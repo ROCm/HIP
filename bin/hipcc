@@ -1,0 +1,201 @@
+#!/usr/bin/perl -w
+
+use File::Basename;
+
+# HIP compiler driver 
+# Will call NVCC or HCC (depending on target) and pass the appropriate include and library options for
+# the target compiler and HIP infrastructure.
+
+# Will pass-through options to the target compiler.  The tools calling HIPCC must ensure the compiler
+# options are appropriate for the target compiler.
+
+# Environment variable HIP_PLATFORM control compilation path:
+# HIP_PLATFORM='nvcc' or HIP_PLATFORM='hcc'.
+# If HIP_PLATFORM is not set hipcc will attempt auto-detect based on if nvcc is found.
+#
+# Other environment variable controls:
+# HIP_PATH  : Path to HIP directory, default is one dir level above location of this script 
+# CUDA_PATH : Path to CUDA SDK (default /usr/local/cuda). Used on NVIDIA platforms only.
+# HCC_HOME  : Path to HCC SDK (default /opt/hcc).  Used on AMD platforms only.
+# HSA_PATH  : Path to HSA dir (default /opt/hsa).  Used on AMD platforms only.
+
+
+$verbose = $ENV{'HIPCC_VERBOSE'};
+$verbose = 0 unless defined $verbose;
+# Verbose: 0x1=commands, 0x2=paths, 0x4=hippc args, 0x8=force remake hip_hcc.o, 16=remake hip_hcc in debug.
+
+$HIP_PATH=$ENV{'HIP_PATH'};
+$HIP_PATH=dirname (dirname $0) unless defined $HIP_PATH;        # use parent directory of hipcc
+
+#print "HIP_PATH=$HIP_PATH\n";
+
+$CUDA_PATH=$ENV{'CUDA_PATH'};
+$CUDA_PATH='/usr/local/cuda' unless defined $CUDA_PATH;
+
+
+#---
+#HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
+$HIP_PLATFORM=$ENV{'HIP_PLATFORM'};
+if (not defined $HIP_PLATFORM and (-e "$CUDA_PATH/bin/nvcc")) {
+    $HIP_PLATFORM="nvcc";
+} 
+$HIP_PLATFORM="hcc" unless defined $HIP_PLATFORM;
+
+
+if ($verbose & 0x2) {
+	print ("HIP_PATH=$HIP_PATH\n");
+	print ("HIP_PLATFORM=$HIP_PLATFORM\n");
+	print ("CUDA_PATH=$CUDA_PATH\n");
+}
+
+
+
+if ($HIP_PLATFORM eq "hcc") {
+	$HSA_PATH=$ENV{'HSA_PATH'};
+	$HSA_PATH="/opt/hsa" unless defined $HSA_PATH;
+
+    $HCC_HOME=$ENV{'HCC_HOME'};
+    $HCC_HOME="/opt/hcc" unless defined $HCC_HOME;
+
+    # HCC* may be used to compile src/hip_hcc.o (and also feed the HIPCXXFLAGS below)
+    $HCC = "$HCC_HOME/bin/hcc";
+    $HCCFLAGS = " -hc -I$HCC_HOME/include  -stdlib=libc++";
+
+    $HIPCC=$HCC;
+    $HIPCXXFLAGS = $HCCFLAGS;
+    $HIPCXXFLAGS .= " -I$HIP_PATH/include/hcc_detail/cuda";
+
+	$HIPLDFLAGS =  "-hc -L$HCC_HOME/lib -Wl,--rpath=$HCC_HOME/lib -lc++ -ldl -lpthread -Wl,--whole-archive -lmcwamp -Wl,--no-whole-archive";
+	$HIPLDFLAGS .= " -L$HSA_PATH/lib -lhsa-runtime64 -lhc_am";
+	# Add C++ libs for GCC.
+	$HIPLDFLAGS .= " -lstdc++";
+
+    if ($verbose & 0x2) {
+        print ("HSA_PATH=$HSA_PATH\n");
+        print ("HCC_HOME=$HCC_HOME\n");
+    }
+
+} elsif ($HIP_PLATFORM eq "nvcc") {
+
+    $HIPCC="$CUDA_PATH/bin/nvcc";
+    $HIPCXXFLAGS .= " -I$CUDA_PATH/include";
+
+	$HIPLDFLAGS = "";
+} else {
+	printf ("error: unknown HIP_PLATFORM = '$HIP_PLATFORM'");
+	exit (-1);
+}
+
+
+# Add paths to common HIP includes:
+$HIPCXXFLAGS .= " -I$HIP_PATH/include" ;
+
+my $compileOnly = 0;
+my $needCXXFLAGS = 0;  # need to add CXX flags to compile step
+my $needLDFLAGS = 1;   # need to add LDFLAGS to compile step.
+my $hasC = 0;          # options contain a c-style file (NVCC must force recognition as GPU file)
+my $hasCU = 0;         # options contain a cu-style file (HCC must force recognition as GPU file)
+my $needHipHcc = ($HIP_PLATFORM eq 'hcc');      # set if we need to link hip_hcc.o from src tree. (some builds, ie cmake, provide their own)
+
+
+my @options = ();
+my @inputs  = ();
+
+if ($verbose & 0x4) {
+	print "hipcc-args: ", join (" ", @ARGV), "\n";
+}
+
+foreach $arg (@ARGV) 
+{
+    if ($arg eq '-c') {
+        $compileOnly = 1;
+        $needCXXFLAGS = 1;
+        $needLDFLAGS  = 0;
+    }
+    if ($arg eq '-o') {
+        $needLDFLAGS = 1;
+    }
+
+
+    if ($arg =~ m/^-/) {
+        # options start with -
+        push (@options, $arg);
+        #print "O: <$arg>\n";
+    } else  {
+        # input files and libraries 
+        if (($arg =~ /.cpp$/) or ($arg =~ /.c$/) or ($arg =~ /.cc$/) ) {
+            $hasC = 1;
+            $needCXXFLAGS = 1;
+        } 
+        if (($arg =~ /.cu$/) or ($arg =~ /.cuh$/)) {
+            $hasCU = 1;
+            $needCXXFLAGS = 1;
+        }
+
+        if (($arg =~ /hip_hcc.o$/) or ($arg =~ /hip_hcc.cpp/)) {
+            $needHipHcc = 0;
+        }
+
+        push (@inputs, $arg);
+        #print "I: <$arg>\n";
+    }
+}
+
+if ($hasC and $HIP_PLATFORM eq 'nvcc') {
+    $HIPCXXFLAGS .= " -x cu";
+}
+if ($hasCU and $HIP_PLATFORM eq 'hcc') {
+    $HIPCXXFLAGS .= " -x c++";
+}
+
+if (($verbose & 0x18) and ($HIP_PLATFORM eq 'hcc')) {
+    $needHipHcc = 1; 
+}
+
+if ($needHipHcc) {
+    # See if we need to remake the .o file:
+    my $source = "$HIP_PATH/src/hip_hcc.cpp" ;
+    my $object = "$HIP_PATH/src/hip_hcc.o" ;
+
+    # remake if object does not exist, or if source is newer than object:
+    if ((not -e $object) or ((stat($source))[9] > (stat($object))[9]))  {
+        my $CMD = "$HCC $HCCFLAGS  -I$HSA_PATH/include -I$HIP_PATH/include -Wall -c $source -o $object";
+        if ($verbose & 0x10) {
+            $CMD .= " -g" ;
+        } else {
+            $CMD .= " -O3" ;
+        }
+
+        if ($verbose & 0x1) {
+            print "remake-deps:", $CMD, "\n";
+        }
+        system ("$CMD") and die ("remake-deps failed");
+
+        
+    }
+    
+    $HIPLDFLAGS .= " $HIP_PATH/src/hip_hcc.o" ;
+}
+
+# hipcc currrently requires separate compilation of source files, ie it is not possible to pass
+# CPP files combined with .O files
+# Reason is that NVCC uses the file extension to determine whether to compile in CUDA mode or 
+# pass-through CPP mode.
+
+
+$args = join(" ", @ARGV);
+
+my $CMD="$HIPCC";
+if ($needCXXFLAGS) {
+    $CMD .= " $HIPCXXFLAGS";
+} 
+if ($needLDFLAGS and not $compileOnly) {
+    $CMD .= " $HIPLDFLAGS";
+}
+$CMD .= " $args";
+
+if ($verbose & 0x1) {
+    print "hipcc-cmd: ", $CMD, "\n";
+}
+
+system ("$CMD") and die ();
