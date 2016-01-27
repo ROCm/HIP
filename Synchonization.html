@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: Heterogeneous-computing Interface for Portability (HIP)</title>
+<title>HIP: Heterogenous-computing Interface for Portability: $title</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -36,8 +36,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </script>
   <div id="navrow1" class="tabs">
     <ul class="tablist">
-      <li class="current"><a href="index.html"><span>Main&#160;Page</span></a></li>
-      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
+      <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li class="current"><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="modules.html"><span>Modules</span></a></li>
       <li><a href="annotated.html"><span>Classes</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
@@ -59,7 +59,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       </li>
     </ul>
   </div>
-</div><!-- top -->
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
      onmouseover="return searchBox.OnSearchSelectShow()"
@@ -74,20 +73,39 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </iframe>
 </div>
 
-<div class="header">
-  <div class="headertitle">
-<div class="title">Heterogeneous-computing Interface for Portability (HIP) </div>  </div>
-</div><!--header-->
+</div><!-- top -->
 <div class="contents">
-<div class="textblock"><p>The HIP interface makes it very easy to port existing CUDA apps to run on AMD GPUs, or to develop new apps that can run on either CUDA or AMD GPUs from a common source base.</p>
+<div class="textblock"><h1>Host-synchronous behavior:</h1>
+<p>The following commands are "host-asynchronous" - meaning they do not wait for any preceding commands to complete, and may return control to the host thread before the requested operation completes:</p>
 <ul>
-<li>HIP is very thin and has little or no performance impact over coding directly in CUDA NVCC or Kalmar HC mode.</li>
-<li>HIP allows developers to use the "best" development environment and tools on each target platform.</li>
-<li>HIP allows coding in a single-source C++ programming language including features such as templates, C++11 lambdas,and more.</li>
-<li>"hipify" script automatically converts source from CUDA to HIP.</li>
-<li>Developers can specialize for CUDA or Kalmar to tune for performance or handle tricky cases with #ifdef.</li>
-<li>See the <a class="el" href="group__API.html">HIP API</a>. </li>
+<li>Kernel launches (hipLaunchKernel() )</li>
+<li>Asynchronous memory copies - any memory copy API which contains "Async", such as <a class="el" href="group__Memory.html#ga8ad5a0b13458917e1b9437732b21af54">hipMemcpyAsync()</a>)</li>
+<li>Any memory set (for example, hipMemset());</li>
+<li>TODO</li>
 </ul>
+<p>"Host-synchronous" commands have the following properties:</p>
+<ul>
+<li>wait for all previous commands to complete.</li>
+<li>will not return control back to host until the command completes.</li>
+</ul>
+<p>The following commands are "host-synchronous".</p>
+<ul>
+<li>hipMemcpy waits for preceding work in the same stream to complete.</li>
+</ul>
+<h1>Stream synchronization</h1>
+<h3>Blocking</h3>
+<p>The term "blocking" has two meanings in HIP.</p>
+<p>The first refers to synchronization commands (ie hipStreamSynchronize, hipEventSynchronize) that cause the host CPU to wait for GPU activity to complete. These can either use an active where the host CPU spin-waits on the synchronization variable, or can use an interrupt-based scheme where the core is interrupted when the wait completes. The second technique is referred to as "blocking" (ie hipDeviceBlockingSync, hipEventBlockingSync) while the first is referred to as "active". Active can be appropriate for short tasks where latency is critical, but comes at the expense of a CPU core dedicated to monitoring the event.</p>
+<h3>HIP_LAUNCH_BLOCKING (also can use CUDA_LAUNCH_BLOCKING)</h3>
+<ul>
+<li>The following commands become host-synchronous and will not return until the requested command has completed:<ul>
+<li>Kernel launches (hipKernelLaunch).</li>
+<li>Memory set commands (hipMemset, hipMemsetAsync).</li>
+<li>Memory copy commands (hipMemcpy, hipMemsetAsync).</li>
+</ul>
+</li>
+</ul>
+<p>Note CUDA_LAUNCH_BLOCKING does add any pre-serialization to the commands and does not affect the concurrent stream behavior. For example, even when CUDA_LAUNCH_BLOCKING is set, kernels or data copy commands launched to separate streams can execute concurrently. Use the NULL stream if additional stream synchronization is desired. </p>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

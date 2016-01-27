@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: Heterogeneous-computing Interface for Portability (HIP)</title>
+<title>HIP: Heterogenous-computing Interface for Portability: Bug List</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -36,8 +36,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </script>
   <div id="navrow1" class="tabs">
     <ul class="tablist">
-      <li class="current"><a href="index.html"><span>Main&#160;Page</span></a></li>
-      <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
+      <li><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li class="current"><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="modules.html"><span>Modules</span></a></li>
       <li><a href="annotated.html"><span>Classes</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
@@ -59,7 +59,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       </li>
     </ul>
   </div>
-</div><!-- top -->
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
      onmouseover="return searchBox.OnSearchSelectShow()"
@@ -74,20 +73,25 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </iframe>
 </div>
 
+</div><!-- top -->
 <div class="header">
   <div class="headertitle">
-<div class="title">Heterogeneous-computing Interface for Portability (HIP) </div>  </div>
+<div class="title">Bug List </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>The HIP interface makes it very easy to port existing CUDA apps to run on AMD GPUs, or to develop new apps that can run on either CUDA or AMD GPUs from a common source base.</p>
-<ul>
-<li>HIP is very thin and has little or no performance impact over coding directly in CUDA NVCC or Kalmar HC mode.</li>
-<li>HIP allows developers to use the "best" development environment and tools on each target platform.</li>
-<li>HIP allows coding in a single-source C++ programming language including features such as templates, C++11 lambdas,and more.</li>
-<li>"hipify" script automatically converts source from CUDA to HIP.</li>
-<li>Developers can specialize for CUDA or Kalmar to tune for performance or handle tricky cases with #ifdef.</li>
-<li>See the <a class="el" href="group__API.html">HIP API</a>. </li>
-</ul>
+<div class="textblock"><dl class="reflist">
+<dt><a class="anchor" id="_bug000002"></a>Member <a class="el" href="group__Device.html#gad9ee6822e3e55431811fb6a00f7a1c10">hipDeviceGetProperties</a>  (<a class="el" href="structhipDeviceProp__t.html">hipDeviceProp_t</a> *prop, int device)</dt>
+<dd><p class="startdd">HCC always returns 0 for maxThreadsPerMultiProcessor </p>
+<p>HCC always returns 0 for regsPerBlock </p>
+<p class="enddd">HCC always returns 0 for l2CacheSize  </p>
+</dd>
+<dt><a class="anchor" id="_bug000001"></a>Member <a class="el" href="group__Device.html#ga8d57161ae56a8edc46eeda447417bf6c">hipDeviceReset</a>  (void)</dt>
+<dd>On HCC, hipDeviceReset is a nop and does not reset the device state.  </dd>
+<dt><a class="anchor" id="_bug000004"></a>Member <a class="el" href="group__PeerToPeer.html#gab6211c18ca1e23252ef080cd6be855ca">hipMemcpyPeerAsync</a>  (void *dst, int dstDevice, const void *src, int srcDevice, size_t sizeBytes, hipStream_t stream=0)</dt>
+<dd>This function uses a synchronous copy  </dd>
+<dt><a class="anchor" id="_bug000003"></a>Member <a class="el" href="group__Stream.html#gacdd84c8f8ef1539c96c57c1d5bcae633">hipStreamWaitEvent</a>  (hipStream_t stream, <a class="el" href="structhipEvent__t.html">hipEvent_t</a> event, unsigned int flags)</dt>
+<dd>This function conservatively waits for all work in the specified stream to complete. </dd>
+</dl>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

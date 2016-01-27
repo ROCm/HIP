@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: Heterogeneous-computing Interface for Portability (HIP)</title>
+<title>HIP: Heterogenous-computing Interface for Portability: textureReference Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -36,10 +36,10 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </script>
   <div id="navrow1" class="tabs">
     <ul class="tablist">
-      <li class="current"><a href="index.html"><span>Main&#160;Page</span></a></li>
+      <li><a href="index.html"><span>Main&#160;Page</span></a></li>
       <li><a href="pages.html"><span>Related&#160;Pages</span></a></li>
       <li><a href="modules.html"><span>Modules</span></a></li>
-      <li><a href="annotated.html"><span>Classes</span></a></li>
+      <li class="current"><a href="annotated.html"><span>Classes</span></a></li>
       <li><a href="files.html"><span>Files</span></a></li>
       <li>
         <div id="MSearchBox" class="MSearchBoxInactive">
@@ -59,7 +59,14 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
       </li>
     </ul>
   </div>
-</div><!-- top -->
+  <div id="navrow2" class="tabs2">
+    <ul class="tablist">
+      <li><a href="annotated.html"><span>Class&#160;List</span></a></li>
+      <li><a href="classes.html"><span>Class&#160;Index</span></a></li>
+      <li><a href="hierarchy.html"><span>Class&#160;Hierarchy</span></a></li>
+      <li><a href="functions.html"><span>Class&#160;Members</span></a></li>
+    </ul>
+  </div>
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
      onmouseover="return searchBox.OnSearchSelectShow()"
@@ -74,21 +81,41 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </iframe>
 </div>
 
+</div><!-- top -->
 <div class="header">
+  <div class="summary">
+<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="structtextureReference-members.html">List of all members</a>  </div>
   <div class="headertitle">
-<div class="title">Heterogeneous-computing Interface for Portability (HIP) </div>  </div>
+<div class="title">textureReference Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>The HIP interface makes it very easy to port existing CUDA apps to run on AMD GPUs, or to develop new apps that can run on either CUDA or AMD GPUs from a common source base.</p>
-<ul>
-<li>HIP is very thin and has little or no performance impact over coding directly in CUDA NVCC or Kalmar HC mode.</li>
-<li>HIP allows developers to use the "best" development environment and tools on each target platform.</li>
-<li>HIP allows coding in a single-source C++ programming language including features such as templates, C++11 lambdas,and more.</li>
-<li>"hipify" script automatically converts source from CUDA to HIP.</li>
-<li>Developers can specialize for CUDA or Kalmar to tune for performance or handle tricky cases with #ifdef.</li>
-<li>See the <a class="el" href="group__API.html">HIP API</a>. </li>
+<div class="dynheader">
+Inheritance diagram for textureReference:</div>
+<div class="dyncontent">
+ <div class="center">
+  <img src="structtextureReference.png" usemap="#textureReference_map" alt=""/>
+  <map id="textureReference_map" name="textureReference_map">
+<area href="structtexture.html" alt="texture&lt; T, texType, hipTextureReadMode &gt;" shape="rect" coords="0,56,263,80"/>
+</map>
+ </div></div>
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:a489c1ed138ea152d665ee79447a676ca"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a489c1ed138ea152d665ee79447a676ca"></a>
+hipTextureFilterMode&#160;</td><td class="memItemRight" valign="bottom"><b>filterMode</b></td></tr>
+<tr class="separator:a489c1ed138ea152d665ee79447a676ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aadce2afcf1a39c7566ea9176d9b2d48c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aadce2afcf1a39c7566ea9176d9b2d48c"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>normalized</b></td></tr>
+<tr class="separator:aadce2afcf1a39c7566ea9176d9b2d48c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ad4a3753410b4d05d1bc75cc67ba062"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4ad4a3753410b4d05d1bc75cc67ba062"></a>
+<a class="el" href="structhipChannelFormatDesc.html">hipChannelFormatDesc</a>&#160;</td><td class="memItemRight" valign="bottom"><b>channelDesc</b></td></tr>
+<tr class="separator:a4ad4a3753410b4d05d1bc75cc67ba062"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<hr/>The documentation for this struct was generated from the following file:<ul>
+<li>/home/fpadmin/ben/HIP6/include/hcc_detail/<a class="el" href="hip__texture_8h_source.html">hip_texture.h</a></li>
 </ul>
-</div></div><!-- contents -->
+</div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated on Mon Jan 25 2016 16:05:53 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
