@@ -1,0 +1,76 @@
+#!/usr/bin/perl -w
+use Getopt::Long;
+use Cwd;
+
+# Return name of HIP compiler - either 'nvcc' or 'hcc'
+#
+use Getopt::Long;
+use File::Basename;
+
+Getopt::Long::Configure ( qw{bundling no_ignore_case});
+GetOptions(
+     "help|h" => \$p_help
+    ,"path|p" => \$p_path
+    ,"compiler|c" => \$p_compiler
+    ,"platform|P" => \$p_platform
+    ,"cpp_config|cxx_config|C" => \$p_cpp_config
+    ,"newline|n" => \$p_newline
+);
+
+if ($p_help) {
+    print "usage: which_hip [OPTIONS]\n";
+    print "  --path,  -p        : print HIP_PATH (use env var if set, else determine from hipconfig path)\n";
+    print "  --cpp_config, -C   : print C++ compiler options\n";
+    print "  --compiler, -c     : print compiler (hcc or nvcc)\n";
+    print "  --platform, -P     : print platform (hcc or nvcc)\n";
+    print "  --newline, -n      : print newline\n";
+    print "  --help, -h         : print help message\n";
+    exit();
+}
+
+
+$CUDA_PATH=$ENV{'CUDA_PATH'};
+$CUDA_PATH='/usr/local/cuda' unless defined $CUDA_PATH;
+
+$HCC_HOME=$ENV{'HCC_HOME'};
+$HCC_HOME='/opt/hcc' unless defined $HCC_HOME;
+
+#---
+#HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
+$HIP_PLATFORM=$ENV{'HIP_PLATFORM'};
+if (not defined $HIP_PLATFORM and (-e "$CUDA_PATH/bin/nvcc")) {
+    $HIP_PLATFORM="nvcc";
+}
+$HIP_PLATFORM="hcc" unless defined $HIP_PLATFORM;
+
+$HIP_PATH=$ENV{'HIP_PATH'};
+$HIP_PATH=Cwd::realpath (dirname (dirname $0)) unless defined $HIP_PATH;        # use parent directory of this tool
+
+
+
+$printed = 0;
+if ($p_path) {
+    print "$HIP_PATH";
+    $printed = 1;
+}
+    
+
+if ($p_cpp_config) {
+    if ($HIP_PLATFORM eq "hcc") {
+        print " -D__HIP_PLATFORM_HCC__=   -I$HIP_PATH/include -I$HCC_HOME/include";
+    }
+    if ($HIP_PLATFORM eq "nvcc") {
+        print " -D__HIP_PLATFORM_NVCC__=  -I$HIP_PATH/include -I$CUDA_PATH/include";
+    };
+    $printed = 1;
+}
+
+
+
+if (!$printed or $p_compiler or $p_platform) {
+    print $HIP_PLATFORM;
+}
+
+if ($p_newline) {
+    print "\n";
+}

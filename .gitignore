@@ -1,0 +1,10 @@
+.*
+*.o
+*.exe
+*.swp
+*.Po
+hip-amdinternal
+HIP-Examples
+
+bin/hipInfo
+samples/1_Utils/hipInfo/hipInfo

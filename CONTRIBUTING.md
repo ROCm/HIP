@@ -1,0 +1,133 @@
+# Contributor Guidelines 
+
+
+## Adding a new HIP API
+
+    - Add a translation to the bin/hipify tool ; many examples abound.
+       - For stat tracking purposes, place the API into an appropriate stat category ("dev", "mem", "stream", etc).
+    - Add a inlined NVCC implementation for the function in include/nvcc_detail/hip_runtime_api.h.
+       - These are typically headers 
+    - Add an HCC definition and Doxygen comments for the function in include/hcc_detail/hip_runtime_api.h
+       - Source implementation typically go in src/hcc_detail/hip_hcc.cpp. The implementation may involve 
+         calls to HCC runtime or HSA runtime, or interact with other pieces of the HIP runtime (ie for 
+         hipStream_t).
+
+#### Testing HCC version
+In some cases new HIP features are tied to specified releases of HCC, and it can be useful to determine at compile-time
+if the current HCC compiler is sufficiently new enough to support the desired feature.  The `__hcc_workweek__` compiler
+define is a monotonically increasing integer value that combines the year + workweek + day-of-week (0-6, Sunday is 0) 
+(ie 15403, 16014, etc).   
+The granularity is one day, so __hcc_workweek__  can only be used to distinguish compiler builds that are at least one day apart.
+
+```
+#ifdef __hcc_workweek_ > 16014
+// use cool new HCC feature here
+#endif
+```
+
+Additionally, hcc binary can print the work-week to stdout: ("16014" in the version info below.)4
+```
+> /opt/hcc/bin/hcc -v
+HCC clang version 3.5.0  (based on HCC 0.8.16014-81f8a3f-f155163-5a1009a LLVM 3.5.0svn)
+Target: x86_64-unknown-linux-gnu
+Thread model: posix
+Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/4.8
+Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/4.8.4
+Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/4.9
+Found candidate GCC installation: /usr/lib/gcc/x86_64-linux-gnu/4.9.1
+Selected GCC installation: /usr/lib/gcc/x86_64-linux-gnu/4.8
+Candidate multilib: .;@m64
+Candidate multilib: 32;@m32
+Candidate multilib: x32;@mx32
+Selected multilib: .;@m64
+```
+
+The unix `date` command can print the HCC-format work-week for a specific date , ie:
+```
+> date --utc +%y%W%w -d 2015-11-09  
+15451
+```
+
+## Unit Testing Environment
+
+HIP includes unit tests in the tests/src directory.  
+When adding a new HIP feature, add a new unit test as well.
+The tests/src/hipMemtest.cpp file contains a simple unit test and is a good starting point for other tests.  
+Modify tests/src/CMakefiles.txt to add the test to the build environment.
+
+### Contribution guidelines ###
+
+Features (ie functions, classes, types) defined in hip*.h should resemble CUDA APIs.
+The HIP interface is designed to be very familiar for CUDA programmers.
+
+Differences or limitations of HIP APIs as compared to CUDA APIs should be clearly documented and described. 
+
+
+#### Presubmit Testing:
+Before checking in or submitting a pull request, run all Rodinia tests and ensure pass results match starting point:
+
+```shell
+       > cd examples/
+       > ./run_all.sh
+```
+
+Recent results :
+
+```
+hip2/examples/rodinia_3.0/hip$ make test
+--TESTING: b+tree
+executing: ../../test/b+tree/run0.cmd...      PASSED!
+--TESTING: backprop
+executing: ../../test/backprop/run0.cmd...      PASSED!
+--TESTING: bfs
+executing: ../../test/bfs/run0.cmd...      PASSED!
+executing: ../../test/bfs/run1.cmd...      PASSED!
+--TESTING: cfd
+executing: ../../test/cfd/run0.cmd...      PASSED!
+executing: ../../test/cfd/run1.cmd...      PASSED!
+--TESTING: gaussian
+executing: ../../test/gaussian/run0.cmd...      PASSED!
+--TESTING: heartwall
+executing: ../../test/heartwall/run0.cmd...      PASSED!
+--TESTING: hotspot
+executing: ../../test/hotspot/run0.cmd...      PASSED!
+--TESTING: kmeans
+executing: ../../test/kmeans/run0.cmd...      PASSED!
+executing: ../../test/kmeans/run1.cmd...      PASSED!
+executing: ../../test/kmeans/run2.cmd...      PASSED!
+executing: ../../test/kmeans/run3.cmd...      PASSED!
+--TESTING: lavaMD
+executing: ../../test/lavaMD/run0.cmd...      PASSED!
+executing: ../../test/lavaMD/run1.cmd...      PASSED!
+executing: ../../test/lavaMD/run2.cmd...      PASSED!
+executing: ../../test/lavaMD/run3.cmd...      PASSED!
+executing: ../../test/lavaMD/run4.cmd...      PASSED!
+--TESTING: lud
+executing: ../../test/lud/run0.cmd...      PASSED!
+--TESTING: myocyte
+executing: ../../test/myocyte/run0.cmd...      PASSED!
+--TESTING: nn
+executing: ../../test/nn/run0.cmd...      PASSED!
+--TESTING: nw
+executing: ../../test/nw/run0.cmd...      PASSED!
+--TESTING: particlefilter
+executing: ../../test/particlefilter/run0.cmd...    *** Error in `./particlefilter_naive': free(): invalid next size (fast): 0x0000000001ad89d0 ***
+  FAILED!
+executing: ../../test/particlefilter/run1.cmd...    *** Error in `./particlefilter_float': free(): invalid next size (fast): 0x0000000001a7e890 ***
+  FAILED!
+--TESTING: pathfinder
+executing: ../../test/pathfinder/run0.cmd...      PASSED!
+--TESTING: srad
+executing: ../../test/srad/run0.cmd...      PASSED!
+--TESTING: streamcluster
+executing: ../../test/streamcluster/run0.cmd...    PASSED!
+```
+
+## Doxygen Editing Guidelines
+
+- bugs should be marked with @bugs near the code where the bug might be fixed.  The @bug message will appear in the API description and also in the
+doxygen bug list.
+
+##  Other Tips:
+### Markdown Editing
+Recommended to use an offline Markown viewer to review documentation, such as Markdown Preview Plus extension in Chrome browser, or Remarkable.
