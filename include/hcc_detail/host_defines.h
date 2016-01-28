@@ -19,6 +19,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
+/**
+ *  @file  hcc_detail/host_defines.h
+ *  @brief TODO-doc
+ */
+
 #ifdef __HCC__
 /**
  * Function and kernel markers
@@ -29,7 +35,7 @@ THE SOFTWARE.
 #ifndef DISABLE_GRID_LAUNCH
 #define __global__  __attribute__((hc_grid_launch))
 #else
-#define __global__  
+#define __global__
 #endif
 
 #define __noinline__      __attribute__((noinline))
@@ -44,20 +50,20 @@ THE SOFTWARE.
 #define __shared__     tile_static
 #define __constant__   __attribute__((address_space(2)))
 
-#else 
+#else
 // Non-HCC compiler
 /**
  * Function and kernel markers
  */
-#define __host__     
-#define __device__   
+#define __host__
+#define __device__
 
-#define __global__  
+#define __global__
 
-#define __noinline__      
-#define __forceinline__   
+#define __noinline__
+#define __forceinline__
 
-#define __shared__     
-#define __constant__  
+#define __shared__
+#define __constant__
 
 #endif

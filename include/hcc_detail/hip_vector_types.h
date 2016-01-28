@@ -19,6 +19,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
+/**
+ *  @file  hcc_detail/hip_vector_types.h
+ *  @brief Defines the different newt vector types for HIP runtime.
+ */
+
 #if defined (__HCC__) &&  (__hcc_workweek__ < 16032)
 #error("This version of HIP requires a newer version of HCC.");
 #endif

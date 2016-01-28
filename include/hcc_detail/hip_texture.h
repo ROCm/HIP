@@ -21,11 +21,11 @@ THE SOFTWARE.
 */
 #pragma once
 /**
- *  @file  hip_kalmar_texture.h
+ *  @file  hcc_detail/hip_texture.h
  *  @brief HIP C++ Texture API for hcc compiler
  */
 
-#include <limits.h> 
+#include <limits.h>
 
 #include <hip_runtime.h>
 
@@ -38,13 +38,13 @@ typedef struct hipChannelFormatDesc {
     int _dummy;
 } hipChannelFormatDesc;
 
-typedef enum hipTextureReadMode 
+typedef enum hipTextureReadMode
 {
   hipReadModeElementType,  ///< Read texture as specified element type
 //! @warning cudaReadModeNormalizedFloat is not supported.
 } hipTextureReadMode;
 
-typedef enum hipTextureFilterMode 
+typedef enum hipTextureFilterMode
 {
     hipFilterModePoint,  ///< Point filter mode.
 //! @warning cudaFilterModeLinear is not supported.
@@ -86,26 +86,26 @@ struct texture : public textureReference {
  *  @defgroup Texture Texture Reference Management
  *  @{
  *
- * 
+ *
  *  @warning The HIP texture API implements a small subset of full texture API.  Known limitations include:
  *  - Only point sampling is supported.
  *  - Only C++ APIs are provided.
- *  - Many APIs and modes are not implemented. 
+ *  - Many APIs and modes are not implemented.
  *
  *  The HIP texture support is intended to allow use of texture cache on hardware where this is beneficial.
  *
  *  The following CUDA APIs are not currently supported:
- *  - cudaBindTexture2D 
+ *  - cudaBindTexture2D
  *  - cudaBindTextureToArray
- *  - cudaBindTextureToMipmappedArray 
- *  - cudaGetChannelDesc 
+ *  - cudaBindTextureToMipmappedArray
+ *  - cudaGetChannelDesc
  *  - cudaGetTextureReference
  *
  */
 
 // C API:
 #if 0
-hipChannelFormatDesc  hipBindTexture(size_t *offset, struct textureReference *tex, const void *devPtr, const struct hipChannelFormatDesc *desc, size_t size=UINT_MAX) 
+hipChannelFormatDesc  hipBindTexture(size_t *offset, struct textureReference *tex, const void *devPtr, const struct hipChannelFormatDesc *desc, size_t size=UINT_MAX)
 {
     tex->_dataPtr = devPtr;
 }
@@ -116,7 +116,7 @@ hipChannelFormatDesc  hipBindTexture(size_t *offset, struct textureReference *te
  **/
 // TODO
 template <class T>
-hipChannelFormatDesc  hipCreateChannelDesc() 
+hipChannelFormatDesc  hipCreateChannelDesc()
 {
     hipChannelFormatDesc desc;
     return desc;
@@ -127,11 +127,11 @@ hipChannelFormatDesc  hipCreateChannelDesc()
  **/
 // TODO-doc
 template <class T, int dim, enum hipTextureReadMode readMode>
-hipError_t  hipBindTexture(size_t *offset, 
-                                     struct texture<T, dim, readMode> &tex, 
-                                     const void *devPtr, 
-                                     const struct hipChannelFormatDesc *desc, 
-                                     size_t size=UINT_MAX) 
+hipError_t  hipBindTexture(size_t *offset,
+                                     struct texture<T, dim, readMode> &tex,
+                                     const void *devPtr,
+                                     const struct hipChannelFormatDesc *desc,
+                                     size_t size=UINT_MAX)
 {
     tex._dataPtr = static_cast<const T*>(devPtr);
 
@@ -144,10 +144,10 @@ hipError_t  hipBindTexture(size_t *offset,
  **/
 // TODO-doc
 template <class T, int dim, enum hipTextureReadMode readMode>
-hipError_t  hipBindTexture(size_t *offset, 
-                                     struct texture<T, dim, readMode> &tex, 
-                                     const void *devPtr, 
-                                     size_t size=UINT_MAX) 
+hipError_t  hipBindTexture(size_t *offset,
+                                     struct texture<T, dim, readMode> &tex,
+                                     const void *devPtr,
+                                     size_t size=UINT_MAX)
 {
     return  hipBindTexture(offset, tex, devPtr, &tex.channelDesc, size);
 }
@@ -169,7 +169,7 @@ hipError_t  hipUnbindTexture(struct texture<T, dim, readMode> *tex)
 
 // doxygen end Texture
 /**
- * @}  
+ * @}
  */
 
 
