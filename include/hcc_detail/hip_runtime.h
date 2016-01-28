@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 /**
  *  @file  hcc_detail/hip_runtime.h
- *
+ *  @brief Contains definitions of APIs for HIP runtime.
  */
 
 #pragma once
@@ -286,71 +286,71 @@ __device__ inline unsigned long long int atomicXor(unsigned long long int* addre
 #ifdef __HCC__
 #include <hc.hpp>
 // integer intrinsic function __poc __clz __ffs __brev
-__device__ inline unsigned int __popc( unsigned int input) 
+__device__ inline unsigned int __popc( unsigned int input)
 {
 	return hc::__popcount_u32_b32( input);
 }
 
-__device__ inline unsigned int __popcll( unsigned long long int input) 
+__device__ inline unsigned int __popcll( unsigned long long int input)
 {
 	return hc::__popcount_u32_b64(input);
 }
 
-__device__ inline unsigned int __clz(unsigned int input) 
+__device__ inline unsigned int __clz(unsigned int input)
 {
 	return hc::__firstbit_u32_u32( input);
 }
 
-__device__ inline unsigned int __clzll(unsigned long long int input) 
+__device__ inline unsigned int __clzll(unsigned long long int input)
 {
 	return hc::__firstbit_u32_u64( input);
 }
 
-__device__ inline unsigned int __clz(int input) 
+__device__ inline unsigned int __clz(int input)
 {
 	return hc::__firstbit_u32_s32(  input);
 }
 
-__device__ inline unsigned int __clzll(long long int input) 
+__device__ inline unsigned int __clzll(long long int input)
 {
 	return hc::__firstbit_u32_s64( input);
 }
 
-__device__ inline unsigned int __ffs(unsigned int input) 
+__device__ inline unsigned int __ffs(unsigned int input)
 {
 	return hc::__lastbit_u32_u32( input)+1;
 }
 
-__device__ inline unsigned int __ffsll(unsigned long long int input) 
+__device__ inline unsigned int __ffsll(unsigned long long int input)
 {
 	return hc::__lastbit_u32_u64( input)+1;
 }
 
-__device__ inline unsigned int __brev( unsigned int input) 
+__device__ inline unsigned int __brev( unsigned int input)
 {
 	return hc::__bitrev_b32( input);
 }
 
-__device__ inline unsigned long long int __brevll( unsigned long long int input) 
+__device__ inline unsigned long long int __brevll( unsigned long long int input)
 {
 	return hc::__bitrev_b64( input);
 }
 
 // warp vote function __all __any __ballot
 
-__device__ inline int __all(  int input) 
+__device__ inline int __all(  int input)
 {
 	return hc::__all( input);
 }
 
 
-__device__ inline int __any( int input) 
+__device__ inline int __any( int input)
 {
 	return hc::__any( input);
 }
 
 
-__device__ inline unsigned long long int __ballot( int input) 
+__device__ inline unsigned long long int __ballot( int input)
 {
 	return hc::__ballot( input);
 }

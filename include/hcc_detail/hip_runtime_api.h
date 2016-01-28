@@ -23,7 +23,7 @@ THE SOFTWARE.
 
 /**
  *  @file  hcc_detail/hip_runtime_api.h
- *  @brief Contains C function APIs for HIP runtime.
+ *  @brief Contains C function APIs for HIP runtime. This file does not use any HCC builtin or special language extensions (-hc mode) ; those functions in hip_runtime.h.
  */
 
 #include <stdint.h>
@@ -34,12 +34,6 @@ THE SOFTWARE.
 #if defined (__HCC__) &&  (__hcc_workweek__ < 1602)
 #error("This version of HIP requires a newer version of HCC.");
 #endif
-
-
-// hip_api_hcc.h
-// Contains C function APIs for HIP runtime.
-// This file does not use any HCC builtin or special language extensions (-hc mode) ; those functions in hip_hcc.h.
-
 
 // Structure definitions:
 #ifdef __cplusplus
@@ -604,7 +598,7 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop);
  *
  * Query the status of the specified event.  This function will return #hipErrorNotReady if all commands
  * in the appropriate stream (specified to hipEventRecord) have completed.  If that work has not completed,
- * or if hipEventRecord was not called on the event, then cudaSuccess is returned.
+ * or if hipEventRecord was not called on the event, then hipSuccess is returned.
  *
  *
  */
@@ -756,7 +750,7 @@ hipError_t hipMemGetInfo  (size_t * free, size_t * total)   ;
  * @param [in] peerDevice
  *
  * Returns "1" in @p canAccessPeer if the specified @p device is capable
- * of directly accessing memory phyically located on peerDevice , or "0" if not.
+ * of directly accessing memory physically located on peerDevice , or "0" if not.
  */
 hipError_t hipDeviceCanAccessPeer ( int* canAccessPeer, int  device, int  peerDevice );
 
@@ -786,13 +780,13 @@ hipError_t hipMemcpyPeerAsync ( void* dst, int  dstDevice, const void* src, int 
  */
 
 /**
- * @brief Returns the approximate HIP driver versin.
+ * @brief Returns the approximate HIP driver version.
  *
- * @warning The HIP feature set does not correpond to an exact CUDA SDK driver revision.
+ * @warning The HIP feature set does not correspond to an exact CUDA SDK driver revision.
  * This function always set *driverVersion to 4 as an approximation though HIP supports
  * some features which were introduced in later CUDA SDK revisions.
  * HIP apps code should not rely on the driver revision number here and should
- * use arch feature flags to test device capabiliies or conditional compilation.
+ * use arch feature flags to test device capabilities or conditional compilation.
  *
  */
 hipError_t hipDriverGetVersion(int *driverVersion) ;
@@ -851,12 +845,12 @@ hipError_t hipDriverGetVersion(int *driverVersion) ;
 #ifdef __HCC__
 #include <hc.hpp>
 /**
- * @brief Return hc::acclerator associated with the specified deviceId
+ * @brief Return hc::accelerator associated with the specified deviceId
  */
 hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator *acc);
 
 /**
- * @brief Return hc::acclerator_view associated with the specified stream
+ * @brief Return hc::accelerator_view associated with the specified stream
  */
 hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **av);
 #endif
