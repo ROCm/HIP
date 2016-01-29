@@ -13,7 +13,7 @@ $(HIP_OBJECTS): HIPCC_FLAGS += -I$(HSA_PATH)/include
 $(HIP_OBJECTS): 
 
 %.o:: %.cpp
-	    $(HIPCC) $(HIPCC_FLAGS) $< -c -o $@
+	    $(HIPCC) $(HIPCC_FLAGS) $< -c -O3 -o $@
 
 
 clean:
