@@ -352,10 +352,11 @@ __device__ inline unsigned long long int __ballot( int input)
 }
 
 
-#ifdef __HCC_ACCELERATOR__
 #include <hc_math.hpp>
 // TODO: Choose whether default is precise math or fast math based on compilation flag.
+#ifdef __HCC_ACCELERATOR__
 using namespace hc::precise_math;
+#endif
 
 //TODO: Undo this once min/max functions are supported by hc
 inline int min(int arg1, int arg2) __attribute((hc,cpu)) { \
@@ -367,9 +368,6 @@ inline int max(int arg1, int arg2) __attribute((hc,cpu)) { \
 //TODO - add a couple fast math operations here, the set here will grow :
 __device__ inline float __log2f(float x) {return hc::fast_math::log2(x); };
 __device__ inline float __powf(float base, float exponent) {return hc::fast_math::powf(base, exponent); };
-
-#endif
-
 
 
 /**
