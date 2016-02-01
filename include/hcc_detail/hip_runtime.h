@@ -283,7 +283,6 @@ __device__ inline unsigned long long int atomicXor(unsigned long long int* addre
 	return (long long int)hc::atomic_fetch_xor((uint64_t*)address,(uint64_t)val);
 }
 
-#ifdef __HCC__
 #include <hc.hpp>
 // integer intrinsic function __poc __clz __ffs __brev
 __device__ inline unsigned int __popc( unsigned int input) 
@@ -337,26 +336,20 @@ __device__ inline unsigned long long int __brevll( unsigned long long int input)
 }
 
 // warp vote function __all __any __ballot
-
 __device__ inline int __all(  int input) 
 {
 	return hc::__all( input);
 }
-
 
 __device__ inline int __any( int input) 
 {
 	return hc::__any( input);
 }
 
-
 __device__ inline unsigned long long int __ballot( int input) 
 {
 	return hc::__ballot( input);
 }
-
-#endif
-
 
 
 #ifdef __HCC_ACCELERATOR__
