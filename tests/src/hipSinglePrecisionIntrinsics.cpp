@@ -67,7 +67,7 @@ __device__ void single_precision_intrinsics()
     __logf(1.0f);
     __powf(1.0f, 0.0f);
     //__saturatef(0.1f);
-    __sincosf(0.0f, &fX, &fY);
+    //__sincosf(0.0f, &fX, &fY);
     __sinf(0.0f);
     __tanf(0.0f);
 }
