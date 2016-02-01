@@ -117,7 +117,7 @@ make_hip_executable (hipHcc hipHcc.cpp)
 make_hip_executable (hipSimpleAtomicsTest hipSimpleAtomicsTest.cpp)
 make_hip_executable (hipMathFunctionsHost hipMathFunctions.cpp hipSinglePrecisionMathHost.cpp hipDoublePrecisionMathHost.cpp)
 make_hip_executable (hipMathFunctionsDevice hipMathFunctions.cpp hipSinglePrecisionMathDevice.cpp hipDoublePrecisionMathDevice.cpp)
-make_hip_executable (hipIntrinsics hipMathFunctions.cpp hipSinglePrecisionIntrinsics.cpp)
+make_hip_executable (hipIntrinsics hipMathFunctions.cpp hipSinglePrecisionIntrinsics.cpp hipDoublePrecisionIntrinsics.cpp hipIntegerIntrinsics.cpp)
 target_link_libraries(hipMathFunctionsHost m)
 
 make_test(hip_anyall " " )

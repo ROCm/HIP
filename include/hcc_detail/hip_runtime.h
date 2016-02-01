@@ -380,7 +380,10 @@ __device__ inline float __powf(float base, float exponent) {return hc::fast_math
 __device__ inline void __sincosf(float x, float *s, float *c) {return hc::fast_math::sincosf(x, s, c); };
 __device__ inline float __sinf(float x) {return hc::fast_math::sinf(x); };
 __device__ inline float __tanf(float x) {return hc::fast_math::tanf(x); };
-
+__device__ inline float __dsqrt_rd(double x) {return hc::fast_math::sqrt(x); };
+__device__ inline float __dsqrt_rn(double x) {return hc::fast_math::sqrt(x); };
+__device__ inline float __dsqrt_ru(double x) {return hc::fast_math::sqrt(x); };
+__device__ inline float __dsqrt_rz(double x) {return hc::fast_math::sqrt(x); };
 
 /**
  * Kernel launching

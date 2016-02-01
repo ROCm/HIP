@@ -29,25 +29,25 @@ __device__ void integer_intrinsics()
 {
     __brev((unsigned int)10);
     __brevll((unsigned long long)10);
-    __byte_perm((unsigned int)0, (unsigned int)0, 0);
+    //__byte_perm((unsigned int)0, (unsigned int)0, 0);
     __clz((int)10);
     __clzll((long long)10);
     __ffs((int)10);
     __ffsll((long long)10);
-    __hadd((int)1, (int)3);
-    __mul24((int)1, (int)2);
-    __mul64hi((long long)1, (long long)2);
-    __mulhi((int)1, (int)2);
+    //__hadd((int)1, (int)3);
+    //__mul24((int)1, (int)2);
+    //__mul64hi((long long)1, (long long)2);
+    //__mulhi((int)1, (int)2);
     __popc((unsigned int)4);
     __popcll((unsigned long long)4);
-    __rhadd((int)1, (int)2);
-    __sad((int)1, (int)2, 0);
-    __uhadd((unsigned int)1, (unsigned int)3);
-    __umul24((unsigned int)1, (unsigned int)2);
-    __umul64hi((unsigned long long)1, (unsigned long long)2);
-    __umulhi((unsigned int)1, (unsigned int)2);
-    __urhadd((unsigned int)1, (unsigned int)2);
-    __usad((unsigned int)1, (unsigned int)2, 0);
+    //__rhadd((int)1, (int)2);
+    //__sad((int)1, (int)2, 0);
+    //__uhadd((unsigned int)1, (unsigned int)3);
+    //__umul24((unsigned int)1, (unsigned int)2);
+    //__umul64hi((unsigned long long)1, (unsigned long long)2);
+    //__umulhi((unsigned int)1, (unsigned int)2);
+    //__urhadd((unsigned int)1, (unsigned int)2);
+    //__usad((unsigned int)1, (unsigned int)2, 0);
 }
 
 __global__ void compileIntegerIntrinsics(hipLaunchParm lp, int ignored)
