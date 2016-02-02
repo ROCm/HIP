@@ -57,7 +57,7 @@ extern "C" {
 
 
 /**
- * @warning On AMD devices and recent NVIDIA devices, these hints and controls are ignored.
+ * @warning On AMD devices and recent Nvidia devices, these hints and controls are ignored.
  */
 typedef enum hipFuncCache {
     hipFuncCachePreferNone, ///< no preference for shared memory or L1 (default)
@@ -68,7 +68,7 @@ typedef enum hipFuncCache {
 
 
 /**
- * @warning On AMD devices and recent NVIDIA devices, these hints and controls are ignored.
+ * @warning On AMD devices and recent Nvidia devices, these hints and controls are ignored.
  */
 typedef enum hipSharedMemConfig {
     hipSharedMemBankSizeDefault,   ///< The compiler selects a device-specific value for the banking.
@@ -248,7 +248,7 @@ hipError_t hipDeviceGetProperties(hipDeviceProp_t* prop, int device);
 /**
  * @brief Set L1/Shared cache partition.
  *
- * Note: AMD devices and recent NVIDIA GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
 hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig );
@@ -257,7 +257,7 @@ hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig );
 /**
  * @brief Set Cache configuration for a specific function
  *
- * Note: AMD devices and recent NVIDIA GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
 hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig );
@@ -266,7 +266,7 @@ hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig );
 /**
  * @brief Set Cache configuration for a specific function
  *
- * Note: AMD devices and recent NVIDIA GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
 hipError_t hipFuncSetCacheConfig ( hipFuncCache config );
@@ -277,7 +277,7 @@ hipError_t hipFuncSetCacheConfig ( hipFuncCache config );
 /**
  * @brief Get Shared memory bank configuration.
  *
- * Note: AMD devices and recent NVIDIA GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
  *
  */
 hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig );
@@ -286,7 +286,7 @@ hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig );
 /**
  * @brief Set Shared memory bank configuration.
  *
- * Note: AMD devices and recent NVIDIA GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
  *
  */
 hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config );
@@ -629,7 +629,7 @@ hipError_t hipEventQuery(hipEvent_t event) ;
 
 
 /**
- *  Allocate memory on the default accelerator
+ *  @brief Allocate memory on the default accelerator
  *
  *  @param[out] ptr Pointer to the allocated memory
  *  @param[in]  size Requested memory size
@@ -639,89 +639,120 @@ hipError_t hipMalloc(void** ptr, size_t size) ;
 
 
 /**
- *  Allocate pinned host memory
+ *  @brief Allocate pinned host memory
  *
- *  @param[in]  ptr Pointer to the allocated host pinned memory
- *  @param[out] size Requested memory size
+ *  @param[out]  ptr Pointer to the allocated host pinned memory
+ *  @param[in] size Requested memory size
  *  @return Error code
  */
 hipError_t hipMallocHost(void** ptr, size_t size) ;
 
 
-
-// TODO-doc (error codes)
 /**
- *  Free memory allocated by the hcc hip memory allocation API.
+ *  @brief Free memory allocated by the hcc hip memory allocation API.
  *  This API performs an implicit hipDeviceSynchronize() call.
  *
  *  @param[in] ptr Pointer to memory to be freed
- *  @return Error code
+ *  @return #hipSuccess, #hipErrorMemoryFree
  */
 hipError_t hipFree(void* ptr);
 
 
 
-// TODO-doc (error codes)
 /**
- *  Free memory allocated by the hcc hip host memory allocation API
+ *  @brief Free memory allocated by the hcc hip host memory allocation API
  *
  *  @param[in] ptr Pointer to memory to be freed
- *  @return Error code
+ *  @return #hipSuccess, #hipErrorMemoryFree
  */
 hipError_t hipFreeHost(void* ptr);
 
 
 
-
-// TODO-doc (error codes)
 /**
- *  Copy data from src to dst.  It supports memory from host to device,
+ *  @brief Copy data from src to dst.
+ *
+ *  It supports memory from host to device,
  *  device to host, device to device and host to host
  *  The src and dst must not overlap.
- *  If the
+ *  TODO: cudaErrorInvalidMemcpyDirection error code is not supported right now, use hipErrorUnknown for now
  *
- *  This function is host-synchronous for most inputs.
- *  It uses the default NULL stream and will synchronize with other blocking streams on the same device.
- *
- *  @param[ being copy to
+ *  @param[out]  dst Data being copy to
  *  @param[in]  src Data being copy from
  *  @param[in]  sizeBytes Data size in bytes
  *  @param[in]  copyType Memory copy type
- *  @return Error code
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
  */
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind);
 
 
+/**
+ *  @brief Copies count bytes from the memory area pointed to by src to the memory area pointed to by offset bytes from the start of symbol symbol.
+ *
+ *  The memory areas may not overlap. Symbol can either be a variable that resides in global or constant memory space, or it can be a character string,
+ *  naming a variable that resides in global or constant memory space. Kind can be either hipMemcpyHostToDevice or hipMemcpyDeviceToDevice
+ *  TODO: cudaErrorInvalidSymbol and cudaErrorInvalidMemcpyDirection is not supported, use hipErrorUnknown for now
+ *
+ *  @param[in]  symbolName - Symbol destination on device
+ *  @param[in]  src - Data being copy from
+ *  @param[in]  sizeBytes - Data size in bytes
+ *  @param[in]  offset - Offset from start of symbol in bytes
+ *  @param[in]  kind - Type of transfer
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
+ */
 hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t sizeBytes, size_t offset, hipMemcpyKind kind);
 
 
-
-// TODO-doc (error codes)
 /**
- *  Copy data from src to dst asynchronously.  It supports memory from host to device,
+ *  @brief Copy data from src to dst asynchronously.
+ *
+ *  It supports memory from host to device,
+ *  device to host, device to device and host to host.
+ *  TODO: cudaErrorInvalidMemcpyDirection error code is not supported right now, use hipErrorUnknown for now
+ *
+ *  @param[out] dst Data being copy to
+ *  @param[in]  src Data being copy from
+ *  @param[in]  sizeBytes Data size in bytes
+ *  @param[in]  accelerator_view Accelerator view which the copy is being enqueued
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
+ */
+hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream=0);
+
+
+/**
+ *  @brief Copy data from src to dst asynchronously.
+ *
+ * It supports memory from host to device,
  *  device to host, device to device and host to host.
  *
  *  @param[out] dst Data being copy to
  *  @param[in]  src Data being copy from
  *  @param[in]  sizeBytes Data size in bytes
  *  @param[in]  accelerator_view Accelerator view which the copy is being enqueued
- *  @return Error code
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
  */
-hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream=0);
-
-
-// TODO-doc
-/*
- * This function is host-asynchronous and may return before the memset operation completes.
- * Same as hipMemsetAsync with null stream.
- *
- * */
 hipError_t hipMemset(void* dst, int  value, size_t sizeBytes );
+
+
+/**
+ *  @brief Fills the first count bytes of the memory area pointed to by dev with the constant byte value value.
+ *
+ *  hipMemsetAsync() is asynchronous with respect to the host, so the call may return before the memset is complete.
+ *  The operation can optionally be associated to a stream by passing a non-zero stream argument.
+ *  If stream is non-zero, the operation may overlap with operations in other streams.
+ *
+ *  @param[out] dst Pointer to device memory
+ *  @param[in]  value - Value to set for each byte of specified memory
+ *  @param[in]  count - Size in bytes to set
+ *  @param[in]  stream - Stream identifier
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
+ */
 hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t = 0 );
 
 
 /*
- * @brief Query memory info.  Return snapshot of free memory, and total allocatable memory on the device.
+ * @brief Query memory info.
+ * Return snapshot of free memory, and total allocatable memory on the device.
  *
  * Returns in *free a snapshot of the current free memory o
  **/
@@ -806,7 +837,7 @@ hipError_t hipDriverGetVersion(int *driverVersion) ;
  *  @{
  *
  *
- *  The cudaProfilerInitialize API format for "configFile" is not supported.
+ *  @warning The cudaProfilerInitialize API format for "configFile" is not supported.
  *
  *  On AMD platforms, hipProfilerStart and hipProfilerStop require installation of AMD's GPU
  *  perf counter API and defining GPU_PERF
