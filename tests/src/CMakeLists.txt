@@ -103,6 +103,7 @@ endmacro()
 #install (TARGETS hipMemset DESTINATION bin)
 #install (TARGETS hipEventRecord DESTINATION bin)
 
+make_hip_executable (hip_ballot hip_ballot.cpp)
 make_hip_executable (hip_anyall hip_anyall.cpp) 
 make_hip_executable (hip_popc hip_popc.cpp) 
 make_hip_executable (hip_clz hip_clz.cpp) 
@@ -120,6 +121,7 @@ make_hip_executable (hipMathFunctionsDevice hipMathFunctions.cpp hipSinglePrecis
 make_hip_executable (hipIntrinsics hipMathFunctions.cpp hipSinglePrecisionIntrinsics.cpp hipDoublePrecisionIntrinsics.cpp hipIntegerIntrinsics.cpp)
 target_link_libraries(hipMathFunctionsHost m)
 
+make_test(hip_ballot " " )
 make_test(hip_anyall " " )
 make_test(hip_popc " " )
 make_test(hip_brev " " )

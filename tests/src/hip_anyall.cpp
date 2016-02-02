@@ -32,8 +32,8 @@ __global__ void
 {
 
    int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
-   device_any[hipThreadIdx_x>>6] = __any(tid >77);
-   device_all[hipThreadIdx_x>>6] = __all(tid >77);
+   device_any[hipThreadIdx_x>>6] = __any(tid -77);
+   device_all[hipThreadIdx_x>>6] = __all(tid -77);
 }
 
 
