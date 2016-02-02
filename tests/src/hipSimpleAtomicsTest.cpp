@@ -190,7 +190,7 @@ int computeGold(int *gpuData, const int len)
     return true;
 }
 
-__global__ void HIP_FUNCTION(testKernel,int *g_odata)
+__global__ void testKernel(hipLaunchParm lp,int *g_odata)
 {
     // access thread id
     const unsigned int tid = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
@@ -236,7 +236,7 @@ __global__ void HIP_FUNCTION(testKernel,int *g_odata)
     // Atomic XOR
     atomicXor(&g_odata[10], tid);
 }
-HIP_FUNCTION_END
+
 
 int main(int argc, char **argv)
 {

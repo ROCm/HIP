@@ -79,21 +79,6 @@ HIP_kernel(hipLaunchParm lp,
 
 
 
-#if 0
-__kernel__ void HIP_kernel(unsigned int* a, unsigned int* b, unsigned long long int* c, unsigned long long int* d, int width, int height) {
-
-  
-  int x = blockDimX * blockIdx.x + threadIdx.x;
-  int y = blockDimY * blockIdy.y + threadIdx.y;
-
-  int i = y * width + x;
-  if ( i < (width * height)) {
-     a[i] = __brev(b[i]);
-	 c[i] = __brevll(d[i]);
-  }
-}
-#endif
-
 using namespace std;
 
 int main() {
