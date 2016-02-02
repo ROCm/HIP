@@ -353,7 +353,8 @@ __device__ inline int __all(  int input)
 
 __device__ inline int __any( int input) 
 {
-	return hc::__any( input);
+	if( hc::__any( input)!=0) return 1;
+	else return 0;
 }
 
 __device__ inline unsigned long long int __ballot( int input) 
