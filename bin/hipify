@@ -624,12 +624,12 @@ sub warnUnsupportedSpecialFunctions
         "__ldg",
 
         # Cross-lane and warp-vote instructions:
-        "__all",
-        "__any",
-        "__ballot",
+        #"__all",
+        #"__any",
+        #"__ballot",
 
-        "__popc",
-        "__clz",        
+        #"__popc",
+        #"__clz",        
 
         "__shfl",
         "__shfl_up",  
