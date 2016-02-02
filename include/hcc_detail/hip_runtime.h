@@ -325,6 +325,16 @@ __device__ inline unsigned int __ffsll(unsigned long long int input)
 	return hc::__lastbit_u32_u64( input)+1;
 }
 
+__device__ inline unsigned int __ffs(int input) 
+{
+	return hc::__lastbit_u32_s32( input)+1;
+}
+
+__device__ inline unsigned int __ffsll(long long int input) 
+{
+	return hc::__lastbit_u32_s64( input)+1;
+}
+
 __device__ inline unsigned int __brev( unsigned int input) 
 {
 	return hc::__bitrev_b32( input);
