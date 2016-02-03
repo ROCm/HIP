@@ -75,6 +75,7 @@ macro (make_hip_executable exe cpp)
     endif() 
 endmacro()
 
+
 macro (make_test exe )
   string (REPLACE " " "" smush_args ${ARGN})
   set (testname ${exe}${smush_args}.tst)
@@ -84,6 +85,16 @@ macro (make_test exe )
   set_tests_properties (${testname}
       PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
     )
+endmacro()
+
+
+macro (make_hipify_test sourceFile )
+    #string (REPLACE " " "" smush_args ${ARGN})
+  set (testname ${sourceFile}${smush_args}.tst)
+
+  add_test (NAME ${testname} 
+      COMMAND ${HIP_PATH}/bin/hipify ${PROJECT_SOURCE_DIR}/${sourceFile} ${ARGN} 
+            )
 endmacro()
 
 
@@ -103,6 +114,7 @@ endmacro()
 #install (TARGETS hipMemset DESTINATION bin)
 #install (TARGETS hipEventRecord DESTINATION bin)
 
+make_hip_executable (hip_ballot hip_ballot.cpp)
 make_hip_executable (hip_anyall hip_anyall.cpp) 
 make_hip_executable (hip_popc hip_popc.cpp) 
 make_hip_executable (hip_clz hip_clz.cpp) 
@@ -115,9 +127,12 @@ make_hip_executable (hipLanguageExtensions hipLanguageExtensions.cpp)
 make_hip_executable (hipGridLaunch hipGridLaunch.cpp) 
 make_hip_executable (hipHcc hipHcc.cpp) 
 make_hip_executable (hipSimpleAtomicsTest hipSimpleAtomicsTest.cpp)
-make_hip_executable (hipMathFunctions hipMathFunctions.cpp hipSinglePrecisionMathHost.cpp hipDoublePrecisionMathHost.cpp hipSinglePrecisionMathDevice.cpp hipDoublePrecisionMathDevice.cpp)
-target_link_libraries(hipMathFunctions m)
+make_hip_executable (hipMathFunctionsHost hipMathFunctions.cpp hipSinglePrecisionMathHost.cpp hipDoublePrecisionMathHost.cpp)
+make_hip_executable (hipMathFunctionsDevice hipMathFunctions.cpp hipSinglePrecisionMathDevice.cpp hipDoublePrecisionMathDevice.cpp)
+make_hip_executable (hipIntrinsics hipMathFunctions.cpp hipSinglePrecisionIntrinsics.cpp hipDoublePrecisionIntrinsics.cpp hipIntegerIntrinsics.cpp)
+target_link_libraries(hipMathFunctionsHost m)
 
+make_test(hip_ballot " " )
 make_test(hip_anyall " " )
 make_test(hip_popc " " )
 make_test(hip_brev " " )
@@ -133,3 +148,5 @@ make_test(hipGridLaunch " " )
 make_test(hipMemcpy  " " )
 
 make_test(hipHcc  " " )
+
+make_hipify_test(specialFunc.cu )
