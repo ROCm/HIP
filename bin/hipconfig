@@ -78,6 +78,10 @@ if ($p_full) {
         print "== hcc\n";
         print ("HCC_HOME     : $HCC_HOME\n");
         system("$HCC_HOME/bin/hcc --version");
+        print ("HCC-cxxflags: "); 
+        system("$HCC_HOME/bin/hcc-config --cxxflags");
+        print ("HCC-ldflags : "); 
+        system("$HCC_HOME/bin/hcc-config --ldflags");
     }
     if ($HIP_PLATFORM eq "nvcc")  {
         print "\n" ;
