@@ -785,16 +785,56 @@ hipError_t hipMemGetInfo  (size_t * free, size_t * total)   ;
  */
 hipError_t hipDeviceCanAccessPeer ( int* canAccessPeer, int  device, int  peerDevice );
 
-// TODO-DOC
+
+
+/**
+ * @brief Disables registering memory on peerDevice for direct access from the current device.
+ *
+ * If there are any allocations on peerDevice which were registered in the current device using hipPeerRegister() then these allocations will be automatically unregistered.
+ * Returns hipErrorPeerAccessNotEnabled if direct access to memory on peerDevice has not yet been enabled from the current device.
+ *
+ * @param [in] peerDevice
+ * TODO:cudaErrorPeerAccessNotEnabled and cudaErrorInvalidDevice error not supported in HIP, return hipErrorUnknown
+ * Returns #hipSuccess, #hipErrorUnknown
+ */
 hipError_t  hipDeviceDisablePeerAccess ( int  peerDevice );
 
-// TODO-DOC
+/**
+ * @brief Enables registering memory on peerDevice for direct access from the current device.
+ *
+ * @param [in] peerDevice
+ * @param [in] flags
+ *
+ * TODO:cudaErrorInvalidDevice error not supported in HIP, return hipErrorUnknown
+ * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, #hipErrorUnknown
+ */
 hipError_t  hipDeviceEnablePeerAccess ( int  peerDevice, unsigned int  flags );
 
-// TODO-DOC
+/**
+ * @brief Copies memory from one device to memory on another device.
+ *
+ * @param [out] dst - Destination device pointer.
+ * @param [in] dstDevice - Destination device
+ * @param [in] src - Source device pointer
+ * @param [in] srcDevice - Source device
+ * @param [in] count - Size of memory copy in bytes
+ *
+ * Returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
+ */
 hipError_t hipMemcpyPeer ( void* dst, int  dstDevice, const void* src, int  srcDevice, size_t sizeBytes );
 
-// TODO-DOC
+/**
+ * @brief Copies memory from one device to memory on another device.
+ *
+ * @param [out] dst - Destination device pointer.
+ * @param [in] dstDevice - Destination device
+ * @param [in] src - Source device pointer
+ * @param [in] srcDevice - Source device
+ * @param [in] count - Size of memory copy in bytes
+ * @param [in] stream - Stream identifier
+ *
+ * Returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
+ */
 hipError_t hipMemcpyPeerAsync ( void* dst, int  dstDevice, const void* src, int  srcDevice, size_t sizeBytes, hipStream_t stream=0 );
 // doxygen end PeerToPeer
 /**
