@@ -75,6 +75,7 @@ macro (make_hip_executable exe cpp)
     endif() 
 endmacro()
 
+
 macro (make_test exe )
   string (REPLACE " " "" smush_args ${ARGN})
   set (testname ${exe}${smush_args}.tst)
@@ -84,6 +85,16 @@ macro (make_test exe )
   set_tests_properties (${testname}
       PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
     )
+endmacro()
+
+
+macro (make_hipify_test sourceFile )
+    #string (REPLACE " " "" smush_args ${ARGN})
+  set (testname ${sourceFile}${smush_args}.tst)
+
+  add_test (NAME ${testname} 
+      COMMAND ${HIP_PATH}/bin/hipify ${PROJECT_SOURCE_DIR}/${sourceFile} ${ARGN} 
+            )
 endmacro()
 
 
@@ -137,3 +148,5 @@ make_test(hipGridLaunch " " )
 make_test(hipMemcpy  " " )
 
 make_test(hipHcc  " " )
+
+make_hipify_test(specialFunc.cu )
