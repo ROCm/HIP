@@ -232,6 +232,13 @@ hipError_t hipGetDevice(int *device);
  */
 hipError_t hipGetDeviceCount(int *count);
 
+/**
+ * @brief Query device attribute.
+ * @param [out] pi pointer to value to return
+ * @param [in] attr attribute to query
+ * @param [in] device which device to query for information
+ */
+hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device);
 
 /**
  * @brief Returns device properties.  

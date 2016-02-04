@@ -125,7 +125,31 @@ typedef enum hipError_t {
   ,hipErrorTbd                     ///< Marker that more error codes are needed.
 } hipError_t;
 
-
+/*
+ * @brief hipDeviceAttribute_t
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipDeviceAttribute_t {
+  hipDeviceAttributeMaxThreadsPerBlock,                       ///< Maximum number of threads per block.
+  hipDeviceAttributeMaxBlockDimX,                             ///< Maximum x-dimension of a block.
+  hipDeviceAttributeMaxBlockDimY,                             ///< Maximum y-dimension of a block.
+  hipDeviceAttributeMaxBlockDimZ,                             ///< Maximum z-dimension of a block.
+  hipDeviceAttributeMaxGridDimX,                              ///< Maximum x-dimension of a grid.
+  hipDeviceAttributeMaxGridDimY,                              ///< Maximum y-dimension of a grid.
+  hipDeviceAttributeMaxGridDimZ,                              ///< Maximum z-dimension of a grid.
+  hipDeviceAttributeMaxSharedMemoryPerBlock,                  ///< Maximum shared memory available per block in bytes.
+  hipDeviceAttributeTotalConstantMemory,                      ///< Constant memory size in bytes.
+  hipDeviceAttributeWarpSize,                                 ///< Warp size in threads.
+  hipDeviceAttributeMaxRegistersPerBlock,                     ///< Maximum number of 32-bit registers available to a thread block. This number is shared by all thread blocks simultaneously resident on a multiprocessor.
+  hipDeviceAttributeClockRate,                                ///< Peak clock frequency in kilohertz.
+  hipDeviceAttributeMultiprocessorCount,                      ///< Number of multiprocessors on the device.
+  hipDeviceAttributeComputeMode,                              ///< Compute mode that device is currently in.
+  hipDeviceAttributeL2CacheSize,                              ///< Size of L2 cache in bytes. 0 if the device doesn't have L2 cache.
+  hipDeviceAttributeMaxThreadsPerMultiProcessor,              ///< Maximum resident threads per multiprocessor.
+  hipDeviceAttributeComputeCapabilityMajor,                   ///< Major compute capability version number.
+  hipDeviceAttributeComputeCapabilityMinor,                   ///< Minor compute capability version number.
+} hipDeviceAttribute_t;
 
 /**
  *     @}
