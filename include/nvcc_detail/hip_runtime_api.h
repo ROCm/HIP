@@ -213,7 +213,7 @@ inline static hipError_t hipDeviceGetProperties(hipDeviceProp_t *p_prop, int dev
 
 inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
 {
-    cudaDeviceAttribute cdattr;
+    cudaDeviceAttr cdattr;
     cudaError_t cerror;
     
     switch (attr) {
@@ -254,7 +254,7 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
     case hipDeviceAttributeComputeCapabilityMinor:
         cdattr = cudaDevAttrComputeCapabilityMinor; break;
     default:
-        e = hipErrorInvalidValue; break;
+        cerror = cudaErrorInvalidValue; break;
     }
 
     cerror = cudaDeviceGetAttribute(pi, cdattr, device);
