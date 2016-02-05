@@ -1,7 +1,32 @@
 # FAQ
 
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-### What APIs does HIP support?
+- [FAQ](#faq)
+- [Table of Contents](#table-of-contents)
+    - [What APIs does HIP support?](#what-apis-does-hip-support)
+    - [What is not supported?](#what-is-not-supported)
+      - [Run-time features:](#run-time-features)
+    - [How does HIP compare with OpenCL?](#how-does-hip-compare-with-opencl)
+    - [What hardware does HIP support?](#what-hardware-does-hip-support)
+    - [Does Hipify automatically convert all source code?](#does-hipify-automatically-convert-all-source-code)
+    - [What is NVCC?](#what-is-nvcc)
+    - [What is HCC?](#what-is-hcc)
+    - [Why use HIP rather than supporting CUDA directly?](#why-use-hip-rather-than-supporting-cuda-directly)
+    - [Can I develop HIP code on an Nvidia CUDA platform?](#can-i-develop-hip-code-on-an-nvidia-cuda-platform)
+    - [Can I develop HIP code on an AMD HCC platform?](#can-i-develop-hip-code-on-an-amd-hcc-platform)
+    - [Can a HIP binary run on both AMD and Nvidia platforms?](#can-a-hip-binary-run-on-both-amd-and-nvidia-platforms)
+    - [Hmmm](#hmmm)
+    - [Link2 Is it ready?](#link2-is-it-ready)
+    - [What's the difference between HIP and hc?](#whats-the-difference-between-hip-and-hc)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+=================
+
+
+### What APIs does HIP support ?
 HIP provides the following:
 - Devices (hipSetDevice(), hipGetDeviceProperties(), etc)
 - Memory management (hipMalloc(), hipMemcpy(), hipFree())
@@ -15,7 +40,7 @@ HIP provides the following:
 The HIP documentation describes each API and its limitations, if any, compared with the equivalent CUDA API.
 
 ### What is not supported?
-#### Run-time features:
+#### Run-time features
 - Textures 
 - Dynamic parallelism
 - Managed memory
@@ -23,7 +48,7 @@ The HIP documentation describes each API and its limitations, if any, compared w
 - CUDA array, mipmappedArray and pitched memory
 - CUDA Driver API
    
-#### Kernel language features:
+#### Kernel language features
 - Device-side dynamic memory allocations (malloc, free, new, delete)
 - Virtual functions, indirect functions and try/catch
 - `__prof_trigger` 
@@ -58,9 +83,10 @@ NVCC is Nvidia's compiler driver for compiling "CUDA C++" code into PTX or devic
 ### What is HCC?
 HCC is AMD's compiler driver which compiles "heterogenous C++" code into HSAIL or GCN device code for AMD GPUs.  HCC is an open-source compiler based on recent versions of CLANG/LLVM.
 
-### Why use HIP rather than supporting CUDA run time directly?
+### Why use HIP rather than supporting CUDA directly?
 While HIP is a strong subset of the CUDA, it is a subset.  The HIP layer allows that subset to be clearly defined and documented.
-Developers who code to the HIP API can be assured there code will remain portable across Nvidia and AMD platforms.
+Developers who code to the HIP API can be assured there code will remain portable across Nvidia and AMD platforms.  
+In addition, HIP defines portable mechanisms to query architectural features, and supports a larger 64-bit wavesize which expands the return type for cross-lane functions like ballot and shuffle from 32-bit ints to 64-bit ints.  
 
 ### Can I develop HIP code on an Nvidia CUDA platform?
 Yes!  HIP's CUDA path only exposes the APIs and functionality that work on both NVCC and HCC back-ends.
@@ -74,6 +100,7 @@ Yes! HIP's HCC path only exposes the APIs and functions that work on both NVCC a
 
 ### Can a HIP binary run on both AMD and Nvidia platforms?
 HIP is a source-portable language that can be compiled to run on either the HCC or NVCC platform. HIP tools don't create a "fat binary" that can run on either platform, however.
+
 
 ### What's the difference between HIP and hc?
 HIP is a portable C++ language that supports a strong subset of the CUDA run-time APIs and device-kernel language. It's designed to simplify CUDA conversion to portable C++. HIP provides a C-compatible run-time API, C-compatible kernel-launch mechanism, C++ kernel language and pointer-based memory management.

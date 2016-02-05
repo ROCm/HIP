@@ -6,9 +6,9 @@ and provides practical suggestions on how to port CUDA code and work through com
 ###Table of Contents
 =================
 
- * [HIP Porting Guide](#hip-porting-guide" aria-hidden="true"><span aria-hidden="true)
-      * [Table of Contents](#table-of-contents" aria-hidden="true"><span aria-hidden="true)
-    * [Porting a New Cuda Project](#porting-a-new-cuda-project" aria-hidden="true"><span aria-hidden="true)
+ * [HIP Porting Guide](#hip-porting-guide)
+      * [Table of Contents](#table-of-contents)
+    * [Porting a New Cuda Project TO](#porting-a-new-cuda-project)
       * [General Tips](#general-tips" aria-hidden="true"><span aria-hidden="true)
       * [Scanning existing CUDA code to scope the porting effort](#scanning-existing-cuda-code-to-scope-the-porting-effort" aria-hidden="true"><span aria-hidden="true)
     * [Distinguishing Compiler Modes](#distinguishing-compiler-modes" aria-hidden="true"><span aria-hidden="true)
@@ -42,7 +42,7 @@ and provides practical suggestions on how to port CUDA code and work through com
       * [What Does This Error Mean?](#what-does-this-error-mean" aria-hidden="true"><span aria-hidden="true)
         * [/usr/include/c  /v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();](#usrincludecv1memory517215-error-call-to-implicitly-deleted-default-constructor-of-std__1bad_weak_ptr-throw-bad_weak_ptr" aria-hidden="true"><span aria-hidden="true)
         * [grid_launch kernel dispatch - fallback](#grid_launch-kernel-dispatch---fallback" aria-hidden="true"><span aria-hidden="true)
-        * [Editor Highlighting](#editor-highlighting" aria-hidden="true"><span aria-hidden="true)
+        * [Editor Highlighting](#editor-highlighting)
 
 
 ## Porting a New Cuda Project
@@ -95,6 +95,32 @@ info: TOTAL-converted 89 CUDA->HIP refs( dev:3 mem:32 kern:2 builtin:37 math:0 s
   kernels (1 total) :   kmeansPoint(1)
 ```
  
+### Converting a project "in-place"
+
+```shell
+> hipify --inplace
+```
+
+For each input file FILE, this script will:
+  - If "FILE.prehip file does not exist, copy the original code to a new file with extension ".prehip".  Then Hipify the code file.
+  - If "FILE.prehip" file exists, hipify FILE.prehip and save to FILE.  
+
+This is useful for testing improvements to the hipify toolset.
+
+
+The "hipconvertinplace.sh" script will perform inplace conversion for all code files in the specified directory.
+This can be quite handy when dealing with an existing CUDA code base since the script preserves the existing directory structure
+and filenames - so includes work.  After converting in-place, you can review the code to add additional parameters to
+directory names.
+
+
+```shell
+> hipconverinplace.sh MY_SRC_DIR
+```
+
+
+
+
  
 ## Distinguishing Compiler Modes
  
