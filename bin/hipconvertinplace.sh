@@ -4,10 +4,10 @@
 
 #hipify "inplace" all code files in specified directory.    
 # This can be quite handy when dealing with an existing CUDA code base since the script
-# preseeves the existing directory structure.
+# preserves the existing directory structure.
 
 #  For each code file, this script will:
-#   - If ".prehip file does not exist, copy the original code to a new file withextension ".prehip".  Then Hipify the code file.
+#   - If ".prehip file does not exist, copy the original code to a new file with extension ".prehip".  Then Hipify the code file.
 #   - If ".prehip" file exists, this is used as input to hipify.
 # (this is useful for testing improvements to the hipify toolset).
 

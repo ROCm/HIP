@@ -345,6 +345,28 @@ while (@ARGV) {
         $ft{'dev'} += s/\bcudaDeviceProp\b/hipDeviceProp_t/g;
         $ft{'dev'} += s/\bcudaGetDeviceProperties\b/hipDeviceGetProperties/g;
 
+        # Attribute
+        $ft{'err'} += s/\bcudaDevAttrMaxThreadsPerBlock\b/hipDeviceAttributeMaxThreadsPerBlock/g;
+        $ft{'err'} += s/\bcudaDevAttrMaxBlockDimX\b/hipDeviceAttributeMaxBlockDimX/g;
+        $ft{'err'} += s/\bcudaDevAttrMaxBlockDimY\b/hipDeviceAttributeMaxBlockDimY/g;
+        $ft{'err'} += s/\bcudaDevAttrMaxBlockDimZ\b/hipDeviceAttributeMaxBlockDimZ/g;
+        $ft{'err'} += s/\bcudaDevAttrMaxGridDimX\b/hipDeviceAttributeMaxGridDimX/g;
+        $ft{'err'} += s/\bcudaDevAttrMaxGridDimY\b/hipDeviceAttributeMaxGridDimY/g;
+        $ft{'err'} += s/\bcudaDevAttrMaxGridDimZ\b/hipDeviceAttributeMaxGridDimZ/g;
+        $ft{'err'} += s/\bcudaDevAttrMaxSharedMemoryPerBlock\b/hipDeviceAttributeMaxSharedMemoryPerBlock/g;
+        $ft{'err'} += s/\bcudaDevAttrTotalConstantMemory\b/hipDeviceAttributeTotalConstantMemory/g;
+        $ft{'err'} += s/\bcudaDevAttrWarpSize\b/hipDeviceAttributeWarpSize/g;
+        $ft{'err'} += s/\bcudaDevAttrMaxRegistersPerBlock\b/hipDeviceAttributeMaxRegistersPerBlock/g;
+        $ft{'err'} += s/\bcudaDevAttrClockRate\b/hipDeviceAttributeClockRate/g;
+        $ft{'err'} += s/\bcudaDevAttrMultiProcessorCount\b/hipDeviceAttributeMultiprocessorCount/g;
+        $ft{'err'} += s/\bcudaDevAttrComputeMode\b/hipDeviceAttributeComputeMode/g;
+        $ft{'err'} += s/\bcudaDevAttrL2CacheSize\b/hipDeviceAttributeL2CacheSize/g;
+        $ft{'err'} += s/\bcudaDevAttrMaxThreadsPerMultiProcessor\b/hipDeviceAttributeMaxThreadsPerMultiProcessor/g;
+        $ft{'err'} += s/\bcudaDevAttrComputeCapabilityMajor\b/hipDeviceAttributeComputeCapabilityMajor/g;
+        $ft{'err'} += s/\bcudaDevAttrComputeCapabilityMinor\b/hipDeviceAttributeComputeCapabilityMinor/g;
+        $ft{'dev'} += s/\bcudaDeviceAttr\b/hipDeviceAttribute_t/g;
+        $ft{'dev'} += s/\bcudaDeviceGetAttribute\b/hipDeviceGetAttribute/g;
+
         # Cache config
         $ft{'dev'} += s/\bcudaDeviceSetCacheConfig\b/hipDeviceSetCacheConfig/g;
         $ft{'dev'} += s/\bcudaThreadSetCacheConfig\b/hipDeviceSetCacheConfig/g; # translate deprecated

@@ -789,7 +789,63 @@ hipError_t hipDeviceReset(void)
     return ihipLogStatus(hipSuccess);
 }
 
+/**
+ *
+ */
+hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
+{
+    std::call_once(hip_initialized, ihipInit);
 
+    hipError_t e = hipSuccess;
+
+    ihipDevice_t * hipDevice = ihipGetDevice(device);
+    hipDeviceProp_t *prop = &hipDevice->_props;
+    if (hipDevice) {
+        switch (attr) {
+        case hipDeviceAttributeMaxThreadsPerBlock:
+            *pi = prop->maxThreadsPerBlock; break;
+        case hipDeviceAttributeMaxBlockDimX:
+            *pi = prop->maxThreadsDim[0]; break;
+        case hipDeviceAttributeMaxBlockDimY:
+            *pi = prop->maxThreadsDim[1]; break;
+        case hipDeviceAttributeMaxBlockDimZ:
+            *pi = prop->maxThreadsDim[2]; break;
+        case hipDeviceAttributeMaxGridDimX:
+            *pi = prop->maxGridSize[0]; break;
+        case hipDeviceAttributeMaxGridDimY:
+            *pi = prop->maxGridSize[1]; break;
+        case hipDeviceAttributeMaxGridDimZ:
+            *pi = prop->maxGridSize[2]; break;
+        case hipDeviceAttributeMaxSharedMemoryPerBlock:
+            *pi = prop->sharedMemPerBlock; break;
+        case hipDeviceAttributeTotalConstantMemory:
+            *pi = prop->totalConstMem; break;
+        case hipDeviceAttributeWarpSize:
+            *pi = prop->warpSize; break;
+        case hipDeviceAttributeMaxRegistersPerBlock:
+            *pi = prop->regsPerBlock; break;
+        case hipDeviceAttributeClockRate:
+            *pi = prop->clockRate; break;
+        case hipDeviceAttributeMultiprocessorCount:
+            *pi = prop->multiProcessorCount; break;
+        case hipDeviceAttributeComputeMode:
+            *pi = prop->computeMode; break;
+        case hipDeviceAttributeL2CacheSize:
+            *pi = prop->l2CacheSize; break;
+        case hipDeviceAttributeMaxThreadsPerMultiProcessor:
+            *pi = prop->maxThreadsPerMultiProcessor; break;
+        case hipDeviceAttributeComputeCapabilityMajor:
+            *pi = prop->major; break;
+        case hipDeviceAttributeComputeCapabilityMinor:
+            *pi = prop->minor; break;
+        default:
+            e = hipErrorInvalidValue; break;
+        }
+    } else {
+        e = hipErrorInvalidDevice;
+    }
+    return ihipLogStatus(e);
+}
 
 
 /**
@@ -1367,8 +1423,8 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
     } else {
         e = hipErrorInvalidResourceHandle;
     }
-
         
+
 #else
     // TODO-hsart - what synchronization does hsa_copy provide?
     hc::am_copy(dst, src, sizeBytes);
