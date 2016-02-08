@@ -230,6 +230,13 @@ hipError_t hipGetDevice(int *device);
  */
 hipError_t hipGetDeviceCount(int *count);
 
+/**
+ * @brief Query device attribute.
+ * @param [out] pi pointer to value to return
+ * @param [in] attr attribute to query
+ * @param [in] device which device to query for information
+ */
+hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device);
 
 /**
  * @brief Returns device properties.
@@ -687,11 +694,11 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 
 
 /**
- *  @brief Copies count bytes from the memory area pointed to by src to the memory area pointed to by offset bytes from the start of symbol symbol.
+ *  @brief Copies @p sizeBytes bytes from the memory area pointed to by @p src to the memory area pointed to by @p offset bytes from the start of symbol @p symbol.
  *
  *  The memory areas may not overlap. Symbol can either be a variable that resides in global or constant memory space, or it can be a character string,
  *  naming a variable that resides in global or constant memory space. Kind can be either hipMemcpyHostToDevice or hipMemcpyDeviceToDevice
- *  TODO: cudaErrorInvalidSymbol and cudaErrorInvalidMemcpyDirection is not supported, use hipErrorUnknown for now
+ *  TODO: cudaErrorInvalidSymbol and cudaErrorInvalidMemcpyDirection is not supported, use hipErrorUnknown for now.  
  *
  *  @param[in]  symbolName - Symbol destination on device
  *  @param[in]  src - Data being copy from
@@ -706,8 +713,6 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t siz
 /**
  *  @brief Copy data from src to dst asynchronously.
  *
- *  It supports memory from host to device,
- *  device to host, device to device and host to host.
  *  TODO: cudaErrorInvalidMemcpyDirection error code is not supported right now, use hipErrorUnknown for now
  *
  *  @param[out] dst Data being copy to
@@ -735,7 +740,7 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes );
 
 
 /**
- *  @brief Fills the first count bytes of the memory area pointed to by dev with the constant byte value value.
+ *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dev with the constant byte value value.
  *
  *  hipMemsetAsync() is asynchronous with respect to the host, so the call may return before the memset is complete.
  *  The operation can optionally be associated to a stream by passing a non-zero stream argument.
@@ -743,7 +748,7 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes );
  *
  *  @param[out] dst Pointer to device memory
  *  @param[in]  value - Value to set for each byte of specified memory
- *  @param[in]  count - Size in bytes to set
+ *  @param[in]  sizeBytes - Size in bytes to set
  *  @param[in]  stream - Stream identifier
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
  */
@@ -817,7 +822,7 @@ hipError_t  hipDeviceEnablePeerAccess ( int  peerDevice, unsigned int  flags );
  * @param [in] dstDevice - Destination device
  * @param [in] src - Source device pointer
  * @param [in] srcDevice - Source device
- * @param [in] count - Size of memory copy in bytes
+ * @param [in] sizeBytes - Size of memory copy in bytes
  *
  * Returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
  */
@@ -830,7 +835,7 @@ hipError_t hipMemcpyPeer ( void* dst, int  dstDevice, const void* src, int  srcD
  * @param [in] dstDevice - Destination device
  * @param [in] src - Source device pointer
  * @param [in] srcDevice - Source device
- * @param [in] count - Size of memory copy in bytes
+ * @param [in] sizeBytes - Size of memory copy in bytes
  * @param [in] stream - Stream identifier
  *
  * Returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice

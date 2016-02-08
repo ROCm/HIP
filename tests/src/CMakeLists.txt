@@ -8,32 +8,19 @@ include_directories( ${PROJECT_SOURCE_DIR}/include )
 set (HIP_Unit_Test_VERSION_MAJOR 1)
 set (HIP_Unit_Test_VERSION_MINOR 0)
 
-set (CUDA_PATH $ENV{CUDA_PATH})
-if (NOT DEFINED CUDA_PATH)
-	set( CUDA_PATH /usr/local/cuda)
-endif()
-
 set (HIP_PATH $ENV{HIP_PATH})
 if (NOT DEFINED HIP_PATH)
 	set (HIP_PATH ../..)
 endif()
 
-set (HIP_PLATFORM $ENV{HIP_PLATFORM})
-if (NOT DEFINED HIP_PLATFORM) 
-	if (EXISTS $CUDA_PATH)	
-        set (HIP_PLATFORM nvcc)
-	else()
-        set (HIP_PLATFORM hcc)
-	endif()
-endif()
+execute_process(COMMAND ${HIP_PATH}/bin/hipconfig --platform OUTPUT_VARIABLE HIP_PLATFORM)
 
-
+MESSAGE ("HIP_PATH=" ${HIP_PATH})
 
 if (${HIP_PLATFORM} STREQUAL "hcc")
-	MESSAGE ("HCC")
+	MESSAGE ("HIP_PLATFORM=hcc")
 	set (HC_PATH ${HIP_PATH}/hc)
 	set (HSA_PATH /opt/hsa)
-
 
 	#---
 	# Add HSA library:
@@ -51,12 +38,13 @@ if (${HIP_PLATFORM} STREQUAL "hcc")
 
 
 elseif (${HIP_PLATFORM} STREQUAL "nvcc")
-	MESSAGE ("NVCC")
+	MESSAGE ("HIP_PLATFORM=nvcc")
 	# NVCC does not not support -rdynamic option
 	set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS )
 	set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS )
+
 else()
-    MESSAGE ("UNKNOWN HIP_PLATFORM=" ${HIP_PLATFORM})
+	MESSAGE (FATAL_ERROR "UNKNOWN HIP_PLATFORM=" ${HIP_PLATFORM})
 endif()
 
 set (HIPCC ${HIP_PATH}/bin/hipcc)
@@ -109,19 +97,15 @@ macro (make_test_matches exe match_string)
     )
 endmacro()
 
-
-#set(CMAKE_INSTALL_PREFIX "./install")
-#install (TARGETS hipMemset DESTINATION bin)
-#install (TARGETS hipEventRecord DESTINATION bin)
-
 make_hip_executable (hip_ballot hip_ballot.cpp)
 make_hip_executable (hip_anyall hip_anyall.cpp) 
 make_hip_executable (hip_popc hip_popc.cpp) 
 make_hip_executable (hip_clz hip_clz.cpp) 
 make_hip_executable (hip_brev hip_brev.cpp) 
 make_hip_executable (hip_ffs hip_ffs.cpp) 
-make_hip_executable (hipMemset hipMemset.cpp) 
+make_hip_executable (hipInfo hipInfo.cpp) 
 make_hip_executable (hipMemcpy hipMemcpy.cpp) 
+make_hip_executable (hipMemset hipMemset.cpp) 
 make_hip_executable (hipEventRecord hipEventRecord.cpp) 
 make_hip_executable (hipLanguageExtensions hipLanguageExtensions.cpp) 
 make_hip_executable (hipGridLaunch hipGridLaunch.cpp) 

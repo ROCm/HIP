@@ -27,6 +27,7 @@ char memsetval=0x42;
 int iterations = 1;
 unsigned blocksPerCU = 6; // to hide latency
 unsigned threadsPerBlock = 256; 
+int p_gpuDevice = 0;
 
 
 
@@ -105,7 +106,12 @@ int parseStandardArguments(int argc, char *argv[], bool failOnUndefinedArg)
             memsetval = ex;
         } else if (!strcmp(arg, "--iterations") || (!strcmp(arg, "-i"))) {
             if (++i >= argc || !HipTest::parseInt(argv[i], &iterations)) {
-               failed("Bad itertions argument"); 
+               failed("Bad iterations argument"); 
+            }
+
+        } else if (!strcmp(arg, "--gpu") || (!strcmp(arg, "-g"))) {
+            if (++i >= argc || !HipTest::parseInt(argv[i], &p_gpuDevice)) {
+               failed("Bad gpuDevice argument"); 
             }
 
         } 
