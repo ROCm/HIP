@@ -383,6 +383,7 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     prop->arch.has3dGrid                   = 1;
     prop->arch.hasDynamicParallelism       = 0;
 
+    prop->concurrentKernels = 1; // All ROCR hardware supports executing multiple kernels concurrently
     return e;
 }
 
