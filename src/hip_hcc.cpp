@@ -40,7 +40,7 @@ THE SOFTWARE.
 
 #define USE_PINNED_HOST (__hcc_workweek__ >= 1601)
 
-//#define USE_ASYNC_COPY 
+#define USE_ASYNC_COPY  0
 
 #define INLINE static inline
 
@@ -338,8 +338,7 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     DeviceErrorCheck(err);
     prop->l2CacheSize = cache_size[1];
 
-    /* Computemode for HSA Devices is always : cudaComputeModeDefault :/
-                             Default compute mode (Multiple threads can use cudaSetDevice() with this device)  */
+    /* Computemode for HSA Devices is always : cudaComputeModeDefault */
     prop->computeMode = 0;
 
     // Get Max Threads Per Multiprocessor
@@ -760,7 +759,7 @@ hipError_t hipSetDevice(int device)
 {
     std::call_once(hip_initialized, ihipInit);
 
-    if ((device < 0) || (device > g_devices.size())) {
+    if ((device < 0) || (device >= g_devices.size())) {
         return ihipLogStatus(hipErrorInvalidDevice);
     } else {
         tls_defaultDevice = device;
@@ -1428,7 +1427,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 
     hipError_t e = hipSuccess;
 
-#ifdef USE_ASYNC_COPY
+#if USE_ASYNC_COPY
     if (ihipIsValidDevice(stream->_device_index)) {
 
         ihipDevice_t *device = &g_devices[stream->_device_index];
