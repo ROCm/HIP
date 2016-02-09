@@ -19,7 +19,7 @@ GetOptions(
 );
 
 if ($p_help) {
-    print "usage: which_hip [OPTIONS]\n";
+    print "usage: hipconfig [OPTIONS]\n";
     print "  --path,  -p        : print HIP_PATH (use env var if set, else determine from hipconfig path)\n";
     print "  --cpp_config, -C   : print C++ compiler options\n";
     print "  --compiler, -c     : print compiler (hcc or nvcc)\n";

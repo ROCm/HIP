@@ -207,6 +207,7 @@ inline static hipError_t hipDeviceGetProperties(hipDeviceProp_t *p_prop, int dev
     p_prop->arch.has3dGrid                   =  (ccVers >= 200);
     p_prop->arch.hasDynamicParallelism       =  (ccVers >= 350);
 
+    p_prop->concurrentKernels = cdprop.concurrentKernels;
 
     return hipCUDAErrorTohipError(cerror);
 }

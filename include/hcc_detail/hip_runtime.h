@@ -62,9 +62,6 @@ THE SOFTWARE.
 #if defined(__HCC_ACCELERATOR__) and (__HCC_ACCELERATOR__ != 0)
 // Device compile and not host compile:
 
-
-#define __HIP_DEVICE_COMPILE__ 1
-
 //TODO-HCC enable __HIP_ARCH_HAS_ATOMICS__ when HCC supports these.
     // 32-bit Atomics:
 #define __HIP_ARCH_HAS_GLOBAL_INT32_ATOMICS__       (1)
@@ -94,10 +91,6 @@ THE SOFTWARE.
 #define __HIP_ARCH_HAS_SURFACE_FUNCS__              (0)
 #define __HIP_ARCH_HAS_3DGRID__                     (1)
 #define __HIP_ARCH_HAS_DYNAMIC_PARALLEL__           (0)
-
-#else
-// Host compile and not device compile:
-#define __HIP_DEVICE_COMPILE__ 0
 
 #endif
 
