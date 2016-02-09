@@ -435,8 +435,8 @@ HIP supports the following atomic operations.
 | int atomicMax(int* address, int val) | ✓ | ✓ |
 | unsigned int atomicMax(unsigned int* address,unsigned int val) | ✓ | ✓ |
 | unsigned long long int atomicMax(unsigned long long int* address,unsigned long long int val) | ✓ | ✓ |
-| unsigned int atomicInc(unsigned int* address)| ✓ <br><sub>Takes one argument.</sub> | ✓ <br><sub> Wrapping increment,takes two arguments.</sub> |
-| unsigned int atomicDec(unsigned int* address)| ✓ <br><sub>Takes one argument.</sub> | ✓ <br><sub> Wrapping decrement,takes two arguments.</sub> |
+| unsigned int atomicInc(unsigned int* address)| ✗ | ✓  |
+| unsigned int atomicDec(unsigned int* address)| ✗ | ✓ |
 | int atomicCAS(int* address, int compare, int val) | ✓ | ✓ |
 | unsigned int atomicCAS(unsigned int* address,unsigned int compare,unsigned int val) | ✓ | ✓ |
 | unsigned long long int atomicCAS(unsigned long long int* address,unsigned long long int compare,unsigned long long int val) | ✓ | ✓ |

@@ -195,18 +195,6 @@ __device__ inline unsigned long long int atomicMax(unsigned long long int* addre
 	return (long long int)hc::atomic_fetch_max((uint64_t*)address,(uint64_t)val);
 }
 
-//atomicInc()
-__device__ inline unsigned int atomicInc(unsigned int* address)
-{
-	return hc::atomic_fetch_inc(address);
-}
-
-//atomicDec()
-__device__ inline unsigned int atomicDec(unsigned int* address)
-{
-	return hc::atomic_fetch_dec(address);
-}
-
 //atomicCAS()
 __device__ inline int atomicCAS(int* address, int compare, int val)
 {
@@ -318,17 +306,17 @@ __device__ inline unsigned int __ffsll(unsigned long long int input)
 	return hc::__lastbit_u32_u64( input)+1;
 }
 
-__device__ inline unsigned int __ffs(int input) 
+__device__ inline unsigned int __ffs(int input)
 {
 	return hc::__lastbit_u32_s32( input)+1;
 }
 
-__device__ inline unsigned int __ffsll(long long int input) 
+__device__ inline unsigned int __ffsll(long long int input)
 {
 	return hc::__lastbit_u32_s64( input)+1;
 }
 
-__device__ inline unsigned int __brev( unsigned int input) 
+__device__ inline unsigned int __brev( unsigned int input)
 {
 	return hc::__bitrev_b32( input);
 }
@@ -339,59 +327,59 @@ __device__ inline unsigned long long int __brevll( unsigned long long int input)
 }
 
 // warp vote function __all __any __ballot
-__device__ inline int __all(  int input) 
+__device__ inline int __all(  int input)
 {
 	return hc::__all( input);
 }
 
-__device__ inline int __any( int input) 
+__device__ inline int __any( int input)
 {
 	if( hc::__any( input)!=0) return 1;
 	else return 0;
 }
 
-__device__ inline unsigned long long int __ballot( int input) 
+__device__ inline unsigned long long int __ballot( int input)
 {
 	return hc::__ballot( input);
 }
 
 // warp shuffle functions
-__device__ inline int __shfl(int input, int lane, int width) 
+__device__ inline int __shfl(int input, int lane, int width)
 {
   return hc::__shfl(input,lane,width);
 }
 
-__device__ inline int __shfl_up(int input, unsigned int lane_delta, int width) 
+__device__ inline int __shfl_up(int input, unsigned int lane_delta, int width)
 {
   return hc::__shfl_up(input,lane_delta,width);
 }
 
-__device__ inline int __shfl_down(int input, unsigned int lane_delta, int width) 
+__device__ inline int __shfl_down(int input, unsigned int lane_delta, int width)
 {
   return hc::__shfl_down(input,lane_delta,width);
 }
 
-__device__ inline int __shfl_xor(int input, int lane_mask, int width) 
+__device__ inline int __shfl_xor(int input, int lane_mask, int width)
 {
   return hc::__shfl_xor(input,lane_mask,width);
 }
 
-__device__ inline float __shfl(float input, int lane, int width) 
+__device__ inline float __shfl(float input, int lane, int width)
 {
   return hc::__shfl(input,lane,width);
 }
 
-__device__ inline float __shfl_up(float input, unsigned int lane_delta, int width) 
+__device__ inline float __shfl_up(float input, unsigned int lane_delta, int width)
 {
   return hc::__shfl_up(input,lane_delta,width);
 }
 
-__device__ inline float __shfl_down(float input, unsigned int lane_delta, int width) 
+__device__ inline float __shfl_down(float input, unsigned int lane_delta, int width)
 {
   return hc::__shfl_down(input,lane_delta,width);
 }
 
-__device__ inline float __shfl_xor(float input, int lane_mask, int width) 
+__device__ inline float __shfl_xor(float input, int lane_mask, int width)
 {
   return hc::__shfl_xor(input,lane_mask,width);
 }
