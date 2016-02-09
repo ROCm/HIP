@@ -22,7 +22,7 @@ THE SOFTWARE.
 /**
  * @file hip_runtime_api.h
  *
- * Defines the API signatures for HIP runtime. 
+ * @brief Defines the API signatures for HIP runtime.
  * This file can be compiled with a standard compiler.
  */
 
@@ -48,8 +48,8 @@ typedef struct {
     unsigned hasDoubles               : 1;   ///< double-precision floating point.
 
     // Warp cross-lane operations:
-    unsigned hasWarpVote              : 1;   ///< warp vote instructions (__any, __all) 
-    unsigned hasWarpBallot            : 1;   ///< warp ballot instructions (__ballot) 
+    unsigned hasWarpVote              : 1;   ///< warp vote instructions (__any, __all)
+    unsigned hasWarpBallot            : 1;   ///< warp ballot instructions (__ballot)
     unsigned hasWarpShuffle           : 1;   ///< warp shuffle operations. (__shfl_*)
     unsigned hasFunnelShift           : 1;   ///< funnel two words into one, with shift&mask caps
 
@@ -60,7 +60,7 @@ typedef struct {
     // Misc
     unsigned hasSurfaceFuncs          : 1;   ///< Surface functions
     unsigned has3dGrid                : 1;   ///< Grid and group dims are 3D (rather than 2D)
-    unsigned hasDynamicParallelism    : 1;   ///< Dynamic parallellism
+    unsigned hasDynamicParallelism    : 1;   ///< Dynamic parallelism
 } hipDeviceArch_t;
 
 
@@ -68,16 +68,16 @@ typedef struct {
 // Common headers for both NVCC and HCC paths:
 
 /**
- * hipDeviceProp 
+ * hipDeviceProp
  *
  */
 typedef struct hipDeviceProp_t {
 	char name[256];           ///< Device name
 	size_t totalGlobalMem;    ///< Size of global memory region (in bytes)
 	size_t sharedMemPerBlock; ///< Size of shared memory region (in bytes)
-	int regsPerBlock ; ///< registers per block 
-	int warpSize ; ///< warp size 
-	int maxThreadsPerBlock; ///< max work items per work group or workgroup max size 
+	int regsPerBlock ; ///< registers per block
+	int warpSize ; ///< warp size
+	int maxThreadsPerBlock; ///< max work items per work group or workgroup max size
 	int maxThreadsDim[3]; ///< max number of threads in each dimension (XYZ) of a block
 	int maxGridSize[3]; ///< max grid dimensions (XYZ)
 	int clockRate ; ///< max clock frequency of the multiProcessors, in khz.
@@ -89,7 +89,7 @@ typedef struct hipDeviceProp_t {
 	int l2CacheSize; ///< L2 cache size
 	int maxThreadsPerMultiProcessor; ///< Maximum resident threads per multi-processor
 	int computeMode; ///< Compute mode
-    
+
 	int clockInstructionRate ;   ///< Frequency in khz of the timer used by the device-side "clock*" instructions.  New for HIP.
 
     hipDeviceArch_t arch;  ///< Architectural feature flags.  New for HIP.
@@ -97,10 +97,10 @@ typedef struct hipDeviceProp_t {
 
 
 // hack to get these to show up in Doxygen:
-/** 
+/**
  *     @defgroup GlobalDefs Global enum and defines
  *     @{
- *             
+ *
  */
 
 
@@ -115,10 +115,10 @@ typedef enum hipError_t {
   ,hipErrorMemoryFree              ///< Memory free error.
   ,hipErrorUnknownSymbol           ///< Unknown symbol
   ,hipErrorOutOfResources          ///< Out of resources error
-  ,hipErrorInvalidValue            ///< One or more of the paramters passed to the API call is NULL or not in an acceptable range.
+  ,hipErrorInvalidValue            ///< One or more of the parameters passed to the API call is NULL or not in an acceptable range.
   ,hipErrorInvalidResourceHandle   ///< Resource handle (hipEvent_t or hipStream_t) invalid.
   ,hipErrorInvalidDevice           ///< DeviceID must be in range 0...#compute-devices.
-  ,hipErrorNoDevice                ///< Call to cudaGetDeviceCount returned 0 devices
+  ,hipErrorNoDevice                ///< Call to hipGetDeviceCount returned 0 devices
   ,hipErrorNotReady                ///< indicates that asynchronous operations enqueued earlier are not ready.  This is not actually an error, but is used to distinguish from hipSuccess (which indicates completion).  APIs that return this error include hipEventQuery and hipStreamQuery.
 
   ,hipErrorUnknown                 ///< Unknown error
@@ -159,7 +159,7 @@ typedef enum hipDeviceAttribute_t {
 #include "hcc_detail/hip_runtime_api.h"
 #elif defined(__HIP_PLATFORM_NVCC__) and not defined (__HIP_PLATFORM_HCC__)
 #include "nvcc_detail/hip_runtime_api.h"
-#else 
+#else
 #error("Must define exactly one of __HIP_PLATFORM_HCC__ or __HIP_PLATFORM_NVCC__");
 #endif
 
