@@ -104,8 +104,8 @@ make_hip_executable (hip_clz hip_clz.cpp)
 make_hip_executable (hip_brev hip_brev.cpp) 
 make_hip_executable (hip_ffs hip_ffs.cpp) 
 make_hip_executable (hipInfo hipInfo.cpp) 
-make_hip_executable (hipSetValidDevices hipSetValidDevices.cpp)
 make_hip_executable (hipMemcpy hipMemcpy.cpp) 
+make_hip_executable (hipMemset hipMemset.cpp) 
 make_hip_executable (hipEventRecord hipEventRecord.cpp) 
 make_hip_executable (hipLanguageExtensions hipLanguageExtensions.cpp) 
 make_hip_executable (hipGridLaunch hipGridLaunch.cpp) 
@@ -128,7 +128,6 @@ make_test(hipMemset --N 10    --memsetval 0x42 )  # small copy, just 10 bytes.
 make_test(hipMemset --N 10013 --memsetval 0x5a )  # oddball size.
 make_test(hipMemset --N 500M  --memsetval 0xa6 )  # big copy
 make_test(hipGridLaunch " " )
-make_test(hipSetValidDevices " " )
 
 make_test(hipMemcpy  " " )
 

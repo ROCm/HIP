@@ -52,6 +52,7 @@ extern char memsetval;
 extern int iterations;
 extern unsigned blocksPerCU;
 extern unsigned threadsPerBlock;
+extern int p_gpuDevice;
 
 namespace HipTest {
 
