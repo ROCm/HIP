@@ -31,9 +31,11 @@ int main(int argc, char *argv[])
 
     HipTest::parseStandardArguments(argc, argv, true);
 
+    HIPCHECK(hipSetDevice(p_gpuDevice));
+
     size_t Nbytes = N*sizeof(char);
 
-    printf ("N=%zu  memsetval=%2x\n", N, memsetval);
+    printf ("N=%zu  memsetval=%2x device=%d\n", N, memsetval, p_gpuDevice);
 
     char *A_d;
     char *A_h;
