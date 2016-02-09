@@ -32,9 +32,11 @@ THE SOFTWARE.
 #define __HIP_PLATFORM_HCC__
 #define __HIPCC__
 
-# if defined __HCC_ACCELERATOR__
-# define __HIP_DEVICE_COMPILE__ 1
-# endif
+#if defined(__HCC_ACCELERATOR__) and (__HCC_ACCELERATOR__ != 0)
+#define __HIP_DEVICE_COMPILE__ 1
+#else
+#define __HIP_DEVICE_COMPILE__ 0
+#endif
 #endif
 
 // Auto enable __HIP_PLATFORM_NVCC__ if compiling with NVCC
@@ -44,9 +46,11 @@ THE SOFTWARE.
 # define __HIPCC__
 # endif
 
-# ifdef __CUDA_ARCH__
-# define __HIP_DEVICE_COMPILE__ 1
-# endif
+#if defined(__CUDA_ARCH__) and (__CUDA_ARCH__ != 0)
+#define __HIP_DEVICE_COMPILE__ 1
+#else
+#define __HIP_DEVICE_COMPILE__ 0
+#endif
 
 #endif
 

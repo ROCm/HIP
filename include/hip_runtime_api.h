@@ -93,6 +93,7 @@ typedef struct hipDeviceProp_t {
 	int clockInstructionRate ;   ///< Frequency in khz of the timer used by the device-side "clock*" instructions.  New for HIP.
 
     hipDeviceArch_t arch;  ///< Architectural feature flags.  New for HIP.
+    int concurrentKernels; ///< Device can possibly execute multiple kernels concurrently
  } hipDeviceProp_t;
 
 
