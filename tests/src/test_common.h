@@ -29,12 +29,15 @@
 
 
 #define HIPCHECK(error) \
-    if (error != hipSuccess) { \
+{\
+    hipError_t localError = error; \
+    if (localError != hipSuccess) { \
       printf("%serror: '%s'(%d) at %s:%d%s\n", \
-          KRED,hipGetErrorString(error), error,\
+          KRED,hipGetErrorString(localError), localError,\
       __FILE__, __LINE__,KNRM); \
         failed("API returned error code.");\
-    }
+    }\
+}
 
 #define HIPASSERT(condition) \
     if (! (condition) ) { \
