@@ -126,7 +126,7 @@ make_test(hipEventRecord --iterations 10)
 make_test(hipMemset " " )
 make_test(hipMemset --N 10    --memsetval 0x42 )  # small copy, just 10 bytes.
 make_test(hipMemset --N 10013 --memsetval 0x5a )  # oddball size.
-make_test(hipMemset --N 500M  --memsetval 0xa6 )  # big copy
+make_test(hipMemset --N 256M  --memsetval 0xa6 )  # big copy
 make_test(hipGridLaunch " " )
 
 make_test(hipMemcpy  " " )

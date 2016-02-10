@@ -39,12 +39,17 @@ __global__ void
 
 
 int main(int argc, char *argv[])
-{
-
+{ int warpSize;
+  hipDeviceProp_t devProp;
+  hipDeviceGetProperties(&devProp, 0);
+  if(strncmp(devProp.name,"Fiji",1)==0)  warpSize =64;
+  else warpSize =32;
+  int anycount =0;
+  int allcount =0;
   int Num_Threads_per_Block      = 1024;
   int Num_Blocks_per_Grid        = 1;
-  int Num_Warps_per_Block        = Num_Threads_per_Block/64;
-  int Num_Warps_per_Grid         = (Num_Threads_per_Block*Num_Blocks_per_Grid)/64;
+  int Num_Warps_per_Block        = Num_Threads_per_Block/warpSize;
+  int Num_Warps_per_Grid         = (Num_Threads_per_Block*Num_Blocks_per_Grid)/warpSize;
   
   int * host_any  = ( int*)malloc(Num_Warps_per_Grid*sizeof(int));
   int * host_all  = ( int*)malloc(Num_Warps_per_Grid*sizeof(int));
@@ -69,10 +74,11 @@ for (int i=0; i<Num_Warps_per_Grid; i++)
 
     printf("warp no. %d __any = %d \n",i,host_any[i]);
     printf("warp no. %d __all = %d \n",i,host_all[i]);
-
+    if (host_any[i]!=1) ++anycount;
+    if (host_all[i]!=1) ++allcount; 
 
 }
-
+if (anycount == 0 && allcount ==1) printf("PASSED"); else printf("FAILED");
 
   return EXIT_SUCCESS;
 
