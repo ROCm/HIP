@@ -37,7 +37,7 @@ __device__ int foo(int i)
 //Syntax we would like to support with GRID_LAUNCH enabled:
 template <typename T>
 __global__ void
-vectorADD2( grid_launch_parm lp,
+vectorADD2( hipLaunchParm lp,
             T *A_d,
             T *B_d,
             T *C_d,
