@@ -31,12 +31,17 @@ THE SOFTWARE.
 #include <list>
 #include <sys/types.h>
 #include <unistd.h>
+#include <unordered_map>
+
 #include <hc.hpp>
 #include <hc_am.hpp>
 
 #include "hip_runtime.h"
 
 #include "hsa_ext_amd.h"
+
+
+#include "hc_AM.cpp"
 
 #define USE_PINNED_HOST (__hcc_workweek__ >= 1601)
 
@@ -466,7 +471,8 @@ void ihipInit()
     g_devices.reserve(accs.size());
     for (int i=0; i<accs.size(); i++) {
         if (! accs[i].get_is_emulated()) {
-           g_devices.emplace_back(ihipDevice_t(g_devices.size(), accs[i]));
+            int deviceId = g_devices.size();
+           g_devices.emplace_back(ihipDevice_t(deviceId, accs[i]));
         }
     }
 
@@ -1262,6 +1268,53 @@ hipError_t hipEventQuery(hipEvent_t event)
 // Memory
 //
 //
+//
+
+//---
+/**
+ * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
+ */
+hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr) 
+{
+    std::call_once(hip_initialized, ihipInit);
+
+    hipError_t e = hipSuccess;
+
+    hc::AmPointerInfo amPointerInfo;
+    am_status_t status = hc::AM_get_pointer_info(&amPointerInfo, ptr);
+    if (status == AM_SUCCESS) {
+
+        attributes->memoryType    = amPointerInfo._isDeviceMem ? hipMemoryTypeDevice: hipMemoryTypeHost;
+        attributes->hostPointer   = amPointerInfo._hostPointer;
+        attributes->devicePointer = amPointerInfo._devicePointer;
+        attributes->isManaged     = 0;
+        attributes->allocationFlags = amPointerInfo._allocationFlags;
+
+
+        attributes->device        = -1;
+        e = hipErrorInvalidDevice;
+        for (int i=0; i<g_devices.size(); i++) {
+            if (g_devices[i]._acc == amPointerInfo._acc) {
+                attributes->device = i;
+                e = hipSuccess;
+                break;
+            }
+        }
+    } else {
+        attributes->memoryType    = hipMemoryTypeDevice;
+        attributes->hostPointer   = 0;
+        attributes->devicePointer = 0;
+        attributes->device        = -1;
+        attributes->isManaged     = 0;
+        attributes->allocationFlags = 0;
+
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
+
+
 
 // kernel for launching memcpy operations:
 template <typename T>
@@ -1345,9 +1398,9 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
     hipError_t  hip_status = hipSuccess;
 
     const unsigned am_flags = 0;
-    *ptr = hc::am_alloc(sizeBytes, ihipGetTlsDefaultDevice()->_acc, am_flags);
+    *ptr = hc::AM_alloc(sizeBytes, ihipGetTlsDefaultDevice()->_acc, am_flags);
 
-    if (*ptr == NULL) {
+    if (sizeBytes && (*ptr == NULL)) {
         hip_status = hipErrorMemoryAllocation;
     } else {
         hip_status = hipSuccess;
@@ -1367,9 +1420,9 @@ hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
 
     const unsigned am_flags = amHostPinned;
 
-    *ptr = hc::am_alloc(sizeBytes, ihipGetTlsDefaultDevice()->_acc, am_flags);
+    *ptr = hc::AM_alloc(sizeBytes, ihipGetTlsDefaultDevice()->_acc, am_flags);
     hipError_t  hip_status = hipSuccess;
-    if (*ptr == NULL) {
+    if (sizeBytes && (*ptr == NULL)) {
         hip_status = hipErrorMemoryAllocation;
     } else {
         hip_status = hipSuccess;
@@ -1444,7 +1497,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 
 #else
     // TODO-hsart - what synchronization does hsa_copy provide?
-    hc::am_copy(dst, src, sizeBytes);
+    hc::AM_copy(dst, src, sizeBytes);
     e = hipSuccess;
 #endif
 
@@ -1475,7 +1528,7 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
 
     // TODO-hsart This routine needs to ensure that dst and src are mapped on the GPU.
     // This is a synchronous copy - remove and replace with code below when we have appropriate LOCK APIs.
-    hc::am_copy(dst, src, sizeBytes);
+    hc::AM_copy(dst, src, sizeBytes);
 
 #if 0
 
@@ -1592,7 +1645,7 @@ hipError_t hipFree(void* ptr)
     ihipWaitAllStreams(ihipGetTlsDefaultDevice());
 
     if (ptr) {
-        hc::am_free(ptr);
+        hc::AM_free(ptr);
     }
 
     return ihipLogStatus(hipSuccess);
@@ -1606,7 +1659,7 @@ hipError_t hipFreeHost(void* ptr)
     if (ptr) {
 #if USE_PINNED_HOST
         tprintf (TRACE_MEM, "  %s: %p\n", __func__, ptr);
-        hc::am_free(ptr);
+        hc::AM_free(ptr);
 #else
         free(ptr);
 #endif

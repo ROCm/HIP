@@ -105,6 +105,8 @@ enum hipMemcpyKind {
 } ;
 
 
+
+
 // Doxygen end group GlobalDefs
 /**  @} */
 
@@ -122,6 +124,7 @@ typedef struct ihipStream_t * hipStream_t;
 typedef struct hipEvent_t {
     struct ihipEvent_t *_handle;
 } hipEvent_t;
+
 
 
 
@@ -633,6 +636,11 @@ hipError_t hipEventQuery(hipEvent_t event) ;
  *
  */
 
+
+/**
+ *  @brief Return attributes for the specified pointer
+ */
+hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr) ;
 
 
 /**

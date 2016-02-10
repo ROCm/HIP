@@ -97,6 +97,30 @@ typedef struct hipDeviceProp_t {
  } hipDeviceProp_t;
 
 
+/**
+ * Memory type (for pointer attributes)
+ */
+enum hipMemoryType {
+    hipMemoryTypeHost,   ///< Memory is physically located on host
+    hipMemoryTypeDevice  ///< Memory is physically located on device. (see deviceId for specific device)
+};
+
+
+
+/**
+ * Pointer attributes
+ */
+typedef struct hipPointerAttribute_t {
+    enum hipMemoryType memoryType;
+    int device;
+    void *devicePointer;
+    void *hostPointer;
+    int isManaged;
+    unsigned allocationFlags; /* flags specified when memory was allocated*/
+    /* peers? */
+} hipPointerAttribute_t;
+
+
 // hack to get these to show up in Doxygen:
 /**
  *     @defgroup GlobalDefs Global enum and defines
