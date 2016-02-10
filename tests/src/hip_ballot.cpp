@@ -4,22 +4,22 @@
 #define HIP_ASSERT(x) (assert((x)==hipSuccess))
 
 __global__ void 
-	gpu_ballot(hipLaunchParm lp, unsigned int* device_ballot, int Num_Warps_per_Block)
+	gpu_ballot(hipLaunchParm lp, unsigned int* device_ballot, int Num_Warps_per_Block,int pshift)
 {
 
    int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
-   const unsigned int warp_num = hipThreadIdx_x >> 6;
+   const unsigned int warp_num = hipThreadIdx_x >> pshift;
    atomicAdd(&device_ballot[warp_num+hipBlockIdx_x*Num_Warps_per_Block],__popcll(__ballot(tid - 245)));
  
 }
 
 
 int main(int argc, char *argv[])
-{ int warpSize;
+{ int warpSize, pshift;
   hipDeviceProp_t devProp;
   hipDeviceGetProperties(&devProp, 0);
-  if(strncmp(devProp.name,"Fiji",1)==0)  warpSize =64;
-  else warpSize =32;
+  if(strncmp(devProp.name,"Fiji",1)==0)  {warpSize =64; pshift =6;}
+  else {warpSize =32; pshift =5;}
   unsigned int Num_Threads_per_Block      = 512;
   unsigned int Num_Blocks_per_Grid        = 1;
   unsigned int Num_Warps_per_Block        = Num_Threads_per_Block/warpSize;
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
  
   HIP_ASSERT(hipMemcpy(device_ballot, host_ballot, Num_Warps_per_Grid*sizeof(unsigned int), hipMemcpyHostToDevice));
 
-  hipLaunchKernel(gpu_ballot, dim3(Num_Blocks_per_Grid),dim3(Num_Threads_per_Block),0,0, device_ballot,Num_Warps_per_Block);
+  hipLaunchKernel(gpu_ballot, dim3(Num_Blocks_per_Grid),dim3(Num_Threads_per_Block),0,0, device_ballot,Num_Warps_per_Block,pshift);
 
 
   HIP_ASSERT(hipMemcpy(host_ballot, device_ballot, Num_Warps_per_Grid*sizeof(unsigned int), hipMemcpyDeviceToHost));
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 	  divergent_count++;}
 }
 
-if (divergent_count==1) printf("PASSED"); else printf("FAILED");
+if (divergent_count==1) printf("PASSED\n"); else printf("FAILED\n");
   return EXIT_SUCCESS;
 
 }

@@ -216,11 +216,11 @@ __global__ void testKernel(hipLaunchParm lp,int *g_odata)
 
     // Atomic increment (modulo 17+1)
     //atomicInc((unsigned int *)&g_odata[5], 17);
-    atomicInc((unsigned int *)&g_odata[5]);
+    //atomicInc((unsigned int *)&g_odata[5]);
 
     // Atomic decrement
    // atomicDec((unsigned int *)&g_odata[6], 137);
-    atomicDec((unsigned int *)&g_odata[6]);
+    //atomicDec((unsigned int *)&g_odata[6]);
 
     // Atomic compare-and-swap
     atomicCAS(&g_odata[7], tid-1, tid);
