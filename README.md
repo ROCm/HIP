@@ -30,6 +30,7 @@ HIP code can be developed either on AMD HSA or Boltzmann platform using hcc comp
 * Install [hcc](https://bitbucket.org/multicoreware/hcc/wiki/Home) including supporting HSA kernel and runtime driver stack 
 * By default HIP looks for hcc in /opt/hcc (can be overridden by setting HCC_HOME environment variable)
 * By default HIP looks for HSA in /opt/hsa (can be overridden by setting HSA_PATH environment variable) 
+* Ensure that ROCR runtime is installed and added to LD_LIBRARY_PATH
    
 #### NVIDIA (nvcc)
 * Install CUDA SDK from manufacturer website
