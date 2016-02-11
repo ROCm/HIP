@@ -342,29 +342,18 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
                              Default compute mode (Multiple threads can use cudaSetDevice() with this device)  */
     prop->computeMode = 0;
 
-
-
-/*	HsaSystemProperties props;
-	hsaKmtReleaseSystemProperties();
-	if(HSAKMT_STATUS_SUCCESS == hsaKmtAcquireSystemProperties(&props))
-	{
-		HsaNodeProperties node_prop = {0};
-		if(HSAKMT_STATUS_SUCCESS == hsaKmtGetNodeProperties(node, &node_prop))
-		{
-			uint32_t waves_per_cu = node_prop.MaxWavesPerSIMD;
-			prop-> maxThreadsPerMultiProcessor = prop->warpsize*waves_per_cu;
-		}
-	}  */
-
-    // get memory properties */
+    // Get memory properties
 
     err = hsa_agent_iterate_regions(_hsa_agent,get_region_info,prop);
     DeviceErrorCheck(err);
 
-
     // Get the size of the region we are using for Accelerator Memory allocations:
     hsa_region_t *am_region = static_cast<hsa_region_t*> (_acc.get_hsa_am_region());
     err = hsa_region_get_info(*am_region, HSA_REGION_INFO_SIZE, &(prop->totalGlobalMem));
+    DeviceErrorCheck(err);
+    // maxThreadsPerMultiProcessor should be as the same as group memory size.
+    // Group memory will not be paged out, so, the physical memory size is the total shared memory size, and also equal to the group region size.
+    prop->maxThreadsPerMultiProcessor = prop->totalGlobalMem;
 
     // Set feature flags - these are all mandatory for HIP on HCC path:
     // Some features are under-development and future revs may support flags that are currently 0.
