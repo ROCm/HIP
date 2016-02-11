@@ -72,27 +72,28 @@ typedef struct {
  *
  */
 typedef struct hipDeviceProp_t {
-    char name[256];                     ///< Device name.
-    size_t totalGlobalMem;              ///< Size of global memory region (in bytes).
-    size_t sharedMemPerBlock;           ///< Size of shared memory region (in bytes).
-    int regsPerBlock;                   ///< Registers per block.
-    int warpSize;                       ///< Warp size.
-    int maxThreadsPerBlock;             ///< Max work items per work group or workgroup max size.
-    int maxThreadsDim[3];               ///< Max number of threads in each dimension (XYZ) of a block.
-    int maxGridSize[3];                 ///< Max grid dimensions (XYZ).
-    int clockRate;                      ///< Max clock frequency of the multiProcessors, in khz.
-    size_t totalConstMem;               ///< Size of shared memory region (in bytes).
-    int major;                          ///< Major compute capability.  On HCC, this is an approximation and features may differ from CUDA CC.  See the arch feature flags for portable ways to query feature caps.
-    int minor;                          ///< Minor compute capability.  On HCC, this is an approximation and features may differ from CUDA CC.  See the arch feature flags for portable ways to query feature caps.
-    int multiProcessorCount;            ///< Number of multi-processors (compute units).
-    int l2CacheSize;                    ///< L2 cache size.
-    int maxThreadsPerMultiProcessor;    ///< Maximum resident threads per multi-processor.
-    int computeMode;                    ///< Compute mode.
-    int clockInstructionRate;           ///< Frequency in khz of the timer used by the device-side "clock*" instructions.  New for HIP.
-    hipDeviceArch_t arch;               ///< Architectural feature flags.  New for HIP.
-    int concurrentKernels;              ///< Device can possibly execute multiple kernels concurrently.
-    int pciBusID;                       ///< PCI Bus ID.
-    int pciDeviceID;                    ///< PCI Device ID.
+    char name[256];                             ///< Device name.
+    size_t totalGlobalMem;                      ///< Size of global memory region (in bytes).
+    size_t sharedMemPerBlock;                   ///< Size of shared memory region (in bytes).
+    int regsPerBlock;                           ///< Registers per block.
+    int warpSize;                               ///< Warp size.
+    int maxThreadsPerBlock;                     ///< Max work items per work group or workgroup max size.
+    int maxThreadsDim[3];                       ///< Max number of threads in each dimension (XYZ) of a block.
+    int maxGridSize[3];                         ///< Max grid dimensions (XYZ).
+    int clockRate;                              ///< Max clock frequency of the multiProcessors, in khz.
+    size_t totalConstMem;                       ///< Size of shared memory region (in bytes).
+    int major;                                  ///< Major compute capability.  On HCC, this is an approximation and features may differ from CUDA CC.  See the arch feature flags for portable ways to query feature caps.
+    int minor;                                  ///< Minor compute capability.  On HCC, this is an approximation and features may differ from CUDA CC.  See the arch feature flags for portable ways to query feature caps.
+    int multiProcessorCount;                    ///< Number of multi-processors (compute units).
+    int l2CacheSize;                            ///< L2 cache size.
+    int maxThreadsPerMultiProcessor;            ///< Maximum resident threads per multi-processor.
+    int computeMode;                            ///< Compute mode.
+    int clockInstructionRate;                   ///< Frequency in khz of the timer used by the device-side "clock*" instructions.  New for HIP.
+    hipDeviceArch_t arch;                       ///< Architectural feature flags.  New for HIP.
+    int concurrentKernels;                      ///< Device can possibly execute multiple kernels concurrently.
+    int pciBusID;                               ///< PCI Bus ID.
+    int pciDeviceID;                            ///< PCI Device ID.
+    size_t maxSharedMemoryPerMultiProcessor;    ///< Maximum Shared Memory Per Multiprocessor.
  } hipDeviceProp_t;
 
 
@@ -130,26 +131,27 @@ typedef enum hipError_t {
  * @ingroup Enumerations
  */
 typedef enum hipDeviceAttribute_t {
-    hipDeviceAttributeMaxThreadsPerBlock,             ///< Maximum number of threads per block.
-    hipDeviceAttributeMaxBlockDimX,                   ///< Maximum x-dimension of a block.
-    hipDeviceAttributeMaxBlockDimY,                   ///< Maximum y-dimension of a block.
-    hipDeviceAttributeMaxBlockDimZ,                   ///< Maximum z-dimension of a block.
-    hipDeviceAttributeMaxGridDimX,                    ///< Maximum x-dimension of a grid.
-    hipDeviceAttributeMaxGridDimY,                    ///< Maximum y-dimension of a grid.
-    hipDeviceAttributeMaxGridDimZ,                    ///< Maximum z-dimension of a grid.
-    hipDeviceAttributeMaxSharedMemoryPerBlock,        ///< Maximum shared memory available per block in bytes.
-    hipDeviceAttributeTotalConstantMemory,            ///< Constant memory size in bytes.
-    hipDeviceAttributeWarpSize,                       ///< Warp size in threads.
-    hipDeviceAttributeMaxRegistersPerBlock,           ///< Maximum number of 32-bit registers available to a thread block. This number is shared by all thread blocks simultaneously resident on a multiprocessor.
-    hipDeviceAttributeClockRate,                      ///< Peak clock frequency in kilohertz.
-    hipDeviceAttributeMultiprocessorCount,            ///< Number of multiprocessors on the device.
-    hipDeviceAttributeComputeMode,                    ///< Compute mode that device is currently in.
-    hipDeviceAttributeL2CacheSize,                    ///< Size of L2 cache in bytes. 0 if the device doesn't have L2 cache.
-    hipDeviceAttributeMaxThreadsPerMultiProcessor,    ///< Maximum resident threads per multiprocessor.
-    hipDeviceAttributeComputeCapabilityMajor,         ///< Major compute capability version number.
-    hipDeviceAttributeComputeCapabilityMinor,         ///< Minor compute capability version number.
-    hipDeviceAttributePciBusId,                       ///< PCI Bus ID.
-    hipDeviceAttributePciDeviceId,                    ///< PCI Device ID.
+    hipDeviceAttributeMaxThreadsPerBlock,                   ///< Maximum number of threads per block.
+    hipDeviceAttributeMaxBlockDimX,                         ///< Maximum x-dimension of a block.
+    hipDeviceAttributeMaxBlockDimY,                         ///< Maximum y-dimension of a block.
+    hipDeviceAttributeMaxBlockDimZ,                         ///< Maximum z-dimension of a block.
+    hipDeviceAttributeMaxGridDimX,                          ///< Maximum x-dimension of a grid.
+    hipDeviceAttributeMaxGridDimY,                          ///< Maximum y-dimension of a grid.
+    hipDeviceAttributeMaxGridDimZ,                          ///< Maximum z-dimension of a grid.
+    hipDeviceAttributeMaxSharedMemoryPerBlock,              ///< Maximum shared memory available per block in bytes.
+    hipDeviceAttributeTotalConstantMemory,                  ///< Constant memory size in bytes.
+    hipDeviceAttributeWarpSize,                             ///< Warp size in threads.
+    hipDeviceAttributeMaxRegistersPerBlock,                 ///< Maximum number of 32-bit registers available to a thread block. This number is shared by all thread blocks simultaneously resident on a multiprocessor.
+    hipDeviceAttributeClockRate,                            ///< Peak clock frequency in kilohertz.
+    hipDeviceAttributeMultiprocessorCount,                  ///< Number of multiprocessors on the device.
+    hipDeviceAttributeComputeMode,                          ///< Compute mode that device is currently in.
+    hipDeviceAttributeL2CacheSize,                          ///< Size of L2 cache in bytes. 0 if the device doesn't have L2 cache.
+    hipDeviceAttributeMaxThreadsPerMultiProcessor,          ///< Maximum resident threads per multiprocessor.
+    hipDeviceAttributeComputeCapabilityMajor,               ///< Major compute capability version number.
+    hipDeviceAttributeComputeCapabilityMinor,               ///< Minor compute capability version number.
+    hipDeviceAttributePciBusId,                             ///< PCI Bus ID.
+    hipDeviceAttributePciDeviceId,                          ///< PCI Device ID.
+    hipDeviceAttributeMaxSharedMemoryPerMultiprocessor,     ///< Maximum Shared Memory Per Multiprocessor.
 } hipDeviceAttribute_t;
 
 /**

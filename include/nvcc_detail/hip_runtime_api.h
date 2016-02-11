@@ -256,6 +256,8 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
         cdattr = cudaDevAttrPciBusId; break;
     case hipDeviceAttributePciDeviceId:
         cdattr = cudaDevAttrPciDeviceId; break;
+    case hipDeviceAttributeMaxSharedMemoryPerMultiprocessor:
+        cdattr = cudaDevAttrMaxSharedMemoryPerMultiprocessor; break;
     default:
         cerror = cudaErrorInvalidValue; break;
     }
