@@ -75,6 +75,7 @@ int main(int argc, char *argv[])
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeComputeCapabilityMinor, props.minor));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributePciBusId, props.pciBusID));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributePciDeviceId, props.pciDeviceID));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxSharedMemoryPerMultiprocessor, props.maxSharedMemoryPerMultiProcessor));
     passed();
 
 };
