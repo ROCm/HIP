@@ -91,6 +91,8 @@ typedef struct hipDeviceProp_t {
     int clockInstructionRate;           ///< Frequency in khz of the timer used by the device-side "clock*" instructions.  New for HIP.
     hipDeviceArch_t arch;               ///< Architectural feature flags.  New for HIP.
     int concurrentKernels;              ///< Device can possibly execute multiple kernels concurrently.
+    int pciBusID;                       ///< PCI Bus ID.
+    int pciDeviceID;                    ///< PCI Device ID.
  } hipDeviceProp_t;
 
 
@@ -146,6 +148,8 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeMaxThreadsPerMultiProcessor,    ///< Maximum resident threads per multiprocessor.
     hipDeviceAttributeComputeCapabilityMajor,         ///< Major compute capability version number.
     hipDeviceAttributeComputeCapabilityMinor,         ///< Minor compute capability version number.
+    hipDeviceAttributePciBusId,                       ///< PCI Bus ID.
+    hipDeviceAttributePciDeviceId,                    ///< PCI Device ID.
 } hipDeviceAttribute_t;
 
 /**
