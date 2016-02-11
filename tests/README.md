@@ -2,8 +2,9 @@ Tests uses CMAKE as teh build infrastructure.
 
 Use :
 
-> cd src
-> cmake .
+> mkdir build
+> cd build
+> cmake ../src
 > make
 > make test
 
