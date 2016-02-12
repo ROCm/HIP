@@ -91,6 +91,7 @@ syn keyword hipFunctionName hipD3D9UnmapResources
 syn keyword hipFunctionName hipD3D9UnregisterResource 
 syn keyword hipFunctionName hipDeviceGetProperties 
 syn keyword hipFunctionName hipDeviceSynchronize 
+syn keyword hipFunctionName hipDeviceReset 
 syn keyword hipFunctionName hipEventCreate 
 syn keyword hipFunctionName hipEventDestroy 
 syn keyword hipFunctionName hipEventElapsedTime 
