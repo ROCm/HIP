@@ -286,7 +286,17 @@ am_status_t am_memtracker_getinfo(hc::AmPointerInfo *info, void *ptr)
 }
 
 
-am_status_t am_memtracker_update(void* ptr, int appId, unsigned allocationFlags);
+am_status_t am_memtracker_update(void* ptr, int appId, unsigned allocationFlags)
+{
+    auto iter = g_amPointerTracker.find(ptr);
+    if (iter != g_amPointerTracker.end()) {
+        iter->second._appId              = appId;
+        iter->second._appAllocationFlags = allocationFlags;
+        return AM_SUCCESS;
+    } else {
+        return AM_ERROR_MISC;
+    }
+}
 
 
 am_status_t am_memtracker_add(void* ptr, size_t sizeBytes, hc::accelerator acc, bool isDeviceMem)

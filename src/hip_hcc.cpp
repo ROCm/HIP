@@ -1295,18 +1295,11 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
         attributes->hostPointer   = amPointerInfo._hostPointer;
         attributes->devicePointer = amPointerInfo._devicePointer;
         attributes->isManaged     = 0;
+
         attributes->allocationFlags = amPointerInfo._appAllocationFlags;
+        attributes->device          = amPointerInfo._appId;
 
 
-        attributes->device        = -1;
-        e = hipErrorInvalidDevice;
-        for (int i=0; i<g_devices.size(); i++) {
-            if (g_devices[i]._acc == amPointerInfo._acc) {
-                attributes->device = i;
-                e = hipSuccess;
-                break;
-            }
-        }
     } else {
         attributes->memoryType    = hipMemoryTypeDevice;
         attributes->hostPointer   = 0;
@@ -1316,6 +1309,36 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
         attributes->allocationFlags = 0;
 
         e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
+
+
+// TODO - test this function:
+/**
+ * @returns #hipSuccess, 
+ * @returns #hipErrorInvalidValue if flags are not 0
+ * @returns #hipErrorMemoryAllocation if hostPointer is not a tracked allocation.
+ */
+hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsigned flags)
+{
+    std::call_once(hip_initialized, ihipInit);
+
+    hipError_t e = hipSuccess;
+
+    // Flags must be 0:
+    if (flags == 0) {
+        e = hipErrorInvalidValue;
+    } else {
+        hc::AmPointerInfo amPointerInfo;
+        am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, hostPointer);
+        if (status == AM_SUCCESS) {
+            *devicePointer = amPointerInfo._devicePointer;
+        } else {
+            e = hipErrorMemoryAllocation;  
+            *devicePointer = NULL;
+        }
     }
 
     return ihipLogStatus(e);
@@ -1398,24 +1421,31 @@ ihipMemsetKernel(hipStream_t stream, T * ptr, T val, size_t sizeBytes)
 }
 
 //---
+/**
+ * @returns #hipSuccess #hipErrorMemoryAllocation 
+ */
 hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 {
     std::call_once(hip_initialized, ihipInit);
 
     hipError_t  hip_status = hipSuccess;
 
-    const unsigned am_flags = 0;
-    *ptr = hc::AM_alloc(sizeBytes, ihipGetTlsDefaultDevice()->_acc, am_flags);
+	auto device = ihipGetTlsDefaultDevice();
 
-    if (sizeBytes && (*ptr == NULL)) {
-        hip_status = hipErrorMemoryAllocation;
+    if (device) {
+        const unsigned am_flags = 0;
+        *ptr = hc::AM_alloc(sizeBytes, device->_acc, am_flags);
+
+        if (sizeBytes && (*ptr == NULL)) {
+            hip_status = hipErrorMemoryAllocation;
+        } else {
+            hc::am_memtracker_update(*ptr, device->_device_index, 0);
+        }
     } else {
-        hip_status = hipSuccess;
+        hip_status = hipErrorMemoryAllocation;
     }
 
-    ihipLogStatus(hip_status);
-
-    return hip_status;
+    return ihipLogStatus(hip_status);
 }
 
 
@@ -1423,23 +1453,24 @@ hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
 {
     std::call_once(hip_initialized, ihipInit);
 
+    hipError_t  hip_status = hipSuccess;
 #if USE_PINNED_HOST
 
     const unsigned am_flags = amHostPinned;
+	auto device = ihipGetTlsDefaultDevice();
 
-    *ptr = hc::AM_alloc(sizeBytes, ihipGetTlsDefaultDevice()->_acc, am_flags);
-    hipError_t  hip_status = hipSuccess;
-    if (sizeBytes && (*ptr == NULL)) {
-        hip_status = hipErrorMemoryAllocation;
-    } else {
-        hip_status = hipSuccess;
+    if (device) {
+        *ptr = hc::AM_alloc(sizeBytes, device->_acc, am_flags);
+        if (sizeBytes && (*ptr == NULL)) {
+            hip_status = hipErrorMemoryAllocation;
+        } else {
+            hc::am_memtracker_update(*ptr, device->_device_index, 0);
+        }
+
+        tprintf (TRACE_MEM, "  %s: pinned ptr=%p\n", __func__, *ptr);
     }
 
-    tprintf (TRACE_MEM, "  %s: pinned ptr=%p\n", __func__, *ptr);
-
-    ihipLogStatus(hip_status);
-
-    return hip_status;
+    return ihipLogStatus(hip_status);
 
 #else
     // TODO-hcc remove-me
