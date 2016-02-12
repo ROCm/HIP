@@ -385,6 +385,28 @@ For the cases where this overhead is not acceptable and programmer is willing to
 hcc provides hc::__lastbit_u32_u32(unsigned int input) and  hc::__lastbit_u32_u64(unsigned long long int input).
 The index returned by __lastbit_ instructions starts at -1, while for ffs the index starts at 0.
 
+### Floating-point Intrinsics
+Following is the list of supported floating-point intrinsics. Note that intrinsics are supported on device only.
+
+| **Function** |
+| --- |
+| float __cosf ( float  x ) <br><sub>Calculate the fast approximate cosine of the input argument.</sub> |
+| float __expf ( float  x ) <br><sub>Calculate the fast approximate base e exponential of the input argument.</sub> |
+| float __frsqrt_rn ( float  x ) <br><sub>Compute `1 / √x` in round-to-nearest-even mode.</sub> |
+| float __fsqrt_rd ( float  x ) <br><sub>Compute `√x` in round-down mode.</sub> |
+| float __fsqrt_rn ( float  x ) <br><sub>Compute `√x` in round-to-nearest-even mode.</sub> |
+| float __fsqrt_ru ( float  x ) <br><sub>Compute `√x` in round-up mode.</sub> |
+| float __fsqrt_rz ( float  x ) <br><sub>Compute `√x` in round-towards-zero mode.</sub> |
+| float __log10f ( float  x ) <br><sub>Calculate the fast approximate base 10 logarithm of the input argument.</sub> |
+| float __log2f ( float  x ) <br><sub>Calculate the fast approximate base 2 logarithm of the input argument.</sub> |
+| float __logf ( float  x ) <br><sub>Calculate the fast approximate base e logarithm of the input argument.</sub> |
+| float __powf ( float  x, float  y ) <br><sub>Calculate the fast approximate of x<sup>y</sup>.</sub> |
+| float __sinf ( float  x ) <br><sub>Calculate the fast approximate sine of the input argument.</sub> |
+| float __tanf ( float  x ) <br><sub>Calculate the fast approximate tangent of the input argument.</sub> |
+| double __dsqrt_rd ( double  x ) <br><sub>Compute `√x` in round-down mode.</sub> |
+| double __dsqrt_rn ( double  x ) <br><sub>Compute `√x` in round-to-nearest-even mode.</sub> |
+| double __dsqrt_ru ( double  x ) <br><sub>Compute `√x` in round-up mode.</sub> |
+| double __dsqrt_rz ( double  x ) <br><sub>Compute `√x` in round-towards-zero mode.</sub> |
 
 ## Texture Functions
 Texture functions are not supported.
