@@ -44,8 +44,8 @@ THE SOFTWARE.
 #include "hc_AM.cpp"
 
 #define USE_PINNED_HOST (__hcc_workweek__ >= 1601)
-
 #define USE_ASYNC_COPY  0
+#define USE_AM_TRACKER 1  /* use new AM memory tracker features */
 
 #define INLINE static inline
 
@@ -802,6 +802,13 @@ hipError_t hipDeviceReset(void)
     // It should destroy and clean up all resources allocated with the default device in the current process.
     // and needs to destroy all queues as well.
     //
+#if USE_AM_TRACKER
+    // TODO - remove bug above.
+    ihipDevice_t *device = ihipGetTlsDefaultDevice();
+    if (device) {
+        am_memtracker_reset(device->_acc);
+    }
+#endif
 
     return ihipLogStatus(hipSuccess);
 }
@@ -1281,14 +1288,14 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
     hipError_t e = hipSuccess;
 
     hc::AmPointerInfo amPointerInfo;
-    am_status_t status = hc::AM_get_pointer_info(&amPointerInfo, ptr);
+    am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
     if (status == AM_SUCCESS) {
 
-        attributes->memoryType    = amPointerInfo._isDeviceMem ? hipMemoryTypeDevice: hipMemoryTypeHost;
+        attributes->memoryType    = amPointerInfo._isInDeviceMem ? hipMemoryTypeDevice: hipMemoryTypeHost;
         attributes->hostPointer   = amPointerInfo._hostPointer;
         attributes->devicePointer = amPointerInfo._devicePointer;
         attributes->isManaged     = 0;
-        attributes->allocationFlags = amPointerInfo._allocationFlags;
+        attributes->allocationFlags = amPointerInfo._appAllocationFlags;
 
 
         attributes->device        = -1;

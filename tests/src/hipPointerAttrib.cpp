@@ -75,7 +75,7 @@ void resetAttribs(hipPointerAttribute_t *attribs)
 };
 
 
-void printAttribs(hipPointerAttribute_t *attribs) 
+void printAttribs(const hipPointerAttribute_t *attribs) 
 {
     printf ("hostPointer:%p devicePointer:%p  memoryType:%s deviceId:%d isManaged:%d allocationFlags:%u\n", 
             attribs->hostPointer,
@@ -99,8 +99,13 @@ inline int zrand(int max)
 //=================================================================================================
 //
 //Run through a couple simple cases to test lookups and hostd pointer arithmetic:
-void simpleTests() 
+void testSimple() 
 {
+    printf ("\n");
+    printf ("===========================================================================\n");
+    printf ("Simple Tests\n");
+    printf ("===========================================================================\n");
+
     char *A_d;
     char *A_Pinned_h;
     char *A_OSAlloc_h;
@@ -179,8 +184,24 @@ void simpleTests()
 }
 
 
+void resetTracker ()
+{
+    if (p_verbose & 0x1) {
+        printf ("info: reset tracker for all devices in platform\n");
+    }
+
+    int numDevices;
+    HIPCHECK(hipGetDeviceCount(&numDevices));
+
+    // Clean up:
+    for (int i=0; i<numDevices; i++) {
+        HIPCHECK(hipSetDevice(i));
+        HIPCHECK(hipDeviceReset());
+    };
+}
 
 
+// Store the hipPointer attrib and some extra info so can later compare the looked-up info against the reference expectation
 struct SuperPointerAttribute {
     void *                  _pointer;
     size_t                  _sizeBytes;
@@ -194,9 +215,10 @@ void checkPointer(SuperPointerAttribute &ref, int major, int minor, void *pointe
     hipPointerAttribute_t attribs;
     resetAttribs(&attribs);
 
-    HIPCHECK(hipPointerGetAttributes(&attribs, pointer));
-    if (attribs != ref._attrib) {
-        printf("Test %d.%d", major, minor);
+    hipError_t e = hipPointerGetAttributes(&attribs, pointer);
+    if ((e != hipSuccess) || (attribs != ref._attrib)) {
+        printf("Test %d.%d (err=%d)\n", major, minor, e);
+        HIPCHECK(e);
         printf("  ref    ::  "); printAttribs(&ref._attrib);
         printf("  getattr::  "); printAttribs(&attribs);
         
@@ -211,9 +233,7 @@ void checkPointer(SuperPointerAttribute &ref, int major, int minor, void *pointe
 
 void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize)
 {
-    printf ("===========================================================================\n");
-    printf ("clusterAllocs numAllocs=%d size=%lu..%lu\n", numAllocs, minSize, maxSize);
-    printf ("===========================================================================\n");
+    printf ("  clusterAllocs numAllocs=%d size=%lu..%lu\n", numAllocs, minSize, maxSize);
     std::vector <SuperPointerAttribute> reference(numAllocs);
 
     HIPASSERT(minSize > 0);
@@ -244,14 +264,15 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize)
             reference[i]._attrib.memoryType    = hipMemoryTypeHost;
             reference[i]._attrib.devicePointer = ptr;
             reference[i]._attrib.hostPointer   = ptr;
-            reference[i]._attrib.allocationFlags = 1; // TODO-randomize these.
+            reference[i]._attrib.allocationFlags = 0; // TODO-randomize these.
         }
         reference[i]._pointer = ptr;
     }
 
 #ifdef __HIP_PLATFORM_HCC__
     if (p_verbose & 0x2) {
-        hc::AM_print_tracker();
+        printf ("Tracker after insertions:\n");
+        hc::am_memtracker_print();
     }
 #endif
 
@@ -265,27 +286,143 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize)
             checkPointer(ref, i, 2, (char *)ref._pointer + ref._sizeBytes-1);
         }
 
+        if (ref._attrib.memoryType == hipMemoryTypeDevice) {
+            hipFree(ref._pointer);
+        } else {
+            hipFreeHost(ref._pointer);
+        }
+
+    }
+
+
+
+#ifdef __HIP_PLATFORM_HCC__
+    if (p_verbose & 0x2) {
+        printf ("Tracker after cleanup:\n");
+        hc::am_memtracker_print();
+    }
+#endif
+}
+
+
+void testMultiThreaded_1(bool serialize=false)
+{
+    printf ("\n===========================================================================\n");
+    printf ("MultiThreaded_1\n");
+    if (serialize) printf ("[SERIALIZE]\n");
+    printf ("===========================================================================\n");
+    std::thread t1(clusterAllocs, 1000, 101, 1000);
+    if (serialize) t1.join();
+
+    std::thread t2(clusterAllocs, 1000,  11,  100);
+    if (serialize) t2.join();
+
+    std::thread t3(clusterAllocs, 1000,   5,  10);
+    if (serialize) t3.join();
+
+    std::thread t4(clusterAllocs, 1000,   1,   4);
+    if (serialize) t4.join();
+
+    if (!serialize) {
+        t1.join();
+        t2.join();
+        t3.join();
+        t4.join();
+    }
+
+    resetTracker();
+}
+
+
+///================================================================================================
+
+
+// Add pointers to tracker very quickly.
+void thread_query(void *ptr, const hipPointerAttribute_t *refAttrib)
+{
+    int count = 0;
+
+    for (int count=0; count< 1000000; count++) {
+        hipPointerAttribute_t a;
+        hipError_t e = hipPointerGetAttributes(&a, ptr);
+        if ((e != hipSuccess) || (a!= *refAttrib)) {
+            printf("Test %d (err=%d)\n", count, e);
+            HIPCHECK(e);
+
+            printf("  ref    ::  "); printAttribs(refAttrib);
+            printf("  getattr::  "); printAttribs(&a);
+        }
     }
 }
 
 
-void testMultiThreaded()
+enum Dir {Up, Down};
+void thread_noise_generator(int iters, size_t numBuffers, Dir addDir, Dir removeDir)
 {
-    std::thread t1(clusterAllocs, 1000, 101, 1000);
-    std::thread t2(clusterAllocs, 1000,  11,  100);
-    std::thread t3(clusterAllocs, 1000,   5,  10);
-    std::thread t4(clusterAllocs, 1000,   1,   4);
+    const size_t bufferSize = 16;
+    size_t maxSize = numBuffers*bufferSize;
+    HIPASSERT((maxSize % bufferSize) == 0); // loop logic assumes this is true
+
+
+    for (int i=0; i<iters; i++) {
+        char * basePtr = (char*)malloc(maxSize);
+
+        auto acc = hc::accelerator();
+
+        if (addDir == Up) {
+            for (char *p = basePtr; p<basePtr + maxSize; p+=bufferSize) 
+            {
+                hc::am_memtracker_add(p, bufferSize, acc, false);
+            }
+        }
+
+        if (removeDir == Up) {
+            for (char *p = basePtr; p<basePtr + maxSize; p+=bufferSize) 
+            {
+                hc::am_memtracker_remove(p);
+            }
+        };
+    }
+}
+
+
+void testMultiThreaded_2()
+{
+    std::atomic<int> inflight(2);
+
+    printf ("\n===========================================================================\n");
+    printf ("MultiThreaded_2\n");
+    printf ("===========================================================================\n");
+
+    hipSetDevice(0);
+    hipDeviceReset();
+
+    // Create some entries in the tracker:
+    for (int i=0; i<1000; i++) {
+        void *C_d;
+        HIPCHECK(hipMalloc(&C_d, 32));
+    }
+
+
+    // Allocate a pointer that we will repeatedly lookup:
+    void *A_d;
+    HIPCHECK(hipMalloc(&A_d, 10000));
+    hipPointerAttribute_t attrib1;
+    HIPCHECK(hipPointerGetAttributes(&attrib1, A_d));
+    std::thread t1(thread_query, A_d, &attrib1);
+
+    std::thread t2(thread_noise_generator, 10000, 1000, Up, Up);
 
     t1.join();
     t2.join();
-    t3.join();
-    t4.join();
+
+    hipSetDevice(0);
+    hipDeviceReset();
 }
 
 
 int main(int argc, char *argv[])
 {
-
     N= 1000000;
     HipTest::parseStandardArguments(argc, argv, true);
 
@@ -296,22 +433,34 @@ int main(int argc, char *argv[])
     printf ("N=%zu (%6.2f MB) device=%d\n", N, Nbytes/(1024.0*1024.0), p_gpuDevice);
 
 
-    if (p_tests & 0x1) {
-        simpleTests();
+    if (p_tests & 0x01) {
+        testSimple();
     }
 
-    if (p_tests & 0x2) {
+    if (p_tests & 0x02) {
         srand(0x100);
+        printf ("\n===========================================================================\n");
         clusterAllocs(100, 1024*1, 1024*1024);
+        resetTracker();
     }
 
-    if (p_tests & 0x4) {
+    if (p_tests & 0x04) {
         srand(0x200);
+        printf ("\n===========================================================================\n");
         clusterAllocs(1000, 1, 10); //  Many tiny allocations;
+        resetTracker();
     }
 
-    if (p_tests & 0x8) {
-        testMultiThreaded();
+    if (p_tests & 0x08) {
+        srand(0x300);
+        testMultiThreaded_1(true);
+        testMultiThreaded_1(false);
+    }
+
+    if (p_tests & 0x10) {
+        srand(0x400);
+        testMultiThreaded_2();
+        resetTracker();
     }
 
     printf ("\n");
