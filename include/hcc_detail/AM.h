@@ -78,6 +78,7 @@ am_status_t AM_free(void*  ptr);
  */
 am_status_t AM_copy(void*  dst, const void*  src, size_t size);
 
+
 /**
  * Return information about tracked pointer.
  *
@@ -92,10 +93,14 @@ am_status_t AM_copy(void*  dst, const void*  src, size_t size);
  */
 am_status_t am_memtracker_getinfo(hc::AmPointerInfo *info, void *ptr);
 
+
+//TODO-doc
+am_status_t am_memtracker_add(void* ptr, size_t sizeBytes, hc::accelerator acc, bool isDeviceMem=false);
+
+
 //TODO-doc
 am_status_t am_memtracker_update(void* ptr, int appId, unsigned allocationFlags);
 
-am_status_t am_memtracker_add(void* ptr, size_t sizeBytes, hc::accelerator acc, bool isDeviceMem=false);
 
 /** 
  * Remove the pointer from the tracker structure.
@@ -109,15 +114,19 @@ am_status_t am_memtracker_remove(void* ptr);
 
 /**
  * Remove all memory allocations associated with specified accelerator.
+ *
+ * @returns Number of entries reset.
  */
 size_t am_memtracker_reset(hc::accelerator acc);
 
 /**
- * Prints the contents of the memory tracker table to stderr
+ * Prints info about the memory tracker table.
  *
  * Intended primarily for debug purposes.
  **/
 void am_memtracker_print();
+
+void am_memtracker_sizeinfo(hc::accelerator acc, size_t *deviceMemSize, size_t *hostMemSize, size_t *userMemSize);
 
 
 }; // namespace hc

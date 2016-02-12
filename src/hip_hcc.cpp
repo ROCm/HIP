@@ -1286,6 +1286,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
 
     hipError_t e = hipSuccess;
 
+#if USE_AM_TRACKER
     hc::AmPointerInfo amPointerInfo;
     am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
     if (status == AM_SUCCESS) {
@@ -1309,11 +1310,15 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
 
         e = hipErrorInvalidValue;
     }
+#else
+    e = hipErrorInvalidValue;
+#endif
 
     return ihipLogStatus(e);
 }
 
 
+#if USE_AM_TRACKER
 // TODO - test this function:
 /**
  * @returns #hipSuccess, 
@@ -1342,6 +1347,7 @@ hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsi
 
     return ihipLogStatus(e);
 }
+#endif
 
 
 
@@ -1438,7 +1444,9 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
         if (sizeBytes && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
         } else {
+#ifdef USE_AM_TRACKER
             hc::am_memtracker_update(*ptr, device->_device_index, 0);
+#endif
         }
     } else {
         hip_status = hipErrorMemoryAllocation;
@@ -1462,7 +1470,9 @@ hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
         if (sizeBytes && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
         } else {
+#ifdef USE_AM_TRACKER
             hc::am_memtracker_update(*ptr, device->_device_index, 0);
+#endif
         }
 
         tprintf (TRACE_MEM, "  %s: pinned ptr=%p\n", __func__, *ptr);
@@ -1627,10 +1637,10 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
 
 
 /*
- * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue (if free != NULL due to bug)
- * @bug - on hcc free always returns 50% of peak regardless of current allocations.  hipMemGetInfo returns hipErrorInvalidValue to indicate this.
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue (if free != NULL due to bug)S
+ * @warning On HCC, the free memory only accounts for memory allocated by this process and may be optimistic.
  */
-hipError_t hipMemGetInfo  (   size_t *    free, size_t *    total    )
+hipError_t hipMemGetInfo  (size_t *free, size_t *total)
 {
     std::call_once(hip_initialized, ihipInit);
 
@@ -1643,17 +1653,22 @@ hipError_t hipMemGetInfo  (   size_t *    free, size_t *    total    )
         }
 
         if (free) {
-            *free =  hipDevice->_props.totalGlobalMem  * 0.5; // TODO
+#if USE_AM_TRACKER
+            // TODO - replace with kernel-level for reporting free memory:
+            size_t deviceMemSize, hostMemSize, userMemSize;
+            hc::am_memtracker_sizeinfo(hipDevice->_acc, &deviceMemSize, &hostMemSize, &userMemSize);
+            *free =  hipDevice->_props.totalGlobalMem - deviceMemSize;
+#else
+            *free =  hipDevice->_props.totalGlobalMem * 0.5; // TODO
             e=hipErrorInvalidValue;
+#endif
         }
 
     } else {
         e = hipErrorInvalidDevice;
     }
 
-    // TODO-runtime  - when we fix the 50% bug.
-    //return ihipLogStatus(hipErrorSuccess);
-    return ihipLogStatus(hipErrorInvalidValue);
+    return ihipLogStatus(e);
 }
 
 
