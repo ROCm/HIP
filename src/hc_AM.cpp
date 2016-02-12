@@ -24,10 +24,10 @@
 //#include <shared_mutex>
 
 struct AmMemoryRange {
-    void * _basePointer;
-    void * _endPointer;
-    AmMemoryRange(void *basePointer, size_t sizeBytes) :
-        _basePointer(basePointer), _endPointer((unsigned char*)basePointer + sizeBytes - 1) {};
+    const void * _basePointer;
+    const void * _endPointer;
+    AmMemoryRange(const void *basePointer, size_t sizeBytes) :
+        _basePointer(basePointer), _endPointer((const unsigned char*)basePointer + sizeBytes - 1) {};
 };
 
 // Functor to compare ranges:
@@ -63,7 +63,7 @@ public:
     void insert(void *pointer, const hc::AmPointerInfo &p);
     int remove(void *pointer);
 
-    MapTrackerType::iterator find(void *hostPtr) ;
+    MapTrackerType::iterator find(const void *hostPtr) ;
 
     MapTrackerType::iterator readerLockBegin() { _mutex.lock(); return _tracker.begin(); } ;
     MapTrackerType::iterator end() { return _tracker.end(); } ;
@@ -107,7 +107,7 @@ int AmPointerTracker::remove (void *pointer)
 
 
 //---
-AmPointerTracker::MapTrackerType::iterator  AmPointerTracker::find (void *pointer)
+AmPointerTracker::MapTrackerType::iterator  AmPointerTracker::find (const void *pointer)
 {
     // TODO-mutex- read lock
     std::lock_guard<std::mutex> l (_mutex);
@@ -144,7 +144,7 @@ size_t AmPointerTracker::reset (hc::accelerator acc)
     for (auto iter = _tracker.begin() ; iter != _tracker.end(); ) {
         if (iter->second._acc == acc) {
             if (iter->second._isAmManaged) {
-                hsa_memory_free(iter->first._basePointer);
+                hsa_memory_free(const_cast<void*> (iter->first._basePointer));
             }
             count++;
 
@@ -278,7 +278,7 @@ am_status_t AM_copy(void*  dst, const void*  src, size_t sizeBytes)
 }
 
 
-am_status_t am_memtracker_getinfo(hc::AmPointerInfo *info, void *ptr)
+am_status_t am_memtracker_getinfo(hc::AmPointerInfo *info, const void *ptr)
 {
     auto infoI = g_amPointerTracker.find(ptr);
     if (infoI != g_amPointerTracker.end()) {
@@ -290,7 +290,7 @@ am_status_t am_memtracker_getinfo(hc::AmPointerInfo *info, void *ptr)
 }
 
 
-am_status_t am_memtracker_update(void* ptr, int appId, unsigned allocationFlags)
+am_status_t am_memtracker_update(const void* ptr, int appId, unsigned allocationFlags)
 {
     auto iter = g_amPointerTracker.find(ptr);
     if (iter != g_amPointerTracker.end()) {

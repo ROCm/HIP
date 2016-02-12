@@ -151,6 +151,9 @@ syn keyword hipFunctionName hipUnbindTexture
 syn keyword hipFlags hipFilterModePoint 
 syn keyword hipFlags hipMemcpyHostToDevice 
 syn keyword hipFlags hipMemcpyDeviceToHost 
+syn keyword hipFlags hipMemcpyHostToHost 
+syn keyword hipFlags hipMemcpyDeviceToDevice 
+syn keyword hipFlags hipMemcpyDefault 
 syn keyword hipFlags hipReadModeElementType 
 syn keyword hipFlags hipSuccess 
 syn keyword hipFlags hipTextureType1D 

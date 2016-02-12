@@ -22,8 +22,8 @@ struct AmPointerInfo {
     bool        _isInDeviceMem;    ///< Memory is physically resident on a device (if false, memory is located on host)
     bool        _isAmManaged;   ///< Memory was allocated by AM and should be freed when am_reset is called.
 
-    int         _appId;              ///< App-specific storage.  Used by HIP to store deviceID.
-    unsigned    _appAllocationFlags; ///< App-specific allocation flags.  Used by HIP to store allocation flags. 
+    int         _appId;              ///< App-specific storage.  (Used by HIP to store deviceID.)
+    unsigned    _appAllocationFlags; ///< App-specific allocation flags.  (Used by HIP to store allocation flags.)
 
     AmPointerInfo() {};
 
@@ -91,7 +91,7 @@ am_status_t AM_copy(void*  dst, const void*  src, size_t size);
  *
  * @see AM_memtracker_add, 
  */
-am_status_t am_memtracker_getinfo(hc::AmPointerInfo *info, void *ptr);
+am_status_t am_memtracker_getinfo(hc::AmPointerInfo *info, const void *ptr);
 
 
 //TODO-doc
@@ -99,7 +99,7 @@ am_status_t am_memtracker_add(void* ptr, size_t sizeBytes, hc::accelerator acc, 
 
 
 //TODO-doc
-am_status_t am_memtracker_update(void* ptr, int appId, unsigned allocationFlags);
+am_status_t am_memtracker_update(const void* ptr, int appId, unsigned allocationFlags);
 
 
 /** 

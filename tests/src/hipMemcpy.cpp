@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 
     size_t Nbytes = N*sizeof(int);
 
-    printf ("N=%zu \n", N);
+    printf ("N=%zu Nbytes=%6.2fMB\n", N, Nbytes/1024.0/1024.0);
 
     int *A_d, *B_d, *C_d;
     int *A_h, *B_h, *C_h;
