@@ -63,13 +63,15 @@ public:
     void insert(void *pointer, const hc::AmPointerInfo &p);
     int remove(void *pointer);
 
-    MapTrackerType::iterator find(void *hostPtr);
+    MapTrackerType::iterator find(void *hostPtr) ;
 
-    MapTrackerType::iterator end() { return _tracker.end(); };
+    MapTrackerType::iterator readerLockBegin() { _mutex.lock(); return _tracker.begin(); } ;
+    MapTrackerType::iterator end() { return _tracker.end(); } ;
+    void readerUnlock() { _mutex.unlock(); };
+
 
     size_t reset (hc::accelerator acc);
 
-    std::ostream & print (std::ostream &os);
 private:
     // TODO - use or remove.
     inline void writeLock(); 
@@ -115,6 +117,7 @@ AmPointerTracker::MapTrackerType::iterator  AmPointerTracker::find (void *pointe
 }
 
 
+#if 0
 //---
 std::ostream & AmPointerTracker::print (std::ostream &os)
 {
@@ -126,6 +129,7 @@ std::ostream & AmPointerTracker::print (std::ostream &os)
 
     return os;
 }
+#endif
 
 //---
 // Remove all tracked locations, and free the associated memory (if the range was originally allocated by AM).
@@ -326,7 +330,38 @@ am_status_t am_memtracker_remove(void* ptr)
 //---
 void am_memtracker_print()
 {
-    g_amPointerTracker.print(std::cerr);
+    std::ostream &os = std::cerr;
+
+    //g_amPointerTracker.print(std::cerr);
+    for (auto iter = g_amPointerTracker.readerLockBegin() ; iter != g_amPointerTracker.end(); iter++) {
+        os << "  " << iter->first._basePointer << "..." << iter->first._endPointer << "::  ";
+        os << iter->second << std::endl;
+    }
+
+    g_amPointerTracker.readerUnlock();
+}
+
+
+//---
+void am_memtracker_sizeinfo(hc::accelerator acc, size_t *deviceMemSize, size_t *hostMemSize, size_t *userMemSize)
+{
+    *deviceMemSize = *hostMemSize = *userMemSize = 0;
+    for (auto iter = g_amPointerTracker.readerLockBegin() ; iter != g_amPointerTracker.end(); iter++) {
+        if (iter->second._acc == acc) {
+            size_t sizeBytes = iter->second._sizeBytes;
+            if (iter->second._isAmManaged) {
+                if (iter->second._isInDeviceMem) {
+                    *deviceMemSize += sizeBytes;
+                } else {
+                    *hostMemSize += sizeBytes;
+                }
+            } else {
+                *userMemSize += sizeBytes;
+            }
+        }
+    }
+
+    g_amPointerTracker.readerUnlock();
 }
 
 

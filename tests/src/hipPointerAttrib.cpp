@@ -115,6 +115,11 @@ void testSimple()
     HIPCHECK ( hipMallocHost(&A_Pinned_h, Nbytes) );
     A_OSAlloc_h = (char*)malloc(Nbytes);
 
+    size_t free, total;
+    HIPCHECK(hipMemGetInfo(&free, &total));
+    printf ("hipMemGetInfo: free=%zu (%4.2f) Nbytes=%lu total=%zu (%4.2f)\n", free, (float)(free/1024.0/1024.0), Nbytes, total, (float)(total/1024.0/1024.0));
+    HIPASSERT(free + Nbytes <= total);
+
 
     hipPointerAttribute_t attribs;
     hipPointerAttribute_t attribs2;
@@ -244,6 +249,10 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize)
 
     //---
     //Populate with device and host allocations.
+    size_t totalDeviceAllocated[numDevices];
+    for (int i =0; i<numDevices; i++) {
+        totalDeviceAllocated[i] = 0;
+    }
     for (int i=0; i<numAllocs; i++) {
         bool isDevice = rand() & 0x1;
         reference[i]._sizeBytes = zrand(maxSize-minSize) + minSize;
@@ -254,6 +263,7 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize)
 
         void * ptr;
         if (isDevice) {
+            totalDeviceAllocated[reference[i]._attrib.device] += reference[i]._sizeBytes;
             HIPCHECK(hipMalloc(&ptr, reference[i]._sizeBytes));
             reference[i]._attrib.memoryType    = hipMemoryTypeDevice;
             reference[i]._attrib.devicePointer = ptr;
@@ -277,6 +287,15 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize)
 #endif
 
 
+    for (int i =0; i<numDevices; i++) {
+        size_t free, total;
+        HIPCHECK(hipMemGetInfo(&free, &total));
+        printf ("  device#%d: hipMemGetInfo: free=%zu (%4.2fMB) clusterAllocTotalDevice=%lu (%4.2fMB) total=%zu (%4.2fMB)\n", 
+                i, free, (float)(free/1024.0/1024.0), totalDeviceAllocated[i], (float)(totalDeviceAllocated[i])/1024.0/1024.0, total, (float)(total/1024.0/1024.0));
+        HIPASSERT(free + totalDeviceAllocated[i] <= total);
+    }
+
+
     // Now look up each pointer we inserted and verify we can find it:
     for (int i=0; i<numAllocs; i++) {
         SuperPointerAttribute &ref = reference[i];
@@ -293,6 +312,7 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize)
         }
 
     }
+
 
 
 
@@ -370,18 +390,24 @@ void thread_noise_generator(int iters, size_t numBuffers, Dir addDir, Dir remove
         auto acc = hc::accelerator();
 
         if (addDir == Up) {
-            for (char *p = basePtr; p<basePtr + maxSize; p+=bufferSize) 
-            {
+            for (char *p = basePtr; p<basePtr + maxSize; p+=bufferSize) {
+                hc::am_memtracker_add(p, bufferSize, acc, false);
+            }
+        } else if (addDir == Down) {
+            for (char *p = basePtr+maxSize-bufferSize; p>=0; p-=bufferSize) {
                 hc::am_memtracker_add(p, bufferSize, acc, false);
             }
         }
 
         if (removeDir == Up) {
-            for (char *p = basePtr; p<basePtr + maxSize; p+=bufferSize) 
-            {
+            for (char *p = basePtr; p<basePtr + maxSize; p+=bufferSize) {
                 hc::am_memtracker_remove(p);
             }
-        };
+        } else if (removeDir == Down) {
+            for (char *p = basePtr+maxSize-bufferSize; p>=0; p-=bufferSize)  {
+                hc::am_memtracker_remove(p);
+            }
+        }
     }
 }
 
