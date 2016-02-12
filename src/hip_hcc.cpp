@@ -132,6 +132,7 @@ struct StagingBuffer {
 
 
     StagingBuffer(ihipDevice_t *device, size_t bufferSize) ;
+    ~StagingBuffer();
 
     void CopyHostToDevice(void* dst, const void* src, size_t sizeBytes);
 
@@ -163,6 +164,7 @@ struct ihipDevice_t
     StagingBuffer           *_staging_device2host;
 
 public:
+    void reset();
     void init(unsigned device_index, hc::accelerator acc);
     hipError_t getProperties(hipDeviceProp_t* prop);
 
@@ -172,6 +174,17 @@ public:
 
 
 //=================================================================================================
+//
+//Reset the device - this is called from hipDeviceReset.  
+//Device may be reset multiple times, and may be reset after init.
+void ihipDevice_t::reset() 
+{
+    _staging_host2device = new StagingBuffer(this, HIP_STAGING_SIZE*1024);
+    _staging_device2host = NULL;
+};
+
+
+//---
 void ihipDevice_t::init(unsigned device_index, hc::accelerator acc)
 {
     _device_index = device_index;
@@ -194,8 +207,7 @@ void ihipDevice_t::init(unsigned device_index, hc::accelerator acc)
     this->_streams.push_back(_null_stream);
     tprintf(TRACE_SYNC, "created device with null_stream=%p\n", _null_stream);
 
-    _staging_host2device = new StagingBuffer(this, HIP_STAGING_SIZE*1024);
-    _staging_device2host = NULL;
+    this->reset();
 };
 
 #if 0
@@ -204,6 +216,13 @@ ihipDevice_t::~ihipDevice_t()
     if (_null_stream) {
         delete _null_stream;
         _null_stream = NULL;
+    }
+
+    if (_staging_device2host) {
+        delete _staging_device2host;
+    }
+    if (_staging_host2device){
+        delete _staging_host2device;
     }
 }
 #endif
@@ -848,6 +867,7 @@ hipError_t hipDeviceReset(void)
     ihipDevice_t *device = ihipGetTlsDefaultDevice();
     if (device) {
         am_memtracker_reset(device->_acc);
+        device->reset(); // re-allocate required resources.
     }
 #endif
 
@@ -1562,6 +1582,18 @@ StagingBuffer::StagingBuffer(ihipDevice_t *device, size_t bufferSize) :
     }
 };
 
+//---
+StagingBuffer::~StagingBuffer()
+{
+    for (int i=0; i<numBuffers; i++) {
+        if (_pinnedStagingBuffer[i]) {
+            hc::AM_free(_pinnedStagingBuffer[i]);
+            _pinnedStagingBuffer[i] = NULL;
+        }
+        hsa_signal_destroy(_completion_signal[i]);
+    }
+}
+
 
 //---
 void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeBytes) {
@@ -1622,21 +1654,25 @@ void ihipAsyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t size
         }
     }
 
-    switch (kind) {
-        case hipMemcpyHostToDevice:
-            if (srcNotTracked) {
-                device->_staging_host2device->CopyHostToDevice(dst, src, sizeBytes);
-            } else {
-                assert(0); // TODO
-                //hsa_signal_wait_relaxed(completion_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
-            }
-            break;
-        case hipMemcpyDeviceToHost:
-            // TODO - optimize the copy here.
-            hc::AM_copy(dst, src, sizeBytes);
-            break;
-        default:
-            assert(0); // TODO
+    if ((kind == hipMemcpyHostToDevice) && (srcNotTracked)) {
+        if (useStagingBuffer) {
+            device->_staging_host2device->CopyHostToDevice(dst, src, sizeBytes);
+        }
+    } else if ((kind == hipMemcpyDeviceToHost) && (dstNotTracked)) {
+        // TODO - optimize the copy here.
+        hc::AM_copy(dst, src, sizeBytes);
+    } else {
+        // Let HSA runtime handle it:
+        // TODO - need buffer pool for the signals:
+        hsa_signal_t completion_signal;
+        hsa_signal_create(1, 0, NULL, &completion_signal);
+        hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, src, sizeBytes, device->_hsa_agent, 0, NULL, completion_signal);
+
+        if (hsa_status == HSA_STATUS_SUCCESS) {
+            hsa_signal_wait_relaxed(completion_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
+        }
+
+        hsa_signal_destroy(completion_signal);
     }
 }
 #endif
@@ -1815,6 +1851,7 @@ hipError_t hipMemGetInfo  (size_t *free, size_t *total)
 //---
 hipError_t hipFree(void* ptr)
 {
+    // TODO - ensure this pointer was created by hipMalloc and not hipMallocHost
     std::call_once(hip_initialized, ihipInit);
 
 
@@ -1831,6 +1868,7 @@ hipError_t hipFree(void* ptr)
 
 hipError_t hipFreeHost(void* ptr)
 {
+    // TODO - ensure this pointer was created by hipMallocHost and not hipMalloc
     std::call_once(hip_initialized, ihipInit);
 
     if (ptr) {
