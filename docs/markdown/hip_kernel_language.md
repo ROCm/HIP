@@ -363,27 +363,27 @@ Following is the list of supported double precision mathematical functions.
 <sub><b id="f2"><sup>[1]</sup></b> __RETURN_TYPE is dependent on compiler. It is usually 'int' for C compilers and 'bool' for C++ compilers.</sub> [↩](#a2)
 
 ### Integer Intrinsics
-Following is the list of supported integer intrinsics.
+Following is the list of supported integer intrinsics. Note that intrinsics are supported on device only.
 
-| **Function** | **Supported on Host** | **Supported on Device** |
-| --- | --- | --- |
-| unsigned int __brev ( unsigned int x ) <br><sub>Reverse the bit order of a 32 bit unsigned integer.</sub> | ✓ | ✓ |
-| unsigned long long int __brevll ( unsigned long long int x ) <br><sub>Reverse the bit order of a 64 bit unsigned integer. </sub> | ✓ | ✓ |
-| int __clz ( int  x ) <br><sub>Return the number of consecutive high-order zero bits in a 32 bit integer.</sub> | ✓ | ✓ |
-| unsigned int __clz(unsigned int x) <br><sub>Return the number of consecutive high-order zero bits in 32 bit unsigned integer.</sub> | ✓ | ✗ |  
-| int __clzll ( long long int x ) <br><sub>Count the number of consecutive high-order zero bits in a 64 bit integer.</sub> | ✓ | ✓ |
-| unsigned int __clzll(long long int x) <br><sub>Return the number of consecutive high-order zero bits in 64 bit signed integer.</sub> | ✓ | ✗ |
-| unsigned int __ffs(unsigned int x) <br><sub>Find the position of least signigicant bit set to 1 in a 32 bit unsigned integer.<sup id="a3">[1](#f3)</sup></sub> | ✓ | ✓|
-| unsigned int __ffs(int x) <br><sub>Find the position of least signigicant bit set to 1 in a 32 bit signed integer.</sub> | ✗ | ✓ |
-| unsigned int __ffsll(unsigned long long int x) <br><sub>Find the position of least signigicant bit set to 1 in a 64 bit unsigned integer.<sup>[1](#f3)</sup></sub> | ✓ | ✓ |
-| unsigned int __ffsll(long long int x) <br><sub>Find the position of least signigicant bit set to 1 in a 64 bit signed integer.</sub> | ✗ | ✓ |
-| unsigned int __popc ( unsigned int x ) <br><sub>Count the number of bits that are set to 1 in a 32 bit integer.</sub> | ✓ | ✓ |
-| int __popcll ( unsigned long long int x )<br><sub>Count the number of bits that are set to 1 in a 64 bit integer.</sub> | ✓ | ✓ |
+| **Function** |
+| --- |
+| unsigned int __brev ( unsigned int x ) <br><sub>Reverse the bit order of a 32 bit unsigned integer.</sub> |
+| unsigned long long int __brevll ( unsigned long long int x ) <br><sub>Reverse the bit order of a 64 bit unsigned integer. </sub> |
+| int __clz ( int  x ) <br><sub>Return the number of consecutive high-order zero bits in a 32 bit integer.</sub> |
+| unsigned int __clz(unsigned int x) <br><sub>Return the number of consecutive high-order zero bits in 32 bit unsigned integer.</sub> |
+| int __clzll ( long long int x ) <br><sub>Count the number of consecutive high-order zero bits in a 64 bit integer.</sub> |
+| unsigned int __clzll(long long int x) <br><sub>Return the number of consecutive high-order zero bits in 64 bit signed integer.</sub> |
+| unsigned int __ffs(unsigned int x) <br><sub>Find the position of least signigicant bit set to 1 in a 32 bit unsigned integer.<sup id="a3">[1](#f3)</sup></sub> |
+| unsigned int __ffs(int x) <br><sub>Find the position of least signigicant bit set to 1 in a 32 bit signed integer.</sub> |
+| unsigned int __ffsll(unsigned long long int x) <br><sub>Find the position of least signigicant bit set to 1 in a 64 bit unsigned integer.<sup>[1](#f3)</sup></sub> |
+| unsigned int __ffsll(long long int x) <br><sub>Find the position of least signigicant bit set to 1 in a 64 bit signed integer.</sub> |
+| unsigned int __popc ( unsigned int x ) <br><sub>Count the number of bits that are set to 1 in a 32 bit integer.</sub> |
+| int __popcll ( unsigned long long int x )<br><sub>Count the number of bits that are set to 1 in a 64 bit integer.</sub> |
 <sub><b id="f3"><sup>[1]</sup></b> 
 The hcc implementation of __ffs() and __ffsll() contains code to add a constant +1 to produce the ffs result format.
 For the cases where this overhead is not acceptable and programmer is willing to specialize for the platform, 
 hcc provides hc::__lastbit_u32_u32(unsigned int input) and  hc::__lastbit_u32_u64(unsigned long long int input).
-The index returned by __lastbit_ instructions starts at 0, while for ffs the index starts at 1.  
+The index returned by __lastbit_ instructions starts at -1, while for ffs the index starts at 0.
 
 
 ## Texture Functions
