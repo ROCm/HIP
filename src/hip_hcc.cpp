@@ -43,7 +43,6 @@ THE SOFTWARE.
 
 #include "hc_AM.cpp"
 
-#define USE_PINNED_HOST (__hcc_workweek__ >= 1601)
 #define USE_ASYNC_COPY  0
 #define USE_AM_TRACKER 1  /* use new AM memory tracker features */
 
@@ -1454,7 +1453,6 @@ hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
     std::call_once(hip_initialized, ihipInit);
 
     hipError_t  hip_status = hipSuccess;
-#if USE_PINNED_HOST
 
     const unsigned am_flags = amHostPinned;
 	auto device = ihipGetTlsDefaultDevice();
@@ -1472,20 +1470,6 @@ hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
 
     return ihipLogStatus(hip_status);
 
-#else
-    // TODO-hcc remove-me
-
-	// This code only works on Kaveri:
-    *ptr = malloc(sizeBytes); // TODO - call am_alloc for device memory, this will only on KV HSA.
-    if (*ptr != NULL) {
-        //TODO-hsart : need memory pin APIs to implement this correctly.
-        // FOr now do our best to allocate the memory, but return an error since
-        // the returned pointer can only be used on the HOST not the GPU.
-        return ihipLogStatus(hipErrorMemoryAllocation);
-    } else {
-        return ihipLogStatus(hipErrorMemoryAllocation);
-    }
-#endif
 }
 
 hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind)
@@ -1695,12 +1679,8 @@ hipError_t hipFreeHost(void* ptr)
     std::call_once(hip_initialized, ihipInit);
 
     if (ptr) {
-#if USE_PINNED_HOST
         tprintf (TRACE_MEM, "  %s: %p\n", __func__, ptr);
         hc::AM_free(ptr);
-#else
-        free(ptr);
-#endif
     }
 
     return ihipLogStatus(hipSuccess);
