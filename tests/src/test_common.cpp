@@ -88,7 +88,7 @@ int parseStandardArguments(int argc, char *argv[], bool failOnUndefinedArg)
 
         if (!strcmp(arg, " ")) {
             // skip NULL args.
-        } else if (!strcmp(arg, "--N")) {
+        } else if (!strcmp(arg, "--N") || (!strcmp(arg, "-N"))) {
             if (++i >= argc || !HipTest::parseSize(argv[i], &N)) {
                failed("Bad N size argument"); 
             }

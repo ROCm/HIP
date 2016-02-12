@@ -43,7 +43,7 @@ THE SOFTWARE.
 
 #include "hc_AM.cpp"
 
-#define USE_ASYNC_COPY  0
+#define USE_ASYNC_COPY  1
 #define USE_AM_TRACKER 1  /* use new AM memory tracker features */
 
 #define INLINE static inline
@@ -60,10 +60,12 @@ static const int release = 1;
 int HIP_PRINT_ENV = 0;
 int HIP_TRACE_API= 0;
 int HIP_LAUNCH_BLOCKING = 0;
+int HIP_STAGING_SIZE = 64;   /* size of staging buffers, in KB */
 
-#define TRACE_API  0x1 /* trace API calls and return values */
-#define TRACE_SYNC 0x2 /* trace synchronization pieces */
-#define TRACE_MEM  0x4 /* trace memory allocation / deallocation */
+#define TRACE_API   0x1 /* trace API calls and return values */
+#define TRACE_SYNC  0x2 /* trace synchronization pieces */
+#define TRACE_MEM   0x4 /* trace memory allocation / deallocation */
+#define TRACE_COPY2 0x8 /* trace memory copy commands. Detailed. */
 
 #define tprintf(trace_level, ...) {\
     if (HIP_TRACE_API & trace_level) {\
@@ -119,6 +121,28 @@ struct ihipEvent_t {
 } ;
 
 
+//-------------------------------------------------------------------------------------------------
+struct StagingBuffer {
+    static const int numBuffers = 2;
+
+    int             _bufferIndex; // Operating on buffer 0 or 1?
+
+    ihipDevice_t    *_device;
+    size_t          _bufferSize;  // Size of the buffers.
+
+
+    StagingBuffer(ihipDevice_t *device, size_t bufferSize) ;
+
+    void CopyHostToDevice(void* dst, const void* src, size_t sizeBytes);
+
+private:
+    char            *_pinnedStagingBuffer[numBuffers];
+    hsa_signal_t     _completion_signal[numBuffers];
+};
+
+
+
+//-------------------------------------------------------------------------------------------------
 struct ihipDevice_t
 {
     unsigned                _device_index; // index into g_devices.
@@ -135,8 +159,11 @@ struct ihipDevice_t
 
     unsigned                _compute_units;
 
+    StagingBuffer           *_staging_host2device;
+    StagingBuffer           *_staging_device2host;
+
 public:
-    ihipDevice_t(unsigned device_index, hc::accelerator acc);
+    void init(unsigned device_index, hc::accelerator acc);
     hipError_t getProperties(hipDeviceProp_t* prop);
 
     // TODO- create a copy constructor.
@@ -145,10 +172,10 @@ public:
 
 
 //=================================================================================================
-ihipDevice_t::ihipDevice_t(unsigned device_index, hc::accelerator acc)
-    :   _device_index(device_index),
-        _acc(acc)
+void ihipDevice_t::init(unsigned device_index, hc::accelerator acc)
 {
+    _device_index = device_index;
+    _acc = acc;
     hsa_agent_t *agent = static_cast<hsa_agent_t*> (acc.get_default_view().get_hsa_agent());
     if (agent) {
         int err = hsa_agent_get_info(*agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_COMPUTE_UNIT_COUNT, &_compute_units);
@@ -166,6 +193,9 @@ ihipDevice_t::ihipDevice_t(unsigned device_index, hc::accelerator acc)
     _null_stream = new ihipStream_t(device_index, acc.get_default_view(), hipStreamDefault);
     this->_streams.push_back(_null_stream);
     tprintf(TRACE_SYNC, "created device with null_stream=%p\n", _null_stream);
+
+    _staging_host2device = new StagingBuffer(this, HIP_STAGING_SIZE*1024);
+    _staging_device2host = NULL;
 };
 
 #if 0
@@ -187,7 +217,8 @@ thread_local int tls_defaultDevice = 0;
 
 // Global initialization.
 std::once_flag hip_initialized;
-std::vector<ihipDevice_t> g_devices; // Vector of all non-emulated (ie GPU) accelerators in the system.
+ihipDevice_t *g_devices; // Array of all non-emulated (ie GPU) accelerators in the system.
+unsigned g_deviceCnt;
 
 //=================================================================================================
 
@@ -462,25 +493,36 @@ void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, c
 //It is called with C++11 call_once, which provided thread-safety.
 void ihipInit()
 {
-
-    /*
-     * Build a table of valid compute devices.
-     */
-    auto accs = hc::accelerator::get_all();
-    g_devices.reserve(accs.size());
-    for (int i=0; i<accs.size(); i++) {
-        if (! accs[i].get_is_emulated()) {
-            int deviceId = g_devices.size();
-           g_devices.emplace_back(ihipDevice_t(deviceId, accs[i]));
-        }
-    }
-
     /*
      * Environment variables
      */
     READ_ENV_I(release, HIP_PRINT_ENV, 0,  "Print HIP environment variables.");
     READ_ENV_I(release, HIP_TRACE_API, 0,  "Trace each HIP API call.  Print function name and return code to stderr as program executes.");
     READ_ENV_I(release, HIP_LAUNCH_BLOCKING, CUDA_LAUNCH_BLOCKING, "Make HIP APIs 'host-synchronous', so they block until any kernel launches or data copy commands complete. Alias: CUDA_LAUNCH_BLOCKING." );
+    READ_ENV_I(release, HIP_STAGING_SIZE, 0, "Size of staging buffer, in KB" );
+
+    /*
+     * Build a table of valid compute devices.
+     */
+    auto accs = hc::accelerator::get_all();
+    int deviceCnt = 0;
+    for (int i=0; i<accs.size(); i++) {
+        if (! accs[i].get_is_emulated()) {
+            deviceCnt++;
+        }
+    };
+
+    g_devices = new ihipDevice_t[deviceCnt];
+    g_deviceCnt = 0;
+    for (int i=0; i<accs.size(); i++) {
+        if (! accs[i].get_is_emulated()) {
+           g_devices[g_deviceCnt].init(g_deviceCnt, accs[i]);
+           g_deviceCnt++;
+        }
+    }
+
+    assert(deviceCnt == g_deviceCnt);
+
 
     tprintf(TRACE_API, "pid=%u %-30s\n", getpid(), "<ihipInit>");
 
@@ -489,7 +531,7 @@ void ihipInit()
 INLINE bool ihipIsValidDevice(unsigned deviceIndex)
 {
     // deviceIndex is unsigned so always > 0
-    return (deviceIndex < g_devices.size());
+    return (deviceIndex < g_deviceCnt);
 }
 
 
@@ -508,7 +550,7 @@ INLINE ihipDevice_t *ihipGetTlsDefaultDevice()
 //---
 INLINE ihipDevice_t *ihipGetDevice(int deviceId)
 {
-    if ((deviceId >= 0) && (deviceId < g_devices.size())) {
+    if ((deviceId >= 0) && (deviceId < g_deviceCnt)) {
         return &g_devices[deviceId];
     } else {
         return NULL;
@@ -675,7 +717,7 @@ hipError_t hipGetDeviceCount(int *count)
 {
     std::call_once(hip_initialized, ihipInit);
 
-    *count = g_devices.size();
+    *count = g_deviceCnt;
 
     if (*count > 0) {
         return ihipLogStatus(hipSuccess);
@@ -764,7 +806,7 @@ hipError_t hipSetDevice(int device)
 {
     std::call_once(hip_initialized, ihipInit);
 
-    if ((device < 0) || (device >= g_devices.size())) {
+    if ((device < 0) || (device >= g_deviceCnt)) {
         return ihipLogStatus(hipErrorInvalidDevice);
     } else {
         tls_defaultDevice = device;
@@ -1299,6 +1341,10 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
         attributes->allocationFlags = amPointerInfo._appAllocationFlags;
         attributes->device          = amPointerInfo._appId;
 
+        if (attributes->device < 0) {
+            e = hipErrorInvalidDevice;
+        }
+
 
     } else {
         attributes->memoryType    = hipMemoryTypeDevice;
@@ -1482,6 +1528,7 @@ hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
 
 }
 
+//---
 hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind)
 {
 #ifdef USE_MEMCPYTOSYMBOL
@@ -1498,6 +1545,102 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t cou
 #endif
 	return ihipLogStatus(hipSuccess);
 }
+
+
+//-------------------------------------------------------------------------------------------------
+StagingBuffer::StagingBuffer(ihipDevice_t *device, size_t bufferSize) :
+    _bufferIndex(0), 
+    _device(device),
+    _bufferSize(bufferSize)
+{
+    for (int i=0; i<numBuffers; i++) {
+        _pinnedStagingBuffer[i] = hc::AM_alloc(_bufferSize, device->_acc, amHostPinned);
+        if (_pinnedStagingBuffer[i] == NULL) {
+            throw;
+        }
+        hsa_signal_create(0, 0, NULL, &_completion_signal[i]);
+    }
+};
+
+
+//---
+void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeBytes) {
+    const char *srcp = static_cast<const char*> (src); 
+    char *dstp = static_cast<char*> (dst); 
+
+    assert(sizeBytes < UINT64_MAX/2); // TODO
+    for (int64_t bytesRemaining=sizeBytes; bytesRemaining>0;  bytesRemaining -= _bufferSize) {
+
+        // TODO - double-buffer these guys.
+        size_t theseBytes = (bytesRemaining > _bufferSize) ? _bufferSize : bytesRemaining;
+
+        tprintf (TRACE_COPY2, "copy %zu bytes %p to stagingBuf[%d]:%p\n", theseBytes, srcp, _bufferIndex, _pinnedStagingBuffer[_bufferIndex]);
+
+        memcpy(_pinnedStagingBuffer[_bufferIndex], srcp, theseBytes);
+
+        tprintf (TRACE_COPY2, "async_copy %zu bytes %p to %p\n", theseBytes, _pinnedStagingBuffer[_bufferIndex], dstp);
+
+        hsa_signal_store_relaxed(_completion_signal[_bufferIndex], 1);
+        hsa_status_t hsa_status = hsa_amd_memory_async_copy(dstp, _pinnedStagingBuffer[_bufferIndex], theseBytes, _device->_hsa_agent, 0, NULL, _completion_signal[_bufferIndex]);
+
+        tprintf (TRACE_COPY2, "waiting... status=%d\n", hsa_status);
+        if (hsa_status == HSA_STATUS_SUCCESS) {
+            hsa_signal_wait_acquire(_completion_signal[_bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
+        }
+
+        srcp += theseBytes;
+        dstp += theseBytes;
+    }
+}
+
+
+
+
+#if USE_AM_TRACKER
+// TODO - add mutex to limit in/out:
+void ihipAsyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind)
+{
+    hc::AmPointerInfo dstPtrInfo, srcPtrInfo;
+
+    bool dstNotTracked = (hc::am_memtracker_getinfo(&dstPtrInfo, dst) != AM_SUCCESS);
+    bool srcNotTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) != AM_SUCCESS);
+
+    bool useStagingBuffer = true;
+
+    // Resolve default to a specific Kind, since we use different algorithms:
+    if (kind == hipMemcpyDefault) {
+        bool dstIsHost = (dstNotTracked || dstPtrInfo._isInDeviceMem);
+        bool srcIsHost = (srcNotTracked || srcPtrInfo._isInDeviceMem);
+        if (srcIsHost && !dstIsHost) {
+            kind = hipMemcpyHostToDevice;
+        } else if (!srcIsHost && dstIsHost) {
+            kind = hipMemcpyDeviceToHost;
+        } else if (srcIsHost && dstIsHost) {
+            kind = hipMemcpyHostToHost;
+        } else if (srcIsHost && dstIsHost) {
+            kind = hipMemcpyDeviceToDevice;
+        }
+    }
+
+    switch (kind) {
+        case hipMemcpyHostToDevice:
+            if (srcNotTracked) {
+                device->_staging_host2device->CopyHostToDevice(dst, src, sizeBytes);
+            } else {
+                assert(0); // TODO
+                //hsa_signal_wait_relaxed(completion_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
+            }
+            break;
+        case hipMemcpyDeviceToHost:
+            // TODO - optimize the copy here.
+            hc::AM_copy(dst, src, sizeBytes);
+            break;
+        default:
+            assert(0); // TODO
+    }
+}
+#endif
+
 
 
 //---
@@ -1517,11 +1660,8 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 
         ihipDevice_t *device = &g_devices[stream->_device_index];
 
-        hsa_signal_t completion_signal; // init/obtain from pool.
+        ihipAsyncCopy(device, dst, src, sizeBytes, kind);
 
-        hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, src, size, device->_hsa_agent, 0, NULL, &completion_signal);
-
-        e = (hsa_status == HSA_STATUS_SUCCESS) ? hipSuccess : hipErrorTbd;
     } else {
         e = hipErrorInvalidResourceHandle;
     }
