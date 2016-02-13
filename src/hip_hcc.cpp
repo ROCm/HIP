@@ -60,7 +60,7 @@ int HIP_PRINT_ENV = 0;
 int HIP_TRACE_API= 0;
 int HIP_LAUNCH_BLOCKING = 0;
 int HIP_STAGING_SIZE = 64;   /* size of staging buffers, in KB */
-int HIP_STAGING_DOUBLE_BUFFER = 1;  
+int HIP_STAGING_BUFFERS = 2;  
 
 #define TRACE_API   0x1 /* trace API calls and return values */
 #define TRACE_SYNC  0x2 /* trace synchronization pieces */
@@ -123,11 +123,10 @@ struct ihipEvent_t {
 
 //-------------------------------------------------------------------------------------------------
 struct StagingBuffer {
-    static const int _numBuffers = 2;
 
+    static const int _max_buffers = 4;
 
-
-    StagingBuffer(ihipDevice_t *device, size_t bufferSize, bool doubleBuffer) ;
+    StagingBuffer(ihipDevice_t *device, size_t bufferSize, int numBuffers) ;
     ~StagingBuffer();
 
     void CopyDeviceToHost(void* dst, const void* src, size_t sizeBytes);
@@ -136,10 +135,10 @@ struct StagingBuffer {
 private:
     ihipDevice_t    *_device;
     size_t          _bufferSize;  // Size of the buffers.
-    bool            _double_buffer; 
+    int             _numBuffers;
 
-    char            *_pinnedStagingBuffer[_numBuffers];
-    hsa_signal_t     _completion_signal[_numBuffers];
+    char            *_pinnedStagingBuffer[_max_buffers];
+    hsa_signal_t     _completion_signal[_max_buffers];
 };
 
 
@@ -161,8 +160,9 @@ struct ihipDevice_t
 
     unsigned                _compute_units;
 
-    StagingBuffer           *_staging_host2device;
-    StagingBuffer           *_staging_device2host;
+    hsa_signal_t             _copy_signal;         // signal to use for copies
+    std::mutex               _copy_lock[2];      // mutex for each direction.
+    StagingBuffer           *_staging_buffer[2]; // one buffer for each direction.
 
 public:
     void reset();
@@ -170,7 +170,7 @@ public:
     hipError_t getProperties(hipDeviceProp_t* prop);
 
     // TODO- create a copy constructor.
-    //~ihipDevice_t();
+    ~ihipDevice_t();
 };
 
 
@@ -180,8 +180,8 @@ public:
 //Device may be reset multiple times, and may be reset after init.
 void ihipDevice_t::reset() 
 {
-    _staging_host2device = new StagingBuffer(this, HIP_STAGING_SIZE*1024, HIP_STAGING_DOUBLE_BUFFER);
-    _staging_device2host = NULL;
+    _staging_buffer[0] = new StagingBuffer(this, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
+    _staging_buffer[1] = new StagingBuffer(this, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
 };
 
 
@@ -208,10 +208,13 @@ void ihipDevice_t::init(unsigned device_index, hc::accelerator acc)
     this->_streams.push_back(_null_stream);
     tprintf(TRACE_SYNC, "created device with null_stream=%p\n", _null_stream);
 
+    hsa_signal_create(0, 0, NULL, &_copy_signal);
+
     this->reset();
 };
 
-#if 0
+#if 1
+// TODO-remove #ifdef
 ihipDevice_t::~ihipDevice_t()
 {
     if (_null_stream) {
@@ -219,12 +222,12 @@ ihipDevice_t::~ihipDevice_t()
         _null_stream = NULL;
     }
 
-    if (_staging_device2host) {
-        delete _staging_device2host;
+    for (int i=0; i<2; i++) {
+        if (_staging_buffer[i]) {
+            delete _staging_buffer[i];
+        }
     }
-    if (_staging_host2device){
-        delete _staging_host2device;
-    }
+    hsa_signal_destroy(_copy_signal);
 }
 #endif
 
@@ -519,8 +522,8 @@ void ihipInit()
     READ_ENV_I(release, HIP_PRINT_ENV, 0,  "Print HIP environment variables.");
     READ_ENV_I(release, HIP_TRACE_API, 0,  "Trace each HIP API call.  Print function name and return code to stderr as program executes.");
     READ_ENV_I(release, HIP_LAUNCH_BLOCKING, CUDA_LAUNCH_BLOCKING, "Make HIP APIs 'host-synchronous', so they block until any kernel launches or data copy commands complete. Alias: CUDA_LAUNCH_BLOCKING." );
-    READ_ENV_I(release, HIP_STAGING_SIZE, 0, "Size of staging buffer, in KB" );
-    READ_ENV_I(release, HIP_STAGING_DOUBLE_BUFFER, 0, "Double-buffer copies to device" );
+    READ_ENV_I(release, HIP_STAGING_SIZE, 0, "Size of each staging buffer (in KB)." );
+    READ_ENV_I(release, HIP_STAGING_BUFFERS, 0, "Number of staging buffers to use in each direction.");
 
     /*
      * Build a table of valid compute devices.
@@ -1570,11 +1573,14 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t cou
 
 
 //-------------------------------------------------------------------------------------------------
-StagingBuffer::StagingBuffer(ihipDevice_t *device, size_t bufferSize, bool doubleBuffer) :
+StagingBuffer::StagingBuffer(ihipDevice_t *device, size_t bufferSize, int numBuffers) :
     _device(device),
     _bufferSize(bufferSize),
-    _double_buffer(doubleBuffer)
+    _numBuffers(numBuffers > _max_buffers ? _max_buffers : numBuffers)
 {
+    
+
+    
     for (int i=0; i<_numBuffers; i++) {
         // TODO - experiment with alignment here.
         _pinnedStagingBuffer[i] = hc::AM_alloc(_bufferSize, device->_acc, amHostPinned);
@@ -1630,8 +1636,8 @@ void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeByte
 
         srcp += theseBytes;
         dstp += theseBytes;
-        if (_double_buffer) {
-            bufferIndex = (bufferIndex + 1) % _numBuffers;
+        if (++bufferIndex >= _numBuffers) {
+            bufferIndex = 0;
         }
     }
 
@@ -1647,9 +1653,7 @@ void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeByte
     const char *srcp0 = static_cast<const char*> (src); 
     char *dstp1 = static_cast<char*> (dst); 
 
-    int numBuffers = _double_buffer ? _numBuffers  : 1;
-
-    for (int i=0; i<numBuffers; i++) {
+    for (int i=0; i<_numBuffers; i++) {
         hsa_signal_store_relaxed(_completion_signal[i], 0);
     }
 
@@ -1660,7 +1664,7 @@ void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeByte
 
     while (bytesRemaining1 > 0) {
         // First launch the async copies to copy from dest to host
-        for (int bufferIndex = 0; (bytesRemaining0>0) && (bufferIndex < numBuffers);  bytesRemaining0 -= _bufferSize, bufferIndex++) {
+        for (int bufferIndex = 0; (bytesRemaining0>0) && (bufferIndex < _numBuffers);  bytesRemaining0 -= _bufferSize, bufferIndex++) {
 
             size_t theseBytes = (bytesRemaining0 > _bufferSize) ? _bufferSize : bytesRemaining0;
 
@@ -1673,7 +1677,7 @@ void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeByte
         }
 
         // Now unload the staging buffers:
-        for (int bufferIndex=0; (bytesRemaining1>0) && (bufferIndex < numBuffers);  bytesRemaining1 -= _bufferSize, bufferIndex++) {
+        for (int bufferIndex=0; (bytesRemaining1>0) && (bufferIndex < _numBuffers);  bytesRemaining1 -= _bufferSize, bufferIndex++) {
 
             size_t theseBytes = (bytesRemaining1 > _bufferSize) ? _bufferSize : bytesRemaining1;
 
@@ -1705,7 +1709,7 @@ void ihipAsyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t size
     bool dstNotTracked = (hc::am_memtracker_getinfo(&dstPtrInfo, dst) != AM_SUCCESS);
     bool srcNotTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) != AM_SUCCESS);
 
-    bool useStagingBuffer = true;
+    bool useStagingBuffer = true;  // TODO - remove when new copy bakes a bit.  
 
     // Resolve default to a specific Kind, since we use different algorithms:
     if (kind == hipMemcpyDefault) {
@@ -1724,31 +1728,36 @@ void ihipAsyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t size
 
     if ((kind == hipMemcpyHostToDevice) && (srcNotTracked)) {
         if (useStagingBuffer) {
-            device->_staging_host2device->CopyHostToDevice(dst, src, sizeBytes);
+            std::lock_guard<std::mutex> l (device->_copy_lock[0]);
+            device->_staging_buffer[0]->CopyHostToDevice(dst, src, sizeBytes);
         } else {
             hc::AM_copy(dst, src, sizeBytes);
         }
     } else if ((kind == hipMemcpyDeviceToHost) && (dstNotTracked)) {
         if (useStagingBuffer) {
-            device->_staging_host2device->CopyDeviceToHost(dst, src, sizeBytes);
+            std::lock_guard<std::mutex> l (device->_copy_lock[1]);
+            device->_staging_buffer[1]->CopyDeviceToHost(dst, src, sizeBytes);
         } else {
             hc::AM_copy(dst, src, sizeBytes);
         }
     } else if (kind == hipMemcpyHostToHost)  {
-        memcpy(dst, src, sizeBytes);
+        memcpy(dst, src, sizeBytes);  // TODO - not async.
 
     } else {
         // Let HSA runtime handle it:
         // TODO - need buffer pool for the signals:
-        hsa_signal_t completion_signal;
-        hsa_signal_create(1, 0, NULL, &completion_signal);
-        hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, src, sizeBytes, device->_hsa_agent, 0, NULL, completion_signal);
+
+        device->_copy_lock[1].lock();
+
+        hsa_signal_store_relaxed(device->_copy_signal, 1);
+        hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, src, sizeBytes, device->_hsa_agent, 0, NULL, device->_copy_signal);
 
         if (hsa_status == HSA_STATUS_SUCCESS) {
-            hsa_signal_wait_relaxed(completion_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
+            hsa_signal_wait_relaxed(device->_copy_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
         }
 
-        hsa_signal_destroy(completion_signal);
+        device->_copy_lock[1].unlock();
+
     }
 }
 #endif
