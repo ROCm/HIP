@@ -52,9 +52,9 @@ bool          p_d2h = true;
 void RunBenchmark_H2D(ResultDatabase &resultDB) 
 {
     // Sizes are in kb
-    int nSizes  = 20;
-    int sizes[20] = {1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,
-		     32768,65536,131072,262144,524288};
+    int sizes[] = {1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384, 32768,65536,131072,262144,524288};
+    int nSizes  = sizeof(sizes) / sizeof(int);
+
     long long numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
 
     hipSetDevice(p_device);
