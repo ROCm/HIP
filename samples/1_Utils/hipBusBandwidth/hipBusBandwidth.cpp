@@ -144,8 +144,8 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
             double speed = (double(sizes[sizeIndex]) * 1024. / (1000*1000)) / t;
             char sizeStr[256];
             sprintf(sizeStr, "% 7dkB", sizes[sizeIndex]);
-            resultDB.AddResult("DownloadSpeed", sizeStr, "GB/sec", speed);
-            resultDB.AddResult("DownloadTime", sizeStr, "ms", t);
+            resultDB.AddResult("H2D_Bandwidth", sizeStr, "GB/sec", speed);
+            resultDB.AddResult("H2D_Time", sizeStr, "ms", t);
         }
     }
 
@@ -273,8 +273,8 @@ void RunBenchmark_D2H(ResultDatabase &resultDB)
             double speed = (double(sizes[sizeIndex]) * 1024. / (1000*1000)) / t;
             char sizeStr[256];
             sprintf(sizeStr, "% 7dkB", sizes[sizeIndex]);
-            resultDB.AddResult("ReadbackSpeed", sizeStr, "GB/sec", speed);
-            resultDB.AddResult("ReadbackTime", sizeStr, "ms", t);
+            resultDB.AddResult("D2H_Bandwidth", sizeStr, "GB/sec", speed);
+            resultDB.AddResult("D2H_Time", sizeStr, "ms", t);
         }
 	//resultDB.AddResult("ReadbackLatencyEstimate", "1-2kb", "ms", times[0]-(times[1]-times[0])/1.);
 	//resultDB.AddResult("ReadbackLatencyEstimate", "1-4kb", "ms", times[0]-(times[2]-times[0])/3.);
