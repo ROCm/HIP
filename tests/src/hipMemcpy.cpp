@@ -129,7 +129,6 @@ void memcpytest2(size_t numElements, bool usePinnedHost, bool useHostToHost, boo
     HipTest::checkVectorADD(A_h, B_h, C_h, numElements);
 
     HipTest::freeArrays (A_d, B_d, C_d, A_h, B_h, C_h, usePinnedHost);
-    HIPCHECK ( hipDeviceReset() );
 
     printf ("  %s success\n", __func__);
 }
@@ -177,24 +176,26 @@ void memcpytest2_sizes(size_t maxElem=0, size_t offset=0)
             deviceId, free, (float)(free/1024.0/1024.0), total, (float)(total/1024.0/1024.0), maxElem*sizeof(T)/1024.0/1024.0, offset);
 
     for (size_t elem=64; elem+offset<=maxElem; elem*=2) {
+        HIPCHECK ( hipDeviceReset() );
         memcpytest2<T>(elem+offset, 0, 1, 1, 0);  // unpinned host
+        HIPCHECK ( hipDeviceReset() );
         memcpytest2<T>(elem+offset, 1, 1, 1, 0);  // pinned host
     }
 }
 
 
 template<typename T>
-void multiThread_1(bool serialize)
+void multiThread_1(bool serialize, bool usePinnedHost)
 {
     printSep();
-    printf ("test: %s<%s> serialize=%d\n", __func__,  typeid(T).name(), serialize);
-    std::thread t1 (memcpytest2<T>,N, 0,0,0,0);
+    printf ("test: %s<%s> serialize=%d usePinnedHost=%d\n", __func__,  typeid(T).name(), serialize, usePinnedHost);
+    std::thread t1 (memcpytest2<T>,N, usePinnedHost,0,0,0);
     if (serialize) {
         t1.join();
     }
 
     
-    std::thread t2 (memcpytest2<T>,N, 0,0,0,0);
+    std::thread t2 (memcpytest2<T>,N, usePinnedHost,0,0,0);
     if (serialize) {
         t2.join();
     }
@@ -213,10 +214,12 @@ int main(int argc, char *argv[])
 
 
     if (p_tests & 0x1) {
+        HIPCHECK ( hipDeviceReset() );
         simpleTest1();
     }
 
     if (p_tests & 0x2) {
+        HIPCHECK ( hipDeviceReset() );
         memcpytest2_loop<float>(N);
         memcpytest2_loop<double>(N);
         memcpytest2_loop<char>(N);
@@ -224,6 +227,7 @@ int main(int argc, char *argv[])
     }
 
     if (p_tests & 0x4) {
+        HIPCHECK ( hipDeviceReset() );
         printSep();
         memcpytest2_sizes<float>(0,0);
         printSep();
@@ -235,9 +239,11 @@ int main(int argc, char *argv[])
     }
 
     if (p_tests & 0x8) {
+        HIPCHECK ( hipDeviceReset() );
         printSep();
-        multiThread_1<float>(true);
-        multiThread_1<float>(false);
+        multiThread_1<float>(true, true);
+        multiThread_1<float>(false, true);
+        multiThread_1<float>(false, false); // TODO
     }
 
     passed();
