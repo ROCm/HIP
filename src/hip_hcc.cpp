@@ -1641,8 +1641,8 @@ void ihipAsyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t size
 
     // Resolve default to a specific Kind, since we use different algorithms:
     if (kind == hipMemcpyDefault) {
-        bool dstIsHost = (dstNotTracked || dstPtrInfo._isInDeviceMem);
-        bool srcIsHost = (srcNotTracked || srcPtrInfo._isInDeviceMem);
+        bool dstIsHost = (dstNotTracked || !dstPtrInfo._isInDeviceMem);
+        bool srcIsHost = (srcNotTracked || !srcPtrInfo._isInDeviceMem);
         if (srcIsHost && !dstIsHost) {
             kind = hipMemcpyHostToDevice;
         } else if (!srcIsHost && dstIsHost) {
