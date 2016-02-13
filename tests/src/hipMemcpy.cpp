@@ -22,6 +22,8 @@ THE SOFTWARE.
 #include "hip_runtime.h"
 #include "test_common.h"
 
+//:w #include <typeinfo>
+
 
 // Test simple H2D copies and back.
 void simpleTest1()
@@ -59,9 +61,12 @@ void simpleTest1()
 // Test many different kinds of memory copies:
 
 template <typename T>
-void memcpyKind(bool usePinnedHost, bool useHostToHost, bool useMemkindDefault)
+void memcpytest2(bool usePinnedHost, bool useHostToHost, bool useDeviceToDevice, bool useMemkindDefault)
 {
-    printf ("test: %s\n", __func__);
+    printf ("test: %s<%s> usePinnedHost:%d, useHostToHost:%d, useDeviceToDevice:%d, useMemkindDefault:%d\n", 
+            __func__, 
+            typeid(T).name(),
+            usePinnedHost, useHostToHost, useDeviceToDevice, useMemkindDefault);
 
 
     T *A_d, *B_d, *C_d;
@@ -76,9 +81,6 @@ void memcpyKind(bool usePinnedHost, bool useHostToHost, bool useMemkindDefault)
     T *B_hh = NULL;
     T *C_dd = NULL;
 
-    // Allocate some extra arrays:
-     
-    HIPCHECK ( hipMalloc(&C_dd, Nbytes) );
 
 
     if (useHostToHost) {
@@ -91,7 +93,7 @@ void memcpyKind(bool usePinnedHost, bool useHostToHost, bool useMemkindDefault)
         }
 
 
-        // Do some extra host copies here to mix things up:
+        // Do some extra host-to-host copies here to mix things up:
         HIPCHECK ( hipMemcpy(A_hh, A_h, Nbytes, useMemkindDefault? hipMemcpyDefault : hipMemcpyHostToHost));
         HIPCHECK ( hipMemcpy(B_hh, B_h, Nbytes, useMemkindDefault? hipMemcpyDefault : hipMemcpyHostToHost));
 
@@ -105,17 +107,19 @@ void memcpyKind(bool usePinnedHost, bool useHostToHost, bool useMemkindDefault)
 
     hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d, B_d, C_d, N);
 
-#if 0
-    // Do some extra host copies here to mix things up:
-    HIPCHECK ( hipMemcpy(C_dd, C_d,  Nbytes, useMemkindDefault? hipMemcpyDefault : hipMemcpyHostToHost));
+    if (useDeviceToDevice) {
+        HIPCHECK ( hipMalloc(&C_dd, Nbytes) );
 
-    //Destroy the original C_d:
-    HIPCHECK ( hipMemset(C_d, 0x5A, Nbytes));
+        // Do an extra device-to-device copies here to mix things up:
+        HIPCHECK ( hipMemcpy(C_dd, C_d,  Nbytes, useMemkindDefault? hipMemcpyDefault : hipMemcpyDeviceToDevice));
 
-    HIPCHECK ( hipMemcpy(C_h, C_dd, Nbytes, useMemkindDefault? hipMemcpyDefault:hipMemcpyDeviceToHost));
-#else
-    HIPCHECK ( hipMemcpy(C_h, C_d, Nbytes, useMemkindDefault? hipMemcpyDefault:hipMemcpyDeviceToHost));
-#endif
+        //Destroy the original C_d:
+        HIPCHECK ( hipMemset(C_d, 0x5A, Nbytes));
+
+        HIPCHECK ( hipMemcpy(C_h, C_dd, Nbytes, useMemkindDefault? hipMemcpyDefault:hipMemcpyDeviceToHost));
+    } else {
+        HIPCHECK ( hipMemcpy(C_h, C_d, Nbytes, useMemkindDefault? hipMemcpyDefault:hipMemcpyDeviceToHost));
+    }
 
     HIPCHECK ( hipDeviceSynchronize() );
     HipTest::checkVectorADD(A_h, B_h, C_h, N);
@@ -127,6 +131,25 @@ void memcpyKind(bool usePinnedHost, bool useHostToHost, bool useMemkindDefault)
 }
 
 
+template<typename T>
+void memcpytest2_loop()
+{
+    for (int usePinnedHost =0; usePinnedHost<=1; usePinnedHost++) {
+#define USE_HOST_2_HOST
+#ifdef USE_HOST_2_HOST
+        for (int useHostToHost =0; useHostToHost<=1; useHostToHost++) {  // TODO
+#else
+        for (int useHostToHost =0; useHostToHost<=0; useHostToHost++) {  // TODO
+#endif
+            for (int useDeviceToDevice =0; useDeviceToDevice<=1; useDeviceToDevice++) {
+                for (int useMemkindDefault =0; useMemkindDefault<=1; useMemkindDefault++) {
+                    memcpytest2<T>(usePinnedHost, useHostToHost, useDeviceToDevice, useMemkindDefault);
+                }
+            }
+        }
+    }
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -135,9 +158,13 @@ int main(int argc, char *argv[])
 
     simpleTest1();
 
-    memcpyKind<float>(false, false, false);
-    memcpyKind<float>(true, false, false);
-    //memcpyKind<float>(true);
+    //memcpytest2<char>(0/*usePinnedHost*/, 0/*useHostToHost*/, 0/*useDeviceToDevice*/, 1/*useMemkindDefault*/);
+
+    memcpytest2_loop<float>();
+    memcpytest2_loop<double>();
+    memcpytest2_loop<char>();
+    memcpytest2_loop<int>();
+
 
     passed();
 
