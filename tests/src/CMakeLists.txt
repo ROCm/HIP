@@ -19,7 +19,6 @@ MESSAGE ("HIP_PATH=" ${HIP_PATH})
 
 if (${HIP_PLATFORM} STREQUAL "hcc")
 	MESSAGE ("HIP_PLATFORM=hcc")
-	set (HC_PATH ${HIP_PATH}/hc)
 	set (HSA_PATH /opt/hsa)
 
 	#---
@@ -30,7 +29,7 @@ if (${HIP_PLATFORM} STREQUAL "hcc")
 	#These includes are used for all files.
 	#Include HIP and HC since the tests need both of these:
 	#Note below HSA path is surgically included only where necessary.
-	include_directories(${HIP_PATH}/include ${HC_PATH}/include)
+	include_directories(${HIP_PATH}/include)
 
 	# hip_hcc.o:
 	add_library(hip_hcc OBJECT ${HIP_PATH}/src/hip_hcc.cpp)
