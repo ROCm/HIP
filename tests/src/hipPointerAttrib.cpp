@@ -289,6 +289,7 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize)
 
     for (int i =0; i<numDevices; i++) {
         size_t free, total;
+        HIPCHECK(hipSetDevice(i));
         HIPCHECK(hipMemGetInfo(&free, &total));
         printf ("  device#%d: hipMemGetInfo: free=%zu (%4.2fMB) clusterAllocTotalDevice=%lu (%4.2fMB) total=%zu (%4.2fMB)\n", 
                 i, free, (float)(free/1024.0/1024.0), totalDeviceAllocated[i], (float)(totalDeviceAllocated[i])/1024.0/1024.0, total, (float)(total/1024.0/1024.0));
@@ -452,7 +453,6 @@ int main(int argc, char *argv[])
     N= 1000000;
     HipTest::parseStandardArguments(argc, argv, true);
 
-    HIPCHECK(hipSetDevice(p_gpuDevice));
 
     Nbytes = N*sizeof(char);
 
@@ -460,6 +460,8 @@ int main(int argc, char *argv[])
 
 
     if (p_tests & 0x01) {
+        printf ("info: set device to %d\n", p_gpuDevice);
+        HIPCHECK(hipSetDevice(p_gpuDevice));
         testSimple();
     }
 
