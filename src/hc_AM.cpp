@@ -73,12 +73,6 @@ public:
     size_t reset (hc::accelerator acc);
 
 private:
-    // TODO - use or remove.
-    inline void writeLock(); 
-    inline void writeUnlock(); 
-    inline void readLock(); 
-    inline void readUnlock(); 
-
     MapTrackerType  _tracker;
     std::mutex      _mutex;
     //std::shared_timed_mutex _mut;
@@ -117,20 +111,6 @@ AmPointerTracker::MapTrackerType::iterator  AmPointerTracker::find (const void *
 }
 
 
-#if 0
-//---
-std::ostream & AmPointerTracker::print (std::ostream &os)
-{
-    std::lock_guard<std::mutex> l (_mutex);
-    for (auto iter = _tracker.begin() ; iter != _tracker.end(); iter++) {
-        os << "  " << iter->first._basePointer << "..." << iter->first._endPointer << "::  ";
-        os << iter->second << std::endl;
-    }
-
-    return os;
-}
-#endif
-
 //---
 // Remove all tracked locations, and free the associated memory (if the range was originally allocated by AM).
 // Returns count of ranges removed.
@@ -156,39 +136,6 @@ size_t AmPointerTracker::reset (hc::accelerator acc)
 
     return count;
 }
-
-
-
-//---
-void AmPointerTracker::writeLock ()
-{
-    _mutex.lock();
-}
-
-
-//---
-void AmPointerTracker::writeUnlock ()
-{
-    _mutex.unlock();
-}
-
-
-//---
-// TODO - support multiple concurrent reader
-void AmPointerTracker::readLock ()
-{
-    _mutex.lock();
-}
-
-
-//---
-// TODO - support multiple concurrent reader
-void AmPointerTracker::readUnlock ()
-{
-    _mutex.unlock();
-}
-
-
 
 
 //=========================================================================================================
@@ -289,6 +236,17 @@ am_status_t am_memtracker_getinfo(hc::AmPointerInfo *info, const void *ptr)
     }
 }
 
+am_status_t am_memtracker_add(void* ptr, size_t sizeBytes, hc::accelerator acc, bool isDeviceMem)
+{
+    if (isDeviceMem) {
+        g_amPointerTracker.insert(ptr, hc::AmPointerInfo(ptr/*hostPointer*/,  ptr /*devicePointer*/, sizeBytes, acc, true/*isDevice*/, false /*isAMManaged*/));
+    } else {
+        g_amPointerTracker.insert(ptr, hc::AmPointerInfo(NULL/*hostPointer*/,  ptr /*devicePointer*/, sizeBytes, acc, false/*isDevice*/, false /*isAMManaged*/));
+    }
+
+    return AM_SUCCESS;
+}
+
 
 am_status_t am_memtracker_update(const void* ptr, int appId, unsigned allocationFlags)
 {
@@ -300,18 +258,6 @@ am_status_t am_memtracker_update(const void* ptr, int appId, unsigned allocation
     } else {
         return AM_ERROR_MISC;
     }
-}
-
-
-am_status_t am_memtracker_add(void* ptr, size_t sizeBytes, hc::accelerator acc, bool isDeviceMem)
-{
-    if (isDeviceMem) {
-        g_amPointerTracker.insert(ptr, hc::AmPointerInfo(ptr/*hostPointer*/,  ptr /*devicePointer*/, sizeBytes, acc, true/*isDevice*/, false /*isAMManaged*/));
-    } else {
-        g_amPointerTracker.insert(ptr, hc::AmPointerInfo(NULL/*hostPointer*/,  ptr /*devicePointer*/, sizeBytes, acc, false/*isDevice*/, false /*isAMManaged*/));
-    }
-
-    return AM_SUCCESS;
 }
 
 

@@ -79,6 +79,7 @@ am_status_t AM_free(void*  ptr);
 am_status_t AM_copy(void*  dst, const void*  src, size_t size);
 
 
+
 /**
  * Return information about tracked pointer.
  *
@@ -94,11 +95,23 @@ am_status_t AM_copy(void*  dst, const void*  src, size_t size);
 am_status_t am_memtracker_getinfo(hc::AmPointerInfo *info, const void *ptr);
 
 
-//TODO-doc
+/**
+ * Adds a pointer to the memory tracker.
+ *
+ * @return AM_SUCCESS
+ * @see am_memtracker_getinfo
+ */
 am_status_t am_memtracker_add(void* ptr, size_t sizeBytes, hc::accelerator acc, bool isDeviceMem=false);
 
 
-//TODO-doc
+/*
+ * Updates infor for an existing pointer in the memory tracker.
+ *
+ * @returns AM_ERROR_MISC if pointer is not found in tracker.  
+ * @returns AM_SUCCESS if pointer is not found in tracker.  
+ *
+ * @see am_memtracker_getinfo, am_memtracker_add
+ */
 am_status_t am_memtracker_update(const void* ptr, int appId, unsigned allocationFlags);
 
 
@@ -109,23 +122,33 @@ am_status_t am_memtracker_update(const void* ptr, int appId, unsigned allocation
  *
  * @returns AM_ERROR_MISC if pointer is not found in tracker.  
  * @returns AM_SUCCESS if pointer is not found in tracker.  
+ *
+ * @see am_memtracker_getinfo, am_memtracker_add
  */
 am_status_t am_memtracker_remove(void* ptr);
 
 /**
- * Remove all memory allocations associated with specified accelerator.
+ * Remove all memory allocations associated with specified accelerator from the memory tracker.
  *
  * @returns Number of entries reset.
+ * @see am_memtracker_getinfo
  */
 size_t am_memtracker_reset(hc::accelerator acc);
 
 /**
- * Prints info about the memory tracker table.
+ * Prints the entries in the memory tracker table.
  *
  * Intended primarily for debug purposes.
+ * @see am_memtracker_getinfo
  **/
 void am_memtracker_print();
 
+
+/**
+ * Returns total sizes of device, host, and user memory allocated by the application
+ *
+ * User memory is registered with am_tracker_add.
+ **/
 void am_memtracker_sizeinfo(hc::accelerator acc, size_t *deviceMemSize, size_t *hostMemSize, size_t *userMemSize);
 
 
