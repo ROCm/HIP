@@ -49,8 +49,6 @@ THE SOFTWARE.
 
 //---
 // Environment variables:
-// TODO-HCC - map this to the HC instruction that uses HSAIL to get the wave size.
-int warpSize = 64;
 
 // Intended to distinguish whether an environment variable should be visible only in debug mode, or in debug+release.
 //static const int debug = 0;
@@ -169,7 +167,6 @@ public:
     void init(unsigned device_index, hc::accelerator acc);
     hipError_t getProperties(hipDeviceProp_t* prop);
 
-    // TODO- create a copy constructor.
     ~ihipDevice_t();
 };
 
@@ -213,8 +210,6 @@ void ihipDevice_t::init(unsigned device_index, hc::accelerator acc)
     this->reset();
 };
 
-#if 1
-// TODO-remove #ifdef
 ihipDevice_t::~ihipDevice_t()
 {
     if (_null_stream) {
@@ -229,7 +224,6 @@ ihipDevice_t::~ihipDevice_t()
     }
     hsa_signal_destroy(_copy_signal);
 }
-#endif
 
 //----
 
