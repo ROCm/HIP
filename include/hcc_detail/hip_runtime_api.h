@@ -115,7 +115,7 @@ enum hipMemcpyKind {
 
 
 // The handle allows the async commands to use the stream even if the parent hipStream_t goes out-of-scope.
-typedef struct ihipStream_t * hipStream_t;
+typedef class ihipStream_t * hipStream_t;
 
 
 /*
