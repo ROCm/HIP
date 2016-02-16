@@ -134,6 +134,7 @@ typedef struct hipPointerAttribute_t {
  * @enum
  * @ingroup Enumerations
  */
+// Developer note - when updating these, update the hipErrorName and hipErrorString functions
 typedef enum hipError_t {
      hipSuccess = 0                   ///< Successful completion.
     ,hipErrorMemoryAllocation         ///< Memory allocation error.
@@ -143,6 +144,8 @@ typedef enum hipError_t {
     ,hipErrorInvalidValue             ///< One or more of the parameters passed to the API call is NULL or not in an acceptable range.
     ,hipErrorInvalidResourceHandle    ///< Resource handle (hipEvent_t or hipStream_t) invalid.
     ,hipErrorInvalidDevice            ///< DeviceID must be in range 0...#compute-devices.
+    ,hipErrorInvalidMemcpyDirection   ///< Invalid memory copy direction 
+
     ,hipErrorNoDevice                 ///< Call to hipGetDeviceCount returned 0 devices
     ,hipErrorNotReady                 ///< Indicates that asynchronous operations enqueued earlier are not ready.  This is not actually an error, but is used to distinguish from hipSuccess (which indicates completion).  APIs that return this error include hipEventQuery and hipStreamQuery.
     ,hipErrorUnknown                  ///< Unknown error.

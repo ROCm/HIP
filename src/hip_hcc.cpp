@@ -67,6 +67,7 @@ int HIP_TRACE_API= 0;
 int HIP_LAUNCH_BLOCKING = 0;
 int HIP_STAGING_SIZE = 64;   /* size of staging buffers, in KB */
 int HIP_STAGING_BUFFERS = 2;  
+int HIP_STREAM_SIGNALS = 2;  /* number of signals to use when stream is created */
 
 #define TRACE_API   0x1 /* trace API calls and return values */
 #define TRACE_SYNC  0x2 /* trace synchronization pieces */
@@ -90,18 +91,50 @@ enum ihipCommand_t {
     ihipCommandData,
 };
 
+
+// Small wrapper around signals.
+// Designed to be used from stream.
+struct ihipSignal_t {
+    hsa_signal_t   _hsa_signal;
+    int            _refCnt;
+
+    ihipSignal_t() : _refCnt(0) {
+      if (hsa_signal_create(1, 0, NULL, &_hsa_signal) != HSA_STATUS_SUCCESS) {
+          throw;
+      }
+    }
+
+    ~ihipSignal_t() {
+        if (hsa_signal_destroy(_hsa_signal) != HSA_STATUS_SUCCESS) {
+            throw;
+        }
+        // _refCnt should be 0, unless we are shutting down...
+        _refCnt = 0;
+    };
+};
+
+
 // Internal stream structure.
-struct ihipStream_t {
+class ihipStream_t {
+public:
     unsigned             _device_index;
     hc::accelerator_view _av;
     unsigned            _flags;
     ihipCommand_t        _last_command;
 
     //ihipStream_t() : _av(){ };
-    ihipStream_t(unsigned device_index, hc::accelerator_view av, unsigned int flags) :
-        _device_index(device_index), _av(av), _flags(flags), _last_command(ihipCommandKernel)
-         {};
-} ;
+    ihipStream_t(unsigned device_index, hc::accelerator_view av, unsigned int flags);
+    ~ihipStream_t();
+
+    inline ihipDevice_t *       getDevice() const;
+
+    hsa_signal_t                getSignal() ;
+    void                        releaseSignal(ihipSignal_t *signal) ;
+
+private:
+    int                         _signalCursor;
+    std::vector<ihipSignal_t>     _signalPool;
+};
 
 
 
@@ -180,6 +213,91 @@ public:
 
 
 //=================================================================================================
+// Global Data Structures:
+//=================================================================================================
+//TLS - must be initialized here.
+thread_local hipError_t tls_lastHipError = hipSuccess;
+thread_local int tls_defaultDevice = 0;
+
+// Global initialization.
+std::once_flag hip_initialized;
+ihipDevice_t *g_devices; // Array of all non-emulated (ie GPU) accelerators in the system.
+unsigned g_deviceCnt;
+//=================================================================================================
+
+
+//=================================================================================================
+// Implementation:
+//=================================================================================================
+
+
+//=================================================================================================
+// ihipStream_t:
+//=================================================================================================
+//---
+ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, unsigned int flags) :
+    _device_index(device_index), _av(av), _flags(flags), _last_command(ihipCommandKernel),
+    _signalCursor(0)
+{
+    _signalPool.resize(HIP_STREAM_SIGNALS > 0 ? HIP_STREAM_SIGNALS : 1);
+
+};
+
+//---
+ihipStream_t::~ihipStream_t()
+{
+    _signalPool.clear();
+}
+
+
+//---
+inline ihipDevice_t * ihipStream_t::getDevice() const 
+{ 
+    return &g_devices[_device_index]; 
+};
+
+
+// Allocate a new signal from the signal pool.
+// Returned signals are initialized to a value of "1".
+hsa_signal_t ihipStream_t::getSignal() 
+{
+    int numToScan = _signalPool.size();
+    do {
+        auto thisCursor = _signalCursor;
+        if (++_signalCursor > _signalPool.size()) {
+            _signalCursor = 0;
+        }
+
+        if (_signalPool[thisCursor]._refCnt == 0) {
+            _signalPool[thisCursor]._refCnt ++; // allocate it
+            return _signalPool[thisCursor]._hsa_signal;
+        }
+
+        numToScan--;
+    } while (numToScan) ;
+
+    assert(numToScan == 0);
+
+    // Have to grow the pool:
+    printf ("Grow signal pool\n");
+    _signalCursor = _signalPool.size(); // set to the beginning of the new entries:
+    _signalPool.resize(_signalPool.size() * 2);
+    return getSignal();  // try again, 
+
+    // Shouldnever reach here.
+    assert(0);
+}
+
+
+void ihipStream_t::releaseSignal(ihipSignal_t *signal) 
+{
+    if (--signal->_refCnt <= 0) {
+        // restore signal to the initial value 1
+        hsa_signal_store_release(signal->_hsa_signal, 1);
+    }
+}
+
+//=================================================================================================
 //
 //Reset the device - this is called from hipDeviceReset.  
 //Device may be reset multiple times, and may be reset after init.
@@ -235,17 +353,6 @@ ihipDevice_t::~ihipDevice_t()
 
 //----
 
-//=================================================================================================
-//TLS - must be initialized here.
-thread_local hipError_t tls_lastHipError = hipSuccess;
-thread_local int tls_defaultDevice = 0;
-
-// Global initialization.
-std::once_flag hip_initialized;
-ihipDevice_t *g_devices; // Array of all non-emulated (ie GPU) accelerators in the system.
-unsigned g_deviceCnt;
-
-//=================================================================================================
 
 
 
@@ -524,8 +631,9 @@ void ihipInit()
     READ_ENV_I(release, HIP_PRINT_ENV, 0,  "Print HIP environment variables.");
     READ_ENV_I(release, HIP_TRACE_API, 0,  "Trace each HIP API call.  Print function name and return code to stderr as program executes.");
     READ_ENV_I(release, HIP_LAUNCH_BLOCKING, CUDA_LAUNCH_BLOCKING, "Make HIP APIs 'host-synchronous', so they block until any kernel launches or data copy commands complete. Alias: CUDA_LAUNCH_BLOCKING." );
-    READ_ENV_I(release, HIP_STAGING_SIZE, 0, "Size of each staging buffer (in KB)." );
-    READ_ENV_I(release, HIP_STAGING_BUFFERS, 0, "Number of staging buffers to use in each direction.");
+    READ_ENV_I(release, HIP_STAGING_SIZE, 0, "Size of each staging buffer (in KB)" );
+    READ_ENV_I(release, HIP_STAGING_BUFFERS, 0, "Number of staging buffers to use in each direction");
+    READ_ENV_I(release, HIP_STREAM_SIGNALS, 0, "Number of signals to use when creating a new stream (pool can later grow)");
 
     /*
      * Build a table of valid compute devices.
@@ -1012,6 +1120,7 @@ const char *hipGetErrorName(hipError_t hip_error)
         case hipErrorInvalidValue           : return "hipErrorInvalidValue";
         case hipErrorInvalidResourceHandle  : return "hipErrorInvalidResourceHandle";
         case hipErrorInvalidDevice          : return "hipErrorInvalidDevice";
+        case hipErrorInvalidMemcpyDirection : return "hipErrorInvalidMemcpyDirection";
         case hipErrorNoDevice               : return "hipErrorNoDevice";
         case hipErrorNotReady               : return "hipErrorNotReady";
         case hipErrorUnknown                : return "hipErrorUnknown";
@@ -1744,7 +1853,7 @@ void ihipSyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t sizeB
             hc::am_copy(dst, src, sizeBytes);
         }
     } else if (kind == hipMemcpyHostToHost)  {
-        memcpy(dst, src, sizeBytes);  // TODO - not async.
+        memcpy(dst, src, sizeBytes);  
 
     } else {
         // Let HSA runtime handle it:
@@ -1764,37 +1873,6 @@ void ihipSyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t sizeB
     }
 }
 #endif
-
-
-#if 0 // USE_AM_TRACKER
-void ihipAsyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind)
-{
-    bool useStagingBuffer = true;  // TODO - remove when new copy bakes a bit.  
-
-    hipStatus_t e = hipSuccess;
-
-    // TODO - check kind is not default.
-    if (kind == hipMemcpyDefault) {
-        e = hipErrorInvalidMemoryDirection;
-    } else {
-        // Let HSA runtime handle it:
-        // TODO - need buffer pool for the signals:
-
-        device->_copy_lock[1].lock();
-
-        hsa_signal_store_relaxed(device->_copy_signal, 1);
-        hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, src, sizeBytes, device->_hsa_agent, 0, NULL, device->_copy_signal);
-
-        if (hsa_status == HSA_STATUS_SUCCESS) {
-            hsa_signal_wait_relaxed(device->_copy_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
-        }
-
-        device->_copy_lock[1].unlock();
-
-    }
-}
-#endif
-
 
 
 //---
@@ -1822,12 +1900,9 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
         
 
 #else
-    // TODO-hsart - what synchronization does hsa_copy provide?
     hc::am_copy(dst, src, sizeBytes);
     e = hipSuccess;
 #endif
-
-    // TODO - when am_copy becomes async, and we have HIP_LAUNCH_BLOCKING set, then we would wait for copy operation to complete here.
 
     return ihipLogStatus(e);
 }
@@ -1856,20 +1931,34 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
     // This is a synchronous copy - remove and replace with code below when we have appropriate LOCK APIs.
     hc::am_copy(dst, src, sizeBytes);
 
-#if 0
+#if USE_ASYNC_COPY
 
-    hipStream_t s =ihipGetStream(stream);
-
+    hipStream_t s = ihipSyncAndResolveStream(stream);
 
     if (s) {
-        hc::completion_future cf = ihipMemcpyKernel<char> (s, static_cast<char*> (dst), static_cast<const char*> (src), sizeBytes);
+        ihipDevice_t *device = s->getDevice();
 
-        //cf.wait();
+        if (kind == hipMemcpyDefault) {
+            e = hipErrorInvalidMemcpyDirection;
+        } else {
+            // Let HSA runtime handle it:
+            // TODO - need buffer pool for the signals rather than lock:
+            device->_copy_lock[1].lock();
 
-        e =  hipSuccess;
+            hsa_signal_store_relaxed(device->_copy_signal, 1);
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, src, sizeBytes, device->_hsa_agent, 0, NULL, device->_copy_signal);
+
+            if (hsa_status == HSA_STATUS_SUCCESS) {
+                hsa_signal_wait_relaxed(device->_copy_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
+            }
+
+            device->_copy_lock[1].unlock();
+
+        }
     } else {
         e = hipErrorInvalidValue;
     }
+
 #endif
 
     // TODO - if am_copy becomes async, and we have HIP_LAUNCH_BLOCKING set, then we would wait for copy operation to complete here.
@@ -2113,3 +2202,5 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **a
     hipError_t err = hipSuccess;
     return ihipLogStatus(err);
 }
+
+// TODO - review signal / error reporting code.
