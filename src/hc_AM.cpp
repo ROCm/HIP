@@ -93,7 +93,6 @@ void AmPointerTracker::insert (void *pointer, const hc::AmPointerInfo &p)
 // Return 1 if removed or 0 if not found.
 int AmPointerTracker::remove (void *pointer)
 {
-    // TODO-mutex - write lock.
     std::lock_guard<std::mutex> l (_mutex);
     mprintf ("remove: %p\n", pointer);
     return _tracker.erase(AmMemoryRange(pointer,1));
@@ -103,7 +102,6 @@ int AmPointerTracker::remove (void *pointer)
 //---
 AmPointerTracker::MapTrackerType::iterator  AmPointerTracker::find (const void *pointer)
 {
-    // TODO-mutex- read lock
     std::lock_guard<std::mutex> l (_mutex);
     auto iter = _tracker.find(AmMemoryRange(pointer,1));
     mprintf ("find: %p\n", pointer);
