@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include <list>
 #include <sys/types.h>
 #include <unistd.h>
+#include <vector>
 
 #include <hc.hpp>
 #include <hc_am.hpp>
@@ -64,7 +65,7 @@ int HIP_STAGING_SIZE = 64;   /* size of staging buffers, in KB */
 int HIP_STAGING_BUFFERS = 2;
 int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
 // vector of integers that contains the visible device IDs
-std::vector<int> HIP_VISIBLE_DEVICES_IDS;
+std::vector<int> g_hip_visible_devices;
 
 #define TRACE_API   0x1 /* trace API calls and return values */
 #define TRACE_SYNC  0x2 /* trace synchronization pieces */
@@ -484,20 +485,23 @@ void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, c
     // Check if the environment variable is either HIP_VISIBLE_DEVICES or CUDA_LAUNCH_BLOCKING, which
     // contains a sequence of comma-separated device IDs
     if (!(strcmp(var_name1,"HIP_VISIBLE_DEVICES") && strcmp(var_name2, "CUDA_VISIBLE_DEVICES")) && env){
-        // Parse the string stream of env and store the device ids to HIP_VISIBLE_DEVICES_IDS global variable
+        // Parse the string stream of env and store the device ids to g_hip_visible_devices global variable
         std::string str = env;
         std::istringstream ss(str);
         std::string device_id;
-
         while (std::getline(ss, device_id, ',')) {
-            HIP_VISIBLE_DEVICES_IDS.push_back(atoi(device_id.c_str()));
+            if (atoi(device_id.c_str()) >= 0) {
+                g_hip_visible_devices.push_back(atoi(device_id.c_str()));
+            }else// Any device number after invalid number will not present
+                break;
         }
-    // Print out the number of ids for debugging
+
+    // Print out the number of ids
         if (HIP_PRINT_ENV) {
-            std::cout << "HIP visible device id is set to be: ";
-            for(int i=0;i<HIP_VISIBLE_DEVICES_IDS.size();i++)
-                std::cout << HIP_VISIBLE_DEVICES_IDS[i] << " ";
-            std::cout << std::endl;
+            printf ("%-30s = ", var_name1);
+            for(int i=0;i<g_hip_visible_devices.size();i++)
+                printf ("%2d ", g_hip_visible_devices[i]);
+            printf (": %s\n", description);
         }
     }
     else { // Parse environment variables with sigle value
@@ -573,7 +577,14 @@ void ihipInit()
     }
 
     assert(deviceCnt == g_deviceCnt);
-
+    // Make sure the hip visible devices are within the g_deviceCnt range
+    for (int i = 0; i < g_hip_visible_devices.size(); i++) {
+        if(g_hip_visible_devices[i] >= g_deviceCnt){
+            // Make sure any DeviceID after invalid DeviceID will be erased.
+            g_hip_visible_devices.resize(i);
+            break;
+        }
+    }
 
     tprintf(TRACE_API, "pid=%u %-30s\n", getpid(), "<ihipInit>");
 
