@@ -27,7 +27,9 @@ THE SOFTWARE.
 #include "test_common.h"
 
 #ifdef __HIP_PLATFORM_HCC__
-#include "hcc_detail/AM.h"
+//#include "hcc_detail/AM.h"
+#include "hc_am.hpp"
+
 #endif
 
 size_t Nbytes = 0;
@@ -97,8 +99,8 @@ inline int zrand(int max)
 //=================================================================================================
 // Functins to run tests
 //=================================================================================================
-//
-//Run through a couple simple cases to test lookups and hostd pointer arithmetic:
+//--
+//Run through a couple simple cases to test lookups and host pointer arithmetic:
 void testSimple() 
 {
     printf ("\n");
@@ -188,7 +190,10 @@ void testSimple()
     HIPASSERT(e == hipErrorInvalidValue); // OS-allocated pointers should return hipErrorInvalidValue.
 }
 
-
+//---
+//Reset the memory tracker (remove allocations from all known devices):
+//This frees any memory allocated through the runtime.
+//The routine will not release any 
 void resetTracker ()
 {
     if (p_verbose & 0x1) {
@@ -214,7 +219,8 @@ struct SuperPointerAttribute {
 };
 
 
-
+//---
+//Support function to check result against a reference:
 void checkPointer(SuperPointerAttribute &ref, int major, int minor, void *pointer)
 {
     hipPointerAttribute_t attribs;
@@ -236,6 +242,12 @@ void checkPointer(SuperPointerAttribute &ref, int major, int minor, void *pointe
 }
 
 
+//---
+//Test that allocates memory across all 4 devices withing the specified size range (minSize...maxSize).
+//Then does lookups to make sure the info reported by the tracker matches expecations
+//Then deallocates it all.
+//
+//Multiple threads can call this funtion and in fact we do this in the testMultiThreaded_1 test.
 void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize)
 {
     printf ("  clusterAllocs numAllocs=%d size=%lu..%lu\n", numAllocs, minSize, maxSize);
@@ -313,9 +325,6 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize)
 
     }
 
-
-
-
 #ifdef __HIP_PLATFORM_HCC__
     if (p_verbose & 0x2) {
         printf ("Tracker after cleanup:\n");
@@ -325,6 +334,10 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize)
 }
 
 
+//---
+// Multi-threaded test with many simul allocs.
+// IN : serialize will force the test to run in serial fashion.
+// Seems like this does not hit MT corner cases in the tracker very often - testMultiThreaded_2 below seems more effective.
 void testMultiThreaded_1(bool serialize=false)
 {
     printf ("\n===========================================================================\n");
@@ -356,8 +369,8 @@ void testMultiThreaded_1(bool serialize=false)
 
 ///================================================================================================
 
-
-// Add pointers to tracker very quickly.
+//---
+//Repeatedly query a single entry:
 void thread_query(void *ptr, const hipPointerAttribute_t *refAttrib)
 {
     int count = 0;
@@ -376,6 +389,9 @@ void thread_query(void *ptr, const hipPointerAttribute_t *refAttrib)
 }
 
 
+#ifdef __HIP_PLATFORM_HCC__
+//---
+// Add pointers to tracker very quickly, then remove them quickly:
 enum Dir {Up, Down};
 void thread_noise_generator(int iters, size_t numBuffers, Dir addDir, Dir removeDir)
 {
@@ -412,6 +428,13 @@ void thread_noise_generator(int iters, size_t numBuffers, Dir addDir, Dir remove
 }
 
 
+//---
+//Multi-thread test that is effective at catching locking errors in the alloc/dealloc/tracker.
+//The query thread repeately requests information on the same block of memory.
+//Meanwhile, the thread_noise_generator registers a large number of blocks, and 
+//then unregisters them.   This causes a large amount of rebalancing in the tree
+//structure and will generate errors unless the locks in the tracker are preventing reading 
+//while writing.
 void testMultiThreaded_2()
 {
     std::atomic<int> inflight(2);
@@ -445,6 +468,8 @@ void testMultiThreaded_2()
     hipSetDevice(0);
     hipDeviceReset();
 }
+#endif
+
 
 
 int main(int argc, char *argv[])
@@ -483,11 +508,14 @@ int main(int argc, char *argv[])
         testMultiThreaded_1(false);
     }
 
+
+#ifdef __HIP_PLATFORM_HCC__
     if (p_tests & 0x10) {
         srand(0x400);
         testMultiThreaded_2();
         resetTracker();
     }
+#endif
 
     printf ("\n");
     passed();

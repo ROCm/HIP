@@ -28,7 +28,9 @@ void printSep()
     printf ("======================================================================================\n");
 }
 
+//---
 // Test simple H2D copies and back.
+// Designed to stress a small number of simple smoke tests
 void simpleTest1()
 {
     printf ("test: %s\n", __func__);
@@ -61,8 +63,16 @@ void simpleTest1()
 }
 
 
-// Test many different kinds of memory copies:
-
+//---
+// Test many different kinds of memory copies.
+// THe subroutine allocates memory , copies to device, runs a vector add kernel, copies back, and checks the result.
+//
+// IN: numElements  controls the number of elements used for allocations.
+// IN: usePinnedHost : If true, allocate host with hipMallocHost and is pinned ; else allocate host memory with malloc.
+// IN: useHostToHost : If true, add an extra host-to-host copy.
+// IN: useDeviceToDevice : If true, add an extra deviceto-device copy after result is produced.
+// IN: useMemkindDefault : If true, use memkinddefault (runtime figures out direction).  if false, use explicit memcpy direction.
+//
 template <typename T>
 void memcpytest2(size_t numElements, bool usePinnedHost, bool useHostToHost, bool useDeviceToDevice, bool useMemkindDefault)
 {
@@ -134,18 +144,15 @@ void memcpytest2(size_t numElements, bool usePinnedHost, bool useHostToHost, boo
 }
 
 
+//---
+//Try all the 16 possible combinations to memcpytest2 - usePinnedHost, useHostToHost, useDeviceToDevice, useMemkindDefault
 template<typename T>
 void memcpytest2_loop(size_t numElements)
 {
     printSep();
 
     for (int usePinnedHost =0; usePinnedHost<=1; usePinnedHost++) {
-#define USE_HOST_2_HOST
-#ifdef USE_HOST_2_HOST
         for (int useHostToHost =0; useHostToHost<=1; useHostToHost++) {  // TODO
-#else
-        for (int useHostToHost =0; useHostToHost<=0; useHostToHost++) {  // TODO
-#endif
             for (int useDeviceToDevice =0; useDeviceToDevice<=1; useDeviceToDevice++) {
                 for (int useMemkindDefault =0; useMemkindDefault<=1; useMemkindDefault++) {
                     memcpytest2<T>(numElements, usePinnedHost, useHostToHost, useDeviceToDevice, useMemkindDefault);
@@ -156,6 +163,8 @@ void memcpytest2_loop(size_t numElements)
 }
 
 
+//---
+//Try many different sizes to memory copy.
 template<typename T>
 void memcpytest2_sizes(size_t maxElem=0, size_t offset=0)
 {
@@ -184,6 +193,8 @@ void memcpytest2_sizes(size_t maxElem=0, size_t offset=0)
 }
 
 
+//---
+//Create multiple threads to stress multi-thread locking behavior in the allocation/deallocation/tracking logic:
 template<typename T>
 void multiThread_1(bool serialize, bool usePinnedHost)
 {
