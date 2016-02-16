@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include <assert.h>
 #include <stdint.h>
 #include <iostream>
+#include <sstream>
 #include <list>
 #include <sys/types.h>
 #include <unistd.h>
@@ -60,7 +61,10 @@ int HIP_PRINT_ENV = 0;
 int HIP_TRACE_API= 0;
 int HIP_LAUNCH_BLOCKING = 0;
 int HIP_STAGING_SIZE = 64;   /* size of staging buffers, in KB */
-int HIP_STAGING_BUFFERS = 2;  
+int HIP_STAGING_BUFFERS = 2;
+int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
+// vector of integers that contains the visible device IDs
+std::vector<int> HIP_VISIBLE_DEVICES_IDS;
 
 #define TRACE_API   0x1 /* trace API calls and return values */
 #define TRACE_SYNC  0x2 /* trace synchronization pieces */
@@ -176,9 +180,9 @@ public:
 
 //=================================================================================================
 //
-//Reset the device - this is called from hipDeviceReset.  
+//Reset the device - this is called from hipDeviceReset.
 //Device may be reset multiple times, and may be reset after init.
-void ihipDevice_t::reset() 
+void ihipDevice_t::reset()
 {
     _staging_buffer[0] = new StagingBuffer(this, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
     _staging_buffer[1] = new StagingBuffer(this, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
@@ -477,17 +481,39 @@ void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, c
         env = getenv(var_name2);
     }
 
-    // Default is set when variable is initialized (at top of this file), so only override if we find
-    // an environment variable.
-    if (env) {
-        long int v = strtol(env, NULL, 0);
-        *var_ptr = (int) (v);
+    // Check if the environment variable is either HIP_VISIBLE_DEVICES or CUDA_LAUNCH_BLOCKING, which
+    // contains a sequence of comma-separated device IDs
+    if (!(strcmp(var_name1,"HIP_VISIBLE_DEVICES") && strcmp(var_name2, "CUDA_VISIBLE_DEVICES")) && env){
+        // Parse the string stream of env and store the device ids to HIP_VISIBLE_DEVICES_IDS global variable
+        std::string str = env;
+        std::istringstream ss(str);
+        std::string device_id;
+
+        while (std::getline(ss, device_id, ',')) {
+            HIP_VISIBLE_DEVICES_IDS.push_back(atoi(device_id.c_str()));
+        }
+    // Print out the number of ids for debugging
+        if (HIP_PRINT_ENV) {
+            std::cout << "HIP visible device id is set to be: ";
+            for(int i=0;i<HIP_VISIBLE_DEVICES_IDS.size();i++)
+                std::cout << HIP_VISIBLE_DEVICES_IDS[i] << " ";
+            std::cout << std::endl;
+        }
     }
+    else { // Parse environment variables with sigle value
+        // Default is set when variable is initialized (at top of this file), so only override if we find
+        // an environment variable.
+        if (env) {
+            long int v = strtol(env, NULL, 0);
+            *var_ptr = (int) (v);
+        }
 
 
-    if (HIP_PRINT_ENV) {
-        printf ("%-30s = %2d : %s\n", var_name1, *var_ptr, description);
+        if (HIP_PRINT_ENV) {
+            printf ("%-30s = %2d : %s\n", var_name1, *var_ptr, description);
+        }
     }
+
 }
 
 #if defined (DEBUG)
@@ -522,6 +548,7 @@ void ihipInit()
     READ_ENV_I(release, HIP_PRINT_ENV, 0,  "Print HIP environment variables.");
     READ_ENV_I(release, HIP_TRACE_API, 0,  "Trace each HIP API call.  Print function name and return code to stderr as program executes.");
     READ_ENV_I(release, HIP_LAUNCH_BLOCKING, CUDA_LAUNCH_BLOCKING, "Make HIP APIs 'host-synchronous', so they block until any kernel launches or data copy commands complete. Alias: CUDA_LAUNCH_BLOCKING." );
+    READ_ENV_I(release, HIP_VISIBLE_DEVICES, CUDA_VISIBLE_DEVICES, "Only devices whose index is present in the secquence are visible to HIP applications and they are enumerated in the order of secquence" );
     READ_ENV_I(release, HIP_STAGING_SIZE, 0, "Size of each staging buffer (in KB)." );
     READ_ENV_I(release, HIP_STAGING_BUFFERS, 0, "Number of staging buffers to use in each direction.");
 
@@ -564,7 +591,7 @@ INLINE ihipDevice_t *ihipGetTlsDefaultDevice()
 {
     // If this is invalid, the TLS state is corrupt.
     // This can fire if called before devices are initialized.
-    // TODO - consider replacing assert with error code 
+    // TODO - consider replacing assert with error code
     assert (ihipIsValidDevice(tls_defaultDevice));
 
     return &g_devices[tls_defaultDevice];
@@ -1347,7 +1374,7 @@ hipError_t hipEventQuery(hipEvent_t event)
 /**
  * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
  */
-hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr) 
+hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
 {
     std::call_once(hip_initialized, ihipInit);
 
@@ -1392,7 +1419,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
 #if USE_AM_TRACKER
 // TODO - test this function:
 /**
- * @returns #hipSuccess, 
+ * @returns #hipSuccess,
  * @returns #hipErrorInvalidValue if flags are not 0
  * @returns #hipErrorMemoryAllocation if hostPointer is not a tracked allocation.
  */
@@ -1411,7 +1438,7 @@ hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsi
         if (status == AM_SUCCESS) {
             *devicePointer = amPointerInfo._devicePointer;
         } else {
-            e = hipErrorMemoryAllocation;  
+            e = hipErrorMemoryAllocation;
             *devicePointer = NULL;
         }
     }
@@ -1498,7 +1525,7 @@ ihipMemsetKernel(hipStream_t stream, T * ptr, T val, size_t sizeBytes)
 
 //---
 /**
- * @returns #hipSuccess #hipErrorMemoryAllocation 
+ * @returns #hipSuccess #hipErrorMemoryAllocation
  */
 hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 {
@@ -1578,9 +1605,9 @@ StagingBuffer::StagingBuffer(ihipDevice_t *device, size_t bufferSize, int numBuf
     _bufferSize(bufferSize),
     _numBuffers(numBuffers > _max_buffers ? _max_buffers : numBuffers)
 {
-    
 
-    
+
+
     for (int i=0; i<_numBuffers; i++) {
         // TODO - experiment with alignment here.
         _pinnedStagingBuffer[i] = hc::AM_alloc(_bufferSize, device->_acc, amHostPinned);
@@ -1605,10 +1632,10 @@ StagingBuffer::~StagingBuffer()
 
 
 //---
-void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeBytes) 
+void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeBytes)
 {
-    const char *srcp = static_cast<const char*> (src); 
-    char *dstp = static_cast<char*> (dst); 
+    const char *srcp = static_cast<const char*> (src);
+    char *dstp = static_cast<char*> (dst);
 
     for (int i=0; i<_numBuffers; i++) {
         hsa_signal_store_relaxed(_completion_signal[i], 0);
@@ -1621,7 +1648,7 @@ void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeByte
         size_t theseBytes = (bytesRemaining > _bufferSize) ? _bufferSize : bytesRemaining;
 
         tprintf (TRACE_COPY2, "waiting... on completion signal\n");
-        hsa_signal_wait_acquire(_completion_signal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
+        hsa_signal_wait_acquire(_completion_signal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
 
         tprintf (TRACE_COPY2, "copy %zu bytes %p to stagingBuf[%d]:%p\n", theseBytes, srcp, bufferIndex, _pinnedStagingBuffer[bufferIndex]);
         // TODO - use uncached memcpy, someday.
@@ -1632,7 +1659,7 @@ void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeByte
         hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
         hsa_status_t hsa_status = hsa_amd_memory_async_copy(dstp, _pinnedStagingBuffer[bufferIndex], theseBytes, _device->_hsa_agent, 0, NULL, _completion_signal[bufferIndex]);
 
-        assert(hsa_status == HSA_STATUS_SUCCESS); // TODO - throw 
+        assert(hsa_status == HSA_STATUS_SUCCESS); // TODO - throw
 
         srcp += theseBytes;
         dstp += theseBytes;
@@ -1643,15 +1670,15 @@ void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeByte
 
 
     for (int i=0; i<_numBuffers; i++) {
-        hsa_signal_wait_acquire(_completion_signal[i], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
+        hsa_signal_wait_acquire(_completion_signal[i], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
     }
 }
 
 //---
-void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeBytes) 
+void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeBytes)
 {
-    const char *srcp0 = static_cast<const char*> (src); 
-    char *dstp1 = static_cast<char*> (dst); 
+    const char *srcp0 = static_cast<const char*> (src);
+    char *dstp1 = static_cast<char*> (dst);
 
     for (int i=0; i<_numBuffers; i++) {
         hsa_signal_store_relaxed(_completion_signal[i], 0);
@@ -1671,7 +1698,7 @@ void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeByte
             tprintf (TRACE_COPY2, "D2H: async_copy %zu bytes src:%p to staging:%p\n", theseBytes, srcp0, _pinnedStagingBuffer[bufferIndex]);
             hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
             hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], srcp0, theseBytes, _device->_hsa_agent, 0, NULL, _completion_signal[bufferIndex]);
-            assert(hsa_status == HSA_STATUS_SUCCESS); // TODO - throw 
+            assert(hsa_status == HSA_STATUS_SUCCESS); // TODO - throw
 
             srcp0 += theseBytes;
         }
@@ -1682,7 +1709,7 @@ void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeByte
             size_t theseBytes = (bytesRemaining1 > _bufferSize) ? _bufferSize : bytesRemaining1;
 
             tprintf (TRACE_COPY2, "D2H: wait_completion[%d] bytesRemaining=%zu\n", bufferIndex, bytesRemaining1);
-            hsa_signal_wait_acquire(_completion_signal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
+            hsa_signal_wait_acquire(_completion_signal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
 
             tprintf (TRACE_COPY2, "D2H: copy %zu bytes stagingBuf[%d]:%p to dst:%p\n", theseBytes, bufferIndex, _pinnedStagingBuffer[bufferIndex], dstp1);
             memcpy(dstp1, _pinnedStagingBuffer[bufferIndex], theseBytes);
@@ -1693,7 +1720,7 @@ void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeByte
 
 
     //for (int i=0; i<_numBuffers; i++) {
-    //    hsa_signal_wait_acquire(_completion_signal[i], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
+    //    hsa_signal_wait_acquire(_completion_signal[i], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
     //}
 }
 
@@ -1709,7 +1736,7 @@ void ihipAsyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t size
     bool dstNotTracked = (hc::am_memtracker_getinfo(&dstPtrInfo, dst) != AM_SUCCESS);
     bool srcNotTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) != AM_SUCCESS);
 
-    bool useStagingBuffer = true;  // TODO - remove when new copy bakes a bit.  
+    bool useStagingBuffer = true;  // TODO - remove when new copy bakes a bit.
 
     // Resolve default to a specific Kind, since we use different algorithms:
     if (kind == hipMemcpyDefault) {
@@ -1753,7 +1780,7 @@ void ihipAsyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t size
         hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, src, sizeBytes, device->_hsa_agent, 0, NULL, device->_copy_signal);
 
         if (hsa_status == HSA_STATUS_SUCCESS) {
-            hsa_signal_wait_relaxed(device->_copy_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
+            hsa_signal_wait_relaxed(device->_copy_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
         }
 
         device->_copy_lock[1].unlock();
@@ -1786,7 +1813,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
     } else {
         e = hipErrorInvalidResourceHandle;
     }
-        
+
 
 #else
     // TODO-hsart - what synchronization does hsa_copy provide?
