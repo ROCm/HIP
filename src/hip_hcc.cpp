@@ -40,10 +40,18 @@ THE SOFTWARE.
 #include "hsa_ext_amd.h"
 
 
-#include "hc_AM.cpp"
 
 #define USE_ASYNC_COPY  1
-#define USE_AM_TRACKER 1  /* use new AM memory tracker features */
+#define USE_AM_TRACKER 2  /* >0 = use new AM memory tracker features.  1= use HIP impl, 2=use HCC impl */
+
+#if USE_AM_TRACKER==1
+#include "hc_AM.cpp"
+#define AM_ALLOC hc::AM_alloc
+#define AM_FREE hc::AM_free
+#else
+#define AM_ALLOC hc::am_alloc
+#define AM_FREE hc::am_free
+#endif
 
 #define INLINE static inline
 
@@ -1504,7 +1512,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 
     if (device) {
         const unsigned am_flags = 0;
-        *ptr = hc::AM_alloc(sizeBytes, device->_acc, am_flags);
+        *ptr = AM_ALLOC(sizeBytes, device->_acc, am_flags);
 
         if (sizeBytes && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
@@ -1531,7 +1539,7 @@ hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
 	auto device = ihipGetTlsDefaultDevice();
 
     if (device) {
-        *ptr = hc::AM_alloc(sizeBytes, device->_acc, am_flags);
+        *ptr = AM_ALLOC(sizeBytes, device->_acc, am_flags);
         if (sizeBytes && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
         } else {
@@ -1577,7 +1585,7 @@ StagingBuffer::StagingBuffer(ihipDevice_t *device, size_t bufferSize, int numBuf
     
     for (int i=0; i<_numBuffers; i++) {
         // TODO - experiment with alignment here.
-        _pinnedStagingBuffer[i] = hc::AM_alloc(_bufferSize, device->_acc, amHostPinned);
+        _pinnedStagingBuffer[i] = AM_ALLOC(_bufferSize, device->_acc, amHostPinned);
         if (_pinnedStagingBuffer[i] == NULL) {
             throw;
         }
@@ -1590,7 +1598,7 @@ StagingBuffer::~StagingBuffer()
 {
     for (int i=0; i<_numBuffers; i++) {
         if (_pinnedStagingBuffer[i]) {
-            hc::AM_free(_pinnedStagingBuffer[i]);
+            AM_FREE(_pinnedStagingBuffer[i]);
             _pinnedStagingBuffer[i] = NULL;
         }
         hsa_signal_destroy(_completion_signal[i]);
@@ -1695,8 +1703,7 @@ void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeByte
 
 
 #if USE_AM_TRACKER
-// TODO - add mutex to limit in/out:
-void ihipAsyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind)
+void ihipSyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind)
 {
     hc::AmPointerInfo dstPtrInfo, srcPtrInfo;
 
@@ -1725,18 +1732,50 @@ void ihipAsyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t size
             std::lock_guard<std::mutex> l (device->_copy_lock[0]);
             device->_staging_buffer[0]->CopyHostToDevice(dst, src, sizeBytes);
         } else {
-            hc::AM_copy(dst, src, sizeBytes);
+            // TODO - remove, slow path.
+            hc::am_copy(dst, src, sizeBytes);
         }
     } else if ((kind == hipMemcpyDeviceToHost) && (dstNotTracked)) {
         if (useStagingBuffer) {
             std::lock_guard<std::mutex> l (device->_copy_lock[1]);
             device->_staging_buffer[1]->CopyDeviceToHost(dst, src, sizeBytes);
         } else {
-            hc::AM_copy(dst, src, sizeBytes);
+            // TODO - remove, slow path.
+            hc::am_copy(dst, src, sizeBytes);
         }
     } else if (kind == hipMemcpyHostToHost)  {
         memcpy(dst, src, sizeBytes);  // TODO - not async.
 
+    } else {
+        // Let HSA runtime handle it:
+        // TODO - need buffer pool for the signals:
+
+        device->_copy_lock[1].lock();
+
+        hsa_signal_store_relaxed(device->_copy_signal, 1);
+        hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, src, sizeBytes, device->_hsa_agent, 0, NULL, device->_copy_signal);
+
+        if (hsa_status == HSA_STATUS_SUCCESS) {
+            hsa_signal_wait_relaxed(device->_copy_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
+        }
+
+        device->_copy_lock[1].unlock();
+
+    }
+}
+#endif
+
+
+#if 0 // USE_AM_TRACKER
+void ihipAsyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind)
+{
+    bool useStagingBuffer = true;  // TODO - remove when new copy bakes a bit.  
+
+    hipStatus_t e = hipSuccess;
+
+    // TODO - check kind is not default.
+    if (kind == hipMemcpyDefault) {
+        e = hipErrorInvalidMemoryDirection;
     } else {
         // Let HSA runtime handle it:
         // TODO - need buffer pool for the signals:
@@ -1775,7 +1814,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 
         ihipDevice_t *device = &g_devices[stream->_device_index];
 
-        ihipAsyncCopy(device, dst, src, sizeBytes, kind);
+        ihipSyncCopy(device, dst, src, sizeBytes, kind);
 
     } else {
         e = hipErrorInvalidResourceHandle;
@@ -1784,7 +1823,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 
 #else
     // TODO-hsart - what synchronization does hsa_copy provide?
-    hc::AM_copy(dst, src, sizeBytes);
+    hc::am_copy(dst, src, sizeBytes);
     e = hipSuccess;
 #endif
 
@@ -1815,7 +1854,7 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
 
     // TODO-hsart This routine needs to ensure that dst and src are mapped on the GPU.
     // This is a synchronous copy - remove and replace with code below when we have appropriate LOCK APIs.
-    hc::AM_copy(dst, src, sizeBytes);
+    hc::am_copy(dst, src, sizeBytes);
 
 #if 0
 
@@ -1938,7 +1977,7 @@ hipError_t hipFree(void* ptr)
     ihipWaitAllStreams(ihipGetTlsDefaultDevice());
 
     if (ptr) {
-        hc::AM_free(ptr);
+        AM_FREE(ptr);
     }
 
     return ihipLogStatus(hipSuccess);
@@ -1952,7 +1991,7 @@ hipError_t hipFreeHost(void* ptr)
 
     if (ptr) {
         tprintf (TRACE_MEM, "  %s: %p\n", __func__, ptr);
-        hc::AM_free(ptr);
+        AM_FREE(ptr);
     }
 
     return ihipLogStatus(hipSuccess);

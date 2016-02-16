@@ -13,7 +13,7 @@ typedef int am_status_t;
 
 namespace hc {
 
-// This is the data that is maintained for each pointer:
+// Info for each pointer in the memtry tracker:
 struct AmPointerInfo {
     void *      _hostPointer;   ///< Host pointer.  If host access is not allowed, NULL.
     void *      _devicePointer; ///< Device pointer.  
@@ -45,7 +45,7 @@ namespace hc {
 
 
 /**
- * Allocates a block of @p size bytes of memory on the specified @p acc.
+ * Allocate a block of @p size bytes of memory on the specified @p acc.
  *
  * The contents of the newly allocated block of memory are not initialized.
  *
@@ -53,7 +53,7 @@ namespace hc {
  *
  * Flags must be 0.
  *
- * @returns : On success, pointer to the newly allocated memory is returned.
+ * @return : On success, pointer to the newly allocated memory is returned.
  * The pointer is typecast to the desired return type.
  *
  * If an error occurred trying to allocate the requested memory, 0 is returned.
@@ -63,17 +63,18 @@ namespace hc {
 auto_voidp AM_alloc(size_t size, hc::accelerator acc, unsigned flags);
 
 /**
- * Frees a block of memory previously allocated with am_alloc.
+ * Free a block of memory previously allocated with am_alloc.
  *
+ * @return AM_SUCCESS
  * @see am_alloc, am_copy
  */
 am_status_t AM_free(void*  ptr);
 
 
 /**
- * Copies @p size bytes of memory from @p src to @ dst.  The memory areas (src+size and dst+size) must not overlap.
+ * Copy @p size bytes of memory from @p src to @ dst.  The memory areas (src+size and dst+size) must not overlap.
  *
- * @returns AM_SUCCESS on error or AM_ERROR_MISC if an error occurs.
+ * @return AM_SUCCESS on error or AM_ERROR_MISC if an error occurs.
  * @see am_alloc, am_free
  */
 am_status_t AM_copy(void*  dst, const void*  src, size_t size);
@@ -96,7 +97,7 @@ am_status_t am_memtracker_getinfo(hc::AmPointerInfo *info, const void *ptr);
 
 
 /**
- * Adds a pointer to the memory tracker.
+ * Add a pointer to the memory tracker.
  *
  * @return AM_SUCCESS
  * @see am_memtracker_getinfo
@@ -105,7 +106,7 @@ am_status_t am_memtracker_add(void* ptr, size_t sizeBytes, hc::accelerator acc, 
 
 
 /*
- * Updates infor for an existing pointer in the memory tracker.
+ * Update info for an existing pointer in the memory tracker.
  *
  * @returns AM_ERROR_MISC if pointer is not found in tracker.  
  * @returns AM_SUCCESS if pointer is not found in tracker.  
@@ -116,7 +117,7 @@ am_status_t am_memtracker_update(const void* ptr, int appId, unsigned allocation
 
 
 /** 
- * Remove the pointer from the tracker structure.
+ * Remove @ptr from the tracker structure.
  *
  * @p ptr may be anywhere in a tracked memory range.
  *
@@ -136,7 +137,7 @@ am_status_t am_memtracker_remove(void* ptr);
 size_t am_memtracker_reset(hc::accelerator acc);
 
 /**
- * Prints the entries in the memory tracker table.
+ * Print the entries in the memory tracker table.
  *
  * Intended primarily for debug purposes.
  * @see am_memtracker_getinfo
@@ -145,7 +146,7 @@ void am_memtracker_print();
 
 
 /**
- * Returns total sizes of device, host, and user memory allocated by the application
+ * Return total sizes of device, host, and user memory allocated by the application
  *
  * User memory is registered with am_tracker_add.
  **/
