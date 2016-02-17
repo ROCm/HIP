@@ -9,7 +9,7 @@ git clone http://llvm.org/git/llvm.git llvm
 git clone http://llvm.org/git/clang.git llvm/tools/clang
 
 mkdir llvm_build && cd llvm_build
-cmake -DCMAKE_INSTALL_PREFIX="LLVM_INSTALL_PATH" -DLLVM_TARGETS_TO_BUILD="X86;NVPTX;AMDGPU" ../llvm
+cmake -DCMAKE_INSTALL_PREFIX="LLVM_INSTALL_PATH" -DLLVM_INSTALL_UTILS=ON -DLLVM_TARGETS_TO_BUILD="X86;NVPTX;AMDGPU" ../llvm
 make && make install
 
 git clone https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP-hipify.git path_to_hipify_src
@@ -32,5 +32,16 @@ echo "add_subdirectory(hipify)" >> llvm/tools/clang/tools/extra/CMakeLists.txt
 mkdir llvm_build && cd llvm_build
 cmake -DLLVM_TARGETS_TO_BUILD="X86;NVPTX;AMDGPU" ../llvm
 make -C tools/clang/tools/extra/hipify
+```
+
+# How to run tests (for *standalone* tool only)
+- install Python and add python-setuptools
+- install lit python script
+- make sure that FileCheck util is installed to **LLVM_INSTALL_PATH/bin/FileCheck**
+- run tests from path_to_hipify_src/build
+```
+sudo apt-get install python python-setuptools
+sudo easy_install lit
+make -C path_to_hipify_src/build test
 ```
 
