@@ -1,29 +1,39 @@
-/*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+//===---- tools/extra/ToolTemplate.cpp - Template for refactoring tool ----===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is distributed under the University of Illinois Open Source
+// License. See LICENSE.TXT for details.
+//
+//===----------------------------------------------------------------------===//
+//
+//  This file implements an empty refactoring tool using the clang tooling.
+//  The goal is to lower the "barrier to entry" for writing refactoring tools.
+//
+//  Usage:
+//  tool-template <cmake-output-dir> <file1> <file2> ...
+//
+//  Where <cmake-output-dir> is a CMake build directory in which a file named
+//  compile_commands.json exists (enable -DCMAKE_EXPORT_COMPILE_COMMANDS in
+//  CMake to get this output).
+//
+//  <file1> ... specify the paths of files in the CMake source tree. This path
+//  is looked up in the compile command database. If the path of a file is
+//  absolute, it needs to point into CMake's source tree. If the path is
+//  relative, the current working directory needs to be in the CMake source
+//  tree and the file must be in a subdirectory of the current working
+//  directory. "./" prefixes in the relative files will be automatically
+//  removed, but the rest of a relative path must be a suffix of a path in
+//  the compile command line database.
+//
+//  For example, to use tool-template on all files in a subtree of the
+//  source tree, use:
+//
+//    /path/in/subtree $ find . -name '*.cpp'|
+//        xargs tool-template /path/to/build
+//
+//===----------------------------------------------------------------------===//
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-*/
-/**
- * @file Cuda2Hip.cpp
- *
- * This file is compiled and linked into clang based hipify tool.
- */
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/Basic/SourceManager.h"
@@ -65,7 +75,7 @@ namespace {
 
       // Error codes and return types:
       cuda2hipRename["cudaError_t"] = "hipError_t";
-      cuda2hipRename["cudaError"] = "hipError_t";
+      cuda2hipRename["cudaError"] = "hipError";
       cuda2hipRename["cudaSuccess"] = "hipSuccess";
 
       cuda2hipRename["cudaErrorUnknown"] = "hipErrorUnknown";
@@ -138,7 +148,7 @@ namespace {
 
       cuda2hipRename["warpSize"] = "hipWarpSize";
 
-      // Events
+      // Events 
       cuda2hipRename["cudaEvent_t"] = "hipEvent_t";
       cuda2hipRename["cudaEventCreate"] = "hipEventCreate";
       cuda2hipRename["cudaEventCreateWithFlags"] = "hipEventCreateWithFlags";
@@ -157,7 +167,7 @@ namespace {
       cuda2hipRename["cudaStreamDefault"] = "hipStreamDefault";
       cuda2hipRename["cudaStreamNonBlocking"] = "hipStreamNonBlocking";
 
-      // Other synchronization
+      // Other synchronization 
       cuda2hipRename["cudaDeviceSynchronize"] = "hipDeviceSynchronize";
       cuda2hipRename["cudaThreadSynchronize"] = "hipDeviceSynchronize";  // translate deprecated cudaThreadSynchronize
       cuda2hipRename["cudaDeviceReset"] = "hipDeviceReset";
@@ -165,7 +175,7 @@ namespace {
       cuda2hipRename["cudaSetDevice"] = "hipSetDevice";
       cuda2hipRename["cudaGetDevice"] = "hipGetDevice";
 
-      // Device
+      // Device 
       cuda2hipRename["cudaDeviceProp"] = "hipDeviceProp_t";
       cuda2hipRename["cudaGetDeviceProperties"] = "hipDeviceGetProperties";
 
@@ -291,11 +301,11 @@ namespace {
       }
     }
 
-    void EndOfMainFile() override
-    {
-
+    void EndOfMainFile() override 
+    { 
+   
     }
-
+    
     bool SeenEnd;
     void setSourceManager(SourceManager * sm) { _sm = sm; }
 
@@ -349,7 +359,7 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
 
       std::string name = kernelDecl->getDeclName().getAsString();
       std::string repName = "hipLaunchKernel(HIP_KERNEL_NAME(" + name + "), ";
-
+      
 
       const CallExpr * config = launchKernel->getConfig();
       llvm::outs() << "\nKernel config arguments:\n";
@@ -359,7 +369,7 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
         if (!isa<CXXDefaultArgExpr>(arg)) {
           std::string typeCtor = "";
           const ParmVarDecl * pvd = config->getDirectCallee()->getParamDecl(argno);
-
+          
           SourceLocation sl(arg->getLocStart());
           SourceLocation el(arg->getLocEnd());
           SourceLocation stop = clang::Lexer::getLocForEndOfToken(el, 0, *SM, DefaultLangOptions);
@@ -372,7 +382,7 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
         } else
           repName += " 0,";
       }
-
+ 
       for (unsigned argno = 0; argno < launchKernel->getNumArgs(); argno++)
       {
         const Expr * arg = launchKernel->getArg(argno);
@@ -409,11 +419,21 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
 		  }
 	  }
 
-    if (const DeclRefExpr * cudaEnumConstant = Result.Nodes.getNodeAs<clang::DeclRefExpr>("cudaEnumConstant"))
+    if (const DeclRefExpr * cudaEnumConstantRef = Result.Nodes.getNodeAs<clang::DeclRefExpr>("cudaEnumConstantRef"))
     {
-      std::string name = cudaEnumConstant->getDecl()->getNameAsString();
+      std::string name = cudaEnumConstantRef->getDecl()->getNameAsString();
       std::string repName = N.cuda2hipRename[name];
-      SourceLocation sl = cudaEnumConstant->getLocStart();
+      SourceLocation sl = cudaEnumConstantRef->getLocStart();
+      Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
+        SM->getImmediateSpellingLoc(sl) : sl, name.length(), repName);
+      Replace->insert(Rep);
+    }
+
+    if (const VarDecl * cudaEnumConstantDecl = Result.Nodes.getNodeAs<clang::VarDecl>("cudaEnumConstantDecl"))
+    {
+      std::string name = cudaEnumConstantDecl->getType()->getAsTagDecl()->getNameAsString();
+      std::string repName = N.cuda2hipRename[name];
+      SourceLocation sl = cudaEnumConstantDecl->getLocStart();
       Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
         SM->getImmediateSpellingLoc(sl) : sl, name.length(), repName);
       Replace->insert(Rep);
@@ -425,6 +445,17 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
         cudaStructVar->getType()->getAsStructureType()->getDecl()->getNameAsString();
       std::string repName = N.cuda2hipRename[name];
       SourceLocation sl = cudaStructVar->getLocStart();
+      Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
+        SM->getImmediateSpellingLoc(sl) : sl, name.length(), repName);
+      Replace->insert(Rep);
+    }
+
+    if (const ParmVarDecl * cudaParamDecl = Result.Nodes.getNodeAs<clang::ParmVarDecl>("cudaParamDecl"))
+    {
+      QualType QT = cudaParamDecl->getOriginalType();
+      std::string name = QT.getAsString();
+      std::string repName = N.cuda2hipRename[name];
+      SourceLocation sl = cudaParamDecl->getLocStart();
       Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
         SM->getImmediateSpellingLoc(sl) : sl, name.length(), repName);
       Replace->insert(Rep);
@@ -447,7 +478,7 @@ int main(int argc, const char **argv) {
   llvm::sys::PrintStackTraceOnErrorSignal();
 
   int Result;
-
+  
   CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory);
   std::vector<std::string> savedSources;
   for (auto I : OptionsParser.getSourcePathList())
@@ -472,8 +503,10 @@ int main(int argc, const char **argv) {
   Finder.addMatcher(callExpr(isExpansionInMainFile(), callee(functionDecl(matchesName("cuda.*")))).bind("cudaCall"), &Callback);
   Finder.addMatcher(cudaKernelCallExpr().bind("cudaLaunchKernel"), &Callback);
   Finder.addMatcher(memberExpr(isExpansionInMainFile(), hasObjectExpression(hasType(cxxRecordDecl(matchesName("__cuda_builtin_"))))).bind("cudaBuiltin"), &Callback);
-  Finder.addMatcher(declRefExpr(isExpansionInMainFile(), to(enumConstantDecl(matchesName("cuda.*")))).bind("cudaEnumConstant"), &Callback);
+  Finder.addMatcher(declRefExpr(isExpansionInMainFile(), to(enumConstantDecl(matchesName("cuda.*")))).bind("cudaEnumConstantRef"), &Callback);
+  Finder.addMatcher(varDecl(isExpansionInMainFile(), hasType(enumDecl(matchesName("cuda.*")))).bind("cudaEnumConstantDecl"), &Callback);
   Finder.addMatcher(varDecl(isExpansionInMainFile(), hasType(cxxRecordDecl(matchesName("cuda.*")))).bind("cudaStructVar"), &Callback);
+  Finder.addMatcher(parmVarDecl(isExpansionInMainFile(), hasType(namedDecl(matchesName("cuda.*")))).bind("cudaParamDecl"), &Callback);
 
   auto action = newFrontendActionFactory(&Finder, &PPCallbacks);
 
@@ -491,7 +524,7 @@ int main(int argc, const char **argv) {
 
 	  Tool.clearArgumentsAdjusters();
   }
-
+  
   LangOptions DefaultLangOptions;
   IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts = new DiagnosticOptions();
   TextDiagnosticPrinter DiagnosticPrinter(llvm::errs(), &*DiagOpts);
