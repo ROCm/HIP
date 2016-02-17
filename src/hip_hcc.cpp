@@ -64,8 +64,7 @@ int HIP_LAUNCH_BLOCKING = 0;
 int HIP_STAGING_SIZE = 64;   /* size of staging buffers, in KB */
 int HIP_STAGING_BUFFERS = 2;
 int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
-// vector of integers that contains the visible device IDs
-std::vector<int> g_hip_visible_devices;
+std::vector<int> g_hip_visible_devices; /* vector of integers that contains the visible device IDs */
 
 #define TRACE_API   0x1 /* trace API calls and return values */
 #define TRACE_SYNC  0x2 /* trace synchronization pieces */
@@ -489,14 +488,16 @@ void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, c
         std::string str = env;
         std::istringstream ss(str);
         std::string device_id;
+        // Clean up the defult value
+        g_hip_visible_devices.clear();
+        // Read the visible device numbers
         while (std::getline(ss, device_id, ',')) {
             if (atoi(device_id.c_str()) >= 0) {
                 g_hip_visible_devices.push_back(atoi(device_id.c_str()));
             }else// Any device number after invalid number will not present
                 break;
         }
-
-    // Print out the number of ids
+        // Print out the number of ids
         if (HIP_PRINT_ENV) {
             printf ("%-30s = ", var_name1);
             for(int i=0;i<g_hip_visible_devices.size();i++)
@@ -511,8 +512,6 @@ void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, c
             long int v = strtol(env, NULL, 0);
             *var_ptr = (int) (v);
         }
-
-
         if (HIP_PRINT_ENV) {
             printf ("%-30s = %2d : %s\n", var_name1, *var_ptr, description);
         }
@@ -549,6 +548,7 @@ void ihipInit()
     /*
      * Environment variables
      */
+    g_hip_visible_devices.push_back(0); /* Set the default value of visible devices */
     READ_ENV_I(release, HIP_PRINT_ENV, 0,  "Print HIP environment variables.");
     READ_ENV_I(release, HIP_TRACE_API, 0,  "Trace each HIP API call.  Print function name and return code to stderr as program executes.");
     READ_ENV_I(release, HIP_LAUNCH_BLOCKING, CUDA_LAUNCH_BLOCKING, "Make HIP APIs 'host-synchronous', so they block until any kernel launches or data copy commands complete. Alias: CUDA_LAUNCH_BLOCKING." );
@@ -567,24 +567,36 @@ void ihipInit()
         }
     };
 
-    g_devices = new ihipDevice_t[deviceCnt];
-    g_deviceCnt = 0;
-    for (int i=0; i<accs.size(); i++) {
-        if (! accs[i].get_is_emulated()) {
-           g_devices[g_deviceCnt].init(g_deviceCnt, accs[i]);
-           g_deviceCnt++;
-        }
-    }
-
-    assert(deviceCnt == g_deviceCnt);
-    // Make sure the hip visible devices are within the g_deviceCnt range
+    // Make sure the hip visible devices are within the deviceCnt range
     for (int i = 0; i < g_hip_visible_devices.size(); i++) {
-        if(g_hip_visible_devices[i] >= g_deviceCnt){
+        if(g_hip_visible_devices[i] >= deviceCnt){
             // Make sure any DeviceID after invalid DeviceID will be erased.
             g_hip_visible_devices.resize(i);
             break;
         }
     }
+
+    g_devices = new ihipDevice_t[deviceCnt];
+    g_deviceCnt = 0;
+    for (int i=0; i<accs.size(); i++) {
+        // check if the device id is included in the HIP_VISIBLE_DEVICES env variable
+        if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(),
+             i) != g_hip_visible_devices.end())
+        {
+            if (! accs[i].get_is_emulated()) {
+               g_devices[g_deviceCnt].init(g_deviceCnt, accs[i]);
+               g_deviceCnt++;
+            }
+        }
+    }
+
+    // The following assert is not valid as we introduce the
+    // env variable of HIP_VISIBLE_DEVICES
+    //assert(deviceCnt == g_deviceCnt);
+
+
+    // Remove non-visible devices from g_devices
+
 
     tprintf(TRACE_API, "pid=%u %-30s\n", getpid(), "<ihipInit>");
 
@@ -596,6 +608,12 @@ INLINE bool ihipIsValidDevice(unsigned deviceIndex)
     return (deviceIndex < g_deviceCnt);
 }
 
+// check if the device ID is set as visible
+INLINE bool ihipIsVisibleDevice(unsigned deviceIndex)
+{
+    return std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(),
+            (int)deviceIndex) != g_hip_visible_devices.end();
+}
 
 //---
 INLINE ihipDevice_t *ihipGetTlsDefaultDevice()
