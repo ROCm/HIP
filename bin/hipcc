@@ -164,7 +164,7 @@ if ($needHipHcc) {
     if ((not -e $object) or ((stat($source))[9] > (stat($object))[9]))  {
         my $CMD = "$HCC $HCCFLAGS  -I$HSA_PATH/include -I$HIP_PATH/include -Wall -c $source -o $object";
         if ($verbose & 0x10) {
-            $CMD .= " -g" ;
+            $CMD .= " -g -O2" ;
         } else {
             $CMD .= " -O3" ;
         }

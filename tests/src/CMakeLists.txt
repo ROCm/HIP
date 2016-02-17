@@ -104,6 +104,7 @@ make_hip_executable (hip_brev hip_brev.cpp)
 make_hip_executable (hip_ffs hip_ffs.cpp) 
 make_hip_executable (hipGetDeviceAttribute hipGetDeviceAttribute.cpp) 
 make_hip_executable (hipMemcpy hipMemcpy.cpp) 
+make_hip_executable (hipMemcpyAsync hipMemcpyAsync.cpp) 
 make_hip_executable (hipMemset hipMemset.cpp) 
 make_hip_executable (hipEventRecord hipEventRecord.cpp) 
 make_hip_executable (hipLanguageExtensions hipLanguageExtensions.cpp) 
@@ -131,6 +132,7 @@ make_test(hipGridLaunch " " )
 make_test(hipPointerAttrib " " )
 
 make_test(hipMemcpy  " " )
+make_test(hipMemcpyAsync  " " )
 
 make_test(hipHcc  " " )
 
