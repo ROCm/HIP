@@ -33,6 +33,7 @@ THE SOFTWARE.
 #include <sys/types.h>
 #include <unistd.h>
 #include <vector>
+#include <algorithm>
 
 #include <hc.hpp>
 #include <hc_am.hpp>
@@ -580,15 +581,19 @@ void ihipInit()
     g_deviceCnt = 0;
     for (int i=0; i<accs.size(); i++) {
         // check if the device id is included in the HIP_VISIBLE_DEVICES env variable
-        if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(),
-             i) != g_hip_visible_devices.end())
-        {
-            if (! accs[i].get_is_emulated()) {
-               g_devices[g_deviceCnt].init(g_deviceCnt, accs[i]);
-               g_deviceCnt++;
+        if (! accs[i].get_is_emulated()) {
+            if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), (i-1)) == g_hip_visible_devices.end())
+            {
+                //std::cout << "The device is not in visible devices list, ignore, index i = " << i << std::endl;
+                continue;
             }
+            //std::cout << "The visible GPU number is " << i << std::endl;
+            g_devices[g_deviceCnt].init(g_deviceCnt, accs[i]);
+            //std::cout << "index of g_devices = "<< g_deviceCnt << std::endl;
+            g_deviceCnt++;
         }
     }
+    //std::cout << "g_deviceCnt = " << g_deviceCnt << std::endl;
 
     // The following assert is not valid as we introduce the
     // env variable of HIP_VISIBLE_DEVICES
