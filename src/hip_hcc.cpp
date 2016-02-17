@@ -62,12 +62,13 @@ THE SOFTWARE.
 //static const int debug = 0;
 static const int release = 1;
 
+int HIP_LAUNCH_BLOCKING = 0;
+
 int HIP_PRINT_ENV = 0;
 int HIP_TRACE_API= 0;
-int HIP_LAUNCH_BLOCKING = 0;
 int HIP_STAGING_SIZE = 64;   /* size of staging buffers, in KB */
 int HIP_STAGING_BUFFERS = 2;  
-int HIP_STREAM_SIGNALS = 2;  /* number of signals to use when stream is created */
+int HIP_STREAM_SIGNALS = 2;  /* number of signals to allocate at stream creation */
 
 #define TRACE_API   0x1 /* trace API calls and return values */
 #define TRACE_SYNC  0x2 /* trace synchronization pieces */
@@ -128,7 +129,7 @@ public:
 
     inline ihipDevice_t *       getDevice() const;
 
-    hsa_signal_t                getSignal() ;
+    ihipSignal_t *               getSignal() ;
     void                        releaseSignal(ihipSignal_t *signal) ;
 
 private:
@@ -241,6 +242,13 @@ ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, unsig
 {
     _signalPool.resize(HIP_STREAM_SIGNALS > 0 ? HIP_STREAM_SIGNALS : 1);
 
+    auto s = this;
+
+    std::for_each(_signalPool.begin(), _signalPool.end(), 
+            [s](ihipSignal_t &iter) { 
+            printf ("  stream:%p allocated hsa_signal=%p\n", s, (iter._hsa_signal));
+            });
+
 };
 
 //---
@@ -259,18 +267,18 @@ inline ihipDevice_t * ihipStream_t::getDevice() const
 
 // Allocate a new signal from the signal pool.
 // Returned signals are initialized to a value of "1".
-hsa_signal_t ihipStream_t::getSignal() 
+ihipSignal_t *ihipStream_t::getSignal() 
 {
     int numToScan = _signalPool.size();
     do {
         auto thisCursor = _signalCursor;
-        if (++_signalCursor > _signalPool.size()) {
+        if (++_signalCursor == _signalPool.size()) {
             _signalCursor = 0;
         }
 
         if (_signalPool[thisCursor]._refCnt == 0) {
             _signalPool[thisCursor]._refCnt ++; // allocate it
-            return _signalPool[thisCursor]._hsa_signal;
+            return &_signalPool[thisCursor];
         }
 
         numToScan--;
@@ -335,6 +343,7 @@ void ihipDevice_t::init(unsigned device_index, hc::accelerator acc)
 
     this->reset();
 };
+
 
 ihipDevice_t::~ihipDevice_t()
 {
@@ -628,12 +637,14 @@ void ihipInit()
     /*
      * Environment variables
      */
-    READ_ENV_I(release, HIP_PRINT_ENV, 0,  "Print HIP environment variables.");
-    READ_ENV_I(release, HIP_TRACE_API, 0,  "Trace each HIP API call.  Print function name and return code to stderr as program executes.");
+    READ_ENV_I(release, HIP_PRINT_ENV, 0,  "Print HIP environment variables.");  
+    //-- READ HIP_PRINT_ENV env first, since it has impact on later env var reading
+
     READ_ENV_I(release, HIP_LAUNCH_BLOCKING, CUDA_LAUNCH_BLOCKING, "Make HIP APIs 'host-synchronous', so they block until any kernel launches or data copy commands complete. Alias: CUDA_LAUNCH_BLOCKING." );
+    READ_ENV_I(release, HIP_TRACE_API, 0,  "Trace each HIP API call.  Print function name and return code to stderr as program executes.");
     READ_ENV_I(release, HIP_STAGING_SIZE, 0, "Size of each staging buffer (in KB)" );
     READ_ENV_I(release, HIP_STAGING_BUFFERS, 0, "Number of staging buffers to use in each direction");
-    READ_ENV_I(release, HIP_STREAM_SIGNALS, 0, "Number of signals to use when creating a new stream (pool can later grow)");
+    READ_ENV_I(release, HIP_STREAM_SIGNALS, 0, "Number of signals to allocate when new stream is created (signal pool will grow on demand)");
 
     /*
      * Build a table of valid compute devices.
@@ -791,7 +802,10 @@ inline bool ihipCheckCommandSwitchSync(hipStream_t stream, ihipCommand_t new_com
         addedSync = true;
         *marker = stream->_av.create_marker();
 
-        tprintf (TRACE_SYNC, "stream %p switch to %s (barrier pkt inserted)\n", (void*)stream, new_command == ihipCommandKernel ? "Kernel" : "Data");
+        tprintf (TRACE_SYNC, "stream %p switch %s to %s (barrier pkt inserted)\n", 
+                (void*)stream, 
+                stream->_last_command == ihipCommandKernel ? "Kernel" : "Data",
+                new_command == ihipCommandKernel ? "Kernel" : "Data");
         stream->_last_command = new_command;
     }
 
@@ -1908,10 +1922,12 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 }
 
 
-//---
-/*
+#if USE_ASYNC_COPY==0
+/**
  * @warning on HCC hipMemcpyAsync uses a synchronous copy.
  */
+#endif
+//---
 hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream)
 {
     std::call_once(hip_initialized, ihipInit);
@@ -1927,9 +1943,6 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
 
     // Async - need to set up dependency on the last command queued to the device?
 
-    // TODO-hsart This routine needs to ensure that dst and src are mapped on the GPU.
-    // This is a synchronous copy - remove and replace with code below when we have appropriate LOCK APIs.
-    hc::am_copy(dst, src, sizeBytes);
 
 #if USE_ASYNC_COPY
 
@@ -1943,25 +1956,33 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
         } else {
             // Let HSA runtime handle it:
             // TODO - need buffer pool for the signals rather than lock:
-            device->_copy_lock[1].lock();
+            ihipSignal_t *ihip_signal = stream->getSignal();
 
-            hsa_signal_store_relaxed(device->_copy_signal, 1);
-            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, src, sizeBytes, device->_hsa_agent, 0, NULL, device->_copy_signal);
+            //stream->saveLastSignal(ihipSignal);
+
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, src, sizeBytes, device->_hsa_agent, 0, NULL, ihip_signal->_hsa_signal);
 
             if (hsa_status == HSA_STATUS_SUCCESS) {
-                hsa_signal_wait_relaxed(device->_copy_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
+
+                if (HIP_LAUNCH_BLOCKING) {
+                    hsa_signal_wait_relaxed(ihip_signal->_hsa_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
+                    stream->releaseSignal(ihip_signal);
+                } 
+            } else {
+                // This path can be hit if src or dst point to unpinned host memory.
+                // TODO - does async-copy fall back to sync if input pointers are not pinned?
+                e = hipErrorInvalidValue;
             }
-
-            device->_copy_lock[1].unlock();
-
         }
     } else {
         e = hipErrorInvalidValue;
     }
-
+#else
+    // TODO-hsart This routine needs to ensure that dst and src are mapped on the GPU.
+    // This is a synchronous copy - remove and replace with code below when we have appropriate LOCK APIs.
+    hc::am_copy(dst, src, sizeBytes);
 #endif
 
-    // TODO - if am_copy becomes async, and we have HIP_LAUNCH_BLOCKING set, then we would wait for copy operation to complete here.
 
     return ihipLogStatus(e);
 }
@@ -2015,6 +2036,7 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
 
 hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
 {
+    // TODO - call an ihip memset so HIP_TRACE is correct.
     return hipMemsetAsync(dst, value, sizeBytes, hipStreamNull);
 }
 
