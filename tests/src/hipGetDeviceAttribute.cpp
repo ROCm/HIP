@@ -67,13 +67,14 @@ int main(int argc, char *argv[])
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeWarpSize, props.warpSize));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxRegistersPerBlock, props.regsPerBlock));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeClockRate, props.clockRate));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMemoryClockRate, props.memoryClockRate));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMultiprocessorCount, props.multiProcessorCount));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeComputeMode, props.computeMode));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeL2CacheSize, props.l2CacheSize));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxThreadsPerMultiProcessor, props.maxThreadsPerMultiProcessor));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeComputeCapabilityMajor, props.major));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeComputeCapabilityMinor, props.minor));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDevAttrConcurrentKernels, props.concurrentKernels));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeConcurrentKernels, props.concurrentKernels));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributePciBusId, props.pciBusID));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributePciDeviceId, props.pciDeviceID));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxSharedMemoryPerMultiprocessor, props.maxSharedMemoryPerMultiProcessor));
