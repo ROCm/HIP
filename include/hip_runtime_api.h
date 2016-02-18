@@ -80,7 +80,8 @@ typedef struct hipDeviceProp_t {
     int maxThreadsPerBlock;                     ///< Max work items per work group or workgroup max size.
     int maxThreadsDim[3];                       ///< Max number of threads in each dimension (XYZ) of a block.
     int maxGridSize[3];                         ///< Max grid dimensions (XYZ).
-    int clockRate;                              ///< Max clock frequency of the multiProcessors, in khz.
+    int clockRate;                              ///< Max clock frequency of the multiProcessors in khz.
+    int memoryClockRate;                        ///< Max memory clock frequency in khz.
     size_t totalConstMem;                       ///< Size of shared memory region (in bytes).
     int major;                                  ///< Major compute capability.  On HCC, this is an approximation and features may differ from CUDA CC.  See the arch feature flags for portable ways to query feature caps.
     int minor;                                  ///< Minor compute capability.  On HCC, this is an approximation and features may differ from CUDA CC.  See the arch feature flags for portable ways to query feature caps.
@@ -143,13 +144,14 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeWarpSize,                             ///< Warp size in threads.
     hipDeviceAttributeMaxRegistersPerBlock,                 ///< Maximum number of 32-bit registers available to a thread block. This number is shared by all thread blocks simultaneously resident on a multiprocessor.
     hipDeviceAttributeClockRate,                            ///< Peak clock frequency in kilohertz.
+    hipDeviceAttributeMemoryClockRate,                      ///< Peak memory clock frequency in kilohertz.
     hipDeviceAttributeMultiprocessorCount,                  ///< Number of multiprocessors on the device.
     hipDeviceAttributeComputeMode,                          ///< Compute mode that device is currently in.
     hipDeviceAttributeL2CacheSize,                          ///< Size of L2 cache in bytes. 0 if the device doesn't have L2 cache.
     hipDeviceAttributeMaxThreadsPerMultiProcessor,          ///< Maximum resident threads per multiprocessor.
     hipDeviceAttributeComputeCapabilityMajor,               ///< Major compute capability version number.
     hipDeviceAttributeComputeCapabilityMinor,               ///< Minor compute capability version number.
-    hipDevAttrConcurrentKernels,                            ///< Device can possibly execute multiple kernels concurrently.
+    hipDeviceAttributeConcurrentKernels,                    ///< Device can possibly execute multiple kernels concurrently.
     hipDeviceAttributePciBusId,                             ///< PCI Bus ID.
     hipDeviceAttributePciDeviceId,                          ///< PCI Device ID.
     hipDeviceAttributeMaxSharedMemoryPerMultiprocessor,     ///< Maximum Shared Memory Per Multiprocessor.

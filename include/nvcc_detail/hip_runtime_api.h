@@ -242,6 +242,8 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
         cdattr = cudaDevAttrMaxRegistersPerBlock; break;
     case hipDeviceAttributeClockRate:
         cdattr = cudaDevAttrClockRate; break;
+    case hipDeviceAttributeMemoryClockRate:
+        cdattr = cudaDevAttrMemoryClockRate:; break;
     case hipDeviceAttributeMultiprocessorCount:
         cdattr = cudaDevAttrMultiProcessorCount; break;
     case hipDeviceAttributeComputeMode:
@@ -252,7 +254,7 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
         cdattr = cudaDevAttrMaxThreadsPerMultiProcessor; break;
     case hipDeviceAttributeComputeCapabilityMajor:
         cdattr = cudaDevAttrComputeCapabilityMajor; break;
-    case hipDevAttrConcurrentKernels:
+    case hipDeviceAttributeConcurrentKernels:
         cdattr = cudaDevAttrConcurrentKernels; break;
     case hipDeviceAttributePciBusId:
         cdattr = cudaDevAttrPciBusId; break;
