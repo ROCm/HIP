@@ -300,7 +300,7 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
 
 
     // Get Max clock frequency
-    err = hsa_agent_get_info(_hsa_agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_MAX_CLOCK_FREQUENCY,&prop->clockRate);
+    err = hsa_agent_get_info(_hsa_agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_MAX_CLOCK_FREQUENCY, &prop->clockRate);
     prop->clockRate *= 1000.0;   // convert Mhz to Khz.
     DeviceErrorCheck(err);
 
@@ -356,12 +356,11 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
 */
 
     // Get memory properties
-
-    err = hsa_agent_iterate_regions(_hsa_agent,get_region_info,prop);
+    err = hsa_agent_iterate_regions(_hsa_agent, get_region_info, prop);
     DeviceErrorCheck(err);
 
     // Get the size of the region we are using for Accelerator Memory allocations:
-    hsa_region_t *am_region = static_cast<hsa_region_t*> (_acc.get_hsa_am_region());
+    hsa_region_t *am_region = static_cast<hsa_region_t*>(_acc.get_hsa_am_region());
     err = hsa_region_get_info(*am_region, HSA_REGION_INFO_SIZE, &prop->totalGlobalMem);
     DeviceErrorCheck(err);
     // maxSharedMemoryPerMultiProcessor should be as the same as group memory size.
@@ -370,7 +369,11 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
 
     // Get Max memory clock frequency
     err = hsa_region_get_info(*am_region, (hsa_region_info_t)HSA_AMD_REGION_INFO_MAX_CLOCK_FREQUENCY, &prop->memoryClockRate);
+    DeviceErrorCheck(err);
     prop->memoryClockRate *= 1000.0;   // convert Mhz to Khz.
+
+    // Get global memory bus width in bits
+    err = hsa_region_get_info(*am_region, (hsa_region_info_t)HSA_AMD_REGION_INFO_BUS_WIDTH, &prop->memoryBusWidth);
     DeviceErrorCheck(err);
 
     // Set feature flags - these are all mandatory for HIP on HCC path:
@@ -845,6 +848,8 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
             *pi = prop->clockRate; break;
         case hipDeviceAttributeMemoryClockRate:
             *pi = prop->memoryClockRate; break;
+        case hipDeviceAttributeMemoryBusWidth:
+            *pi = prop->memoryBusWidth; break;
         case hipDeviceAttributeMultiprocessorCount:
             *pi = prop->multiProcessorCount; break;
         case hipDeviceAttributeComputeMode:

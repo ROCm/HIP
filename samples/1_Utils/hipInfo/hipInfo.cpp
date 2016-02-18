@@ -80,6 +80,7 @@ void printDeviceProp (int deviceId)
     cout << setw(w1) << "pciDeviceID: " << props.pciDeviceID << endl;
     cout << setw(w1) << "multiProcessorCount: " << props.multiProcessorCount << endl;
     cout << setw(w1) << "maxThreadsPerMultiProcessor: " << props.maxThreadsPerMultiProcessor << endl;
+    cout << setw(w1) << "memoryBusWidth: " << props.memoryBusWidth << endl;
     cout << setw(w1) << "clockRate: " << (float)props.clockRate / 1000.0 << " Mhz" << endl;
     cout << setw(w1) << "memoryClockRate: " << (float)props.memoryClockRate / 1000.0 << " Mhz" << endl;
     cout << setw(w1) << "clockInstructionRate: " << (float)props.clockInstructionRate / 1000.0 << " Mhz" << endl;

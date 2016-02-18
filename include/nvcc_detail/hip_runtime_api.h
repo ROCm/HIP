@@ -243,7 +243,9 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
     case hipDeviceAttributeClockRate:
         cdattr = cudaDevAttrClockRate; break;
     case hipDeviceAttributeMemoryClockRate:
-        cdattr = cudaDevAttrMemoryClockRate:; break;
+        cdattr = cudaDevAttrMemoryClockRate; break;
+    case hipDeviceAttributeMemoryBusWidth:
+        cdattr = cudaDevAttrGlobalMemoryBusWidth; break;
     case hipDeviceAttributeMultiprocessorCount:
         cdattr = cudaDevAttrMultiProcessorCount; break;
     case hipDeviceAttributeComputeMode:
