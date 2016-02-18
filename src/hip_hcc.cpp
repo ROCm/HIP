@@ -41,11 +41,16 @@ THE SOFTWARE.
 
 
 
-#define USE_AM_TRACKER 0  /* >0 = use new AM memory tracker features.  2=use HCC impl */
-#define USE_ROCR_V2    0  /* use the ROCR v2 async copy API with dst and src agents */
+#define USE_AM_TRACKER 1  /* >0 = use new AM memory tracker features. */
+#define USE_ROCR_V2    1  /* use the ROCR v2 async copy API with dst and src agents */
 
 #if (USE_AM_TRACKER) and (__hcc_workweek__ < 16074)
 #error (USE_AM_TRACKER requries HCC version of 16074 or newer)
+#endif
+
+
+#if (USE_ROCR_V2) and (USE_AM_TRACKER == 0)
+#error (USE_ROCR_V2 requires USE_AM_TRACKER>0)
 #endif
 
 
@@ -1478,7 +1483,8 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
     hipError_t e = hipSuccess;
 
 #if USE_AM_TRACKER
-    hc::AmPointerInfo amPointerInfo;
+    hc::accelerator acc;
+    hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
     am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
     if (status == AM_SUCCESS) {
 
@@ -1530,7 +1536,8 @@ hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsi
     if (flags == 0) {
         e = hipErrorInvalidValue;
     } else {
-        hc::AmPointerInfo amPointerInfo;
+        hc::accelerator acc;
+        hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
         am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, hostPointer);
         if (status == AM_SUCCESS) {
             *devicePointer = amPointerInfo._devicePointer;
@@ -1836,7 +1843,9 @@ void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeByte
 #if USE_AM_TRACKER
 void ihipSyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind)
 {
-    hc::AmPointerInfo dstPtrInfo, srcPtrInfo;
+    hc::accelerator acc;
+    hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
+    hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
 
     bool dstNotTracked = (hc::am_memtracker_getinfo(&dstPtrInfo, dst) != AM_SUCCESS);
     bool srcNotTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) != AM_SUCCESS);
