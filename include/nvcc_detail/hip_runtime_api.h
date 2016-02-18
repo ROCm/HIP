@@ -252,6 +252,8 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
         cdattr = cudaDevAttrMaxThreadsPerMultiProcessor; break;
     case hipDeviceAttributeComputeCapabilityMajor:
         cdattr = cudaDevAttrComputeCapabilityMajor; break;
+    case hipDevAttrConcurrentKernels:
+        cdattr = cudaDevAttrConcurrentKernels; break;
     case hipDeviceAttributePciBusId:
         cdattr = cudaDevAttrPciBusId; break;
     case hipDeviceAttributePciDeviceId:

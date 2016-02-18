@@ -852,6 +852,8 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
             *pi = prop->minor; break;
         case hipDeviceAttributePciBusId:
             *pi = prop->pciBusID; break;
+        case hipDevAttrConcurrentKernels:
+            *pi = prop->concurrentKernels; break;
         case hipDeviceAttributePciDeviceId:
             *pi = prop->pciDeviceID; break;
         case hipDeviceAttributeMaxSharedMemoryPerMultiprocessor:

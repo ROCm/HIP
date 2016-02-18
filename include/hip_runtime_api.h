@@ -149,6 +149,7 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeMaxThreadsPerMultiProcessor,          ///< Maximum resident threads per multiprocessor.
     hipDeviceAttributeComputeCapabilityMajor,               ///< Major compute capability version number.
     hipDeviceAttributeComputeCapabilityMinor,               ///< Minor compute capability version number.
+    hipDevAttrConcurrentKernels,                            ///< Device can possibly execute multiple kernels concurrently.
     hipDeviceAttributePciBusId,                             ///< PCI Bus ID.
     hipDeviceAttributePciDeviceId,                          ///< PCI Device ID.
     hipDeviceAttributeMaxSharedMemoryPerMultiprocessor,     ///< Maximum Shared Memory Per Multiprocessor.
