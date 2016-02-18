@@ -19,7 +19,10 @@ MESSAGE ("HIP_PATH=" ${HIP_PATH})
 
 if (${HIP_PLATFORM} STREQUAL "hcc")
 	MESSAGE ("HIP_PLATFORM=hcc")
-	set (HSA_PATH /opt/hsa)
+    set (HSA_PATH $ENV{HSA_PATH})
+    if (NOT DEFINED HSA_PATH)
+        set (HSA_PATH /opt/hsa)
+    endif()
 
 	#---
 	# Add HSA library:
