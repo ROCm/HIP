@@ -207,36 +207,24 @@ void error_check(hsa_status_t hsa_error_code, int line_num, std::string str) {
 
 hsa_status_t get_region_info(hsa_region_t region, void* data)
 {
-
     hsa_status_t err;
     hipDeviceProp_t* p_prop = reinterpret_cast<hipDeviceProp_t*>(data);
-    uint32_t region_segment ;
+    uint32_t region_segment;
 
+    // Get region segment
+    err = hsa_region_get_info(region, HSA_REGION_INFO_SEGMENT, &region_segment);
+    ErrorCheck(err);
 
-        // Get region segment
-	err = hsa_region_get_info(region, HSA_REGION_INFO_SEGMENT, &region_segment);
-	ErrorCheck(err);
-
-	switch(region_segment)
-	{
-		case HSA_REGION_SEGMENT_READONLY:
-            err = hsa_region_get_info(region, HSA_REGION_INFO_SIZE, &(p_prop->totalConstMem));
-
-			break;
-
-		/* case HSA_REGION_SEGMENT_PRIVATE:
-			cout<<"PRIVATE"<<endl; private segment cannot be queried */
-
-		case HSA_REGION_SEGMENT_GROUP:
-		err = hsa_region_get_info(region, HSA_REGION_INFO_SIZE, &(p_prop->sharedMemPerBlock));
-
-			break;
-
-		default:
-			break;
-	}
+    switch(region_segment) {
+    case HSA_REGION_SEGMENT_READONLY:
+        err = hsa_region_get_info(region, HSA_REGION_INFO_SIZE, &(p_prop->totalConstMem)); break;
+    /* case HSA_REGION_SEGMENT_PRIVATE:
+        cout<<"PRIVATE"<<endl; private segment cannot be queried */
+    case HSA_REGION_SEGMENT_GROUP:
+        err = hsa_region_get_info(region, HSA_REGION_INFO_SIZE, &(p_prop->sharedMemPerBlock)); break;
+    default: break;
+    }
     return HSA_STATUS_SUCCESS;
-
 }
 
 
@@ -244,28 +232,22 @@ hsa_status_t get_region_info(hsa_region_t region, void* data)
 hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
 {
     hipError_t e = hipSuccess;
+    hsa_status_t err;
 
     // Set some defaults in case we don't find the appropriate regions:
     prop->totalGlobalMem = 0;
     prop->totalConstMem = 0;
     prop->sharedMemPerBlock = 0;
     prop-> maxThreadsPerMultiProcessor = 0;
-    //
-    //
     prop->regsPerBlock = 0;
-
-
-    hsa_status_t err;
 
     if (_hsa_agent.handle == -1) {
         return hipErrorInvalidDevice;
     }
 
-
     // Get agent name
     err = hsa_agent_get_info(_hsa_agent, HSA_AGENT_INFO_NAME, &(prop->name));
     DeviceErrorCheck(err);
-
 
     // Get agent node
     uint32_t node;
@@ -276,11 +258,9 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     err = hsa_agent_get_info(_hsa_agent, HSA_AGENT_INFO_WAVEFRONT_SIZE,&prop->warpSize);
     DeviceErrorCheck(err);
 
-
     // Get max total number of work-items in a workgroup
     err = hsa_agent_get_info(_hsa_agent, HSA_AGENT_INFO_WORKGROUP_MAX_SIZE, &prop->maxThreadsPerBlock );
     DeviceErrorCheck(err);
-
 
     // Get max number of work-items of each dimension of a work-group
     uint16_t work_group_max_dim[3];
@@ -290,14 +270,12 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
         prop->maxThreadsDim[i]= work_group_max_dim[i];
     }
 
-
     hsa_dim3_t grid_max_dim;
     err = hsa_agent_get_info(_hsa_agent, HSA_AGENT_INFO_GRID_MAX_DIM, &grid_max_dim);
     DeviceErrorCheck(err);
     prop->maxGridSize[0]= (int) ((grid_max_dim.x == UINT32_MAX) ? (INT32_MAX) : grid_max_dim.x);
     prop->maxGridSize[1]= (int) ((grid_max_dim.y == UINT32_MAX) ? (INT32_MAX) : grid_max_dim.y);
     prop->maxGridSize[2]= (int) ((grid_max_dim.z == UINT32_MAX) ? (INT32_MAX) : grid_max_dim.z);
-
 
     // Get Max clock frequency
     err = hsa_agent_get_info(_hsa_agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_MAX_CLOCK_FREQUENCY, &prop->clockRate);
@@ -326,11 +304,9 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     prop->major = 2;
     prop->minor = 0;
 
-
     // Get number of Compute Unit
     err = hsa_agent_get_info(_hsa_agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_COMPUTE_UNIT_COUNT, &(prop->multiProcessorCount));
     DeviceErrorCheck(err);
-
 
     // TODO-hsart - this appears to return 0?
     uint32_t cache_size[4];
@@ -387,17 +363,13 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     prop->arch.hasFloatAtomicAdd           = 0;
     prop->arch.hasGlobalInt64Atomics       = 1;
     prop->arch.hasSharedInt64Atomics       = 0; // TODO-hcc-atomics
-
     prop->arch.hasDoubles                  = 1; // TODO - true for Fiji.
-
     prop->arch.hasWarpVote                 = 1;
     prop->arch.hasWarpBallot               = 1;
     prop->arch.hasWarpShuffle              = 1;
     prop->arch.hasFunnelShift              = 0; // TODO-hcc
-
     prop->arch.hasThreadFenceSystem        = 0; // TODO-hcc
     prop->arch.hasSyncThreadsExt           = 0; // TODO-hcc
-
     prop->arch.hasSurfaceFuncs             = 0; // TODO-hcc
     prop->arch.has3dGrid                   = 1;
     prop->arch.hasDynamicParallelism       = 0;
@@ -1399,7 +1371,7 @@ hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
 #else
     // TODO-hcc remove-me
 
-	// This code only works on Kaveri:
+    // This code only works on Kaveri:
     *ptr = malloc(sizeBytes); // TODO - call am_alloc for device memory, this will only on KV HSA.
     if (*ptr != NULL) {
         //TODO-hsart : need memory pin APIs to implement this correctly.
@@ -1415,18 +1387,15 @@ hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
 hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind)
 {
 #ifdef USE_MEMCPYTOSYMBOL
-	if(kind != hipMemcpyHostToDevice)
-	{
-		return ihipLogStatus(hipErrorInvalidValue);
-	}
-	auto device = ihipGetTlsDefaultDevice();
-
+    if(kind != hipMemcpyHostToDevice) {
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
+    auto device = ihipGetTlsDefaultDevice();
     hc::completion_future marker;
     ihipCheckCommandSwitchSync(device._null_stream, ihipCommandData, &marker);
-
-	device->_acc.memcpy_symbol(symbolName, (void*) src,count, offset);
+    device->_acc.memcpy_symbol(symbolName, (void*) src,count, offset);
 #endif
-	return ihipLogStatus(hipSuccess);
+    return ihipLogStatus(hipSuccess);
 }
 
 
@@ -1696,10 +1665,8 @@ hipError_t hipMemcpyPeerAsync ( void* dst, int  dstDevice, const void* src, int 
 hipError_t hipDriverGetVersion(int *driverVersion)
 {
     std::call_once(hip_initialized, ihipInit);
-
     *driverVersion = 4;
-
-	return ihipLogStatus(hipSuccess);
+    return ihipLogStatus(hipSuccess);
 }
 
 
