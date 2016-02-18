@@ -223,6 +223,9 @@ int main(int argc, char *argv[])
 {
     HipTest::parseStandardArguments(argc, argv, true);
 
+    printf ("info: set device to %d\n", p_gpuDevice);
+    HIPCHECK(hipSetDevice(p_gpuDevice));
+
 
     if (p_tests & 0x1) {
         HIPCHECK ( hipDeviceReset() );
