@@ -42,21 +42,13 @@ THE SOFTWARE.
 
 
 #define USE_AM_TRACKER 0  /* >0 = use new AM memory tracker features.  2=use HCC impl */
-#define USE_ROCR_V2    0
+#define USE_ROCR_V2    0  /* use the ROCR v2 async copy API with dst and src agents */
 
-#if ((USE_AM_TRACKER!=0) && (USE_AM_TRACKER!=2))
-#error (USE_AM_TRACKER must be 0 or 2)
+#if (USE_AM_TRACKER) and (__hcc_workweek__ < 16074)
+#error (USE_AM_TRACKER requries HCC version of 16074 or newer)
 #endif
 
 
-#if USE_AM_TRACKER==1
-#include "hc_AM.cpp"
-#define AM_ALLOC hc::AM_alloc
-#define AM_FREE hc::AM_free
-#else
-#define AM_ALLOC hc::am_alloc
-#define AM_FREE hc::am_free
-#endif
 
 #define INLINE static inline
 
@@ -247,9 +239,9 @@ ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, unsig
 {
     _signalPool.resize(HIP_STREAM_SIGNALS > 0 ? HIP_STREAM_SIGNALS : 1);
 
-    auto s = this;
 
 #if 0
+    auto s = this;
     std::for_each(_signalPool.begin(), _signalPool.end(), 
             [s](ihipSignal_t &iter) { 
             printf ("  stream:%p allocated hsa_signal=%lu\n", s, (iter._hsa_signal.handle));
@@ -1642,7 +1634,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 
     if (device) {
         const unsigned am_flags = 0;
-        *ptr = AM_ALLOC(sizeBytes, device->_acc, am_flags);
+        *ptr = hc::am_alloc(sizeBytes, device->_acc, am_flags);
 
         if (sizeBytes && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
@@ -1669,7 +1661,7 @@ hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
 	auto device = ihipGetTlsDefaultDevice();
 
     if (device) {
-        *ptr = AM_ALLOC(sizeBytes, device->_acc, am_flags);
+        *ptr = hc::am_alloc(sizeBytes, device->_acc, am_flags);
         if (sizeBytes && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
         } else {
@@ -1715,7 +1707,7 @@ StagingBuffer::StagingBuffer(ihipDevice_t *device, size_t bufferSize, int numBuf
     
     for (int i=0; i<_numBuffers; i++) {
         // TODO - experiment with alignment here.
-        _pinnedStagingBuffer[i] = AM_ALLOC(_bufferSize, device->_acc, amHostPinned);
+        _pinnedStagingBuffer[i] = hc::am_alloc(_bufferSize, device->_acc, amHostPinned);
         if (_pinnedStagingBuffer[i] == NULL) {
             throw;
         }
@@ -1728,7 +1720,7 @@ StagingBuffer::~StagingBuffer()
 {
     for (int i=0; i<_numBuffers; i++) {
         if (_pinnedStagingBuffer[i]) {
-            AM_FREE(_pinnedStagingBuffer[i]);
+            hc::am_free(_pinnedStagingBuffer[i]);
             _pinnedStagingBuffer[i] = NULL;
         }
         hsa_signal_destroy(_completion_signal[i]);
@@ -2112,7 +2104,7 @@ hipError_t hipFree(void* ptr)
     ihipWaitAllStreams(ihipGetTlsDefaultDevice());
 
     if (ptr) {
-        AM_FREE(ptr);
+        hc::am_free(ptr);
     }
 
     return ihipLogStatus(hipSuccess);
@@ -2126,7 +2118,7 @@ hipError_t hipFreeHost(void* ptr)
 
     if (ptr) {
         tprintf (TRACE_MEM, "  %s: %p\n", __func__, ptr);
-        AM_FREE(ptr);
+        hc::am_free(ptr);
     }
 
     return ihipLogStatus(hipSuccess);
