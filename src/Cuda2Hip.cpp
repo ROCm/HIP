@@ -254,7 +254,7 @@ namespace {
       const FileEntry *file,
       StringRef search_path,
       StringRef relative_path,
-      const Module *imported) override
+      const clang::Module *imported) override
     {
       if (_sm->isWrittenInMainFile(hash_loc)) {
         if (is_angled) {
