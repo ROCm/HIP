@@ -369,7 +369,8 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     prop->maxSharedMemoryPerMultiProcessor = prop->totalGlobalMem;
 
     // Get Max memory clock frequency
-    err = hsa_region_get_info(*am_region, (hsa_region_info_t)HSA_AMD_REGION_INFO_MAX_CLOCK_FREQUENCY, &prop->memoryClockRate);
+    prop->memoryClockRate = 0; // TODO - remove when prop API is available:
+    //err = hsa_region_get_info(*am_region, (hsa_region_info_t)HSA_AMD_REGION_INFO_MAX_CLOCK_FREQUENCY, &prop->memoryClockRate);
     prop->memoryClockRate *= 1000.0;   // convert Mhz to Khz.
     DeviceErrorCheck(err);
 
