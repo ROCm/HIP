@@ -72,11 +72,6 @@ kernelName<<<numblocks,numthreads,memperblock,streamId>>>(0, __VA_ARGS__);\
 #define __HIP_ARCH_HAS_3DGRID__                     (__CUDA_ARCH__ >= 200)
 #define __HIP_ARCH_HAS_DYNAMIC_PARALLEL__           (__CUDA_ARCH__ >= 350)
 
-
-#else
-
-#define __HIP_DEVICE_COMPILE__ 0
-
 #endif
 
 #ifdef __CUDACC__

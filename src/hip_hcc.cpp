@@ -310,7 +310,16 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     //prop->clockInstructionRate = counterHz / 1000;
     prop->clockInstructionRate = 100*1000; /* TODO-RT - hard-code until HSART has function to properly report clock */
 
+    // Get Agent BDFID (bus/device/function ID)
+    uint16_t bdf_id = 1;
+    err = hsa_agent_get_info(_hsa_agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_BDFID, &bdf_id);
+    DeviceErrorCheck(err);
 
+    // BDFID is 16bit uint: [8bit - BusID | 5bit - Device ID | 3bit - Function/DomainID]
+    // TODO/Clarify: cudaDeviceProp::pciDomainID how to report?
+    // prop->pciDomainID =  bdf_id & 0x7;
+    prop->pciDeviceID =  (bdf_id>>3) & 0x1F;
+    prop->pciBusID =  (bdf_id>>8) & 0xFF;
 
     // Masquerade as a 3.0-level device. This will change as more HW functions are properly supported.
     // Application code should use the arch.has* to do detailed feature detection.
@@ -333,29 +342,36 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
                              Default compute mode (Multiple threads can use cudaSetDevice() with this device)  */
     prop->computeMode = 0;
 
+    // Get Max Threads Per Multiprocessor
+/*
+    HsaSystemProperties props;
+    hsaKmtReleaseSystemProperties();
+    if(HSAKMT_STATUS_SUCCESS == hsaKmtAcquireSystemProperties(&props)) {
+        HsaNodeProperties node_prop = {0};
+        if(HSAKMT_STATUS_SUCCESS == hsaKmtGetNodeProperties(node, &node_prop)) {
+            uint32_t waves_per_cu = node_prop.MaxWavesPerSIMD;
+            prop-> maxThreadsPerMultiProcessor = prop->warpsize*waves_per_cu;
+        }
+    }
+*/
 
-
-/*	HsaSystemProperties props;
-	hsaKmtReleaseSystemProperties();
-	if(HSAKMT_STATUS_SUCCESS == hsaKmtAcquireSystemProperties(&props))
-	{
-		HsaNodeProperties node_prop = {0};
-		if(HSAKMT_STATUS_SUCCESS == hsaKmtGetNodeProperties(node, &node_prop))
-		{
-			uint32_t waves_per_cu = node_prop.MaxWavesPerSIMD;
-			prop-> maxThreadsPerMultiProcessor = prop->warpsize*waves_per_cu;
-		}
-	}  */
-
-    // get memory properties */
+    // Get memory properties
 
     err = hsa_agent_iterate_regions(_hsa_agent,get_region_info,prop);
     DeviceErrorCheck(err);
 
-
     // Get the size of the region we are using for Accelerator Memory allocations:
     hsa_region_t *am_region = static_cast<hsa_region_t*> (_acc.get_hsa_am_region());
-    err = hsa_region_get_info(*am_region, HSA_REGION_INFO_SIZE, &(prop->totalGlobalMem));
+    err = hsa_region_get_info(*am_region, HSA_REGION_INFO_SIZE, &prop->totalGlobalMem);
+    DeviceErrorCheck(err);
+    // maxSharedMemoryPerMultiProcessor should be as the same as group memory size.
+    // Group memory will not be paged out, so, the physical memory size is the total shared memory size, and also equal to the group region size.
+    prop->maxSharedMemoryPerMultiProcessor = prop->totalGlobalMem;
+
+    // Get Max memory clock frequency
+    err = hsa_region_get_info(*am_region, (hsa_region_info_t)HSA_AMD_REGION_INFO_MAX_CLOCK_FREQUENCY, &prop->memoryClockRate);
+    prop->memoryClockRate *= 1000.0;   // convert Mhz to Khz.
+    DeviceErrorCheck(err);
 
     // Set feature flags - these are all mandatory for HIP on HCC path:
     // Some features are under-development and future revs may support flags that are currently 0.
@@ -383,6 +399,7 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     prop->arch.has3dGrid                   = 1;
     prop->arch.hasDynamicParallelism       = 0;
 
+    prop->concurrentKernels = 1; // All ROCR hardware supports executing multiple kernels concurrently
     return e;
 }
 
@@ -789,7 +806,73 @@ hipError_t hipDeviceReset(void)
     return ihipLogStatus(hipSuccess);
 }
 
+/**
+ *
+ */
+hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
+{
+    std::call_once(hip_initialized, ihipInit);
 
+    hipError_t e = hipSuccess;
+
+    ihipDevice_t * hipDevice = ihipGetDevice(device);
+    hipDeviceProp_t *prop = &hipDevice->_props;
+    if (hipDevice) {
+        switch (attr) {
+        case hipDeviceAttributeMaxThreadsPerBlock:
+            *pi = prop->maxThreadsPerBlock; break;
+        case hipDeviceAttributeMaxBlockDimX:
+            *pi = prop->maxThreadsDim[0]; break;
+        case hipDeviceAttributeMaxBlockDimY:
+            *pi = prop->maxThreadsDim[1]; break;
+        case hipDeviceAttributeMaxBlockDimZ:
+            *pi = prop->maxThreadsDim[2]; break;
+        case hipDeviceAttributeMaxGridDimX:
+            *pi = prop->maxGridSize[0]; break;
+        case hipDeviceAttributeMaxGridDimY:
+            *pi = prop->maxGridSize[1]; break;
+        case hipDeviceAttributeMaxGridDimZ:
+            *pi = prop->maxGridSize[2]; break;
+        case hipDeviceAttributeMaxSharedMemoryPerBlock:
+            *pi = prop->sharedMemPerBlock; break;
+        case hipDeviceAttributeTotalConstantMemory:
+            *pi = prop->totalConstMem; break;
+        case hipDeviceAttributeWarpSize:
+            *pi = prop->warpSize; break;
+        case hipDeviceAttributeMaxRegistersPerBlock:
+            *pi = prop->regsPerBlock; break;
+        case hipDeviceAttributeClockRate:
+            *pi = prop->clockRate; break;
+        case hipDeviceAttributeMemoryClockRate:
+            *pi = prop->memoryClockRate; break;
+        case hipDeviceAttributeMultiprocessorCount:
+            *pi = prop->multiProcessorCount; break;
+        case hipDeviceAttributeComputeMode:
+            *pi = prop->computeMode; break;
+        case hipDeviceAttributeL2CacheSize:
+            *pi = prop->l2CacheSize; break;
+        case hipDeviceAttributeMaxThreadsPerMultiProcessor:
+            *pi = prop->maxThreadsPerMultiProcessor; break;
+        case hipDeviceAttributeComputeCapabilityMajor:
+            *pi = prop->major; break;
+        case hipDeviceAttributeComputeCapabilityMinor:
+            *pi = prop->minor; break;
+        case hipDeviceAttributePciBusId:
+            *pi = prop->pciBusID; break;
+        case hipDeviceAttributeConcurrentKernels:
+            *pi = prop->concurrentKernels; break;
+        case hipDeviceAttributePciDeviceId:
+            *pi = prop->pciDeviceID; break;
+        case hipDeviceAttributeMaxSharedMemoryPerMultiprocessor:
+            *pi = prop->maxSharedMemoryPerMultiProcessor; break;
+        default:
+            e = hipErrorInvalidValue; break;
+        }
+    } else {
+        e = hipErrorInvalidDevice;
+    }
+    return ihipLogStatus(e);
+}
 
 
 /**
@@ -1367,8 +1450,8 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
     } else {
         e = hipErrorInvalidResourceHandle;
     }
-
         
+
 #else
     // TODO-hsart - what synchronization does hsa_copy provide?
     hc::am_copy(dst, src, sizeBytes);

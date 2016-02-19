@@ -28,23 +28,31 @@ THE SOFTWARE.
 #define HIP_ASSERT(x) (assert((x)==hipSuccess))
 
 __global__ void 
-	warpvote(hipLaunchParm lp, int* device_any, int* device_all , int Num_Warps_per_Block)
+	warpvote(hipLaunchParm lp, int* device_any, int* device_all , int Num_Warps_per_Block, int pshift)
 {
 
    int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
-   device_any[hipThreadIdx_x>>6] = __any(tid >77);
-   device_all[hipThreadIdx_x>>6] = __all(tid >77);
+   device_any[hipThreadIdx_x>>pshift] = __any(tid -77);
+   device_all[hipThreadIdx_x>>pshift] = __all(tid -77);
 }
 
 
 
 int main(int argc, char *argv[])
-{
-
+{ int warpSize, pshift;
+  hipDeviceProp_t devProp;
+  hipDeviceGetProperties(&devProp, 0);
+  if(strncmp(devProp.name,"Fiji",1)==0) 
+{ warpSize =64;
+  pshift =6;
+}
+  else {warpSize =32; pshift=5;}
+  int anycount =0;
+  int allcount =0;
   int Num_Threads_per_Block      = 1024;
   int Num_Blocks_per_Grid        = 1;
-  int Num_Warps_per_Block        = Num_Threads_per_Block/64;
-  int Num_Warps_per_Grid         = (Num_Threads_per_Block*Num_Blocks_per_Grid)/64;
+  int Num_Warps_per_Block        = Num_Threads_per_Block/warpSize;
+  int Num_Warps_per_Grid         = (Num_Threads_per_Block*Num_Blocks_per_Grid)/warpSize;
   
   int * host_any  = ( int*)malloc(Num_Warps_per_Grid*sizeof(int));
   int * host_all  = ( int*)malloc(Num_Warps_per_Grid*sizeof(int));
@@ -60,7 +68,7 @@ for (int i=0; i<Num_Warps_per_Grid; i++)
   HIP_ASSERT(hipMemcpy(device_any, host_any,sizeof(int), hipMemcpyHostToDevice));
   HIP_ASSERT(hipMemcpy(device_all, host_all,sizeof(int), hipMemcpyHostToDevice));
 
-  hipLaunchKernel(warpvote, dim3(Num_Blocks_per_Grid),dim3(Num_Threads_per_Block),0,0, device_any, device_all ,Num_Warps_per_Block);
+  hipLaunchKernel(warpvote, dim3(Num_Blocks_per_Grid),dim3(Num_Threads_per_Block),0,0, device_any, device_all ,Num_Warps_per_Block,pshift);
 
 
   HIP_ASSERT(hipMemcpy(host_any, device_any, Num_Warps_per_Grid*sizeof(int), hipMemcpyDeviceToHost));
@@ -69,10 +77,11 @@ for (int i=0; i<Num_Warps_per_Grid; i++)
 
     printf("warp no. %d __any = %d \n",i,host_any[i]);
     printf("warp no. %d __all = %d \n",i,host_all[i]);
-
+    if (host_any[i]!=1) ++anycount;
+    if (host_all[i]!=1) ++allcount; 
 
 }
-
+if (anycount == 0 && allcount ==1) printf("PASSED\n"); else printf("FAILED\n");
 
   return EXIT_SUCCESS;
 

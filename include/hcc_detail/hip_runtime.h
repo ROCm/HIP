@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 /**
  *  @file  hcc_detail/hip_runtime.h
- *
+ *  @brief Contains definitions of APIs for HIP runtime.
  */
 
 #pragma once
@@ -62,9 +62,6 @@ THE SOFTWARE.
 #if defined(__HCC_ACCELERATOR__) and (__HCC_ACCELERATOR__ != 0)
 // Device compile and not host compile:
 
-
-#define __HIP_DEVICE_COMPILE__ 1
-
 //TODO-HCC enable __HIP_ARCH_HAS_ATOMICS__ when HCC supports these.
     // 32-bit Atomics:
 #define __HIP_ARCH_HAS_GLOBAL_INT32_ATOMICS__       (1)
@@ -94,10 +91,6 @@ THE SOFTWARE.
 #define __HIP_ARCH_HAS_SURFACE_FUNCS__              (0)
 #define __HIP_ARCH_HAS_3DGRID__                     (1)
 #define __HIP_ARCH_HAS_DYNAMIC_PARALLEL__           (0)
-
-#else
-// Host compile and not device compile:
-#define __HIP_DEVICE_COMPILE__ 0
 
 #endif
 
@@ -202,18 +195,6 @@ __device__ inline unsigned long long int atomicMax(unsigned long long int* addre
 	return (long long int)hc::atomic_fetch_max((uint64_t*)address,(uint64_t)val);
 }
 
-//atomicInc()
-__device__ inline unsigned int atomicInc(unsigned int* address)
-{
-	return hc::atomic_fetch_inc(address);
-}
-
-//atomicDec()
-__device__ inline unsigned int atomicDec(unsigned int* address)
-{
-	return hc::atomic_fetch_dec(address);
-}
-
 //atomicCAS()
 __device__ inline int atomicCAS(int* address, int compare, int val)
 {
@@ -283,86 +264,132 @@ __device__ inline unsigned long long int atomicXor(unsigned long long int* addre
 	return (long long int)hc::atomic_fetch_xor((uint64_t*)address,(uint64_t)val);
 }
 
-#ifdef __HCC__
 #include <hc.hpp>
 // integer intrinsic function __poc __clz __ffs __brev
-__device__ inline unsigned int __popc( unsigned int input) 
+__device__ inline unsigned int __popc( unsigned int input)
 {
 	return hc::__popcount_u32_b32( input);
 }
 
-__device__ inline unsigned int __popcll( unsigned long long int input) 
+__device__ inline unsigned int __popcll( unsigned long long int input)
 {
 	return hc::__popcount_u32_b64(input);
 }
 
-__device__ inline unsigned int __clz(unsigned int input) 
+__device__ inline unsigned int __clz(unsigned int input)
 {
 	return hc::__firstbit_u32_u32( input);
 }
 
-__device__ inline unsigned int __clzll(unsigned long long int input) 
+__device__ inline unsigned int __clzll(unsigned long long int input)
 {
 	return hc::__firstbit_u32_u64( input);
 }
 
-__device__ inline unsigned int __clz(int input) 
+__device__ inline unsigned int __clz(int input)
 {
 	return hc::__firstbit_u32_s32(  input);
 }
 
-__device__ inline unsigned int __clzll(long long int input) 
+__device__ inline unsigned int __clzll(long long int input)
 {
 	return hc::__firstbit_u32_s64( input);
 }
 
-__device__ inline unsigned int __ffs(unsigned int input) 
+__device__ inline unsigned int __ffs(unsigned int input)
 {
 	return hc::__lastbit_u32_u32( input)+1;
 }
 
-__device__ inline unsigned int __ffsll(unsigned long long int input) 
+__device__ inline unsigned int __ffsll(unsigned long long int input)
 {
 	return hc::__lastbit_u32_u64( input)+1;
 }
 
-__device__ inline unsigned int __brev( unsigned int input) 
+__device__ inline unsigned int __ffs(int input)
+{
+	return hc::__lastbit_u32_s32( input)+1;
+}
+
+__device__ inline unsigned int __ffsll(long long int input)
+{
+	return hc::__lastbit_u32_s64( input)+1;
+}
+
+__device__ inline unsigned int __brev( unsigned int input)
 {
 	return hc::__bitrev_b32( input);
 }
 
-__device__ inline unsigned long long int __brevll( unsigned long long int input) 
+__device__ inline unsigned long long int __brevll( unsigned long long int input)
 {
 	return hc::__bitrev_b64( input);
 }
 
 // warp vote function __all __any __ballot
-
-__device__ inline int __all(  int input) 
+__device__ inline int __all(  int input)
 {
 	return hc::__all( input);
 }
 
-
-__device__ inline int __any( int input) 
+__device__ inline int __any( int input)
 {
-	return hc::__any( input);
+	if( hc::__any( input)!=0) return 1;
+	else return 0;
 }
 
-
-__device__ inline unsigned long long int __ballot( int input) 
+__device__ inline unsigned long long int __ballot( int input)
 {
 	return hc::__ballot( input);
 }
 
-#endif
+// warp shuffle functions
+__device__ inline int __shfl(int input, int lane, int width)
+{
+  return hc::__shfl(input,lane,width);
+}
+
+__device__ inline int __shfl_up(int input, unsigned int lane_delta, int width)
+{
+  return hc::__shfl_up(input,lane_delta,width);
+}
+
+__device__ inline int __shfl_down(int input, unsigned int lane_delta, int width)
+{
+  return hc::__shfl_down(input,lane_delta,width);
+}
+
+__device__ inline int __shfl_xor(int input, int lane_mask, int width)
+{
+  return hc::__shfl_xor(input,lane_mask,width);
+}
+
+__device__ inline float __shfl(float input, int lane, int width)
+{
+  return hc::__shfl(input,lane,width);
+}
+
+__device__ inline float __shfl_up(float input, unsigned int lane_delta, int width)
+{
+  return hc::__shfl_up(input,lane_delta,width);
+}
+
+__device__ inline float __shfl_down(float input, unsigned int lane_delta, int width)
+{
+  return hc::__shfl_down(input,lane_delta,width);
+}
+
+__device__ inline float __shfl_xor(float input, int lane_mask, int width)
+{
+  return hc::__shfl_xor(input,lane_mask,width);
+}
 
 
-
-#ifdef __HCC_ACCELERATOR__
 #include <hc_math.hpp>
 // TODO: Choose whether default is precise math or fast math based on compilation flag.
+#ifdef __HCC_ACCELERATOR__
 using namespace hc::precise_math;
+#endif
 
 //TODO: Undo this once min/max functions are supported by hc
 inline int min(int arg1, int arg2) __attribute((hc,cpu)) { \
@@ -372,12 +399,24 @@ inline int max(int arg1, int arg2) __attribute((hc,cpu)) { \
 
 
 //TODO - add a couple fast math operations here, the set here will grow :
-__device__ inline float __log2f(float x) {return hc::fast_math::log2(x); };
+__device__ inline float __cosf(float x) {return hc::fast_math::cosf(x); };
+__device__ inline float __expf(float x) {return hc::fast_math::expf(x); };
+__device__ inline float __frsqrt_rn(float x) {return hc::fast_math::rsqrt(x); };
+__device__ inline float __fsqrt_rd(float x) {return hc::fast_math::sqrt(x); };
+__device__ inline float __fsqrt_rn(float x) {return hc::fast_math::sqrt(x); };
+__device__ inline float __fsqrt_ru(float x) {return hc::fast_math::sqrt(x); };
+__device__ inline float __fsqrt_rz(float x) {return hc::fast_math::sqrt(x); };
+__device__ inline float __log10f(float x) {return hc::fast_math::log10f(x); };
+__device__ inline float __log2f(float x) {return hc::fast_math::log2f(x); };
+__device__ inline float __logf(float x) {return hc::fast_math::logf(x); };
 __device__ inline float __powf(float base, float exponent) {return hc::fast_math::powf(base, exponent); };
-
-#endif
-
-
+__device__ inline void __sincosf(float x, float *s, float *c) {return hc::fast_math::sincosf(x, s, c); };
+__device__ inline float __sinf(float x) {return hc::fast_math::sinf(x); };
+__device__ inline float __tanf(float x) {return hc::fast_math::tanf(x); };
+__device__ inline float __dsqrt_rd(double x) {return hc::fast_math::sqrt(x); };
+__device__ inline float __dsqrt_rn(double x) {return hc::fast_math::sqrt(x); };
+__device__ inline float __dsqrt_ru(double x) {return hc::fast_math::sqrt(x); };
+__device__ inline float __dsqrt_rz(double x) {return hc::fast_math::sqrt(x); };
 
 /**
  * Kernel launching

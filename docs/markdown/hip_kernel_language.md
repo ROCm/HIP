@@ -1,53 +1,54 @@
-﻿# HIP Kernel Language
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Introduction](#introduction)
+- [Function-Type Qualifiers](#function-type-qualifiers)
+  - [`__device__`](#__device__)
+  - [`__global__`](#__global__)
+  - [`__host__`](#__host__)
+- [Calling `__global__` Functions](#calling-__global__-functions)
+- [Kernel-Launch Example](#kernel-launch-example)
+- [Variable-Type Qualifiers](#variable-type-qualifiers)
+  - [`__constant__`](#__constant__)
+  - [`__shared__`](#__shared__)
+  - [`__managed__`](#__managed__)
+  - [`__restrict__`](#__restrict__)
+- [Built-In Variables](#built-in-variables)
+  - [Coordinate Built-Ins](#coordinate-built-ins)
+  - [warpSize](#warpsize)
+- [Vector Types](#vector-types)
+  - [Short Vector Types](#short-vector-types)
+  - [dim3](#dim3)
+- [Memory-Fence Instructions](#memory-fence-instructions)
+- [Synchronization Functions](#synchronization-functions)
+- [Math Functions](#math-functions)
+  - [Single Precision Mathematical Functions](#single-precision-mathematical-functions)
+  - [Double Precision Mathematical Functions](#double-precision-mathematical-functions)
+  - [Integer Intrinsics](#integer-intrinsics)
+- [Texture Functions](#texture-functions)
+- [Surface Functions](#surface-functions)
+- [Timer Functions](#timer-functions)
+- [Atomic Functions](#atomic-functions)
+  - [Caveats and Features Under-Development:](#caveats-and-features-under-development)
+- [Warp Cross-Lane Functions](#warp-cross-lane-functions)
+  - [Warp Vote and Ballot Functions](#warp-vote-and-ballot-functions)
+  - [Warp Shuffle Functions](#warp-shuffle-functions)
+- [Profiler Counter Function](#profiler-counter-function)
+- [Assert](#assert)
+- [Printf](#printf)
+- [Device-Side Dynamic Global Memory Allocation](#device-side-dynamic-global-memory-allocation)
+- [`__launch_bounds__`](#__launch_bounds__)
+- [Register Keyword](#register-keyword)
+- [Pragma Unroll](#pragma-unroll)
+- [In-Line Assembly](#in-line-assembly)
+- [C++ Support](#c-support)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
-###Table of Contents
-=================
 
-  * [HIP Kernel Language](#hip-kernel-language" aria-hidden="true"><span aria-hidden="true)
-    * [Table of Contents](#table-of-contents" aria-hidden="true"><span aria-hidden="true)
-    * [Function-Type Qualifiers](#function-type-qualifiers" aria-hidden="true"><span aria-hidden="true)
-      * [__device__ ](#__device__" aria-hidden="true"><span aria-hidden="true)
-      * [__global__ ](#__global__" aria-hidden="true"><span aria-hidden="true)
-      * [__host__ ](#__host__" aria-hidden="true"><span aria-hidden="true)
-    * [Calling __global__ Functions](#calling-__global__-functions" aria-hidden="true"><span aria-hidden="true)
-    * [Kernel-Launch Example](#kernel-launch-example" aria-hidden="true"><span aria-hidden="true)
-    * [Variable-Type Qualifiers](#variable-type-qualifiers" aria-hidden="true"><span aria-hidden="true)
-      * [__constant__ ](#__constant__" aria-hidden="true"><span aria-hidden="true)
-      * [__shared__ ](#__shared__" aria-hidden="true"><span aria-hidden="true)
-      * [__managed__ ](#__managed__" aria-hidden="true"><span aria-hidden="true)
-      * [__restrict__ ](#__restrict__" aria-hidden="true"><span aria-hidden="true)
-    * [Built-In Variables](#built-in-variables" aria-hidden="true"><span aria-hidden="true)
-      * [Coordinate Built-Ins](#coordinate-built-ins" aria-hidden="true"><span aria-hidden="true)
-      * [warpSize](#warpsize" aria-hidden="true"><span aria-hidden="true)
-    * [Vector Types](#vector-types" aria-hidden="true"><span aria-hidden="true)
-      * [Short Vector Types](#short-vector-types" aria-hidden="true"><span aria-hidden="true)
-      * [dim3](#dim3" aria-hidden="true"><span aria-hidden="true)
-    * [Memory-Fence Instructions](#memory-fence-instructions" aria-hidden="true"><span aria-hidden="true)
-    * [Synchronization Functions](#synchronization-functions" aria-hidden="true"><span aria-hidden="true)
-    * [Math Functions](#math-functions" aria-hidden="true"><span aria-hidden="true)
-      * [Single Precision Mathematical Functions](#single-precision-mathematical-functions" aria-hidden="true"><span aria-hidden="true)
-      * [Double Precision Mathematical Functions](#double-precision-mathematical-functions" aria-hidden="true"><span aria-hidden="true)
-      * [Integer Intrinsics](#integer-intrinsics" aria-hidden="true"><span aria-hidden="true)
-    * [Texture Functions](#texture-functions" aria-hidden="true"><span aria-hidden="true)
-    * [Surface Functions](#surface-functions" aria-hidden="true"><span aria-hidden="true)
-    * [Timer Functions](#timer-functions" aria-hidden="true"><span aria-hidden="true)
-    * [Atomic Functions](#atomic-functions" aria-hidden="true"><span aria-hidden="true)
-      * [Caveats and Features Under-Development:](#caveats-and-features-under-development" aria-hidden="true"><span aria-hidden="true)
-    * [Warp Cross-Lane Functions](#warp-cross-lane-functions" aria-hidden="true"><span aria-hidden="true)
-      * [Warp Vote and Ballot Functions](#warp-vote-and-ballot-functions" aria-hidden="true"><span aria-hidden="true)
-      * [Warp Shuffle Functions](#warp-shuffle-functions" aria-hidden="true"><span aria-hidden="true)
-    * [Profiler Counter Function](#profiler-counter-function" aria-hidden="true"><span aria-hidden="true)
-    * [Assert](#assert" aria-hidden="true"><span aria-hidden="true)
-    * [Printf](#printf" aria-hidden="true"><span aria-hidden="true)
-    * [Device-Side Dynamic Global Memory Allocation](#device-side-dynamic-global-memory-allocation" aria-hidden="true"><span aria-hidden="true)
-    * [__launch_bounds__ ](#__launch_bounds__" aria-hidden="true"><span aria-hidden="true)
-    * [Register Keyword](#register-keyword" aria-hidden="true"><span aria-hidden="true)
-    * [Pragma Unroll](#pragma-unroll" aria-hidden="true"><span aria-hidden="true)
-    * [In-Line Assembly](#in-line-assembly" aria-hidden="true"><span aria-hidden="true)
-    * [C   Support](#c-support" aria-hidden="true"><span aria-hidden="true)
-
-
+## Introduction
 
 HIP provides a C++ syntax that is suitable for compiling most code that commonly appears in compute kernels, including classes, namespaces, operator overloading, templates and more. Additionally, it defines other language features designed specifically to target accelerators, such as the following:
 - A kernel-launch syntax that uses standard C++, resembles a function call and is portable to all HIP targets
@@ -362,28 +363,50 @@ Following is the list of supported double precision mathematical functions.
 <sub><b id="f2"><sup>[1]</sup></b> __RETURN_TYPE is dependent on compiler. It is usually 'int' for C compilers and 'bool' for C++ compilers.</sub> [↩](#a2)
 
 ### Integer Intrinsics
-Following is the list of supported integer intrinsics.
+Following is the list of supported integer intrinsics. Note that intrinsics are supported on device only.
 
-| **Function** | **Supported on Host** | **Supported on Device** |
-| --- | --- | --- |
-| unsigned int __brev ( unsigned int x ) <br><sub>Reverse the bit order of a 32 bit unsigned integer.</sub> | ✓ | ✓ |
-| unsigned long long int __brevll ( unsigned long long int x ) <br><sub>Reverse the bit order of a 64 bit unsigned integer. </sub> | ✓ | ✓ |
-| int __clz ( int  x ) <br><sub>Return the number of consecutive high-order zero bits in a 32 bit integer.</sub> | ✓ | ✓ |
-| unsigned int __clz(unsigned int x) <br><sub>Return the number of consecutive high-order zero bits in 32 bit unsigned integer.</sub> | ✓ | ✗ |  
-| int __clzll ( long long int x ) <br><sub>Count the number of consecutive high-order zero bits in a 64 bit integer.</sub> | ✓ | ✓ |
-| unsigned int __clzll(long long int x) <br><sub>Return the number of consecutive high-order zero bits in 64 bit signed integer.</sub> | ✓ | ✗ |
-| unsigned int __ffs(unsigned int x) <br><sub>Find the position of least signigicant bit set to 1 in a 32 bit unsigned integer.<sup id="a3">[1](#f3)</sup></sub> | ✓ | ✓|
-| unsigned int __ffs(int x) <br><sub>Find the position of least signigicant bit set to 1 in a 32 bit signed integer.</sub> | ✗ | ✓ |
-| unsigned int __ffsll(unsigned long long int x) <br><sub>Find the position of least signigicant bit set to 1 in a 64 bit unsigned integer.<sup>[1](#f3)</sup></sub> | ✓ | ✓ |
-| unsigned int __ffsll(long long int x) <br><sub>Find the position of least signigicant bit set to 1 in a 64 bit signed integer.</sub> | ✗ | ✓ |
-| unsigned int __popc ( unsigned int x ) <br><sub>Count the number of bits that are set to 1 in a 32 bit integer.</sub> | ✓ | ✓ |
-| int __popcll ( unsigned long long int x )<br><sub>Count the number of bits that are set to 1 in a 64 bit integer.</sub> | ✓ | ✓ |
+| **Function** |
+| --- |
+| unsigned int __brev ( unsigned int x ) <br><sub>Reverse the bit order of a 32 bit unsigned integer.</sub> |
+| unsigned long long int __brevll ( unsigned long long int x ) <br><sub>Reverse the bit order of a 64 bit unsigned integer. </sub> |
+| int __clz ( int  x ) <br><sub>Return the number of consecutive high-order zero bits in a 32 bit integer.</sub> |
+| unsigned int __clz(unsigned int x) <br><sub>Return the number of consecutive high-order zero bits in 32 bit unsigned integer.</sub> |
+| int __clzll ( long long int x ) <br><sub>Count the number of consecutive high-order zero bits in a 64 bit integer.</sub> |
+| unsigned int __clzll(long long int x) <br><sub>Return the number of consecutive high-order zero bits in 64 bit signed integer.</sub> |
+| unsigned int __ffs(unsigned int x) <br><sub>Find the position of least signigicant bit set to 1 in a 32 bit unsigned integer.<sup id="a3">[1](#f3)</sup></sub> |
+| unsigned int __ffs(int x) <br><sub>Find the position of least signigicant bit set to 1 in a 32 bit signed integer.</sub> |
+| unsigned int __ffsll(unsigned long long int x) <br><sub>Find the position of least signigicant bit set to 1 in a 64 bit unsigned integer.<sup>[1](#f3)</sup></sub> |
+| unsigned int __ffsll(long long int x) <br><sub>Find the position of least signigicant bit set to 1 in a 64 bit signed integer.</sub> |
+| unsigned int __popc ( unsigned int x ) <br><sub>Count the number of bits that are set to 1 in a 32 bit integer.</sub> |
+| int __popcll ( unsigned long long int x )<br><sub>Count the number of bits that are set to 1 in a 64 bit integer.</sub> |
 <sub><b id="f3"><sup>[1]</sup></b> 
 The hcc implementation of __ffs() and __ffsll() contains code to add a constant +1 to produce the ffs result format.
 For the cases where this overhead is not acceptable and programmer is willing to specialize for the platform, 
 hcc provides hc::__lastbit_u32_u32(unsigned int input) and  hc::__lastbit_u32_u64(unsigned long long int input).
-The index returned by __lastbit_ instructions starts at 0, while for ffs the index starts at 1.  
+The index returned by __lastbit_ instructions starts at -1, while for ffs the index starts at 0.
 
+### Floating-point Intrinsics
+Following is the list of supported floating-point intrinsics. Note that intrinsics are supported on device only.
+
+| **Function** |
+| --- |
+| float __cosf ( float  x ) <br><sub>Calculate the fast approximate cosine of the input argument.</sub> |
+| float __expf ( float  x ) <br><sub>Calculate the fast approximate base e exponential of the input argument.</sub> |
+| float __frsqrt_rn ( float  x ) <br><sub>Compute `1 / √x` in round-to-nearest-even mode.</sub> |
+| float __fsqrt_rd ( float  x ) <br><sub>Compute `√x` in round-down mode.</sub> |
+| float __fsqrt_rn ( float  x ) <br><sub>Compute `√x` in round-to-nearest-even mode.</sub> |
+| float __fsqrt_ru ( float  x ) <br><sub>Compute `√x` in round-up mode.</sub> |
+| float __fsqrt_rz ( float  x ) <br><sub>Compute `√x` in round-towards-zero mode.</sub> |
+| float __log10f ( float  x ) <br><sub>Calculate the fast approximate base 10 logarithm of the input argument.</sub> |
+| float __log2f ( float  x ) <br><sub>Calculate the fast approximate base 2 logarithm of the input argument.</sub> |
+| float __logf ( float  x ) <br><sub>Calculate the fast approximate base e logarithm of the input argument.</sub> |
+| float __powf ( float  x, float  y ) <br><sub>Calculate the fast approximate of x<sup>y</sup>.</sub> |
+| float __sinf ( float  x ) <br><sub>Calculate the fast approximate sine of the input argument.</sub> |
+| float __tanf ( float  x ) <br><sub>Calculate the fast approximate tangent of the input argument.</sub> |
+| double __dsqrt_rd ( double  x ) <br><sub>Compute `√x` in round-down mode.</sub> |
+| double __dsqrt_rn ( double  x ) <br><sub>Compute `√x` in round-to-nearest-even mode.</sub> |
+| double __dsqrt_ru ( double  x ) <br><sub>Compute `√x` in round-up mode.</sub> |
+| double __dsqrt_rz ( double  x ) <br><sub>Compute `√x` in round-towards-zero mode.</sub> |
 
 ## Texture Functions
 Texture functions are not supported.
@@ -434,8 +457,8 @@ HIP supports the following atomic operations.
 | int atomicMax(int* address, int val) | ✓ | ✓ |
 | unsigned int atomicMax(unsigned int* address,unsigned int val) | ✓ | ✓ |
 | unsigned long long int atomicMax(unsigned long long int* address,unsigned long long int val) | ✓ | ✓ |
-| unsigned int atomicInc(unsigned int* address)| ✓ <br><sub>Takes one argument.</sub> | ✓ <br><sub> Wrapping increment,takes two arguments.</sub> |
-| unsigned int atomicDec(unsigned int* address)| ✓ <br><sub>Takes one argument.</sub> | ✓ <br><sub> Wrapping decrement,takes two arguments.</sub> |
+| unsigned int atomicInc(unsigned int* address)| ✗ | ✓  |
+| unsigned int atomicDec(unsigned int* address)| ✗ | ✓ |
 | int atomicCAS(int* address, int compare, int val) | ✓ | ✓ |
 | unsigned int atomicCAS(unsigned int* address,unsigned int compare,unsigned int val) | ✓ | ✓ |
 | unsigned long long int atomicCAS(unsigned long long int* address,unsigned long long int compare,unsigned long long int val) | ✓ | ✓ |

@@ -209,11 +209,11 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>: <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a88e525a7c8f35552dfada58e9f2f6d3a" title="Resource handle (hipEvent_t or hipStream_t) invalid. ">hipErrorInvalidResourceHandle</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1" title="indicates that asynchronous operations enqueued earlier are not ready. This is not actually an error...">hipErrorNotReady</a>,</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>: <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a88e525a7c8f35552dfada58e9f2f6d3a" title="Resource handle (hipEvent_t or hipStream_t) invalid. ">hipErrorInvalidResourceHandle</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1" title="Indicates that asynchronous operations enqueued earlier are not ready. This is not actually an error...">hipErrorNotReady</a>,</dd></dl>
 <p>Computes the elapsed time between two events. Time is computed in ms, with a resolution of approximately 1 us.</p>
 <p>Events which are recorded in a NULL stream will block until all commands on all other streams complete execution, and then record the timestamp.</p>
 <p>Events which are recorded in a non-NULL stream will record their timestamp when they reach the head of the specified stream, after all previous commands in that stream have completed executing. Thus the time that the event recorded may be significantly after the host calls hipEventRecord.</p>
-<p>If hipEventRecord has not been called on either event, then <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a88e525a7c8f35552dfada58e9f2f6d3a" title="Resource handle (hipEvent_t or hipStream_t) invalid. ">hipErrorInvalidResourceHandle</a> is returned. If hipEventRecord has been called on both events, but the timestamp has not yet been recorded on one or both events (that is, hipEventQuery would return <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1" title="indicates that asynchronous operations enqueued earlier are not ready. This is not actually an error...">hipErrorNotReady</a> on at least one of the events), then <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1" title="indicates that asynchronous operations enqueued earlier are not ready. This is not actually an error...">hipErrorNotReady</a> is returned. </p>
+<p>If hipEventRecord has not been called on either event, then <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a88e525a7c8f35552dfada58e9f2f6d3a" title="Resource handle (hipEvent_t or hipStream_t) invalid. ">hipErrorInvalidResourceHandle</a> is returned. If hipEventRecord has been called on both events, but the timestamp has not yet been recorded on one or both events (that is, hipEventQuery would return <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1" title="Indicates that asynchronous operations enqueued earlier are not ready. This is not actually an error...">hipErrorNotReady</a> on at least one of the events), then <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1" title="Indicates that asynchronous operations enqueued earlier are not ready. This is not actually an error...">hipErrorNotReady</a> is returned. </p>
 
 </div>
 </div>
@@ -239,7 +239,7 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, hipEventNotReady</dd></dl>
-<p>Query the status of the specified event. This function will return <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1" title="indicates that asynchronous operations enqueued earlier are not ready. This is not actually an error...">hipErrorNotReady</a> if all commands in the appropriate stream (specified to hipEventRecord) have completed. If that work has not completed, or if hipEventRecord was not called on the event, then cudaSuccess is returned. </p>
+<p>Query the status of the specified event. This function will return <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1" title="Indicates that asynchronous operations enqueued earlier are not ready. This is not actually an error...">hipErrorNotReady</a> if all commands in the appropriate stream (specified to hipEventRecord) have completed. If that work has not completed, or if hipEventRecord was not called on the event, then hipSuccess is returned. </p>
 
 </div>
 </div>
@@ -315,7 +315,7 @@ Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Jan 25 2016 16:05:53 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Feb 18 2016 20:42:16 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

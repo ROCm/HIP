@@ -14,15 +14,17 @@ GetOptions(
     ,"compiler|c" => \$p_compiler
     ,"platform|P" => \$p_platform
     ,"cpp_config|cxx_config|C" => \$p_cpp_config
+    ,"full|f" => \$p_full,
     ,"newline|n" => \$p_newline
 );
 
 if ($p_help) {
-    print "usage: which_hip [OPTIONS]\n";
+    print "usage: hipconfig [OPTIONS]\n";
     print "  --path,  -p        : print HIP_PATH (use env var if set, else determine from hipconfig path)\n";
     print "  --cpp_config, -C   : print C++ compiler options\n";
     print "  --compiler, -c     : print compiler (hcc or nvcc)\n";
     print "  --platform, -P     : print platform (hcc or nvcc)\n";
+    print "  --full, -f         : print full config\n";
     print "  --newline, -n      : print newline\n";
     print "  --help, -h         : print help message\n";
     exit();
@@ -47,8 +49,13 @@ $HIP_PATH=$ENV{'HIP_PATH'};
 $HIP_PATH=Cwd::realpath (dirname (dirname $0)) unless defined $HIP_PATH;        # use parent directory of this tool
 
 
+if ($HIP_PLATFORM eq "hcc") {
+    $CPP_CONFIG= " -D__HIP_PLATFORM_HCC__=   -I$HIP_PATH/include -I$HCC_HOME/include";
+}
+if ($HIP_PLATFORM eq "nvcc") {
+    $CPP_CONFIG = " -D__HIP_PLATFORM_NVCC__=  -I$HIP_PATH/include -I$CUDA_PATH/include";
+};
 
-$printed = 0;
 if ($p_path) {
     print "$HIP_PATH";
     $printed = 1;
@@ -56,15 +63,43 @@ if ($p_path) {
     
 
 if ($p_cpp_config) {
-    if ($HIP_PLATFORM eq "hcc") {
-        print " -D__HIP_PLATFORM_HCC__=   -I$HIP_PATH/include -I$HCC_HOME/include";
-    }
-    if ($HIP_PLATFORM eq "nvcc") {
-        print " -D__HIP_PLATFORM_NVCC__=  -I$HIP_PATH/include -I$CUDA_PATH/include";
-    };
+    print $CPP_CONFIG;
     $printed = 1;
 }
 
+if ($p_full) {
+    print "== hipconfig\n";
+    print "HIP_PATH     : ", $HIP_PATH, "\n";
+    print "HIP_PLATFORM : ", $HIP_PLATFORM, "\n";
+    print "CPP_CONFIG   : ", $CPP_CONFIG, "\n";
+    if ($HIP_PLATFORM eq "hcc") 
+    {
+        print "\n" ;
+        print "== hcc\n";
+        print ("HCC_HOME     : $HCC_HOME\n");
+        system("$HCC_HOME/bin/hcc --version");
+        print ("HCC-cxxflags: "); 
+        system("$HCC_HOME/bin/hcc-config --cxxflags");
+        print ("HCC-ldflags : "); 
+        system("$HCC_HOME/bin/hcc-config --ldflags");
+    }
+    if ($HIP_PLATFORM eq "nvcc")  {
+        print "\n" ;
+        print "== nvcc\n";
+        #print "CUDA_PATH   :", $CUDA_PATH";
+        system("nvcc --version");
+
+    }
+    print "\n" ;
+
+    print "=== Environment Variables\n";
+    system("env | egrep '^HIP|^HSA|^HCC|^CUDA'");
+
+    print "\n" ;
+    print "== Linux Kernel\n";
+    system ("uname -a");
+    $printed = 1;
+}
 
 
 if (!$printed or $p_compiler or $p_platform) {

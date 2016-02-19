@@ -207,6 +207,66 @@ inline static hipError_t hipDeviceGetProperties(hipDeviceProp_t *p_prop, int dev
     p_prop->arch.has3dGrid                   =  (ccVers >= 200);
     p_prop->arch.hasDynamicParallelism       =  (ccVers >= 350);
 
+    p_prop->concurrentKernels = cdprop.concurrentKernels;
+
+    return hipCUDAErrorTohipError(cerror);
+}
+
+inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
+{
+    cudaDeviceAttr cdattr;
+    cudaError_t cerror;
+    
+    switch (attr) {
+    case hipDeviceAttributeMaxThreadsPerBlock:
+        cdattr = cudaDevAttrMaxThreadsPerBlock; break;
+    case hipDeviceAttributeMaxBlockDimX:
+        cdattr = cudaDevAttrMaxBlockDimX; break;
+    case hipDeviceAttributeMaxBlockDimY:
+        cdattr = cudaDevAttrMaxBlockDimY; break;
+    case hipDeviceAttributeMaxBlockDimZ:
+        cdattr = cudaDevAttrMaxBlockDimZ; break;
+    case hipDeviceAttributeMaxGridDimX:
+        cdattr = cudaDevAttrMaxGridDimX; break;
+    case hipDeviceAttributeMaxGridDimY:
+        cdattr = cudaDevAttrMaxGridDimY; break;
+    case hipDeviceAttributeMaxGridDimZ:
+        cdattr = cudaDevAttrMaxGridDimZ; break;
+    case hipDeviceAttributeMaxSharedMemoryPerBlock:
+        cdattr = cudaDevAttrMaxSharedMemoryPerBlock; break;
+    case hipDeviceAttributeTotalConstantMemory:
+        cdattr = cudaDevAttrTotalConstantMemory; break;
+    case hipDeviceAttributeWarpSize:
+        cdattr = cudaDevAttrWarpSize; break;
+    case hipDeviceAttributeMaxRegistersPerBlock:
+        cdattr = cudaDevAttrMaxRegistersPerBlock; break;
+    case hipDeviceAttributeClockRate:
+        cdattr = cudaDevAttrClockRate; break;
+    case hipDeviceAttributeMemoryClockRate:
+        cdattr = cudaDevAttrMemoryClockRate:; break;
+    case hipDeviceAttributeMultiprocessorCount:
+        cdattr = cudaDevAttrMultiProcessorCount; break;
+    case hipDeviceAttributeComputeMode:
+        cdattr = cudaDevAttrComputeMode; break;
+    case hipDeviceAttributeL2CacheSize:
+        cdattr = cudaDevAttrL2CacheSize; break;
+    case hipDeviceAttributeMaxThreadsPerMultiProcessor:
+        cdattr = cudaDevAttrMaxThreadsPerMultiProcessor; break;
+    case hipDeviceAttributeComputeCapabilityMajor:
+        cdattr = cudaDevAttrComputeCapabilityMajor; break;
+    case hipDeviceAttributeConcurrentKernels:
+        cdattr = cudaDevAttrConcurrentKernels; break;
+    case hipDeviceAttributePciBusId:
+        cdattr = cudaDevAttrPciBusId; break;
+    case hipDeviceAttributePciDeviceId:
+        cdattr = cudaDevAttrPciDeviceId; break;
+    case hipDeviceAttributeMaxSharedMemoryPerMultiprocessor:
+        cdattr = cudaDevAttrMaxSharedMemoryPerMultiprocessor; break;
+    default:
+        cerror = cudaErrorInvalidValue; break;
+    }
+
+    cerror = cudaDeviceGetAttribute(pi, cdattr, device);
 
     return hipCUDAErrorTohipError(cerror);
 }

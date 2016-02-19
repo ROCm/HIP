@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['bug_20list',['Bug List',['../bug.html',1,'']]]
+  ['arch',['arch',['../structhipDeviceProp__t.html#afc58158e44bef6ad26f2be401434b049',1,'hipDeviceProp_t']]]
 ];
