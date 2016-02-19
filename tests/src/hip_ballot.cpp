@@ -9,7 +9,8 @@ __global__ void
 
    int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
    const unsigned int warp_num = hipThreadIdx_x >> pshift;
-   atomicAdd(&device_ballot[warp_num+hipBlockIdx_x*Num_Warps_per_Block],__popcll(__ballot(tid - 245)));
+   if (pshift ==6) {atomicAdd(&device_ballot[warp_num+hipBlockIdx_x*Num_Warps_per_Block],__popcll(__ballot(tid - 245)));}
+	else {atomicAdd(&device_ballot[warp_num+hipBlockIdx_x*Num_Warps_per_Block],__popc(__ballot(tid - 245)));}
  
 }
 
@@ -18,8 +19,11 @@ int main(int argc, char *argv[])
 { int warpSize, pshift;
   hipDeviceProp_t devProp;
   hipDeviceGetProperties(&devProp, 0);
-  if(strncmp(devProp.name,"Fiji",1)==0)  {warpSize =64; pshift =6;}
+  
+  if(strncmp(devProp.name,"Fiji",1)==0)  
+  {warpSize = 64; pshift =6;}
   else {warpSize =32; pshift =5;}
+  
   unsigned int Num_Threads_per_Block      = 512;
   unsigned int Num_Blocks_per_Grid        = 1;
   unsigned int Num_Warps_per_Block        = Num_Threads_per_Block/warpSize;
@@ -41,7 +45,7 @@ int main(int argc, char *argv[])
 
      if ((host_ballot[i] == 0)||(host_ballot[i]/warpSize == warpSize)) std::cout << "Warp " << i << " IS convergent- Predicate true for " << host_ballot[i]/warpSize << " threads\n";
 
-     else {std::cout << "Warp " << i << " IS divergent - Predicate true for " << host_ballot[i]/warpSize<< " threads\n";
+     else {std::cout << " Warp " << i << " IS divergent - Predicate true for " << host_ballot[i]/warpSize<< " threads\n";
 	  divergent_count++;}
 }
 

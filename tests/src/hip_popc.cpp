@@ -31,8 +31,8 @@ THE SOFTWARE.
 #define HIP_ASSERT(x) (assert((x)==hipSuccess))
 
 
-#define WIDTH     32
-#define HEIGHT    32
+#define WIDTH     16
+#define HEIGHT    16
 
 #define NUM       (WIDTH*HEIGHT)
 
@@ -52,10 +52,10 @@ unsigned int popcountCPU( T value) {
 	}
 	return ret;
 }
-
+ 
 __global__ void 
-HIP_kernel(hipLaunchParm lp,
-             unsigned int* a, unsigned int* b,unsigned int* c, unsigned long long int* d, int width, int height) 
+HIP_kernel(hipLaunchParm lp, 
+             unsigned int* a, unsigned int* b,unsigned  int* c, unsigned long long int* d, int width, int height) 
   {
  
       int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
@@ -71,20 +71,18 @@ HIP_kernel(hipLaunchParm lp,
 
 
 
-
-
 using namespace std;
 
 int main() {
   
   unsigned int* hostA;
   unsigned int* hostB;
-  unsigned  int* hostC; 
+  unsigned int* hostC; 
   unsigned long long int* hostD;
 
   unsigned int* deviceA;
   unsigned int* deviceB;
-  unsigned  int* deviceC;
+  unsigned int* deviceC;
   unsigned long long int* deviceD;
 
   hipDeviceProp_t devProp;
@@ -107,7 +105,7 @@ int main() {
   // initialize the input data
   for (i = 0; i < NUM; i++) {
     hostB[i] = i;
-	hostD[i] = 1099511627776-i;
+    hostD[i] = 1099511627776-i;
   }
   
   HIP_ASSERT(hipMalloc((void**)&deviceA, NUM * sizeof(unsigned int)));
@@ -128,7 +126,7 @@ int main() {
 
   HIP_ASSERT(hipMemcpy(hostA, deviceA, NUM*sizeof(unsigned int), hipMemcpyDeviceToHost));
   HIP_ASSERT(hipMemcpy(hostC, deviceC, NUM*sizeof(unsigned int), hipMemcpyDeviceToHost));
-  // verify the results
+   // verify the results
   errors = 0;
   for (i = 0; i < NUM; i++) {
 	printf("gpu_popc =%d, cpu_popc =%d \n",hostA[i],popcountCPU(hostB[i]));
@@ -149,11 +147,10 @@ int main() {
     }
   }
   if (errors!=0) {
-    printf("FAILED: %d errors\n",errors);
+      printf("FAILED: %d errors\n",errors);
   } else {
       printf ("__popcll() PASSED!\n");
   }
-
   HIP_ASSERT(hipFree(deviceA));
   HIP_ASSERT(hipFree(deviceB));
   HIP_ASSERT(hipFree(deviceC));
