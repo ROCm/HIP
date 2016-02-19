@@ -364,9 +364,12 @@ while (@ARGV) {
         $ft{'err'} += s/\bcudaDevAttrMaxThreadsPerMultiProcessor\b/hipDeviceAttributeMaxThreadsPerMultiProcessor/g;
         $ft{'err'} += s/\bcudaDevAttrComputeCapabilityMajor\b/hipDeviceAttributeComputeCapabilityMajor/g;
         $ft{'err'} += s/\bcudaDevAttrComputeCapabilityMinor\b/hipDeviceAttributeComputeCapabilityMinor/g;
+        $ft{'err'} += s/\bcudaDevAttrConcurrentKernels\b/hipDeviceAttributeConcurrentKernels/g;
         $ft{'err'} += s/\bcudaDevAttrPciBusId\b/hipDeviceAttributePciBusId/g;
         $ft{'err'} += s/\bcudaDevAttrPciDeviceId\b/hipDeviceAttributePciDeviceId/g;
         $ft{'err'} += s/\bcudaDevAttrMaxSharedMemoryPerMultiprocessor\b/hipDeviceAttributeMaxSharedMemoryPerMultiprocessor/g;
+        $ft{'err'} += s/\bcudaDevAttrMemoryClockRate\b/hipDeviceAttributeMemoryClockRate/g;
+        $ft{'err'} += s/\bcudaDevAttrGlobalMemoryBusWidth\b/hipDeviceAttributeMemoryBusWidth/g;
         $ft{'dev'} += s/\bcudaDeviceAttr\b/hipDeviceAttribute_t/g;
         $ft{'dev'} += s/\bcudaDeviceGetAttribute\b/hipDeviceGetAttribute/g;
 
