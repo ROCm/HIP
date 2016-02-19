@@ -20,7 +20,8 @@ void simpleNegTest()
 
     // Can't use default with async copy
     e = hipMemcpyAsync(A_pinned, A_d, Nbytes, hipMemcpyDefault, NULL);
-    HIPASSERT (e==hipErrorInvalidMemcpyDirection);
+    HIPASSERT (e==hipErrorInvalidMemcpyDirection); // TODO 
+    HIPASSERT (e!= hipSuccess);
 
 
     // Not sure what happens here, the memory must be pinned.
@@ -29,6 +30,33 @@ void simpleNegTest()
     printf ("  async memcpy of A_malloc to A_d. Result=%d\n", e);
     //HIPASSERT (e==hipErrorInvalidValue);
 }
+
+
+//---
+//Send many async copies to the same stream.
+//This requires runtime to keep track of many outstanding commands, and in the case of HCC requires growing/tracking the signal pool:
+template<typename T>
+void test_manyCopies(int nElements, size_t numCopies, int nStreams)
+{
+    size_t Nbytes = nElements*sizeof(T);
+    printf ("Nbytes=%zu (%6.1f MB)\n", Nbytes, (double)(Nbytes)/1024.0/1024.0);
+
+    int *A_d, *B_d, *C_d;
+    int *A_h, *B_h, *C_h;
+
+    HipTest::initArrays (&A_d, &B_d, &C_d, &A_h, &B_h, &C_h, N, true);
+
+    size_t eachCopyBytes = Nbytes / numCopies;
+
+    for (size_t i=0; i<Nbytes; i++) 
+    {
+
+    }
+
+    HipTest::freeArrays (A_d, B_d, C_d, A_h, B_h, C_h, true);
+}
+
+
 
 //---
 //Classic example showing how to overlap data transfer with compute.
@@ -40,7 +68,7 @@ void simpleNegTest()
 // IN :useNullStream - use NULL stream.  Synchronizes everything.
 // IN: useSyncMemcpyH2D - use sync memcpy (no overlap) for H2D
 // IN: useSyncMemcpyD2H - use sync memcpy (no overlap) for D2H
-void chunkedAsyncExample(int nStreams, bool useNullStream, bool useSyncMemcpyH2D, bool useSyncMemcpyD2H)
+void test_chunkedAsyncExample(int nStreams, bool useNullStream, bool useSyncMemcpyH2D, bool useSyncMemcpyD2H)
 {
 
     size_t Nbytes = N*sizeof(int);
@@ -137,10 +165,10 @@ int main(int argc, char *argv[])
     simpleNegTest();
 
 
-    chunkedAsyncExample(p_streams, true, true, true); // Easy sync version
-    chunkedAsyncExample(p_streams, false, true, true); // Easy sync version
-    chunkedAsyncExample(p_streams, false, false, true); // Some async
-    chunkedAsyncExample(p_streams, false, false, false); // All async
+    test_chunkedAsyncExample(p_streams, true, true, true); // Easy sync version
+    test_chunkedAsyncExample(p_streams, false, true, true); // Easy sync version
+    test_chunkedAsyncExample(p_streams, false, false, true); // Some async
+    test_chunkedAsyncExample(p_streams, false, false, false); // All async
 
 
 
