@@ -81,8 +81,10 @@ typedef struct hipDeviceProp_t {
     int maxThreadsDim[3];                       ///< Max number of threads in each dimension (XYZ) of a block.
     int maxGridSize[3];                         ///< Max grid dimensions (XYZ).
     int clockRate;                              ///< Max clock frequency of the multiProcessors in khz.
+#ifdef USE_ROCR_20
     int memoryClockRate;                        ///< Max global memory clock frequency in khz.
     int memoryBusWidth;                         ///< Global memory bus width in bits.
+#endif
     size_t totalConstMem;                       ///< Size of shared memory region (in bytes).
     int major;                                  ///< Major compute capability.  On HCC, this is an approximation and features may differ from CUDA CC.  See the arch feature flags for portable ways to query feature caps.
     int minor;                                  ///< Minor compute capability.  On HCC, this is an approximation and features may differ from CUDA CC.  See the arch feature flags for portable ways to query feature caps.
@@ -145,8 +147,10 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeWarpSize,                             ///< Warp size in threads.
     hipDeviceAttributeMaxRegistersPerBlock,                 ///< Maximum number of 32-bit registers available to a thread block. This number is shared by all thread blocks simultaneously resident on a multiprocessor.
     hipDeviceAttributeClockRate,                            ///< Peak clock frequency in kilohertz.
+#ifdef USE_ROCR_20
     hipDeviceAttributeMemoryClockRate,                      ///< Peak memory clock frequency in kilohertz.
     hipDeviceAttributeMemoryBusWidth,                       ///< Global memory bus width in bits.
+#endif
     hipDeviceAttributeMultiprocessorCount,                  ///< Number of multiprocessors on the device.
     hipDeviceAttributeComputeMode,                          ///< Compute mode that device is currently in.
     hipDeviceAttributeL2CacheSize,                          ///< Size of L2 cache in bytes. 0 if the device doesn't have L2 cache.
