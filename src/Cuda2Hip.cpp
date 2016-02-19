@@ -460,6 +460,21 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
         SM->getImmediateSpellingLoc(sl) : sl, name.length(), repName);
       Replace->insert(Rep);
     }
+    if (const StringLiteral * stringLiteral = Result.Nodes.getNodeAs<clang::StringLiteral>("stringLiteral"))
+    {
+      std::string s = stringLiteral->getString();
+      std::string search("cuda"), replace("hip");
+      size_t pos = 0;
+      while ((pos = s.find("cuda", pos)) != std::string::npos) {
+        llvm::outs() << "String Literal: " << s << "\n";
+        s.replace(pos, search.length(), replace);
+        pos += replace.length();
+        SourceLocation sl = stringLiteral->getLocStart();
+        Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
+         SM->getImmediateSpellingLoc(sl) : sl, stringLiteral->getLength(), s);
+        Replace->insert(Rep);
+      }
+    }
   }
 
  private:
@@ -507,6 +522,7 @@ int main(int argc, const char **argv) {
   Finder.addMatcher(varDecl(isExpansionInMainFile(), hasType(enumDecl(matchesName("cuda.*")))).bind("cudaEnumConstantDecl"), &Callback);
   Finder.addMatcher(varDecl(isExpansionInMainFile(), hasType(cxxRecordDecl(matchesName("cuda.*")))).bind("cudaStructVar"), &Callback);
   Finder.addMatcher(parmVarDecl(isExpansionInMainFile(), hasType(namedDecl(matchesName("cuda.*")))).bind("cudaParamDecl"), &Callback);
+  Finder.addMatcher(stringLiteral().bind("stringLiteral"), &Callback);
 
   auto action = newFrontendActionFactory(&Finder, &PPCallbacks);
 
