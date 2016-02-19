@@ -17,17 +17,17 @@ Stay tuned - the work for many of these features is already in-flight.
 ## Revision History:
 
 ===================================================================================================
-Release:0.80.01.00 
+Release:0.80.01
 Date: 2016.02.18
 - Improve reporting and support for device-side math functions.
 - Update Runtime Documentation.
 - Improve implementations of cross-lane operations (_ballot, _any, _all).
 - Provide shuffle intrinsics (performance optimization in-progress).
 - Support hipDeviceAttribute for querying "one-shot" device attributes, as an alternative to hipDeviceGetProperties.
-- 
+
 
 ===================================================================================================
-Release:0.80.00.00 :
+Release:0.80.00 :
 Date: 2016.01.25
 
 Initial release with GPUOpen Launch.
