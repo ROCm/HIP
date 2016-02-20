@@ -481,7 +481,8 @@ __device__ inline float __dsqrt_rz(double x) {return hc::fast_math::sqrt(x); };
 
 
 #ifdef __HCC_CPP__
-hc::accelerator_view *ihipLaunchKernel(hipStream_t stream);
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, hc::accelerator_view **av);
+void ihipPostLaunchKernel(hipStream_t stream, hc::completion_future &cf);
 
 #if not defined(DISABLE_GRID_LAUNCH)
 #define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...) \
@@ -496,12 +497,13 @@ do {\
   lp.groupMemBytes = _groupMemBytes;\
   hc::completion_future cf;\
   lp.cf = &cf;  \
-  lp.av = (ihipLaunchKernel(_stream)); \
+  hipStream_t trueStream = (ihipPreLaunchKernel(_stream, &lp.av)); \
     if (HIP_TRACE_API) {\
         fprintf(stderr, "hiptrace1: launch '%s' gridDim:[%d.%d.%d] groupDim:[%d.%d.%d] groupMem:+%d stream=%p\n", \
                 #_kernelName, lp.gridDim.z, lp.gridDim.y, lp.gridDim.x, lp.groupDim.z, lp.groupDim.y, lp.groupDim.x, lp.groupMemBytes, (void*)(_stream));\
     }\
   _kernelName (lp, __VA_ARGS__);\
+  ihipPostLaunchKernel(trueStream, cf);\
 } while(0)
 
 #else
@@ -519,12 +521,13 @@ do {\
   lp.groupMemBytes = _groupMemBytes;\
   hc::completion_future cf;\
   lp.cf = &cf;  \
-  lp.av = (ihipLaunchKernel(_stream)); \
+  hipStream_t trueStream = (ihipPreLaunchKernel(_stream, &lp.av)); \
     if (HIP_TRACE_API) {\
         fprintf(stderr, "hiptrace1: launch '%s' gridDim:[%d.%d.%d] groupDim:[%d.%d.%d] groupMem:+%d stream=%p\n", \
                 #_kernelName, lp.gridDim.z, lp.gridDim.y, lp.gridDim.x, lp.groupDim.z, lp.groupDim.y, lp.groupDim.x, lp.groupMemBytes, (void*)(_stream));\
     }\
   _kernelName (lp, __VA_ARGS__);\
+  ihipPostLaunchKernel(trueStream, cf);\
 } while(0)
 /*end hipLaunchKernel */
 #endif

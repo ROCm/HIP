@@ -25,7 +25,7 @@
     printf (__VA_ARGS__);\
     printf ("\n");\
     printf ("error: TEST FAILED\n%s", KNRM );\
-    exit(EXIT_FAILURE);
+    abort();
 
 
 #define HIPCHECK(error) \
