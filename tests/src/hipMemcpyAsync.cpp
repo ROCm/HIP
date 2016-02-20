@@ -36,24 +36,62 @@ void simpleNegTest()
 //Send many async copies to the same stream.
 //This requires runtime to keep track of many outstanding commands, and in the case of HCC requires growing/tracking the signal pool:
 template<typename T>
-void test_manyCopies(int nElements, size_t numCopies, int nStreams)
+void test_manyCopies(int nElements, int numCopies)
 {
     size_t Nbytes = nElements*sizeof(T);
-    printf ("Nbytes=%zu (%6.1f MB)\n", Nbytes, (double)(Nbytes)/1024.0/1024.0);
+    size_t eachCopyElements = nElements / numCopies;
+    size_t eachCopyBytes = eachCopyElements * sizeof(T);
 
-    int *A_d, *B_d, *C_d;
-    int *A_h, *B_h, *C_h;
+    printf ("-----------------------------------------------------------------------------------------------\n");
+    printf ("testing: %s  Nbytes=%zu (%6.1f MB) numCopies=%d eachCopyElements=%zu eachCopyBytes=%zu\n", 
+            __func__, Nbytes, (double)(Nbytes)/1024.0/1024.0, numCopies, eachCopyElements, eachCopyBytes);
 
-    HipTest::initArrays (&A_d, &B_d, &C_d, &A_h, &B_h, &C_h, N, true);
+    T *A_d;
+    T *A_h1, *A_h2;
 
-    size_t eachCopyBytes = Nbytes / numCopies;
+    HIPCHECK(hipMallocHost(&A_h1, Nbytes));
+    HIPCHECK(hipMallocHost(&A_h2, Nbytes));
+    HIPCHECK(hipMalloc(&A_d, Nbytes));
 
-    for (size_t i=0; i<Nbytes; i++) 
-    {
-
+    for (int i=0; i<nElements; i++) {
+        A_h1[i] = 3.14f + static_cast<T> (i);
     }
 
-    HipTest::freeArrays (A_d, B_d, C_d, A_h, B_h, C_h, true);
+
+    hipStream_t stream;
+    HIPCHECK (hipStreamCreate(&stream));
+
+    //stream=0; // fixme TODO
+
+
+    for (int i=0; i<numCopies; i++) 
+    {
+        printf ("i=%d, dst=%p, src=%p\n", i, &A_d[i*eachCopyElements], &A_h1[i*eachCopyElements]);
+        HIPCHECK(hipMemcpyAsync(&A_d[i*eachCopyElements], &A_h1[i*eachCopyElements], eachCopyBytes, hipMemcpyHostToDevice, stream));
+    }
+
+    HIPCHECK(hipDeviceSynchronize());
+
+    for (int i=0; i<numCopies; i++) 
+    {
+        HIPCHECK(hipMemcpyAsync(&A_h2[i*eachCopyElements], &A_d[i*eachCopyElements], eachCopyBytes, hipMemcpyDeviceToHost, stream));
+    }
+
+    HIPCHECK(hipDeviceSynchronize());
+
+
+    // Verify we copied back all the data correctly:
+    for (int i=0; i<nElements; i++) {
+        HIPASSERT(A_h1[i] == A_h2[i]);
+    }
+
+
+    HIPCHECK(hipFreeHost(A_h1));
+    HIPCHECK(hipFreeHost(A_h2));
+    HIPCHECK(hipFree(A_d));
+
+    HIPCHECK(hipStreamDestroy(stream));
+
 }
 
 
@@ -127,6 +165,8 @@ void test_chunkedAsyncExample(int nStreams, bool useNullStream, bool useSyncMemc
     HipTest::checkVectorADD(A_h, B_h, C_h, N);
 
     HipTest::freeArrays (A_d, B_d, C_d, A_h, B_h, C_h, true);
+
+    free(stream);
 };
 
 
@@ -162,13 +202,23 @@ int main(int argc, char *argv[])
     printf ("info: set device to %d\n", p_gpuDevice);
     HIPCHECK(hipSetDevice(p_gpuDevice));
 
-    simpleNegTest();
+    if (p_tests & 0x1) {
+        simpleNegTest();
+    }
+
+    if (p_tests & 0x2) {
+        test_manyCopies<float>(1024,   16);
+        test_manyCopies<float>(1024,    4);
+        test_manyCopies<float>(1024*4, 64);
+    }
 
 
-    test_chunkedAsyncExample(p_streams, true, true, true); // Easy sync version
-    test_chunkedAsyncExample(p_streams, false, true, true); // Easy sync version
-    test_chunkedAsyncExample(p_streams, false, false, true); // Some async
-    test_chunkedAsyncExample(p_streams, false, false, false); // All async
+    if (p_tests & 0x4) {
+        test_chunkedAsyncExample(p_streams, true, true, true); // Easy sync version
+        test_chunkedAsyncExample(p_streams, false, true, true); // Easy sync version
+        test_chunkedAsyncExample(p_streams, false, false, true); // Some async
+        test_chunkedAsyncExample(p_streams, false, false, false); // All async
+    }
 
 
 
