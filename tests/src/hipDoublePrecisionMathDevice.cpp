@@ -42,7 +42,9 @@ __device__ void double_precision_math_functions()
     copysign(1.0, -2.0);
     cos(0.0);
     cosh(0.0);
-    //cospi(0.0);
+#if __hcc_workweek__ >= 16073
+    cospi(0.0);
+#endif
     //cyl_bessel_i0(0.0);
     //cyl_bessel_i1(0.0);
     erf(0.0);
@@ -100,7 +102,9 @@ __device__ void double_precision_math_functions()
     //rnorm3d(0.0, 0.0, 1.0);
     //rnorm4d(0.0, 0.0, 0.0, 1.0);
     round(0.0);
-    //rsqrt(1.0);
+#if __hcc_workweek__ >= 16073
+    rsqrt(1.0);
+#endif
     //scalbln(0.0, 1);
     scalbn(0.0, 1);
     signbit(1.0);
@@ -108,7 +112,9 @@ __device__ void double_precision_math_functions()
     //sincos(0.0, &fX, &fY);
     //sincospi(0.0, &fX, &fY);
     sinh(0.0);
-    //sinpi(0.0);
+#if __hcc_workweek__ >= 16073
+    sinpi(0.0);
+#endif
     sqrt(0.0);
     tan(0.0);
     tanh(0.0);
