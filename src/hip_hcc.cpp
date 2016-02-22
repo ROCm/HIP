@@ -40,7 +40,7 @@ THE SOFTWARE.
 
 #define USE_PINNED_HOST (__hcc_workweek__ >= 1601)
 
-//#define USE_ASYNC_COPY 
+//#define USE_ASYNC_COPY
 
 #define INLINE static inline
 
@@ -360,11 +360,11 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
 
     prop->arch.hasGlobalInt32Atomics       = 1;
     prop->arch.hasGlobalFloatAtomicExch    = 1;
-    prop->arch.hasSharedInt32Atomics       = 0; // TODO-hcc-atomics
-    prop->arch.hasSharedFloatAtomicExch    = 0; // TODO-hcc-atomics
+    prop->arch.hasSharedInt32Atomics       = 1;
+    prop->arch.hasSharedFloatAtomicExch    = 1;
     prop->arch.hasFloatAtomicAdd           = 0;
     prop->arch.hasGlobalInt64Atomics       = 1;
-    prop->arch.hasSharedInt64Atomics       = 0; // TODO-hcc-atomics
+    prop->arch.hasSharedInt64Atomics       = 1;
     prop->arch.hasDoubles                  = 1; // TODO - true for Fiji.
     prop->arch.hasWarpVote                 = 1;
     prop->arch.hasWarpBallot               = 1;
@@ -476,7 +476,7 @@ INLINE ihipDevice_t *ihipGetTlsDefaultDevice()
 {
     // If this is invalid, the TLS state is corrupt.
     // This can fire if called before devices are initialized.
-    // TODO - consider replacing assert with error code 
+    // TODO - consider replacing assert with error code
     assert (ihipIsValidDevice(tls_defaultDevice));
 
     return &g_devices[tls_defaultDevice];
@@ -1428,7 +1428,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
     } else {
         e = hipErrorInvalidResourceHandle;
     }
-        
+
 
 #else
     // TODO-hsart - what synchronization does hsa_copy provide?

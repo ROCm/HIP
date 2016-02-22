@@ -66,8 +66,8 @@ THE SOFTWARE.
     // 32-bit Atomics:
 #define __HIP_ARCH_HAS_GLOBAL_INT32_ATOMICS__       (1)
 #define __HIP_ARCH_HAS_GLOBAL_FLOAT_ATOMIC_EXCH__   (1)
-#define __HIP_ARCH_HAS_SHARED_INT32_ATOMICS__       (0)
-#define __HIP_ARCH_HAS_SHARED_FLOAT_ATOMIC_EXCH__   (0)
+#define __HIP_ARCH_HAS_SHARED_INT32_ATOMICS__       (1)
+#define __HIP_ARCH_HAS_SHARED_FLOAT_ATOMIC_EXCH__   (1)
 #define __HIP_ARCH_HAS_FLOAT_ATOMIC_ADD__           (0)
 
 // 64-bit Atomics:
