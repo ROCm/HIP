@@ -82,6 +82,7 @@ if ($p_full) {
         system("$HCC_HOME/bin/hcc-config --cxxflags");
         print ("HCC-ldflags : "); 
         system("$HCC_HOME/bin/hcc-config --ldflags");
+        printf("\n");
     }
     if ($HIP_PLATFORM eq "nvcc")  {
         print "\n" ;
@@ -98,6 +99,8 @@ if ($p_full) {
     print "\n" ;
     print "== Linux Kernel\n";
     system ("uname -a");
+
+    print "\n" ;
     $printed = 1;
 }
 
