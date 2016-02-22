@@ -105,6 +105,8 @@ enum hipMemcpyKind {
 } ;
 
 
+
+
 // Doxygen end group GlobalDefs
 /**  @} */
 
@@ -113,7 +115,7 @@ enum hipMemcpyKind {
 
 
 // The handle allows the async commands to use the stream even if the parent hipStream_t goes out-of-scope.
-typedef struct ihipStream_t * hipStream_t;
+typedef class ihipStream_t * hipStream_t;
 
 
 /*
@@ -122,6 +124,7 @@ typedef struct ihipStream_t * hipStream_t;
 typedef struct hipEvent_t {
     struct ihipEvent_t *_handle;
 } hipEvent_t;
+
 
 
 
@@ -633,6 +636,11 @@ hipError_t hipEventQuery(hipEvent_t event) ;
  *
  */
 
+
+/**
+ *  @brief Return attributes for the specified pointer
+ */
+hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr) ;
 
 
 /**
