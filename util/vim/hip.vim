@@ -23,6 +23,7 @@ syn keyword hipKeyword hipThreadIdx_x hipThreadIdx_y hipThreadIdx_z
 syn keyword hipKeyword hipBlockDim_x hipBlockDim_y hipBlockDim_z
 syn keyword hipKeyword hipBlockIdx_x hipBlockIdx_y hipBlockIdx_z
 syn keyword hipKeyword hipGridIdx_x hipGridIdx_y hipGridIdx_z
+syn keyword hipKeyword hipGridDim_x hipGridDim_y hipGridDim_z
 
 syn keyword hipType uint uint1 uint2 uint3 uint4
 syn keyword hipType int1 int2 int3 int4
@@ -31,6 +32,7 @@ syn keyword hipType char1 char2 char3 char4
 syn keyword hipType uchar1 uchar2 uchar3 uchar4
 syn keyword hipType short1 short2 short3 short4
 syn keyword hipType dim1 dim2 dim3 dim4
+syn keyword hipType hipLaunchParm
 
 " Atomic functions
 syn keyword hipFunctionName atomicAdd atomicAnd atomicCAS atomicDec atomicExch
@@ -124,6 +126,7 @@ syn keyword hipFunctionName hipMallocArray
 syn keyword hipFunctionName hipMallocHost 
 syn keyword hipFunctionName hipMallocPitch 
 syn keyword hipFunctionName hipMemcpy 
+syn keyword hipFunctionName hipMemcpyAsync
 syn keyword hipFunctionName hipMemcpy2D 
 syn keyword hipFunctionName hipMemcpy2DArrayToArray 
 syn keyword hipFunctionName hipMemcpy2DFromArray 
