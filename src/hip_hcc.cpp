@@ -65,7 +65,6 @@ THE SOFTWARE.
 //static const int debug = 0;
 static const int release = 1;
 
-#define ENABLE_CHECKS 1
 
 int HIP_LAUNCH_BLOCKING = 0;
 
@@ -1413,6 +1412,15 @@ hipError_t hipStreamDestroy(hipStream_t stream)
 
     hipError_t e = hipSuccess;
 
+    //--- Drain the stream:
+    if (stream == NULL) {
+        ihipDevice_t *device = ihipGetTlsDefaultDevice();
+        ihipWaitNullStream(device);
+    } else {
+        stream->wait();
+        e = hipSuccess;
+    }
+
     ihipDevice_t *device = stream->getDevice();
 
     if (device) {
@@ -1862,6 +1870,8 @@ hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
 //---
 hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind)
 {
+    std::call_once(hip_initialized, ihipInit);
+
 #ifdef USE_MEMCPYTOSYMBOL
 	if(kind != hipMemcpyHostToDevice)
 	{
@@ -2288,6 +2298,8 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
 
 hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
 {
+    std::call_once(hip_initialized, ihipInit);
+
     // TODO - call an ihip memset so HIP_TRACE is correct.
     return hipMemsetAsync(dst, value, sizeBytes, hipStreamNull);
 }
