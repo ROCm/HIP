@@ -1183,6 +1183,8 @@ hipError_t hipDeviceReset(void)
     }
 #endif
 
+	// TODO - reset all streams on the device.
+
     return ihipLogStatus(hipSuccess);
 }
 
