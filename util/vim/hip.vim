@@ -116,8 +116,8 @@ syn keyword hipFunctionName hipGLRegisterBufferObject
 syn keyword hipFunctionName hipGLSetGLDevice 
 syn keyword hipFunctionName hipGLUnmapBufferObject 
 syn keyword hipFunctionName hipGLUnregisterBufferObject 
-syn keyword hipFunctionName hipLaunch 
 syn keyword hipFunctionName hipLaunchKernel
+syn keyword hipFunctionName hipLaunchParm
 syn keyword hipFunctionName hipMalloc 
 syn keyword hipFunctionName hipMalloc3D 
 syn keyword hipFunctionName hipMalloc3DArray 
