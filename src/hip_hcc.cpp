@@ -65,6 +65,8 @@ THE SOFTWARE.
 //static const int debug = 0;
 static const int release = 1;
 
+#define ENABLE_CHECKS 1
+
 int HIP_LAUNCH_BLOCKING = 0;
 
 int HIP_PRINT_ENV = 0;
@@ -73,14 +75,25 @@ int HIP_STAGING_SIZE = 64;   /* size of staging buffers, in KB */
 int HIP_STAGING_BUFFERS = 2;  
 int HIP_STREAM_SIGNALS = 2;  /* number of signals to allocate at stream creation */
 
-#define TRACE_API   0x1 /* trace API calls and return values */
-#define TRACE_SYNC  0x2 /* trace synchronization pieces */
-#define TRACE_MEM   0x4 /* trace memory allocation / deallocation */
-#define TRACE_COPY2 0x8 /* trace memory copy commands. Detailed. */
+
+//---
+// Chicken bits for disabling functionality to work around potential issues:
+int HIP_DISABLE_ENQ_BARRIER = 1;
+int HIP_DISABLE_BIDIR_MEMCPY = 1;
+int HIP_ONESHOT_COPY_DEP     = 1;  // this is a good thing
+
+
+//---
+//Debug flags:
+#define TRACE_API    0x01 /* trace API calls and return values */
+#define TRACE_SYNC   0x02 /* trace synchronization pieces */
+#define TRACE_MEM    0x04 /* trace memory allocation / deallocation */
+#define TRACE_COPY2  0x08 /* trace memory copy commands. Detailed. */
+#define TRACE_SIGNAL 0x10 /* trace signal pool commands */
 
 #define tprintf(trace_level, ...) {\
     if (HIP_TRACE_API & trace_level) {\
-        fprintf (stderr, "hiptrace%d: ", trace_level); \
+        fprintf (stderr, "hiptrace%x: ", trace_level); \
         fprintf (stderr, __VA_ARGS__);\
     }\
 }
@@ -101,28 +114,26 @@ const char* ihipCommandName[] = {
 };
 
 
+
+typedef uint64_t SIGSEQNUM;
+
+//---
 // Small wrapper around signals.
 // Designed to be used from stream.
+// TODO-someday refactor this class so it can be stored in a vector<>  
+// we already store the index here so we can use for garbage collection.
 struct ihipSignal_t {
     hsa_signal_t   _hsa_signal; // hsa signal handle
-    int            _ref_cnt;    // reference count, 0 == signal is free.
-    uint64_t       _seq_id;      // unique sequentially increasig ID.
+    int            _index;      // Index in pool, used for garbage collection.
+    SIGSEQNUM      _sig_id;     // unique sequentially increasing ID.
 
-    ihipSignal_t() : _ref_cnt(0), _seq_id(0) {
-      if (hsa_signal_create(1, 0, NULL, &_hsa_signal) != HSA_STATUS_SUCCESS) {
-          throw;
-      }
-      tprintf (TRACE_SYNC, "  allocated hsa_signal=%lu\n", (_hsa_signal.handle));
-    }
+    ihipSignal_t(); 
+    ~ihipSignal_t();
 
-    ~ihipSignal_t() {
-        if (hsa_signal_destroy(_hsa_signal) != HSA_STATUS_SUCCESS) {
-            throw;
-        }
-        // _ref_cnt should be 0, unless we are shutting down...
-        _ref_cnt = 0;
-    };
+    inline void release();
 };
+
+
 
 
 // Internal stream structure.
@@ -132,31 +143,38 @@ public:
     ihipStream_t(unsigned device_index, hc::accelerator_view av, unsigned int flags);
     ~ihipStream_t();
 
+    inline void                 reclaimSignals(SIGSEQNUM sigNum);
+    inline void                 waitAndReclaimOlder(ihipSignal_t *signal);
     inline void                 wait();
 
     inline ihipDevice_t *       getDevice() const;
 
     ihipSignal_t *              getSignal() ;
-    void                        releaseSignal(ihipSignal_t *signal) ;
 
     inline bool                 preKernelCommand();
     inline void                 postKernelCommand(hc::completion_future &kernel_future);
     inline int                  copyCommand(ihipSignal_t *lastCopy, hsa_signal_t *waitSignal, ihipCommand_t copyType);
 
+    inline void                 resetToEmpty();
+
+    inline SIGSEQNUM            lastCopySeqId() { return _last_copy_signal ? _last_copy_signal->_sig_id : 0; };
+
     //---
-    unsigned             _device_index;
     hc::accelerator_view _av;
     unsigned            _flags;
 private:
     void                        enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal);
 
-    uint64_t                    _seq_signal_id;      // Monotonically increasing unique signal id.
+    unsigned                    _device_index;
     ihipCommand_t               _last_command_type;  // type of the last command
     ihipSignal_t                *_last_copy_signal;  // signal of last copy command sent to the stream.  Copy can be either H2D or D2H.
     hc::completion_future       _last_kernel_future;  // Completion future of last kernel command sent to GPU.
     
     int                         _signalCursor;
-    std::deque<ihipSignal_t>    _signalPool;
+    
+    SIGSEQNUM                   _stream_sig_id;      // Monotonically increasing unique signal id.
+    SIGSEQNUM                   _oldest_live_sig_id; // oldest live seq_id, anything < this can be allocated.
+    std::deque<ihipSignal_t>    _signalPool;   // Pool of signals for use by this stream.
 };
 
 
@@ -180,6 +198,8 @@ struct ihipEvent_t {
 
     hc::completion_future _marker;
     uint64_t              _timestamp;  // store timestamp, may be set on host or by marker.
+
+    SIGSEQNUM             _copy_seq_id;
 } ;
 
 
@@ -191,8 +211,8 @@ struct StagingBuffer {
     StagingBuffer(ihipDevice_t *device, size_t bufferSize, int numBuffers) ;
     ~StagingBuffer();
 
-    void CopyDeviceToHost(void* dst, const void* src, size_t sizeBytes);
-    void CopyHostToDevice(void* dst, const void* src, size_t sizeBytes);
+    void CopyDeviceToHost(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
+    void CopyHostToDevice(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
 
 private:
     ihipDevice_t    *_device;
@@ -250,8 +270,37 @@ unsigned g_deviceCnt;
 
 
 //=================================================================================================
+//Forward Declarations:
+//=================================================================================================
+INLINE bool ihipIsValidDevice(unsigned deviceIndex);
+
+//=================================================================================================
 // Implementation:
 //=================================================================================================
+
+
+//=================================================================================================
+// ihipSignal_t:
+//=================================================================================================
+//
+//---
+ihipSignal_t::ihipSignal_t() :  _sig_id(0) 
+{
+  if (hsa_signal_create(0/*value*/, 0, NULL, &_hsa_signal) != HSA_STATUS_SUCCESS) {
+      throw;
+  }
+  tprintf (TRACE_SIGNAL, "  allocated hsa_signal=%lu\n", (_hsa_signal.handle));
+}
+
+//---
+ihipSignal_t::~ihipSignal_t() 
+{
+    tprintf (TRACE_SIGNAL, "  destroy hsa_signal #%lu (#%lu)\n", (_hsa_signal.handle), _sig_id);
+    if (hsa_signal_destroy(_hsa_signal) != HSA_STATUS_SUCCESS) {
+        throw; // TODO
+    }
+};
+
 
 
 //=================================================================================================
@@ -259,17 +308,18 @@ unsigned g_deviceCnt;
 //=================================================================================================
 //---
 ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, unsigned int flags) :
-    _device_index(device_index), 
     _av(av), 
     _flags(flags), 
-    _seq_signal_id(0),
-    _last_command_type(ihipCommandCopyH2D),
-    _last_copy_signal (NULL),
-    _signalCursor(0)
+    _device_index(device_index), 
+    _last_copy_signal(0),
+    _signalCursor(0),
+    _stream_sig_id(0),
+    _oldest_live_sig_id(1)
 {
     tprintf(TRACE_SYNC, " streamCreate: stream=%p\n", this);
     _signalPool.resize(HIP_STREAM_SIGNALS > 0 ? HIP_STREAM_SIGNALS : 1);
 
+    resetToEmpty();
 };
 
 
@@ -280,26 +330,62 @@ ihipStream_t::~ihipStream_t()
 }
 
 
-void ihipStream_t::wait() {
-    tprintf (TRACE_SYNC, "stream %p wait for queue-empty and lastCopy:#%lu...\n", this, _last_copy_signal ? _last_copy_signal->_seq_id: 0x0 );
+//---
+// Reset the stream to "empty" - next command will not set up an inpute dependency on any older signal.
+void ihipStream_t::resetToEmpty() 
+{
+    _last_command_type = ihipCommandCopyH2D;
+    _last_copy_signal = NULL;
+}
+
+//---
+void ihipStream_t::reclaimSignals(SIGSEQNUM sigNum)
+{
+    tprintf(TRACE_SIGNAL, "reclaim signal #%lu\n", sigNum);
+    // Mark all signals older and including this one as available for 
+    _oldest_live_sig_id = sigNum+1;
+}
+
+
+//---
+void ihipStream_t::waitAndReclaimOlder(ihipSignal_t *signal) 
+{
+    hsa_signal_wait_acquire(_last_copy_signal->_hsa_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+
+    reclaimSignals(_last_copy_signal->_sig_id); 
+
+}
+
+
+//---
+//Wait for all queues kernels in the associated accelerator_view to complete.
+void ihipStream_t::wait() 
+{
+    tprintf (TRACE_SYNC, "stream %p wait for queue-empty and lastCopy:#%lu...\n", this, _last_copy_signal ? _last_copy_signal->_sig_id: 0x0 );
     _av.wait();
     if (_last_copy_signal) {
-        hsa_signal_wait_acquire(_last_copy_signal->_hsa_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
-        // TODO-stream : reset ?
+        this->waitAndReclaimOlder(_last_copy_signal);
     }
 
+    resetToEmpty();
 };
 
 
 //---
 inline ihipDevice_t * ihipStream_t::getDevice() const 
 { 
-    return &g_devices[_device_index]; 
+    if (ihipIsValidDevice(_device_index)) {
+        return &g_devices[_device_index]; 
+    } else {
+        return NULL;
+    }
 };
 
 
+//---
 // Allocate a new signal from the signal pool.
-// Returned signals are initialized to a value of "1".
+// Returned signals have value of 0.
+// Signals are intended for use in this stream and are always reclaimed "in-order".
 ihipSignal_t *ihipStream_t::getSignal() 
 {
     int numToScan = _signalPool.size();
@@ -309,21 +395,22 @@ ihipSignal_t *ihipStream_t::getSignal()
             _signalCursor = 0;
         }
 
-        if (_signalPool[thisCursor]._ref_cnt == 0) {
-            _signalPool[thisCursor]._ref_cnt ++; // allocate it
-            _signalPool[thisCursor]._seq_id  =  ++_seq_signal_id; // allocate it
+        if (_signalPool[thisCursor]._sig_id < _oldest_live_sig_id) {
+            _signalPool[thisCursor]._index = thisCursor;
+            _signalPool[thisCursor]._sig_id  =  ++_stream_sig_id;  // allocate it.
+
+
             return &_signalPool[thisCursor];
         }
 
-        numToScan--;
-    } while (numToScan) ;
+    } while (--numToScan) ;
 
     assert(numToScan == 0);
 
     // Have to grow the pool:
     _signalCursor = _signalPool.size(); // set to the beginning of the new entries:
     _signalPool.resize(_signalPool.size() * 2);
-    tprintf (TRACE_SYNC, "grow signal pool to %zu entries, cursor=%d\n", _signalPool.size(), _signalCursor);
+    tprintf (TRACE_SIGNAL, "grow signal pool to %zu entries, cursor=%d\n", _signalPool.size(), _signalCursor);
     return getSignal();  // try again, 
 
     // Should never reach here.
@@ -331,13 +418,112 @@ ihipSignal_t *ihipStream_t::getSignal()
 }
 
 
-void ihipStream_t::releaseSignal(ihipSignal_t *signal) 
+//---
+void ihipStream_t::enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal) 
 {
-    if (--signal->_ref_cnt <= 0) {
-        // restore signal to the initial value 1
-        hsa_signal_store_release(signal->_hsa_signal, 1);
-    }
+
+    // Obtain the write index for the command queue
+    uint64_t index = hsa_queue_load_write_index_relaxed(queue);
+    const uint32_t queueMask = queue->size - 1;
+
+    // Define the barrier packet to be at the calculated queue index address
+    hsa_barrier_and_packet_t* barrier = &(((hsa_barrier_and_packet_t*)(queue->base_address))[index&queueMask]);
+    memset(barrier, 0, sizeof(hsa_barrier_and_packet_t));
+
+    // setup header
+    uint16_t header = HSA_PACKET_TYPE_BARRIER_AND << HSA_PACKET_HEADER_TYPE;
+    header |= 1 << HSA_PACKET_HEADER_BARRIER;
+    //header |= HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE;
+    //header |= HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE;
+    barrier->header = header;
+
+    barrier->dep_signal[0] = depSignal->_hsa_signal;
+
+    barrier->completion_signal.handle = 0;
+
+    // TODO - check queue overflow, return error:
+    // Increment write index and ring doorbell to dispatch the kernel
+    hsa_queue_store_write_index_relaxed(queue, index+1);
+    hsa_signal_store_relaxed(queue->doorbell_signal, index);
 }
+
+
+//--
+//When the commands in a stream change types (ie kernel command follows a data command,
+//or data command follows a kernel command), then we need to add a barrier packet
+//into the stream to mimic CUDA stream semantics.  (some hardware uses separate
+//queues for data commands and kernel commands, and no implicit ordering is provided).
+//
+inline bool ihipStream_t::preKernelCommand()
+{
+    bool addedSync = false;
+    // If switching command types, we need to add a barrier packet to synchronize things.
+    if (_last_command_type != ihipCommandKernel) {
+        if (_last_copy_signal) {
+            addedSync = true;
+
+            hsa_queue_t * q =  (hsa_queue_t*)_av.get_hsa_queue();
+            if (! HIP_DISABLE_ENQ_BARRIER) {
+                this->enqueueBarrier(q, _last_copy_signal);
+                tprintf (TRACE_SYNC, "stream %p switch %s to %s (barrier pkt inserted with wait on #%lu)\n", 
+                        this, ihipCommandName[_last_command_type], ihipCommandName[ihipCommandKernel], _last_copy_signal->_sig_id)
+
+            } else {
+                tprintf (TRACE_SYNC, "stream %p switch %s to %s (wait for previous...)\n", 
+                        this, ihipCommandName[_last_command_type], ihipCommandName[ihipCommandKernel]);
+                this->waitAndReclaimOlder(_last_copy_signal);
+            }
+        }
+        _last_command_type = ihipCommandKernel;
+    }
+
+    return addedSync;
+}
+
+
+//---
+inline void ihipStream_t::postKernelCommand(hc::completion_future &kernelFuture)
+{
+    _last_kernel_future = kernelFuture;
+};
+
+
+
+//---
+// Called whenever a copy command is set to the stream.
+// Examines the last command sent to this stream and returns a signal to wait on, if required.
+inline int ihipStream_t::copyCommand(ihipSignal_t *lastCopy, hsa_signal_t *waitSignal, ihipCommand_t copyType)
+{
+    int needSync = 0;
+
+    waitSignal->handle = 0;
+    // If switching command types, we need to add a barrier packet to synchronize things.
+    if (_last_command_type != copyType) {
+
+
+        if (_last_command_type == ihipCommandKernel) {
+            tprintf (TRACE_SYNC, "stream %p switch %s to %s (async copy dep on prev kernel)\n", 
+                    this, ihipCommandName[_last_command_type], ihipCommandName[copyType]);
+            needSync = 1;
+            hsa_signal_t *hsaSignal = (static_cast<hsa_signal_t*> (_last_kernel_future.get_native_handle()));
+            if (hsaSignal) {
+                *waitSignal = * hsaSignal;
+            }
+        } else if (_last_copy_signal) {
+            needSync = 1;
+            tprintf (TRACE_SYNC, "stream %p switch %s to %s (async copy dep on other copy #%lu)\n", 
+                    this, ihipCommandName[_last_command_type], ihipCommandName[copyType], _last_copy_signal->_sig_id);
+            *waitSignal = _last_copy_signal->_hsa_signal;
+        }
+
+        _last_command_type = copyType;
+    }
+
+    _last_copy_signal = lastCopy;
+
+    return needSync;
+}
+
 
 //=================================================================================================
 //
@@ -680,6 +866,10 @@ void ihipInit()
     READ_ENV_I(release, HIP_STAGING_BUFFERS, 0, "Number of staging buffers to use in each direction");
     READ_ENV_I(release, HIP_STREAM_SIGNALS, 0, "Number of signals to allocate when new stream is created (signal pool will grow on demand)");
 
+    READ_ENV_I(release, HIP_DISABLE_ENQ_BARRIER, 0, "Disable enqueue of barrier packet - instead wait for copy completion on host.");
+    READ_ENV_I(release, HIP_DISABLE_BIDIR_MEMCPY, 0, "Disable simultaneous H2D memcpy and D2H memcpy to same device");
+    READ_ENV_I(release, HIP_ONESHOT_COPY_DEP, 0, "If set, only set the copy input dependency for the first copy command in a staged copy.  If clear, set the dep for each copy.");
+
     /*
      * Build a table of valid compute devices.
      */
@@ -784,103 +974,6 @@ inline hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 }
 
 
-void 
-ihipStream_t::enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal) {
-
-    // Obtain the write index for the command queue
-    uint64_t index = hsa_queue_load_write_index_relaxed(queue);
-    const uint32_t queueMask = queue->size - 1;
-
-    // Define the barrier packet to be at the calculated queue index address
-    hsa_barrier_and_packet_t* barrier = &(((hsa_barrier_and_packet_t*)(queue->base_address))[index&queueMask]);
-    memset(barrier, 0, sizeof(hsa_barrier_and_packet_t));
-
-    // setup header
-    uint16_t header = HSA_PACKET_TYPE_BARRIER_AND << HSA_PACKET_HEADER_TYPE;
-    header |= 1 << HSA_PACKET_HEADER_BARRIER;
-    //header |= HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE;
-    //header |= HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE;
-    barrier->header = header;
-
-    barrier->dep_signal[0] = depSignal->_hsa_signal;
-
-    barrier->completion_signal.handle = 0;
-
-    // TODO - check queue overflow, return error:
-    // Increment write index and ring doorbell to dispatch the kernel
-    hsa_queue_store_write_index_relaxed(queue, index+1);
-    hsa_signal_store_relaxed(queue->doorbell_signal, index);
-}
-
-
-//--
-//When the commands in a stream change types (ie kernel command follows a data command,
-//or data command follows a kernel command), then we need to add a barrier packet
-//into the stream to mimic CUDA stream semantics.  (some hardware uses separate
-//queues for data commands and kernel commands, and no implicit ordering is provided).
-//
-inline bool ihipStream_t::preKernelCommand()
-{
-    bool addedSync = false;
-    // If switching command types, we need to add a barrier packet to synchronize things.
-    if (_last_command_type != ihipCommandKernel) {
-        if (_last_copy_signal) {
-            addedSync = true;
-
-            hsa_queue_t * q =  (hsa_queue_t*)_av.get_hsa_queue();
-            this->enqueueBarrier(q, _last_copy_signal);
-
-            tprintf (TRACE_SYNC, "stream %p switch %s to %s (barrier pkt inserted)\n", 
-                    this, 
-                ihipCommandName[_last_command_type], ihipCommandName[ihipCommandKernel])
-        }
-        _last_command_type = ihipCommandKernel;
-    }
-
-    return addedSync;
-}
-
-
-//---
-inline void ihipStream_t::postKernelCommand(hc::completion_future &kernelFuture)
-{
-    _last_kernel_future = kernelFuture;
-};
-
-
-
-//---
-// Called whenever a copy command is set to the stream.
-// Examines the last command sent to this stream and returns a signal to wait on, if required.
-inline int ihipStream_t::copyCommand(ihipSignal_t *lastCopy, hsa_signal_t *waitSignal, ihipCommand_t copyType)
-{
-    int needSync = 0;
-    // If switching command types, we need to add a barrier packet to synchronize things.
-    if (_last_command_type != copyType) {
-        needSync = 1;
-
-
-        if (_last_command_type == ihipCommandKernel) {
-            tprintf (TRACE_SYNC, "stream %p switch %s to %s (async copy dep on prev kernel)\n", 
-                    this, ihipCommandName[_last_command_type], ihipCommandName[copyType]);
-            hsa_signal_t *hsaSignal = (static_cast<hsa_signal_t*> (_last_kernel_future.get_native_handle()));
-            if (hsaSignal) {
-                *waitSignal = * hsaSignal;
-            }
-        } else if (_last_copy_signal) {
-            tprintf (TRACE_SYNC, "stream %p switch %s to %s (async copy dep on other copy)\n", 
-                    this, ihipCommandName[_last_command_type], ihipCommandName[copyType]);
-            assert (_last_copy_signal->_ref_cnt > 0);
-            *waitSignal = _last_copy_signal->_hsa_signal;
-        }
-
-        _last_command_type = copyType;
-    } 
-
-    _last_copy_signal = lastCopy;
-
-    return needSync;
-}
 
 
 
@@ -906,6 +999,9 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, hc::accelerator_view **av)
 void ihipPostLaunchKernel(hipStream_t stream, hc::completion_future &kernelFuture)
 {
     stream->postKernelCommand(kernelFuture);
+    if (HIP_LAUNCH_BLOCKING) {
+        tprintf(TRACE_SYNC, " stream:%p LAUNCH_BLOCKING for kernel completion\n", stream);
+    }
 }
 
 
@@ -1317,20 +1413,16 @@ hipError_t hipStreamDestroy(hipStream_t stream)
 
     hipError_t e = hipSuccess;
 
-    if (ihipIsValidDevice(stream->_device_index)) {
+    ihipDevice_t *device = stream->getDevice();
 
-        ihipDevice_t *device = &g_devices[stream->_device_index];
-
+    if (device) {
         device->_streams.remove(stream);
-
         delete stream;
-
-        e = hipSuccess;
     } else {
         e = hipErrorInvalidResourceHandle;
     }
 
-    return ihipLogStatus(hipSuccess);
+    return ihipLogStatus(e);
 }
 
 
@@ -1371,6 +1463,8 @@ hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags)
         eh->_state  = hipEventStatusCreated;
         eh->_stream = NULL;
         eh->_flags  = flags;
+        eh->_timestamp  = 0;
+        eh->_copy_seq_id  = 0;
     } else {
         e = hipErrorInvalidValue;
     }
@@ -1405,6 +1499,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
             // Clear timestamps
             eh->_timestamp = 0;
             eh->_marker = stream->_av.create_marker();
+            eh->_copy_seq_id = stream->lastCopySeqId();
 
             return ihipLogStatus(hipSuccess);
         }
@@ -1452,6 +1547,8 @@ hipError_t hipEventSynchronize(hipEvent_t event)
 #else
             eh->_marker.wait();
 #endif
+            eh->_stream->reclaimSignals(eh->_copy_seq_id);
+
             return ihipLogStatus(hipSuccess);
         }
     } else {
@@ -1636,7 +1733,7 @@ template <typename T>
 hc::completion_future
 ihipMemcpyKernel(hipStream_t stream, T * c, const T * a, size_t sizeBytes)
 {
-    int wg = std::min((unsigned)8, g_devices[stream->_device_index]._compute_units);
+    int wg = std::min((unsigned)8, stream->getDevice()->_compute_units);
     const int threads_per_wg = 256;
 
     int threads = wg * threads_per_wg;
@@ -1673,7 +1770,7 @@ template <typename T>
 hc::completion_future
 ihipMemsetKernel(hipStream_t stream, T * ptr, T val, size_t sizeBytes)
 {
-    int wg = std::min((unsigned)8, g_devices[stream->_device_index]._compute_units);
+    int wg = std::min((unsigned)8, stream->getDevice()->_compute_units);
     const int threads_per_wg = 256;
 
     int threads = wg * threads_per_wg;
@@ -1815,7 +1912,11 @@ StagingBuffer::~StagingBuffer()
 
 
 //---
-void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeBytes) 
+//Copies sizeBytes from src to dst, using either a copy to a staging buffer or a staged pin-in-place strategy
+//IN: dst - dest pointer - must be accessible from host CPU.
+//IN: src - src pointer for copy.  Must be accessible from agent this buffer is associated with (via _device)
+//IN: waitFor - hsaSignal to wait for - the copy will begin only when the specified dependency is resolved.  May be NULL indicating no dependency.
+void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor) 
 {
     const char *srcp = static_cast<const char*> (src); 
     char *dstp = static_cast<char*> (dst); 
@@ -1830,10 +1931,10 @@ void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeByte
 
         size_t theseBytes = (bytesRemaining > _bufferSize) ? _bufferSize : bytesRemaining;
 
-        tprintf (TRACE_COPY2, "waiting... on completion signal\n");
+        tprintf (TRACE_COPY2, "H2D: waiting... on completion signal handle=%lu\n", _completion_signal[bufferIndex].handle);
         hsa_signal_wait_acquire(_completion_signal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
 
-        tprintf (TRACE_COPY2, "copy %zu bytes %p to stagingBuf[%d]:%p\n", theseBytes, srcp, bufferIndex, _pinnedStagingBuffer[bufferIndex]);
+        tprintf (TRACE_COPY2, "H2D: bytesRemaining=%zu: copy %zu bytes %p to stagingBuf[%d]:%p\n", bytesRemaining, theseBytes, srcp, bufferIndex, _pinnedStagingBuffer[bufferIndex]);
         // TODO - use uncached memcpy, someday.
         memcpy(_pinnedStagingBuffer[bufferIndex], srcp, theseBytes);
 
@@ -1841,16 +1942,11 @@ void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeByte
         hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
 
 #if USE_ROCR_V2
-        hsa_signal_t depSignal;
-        int depSignalCnt = 0; //stream->copyCommand(_completion_signal[bufferIndex], &depSignal, copyType);
-
-        printf ("need sync\n");
-
-        hsa_status_t hsa_status = hsa_amd_memory_async_copy(dstp, _device->_hsa_agent, _pinnedStagingBuffer[bufferIndex], _device->_hsa_agent, theseBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, _completion_signal[bufferIndex]);
+        hsa_status_t hsa_status = hsa_amd_memory_async_copy(dstp, _device->_hsa_agent, _pinnedStagingBuffer[bufferIndex], _device->_hsa_agent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
 #else
         hsa_status_t hsa_status = hsa_amd_memory_async_copy(dstp, _pinnedStagingBuffer[bufferIndex], theseBytes, _device->_hsa_agent, 0, NULL, _completion_signal[bufferIndex]);
 #endif
-        tprintf (TRACE_COPY2, "async_copy %zu bytes %p to %p status=%x\n", theseBytes, _pinnedStagingBuffer[bufferIndex], dstp, hsa_status);
+        tprintf (TRACE_COPY2, "H2D: bytesRemaining=%zu: async_copy %zu bytes %p to %p status=%x\n", bytesRemaining, theseBytes, _pinnedStagingBuffer[bufferIndex], dstp, hsa_status);
 
         assert(hsa_status == HSA_STATUS_SUCCESS); // TODO - throw 
 
@@ -1858,6 +1954,10 @@ void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeByte
         dstp += theseBytes;
         if (++bufferIndex >= _numBuffers) {
             bufferIndex = 0;
+        }
+
+        if (HIP_ONESHOT_COPY_DEP) {
+            waitFor = NULL; // TODO - don't need dependency after first copy submitted?
         }
     }
 
@@ -1868,7 +1968,11 @@ void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeByte
 }
 
 //---
-void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeBytes) 
+//Copies sizeBytes from src to dst, using either a copy to a staging buffer or a staged pin-in-place strategy
+//IN: dst - dest pointer - must be accessible from agent this buffer is assocaited with (via _device).
+//IN: src - src pointer for copy.  Must be accessible from host CPU.
+//IN: waitFor - hsaSignal to wait for - the copy will begin only when the specified dependency is resolved.  May be NULL indicating no dependency.
+void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor) 
 {
     const char *srcp0 = static_cast<const char*> (src); 
     char *dstp1 = static_cast<char*> (dst); 
@@ -1888,22 +1992,21 @@ void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeByte
 
             size_t theseBytes = (bytesRemaining0 > _bufferSize) ? _bufferSize : bytesRemaining0;
 
-            tprintf (TRACE_COPY2, "D2H: async_copy %zu bytes src:%p to staging:%p\n", theseBytes, srcp0, _pinnedStagingBuffer[bufferIndex]);
+            tprintf (TRACE_COPY2, "D2H: bytesRemaining0=%zu  async_copy %zu bytes src:%p to staging:%p\n", bytesRemaining0, theseBytes, srcp0, _pinnedStagingBuffer[bufferIndex]);
             hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
 #if USE_ROCR_V2
-            hsa_signal_t depSignal;
-            // TODO
-            int depSignalCnt = 0; //stream->copyCommand(_completion_signal[bufferIndex], &depSignal, copyType);
-
-            printf ("need sync\n");
-
-            hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], _device->_hsa_agent, srcp0, _device->_hsa_agent, theseBytes, depSignalCnt, depSignalCnt ? &depSignal:0, _completion_signal[bufferIndex]);
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], _device->_hsa_agent, srcp0, _device->_hsa_agent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
 #else
             hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], srcp0, theseBytes, _device->_hsa_agent, 0, NULL, _completion_signal[bufferIndex]);
 #endif
             assert(hsa_status == HSA_STATUS_SUCCESS); // TODO - throw 
 
             srcp0 += theseBytes;
+
+           
+            if (HIP_ONESHOT_COPY_DEP) {
+                waitFor = NULL; // TODO - don't need dependency after first copy submitted?
+            }
         }
 
         // Now unload the staging buffers:
@@ -1914,7 +2017,7 @@ void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeByte
             tprintf (TRACE_COPY2, "D2H: wait_completion[%d] bytesRemaining=%zu\n", bufferIndex, bytesRemaining1);
             hsa_signal_wait_acquire(_completion_signal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
 
-            tprintf (TRACE_COPY2, "D2H: copy %zu bytes stagingBuf[%d]:%p to dst:%p\n", theseBytes, bufferIndex, _pinnedStagingBuffer[bufferIndex], dstp1);
+            tprintf (TRACE_COPY2, "D2H: bytesRemaining1=%zu copy %zu bytes stagingBuf[%d]:%p to dst:%p\n", bytesRemaining1, theseBytes, bufferIndex, _pinnedStagingBuffer[bufferIndex], dstp1);
             memcpy(dstp1, _pinnedStagingBuffer[bufferIndex], theseBytes);
 
             dstp1 += theseBytes;
@@ -1931,8 +2034,14 @@ void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeByte
 
 
 #if USE_AM_TRACKER
-void ihipSyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind)
+void ihipSyncCopy(ihipStream_t *stream, void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind)
 {
+    ihipDevice_t *device = stream->getDevice();
+
+    if (device == NULL) {
+        throw;
+    }
+
     hc::accelerator acc;
     hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
     hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
@@ -1940,9 +2049,9 @@ void ihipSyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t sizeB
     bool dstNotTracked = (hc::am_memtracker_getinfo(&dstPtrInfo, dst) != AM_SUCCESS);
     bool srcNotTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) != AM_SUCCESS);
 
-    bool useStagingBuffer = true;  // TODO - remove when new copy bakes a bit.  
+    bool useStagingBuffer = true;  
 
-    // Resolve default to a specific Kind, since we use different algorithms:
+    // Resolve default to a specific Kind so we know which algorithm to use:
     if (kind == hipMemcpyDefault) {
         bool dstIsHost = (dstNotTracked || !dstPtrInfo._isInDeviceMem);
         bool srcIsHost = (srcNotTracked || !srcPtrInfo._isInDeviceMem);
@@ -1957,26 +2066,29 @@ void ihipSyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t sizeB
         }
     }
 
-#if 0
-
-    //TODO
-    hsa_signal_t depSignal;
-    int dep_signals = stream->commandCopy(&depSignal, );
-    pass to CopyHostToDevice
-#endif
 
     if ((kind == hipMemcpyHostToDevice) && (srcNotTracked)) {
         if (useStagingBuffer) {
             std::lock_guard<std::mutex> l (device->_copy_lock[0]);
-            device->_staging_buffer[0]->CopyHostToDevice(dst, src, sizeBytes);
+            //printf ("staged-copy- read dep signals\n");
+
+            hsa_signal_t depSignal;
+            int depSignalCnt = stream->copyCommand(NULL, &depSignal, ihipCommandCopyH2D);
+            device->_staging_buffer[0]->CopyHostToDevice(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL); 
+
+            // The copy waits for inputs and then completes before returning.
+            stream->resetToEmpty();
         } else {
             // TODO - remove, slow path.
             hc::am_copy(dst, src, sizeBytes);
         }
     } else if ((kind == hipMemcpyDeviceToHost) && (dstNotTracked)) {
         if (useStagingBuffer) {
-            std::lock_guard<std::mutex> l (device->_copy_lock[1]);
-            device->_staging_buffer[1]->CopyDeviceToHost(dst, src, sizeBytes);
+            std::lock_guard<std::mutex> l (device->_copy_lock[HIP_DISABLE_BIDIR_MEMCPY ? 0:1]);
+            //printf ("staged-copy- read dep signals\n");
+            hsa_signal_t depSignal;
+            int depSignalCnt = stream->copyCommand(NULL, &depSignal, ihipCommandCopyD2H);
+            device->_staging_buffer[1]->CopyDeviceToHost(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL); 
         } else {
             // TODO - remove, slow path.
             hc::am_copy(dst, src, sizeBytes);
@@ -1988,7 +2100,7 @@ void ihipSyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t sizeB
         // Let HSA runtime handle it:
         // TODO - need buffer pool for the signals:
 
-        device->_copy_lock[1].lock();
+        device->_copy_lock[HIP_DISABLE_BIDIR_MEMCPY? 0:1].lock();
 
         hsa_signal_store_relaxed(device->_copy_signal, 1);
 #if USE_ROCR_V2
@@ -2001,7 +2113,7 @@ void ihipSyncCopy(ihipDevice_t *device, void* dst, const void* src, size_t sizeB
             hsa_signal_wait_relaxed(device->_copy_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
         }
 
-        device->_copy_lock[1].unlock();
+        device->_copy_lock[HIP_DISABLE_BIDIR_MEMCPY ? 0:1].unlock();
 
     }
 }
@@ -2017,17 +2129,13 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 
     hc::completion_future marker;
 
-
     hipError_t e = hipSuccess;
 
 #if USE_AM_TRACKER
-    if (ihipIsValidDevice(stream->_device_index)) {
-
-        ihipDevice_t *device = &g_devices[stream->_device_index];
-
-        ihipSyncCopy(device, dst, src, sizeBytes, kind);
-
-    } else {
+    try {
+        ihipSyncCopy(stream, dst, src, sizeBytes, kind);
+    } 
+    catch (...) {
         e = hipErrorInvalidResourceHandle;
     }
         
@@ -2046,6 +2154,9 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
  * @warning on HCC hipMemcpyAsync uses a synchronous copy.
  */
 #endif
+/**
+ * @result #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidMemcpyDirection, #hipErrorInvalidValue
+ */
 //---
 hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream)
 {
@@ -2059,7 +2170,10 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
     if (stream) {
         ihipDevice_t *device = stream->getDevice();
 
-        if (kind == hipMemcpyDefault) {
+        if (device == NULL) {
+            e = hipErrorInvalidDevice;
+
+        } else if (kind == hipMemcpyDefault) {
             e = hipErrorInvalidMemcpyDirection;
 
         } else if (kind == hipMemcpyHostToHost) {
@@ -2069,6 +2183,7 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
 
         } else {
             ihipSignal_t *ihip_signal = stream->getSignal();
+            hsa_signal_store_relaxed(ihip_signal->_hsa_signal, 1);
 
             ihipCommand_t copyType;
             if ((kind == hipMemcpyHostToDevice) || (kind == hipMemcpyDeviceToDevice)) {
@@ -2084,7 +2199,7 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
             hsa_signal_t depSignal;
             int depSignalCnt = stream->copyCommand(ihip_signal, &depSignal, copyType);
 
-            tprintf (TRACE_SYNC, " copy-async, waitFor=%d(%lu) completion=%lu\n", depSignalCnt, depSignal.handle, ihip_signal->_seq_id);
+            tprintf (TRACE_SYNC, " copy-async, waitFor=%lu completion=#%lu(%lu)\n", depSignalCnt? depSignal.handle:0x0, ihip_signal->_sig_id, ihip_signal->_hsa_signal.handle);
 
             hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, device->_hsa_agent, src, device->_hsa_agent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, ihip_signal->_hsa_signal);
 #else
@@ -2093,15 +2208,14 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
 
 
             if (hsa_status == HSA_STATUS_SUCCESS) {
+                // TODO-stream - fix release-signal calls here.
                 if (HIP_LAUNCH_BLOCKING) {
-                    hsa_signal_wait_relaxed(ihip_signal->_hsa_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE); 
-                    stream->releaseSignal(ihip_signal);
-                }  else {
-                    //stream->releaseSignal(ihip_signal);
-                }
+                    tprintf(TRACE_SYNC, "LAUNCH_BLOCKING for completion of hipMemcpyAsync(%zu)\n", sizeBytes);
+                    stream->wait();
+                }  
             } else {
                 // This path can be hit if src or dst point to unpinned host memory.
-                // TODO - does async-copy fall back to sync if input pointers are not pinned?
+                // TODO-stream - does async-copy fall back to sync if input pointers are not pinned?
                 e = hipErrorInvalidValue;
             }
         }

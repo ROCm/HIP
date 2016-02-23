@@ -31,15 +31,129 @@ void simpleNegTest()
     //HIPASSERT (e==hipErrorInvalidValue);
 }
 
+class Pinned;
+class Unpinned;
+
+template <typename T> struct HostTraits;
+
+template<>
+struct HostTraits<Pinned>
+{
+    static const char *Name() { return "Pinned"; } ;
+
+    static void *Alloc(size_t sizeBytes) {
+        void *p; 
+        HIPCHECK(hipMallocHost(&p, sizeBytes));
+        return p;
+    };
+};
+
+
+template<typename T>
+__global__ void 
+addK (hipLaunchParm lp, T *A, T K, size_t numElements)
+{
+    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    size_t stride = hipBlockDim_x * hipGridDim_x ;
+
+    for (size_t i=offset; i<numElements; i+=stride) {
+        A[i] = A[i] + K;
+	}
+}
+
+
+
+//---
+//Tests propert dependency resolution between H2D and D2H commands in same stream:
+//IN: numInflight : number of copies inflight at any time:
+//IN: numPongs = number of iterations to run (iteration)
+template<typename T, class AllocType>
+void test_pingpong(hipStream_t stream, size_t numElements, int numInflight, int numPongs, bool doHostSide) 
+{
+    HIPASSERT(numElements % numInflight == 0); // Must be evenly divisible.
+    size_t Nbytes = numElements*sizeof(T);
+    size_t eachCopyElements = numElements / numInflight;
+    size_t eachCopyBytes = eachCopyElements * sizeof(T);
+
+    unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, numElements);
+
+    printf ("-----------------------------------------------------------------------------------------------\n");
+    printf ("testing: %s<%s>  Nbytes=%zu (%6.1f MB) numPongs=%d numInflight=%d eachCopyElements=%zu eachCopyBytes=%zu\n", 
+            __func__, HostTraits<AllocType>::Name(), Nbytes, (double)(Nbytes)/1024.0/1024.0, numPongs, numInflight, eachCopyElements, eachCopyBytes);
+
+    T *A_h;
+    T *A_d;
+
+    A_h = (T*)(HostTraits<AllocType>::Alloc(Nbytes));
+    HIPCHECK(hipMalloc(&A_d, Nbytes));
+
+    // Initialize the host array:
+    const T initValue = 13;
+    const T deviceConst = 2;
+    const T hostConst = 10000;
+    for (size_t i=0; i<numElements; i++) {
+        A_h[i] = initValue + i;
+    }
+
+
+    for (int k=0; k<numPongs; k++ ) {
+        for (int i=0; i<numInflight; i++) {
+            HIPCHECK(hipMemcpyAsync(&A_d[i*eachCopyElements], &A_h[i*eachCopyElements], eachCopyBytes, hipMemcpyHostToDevice, stream));
+        }
+
+        hipLaunchKernel(addK<T>, dim3(blocks), dim3(threadsPerBlock), 0, stream,   A_d, 2, numElements);
+
+        for (int i=0; i<numInflight; i++ ) {
+            HIPCHECK(hipMemcpyAsync(&A_h[i*eachCopyElements], &A_d[i*eachCopyElements], eachCopyBytes, hipMemcpyDeviceToHost, stream));
+        }
+
+        if (doHostSide) {
+            assert(0);
+#if 0
+            hipEvent_t e;
+            HIPCHECK(hipEventCreate(&e));
+#endif
+            HIPCHECK(hipDeviceSynchronize());
+            for (size_t i=0; i<numElements; i++) {
+                A_h[i] += hostConst;
+            }
+        }
+    };
+
+    HIPCHECK(hipDeviceSynchronize());
+
+
+    // Verify we copied back all the data correctly:
+    for (size_t i=0; i<numElements; i++) {
+        T gold = initValue + i;
+        // Perform calcs in same order as test above to replicate FP order-of-operations:
+        for (int k=0; k<numPongs; k++) {
+            gold += deviceConst;
+            if (doHostSide) {
+                gold += hostConst;
+            }
+        }
+
+        if (gold != A_h[i]) {
+            std::cout << i << ": gold=" << gold << " out=" << A_h[i] << std::endl;
+            HIPASSERT(gold == A_h[i]);
+        }
+    }
+
+
+    HIPCHECK(hipFreeHost(A_h));
+    HIPCHECK(hipFree(A_d));
+}
+
 
 //---
 //Send many async copies to the same stream.
 //This requires runtime to keep track of many outstanding commands, and in the case of HCC requires growing/tracking the signal pool:
 template<typename T>
-void test_manyCopies(int nElements, int numCopies)
+void test_manyInflightCopies(hipStream_t stream, int numElements, int numCopies, bool syncBetweenCopies)
 {
-    size_t Nbytes = nElements*sizeof(T);
-    size_t eachCopyElements = nElements / numCopies;
+    size_t Nbytes = numElements*sizeof(T);
+    size_t eachCopyElements = numElements / numCopies;
     size_t eachCopyBytes = eachCopyElements * sizeof(T);
 
     printf ("-----------------------------------------------------------------------------------------------\n");
@@ -53,24 +167,22 @@ void test_manyCopies(int nElements, int numCopies)
     HIPCHECK(hipMallocHost(&A_h2, Nbytes));
     HIPCHECK(hipMalloc(&A_d, Nbytes));
 
-    for (int i=0; i<nElements; i++) {
+    for (int i=0; i<numElements; i++) {
         A_h1[i] = 3.14f + static_cast<T> (i);
     }
 
-
-    hipStream_t stream;
-    HIPCHECK (hipStreamCreate(&stream));
 
     //stream=0; // fixme TODO
 
 
     for (int i=0; i<numCopies; i++) 
     {
-        printf ("i=%d, dst=%p, src=%p\n", i, &A_d[i*eachCopyElements], &A_h1[i*eachCopyElements]);
         HIPCHECK(hipMemcpyAsync(&A_d[i*eachCopyElements], &A_h1[i*eachCopyElements], eachCopyBytes, hipMemcpyHostToDevice, stream));
     }
 
-    HIPCHECK(hipDeviceSynchronize());
+    if (syncBetweenCopies) {
+        HIPCHECK(hipDeviceSynchronize());
+    }
 
     for (int i=0; i<numCopies; i++) 
     {
@@ -81,7 +193,7 @@ void test_manyCopies(int nElements, int numCopies)
 
 
     // Verify we copied back all the data correctly:
-    for (int i=0; i<nElements; i++) {
+    for (int i=0; i<numElements; i++) {
         HIPASSERT(A_h1[i] == A_h2[i]);
     }
 
@@ -89,11 +201,7 @@ void test_manyCopies(int nElements, int numCopies)
     HIPCHECK(hipFreeHost(A_h1));
     HIPCHECK(hipFreeHost(A_h2));
     HIPCHECK(hipFree(A_d));
-
-    HIPCHECK(hipStreamDestroy(stream));
-
 }
-
 
 
 //---
@@ -202,24 +310,38 @@ int main(int argc, char *argv[])
     printf ("info: set device to %d\n", p_gpuDevice);
     HIPCHECK(hipSetDevice(p_gpuDevice));
 
-    if (p_tests & 0x1) {
+    if (p_tests & 0x01) {
         simpleNegTest();
     }
 
-    if (p_tests & 0x2) {
-        test_manyCopies<float>(1024,   16);
-        test_manyCopies<float>(1024,    4);
-        test_manyCopies<float>(1024*4, 64);
+    if (p_tests & 0x02) {
+        hipStream_t stream;
+        HIPCHECK (hipStreamCreate(&stream));
+
+        test_manyInflightCopies<float>(stream, 1024,   16,  true);
+        test_manyInflightCopies<float>(stream, 1024,    4,  true); // verify we re-use the same entries instead of growing pool.
+        test_manyInflightCopies<float>(stream, 1024*8, 64, false);
+
+        HIPCHECK(hipStreamDestroy(stream));
     }
 
 
-    if (p_tests & 0x4) {
+    if (p_tests & 0x04) {
         test_chunkedAsyncExample(p_streams, true, true, true); // Easy sync version
         test_chunkedAsyncExample(p_streams, false, true, true); // Easy sync version
         test_chunkedAsyncExample(p_streams, false, false, true); // Some async
         test_chunkedAsyncExample(p_streams, false, false, false); // All async
     }
 
+    if (p_tests & 0x08) {
+        hipStream_t stream;
+        HIPCHECK (hipStreamCreate(&stream));
+
+        test_pingpong<int, Pinned>(stream, 1024*1024*32, 1, 1, false);
+        test_pingpong<int, Pinned>(stream, 1024*1024*32, 1, 10, false);
+
+        HIPCHECK(hipStreamDestroy(stream));
+    }
 
 
     passed();

@@ -88,7 +88,7 @@ vectorADD(hipLaunchParm lp,
     size_t stride = hipBlockDim_x * hipGridDim_x ;
 
     for (size_t i=offset; i<N; i+=stride) {
-		C_d[i] = A_d[i] + B_d[i];
+        C_d[i] = A_d[i] + B_d[i];
 	}
 }
 
