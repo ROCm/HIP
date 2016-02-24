@@ -1,39 +1,29 @@
-//===---- tools/extra/ToolTemplate.cpp - Template for refactoring tool ----===//
-//
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
-//
-//===----------------------------------------------------------------------===//
-//
-//  This file implements an empty refactoring tool using the clang tooling.
-//  The goal is to lower the "barrier to entry" for writing refactoring tools.
-//
-//  Usage:
-//  tool-template <cmake-output-dir> <file1> <file2> ...
-//
-//  Where <cmake-output-dir> is a CMake build directory in which a file named
-//  compile_commands.json exists (enable -DCMAKE_EXPORT_COMPILE_COMMANDS in
-//  CMake to get this output).
-//
-//  <file1> ... specify the paths of files in the CMake source tree. This path
-//  is looked up in the compile command database. If the path of a file is
-//  absolute, it needs to point into CMake's source tree. If the path is
-//  relative, the current working directory needs to be in the CMake source
-//  tree and the file must be in a subdirectory of the current working
-//  directory. "./" prefixes in the relative files will be automatically
-//  removed, but the rest of a relative path must be a suffix of a path in
-//  the compile command line database.
-//
-//  For example, to use tool-template on all files in a subtree of the
-//  source tree, use:
-//
-//    /path/in/subtree $ find . -name '*.cpp'|
-//        xargs tool-template /path/to/build
-//
-//===----------------------------------------------------------------------===//
+/*
+Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
 
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+/**
+ * @file Cuda2Hip.cpp
+ *
+ * This file is compiled and linked into clang based hipify tool.
+ */
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/Basic/SourceManager.h"
@@ -495,8 +485,10 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
 } // end anonymous namespace
 
 // Set up the command line options
-static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 static cl::OptionCategory ToolTemplateCategory("CUDA to HIP source translator options");
+static cl::extrahelp MoreHelp( "<source0> specify the path of source file\n\n" );
+static cl::opt<std::string>
+OutputFilename("o", cl::desc("Output filename"), cl::value_desc("filename"), cl::cat(ToolTemplateCategory));
 
 int main(int argc, const char **argv) {
 
@@ -504,24 +496,28 @@ int main(int argc, const char **argv) {
 
   int Result;
   
-  CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory);
-  std::vector<std::string> savedSources;
-  for (auto I : OptionsParser.getSourcePathList())
-  {
-    size_t pos = I.find(".cu");
-    if (pos != std::string::npos)
-    {
-      std::string dst = I.substr(0, pos) + ".hip.cu";
-      std::ifstream source(I, std::ios::binary);
-      std::ofstream dest(dst, std::ios::binary);
-      dest << source.rdbuf();
-      source.close();
-      dest.close();
-      savedSources.push_back(dst);
+  CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::Required);
+  std::string dst = OutputFilename;
+  std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
+  if (dst.empty()) {
+    dst = fileSources[0];
+    size_t pos = dst.find(".cu");
+    if (pos != std::string::npos) {
+      dst = dst.substr(0, pos) + ".hip.cu";
+    } else {
+      llvm::errs() << "Input .cu file was not specified.\n";
+      return 1;
     }
+  } else {
+    dst += ".cu";
   }
+  std::ifstream source(fileSources[0], std::ios::binary);
+  std::ofstream dest(dst, std::ios::binary);
+  dest << source.rdbuf();
+  source.close();
+  dest.close();
 
-  RefactoringTool Tool(OptionsParser.getCompilations(), savedSources);
+  RefactoringTool Tool(OptionsParser.getCompilations(), dst);
   ast_matchers::MatchFinder Finder;
   Cuda2HipCallback Callback(&Tool.getReplacements());
   HipifyPPCallbacks PPCallbacks(&Tool.getReplacements());
@@ -573,12 +569,11 @@ int main(int argc, const char **argv) {
   Result = Rewrite.overwriteChangedFiles();
 
 
-  for (auto I : savedSources)
   {
-	  size_t pos = I.find(".cu");
+	  size_t pos = dst.find(".cu");
 	  if (pos != std::string::npos)
 	  {
-		  rename(I.c_str(), I.substr(0, pos).c_str());
+		  rename(dst.c_str(), dst.substr(0, pos).c_str());
 	  }
   }
   return Result;
