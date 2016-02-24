@@ -254,7 +254,7 @@ namespace {
       const FileEntry *file,
       StringRef search_path,
       StringRef relative_path,
-      const Module *imported) override
+      const clang::Module *imported) override
     {
       if (_sm->isWrittenInMainFile(hash_loc)) {
         if (is_angled) {
@@ -462,17 +462,28 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
     }
     if (const StringLiteral * stringLiteral = Result.Nodes.getNodeAs<clang::StringLiteral>("stringLiteral"))
     {
-      std::string s = stringLiteral->getString();
-      std::string search("cuda"), replace("hip");
-      size_t pos = 0;
-      while ((pos = s.find("cuda", pos)) != std::string::npos) {
-        llvm::outs() << "String Literal: " << s << "\n";
-        s.replace(pos, search.length(), replace);
-        pos += replace.length();
-        SourceLocation sl = stringLiteral->getLocStart();
-        Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
-         SM->getImmediateSpellingLoc(sl) : sl, stringLiteral->getLength(), s);
-        Replace->insert(Rep);
+      StringRef s = stringLiteral->getString();
+      
+      std::pair<StringRef, StringRef> split = s.split("cuda");
+      StringRef cuda = split.second;
+      while (!cuda.empty()) {
+        size_t byteNum = split.first.size();
+        cuda = cuda.data() - 4;
+        std::pair<StringRef, StringRef> name_pair = cuda.split(' ');
+        StringRef name = name_pair.first;
+        llvm::outs() << "\nToken: <" << name << "> found in string literal " << s << "\n";
+        StringRef repName = N.cuda2hipRename[name];
+        if (!repName.empty())
+        {
+          llvm::outs() << "\nWill be replaced with: <" << repName << ">\n";
+          SourceLocation sl = stringLiteral->getLocationOfByte(byteNum, *SM,
+               Result.Context->getLangOpts(), Result.Context->getTargetInfo());
+              Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
+              SM->getImmediateSpellingLoc(sl) : sl, name.size(), repName);
+          Replace->insert(Rep);
+        }
+        split = name_pair.second.split("cuda");
+        cuda = split.second;
       }
     }
   }
