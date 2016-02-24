@@ -463,7 +463,6 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
     if (const StringLiteral * stringLiteral = Result.Nodes.getNodeAs<clang::StringLiteral>("stringLiteral"))
     {
       StringRef s = stringLiteral->getString();
-      
       std::pair<StringRef, StringRef> split = s.split("cuda");
       StringRef cuda = split.second;
       while (!cuda.empty()) {
