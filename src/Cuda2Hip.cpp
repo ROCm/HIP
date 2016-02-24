@@ -453,26 +453,22 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
     if (const StringLiteral * stringLiteral = Result.Nodes.getNodeAs<clang::StringLiteral>("stringLiteral"))
     {
       StringRef s = stringLiteral->getString();
-      std::pair<StringRef, StringRef> split = s.split("cuda");
-      StringRef cuda = split.second;
-      while (!cuda.empty()) {
-        size_t byteNum = split.first.size();
-        cuda = cuda.data() - 4;
-        std::pair<StringRef, StringRef> name_pair = cuda.split(' ');
-        StringRef name = name_pair.first;
+      size_t begin = 0;
+      while ((begin = s.find("cuda", begin)) != StringRef::npos) {
+        const size_t end = s.find_first_of(" ", begin + 4);
+        StringRef name = s.slice(begin, end);
         llvm::outs() << "\nToken: <" << name << "> found in string literal " << s << "\n";
         StringRef repName = N.cuda2hipRename[name];
-        if (!repName.empty())
-        {
-          llvm::outs() << "\nWill be replaced with: <" << repName << ">\n";
-          SourceLocation sl = stringLiteral->getLocationOfByte(byteNum, *SM,
-               Result.Context->getLangOpts(), Result.Context->getTargetInfo());
-              Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
-              SM->getImmediateSpellingLoc(sl) : sl, name.size(), repName);
+        if (!repName.empty()) {
+          llvm::outs() << "\nWill be replaced with: <" << repName << "\n";
+          SourceLocation sl = stringLiteral->getLocationOfByte(begin, *SM,
+            Result.Context->getLangOpts(), Result.Context->getTargetInfo());
+          Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
+            SM->getImmediateSpellingLoc(sl) : sl, name.size(), repName);
           Replace->insert(Rep);
         }
-        split = name_pair.second.split("cuda");
-        cuda = split.second;
+        if (end == StringRef::npos) break;
+        begin = end + 1;
       }
     }
   }
