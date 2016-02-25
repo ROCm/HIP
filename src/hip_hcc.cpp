@@ -227,6 +227,21 @@ hsa_status_t get_region_info(hsa_region_t region, void* data)
     return HSA_STATUS_SUCCESS;
 }
 
+// Determines if the given agent is of type HSA_DEVICE_TYPE_GPU and counts it.
+static hsa_status_t countGpuAgents(hsa_agent_t agent, void *data) {
+    if (data == NULL) {
+        return HSA_STATUS_ERROR_INVALID_ARGUMENT;
+    }
+    hsa_device_type_t device_type;
+    hsa_status_t status = hsa_agent_get_info(agent, HSA_AGENT_INFO_DEVICE, &device_type);
+    if (status != HSA_STATUS_SUCCESS) {
+        return status;
+    }
+    if (device_type == HSA_DEVICE_TYPE_GPU) {
+        (*static_cast<int*>(data))++;
+    }
+    return HSA_STATUS_SUCCESS;
+}
 
 // Internal version,
 hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
@@ -244,6 +259,14 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     if (_hsa_agent.handle == -1) {
         return hipErrorInvalidDevice;
     }
+
+    // Iterates over the agents to determine Multiple GPU devices
+    // using the countGpuAgents callback.
+    int gpuAgentsCount = 0;
+    err = hsa_iterate_agents(countGpuAgents, &gpuAgentsCount);
+    if (err == HSA_STATUS_INFO_BREAK) { err = HSA_STATUS_SUCCESS; }
+    DeviceErrorCheck(err);
+    prop->isMultiGpuBoard = 0 ? gpuAgentsCount < 2 : 1;
 
     // Get agent name
     err = hsa_agent_get_info(_hsa_agent, HSA_AGENT_INFO_NAME, &(prop->name));
@@ -846,6 +869,8 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
             *pi = prop->pciDeviceID; break;
         case hipDeviceAttributeMaxSharedMemoryPerMultiprocessor:
             *pi = prop->maxSharedMemoryPerMultiProcessor; break;
+        case hipDeviceAttributeIsMultiGpuBoard:
+            *pi = prop->isMultiGpuBoard; break;
         default:
             e = hipErrorInvalidValue; break;
         }
