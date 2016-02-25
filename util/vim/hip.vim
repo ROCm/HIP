@@ -64,6 +64,7 @@ syn keyword hipFunctionName expf __expf exp logf __logf log
 " Runtime Data Types
 syn keyword hipType hipDeviceProp_t 
 syn keyword hipType hipError_t 
+syn keyword hipType hipStream_t
 
 " Runtime functions
 syn keyword hipFunctionName hipBindTexture hipBindTextureToArray 
@@ -153,6 +154,8 @@ syn keyword hipFunctionName hipUnbindTexture
 " HIP Flags
 syn keyword hipFlags hipFilterModePoint 
 syn keyword hipFlags hipMemcpyHostToDevice 
+syn keyword hipFlags hipMemcpyDeviceToDevice 
+syn keyword hipFlags hipMemcpyHostToHost
 syn keyword hipFlags hipMemcpyDeviceToHost 
 syn keyword hipFlags hipReadModeElementType 
 syn keyword hipFlags hipSuccess 
