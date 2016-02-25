@@ -63,11 +63,6 @@ void simpleTest1()
 }
 
 
-#ifdef __HIP_PLATFORM_HCC
-#define TYPENAME(T) typeid(T).name()
-#else
-#define TYPENAME(T) "?"
-#endif
 
 
 //---
