@@ -15,6 +15,7 @@ if(${HIPIFY_STANDLONE})
   link_directories(${LLVM_LIBRARY_DIRS})
   add_definitions(${LLVM_DEFINITIONS})
   add_llvm_executable( hipify src/Cuda2Hip.cpp )
+  find_program(LIT_COMMAND lit)
   
 else()
   set(LLVM_LINK_COMPONENTS
