@@ -19,6 +19,10 @@ use File::Basename;
 # HCC_HOME  : Path to HCC SDK (default /opt/hcc).  Used on AMD platforms only.
 # HSA_PATH  : Path to HSA dir (default /opt/hsa).  Used on AMD platforms only.
 
+if(scalar @ARGV == 0){
+print "No Arguments passed, exiting ...\n";
+exit(-1);
+}
 
 $verbose = $ENV{'HIPCC_VERBOSE'};
 $verbose = 0 unless defined $verbose;
