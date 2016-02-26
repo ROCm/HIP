@@ -41,6 +41,10 @@ if (${HIP_PLATFORM} STREQUAL "hcc")
 
 elseif (${HIP_PLATFORM} STREQUAL "nvcc")
 	MESSAGE ("HIP_PLATFORM=nvcc")
+
+	#Need C++11 for threads in some of the tests.
+	add_definitions(-std=c++11) 
+
 	# NVCC does not not support -rdynamic option
 	set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS )
 	set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS )

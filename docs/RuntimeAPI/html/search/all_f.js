@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['x',['x',['../structdim3.html#ac866c05f83a28dac20a153fc65b3b16c',1,'dim3']]]
+  ['sharedmemperblock',['sharedMemPerBlock',['../structhipDeviceProp__t.html#a3b9138678a0795c2677eddcfb1c67156',1,'hipDeviceProp_t']]],
+  ['stream_20management',['Stream Management',['../group__Stream.html',1,'']]]
 ];

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['warpsize',['warpSize',['../structhipDeviceProp__t.html#af3357d33c004608bf05bc21a352be81b',1,'hipDeviceProp_t']]]
+  ['regsperblock',['regsPerBlock',['../structhipDeviceProp__t.html#a73c1c21648a901799ff6bef83c11135b',1,'hipDeviceProp_t']]]
 ];

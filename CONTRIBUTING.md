@@ -110,11 +110,6 @@ executing: ../../test/myocyte/run0.cmd...      PASSED!
 executing: ../../test/nn/run0.cmd...      PASSED!
 --TESTING: nw
 executing: ../../test/nw/run0.cmd...      PASSED!
---TESTING: particlefilter
-executing: ../../test/particlefilter/run0.cmd...    *** Error in `./particlefilter_naive': free(): invalid next size (fast): 0x0000000001ad89d0 ***
-  FAILED!
-executing: ../../test/particlefilter/run1.cmd...    *** Error in `./particlefilter_float': free(): invalid next size (fast): 0x0000000001a7e890 ***
-  FAILED!
 --TESTING: pathfinder
 executing: ../../test/pathfinder/run0.cmd...      PASSED!
 --TESTING: srad
