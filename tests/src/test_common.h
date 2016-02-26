@@ -16,6 +16,16 @@
 #define KCYN  "\x1B[36m"
 #define KWHT  "\x1B[37m"
 
+
+
+#ifdef __HIP_PLATFORM_HCC
+#define TYPENAME(T) typeid(T).name()
+#else
+#define TYPENAME(T) "?"
+#endif
+
+
+
 #define passed() \
     printf ("%sPASSED!%s\n",KGRN, KNRM);\
     exit(0);
@@ -82,12 +92,12 @@ vectorADD(hipLaunchParm lp,
             const T *A_d,
             const T *B_d,
             T *C_d,
-            size_t N)
+            size_t NELEM)
 {
     size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
     size_t stride = hipBlockDim_x * hipGridDim_x ;
 
-    for (size_t i=offset; i<N; i+=stride) {
+    for (size_t i=offset; i<NELEM; i+=stride) {
         C_d[i] = A_d[i] + B_d[i];
 	}
 }
@@ -219,5 +229,71 @@ void checkVectorADD(T* A_h, T* B_h, T* result_H, size_t N, bool expectMatch=true
     }
 
 }
+
+
+//---
+struct Pinned {
+	static const bool isPinned = true;
+	static const char *str() { return "Pinned"; };
+
+    static void *Alloc(size_t sizeBytes) 
+	{
+        void *p; 
+        HIPCHECK(hipMallocHost(&p, sizeBytes));
+        return p;
+    };
+};
+
+
+//---
+struct Unpinned 
+{
+	static const bool isPinned = false;
+	static const char *str() { return "Unpinned"; };
+
+    static void *Alloc(size_t sizeBytes) 
+	{
+        void *p  = malloc (sizeBytes);
+        HIPASSERT(p);
+		return p;
+    };
+};
+
+
+
+struct Memcpy
+{
+	static const char *str() { return "Memcpy"; };
+};
+
+struct MemcpyAsync
+{
+	static const char *str() { return "MemcpyAsync"; };
+};
+
+
+template <typename C> struct MemTraits;
+
+
+template<>
+struct MemTraits<Memcpy>
+{
+
+    static void Copy(void *dest, const void *src, size_t sizeBytes, hipMemcpyKind kind,  hipStream_t stream) 
+	{
+		HIPCHECK(hipMemcpy(dest, src, sizeBytes, kind));
+	}
+};
+
+
+template<>
+struct MemTraits<MemcpyAsync>
+{
+
+    static void Copy(void *dest, const void *src, size_t sizeBytes, hipMemcpyKind kind,  hipStream_t stream) 
+	{
+		HIPCHECK(hipMemcpyAsync(dest, src, sizeBytes, kind, stream));
+	}
+};
 
 }; // namespace HipTest
