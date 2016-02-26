@@ -14,7 +14,7 @@ GetOptions(
     ,"compiler|c" => \$p_compiler
     ,"platform|P" => \$p_platform
     ,"cpp_config|cxx_config|C" => \$p_cpp_config
-    ,"full|f" => \$p_full,
+    ,"full|f|info" => \$p_full,
     ,"newline|n" => \$p_newline
 );
 
@@ -94,7 +94,9 @@ if ($p_full) {
     print "\n" ;
 
     print "=== Environment Variables\n";
-    system("env | egrep '^HIP|^HSA|^HCC|^CUDA'");
+    system("echo PATH=\$PATH");
+    system("env | egrep '^HIP|^HSA|^HCC|^CUDA|^LD_LIBRARY_PATH'");
+
 
     print "\n" ;
     print "== Linux Kernel\n";
