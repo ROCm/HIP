@@ -67,10 +67,8 @@ int main(int argc, char *argv[])
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeWarpSize, props.warpSize));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxRegistersPerBlock, props.regsPerBlock));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeClockRate, props.clockRate));
-#ifdef USE_ROCR_20
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMemoryClockRate, props.memoryClockRate));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMemoryBusWidth, props.memoryBusWidth));
-#endif
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMultiprocessorCount, props.multiProcessorCount));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeIsMultiGpuBoard, props.isMultiGpuBoard));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeComputeMode, props.computeMode));
