@@ -63,9 +63,16 @@ void simpleTest1()
 }
 
 
+class hipMemcpy;
+class hipMemcpyAsync;
+
+
+
+
+
 //---
 // Test many different kinds of memory copies.
-// THe subroutine allocates memory , copies to device, runs a vector add kernel, copies back, and checks the result.
+// The subroutine allocates memory , copies to device, runs a vector add kernel, copies back, and checks the result.
 //
 // IN: numElements  controls the number of elements used for allocations.
 // IN: usePinnedHost : If true, allocate host with hipMallocHost and is pinned ; else allocate host memory with malloc.
@@ -255,8 +262,18 @@ int main(int argc, char *argv[])
     if (p_tests & 0x8) {
         HIPCHECK ( hipDeviceReset() );
         printSep();
-        multiThread_1<float>(true, true);
+
+        // Simplest cases: serialize the threads, and also used pinned memory:
+        // This verifies that the sub-calls to memcpytest2 are correct.
+        multiThread_1<float>(true, true); 
+
+        // Serialize, but use unpinned memory to stress the unpinned memory xfer path.
+        multiThread_1<float>(true, false);
+
+        // Remove serialization, so two threads are performing memory copies in parallel.
         multiThread_1<float>(false, true);
+
+        // Remove serialization, and use unpinned.
         multiThread_1<float>(false, false); // TODO
     }
 
