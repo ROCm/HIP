@@ -63,12 +63,6 @@ void simpleTest1()
 }
 
 
-class hipMemcpy;
-class hipMemcpyAsync;
-
-
-
-
 
 //---
 // Test many different kinds of memory copies.
@@ -86,7 +80,7 @@ void memcpytest2(size_t numElements, bool usePinnedHost, bool useHostToHost, boo
     size_t sizeElements = numElements * sizeof(T);
     printf ("test: %s<%s> size=%lu (%6.2fMB) usePinnedHost:%d, useHostToHost:%d, useDeviceToDevice:%d, useMemkindDefault:%d\n", 
             __func__, 
-            typeid(T).name(),
+            TYPENAME(T),
             sizeElements, sizeElements/1024.0/1024.0,
             usePinnedHost, useHostToHost, useDeviceToDevice, useMemkindDefault);
 
@@ -176,7 +170,7 @@ template<typename T>
 void memcpytest2_sizes(size_t maxElem=0, size_t offset=0)
 {
     printSep();
-    printf ("test: %s<%s>\n", __func__,  typeid(T).name());
+    printf ("test: %s<%s>\n", __func__,  TYPENAME(T));
 
     int deviceId;
     HIPCHECK(hipGetDevice(&deviceId));
@@ -206,7 +200,7 @@ template<typename T>
 void multiThread_1(bool serialize, bool usePinnedHost)
 {
     printSep();
-    printf ("test: %s<%s> serialize=%d usePinnedHost=%d\n", __func__,  typeid(T).name(), serialize, usePinnedHost);
+    printf ("test: %s<%s> serialize=%d usePinnedHost=%d\n", __func__,  TYPENAME(T), serialize, usePinnedHost);
     std::thread t1 (memcpytest2<T>,N, usePinnedHost,0,0,0);
     if (serialize) {
         t1.join();

@@ -789,11 +789,16 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
 
     // Get the size of the region we are using for Accelerator Memory allocations:
     hsa_region_t *am_region = static_cast<hsa_region_t*> (_acc.get_hsa_am_region());
-    err = hsa_region_get_info(*am_region, HSA_REGION_INFO_SIZE, &(prop->totalGlobalMem));
+    err = hsa_region_get_info(*am_region, HSA_REGION_INFO_SIZE, &prop->totalGlobalMem);
     DeviceErrorCheck(err);
     // maxSharedMemoryPerMultiProcessor should be as the same as group memory size.
     // Group memory will not be paged out, so, the physical memory size is the total shared memory size, and also equal to the group region size.
     prop->maxSharedMemoryPerMultiProcessor = prop->totalGlobalMem;
+
+    // Get Max memory clock frequency
+    err = hsa_region_get_info(*am_region, (hsa_region_info_t)HSA_AMD_REGION_INFO_MAX_CLOCK_FREQUENCY, &prop->memoryClockRate);
+    prop->memoryClockRate *= 1000.0;   // convert Mhz to Khz.
+    DeviceErrorCheck(err);
 
     // Set feature flags - these are all mandatory for HIP on HCC path:
     // Some features are under-development and future revs may support flags that are currently 0.
@@ -1223,6 +1228,8 @@ hipError_t hipDeviceReset(void)
     }
 #endif
 
+	// TODO - reset all streams on the device.
+
     return ihipLogStatus(hipSuccess);
 }
 
@@ -1263,6 +1270,8 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
             *pi = prop->regsPerBlock; break;
         case hipDeviceAttributeClockRate:
             *pi = prop->clockRate; break;
+        case hipDeviceAttributeMemoryClockRate:
+            *pi = prop->memoryClockRate; break;
         case hipDeviceAttributeMultiprocessorCount:
             *pi = prop->multiProcessorCount; break;
         case hipDeviceAttributeComputeMode:
@@ -1277,6 +1286,8 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
             *pi = prop->minor; break;
         case hipDeviceAttributePciBusId:
             *pi = prop->pciBusID; break;
+        case hipDeviceAttributeConcurrentKernels:
+            *pi = prop->concurrentKernels; break;
         case hipDeviceAttributePciDeviceId:
             *pi = prop->pciDeviceID; break;
         case hipDeviceAttributeMaxSharedMemoryPerMultiprocessor:

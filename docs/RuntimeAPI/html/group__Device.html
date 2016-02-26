@@ -99,6 +99,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ga8555d5c76d88c50ddbf54ae70b568394"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#ga8555d5c76d88c50ddbf54ae70b568394">hipGetDeviceCount</a> (int *count)</td></tr>
 <tr class="memdesc:ga8555d5c76d88c50ddbf54ae70b568394"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return number of compute-capable devices.  <a href="#ga8555d5c76d88c50ddbf54ae70b568394">More...</a><br/></td></tr>
 <tr class="separator:ga8555d5c76d88c50ddbf54ae70b568394"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac49518ff2b26b98ea2ec9e9268761a24"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#gac49518ff2b26b98ea2ec9e9268761a24">hipDeviceGetAttribute</a> (int *pi, <a class="el" href="group__GlobalDefs.html#gacc0acd7b9bda126c6bb3dfd6e2796d7c">hipDeviceAttribute_t</a> attr, int device)</td></tr>
+<tr class="memdesc:gac49518ff2b26b98ea2ec9e9268761a24"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query device attribute.  <a href="#gac49518ff2b26b98ea2ec9e9268761a24">More...</a><br/></td></tr>
+<tr class="separator:gac49518ff2b26b98ea2ec9e9268761a24"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gad9ee6822e3e55431811fb6a00f7a1c10"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#gad9ee6822e3e55431811fb6a00f7a1c10">hipDeviceGetProperties</a> (<a class="el" href="structhipDeviceProp__t.html">hipDeviceProp_t</a> *prop, int device)</td></tr>
 <tr class="memdesc:gad9ee6822e3e55431811fb6a00f7a1c10"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns device properties.  <a href="#gad9ee6822e3e55431811fb6a00f7a1c10">More...</a><br/></td></tr>
 <tr class="separator:gad9ee6822e3e55431811fb6a00f7a1c10"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -121,6 +124,48 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <h2>----------------------------------------------------------------------------------------------&mdash; </h2>
 <h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="gac49518ff2b26b98ea2ec9e9268761a24"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipDeviceGetAttribute </td>
+          <td>(</td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>pi</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="group__GlobalDefs.html#gacc0acd7b9bda126c6bb3dfd6e2796d7c">hipDeviceAttribute_t</a>&#160;</td>
+          <td class="paramname"><em>attr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>device</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Query device attribute. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">pi</td><td>pointer to value to return </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">attr</td><td>attribute to query </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>which device to query for information </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a class="anchor" id="gaeeffa2456c5430400bea75ecd6ad1e68"></a>
 <div class="memitem">
 <div class="memproto">
@@ -136,7 +181,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Set Cache configuration for a specific function. </p>
-<p>Note: AMD devices and recent NVIDIA GPUS do not support reconfigurable cache. This hint is ignored on those architectures.</p>
+<p>Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache. This hint is ignored on those architectures.</p>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a> </dd></dl>
 
 </div>
@@ -197,7 +242,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Get Shared memory bank configuration. </p>
-<p>Note: AMD devices and recent NVIDIA GPUS do not support shared cache banking, and the hint is ignored on those architectures.</p>
+<p>Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.</p>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a> </dd></dl>
 
 </div>
@@ -240,7 +285,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Set L1/Shared cache partition. </p>
-<p>Note: AMD devices and recent NVIDIA GPUS do not support reconfigurable cache. This hint is ignored on those architectures.</p>
+<p>Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache. This hint is ignored on those architectures.</p>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a> </dd></dl>
 
 </div>
@@ -260,7 +305,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Set Shared memory bank configuration. </p>
-<p>Note: AMD devices and recent NVIDIA GPUS do not support shared cache banking, and the hint is ignored on those architectures.</p>
+<p>Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.</p>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a> </dd></dl>
 
 </div>
@@ -301,7 +346,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Set Cache configuration for a specific function. </p>
-<p>Note: AMD devices and recent NVIDIA GPUS do not support reconfigurable cache. This hint is ignored on those architectures.</p>
+<p>Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache. This hint is ignored on those architectures.</p>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a> </dd></dl>
 
 </div>
@@ -354,8 +399,8 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<p>Returns in <code>*count</code> the number of devices that have ability to run compute commands. If there are no such devices, then <a class="el" href="group__Device.html#ga8555d5c76d88c50ddbf54ae70b568394">hipGetDeviceCount</a> will return <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ad4406972c318df36d231310a15131c24" title="Call to cudaGetDeviceCount returned 0 devices. ">hipErrorNoDevice</a>. If 1 or more devices can be found, then hipGetDeviceCount returns <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>.</p>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ad4406972c318df36d231310a15131c24" title="Call to cudaGetDeviceCount returned 0 devices. ">hipErrorNoDevice</a> </dd></dl>
+<p>Returns in <code>*count</code> the number of devices that have ability to run compute commands. If there are no such devices, then <a class="el" href="group__Device.html#ga8555d5c76d88c50ddbf54ae70b568394">hipGetDeviceCount</a> will return <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ad4406972c318df36d231310a15131c24" title="Call to hipGetDeviceCount returned 0 devices. ">hipErrorNoDevice</a>. If 1 or more devices can be found, then hipGetDeviceCount returns <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>.</p>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ad4406972c318df36d231310a15131c24" title="Call to hipGetDeviceCount returned 0 devices. ">hipErrorNoDevice</a> </dd></dl>
 
 </div>
 </div>
@@ -397,7 +442,7 @@ Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Jan 25 2016 16:05:53 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Feb 18 2016 20:42:16 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

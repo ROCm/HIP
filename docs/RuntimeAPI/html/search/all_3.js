@@ -1,6 +1,8 @@
 var searchData=
 [
-  ['device_20management',['Device Management',['../group__Device.html',1,'']]],
-  ['dim3',['dim3',['../structdim3.html',1,'dim3'],['../group__GlobalDefs.html#gacb37281795c3567d0b10a61c056d512b',1,'dim3():&#160;hip_runtime_api.h']]],
-  ['device_20memory_20access',['Device Memory Access',['../group__PeerToPeer.html',1,'']]]
+  ['clockinstructionrate',['clockInstructionRate',['../structhipDeviceProp__t.html#a6fbf3b08a1a08ae700f1a06265f6666b',1,'hipDeviceProp_t']]],
+  ['clockrate',['clockRate',['../structhipDeviceProp__t.html#a1dd15bee43692b8649dfbdc1adbaaf96',1,'hipDeviceProp_t']]],
+  ['computemode',['computeMode',['../structhipDeviceProp__t.html#ae7d9216f8583a703359d0b9373823f5d',1,'hipDeviceProp_t']]],
+  ['concurrentkernels',['concurrentKernels',['../structhipDeviceProp__t.html#ad8461a28caf9c38c58cf358583b5bee3',1,'hipDeviceProp_t']]],
+  ['control',['Control',['../group__Profiler.html',1,'']]]
 ];
