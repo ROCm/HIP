@@ -271,6 +271,29 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
     return hipCUDAErrorTohipError(cerror);
 }
 
+
+inline static hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr){
+	cudaPointerAttributes cPA;
+	hipError_t err = hipCUDAErrorTohipError(cudaPointerGetAttributes(&cPA, ptr));
+	if(err == hipSuccess){
+		switch (cPA.memoryType){
+			case cudaMemoryTypeDevice:
+        		attributes->memoryType = hipMemoryTypeDevice; break;
+			case cudaMemoryTypeHost:
+		        attributes->memoryType = hipMemoryTypeHost; break;
+			default:
+		        return hipErrorUnknownSymbol;
+		}
+		attributes->device = cPA.device;
+		attributes->devicePointer = cPA.devicePointer;
+		attributes->hostPointer = cPA.hostPointer;
+		attributes->isManaged = 0;
+		attributes->allocationFlags = 0;
+	}
+	return err;
+}
+
+
 inline static hipError_t hipMemGetInfo( size_t* free, size_t* total)
 {
     return hipCUDAErrorTohipError(cudaMemGetInfo(free,total));
