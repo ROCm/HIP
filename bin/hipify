@@ -277,6 +277,8 @@ while (@ARGV) {
 
         $ft{'mem'} += s/\bcudaMemcpyKind\b/hipMemcpyKind/g;
 
+        $ft{'mem'} += s/\bcudaPointerAttributes\b/hipPointerAttribute_t/g;
+
 
         #--------
         # Memory management:
