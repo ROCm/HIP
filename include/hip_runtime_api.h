@@ -98,6 +98,7 @@ typedef struct hipDeviceProp_t {
     int pciBusID;                               ///< PCI Bus ID.
     int pciDeviceID;                            ///< PCI Device ID.
     size_t maxSharedMemoryPerMultiProcessor;    ///< Maximum Shared Memory Per Multiprocessor.
+    int isMultiGpuBoard;                        ///< 1 if device is on a multi-GPU board, 0 if not.
  } hipDeviceProp_t;
 
 
@@ -188,6 +189,7 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributePciBusId,                             ///< PCI Bus ID.
     hipDeviceAttributePciDeviceId,                          ///< PCI Device ID.
     hipDeviceAttributeMaxSharedMemoryPerMultiprocessor,     ///< Maximum Shared Memory Per Multiprocessor.
+    hipDeviceAttributeIsMultiGpuBoard,                      ///< Multiple GPU devices.
 } hipDeviceAttribute_t;
 
 /**

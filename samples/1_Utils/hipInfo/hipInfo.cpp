@@ -80,6 +80,7 @@ void printDeviceProp (int deviceId)
     cout << setw(w1) << "pciDeviceID: " << props.pciDeviceID << endl;
     cout << setw(w1) << "multiProcessorCount: " << props.multiProcessorCount << endl;
     cout << setw(w1) << "maxThreadsPerMultiProcessor: " << props.maxThreadsPerMultiProcessor << endl;
+    cout << setw(w1) << "isMultiGpuBoard: " << props.isMultiGpuBoard << endl;
     cout << setw(w1) << "clockRate: " << (float)props.clockRate / 1000.0 << " Mhz" << endl;
 #ifdef USE_ROCR_20
     cout << setw(w1) << "memoryClockRate: " << (float)props.memoryClockRate / 1000.0 << " Mhz" << endl;
