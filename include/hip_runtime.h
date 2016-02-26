@@ -43,7 +43,7 @@ THE SOFTWARE.
 #include <stdlib.h>
 #include <assert.h>
 
-#ifdef __cplusplus
+#if __cplusplus > 199711L
 #include <thread>
 #endif
 
