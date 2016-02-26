@@ -93,6 +93,7 @@ syn keyword hipFunctionName hipD3D9UnmapResources
 syn keyword hipFunctionName hipD3D9UnregisterResource 
 syn keyword hipFunctionName hipDeviceGetProperties 
 syn keyword hipFunctionName hipDeviceSynchronize 
+syn keyword hipFunctionName hipDeviceReset 
 syn keyword hipFunctionName hipEventCreate 
 syn keyword hipFunctionName hipEventDestroy 
 syn keyword hipFunctionName hipEventElapsedTime 
@@ -117,8 +118,8 @@ syn keyword hipFunctionName hipGLRegisterBufferObject
 syn keyword hipFunctionName hipGLSetGLDevice 
 syn keyword hipFunctionName hipGLUnmapBufferObject 
 syn keyword hipFunctionName hipGLUnregisterBufferObject 
-syn keyword hipFunctionName hipLaunch 
 syn keyword hipFunctionName hipLaunchKernel
+syn keyword hipFunctionName hipLaunchParm
 syn keyword hipFunctionName hipMalloc 
 syn keyword hipFunctionName hipMalloc3D 
 syn keyword hipFunctionName hipMalloc3DArray 
@@ -154,6 +155,9 @@ syn keyword hipFunctionName hipUnbindTexture
 syn keyword hipFlags hipFilterModePoint 
 syn keyword hipFlags hipMemcpyHostToDevice 
 syn keyword hipFlags hipMemcpyDeviceToHost 
+syn keyword hipFlags hipMemcpyHostToHost 
+syn keyword hipFlags hipMemcpyDeviceToDevice 
+syn keyword hipFlags hipMemcpyDefault 
 syn keyword hipFlags hipReadModeElementType 
 syn keyword hipFlags hipSuccess 
 syn keyword hipFlags hipTextureType1D 
