@@ -28,10 +28,13 @@ THE SOFTWARE.
 #include <assert.h>
 #include <stdint.h>
 #include <iostream>
+#include <sstream>
 #include <list>
 #include <sys/types.h>
 #include <unistd.h>
 #include <deque>
+#include <vector>
+#include <algorithm>
 
 #include <hc.hpp>
 #include <hc_am.hpp>
@@ -73,6 +76,8 @@ int HIP_STAGING_SIZE = 64;   /* size of staging buffers, in KB */
 int HIP_STAGING_BUFFERS = 2;    // TODO - remove, two buffers should be enough.
 int HIP_PININPLACE = 0;
 int HIP_STREAM_SIGNALS = 2;  /* number of signals to allocate at stream creation */
+int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
+std::vector<int> g_hip_visible_devices; /* vector of integers that contains the visible device IDs */
 
 
 //---
@@ -851,17 +856,42 @@ void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, c
         env = getenv(var_name2);
     }
 
-    // Default is set when variable is initialized (at top of this file), so only override if we find
-    // an environment variable.
-    if (env) {
-        long int v = strtol(env, NULL, 0);
-        *var_ptr = (int) (v);
+    // Check if the environment variable is either HIP_VISIBLE_DEVICES or CUDA_LAUNCH_BLOCKING, which
+    // contains a sequence of comma-separated device IDs
+    if (!(strcmp(var_name1,"HIP_VISIBLE_DEVICES") && strcmp(var_name2, "CUDA_VISIBLE_DEVICES")) && env){
+        // Parse the string stream of env and store the device ids to g_hip_visible_devices global variable
+        std::string str = env;
+        std::istringstream ss(str);
+        std::string device_id;
+        // Clean up the defult value
+        g_hip_visible_devices.clear();
+        // Read the visible device numbers
+        while (std::getline(ss, device_id, ',')) {
+            if (atoi(device_id.c_str()) >= 0) {
+                g_hip_visible_devices.push_back(atoi(device_id.c_str()));
+            }else// Any device number after invalid number will not present
+                break;
+        }
+        // Print out the number of ids
+        if (HIP_PRINT_ENV) {
+            printf ("%-30s = ", var_name1);
+            for(int i=0;i<g_hip_visible_devices.size();i++)
+                printf ("%2d ", g_hip_visible_devices[i]);
+            printf (": %s\n", description);
+        }
+    }
+    else { // Parse environment variables with sigle value
+        // Default is set when variable is initialized (at top of this file), so only override if we find
+        // an environment variable.
+        if (env) {
+            long int v = strtol(env, NULL, 0);
+            *var_ptr = (int) (v);
+        }
+        if (HIP_PRINT_ENV) {
+            printf ("%-30s = %2d : %s\n", var_name1, *var_ptr, description);
+        }
     }
 
-
-    if (HIP_PRINT_ENV) {
-        printf ("%-30s = %2d : %s\n", var_name1, *var_ptr, description);
-    }
 }
 
 #if defined (DEBUG)
@@ -893,6 +923,7 @@ void ihipInit()
     /*
      * Environment variables
      */
+    g_hip_visible_devices.push_back(0); /* Set the default value of visible devices */
     READ_ENV_I(release, HIP_PRINT_ENV, 0,  "Print HIP environment variables.");
     //-- READ HIP_PRINT_ENV env first, since it has impact on later env var reading
 
@@ -902,6 +933,7 @@ void ihipInit()
     READ_ENV_I(release, HIP_STAGING_BUFFERS, 0, "Number of staging buffers to use in each direction. 0=use hsa_memory_copy.");
     READ_ENV_I(release, HIP_PININPLACE, 0, "For unpinned transfers, pin the memory in-place in chunks before doing the copy");
     READ_ENV_I(release, HIP_STREAM_SIGNALS, 0, "Number of signals to allocate when new stream is created (signal pool will grow on demand)");
+    READ_ENV_I(release, HIP_VISIBLE_DEVICES, CUDA_VISIBLE_DEVICES, "Only devices whose index is present in the secquence are visible to HIP applications and they are enumerated in the order of secquence" );
 
     READ_ENV_I(release, HIP_DISABLE_HW_KERNEL_DEP, 0, "Disable HW dependencies before kernel commands  - instead wait for dependency on host.");
     READ_ENV_I(release, HIP_DISABLE_HW_COPY_DEP, 0, "Disable HW dependencies before copy commands  - instead wait for dependency on host.");
@@ -919,16 +951,39 @@ void ihipInit()
         }
     };
 
-    g_devices = new ihipDevice_t[deviceCnt];
-    g_deviceCnt = 0;
-    for (int i=0; i<accs.size(); i++) {
-        if (! accs[i].get_is_emulated()) {
-           g_devices[g_deviceCnt].init(g_deviceCnt, accs[i]);
-           g_deviceCnt++;
+    // Make sure the hip visible devices are within the deviceCnt range
+    for (int i = 0; i < g_hip_visible_devices.size(); i++) {
+        if(g_hip_visible_devices[i] >= deviceCnt){
+            // Make sure any DeviceID after invalid DeviceID will be erased.
+            g_hip_visible_devices.resize(i);
+            break;
         }
     }
 
-    assert(deviceCnt == g_deviceCnt);
+    g_devices = new ihipDevice_t[deviceCnt];
+    g_deviceCnt = 0;
+    for (int i=0; i<accs.size(); i++) {
+        // check if the device id is included in the HIP_VISIBLE_DEVICES env variable
+        if (! accs[i].get_is_emulated()) {
+            if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), (i-1)) == g_hip_visible_devices.end())
+            {
+                //std::cout << "The device is not in visible devices list, ignore, index i = " << i << std::endl;
+                continue;
+            }
+            //std::cout << "The visible GPU number is " << i << std::endl;
+            g_devices[g_deviceCnt].init(g_deviceCnt, accs[i]);
+            //std::cout << "index of g_devices = "<< g_deviceCnt << std::endl;
+            g_deviceCnt++;
+        }
+    }
+    //std::cout << "g_deviceCnt = " << g_deviceCnt << std::endl;
+
+    // The following assert is not valid as we introduce the
+    // env variable of HIP_VISIBLE_DEVICES
+    //assert(deviceCnt == g_deviceCnt);
+
+
+    // Remove non-visible devices from g_devices
 
 
     tprintf(TRACE_API, "pid=%u %-30s\n", getpid(), "<ihipInit>");
@@ -941,6 +996,12 @@ INLINE bool ihipIsValidDevice(unsigned deviceIndex)
     return (deviceIndex < g_deviceCnt);
 }
 
+// check if the device ID is set as visible
+INLINE bool ihipIsVisibleDevice(unsigned deviceIndex)
+{
+    return std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(),
+            (int)deviceIndex) != g_hip_visible_devices.end();
+}
 
 //---
 INLINE ihipDevice_t *ihipGetTlsDefaultDevice()
