@@ -41,6 +41,10 @@ if (${HIP_PLATFORM} STREQUAL "hcc")
 
 elseif (${HIP_PLATFORM} STREQUAL "nvcc")
 	MESSAGE ("HIP_PLATFORM=nvcc")
+
+	#Need C++11 for threads in some of the tests.
+	add_definitions(-std=c++11) 
+
 	# NVCC does not not support -rdynamic option
 	set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS )
 	set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS )
@@ -118,6 +122,7 @@ make_hip_executable (hipMathFunctionsHost hipMathFunctions.cpp hipSinglePrecisio
 make_hip_executable (hipMathFunctionsDevice hipMathFunctions.cpp hipSinglePrecisionMathDevice.cpp hipDoublePrecisionMathDevice.cpp)
 make_hip_executable (hipIntrinsics hipMathFunctions.cpp hipSinglePrecisionIntrinsics.cpp hipDoublePrecisionIntrinsics.cpp hipIntegerIntrinsics.cpp)
 make_hip_executable (hipPointerAttrib hipPointerAttrib.cpp) 
+make_hip_executable (hipMultiThreadStreams hipMultiThreadStreams.cpp) 
 target_link_libraries(hipMathFunctionsHost m)
 
 make_test(hip_ballot " " )
@@ -133,6 +138,7 @@ make_test(hipMemset --N 10013 --memsetval 0x5a )  # oddball size.
 make_test(hipMemset --N 256M  --memsetval 0xa6 )  # big copy
 make_test(hipGridLaunch " " )
 make_test(hipPointerAttrib " " )
+make_test(hipMultiThreadStreams " " )
 
 make_test(hipMemcpy  " " )
 make_test(hipMemcpyAsync  " " )
