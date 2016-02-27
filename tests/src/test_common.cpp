@@ -28,6 +28,8 @@ int iterations = 1;
 unsigned blocksPerCU = 6; // to hide latency
 unsigned threadsPerBlock = 256; 
 int p_gpuDevice = 0;
+unsigned p_verbose  = 0;
+int p_tests = -1; /*which tests to run. Interpretation is left to each test.  default:all*/
 
 
 
@@ -86,7 +88,7 @@ int parseStandardArguments(int argc, char *argv[], bool failOnUndefinedArg)
 
         if (!strcmp(arg, " ")) {
             // skip NULL args.
-        } else if (!strcmp(arg, "--N")) {
+        } else if (!strcmp(arg, "--N") || (!strcmp(arg, "-N"))) {
             if (++i >= argc || !HipTest::parseSize(argv[i], &N)) {
                failed("Bad N size argument"); 
             }
@@ -114,8 +116,16 @@ int parseStandardArguments(int argc, char *argv[], bool failOnUndefinedArg)
                failed("Bad gpuDevice argument"); 
             }
 
-        } 
-        else {
+        } else if (!strcmp(arg, "--verbose") || (!strcmp(arg, "-v"))) {
+            if (++i >= argc || !HipTest::parseUInt(argv[i], &p_verbose)) {
+               failed("Bad verbose argument"); 
+            }
+        } else if (!strcmp(arg, "--tests") || (!strcmp(arg, "-t"))) {
+            if (++i >= argc || !HipTest::parseInt(argv[i], &p_tests)) {
+               failed("Bad tests argument"); 
+            }
+
+        } else {
             if (failOnUndefinedArg) {
                 failed("Bad argument '%s'", arg);
             } else {

@@ -43,6 +43,11 @@ THE SOFTWARE.
 #include <stdlib.h>
 #include <assert.h>
 
+#if __cplusplus > 199711L
+#include <thread>
+#endif
+
+
 #include <hip_common.h>
 
 #if defined(__HIP_PLATFORM_HCC__) and not defined (__HIP_PLATFORM_NVCC__)

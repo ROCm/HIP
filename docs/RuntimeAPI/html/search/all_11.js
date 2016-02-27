@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['z',['z',['../structdim3.html#a866e38993ecc4e76fd47311236c16b04',1,'dim3']]]
+  ['warpsize',['warpSize',['../structhipDeviceProp__t.html#af3357d33c004608bf05bc21a352be81b',1,'hipDeviceProp_t']]]
 ];

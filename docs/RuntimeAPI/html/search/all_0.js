@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['arch',['arch',['../structhipDeviceProp__t.html#afc58158e44bef6ad26f2be401434b049',1,'hipDeviceProp_t']]]
+  ['_5f_5fhost_5f_5f',['__host__',['../host__defines_8h.html#a803050db3c78e0db3ea59a0c35499622',1,'host_defines.h']]]
 ];

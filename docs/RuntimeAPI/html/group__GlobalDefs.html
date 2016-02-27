@@ -119,6 +119,9 @@ Typedefs</h2></td></tr>
 <tr class="memitem:gabcef9edb0c32c26490ea58122a59c48d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gabcef9edb0c32c26490ea58122a59c48d"></a>
 typedef enum <a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>hipError_t</b></td></tr>
 <tr class="separator:gabcef9edb0c32c26490ea58122a59c48d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga98568c9e181d803c8b3ab6f36660a15c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga98568c9e181d803c8b3ab6f36660a15c"></a>
+typedef enum <a class="el" href="group__GlobalDefs.html#gacc0acd7b9bda126c6bb3dfd6e2796d7c">hipDeviceAttribute_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>hipDeviceAttribute_t</b></td></tr>
+<tr class="separator:ga98568c9e181d803c8b3ab6f36660a15c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaad15dc7939a0a25b16e4aa161fb41eee"><td class="memItemLeft" align="right" valign="top">typedef enum <a class="el" href="group__GlobalDefs.html#gac7e4bfd88340fc06642136c839a3d822">hipFuncCache</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#gaad15dc7939a0a25b16e4aa161fb41eee">hipFuncCache</a></td></tr>
 <tr class="separator:gaad15dc7939a0a25b16e4aa161fb41eee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6b1ca424fa26a5fb718937d662eaee7f"><td class="memItemLeft" align="right" valign="top">typedef enum <a class="el" href="group__GlobalDefs.html#ga2e17b71d94ac350f2ccd914fd49d104e">hipSharedMemConfig</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#ga6b1ca424fa26a5fb718937d662eaee7f">hipSharedMemConfig</a></td></tr>
@@ -146,6 +149,38 @@ Enumerations</h2></td></tr>
 <br/>
  }</td></tr>
 <tr class="separator:gadf5010f6e140a53ecbdf949e73e87594"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gacc0acd7b9bda126c6bb3dfd6e2796d7c"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#gacc0acd7b9bda126c6bb3dfd6e2796d7c">hipDeviceAttribute_t</a> { <br/>
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca8327aa23782d9c994bdef33a6d62e02e">hipDeviceAttributeMaxThreadsPerBlock</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7cac1e4ac589db0d8adbbc241e3d0fcd594">hipDeviceAttributeMaxBlockDimX</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca187dbffe12db09a56c0f75c340d879c9">hipDeviceAttributeMaxBlockDimY</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7caf811f51e03d1ffb025d80ac1da088675">hipDeviceAttributeMaxBlockDimZ</a>, 
+<br/>
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca03db8df0e7a9fbdaae683d97e8ac9c87">hipDeviceAttributeMaxGridDimX</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca5b5cc49972679c5ccf62b79425ee99df">hipDeviceAttributeMaxGridDimY</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca6c206ac083999caf4640e5d91dae24f7">hipDeviceAttributeMaxGridDimZ</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca7bca3aa18b26d40eba043ae93e15c7e5">hipDeviceAttributeMaxSharedMemoryPerBlock</a>, 
+<br/>
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7cac6089ac3a0f9c77cc382fb0eaa73ae9c">hipDeviceAttributeTotalConstantMemory</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7caffd94133e823247a6f1215343232f6ec">hipDeviceAttributeWarpSize</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca82289b170192b6ea742be0efc6f95107">hipDeviceAttributeMaxRegistersPerBlock</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca2300e077e020e7967592065561373b00">hipDeviceAttributeClockRate</a>, 
+<br/>
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca6b68deafd65f036b30dc8051573eb000">hipDeviceAttributeMemoryClockRate</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca5c1519870733ccf0b83f722678240e5f">hipDeviceAttributeMultiprocessorCount</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca4d0369a6ef7bd7890fdcabc16ed3385d">hipDeviceAttributeComputeMode</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca582ae5a26a7148504878890028e4b64c">hipDeviceAttributeL2CacheSize</a>, 
+<br/>
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7caddc08922b491eb1f6a583833cbf4e2f0">hipDeviceAttributeMaxThreadsPerMultiProcessor</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca2735739cf977b7d303266f6781131e8d">hipDeviceAttributeComputeCapabilityMajor</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca38edc4fcae456e47160d349da3249b85">hipDeviceAttributeComputeCapabilityMinor</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7cad9f45254d0d048677f560032532d5504">hipDeviceAttributeConcurrentKernels</a>, 
+<br/>
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca572b29c44f1322aa7657fdd784832f88">hipDeviceAttributePciBusId</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca955d90286e87be9e3528f0b817ab32ff">hipDeviceAttributePciDeviceId</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7cad3e7f3d01533b32e12211172fcf410ba">hipDeviceAttributeMaxSharedMemoryPerMultiprocessor</a>
+<br/>
+ }</td></tr>
+<tr class="separator:gacc0acd7b9bda126c6bb3dfd6e2796d7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gac7e4bfd88340fc06642136c839a3d822"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#gac7e4bfd88340fc06642136c839a3d822">hipFuncCache</a> { <a class="el" href="group__GlobalDefs.html#ggac7e4bfd88340fc06642136c839a3d822a0813fbaa008ce1231ff9fed3911eb3af">hipFuncCachePreferNone</a>, 
 <a class="el" href="group__GlobalDefs.html#ggac7e4bfd88340fc06642136c839a3d822a9b34337dfbadba25ed2aa270bbcabc43">hipFuncCachePreferShared</a>, 
 <a class="el" href="group__GlobalDefs.html#ggac7e4bfd88340fc06642136c839a3d822a636a3c140db6b9d4a8bf7d5a61c398c5">hipFuncCachePreferL1</a>, 
@@ -238,7 +273,7 @@ Enumerations</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="section warning"><dt>Warning</dt><dd>On AMD devices and recent NVIDIA devices, these hints and controls are ignored. </dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>On AMD devices and recent Nvidia devices, these hints and controls are ignored. </dd></dl>
 
 </div>
 </div>
@@ -251,11 +286,94 @@ Enumerations</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="section warning"><dt>Warning</dt><dd>On AMD devices and recent NVIDIA devices, these hints and controls are ignored. </dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>On AMD devices and recent Nvidia devices, these hints and controls are ignored. </dd></dl>
 
 </div>
 </div>
 <h2 class="groupheader">Enumeration Type Documentation</h2>
+<a class="anchor" id="gacc0acd7b9bda126c6bb3dfd6e2796d7c"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum <a class="el" href="group__GlobalDefs.html#gacc0acd7b9bda126c6bb3dfd6e2796d7c">hipDeviceAttribute_t</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca8327aa23782d9c994bdef33a6d62e02e"></a>hipDeviceAttributeMaxThreadsPerBlock</em>&#160;</td><td class="fielddoc">
+<p>Maximum number of threads per block. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7cac1e4ac589db0d8adbbc241e3d0fcd594"></a>hipDeviceAttributeMaxBlockDimX</em>&#160;</td><td class="fielddoc">
+<p>Maximum x-dimension of a block. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca187dbffe12db09a56c0f75c340d879c9"></a>hipDeviceAttributeMaxBlockDimY</em>&#160;</td><td class="fielddoc">
+<p>Maximum y-dimension of a block. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7caf811f51e03d1ffb025d80ac1da088675"></a>hipDeviceAttributeMaxBlockDimZ</em>&#160;</td><td class="fielddoc">
+<p>Maximum z-dimension of a block. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca03db8df0e7a9fbdaae683d97e8ac9c87"></a>hipDeviceAttributeMaxGridDimX</em>&#160;</td><td class="fielddoc">
+<p>Maximum x-dimension of a grid. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca5b5cc49972679c5ccf62b79425ee99df"></a>hipDeviceAttributeMaxGridDimY</em>&#160;</td><td class="fielddoc">
+<p>Maximum y-dimension of a grid. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca6c206ac083999caf4640e5d91dae24f7"></a>hipDeviceAttributeMaxGridDimZ</em>&#160;</td><td class="fielddoc">
+<p>Maximum z-dimension of a grid. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca7bca3aa18b26d40eba043ae93e15c7e5"></a>hipDeviceAttributeMaxSharedMemoryPerBlock</em>&#160;</td><td class="fielddoc">
+<p>Maximum shared memory available per block in bytes. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7cac6089ac3a0f9c77cc382fb0eaa73ae9c"></a>hipDeviceAttributeTotalConstantMemory</em>&#160;</td><td class="fielddoc">
+<p>Constant memory size in bytes. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7caffd94133e823247a6f1215343232f6ec"></a>hipDeviceAttributeWarpSize</em>&#160;</td><td class="fielddoc">
+<p>Warp size in threads. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca82289b170192b6ea742be0efc6f95107"></a>hipDeviceAttributeMaxRegistersPerBlock</em>&#160;</td><td class="fielddoc">
+<p>Maximum number of 32-bit registers available to a thread block. This number is shared by all thread blocks simultaneously resident on a multiprocessor. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca2300e077e020e7967592065561373b00"></a>hipDeviceAttributeClockRate</em>&#160;</td><td class="fielddoc">
+<p>Peak clock frequency in kilohertz. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca6b68deafd65f036b30dc8051573eb000"></a>hipDeviceAttributeMemoryClockRate</em>&#160;</td><td class="fielddoc">
+<p>Peak memory clock frequency in kilohertz. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca5c1519870733ccf0b83f722678240e5f"></a>hipDeviceAttributeMultiprocessorCount</em>&#160;</td><td class="fielddoc">
+<p>Number of multiprocessors on the device. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca4d0369a6ef7bd7890fdcabc16ed3385d"></a>hipDeviceAttributeComputeMode</em>&#160;</td><td class="fielddoc">
+<p>Compute mode that device is currently in. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca582ae5a26a7148504878890028e4b64c"></a>hipDeviceAttributeL2CacheSize</em>&#160;</td><td class="fielddoc">
+<p>Size of L2 cache in bytes. 0 if the device doesn't have L2 cache. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7caddc08922b491eb1f6a583833cbf4e2f0"></a>hipDeviceAttributeMaxThreadsPerMultiProcessor</em>&#160;</td><td class="fielddoc">
+<p>Maximum resident threads per multiprocessor. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca2735739cf977b7d303266f6781131e8d"></a>hipDeviceAttributeComputeCapabilityMajor</em>&#160;</td><td class="fielddoc">
+<p>Major compute capability version number. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca38edc4fcae456e47160d349da3249b85"></a>hipDeviceAttributeComputeCapabilityMinor</em>&#160;</td><td class="fielddoc">
+<p>Minor compute capability version number. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7cad9f45254d0d048677f560032532d5504"></a>hipDeviceAttributeConcurrentKernels</em>&#160;</td><td class="fielddoc">
+<p>Device can possibly execute multiple kernels concurrently. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca572b29c44f1322aa7657fdd784832f88"></a>hipDeviceAttributePciBusId</em>&#160;</td><td class="fielddoc">
+<p>PCI Bus ID. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca955d90286e87be9e3528f0b817ab32ff"></a>hipDeviceAttributePciDeviceId</em>&#160;</td><td class="fielddoc">
+<p>PCI Device ID. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7cad3e7f3d01533b32e12211172fcf410ba"></a>hipDeviceAttributeMaxSharedMemoryPerMultiprocessor</em>&#160;</td><td class="fielddoc">
+<p>Maximum Shared Memory Per Multiprocessor. </p>
+</td></tr>
+</table>
+
+</div>
+</div>
 <a class="anchor" id="gadf5010f6e140a53ecbdf949e73e87594"></a>
 <div class="memitem">
 <div class="memproto">
@@ -282,7 +400,7 @@ Enumerations</h2></td></tr>
 <p>Out of resources error. </p>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83"></a>hipErrorInvalidValue</em>&#160;</td><td class="fielddoc">
-<p>One or more of the paramters passed to the API call is NULL or not in an acceptable range. </p>
+<p>One or more of the parameters passed to the API call is NULL or not in an acceptable range. </p>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a88e525a7c8f35552dfada58e9f2f6d3a"></a>hipErrorInvalidResourceHandle</em>&#160;</td><td class="fielddoc">
 <p>Resource handle (<a class="el" href="structhipEvent__t.html">hipEvent_t</a> or hipStream_t) invalid. </p>
@@ -291,10 +409,10 @@ Enumerations</h2></td></tr>
 <p>DeviceID must be in range 0...#compute-devices. </p>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594ad4406972c318df36d231310a15131c24"></a>hipErrorNoDevice</em>&#160;</td><td class="fielddoc">
-<p>Call to cudaGetDeviceCount returned 0 devices. </p>
+<p>Call to hipGetDeviceCount returned 0 devices. </p>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1"></a>hipErrorNotReady</em>&#160;</td><td class="fielddoc">
-<p>indicates that asynchronous operations enqueued earlier are not ready. This is not actually an error, but is used to distinguish from hipSuccess (which indicates completion). APIs that return this error include hipEventQuery and hipStreamQuery. </p>
+<p>Indicates that asynchronous operations enqueued earlier are not ready. This is not actually an error, but is used to distinguish from hipSuccess (which indicates completion). APIs that return this error include hipEventQuery and hipStreamQuery. </p>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594aa74e64c5b2f5fb0d6a92681f5b234073"></a>hipErrorUnknown</em>&#160;</td><td class="fielddoc">
 <p>Unknown error. </p>
@@ -315,7 +433,7 @@ Enumerations</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="section warning"><dt>Warning</dt><dd>On AMD devices and recent NVIDIA devices, these hints and controls are ignored. </dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>On AMD devices and recent Nvidia devices, these hints and controls are ignored. </dd></dl>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><em><a class="anchor" id="ggac7e4bfd88340fc06642136c839a3d822a0813fbaa008ce1231ff9fed3911eb3af"></a>hipFuncCachePreferNone</em>&#160;</td><td class="fielddoc">
 <p>no preference for shared memory or L1 (default) </p>
@@ -372,7 +490,7 @@ Enumerations</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="section warning"><dt>Warning</dt><dd>On AMD devices and recent NVIDIA devices, these hints and controls are ignored. </dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>On AMD devices and recent Nvidia devices, these hints and controls are ignored. </dd></dl>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><em><a class="anchor" id="gga2e17b71d94ac350f2ccd914fd49d104eaf5b325c9b7bde878913f768eaba5014d"></a>hipSharedMemBankSizeDefault</em>&#160;</td><td class="fielddoc">
 <p>The compiler selects a device-specific value for the banking. </p>
@@ -390,7 +508,7 @@ Enumerations</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Jan 25 2016 16:05:53 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Feb 18 2016 20:42:16 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

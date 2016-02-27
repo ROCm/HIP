@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['sharedmemperblock',['sharedMemPerBlock',['../structhipDeviceProp__t.html#a3b9138678a0795c2677eddcfb1c67156',1,'hipDeviceProp_t']]]
+  ['regsperblock',['regsPerBlock',['../structhipDeviceProp__t.html#a73c1c21648a901799ff6bef83c11135b',1,'hipDeviceProp_t']]]
 ];
