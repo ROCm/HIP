@@ -338,6 +338,7 @@ __device__ inline int __all(  int input)
 	return hc::__all( input);
 }
 
+
 __device__ inline int __any( int input)
 {
 	if( hc::__any( input)!=0) return 1;

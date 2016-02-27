@@ -112,9 +112,14 @@ hipChannelFormatDesc  hipBindTexture(size_t *offset, struct textureReference *te
 #endif
 
 /*
- * @brief hipChannelFormatDesc
+ * @brief Returns a channel descriptor with format f and number of bits of each ocmponent x,y,z and w.
+ *
+ * @par Parameters
+ *      None.
+ * @return Channel descriptor
+ *
+ *
  **/
-// TODO
 template <class T>
 hipChannelFormatDesc  hipCreateChannelDesc()
 {
@@ -123,9 +128,18 @@ hipChannelFormatDesc  hipCreateChannelDesc()
 }
 
 /*
- * @brief hipBindTexture
+ * @brief hipBindTexture Binds size bytes of the memory area pointed to by @p devPtr to the texture reference tex.
+ *
+ * @p desc describes how the memory is interpreted when fetching values from the texture. The @p offset parameter is an optional byte offset as with the low-level
+ * hipBindTexture() function. Any memory previously bound to tex is unbound.
+ *
+ *  @param[in]  offset - Offset in bytes
+ *  @param[out]  tex - texture to bind
+ *  @param[in]  devPtr - Memory area on device
+ *  @param[in]  desc - Channel format
+ *  @param[in]  size - Size of the memory area pointed to by devPtr
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
  **/
-// TODO-doc
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t  hipBindTexture(size_t *offset,
                                      struct texture<T, dim, readMode> &tex,
@@ -138,11 +152,18 @@ hipError_t  hipBindTexture(size_t *offset,
     return hipSuccess;
 }
 
-
 /*
- * @brief hipBindTexture
+ * @brief hipBindTexture Binds size bytes of the memory area pointed to by @p devPtr to the texture reference tex.
+ *
+ * @p desc describes how the memory is interpreted when fetching values from the texture. The @p offset parameter is an optional byte offset as with the low-level
+ * hipBindTexture() function. Any memory previously bound to tex is unbound.
+ *
+ *  @param[in]  offset - Offset in bytes
+ *  @param[in]  tex - texture to bind
+ *  @param[in]  devPtr - Memory area on device
+ *  @param[in]  size - Size of the memory area pointed to by devPtr
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
  **/
-// TODO-doc
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t  hipBindTexture(size_t *offset,
                                      struct texture<T, dim, readMode> &tex,
@@ -154,9 +175,12 @@ hipError_t  hipBindTexture(size_t *offset,
 
 
 /*
- * @brief hipUnbindTexture
+ * @brief Unbinds the textuer bound to @p tex
+ *
+ *  @param[in]  tex - texture to unbind
+ *
+ *  @return #hipSuccess
  **/
-// TODO-doc
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t  hipUnbindTexture(struct texture<T, dim, readMode> *tex)
 {
