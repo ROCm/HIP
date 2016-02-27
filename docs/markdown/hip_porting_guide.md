@@ -290,7 +290,7 @@ hipcc adds the necessary libraries for HIP as well as for the accelerator compil
 
 ### -lm Option
  
-hcc does not add -lm by default. If you see errors about missing math functions at link time (e.g., "sqrt@@GLIBC_2.2.5"), ensure that -lm is in the link options.
+hipcc adds -lm by default to the link command.
 
 
 ## Linking Code With Other Compilers
