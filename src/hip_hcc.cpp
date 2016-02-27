@@ -1735,7 +1735,12 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
         attributes->hostPointer   = amPointerInfo._hostPointer;
         attributes->devicePointer = amPointerInfo._devicePointer;
         attributes->isManaged     = 0;
-
+        if(attributes->memoryType == hipMemoryTypeHost){
+            attributes->hostPointer = ptr;
+        }
+        if(attributes->memoryType == hipMemoryTypeDevice){
+            attributes->devicePointer = ptr;
+        }
         attributes->allocationFlags = amPointerInfo._appAllocationFlags;
         attributes->device          = amPointerInfo._appId;
 
