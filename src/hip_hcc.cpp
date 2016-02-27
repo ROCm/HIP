@@ -291,6 +291,7 @@ thread_local int tls_defaultDevice = 0;
 // Global initialization.
 std::once_flag hip_initialized;
 ihipDevice_t *g_devices; // Array of all non-emulated (ie GPU) accelerators in the system.
+bool g_visible_device = false; // Set the flag when HIP_VISIBLE_DEVICES is set
 unsigned g_deviceCnt;
 //=================================================================================================
 
@@ -299,7 +300,7 @@ unsigned g_deviceCnt;
 //Forward Declarations:
 //=================================================================================================
 INLINE bool ihipIsValidDevice(unsigned deviceIndex);
-
+INLINE bool ihipIsVisibleDevice(unsigned deviceIndex);
 //=================================================================================================
 // Implementation:
 //=================================================================================================
@@ -865,6 +866,7 @@ void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, c
         std::string device_id;
         // Clean up the defult value
         g_hip_visible_devices.clear();
+        g_visible_device = true;
         // Read the visible device numbers
         while (std::getline(ss, device_id, ',')) {
             if (atoi(device_id.c_str()) >= 0) {
@@ -965,9 +967,10 @@ void ihipInit()
     for (int i=0; i<accs.size(); i++) {
         // check if the device id is included in the HIP_VISIBLE_DEVICES env variable
         if (! accs[i].get_is_emulated()) {
-            if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), (i-1)) == g_hip_visible_devices.end())
+            //if (ihipIsVisibleDevice(i-1) && !g_visible_device)
+            if (ihipIsVisibleDevice(i-1))
             {
-                //std::cout << "The device is not in visible devices list, ignore, index i = " << i << std::endl;
+                //Ignore if the device is not in visible devices list
                 continue;
             }
             //std::cout << "The visible GPU number is " << i << std::endl;
@@ -978,16 +981,11 @@ void ihipInit()
     }
     //std::cout << "g_deviceCnt = " << g_deviceCnt << std::endl;
 
-    // The following assert is not valid as we introduce the
-    // env variable of HIP_VISIBLE_DEVICES
-    //assert(deviceCnt == g_deviceCnt);
-
-
-    // Remove non-visible devices from g_devices
-
+    // If HIP_VISIBLE_DEVICES is not set, make sure all devices are initialized
+    if(!g_visible_device)
+        assert(deviceCnt == g_deviceCnt);
 
     tprintf(TRACE_API, "pid=%u %-30s\n", getpid(), "<ihipInit>");
-
 }
 
 INLINE bool ihipIsValidDevice(unsigned deviceIndex)
