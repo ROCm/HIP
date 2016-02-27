@@ -28,24 +28,27 @@ THE SOFTWARE.
 #include <string>
 #include <hip_runtime.h>
 
-int debug = 0;
+using namespace std;
 
 void usage() {
     printf("hipEnvVar [otpions]\n\
-    -a,\t\ttotal number ofavailable GPUs and their pciBusID\n\
-    -s,\t\tselect one GPU and return its pciBusID\n\
+    -c,\t\ttotal number ofavailable GPUs and their pciBusID\n\
+    -d,\t\tselect one GPU and return its pciBusID\n\
+    -v,\t\tsend the list to HIP_VISIBLE_DEVICES env var\n\
     -h,\t\tshow this help message\n\
     ");
 }
 int main(int argc, char **argv)
 {
+   //string str = getenv("HIP_VISIBLE_DEVICES");
+    //std::cout << "The current env HIP_VISIBLE_DEVICES is"<<str << std::endl;
     extern char *optarg;
     extern int optind;
     int c, err = 0;
-    int retDevCnt=0, retDevInfo=0;
+    int retDevCnt=0, retDevInfo=0, setEnvVar=0;
     int device=0;
-    //std::cout << "reach here!!" << std::endl;
-    while ((c = getopt(argc, argv, "cd:h")) != -1)
+    string env;
+    while ((c = getopt(argc, argv, "cd:v:h")) != -1)
         switch (c) {
         case 'c':
             retDevCnt = true;
@@ -53,6 +56,10 @@ int main(int argc, char **argv)
         case 'd':
             retDevInfo = true;
             device = atoi(optarg);
+            break;
+        case 'v':
+            setEnvVar = true;
+            env = optarg;
             break;
         case 'h':
             usage();
@@ -66,6 +73,21 @@ int main(int argc, char **argv)
             err = 1;
             break;
         }
+
+    if (setEnvVar ) {
+        //env = "export HIP_VISIBLE_DEVICES=" + env;
+        //cout<<"The received env var is: "<<env<<endl;
+        setenv("HIP_VISIBLE_DEVICES",env.c_str(),1);
+        cout<<"set env HIP_VISIBLE_DEVICES = "<< env.c_str()<<endl;
+        //verify if the environment variable is set
+        char* pPath;
+        pPath = getenv ("HIP_VISIBLE_DEVICES");
+        if(pPath!=NULL)
+            printf("HIP_VISIBLE_DEVICES is %s\n", pPath);
+        else
+            printf("HIP_VISIBLE_DEVICES is not set\n");
+    }
+
     // device init
     int devCount=0;
     hipGetDeviceCount(&devCount);
@@ -81,8 +103,10 @@ int main(int argc, char **argv)
                device, 0, devCount -1);
         return -1;
     }
+
     if (retDevCnt) {
-        std::cout << "Total number of devices visible in system is "<< devCount  << std::endl;
+        //std::cout << "Total number of devices visible in system is "<< devCount  << std::endl;
+        std::cout << devCount  << std::endl;
     }
     if (retDevInfo) {
         hipSetDevice(device);
@@ -90,13 +114,11 @@ int main(int argc, char **argv)
 
         hipDeviceGetProperties(&devProp, device);
         if (devProp.major < 1) {
-            printf("Device %d does not support HIP\n", device);
+            printf("%d does not support HIP\n", device);
             return -1;
         }
-
-        std::cout << "The selected device pciBusID is " << devProp.pciBusID << std::endl;
+        std::cout << devProp.pciBusID << std::endl;
     }
-
     exit(0);
 }
 

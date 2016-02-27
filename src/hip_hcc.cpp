@@ -300,7 +300,7 @@ unsigned g_deviceCnt;
 //Forward Declarations:
 //=================================================================================================
 INLINE bool ihipIsValidDevice(unsigned deviceIndex);
-INLINE bool ihipIsVisibleDevice(unsigned deviceIndex);
+
 //=================================================================================================
 // Implementation:
 //=================================================================================================
@@ -967,25 +967,23 @@ void ihipInit()
     for (int i=0; i<accs.size(); i++) {
         // check if the device id is included in the HIP_VISIBLE_DEVICES env variable
         if (! accs[i].get_is_emulated()) {
-            //if (ihipIsVisibleDevice(i-1) && !g_visible_device)
-            if (ihipIsVisibleDevice(i-1))
+            //if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), (i-1)) == g_hip_visible_devices.end() && g_visible_device)
+            if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), (i-1)) == g_hip_visible_devices.end() && g_visible_device)
             {
-                //Ignore if the device is not in visible devices list
+                //If device is not in visible devices list, ignore
                 continue;
             }
-            //std::cout << "The visible GPU number is " << i << std::endl;
             g_devices[g_deviceCnt].init(g_deviceCnt, accs[i]);
-            //std::cout << "index of g_devices = "<< g_deviceCnt << std::endl;
             g_deviceCnt++;
         }
     }
-    //std::cout << "g_deviceCnt = " << g_deviceCnt << std::endl;
 
     // If HIP_VISIBLE_DEVICES is not set, make sure all devices are initialized
     if(!g_visible_device)
         assert(deviceCnt == g_deviceCnt);
 
     tprintf(TRACE_API, "pid=%u %-30s\n", getpid(), "<ihipInit>");
+
 }
 
 INLINE bool ihipIsValidDevice(unsigned deviceIndex)
@@ -994,12 +992,12 @@ INLINE bool ihipIsValidDevice(unsigned deviceIndex)
     return (deviceIndex < g_deviceCnt);
 }
 
-// check if the device ID is set as visible
-INLINE bool ihipIsVisibleDevice(unsigned deviceIndex)
-{
-    return std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(),
-            (int)deviceIndex) != g_hip_visible_devices.end();
-}
+/*// check if the device ID is set as visible*/
+//INLINE bool ihipIsVisibleDevice(unsigned deviceIndex)
+//{
+    //return std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(),
+            //(int)deviceIndex) != g_hip_visible_devices.end();
+/*}*/
 
 //---
 INLINE ihipDevice_t *ihipGetTlsDefaultDevice()
