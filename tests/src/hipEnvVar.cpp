@@ -32,7 +32,7 @@ using namespace std;
 
 void usage() {
     printf("hipEnvVar [otpions]\n\
-    -c,\t\ttotal number ofavailable GPUs and their pciBusID\n\
+    -c,\t\ttotal number of available GPUs and their pciBusID\n\
     -d,\t\tselect one GPU and return its pciBusID\n\
     -v,\t\tsend the list to HIP_VISIBLE_DEVICES env var\n\
     -h,\t\tshow this help message\n\
