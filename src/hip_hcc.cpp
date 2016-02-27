@@ -792,7 +792,7 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     // Group memory will not be paged out, so, the physical memory size is the total shared memory size, and also equal to the group region size.
     prop->maxSharedMemoryPerMultiProcessor = prop->totalGlobalMem;
 
-#ifdef USE_ROCR_V2
+#if USE_ROCR_V2
     // Get Max memory clock frequency
     err = hsa_region_get_info(*am_region, (hsa_region_info_t)HSA_AMD_REGION_INFO_MAX_CLOCK_FREQUENCY, &prop->memoryClockRate);
     DeviceErrorCheck(err);
@@ -1269,12 +1269,10 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
             *pi = prop->regsPerBlock; break;
         case hipDeviceAttributeClockRate:
             *pi = prop->clockRate; break;
-#ifdef USE_ROCR_V2
         case hipDeviceAttributeMemoryClockRate:
             *pi = prop->memoryClockRate; break;
         case hipDeviceAttributeMemoryBusWidth:
             *pi = prop->memoryBusWidth; break;
-#endif
         case hipDeviceAttributeMultiprocessorCount:
             *pi = prop->multiProcessorCount; break;
         case hipDeviceAttributeComputeMode:
@@ -2309,6 +2307,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 #endif
 /**
  * @result #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidMemcpyDirection, #hipErrorInvalidValue
+ * @warning on HCC hipMemcpyAsync does not support overlapped H2D and D2H copies.
  */
 //---
 hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream)
