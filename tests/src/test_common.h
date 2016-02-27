@@ -16,6 +16,16 @@
 #define KCYN  "\x1B[36m"
 #define KWHT  "\x1B[37m"
 
+
+
+#ifdef __HIP_PLATFORM_HCC
+#define TYPENAME(T) typeid(T).name()
+#else
+#define TYPENAME(T) "?"
+#endif
+
+
+
 #define passed() \
     printf ("%sPASSED!%s\n",KGRN, KNRM);\
     exit(0);
@@ -25,7 +35,7 @@
     printf (__VA_ARGS__);\
     printf ("\n");\
     printf ("error: TEST FAILED\n%s", KNRM );\
-    exit(EXIT_FAILURE);
+    abort();
 
 
 #define HIPCHECK(error) \
@@ -53,6 +63,8 @@ extern int iterations;
 extern unsigned blocksPerCU;
 extern unsigned threadsPerBlock;
 extern int p_gpuDevice;
+extern unsigned p_verbose;
+extern int p_tests;
 
 namespace HipTest {
 
@@ -80,13 +92,13 @@ vectorADD(hipLaunchParm lp,
             const T *A_d,
             const T *B_d,
             T *C_d,
-            size_t N)
+            size_t NELEM)
 {
     size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
     size_t stride = hipBlockDim_x * hipGridDim_x ;
 
-    for (size_t i=offset; i<N; i+=stride) {
-		C_d[i] = A_d[i] + B_d[i];
+    for (size_t i=offset; i<NELEM; i+=stride) {
+        C_d[i] = A_d[i] + B_d[i];
 	}
 }
 
@@ -94,7 +106,7 @@ vectorADD(hipLaunchParm lp,
 template <typename T>
 void initArrays(T **A_d, T **B_d, T **C_d,
                 T **A_h, T **B_h, T **C_h, 
-                size_t N) 
+                size_t N, bool usePinnedHost=false) 
 {
     size_t Nbytes = N*sizeof(T);
 
@@ -108,14 +120,32 @@ void initArrays(T **A_d, T **B_d, T **C_d,
         HIPCHECK ( hipMalloc(C_d, Nbytes) );
     }
 
-    if (A_h)
-        *A_h = (T*)malloc(Nbytes);
-    
-    if (B_h)
-        *B_h = (T*)malloc(Nbytes);
+    if (usePinnedHost) {
+        if (A_h) {
+            HIPCHECK ( hipMallocHost(A_h, Nbytes) );
+        }
+        if (B_h) {
+            HIPCHECK ( hipMallocHost(B_h, Nbytes) );
+        }
+        if (C_h) {
+            HIPCHECK ( hipMallocHost(C_h, Nbytes) );
+        }
+    } else {
+        if (A_h) {
+            *A_h = (T*)malloc(Nbytes);
+            HIPASSERT(*A_h != NULL);
+        }
+        
+        if (B_h) {
+            *B_h = (T*)malloc(Nbytes);
+            HIPASSERT(*B_h != NULL);
+        }
 
-    if (C_h)
-        *C_h = (T*)malloc(Nbytes);
+        if (C_h) {
+            *C_h = (T*)malloc(Nbytes);
+            HIPASSERT(*C_h != NULL);
+        }
+    }
 
 
     // Initialize the host data:
@@ -128,7 +158,43 @@ void initArrays(T **A_d, T **B_d, T **C_d,
 }
 
 
+template <typename T>
+void freeArrays(T *A_d, T *B_d, T *C_d,
+                T *A_h, T *B_h, T *C_h, bool usePinnedHost) 
+{
+    if (A_d) {
+        HIPCHECK ( hipFree(A_d) );
+    }
+    if (B_d) {
+        HIPCHECK ( hipFree(B_d) );
+    }
+    if (C_d) {
+        HIPCHECK ( hipFree(C_d) );
+    }
 
+    if (usePinnedHost) {
+        if (A_h) {
+            HIPCHECK (hipFreeHost(A_h));
+        }
+        if (B_h) {
+            HIPCHECK (hipFreeHost(B_h));
+        }
+        if (C_h) {
+            HIPCHECK (hipFreeHost(C_h));
+        }
+    } else {
+        if (A_h) {
+            free (A_h);
+        }
+        if (B_h) {
+            free (B_h);
+        }
+        if (C_h) {
+            free (C_h);
+        }
+    }
+    
+}
 
 
 // Assumes C_h contains vector add of A_h + B_h
@@ -163,5 +229,71 @@ void checkVectorADD(T* A_h, T* B_h, T* result_H, size_t N, bool expectMatch=true
     }
 
 }
+
+
+//---
+struct Pinned {
+	static const bool isPinned = true;
+	static const char *str() { return "Pinned"; };
+
+    static void *Alloc(size_t sizeBytes) 
+	{
+        void *p; 
+        HIPCHECK(hipMallocHost(&p, sizeBytes));
+        return p;
+    };
+};
+
+
+//---
+struct Unpinned 
+{
+	static const bool isPinned = false;
+	static const char *str() { return "Unpinned"; };
+
+    static void *Alloc(size_t sizeBytes) 
+	{
+        void *p  = malloc (sizeBytes);
+        HIPASSERT(p);
+		return p;
+    };
+};
+
+
+
+struct Memcpy
+{
+	static const char *str() { return "Memcpy"; };
+};
+
+struct MemcpyAsync
+{
+	static const char *str() { return "MemcpyAsync"; };
+};
+
+
+template <typename C> struct MemTraits;
+
+
+template<>
+struct MemTraits<Memcpy>
+{
+
+    static void Copy(void *dest, const void *src, size_t sizeBytes, hipMemcpyKind kind,  hipStream_t stream) 
+	{
+		HIPCHECK(hipMemcpy(dest, src, sizeBytes, kind));
+	}
+};
+
+
+template<>
+struct MemTraits<MemcpyAsync>
+{
+
+    static void Copy(void *dest, const void *src, size_t sizeBytes, hipMemcpyKind kind,  hipStream_t stream) 
+	{
+		HIPCHECK(hipMemcpyAsync(dest, src, sizeBytes, kind, stream));
+	}
+};
 
 }; // namespace HipTest

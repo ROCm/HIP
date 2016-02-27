@@ -66,8 +66,8 @@ THE SOFTWARE.
     // 32-bit Atomics:
 #define __HIP_ARCH_HAS_GLOBAL_INT32_ATOMICS__       (1)
 #define __HIP_ARCH_HAS_GLOBAL_FLOAT_ATOMIC_EXCH__   (1)
-#define __HIP_ARCH_HAS_SHARED_INT32_ATOMICS__       (0)
-#define __HIP_ARCH_HAS_SHARED_FLOAT_ATOMIC_EXCH__   (0)
+#define __HIP_ARCH_HAS_SHARED_INT32_ATOMICS__       (1)
+#define __HIP_ARCH_HAS_SHARED_FLOAT_ATOMIC_EXCH__   (1)
 #define __HIP_ARCH_HAS_FLOAT_ATOMIC_ADD__           (0)
 
 // 64-bit Atomics:
@@ -107,6 +107,12 @@ THE SOFTWARE.
 #elif defined(__STDC_VERSION__)
 #define __HCC_C__
 #endif
+
+
+// TODO - hipify-clang - change to use the function call.
+//#define warpSize hc::__wavesize()
+const int warpSize  = 64;
+
 
 #define clock_t long long int
 __device__ inline long long int clock64() { return (long long int)hc::__clock_u64(); };
@@ -193,18 +199,6 @@ __device__ inline unsigned long long int atomicMax(unsigned long long int* addre
                                  unsigned long long int val)
 {
 	return (long long int)hc::atomic_fetch_max((uint64_t*)address,(uint64_t)val);
-}
-
-//atomicInc()
-__device__ inline unsigned int atomicInc(unsigned int* address)
-{
-	return hc::atomic_fetch_inc(address);
-}
-
-//atomicDec()
-__device__ inline unsigned int atomicDec(unsigned int* address)
-{
-	return hc::atomic_fetch_dec(address);
 }
 
 //atomicCAS()
@@ -351,49 +345,48 @@ __device__ inline int __any( int input)
 	else return 0;
 }
 
-
 __device__ inline unsigned long long int __ballot( int input)
 {
 	return hc::__ballot( input);
 }
 
 // warp shuffle functions
-__device__ inline int __shfl(int input, int lane, int width)
+__device__ inline int __shfl(int input, int lane, int width=warpSize)
 {
   return hc::__shfl(input,lane,width);
 }
 
-__device__ inline int __shfl_up(int input, unsigned int lane_delta, int width)
+__device__ inline int __shfl_up(int input, unsigned int lane_delta, int width=warpSize)
 {
   return hc::__shfl_up(input,lane_delta,width);
 }
 
-__device__ inline int __shfl_down(int input, unsigned int lane_delta, int width)
+__device__ inline int __shfl_down(int input, unsigned int lane_delta, int width=warpSize)
 {
   return hc::__shfl_down(input,lane_delta,width);
 }
 
-__device__ inline int __shfl_xor(int input, int lane_mask, int width)
+__device__ inline int __shfl_xor(int input, int lane_mask, int width=warpSize)
 {
   return hc::__shfl_xor(input,lane_mask,width);
 }
 
-__device__ inline float __shfl(float input, int lane, int width)
+__device__ inline float __shfl(float input, int lane, int width=warpSize)
 {
   return hc::__shfl(input,lane,width);
 }
 
-__device__ inline float __shfl_up(float input, unsigned int lane_delta, int width)
+__device__ inline float __shfl_up(float input, unsigned int lane_delta, int width=warpSize)
 {
   return hc::__shfl_up(input,lane_delta,width);
 }
 
-__device__ inline float __shfl_down(float input, unsigned int lane_delta, int width)
+__device__ inline float __shfl_down(float input, unsigned int lane_delta, int width=warpSize)
 {
   return hc::__shfl_down(input,lane_delta,width);
 }
 
-__device__ inline float __shfl_xor(float input, int lane_mask, int width)
+__device__ inline float __shfl_xor(float input, int lane_mask, int width=warpSize)
 {
   return hc::__shfl_xor(input,lane_mask,width);
 }
@@ -452,7 +445,6 @@ __device__ inline float __dsqrt_rz(double x) {return hc::fast_math::sqrt(x); };
 #define hipGridDim_z   (hc_get_num_groups(0))
 
 
-extern int warpSize ;
 
 
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
@@ -490,7 +482,8 @@ extern int warpSize ;
 
 
 #ifdef __HCC_CPP__
-hc::accelerator_view *ihipLaunchKernel(hipStream_t stream);
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, hc::accelerator_view **av);
+void ihipPostLaunchKernel(hipStream_t stream, hc::completion_future &cf);
 
 #if not defined(DISABLE_GRID_LAUNCH)
 #define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...) \
@@ -505,12 +498,13 @@ do {\
   lp.groupMemBytes = _groupMemBytes;\
   hc::completion_future cf;\
   lp.cf = &cf;  \
-  lp.av = (ihipLaunchKernel(_stream)); \
+  hipStream_t trueStream = (ihipPreLaunchKernel(_stream, &lp.av)); \
     if (HIP_TRACE_API) {\
         fprintf(stderr, "hiptrace1: launch '%s' gridDim:[%d.%d.%d] groupDim:[%d.%d.%d] groupMem:+%d stream=%p\n", \
                 #_kernelName, lp.gridDim.z, lp.gridDim.y, lp.gridDim.x, lp.groupDim.z, lp.groupDim.y, lp.groupDim.x, lp.groupMemBytes, (void*)(_stream));\
     }\
   _kernelName (lp, __VA_ARGS__);\
+  ihipPostLaunchKernel(trueStream, cf);\
 } while(0)
 
 #else
@@ -528,12 +522,13 @@ do {\
   lp.groupMemBytes = _groupMemBytes;\
   hc::completion_future cf;\
   lp.cf = &cf;  \
-  lp.av = (ihipLaunchKernel(_stream)); \
+  hipStream_t trueStream = (ihipPreLaunchKernel(_stream, &lp.av)); \
     if (HIP_TRACE_API) {\
         fprintf(stderr, "hiptrace1: launch '%s' gridDim:[%d.%d.%d] groupDim:[%d.%d.%d] groupMem:+%d stream=%p\n", \
                 #_kernelName, lp.gridDim.z, lp.gridDim.y, lp.gridDim.x, lp.groupDim.z, lp.groupDim.y, lp.groupDim.x, lp.groupMemBytes, (void*)(_stream));\
     }\
   _kernelName (lp, __VA_ARGS__);\
+  ihipPostLaunchKernel(trueStream, cf);\
 } while(0)
 /*end hipLaunchKernel */
 #endif

@@ -242,6 +242,10 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
         cdattr = cudaDevAttrMaxRegistersPerBlock; break;
     case hipDeviceAttributeClockRate:
         cdattr = cudaDevAttrClockRate; break;
+    case hipDeviceAttributeMemoryClockRate:
+        cdattr = cudaDevAttrMemoryClockRate; break;
+    case hipDeviceAttributeMemoryBusWidth:
+        cdattr = cudaDevAttrGlobalMemoryBusWidth; break;
     case hipDeviceAttributeMultiprocessorCount:
         cdattr = cudaDevAttrMultiProcessorCount; break;
     case hipDeviceAttributeComputeMode:
@@ -252,8 +256,16 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
         cdattr = cudaDevAttrMaxThreadsPerMultiProcessor; break;
     case hipDeviceAttributeComputeCapabilityMajor:
         cdattr = cudaDevAttrComputeCapabilityMajor; break;
-    case hipDeviceAttributeComputeCapabilityMinor:
-        cdattr = cudaDevAttrComputeCapabilityMinor; break;
+    case hipDeviceAttributeConcurrentKernels:
+        cdattr = cudaDevAttrConcurrentKernels; break;
+    case hipDeviceAttributePciBusId:
+        cdattr = cudaDevAttrPciBusId; break;
+    case hipDeviceAttributePciDeviceId:
+        cdattr = cudaDevAttrPciDeviceId; break;
+    case hipDeviceAttributeMaxSharedMemoryPerMultiprocessor:
+        cdattr = cudaDevAttrMaxSharedMemoryPerMultiprocessor; break;
+    case hipDeviceAttributeIsMultiGpuBoard:
+        cdattr = cudaDevAttrIsMultiGpuBoard; break;
     default:
         cerror = cudaErrorInvalidValue; break;
     }
@@ -262,6 +274,29 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
 
     return hipCUDAErrorTohipError(cerror);
 }
+
+
+inline static hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr){
+	cudaPointerAttributes cPA;
+	hipError_t err = hipCUDAErrorTohipError(cudaPointerGetAttributes(&cPA, ptr));
+	if(err == hipSuccess){
+		switch (cPA.memoryType){
+			case cudaMemoryTypeDevice:
+        		attributes->memoryType = hipMemoryTypeDevice; break;
+			case cudaMemoryTypeHost:
+		        attributes->memoryType = hipMemoryTypeHost; break;
+			default:
+		        return hipErrorUnknownSymbol;
+		}
+		attributes->device = cPA.device;
+		attributes->devicePointer = cPA.devicePointer;
+		attributes->hostPointer = cPA.hostPointer;
+		attributes->isManaged = 0;
+		attributes->allocationFlags = 0;
+	}
+	return err;
+}
+
 
 inline static hipError_t hipMemGetInfo( size_t* free, size_t* total)
 {

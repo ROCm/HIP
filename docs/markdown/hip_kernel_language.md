@@ -363,28 +363,50 @@ Following is the list of supported double precision mathematical functions.
 <sub><b id="f2"><sup>[1]</sup></b> __RETURN_TYPE is dependent on compiler. It is usually 'int' for C compilers and 'bool' for C++ compilers.</sub> [↩](#a2)
 
 ### Integer Intrinsics
-Following is the list of supported integer intrinsics.
+Following is the list of supported integer intrinsics. Note that intrinsics are supported on device only.
 
-| **Function** | **Supported on Host** | **Supported on Device** |
-| --- | --- | --- |
-| unsigned int __brev ( unsigned int x ) <br><sub>Reverse the bit order of a 32 bit unsigned integer.</sub> | ✓ | ✓ |
-| unsigned long long int __brevll ( unsigned long long int x ) <br><sub>Reverse the bit order of a 64 bit unsigned integer. </sub> | ✓ | ✓ |
-| int __clz ( int  x ) <br><sub>Return the number of consecutive high-order zero bits in a 32 bit integer.</sub> | ✓ | ✓ |
-| unsigned int __clz(unsigned int x) <br><sub>Return the number of consecutive high-order zero bits in 32 bit unsigned integer.</sub> | ✓ | ✗ |  
-| int __clzll ( long long int x ) <br><sub>Count the number of consecutive high-order zero bits in a 64 bit integer.</sub> | ✓ | ✓ |
-| unsigned int __clzll(long long int x) <br><sub>Return the number of consecutive high-order zero bits in 64 bit signed integer.</sub> | ✓ | ✗ |
-| unsigned int __ffs(unsigned int x) <br><sub>Find the position of least signigicant bit set to 1 in a 32 bit unsigned integer.<sup id="a3">[1](#f3)</sup></sub> | ✓ | ✓|
-| unsigned int __ffs(int x) <br><sub>Find the position of least signigicant bit set to 1 in a 32 bit signed integer.</sub> | ✗ | ✓ |
-| unsigned int __ffsll(unsigned long long int x) <br><sub>Find the position of least signigicant bit set to 1 in a 64 bit unsigned integer.<sup>[1](#f3)</sup></sub> | ✓ | ✓ |
-| unsigned int __ffsll(long long int x) <br><sub>Find the position of least signigicant bit set to 1 in a 64 bit signed integer.</sub> | ✗ | ✓ |
-| unsigned int __popc ( unsigned int x ) <br><sub>Count the number of bits that are set to 1 in a 32 bit integer.</sub> | ✓ | ✓ |
-| int __popcll ( unsigned long long int x )<br><sub>Count the number of bits that are set to 1 in a 64 bit integer.</sub> | ✓ | ✓ |
+| **Function** |
+| --- |
+| unsigned int __brev ( unsigned int x ) <br><sub>Reverse the bit order of a 32 bit unsigned integer.</sub> |
+| unsigned long long int __brevll ( unsigned long long int x ) <br><sub>Reverse the bit order of a 64 bit unsigned integer. </sub> |
+| int __clz ( int  x ) <br><sub>Return the number of consecutive high-order zero bits in a 32 bit integer.</sub> |
+| unsigned int __clz(unsigned int x) <br><sub>Return the number of consecutive high-order zero bits in 32 bit unsigned integer.</sub> |
+| int __clzll ( long long int x ) <br><sub>Count the number of consecutive high-order zero bits in a 64 bit integer.</sub> |
+| unsigned int __clzll(long long int x) <br><sub>Return the number of consecutive high-order zero bits in 64 bit signed integer.</sub> |
+| unsigned int __ffs(unsigned int x) <br><sub>Find the position of least signigicant bit set to 1 in a 32 bit unsigned integer.<sup id="a3">[1](#f3)</sup></sub> |
+| unsigned int __ffs(int x) <br><sub>Find the position of least signigicant bit set to 1 in a 32 bit signed integer.</sub> |
+| unsigned int __ffsll(unsigned long long int x) <br><sub>Find the position of least signigicant bit set to 1 in a 64 bit unsigned integer.<sup>[1](#f3)</sup></sub> |
+| unsigned int __ffsll(long long int x) <br><sub>Find the position of least signigicant bit set to 1 in a 64 bit signed integer.</sub> |
+| unsigned int __popc ( unsigned int x ) <br><sub>Count the number of bits that are set to 1 in a 32 bit integer.</sub> |
+| int __popcll ( unsigned long long int x )<br><sub>Count the number of bits that are set to 1 in a 64 bit integer.</sub> |
 <sub><b id="f3"><sup>[1]</sup></b> 
 The hcc implementation of __ffs() and __ffsll() contains code to add a constant +1 to produce the ffs result format.
 For the cases where this overhead is not acceptable and programmer is willing to specialize for the platform, 
 hcc provides hc::__lastbit_u32_u32(unsigned int input) and  hc::__lastbit_u32_u64(unsigned long long int input).
-The index returned by __lastbit_ instructions starts at 0, while for ffs the index starts at 1.  
+The index returned by __lastbit_ instructions starts at -1, while for ffs the index starts at 0.
 
+### Floating-point Intrinsics
+Following is the list of supported floating-point intrinsics. Note that intrinsics are supported on device only.
+
+| **Function** |
+| --- |
+| float __cosf ( float  x ) <br><sub>Calculate the fast approximate cosine of the input argument.</sub> |
+| float __expf ( float  x ) <br><sub>Calculate the fast approximate base e exponential of the input argument.</sub> |
+| float __frsqrt_rn ( float  x ) <br><sub>Compute `1 / √x` in round-to-nearest-even mode.</sub> |
+| float __fsqrt_rd ( float  x ) <br><sub>Compute `√x` in round-down mode.</sub> |
+| float __fsqrt_rn ( float  x ) <br><sub>Compute `√x` in round-to-nearest-even mode.</sub> |
+| float __fsqrt_ru ( float  x ) <br><sub>Compute `√x` in round-up mode.</sub> |
+| float __fsqrt_rz ( float  x ) <br><sub>Compute `√x` in round-towards-zero mode.</sub> |
+| float __log10f ( float  x ) <br><sub>Calculate the fast approximate base 10 logarithm of the input argument.</sub> |
+| float __log2f ( float  x ) <br><sub>Calculate the fast approximate base 2 logarithm of the input argument.</sub> |
+| float __logf ( float  x ) <br><sub>Calculate the fast approximate base e logarithm of the input argument.</sub> |
+| float __powf ( float  x, float  y ) <br><sub>Calculate the fast approximate of x<sup>y</sup>.</sub> |
+| float __sinf ( float  x ) <br><sub>Calculate the fast approximate sine of the input argument.</sub> |
+| float __tanf ( float  x ) <br><sub>Calculate the fast approximate tangent of the input argument.</sub> |
+| double __dsqrt_rd ( double  x ) <br><sub>Compute `√x` in round-down mode.</sub> |
+| double __dsqrt_rn ( double  x ) <br><sub>Compute `√x` in round-to-nearest-even mode.</sub> |
+| double __dsqrt_ru ( double  x ) <br><sub>Compute `√x` in round-up mode.</sub> |
+| double __dsqrt_rz ( double  x ) <br><sub>Compute `√x` in round-towards-zero mode.</sub> |
 
 ## Texture Functions
 Texture functions are not supported.
@@ -435,8 +457,8 @@ HIP supports the following atomic operations.
 | int atomicMax(int* address, int val) | ✓ | ✓ |
 | unsigned int atomicMax(unsigned int* address,unsigned int val) | ✓ | ✓ |
 | unsigned long long int atomicMax(unsigned long long int* address,unsigned long long int val) | ✓ | ✓ |
-| unsigned int atomicInc(unsigned int* address)| ✓ <br><sub>Takes one argument.</sub> | ✓ <br><sub> Wrapping increment,takes two arguments.</sub> |
-| unsigned int atomicDec(unsigned int* address)| ✓ <br><sub>Takes one argument.</sub> | ✓ <br><sub> Wrapping decrement,takes two arguments.</sub> |
+| unsigned int atomicInc(unsigned int* address)| ✗ | ✓  |
+| unsigned int atomicDec(unsigned int* address)| ✗ | ✓ |
 | int atomicCAS(int* address, int compare, int val) | ✓ | ✓ |
 | unsigned int atomicCAS(unsigned int* address,unsigned int compare,unsigned int val) | ✓ | ✓ |
 | unsigned long long int atomicCAS(unsigned long long int* address,unsigned long long int compare,unsigned long long int val) | ✓ | ✓ |
@@ -453,7 +475,6 @@ HIP supports the following atomic operations.
 ### Caveats and Features Under-Development:
 
 - HIP enables atomic operations on 32-bit integers. Additionally, it supports an atomic float add. AMD hardware, however, implements the float add using a CAS loop, so this function may not perform efficiently.
-- hcc currently maps `__shared__` atomics to `__device__` atomics. Optimal support is under development.
 - wrapping increment and decrement are under development.
 
 ## Warp Cross-Lane Functions
