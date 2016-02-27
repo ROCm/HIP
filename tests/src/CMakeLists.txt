@@ -123,6 +123,7 @@ make_hip_executable (hipMathFunctionsDevice hipMathFunctions.cpp hipSinglePrecis
 make_hip_executable (hipIntrinsics hipMathFunctions.cpp hipSinglePrecisionIntrinsics.cpp hipDoublePrecisionIntrinsics.cpp hipIntegerIntrinsics.cpp)
 make_hip_executable (hipPointerAttrib hipPointerAttrib.cpp) 
 make_hip_executable (hipMultiThreadStreams hipMultiThreadStreams.cpp) 
+make_hip_executable (hipStreamL5 hipStreamL5.cpp)
 target_link_libraries(hipMathFunctionsHost m)
 
 make_test(hip_ballot " " )
@@ -144,5 +145,7 @@ make_test(hipMemcpy  " " )
 make_test(hipMemcpyAsync  " " )
 
 make_test(hipHcc  " " )
+
+make_test(hipStreamL5 " ")
 
 make_hipify_test(specialFunc.cu )
