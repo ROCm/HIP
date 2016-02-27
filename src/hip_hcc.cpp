@@ -43,7 +43,7 @@ THE SOFTWARE.
 
 
 #define USE_AM_TRACKER 1  /* >0 = use new AM memory tracker features. */
-#define USE_ROCR_V2    1  /* use the ROCR v2 async copy API with dst and src agents */
+#define USE_ROCR_V2    0  /* use the ROCR v2 async copy API with dst and src agents */
 
 #if (USE_AM_TRACKER) and (__hcc_workweek__ < 16074)
 #error (USE_AM_TRACKER requries HCC version of 16074 or newer)
@@ -81,7 +81,7 @@ int HIP_DISABLE_HW_KERNEL_DEP = 1;
 int HIP_DISABLE_HW_COPY_DEP = 1;
 
 int HIP_DISABLE_BIDIR_MEMCPY = 0;
-int HIP_ONESHOT_COPY_DEP     = 1;  // TODO - setting this =1  is a good thing, reduces input deps on 
+int HIP_ONESHOT_COPY_DEP     = 1;  // TODO - setting this =1  is a good thing, reduces input deps
 
 
 //---
@@ -2253,10 +2253,10 @@ void ihipSyncCopy(ihipStream_t *stream, void* dst, const void* src, size_t sizeB
 
         hsa_signal_store_relaxed(device->_copy_signal, 1);
 
-        hsa_signal_t depSignal;
-        int depSignalCnt = stream->copyCommand(NULL, &depSignal, copyType);
 
 #if USE_ROCR_V2
+        hsa_signal_t depSignal;
+        int depSignalCnt = stream->copyCommand(NULL, &depSignal, copyType);
         hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, device->_hsa_agent, src, device->_hsa_agent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, device->_copy_signal);
 #else
         hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, src, sizeBytes, device->_hsa_agent, 0, NULL, device->_copy_signal);
