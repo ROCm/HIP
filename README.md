@@ -45,6 +45,20 @@ Verify your can find hipconfig (one of the hip tools in bin dir):
 ```
 >  hipconfig -pn
 /home/me/HIP
+
+
+### Using HIP with the AMD Native-GCN compiler.
+AMD recently released a direct-to-GCN-ISA target.  This compiler generates GCN ISA directly from LLVM, without going through an intermediate compiler 
+IR such as HSAIL or PTX.
+The native GCN target is included with upstream LLVM, and has also been integrated with HCC compiler and can be used to compiler HIP programs for AMD.
+Here's how to use it with HIP:
+
+- Follow the instructions here to compile the HCC and native LLVM compiler:
+> https://github.com/RadeonOpenCompute/HCC-Native-GCN-ISA/wiki
+> (In the make step for HCC, we recommend setting -DCMAKE_INSTALL_PREFIX=/opt/hcc-native)
+
+Set HCC_HOME environment variable before compiling HIP program to point to the native compiler:
+> export HCC_HOME=/opt/hcc-native
 ```
 
 ## Examples and Getting Started:
