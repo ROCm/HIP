@@ -46,7 +46,7 @@ THE SOFTWARE.
 
 
 #define USE_AM_TRACKER 1  /* >0 = use new AM memory tracker features. */
-#define USE_ROCR_V2    0  /* use the ROCR v2 async copy API with dst and src agents */
+#define USE_ROCR_V2    1  /* use the ROCR v2 async copy API with dst and src agents */
 
 #if (USE_AM_TRACKER) and (__hcc_workweek__ < 16074)
 #error (USE_AM_TRACKER requries HCC version of 16074 or newer)
@@ -498,9 +498,14 @@ inline bool ihipStream_t::preKernelCommand()
                         this, ihipCommandName[_last_command_type], ihipCommandName[ihipCommandKernel], _last_copy_signal->_sig_id)
 
             } else {
-                tprintf (TRACE_SYNC, "stream %p switch %s to %s (wait for previous...)\n",
-                        this, ihipCommandName[_last_command_type], ihipCommandName[ihipCommandKernel]);
-                this->waitAndReclaimOlder(_last_copy_signal);
+                if (HIP_DISABLE_HW_KERNEL_DEP != -1) {
+                    tprintf (TRACE_SYNC, "stream %p switch %s to %s (wait for previous...)\n",
+                            this, ihipCommandName[_last_command_type], ihipCommandName[ihipCommandKernel]);
+                    this->waitAndReclaimOlder(_last_copy_signal);
+                } else {
+                    tprintf (TRACE_SYNC, "stream %p switch %s to %s (IGNORE dependency)\n",
+                            this, ihipCommandName[_last_command_type], ihipCommandName[ihipCommandKernel]);
+                }
             }
         }
         _last_command_type = ihipCommandKernel;
@@ -548,9 +553,15 @@ inline int ihipStream_t::copyCommand(ihipSignal_t *lastCopy, hsa_signal_t *waitS
         }
 
         if (HIP_DISABLE_HW_COPY_DEP && needSync) {
-            // do the wait here on the host, and disable the device-side command resolution.
-            hsa_signal_wait_acquire(*waitSignal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
-            needSync = 0;
+            if (HIP_DISABLE_HW_COPY_DEP == -1) {
+                tprintf (TRACE_SYNC, "IGNORE copy dependency\n")
+
+            } else {
+                tprintf (TRACE_SYNC, "HOST-wait for copy dependency\n")
+                // do the wait here on the host, and disable the device-side command resolution.
+                hsa_signal_wait_acquire(*waitSignal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+                needSync = 0;
+            }
         }
 
         _last_command_type = copyType;
@@ -937,8 +948,8 @@ void ihipInit()
     READ_ENV_I(release, HIP_STREAM_SIGNALS, 0, "Number of signals to allocate when new stream is created (signal pool will grow on demand)");
     READ_ENV_I(release, HIP_VISIBLE_DEVICES, CUDA_VISIBLE_DEVICES, "Only devices whose index is present in the secquence are visible to HIP applications and they are enumerated in the order of secquence" );
 
-    READ_ENV_I(release, HIP_DISABLE_HW_KERNEL_DEP, 0, "Disable HW dependencies before kernel commands  - instead wait for dependency on host.");
-    READ_ENV_I(release, HIP_DISABLE_HW_COPY_DEP, 0, "Disable HW dependencies before copy commands  - instead wait for dependency on host.");
+    READ_ENV_I(release, HIP_DISABLE_HW_KERNEL_DEP, 0, "Disable HW dependencies before kernel commands  - instead wait for dependency on host. -1 means ignore these dependencies. (debug mode)");
+    READ_ENV_I(release, HIP_DISABLE_HW_COPY_DEP, 0, "Disable HW dependencies before copy commands  - instead wait for dependency on host. -1 means ifnore these dependencies (debug mode)");
     READ_ENV_I(release, HIP_DISABLE_BIDIR_MEMCPY, 0, "Disable simultaneous H2D memcpy and D2H memcpy to same device");
     READ_ENV_I(release, HIP_ONESHOT_COPY_DEP, 0, "If set, only set the copy input dependency for the first copy command in a staged copy.  If clear, set the dep for each copy.");
 
@@ -2262,14 +2273,13 @@ void ihipSyncCopy(ihipStream_t *stream, void* dst, const void* src, size_t sizeB
         }
     }
 
+    hsa_signal_t depSignal;
+    int depSignalCnt = stream->copyCommand(NULL, &depSignal, ihipCommandCopyH2D);
 
     if ((kind == hipMemcpyHostToDevice) && (srcNotTracked)) {
         if (HIP_STAGING_BUFFERS) {
             std::lock_guard<std::mutex> l (device->_copy_lock[0]);
             //printf ("staged-copy- read dep signals\n");
-
-            hsa_signal_t depSignal;
-            int depSignalCnt = stream->copyCommand(NULL, &depSignal, ihipCommandCopyH2D);
 
             if (HIP_PININPLACE) {
                 device->_staging_buffer[0]->CopyHostToDevicePinInPlace(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
@@ -2287,14 +2297,17 @@ void ihipSyncCopy(ihipStream_t *stream, void* dst, const void* src, size_t sizeB
         if (HIP_STAGING_BUFFERS) {
             std::lock_guard<std::mutex> l (device->_copy_lock[HIP_DISABLE_BIDIR_MEMCPY ? 0:1]);
             //printf ("staged-copy- read dep signals\n");
-            hsa_signal_t depSignal;
-            int depSignalCnt = stream->copyCommand(NULL, &depSignal, ihipCommandCopyD2H);
             device->_staging_buffer[1]->CopyDeviceToHost(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
         } else {
             // TODO - remove, slow path.
             hc::am_copy(dst, src, sizeBytes);
         }
     } else if (kind == hipMemcpyHostToHost)  { // TODO-refactor.
+
+        if (depSignalCnt) {
+            // host waits before doing host memory copy.
+            hsa_signal_wait_acquire(depSignal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+        }
         memcpy(dst, src, sizeBytes);
 
     } else {
@@ -2315,8 +2328,6 @@ void ihipSyncCopy(ihipStream_t *stream, void* dst, const void* src, size_t sizeB
 
 
 #if USE_ROCR_V2
-        hsa_signal_t depSignal;
-        int depSignalCnt = stream->copyCommand(NULL, &depSignal, copyType);
         hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, device->_hsa_agent, src, device->_hsa_agent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, device->_copy_signal);
 #else
         hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, src, sizeBytes, device->_hsa_agent, 0, NULL, device->_copy_signal);
@@ -2370,6 +2381,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 /**
  * @result #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidMemcpyDirection, #hipErrorInvalidValue
  * @warning on HCC hipMemcpyAsync does not support overlapped H2D and D2H copies.
+ * @warning on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hipMallocHost call).
  */
 //---
 hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream)

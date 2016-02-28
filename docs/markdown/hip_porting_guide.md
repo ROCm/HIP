@@ -115,7 +115,7 @@ directory names.
 
 
 ```shell
-> hipconverinplace.sh MY_SRC_DIR
+> hipconvertinplace.sh MY_SRC_DIR
 ```
 
 
