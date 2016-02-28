@@ -67,7 +67,14 @@ if ($p_cpp_config) {
     $printed = 1;
 }
 
-if ($p_full) {
+
+if ($p_compiler or $p_platform) {
+    print $HIP_PLATFORM;
+    $printed = 1;
+}
+
+
+if (!$printed or $p_full) {
     print "== hipconfig\n";
     print "HIP_PATH     : ", $HIP_PATH, "\n";
     print "HIP_PLATFORM : ", $HIP_PLATFORM, "\n";
@@ -76,6 +83,7 @@ if ($p_full) {
     {
         print "\n" ;
         print "== hcc\n";
+        print ("HSA_HOME     : $HCC_HOME\n");
         print ("HCC_HOME     : $HCC_HOME\n");
         system("$HCC_HOME/bin/hcc --version");
         print ("HCC-cxxflags: "); 
@@ -106,10 +114,6 @@ if ($p_full) {
     $printed = 1;
 }
 
-
-if (!$printed or $p_compiler or $p_platform) {
-    print $HIP_PLATFORM;
-}
 
 if ($p_newline) {
     print "\n";

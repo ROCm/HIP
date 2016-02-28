@@ -46,7 +46,7 @@ THE SOFTWARE.
 
 
 #define USE_AM_TRACKER 1  /* >0 = use new AM memory tracker features. */
-#define USE_ROCR_V2    0  /* use the ROCR v2 async copy API with dst and src agents */
+#define USE_ROCR_V2    1  /* use the ROCR v2 async copy API with dst and src agents */
 
 #if (USE_AM_TRACKER) and (__hcc_workweek__ < 16074)
 #error (USE_AM_TRACKER requries HCC version of 16074 or newer)
@@ -2370,6 +2370,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 /**
  * @result #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidMemcpyDirection, #hipErrorInvalidValue
  * @warning on HCC hipMemcpyAsync does not support overlapped H2D and D2H copies.
+ * @warning on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hipMallocHost call).
  */
 //---
 hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream)
