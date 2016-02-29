@@ -2405,6 +2405,11 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
         } else if (kind == hipMemcpyHostToHost) {
             tprintf (TRACE_COPY2, "H2H copy with memcpy");
 
+			/* As this is a CPU op, we need to wait until all
+			the commands in current stream are finished.
+			*/
+			stream->wait();
+
             memcpy(dst, src, sizeBytes);
 
         } else {
