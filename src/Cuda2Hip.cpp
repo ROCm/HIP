@@ -517,6 +517,20 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
         begin = end + 1;
       }
     }
+
+    if (const UnaryExprOrTypeTraitExpr * expr = Result.Nodes.getNodeAs<clang::UnaryExprOrTypeTraitExpr>("cudaStructSizeOf"))
+    {
+      TypeSourceInfo * typeInfo = expr->getArgumentTypeInfo();
+      QualType QT = typeInfo->getType().getUnqualifiedType();
+      const Type * type = QT.getTypePtr();
+      StringRef name = type->getAsCXXRecordDecl()->getName();
+     StringRef repName = N.cuda2hipRename[name];
+      TypeLoc TL = typeInfo->getTypeLoc();
+      SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
+      Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
+        SM->getImmediateSpellingLoc(sl) : sl, name.size(), repName);
+      Replace->insert(Rep);
+    }
   }
 
  private:
