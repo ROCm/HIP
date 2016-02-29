@@ -36,6 +36,7 @@ For example,
 a test for Ker, D2D, D2H, H2H, H2D is given as test34512();
 Note that all memory copies are Async.
 
+invalid{
 *WARNING: The commented out assertions are failing cases.
 According to my observation, they are happening with tests
 which end in HostToHost and take data from previous
@@ -49,6 +50,7 @@ For disjoint data passed:
 test24513
 test25134
 test34512
+}
 */
 
 template<typename T>
@@ -260,7 +262,7 @@ void test24513(){
 	D2H(Eh, Cd, size);
 
 	HIPASSERT(Eh[0] == Dh[0] + T(1));
-	//HIPASSERT(Ah[0] == Ch[0]);
+	HIPASSERT(Ah[0] == Ch[0]);
 }
 
 template<typename T>
@@ -299,7 +301,7 @@ void test25134(){
 
 	HIPCHECK(hipDeviceSynchronize());
 
-	//HIPASSERT(Ah[10] == Ch[10]);
+	HIPASSERT(Ah[10] == Ch[10]);
 	HIPASSERT(Dh[10] + T(1) == Eh[10]);
 }
 
@@ -370,7 +372,7 @@ void test34512(){
 	D2H(Dh, Cd, size);
 
 	HIPCHECK(hipDeviceSynchronize());
-	//HIPASSERT( Ah[10] + T(1) == Dh[10] );
+	HIPASSERT( Ah[10] + T(1) == Dh[10] );
 }
 
 template<typename T>
@@ -483,7 +485,7 @@ void test32451(){
 	HIPCHECK(hipDeviceSynchronize());
 	D2H(Dh, Ad, size);
 
-	//HIPASSERT(Ah[10] == Ch[10]);
+	HIPASSERT(Ah[10] == Ch[10]);
 	HIPASSERT(Eh[10] + T(1) == Dh[10]);
 
 }
@@ -592,7 +594,7 @@ void test42351(){
 
 	HIPCHECK(hipDeviceSynchronize());
 	HIPASSERT(Dh[10] == Eh[10]);
-	//HIPASSERT(Ah[10] + T(1) == Ch[10]);
+	HIPASSERT(Ah[10] + T(1) == Ch[10]);
 }
 
 template<typename T>
@@ -627,7 +629,7 @@ void test43512(){
 
 	D2H(Ch, Cd, size);
 	HIPCHECK(hipDeviceSynchronize());
-	//HIPASSERT( Dh[10] + T(1) == Ch[10]);
+	HIPASSERT( Dh[10] + T(1) == Ch[10]);
 }
 
 template<typename T>
