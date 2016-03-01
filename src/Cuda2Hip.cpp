@@ -183,6 +183,7 @@ namespace {
       cuda2hipRename["cudaFuncSetCacheConfig"] = "hipFuncSetCacheConfig";
 
       cuda2hipRename["cudaDriverGetVersion"] = "hipDriverGetVersion";
+      cuda2hipRename["cudaRuntimeGetVersion"] = "hipRuntimeGetVersion";
 
       // Peer2Peer
       cuda2hipRename["cudaDeviceCanAccessPeer"] = "hipDeviceCanAccessPeer";
@@ -307,49 +308,55 @@ namespace {
   };
 
 class Cuda2HipCallback : public MatchFinder::MatchCallback {
- public:
-   Cuda2HipCallback(Replacements *Replace) : Replace(Replace) {}
+  public:
+    Cuda2HipCallback(Replacements *Replace) : Replace(Replace) {}
 
-  void run(const MatchFinder::MatchResult &Result) override {
+    void run(const MatchFinder::MatchResult &Result) override {
 
-    SourceManager * SM = Result.SourceManager;
+      SourceManager * SM = Result.SourceManager;
 
-	  if (const CallExpr * call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaCall"))
-	  {
-		  const FunctionDecl * funcDcl = call->getDirectCallee();
-		  std::string name = funcDcl->getDeclName().getAsString();
-		  if (N.cuda2hipRename.count(name)) {
-			  std::string repName = N.cuda2hipRename[name];
-        SourceLocation sl = call->getLocStart();
-			  Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
-         SM->getImmediateSpellingLoc(sl) : sl, name.length(), repName);
-			  Replace->insert(Rep);
-		  }
-	  }
+      if (const CallExpr * call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaCall"))
+      {
+        const FunctionDecl * funcDcl = call->getDirectCallee();
+        std::string name = funcDcl->getDeclName().getAsString();
+        if (N.cuda2hipRename.count(name)) {
+	  std::string repName = N.cuda2hipRename[name];
+          SourceLocation sl = call->getLocStart();
+	  Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
+          SM->getImmediateSpellingLoc(sl) : sl, name.length(), repName);
+	  Replace->insert(Rep);
+        }
+      }
 
-	  if (const CUDAKernelCallExpr * launchKernel = Result.Nodes.getNodeAs<clang::CUDAKernelCallExpr>("cudaLaunchKernel"))
-	  {
-      LangOptions DefaultLangOptions;
+      if (const CUDAKernelCallExpr * launchKernel = Result.Nodes.getNodeAs<clang::CUDAKernelCallExpr>("cudaLaunchKernel"))
+      {
+        LangOptions DefaultLangOptions;
+        StringRef initialParamList;
+        SmallString<40> XStr;
+        raw_svector_ostream OS(XStr);
+        OS << "hipLaunchParm lp";
+        const FunctionDecl * kernelDecl = launchKernel->getDirectCallee();
+        SourceLocation l1 = kernelDecl->getNameInfo().getLocStart();
+        l1.dump(*SM);llvm::outs() << "\n";
+        SourceLocation kernelArgListStart = clang::Lexer::findLocationAfterToken(l1, clang::tok::l_paren, *SM, DefaultLangOptions, true);
+        kernelArgListStart.dump(*SM);llvm::outs() << "\n";
+        size_t replacementLength = 0;
+        if (kernelDecl->getNumParams() > 0) {
+          const ParmVarDecl * pvdLast = kernelDecl->getParamDecl(kernelDecl->getNumParams()-1);
+          SourceLocation kernelArgListEnd = SourceLocation(pvdLast->getLocEnd());
+          SourceLocation stop = clang::Lexer::getLocForEndOfToken(kernelArgListEnd, 0, *SM, DefaultLangOptions);
+          replacementLength = SM->getCharacterData(stop) - SM->getCharacterData(kernelArgListStart);
+          initialParamList = StringRef(SM->getCharacterData(kernelArgListStart), replacementLength);
+          OS << ", " << initialParamList;
+        }
+          
+        llvm::outs() << "initial paramlist: " << initialParamList << "\n";
+        llvm::outs() << "new paramlist: " << OS.str() << "\n";
+        Replacement Rep0(*(Result.SourceManager), kernelArgListStart, replacementLength, OS.str());
+        Replace->insert(Rep0);
 
-		  const FunctionDecl * kernelDecl = launchKernel->getDirectCallee();
-
-      const ParmVarDecl * pvdFirst = kernelDecl->getParamDecl(0);
-      const ParmVarDecl * pvdLast = kernelDecl->getParamDecl(kernelDecl->getNumParams()-1);
-      SourceLocation kernelArgListStart(pvdFirst->getLocStart());
-      SourceLocation kernelArgListEnd(pvdLast->getLocEnd());
-      SourceLocation stop = clang::Lexer::getLocForEndOfToken(kernelArgListEnd, 0, *SM, DefaultLangOptions);
-      size_t replacementLength = SM->getCharacterData(stop) - SM->getCharacterData(kernelArgListStart);
-      std::string outs(SM->getCharacterData(kernelArgListStart), replacementLength);
-      llvm::outs() << "initial paramlist: " << outs.c_str() << "\n";
-      outs = "hipLaunchParm lp, " + outs;
-      llvm::outs() << "new paramlist: " << outs.c_str() << "\n";
-      Replacement Rep0(*(Result.SourceManager), kernelArgListStart, replacementLength, outs);
-      Replace->insert(Rep0);
-
-
-      std::string name = kernelDecl->getDeclName().getAsString();
-      std::string repName = "hipLaunchKernel(HIP_KERNEL_NAME(" + name + "), ";
-      
+      XStr.clear();
+      OS << "hipLaunchKernel(HIP_KERNEL_NAME(" << kernelDecl->getName() << "), ";
 
       const CallExpr * config = launchKernel->getConfig();
       llvm::outs() << "\nKernel config arguments:\n";
@@ -357,20 +364,19 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
       {
         const Expr * arg = config->getArg(argno);
         if (!isa<CXXDefaultArgExpr>(arg)) {
-          std::string typeCtor = "";
           const ParmVarDecl * pvd = config->getDirectCallee()->getParamDecl(argno);
           
           SourceLocation sl(arg->getLocStart());
           SourceLocation el(arg->getLocEnd());
           SourceLocation stop = clang::Lexer::getLocForEndOfToken(el, 0, *SM, DefaultLangOptions);
-          std::string outs(SM->getCharacterData(sl), SM->getCharacterData(stop) - SM->getCharacterData(sl));
-          llvm::outs() << "args[ " << argno << "]" << outs.c_str() << " <" << pvd->getType().getAsString() << ">\n";
+          StringRef outs(SM->getCharacterData(sl), SM->getCharacterData(stop) - SM->getCharacterData(sl));
+          llvm::outs() << "args[ " << argno << "]" << outs << " <" << pvd->getType().getAsString() << ">\n";
           if (pvd->getType().getAsString().compare("dim3") == 0)
-            repName += " dim3(" + outs + "),";
+            OS << " dim3(" << outs << "),";
           else
-            repName += " " + outs + ",";
+            OS << " " << outs << ",";
         } else
-          repName += " 0,";
+          OS << " 0,";
       }
  
       for (unsigned argno = 0; argno < launchKernel->getNumArgs(); argno++)
@@ -381,13 +387,13 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
         SourceLocation stop = clang::Lexer::getLocForEndOfToken(el, 0, *SM, DefaultLangOptions);
         std::string outs(SM->getCharacterData(sl), SM->getCharacterData(stop) - SM->getCharacterData(sl));
         llvm::outs() << outs.c_str() << "\n";
-        repName += " " + outs + ",";
+        OS << " " << outs << ",";
       }
-      repName.pop_back();
-      repName += ")";
+      XStr.pop_back();
+      OS << ")";
       size_t length = SM->getCharacterData(clang::Lexer::getLocForEndOfToken(launchKernel->getLocEnd(), 0, *SM, DefaultLangOptions)) -
         SM->getCharacterData(launchKernel->getLocStart());
-      Replacement Rep(*SM, launchKernel->getLocStart(), length, repName);
+      Replacement Rep(*SM, launchKernel->getLocStart(), length, OS.str());
       Replace->insert(Rep);
 	  }
 
@@ -434,22 +440,62 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
       std::string name = 
         cudaStructVar->getType()->getAsStructureType()->getDecl()->getNameAsString();
       std::string repName = N.cuda2hipRename[name];
-      SourceLocation sl = cudaStructVar->getLocStart();
+      TypeLoc TL = cudaStructVar->getTypeSourceInfo()->getTypeLoc();
+      SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
       Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
         SM->getImmediateSpellingLoc(sl) : sl, name.length(), repName);
       Replace->insert(Rep);
     }
 
+    if (const VarDecl * cudaStructVarPtr = Result.Nodes.getNodeAs<clang::VarDecl>("cudaStructVarPtr"))
+    {
+      const Type * t = cudaStructVarPtr->getType().getTypePtrOrNull();
+      if (t) {
+        StringRef name = t->getPointeeCXXRecordDecl()->getName();
+        StringRef repName = N.cuda2hipRename[name];
+        TypeLoc TL = cudaStructVarPtr->getTypeSourceInfo()->getTypeLoc();
+        SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
+        Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
+          SM->getImmediateSpellingLoc(sl) : sl, name.size(), repName);
+        Replace->insert(Rep);
+      }
+    }
+
+
     if (const ParmVarDecl * cudaParamDecl = Result.Nodes.getNodeAs<clang::ParmVarDecl>("cudaParamDecl"))
     {
-      QualType QT = cudaParamDecl->getOriginalType();
-      std::string name = QT.getAsString();
-      std::string repName = N.cuda2hipRename[name];
-      SourceLocation sl = cudaParamDecl->getLocStart();
+      QualType QT = cudaParamDecl->getOriginalType().getUnqualifiedType();
+      StringRef name = QT.getAsString();
+      const Type * t = QT.getTypePtr();
+      if (t->isStructureOrClassType()) {
+        name = t->getAsCXXRecordDecl()->getName();
+      }
+      StringRef repName = N.cuda2hipRename[name];
+      TypeLoc TL = cudaParamDecl->getTypeSourceInfo()->getTypeLoc();
+      SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
       Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
-        SM->getImmediateSpellingLoc(sl) : sl, name.length(), repName);
+        SM->getImmediateSpellingLoc(sl) : sl, name.size(), repName);
       Replace->insert(Rep);
     }
+
+    if (const ParmVarDecl * cudaParamDeclPtr = Result.Nodes.getNodeAs<clang::ParmVarDecl>("cudaParamDeclPtr"))
+    {
+      const Type * pt = cudaParamDeclPtr->getType().getTypePtrOrNull();
+      if (pt) {
+        QualType QT = pt->getPointeeType();
+        const Type * t = QT.getTypePtr();
+        StringRef name = t->isStructureOrClassType()?
+          t->getAsCXXRecordDecl()->getName() : StringRef(QT.getAsString());
+        StringRef repName = N.cuda2hipRename[name];
+        TypeLoc TL = cudaParamDeclPtr->getTypeSourceInfo()->getTypeLoc();
+        SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
+        Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
+          SM->getImmediateSpellingLoc(sl) : sl, name.size(), repName);
+        Replace->insert(Rep);
+      }
+    }
+
+
     if (const StringLiteral * stringLiteral = Result.Nodes.getNodeAs<clang::StringLiteral>("stringLiteral"))
     {
       StringRef s = stringLiteral->getString();
@@ -470,6 +516,20 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
         if (end == StringRef::npos) break;
         begin = end + 1;
       }
+    }
+
+    if (const UnaryExprOrTypeTraitExpr * expr = Result.Nodes.getNodeAs<clang::UnaryExprOrTypeTraitExpr>("cudaStructSizeOf"))
+    {
+      TypeSourceInfo * typeInfo = expr->getArgumentTypeInfo();
+      QualType QT = typeInfo->getType().getUnqualifiedType();
+      const Type * type = QT.getTypePtr();
+      StringRef name = type->getAsCXXRecordDecl()->getName();
+     StringRef repName = N.cuda2hipRename[name];
+      TypeLoc TL = typeInfo->getTypeLoc();
+      SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
+      Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
+        SM->getImmediateSpellingLoc(sl) : sl, name.size(), repName);
+      Replace->insert(Rep);
     }
   }
 
@@ -523,7 +583,10 @@ int main(int argc, const char **argv) {
   Finder.addMatcher(declRefExpr(isExpansionInMainFile(), to(enumConstantDecl(matchesName("cuda.*")))).bind("cudaEnumConstantRef"), &Callback);
   Finder.addMatcher(varDecl(isExpansionInMainFile(), hasType(enumDecl(matchesName("cuda.*")))).bind("cudaEnumConstantDecl"), &Callback);
   Finder.addMatcher(varDecl(isExpansionInMainFile(), hasType(cxxRecordDecl(matchesName("cuda.*")))).bind("cudaStructVar"), &Callback);
+  Finder.addMatcher(varDecl(isExpansionInMainFile(), hasType(pointsTo(cxxRecordDecl(matchesName("cuda.*"))))).bind("cudaStructVarPtr"), &Callback);
   Finder.addMatcher(parmVarDecl(isExpansionInMainFile(), hasType(namedDecl(matchesName("cuda.*")))).bind("cudaParamDecl"), &Callback);
+  Finder.addMatcher(parmVarDecl(isExpansionInMainFile(), hasType(pointsTo(namedDecl(matchesName("cuda.*"))))).bind("cudaParamDeclPtr"), &Callback);
+  Finder.addMatcher(expr(sizeOfExpr(hasArgumentOfType(recordType(hasDeclaration(cxxRecordDecl(matchesName("cuda.*"))))))).bind("cudaStructSizeOf"), &Callback);
   Finder.addMatcher(stringLiteral().bind("stringLiteral"), &Callback);
 
   auto action = newFrontendActionFactory(&Finder, &PPCallbacks);
