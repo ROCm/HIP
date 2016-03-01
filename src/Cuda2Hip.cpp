@@ -42,6 +42,7 @@ THE SOFTWARE.
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/PPCallbacks.h"
+#include "clang/Lex/MacroArgs.h"
 
 #include <fstream>
 #include <cstdio>
@@ -222,7 +223,7 @@ namespace {
 
   struct HipifyPPCallbacks : public PPCallbacks, public SourceFileCallbacks {
     HipifyPPCallbacks(Replacements * R)
-      : SeenEnd(false), _sm(nullptr), Replace(R)
+      : SeenEnd(false), _sm(nullptr), _pp(nullptr), Replace(R)
     {
     }
 
@@ -233,6 +234,7 @@ namespace {
       setSourceManager(&SM);
       PP.addPPCallbacks(std::unique_ptr<HipifyPPCallbacks>(this));
       PP.Retain();
+      setPreprocessor(&PP);
       return true;
     }
 
@@ -279,13 +281,76 @@ namespace {
             if (N.cuda2hipRename.count(name)) {
               StringRef repName = N.cuda2hipRename[name];
               llvm::errs() << "\nIdentifier " << name
-              << " found in definition of macro " << MacroNameTok.getIdentifierInfo()->getName() << "\n";
+              << " found in definition of macro " 
+              << MacroNameTok.getIdentifierInfo()->getName() << "\n";
               llvm::errs() << "\nwill be replaced with: " << repName << "\n";
               SourceLocation sl = T.getLocation();
               llvm::errs() << "\nSourceLocation: ";sl.dump(*_sm);
               llvm::errs() << "\n";
               Replacement Rep(*_sm, sl, name.size(), repName);
               Replace->insert(Rep);
+            }
+          }
+        }
+      }
+    }
+
+    virtual void MacroExpands(const Token &MacroNameTok,
+      const MacroDefinition &MD, SourceRange Range,
+      const MacroArgs *Args) override
+    {
+      if (_sm->isWrittenInMainFile(Range.getBegin()))
+      {
+        for (unsigned int i = 0; Args && i < MD.getMacroInfo()->getNumArgs(); i++)
+        {
+          StringRef macroName = MacroNameTok.getIdentifierInfo()->getName();
+          std::vector<Token> toks;
+          // Code below is a kind of stolen from 'MacroArgs::getPreExpArgument'
+          // to workaround the 'const' MacroArgs passed into this hook.
+          const Token * start = Args->getUnexpArgument(i);
+          size_t len = Args->getArgLength(start) + 1;
+          _pp->EnterTokenStream(ArrayRef<Token>(start,len), false);
+          do {
+            toks.push_back(Token());
+            Token & tk = toks.back();
+            _pp->Lex(tk);
+          } while (toks.back().isNot(tok::eof));
+          _pp->RemoveTopOfLexerStack();
+          // end of stolen code
+          for (auto tok : toks) {
+            if (tok.isAnyIdentifier())
+            {
+              StringRef name = tok.getIdentifierInfo()->getName();
+              if (N.cuda2hipRename.count(name)) {
+                StringRef repName = N.cuda2hipRename[name];
+                llvm::errs() << "\nIdentifier " << name
+                  << " found as an actual argument in expansion of macro "
+                  << macroName << "\n";
+                llvm::errs() << "\nwill be replaced with: " << repName << "\n";
+                SourceLocation sl = tok.getLocation();
+                Replacement Rep(*_sm, sl, name.size(), repName);
+                Replace->insert(Rep);
+              }
+            }
+            if (tok.is(tok::string_literal))
+            {
+              StringRef s(tok.getLiteralData(), tok.getLength());
+              size_t begin = 0;
+              while ((begin = s.find("cuda", begin)) != StringRef::npos) {
+                const size_t end = s.find_first_of(" ", begin + 4);
+                StringRef name = s.slice(begin, end);
+                llvm::outs() << "\nToken: <" << name << "> found in string literal '"
+                  << s << "' as argument in expansion of macro '" << macroName << "'\n";
+                StringRef repName = N.cuda2hipRename[name];
+                if (!repName.empty()) {
+                  llvm::outs() << "\nWill be replaced with: <" << repName << "\n";
+                  SourceLocation sl = tok.getLocation().getLocWithOffset(begin);
+                  Replacement Rep(*_sm, sl, name.size(), repName);
+                  Replace->insert(Rep);
+                }
+                if (end == StringRef::npos) break;
+                begin = end + 1;
+              }
             }
           }
         }
@@ -299,10 +364,13 @@ namespace {
     
     bool SeenEnd;
     void setSourceManager(SourceManager * sm) { _sm = sm; }
+    void setPreprocessor (Preprocessor  * pp) { _pp = pp; }
 
     private:
 
     SourceManager * _sm;
+    Preprocessor * _pp;
+
     Replacements * Replace;
     struct hipName N;
   };
@@ -315,18 +383,17 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
 
       SourceManager * SM = Result.SourceManager;
 
-      if (const CallExpr * call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaCall"))
-      {
-        const FunctionDecl * funcDcl = call->getDirectCallee();
-        std::string name = funcDcl->getDeclName().getAsString();
-        if (N.cuda2hipRename.count(name)) {
-	  std::string repName = N.cuda2hipRename[name];
-          SourceLocation sl = call->getLocStart();
-	  Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
-          SM->getImmediateSpellingLoc(sl) : sl, name.length(), repName);
-	  Replace->insert(Rep);
-        }
-      }
+	  if (const CallExpr * call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaCall"))
+	  {
+		  const FunctionDecl * funcDcl = call->getDirectCallee();
+		  std::string name = funcDcl->getDeclName().getAsString();
+		  if (N.cuda2hipRename.count(name)) {
+			  std::string repName = N.cuda2hipRename[name];
+        SourceLocation sl = call->getLocStart();
+        Replacement Rep(*SM, sl, name.length(), repName);
+			  Replace->insert(Rep);
+		  }
+	  }
 
       if (const CUDAKernelCallExpr * launchKernel = Result.Nodes.getNodeAs<clang::CUDAKernelCallExpr>("cudaLaunchKernel"))
       {
@@ -408,8 +475,7 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
           name += "." + memberName;
      		  std::string repName = N.cuda2hipRename[name];
           SourceLocation sl = threadIdx->getLocStart();
-          Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
-          SM->getImmediateSpellingLoc(sl) : sl, name.length(), repName);
+          Replacement Rep(*SM, sl, name.length(), repName);
 			    Replace->insert(Rep);
         }
 		  }
@@ -420,8 +486,7 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
       std::string name = cudaEnumConstantRef->getDecl()->getNameAsString();
       std::string repName = N.cuda2hipRename[name];
       SourceLocation sl = cudaEnumConstantRef->getLocStart();
-      Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
-        SM->getImmediateSpellingLoc(sl) : sl, name.length(), repName);
+      Replacement Rep(*SM, sl, name.length(), repName);
       Replace->insert(Rep);
     }
 
@@ -430,8 +495,7 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
       std::string name = cudaEnumConstantDecl->getType()->getAsTagDecl()->getNameAsString();
       std::string repName = N.cuda2hipRename[name];
       SourceLocation sl = cudaEnumConstantDecl->getLocStart();
-      Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
-        SM->getImmediateSpellingLoc(sl) : sl, name.length(), repName);
+      Replacement Rep(*SM, sl, name.length(), repName);
       Replace->insert(Rep);
     }
 
@@ -442,8 +506,7 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
       std::string repName = N.cuda2hipRename[name];
       TypeLoc TL = cudaStructVar->getTypeSourceInfo()->getTypeLoc();
       SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-      Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
-        SM->getImmediateSpellingLoc(sl) : sl, name.length(), repName);
+      Replacement Rep(*SM, sl, name.length(), repName);
       Replace->insert(Rep);
     }
 
@@ -455,8 +518,7 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
         StringRef repName = N.cuda2hipRename[name];
         TypeLoc TL = cudaStructVarPtr->getTypeSourceInfo()->getTypeLoc();
         SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-        Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
-          SM->getImmediateSpellingLoc(sl) : sl, name.size(), repName);
+        Replacement Rep(*SM, sl, name.size(), repName);
         Replace->insert(Rep);
       }
     }
@@ -473,8 +535,7 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
       StringRef repName = N.cuda2hipRename[name];
       TypeLoc TL = cudaParamDecl->getTypeSourceInfo()->getTypeLoc();
       SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-      Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
-        SM->getImmediateSpellingLoc(sl) : sl, name.size(), repName);
+      Replacement Rep(*SM, sl, name.size(), repName);
       Replace->insert(Rep);
     }
 
@@ -489,8 +550,7 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
         StringRef repName = N.cuda2hipRename[name];
         TypeLoc TL = cudaParamDeclPtr->getTypeSourceInfo()->getTypeLoc();
         SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-        Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
-          SM->getImmediateSpellingLoc(sl) : sl, name.size(), repName);
+        Replacement Rep(*SM, sl, name.size(), repName);
         Replace->insert(Rep);
       }
     }
@@ -509,8 +569,7 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
           llvm::outs() << "\nWill be replaced with: <" << repName << "\n";
           SourceLocation sl = stringLiteral->getLocationOfByte(begin, *SM,
             Result.Context->getLangOpts(), Result.Context->getTargetInfo());
-          Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
-            SM->getImmediateSpellingLoc(sl) : sl, name.size(), repName);
+          Replacement Rep(*SM, sl, name.size(), repName);
           Replace->insert(Rep);
         }
         if (end == StringRef::npos) break;
@@ -524,11 +583,10 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
       QualType QT = typeInfo->getType().getUnqualifiedType();
       const Type * type = QT.getTypePtr();
       StringRef name = type->getAsCXXRecordDecl()->getName();
-     StringRef repName = N.cuda2hipRename[name];
+      StringRef repName = N.cuda2hipRename[name];
       TypeLoc TL = typeInfo->getTypeLoc();
       SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-      Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
-        SM->getImmediateSpellingLoc(sl) : sl, name.size(), repName);
+      Replacement Rep(*SM, sl, name.size(), repName);
       Replace->insert(Rep);
     }
   }
