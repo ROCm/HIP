@@ -6,7 +6,7 @@ if( NOT PYTHONINTERP_FOUND )
           "Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
 endif()
 
-set(BINARY_DIR       ${CMAKE_CURRENT_BINARY_DIR}  )
+set(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/..  )
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/lit.site.cfg.in
@@ -16,7 +16,7 @@ configure_file(
 add_lit_testsuite(check-hipify "Running HIPify regression tests"
   ${CMAKE_CURRENT_SOURCE_DIR}
   PARAMS site_config=${CMAKE_CURRENT_BINARY_DIR}/lit.site.cfg
-  DEPENDS hipify
+  DEPENDS hipify FileCheck lit
   )
 
 add_custom_target(check)
