@@ -657,10 +657,9 @@ int main(int argc, const char **argv) {
 
   for (auto Stage : compilationStages)
   {
-    Tool.appendArgumentsAdjuster(combineAdjusters(
-       getInsertArgumentAdjuster(Stage, ArgumentInsertPosition::BEGIN),
-       getClangSyntaxOnlyAdjuster()));
-
+    Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(Stage, ArgumentInsertPosition::BEGIN));
+    Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-std=c++11"));
+    Tool.appendArgumentsAdjuster(getClangSyntaxOnlyAdjuster());
     Result = Tool.run(action.get());
 
 	  Tool.clearArgumentsAdjusters();
