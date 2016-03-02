@@ -221,6 +221,31 @@ namespace {
     DenseMap<StringRef, StringRef> cuda2hipRename;
   };
 
+  StringRef unquoteStr(StringRef s) {
+    if (s.size() > 1 && s.front() == '"' && s.back() == '"')
+      return s.substr(1, s.size()-2);
+    return s;
+  }
+
+  void processString(StringRef s, struct hipName & map,
+   Replacements * Replace, SourceManager & SM, SourceLocation start)
+  {
+    size_t begin = 0;
+    while ((begin = s.find("cuda", begin)) != StringRef::npos) {
+      const size_t end = s.find_first_of(" ", begin + 4);
+      StringRef name = s.slice(begin, end);
+      StringRef repName = map.cuda2hipRename[name];
+      if (!repName.empty()) {
+        SourceLocation sl = start.getLocWithOffset(begin + 1);
+        Replacement Rep(SM, sl, name.size(), repName);
+        Replace->insert(Rep);
+      }
+      if (end == StringRef::npos) break;
+      begin = end + 1;
+    }
+  }
+
+
   struct HipifyPPCallbacks : public PPCallbacks, public SourceFileCallbacks {
     HipifyPPCallbacks(Replacements * R)
       : SeenEnd(false), _sm(nullptr), _pp(nullptr), Replace(R)
@@ -335,22 +360,7 @@ namespace {
             if (tok.is(tok::string_literal))
             {
               StringRef s(tok.getLiteralData(), tok.getLength());
-              size_t begin = 0;
-              while ((begin = s.find("cuda", begin)) != StringRef::npos) {
-                const size_t end = s.find_first_of(" ", begin + 4);
-                StringRef name = s.slice(begin, end);
-                llvm::outs() << "\nToken: <" << name << "> found in string literal '"
-                  << s << "' as argument in expansion of macro '" << macroName << "'\n";
-                StringRef repName = N.cuda2hipRename[name];
-                if (!repName.empty()) {
-                  llvm::outs() << "\nWill be replaced with: <" << repName << "\n";
-                  SourceLocation sl = tok.getLocation().getLocWithOffset(begin);
-                  Replacement Rep(*_sm, sl, name.size(), repName);
-                  Replace->insert(Rep);
-                }
-                if (end == StringRef::npos) break;
-                begin = end + 1;
-              }
+              processString(unquoteStr(s), N, Replace, *_sm, tok.getLocation());
             }
           }
         }
@@ -560,23 +570,7 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
     if (const StringLiteral * stringLiteral = Result.Nodes.getNodeAs<clang::StringLiteral>("stringLiteral"))
     {
       StringRef s = stringLiteral->getString();
-      size_t begin = 0;
-      while ((begin = s.find("cuda", begin)) != StringRef::npos) {
-        const size_t end = s.find_first_of(" ", begin + 4);
-        StringRef name = s.slice(begin, end);
-        llvm::outs() << "\nToken: <" << name << "> found in string literal " << s << "\n";
-        StringRef repName = N.cuda2hipRename[name];
-        if (!repName.empty()) {
-          llvm::outs() << "\nWill be replaced with: <" << repName << "\n";
-          SourceLocation sl = stringLiteral->getLocationOfByte(begin, *SM,
-            Result.Context->getLangOpts(), Result.Context->getTargetInfo());
-          Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
-            SM->getImmediateSpellingLoc(sl) : sl, name.size(), repName);
-          Replace->insert(Rep);
-        }
-        if (end == StringRef::npos) break;
-        begin = end + 1;
-      }
+      processString(s, N, Replace, *SM, stringLiteral->getLocStart());
     }
 
     if (const UnaryExprOrTypeTraitExpr * expr = Result.Nodes.getNodeAs<clang::UnaryExprOrTypeTraitExpr>("cudaStructSizeOf"))
