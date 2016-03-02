@@ -139,7 +139,7 @@ namespace {
 
       cuda2hipRename["warpSize"] = "hipWarpSize";
 
-      // Events 
+      // Events
       cuda2hipRename["cudaEvent_t"] = "hipEvent_t";
       cuda2hipRename["cudaEventCreate"] = "hipEventCreate";
       cuda2hipRename["cudaEventCreateWithFlags"] = "hipEventCreateWithFlags";
