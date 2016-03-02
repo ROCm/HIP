@@ -98,6 +98,6 @@ int main() {
     setenv("HIP_VISIBLE_DEVICES","-100,0,1",1);
     assert(getDeviceNumber() == 0);
 
-    std::cout << "Passed!" << std::endl;
+    std::cout << "PASSED" << std::endl;
     return 0;
 }
