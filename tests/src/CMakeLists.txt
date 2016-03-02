@@ -124,7 +124,9 @@ make_hip_executable (hipMathFunctionsHost hipMathFunctions.cpp hipSinglePrecisio
 make_hip_executable (hipMathFunctionsDevice hipMathFunctions.cpp hipSinglePrecisionMathDevice.cpp hipDoublePrecisionMathDevice.cpp)
 make_hip_executable (hipIntrinsics hipMathFunctions.cpp hipSinglePrecisionIntrinsics.cpp hipDoublePrecisionIntrinsics.cpp hipIntegerIntrinsics.cpp)
 make_hip_executable (hipPointerAttrib hipPointerAttrib.cpp) 
-make_hip_executable (hipMultiThreadStreams hipMultiThreadStreams.cpp) 
+make_hip_executable (hipMultiThreadStreams1 hipMultiThreadStreams1.cpp)
+make_hip_executable (hipMultiThreadStreams2 hipMultiThreadStreams2.cpp) 
+
 make_hip_executable (hipStreamL5 hipStreamL5.cpp)
 target_link_libraries(hipMathFunctionsHost m)
 
@@ -142,7 +144,8 @@ make_test(hipMemset --N 256M  --memsetval 0xa6 )  # big copy
 make_test(hipGridLaunch " " )
 make_test(hipEnvVarDriver " " )
 make_test(hipPointerAttrib " " )
-make_test(hipMultiThreadStreams " " )
+make_test(hipMultiThreadStreams1 " " )
+make_test(hipMultiThreadStreams2 " " )
 
 make_test(hipMemcpy  " " )
 make_test(hipMemcpyAsync  " " )
