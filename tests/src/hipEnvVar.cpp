@@ -44,7 +44,7 @@ int main(int argc, char **argv)
     //std::cout << "The current env HIP_VISIBLE_DEVICES is"<<str << std::endl;
     extern char *optarg;
     extern int optind;
-    int c, err = 0;
+    int c = 0;
     int retDevCnt=0, retDevInfo=0, setEnvVar=0;
     int device=0;
     string env;
@@ -64,20 +64,16 @@ int main(int argc, char **argv)
         case 'h':
             usage();
             return 0;
-            break;
         default :
             //usage();
             return -1;
-            break;
-        case '?':
-            err = 1;
-            break;
         }
 
     if (setEnvVar ) {
         //env = "export HIP_VISIBLE_DEVICES=" + env;
         //cout<<"The received env var is: "<<env<<endl;
         setenv("HIP_VISIBLE_DEVICES",env.c_str(),1);
+        setenv("CUDA_VISIBLE_DEVICES",env.c_str(),1);
         cout<<"set env HIP_VISIBLE_DEVICES = "<< env.c_str()<<endl;
         //verify if the environment variable is set
         char* pPath;
