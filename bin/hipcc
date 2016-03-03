@@ -130,16 +130,16 @@ foreach $arg (@ARGV)
         #print "O: <$arg>\n";
     } else  {
         # input files and libraries 
-        if (($arg =~ /.cpp$/) or ($arg =~ /.c$/) or ($arg =~ /.cc$/) ) {
+        if (($arg =~ /\.cpp$/) or ($arg =~ /\.c$/) or ($arg =~ /\.cc$/) ) {
             $hasC = 1;
             $needCXXFLAGS = 1;
         } 
-        if (($arg =~ /.cu$/) or ($arg =~ /.cuh$/)) {
+        if (($arg =~ /\.cu$/) or ($arg =~ /\.cuh$/)) {
             $hasCU = 1;
             $needCXXFLAGS = 1;
         }
 
-        if (($arg =~ /hip_hcc.o$/) or ($arg =~ /hip_hcc.cpp/)) {
+        if (($arg =~ /hip_hcc\.o$/) or ($arg =~ /hip_hcc\.cpp/)) {
             $needHipHcc = 0;
         }
 
