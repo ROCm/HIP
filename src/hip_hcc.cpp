@@ -1829,7 +1829,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
         e = hipErrorUnknown;
     }
 #else
-    e = hipErrorInvalidDevice;
+    e = hipErrorInvalidValue;
 #endif
 
     return ihipLogStatus(e);
