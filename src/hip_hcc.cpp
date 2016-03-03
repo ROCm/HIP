@@ -58,6 +58,11 @@ THE SOFTWARE.
 #endif
 
 
+// If defined, thread-safety is enforced on all stream functions.
+// Stream functions will acquire a mutex before entering critical sections.
+#define STREAM_THREAD_SAFE
+
+
 #define INLINE static inline
 
 //---
@@ -113,6 +118,7 @@ enum ihipCommand_t {
     ihipCommandKernel,
     ihipCommandCopyH2D,
     ihipCommandCopyD2H,
+    ihipCommandCopyGeneric,
 };
 
 const char* ihipCommandName[] = {
@@ -150,6 +156,13 @@ class FakeMutex
 };
 
 
+#ifdef STREAM_THREAD_SAFE
+typedef std::mutex StreamMutex;
+#else
+typedef FakeMutex StreamMutex;
+#endif
+
+
 
 // Internal stream structure.
 class ihipStream_t {
@@ -173,7 +186,7 @@ public:
     inline void                 resetToEmpty();
 
     inline SIGSEQNUM            lastCopySeqId() { return _last_copy_signal ? _last_copy_signal->_sig_id : 0; };
-    std::mutex &                mutex() {return _mutex;};
+    StreamMutex &               mutex() {return _mutex;};
 
     //---
     hc::accelerator_view _av;
@@ -196,7 +209,7 @@ private:
     SIGSEQNUM                   _oldest_live_sig_id; // oldest live seq_id, anything < this can be allocated.
     std::deque<ihipSignal_t>    _signalPool;   // Pool of signals for use by this stream.
 
-    std::mutex                  _mutex;
+    StreamMutex                  _mutex;
 };
 
 
