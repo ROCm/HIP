@@ -613,7 +613,7 @@ int main(int argc, const char **argv) {
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
   if (dst.empty()) {
     dst = fileSources[0];
-    size_t pos = dst.find(".cu");
+    size_t pos = dst.rfind(".cu");
     if (pos != std::string::npos) {
       dst = dst.substr(0, pos) + ".hip.cu";
     } else {
@@ -658,7 +658,7 @@ int main(int argc, const char **argv) {
     Tool.appendArgumentsAdjuster(getClangSyntaxOnlyAdjuster());
     Result = Tool.run(action.get());
 
-	  Tool.clearArgumentsAdjusters();
+    Tool.clearArgumentsAdjusters();
   }
 
   LangOptions DefaultLangOptions;
@@ -682,13 +682,10 @@ int main(int argc, const char **argv) {
 
   Result = Rewrite.overwriteChangedFiles();
 
-
+  size_t pos = dst.rfind(".cu");
+  if (pos != std::string::npos)
   {
-	  size_t pos = dst.find(".cu");
-	  if (pos != std::string::npos)
-	  {
-		  rename(dst.c_str(), dst.substr(0, pos).c_str());
-	  }
+    rename(dst.c_str(), dst.substr(0, pos).c_str());
   }
   return Result;
 }
