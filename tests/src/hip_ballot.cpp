@@ -9,8 +9,11 @@ __global__ void
 
    int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
    const unsigned int warp_num = hipThreadIdx_x >> pshift;
-   if (pshift ==6) {atomicAdd(&device_ballot[warp_num+hipBlockIdx_x*Num_Warps_per_Block],__popcll(__ballot(tid - 245)));}
-	else {atomicAdd(&device_ballot[warp_num+hipBlockIdx_x*Num_Warps_per_Block],__popc(__ballot(tid - 245)));}
+#ifdef __HIP_PLATFORM_HCC__
+   atomicAdd(&device_ballot[warp_num+hipBlockIdx_x*Num_Warps_per_Block],__popcll(__ballot(tid - 245)));
+#else
+	atomicAdd(&device_ballot[warp_num+hipBlockIdx_x*Num_Warps_per_Block],__popc(__ballot(tid - 245)));
+#endif
  
 }
 
