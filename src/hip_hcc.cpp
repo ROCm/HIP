@@ -1826,10 +1826,10 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
         attributes->isManaged     = 0;
         attributes->allocationFlags = 0;
 
-        e = hipErrorInvalidValue;
+        e = hipErrorUnknown;
     }
 #else
-    e = hipErrorInvalidValue;
+    e = hipErrorInvalidDevice;
 #endif
 
     return ihipLogStatus(e);
