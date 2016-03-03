@@ -569,8 +569,10 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
 
     if (const StringLiteral * stringLiteral = Result.Nodes.getNodeAs<clang::StringLiteral>("stringLiteral"))
     {
-      StringRef s = stringLiteral->getString();
-      processString(s, N, Replace, *SM, stringLiteral->getLocStart());
+      if (stringLiteral->getCharByteWidth() == 1) {
+        StringRef s = stringLiteral->getString();
+        processString(s, N, Replace, *SM, stringLiteral->getLocStart());
+      }
     }
 
     if (const UnaryExprOrTypeTraitExpr * expr = Result.Nodes.getNodeAs<clang::UnaryExprOrTypeTraitExpr>("cudaStructSizeOf"))
