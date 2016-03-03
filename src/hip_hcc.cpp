@@ -1090,6 +1090,7 @@ inline hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 // Allows runtime to track some information about the stream.
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, hc::accelerator_view **av)
 {
+	std::call_once(hip_initialized, ihipInit);
     stream = ihipSyncAndResolveStream(stream);
 
     stream->preKernelCommand();
