@@ -25,6 +25,7 @@ THE SOFTWARE.
 
 #include "hip_runtime.h"
 #include "test_common.h"
+#include <vector>
 
 #ifdef __HIP_PLATFORM_HCC__
 //#include "hcc_detail/AM.h"
