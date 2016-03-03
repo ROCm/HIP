@@ -41,6 +41,7 @@ target_link_libraries(hipify
   clangToolingCore
   clangRewrite
   clangBasic
+  LLVMProfileData
   LLVMSupport
   LLVMMCParser
   LLVMMC
