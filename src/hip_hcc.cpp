@@ -58,10 +58,16 @@ THE SOFTWARE.
 #endif
 
 
-// If defined, thread-safety is enforced on all stream functions.
+// If set, thread-safety is enforced on all stream functions.
 // Stream functions will acquire a mutex before entering critical sections.
-#define STREAM_THREAD_SAFE
+#define STREAM_THREAD_SAFE 1
 
+// If FORCE_SAMEDIR_DEP=1 , HIP runtime will add 
+// synchronization for sequential commands in the same stream.  
+// If FORCE_SAMEDIR_DEP=0 data copies in the same direction are assumed to be correctly ordered.
+// ROCR runtime implementation currently provides this guarantee when using SDMA queues but not 
+// when using shader queues.  
+#define FORCE_SAMEDIR_DEP 1
 
 #define INLINE static inline
 
@@ -118,7 +124,6 @@ enum ihipCommand_t {
     ihipCommandKernel,
     ihipCommandCopyH2D,
     ihipCommandCopyD2H,
-    ihipCommandCopyGeneric,
 };
 
 const char* ihipCommandName[] = {
@@ -156,7 +161,7 @@ class FakeMutex
 };
 
 
-#ifdef STREAM_THREAD_SAFE
+#if STREAM_THREAD_SAFE
 typedef std::mutex StreamMutex;
 #else
 typedef FakeMutex StreamMutex;
@@ -505,20 +510,18 @@ inline bool ihipStream_t::preKernelCommand()
             addedSync = true;
 
             hsa_queue_t * q =  (hsa_queue_t*)_av.get_hsa_queue();
-            if (! HIP_DISABLE_HW_KERNEL_DEP) {
+            if (HIP_DISABLE_HW_KERNEL_DEP == 0) {
                 this->enqueueBarrier(q, _last_copy_signal);
                 tprintf (TRACE_SYNC, "stream %p switch %s to %s (barrier pkt inserted with wait on #%lu)\n",
                         this, ihipCommandName[_last_command_type], ihipCommandName[ihipCommandKernel], _last_copy_signal->_sig_id)
 
-            } else {
-                if (HIP_DISABLE_HW_KERNEL_DEP != -1) {
-                    tprintf (TRACE_SYNC, "stream %p switch %s to %s (wait for previous...)\n",
+            } else if (HIP_DISABLE_HW_KERNEL_DEP>0) {
+                    tprintf (TRACE_SYNC, "stream %p switch %s to %s (HOST wait for previous...)\n",
                             this, ihipCommandName[_last_command_type], ihipCommandName[ihipCommandKernel]);
                     this->waitAndReclaimOlder(_last_copy_signal);
-                } else {
-                    tprintf (TRACE_SYNC, "stream %p switch %s to %s (IGNORE dependency)\n",
-                            this, ihipCommandName[_last_command_type], ihipCommandName[ihipCommandKernel]);
-                }
+            } else if (HIP_DISABLE_HW_KERNEL_DEP==-1) {
+                tprintf (TRACE_SYNC, "stream %p switch %s to %s (IGNORE dependency)\n",
+                        this, ihipCommandName[_last_command_type], ihipCommandName[ihipCommandKernel]);
             }
         }
         _last_command_type = ihipCommandKernel;
@@ -547,7 +550,7 @@ inline int ihipStream_t::copyCommand(ihipSignal_t *lastCopy, hsa_signal_t *waitS
 
     waitSignal->handle = 0;
     // If switching command types, we need to add a barrier packet to synchronize things.
-    if (_last_command_type != copyType) {
+    if (FORCE_SAMEDIR_DEP || (_last_command_type != copyType)) {
 
 
         if (_last_command_type == ihipCommandKernel) {
