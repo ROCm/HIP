@@ -2412,21 +2412,33 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
 
         } else {
 			if (kind == hipMemcpyDefault) {
-				std::cout<<"hipMemcpyDefault"<<std::endl;
-				hipPointerAttribute_t att;
-				hipError_t hipSt = hipPointerGetAttributes(&att, dst);
-				if(hipSt == hipSuccess){
-					if(att.devicePointer != NULL && att.hostPointer != NULL){
-						return hipSuccess;
+				hc::accelerator acc;
+				hc::AmPointerInfo dstAm(NULL, NULL, 0, acc, 0, 0);
+				hc::AmPointerInfo srcAm(NULL, NULL, 0, acc, 0, 0);
+				am_status_t statDst = hc::am_memtracker_getinfo(&dstAm, dst);
+				am_status_t statSrc = hc::am_memtracker_getinfo(&srcAm, src);
+
+				if(statDst == AM_SUCCESS && statSrc == AM_SUCCESS){
+					if(dstAm._devicePointer != NULL){
+						if(srcAm._devicePointer != NULL){
+							kind = hipMemcpyDeviceToDevice;
+						}
+						if(srcAm._hostPointer != NULL){
+							kind = hipMemcpyHostToDevice;
+						}
+					}
+					if(dstAm._hostPointer != NULL){
+						if(srcAm._devicePointer != NULL){
+							kind = hipMemcpyDeviceToHost;
+						}
+						if(srcAm._hostPointer != NULL){
+							kind = hipMemcpyHostToHost;
+						}
 					}
 				}
-				hipSt = hipPointerGetAttributes(&att, (void*)src);
-				if(hipSt == hipSuccess){
-					if(att.devicePointer != NULL && att.hostPointer != NULL){
-						return hipSuccess;
-					}
+				else{
+					return hipErrorInvalidMemcpyDirection;
 				}
-				else{return hipErrorInvalidMemcpyDirection;}
 			}
             ihipSignal_t *ihip_signal = stream->getSignal();
             hsa_signal_store_relaxed(ihip_signal->_hsa_signal, 1);
