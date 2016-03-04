@@ -164,7 +164,7 @@ void testSimple()
 
     hipFree(A_d);
     e = hipPointerGetAttributes(&attribs, A_d);
-    HIPASSERT(e == hipErrorInvalidValue); // Just freed the pointer, this should return an error.
+    HIPASSERT(e == hipErrorUnknown); // Just freed the pointer, this should return an error.
 
 
     // Device-visible host memory
@@ -180,7 +180,7 @@ void testSimple()
 
     hipFreeHost(A_Pinned_h);
     e = hipPointerGetAttributes(&attribs, A_Pinned_h);
-    HIPASSERT(e == hipErrorInvalidValue); // Just freed the pointer, this should return an error.
+    HIPASSERT(e == hipErrorUnknown); // Just freed the pointer, this should return an error.
     printf("getAttr:%-20s err=%d (%s), neg-test expected\n", "A_d+NBytes", e, hipGetErrorString(e));
 
 
@@ -188,7 +188,7 @@ void testSimple()
     printf ("\nOS-allocated memory (malloc)\n");
     e = hipPointerGetAttributes(&attribs, A_OSAlloc_h);
     printf("getAttr:%-20s err=%d (%s), neg-test expected\n", "A_OSAlloc_h", e, hipGetErrorString(e));
-    HIPASSERT(e == hipErrorInvalidValue); // OS-allocated pointers should return hipErrorInvalidValue.
+    HIPASSERT(e == hipErrorUnknown); // OS-allocated pointers should return hipErrorUnknown.
 }
 
 //---
