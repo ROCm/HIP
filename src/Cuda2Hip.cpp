@@ -324,7 +324,7 @@ namespace {
       const MacroDefinition &MD, SourceRange Range,
       const MacroArgs *Args) override
     {
-      if (_sm->isWrittenInMainFile(Range.getBegin()))
+      if (_sm->isWrittenInMainFile(MacroNameTok.getLocation()))
       {
         for (unsigned int i = 0; Args && i < MD.getMacroInfo()->getNumArgs(); i++)
         {
@@ -386,12 +386,43 @@ namespace {
   };
 
 class Cuda2HipCallback : public MatchFinder::MatchCallback {
-  public:
-    Cuda2HipCallback(Replacements *Replace) : Replace(Replace) {}
+ public:
+   Cuda2HipCallback(Replacements *Replace, ast_matchers::MatchFinder *parent) 
+   : Replace(Replace), owner(parent) {}
 
-    void run(const MatchFinder::MatchResult &Result) override {
+   void convertKernelDecl(const FunctionDecl * kernelDecl, const MatchFinder::MatchResult &Result)
+   {
+     SourceManager * SM = Result.SourceManager;
+     LangOptions DefaultLangOptions;
 
-      SourceManager * SM = Result.SourceManager;
+     SmallString<40> XStr;
+     raw_svector_ostream OS(XStr);
+     StringRef initialParamList;
+     OS << "hipLaunchParm lp";
+     size_t replacementLength = OS.str().size();
+     SourceLocation sl = kernelDecl->getNameInfo().getEndLoc();
+     SourceLocation kernelArgListStart = clang::Lexer::findLocationAfterToken(sl, clang::tok::l_paren, *SM, DefaultLangOptions, true);
+     kernelArgListStart.dump(*SM);
+     if (kernelDecl->getNumParams() > 0) {
+       const ParmVarDecl * pvdFirst = kernelDecl->getParamDecl(0);
+       const ParmVarDecl * pvdLast = kernelDecl->getParamDecl(kernelDecl->getNumParams() - 1);
+       SourceLocation kernelArgListStart(pvdFirst->getLocStart());
+       SourceLocation kernelArgListEnd(pvdLast->getLocEnd());
+       SourceLocation stop = clang::Lexer::getLocForEndOfToken(kernelArgListEnd, 0, *SM, DefaultLangOptions);
+       size_t replacementLength = SM->getCharacterData(stop) - SM->getCharacterData(kernelArgListStart);
+       initialParamList = StringRef(SM->getCharacterData(kernelArgListStart), replacementLength);
+       OS << ", " << initialParamList;
+     }
+     llvm::outs() << "initial paramlist: " << initialParamList << "\n";
+     llvm::outs() << "new paramlist: " << OS.str() << "\n";
+     Replacement Rep0(*(Result.SourceManager), kernelArgListStart, replacementLength, OS.str());
+     Replace->insert(Rep0);
+   }
+
+  void run(const MatchFinder::MatchResult &Result) override {
+
+    SourceManager * SM = Result.SourceManager;
+    LangOptions DefaultLangOptions;
 
       if (const CallExpr * call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaCall"))
       {
@@ -406,35 +437,27 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
         }
       }
 
-      if (const CUDAKernelCallExpr * launchKernel = Result.Nodes.getNodeAs<clang::CUDAKernelCallExpr>("cudaLaunchKernel"))
-      {
-        LangOptions DefaultLangOptions;
-        StringRef initialParamList;
-        SmallString<40> XStr;
-        raw_svector_ostream OS(XStr);
-        OS << "hipLaunchParm lp";
-        const FunctionDecl * kernelDecl = launchKernel->getDirectCallee();
-        SourceLocation l1 = kernelDecl->getNameInfo().getLocStart();
-        l1.dump(*SM);llvm::outs() << "\n";
-        SourceLocation kernelArgListStart = clang::Lexer::findLocationAfterToken(l1, clang::tok::l_paren, *SM, DefaultLangOptions, true);
-        kernelArgListStart.dump(*SM);llvm::outs() << "\n";
-        size_t replacementLength = 0;
-        if (kernelDecl->getNumParams() > 0) {
-          const ParmVarDecl * pvdLast = kernelDecl->getParamDecl(kernelDecl->getNumParams()-1);
-          SourceLocation kernelArgListEnd = SourceLocation(pvdLast->getLocEnd());
-          SourceLocation stop = clang::Lexer::getLocForEndOfToken(kernelArgListEnd, 0, *SM, DefaultLangOptions);
-          replacementLength = SM->getCharacterData(stop) - SM->getCharacterData(kernelArgListStart);
-          initialParamList = StringRef(SM->getCharacterData(kernelArgListStart), replacementLength);
-          OS << ", " << initialParamList;
+	  if (const CUDAKernelCallExpr * launchKernel = Result.Nodes.getNodeAs<clang::CUDAKernelCallExpr>("cudaLaunchKernel"))
+	  {
+      SmallString<40> XStr;
+      raw_svector_ostream OS(XStr);
+      StringRef calleeName;
+		  const FunctionDecl * kernelDecl = launchKernel->getDirectCallee();
+      if (kernelDecl) {
+        calleeName = kernelDecl->getName();
+        convertKernelDecl(kernelDecl, Result);
+      }
+      else {
+        const Expr * e = launchKernel->getCallee();
+        if (const UnresolvedLookupExpr * ule = dyn_cast<UnresolvedLookupExpr>(e)) {
+          calleeName = ule->getName().getAsIdentifierInfo()->getName();
+          owner->addMatcher(functionTemplateDecl(hasName(calleeName)).bind("unresolvedTemplateName"), this);
         }
+      }
 
-        llvm::outs() << "initial paramlist: " << initialParamList << "\n";
-        llvm::outs() << "new paramlist: " << OS.str() << "\n";
-        Replacement Rep0(*(Result.SourceManager), kernelArgListStart, replacementLength, OS.str());
-        Replace->insert(Rep0);
 
       XStr.clear();
-      OS << "hipLaunchKernel(HIP_KERNEL_NAME(" << kernelDecl->getName() << "), ";
+      OS << "hipLaunchKernel(HIP_KERNEL_NAME(" << calleeName << "), ";
 
       const CallExpr * config = launchKernel->getConfig();
       llvm::outs() << "\nKernel config arguments:\n";
@@ -474,6 +497,12 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
       Replacement Rep(*SM, launchKernel->getLocStart(), length, OS.str());
       Replace->insert(Rep);
 	  }
+
+    if (const FunctionTemplateDecl * templateDecl = Result.Nodes.getNodeAs<clang::FunctionTemplateDecl>("unresolvedTemplateName"))
+    {
+      FunctionDecl * kernelDecl = templateDecl->getTemplatedDecl();
+      convertKernelDecl(kernelDecl, Result);
+    }
 
 	  if (const MemberExpr * threadIdx = Result.Nodes.getNodeAs<clang::MemberExpr>("cudaBuiltin"))
 	  {
@@ -591,6 +620,7 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
 
  private:
   Replacements *Replace;
+  ast_matchers::MatchFinder * owner;
   struct hipName N;
 };
 
@@ -631,7 +661,7 @@ int main(int argc, const char **argv) {
 
   RefactoringTool Tool(OptionsParser.getCompilations(), dst);
   ast_matchers::MatchFinder Finder;
-  Cuda2HipCallback Callback(&Tool.getReplacements());
+  Cuda2HipCallback Callback(&Tool.getReplacements(), &Finder);
   HipifyPPCallbacks PPCallbacks(&Tool.getReplacements());
   Finder.addMatcher(callExpr(isExpansionInMainFile(), callee(functionDecl(matchesName("cuda.*")))).bind("cudaCall"), &Callback);
   Finder.addMatcher(cudaKernelCallExpr().bind("cudaLaunchKernel"), &Callback);
@@ -642,8 +672,8 @@ int main(int argc, const char **argv) {
   Finder.addMatcher(varDecl(isExpansionInMainFile(), hasType(pointsTo(cxxRecordDecl(matchesName("cuda.*"))))).bind("cudaStructVarPtr"), &Callback);
   Finder.addMatcher(parmVarDecl(isExpansionInMainFile(), hasType(namedDecl(matchesName("cuda.*")))).bind("cudaParamDecl"), &Callback);
   Finder.addMatcher(parmVarDecl(isExpansionInMainFile(), hasType(pointsTo(namedDecl(matchesName("cuda.*"))))).bind("cudaParamDeclPtr"), &Callback);
-  Finder.addMatcher(expr(sizeOfExpr(hasArgumentOfType(recordType(hasDeclaration(cxxRecordDecl(matchesName("cuda.*"))))))).bind("cudaStructSizeOf"), &Callback);
-  Finder.addMatcher(stringLiteral().bind("stringLiteral"), &Callback);
+  Finder.addMatcher(expr(isExpansionInMainFile(), sizeOfExpr(hasArgumentOfType(recordType(hasDeclaration(cxxRecordDecl(matchesName("cuda.*"))))))).bind("cudaStructSizeOf"), &Callback);
+  Finder.addMatcher(stringLiteral(isExpansionInMainFile()).bind("stringLiteral"), &Callback);
 
   auto action = newFrontendActionFactory(&Finder, &PPCallbacks);
 
