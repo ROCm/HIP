@@ -1842,10 +1842,10 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
         attributes->isManaged     = 0;
         attributes->allocationFlags = 0;
 
-        e = hipErrorInvalidValue;
+        e = hipErrorUnknown;
     }
 #else
-    e = hipErrorInvalidValue;
+    e = hipErrorInvalidDevice;
 #endif
 
     return ihipLogStatus(e);
@@ -2416,9 +2416,6 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
         if (device == NULL) {
             e = hipErrorInvalidDevice;
 
-        } else if (kind == hipMemcpyDefault) {
-            e = hipErrorInvalidMemcpyDirection;
-
         } else if (kind == hipMemcpyHostToHost) {
             tprintf (TRACE_COPY2, "H2H copy with memcpy");
 
@@ -2430,6 +2427,23 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
             memcpy(dst, src, sizeBytes);
 
         } else {
+			if (kind == hipMemcpyDefault) {
+				std::cout<<"hipMemcpyDefault"<<std::endl;
+				hipPointerAttribute_t att;
+				hipError_t hipSt = hipPointerGetAttributes(&att, dst);
+				if(hipSt == hipSuccess){
+					if(att.devicePointer != NULL && att.hostPointer != NULL){
+						return hipSuccess;
+					}
+				}
+				hipSt = hipPointerGetAttributes(&att, (void*)src);
+				if(hipSt == hipSuccess){
+					if(att.devicePointer != NULL && att.hostPointer != NULL){
+						return hipSuccess;
+					}
+				}
+				else{return hipErrorInvalidMemcpyDirection;}
+			}
             ihipSignal_t *ihip_signal = stream->getSignal();
             hsa_signal_store_relaxed(ihip_signal->_hsa_signal, 1);
 
