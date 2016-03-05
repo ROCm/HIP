@@ -56,6 +56,11 @@ extern "C" {
 #define hipEventInterprocess  0x4  ///< Event can support IPC.  @warning - not supported in HIP.
 
 
+#define hipHostAllocDefault 0x0
+#define hipHostAllocPortable 0x1
+#define hipHostAllocMapped 0x2
+#define hipHostAllocWriteCombined 0x4
+
 /**
  * @warning On AMD devices and recent Nvidia devices, these hints and controls are ignored.
  */
@@ -662,6 +667,25 @@ hipError_t hipMalloc(void** ptr, size_t size) ;
  */
 hipError_t hipMallocHost(void** ptr, size_t size) ;
 
+/**
+ *  @brief Allocate device accessible page locked host memory 
+ *
+ *  @param[out]  ptr Pointer to the allocated host pinned memory
+ *  @param[in] size Requested memory size
+ *  @param[in] flags Type of host memory allocation
+ *  @return Error code
+ */
+hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) ;
+
+/**
+ *  @brief Get Device pointer from Host Pointer allocated through hipHostAlloc
+ *
+ *  @param[out]  dstPtr Device Pointer mapped to passed host pointer
+ *  @param[in] hstPtr Host Pointer allocated through hipHostAlloc
+ *  @param[in] size Requested memory size
+ *  @return Error code
+ */
+hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, size_t size) ;
 
 /**
  *  @brief Free memory allocated by the hcc hip memory allocation API.
