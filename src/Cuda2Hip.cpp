@@ -685,6 +685,9 @@ int main(int argc, const char **argv) {
   {
     Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(Stage, ArgumentInsertPosition::BEGIN));
     Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-std=c++11"));
+#if defined(HIPIFY_CLANG_RES)
+    Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-resource-dir=" HIPIFY_CLANG_RES));
+#endif // defined(HIPIFY_CLANG_HEADERS)
     Tool.appendArgumentsAdjuster(getClangSyntaxOnlyAdjuster());
     Result = Tool.run(action.get());
 
