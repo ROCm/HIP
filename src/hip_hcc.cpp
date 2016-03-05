@@ -2000,6 +2000,73 @@ hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
     return ihipLogStatus(hip_status);
 }
 
+hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags){
+	std::call_once(hip_initialized, ihipInit);
+
+	hipError_t hip_status = hipSuccess;
+
+	auto device = ihipGetTlsDefaultDevice();
+
+	if(device){
+		if(flags | hipHostAllocDefault){
+		const unsigned am_flags = amHostPinned;
+
+		*ptr = hc::am_alloc(sizeBytes, device->_acc, am_flags);
+		if(sizeBytes && (*ptr == NULL)){
+			hip_status = hipErrorMemoryAllocation;
+		}else{
+#if USE_AM_TRACKER
+			hc::am_memtracker_update(*ptr, device->_device_index, 0);
+#endif
+		}
+		tprintf(TRACE_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
+		}
+		if(flags | hipHostAllocMapped && device->_props.canMapHostMemory == 1){
+		const unsigned am_flags = amHostPinned;
+
+		*ptr = hc::am_alloc(sizeBytes, device->_acc, am_flags);
+		if(sizeBytes && (*ptr == NULL)){
+			hip_status = hipErrorMemoryAllocation;
+		}else{
+#if USE_AM_TRACKER
+			hc::am_memtracker_update(*ptr, device->_device_index, 0);
+			void *srcPtr;
+			hsa_status_t hsa_status = hsa_amd_memory_lock((*ptr), sizeBytes, &device->_hsa_agent, 1, &srcPtr);
+			assert(hsa_status == HSA_STATUS_SUCCESS);
+			hc::am_memtracker_add(srcPtr, sizeBytes, device->_acc, false);
+#endif
+		}
+		tprintf(TRACE_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
+		}
+	}
+	return ihipLogStatus(hip_status);
+}
+
+hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, size_t size){
+	std::call_once(hip_initialized, ihipInit);
+
+	hipError_t hip_status = hipSuccess;
+
+	if(hstPtr == NULL){
+		hip_status = hipErrorInvalidValue;
+	}else{
+
+#if USE_AM_TRACKER
+	hc::accelerator acc;
+	hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+	am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, hstPtr);
+	if(status == AM_SUCCESS){
+		*devPtr = amPointerInfo._devicePointer;
+		if(devPtr == NULL){
+			hip_status = hipErrorMemoryAllocation;
+	}
+	}
+#endif
+	tprintf(TRACE_MEM, " %s: pinned ptr=%p\n", __func__, *devPtr);
+	}
+	return ihipLogStatus(hip_status);
+}
+
 //---
 hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind)
 {
