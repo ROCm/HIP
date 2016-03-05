@@ -177,6 +177,7 @@ inline static hipError_t hipDeviceGetProperties(hipDeviceProp_t *p_prop, int dev
 	p_prop->l2CacheSize = cdprop.l2CacheSize ;
 	p_prop->maxThreadsPerMultiProcessor = cdprop.maxThreadsPerMultiProcessor ;
 	p_prop->computeMode = cdprop.computeMode ;
+	p_prop->canMapHostMemory = cdprop.canMapHostMemory;
 
 	// Same as clock-rate:
 	p_prop->clockInstructionRate = cdprop.clockRate; 
