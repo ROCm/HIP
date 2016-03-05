@@ -50,6 +50,10 @@ hipMemcpyHostToHost
 } hipTextureFilterMode;*/
 #define hipFilterModePoint cudaFilterModePoint
 
+#define hipHostAllocDefault cudaHostAllocDefault
+#define hipHostAllocPortable cudaHostAllocPortable
+#define hipHostAllocMapped cudaHostAllocMapped
+#define hipHostAllocWriteCombined cudaHostAllocWriteCombined
 
 typedef cudaEvent_t hipEvent_t;
 typedef cudaStream_t hipStream_t;
@@ -115,6 +119,15 @@ inline static hipError_t hipFree(void* ptr) {
 inline static hipError_t hipMallocHost(void** ptr, size_t size) {
     return hipCUDAErrorTohipError(cudaMallocHost(ptr, size));
 }
+
+inline static hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags){
+	return hipCUDAErrorTohipError(cudaHostAlloc(ptr, size, flags));
+}
+
+inline static hipError_t hipHostGetDevicePointer(void** devPtr, void* hostPtr, unsigned int flags){
+	return hipCUDAErrorTohipError(cudaHostGetDevicePointer(devPtr, hostPtr, flags));
+}
+
 inline static hipError_t hipFreeHost(void* ptr) {
     return hipCUDAErrorTohipError(cudaFreeHost(ptr));
 }
