@@ -258,7 +258,7 @@ void runTest(int argc, char **argv)
     deviceProp.minor = 0;
     int dev = 0;
 
-    hipDeviceGetProperties(&deviceProp, dev);
+    hipGetDeviceProperties(&deviceProp, dev);
 
     // Statistics about the GPU device
     printf("> GPU device has %d Multi-Processors, "

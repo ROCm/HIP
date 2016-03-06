@@ -15,7 +15,7 @@ float *Ad, *Bd, *Cd;
 hipDeviceProp_t prop;
 int device;
 HIPCHECK(hipGetDevice(&device));
-HIPCHECK(hipDeviceGetProperties(&prop, device));
+HIPCHECK(hipGetDeviceProperties(&prop, device));
 if(prop.canMapHostMemory != 1){
 std::cout<<"Exiting..."<<std::endl;
 }

@@ -350,7 +350,7 @@ while (@ARGV) {
         #--------
         # Device 
         $ft{'dev'} += s/\bcudaDeviceProp\b/hipDeviceProp_t/g;
-        $ft{'dev'} += s/\bcudaGetDeviceProperties\b/hipDeviceGetProperties/g;
+        $ft{'dev'} += s/\bcudaGetDeviceProperties\b/hipGetDeviceProperties/g;
 
         # Attribute
         $ft{'err'} += s/\bcudaDevAttrMaxThreadsPerBlock\b/hipDeviceAttributeMaxThreadsPerBlock/g;

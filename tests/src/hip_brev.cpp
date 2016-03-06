@@ -94,7 +94,7 @@ int main() {
   unsigned long long int* deviceD;
 
   hipDeviceProp_t devProp;
-  hipDeviceGetProperties(&devProp, 0);
+  hipGetDeviceProperties(&devProp, 0);
   cout << " System minor " << devProp.minor << endl;
   cout << " System major " << devProp.major << endl;
   cout << " agent prop name " << devProp.name << endl;

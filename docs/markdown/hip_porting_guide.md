@@ -215,10 +215,10 @@ For host code, the `__HIP_ARCH__*` defines are set to 0. You should only use the
 
 ### Device-Architecture Properties
 
-Host code should query the architecture feature flags in the device properties that hipDeviceGetProperties returns, rather than testing the "major" and "minor" fields directly:
+Host code should query the architecture feature flags in the device properties that hipGetDeviceProperties returns, rather than testing the "major" and "minor" fields directly:
 
 ```
-hipDeviceGetProperties(&deviceProp, device);
+hipGetDeviceProperties(&deviceProp, device);
 //if ((deviceProp.major == 1 && deviceProp.minor < 2))  // non-portable
 if (deviceProp.arch.hasSharedInt32Atomics) {            // portable HIP feature query
     // has shared int32 atomic operations ...
