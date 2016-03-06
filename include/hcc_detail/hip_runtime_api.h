@@ -688,6 +688,15 @@ hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) ;
 hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, size_t size) ;
 
 /**
+ *  @brief Get flags associated with host pointer
+ *
+ *  @param[out]  flagsPtr Memory location to store flags
+ *  @param[in] hostPtr Host Pointer allocated through hipHostAlloc
+ *  @return Error code
+ */
+hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) ;
+
+/**
  *  @brief Free memory allocated by the hcc hip memory allocation API.
  *  This API performs an implicit hipDeviceSynchronize() call.
  *

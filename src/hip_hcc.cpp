@@ -2008,7 +2008,7 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags){
 	auto device = ihipGetTlsDefaultDevice();
 
 	if(device){
-		if(flags | hipHostAllocDefault){
+		if(flags & hipHostAllocDefault){
 		const unsigned am_flags = amHostPinned;
 
 		*ptr = hc::am_alloc(sizeBytes, device->_acc, am_flags);
@@ -2021,7 +2021,7 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags){
 		}
 		tprintf(TRACE_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
 		}
-		if(flags | hipHostAllocMapped && device->_props.canMapHostMemory == 1){
+		if(flags & hipHostAllocMapped){
 		const unsigned am_flags = amHostPinned;
 
 		*ptr = hc::am_alloc(sizeBytes, device->_acc, am_flags);
@@ -2030,10 +2030,10 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags){
 		}else{
 #if USE_AM_TRACKER
 			hc::am_memtracker_update(*ptr, device->_device_index, flags);
-			void *srcPtr;
-			hsa_status_t hsa_status = hsa_amd_memory_lock((*ptr), sizeBytes, &device->_hsa_agent, 1, &srcPtr);
-			assert(hsa_status == HSA_STATUS_SUCCESS);
-			hc::am_memtracker_add(srcPtr, sizeBytes, device->_acc, false);
+//			void *srcPtr;
+//			hsa_status_t hsa_status = hsa_amd_memory_lock((*ptr), sizeBytes, &device->_hsa_agent, 1, &srcPtr);
+//			assert(hsa_status == HSA_STATUS_SUCCESS);
+//			hc::am_memtracker_add(srcPtr, sizeBytes, device->_acc, false);
 #endif
 		}
 		tprintf(TRACE_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
@@ -2063,6 +2063,29 @@ hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, size_t size){
 	}
 #endif
 	tprintf(TRACE_MEM, " %s: pinned ptr=%p\n", __func__, *devPtr);
+	}
+	return ihipLogStatus(hip_status);
+}
+
+hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr)
+{
+	std::call_once(hip_initialized, ihipInit);
+	hipError_t hip_status = hipSuccess;
+
+	hc::accelerator acc;
+	hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+	am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, hostPtr);
+	if(status == AM_SUCCESS){
+		*flagsPtr = amPointerInfo._appAllocationFlags;
+		if(*flagsPtr == 0){
+			hip_status = hipErrorInvalidValue;
+		}
+		else{
+			hip_status = hipSuccess;
+		}
+		tprintf(TRACE_MEM, " %s: host ptr=%p\n", __func__, hostPtr);
+	}else{
+		hip_status = hipErrorInvalidValue;
 	}
 	return ihipLogStatus(hip_status);
 }
