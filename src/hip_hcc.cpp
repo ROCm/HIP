@@ -2029,7 +2029,7 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags){
 			hip_status = hipErrorMemoryAllocation;
 		}else{
 #if USE_AM_TRACKER
-			hc::am_memtracker_update(*ptr, device->_device_index, 0);
+			hc::am_memtracker_update(*ptr, device->_device_index, flags);
 			void *srcPtr;
 			hsa_status_t hsa_status = hsa_amd_memory_lock((*ptr), sizeBytes, &device->_hsa_agent, 1, &srcPtr);
 			assert(hsa_status == HSA_STATUS_SUCCESS);
