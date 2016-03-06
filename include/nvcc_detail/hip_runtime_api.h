@@ -167,7 +167,7 @@ inline static hipError_t hipMemset(void* devPtr,int value, size_t count) {
     return hipCUDAErrorTohipError(cudaMemset(devPtr, value, count));
 }
 
-inline static hipError_t hipDeviceGetProperties(hipDeviceProp_t *p_prop, int device)
+inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t *p_prop, int device)
 {
 	cudaDeviceProp cdprop;
 	cudaError_t cerror;

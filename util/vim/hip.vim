@@ -92,7 +92,7 @@ syn keyword hipFunctionName hipD3D9ResourceSetMapFlags
 syn keyword hipFunctionName hipD3D9SetDirect3DDevice 
 syn keyword hipFunctionName hipD3D9UnmapResources 
 syn keyword hipFunctionName hipD3D9UnregisterResource 
-syn keyword hipFunctionName hipDeviceGetProperties 
+syn keyword hipFunctionName hipGetDeviceProperties 
 syn keyword hipFunctionName hipDeviceSynchronize 
 syn keyword hipFunctionName hipDeviceReset 
 syn keyword hipFunctionName hipEventCreate 

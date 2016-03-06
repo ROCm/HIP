@@ -252,9 +252,9 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
  * @param [out] prop written with device properties
  * @param [in]  device which device to query for information
  *
- * Populates hipDeviceGetProperties with information for the specified device.
+ * Populates hipGetDeviceProperties with information for the specified device.
  */
-hipError_t hipDeviceGetProperties(hipDeviceProp_t* prop, int device);
+hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int device);
 
 
 

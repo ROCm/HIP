@@ -73,7 +73,7 @@ void printDeviceProp (int deviceId)
     cout << setw(w1) << "device#" << deviceId << endl;
 
     hipDeviceProp_t props;
-    HIPCHECK(hipDeviceGetProperties(&props, deviceId));
+    HIPCHECK(hipGetDeviceProperties(&props, deviceId));
 
     cout << setw(w1) << "Name: " << props.name << endl;
     cout << setw(w1) << "pciBusID: " << props.pciBusID << endl;

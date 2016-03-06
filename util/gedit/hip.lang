@@ -226,8 +226,8 @@
           <keyword>hipD3D9SetDirect3DDevice</keyword>
           <keyword>hipD3D9UnmapResources</keyword>
           <keyword>hipD3D9UnregisterResource</keyword>
-          <keyword>hipDeviceGetProperties</keyword>
-					<keyword>hipDeviceSynchronize</keyword>
+          <keyword>hipGetDeviceProperties</keyword>
+		  <keyword>hipDeviceSynchronize</keyword>
           <keyword>hipEventCreate</keyword>
           <keyword>hipEventDestroy</keyword>
           <keyword>hipEventElapsedTime</keyword>

@@ -1380,7 +1380,7 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
  * @bug HCC always returns 0 for regsPerBlock
  * @bug HCC always returns 0 for l2CacheSize
  */
-hipError_t hipDeviceGetProperties(hipDeviceProp_t* props, int device)
+hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device)
 {
     std::call_once(hip_initialized, ihipInit);
 
