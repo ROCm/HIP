@@ -97,6 +97,7 @@ typedef struct hipDeviceProp_t {
     int pciDeviceID;                            ///< PCI Device ID.
     size_t maxSharedMemoryPerMultiProcessor;    ///< Maximum Shared Memory Per Multiprocessor.
     int isMultiGpuBoard;                        ///< 1 if device is on a multi-GPU board, 0 if not.
+    int canMapHostMemory;                       ///< Check whether HIP can map host memory
  } hipDeviceProp_t;
 
 
