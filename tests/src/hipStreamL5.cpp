@@ -58,7 +58,6 @@ void test12345(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
 
-	const size_t N = 1000;
 	const size_t size = sizeof(T) * N;
 
 	T *Ah, *Bh, *Ch;
@@ -71,7 +70,7 @@ void test12345(){
 
 	H2HAsync(Bh, Ah, size, stream);
 	H2DAsync(Ad, Bh, size, stream);
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Ad);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Ad);
 	D2DAsync(Bd, Ad, size, stream);
 	D2HAsync(Ch, Bd, size, stream);
 	HIPCHECK(hipDeviceSynchronize());
@@ -85,7 +84,6 @@ void test13452(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
 
-	const size_t N = 1000;
 	const size_t size = sizeof(T) * N;
 
 	T *Ah, *Bh, *Ch;
@@ -107,7 +105,7 @@ void test13452(){
 	H2D(Ad, Dh, size);
 
 	H2HAsync(Bh, Ah, size, stream);
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Ad);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Ad);
 	D2DAsync(Bd, Ad, size, stream);
 	D2HAsync(Ch, Bd, size, stream);
 	H2DAsync(Cd, Ch, size, stream);
@@ -125,7 +123,6 @@ void test14523(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
 
-	const int N = 1000;
 	const size_t size = sizeof(T) * N;
 
 	T *Ah, *Bh, *Ch;
@@ -150,7 +147,7 @@ void test14523(){
 	D2DAsync(Bd, Ad, size, stream);
 	D2HAsync(Ch, Bd, size, stream);
 	H2DAsync(Cd, Ch, size, stream);
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Cd);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Cd);
 
 	HIPCHECK(hipDeviceSynchronize());
 
@@ -165,7 +162,6 @@ void test15234(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
 
-	const size_t N = 1000;
 	const size_t size = sizeof(T) * N;
 
 	T *Ah, *Bh, *Ch;
@@ -189,7 +185,7 @@ void test15234(){
 	H2HAsync(Bh, Ah, size, stream);
 	D2HAsync(Ch, Ad, size, stream);
 	H2DAsync(Bd, Ch, size, stream);
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Bd);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Bd);
 	D2DAsync(Cd, Bd, size, stream);
 
 	D2H(Eh, Cd, size);
@@ -203,7 +199,6 @@ template<typename T>
 void test23451(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
-	const size_t N = 1000;
 	const size_t size = sizeof(T) * N;
 
 	T *Ah, *Bh, *Ch;
@@ -218,12 +213,12 @@ void test23451(){
 	setArray(Ah, N, T(1));
 
 	H2DAsync(Ad, Ah, size, stream);
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Ad);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Ad);
 	D2DAsync(Bd, Ad, size, stream);
 	D2HAsync(Bh, Bd, size, stream);
 	H2HAsync(Ch, Bh, size, stream);
 	HIPCHECK(hipDeviceSynchronize());
-	//HIPASSERT(Ah[10] == Ch[10]);
+	HIPASSERT(Ah[10] + T(1) == Ch[10]);
 }
 
 template<typename T>
@@ -231,7 +226,6 @@ void test24513(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
 
-	const size_t N = 1000;
 	const size_t size = sizeof(T) * N;
 
 	T *Ah, *Bh, *Ch;
@@ -256,7 +250,7 @@ void test24513(){
 	D2DAsync(Bd, Ad, size, stream);
 	D2HAsync(Bh, Bd, size, stream);
 	H2HAsync(Ch, Bh, size, stream);
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Cd);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Cd);
 	HIPCHECK(hipDeviceSynchronize());
 
 	D2H(Eh, Cd, size);
@@ -270,7 +264,6 @@ void test25134(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
 
-	const size_t N = 1000;
 	const size_t size = sizeof(T) * N;
 
 	T *Ah, *Bh, *Ch;
@@ -294,7 +287,7 @@ void test25134(){
 	H2DAsync(Ad, Ah, size, stream);
 	D2HAsync(Bh, Ad, size, stream);
 	H2HAsync(Ch, Bh, size, stream);
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Bd);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Bd);
 	D2DAsync(Cd, Bd, size, stream);
 
 	D2H(Eh, Cd, size);
@@ -310,7 +303,6 @@ void test21345(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
 
-	const size_t N = 1000;
 	const size_t size = N * sizeof(T);
 
 	T *Ah, *Bh, *Ch, *Dh;
@@ -328,7 +320,7 @@ void test21345(){
 
 	H2DAsync(Ad, Ah, size, stream);
 	H2HAsync(Ch, Bh, size, stream);
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Ad);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Ad);
 	D2DAsync(Bd, Ad, size, stream);
 	D2HAsync(Dh, Bd, size, stream);
 
@@ -343,7 +335,6 @@ void test34512(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
 
-	const size_t N = 1000;
 	const size_t size = N * sizeof(T);
 
 	T *Bh, *Ch, *Dh;
@@ -363,7 +354,7 @@ void test34512(){
 
 	H2D(Ad, Ah, size);
 
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Ad);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Ad);
 	D2DAsync(Bd, Ad, size, stream);
 	D2HAsync(Bh, Bd, size, stream);
 	H2HAsync(Ch, Bh, size, stream);
@@ -380,7 +371,6 @@ void test35124(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
 
-	const size_t N = 1000;
 	const size_t size = N * sizeof(T);
 
 	T *Ah, *Bh;
@@ -399,7 +389,7 @@ void test35124(){
 
 	H2D(Ad, Dh, size);
 
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Ad);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Ad);
 	D2HAsync(Ah, Ad, size, stream);
 	H2HAsync(Bh, Ah, size, stream);
 	H2DAsync(Bd, Bh, size, stream);
@@ -417,7 +407,6 @@ void test31245(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
 
-	const size_t N = 1000;
 	const size_t size = N * sizeof(T);
 	T *Ah, *Bh, *Ch;
 	T *Dh, *Eh;
@@ -437,7 +426,7 @@ void test31245(){
 
 	H2D(Ad, Dh, size);
 
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Ad);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Ad);
 	H2HAsync(Bh, Ah, size, stream);
 	H2DAsync(Bd, Bh, size, stream);
 	D2DAsync(Cd, Bd, size, stream);
@@ -457,7 +446,6 @@ void test32451(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
 
-	const size_t N = 1000;
 	const size_t size = N * sizeof(T);
 
 	T *Ah, *Bh, *Ch;
@@ -477,7 +465,7 @@ void test32451(){
 	setArray(Eh, N, T(2));
 
 	H2D(Ad, Eh, size);
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Ad);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Ad);
 	H2DAsync(Bd, Ah, size, stream);
 	D2DAsync(Cd, Bd, size, stream);
 	D2HAsync(Bh, Cd, size, stream);
@@ -494,7 +482,6 @@ template<typename T>
 void test45123(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
-	const size_t N = 1000;
 	const size_t size = N * sizeof(T);
 
 	T *Ah, *Bh;
@@ -517,7 +504,7 @@ void test45123(){
 	D2HAsync(Ah, Bd, size, stream);
 	H2HAsync(Bh, Ah, size, stream);
 	H2DAsync(Cd, Bh, size, stream);
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Cd);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Cd);
 	D2H(Ch, Cd, size);
 	HIPCHECK(hipDeviceSynchronize());
 
@@ -529,7 +516,6 @@ template<typename T>
 void test41235(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
-	const size_t N = 1000;
 	const size_t size = N * sizeof(T);
 
 	T *Ah, *Bh;
@@ -550,7 +536,7 @@ void test41235(){
 	D2DAsync(Bd, Ad, size, stream);
 	D2HAsync(Ah, Bd, size, stream);
 	H2DAsync(Cd, Ah, size, stream);
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Cd);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Cd);
 	D2HAsync(Bh, Cd, size, stream);
 
 	HIPCHECK(hipDeviceSynchronize());
@@ -563,7 +549,6 @@ void test42351(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
 
-	const size_t N = 1000;
 	const size_t size = N * sizeof(T);
 
 	T *Ah, *Bh, *Ch;
@@ -586,7 +571,7 @@ void test42351(){
 
 	D2DAsync(Bd, Ad, size, stream);
 	H2DAsync(Cd, Ah, size, stream);
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Cd);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Cd);
 	D2HAsync(Bh, Cd, size, stream);
 	H2HAsync(Ch, Bh, size, stream);
 
@@ -602,7 +587,6 @@ void test43512(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
 
-	const size_t N = 1000;
 	const size_t size = N * sizeof(T);
 
 	T *Ah, *Bh;
@@ -622,7 +606,7 @@ void test43512(){
 	H2D(Ad, Dh, size);
 
 	D2DAsync(Bd, Ad, size, stream);
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Bd);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Bd);
 	D2HAsync(Ah, Bd, size, stream);
 	H2HAsync(Bh, Ah, size, stream);
 	H2DAsync(Cd, Bh, size, stream);
@@ -637,7 +621,6 @@ void test51234(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
 
-	const size_t N = 1000;
 	const size_t size = N * sizeof(T);
 
 	T *Ah, *Bh;
@@ -659,7 +642,7 @@ void test51234(){
 	D2HAsync(Ah, Ad, size, stream);
 	H2HAsync(Bh, Ah, size, stream);
 	H2DAsync(Bd, Bh, size, stream);
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Bd);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Bd);
 	D2DAsync(Cd, Bd, size, stream);
 
 	D2H(Ch, Cd, size);
@@ -673,7 +656,6 @@ template<typename T>
 void test52341(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
-	const size_t N = 1000;
 	const size_t size = N * sizeof(T);
 
 	T *Ah, *Bh, *Ch;
@@ -696,7 +678,7 @@ void test52341(){
 
 	D2HAsync(Ah, Ad, size, stream);
 	H2DAsync(Bd, Ah, size, stream);
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Bd);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Bd);
 	D2DAsync(Cd, Bd, size, stream);
 	H2HAsync(Ch, Bh, size, stream);
 
@@ -712,7 +694,6 @@ template<typename T>
 void test53412(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
-	const size_t N = 1000;
 	const size_t size = sizeof(T) * N;
 
 	T *Ah, *Bh, *Ch, *Dh;
@@ -739,7 +720,7 @@ void test53412(){
 	H2D(Bd, Eh, size);
 
 	D2HAsync(Ah, Ad, size, stream);
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Bd);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Bd);
 	D2DAsync(Cd, Bd, size, stream);
 	H2HAsync(Ch, Bh, size, stream);
 	H2DAsync(Dd, Ch, size, stream);
@@ -757,7 +738,6 @@ void test54123(){
 	hipStream_t stream;
 	HIPCHECK(hipStreamCreate(&stream));
 
-	const size_t N = 1000;
 	const size_t size = N * sizeof(T);
 
 	T *Ah, *Bh, *Ch;
@@ -787,7 +767,7 @@ void test54123(){
 	D2DAsync(Cd, Bd, size, stream);
 	H2HAsync(Ch, Bh, size, stream);
 	H2DAsync(Dd, Ch, size, stream);
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Dd);
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Dd);
 
 	D2H(Fh, Cd, size);
 	D2H(Gh, Dd, size);
