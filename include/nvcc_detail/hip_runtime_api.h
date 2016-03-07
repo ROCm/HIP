@@ -128,7 +128,7 @@ inline static hipError_t hipHostGetDevicePointer(void** devPtr, void* hostPtr, u
 	return hipCUDAErrorTohipError(cudaHostGetDevicePointer(devPtr, hostPtr, flags));
 }
 
-inline static hipError_ hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr){
+inline static hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr){
 	return hipCUDAErrorTohipError(cudaHostGetFlags(flagsPtr, hostPtr));
 }
 
