@@ -132,6 +132,14 @@ inline static hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr){
 	return hipCUDAErrorTohipError(cudaHostGetFlags(flagsPtr, hostPtr));
 }
 
+inline static hipError_t hipHostRegister(void* ptr, size_t size, unsigned int flags){
+	return hipCUDAErrorTohipError(cudaHostRegister(ptr, size, flags));
+}
+
+inline static hipError_t hipHostUnregister(void* ptr){
+	return hipCUDAErrorTohipError(cudaHostUnregister(ptr));
+}
+
 inline static hipError_t hipFreeHost(void* ptr) {
     return hipCUDAErrorTohipError(cudaFreeHost(ptr));
 }

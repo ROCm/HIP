@@ -129,6 +129,7 @@ make_hip_executable (hipMultiThreadStreams2 hipMultiThreadStreams2.cpp)
 make_hip_executable (hipHostAlloc hipHostAlloc.cpp)
 make_hip_executable (hipStreamL5 hipStreamL5.cpp)
 make_hip_executable (hipHostGetFlags hipHostGetFlags.cpp)
+make_hip_executable (hipHostRegister hipHostRegister.cpp)
 target_link_libraries(hipMathFunctionsHost m)
 
 make_test(hip_ballot " " )
@@ -152,7 +153,7 @@ make_test(hipMemcpy  " " )
 make_test(hipMemcpyAsync  " " )
 make_test(hipHostGetFlags " ")
 make_test(hipHcc  " " )
-
+make_test(hipHostRegister " ")
 make_test(hipStreamL5 " ")
 
 make_hipify_test(specialFunc.cu )
