@@ -55,6 +55,9 @@ hipMemcpyHostToHost
 #define hipHostAllocMapped cudaHostAllocMapped
 #define hipHostAllocWriteCombined cudaHostAllocWriteCombined
 
+#define hipHostRegisterPortable cudaHostRegisterPortable
+#define hipHostRegisterMapped cudaHostRegisterMapped
+
 typedef cudaEvent_t hipEvent_t;
 typedef cudaStream_t hipStream_t;
 //typedef cudaChannelFormatDesc hipChannelFormatDesc;
