@@ -14,7 +14,8 @@ GetOptions(
     ,"compiler|c" => \$p_compiler
     ,"platform|P" => \$p_platform
     ,"cpp_config|cxx_config|C" => \$p_cpp_config
-    ,"full|f" => \$p_full,
+    ,"full|f|info" => \$p_full,
+    ,"check" => \$p_check,
     ,"newline|n" => \$p_newline
 );
 
@@ -25,6 +26,7 @@ if ($p_help) {
     print "  --compiler, -c     : print compiler (hcc or nvcc)\n";
     print "  --platform, -P     : print platform (hcc or nvcc)\n";
     print "  --full, -f         : print full config\n";
+    print "  --check            : check configuration\n";
     print "  --newline, -n      : print newline\n";
     print "  --help, -h         : print help message\n";
     exit();
@@ -36,6 +38,9 @@ $CUDA_PATH='/usr/local/cuda' unless defined $CUDA_PATH;
 
 $HCC_HOME=$ENV{'HCC_HOME'};
 $HCC_HOME='/opt/hcc' unless defined $HCC_HOME;
+
+$HSA_PATH=$ENV{'HSA_PATH'};
+$HSA_PATH='/opt/hsa' unless defined $HSA_PATH;
 
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
@@ -67,7 +72,15 @@ if ($p_cpp_config) {
     $printed = 1;
 }
 
-if ($p_full) {
+
+if ($p_compiler or $p_platform) {
+    print $HIP_PLATFORM;
+    $printed = 1;
+}
+
+
+
+if (!$printed or $p_full) {
     print "== hipconfig\n";
     print "HIP_PATH     : ", $HIP_PATH, "\n";
     print "HIP_PLATFORM : ", $HIP_PLATFORM, "\n";
@@ -76,12 +89,14 @@ if ($p_full) {
     {
         print "\n" ;
         print "== hcc\n";
+        print ("HSA_PATH     : $HSA_PATH\n");
         print ("HCC_HOME     : $HCC_HOME\n");
         system("$HCC_HOME/bin/hcc --version");
         print ("HCC-cxxflags: "); 
         system("$HCC_HOME/bin/hcc-config --cxxflags");
         print ("HCC-ldflags : "); 
         system("$HCC_HOME/bin/hcc-config --ldflags");
+        printf("\n");
     }
     if ($HIP_PLATFORM eq "nvcc")  {
         print "\n" ;
@@ -93,18 +108,42 @@ if ($p_full) {
     print "\n" ;
 
     print "=== Environment Variables\n";
-    system("env | egrep '^HIP|^HSA|^HCC|^CUDA'");
+    system("echo PATH=\$PATH");
+    system("env | egrep '^HIP|^HSA|^HCC|^CUDA|^LD_LIBRARY_PATH'");
+
 
     print "\n" ;
     print "== Linux Kernel\n";
     system ("uname -a");
+
+    print "\n" ;
     $printed = 1;
 }
 
 
-if (!$printed or $p_compiler or $p_platform) {
-    print $HIP_PLATFORM;
+if ($p_check) {
+    print "\nCheck system installation:\n";
+
+    printf ("%-70s", "check hipconfig in PATH...");
+    if (system ("hipconfig > /dev/null 2>&1") != 0)  {
+        print "FAIL\n";
+    } else {
+        printf "good\n";
+    }
+
+    if ($HIP_PLATFORM eq "hcc")  {
+        $LD_LIBRARY_PATH=$ENV{'LD_LIBRARY_PATH'};
+        printf("%-70s", "check LD_LIBRARY_PATH ($LD_LIBRARY_PATH) contains HSA_PATH ($HSA_PATH)...");
+        if (index($LD_LIBRARY_PATH, $HSA_PATH) == -1) {
+            print "FAIL\n";
+        } else {
+            printf "good\n";
+        }
+
+        # TODO - check hipcc / nvcc found and executable.
+    }
 }
+
 
 if ($p_newline) {
     print "\n";

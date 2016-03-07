@@ -68,7 +68,9 @@ int main(int argc, char *argv[])
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxRegistersPerBlock, props.regsPerBlock));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeClockRate, props.clockRate));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMemoryClockRate, props.memoryClockRate));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMemoryBusWidth, props.memoryBusWidth));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMultiprocessorCount, props.multiProcessorCount));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeIsMultiGpuBoard, props.isMultiGpuBoard));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeComputeMode, props.computeMode));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeL2CacheSize, props.l2CacheSize));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxThreadsPerMultiProcessor, props.maxThreadsPerMultiProcessor));

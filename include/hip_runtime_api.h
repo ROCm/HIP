@@ -81,7 +81,8 @@ typedef struct hipDeviceProp_t {
     int maxThreadsDim[3];                       ///< Max number of threads in each dimension (XYZ) of a block.
     int maxGridSize[3];                         ///< Max grid dimensions (XYZ).
     int clockRate;                              ///< Max clock frequency of the multiProcessors in khz.
-    int memoryClockRate;                        ///< Max memory clock frequency in khz.
+    int memoryClockRate;                        ///< Max global memory clock frequency in khz.
+    int memoryBusWidth;                         ///< Global memory bus width in bits.
     size_t totalConstMem;                       ///< Size of shared memory region (in bytes).
     int major;                                  ///< Major compute capability.  On HCC, this is an approximation and features may differ from CUDA CC.  See the arch feature flags for portable ways to query feature caps.
     int minor;                                  ///< Minor compute capability.  On HCC, this is an approximation and features may differ from CUDA CC.  See the arch feature flags for portable ways to query feature caps.
@@ -95,7 +96,32 @@ typedef struct hipDeviceProp_t {
     int pciBusID;                               ///< PCI Bus ID.
     int pciDeviceID;                            ///< PCI Device ID.
     size_t maxSharedMemoryPerMultiProcessor;    ///< Maximum Shared Memory Per Multiprocessor.
+    int isMultiGpuBoard;                        ///< 1 if device is on a multi-GPU board, 0 if not.
  } hipDeviceProp_t;
+
+
+/**
+ * Memory type (for pointer attributes)
+ */
+enum hipMemoryType {
+    hipMemoryTypeHost,   ///< Memory is physically located on host
+    hipMemoryTypeDevice  ///< Memory is physically located on device. (see deviceId for specific device)
+};
+
+
+
+/**
+ * Pointer attributes
+ */
+typedef struct hipPointerAttribute_t {
+    enum hipMemoryType memoryType;
+    int device;
+    void *devicePointer;
+    void *hostPointer;
+    int isManaged;
+    unsigned allocationFlags; /* flags specified when memory was allocated*/
+    /* peers? */
+} hipPointerAttribute_t;
 
 
 // hack to get these to show up in Doxygen:
@@ -107,10 +133,11 @@ typedef struct hipDeviceProp_t {
 
 
 /*
- * @brief hipError_t
+ asdasd* @brief hipError_t
  * @enum
  * @ingroup Enumerations
  */
+// Developer note - when updating these, update the hipErrorName and hipErrorString functions
 typedef enum hipError_t {
      hipSuccess = 0                   ///< Successful completion.
     ,hipErrorMemoryAllocation         ///< Memory allocation error.
@@ -120,6 +147,8 @@ typedef enum hipError_t {
     ,hipErrorInvalidValue             ///< One or more of the parameters passed to the API call is NULL or not in an acceptable range.
     ,hipErrorInvalidResourceHandle    ///< Resource handle (hipEvent_t or hipStream_t) invalid.
     ,hipErrorInvalidDevice            ///< DeviceID must be in range 0...#compute-devices.
+    ,hipErrorInvalidMemcpyDirection   ///< Invalid memory copy direction 
+
     ,hipErrorNoDevice                 ///< Call to hipGetDeviceCount returned 0 devices
     ,hipErrorNotReady                 ///< Indicates that asynchronous operations enqueued earlier are not ready.  This is not actually an error, but is used to distinguish from hipSuccess (which indicates completion).  APIs that return this error include hipEventQuery and hipStreamQuery.
     ,hipErrorUnknown                  ///< Unknown error.
@@ -145,6 +174,7 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeMaxRegistersPerBlock,                 ///< Maximum number of 32-bit registers available to a thread block. This number is shared by all thread blocks simultaneously resident on a multiprocessor.
     hipDeviceAttributeClockRate,                            ///< Peak clock frequency in kilohertz.
     hipDeviceAttributeMemoryClockRate,                      ///< Peak memory clock frequency in kilohertz.
+    hipDeviceAttributeMemoryBusWidth,                       ///< Global memory bus width in bits.
     hipDeviceAttributeMultiprocessorCount,                  ///< Number of multiprocessors on the device.
     hipDeviceAttributeComputeMode,                          ///< Compute mode that device is currently in.
     hipDeviceAttributeL2CacheSize,                          ///< Size of L2 cache in bytes. 0 if the device doesn't have L2 cache.
@@ -155,6 +185,7 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributePciBusId,                             ///< PCI Bus ID.
     hipDeviceAttributePciDeviceId,                          ///< PCI Device ID.
     hipDeviceAttributeMaxSharedMemoryPerMultiprocessor,     ///< Maximum Shared Memory Per Multiprocessor.
+    hipDeviceAttributeIsMultiGpuBoard,                      ///< Multiple GPU devices.
 } hipDeviceAttribute_t;
 
 /**

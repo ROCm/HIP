@@ -19,8 +19,10 @@ MESSAGE ("HIP_PATH=" ${HIP_PATH})
 
 if (${HIP_PLATFORM} STREQUAL "hcc")
 	MESSAGE ("HIP_PLATFORM=hcc")
-	set (HC_PATH ${HIP_PATH}/hc)
-	set (HSA_PATH /opt/hsa)
+    set (HSA_PATH $ENV{HSA_PATH})
+    if (NOT DEFINED HSA_PATH)
+        set (HSA_PATH /opt/hsa)
+    endif()
 
 	#---
 	# Add HSA library:
@@ -30,7 +32,7 @@ if (${HIP_PLATFORM} STREQUAL "hcc")
 	#These includes are used for all files.
 	#Include HIP and HC since the tests need both of these:
 	#Note below HSA path is surgically included only where necessary.
-	include_directories(${HIP_PATH}/include ${HC_PATH}/include)
+	include_directories(${HIP_PATH}/include)
 
 	# hip_hcc.o:
 	add_library(hip_hcc OBJECT ${HIP_PATH}/src/hip_hcc.cpp)
@@ -39,6 +41,10 @@ if (${HIP_PLATFORM} STREQUAL "hcc")
 
 elseif (${HIP_PLATFORM} STREQUAL "nvcc")
 	MESSAGE ("HIP_PLATFORM=nvcc")
+
+	#Need C++11 for threads in some of the tests.
+	add_definitions(-std=c++11) 
+
 	# NVCC does not not support -rdynamic option
 	set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS )
 	set(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS )
@@ -103,7 +109,10 @@ make_hip_executable (hip_clz hip_clz.cpp)
 make_hip_executable (hip_brev hip_brev.cpp) 
 make_hip_executable (hip_ffs hip_ffs.cpp) 
 make_hip_executable (hipGetDeviceAttribute hipGetDeviceAttribute.cpp) 
+make_hip_executable (hipEnvVar hipEnvVar.cpp) 
+make_hip_executable (hipEnvVarDriver hipEnvVarDriver.cpp) 
 make_hip_executable (hipMemcpy hipMemcpy.cpp) 
+make_hip_executable (hipMemcpyAsync hipMemcpyAsync.cpp) 
 make_hip_executable (hipMemset hipMemset.cpp) 
 make_hip_executable (hipEventRecord hipEventRecord.cpp) 
 make_hip_executable (hipLanguageExtensions hipLanguageExtensions.cpp) 
@@ -112,6 +121,11 @@ make_hip_executable (hipSimpleAtomicsTest hipSimpleAtomicsTest.cpp)
 make_hip_executable (hipMathFunctionsHost hipMathFunctions.cpp hipSinglePrecisionMathHost.cpp hipDoublePrecisionMathHost.cpp)
 make_hip_executable (hipMathFunctionsDevice hipMathFunctions.cpp hipSinglePrecisionMathDevice.cpp hipDoublePrecisionMathDevice.cpp)
 make_hip_executable (hipIntrinsics hipMathFunctions.cpp hipSinglePrecisionIntrinsics.cpp hipDoublePrecisionIntrinsics.cpp hipIntegerIntrinsics.cpp)
+make_hip_executable (hipPointerAttrib hipPointerAttrib.cpp) 
+make_hip_executable (hipMultiThreadStreams1 hipMultiThreadStreams1.cpp)
+make_hip_executable (hipMultiThreadStreams2 hipMultiThreadStreams2.cpp) 
+
+make_hip_executable (hipStreamL5 hipStreamL5.cpp)
 target_link_libraries(hipMathFunctionsHost m)
 
 make_test(hip_anyall " " )
@@ -124,8 +138,13 @@ make_test(hipMemset --N 10    --memsetval 0x42 )  # small copy, just 10 bytes.
 make_test(hipMemset --N 10013 --memsetval 0x5a )  # oddball size.
 make_test(hipMemset --N 256M  --memsetval 0xa6 )  # big copy
 make_test(hipGridLaunch " " )
+make_test(hipEnvVarDriver " " )
+make_test(hipPointerAttrib " " )
+make_test(hipMultiThreadStreams1 " " )
+make_test(hipMultiThreadStreams2 " " )
 
 make_test(hipMemcpy  " " )
+make_test(hipMemcpyAsync  " " )
 
 # Isolate some tests which only run on HCC platform, for now:
 if (${HIP_PLATFORM} STREQUAL "hcc")
@@ -136,5 +155,7 @@ make_test(hipHcc  " " )
 # builds but fails at runtime:
 make_test(hip_ballot " " )
 endif()
+
+make_test(hipStreamL5 " ")
 
 make_hipify_test(specialFunc.cu )

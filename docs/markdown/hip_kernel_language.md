@@ -475,7 +475,6 @@ HIP supports the following atomic operations.
 ### Caveats and Features Under-Development:
 
 - HIP enables atomic operations on 32-bit integers. Additionally, it supports an atomic float add. AMD hardware, however, implements the float add using a CAS loop, so this function may not perform efficiently.
-- hcc currently maps `__shared__` atomics to `__device__` atomics. Optimal support is under development.
 - wrapping increment and decrement are under development.
 
 ## Warp Cross-Lane Functions

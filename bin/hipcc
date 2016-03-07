@@ -19,6 +19,10 @@ use File::Basename;
 # HCC_HOME  : Path to HCC SDK (default /opt/hcc).  Used on AMD platforms only.
 # HSA_PATH  : Path to HSA dir (default /opt/hsa).  Used on AMD platforms only.
 
+if(scalar @ARGV == 0){
+print "No Arguments passed, exiting ...\n";
+exit(-1);
+}
 
 $verbose = $ENV{'HIPCC_VERBOSE'};
 $verbose = 0 unless defined $verbose;
@@ -71,6 +75,7 @@ if ($HIP_PLATFORM eq "hcc") {
 	$HIPLDFLAGS .= " -L$HSA_PATH/lib -lhsa-runtime64 -lhc_am";
 	# Add C++ libs for GCC.
 	$HIPLDFLAGS .= " -lstdc++";
+	$HIPLDFLAGS .= " -lm";
 
     if ($verbose & 0x2) {
         print ("HSA_PATH=$HSA_PATH\n");
@@ -125,16 +130,16 @@ foreach $arg (@ARGV)
         #print "O: <$arg>\n";
     } else  {
         # input files and libraries 
-        if (($arg =~ /.cpp$/) or ($arg =~ /.c$/) or ($arg =~ /.cc$/) ) {
+        if (($arg =~ /\.cpp$/) or ($arg =~ /\.c$/) or ($arg =~ /\.cc$/) ) {
             $hasC = 1;
             $needCXXFLAGS = 1;
         } 
-        if (($arg =~ /.cu$/) or ($arg =~ /.cuh$/)) {
+        if (($arg =~ /\.cu$/) or ($arg =~ /\.cuh$/)) {
             $hasCU = 1;
             $needCXXFLAGS = 1;
         }
 
-        if (($arg =~ /hip_hcc.o$/) or ($arg =~ /hip_hcc.cpp/)) {
+        if (($arg =~ /hip_hcc\.o$/) or ($arg =~ /hip_hcc\.cpp/)) {
             $needHipHcc = 0;
         }
 
@@ -163,7 +168,7 @@ if ($needHipHcc) {
     if ((not -e $object) or ((stat($source))[9] > (stat($object))[9]))  {
         my $CMD = "$HCC $HCCFLAGS  -I$HSA_PATH/include -I$HIP_PATH/include -Wall -c $source -o $object";
         if ($verbose & 0x10) {
-            $CMD .= " -g" ;
+            $CMD .= " -g -O0" ;
         } else {
             $CMD .= " -O3" ;
         }

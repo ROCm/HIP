@@ -23,6 +23,7 @@ syn keyword hipKeyword hipThreadIdx_x hipThreadIdx_y hipThreadIdx_z
 syn keyword hipKeyword hipBlockDim_x hipBlockDim_y hipBlockDim_z
 syn keyword hipKeyword hipBlockIdx_x hipBlockIdx_y hipBlockIdx_z
 syn keyword hipKeyword hipGridIdx_x hipGridIdx_y hipGridIdx_z
+syn keyword hipKeyword hipGridDim_x hipGridDim_y hipGridDim_z
 
 syn keyword hipType uint uint1 uint2 uint3 uint4
 syn keyword hipType int1 int2 int3 int4
@@ -31,6 +32,7 @@ syn keyword hipType char1 char2 char3 char4
 syn keyword hipType uchar1 uchar2 uchar3 uchar4
 syn keyword hipType short1 short2 short3 short4
 syn keyword hipType dim1 dim2 dim3 dim4
+syn keyword hipType hipLaunchParm
 
 " Atomic functions
 syn keyword hipFunctionName atomicAdd atomicAnd atomicCAS atomicDec atomicExch
@@ -62,6 +64,7 @@ syn keyword hipFunctionName expf __expf exp logf __logf log
 " Runtime Data Types
 syn keyword hipType hipDeviceProp_t 
 syn keyword hipType hipError_t 
+syn keyword hipType hipStream_t
 
 " Runtime functions
 syn keyword hipFunctionName hipBindTexture hipBindTextureToArray 
@@ -91,6 +94,7 @@ syn keyword hipFunctionName hipD3D9UnmapResources
 syn keyword hipFunctionName hipD3D9UnregisterResource 
 syn keyword hipFunctionName hipDeviceGetProperties 
 syn keyword hipFunctionName hipDeviceSynchronize 
+syn keyword hipFunctionName hipDeviceReset 
 syn keyword hipFunctionName hipEventCreate 
 syn keyword hipFunctionName hipEventDestroy 
 syn keyword hipFunctionName hipEventElapsedTime 
@@ -115,8 +119,8 @@ syn keyword hipFunctionName hipGLRegisterBufferObject
 syn keyword hipFunctionName hipGLSetGLDevice 
 syn keyword hipFunctionName hipGLUnmapBufferObject 
 syn keyword hipFunctionName hipGLUnregisterBufferObject 
-syn keyword hipFunctionName hipLaunch 
 syn keyword hipFunctionName hipLaunchKernel
+syn keyword hipFunctionName hipLaunchParm
 syn keyword hipFunctionName hipMalloc 
 syn keyword hipFunctionName hipMalloc3D 
 syn keyword hipFunctionName hipMalloc3DArray 
@@ -124,6 +128,7 @@ syn keyword hipFunctionName hipMallocArray
 syn keyword hipFunctionName hipMallocHost 
 syn keyword hipFunctionName hipMallocPitch 
 syn keyword hipFunctionName hipMemcpy 
+syn keyword hipFunctionName hipMemcpyAsync
 syn keyword hipFunctionName hipMemcpy2D 
 syn keyword hipFunctionName hipMemcpy2DArrayToArray 
 syn keyword hipFunctionName hipMemcpy2DFromArray 
@@ -150,7 +155,12 @@ syn keyword hipFunctionName hipUnbindTexture
 " HIP Flags
 syn keyword hipFlags hipFilterModePoint 
 syn keyword hipFlags hipMemcpyHostToDevice 
+syn keyword hipFlags hipMemcpyDeviceToDevice 
+syn keyword hipFlags hipMemcpyHostToHost
 syn keyword hipFlags hipMemcpyDeviceToHost 
+syn keyword hipFlags hipMemcpyHostToHost 
+syn keyword hipFlags hipMemcpyDeviceToDevice 
+syn keyword hipFlags hipMemcpyDefault 
 syn keyword hipFlags hipReadModeElementType 
 syn keyword hipFlags hipSuccess 
 syn keyword hipFlags hipTextureType1D 
