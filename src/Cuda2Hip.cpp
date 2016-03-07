@@ -629,8 +629,13 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
 // Set up the command line options
 static cl::OptionCategory ToolTemplateCategory("CUDA to HIP source translator options");
 static cl::extrahelp MoreHelp( "<source0> specify the path of source file\n\n" );
+
 static cl::opt<std::string>
 OutputFilename("o", cl::desc("Output filename"), cl::value_desc("filename"), cl::cat(ToolTemplateCategory));
+
+static cl::opt<bool>
+Inplace("inplace", cl::desc("Modify input file inplace, replacing input with hipified output, save backup in .prehip file. "
+  "If .prehip file exists, use that as input to hip."), cl::value_desc("inplace"), cl::cat(ToolTemplateCategory));
 
 int main(int argc, const char **argv) {
 
@@ -643,18 +648,24 @@ int main(int argc, const char **argv) {
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
   if (dst.empty()) {
     dst = fileSources[0];
-    size_t pos = dst.rfind(".cu");
-    if (pos != std::string::npos) {
-      dst = dst.substr(0, pos) + ".hip.cu";
-    } else {
-      llvm::errs() << "Input .cu file was not specified.\n";
-      return 1;
+    if (!Inplace) {
+      size_t pos = dst.rfind(".cu");
+      if (pos != std::string::npos) {
+        dst = dst.substr(0, pos) + ".hip.cu";
+      } else {
+        llvm::errs() << "Input .cu file was not specified.\n";
+        return 1;
+      }
     }
   } else {
+    if (Inplace) {
+      llvm::errs() << "Conflict: both -o and -inplace options are specified.";
+    }
     dst += ".cu";
   }
+
   std::ifstream source(fileSources[0], std::ios::binary);
-  std::ofstream dest(dst, std::ios::binary);
+  std::ofstream dest(Inplace ? dst+".prehip" : dst, std::ios::binary);
   dest << source.rdbuf();
   source.close();
   dest.close();
@@ -715,10 +726,12 @@ int main(int argc, const char **argv) {
 
   Result = Rewrite.overwriteChangedFiles();
 
-  size_t pos = dst.rfind(".cu");
-  if (pos != std::string::npos)
-  {
-    rename(dst.c_str(), dst.substr(0, pos).c_str());
+  if (!Inplace) {
+    size_t pos = dst.rfind(".cu");
+    if (pos != std::string::npos)
+    {
+      rename(dst.c_str(), dst.substr(0, pos).c_str());
+    }
   }
   return Result;
 }
