@@ -500,7 +500,7 @@ do {\
   lp.cf = &cf;  \
   hipStream_t trueStream = (ihipPreLaunchKernel(_stream, &lp.av)); \
     if (HIP_TRACE_API) {\
-        fprintf(stderr, "hiptrace1: launch '%s' gridDim:[%d.%d.%d] groupDim:[%d.%d.%d] groupMem:+%d stream=%p\n", \
+        fprintf(stderr, "==hip-api: launch '%s' gridDim:[%d.%d.%d] groupDim:[%d.%d.%d] groupMem:+%d stream=%p\n", \
                 #_kernelName, lp.gridDim.z, lp.gridDim.y, lp.gridDim.x, lp.groupDim.z, lp.groupDim.y, lp.groupDim.x, lp.groupMemBytes, (void*)(_stream));\
     }\
   _kernelName (lp, __VA_ARGS__);\
