@@ -94,9 +94,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a3386b9e312c0bf133174e7a0e602aca1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3386b9e312c0bf133174e7a0e602aca1"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ihipDevice_t</b> (unsigned device_index, hc::accelerator acc)</td></tr>
-<tr class="separator:a3386b9e312c0bf133174e7a0e602aca1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58de2d307c8bc6c12ebdc44452b85fdc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a58de2d307c8bc6c12ebdc44452b85fdc"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>reset</b> ()</td></tr>
+<tr class="separator:a58de2d307c8bc6c12ebdc44452b85fdc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea2d2e0094f6dd26ec8012bdf3106117"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aea2d2e0094f6dd26ec8012bdf3106117"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>init</b> (unsigned device_index, hc::accelerator acc)</td></tr>
+<tr class="separator:aea2d2e0094f6dd26ec8012bdf3106117"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0abb382f1bcdda80028f9a8307e50561"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0abb382f1bcdda80028f9a8307e50561"></a>
 <a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>getProperties</b> (<a class="el" href="structhipDeviceProp__t.html">hipDeviceProp_t</a> *prop)</td></tr>
 <tr class="separator:a0abb382f1bcdda80028f9a8307e50561"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -116,22 +119,31 @@ hc::accelerator&#160;</td><td class="memItemRight" valign="bottom"><b>_acc</b></
 hsa_agent_t&#160;</td><td class="memItemRight" valign="bottom"><b>_hsa_agent</b></td></tr>
 <tr class="separator:af7db5d9ad862aa04136726a0826c9e70"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afb46e1e38da2fe9fcb690505852da391"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afb46e1e38da2fe9fcb690505852da391"></a>
-<a class="el" href="structihipStream__t.html">ihipStream_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>_null_stream</b></td></tr>
+<a class="el" href="classihipStream__t.html">ihipStream_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>_null_stream</b></td></tr>
 <tr class="separator:afb46e1e38da2fe9fcb690505852da391"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae43a87234b4663c1266fa5ea2569e8a4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae43a87234b4663c1266fa5ea2569e8a4"></a>
-std::list&lt; <a class="el" href="structihipStream__t.html">ihipStream_t</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>_streams</b></td></tr>
+std::list&lt; <a class="el" href="classihipStream__t.html">ihipStream_t</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>_streams</b></td></tr>
 <tr class="separator:ae43a87234b4663c1266fa5ea2569e8a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b7e2064036500f5609053c562963724"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3b7e2064036500f5609053c562963724"></a>
 unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>_compute_units</b></td></tr>
 <tr class="separator:a3b7e2064036500f5609053c562963724"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a54d6932b9ef1d24cf7416c0d75619926"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a54d6932b9ef1d24cf7416c0d75619926"></a>
+hsa_signal_t&#160;</td><td class="memItemRight" valign="bottom"><b>_copy_signal</b></td></tr>
+<tr class="separator:a54d6932b9ef1d24cf7416c0d75619926"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af7ec5ffb29aee3ca1b8ea6ac66eb335c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af7ec5ffb29aee3ca1b8ea6ac66eb335c"></a>
+std::mutex&#160;</td><td class="memItemRight" valign="bottom"><b>_copy_lock</b> [2]</td></tr>
+<tr class="separator:af7ec5ffb29aee3ca1b8ea6ac66eb335c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a64d2dc824ae34e946839d9f77e49da67"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a64d2dc824ae34e946839d9f77e49da67"></a>
+<a class="el" href="structStagingBuffer.html">StagingBuffer</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>_staging_buffer</b> [2]</td></tr>
+<tr class="separator:a64d2dc824ae34e946839d9f77e49da67"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>/home/bensander/HIP.public/src/<a class="el" href="hip__hcc_8cpp.html">hip_hcc.cpp</a></li>
+<li>/home/mangupta/hip_git/release_process/HIP.public/src/<a class="el" href="hip__hcc_8cpp.html">hip_hcc.cpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Feb 18 2016 20:42:16 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Mar 7 2016 10:51:16 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
