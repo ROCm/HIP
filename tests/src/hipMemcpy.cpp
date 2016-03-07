@@ -28,39 +28,6 @@ void printSep()
     printf ("======================================================================================\n");
 }
 
-//---
-// Test simple H2D copies and back.
-// Designed to stress a small number of simple smoke tests
-void simpleTest1()
-{
-    printf ("test: %s\n", __func__);
-    size_t Nbytes = N*sizeof(int);
-    printf ("N=%zu Nbytes=%6.2fMB\n", N, Nbytes/1024.0/1024.0);
-
-    int *A_d, *B_d, *C_d;
-    int *A_h, *B_h, *C_h;
-
-    HipTest::initArrays (&A_d, &B_d, &C_d, &A_h, &B_h, &C_h, N, false);
-
-    printf ("A_d=%p B_d=%p C_d=%p  A_h=%p B_h=%p C_h=%p\n", A_d, B_d, C_d, A_h, B_d, C_h);
-    unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
-
-    HIPCHECK ( hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
-    HIPCHECK ( hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
-
-    hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d, B_d, C_d, N);
-
-    HIPCHECK ( hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
-
-    HIPCHECK (hipDeviceSynchronize());
-
-    HipTest::checkVectorADD(A_h, B_h, C_h, N);
-
-    HipTest::freeArrays (A_d, B_d, C_d, A_h, B_h, C_h, false);
-    HIPCHECK (hipDeviceReset());
-
-    printf ("  %s success\n", __func__);
-}
 
 
 
@@ -148,7 +115,7 @@ void memcpytest2(size_t numElements, bool usePinnedHost, bool useHostToHost, boo
 //---
 //Try all the 16 possible combinations to memcpytest2 - usePinnedHost, useHostToHost, useDeviceToDevice, useMemkindDefault
 template<typename T>
-void memcpytest2_loop(size_t numElements)
+void memcpytest2_for_type(size_t numElements)
 {
     printSep();
 
@@ -220,6 +187,7 @@ void multiThread_1(bool serialize, bool usePinnedHost)
 
 
 
+
 int main(int argc, char *argv[])
 {
     HipTest::parseStandardArguments(argc, argv, true);
@@ -229,19 +197,37 @@ int main(int argc, char *argv[])
 
 
     if (p_tests & 0x1) {
+        printf ("\n\n=== tests&1 (types and different memcpy kinds (H2D, D2H, H2H, D2D)\n");
         HIPCHECK ( hipDeviceReset() );
-        simpleTest1();
+        memcpytest2_for_type<float>(N);
+        memcpytest2_for_type<double>(N);
+        memcpytest2_for_type<char>(N);
+        memcpytest2_for_type<int>(N);
+        printf ("===\n\n\n");
     }
+
 
     if (p_tests & 0x2) {
-        HIPCHECK ( hipDeviceReset() );
-        memcpytest2_loop<float>(N);
-        memcpytest2_loop<double>(N);
-        memcpytest2_loop<char>(N);
-        memcpytest2_loop<int>(N);
+        // Some tests around the 64MB boundary which have historically shown issues:
+        printf ("\n\n=== tests&0x2 (64MB boundary)\n");
+#if 0
+        // These all pass:
+        memcpytest2<float>(15*1024*1024, 1, 0, 0, 0);  
+        memcpytest2<float>(16*1024*1024, 1, 0, 0, 0);  
+        memcpytest2<float>(16*1024*1024+16*1024,  1, 0, 0, 0);  
+#endif
+        // Just over 64MB:
+        memcpytest2<float>(16*1024*1024+512*1024,  1, 0, 0, 0);  
+        memcpytest2<float>(17*1024*1024+1024,  1, 0, 0, 0);  
+        memcpytest2<float>(32*1024*1024, 1, 0, 0, 0);  
+        memcpytest2<float>(32*1024*1024, 0, 0, 0, 0);  
+        memcpytest2<float>(32*1024*1024, 1, 1, 1, 0);  
+        memcpytest2<float>(32*1024*1024, 1, 1, 1, 0);  
     }
 
+
     if (p_tests & 0x4) {
+        printf ("\n\n=== tests&4 (test sizes and offsets)\n");
         HIPCHECK ( hipDeviceReset() );
         printSep();
         memcpytest2_sizes<float>(0,0);
@@ -254,6 +240,7 @@ int main(int argc, char *argv[])
     }
 
     if (p_tests & 0x8) {
+        printf ("\n\n=== tests&8\n");
         HIPCHECK ( hipDeviceReset() );
         printSep();
 
@@ -269,7 +256,9 @@ int main(int argc, char *argv[])
 
         // Remove serialization, and use unpinned.
         multiThread_1<float>(false, false); // TODO
+        printf ("===\n\n\n");
     }
+
 
     passed();
 

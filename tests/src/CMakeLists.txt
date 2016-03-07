@@ -69,16 +69,20 @@ macro (make_hip_executable exe cpp)
     endif() 
 endmacro()
 
-
-macro (make_test exe )
-  string (REPLACE " " "" smush_args ${ARGN})
-  set (testname ${exe}${smush_args}.tst)
+macro (make_named_test exe testname )
   add_test (NAME ${testname} 
       COMMAND ${PROJECT_BINARY_DIR}/${exe} ${ARGN}
             )
   set_tests_properties (${testname}
       PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
     )
+endmacro()
+
+macro (make_test exe )
+  string (REPLACE " " "" smush_args ${ARGN})
+  set (testname ${exe}${smush_args}.tst)
+
+  make_named_test(${exe} ${testname} ${ARGN})
 endmacro()
 
 
@@ -112,6 +116,7 @@ make_hip_executable (hip_ffs hip_ffs.cpp)
 make_hip_executable (hipGetDeviceAttribute hipGetDeviceAttribute.cpp) 
 make_hip_executable (hipEnvVar hipEnvVar.cpp) 
 make_hip_executable (hipEnvVarDriver hipEnvVarDriver.cpp) 
+make_hip_executable (hipMemcpy_simple hipMemcpy_simple.cpp) 
 make_hip_executable (hipMemcpy hipMemcpy.cpp) 
 make_hip_executable (hipMemcpyAsync hipMemcpyAsync.cpp) 
 make_hip_executable (hipMemset hipMemset.cpp) 
@@ -147,7 +152,10 @@ make_test(hipPointerAttrib " " )
 make_test(hipMultiThreadStreams1 " " )
 make_test(hipMultiThreadStreams2 " " )
 
-make_test(hipMemcpy  " " )
+make_test(hipMemcpy_simple  " " )
+make_named_test(hipMemcpy "hipMemcpy-modes" --tests 0x1 )
+make_named_test(hipMemcpy "hipMemcpy-size" --tests 0x6 )
+make_named_test(hipMemcpy "hipMemcpy-multithreaded" --tests 0x8 )
 make_test(hipMemcpyAsync  " " )
 
 make_test(hipHcc  " " )
