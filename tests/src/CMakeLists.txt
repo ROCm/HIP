@@ -105,6 +105,7 @@ endmacro()
 
 make_hip_executable (hip_ballot hip_ballot.cpp)
 make_hip_executable (hip_anyall hip_anyall.cpp) 
+make_hip_executable (hip_popc hip_popc.cpp) 
 make_hip_executable (hip_clz hip_clz.cpp) 
 make_hip_executable (hip_brev hip_brev.cpp) 
 make_hip_executable (hip_ffs hip_ffs.cpp) 
@@ -117,6 +118,7 @@ make_hip_executable (hipMemset hipMemset.cpp)
 make_hip_executable (hipEventRecord hipEventRecord.cpp) 
 make_hip_executable (hipLanguageExtensions hipLanguageExtensions.cpp) 
 make_hip_executable (hipGridLaunch hipGridLaunch.cpp) 
+make_hip_executable (hipHcc hipHcc.cpp) 
 make_hip_executable (hipSimpleAtomicsTest hipSimpleAtomicsTest.cpp)
 make_hip_executable (hipMathFunctionsHost hipMathFunctions.cpp hipSinglePrecisionMathHost.cpp hipDoublePrecisionMathHost.cpp)
 make_hip_executable (hipMathFunctionsDevice hipMathFunctions.cpp hipSinglePrecisionMathDevice.cpp hipDoublePrecisionMathDevice.cpp)
@@ -128,7 +130,9 @@ make_hip_executable (hipMultiThreadStreams2 hipMultiThreadStreams2.cpp)
 make_hip_executable (hipStreamL5 hipStreamL5.cpp)
 target_link_libraries(hipMathFunctionsHost m)
 
+make_test(hip_ballot " " )
 make_test(hip_anyall " " )
+make_test(hip_popc " " )
 make_test(hip_brev " " )
 make_test(hip_clz " " )
 make_test(hip_ffs " " )
@@ -140,22 +144,20 @@ make_test(hipMemset --N 256M  --memsetval 0xa6 )  # big copy
 make_test(hipGridLaunch " " )
 make_test(hipEnvVarDriver " " )
 make_test(hipPointerAttrib " " )
-make_test(hipMultiThreadStreams1 " " )
+#make_test(hipMultiThreadStreams1 " " )
 make_test(hipMultiThreadStreams2 " " )
 
-make_test(hipMemcpy  " " )
+#make_test(hipMemcpy  " " )
 make_test(hipMemcpyAsync  " " )
 
-# Isolate some tests which only run on HCC platform, for now:
-if (${HIP_PLATFORM} STREQUAL "hcc")
-make_hip_executable (hip_popc hip_popc.cpp) 
-make_hip_executable (hipHcc hipHcc.cpp) 
-make_test(hip_popc " " )
 make_test(hipHcc  " " )
-# builds but fails at runtime:
-make_test(hip_ballot " " )
-endif()
 
 make_test(hipStreamL5 " ")
+
+# Isolate some tests which build but don't run on HCC platform, for now:
+if (${HIP_PLATFORM} STREQUAL "nvcc")
+make_test(hipMultiThreadStreams1 " " )
+make_test(hipMemcpy  " " )
+endif()
 
 make_hipify_test(specialFunc.cu )
