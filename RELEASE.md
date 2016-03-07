@@ -26,6 +26,24 @@ Next:
 ## Revision History:
 
 ===================================================================================================
+Release:0.82.00
+Date: 2016.03.07
+- Bump minimum required HCC workweek to 16074.
+- Enable multi-GPU support.
+  * Use hipSetDevice to select a device for subsequent kernel calls and memory allocations.
+  * CUDA_VISIBLE_DEVICES / HIP_VISIBLE_DEVICE environment variable selects devices visible to the runtime.
+- Support hipStreams – send sequences of copy and kernel commands to a device.
+  * Asynchronous copies supported.
+- Optimize memory copy operations.
+- Support hipPointerGetAttribute – can determine if a pointer is host or device.
+- Enable atomics to local memory.
+- Support for LC Direct-To-ISA path.
+- Improved free memory reporting.
+  * hipMemGetInfo (report full memory used in current process).
+  * hipDeviceReset (deletes all memory allocated by current process).
+
+
+===================================================================================================
 Release:0.80.01
 Date: 2016.02.18
 - Improve reporting and support for device-side math functions.
