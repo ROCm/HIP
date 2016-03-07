@@ -278,9 +278,10 @@ namespace {
         if (is_angled) {
           if (N.cuda2hipRename.count(file_name)) {
             std::string repName = N.cuda2hipRename[file_name];
-            llvm::errs() << "\nInclude file found: " << file_name << "\n";
-            llvm::errs() << "\nSourceLocation:"; filename_range.getBegin().dump(*_sm);
-            llvm::errs() << "\nWill be replaced with " << repName << "\n";
+            DEBUG(dbgs() << "Include file found: " << file_name << "\n");
+            DEBUG(dbgs() << "SourceLocation:"
+              << filename_range.getBegin().printToString(*_sm) << "\n");
+            DEBUG(dbgs() << "Will be replaced with " << repName << "\n");
             SourceLocation sl = filename_range.getBegin();
             SourceLocation sle = filename_range.getEnd();
             const char* B = _sm->getCharacterData(sl);
@@ -305,13 +306,12 @@ namespace {
             StringRef name = T.getIdentifierInfo()->getName();
             if (N.cuda2hipRename.count(name)) {
               StringRef repName = N.cuda2hipRename[name];
-              llvm::errs() << "\nIdentifier " << name
-              << " found in definition of macro " 
-              << MacroNameTok.getIdentifierInfo()->getName() << "\n";
-              llvm::errs() << "\nwill be replaced with: " << repName << "\n";
+              DEBUG(dbgs() << "Identifier " << name
+                << " found in definition of macro "
+                << MacroNameTok.getIdentifierInfo()->getName() << "\n");
+              DEBUG(dbgs() << "will be replaced with: " << repName << "\n");
               SourceLocation sl = T.getLocation();
-              llvm::errs() << "\nSourceLocation: ";sl.dump(*_sm);
-              llvm::errs() << "\n";
+              DEBUG(dbgs() << "SourceLocation: " << sl.printToString(*_sm) << "\n");
               Replacement Rep(*_sm, sl, name.size(), repName);
               Replace->insert(Rep);
             }
@@ -348,10 +348,10 @@ namespace {
               StringRef name = tok.getIdentifierInfo()->getName();
               if (N.cuda2hipRename.count(name)) {
                 StringRef repName = N.cuda2hipRename[name];
-                llvm::errs() << "\nIdentifier " << name
+                DEBUG(dbgs() << "Identifier " << name
                   << " found as an actual argument in expansion of macro "
-                  << macroName << "\n";
-                llvm::errs() << "\nwill be replaced with: " << repName << "\n";
+                  << macroName << "\n");
+                DEBUG(dbgs() << "will be replaced with: " << repName << "\n");
                 SourceLocation sl = tok.getLocation();
                 Replacement Rep(*_sm, sl, name.size(), repName);
                 Replace->insert(Rep);
@@ -402,7 +402,7 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
      size_t replacementLength = OS.str().size();
      SourceLocation sl = kernelDecl->getNameInfo().getEndLoc();
      SourceLocation kernelArgListStart = clang::Lexer::findLocationAfterToken(sl, clang::tok::l_paren, *SM, DefaultLangOptions, true);
-     kernelArgListStart.dump(*SM);
+     DEBUG(dbgs() << kernelArgListStart.printToString(*SM));
      if (kernelDecl->getNumParams() > 0) {
        const ParmVarDecl * pvdFirst = kernelDecl->getParamDecl(0);
        const ParmVarDecl * pvdLast = kernelDecl->getParamDecl(kernelDecl->getNumParams() - 1);
@@ -413,29 +413,29 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
        initialParamList = StringRef(SM->getCharacterData(kernelArgListStart), replacementLength);
        OS << ", " << initialParamList;
      }
-     llvm::outs() << "initial paramlist: " << initialParamList << "\n";
-     llvm::outs() << "new paramlist: " << OS.str() << "\n";
+     DEBUG(dbgs() << "initial paramlist: " << initialParamList << "\n");
+     DEBUG(dbgs() << "new paramlist: " << OS.str() << "\n");
      Replacement Rep0(*(Result.SourceManager), kernelArgListStart, replacementLength, OS.str());
      Replace->insert(Rep0);
-   }
+  }
 
   void run(const MatchFinder::MatchResult &Result) override {
 
     SourceManager * SM = Result.SourceManager;
     LangOptions DefaultLangOptions;
 
-      if (const CallExpr * call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaCall"))
-      {
-        const FunctionDecl * funcDcl = call->getDirectCallee();
-        std::string name = funcDcl->getDeclName().getAsString();
-        if (N.cuda2hipRename.count(name)) {
-	  std::string repName = N.cuda2hipRename[name];
-          SourceLocation sl = call->getLocStart();
-	  Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
-          SM->getImmediateSpellingLoc(sl) : sl, name.length(), repName);
-	  Replace->insert(Rep);
-        }
+    if (const CallExpr * call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaCall"))
+    {
+      const FunctionDecl * funcDcl = call->getDirectCallee();
+      std::string name = funcDcl->getDeclName().getAsString();
+      if (N.cuda2hipRename.count(name)) {
+        std::string repName = N.cuda2hipRename[name];
+        SourceLocation sl = call->getLocStart();
+        Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
+        SM->getImmediateSpellingLoc(sl) : sl, name.length(), repName);
+        Replace->insert(Rep);
       }
+    }
 
 	  if (const CUDAKernelCallExpr * launchKernel = Result.Nodes.getNodeAs<clang::CUDAKernelCallExpr>("cudaLaunchKernel"))
 	  {
@@ -460,7 +460,7 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
       OS << "hipLaunchKernel(HIP_KERNEL_NAME(" << calleeName << "), ";
 
       const CallExpr * config = launchKernel->getConfig();
-      llvm::outs() << "\nKernel config arguments:\n";
+      DEBUG(dbgs() << "Kernel config arguments:" << "\n");
       for (unsigned argno = 0; argno < config->getNumArgs(); argno++)
       {
         const Expr * arg = config->getArg(argno);
@@ -471,7 +471,8 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
           SourceLocation el(arg->getLocEnd());
           SourceLocation stop = clang::Lexer::getLocForEndOfToken(el, 0, *SM, DefaultLangOptions);
           StringRef outs(SM->getCharacterData(sl), SM->getCharacterData(stop) - SM->getCharacterData(sl));
-          llvm::outs() << "args[ " << argno << "]" << outs << " <" << pvd->getType().getAsString() << ">\n";
+          DEBUG(dbgs() << "args[ " << argno << "]" << outs << " <"
+            << pvd->getType().getAsString() << ">" << "\n");
           if (pvd->getType().getAsString().compare("dim3") == 0)
             OS << " dim3(" << outs << "),";
           else
@@ -487,7 +488,7 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
         SourceLocation el(arg->getLocEnd());
         SourceLocation stop = clang::Lexer::getLocForEndOfToken(el, 0, *SM, DefaultLangOptions);
         std::string outs(SM->getCharacterData(sl), SM->getCharacterData(stop) - SM->getCharacterData(sl));
-        llvm::outs() << outs.c_str() << "\n";
+        DEBUG(dbgs() << outs << "\n");
         OS << " " << outs << ",";
       }
       XStr.pop_back();
@@ -633,6 +634,10 @@ static cl::extrahelp MoreHelp( "<source0> specify the path of source file\n\n" )
 static cl::opt<std::string>
 OutputFilename("o", cl::desc("Output filename"), cl::value_desc("filename"), cl::cat(ToolTemplateCategory));
 
+static cl::opt<bool, true>
+Debug("debug", cl::desc("Enable debug output"), cl::Hidden,
+      cl::location(llvm::DebugFlag));
+
 static cl::opt<bool>
 Inplace("inplace", cl::desc("Modify input file inplace, replacing input with hipified output, save backup in .prehip file. "
   "If .prehip file exists, use that as input to hip."), cl::value_desc("inplace"), cl::cat(ToolTemplateCategory));
@@ -713,15 +718,15 @@ int main(int argc, const char **argv) {
     &*DiagOpts, &DiagnosticPrinter, false);
   SourceManager Sources(Diagnostics, Tool.getFiles());
 
-  llvm::outs() << "Replacements collected by the tool:\n";
-  for (auto &r : Tool.getReplacements()) {
-    llvm::outs() << r.toString() << "\n";
+  DEBUG(dbgs() << "Replacements collected by the tool:\n");
+  for (const auto &r : Tool.getReplacements()) {
+    DEBUG(dbgs() << r.toString() << "\n");
   }
 
   Rewriter Rewrite(Sources, DefaultLangOptions);
 
   if (!Tool.applyAllReplacements(Rewrite)) {
-    llvm::errs() << "Skipped some replacements.\n";
+    DEBUG(dbgs() << "Skipped some replacements.\n");
   }
 
   Result = Rewrite.overwriteChangedFiles();
