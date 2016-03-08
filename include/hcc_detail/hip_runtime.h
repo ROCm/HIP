@@ -478,6 +478,9 @@ __device__ inline float __dsqrt_rz(double x) {return hc::fast_math::sqrt(x); };
 
 
 
+/**
+ * @bug HIP currently requires that kernels be called from the same compilation unit where they are defined.  Calling a kernel defined in another compilation unit will produce an error similar to “undefined reference to `__hcLaunchKernel__ZN4XXX”.
+ */
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
 
 

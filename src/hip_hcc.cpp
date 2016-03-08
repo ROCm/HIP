@@ -1947,6 +1947,7 @@ ihipMemsetKernel(hipStream_t stream, T * ptr, T val, size_t sizeBytes)
 //---
 /**
  * @returns #hipSuccess #hipErrorMemoryAllocation
+ * @bug The March ROCK driver has a bug related to allocating and copying > 64MB of data.  This causes the kmeans and some directed tests to fail.  This issue will be addressed soon.
  */
 hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 {
