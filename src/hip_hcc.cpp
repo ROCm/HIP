@@ -2090,6 +2090,51 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr)
 	return ihipLogStatus(hip_status);
 }
 
+hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
+{
+	std::call_once(hip_initialized, ihipInit);
+	hipError_t hip_status = hipSuccess;
+
+	auto device = ihipGetTlsDefaultDevice();
+	void* srcPtr;
+	if(hostPtr == NULL){
+		return ihipLogStatus(hipErrorInvalidValue);
+	}
+	if(device){
+	if(flags == hipHostAllocDefault){
+		hsa_status_t hsa_status = hsa_amd_memory_lock(hostPtr, sizeBytes, &device->_hsa_agent, 1, &srcPtr);
+		if(hsa_status == HSA_STATUS_SUCCESS){
+			hip_status = hipSuccess;
+		}else{
+			hip_status = hipErrorMemoryAllocation;
+		}
+	}
+	else if (flags | hipHostRegisterMapped){
+		hsa_status_t hsa_status = hsa_amd_memory_lock(hostPtr, sizeBytes, &device->_hsa_agent, 1, &srcPtr);
+		//TODO: Added feature for actual host pointer being tracked
+		if(hsa_status != HSA_STATUS_SUCCESS){
+			hip_status = hipErrorMemoryAllocation;
+		}
+	}
+	}
+	return ihipLogStatus(hip_status);
+}
+
+hipError_t hipHostUnregister(void *hostPtr){
+	std::call_once(hip_initialized, ihipInit);
+	hipError_t hip_status = hipSuccess;
+	if(hostPtr == NULL){
+		hip_status = hipErrorInvalidValue;
+	}else{
+	hsa_status_t hsa_status = hsa_amd_memory_unlock(hostPtr);
+	if(hsa_status != HSA_STATUS_SUCCESS){
+		hip_status = hipErrorInvalidValue;
+// TODO: Add a different return error. This is not true
+	}
+	}
+	return ihipLogStatus(hip_status);
+}
+
 //---
 hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind)
 {

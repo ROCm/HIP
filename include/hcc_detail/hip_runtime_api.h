@@ -61,6 +61,11 @@ extern "C" {
 #define hipHostAllocMapped 0x2
 #define hipHostAllocWriteCombined 0x4
 
+#define hipHostRegisterDefault 0x0
+#define hipHostRegisterPortable 0x1 
+#define hipHostRegisterMapped 0x2
+#define hipHostRegisterIoMemory 0x4
+
 /**
  * @warning On AMD devices and recent Nvidia devices, these hints and controls are ignored.
  */
@@ -695,6 +700,25 @@ hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, size_t size) ;
  *  @return Error code
  */
 hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) ;
+
+/**
+ *  @brief Pin host memory
+ *
+ *  @param[out] hostPtr Pointer to host memory to be pinned
+ *  @param[in] sizeBytes size of the host memory
+ *  @param[in] flags Type of pinning the the host memory
+ *  @return Error code
+ */
+hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) ;
+
+/**
+ *  @brief Un-pin host pointer
+ *
+ *  @param[in] hostPtr Pinned Host Pointer
+ *  @return Error code
+ */
+hipError_t hipHostUnregister(void* hostPtr) ;
+
 
 /**
  *  @brief Free memory allocated by the hcc hip memory allocation API.
