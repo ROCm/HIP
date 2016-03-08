@@ -20,6 +20,7 @@ Stay tuned - the work for many of these features is already in-flight.
 Release:0.82.00
 Date: 2016.03.07
 - Bump minimum required HCC workweek to 16074.
+- Bump minimum required ROCK-Kernel-Driver and ROCR-Runtime to Developer Preview 2.
 - Enable multi-GPU support.
   * Use hipSetDevice to select a device for subsequent kernel calls and memory allocations.
   * CUDA_VISIBLE_DEVICES / HIP_VISIBLE_DEVICE environment variable selects devices visible to the runtime.

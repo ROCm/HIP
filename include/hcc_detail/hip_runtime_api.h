@@ -31,7 +31,7 @@ THE SOFTWARE.
 
 #include <hcc_detail/host_defines.h>
 
-#if defined (__HCC__) &&  (__hcc_workweek__ < 1602)
+#if defined (__HCC__) &&  (__hcc_workweek__ < 16074)
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
