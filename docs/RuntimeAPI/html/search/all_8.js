@@ -21,6 +21,7 @@ var searchData=
   ['hcc_2dspecific_20accessors',['HCC-Specific Accessors',['../group__HCC__Specific.html',1,'']]],
   ['hip_20environment_20variables',['HIP Environment Variables',['../group__HIP-ENV.html',1,'']]],
   ['hip_5fhcc_2ecpp',['hip_hcc.cpp',['../hip__hcc_8cpp.html',1,'']]],
+  ['hip_5fkernel_5fname',['HIP_KERNEL_NAME',['../hcc__detail_2hip__runtime_8h.html#a1ae4bd590189ae294b70ee4f3d3de5dc',1,'hip_runtime.h']]],
   ['hip_5flaunch_5fblocking',['HIP_LAUNCH_BLOCKING',['../group__HIP-ENV.html#ga8049b329f2663b4572d81e7a9aa8a155',1,'HIP_LAUNCH_BLOCKING():&#160;hip_hcc.cpp'],['../group__HIP-ENV.html#ga8049b329f2663b4572d81e7a9aa8a155',1,'HIP_LAUNCH_BLOCKING():&#160;hip_hcc.cpp']]],
   ['hip_5fprint_5fenv',['HIP_PRINT_ENV',['../group__HIP-ENV.html#ga1e1c85dbb250f1acfb484c1be1f3b28a',1,'HIP_PRINT_ENV():&#160;hip_hcc.cpp'],['../group__HIP-ENV.html#ga1e1c85dbb250f1acfb484c1be1f3b28a',1,'HIP_PRINT_ENV():&#160;hip_hcc.cpp']]],
   ['hip_5fruntime_2eh',['hip_runtime.h',['../hcc__detail_2hip__runtime_8h.html',1,'']]],

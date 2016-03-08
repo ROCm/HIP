@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/hip_git/release_process/HIP.public/include/hcc_detail/hip_runtime.h File Reference</title>
+<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/hip_git/wip.pub/include/hcc_detail/hip_runtime.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -161,8 +161,7 @@ Macros</h2></td></tr>
 <tr class="memitem:a1d71a6ed991854dbafa20f282905c262"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1d71a6ed991854dbafa20f282905c262"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>__syncthreads</b>()&#160;&#160;&#160;hc_barrier(CLK_LOCAL_MEM_FENCE)</td></tr>
 <tr class="separator:a1d71a6ed991854dbafa20f282905c262"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1ae4bd590189ae294b70ee4f3d3de5dc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1ae4bd590189ae294b70ee4f3d3de5dc"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_KERNEL_NAME</b>(...)&#160;&#160;&#160;__VA_ARGS__</td></tr>
+<tr class="memitem:a1ae4bd590189ae294b70ee4f3d3de5dc"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hcc__detail_2hip__runtime_8h.html#a1ae4bd590189ae294b70ee4f3d3de5dc">HIP_KERNEL_NAME</a>(...)&#160;&#160;&#160;__VA_ARGS__</td></tr>
 <tr class="separator:a1ae4bd590189ae294b70ee4f3d3de5dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad55ac6a8f4c288efbe4af7f44bc93653"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>KERNELBEGIN</b></td></tr>
 <tr class="separator:ad55ac6a8f4c288efbe4af7f44bc93653"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -414,6 +413,23 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains definitions of APIs for HIP runtime. </p>
 </div><h2 class="groupheader">Macro Definition Documentation</h2>
+<a class="anchor" id="a1ae4bd590189ae294b70ee4f3d3de5dc"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define HIP_KERNEL_NAME</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname"><em>...</em></td><td>)</td>
+          <td>&#160;&#160;&#160;__VA_ARGS__</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<dl class="bug"><dt><b><a class="el" href="bug.html#_bug000001">Bug:</a></b></dt><dd>HIP currently requires that kernels be called from the same compilation unit where they are defined. Calling a kernel defined in another compilation unit will produce an error similar to “undefined reference to `__hcLaunchKernel__ZN4XXX”. </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="a48f5f9da77c5fab1fbcf0205bb347d89"></a>
 <div class="memitem">
 <div class="memproto">
@@ -491,7 +507,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Mar 7 2016 10:51:16 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Mar 8 2016 14:46:05 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
