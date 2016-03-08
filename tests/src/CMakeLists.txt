@@ -130,6 +130,8 @@ make_hip_executable (hipHostAlloc hipHostAlloc.cpp)
 make_hip_executable (hipStreamL5 hipStreamL5.cpp)
 make_hip_executable (hipHostGetFlags hipHostGetFlags.cpp)
 make_hip_executable (hipHostRegister hipHostRegister.cpp)
+make_hip_executable (hipRandomMemcpyAsync hipRandomMemcpyAsync.cpp)
+
 target_link_libraries(hipMathFunctionsHost m)
 
 make_test(hip_ballot " " )
@@ -155,5 +157,5 @@ make_test(hipHostGetFlags " ")
 make_test(hipHcc  " " )
 make_test(hipHostRegister " ")
 make_test(hipStreamL5 " ")
-
+make_test(hipRandomMemcpyAsync " ")
 make_hipify_test(specialFunc.cu )
