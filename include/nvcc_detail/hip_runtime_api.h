@@ -55,6 +55,9 @@ hipMemcpyHostToHost
 #define hipHostAllocMapped cudaHostAllocMapped
 #define hipHostAllocWriteCombined cudaHostAllocWriteCombined
 
+#define hipHostRegisterPortable cudaHostRegisterPortable
+#define hipHostRegisterMapped cudaHostRegisterMapped
+
 typedef cudaEvent_t hipEvent_t;
 typedef cudaStream_t hipStream_t;
 //typedef cudaChannelFormatDesc hipChannelFormatDesc;
@@ -130,6 +133,14 @@ inline static hipError_t hipHostGetDevicePointer(void** devPtr, void* hostPtr, u
 
 inline static hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr){
 	return hipCUDAErrorTohipError(cudaHostGetFlags(flagsPtr, hostPtr));
+}
+
+inline static hipError_t hipHostRegister(void* ptr, size_t size, unsigned int flags){
+	return hipCUDAErrorTohipError(cudaHostRegister(ptr, size, flags));
+}
+
+inline static hipError_t hipHostUnregister(void* ptr){
+	return hipCUDAErrorTohipError(cudaHostUnregister(ptr));
 }
 
 inline static hipError_t hipFreeHost(void* ptr) {
