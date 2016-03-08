@@ -68,7 +68,7 @@ THE SOFTWARE.
 static const int release = 1;
 
 
-int HIP_LAUNCH_BLOCKING = 1;
+int HIP_LAUNCH_BLOCKING = 0;
 
 int HIP_PRINT_ENV = 0;
 int HIP_TRACE_API= 0;
@@ -82,8 +82,8 @@ std::vector<int> g_hip_visible_devices; /* vector of integers that contains the 
 
 //---
 // Chicken bits for disabling functionality to work around potential issues:
-int HIP_DISABLE_HW_KERNEL_DEP = 0;
-int HIP_DISABLE_HW_COPY_DEP = 0;
+int HIP_DISABLE_HW_KERNEL_DEP = 1;
+int HIP_DISABLE_HW_COPY_DEP = 1;
 
 int HIP_DISABLE_BIDIR_MEMCPY = 0;
 int HIP_ONESHOT_COPY_DEP     = 1;  // TODO - setting this =1  is a good thing, reduces input deps
@@ -2483,8 +2483,6 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
 
     stream = ihipSyncAndResolveStream(stream);
 
-	bool trueAsync = true;
-
 #if USE_AM_TRACKER
     if (stream) {
         ihipDevice_t *device = stream->getDevice();
@@ -2503,17 +2501,13 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
             memcpy(dst, src, sizeBytes);
 
         } else {
-			hc::accelerator acc;
-			hc::AmPointerInfo dstAm(NULL, NULL, 0, acc, 0, 0);
-			hc::AmPointerInfo srcAm(NULL, NULL, 0, acc, 0, 0);
-			am_status_t statDst = hc::am_memtracker_getinfo(&dstAm, dst);
-			am_status_t statSrc = hc::am_memtracker_getinfo(&srcAm, src);
-
-			if(dstAm._appAllocationFlags != 1 || srcAm._appAllocationFlags != 1){
-				trueAsync = false;
-			}
-
 			if (kind == hipMemcpyDefault) {
+				hc::accelerator acc;
+				hc::AmPointerInfo dstAm(NULL, NULL, 0, acc, 0, 0);
+				hc::AmPointerInfo srcAm(NULL, NULL, 0, acc, 0, 0);
+				am_status_t statDst = hc::am_memtracker_getinfo(&dstAm, dst);
+				am_status_t statSrc = hc::am_memtracker_getinfo(&srcAm, src);
+
 				if(statDst == AM_SUCCESS && statSrc == AM_SUCCESS){
 					if(dstAm._devicePointer != NULL){
 						if(srcAm._devicePointer != NULL){
@@ -2540,10 +2534,7 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
             hsa_signal_store_relaxed(ihip_signal->_hsa_signal, 1);
 
             ihipCommand_t copyType;
-            if (kind == hipMemcpyHostToDevice ){
-				copyType = ihipCommandCopyH2D;
-				
-			}else if(kind == hipMemcpyDeviceToDevice) {
+            if ((kind == hipMemcpyHostToDevice) || (kind == hipMemcpyDeviceToDevice)) {
                 copyType = ihipCommandCopyH2D;
             } else if (kind == hipMemcpyDeviceToHost) {
                 copyType = ihipCommandCopyD2H;
@@ -2552,11 +2543,7 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
                 copyType = ihipCommandCopyD2H;
             }
 
-			
-
 #if USE_ROCR_V2
-			if(trueAsync == true){
-
             hsa_signal_t depSignal;
             int depSignalCnt = stream->copyCommand(ihip_signal, &depSignal, copyType);
 
@@ -2579,10 +2566,6 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
                 // TODO-stream - does async-copy fall back to sync if input pointers are not pinned?
                 e = hipErrorInvalidValue;
             }
-			}
-			else {
-				ihipSyncCopy(stream, dst, src, sizeBytes, kind);
-			}
         }
     } else {
         e = hipErrorInvalidValue;
