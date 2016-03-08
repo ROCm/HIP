@@ -96,7 +96,7 @@ Functions</h2></td></tr>
 <tr class="memitem:ga72ae9e7f498ab5684580892a5d7d8e2d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__PeerToPeer.html#ga72ae9e7f498ab5684580892a5d7d8e2d">hipMemcpyPeer</a> (void *dst, int dstDevice, const void *src, int srcDevice, size_t sizeBytes)</td></tr>
 <tr class="memdesc:ga72ae9e7f498ab5684580892a5d7d8e2d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies memory from one device to memory on another device.  <a href="#ga72ae9e7f498ab5684580892a5d7d8e2d">More...</a><br/></td></tr>
 <tr class="separator:ga72ae9e7f498ab5684580892a5d7d8e2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gab6211c18ca1e23252ef080cd6be855ca"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__PeerToPeer.html#gab6211c18ca1e23252ef080cd6be855ca">hipMemcpyPeerAsync</a> (void *dst, int dstDevice, const void *src, int srcDevice, size_t sizeBytes, <a class="el" href="structihipStream__t.html">hipStream_t</a> stream=0)</td></tr>
+<tr class="memitem:gab6211c18ca1e23252ef080cd6be855ca"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__PeerToPeer.html#gab6211c18ca1e23252ef080cd6be855ca">hipMemcpyPeerAsync</a> (void *dst, int dstDevice, const void *src, int srcDevice, size_t sizeBytes, hipStream_t stream=0)</td></tr>
 <tr class="memdesc:gab6211c18ca1e23252ef080cd6be855ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies memory from one device to memory on another device.  <a href="#gab6211c18ca1e23252ef080cd6be855ca">More...</a><br/></td></tr>
 <tr class="separator:gab6211c18ca1e23252ef080cd6be855ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -302,7 +302,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="structihipStream__t.html">hipStream_t</a>&#160;</td>
+          <td class="paramtype">hipStream_t&#160;</td>
           <td class="paramname"><em>stream</em>&#160;</td>
         </tr>
         <tr>
@@ -326,14 +326,14 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <p>Returns <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d" title="DeviceID must be in range 0...#compute-devices. ">hipErrorInvalidDevice</a></p>
-<dl class="bug"><dt><b><a class="el" href="bug.html#_bug000004">Bug:</a></b></dt><dd>This function uses a synchronous copy </dd></dl>
+<dl class="bug"><dt><b><a class="el" href="bug.html#_bug000005">Bug:</a></b></dt><dd>This function uses a synchronous copy </dd></dl>
 
 </div>
 </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Feb 18 2016 20:42:16 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Mar 8 2016 14:46:06 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
