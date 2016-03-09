@@ -634,9 +634,8 @@ static cl::extrahelp MoreHelp( "<source0> specify the path of source file\n\n" )
 static cl::opt<std::string>
 OutputFilename("o", cl::desc("Output filename"), cl::value_desc("filename"), cl::cat(ToolTemplateCategory));
 
-static cl::opt<bool, true>
-Debug("debug", cl::desc("Enable debug output"), cl::Hidden,
-      cl::location(llvm::DebugFlag));
+//static cl::opt<bool, true>
+//Debug("debug", cl::desc("Enable debug output"), cl::Hidden, cl::location(llvm::DebugFlag));
 
 static cl::opt<bool>
 Inplace("inplace", cl::desc("Modify input file inplace, replacing input with hipified output, save backup in .prehip file. "
