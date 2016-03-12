@@ -45,11 +45,6 @@ THE SOFTWARE.
 
 
 
-#define USE_ROCR_V2    1  /* use the ROCR v2 async copy API with dst and src agents */
-
-
-
-
 #define INLINE static inline
 
 //---
@@ -863,7 +858,6 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     // Group memory will not be paged out, so, the physical memory size is the total shared memory size, and also equal to the group region size.
     prop->maxSharedMemoryPerMultiProcessor = prop->totalGlobalMem;
 
-#if USE_ROCR_V2
     // Get Max memory clock frequency
     //err = hsa_region_get_info(*am_region, (hsa_region_info_t)HSA_AMD_REGION_INFO_MAX_CLOCK_FREQUENCY, &prop->memoryClockRate);
     DeviceErrorCheck(err);
@@ -872,7 +866,6 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     // Get global memory bus width in bits
     //err = hsa_region_get_info(*am_region, (hsa_region_info_t)HSA_AMD_REGION_INFO_BUS_WIDTH, &prop->memoryBusWidth);
     DeviceErrorCheck(err);
-#endif
 
     // Set feature flags - these are all mandatory for HIP on HCC path:
     // Some features are under-development and future revs may support flags that are currently 0.
@@ -2142,11 +2135,7 @@ void StagingBuffer::CopyHostToDevicePinInPlace(void* dst, const void* src, size_
 
         hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
 
-#if USE_ROCR_V2
         hsa_status = hsa_amd_memory_async_copy(dstp, _device->_hsa_agent, locked_srcp, _device->_hsa_agent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
-#else
-        assert(0);
-#endif
         tprintf (DB_COPY2, "H2D: bytesRemaining=%zu: async_copy %zu bytes %p to %p status=%x\n", bytesRemaining, theseBytes, _pinnedStagingBuffer[bufferIndex], dstp, hsa_status);
 
         if (hsa_status != HSA_STATUS_SUCCESS) {
@@ -2206,11 +2195,7 @@ void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeByte
 
         hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
 
-#if USE_ROCR_V2
         hsa_status_t hsa_status = hsa_amd_memory_async_copy(dstp, _device->_hsa_agent, _pinnedStagingBuffer[bufferIndex], _device->_hsa_agent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
-#else
-        hsa_status_t hsa_status = hsa_amd_memory_async_copy(dstp, _pinnedStagingBuffer[bufferIndex], theseBytes, _device->_hsa_agent, 0, NULL, _completion_signal[bufferIndex]);
-#endif
         tprintf (DB_COPY2, "H2D: bytesRemaining=%zu: async_copy %zu bytes %p to %p status=%x\n", bytesRemaining, theseBytes, _pinnedStagingBuffer[bufferIndex], dstp, hsa_status);
 
         if (hsa_status != HSA_STATUS_SUCCESS) {
@@ -2261,11 +2246,7 @@ void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeByte
 
             tprintf (DB_COPY2, "D2H: bytesRemaining0=%zu  async_copy %zu bytes src:%p to staging:%p\n", bytesRemaining0, theseBytes, srcp0, _pinnedStagingBuffer[bufferIndex]);
             hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
-#if USE_ROCR_V2
             hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], _device->_hsa_agent, srcp0, _device->_hsa_agent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
-#else
-            hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], srcp0, theseBytes, _device->_hsa_agent, 0, NULL, _completion_signal[bufferIndex]);
-#endif
             if (hsa_status != HSA_STATUS_SUCCESS) {
                 throw (ihipException(hipErrorUnknown));
             }
@@ -2394,11 +2375,7 @@ void ihipSyncCopy(ihipStream_t *stream, void* dst, const void* src, size_t sizeB
 
         tprintf(DB_COPY1, "HSA Async_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
 
-#if USE_ROCR_V2
         hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, device->_hsa_agent, src, device->_hsa_agent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, device->_copy_signal);
-#else
-        hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, src, sizeBytes, device->_hsa_agent, 0, NULL, device->_copy_signal);
-#endif
 
         if (hsa_status == HSA_STATUS_SUCCESS) {
             hsa_signal_wait_relaxed(device->_copy_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
@@ -2501,16 +2478,12 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
                 copyType = ihipCommandCopyD2H;
             }
 
-#if USE_ROCR_V2
             hsa_signal_t depSignal;
             int depSignalCnt = stream->copyCommand(ihip_signal, &depSignal, copyType);
 
             tprintf (DB_SYNC, " copy-async, waitFor=%lu completion=#%lu(%lu)\n", depSignalCnt? depSignal.handle:0x0, ihip_signal->_sig_id, ihip_signal->_hsa_signal.handle);
 
             hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, device->_hsa_agent, src, device->_hsa_agent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, ihip_signal->_hsa_signal);
-#else
-            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, src, sizeBytes, device->_hsa_agent, 0, NULL, ihip_signal->_hsa_signal);
-#endif
 
 
             if (hsa_status == HSA_STATUS_SUCCESS) {
