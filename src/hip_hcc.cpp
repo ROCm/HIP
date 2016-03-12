@@ -149,6 +149,15 @@ const char *dbName [] =
 #endif
 
 
+class ihipException : public std::exception
+{
+public:
+    ihipException(hipError_t e) : _code(e) {};
+
+    hipError_t _code; 
+};
+
+
 const hipStream_t hipStreamNull = 0x0;
 
 struct ihipDevice_t;
@@ -366,9 +375,9 @@ INLINE bool ihipIsValidDevice(unsigned deviceIndex);
 ihipSignal_t::ihipSignal_t() :  _sig_id(0)
 {
   if (hsa_signal_create(0/*value*/, 0, NULL, &_hsa_signal) != HSA_STATUS_SUCCESS) {
-      throw;
-  }
-  tprintf (DB_SIGNAL, "  allocated hsa_signal=%lu\n", (_hsa_signal.handle));
+  throw ihipException(hipErrorOutOfResources);
+}
+tprintf (DB_SIGNAL, "  allocated hsa_signal=%lu\n", (_hsa_signal.handle));
 }
 
 //---
@@ -376,7 +385,7 @@ ihipSignal_t::~ihipSignal_t()
 {
     tprintf (DB_SIGNAL, "  destroy hsa_signal #%lu (#%lu)\n", (_hsa_signal.handle), _sig_id);
     if (hsa_signal_destroy(_hsa_signal) != HSA_STATUS_SUCCESS) {
-        throw; // TODO
+       throw ihipException(hipErrorOutOfResources);
     }
 };
 
@@ -2094,7 +2103,7 @@ StagingBuffer::StagingBuffer(ihipDevice_t *device, size_t bufferSize, int numBuf
         // TODO - experiment with alignment here.
         _pinnedStagingBuffer[i] = hc::am_alloc(_bufferSize, device->_acc, amHostPinned);
         if (_pinnedStagingBuffer[i] == NULL) {
-            throw;
+            throw ihipException(hipErrorMemoryAllocation);
         }
         hsa_signal_create(0, 0, NULL, &_completion_signal[i]);
     }
@@ -2127,7 +2136,9 @@ void StagingBuffer::CopyHostToDevicePinInPlace(void* dst, const void* src, size_
         hsa_signal_store_relaxed(_completion_signal[i], 0);
     }
 
-    assert(sizeBytes < UINT64_MAX/2); // TODO
+    if (sizeBytes >= UINT64_MAX/2) {
+        throw (ihipException(hipErrorInvalidValue));
+    }
     int bufferIndex = 0;
     for (int64_t bytesRemaining=sizeBytes; bytesRemaining>0 ;  bytesRemaining -= _bufferSize) {
 
@@ -2143,7 +2154,9 @@ void StagingBuffer::CopyHostToDevicePinInPlace(void* dst, const void* src, size_
         void *locked_srcp;
         hsa_status_t hsa_status = hsa_amd_memory_lock(const_cast<char *> (srcp), theseBytes, &_device->_hsa_agent, 1, &locked_srcp);
 
-        assert (hsa_status == HSA_STATUS_SUCCESS);
+        if (hsa_status != HSA_STATUS_SUCCESS) {
+            throw (ihipException(hipErrorUnknown));
+        }
 
         hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
 
@@ -2154,7 +2167,9 @@ void StagingBuffer::CopyHostToDevicePinInPlace(void* dst, const void* src, size_
 #endif
         tprintf (DB_COPY2, "H2D: bytesRemaining=%zu: async_copy %zu bytes %p to %p status=%x\n", bytesRemaining, theseBytes, _pinnedStagingBuffer[bufferIndex], dstp, hsa_status);
 
-        assert(hsa_status == HSA_STATUS_SUCCESS); // TODO - throw
+        if (hsa_status != HSA_STATUS_SUCCESS) {
+            throw (ihipException(hipErrorUnknown));
+        }
 
         srcp += theseBytes;
         dstp += theseBytes;
@@ -2216,7 +2231,9 @@ void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeByte
 #endif
         tprintf (DB_COPY2, "H2D: bytesRemaining=%zu: async_copy %zu bytes %p to %p status=%x\n", bytesRemaining, theseBytes, _pinnedStagingBuffer[bufferIndex], dstp, hsa_status);
 
-        assert(hsa_status == HSA_STATUS_SUCCESS); // TODO - throw
+        if (hsa_status != HSA_STATUS_SUCCESS) {
+            throw (ihipException(hipErrorUnknown));
+        }
 
         srcp += theseBytes;
         dstp += theseBytes;
@@ -2267,7 +2284,9 @@ void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeByte
 #else
             hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], srcp0, theseBytes, _device->_hsa_agent, 0, NULL, _completion_signal[bufferIndex]);
 #endif
-            assert(hsa_status == HSA_STATUS_SUCCESS); // TODO - throw
+            if (hsa_status != HSA_STATUS_SUCCESS) {
+                throw (ihipException(hipErrorUnknown));
+            }
 
             srcp0 += theseBytes;
 
@@ -2306,8 +2325,9 @@ void ihipSyncCopy(ihipStream_t *stream, void* dst, const void* src, size_t sizeB
 {
     ihipDevice_t *device = stream->getDevice();
 
+
     if (device == NULL) {
-        throw;
+        throw ihipException(hipErrorInvalidDevice);
     }
 
     hc::accelerator acc;
@@ -2328,8 +2348,10 @@ void ihipSyncCopy(ihipStream_t *stream, void* dst, const void* src, size_t sizeB
             kind = hipMemcpyDeviceToHost;
         } else if (srcIsHost && dstIsHost) {
             kind = hipMemcpyHostToHost;
-        } else if (srcIsHost && dstIsHost) {
+        } else if (!srcIsHost && !dstIsHost) {
             kind = hipMemcpyDeviceToDevice;
+        } else {
+            throw ihipException(hipErrorInvalidMemcpyDirection);
         }
     }
 
@@ -2382,9 +2404,7 @@ void ihipSyncCopy(ihipStream_t *stream, void* dst, const void* src, size_t sizeB
         } else if (kind == hipMemcpyDeviceToHost) {
             copyType = ihipCommandCopyD2H;
         } else {
-            // TODO - return error condition:
-            //e = hipErrorInvalidMemcpyDirection;
-            copyType = ihipCommandCopyD2H;
+            throw ihipException(hipErrorInvalidMemcpyDirection);
         }
 
         device->_copy_lock[HIP_DISABLE_BIDIR_MEMCPY? 0:1].lock();
@@ -2399,12 +2419,10 @@ void ihipSyncCopy(ihipStream_t *stream, void* dst, const void* src, size_t sizeB
         hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, src, sizeBytes, device->_hsa_agent, 0, NULL, device->_copy_signal);
 #endif
 
-        printf ("HSA_STATUS=%d\n", hsa_status);
-
         if (hsa_status == HSA_STATUS_SUCCESS) {
             hsa_signal_wait_relaxed(device->_copy_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
         } else {
-            throw;
+            throw ihipException(hipErrorInvalidValue);
         }
 
         device->_copy_lock[HIP_DISABLE_BIDIR_MEMCPY ? 0:1].unlock();
@@ -2429,8 +2447,8 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
     try {
         ihipSyncCopy(stream, dst, src, sizeBytes, kind);
     }
-    catch (...) {
-        e = hipErrorInvalidResourceHandle;
+    catch (ihipException ex) {
+        e = ex._code;
     }
 
 

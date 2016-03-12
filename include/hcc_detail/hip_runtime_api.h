@@ -690,7 +690,6 @@ hipError_t hipFreeHost(void* ptr);
  *  It supports memory from host to device,
  *  device to host, device to device and host to host
  *  The src and dst must not overlap.
- *  TODO: cudaErrorInvalidMemcpyDirection error code is not supported right now, use hipErrorUnknown for now
  *
  *  @param[out]  dst Data being copy to
  *  @param[in]  src Data being copy from
