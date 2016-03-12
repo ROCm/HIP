@@ -45,12 +45,7 @@ THE SOFTWARE.
 
 
 
-#define USE_AM_TRACKER 1  /* >0 = use new AM memory tracker features. */
 #define USE_ROCR_V2    1  /* use the ROCR v2 async copy API with dst and src agents */
-
-#if (USE_AM_TRACKER) and (__hcc_workweek__ < 16074)
-#error (USE_AM_TRACKER requries HCC version of 16074 or newer)
-#endif
 
 
 
@@ -1357,12 +1352,10 @@ hipError_t hipDeviceReset(void)
     device->_streams.clear();
 
 
-#if USE_AM_TRACKER
     if (device) {
         am_memtracker_reset(device->_acc);
         device->reset(); // re-allocate required resources.
     }
-#endif
 
 	// TODO - reset all streams on the device.
 
@@ -1862,7 +1855,6 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
 
     hipError_t e = hipSuccess;
 
-#if USE_AM_TRACKER
     hc::accelerator acc;
     hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
     am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
@@ -1896,16 +1888,11 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
 
         e = hipErrorUnknown;
     }
-#else
-    e = hipErrorInvalidDevice;
-#endif
 
     return ihipLogStatus(e);
 }
 
 
-#if USE_AM_TRACKER
-// TODO - test this function:
 /**
  * @returns #hipSuccess,
  * @returns #hipErrorInvalidValue if flags are not 0
@@ -1934,7 +1921,6 @@ hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsi
 
     return ihipLogStatus(e);
 }
-#endif
 
 
 
@@ -2031,9 +2017,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
         if (sizeBytes && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
         } else {
-#if USE_AM_TRACKER
             hc::am_memtracker_update(*ptr, device->_device_index, 0);
-#endif
         }
     } else {
         hip_status = hipErrorMemoryAllocation;
@@ -2057,9 +2041,7 @@ hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
         if (sizeBytes && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
         } else {
-#if USE_AM_TRACKER
             hc::am_memtracker_update(*ptr, device->_device_index, 0);
-#endif
         }
 
         tprintf (DB_MEM, "  %s: pinned ptr=%p\n", __func__, *ptr);
@@ -2320,7 +2302,6 @@ void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeByte
 
 
 
-#if USE_AM_TRACKER
 void ihipSyncCopy(ihipStream_t *stream, void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind)
 {
     ihipDevice_t *device = stream->getDevice();
@@ -2429,7 +2410,6 @@ void ihipSyncCopy(ihipStream_t *stream, void* dst, const void* src, size_t sizeB
 
     }
 }
-#endif
 
 
 //---
@@ -2443,7 +2423,6 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 
     hipError_t e = hipSuccess;
 
-#if USE_AM_TRACKER
     try {
         ihipSyncCopy(stream, dst, src, sizeBytes, kind);
     }
@@ -2451,11 +2430,6 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
         e = ex._code;
     }
 
-
-#else
-    hc::am_copy(dst, src, sizeBytes);
-    e = hipSuccess;
-#endif
 
     if (HIP_LAUNCH_BLOCKING) {
         tprintf(DB_SYNC, "LAUNCH_BLOCKING for completion of hipMemcpy\n");
@@ -2466,11 +2440,6 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 }
 
 
-#if USE_AM_TRACKER==0
-/**
- * @warning on HCC hipMemcpyAsync uses a synchronous copy.
- */
-#endif
 /**
  * @result #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidMemcpyDirection, #hipErrorInvalidValue
  * @warning on HCC hipMemcpyAsync does not support overlapped H2D and D2H copies.
@@ -2485,7 +2454,6 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
 
     stream = ihipSyncAndResolveStream(stream);
 
-#if USE_AM_TRACKER
     if (stream) {
         ihipDevice_t *device = stream->getDevice();
 
@@ -2560,12 +2528,6 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
     } else {
         e = hipErrorInvalidValue;
     }
-#else
-    // TODO-hsart This routine needs to ensure that dst and src are mapped on the GPU.
-    // This is a synchronous copy - remove and replace with code below when we have appropriate LOCK APIs.
-    hc::am_copy(dst, src, sizeBytes);
-#endif
-
 
     return ihipLogStatus(e);
 }
@@ -2650,15 +2612,10 @@ hipError_t hipMemGetInfo  (size_t *free, size_t *total)
         }
 
         if (free) {
-#if USE_AM_TRACKER
             // TODO - replace with kernel-level for reporting free memory:
             size_t deviceMemSize, hostMemSize, userMemSize;
             hc::am_memtracker_sizeinfo(hipDevice->_acc, &deviceMemSize, &hostMemSize, &userMemSize);
             *free =  hipDevice->_props.totalGlobalMem - deviceMemSize;
-#else
-            *free =  hipDevice->_props.totalGlobalMem * 0.5; // TODO
-            e=hipErrorInvalidValue;
-#endif
         }
 
     } else {
