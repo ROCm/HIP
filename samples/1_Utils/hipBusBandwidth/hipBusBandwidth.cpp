@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 #include <hip_runtime.h>
 
 #include "ResultDatabase.h"
@@ -27,8 +29,35 @@ bool          p_d2h = true;
 }
 
 
+
 // ****************************************************************************
-// Function: runBenchmark
+int sizeToBytes(int size) {
+    return (size < 0) ? -size : size * 1024;
+}
+
+
+// ****************************************************************************
+std::string sizeToString(int size) 
+{
+    using namespace std;
+    stringstream ss;
+    if (size < 0) {
+        ss << char(0x1) << setfill('0') << setw(3) << -size <<  "B";
+    } else {
+        ss << size << "kB";
+    }
+    return ss.str();
+}
+
+
+// ****************************************************************************
+// -sizes are in bytes, +sizes are in kb, last size must be largest
+int sizes[] = {-64, -256, -512, 1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384, 32768,65536,131072,262144,524288};
+int nSizes  = sizeof(sizes) / sizeof(int);
+
+
+// ****************************************************************************
+// Function: RunBenchmark_H2D
 //
 // Purpose:
 //   Measures the bandwidth of the bus connecting the host processor to the
@@ -51,10 +80,6 @@ bool          p_d2h = true;
 // ****************************************************************************
 void RunBenchmark_H2D(ResultDatabase &resultDB) 
 {
-    // Sizes are in kb
-    int sizes[] = {1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384, 32768,65536,131072,262144,524288};
-    int nSizes  = sizeof(sizes) / sizeof(int);
-
     long long numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
 
     hipSetDevice(p_device);
@@ -66,15 +91,15 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
         hipMallocHost((void**)&hostMem, sizeof(float) * numMaxFloats);
         while (hipGetLastError() != hipSuccess)
         {
- 	    // drop the size and try again
-	    if (p_verbose) std::cout << " - dropping size allocating pinned mem\n";
-	    --nSizes;
-	    if (nSizes < 1)
-	    {
-            std::cerr << "Error: Couldn't allocated any pinned buffer\n";
-		return;
-	    }
-	    numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
+            // drop the size and try again
+            if (p_verbose) std::cout << " - dropping size allocating pinned mem\n";
+            --nSizes;
+            if (nSizes < 1)
+            {
+                std::cerr << "Error: Couldn't allocated any pinned buffer\n";
+            return;
+            }
+            numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
             hipMallocHost((void**)&hostMem, sizeof(float) * numMaxFloats);
         }
     }
@@ -92,15 +117,15 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
     hipMalloc((void**)&device, sizeof(float) * numMaxFloats);
     while (hipGetLastError() != hipSuccess)
     {
-	// drop the size and try again
-	if (p_verbose) std::cout << " - dropping size allocating device mem\n";
-	--nSizes;
-	if (nSizes < 1)
-	{
-        std::cerr << "Error: Couldn't allocated any device buffer\n";
-	    return;
-	}
-	numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
+        // drop the size and try again
+        if (p_verbose) std::cout << " - dropping size allocating device mem\n";
+        --nSizes;
+        if (nSizes < 1)
+        {
+            std::cerr << "Error: Couldn't allocated any device buffer\n";
+            return;
+        }
+        numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
         hipMalloc((void**)&device, sizeof(float) * numMaxFloats);
     }
 
@@ -124,7 +149,7 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
             else
                 sizeIndex = (nSizes - 1) - i;
 
-            int nbytes = sizes[sizeIndex] * 1024;
+            int nbytes = sizeToBytes(sizes[sizeIndex]);
 
             hipEventRecord(start, 0);
             hipMemcpy(device, hostMem, nbytes, hipMemcpyHostToDevice);
@@ -137,13 +162,13 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
             // Convert to GB/sec
             if (p_verbose)
             {
-                std::cerr << "size " << sizes[sizeIndex] << "k took " << t <<
+                std::cerr << "size " << sizeToString(sizes[sizeIndex]) << " took " << t <<
                         " ms\n";
             }
 
-            double speed = (double(sizes[sizeIndex]) * 1024. / (1000*1000)) / t;
+            double speed = (double(sizeToBytes(sizes[sizeIndex])) / (1000*1000)) / t;
             char sizeStr[256];
-            sprintf(sizeStr, "% 7dkB", sizes[sizeIndex]);
+            sprintf(sizeStr, "%9s", sizeToString(sizes[sizeIndex]).c_str());
             resultDB.AddResult("H2D_Bandwidth", sizeStr, "GB/sec", speed);
             resultDB.AddResult("H2D_Time", sizeStr, "ms", t);
         }
@@ -166,13 +191,10 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
 }
 
 
+
+// ****************************************************************************
 void RunBenchmark_D2H(ResultDatabase &resultDB)
 {
-
-    // Sizes are in kb
-    int nSizes  = 20;
-    int sizes[20] = {1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,
-		     32768,65536,131072,262144,524288};
     long long numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
 
     // Create some host memory pattern
@@ -252,7 +274,7 @@ void RunBenchmark_D2H(ResultDatabase &resultDB)
             else
                 sizeIndex = (nSizes - 1) - i;
 
-            int nbytes = sizes[sizeIndex] * 1024;
+            int nbytes = sizeToBytes(sizes[sizeIndex]);
 
             hipEventRecord(start, 0);
             hipMemcpy(hostMem2, device,
@@ -266,13 +288,13 @@ void RunBenchmark_D2H(ResultDatabase &resultDB)
             // Convert to GB/sec
             if (p_verbose)
             {
-                std::cerr << "size " <<sizes[sizeIndex] << "k took " << t <<
+                std::cerr << "size " <<sizeToString(sizes[sizeIndex]) << " took " << t <<
                         " ms\n";
             }
 
-            double speed = (double(sizes[sizeIndex]) * 1024. / (1000*1000)) / t;
+            double speed = (double(sizeToBytes(sizes[sizeIndex])) / (1000*1000)) / t;
             char sizeStr[256];
-            sprintf(sizeStr, "% 7dkB", sizes[sizeIndex]);
+            sprintf(sizeStr, "%9s", sizeToString(sizes[sizeIndex]).c_str());
             resultDB.AddResult("D2H_Bandwidth", sizeStr, "GB/sec", speed);
             resultDB.AddResult("D2H_Time", sizeStr, "ms", t);
         }
