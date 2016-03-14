@@ -91,7 +91,7 @@ int HIP_ONESHOT_COPY_DEP     = 1;  // TODO - setting this =1  is a good thing, r
 
 // Compile debug trace mode - this prints debug messages to stderr when env var HIP_DB is set.
 // May be set to 0 to remove debug if checks - possible code size and performance difference?
-#define COMPILE_DB_TRACE 0
+#define COMPILE_DB_TRACE 1
 
 
 // Color defs for debug messages:
@@ -1053,6 +1053,7 @@ void ihipInit()
 
 }
 
+
 INLINE bool ihipIsValidDevice(unsigned deviceIndex)
 {
     // deviceIndex is unsigned so always > 0
@@ -1678,6 +1679,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
             // If stream == NULL, wait on all queues.
             // This matches behavior described in CUDA 7 RT APIs, which say that "This function uses standard default stream semantics".
             // TODO-HCC fix this - is CUDA this conservative or still uses device timestamps?
+            // TODO-HCC can we use barrier or event marker to implement better solution?
             ihipDevice_t *device = ihipGetTlsDefaultDevice();
             ihipWaitNullStream(device);
 
