@@ -720,7 +720,8 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t siz
 /**
  *  @brief Copy data from src to dst asynchronously.
  *
- *  TODO: cudaErrorInvalidMemcpyDirection error code is not supported right now, use hipErrorUnknown for now
+ *  @warning If host or dest are not pinned, the memory copy will be performed synchronously.  For best performance, use hipHostAlloc to
+ *  allocate host memory that is transferred asynchronously.
  *
  *  @param[out] dst Data being copy to
  *  @param[in]  src Data being copy from
