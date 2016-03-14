@@ -1435,7 +1435,7 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
  * @bug HCC always returns 0 for regsPerBlock
  * @bug HCC always returns 0 for l2CacheSize
  */
-hipError_t hipDeviceGetProperties(hipDeviceProp_t* props, int device)
+hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device)
 {
     std::call_once(hip_initialized, ihipInit);
 
@@ -2045,6 +2045,137 @@ hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
     return ihipLogStatus(hip_status);
 }
 
+
+hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags){
+	std::call_once(hip_initialized, ihipInit);
+
+	hipError_t hip_status = hipSuccess;
+
+	auto device = ihipGetTlsDefaultDevice();
+
+	if(device){
+		if(flags & hipHostAllocDefault){
+		const unsigned am_flags = amHostPinned;
+
+		*ptr = hc::am_alloc(sizeBytes, device->_acc, am_flags);
+		if(sizeBytes && (*ptr == NULL)){
+			hip_status = hipErrorMemoryAllocation;
+		}else{
+			hc::am_memtracker_update(*ptr, device->_device_index, 0);
+		}
+		tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
+		}
+		if(flags & hipHostAllocMapped){
+		const unsigned am_flags = amHostPinned;
+
+		*ptr = hc::am_alloc(sizeBytes, device->_acc, am_flags);
+		if(sizeBytes && (*ptr == NULL)){
+			hip_status = hipErrorMemoryAllocation;
+		}else{
+			hc::am_memtracker_update(*ptr, device->_device_index, flags);
+//			void *srcPtr;
+//			hsa_status_t hsa_status = hsa_amd_memory_lock((*ptr), sizeBytes, &device->_hsa_agent, 1, &srcPtr);
+//			assert(hsa_status == HSA_STATUS_SUCCESS);
+//			hc::am_memtracker_add(srcPtr, sizeBytes, device->_acc, false);
+		}
+		tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
+		}
+	}
+	return ihipLogStatus(hip_status);
+}
+
+
+hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, size_t size){
+	std::call_once(hip_initialized, ihipInit);
+
+	hipError_t hip_status = hipSuccess;
+
+	if(hstPtr == NULL){
+		hip_status = hipErrorInvalidValue;
+	}else{
+
+	hc::accelerator acc;
+	hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+	am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, hstPtr);
+	if(status == AM_SUCCESS){
+		*devPtr = amPointerInfo._devicePointer;
+		if(devPtr == NULL){
+			hip_status = hipErrorMemoryAllocation;
+        }
+	}
+	tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *devPtr);
+	}
+	return ihipLogStatus(hip_status);
+}
+
+hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr)
+{
+	std::call_once(hip_initialized, ihipInit);
+	hipError_t hip_status = hipSuccess;
+
+	hc::accelerator acc;
+	hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+	am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, hostPtr);
+	if(status == AM_SUCCESS){
+		*flagsPtr = amPointerInfo._appAllocationFlags;
+		if(*flagsPtr == 0){
+			hip_status = hipErrorInvalidValue;
+		}
+		else{
+			hip_status = hipSuccess;
+		}
+		tprintf(DB_MEM, " %s: host ptr=%p\n", __func__, hostPtr);
+	}else{
+		hip_status = hipErrorInvalidValue;
+	}
+	return ihipLogStatus(hip_status);
+}
+
+hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
+{
+	std::call_once(hip_initialized, ihipInit);
+	hipError_t hip_status = hipSuccess;
+
+	auto device = ihipGetTlsDefaultDevice();
+	void* srcPtr;
+	if(hostPtr == NULL){
+		return ihipLogStatus(hipErrorInvalidValue);
+	}
+	if(device){
+	if(flags == hipHostAllocDefault){
+		hsa_status_t hsa_status = hsa_amd_memory_lock(hostPtr, sizeBytes, &device->_hsa_agent, 1, &srcPtr);
+		if(hsa_status == HSA_STATUS_SUCCESS){
+			hip_status = hipSuccess;
+		}else{
+			hip_status = hipErrorMemoryAllocation;
+		}
+	}
+	else if (flags | hipHostRegisterMapped){
+		hsa_status_t hsa_status = hsa_amd_memory_lock(hostPtr, sizeBytes, &device->_hsa_agent, 1, &srcPtr);
+		//TODO: Added feature for actual host pointer being tracked
+		if(hsa_status != HSA_STATUS_SUCCESS){
+			hip_status = hipErrorMemoryAllocation;
+		}
+	}
+	}
+	return ihipLogStatus(hip_status);
+}
+
+hipError_t hipHostUnregister(void *hostPtr){
+	std::call_once(hip_initialized, ihipInit);
+	hipError_t hip_status = hipSuccess;
+	if(hostPtr == NULL){
+		hip_status = hipErrorInvalidValue;
+	}else{
+	hsa_status_t hsa_status = hsa_amd_memory_unlock(hostPtr);
+	if(hsa_status != HSA_STATUS_SUCCESS){
+		hip_status = hipErrorInvalidValue;
+// TODO: Add a different return error. This is not true
+	}
+	}
+	return ihipLogStatus(hip_status);
+}
+
 //---
 hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind)
 {
@@ -2433,6 +2564,8 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
 
     stream = ihipSyncAndResolveStream(stream);
 
+	bool trueAsync = true;
+
     if (stream) {
         ihipDevice_t *device = stream->getDevice();
 
@@ -2450,28 +2583,47 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
             memcpy(dst, src, sizeBytes);
 
         } else {
+			hc::accelerator acc;
+			hc::AmPointerInfo dstAm(NULL, NULL, 0, acc, 0, 0);
+			hc::AmPointerInfo srcAm(NULL, NULL, 0, acc, 0, 0);
+			am_status_t statDst = hc::am_memtracker_getinfo(&dstAm, dst);
+			am_status_t statSrc = hc::am_memtracker_getinfo(&srcAm, src);
+
+			if(dstAm._appAllocationFlags != 1 || srcAm._appAllocationFlags != 1){
+				trueAsync = false;
+			}
+
 			if (kind == hipMemcpyDefault) {
-				std::cout<<"hipMemcpyDefault"<<std::endl;
-				hipPointerAttribute_t att;
-				hipError_t hipSt = hipPointerGetAttributes(&att, dst);
-				if(hipSt == hipSuccess){
-					if(att.devicePointer != NULL && att.hostPointer != NULL){
-						return hipSuccess;
+				if(statDst == AM_SUCCESS && statSrc == AM_SUCCESS){
+					if(dstAm._devicePointer != NULL){
+						if(srcAm._devicePointer != NULL){
+							kind = hipMemcpyDeviceToDevice;
+						}
+						if(srcAm._hostPointer != NULL){
+							kind = hipMemcpyHostToDevice;
+						}
+					}
+					if(dstAm._hostPointer != NULL){
+						if(srcAm._devicePointer != NULL){
+							kind = hipMemcpyDeviceToHost;
+						}
+						if(srcAm._hostPointer != NULL){
+							kind = hipMemcpyHostToHost;
+						}
 					}
 				}
-				hipSt = hipPointerGetAttributes(&att, (void*)src);
-				if(hipSt == hipSuccess){
-					if(att.devicePointer != NULL && att.hostPointer != NULL){
-						return hipSuccess;
-					}
+				else{
+					return hipErrorInvalidMemcpyDirection;
 				}
-				else{return hipErrorInvalidMemcpyDirection;}
 			}
             ihipSignal_t *ihip_signal = stream->getSignal();
             hsa_signal_store_relaxed(ihip_signal->_hsa_signal, 1);
 
             ihipCommand_t copyType;
-            if ((kind == hipMemcpyHostToDevice) || (kind == hipMemcpyDeviceToDevice)) {
+            if (kind == hipMemcpyHostToDevice ){
+				copyType = ihipCommandCopyH2D;
+				
+			}else if(kind == hipMemcpyDeviceToDevice) {
                 copyType = ihipCommandCopyH2D;
             } else if (kind == hipMemcpyDeviceToHost) {
                 copyType = ihipCommandCopyD2H;
@@ -2480,25 +2632,30 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
                 copyType = ihipCommandCopyD2H;
             }
 
-            hsa_signal_t depSignal;
-            int depSignalCnt = stream->copyCommand(ihip_signal, &depSignal, copyType);
+			if(trueAsync == true){
 
-            tprintf (DB_SYNC, " copy-async, waitFor=%lu completion=#%lu(%lu)\n", depSignalCnt? depSignal.handle:0x0, ihip_signal->_sig_id, ihip_signal->_hsa_signal.handle);
+                hsa_signal_t depSignal;
+                int depSignalCnt = stream->copyCommand(ihip_signal, &depSignal, copyType);
 
-            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, device->_hsa_agent, src, device->_hsa_agent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, ihip_signal->_hsa_signal);
+                tprintf (DB_SYNC, " copy-async, waitFor=%lu completion=#%lu(%lu)\n", depSignalCnt? depSignal.handle:0x0, ihip_signal->_sig_id, ihip_signal->_hsa_signal.handle);
+
+                hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, device->_hsa_agent, src, device->_hsa_agent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, ihip_signal->_hsa_signal);
 
 
-            if (hsa_status == HSA_STATUS_SUCCESS) {
-                // TODO-stream - fix release-signal calls here.
-                if (HIP_LAUNCH_BLOCKING) {
-                    tprintf(DB_SYNC, "LAUNCH_BLOCKING for completion of hipMemcpyAsync(%zu)\n", sizeBytes);
-                    stream->wait();
+                if (hsa_status == HSA_STATUS_SUCCESS) {
+                    // TODO-stream - fix release-signal calls here.
+                    if (HIP_LAUNCH_BLOCKING) {
+                        tprintf(DB_SYNC, "LAUNCH_BLOCKING for completion of hipMemcpyAsync(%zu)\n", sizeBytes);
+                        stream->wait();
+                    }
+                } else {
+                    // This path can be hit if src or dst point to unpinned host memory.
+                    // TODO-stream - does async-copy fall back to sync if input pointers are not pinned?
+                    e = hipErrorInvalidValue;
                 }
-            } else {
-                // This path can be hit if src or dst point to unpinned host memory.
-                // TODO-stream - does async-copy fall back to sync if input pointers are not pinned?
-                e = hipErrorInvalidValue;
-            }
+			} else {
+				ihipSyncCopy(stream, dst, src, sizeBytes, kind);
+			}
         }
     } else {
         e = hipErrorInvalidValue;

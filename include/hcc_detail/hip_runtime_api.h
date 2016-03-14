@@ -56,6 +56,16 @@ extern "C" {
 #define hipEventInterprocess  0x4  ///< Event can support IPC.  @warning - not supported in HIP.
 
 
+#define hipHostAllocDefault 0x0
+#define hipHostAllocPortable 0x1
+#define hipHostAllocMapped 0x2
+#define hipHostAllocWriteCombined 0x4
+
+#define hipHostRegisterDefault 0x0
+#define hipHostRegisterPortable 0x1 
+#define hipHostRegisterMapped 0x2
+#define hipHostRegisterIoMemory 0x4
+
 /**
  * @warning On AMD devices and recent Nvidia devices, these hints and controls are ignored.
  */
@@ -247,9 +257,9 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
  * @param [out] prop written with device properties
  * @param [in]  device which device to query for information
  *
- * Populates hipDeviceGetProperties with information for the specified device.
+ * Populates hipGetDeviceProperties with information for the specified device.
  */
-hipError_t hipDeviceGetProperties(hipDeviceProp_t* prop, int device);
+hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int device);
 
 
 
@@ -661,6 +671,53 @@ hipError_t hipMalloc(void** ptr, size_t size) ;
  *  @return Error code
  */
 hipError_t hipMallocHost(void** ptr, size_t size) ;
+
+/**
+ *  @brief Allocate device accessible page locked host memory 
+ *
+ *  @param[out]  ptr Pointer to the allocated host pinned memory
+ *  @param[in] size Requested memory size
+ *  @param[in] flags Type of host memory allocation
+ *  @return Error code
+ */
+hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) ;
+
+/**
+ *  @brief Get Device pointer from Host Pointer allocated through hipHostAlloc
+ *
+ *  @param[out]  dstPtr Device Pointer mapped to passed host pointer
+ *  @param[in] hstPtr Host Pointer allocated through hipHostAlloc
+ *  @param[in] size Requested memory size
+ *  @return Error code
+ */
+hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, size_t size) ;
+
+/**
+ *  @brief Get flags associated with host pointer
+ *
+ *  @param[out]  flagsPtr Memory location to store flags
+ *  @param[in] hostPtr Host Pointer allocated through hipHostAlloc
+ *  @return Error code
+ */
+hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) ;
+
+/**
+ *  @brief Pin host memory
+ *
+ *  @param[out] hostPtr Pointer to host memory to be pinned
+ *  @param[in] sizeBytes size of the host memory
+ *  @param[in] flags Type of pinning the the host memory
+ *  @return Error code
+ */
+hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) ;
+
+/**
+ *  @brief Un-pin host pointer
+ *
+ *  @param[in] hostPtr Pinned Host Pointer
+ *  @return Error code
+ */
+hipError_t hipHostUnregister(void* hostPtr) ;
 
 
 /**

@@ -23,7 +23,7 @@ Date: 2016.02.18
 - Update Runtime Documentation.
 - Improve implementations of cross-lane operations (_ballot, _any, _all).
 - Provide shuffle intrinsics (performance optimization in-progress).
-- Support hipDeviceAttribute for querying "one-shot" device attributes, as an alternative to hipDeviceGetProperties.
+- Support hipDeviceAttribute for querying "one-shot" device attributes, as an alternative to hipGetDeviceProperties.
 
 
 ===================================================================================================

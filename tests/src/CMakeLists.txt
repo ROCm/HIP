@@ -131,8 +131,12 @@ make_hip_executable (hipIntrinsics hipMathFunctions.cpp hipSinglePrecisionIntrin
 make_hip_executable (hipPointerAttrib hipPointerAttrib.cpp) 
 make_hip_executable (hipMultiThreadStreams1 hipMultiThreadStreams1.cpp)
 make_hip_executable (hipMultiThreadStreams2 hipMultiThreadStreams2.cpp) 
-
+make_hip_executable (hipHostAlloc hipHostAlloc.cpp)
 make_hip_executable (hipStreamL5 hipStreamL5.cpp)
+make_hip_executable (hipHostGetFlags hipHostGetFlags.cpp)
+make_hip_executable (hipHostRegister hipHostRegister.cpp)
+make_hip_executable (hipRandomMemcpyAsync hipRandomMemcpyAsync.cpp)
+
 target_link_libraries(hipMathFunctionsHost m)
 
 make_test(hip_ballot " " )
@@ -151,15 +155,15 @@ make_test(hipEnvVarDriver " " )
 make_test(hipPointerAttrib " " )
 make_test(hipMultiThreadStreams1 " " )
 make_test(hipMultiThreadStreams2 " " )
-
 make_test(hipMemcpy_simple  " " )
 make_named_test(hipMemcpy "hipMemcpy-modes" --tests 0x1 )
 make_named_test(hipMemcpy "hipMemcpy-size" --tests 0x6 )
 make_named_test(hipMemcpy "hipMemcpy-multithreaded" --tests 0x8 )
+make_test(hipHostAlloc " ")
 make_test(hipMemcpyAsync  " " )
-
+make_test(hipHostGetFlags " ")
 make_test(hipHcc  " " )
-
+make_test(hipHostRegister " ")
 make_test(hipStreamL5 " ")
-
+make_test(hipRandomMemcpyAsync " ")
 make_hipify_test(specialFunc.cu )
