@@ -144,7 +144,7 @@ unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlock, size_t N)
     int device;
     HIPCHECK(hipGetDevice(&device));
     hipDeviceProp_t props;
-    HIPCHECK(hipDeviceGetProperties(&props, device));
+    HIPCHECK(hipGetDeviceProperties(&props, device));
 
     unsigned blocks = props.multiProcessorCount * blocksPerCU;
     if (blocks * threadsPerBlock > N) {

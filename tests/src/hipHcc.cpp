@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     int deviceId;
     CHECK (hipGetDevice(&deviceId));
     hipDeviceProp_t props;
-    CHECK(hipDeviceGetProperties(&props, deviceId));
+    CHECK(hipGetDeviceProperties(&props, deviceId));
     printf ("info: running on device #%d %s\n", deviceId, props.name);
 
 #ifdef __HCC__

@@ -1,13 +1,16 @@
 /*
 Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
@@ -17,14 +20,45 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-//Test to ensure hipify runs correctly.
-// Hipify may report warnings for some missing/unsupported functions
+#include"test_common.h"
 
-void __global__
-test_kernel(float *A) 
-{
-    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+#define LEN 1024*1024
+#define SIZE LEN*sizeof(float)
 
-    float a = __ballot(tid < 16);
-    float b = __shfl(tid < 16);
+__global__ void Add(hipLaunchParm lp, float *Ad, float *Bd, float *Cd){
+int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+Cd[tx] = Ad[tx] + Bd[tx];
+}
+
+int main(){
+float *A, *B, *C;
+float *Ad, *Bd, *Cd;
+
+hipDeviceProp_t prop;
+int device;
+HIPCHECK(hipGetDevice(&device));
+HIPCHECK(hipGetDeviceProperties(&prop, device));
+if(prop.canMapHostMemory != 1){
+std::cout<<"Exiting..."<<std::endl;
+}
+HIPCHECK(hipHostAlloc((void**)&A, SIZE, hipHostAllocWriteCombined | hipHostAllocMapped));
+HIPCHECK(hipHostAlloc((void**)&B, SIZE, hipHostAllocWriteCombined | hipHostAllocMapped));
+HIPCHECK(hipHostAlloc((void**)&C, SIZE, hipHostAllocMapped));
+
+HIPCHECK(hipHostGetDevicePointer((void**)&Ad, A, 0));
+HIPCHECK(hipHostGetDevicePointer((void**)&Bd, B, 0));
+HIPCHECK(hipHostGetDevicePointer((void**)&Cd, C, 0));
+
+for(int i=0;i<LEN;i++){
+A[i] = 1.0f;
+B[i] = 2.0f;
+}
+
+dim3 dimGrid(LEN/512,1,1);
+dim3 dimBlock(512,1,1);
+
+hipLaunchKernel(HIP_KERNEL_NAME(Add), dimGrid, dimBlock, 0, 0, Ad, Bd, Cd);
+
+passed();
+
 }

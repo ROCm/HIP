@@ -50,6 +50,13 @@ hipMemcpyHostToHost
 } hipTextureFilterMode;*/
 #define hipFilterModePoint cudaFilterModePoint
 
+#define hipHostAllocDefault cudaHostAllocDefault
+#define hipHostAllocPortable cudaHostAllocPortable
+#define hipHostAllocMapped cudaHostAllocMapped
+#define hipHostAllocWriteCombined cudaHostAllocWriteCombined
+
+#define hipHostRegisterPortable cudaHostRegisterPortable
+#define hipHostRegisterMapped cudaHostRegisterMapped
 
 typedef cudaEvent_t hipEvent_t;
 typedef cudaStream_t hipStream_t;
@@ -115,6 +122,27 @@ inline static hipError_t hipFree(void* ptr) {
 inline static hipError_t hipMallocHost(void** ptr, size_t size) {
     return hipCUDAErrorTohipError(cudaMallocHost(ptr, size));
 }
+
+inline static hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags){
+	return hipCUDAErrorTohipError(cudaHostAlloc(ptr, size, flags));
+}
+
+inline static hipError_t hipHostGetDevicePointer(void** devPtr, void* hostPtr, unsigned int flags){
+	return hipCUDAErrorTohipError(cudaHostGetDevicePointer(devPtr, hostPtr, flags));
+}
+
+inline static hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr){
+	return hipCUDAErrorTohipError(cudaHostGetFlags(flagsPtr, hostPtr));
+}
+
+inline static hipError_t hipHostRegister(void* ptr, size_t size, unsigned int flags){
+	return hipCUDAErrorTohipError(cudaHostRegister(ptr, size, flags));
+}
+
+inline static hipError_t hipHostUnregister(void* ptr){
+	return hipCUDAErrorTohipError(cudaHostUnregister(ptr));
+}
+
 inline static hipError_t hipFreeHost(void* ptr) {
     return hipCUDAErrorTohipError(cudaFreeHost(ptr));
 }
@@ -154,7 +182,7 @@ inline static hipError_t hipMemset(void* devPtr,int value, size_t count) {
     return hipCUDAErrorTohipError(cudaMemset(devPtr, value, count));
 }
 
-inline static hipError_t hipDeviceGetProperties(hipDeviceProp_t *p_prop, int device)
+inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t *p_prop, int device)
 {
 	cudaDeviceProp cdprop;
 	cudaError_t cerror;
@@ -177,6 +205,7 @@ inline static hipError_t hipDeviceGetProperties(hipDeviceProp_t *p_prop, int dev
 	p_prop->l2CacheSize = cdprop.l2CacheSize ;
 	p_prop->maxThreadsPerMultiProcessor = cdprop.maxThreadsPerMultiProcessor ;
 	p_prop->computeMode = cdprop.computeMode ;
+	p_prop->canMapHostMemory = cdprop.canMapHostMemory;
 
 	// Same as clock-rate:
 	p_prop->clockInstructionRate = cdprop.clockRate; 

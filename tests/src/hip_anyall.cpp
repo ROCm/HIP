@@ -41,7 +41,7 @@ __global__ void
 int main(int argc, char *argv[])
 { int warpSize, pshift;
   hipDeviceProp_t devProp;
-  hipDeviceGetProperties(&devProp, 0);
+  hipGetDeviceProperties(&devProp, 0);
   if(strncmp(devProp.name,"Fiji",1)==0) 
 { warpSize =64;
   pshift =6;

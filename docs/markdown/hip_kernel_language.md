@@ -427,7 +427,7 @@ Nvidia devices implement the timer as a per-compute-unit clock that increments o
 To obtain the clock frequency, use the hipDeviceProp_t.clockInstructionRate field:
 
 ```
-hipDeviceGetProperties(&deviceProps, deviceId);
+hipGetDeviceProperties(&deviceProps, deviceId);
 // Compute time in ms--device_ticks is based on values reported from clock() device function
 float time = device_ticks / (float)deviceProps.clockInstructionRate;
 ```

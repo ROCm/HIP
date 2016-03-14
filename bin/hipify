@@ -286,7 +286,12 @@ while (@ARGV) {
         $ft{'mem'} += s/\bcudaMallocHost\b/hipMallocHost/g;
         $ft{'mem'} += s/\bcudaFree\b/hipFree/g;
         $ft{'mem'} += s/\bcudaFreeHost\b/hipFreeHost/g;
-
+		$ft{'mem'} += s/\bcudaHostAlloc\b/hipHostAlloc/g;
+		$ft{'mem'} += s/\bcudaHostGetDevicePointer\b/hipHostGetDevicePointer/g;
+		$ft{'mem'} += s/\bcudaHostAllocDefault\b/hipHostAllocDefault/g;
+		$ft{'mem'} += s/\bcudaHostAllocPortable\b/hipHostAllocPortable/g;
+		$ft{'mem'} += s/\bcudaHostAllocMapped\b/hipHostAllocMapped/g;
+		$ft{'mem'} += s/\bcudaHostAllocWriteCombined\b/hipHostAllocWriteCombined/g;
 
 
         #--------
@@ -345,7 +350,7 @@ while (@ARGV) {
         #--------
         # Device 
         $ft{'dev'} += s/\bcudaDeviceProp\b/hipDeviceProp_t/g;
-        $ft{'dev'} += s/\bcudaGetDeviceProperties\b/hipDeviceGetProperties/g;
+        $ft{'dev'} += s/\bcudaGetDeviceProperties\b/hipGetDeviceProperties/g;
 
         # Attribute
         $ft{'err'} += s/\bcudaDevAttrMaxThreadsPerBlock\b/hipDeviceAttributeMaxThreadsPerBlock/g;
