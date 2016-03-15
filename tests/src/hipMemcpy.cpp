@@ -36,7 +36,7 @@ void printSep()
 // The subroutine allocates memory , copies to device, runs a vector add kernel, copies back, and checks the result.
 //
 // IN: numElements  controls the number of elements used for allocations.
-// IN: usePinnedHost : If true, allocate host with hipMallocHost and is pinned ; else allocate host memory with malloc.
+// IN: usePinnedHost : If true, allocate host with hipHostAlloc and is pinned ; else allocate host memory with malloc.
 // IN: useHostToHost : If true, add an extra host-to-host copy.
 // IN: useDeviceToDevice : If true, add an extra deviceto-device copy after result is produced.
 // IN: useMemkindDefault : If true, use memkinddefault (runtime figures out direction).  if false, use explicit memcpy direction.
@@ -67,8 +67,8 @@ void memcpytest2(size_t numElements, bool usePinnedHost, bool useHostToHost, boo
 
     if (useHostToHost) {
         if (usePinnedHost) {
-            HIPCHECK ( hipMallocHost(&A_hh, sizeElements) );
-            HIPCHECK ( hipMallocHost(&B_hh, sizeElements) );
+            HIPCHECK ( hipHostAlloc((void**)&A_hh, sizeElements, hipHostAllocDefault) );
+            HIPCHECK ( hipHostAlloc((void**)&B_hh, sizeElements, hipHostAllocDefault) );
         } else {
             A_hh = (T*)malloc(sizeElements);
             B_hh = (T*)malloc(sizeElements);
