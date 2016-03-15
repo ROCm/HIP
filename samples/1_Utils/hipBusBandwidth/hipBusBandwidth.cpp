@@ -490,6 +490,14 @@ int parseInt(const char *str, int *output)
     return !strlen(next);
 }
 
+
+void printConfig() {
+    hipDeviceProp_t props;
+    hipGetDeviceProperties(&props, p_device);
+
+    printf ("Device:%s Mem=%.1fGB #CUs=%d Freq=%.0fMhz  Pinned=%s\n", props.name, props.totalGlobalMem/1024.0/1024.0/1024.0, props.multiProcessorCount, props.clockRate/1000.0, p_pinned ? "YES" : "NO");
+}
+
 void help() {
     printf ("Usage: hipBusBandwidth [OPTIONS]\n");
     printf ("  --iterations, -i     : Number of copy iterations to run.\n");
@@ -559,6 +567,8 @@ int parseStandardArguments(int argc, char *argv[])
 int main(int argc, char *argv[])
 {
     parseStandardArguments(argc, argv);
+
+    printConfig();
 
     if (p_h2d) {
         ResultDatabase resultDB;
