@@ -64,13 +64,13 @@ int main(){
 	hipLaunchKernel(HIP_KERNEL_NAME(One), dim3(LEN/512), dim3(512), 0, 0, Ad);
 	hipEventRecord(stop);
 	hipEventElapsedTime(&mS, start, stop);
-	std::cout<<"First Kernel Launch: \t\t"<<mS*1000/ITER<<" uS"<<std::endl;
+	std::cout<<"First Kernel Launch: \t\t"<<mS*1000<<" uS"<<std::endl;
 	
 	hipEventRecord(start);
 	hipLaunchKernel(HIP_KERNEL_NAME(One), dim3(LEN/512), dim3(512), 0, 0, Ad);
 	hipEventRecord(stop);
 	hipEventElapsedTime(&mS, start, stop);
-	std::cout<<"Second Kernel Launch: \t\t"<<mS*1000/ITER<<" uS"<<std::endl;
+	std::cout<<"Second Kernel Launch: \t\t"<<mS*1000<<" uS"<<std::endl;
 	
 	hipEventRecord(start);
 	for(int i=0;i<ITER;i++){
