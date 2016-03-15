@@ -103,7 +103,7 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
     float *hostMem = NULL;
     if (p_pinned)
     {
-        hipMallocHost((void**)&hostMem, sizeof(float) * numMaxFloats);
+        hipHostAlloc((void**)&hostMem, sizeof(float) * numMaxFloats, hipHostAllocDefault);
         while (hipGetLastError() != hipSuccess)
         {
             // drop the size and try again
@@ -115,7 +115,7 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
             return;
             }
             numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
-            hipMallocHost((void**)&hostMem, sizeof(float) * numMaxFloats);
+            hipHostAlloc((void**)&hostMem, sizeof(float) * numMaxFloats, hipHostAllocDefault);
         }
     }
     else
@@ -217,9 +217,9 @@ void RunBenchmark_D2H(ResultDatabase &resultDB)
     float *hostMem2;
     if (p_pinned)
     {
-        hipMallocHost((void**)&hostMem1, sizeof(float)*numMaxFloats);
+        hipHostAlloc((void**)&hostMem1, sizeof(float)*numMaxFloats, hipHostAllocDefault);
         hipError_t err1 = hipGetLastError();
-        hipMallocHost((void**)&hostMem2, sizeof(float)*numMaxFloats);
+        hipHostAlloc((void**)&hostMem2, sizeof(float)*numMaxFloats, hipHostAllocDefault);
         hipError_t err2 = hipGetLastError();
 	while (err1 != hipSuccess || err2 != hipSuccess)
 	{
