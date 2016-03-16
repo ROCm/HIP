@@ -2055,9 +2055,7 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags){
 
 	if(device){
 		if(flags == hipHostAllocDefault){
-		    const unsigned am_flags = amHostPinned;
-
-		    *ptr = hc::am_alloc(sizeBytes, device->_acc, am_flags);
+		    *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
 		    if(sizeBytes && (*ptr == NULL)){
 			    hip_status = hipErrorMemoryAllocation;
 		    }else{
@@ -2066,17 +2064,11 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags){
 		    tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
 		}
 		if(flags & hipHostAllocMapped){
-		    const unsigned am_flags = amHostPinned;
-
-		    *ptr = hc::am_alloc(sizeBytes, device->_acc, am_flags);
+		    *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
 		    if(sizeBytes && (*ptr == NULL)){
 			    hip_status = hipErrorMemoryAllocation;
 		    }else{
 			    hc::am_memtracker_update(*ptr, device->_device_index, flags);
-//			void *srcPtr;
-//			hsa_status_t hsa_status = hsa_amd_memory_lock((*ptr), sizeBytes, &device->_hsa_agent, 1, &srcPtr);
-//			assert(hsa_status == HSA_STATUS_SUCCESS);
-//			hc::am_memtracker_add(srcPtr, sizeBytes, device->_acc, false);
 		    }
 		    tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
 		}
@@ -2142,10 +2134,10 @@ hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
 		return ihipLogStatus(hipErrorInvalidValue);
 	}
 	if(device){
-	if(flags == hipHostAllocDefault){
+	if(flags == hipHostRegisterDefault){
 		hsa_status_t hsa_status = hsa_amd_memory_lock(hostPtr, sizeBytes, &device->_hsa_agent, 1, &srcPtr);
 		if(hsa_status == HSA_STATUS_SUCCESS){
-			hip_status = hipSuccess;
+			hip_status = hipSuccess;	
 		}else{
 			hip_status = hipErrorMemoryAllocation;
 		}
