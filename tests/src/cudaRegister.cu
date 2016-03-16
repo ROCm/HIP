@@ -34,26 +34,32 @@ if(status != cudaSuccess) { \
 } \
 }
 
-__global__ void Inc1(float *Ad){
+__global__ void Inc1(float *Ad, float *Bd){
 	int tx = threadIdx.x + blockIdx.x * blockDim.x;
 	if(tx < 1 ){
 		for(int i=0;i<ITER;i++){
 			Ad[tx] = Ad[tx] + 1.0f;
+			for(int j=0;j<256;j++){
+				Bd[tx] = Ad[tx];
+			}
 		}
 	}
 }
 
-__global__ void Inc2(float *Ad){
+__global__ void Inc2(float *Ad, float *Bd){
 	int tx = threadIdx.x + blockIdx.x * blockDim.x;
 	if(tx < 1024){
 		for(int i=0;i<ITER;i++){
 			Ad[tx] = Ad[tx] + 1.0f;
+			for(int j=0;j<256;j++){
+				Bd[tx] = Ad[tx];
+			}
 		}
 	}
 }
 
 int main(){
-	float *A, *Ad;
+	float *A, *Ad, *Bd;
 	A = new float[LEN];
 	for(int i=0;i<LEN;i++){
 		A[i] = 0.0f;
@@ -62,10 +68,11 @@ int main(){
 	status = cudaHostRegister(A, SIZE, cudaHostRegisterMapped);
 	check("Registering A",status);
 	cudaHostGetDevicePointer(&Ad, A, 0);
-
+	cudaMalloc((void**)&Bd, SIZE);
 	dim3 dimGrid(LEN/512,1,1);
 	dim3 dimBlock(512,1,1);
-	Inc1<<<dimGrid, dimBlock>>>(Ad);
+	Inc1<<<dimGrid, dimBlock>>>(Ad, Bd);
+	sleep(3);
 	A[0] = -(ITER*1.0f);
 	std::cout<<"Same cache line before completion: \t"<< A[0]<<std::endl;
 	cudaDeviceSynchronize();
@@ -74,7 +81,8 @@ int main(){
 	for(int i=0;i<LEN;i++){
 		A[i] = 0.0f;
 	}
-	Inc2<<<dimGrid, dimBlock>>>(Ad);
+	Inc2<<<dimGrid, dimBlock>>>(Ad, Bd);
+	sleep(3);
 	A[0] = -(ITER*1.0f);
 	std::cout<<"Diff cache line before completion: \t"<<A[0]<<std::endl;
 	cudaDeviceSynchronize();
