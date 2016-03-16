@@ -428,21 +428,21 @@ __device__ inline float __dsqrt_rz(double x) {return hc::fast_math::sqrt(x); };
 /**
  * Kernel launching
  */
-#define hipThreadIdx_x (amp_get_local_id(2))
+#define hipThreadIdx_x (amp_get_local_id(0))
 #define hipThreadIdx_y (amp_get_local_id(1))
-#define hipThreadIdx_z (amp_get_local_id(0))
+#define hipThreadIdx_z (amp_get_local_id(2))
 
-#define hipBlockIdx_x  (hc_get_group_id(2))
+#define hipBlockIdx_x  (hc_get_group_id(0))
 #define hipBlockIdx_y  (hc_get_group_id(1))
-#define hipBlockIdx_z  (hc_get_group_id(0))
+#define hipBlockIdx_z  (hc_get_group_id(2))
 
-#define hipBlockDim_x  (amp_get_local_size(2))
+#define hipBlockDim_x  (amp_get_local_size(0))
 #define hipBlockDim_y  (amp_get_local_size(1))
-#define hipBlockDim_z  (amp_get_local_size(0))
+#define hipBlockDim_z  (amp_get_local_size(2))
 
-#define hipGridDim_x   (hc_get_num_groups(2))
+#define hipGridDim_x   (hc_get_num_groups(0))
 #define hipGridDim_y   (hc_get_num_groups(1))
-#define hipGridDim_z   (hc_get_num_groups(0))
+#define hipGridDim_z   (hc_get_num_groups(2))
 
 
 
