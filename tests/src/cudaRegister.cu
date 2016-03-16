@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include<stdio.h>
 #include<malloc.h>
 
-#define LEN 1024*1024
+#define LEN 1024
 #define SIZE LEN * sizeof(float)
 #define ITER 1024*1024
 
@@ -67,15 +67,16 @@ int main(){
 	dim3 dimBlock(512,1,1);
 	Inc1<<<dimGrid, dimBlock>>>(Ad);
 	A[0] = -(ITER*1.0f);
-	std::cout<<A[0]<<std::endl;
+	std::cout<<"Same cache line before completion: \t"<< A[0]<<std::endl;
 	cudaDeviceSynchronize();
-	std::cout<<A[0]<<std::endl;
+	std::cout<<"Same cache line after completion: \t"<< A[0]<<std::endl;
 
 	for(int i=0;i<LEN;i++){
 		A[i] = 0.0f;
 	}
 	Inc2<<<dimGrid, dimBlock>>>(Ad);
 	A[0] = -(ITER*1.0f);
+	std::cout<<"Diff cache line before completion: \t"<<A[0]<<std::endl;
 	cudaDeviceSynchronize();
-	std::cout<<A[0]<<std::endl;
+	std::cout<<"Diff cache line after completion: \t"<<A[0]<<std::endl;
 }
