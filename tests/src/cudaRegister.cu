@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 #define LEN 1024*1024
 #define SIZE LEN * sizeof(float)
-#define ITER 1024*128
+#define ITER 1024*1024
 
 #define check(msg, status){ \
 if(status != cudaSuccess) { \
@@ -66,15 +66,16 @@ int main(){
 	dim3 dimGrid(LEN/512,1,1);
 	dim3 dimBlock(512,1,1);
 	Inc1<<<dimGrid, dimBlock>>>(Ad);
-	A[1] = -(ITER*1.0f);
+	A[0] = -(ITER*1.0f);
+	std::cout<<A[0]<<std::endl;
 	cudaDeviceSynchronize();
-	std::cout<<A[1]<<std::endl;
+	std::cout<<A[0]<<std::endl;
 
 	for(int i=0;i<LEN;i++){
 		A[i] = 0.0f;
 	}
 	Inc2<<<dimGrid, dimBlock>>>(Ad);
-	A[1] = -(ITER*1.0f);
+	A[0] = -(ITER*1.0f);
 	cudaDeviceSynchronize();
-	std::cout<<A[1]<<std::endl;
+	std::cout<<A[0]<<std::endl;
 }
