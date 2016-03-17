@@ -77,8 +77,9 @@ int HIP_DISABLE_HW_KERNEL_DEP = 1;
 int HIP_DISABLE_HW_COPY_DEP = 1;
 
 int HIP_DISABLE_BIDIR_MEMCPY = 0;
-int HIP_ONESHOT_COPY_DEP     = 1;  // TODO - setting this =1  is a good thing, reduces input deps
 
+
+#define HIP_HCC  
 
 // If set, thread-safety is enforced on all stream functions.
 // Stream functions will acquire a mutex before entering critical sections.
@@ -641,8 +642,8 @@ inline void ihipStream_t::postCopyCommand()
 //Device may be reset multiple times, and may be reset after init.
 void ihipDevice_t::reset()
 {
-    _staging_buffer[0] = new StagingBuffer(this, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
-    _staging_buffer[1] = new StagingBuffer(this, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
+    _staging_buffer[0] = new StagingBuffer(_acc, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
+    _staging_buffer[1] = new StagingBuffer(_acc, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
 };
 
 
@@ -651,7 +652,7 @@ void ihipDevice_t::init(unsigned device_index, hc::accelerator acc)
 {
     _device_index = device_index;
     _acc = acc;
-    hsa_agent_t *agent = static_cast<hsa_agent_t*> (acc.get_default_view().get_hsa_agent());
+    hsa_agent_t *agent = static_cast<hsa_agent_t*> (acc.get_hsa_agent());
     if (agent) {
         int err = hsa_agent_get_info(*agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_COMPUTE_UNIT_COUNT, &_compute_units);
         if (err != HSA_STATUS_SUCCESS) {
@@ -1018,8 +1019,6 @@ void ihipInit()
     READ_ENV_I(release, HIP_DISABLE_HW_KERNEL_DEP, 0, "Disable HW dependencies before kernel commands  - instead wait for dependency on host. -1 means ignore these dependencies. (debug mode)");
     READ_ENV_I(release, HIP_DISABLE_HW_COPY_DEP, 0, "Disable HW dependencies before copy commands  - instead wait for dependency on host. -1 means ifnore these dependencies (debug mode)");
     READ_ENV_I(release, HIP_DISABLE_BIDIR_MEMCPY, 0, "Disable simultaneous H2D memcpy and D2H memcpy to same device");
-    READ_ENV_I(release, HIP_ONESHOT_COPY_DEP, 0, "If set, only set the copy input dependency for the first copy command in a staged copy.  If clear, set the dep for each copy.");
-
 
 
     /*
@@ -1508,6 +1507,8 @@ const char *hipGetErrorName(hipError_t hip_error)
         case hipErrorInvalidMemcpyDirection : return "hipErrorInvalidMemcpyDirection";
         case hipErrorNoDevice               : return "hipErrorNoDevice";
         case hipErrorNotReady               : return "hipErrorNotReady";
+        case hipErrorRuntimeMemory          : return "hipErrorRuntimeMemory";
+        case hipErrorRuntimeOther           : return "hipErrorRuntimeOther";
         case hipErrorUnknown                : return "hipErrorUnknown";
         case hipErrorTbd                    : return "hipErrorTbd";
         default                             : return "hipErrorUnknown";
@@ -2189,6 +2190,7 @@ hipError_t hipHostUnregister(void *hostPtr){
 	return ihipLogStatus(hip_status);
 }
 
+
 //---
 hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind)
 {
@@ -2209,9 +2211,6 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t cou
 #endif
     return ihipLogStatus(hipSuccess);
 }
-
-
-
 
 
 
