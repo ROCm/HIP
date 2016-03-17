@@ -35,7 +35,8 @@ if (${HIP_PLATFORM} STREQUAL "hcc")
 	include_directories(${HIP_PATH}/include)
 
 	# hip_hcc.o:
-	add_library(hip_hcc OBJECT ${HIP_PATH}/src/hip_hcc.cpp)
+    add_library(hip_hcc STATIC ${HIP_PATH}/src/hip_hcc.cpp )
+    #add_library(hip_hcc STATIC ${HIP_PATH}/src/hip_hcc.cpp ${HIP_PATH}/src/staging_buffer.cpp)
 	target_include_directories(hip_hcc PRIVATE ${HSA_PATH}/include)
 
 
@@ -63,7 +64,8 @@ add_library(test_common OBJECT test_common.cpp )
 # usage : make_hip_executable (exe_name CPP_FILES)
 macro (make_hip_executable exe cpp)  
     if (${HIP_PLATFORM} STREQUAL "hcc")
-        add_executable (${exe} ${cpp} ${ARGN} $<TARGET_OBJECTS:test_common> $<TARGET_OBJECTS:hip_hcc> )
+        add_executable (${exe} ${cpp} ${ARGN} $<TARGET_OBJECTS:test_common> )
+        target_link_libraries(${exe} hip_hcc)
     else()
         add_executable (${exe} ${cpp} ${ARGN} $<TARGET_OBJECTS:test_common> )
     endif() 
@@ -137,7 +139,8 @@ make_hip_executable (hipHostGetFlags hipHostGetFlags.cpp)
 make_hip_executable (hipHostRegister hipHostRegister.cpp)
 make_hip_executable (hipRandomMemcpyAsync hipRandomMemcpyAsync.cpp)
 
-target_link_libraries(hipMathFunctionsHost m)
+# not needed since hipcc now includes -lm by default:
+#target_link_libraries(hipMathFunctionsHost m)
 
 make_test(hip_ballot " " )
 make_test(hip_anyall " " )
