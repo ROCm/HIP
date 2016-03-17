@@ -61,8 +61,9 @@ void simpleTest1()
 template <typename T>
 void simpleTest2(size_t numElements, bool usePinnedHost)
 {
-    printf ("test: %s<%s>\n", __func__, TYPENAME(T));
     size_t sizeElements = numElements * sizeof(T);
+    size_t alignment = 4096;
+    printf ("test: %s<%s> numElements=%zu sizeElements=%zu bytes\n", __func__, TYPENAME(T), numElements, sizeElements);
 
     T *A_d, *A_h1, *A_h2;
 
@@ -70,8 +71,10 @@ void simpleTest2(size_t numElements, bool usePinnedHost)
         HIPCHECK ( hipMallocHost(&A_h1, sizeElements) );
         HIPCHECK ( hipMallocHost(&A_h2, sizeElements) );
     } else {
-        A_h1 = (T*)malloc(sizeElements);
-        A_h2 = (T*)malloc(sizeElements);
+        A_h1 = (T*)aligned_alloc(alignment, sizeElements);
+        HIPASSERT(A_h1);
+        A_h2 = (T*)aligned_alloc(alignment, sizeElements);
+        HIPASSERT(A_h1);
     }
 
     // Alloc device array:
@@ -124,8 +127,8 @@ int main(int argc, char *argv[])
 
     if (p_tests & 0x4) {
         printf ("\n\n=== tests&2 (copy pin-pong, unpinned host)\n");
-        simpleTest2<float>(N, false/*usePinnedHost*/);
         simpleTest2<char>(N, false/*usePinnedHost*/);
+        simpleTest2<float>(N, false/*usePinnedHost*/);
     }
 
     passed();
