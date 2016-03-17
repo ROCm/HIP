@@ -1,24 +1,40 @@
+#include <hc_am.hpp>
+
+#include "hsa_ext_amd.h"
+
 #include "hcc_detail/staging_buffer.h"
 
+#ifndef tprintf
+#define tprintf(trace_level, ...) 
+#endif
+
+#ifdef HIP_HCC
+#define THROW_ERROR(e) throw ihipException(e)
+#else
+#define THROW_ERROR(e) throw 
+#endif
 
 //-------------------------------------------------------------------------------------------------
-StagingBuffer::StagingBuffer(ihipDevice_t *device, size_t bufferSize, int numBuffers) :
-    _device(device),
+StagingBuffer::StagingBuffer(hc::accelerator &acc, size_t bufferSize, int numBuffers) :
+    _acc(acc),
     _bufferSize(bufferSize),
     _numBuffers(numBuffers > _max_buffers ? _max_buffers : numBuffers)
 {
 
+    hsa_agent_t *agentPtr = static_cast<hsa_agent_t*> (acc.get_hsa_agent());
+    _hsa_agent = *agentPtr;
 
 
     for (int i=0; i<_numBuffers; i++) {
         // TODO - experiment with alignment here.
-        _pinnedStagingBuffer[i] = hc::am_alloc(_bufferSize, device->_acc, amHostPinned);
+        _pinnedStagingBuffer[i] = hc::am_alloc(_bufferSize, _acc, amHostPinned);
         if (_pinnedStagingBuffer[i] == NULL) {
-            throw ihipException(hipErrorMemoryAllocation);
+            THROW_ERROR(hipErrorMemoryAllocation);
         }
         hsa_signal_create(0, 0, NULL, &_completion_signal[i]);
     }
 };
+
 
 //---
 StagingBuffer::~StagingBuffer()
@@ -34,9 +50,10 @@ StagingBuffer::~StagingBuffer()
 
 
 
+//---
 //Copies sizeBytes from src to dst, using either a copy to a staging buffer or a staged pin-in-place strategy
 //IN: dst - dest pointer - must be accessible from host CPU.
-//IN: src - src pointer for copy.  Must be accessible from agent this buffer is associated with (via _device)
+//IN: src - src pointer for copy.  Must be accessible from agent this buffer is associated with (via _hsa_agent)
 //IN: waitFor - hsaSignal to wait for - the copy will begin only when the specified dependency is resolved.  May be NULL indicating no dependency.
 void StagingBuffer::CopyHostToDevicePinInPlace(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
 {
@@ -48,7 +65,7 @@ void StagingBuffer::CopyHostToDevicePinInPlace(void* dst, const void* src, size_
     }
 
     if (sizeBytes >= UINT64_MAX/2) {
-        throw (ihipException(hipErrorInvalidValue));
+        THROW_ERROR (hipErrorInvalidValue);
     }
     int bufferIndex = 0;
     for (int64_t bytesRemaining=sizeBytes; bytesRemaining>0 ;  bytesRemaining -= _bufferSize) {
@@ -58,26 +75,24 @@ void StagingBuffer::CopyHostToDevicePinInPlace(void* dst, const void* src, size_
         tprintf (DB_COPY2, "H2D: waiting... on completion signal handle=%lu\n", _completion_signal[bufferIndex].handle);
         hsa_signal_wait_acquire(_completion_signal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
 
-
-
         void * masked_srcp = (void*) ((uintptr_t)srcp & (uintptr_t)(~0x3f)) ; // TODO
         void *locked_srcp;
-        hsa_status_t hsa_status = hsa_amd_memory_lock(masked_srcp, theseBytes, &_device->_hsa_agent, 1, &locked_srcp);
-        //hsa_status_t hsa_status = hsa_amd_memory_lock(const_cast<char*> (srcp), theseBytes, &_device->_hsa_agent, 1, &locked_srcp);
+        hsa_status_t hsa_status = hsa_amd_memory_lock(masked_srcp, theseBytes, &_hsa_agent, 1, &locked_srcp);
+        //hsa_status_t hsa_status = hsa_amd_memory_lock(const_cast<char*> (srcp), theseBytes, &_hsa_agent, 1, &locked_srcp);
         tprintf (DB_COPY2, "H2D: bytesRemaining=%zu: pin-in-place:%p+%zu bufferIndex[%d]\n", bytesRemaining, srcp, theseBytes, bufferIndex);
         printf ("status=%x srcp=%p, masked_srcp=%p, locked_srcp=%p\n", hsa_status, srcp, masked_srcp, locked_srcp);
 
         if (hsa_status != HSA_STATUS_SUCCESS) {
-            throw (ihipException(hipErrorUnknown));
+            THROW_ERROR (hipErrorRuntimeMemory);
         }
 
         hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
 
-        hsa_status = hsa_amd_memory_async_copy(dstp, _device->_hsa_agent, locked_srcp, _device->_hsa_agent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
+        hsa_status = hsa_amd_memory_async_copy(dstp, _hsa_agent, locked_srcp, _hsa_agent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
         tprintf (DB_COPY2, "H2D: bytesRemaining=%zu: async_copy %zu bytes %p to %p status=%x\n", bytesRemaining, theseBytes, _pinnedStagingBuffer[bufferIndex], dstp, hsa_status);
 
         if (hsa_status != HSA_STATUS_SUCCESS) {
-            throw (ihipException(hipErrorUnknown));
+            THROW_ERROR (hipErrorRuntimeMemory);
         }
 
         srcp += theseBytes;
@@ -86,9 +101,8 @@ void StagingBuffer::CopyHostToDevicePinInPlace(void* dst, const void* src, size_
             bufferIndex = 0;
         }
 
-        if (HIP_ONESHOT_COPY_DEP) {
-            waitFor = NULL; // TODO - don't need dependency after first copy submitted?
-        }
+        // Assume subsequent commands are dependent on previous and don't need dependency after first copy submitted, HIP_ONESHOT_COPY_DEP=1 
+        waitFor = NULL; 
     }
 
     // TODO -
@@ -106,7 +120,7 @@ void StagingBuffer::CopyHostToDevicePinInPlace(void* dst, const void* src, size_
 //---
 //Copies sizeBytes from src to dst, using either a copy to a staging buffer or a staged pin-in-place strategy
 //IN: dst - dest pointer - must be accessible from host CPU.
-//IN: src - src pointer for copy.  Must be accessible from agent this buffer is associated with (via _device)
+//IN: src - src pointer for copy.  Must be accessible from agent this buffer is associated with (via _hsa_agent)
 //IN: waitFor - hsaSignal to wait for - the copy will begin only when the specified dependency is resolved.  May be NULL indicating no dependency.
 void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
 {
@@ -117,7 +131,9 @@ void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeByte
         hsa_signal_store_relaxed(_completion_signal[i], 0);
     }
 
-    assert(sizeBytes < UINT64_MAX/2); // TODO
+    if (sizeBytes >= UINT64_MAX/2) {
+        THROW_ERROR (hipErrorInvalidValue);
+    }
     int bufferIndex = 0;
     for (int64_t bytesRemaining=sizeBytes; bytesRemaining>0 ;  bytesRemaining -= _bufferSize) {
 
@@ -133,11 +149,11 @@ void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeByte
 
         hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
 
-        hsa_status_t hsa_status = hsa_amd_memory_async_copy(dstp, _device->_hsa_agent, _pinnedStagingBuffer[bufferIndex], _device->_hsa_agent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
+        hsa_status_t hsa_status = hsa_amd_memory_async_copy(dstp, _hsa_agent, _pinnedStagingBuffer[bufferIndex], _hsa_agent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
         tprintf (DB_COPY2, "H2D: bytesRemaining=%zu: async_copy %zu bytes %p to %p status=%x\n", bytesRemaining, theseBytes, _pinnedStagingBuffer[bufferIndex], dstp, hsa_status);
 
         if (hsa_status != HSA_STATUS_SUCCESS) {
-            throw (ihipException(hipErrorUnknown));
+            THROW_ERROR ((hipErrorRuntimeMemory));
         }
 
         srcp += theseBytes;
@@ -146,9 +162,8 @@ void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeByte
             bufferIndex = 0;
         }
 
-        if (HIP_ONESHOT_COPY_DEP) {
-            waitFor = NULL; // TODO - don't need dependency after first copy submitted?
-        }
+        // Assume subsequent commands are dependent on previous and don't need dependency after first copy submitted, HIP_ONESHOT_COPY_DEP=1 
+        waitFor = NULL; 
     }
 
 
@@ -159,7 +174,7 @@ void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeByte
 
 //---
 //Copies sizeBytes from src to dst, using either a copy to a staging buffer or a staged pin-in-place strategy
-//IN: dst - dest pointer - must be accessible from agent this buffer is assocaited with (via _device).
+//IN: dst - dest pointer - must be accessible from agent this buffer is associated with (via _hsa_agent).
 //IN: src - src pointer for copy.  Must be accessible from host CPU.
 //IN: waitFor - hsaSignal to wait for - the copy will begin only when the specified dependency is resolved.  May be NULL indicating no dependency.
 void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
@@ -171,7 +186,9 @@ void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeByte
         hsa_signal_store_relaxed(_completion_signal[i], 0);
     }
 
-    assert(sizeBytes < UINT64_MAX/2); // TODO
+    if (sizeBytes >= UINT64_MAX/2) {
+        THROW_ERROR (hipErrorInvalidValue);
+    }
 
     int64_t bytesRemaining0 = sizeBytes; // bytes to copy from dest into staging buffer.
     int64_t bytesRemaining1 = sizeBytes; // bytes to copy from staging buffer into final dest
@@ -184,17 +201,16 @@ void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeByte
 
             tprintf (DB_COPY2, "D2H: bytesRemaining0=%zu  async_copy %zu bytes src:%p to staging:%p\n", bytesRemaining0, theseBytes, srcp0, _pinnedStagingBuffer[bufferIndex]);
             hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
-            hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], _device->_hsa_agent, srcp0, _device->_hsa_agent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], _hsa_agent, srcp0, _hsa_agent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
             if (hsa_status != HSA_STATUS_SUCCESS) {
-                throw (ihipException(hipErrorUnknown));
+                THROW_ERROR (hipErrorRuntimeMemory);
             }
 
             srcp0 += theseBytes;
 
 
-            if (HIP_ONESHOT_COPY_DEP) {
-                waitFor = NULL; // TODO - don't need dependency after first copy submitted?
-            }
+            // Assume subsequent commands are dependent on previous and don't need dependency after first copy submitted, HIP_ONESHOT_COPY_DEP=1 
+            waitFor = NULL; 
         }
 
         // Now unload the staging buffers:

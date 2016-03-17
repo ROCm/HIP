@@ -153,6 +153,8 @@ typedef enum hipError_t {
     ,hipErrorNoDevice                 ///< Call to hipGetDeviceCount returned 0 devices
     ,hipErrorNotReady                 ///< Indicates that asynchronous operations enqueued earlier are not ready.  This is not actually an error, but is used to distinguish from hipSuccess (which indicates completion).  APIs that return this error include hipEventQuery and hipStreamQuery.
     ,hipErrorUnknown                  ///< Unknown error.
+    ,hipErrorRuntimeMemory            ///< HSA runtime memory call returned error.  Typically not seen in production systems.
+    ,hipErrorRuntimeOther             ///< HSA runtime call other than memory returned error.  Typically not seen in production systems.
     ,hipErrorTbd                      ///< Marker that more error codes are needed.
 } hipError_t;
 
