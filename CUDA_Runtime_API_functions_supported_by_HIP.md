@@ -97,9 +97,9 @@
 | `cudaGetMipmappedArrayLevel`                              |                               | Gets a mipmap level of a CUDA mipmapped array.                                                                                 |
 | `cudaGetSymbolAddress`                                    |                               | Finds the address associated with a CUDA symbol.                                                                               |
 | `cudaGetSymbolSize`                                       |                               | Finds the size of the object associated with a CUDA symbol.                                                                    |
-| `cudaHostAlloc`                                           |                               | Allocates page-locked memory on the host.                                                                                      |
-| `cudaHostGetDevicePointer`                                |                               | Passes back device pointer of mapped host memory allocated by cudaHostAlloc or registered by cudaHostRegister.                 |
-| `cudaHostGetFlags`                                        |                               | Passes back flags used to allocate pinned host memory allocated by cudaHostAlloc.                                              |
+| `cudaHostAlloc`                                           | `hipHostAlloc`                | Allocates page-locked memory on the host.                                                                                      |
+| `cudaHostGetDevicePointer`                                | `hipHostGetDevicePointer`    | Passes back device pointer of mapped host memory allocated by cudaHostAlloc or registered by cudaHostRegister.                 |
+| `cudaHostGetFlags`                                        | `hipHostGetFlags`           | Passes back flags used to allocate pinned host memory allocated by cudaHostAlloc.                                              |
 | `cudaHostRegister`                                        |                               | Registers an existing host memory range for use by CUDA.                                                                       |
 | `cudaHostUnregister`                                      |                               | Unregisters a memory range that was registered with cudaHostRegister.                                                          |
 | `cudaMalloc`                                              | `hipMalloc`                   | Allocate memory on the device.                                                                                                 |
@@ -149,7 +149,7 @@
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaPointerGetAttributes`                                |                               | Returns attributes about a specified pointer.                                                                                  |
+| `cudaPointerGetAttributes`                                | `hipPointerGetAttributes`     | Returns attributes about a specified pointer.                                                                                  |
 
 **9. Peer Device Memory Access**
 
@@ -227,6 +227,7 @@
 | `cudaRuntimeGetVersion`                                   |                               | Returns the CUDA Runtime version.                                                                                              |
 
 **17. C++ API Routines (7.0 contains, 7.5 doesn’t)**
+> Will not support for HIP (probably)
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
