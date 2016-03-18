@@ -76,7 +76,6 @@ std::vector<int> g_hip_visible_devices; /* vector of integers that contains the 
 int HIP_DISABLE_HW_KERNEL_DEP = 1;
 int HIP_DISABLE_HW_COPY_DEP = 1;
 
-int HIP_DISABLE_BIDIR_MEMCPY = 0;
 
 
 #define HIP_HCC  
@@ -233,7 +232,7 @@ public:
     inline int                  preCopyCommand(ihipSignal_t *lastCopy, hsa_signal_t *waitSignal, ihipCommand_t copyType);
 
     inline void                 reclaimSignals_ts(SIGSEQNUM sigNum);
-    inline void                 wait();
+    inline void                 wait(bool assertQueueEmpty=false);
 
 
 
@@ -254,7 +253,6 @@ public:
 private:
     void                        enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal);
     inline void                 waitCopy(ihipSignal_t *signal);
-    inline void                 resetToEmpty();
 
     //---
 
@@ -322,8 +320,6 @@ struct ihipDevice_t
 
     unsigned                _compute_units;
 
-    hsa_signal_t             _copy_signal;       // signal to use for synchronous memcopies
-    std::mutex               _copy_lock[2];      // mutex for each direction.
     StagingBuffer           *_staging_buffer[2]; // one buffer for each direction.
 
 public:
@@ -392,7 +388,8 @@ ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, unsig
     _av(av),
     _flags(flags),
     _device_index(device_index),
-    _last_copy_signal(0),
+    _last_command_type(ihipCommandCopyH2D),
+    _last_copy_signal(NULL),
     _signalCursor(0),
     _stream_sig_id(0),
     _oldest_live_sig_id(1)
@@ -400,7 +397,6 @@ ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, unsig
     tprintf(DB_SYNC, " streamCreate: stream=%p\n", this);
     _signalPool.resize(HIP_STREAM_SIGNALS > 0 ? HIP_STREAM_SIGNALS : 1);
 
-    resetToEmpty();
 };
 
 
@@ -411,13 +407,6 @@ ihipStream_t::~ihipStream_t()
 }
 
 
-//---
-// Reset the stream to "empty" - next command will not set up an inpute dependency on any older signal.
-void ihipStream_t::resetToEmpty()
-{
-    _last_command_type = ihipCommandCopyH2D;
-    _last_copy_signal = NULL;
-}
 
 //---
 void ihipStream_t::reclaimSignals_ts(SIGSEQNUM sigNum)
@@ -444,15 +433,19 @@ void ihipStream_t::waitCopy(ihipSignal_t *signal)
 
 //---
 //Wait for all kernel and data copy commands in this stream to complete.
-void ihipStream_t::wait()
+void ihipStream_t::wait(bool assertQueueEmpty)
 {
-    tprintf (DB_SYNC, "stream %p wait for queue-empty and lastCopy:#%lu...\n", this, _last_copy_signal ? _last_copy_signal->_sig_id: 0x0 );
-    _av.wait();
-    if (_last_copy_signal) {
-        this->waitCopy(_last_copy_signal);
+    if (! assertQueueEmpty) {
+        tprintf (DB_SYNC, "stream %p wait for queue-empty and lastCopy:#%lu...\n", this, _last_copy_signal ? _last_copy_signal->_sig_id: 0x0 );
+        _av.wait();
+        if (_last_copy_signal) {
+            this->waitCopy(_last_copy_signal);
+        }
     }
 
-    resetToEmpty();
+    // Reset the stream to "empty" - next command will not set up an inpute dependency on any older signal.
+    _last_command_type = ihipCommandCopyH2D;
+    _last_copy_signal = NULL;
 };
 
 
@@ -672,7 +665,6 @@ void ihipDevice_t::init(unsigned device_index, hc::accelerator acc)
     this->_streams.push_back(_null_stream);
     tprintf(DB_SYNC, "created device with null_stream=%p\n", _null_stream);
 
-    hsa_signal_create(0, 0, NULL, &_copy_signal);
 
     hsa_region_t *pinnedHostRegion;
     pinnedHostRegion = static_cast<hsa_region_t*>(_acc.get_hsa_am_system_region());
@@ -695,7 +687,6 @@ ihipDevice_t::~ihipDevice_t()
             _staging_buffer[i] = NULL;
         }
     }
-    hsa_signal_destroy(_copy_signal);
 }
 
 //----
@@ -1025,7 +1016,6 @@ void ihipInit()
 
     READ_ENV_I(release, HIP_DISABLE_HW_KERNEL_DEP, 0, "Disable HW dependencies before kernel commands  - instead wait for dependency on host. -1 means ignore these dependencies. (debug mode)");
     READ_ENV_I(release, HIP_DISABLE_HW_COPY_DEP, 0, "Disable HW dependencies before copy commands  - instead wait for dependency on host. -1 means ifnore these dependencies (debug mode)");
-    READ_ENV_I(release, HIP_DISABLE_BIDIR_MEMCPY, 0, "Disable simultaneous H2D memcpy and D2H memcpy to same device");
 
 
     /*
@@ -2255,9 +2245,8 @@ void ihipStream_t::ihipSyncCopy(void* dst, const void* src, size_t sizeBytes, hi
 
 
     if ((kind == hipMemcpyHostToDevice) && (srcNotTracked)) {
-        int depSignalCnt = this->preCopyCommand(NULL, &depSignal, ihipCommandCopyH2D);
+        int depSignalCnt = preCopyCommand(NULL, &depSignal, ihipCommandCopyH2D);
         if (HIP_STAGING_BUFFERS) {
-            std::lock_guard<std::mutex> l (device->_copy_lock[0]);
             tprintf(DB_COPY1, "D2H && dstNotTracked: staged copy H2D dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
 
             if (HIP_PININPLACE) {
@@ -2267,22 +2256,21 @@ void ihipStream_t::ihipSyncCopy(void* dst, const void* src, size_t sizeBytes, hi
             }
 
             // The copy waits for inputs and then completes before returning so can reset queue to empty:
-            this->resetToEmpty();
+            this->wait(true);
         } else {
             // TODO - remove, slow path.
             tprintf(DB_COPY1, "H2D && srcNotTracked: am_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
             hc::am_copy(dst, src, sizeBytes);
         }
     } else if ((kind == hipMemcpyDeviceToHost) && (dstNotTracked)) {
-        int depSignalCnt = this->preCopyCommand(NULL, &depSignal, ihipCommandCopyD2H);
+        int depSignalCnt = preCopyCommand(NULL, &depSignal, ihipCommandCopyD2H);
         if (HIP_STAGING_BUFFERS) {
             tprintf(DB_COPY1, "D2H && dstNotTracked: staged copy D2H dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
-            std::lock_guard<std::mutex> l (device->_copy_lock[HIP_DISABLE_BIDIR_MEMCPY ? 0:1]);
             //printf ("staged-copy- read dep signals\n");
             device->_staging_buffer[1]->CopyDeviceToHost(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
 
             // The copy waits for inputs and then completes before returning so can reset queue to empty:
-            this->resetToEmpty();
+            this->wait(true);
 
         } else {
             // TODO - remove, slow path.
@@ -2290,7 +2278,7 @@ void ihipStream_t::ihipSyncCopy(void* dst, const void* src, size_t sizeBytes, hi
             hc::am_copy(dst, src, sizeBytes);
         }
     } else if (kind == hipMemcpyHostToHost)  { 
-        int depSignalCnt = this->preCopyCommand(NULL, &depSignal, ihipCommandCopyH2H);
+        int depSignalCnt = preCopyCommand(NULL, &depSignal, ihipCommandCopyH2H);
 
         if (depSignalCnt) {
             // host waits before doing host memory copy.
@@ -2309,23 +2297,24 @@ void ihipStream_t::ihipSyncCopy(void* dst, const void* src, size_t sizeBytes, hi
             case hipMemcpyDeviceToDevice : commandType = ihipCommandCopyD2D; break;
             default: throw ihipException(hipErrorInvalidMemcpyDirection);
         };
-        int depSignalCnt = this->preCopyCommand(NULL, &depSignal, commandType);
+        int depSignalCnt = preCopyCommand(NULL, &depSignal, commandType);
 
-        device->_copy_lock[HIP_DISABLE_BIDIR_MEMCPY? 0:1].lock();
+        // Get a completion signal:
+        ihipSignal_t *ihipSignal = allocSignal();
+        hsa_signal_t copyCompleteSignal = ihipSignal->_hsa_signal;
 
-        hsa_signal_store_relaxed(device->_copy_signal, 1);
+        hsa_signal_store_relaxed(copyCompleteSignal, 1);
 
         tprintf(DB_COPY1, "HSA Async_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
 
-        hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, device->_hsa_agent, src, device->_hsa_agent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, device->_copy_signal);
+        hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, device->_hsa_agent, src, device->_hsa_agent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, copyCompleteSignal);
 
+        // This is sync copy, so let's wait for copy right here:
         if (hsa_status == HSA_STATUS_SUCCESS) {
-            hsa_signal_wait_relaxed(device->_copy_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+            hsa_signal_wait_relaxed(copyCompleteSignal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
         } else {
             throw ihipException(hipErrorInvalidValue);
         }
-
-        device->_copy_lock[HIP_DISABLE_BIDIR_MEMCPY ? 0:1].unlock();
 
     }
 }
