@@ -15,20 +15,16 @@
 #endif
 
 //-------------------------------------------------------------------------------------------------
-StagingBuffer::StagingBuffer(hc::accelerator &acc, size_t bufferSize, int numBuffers) :
-    _acc(acc),
+StagingBuffer::StagingBuffer(hsa_agent_t hsaAgent, hsa_region_t systemRegion, size_t bufferSize, int numBuffers) :
+    _hsa_agent(hsaAgent),
     _bufferSize(bufferSize),
     _numBuffers(numBuffers > _max_buffers ? _max_buffers : numBuffers)
 {
-
-    hsa_agent_t *agentPtr = static_cast<hsa_agent_t*> (acc.get_hsa_agent());
-    _hsa_agent = *agentPtr;
-
-
     for (int i=0; i<_numBuffers; i++) {
         // TODO - experiment with alignment here.
-        _pinnedStagingBuffer[i] = hc::am_alloc(_bufferSize, _acc, amHostPinned);
-        if (_pinnedStagingBuffer[i] == NULL) {
+        hsa_status_t s1 = hsa_memory_allocate(systemRegion, _bufferSize, (void**) (&_pinnedStagingBuffer[i]) );
+
+        if ((s1 != HSA_STATUS_SUCCESS) || (_pinnedStagingBuffer[i] == NULL)) {
             THROW_ERROR(hipErrorMemoryAllocation);
         }
         hsa_signal_create(0, 0, NULL, &_completion_signal[i]);
