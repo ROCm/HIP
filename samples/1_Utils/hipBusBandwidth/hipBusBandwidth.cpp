@@ -13,6 +13,7 @@ int           p_iterations   = 10;
 int           p_device  = 0;
 int           p_detailed  = 0;
 bool          p_async = 0; 
+bool          p_alignedhost = 1; 
 
 bool          p_h2d   = true;
 bool          p_d2h   = true;
@@ -120,7 +121,11 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
     }
     else
     {
-        hostMem = new float[numMaxFloats];
+        if (p_alignedhost) {
+            hostMem = (float*)aligned_alloc(64, numMaxFloats*sizeof(float));
+        } else {
+            hostMem = new float[numMaxFloats];
+        }
     }
 
     for (int i = 0; i < numMaxFloats; i++)
@@ -189,6 +194,21 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
         }
     }
 
+    // Check.  First reset the host memory, then copy-back result.  Then compare against original ref value.
+    for (int i = 0; i < numMaxFloats; i++)
+    {
+        hostMem[i] = 0;
+    }
+    hipMemcpy(hostMem, device, numMaxFloats*sizeof(float), hipMemcpyDeviceToHost);
+    for (int i = 0; i < numMaxFloats; i++)
+    {
+        float ref = i % 77;
+        if (ref != hostMem[i]) {
+            printf ("error: H2D. i=%d reference:%6.f != copyback:%6.2f\n", i, ref, hostMem[i]);
+        }
+    }
+
+
     // Cleanup
     hipFree((void*)device);
     CHECK_HIP_ERROR();
@@ -199,7 +219,11 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
     }
     else
     {
-        delete[] hostMem;
+        if (p_alignedhost) {
+            delete[] hostMem;
+        } else {
+            free(hostMem);
+        }
     }
     hipEventDestroy(start);
     hipEventDestroy(stop);
@@ -254,15 +278,15 @@ void RunBenchmark_D2H(ResultDatabase &resultDB)
     hipMalloc((void**)&device, sizeof(float) * numMaxFloats);
     while (hipGetLastError() != hipSuccess)
     {
-	// drop the size and try again
-	if (p_verbose) std::cout << " - dropping size allocating device mem\n";
-	--nSizes;
-	if (nSizes < 1)
-	{
-        std::cerr << "Error: Couldn't allocated any device buffer\n";
-	    return;
-	}
-	numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
+        // drop the size and try again
+        if (p_verbose) std::cout << " - dropping size allocating device mem\n";
+        --nSizes;
+        if (nSizes < 1)
+        {
+            std::cerr << "Error: Couldn't allocated any device buffer\n";
+            return;
+        }
+        numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
         hipMalloc((void**)&device, sizeof(float) * numMaxFloats);
     }
 
@@ -314,6 +338,16 @@ void RunBenchmark_D2H(ResultDatabase &resultDB)
 	//resultDB.AddResult("ReadbackLatencyEstimate", "1-2kb", "ms", times[0]-(times[1]-times[0])/1.);
 	//resultDB.AddResult("ReadbackLatencyEstimate", "1-4kb", "ms", times[0]-(times[2]-times[0])/3.);
 	//resultDB.AddResult("ReadbackLatencyEstimate", "2-4kb", "ms", times[1]-(times[2]-times[1])/1.);
+    }
+
+
+    // Check.  First reset the host memory, then copy-back result.  Then compare against original ref value.
+    for (int i = 0; i < numMaxFloats; i++)
+    {
+        float ref = i % 77;
+        if (ref != hostMem2[i]) {
+            printf ("error: D2H. i=%d reference:%6.f != copyback:%6.2f\n", i, ref, hostMem2[i]);
+        }
     }
 
     // Cleanup
