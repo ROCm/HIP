@@ -8,7 +8,7 @@ struct StagingBuffer {
 
     static const int _max_buffers = 4;
 
-    StagingBuffer(hc::accelerator &acc, size_t bufferSize, int numBuffers) ;
+    StagingBuffer(hsa_agent_t hsaAgent, hsa_region_t systemRegion, size_t bufferSize, int numBuffers) ;
     ~StagingBuffer();
 
     void CopyHostToDevice(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
@@ -19,7 +19,6 @@ struct StagingBuffer {
 
 
 private:
-    hc::accelerator &_acc;
     hsa_agent_t     _hsa_agent;
     size_t          _bufferSize;  // Size of the buffers.
     int             _numBuffers;
