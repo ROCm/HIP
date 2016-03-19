@@ -10,6 +10,7 @@
 bool          p_verbose = false;
 bool          p_pinned  = true;
 int           p_iterations   = 10;
+int           p_beatsperiteration=1;
 int           p_device  = 0;
 int           p_detailed  = 0;
 bool          p_async = 0; 
@@ -189,8 +190,8 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
             double speed = (double(sizeToBytes(sizes[sizeIndex])) / (1000*1000)) / t;
             char sizeStr[256];
             sprintf(sizeStr, "%9s", sizeToString(sizes[sizeIndex]).c_str());
-            resultDB.AddResult("H2D_Bandwidth", sizeStr, "GB/sec", speed);
-            resultDB.AddResult("H2D_Time", sizeStr, "ms", t);
+            resultDB.AddResult(std::string("H2D_Bandwidth") + (p_pinned ? "_Pinned" : "_Unpinned"), sizeStr, "GB/sec", speed);
+            resultDB.AddResult(std::string("H2D_Time") + (p_pinned ? "_Pinned" : "_Unpinned"), sizeStr, "ms", t);
         }
     }
 
@@ -332,8 +333,8 @@ void RunBenchmark_D2H(ResultDatabase &resultDB)
             double speed = (double(sizeToBytes(sizes[sizeIndex])) / (1000*1000)) / t;
             char sizeStr[256];
             sprintf(sizeStr, "%9s", sizeToString(sizes[sizeIndex]).c_str());
-            resultDB.AddResult("D2H_Bandwidth", sizeStr, "GB/sec", speed);
-            resultDB.AddResult("D2H_Time", sizeStr, "ms", t);
+            resultDB.AddResult(std::string("D2H_Bandwidth") + (p_pinned ? "_Pinned" : "_Unpinned"), sizeStr, "GB/sec", speed);
+            resultDB.AddResult(std::string("D2H_Time") + (p_pinned ? "_Pinned" : "_Unpinned"), sizeStr, "ms", t);
         }
 	//resultDB.AddResult("ReadbackLatencyEstimate", "1-2kb", "ms", times[0]-(times[1]-times[0])/1.);
 	//resultDB.AddResult("ReadbackLatencyEstimate", "1-4kb", "ms", times[0]-(times[2]-times[0])/3.);
@@ -484,8 +485,8 @@ void RunBenchmark_Bidir(ResultDatabase &resultDB)
             double speed = (double(sizeToBytes(sizes[sizeIndex])) / (1000*1000)) / t;
             char sizeStr[256];
             sprintf(sizeStr, "%9s", sizeToString(sizes[sizeIndex]).c_str());
-            resultDB.AddResult("Bidir_Bandwidth", sizeStr, "GB/sec", speed);
-            resultDB.AddResult("Bidir_Time", sizeStr, "ms", t);
+            resultDB.AddResult(std::string("Bidir_Bandwidth") + (p_pinned ? "_Pinned" : "_Unpinned"), sizeStr, "GB/sec", speed);
+            resultDB.AddResult(std::string("Bidir_Time") + (p_pinned ? "_Pinned" : "_Unpinned"), sizeStr, "ms", t);
         }
     }
 
