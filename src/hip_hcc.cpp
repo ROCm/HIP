@@ -1921,7 +1921,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
         attributes->isManaged     = 0;
         attributes->allocationFlags = 0;
 
-        e = hipErrorUnknown;
+        e = hipErrorUnknown; // TODO - should be hipErrorInvalidValue ?
     }
 
     return ihipLogStatus(e);
@@ -2087,34 +2087,32 @@ hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
 
 
 hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags){
-	std::call_once(hip_initialized, ihipInit);
+    std::call_once(hip_initialized, ihipInit);
 
-	hipError_t hip_status = hipSuccess;
+    hipError_t hip_status = hipSuccess;
 
-	auto device = ihipGetTlsDefaultDevice();
+    auto device = ihipGetTlsDefaultDevice();
 
-	if(device){
-		if(flags & hipHostAllocDefault){
-
-		*ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
-		if(sizeBytes && (*ptr == NULL)){
-			hip_status = hipErrorMemoryAllocation;
-		}else{
-			hc::am_memtracker_update(*ptr, device->_device_index, 0);
-		}
-		tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
-		}
-		if(flags & hipHostAllocMapped){
-
-		*ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
-		if(sizeBytes && (*ptr == NULL)){
-			hip_status = hipErrorMemoryAllocation;
-		}else{
-			hc::am_memtracker_update(*ptr, device->_device_index, flags);
-		}
-		tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
-	}
-	return ihipLogStatus(hip_status);
+    if(device){
+        if(flags == hipHostAllocDefault){
+            *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
+            if(sizeBytes && (*ptr == NULL)){
+                hip_status = hipErrorMemoryAllocation;
+            }else{
+                hc::am_memtracker_update(*ptr, device->_device_index, 0);
+            }
+            tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
+        } else if(flags & hipHostAllocMapped){
+            *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
+            if(sizeBytes && (*ptr == NULL)){
+                hip_status = hipErrorMemoryAllocation;
+            }else{
+                hc::am_memtracker_update(*ptr, device->_device_index, flags);
+            }
+            tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
+        }
+    }
+    return ihipLogStatus(hip_status);
 }
 
 
@@ -2575,6 +2573,8 @@ hipError_t hipMemGetInfo  (size_t *free, size_t *total)
             // TODO - replace with kernel-level for reporting free memory:
             size_t deviceMemSize, hostMemSize, userMemSize;
             hc::am_memtracker_sizeinfo(hipDevice->_acc, &deviceMemSize, &hostMemSize, &userMemSize);
+            printf ("deviceMemSize=%zu\n", deviceMemSize);
+        
             *free =  hipDevice->_props.totalGlobalMem - deviceMemSize;
         }
 
