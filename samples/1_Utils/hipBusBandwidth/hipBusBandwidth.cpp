@@ -14,11 +14,14 @@ int           p_beatsperiteration=1;
 int           p_device  = 0;
 int           p_detailed  = 0;
 bool          p_async = 0; 
-bool          p_alignedhost = 1; 
+int           p_alignedhost = 0;  // align host allocs to this granularity, in bytes. 64 or 4096 are good values to try.
+int           p_onesize = 0;  
 
 bool          p_h2d   = true;
 bool          p_d2h   = true;
 bool          p_bidir = true;
+
+
 
 
 #define CHECK_HIP_ERROR()                                                    \
@@ -46,8 +49,8 @@ std::string sizeToString(int size)
     using namespace std;
     stringstream ss;
     if (size < 0) {
-        // char (01) sorts before " " so will cause Byte values to be displayed before kB.
-        ss << char(0x1) << setfill('0') << setw(3) << -size <<  "B";
+        // char (09, horiz tab) lexically sorts before " " so will cause Byte values to be displayed before kB.
+        ss << char(0x09)/*tab*/ << setfill('0') << setw(3) << -size <<  "B";
     } else {
         ss << size << "kB";
     }
@@ -123,7 +126,7 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
     else
     {
         if (p_alignedhost) {
-            hostMem = (float*)aligned_alloc(64, numMaxFloats*sizeof(float));
+            hostMem = (float*)aligned_alloc(p_alignedhost, numMaxFloats*sizeof(float));
         } else {
             hostMem = new float[numMaxFloats];
         }
@@ -170,10 +173,13 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
             else
                 sizeIndex = (nSizes - 1) - i;
 
-            int nbytes = sizeToBytes(sizes[sizeIndex]);
+            const int thisSize = p_onesize ? p_onesize : sizes[sizeIndex];
+            const int nbytes = sizeToBytes(thisSize);
 
             hipEventRecord(start, 0);
-            memcopy(device, hostMem, nbytes, hipMemcpyHostToDevice);
+            for (int j=0;j<p_beatsperiteration;j++) {
+                memcopy(device, hostMem, nbytes, hipMemcpyHostToDevice);
+            }
             hipEventRecord(stop, 0);
             hipEventSynchronize(stop);
             float t = 0;
@@ -183,16 +189,27 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
             // Convert to GB/sec
             if (p_verbose)
             {
-                std::cerr << "size " << sizeToString(sizes[sizeIndex]) << " took " << t <<
-                        " ms\n";
+                std::cerr << "size " << sizeToString(thisSize) << " took " << t << " ms\n";
             }
 
-            double speed = (double(sizeToBytes(sizes[sizeIndex])) / (1000*1000)) / t;
+            double speed = (double(sizeToBytes(thisSize) * p_beatsperiteration) / (1000*1000)) / t;
             char sizeStr[256];
-            sprintf(sizeStr, "%9s", sizeToString(sizes[sizeIndex]).c_str());
+            if (p_beatsperiteration>1) {
+                sprintf(sizeStr, "%9sx%d", sizeToString(thisSize).c_str(), p_beatsperiteration);
+            } else {
+                sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
+            }
             resultDB.AddResult(std::string("H2D_Bandwidth") + (p_pinned ? "_Pinned" : "_Unpinned"), sizeStr, "GB/sec", speed);
             resultDB.AddResult(std::string("H2D_Time") + (p_pinned ? "_Pinned" : "_Unpinned"), sizeStr, "ms", t);
+
+            if (p_onesize) {
+                break;
+            }
         }
+    }
+
+    if (p_onesize) {
+        numMaxFloats = sizeToBytes(p_onesize) / sizeof(float);
     }
 
     // Check.  First reset the host memory, then copy-back result.  Then compare against original ref value.
@@ -313,10 +330,13 @@ void RunBenchmark_D2H(ResultDatabase &resultDB)
             else
                 sizeIndex = (nSizes - 1) - i;
 
-            int nbytes = sizeToBytes(sizes[sizeIndex]);
+            const int thisSize = p_onesize ? p_onesize : sizes[sizeIndex];
+            const int nbytes = sizeToBytes(thisSize);
 
             hipEventRecord(start, 0);
-            memcopy(hostMem2, device, nbytes, hipMemcpyDeviceToHost);
+            for (int j=0;j<p_beatsperiteration;j++) {
+                memcopy(hostMem2, device, nbytes, hipMemcpyDeviceToHost);
+            }
             hipEventRecord(stop, 0);
             hipEventSynchronize(stop);
             float t = 0;
@@ -326,22 +346,29 @@ void RunBenchmark_D2H(ResultDatabase &resultDB)
             // Convert to GB/sec
             if (p_verbose)
             {
-                std::cerr << "size " <<sizeToString(sizes[sizeIndex]) << " took " << t <<
+                std::cerr << "size " <<sizeToString(thisSize) << " took " << t <<
                         " ms\n";
             }
 
-            double speed = (double(sizeToBytes(sizes[sizeIndex])) / (1000*1000)) / t;
+            double speed = (double(sizeToBytes(thisSize)) / (1000*1000)) / t;
             char sizeStr[256];
-            sprintf(sizeStr, "%9s", sizeToString(sizes[sizeIndex]).c_str());
+            sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
+            if (p_beatsperiteration>1) {
+                sprintf(sizeStr, "%9sx%d", sizeToString(thisSize).c_str(), p_beatsperiteration);
+            } else {
+                sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
+            }
             resultDB.AddResult(std::string("D2H_Bandwidth") + (p_pinned ? "_Pinned" : "_Unpinned"), sizeStr, "GB/sec", speed);
             resultDB.AddResult(std::string("D2H_Time") + (p_pinned ? "_Pinned" : "_Unpinned"), sizeStr, "ms", t);
+            if (p_onesize) {
+                break;
+            }
         }
-	//resultDB.AddResult("ReadbackLatencyEstimate", "1-2kb", "ms", times[0]-(times[1]-times[0])/1.);
-	//resultDB.AddResult("ReadbackLatencyEstimate", "1-4kb", "ms", times[0]-(times[2]-times[0])/3.);
-	//resultDB.AddResult("ReadbackLatencyEstimate", "2-4kb", "ms", times[1]-(times[2]-times[1])/1.);
     }
 
-
+    if (p_onesize) {
+        numMaxFloats = sizeToBytes(p_onesize) / sizeof(float);
+    }
     // Check.  First reset the host memory, then copy-back result.  Then compare against original ref value.
     for (int i = 0; i < numMaxFloats; i++)
     {
@@ -464,7 +491,8 @@ void RunBenchmark_Bidir(ResultDatabase &resultDB)
             else
                 sizeIndex = (nSizes - 1) - i;
 
-            int nbytes = sizeToBytes(sizes[sizeIndex]);
+            const int thisSize = p_onesize ? p_onesize : sizes[sizeIndex];
+            const int nbytes = sizeToBytes(thisSize);
 
             hipEventRecord(start, 0);
             hipMemcpyAsync(deviceMem[0], hostMem[0],   nbytes, hipMemcpyHostToDevice, stream[0]);
@@ -473,18 +501,17 @@ void RunBenchmark_Bidir(ResultDatabase &resultDB)
             hipEventSynchronize(stop);
             float t = 0;
             hipEventElapsedTime(&t, start, stop);
-            //times[sizeIndex] = t;
 
             // Convert to GB/sec
             if (p_verbose)
             {
-                std::cerr << "size " << sizeToString(sizes[sizeIndex]) << " took " << t <<
+                std::cerr << "size " << sizeToString(thisSize) << " took " << t <<
                         " ms\n";
             }
 
-            double speed = (double(sizeToBytes(sizes[sizeIndex])) / (1000*1000)) / t;
+            double speed = (double(sizeToBytes(thisSize)) / (1000*1000)) / t;
             char sizeStr[256];
-            sprintf(sizeStr, "%9s", sizeToString(sizes[sizeIndex]).c_str());
+            sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
             resultDB.AddResult(std::string("Bidir_Bandwidth") + (p_pinned ? "_Pinned" : "_Unpinned"), sizeStr, "GB/sec", speed);
             resultDB.AddResult(std::string("Bidir_Time") + (p_pinned ? "_Pinned" : "_Unpinned"), sizeStr, "ms", t);
         }
@@ -535,15 +562,18 @@ void printConfig() {
 
 void help() {
     printf ("Usage: hipBusBandwidth [OPTIONS]\n");
-    printf ("  --iterations, -i     : Number of copy iterations to run.\n");
-    printf ("  --device, -d         : Device ID to use (0..numDevices).\n");
-    printf ("  --unpinned           : Use unpinned host memory.\n");
-    printf ("  --d2h                : Run only device-to-host test.\n");
-    printf ("  --h2d                : Run only host-to-device test.\n");
-    printf ("  --bidir              : Run only bidir copy test.\n");
-    printf ("  --verbose            : Print verbose status messages as test is run.\n");
-    printf ("  --detailed           : Print detailed report (including all trials).\n");
-    printf ("  --async              : Use hipMemcpyAsync(with NULL stream) for H2D/D2H.  Default uses hipMemcpy.\n");
+    printf ("  --iterations, -i         : Number of copy iterations to run.\n");
+    printf ("  --beatsperiterations, -b : Number of beats (back-to-back copies of same size) per iteration to run.\n");
+    printf ("  --device, -d             : Device ID to use (0..numDevices).\n");
+    printf ("  --unpinned               : Use unpinned host memory.\n");
+    printf ("  --d2h                    : Run only device-to-host test.\n");
+    printf ("  --h2d                    : Run only host-to-device test.\n");
+    printf ("  --bidir                  : Run only bidir copy test.\n");
+    printf ("  --verbose                : Print verbose status messages as test is run.\n");
+    printf ("  --detailed               : Print detailed report (including all trials).\n");
+
+    printf ("  --async                  : Use hipMemcpyAsync(with NULL stream) for H2D/D2H.  Default uses hipMemcpy.\n");
+    printf ("  --onesize, -o            : Only run one measurement, at specified size (in KB, or if negative in bytes)\n");
 
 };
 
@@ -558,9 +588,17 @@ int parseStandardArguments(int argc, char *argv[])
             if (++i >= argc || !parseInt(argv[i], &p_iterations)) {
                failed("Bad iterations argument"); 
             }
+        } else if (!strcmp(arg, "--beatsperiteration") || (!strcmp(arg, "-b"))) {
+            if (++i >= argc || !parseInt(argv[i], &p_beatsperiteration)) {
+               failed("Bad beatsperiteration argument"); 
+            }
         } else if (!strcmp(arg, "--device") || (!strcmp(arg, "-d"))) {
             if (++i >= argc || !parseInt(argv[i], &p_device)) {
                failed("Bad device argument"); 
+            }
+        } else if (!strcmp(arg, "--onesize") || (!strcmp(arg, "-o"))) {
+            if (++i >= argc || !parseInt(argv[i], &p_onesize)) {
+               failed("Bad onesize argument"); 
             }
         } else if (!strcmp(arg, "--unpinned")) {
             p_pinned = 0;
@@ -582,6 +620,7 @@ int parseStandardArguments(int argc, char *argv[])
         } else if (!strcmp(arg, "--help")  || (!strcmp(arg, "-h"))) {
             help();
             exit(EXIT_SUCCESS);
+
 
         } else if (!strcmp(arg, "--verbose")) {
             p_verbose = 1;

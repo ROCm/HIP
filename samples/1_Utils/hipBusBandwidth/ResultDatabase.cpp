@@ -189,8 +189,12 @@ void ResultDatabase::AddResult(const string &test_orig,
 void ResultDatabase::DumpDetailed(ostream &out)
 {
     vector<Result> sorted(results);
-
     sort(sorted.begin(), sorted.end());
+
+    const int testNameW = 24 ;
+    const int attW = 12;
+    const int fieldW = 11;
+    out << std::fixed << right << std::setprecision(4);
 
     int maxtrials = 1;
     for (int i=0; i<sorted.size(); i++)
@@ -201,9 +205,9 @@ void ResultDatabase::DumpDetailed(ostream &out)
 
     // TODO: in big parallel runs, the "trials" are the procs
     // and we really don't want to print them all out....
-    out << "test\t"
-        << "atts\t"
-        << "units\t"
+    out << setw(testNameW) << "test\t"  
+        << setw(attW) << "atts\t"
+        << setw(fieldW) 
         << "median\t"
         << "mean\t"
         << "stddev\t"
@@ -216,9 +220,9 @@ void ResultDatabase::DumpDetailed(ostream &out)
     for (int i=0; i<sorted.size(); i++)
     {
         Result &r = sorted[i];
-        out << r.test << "\t";
-        out << r.atts << "\t";
-        out << r.unit << "\t";
+        out << setw(testNameW) << r.test + "\t";
+        out << setw(attW) << r.atts + "\t";
+        out << setw(fieldW) << r.unit + "\t";
         if (r.GetMedian() == FLT_MAX)
             out << "N/A\t";
         else
@@ -277,13 +281,11 @@ void ResultDatabase::DumpDetailed(ostream &out)
 void ResultDatabase::DumpSummary(ostream &out)
 {
     vector<Result> sorted(results);
-
-    const int testNameW = 24 ;
-    const int attW = 15;
-    const int fieldW = 9;
-
     sort(sorted.begin(), sorted.end());
 
+    const int testNameW = 24 ;
+    const int attW = 12;
+    const int fieldW = 9;
     out << std::fixed << right << std::setprecision(4);
 
     // TODO: in big parallel runs, the "trials" are the procs
