@@ -487,6 +487,28 @@ MyKernel(hipLaunchParm lp, float *C, const float *A, size_t N)
 }
 ```
 
+#### HIP Environment Variables
+
+On the HCC path, HIP provides a number of environment variables that control the behavior of HIP.  Some of these are useful for appliction development (for example HIP_VISIBLE_DEVICES, HIP_LAUNCH_BLOCKING),
+some are useful for performance tuning or experimentation (for example HIP_STAGING*), and some are useful for debugging (HIP_DB).  You can see the environment variables supported by HIP as well as
+their current values and usage with the environment var "HIP_PRINT_ENV" - set this and then run any HIP application.  For example:
+
+```
+$ HIP_PRINT_ENV=1 ./myhipapp
+HIP_PRINT_ENV                  =  1 : Print HIP environment variables.
+HIP_LAUNCH_BLOCKING            =  0 : Make HIP APIs 'host-synchronous', so they block until any kernel launches or data copy commands complete. Alias: CUDA_LAUNCH_BLOCKING.
+HIP_DB                         =  0 : Print various debug info.  Bitmask, see hip_hcc.cpp for more information.
+HIP_TRACE_API                  =  0 : Trace each HIP API call.  Print function name and return code to stderr as program executes.
+HIP_STAGING_SIZE               = 64 : Size of each staging buffer (in KB)
+HIP_STAGING_BUFFERS            =  2 : Number of staging buffers to use in each direction. 0=use hsa_memory_copy.
+HIP_PININPLACE                 =  0 : For unpinned transfers, pin the memory in-place in chunks before doing the copy.  Under development.
+HIP_STREAM_SIGNALS             =  2 : Number of signals to allocate when new stream is created (signal pool will grow on demand)
+HIP_VISIBLE_DEVICES            =  0 : Only devices whose index is present in the secquence are visible to HIP applications and they are enumerated in the order of secquence
+HIP_DISABLE_HW_KERNEL_DEP      =  1 : Disable HW dependencies before kernel commands  - instead wait for dependency on host. -1 means ignore these dependencies. (debug mode)
+HIP_DISABLE_HW_COPY_DEP        =  1 : Disable HW dependencies before copy commands  - instead wait for dependency on host. -1 means ifnore these dependencies (debug mode)
+
+```
+
 
 #### Editor Highlighting
 See the utils/vim or utils/gedit directories to add handy highlighting to hip files.
