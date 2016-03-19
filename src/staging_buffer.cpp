@@ -4,14 +4,11 @@
 
 #include "hcc_detail/staging_buffer.h"
 
-#ifndef tprintf
-#define tprintf(trace_level, ...) 
-#endif
-
 #ifdef HIP_HCC
 #define THROW_ERROR(e) throw ihipException(e)
 #else
 #define THROW_ERROR(e) throw 
+#define tprintf(trace_level, ...) 
 #endif
 
 //-------------------------------------------------------------------------------------------------

@@ -44,6 +44,7 @@ THE SOFTWARE.
 #include "hsa_ext_amd.h"
 
 // HIP includes:
+#define HIP_HCC
 #include "hcc_detail/staging_buffer.h"
 
 
@@ -314,7 +315,7 @@ struct ihipDevice_t
 
     // The NULL stream is used if no other stream is specified.
     // NULL has special synchronization properties with other streams.
-    ihipStream_t            *_null_stream;
+    ihipStream_t            *_default_stream;
 
     std::list<ihipStream_t*> _streams;   // streams associated with this device.
 
@@ -326,6 +327,8 @@ public:
     void reset();
     void init(unsigned device_index, hc::accelerator acc);
     hipError_t getProperties(hipDeviceProp_t* prop);
+
+    inline void syncDefaultStream(bool waitOnSelf);
 
     ~ihipDevice_t();
 };
@@ -363,10 +366,10 @@ INLINE bool ihipIsValidDevice(unsigned deviceIndex);
 //---
 ihipSignal_t::ihipSignal_t() :  _sig_id(0)
 {
-  if (hsa_signal_create(0/*value*/, 0, NULL, &_hsa_signal) != HSA_STATUS_SUCCESS) {
-  throw ihipException(hipErrorOutOfResources);
-}
-tprintf (DB_SIGNAL, "  allocated hsa_signal=%lu\n", (_hsa_signal.handle));
+    if (hsa_signal_create(0/*value*/, 0, NULL, &_hsa_signal) != HSA_STATUS_SUCCESS) {
+        throw ihipException(hipErrorOutOfResources);
+    }
+    //tprintf (DB_SIGNAL, "  allocated hsa_signal=%lu\n", (_hsa_signal.handle));
 }
 
 //---
@@ -420,13 +423,15 @@ void ihipStream_t::reclaimSignals_ts(SIGSEQNUM sigNum)
 //---
 void ihipStream_t::waitCopy(ihipSignal_t *signal)
 {
-    hsa_signal_wait_acquire(_last_copy_signal->_hsa_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+    hsa_signal_wait_acquire(signal->_hsa_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
 
-    SIGSEQNUM sigNum = _last_copy_signal->_sig_id;
+    SIGSEQNUM sigNum = signal->_sig_id;
 
-    tprintf(DB_SIGNAL, "reclaim signal #%lu\n", sigNum);
-    // Mark all signals older and including this one as available for
-    _oldest_live_sig_id = sigNum+1;
+    tprintf(DB_SIGNAL, "waitCopy reclaim signal #%lu\n", sigNum);
+    // Mark all signals older and including this one as available for reclaim
+    if (sigNum > _oldest_live_sig_id) {
+        _oldest_live_sig_id = sigNum+1; // TODO, +1 here seems dangerous.
+    }
 
 }
 
@@ -438,9 +443,9 @@ void ihipStream_t::wait(bool assertQueueEmpty)
     if (! assertQueueEmpty) {
         tprintf (DB_SYNC, "stream %p wait for queue-empty and lastCopy:#%lu...\n", this, _last_copy_signal ? _last_copy_signal->_sig_id: 0x0 );
         _av.wait();
-        if (_last_copy_signal) {
-            this->waitCopy(_last_copy_signal);
-        }
+    }
+    if (_last_copy_signal) {
+        this->waitCopy(_last_copy_signal);
     }
 
     // Reset the stream to "empty" - next command will not set up an inpute dependency on any older signal.
@@ -474,8 +479,13 @@ ihipSignal_t *ihipStream_t::allocSignal()
         }
 
         if (_signalPool[thisCursor]._sig_id < _oldest_live_sig_id) {
+            SIGSEQNUM oldSigId = _signalPool[thisCursor]._sig_id;
             _signalPool[thisCursor]._index = thisCursor;
             _signalPool[thisCursor]._sig_id  =  ++_stream_sig_id;  // allocate it.
+            tprintf(DB_SIGNAL, "allocatSignal #%lu at pos:%i (old sigId:%lu < oldest_live:%lu)\n", 
+                    _signalPool[thisCursor]._sig_id,
+                    thisCursor, oldSigId, _oldest_live_sig_id);
+
 
 
             return &_signalPool[thisCursor];
@@ -487,6 +497,9 @@ ihipSignal_t *ihipStream_t::allocSignal()
 
     // Have to grow the pool:
     _signalCursor = _signalPool.size(); // set to the beginning of the new entries:
+    if (_signalCursor > 10000) {
+        fprintf (stderr, "warning: signal pool size=%d, may indicate runaway number of inflight commands\n", _signalCursor);
+    }
     _signalPool.resize(_signalPool.size() * 2);
     tprintf (DB_SIGNAL, "grow signal pool to %zu entries, cursor=%d\n", _signalPool.size(), _signalCursor);
     return allocSignal();  // try again,
@@ -661,9 +674,9 @@ void ihipDevice_t::init(unsigned device_index, hc::accelerator acc)
 
     getProperties(&_props);
 
-    _null_stream = new ihipStream_t(device_index, acc.get_default_view(), hipStreamDefault);
-    this->_streams.push_back(_null_stream);
-    tprintf(DB_SYNC, "created device with null_stream=%p\n", _null_stream);
+    _default_stream = new ihipStream_t(device_index, acc.get_default_view(), hipStreamDefault);
+    this->_streams.push_back(_default_stream);
+    tprintf(DB_SYNC, "created device with default_stream=%p\n", _default_stream);
 
 
     hsa_region_t *pinnedHostRegion;
@@ -676,9 +689,9 @@ void ihipDevice_t::init(unsigned device_index, hc::accelerator acc)
 
 ihipDevice_t::~ihipDevice_t()
 {
-    if (_null_stream) {
-        delete _null_stream;
-        _null_stream = NULL;
+    if (_default_stream) {
+        delete _default_stream;
+        _default_stream = NULL;
     }
 
     for (int i=0; i<2; i++) {
@@ -905,6 +918,32 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     return e;
 }
 
+
+// Implement "default" stream syncronization
+//   This waits for all other streams to drain before continuing.
+//   If waitOnSelf is set, this additionally waits for the default stream to empty.
+void ihipDevice_t::syncDefaultStream(bool waitOnSelf)
+{
+    tprintf(DB_SYNC, "syncDefaultStream\n");
+
+    for (auto streamI=_streams.begin(); streamI!=_streams.end(); streamI++) {
+        ihipStream_t *stream = *streamI;
+       
+        // Don't wait for streams that have "opted-out" of syncing with NULL stream.
+        // And - don't wait for the NULL stream
+        if (!(stream->_flags & hipStreamNonBlocking)) {
+
+            if (waitOnSelf || (stream != _default_stream)) {
+                // TODO-hcc - use blocking or active wait here?
+                // TODO-sync - cudaDeviceBlockingSync
+                stream->wait();
+            }
+        }
+    }
+}
+
+
+
 #define ihipLogStatus(_hip_status) \
     ({\
         tls_lastHipError = _hip_status;\
@@ -1000,7 +1039,7 @@ void ihipInit()
     //-- READ HIP_PRINT_ENV env first, since it has impact on later env var reading
 
     READ_ENV_I(release, HIP_LAUNCH_BLOCKING, CUDA_LAUNCH_BLOCKING, "Make HIP APIs 'host-synchronous', so they block until any kernel launches or data copy commands complete. Alias: CUDA_LAUNCH_BLOCKING." );
-    READ_ENV_I(release, HIP_DB, 0,  "Print various debug info.  Bitmasl, see hip_hcc.cpp for more information.");
+    READ_ENV_I(release, HIP_DB, 0,  "Print various debug info.  Bitmask, see hip_hcc.cpp for more information.");
     if ((HIP_DB & DB_API)  && (HIP_TRACE_API == 0)) {
         // Set HIP_TRACE_API before we read it, so it is printed correctly.
         HIP_TRACE_API = 1;
@@ -1010,7 +1049,7 @@ void ihipInit()
     READ_ENV_I(release, HIP_TRACE_API, 0,  "Trace each HIP API call.  Print function name and return code to stderr as program executes.");
     READ_ENV_I(release, HIP_STAGING_SIZE, 0, "Size of each staging buffer (in KB)" );
     READ_ENV_I(release, HIP_STAGING_BUFFERS, 0, "Number of staging buffers to use in each direction. 0=use hsa_memory_copy.");
-    READ_ENV_I(release, HIP_PININPLACE, 0, "For unpinned transfers, pin the memory in-place in chunks before doing the copy");
+    READ_ENV_I(release, HIP_PININPLACE, 0, "For unpinned transfers, pin the memory in-place in chunks before doing the copy. Under development.");
     READ_ENV_I(release, HIP_STREAM_SIGNALS, 0, "Number of signals to allocate when new stream is created (signal pool will grow on demand)");
     READ_ENV_I(release, HIP_VISIBLE_DEVICES, CUDA_VISIBLE_DEVICES, "Only devices whose index is present in the secquence are visible to HIP applications and they are enumerated in the order of secquence" );
 
@@ -1113,19 +1152,6 @@ static inline void ihipWaitAllStreams(ihipDevice_t *device)
 
 
 
-inline void ihipWaitNullStream(ihipDevice_t *device)
-{
-    tprintf(DB_SYNC, "waitNullStream\n");
-
-    for (auto streamI=device->_streams.begin(); streamI!=device->_streams.end(); streamI++) {
-        ihipStream_t *stream = *streamI;
-        if (!(stream->_flags & hipStreamNonBlocking)) {
-            // TODO-hcc - use blocking or active wait here?
-            // TODO-sync - cudaDeviceBlockingSync
-            stream->wait();
-        }
-    }
-}
 
 
 //---
@@ -1137,10 +1163,16 @@ inline hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 {
     if (stream == hipStreamNull ) {
         ihipDevice_t *device = ihipGetTlsDefaultDevice();
-        ihipWaitNullStream(device);
+        device->syncDefaultStream(false);
 
-        return device->_null_stream;
+        return device->_default_stream;
     } else {
+        // Have to wait for legacy default stream to be empty:
+        if (!(stream->_flags & hipStreamNonBlocking))  {
+            tprintf(DB_SYNC, "stream %p wait default stream\n", stream);
+            stream->getDevice()->_default_stream->wait();
+        }
+        
         return stream;
     }
 }
@@ -1584,7 +1616,7 @@ hipError_t hipStreamSynchronize(hipStream_t stream)
 
     if (stream == NULL) {
         ihipDevice_t *device = ihipGetTlsDefaultDevice();
-        ihipWaitNullStream(device);
+        device->syncDefaultStream(true/*waitOnSelf*/);
     } else {
         stream->wait();
         e = hipSuccess;
@@ -1608,7 +1640,7 @@ hipError_t hipStreamDestroy(hipStream_t stream)
     //--- Drain the stream:
     if (stream == NULL) {
         ihipDevice_t *device = ihipGetTlsDefaultDevice();
-        ihipWaitNullStream(device);
+        device->syncDefaultStream(true/*waitOnSelf*/);
     } else {
         stream->wait();
         e = hipSuccess;
@@ -1690,8 +1722,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
             // TODO-HCC fix this - is CUDA this conservative or still uses device timestamps?
             // TODO-HCC can we use barrier or event marker to implement better solution?
             ihipDevice_t *device = ihipGetTlsDefaultDevice();
-            ihipWaitNullStream(device);
-
+            device->syncDefaultStream(true);
 
             eh->_timestamp = hc::get_system_ticks();
             eh->_state = hipEventStatusRecorded;
@@ -1741,7 +1772,7 @@ hipError_t hipEventSynchronize(hipEvent_t event)
             return ihipLogStatus(hipSuccess);
         } else if (eh->_stream == NULL) {
             ihipDevice_t *device = ihipGetTlsDefaultDevice();
-            ihipWaitNullStream(device);
+            device->syncDefaultStream(true);
             return ihipLogStatus(hipSuccess);
         } else {
 #if __hcc_workweek__ >= 16033
@@ -2197,7 +2228,7 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t cou
 	auto device = ihipGetTlsDefaultDevice();
 
     //hsa_signal_t depSignal;
-    //int depSignalCnt = device._null_stream->preCopyCommand(NULL, &depSignal, ihipCommandCopyH2D);
+    //int depSignalCnt = device._default_stream->preCopyCommand(NULL, &depSignal, ihipCommandCopyH2D);
     assert(0);  // Need to properly synchronize the copy - do something with depSignal if != NULL.
 
 	device->_acc.memcpy_symbol(symbolName, (void*) src,count, offset);
@@ -2311,11 +2342,10 @@ void ihipStream_t::ihipSyncCopy(void* dst, const void* src, size_t sizeBytes, hi
 
         // This is sync copy, so let's wait for copy right here:
         if (hsa_status == HSA_STATUS_SUCCESS) {
-            hsa_signal_wait_relaxed(copyCompleteSignal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+            waitCopy(ihipSignal); // wait for copy, and return to pool.
         } else {
             throw ihipException(hipErrorInvalidValue);
         }
-
     }
 }
 
@@ -2349,7 +2379,8 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 
 
 /**
- * @result #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidMemcpyDirection, #hipErrorInvalidValue
+ * @result #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidMemcpyDirection, 
+ * @result #hipErrorInvalidValue : If dst==NULL or src==NULL, or other bad argument.
  * @warning on HCC hipMemcpyAsync does not support overlapped H2D and D2H copies.
  * @warning on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hipMallocHost call).
  */
@@ -2364,7 +2395,9 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
 
 	bool trueAsync = true;
 
-    if (stream) {
+    if ((dst == NULL) || (src == NULL)) {
+        e= hipErrorInvalidValue;
+    } else if (stream) {
         ihipDevice_t *device = stream->getDevice();
 
         if (device == NULL) {
@@ -2373,6 +2406,7 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
         } else if (kind == hipMemcpyHostToHost) {
             tprintf (DB_COPY2, "H2H copy with memcpy");
 
+            // TODO - consider if we want to perhaps use the GPU SDMA engines anyway, to avoid the host-side sync here and keep everything flowing on the GPU.
 			/* As this is a CPU op, we need to wait until all
 			the commands in current stream are finished.
 			*/
@@ -2384,36 +2418,37 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
 			hc::accelerator acc;
 			hc::AmPointerInfo dstAm(NULL, NULL, 0, acc, 0, 0);
 			hc::AmPointerInfo srcAm(NULL, NULL, 0, acc, 0, 0);
-			am_status_t statDst = hc::am_memtracker_getinfo(&dstAm, dst);
-			am_status_t statSrc = hc::am_memtracker_getinfo(&srcAm, src);
+			bool dstTracked = (hc::am_memtracker_getinfo(&dstAm, dst) == AM_SUCCESS);
+			bool srcTracked = (hc::am_memtracker_getinfo(&srcAm, src) == AM_SUCCESS);
 
-			if(dstAm._appAllocationFlags != 1 || srcAm._appAllocationFlags != 1){
+            bool dstInDeviceMem = (dstTracked && dstAm._isInDeviceMem);
+            bool srcInDeviceMem = (srcTracked && srcAm._isInDeviceMem);
+
+            // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.  
+            // If both pointers are not tracked, we need to fall back to a sync copy.
+			if (!dstTracked || !srcTracked) {
 				trueAsync = false;
+            }
+
+            if (kind == hipMemcpyDefault) {
+                if (!dstInDeviceMem && !srcInDeviceMem) {
+                    kind = hipMemcpyHostToHost;
+                } else if (dstInDeviceMem && !srcInDeviceMem) {
+                    kind = hipMemcpyHostToDevice;
+                } else if (!dstInDeviceMem && srcInDeviceMem) {
+                    kind = hipMemcpyDeviceToHost;
+                } else if (dstInDeviceMem &&  srcInDeviceMem) {
+                    kind = hipMemcpyDeviceToHost;
+                }
+
+                // If we still couldn't determine direction, flag error here:
+                if (kind == hipMemcpyDefault) {
+                    return hipErrorInvalidMemcpyDirection;
+                }
 			}
 
-			if (kind == hipMemcpyDefault) {
-				if(statDst == AM_SUCCESS && statSrc == AM_SUCCESS){
-					if(dstAm._devicePointer != NULL){
-						if(srcAm._devicePointer != NULL){
-							kind = hipMemcpyDeviceToDevice;
-						}
-						if(srcAm._hostPointer != NULL){
-							kind = hipMemcpyHostToDevice;
-						}
-					}
-					if(dstAm._hostPointer != NULL){
-						if(srcAm._devicePointer != NULL){
-							kind = hipMemcpyDeviceToHost;
-						}
-						if(srcAm._hostPointer != NULL){
-							kind = hipMemcpyHostToHost;
-						}
-					}
-				}
-				else{
-					return hipErrorInvalidMemcpyDirection;
-				}
-			}
+
+
             ihipSignal_t *ihip_signal = stream->allocSignal();
             hsa_signal_store_relaxed(ihip_signal->_hsa_signal, 1);
 
@@ -2693,7 +2728,7 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **a
 
     if (stream == hipStreamNull ) {
         ihipDevice_t *device = ihipGetTlsDefaultDevice();
-        stream = device->_null_stream;
+        stream = device->_default_stream;
     }
 
     *av = &(stream->_av);
@@ -2703,11 +2738,11 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **a
 }
 
 // TODO - review signal / error reporting code.
-// TODO - describe naming convention. ihip _.  No accessors.
+// TODO - describe naming convention. ihip _.  No accessors.  No early returns from functions. Set status to success at top, only set error codes in implementation.  No tabs.
+//        Caps convention _ or camelCase
 // TODO - describe MT strategy
 //
-//
-//
+//// TODO - add identifier numbers for streams and devices to help with debugging.
 
 #if ONE_OBJECT_FILE
 #include "staging_buffer.cpp"
