@@ -193,13 +193,13 @@ void freeArrays(T *A_d, T *B_d, T *C_d,
 
     if (usePinnedHost) {
         if (A_h) {
-            HIPCHECK (hipFreeHost(A_h));
+            HIPCHECK (hipHostFree(A_h));
         }
         if (B_h) {
-            HIPCHECK (hipFreeHost(B_h));
+            HIPCHECK (hipHostFree(B_h));
         }
         if (C_h) {
-            HIPCHECK (hipFreeHost(C_h));
+            HIPCHECK (hipHostFree(C_h));
         }
     } else {
         if (A_h) {
