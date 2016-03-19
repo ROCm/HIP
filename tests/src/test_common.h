@@ -141,13 +141,13 @@ void initArrays(T **A_d, T **B_d, T **C_d,
 
     if (usePinnedHost) {
         if (A_h) {
-            HIPCHECK ( hipMallocHost(A_h, Nbytes) );
+            HIPCHECK ( hipHostAlloc((void**)A_h, Nbytes, hipHostAllocDefault) );
         }
         if (B_h) {
-            HIPCHECK ( hipMallocHost(B_h, Nbytes) );
+            HIPCHECK ( hipHostAlloc((void**)B_h, Nbytes, hipHostAllocDefault) );
         }
         if (C_h) {
-            HIPCHECK ( hipMallocHost(C_h, Nbytes) );
+            HIPCHECK ( hipHostAlloc((void**)C_h, Nbytes, hipHostAllocDefault) );
         }
     } else {
         if (A_h) {
@@ -258,7 +258,7 @@ struct Pinned {
     static void *Alloc(size_t sizeBytes) 
 	{
         void *p; 
-        HIPCHECK(hipMallocHost(&p, sizeBytes));
+        HIPCHECK(hipHostAlloc((void**)&p, sizeBytes, hipHostAllocDefault));
         return p;
     };
 };
