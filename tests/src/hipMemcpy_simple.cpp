@@ -97,8 +97,8 @@ void simpleTest2(size_t numElements, bool usePinnedHost)
 
     HIPCHECK(hipFree(A_d));
     if (usePinnedHost) {
-        HIPCHECK(hipFreeHost(A_h1));
-        HIPCHECK(hipFreeHost(A_h2));
+        HIPCHECK(hipHostFree(A_h1));
+        HIPCHECK(hipHostFree(A_h2));
     } else {
         free(A_h1);
         free(A_h2);

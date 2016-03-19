@@ -159,7 +159,7 @@ void test_pingpong(hipStream_t stream, size_t numElements, int numInflight, int 
     }
 
 
-    HIPCHECK(hipFreeHost(A_h));
+    HIPCHECK(hipHostFree(A_h));
     HIPCHECK(hipFree(A_d));
 }
 
@@ -216,8 +216,8 @@ void test_manyInflightCopies(hipStream_t stream, int numElements, int numCopies,
     }
 
 
-    HIPCHECK(hipFreeHost(A_h1));
-    HIPCHECK(hipFreeHost(A_h2));
+    HIPCHECK(hipHostFree(A_h1));
+    HIPCHECK(hipHostFree(A_h2));
     HIPCHECK(hipFree(A_d));
 }
 

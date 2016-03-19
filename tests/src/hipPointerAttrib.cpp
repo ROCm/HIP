@@ -178,7 +178,7 @@ void testSimple()
     HIPASSERT((char*)attribs.hostPointer+Nbytes/2 == (char*)attribs2.hostPointer);
 
 
-    hipFreeHost(A_Pinned_h);
+    hipHostFree(A_Pinned_h);
     e = hipPointerGetAttributes(&attribs, A_Pinned_h);
     HIPASSERT(e == hipErrorUnknown); // Just freed the pointer, this should return an error.
     printf("getAttr:%-20s err=%d (%s), neg-test expected\n", "A_d+NBytes", e, hipGetErrorString(e));
@@ -322,7 +322,7 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize)
         if (ref._attrib.memoryType == hipMemoryTypeDevice) {
             hipFree(ref._pointer);
         } else {
-            hipFreeHost(ref._pointer);
+            hipHostFree(ref._pointer);
         }
 
     }
