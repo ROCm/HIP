@@ -223,7 +223,8 @@ public:
     ~ihipStream_t();
 
 
-    void ihipSyncCopy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind);
+    void copySync (void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind);
+    void copyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind);
 
     //---
     // Thread-safe accessors - these acquire / release mutex:
@@ -328,6 +329,7 @@ public:
     void init(unsigned device_index, hc::accelerator acc);
     hipError_t getProperties(hipDeviceProp_t* prop);
 
+    inline void waitAllStreams();
     inline void syncDefaultStream(bool waitOnSelf);
 
     ~ihipDevice_t();
@@ -943,6 +945,17 @@ void ihipDevice_t::syncDefaultStream(bool waitOnSelf)
 }
 
 
+//---
+//Heavyweight synchronization that waits on all streams, ignoring hipStreamNonBlocking flag.
+void ihipDevice_t::waitAllStreams()
+{
+    tprintf(DB_SYNC, "waitAllStream\n");
+    for (auto streamI=_streams.begin(); streamI!=_streams.end(); streamI++) {
+        (*streamI)->wait();
+    }
+}
+
+
 
 #define ihipLogStatus(_hip_status) \
     ({\
@@ -1137,20 +1150,6 @@ INLINE ihipDevice_t *ihipGetDevice(int deviceId)
     }
 
 }
-
-
-//---
-//Heavyweight synchronization that waits on all streams, ignoring hipStreamNonBlocking flag.
-static inline void ihipWaitAllStreams(ihipDevice_t *device)
-{
-    tprintf(DB_SYNC, "waitAllStream\n");
-    for (auto streamI=device->_streams.begin(); streamI!=device->_streams.end(); streamI++) {
-        (*streamI)->wait();
-    }
-}
-
-
-
 
 
 
@@ -1351,7 +1350,7 @@ hipError_t hipDeviceSynchronize(void)
 {
     std::call_once(hip_initialized, ihipInit);
 
-    ihipWaitAllStreams(ihipGetTlsDefaultDevice()); // ignores non-blocking streams, this waits for all activity to finish.
+    ihipGetTlsDefaultDevice()->waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
 
     return ihipLogStatus(hipSuccess);
 }
@@ -2231,10 +2230,9 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t cou
 
 
 
-void ihipStream_t::ihipSyncCopy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind)
+void ihipStream_t::copySync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind)
 {
     ihipDevice_t *device = this->getDevice();
-
 
     if (device == NULL) {
         throw ihipException(hipErrorInvalidDevice);
@@ -2343,6 +2341,101 @@ void ihipStream_t::ihipSyncCopy(void* dst, const void* src, size_t sizeBytes, hi
 }
 
 
+void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind)
+{
+    ihipDevice_t *device = this->getDevice();
+
+    if (device == NULL) {
+        throw ihipException(hipErrorInvalidDevice);
+    }
+
+    if (kind == hipMemcpyHostToHost) {
+        tprintf (DB_COPY2, "Asyc: H2H with memcpy");
+
+        // TODO - consider if we want to perhaps use the GPU SDMA engines anyway, to avoid the host-side sync here and keep everything flowing on the GPU.
+        /* As this is a CPU op, we need to wait until all
+        the commands in current stream are finished.
+        */
+        this->wait();
+
+        memcpy(dst, src, sizeBytes);
+
+    } else {
+        bool trueAsync = true;
+
+        hc::accelerator acc;
+        hc::AmPointerInfo dstAm(NULL, NULL, 0, acc, 0, 0);
+        hc::AmPointerInfo srcAm(NULL, NULL, 0, acc, 0, 0);
+        bool dstTracked = (hc::am_memtracker_getinfo(&dstAm, dst) == AM_SUCCESS);
+        bool srcTracked = (hc::am_memtracker_getinfo(&srcAm, src) == AM_SUCCESS);
+
+        bool dstInDeviceMem = (dstTracked && dstAm._isInDeviceMem);
+        bool srcInDeviceMem = (srcTracked && srcAm._isInDeviceMem);
+
+        // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.  
+        // If both pointers are not tracked, we need to fall back to a sync copy.
+        if (!dstTracked || !srcTracked) {
+            trueAsync = false;
+        }
+
+        if (kind == hipMemcpyDefault) {
+            if (!dstInDeviceMem && !srcInDeviceMem) {
+                kind = hipMemcpyHostToHost;
+            } else if (dstInDeviceMem && !srcInDeviceMem) {
+                kind = hipMemcpyHostToDevice;
+            } else if (!dstInDeviceMem && srcInDeviceMem) {
+                kind = hipMemcpyDeviceToHost;
+            } else if (dstInDeviceMem &&  srcInDeviceMem) {
+                kind = hipMemcpyDeviceToHost;
+            }
+
+            // If we still couldn't determine direction, flag error here:
+            if (kind == hipMemcpyDefault) {
+                throw ihipException(hipErrorInvalidMemcpyDirection);
+            }
+        }
+
+
+
+        ihipSignal_t *ihip_signal = allocSignal();
+        hsa_signal_store_relaxed(ihip_signal->_hsa_signal, 1);
+
+        ihipCommand_t commandType;
+        switch (kind) {
+            case hipMemcpyHostToHost     : commandType = ihipCommandCopyH2H; break;
+            case hipMemcpyHostToDevice   : commandType = ihipCommandCopyH2D; break;
+            case hipMemcpyDeviceToHost   : commandType = ihipCommandCopyD2H; break;
+            case hipMemcpyDeviceToDevice : commandType = ihipCommandCopyD2D; break;
+            default: throw ihipException(hipErrorInvalidMemcpyDirection);
+        };
+
+        if(trueAsync == true){
+
+            hsa_signal_t depSignal;
+            int depSignalCnt = preCopyCommand(ihip_signal, &depSignal, commandType);
+
+            tprintf (DB_SYNC, " copy-async, waitFor=%lu completion=#%lu(%lu)\n", depSignalCnt? depSignal.handle:0x0, ihip_signal->_sig_id, ihip_signal->_hsa_signal.handle);
+
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, device->_hsa_agent, src, device->_hsa_agent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, ihip_signal->_hsa_signal);
+
+
+            if (hsa_status == HSA_STATUS_SUCCESS) {
+                if (HIP_LAUNCH_BLOCKING) {
+                    tprintf(DB_SYNC, "LAUNCH_BLOCKING for completion of hipMemcpyAsync(%zu)\n", sizeBytes);
+                    this->wait();
+                }
+            } else {
+                // This path can be hit if src or dst point to unpinned host memory.
+                // TODO-stream - does async-copy fall back to sync if input pointers are not pinned?
+                throw ihipException(hipErrorInvalidValue);
+            }
+        } else {
+            copySync(dst, src, sizeBytes, kind);
+        }
+    }
+}
+
+
 //---
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind)
 {
@@ -2355,7 +2448,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
     hipError_t e = hipSuccess;
 
     try {
-        stream->ihipSyncCopy(dst, src, sizeBytes, kind);
+        stream->copySync(dst, src, sizeBytes, kind);
     }
     catch (ihipException ex) {
         e = ex._code;
@@ -2386,102 +2479,15 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
 
     stream = ihipSyncAndResolveStream(stream);
 
-	bool trueAsync = true;
 
     if ((dst == NULL) || (src == NULL)) {
         e= hipErrorInvalidValue;
     } else if (stream) {
-        ihipDevice_t *device = stream->getDevice();
-
-        if (device == NULL) {
-            e = hipErrorInvalidDevice;
-
-        } else if (kind == hipMemcpyHostToHost) {
-            tprintf (DB_COPY2, "H2H copy with memcpy");
-
-            // TODO - consider if we want to perhaps use the GPU SDMA engines anyway, to avoid the host-side sync here and keep everything flowing on the GPU.
-			/* As this is a CPU op, we need to wait until all
-			the commands in current stream are finished.
-			*/
-			stream->wait();
-
-            memcpy(dst, src, sizeBytes);
-
-        } else {
-			hc::accelerator acc;
-			hc::AmPointerInfo dstAm(NULL, NULL, 0, acc, 0, 0);
-			hc::AmPointerInfo srcAm(NULL, NULL, 0, acc, 0, 0);
-			bool dstTracked = (hc::am_memtracker_getinfo(&dstAm, dst) == AM_SUCCESS);
-			bool srcTracked = (hc::am_memtracker_getinfo(&srcAm, src) == AM_SUCCESS);
-
-            bool dstInDeviceMem = (dstTracked && dstAm._isInDeviceMem);
-            bool srcInDeviceMem = (srcTracked && srcAm._isInDeviceMem);
-
-            // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.  
-            // If both pointers are not tracked, we need to fall back to a sync copy.
-			if (!dstTracked || !srcTracked) {
-				trueAsync = false;
-            }
-
-            if (kind == hipMemcpyDefault) {
-                if (!dstInDeviceMem && !srcInDeviceMem) {
-                    kind = hipMemcpyHostToHost;
-                } else if (dstInDeviceMem && !srcInDeviceMem) {
-                    kind = hipMemcpyHostToDevice;
-                } else if (!dstInDeviceMem && srcInDeviceMem) {
-                    kind = hipMemcpyDeviceToHost;
-                } else if (dstInDeviceMem &&  srcInDeviceMem) {
-                    kind = hipMemcpyDeviceToHost;
-                }
-
-                // If we still couldn't determine direction, flag error here:
-                if (kind == hipMemcpyDefault) {
-                    return hipErrorInvalidMemcpyDirection;
-                }
-			}
-
-
-
-            ihipSignal_t *ihip_signal = stream->allocSignal();
-            hsa_signal_store_relaxed(ihip_signal->_hsa_signal, 1);
-
-            ihipCommand_t copyType;
-            if (kind == hipMemcpyHostToDevice ){
-				copyType = ihipCommandCopyH2D;
-				
-			}else if(kind == hipMemcpyDeviceToDevice) {
-                copyType = ihipCommandCopyH2D;
-            } else if (kind == hipMemcpyDeviceToHost) {
-                copyType = ihipCommandCopyD2H;
-            } else {
-                e = hipErrorInvalidMemcpyDirection;
-                copyType = ihipCommandCopyD2H;
-            }
-
-			if(trueAsync == true){
-
-                hsa_signal_t depSignal;
-                int depSignalCnt = stream->preCopyCommand(ihip_signal, &depSignal, copyType);
-
-                tprintf (DB_SYNC, " copy-async, waitFor=%lu completion=#%lu(%lu)\n", depSignalCnt? depSignal.handle:0x0, ihip_signal->_sig_id, ihip_signal->_hsa_signal.handle);
-
-                hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, device->_hsa_agent, src, device->_hsa_agent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, ihip_signal->_hsa_signal);
-
-
-                if (hsa_status == HSA_STATUS_SUCCESS) {
-                    // TODO-stream - fix release-signal calls here.
-                    if (HIP_LAUNCH_BLOCKING) {
-                        tprintf(DB_SYNC, "LAUNCH_BLOCKING for completion of hipMemcpyAsync(%zu)\n", sizeBytes);
-                        stream->wait();
-                    }
-                } else {
-                    // This path can be hit if src or dst point to unpinned host memory.
-                    // TODO-stream - does async-copy fall back to sync if input pointers are not pinned?
-                    e = hipErrorInvalidValue;
-                }
-			} else {
-				stream->ihipSyncCopy(dst, src, sizeBytes, kind);
-			}
+        try {
+            stream->copyAsync(dst, src, sizeBytes, kind);
+        }
+        catch (ihipException ex) {
+            e = ex._code;
         }
     } else {
         e = hipErrorInvalidValue;
@@ -2594,7 +2600,7 @@ hipError_t hipFree(void* ptr)
 
 
    // Synchronize to ensure all work has finished.
-    ihipWaitAllStreams(ihipGetTlsDefaultDevice());
+    ihipGetTlsDefaultDevice()->waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
 
     if (ptr) {
         hc::am_free(ptr);
