@@ -277,7 +277,7 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize)
         void * ptr;
         if (isDevice) {
             totalDeviceAllocated[reference[i]._attrib.device] += reference[i]._sizeBytes;
-            HIPCHECK(hipHostAlloc((void**)&ptr, reference[i]._sizeBytes, hipHostAllocDefault));
+            HIPCHECK(hipMalloc((void**)&ptr, reference[i]._sizeBytes));
             reference[i]._attrib.memoryType    = hipMemoryTypeDevice;
             reference[i]._attrib.devicePointer = ptr;
             reference[i]._attrib.hostPointer   = NULL;
@@ -304,7 +304,7 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize)
         size_t free, total;
         HIPCHECK(hipSetDevice(i));
         HIPCHECK(hipMemGetInfo(&free, &total));
-        printf ("  device#%d: hipMemGetInfo: free=%zu (%4.2fMB) clusterAllocTotalDevice=%lu (%4.2fMB) total=%zu (%4.2fMB)\n",
+        printf ("  device#%d: hipMemGetInfo: free=%zu (%4.2fMB) totalDevice=%lu (%4.2fMB) total=%zu (%4.2fMB)\n",
                 i, free, (float)(free/1024.0/1024.0), totalDeviceAllocated[i], (float)(totalDeviceAllocated[i])/1024.0/1024.0, total, (float)(total/1024.0/1024.0));
         HIPASSERT(free + totalDeviceAllocated[i] <= total);
     }
