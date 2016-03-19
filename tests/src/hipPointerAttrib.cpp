@@ -115,7 +115,7 @@ void testSimple()
     hipError_t e;
 
     HIPCHECK ( hipMalloc(&A_d, Nbytes) );
-    HIPCHECK ( hipMallocHost(&A_Pinned_h, Nbytes) );
+    HIPCHECK ( hipHostAlloc((void**)&A_Pinned_h, Nbytes, hipHostAllocDefault) );
     A_OSAlloc_h = (char*)malloc(Nbytes);
 
     size_t free, total;
@@ -168,7 +168,7 @@ void testSimple()
 
 
     // Device-visible host memory
-    printf ("\nDevice-visible host memory (hipMallocHost)\n");
+    printf ("\nDevice-visible host memory (hipHostAlloc)\n");
     HIPCHECK( hipPointerGetAttributes(&attribs, A_Pinned_h));
     printf("getAttr:%-20s", "A_pinned_h"); printAttribs(&attribs);
 
@@ -277,13 +277,13 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize)
         void * ptr;
         if (isDevice) {
             totalDeviceAllocated[reference[i]._attrib.device] += reference[i]._sizeBytes;
-            HIPCHECK(hipMalloc(&ptr, reference[i]._sizeBytes));
+            HIPCHECK(hipHostAlloc((void**)&ptr, reference[i]._sizeBytes, hipHostAllocDefault));
             reference[i]._attrib.memoryType    = hipMemoryTypeDevice;
             reference[i]._attrib.devicePointer = ptr;
             reference[i]._attrib.hostPointer   = NULL;
             reference[i]._attrib.allocationFlags = 0; // TODO-randomize these.
         } else {
-            HIPCHECK(hipMallocHost(&ptr, reference[i]._sizeBytes));
+            HIPCHECK(hipHostAlloc((void**)&ptr, reference[i]._sizeBytes, hipHostAllocDefault));
             reference[i]._attrib.memoryType    = hipMemoryTypeHost;
             reference[i]._attrib.devicePointer = ptr;
             reference[i]._attrib.hostPointer   = ptr;
