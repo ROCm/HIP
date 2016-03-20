@@ -2624,7 +2624,7 @@ hipError_t hipHostFree(void* ptr)
 // TODO - deprecated function.
 hipError_t hipFreeHost(void* ptr)
 {
-    hipHostFree(ptr);
+    return hipHostFree(ptr);
 }
 
 
