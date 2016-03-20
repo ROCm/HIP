@@ -1151,8 +1151,6 @@ INLINE ihipDevice_t *ihipGetDevice(int deviceId)
 
 }
 
-
-
 //---
 // Get the stream to use for a command submission.
 //
@@ -1162,8 +1160,10 @@ inline hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 {
     if (stream == hipStreamNull ) {
         ihipDevice_t *device = ihipGetTlsDefaultDevice();
-        device->syncDefaultStream(false);
 
+#ifndef HIP_API_PER_THREAD_DEFAULT_STREAM
+        device->syncDefaultStream(false);
+#endif
         return device->_default_stream;
     } else {
         // Have to wait for legacy default stream to be empty:
