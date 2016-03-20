@@ -670,7 +670,7 @@ hipError_t hipMalloc(void** ptr, size_t size) ;
  *  @param[in] size Requested memory size
  *  @return Error code
  */
-hipError_t hipMallocHost(void** ptr, size_t size) ;
+hipError_t hipMallocHost(void** ptr, size_t size) __attribute__((deprecated("use hipHostAlloc instead"))) ;
 
 /**
  *  @brief Allocate device accessible page locked host memory 
@@ -737,7 +737,7 @@ hipError_t hipFree(void* ptr);
  *  @param[in] ptr Pointer to memory to be freed
  *  @return #hipSuccess, #hipErrorMemoryFree
  */
-hipError_t hipFreeHost(void* ptr);
+hipError_t hipFreeHost(void* ptr) __attribute__((deprecated("use hipHostFree instead")))  ;
 
 
 
