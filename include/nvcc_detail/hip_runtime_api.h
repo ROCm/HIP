@@ -119,7 +119,7 @@ inline static hipError_t hipFree(void* ptr) {
     return hipCUDAErrorTohipError(cudaFree(ptr));
 }
 
-inline static hipError_t hipMallocHost(void** ptr, size_t size) {
+inline static hipError_t hipMallocHost(void** ptr, size_t size) __attribute__((deprecated("use hipHostAlloc instead"))) {
     return hipCUDAErrorTohipError(cudaMallocHost(ptr, size));
 }
 
@@ -143,9 +143,14 @@ inline static hipError_t hipHostUnregister(void* ptr){
 	return hipCUDAErrorTohipError(cudaHostUnregister(ptr));
 }
 
-inline static hipError_t hipFreeHost(void* ptr) {
+inline static hipError_t hipFreeHost(void* ptr) __attribute__((deprecated("use hipHostFree instead")))  {
     return hipCUDAErrorTohipError(cudaFreeHost(ptr));
 }
+
+inline static hipError_t hipHostFree(void* ptr)  {
+    return hipCUDAErrorTohipError(cudaFreeHost(ptr));
+}
+
 inline static hipError_t hipSetDevice(int device) {
     return hipCUDAErrorTohipError(cudaSetDevice(device));
 }
