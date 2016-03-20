@@ -2607,7 +2607,7 @@ hipError_t hipFree(void* ptr)
 }
 
 
-hipError_t hipFreeHost(void* ptr)
+hipError_t hipHostFree(void* ptr)
 {
     // TODO - ensure this pointer was created by hipMallocHost and not hipMalloc
     std::call_once(hip_initialized, ihipInit);
@@ -2619,6 +2619,13 @@ hipError_t hipFreeHost(void* ptr)
 
     return ihipLogStatus(hipSuccess);
 };
+
+
+// TODO - deprecated function.
+hipError_t hipFreeHost(void* ptr)
+{
+    hipHostFree(ptr);
+}
 
 
 

@@ -740,6 +740,15 @@ hipError_t hipFree(void* ptr);
 hipError_t hipFreeHost(void* ptr) __attribute__((deprecated("use hipHostFree instead")))  ;
 
 
+/**
+ *  @brief Free memory allocated by the hcc hip host memory allocation API
+ *
+ *  @param[in] ptr Pointer to memory to be freed
+ *  @return #hipSuccess, #hipErrorMemoryFree
+ */
+hipError_t hipHostFree(void* ptr);
+
+
 
 /**
  *  @brief Copy data from src to dst.
