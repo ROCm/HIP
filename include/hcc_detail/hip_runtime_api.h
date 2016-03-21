@@ -688,10 +688,10 @@ hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) __attribute
  *
  *  @param[out]  dstPtr Device Pointer mapped to passed host pointer
  *  @param[in] hstPtr Host Pointer allocated through hipHostAlloc
- *  @param[in] flags Flags to be passed for extension
+ *  @param[in] size Requested memory size
  *  @return Error code
  */
-hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, unsigned int flags) ;
+hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, size_t size) ;
 
 /**
  *  @brief Get flags associated with host pointer
