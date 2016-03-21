@@ -50,10 +50,10 @@ hipMemcpyHostToHost
 } hipTextureFilterMode;*/
 #define hipFilterModePoint cudaFilterModePoint
 
-#define hipHostAllocDefault cudaHostAllocDefault
-#define hipHostAllocPortable cudaHostAllocPortable
-#define hipHostAllocMapped cudaHostAllocMapped
-#define hipHostAllocWriteCombined cudaHostAllocWriteCombined
+#define hipHostMallocDefault cudaHostAllocDefault
+#define hipHostMallocPortable cudaHostAllocPortable
+#define hipHostMallocMapped cudaHostAllocMapped
+#define hipHostMallocWriteCombined cudaHostAllocWriteCombined
 
 #define hipHostRegisterPortable cudaHostRegisterPortable
 #define hipHostRegisterMapped cudaHostRegisterMapped
