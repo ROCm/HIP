@@ -283,15 +283,15 @@ while (@ARGV) {
         #--------
         # Memory management:
         $ft{'mem'} += s/\bcudaMalloc\b/hipMalloc/g;
-        $ft{'mem'} += s/\bcudaMallocHost\b/hipMallocHost/g;
+        $ft{'mem'} += s/\bcudaMallocHost\b/hipHostMalloc/g;  # note conversion to standard hipHost* naming convention
         $ft{'mem'} += s/\bcudaFree\b/hipFree/g;
-        $ft{'mem'} += s/\bcudaFreeHost\b/hipFreeHost/g;
+        $ft{'mem'} += s/\bcudaFreeHost\b/hipHostFree/g;    # note conversion to standard hipHost* naming convention
 		$ft{'mem'} += s/\bcudaHostAlloc\b/hipHostAlloc/g;
 		$ft{'mem'} += s/\bcudaHostGetDevicePointer\b/hipHostGetDevicePointer/g;
-		$ft{'mem'} += s/\bcudaHostAllocDefault\b/hipHostAllocDefault/g;
-		$ft{'mem'} += s/\bcudaHostAllocPortable\b/hipHostAllocPortable/g;
-		$ft{'mem'} += s/\bcudaHostAllocMapped\b/hipHostAllocMapped/g;
-		$ft{'mem'} += s/\bcudaHostAllocWriteCombined\b/hipHostAllocWriteCombined/g;
+		$ft{'mem'} += s/\bcudaHostAllocDefault\b/hipHostMallocDefault/g;
+		$ft{'mem'} += s/\bcudaHostAllocPortable\b/hipHostMallocPortable/g;
+		$ft{'mem'} += s/\bcudaHostAllocMapped\b/hipHostMallocMapped/g;
+		$ft{'mem'} += s/\bcudaHostAllocWriteCombined\b/hipHostMallocWriteCombined/g;
 
 
         #--------

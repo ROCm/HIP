@@ -85,7 +85,7 @@ void initArrays(T **Ad, T **Ah,
 		HIPCHECK( hipMalloc(Ad, NBytes));
 	}
 	if(usePinnedHost){
-		HIPCHECK( hipHostAlloc((void**)Ah, NBytes, hipHostAllocDefault));
+		HIPCHECK( hipHostMalloc((void**)Ah, NBytes, hipHostMallocDefault));
 	}
 	else{
 		*Ah = new T[N];
@@ -102,7 +102,7 @@ void initArrays(T **Ad, size_t N,
 		HIPCHECK( hipMalloc(Ad, NBytes)); 
 	}else{
 		if(usePinnedHost){
-			HIPCHECK(hipHostAlloc((void**)Ad, NBytes, hipHostAllocDefault));
+			HIPCHECK(hipHostMalloc((void**)Ad, NBytes, hipHostMallocDefault));
 		}else{
 			*Ad = new T[N];
 			HIPASSERT(*Ad != NULL);

@@ -33,7 +33,7 @@ void simpleNegTest()
 
     size_t Nbytes = N*sizeof(float);
     A_malloc = (float*)malloc(Nbytes);
-    HIPCHECK(hipHostAlloc((void**)&A_pinned, Nbytes, hipHostAllocDefault));
+    HIPCHECK(hipHostMalloc((void**)&A_pinned, Nbytes, hipHostMallocDefault));
     HIPCHECK(hipMalloc(&A_d, Nbytes));
 
 
@@ -61,7 +61,7 @@ struct HostTraits<Pinned>
 
     static void *Alloc(size_t sizeBytes) {
         void *p; 
-        HIPCHECK(hipHostAlloc((void**)&p, sizeBytes, hipHostAllocDefault));
+        HIPCHECK(hipHostMalloc((void**)&p, sizeBytes, hipHostMallocDefault));
         return p;
     };
 };
@@ -181,8 +181,8 @@ void test_manyInflightCopies(hipStream_t stream, int numElements, int numCopies,
     T *A_d;
     T *A_h1, *A_h2;
 
-    HIPCHECK(hipHostAlloc((void**)&A_h1, Nbytes, hipHostAllocDefault));
-    HIPCHECK(hipHostAlloc((void**)&A_h2, Nbytes, hipHostAllocDefault));
+    HIPCHECK(hipHostMalloc((void**)&A_h1, Nbytes, hipHostMallocDefault));
+    HIPCHECK(hipHostMalloc((void**)&A_h2, Nbytes, hipHostMallocDefault));
     HIPCHECK(hipMalloc(&A_d, Nbytes));
 
     for (int i=0; i<numElements; i++) {

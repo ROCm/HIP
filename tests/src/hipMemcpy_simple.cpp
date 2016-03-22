@@ -68,8 +68,8 @@ void simpleTest2(size_t numElements, bool usePinnedHost)
     T *A_d, *A_h1, *A_h2;
 
     if (usePinnedHost) {
-        HIPCHECK ( hipHostAlloc((void**)&A_h1, sizeElements, hipHostAllocDefault) );
-        HIPCHECK ( hipHostAlloc((void**)&A_h2, sizeElements, hipHostAllocDefault) );
+        HIPCHECK ( hipHostMalloc((void**)&A_h1, sizeElements, hipHostMallocDefault) );
+        HIPCHECK ( hipHostMalloc((void**)&A_h2, sizeElements, hipHostMallocDefault) );
     } else {
         A_h1 = (T*)aligned_alloc(alignment, sizeElements);
         HIPASSERT(A_h1);

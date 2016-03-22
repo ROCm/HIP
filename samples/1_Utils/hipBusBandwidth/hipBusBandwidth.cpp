@@ -108,7 +108,7 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
     float *hostMem = NULL;
     if (p_pinned)
     {
-        hipHostAlloc((void**)&hostMem, sizeof(float) * numMaxFloats, hipHostAllocDefault);
+        hipHostMalloc((void**)&hostMem, sizeof(float) * numMaxFloats);
         while (hipGetLastError() != hipSuccess)
         {
             // drop the size and try again
@@ -120,7 +120,7 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
             return;
             }
             numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
-            hipHostAlloc((void**)&hostMem, sizeof(float) * numMaxFloats, hipHostAllocDefault);
+            hipHostMalloc((void**)&hostMem, sizeof(float) * numMaxFloats);
         }
     }
     else
@@ -232,7 +232,7 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
     CHECK_HIP_ERROR();
     if (p_pinned)
     {
-        hipFreeHost((void*)hostMem);
+        hipHostFree((void*)hostMem);
         CHECK_HIP_ERROR();
     }
     else
@@ -259,15 +259,15 @@ void RunBenchmark_D2H(ResultDatabase &resultDB)
     float *hostMem2;
     if (p_pinned)
     {
-        hipHostAlloc((void**)&hostMem1, sizeof(float)*numMaxFloats, hipHostAllocDefault);
+        hipHostMalloc((void**)&hostMem1, sizeof(float)*numMaxFloats);
         hipError_t err1 = hipGetLastError();
-        hipHostAlloc((void**)&hostMem2, sizeof(float)*numMaxFloats, hipHostAllocDefault);
+        hipHostMalloc((void**)&hostMem2, sizeof(float)*numMaxFloats);
         hipError_t err2 = hipGetLastError();
 	while (err1 != hipSuccess || err2 != hipSuccess)
 	{
 	    // free the first buffer if only the second failed
 	    if (err1 == hipSuccess)
-	        hipFreeHost((void*)hostMem1);
+	        hipHostFree((void*)hostMem1);
 
 	    // drop the size and try again
 	    if (p_verbose) std::cout << " - dropping size allocating pinned mem\n";
@@ -383,9 +383,9 @@ void RunBenchmark_D2H(ResultDatabase &resultDB)
     CHECK_HIP_ERROR();
     if (p_pinned)
     {
-        hipFreeHost((void*)hostMem1);
+        hipHostFree((void*)hostMem1);
         CHECK_HIP_ERROR();
-        hipFreeHost((void*)hostMem2);
+        hipHostFree((void*)hostMem2);
         CHECK_HIP_ERROR();
     }
     else
@@ -523,8 +523,8 @@ void RunBenchmark_Bidir(ResultDatabase &resultDB)
     CHECK_HIP_ERROR();
     if (p_pinned)
     {
-        hipFreeHost((void*)hostMem[0]);
-        hipFreeHost((void*)hostMem[1]);
+        hipHostFree((void*)hostMem[0]);
+        hipHostFree((void*)hostMem[1]);
         CHECK_HIP_ERROR();
     }
     else

@@ -103,7 +103,13 @@ syn keyword hipFunctionName hipEventRecord
 syn keyword hipFunctionName hipEventSynchronize 
 syn keyword hipFunctionName hipFree 
 syn keyword hipFunctionName hipFreeArray 
-syn keyword hipFunctionName hipFreeHost  
+syn keyword hipFunctionName hipHostMalloc  
+syn keyword hipFunctionName hipHostFree  
+syn keyword hipFunctionName hipHostGetDevicePointer  
+syn keyword hipFunctionName hipHostGetFlags  
+syn keyword hipFunctionName hipHostRegister  
+syn keyword hipFunctionName hipHostUnregister  
+
 syn keyword hipFunctionName hipGetChannelDesc 
 syn keyword hipFunctionName hipGetDevice 
 syn keyword hipFunctionName hipGetDeviceCount 
@@ -164,6 +170,16 @@ syn keyword hipFlags hipMemcpyDefault
 syn keyword hipFlags hipReadModeElementType 
 syn keyword hipFlags hipSuccess 
 syn keyword hipFlags hipTextureType1D 
+
+syn keyword hipFlags hipHostMallocDefault
+syn keyword hipFlags hipHostMallocPortable
+syn keyword hipFlags hipHostMallocMapped
+syn keyword hipFlags hipHostMallocWriteCombined
+
+syn keyword hipFlags hipHostRegisterDefault
+syn keyword hipFlags hipHostRegisterPortable
+syn keyword hipFlags hipHostRegisterMapped
+syn keyword hipFlags hipHostRegisterIoMemory
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already
