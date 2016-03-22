@@ -45,3 +45,9 @@ sudo easy_install lit
 make -C path_to_hipify_src/build test
 ```
 
+# Notes
+- To run, the tool needs "cuda minimal build" package:
+ 1. Download target installer from https://developer.nvidia.com/cuda-downloads. Choose "deb(network)" installer type to reduce downloaded packages size (we don't need the whole set)
+ 2. Run `sudo dpkg -i cuda-repo-ubuntu1404_7.5-18_amd64.deb`
+ 3. Run `sudo apt-get update`
+ 4. Run `sudo apt-get install cuda-minimal-build-7-5` - this will install needed files, (without nvidia drivers, runtime, tools etc.)
