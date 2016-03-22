@@ -277,7 +277,7 @@ namespace {
       if (_sm->isWrittenInMainFile(hash_loc)) {
         if (is_angled) {
           if (N.cuda2hipRename.count(file_name)) {
-            std::string repName = N.cuda2hipRename[file_name];
+            StringRef repName = N.cuda2hipRename[file_name];
             DEBUG(dbgs() << "Include file found: " << file_name << "\n");
             DEBUG(dbgs() << "SourceLocation:"
               << filename_range.getBegin().printToString(*_sm) << "\n");
@@ -286,8 +286,8 @@ namespace {
             SourceLocation sle = filename_range.getEnd();
             const char* B = _sm->getCharacterData(sl);
             const char* E = _sm->getCharacterData(sle);
-            repName = "<" + repName + ">";
-            Replacement Rep(*_sm, sl, E - B, repName);
+            SmallString<128> tmpData;
+            Replacement Rep(*_sm, sl, E - B, Twine("<" + repName + ">").toStringRef(tmpData));
             Replace->insert(Rep);
           }
         }
@@ -431,12 +431,12 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
     if (const CallExpr * call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaCall"))
     {
       const FunctionDecl * funcDcl = call->getDirectCallee();
-      std::string name = funcDcl->getDeclName().getAsString();
+      StringRef name = funcDcl->getDeclName().getAsString();
       if (N.cuda2hipRename.count(name)) {
-        std::string repName = N.cuda2hipRename[name];
+        StringRef repName = N.cuda2hipRename[name];
         SourceLocation sl = call->getLocStart();
         Replacement Rep(*SM, SM->isMacroArgExpansion(sl) ?
-        SM->getImmediateSpellingLoc(sl) : sl, name.length(), repName);
+        SM->getImmediateSpellingLoc(sl) : sl, name.size(), repName);
         Replace->insert(Rep);
       }
     }
@@ -513,14 +513,15 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
 	  {
 		  if (const OpaqueValueExpr * refBase = dyn_cast<OpaqueValueExpr>(threadIdx->getBase())) {
         if (const DeclRefExpr * declRef = dyn_cast<DeclRefExpr>(refBase->getSourceExpr())) {
-          std::string name = declRef->getDecl()->getNameAsString();
-          std::string memberName = threadIdx->getMemberDecl()->getNameAsString();
-          size_t pos = memberName.find_first_not_of("__fetch_builtin_");
-          memberName = memberName.substr(pos, memberName.length() - pos);
-          name += "." + memberName;
-     		  std::string repName = N.cuda2hipRename[name];
-          SourceLocation sl = threadIdx->getLocStart();
-          Replacement Rep(*SM, sl, name.length(), repName);
+           StringRef name = declRef->getDecl()->getName();
+           StringRef memberName = threadIdx->getMemberDecl()->getName();
+           size_t pos = memberName.find_first_not_of("__fetch_builtin_");
+           memberName = memberName.slice(pos, memberName.size());
+           SmallString<128> tmpData;
+           name = Twine(name+"."+memberName).toStringRef(tmpData);
+           StringRef repName = N.cuda2hipRename[name];
+           SourceLocation sl = threadIdx->getLocStart();
+           Replacement Rep(*SM, sl, name.size(), repName);
 			    Replace->insert(Rep);
         }
 		  }
@@ -528,30 +529,29 @@ class Cuda2HipCallback : public MatchFinder::MatchCallback {
 
     if (const DeclRefExpr * cudaEnumConstantRef = Result.Nodes.getNodeAs<clang::DeclRefExpr>("cudaEnumConstantRef"))
     {
-      std::string name = cudaEnumConstantRef->getDecl()->getNameAsString();
-      std::string repName = N.cuda2hipRename[name];
+      StringRef name = cudaEnumConstantRef->getDecl()->getNameAsString();
+      StringRef repName = N.cuda2hipRename[name];
       SourceLocation sl = cudaEnumConstantRef->getLocStart();
-      Replacement Rep(*SM, sl, name.length(), repName);
+      Replacement Rep(*SM, sl, name.size(), repName);
       Replace->insert(Rep);
     }
 
     if (const VarDecl * cudaEnumConstantDecl = Result.Nodes.getNodeAs<clang::VarDecl>("cudaEnumConstantDecl"))
     {
-      std::string name = cudaEnumConstantDecl->getType()->getAsTagDecl()->getNameAsString();
-      std::string repName = N.cuda2hipRename[name];
+      StringRef name = cudaEnumConstantDecl->getType()->getAsTagDecl()->getNameAsString();
+      StringRef repName = N.cuda2hipRename[name];
       SourceLocation sl = cudaEnumConstantDecl->getLocStart();
-      Replacement Rep(*SM, sl, name.length(), repName);
+      Replacement Rep(*SM, sl, name.size(), repName);
       Replace->insert(Rep);
     }
 
     if (const VarDecl * cudaStructVar = Result.Nodes.getNodeAs<clang::VarDecl>("cudaStructVar"))
     {
-      std::string name = 
-        cudaStructVar->getType()->getAsStructureType()->getDecl()->getNameAsString();
-      std::string repName = N.cuda2hipRename[name];
+      StringRef name = cudaStructVar->getType()->getAsStructureType()->getDecl()->getNameAsString();
+      StringRef repName = N.cuda2hipRename[name];
       TypeLoc TL = cudaStructVar->getTypeSourceInfo()->getTypeLoc();
       SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-      Replacement Rep(*SM, sl, name.length(), repName);
+      Replacement Rep(*SM, sl, name.size(), repName);
       Replace->insert(Rep);
     }
 
