@@ -56,10 +56,10 @@ extern "C" {
 #define hipEventInterprocess  0x4  ///< Event can support IPC.  @warning - not supported in HIP.
 
 
-#define hipHostAllocDefault 0x0
-#define hipHostAllocPortable 0x1
-#define hipHostAllocMapped 0x2
-#define hipHostAllocWriteCombined 0x4
+#define hipHostMallocDefault 0x0
+#define hipHostMallocPortable 0x1
+#define hipHostMallocMapped 0x2
+#define hipHostMallocWriteCombined 0x4
 
 #define hipHostRegisterDefault 0x0
 #define hipHostRegisterPortable 0x1 
@@ -670,7 +670,7 @@ hipError_t hipMalloc(void** ptr, size_t size) ;
  *  @param[in] size Requested memory size
  *  @return Error code
  */
-hipError_t hipMallocHost(void** ptr, size_t size) __attribute__((deprecated("use hipHostAlloc instead"))) ;
+hipError_t hipMallocHost(void** ptr, size_t size) __attribute__((deprecated("use hipHostMalloc instead"))) ;
 
 /**
  *  @brief Allocate device accessible page locked host memory 
@@ -680,7 +680,8 @@ hipError_t hipMallocHost(void** ptr, size_t size) __attribute__((deprecated("use
  *  @param[in] flags Type of host memory allocation
  *  @return Error code
  */
-hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) ;
+hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags) ;
+hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) __attribute__((deprecated("use hipHostMalloc instead"))) ;;
 
 /**
  *  @brief Get Device pointer from Host Pointer allocated through hipHostAlloc
@@ -696,7 +697,7 @@ hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, size_t size) ;
  *  @brief Get flags associated with host pointer
  *
  *  @param[out]  flagsPtr Memory location to store flags
- *  @param[in] hostPtr Host Pointer allocated through hipHostAlloc
+ *  @param[in] hostPtr Host Pointer allocated through hipHostMalloc
  *  @return Error code
  */
 hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) ;
@@ -786,7 +787,7 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t siz
 /**
  *  @brief Copy data from src to dst asynchronously.
  *
- *  @warning If host or dest are not pinned, the memory copy will be performed synchronously.  For best performance, use hipHostAlloc to
+ *  @warning If host or dest are not pinned, the memory copy will be performed synchronously.  For best performance, use hipHostMalloc to
  *  allocate host memory that is transferred asynchronously.
  *
  *  @param[out] dst Data being copy to

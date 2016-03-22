@@ -34,11 +34,11 @@ Array[tx] = Array[tx] + T(1);
 void run1(size_t size, hipStream_t stream){
 	float *Ah, *Bh, *Cd, *Dd, *Eh;
 
-	HIPCHECK(hipHostAlloc((void**)&Ah, size, hipHostAllocDefault));
-	HIPCHECK(hipHostAlloc((void**)&Bh, size, hipHostAllocDefault));
+	HIPCHECK(hipHostMalloc((void**)&Ah, size, hipHostMallocDefault));
+	HIPCHECK(hipHostMalloc((void**)&Bh, size, hipHostMallocDefault));
 	HIPCHECK(hipMalloc(&Cd, size));
 	HIPCHECK(hipMalloc(&Dd, size));
-	HIPCHECK(hipHostAlloc((void**)&Eh, size, hipHostAllocDefault));
+	HIPCHECK(hipHostMalloc((void**)&Eh, size, hipHostMallocDefault));
 
 	for(int i=0;i<N;i++){
 		Ah[i] = 1.0f;
@@ -58,16 +58,16 @@ void run(size_t size, hipStream_t stream1, hipStream_t stream2){
 	float *Ah, *Bh, *Cd, *Dd, *Eh;
 	float *Ahh, *Bhh, *Cdd, *Ddd, *Ehh;
 
-	HIPCHECK(hipHostAlloc((void**)&Ah, size, hipHostAllocDefault));
-	HIPCHECK(hipHostAlloc((void**)&Bh, size, hipHostAllocDefault));
+	HIPCHECK(hipHostMalloc((void**)&Ah, size, hipHostMallocDefault));
+	HIPCHECK(hipHostMalloc((void**)&Bh, size, hipHostMallocDefault));
 	HIPCHECK(hipMalloc(&Cd, size));
 	HIPCHECK(hipMalloc(&Dd, size));
-	HIPCHECK(hipHostAlloc((void**)&Eh, size, hipHostAllocDefault));
-	HIPCHECK(hipHostAlloc((void**)&Ahh, size, hipHostAllocDefault));
-	HIPCHECK(hipHostAlloc((void**)&Bhh, size, hipHostAllocDefault));
+	HIPCHECK(hipHostMalloc((void**)&Eh, size, hipHostMallocDefault));
+	HIPCHECK(hipHostMalloc((void**)&Ahh, size, hipHostMallocDefault));
+	HIPCHECK(hipHostMalloc((void**)&Bhh, size, hipHostMallocDefault));
 	HIPCHECK(hipMalloc(&Cdd, size));
 	HIPCHECK(hipMalloc(&Ddd, size));
-	HIPCHECK(hipHostAlloc((void**)&Ehh, size, hipHostAllocDefault));
+	HIPCHECK(hipHostMalloc((void**)&Ehh, size, hipHostMallocDefault));
 
 	HIPCHECK(hipMemcpyAsync(Bh, Ah, size, hipMemcpyHostToHost, stream1));
 	HIPCHECK(hipMemcpyAsync(Bhh, Ahh, size, hipMemcpyHostToHost, stream2));

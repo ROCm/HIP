@@ -15,7 +15,7 @@ Stay tuned - the work for many of these features is already in-flight.
 
 Next:
 - Deprecate hipDeviceGetProp, replace with hipGetDeviceProp
-- Deprecate hipMallocHost (Replace with hipHostAlloc with hipHostAllocDefault as last parameter).
+- Deprecate hipMallocHost (Replace with hipHostMalloc)
 - Deprecate hipFreeHost (Replace with hipHostFree). 
 
 

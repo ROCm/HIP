@@ -42,9 +42,9 @@ if(prop.canMapHostMemory != 1){
 //std::cout<<"Exiting..."<<std::endl;
 }
 
-HIPCHECK(hipHostAlloc((void**)&A, SIZE, hipHostAllocWriteCombined | hipHostAllocMapped));
-HIPCHECK(hipHostAlloc((void**)&B, SIZE, hipHostAllocDefault));
-HIPCHECK(hipHostAlloc((void**)&C, SIZE, hipHostAllocMapped));
+HIPCHECK(hipHostMalloc((void**)&A, SIZE, hipHostMallocWriteCombined | hipHostMallocMapped));
+HIPCHECK(hipHostMalloc((void**)&B, SIZE, hipHostMallocDefault));
+HIPCHECK(hipHostMalloc((void**)&C, SIZE, hipHostMallocMapped));
 
 HIPCHECK(hipHostGetDevicePointer((void**)&Ad, A, 0));
 HIPCHECK(hipHostGetDevicePointer((void**)&Cd, C, 0));

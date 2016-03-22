@@ -2085,7 +2085,7 @@ hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
 }
 
 
-hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags){
+hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags){
     std::call_once(hip_initialized, ihipInit);
 
     hipError_t hip_status = hipSuccess;
@@ -2093,7 +2093,7 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags){
     auto device = ihipGetTlsDefaultDevice();
 
     if(device){
-        if(flags == hipHostAllocDefault){
+        if(flags == hipHostMallocDefault){
             *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
             if(sizeBytes && (*ptr == NULL)){
                 hip_status = hipErrorMemoryAllocation;
@@ -2101,7 +2101,7 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags){
                 hc::am_memtracker_update(*ptr, device->_device_index, 0);
             }
             tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
-        } else if(flags & hipHostAllocMapped){
+        } else if(flags & hipHostMallocMapped){
             *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
             if(sizeBytes && (*ptr == NULL)){
                 hip_status = hipErrorMemoryAllocation;
@@ -2113,6 +2113,14 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags){
     }
     return ihipLogStatus(hip_status);
 }
+
+
+// TODO - remove me, this is deprecated.
+hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags)
+{
+    return hipHostMalloc(ptr, sizeBytes, flags);
+};
+
 
 
 hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, size_t size){

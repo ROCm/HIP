@@ -35,9 +35,9 @@ int main(){
 float *A, *B, *C, *D;
 float *Ad, *Bd, *Cd, *Dd;
 unsigned int FlagA, FlagB, FlagC;
-FlagA = hipHostAllocWriteCombined | hipHostAllocMapped;
-FlagB = hipHostAllocWriteCombined | hipHostAllocMapped;
-FlagC = hipHostAllocMapped;
+FlagA = hipHostMallocWriteCombined | hipHostMallocMapped;
+FlagB = hipHostMallocWriteCombined | hipHostMallocMapped;
+FlagC = hipHostMallocMapped;
 hipDeviceProp_t prop;
 int device;
 HIPCHECK(hipGetDevice(&device));
@@ -45,11 +45,11 @@ HIPCHECK(hipGetDeviceProperties(&prop, device));
 if(prop.canMapHostMemory != 1){
 std::cout<<"Exiting..."<<std::endl;
 }
-HIPCHECK(hipHostAlloc((void**)&A, SIZE, hipHostAllocWriteCombined | hipHostAllocMapped));
-HIPCHECK(hipHostAlloc((void**)&B, SIZE, hipHostAllocWriteCombined | hipHostAllocMapped));
-HIPCHECK(hipHostAlloc((void**)&C, SIZE, hipHostAllocMapped));
+HIPCHECK(hipHostMalloc((void**)&A, SIZE, hipHostMallocWriteCombined | hipHostMallocMapped));
+HIPCHECK(hipHostMalloc((void**)&B, SIZE, hipHostMallocWriteCombined | hipHostMallocMapped));
+HIPCHECK(hipHostMalloc((void**)&C, SIZE, hipHostMallocMapped));
 
-HIPCHECK(hipHostAlloc((void**)&D, SIZE, hipHostAllocDefault));
+HIPCHECK(hipHostMalloc((void**)&D, SIZE, hipHostMallocDefault));
 
 unsigned int flagA, flagB, flagC;
 
