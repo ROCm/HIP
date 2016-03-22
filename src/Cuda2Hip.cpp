@@ -103,9 +103,9 @@ namespace {
 
       // Memory management :
       cuda2hipRename["cudaMalloc"] = "hipMalloc";
-      cuda2hipRename["cudaMallocHost"] = "hipMallocHost";
+      cuda2hipRename["cudaMallocHost"] = "hipHostAlloc";
       cuda2hipRename["cudaFree"] = "hipFree";
-      cuda2hipRename["cudaFreeHost"] = "hipFreeHost";
+      cuda2hipRename["cudaFreeHost"] = "hipHostFree";
 
       // Coordinate Indexing and Dimensions:
       cuda2hipRename["threadIdx.x"] = "hipThreadIdx_x";
@@ -334,7 +334,11 @@ namespace {
           // to workaround the 'const' MacroArgs passed into this hook.
           const Token * start = Args->getUnexpArgument(i);
           size_t len = Args->getArgLength(start) + 1;
+#if (LLVM_VERSION_MAJOR >= 3) && (LLVM_VERSION_MINOR >= 9)
           _pp->EnterTokenStream(ArrayRef<Token>(start,len), false);
+#else
+          _pp->EnterTokenStream(start, len, false, false);
+#endif
           do {
             toks.push_back(Token());
             Token & tk = toks.back();
