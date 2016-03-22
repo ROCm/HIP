@@ -278,9 +278,9 @@ void RunBenchmark_D2H(ResultDatabase &resultDB)
 		return;
 	    }
 	    numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
-            hipMallocHost((void**)&hostMem1, sizeof(float)*numMaxFloats);
+            hipHostMalloc((void**)&hostMem1, sizeof(float)*numMaxFloats);
             err1 = hipGetLastError();
-            hipMallocHost((void**)&hostMem2, sizeof(float)*numMaxFloats);
+            hipHostMalloc((void**)&hostMem2, sizeof(float)*numMaxFloats);
             err2 = hipGetLastError();
 	}
    }
@@ -413,8 +413,8 @@ void RunBenchmark_Bidir(ResultDatabase &resultDB)
     {
         while (1) 
         {
-            hipError_t e1 = hipMallocHost((void**)&hostMem[0], sizeof(float) * numMaxFloats);
-            hipError_t e2 = hipMallocHost((void**)&hostMem[1], sizeof(float) * numMaxFloats);
+            hipError_t e1 = hipHostMalloc((void**)&hostMem[0], sizeof(float) * numMaxFloats);
+            hipError_t e2 = hipHostMalloc((void**)&hostMem[1], sizeof(float) * numMaxFloats);
 
             if ((e1 == hipSuccess) && (e2 == hipSuccess)) {
                 break;
