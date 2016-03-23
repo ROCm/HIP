@@ -30,6 +30,7 @@ THE SOFTWARE.
 #include <stddef.h>
 
 #include <hcc_detail/host_defines.h>
+#include <hcc_detail/hip_hcc.h>
 
 #if defined (__HCC__) &&  (__hcc_workweek__ < 1602)
 #error("This version of HIP requires a newer version of HCC.");
@@ -127,15 +128,15 @@ enum hipMemcpyKind {
 
 
 // The handle allows the async commands to use the stream even if the parent hipStream_t goes out-of-scope.
-typedef class ihipStream_t * hipStream_t;
+//typedef class ihipStream_t * hipStream_t;
 
 
 /*
  * Opaque structure allows the true event (pointed at by the handle) to remain "live" even if the surrounding hipEvent_t goes out-of-scope.
  * This is handy for cases where the hipEvent_t goes out-of-scope but the true event is being written by some async queue or device */
-typedef struct hipEvent_t {
-    struct ihipEvent_t *_handle;
-} hipEvent_t;
+//typedef struct hipEvent_t {
+//    struct ihipEvent_t *_handle;
+//} hipEvent_t;
 
 
 

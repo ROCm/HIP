@@ -40,11 +40,11 @@ if (${HIP_PLATFORM} STREQUAL "hcc")
 	#Include HIP and HC since the tests need both of these:
 	#Note below HSA path is surgically included only where necessary.
 	include_directories(${HIP_PATH}/include)
-
+        include_directories(${HSA_PATH}/include)
 	# hip_hcc.o:
     #add_library(hip_hcc STATIC ${HIP_PATH}/src/hip_hcc.cpp )
-#    add_library(hip_hcc STATIC ${HIP_PATH}/src/hip_hcc.cpp ${HIP_PATH}/src/staging_buffer.cpp)
-#    target_include_directories(hip_hcc PRIVATE ${HSA_PATH}/include ${CODEXL_SDK_ATAL_PATH}/include)
+    add_library(hip_hcc STATIC ${HIP_PATH}/src/hip_hcc.cpp ${HIP_PATH}/src/staging_buffer.cpp)
+    target_include_directories(hip_hcc PRIVATE ${HSA_PATH}/include ${CODEXL_SDK_ATAL_PATH}/include)
 
 
 elseif (${HIP_PLATFORM} STREQUAL "nvcc")
@@ -71,7 +71,7 @@ add_library(test_common OBJECT test_common.cpp )
 macro (make_hip_executable exe cpp)  
     if (${HIP_PLATFORM} STREQUAL "hcc")
         add_executable (${exe} ${cpp} ${ARGN} $<TARGET_OBJECTS:test_common> )
-        target_link_libraries(${exe} hip_hcc)
+#        target_link_libraries(${exe} hip_hcc)
     else()
         add_executable (${exe} ${cpp} ${ARGN} $<TARGET_OBJECTS:test_common> )
     endif() 

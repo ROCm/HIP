@@ -611,9 +611,9 @@ do {\
  * @defgroup HIP-ENV HIP Environment Variables
  * @{
  */
-extern int HIP_PRINT_ENV ;   ///< Print all HIP-related environment variables.
-extern int HIP_TRACE_API;    ///< Trace HIP APIs.
-extern int HIP_LAUNCH_BLOCKING ; ///< Make all HIP APIs host-synchronous
+//extern int HIP_PRINT_ENV ;   ///< Print all HIP-related environment variables.
+//extern int HIP_TRACE_API;    ///< Trace HIP APIs.
+//extern int HIP_LAUNCH_BLOCKING ; ///< Make all HIP APIs host-synchronous
 
 /**
  * @}
