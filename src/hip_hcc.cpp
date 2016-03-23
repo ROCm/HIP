@@ -130,7 +130,7 @@ int HIP_DISABLE_HW_COPY_DEP = 1;
 
 // Compile code that generate
 #ifndef COMPILE_TRACE_MARKER
-#define COMPILE_TRACE_MARKER 1
+#define COMPILE_TRACE_MARKER 0
 #endif
 
 
@@ -2064,7 +2064,7 @@ hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsi
     hipError_t e = hipSuccess;
 
     // Flags must be 0:
-    if (flags == 0) {
+    if (flags != 0) {
         e = hipErrorInvalidValue;
     } else {
         hc::accelerator acc;

@@ -52,7 +52,6 @@ HIPCHECK(hipHostMalloc((void**)&C, SIZE, hipHostMallocMapped));
 HIPCHECK(hipHostMalloc((void**)&D, SIZE, hipHostMallocDefault));
 
 unsigned int flagA, flagB, flagC;
-
 HIPCHECK(hipHostGetDevicePointer((void**)&Ad, A, 0));
 HIPCHECK(hipHostGetDevicePointer((void**)&Bd, B, 0));
 HIPCHECK(hipHostGetDevicePointer((void**)&Cd, C, 0));
