@@ -128,7 +128,8 @@ int HIP_DISABLE_HW_COPY_DEP = 1;
 #define COMPILE_HIP_TRACE_API 0x3 
 
 
-// Compile code that generate
+// Compile code that generates trace markers for CodeXL ATP at HIP function begin/end.
+// ATP is standard CodeXL format that includes timestamps for kernels, HSA RT APIs, and HIP APIs.
 #ifndef COMPILE_TRACE_MARKER
 #define COMPILE_TRACE_MARKER 0
 #endif
@@ -168,7 +169,7 @@ int HIP_DISABLE_HW_COPY_DEP = 1;
 
 // This macro should be called at the beginning of every HIP API.
 // It initialies the hip runtime (exactly once), and
-// generate trace to stderr or to ATP file.
+// generate trace string that can be output to stderr or to ATP file.
 #define HIP_INIT_API(...) \
 	std::call_once(hip_initialized, ihipInit);\
     API_TRACE(__VA_ARGS__);
