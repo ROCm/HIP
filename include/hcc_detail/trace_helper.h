@@ -1,7 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include "hcc_detail/hip_common.h"
+
 //---
 // Helper functions to convert HIP function arguments into strings.
 // Handles POD data types as well as enumerations (ie hipMemcpyKind).
@@ -11,6 +11,7 @@
 
 // Handy macro to convert an enumeration to a stringified version of same:
 #define CASE_STR(x) case x: return #x;
+
 
 // Building block functions:
 template <typename T>
