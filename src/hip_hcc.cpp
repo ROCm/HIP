@@ -2248,31 +2248,6 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags)
 };
 
 
-
-hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, size_t size)
-{
-    HIP_INIT_API(devPtr, hstPtr, size);
-
-	hipError_t hip_status = hipSuccess;
-
-	if(hstPtr == NULL){
-		hip_status = hipErrorInvalidValue;
-	}else{
-
-	hc::accelerator acc;
-	hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
-	am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, hstPtr);
-	if(status == AM_SUCCESS){
-		*devPtr = amPointerInfo._devicePointer;
-		if(devPtr == NULL){
-			hip_status = hipErrorMemoryAllocation;
-        }
-	}
-	tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *devPtr);
-	}
-	return ihipLogStatus(hip_status);
-}
-
 hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr)
 {
     HIP_INIT_API(flagsPtr, hostPtr);
