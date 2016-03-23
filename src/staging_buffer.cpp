@@ -1,5 +1,8 @@
+#include <hc_am.hpp>
+
+#include "hsa_ext_amd.h"
+
 #include "hcc_detail/staging_buffer.h"
-#include "hcc_detail/hip_util.h"
 
 #ifdef HIP_HCC
 #define THROW_ERROR(e) throw ihipException(e)
