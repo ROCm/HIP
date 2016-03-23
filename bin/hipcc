@@ -72,7 +72,7 @@ if ($HIP_PLATFORM eq "hcc") {
     $HIPCC=$HCC;
     $HIPCXXFLAGS = $HCCFLAGS;
     $HIPCXXFLAGS .= " -I$HIP_PATH/include/hcc_detail/cuda";
-
+    $HIPCXXFLAGS .= " -I$HSA_PATH/include";
 	$HIPLDFLAGS =  "-hc -L$HCC_HOME/lib -Wl,--rpath=$HCC_HOME/lib -lc++ -ldl -lpthread -Wl,--whole-archive -lmcwamp -Wl,--no-whole-archive";
         # Suppress linker warnings in case HCC distribution contains OpenCL/SPIR symbols
         $HIPLDFLAGS .= " -Wl,--defsym=_binary_kernel_spir_end=0 -Wl,--defsym=_binary_kernel_spir_start=0 -Wl,--defsym=_binary_kernel_cl_start=0 -Wl,--defsym=_binary_kernel_cl_end=0";
