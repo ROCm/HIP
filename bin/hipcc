@@ -173,30 +173,30 @@ if (($verbose & 0x18) and ($HIP_PLATFORM eq 'hcc')) {
 
 if ($needHipHcc) {
     # See if we need to remake the .o file:
-    my $source = "$HIP_PATH/src/hip_hcc.cpp" ;
-    my $object = "$HIP_PATH/src/hip_hcc.o" ;
+#    my $source = "$HIP_PATH/src/hip_hcc.cpp" ;
+#    my $object = "$HIP_PATH/src/hip_hcc.o" ;
 
     # remake if object does not exist, or if source is newer than object:
-    if ((not -e $object) or ((stat($source))[9] > (stat($object))[9]))  {
-        my $CMD = "$HCC $HCCFLAGS  -I$HSA_PATH/include -I$HIP_PATH/include -Wall -c $source -o $object";
-        if ($verbose & 0x10) {
-            $CMD .= " -g -O0" ;
-        } else {
-            $CMD .= " -O3" ;
-        }
+#    if ((not -e $object) or ((stat($source))[9] > (stat($object))[9]))  {
+#        my $CMD = "$HCC $HCCFLAGS  -I$HSA_PATH/include -I$HIP_PATH/include -Wall -c $source -o $object";
+#        if ($verbose & 0x10) {
+#            $CMD .= " -g -O0" ;
+#        } else {
+#            $CMD .= " -O3" ;
+#        }
 
-        $CMD .= " -I$marker_path/include";
+#        $CMD .= " -I$marker_path/include";
 
 
-        if ($verbose & 0x1) {
-            print "remake-deps:", $CMD, "\n";
-        }
-        system ("$CMD") and die ("remake-deps failed");
+#        if ($verbose & 0x1) {
+#            print "remake-deps:", $CMD, "\n";
+#        }
+#        system ("$CMD") and die ("remake-deps failed");
 
         
-    }
+#    }
     
-    $HIPLDFLAGS .= " $HIP_PATH/src/hip_hcc.o" ;
+    $HIPLDFLAGS .= " -L/opt/hip/lib -lhip_hcc" ;
 }
 
 # hipcc currrently requires separate compilation of source files, ie it is not possible to pass
