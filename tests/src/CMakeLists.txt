@@ -62,7 +62,6 @@ else()
 endif()
 
 set (HIPCC ${HIP_PATH}/bin/hipcc)
-set (CMAKE_CXX_COMPILER ${HIPCC})
 
 
 add_library(test_common OBJECT test_common.cpp )
@@ -115,6 +114,9 @@ macro (make_test_matches exe match_string)
       PROPERTIES PASS_REGULAR_EXPRESSION ${match_string}
     )
 endmacro()
+
+
+set (CMAKE_CXX_COMPILER ${HIPCC})
 
 #make_hip_executable (hipAPIStreamEnable hipAPIStreamEnable.cpp)
 #make_hip_executable (hipAPIStreamDisable hipAPIStreamDisable.cpp)
@@ -177,7 +179,8 @@ make_named_test(hipMemcpy "hipMemcpy-multithreaded" --tests 0x8 )
 
 make_test(hipHostAlloc " ")
 make_test(hipMemcpyAsync  " " )
-make_test(hipHostGetFlags " ")
+# BS- comment out since test appears broken - asks for device pointer but pointer was never allocated.
+#make_test(hipHostGetFlags " ")
 make_test(hipHcc  " " )
 make_test(hipHostRegister " ")
 make_test(hipStreamL5 " ")
