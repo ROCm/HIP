@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['pcibusid',['pciBusID',['../structhipDeviceProp__t.html#a1350f64d49b717ed3a06458f7549ccb0',1,'hipDeviceProp_t']]],
-  ['pcideviceid',['pciDeviceID',['../structhipDeviceProp__t.html#ae6aa845dc2d540f85098ea30be35f4eb',1,'hipDeviceProp_t']]]
+  ['one_5fcomponent_5faccess',['ONE_COMPONENT_ACCESS',['../hcc__detail_2hip__vector__types_8h.html#add5d9c0f058c5a52c2b9165a66035d0e',1,'hip_vector_types.h']]]
 ];

@@ -113,6 +113,34 @@ Macros</h2></td></tr>
 <tr class="memitem:ga0f01d74059baa704e42aeff8222166bb"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#ga0f01d74059baa704e42aeff8222166bb">hipEventInterprocess</a>&#160;&#160;&#160;0x4</td></tr>
 <tr class="memdesc:ga0f01d74059baa704e42aeff8222166bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Event can support IPC.  <a href="#ga0f01d74059baa704e42aeff8222166bb">More...</a><br/></td></tr>
 <tr class="separator:ga0f01d74059baa704e42aeff8222166bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad594ec51cb5b5e946c1e354bf80bddc7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gad594ec51cb5b5e946c1e354bf80bddc7"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#gad594ec51cb5b5e946c1e354bf80bddc7">hipHostMallocDefault</a>&#160;&#160;&#160;0x0</td></tr>
+<tr class="memdesc:gad594ec51cb5b5e946c1e354bf80bddc7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flags that can be used with hipHostMalloc. <br/></td></tr>
+<tr class="separator:gad594ec51cb5b5e946c1e354bf80bddc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga99b7c2b08a834b4736bfdc24893a6bc5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga99b7c2b08a834b4736bfdc24893a6bc5"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipHostMallocPortable</b>&#160;&#160;&#160;0x1</td></tr>
+<tr class="separator:ga99b7c2b08a834b4736bfdc24893a6bc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaf6e07be144bb1031bfcf9816335906cc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gaf6e07be144bb1031bfcf9816335906cc"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipHostMallocMapped</b>&#160;&#160;&#160;0x2</td></tr>
+<tr class="separator:gaf6e07be144bb1031bfcf9816335906cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga21beb95617644dbefaffaacdc0f0a35c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga21beb95617644dbefaffaacdc0f0a35c"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipHostMallocWriteCombined</b>&#160;&#160;&#160;0x4</td></tr>
+<tr class="separator:ga21beb95617644dbefaffaacdc0f0a35c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac7c100d241ff84ad10109bb00b7b25dc"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#gac7c100d241ff84ad10109bb00b7b25dc">hipHostRegisterDefault</a>&#160;&#160;&#160;0x0</td></tr>
+<tr class="memdesc:gac7c100d241ff84ad10109bb00b7b25dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flags that can be used with hipHostRegister.  <a href="#gac7c100d241ff84ad10109bb00b7b25dc">More...</a><br/></td></tr>
+<tr class="separator:gac7c100d241ff84ad10109bb00b7b25dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga2db444f2315d412d3c7ba80ec6049583"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga2db444f2315d412d3c7ba80ec6049583"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#ga2db444f2315d412d3c7ba80ec6049583">hipHostRegisterPortable</a>&#160;&#160;&#160;0x1</td></tr>
+<tr class="memdesc:ga2db444f2315d412d3c7ba80ec6049583"><td class="mdescLeft">&#160;</td><td class="mdescRight">Memory is considered registered by all contexts. HIP only supports one context so this is always assumed true. <br/></td></tr>
+<tr class="separator:ga2db444f2315d412d3c7ba80ec6049583"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gacfa4edcfcb39fc61bff6bdecb14d7618"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gacfa4edcfcb39fc61bff6bdecb14d7618"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#gacfa4edcfcb39fc61bff6bdecb14d7618">hipHostRegisterMapped</a>&#160;&#160;&#160;0x2</td></tr>
+<tr class="memdesc:gacfa4edcfcb39fc61bff6bdecb14d7618"><td class="mdescLeft">&#160;</td><td class="mdescRight">Map the allocation into the address space for the current device. The device pointer can be obtained with <a class="el" href="group__Memory.html#ga8fa7a0478020b835a24785cd6bb89725" title="Get Device pointer from Host Pointer allocated through hipHostAlloc. ">hipHostGetDevicePointer</a>. <br/></td></tr>
+<tr class="separator:gacfa4edcfcb39fc61bff6bdecb14d7618"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaefa79f1b4481d6a1d1091c14b24f33d0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gaefa79f1b4481d6a1d1091c14b24f33d0"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#gaefa79f1b4481d6a1d1091c14b24f33d0">hipHostRegisterIoMemory</a>&#160;&#160;&#160;0x4</td></tr>
+<tr class="memdesc:gaefa79f1b4481d6a1d1091c14b24f33d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Not supported. <br/></td></tr>
+<tr class="separator:gaefa79f1b4481d6a1d1091c14b24f33d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
@@ -142,10 +170,17 @@ Enumerations</h2></td></tr>
 <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a88e525a7c8f35552dfada58e9f2f6d3a">hipErrorInvalidResourceHandle</a>, 
 <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d">hipErrorInvalidDevice</a>, 
 <br/>
-&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ad4406972c318df36d231310a15131c24">hipErrorNoDevice</a>, 
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1">hipErrorNotReady</a>, 
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ae35ad9fb66b7c33f21a021efe89975b0">hipErrorInvalidMemcpyDirection</a>, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a37a93fcd2b0aed9bf52b82fa26031e6f">hipErrorInvalidDevicePointer</a>, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a7e935ae88ee1f9ff3920156ac6864520">hipErrorInitializationError</a>, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ad4406972c318df36d231310a15131c24">hipErrorNoDevice</a>, 
+<br/>
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1">hipErrorNotReady</a>, 
 <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa74e64c5b2f5fb0d6a92681f5b234073">hipErrorUnknown</a>, 
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ab556409e11ddb0c4cf77a2f4fc91ea9e">hipErrorTbd</a>
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1159eb9a6be66bea740a8bfb61378723">hipErrorRuntimeMemory</a>, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a44f847c5914be2177feac107dcb096d1">hipErrorRuntimeOther</a>, 
+<br/>
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ab556409e11ddb0c4cf77a2f4fc91ea9e">hipErrorTbd</a>
 <br/>
  }</td></tr>
 <tr class="separator:gadf5010f6e140a53ecbdf949e73e87594"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -166,18 +201,21 @@ Enumerations</h2></td></tr>
 <a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca2300e077e020e7967592065561373b00">hipDeviceAttributeClockRate</a>, 
 <br/>
 &#160;&#160;<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca6b68deafd65f036b30dc8051573eb000">hipDeviceAttributeMemoryClockRate</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca848c1396fab6f20463c6aefb828b0870">hipDeviceAttributeMemoryBusWidth</a>, 
 <a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca5c1519870733ccf0b83f722678240e5f">hipDeviceAttributeMultiprocessorCount</a>, 
 <a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca4d0369a6ef7bd7890fdcabc16ed3385d">hipDeviceAttributeComputeMode</a>, 
-<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca582ae5a26a7148504878890028e4b64c">hipDeviceAttributeL2CacheSize</a>, 
 <br/>
-&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7caddc08922b491eb1f6a583833cbf4e2f0">hipDeviceAttributeMaxThreadsPerMultiProcessor</a>, 
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca582ae5a26a7148504878890028e4b64c">hipDeviceAttributeL2CacheSize</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7caddc08922b491eb1f6a583833cbf4e2f0">hipDeviceAttributeMaxThreadsPerMultiProcessor</a>, 
 <a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca2735739cf977b7d303266f6781131e8d">hipDeviceAttributeComputeCapabilityMajor</a>, 
 <a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca38edc4fcae456e47160d349da3249b85">hipDeviceAttributeComputeCapabilityMinor</a>, 
-<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7cad9f45254d0d048677f560032532d5504">hipDeviceAttributeConcurrentKernels</a>, 
 <br/>
-&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca572b29c44f1322aa7657fdd784832f88">hipDeviceAttributePciBusId</a>, 
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7cad9f45254d0d048677f560032532d5504">hipDeviceAttributeConcurrentKernels</a>, 
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca572b29c44f1322aa7657fdd784832f88">hipDeviceAttributePciBusId</a>, 
 <a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca955d90286e87be9e3528f0b817ab32ff">hipDeviceAttributePciDeviceId</a>, 
-<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7cad3e7f3d01533b32e12211172fcf410ba">hipDeviceAttributeMaxSharedMemoryPerMultiprocessor</a>
+<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7cad3e7f3d01533b32e12211172fcf410ba">hipDeviceAttributeMaxSharedMemoryPerMultiprocessor</a>, 
+<br/>
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca6129311200a17dcc5fa8d2256874ae3d">hipDeviceAttributeIsMultiGpuBoard</a>
 <br/>
  }</td></tr>
 <tr class="separator:gacc0acd7b9bda126c6bb3dfd6e2796d7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -232,6 +270,21 @@ Enumerations</h2></td></tr>
 
 <p>Event can support IPC. </p>
 <dl class="section warning"><dt>Warning</dt><dd>- not supported in HIP. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gac7c100d241ff84ad10109bb00b7b25dc"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define hipHostRegisterDefault&#160;&#160;&#160;0x0</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Flags that can be used with hipHostRegister. </p>
+<p>Memory is Mapped and Portable </p>
 
 </div>
 </div>
@@ -340,6 +393,9 @@ Enumerations</h2></td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca6b68deafd65f036b30dc8051573eb000"></a>hipDeviceAttributeMemoryClockRate</em>&#160;</td><td class="fielddoc">
 <p>Peak memory clock frequency in kilohertz. </p>
 </td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca848c1396fab6f20463c6aefb828b0870"></a>hipDeviceAttributeMemoryBusWidth</em>&#160;</td><td class="fielddoc">
+<p>Global memory bus width in bits. </p>
+</td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca5c1519870733ccf0b83f722678240e5f"></a>hipDeviceAttributeMultiprocessorCount</em>&#160;</td><td class="fielddoc">
 <p>Number of multiprocessors on the device. </p>
 </td></tr>
@@ -369,6 +425,9 @@ Enumerations</h2></td></tr>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7cad3e7f3d01533b32e12211172fcf410ba"></a>hipDeviceAttributeMaxSharedMemoryPerMultiprocessor</em>&#160;</td><td class="fielddoc">
 <p>Maximum Shared Memory Per Multiprocessor. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggacc0acd7b9bda126c6bb3dfd6e2796d7ca6129311200a17dcc5fa8d2256874ae3d"></a>hipDeviceAttributeIsMultiGpuBoard</em>&#160;</td><td class="fielddoc">
+<p>Multiple GPU devices. </p>
 </td></tr>
 </table>
 
@@ -408,6 +467,15 @@ Enumerations</h2></td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d"></a>hipErrorInvalidDevice</em>&#160;</td><td class="fielddoc">
 <p>DeviceID must be in range 0...#compute-devices. </p>
 </td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594ae35ad9fb66b7c33f21a021efe89975b0"></a>hipErrorInvalidMemcpyDirection</em>&#160;</td><td class="fielddoc">
+<p>Invalid memory copy direction. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a37a93fcd2b0aed9bf52b82fa26031e6f"></a>hipErrorInvalidDevicePointer</em>&#160;</td><td class="fielddoc">
+<p>Invalid Device Pointer. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a7e935ae88ee1f9ff3920156ac6864520"></a>hipErrorInitializationError</em>&#160;</td><td class="fielddoc">
+<p>TODO comment from hipErrorInitializationError. </p>
+</td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594ad4406972c318df36d231310a15131c24"></a>hipErrorNoDevice</em>&#160;</td><td class="fielddoc">
 <p>Call to hipGetDeviceCount returned 0 devices. </p>
 </td></tr>
@@ -416,6 +484,12 @@ Enumerations</h2></td></tr>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594aa74e64c5b2f5fb0d6a92681f5b234073"></a>hipErrorUnknown</em>&#160;</td><td class="fielddoc">
 <p>Unknown error. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a1159eb9a6be66bea740a8bfb61378723"></a>hipErrorRuntimeMemory</em>&#160;</td><td class="fielddoc">
+<p>HSA runtime memory call returned error. Typically not seen in production systems. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a44f847c5914be2177feac107dcb096d1"></a>hipErrorRuntimeOther</em>&#160;</td><td class="fielddoc">
+<p>HSA runtime call other than memory returned error. Typically not seen in production systems. </p>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594ab556409e11ddb0c4cf77a2f4fc91ea9e"></a>hipErrorTbd</em>&#160;</td><td class="fielddoc">
 <p>Marker that more error codes are needed. </p>
@@ -508,7 +582,7 @@ Enumerations</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Feb 18 2016 20:42:16 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 23 2016 23:11:07 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
