@@ -45,9 +45,51 @@ Verify your can find hipconfig (one of the hip tools in bin dir):
 ```
 >  hipconfig -pn
 /home/me/HIP
+```
+
+### HCC Options
+
+#### Compiling CodeXL markers for HIP Functions
+HIP can generate markers at function begin/end which are displayed on the CodeXL timeline view.  To do this, you need to install CodeXL, tell HIP
+where the CodeXL install directory lives, and enable HIP to generate the markers:
+
+1. Install CodeXL
+See [CodeXL Download](http://developer.amd.com/tools-and-sdks/opencl-zone/codexl/?webSyncID=9d9c2cb9-3d73-5e65-268a-c7b06428e5e0&sessionGUID=29beacd0-d654-ddc6-a3e2-b9e6c0b0cc77) for the installation file.
+Also this [blog](http://gpuopen.com/getting-up-to-speed-with-the-codexl-gpu-profiler-and-radeon-open-compute/) provides more information and tips for using CodeXL.  In addition to installing the CodeXL profiling 
+and visualization tools, CodeXL also comes with an SDK that allow applications to add markers to the timeline viewer.  We'll be linking HIP against this library.
+
+2. Set CODEXL_PATH
+```
+# set to your code-xl installation location:
+export CODEXL_PATH=/opt/AMD/CodeXL
+```
+
+3. Enable in source code.
+In src/hip_hcc.cpp, enable the define 
+```
+#define COMPILE_TRACE_MARKER 1
+```
 
 
-### Using HIP with the AMD Native-GCN compiler.
+Then recompile the target application, run with profiler enabled to generate ATP file or trace log.
+```
+# Use profiler to generate timeline view:
+$  $CODEXL_PATH/CodeXLGpuProfiler -A  -o  ./myHipApp  
+...
+Session output path: /home/me/HIP-privatestaging/tests/b1/mytrace.atp
+```
+
+You can also print the HIP function strings to stderr using HIP_TRACE_API environment variable.  This can be useful for tracing application flow.  Also can be combined with the more detailed debug information provided
+by the HIP_DB switch.  For example:
+```
+# Trace to stderr showing begin/end of each function (with arguments) + intermediate debug trace during the execution of each function.
+$  HIP_TRACE_API=1  HIP_DB=0x2  ./myHipApp  
+```
+
+Note this trace mode uses colors.  "less -r" can handle raw control characters and will display the debug output in proper colors.
+
+
+#### Using HIP with the AMD Native-GCN compiler.
 AMD recently released a direct-to-GCN-ISA target.  This compiler generates GCN ISA directly from LLVM, without going through an intermediate compiler 
 IR such as HSAIL or PTX.
 The native GCN target is included with upstream LLVM, and has also been integrated with HCC compiler and can be used to compiler HIP programs for AMD.

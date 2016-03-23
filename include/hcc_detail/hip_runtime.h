@@ -485,6 +485,10 @@ __device__ inline float __dsqrt_rz(double x) {return hc::fast_math::sqrt(x); };
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, hc::accelerator_view **av);
 void ihipPostLaunchKernel(hipStream_t stream, hc::completion_future &cf);
 
+// TODO - move to common header file.
+#define KNRM  "\x1B[0m"
+#define KGRN  "\x1B[32m"
+
 #if not defined(DISABLE_GRID_LAUNCH)
 #define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...) \
 do {\
@@ -500,7 +504,7 @@ do {\
   lp.cf = &cf;  \
   hipStream_t trueStream = (ihipPreLaunchKernel(_stream, &lp.av)); \
     if (HIP_TRACE_API) {\
-        fprintf(stderr, "==hip-api: launch '%s' gridDim:[%d.%d.%d] groupDim:[%d.%d.%d] groupMem:+%d stream=%p\n", \
+        fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:[%d.%d.%d] groupDim:[%d.%d.%d] groupMem:+%d stream=%p\n" KNRM, \
                 #_kernelName, lp.gridDim.z, lp.gridDim.y, lp.gridDim.x, lp.groupDim.z, lp.groupDim.y, lp.groupDim.x, lp.groupMemBytes, (void*)(_stream));\
     }\
   _kernelName (lp, __VA_ARGS__);\
@@ -524,7 +528,7 @@ do {\
   lp.cf = &cf;  \
   hipStream_t trueStream = (ihipPreLaunchKernel(_stream, &lp.av)); \
     if (HIP_TRACE_API) {\
-        fprintf(stderr, "hiptrace1: launch '%s' gridDim:[%d.%d.%d] groupDim:[%d.%d.%d] groupMem:+%d stream=%p\n", \
+        fprintf(stderr, "==hip-api: launch '%s' gridDim:[%d.%d.%d] groupDim:[%d.%d.%d] groupMem:+%d stream=%p\n", \
                 #_kernelName, lp.gridDim.z, lp.gridDim.y, lp.gridDim.x, lp.groupDim.z, lp.groupDim.y, lp.groupDim.x, lp.groupMemBytes, (void*)(_stream));\
     }\
   _kernelName (lp, __VA_ARGS__);\
