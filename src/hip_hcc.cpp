@@ -52,6 +52,10 @@ THE SOFTWARE.
 extern const char *ihipErrorString(hipError_t hip_error);
 #include "hcc_detail/trace_helper.h"
 
+// #define USE_MEMCPYTOSYMBOL
+//
+//Use the new HCC accelerator_view::copy instead of am_copy
+#define USE_AV_COPY 0
 
 #define INLINE static inline
 
@@ -2442,7 +2446,11 @@ void ihipStream_t::copySync(void* dst, const void* src, size_t sizeBytes, hipMem
         } else {
             // TODO - remove, slow path.
             tprintf(DB_COPY1, "H2D && ! srcTracked: am_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
+#if USE_AV_COPY
+            _av.copy(src,dst,sizeBytes);
+#else
             hc::am_copy(dst, src, sizeBytes);
+#endif
         }
     } else if ((kind == hipMemcpyDeviceToHost) && (!dstTracked)) {
         int depSignalCnt = preCopyCommand(NULL, &depSignal, ihipCommandCopyD2H);
@@ -2457,7 +2465,11 @@ void ihipStream_t::copySync(void* dst, const void* src, size_t sizeBytes, hipMem
         } else {
             // TODO - remove, slow path.
             tprintf(DB_COPY1, "D2H && !dstTracked: am_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
+#if USE_AV_COPY
+            _av.copy(src, dst, sizeBytes);
+#else
             hc::am_copy(dst, src, sizeBytes);
+#endif
         }
     } else if (kind == hipMemcpyHostToHost)  { 
         int depSignalCnt = preCopyCommand(NULL, &depSignal, ihipCommandCopyH2H);
