@@ -10,8 +10,17 @@ Key features include:
 * Developers can specialize for the platform (CUDA or hcc) to tune for performance or handle tricky cases 
 
 New projects can be developed directly in the portable HIP C++ language and can run on either NVIDIA or AMD platforms.  Additionally, HIP provides porting tools which make it easy to port existing CUDA codes to the HIP layer, with no loss of performance as compared to the original CUDA application.  HIP is not intended to be a drop-in replacement for CUDA, and developers should expect to do some manual coding and performance tuning work to complete the port.
-## Issues
-If you are having issues after Mar 23 2016 3:00 PM CST, make sure you revert to dc429aade68bd7381af9e4481d16d31120307555
+## Installation
+```
+cd HIP-privatestaging
+mkdir build
+cd build
+cmake ..
+make
+sudo make install
+```
+Make sure HIP_PATH is pointed to `/opt/hip` and PATH to `/opt/hip/bin`
+
 ## More Info:
 - [HIP FAQ](docs/markdown/hip_faq.md)
 - [HIP Kernel Language](docs/markdown/hip_kernel_language.md)
