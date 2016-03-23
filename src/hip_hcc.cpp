@@ -272,12 +272,15 @@ typedef FakeMutex StreamMutex;
 
 // TODO - move async copy code into stream?  Stream->async-copy.
 // Add PreCopy / PostCopy to manage locks?
+//
+
 
 // Internal stream structure.
 class ihipStream_t {
 public:
+typedef uint64_t SeqNum_t ;
 
-    ihipStream_t(unsigned device_index, hc::accelerator_view av, unsigned int flags);
+    ihipStream_t(unsigned device_index, hc::accelerator_view av, SeqNum_t id, unsigned int flags);
     ~ihipStream_t();
 
 
@@ -308,8 +311,9 @@ public:
 
     //---
     //Member vars - these are set at initialization:
-    hc::accelerator_view _av;
-    unsigned            _flags;
+    SeqNum_t                    _id;   // monotonic sequence ID
+    hc::accelerator_view        _av;
+    unsigned                    _flags;
 private:
     void                        enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal);
     inline void                 waitCopy(ihipSignal_t *signal);
@@ -382,15 +386,19 @@ struct ihipDevice_t
 
     StagingBuffer           *_staging_buffer[2]; // one buffer for each direction.
 
+    ihipStream_t::SeqNum_t   _stream_id;
+
 public:
-    void reset();
     void init(unsigned device_index, hc::accelerator acc);
+    ~ihipDevice_t();
+    void reset();
     hipError_t getProperties(hipDeviceProp_t* prop);
 
     inline void waitAllStreams();
     inline void syncDefaultStream(bool waitOnSelf);
 
-    ~ihipDevice_t();
+private:
+
 };
 
 
@@ -447,7 +455,8 @@ ihipSignal_t::~ihipSignal_t()
 // ihipStream_t:
 //=================================================================================================
 //---
-ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, unsigned int flags) :
+ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, SeqNum_t id, unsigned int flags) :
+    _id(id),
     _av(av),
     _flags(flags),
     _device_index(device_index),
@@ -719,6 +728,8 @@ void ihipDevice_t::reset()
 //---
 void ihipDevice_t::init(unsigned device_index, hc::accelerator acc)
 {
+    _stream_id = 0;
+
     _device_index = device_index;
     _acc = acc;
     hsa_agent_t *agent = static_cast<hsa_agent_t*> (acc.get_hsa_agent());
@@ -735,7 +746,7 @@ void ihipDevice_t::init(unsigned device_index, hc::accelerator acc)
 
     getProperties(&_props);
 
-    _default_stream = new ihipStream_t(device_index, acc.get_default_view(), hipStreamDefault);
+    _default_stream = new ihipStream_t(device_index, acc.get_default_view(), _stream_id++, hipStreamDefault);
     this->_streams.push_back(_default_stream);
     tprintf(DB_SYNC, "created device with default_stream=%p\n", _default_stream);
 
@@ -1654,7 +1665,7 @@ hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
     //Note this is an execute_in_order queue, so all kernels submitted will atuomatically wait for prev to complete:
     //This matches CUDA stream behavior:
 
-    auto istream = new ihipStream_t(device->_device_index, acc.create_view(), flags);
+    auto istream = new ihipStream_t(device->_device_index, acc.create_view(), device->_stream_id, flags);
     device->_streams.push_back(istream);
     *stream = istream;
     tprintf(DB_SYNC, "hipStreamCreate, stream=%p\n", *stream);
