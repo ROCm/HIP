@@ -49,6 +49,7 @@ THE SOFTWARE.
 
 
 
+
 #define INLINE static inline
 
 //---
@@ -97,11 +98,48 @@ int HIP_DISABLE_HW_COPY_DEP = 1;
 
 // Compile debug trace mode - this prints debug messages to stderr when env var HIP_DB is set.
 // May be set to 0 to remove debug if checks - possible code size and performance difference?
-#define COMPILE_DB_TRACE 1
+#define COMPILE_HIP_DB  1
+
+
+// Compile HIP tracing capability.
+// 0x1 = print a string at function entry with arguments.
+// 0x2 = prints a simple message with function name + return code when function exits.
+// 0x3 = print both.
+// Must be enabled at runtime with HIP_TRACE_API
+#define COMPILE_HIP_TRACE_API 0x3 
+
+
+// Compile code that generate
+#define COMPILE_TRACE_MARKER 1
 
 
 // #include CPP files to produce one object file
 #define ONE_OBJECT_FILE 1
+
+
+// TODO, re-org header order.
+extern const char *ihipErrorString(hipError_t hip_error);
+
+// Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function boundary.
+// TODO - currently we print the trace message at the beginning. if we waited, we could also include return codes, and any values returned
+// through ptr-to-args (ie the pointers allocated by hipMalloc).
+#ifdef COMPILE_TRACE_MARKER
+#include "AMDTActivityLogger.h"
+#include "hcc_detail/trace_helper.h"
+#define API_TRACE(...)\
+{\
+    std::string s = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
+    printf ("API_TRACE=%s\n", s.c_str());\
+    amdtScopedMarker(s.c_str(), "HIP", NULL);\
+}
+#else
+#define API_TRACE()
+#endif
+
+#define HIP_INIT_API(...) \
+	std::call_once(hip_initialized, ihipInit);\
+    API_TRACE(__VA_ARGS__);
+
 
 // Color defs for debug messages:
 #define KNRM  "\x1B[0m"
@@ -115,7 +153,7 @@ int HIP_DISABLE_HW_COPY_DEP = 1;
 
 
 //---
-//Debug flags:
+//HIP_DB Debug flags:
 #define DB_API    0 /* 0x01 - shortcut to enable HIP_TRACE_API on single switch */
 #define DB_SYNC   1 /* 0x02 - trace synchronization pieces */
 #define DB_MEM    2 /* 0x04 - trace memory allocation / deallocation */
@@ -134,7 +172,7 @@ const char *dbName [] =
     KNRM "hip-copy2",
 };
 
-#if COMPILE_DB_TRACE
+#if COMPILE_HIP_DB
 #define tprintf(trace_level, ...) {\
     if (HIP_DB & (1<<(trace_level))) {\
         fprintf (stderr, "  %s:", dbName[trace_level]); \
@@ -443,10 +481,11 @@ void ihipStream_t::waitCopy(ihipSignal_t *signal)
 void ihipStream_t::wait(bool assertQueueEmpty)
 {
     if (! assertQueueEmpty) {
-        tprintf (DB_SYNC, "stream %p wait for queue-empty and lastCopy:#%lu...\n", this, _last_copy_signal ? _last_copy_signal->_sig_id: 0x0 );
+        tprintf (DB_SYNC, "stream %p wait for queue-empty..\n", this);
         _av.wait();
     }
     if (_last_copy_signal) {
+        tprintf (DB_SYNC, "stream %p wait for lastCopy:#%lu...\n", this, _last_copy_signal ? _last_copy_signal->_sig_id: 0x0 );
         this->waitCopy(_last_copy_signal);
     }
 
@@ -961,8 +1000,8 @@ void ihipDevice_t::waitAllStreams()
     ({\
         tls_lastHipError = _hip_status;\
         \
-        if (HIP_TRACE_API) {\
-            fprintf(stderr, "==hip-api: %-30s ret=%2d\n", __func__,  _hip_status);\
+        if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API) {\
+            fprintf(stderr, "]]hip-api: %-30s ret=%2d\n", __func__,  _hip_status);\
         }\
         _hip_status;\
     })
@@ -1044,6 +1083,10 @@ void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, c
 //It is called with C++11 call_once, which provided thread-safety.
 void ihipInit()
 {
+#ifdef COMPILE_TRACE_MARKER 
+    amdtInitializeActivityLogger();
+    amdtScopedMarker("ihipInit", "HIP", NULL); 
+#endif
     /*
      * Environment variables
      */
@@ -1068,6 +1111,14 @@ void ihipInit()
 
     READ_ENV_I(release, HIP_DISABLE_HW_KERNEL_DEP, 0, "Disable HW dependencies before kernel commands  - instead wait for dependency on host. -1 means ignore these dependencies. (debug mode)");
     READ_ENV_I(release, HIP_DISABLE_HW_COPY_DEP, 0, "Disable HW dependencies before copy commands  - instead wait for dependency on host. -1 means ifnore these dependencies (debug mode)");
+
+    if (HIP_DB && !COMPILE_HIP_DB) {
+        fprintf (stderr, "warning: env var HIP_DB=0x%x but COMPILE_HIP_DB=0.  (perhaps enable COMPILE_HIP_DB in src code before compiling?)", HIP_DB);
+    }
+
+    if (HIP_TRACE_API && !COMPILE_HIP_TRACE_API) {
+        fprintf (stderr, "warning: env var HIP_TRACE_API=0x%x but COMPILE_HIP_TRACE_API=0.  (perhaps enable COMPILE_HIP_DB in src code before compiling?)", HIP_DB);
+    }
 
 
     /*
@@ -1109,6 +1160,7 @@ void ihipInit()
     // If HIP_VISIBLE_DEVICES is not set, make sure all devices are initialized
     if(!g_visible_device)
         assert(deviceCnt == g_deviceCnt);
+
 
     tprintf(DB_SYNC, "pid=%u %-30s\n", getpid(), "<ihipInit>");
 
@@ -1177,8 +1229,6 @@ inline hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 }
 
 
-
-
 // TODO - data-up to data-down:
 // Called just before a kernel is launched from hipLaunchKernel.
 // Allows runtime to track some information about the stream.
@@ -1229,7 +1279,7 @@ void ihipPostLaunchKernel(hipStream_t stream, hc::completion_future &kernelFutur
  */
 hipError_t hipGetDevice(int *device)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(device);
 
     *device = tls_defaultDevice;
     return ihipLogStatus(hipSuccess);
@@ -1242,7 +1292,7 @@ hipError_t hipGetDevice(int *device)
  */
 hipError_t hipGetDeviceCount(int *count)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(count);
 
     *count = g_deviceCnt;
 
@@ -1331,7 +1381,7 @@ hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig )
  */
 hipError_t hipSetDevice(int device)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(device);
 
     if ((device < 0) || (device >= g_deviceCnt)) {
         return ihipLogStatus(hipErrorInvalidDevice);
@@ -1348,9 +1398,10 @@ hipError_t hipSetDevice(int device)
  */
 hipError_t hipDeviceSynchronize(void)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API();
 
     ihipGetTlsDefaultDevice()->waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
+
 
     return ihipLogStatus(hipSuccess);
 }
@@ -1362,7 +1413,7 @@ hipError_t hipDeviceSynchronize(void)
  */
 hipError_t hipDeviceReset(void)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API();
 
     ihipDevice_t *device = ihipGetTlsDefaultDevice();
 
@@ -1468,7 +1519,7 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
  */
 hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(props, device);
 
     hipError_t e;
 
@@ -1496,29 +1547,28 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device)
  */
 hipError_t hipGetLastError()
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API();
 
     // Return last error, but then reset the state:
-    return tls_lastHipError;
-    ihipLogStatus(hipSuccess);
+    hipError_t e = ihipLogStatus(tls_lastHipError);
+    tls_lastHipError = hipSuccess;
+    return e;
 }
 
 
 //---
 hipError_t hipPeakAtLastError()
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API();
 
-    return tls_lastHipError;
-    ihipLogStatus(tls_lastHipError);
+   
+    // peak at last error, but don't reset it. 
+    return ihipLogStatus(tls_lastHipError);
 }
 
 
-//---
-const char *hipGetErrorName(hipError_t hip_error)
+const char *ihipErrorString(hipError_t hip_error)
 {
-    std::call_once(hip_initialized, ihipInit);
-
     switch (hip_error) {
         case hipSuccess                     : return "hipSuccess";
         case hipErrorMemoryAllocation       : return "hipErrorMemoryAllocation";
@@ -1537,6 +1587,16 @@ const char *hipGetErrorName(hipError_t hip_error)
         case hipErrorTbd                    : return "hipErrorTbd";
         default                             : return "hipErrorUnknown";
     };
+};
+
+
+
+//---
+const char *hipGetErrorName(hipError_t hip_error)
+{
+    HIP_INIT_API(hip_error);
+
+    return ihipErrorString(hip_error);
 }
 
 
@@ -2038,7 +2098,7 @@ ihipMemsetKernel(hipStream_t stream, T * ptr, T val, size_t sizeBytes)
  */
 hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(ptr, sizeBytes);
 
     hipError_t  hip_status = hipSuccess;
 
@@ -2063,7 +2123,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 
 hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(ptr, sizeBytes);
 
     hipError_t  hip_status = hipSuccess;
 
@@ -2085,8 +2145,9 @@ hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
 }
 
 
-hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags){
-    std::call_once(hip_initialized, ihipInit);
+hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
+{
+    HIP_INIT_API(ptr, sizeBytes, flags);
 
     hipError_t hip_status = hipSuccess;
 
@@ -2123,8 +2184,9 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags)
 
 
 
-hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, size_t size){
-	std::call_once(hip_initialized, ihipInit);
+hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, size_t size)
+{
+    HIP_INIT_API(devPtr, hstPtr, size);
 
 	hipError_t hip_status = hipSuccess;
 
@@ -2148,7 +2210,8 @@ hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, size_t size){
 
 hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr)
 {
-	std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(*flagsPtr, hostPtr);
+
 	hipError_t hip_status = hipSuccess;
 
 	hc::accelerator acc;
@@ -2171,7 +2234,8 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr)
 
 hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
 {
-	std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(hostPtr, sizeBytes, flags);
+
 	hipError_t hip_status = hipSuccess;
 
 	auto device = ihipGetTlsDefaultDevice();
@@ -2199,8 +2263,10 @@ hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
 	return ihipLogStatus(hip_status);
 }
 
-hipError_t hipHostUnregister(void *hostPtr){
-	std::call_once(hip_initialized, ihipInit);
+hipError_t hipHostUnregister(void *hostPtr)
+{
+    HIP_INIT_API(hostPtr);
+
 	hipError_t hip_status = hipSuccess;
 	if(hostPtr == NULL){
 		hip_status = hipErrorInvalidValue;
@@ -2218,7 +2284,7 @@ hipError_t hipHostUnregister(void *hostPtr){
 //---
 hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(symbolName, src, count, offset, kind);
 
 #ifdef USE_MEMCPYTOSYMBOL
 	if(kind != hipMemcpyHostToDevice)
@@ -2444,7 +2510,7 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, hipMe
 //---
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(dst, src, sizeBytes, kind);
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
@@ -2478,7 +2544,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 //---
 hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(dst, src, sizeBytes, kind, stream);
 
     hipError_t e = hipSuccess;
 
@@ -2507,7 +2573,7 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
  */
 hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t stream )
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(dst, value, sizeBytes, stream);
 
     hipError_t e = hipSuccess;
 
@@ -2557,7 +2623,7 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
 
 hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(dst, value, sizeBytes);
 
     // TODO - call an ihip memset so HIP_TRACE is correct.
     return hipMemsetAsync(dst, value, sizeBytes, hipStreamNull);
@@ -2570,7 +2636,7 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
  */
 hipError_t hipMemGetInfo  (size_t *free, size_t *total)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(free, total);
 
     hipError_t e = hipSuccess;
 
@@ -2600,9 +2666,9 @@ hipError_t hipMemGetInfo  (size_t *free, size_t *total)
 //---
 hipError_t hipFree(void* ptr)
 {
-    // TODO - ensure this pointer was created by hipMalloc and not hipMallocHost
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(ptr);
 
+    // TODO - ensure this pointer was created by hipMalloc and not hipMallocHost
 
    // Synchronize to ensure all work has finished.
     ihipGetTlsDefaultDevice()->waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
@@ -2617,6 +2683,8 @@ hipError_t hipFree(void* ptr)
 
 hipError_t hipHostFree(void* ptr)
 {
+    HIP_INIT_API(ptr);
+
     // TODO - ensure this pointer was created by hipMallocHost and not hipMalloc
     std::call_once(hip_initialized, ihipInit);
 
@@ -2643,7 +2711,8 @@ hipError_t hipFreeHost(void* ptr)
 //---
 hipError_t hipDeviceCanAccessPeer ( int* canAccessPeer, int  device, int  peerDevice )
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(canAccessPeer, device, peerDevice);
+
     *canAccessPeer = false;
     return ihipLogStatus(hipSuccess);
 }
@@ -2655,7 +2724,8 @@ hipError_t hipDeviceCanAccessPeer ( int* canAccessPeer, int  device, int  peerDe
 //---
 hipError_t  hipDeviceDisablePeerAccess ( int  peerDevice )
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(peerDevice);
+
     // TODO-p2p
     return ihipLogStatus(hipSuccess);
 };
@@ -2701,7 +2771,10 @@ hipError_t hipMemcpyPeerAsync ( void* dst, int  dstDevice, const void* src, int 
 hipError_t hipDriverGetVersion(int *driverVersion)
 {
     std::call_once(hip_initialized, ihipInit);
-    *driverVersion = 4;
+    if (driverVersion) {
+        *driverVersion = 4;
+    }
+
     return ihipLogStatus(hipSuccess);
 }
 

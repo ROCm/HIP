@@ -36,6 +36,10 @@ $HIP_PATH=dirname (dirname $0) unless defined $HIP_PATH;        # use parent dir
 $CUDA_PATH=$ENV{'CUDA_PATH'};
 $CUDA_PATH='/usr/local/cuda' unless defined $CUDA_PATH;
 
+$CODEXL_PATH = $ENV{'CODEXL_PATH'};
+$CODEXL_PATH = "/opt/AMD/CodeXL" unless defined $CODEXL_PATH;
+$marker_path = "$CODEXL_PATH/SDK/AMDTActivityLogger";
+
 
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
@@ -73,6 +77,10 @@ if ($HIP_PLATFORM eq "hcc") {
         # Suppress linker warnings in case HCC distribution contains OpenCL/SPIR symbols
         $HIPLDFLAGS .= " -Wl,--defsym=_binary_kernel_spir_end=0 -Wl,--defsym=_binary_kernel_spir_start=0 -Wl,--defsym=_binary_kernel_cl_start=0 -Wl,--defsym=_binary_kernel_cl_end=0";
 	$HIPLDFLAGS .= " -L$HSA_PATH/lib -lhsa-runtime64 -lhc_am";
+
+    # Add trace marker library:
+    $HIPLDFLAGS .= " -L$marker_path/bin/x86_64 -lAMDTActivityLogger";
+
 	# Add C++ libs for GCC.
 	$HIPLDFLAGS .= " -lstdc++";
 	$HIPLDFLAGS .= " -lm";
@@ -139,7 +147,7 @@ foreach $arg (@ARGV)
             $needCXXFLAGS = 1;
         }
 
-        if (($arg =~ /hip_hcc\.o$/) or ($arg =~ /hip_hcc\.cpp/)) {
+        if (($arg =~ /hip_hcc\.o$/) or ($arg =~ /hip_hcc\.cpp$/)) {
             $needHipHcc = 0;
         }
 
@@ -172,6 +180,9 @@ if ($needHipHcc) {
         } else {
             $CMD .= " -O3" ;
         }
+
+        $CMD .= " -I$marker_path/include";
+
 
         if ($verbose & 0x1) {
             print "remake-deps:", $CMD, "\n";

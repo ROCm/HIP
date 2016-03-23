@@ -19,10 +19,17 @@ MESSAGE ("HIP_PATH=" ${HIP_PATH})
 
 if (${HIP_PLATFORM} STREQUAL "hcc")
 	MESSAGE ("HIP_PLATFORM=hcc")
+
     set (HSA_PATH $ENV{HSA_PATH})
     if (NOT DEFINED HSA_PATH)
         set (HSA_PATH /opt/hsa)
     endif()
+
+    set (CODEXL_PATH $ENV{CODEXL_PATH})
+    if (NOT DEFINED CODEXL_PATH)
+        set (CODEXL_PATH /opt/AMD/CodeXL)
+    endif()
+    set (CODEXL_SDK_ATAL_PATH ${CODEXL_PATH}/SDK/AMDTActivityLogger)
 
 	#---
 	# Add HSA library:
@@ -37,7 +44,7 @@ if (${HIP_PLATFORM} STREQUAL "hcc")
 	# hip_hcc.o:
     #add_library(hip_hcc STATIC ${HIP_PATH}/src/hip_hcc.cpp )
     add_library(hip_hcc STATIC ${HIP_PATH}/src/hip_hcc.cpp ${HIP_PATH}/src/staging_buffer.cpp)
-	target_include_directories(hip_hcc PRIVATE ${HSA_PATH}/include)
+    target_include_directories(hip_hcc PRIVATE ${HSA_PATH}/include ${CODEXL_SDK_ATAL_PATH}/include)
 
 
 elseif (${HIP_PLATFORM} STREQUAL "nvcc")
@@ -132,7 +139,8 @@ make_hip_executable (hipSimpleAtomicsTest hipSimpleAtomicsTest.cpp)
 make_hip_executable (hipMathFunctionsHost hipMathFunctions.cpp hipSinglePrecisionMathHost.cpp hipDoublePrecisionMathHost.cpp)
 make_hip_executable (hipMathFunctionsDevice hipMathFunctions.cpp hipSinglePrecisionMathDevice.cpp hipDoublePrecisionMathDevice.cpp)
 make_hip_executable (hipIntrinsics hipMathFunctions.cpp hipSinglePrecisionIntrinsics.cpp hipDoublePrecisionIntrinsics.cpp hipIntegerIntrinsics.cpp)
-make_hip_executable (hipPointerAttrib hipPointerAttrib.cpp) 
+#TODO - re-enable.  This uses the pointer add feature.
+#make_hip_executable (hipPointerAttrib hipPointerAttrib.cpp) 
 make_hip_executable (hipMultiThreadStreams1 hipMultiThreadStreams1.cpp)
 make_hip_executable (hipMultiThreadStreams2 hipMultiThreadStreams2.cpp) 
 make_hip_executable (hipHostAlloc hipHostAlloc.cpp)
@@ -153,13 +161,17 @@ make_test(hipMemset --N 10013 --memsetval 0x5a )  # oddball size.
 make_test(hipMemset --N 256M  --memsetval 0xa6 )  # big copy
 make_test(hipGridLaunch " " )
 make_test(hipEnvVarDriver " " )
-make_test(hipPointerAttrib " " )
+#TODO -reenable
+#make_test(hipPointerAttrib " " )
 #make_test(hipMultiThreadStreams1 " " )
 #make_test(hipMultiThreadStreams2 " " )
 make_test(hipMemcpy_simple  " " )
 make_named_test(hipMemcpy "hipMemcpy-modes" --tests 0x1 )
 make_named_test(hipMemcpy "hipMemcpy-size" --tests 0x6 )
 make_named_test(hipMemcpy "hipMemcpy-multithreaded" --tests 0x8 )
+
+# Debug synchronization, then enable.
+#make_named_test(hipMemcpy_simple "hipMemcpyAsync-simple" --async)
 
 make_test(hipHostAlloc " ")
 make_test(hipMemcpyAsync  " " )

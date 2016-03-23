@@ -22,6 +22,18 @@ THE SOFTWARE.
 #include "hip_runtime.h"
 #include "test_common.h"
 
+bool p_async = false;
+
+// ****************************************************************************
+hipError_t memcopy(void * dst, const void *src, size_t sizeBytes, enum hipMemcpyKind kind)
+{
+    if (p_async) {
+        return hipMemcpyAsync(dst, src, sizeBytes, kind, NULL);
+    } else {
+        return hipMemcpy(dst, src, sizeBytes, kind);
+    }
+}
+
 
 //---
 // Test simple H2D copies and back.
@@ -40,12 +52,12 @@ void simpleTest1()
     printf ("A_d=%p B_d=%p C_d=%p  A_h=%p B_h=%p C_h=%p\n", A_d, B_d, C_d, A_h, B_d, C_h);
     unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
 
-    HIPCHECK ( hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
-    HIPCHECK ( hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
+    HIPCHECK ( memcopy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
+    HIPCHECK ( memcopy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
 
     hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d, B_d, C_d, N);
 
-    HIPCHECK ( hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
+    HIPCHECK ( memcopy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
 
     HIPCHECK (hipDeviceSynchronize());
 
@@ -86,9 +98,9 @@ void simpleTest2(size_t numElements, bool usePinnedHost)
         A_h2[i] = 12345678.0 + i; // init output with something distincctive, to ensure we replace it.
     }
 
-    HIPCHECK(hipMemcpy(A_d, A_h1, sizeElements, hipMemcpyHostToDevice));
+    HIPCHECK(memcopy(A_d, A_h1, sizeElements, hipMemcpyHostToDevice));
     HIPCHECK(hipDeviceSynchronize());
-    HIPCHECK(hipMemcpy(A_h2, A_d, sizeElements, hipMemcpyDeviceToHost));
+    HIPCHECK(memcopy(A_h2, A_d, sizeElements, hipMemcpyDeviceToHost));
     HIPCHECK(hipDeviceSynchronize());
 
     for (size_t i=0; i<numElements; i++) {
@@ -104,9 +116,30 @@ void simpleTest2(size_t numElements, bool usePinnedHost)
         free(A_h2);
     }
 }
+
+
+//Parse arguments specific to this test.
+void parseMyArguments(int argc, char *argv[])
+{
+    int more_argc = HipTest::parseStandardArguments(argc, argv, false);
+
+    // parse args for this test:
+    for (int i = 1; i < more_argc; i++) {
+        const char *arg = argv[i];
+
+        if (!strcmp(arg, "--async")) {
+            p_async = true;
+
+        } else {
+            failed("Bad argument '%s'", arg);
+        }
+    }
+};
+
+
 int main(int argc, char *argv[])
 {
-    HipTest::parseStandardArguments(argc, argv, true);
+    parseMyArguments(argc, argv);
 
     printf ("info: set device to %d, tests=%x\n", p_gpuDevice, p_tests);
     HIPCHECK(hipSetDevice(p_gpuDevice));
@@ -120,16 +153,22 @@ int main(int argc, char *argv[])
     }
 
     if (p_tests & 0x2) {
-        printf ("\n\n=== tests&2 (copy pin-pong, pinned host)\n");
+        printf ("\n\n=== tests&2 (copy ping-pong, pinned host)\n");
         simpleTest2<float>(N, true/*usePinnedHost*/);
         simpleTest2<char>(N, true/*usePinnedHost*/);
     }
 
     if (p_tests & 0x4) {
-        printf ("\n\n=== tests&2 (copy pin-pong, unpinned host)\n");
+        printf ("\n\n=== tests&4 (copy ping-pong, unpinned host)\n");
         simpleTest2<char>(N, false/*usePinnedHost*/);
         simpleTest2<float>(N, false/*usePinnedHost*/);
     }
+
+    hipDeviceSynchronize();
+    hipDeviceReset();
+
+    int v;
+    hipDriverGetVersion(&v);
 
     passed();
 };
