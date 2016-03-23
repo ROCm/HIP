@@ -110,7 +110,9 @@ int HIP_DISABLE_HW_COPY_DEP = 1;
 
 
 // Compile code that generate
+#ifndef COMPILE_TRACE_MARKER
 #define COMPILE_TRACE_MARKER 1
+#endif
 
 
 // #include CPP files to produce one object file
@@ -123,16 +125,27 @@ extern const char *ihipErrorString(hipError_t hip_error);
 // Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function boundary.
 // TODO - currently we print the trace message at the beginning. if we waited, we could also include return codes, and any values returned
 // through ptr-to-args (ie the pointers allocated by hipMalloc).
-#ifdef COMPILE_TRACE_MARKER
+#if COMPILE_TRACE_MARKER
 #include "AMDTActivityLogger.h"
 #include "hcc_detail/trace_helper.h"
+#define SCOPED_MARKER(markerName,group,userString) amdtScopedMarker(markerName, group, userString)
+#else 
+// Swallow scoped markers:
+#define SCOPED_MARKER(markerName,group,userString) 
+#endif
+
+
+#if COMPILE_TRACE_MARKER || (COMPILE_HIP_TRACE_API & 0x1) 
 #define API_TRACE(...)\
 {\
     std::string s = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
-    printf ("API_TRACE=%s\n", s.c_str());\
-    amdtScopedMarker(s.c_str(), "HIP", NULL);\
+    if (COMPILE_HIP_DB && HIP_TRACE_API) {\
+        fprintf (stderr, API_COLOR "<<hip-api: %s\n" KNRM, s.c_str());\
+    }\
+    SCOPED_MARKER(s.c_str(), "HIP", NULL);\
 }
 #else
+// Swallow API_TRACE
 #define API_TRACE()
 #endif
 
@@ -150,6 +163,8 @@ extern const char *ihipErrorString(hipError_t hip_error);
 #define KMAG  "\x1B[35m"
 #define KCYN  "\x1B[36m"
 #define KWHT  "\x1B[37m"
+
+#define API_COLOR KGRN
 
 
 //---
@@ -1001,7 +1016,7 @@ void ihipDevice_t::waitAllStreams()
         tls_lastHipError = _hip_status;\
         \
         if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API) {\
-            fprintf(stderr, "]]hip-api: %-30s ret=%2d\n", __func__,  _hip_status);\
+            fprintf(stderr, "  %ship-api: %-30s ret=%2d (%s)>>\n" KNRM, (_hip_status == 0) ? API_COLOR:KRED, __func__, _hip_status, ihipErrorString(_hip_status));\
         }\
         _hip_status;\
     })
@@ -2770,7 +2785,8 @@ hipError_t hipMemcpyPeerAsync ( void* dst, int  dstDevice, const void* src, int 
 //---
 hipError_t hipDriverGetVersion(int *driverVersion)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(driverVersion);
+
     if (driverVersion) {
         *driverVersion = 4;
     }
