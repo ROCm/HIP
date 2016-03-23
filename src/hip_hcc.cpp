@@ -48,6 +48,9 @@ THE SOFTWARE.
 #include "hcc_detail/staging_buffer.h"
 
 
+// TODO, re-org header order.
+extern const char *ihipErrorString(hipError_t hip_error);
+#include "hcc_detail/trace_helper.h"
 
 
 #define INLINE static inline
@@ -78,6 +81,18 @@ std::vector<int> g_hip_visible_devices; /* vector of integers that contains the 
 int HIP_DISABLE_HW_KERNEL_DEP = 1;
 int HIP_DISABLE_HW_COPY_DEP = 1;
 
+
+// Color defs for debug messages:
+#define KNRM  "\x1B[0m"
+#define KRED  "\x1B[31m"
+#define KGRN  "\x1B[32m"
+#define KYEL  "\x1B[33m"
+#define KBLU  "\x1B[34m"
+#define KMAG  "\x1B[35m"
+#define KCYN  "\x1B[36m"
+#define KWHT  "\x1B[37m"
+
+#define API_COLOR KGRN
 
 
 #define HIP_HCC  
@@ -111,7 +126,7 @@ int HIP_DISABLE_HW_COPY_DEP = 1;
 
 // Compile code that generate
 #ifndef COMPILE_TRACE_MARKER
-#define COMPILE_TRACE_MARKER 1
+#define COMPILE_TRACE_MARKER 0
 #endif
 
 
@@ -119,15 +134,11 @@ int HIP_DISABLE_HW_COPY_DEP = 1;
 #define ONE_OBJECT_FILE 1
 
 
-// TODO, re-org header order.
-extern const char *ihipErrorString(hipError_t hip_error);
-
 // Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function boundary.
 // TODO - currently we print the trace message at the beginning. if we waited, we could also include return codes, and any values returned
 // through ptr-to-args (ie the pointers allocated by hipMalloc).
 #if COMPILE_TRACE_MARKER
 #include "AMDTActivityLogger.h"
-#include "hcc_detail/trace_helper.h"
 #define SCOPED_MARKER(markerName,group,userString) amdtScopedMarker(markerName, group, userString)
 #else 
 // Swallow scoped markers:
@@ -146,25 +157,19 @@ extern const char *ihipErrorString(hipError_t hip_error);
 }
 #else
 // Swallow API_TRACE
-#define API_TRACE()
+#define API_TRACE(...)
 #endif
 
+
+
+// This macro should be called at the beginning of every HIP API.
+// It initialies the hip runtime (exactly once), and
+// generate trace to stderr or to ATP file.
 #define HIP_INIT_API(...) \
 	std::call_once(hip_initialized, ihipInit);\
     API_TRACE(__VA_ARGS__);
 
 
-// Color defs for debug messages:
-#define KNRM  "\x1B[0m"
-#define KRED  "\x1B[31m"
-#define KGRN  "\x1B[32m"
-#define KYEL  "\x1B[33m"
-#define KBLU  "\x1B[34m"
-#define KMAG  "\x1B[35m"
-#define KCYN  "\x1B[36m"
-#define KWHT  "\x1B[37m"
-
-#define API_COLOR KGRN
 
 
 //---
@@ -1098,7 +1103,7 @@ void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, c
 //It is called with C++11 call_once, which provided thread-safety.
 void ihipInit()
 {
-#ifdef COMPILE_TRACE_MARKER 
+#if COMPILE_TRACE_MARKER 
     amdtInitializeActivityLogger();
     amdtScopedMarker("ihipInit", "HIP", NULL); 
 #endif

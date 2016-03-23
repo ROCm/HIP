@@ -2,6 +2,14 @@
 #include <iomanip>
 #include <string>
 
+//---
+// Helper functions to convert HIP function arguments into strings.
+// Handles POD data types as well as enumerations (ie hipMemcpyKind).
+// The implementation uses C++11 variadic templates and template specialization.
+// The hipMemcpyKind example below is a good example that shows how to implement conversion for a new HSA type.
+
+
+// Handy macro to convert an enumeration to a stringified version of same:
 #define CASE_STR(x) case x: return #x;
 
 
@@ -15,7 +23,7 @@ std::string ToHexString(T v)
 };
 
 
-
+//---
 // Template overloads for ToString to handle various types:
 // Note these use C++11 variadic templates
 template <typename T>
@@ -24,17 +32,6 @@ std::string ToString(T v) {
     ss << v;
     return ss.str();
 };
-
-
-#if 0
-template <>
-std::string ToString(void* v) {
-    std::ostringstream ss;
-    //ss << "0x" << std::setw(16) << std::setfill('0') << std::hex << v;
-    ss << "0x" << std::hex << v;
-    return ss.str();
-};
-#endif
 
 
 template <>
@@ -61,11 +58,11 @@ std::string ToString() {
     return ("");
 }
 
-    ///
+
+//---
 // C++11 variadic template - peels off first argument, converts to string, and calls itself again to peel the next arg.
+// Strings are automatically separated by comma+space.
 template <typename T, typename... Args> 
 std::string ToString(T first, Args... args) {
     return ToString(first) + ", " + ToString(args...) ;
 }
-
-
