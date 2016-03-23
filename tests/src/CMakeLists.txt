@@ -43,8 +43,8 @@ if (${HIP_PLATFORM} STREQUAL "hcc")
 
 	# hip_hcc.o:
     #add_library(hip_hcc STATIC ${HIP_PATH}/src/hip_hcc.cpp )
-    add_library(hip_hcc STATIC ${HIP_PATH}/src/hip_hcc.cpp ${HIP_PATH}/src/staging_buffer.cpp)
-    target_include_directories(hip_hcc PRIVATE ${HSA_PATH}/include ${CODEXL_SDK_ATAL_PATH}/include)
+#    add_library(hip_hcc STATIC ${HIP_PATH}/src/hip_hcc.cpp ${HIP_PATH}/src/staging_buffer.cpp)
+#    target_include_directories(hip_hcc PRIVATE ${HSA_PATH}/include ${CODEXL_SDK_ATAL_PATH}/include)
 
 
 elseif (${HIP_PLATFORM} STREQUAL "nvcc")

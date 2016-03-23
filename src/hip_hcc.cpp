@@ -25,191 +25,19 @@ THE SOFTWARE.
  * Contains definitions for functions that are large enough that we don't want to inline them everywhere.
  * This file is compiled and linked into apps running HIP / HCC path.
  */
-#include <assert.h>
-#include <stdint.h>
-#include <iostream>
-#include <sstream>
-#include <list>
-#include <sys/types.h>
-#include <unistd.h>
-#include <deque>
-#include <vector>
-#include <algorithm>
-
-#include <hc.hpp>
-#include <hc_am.hpp>
-
-#include "hip_runtime.h"
-
-#include "hsa_ext_amd.h"
 
 // HIP includes:
 #define HIP_HCC
 #include "hcc_detail/staging_buffer.h"
-
-
+#include "hcc_detail/hip_common.h"
+#include "hcc_detail/hip_util.h"
+#include "hcc_detail/hip_inline.h"
 // TODO, re-org header order.
 extern const char *ihipErrorString(hipError_t hip_error);
-#include "hcc_detail/trace_helper.h"
 
 // #define USE_MEMCPYTOSYMBOL
 //
 //Use the new HCC accelerator_view::copy instead of am_copy
-#define USE_AV_COPY 0
-
-#define INLINE static inline
-
-//---
-// Environment variables:
-
-// Intended to distinguish whether an environment variable should be visible only in debug mode, or in debug+release.
-//static const int debug = 0;
-static const int release = 1;
-
-
-int HIP_LAUNCH_BLOCKING = 0;
-
-int HIP_PRINT_ENV = 0;
-int HIP_TRACE_API= 0;
-int HIP_DB= 0;
-int HIP_STAGING_SIZE = 64;   /* size of staging buffers, in KB */
-int HIP_STAGING_BUFFERS = 2;    // TODO - remove, two buffers should be enough.
-int HIP_PININPLACE = 0;
-int HIP_STREAM_SIGNALS = 2;  /* number of signals to allocate at stream creation */
-int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
-
-
-
-//---
-// Chicken bits for disabling functionality to work around potential issues:
-int HIP_DISABLE_HW_KERNEL_DEP = 1;
-int HIP_DISABLE_HW_COPY_DEP = 1;
-
-
-// Color defs for debug messages:
-#define KNRM  "\x1B[0m"
-#define KRED  "\x1B[31m"
-#define KGRN  "\x1B[32m"
-#define KYEL  "\x1B[33m"
-#define KBLU  "\x1B[34m"
-#define KMAG  "\x1B[35m"
-#define KCYN  "\x1B[36m"
-#define KWHT  "\x1B[37m"
-
-#define API_COLOR KGRN
-
-
-#define HIP_HCC  
-
-// If set, thread-safety is enforced on all stream functions.
-// Stream functions will acquire a mutex before entering critical sections.
-#define STREAM_THREAD_SAFE 1
-
-// If FORCE_COPY_DEP=1 , HIP runtime will add 
-// synchronization for copy commands in the same stream, regardless of command type.
-// If FORCE_COPY_DEP=0 data copies of the same kind (H2H, H2D, D2H, D2D) are assumed to be implicitly ordered.
-// ROCR runtime implementation currently provides this guarantee when using SDMA queues but not 
-// when using shader queues.  
-// TODO - measure if this matters for performance, in particular for back-to-back small copies.
-// If not, we can simplify the copy dependency tracking by collapsing to a single Copy type, and always forcing dependencies for copy commands.
-#define FORCE_SAMEDIR_COPY_DEP 1
-
-
-// Compile debug trace mode - this prints debug messages to stderr when env var HIP_DB is set.
-// May be set to 0 to remove debug if checks - possible code size and performance difference?
-#define COMPILE_HIP_DB  1
-
-
-// Compile HIP tracing capability.
-// 0x1 = print a string at function entry with arguments.
-// 0x2 = prints a simple message with function name + return code when function exits.
-// 0x3 = print both.
-// Must be enabled at runtime with HIP_TRACE_API
-#define COMPILE_HIP_TRACE_API 0x3 
-
-
-// Compile code that generates trace markers for CodeXL ATP at HIP function begin/end.
-// ATP is standard CodeXL format that includes timestamps for kernels, HSA RT APIs, and HIP APIs.
-#ifndef COMPILE_TRACE_MARKER
-#define COMPILE_TRACE_MARKER 0
-#endif
-
-
-// #include CPP files to produce one object file
-#define ONE_OBJECT_FILE 1
-
-
-// Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function boundary.
-// TODO - currently we print the trace message at the beginning. if we waited, we could also include return codes, and any values returned
-// through ptr-to-args (ie the pointers allocated by hipMalloc).
-#if COMPILE_TRACE_MARKER
-#include "AMDTActivityLogger.h"
-#define SCOPED_MARKER(markerName,group,userString) amdtScopedMarker(markerName, group, userString)
-#else 
-// Swallow scoped markers:
-#define SCOPED_MARKER(markerName,group,userString) 
-#endif
-
-
-#if COMPILE_TRACE_MARKER || (COMPILE_HIP_TRACE_API & 0x1) 
-#define API_TRACE(...)\
-{\
-    std::string s = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
-    if (COMPILE_HIP_DB && HIP_TRACE_API) {\
-        fprintf (stderr, API_COLOR "<<hip-api: %s\n" KNRM, s.c_str());\
-    }\
-    SCOPED_MARKER(s.c_str(), "HIP", NULL);\
-}
-#else
-// Swallow API_TRACE
-#define API_TRACE(...)
-#endif
-
-
-
-// This macro should be called at the beginning of every HIP API.
-// It initialies the hip runtime (exactly once), and
-// generate trace string that can be output to stderr or to ATP file.
-#define HIP_INIT_API(...) \
-	std::call_once(hip_initialized, ihipInit);\
-    API_TRACE(__VA_ARGS__);
-
-
-
-
-//---
-//HIP_DB Debug flags:
-#define DB_API    0 /* 0x01 - shortcut to enable HIP_TRACE_API on single switch */
-#define DB_SYNC   1 /* 0x02 - trace synchronization pieces */
-#define DB_MEM    2 /* 0x04 - trace memory allocation / deallocation */
-#define DB_COPY1  3 /* 0x08 - trace memory copy commands. . */
-#define DB_SIGNAL 4 /* 0x10 - trace signal pool commands */
-#define DB_COPY2  5 /* 0x20 - trace memory copy commands. Detailed. */
-// When adding a new debug flag, also add to the char name table below.
-
-const char *dbName [] =
-{
-    KNRM "hip-api", // not used, 
-    KYEL "hip-sync",
-    KCYN "hip-mem",
-    KMAG "hip-copy1",
-    KRED "hip-signal",
-    KNRM "hip-copy2",
-};
-
-#if COMPILE_HIP_DB
-#define tprintf(trace_level, ...) {\
-    if (HIP_DB & (1<<(trace_level))) {\
-        fprintf (stderr, "  %s:", dbName[trace_level]); \
-        fprintf (stderr, __VA_ARGS__);\
-        fprintf (stderr, "%s", KNRM); \
-    }\
-}
-#else 
-/* Compile to empty code */
-#define tprintf(trace_level, ...) 
-#endif
-
 
 class ihipException : public std::exception
 {
@@ -225,54 +53,12 @@ const hipStream_t hipStreamNull = 0x0;
 struct ihipDevice_t;
 
 
-enum ihipCommand_t {
-    ihipCommandCopyH2H,
-    ihipCommandCopyH2D,  
-    ihipCommandCopyD2H,
-    ihipCommandCopyD2D,
-    ihipCommandKernel,
-};
-
 const char* ihipCommandName[] = {
     "CopyH2H", "CopyH2D", "CopyD2H", "CopyD2D", "Kernel"
 };
 
 
 
-typedef uint64_t SIGSEQNUM;
-
-//---
-// Small wrapper around signals.
-// Designed to be used from stream.
-// TODO-someday refactor this class so it can be stored in a vector<>
-// we already store the index here so we can use for garbage collection.
-struct ihipSignal_t {
-    hsa_signal_t   _hsa_signal; // hsa signal handle
-    int            _index;      // Index in pool, used for garbage collection.
-    SIGSEQNUM      _sig_id;     // unique sequentially increasing ID.
-
-    ihipSignal_t();
-    ~ihipSignal_t();
-
-    inline void release();
-};
-
-
-// Used to remove lock, for performance or stimulating bugs.
-class FakeMutex
-{
-  public:
-    void lock() {  }
-    bool try_lock() {return true; }
-    void unlock() { }
-};
-
-
-#if STREAM_THREAD_SAFE
-typedef std::mutex StreamMutex;
-#else
-typedef FakeMutex StreamMutex;
-#endif
 
 
 // TODO - move async copy code into stream?  Stream->async-copy.
@@ -281,71 +67,7 @@ typedef FakeMutex StreamMutex;
 
 
 // Internal stream structure.
-class ihipStream_t {
-public:
-typedef uint64_t SeqNum_t ;
 
-    ihipStream_t(unsigned device_index, hc::accelerator_view av, SeqNum_t id, unsigned int flags);
-    ~ihipStream_t();
-
-
-    void copySync (void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind);
-    void copyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind);
-
-    //---
-    // Thread-safe accessors - these acquire / release mutex:
-    inline bool                 preKernelCommand();
-    inline void                 postKernelCommand(hc::completion_future &kernel_future);
-
-    inline int                  preCopyCommand(ihipSignal_t *lastCopy, hsa_signal_t *waitSignal, ihipCommand_t copyType);
-
-    inline void                 reclaimSignals_ts(SIGSEQNUM sigNum);
-    inline void                 wait(bool assertQueueEmpty=false);
-
-
-
-    // Non-threadsafe accessors - must be protected by high-level stream lock:
-    inline SIGSEQNUM            lastCopySeqId() { return _last_copy_signal ? _last_copy_signal->_sig_id : 0; };
-    ihipSignal_t *              allocSignal();
-
-
-    //-- Non-racy accessors:
-    // These functions access fields set at initialization time and are non-racy (so do not acquire mutex)
-    inline ihipDevice_t *       getDevice() const;
-    StreamMutex &               mutex() {return _mutex;};
-
-    //---
-    //Member vars - these are set at initialization:
-    SeqNum_t                    _id;   // monotonic sequence ID
-    hc::accelerator_view        _av;
-    unsigned                    _flags;
-private:
-    void                        enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal);
-    inline void                 waitCopy(ihipSignal_t *signal);
-
-
-    hipMemcpyKind resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDeviceMem);
-    void setCopyAgents(hipMemcpyKind kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent);
-
-    //---
-
-    unsigned                    _device_index;
-    ihipCommand_t               _last_command_type;  // type of the last command
-
-    // signal of last copy command sent to the stream.
-    // May be NULL, indicating the previous command has completley finished and future commands don't need to create a dependency.
-    // Copy can be either H2D or D2H.
-    ihipSignal_t                *_last_copy_signal;
-    hc::completion_future       _last_kernel_future;  // Completion future of last kernel command sent to GPU.
-
-    int                         _signalCursor;
-
-    SIGSEQNUM                   _stream_sig_id;      // Monotonically increasing unique signal id.
-    SIGSEQNUM                   _oldest_live_sig_id; // oldest live seq_id, anything < this can be allocated.
-    std::deque<ihipSignal_t>    _signalPool;   // Pool of signals for use by this stream.
-
-    StreamMutex                  _mutex;
-};
 
 
 
@@ -377,38 +99,7 @@ struct ihipEvent_t {
 
 
 //-------------------------------------------------------------------------------------------------
-struct ihipDevice_t
-{
-    unsigned                _device_index; // index into g_devices.
 
-    hipDeviceProp_t         _props;        // saved device properties.
-    hc::accelerator         _acc;
-    hsa_agent_t             _hsa_agent;    // hsa agent handle
-
-    // The NULL stream is used if no other stream is specified.
-    // NULL has special synchronization properties with other streams.
-    ihipStream_t            *_default_stream;
-
-    std::list<ihipStream_t*> _streams;   // streams associated with this device.
-
-    unsigned                _compute_units;
-
-    StagingBuffer           *_staging_buffer[2]; // one buffer for each direction.
-
-    ihipStream_t::SeqNum_t   _stream_id;
-
-public:
-    void init(unsigned device_index, hc::accelerator acc);
-    ~ihipDevice_t();
-    void reset();
-    hipError_t getProperties(hipDeviceProp_t* prop);
-
-    inline void waitAllStreams();
-    inline void syncDefaultStream(bool waitOnSelf);
-
-private:
-
-};
 
 
 //=================================================================================================
@@ -422,7 +113,7 @@ thread_local int tls_defaultDevice = 0;
 std::once_flag hip_initialized;
 ihipDevice_t *g_devices; // Array of all non-emulated (ie GPU) accelerators in the system.
 bool g_visible_device = false; // Set the flag when HIP_VISIBLE_DEVICES is set
-unsigned g_deviceCnt;
+//unsigned g_deviceCnt;
 std::vector<int> g_hip_visible_devices; /* vector of integers that contains the visible device IDs */
 hsa_agent_t g_cpu_agent ;   // the CPU agent.
 //=================================================================================================
@@ -431,7 +122,6 @@ hsa_agent_t g_cpu_agent ;   // the CPU agent.
 //=================================================================================================
 //Forward Declarations:
 //=================================================================================================
-INLINE bool ihipIsValidDevice(unsigned deviceIndex);
 
 //=================================================================================================
 // Implementation:
@@ -489,6 +179,16 @@ ihipStream_t::~ihipStream_t()
     _signalPool.clear();
 }
 
+//---
+inline ihipDevice_t * ihipStream_t::getDevice() const
+{
+    if (ihipIsValidDevice(_device_index)) {
+        return &g_devices[_device_index];
+    } else {
+        return NULL;
+    }
+};
+
 
 
 //---
@@ -534,16 +234,6 @@ void ihipStream_t::wait(bool assertQueueEmpty)
     _last_copy_signal = NULL;
 };
 
-
-//---
-inline ihipDevice_t * ihipStream_t::getDevice() const
-{
-    if (ihipIsValidDevice(_device_index)) {
-        return &g_devices[_device_index];
-    } else {
-        return NULL;
-    }
-};
 
 
 //---
@@ -1039,16 +729,6 @@ void ihipDevice_t::waitAllStreams()
 
 
 
-#define ihipLogStatus(_hip_status) \
-    ({\
-        tls_lastHipError = _hip_status;\
-        \
-        if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API) {\
-            fprintf(stderr, "  %ship-api: %-30s ret=%2d (%s)>>\n" KNRM, (_hip_status == 0) ? API_COLOR:KRED, __func__, _hip_status, ihipErrorString(_hip_status));\
-        }\
-        _hip_status;\
-    })
-
 
 
 // Read environment variables.
@@ -1233,67 +913,6 @@ void ihipInit()
 }
 
 
-INLINE bool ihipIsValidDevice(unsigned deviceIndex)
-{
-    // deviceIndex is unsigned so always > 0
-    return (deviceIndex < g_deviceCnt);
-}
-
-/*// check if the device ID is set as visible*/
-//INLINE bool ihipIsVisibleDevice(unsigned deviceIndex)
-//{
-    //return std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(),
-            //(int)deviceIndex) != g_hip_visible_devices.end();
-/*}*/
-
-//---
-INLINE ihipDevice_t *ihipGetTlsDefaultDevice()
-{
-    // If this is invalid, the TLS state is corrupt.
-    // This can fire if called before devices are initialized.
-    // TODO - consider replacing assert with error code
-    assert (ihipIsValidDevice(tls_defaultDevice));
-
-    return &g_devices[tls_defaultDevice];
-}
-
-
-//---
-INLINE ihipDevice_t *ihipGetDevice(int deviceId)
-{
-    if ((deviceId >= 0) && (deviceId < g_deviceCnt)) {
-        return &g_devices[deviceId];
-    } else {
-        return NULL;
-    }
-
-}
-
-//---
-// Get the stream to use for a command submission.
-//
-// If stream==NULL synchronize appropriately with other streams and return the default av for the device.
-// If stream is valid, return the AV to use.
-inline hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
-{
-    if (stream == hipStreamNull ) {
-        ihipDevice_t *device = ihipGetTlsDefaultDevice();
-
-#ifndef HIP_API_PER_THREAD_DEFAULT_STREAM
-        device->syncDefaultStream(false);
-#endif
-        return device->_default_stream;
-    } else {
-        // Have to wait for legacy default stream to be empty:
-        if (!(stream->_flags & hipStreamNonBlocking))  {
-            tprintf(DB_SYNC, "stream %p wait default stream\n", stream);
-            stream->getDevice()->_default_stream->wait();
-        }
-        
-        return stream;
-    }
-}
-
 
 // TODO - data-up to data-down:
 // Called just before a kernel is launched from hipLaunchKernel.
@@ -1336,270 +955,7 @@ void ihipPostLaunchKernel(hipStream_t stream, hc::completion_future &kernelFutur
 //---
 
 
-//-------------------------------------------------------------------------------------------------
-//Devices
-//-------------------------------------------------------------------------------------------------
-//---
-/**
- * @return  #hipSuccess
- */
-hipError_t hipGetDevice(int *device)
-{
-    HIP_INIT_API(device);
 
-    *device = tls_defaultDevice;
-    return ihipLogStatus(hipSuccess);
-}
-
-
-//---
-/**
- * @return  #hipSuccess, #hipErrorNoDevice
- */
-hipError_t hipGetDeviceCount(int *count)
-{
-    HIP_INIT_API(count);
-
-    *count = g_deviceCnt;
-
-    if (*count > 0) {
-        return ihipLogStatus(hipSuccess);
-    } else {
-        return ihipLogStatus(hipErrorNoDevice);
-    }
-}
-
-
-//---
-/**
- * @returns #hipSuccess
- */
-hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig )
-{
-    std::call_once(hip_initialized, ihipInit);
-
-    // Nop, AMD does not support variable cache configs.
-
-    return ihipLogStatus(hipSuccess);
-}
-
-
-//---
-/**
- * @returns #hipSuccess
- */
-hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig )
-{
-    std::call_once(hip_initialized, ihipInit);
-
-    *cacheConfig = hipFuncCachePreferNone;
-
-    return ihipLogStatus(hipSuccess);
-}
-
-
-//---
-/**
- * @returns #hipSuccess
- */
-hipError_t hipFuncSetCacheConfig ( hipFuncCache cacheConfig )
-{
-    std::call_once(hip_initialized, ihipInit);
-
-    // Nop, AMD does not support variable cache configs.
-
-    return ihipLogStatus(hipSuccess);
-}
-
-
-
-//---
-/**
- * @returns #hipSuccess
- */
-hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config )
-{
-    std::call_once(hip_initialized, ihipInit);
-
-    // Nop, AMD does not support variable shared mem configs.
-
-    return ihipLogStatus(hipSuccess);
-}
-
-
-
-//---
-/**
- * @returns #hipSuccess
- */
-hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig )
-{
-    std::call_once(hip_initialized, ihipInit);
-
-    *pConfig = hipSharedMemBankSizeFourByte;
-
-    return ihipLogStatus(hipSuccess);
-}
-
-//---
-/**
- * @return #hipSuccess, #hipErrorInvalidDevice
- */
-hipError_t hipSetDevice(int device)
-{
-    HIP_INIT_API(device);
-
-    if ((device < 0) || (device >= g_deviceCnt)) {
-        return ihipLogStatus(hipErrorInvalidDevice);
-    } else {
-        tls_defaultDevice = device;
-        return ihipLogStatus(hipSuccess);
-    }
-}
-
-
-//---
-/**
- * @return #hipSuccess
- */
-hipError_t hipDeviceSynchronize(void)
-{
-    HIP_INIT_API();
-
-    ihipGetTlsDefaultDevice()->waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
-
-
-    return ihipLogStatus(hipSuccess);
-}
-
-
-//---
-/**
- * @return @ref hipSuccess
- */
-hipError_t hipDeviceReset(void)
-{
-    HIP_INIT_API();
-
-    ihipDevice_t *device = ihipGetTlsDefaultDevice();
-
-    // TODO-HCC
-    // This function currently does a user-level cleanup of known resources.
-    // It could benefit from KFD support to perform a more "nuclear" clean that would include any associated kernel resources and page table entries.
-
-
-    if (device) {
-        //---
-        //Wait for pending activity to complete?
-        //TODO - check if this is required behavior:
-        for (auto streamI=device->_streams.begin(); streamI!=device->_streams.end(); streamI++) {
-            ihipStream_t *stream = *streamI;
-            stream->wait();
-        }
-
-        // Release device resources (streams and memory):
-        device->reset(); 
-    }
-
-    return ihipLogStatus(hipSuccess);
-}
-
-/**
- *
- */
-hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
-{
-    std::call_once(hip_initialized, ihipInit);
-
-    hipError_t e = hipSuccess;
-
-    ihipDevice_t * hipDevice = ihipGetDevice(device);
-    hipDeviceProp_t *prop = &hipDevice->_props;
-    if (hipDevice) {
-        switch (attr) {
-        case hipDeviceAttributeMaxThreadsPerBlock:
-            *pi = prop->maxThreadsPerBlock; break;
-        case hipDeviceAttributeMaxBlockDimX:
-            *pi = prop->maxThreadsDim[0]; break;
-        case hipDeviceAttributeMaxBlockDimY:
-            *pi = prop->maxThreadsDim[1]; break;
-        case hipDeviceAttributeMaxBlockDimZ:
-            *pi = prop->maxThreadsDim[2]; break;
-        case hipDeviceAttributeMaxGridDimX:
-            *pi = prop->maxGridSize[0]; break;
-        case hipDeviceAttributeMaxGridDimY:
-            *pi = prop->maxGridSize[1]; break;
-        case hipDeviceAttributeMaxGridDimZ:
-            *pi = prop->maxGridSize[2]; break;
-        case hipDeviceAttributeMaxSharedMemoryPerBlock:
-            *pi = prop->sharedMemPerBlock; break;
-        case hipDeviceAttributeTotalConstantMemory:
-            *pi = prop->totalConstMem; break;
-        case hipDeviceAttributeWarpSize:
-            *pi = prop->warpSize; break;
-        case hipDeviceAttributeMaxRegistersPerBlock:
-            *pi = prop->regsPerBlock; break;
-        case hipDeviceAttributeClockRate:
-            *pi = prop->clockRate; break;
-        case hipDeviceAttributeMemoryClockRate:
-            *pi = prop->memoryClockRate; break;
-        case hipDeviceAttributeMemoryBusWidth:
-            *pi = prop->memoryBusWidth; break;
-        case hipDeviceAttributeMultiprocessorCount:
-            *pi = prop->multiProcessorCount; break;
-        case hipDeviceAttributeComputeMode:
-            *pi = prop->computeMode; break;
-        case hipDeviceAttributeL2CacheSize:
-            *pi = prop->l2CacheSize; break;
-        case hipDeviceAttributeMaxThreadsPerMultiProcessor:
-            *pi = prop->maxThreadsPerMultiProcessor; break;
-        case hipDeviceAttributeComputeCapabilityMajor:
-            *pi = prop->major; break;
-        case hipDeviceAttributeComputeCapabilityMinor:
-            *pi = prop->minor; break;
-        case hipDeviceAttributePciBusId:
-            *pi = prop->pciBusID; break;
-        case hipDeviceAttributeConcurrentKernels:
-            *pi = prop->concurrentKernels; break;
-        case hipDeviceAttributePciDeviceId:
-            *pi = prop->pciDeviceID; break;
-        case hipDeviceAttributeMaxSharedMemoryPerMultiprocessor:
-            *pi = prop->maxSharedMemoryPerMultiProcessor; break;
-        case hipDeviceAttributeIsMultiGpuBoard:
-            *pi = prop->isMultiGpuBoard; break;
-        default:
-            e = hipErrorInvalidValue; break;
-        }
-    } else {
-        e = hipErrorInvalidDevice;
-    }
-    return ihipLogStatus(e);
-}
-
-
-/**
- * @return #hipSuccess, #hipErrorInvalidDevice
- * @bug HCC always returns 0 for maxThreadsPerMultiProcessor
- * @bug HCC always returns 0 for regsPerBlock
- * @bug HCC always returns 0 for l2CacheSize
- */
-hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device)
-{
-    HIP_INIT_API(props, device);
-
-    hipError_t e;
-
-    ihipDevice_t * hipDevice = ihipGetDevice(device);
-    if (hipDevice) {
-        // copy saved props
-        *props = hipDevice->_props;
-        e = hipSuccess;
-    } else {
-        e = hipErrorInvalidDevice;
-    }
-
-    return ihipLogStatus(e);
-}
 
 
 
@@ -2908,4 +2264,5 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **a
 
 #if ONE_OBJECT_FILE
 #include "staging_buffer.cpp"
+//#include "hip_device.cpp"
 #endif
