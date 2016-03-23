@@ -97,3 +97,8 @@ The README with the procedures and tips the team used during this porting effort
     * **hipexamine.sh** : Script to scan directory, find all code, and report statistics on how much can be ported with HIP (and identify likely features not yet supported)
 
 * **doc**: Documentation - markdown and doxygen info
+
+## Reporting an issue
+Use the [GitHub issue tracker] (https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/issues).
+If reporting a bug, include the output of "hipconfig --full" and samples/1_hipInfo/hipInfo (if possible).
+
