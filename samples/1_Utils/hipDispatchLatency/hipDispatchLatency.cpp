@@ -20,6 +20,7 @@ THE SOFTWARE.
 #include"hip_runtime.h"
 #include<iostream>
 #include<time.h>
+#include"ResultDatabase.h"
 
 #define check(msg, status) \
 if(status != hipSuccess){ \
@@ -60,18 +61,22 @@ int main(){
 	hipEventCreate(&start);
 	hipEventCreate(&stop);
 
+	ResultDatabase resultDB[8];
+
 	hipEventRecord(start);
 	hipLaunchKernel(HIP_KERNEL_NAME(One), dim3(LEN/512), dim3(512), 0, 0, Ad);
 	hipEventRecord(stop);
 	hipEventElapsedTime(&mS, start, stop);
-	std::cout<<"First Kernel Launch: \t\t"<<mS*1000<<" uS"<<std::endl;
-	
+	resultDB[0].AddResult(std::string("First Kernel Launch"), "", "uS", mS*1000); 
+//	std::cout<<"First Kernel Launch: \t\t"<<mS*1000<<" uS"<<std::endl;
+	resultDB[0].DumpSummary(std::cout);
 	hipEventRecord(start);
 	hipLaunchKernel(HIP_KERNEL_NAME(One), dim3(LEN/512), dim3(512), 0, 0, Ad);
 	hipEventRecord(stop);
 	hipEventElapsedTime(&mS, start, stop);
-	std::cout<<"Second Kernel Launch: \t\t"<<mS*1000<<" uS"<<std::endl;
-	
+	resultDB[1].AddResult(std::string("Second Kernel Launch"), "", "uS", mS*1000); 
+//	std::cout<<"Second Kernel Launch: \t\t"<<mS*1000<<" uS"<<std::endl;
+	resultDB[1].DumpSummary(std::cout);
 	hipEventRecord(start);
 	for(int i=0;i<ITER;i++){
 		hipLaunchKernel(HIP_KERNEL_NAME(One), dim3(LEN/512), dim3(512), 0, 0, Ad);
@@ -79,7 +84,9 @@ int main(){
 	hipDeviceSynchronize();
 	hipEventRecord(stop);
 	hipEventElapsedTime(&mS, start, stop);
-	std::cout<<"NULL Stream Sync dispatch wait: \t"<<mS*1000/ITER<<" uS"<<std::endl;
+	resultDB[2].AddResult(std::string("NULL Stream Sync dispatch wait"), "", "uS", mS*1000/ITER); 
+	resultDB[2].DumpSummary(std::cout);
+//	std::cout<<"NULL Stream Sync dispatch wait: \t"<<mS*1000/ITER<<" uS"<<std::endl;
 	hipDeviceSynchronize();
 
 	hipEventRecord(start);
@@ -89,7 +96,9 @@ int main(){
 	hipEventRecord(stop);
 	hipDeviceSynchronize();
 	hipEventElapsedTime(&mS, start, stop);
-	std::cout<<"NULL Stream Async dispatch wait: \t"<<mS*1000/ITER<<" uS"<<std::endl;
+	resultDB[3].AddResult(std::string("NULL Stream Async dispatch wait"), "", "uS", mS*1000/ITER); 
+	resultDB[3].DumpSummary(std::cout);
+//	std::cout<<"NULL Stream Async dispatch wait: \t"<<mS*1000/ITER<<" uS"<<std::endl;
 	hipDeviceSynchronize();
 
 	hipEventRecord(start);
@@ -99,7 +108,9 @@ int main(){
 	}
 	hipEventRecord(stop);
 	hipEventElapsedTime(&mS, start, stop);
-	std::cout<<"Stream Sync dispatch wait: \t\t"<<mS*1000/ITER<<" uS"<<std::endl;
+	resultDB[4].AddResult(std::string("Stream Sync dispatch wait"), "", "uS", mS*1000/ITER); 
+	resultDB[4].DumpSummary(std::cout);
+//	std::cout<<"Stream Sync dispatch wait: \t\t"<<mS*1000/ITER<<" uS"<<std::endl;
 	hipDeviceSynchronize();
 	hipEventRecord(start);
 	for(int i=0;i<ITER;i++){
@@ -108,7 +119,9 @@ int main(){
 	hipDeviceSynchronize();
 	hipEventRecord(stop);
 	hipEventElapsedTime(&mS, start, stop);
-	std::cout<<"Stream Async dispatch wait: \t\t"<<mS*1000/ITER<<" uS"<<std::endl;
+	resultDB[5].AddResult(std::string("Stream Async dispatch wait"), "", "uS", mS*1000/ITER); 
+//	std::cout<<"Stream Async dispatch wait: \t\t"<<mS*1000/ITER<<" uS"<<std::endl;
+	resultDB[5].DumpSummary(std::cout);
 	hipDeviceSynchronize();
 
 	hipEventRecord(start);
@@ -117,7 +130,9 @@ int main(){
 	}
 	hipEventRecord(stop);
 	hipEventElapsedTime(&mS, start, stop);
-	std::cout<<"NULL Stream Dispatch No Wait: \t\t"<<mS*1000/ITER<<" uS"<<std::endl;
+	resultDB[6].AddResult(std::string("NULL Stream No Wait"), "", "uS", mS*1000/ITER); 
+	resultDB[6].DumpSummary(std::cout);
+//	std::cout<<"NULL Stream Dispatch No Wait: \t\t"<<mS*1000/ITER<<" uS"<<std::endl;
 	hipDeviceSynchronize();
 
 	hipEventRecord(start);
@@ -126,6 +141,8 @@ int main(){
 	}
 	hipEventRecord(stop);
 	hipEventElapsedTime(&mS, start, stop);
-	std::cout<<"Stream Dispatch No Wait: \t\t"<<mS*1000/ITER<<" uS"<<std::endl;
+	resultDB[7].AddResult(std::string("Stream Dispatch No Wait"), "", "uS", mS*1000/ITER); 
+	resultDB[7].DumpSummary(std::cout);
+//	std::cout<<"Stream Dispatch No Wait: \t\t"<<mS*1000/ITER<<" uS"<<std::endl;
 	hipDeviceSynchronize();
 }
