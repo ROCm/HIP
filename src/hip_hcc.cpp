@@ -2699,16 +2699,24 @@ hipError_t hipFree(void* ptr)
 {
     HIP_INIT_API(ptr);
 
-    // TODO - ensure this pointer was created by hipMalloc and not hipMallocHost
+    hipError_t hipStatus = hipErrorInvalidDevicePointer;
 
    // Synchronize to ensure all work has finished.
     ihipGetTlsDefaultDevice()->waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
 
     if (ptr) {
-        hc::am_free(ptr);
+        hc::accelerator acc;
+        hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+        am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
+        if(status == AM_SUCCESS){
+            if(amPointerInfo._hostPointer == NULL){
+                hc::am_free(ptr);
+                hipStatus = hipSuccess;
+            }
+        }
     }
 
-    return ihipLogStatus(hipSuccess);
+    return ihipLogStatus(hipStatus);
 }
 
 
@@ -2719,12 +2727,20 @@ hipError_t hipHostFree(void* ptr)
     // TODO - ensure this pointer was created by hipMallocHost and not hipMalloc
     std::call_once(hip_initialized, ihipInit);
 
+    hipError_t hipStatus = hipErrorInvalidDevicePointer;
     if (ptr) {
-        tprintf (DB_MEM, "  %s: %p\n", __func__, ptr);
-        hc::am_free(ptr);
+        hc::accelerator acc;
+        hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+        am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
+        if(status == AM_SUCCESS){
+            if(amPointerInfo._hostPointer == ptr){
+                hc::am_free(ptr);
+                hipStatus = hipSuccess;
+            }
+        }
     }
 
-    return ihipLogStatus(hipSuccess);
+    return ihipLogStatus(hipStatus);
 };
 
 

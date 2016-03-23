@@ -149,6 +149,8 @@ typedef enum hipError_t {
     ,hipErrorInvalidResourceHandle    ///< Resource handle (hipEvent_t or hipStream_t) invalid.
     ,hipErrorInvalidDevice            ///< DeviceID must be in range 0...#compute-devices.
     ,hipErrorInvalidMemcpyDirection   ///< Invalid memory copy direction 
+    ,hipErrorInvalidDevicePointer     ///< Invalid Device Pointer
+    ,hipErrorInitializationError      ///< TODO comment from hipErrorInitializationError
 
     ,hipErrorNoDevice                 ///< Call to hipGetDeviceCount returned 0 devices
     ,hipErrorNotReady                 ///< Indicates that asynchronous operations enqueued earlier are not ready.  This is not actually an error, but is used to distinguish from hipSuccess (which indicates completion).  APIs that return this error include hipEventQuery and hipStreamQuery.
