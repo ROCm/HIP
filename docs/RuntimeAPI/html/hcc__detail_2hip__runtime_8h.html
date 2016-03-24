@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: /home/bensander/HIP.public/include/hcc_detail/hip_runtime.h File Reference</title>
+<title>HIP: Heterogenous-computing Interface for Portability: /home/bensander/HIP-privatestaging/include/hcc_detail/hip_runtime.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -306,30 +306,30 @@ __device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>__any</b> (
 <tr class="memitem:aa2230562f67a1e7e3393026372f6e31f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa2230562f67a1e7e3393026372f6e31f"></a>
 __device__ unsigned long long int&#160;</td><td class="memItemRight" valign="bottom"><b>__ballot</b> (int input)</td></tr>
 <tr class="separator:aa2230562f67a1e7e3393026372f6e31f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1d20171b01222c4e28acb3114b839bde"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1d20171b01222c4e28acb3114b839bde"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl</b> (int input, int lane, int width)</td></tr>
-<tr class="separator:a1d20171b01222c4e28acb3114b839bde"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a294f4c766964298b0231bec7617051f6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a294f4c766964298b0231bec7617051f6"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl_up</b> (int input, unsigned int lane_delta, int width)</td></tr>
-<tr class="separator:a294f4c766964298b0231bec7617051f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6b79b18210b9908f5a31ca38f3b388db"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6b79b18210b9908f5a31ca38f3b388db"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl_down</b> (int input, unsigned int lane_delta, int width)</td></tr>
-<tr class="separator:a6b79b18210b9908f5a31ca38f3b388db"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3cd83b37a4947e4f2182db012519de2d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3cd83b37a4947e4f2182db012519de2d"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl_xor</b> (int input, int lane_mask, int width)</td></tr>
-<tr class="separator:a3cd83b37a4947e4f2182db012519de2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a98366898c63f47a133cba150068e8875"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a98366898c63f47a133cba150068e8875"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl</b> (float input, int lane, int width)</td></tr>
-<tr class="separator:a98366898c63f47a133cba150068e8875"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a584719cecfe54e38a36b22840be5c3a7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a584719cecfe54e38a36b22840be5c3a7"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl_up</b> (float input, unsigned int lane_delta, int width)</td></tr>
-<tr class="separator:a584719cecfe54e38a36b22840be5c3a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a32851dad447c5709a888aeb3244ec567"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a32851dad447c5709a888aeb3244ec567"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl_down</b> (float input, unsigned int lane_delta, int width)</td></tr>
-<tr class="separator:a32851dad447c5709a888aeb3244ec567"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a63c035f8db69f7ac228c698f7e77c4a4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a63c035f8db69f7ac228c698f7e77c4a4"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl_xor</b> (float input, int lane_mask, int width)</td></tr>
-<tr class="separator:a63c035f8db69f7ac228c698f7e77c4a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5307a30ea822f88f8d6de9573c864686"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5307a30ea822f88f8d6de9573c864686"></a>
+__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl</b> (int input, int lane, int width=warpSize)</td></tr>
+<tr class="separator:a5307a30ea822f88f8d6de9573c864686"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3361f1338bdb6b197f4e7e1c476e99fe"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3361f1338bdb6b197f4e7e1c476e99fe"></a>
+__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl_up</b> (int input, unsigned int lane_delta, int width=warpSize)</td></tr>
+<tr class="separator:a3361f1338bdb6b197f4e7e1c476e99fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afe8dbf7d44ba3ed5d9be3b6f682cdfb8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afe8dbf7d44ba3ed5d9be3b6f682cdfb8"></a>
+__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl_down</b> (int input, unsigned int lane_delta, int width=warpSize)</td></tr>
+<tr class="separator:afe8dbf7d44ba3ed5d9be3b6f682cdfb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7836ca24eaaeba8c103c08ee9a46f18d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7836ca24eaaeba8c103c08ee9a46f18d"></a>
+__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl_xor</b> (int input, int lane_mask, int width=warpSize)</td></tr>
+<tr class="separator:a7836ca24eaaeba8c103c08ee9a46f18d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad7b7829763268e2c7a4c7cdef032e6d7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad7b7829763268e2c7a4c7cdef032e6d7"></a>
+__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl</b> (float input, int lane, int width=warpSize)</td></tr>
+<tr class="separator:ad7b7829763268e2c7a4c7cdef032e6d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acdcfcd64772896e09902efd9b56fe959"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acdcfcd64772896e09902efd9b56fe959"></a>
+__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl_up</b> (float input, unsigned int lane_delta, int width=warpSize)</td></tr>
+<tr class="separator:acdcfcd64772896e09902efd9b56fe959"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad314c55944b099be7d7e3ee4fc94ce5c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad314c55944b099be7d7e3ee4fc94ce5c"></a>
+__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl_down</b> (float input, unsigned int lane_delta, int width=warpSize)</td></tr>
+<tr class="separator:ad314c55944b099be7d7e3ee4fc94ce5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2086d178995020d6a1fedb0d474c9d7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad2086d178995020d6a1fedb0d474c9d7"></a>
+__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl_xor</b> (float input, int lane_mask, int width=warpSize)</td></tr>
+<tr class="separator:ad2086d178995020d6a1fedb0d474c9d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a48c1aefd76f1b35b9813e487de3b048c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a48c1aefd76f1b35b9813e487de3b048c"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>min</b> (int arg1, int arg2) __attribute((hc</td></tr>
 <tr class="separator:a48c1aefd76f1b35b9813e487de3b048c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -393,11 +393,11 @@ __device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__dsqrt_r
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
+<tr class="memitem:a5318f692fa09f8c7c31576c63cbf8894"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5318f692fa09f8c7c31576c63cbf8894"></a>
+const int&#160;</td><td class="memItemRight" valign="bottom"><b>warpSize</b> = 64</td></tr>
+<tr class="separator:a5318f692fa09f8c7c31576c63cbf8894"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a41a58b7c4446ab1abce89f43531cd523"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><b>cpu</b></td></tr>
 <tr class="separator:a41a58b7c4446ab1abce89f43531cd523"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a48fa8b9d8b693778a249dad1ed747249"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a48fa8b9d8b693778a249dad1ed747249"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>warpSize</b></td></tr>
-<tr class="separator:a48fa8b9d8b693778a249dad1ed747249"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga1e1c85dbb250f1acfb484c1be1f3b28a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga1e1c85dbb250f1acfb484c1be1f3b28a"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__HIP-ENV.html#ga1e1c85dbb250f1acfb484c1be1f3b28a">HIP_PRINT_ENV</a></td></tr>
 <tr class="memdesc:ga1e1c85dbb250f1acfb484c1be1f3b28a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print all HIP-related environment variables. <br/></td></tr>
@@ -468,8 +468,8 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
 <div class="line">            fprintf(stderr, <span class="stringliteral">&quot;hiptrace1: ...completed.\n&quot;</span>);\</div>
 <div class="line">        }\</div>
 <div class="line">    }</div>
-<div class="ttc" id="group__HIP-ENV_html_gaae9c541f3e25b8f002762337a03fec28"><div class="ttname"><a href="group__HIP-ENV.html#gaae9c541f3e25b8f002762337a03fec28">HIP_TRACE_API</a></div><div class="ttdeci">int HIP_TRACE_API</div><div class="ttdoc">Trace HIP APIs. </div><div class="ttdef"><b>Definition:</b> hip_hcc.cpp:57</div></div>
-<div class="ttc" id="group__HIP-ENV_html_ga8049b329f2663b4572d81e7a9aa8a155"><div class="ttname"><a href="group__HIP-ENV.html#ga8049b329f2663b4572d81e7a9aa8a155">HIP_LAUNCH_BLOCKING</a></div><div class="ttdeci">int HIP_LAUNCH_BLOCKING</div><div class="ttdoc">Make all HIP APIs host-synchronous. </div><div class="ttdef"><b>Definition:</b> hip_hcc.cpp:58</div></div>
+<div class="ttc" id="group__HIP-ENV_html_gaae9c541f3e25b8f002762337a03fec28"><div class="ttname"><a href="group__HIP-ENV.html#gaae9c541f3e25b8f002762337a03fec28">HIP_TRACE_API</a></div><div class="ttdeci">int HIP_TRACE_API</div><div class="ttdoc">Trace HIP APIs. </div><div class="ttdef"><b>Definition:</b> hip_hcc.cpp:73</div></div>
+<div class="ttc" id="group__HIP-ENV_html_ga8049b329f2663b4572d81e7a9aa8a155"><div class="ttname"><a href="group__HIP-ENV.html#ga8049b329f2663b4572d81e7a9aa8a155">HIP_LAUNCH_BLOCKING</a></div><div class="ttdeci">int HIP_LAUNCH_BLOCKING</div><div class="ttdoc">Make all HIP APIs host-synchronous. </div><div class="ttdef"><b>Definition:</b> hip_hcc.cpp:70</div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -491,7 +491,7 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Feb 18 2016 20:42:16 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 23 2016 23:11:07 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

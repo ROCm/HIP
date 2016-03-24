@@ -102,9 +102,9 @@ Functions</h2></td></tr>
 <tr class="memitem:gac49518ff2b26b98ea2ec9e9268761a24"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#gac49518ff2b26b98ea2ec9e9268761a24">hipDeviceGetAttribute</a> (int *pi, <a class="el" href="group__GlobalDefs.html#gacc0acd7b9bda126c6bb3dfd6e2796d7c">hipDeviceAttribute_t</a> attr, int device)</td></tr>
 <tr class="memdesc:gac49518ff2b26b98ea2ec9e9268761a24"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query device attribute.  <a href="#gac49518ff2b26b98ea2ec9e9268761a24">More...</a><br/></td></tr>
 <tr class="separator:gac49518ff2b26b98ea2ec9e9268761a24"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gad9ee6822e3e55431811fb6a00f7a1c10"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#gad9ee6822e3e55431811fb6a00f7a1c10">hipDeviceGetProperties</a> (<a class="el" href="structhipDeviceProp__t.html">hipDeviceProp_t</a> *prop, int device)</td></tr>
-<tr class="memdesc:gad9ee6822e3e55431811fb6a00f7a1c10"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns device properties.  <a href="#gad9ee6822e3e55431811fb6a00f7a1c10">More...</a><br/></td></tr>
-<tr class="separator:gad9ee6822e3e55431811fb6a00f7a1c10"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga77c20744e2a88c31440992d6c7754b5f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#ga77c20744e2a88c31440992d6c7754b5f">hipGetDeviceProperties</a> (<a class="el" href="structhipDeviceProp__t.html">hipDeviceProp_t</a> *prop, int device)</td></tr>
+<tr class="memdesc:ga77c20744e2a88c31440992d6c7754b5f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns device properties.  <a href="#ga77c20744e2a88c31440992d6c7754b5f">More...</a><br/></td></tr>
+<tr class="separator:ga77c20744e2a88c31440992d6c7754b5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gac2b282179f29c4c0ca7b5391242c6a4c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#gac2b282179f29c4c0ca7b5391242c6a4c">hipDeviceSetCacheConfig</a> (<a class="el" href="group__GlobalDefs.html#gac7e4bfd88340fc06642136c839a3d822">hipFuncCache</a> cacheConfig)</td></tr>
 <tr class="memdesc:gac2b282179f29c4c0ca7b5391242c6a4c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set L1/Shared cache partition.  <a href="#gac2b282179f29c4c0ca7b5391242c6a4c">More...</a><br/></td></tr>
 <tr class="separator:gac2b282179f29c4c0ca7b5391242c6a4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -186,47 +186,6 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="gad9ee6822e3e55431811fb6a00f7a1c10"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipDeviceGetProperties </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="structhipDeviceProp__t.html">hipDeviceProp_t</a> *&#160;</td>
-          <td class="paramname"><em>props</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>device</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Returns device properties. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">prop</td><td>written with device properties </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>which device to query for information</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>Populates hipDeviceGetProperties with information for the specified device.</p>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d" title="DeviceID must be in range 0...#compute-devices. ">hipErrorInvalidDevice</a> </dd></dl>
-<dl class="bug"><dt><b><a class="el" href="bug.html#_bug000002">Bug:</a></b></dt><dd><p class="startdd">HCC always returns 0 for maxThreadsPerMultiProcessor </p>
-<p>HCC always returns 0 for regsPerBlock </p>
-<p class="enddd">HCC always returns 0 for l2CacheSize </p>
-</dd></dl>
-
-</div>
-</div>
 <a class="anchor" id="ga1bb08f774a34a468d969a8a04791c9bb"></a>
 <div class="memitem">
 <div class="memproto">
@@ -266,7 +225,6 @@ Functions</h2></td></tr>
 <p>This function will reset the device immmediately, and then return after all resources have been freed. The caller must ensure that the device is not being accessed by any other host threads from the active process when this function is called.</p>
 <dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__Device.html#gaefdc2847fb1d6c3fb1354e827a191ebd" title="Blocks until the default device has completed all preceding requested tasks. ">hipDeviceSynchronize</a></dd></dl>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063">hipSuccess</a> </dd></dl>
-<dl class="bug"><dt><b><a class="el" href="bug.html#_bug000001">Bug:</a></b></dt><dd>On HCC, hipDeviceReset is a nop and does not reset the device state. </dd></dl>
 
 </div>
 </div>
@@ -404,6 +362,52 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="ga77c20744e2a88c31440992d6c7754b5f"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipGetDeviceProperties </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structhipDeviceProp__t.html">hipDeviceProp_t</a> *&#160;</td>
+          <td class="paramname"><em>props</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>device</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns device properties. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">prop</td><td>written with device properties </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>which device to query for information</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Populates hipGetDeviceProperties with information for the specified device.</p>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d" title="DeviceID must be in range 0...#compute-devices. ">hipErrorInvalidDevice</a> </dd></dl>
+<dl class="bug"><dt><b><a class="el" href="bug.html#_bug000002">Bug:</a></b></dt><dd><p class="startdd">HCC always returns 0 for maxThreadsPerMultiProcessor </p>
+<p>HCC always returns 0 for regsPerBlock </p>
+<p class="enddd">HCC always returns 0 for l2CacheSize </p>
+</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d" title="DeviceID must be in range 0...#compute-devices. ">hipErrorInvalidDevice</a> </dd></dl>
+<dl class="bug"><dt><b><a class="el" href="bug.html#_bug000005">Bug:</a></b></dt><dd><p class="startdd">HCC always returns 0 for maxThreadsPerMultiProcessor </p>
+<p>HCC always returns 0 for regsPerBlock </p>
+<p class="enddd">HCC always returns 0 for l2CacheSize </p>
+</dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="ga8ec0b093af0adadc7fe98bf33fa21620"></a>
 <div class="memitem">
 <div class="memproto">
@@ -442,7 +446,7 @@ Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Feb 18 2016 20:42:16 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 23 2016 23:11:07 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

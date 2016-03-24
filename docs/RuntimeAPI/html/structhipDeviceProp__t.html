@@ -133,8 +133,12 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 <tr class="separator:a1dd15bee43692b8649dfbdc1adbaaf96"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6db0ab8e7e8cc13c84d7bb7f70226d5e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6db0ab8e7e8cc13c84d7bb7f70226d5e"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structhipDeviceProp__t.html#a6db0ab8e7e8cc13c84d7bb7f70226d5e">memoryClockRate</a></td></tr>
-<tr class="memdesc:a6db0ab8e7e8cc13c84d7bb7f70226d5e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Max memory clock frequency in khz. <br/></td></tr>
+<tr class="memdesc:a6db0ab8e7e8cc13c84d7bb7f70226d5e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Max global memory clock frequency in khz. <br/></td></tr>
 <tr class="separator:a6db0ab8e7e8cc13c84d7bb7f70226d5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d710ce8bd34daf66f892a66a2273132"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1d710ce8bd34daf66f892a66a2273132"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structhipDeviceProp__t.html#a1d710ce8bd34daf66f892a66a2273132">memoryBusWidth</a></td></tr>
+<tr class="memdesc:a1d710ce8bd34daf66f892a66a2273132"><td class="mdescLeft">&#160;</td><td class="mdescRight">Global memory bus width in bits. <br/></td></tr>
+<tr class="separator:a1d710ce8bd34daf66f892a66a2273132"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a29880232c56120be3455ce00d5379665"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a29880232c56120be3455ce00d5379665"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structhipDeviceProp__t.html#a29880232c56120be3455ce00d5379665">totalConstMem</a></td></tr>
 <tr class="memdesc:a29880232c56120be3455ce00d5379665"><td class="mdescLeft">&#160;</td><td class="mdescRight">Size of shared memory region (in bytes). <br/></td></tr>
@@ -187,16 +191,24 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struc
 size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structhipDeviceProp__t.html#aa1a32a7f387f6da845db7b228711fce8">maxSharedMemoryPerMultiProcessor</a></td></tr>
 <tr class="memdesc:aa1a32a7f387f6da845db7b228711fce8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum Shared Memory Per Multiprocessor. <br/></td></tr>
 <tr class="separator:aa1a32a7f387f6da845db7b228711fce8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9bb19b2b0cdee8977ed63964532d639d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9bb19b2b0cdee8977ed63964532d639d"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structhipDeviceProp__t.html#a9bb19b2b0cdee8977ed63964532d639d">isMultiGpuBoard</a></td></tr>
+<tr class="memdesc:a9bb19b2b0cdee8977ed63964532d639d"><td class="mdescLeft">&#160;</td><td class="mdescRight">1 if device is on a multi-GPU board, 0 if not. <br/></td></tr>
+<tr class="separator:a9bb19b2b0cdee8977ed63964532d639d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2143f5448607d1a02a9e8783fcf06a1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac2143f5448607d1a02a9e8783fcf06a1"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structhipDeviceProp__t.html#ac2143f5448607d1a02a9e8783fcf06a1">canMapHostMemory</a></td></tr>
+<tr class="memdesc:ac2143f5448607d1a02a9e8783fcf06a1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check whether HIP can map host memory. <br/></td></tr>
+<tr class="separator:ac2143f5448607d1a02a9e8783fcf06a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>hipDeviceProp </p>
 </div><hr/>The documentation for this struct was generated from the following file:<ul>
-<li>/home/bensander/HIP.public/include/<a class="el" href="hip__runtime__api_8h_source.html">hip_runtime_api.h</a></li>
+<li>/home/bensander/HIP-privatestaging/include/<a class="el" href="hip__runtime__api_8h_source.html">hip_runtime_api.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Feb 18 2016 20:42:16 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Mar 23 2016 23:11:07 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
