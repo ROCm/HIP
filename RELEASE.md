@@ -14,6 +14,10 @@ We have attempted to document known bugs and limitations - in particular the [HI
 Stay tuned - the work for many of these features is already in-flight.
 
 Next:
+- Refactor HIP make and install system:
+    - Move to CMake.
+    - Split source into multiple modular .cpp and .h files.
+    - Create static library and link.
 - Deprecate hipDeviceGetProp, replace with hipGetDeviceProp
 - Deprecate hipMallocHost (Replace with hipHostMalloc)
 - Deprecate hipFreeHost (Replace with hipHostFree). 
