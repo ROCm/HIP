@@ -1,6 +1,8 @@
 var searchData=
 [
-  ['ihipdevice_5ft',['ihipDevice_t',['../structihipDevice__t.html',1,'']]],
-  ['ihipevent_5ft',['ihipEvent_t',['../structihipEvent__t.html',1,'']]],
-  ['ihipstream_5ft',['ihipStream_t',['../structihipStream__t.html',1,'']]]
+  ['hipchannelformatdesc',['hipChannelFormatDesc',['../structhipChannelFormatDesc.html',1,'']]],
+  ['hipdevicearch_5ft',['hipDeviceArch_t',['../structhipDeviceArch__t.html',1,'']]],
+  ['hipdeviceprop_5ft',['hipDeviceProp_t',['../structhipDeviceProp__t.html',1,'']]],
+  ['hipevent_5ft',['hipEvent_t',['../structhipEvent__t.html',1,'']]],
+  ['hippointerattribute_5ft',['hipPointerAttribute_t',['../structhipPointerAttribute__t.html',1,'']]]
 ];

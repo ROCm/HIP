@@ -68,7 +68,7 @@ HIP offers several benefits over OpenCL:
 
 ### What hardware does HIP support?
 - For AMD platforms, HIP runs on the same hardware that the HCC "hc" mode supports - specifically AMD Kaveri, Carrizo and Fiji.
-- For Nvidia platforms, HIP should run on a device which runs the CUDA SDK 5.0 or newer. We have tested the Nvidia Titan and K40.
+- For Nvidia platforms, HIP requires Unified Memory and should run on a device which runs the CUDA SDK 6.0 or newer. We have tested the Nvidia Titan and K40.
 
 ### Does Hipify automatically convert all source code?
 Typically, Hipify can automatically convert almost all run-time code, and the coordinate indexing device code. 

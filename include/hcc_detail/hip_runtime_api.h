@@ -56,15 +56,17 @@ extern "C" {
 #define hipEventInterprocess  0x4  ///< Event can support IPC.  @warning - not supported in HIP.
 
 
-#define hipHostMallocDefault 0x0
-#define hipHostMallocPortable 0x1
-#define hipHostMallocMapped 0x2
+//! Flags that can be used with hipHostMalloc
+#define hipHostMallocDefault       0x0
+#define hipHostMallocPortable      0x1
+#define hipHostMallocMapped        0x2
 #define hipHostMallocWriteCombined 0x4
 
-#define hipHostRegisterDefault 0x0
-#define hipHostRegisterPortable 0x1 
-#define hipHostRegisterMapped 0x2
-#define hipHostRegisterIoMemory 0x4
+//! Flags that can be used with hipHostRegister
+#define hipHostRegisterDefault  0x0  ///< Memory is Mapped and Portable
+#define hipHostRegisterPortable 0x1  ///< Memory is considered registered by all contexts.  HIP only supports one context so this is always assumed true.
+#define hipHostRegisterMapped   0x2  ///< Map the allocation into the address space for the current device.  The device pointer can be obtained with #hipHostGetDevicePointer.
+#define hipHostRegisterIoMemory 0x4  ///< Not supported.
 
 /**
  * @warning On AMD devices and recent Nvidia devices, these hints and controls are ignored.
@@ -398,7 +400,10 @@ const char *hipGetErrorString(hipError_t hip_error);
  * @param[in ] flags to control stream creation.
  * @return #hipSuccess, #hipErrorInvalidValue
  *
- * Create a new asynchronous stream.
+ * Create a new asynchronous stream.  @p stream returns an opaque handle that can be used to reference the newly
+ * created stream in subsequent hipStream* commands.  The stream is allocated on the heap and will remain allocated 
+ *
+ * even if the handle goes out-of-scope.  To release the memory used by the stream, applicaiton must call hipStreamDestroy.
  * Flags controls behavior of the stream.  See #hipStreamDefault, #hipStreamNonBlocking.
  * @error hipStream_t are under development - with current HIP use the NULL stream.
  */
@@ -413,7 +418,12 @@ hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags);
  * @param[in, out] stream Valid pointer to hipStream_t.  This function writes the memory with the newly created stream.
  * @return #hipSuccess, #hipErrorInvalidValue
  *
- * Create a new asynchronous stream.
+ * Create a new asynchronous stream.  @p stream returns an opaque handle that can be used to reference the newly
+ * created stream in subsequent hipStream* commands.  The stream is allocated on the heap and will remain allocated 
+ * even if the handle goes out-of-scope.  To release the memory used by the stream, applicaiton must call hipStreamDestroy.
+ * 
+ *
+ * @see hipStreamDestroy
  *
  */
 static inline hipError_t hipStreamCreate(hipStream_t *stream)
@@ -703,19 +713,41 @@ hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, unsigned int fla
 hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) ;
 
 /**
- *  @brief Pin host memory
+ *  @brief Register host memory so it can be accessed from the current device.
  *
- *  @param[out] hostPtr Pointer to host memory to be pinned
+ *  @param[out] hostPtr Pointer to host memory to be registered.
  *  @param[in] sizeBytes size of the host memory
- *  @param[in] flags Type of pinning the the host memory
- *  @return Error code
+ *  @param[in] flags.  See below.
+ *
+ *  Flags:
+ *  - #hipHostRegisterDefault   Memory is Mapped and Portable
+ *  - #hipHostRegisterPortable  Memory is considered registered by all contexts.  HIP only supports one context so this is always assumed true.
+ *  - #hipHostRegisterMapped    Map the allocation into the address space for the current device.  The device pointer can be obtained with #hipHostGetDevicePointer.
+ *
+ *
+ *  After registering the memory, use #hipHostGetDevicePointer to obtain the mapped device pointer.  
+ *  On many systems, the mapped device pointer will have a different value than the mapped host pointer.  Applications
+ *  must use the device pointer in device code, and the host pointer in device code.  
+ *
+ *  On some systems, registered memory is pinned.  On some systems, registered memory may not be actually be pinned
+ *  but uses OS or hardware facilities to all GPU access to the host memory.
+ *
+ *  Developers are strongly encouraged to register memory blocks which are aligned to the host cache-line size.
+ *  (typically 64-bytes but can be obtains from the CPUID instruction).
+ *
+ *  If registering non-aligned pointers, the application must take care when register pointers from the same cache line 
+ *  on different devices.  HIP's coarse-grained synchronization model does not guarantee correct results if different
+ *  devices write to different parts of the same cache block - typically one of the writes will "win" and overwrite data
+ *  from the other registered memory region.
+ *
+ *  @return #hipSuccess, #hipErrorMemoryAllocation
  */
 hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) ;
 
 /**
- *  @brief Un-pin host pointer
+ *  @brief Un-register host pointer
  *
- *  @param[in] hostPtr Pinned Host Pointer
+ *  @param[in] hostPtr Host pointer previously registered with #hipHostRegister
  *  @return Error code
  */
 hipError_t hipHostUnregister(void* hostPtr) ;
@@ -830,7 +862,7 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes );
 hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t = 0 );
 
 
-/*
+/**
  * @brief Query memory info.
  * Return snapshot of free memory, and total allocatable memory on the device.
  *
