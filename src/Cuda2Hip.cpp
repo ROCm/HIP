@@ -55,183 +55,211 @@ using namespace llvm;
 #define DEBUG_TYPE "cuda2hip"
 
 namespace {
-struct hipName {
-  hipName() {
+
+enum ConvTypes {
+  CONV_DEV = 0,
+  CONV_MEM,
+  CONV_KERN,
+  CONV_COORD_FUNC,
+  CONV_MATH_FUNC,
+  CONV_SPECIAL_FUNC,
+  CONV_STREAM,
+  CONV_EVENT,
+  CONV_ERR,
+  CONV_DEF,
+  CONV_TEX,
+  CONV_OTHER,
+  CONV_INC,
+  CONV_LAST
+} ;
+
+struct cuda2hipMap {
+  cuda2hipMap() {
     // defines
-    cuda2hipRename["__CUDACC__"] = "__HIPCC__";
+    cuda2hipRename["__CUDACC__"] = {"__HIPCC__", CONV_DEF};
 
     // includes
-    cuda2hipRename["cuda_runtime.h"] = "hip_runtime.h";
-    cuda2hipRename["cuda_runtime_api.h"] = "hip_runtime_api.h";
+    cuda2hipRename["cuda_runtime.h"] = {"hip_runtime.h", CONV_INC};
+    cuda2hipRename["cuda_runtime_api.h"] = {"hip_runtime_api.h", CONV_INC};
 
     // Error codes and return types:
-    cuda2hipRename["cudaError_t"] = "hipError_t";
-    cuda2hipRename["cudaError"] = "hipError";
-    cuda2hipRename["cudaSuccess"] = "hipSuccess";
+    cuda2hipRename["cudaError_t"] = {"hipError_t", CONV_ERR};
+    cuda2hipRename["cudaError"] = {"hipError", CONV_ERR};
+    cuda2hipRename["cudaSuccess"] = {"hipSuccess", CONV_ERR};
 
-    cuda2hipRename["cudaErrorUnknown"] = "hipErrorUnknown";
-    cuda2hipRename["cudaErrorMemoryAllocation"] = "hipErrorMemoryAllocation";
-    cuda2hipRename["cudaErrorMemoryFree"] = "hipErrorMemoryFree";
-    cuda2hipRename["cudaErrorUnknownSymbol"] = "hipErrorUnknownSymbol";
-    cuda2hipRename["cudaErrorOutOfResources"] = "hipErrorOutOfResources";
-    cuda2hipRename["cudaErrorInvalidValue"] = "hipErrorInvalidValue";
+    cuda2hipRename["cudaErrorUnknown"] = {"hipErrorUnknown", CONV_ERR};
+    cuda2hipRename["cudaErrorMemoryAllocation"] = {"hipErrorMemoryAllocation", CONV_ERR};
+    cuda2hipRename["cudaErrorMemoryFree"] = {"hipErrorMemoryFree", CONV_ERR};
+    cuda2hipRename["cudaErrorUnknownSymbol"] = {"hipErrorUnknownSymbol", CONV_ERR};
+    cuda2hipRename["cudaErrorOutOfResources"] = {"hipErrorOutOfResources", CONV_ERR};
+    cuda2hipRename["cudaErrorInvalidValue"] = {"hipErrorInvalidValue", CONV_ERR};
     cuda2hipRename["cudaErrorInvalidResourceHandle"] =
-        "hipErrorInvalidResourceHandle";
-    cuda2hipRename["cudaErrorInvalidDevice"] = "hipErrorInvalidDevice";
-    cuda2hipRename["cudaErrorNoDevice"] = "hipErrorNoDevice";
-    cuda2hipRename["cudaErrorNotReady"] = "hipErrorNotReady";
-    cuda2hipRename["cudaErrorUnknown"] = "hipErrorUnknown";
+        {"hipErrorInvalidResourceHandle", CONV_ERR};
+    cuda2hipRename["cudaErrorInvalidDevice"] = {"hipErrorInvalidDevice", CONV_ERR};
+    cuda2hipRename["cudaErrorNoDevice"] = {"hipErrorNoDevice", CONV_ERR};
+    cuda2hipRename["cudaErrorNotReady"] = {"hipErrorNotReady", CONV_ERR};
+    cuda2hipRename["cudaErrorUnknown"] = {"hipErrorUnknown", CONV_ERR};
 
     // error APIs:
-    cuda2hipRename["cudaGetLastError"] = "hipGetLastError";
-    cuda2hipRename["cudaPeekAtLastError"] = "hipPeekAtLastError";
-    cuda2hipRename["cudaGetErrorName"] = "hipGetErrorName";
-    cuda2hipRename["cudaGetErrorString"] = "hipGetErrorString";
+    cuda2hipRename["cudaGetLastError"] = {"hipGetLastError", CONV_ERR};
+    cuda2hipRename["cudaPeekAtLastError"] = {"hipPeekAtLastError", CONV_ERR};
+    cuda2hipRename["cudaGetErrorName"] = {"hipGetErrorName", CONV_ERR};
+    cuda2hipRename["cudaGetErrorString"] = {"hipGetErrorString", CONV_ERR};
 
     // Memcpy
-    cuda2hipRename["cudaMemcpy"] = "hipMemcpy";
-    cuda2hipRename["cudaMemcpyHostToHost"] = "hipMemcpyHostToHost";
-    cuda2hipRename["cudaMemcpyHostToDevice"] = "hipMemcpyHostToDevice";
-    cuda2hipRename["cudaMemcpyDeviceToHost"] = "hipMemcpyDeviceToHost";
-    cuda2hipRename["cudaMemcpyDeviceToDevice"] = "hipMemcpyDeviceToDevice";
-    cuda2hipRename["cudaMemcpyDefault"] = "hipMemcpyDefault";
-    cuda2hipRename["cudaMemcpyToSymbol"] = "hipMemcpyToSymbol";
-    cuda2hipRename["cudaMemset"] = "hipMemset";
-    cuda2hipRename["cudaMemsetAsync"] = "hipMemsetAsync";
-    cuda2hipRename["cudaMemcpyAsync"] = "hipMemcpyAsync";
-    cuda2hipRename["cudaMemGetInfo"] = "hipMemGetInfo";
-    cuda2hipRename["cudaMemcpyKind"] = "hipMemcpyKind";
+    cuda2hipRename["cudaMemcpy"] = {"hipMemcpy", CONV_MEM};
+    cuda2hipRename["cudaMemcpyHostToHost"] = {"hipMemcpyHostToHost", CONV_MEM};
+    cuda2hipRename["cudaMemcpyHostToDevice"] = {"hipMemcpyHostToDevice", CONV_MEM};
+    cuda2hipRename["cudaMemcpyDeviceToHost"] = {"hipMemcpyDeviceToHost", CONV_MEM};
+    cuda2hipRename["cudaMemcpyDeviceToDevice"] = {"hipMemcpyDeviceToDevice", CONV_MEM};
+    cuda2hipRename["cudaMemcpyDefault"] = {"hipMemcpyDefault", CONV_MEM};
+    cuda2hipRename["cudaMemcpyToSymbol"] = {"hipMemcpyToSymbol", CONV_MEM};
+    cuda2hipRename["cudaMemset"] = {"hipMemset", CONV_MEM};
+    cuda2hipRename["cudaMemsetAsync"] = {"hipMemsetAsync", CONV_MEM};
+    cuda2hipRename["cudaMemcpyAsync"] = {"hipMemcpyAsync", CONV_MEM};
+    cuda2hipRename["cudaMemGetInfo"] = {"hipMemGetInfo", CONV_MEM};
+    cuda2hipRename["cudaMemcpyKind"] = {"hipMemcpyKind", CONV_MEM};
 
     // Memory management :
-    cuda2hipRename["cudaMalloc"] = "hipMalloc";
-    cuda2hipRename["cudaMallocHost"] = "hipHostAlloc";
-    cuda2hipRename["cudaFree"] = "hipFree";
-    cuda2hipRename["cudaFreeHost"] = "hipHostFree";
+    cuda2hipRename["cudaMalloc"] = {"hipMalloc", CONV_MEM};
+    cuda2hipRename["cudaMallocHost"] = {"hipHostAlloc", CONV_MEM};
+    cuda2hipRename["cudaFree"] = {"hipFree", CONV_MEM};
+    cuda2hipRename["cudaFreeHost"] = {"hipHostFree", CONV_MEM};
 
     // Coordinate Indexing and Dimensions:
-    cuda2hipRename["threadIdx.x"] = "hipThreadIdx_x";
-    cuda2hipRename["threadIdx.y"] = "hipThreadIdx_y";
-    cuda2hipRename["threadIdx.z"] = "hipThreadIdx_z";
+    cuda2hipRename["threadIdx.x"] = {"hipThreadIdx_x", CONV_COORD_FUNC};
+    cuda2hipRename["threadIdx.y"] = {"hipThreadIdx_y", CONV_COORD_FUNC};
+    cuda2hipRename["threadIdx.z"] = {"hipThreadIdx_z", CONV_COORD_FUNC};
 
-    cuda2hipRename["blockIdx.x"] = "hipBlockIdx_x";
-    cuda2hipRename["blockIdx.y"] = "hipBlockIdx_y";
-    cuda2hipRename["blockIdx.z"] = "hipBlockIdx_z";
+    cuda2hipRename["blockIdx.x"] = {"hipBlockIdx_x", CONV_COORD_FUNC};
+    cuda2hipRename["blockIdx.y"] = {"hipBlockIdx_y", CONV_COORD_FUNC};
+    cuda2hipRename["blockIdx.z"] = {"hipBlockIdx_z", CONV_COORD_FUNC};
 
-    cuda2hipRename["blockDim.x"] = "hipBlockDim_x";
-    cuda2hipRename["blockDim.y"] = "hipBlockDim_y";
-    cuda2hipRename["blockDim.z"] = "hipBlockDim_z";
+    cuda2hipRename["blockDim.x"] = {"hipBlockDim_x", CONV_COORD_FUNC};
+    cuda2hipRename["blockDim.y"] = {"hipBlockDim_y", CONV_COORD_FUNC};
+    cuda2hipRename["blockDim.z"] = {"hipBlockDim_z", CONV_COORD_FUNC};
 
-    cuda2hipRename["gridDim.x"] = "hipGridDim_x";
-    cuda2hipRename["gridDim.y"] = "hipGridDim_y";
-    cuda2hipRename["gridDim.z"] = "hipGridDim_z";
+    cuda2hipRename["gridDim.x"] = {"hipGridDim_x", CONV_COORD_FUNC};
+    cuda2hipRename["gridDim.y"] = {"hipGridDim_y", CONV_COORD_FUNC};
+    cuda2hipRename["gridDim.z"] = {"hipGridDim_z", CONV_COORD_FUNC};
 
-    cuda2hipRename["blockIdx.x"] = "hipBlockIdx_x";
-    cuda2hipRename["blockIdx.y"] = "hipBlockIdx_y";
-    cuda2hipRename["blockIdx.z"] = "hipBlockIdx_z";
+    cuda2hipRename["blockIdx.x"] = {"hipBlockIdx_x", CONV_COORD_FUNC};
+    cuda2hipRename["blockIdx.y"] = {"hipBlockIdx_y", CONV_COORD_FUNC};
+    cuda2hipRename["blockIdx.z"] = {"hipBlockIdx_z", CONV_COORD_FUNC};
 
-    cuda2hipRename["blockDim.x"] = "hipBlockDim_x";
-    cuda2hipRename["blockDim.y"] = "hipBlockDim_y";
-    cuda2hipRename["blockDim.z"] = "hipBlockDim_z";
+    cuda2hipRename["blockDim.x"] = {"hipBlockDim_x", CONV_COORD_FUNC};
+    cuda2hipRename["blockDim.y"] = {"hipBlockDim_y", CONV_COORD_FUNC};
+    cuda2hipRename["blockDim.z"] = {"hipBlockDim_z", CONV_COORD_FUNC};
 
-    cuda2hipRename["gridDim.x"] = "hipGridDim_x";
-    cuda2hipRename["gridDim.y"] = "hipGridDim_y";
-    cuda2hipRename["gridDim.z"] = "hipGridDim_z";
+    cuda2hipRename["gridDim.x"] = {"hipGridDim_x", CONV_COORD_FUNC};
+    cuda2hipRename["gridDim.y"] = {"hipGridDim_y", CONV_COORD_FUNC};
+    cuda2hipRename["gridDim.z"] = {"hipGridDim_z", CONV_COORD_FUNC};
 
-    cuda2hipRename["warpSize"] = "hipWarpSize";
+    cuda2hipRename["warpSize"] = {"hipWarpSize", CONV_SPECIAL_FUNC};
 
     // Events
-    cuda2hipRename["cudaEvent_t"] = "hipEvent_t";
-    cuda2hipRename["cudaEventCreate"] = "hipEventCreate";
-    cuda2hipRename["cudaEventCreateWithFlags"] = "hipEventCreateWithFlags";
-    cuda2hipRename["cudaEventDestroy"] = "hipEventDestroy";
-    cuda2hipRename["cudaEventRecord"] = "hipEventRecord";
-    cuda2hipRename["cudaEventElapsedTime"] = "hipEventElapsedTime";
-    cuda2hipRename["cudaEventSynchronize"] = "hipEventSynchronize";
+    cuda2hipRename["cudaEvent_t"] = {"hipEvent_t", CONV_EVENT};
+    cuda2hipRename["cudaEventCreate"] = {"hipEventCreate", CONV_EVENT};
+    cuda2hipRename["cudaEventCreateWithFlags"] = {"hipEventCreateWithFlags", CONV_EVENT};
+    cuda2hipRename["cudaEventDestroy"] = {"hipEventDestroy", CONV_EVENT};
+    cuda2hipRename["cudaEventRecord"] = {"hipEventRecord", CONV_EVENT};
+    cuda2hipRename["cudaEventElapsedTime"] = {"hipEventElapsedTime", CONV_EVENT};
+    cuda2hipRename["cudaEventSynchronize"] = {"hipEventSynchronize", CONV_EVENT};
 
     // Streams
-    cuda2hipRename["cudaStream_t"] = "hipStream_t";
-    cuda2hipRename["cudaStreamCreate"] = "hipStreamCreate";
-    cuda2hipRename["cudaStreamCreateWithFlags"] = "hipStreamCreateWithFlags";
-    cuda2hipRename["cudaStreamDestroy"] = "hipStreamDestroy";
-    cuda2hipRename["cudaStreamWaitEvent"] = "hipStreamWaitEven";
-    cuda2hipRename["cudaStreamSynchronize"] = "hipStreamSynchronize";
-    cuda2hipRename["cudaStreamDefault"] = "hipStreamDefault";
-    cuda2hipRename["cudaStreamNonBlocking"] = "hipStreamNonBlocking";
+    cuda2hipRename["cudaStream_t"] = {"hipStream_t", CONV_STREAM};
+    cuda2hipRename["cudaStreamCreate"] = {"hipStreamCreate", CONV_STREAM};
+    cuda2hipRename["cudaStreamCreateWithFlags"] = {"hipStreamCreateWithFlags", CONV_STREAM};
+    cuda2hipRename["cudaStreamDestroy"] = {"hipStreamDestroy", CONV_STREAM};
+    cuda2hipRename["cudaStreamWaitEvent"] = {"hipStreamWaitEven", CONV_STREAM};
+    cuda2hipRename["cudaStreamSynchronize"] = {"hipStreamSynchronize", CONV_STREAM};
+    cuda2hipRename["cudaStreamDefault"] = {"hipStreamDefault", CONV_STREAM};
+    cuda2hipRename["cudaStreamNonBlocking"] = {"hipStreamNonBlocking", CONV_STREAM};
 
     // Other synchronization
-    cuda2hipRename["cudaDeviceSynchronize"] = "hipDeviceSynchronize";
+    cuda2hipRename["cudaDeviceSynchronize"] = {"hipDeviceSynchronize", CONV_DEV};
     cuda2hipRename["cudaThreadSynchronize"] =
-        "hipDeviceSynchronize"; // translate deprecated cudaThreadSynchronize
-    cuda2hipRename["cudaDeviceReset"] = "hipDeviceReset";
+        {"hipDeviceSynchronize", CONV_DEV}; // translate deprecated cudaThreadSynchronize
+    cuda2hipRename["cudaDeviceReset"] = {"hipDeviceReset", CONV_DEV};
     cuda2hipRename["cudaThreadExit"] =
-        "hipDeviceReset"; // translate deprecated cudaThreadExit
-    cuda2hipRename["cudaSetDevice"] = "hipSetDevice";
-    cuda2hipRename["cudaGetDevice"] = "hipGetDevice";
+        {"hipDeviceReset", CONV_DEV}; // translate deprecated cudaThreadExit
+    cuda2hipRename["cudaSetDevice"] = {"hipSetDevice", CONV_DEV};
+    cuda2hipRename["cudaGetDevice"] = {"hipGetDevice", CONV_DEV};
 
+    // Attribute
+    cuda2hipRename["bcudaDeviceAttr"] = {"hipDeviceAttribute_t", CONV_DEV};
+    cuda2hipRename["bcudaDeviceGetAttribute"] = {"hipDeviceGetAttribute", CONV_DEV};
+    
     // Device
-    cuda2hipRename["cudaDeviceProp"] = "hipDeviceProp_t";
-    cuda2hipRename["cudaGetDeviceProperties"] = "hipDeviceGetProperties";
+    cuda2hipRename["cudaDeviceProp"] = {"hipDeviceProp_t", CONV_DEV};
+    cuda2hipRename["cudaGetDeviceProperties"] = {"hipDeviceGetProperties", CONV_DEV};
 
     // Cache config
-    cuda2hipRename["cudaDeviceSetCacheConfig"] = "hipDeviceSetCacheConfig";
+    cuda2hipRename["cudaDeviceSetCacheConfig"] = {"hipDeviceSetCacheConfig", CONV_DEV};
     cuda2hipRename["cudaThreadSetCacheConfig"] =
-        "hipDeviceSetCacheConfig"; // translate deprecated
-    cuda2hipRename["cudaDeviceGetCacheConfig"] = "hipDeviceGetCacheConfig";
+        {"hipDeviceSetCacheConfig", CONV_DEV}; // translate deprecated
+    cuda2hipRename["cudaDeviceGetCacheConfig"] = {"hipDeviceGetCacheConfig", CONV_DEV};
     cuda2hipRename["cudaThreadGetCacheConfig"] =
-        "hipDeviceGetCacheConfig"; // translate deprecated
-    cuda2hipRename["cudaFuncCache"] = "hipFuncCache";
-    cuda2hipRename["cudaFuncCachePreferNone"] = "hipFuncCachePreferNone";
-    cuda2hipRename["cudaFuncCachePreferShared"] = "hipFuncCachePreferShared";
-    cuda2hipRename["cudaFuncCachePreferL1"] = "hipFuncCachePreferL1";
-    cuda2hipRename["cudaFuncCachePreferEqual"] = "hipFuncCachePreferEqual";
+        {"hipDeviceGetCacheConfig", CONV_DEV}; // translate deprecated
+    cuda2hipRename["cudaFuncCache"] = {"hipFuncCache", CONV_DEV};
+    cuda2hipRename["cudaFuncCachePreferNone"] = {"hipFuncCachePreferNone", CONV_DEV};
+    cuda2hipRename["cudaFuncCachePreferShared"] = {"hipFuncCachePreferShared", CONV_DEV};
+    cuda2hipRename["cudaFuncCachePreferL1"] = {"hipFuncCachePreferL1", CONV_DEV};
+    cuda2hipRename["cudaFuncCachePreferEqual"] = {"hipFuncCachePreferEqual", CONV_DEV};
     // function
-    cuda2hipRename["cudaFuncSetCacheConfig"] = "hipFuncSetCacheConfig";
+    cuda2hipRename["cudaFuncSetCacheConfig"] = {"hipFuncSetCacheConfig", CONV_DEV};
 
-    cuda2hipRename["cudaDriverGetVersion"] = "hipDriverGetVersion";
-    cuda2hipRename["cudaRuntimeGetVersion"] = "hipRuntimeGetVersion";
+    cuda2hipRename["cudaDriverGetVersion"] = {"hipDriverGetVersion", CONV_DEV};
+//    cuda2hipRename["cudaRuntimeGetVersion"] = {"hipRuntimeGetVersion", CONV_DEV};
 
     // Peer2Peer
-    cuda2hipRename["cudaDeviceCanAccessPeer"] = "hipDeviceCanAccessPeer";
+    cuda2hipRename["cudaDeviceCanAccessPeer"] = {"hipDeviceCanAccessPeer", CONV_DEV};
     cuda2hipRename["cudaDeviceDisablePeerAccess"] =
-        "hipDeviceDisablePeerAccess";
-    cuda2hipRename["cudaDeviceEnablePeerAccess"] = "hipDeviceEnablePeerAccess";
-    cuda2hipRename["cudaMemcpyPeerAsync"] = "hipMemcpyPeerAsync";
-    cuda2hipRename["cudaMemcpyPeer"] = "hipMemcpyPeer";
+        {"hipDeviceDisablePeerAccess", CONV_DEV};
+    cuda2hipRename["cudaDeviceEnablePeerAccess"] = {"hipDeviceEnablePeerAccess", CONV_DEV};
+    cuda2hipRename["cudaMemcpyPeerAsync"] = {"hipMemcpyPeerAsync", CONV_MEM};
+    cuda2hipRename["cudaMemcpyPeer"] = {"hipMemcpyPeer", CONV_MEM};
 
     // Shared mem:
     cuda2hipRename["cudaDeviceSetSharedMemConfig"] =
-        "hipDeviceSetSharedMemConfig";
+        {"hipDeviceSetSharedMemConfig", CONV_DEV};
     cuda2hipRename["cudaThreadSetSharedMemConfig"] =
-        "hipDeviceSetSharedMemConfig"; // translate deprecated
+        {"hipDeviceSetSharedMemConfig", CONV_DEV}; // translate deprecated
     cuda2hipRename["cudaDeviceGetSharedMemConfig"] =
-        "hipDeviceGetSharedMemConfig";
+        {"hipDeviceGetSharedMemConfig", CONV_DEV};
     cuda2hipRename["cudaThreadGetSharedMemConfig"] =
-        "hipDeviceGetSharedMemConfig"; // translate deprecated
-    cuda2hipRename["cudaSharedMemConfig"] = "hipSharedMemConfig";
+        {"hipDeviceGetSharedMemConfig", CONV_DEV}; // translate deprecated
+    cuda2hipRename["cudaSharedMemConfig"] = {"hipSharedMemConfig", CONV_DEV};
     cuda2hipRename["cudaSharedMemBankSizeDefault"] =
-        "hipSharedMemBankSizeDefault";
+        {"hipSharedMemBankSizeDefault", CONV_DEV};
     cuda2hipRename["cudaSharedMemBankSizeFourByte"] =
-        "hipSharedMemBankSizeFourByte";
+        {"hipSharedMemBankSizeFourByte", CONV_DEV};
     cuda2hipRename["cudaSharedMemBankSizeEightByte"] =
-        "hipSharedMemBankSizeEightByte";
+        {"hipSharedMemBankSizeEightByte", CONV_DEV};
 
-    cuda2hipRename["cudaGetDeviceCount"] = "hipGetDeviceCount";
+    cuda2hipRename["cudaGetDeviceCount"] = {"hipGetDeviceCount", CONV_DEV};
 
     // Profiler
     // cuda2hipRename["cudaProfilerInitialize"] = "hipProfilerInitialize";  //
     // see if these are called anywhere.
-    cuda2hipRename["cudaProfilerStart"] = "hipProfilerStart";
-    cuda2hipRename["cudaProfilerStop"] = "hipProfilerStop";
+    cuda2hipRename["cudaProfilerStart"] = {"hipProfilerStart", CONV_OTHER};
+    cuda2hipRename["cudaProfilerStop"] = {"hipProfilerStop", CONV_OTHER};
 
-    cuda2hipRename["cudaChannelFormatDesc"] = "hipChannelFormatDesc";
-    cuda2hipRename["cudaFilterModePoint"] = "hipFilterModePoint";
-    cuda2hipRename["cudaReadModeElementType"] = "hipReadModeElementType";
+    cuda2hipRename["cudaChannelFormatDesc"] = {"hipChannelFormatDesc", CONV_TEX};
+    cuda2hipRename["cudaFilterModePoint"] = {"hipFilterModePoint", CONV_TEX};
+    cuda2hipRename["cudaReadModeElementType"] = {"hipReadModeElementType", CONV_TEX};
 
-    cuda2hipRename["cudaCreateChannelDesc"] = "hipCreateChannelDesc";
-    cuda2hipRename["cudaBindTexture"] = "hipBindTexture";
-    cuda2hipRename["cudaUnbindTexture"] = "hipUnbindTexture";
+    cuda2hipRename["cudaCreateChannelDesc"] = {"hipCreateChannelDesc", CONV_TEX};
+    cuda2hipRename["cudaBindTexture"] = {"hipBindTexture", CONV_TEX};
+    cuda2hipRename["cudaUnbindTexture"] = {"hipUnbindTexture", CONV_TEX};
   }
-  DenseMap<StringRef, StringRef> cuda2hipRename;
+  
+  struct HipNames {
+    StringRef hipName;
+    ConvTypes countType;
+  };
+  
+  SmallDenseMap<StringRef, HipNames, 128> cuda2hipRename;
 };
 
 StringRef unquoteStr(StringRef s) {
@@ -240,13 +268,13 @@ StringRef unquoteStr(StringRef s) {
   return s;
 }
 
-void processString(StringRef s, struct hipName &map, Replacements *Replace,
+static void processString(StringRef s, struct cuda2hipMap &map, Replacements *Replace,
                    SourceManager &SM, SourceLocation start) {
   size_t begin = 0;
   while ((begin = s.find("cuda", begin)) != StringRef::npos) {
     const size_t end = s.find_first_of(" ", begin + 4);
     StringRef name = s.slice(begin, end);
-    StringRef repName = map.cuda2hipRename[name];
+    StringRef repName = map.cuda2hipRename[name].hipName;
     if (!repName.empty()) {
       SourceLocation sl = start.getLocWithOffset(begin + 1);
       Replacement Rep(SM, sl, name.size(), repName);
@@ -283,7 +311,7 @@ struct HipifyPPCallbacks : public PPCallbacks, public SourceFileCallbacks {
     if (_sm->isWrittenInMainFile(hash_loc)) {
       if (is_angled) {
         if (N.cuda2hipRename.count(file_name)) {
-          StringRef repName = N.cuda2hipRename[file_name];
+          StringRef repName = N.cuda2hipRename[file_name].hipName;
           DEBUG(dbgs() << "Include file found: " << file_name << "\n"
                        << "SourceLocation:"
                        << filename_range.getBegin().printToString(*_sm) << "\n"
@@ -309,7 +337,7 @@ struct HipifyPPCallbacks : public PPCallbacks, public SourceFileCallbacks {
         if (T.isAnyIdentifier()) {
           StringRef name = T.getIdentifierInfo()->getName();
           if (N.cuda2hipRename.count(name)) {
-            StringRef repName = N.cuda2hipRename[name];
+            StringRef repName = N.cuda2hipRename[name].hipName;
             SourceLocation sl = T.getLocation();
             DEBUG(dbgs() << "Identifier " << name
                          << " found in definition of macro "
@@ -353,7 +381,7 @@ struct HipifyPPCallbacks : public PPCallbacks, public SourceFileCallbacks {
           if (tok.isAnyIdentifier()) {
             StringRef name = tok.getIdentifierInfo()->getName();
             if (N.cuda2hipRename.count(name)) {
-              StringRef repName = N.cuda2hipRename[name];
+              StringRef repName = N.cuda2hipRename[name].hipName;
               DEBUG(dbgs() << "Identifier " << name
                            << " found as an actual argument in expansion of macro "
                            << macroName << "\n"
@@ -383,7 +411,7 @@ private:
   Preprocessor *_pp;
 
   Replacements *Replace;
-  struct hipName N;
+  struct cuda2hipMap N;
 };
 
 class Cuda2HipCallback : public MatchFinder::MatchCallback {
@@ -435,7 +463,7 @@ public:
       const FunctionDecl *funcDcl = call->getDirectCallee();
       StringRef name = funcDcl->getDeclName().getAsString();
       if (N.cuda2hipRename.count(name)) {
-        StringRef repName = N.cuda2hipRename[name];
+        StringRef repName = N.cuda2hipRename[name].hipName;
         SourceLocation sl = call->getLocStart();
         Replacement Rep(*SM, SM->isMacroArgExpansion(sl)
                                  ? SM->getImmediateSpellingLoc(sl)
@@ -533,7 +561,7 @@ public:
           memberName = memberName.slice(pos, memberName.size());
           SmallString<128> tmpData;
           name = Twine(name + "." + memberName).toStringRef(tmpData);
-          StringRef repName = N.cuda2hipRename[name];
+          StringRef repName = N.cuda2hipRename[name].hipName;
           SourceLocation sl = threadIdx->getLocStart();
           Replacement Rep(*SM, sl, name.size(), repName);
           Replace->insert(Rep);
@@ -544,7 +572,7 @@ public:
     if (const DeclRefExpr *cudaEnumConstantRef =
             Result.Nodes.getNodeAs<clang::DeclRefExpr>("cudaEnumConstantRef")) {
       StringRef name = cudaEnumConstantRef->getDecl()->getNameAsString();
-      StringRef repName = N.cuda2hipRename[name];
+      StringRef repName = N.cuda2hipRename[name].hipName;
       SourceLocation sl = cudaEnumConstantRef->getLocStart();
       Replacement Rep(*SM, sl, name.size(), repName);
       Replace->insert(Rep);
@@ -554,7 +582,7 @@ public:
             Result.Nodes.getNodeAs<clang::VarDecl>("cudaEnumConstantDecl")) {
       StringRef name =
           cudaEnumConstantDecl->getType()->getAsTagDecl()->getNameAsString();
-      StringRef repName = N.cuda2hipRename[name];
+      StringRef repName = N.cuda2hipRename[name].hipName;
       SourceLocation sl = cudaEnumConstantDecl->getLocStart();
       Replacement Rep(*SM, sl, name.size(), repName);
       Replace->insert(Rep);
@@ -566,7 +594,7 @@ public:
                            ->getAsStructureType()
                            ->getDecl()
                            ->getNameAsString();
-      StringRef repName = N.cuda2hipRename[name];
+      StringRef repName = N.cuda2hipRename[name].hipName;
       TypeLoc TL = cudaStructVar->getTypeSourceInfo()->getTypeLoc();
       SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
       Replacement Rep(*SM, sl, name.size(), repName);
@@ -578,7 +606,7 @@ public:
       const Type *t = cudaStructVarPtr->getType().getTypePtrOrNull();
       if (t) {
         StringRef name = t->getPointeeCXXRecordDecl()->getName();
-        StringRef repName = N.cuda2hipRename[name];
+        StringRef repName = N.cuda2hipRename[name].hipName;
         TypeLoc TL = cudaStructVarPtr->getTypeSourceInfo()->getTypeLoc();
         SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
         Replacement Rep(*SM, sl, name.size(), repName);
@@ -594,7 +622,7 @@ public:
       if (t->isStructureOrClassType()) {
         name = t->getAsCXXRecordDecl()->getName();
       }
-      StringRef repName = N.cuda2hipRename[name];
+      StringRef repName = N.cuda2hipRename[name].hipName;
       TypeLoc TL = cudaParamDecl->getTypeSourceInfo()->getTypeLoc();
       SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
       Replacement Rep(*SM, sl, name.size(), repName);
@@ -610,7 +638,7 @@ public:
         StringRef name = t->isStructureOrClassType()
                              ? t->getAsCXXRecordDecl()->getName()
                              : StringRef(QT.getAsString());
-        StringRef repName = N.cuda2hipRename[name];
+        StringRef repName = N.cuda2hipRename[name].hipName;
         TypeLoc TL = cudaParamDeclPtr->getTypeSourceInfo()->getTypeLoc();
         SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
         Replacement Rep(*SM, sl, name.size(), repName);
@@ -633,7 +661,7 @@ public:
       QualType QT = typeInfo->getType().getUnqualifiedType();
       const Type *type = QT.getTypePtr();
       StringRef name = type->getAsCXXRecordDecl()->getName();
-      StringRef repName = N.cuda2hipRename[name];
+      StringRef repName = N.cuda2hipRename[name].hipName;
       TypeLoc TL = typeInfo->getTypeLoc();
       SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
       Replacement Rep(*SM, sl, name.size(), repName);
@@ -644,7 +672,7 @@ public:
 private:
   Replacements *Replace;
   ast_matchers::MatchFinder *owner;
-  struct hipName N;
+  struct cuda2hipMap N;
 };
 
 } // end anonymous namespace
@@ -661,10 +689,18 @@ static cl::opt<std::string> OutputFilename("o", cl::desc("Output filename"),
 static cl::opt<bool>
     Inplace("inplace",
             cl::desc("Modify input file inplace, replacing input with hipified "
-                     "output, save backup in .prehip file. "
-                     "If .prehip file exists, use that as input to hip."),
+                     "output, save backup in .prehip file. "),
             cl::value_desc("inplace"), cl::cat(ToolTemplateCategory));
 
+static cl::opt<bool>
+    NoOutput("no-output",
+            cl::desc("don't write any translated output to stdout"),
+            cl::value_desc("no-output"), cl::cat(ToolTemplateCategory));
+static cl::opt<bool>
+    PrintStats("print-stats",
+            cl::desc("print the command-line, like a header"),
+            cl::value_desc("print-stats"), cl::cat(ToolTemplateCategory));
+ 
 int main(int argc, const char **argv) {
 
   llvm::sys::PrintStackTraceOnErrorSignal();
@@ -693,6 +729,7 @@ int main(int argc, const char **argv) {
     dst += ".cu";
   }
 
+  // copy source file since tooling makes changes "inplace"
   std::ifstream source(fileSources[0], std::ios::binary);
   std::ofstream dest(Inplace ? dst + ".prehip" : dst, std::ios::binary);
   dest << source.rdbuf();
