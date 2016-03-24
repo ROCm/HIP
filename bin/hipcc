@@ -124,8 +124,10 @@ if ($verbose & 0x4) {
 	print "hipcc-args: ", join (" ", @ARGV), "\n";
 }
 
+my $toolArgs = "";  # arguments to pass to the hcc or nvcc tool
 foreach $arg (@ARGV) 
 {
+    my $swallowArg = 0;
     if ($arg eq '-c') {
         $compileOnly = 1;
         $needCXXFLAGS = 1;
@@ -138,7 +140,17 @@ foreach $arg (@ARGV)
 
     if ($arg =~ m/^-/) {
         # options start with -
-        push (@options, $arg);
+        
+        # Process HIPCC options here:
+        if ($arg =~ m/^--hipcc/) {
+            $swallowArg = 1;
+            if ($arg eq "--hipcc_explicit_lib") {
+                # Some environments (ie cmake tests) already link their own hip_hcc.o, so don't add here:
+                $needHipHcc = 0;
+            }
+        } else {
+            push (@options, $arg);
+        }
         #print "O: <$arg>\n";
     } else  {
         # input files and libraries 
@@ -151,13 +163,10 @@ foreach $arg (@ARGV)
             $needCXXFLAGS = 1;
         }
 
-        if (($arg =~ /hip_hcc\.o$/) or ($arg =~ /hip_hcc\.cpp$/)) {
-            $needHipHcc = 0;
-        }
-
         push (@inputs, $arg);
         #print "I: <$arg>\n";
     }
+    $toolArgs .= " $arg" unless $swallowArg;
 }
 
 if ($hasC and $HIP_PLATFORM eq 'nvcc') {
@@ -172,30 +181,6 @@ if (($verbose & 0x18) and ($HIP_PLATFORM eq 'hcc')) {
 }
 
 if ($needHipHcc) {
-    # See if we need to remake the .o file:
-#    my $source = "$HIP_PATH/src/hip_hcc.cpp" ;
-#    my $object = "$HIP_PATH/src/hip_hcc.o" ;
-
-    # remake if object does not exist, or if source is newer than object:
-#    if ((not -e $object) or ((stat($source))[9] > (stat($object))[9]))  {
-#        my $CMD = "$HCC $HCCFLAGS  -I$HSA_PATH/include -I$HIP_PATH/include -Wall -c $source -o $object";
-#        if ($verbose & 0x10) {
-#            $CMD .= " -g -O0" ;
-#        } else {
-#            $CMD .= " -O3" ;
-#        }
-
-#        $CMD .= " -I$marker_path/include";
-
-
-#        if ($verbose & 0x1) {
-#            print "remake-deps:", $CMD, "\n";
-#        }
-#        system ("$CMD") and die ("remake-deps failed");
-
-        
-#    }
-    
     $HIPLDFLAGS .= " -L/opt/hip/lib -lhip_hcc" ;
 }
 
@@ -205,7 +190,6 @@ if ($needHipHcc) {
 # pass-through CPP mode.
 
 
-$args = join(" ", @ARGV);
 
 my $CMD="$HIPCC";
 if ($needCXXFLAGS) {
@@ -214,7 +198,7 @@ if ($needCXXFLAGS) {
 if ($needLDFLAGS and not $compileOnly) {
     $CMD .= " $HIPLDFLAGS";
 }
-$CMD .= " $args";
+$CMD .= " $toolArgs";
 
 if ($verbose & 0x1) {
     print "hipcc-cmd: ", $CMD, "\n";
