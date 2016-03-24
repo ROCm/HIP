@@ -3,6 +3,9 @@ project(hip_hcc)
 
 set(HCC_PATH "/opt/hcc")
 set(HSA_PATH "/opt/hsa")
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX "/opt/hip" CACHE PATH "Default installation path of hip" FORCE)
+endif ()
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
@@ -16,9 +19,9 @@ set(SOURCE_FILES src/hip_hcc.cpp src/staging_buffer.cpp)
 
 add_library(hip_hcc STATIC ${SOURCE_FILES})
 
-install(TARGETS hip_hcc DESTINATION /opt/hip/lib)
-install(DIRECTORY src DESTINATION /opt/hip)
-install(DIRECTORY bin DESTINATION /opt/hip USE_SOURCE_PERMISSIONS)
-install(DIRECTORY include DESTINATION /opt/hip)
+install(TARGETS hip_hcc DESTINATION lib)
+install(DIRECTORY src DESTINATION .)
+install(DIRECTORY bin DESTINATION . USE_SOURCE_PERMISSIONS)
+install(DIRECTORY include DESTINATION .)
 
 
