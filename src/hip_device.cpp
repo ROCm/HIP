@@ -1,3 +1,6 @@
+#include "hip_runtime.h"
+#include "hcc_detail/hip_hcc.h"
+#include "hcc_detail/trace_helper.h"
 
 //-------------------------------------------------------------------------------------------------
 //Devices
@@ -111,7 +114,6 @@ hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig )
 hipError_t hipSetDevice(int device)
 {
     HIP_INIT_API(device);
-
     if ((device < 0) || (device >= g_deviceCnt)) {
         return ihipLogStatus(hipErrorInvalidDevice);
     } else {
@@ -263,3 +265,6 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device)
 
     return ihipLogStatus(e);
 }
+
+
+

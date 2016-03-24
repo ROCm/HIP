@@ -1,3 +1,7 @@
+#include "hip_runtime.h"
+#include "hcc_detail/hip_hcc.h"
+#include "hcc_detail/trace_helper.h"
+
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -116,3 +120,6 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags)
         return ihipLogStatus(hipSuccess);
     }
 }
+
+
+

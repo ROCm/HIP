@@ -39,7 +39,7 @@ THE SOFTWARE.
 #define CUDA_SUCCESS hipSuccess
 
 #include <hip_runtime_api.h>
-
+#include "hcc_detail/hip_hcc.h"
 //---
 // Remainder of this file only compiles with HCC
 #ifdef __HCC__
@@ -52,7 +52,6 @@ THE SOFTWARE.
 
 #include <hcc_detail/hip_texture.h>
 #include <hcc_detail/host_defines.h>
-
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
 #if defined (__KALMAR_ACCELERATOR__) && not defined (__HCC_ACCELERATOR__)
 #define __HCC_ACCELERATOR__  __KALMAR_ACCELERATOR__
@@ -496,8 +495,6 @@ __device__ inline float __dsqrt_rz(double x) {return hc::fast_math::sqrt(x); };
         }\
     }
 #endif
-
-
 
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
 

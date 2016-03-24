@@ -1,3 +1,6 @@
+#include "hip_runtime.h"
+#include "hcc_detail/hip_hcc.h"
+#include "hcc_detail/trace_helper.h"
 
 /**
  * @warning HCC returns 0 in *canAccessPeer ; Need to update this function when RT supports P2P
@@ -56,3 +59,21 @@ hipError_t hipMemcpyPeerAsync ( void* dst, int  dstDevice, const void* src, int 
     // HCC has a unified memory architecture so device specifiers are not required.
     return hipMemcpyAsync(dst, src, sizeBytes, hipMemcpyDefault, stream);
 };
+
+
+/**
+ * @return #hipSuccess
+ */
+//---
+hipError_t hipDriverGetVersion(int *driverVersion)
+{
+    HIP_INIT_API(driverVersion);
+
+    if (driverVersion) {
+        *driverVersion = 4;
+    }
+
+    return ihipLogStatus(hipSuccess);
+}
+
+

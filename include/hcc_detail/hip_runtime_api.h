@@ -30,7 +30,8 @@ THE SOFTWARE.
 #include <stddef.h>
 
 #include <hcc_detail/host_defines.h>
-#include <hcc_detail/hip_hcc.h>
+#include <hip_runtime_api.h>
+#include "hip_hcc.h"
 
 #if defined (__HCC__) &&  (__hcc_workweek__ < 1602)
 #error("This version of HIP requires a newer version of HCC.");
