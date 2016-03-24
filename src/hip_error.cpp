@@ -1,3 +1,7 @@
+#include "hip_runtime.h"
+#include "hcc_detail/hip_hcc.h"
+#include "hcc_detail/trace_helper.h"
+
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 // Error Handling
@@ -25,31 +29,6 @@ hipError_t hipPeakAtLastError()
     // peak at last error, but don't reset it. 
     return ihipLogStatus(tls_lastHipError);
 }
-
-
-const char *ihipErrorString(hipError_t hip_error)
-{
-    switch (hip_error) {
-        case hipSuccess                     : return "hipSuccess";
-        case hipErrorMemoryAllocation       : return "hipErrorMemoryAllocation";
-        case hipErrorMemoryFree             : return "hipErrorMemoryFree";
-        case hipErrorUnknownSymbol          : return "hipErrorUnknownSymbol";
-        case hipErrorOutOfResources         : return "hipErrorOutOfResources";
-        case hipErrorInvalidValue           : return "hipErrorInvalidValue";
-        case hipErrorInvalidResourceHandle  : return "hipErrorInvalidResourceHandle";
-        case hipErrorInvalidDevice          : return "hipErrorInvalidDevice";
-        case hipErrorInvalidMemcpyDirection : return "hipErrorInvalidMemcpyDirection";
-        case hipErrorNoDevice               : return "hipErrorNoDevice";
-        case hipErrorNotReady               : return "hipErrorNotReady";
-        case hipErrorRuntimeMemory          : return "hipErrorRuntimeMemory";
-        case hipErrorRuntimeOther           : return "hipErrorRuntimeOther";
-        case hipErrorUnknown                : return "hipErrorUnknown";
-        case hipErrorTbd                    : return "hipErrorTbd";
-        default                             : return "hipErrorUnknown";
-    };
-};
-
-
 
 //---
 const char *hipGetErrorName(hipError_t hip_error)

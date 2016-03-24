@@ -2,8 +2,9 @@
 #define HIP_HCC_H
 
 #include <hc.hpp>
-#include "hip_util.h"
-#include "staging_buffer.h"
+#include "hcc_detail/hip_util.h"
+#include "hcc_detail/staging_buffer.h"
+
 #define HIP_HCC
 
 #if defined(__HCC__) && (__hcc_workweek__ < 1502)
@@ -22,29 +23,30 @@
 
 // Intended to distinguish whether an environment variable should be visible only in debug mode, or in debug+release.
 //static const int debug = 0;
-static const int release = 1;
+extern const int release;
 
+extern int HIP_LAUNCH_BLOCKING;
 
-static int HIP_LAUNCH_BLOCKING = 0;
-
-static int HIP_PRINT_ENV = 0;
-static int HIP_TRACE_API= 0;
-static int HIP_DB= 0;
-static int HIP_STAGING_SIZE = 64;   /* size of staging buffers, in KB */
-static int HIP_STAGING_BUFFERS = 2;    // TODO - remove, two buffers should be enough.
-static int HIP_PININPLACE = 0;
-static int HIP_STREAM_SIGNALS = 2;  /* number of signals to allocate at stream creation */
-static int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
-
+extern int HIP_PRINT_ENV;
+extern int HIP_TRACE_API;
+extern int HIP_DB;
+extern int HIP_STAGING_SIZE;   /* size of staging buffers, in KB */
+extern int HIP_STAGING_BUFFERS;    // TODO - remove, two buffers should be enough.
+extern int HIP_PININPLACE;
+extern int HIP_STREAM_SIGNALS;  /* number of signals to allocate at stream creation */
+extern int HIP_VISIBLE_DEVICES; /* Contains a comma-separated sequence of GPU identifiers */
 
 
 //---
 // Chicken bits for disabling functionality to work around potential issues:
-static int HIP_DISABLE_HW_KERNEL_DEP = 1;
-static int HIP_DISABLE_HW_COPY_DEP = 1;
+extern int HIP_DISABLE_HW_KERNEL_DEP;
+extern int HIP_DISABLE_HW_COPY_DEP;
 
-static thread_local int tls_defaultDevice = 0;
-static thread_local hipError_t tls_lastHipError = hipSuccess;
+extern thread_local int tls_defaultDevice;
+extern thread_local hipError_t tls_lastHipError;
+struct ihipStream_t;
+struct ihipDevice_t;
+
 
 // Color defs for debug messages:
 #define KNRM  "\x1B[0m"
@@ -96,7 +98,7 @@ static thread_local hipError_t tls_lastHipError = hipSuccess;
 
 
 // #include CPP files to produce one object file
-//#define ONE_OBJECT_FILE 1
+#define ONE_OBJECT_FILE 1
 
 
 // Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function boundary.
@@ -133,6 +135,16 @@ static thread_local hipError_t tls_lastHipError = hipSuccess;
 #define HIP_INIT_API(...) \
 	std::call_once(hip_initialized, ihipInit);\
     API_TRACE(__VA_ARGS__);
+
+#define ihipLogStatus(_hip_status) \
+    ({\
+        tls_lastHipError = _hip_status;\
+        \
+        if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API) {\
+            fprintf(stderr, "  %ship-api: %-30s ret=%2d (%s)>>\n" KNRM, (_hip_status == 0) ? API_COLOR:KRED, __func__, _hip_status, ihipErrorString(_hip_status));\
+        }\
+        _hip_status;\
+    })
 
 
 
@@ -179,14 +191,11 @@ public:
 };
 
 
-struct ihipStream_t;
-struct ihipDevice_t;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef class ihipStream_t *hipStream_t;
+typedef class ihipStream_t* hipStream_t;
 typedef struct hipEvent_t {
     struct ihipEvent_t *_handle;
 } hipEvent_t;
@@ -387,13 +396,95 @@ private:
 
 
 // Global initialization.
-static std::once_flag hip_initialized;
-static ihipDevice_t *g_devices; // Array of all non-emulated (ie GPU) accelerators in the system.
-static bool g_visible_device = false; // Set the flag when HIP_VISIBLE_DEVICES is set
-static unsigned g_deviceCnt;
-static std::vector<int> g_hip_visible_devices; /* vector of integers that contains the visible device IDs */
-static hsa_agent_t g_cpu_agent ;   // the CPU agent.
+extern std::once_flag hip_initialized;
+extern ihipDevice_t *g_devices; // Array of all non-emulated (ie GPU) accelerators in the system.
+extern bool g_visible_device; // Set the flag when HIP_VISIBLE_DEVICES is set
+extern unsigned g_deviceCnt;
+extern std::vector<int> g_hip_visible_devices; /* vector of integers that contains the visible device IDs */
+extern hsa_agent_t g_cpu_agent ;   // the CPU agent.
 //=================================================================================================
+void ihipInit();
+const char *ihipErrorString(hipError_t);
+ihipDevice_t *ihipGetTlsDefaultDevice();
+ihipDevice_t *ihipGetDevice(int);
+void ihipSetTs(hipEvent_t e);
 
+template<typename T>
+hc::completion_future ihipMemcpyKernel(hipStream_t, T*, const T*, size_t);
+
+template<typename T>
+hc::completion_future ihipMemsetKernel(hipStream_t, T*, T, size_t);
+
+hipStream_t ihipSyncAndResolveStream(hipStream_t);
+template <typename T>
+
+hc::completion_future
+ihipMemsetKernel(hipStream_t stream, T * ptr, T val, size_t sizeBytes)
+{
+    int wg = std::min((unsigned)8, stream->getDevice()->_compute_units);
+    const int threads_per_wg = 256;
+
+    int threads = wg * threads_per_wg;
+    if (threads > sizeBytes) {
+        threads = ((sizeBytes + threads_per_wg - 1) / threads_per_wg) * threads_per_wg;
+    }
+
+
+    hc::extent<1> ext(threads);
+    auto ext_tile = ext.tile(threads_per_wg);
+
+    hc::completion_future cf =
+    hc::parallel_for_each(
+            stream->_av,
+            ext_tile,
+            [=] (hc::tiled_index<1> idx)
+            __attribute__((hc))
+    {
+        int offset = amp_get_global_id(0);
+        // TODO-HCC - change to hc_get_local_size()
+        int stride = amp_get_local_size(0) * hc_get_num_groups(0) ;
+
+        for (int i=offset; i<sizeBytes; i+=stride) {
+            ptr[i] = val;
+        }
+    });
+
+    return cf;
+}
+
+template <typename T>
+hc::completion_future
+ihipMemcpyKernel(hipStream_t stream, T * c, const T * a, size_t sizeBytes)
+{
+    int wg = std::min((unsigned)8, stream->getDevice()->_compute_units);
+    const int threads_per_wg = 256;
+
+    int threads = wg * threads_per_wg;
+    if (threads > sizeBytes) {
+        threads = ((sizeBytes + threads_per_wg - 1) / threads_per_wg) * threads_per_wg;
+    }
+
+
+    hc::extent<1> ext(threads);
+    auto ext_tile = ext.tile(threads_per_wg);
+
+    hc::completion_future cf =
+    hc::parallel_for_each(
+            stream->_av,
+            ext_tile,
+            [=] (hc::tiled_index<1> idx)
+            __attribute__((hc))
+    {
+        int offset = amp_get_global_id(0);
+        // TODO-HCC - change to hc_get_local_size()
+        int stride = amp_get_local_size(0) * hc_get_num_groups(0) ;
+
+        for (int i=offset; i<sizeBytes; i+=stride) {
+            c[i] = a[i];
+        }
+    });
+
+    return cf;
+}
 
 #endif
