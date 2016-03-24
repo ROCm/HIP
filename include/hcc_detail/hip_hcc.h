@@ -96,7 +96,7 @@ static thread_local hipError_t tls_lastHipError = hipSuccess;
 
 
 // #include CPP files to produce one object file
-#define ONE_OBJECT_FILE 1
+//#define ONE_OBJECT_FILE 1
 
 
 // Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function boundary.
