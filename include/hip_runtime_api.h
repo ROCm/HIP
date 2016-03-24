@@ -222,7 +222,7 @@ static inline hipError_t hipMalloc ( T** devPtr, size_t size)
 
 // Provide an override to automatically typecast the pointer type from void**, and also provide a default for the flags.
 template<class T>
-static inline hipError_t hipHostMalloc( T** ptr, size_t size, unsigned int flags = hipHostMallocDefault)
+static inline hipError_t hipHostMalloc( T** ptr, size_t size, unsigned int flags = 0)
 {
     return hipHostMalloc((void**)ptr, size, flags);
 }
