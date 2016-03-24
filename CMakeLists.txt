@@ -11,8 +11,14 @@ MESSAGE ("HCC_HOME=" ${HCC_HOME})
 
 set(HSA_PATH "/opt/hsa")
 
+
+set (HIP_INSTALL_PATH $ENV{HIP_PATH})
+if (NOT DEFINED HIP_INSTALL_PATH)
+    set (HIP_INSTALLPATH /opt/hip)
+endif()
+
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX "/opt/hip" CACHE PATH "Default installation path of hip" FORCE)
+    set(CMAKE_INSTALL_PREFIX "${HIP_INSTALL_PATH}" CACHE PATH "Default installation path of hip" FORCE)
 endif ()
 
 include_directories(${PROJECT_SOURCE_DIR}/include)

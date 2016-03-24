@@ -26,7 +26,7 @@ exit(-1);
 
 $verbose = $ENV{'HIPCC_VERBOSE'};
 $verbose = 0 unless defined $verbose;
-# Verbose: 0x1=commands, 0x2=paths, 0x4=hippc args, 0x8=force remake hip_hcc.o, 16=remake hip_hcc in debug.
+# Verbose: 0x1=commands, 0x2=paths, 0x4=hippc args
 
 $HIP_PATH=$ENV{'HIP_PATH'};
 $HIP_PATH=dirname (dirname $0) unless defined $HIP_PATH;        # use parent directory of hipcc
@@ -176,12 +176,9 @@ if ($hasCU and $HIP_PLATFORM eq 'hcc') {
     $HIPCXXFLAGS .= " -x c++";
 }
 
-if (($verbose & 0x18) and ($HIP_PLATFORM eq 'hcc')) {
-    $needHipHcc = 1; 
-}
-
 if ($needHipHcc) {
-    $HIPLDFLAGS .= " -L/opt/hip/lib -lhip_hcc" ;
+    #$HIPLDFLAGS .= " -L/opt/hip/lib -lhip_hcc" ;
+    $HIPLDFLAGS .= " -L$HIP_PATH/lib -lhip_hcc" ;
 }
 
 # hipcc currrently requires separate compilation of source files, ie it is not possible to pass
