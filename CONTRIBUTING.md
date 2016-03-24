@@ -52,8 +52,21 @@ The unix `date` command can print the HCC-format work-week for a specific date ,
 
 HIP includes unit tests in the tests/src directory.  
 When adding a new HIP feature, add a new unit test as well.
-The tests/src/hipMemtest.cpp file contains a simple unit test and is a good starting point for other tests.  
-Modify tests/src/CMakefiles.txt to add the test to the build environment.
+See [tests/README.md](README.md) for more information.
+
+## Development Flow
+The Unit testing environment automatically rebuilds libhip_hcc.a and the tests when a change it made to the HIP source, and this 
+is a great place to develop new features alongside the associated test.  
+
+For applications and benchmarks outside the directed test environment, developments should use a two-step development flow:
+- #1. Compile, link, and install HCC.  See [Installation](README.md#Installation) notes.
+- #2. Relink the target application to include changes in the libhip_hcc.a file.
+
+## Environment Variables
+- **HIP_PATH** : Location of HIP include, src, bin, lib directories.  
+- **HCC_HOME** : Path to HCC compiler.  Default /opt/hcc.
+- **HSA_PATH** : Path to HSA include, lib.  Default /opt/hcc.
+- **CUDA_PATH* : On nvcc system, this points to root of CUDA installation.
 
 ### Contribution guidelines ###
 
