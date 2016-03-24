@@ -17,20 +17,28 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include "test_common.h"
 
-#ifndef HIP_UTIL_H
-#define HIP_UTIL_H
+int main()
+{
+    unsigned flag = 0;
+    HIPCHECK(hipDeviceReset());
 
-#include <assert.h>
-#include <stdint.h>
-#include <iostream>
-#include <sstream>
-#include <list>
-#include <sys/types.h>
-#include <unistd.h>
-#include <deque>
-#include <vector>
-#include <algorithm>
+    int deviceCount = 0;
+    HIPCHECK(hipGetDeviceCount(&deviceCount));
 
+    for(int j=0;j<deviceCount;j++){
 
-#endif
+        HIPCHECK(hipSetDevice(j));
+
+        for(int i=0;i<4;i++){
+            flag = 1 < i;
+            HIPCHECK(hipSetDeviceFlags(flag));
+        }
+
+        flag = 0;
+
+    }
+
+    passed();
+}
