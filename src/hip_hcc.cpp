@@ -395,11 +395,12 @@ void ihipDevice_t::reset()
 
 
 //---
-void ihipDevice_t::init(unsigned device_index, hc::accelerator acc)
+void ihipDevice_t::init(unsigned device_index, hc::accelerator acc, unsigned flags)
 {
     _stream_id = 0;
 
     _device_index = device_index;
+    _device_flags = flags;
     _acc = acc;
     hsa_agent_t *agent = static_cast<hsa_agent_t*> (acc.get_hsa_agent());
     if (agent) {
@@ -858,7 +859,7 @@ void ihipInit()
                 //If device is not in visible devices list, ignore
                 continue;
             }
-            g_devices[g_deviceCnt].init(g_deviceCnt, accs[i]);
+            g_devices[g_deviceCnt].init(g_deviceCnt, accs[i], 0);
             g_deviceCnt++;
         }
     }
