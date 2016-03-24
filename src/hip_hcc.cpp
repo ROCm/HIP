@@ -658,6 +658,11 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     prop->arch.hasDynamicParallelism       = 0;
 
     prop->concurrentKernels = 1; // All ROCR hardware supports executing multiple kernels concurrently
+    if ( _device_flags | hipDeviceMapHost) {
+        prop->canMapHostMemory = 1;
+    } else {
+        prop->canMapHostMemory = 0;
+    }
     return e;
 }
 
@@ -859,7 +864,7 @@ void ihipInit()
                 //If device is not in visible devices list, ignore
                 continue;
             }
-            g_devices[g_deviceCnt].init(g_deviceCnt, accs[i], 0);
+            g_devices[g_deviceCnt].init(g_deviceCnt, accs[i], hipDeviceMapHost);
             g_deviceCnt++;
         }
     }
