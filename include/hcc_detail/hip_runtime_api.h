@@ -315,6 +315,13 @@ hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig );
  */
 hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config );
 
+/**
+ * @brief Set Device flags
+ *
+ * Note: Only hipDeviceScheduleAuto and hipDeviceMapHost are supported
+ *
+*/
+hipError_t hipSetDeviceFlags ( unsigned flags);
 
 // end doxygen Device
 /**
