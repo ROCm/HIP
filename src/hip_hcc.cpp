@@ -40,7 +40,7 @@ THE SOFTWARE.
 #include <hc_am.hpp>
 
 #include "hip_runtime.h"
-
+#include "hcc_detail/hip_hcc.h"
 #include "hsa_ext_amd.h"
 
 // HIP includes:
@@ -52,11 +52,44 @@ THE SOFTWARE.
 extern const char *ihipErrorString(hipError_t hip_error);
 #include "hcc_detail/trace_helper.h"
 
+const int release = 1;
+
+
+int HIP_LAUNCH_BLOCKING = 0;
+
+int HIP_PRINT_ENV = 0;
+int HIP_TRACE_API= 0;
+int HIP_DB= 0;
+int HIP_STAGING_SIZE = 64;   /* size of staging buffers, in KB */
+int HIP_STAGING_BUFFERS = 2;    // TODO - remove, two buffers should be enough.
+int HIP_PININPLACE = 0;
+int HIP_STREAM_SIGNALS = 2;  /* number of signals to allocate at stream creation */
+int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
+
+
+//---
+// Chicken bits for disabling functionality to work around potential issues:
+int HIP_DISABLE_HW_KERNEL_DEP = 1;
+int HIP_DISABLE_HW_COPY_DEP = 1;
+
+thread_local int tls_defaultDevice = 0;
+thread_local hipError_t tls_lastHipError = hipSuccess;
+
+
 
 //=================================================================================================
 //Forward Declarations:
 //=================================================================================================
 bool ihipIsValidDevice(unsigned deviceIndex);
+
+std::once_flag hip_initialized;
+ihipDevice_t *g_devices;
+bool g_visible_device = false;
+unsigned g_deviceCnt;
+std::vector<int> g_hip_visible_devices;
+hsa_agent_t g_cpu_agent;
+
+
 
 //=================================================================================================
 // Implementation:
@@ -664,18 +697,6 @@ void ihipDevice_t::waitAllStreams()
 
 
 
-#define ihipLogStatus(_hip_status) \
-    ({\
-        tls_lastHipError = _hip_status;\
-        \
-        if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API) {\
-            fprintf(stderr, "  %ship-api: %-30s ret=%2d (%s)>>\n" KNRM, (_hip_status == 0) ? API_COLOR:KRED, __func__, _hip_status, ihipErrorString(_hip_status));\
-        }\
-        _hip_status;\
-    })
-
-
-
 // Read environment variables.
 void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, const char *description)
 {
@@ -809,6 +830,7 @@ void ihipInit()
      * Build a table of valid compute devices.
      */
     auto accs = hc::accelerator::get_all();
+
     int deviceCnt = 0;
     for (int i=0; i<accs.size(); i++) {
         if (! accs[i].get_is_emulated()) {
@@ -960,16 +982,315 @@ void ihipPostLaunchKernel(hipStream_t stream, hc::completion_future &kernelFutur
 //
 //---
 
-#include "hip_device.cpp"
-#include "hip_error.cpp"
-#include "hip_stream.cpp"
-#include "hip_event.cpp"
-#include "hip_memory.cpp"
-#include "hip_p2p.cpp"
-#include "hip_misc.cpp"
+//-------------------------------------------------------------------------------------------------
 
 
 
+const char *ihipErrorString(hipError_t hip_error)
+{
+    switch (hip_error) {
+        case hipSuccess                     : return "hipSuccess";
+        case hipErrorMemoryAllocation       : return "hipErrorMemoryAllocation";
+        case hipErrorMemoryFree             : return "hipErrorMemoryFree";
+        case hipErrorUnknownSymbol          : return "hipErrorUnknownSymbol";
+        case hipErrorOutOfResources         : return "hipErrorOutOfResources";
+        case hipErrorInvalidValue           : return "hipErrorInvalidValue";
+        case hipErrorInvalidResourceHandle  : return "hipErrorInvalidResourceHandle";
+        case hipErrorInvalidDevice          : return "hipErrorInvalidDevice";
+        case hipErrorInvalidMemcpyDirection : return "hipErrorInvalidMemcpyDirection";
+        case hipErrorNoDevice               : return "hipErrorNoDevice";
+        case hipErrorNotReady               : return "hipErrorNotReady";
+        case hipErrorRuntimeMemory          : return "hipErrorRuntimeMemory";
+        case hipErrorRuntimeOther           : return "hipErrorRuntimeOther";
+        case hipErrorUnknown                : return "hipErrorUnknown";
+        case hipErrorTbd                    : return "hipErrorTbd";
+        default                             : return "hipErrorUnknown";
+    };
+};
+
+
+void ihipSetTs(hipEvent_t e)
+{
+    ihipEvent_t *eh = e._handle;
+    if (eh->_state == hipEventStatusRecorded) {
+        // already recorded, done:
+        return;
+    } else {
+        // TODO - use completion-future functions to obtain ticks and timestamps:
+        hsa_signal_t *sig  = static_cast<hsa_signal_t*> (eh->_marker.get_native_handle());
+        if (sig) {
+            if (hsa_signal_load_acquire(*sig) == 0) {
+                eh->_timestamp = eh->_marker.get_end_tick();
+                eh->_state = hipEventStatusRecorded;
+            }
+        }
+    }
+}
+
+
+
+// Resolve hipMemcpyDefault to a known type.
+unsigned ihipStream_t::resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDeviceMem)
+{
+    hipMemcpyKind kind = hipMemcpyDefault;
+
+    if (!srcInDeviceMem && !dstInDeviceMem) {
+        kind = hipMemcpyHostToHost;
+    } else if (!srcInDeviceMem && dstInDeviceMem) {
+        kind = hipMemcpyHostToDevice;
+    } else if (srcInDeviceMem && !dstInDeviceMem) {
+        kind = hipMemcpyDeviceToHost;
+    } else if (srcInDeviceMem &&  dstInDeviceMem) {
+        kind = hipMemcpyDeviceToDevice;
+    }
+
+    assert (kind != hipMemcpyDefault);
+
+    return kind;
+}
+
+
+// Setup the copyCommandType and the copy agents (for hsa_amd_memory_async_copy)
+void ihipStream_t::setCopyAgents(unsigned kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent)
+{
+    ihipDevice_t *device = this->getDevice();
+    hsa_agent_t deviceAgent = device->_hsa_agent;
+
+    switch (kind) {
+        case hipMemcpyHostToHost     : *commandType = ihipCommandCopyH2H; *srcAgent=g_cpu_agent; *dstAgent=g_cpu_agent; break;
+        case hipMemcpyHostToDevice   : *commandType = ihipCommandCopyH2D; *srcAgent=g_cpu_agent; *dstAgent=deviceAgent; break;
+        case hipMemcpyDeviceToHost   : *commandType = ihipCommandCopyD2H; *srcAgent=deviceAgent; *dstAgent=g_cpu_agent; break;
+        case hipMemcpyDeviceToDevice : *commandType = ihipCommandCopyD2D; *srcAgent=deviceAgent; *dstAgent=deviceAgent; break;
+        default: throw ihipException(hipErrorInvalidMemcpyDirection);
+    };
+}
+
+
+void ihipStream_t::copySync(void* dst, const void* src, size_t sizeBytes, unsigned kind)
+{
+    ihipDevice_t *device = this->getDevice();
+
+    if (device == NULL) {
+        throw ihipException(hipErrorInvalidDevice);
+    }
+
+    hc::accelerator acc;
+    hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
+    hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
+
+    bool dstTracked = (hc::am_memtracker_getinfo(&dstPtrInfo, dst) == AM_SUCCESS);
+    bool srcTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) == AM_SUCCESS);
+
+
+    // Resolve default to a specific Kind so we know which algorithm to use:
+    if (kind == hipMemcpyDefault) {
+        bool srcInDeviceMem = (srcTracked && srcPtrInfo._isInDeviceMem);
+        bool dstInDeviceMem = (dstTracked && dstPtrInfo._isInDeviceMem);
+        kind = resolveMemcpyDirection(srcInDeviceMem, dstInDeviceMem);
+    };
+
+    hsa_signal_t depSignal;
+
+    if ((kind == hipMemcpyHostToDevice) && (!srcTracked)) {
+        int depSignalCnt = preCopyCommand(NULL, &depSignal, ihipCommandCopyH2D);
+        if (HIP_STAGING_BUFFERS) {
+            tprintf(DB_COPY1, "D2H && !dstTracked: staged copy H2D dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
+
+            if (HIP_PININPLACE) {
+                device->_staging_buffer[0]->CopyHostToDevicePinInPlace(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+            } else  {
+                device->_staging_buffer[0]->CopyHostToDevice(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+            }
+
+            // The copy waits for inputs and then completes before returning so can reset queue to empty:
+            this->wait(true);
+        } else {
+            // TODO - remove, slow path.
+            tprintf(DB_COPY1, "H2D && ! srcTracked: am_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
+#if USE_AV_COPY
+            _av.copy(src,dst,sizeBytes);
+#else
+            hc::am_copy(dst, src, sizeBytes);
+#endif
+        }
+    } else if ((kind == hipMemcpyDeviceToHost) && (!dstTracked)) {
+        int depSignalCnt = preCopyCommand(NULL, &depSignal, ihipCommandCopyD2H);
+        if (HIP_STAGING_BUFFERS) {
+            tprintf(DB_COPY1, "D2H && !dstTracked: staged copy D2H dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
+            //printf ("staged-copy- read dep signals\n");
+            device->_staging_buffer[1]->CopyDeviceToHost(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+
+            // The copy waits for inputs and then completes before returning so can reset queue to empty:
+            this->wait(true);
+
+        } else {
+            // TODO - remove, slow path.
+            tprintf(DB_COPY1, "D2H && !dstTracked: am_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
+#if USE_AV_COPY
+            _av.copy(src, dst, sizeBytes);
+#else
+            hc::am_copy(dst, src, sizeBytes);
+#endif
+        }
+    } else if (kind == hipMemcpyHostToHost)  { 
+        int depSignalCnt = preCopyCommand(NULL, &depSignal, ihipCommandCopyH2H);
+
+        if (depSignalCnt) {
+            // host waits before doing host memory copy.
+            hsa_signal_wait_acquire(depSignal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+        }
+        tprintf(DB_COPY1, "H2H memcpy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
+        memcpy(dst, src, sizeBytes);
+
+    } else {
+        // If not special case - these can all be handled by the hsa async copy:
+        ihipCommand_t commandType;
+        hsa_agent_t srcAgent, dstAgent;
+        setCopyAgents(kind, &commandType, &srcAgent, &dstAgent);
+
+        int depSignalCnt = preCopyCommand(NULL, &depSignal, commandType);
+
+        // Get a completion signal:
+        ihipSignal_t *ihipSignal = allocSignal();
+        hsa_signal_t copyCompleteSignal = ihipSignal->_hsa_signal;
+
+        hsa_signal_store_relaxed(copyCompleteSignal, 1);
+
+        tprintf(DB_COPY1, "HSA Async_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
+
+        hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, dstAgent, src, srcAgent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, copyCompleteSignal);
+
+        // This is sync copy, so let's wait for copy right here:
+        if (hsa_status == HSA_STATUS_SUCCESS) {
+            waitCopy(ihipSignal); // wait for copy, and return to pool.
+        } else {
+            throw ihipException(hipErrorInvalidValue);
+        }
+    }
+}
+
+
+
+
+void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind)
+{
+    ihipDevice_t *device = this->getDevice();
+
+    if (device == NULL) {
+        throw ihipException(hipErrorInvalidDevice);
+    }
+
+    if (kind == hipMemcpyHostToHost) {
+        tprintf (DB_COPY2, "Asyc: H2H with memcpy");
+
+        // TODO - consider if we want to perhaps use the GPU SDMA engines anyway, to avoid the host-side sync here and keep everything flowing on the GPU.
+        /* As this is a CPU op, we need to wait until all
+        the commands in current stream are finished.
+        */
+        this->wait();
+
+        memcpy(dst, src, sizeBytes);
+
+    } else {
+        bool trueAsync = true;
+
+        hc::accelerator acc;
+        hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
+        hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
+        bool dstTracked = (hc::am_memtracker_getinfo(&dstPtrInfo, dst) == AM_SUCCESS);
+        bool srcTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) == AM_SUCCESS);
+
+
+        // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.  
+        // If both pointers are not tracked, we need to fall back to a sync copy.
+        if (!dstTracked || !srcTracked) {
+            trueAsync = false;
+        }
+
+        if (kind == hipMemcpyDefault) {
+            bool srcInDeviceMem = (srcTracked && srcPtrInfo._isInDeviceMem);
+            bool dstInDeviceMem = (dstTracked && dstPtrInfo._isInDeviceMem);
+            kind = resolveMemcpyDirection(srcInDeviceMem, dstInDeviceMem);
+        }
+
+
+
+        ihipSignal_t *ihip_signal = allocSignal();
+        hsa_signal_store_relaxed(ihip_signal->_hsa_signal, 1);
+
+
+        if(trueAsync == true){
+
+            ihipCommand_t commandType;
+            hsa_agent_t srcAgent, dstAgent;
+            setCopyAgents(kind, &commandType, &srcAgent, &dstAgent);
+
+            hsa_signal_t depSignal;
+            int depSignalCnt = preCopyCommand(ihip_signal, &depSignal, commandType);
+
+            tprintf (DB_SYNC, " copy-async, waitFor=%lu completion=#%lu(%lu)\n", depSignalCnt? depSignal.handle:0x0, ihip_signal->_sig_id, ihip_signal->_hsa_signal.handle);
+
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, dstAgent, src, srcAgent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, ihip_signal->_hsa_signal);
+
+
+            if (hsa_status == HSA_STATUS_SUCCESS) {
+                if (HIP_LAUNCH_BLOCKING) {
+                    tprintf(DB_SYNC, "LAUNCH_BLOCKING for completion of hipMemcpyAsync(%zu)\n", sizeBytes);
+                    this->wait();
+                }
+            } else {
+                // This path can be hit if src or dst point to unpinned host memory.
+                // TODO-stream - does async-copy fall back to sync if input pointers are not pinned?
+                throw ihipException(hipErrorInvalidValue);
+            }
+        } else {
+            copySync(dst, src, sizeBytes, kind);
+        }
+    }
+}
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+// HCC-specific accessor functions:
+
+/**
+ * @return #hipSuccess, #hipErrorInvalidDevice
+ */
+//---
+hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator *acc)
+{
+    std::call_once(hip_initialized, ihipInit);
+
+    ihipDevice_t *d = ihipGetDevice(deviceId);
+    hipError_t err;
+    if (d == NULL) {
+        err =  hipErrorInvalidDevice;
+    } else {
+        *acc = d->_acc;
+        err = hipSuccess;
+    }
+    return ihipLogStatus(err);
+}
+
+
+/**
+ * @return #hipSuccess
+ */
+//---
+hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **av)
+{
+    std::call_once(hip_initialized, ihipInit);
+
+    if (stream == hipStreamNull ) {
+        ihipDevice_t *device = ihipGetTlsDefaultDevice();
+        stream = device->_default_stream;
+    }
+
+    *av = &(stream->_av);
+
+    hipError_t err = hipSuccess;
+    return ihipLogStatus(err);
+}
 
 // TODO - review signal / error reporting code.
 // TODO - describe naming convention. ihip _.  No accessors.  No early returns from functions. Set status to success at top, only set error codes in implementation.  No tabs.

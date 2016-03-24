@@ -23,7 +23,14 @@ set(CMAKE_C_COMPILER   "${HCC_HOME}/bin/hcc")
 set(CMAKE_CXX_FLAGS " -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I${HIP_PATH}/include -stdlib=libc++ ")
 set(CMAKE_C_FLAGS   " -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I${HIP_PATH}/include -stdlib=libc++ ")
 
-set(SOURCE_FILES src/hip_hcc.cpp src/staging_buffer.cpp)
+set(SOURCE_FILES src/hip_hcc.cpp 
+src/hip_device.cpp
+src/hip_error.cpp
+src/hip_event.cpp
+src/hip_memory.cpp
+src/hip_peer.cpp
+src/hip_stream.cpp
+src/staging_buffer.cpp)
 
 add_library(hip_hcc STATIC ${SOURCE_FILES})
 
