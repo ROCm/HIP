@@ -221,7 +221,7 @@ ihipSignal_t *ihipStream_t::allocSignal()
             SIGSEQNUM oldSigId = _signalPool[thisCursor]._sig_id;
             _signalPool[thisCursor]._index = thisCursor;
             _signalPool[thisCursor]._sig_id  =  ++_stream_sig_id;  // allocate it.
-            tprintf(DB_SIGNAL, "allocatSignal #%lu at pos:%i (old sigId:%lu < oldest_live:%lu)\n", 
+            tprintf(DB_SIGNAL, "allocatSignal #%lu at pos:%i (old sigId:%lu < oldest_live:%lu)\n",
                     _signalPool[thisCursor]._sig_id,
                     thisCursor, oldSigId, _oldest_live_sig_id);
 
@@ -627,12 +627,12 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     prop->maxSharedMemoryPerMultiProcessor = prop->totalGlobalMem;
 
     // Get Max memory clock frequency
-    //err = hsa_region_get_info(*am_region, (hsa_region_info_t)HSA_AMD_REGION_INFO_MAX_CLOCK_FREQUENCY, &prop->memoryClockRate);
+    err = hsa_region_get_info(*am_region, (hsa_region_info_t)HSA_AMD_REGION_INFO_MAX_CLOCK_FREQUENCY, &prop->memoryClockRate);
     DeviceErrorCheck(err);
     prop->memoryClockRate *= 1000.0;   // convert Mhz to Khz.
 
     // Get global memory bus width in bits
-    //err = hsa_region_get_info(*am_region, (hsa_region_info_t)HSA_AMD_REGION_INFO_BUS_WIDTH, &prop->memoryBusWidth);
+    err = hsa_region_get_info(*am_region, (hsa_region_info_t)HSA_AMD_REGION_INFO_BUS_WIDTH, &prop->memoryBusWidth);
     DeviceErrorCheck(err);
 
     // Set feature flags - these are all mandatory for HIP on HCC path:
@@ -676,7 +676,7 @@ void ihipDevice_t::syncDefaultStream(bool waitOnSelf)
 
     for (auto streamI=_streams.begin(); streamI!=_streams.end(); streamI++) {
         ihipStream_t *stream = *streamI;
-       
+
         // Don't wait for streams that have "opted-out" of syncing with NULL stream.
         // And - don't wait for the NULL stream
         if (!(stream->_flags & hipStreamNonBlocking)) {
@@ -769,7 +769,7 @@ void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, c
 #endif
 
 // Determines if the given agent is of type HSA_DEVICE_TYPE_GPU and counts it.
-static hsa_status_t findCpuAgent(hsa_agent_t agent, void *data) 
+static hsa_status_t findCpuAgent(hsa_agent_t agent, void *data)
 {
     hsa_device_type_t device_type;
     hsa_status_t status = hsa_agent_get_info(agent, HSA_AGENT_INFO_DEVICE, &device_type);
@@ -794,9 +794,9 @@ static hsa_status_t findCpuAgent(hsa_agent_t agent, void *data)
 void ihipInit()
 {
 
-#if COMPILE_TRACE_MARKER 
+#if COMPILE_TRACE_MARKER
     amdtInitializeActivityLogger();
-    amdtScopedMarker("ihipInit", "HIP", NULL); 
+    amdtScopedMarker("ihipInit", "HIP", NULL);
 #endif
     /*
      * Environment variables
@@ -942,7 +942,7 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
             tprintf(DB_SYNC, "stream %p wait default stream\n", stream);
             stream->getDevice()->_default_stream->wait();
         }
-        
+
         return stream;
     }
 }
@@ -1138,7 +1138,7 @@ void ihipStream_t::copySync(void* dst, const void* src, size_t sizeBytes, unsign
             hc::am_copy(dst, src, sizeBytes);
 #endif
         }
-    } else if (kind == hipMemcpyHostToHost)  { 
+    } else if (kind == hipMemcpyHostToHost)  {
         int depSignalCnt = preCopyCommand(NULL, &depSignal, ihipCommandCopyH2H);
 
         if (depSignalCnt) {
@@ -1207,7 +1207,7 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsig
         bool srcTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) == AM_SUCCESS);
 
 
-        // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.  
+        // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.
         // If both pointers are not tracked, we need to fall back to a sync copy.
         if (!dstTracked || !srcTracked) {
             trueAsync = false;
