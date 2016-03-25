@@ -8,7 +8,8 @@ include_directories( ${PROJECT_SOURCE_DIR}/include )
 set (HIP_Unit_Test_VERSION_MAJOR 1)
 set (HIP_Unit_Test_VERSION_MINOR 0)
 
-set (HIP_PATH $ENV{HIP_PATH})
+set(HIP_PATH $ENV{HIP_PATH})
+MESSAGE("HIP_PATH=" ${HIP_PATH})
 if (NOT DEFINED HIP_PATH)
 	set (HIP_PATH ../..)
 endif()
@@ -44,9 +45,7 @@ if (${HIP_PLATFORM} STREQUAL "hcc")
 
     # This will create a subdir "hip_hcc" in the test build directory
     # Any changes to hip_hcc source will be detected and force the library and then the tests to be rebuilt.  
-    add_subdirectory(${HIP_PATH} hip_hcc)
-    link_directories(${CMAKE_CURRENT_BINARY_DIR}/hip_hcc)  # search the local hip_hcc for libhip_hcc.a
-
+    
 elseif (${HIP_PLATFORM} STREQUAL "nvcc")
 	MESSAGE ("HIP_PLATFORM=nvcc")
 

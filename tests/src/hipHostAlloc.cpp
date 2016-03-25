@@ -39,7 +39,8 @@ int device;
 HIPCHECK(hipGetDevice(&device));
 HIPCHECK(hipGetDeviceProperties(&prop, device));
 if(prop.canMapHostMemory != 1){
-//std::cout<<"Exiting..."<<std::endl;
+std::cout<<"Exiting..."<<std::endl;
+failed("Does support HostPinned Memory");
 }
 
 HIPCHECK(hipHostMalloc((void**)&A, SIZE, hipHostMallocWriteCombined | hipHostMallocMapped));
