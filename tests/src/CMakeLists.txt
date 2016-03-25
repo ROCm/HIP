@@ -152,6 +152,8 @@ make_hip_executable (hipHostRegister hipHostRegister.cpp)
 make_hip_executable (hipRandomMemcpyAsync hipRandomMemcpyAsync.cpp)
 make_hip_executable (hipMemoryAllocate hipMemoryAllocate.cpp)
 make_hip_executable (hipFuncSetDeviceFlags hipFuncSetDeviceFlags.cpp)
+make_hip_executable (hipFuncGetDevice hipFuncGetDevice.cpp)
+make_hip_executable (hipFuncSetDevice hipFuncSetDevice.cpp)
 
 make_test(hip_ballot " " )
 make_test(hip_anyall " " )
@@ -190,4 +192,8 @@ make_test(hipRandomMemcpyAsync " ")
 #make_test(hipAPIStreamDisable " ")
 make_test(hipMemoryAllocate " ")
 make_test(hipFuncSetDeviceFlags " ")
+make_test(hipFuncGetDevice " ")
+make_test(hipFuncSetDevice " ")
+
+
 make_hipify_test(specialFunc.cu )
