@@ -116,6 +116,10 @@ if (!$printed or $p_full) {
     print "== Linux Kernel\n";
     system ("uname -a");
 
+    if (-e "/usr/bin/lsb_release") {
+        system ("/usr/bin/lsb_release -a");
+    }
+
     print "\n" ;
     $printed = 1;
 }
