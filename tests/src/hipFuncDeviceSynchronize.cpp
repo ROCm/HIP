@@ -17,18 +17,23 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/*
+ * Test for checking the functionality of
+ * hipError_t hipDeviceSynchronize();
+*/
+
 #include"test_common.h"
 
 #define _SIZE sizeof(int)*1024*1024
-#define NUM_STREAMS 10
+#define NUM_STREAMS 2
 
 __global__ void Iter(hipLaunchParm lp, int *Ad, int num){
-int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
-if(tx == 0){
-for(int i = 0; i<num;i++){
-Ad[tx] += 1;
-}
-}
+    int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+    if(tx == 0){
+        for(int i = 0; i<num;i++){
+            Ad[tx] += 1;
+        }
+    }
 }
 
 int main(){
@@ -36,16 +41,24 @@ int main(){
     int *Ad[NUM_STREAMS];
     hipStream_t stream[NUM_STREAMS];
     for(int i=0;i<NUM_STREAMS;i++){
-        A[i] = (int*)malloc(_SIZE);
+        HIPCHECK(hipHostMalloc((void**)&A[i], _SIZE, hipHostMallocDefault));
         A[i][0] = 1;
         HIPCHECK(hipMalloc((void**)&Ad[i], _SIZE));
         HIPCHECK(hipStreamCreate(&stream[i]));
     }
     for(int i=0;i<NUM_STREAMS;i++){
         HIPCHECK(hipMemcpyAsync(Ad[i], A[i], _SIZE, hipMemcpyHostToDevice, stream[i]));
+    }
+    for(int i=0;i<NUM_STREAMS;i++){
         hipLaunchKernel(HIP_KERNEL_NAME(Iter), dim3(1), dim3(1), 0, stream[i], Ad[i], 1<<30);
+    }
+    for(int i=0;i<NUM_STREAMS;i++){
         HIPCHECK(hipMemcpyAsync(A[i], Ad[i], _SIZE, hipMemcpyDeviceToHost, stream[i]));
     }
+    
     HIPASSERT(1<<30 != A[NUM_STREAMS-1][0]-1);
+    HIPCHECK(hipDeviceSynchronize());
+    HIPASSERT(1<<30 == A[NUM_STREAMS-1][0]-1);
+    passed();
 }
 
