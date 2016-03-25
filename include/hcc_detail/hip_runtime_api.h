@@ -47,28 +47,36 @@ extern "C" {
  * @{
  */
 //! Flags that can be used with hipStreamCreateWithFlags
-#define hipStreamDefault     0x00 ///< Default stream creation flags. These are used with hipStreamCreate().
-#define hipStreamNonBlocking 0x01 ///< Stream does not implicitly synchronize with null stream
+#define hipStreamDefault            0x00 ///< Default stream creation flags. These are used with hipStreamCreate().
+#define hipStreamNonBlocking        0x01 ///< Stream does not implicitly synchronize with null stream
 
 
 //! Flags that can be used with hipEventCreateWithFlags:
-#define hipEventDefault       0x0  ///< Default flags
-#define hipEventBlockingSync  0x1  ///< Waiting will yield CPU.  Power-friendly and usage-friendly but may increase latency.
-#define hipEventDisableTiming 0x2  ///< Disable event's capability to record timing information.  May improve performance.
-#define hipEventInterprocess  0x4  ///< Event can support IPC.  @warning - not supported in HIP.
+#define hipEventDefault             0x0  ///< Default flags
+#define hipEventBlockingSync        0x1  ///< Waiting will yield CPU.  Power-friendly and usage-friendly but may increase latency.
+#define hipEventDisableTiming       0x2  ///< Disable event's capability to record timing information.  May improve performance.
+#define hipEventInterprocess        0x4  ///< Event can support IPC.  @warning - not supported in HIP.
 
 
 //! Flags that can be used with hipHostMalloc
-#define hipHostMallocDefault       0x0
-#define hipHostMallocPortable      0x1
-#define hipHostMallocMapped        0x2
-#define hipHostMallocWriteCombined 0x4
+#define hipHostMallocDefault        0x0
+#define hipHostMallocPortable       0x1
+#define hipHostMallocMapped         0x2
+#define hipHostMallocWriteCombined  0x4
 
 //! Flags that can be used with hipHostRegister
-#define hipHostRegisterDefault  0x0  ///< Memory is Mapped and Portable
-#define hipHostRegisterPortable 0x1  ///< Memory is considered registered by all contexts.  HIP only supports one context so this is always assumed true.
-#define hipHostRegisterMapped   0x2  ///< Map the allocation into the address space for the current device.  The device pointer can be obtained with #hipHostGetDevicePointer.
-#define hipHostRegisterIoMemory 0x4  ///< Not supported.
+#define hipHostRegisterDefault      0x0  ///< Memory is Mapped and Portable
+#define hipHostRegisterPortable     0x1  ///< Memory is considered registered by all contexts.  HIP only supports one context so this is always assumed true.
+#define hipHostRegisterMapped       0x2  ///< Map the allocation into the address space for the current device.  The device pointer can be obtained with #hipHostGetDevicePointer.
+#define hipHostRegisterIoMemory     0x4  ///< Not supported.
+
+
+#define hipDeviceScheduleAuto       0x0
+#define hipDeviceScheduleSpin       0x1
+#define hipDeviceScheduleYield      0x2
+#define hipDeviceBlockingSync       0x4
+#define hipDeviceMapHost            0x8
+#define hipDeviceLmemResizeToMax    0x16
 
 /**
  * @warning On AMD devices and recent Nvidia devices, these hints and controls are ignored.
