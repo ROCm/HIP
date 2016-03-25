@@ -43,7 +43,7 @@ hipMemcpyHostToHost
 
 // hipErrorNoDevice.
 
-/*typedef enum hipTextureFilterMode 
+/*typedef enum hipTextureFilterMode
 {
     hipFilterModePoint = cudaFilterModePoint,  ///< Point filter mode.
 //! @warning cudaFilterModeLinear is not supported.
@@ -76,7 +76,7 @@ default:
     return hipErrorUnknown;
 }
 }
-// TODO   match the error enum names of hip and cuda 
+// TODO   match the error enum names of hip and cuda
 inline static cudaError_t hipErrorToCudaError(hipError_t hError) {
 switch(hError) {
 case hipSuccess:
@@ -214,9 +214,11 @@ inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t *p_prop, int dev
 	p_prop->maxThreadsPerMultiProcessor = cdprop.maxThreadsPerMultiProcessor ;
 	p_prop->computeMode = cdprop.computeMode ;
 	p_prop->canMapHostMemory = cdprop.canMapHostMemory;
+    p_prop->memoryClockRate = cdprop.memoryClockRate;
+    p_prop->memoryBusWidth = cdprop.memoryBusWidth;
 
 	// Same as clock-rate:
-	p_prop->clockInstructionRate = cdprop.clockRate; 
+	p_prop->clockInstructionRate = cdprop.clockRate;
 
 	int ccVers = p_prop->major*100 + p_prop->minor * 10;
 
@@ -253,7 +255,7 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
 {
     cudaDeviceAttr cdattr;
     cudaError_t cerror;
-    
+
     switch (attr) {
     case hipDeviceAttributeMaxThreadsPerBlock:
         cdattr = cudaDevAttrMaxThreadsPerBlock; break;
@@ -344,7 +346,7 @@ inline static hipError_t hipEventCreate( hipEvent_t* event)
 {
     return hipCUDAErrorTohipError(cudaEventCreate(event));
 }
- 
+
 inline static hipError_t hipEventRecord( hipEvent_t event, hipStream_t stream = NULL)
 {
     return hipCUDAErrorTohipError(cudaEventRecord(event,stream));
@@ -377,18 +379,18 @@ inline static hipError_t hipStreamCreate(hipStream_t *stream)
     return hipCUDAErrorTohipError(cudaStreamCreate(stream));
 }
 
-inline static hipError_t hipStreamSynchronize(hipStream_t stream) 
+inline static hipError_t hipStreamSynchronize(hipStream_t stream)
 {
     return hipCUDAErrorTohipError(cudaStreamSynchronize(stream));
 }
 
-inline static hipError_t hipStreamDestroy(hipStream_t stream) 
+inline static hipError_t hipStreamDestroy(hipStream_t stream)
 {
     return hipCUDAErrorTohipError(cudaStreamDestroy(stream));
 }
 
 
-inline static hipError_t hipDriverGetVersion(int *driverVersion) 
+inline static hipError_t hipDriverGetVersion(int *driverVersion)
 {
 	cudaError_t err = cudaDriverGetVersion(driverVersion);
 
@@ -443,11 +445,11 @@ inline static hipError_t  hipBindTexture(size_t *offset,
 }
 
 template <class T, int dim, enum cudaTextureReadMode readMode>
-inline static hipError_t  hipBindTexture(size_t *offset, 
-                                     struct texture<T, dim, readMode> *tex, 
-                                     const void *devPtr, 
-                                     const struct hipChannelFormatDesc *desc, 
-                                     size_t size=UINT_MAX) 
+inline static hipError_t  hipBindTexture(size_t *offset,
+                                     struct texture<T, dim, readMode> *tex,
+                                     const void *devPtr,
+                                     const struct hipChannelFormatDesc *desc,
+                                     size_t size=UINT_MAX)
 {
 		return  hipCUDAErrorTohipError(cudaBindTexture(offset, tex, devPtr, desc, size));
 }
