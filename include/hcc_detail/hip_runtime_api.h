@@ -443,10 +443,7 @@ hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags);
  * @see hipStreamDestroy
  *
  */
-static inline hipError_t hipStreamCreate(hipStream_t *stream)
-{
-    return hipStreamCreateWithFlags(stream, hipStreamDefault);
-}
+hipError_t hipStreamCreate(hipStream_t *stream);
 
 
 /**
@@ -544,13 +541,10 @@ hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags);
 /**
  *  Create an event
  *
- *  @param[in] event Creates an event
+ * @param[in,out] event Returns the newly created event.
  *
  */
-static inline hipError_t hipEventCreate(hipEvent_t* event)
-{
-    return hipEventCreateWithFlags(event, 0);
-}
+hipError_t hipEventCreate(hipEvent_t* event);
 
 
 /**

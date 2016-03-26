@@ -44,16 +44,38 @@ std::string ToHexString(T v)
 
 
 //---
-// Template overloads for ToString to handle various types:
-// Note these use C++11 variadic templates
+// Template overloads for ToString to handle specific types
+
+// This is the default which works for most types:
 template <typename T>
-std::string ToString(T v) {
+std::string ToString(T v) 
+{
     std::ostringstream ss;
     ss << v;
     return ss.str();
 };
 
 
+//  hipEvent_t specialization. TODO - maybe add an event ID for debug?
+template <>
+std::string ToString(hipEvent_t v) 
+{
+    return ToString(&v);
+};
+
+
+
+//  hipStream_t
+template <>
+std::string ToString(hipStream_t v) 
+{
+    std::ostringstream ss;
+    ss << *v;
+
+    return ss.str();
+};
+
+//  hipMemcpyKind specialization
 template <>
 std::string ToString(hipMemcpyKind v) {
     switch(v) {

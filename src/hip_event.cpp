@@ -25,16 +25,13 @@ THE SOFTWARE.
 //-------------------------------------------------------------------------------------------------
 // Events
 //---
-/**
- * @warning : flags must be 0.
- */
-hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags)
-{
-    // TODO - support hipEventDefault, hipEventBlockingSync, hipEventDisableTiming
-    std::call_once(hip_initialized, ihipInit);
 
+
+hipError_t ihipEventCreate(hipEvent_t* event, unsigned flags)
+{
     hipError_t e = hipSuccess;
 
+    // TODO - support hipEventDefault, hipEventBlockingSync, hipEventDisableTiming
     if (flags == 0) {
         ihipEvent_t *eh = event->_handle = new ihipEvent_t();
 
@@ -47,8 +44,25 @@ hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags)
         e = hipErrorInvalidValue;
     }
 
+    return e;
+}
 
-    return ihipLogStatus(e);
+/**
+ * @warning : flags must be 0.
+ */
+hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags)
+{
+    HIP_INIT_API(event, flags);
+
+    return ihipLogStatus(ihipEventCreate(event, flags));
+}
+
+
+hipError_t hipEventCreate(hipEvent_t* event)
+{
+    HIP_INIT_API(event);
+
+    return ihipLogStatus(ihipEventCreate(event, 0));
 }
 
 
