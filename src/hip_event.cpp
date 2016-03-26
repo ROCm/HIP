@@ -67,7 +67,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
             // TODO-HCC fix this - conservative or use device timestamps?
             // TODO-HCC can we use barrier or event marker to implement better solution?
             ihipDevice_t *device = ihipGetTlsDefaultDevice();
-            device->syncDefaultStream(true);
+            device->locked_syncDefaultStream(true);
 
             eh->_timestamp = hc::get_system_ticks();
             eh->_state = hipEventStatusRecorded;
@@ -117,7 +117,7 @@ hipError_t hipEventSynchronize(hipEvent_t event)
             return ihipLogStatus(hipSuccess);
         } else if (eh->_stream == NULL) {
             ihipDevice_t *device = ihipGetTlsDefaultDevice();
-            device->syncDefaultStream(true);
+            device->locked_syncDefaultStream(true);
             return ihipLogStatus(hipSuccess);
         } else {
 #if __hcc_workweek__ >= 16033

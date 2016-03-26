@@ -459,7 +459,7 @@ hipError_t hipFree(void* ptr)
     hipError_t hipStatus = hipErrorInvalidDevicePointer;
 
    // Synchronize to ensure all work has finished.
-    ihipGetTlsDefaultDevice()->waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
+    ihipGetTlsDefaultDevice()->locked_waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
 
     if (ptr) {
         hc::accelerator acc;

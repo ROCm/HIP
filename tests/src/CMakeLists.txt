@@ -9,7 +9,6 @@ set (HIP_Unit_Test_VERSION_MAJOR 1)
 set (HIP_Unit_Test_VERSION_MINOR 0)
 
 set(HIP_PATH $ENV{HIP_PATH})
-MESSAGE("HIP_PATH=" ${HIP_PATH})
 if (NOT DEFINED HIP_PATH)
 	set (HIP_PATH ../..)
 endif()
@@ -39,12 +38,13 @@ if (${HIP_PLATFORM} STREQUAL "hcc")
 
 	#These includes are used for all files.
 	#Include HIP and HC since the tests need both of these:
-	#Note below HSA path is surgically included only where necessary.
 	include_directories(${HIP_PATH}/include)
-    include_directories(${HSA_PATH}/include)
 
     # This will create a subdir "hip_hcc" in the test build directory
     # Any changes to hip_hcc source will be detected and force the library and then the tests to be rebuilt.  
+    add_subdirectory(${HIP_PATH} build.hip_hcc)
+    link_directories(${CMAKE_CURRENT_BINARY_DIR}/build.hip_hcc)  # search the local hip_hcc for libhip_hcc.a
+
     
 elseif (${HIP_PLATFORM} STREQUAL "nvcc")
 	MESSAGE ("HIP_PLATFORM=nvcc")
@@ -156,6 +156,8 @@ make_hip_executable (hipFuncGetDevice hipFuncGetDevice.cpp)
 make_hip_executable (hipFuncSetDevice hipFuncSetDevice.cpp)
 make_hip_executable (hipFuncDeviceSynchronize hipFuncDeviceSynchronize.cpp)
 
+make_hip_executable (hipThreadSafeDevice hipThreadSafeDevice.cpp) 
+
 make_test(hip_ballot " " )
 make_test(hip_anyall " " )
 make_test(hip_popc " " )
@@ -196,5 +198,6 @@ make_test(hipFuncSetDeviceFlags " ")
 make_test(hipFuncGetDevice " ")
 make_test(hipFuncSetDevice " ")
 make_test(hipFuncDeviceSynchronize " ")
+make_test (hipThreadSafeDevice " ") 
 
 make_hipify_test(specialFunc.cu )
