@@ -341,7 +341,7 @@ typedef uint64_t SeqNum_t ;
 
     //-- Non-racy accessors:
     // These functions access fields set at initialization time and are non-racy (so do not acquire mutex)
-    ihipDevice_t *       getDevice() const;
+    ihipDevice_t *              getDevice() const;
     StreamMutex &               mutex() {return _mutex;};
 
     //---
@@ -375,8 +375,19 @@ private:
     std::deque<ihipSignal_t>    _signalPool;   // Pool of signals for use by this stream.
 
     StreamMutex                  _mutex;
+
+    friend std::ostream& operator<<(std::ostream& os, const ihipStream_t& s);
 };
 
+
+inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s)
+{
+    os << "stream#";
+    os << s._device_index;
+    os << '.';
+    os << s._id;
+    return os;
+}
 
 
 //----

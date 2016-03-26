@@ -28,10 +28,8 @@ THE SOFTWARE.
 //
 
 //---
-hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
+hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags)
 {
-    std::call_once(hip_initialized, ihipInit);
-
     ihipDevice_t *device = ihipGetTlsDefaultDevice();
     hc::accelerator acc = device->_acc;
 
@@ -48,7 +46,25 @@ hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
     *stream = istream;
     tprintf(DB_SYNC, "hipStreamCreate, stream=%p\n", *stream);
 
-    return ihipLogStatus(hipSuccess);
+    return hipSuccess;
+}
+
+
+//---
+hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
+{
+    HIP_INIT_API(stream, flags);
+
+    return ihipLogStatus(ihipStreamCreate(stream, flags));
+
+}
+
+//---
+hipError_t hipStreamCreate(hipStream_t *stream) 
+{
+    HIP_INIT_API(stream);
+
+    return ihipLogStatus(ihipStreamCreate(stream, hipStreamDefault));
 }
 
 
@@ -58,8 +74,7 @@ hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
  */
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags)
 {
-
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(stream, event, flags);
 
     hipError_t e = hipSuccess;
 
@@ -78,7 +93,7 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
 //---
 hipError_t hipStreamSynchronize(hipStream_t stream)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(stream);
 
     hipError_t e = hipSuccess;
 
@@ -101,7 +116,7 @@ hipError_t hipStreamSynchronize(hipStream_t stream)
  */
 hipError_t hipStreamDestroy(hipStream_t stream)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(stream);
 
     hipError_t e = hipSuccess;
 
@@ -130,7 +145,7 @@ hipError_t hipStreamDestroy(hipStream_t stream)
 //---
 hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(stream, flags);
 
     if (flags == NULL) {
         return ihipLogStatus(hipErrorInvalidValue);
