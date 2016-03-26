@@ -41,7 +41,7 @@ hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
     //Note this is an execute_in_order queue, so all kernels submitted will atuomatically wait for prev to complete:
     //This matches CUDA stream behavior:
 
-    auto istream = new ihipStream_t(device->_device_index, acc.create_view(), device->_stream_id, flags);
+    auto istream = new ihipStream_t(device->_device_index, acc.create_view(), flags);
 
     device->locked_addStream(istream);
 

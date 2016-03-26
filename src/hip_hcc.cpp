@@ -124,8 +124,8 @@ ihipSignal_t::~ihipSignal_t()
 // ihipStream_t:
 //=================================================================================================
 //---
-ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, SeqNum_t id, unsigned int flags) :
-    _id(id),
+ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, unsigned int flags) :
+    _id(0), // will be set by add function.
     _av(av),
     _flags(flags),
     _device_index(device_index),
@@ -402,13 +402,12 @@ void ihipDevice_t::locked_reset()
 
 
 //---
-void ihipDevice_t::locked_init(unsigned device_index, hc::accelerator acc, unsigned flags)
+void ihipDevice_t::init(unsigned device_index, hc::accelerator &acc, unsigned flags)
 {
-    _stream_id = 0;
-
     _device_index = device_index;
     _device_flags = flags;
     _acc = acc;
+
     hsa_agent_t *agent = static_cast<hsa_agent_t*> (acc.get_hsa_agent());
     if (agent) {
         int err = hsa_agent_get_info(*agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_COMPUTE_UNIT_COUNT, &_compute_units);
@@ -423,14 +422,10 @@ void ihipDevice_t::locked_init(unsigned device_index, hc::accelerator acc, unsig
 
     getProperties(&_props);
 
-    { 
-        Locked_ihipDeviceCritical_t  l(_criticalData);
-        _default_stream = new ihipStream_t(device_index, acc.get_default_view(), _stream_id++, hipStreamDefault);
-        l->streams().push_back(_default_stream);
-    }
+    _default_stream = new ihipStream_t(device_index, acc.get_default_view(), hipStreamDefault);
+    locked_addStream(_default_stream);
 
     tprintf(DB_SYNC, "created device with default_stream=%p\n", _default_stream);
-
 
     hsa_region_t *pinnedHostRegion;
     pinnedHostRegion = static_cast<hsa_region_t*>(_acc.get_hsa_am_system_region());
@@ -438,6 +433,8 @@ void ihipDevice_t::locked_init(unsigned device_index, hc::accelerator acc, unsig
     _staging_buffer[1] = new StagingBuffer(_hsa_agent, *pinnedHostRegion, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
 
 };
+
+
 
 
 ihipDevice_t::~ihipDevice_t()
@@ -709,6 +706,7 @@ void ihipDevice_t::locked_addStream(ihipStream_t *s)
     Locked_ihipDeviceCritical_t  l(_criticalData);
 
     l->streams().push_back(s);
+    s->_id = l->incStreamId();
 }
 
 //---
@@ -895,7 +893,7 @@ void ihipInit()
                 //If device is not in visible devices list, ignore
                 continue;
             }
-            g_devices[g_deviceCnt].locked_init(g_deviceCnt, accs[i], hipDeviceMapHost);
+            g_devices[g_deviceCnt].init(g_deviceCnt, accs[i], hipDeviceMapHost);
             g_deviceCnt++;
         }
     }
