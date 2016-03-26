@@ -275,23 +275,47 @@ class FakeMutex
 #if STREAM_THREAD_SAFE
 typedef std::mutex StreamMutex;
 #else
+#warning "Stream thread-safe disabled"
 typedef FakeMutex StreamMutex;
 #endif
 
 
+//
+//---
+// Protects access to the member _data with a lock acquired on contruction/destruction.
+// T must contain a _mutex field which meets the BasicLockable requirements (lock/unlock)
+template<typename T>
+class LockedAccessor
+{
+public:
+    LockedAccessor(T &criticalData) : _criticalData(&criticalData)
+    {
+        _criticalData->_mutex.lock();
+    };
+
+    ~LockedAccessor() 
+    {
+        _criticalData->_mutex.unlock();
+    }
+
+    // Syntactic sugar so -> can be used to get the underlying type.
+    T *operator->() { return  _criticalData; };
+
+private:
+    T            *_criticalData;
+};
+
+
+
+
 // TODO - move async copy code into stream?  Stream->async-copy.
 // Add PreCopy / PostCopy to manage locks?
-//
-
-
-
-
 // Internal stream structure.
 class ihipStream_t {
 public:
 typedef uint64_t SeqNum_t ;
 
-    ihipStream_t(unsigned device_index, hc::accelerator_view av, SeqNum_t id, unsigned int flags);
+    ihipStream_t(unsigned device_index, hc::accelerator_view av, unsigned int flags);
     ~ihipStream_t();
 
     // kind is hipMemcpyKind
@@ -379,29 +403,6 @@ struct ihipEvent_t {
 } ;
 
 
-//---
-// Protects access to the member _data with a lock acquired on contruction/destruction.
-// T must contain a _mutex field which meets the BasicLockable requirements (lock/unlock)
-template<typename T>
-class LockedAccessor
-{
-public:
-    LockedAccessor(T &data) : _data(&data)
-    {
-        _data->_mutex.lock();
-    };
-
-    ~LockedAccessor() 
-    {
-        _data->_mutex.unlock();
-    }
-
-    // Syntactic sugar so -> can be used to get the underlying type.
-    T *operator->() { return  _data; };
-
-private:
-    T            *_data;
-};
 
 
 
@@ -415,17 +416,22 @@ template <typename MUTEX_TYPE>
 class ihipDeviceCriticalBase_t
 {
 public:
+    ihipDeviceCriticalBase_t() :  _stream_id(0) {};
     friend class LockedAccessor<ihipDeviceCriticalBase_t>;
 
     std::list<ihipStream_t*> &streams() { return _streams; };
     const std::list<ihipStream_t*> &const_streams() const { return _streams; };
 
+    // "Allocate" a stream ID:
+    ihipStream_t::SeqNum_t  incStreamId() { return _stream_id++; };
+
+
 private:
     std::list<ihipStream_t*> _streams;   // streams associated with this device.
+    ihipStream_t::SeqNum_t   _stream_id;
     MUTEX_TYPE   _mutex;
 };
 
-// Typedefs for common definitions.
 #if DEVICE_THREAD_SAFE
 typedef ihipDeviceCriticalBase_t<std::mutex> ihipDeviceCritical_t;  // Use real mutex
 #else
@@ -445,8 +451,15 @@ typedef LockedAccessor<ihipDeviceCritical_t> Locked_ihipDeviceCritical_t;
 class ihipDevice_t
 {
 public: // Functions:
+    ihipDevice_t() {}; // note: calls constructor for _criticalData 
+    void init(unsigned device_index, hc::accelerator &acc, unsigned flags);
+    ~ihipDevice_t();
+
     void locked_addStream(ihipStream_t *s);
     void locked_removeStream(ihipStream_t *s);
+    void locked_reset();
+    void locked_waitAllStreams();
+    void locked_syncDefaultStream(bool waitOnSelf);
 
 public: // Data, set at initialization:
     unsigned                _device_index; // index into g_devices.
@@ -464,20 +477,13 @@ public: // Data, set at initialization:
 
     StagingBuffer           *_staging_buffer[2]; // one buffer for each direction.
 
-    ihipStream_t::SeqNum_t   _stream_id;
 
     unsigned                _device_flags;
 
-public:
-    void locked_init(unsigned device_index, hc::accelerator acc, unsigned flags);
-    ~ihipDevice_t();
+private:
     hipError_t getProperties(hipDeviceProp_t* prop);
 
-    void locked_reset();
-    void locked_waitAllStreams();
-    void locked_syncDefaultStream(bool waitOnSelf);
-
-private:
+private:  // Critical data, protected with locked access:
     // Members of _protected data MUST be accessed through the LockedAccessor.
     // Search for LockedAccessor<ihipDeviceCritical_t> for examples; do not access _criticalData directly.
     ihipDeviceCritical_t  _criticalData;

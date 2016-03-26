@@ -109,17 +109,17 @@ int main(int argc, char *argv[])
 
     // Serial version, just call once:
     if (p_tests & 0x1) {
-        printf ("test 0x1 : serial createThenDestroyStreams(10) \n");
+        printf ("\ntest 0x1 : serial createThenDestroyStreams(10) \n");
         createThenDestroyStreams(10, 10);
     };
 
     if (p_tests & 0x2) {
-        printf ("test 0x2 : serialized multiThread_1(1) \n");
+        printf ("\ntest 0x2 : serialized multiThread_pyramid(1) \n");
         multiThread_pyramid(true, 10);
     }
 
     if (p_tests & 0x4) {
-        printf ("test 0x4 : multiThread_pyramid(1) \n");
+        printf ("\ntest 0x4 : parallel multiThread_pyramid(1) \n");
         multiThread_pyramid(false, 10);
     }
 
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
    // }
 
     if (p_tests & 0x10) {
-        printf ("test 0x10 : multiThread_tiny(1000) \n");
+        printf ("\ntest 0x10 : parallel multiThread_tiny(1000) \n");
         multiThread_tiny(false, 1000);
     }
 
