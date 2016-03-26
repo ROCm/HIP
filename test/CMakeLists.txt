@@ -16,7 +16,7 @@ configure_file(
 add_lit_testsuite(check-hipify "Running HIPify regression tests"
   ${CMAKE_CURRENT_SOURCE_DIR}
   PARAMS site_config=${CMAKE_CURRENT_BINARY_DIR}/lit.site.cfg
-  DEPENDS hipify FileCheck lit
+  DEPENDS hipify lit
   )
 
 add_custom_target(check)
