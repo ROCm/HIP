@@ -16,7 +16,7 @@ LIABILITY, WHETHER INN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#pragma once
+
 
 #include <iostream>
 #include <iomanip>
@@ -35,7 +35,7 @@ THE SOFTWARE.
 
 // Building block functions:
 template <typename T>
-inline std::string ToHexString(T v)
+std::string ToHexString(T v)
 {
     std::ostringstream ss;
     ss << "0x" << std::hex << v;
@@ -44,18 +44,40 @@ inline std::string ToHexString(T v)
 
 
 //---
-// Template overloads for ToString to handle various types:
-// Note these use C++11 variadic templates
+// Template overloads for ToString to handle specific types
+
+// This is the default which works for most types:
 template <typename T>
-inline std::string ToString(T v) {
+std::string ToString(T v) 
+{
     std::ostringstream ss;
     ss << v;
     return ss.str();
 };
 
 
+//  hipEvent_t specialization. TODO - maybe add an event ID for debug?
 template <>
-inline std::string ToString(hipMemcpyKind v) {
+std::string ToString(hipEvent_t v) 
+{
+    return ToString(&v);
+};
+
+
+
+//  hipStream_t
+template <>
+std::string ToString(hipStream_t v) 
+{
+    std::ostringstream ss;
+    ss << *v;
+
+    return ss.str();
+};
+
+//  hipMemcpyKind specialization
+template <>
+std::string ToString(hipMemcpyKind v) {
     switch(v) {
     CASE_STR(hipMemcpyHostToHost);
     CASE_STR(hipMemcpyHostToDevice);
@@ -68,13 +90,13 @@ inline std::string ToString(hipMemcpyKind v) {
 
 
 template <>
-inline std::string ToString(hipError_t v) {
+std::string ToString(hipError_t v) {
     return ihipErrorString(v);
 };
 
 
 // Catch empty arguments case
-inline std::string ToString() {
+std::string ToString() {
     return ("");
 }
 
@@ -83,6 +105,6 @@ inline std::string ToString() {
 // C++11 variadic template - peels off first argument, converts to string, and calls itself again to peel the next arg.
 // Strings are automatically separated by comma+space.
 template <typename T, typename... Args> 
-inline std::string ToString(T first, Args... args) {
+std::string ToString(T first, Args... args) {
     return ToString(first) + ", " + ToString(args...) ;
 }
