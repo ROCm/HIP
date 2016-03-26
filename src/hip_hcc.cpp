@@ -145,6 +145,8 @@ ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, SeqNu
 ihipStream_t::~ihipStream_t()
 {
     _signalPool.clear();
+    // Hack to catch memory issues, in particular accesses to _acc after it has been destroyed.
+    //memset (&_av, 0x0, sizeof(hc::accelerator_view&));
 }
 
 
@@ -348,6 +350,8 @@ int ihipStream_t::preCopyCommand(ihipSignal_t *lastCopy, hsa_signal_t *waitSigna
             hsa_signal_t *hsaSignal = (static_cast<hsa_signal_t*> (_last_kernel_future.get_native_handle()));
             if (hsaSignal) {
                 *waitSignal = * hsaSignal;
+            } else {
+                assert(0); // if NULL signal, and we return 1, hsa_amd_memory_copy_async will fail.  Confirm this never happens.
             }
         } else if (_last_copy_signal) {
             needSync = 1;
@@ -383,10 +387,13 @@ int ihipStream_t::preCopyCommand(ihipSignal_t *lastCopy, hsa_signal_t *waitSigna
 //
 //Reset the device - this is called from hipDeviceReset.
 //Device may be reset multiple times, and may be reset after init.
-void ihipDevice_t::reset()
+void ihipDevice_t::locked_reset()
 {
+    // Obtain mutex access to the device critical data, release by destructor
+    Locked_ihipDeviceCritical_t  l(_criticalData);
+
     // Reset and remove streams:
-    _streams.clear();
+    l->streams().clear();
 
     // Reset and release all memory stored in the tracker:
     am_memtracker_reset(_acc);
@@ -395,7 +402,7 @@ void ihipDevice_t::reset()
 
 
 //---
-void ihipDevice_t::init(unsigned device_index, hc::accelerator acc, unsigned flags)
+void ihipDevice_t::locked_init(unsigned device_index, hc::accelerator acc, unsigned flags)
 {
     _stream_id = 0;
 
@@ -416,8 +423,12 @@ void ihipDevice_t::init(unsigned device_index, hc::accelerator acc, unsigned fla
 
     getProperties(&_props);
 
-    _default_stream = new ihipStream_t(device_index, acc.get_default_view(), _stream_id++, hipStreamDefault);
-    this->_streams.push_back(_default_stream);
+    { 
+        Locked_ihipDeviceCritical_t  l(_criticalData);
+        _default_stream = new ihipStream_t(device_index, acc.get_default_view(), _stream_id++, hipStreamDefault);
+        l->streams().push_back(_default_stream);
+    }
+
     tprintf(DB_SYNC, "created device with default_stream=%p\n", _default_stream);
 
 
@@ -670,11 +681,13 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
 // Implement "default" stream syncronization
 //   This waits for all other streams to drain before continuing.
 //   If waitOnSelf is set, this additionally waits for the default stream to empty.
-void ihipDevice_t::syncDefaultStream(bool waitOnSelf)
+void ihipDevice_t::locked_syncDefaultStream(bool waitOnSelf)
 {
+    Locked_ihipDeviceCritical_t  l(_criticalData);
+
     tprintf(DB_SYNC, "syncDefaultStream\n");
 
-    for (auto streamI=_streams.begin(); streamI!=_streams.end(); streamI++) {
+    for (auto streamI=l->const_streams().begin(); streamI!=l->const_streams().end(); streamI++) {
         ihipStream_t *stream = *streamI;
 
         // Don't wait for streams that have "opted-out" of syncing with NULL stream.
@@ -690,13 +703,31 @@ void ihipDevice_t::syncDefaultStream(bool waitOnSelf)
     }
 }
 
+//---
+void ihipDevice_t::locked_addStream(ihipStream_t *s)
+{
+    Locked_ihipDeviceCritical_t  l(_criticalData);
+
+    l->streams().push_back(s);
+}
+
+//---
+void ihipDevice_t::locked_removeStream(ihipStream_t *s)
+{
+    Locked_ihipDeviceCritical_t  l(_criticalData);
+
+    l->streams().remove(s);
+}
+
 
 //---
 //Heavyweight synchronization that waits on all streams, ignoring hipStreamNonBlocking flag.
-void ihipDevice_t::waitAllStreams()
+void ihipDevice_t::locked_waitAllStreams()
 {
+    Locked_ihipDeviceCritical_t  l(_criticalData);
+
     tprintf(DB_SYNC, "waitAllStream\n");
-    for (auto streamI=_streams.begin(); streamI!=_streams.end(); streamI++) {
+    for (auto streamI=l->const_streams().begin(); streamI!=l->const_streams().end(); streamI++) {
         (*streamI)->wait();
     }
 }
@@ -864,7 +895,7 @@ void ihipInit()
                 //If device is not in visible devices list, ignore
                 continue;
             }
-            g_devices[g_deviceCnt].init(g_deviceCnt, accs[i], hipDeviceMapHost);
+            g_devices[g_deviceCnt].locked_init(g_deviceCnt, accs[i], hipDeviceMapHost);
             g_deviceCnt++;
         }
     }
@@ -933,7 +964,7 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
         ihipDevice_t *device = ihipGetTlsDefaultDevice();
 
 #ifndef HIP_API_PER_THREAD_DEFAULT_STREAM
-        device->syncDefaultStream(false);
+        device->locked_syncDefaultStream(false);
 #endif
         return device->_default_stream;
     } else {
@@ -1302,6 +1333,7 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **a
 // TODO - describe naming convention. ihip _.  No accessors.  No early returns from functions. Set status to success at top, only set error codes in implementation.  No tabs.
 //        Caps convention _ or camelCase
 //        if { }
+//        Should use ihip* data structures inside code rather than app-facing hip.  For example, use ihipDevice_t (rather than hipDevice_t), ihipStream_t (rather than hipStream_t).
 // TODO - describe MT strategy
 //
 //// TODO - add identifier numbers for streams and devices to help with debugging.

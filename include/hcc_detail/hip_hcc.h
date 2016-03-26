@@ -63,8 +63,8 @@ extern int HIP_DISABLE_HW_COPY_DEP;
 
 extern thread_local int tls_defaultDevice;
 extern thread_local hipError_t tls_lastHipError;
-struct ihipStream_t;
-struct ihipDevice_t;
+class ihipStream_t;
+class ihipDevice_t;
 
 
 // Color defs for debug messages:
@@ -85,6 +85,9 @@ struct ihipDevice_t;
 // If set, thread-safety is enforced on all stream functions.
 // Stream functions will acquire a mutex before entering critical sections.
 #define STREAM_THREAD_SAFE 1
+
+
+#define DEVICE_THREAD_SAFE 1
 
 // If FORCE_COPY_DEP=1 , HIP runtime will add 
 // synchronization for copy commands in the same stream, regardless of command type.
@@ -376,12 +379,76 @@ struct ihipEvent_t {
 } ;
 
 
+//---
+// Protects access to the member _data with a lock acquired on contruction/destruction.
+// T must contain a _mutex field which meets the BasicLockable requirements (lock/unlock)
+template<typename T>
+class LockedAccessor
+{
+public:
+    LockedAccessor(T &data) : _data(&data)
+    {
+        _data->_mutex.lock();
+    };
+
+    ~LockedAccessor() 
+    {
+        _data->_mutex.unlock();
+    }
+
+    // Syntactic sugar so -> can be used to get the underlying type.
+    T *operator->() { return  _data; };
+
+private:
+    T            *_data;
+};
+
+
+
+//---
+// Data that must be protected with thread-safe access
+// All members are private - this class must be accessed through friend LockedAccessor which 
+// will lock the mutex on construction and unlock on destruction.
+//
+// MUTEX_TYPE is template argument so can easily convert to FakeMutex for performance or stress testing.
+template <typename MUTEX_TYPE>
+class ihipDeviceCriticalBase_t
+{
+public:
+    friend class LockedAccessor<ihipDeviceCriticalBase_t>;
+
+    std::list<ihipStream_t*> &streams() { return _streams; };
+    const std::list<ihipStream_t*> &const_streams() const { return _streams; };
+
+private:
+    std::list<ihipStream_t*> _streams;   // streams associated with this device.
+    MUTEX_TYPE   _mutex;
+};
+
+// Typedefs for common definitions.
+#if DEVICE_THREAD_SAFE
+typedef ihipDeviceCriticalBase_t<std::mutex> ihipDeviceCritical_t;  // Use real mutex
+#else
+#warning "Device thread-safe disabled"
+typedef ihipDeviceCriticalBase_t<FakeMutex>  ihipDeviceCritical_t; // Fake mutex, for testing
+#endif
+
+typedef LockedAccessor<ihipDeviceCritical_t> Locked_ihipDeviceCritical_t;
 
 
 
 //-------------------------------------------------------------------------------------------------
-struct ihipDevice_t
+// Functions which read or write the critical data are named locked_.
+// ihipDevice_t does not use recursive locks so the ihip implementation must avoid calling a locked_ function from within a locked_ function.
+// External functions which call several locked_ functions will acquire and release the lock for each function.  if this occurs in 
+// performance-sensitive code we may want to refactor by adding non-locked functions and creating a new locked_ member function to call them all.
+class ihipDevice_t
 {
+public: // Functions:
+    void locked_addStream(ihipStream_t *s);
+    void locked_removeStream(ihipStream_t *s);
+
+public: // Data, set at initialization:
     unsigned                _device_index; // index into g_devices.
 
     hipDeviceProp_t         _props;        // saved device properties.
@@ -392,7 +459,6 @@ struct ihipDevice_t
     // NULL has special synchronization properties with other streams.
     ihipStream_t            *_default_stream;
 
-    std::list<ihipStream_t*> _streams;   // streams associated with this device.
 
     unsigned                _compute_units;
 
@@ -403,20 +469,24 @@ struct ihipDevice_t
     unsigned                _device_flags;
 
 public:
-    void init(unsigned device_index, hc::accelerator acc, unsigned flags);
+    void locked_init(unsigned device_index, hc::accelerator acc, unsigned flags);
     ~ihipDevice_t();
-    void reset();
     hipError_t getProperties(hipDeviceProp_t* prop);
 
-    void waitAllStreams();
-    void syncDefaultStream(bool waitOnSelf);
+    void locked_reset();
+    void locked_waitAllStreams();
+    void locked_syncDefaultStream(bool waitOnSelf);
 
 private:
+    // Members of _protected data MUST be accessed through the LockedAccessor.
+    // Search for LockedAccessor<ihipDeviceCritical_t> for examples; do not access _criticalData directly.
+    ihipDeviceCritical_t  _criticalData;
 
 };
 
 
-// Global initialization.
+
+// Global variable definition:
 extern std::once_flag hip_initialized;
 extern ihipDevice_t *g_devices; // Array of all non-emulated (ie GPU) accelerators in the system.
 extern bool g_visible_device; // Set the flag when HIP_VISIBLE_DEVICES is set

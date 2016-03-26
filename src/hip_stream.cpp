@@ -42,7 +42,9 @@ hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
     //This matches CUDA stream behavior:
 
     auto istream = new ihipStream_t(device->_device_index, acc.create_view(), device->_stream_id, flags);
-    device->_streams.push_back(istream);
+
+    device->locked_addStream(istream);
+
     *stream = istream;
     tprintf(DB_SYNC, "hipStreamCreate, stream=%p\n", *stream);
 
@@ -82,7 +84,7 @@ hipError_t hipStreamSynchronize(hipStream_t stream)
 
     if (stream == NULL) {
         ihipDevice_t *device = ihipGetTlsDefaultDevice();
-        device->syncDefaultStream(true/*waitOnSelf*/);
+        device->locked_syncDefaultStream(true/*waitOnSelf*/);
     } else {
         stream->wait();
         e = hipSuccess;
@@ -106,7 +108,7 @@ hipError_t hipStreamDestroy(hipStream_t stream)
     //--- Drain the stream:
     if (stream == NULL) {
         ihipDevice_t *device = ihipGetTlsDefaultDevice();
-        device->syncDefaultStream(true/*waitOnSelf*/);
+        device->locked_syncDefaultStream(true/*waitOnSelf*/);
     } else {
         stream->wait();
         e = hipSuccess;
@@ -115,7 +117,7 @@ hipError_t hipStreamDestroy(hipStream_t stream)
     ihipDevice_t *device = stream->getDevice();
 
     if (device) {
-        device->_streams.remove(stream);
+        device->locked_removeStream(stream);
         delete stream;
     } else {
         e = hipErrorInvalidResourceHandle;
