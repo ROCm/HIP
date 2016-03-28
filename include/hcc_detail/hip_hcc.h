@@ -160,12 +160,13 @@ class ihipDevice_t;
 
 #define ihipLogStatus(_hip_status) \
     ({\
-        tls_lastHipError = _hip_status;\
+        hipError_t _local_hip_status = _hip_status; /*local copy so _hip_status only evaluated once*/ \
+        tls_lastHipError = _local_hip_status;\
         \
         if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API) {\
-            fprintf(stderr, "  %ship-api: %-30s ret=%2d (%s)>>\n" KNRM, (_hip_status == 0) ? API_COLOR:KRED, __func__, _hip_status, ihipErrorString(_hip_status));\
+            fprintf(stderr, "  %ship-api: %-30s ret=%2d (%s)>>\n" KNRM, (_local_hip_status == 0) ? API_COLOR:KRED, __func__, _local_hip_status, ihipErrorString(_local_hip_status));\
         }\
-        _hip_status;\
+        _local_hip_status;\
     })
 
 
