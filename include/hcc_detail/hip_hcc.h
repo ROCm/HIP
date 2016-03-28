@@ -306,10 +306,29 @@ private:
 };
 
 
+template <typename MUTEX_TYPE>
+struct LockedBase {
+
+    // Experts-only interface for explicit locking.  
+    // Most uses should use the lock-accessor.
+    void lock() { _mutex.lock(); }
+    void unlock() { _mutex.unlock(); }
+
+    MUTEX_TYPE  _mutex;
+};
 
 
-// TODO - move async copy code into stream?  Stream->async-copy.
-// Add PreCopy / PostCopy to manage locks?
+template <typename MUTEX_TYPE> 
+class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE> 
+{
+private:
+};
+typedef ihipStreamCriticalBase_t<StreamMutex> ihipStreamCritical_t;  
+
+typedef LockedAccessor<ihipStreamCritical_t> Locked_ihipStreamCritical_t;
+
+
+
 // Internal stream structure.
 class ihipStream_t {
 public:
@@ -342,13 +361,15 @@ typedef uint64_t SeqNum_t ;
     //-- Non-racy accessors:
     // These functions access fields set at initialization time and are non-racy (so do not acquire mutex)
     ihipDevice_t *              getDevice() const;
-    StreamMutex &               mutex() {return _mutex;};
 
     //---
     //Member vars - these are set at initialization:
     SeqNum_t                    _id;   // monotonic sequence ID
     hc::accelerator_view        _av;
     unsigned                    _flags;
+private:
+    ihipStreamCritical_t        _criticalData;
+
 private:
     void                        enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal);
     void                 waitCopy(ihipSignal_t *signal);
@@ -360,6 +381,8 @@ private:
     //---
 
     unsigned                    _device_index;
+
+    // Critical Data:
     ihipCommand_t               _last_command_type;  // type of the last command
 
     // signal of last copy command sent to the stream.
@@ -374,7 +397,6 @@ private:
     SIGSEQNUM                   _oldest_live_sig_id; // oldest live seq_id, anything < this can be allocated.
     std::deque<ihipSignal_t>    _signalPool;   // Pool of signals for use by this stream.
 
-    StreamMutex                  _mutex;
 
     friend std::ostream& operator<<(std::ostream& os, const ihipStream_t& s);
 };
@@ -424,7 +446,7 @@ struct ihipEvent_t {
 //
 // MUTEX_TYPE is template argument so can easily convert to FakeMutex for performance or stress testing.
 template <typename MUTEX_TYPE>
-class ihipDeviceCriticalBase_t
+class ihipDeviceCriticalBase_t : LockedBase<MUTEX_TYPE>
 {
 public:
     ihipDeviceCriticalBase_t() :  _stream_id(0) {};
@@ -440,7 +462,6 @@ public:
 private:
     std::list<ihipStream_t*> _streams;   // streams associated with this device.
     ihipStream_t::SeqNum_t   _stream_id;
-    MUTEX_TYPE   _mutex;
 };
 
 #if DEVICE_THREAD_SAFE
