@@ -288,7 +288,7 @@ void ihipStream_t::enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal)
 //
 bool ihipStream_t::preKernelCommand()
 {
-    _mutex.lock(); // will be unlocked in postKernelCommand
+    _criticalData.lock();// will be unlocked in postKernelCommand
 
     bool addedSync = false;
     // If switching command types, we need to add a barrier packet to synchronize things.
@@ -323,7 +323,7 @@ void ihipStream_t::postKernelCommand(hc::completion_future &kernelFuture)
 {
     _last_kernel_future = kernelFuture;
 
-    _mutex.unlock();
+    _criticalData.unlock(); // paired with lock from preKernelCommand
 };
 
 
