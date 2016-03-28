@@ -8,9 +8,9 @@ set(HSA_DIR "/opt/hsa" CACHE PATH "Path to which HSA runtime has been installed"
 message(STATUS "Looking for HSA runtime in: " ${HSA_DIR})
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-    set(HIP_INSTALL_DIR ${CMAKE_SOURCE_DIR} CACHE PATH "Installation path for HIP" FORCE)
+    set(HIP_INSTALL_DIR ${CMAKE_SOURCE_DIR} CACHE PATH "Installation path for HIP")
 else()
-    set(HIP_INSTALL_DIR "/opt/hip" CACHE PATH "Installation path for HIP" FORCE)
+    set(HIP_INSTALL_DIR "/opt/hip" CACHE PATH "Installation path for HIP")
 endif()
 message(STATUS "HIP will be installed in: " ${HIP_INSTALL_DIR})
 
