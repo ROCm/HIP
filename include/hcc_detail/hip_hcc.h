@@ -280,6 +280,12 @@ typedef std::mutex StreamMutex;
 typedef FakeMutex StreamMutex;
 #endif
 
+#if DEVICE_THREAD_SAFE
+typedef std::mutex DeviceMutex;
+#else
+typedef FakeMutex DeviceMutex;
+#warning "Device thread-safe disabled"
+#endif
 
 //
 //---
@@ -322,10 +328,46 @@ struct LockedBase {
 template <typename MUTEX_TYPE> 
 class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE> 
 {
-private:
-};
-typedef ihipStreamCriticalBase_t<StreamMutex> ihipStreamCritical_t;  
+public:
+    ihipStreamCriticalBase_t() :
+        _last_command_type(ihipCommandCopyH2H),
+        _last_copy_signal(NULL),
+        _signalCursor(0),
+        _oldest_live_sig_id(1),
+        _stream_sig_id(0)
+    {
+        _signalPool.resize(HIP_STREAM_SIGNALS > 0 ? HIP_STREAM_SIGNALS : 1);
+    };
 
+    ~ihipStreamCriticalBase_t() {
+        _signalPool.clear();
+    }
+
+    ihipStreamCriticalBase_t<StreamMutex>  * mlock() { LockedBase<MUTEX_TYPE>::lock(); return this;};
+
+
+public:
+    // Critical Data:
+    ihipCommand_t               _last_command_type;  // type of the last command
+
+    // signal of last copy command sent to the stream.
+    // May be NULL, indicating the previous command has completley finished and future commands don't need to create a dependency.
+    // Copy can be either H2D or D2H.
+    ihipSignal_t                *_last_copy_signal;
+
+    hc::completion_future       _last_kernel_future;  // Completion future of last kernel command sent to GPU.
+
+    // Signal pool:
+    int                         _signalCursor;
+    SIGSEQNUM                   _oldest_live_sig_id; // oldest live seq_id, anything < this can be allocated.
+    std::deque<ihipSignal_t>    _signalPool;   // Pool of signals for use by this stream.
+
+
+    SIGSEQNUM                   _stream_sig_id;      // Monotonically increasing unique signal id.
+};
+
+
+typedef ihipStreamCriticalBase_t<StreamMutex> ihipStreamCritical_t;  
 typedef LockedAccessor<ihipStreamCritical_t> Locked_ihipStreamCritical_t;
 
 
@@ -339,7 +381,9 @@ typedef uint64_t SeqNum_t ;
     ~ihipStream_t();
 
     // kind is hipMemcpyKind
-    void copySync (void* dst, const void* src, size_t sizeBytes, unsigned kind);
+    void copySync (Locked_ihipStreamCritical_t &crit, void* dst, const void* src, size_t sizeBytes, unsigned kind);
+    void locked_copySync (void* dst, const void* src, size_t sizeBytes, unsigned kind);
+
     void copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind);
 
     //---
@@ -347,57 +391,46 @@ typedef uint64_t SeqNum_t ;
     bool                 preKernelCommand();
     void                 postKernelCommand(hc::completion_future &kernel_future);
 
-    int                  preCopyCommand(ihipSignal_t *lastCopy, hsa_signal_t *waitSignal, ihipCommand_t copyType);
+    int                  preCopyCommand(Locked_ihipStreamCritical_t &crit, ihipSignal_t *lastCopy, hsa_signal_t *waitSignal, ihipCommand_t copyType);
 
-    void                 reclaimSignals_ts(SIGSEQNUM sigNum);
-    void                 wait(bool assertQueueEmpty=false);
+    void                 locked_reclaimSignals(SIGSEQNUM sigNum);
+    void                 locked_wait(bool assertQueueEmpty=false);
+
+    // Use this if we already have the stream critical data mutex:
+    void                 wait(Locked_ihipStreamCritical_t &crit, bool assertQueueEmpty=false);
 
 
+    SIGSEQNUM            locked_lastCopySeqId() {Locked_ihipStreamCritical_t crit(_criticalData); return lastCopySeqId(crit); };
 
-    // Non-threadsafe accessors - must be protected by high-level stream lock:
-    SIGSEQNUM            lastCopySeqId() { return _last_copy_signal ? _last_copy_signal->_sig_id : 0; };
-    ihipSignal_t *              allocSignal();
+    // Non-threadsafe accessors - must be protected by high-level stream lock with accessor passed to function.
+    SIGSEQNUM            lastCopySeqId(Locked_ihipStreamCritical_t &crit) { return crit->_last_copy_signal ? crit->_last_copy_signal->_sig_id : 0; };
+    ihipSignal_t *       allocSignal(Locked_ihipStreamCritical_t &crit);
 
 
     //-- Non-racy accessors:
     // These functions access fields set at initialization time and are non-racy (so do not acquire mutex)
     ihipDevice_t *              getDevice() const;
 
+
+
     //---
     //Member vars - these are set at initialization:
     SeqNum_t                    _id;   // monotonic sequence ID
     hc::accelerator_view        _av;
     unsigned                    _flags;
+
 private:
     ihipStreamCritical_t        _criticalData;
 
 private:
     void                        enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal);
-    void                 waitCopy(ihipSignal_t *signal);
+    void                        waitCopy(Locked_ihipStreamCritical_t &crit, ihipSignal_t *signal);
 
     // The unsigned return is hipMemcpyKind
     unsigned resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDeviceMem);
     void setCopyAgents(unsigned kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent);
 
-    //---
-
-    unsigned                    _device_index;
-
-    // Critical Data:
-    ihipCommand_t               _last_command_type;  // type of the last command
-
-    // signal of last copy command sent to the stream.
-    // May be NULL, indicating the previous command has completley finished and future commands don't need to create a dependency.
-    // Copy can be either H2D or D2H.
-    ihipSignal_t                *_last_copy_signal;
-    hc::completion_future       _last_kernel_future;  // Completion future of last kernel command sent to GPU.
-
-    int                         _signalCursor;
-
-    SIGSEQNUM                   _stream_sig_id;      // Monotonically increasing unique signal id.
-    SIGSEQNUM                   _oldest_live_sig_id; // oldest live seq_id, anything < this can be allocated.
-    std::deque<ihipSignal_t>    _signalPool;   // Pool of signals for use by this stream.
-
+    unsigned                    _device_index;       // index into the g_device array 
 
     friend std::ostream& operator<<(std::ostream& os, const ihipStream_t& s);
 };
@@ -465,13 +498,10 @@ private:
     ihipStream_t::SeqNum_t   _stream_id;
 };
 
-#if DEVICE_THREAD_SAFE
-typedef ihipDeviceCriticalBase_t<std::mutex> ihipDeviceCritical_t;  // Use real mutex
-#else
-#warning "Device thread-safe disabled"
-typedef ihipDeviceCriticalBase_t<FakeMutex>  ihipDeviceCritical_t; // Fake mutex, for testing
-#endif
+// Note Mutex selected based on DeviceMutex
+typedef ihipDeviceCriticalBase_t<DeviceMutex> ihipDeviceCritical_t;  
 
+// This type is used by functions that need access to the critical device structures.
 typedef LockedAccessor<ihipDeviceCritical_t> Locked_ihipDeviceCritical_t;
 
 

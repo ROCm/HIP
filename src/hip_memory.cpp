@@ -307,17 +307,14 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
     hipError_t e = hipSuccess;
 
     try {
-        stream->copySync(dst, src, sizeBytes, kind);
+
+        stream->locked_copySync(dst, src, sizeBytes, kind);
     }
     catch (ihipException ex) {
         e = ex._code;
     }
 
 
-    if (HIP_LAUNCH_BLOCKING) {
-        tprintf(DB_SYNC, "LAUNCH_BLOCKING for completion of hipMemcpy\n");
-        stream->wait();
-    }
 
     return ihipLogStatus(e);
 }

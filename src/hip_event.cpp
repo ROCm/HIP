@@ -91,7 +91,8 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
             // Clear timestamps
             eh->_timestamp = 0;
             eh->_marker = stream->_av.create_marker();
-            eh->_copy_seq_id = stream->lastCopySeqId();
+            
+            eh->_copy_seq_id = stream->locked_lastCopySeqId();
 
             return ihipLogStatus(hipSuccess);
         }
@@ -139,7 +140,7 @@ hipError_t hipEventSynchronize(hipEvent_t event)
 #else
             eh->_marker.wait();
 #endif
-            eh->_stream->reclaimSignals_ts(eh->_copy_seq_id);
+            eh->_stream->locked_reclaimSignals(eh->_copy_seq_id);
 
             return ihipLogStatus(hipSuccess);
         }
