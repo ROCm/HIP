@@ -62,7 +62,7 @@ endif()
 
 set (HIPCC ${HIP_PATH}/bin/hipcc)
 set (CMAKE_CXX_COMPILER ${HIPCC})
-set (CMAKE_CXX_FLAGS --hipcc_explicit_lib)
+#set (CMAKE_CXX_FLAGS --hipcc_explicit_lib)
 
 
 add_library(test_common OBJECT test_common.cpp )
