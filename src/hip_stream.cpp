@@ -82,7 +82,7 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
         // TODO-hcc Convert to use create_blocking_marker(...) functionality.
         // Currently we have a super-conservative version of this - block on host, and drain the queue.
         // This should create a barrier packet in the target queue.
-        stream->wait();
+        stream->locked_wait();
         e = hipSuccess;
     }
 
@@ -101,7 +101,7 @@ hipError_t hipStreamSynchronize(hipStream_t stream)
         ihipDevice_t *device = ihipGetTlsDefaultDevice();
         device->locked_syncDefaultStream(true/*waitOnSelf*/);
     } else {
-        stream->wait();
+        stream->locked_wait();
         e = hipSuccess;
     }
 
@@ -125,7 +125,7 @@ hipError_t hipStreamDestroy(hipStream_t stream)
         ihipDevice_t *device = ihipGetTlsDefaultDevice();
         device->locked_syncDefaultStream(true/*waitOnSelf*/);
     } else {
-        stream->wait();
+        stream->locked_wait();
         e = hipSuccess;
     }
 
