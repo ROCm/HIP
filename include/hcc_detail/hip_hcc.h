@@ -47,7 +47,9 @@ extern const int release;
 extern int HIP_LAUNCH_BLOCKING;
 
 extern int HIP_PRINT_ENV;
+extern int HIP_ATP_MARKER;
 extern int HIP_TRACE_API;
+extern int HIP_ATP;
 extern int HIP_DB;
 extern int HIP_STAGING_SIZE;   /* size of staging buffers, in KB */
 extern int HIP_STAGING_BUFFERS;    // TODO - remove, two buffers should be enough.
@@ -114,8 +116,8 @@ class ihipDevice_t;
 
 // Compile code that generates trace markers for CodeXL ATP at HIP function begin/end.
 // ATP is standard CodeXL format that includes timestamps for kernels, HSA RT APIs, and HIP APIs.
-#ifndef COMPILE_TRACE_MARKER
-#define COMPILE_TRACE_MARKER 0
+#ifndef COMPILE_HIP_ATP_MARKER
+#define COMPILE_HIP_ATP_MARKER 0
 #endif
 
 
@@ -126,7 +128,7 @@ class ihipDevice_t;
 // Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function boundary.
 // TODO - currently we print the trace message at the beginning. if we waited, we could also include return codes, and any values returned
 // through ptr-to-args (ie the pointers allocated by hipMalloc).
-#if COMPILE_TRACE_MARKER
+#if COMPILE_HIP_ATP_MARKER
 #include "AMDTActivityLogger.h"
 #define SCOPED_MARKER(markerName,group,userString) amdtScopedMarker(markerName, group, userString)
 #else 
@@ -135,14 +137,16 @@ class ihipDevice_t;
 #endif
 
 
-#if COMPILE_TRACE_MARKER || (COMPILE_HIP_TRACE_API & 0x1) 
+#if COMPILE_HIP_ATP_MARKER || (COMPILE_HIP_TRACE_API & 0x1) 
 #define API_TRACE(...)\
 {\
-    std::string s = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
-    if (COMPILE_HIP_DB && HIP_TRACE_API) {\
-        fprintf (stderr, API_COLOR "<<hip-api: %s\n" KNRM, s.c_str());\
+    if (HIP_ATP_MARKER || (COMPILE_HIP_DB && HIP_TRACE_API)) {\
+        std::string s = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
+        if (COMPILE_HIP_DB && HIP_TRACE_API) {\
+            fprintf (stderr, API_COLOR "<<hip-api: %s\n" KNRM, s.c_str());\
+        }\
+        SCOPED_MARKER(s.c_str(), "HIP", NULL);\
     }\
-    SCOPED_MARKER(s.c_str(), "HIP", NULL);\
 }
 #else
 // Swallow API_TRACE
