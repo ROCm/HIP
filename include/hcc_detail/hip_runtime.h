@@ -273,8 +273,10 @@ __device__ inline unsigned long long int atomicXor(unsigned long long int* addre
 // integer intrinsic function __poc __clz __ffs __brev
 __device__ inline unsigned int __popc( unsigned int input)
 {
-	return hc::__popcount_u32_b32( input);
+    return hc::__popcount_u32_b32(input);
 }
+
+__device__ unsigned int test__popc(unsigned int input);
 
 __device__ inline unsigned int __popcll( unsigned long long int input)
 {
