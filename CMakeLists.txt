@@ -1,27 +1,20 @@
 cmake_minimum_required(VERSION 2.6)
 project(hip_hcc)
 
-# preserve HCC_HOME env in the generated
+set (HCC_DIR "/opt/hcc" CACHE PATH "Path to which HCC has been installed")
+message(STATUS "Looking for HCC in: " ${HCC_DIR})
 
-if (NOT DEFINED HCC_DIR)
-    set (HCC_DIR "/opt/hcc")
+set(HSA_DIR "/opt/hsa" CACHE PATH "Path to which HSA runtime has been installed")
+message(STATUS "Looking for HSA runtime in: " ${HSA_DIR})
+
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    set(HIP_INSTALL_DIR ${CMAKE_SOURCE_DIR} CACHE PATH "Installation path for HIP")
+else()
+    set(HIP_INSTALL_DIR "/opt/hip" CACHE PATH "Installation path for HIP")
 endif()
-message(STATUS ${HCC_DIR})
+message(STATUS "HIP will be installed in: " ${HIP_INSTALL_DIR})
 
-if(NOT DEFINED HIP_INSTALL_DIR)
-    set(HIP_INSTALL_DIR "/opt/hip")
-endif()
-message(STATUS ${HIP_INSTALL_DIR})
-
-if(NOT DEFINED HSA_DIR)
-    set(HSA_DIR "/opt/hsa")
-endif()
-message(STATUS ${HSA_DIR})
-
-
-#if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-#    set(CMAKE_INSTALL_PREFIX "${HIP_INSTALL_PATH}" CACHE PATH "Default installation path of hip" FORCE)
-#endif ()
+set(CMAKE_INSTALL_PREFIX "${HIP_INSTALL_PATH}" CACHE INTERNAL "Installation path for HIP" FORCE)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
