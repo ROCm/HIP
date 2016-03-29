@@ -31,7 +31,7 @@ THE SOFTWARE.
 
 #include <hcc_detail/host_defines.h>
 #include <hip_runtime_api.h>
-#include "hip_hcc.h"
+//#include "hip_hcc.h"
 
 #if defined (__HCC__) &&  (__hcc_workweek__ < 16074)
 #error("This version of HIP requires a newer version of HCC.");
@@ -41,6 +41,12 @@ THE SOFTWARE.
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef struct ihipStream_t *hipStream_t;
+typedef struct hipEvent_t {
+    struct ihipEvent_t *_handle;
+} hipEvent_t;
+
 
 /**
  * @addtogroup GlobalDefs More
