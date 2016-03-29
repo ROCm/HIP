@@ -24,7 +24,8 @@ set(CMAKE_C_COMPILER   "${HCC_DIR}/bin/hcc")
 set(CMAKE_CXX_FLAGS " -hc -I${HCC_DIR}/include -I${HSA_DIR}/include -stdlib=libc++ ")
 set(CMAKE_C_FLAGS   " -hc -I${HCC_DIR}/include -I${HSA_DIR}/include -stdlib=libc++ ")
 
-set(SOURCE_FILES src/hip_hcc.cpp 
+set(SOURCE_FILES src/device_util.cpp
+src/hip_hcc.cpp 
 src/hip_device.cpp
 src/hip_error.cpp
 src/hip_event.cpp
