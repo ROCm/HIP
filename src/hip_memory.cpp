@@ -307,17 +307,14 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
     hipError_t e = hipSuccess;
 
     try {
-        stream->copySync(dst, src, sizeBytes, kind);
+
+        stream->locked_copySync(dst, src, sizeBytes, kind);
     }
     catch (ihipException ex) {
         e = ex._code;
     }
 
 
-    if (HIP_LAUNCH_BLOCKING) {
-        tprintf(DB_SYNC, "LAUNCH_BLOCKING for completion of hipMemcpy\n");
-        stream->wait();
-    }
 
     return ihipLogStatus(e);
 }
@@ -366,9 +363,9 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
     hipError_t e = hipSuccess;
 
     stream =  ihipSyncAndResolveStream(stream);
-    stream->preKernelCommand();
 
     if (stream) {
+        stream->lockopen_preKernelCommand();
 
         hc::completion_future cf ;
 
@@ -392,7 +389,7 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
             }
         }
 
-        stream->postKernelCommand(cf);
+        stream->lockclose_postKernelCommand(cf);
 
 
         if (HIP_LAUNCH_BLOCKING) {
@@ -459,7 +456,7 @@ hipError_t hipFree(void* ptr)
     hipError_t hipStatus = hipErrorInvalidDevicePointer;
 
    // Synchronize to ensure all work has finished.
-    ihipGetTlsDefaultDevice()->waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
+    ihipGetTlsDefaultDevice()->locked_waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
 
     if (ptr) {
         hc::accelerator acc;

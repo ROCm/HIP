@@ -106,3 +106,10 @@ HIP is a source-portable language that can be compiled to run on either the HCC 
 HIP is a portable C++ language that supports a strong subset of the CUDA run-time APIs and device-kernel language. It's designed to simplify CUDA conversion to portable C++. HIP provides a C-compatible run-time API, C-compatible kernel-launch mechanism, C++ kernel language and pointer-based memory management.
 
 A C++ dialect, hc is supported by the AMD HCC compiler. It provides C++ run time, C++ kernel-launch APIs (parallel_for_each), C++ kernel language, and several memory-management options, including pointers, arrays and array_view (with implicit data synchronization). It's intended to be a leading indicator of the ISO C++ standard.
+
+### HIP detected my platform (hcc vs nvcc) incorrectly - what should I do?
+HIP will set the platform to HCC if it sees that the AMD graphics driver is installed and has detected an AMD GPU.
+Sometimes this isn't what you want - you can force HIP to recognize the platform by setting HIP_PLATFORM to hcc (or nvcc)
+```
+export HIP_PLATFORM=hcc
+```

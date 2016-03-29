@@ -28,10 +28,8 @@ THE SOFTWARE.
 //
 
 //---
-hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
+hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags)
 {
-    std::call_once(hip_initialized, ihipInit);
-
     ihipDevice_t *device = ihipGetTlsDefaultDevice();
     hc::accelerator acc = device->_acc;
 
@@ -41,12 +39,32 @@ hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
     //Note this is an execute_in_order queue, so all kernels submitted will atuomatically wait for prev to complete:
     //This matches CUDA stream behavior:
 
-    auto istream = new ihipStream_t(device->_device_index, acc.create_view(), device->_stream_id, flags);
-    device->_streams.push_back(istream);
+    auto istream = new ihipStream_t(device->_device_index, acc.create_view(), flags);
+
+    device->locked_addStream(istream);
+
     *stream = istream;
     tprintf(DB_SYNC, "hipStreamCreate, stream=%p\n", *stream);
 
-    return ihipLogStatus(hipSuccess);
+    return hipSuccess;
+}
+
+
+//---
+hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
+{
+    HIP_INIT_API(stream, flags);
+
+    return ihipLogStatus(ihipStreamCreate(stream, flags));
+
+}
+
+//---
+hipError_t hipStreamCreate(hipStream_t *stream) 
+{
+    HIP_INIT_API(stream);
+
+    return ihipLogStatus(ihipStreamCreate(stream, hipStreamDefault));
 }
 
 
@@ -56,8 +74,7 @@ hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
  */
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags)
 {
-
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(stream, event, flags);
 
     hipError_t e = hipSuccess;
 
@@ -65,7 +82,7 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
         // TODO-hcc Convert to use create_blocking_marker(...) functionality.
         // Currently we have a super-conservative version of this - block on host, and drain the queue.
         // This should create a barrier packet in the target queue.
-        stream->wait();
+        stream->locked_wait();
         e = hipSuccess;
     }
 
@@ -76,15 +93,15 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
 //---
 hipError_t hipStreamSynchronize(hipStream_t stream)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(stream);
 
     hipError_t e = hipSuccess;
 
     if (stream == NULL) {
         ihipDevice_t *device = ihipGetTlsDefaultDevice();
-        device->syncDefaultStream(true/*waitOnSelf*/);
+        device->locked_syncDefaultStream(true/*waitOnSelf*/);
     } else {
-        stream->wait();
+        stream->locked_wait();
         e = hipSuccess;
     }
 
@@ -99,23 +116,23 @@ hipError_t hipStreamSynchronize(hipStream_t stream)
  */
 hipError_t hipStreamDestroy(hipStream_t stream)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(stream);
 
     hipError_t e = hipSuccess;
 
     //--- Drain the stream:
     if (stream == NULL) {
         ihipDevice_t *device = ihipGetTlsDefaultDevice();
-        device->syncDefaultStream(true/*waitOnSelf*/);
+        device->locked_syncDefaultStream(true/*waitOnSelf*/);
     } else {
-        stream->wait();
+        stream->locked_wait();
         e = hipSuccess;
     }
 
     ihipDevice_t *device = stream->getDevice();
 
     if (device) {
-        device->_streams.remove(stream);
+        device->locked_removeStream(stream);
         delete stream;
     } else {
         e = hipErrorInvalidResourceHandle;
@@ -128,7 +145,7 @@ hipError_t hipStreamDestroy(hipStream_t stream)
 //---
 hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(stream, flags);
 
     if (flags == NULL) {
         return ihipLogStatus(hipErrorInvalidValue);

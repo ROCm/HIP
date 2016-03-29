@@ -44,18 +44,45 @@ inline std::string ToHexString(T v)
 
 
 //---
-// Template overloads for ToString to handle various types:
-// Note these use C++11 variadic templates
+// Template overloads for ToString to handle specific types
+
+// This is the default which works for most types:
 template <typename T>
-inline std::string ToString(T v) {
+inline std::string ToString(T v) 
+{
     std::ostringstream ss;
     ss << v;
     return ss.str();
 };
 
 
+//  hipEvent_t specialization. TODO - maybe add an event ID for debug?
 template <>
-inline std::string ToString(hipMemcpyKind v) {
+inline std::string ToString(hipEvent_t v) 
+{
+    return ToString(&v);
+};
+
+
+
+//  hipStream_t
+template <>
+inline std::string ToString(hipStream_t v) 
+{
+    std::ostringstream ss;
+    if (v == NULL) {
+        ss << "stream:<null>";
+    } else {
+        ss << *v;
+    }
+
+    return ss.str();
+};
+
+//  hipMemcpyKind specialization
+template <>
+inline std::string ToString(hipMemcpyKind v) 
+{
     switch(v) {
     CASE_STR(hipMemcpyHostToHost);
     CASE_STR(hipMemcpyHostToDevice);
@@ -68,13 +95,15 @@ inline std::string ToString(hipMemcpyKind v) {
 
 
 template <>
-inline std::string ToString(hipError_t v) {
+inline std::string ToString(hipError_t v) 
+{
     return ihipErrorString(v);
 };
 
 
 // Catch empty arguments case
-inline std::string ToString() {
+inline std::string ToString() 
+{
     return ("");
 }
 
@@ -83,6 +112,7 @@ inline std::string ToString() {
 // C++11 variadic template - peels off first argument, converts to string, and calls itself again to peel the next arg.
 // Strings are automatically separated by comma+space.
 template <typename T, typename... Args> 
-inline std::string ToString(T first, Args... args) {
+inline std::string ToString(T first, Args... args) 
+{
     return ToString(first) + ", " + ToString(args...) ;
 }

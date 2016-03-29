@@ -150,6 +150,7 @@ syn keyword hipFunctionName hipMemset2D
 syn keyword hipFunctionName hipMemset3D 
 syn keyword hipFunctionName hipSetDevice 
 syn keyword hipFunctionName hipSetupArgument 
+syn keyword hipFunctionName hipStreamCreateWithFlags
 syn keyword hipFunctionName hipStreamCreate 
 syn keyword hipFunctionName hipStreamDestroy 
 syn keyword hipFunctionName hipStreamQuery 

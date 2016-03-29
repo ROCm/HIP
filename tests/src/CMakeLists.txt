@@ -8,8 +8,9 @@ include_directories( ${PROJECT_SOURCE_DIR}/include )
 set (HIP_Unit_Test_VERSION_MAJOR 1)
 set (HIP_Unit_Test_VERSION_MINOR 0)
 
+set (HIP_BUILD_LOCAL  0)
+
 set(HIP_PATH $ENV{HIP_PATH})
-MESSAGE("HIP_PATH=" ${HIP_PATH})
 if (NOT DEFINED HIP_PATH)
 	set (HIP_PATH ../..)
 endif()
@@ -39,12 +40,16 @@ if (${HIP_PLATFORM} STREQUAL "hcc")
 
 	#These includes are used for all files.
 	#Include HIP and HC since the tests need both of these:
-	#Note below HSA path is surgically included only where necessary.
 	include_directories(${HIP_PATH}/include)
-    include_directories(${HSA_PATH}/include)
 
     # This will create a subdir "hip_hcc" in the test build directory
     # Any changes to hip_hcc source will be detected and force the library and then the tests to be rebuilt.  
+    if (${HIP_BUILD_LOCAL})
+        add_subdirectory(${HIP_PATH} build.hip_hcc)
+        #link_directories(${CMAKE_CURRENT_BINARY_DIR}/build.hip_hcc)  # search the local hip_hcc for libhip_hcc.a
+        set (CMAKE_CXX_FLAGS --hipcc_explicit_lib)
+    endif()
+
     
 elseif (${HIP_PLATFORM} STREQUAL "nvcc")
 	MESSAGE ("HIP_PLATFORM=nvcc")
@@ -62,7 +67,6 @@ endif()
 
 set (HIPCC ${HIP_PATH}/bin/hipcc)
 set (CMAKE_CXX_COMPILER ${HIPCC})
-#set (CMAKE_CXX_FLAGS --hipcc_explicit_lib)
 
 
 add_library(test_common OBJECT test_common.cpp )
@@ -72,7 +76,9 @@ add_library(test_common OBJECT test_common.cpp )
 macro (make_hip_executable exe cpp)  
     if (${HIP_PLATFORM} STREQUAL "hcc")
         add_executable (${exe} ${cpp} ${ARGN} $<TARGET_OBJECTS:test_common> )
-        target_link_libraries(${exe} hip_hcc)
+        if (${HIP_BUILD_LOCAL})
+            target_link_libraries(${exe} hip_hcc)
+        endif()
     else()
         add_executable (${exe} ${cpp} ${ARGN} $<TARGET_OBJECTS:test_common> )
     endif() 
@@ -142,7 +148,7 @@ make_hip_executable (hipMathFunctionsHost hipMathFunctions.cpp hipSinglePrecisio
 make_hip_executable (hipMathFunctionsDevice hipMathFunctions.cpp hipSinglePrecisionMathDevice.cpp hipDoublePrecisionMathDevice.cpp)
 make_hip_executable (hipIntrinsics hipMathFunctions.cpp hipSinglePrecisionIntrinsics.cpp hipDoublePrecisionIntrinsics.cpp hipIntegerIntrinsics.cpp)
 #TODO - re-enable.  This uses the pointer add feature.
-#make_hip_executable (hipPointerAttrib hipPointerAttrib.cpp) 
+make_hip_executable (hipPointerAttrib hipPointerAttrib.cpp) 
 make_hip_executable (hipMultiThreadStreams1 hipMultiThreadStreams1.cpp)
 make_hip_executable (hipMultiThreadStreams2 hipMultiThreadStreams2.cpp) 
 make_hip_executable (hipHostAlloc hipHostAlloc.cpp)
@@ -155,6 +161,8 @@ make_hip_executable (hipFuncSetDeviceFlags hipFuncSetDeviceFlags.cpp)
 make_hip_executable (hipFuncGetDevice hipFuncGetDevice.cpp)
 make_hip_executable (hipFuncSetDevice hipFuncSetDevice.cpp)
 make_hip_executable (hipFuncDeviceSynchronize hipFuncDeviceSynchronize.cpp)
+
+make_hip_executable (hipMultiThreadDevice hipMultiThreadDevice.cpp) 
 
 make_test(hip_ballot " " )
 make_test(hip_anyall " " )
@@ -171,8 +179,9 @@ make_test(hipGridLaunch " " )
 make_test(hipEnvVarDriver " " )
 #TODO -reenable
 #make_test(hipPointerAttrib " " )
-#make_test(hipMultiThreadStreams1 " " )
-#make_test(hipMultiThreadStreams2 " " )
+#make_test(hipMultiThreadStreams1 " " )  Fails if 0x3 specified, passes otherwise.  
+
+make_test(hipMultiThreadStreams2 " " )
 make_test(hipMemcpy_simple  " " )
 make_named_test(hipMemcpy "hipMemcpy-modes" --tests 0x1 )
 make_named_test(hipMemcpy "hipMemcpy-size" --tests 0x6 )
@@ -196,5 +205,8 @@ make_test(hipFuncSetDeviceFlags " ")
 make_test(hipFuncGetDevice " ")
 make_test(hipFuncSetDevice " ")
 make_test(hipFuncDeviceSynchronize " ")
+make_named_test (hipMultiThreadDevice "hipMultiThreadDevice-serial" --tests 0x1) 
+make_named_test (hipMultiThreadDevice "hipMultiThreadDevice-pyramid" --tests 0x4) 
+make_named_test (hipMultiThreadDevice "hipMultiThreadDevice-nearzero" --tests 0x10) 
 
 make_hipify_test(specialFunc.cu )
