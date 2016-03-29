@@ -215,9 +215,9 @@ extern "C" {
 #endif
 
 typedef class ihipStream_t* hipStream_t;
-typedef struct hipEvent_t {
-    struct ihipEvent_t *_handle;
-} hipEvent_t;
+//typedef struct hipEvent_t {
+//    struct ihipEvent_t *_handle;
+//} hipEvent_t;
 
 #ifdef __cplusplus
 }
