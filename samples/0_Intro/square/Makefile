@@ -1,4 +1,4 @@
-HIP_PATH?=$(shell hipconfig --path)
+HIP_PATH=../../..
 HIPCC=$(HIP_PATH)/bin/hipcc
 
 all: square.hip.out
