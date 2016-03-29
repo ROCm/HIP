@@ -363,9 +363,9 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
     hipError_t e = hipSuccess;
 
     stream =  ihipSyncAndResolveStream(stream);
-    stream->preKernelCommand();
 
     if (stream) {
+        stream->lockopen_preKernelCommand();
 
         hc::completion_future cf ;
 
@@ -389,7 +389,7 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
             }
         }
 
-        stream->postKernelCommand(cf);
+        stream->lockclose_postKernelCommand(cf);
 
 
         if (HIP_LAUNCH_BLOCKING) {
