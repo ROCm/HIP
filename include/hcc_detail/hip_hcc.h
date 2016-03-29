@@ -120,7 +120,7 @@ class ihipDevice_t;
 
 
 // #include CPP files to produce one object file
-#define ONE_OBJECT_FILE 1
+#define ONE_OBJECT_FILE 0
 
 
 // Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function boundary.
