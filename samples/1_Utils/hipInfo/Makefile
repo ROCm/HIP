@@ -1,4 +1,4 @@
-HIP_PATH?=$(shell hipconfig -p)
+HIP_PATH=../../..
 HIPCC=$(HIP_PATH)/bin/hipcc
 
 EXE=hipInfo
