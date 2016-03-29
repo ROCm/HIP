@@ -58,7 +58,7 @@ std::string ToString(T v)
 
 //  hipEvent_t specialization. TODO - maybe add an event ID for debug?
 template <>
-std::string ToString(hipEvent_t v) 
+inline std::string ToString(hipEvent_t v) 
 {
     return ToString(&v);
 };
@@ -67,10 +67,14 @@ std::string ToString(hipEvent_t v)
 
 //  hipStream_t
 template <>
-std::string ToString(hipStream_t v) 
+inline std::string ToString(hipStream_t v) 
 {
     std::ostringstream ss;
-    ss << *v;
+    if (v == NULL) {
+        ss << "stream:<null>";
+    } else {
+        ss << *v;
+    }
 
     return ss.str();
 };
