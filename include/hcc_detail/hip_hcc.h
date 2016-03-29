@@ -295,14 +295,24 @@ template<typename T>
 class LockedAccessor
 {
 public:
-    LockedAccessor(T &criticalData) : _criticalData(&criticalData)
+    LockedAccessor(T &criticalData, bool autoUnlock=true) : 
+        _criticalData(&criticalData),
+        _autoUnlock(autoUnlock)
+
     {
         _criticalData->_mutex.lock();
     };
 
     ~LockedAccessor() 
     {
-        _criticalData->_mutex.unlock();
+        if (_autoUnlock) {
+            _criticalData->_mutex.unlock();
+        }
+    }
+
+    void unlock() 
+    {
+       _criticalData->_mutex.unlock();
     }
 
     // Syntactic sugar so -> can be used to get the underlying type.
@@ -310,6 +320,7 @@ public:
 
 private:
     T            *_criticalData;
+    bool          _autoUnlock;
 };
 
 
@@ -368,7 +379,7 @@ public:
 
 
 typedef ihipStreamCriticalBase_t<StreamMutex> ihipStreamCritical_t;  
-typedef LockedAccessor<ihipStreamCritical_t> Locked_ihipStreamCritical_t;
+typedef LockedAccessor<ihipStreamCritical_t> LockedAccessor_StreamCrit_t;
 
 
 
@@ -381,30 +392,30 @@ typedef uint64_t SeqNum_t ;
     ~ihipStream_t();
 
     // kind is hipMemcpyKind
-    void copySync (Locked_ihipStreamCritical_t &crit, void* dst, const void* src, size_t sizeBytes, unsigned kind);
+    void copySync (LockedAccessor_StreamCrit_t &crit, void* dst, const void* src, size_t sizeBytes, unsigned kind);
     void locked_copySync (void* dst, const void* src, size_t sizeBytes, unsigned kind);
 
     void copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind);
 
     //---
     // Thread-safe accessors - these acquire / release mutex:
-    bool                 preKernelCommand();
-    void                 postKernelCommand(hc::completion_future &kernel_future);
+    bool                 lockopen_preKernelCommand();
+    void                 lockclose_postKernelCommand(hc::completion_future &kernel_future);
 
-    int                  preCopyCommand(Locked_ihipStreamCritical_t &crit, ihipSignal_t *lastCopy, hsa_signal_t *waitSignal, ihipCommand_t copyType);
+    int                  preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *lastCopy, hsa_signal_t *waitSignal, ihipCommand_t copyType);
 
     void                 locked_reclaimSignals(SIGSEQNUM sigNum);
     void                 locked_wait(bool assertQueueEmpty=false);
+    SIGSEQNUM            locked_lastCopySeqId() {LockedAccessor_StreamCrit_t crit(_criticalData); return lastCopySeqId(crit); };
 
     // Use this if we already have the stream critical data mutex:
-    void                 wait(Locked_ihipStreamCritical_t &crit, bool assertQueueEmpty=false);
+    void                 wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty=false);
 
 
-    SIGSEQNUM            locked_lastCopySeqId() {Locked_ihipStreamCritical_t crit(_criticalData); return lastCopySeqId(crit); };
 
     // Non-threadsafe accessors - must be protected by high-level stream lock with accessor passed to function.
-    SIGSEQNUM            lastCopySeqId(Locked_ihipStreamCritical_t &crit) { return crit->_last_copy_signal ? crit->_last_copy_signal->_sig_id : 0; };
-    ihipSignal_t *       allocSignal(Locked_ihipStreamCritical_t &crit);
+    SIGSEQNUM            lastCopySeqId (LockedAccessor_StreamCrit_t &crit) { return crit->_last_copy_signal ? crit->_last_copy_signal->_sig_id : 0; };
+    ihipSignal_t *       allocSignal (LockedAccessor_StreamCrit_t &crit);
 
 
     //-- Non-racy accessors:
@@ -412,19 +423,19 @@ typedef uint64_t SeqNum_t ;
     ihipDevice_t *              getDevice() const;
 
 
-
+public:
     //---
-    //Member vars - these are set at initialization:
+    //Public member vars - these are set at initialization and never change:
     SeqNum_t                    _id;   // monotonic sequence ID
     hc::accelerator_view        _av;
     unsigned                    _flags;
 
-private:
+private: // Critical Data.  THis MUST be accessed through LockedAccessor_StreamCrit_t
     ihipStreamCritical_t        _criticalData;
 
 private:
     void                        enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal);
-    void                        waitCopy(Locked_ihipStreamCritical_t &crit, ihipSignal_t *signal);
+    void                        waitCopy(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *signal);
 
     // The unsigned return is hipMemcpyKind
     unsigned resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDeviceMem);
@@ -502,7 +513,7 @@ private:
 typedef ihipDeviceCriticalBase_t<DeviceMutex> ihipDeviceCritical_t;  
 
 // This type is used by functions that need access to the critical device structures.
-typedef LockedAccessor<ihipDeviceCritical_t> Locked_ihipDeviceCritical_t;
+typedef LockedAccessor<ihipDeviceCritical_t> LockedAccessor_DeviceCrit_t;
 
 
 
