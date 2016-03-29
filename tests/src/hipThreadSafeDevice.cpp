@@ -74,7 +74,7 @@ void multiThread_pyramid(bool serialize, int iters)
 
 // Create 3 streams, all creating and destroying streams on the same device.
 // Try to keep number of streams near zero, to cause problems.
-void multiThread_tiny(bool serialize, int iters)
+void multiThread_nearzero(bool serialize, int iters)
 {
     printf ("%s creating %d streams x 3 threads\n", __func__, iters);
     std::thread t1 (createThenDestroyStreams, iters, 1);
@@ -96,9 +96,9 @@ void multiThread_tiny(bool serialize, int iters)
     }
 
     if (!serialize) {
-        t1.join();
-        t2.join();
-        t3.join();
+        t1.join(); printf ("t1 done\n");
+        t2.join(); printf ("t2 done\n");
+        t3.join(); printf ("t3 done\n");
     }
 
 }
@@ -113,7 +113,8 @@ int main(int argc, char *argv[])
         createThenDestroyStreams(10, 10);
     };
 
-    if (p_tests & 0x2) {
+    /*disable, this takess a while and if the next one works then no need to run serial*/
+    if (1 && (p_tests & 0x2)) {
         printf ("\ntest 0x2 : serialized multiThread_pyramid(1) \n");
         multiThread_pyramid(true, 10);
     }
@@ -129,8 +130,8 @@ int main(int argc, char *argv[])
    // }
 
     if (p_tests & 0x10) {
-        printf ("\ntest 0x10 : parallel multiThread_tiny(1000) \n");
-        multiThread_tiny(false, 1000);
+        printf ("\ntest 0x10 : parallel multiThread_nearzero(1000) \n");
+        multiThread_nearzero(false, 1000);
     }
 
     passed();

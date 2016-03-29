@@ -18,6 +18,7 @@ THE SOFTWARE.
 */
 
 #include <iostream>
+#include <iomanip>
 #include <sys/time.h>
 #include <stddef.h>
 
@@ -232,7 +233,10 @@ void checkVectorADD(T* A_h, T* B_h, T* result_H, size_t N, bool expectMatch=true
             }
             mismatchCount++;
             if ((mismatchCount <= mismatchesToPrint) && expectMatch) {
-                std::cout << "At " << i << "  Computed:" << result_H[i] << ", expected:" << expected << std::endl;
+                std::cout << std::fixed << std::setprecision(32);
+                std::cout << "At " << i << std::endl;
+                std::cout << "  Computed:" << result_H[i]  << std::endl;
+                std::cout << "  Expected:" << expected << std::endl;
             }
         }
     }
