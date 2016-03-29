@@ -25,16 +25,13 @@ THE SOFTWARE.
 //-------------------------------------------------------------------------------------------------
 // Events
 //---
-/**
- * @warning : flags must be 0.
- */
-hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags)
-{
-    // TODO - support hipEventDefault, hipEventBlockingSync, hipEventDisableTiming
-    std::call_once(hip_initialized, ihipInit);
 
+
+hipError_t ihipEventCreate(hipEvent_t* event, unsigned flags)
+{
     hipError_t e = hipSuccess;
 
+    // TODO - support hipEventDefault, hipEventBlockingSync, hipEventDisableTiming
     if (flags == 0) {
         ihipEvent_t *eh = event->_handle = new ihipEvent_t();
 
@@ -47,8 +44,25 @@ hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags)
         e = hipErrorInvalidValue;
     }
 
+    return e;
+}
 
-    return ihipLogStatus(e);
+/**
+ * @warning : flags must be 0.
+ */
+hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags)
+{
+    HIP_INIT_API(event, flags);
+
+    return ihipLogStatus(ihipEventCreate(event, flags));
+}
+
+
+hipError_t hipEventCreate(hipEvent_t* event)
+{
+    HIP_INIT_API(event);
+
+    return ihipLogStatus(ihipEventCreate(event, 0));
 }
 
 
@@ -67,7 +81,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
             // TODO-HCC fix this - is CUDA this conservative or still uses device timestamps?
             // TODO-HCC can we use barrier or event marker to implement better solution?
             ihipDevice_t *device = ihipGetTlsDefaultDevice();
-            device->syncDefaultStream(true);
+            device->locked_syncDefaultStream(true);
 
             eh->_timestamp = hc::get_system_ticks();
             eh->_state = hipEventStatusRecorded;
@@ -77,7 +91,8 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
             // Clear timestamps
             eh->_timestamp = 0;
             eh->_marker = stream->_av.create_marker();
-            eh->_copy_seq_id = stream->lastCopySeqId();
+            
+            eh->_copy_seq_id = stream->locked_lastCopySeqId();
 
             return ihipLogStatus(hipSuccess);
         }
@@ -117,7 +132,7 @@ hipError_t hipEventSynchronize(hipEvent_t event)
             return ihipLogStatus(hipSuccess);
         } else if (eh->_stream == NULL) {
             ihipDevice_t *device = ihipGetTlsDefaultDevice();
-            device->syncDefaultStream(true);
+            device->locked_syncDefaultStream(true);
             return ihipLogStatus(hipSuccess);
         } else {
 #if __hcc_workweek__ >= 16033
@@ -125,7 +140,7 @@ hipError_t hipEventSynchronize(hipEvent_t event)
 #else
             eh->_marker.wait();
 #endif
-            eh->_stream->reclaimSignals_ts(eh->_copy_seq_id);
+            eh->_stream->locked_reclaimSignals(eh->_copy_seq_id);
 
             return ihipLogStatus(hipSuccess);
         }

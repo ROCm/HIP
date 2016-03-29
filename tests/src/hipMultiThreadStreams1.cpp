@@ -84,11 +84,11 @@ void test_multiThread_1(std::string testName, hipStream_t stream0, hipStream_t s
 	std::cout << testName << std::endl;
 
 	// Test 2 threads operating on same stream:
-    std::thread t1 (simpleVectorCopy<T, HipTest::Pinned, C>, 2000000/*mb*/, 1000, stream0);
+    std::thread t1 (simpleVectorCopy<T, HipTest::Pinned, C>, 2000000/*mb*/, 100/*iters*/, stream0);
     if (serialize) {
         t1.join();
     }
-    std::thread t2 (simpleVectorCopy<T, HipTest::Pinned, C>, 2000000/*mb*/, 1000, stream1);
+    std::thread t2 (simpleVectorCopy<T, HipTest::Pinned, C>, 2000000/*mb*/, 100/*iters*/, stream1);
     if (serialize) {
         t2.join();
     }
@@ -119,19 +119,21 @@ int main(int argc, char *argv[])
         simpleVectorCopy<float, HipTest::Pinned, HipTest::MemcpyAsync>	(2000000/*mb*/, 10/*iters*/, stream);
         simpleVectorCopy<float, HipTest::Pinned, HipTest::Memcpy>		(2000000/*mb*/, 10/*iters*/, stream);
 
-        //HIPCHECK(hipStreamDestroy(stream));
+        HIPCHECK(hipStreamDestroy(stream));
     }
 
 
-    if (p_tests & 0x2) {
-		hipStream_t stream0, stream1;
-		HIPCHECK (hipStreamCreate(&stream0));
-		HIPCHECK (hipStreamCreate(&stream1));
+    hipStream_t stream0, stream1;
+    HIPCHECK (hipStreamCreate(&stream0));
+    HIPCHECK (hipStreamCreate(&stream1));
 
+    if (p_tests & 0x2) {
 		// Easy tests to verify the test works - these don't allow overlap between the threads:
 		test_multiThread_1<float, HipTest::MemcpyAsync> ("Multithread NULL with serialized", NULL, NULL, true);
-		test_multiThread_1<float, HipTest::MemcpyAsync> ("Multithread with serialized", stream0, stream1, true);
+		test_multiThread_1<float, HipTest::MemcpyAsync> ("Multithread two streams serialized", stream0, stream1, true);
+    }
 
+    if (p_tests & 0x4) {
 		test_multiThread_1<float, HipTest::MemcpyAsync> ("Multithread with NULL stream", NULL, NULL, false);
 		test_multiThread_1<float, HipTest::MemcpyAsync> ("Multithread with two streams", stream0, stream1, false);
 		test_multiThread_1<float, HipTest::MemcpyAsync> ("Multithread with one stream",  stream0, stream0, false);

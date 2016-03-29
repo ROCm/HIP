@@ -150,8 +150,7 @@ hipError_t hipDeviceSynchronize(void)
 {
     HIP_INIT_API();
 
-    ihipGetTlsDefaultDevice()->waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
-
+    ihipGetTlsDefaultDevice()->locked_waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
 
     return ihipLogStatus(hipSuccess);
 }
@@ -174,15 +173,12 @@ hipError_t hipDeviceReset(void)
 
     if (device) {
         //---
-        //Wait for pending activity to complete?
-        //TODO - check if this is required behavior:
-        for (auto streamI=device->_streams.begin(); streamI!=device->_streams.end(); streamI++) {
-            ihipStream_t *stream = *streamI;
-            stream->wait();
-        }
+        //Wait for pending activity to complete?  TODO - check if this is required behavior:
+        
+        device->locked_waitAllStreams();
 
         // Release device resources (streams and memory):
-        device->reset(); 
+        device->locked_reset(); 
     }
 
     return ihipLogStatus(hipSuccess);
