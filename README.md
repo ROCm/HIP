@@ -15,9 +15,9 @@ New projects can be developed directly in the portable HIP C++ language and can 
 cd HIP-privatestaging
 mkdir build
 cd build
-cmake ..
+cmake -DHSA_DIR=/path/to/hsa -DHCC_DIR=/path/to/hcc -DHIP_INSTALL_DIR=/where/to/install/hip ..
 make
-sudo make install
+make install
 ```
 Make sure HIP_PATH is pointed to `/opt/hip` and PATH includes `$HIP_PATH/bin`
 
