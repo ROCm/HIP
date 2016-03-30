@@ -3,7 +3,7 @@
 
 #define ITER 1<<20
 #define SIZE 1024*1024*sizeof(int)
-
+/*
 __global__ void Iter(hipLaunchParm lp, int *Ad){
     int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
     if(tx == 0){
@@ -12,7 +12,7 @@ __global__ void Iter(hipLaunchParm lp, int *Ad){
         }
     }
 }
-
+*/
 int main(){
     int A=0, *Ad;
     hipMalloc((void**)&Ad, SIZE);
