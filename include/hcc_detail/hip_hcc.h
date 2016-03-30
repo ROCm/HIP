@@ -48,7 +48,7 @@ extern int HIP_LAUNCH_BLOCKING;
 
 extern int HIP_PRINT_ENV;
 extern int HIP_ATP_MARKER;
-extern int HIP_TRACE_API;
+//extern int HIP_TRACE_API;
 extern int HIP_ATP;
 extern int HIP_DB;
 extern int HIP_STAGING_SIZE;   /* size of staging buffers, in KB */
