@@ -183,7 +183,7 @@ if ($hasCU and $HIP_PLATFORM eq 'hcc') {
 
 if ($needHipHcc) {
     #$HIPLDFLAGS .= " -L/opt/hip/lib -lhip_hcc" ;
-    $HIPLDFLAGS .= " -L$HIP_PATH/lib -lhip_hcc" ;
+    $HIPLDFLAGS .= " $HIP_PATH/lib/device_util.cpp.o $HIP_PATH/lib/hip_device.cpp.o $HIP_PATH/lib/hip_error.cpp.o $HIP_PATH/lib/hip_event.cpp.o $HIP_PATH/lib/hip_hcc.cpp.o $HIP_PATH/lib/hip_memory.cpp.o $HIP_PATH/lib/hip_peer.cpp.o $HIP_PATH/lib/hip_stream.cpp.o $HIP_PATH/lib/staging_buffer.cpp.o";
 }
 
 # hipcc currrently requires separate compilation of source files, ie it is not possible to pass
