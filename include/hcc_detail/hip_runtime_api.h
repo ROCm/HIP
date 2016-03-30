@@ -114,8 +114,9 @@ typedef struct dim3 {
   uint32_t x;                 ///< x
   uint32_t y;                 ///< y
   uint32_t z;                 ///< z
-
+#ifdef __cplusplus
   dim3(uint32_t _x=1, uint32_t _y=1, uint32_t _z=1) : x(_x), y(_y), z(_z) {};
+#endif
 } dim3;
 
 
@@ -124,13 +125,13 @@ typedef struct dim3 {
  * Memory copy types
  *
  */
-enum hipMemcpyKind {
+typedef enum hipMemcpyKind {
    hipMemcpyHostToHost = 0    ///< Host-to-Host Copy
   ,hipMemcpyHostToDevice = 1  ///< Host-to-Device Copy
   ,hipMemcpyDeviceToHost = 2  ///< Device-to-Host Copy
   ,hipMemcpyDeviceToDevice =3 ///< Device-to-Device Copy
   ,hipMemcpyDefault = 4,      ///< Runtime will automatically determine copy-kind based on virtual addresses.
-} ;
+} hipMemcpyKind;
 
 
 
@@ -577,9 +578,11 @@ hipError_t hipEventCreate(hipEvent_t* event);
  * @see hipEventElapsedTime
  *
  */
-
+#ifdef __cplusplus
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream = NULL);
-
+#else
+hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream);
+#endif
 
 /**
  *  @brief Destroy the specified event.
@@ -677,8 +680,7 @@ hipError_t hipEventQuery(hipEvent_t event) ;
 /**
  *  @brief Return attributes for the specified pointer
  */
-hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr) ;
-
+hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr);
 
 /**
  *  @brief Allocate memory on the default accelerator
@@ -845,8 +847,11 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t siz
  *  @param[in]  accelerator_view Accelerator view which the copy is being enqueued
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
  */
+#if __cplusplus
 hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream=0);
-
+#else
+hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream);
+#endif
 
 /**
  *  @brief Copy data from src to dst asynchronously.
@@ -876,8 +881,11 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes );
  *  @param[in]  stream - Stream identifier
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
  */
+#if __cplusplus
 hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t = 0 );
-
+#else
+hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream);
+#endif
 
 /**
  * @brief Query memory info.
@@ -964,7 +972,11 @@ hipError_t hipMemcpyPeer ( void* dst, int  dstDevice, const void* src, int  srcD
  *
  * Returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
  */
+#if __cplusplus
 hipError_t hipMemcpyPeerAsync ( void* dst, int  dstDevice, const void* src, int  srcDevice, size_t sizeBytes, hipStream_t stream=0 );
+#else
+hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int srcDevice, size_t sizeBytes, hipStream_t stream);
+#endif
 // doxygen end PeerToPeer
 /**
  * @}
@@ -1041,7 +1053,7 @@ hipError_t hipDriverGetVersion(int *driverVersion) ;
  * @endcode
  *
  */
-
+#if __cplusplus
 #ifdef __HCC__
 #include <hc.hpp>
 /**
@@ -1054,7 +1066,7 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator *acc);
  */
 hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **av);
 #endif
-
+#endif
 
 // end-group HCC_Specific
 /**
