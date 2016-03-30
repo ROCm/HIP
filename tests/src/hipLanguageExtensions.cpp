@@ -53,14 +53,14 @@ __device__ __host__ float PlusOne(float x)
 
 __global__ void MyKernel (const hipLaunchParm lp, const float *a, const float *b, float *c, unsigned N)
 {
-    KERNELBEGIN;
+    //KERNELBEGIN;
 
     unsigned gid = hipThreadIdx_x;
     if (gid < N) {
         c[gid] = a[gid] + PlusOne(b[gid]);
     }
 
-    KERNELEND;
+    //KERNELEND;
 }
 
 
@@ -82,7 +82,7 @@ vectorADD(const hipLaunchParm lp,
           T *C_d,
           size_t N)
 {
-    KERNELBEGIN;
+//    KERNELBEGIN;
     int ws = warpSize;
 
 
@@ -119,7 +119,7 @@ vectorADD(const hipLaunchParm lp,
 		C_d[i] = A_d[i] + B_d[i];
 	}
 
-    KERNELEND;
+//    KERNELEND;
 }
 
 

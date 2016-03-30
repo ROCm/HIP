@@ -30,8 +30,8 @@ THE SOFTWARE.
 // Top part of file can be compiled with any compiler
 
 
-#include <cstring>
-#include <cmath>
+//#include <cstring>
+//#include <cmath>
 #include <string.h>
 #include <stddef.h>
 
@@ -43,7 +43,9 @@ THE SOFTWARE.
 //---
 // Remainder of this file only compiles with HCC
 #ifdef __HCC__
+//#if __cplusplus
 #include <hc.hpp>
+//#endif
 #include <grid_launch.h>
 extern int HIP_TRACE_API;
 
@@ -54,12 +56,12 @@ extern int HIP_TRACE_API;
 #include <hcc_detail/hip_texture.h>
 #include <hcc_detail/host_defines.h>
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
-#if defined (__KALMAR_ACCELERATOR__) && not defined (__HCC_ACCELERATOR__)
+#if defined (__KALMAR_ACCELERATOR__) && !defined (__HCC_ACCELERATOR__)
 #define __HCC_ACCELERATOR__  __KALMAR_ACCELERATOR__
 #endif
 
 // Feature tests:
-#if defined(__HCC_ACCELERATOR__) and (__HCC_ACCELERATOR__ != 0)
+#if defined(__HCC_ACCELERATOR__) && (__HCC_ACCELERATOR__ != 0)
 // Device compile and not host compile:
 
 //TODO-HCC enable __HIP_ARCH_HAS_ATOMICS__ when HCC supports these.
@@ -472,35 +474,7 @@ __device__ inline float __dsqrt_rz(double x) {return hc::fast_math::sqrt(x); };
 
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
 
-
-#if 0
-#define KALMAR_PFE_BEGIN() \
-      hc::extent<3> ext(lp.gridDim.x, lp.gridDim.y, lp.gridDim.z);\
-      auto __hipExtTile = ext.tile(lp.groupDim.x, lp.groupDim.y, lp.groupDim.z);\
-      __hipExtTile.set_dynamic_group_segment_size(lp.groupMemBytes);\
-    \
-      hc::completion_future cf = hc::parallel_for_each (\
-              *lp.av,\
-              __hipExtTile,\
-              [=] (hc::tiled_index<3> __hipIdx) mutable [[hc]]
-
-
-
-#define KALMAR_PFE_END \
-              );  \
-    if (HIP_LAUNCH_BLOCKING) {\
-        if (HIP_TRACE_API) {\
-            fprintf(stderr, "hiptrace1: HIP_LAUNCH_BLOCKING ...\n");\
-        }\
-        cf.wait(); \
-        if (HIP_TRACE_API) {\
-            fprintf(stderr, "hiptrace1: ...completed.\n");\
-        }\
-    }
-#endif
-
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
-
 
 #ifdef __HCC_CPP__
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, hc::accelerator_view **av);
@@ -564,44 +538,6 @@ do {\
 
 #endif
 
-
-#if not defined(DISABLE_GRID_LAUNCH)
-// TODO -In GL these are no-ops and can be removed:
-// Keep them around for a little while as a fallback.
-#define KERNELBEGIN
-#define KERNELEND
-
-#else
-
-// TODO-GL:
-// These wrap the kernel in a PFE loop with macros.
-// Not required with GL but exist here as a fallback.
-#define KERNELBEGIN \
-      hc::extent<3> ext(lp.gridDim.x, lp.gridDim.y, lp.gridDim.z);\
-      auto __hipExtTile = ext.tile(lp.groupDim.x, lp.groupDim.y, lp.groupDim.z);\
-      __hipExtTile.set_dynamic_group_segment_size(lp.groupMemBytes);\
-      \
-      hc::completion_future cf = \
-      hc::parallel_for_each (\
-              *lp.av,\
-              __hipExtTile,\
-              [=] (hc::tiled_index<3> __hipIdx) mutable [[hc]] \
-      {
-
-
-#define KERNELEND \
-              });  \
-    if (HIP_LAUNCH_BLOCKING) {\
-        if (HIP_TRACE_API) {\
-            fprintf(stderr, "hiptrace1: HIP_LAUNCH_BLOCKING ...\n");\
-        }\
-        cf.wait(); \
-        if (HIP_TRACE_API) {\
-            fprintf(stderr, "hiptrace1: ...completed.\n");\
-        }\
-    }
-
-#endif /*DISABLE_GRID_LAUNCH*/
 
 
 #endif // __HCC__

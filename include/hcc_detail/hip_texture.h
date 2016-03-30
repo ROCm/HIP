@@ -55,7 +55,7 @@ struct textureReference {
     bool                 normalized;
     hipChannelFormatDesc channelDesc;
 };
-
+#if __cplusplus
 template <class T, int texType=hipTextureType1D, enum hipTextureReadMode=hipReadModeElementType>
 struct texture : public textureReference {
 
@@ -63,7 +63,7 @@ struct texture : public textureReference {
 
     //texture() : filterMode(hipFilterModePoint), normalized(false), _dataPtr(NULL) {};
 };
-
+#endif
 
 
 
