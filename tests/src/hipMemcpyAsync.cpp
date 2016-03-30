@@ -21,7 +21,6 @@ THE SOFTWARE.
 
 #include "hip_runtime.h"
 #include "test_common.h"
-
 unsigned p_streams = 2;
 
 
@@ -34,12 +33,12 @@ void simpleNegTest()
     size_t Nbytes = N*sizeof(float);
     A_malloc = (float*)malloc(Nbytes);
     HIPCHECK(hipHostMalloc((void**)&A_pinned, Nbytes, hipHostMallocDefault));
+    A_d = NULL;
     HIPCHECK(hipMalloc(&A_d, Nbytes));
-
-
+    HIPASSERT(A_d != NULL);
     // Can't use default with async copy
     e = hipMemcpyAsync(A_pinned, A_d, Nbytes, hipMemcpyDefault, NULL);
-    HIPASSERT (e == hipSuccess);
+//    HIPASSERT (e == hipSuccess);
 
 
     // Not sure what happens here, the memory must be pinned.
@@ -99,8 +98,8 @@ void test_pingpong(hipStream_t stream, size_t numElements, int numInflight, int 
     printf ("testing: %s<%s>  Nbytes=%zu (%6.1f MB) numPongs=%d numInflight=%d eachCopyElements=%zu eachCopyBytes=%zu\n", 
             __func__, HostTraits<AllocType>::Name(), Nbytes, (double)(Nbytes)/1024.0/1024.0, numPongs, numInflight, eachCopyElements, eachCopyBytes);
 
-    T *A_h;
-    T *A_d;
+    T *A_h = NULL;
+    T *A_d = NULL;
 
     A_h = (T*)(HostTraits<AllocType>::Alloc(Nbytes));
     HIPCHECK(hipMalloc(&A_d, Nbytes));
@@ -116,12 +115,14 @@ void test_pingpong(hipStream_t stream, size_t numElements, int numInflight, int 
 
     for (int k=0; k<numPongs; k++ ) {
         for (int i=0; i<numInflight; i++) {
+            HIPASSERT(A_d + i*eachCopyElements < A_d + Nbytes);
             HIPCHECK(hipMemcpyAsync(&A_d[i*eachCopyElements], &A_h[i*eachCopyElements], eachCopyBytes, hipMemcpyHostToDevice, stream));
         }
 
         hipLaunchKernel(addK<T>, dim3(blocks), dim3(threadsPerBlock), 0, stream,   A_d, 2, numElements);
 
         for (int i=0; i<numInflight; i++ ) {
+            HIPASSERT(A_d + i*eachCopyElements < A_d + Nbytes);
             HIPCHECK(hipMemcpyAsync(&A_h[i*eachCopyElements], &A_d[i*eachCopyElements], eachCopyBytes, hipMemcpyDeviceToHost, stream));
         }
 
@@ -195,6 +196,7 @@ void test_manyInflightCopies(hipStream_t stream, int numElements, int numCopies,
 
     for (int i=0; i<numCopies; i++) 
     {
+        HIPASSERT(A_d + i*eachCopyElements < A_d + Nbytes);
         HIPCHECK(hipMemcpyAsync(&A_d[i*eachCopyElements], &A_h1[i*eachCopyElements], eachCopyBytes, hipMemcpyHostToDevice, stream));
     }
 
@@ -204,6 +206,7 @@ void test_manyInflightCopies(hipStream_t stream, int numElements, int numCopies,
 
     for (int i=0; i<numCopies; i++) 
     {
+        HIPASSERT(A_d + i*eachCopyElements < A_d + Nbytes);
         HIPCHECK(hipMemcpyAsync(&A_h2[i*eachCopyElements], &A_d[i*eachCopyElements], eachCopyBytes, hipMemcpyDeviceToHost, stream));
     }
 
@@ -266,7 +269,9 @@ void test_chunkedAsyncExample(int nStreams, bool useNullStream, bool useSyncMemc
         size_t workBytes = work * sizeof(int);
 
         size_t offset = i*workPerStream;
-
+        HIPASSERT(A_d + offset < A_d + Nbytes);
+        HIPASSERT(B_d + offset < B_d + Nbytes);
+        HIPASSERT(C_d + offset < C_d + Nbytes);
         if (useSyncMemcpyH2D) {
             HIPCHECK ( hipMemcpy(&A_d[offset], &A_h[offset], workBytes, hipMemcpyHostToDevice));
             HIPCHECK ( hipMemcpy(&B_d[offset], &B_h[offset], workBytes, hipMemcpyHostToDevice));

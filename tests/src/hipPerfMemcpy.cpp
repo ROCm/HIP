@@ -22,7 +22,7 @@ THE SOFTWARE.
 #include<time.h>
 
 #define NUM_SIZE 8
-#define NUM_ITER 12
+#define NUM_ITER 1 << 30
 static size_t size[NUM_SIZE];
 
 void setup(){
@@ -49,7 +49,8 @@ int main(){
 		std::cout<<"Malloc success at size: "<<size[i]<<std::endl;
 		clock_t start ,end;
 		start = clock();
-		for(int i=0;i<NUM_ITER;i++){
+		for(int j=0;j<NUM_ITER;j++){
+//            std::cout<<"At iter: "<<j<<std::endl;
 			hipMemcpy(Ad, A, size[i], hipMemcpyHostToDevice);
 		}
 		hipDeviceSynchronize();
