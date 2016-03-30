@@ -66,10 +66,29 @@ src/hip_peer.cpp
 src/hip_stream.cpp
 src/staging_buffer.cpp)
 
-add_library(hip_hcc STATIC ${SOURCE_FILES})
+add_library(hip_hcc OBJECT src/hip_hcc.cpp)
+add_library(device_util OBJECT src/device_util.cpp)
+add_library(hip_device OBJECT src/hip_device.cpp)
+add_library(hip_error OBJECT src/hip_error.cpp)
+add_library(hip_event OBJECT src/hip_event.cpp)
+add_library(hip_memory OBJECT src/hip_memory.cpp)
+add_library(hip_peer OBJECT src/hip_peer.cpp)
+add_library(hip_stream OBJECT src/hip_stream.cpp)
+add_library(staging_buffer OBJECT src/staging_buffer.cpp)
 
-install(TARGETS hip_hcc DESTINATION ${HIP_INSTALL_DIR}/lib)
+
+#install(TARGETS hip_hcc DESTINATION ${HIP_INSTALL_DIR}/lib)
 if(NOT ${HIP_INSTALL_DIR} MATCHES ${CMAKE_CURRENT_SOURCE_DIR})
+install(FILES ${PROJECT_BINARY_DIR}/CMakeFiles/device_util.dir/src/device_util.cpp.o DESTINATION ${HIP_INSTALL_DIR}/lib)
+install(FILES ${PROJECT_BINARY_DIR}/CMakeFiles/hip_hcc.dir/src/hip_hcc.cpp.o  DESTINATION ${HIP_INSTALL_DIR}/lib)
+install(FILES ${PROJECT_BINARY_DIR}/CMakeFiles/hip_device.dir/src/hip_device.cpp.o DESTINATION ${HIP_INSTALL_DIR}/lib)
+install(FILES ${PROJECT_BINARY_DIR}/CMakeFiles/hip_error.dir/src/hip_error.cpp.o DESTINATION ${HIP_INSTALL_DIR}/lib)
+install(FILES ${PROJECT_BINARY_DIR}/CMakeFiles/hip_event.dir/src/hip_event.cpp.o DESTINATION ${HIP_INSTALL_DIR}/lib)
+install(FILES ${PROJECT_BINARY_DIR}/CMakeFiles/hip_memory.dir/src/hip_memory.cpp.o DESTINATION ${HIP_INSTALL_DIR}/lib)
+install(FILES ${PROJECT_BINARY_DIR}/CMakeFiles/hip_peer.dir/src/hip_peer.cpp.o DESTINATION ${HIP_INSTALL_DIR}/lib)
+install(FILES ${PROJECT_BINARY_DIR}/CMakeFiles/hip_stream.dir/src/hip_stream.cpp.o DESTINATION ${HIP_INSTALL_DIR}/lib)
+install(FILES ${PROJECT_BINARY_DIR}/CMakeFiles/staging_buffer.dir/src/staging_buffer.cpp.o DESTINATION ${HIP_INSTALL_DIR}/lib)
+
     install(DIRECTORY src DESTINATION ${HIP_INSTALL_DIR})
     install(DIRECTORY bin DESTINATION ${HIP_INSTALL_DIR} USE_SOURCE_PERMISSIONS)
     install(DIRECTORY include DESTINATION ${HIP_INSTALL_DIR})
