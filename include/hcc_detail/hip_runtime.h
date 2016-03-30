@@ -39,12 +39,13 @@ THE SOFTWARE.
 #define CUDA_SUCCESS hipSuccess
 
 #include <hip_runtime_api.h>
-#include "hcc_detail/hip_hcc.h"
+//#include "hcc_detail/hip_hcc.h"
 //---
 // Remainder of this file only compiles with HCC
 #ifdef __HCC__
 #include <hc.hpp>
 #include <grid_launch.h>
+extern int HIP_TRACE_API;
 
 //TODO-HCC-GL - change this to typedef.
 //typedef grid_launch_parm hipLaunchParm ;
