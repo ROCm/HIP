@@ -17,7 +17,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include"test_common.h"
+#include"hip_runtime.h"
 #include<iostream>
 #include<time.h>
 
@@ -42,20 +42,15 @@ int main(){
 	setup();
 	int *A, *Ad;
 	for(int i=0;i<NUM_SIZE;i++){
-		std::cout<<size[i]<<std::endl;
 		A = (int*)malloc(size[i]);
 		valSet(A, 1, size[i]);
 		hipMalloc(&Ad, size[i]);
 		std::cout<<"Malloc success at size: "<<size[i]<<std::endl;
-		clock_t start ,end;
-		start = clock();
 		for(int j=0;j<NUM_ITER;j++){
-//            std::cout<<"At iter: "<<j<<std::endl;
+            std::cout<<"\r"<<"Iter: "<<j;
 			hipMemcpy(Ad, A, size[i], hipMemcpyHostToDevice);
 		}
+        std::cout<<std::endl;
 		hipDeviceSynchronize();
-		end = clock();
-		double uS = (double)(end - start)*1000/(NUM_ITER*CLOCKS_PER_SEC);
-		std::cout<<uS<<std::endl;
 	}
 }
