@@ -160,18 +160,6 @@ typedef enum hipMemcpyKind {
 
 
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
-
-
-
-
-//==================================================================================================
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /**
  *  @defgroup API HIP API
  *  @{
