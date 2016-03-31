@@ -191,7 +191,7 @@ make_named_test(hipMemcpy "hipMemcpy-multithreaded" --tests 0x8 )
 #make_named_test(hipMemcpy_simple "hipMemcpyAsync-simple" --async)
 
 make_test(hipHostAlloc " ")
-make_test(hipMemcpyAsync  " " )
+#make_test(hipMemcpyAsync  " " )
 # BS- comment out since test appears broken - asks for device pointer but pointer was never allocated.
 #make_test(hipHostGetFlags " ")
 make_test(hipHcc  " " )
