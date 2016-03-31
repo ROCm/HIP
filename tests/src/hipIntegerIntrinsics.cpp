@@ -40,6 +40,8 @@ __device__ void integer_intrinsics()
     //__mulhi((int)1, (int)2);
     __popc((unsigned int)4);
     __popcll((unsigned long long)4);
+    int a = min((int)4, (int)5);
+    int b = max((int)4, (int)5);
     //__rhadd((int)1, (int)2);
     //__sad((int)1, (int)2, 0);
     //__uhadd((unsigned int)1, (unsigned int)3);
