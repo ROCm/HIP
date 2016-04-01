@@ -18,9 +18,14 @@ Next:
     - Move to CMake.
     - Split source into multiple modular .cpp and .h files.
     - Create static library and link.
-- Deprecate hipDeviceGetProp, replace with hipGetDeviceProp
+    - Set HIP_PATH to install.
+- Make hipDevice and hipStream thread-safe.
+    - Prefered hipStream usage is still to create new streams for each new thread, but it works even if you don;t.
+- Improve automated platform detection: If AMD GPU is installed and detected by driver, default HIP_PLATFORM to hcc.
+- HIP_TRACE_API now prints arguments to the HIP function (in addition to name of function).
+- Deprecate hipDeviceGetProp (Replace with hipGetDeviceProp)
 - Deprecate hipMallocHost (Replace with hipHostMalloc)
-- Deprecate hipFreeHost (Replace with hipHostFree). 
+- Deprecate hipFreeHost (Replace with hipHostFree)
 
 
 ## Revision History:
