@@ -64,25 +64,11 @@ src/hip_peer.cpp
 src/hip_stream.cpp
 src/staging_buffer.cpp)
 
-if(NOT DEFINED ENV{HIP_USE_SHARED_LIBRARY})
-    set(HIP_USE_SHARED_LIBRARY 0)
-else()
-    set(HIP_USE_SHARED_LIBRARY $ENV{HIP_USE_SHARED_LIBRARY})
-endif()
-
 #add_library(hip_hcc STATIC ${SOURCE_FILES})
-if(${HIP_USE_SHARED_LIBRARY} EQUAL 1)
-    add_library(hip_hcc SHARED ${SOURCE_FILES})
-else()
-    add_library(hip_hcc OBJECT ${SOURCE_FILES})
-endif()
+add_library(hip_hcc OBJECT ${SOURCE_FILES})
 
 #install(TARGETS hip_hcc DESTINATION lib)
-if(${HIP_USE_SHARED_LIBRARY} EQUAL 1)
-    install(TARGETS hip_hcc DESTINATION lib)
-else()
-    install(DIRECTORY ${PROJECT_BINARY_DIR}/CMakeFiles/hip_hcc.dir/src/ DESTINATION lib)
-endif()
+install(DIRECTORY ${PROJECT_BINARY_DIR}/CMakeFiles/hip_hcc.dir/src/ DESTINATION lib)
 set(EXECUTE_COMMAND test ${CMAKE_INSTALL_PREFIX} -ef ${CMAKE_CURRENT_SOURCE_DIR})
 execute_process(COMMAND ${EXECUTE_COMMAND} RESULT_VARIABLE INSTALL_SOURCE)
 if(NOT ${INSTALL_SOURCE} EQUAL 0)
