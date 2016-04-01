@@ -15,14 +15,11 @@ New projects can be developed directly in the portable HIP C++ language and can 
 cd HIP-privatestaging
 mkdir build
 cd build
-cmake -DHSA_DIR=/path/to/hsa -DHCC_DIR=/path/to/hcc -DHIP_INSTALL_DIR=/where/to/install/hip -DCMAKE_BUILD_TYPE=Release ..
+cmake -DHSA_PATH=/path/to/hsa -DHCC_HOME=/path/to/hcc -DCMAKE_INSTALL_PREFIX=/where/to/install/hip -DCMAKE_BUILD_TYPE=Release ..
 make
 make install
 ```
 Make sure HIP_PATH is pointed to `/where/to/install/hip` and PATH includes `$HIP_PATH/bin`. This requirement is optional, but required to run any HIP test infrastructure.
-
-The Release build installs HIP inside `/where/to/install/hip`. The Debug build will install inside HIP repo directory by adding a `./lib` directory containing `libhip_hcc.a`
-
 
 ## More Info:
 - [HIP FAQ](docs/markdown/hip_faq.md)
