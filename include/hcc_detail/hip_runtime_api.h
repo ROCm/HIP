@@ -919,19 +919,22 @@ hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int deviceId, int peerDev
  *
  * @param [in] peerDeviceId
  *
- * TODO:cudaErrorPeerAccessNotEnabled and cudaErrorInvalidDevice error not supported in HIP, return hipErrorUnknown
- * Returns #hipSuccess, #hipErrorUnknown
+ * Returns #hipSuccess, #hipErrorPeerAccessNotEnabled
  */
 hipError_t  hipDeviceDisablePeerAccess (int peerDeviceId);
 
 /**
  * @brief Enable direct access from current device's virtual address space to memory allocations physically located on a peer device.  
  *
+ * Memory which already allocated on peer device will be mapped into the address space of the current device.  In addition, all
+ * future memory allocations on peerDeviceId will be mapped into the address space of the current device when the memory is allocated.
+ * The peer memory remains accessible from the current device until a call to hipDeviceDisablePeerAccess or @hipDeviceReset.
+ *
+ *
  * @param [in] peerDeviceId
  * @param [in] flags
  *
- * TODO:cudaErrorInvalidDevice error not supported in HIP, return hipErrorUnknown
- * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, #hipErrorUnknown
+ * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, #hipErrorPeerAccessAlreadyEnabled
  */
 hipError_t  hipDeviceEnablePeerAccess (int  peerDeviceId, unsigned int flags);
 
