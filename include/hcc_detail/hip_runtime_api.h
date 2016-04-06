@@ -908,12 +908,12 @@ hipError_t hipMemGetInfo  (size_t * free, size_t * total)   ;
  * Returns "1" in @p canAccessPeer if the specified @p device is capable
  * of directly accessing memory physically located on peerDevice , or "0" if not.
  */
-hipError_t hipDeviceCanAccessPeer ( int* canAccessPeer, int  device, int  peerDevice );
+hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int deviceId, int peerDeviceId);
 
 
 
 /**
- * @brief Disables registering memory on peerDevice for direct access from the current device.
+ * @brief Disable registering memory on peerDevice for direct access from the current device.
  *
  * If there are any allocations on peerDevice which were registered in the current device using hipPeerRegister() then these allocations will be automatically unregistered.
  * Returns hipErrorPeerAccessNotEnabled if direct access to memory on peerDevice has not yet been enabled from the current device.
@@ -922,10 +922,10 @@ hipError_t hipDeviceCanAccessPeer ( int* canAccessPeer, int  device, int  peerDe
  * TODO:cudaErrorPeerAccessNotEnabled and cudaErrorInvalidDevice error not supported in HIP, return hipErrorUnknown
  * Returns #hipSuccess, #hipErrorUnknown
  */
-hipError_t  hipDeviceDisablePeerAccess ( int  peerDevice );
+hipError_t  hipDeviceDisablePeerAccess (int peerDeviceId);
 
 /**
- * @brief Enables registering memory on peerDevice for direct access from the current device.
+ * @brief Enable registering memory on peerDevice for direct access from the current device.
  *
  * @param [in] peerDevice
  * @param [in] flags
@@ -933,7 +933,7 @@ hipError_t  hipDeviceDisablePeerAccess ( int  peerDevice );
  * TODO:cudaErrorInvalidDevice error not supported in HIP, return hipErrorUnknown
  * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, #hipErrorUnknown
  */
-hipError_t  hipDeviceEnablePeerAccess ( int  peerDevice, unsigned int  flags );
+hipError_t  hipDeviceEnablePeerAccess (int  peerDeviceId, unsigned int flags);
 
 /**
  * @brief Copies memory from one device to memory on another device.
