@@ -494,11 +494,23 @@ struct ihipEvent_t {
 // will lock the mutex on construction and unlock on destruction.
 //
 // MUTEX_TYPE is template argument so can easily convert to FakeMutex for performance or stress testing.
-template <typename MUTEX_TYPE>
+template <class MUTEX_TYPE>
 class ihipDeviceCriticalBase_t : LockedBase<MUTEX_TYPE>
 {
 public:
-    ihipDeviceCriticalBase_t() :  _stream_id(0) {};
+    ihipDeviceCriticalBase_t() :  _stream_id(0), _peerAgents(nullptr) {};
+   
+    void init(unsigned deviceCnt) {
+        assert(_peerAgents == nullptr);
+        _peerAgents = new hsa_agent_t[deviceCnt];
+    };
+
+    ~ihipDeviceCriticalBase_t()  {
+        if (_peerAgents != nullptr) {
+            delete _peerAgents;
+            _peerAgents = nullptr;
+        }
+    }
     friend class LockedAccessor<ihipDeviceCriticalBase_t>;
 
     std::list<ihipStream_t*> &streams() { return _streams; };
@@ -507,10 +519,19 @@ public:
     // "Allocate" a stream ID:
     ihipStream_t::SeqNum_t  incStreamId() { return _stream_id++; };
 
+    void recomputePeerAgents();
+    void addPeer(ihipDevice_t *peer);
+    void removePeer(ihipDevice_t *peer);
+
 
 private:
     std::list<ihipStream_t*> _streams;   // streams associated with this device.
     ihipStream_t::SeqNum_t   _stream_id;
+
+    // These reflect the currently Enabled set of peers for this GPU:
+    std::list<ihipDevice_t*>  _peers;     // list of enabled peer devices.
+    uint32_t                  _peerCnt;     // number of enabled peers
+    hsa_agent_t              *_peerAgents;  // efficient packed array of enabled agents (to use for allocations.)
 };
 
 // Note Mutex selected based on DeviceMutex
@@ -530,7 +551,7 @@ class ihipDevice_t
 {
 public: // Functions:
     ihipDevice_t() {}; // note: calls constructor for _criticalData 
-    void init(unsigned device_index, hc::accelerator &acc, unsigned flags);
+    void init(unsigned device_index, unsigned deviceCnt, hc::accelerator &acc, unsigned flags);
     ~ihipDevice_t();
 
     void locked_addStream(ihipStream_t *s);
