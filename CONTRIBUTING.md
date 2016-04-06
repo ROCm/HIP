@@ -55,8 +55,8 @@ When adding a new HIP feature, add a new unit test as well.
 See [tests/README.md](README.md) for more information.
 
 ## Development Flow
-The Unit testing environment automatically rebuilds libhip_hcc.a and the tests when a change it made to the HIP source, and this 
-is a great place to develop new features alongside the associated test.  
+It is recommended that developers set the flag HIP_BUILD_LOCAL=1 so that the unit testing environment automatically rebuilds libhip_hcc.a and the tests when a change it made to the HIP source. 
+Directed tests provide a great place to develop new features alongside the associated test.  
 
 For applications and benchmarks outside the directed test environment, developments should use a two-step development flow:
 - #1. Compile, link, and install HCC.  See [Installation](README.md#Installation) notes.
