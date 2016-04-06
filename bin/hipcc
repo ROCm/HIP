@@ -55,7 +55,7 @@ if ($verbose & 0x2) {
 	print ("CUDA_PATH=$CUDA_PATH\n");
 }
 
-
+$enablestdcpplib = 0;
 
 if ($HIP_PLATFORM eq "hcc") {
 	$HSA_PATH=$ENV{'HSA_PATH'};
@@ -143,12 +143,10 @@ foreach $arg (@ARGV)
         $needLDFLAGS = 1;
     }
 
-    if($arg eq '-stdlib=libstdc++')
+    if($arg eq '-stdlib=libstdc++' and $enablestdcpplib eq 0)
     {
 	$HIPCXXFLAGS .= " -stdlib=libstdc++";
-    }else
-    {
-         $HIPCXXFLAGS .= " -stdlib=libc++";
+	$enablestdcpplib = 1;
     }
 
     if ($arg =~ m/^-/) {
@@ -187,6 +185,11 @@ if ($hasC and $HIP_PLATFORM eq 'nvcc') {
 }
 if ($hasCU and $HIP_PLATFORM eq 'hcc') {
     $HIPCXXFLAGS .= " -x c++";
+}
+
+if ($enablestdcpplib eq 0)
+{
+    $HIPCXXFLAGS .= " -stdlib=libc++";
 }
 
 if ($needHipHcc) {
