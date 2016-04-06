@@ -130,6 +130,12 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
             hip_status = hipErrorMemoryAllocation;
         } else {
             hc::am_memtracker_update(*ptr, device->_device_index, 0);
+            {
+                LockedAccessor_DeviceCrit_t crit(device->criticalData());
+                if (crit->peerCnt()) {
+                    hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
+                }
+            }
         }
     } else {
         hip_status = hipErrorMemoryAllocation;
@@ -138,29 +144,6 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
     return ihipLogStatus(hip_status);
 }
 
-
-hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
-{
-    HIP_INIT_API(ptr, sizeBytes);
-
-    hipError_t  hip_status = hipSuccess;
-
-    const unsigned am_flags = amHostPinned;
-	auto device = ihipGetTlsDefaultDevice();
-
-    if (device) {
-        *ptr = hc::am_alloc(sizeBytes, device->_acc, am_flags);
-        if (sizeBytes && (*ptr == NULL)) {
-            hip_status = hipErrorMemoryAllocation;
-        } else {
-            hc::am_memtracker_update(*ptr, device->_device_index, 0);
-        }
-
-        tprintf (DB_MEM, "  %s: pinned ptr=%p\n", __func__, *ptr);
-    }
-
-    return ihipLogStatus(hip_status);
-}
 
 
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
@@ -186,6 +169,12 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
                 hip_status = hipErrorMemoryAllocation;
             }else{
                 hc::am_memtracker_update(*ptr, device->_device_index, flags);
+                {
+                    LockedAccessor_DeviceCrit_t crit(device->criticalData());
+                    if (crit->peerCnt()) {
+                        hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
+                    }
+                }
             }
             tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
         }
@@ -194,6 +183,7 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 }
 
 
+//---
 // TODO - remove me, this is deprecated.
 hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
@@ -201,6 +191,15 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags)
 };
 
 
+//---
+// TODO - remove me, this is deprecated.
+hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
+{
+    return hipHostMalloc(ptr, sizeBytes, 0);
+}
+
+
+//---
 hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr)
 {
     HIP_INIT_API(flagsPtr, hostPtr);
@@ -225,6 +224,8 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr)
 	return ihipLogStatus(hip_status);
 }
 
+
+//---
 hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
 {
     HIP_INIT_API(hostPtr, sizeBytes, flags);
