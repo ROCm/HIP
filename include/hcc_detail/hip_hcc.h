@@ -519,9 +519,11 @@ public:
     // "Allocate" a stream ID:
     ihipStream_t::SeqNum_t  incStreamId() { return _stream_id++; };
 
-    void recomputePeerAgents();
-    void addPeer(ihipDevice_t *peer);
-    void removePeer(ihipDevice_t *peer);
+    bool addPeer(ihipDevice_t *peer);
+    bool removePeer(ihipDevice_t *peer);
+
+    uint32_t peerCnt() const { return _peerCnt; };
+    uint32_t peerAgents() const { return _peerAgents; };
 
 
 private:
@@ -532,6 +534,8 @@ private:
     std::list<ihipDevice_t*>  _peers;     // list of enabled peer devices.
     uint32_t                  _peerCnt;     // number of enabled peers
     hsa_agent_t              *_peerAgents;  // efficient packed array of enabled agents (to use for allocations.)
+private:
+    void recomputePeerAgents();
 };
 
 // Note Mutex selected based on DeviceMutex
@@ -559,6 +563,8 @@ public: // Functions:
     void locked_reset();
     void locked_waitAllStreams();
     void locked_syncDefaultStream(bool waitOnSelf);
+
+    ihipDeviceCritical_t  &criticalData() { return _criticalData; }; // TODO, move private.  Fix P2P.
 
 public: // Data, set at initialization:
     unsigned                _device_index; // index into g_devices.

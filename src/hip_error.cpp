@@ -65,7 +65,7 @@ const char *hipGetErrorName(hipError_t hip_error)
 //---
 const char *hipGetErrorString(hipError_t hip_error)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(hip_error);
 
     // TODO - return a message explaining the error.
     // TODO - This should be set up to return the same string reported in the the doxygen comments, somehow.

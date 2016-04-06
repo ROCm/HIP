@@ -211,24 +211,31 @@ void ihipDeviceCriticalBase_t<DeviceMutex>::recomputePeerAgents()
 
 
 template<>
-void ihipDeviceCriticalBase_t<DeviceMutex>::addPeer(ihipDevice_t *peer) 
+bool ihipDeviceCriticalBase_t<DeviceMutex>::addPeer(ihipDevice_t *peer) 
 {
     auto match = std::find(_peers.begin(), _peers.end(), peer);
     if (match != std::end(_peers)) {
         _peers.push_back(peer);
         recomputePeerAgents();
-        return;
+        return true;
     }
 
     // If we get here - peer was already on list, silently ignore.
+    return false;
 }
 
 
 template<>
-void ihipDeviceCriticalBase_t<DeviceMutex>::removePeer(ihipDevice_t *peer) 
+bool ihipDeviceCriticalBase_t<DeviceMutex>::removePeer(ihipDevice_t *peer) 
 {
-    _peers.remove(peer);
-    recomputePeerAgents();
+    auto match = std::find(_peers.begin(), _peers.end(), peer);
+    if (match != std::end(_peers)) {
+        _peers.remove(peer);
+        recomputePeerAgents();
+        return true;
+    } else {
+        return false;
+    }
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -1065,22 +1072,25 @@ void ihipPostLaunchKernel(hipStream_t stream, hc::completion_future &kernelFutur
 const char *ihipErrorString(hipError_t hip_error)
 {
     switch (hip_error) {
-        case hipSuccess                     : return "hipSuccess";
-        case hipErrorMemoryAllocation       : return "hipErrorMemoryAllocation";
-        case hipErrorMemoryFree             : return "hipErrorMemoryFree";
-        case hipErrorUnknownSymbol          : return "hipErrorUnknownSymbol";
-        case hipErrorOutOfResources         : return "hipErrorOutOfResources";
-        case hipErrorInvalidValue           : return "hipErrorInvalidValue";
-        case hipErrorInvalidResourceHandle  : return "hipErrorInvalidResourceHandle";
-        case hipErrorInvalidDevice          : return "hipErrorInvalidDevice";
-        case hipErrorInvalidMemcpyDirection : return "hipErrorInvalidMemcpyDirection";
-        case hipErrorNoDevice               : return "hipErrorNoDevice";
-        case hipErrorNotReady               : return "hipErrorNotReady";
-        case hipErrorRuntimeMemory          : return "hipErrorRuntimeMemory";
-        case hipErrorRuntimeOther           : return "hipErrorRuntimeOther";
-        case hipErrorUnknown                : return "hipErrorUnknown";
-        case hipErrorTbd                    : return "hipErrorTbd";
-        default                             : return "hipErrorUnknown";
+        case hipSuccess                         : return "hipSuccess";
+        case hipErrorMemoryAllocation           : return "hipErrorMemoryAllocation";
+        case hipErrorMemoryFree                 : return "hipErrorMemoryFree";
+        case hipErrorUnknownSymbol              : return "hipErrorUnknownSymbol";
+        case hipErrorOutOfResources             : return "hipErrorOutOfResources";
+        case hipErrorInvalidValue               : return "hipErrorInvalidValue";
+        case hipErrorInvalidResourceHandle      : return "hipErrorInvalidResourceHandle";
+        case hipErrorInvalidDevice              : return "hipErrorInvalidDevice";
+        case hipErrorInvalidMemcpyDirection     : return "hipErrorInvalidMemcpyDirection";
+        case hipErrorNoDevice                   : return "hipErrorNoDevice";
+        case hipErrorNotReady                   : return "hipErrorNotReady";
+        case hipErrorPeerAccessNotEnabled       : return "hipErrorPeerAccessNotEnabled";
+        case hipErrorPeerAccessAlreadyEnabled   : return "hipErrorPeerAccessAlreadyEnabled";
+
+        case hipErrorRuntimeMemory              : return "hipErrorRuntimeMemory";
+        case hipErrorRuntimeOther               : return "hipErrorRuntimeOther";
+        case hipErrorUnknown                    : return "hipErrorUnknown";
+        case hipErrorTbd                        : return "hipErrorTbd";
+        default                                 : return "hipErrorUnknown";
     };
 };
 
