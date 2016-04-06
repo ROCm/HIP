@@ -137,7 +137,7 @@ ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, unsig
 
 //---
 ihipStream_t::~ihipStream_t()
-{
+{ 
 }
 
 
@@ -211,42 +211,24 @@ void ihipDeviceCriticalBase_t<DeviceMutex>::recomputePeerAgents()
 
 
 template<>
-bool ihipDeviceCriticalBase_t<DeviceMutex>::addPeer(ihipDevice_t *peer) 
-{
-    auto match = std::find(_peers.begin(), _peers.end(), peer);
-    if (match == std::end(_peers)) {
-        // Not already a peer, let's update the list:
-        _peers.push_back(peer);
-        recomputePeerAgents();
-        return true;
-    }
-
-    // If we get here - peer was already on list, silently ignore.
-    return false;
-}
-
-
-template<>
-bool ihipDeviceCriticalBase_t<DeviceMutex>::removePeer(ihipDevice_t *peer) 
+void ihipDeviceCriticalBase_t<DeviceMutex>::addPeer(ihipDevice_t *peer) 
 {
     auto match = std::find(_peers.begin(), _peers.end(), peer);
     if (match != std::end(_peers)) {
-        // Found a valid peer, let's remove it.
-        _peers.remove(peer);
+        _peers.push_back(peer);
         recomputePeerAgents();
-        return true;
-    } else {
-        return false;
+        return;
     }
+
+    // If we get here - peer was already on list, silently ignore.
 }
 
 
 template<>
-void ihipDeviceCriticalBase_t<DeviceMutex>::resetPeers(ihipDevice_t *thisDevice)
+void ihipDeviceCriticalBase_t<DeviceMutex>::removePeer(ihipDevice_t *peer) 
 {
-    _peers.clear();
-    _peerCnt = 0;
-    addPeer(thisDevice); // peer-list always contains self agent.
+    _peers.remove(peer);
+    recomputePeerAgents();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -453,12 +435,7 @@ void ihipDevice_t::locked_reset()
     // Reset and remove streams:
     crit->streams().clear();
 
-
-    // This resest peer list to just me:
-    crit->resetPeers(this);
-
     // Reset and release all memory stored in the tracker:
-    // Reset will remove peer mapping so don't need to do this explicitly.
     am_memtracker_reset(_acc);
 
 };
@@ -485,13 +462,10 @@ void ihipDevice_t::init(unsigned device_index, unsigned deviceCnt, hc::accelerat
 
     getProperties(&_props);
 
-    _criticalData.init(deviceCnt);
-
-    locked_reset();
-
     _default_stream = new ihipStream_t(device_index, acc.get_default_view(), hipStreamDefault);
     locked_addStream(_default_stream);
-    
+
+    _criticalData.init(deviceCnt);
 
     tprintf(DB_SYNC, "created device with default_stream=%p\n", _default_stream);
 
@@ -961,6 +935,7 @@ void ihipInit()
     for (int i=0; i<accs.size(); i++) {
         // check if the device id is included in the HIP_VISIBLE_DEVICES env variable
         if (! accs[i].get_is_emulated()) {
+            //if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), (i-1)) == g_hip_visible_devices.end() && g_visible_device)
             if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), (i-1)) == g_hip_visible_devices.end() && g_visible_device)
             {
                 //If device is not in visible devices list, ignore
@@ -993,6 +968,13 @@ bool ihipIsValidDevice(unsigned deviceIndex)
     // deviceIndex is unsigned so always > 0
     return (deviceIndex < g_deviceCnt);
 }
+
+/*// check if the device ID is set as visible*/
+//INLINE bool ihipIsVisibleDevice(unsigned deviceIndex)
+//{
+    //return std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(),
+            //(int)deviceIndex) != g_hip_visible_devices.end();
+/*}*/
 
 //---
 ihipDevice_t *ihipGetTlsDefaultDevice()
@@ -1091,25 +1073,22 @@ void ihipPostLaunchKernel(hipStream_t stream, hc::completion_future &kernelFutur
 const char *ihipErrorString(hipError_t hip_error)
 {
     switch (hip_error) {
-        case hipSuccess                         : return "hipSuccess";
-        case hipErrorMemoryAllocation           : return "hipErrorMemoryAllocation";
-        case hipErrorMemoryFree                 : return "hipErrorMemoryFree";
-        case hipErrorUnknownSymbol              : return "hipErrorUnknownSymbol";
-        case hipErrorOutOfResources             : return "hipErrorOutOfResources";
-        case hipErrorInvalidValue               : return "hipErrorInvalidValue";
-        case hipErrorInvalidResourceHandle      : return "hipErrorInvalidResourceHandle";
-        case hipErrorInvalidDevice              : return "hipErrorInvalidDevice";
-        case hipErrorInvalidMemcpyDirection     : return "hipErrorInvalidMemcpyDirection";
-        case hipErrorNoDevice                   : return "hipErrorNoDevice";
-        case hipErrorNotReady                   : return "hipErrorNotReady";
-        case hipErrorPeerAccessNotEnabled       : return "hipErrorPeerAccessNotEnabled";
-        case hipErrorPeerAccessAlreadyEnabled   : return "hipErrorPeerAccessAlreadyEnabled";
-
-        case hipErrorRuntimeMemory              : return "hipErrorRuntimeMemory";
-        case hipErrorRuntimeOther               : return "hipErrorRuntimeOther";
-        case hipErrorUnknown                    : return "hipErrorUnknown";
-        case hipErrorTbd                        : return "hipErrorTbd";
-        default                                 : return "hipErrorUnknown";
+        case hipSuccess                     : return "hipSuccess";
+        case hipErrorMemoryAllocation       : return "hipErrorMemoryAllocation";
+        case hipErrorMemoryFree             : return "hipErrorMemoryFree";
+        case hipErrorUnknownSymbol          : return "hipErrorUnknownSymbol";
+        case hipErrorOutOfResources         : return "hipErrorOutOfResources";
+        case hipErrorInvalidValue           : return "hipErrorInvalidValue";
+        case hipErrorInvalidResourceHandle  : return "hipErrorInvalidResourceHandle";
+        case hipErrorInvalidDevice          : return "hipErrorInvalidDevice";
+        case hipErrorInvalidMemcpyDirection : return "hipErrorInvalidMemcpyDirection";
+        case hipErrorNoDevice               : return "hipErrorNoDevice";
+        case hipErrorNotReady               : return "hipErrorNotReady";
+        case hipErrorRuntimeMemory          : return "hipErrorRuntimeMemory";
+        case hipErrorRuntimeOther           : return "hipErrorRuntimeOther";
+        case hipErrorUnknown                : return "hipErrorUnknown";
+        case hipErrorTbd                    : return "hipErrorTbd";
+        default                             : return "hipErrorUnknown";
     };
 };
 
