@@ -198,6 +198,40 @@ void ihipStream_t::locked_wait(bool assertQueueEmpty)
 };
 
 
+// Recompute the peercnt and the packed _peerAgents whenever a peer is added or deleted.
+// The packed _peerAgents can efficiently be used on each memory allocation.
+template<> 
+void ihipDeviceCriticalBase_t<DeviceMutex>::recomputePeerAgents()
+{
+    _peerCnt = 0;
+    std::for_each (_peers.begin(), _peers.end(), [this](ihipDevice_t* device) {
+        _peerAgents[_peerCnt++] = device->_hsa_agent;
+    });
+}
+
+
+template<>
+void ihipDeviceCriticalBase_t<DeviceMutex>::addPeer(ihipDevice_t *peer) 
+{
+    auto match = std::find(_peers.begin(), _peers.end(), peer);
+    if (match != std::end(_peers)) {
+        _peers.push_back(peer);
+        recomputePeerAgents();
+        return;
+    }
+
+    // If we get here - peer was already on list, silently ignore.
+}
+
+
+template<>
+void ihipDeviceCriticalBase_t<DeviceMutex>::removePeer(ihipDevice_t *peer) 
+{
+    _peers.remove(peer);
+    recomputePeerAgents();
+}
+
+//-------------------------------------------------------------------------------------------------
 
 //---
 ihipDevice_t * ihipStream_t::getDevice() const
@@ -408,7 +442,7 @@ void ihipDevice_t::locked_reset()
 
 
 //---
-void ihipDevice_t::init(unsigned device_index, hc::accelerator &acc, unsigned flags)
+void ihipDevice_t::init(unsigned device_index, unsigned deviceCnt, hc::accelerator &acc, unsigned flags)
 {
     _device_index = device_index;
     _device_flags = flags;
@@ -430,6 +464,8 @@ void ihipDevice_t::init(unsigned device_index, hc::accelerator &acc, unsigned fl
 
     _default_stream = new ihipStream_t(device_index, acc.get_default_view(), hipStreamDefault);
     locked_addStream(_default_stream);
+
+    _criticalData.init(deviceCnt);
 
     tprintf(DB_SYNC, "created device with default_stream=%p\n", _default_stream);
 
@@ -904,7 +940,7 @@ void ihipInit()
                 //If device is not in visible devices list, ignore
                 continue;
             }
-            g_devices[g_deviceCnt].init(g_deviceCnt, accs[i], hipDeviceMapHost);
+            g_devices[g_deviceCnt].init(g_deviceCnt, deviceCnt, accs[i], hipDeviceMapHost);
             g_deviceCnt++;
         }
     }
