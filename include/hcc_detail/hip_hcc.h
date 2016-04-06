@@ -35,6 +35,10 @@ THE SOFTWARE.
 //Use the new HCC accelerator_view::copy instead of am_copy
 #define USE_AV_COPY 0
 
+// Compile peer-to-peer support.
+// 2= use upcoming HCC APIs.
+#define USE_PEER_TO_PEER 1
+
 //#define INLINE static inline
 
 //---
@@ -523,7 +527,7 @@ public:
     bool removePeer(ihipDevice_t *peer);
 
     uint32_t peerCnt() const { return _peerCnt; };
-    uint32_t peerAgents() const { return _peerAgents; };
+    hsa_agent_t *peerAgents() const { return _peerAgents; };
 
 
 private:
