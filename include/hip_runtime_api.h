@@ -138,7 +138,7 @@ typedef struct hipPointerAttribute_t {
  * @enum
  * @ingroup Enumerations
  */
-// Developer note - when updating these, update the hipErrorName and hipErrorString functions
+// Developer note - when updating these, update the hipErrorName and hipErrorString functions in NVCC and HCC paths
 typedef enum hipError_t {
      hipSuccess = 0                   ///< Successful completion.
     ,hipErrorMemoryAllocation         ///< Memory allocation error.
@@ -155,6 +155,8 @@ typedef enum hipError_t {
     ,hipErrorNoDevice                 ///< Call to hipGetDeviceCount returned 0 devices
     ,hipErrorNotReady                 ///< Indicates that asynchronous operations enqueued earlier are not ready.  This is not actually an error, but is used to distinguish from hipSuccess (which indicates completion).  APIs that return this error include hipEventQuery and hipStreamQuery.
     ,hipErrorUnknown                  ///< Unknown error.
+    ,hipErrorPeerAccessNotEnabled     ///< Peer access was never enabled from the current device.
+    ,hipErrorPeerAccessAlreadyEnabled ///< Peer access was already enabled from the current device.
     ,hipErrorRuntimeMemory            ///< HSA runtime memory call returned error.  Typically not seen in production systems.
     ,hipErrorRuntimeOther             ///< HSA runtime call other than memory returned error.  Typically not seen in production systems.
     ,hipErrorTbd                      ///< Marker that more error codes are needed.
