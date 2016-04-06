@@ -5,7 +5,6 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release")
 endif()
 
-set(HIPIFY_STANDLONE 1)
 add_subdirectory(clang-hipify)
 
 if(NOT DEFINED HCC_HOME)
