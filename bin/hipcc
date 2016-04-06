@@ -40,7 +40,6 @@ $CODEXL_PATH = $ENV{'CODEXL_PATH'};
 $CODEXL_PATH = "/opt/AMD/CodeXL" unless defined $CODEXL_PATH;
 $marker_path = "$CODEXL_PATH/SDK/AMDTActivityLogger";
 
-
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
 $HIP_PLATFORM=$ENV{'HIP_PLATFORM'};
@@ -67,7 +66,7 @@ if ($HIP_PLATFORM eq "hcc") {
 
     # HCC* may be used to compile src/hip_hcc.o (and also feed the HIPCXXFLAGS below)
     $HCC = "$HCC_HOME/bin/hcc";
-    $HCCFLAGS = " -hc -I$HCC_HOME/include  -stdlib=libc++";
+    $HCCFLAGS = " -hc -I$HCC_HOME/include ";
 
     $HIPCC=$HCC;
     $HIPCXXFLAGS = $HCCFLAGS;
@@ -144,6 +143,13 @@ foreach $arg (@ARGV)
         $needLDFLAGS = 1;
     }
 
+    if($arg eq '-stdlib=libstdc++')
+    {
+	$HIPCXXFLAGS .= " -stdlib=libstdc++";
+    }else
+    {
+         $HIPCXXFLAGS .= " -stdlib=libc++";
+    }
 
     if ($arg =~ m/^-/) {
         # options start with -
