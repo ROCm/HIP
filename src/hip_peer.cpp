@@ -20,7 +20,6 @@ THE SOFTWARE.
 #include "hip_runtime.h"
 #include "hcc_detail/hip_hcc.h"
 #include "hcc_detail/trace_helper.h"
-#define USE_PEER_TO_PEER 1
 
 /**
  * @warning HCC returns 0 in *canAccessPeer ; Need to update this function when RT supports P2P
@@ -67,15 +66,26 @@ hipError_t hipDeviceDisablePeerAccess (int peerDeviceId)
     auto thisDevice = ihipGetTlsDefaultDevice();
     auto peerDevice = ihipGetDevice(peerDeviceId);
     if ((thisDevice != NULL) && (peerDevice != NULL)) {
-        LockedAccessor_DeviceCrit_t crit(thisDevice->criticalData());
-        bool changed = crit->removePeer(peerDevice);
-        if (changed) {
 #if USE_PEER_TO_PEER==2
-            am_memtracker_update_peers(device->_acc, crit->peerCnt(), crit->peerAgents());
+        bool canAccessPeer =  peerDevice->_acc.get_is_peer(device->_acc);
+#else
+        bool canAccessPeer = 0;
 #endif
+        if (! canAccessPeer) {
+            err = hipErrorInvalidDevice;  // P2P not allowed between these devices.
         } else {
-            err = hipErrorPeerAccessNotEnabled; // never enabled P2P access.
-        }
+
+
+            LockedAccessor_DeviceCrit_t crit(thisDevice->criticalData());
+            bool changed = crit->removePeer(peerDevice);
+            if (changed) {
+#if USE_PEER_TO_PEER==2
+                am_memtracker_update_peers(device->_acc, crit->peerCnt(), crit->peerAgents());
+#endif
+            } else {
+                err = hipErrorPeerAccessNotEnabled; // never enabled P2P access.
+            }
+        } 
     } else {
         err = hipErrorInvalidDevice;
     }

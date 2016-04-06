@@ -442,9 +442,12 @@ void ihipDevice_t::locked_reset()
     // Reset and remove streams:
     crit->streams().clear();
 
+#if USE_PEER_TO_PEER==2
+    // remove peer mappings to this device?  Call removePeer on all other devices?
+#endif
+
     // Reset and release all memory stored in the tracker:
     am_memtracker_reset(_acc);
-
 };
 
 
