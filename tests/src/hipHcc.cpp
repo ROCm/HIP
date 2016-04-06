@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include <stdio.h>
 #include <iostream>
 #include <hip_runtime.h>
-
+#include <hcc.h>
 #include "test_common.h"
 
 #define CHECK(error) \
