@@ -57,7 +57,14 @@ set(CMAKE_CXX_FLAGS " -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -stdlib=li
 set(CMAKE_C_FLAGS   " -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -stdlib=libc++ ")
 
 set(SOURCE_FILES src/device_util.cpp
-)
+src/hip_hcc.cpp 
+src/hip_device.cpp
+src/hip_error.cpp
+src/hip_event.cpp
+src/hip_memory.cpp
+src/hip_peer.cpp
+src/hip_stream.cpp
+src/staging_buffer.cpp)
 
 if(NOT DEFINED ENV{HIP_USE_SHARED_LIBRARY})
     set(HIP_USE_SHARED_LIBRARY 0)
