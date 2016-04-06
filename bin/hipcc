@@ -40,7 +40,6 @@ $CODEXL_PATH = $ENV{'CODEXL_PATH'};
 $CODEXL_PATH = "/opt/AMD/CodeXL" unless defined $CODEXL_PATH;
 $marker_path = "$CODEXL_PATH/SDK/AMDTActivityLogger";
 
-
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
 $HIP_PLATFORM=$ENV{'HIP_PLATFORM'};
@@ -56,7 +55,7 @@ if ($verbose & 0x2) {
 	print ("CUDA_PATH=$CUDA_PATH\n");
 }
 
-
+$enablestdcpplib = 0;
 
 if ($HIP_PLATFORM eq "hcc") {
 	$HSA_PATH=$ENV{'HSA_PATH'};
@@ -67,7 +66,7 @@ if ($HIP_PLATFORM eq "hcc") {
 
     # HCC* may be used to compile src/hip_hcc.o (and also feed the HIPCXXFLAGS below)
     $HCC = "$HCC_HOME/bin/hcc";
-    $HCCFLAGS = " -hc -I$HCC_HOME/include  -stdlib=libc++";
+    $HCCFLAGS = " -hc -I$HCC_HOME/include ";
 
     $HIPCC=$HCC;
     $HIPCXXFLAGS = $HCCFLAGS;
@@ -144,6 +143,11 @@ foreach $arg (@ARGV)
         $needLDFLAGS = 1;
     }
 
+    if($arg eq '-stdlib=libstdc++' and $enablestdcpplib eq 0)
+    {
+	$HIPCXXFLAGS .= " -stdlib=libstdc++";
+	$enablestdcpplib = 1;
+    }
 
     if ($arg =~ m/^-/) {
         # options start with -
@@ -181,6 +185,11 @@ if ($hasC and $HIP_PLATFORM eq 'nvcc') {
 }
 if ($hasCU and $HIP_PLATFORM eq 'hcc') {
     $HIPCXXFLAGS .= " -x c++";
+}
+
+if ($enablestdcpplib eq 0)
+{
+    $HIPCXXFLAGS .= " -stdlib=libc++";
 }
 
 if ($needHipHcc) {
