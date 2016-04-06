@@ -15,11 +15,11 @@ New projects can be developed directly in the portable HIP C++ language and can 
 cd HIP-privatestaging
 mkdir build
 cd build
-cmake -DHSA_PATH=/path/to/hsa -DHCC_HOME=/path/to/hcc -DCMAKE_INSTALL_PREFIX=/where/to/install/hip -DCMAKE_BUILD_TYPE=Release ..
+cmake -DHSA_PATH=/path/to/hsa -DHCC_HOME=/path/to/hcc -DCMAKE_INSTALL_PREFIX=/where/to/install/hip -DLLVM_DIR=/path/to/clang-llvm-3.8 -DCMAKE_BUILD_TYPE=Release ..
 make
 make install
 ```
-Make sure HIP_PATH is pointed to `/where/to/install/hip` and PATH includes `$HIP_PATH/bin`. This requirement is optional, but required to run any HIP test infrastructure.
+Make sure HIP_PATH is pointed to `/where/to/install/hip` and PATH includes `$HIP_PATH/bin`. This requirement is optional, but required to run any HIP test infrastructure. The path `/path/to/clang-llvm-3.8` should be specified for [clang-hipify](README.md#clang-hipify) utility build. 
 
 ## More Info:
 - [HIP FAQ](docs/markdown/hip_faq.md)
@@ -42,7 +42,23 @@ HIP code can be developed either on AMD HSA or Boltzmann platform using hcc comp
 * By default HIP looks for hcc in /opt/hcc (can be overridden by setting HCC_HOME environment variable)
 * By default HIP looks for HSA in /opt/hsa (can be overridden by setting HSA_PATH environment variable) 
 * Ensure that ROCR runtime is installed and added to LD_LIBRARY_PATH
-   
+
+#####clang-hipify
+To build and run clang based hipify utiliy a set of CUDA headers and clang+llvm 3.8 binary package are required:
+- download and install CUDA minimal prerequisites:
+ 1. Download "deb(network)" variant of target installer from https://developer.nvidia.com/cuda-downloads. E.g. at the moment the link is http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1404/x86_64/cuda-repo-ubuntu1404_7.5-18_amd64.deb
+ 2. install clang prerequisites with the following commands:
+```
+wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1404/x86_64/cuda-repo-ubuntu1404_7.5-18_amd64.deb
+sudo dpkg -i cuda-repo-ubuntu1404_7.5-18_amd64.deb
+sudo apt-get update && sudo apt-get install cuda-minimal-build-7-5 cuda-curand-dev-7-5
+```
+- download and unpack clang+llvm 3.8 binary package:
+```
+wget http://llvm.org/releases/3.8.0/clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
+tar xvfJ clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz -C /path/to/clang-llvm-3.8
+```
+
 #### NVIDIA (nvcc)
 * Install CUDA SDK from manufacturer website
 * By default HIP looks for CUDA SDK in /usr/local/cuda (can be overriden by setting CUDA_PATH env variable)
