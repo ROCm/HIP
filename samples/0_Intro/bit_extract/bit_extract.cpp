@@ -33,8 +33,6 @@ THE SOFTWARE.
 void __global__
 bit_extract_kernel(hipLaunchParm lp, uint32_t *C_d, const uint32_t *A_d, size_t N)
 {
-    KERNELBEGIN;
-
     size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
     size_t stride = hipBlockDim_x * hipGridDim_x ;
 
@@ -45,8 +43,6 @@ bit_extract_kernel(hipLaunchParm lp, uint32_t *C_d, const uint32_t *A_d, size_t 
 		C_d[i] = ((A_d[i] & 0xf00)  >> 8);
 #endif
 	}
-
-    KERNELEND;
 }
 
 
