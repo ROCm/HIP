@@ -36,8 +36,9 @@ THE SOFTWARE.
 #define USE_AV_COPY 0
 
 // Compile peer-to-peer support.
-// 2= use upcoming HCC APIs.
-#define USE_PEER_TO_PEER 1
+// >= 2 : use HCC hc:accelerator::get_is_peer
+// >= 3 : use hc::am_memtracker_update_peers(...)
+#define USE_PEER_TO_PEER 2
 
 //#define INLINE static inline
 
