@@ -53,7 +53,7 @@ StagingBuffer::~StagingBuffer()
 {
     for (int i=0; i<_numBuffers; i++) {
         if (_pinnedStagingBuffer[i]) {
-            hc::am_free(_pinnedStagingBuffer[i]);
+            hsa_memory_free(_pinnedStagingBuffer[i]);
             _pinnedStagingBuffer[i] = NULL;
         }
         hsa_signal_destroy(_completion_signal[i]);
