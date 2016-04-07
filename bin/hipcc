@@ -40,7 +40,6 @@ $CODEXL_PATH = $ENV{'CODEXL_PATH'};
 $CODEXL_PATH = "/opt/AMD/CodeXL" unless defined $CODEXL_PATH;
 $marker_path = "$CODEXL_PATH/SDK/AMDTActivityLogger";
 
-
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
 $HIP_PLATFORM=$ENV{'HIP_PLATFORM'};
@@ -56,7 +55,7 @@ if ($verbose & 0x2) {
 	print ("CUDA_PATH=$CUDA_PATH\n");
 }
 
-
+$enablestdcpplib = 0;
 
 if ($HIP_PLATFORM eq "hcc") {
 	$HSA_PATH=$ENV{'HSA_PATH'};
@@ -67,15 +66,17 @@ if ($HIP_PLATFORM eq "hcc") {
 
     # HCC* may be used to compile src/hip_hcc.o (and also feed the HIPCXXFLAGS below)
     $HCC = "$HCC_HOME/bin/hcc";
-    $HCCFLAGS = " -hc -I$HCC_HOME/include  -stdlib=libc++";
+    $HCCFLAGS = " -hc -I$HCC_HOME/include ";
 
     $HIPCC=$HCC;
     $HIPCXXFLAGS = $HCCFLAGS;
     $HIPCXXFLAGS .= " -I$HIP_PATH/include/hcc_detail/cuda";
     $HIPCXXFLAGS .= " -I$HSA_PATH/include";
 	$HIPLDFLAGS =  "-hc -L$HCC_HOME/lib -Wl,--rpath=$HCC_HOME/lib -lc++ -ldl -lpthread -Wl,--whole-archive -lmcwamp -Wl,--no-whole-archive";
-        # Suppress linker warnings in case HCC distribution contains OpenCL/SPIR symbols
-        $HIPLDFLAGS .= " -Wl,--defsym=_binary_kernel_spir_end=0 -Wl,--defsym=_binary_kernel_spir_start=0 -Wl,--defsym=_binary_kernel_cl_start=0 -Wl,--defsym=_binary_kernel_cl_end=0";
+    # Suppress linker warnings in case HCC distribution contains OpenCL/SPIR symbols
+    $HIPLDFLAGS .= " -Wl,--defsym=_binary_kernel_spir_end=0 -Wl,--defsym=_binary_kernel_spir_start=0 -Wl,--defsym=_binary_kernel_cl_start=0 -Wl,--defsym=_binary_kernel_cl_end=0";
+    # Satisfy HCC dependencies
+    $HIPLDFLAGS .= " -lc++abi";
 	$HIPLDFLAGS .= " -L$HSA_PATH/lib -lhsa-runtime64 -lhc_am";
 
     # Add trace marker library:
@@ -142,6 +143,11 @@ foreach $arg (@ARGV)
         $needLDFLAGS = 1;
     }
 
+    if($arg eq '-stdlib=libstdc++' and $enablestdcpplib eq 0)
+    {
+	$HIPCXXFLAGS .= " -stdlib=libstdc++";
+	$enablestdcpplib = 1;
+    }
 
     if ($arg =~ m/^-/) {
         # options start with -
@@ -181,13 +187,18 @@ if ($hasCU and $HIP_PLATFORM eq 'hcc') {
     $HIPCXXFLAGS .= " -x c++";
 }
 
+if ($enablestdcpplib eq 0 and $HIP_PLATFORM eq 'hcc')
+{
+    $HIPCXXFLAGS .= " -stdlib=libc++";
+}
+
 if ($needHipHcc) {
     $HIP_USE_SHARED_LIBRARY = $ENV{'HIP_USE_SHARED_LIBRARY'};
     $HIP_USE_SHARED_LIBRARY = 0 unless defined $HIP_USE_SHARED_LIBRARY;
 
     #$HIPLDFLAGS .= " -L/opt/hip/lib -lhip_hcc" ;
     if ($HIP_USE_SHARED_LIBRARY) {
-        $HIPLDFLAGS .= " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc"
+        $HIPLDFLAGS .= " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc";
     } else {
         $HIPLDFLAGS .= " $HIP_PATH/lib/device_util.cpp.o $HIP_PATH/lib/hip_device.cpp.o $HIP_PATH/lib/hip_error.cpp.o $HIP_PATH/lib/hip_event.cpp.o $HIP_PATH/lib/hip_hcc.cpp.o $HIP_PATH/lib/hip_memory.cpp.o $HIP_PATH/lib/hip_peer.cpp.o $HIP_PATH/lib/hip_stream.cpp.o $HIP_PATH/lib/staging_buffer.cpp.o";
     }

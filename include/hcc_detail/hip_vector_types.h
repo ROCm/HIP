@@ -29,7 +29,11 @@ THE SOFTWARE.
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
+#if __cplusplus
 #include <hc_short_vector.hpp>
+
+using namespace hc::short_vector;
+#endif
 
 //-- Signed
 // Define char vector types
@@ -108,7 +112,7 @@ typedef hc::short_vector::double2 double2;
 typedef hc::short_vector::double3 double3;
 typedef hc::short_vector::double4 double4;
 
-
+/*
 ///---
 // Inline functions for creating vector types from basic types
 #define ONE_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT (T x) { VT t; t.x = x; return t; };
@@ -191,3 +195,4 @@ ONE_COMPONENT_ACCESS  (double, double1);
 TWO_COMPONENT_ACCESS  (double, double2);
 THREE_COMPONENT_ACCESS(double, double3);
 FOUR_COMPONENT_ACCESS (double, double4);
+*/
