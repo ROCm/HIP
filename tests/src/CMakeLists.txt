@@ -170,6 +170,7 @@ make_hip_executable (hipFuncSetDeviceFlags hipFuncSetDeviceFlags.cpp)
 make_hip_executable (hipFuncGetDevice hipFuncGetDevice.cpp)
 make_hip_executable (hipFuncSetDevice hipFuncSetDevice.cpp)
 make_hip_executable (hipFuncDeviceSynchronize hipFuncDeviceSynchronize.cpp)
+make_hip_executable (hipPeerToPeer_simple hipPeerToPeer_simple.cpp) 
 
 make_hip_executable (hipMultiThreadDevice hipMultiThreadDevice.cpp) 
 
@@ -217,5 +218,6 @@ make_test(hipFuncDeviceSynchronize " ")
 make_named_test (hipMultiThreadDevice "hipMultiThreadDevice-serial" --tests 0x1) 
 make_named_test (hipMultiThreadDevice "hipMultiThreadDevice-pyramid" --tests 0x4) 
 make_named_test (hipMultiThreadDevice "hipMultiThreadDevice-nearzero" --tests 0x10) 
+make_test(hipPeerToPeer_simple " " )
 
 make_hipify_test(specialFunc.cu )
