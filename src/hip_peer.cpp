@@ -32,12 +32,12 @@ hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int  deviceId, int peerDe
     hipError_t err = hipSuccess;
 
 #if USE_PEER_TO_PEER
-    auto device = ihipGetDevice(deviceId);
+    auto thisDevice = ihipGetDevice(deviceId);
     auto peerDevice = ihipGetDevice(peerDeviceId);
 
-    if ((device != NULL) && (peerDevice != NULL)) {
-#if USE_PEER_TO_PEER==2
-        *canAccessPeer = peerDevice->_acc.get_is_peer(device->_acc);
+    if ((thisDevice != NULL) && (peerDevice != NULL)) {
+#if USE_PEER_TO_PEER>=2
+        *canAccessPeer = peerDevice->_acc.get_is_peer(thisDevice->_acc);
 #else
         *canAccessPeer = 0;
 #endif
@@ -66,8 +66,8 @@ hipError_t hipDeviceDisablePeerAccess (int peerDeviceId)
     auto thisDevice = ihipGetTlsDefaultDevice();
     auto peerDevice = ihipGetDevice(peerDeviceId);
     if ((thisDevice != NULL) && (peerDevice != NULL)) {
-#if USE_PEER_TO_PEER==2
-        bool canAccessPeer =  peerDevice->_acc.get_is_peer(device->_acc);
+#if USE_PEER_TO_PEER>=2
+        bool canAccessPeer =  peerDevice->_acc.get_is_peer(thisDevice->_acc);
 #else
         bool canAccessPeer = 0;
 #endif
@@ -79,7 +79,8 @@ hipError_t hipDeviceDisablePeerAccess (int peerDeviceId)
             LockedAccessor_DeviceCrit_t crit(thisDevice->criticalData());
             bool changed = crit->removePeer(peerDevice);
             if (changed) {
-#if USE_PEER_TO_PEER==2
+#if USE_PEER_TO_PEER>=3
+                // Update the peers for all memory already saved in the tracker:
                 am_memtracker_update_peers(device->_acc, crit->peerCnt(), crit->peerAgents());
 #endif
             } else {
@@ -115,7 +116,7 @@ hipError_t hipDeviceEnablePeerAccess (int peerDeviceId, unsigned int flags)
             LockedAccessor_DeviceCrit_t crit(thisDevice->criticalData());
             bool isNewPeer = crit->addPeer(peerDevice);
             if (isNewPeer) {
-#if USE_PEER_TO_PEER==2
+#if USE_PEER_TO_PEER>=3
                 am_memtracker_update_peers(device->_acc, crit->peerCnt(), crit->peerAgents());
 #endif
             } else {
