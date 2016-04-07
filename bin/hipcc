@@ -187,7 +187,7 @@ if ($hasCU and $HIP_PLATFORM eq 'hcc') {
     $HIPCXXFLAGS .= " -x c++";
 }
 
-if ($enablestdcpplib eq 0)
+if ($enablestdcpplib eq 0 and $HIP_PLATFORM eq 'hcc')
 {
     $HIPCXXFLAGS .= " -stdlib=libc++";
 }
