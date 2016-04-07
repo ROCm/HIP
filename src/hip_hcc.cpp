@@ -137,7 +137,7 @@ ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, unsig
 
 //---
 ihipStream_t::~ihipStream_t()
-{ 
+{
 }
 
 
@@ -899,7 +899,6 @@ void ihipInit()
     for (int i=0; i<accs.size(); i++) {
         // check if the device id is included in the HIP_VISIBLE_DEVICES env variable
         if (! accs[i].get_is_emulated()) {
-            //if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), (i-1)) == g_hip_visible_devices.end() && g_visible_device)
             if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), (i-1)) == g_hip_visible_devices.end() && g_visible_device)
             {
                 //If device is not in visible devices list, ignore
@@ -932,13 +931,6 @@ bool ihipIsValidDevice(unsigned deviceIndex)
     // deviceIndex is unsigned so always > 0
     return (deviceIndex < g_deviceCnt);
 }
-
-/*// check if the device ID is set as visible*/
-//INLINE bool ihipIsVisibleDevice(unsigned deviceIndex)
-//{
-    //return std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(),
-            //(int)deviceIndex) != g_hip_visible_devices.end();
-/*}*/
 
 //---
 ihipDevice_t *ihipGetTlsDefaultDevice()
