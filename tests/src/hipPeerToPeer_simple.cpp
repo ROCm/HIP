@@ -52,12 +52,12 @@ int main(int argc, char *argv[])
 
     HIPCHECK(hipDeviceEnablePeerAccess(peerDevice, 0));
 
-    size_t Nbytes = N*sizeof(float);
+    size_t Nbytes = N*sizeof(char);
 
-    float *A_d0, *A_d1;
-    float *A_h;
+    char *A_d0, *A_d1;
+    char *A_h;
 
-    A_h = (float*)malloc(Nbytes);
+    A_h = (char*)malloc(Nbytes);
     HIPCHECK (hipSetDevice(peerDevice));
     HIPCHECK (hipMalloc(&A_d1, Nbytes) );
 
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
     HIPCHECK ( hipMemset(A_d0, memsetval, Nbytes) ); 
 
     // Device0 push to device1, using P2P:
-    HIPCHECK ( hipMemcpy(A_d0, A_d1, Nbytes, hipMemcpyDefault));
+    HIPCHECK ( hipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyDefault));
 
     // Copy data back to host:
     HIPCHECK ( hipMemcpy(A_h, A_d1, Nbytes, hipMemcpyDeviceToHost));
