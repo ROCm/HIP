@@ -158,6 +158,12 @@ syn keyword hipFunctionName hipStreamSynchronize
 syn keyword hipFunctionName hipThreadExit 
 syn keyword hipFunctionName hipThreadSynchronize 
 syn keyword hipFunctionName hipUnbindTexture 
+syn keyword hipFunctionName hipDeviceCanAccessPeer 
+syn keyword hipFunctionName hipDeviceEnablePeerAccess
+syn keyword hipFunctionName hipDeviceDisablePeerAccess
+syn keyword hipFunctionName hipMemcpyPeer
+syn keyword hipFunctionName hipMemcpyPeerAsync
+
 
 " HIP Flags
 syn keyword hipFlags hipFilterModePoint 
