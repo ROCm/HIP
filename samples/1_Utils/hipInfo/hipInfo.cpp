@@ -120,7 +120,24 @@ void printDeviceProp (int deviceId)
     cout << setw(w1) << "arch.hasSurfaceFuncs: " <<           props.arch.hasSurfaceFuncs          << endl;
     cout << setw(w1) << "arch.has3dGrid: " <<                 props.arch.has3dGrid                << endl;
     cout << setw(w1) << "arch.hasDynamicParallelism: " <<     props.arch.hasDynamicParallelism    << endl;
+
+    int deviceCnt;
+    hipGetDeviceCount(&deviceCnt);
+    cout << setw(w1) << "peers: ";
+    for (int i=0; i<deviceCnt; i++) {
+        int isPeer;
+        hipDeviceCanAccessPeer(&isPeer, deviceId, i);
+        if (isPeer) {
+            cout << "device#" << i << " ";
+        }
+    }
     cout << endl;
+
+
+
+
+    cout << endl;
+
 
     size_t free, total;
     hipMemGetInfo(&free, &total);
