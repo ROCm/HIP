@@ -1,4 +1,4 @@
-HIP_PATH=../../..
+HIP_PATH?=../../..
 HIPCC=$(HIP_PATH)/bin/hipcc
 
 EXE=hipBusBandwidth
