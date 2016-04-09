@@ -127,7 +127,7 @@ void printDeviceProp (int deviceId)
     for (int i=0; i<deviceCnt; i++) {
         int isPeer;
         hipDeviceCanAccessPeer(&isPeer, deviceId, i);
-        if (isPeer) {
+        if ((i != deviceId) && isPeer) {
             cout << "device#" << i << " ";
         }
     }
