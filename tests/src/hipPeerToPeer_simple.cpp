@@ -26,11 +26,26 @@ THE SOFTWARE.
 #include "hip_runtime.h"
 #include "test_common.h"
 
+bool p_memcpyWithPeer = false;
+
+void parseMyArguments(int argc, char *argv[])
+{
+    int more_argc = HipTest::parseStandardArguments(argc, argv, false);
+    // parse args for this test:
+    for (int i = 1; i < more_argc; i++) {
+        const char *arg = argv[i];
+
+        if (!strcmp(arg, "--memcpyWithPeer")) {
+            p_memcpyWithPeer = true;
+        } else {
+            failed("Bad argument '%s'", arg);
+        }
+    };
+};
 
 int main(int argc, char *argv[])
 {
-
-    HipTest::parseStandardArguments(argc, argv, true);
+    parseMyArguments(argc, argv);
 
     int deviceCnt;
 
@@ -58,27 +73,31 @@ int main(int argc, char *argv[])
     char *A_h;
 
     A_h = (char*)malloc(Nbytes);
-    HIPCHECK (hipSetDevice(peerDevice));
-    HIPCHECK (hipMalloc(&A_d1, Nbytes) );
 
+    // allocate and initialize memory on device0
     HIPCHECK (hipSetDevice(p_gpuDevice));
     HIPCHECK (hipMalloc(&A_d0, Nbytes) );
-
-
-    // Set memory on first device.
-    HIPCHECK (hipSetDevice(p_gpuDevice));
     HIPCHECK ( hipMemset(A_d0, memsetval, Nbytes) ); 
 
+    // allocate and initialize memory on peer device
+    HIPCHECK (hipSetDevice(peerDevice));
+    HIPCHECK (hipMalloc(&A_d1, Nbytes) );
+    HIPCHECK ( hipMemset(A_d1, 0x13, Nbytes) ); 
+
+
+
     // Device0 push to device1, using P2P:
-    HIPCHECK ( hipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyDefault));
+    HIPCHECK (hipSetDevice(p_memcpyWithPeer ? peerDevice : p_gpuDevice));
+    HIPCHECK (hipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyDefault));
 
     // Copy data back to host:
-    HIPCHECK ( hipMemcpy(A_h, A_d1, Nbytes, hipMemcpyDeviceToHost));
+    HIPCHECK (hipSetDevice(peerDevice));
+    HIPCHECK (hipMemcpy(A_h, A_d1, Nbytes, hipMemcpyDeviceToHost));
 
     // Check host data:
     for (int i=0; i<N; i++) {
         if (A_h[i] != memsetval) {
-            failed("mismatch at index:%d computed:%02x, memsetval:%02x\n", i, (int)A_h[i], (int)memsetval);
+            failed("mismatch at index:%d computed:0x%02x, golden memsetval:0x%02x\n", i, (int)A_h[i], (int)memsetval);
         }
     }
 
