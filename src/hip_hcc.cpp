@@ -214,7 +214,8 @@ template<>
 bool ihipDeviceCriticalBase_t<DeviceMutex>::addPeer(ihipDevice_t *peer) 
 {
     auto match = std::find(_peers.begin(), _peers.end(), peer);
-    if (match != std::end(_peers)) {
+    if (match == std::end(_peers)) {
+        // Not already a peer, let's update the list:
         _peers.push_back(peer);
         recomputePeerAgents();
         return true;
@@ -230,6 +231,7 @@ bool ihipDeviceCriticalBase_t<DeviceMutex>::removePeer(ihipDevice_t *peer)
 {
     auto match = std::find(_peers.begin(), _peers.end(), peer);
     if (match != std::end(_peers)) {
+        // Found a valid peer, let's remove it.
         _peers.remove(peer);
         recomputePeerAgents();
         return true;
