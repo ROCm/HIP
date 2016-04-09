@@ -10,7 +10,7 @@ set (HIP_Unit_Test_VERSION_MINOR 0)
 
 if(NOT DEFINED HIP_BUILD_LOCAL)
     if(NOT DEFINED ENV{HIP_BUILD_LOCAL})
-        set(HIP_BUILD_LOCAL 0 CACHE BOOL "Build HIP in local folder")
+        set(HIP_BUILD_LOCAL 1 CACHE BOOL "Build HIP in local folder")
     else()
         set(HIP_BUILD_LOCAL $ENV{HIP_BUILD_LOCAL} CACHE BOOL "Build HIP in local folder")
     endif()
