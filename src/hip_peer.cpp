@@ -31,26 +31,23 @@ hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int  deviceId, int peerDe
 
     hipError_t err = hipSuccess;
 
-#if USE_PEER_TO_PEER
     auto thisDevice = ihipGetDevice(deviceId);
     auto peerDevice = ihipGetDevice(peerDeviceId);
 
     if ((thisDevice != NULL) && (peerDevice != NULL)) {
 #if USE_PEER_TO_PEER>=2
         *canAccessPeer = peerDevice->_acc.get_is_peer(thisDevice->_acc);
+        printf ("canAccessPeer=%d\n", *canAccessPeer);
 #else
         *canAccessPeer = 0;
 #endif
 
     } else {
-        *canAccessPeer = false;
+        *canAccessPeer = 0;
         err = hipErrorInvalidDevice;
     }
 
 
-#else
-    *canAccessPeer = false;
-#endif
     return ihipLogStatus(err);
 }
 
