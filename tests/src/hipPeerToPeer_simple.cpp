@@ -26,7 +26,9 @@ THE SOFTWARE.
 #include "hip_runtime.h"
 #include "test_common.h"
 
-bool p_memcpyWithPeer = false;
+bool p_memcpyWithPeer = false; // use the peer device for the P2P copy
+bool p_mirrorPeers = false; // in addition to mapping current to peer space, map peer to current space.
+int  p_peerDevice = -1;  // explicly specify which peer to use, else use p_gpuDevice + 1.
 
 void parseMyArguments(int argc, char *argv[])
 {
@@ -37,11 +39,18 @@ void parseMyArguments(int argc, char *argv[])
 
         if (!strcmp(arg, "--memcpyWithPeer")) {
             p_memcpyWithPeer = true;
+        } else if (!strcmp(arg, "--mirrorPeers")) {
+            p_mirrorPeers = true;
+        } else if (!strcmp(arg, "--peerDevice")) {
+            if (++i >= argc || !HipTest::parseInt(argv[i], &p_peerDevice)) {
+               failed("Bad peerDevice argument"); 
+            }
         } else {
             failed("Bad argument '%s'", arg);
         }
     };
 };
+
 
 int main(int argc, char *argv[])
 {
@@ -50,22 +59,32 @@ int main(int argc, char *argv[])
     int deviceCnt;
 
     HIPCHECK(hipGetDeviceCount(&deviceCnt));
-    HIPCHECK(hipSetDevice(p_gpuDevice));
 
-    int peerDevice = ((p_gpuDevice + 1) % deviceCnt);
+    int currentDevice = p_gpuDevice;
+    int peerDevice    = (p_peerDevice == -1) ? ((currentDevice + 1) % deviceCnt) : p_peerDevice;
 
-    printf ("N=%zu  device=%d peerDevice=%d (%d devices total)\n", N, p_gpuDevice, peerDevice, deviceCnt);
+    printf ("N=%zu  device=%d peerDevice=%d (%d devices total)\n", N, currentDevice, peerDevice, deviceCnt);
 
     // Must be on a multi-gpu system:
-    assert (p_gpuDevice != peerDevice);
+    assert (currentDevice != peerDevice);
 
     int canAccessPeer;
-    HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, p_gpuDevice, peerDevice));
-    printf ("dev#%d canAccessPeer:#%d=%d\n", p_gpuDevice, peerDevice, canAccessPeer);
+    HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, currentDevice, peerDevice));
+    printf ("dev#%d canAccessPeer:#%d=%d\n", currentDevice, peerDevice, canAccessPeer);
 
     assert(canAccessPeer);
 
+    HIPCHECK(hipSetDevice(currentDevice));
     HIPCHECK(hipDeviceEnablePeerAccess(peerDevice, 0));
+
+    if (p_mirrorPeers) {
+        int canAccessPeer;
+        HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, peerDevice, currentDevice));
+        assert(canAccessPeer);
+
+        HIPCHECK(hipSetDevice(peerDevice));
+        HIPCHECK(hipDeviceEnablePeerAccess(currentDevice, 0));
+    }
 
     size_t Nbytes = N*sizeof(char);
 
@@ -75,7 +94,7 @@ int main(int argc, char *argv[])
     A_h = (char*)malloc(Nbytes);
 
     // allocate and initialize memory on device0
-    HIPCHECK (hipSetDevice(p_gpuDevice));
+    HIPCHECK (hipSetDevice(currentDevice));
     HIPCHECK (hipMalloc(&A_d0, Nbytes) );
     HIPCHECK ( hipMemset(A_d0, memsetval, Nbytes) ); 
 
@@ -87,7 +106,7 @@ int main(int argc, char *argv[])
 
 
     // Device0 push to device1, using P2P:
-    HIPCHECK (hipSetDevice(p_memcpyWithPeer ? peerDevice : p_gpuDevice));
+    HIPCHECK (hipSetDevice(p_memcpyWithPeer ? peerDevice : currentDevice));
     HIPCHECK (hipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyDefault));
 
     // Copy data back to host:
