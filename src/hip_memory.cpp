@@ -133,7 +133,10 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
             {
                 LockedAccessor_DeviceCrit_t crit(device->criticalData());
                 if (crit->peerCnt()) {
-                    hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
+                    hsa_status_t hsa_status = hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
+                    if (hsa_status != HSA_STATUS_SUCCESS) {
+                        hip_status = hipErrorMemoryAllocation; 
+                    }
                 }
             }
         }
@@ -172,7 +175,10 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
                 {
                     LockedAccessor_DeviceCrit_t crit(device->criticalData());
                     if (crit->peerCnt()) {
-                        hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
+                        hsa_status_t hsa_status = hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
+                        if (hsa_status != HSA_STATUS_SUCCESS) {
+                            hip_status = hipErrorMemoryAllocation; 
+                        }
                     }
                 }
             }
