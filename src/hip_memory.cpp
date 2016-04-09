@@ -443,8 +443,6 @@ hipError_t hipMemGetInfo  (size_t *free, size_t *total)
             // TODO - replace with kernel-level for reporting free memory:
             size_t deviceMemSize, hostMemSize, userMemSize;
             hc::am_memtracker_sizeinfo(hipDevice->_acc, &deviceMemSize, &hostMemSize, &userMemSize);
-            printf ("deviceMemSize=%zu\n", deviceMemSize);
-        
             *free =  hipDevice->_props.totalGlobalMem - deviceMemSize;
         }
 

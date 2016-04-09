@@ -37,7 +37,6 @@ hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int  deviceId, int peerDe
     if ((thisDevice != NULL) && (peerDevice != NULL)) {
 #if USE_PEER_TO_PEER>=2
         *canAccessPeer = peerDevice->_acc.get_is_peer(thisDevice->_acc);
-        printf ("canAccessPeer=%d\n", *canAccessPeer);
 #else
         *canAccessPeer = 0;
 #endif
