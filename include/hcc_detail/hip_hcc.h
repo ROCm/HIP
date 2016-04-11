@@ -38,7 +38,10 @@ THE SOFTWARE.
 // Compile peer-to-peer support.
 // >= 2 : use HCC hc:accelerator::get_is_peer
 // >= 3 : use hc::am_memtracker_update_peers(...)
-#define USE_PEER_TO_PEER 3
+#define USE_PEER_TO_PEER 1
+
+// Use new lock API in HCC:
+#define USE_HCC_LOCK 0
 
 //#define INLINE static inline
 
