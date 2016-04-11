@@ -454,12 +454,8 @@ void ihipDevice_t::locked_reset()
     crit->streams().clear();
 
 
-
-#if USE_PEER_TO_PEER>=2
     // This resest peer list to just me:
     crit->resetPeers(this);
-
-#endif
 
     // Reset and release all memory stored in the tracker:
     // Reset will remove peer mapping so don't need to do this explicitly.
