@@ -453,7 +453,6 @@ void ihipDevice_t::locked_reset()
     // Reset and remove streams:
     crit->streams().clear();
 
-
     // This resest peer list to just me:
     crit->resetPeers(this);
 
