@@ -1,0 +1,43 @@
+#!/bin/bash
+
+pushd () {
+    command pushd "$@" > /dev/null
+}
+
+popd () {
+    command popd "$@" > /dev/null
+}
+
+ROCMDIR=/opt/rocm
+HIPDIR=$ROCMDIR/hip
+
+# Remove soft-link to bin files
+HIPBINFILES=$HIPDIR/bin/*
+ROCMBINDIR=$ROCMDIR/bin
+pushd $ROCMBINDIR
+for f in $HIPBINFILES
+do
+rm $(basename $f)
+done
+popd
+rmdir --ignore-fail-on-non-empty $ROCMBINDIR
+
+# Remove soft-link to headers
+HIPINCDIR=$HIPDIR/include
+ROCMINCDIR=$ROCMDIR/include
+pushd $ROCMINCDIR
+rm hip
+popd
+rmdir --ignore-fail-on-non-empty $ROCMINCDIR
+
+# Remove soft-links to libraries
+HIPLIBFILES=$HIPDIR/hip/lib/*
+ROCMLIBDIR=$ROCMDIR/lib
+pushd $ROCMLIBDIR
+for f in $HIPLIBFILES
+do
+rm $(basename $f)
+done
+popd
+rmdir --ignore-fail-on-non-empty $ROCMLIBDIR
+
