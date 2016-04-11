@@ -28,11 +28,8 @@ Ad[tx] = Ad[tx] + float(1);
 int main(){
 	float *A, *Ad;
 	const size_t size = N * sizeof(float);
-#ifdef __HIP_PLATFORM_NVCC__
 	A = (float*)malloc(size*2);
-#else
-	A = (float*)memalign(64, size);
-#endif
+
 	HIPCHECK(hipHostRegister(A, size, 0));
 
 	for(int i=0;i<N;i++){
@@ -40,6 +37,17 @@ int main(){
 	}
 
 	HIPCHECK(hipMalloc(&Ad, size));
+        hipStream_t stream;
+        HIPCHECK(hipStreamCreate(&stream));
+
+	HIPCHECK(hipMemcpyAsync(Ad, A, size, hipMemcpyHostToDevice, stream));
+
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Ad);
+	HIPCHECK(hipDeviceSynchronize());
+
+	HIPCHECK(hipMemcpyAsync(A, Ad, size, hipMemcpyDeviceToHost, stream));
+
+	HIPASSERT(A[10] == 2.0f);
 
 	HIPCHECK(hipMemcpy(Ad, A, size, hipMemcpyHostToDevice));
 
@@ -48,7 +56,10 @@ int main(){
 
 	HIPCHECK(hipMemcpy(A, Ad, size, hipMemcpyDeviceToHost));
 
-	HIPASSERT(A[10] == 2.0f);
+	HIPASSERT(A[10] == 3.0f);
+
+
 	HIPCHECK(hipHostUnregister(A));
+        HIPCHECK(hipStreamDestroy(stream));
 	passed();
 }
