@@ -222,7 +222,13 @@ make_test(hipFuncDeviceSynchronize " ")
 make_named_test (hipMultiThreadDevice "hipMultiThreadDevice-serial" --tests 0x1) 
 make_named_test (hipMultiThreadDevice "hipMultiThreadDevice-pyramid" --tests 0x4) 
 make_named_test (hipMultiThreadDevice "hipMultiThreadDevice-nearzero" --tests 0x10) 
-make_test(hipPeerToPeer_simple " " )
+
+if (${HIP_MULTI_GPU})
+    make_test(hipPeerToPeer_simple )                  # use current device for copy, this fails. 
+    make_test(hipPeerToPeer_simple --memcpyWithPeer)  
+    make_test(hipPeerToPeer_simple --mirrorPeers)    # mirror mapping: test to ensure mirror doesn't destroy orig mapping.
+
+endif()
 
 if (${HIP_MULTI_GPU})
     make_test(hipPeerToPeer_simple " ")                  # use current device for copy, this fails. 

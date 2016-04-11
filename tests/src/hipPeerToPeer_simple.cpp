@@ -1,4 +1,3 @@
-
 /*
 Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
 
@@ -52,9 +51,11 @@ void parseMyArguments(int argc, char *argv[])
 };
 
 
-int main(int argc, char *argv[])
+//---
+// Test which enables peer2peer first, then allocates the memory.
+void enablePeerFirst()
 {
-    parseMyArguments(argc, argv);
+    printf ("\n==testing: %s\n", __func__);
 
     int deviceCnt;
 
@@ -74,6 +75,110 @@ int main(int argc, char *argv[])
 
     assert(canAccessPeer);
 
+    HIPCHECK (hipSetDevice(currentDevice));
+    HIPCHECK(hipDeviceReset());
+    HIPCHECK (hipSetDevice(peerDevice));
+    HIPCHECK(hipDeviceReset());
+
+    HIPCHECK(hipSetDevice(currentDevice));
+    HIPCHECK(hipDeviceEnablePeerAccess(peerDevice, 0));
+
+    if (p_mirrorPeers) {
+        int canAccessPeer;
+        HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, peerDevice, currentDevice));
+        assert(canAccessPeer);
+
+        HIPCHECK(hipSetDevice(peerDevice));
+            HIPCHECK(hipDeviceEnablePeerAccess(currentDevice, 0));
+        }
+
+        size_t Nbytes = N*sizeof(char);
+
+        char *A_d0, *A_d1;
+        char *A_h;
+
+        A_h = (char*)malloc(Nbytes);
+
+        // allocate and initialize memory on device0
+        HIPCHECK (hipSetDevice(currentDevice));
+        HIPCHECK (hipMalloc(&A_d0, Nbytes) );
+        HIPCHECK ( hipMemset(A_d0, memsetval, Nbytes) ); 
+
+        // allocate and initialize memory on peer device
+        HIPCHECK (hipSetDevice(peerDevice));
+        HIPCHECK (hipMalloc(&A_d1, Nbytes) );
+        HIPCHECK ( hipMemset(A_d1, 0x13, Nbytes) ); 
+
+
+
+        // Device0 push to device1, using P2P:
+        HIPCHECK (hipSetDevice(p_memcpyWithPeer ? peerDevice : currentDevice));
+        HIPCHECK (hipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyDefault));
+
+        // Copy data back to host:
+        HIPCHECK (hipSetDevice(peerDevice));
+        HIPCHECK (hipMemcpy(A_h, A_d1, Nbytes, hipMemcpyDeviceToHost));
+
+        // Check host data:
+        for (int i=0; i<N; i++) {
+            if (A_h[i] != memsetval) {
+                failed("mismatch at index:%d computed:0x%02x, golden memsetval:0x%02x\n", i, (int)A_h[i], (int)memsetval);
+            }
+        }
+    }
+
+
+    //---
+    // Test which allocated memory first, then enables peer2peer.
+    // Enabling peer needs to scan all allocated memory and enable peer access.
+    void allocMemoryFirst()
+    {
+        printf ("\n==testing: %s\n", __func__);
+        int deviceCnt;
+
+        HIPCHECK(hipGetDeviceCount(&deviceCnt));
+
+        int currentDevice = p_gpuDevice;
+        int peerDevice    = (p_peerDevice == -1) ? ((currentDevice + 1) % deviceCnt) : p_peerDevice;
+
+        printf ("N=%zu  device=%d peerDevice=%d (%d devices total)\n", N, currentDevice, peerDevice, deviceCnt);
+
+        // Must be on a multi-gpu system:
+        assert (currentDevice != peerDevice);
+
+        int canAccessPeer;
+        HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, currentDevice, peerDevice));
+        printf ("dev#%d canAccessPeer:#%d=%d\n", currentDevice, peerDevice, canAccessPeer);
+
+        assert(canAccessPeer);
+
+        HIPCHECK (hipSetDevice(currentDevice));
+    HIPCHECK(hipDeviceReset());
+    HIPCHECK (hipSetDevice(peerDevice));
+    HIPCHECK(hipDeviceReset());
+
+
+    size_t Nbytes = N*sizeof(char);
+
+    char *A_d0, *A_d1;
+    char *A_h;
+
+    A_h = (char*)malloc(Nbytes);
+
+    //---
+    // allocate and initialize memory on device0
+    HIPCHECK (hipSetDevice(currentDevice));
+    HIPCHECK (hipMalloc(&A_d0, Nbytes) );
+    HIPCHECK ( hipMemset(A_d0, memsetval, Nbytes) ); 
+
+    // allocate and initialize memory on peer device
+    HIPCHECK (hipSetDevice(peerDevice));
+    HIPCHECK (hipMalloc(&A_d1, Nbytes) );
+    HIPCHECK ( hipMemset(A_d1, 0x13, Nbytes) ); 
+
+
+    //---
+    //Enable peer access, for memory already allocated:
     HIPCHECK(hipSetDevice(currentDevice));
     HIPCHECK(hipDeviceEnablePeerAccess(peerDevice, 0));
 
@@ -86,25 +191,9 @@ int main(int argc, char *argv[])
         HIPCHECK(hipDeviceEnablePeerAccess(currentDevice, 0));
     }
 
-    size_t Nbytes = N*sizeof(char);
 
-    char *A_d0, *A_d1;
-    char *A_h;
-
-    A_h = (char*)malloc(Nbytes);
-
-    // allocate and initialize memory on device0
-    HIPCHECK (hipSetDevice(currentDevice));
-    HIPCHECK (hipMalloc(&A_d0, Nbytes) );
-    HIPCHECK ( hipMemset(A_d0, memsetval, Nbytes) ); 
-
-    // allocate and initialize memory on peer device
-    HIPCHECK (hipSetDevice(peerDevice));
-    HIPCHECK (hipMalloc(&A_d1, Nbytes) );
-    HIPCHECK ( hipMemset(A_d1, 0x13, Nbytes) ); 
-
-
-
+    //---
+    // Copies to test functionality:
     // Device0 push to device1, using P2P:
     HIPCHECK (hipSetDevice(p_memcpyWithPeer ? peerDevice : currentDevice));
     HIPCHECK (hipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyDefault));
@@ -113,13 +202,29 @@ int main(int argc, char *argv[])
     HIPCHECK (hipSetDevice(peerDevice));
     HIPCHECK (hipMemcpy(A_h, A_d1, Nbytes, hipMemcpyDeviceToHost));
 
+
+    //---
     // Check host data:
     for (int i=0; i<N; i++) {
         if (A_h[i] != memsetval) {
             failed("mismatch at index:%d computed:0x%02x, golden memsetval:0x%02x\n", i, (int)A_h[i], (int)memsetval);
         }
     }
+}
+
+
+
+int main(int argc, char *argv[])
+{
+    parseMyArguments(argc, argv);
+
+    if (p_tests & 0x1) {
+        enablePeerFirst();
+    }
+
+    if (p_tests & 0x2) {
+        allocMemoryFirst();
+    }
 
     passed();
-
 }
