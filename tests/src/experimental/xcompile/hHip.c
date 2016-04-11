@@ -52,7 +52,10 @@ int main()
     memset_hst(b, 2.0f);
     a->h2d(a);
     b->h2d(b);
-    hipLaunchKernel(HIP_KERNEL_NAME(Add), dim3(LEN/1024), dim3(1024), 0, 0, (float*)a->dev_ptr, (float*)b->dev_ptr, (float*)c->dev_ptr, LEN);
+    dim3 dimGrid, dimBlock;
+    dimBlock.x = 1024, dimBlock.y = 1, dimBlock.z = 1;
+    dimGrid.x = LEN/1024, dimGrid.y = 1, dimGrid.z = 1;
+    hipLaunchKernel(HIP_KERNEL_NAME(Add), dimGrid, dimBlock, 0, 0, (float*)a->dev_ptr, (float*)b->dev_ptr, (float*)c->dev_ptr, LEN);
     c->d2h(c);
     assert(((float*)c->hst_ptr)[10] == 3.0f);
 
