@@ -132,7 +132,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
             hc::am_memtracker_update(*ptr, device->_device_index, 0);
             {
                 LockedAccessor_DeviceCrit_t crit(device->criticalData());
-                if (crit->peerCnt()) {
+                if (crit->peerCnt() > 1) { // peerCnt includes self so only call allow_access if other peers involved:
                     hsa_status_t hsa_status = hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
                     if (hsa_status != HSA_STATUS_SUCCESS) {
                         hip_status = hipErrorMemoryAllocation; 
@@ -173,8 +173,9 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
             }else{
                 hc::am_memtracker_update(*ptr, device->_device_index, flags);
                 {
+                    // TODO - allow_access only works for device memory, need to change am_alloc to allocate host directly.
                     LockedAccessor_DeviceCrit_t crit(device->criticalData());
-                    if (crit->peerCnt()) {
+                    if (crit->peerCnt() > 1) { // peerCnt includes self so only call allow_access if other peers involved:
                         hsa_status_t hsa_status = hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
                         if (hsa_status != HSA_STATUS_SUCCESS) {
                             hip_status = hipErrorMemoryAllocation; 
