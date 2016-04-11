@@ -63,7 +63,6 @@ hipError_t hipDeviceDisablePeerAccess (int peerDeviceId)
     HIP_INIT_API(peerDeviceId);
 
     hipError_t err = hipSuccess;
-#if USE_PEER_TO_PEER
 
     auto thisDevice = ihipGetTlsDefaultDevice();
     auto peerDevice = ihipGetDevice(peerDeviceId);
@@ -92,7 +91,6 @@ hipError_t hipDeviceDisablePeerAccess (int peerDeviceId)
     } else {
         err = hipErrorInvalidDevice;
     }
-#endif
 
     return ihipLogStatus(err);
 };
@@ -105,7 +103,6 @@ hipError_t hipDeviceEnablePeerAccess (int peerDeviceId, unsigned int flags)
     HIP_INIT_API(peerDeviceId, flags);
 
     hipError_t err = hipSuccess;
-#if USE_PEER_TO_PEER
     if (flags != 0) {
         err = hipErrorInvalidValue;
     } else {
@@ -125,7 +122,6 @@ hipError_t hipDeviceEnablePeerAccess (int peerDeviceId, unsigned int flags)
             err = hipErrorInvalidDevice;
         }
     }
-#endif
 
     return ihipLogStatus(err);
 }
