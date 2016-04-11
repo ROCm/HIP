@@ -43,17 +43,18 @@ THE SOFTWARE.
 //---
 // Remainder of this file only compiles with HCC
 #ifdef __HCC__
-//#if __cplusplus
+#if __cplusplus
 #include <hc.hpp>
-//#endif
+#endif
 #include <grid_launch.h>
 extern int HIP_TRACE_API;
 
 //TODO-HCC-GL - change this to typedef.
 //typedef grid_launch_parm hipLaunchParm ;
 #define hipLaunchParm grid_launch_parm
-
+#ifdef __cplusplus
 #include <hcc_detail/hip_texture.h>
+#endif
 #include <hcc_detail/host_defines.h>
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
 #if defined (__KALMAR_ACCELERATOR__) && !defined (__HCC_ACCELERATOR__)
@@ -107,6 +108,7 @@ extern int HIP_TRACE_API;
 #define __HCC_C__
 #endif
 
+#if __cplusplus
 __device__ float acosf(float x);
 __device__ float acoshf(float x);
 __device__ float asinf(float x);
@@ -286,7 +288,7 @@ __device__ double trunc(double x);
 __device__ double y0(double x);
 __device__ double y1(double y);
 __device__ double yn(int n, double x);
-
+#endif
 
 // TODO - hipify-clang - change to use the function call.
 //#define warpSize hc::__wavesize()
@@ -296,7 +298,7 @@ extern const int warpSize;
 #define clock_t long long int
 __device__ long long int clock64();
 __device__ clock_t clock();
-
+#if __cplusplus
 //atomicAdd()
 __device__ int atomicAdd(int* address, int val);
 __device__ unsigned int atomicAdd(unsigned int* address,
@@ -441,7 +443,7 @@ __device__ float __dsqrt_rd(double x);
 __device__ float __dsqrt_rn(double x);
 __device__ float __dsqrt_ru(double x);
 __device__ float __dsqrt_rz(double x);
-
+#endif
 /**
  * Kernel launching
  */
