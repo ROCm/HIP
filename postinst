@@ -1,0 +1,42 @@
+#!/bin/bash
+pushd () {
+    command pushd "$@" > /dev/null
+}
+
+popd () {
+    command popd "$@" > /dev/null
+}
+
+ROCMDIR=/opt/rocm
+HIPDIR=$ROCMDIR/hip
+
+# Soft-link to bin files
+HIPBINFILES=$HIPDIR/bin/*
+ROCMBINDIR=$ROCMDIR/bin
+mkdir -p $ROCMBINDIR
+pushd $ROCMBINDIR
+for f in $HIPBINFILES
+do
+    ln -s $f $(basename $f)
+done
+popd >/dev/null
+
+# Soft-link to headers
+HIPINCDIR=$HIPDIR/include
+ROCMINCDIR=$ROCMDIR/include
+mkdir -p $ROCMINCDIR
+pushd $ROCMINCDIR
+    ln -s $HIPINCDIR hip
+popd
+
+# Soft-link to libraries
+HIPLIBFILES=$HIPDIR/lib/*
+ROCMLIBDIR=$ROCMDIR/lib
+mkdir -p $ROCMLIBDIR
+pushd $ROCMLIBDIR
+for f in $HIPLIBFILES
+do
+    ln -s $f $(basename $f)
+done
+popd
+
