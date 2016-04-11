@@ -907,9 +907,32 @@ hipError_t hipMemGetInfo  (size_t * free, size_t * total)   ;
  *
  * Returns "1" in @p canAccessPeer if the specified @p device is capable
  * of directly accessing memory physically located on peerDevice , or "0" if not.
+ *
+ * Returns "0" in @p canAccessPeer if deviceId == peerDeviceId, and both are valid devices : a device is not a peer of itself.
+ *
+ *
+ *
+ * @returns #hipSuccess, 
+ * @returns #hipErrorInvalidDevice if deviceId or peerDeviceId are not valid devices
  */
 hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int deviceId, int peerDeviceId);
 
+
+/**
+ * @brief Enable direct access from current device's virtual address space to memory allocations physically located on a peer device.  
+ *
+ * Memory which already allocated on peer device will be mapped into the address space of the current device.  In addition, all
+ * future memory allocations on peerDeviceId will be mapped into the address space of the current device when the memory is allocated.
+ * The peer memory remains accessible from the current device until a call to hipDeviceDisablePeerAccess or hipDeviceReset.
+ *
+ *
+ * @param [in] peerDeviceId
+ * @param [in] flags
+ *
+ * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, 
+ * @returns #hipErrorPeerAccessAlreadyEnabled if peer access is already enabled for this device.
+ */
+hipError_t  hipDeviceEnablePeerAccess (int  peerDeviceId, unsigned int flags);
 
 
 /**
@@ -923,20 +946,6 @@ hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int deviceId, int peerDev
  */
 hipError_t  hipDeviceDisablePeerAccess (int peerDeviceId);
 
-/**
- * @brief Enable direct access from current device's virtual address space to memory allocations physically located on a peer device.  
- *
- * Memory which already allocated on peer device will be mapped into the address space of the current device.  In addition, all
- * future memory allocations on peerDeviceId will be mapped into the address space of the current device when the memory is allocated.
- * The peer memory remains accessible from the current device until a call to hipDeviceDisablePeerAccess or @hipDeviceReset.
- *
- *
- * @param [in] peerDeviceId
- * @param [in] flags
- *
- * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, #hipErrorPeerAccessAlreadyEnabled
- */
-hipError_t  hipDeviceEnablePeerAccess (int  peerDeviceId, unsigned int flags);
 
 /**
  * @brief Copies memory from one device to memory on another device.
