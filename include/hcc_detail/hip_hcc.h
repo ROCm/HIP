@@ -38,7 +38,7 @@ THE SOFTWARE.
 // Compile peer-to-peer support.
 // >= 2 : use HCC hc:accelerator::get_is_peer
 // >= 3 : use hc::am_memtracker_update_peers(...)
-#define USE_PEER_TO_PEER 2
+#define USE_PEER_TO_PEER 3
 
 //#define INLINE static inline
 
@@ -526,6 +526,7 @@ public:
 
     bool addPeer(ihipDevice_t *peer);
     bool removePeer(ihipDevice_t *peer);
+    void resetPeers(ihipDevice_t *thisDevice);
 
     uint32_t peerCnt() const { return _peerCnt; };
     hsa_agent_t *peerAgents() const { return _peerAgents; };

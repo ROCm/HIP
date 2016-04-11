@@ -240,6 +240,15 @@ bool ihipDeviceCriticalBase_t<DeviceMutex>::removePeer(ihipDevice_t *peer)
     }
 }
 
+
+template<>
+void ihipDeviceCriticalBase_t<DeviceMutex>::resetPeers(ihipDevice_t *thisDevice)
+{
+    _peers.clear();
+    _peerCnt = 0;
+    addPeer(thisDevice); // peer-list always contains self agent.
+}
+
 //-------------------------------------------------------------------------------------------------
 
 //---
@@ -444,12 +453,18 @@ void ihipDevice_t::locked_reset()
     // Reset and remove streams:
     crit->streams().clear();
 
-#if USE_PEER_TO_PEER==2
-    // remove peer mappings to this device?  Call removePeer on all other devices?
+
+
+#if USE_PEER_TO_PEER>=2
+    // This resest peer list to just me:
+    crit->resetPeers(this);
+
 #endif
 
     // Reset and release all memory stored in the tracker:
+    // Reset will remove peer mapping so don't need to do this explicitly.
     am_memtracker_reset(_acc);
+
 };
 
 
@@ -474,10 +489,13 @@ void ihipDevice_t::init(unsigned device_index, unsigned deviceCnt, hc::accelerat
 
     getProperties(&_props);
 
+    _criticalData.init(deviceCnt);
+
+    locked_reset();
+
     _default_stream = new ihipStream_t(device_index, acc.get_default_view(), hipStreamDefault);
     locked_addStream(_default_stream);
-
-    _criticalData.init(deviceCnt);
+    
 
     tprintf(DB_SYNC, "created device with default_stream=%p\n", _default_stream);
 
