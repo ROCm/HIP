@@ -29,6 +29,10 @@ bool p_memcpyWithPeer = false; // use the peer device for the P2P copy
 bool p_mirrorPeers = false; // in addition to mapping current to peer space, map peer to current space.
 int  p_peerDevice = -1;  // explicly specify which peer to use, else use p_gpuDevice + 1.
 
+
+int g_currentDevice;
+int g_peerDevice;
+
 void parseMyArguments(int argc, char *argv[])
 {
     int more_argc = HipTest::parseStandardArguments(argc, argv, false);
@@ -51,45 +55,50 @@ void parseMyArguments(int argc, char *argv[])
 };
 
 
+// Sets globals g_currentDevice, g_peerDevice
+void setupPeerTests() 
+{
+    int deviceCnt;
+
+    HIPCHECK(hipGetDeviceCount(&deviceCnt));
+
+    g_currentDevice = p_gpuDevice;
+    g_peerDevice    = (p_peerDevice == -1) ? ((g_currentDevice + 1) % deviceCnt) : p_peerDevice;
+
+    printf ("N=%zu  device=%d peerDevice=%d (%d devices total)\n", N, g_currentDevice, g_peerDevice, deviceCnt);
+
+    // Must be on a multi-gpu system:
+    assert (g_currentDevice != g_peerDevice);
+
+    int canAccessPeer;
+    HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, g_currentDevice, g_peerDevice));
+    printf ("dev#%d canAccessPeer:#%d=%d\n", g_currentDevice, g_peerDevice, canAccessPeer);
+
+    assert(canAccessPeer);
+
+    HIPCHECK (hipSetDevice(g_currentDevice));
+    HIPCHECK(hipDeviceReset());
+    HIPCHECK (hipSetDevice(g_peerDevice));
+    HIPCHECK(hipDeviceReset());
+}
+
 //---
 // Test which enables peer2peer first, then allocates the memory.
 void enablePeerFirst()
 {
     printf ("\n==testing: %s\n", __func__);
 
-    int deviceCnt;
 
-    HIPCHECK(hipGetDeviceCount(&deviceCnt));
-
-    int currentDevice = p_gpuDevice;
-    int peerDevice    = (p_peerDevice == -1) ? ((currentDevice + 1) % deviceCnt) : p_peerDevice;
-
-    printf ("N=%zu  device=%d peerDevice=%d (%d devices total)\n", N, currentDevice, peerDevice, deviceCnt);
-
-    // Must be on a multi-gpu system:
-    assert (currentDevice != peerDevice);
-
-    int canAccessPeer;
-    HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, currentDevice, peerDevice));
-    printf ("dev#%d canAccessPeer:#%d=%d\n", currentDevice, peerDevice, canAccessPeer);
-
-    assert(canAccessPeer);
-
-    HIPCHECK (hipSetDevice(currentDevice));
-    HIPCHECK(hipDeviceReset());
-    HIPCHECK (hipSetDevice(peerDevice));
-    HIPCHECK(hipDeviceReset());
-
-    HIPCHECK(hipSetDevice(currentDevice));
-    HIPCHECK(hipDeviceEnablePeerAccess(peerDevice, 0));
+    HIPCHECK(hipSetDevice(g_currentDevice));
+    HIPCHECK(hipDeviceEnablePeerAccess(g_peerDevice, 0));
 
     if (p_mirrorPeers) {
         int canAccessPeer;
-        HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, peerDevice, currentDevice));
+        HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, g_peerDevice, g_currentDevice));
         assert(canAccessPeer);
 
-        HIPCHECK(hipSetDevice(peerDevice));
-            HIPCHECK(hipDeviceEnablePeerAccess(currentDevice, 0));
+        HIPCHECK(hipSetDevice(g_peerDevice));
+            HIPCHECK(hipDeviceEnablePeerAccess(g_currentDevice, 0));
         }
 
         size_t Nbytes = N*sizeof(char);
@@ -100,23 +109,23 @@ void enablePeerFirst()
         A_h = (char*)malloc(Nbytes);
 
         // allocate and initialize memory on device0
-        HIPCHECK (hipSetDevice(currentDevice));
+        HIPCHECK (hipSetDevice(g_currentDevice));
         HIPCHECK (hipMalloc(&A_d0, Nbytes) );
         HIPCHECK ( hipMemset(A_d0, memsetval, Nbytes) ); 
 
         // allocate and initialize memory on peer device
-        HIPCHECK (hipSetDevice(peerDevice));
+        HIPCHECK (hipSetDevice(g_peerDevice));
         HIPCHECK (hipMalloc(&A_d1, Nbytes) );
         HIPCHECK ( hipMemset(A_d1, 0x13, Nbytes) ); 
 
 
 
         // Device0 push to device1, using P2P:
-        HIPCHECK (hipSetDevice(p_memcpyWithPeer ? peerDevice : currentDevice));
+        HIPCHECK (hipSetDevice(p_memcpyWithPeer ? g_peerDevice : g_currentDevice));
         HIPCHECK (hipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyDefault));
 
         // Copy data back to host:
-        HIPCHECK (hipSetDevice(peerDevice));
+        HIPCHECK (hipSetDevice(g_peerDevice));
         HIPCHECK (hipMemcpy(A_h, A_d1, Nbytes, hipMemcpyDeviceToHost));
 
         // Check host data:
@@ -128,35 +137,14 @@ void enablePeerFirst()
     }
 
 
-    //---
-    // Test which allocated memory first, then enables peer2peer.
-    // Enabling peer needs to scan all allocated memory and enable peer access.
-    void allocMemoryFirst()
-    {
-        printf ("\n==testing: %s\n", __func__);
-        int deviceCnt;
+//---
+// Test which allocated memory first, then enables peer2peer.
+// Enabling peer needs to scan all allocated memory and enable peer access.
+void allocMemoryFirst()
+{
+    printf ("\n==testing: %s\n", __func__);
 
-        HIPCHECK(hipGetDeviceCount(&deviceCnt));
-
-        int currentDevice = p_gpuDevice;
-        int peerDevice    = (p_peerDevice == -1) ? ((currentDevice + 1) % deviceCnt) : p_peerDevice;
-
-        printf ("N=%zu  device=%d peerDevice=%d (%d devices total)\n", N, currentDevice, peerDevice, deviceCnt);
-
-        // Must be on a multi-gpu system:
-        assert (currentDevice != peerDevice);
-
-        int canAccessPeer;
-        HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, currentDevice, peerDevice));
-        printf ("dev#%d canAccessPeer:#%d=%d\n", currentDevice, peerDevice, canAccessPeer);
-
-        assert(canAccessPeer);
-
-        HIPCHECK (hipSetDevice(currentDevice));
-    HIPCHECK(hipDeviceReset());
-    HIPCHECK (hipSetDevice(peerDevice));
-    HIPCHECK(hipDeviceReset());
-
+    setupPeerTests();
 
     size_t Nbytes = N*sizeof(char);
 
@@ -167,39 +155,39 @@ void enablePeerFirst()
 
     //---
     // allocate and initialize memory on device0
-    HIPCHECK (hipSetDevice(currentDevice));
+    HIPCHECK (hipSetDevice(g_currentDevice));
     HIPCHECK (hipMalloc(&A_d0, Nbytes) );
     HIPCHECK ( hipMemset(A_d0, memsetval, Nbytes) ); 
 
     // allocate and initialize memory on peer device
-    HIPCHECK (hipSetDevice(peerDevice));
+    HIPCHECK (hipSetDevice(g_peerDevice));
     HIPCHECK (hipMalloc(&A_d1, Nbytes) );
     HIPCHECK ( hipMemset(A_d1, 0x13, Nbytes) ); 
 
 
     //---
     //Enable peer access, for memory already allocated:
-    HIPCHECK(hipSetDevice(currentDevice));
-    HIPCHECK(hipDeviceEnablePeerAccess(peerDevice, 0));
+    HIPCHECK(hipSetDevice(g_currentDevice));
+    HIPCHECK(hipDeviceEnablePeerAccess(g_peerDevice, 0));
 
     if (p_mirrorPeers) {
         int canAccessPeer;
-        HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, peerDevice, currentDevice));
+        HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, g_peerDevice, g_currentDevice));
         assert(canAccessPeer);
 
-        HIPCHECK(hipSetDevice(peerDevice));
-        HIPCHECK(hipDeviceEnablePeerAccess(currentDevice, 0));
+        HIPCHECK(hipSetDevice(g_peerDevice));
+        HIPCHECK(hipDeviceEnablePeerAccess(g_currentDevice, 0));
     }
 
 
     //---
     // Copies to test functionality:
     // Device0 push to device1, using P2P:
-    HIPCHECK (hipSetDevice(p_memcpyWithPeer ? peerDevice : currentDevice));
+    HIPCHECK (hipSetDevice(p_memcpyWithPeer ? g_peerDevice : g_currentDevice));
     HIPCHECK (hipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyDefault));
 
     // Copy data back to host:
-    HIPCHECK (hipSetDevice(peerDevice));
+    HIPCHECK (hipSetDevice(g_peerDevice));
     HIPCHECK (hipMemcpy(A_h, A_d1, Nbytes, hipMemcpyDeviceToHost));
 
 
@@ -210,6 +198,40 @@ void enablePeerFirst()
             failed("mismatch at index:%d computed:0x%02x, golden memsetval:0x%02x\n", i, (int)A_h[i], (int)memsetval);
         }
     }
+}
+
+void simpleNegative()
+{
+    printf ("\n==testing: %s\n", __func__);
+
+    setupPeerTests();
+
+    int deviceId;
+    HIPCHECK (hipGetDevice(&deviceId));
+
+    //---
+    //-- self is not a peer
+    int canAccessPeer;
+    hipError_t e = hipDeviceCanAccessPeer(&canAccessPeer, deviceId, deviceId);
+    HIPASSERT( e == hipSuccess);  // no error returned, it doesn't hurt to ask.
+    HIPASSERT (canAccessPeer == 0); // but self is not a peer.
+
+    e = hipSuccess; 
+    //---
+    // Enable same device twice in a row:
+    HIPCHECK(hipSetDevice(g_currentDevice));
+    HIPCHECK(hipDeviceEnablePeerAccess(g_peerDevice, 0));
+    e =(hipDeviceEnablePeerAccess(g_peerDevice, 0));
+    HIPASSERT (e == hipErrorPeerAccessAlreadyEnabled);
+
+    //---
+    // try disabling twice in a row
+    HIPCHECK(hipDeviceDisablePeerAccess(g_peerDevice));
+    e =(hipDeviceDisablePeerAccess(g_peerDevice));
+    HIPASSERT (e == hipErrorPeerAccessNotEnabled);
+
+    
+    // More tests here:
 }
 
 
@@ -224,6 +246,10 @@ int main(int argc, char *argv[])
 
     if (p_tests & 0x2) {
         allocMemoryFirst();
+    }
+
+    if (p_tests & 0x4) {
+        simpleNegative();
     }
 
     passed();

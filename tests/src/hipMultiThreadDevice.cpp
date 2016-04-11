@@ -116,12 +116,12 @@ int main(int argc, char *argv[])
     /*disable, this takess a while and if the next one works then no need to run serial*/
     if (1 && (p_tests & 0x2)) {
         printf ("\ntest 0x2 : serialized multiThread_pyramid(1) \n");
-        multiThread_pyramid(true, 10);
+        multiThread_pyramid(true, 3);
     }
 
     if (p_tests & 0x4) {
         printf ("\ntest 0x4 : parallel multiThread_pyramid(1) \n");
-        multiThread_pyramid(false, 10);
+        multiThread_pyramid(false, 3);
     }
 
     //if (p_tests & 0x8) {
