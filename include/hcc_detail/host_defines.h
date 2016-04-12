@@ -25,6 +25,9 @@ THE SOFTWARE.
  *  @brief TODO-doc
  */
 
+#ifndef HOST_DEFINES_H
+#define HOST_DEFINES_H
+
 #ifdef __HCC__
 /**
  * Function and kernel markers
@@ -65,5 +68,7 @@ THE SOFTWARE.
 
 #define __shared__
 #define __constant__
+
+#endif
 
 #endif

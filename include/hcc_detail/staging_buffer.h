@@ -17,7 +17,9 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
+//#pragma once
+#ifndef STAGING_BUFFER_H
+#define STAGING_BUFFER_H
 
 #include "hsa.h"
 
@@ -58,3 +60,5 @@ private:
     hsa_signal_t     _completion_signal[_max_buffers];
     std::mutex       _copy_lock;    // provide thread-safe access 
 };
+
+#endif
