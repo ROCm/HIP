@@ -19,7 +19,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#pragma once
+
+//#pragma once
+
+#ifndef HIP_TEXTURE_H
+#define HIP_TEXTURE_H
+
 /**
  *  @file  hcc_detail/hip_texture.h
  *  @brief HIP C++ Texture API for hcc compiler
@@ -201,3 +206,6 @@ hipError_t  hipUnbindTexture(struct texture<T, dim, readMode> *tex)
 /**
  *   @}
  */
+
+#endif
+

@@ -25,6 +25,9 @@ THE SOFTWARE.
  *  @brief Defines the different newt vector types for HIP runtime.
  */
 
+#ifndef HIP_VECTOR_TYPES_H
+#define HIP_VECTOR_TYPES_H
+
 #if defined (__HCC__) &&  (__hcc_workweek__ < 16032)
 #error("This version of HIP requires a newer version of HCC.");
 #endif
@@ -196,3 +199,6 @@ TWO_COMPONENT_ACCESS  (double, double2);
 THREE_COMPONENT_ACCESS(double, double3);
 FOUR_COMPONENT_ACCESS (double, double4);
 */
+
+#endif
+

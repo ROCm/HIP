@@ -24,7 +24,9 @@ THE SOFTWARE.
  *  @brief Contains definitions of APIs for HIP runtime.
  */
 
-#pragma once
+//#pragma once
+#ifndef HIP_RUNTIME_H
+#define HIP_RUNTIME_H
 
 //---
 // Top part of file can be compiled with any compiler
@@ -574,4 +576,4 @@ do {\
  */
 
 
-
+#endif
