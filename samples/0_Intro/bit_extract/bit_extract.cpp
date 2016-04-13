@@ -24,11 +24,14 @@ THE SOFTWARE.
 #include <hip_runtime.h>
 
 
-#define CHECK(error) \
+#define CHECK(cmd) \
+{\
+    hipError_t error  = cmd;\
     if (error != hipSuccess) { \
       fprintf(stderr, "error: '%s'(%d) at %s:%d\n", hipGetErrorString(error), error,__FILE__, __LINE__); \
     exit(EXIT_FAILURE);\
-	}
+	}\
+}
 
 void __global__
 bit_extract_kernel(hipLaunchParm lp, uint32_t *C_d, const uint32_t *A_d, size_t N)
