@@ -196,7 +196,7 @@ if ($needHipHcc) {
     $HIP_USE_SHARED_LIBRARY = $ENV{'HIP_USE_SHARED_LIBRARY'};
     $HIP_USE_SHARED_LIBRARY = 0 unless defined $HIP_USE_SHARED_LIBRARY;
 
-    #$HIPLDFLAGS .= " -L/opt/hip/lib -lhip_hcc" ;
+    #$HIPLDFLAGS .= " -L/opt/rocm/hip/lib -lhip_hcc" ;
     if ($HIP_USE_SHARED_LIBRARY) {
         $HIPLDFLAGS .= " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc";
     } else {
