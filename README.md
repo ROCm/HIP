@@ -34,29 +34,33 @@ Make sure HIP_PATH is pointed to `/where/to/install/hip` and PATH includes `$HIP
 ## How do I get set up?
 
 ### Prerequisites - Choose Your Platform
-HIP code can be developed either on AMD HSA or Boltzmann platform using hcc compiler, or a CUDA platform with nvcc installed:
+HIP code can be developed either on AMD ROCm platform using hcc compiler, or a CUDA platform with nvcc installed:
 
 #### AMD (hcc):
 
 * Install [hcc](https://bitbucket.org/multicoreware/hcc/wiki/Home) including supporting HSA kernel and runtime driver stack 
-* By default HIP looks for hcc in /opt/hcc (can be overridden by setting HCC_HOME environment variable)
-* By default HIP looks for HSA in /opt/hsa (can be overridden by setting HSA_PATH environment variable) 
+* By default HIP looks for hcc in /opt/rocm/hcc (can be overridden by setting HCC_HOME environment variable)
+* By default HIP looks for HSA in /opt/rocm/hsa (can be overridden by setting HSA_PATH environment variable) 
 * Ensure that ROCR runtime is installed and added to LD_LIBRARY_PATH
+* Install HIP (from this GitHub repot).  By default HIP is installed into /opt/rocm/hip (can be overridden by setting HIP_PATH environment variable).
+
+* Optionally, consider adding /opt/rocm/bin to your path to make it easier to use the tools.
    
 #### NVIDIA (nvcc)
 * Install CUDA SDK from manufacturer website
 * By default HIP looks for CUDA SDK in /usr/local/cuda (can be overriden by setting CUDA_PATH env variable)
 
-### Add HIP/bin to your path.
-For example, if this repot is cloned to ~/HIP, and you are running bash:
 ```
-> export PATH=$PATH:~/HIP/bin
+
+#### Verify your installation
+Run hipconfig (instructions below assume default installation path) :
 ```
-Verify your can find hipconfig (one of the hip tools in bin dir):
+>  /opt/rocm/bin/hipconfig --full
 ```
->  hipconfig -pn
-/home/me/HIP
-```
+
+Compile and run the [square sample](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/tree/master/samples/0_Intro/square). 
+
+
 
 ### HCC Options
 

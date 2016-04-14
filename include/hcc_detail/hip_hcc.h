@@ -35,6 +35,14 @@ THE SOFTWARE.
 //Use the new HCC accelerator_view::copy instead of am_copy
 #define USE_AV_COPY 0
 
+// Compile peer-to-peer support.
+// >= 2 : use HCC hc:accelerator::get_is_peer
+// >= 3 : use hc::am_memtracker_update_peers(...)
+#define USE_PEER_TO_PEER 0
+
+// Use new lock API in HCC:
+#define USE_HCC_LOCK 0
+
 //#define INLINE static inline
 
 //---
@@ -494,11 +502,23 @@ struct ihipEvent_t {
 // will lock the mutex on construction and unlock on destruction.
 //
 // MUTEX_TYPE is template argument so can easily convert to FakeMutex for performance or stress testing.
-template <typename MUTEX_TYPE>
+template <class MUTEX_TYPE>
 class ihipDeviceCriticalBase_t : LockedBase<MUTEX_TYPE>
 {
 public:
-    ihipDeviceCriticalBase_t() :  _stream_id(0) {};
+    ihipDeviceCriticalBase_t() :  _stream_id(0), _peerAgents(nullptr) {};
+   
+    void init(unsigned deviceCnt) {
+        assert(_peerAgents == nullptr);
+        _peerAgents = new hsa_agent_t[deviceCnt];
+    };
+
+    ~ihipDeviceCriticalBase_t()  {
+        if (_peerAgents != nullptr) {
+            delete _peerAgents;
+            _peerAgents = nullptr;
+        }
+    }
     friend class LockedAccessor<ihipDeviceCriticalBase_t>;
 
     std::list<ihipStream_t*> &streams() { return _streams; };
@@ -507,10 +527,24 @@ public:
     // "Allocate" a stream ID:
     ihipStream_t::SeqNum_t  incStreamId() { return _stream_id++; };
 
+    bool addPeer(ihipDevice_t *peer);
+    bool removePeer(ihipDevice_t *peer);
+    void resetPeers(ihipDevice_t *thisDevice);
+
+    uint32_t peerCnt() const { return _peerCnt; };
+    hsa_agent_t *peerAgents() const { return _peerAgents; };
+
 
 private:
     std::list<ihipStream_t*> _streams;   // streams associated with this device.
     ihipStream_t::SeqNum_t   _stream_id;
+
+    // These reflect the currently Enabled set of peers for this GPU:
+    std::list<ihipDevice_t*>  _peers;     // list of enabled peer devices.
+    uint32_t                  _peerCnt;     // number of enabled peers
+    hsa_agent_t              *_peerAgents;  // efficient packed array of enabled agents (to use for allocations.)
+private:
+    void recomputePeerAgents();
 };
 
 // Note Mutex selected based on DeviceMutex
@@ -530,7 +564,7 @@ class ihipDevice_t
 {
 public: // Functions:
     ihipDevice_t() {}; // note: calls constructor for _criticalData 
-    void init(unsigned device_index, hc::accelerator &acc, unsigned flags);
+    void init(unsigned device_index, unsigned deviceCnt, hc::accelerator &acc, unsigned flags);
     ~ihipDevice_t();
 
     void locked_addStream(ihipStream_t *s);
@@ -538,6 +572,8 @@ public: // Functions:
     void locked_reset();
     void locked_waitAllStreams();
     void locked_syncDefaultStream(bool waitOnSelf);
+
+    ihipDeviceCritical_t  &criticalData() { return _criticalData; }; // TODO, move private.  Fix P2P.
 
 public: // Data, set at initialization:
     unsigned                _device_index; // index into g_devices.

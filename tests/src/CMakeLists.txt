@@ -8,6 +8,10 @@ include_directories( ${PROJECT_SOURCE_DIR}/include )
 set (HIP_Unit_Test_VERSION_MAJOR 1)
 set (HIP_Unit_Test_VERSION_MINOR 0)
 
+if(NOT DEFINED HIP_MULTI_GPU)
+    set(HIP_MULTI_GPU 0 CACHE BOOL "Run tests requiring more than one GPU")
+endif()
+
 if(NOT DEFINED HIP_BUILD_LOCAL)
     if(NOT DEFINED ENV{HIP_BUILD_LOCAL})
         set(HIP_BUILD_LOCAL 1 CACHE BOOL "Build HIP in local folder")
@@ -156,20 +160,21 @@ make_hip_executable (hipSimpleAtomicsTest hipSimpleAtomicsTest.cpp)
 make_hip_executable (hipMathFunctionsHost hipMathFunctions.cpp hipSinglePrecisionMathHost.cpp hipDoublePrecisionMathHost.cpp)
 make_hip_executable (hipMathFunctionsDevice hipMathFunctions.cpp hipSinglePrecisionMathDevice.cpp hipDoublePrecisionMathDevice.cpp)
 make_hip_executable (hipIntrinsics hipMathFunctions.cpp hipSinglePrecisionIntrinsics.cpp hipDoublePrecisionIntrinsics.cpp hipIntegerIntrinsics.cpp)
-#TODO - re-enable.  This uses the pointer add feature.
 make_hip_executable (hipPointerAttrib hipPointerAttrib.cpp) 
 make_hip_executable (hipMultiThreadStreams1 hipMultiThreadStreams1.cpp)
 make_hip_executable (hipMultiThreadStreams2 hipMultiThreadStreams2.cpp) 
 make_hip_executable (hipHostAlloc hipHostAlloc.cpp)
 make_hip_executable (hipStreamL5 hipStreamL5.cpp)
 make_hip_executable (hipHostGetFlags hipHostGetFlags.cpp)
-make_hip_executable (hipHostRegister hipHostRegister.cpp)
+#TODO - re-enable.  This requires working hipHostRegister call, waiting on HCC feature.
+#make_hip_executable (hipHostRegister hipHostRegister.cpp)
 make_hip_executable (hipRandomMemcpyAsync hipRandomMemcpyAsync.cpp)
 make_hip_executable (hipMemoryAllocate hipMemoryAllocate.cpp)
 make_hip_executable (hipFuncSetDeviceFlags hipFuncSetDeviceFlags.cpp)
 make_hip_executable (hipFuncGetDevice hipFuncGetDevice.cpp)
 make_hip_executable (hipFuncSetDevice hipFuncSetDevice.cpp)
 make_hip_executable (hipFuncDeviceSynchronize hipFuncDeviceSynchronize.cpp)
+make_hip_executable (hipPeerToPeer_simple hipPeerToPeer_simple.cpp) 
 
 make_hip_executable (hipMultiThreadDevice hipMultiThreadDevice.cpp) 
 
@@ -217,5 +222,12 @@ make_test(hipFuncDeviceSynchronize " ")
 make_named_test (hipMultiThreadDevice "hipMultiThreadDevice-serial" --tests 0x1) 
 make_named_test (hipMultiThreadDevice "hipMultiThreadDevice-pyramid" --tests 0x4) 
 make_named_test (hipMultiThreadDevice "hipMultiThreadDevice-nearzero" --tests 0x10) 
+
+if (${HIP_MULTI_GPU})
+    make_test(hipPeerToPeer_simple " ")                  # use current device for copy, this fails. 
+    make_test(hipPeerToPeer_simple --memcpyWithPeer)  
+    make_test(hipPeerToPeer_simple --mirrorPeers)    # mirror mapping: test to ensure mirror doesn't destroy orig mapping.
+
+endif()
 
 make_hipify_test(specialFunc.cu )

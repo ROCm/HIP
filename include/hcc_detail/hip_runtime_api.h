@@ -19,8 +19,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#pragma once
-
+//#pragma once
+#ifndef HIP_RUNTIME_API_H
+#define HIP_RUNTIME_API_H
 /**
  *  @file  hcc_detail/hip_runtime_api.h
  *  @brief Contains C function APIs for HIP runtime. This file does not use any HCC builtin or special language extensions (-hc mode) ; those functions in hip_runtime.h.
@@ -907,46 +908,58 @@ hipError_t hipMemGetInfo  (size_t * free, size_t * total)   ;
  *
  * Returns "1" in @p canAccessPeer if the specified @p device is capable
  * of directly accessing memory physically located on peerDevice , or "0" if not.
+ *
+ * Returns "0" in @p canAccessPeer if deviceId == peerDeviceId, and both are valid devices : a device is not a peer of itself.
+ *
+ *
+ *
+ * @returns #hipSuccess, 
+ * @returns #hipErrorInvalidDevice if deviceId or peerDeviceId are not valid devices
  */
-hipError_t hipDeviceCanAccessPeer ( int* canAccessPeer, int  device, int  peerDevice );
-
+hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int deviceId, int peerDeviceId);
 
 
 /**
- * @brief Disables registering memory on peerDevice for direct access from the current device.
+ * @brief Enable direct access from current device's virtual address space to memory allocations physically located on a peer device.  
  *
- * If there are any allocations on peerDevice which were registered in the current device using hipPeerRegister() then these allocations will be automatically unregistered.
- * Returns hipErrorPeerAccessNotEnabled if direct access to memory on peerDevice has not yet been enabled from the current device.
+ * Memory which already allocated on peer device will be mapped into the address space of the current device.  In addition, all
+ * future memory allocations on peerDeviceId will be mapped into the address space of the current device when the memory is allocated.
+ * The peer memory remains accessible from the current device until a call to hipDeviceDisablePeerAccess or hipDeviceReset.
  *
- * @param [in] peerDevice
- * TODO:cudaErrorPeerAccessNotEnabled and cudaErrorInvalidDevice error not supported in HIP, return hipErrorUnknown
- * Returns #hipSuccess, #hipErrorUnknown
- */
-hipError_t  hipDeviceDisablePeerAccess ( int  peerDevice );
-
-/**
- * @brief Enables registering memory on peerDevice for direct access from the current device.
  *
- * @param [in] peerDevice
+ * @param [in] peerDeviceId
  * @param [in] flags
  *
- * TODO:cudaErrorInvalidDevice error not supported in HIP, return hipErrorUnknown
- * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, #hipErrorUnknown
+ * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, 
+ * @returns #hipErrorPeerAccessAlreadyEnabled if peer access is already enabled for this device.
  */
-hipError_t  hipDeviceEnablePeerAccess ( int  peerDevice, unsigned int  flags );
+hipError_t  hipDeviceEnablePeerAccess (int  peerDeviceId, unsigned int flags);
+
+
+/**
+ * @brief Disable direct access from current device's virtual address space to memory allocations physically located on a peer device.  
+ *
+ * Returns hipErrorPeerAccessNotEnabled if direct access to memory on peerDevice has not yet been enabled from the current device.
+ *
+ * @param [in] peerDeviceId
+ *
+ * Returns #hipSuccess, #hipErrorPeerAccessNotEnabled
+ */
+hipError_t  hipDeviceDisablePeerAccess (int peerDeviceId);
+
 
 /**
  * @brief Copies memory from one device to memory on another device.
  *
  * @param [out] dst - Destination device pointer.
- * @param [in] dstDevice - Destination device
+ * @param [in] dstDeviceId - Destination device
  * @param [in] src - Source device pointer
- * @param [in] srcDevice - Source device
+ * @param [in] srcDeviceId - Source device
  * @param [in] sizeBytes - Size of memory copy in bytes
  *
  * Returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
  */
-hipError_t hipMemcpyPeer ( void* dst, int  dstDevice, const void* src, int  srcDevice, size_t sizeBytes );
+hipError_t hipMemcpyPeer (void* dst, int dstDeviceId, const void* src, int srcDeviceId, size_t sizeBytes);
 
 /**
  * @brief Copies memory from one device to memory on another device.
@@ -961,7 +974,7 @@ hipError_t hipMemcpyPeer ( void* dst, int  dstDevice, const void* src, int  srcD
  * Returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
  */
 #if __cplusplus
-hipError_t hipMemcpyPeerAsync ( void* dst, int  dstDevice, const void* src, int  srcDevice, size_t sizeBytes, hipStream_t stream=0 );
+hipError_t hipMemcpyPeerAsync ( void* dst, int  dstDeviceId, const void* src, int  srcDevice, size_t sizeBytes, hipStream_t stream=0 );
 #else
 hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int srcDevice, size_t sizeBytes, hipStream_t stream);
 #endif
@@ -1053,3 +1066,5 @@ hipError_t hipDriverGetVersion(int *driverVersion) ;
 /**
  *   @}
  */
+
+#endif
