@@ -22,11 +22,14 @@ THE SOFTWARE.
 #include <stdio.h>
 #include <hip_runtime.h>
 
-#define CHECK(error) \
+#define CHECK(cmd) \
+{\
+    hipError_t error  = cmd;\
     if (error != hipSuccess) { \
       fprintf(stderr, "error: '%s'(%d) at %s:%d\n", hipGetErrorString(error), error,__FILE__, __LINE__); \
     exit(EXIT_FAILURE);\
-	}
+	}\
+}
 
 
 /* 

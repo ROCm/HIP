@@ -64,7 +64,7 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT AND CMAKE_INSTALL_PREFIX MATCHES 
     if(CMAKE_BUILD_TYPE MATCHES Debug)
             set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "Installation path for HIP" FORCE)
     elseif(CMAKE_BUILD_TYPE MATCHES Release)
-            set(CMAKE_INSTALL_PREFIX "/opt/hip" CACHE PATH "Installation path for HIP" FORCE)
+            set(CMAKE_INSTALL_PREFIX "/opt/rocm/hip" CACHE PATH "Installation path for HIP" FORCE)
     else()
         message(FATAL_ERROR "Invalid CMAKE_BUILD_TYPE specified. Valid values are Debug and Release")
     endif()
