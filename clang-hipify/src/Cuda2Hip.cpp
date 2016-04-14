@@ -215,7 +215,7 @@ struct cuda2hipMap {
 
     // Device
     cuda2hipRename["cudaDeviceProp"] = {"hipDeviceProp_t", CONV_DEV};
-    cuda2hipRename["cudaGetDeviceProperties"] = {"hipDeviceGetProperties",
+    cuda2hipRename["cudaGetDeviceProperties"] = {"hipGetDeviceProperties",
                                                  CONV_DEV};
 
     // Cache config
@@ -492,7 +492,7 @@ public:
       SourceLocation kernelArgListEnd(pvdLast->getLocEnd());
       SourceLocation stop = clang::Lexer::getLocForEndOfToken(
           kernelArgListEnd, 0, *SM, DefaultLangOptions);
-      size_t replacementLength =
+      replacementLength +=
           SM->getCharacterData(stop) - SM->getCharacterData(kernelArgListStart);
       initialParamList = StringRef(SM->getCharacterData(kernelArgListStart),
                                    replacementLength);
