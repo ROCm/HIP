@@ -16,7 +16,10 @@ LIABILITY, WHETHER INN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#pragma once
+//#pragma once
+
+#ifndef TRACE_HELPER_H
+#define TRACE_HELPER_H
 
 #include <iostream>
 #include <iomanip>
@@ -116,3 +119,5 @@ inline std::string ToString(T first, Args... args)
 {
     return ToString(first) + ", " + ToString(args...) ;
 }
+
+#endif

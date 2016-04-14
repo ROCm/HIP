@@ -17,6 +17,8 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <hc_am.hpp>
+
 #include "hip_runtime.h"
 #include "hcc_detail/hip_hcc.h"
 #include "hcc_detail/trace_helper.h"
@@ -25,44 +27,111 @@ THE SOFTWARE.
  * @warning HCC returns 0 in *canAccessPeer ; Need to update this function when RT supports P2P
  */
 //---
-hipError_t hipDeviceCanAccessPeer ( int* canAccessPeer, int  device, int  peerDevice )
+hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int  deviceId, int peerDeviceId)
 {
-    HIP_INIT_API(canAccessPeer, device, peerDevice);
+    HIP_INIT_API(canAccessPeer, deviceId, peerDeviceId);
 
-    *canAccessPeer = false;
-    return ihipLogStatus(hipSuccess);
+    hipError_t err = hipSuccess;
+
+    auto thisDevice = ihipGetDevice(deviceId);
+    auto peerDevice = ihipGetDevice(peerDeviceId);
+
+    if ((thisDevice != NULL) && (peerDevice != NULL)) {
+        if (deviceId == peerDeviceId) {
+            *canAccessPeer = 0;
+        } else {
+#if USE_PEER_TO_PEER>=2
+            *canAccessPeer = peerDevice->_acc.get_is_peer(thisDevice->_acc);
+#else
+            *canAccessPeer = 0;
+#endif
+        }
+
+    } else {
+        *canAccessPeer = 0;
+        err = hipErrorInvalidDevice;
+    }
+
+
+    return ihipLogStatus(err);
 }
 
 
-/**
- * @warning Need to update this function when RT supports P2P
- */
 //---
-hipError_t  hipDeviceDisablePeerAccess ( int  peerDevice )
+hipError_t hipDeviceDisablePeerAccess (int peerDeviceId)
 {
-    HIP_INIT_API(peerDevice);
+    HIP_INIT_API(peerDeviceId);
 
-    // TODO-p2p
-    return ihipLogStatus(hipSuccess);
+    hipError_t err = hipSuccess;
+
+    auto thisDevice = ihipGetTlsDefaultDevice();
+    auto peerDevice = ihipGetDevice(peerDeviceId);
+    if ((thisDevice != NULL) && (peerDevice != NULL)) {
+#if USE_PEER_TO_PEER>=2
+        bool canAccessPeer =  peerDevice->_acc.get_is_peer(thisDevice->_acc);
+#else
+        bool canAccessPeer = 0;
+#endif
+        if (! canAccessPeer) {
+            err = hipErrorInvalidDevice;  // P2P not allowed between these devices.
+        } else if (thisDevice == peerDevice)  {
+            err = hipErrorInvalidDevice;  // Can't disable peer access to self.
+        } else {
+            LockedAccessor_DeviceCrit_t crit(thisDevice->criticalData());
+            bool changed = crit->removePeer(peerDevice);
+            if (changed) {
+#if USE_PEER_TO_PEER>=3
+                // Update the peers for all memory already saved in the tracker:
+                am_memtracker_update_peers(thisDevice->_acc, crit->peerCnt(), crit->peerAgents());
+#endif
+            } else {
+                err = hipErrorPeerAccessNotEnabled; // never enabled P2P access.
+            }
+        } 
+    } else {
+        err = hipErrorInvalidDevice;
+    }
+
+    return ihipLogStatus(err);
 };
 
 
-/**
- * @warning Need to update this function when RT supports P2P
- */
 //---
-hipError_t  hipDeviceEnablePeerAccess ( int  peerDevice, unsigned int  flags )
+ // Enable registering memory on peerDevice for direct access from the current device.
+hipError_t hipDeviceEnablePeerAccess (int peerDeviceId, unsigned int flags)
 {
-    std::call_once(hip_initialized, ihipInit);
-    // TODO-p2p
-    return ihipLogStatus(hipSuccess);
+    HIP_INIT_API(peerDeviceId, flags);
+
+    hipError_t err = hipSuccess;
+    if (flags != 0) {
+        err = hipErrorInvalidValue;
+    } else {
+        auto thisDevice = ihipGetTlsDefaultDevice();
+        auto peerDevice = ihipGetDevice(peerDeviceId);
+        if ((thisDevice != NULL) && (peerDevice != NULL)) {
+            LockedAccessor_DeviceCrit_t crit(thisDevice->criticalData());
+            bool isNewPeer = crit->addPeer(peerDevice);
+            if (isNewPeer) {
+#if USE_PEER_TO_PEER>=3
+                am_memtracker_update_peers(thisDevice->_acc, crit->peerCnt(), crit->peerAgents());
+#endif
+            } else {
+                err = hipErrorPeerAccessAlreadyEnabled;
+            }
+        } else {
+            err = hipErrorInvalidDevice;
+        }
+    }
+
+    return ihipLogStatus(err);
 }
 
 
 //---
-hipError_t hipMemcpyPeer ( void* dst, int  dstDevice, const void* src, int  srcDevice, size_t sizeBytes )
+hipError_t hipMemcpyPeer (void* dst, int  dstDevice, const void* src, int  srcDevice, size_t sizeBytes)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(dst, dstDevice, src, srcDevice, sizeBytes);
+
     // HCC has a unified memory architecture so device specifiers are not required.
     return hipMemcpy(dst, src, sizeBytes, hipMemcpyDefault);
 };
@@ -72,9 +141,9 @@ hipError_t hipMemcpyPeer ( void* dst, int  dstDevice, const void* src, int  srcD
  * @bug This function uses a synchronous copy
  */
 //---
-hipError_t hipMemcpyPeerAsync ( void* dst, int  dstDevice, const void* src, int  srcDevice, size_t sizeBytes, hipStream_t stream )
+hipError_t hipMemcpyPeerAsync (void* dst, int  dstDevice, const void* src, int  srcDevice, size_t sizeBytes, hipStream_t stream)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(dst, dstDevice, src, srcDevice, sizeBytes, stream);
     // HCC has a unified memory architecture so device specifiers are not required.
     return hipMemcpyAsync(dst, src, sizeBytes, hipMemcpyDefault, stream);
 };
