@@ -1,6 +1,6 @@
 #Dependencies : [MYHIP]/bin must be in user's path.
 
-HIP_PATH=?../../..
+HIP_PATH?=../../..
 HIP_PLATFORM=$(shell $(HIP_PATH)/bin/hipconfig --platform)
 HIPCC=$(HIP_PATH)/bin/hipcc
 
