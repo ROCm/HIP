@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(hip_hcc)
+project(hip)
 
 #############################
 # Setup version information
@@ -139,24 +139,55 @@ endif()
 #############################
 # Packaging steps
 #############################
-set(CPACK_SET_DESTDIR TRUE)
-set(CPACK_INSTALL_PREFIX "/opt/rocm/hip")
-set(CPACK_PACKAGE_NAME "hip")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "HIP: Heterogenous-computing Interface for Portability")
-set(CPACK_PACKAGE_VENDOR "Advanced Micro Devices, Inc.")
-set(CPACK_PACKAGE_CONTACT "Maneesh Gupta <maneesh.gupta@amd.com>")
-set(CPACK_PACKAGE_VERSION ${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}.${HIP_VERSION_PATCH})
-set(CPACK_PACKAGE_VERSION_MAJOR ${HIP_VERSION_MAJOR})
-set(CPACK_PACKAGE_VERSION_MINOR ${HIP_VERSION_MINOR})
-set(CPACK_PACKAGE_VERSION_PATCH ${HIP_VERSION_PATCH})
-set(CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH})
-set(CPACK_GENERATOR "DEB;RPM;TGZ")
-set(CPACK_BINARY_DEB "ON")
-set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/postinst;${CMAKE_CURRENT_SOURCE_DIR}/prerm")
-set(CPACK_BINARY_RPM "ON")
-set(CPACK_RPM_PACKAGE_ARCHITECTURE "x86_64")
-set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/postinst")
-set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/prerm")
-set(CPACK_SOURCE_GENERATOR "TGZ")
-include(CPack)
+# Package: hip_base
+set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_base)
+configure_file(packaging/hip_base.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+configure_file(packaging/hip_base.postinst ${BUILD_DIR}/postinst @ONLY)
+configure_file(packaging/hip_base.prerm ${BUILD_DIR}/prerm @ONLY)
+add_custom_target(pkg_hip_base COMMAND ${CMAKE_COMMAND} .
+                               COMMAND rm -rf *.deb *.rpm *.tar.gz
+                               COMMAND make package
+                               COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+                               COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+                               COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+                               WORKING_DIRECTORY ${BUILD_DIR})
+
+# Package: hip_hcc
+set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_hcc)
+configure_file(packaging/hip_hcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+configure_file(packaging/hip_hcc.postinst ${BUILD_DIR}/postinst @ONLY)
+configure_file(packaging/hip_hcc.prerm ${BUILD_DIR}/prerm @ONLY)
+add_custom_target(pkg_hip_hcc  COMMAND ${CMAKE_COMMAND} .
+                               COMMAND rm -rf *.deb *.rpm *.tar.gz
+                               COMMAND make package
+                               COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+                               COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+                               COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+                               WORKING_DIRECTORY ${BUILD_DIR}
+                               DEPENDS hip_hcc)
+
+# Package: hip_nvcc
+set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_nvcc)
+configure_file(packaging/hip_nvcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+add_custom_target(pkg_hip_nvcc COMMAND ${CMAKE_COMMAND} .
+                               COMMAND rm -rf *.deb *.rpm *.tar.gz
+                               COMMAND make package
+                               COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+                               COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+                               COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+                               WORKING_DIRECTORY ${BUILD_DIR})
+
+# Package: hip_doc
+set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_doc)
+configure_file(packaging/hip_doc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+add_custom_target(pkg_hip_doc  COMMAND ${CMAKE_COMMAND} .
+                               COMMAND rm -rf *.deb *.rpm *.tar.gz
+                               COMMAND make package
+                               COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+                               COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+                               COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+                               WORKING_DIRECTORY ${BUILD_DIR})
+
+# Package: all
+add_custom_target(package DEPENDS pkg_hip_base pkg_hip_hcc pkg_hip_nvcc pkg_hip_doc)
 
