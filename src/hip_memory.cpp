@@ -229,58 +229,59 @@ hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
 {
     HIP_INIT_API(hostPtr, sizeBytes, flags);
 
-	hipError_t hip_status = hipSuccess;
+    hipError_t hip_status = hipSuccess;
 
-	auto device = ihipGetTlsDefaultDevice();
-	void* srcPtr;
-	if(hostPtr == NULL){
-		return ihipLogStatus(hipErrorInvalidValue);
-	}
-	if(device){
-	if(flags == hipHostRegisterDefault){
-		am_status_t am_status;
-		std::vector<hc::accelerator>vecAcc;
-		for(int i=0;i<g_deviceCnt;i++){
-//			if(device->_acc.get_is_peer(g_devices[i]._acc)){
-		//hsa_status_t hsa_status = hsa_amd_memory_lock(hostPtr, sizeBytes, &g_devices[i]._hsa_agent, 1, &srcPtr);
-				vecAcc.push_back(g_devices[i]._acc);
-//			}
-		}
-		am_status = hc::am_memory_host_lock(device->_acc, hostPtr, sizeBytes, &vecAcc[0], vecAcc.size());
+    auto device = ihipGetTlsDefaultDevice();
+    if(hostPtr == NULL){
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
 
-//		hsa_status_t hsa_status = hsa_amd_memory_lock(hostPtr, sizeBytes, &device->_hsa_agent, 1, &srcPtr);
-		if(am_status == AM_SUCCESS){
-			hip_status = hipSuccess;	
-		}else{
-			hip_status = hipErrorMemoryAllocation;
-		}
-	}
-	else if (flags | hipHostRegisterMapped){
-		hsa_status_t hsa_status = hsa_amd_memory_lock(hostPtr, sizeBytes, &device->_hsa_agent, 1, &srcPtr);
-		//TODO: Added feature for actual host pointer being tracked
-		if(hsa_status != HSA_STATUS_SUCCESS){
-			hip_status = hipErrorMemoryAllocation;
-		}
-	}
-	}
-	return ihipLogStatus(hip_status);
+    hc::accelerator acc;
+    hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+    am_status_t am_status = hc::am_memtracker_getinfo(&amPointerInfo, hostPtr);
+
+    if(status == AM_SUCCESS){
+        hip_status = hipErrorHostMemoryAlreadyRegistered;
+    }else{
+        auto device = ihipGetTlsDefaultDevice();
+        if(hostPtr == NULL){
+            return ihipLogStatus(hipErrorInvalidValue);
+        }
+        if(device){
+            if(flags == hipHostRegisterDefault || flags == hipHostRegisterPortable || flags == hipHostRegisterMapped){
+                std::vector<hc::accelerator>vecAcc;
+                for(int i=0;i<g_deviceCnt;i++){
+                    vecAcc.push_back(g_devices[i]._acc);
+                }
+                am_status = hc::am_memory_host_lock(device->_acc, hostPtr, sizeBytes, &vecAcc[0], vecAcc.size());
+                if(am_status == AM_SUCCESS){
+                    hip_status = hipSuccess;
+                }else{
+                    hip_status = hipErrorMemoryAllocation;
+                }
+            }else{
+                hip_status = hipErrorInvalidValue;
+            }
+        }
+    }
+    return ihipLogStatus(hip_status);
+}
 }
 
 hipError_t hipHostUnregister(void *hostPtr)
 {
     HIP_INIT_API(hostPtr);
-        auto device = ihipGetTlsDefaultDevice();
-	hipError_t hip_status = hipSuccess;
-	if(hostPtr == NULL){
-		hip_status = hipErrorInvalidValue;
-	}else{
+    auto device = ihipGetTlsDefaultDevice();
+    hipError_t hip_status = hipSuccess;
+    if(hostPtr == NULL){
+        hip_status = hipErrorInvalidValue;
+    }else{
         am_status_t am_status = hc::am_memory_host_unlock(device->_acc, hostPtr);
-	if(am_status != AM_SUCCESS){
-		hip_status = hipErrorInvalidValue;
-// TODO: Add a different return error. This is not true
-	}
-	}
-	return ihipLogStatus(hip_status);
+        if(am_status != AM_SUCCESS){
+            hip_status = hipErrorInvalidValue;
+        }
+    }
+    return ihipLogStatus(hip_status);
 }
 
 
