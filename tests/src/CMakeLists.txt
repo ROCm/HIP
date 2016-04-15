@@ -167,7 +167,7 @@ make_hip_executable (hipHostAlloc hipHostAlloc.cpp)
 make_hip_executable (hipStreamL5 hipStreamL5.cpp)
 make_hip_executable (hipHostGetFlags hipHostGetFlags.cpp)
 #TODO - re-enable.  This requires working hipHostRegister call, waiting on HCC feature.
-#make_hip_executable (hipHostRegister hipHostRegister.cpp)
+make_hip_executable (hipHostRegister hipHostRegister.cpp)
 make_hip_executable (hipRandomMemcpyAsync hipRandomMemcpyAsync.cpp)
 make_hip_executable (hipMemoryAllocate hipMemoryAllocate.cpp)
 make_hip_executable (hipFuncSetDeviceFlags hipFuncSetDeviceFlags.cpp)
