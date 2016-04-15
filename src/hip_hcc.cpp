@@ -1082,25 +1082,28 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 // TODO - data-up to data-down:
 // Called just before a kernel is launched from hipLaunchKernel.
 // Allows runtime to track some information about the stream.
-hipStream_t ihipPreLaunchKernel(hipStream_t stream, hc::accelerator_view **av)
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, grid_launch_parm *lp)
 {
 	std::call_once(hip_initialized, ihipInit);
     stream = ihipSyncAndResolveStream(stream);
 
 
     stream->lockopen_preKernelCommand();
-
-    *av = &stream->_av;
-
+//    *av = &stream->_av;
+    lp->av = &stream->_av;
+    lp->cf = new hc::completion_future;
+//    lp->av = static_cast<void*>(av);
+//    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
     return (stream);
 }
 
 
 //---
 //Called after kernel finishes execution.
-void ihipPostLaunchKernel(hipStream_t stream, hc::completion_future &kernelFuture)
+void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp)
 {
-    stream->lockclose_postKernelCommand(kernelFuture);
+//    stream->lockclose_postKernelCommand(cf);
+    stream->lockclose_postKernelCommand(*lp.cf);
     if (HIP_LAUNCH_BLOCKING) {
         tprintf(DB_SYNC, " stream:%p LAUNCH_BLOCKING for kernel completion\n", stream);
     }
