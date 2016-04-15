@@ -37,10 +37,10 @@ $CUDA_PATH=$ENV{'CUDA_PATH'};
 $CUDA_PATH='/usr/local/cuda' unless defined $CUDA_PATH;
 
 $HCC_HOME=$ENV{'HCC_HOME'};
-$HCC_HOME='/opt/hcc' unless defined $HCC_HOME;
+$HCC_HOME='/opt/rocm/hcc' unless defined $HCC_HOME;
 
 $HSA_PATH=$ENV{'HSA_PATH'};
-$HSA_PATH='/opt/hsa' unless defined $HSA_PATH;
+$HSA_PATH='/opt/rocm/hsa' unless defined $HSA_PATH;
 
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:

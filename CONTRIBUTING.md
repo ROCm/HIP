@@ -27,7 +27,7 @@ The granularity is one day, so __hcc_workweek__  can only be used to distinguish
 
 Additionally, hcc binary can print the work-week to stdout: ("16014" in the version info below.)4
 ```
-> /opt/hcc/bin/hcc -v
+> /opt/rocm/hcc/bin/hcc -v
 HCC clang version 3.5.0  (based on HCC 0.8.16014-81f8a3f-f155163-5a1009a LLVM 3.5.0svn)
 Target: x86_64-unknown-linux-gnu
 Thread model: posix
@@ -64,8 +64,8 @@ For applications and benchmarks outside the directed test environment, developme
 
 ## Environment Variables
 - **HIP_PATH** : Location of HIP include, src, bin, lib directories.  
-- **HCC_HOME** : Path to HCC compiler.  Default /opt/hcc.
-- **HSA_PATH** : Path to HSA include, lib.  Default /opt/hcc.
+- **HCC_HOME** : Path to HCC compiler.  Default /opt/rocm/hcc.
+- **HSA_PATH** : Path to HSA include, lib.  Default /opt/rocm/hsa.
 - **CUDA_PATH* : On nvcc system, this points to root of CUDA installation.
 
 ### Contribution guidelines ###
