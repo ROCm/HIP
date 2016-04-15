@@ -103,7 +103,6 @@ hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsi
             *devicePointer = NULL;
         }
     }
-
     return ihipLogStatus(e);
 }
 
@@ -132,11 +131,8 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
             hc::am_memtracker_update(*ptr, device->_device_index, 0);
             {
                 LockedAccessor_DeviceCrit_t crit(device->criticalData());
-                if (crit->peerCnt() > 1) { // peerCnt includes self so only call allow_access if other peers involved:
-                    hsa_status_t hsa_status = hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
-                    if (hsa_status != HSA_STATUS_SUCCESS) {
-                        hip_status = hipErrorMemoryAllocation; 
-                    }
+                if (crit->peerCnt()) {
+                    hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
                 }
             }
         }
@@ -173,13 +169,9 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
             }else{
                 hc::am_memtracker_update(*ptr, device->_device_index, flags);
                 {
-                    // TODO - allow_access only works for device memory, need to change am_alloc to allocate host directly.
                     LockedAccessor_DeviceCrit_t crit(device->criticalData());
-                    if (crit->peerCnt() > 1) { // peerCnt includes self so only call allow_access if other peers involved:
-                        hsa_status_t hsa_status = hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
-                        if (hsa_status != HSA_STATUS_SUCCESS) {
-                            hip_status = hipErrorMemoryAllocation; 
-                        }
+                    if (crit->peerCnt()) {
+                        hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
                     }
                 }
             }
@@ -246,11 +238,16 @@ hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
 	}
 	if(device){
 	if(flags == hipHostRegisterDefault){
-#if USE_HCC_LOCK
-                am_status_t am_status = hc::am_memtracker_host_memory_lock(device->_acc, hostPtr, sizeBytes);
-#else
-                am_status_t am_status  = AM_ERROR_MISC;
-#endif
+		am_status_t am_status;
+		std::vector<hc::accelerator>vecAcc;
+		for(int i=0;i<g_deviceCnt;i++){
+//			if(device->_acc.get_is_peer(g_devices[i]._acc)){
+		//hsa_status_t hsa_status = hsa_amd_memory_lock(hostPtr, sizeBytes, &g_devices[i]._hsa_agent, 1, &srcPtr);
+				vecAcc.push_back(g_devices[i]._acc);
+//			}
+		}
+		am_status = hc::am_memory_host_lock(device->_acc, hostPtr, sizeBytes, &vecAcc[0], vecAcc.size());
+
 //		hsa_status_t hsa_status = hsa_amd_memory_lock(hostPtr, sizeBytes, &device->_hsa_agent, 1, &srcPtr);
 		if(am_status == AM_SUCCESS){
 			hip_status = hipSuccess;	
@@ -272,13 +269,13 @@ hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
 hipError_t hipHostUnregister(void *hostPtr)
 {
     HIP_INIT_API(hostPtr);
-
+        auto device = ihipGetTlsDefaultDevice();
 	hipError_t hip_status = hipSuccess;
 	if(hostPtr == NULL){
 		hip_status = hipErrorInvalidValue;
 	}else{
-	hsa_status_t hsa_status = hsa_amd_memory_unlock(hostPtr);
-	if(hsa_status != HSA_STATUS_SUCCESS){
+        am_status_t am_status = hc::am_memory_host_unlock(device->_acc, hostPtr);
+	if(am_status != AM_SUCCESS){
 		hip_status = hipErrorInvalidValue;
 // TODO: Add a different return error. This is not true
 	}
@@ -448,6 +445,8 @@ hipError_t hipMemGetInfo  (size_t *free, size_t *total)
             // TODO - replace with kernel-level for reporting free memory:
             size_t deviceMemSize, hostMemSize, userMemSize;
             hc::am_memtracker_sizeinfo(hipDevice->_acc, &deviceMemSize, &hostMemSize, &userMemSize);
+            printf ("deviceMemSize=%zu\n", deviceMemSize);
+        
             *free =  hipDevice->_props.totalGlobalMem - deviceMemSize;
         }
 
