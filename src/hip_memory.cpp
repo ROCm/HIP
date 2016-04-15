@@ -240,7 +240,7 @@ hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
     hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
     am_status_t am_status = hc::am_memtracker_getinfo(&amPointerInfo, hostPtr);
 
-    if(status == AM_SUCCESS){
+    if(am_status == AM_SUCCESS){
         hip_status = hipErrorHostMemoryAlreadyRegistered;
     }else{
         auto device = ihipGetTlsDefaultDevice();
@@ -266,8 +266,8 @@ hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
     }
     return ihipLogStatus(hip_status);
 }
-}
 
+//---
 hipError_t hipHostUnregister(void *hostPtr)
 {
     HIP_INIT_API(hostPtr);
@@ -278,7 +278,7 @@ hipError_t hipHostUnregister(void *hostPtr)
     }else{
         am_status_t am_status = hc::am_memory_host_unlock(device->_acc, hostPtr);
         if(am_status != AM_SUCCESS){
-            hip_status = hipErrorInvalidValue;
+            hip_status = hipErrorHostMemoryNotRegistered;
         }
     }
     return ihipLogStatus(hip_status);
