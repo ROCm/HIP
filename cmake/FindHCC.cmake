@@ -10,24 +10,24 @@ if(UNIX)
 			NAMES  hsa-runtime64
 			PATHS
 			  ENV HSA_PATH
-			  /opt/hsa
+			  /opt/rocm/hsa
 			PATH_SUFFIXES
 			  lib)
 		
 		if( NOT DEFINED ENV{HSA_PATH} )
-			set( ENV{HSA_PATH} /opt/hsa)
+			set( ENV{HSA_PATH} /opt/rocm/hsa)
 		endif()
 		
 		find_program(HCC
 			NAMES  hcc
 			PATHS
 				ENV HCC_PATH
-				/opt/hcc
+				/opt/rocm/hcc
 			PATH_SUFFIXES
 				/bin)
 
 		if( NOT DEFINED  ENV{HCC_PATH} )
-			set( ENV{HCC_PATH} /opt/hcc)
+			set( ENV{HCC_PATH} /opt/rocm/hcc)
 		endif()
 		
 # this is now dynamic
@@ -35,7 +35,7 @@ if(UNIX)
 #			NAMES  mcwamp
 #			PATHS
 #				ENV NCC_PATH
-#				/opt/hcc
+#				/opt/rocm/hcc
 #			PATH_SUFFIXES
 #				/lib)
 				
@@ -44,7 +44,7 @@ if(UNIX)
 				hc.hpp
 			PATHS
 				ENV NCC_PATH
-				/opt/hcc
+				/opt/rocm/hcc
 			PATH_SUFFIXES
 				/include)				
 				

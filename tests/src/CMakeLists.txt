@@ -34,7 +34,7 @@ if (${HIP_PLATFORM} STREQUAL "hcc")
 
     set (HSA_PATH $ENV{HSA_PATH})
     if (NOT DEFINED HSA_PATH)
-        set (HSA_PATH /opt/hsa)
+        set (HSA_PATH /opt/rocm/hsa)
     endif()
 
     set (CODEXL_PATH $ENV{CODEXL_PATH})

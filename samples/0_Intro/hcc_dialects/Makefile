@@ -4,8 +4,8 @@ HCC = $(HCC_HOME)/bin/hcc
 HCC_CFLAGS= `$(HCC_HOME)/bin/hcc-config --cxxflags` 
 HCC_LDFLAGS= `$(HCC_HOME)/bin/hcc-config --ldflags`
 
-CPPAMP_CFLAGS= -std=c++amp -stdlib=libc++ -I/opt/hcc/include
-CPPAMP_LDFLAGS=  -std=c++amp -L/opt/hcc/lib -Wl,--rpath=/opt/hcc/lib -lc++ -lc++abi -ldl -lpthread -Wl,--whole-archive -lmcwamp -Wl,--no-whole-archive 
+CPPAMP_CFLAGS= -std=c++amp -stdlib=libc++ -I$(HCC_HOME)/include
+CPPAMP_LDFLAGS=  -std=c++amp -L$(HCC_HOME)/lib -Wl,--rpath=$(HCC_HOME)/lib -lc++ -lc++abi -ldl -lpthread -Wl,--whole-archive -lmcwamp -Wl,--no-whole-archive 
 
 HIP_PATH?=/opt/rocm/hip
 HIPCC=$(HIP_PATH)/bin/hipcc

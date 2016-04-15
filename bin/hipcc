@@ -16,8 +16,8 @@ use File::Basename;
 # Other environment variable controls:
 # HIP_PATH  : Path to HIP directory, default is one dir level above location of this script 
 # CUDA_PATH : Path to CUDA SDK (default /usr/local/cuda). Used on NVIDIA platforms only.
-# HCC_HOME  : Path to HCC SDK (default /opt/hcc).  Used on AMD platforms only.
-# HSA_PATH  : Path to HSA dir (default /opt/hsa).  Used on AMD platforms only.
+# HCC_HOME  : Path to HCC SDK (default /opt/rocm/hcc).  Used on AMD platforms only.
+# HSA_PATH  : Path to HSA dir (default /opt/rocm/hsa).  Used on AMD platforms only.
 
 if(scalar @ARGV == 0){
 print "No Arguments passed, exiting ...\n";
@@ -59,10 +59,10 @@ $enablestdcpplib = 0;
 
 if ($HIP_PLATFORM eq "hcc") {
 	$HSA_PATH=$ENV{'HSA_PATH'};
-	$HSA_PATH="/opt/hsa" unless defined $HSA_PATH;
+	$HSA_PATH="/opt/rocm/hsa" unless defined $HSA_PATH;
 
     $HCC_HOME=$ENV{'HCC_HOME'};
-    $HCC_HOME="/opt/hcc" unless defined $HCC_HOME;
+    $HCC_HOME="/opt/rocm/hcc" unless defined $HCC_HOME;
 
     # HCC* may be used to compile src/hip_hcc.o (and also feed the HIPCXXFLAGS below)
     $HCC = "$HCC_HOME/bin/hcc";
