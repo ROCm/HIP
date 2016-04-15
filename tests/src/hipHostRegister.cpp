@@ -26,40 +26,29 @@ Ad[tx] = Ad[tx] + float(1);
 }
 
 int main(){
-	float *A, *Ad;
+	float *A, **Ad;
+	int num_devices;
+	HIPCHECK(hipGetDeviceCount(&num_devices));
+	Ad = new float*[num_devices];
 	const size_t size = N * sizeof(float);
-	A = (float*)malloc(size*2);
-
+	A = (float*)malloc(size);
 	HIPCHECK(hipHostRegister(A, size, 0));
-
 	for(int i=0;i<N;i++){
 		A[i] = float(1);
 	}
+	for(int i=0;i<num_devices;i++){
+	HIPCHECK(hipSetDevice(i));
+	HIPCHECK(hipHostGetDevicePointer((void**)&Ad[i], A, 0));
+	}
 
-	HIPCHECK(hipMalloc(&Ad, size));
-        hipStream_t stream;
-        HIPCHECK(hipStreamCreate(&stream));
+	for(int i=0;i<num_devices;i++){
+	HIPCHECK(hipSetDevice(i));
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, 0, Ad[i]);
 
-	HIPCHECK(hipMemcpyAsync(Ad, A, size, hipMemcpyHostToDevice, stream));
-
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, stream, Ad);
 	HIPCHECK(hipDeviceSynchronize());
 
-	HIPCHECK(hipMemcpyAsync(A, Ad, size, hipMemcpyDeviceToHost, stream));
-
-	HIPASSERT(A[10] == 2.0f);
-
-	HIPCHECK(hipMemcpy(Ad, A, size, hipMemcpyHostToDevice));
-
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, 0, Ad);
-	HIPCHECK(hipDeviceSynchronize());
-
-	HIPCHECK(hipMemcpy(A, Ad, size, hipMemcpyDeviceToHost));
-
-	HIPASSERT(A[10] == 3.0f);
-
-
+	}
+	HIPASSERT(A[10] == 1.0f + float(num_devices));
 	HIPCHECK(hipHostUnregister(A));
-        HIPCHECK(hipStreamDestroy(stream));
 	passed();
 }
