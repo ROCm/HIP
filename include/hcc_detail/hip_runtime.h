@@ -45,10 +45,11 @@ THE SOFTWARE.
 //---
 // Remainder of this file only compiles with HCC
 #ifdef __HCC__
-#if __cplusplus
-#include <hc.hpp>
-#endif
+//#if __cplusplus
+//#include <hc.hpp>
+//#endif
 #include <grid_launch.h>
+#include <kalmar_defines.h>
 extern int HIP_TRACE_API;
 
 //TODO-HCC-GL - change this to typedef.
@@ -111,7 +112,6 @@ extern int HIP_TRACE_API;
 #define __HCC_C__
 #endif
 
-#if __cplusplus
 __device__ float acosf(float x);
 __device__ float acoshf(float x);
 __device__ float asinf(float x);
@@ -291,7 +291,6 @@ __device__ double trunc(double x);
 __device__ double y0(double x);
 __device__ double y1(double y);
 __device__ double yn(int n, double x);
-#endif
 
 // TODO - hipify-clang - change to use the function call.
 //#define warpSize hc::__wavesize()
@@ -492,10 +491,10 @@ __device__ float __dsqrt_rz(double x);
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
 
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
-
+#include<grid_launch.h>
 #ifdef __HCC_CPP__
-hipStream_t ihipPreLaunchKernel(hipStream_t stream, hc::accelerator_view **av);
-void ihipPostLaunchKernel(hipStream_t stream, hc::completion_future &cf);
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, grid_launch_parm *lp);
+void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp);
 
 // TODO - move to common header file.
 #define KNRM  "\x1B[0m"
@@ -511,16 +510,14 @@ do {\
   lp.groupDim.x = _blockDim3D.x; \
   lp.groupDim.y = _blockDim3D.y; \
   lp.groupDim.z = _blockDim3D.z; \
-  lp.groupMemBytes = _groupMemBytes;\
-  hc::completion_future cf;\
-  lp.cf = &cf;  \
-  hipStream_t trueStream = (ihipPreLaunchKernel(_stream, &lp.av)); \
+  lp.groupMemBytes = _groupMemBytes; \
+  hipStream_t trueStream = (ihipPreLaunchKernel(_stream, &lp)); \
     if (HIP_TRACE_API) {\
         fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d stream=%p\n" KNRM, \
                 #_kernelName, lp.gridDim.x, lp.gridDim.y, lp.gridDim.z, lp.groupDim.x, lp.groupDim.y, lp.groupDim.z, lp.groupMemBytes, (void*)(_stream));\
     }\
   _kernelName (lp, __VA_ARGS__);\
-  ihipPostLaunchKernel(trueStream, cf);\
+  ihipPostLaunchKernel(trueStream, lp);\
 } while(0)
 
 #else
