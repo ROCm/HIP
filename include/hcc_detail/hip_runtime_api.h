@@ -34,7 +34,7 @@ THE SOFTWARE.
 #include <hip_runtime_api.h>
 //#include "hip_hcc.h"
 
-#if defined (__HCC__) &&  (__hcc_workweek__ < 16074)
+#if defined (__HCC__) &&  (__hcc_workweek__ < 16155)
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
