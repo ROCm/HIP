@@ -40,7 +40,11 @@ hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int  deviceId, int peerDe
         if (deviceId == peerDeviceId) {
             *canAccessPeer = 0;
         } else {
-            *canAccessPeer = peerDevice->_acc.get_is_peer(thisDevice->_acc);
+#if USE_PEER_TO_PEER>=2
+             *canAccessPeer = peerDevice->_acc.get_is_peer(thisDevice->_acc);
+#else
+            *canAccessPeer = 0;
+#endif
         }
 
     } else {
@@ -63,7 +67,12 @@ hipError_t hipDeviceDisablePeerAccess (int peerDeviceId)
     auto thisDevice = ihipGetTlsDefaultDevice();
     auto peerDevice = ihipGetDevice(peerDeviceId);
     if ((thisDevice != NULL) && (peerDevice != NULL)) {
-        bool canAccessPeer =  peerDevice->_acc.get_is_peer(thisDevice->_acc);
+#if USE_PEER_TO_PEER>=2
+         bool canAccessPeer =  peerDevice->_acc.get_is_peer(thisDevice->_acc);
+#else
+        bool canAccessPeer = 0;
+#endif
+
         if (! canAccessPeer) {
             err = hipErrorInvalidDevice;  // P2P not allowed between these devices.
         } else if (thisDevice == peerDevice)  {
@@ -72,8 +81,10 @@ hipError_t hipDeviceDisablePeerAccess (int peerDeviceId)
             LockedAccessor_DeviceCrit_t crit(thisDevice->criticalData());
             bool changed = crit->removePeer(peerDevice);
             if (changed) {
+#if USE_PEER_TO_PEER>=3
                 // Update the peers for all memory already saved in the tracker:
                 am_memtracker_update_peers(thisDevice->_acc, crit->peerCnt(), crit->peerAgents());
+#endif
             } else {
                 err = hipErrorPeerAccessNotEnabled; // never enabled P2P access.
             }
