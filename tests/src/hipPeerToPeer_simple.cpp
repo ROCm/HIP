@@ -88,6 +88,7 @@ void enablePeerFirst()
 {
     printf ("\n==testing: %s\n", __func__);
 
+    setupPeerTests();
 
     HIPCHECK(hipSetDevice(g_currentDevice));
     HIPCHECK(hipDeviceEnablePeerAccess(g_peerDevice, 0));
@@ -111,12 +112,12 @@ void enablePeerFirst()
         // allocate and initialize memory on device0
         HIPCHECK (hipSetDevice(g_currentDevice));
         HIPCHECK (hipMalloc(&A_d0, Nbytes) );
-        HIPCHECK ( hipMemset(A_d0, memsetval, Nbytes) ); 
+        HIPCHECK (hipMemset(A_d0, memsetval, Nbytes) ); 
 
         // allocate and initialize memory on peer device
         HIPCHECK (hipSetDevice(g_peerDevice));
         HIPCHECK (hipMalloc(&A_d1, Nbytes) );
-        HIPCHECK ( hipMemset(A_d1, 0x13, Nbytes) ); 
+        HIPCHECK (hipMemset(A_d1, 0x13, Nbytes) ); 
 
 
 

@@ -50,6 +50,8 @@ struct StagingBuffer {
     void CopyDeviceToHost   (void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
     void CopyDeviceToHostPinInPlace(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
 
+    void CopyPeerToPeer( void* dst, hsa_agent_t dstAgent, const void* src, hsa_agent_t srcAgent, size_t sizeBytes, hsa_signal_t *waitFor);
+
 
 private:
     hsa_agent_t     _hsa_agent;
@@ -58,6 +60,7 @@ private:
 
     char            *_pinnedStagingBuffer[_max_buffers];
     hsa_signal_t     _completion_signal[_max_buffers];
+    hsa_signal_t     _completion_signal2[_max_buffers]; // P2P needs another set of signals.
     std::mutex       _copy_lock;    // provide thread-safe access 
 };
 

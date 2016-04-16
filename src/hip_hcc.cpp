@@ -211,6 +211,14 @@ void ihipDeviceCriticalBase_t<DeviceMutex>::recomputePeerAgents()
 
 
 template<>
+bool ihipDeviceCriticalBase_t<DeviceMutex>::isPeer(const ihipDevice_t *peer) 
+{
+    auto match = std::find(_peers.begin(), _peers.end(), peer);
+    return (match != std::end(_peers));
+}
+
+
+template<>
 bool ihipDeviceCriticalBase_t<DeviceMutex>::addPeer(ihipDevice_t *peer) 
 {
     auto match = std::find(_peers.begin(), _peers.end(), peer);
@@ -252,13 +260,21 @@ void ihipDeviceCriticalBase_t<DeviceMutex>::resetPeers(ihipDevice_t *thisDevice)
 //-------------------------------------------------------------------------------------------------
 
 //---
-ihipDevice_t * ihipStream_t::getDevice() const
+//Flavor that takes device index.
+ihipDevice_t * getDevice(unsigned deviceIndex) 
 {
-    if (ihipIsValidDevice(_device_index)) {
-        return &g_devices[_device_index];
+    if (ihipIsValidDevice(deviceIndex)) {
+        return &g_devices[deviceIndex];
     } else {
         return NULL;
     }
+};
+
+
+//---
+ihipDevice_t * ihipStream_t::getDevice() const
+{
+    return ::getDevice(_device_index);
 };
 
 
@@ -1155,16 +1171,23 @@ unsigned ihipStream_t::resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDev
 
 
 // Setup the copyCommandType and the copy agents (for hsa_amd_memory_async_copy)
-void ihipStream_t::setCopyAgents(unsigned kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent)
+// srcPhysAcc is the physical location of the src data.  For many copies this is the 
+void ihipStream_t::setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent)
 {
-    ihipDevice_t *device = this->getDevice();
-    hsa_agent_t deviceAgent = device->_hsa_agent;
+    // current* represents the device associated with the specified stream.
+    ihipDevice_t *streamDevice = this->getDevice();
+    hsa_agent_t streamAgent = streamDevice->_hsa_agent;
+
+    // ROCR runtime logic is :
+    // -    If both src and dst are cpu agent, launch thread and memcpy.  We want to avoid this.
+    // -    If either/both src or dst is a gpu agent, use the first gpu agent’s DMA engine to perform the copy.
 
     switch (kind) {
+        //case hipMemcpyHostToHost     : *commandType = ihipCommandCopyH2H; *srcAgent=streamAgent; *dstAgent=streamAgent; break;  // TODO - enable me, for async copy use SDMA.
         case hipMemcpyHostToHost     : *commandType = ihipCommandCopyH2H; *srcAgent=g_cpu_agent; *dstAgent=g_cpu_agent; break;
-        case hipMemcpyHostToDevice   : *commandType = ihipCommandCopyH2D; *srcAgent=g_cpu_agent; *dstAgent=deviceAgent; break;
-        case hipMemcpyDeviceToHost   : *commandType = ihipCommandCopyD2H; *srcAgent=deviceAgent; *dstAgent=g_cpu_agent; break;
-        case hipMemcpyDeviceToDevice : *commandType = ihipCommandCopyD2D; *srcAgent=deviceAgent; *dstAgent=deviceAgent; break;
+        case hipMemcpyHostToDevice   : *commandType = ihipCommandCopyH2D; *srcAgent=g_cpu_agent; *dstAgent=streamAgent; break;
+        case hipMemcpyDeviceToHost   : *commandType = ihipCommandCopyD2H; *srcAgent=streamAgent; *dstAgent=g_cpu_agent; break;
+        case hipMemcpyDeviceToDevice : *commandType = ihipCommandCopyD2D; *srcAgent=streamAgent; *dstAgent=streamAgent; break;
         default: throw ihipException(hipErrorInvalidMemcpyDirection);
     };
 }
@@ -1194,6 +1217,17 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
     };
 
     hsa_signal_t depSignal;
+
+    bool copyEngineCanSeeSrcAndDest = false;
+    if (kind == hipMemcpyDeviceToDevice) {
+#if USE_PEER_TO_PEER>=2
+        // TODO - consider refactor.  Do we need to support simul access of enable/disable peers with access?
+        LockedAccessor_DeviceCrit_t  dcrit(device->criticalData());
+        if (dcrit->isPeer(::getDevice(dstPtrInfo._appId)) && (dcrit->isPeer(::getDevice(srcPtrInfo._appId)))) {
+            copyEngineCanSeeSrcAndDest = true;
+        }
+#endif
+    }
 
     if ((kind == hipMemcpyHostToDevice) && (!srcTracked)) {
         int depSignalCnt = preCopyCommand(crit, NULL, &depSignal, ihipCommandCopyH2D);
@@ -1246,11 +1280,28 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
         tprintf(DB_COPY1, "H2H memcpy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
         memcpy(dst, src, sizeBytes);
 
+    } else if ((kind == hipMemcpyDeviceToDevice) && !copyEngineCanSeeSrcAndDest)  {
+        int depSignalCnt = preCopyCommand(crit, NULL, &depSignal, ihipCommandCopyP2P);
+        if (HIP_STAGING_BUFFERS) {
+            tprintf(DB_COPY1, "P2P but engine can't see both pointers: staged copy P2P dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
+            //printf ("staged-copy- read dep signals\n");
+            hsa_agent_t dstAgent = * (static_cast<hsa_agent_t*> (dstPtrInfo._acc.get_hsa_agent()));
+            hsa_agent_t srcAgent = * (static_cast<hsa_agent_t*> (srcPtrInfo._acc.get_hsa_agent()));
+
+            device->_staging_buffer[1]->CopyPeerToPeer(dst, dstAgent, src, srcAgent, sizeBytes, depSignalCnt ? &depSignal : NULL);
+
+            // The copy completes before returning so can reset queue to empty:
+            this->wait(crit, true);
+
+        } else {
+            assert(0); // currently no fallback for this path.
+        } 
+        
     } else {
         // If not special case - these can all be handled by the hsa async copy:
         ihipCommand_t commandType;
         hsa_agent_t srcAgent, dstAgent;
-        setCopyAgents(kind, &commandType, &srcAgent, &dstAgent);
+        setAsyncCopyAgents(kind, &commandType, &srcAgent, &dstAgent);
 
         int depSignalCnt = preCopyCommand(crit, NULL, &depSignal, commandType);
 
@@ -1335,7 +1386,7 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsig
 
             ihipCommand_t commandType;
             hsa_agent_t srcAgent, dstAgent;
-            setCopyAgents(kind, &commandType, &srcAgent, &dstAgent);
+            setAsyncCopyAgents(kind, &commandType, &srcAgent, &dstAgent);
 
             hsa_signal_t depSignal;
             int depSignalCnt = preCopyCommand(crit, ihip_signal, &depSignal, commandType);

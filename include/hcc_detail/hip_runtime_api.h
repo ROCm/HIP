@@ -798,6 +798,12 @@ hipError_t hipHostFree(void* ptr);
  *  device to host, device to device and host to host
  *  The src and dst must not overlap.
  *
+ *  For hipMemcpy, the copy is always performed by the current device (set by hipSetDevice).
+ *  For multi-gpu or peer-to-peer configurations, it is recommended to set the current device to the device where the src data is physically located.
+ *  For optimal peer-to-peer copies, the copy device must be able to access the src and dst pointers (by calling hipDeviceEnablePeerAccess with copy agent as the 
+ *  current device and src/dest as the peerDevice argument.  if this is not done, the hipMemcpy will still work, but will perform the copy using a staging buffer
+ *  on the host.
+ *
  *  @param[out]  dst Data being copy to
  *  @param[in]  src Data being copy from
  *  @param[in]  sizeBytes Data size in bytes
@@ -829,6 +835,13 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t siz
  *
  *  @warning If host or dest are not pinned, the memory copy will be performed synchronously.  For best performance, use hipHostMalloc to
  *  allocate host memory that is transferred asynchronously.
+ *
+ *  For hipMemcpy, the copy is always performed by the device associated with the specified stream.
+ *
+ *  For multi-gpu or peer-to-peer configurations, it is recommended to use a stream which is a attached to the device where the src data is physically located.
+ *  For optimal peer-to-peer copies, the copy device must be able to access the src and dst pointers (by calling hipDeviceEnablePeerAccess with copy agent as the 
+ *  current device and src/dest as the peerDevice argument.  if this is not done, the hipMemcpy will still work, but will perform the copy using a staging buffer
+ *  on the host.
  *
  *  @param[out] dst Data being copy to
  *  @param[in]  src Data being copy from
@@ -902,16 +915,14 @@ hipError_t hipMemGetInfo  (size_t * free, size_t * total)   ;
 /**
  * @brief Determine if a device can access a peer's memory.
  *
- * @param [out] canAccessPeer returns true if specified devices are peers.
- * @param [in] device
- * @param [in] peerDevice
+ * @param [out] canAccessPeer Returns the peer access capability (0 or 1)
+ * @param [in] device - device from where memory may be accessed.
+ * @param [in] peerDevice - device where memory is physically located
  *
  * Returns "1" in @p canAccessPeer if the specified @p device is capable
  * of directly accessing memory physically located on peerDevice , or "0" if not.
  *
  * Returns "0" in @p canAccessPeer if deviceId == peerDeviceId, and both are valid devices : a device is not a peer of itself.
- *
- *
  *
  * @returns #hipSuccess, 
  * @returns #hipErrorInvalidDevice if deviceId or peerDeviceId are not valid devices
