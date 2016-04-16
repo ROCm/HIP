@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: /home/bensander/HIP-privatestaging/src/hip_hcc.cpp File Reference</title>
+<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/hip_git/rel0.84.0/src/hip_hcc.cpp File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -86,10 +86,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- top -->
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a> &#124;
 <a href="#define-members">Macros</a> &#124;
-<a href="#typedef-members">Typedefs</a> &#124;
-<a href="#enum-members">Enumerations</a> &#124;
 <a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle">
@@ -109,172 +106,32 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <code>#include &lt;hc.hpp&gt;</code><br/>
 <code>#include &lt;hc_am.hpp&gt;</code><br/>
 <code>#include &quot;hip_runtime.h&quot;</code><br/>
+<code>#include &quot;hcc_detail/hip_hcc.h&quot;</code><br/>
 <code>#include &quot;hsa_ext_amd.h&quot;</code><br/>
-<code>#include &quot;hcc_detail/staging_buffer.h&quot;</code><br/>
 <code>#include &quot;hcc_detail/trace_helper.h&quot;</code><br/>
-<code>#include &quot;staging_buffer.cpp&quot;</code><br/>
 </div><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
-Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classihipException.html">ihipException</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structihipSignal__t.html">ihipSignal_t</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classFakeMutex.html">FakeMutex</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classihipStream__t.html">ihipStream_t</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structihipEvent__t.html">ihipEvent_t</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structihipDevice__t.html">ihipDevice_t</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
 <tr class="memitem:a6cdfff25aad8796bad4bbf2976aa0780"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6cdfff25aad8796bad4bbf2976aa0780"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_HCC</b></td></tr>
 <tr class="separator:a6cdfff25aad8796bad4bbf2976aa0780"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a108d2dfb0bc3e900937ff9d9a2ac4330"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a108d2dfb0bc3e900937ff9d9a2ac4330"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>USE_AV_COPY</b>&#160;&#160;&#160;0</td></tr>
-<tr class="separator:a108d2dfb0bc3e900937ff9d9a2ac4330"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2eb6f9e0395b47b8d5e3eeae4fe0c116"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2eb6f9e0395b47b8d5e3eeae4fe0c116"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>INLINE</b>&#160;&#160;&#160;static inline</td></tr>
-<tr class="separator:a2eb6f9e0395b47b8d5e3eeae4fe0c116"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a137aa83ec74421d226a90c92ec032ac9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a137aa83ec74421d226a90c92ec032ac9"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>KNRM</b>&#160;&#160;&#160;&quot;\x1B[0m&quot;</td></tr>
-<tr class="separator:a137aa83ec74421d226a90c92ec032ac9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a66290957baed5df3930ada4cb8caccf1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a66290957baed5df3930ada4cb8caccf1"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>KRED</b>&#160;&#160;&#160;&quot;\x1B[31m&quot;</td></tr>
-<tr class="separator:a66290957baed5df3930ada4cb8caccf1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac081c83b067273757f7a2e54a5957d41"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac081c83b067273757f7a2e54a5957d41"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>KGRN</b>&#160;&#160;&#160;&quot;\x1B[32m&quot;</td></tr>
-<tr class="separator:ac081c83b067273757f7a2e54a5957d41"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a897b10d246533c95ba86cb79f92e465a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a897b10d246533c95ba86cb79f92e465a"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>KYEL</b>&#160;&#160;&#160;&quot;\x1B[33m&quot;</td></tr>
-<tr class="separator:a897b10d246533c95ba86cb79f92e465a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3f838f2fc3a9a3b434be606fc908964b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3f838f2fc3a9a3b434be606fc908964b"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>KBLU</b>&#160;&#160;&#160;&quot;\x1B[34m&quot;</td></tr>
-<tr class="separator:a3f838f2fc3a9a3b434be606fc908964b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6825f05d3b9d619d91d79d0ef18bb8b2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6825f05d3b9d619d91d79d0ef18bb8b2"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>KMAG</b>&#160;&#160;&#160;&quot;\x1B[35m&quot;</td></tr>
-<tr class="separator:a6825f05d3b9d619d91d79d0ef18bb8b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a32036c94dbb166a3f874b7efc169841f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a32036c94dbb166a3f874b7efc169841f"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>KCYN</b>&#160;&#160;&#160;&quot;\x1B[36m&quot;</td></tr>
-<tr class="separator:a32036c94dbb166a3f874b7efc169841f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af0036c8022c9980079ab17e5c87fd478"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af0036c8022c9980079ab17e5c87fd478"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>KWHT</b>&#160;&#160;&#160;&quot;\x1B[37m&quot;</td></tr>
-<tr class="separator:af0036c8022c9980079ab17e5c87fd478"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3978cd6db3b05e4fdaccfa46b2bacbad"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3978cd6db3b05e4fdaccfa46b2bacbad"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>API_COLOR</b>&#160;&#160;&#160;KGRN</td></tr>
-<tr class="separator:a3978cd6db3b05e4fdaccfa46b2bacbad"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6cdfff25aad8796bad4bbf2976aa0780"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6cdfff25aad8796bad4bbf2976aa0780"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_HCC</b></td></tr>
-<tr class="separator:a6cdfff25aad8796bad4bbf2976aa0780"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ade5d19898540ff8f7be743b56cbb60cd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ade5d19898540ff8f7be743b56cbb60cd"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>STREAM_THREAD_SAFE</b>&#160;&#160;&#160;1</td></tr>
-<tr class="separator:ade5d19898540ff8f7be743b56cbb60cd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a60f403e685d30a51735df919c3538e7b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a60f403e685d30a51735df919c3538e7b"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>FORCE_SAMEDIR_COPY_DEP</b>&#160;&#160;&#160;1</td></tr>
-<tr class="separator:a60f403e685d30a51735df919c3538e7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2db01dd4e237312393f57d0ec6bda096"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2db01dd4e237312393f57d0ec6bda096"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>COMPILE_HIP_DB</b>&#160;&#160;&#160;1</td></tr>
-<tr class="separator:a2db01dd4e237312393f57d0ec6bda096"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac4295bd6742b71235f55c28f38a92223"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac4295bd6742b71235f55c28f38a92223"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>COMPILE_HIP_TRACE_API</b>&#160;&#160;&#160;0x3</td></tr>
-<tr class="separator:ac4295bd6742b71235f55c28f38a92223"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a479c983a3054ec095f78d514d7007735"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a479c983a3054ec095f78d514d7007735"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>COMPILE_TRACE_MARKER</b>&#160;&#160;&#160;0</td></tr>
-<tr class="separator:a479c983a3054ec095f78d514d7007735"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acd34877c00d629cd9465555a65b73480"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acd34877c00d629cd9465555a65b73480"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>ONE_OBJECT_FILE</b>&#160;&#160;&#160;1</td></tr>
-<tr class="separator:acd34877c00d629cd9465555a65b73480"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a05c9ea406306175581c27c84663854c9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a05c9ea406306175581c27c84663854c9"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>SCOPED_MARKER</b>(markerName, group, userString)</td></tr>
-<tr class="separator:a05c9ea406306175581c27c84663854c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ab4fc39a76f61102adcdd58bc1db8c8"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>API_TRACE</b>(...)</td></tr>
-<tr class="separator:a6ab4fc39a76f61102adcdd58bc1db8c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac0f54ec98b4a19b7657c0280465b9778"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_INIT_API</b>(...)</td></tr>
-<tr class="separator:ac0f54ec98b4a19b7657c0280465b9778"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad15461e01d96b25ab675f3a45e0d3807"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad15461e01d96b25ab675f3a45e0d3807"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>DB_API</b>&#160;&#160;&#160;0 /* 0x01 - shortcut to enable HIP_TRACE_API on single switch */</td></tr>
-<tr class="separator:ad15461e01d96b25ab675f3a45e0d3807"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac0b5a5c19cceefe47bd789c9ace013a1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac0b5a5c19cceefe47bd789c9ace013a1"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>DB_SYNC</b>&#160;&#160;&#160;1 /* 0x02 - trace synchronization pieces */</td></tr>
-<tr class="separator:ac0b5a5c19cceefe47bd789c9ace013a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0480da71bfa046913ff0df168eb8d29f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0480da71bfa046913ff0df168eb8d29f"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>DB_MEM</b>&#160;&#160;&#160;2 /* 0x04 - trace memory allocation / deallocation */</td></tr>
-<tr class="separator:a0480da71bfa046913ff0df168eb8d29f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3cd8fa609a7410b293ede3e5a06a31e3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3cd8fa609a7410b293ede3e5a06a31e3"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>DB_COPY1</b>&#160;&#160;&#160;3 /* 0x08 - trace memory copy commands. . */</td></tr>
-<tr class="separator:a3cd8fa609a7410b293ede3e5a06a31e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab776e543a010d68b5cf62df86a75ad2f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab776e543a010d68b5cf62df86a75ad2f"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>DB_SIGNAL</b>&#160;&#160;&#160;4 /* 0x10 - trace signal pool commands */</td></tr>
-<tr class="separator:ab776e543a010d68b5cf62df86a75ad2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac7f6c71d1181c643721020e175a7284f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac7f6c71d1181c643721020e175a7284f"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>DB_COPY2</b>&#160;&#160;&#160;5 /* 0x20 - trace memory copy commands. Detailed. */</td></tr>
-<tr class="separator:ac7f6c71d1181c643721020e175a7284f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a416fdb19f57927de7f282e4d05eba519"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>tprintf</b>(trace_level,...)</td></tr>
-<tr class="separator:a416fdb19f57927de7f282e4d05eba519"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a70838c4fa8cfbdb44e3b771caf2ccda3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a70838c4fa8cfbdb44e3b771caf2ccda3"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>DeviceErrorCheck</b>(x)&#160;&#160;&#160;if (x != HSA_STATUS_SUCCESS) { return <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d">hipErrorInvalidDevice</a>; }</td></tr>
 <tr class="separator:a70838c4fa8cfbdb44e3b771caf2ccda3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aea6f15cc8a65f027003f4b0e77a41fc8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aea6f15cc8a65f027003f4b0e77a41fc8"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>ErrorCheck</b>(x)&#160;&#160;&#160;error_check(x, __LINE__, __FILE__)</td></tr>
 <tr class="separator:aea6f15cc8a65f027003f4b0e77a41fc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aedd5ad4a39f4959e241b024c27d1746f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>ihipLogStatus</b>(_hip_status)</td></tr>
-<tr class="separator:aedd5ad4a39f4959e241b024c27d1746f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b90029add81faa0bf675869ffc31354"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>READ_ENV_I</b>(_build, _ENV_VAR, _ENV_VAR2, _description)</td></tr>
 <tr class="separator:a2b90029add81faa0bf675869ffc31354"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
-Typedefs</h2></td></tr>
-<tr class="memitem:aa0cc63e306697db139690e3fc5de6f14"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa0cc63e306697db139690e3fc5de6f14"></a>
-typedef uint64_t&#160;</td><td class="memItemRight" valign="bottom"><b>SIGSEQNUM</b></td></tr>
-<tr class="separator:aa0cc63e306697db139690e3fc5de6f14"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4dc6a0d7dc2d54c8b8cb2c8c342a8415"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4dc6a0d7dc2d54c8b8cb2c8c342a8415"></a>
-typedef std::mutex&#160;</td><td class="memItemRight" valign="bottom"><b>StreamMutex</b></td></tr>
-<tr class="separator:a4dc6a0d7dc2d54c8b8cb2c8c342a8415"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
-Enumerations</h2></td></tr>
-<tr class="memitem:a3b2678513b174cc4f1a0d9f6d3e4b3d8"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><b>ihipCommand_t</b> { <br/>
-&#160;&#160;<b>ihipCommandCopyH2H</b>, 
-<b>ihipCommandCopyH2D</b>, 
-<b>ihipCommandCopyD2H</b>, 
-<b>ihipCommandCopyD2D</b>, 
-<br/>
-&#160;&#160;<b>ihipCommandKernel</b>, 
-<b>ihipCommandCopyH2H</b>, 
-<b>ihipCommandCopyH2D</b>, 
-<b>ihipCommandCopyD2H</b>, 
-<br/>
-&#160;&#160;<b>ihipCommandCopyD2D</b>, 
-<b>ihipCommandKernel</b>
-<br/>
- }</td></tr>
-<tr class="separator:a3b2678513b174cc4f1a0d9f6d3e4b3d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad70aced6c661ed8b2b79496d3fe5541e"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><b>hipEventStatus_t</b> { <br/>
-&#160;&#160;<b>hipEventStatusUnitialized</b> = 0, 
-<b>hipEventStatusCreated</b> = 1, 
-<b>hipEventStatusRecording</b> = 2, 
-<b>hipEventStatusRecorded</b> = 3, 
-<br/>
-&#160;&#160;<b>hipEventStatusUnitialized</b> = 0, 
-<b>hipEventStatusCreated</b> = 1, 
-<b>hipEventStatusRecording</b> = 2, 
-<b>hipEventStatusRecorded</b> = 3
-<br/>
- }</td></tr>
-<tr class="separator:ad70aced6c661ed8b2b79496d3fe5541e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a33be00306e0feb6cab4ad540e4af0fb4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a33be00306e0feb6cab4ad540e4af0fb4"></a>
+<tr class="memitem:ae051e3d5b5904889c7cbc658c819ff47"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae051e3d5b5904889c7cbc658c819ff47"></a>
 const char *&#160;</td><td class="memItemRight" valign="bottom"><b>ihipErrorString</b> (<a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hip_error)</td></tr>
-<tr class="separator:a33be00306e0feb6cab4ad540e4af0fb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6080b2c32df2fbbcf58f9b683a4d613f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6080b2c32df2fbbcf58f9b683a4d613f"></a>
-INLINE bool&#160;</td><td class="memItemRight" valign="bottom"><b>ihipIsValidDevice</b> (unsigned deviceIndex)</td></tr>
-<tr class="separator:a6080b2c32df2fbbcf58f9b683a4d613f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ae051e3d5b5904889c7cbc658c819ff47"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a561c8030bb5c9835b7381130106278e2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a561c8030bb5c9835b7381130106278e2"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>ihipIsValidDevice</b> (unsigned deviceIndex)</td></tr>
+<tr class="separator:a561c8030bb5c9835b7381130106278e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a93c32584eb46790f4947ef90da127613"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a93c32584eb46790f4947ef90da127613"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>error_check</b> (hsa_status_t hsa_error_code, int line_num, std::string str)</td></tr>
 <tr class="separator:a93c32584eb46790f4947ef90da127613"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -287,12 +144,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipReadEnv_I</b> (in
 <tr class="memitem:aeabe36aa946ab6100b26602c7e3c23cc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aeabe36aa946ab6100b26602c7e3c23cc"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipInit</b> ()</td></tr>
 <tr class="separator:aeabe36aa946ab6100b26602c7e3c23cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9144a743823b8a6c8457979690ed4cd2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9144a743823b8a6c8457979690ed4cd2"></a>
-INLINE <a class="el" href="structihipDevice__t.html">ihipDevice_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>ihipGetTlsDefaultDevice</b> ()</td></tr>
-<tr class="separator:a9144a743823b8a6c8457979690ed4cd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7e0280673fd5d7495b9af06e04c0cb6a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7e0280673fd5d7495b9af06e04c0cb6a"></a>
-INLINE <a class="el" href="structihipDevice__t.html">ihipDevice_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>ihipGetDevice</b> (int deviceId)</td></tr>
-<tr class="separator:a7e0280673fd5d7495b9af06e04c0cb6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a777c320c7079bd00f4a9e671cc4b7ded"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a777c320c7079bd00f4a9e671cc4b7ded"></a>
+<a class="el" href="classihipDevice__t.html">ihipDevice_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>ihipGetTlsDefaultDevice</b> ()</td></tr>
+<tr class="separator:a777c320c7079bd00f4a9e671cc4b7ded"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ba41a3edca0836565d5d1b21d5887de"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5ba41a3edca0836565d5d1b21d5887de"></a>
+<a class="el" href="classihipDevice__t.html">ihipDevice_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>ihipGetDevice</b> (int deviceId)</td></tr>
+<tr class="separator:a5ba41a3edca0836565d5d1b21d5887de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaf16ac37517d2e0a1642f822b7aafe0f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaf16ac37517d2e0a1642f822b7aafe0f"></a>
 hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>ihipSyncAndResolveStream</b> (hipStream_t stream)</td></tr>
 <tr class="separator:aaf16ac37517d2e0a1642f822b7aafe0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -302,190 +159,31 @@ hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPreLaunchK
 <tr class="memitem:ac57c37c7954286ecdf6f032cf64599b9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac57c37c7954286ecdf6f032cf64599b9"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPostLaunchKernel</b> (hipStream_t stream, hc::completion_future &amp;kernelFuture)</td></tr>
 <tr class="separator:ac57c37c7954286ecdf6f032cf64599b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaffc83567f2df3bbe2d37a19872d60f24"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#gaffc83567f2df3bbe2d37a19872d60f24">hipGetDevice</a> (int *device)</td></tr>
-<tr class="memdesc:gaffc83567f2df3bbe2d37a19872d60f24"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the default device id for the calling host thread.  <a href="group__Device.html#gaffc83567f2df3bbe2d37a19872d60f24">More...</a><br/></td></tr>
-<tr class="separator:gaffc83567f2df3bbe2d37a19872d60f24"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga8555d5c76d88c50ddbf54ae70b568394"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#ga8555d5c76d88c50ddbf54ae70b568394">hipGetDeviceCount</a> (int *count)</td></tr>
-<tr class="memdesc:ga8555d5c76d88c50ddbf54ae70b568394"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return number of compute-capable devices.  <a href="group__Device.html#ga8555d5c76d88c50ddbf54ae70b568394">More...</a><br/></td></tr>
-<tr class="separator:ga8555d5c76d88c50ddbf54ae70b568394"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gac2b282179f29c4c0ca7b5391242c6a4c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#gac2b282179f29c4c0ca7b5391242c6a4c">hipDeviceSetCacheConfig</a> (<a class="el" href="group__GlobalDefs.html#gac7e4bfd88340fc06642136c839a3d822">hipFuncCache</a> cacheConfig)</td></tr>
-<tr class="memdesc:gac2b282179f29c4c0ca7b5391242c6a4c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set L1/Shared cache partition.  <a href="group__Device.html#gac2b282179f29c4c0ca7b5391242c6a4c">More...</a><br/></td></tr>
-<tr class="separator:gac2b282179f29c4c0ca7b5391242c6a4c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaeeffa2456c5430400bea75ecd6ad1e68"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#gaeeffa2456c5430400bea75ecd6ad1e68">hipDeviceGetCacheConfig</a> (<a class="el" href="group__GlobalDefs.html#gac7e4bfd88340fc06642136c839a3d822">hipFuncCache</a> *cacheConfig)</td></tr>
-<tr class="memdesc:gaeeffa2456c5430400bea75ecd6ad1e68"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set Cache configuration for a specific function.  <a href="group__Device.html#gaeeffa2456c5430400bea75ecd6ad1e68">More...</a><br/></td></tr>
-<tr class="separator:gaeeffa2456c5430400bea75ecd6ad1e68"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gadd94a910c2b840833cc325b1e5425702"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#gadd94a910c2b840833cc325b1e5425702">hipFuncSetCacheConfig</a> (<a class="el" href="group__GlobalDefs.html#gac7e4bfd88340fc06642136c839a3d822">hipFuncCache</a> cacheConfig)</td></tr>
-<tr class="memdesc:gadd94a910c2b840833cc325b1e5425702"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set Cache configuration for a specific function.  <a href="group__Device.html#gadd94a910c2b840833cc325b1e5425702">More...</a><br/></td></tr>
-<tr class="separator:gadd94a910c2b840833cc325b1e5425702"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga9b1f279084e76691cedfbfadf9c717ee"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#ga9b1f279084e76691cedfbfadf9c717ee">hipDeviceSetSharedMemConfig</a> (<a class="el" href="group__GlobalDefs.html#ga2e17b71d94ac350f2ccd914fd49d104e">hipSharedMemConfig</a> config)</td></tr>
-<tr class="memdesc:ga9b1f279084e76691cedfbfadf9c717ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set Shared memory bank configuration.  <a href="group__Device.html#ga9b1f279084e76691cedfbfadf9c717ee">More...</a><br/></td></tr>
-<tr class="separator:ga9b1f279084e76691cedfbfadf9c717ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga1bb08f774a34a468d969a8a04791c9bb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#ga1bb08f774a34a468d969a8a04791c9bb">hipDeviceGetSharedMemConfig</a> (<a class="el" href="group__GlobalDefs.html#ga2e17b71d94ac350f2ccd914fd49d104e">hipSharedMemConfig</a> *pConfig)</td></tr>
-<tr class="memdesc:ga1bb08f774a34a468d969a8a04791c9bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get Shared memory bank configuration.  <a href="group__Device.html#ga1bb08f774a34a468d969a8a04791c9bb">More...</a><br/></td></tr>
-<tr class="separator:ga1bb08f774a34a468d969a8a04791c9bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga8ec0b093af0adadc7fe98bf33fa21620"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#ga8ec0b093af0adadc7fe98bf33fa21620">hipSetDevice</a> (int device)</td></tr>
-<tr class="memdesc:ga8ec0b093af0adadc7fe98bf33fa21620"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set default device to be used for subsequent hip API calls from this thread.  <a href="group__Device.html#ga8ec0b093af0adadc7fe98bf33fa21620">More...</a><br/></td></tr>
-<tr class="separator:ga8ec0b093af0adadc7fe98bf33fa21620"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaefdc2847fb1d6c3fb1354e827a191ebd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#gaefdc2847fb1d6c3fb1354e827a191ebd">hipDeviceSynchronize</a> (void)</td></tr>
-<tr class="memdesc:gaefdc2847fb1d6c3fb1354e827a191ebd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Blocks until the default device has completed all preceding requested tasks.  <a href="group__Device.html#gaefdc2847fb1d6c3fb1354e827a191ebd">More...</a><br/></td></tr>
-<tr class="separator:gaefdc2847fb1d6c3fb1354e827a191ebd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga8d57161ae56a8edc46eeda447417bf6c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#ga8d57161ae56a8edc46eeda447417bf6c">hipDeviceReset</a> (void)</td></tr>
-<tr class="memdesc:ga8d57161ae56a8edc46eeda447417bf6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy all resources and reset all state on the default device in the current process.  <a href="group__Device.html#ga8d57161ae56a8edc46eeda447417bf6c">More...</a><br/></td></tr>
-<tr class="separator:ga8d57161ae56a8edc46eeda447417bf6c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gac49518ff2b26b98ea2ec9e9268761a24"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#gac49518ff2b26b98ea2ec9e9268761a24">hipDeviceGetAttribute</a> (int *pi, <a class="el" href="group__GlobalDefs.html#gacc0acd7b9bda126c6bb3dfd6e2796d7c">hipDeviceAttribute_t</a> attr, int device)</td></tr>
-<tr class="memdesc:gac49518ff2b26b98ea2ec9e9268761a24"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query device attribute.  <a href="group__Device.html#gac49518ff2b26b98ea2ec9e9268761a24">More...</a><br/></td></tr>
-<tr class="separator:gac49518ff2b26b98ea2ec9e9268761a24"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga77c20744e2a88c31440992d6c7754b5f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#ga77c20744e2a88c31440992d6c7754b5f">hipGetDeviceProperties</a> (<a class="el" href="structhipDeviceProp__t.html">hipDeviceProp_t</a> *props, int device)</td></tr>
-<tr class="memdesc:ga77c20744e2a88c31440992d6c7754b5f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns device properties.  <a href="group__Device.html#ga77c20744e2a88c31440992d6c7754b5f">More...</a><br/></td></tr>
-<tr class="separator:ga77c20744e2a88c31440992d6c7754b5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga533daeb9114d7fc2db8d867adf9e419b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Error.html#ga533daeb9114d7fc2db8d867adf9e419b">hipGetLastError</a> ()</td></tr>
-<tr class="memdesc:ga533daeb9114d7fc2db8d867adf9e419b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return last error returned by any HIP runtime API call and resets the stored error code to <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>.  <a href="group__Error.html#ga533daeb9114d7fc2db8d867adf9e419b">More...</a><br/></td></tr>
-<tr class="separator:ga533daeb9114d7fc2db8d867adf9e419b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7d0568872ffb94e1269038f91440a6f1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7d0568872ffb94e1269038f91440a6f1"></a>
-<a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>hipPeakAtLastError</b> ()</td></tr>
-<tr class="separator:a7d0568872ffb94e1269038f91440a6f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga88c474d77635523dbf6ca67be7b56999"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Error.html#ga88c474d77635523dbf6ca67be7b56999">hipGetErrorName</a> (<a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hip_error)</td></tr>
-<tr class="memdesc:ga88c474d77635523dbf6ca67be7b56999"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return name of the specified error code in text form.  <a href="group__Error.html#ga88c474d77635523dbf6ca67be7b56999">More...</a><br/></td></tr>
-<tr class="separator:ga88c474d77635523dbf6ca67be7b56999"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga5959779a654bbc98ffe6d36ab536740a"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Error.html#ga5959779a654bbc98ffe6d36ab536740a">hipGetErrorString</a> (<a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hip_error)</td></tr>
-<tr class="memdesc:ga5959779a654bbc98ffe6d36ab536740a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return handy text string message to explain the error which occurred.  <a href="group__Error.html#ga5959779a654bbc98ffe6d36ab536740a">More...</a><br/></td></tr>
-<tr class="separator:ga5959779a654bbc98ffe6d36ab536740a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaf2382e3cc6632332a8983a0f58e43494"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Stream.html#gaf2382e3cc6632332a8983a0f58e43494">hipStreamCreateWithFlags</a> (hipStream_t *stream, unsigned int flags)</td></tr>
-<tr class="memdesc:gaf2382e3cc6632332a8983a0f58e43494"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an asynchronous stream.  <a href="group__Stream.html#gaf2382e3cc6632332a8983a0f58e43494">More...</a><br/></td></tr>
-<tr class="separator:gaf2382e3cc6632332a8983a0f58e43494"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gacdd84c8f8ef1539c96c57c1d5bcae633"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Stream.html#gacdd84c8f8ef1539c96c57c1d5bcae633">hipStreamWaitEvent</a> (hipStream_t stream, <a class="el" href="structhipEvent__t.html">hipEvent_t</a> event, unsigned int flags)</td></tr>
-<tr class="memdesc:gacdd84c8f8ef1539c96c57c1d5bcae633"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make the specified compute stream wait for an event.  <a href="group__Stream.html#gacdd84c8f8ef1539c96c57c1d5bcae633">More...</a><br/></td></tr>
-<tr class="separator:gacdd84c8f8ef1539c96c57c1d5bcae633"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gabbfb9f573a6ebe8c478605ecb5504a74"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Stream.html#gabbfb9f573a6ebe8c478605ecb5504a74">hipStreamSynchronize</a> (hipStream_t stream)</td></tr>
-<tr class="memdesc:gabbfb9f573a6ebe8c478605ecb5504a74"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wait for all commands in stream to complete.  <a href="group__Stream.html#gabbfb9f573a6ebe8c478605ecb5504a74">More...</a><br/></td></tr>
-<tr class="separator:gabbfb9f573a6ebe8c478605ecb5504a74"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga3076a3499ed2c7821311006100bb95ec"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Stream.html#ga3076a3499ed2c7821311006100bb95ec">hipStreamDestroy</a> (hipStream_t stream)</td></tr>
-<tr class="memdesc:ga3076a3499ed2c7821311006100bb95ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroys the specified stream.  <a href="group__Stream.html#ga3076a3499ed2c7821311006100bb95ec">More...</a><br/></td></tr>
-<tr class="separator:ga3076a3499ed2c7821311006100bb95ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga3249555a26439591b8873f70b39bb116"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Stream.html#ga3249555a26439591b8873f70b39bb116">hipStreamGetFlags</a> (hipStream_t stream, unsigned int *flags)</td></tr>
-<tr class="memdesc:ga3249555a26439591b8873f70b39bb116"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return flags associated with this stream.  <a href="group__Stream.html#ga3249555a26439591b8873f70b39bb116">More...</a><br/></td></tr>
-<tr class="separator:ga3249555a26439591b8873f70b39bb116"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gae86a5acb1b22b61bc9ecb9c28fc71b75"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Event.html#gae86a5acb1b22b61bc9ecb9c28fc71b75">hipEventCreateWithFlags</a> (<a class="el" href="structhipEvent__t.html">hipEvent_t</a> *event, unsigned flags)</td></tr>
-<tr class="memdesc:gae86a5acb1b22b61bc9ecb9c28fc71b75"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an event with the specified flags.  <a href="group__Event.html#gae86a5acb1b22b61bc9ecb9c28fc71b75">More...</a><br/></td></tr>
-<tr class="separator:gae86a5acb1b22b61bc9ecb9c28fc71b75"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gace88ebd8c7ec42a6c2cebda2e8b0cb38"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Event.html#gace88ebd8c7ec42a6c2cebda2e8b0cb38">hipEventRecord</a> (<a class="el" href="structhipEvent__t.html">hipEvent_t</a> event, hipStream_t stream)</td></tr>
-<tr class="memdesc:gace88ebd8c7ec42a6c2cebda2e8b0cb38"><td class="mdescLeft">&#160;</td><td class="mdescRight">Record an event in the specified stream.  <a href="group__Event.html#gace88ebd8c7ec42a6c2cebda2e8b0cb38">More...</a><br/></td></tr>
-<tr class="separator:gace88ebd8c7ec42a6c2cebda2e8b0cb38"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga83260357dce0c39e8c6a3c74ec97484c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Event.html#ga83260357dce0c39e8c6a3c74ec97484c">hipEventDestroy</a> (<a class="el" href="structhipEvent__t.html">hipEvent_t</a> event)</td></tr>
-<tr class="memdesc:ga83260357dce0c39e8c6a3c74ec97484c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy the specified event.  <a href="group__Event.html#ga83260357dce0c39e8c6a3c74ec97484c">More...</a><br/></td></tr>
-<tr class="separator:ga83260357dce0c39e8c6a3c74ec97484c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga1f72d98ba5d6f7dc3da54e0c41fe38b1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Event.html#ga1f72d98ba5d6f7dc3da54e0c41fe38b1">hipEventSynchronize</a> (<a class="el" href="structhipEvent__t.html">hipEvent_t</a> event)</td></tr>
-<tr class="memdesc:ga1f72d98ba5d6f7dc3da54e0c41fe38b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">: Wait for an event to complete.  <a href="group__Event.html#ga1f72d98ba5d6f7dc3da54e0c41fe38b1">More...</a><br/></td></tr>
-<tr class="separator:ga1f72d98ba5d6f7dc3da54e0c41fe38b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d30a0554ca00fc1db8442d03e285ef2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1d30a0554ca00fc1db8442d03e285ef2"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipSetTs</b> (<a class="el" href="structhipEvent__t.html">hipEvent_t</a> e)</td></tr>
 <tr class="separator:a1d30a0554ca00fc1db8442d03e285ef2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gad4128b815cb475c8e13c7e66ff6250b7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Event.html#gad4128b815cb475c8e13c7e66ff6250b7">hipEventElapsedTime</a> (float *ms, <a class="el" href="structhipEvent__t.html">hipEvent_t</a> start, <a class="el" href="structhipEvent__t.html">hipEvent_t</a> stop)</td></tr>
-<tr class="memdesc:gad4128b815cb475c8e13c7e66ff6250b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return the elapsed time between two events.  <a href="group__Event.html#gad4128b815cb475c8e13c7e66ff6250b7">More...</a><br/></td></tr>
-<tr class="separator:gad4128b815cb475c8e13c7e66ff6250b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga5d12d7b798b5ceb5932d1ac21f5ac776"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Event.html#ga5d12d7b798b5ceb5932d1ac21f5ac776">hipEventQuery</a> (<a class="el" href="structhipEvent__t.html">hipEvent_t</a> event)</td></tr>
-<tr class="memdesc:ga5d12d7b798b5ceb5932d1ac21f5ac776"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query event status.  <a href="group__Event.html#ga5d12d7b798b5ceb5932d1ac21f5ac776">More...</a><br/></td></tr>
-<tr class="separator:ga5d12d7b798b5ceb5932d1ac21f5ac776"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga3d68ba64959615d4ab84f10caa12433b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga3d68ba64959615d4ab84f10caa12433b">hipPointerGetAttributes</a> (<a class="el" href="structhipPointerAttribute__t.html">hipPointerAttribute_t</a> *attributes, void *ptr)</td></tr>
-<tr class="memdesc:ga3d68ba64959615d4ab84f10caa12433b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return attributes for the specified pointer.  <a href="group__Memory.html#ga3d68ba64959615d4ab84f10caa12433b">More...</a><br/></td></tr>
-<tr class="separator:ga3d68ba64959615d4ab84f10caa12433b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a59f9f57c495531c8bb12f506e915399e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hip__hcc_8cpp.html#a59f9f57c495531c8bb12f506e915399e">hipHostGetDevicePointer</a> (void **devicePointer, void *hostPointer, unsigned flags)</td></tr>
-<tr class="separator:a59f9f57c495531c8bb12f506e915399e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a045b3c563ecce7aea536d42ecf2549bb"><td class="memTemplParams" colspan="2"><a class="anchor" id="a045b3c563ecce7aea536d42ecf2549bb"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:a045b3c563ecce7aea536d42ecf2549bb"><td class="memTemplItemLeft" align="right" valign="top">hc::completion_future&#160;</td><td class="memTemplItemRight" valign="bottom"><b>ihipMemcpyKernel</b> (hipStream_t stream, T *c, const T *a, size_t sizeBytes)</td></tr>
-<tr class="separator:a045b3c563ecce7aea536d42ecf2549bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa77a0a35dd9612f0a3122586799b20f1"><td class="memTemplParams" colspan="2"><a class="anchor" id="aa77a0a35dd9612f0a3122586799b20f1"></a>
-template&lt;typename T &gt; </td></tr>
-<tr class="memitem:aa77a0a35dd9612f0a3122586799b20f1"><td class="memTemplItemLeft" align="right" valign="top">hc::completion_future&#160;</td><td class="memTemplItemRight" valign="bottom"><b>ihipMemsetKernel</b> (hipStream_t stream, T *ptr, T val, size_t sizeBytes)</td></tr>
-<tr class="separator:aa77a0a35dd9612f0a3122586799b20f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga4c6fcfe80010069d2792780d00dcead2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga4c6fcfe80010069d2792780d00dcead2">hipMalloc</a> (void **ptr, size_t sizeBytes)</td></tr>
-<tr class="memdesc:ga4c6fcfe80010069d2792780d00dcead2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocate memory on the default accelerator.  <a href="group__Memory.html#ga4c6fcfe80010069d2792780d00dcead2">More...</a><br/></td></tr>
-<tr class="separator:ga4c6fcfe80010069d2792780d00dcead2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gad3d3cdf82eb0058fc9eac1f939cd9d30"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gad3d3cdf82eb0058fc9eac1f939cd9d30">hipMallocHost</a> (void **ptr, size_t sizeBytes)</td></tr>
-<tr class="memdesc:gad3d3cdf82eb0058fc9eac1f939cd9d30"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocate pinned host memory.  <a href="group__Memory.html#gad3d3cdf82eb0058fc9eac1f939cd9d30">More...</a><br/></td></tr>
-<tr class="separator:gad3d3cdf82eb0058fc9eac1f939cd9d30"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaad40bc7d97ccc799403ef5a9a8c246e1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gaad40bc7d97ccc799403ef5a9a8c246e1">hipHostMalloc</a> (void **ptr, size_t sizeBytes, unsigned int flags)</td></tr>
-<tr class="memdesc:gaad40bc7d97ccc799403ef5a9a8c246e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocate device accessible page locked host memory.  <a href="group__Memory.html#gaad40bc7d97ccc799403ef5a9a8c246e1">More...</a><br/></td></tr>
-<tr class="separator:gaad40bc7d97ccc799403ef5a9a8c246e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gac5ae7f11cefc7085f39ee7868e71724a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gac5ae7f11cefc7085f39ee7868e71724a"></a>
-<a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>hipHostAlloc</b> (void **ptr, size_t sizeBytes, unsigned int flags)</td></tr>
-<tr class="separator:gac5ae7f11cefc7085f39ee7868e71724a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga4d26915873b3e3534ceb4dc310f8709a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga4d26915873b3e3534ceb4dc310f8709a">hipHostGetFlags</a> (unsigned int *flagsPtr, void *hostPtr)</td></tr>
-<tr class="memdesc:ga4d26915873b3e3534ceb4dc310f8709a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get flags associated with host pointer.  <a href="group__Memory.html#ga4d26915873b3e3534ceb4dc310f8709a">More...</a><br/></td></tr>
-<tr class="separator:ga4d26915873b3e3534ceb4dc310f8709a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gab8258f051e1a1f7385f794a15300e674"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gab8258f051e1a1f7385f794a15300e674">hipHostRegister</a> (void *hostPtr, size_t sizeBytes, unsigned int flags)</td></tr>
-<tr class="memdesc:gab8258f051e1a1f7385f794a15300e674"><td class="mdescLeft">&#160;</td><td class="mdescRight">Register host memory so it can be accessed from the current device.  <a href="group__Memory.html#gab8258f051e1a1f7385f794a15300e674">More...</a><br/></td></tr>
-<tr class="separator:gab8258f051e1a1f7385f794a15300e674"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga4c9e1810b9f5858d36c4d28c91c86924"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga4c9e1810b9f5858d36c4d28c91c86924">hipHostUnregister</a> (void *hostPtr)</td></tr>
-<tr class="memdesc:ga4c9e1810b9f5858d36c4d28c91c86924"><td class="mdescLeft">&#160;</td><td class="mdescRight">Un-register host pointer.  <a href="group__Memory.html#ga4c9e1810b9f5858d36c4d28c91c86924">More...</a><br/></td></tr>
-<tr class="separator:ga4c9e1810b9f5858d36c4d28c91c86924"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga131ac5c1ba04e186112491cb9bf964bc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga131ac5c1ba04e186112491cb9bf964bc">hipMemcpyToSymbol</a> (const char *symbolName, const void *src, size_t count, size_t offset, <a class="el" href="group__GlobalDefs.html#ga232e222db36b1fc672ba98054d036a18">hipMemcpyKind</a> kind)</td></tr>
-<tr class="memdesc:ga131ac5c1ba04e186112491cb9bf964bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies <code>sizeBytes</code> bytes from the memory area pointed to by <code>src</code> to the memory area pointed to by <code>offset</code> bytes from the start of symbol <code>symbol</code>.  <a href="group__Memory.html#ga131ac5c1ba04e186112491cb9bf964bc">More...</a><br/></td></tr>
-<tr class="separator:ga131ac5c1ba04e186112491cb9bf964bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gac1a055d288302edd641c6d7416858e1e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gac1a055d288302edd641c6d7416858e1e">hipMemcpy</a> (void *dst, const void *src, size_t sizeBytes, <a class="el" href="group__GlobalDefs.html#ga232e222db36b1fc672ba98054d036a18">hipMemcpyKind</a> kind)</td></tr>
-<tr class="memdesc:gac1a055d288302edd641c6d7416858e1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy data from src to dst.  <a href="group__Memory.html#gac1a055d288302edd641c6d7416858e1e">More...</a><br/></td></tr>
-<tr class="separator:gac1a055d288302edd641c6d7416858e1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga8ad5a0b13458917e1b9437732b21af54"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga8ad5a0b13458917e1b9437732b21af54">hipMemcpyAsync</a> (void *dst, const void *src, size_t sizeBytes, <a class="el" href="group__GlobalDefs.html#ga232e222db36b1fc672ba98054d036a18">hipMemcpyKind</a> kind, hipStream_t stream)</td></tr>
-<tr class="memdesc:ga8ad5a0b13458917e1b9437732b21af54"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy data from src to dst asynchronously.  <a href="group__Memory.html#ga8ad5a0b13458917e1b9437732b21af54">More...</a><br/></td></tr>
-<tr class="separator:ga8ad5a0b13458917e1b9437732b21af54"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaee4ed665ce0a60c661a809c175320a0c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gaee4ed665ce0a60c661a809c175320a0c">hipMemsetAsync</a> (void *dst, int value, size_t sizeBytes, hipStream_t stream)</td></tr>
-<tr class="memdesc:gaee4ed665ce0a60c661a809c175320a0c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fills the first sizeBytes bytes of the memory area pointed to by dev with the constant byte value value.  <a href="group__Memory.html#gaee4ed665ce0a60c661a809c175320a0c">More...</a><br/></td></tr>
-<tr class="separator:gaee4ed665ce0a60c661a809c175320a0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gac7441e74affcce4b8b69dba996c5ebc4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gac7441e74affcce4b8b69dba996c5ebc4">hipMemset</a> (void *dst, int value, size_t sizeBytes)</td></tr>
-<tr class="memdesc:gac7441e74affcce4b8b69dba996c5ebc4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy data from src to dst asynchronously.  <a href="group__Memory.html#gac7441e74affcce4b8b69dba996c5ebc4">More...</a><br/></td></tr>
-<tr class="separator:gac7441e74affcce4b8b69dba996c5ebc4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga311c3e246a21590de14478b8bd063be2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga311c3e246a21590de14478b8bd063be2">hipMemGetInfo</a> (size_t *free, size_t *total)</td></tr>
-<tr class="memdesc:ga311c3e246a21590de14478b8bd063be2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query memory info. Return snapshot of free memory, and total allocatable memory on the device.  <a href="group__Memory.html#ga311c3e246a21590de14478b8bd063be2">More...</a><br/></td></tr>
-<tr class="separator:ga311c3e246a21590de14478b8bd063be2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga740d08da65cae1441ba32f8fedb863d1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga740d08da65cae1441ba32f8fedb863d1">hipFree</a> (void *ptr)</td></tr>
-<tr class="memdesc:ga740d08da65cae1441ba32f8fedb863d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free memory allocated by the hcc hip memory allocation API. This API performs an implicit <a class="el" href="group__Device.html#gaefdc2847fb1d6c3fb1354e827a191ebd" title="Blocks until the default device has completed all preceding requested tasks. ">hipDeviceSynchronize()</a> call.  <a href="group__Memory.html#ga740d08da65cae1441ba32f8fedb863d1">More...</a><br/></td></tr>
-<tr class="separator:ga740d08da65cae1441ba32f8fedb863d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga2e543f58ee4544e317cd695d6d82e0a3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga2e543f58ee4544e317cd695d6d82e0a3">hipHostFree</a> (void *ptr)</td></tr>
-<tr class="memdesc:ga2e543f58ee4544e317cd695d6d82e0a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free memory allocated by the hcc hip host memory allocation API.  <a href="group__Memory.html#ga2e543f58ee4544e317cd695d6d82e0a3">More...</a><br/></td></tr>
-<tr class="separator:ga2e543f58ee4544e317cd695d6d82e0a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gad2164cc3d49da53052f4b83b789e90c9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gad2164cc3d49da53052f4b83b789e90c9">hipFreeHost</a> (void *ptr)</td></tr>
-<tr class="memdesc:gad2164cc3d49da53052f4b83b789e90c9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free memory allocated by the hcc hip host memory allocation API.  <a href="group__Memory.html#gad2164cc3d49da53052f4b83b789e90c9">More...</a><br/></td></tr>
-<tr class="separator:gad2164cc3d49da53052f4b83b789e90c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gab53a55dbc087ff659918fd04287de3d3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__PeerToPeer.html#gab53a55dbc087ff659918fd04287de3d3">hipDeviceCanAccessPeer</a> (int *canAccessPeer, int device, int peerDevice)</td></tr>
-<tr class="memdesc:gab53a55dbc087ff659918fd04287de3d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Determine if a device can access a peer's memory.  <a href="group__PeerToPeer.html#gab53a55dbc087ff659918fd04287de3d3">More...</a><br/></td></tr>
-<tr class="separator:gab53a55dbc087ff659918fd04287de3d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga41e60c01f63597529da1cd77bdd55379"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__PeerToPeer.html#ga41e60c01f63597529da1cd77bdd55379">hipDeviceDisablePeerAccess</a> (int peerDevice)</td></tr>
-<tr class="memdesc:ga41e60c01f63597529da1cd77bdd55379"><td class="mdescLeft">&#160;</td><td class="mdescRight">Disables registering memory on peerDevice for direct access from the current device.  <a href="group__PeerToPeer.html#ga41e60c01f63597529da1cd77bdd55379">More...</a><br/></td></tr>
-<tr class="separator:ga41e60c01f63597529da1cd77bdd55379"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga098e0d626edbfb69b66d141a5a8b7dc6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__PeerToPeer.html#ga098e0d626edbfb69b66d141a5a8b7dc6">hipDeviceEnablePeerAccess</a> (int peerDevice, unsigned int flags)</td></tr>
-<tr class="memdesc:ga098e0d626edbfb69b66d141a5a8b7dc6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enables registering memory on peerDevice for direct access from the current device.  <a href="group__PeerToPeer.html#ga098e0d626edbfb69b66d141a5a8b7dc6">More...</a><br/></td></tr>
-<tr class="separator:ga098e0d626edbfb69b66d141a5a8b7dc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga72ae9e7f498ab5684580892a5d7d8e2d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__PeerToPeer.html#ga72ae9e7f498ab5684580892a5d7d8e2d">hipMemcpyPeer</a> (void *dst, int dstDevice, const void *src, int srcDevice, size_t sizeBytes)</td></tr>
-<tr class="memdesc:ga72ae9e7f498ab5684580892a5d7d8e2d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies memory from one device to memory on another device.  <a href="group__PeerToPeer.html#ga72ae9e7f498ab5684580892a5d7d8e2d">More...</a><br/></td></tr>
-<tr class="separator:ga72ae9e7f498ab5684580892a5d7d8e2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gab6211c18ca1e23252ef080cd6be855ca"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__PeerToPeer.html#gab6211c18ca1e23252ef080cd6be855ca">hipMemcpyPeerAsync</a> (void *dst, int dstDevice, const void *src, int srcDevice, size_t sizeBytes, hipStream_t stream)</td></tr>
-<tr class="memdesc:gab6211c18ca1e23252ef080cd6be855ca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies memory from one device to memory on another device.  <a href="group__PeerToPeer.html#gab6211c18ca1e23252ef080cd6be855ca">More...</a><br/></td></tr>
-<tr class="separator:gab6211c18ca1e23252ef080cd6be855ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaf6c342f52d2a29a0aca5cdd89b4dd47c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Version.html#gaf6c342f52d2a29a0aca5cdd89b4dd47c">hipDriverGetVersion</a> (int *driverVersion)</td></tr>
-<tr class="memdesc:gaf6c342f52d2a29a0aca5cdd89b4dd47c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the approximate HIP driver version.  <a href="group__Version.html#gaf6c342f52d2a29a0aca5cdd89b4dd47c">More...</a><br/></td></tr>
-<tr class="separator:gaf6c342f52d2a29a0aca5cdd89b4dd47c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga0d24b3157fd1b16d38672bb157ec4cd4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__HCC__Specific.html#ga0d24b3157fd1b16d38672bb157ec4cd4">hipHccGetAccelerator</a> (int deviceId, hc::accelerator *acc)</td></tr>
-<tr class="memdesc:ga0d24b3157fd1b16d38672bb157ec4cd4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return hc::accelerator associated with the specified deviceId.  <a href="group__HCC__Specific.html#ga0d24b3157fd1b16d38672bb157ec4cd4">More...</a><br/></td></tr>
-<tr class="separator:ga0d24b3157fd1b16d38672bb157ec4cd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga1a7087ea9c3c3323270d7cce73650b44"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__HCC__Specific.html#ga1a7087ea9c3c3323270d7cce73650b44">hipHccGetAcceleratorView</a> (hipStream_t stream, hc::accelerator_view **av)</td></tr>
-<tr class="memdesc:ga1a7087ea9c3c3323270d7cce73650b44"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return hc::accelerator_view associated with the specified stream.  <a href="group__HCC__Specific.html#ga1a7087ea9c3c3323270d7cce73650b44">More...</a><br/></td></tr>
-<tr class="separator:ga1a7087ea9c3c3323270d7cce73650b44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0d24b3157fd1b16d38672bb157ec4cd4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hip__hcc_8cpp.html#a0d24b3157fd1b16d38672bb157ec4cd4">hipHccGetAccelerator</a> (int deviceId, hc::accelerator *acc)</td></tr>
+<tr class="separator:a0d24b3157fd1b16d38672bb157ec4cd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a7087ea9c3c3323270d7cce73650b44"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hip__hcc_8cpp.html#a1a7087ea9c3c3323270d7cce73650b44">hipHccGetAcceleratorView</a> (hipStream_t stream, hc::accelerator_view **av)</td></tr>
+<tr class="separator:a1a7087ea9c3c3323270d7cce73650b44"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
-<tr class="memitem:ga8049b329f2663b4572d81e7a9aa8a155"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga8049b329f2663b4572d81e7a9aa8a155"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__HIP-ENV.html#ga8049b329f2663b4572d81e7a9aa8a155">HIP_LAUNCH_BLOCKING</a> = 0</td></tr>
-<tr class="memdesc:ga8049b329f2663b4572d81e7a9aa8a155"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make all HIP APIs host-synchronous. <br/></td></tr>
-<tr class="separator:ga8049b329f2663b4572d81e7a9aa8a155"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga1e1c85dbb250f1acfb484c1be1f3b28a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga1e1c85dbb250f1acfb484c1be1f3b28a"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__HIP-ENV.html#ga1e1c85dbb250f1acfb484c1be1f3b28a">HIP_PRINT_ENV</a> = 0</td></tr>
-<tr class="memdesc:ga1e1c85dbb250f1acfb484c1be1f3b28a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print all HIP-related environment variables. <br/></td></tr>
-<tr class="separator:ga1e1c85dbb250f1acfb484c1be1f3b28a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaae9c541f3e25b8f002762337a03fec28"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gaae9c541f3e25b8f002762337a03fec28"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__HIP-ENV.html#gaae9c541f3e25b8f002762337a03fec28">HIP_TRACE_API</a> = 0</td></tr>
-<tr class="memdesc:gaae9c541f3e25b8f002762337a03fec28"><td class="mdescLeft">&#160;</td><td class="mdescRight">Trace HIP APIs. <br/></td></tr>
-<tr class="separator:gaae9c541f3e25b8f002762337a03fec28"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af27ee928e1f3e786c464c52839294319"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af27ee928e1f3e786c464c52839294319"></a>
+const int&#160;</td><td class="memItemRight" valign="bottom"><b>release</b> = 1</td></tr>
+<tr class="separator:af27ee928e1f3e786c464c52839294319"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8049b329f2663b4572d81e7a9aa8a155"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8049b329f2663b4572d81e7a9aa8a155"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_LAUNCH_BLOCKING</b> = 0</td></tr>
+<tr class="separator:a8049b329f2663b4572d81e7a9aa8a155"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e1c85dbb250f1acfb484c1be1f3b28a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1e1c85dbb250f1acfb484c1be1f3b28a"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_PRINT_ENV</b> = 0</td></tr>
+<tr class="separator:a1e1c85dbb250f1acfb484c1be1f3b28a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae9c541f3e25b8f002762337a03fec28"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aae9c541f3e25b8f002762337a03fec28"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_TRACE_API</b> = 0</td></tr>
+<tr class="separator:aae9c541f3e25b8f002762337a03fec28"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a977f7659735ce058d20658b744096034"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a977f7659735ce058d20658b744096034"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_ATP_MARKER</b> = 0</td></tr>
+<tr class="separator:a977f7659735ce058d20658b744096034"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8eadc52d4f7b612393d41f8c9581a8ca"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8eadc52d4f7b612393d41f8c9581a8ca"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_DB</b> = 0</td></tr>
 <tr class="separator:a8eadc52d4f7b612393d41f8c9581a8ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -510,24 +208,17 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_DISABLE_HW_KERNEL_
 <tr class="memitem:a6de84e5835d354cf1e1591d337db7eed"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6de84e5835d354cf1e1591d337db7eed"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_DISABLE_HW_COPY_DEP</b> = 1</td></tr>
 <tr class="separator:a6de84e5835d354cf1e1591d337db7eed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5c1cfc04a54391d714899a02e1bb50dd"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><b>dbName</b> []</td></tr>
-<tr class="separator:a5c1cfc04a54391d714899a02e1bb50dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3ccbac0c243625397e1f0ede5ab93a0c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3ccbac0c243625397e1f0ede5ab93a0c"></a>
-const hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>hipStreamNull</b> = 0x0</td></tr>
-<tr class="separator:a3ccbac0c243625397e1f0ede5ab93a0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a13147983b1b20440bc8e91b5822de858"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><b>ihipCommandName</b> []</td></tr>
-<tr class="separator:a13147983b1b20440bc8e91b5822de858"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a40479a2de3cfe04b98028668d3297ed5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a40479a2de3cfe04b98028668d3297ed5"></a>
-thread_local <a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>tls_lastHipError</b> = <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063">hipSuccess</a></td></tr>
-<tr class="separator:a40479a2de3cfe04b98028668d3297ed5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a89c4a58c7acbb945bd6e4c9d8fafb66c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a89c4a58c7acbb945bd6e4c9d8fafb66c"></a>
 thread_local int&#160;</td><td class="memItemRight" valign="bottom"><b>tls_defaultDevice</b> = 0</td></tr>
 <tr class="separator:a89c4a58c7acbb945bd6e4c9d8fafb66c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40479a2de3cfe04b98028668d3297ed5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a40479a2de3cfe04b98028668d3297ed5"></a>
+thread_local <a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>tls_lastHipError</b> = <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063">hipSuccess</a></td></tr>
+<tr class="separator:a40479a2de3cfe04b98028668d3297ed5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aae9776b40d05a39ead2dd0df7d82e46d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aae9776b40d05a39ead2dd0df7d82e46d"></a>
 std::once_flag&#160;</td><td class="memItemRight" valign="bottom"><b>hip_initialized</b></td></tr>
 <tr class="separator:aae9776b40d05a39ead2dd0df7d82e46d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0d549af4d8556c8cfde5c46720def76e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0d549af4d8556c8cfde5c46720def76e"></a>
-<a class="el" href="structihipDevice__t.html">ihipDevice_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>g_devices</b></td></tr>
+<a class="el" href="classihipDevice__t.html">ihipDevice_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>g_devices</b></td></tr>
 <tr class="separator:a0d549af4d8556c8cfde5c46720def76e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01218bb30329b40a2ab1d0415f22ab66"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a01218bb30329b40a2ab1d0415f22ab66"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>g_visible_device</b> = false</td></tr>
@@ -545,73 +236,6 @@ hsa_agent_t&#160;</td><td class="memItemRight" valign="bottom"><b>g_cpu_agent</b
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains definitions for functions that are large enough that we don't want to inline them everywhere. This file is compiled and linked into apps running HIP / HCC path. </p>
 </div><h2 class="groupheader">Macro Definition Documentation</h2>
-<a class="anchor" id="a6ab4fc39a76f61102adcdd58bc1db8c8"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define API_TRACE</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>...</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">{\</div>
-<div class="line">    std::string s = std::string(__func__) + <span class="stringliteral">&quot; (&quot;</span> + ToString(__VA_ARGS__) + <span class="charliteral">&#39;)&#39;</span>;\</div>
-<div class="line">    if (COMPILE_HIP_DB &amp;&amp; <a class="code" href="group__HIP-ENV.html#gaae9c541f3e25b8f002762337a03fec28">HIP_TRACE_API</a>) {\</div>
-<div class="line">        fprintf (stderr, API_COLOR <span class="stringliteral">&quot;&lt;&lt;hip-api: %s\n&quot;</span> KNRM, s.c_str());\</div>
-<div class="line">    }\</div>
-<div class="line">    SCOPED_MARKER(s.c_str(), <span class="stringliteral">&quot;HIP&quot;</span>, NULL);\</div>
-<div class="line">}</div>
-<div class="ttc" id="group__HIP-ENV_html_gaae9c541f3e25b8f002762337a03fec28"><div class="ttname"><a href="group__HIP-ENV.html#gaae9c541f3e25b8f002762337a03fec28">HIP_TRACE_API</a></div><div class="ttdeci">int HIP_TRACE_API</div><div class="ttdoc">Trace HIP APIs. </div><div class="ttdef"><b>Definition:</b> hip_hcc.cpp:73</div></div>
-</div><!-- fragment -->
-</div>
-</div>
-<a class="anchor" id="ac0f54ec98b4a19b7657c0280465b9778"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define HIP_INIT_API</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>...</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">std::call_once(hip_initialized, ihipInit);\</div>
-<div class="line">    API_TRACE(__VA_ARGS__);</div>
-</div><!-- fragment -->
-</div>
-</div>
-<a class="anchor" id="aedd5ad4a39f4959e241b024c27d1746f"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define ihipLogStatus</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">_hip_status</td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">({\</div>
-<div class="line">        tls_lastHipError = _hip_status;\</div>
-<div class="line">        \</div>
-<div class="line">        if ((COMPILE_HIP_TRACE_API &amp; 0x2) &amp;&amp; <a class="code" href="group__HIP-ENV.html#gaae9c541f3e25b8f002762337a03fec28">HIP_TRACE_API</a>) {\</div>
-<div class="line">            fprintf(stderr, <span class="stringliteral">&quot;  %ship-api: %-30s ret=%2d (%s)&gt;&gt;\n&quot;</span> KNRM, (_hip_status == 0) ? API_COLOR:KRED, __func__, _hip_status, ihipErrorString(_hip_status));\</div>
-<div class="line">        }\</div>
-<div class="line">        _hip_status;\</div>
-<div class="line">    })</div>
-<div class="ttc" id="group__HIP-ENV_html_gaae9c541f3e25b8f002762337a03fec28"><div class="ttname"><a href="group__HIP-ENV.html#gaae9c541f3e25b8f002762337a03fec28">HIP_TRACE_API</a></div><div class="ttdeci">int HIP_TRACE_API</div><div class="ttdoc">Trace HIP APIs. </div><div class="ttdef"><b>Definition:</b> hip_hcc.cpp:73</div></div>
-</div><!-- fragment -->
-</div>
-</div>
 <a class="anchor" id="a2b90029add81faa0bf675869ffc31354"></a>
 <div class="memitem">
 <div class="memproto">
@@ -653,61 +277,22 @@ hsa_agent_t&#160;</td><td class="memItemRight" valign="bottom"><b>g_cpu_agent</b
 </div><!-- fragment -->
 </div>
 </div>
-<a class="anchor" id="a416fdb19f57927de7f282e4d05eba519"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define tprintf</td>
-          <td>(</td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname">trace_level, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">&#160;</td>
-          <td class="paramname"><em>...</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">{\</div>
-<div class="line">    if (HIP_DB &amp; (1&lt;&lt;(trace_level))) {\</div>
-<div class="line">        fprintf (stderr, <span class="stringliteral">&quot;  %s:&quot;</span>, dbName[trace_level]); \</div>
-<div class="line">        fprintf (stderr, __VA_ARGS__);\</div>
-<div class="line">        fprintf (stderr, <span class="stringliteral">&quot;%s&quot;</span>, KNRM); \</div>
-<div class="line">    }\</div>
-<div class="line">}</div>
-</div><!-- fragment -->
-</div>
-</div>
 <h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="a59f9f57c495531c8bb12f506e915399e"></a>
+<a class="anchor" id="a0d24b3157fd1b16d38672bb157ec4cd4"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipHostGetDevicePointer </td>
+          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipHccGetAccelerator </td>
           <td>(</td>
-          <td class="paramtype">void **&#160;</td>
-          <td class="paramname"><em>devicePointer</em>, </td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>deviceId</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>hostPointer</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">unsigned&#160;</td>
-          <td class="paramname"><em>flags</em>&#160;</td>
+          <td class="paramtype">hc::accelerator *&#160;</td>
+          <td class="paramname"><em>acc</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -716,55 +301,41 @@ hsa_agent_t&#160;</td><td class="memItemRight" valign="bottom"><b>g_cpu_agent</b
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, </dd>
-<dd>
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a> if flags are not 0 </dd>
-<dd>
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a8293288a10109874749afe2562db09f2" title="Memory allocation error. ">hipErrorMemoryAllocation</a> if hostPointer is not a tracked allocation. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d" title="DeviceID must be in range 0...#compute-devices. ">hipErrorInvalidDevice</a> </dd></dl>
 
 </div>
 </div>
-<h2 class="groupheader">Variable Documentation</h2>
-<a class="anchor" id="a5c1cfc04a54391d714899a02e1bb50dd"></a>
+<a class="anchor" id="a1a7087ea9c3c3323270d7cce73650b44"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const char* dbName[]</td>
+          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipHccGetAcceleratorView </td>
+          <td>(</td>
+          <td class="paramtype">hipStream_t&#160;</td>
+          <td class="paramname"><em>stream</em>, </td>
         </tr>
-      </table>
-</div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">=</div>
-<div class="line">{</div>
-<div class="line">    KNRM <span class="stringliteral">&quot;hip-api&quot;</span>, </div>
-<div class="line">    KYEL <span class="stringliteral">&quot;hip-sync&quot;</span>,</div>
-<div class="line">    KCYN <span class="stringliteral">&quot;hip-mem&quot;</span>,</div>
-<div class="line">    KMAG <span class="stringliteral">&quot;hip-copy1&quot;</span>,</div>
-<div class="line">    KRED <span class="stringliteral">&quot;hip-signal&quot;</span>,</div>
-<div class="line">    KNRM <span class="stringliteral">&quot;hip-copy2&quot;</span>,</div>
-<div class="line">}</div>
-</div><!-- fragment -->
-</div>
-</div>
-<a class="anchor" id="a13147983b1b20440bc8e91b5822de858"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
         <tr>
-          <td class="memname">const char* ihipCommandName[]</td>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">hc::accelerator_view **&#160;</td>
+          <td class="paramname"><em>av</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">= {</div>
-<div class="line">    <span class="stringliteral">&quot;CopyH2H&quot;</span>, <span class="stringliteral">&quot;CopyH2D&quot;</span>, <span class="stringliteral">&quot;CopyD2H&quot;</span>, <span class="stringliteral">&quot;CopyD2D&quot;</span>, <span class="stringliteral">&quot;Kernel&quot;</span></div>
-<div class="line">}</div>
-</div><!-- fragment -->
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a> </dd></dl>
+
 </div>
 </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Mar 23 2016 23:11:07 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Apr 16 2016 14:52:10 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

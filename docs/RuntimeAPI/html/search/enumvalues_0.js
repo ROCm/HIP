@@ -36,6 +36,8 @@ var searchData=
   ['hiperrornodevice',['hipErrorNoDevice',['../group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ad4406972c318df36d231310a15131c24',1,'hip_runtime_api.h']]],
   ['hiperrornotready',['hipErrorNotReady',['../group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1',1,'hip_runtime_api.h']]],
   ['hiperroroutofresources',['hipErrorOutOfResources',['../group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a60c1c080b79bdde9ef5e808f974ac9ed',1,'hip_runtime_api.h']]],
+  ['hiperrorpeeraccessalreadyenabled',['hipErrorPeerAccessAlreadyEnabled',['../group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a5399c146f91246f8b77abcd4ea30e7ac',1,'hip_runtime_api.h']]],
+  ['hiperrorpeeraccessnotenabled',['hipErrorPeerAccessNotEnabled',['../group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a2ee0bf2e64840f253e4a1b12bbaf2d09',1,'hip_runtime_api.h']]],
   ['hiperrorruntimememory',['hipErrorRuntimeMemory',['../group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1159eb9a6be66bea740a8bfb61378723',1,'hip_runtime_api.h']]],
   ['hiperrorruntimeother',['hipErrorRuntimeOther',['../group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a44f847c5914be2177feac107dcb096d1',1,'hip_runtime_api.h']]],
   ['hiperrortbd',['hipErrorTbd',['../group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ab556409e11ddb0c4cf77a2f4fc91ea9e',1,'hip_runtime_api.h']]],
