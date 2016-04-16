@@ -126,15 +126,15 @@ Functions</h2></td></tr>
 <tr class="memitem:ga131ac5c1ba04e186112491cb9bf964bc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga131ac5c1ba04e186112491cb9bf964bc">hipMemcpyToSymbol</a> (const char *symbolName, const void *src, size_t sizeBytes, size_t offset, <a class="el" href="group__GlobalDefs.html#ga232e222db36b1fc672ba98054d036a18">hipMemcpyKind</a> kind)</td></tr>
 <tr class="memdesc:ga131ac5c1ba04e186112491cb9bf964bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies <code>sizeBytes</code> bytes from the memory area pointed to by <code>src</code> to the memory area pointed to by <code>offset</code> bytes from the start of symbol <code>symbol</code>.  <a href="#ga131ac5c1ba04e186112491cb9bf964bc">More...</a><br/></td></tr>
 <tr class="separator:ga131ac5c1ba04e186112491cb9bf964bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga8ad5a0b13458917e1b9437732b21af54"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga8ad5a0b13458917e1b9437732b21af54">hipMemcpyAsync</a> (void *dst, const void *src, size_t sizeBytes, <a class="el" href="group__GlobalDefs.html#ga232e222db36b1fc672ba98054d036a18">hipMemcpyKind</a> kind, hipStream_t stream=0)</td></tr>
-<tr class="memdesc:ga8ad5a0b13458917e1b9437732b21af54"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy data from src to dst asynchronously.  <a href="#ga8ad5a0b13458917e1b9437732b21af54">More...</a><br/></td></tr>
-<tr class="separator:ga8ad5a0b13458917e1b9437732b21af54"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad55fa9f5980b711bc93c52820149ba18"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gad55fa9f5980b711bc93c52820149ba18">hipMemcpyAsync</a> (void *dst, const void *src, size_t sizeBytes, <a class="el" href="group__GlobalDefs.html#ga232e222db36b1fc672ba98054d036a18">hipMemcpyKind</a> kind, hipStream_t stream)</td></tr>
+<tr class="memdesc:gad55fa9f5980b711bc93c52820149ba18"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy data from src to dst asynchronously.  <a href="#gad55fa9f5980b711bc93c52820149ba18">More...</a><br/></td></tr>
+<tr class="separator:gad55fa9f5980b711bc93c52820149ba18"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gac7441e74affcce4b8b69dba996c5ebc4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gac7441e74affcce4b8b69dba996c5ebc4">hipMemset</a> (void *dst, int value, size_t sizeBytes)</td></tr>
 <tr class="memdesc:gac7441e74affcce4b8b69dba996c5ebc4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy data from src to dst asynchronously.  <a href="#gac7441e74affcce4b8b69dba996c5ebc4">More...</a><br/></td></tr>
 <tr class="separator:gac7441e74affcce4b8b69dba996c5ebc4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaee4ed665ce0a60c661a809c175320a0c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gaee4ed665ce0a60c661a809c175320a0c">hipMemsetAsync</a> (void *dst, int value, size_t sizeBytes, hipStream_t=0)</td></tr>
-<tr class="memdesc:gaee4ed665ce0a60c661a809c175320a0c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fills the first sizeBytes bytes of the memory area pointed to by dev with the constant byte value value.  <a href="#gaee4ed665ce0a60c661a809c175320a0c">More...</a><br/></td></tr>
-<tr class="separator:gaee4ed665ce0a60c661a809c175320a0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gae7d90e14c387e49f10db597f12915c54"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gae7d90e14c387e49f10db597f12915c54">hipMemsetAsync</a> (void *dst, int value, size_t sizeBytes, hipStream_t stream)</td></tr>
+<tr class="memdesc:gae7d90e14c387e49f10db597f12915c54"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fills the first sizeBytes bytes of the memory area pointed to by dev with the constant byte value value.  <a href="#gae7d90e14c387e49f10db597f12915c54">More...</a><br/></td></tr>
+<tr class="separator:gae7d90e14c387e49f10db597f12915c54"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga311c3e246a21590de14478b8bd063be2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga311c3e246a21590de14478b8bd063be2">hipMemGetInfo</a> (size_t *free, size_t *total)</td></tr>
 <tr class="memdesc:ga311c3e246a21590de14478b8bd063be2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query memory info. Return snapshot of free memory, and total allocatable memory on the device.  <a href="#ga311c3e246a21590de14478b8bd063be2">More...</a><br/></td></tr>
 <tr class="separator:ga311c3e246a21590de14478b8bd063be2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -548,7 +548,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga8ad5a0b13458917e1b9437732b21af54"></a>
+<a class="anchor" id="gad55fa9f5980b711bc93c52820149ba18"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -606,10 +606,6 @@ Functions</h2></td></tr>
 <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d" title="DeviceID must be in range 0...#compute-devices. ">hipErrorInvalidDevice</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ae35ad9fb66b7c33f21a021efe89975b0" title="Invalid memory copy direction. ">hipErrorInvalidMemcpyDirection</a>, </dd>
 <dd>
 <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a> : If dst==NULL or src==NULL, or other bad argument. </dd></dl>
-<dl class="section warning"><dt>Warning</dt><dd>on HCC hipMemcpyAsync does not support overlapped H2D and D2H copies. </dd>
-<dd>
-on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hipMallocHost call).</dd></dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d" title="DeviceID must be in range 0...#compute-devices. ">hipErrorInvalidDevice</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ae35ad9fb66b7c33f21a021efe89975b0" title="Invalid memory copy direction. ">hipErrorInvalidMemcpyDirection</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a> </dd></dl>
 <dl class="section warning"><dt>Warning</dt><dd>on HCC hipMemcpyAsync does not support overlapped H2D and D2H copies. </dd>
 <dd>
 on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hipMallocHost call). </dd></dl>
@@ -748,7 +744,7 @@ on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hip
 
 </div>
 </div>
-<a class="anchor" id="gaee4ed665ce0a60c661a809c175320a0c"></a>
+<a class="anchor" id="gae7d90e14c387e49f10db597f12915c54"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -785,7 +781,7 @@ on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hip
 </div><div class="memdoc">
 
 <p>Fills the first sizeBytes bytes of the memory area pointed to by dev with the constant byte value value. </p>
-<p><a class="el" href="group__Memory.html#gaee4ed665ce0a60c661a809c175320a0c" title="Fills the first sizeBytes bytes of the memory area pointed to by dev with the constant byte value val...">hipMemsetAsync()</a> is asynchronous with respect to the host, so the call may return before the memset is complete. The operation can optionally be associated to a stream by passing a non-zero stream argument. If stream is non-zero, the operation may overlap with operations in other streams.</p>
+<p><a class="el" href="group__Memory.html#gae7d90e14c387e49f10db597f12915c54" title="Fills the first sizeBytes bytes of the memory area pointed to by dev with the constant byte value val...">hipMemsetAsync()</a> is asynchronous with respect to the host, so the call may return before the memset is complete. The operation can optionally be associated to a stream by passing a non-zero stream argument. If stream is non-zero, the operation may overlap with operations in other streams.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">dst</td><td>Pointer to device memory </td></tr>
@@ -833,7 +829,7 @@ on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hip
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Mar 23 2016 23:11:07 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Apr 16 2016 14:52:10 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
