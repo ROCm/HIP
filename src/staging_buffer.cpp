@@ -44,6 +44,7 @@ StagingBuffer::StagingBuffer(hsa_agent_t hsaAgent, hsa_region_t systemRegion, si
             THROW_ERROR(hipErrorMemoryAllocation);
         }
         hsa_signal_create(0, 0, NULL, &_completion_signal[i]);
+        hsa_signal_create(0, 0, NULL, &_completion_signal2[i]);
     }
 };
 
@@ -57,6 +58,7 @@ StagingBuffer::~StagingBuffer()
             _pinnedStagingBuffer[i] = NULL;
         }
         hsa_signal_destroy(_completion_signal[i]);
+        hsa_signal_destroy(_completion_signal2[i]);
     }
 }
 
@@ -245,9 +247,80 @@ void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeByte
             dstp1 += theseBytes;
         }
     }
+}
 
 
-    //for (int i=0; i<_numBuffers; i++) {
-    //    hsa_signal_wait_acquire(_completion_signal[i], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
-    //}
+//---
+//Copies sizeBytes from src to dst, using either a copy to a staging buffer or a staged pin-in-place strategy
+//IN: dst - dest pointer - must be accessible from agent this buffer is associated with (via _hsa_agent).
+//IN: src - src pointer for copy.  Must be accessible from host CPU.
+//IN: waitFor - hsaSignal to wait for - the copy will begin only when the specified dependency is resolved.  May be NULL indicating no dependency.
+void StagingBuffer::CopyPeerToPeer(void* dst, hsa_agent_t dstAgent, const void* src, hsa_agent_t srcAgent, size_t sizeBytes, hsa_signal_t *waitFor)
+{
+    std::lock_guard<std::mutex> l (_copy_lock);
+
+    const char *srcp0 = static_cast<const char*> (src);
+    char *dstp1 = static_cast<char*> (dst);
+
+    for (int i=0; i<_numBuffers; i++) {
+        hsa_signal_store_relaxed(_completion_signal[i], 0);
+        hsa_signal_store_relaxed(_completion_signal2[i], 0);
+    }
+
+    if (sizeBytes >= UINT64_MAX/2) {
+        THROW_ERROR (hipErrorInvalidValue);
+    }
+
+    int64_t bytesRemaining0 = sizeBytes; // bytes to copy from dest into staging buffer.
+    int64_t bytesRemaining1 = sizeBytes; // bytes to copy from staging buffer into final dest
+
+    while (bytesRemaining1 > 0) {
+        // First launch the async copies to copy from dest to host
+        for (int bufferIndex = 0; (bytesRemaining0>0) && (bufferIndex < _numBuffers);  bytesRemaining0 -= _bufferSize, bufferIndex++) {
+
+            size_t theseBytes = (bytesRemaining0 > _bufferSize) ? _bufferSize : bytesRemaining0;
+
+            tprintf (DB_COPY2, "P2P: bytesRemaining0=%zu  async_copy %zu bytes src:%p to staging:%p\n", bytesRemaining0, theseBytes, srcp0, _pinnedStagingBuffer[bufferIndex]);
+            hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], srcAgent, srcp0, srcAgent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
+            if (hsa_status != HSA_STATUS_SUCCESS) {
+                THROW_ERROR (hipErrorRuntimeMemory);
+            }
+
+            srcp0 += theseBytes;
+
+
+            // Assume subsequent commands are dependent on previous and don't need dependency after first copy submitted, HIP_ONESHOT_COPY_DEP=1 
+            waitFor = NULL; 
+        }
+
+        // Now unload the staging buffers:
+        for (int bufferIndex=0; (bytesRemaining1>0) && (bufferIndex < _numBuffers);  bytesRemaining1 -= _bufferSize, bufferIndex++) {
+
+            size_t theseBytes = (bytesRemaining1 > _bufferSize) ? _bufferSize : bytesRemaining1;
+
+            tprintf (DB_COPY2, "P2P: wait_completion[%d] bytesRemaining=%zu\n", bufferIndex, bytesRemaining1);
+
+            bool hostWait = 0;
+
+            if (hostWait) {
+                // Host-side wait, should not be necessary:
+                hsa_signal_wait_acquire(_completion_signal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+            }
+
+            tprintf (DB_COPY2, "P2P: bytesRemaining1=%zu copy %zu bytes stagingBuf[%d]:%p to device:%p\n", bytesRemaining1, theseBytes, bufferIndex, _pinnedStagingBuffer[bufferIndex], dstp1);
+            memcpy(dstp1, _pinnedStagingBuffer[bufferIndex], theseBytes);
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dstp1, dstAgent, _pinnedStagingBuffer[bufferIndex], dstAgent /*not used*/, theseBytes, 
+                                      hostWait ? 0:1, hostWait ? NULL : &_completion_signal[bufferIndex], 
+                                      _completion_signal2[bufferIndex]);
+
+            dstp1 += theseBytes;
+        }
+    }
+
+
+    // Wait for the staging-buffer to dest copies to complete:
+    for (int i=0; i<_numBuffers; i++) {
+        hsa_signal_wait_acquire(_completion_signal2[i], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+    }
 }

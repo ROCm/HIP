@@ -108,7 +108,9 @@ hipError_t hipDeviceEnablePeerAccess (int peerDeviceId, unsigned int flags)
     } else {
         auto thisDevice = ihipGetTlsDefaultDevice();
         auto peerDevice = ihipGetDevice(peerDeviceId);
-        if ((thisDevice != NULL) && (peerDevice != NULL)) {
+        if (thisDevice == peerDevice)  {
+            err = hipErrorInvalidDevice;  // Can't enable peer access to self.
+        } else if ((thisDevice != NULL) && (peerDevice != NULL)) {
             LockedAccessor_DeviceCrit_t crit(thisDevice->criticalData());
             bool isNewPeer = crit->addPeer(peerDevice);
             if (isNewPeer) {

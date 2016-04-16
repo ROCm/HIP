@@ -38,7 +38,7 @@ THE SOFTWARE.
 // Compile peer-to-peer support.
 // >= 2 : use HCC hc:accelerator::get_is_peer
 // >= 3 : use hc::am_memtracker_update_peers(...)
-#define USE_PEER_TO_PEER 0
+#define USE_PEER_TO_PEER 2
 
 // Use new lock API in HCC:
 #define USE_HCC_LOCK 0
@@ -247,11 +247,12 @@ enum ihipCommand_t {
     ihipCommandCopyH2D,  
     ihipCommandCopyD2H,
     ihipCommandCopyD2D,
+    ihipCommandCopyP2P,
     ihipCommandKernel,
 };
 
 static const char* ihipCommandName[] = {
-    "CopyH2H", "CopyH2D", "CopyD2H", "CopyD2D", "Kernel"
+    "CopyH2H", "CopyH2D", "CopyD2H", "CopyD2D", "CopyP2P", "Kernel"
 };
 
 
@@ -451,7 +452,7 @@ private:
 
     // The unsigned return is hipMemcpyKind
     unsigned resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDeviceMem);
-    void setCopyAgents(unsigned kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent);
+    void setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent);
 
     unsigned                    _device_index;       // index into the g_device array 
 
@@ -527,6 +528,7 @@ public:
     // "Allocate" a stream ID:
     ihipStream_t::SeqNum_t  incStreamId() { return _stream_id++; };
 
+    bool isPeer(const ihipDevice_t *peer); // returns Trus if peer has access to memory physically located on this device.
     bool addPeer(ihipDevice_t *peer);
     bool removePeer(ihipDevice_t *peer);
     void resetPeers(ihipDevice_t *thisDevice);
@@ -540,9 +542,10 @@ private:
     ihipStream_t::SeqNum_t   _stream_id;
 
     // These reflect the currently Enabled set of peers for this GPU:
+    // Enabled peers have permissions to access the memory physically allocated on this device.
     std::list<ihipDevice_t*>  _peers;     // list of enabled peer devices.
     uint32_t                  _peerCnt;     // number of enabled peers
-    hsa_agent_t              *_peerAgents;  // efficient packed array of enabled agents (to use for allocations.)
+    hsa_agent_t              *_peerAgents;  // efficient packed array of enabled agents (to use for allocations.) 
 private:
     void recomputePeerAgents();
 };
