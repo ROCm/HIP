@@ -156,10 +156,10 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
     if(device){
         if(flags == hipHostMallocDefault){
             *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
-            if(sizeBytes && (*ptr == NULL)){
+            if(sizeBytes < 1 && (*ptr == NULL)){
                 hip_status = hipErrorMemoryAllocation;
             }else{
-                hc::am_memtracker_update(*ptr, device->_device_index, 0);
+                hc::am_memtracker_update(*ptr, device->_device_index, amHostPinned);
             }
             tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
         } else if(flags & hipHostMallocMapped){
