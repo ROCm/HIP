@@ -176,7 +176,7 @@ make_hip_executable (hipFuncGetDevice hipFuncGetDevice.cpp)
 make_hip_executable (hipFuncSetDevice hipFuncSetDevice.cpp)
 make_hip_executable (hipFuncDeviceSynchronize hipFuncDeviceSynchronize.cpp)
 make_hip_executable (hipPeerToPeer_simple hipPeerToPeer_simple.cpp) 
-
+make_hip_executable (hipMemcpyAll hipMemcpyAll.cpp)
 make_hip_executable (hipMultiThreadDevice hipMultiThreadDevice.cpp) 
 
 make_test(hip_ballot " " )
@@ -193,6 +193,7 @@ make_test(hipMemset --N 10013 --memsetval 0x5a )  # oddball size.
 make_test(hipMemset --N 256M  --memsetval 0xa6 )  # big copy
 make_test(hipGridLaunch " " )
 make_test(hipEnvVarDriver " " )
+make_test(hipMemcpyAll " ")
 #TODO -reenable
 #make_test(hipPointerAttrib " " )
 #make_test(hipMultiThreadStreams1 " " )  Fails if 0x3 specified, passes otherwise.  
