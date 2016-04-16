@@ -401,6 +401,13 @@ __device__ int __all(  int input);
 __device__ int __any( int input);
 __device__  unsigned long long int __ballot( int input);
 
+// __ldg function
+template <typename T>
+__device__ __forceinline__ T __ldg( const T * addr)
+{
+	return *addr;
+}
+
 // warp shuffle functions
 #ifdef __cplusplus
 
