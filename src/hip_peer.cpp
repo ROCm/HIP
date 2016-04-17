@@ -58,6 +58,8 @@ hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int  deviceId, int peerDe
 
 
 //---
+// Disable visibility of this device into memory allocated on peer device.
+// Remove this device from peer device peerlist.
 hipError_t hipDeviceDisablePeerAccess (int peerDeviceId)
 {
     HIP_INIT_API(peerDeviceId);
@@ -68,7 +70,8 @@ hipError_t hipDeviceDisablePeerAccess (int peerDeviceId)
     auto peerDevice = ihipGetDevice(peerDeviceId);
     if ((thisDevice != NULL) && (peerDevice != NULL)) {
 #if USE_PEER_TO_PEER>=2
-         bool canAccessPeer =  peerDevice->_acc.get_is_peer(thisDevice->_acc);
+        // Return true if thisDevice can access peerDevice's memory:
+        bool canAccessPeer =  peerDevice->_acc.get_is_peer(thisDevice->_acc);
 #else
         bool canAccessPeer = 0;
 #endif
@@ -78,12 +81,12 @@ hipError_t hipDeviceDisablePeerAccess (int peerDeviceId)
         } else if (thisDevice == peerDevice)  {
             err = hipErrorInvalidDevice;  // Can't disable peer access to self.
         } else {
-            LockedAccessor_DeviceCrit_t crit(thisDevice->criticalData());
-            bool changed = crit->removePeer(peerDevice);
+            LockedAccessor_DeviceCrit_t peerCrit(peerDevice->criticalData());
+            bool changed = peerCrit->removePeer(thisDevice);
             if (changed) {
 #if USE_PEER_TO_PEER>=3
                 // Update the peers for all memory already saved in the tracker:
-                am_memtracker_update_peers(thisDevice->_acc, crit->peerCnt(), crit->peerAgents());
+                am_memtracker_update_peers(peerDevice->_acc, peerCrit->peerCnt(), peerCrit->peerAgents());
 #endif
             } else {
                 err = hipErrorPeerAccessNotEnabled; // never enabled P2P access.
@@ -98,7 +101,8 @@ hipError_t hipDeviceDisablePeerAccess (int peerDeviceId)
 
 
 //---
- // Enable registering memory on peerDevice for direct access from the current device.
+// Allow the current device to see all memory allocated on peerDevice.
+// This should add this device to the peer-device peer list.
 hipError_t hipDeviceEnablePeerAccess (int peerDeviceId, unsigned int flags)
 {
     HIP_INIT_API(peerDeviceId, flags);
@@ -112,11 +116,11 @@ hipError_t hipDeviceEnablePeerAccess (int peerDeviceId, unsigned int flags)
         if (thisDevice == peerDevice)  {
             err = hipErrorInvalidDevice;  // Can't enable peer access to self.
         } else if ((thisDevice != NULL) && (peerDevice != NULL)) {
-            LockedAccessor_DeviceCrit_t crit(thisDevice->criticalData());
-            bool isNewPeer = crit->addPeer(peerDevice);
+            LockedAccessor_DeviceCrit_t peerCrit(peerDevice->criticalData());
+            bool isNewPeer = peerCrit->addPeer(thisDevice);
             if (isNewPeer) {
 #if USE_PEER_TO_PEER>=3
-                am_memtracker_update_peers(thisDevice->_acc, crit->peerCnt(), crit->peerAgents());
+                am_memtracker_update_peers(peerDevice->_acc, peerCrit->peerCnt(), peerCrit->peerAgents());
 #endif
             } else {
                 err = hipErrorPeerAccessAlreadyEnabled;
