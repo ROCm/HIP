@@ -99,43 +99,60 @@ void enablePeerFirst()
         assert(canAccessPeer);
 
         HIPCHECK(hipSetDevice(g_peerDevice));
-            HIPCHECK(hipDeviceEnablePeerAccess(g_currentDevice, 0));
-        }
+        HIPCHECK(hipDeviceEnablePeerAccess(g_currentDevice, 0));
+    }
 
-        size_t Nbytes = N*sizeof(char);
+    size_t Nbytes = N*sizeof(char);
 
-        char *A_d0, *A_d1;
-        char *A_h;
+    char *A_d0, *A_d1;
+    char *A_h;
 
-        A_h = (char*)malloc(Nbytes);
+    A_h = (char*)malloc(Nbytes);
 
-        // allocate and initialize memory on device0
+    // allocate and initialize memory on device0
+    HIPCHECK (hipSetDevice(g_currentDevice));
+    HIPCHECK (hipMalloc(&A_d0, Nbytes) );
+    HIPCHECK (hipMemset(A_d0, memsetval, Nbytes) ); 
+    // TODO - remove me:
+    HIPCHECK (hipDeviceSynchronize());
+
+    // allocate and initialize memory on peer device
+    HIPCHECK (hipSetDevice(g_peerDevice));
+    HIPCHECK (hipMalloc(&A_d1, Nbytes) );
+    HIPCHECK (hipMemset(A_d1, 0x13, Nbytes) ); 
+
+    // TODO - remove me:
+    HIPCHECK (hipDeviceSynchronize());
+
+
+    // Device0 push to device1, using P2P:
+    HIPCHECK (hipSetDevice(p_memcpyWithPeer ? g_peerDevice : g_currentDevice));
+    HIPCHECK (hipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyDefault)); // This is P2P copy.
+
+    // TODO - remove me:
+    if (1) {
         HIPCHECK (hipSetDevice(g_currentDevice));
-        HIPCHECK (hipMalloc(&A_d0, Nbytes) );
-        HIPCHECK (hipMemset(A_d0, memsetval, Nbytes) ); 
-
-        // allocate and initialize memory on peer device
+        HIPCHECK (hipDeviceSynchronize());
         HIPCHECK (hipSetDevice(g_peerDevice));
-        HIPCHECK (hipMalloc(&A_d1, Nbytes) );
-        HIPCHECK (hipMemset(A_d1, 0x13, Nbytes) ); 
+        HIPCHECK (hipDeviceSynchronize());
+    }
 
+    // Copy data back to host:
+    HIPCHECK (hipSetDevice(g_peerDevice));
+    HIPCHECK (hipMemcpy(A_h, A_d1, Nbytes, hipMemcpyDeviceToHost));
 
+    // TODO - remove me:
+    HIPCHECK (hipDeviceSynchronize());
 
-        // Device0 push to device1, using P2P:
-        HIPCHECK (hipSetDevice(p_memcpyWithPeer ? g_peerDevice : g_currentDevice));
-        HIPCHECK (hipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyDefault));
-
-        // Copy data back to host:
-        HIPCHECK (hipSetDevice(g_peerDevice));
-        HIPCHECK (hipMemcpy(A_h, A_d1, Nbytes, hipMemcpyDeviceToHost));
-
-        // Check host data:
-        for (int i=0; i<N; i++) {
-            if (A_h[i] != memsetval) {
-                failed("mismatch at index:%d computed:0x%02x, golden memsetval:0x%02x\n", i, (int)A_h[i], (int)memsetval);
-            }
+    // Check host data:
+    for (int i=0; i<N; i++) {
+        if (A_h[i] != memsetval) {
+            failed("mismatch at index:%d computed:0x%02x, golden memsetval:0x%02x\n", i, (int)A_h[i], (int)memsetval);
         }
     }
+
+    printf ("==done: %s\n\n", __func__);
+}
 
 
 //---
@@ -199,6 +216,7 @@ void allocMemoryFirst()
             failed("mismatch at index:%d computed:0x%02x, golden memsetval:0x%02x\n", i, (int)A_h[i], (int)memsetval);
         }
     }
+    printf ("==done: %s\n\n", __func__);
 }
 
 void simpleNegative()
@@ -233,6 +251,7 @@ void simpleNegative()
 
     
     // More tests here:
+    printf ("==done: %s\n\n", __func__);
 }
 
 
