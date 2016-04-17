@@ -92,6 +92,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set(CMAKE_CXX_COMPILER "${HCC_HOME}/bin/hcc")
     set(CMAKE_C_COMPILER   "${HCC_HOME}/bin/hcc")
 
+    # Set HIP_HCC so we know this is HIP compile, some files are shared with HCC (staging_buffer).
     set(CMAKE_CXX_FLAGS " -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -stdlib=libc++ -DHIP_HCC")
     set(CMAKE_C_FLAGS   " -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -stdlib=libc++ -DHIP_HCC")
 
