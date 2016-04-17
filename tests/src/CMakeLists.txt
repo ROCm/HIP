@@ -145,6 +145,7 @@ make_hip_executable (hip_popc hip_popc.cpp)
 make_hip_executable (hip_clz hip_clz.cpp) 
 make_hip_executable (hip_brev hip_brev.cpp) 
 make_hip_executable (hip_ffs hip_ffs.cpp) 
+make_hip_executable (hip_ldg hip_ldg.cpp)
 make_hip_executable (hipGetDeviceAttribute hipGetDeviceAttribute.cpp) 
 make_hip_executable (hipEnvVar hipEnvVar.cpp) 
 make_hip_executable (hipEnvVarDriver hipEnvVarDriver.cpp) 
@@ -175,7 +176,7 @@ make_hip_executable (hipFuncGetDevice hipFuncGetDevice.cpp)
 make_hip_executable (hipFuncSetDevice hipFuncSetDevice.cpp)
 make_hip_executable (hipFuncDeviceSynchronize hipFuncDeviceSynchronize.cpp)
 make_hip_executable (hipPeerToPeer_simple hipPeerToPeer_simple.cpp) 
-
+make_hip_executable (hipMemcpyAll hipMemcpyAll.cpp)
 make_hip_executable (hipMultiThreadDevice hipMultiThreadDevice.cpp) 
 
 make_test(hip_ballot " " )
@@ -184,6 +185,7 @@ make_test(hip_popc " " )
 make_test(hip_brev " " )
 make_test(hip_clz " " )
 make_test(hip_ffs " " )
+make_test(hip_ldg " " )
 make_test(hipEventRecord --iterations 10)
 make_test(hipMemset " " )
 make_test(hipMemset --N 10    --memsetval 0x42 )  # small copy, just 10 bytes.
@@ -191,6 +193,7 @@ make_test(hipMemset --N 10013 --memsetval 0x5a )  # oddball size.
 make_test(hipMemset --N 256M  --memsetval 0xa6 )  # big copy
 make_test(hipGridLaunch " " )
 make_test(hipEnvVarDriver " " )
+make_test(hipMemcpyAll " ")
 #TODO -reenable
 #make_test(hipPointerAttrib " " )
 #make_test(hipMultiThreadStreams1 " " )  Fails if 0x3 specified, passes otherwise.  
