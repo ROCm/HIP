@@ -451,7 +451,7 @@ private:
     void                        waitCopy(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *signal);
 
     // The unsigned return is hipMemcpyKind
-    unsigned resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDeviceMem);
+    unsigned resolveMemcpyDirection(bool srcTracked, bool dstTracked, bool srcInDeviceMem, bool dstInDeviceMem);
     void setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent);
 
     unsigned                    _device_index;       // index into the g_device array 

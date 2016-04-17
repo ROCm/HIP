@@ -1150,22 +1150,30 @@ void ihipSetTs(hipEvent_t e)
 
 
 // Resolve hipMemcpyDefault to a known type.
-unsigned ihipStream_t::resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDeviceMem)
+unsigned ihipStream_t::resolveMemcpyDirection(bool srcTracked, bool dstTracked, bool srcInDeviceMem, bool dstInDeviceMem)
 {
     hipMemcpyKind kind = hipMemcpyDefault;
-
-    if (!srcInDeviceMem && !dstInDeviceMem) {
+    if(!srcTracked && !dstTracked)
+    {
         kind = hipMemcpyHostToHost;
-    } else if (!srcInDeviceMem && dstInDeviceMem) {
-        kind = hipMemcpyHostToDevice;
-    } else if (srcInDeviceMem && !dstInDeviceMem) {
-        kind = hipMemcpyDeviceToHost;
-    } else if (srcInDeviceMem &&  dstInDeviceMem) {
-        kind = hipMemcpyDeviceToDevice;
+    }
+    if(!srcTracked && dstTracked)
+    {
+        if(dstInDeviceMem) { kind = hipMemcpyHostToDevice; }
+        else{ kind = hipMemcpyHostToHost; }
+    }
+    if (srcTracked && !dstTracked) {
+        if(srcInDeviceMem) { kind = hipMemcpyDeviceToHost; }
+        else { kind = hipMemcpyHostToHost; }
+    }
+    if (srcTracked && dstTracked) {
+        if(srcInDeviceMem && dstInDeviceMem) { kind = hipMemcpyDeviceToDevice; }
+        if(srcInDeviceMem && !dstInDeviceMem) { kind = hipMemcpyDeviceToHost; }
+        if(!srcInDeviceMem && !dstInDeviceMem) { kind = hipMemcpyHostToHost; }
+        if(!srcInDeviceMem && dstInDeviceMem) { kind = hipMemcpyHostToDevice; }
     }
 
     assert (kind != hipMemcpyDefault);
-
     return kind;
 }
 
@@ -1208,12 +1216,11 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
     bool dstTracked = (hc::am_memtracker_getinfo(&dstPtrInfo, dst) == AM_SUCCESS);
     bool srcTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) == AM_SUCCESS);
 
-
     // Resolve default to a specific Kind so we know which algorithm to use:
     if (kind == hipMemcpyDefault) {
         bool srcInDeviceMem = (srcTracked && srcPtrInfo._isInDeviceMem);
         bool dstInDeviceMem = (dstTracked && dstPtrInfo._isInDeviceMem);
-        kind = resolveMemcpyDirection(srcInDeviceMem, dstInDeviceMem);
+        kind = resolveMemcpyDirection(srcTracked, dstTracked, srcPtrInfo._isInDeviceMem, dstPtrInfo._isInDeviceMem);
     };
 
     hsa_signal_t depSignal;
@@ -1229,7 +1236,7 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
 #endif
     }
 
-    if ((kind == hipMemcpyHostToDevice) && (!srcTracked)) {
+    if (kind == hipMemcpyHostToDevice) {
         int depSignalCnt = preCopyCommand(crit, NULL, &depSignal, ihipCommandCopyH2D);
         if (HIP_STAGING_BUFFERS) {
             tprintf(DB_COPY1, "D2H && !dstTracked: staged copy H2D dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
@@ -1251,7 +1258,7 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
             hc::am_copy(dst, src, sizeBytes);
 #endif
         }
-    } else if ((kind == hipMemcpyDeviceToHost) && (!dstTracked)) {
+    } else if (kind == hipMemcpyDeviceToHost) {
         int depSignalCnt = preCopyCommand(crit, NULL, &depSignal, ihipCommandCopyD2H);
         if (HIP_STAGING_BUFFERS) {
             tprintf(DB_COPY1, "D2H && !dstTracked: staged copy D2H dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
@@ -1374,7 +1381,7 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsig
         if (kind == hipMemcpyDefault) {
             bool srcInDeviceMem = (srcTracked && srcPtrInfo._isInDeviceMem);
             bool dstInDeviceMem = (dstTracked && dstPtrInfo._isInDeviceMem);
-            kind = resolveMemcpyDirection(srcInDeviceMem, dstInDeviceMem);
+            kind = resolveMemcpyDirection(srcTracked, dstTracked, srcPtrInfo._isInDeviceMem, dstPtrInfo._isInDeviceMem);
         }
 
 

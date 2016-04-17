@@ -41,7 +41,7 @@ hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int  deviceId, int peerDe
             *canAccessPeer = 0;
         } else {
 #if USE_PEER_TO_PEER>=2
-            *canAccessPeer = peerDevice->_acc.get_is_peer(thisDevice->_acc);
+             *canAccessPeer = peerDevice->_acc.get_is_peer(thisDevice->_acc);
 #else
             *canAccessPeer = 0;
 #endif
@@ -68,10 +68,11 @@ hipError_t hipDeviceDisablePeerAccess (int peerDeviceId)
     auto peerDevice = ihipGetDevice(peerDeviceId);
     if ((thisDevice != NULL) && (peerDevice != NULL)) {
 #if USE_PEER_TO_PEER>=2
-        bool canAccessPeer =  peerDevice->_acc.get_is_peer(thisDevice->_acc);
+         bool canAccessPeer =  peerDevice->_acc.get_is_peer(thisDevice->_acc);
 #else
         bool canAccessPeer = 0;
 #endif
+
         if (! canAccessPeer) {
             err = hipErrorInvalidDevice;  // P2P not allowed between these devices.
         } else if (thisDevice == peerDevice)  {
