@@ -24,7 +24,6 @@ THE SOFTWARE.
 #include "hcc_detail/hip_util.h"
 #include "hcc_detail/staging_buffer.h"
 
-#define HIP_HCC
 
 #if defined(__HCC__) && (__hcc_workweek__ < 1502)
 #error("This version of HIP requires a newer version of HCC.");
@@ -89,8 +88,6 @@ class ihipDevice_t;
 
 #define API_COLOR KGRN
 
-
-#define HIP_HCC  
 
 // If set, thread-safety is enforced on all stream functions.
 // Stream functions will acquire a mutex before entering critical sections.
