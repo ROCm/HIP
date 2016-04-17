@@ -43,11 +43,6 @@ THE SOFTWARE.
 #include "hcc_detail/hip_hcc.h"
 #include "hsa_ext_amd.h"
 
-// HIP includes:
-#define HIP_HCC
-//#include "hcc_detail/staging_buffer.h"
-
-
 // TODO, re-org header order.
 extern const char *ihipErrorString(hipError_t hip_error);
 #include "hcc_detail/trace_helper.h"

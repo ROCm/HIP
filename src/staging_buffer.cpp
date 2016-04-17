@@ -24,6 +24,8 @@ THE SOFTWARE.
 #include "hcc_detail/staging_buffer.h"
 
 #ifdef HIP_HCC
+#include "hcc_detail/hip_runtime.h"
+#include "hcc_detail/hip_hcc.h"
 #define THROW_ERROR(e) throw ihipException(e)
 #else
 #define THROW_ERROR(e) throw 
@@ -301,7 +303,7 @@ void StagingBuffer::CopyPeerToPeer(void* dst, hsa_agent_t dstAgent, const void* 
 
             tprintf (DB_COPY2, "P2P: wait_completion[%d] bytesRemaining=%zu\n", bufferIndex, bytesRemaining1);
 
-            bool hostWait = 0;
+            bool hostWait = 0; // TODO - remove me
 
             if (hostWait) {
                 // Host-side wait, should not be necessary:
