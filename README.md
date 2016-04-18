@@ -15,11 +15,17 @@ New projects can be developed directly in the portable HIP C++ language and can 
 cd HIP-privatestaging
 mkdir build
 cd build
-cmake -DHSA_PATH=/path/to/hsa -DHCC_HOME=/path/to/hcc -DCMAKE_INSTALL_PREFIX=/where/to/install/hip -DCMAKE_BUILD_TYPE=Release ..
+cmake ..
 make
 make install
 ```
-Make sure HIP_PATH is pointed to `/where/to/install/hip` and PATH includes `$HIP_PATH/bin`. This requirement is optional, but required to run any HIP test infrastructure.
+*By default cmake looks for hcc in /opt/rocm/hcc (can be overridden by setting ```-DHCC_HOME=/path/to/hcc``` in the cmake step).*
+
+*By default cmake looks for HSA in /opt/rocm/hsa (can be overridden by setting ```-DHSA_PATH=/path/to/hsa``` in the cmake step).*
+
+*By default cmake installs HIP to /opt/rocm/hip (can be overridden by setting ```-DCMAKE_INSTALL_PREFIX=/where/to/install/hip``` in the cmake step).*
+
+*Make sure HIP_PATH is pointed to `/where/to/install/hip` and PATH includes `$HIP_PATH/bin`. This requirement is optional, but required to run any HIP test infrastructure.*
 
 ## More Info:
 - [HIP FAQ](docs/markdown/hip_faq.md)
@@ -49,6 +55,9 @@ HIP code can be developed either on AMD ROCm platform using hcc compiler, or a C
 #### NVIDIA (nvcc)
 * Install CUDA SDK from manufacturer website
 * By default HIP looks for CUDA SDK in /usr/local/cuda (can be overriden by setting CUDA_PATH env variable)
+* Install HIP (from this GitHub repot).  By default HIP is installed into /opt/rocm/hip (can be overridden by setting HIP_PATH environment variable).
+
+* Optionally, consider adding /opt/rocm/bin to your path to make it easier to use the tools.
 
 #### Verify your installation
 Run hipconfig (instructions below assume default installation path) :
