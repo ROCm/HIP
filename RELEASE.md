@@ -13,9 +13,13 @@ We have attempted to document known bugs and limitations - in particular the [HI
 
 Stay tuned - the work for many of these features is already in-flight.
 
-Next:
+## Revision History:
+
+===================================================================================================
+Release:0.84.00
+Date:
 - Refactor HIP make and install system:
-    - Move to CMake.
+    - Move to CMake. Refer to the installation section in README.md for details.
     - Split source into multiple modular .cpp and .h files.
     - Create static library and link.
     - Set HIP_PATH to install.
@@ -28,7 +32,6 @@ Next:
 - Deprecate hipFreeHost (Replace with hipHostFree)
 
 
-## Revision History:
 
 ===================================================================================================
 Release:0.82.00
@@ -60,7 +63,7 @@ Date: 2016.02.18
 
 
 ===================================================================================================
-Release:0.80.00 :
+Release:0.80.00
 Date: 2016.01.25
 
 Initial release with GPUOpen Launch.
