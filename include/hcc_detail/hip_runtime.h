@@ -33,7 +33,7 @@ THE SOFTWARE.
 
 
 //#include <cstring>
-//#include <cmath>
+#include <cmath>
 #include <string.h>
 #include <stddef.h>
 
