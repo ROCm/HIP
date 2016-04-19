@@ -65,8 +65,8 @@ int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU ident
 
 //---
 // Chicken bits for disabling functionality to work around potential issues:
-int HIP_DISABLE_HW_KERNEL_DEP = 1;
-int HIP_DISABLE_HW_COPY_DEP = 1;
+int HIP_DISABLE_HW_KERNEL_DEP = 0;
+int HIP_DISABLE_HW_COPY_DEP = 0;
 
 thread_local int tls_defaultDevice = 0;
 thread_local hipError_t tls_lastHipError = hipSuccess;
