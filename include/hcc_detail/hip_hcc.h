@@ -531,6 +531,9 @@ public:
     bool removePeer(ihipDevice_t *peer);
     void resetPeers(ihipDevice_t *thisDevice);
 
+
+    void addStream(ihipStream_t *stream);
+
     uint32_t peerCnt() const { return _peerCnt; };
     hsa_agent_t *peerAgents() const { return _peerAgents; };
 
