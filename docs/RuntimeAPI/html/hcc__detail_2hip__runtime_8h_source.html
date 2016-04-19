@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/hip_git/rel0.84.0/include/hcc_detail/hip_runtime.h Source File</title>
+<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/hip_git/release_0.84.00/include/hcc_detail/hip_runtime.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -126,8 +126,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;</div>
 <div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="preprocessor">#define CUDA_SUCCESS hipSuccess</span></div>
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="hcc__detail_2hip__runtime__api_8h.html">hip_runtime_api.h</a>&gt;</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="comment">//#include &quot;hcc_detail/hip_hcc.h&quot;</span></div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="preprocessor">#include &lt;hip/hip_runtime_api.h&gt;</span></div>
+<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="comment">//#include &quot;hip/hcc_detail/hip_hcc.h&quot;</span></div>
 <div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;<span class="comment">//---</span></div>
 <div class="line"><a name="l00046"></a><span class="lineno">   46</span>&#160;<span class="comment">// Remainder of this file only compiles with HCC</span></div>
 <div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;<span class="preprocessor">#ifdef __HCC__</span></div>
@@ -141,9 +141,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;<span class="comment">//typedef grid_launch_parm hipLaunchParm ;</span></div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="preprocessor">#define hipLaunchParm grid_launch_parm</span></div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#ifdef __cplusplus</span></div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &lt;<a class="code" href="hip__texture_8h.html">hcc_detail/hip_texture.h</a>&gt;</span></div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &lt;hip/hcc_detail/hip_texture.h&gt;</span></div>
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &lt;<a class="code" href="host__defines_8h.html">hcc_detail/host_defines.h</a>&gt;</span></div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include &lt;hip/hcc_detail/host_defines.h&gt;</span></div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;<span class="comment">// TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.</span></div>
 <div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;<span class="preprocessor">#if defined (__KALMAR_ACCELERATOR__) &amp;&amp; !defined (__HCC_ACCELERATOR__)</span></div>
 <div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define __HCC_ACCELERATOR__  __KALMAR_ACCELERATOR__</span></div>
@@ -646,14 +646,11 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;</div>
 <div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;<span class="comment">// End doxygen API:</span></div>
 <div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;<span class="comment"></span><span class="preprocessor">#endif</span></div>
-<div class="ttc" id="host__defines_8h_html"><div class="ttname"><a href="host__defines_8h.html">host_defines.h</a></div><div class="ttdoc">TODO-doc. </div></div>
 <div class="ttc" id="host__defines_8h_html_a803050db3c78e0db3ea59a0c35499622"><div class="ttname"><a href="host__defines_8h.html#a803050db3c78e0db3ea59a0c35499622">__host__</a></div><div class="ttdeci">#define __host__</div><div class="ttdef"><b>Definition:</b> host_defines.h:35</div></div>
-<div class="ttc" id="hip__texture_8h_html"><div class="ttname"><a href="hip__texture_8h.html">hip_texture.h</a></div><div class="ttdoc">HIP C++ Texture API for hcc compiler. </div></div>
-<div class="ttc" id="hcc__detail_2hip__runtime__api_8h_html"><div class="ttname"><a href="hcc__detail_2hip__runtime__api_8h.html">hip_runtime_api.h</a></div><div class="ttdoc">Contains C function APIs for HIP runtime. This file does not use any HCC builtin or special language ...</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Apr 16 2016 14:52:10 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Apr 19 2016 22:44:02 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
