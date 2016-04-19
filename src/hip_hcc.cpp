@@ -249,6 +249,14 @@ void ihipDeviceCriticalBase_t<DeviceMutex>::resetPeers(ihipDevice_t *thisDevice)
     addPeer(thisDevice); // peer-list always contains self agent.
 }
 
+
+template<>
+void ihipDeviceCriticalBase_t<DeviceMutex>::addStream(ihipStream_t *stream)
+{
+    _streams.push_back(stream);
+    stream->_id = incStreamId();
+}
+
 //-------------------------------------------------------------------------------------------------
 
 //---
@@ -450,8 +458,28 @@ void ihipDevice_t::locked_reset()
     // Obtain mutex access to the device critical data, release by destructor
     LockedAccessor_DeviceCrit_t  crit(_criticalData);
 
+
+    //---
+    //Wait for pending activity to complete?  TODO - check if this is required behavior:
+    tprintf(DB_SYNC, "locked_reset waiting for activity to complete.\n");
+
     // Reset and remove streams:
+    // Delete all created streams including the default one.
+    for (auto streamI=crit->const_streams().begin(); streamI!=crit->const_streams().end(); streamI++) {
+        ihipStream_t *stream = *streamI;
+        (*streamI)->locked_wait();
+        tprintf(DB_SYNC, " delete stream=%p\n", stream);
+        
+        delete stream;
+    }
+    // Clear the list.
     crit->streams().clear();
+
+
+    // Create a fresh default stream and add it:
+    _default_stream = new ihipStream_t(_device_index, _acc.get_default_view(), hipStreamDefault);
+    crit->addStream(_default_stream);
+
 
     // This resest peer list to just me:
     crit->resetPeers(this);
@@ -488,9 +516,6 @@ void ihipDevice_t::init(unsigned device_index, unsigned deviceCnt, hc::accelerat
 
     locked_reset();
 
-    _default_stream = new ihipStream_t(device_index, acc.get_default_view(), hipStreamDefault);
-    locked_addStream(_default_stream);
-    
 
     tprintf(DB_SYNC, "created device with default_stream=%p\n", _default_stream);
 
@@ -772,8 +797,7 @@ void ihipDevice_t::locked_addStream(ihipStream_t *s)
 {
     LockedAccessor_DeviceCrit_t  crit(_criticalData);
 
-    crit->streams().push_back(s);
-    s->_id = crit->incStreamId();
+    crit->addStream(s);
 }
 
 //---
