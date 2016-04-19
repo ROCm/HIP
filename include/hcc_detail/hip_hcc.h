@@ -21,8 +21,8 @@ THE SOFTWARE.
 #define HIP_HCC_H
 
 #include <hc.hpp>
-#include "hcc_detail/hip_util.h"
-#include "hcc_detail/staging_buffer.h"
+#include "hip/hcc_detail/hip_util.h"
+#include "hip/hcc_detail/staging_buffer.h"
 
 #define HIP_HCC
 
