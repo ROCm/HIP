@@ -282,6 +282,9 @@ void StagingBuffer::CopyPeerToPeer(void* dst, hsa_agent_t dstAgent, const void* 
 
             size_t theseBytes = (bytesRemaining0 > _bufferSize) ? _bufferSize : bytesRemaining0;
 
+            // Wait to make sure we are not overwriting a buffer before it has been drained:
+            hsa_signal_wait_acquire(_completion_signal2[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+
             tprintf (DB_COPY2, "P2P: bytesRemaining0=%zu  async_copy %zu bytes src:%p to staging:%p\n", bytesRemaining0, theseBytes, srcp0, _pinnedStagingBuffer[bufferIndex]);
             hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
             hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], srcAgent, srcp0, srcAgent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
@@ -311,7 +314,7 @@ void StagingBuffer::CopyPeerToPeer(void* dst, hsa_agent_t dstAgent, const void* 
             }
 
             tprintf (DB_COPY2, "P2P: bytesRemaining1=%zu copy %zu bytes stagingBuf[%d]:%p to device:%p\n", bytesRemaining1, theseBytes, bufferIndex, _pinnedStagingBuffer[bufferIndex], dstp1);
-            memcpy(dstp1, _pinnedStagingBuffer[bufferIndex], theseBytes);
+            hsa_signal_store_relaxed(_completion_signal2[bufferIndex], 1);
             hsa_status_t hsa_status = hsa_amd_memory_async_copy(dstp1, dstAgent, _pinnedStagingBuffer[bufferIndex], dstAgent /*not used*/, theseBytes, 
                                       hostWait ? 0:1, hostWait ? NULL : &_completion_signal[bufferIndex], 
                                       _completion_signal2[bufferIndex]);

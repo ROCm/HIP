@@ -151,9 +151,11 @@ void ihipStream_t::locked_reclaimSignals(SIGSEQNUM sigNum)
 //---
 void ihipStream_t::waitCopy(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *signal)
 {
+    SIGSEQNUM sigNum = signal->_sig_id;
+    tprintf(DB_SYNC, "waitCopy signal:#%lu\n", sigNum);
+
     hsa_signal_wait_acquire(signal->_hsa_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
 
-    SIGSEQNUM sigNum = signal->_sig_id;
 
     tprintf(DB_SIGNAL, "waitCopy reclaim signal #%lu\n", sigNum);
     // Mark all signals older and including this one as available for reclaim
@@ -250,6 +252,14 @@ void ihipDeviceCriticalBase_t<DeviceMutex>::resetPeers(ihipDevice_t *thisDevice)
     _peers.clear();
     _peerCnt = 0;
     addPeer(thisDevice); // peer-list always contains self agent.
+}
+
+
+template<>
+void ihipDeviceCriticalBase_t<DeviceMutex>::addStream(ihipStream_t *stream)
+{
+    _streams.push_back(stream);
+    stream->_id = incStreamId();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -461,8 +471,28 @@ void ihipDevice_t::locked_reset()
     // Obtain mutex access to the device critical data, release by destructor
     LockedAccessor_DeviceCrit_t  crit(_criticalData);
 
+
+    //---
+    //Wait for pending activity to complete?  TODO - check if this is required behavior:
+    tprintf(DB_SYNC, "locked_reset waiting for activity to complete.\n");
+
     // Reset and remove streams:
+    // Delete all created streams including the default one.
+    for (auto streamI=crit->const_streams().begin(); streamI!=crit->const_streams().end(); streamI++) {
+        ihipStream_t *stream = *streamI;
+        (*streamI)->locked_wait();
+        tprintf(DB_SYNC, " delete stream=%p\n", stream);
+        
+        delete stream;
+    }
+    // Clear the list.
     crit->streams().clear();
+
+
+    // Create a fresh default stream and add it:
+    _default_stream = new ihipStream_t(_device_index, _acc.get_default_view(), hipStreamDefault);
+    crit->addStream(_default_stream);
+
 
     // This resest peer list to just me:
     crit->resetPeers(this);
@@ -499,10 +529,7 @@ void ihipDevice_t::init(unsigned device_index, unsigned deviceCnt, hc::accelerat
 
     locked_reset();
 
-    _default_stream = new ihipStream_t(device_index, acc.get_default_view(), hipStreamDefault);
-    locked_addStream(_default_stream);
     
-
     tprintf(DB_SYNC, "created device with default_stream=%p\n", _default_stream);
 
     hsa_region_t *pinnedHostRegion;
@@ -783,8 +810,7 @@ void ihipDevice_t::locked_addStream(ihipStream_t *s)
 {
     LockedAccessor_DeviceCrit_t  crit(_criticalData);
 
-    crit->streams().push_back(s);
-    s->_id = crit->incStreamId();
+    crit->addStream(s);
 }
 
 //---
@@ -914,7 +940,7 @@ void ihipInit()
 
     READ_ENV_I(release, HIP_LAUNCH_BLOCKING, CUDA_LAUNCH_BLOCKING, "Make HIP APIs 'host-synchronous', so they block until any kernel launches or data copy commands complete. Alias: CUDA_LAUNCH_BLOCKING." );
     READ_ENV_I(release, HIP_DB, 0,  "Print various debug info.  Bitmask, see hip_hcc.cpp for more information.");
-    if ((HIP_DB & DB_API)  && (HIP_TRACE_API == 0)) {
+    if ((HIP_DB & (1<<DB_API))  && (HIP_TRACE_API == 0)) {
         // Set HIP_TRACE_API default before we read it, so it is printed correctly.
         HIP_TRACE_API = 1;
     }

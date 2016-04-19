@@ -172,12 +172,6 @@ hipError_t hipDeviceReset(void)
 
 
     if (device) {
-        //---
-        //Wait for pending activity to complete?  TODO - check if this is required behavior:
-        //TODO, also we have small window between wait and reset.
-        
-        device->locked_waitAllStreams();
-
         // Release device resources (streams and memory):
         device->locked_reset(); 
     }
