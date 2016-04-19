@@ -137,7 +137,7 @@ ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, unsig
 
 //---
 ihipStream_t::~ihipStream_t()
-{ 
+{
 }
 
 
@@ -247,6 +247,14 @@ void ihipDeviceCriticalBase_t<DeviceMutex>::resetPeers(ihipDevice_t *thisDevice)
     _peers.clear();
     _peerCnt = 0;
     addPeer(thisDevice); // peer-list always contains self agent.
+}
+
+
+template<>
+void ihipDeviceCriticalBase_t<DeviceMutex>::addStream(ihipStream_t *stream)
+{
+    _streams.push_back(stream);
+    stream->_id = incStreamId();
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -450,16 +458,31 @@ void ihipDevice_t::locked_reset()
     // Obtain mutex access to the device critical data, release by destructor
     LockedAccessor_DeviceCrit_t  crit(_criticalData);
 
+
+    //---
+    //Wait for pending activity to complete?  TODO - check if this is required behavior:
+    tprintf(DB_SYNC, "locked_reset waiting for activity to complete.\n");
+
     // Reset and remove streams:
+    // Delete all created streams including the default one.
+    for (auto streamI=crit->const_streams().begin(); streamI!=crit->const_streams().end(); streamI++) {
+        ihipStream_t *stream = *streamI;
+        (*streamI)->locked_wait();
+        tprintf(DB_SYNC, " delete stream=%p\n", stream);
+        
+        delete stream;
+    }
+    // Clear the list.
     crit->streams().clear();
 
 
+    // Create a fresh default stream and add it:
+    _default_stream = new ihipStream_t(_device_index, _acc.get_default_view(), hipStreamDefault);
+    crit->addStream(_default_stream);
 
-#if USE_PEER_TO_PEER>=2
+
     // This resest peer list to just me:
     crit->resetPeers(this);
-
-#endif
 
     // Reset and release all memory stored in the tracker:
     // Reset will remove peer mapping so don't need to do this explicitly.
@@ -493,9 +516,6 @@ void ihipDevice_t::init(unsigned device_index, unsigned deviceCnt, hc::accelerat
 
     locked_reset();
 
-    _default_stream = new ihipStream_t(device_index, acc.get_default_view(), hipStreamDefault);
-    locked_addStream(_default_stream);
-    
 
     tprintf(DB_SYNC, "created device with default_stream=%p\n", _default_stream);
 
@@ -777,8 +797,7 @@ void ihipDevice_t::locked_addStream(ihipStream_t *s)
 {
     LockedAccessor_DeviceCrit_t  crit(_criticalData);
 
-    crit->streams().push_back(s);
-    s->_id = crit->incStreamId();
+    crit->addStream(s);
 }
 
 //---
@@ -965,7 +984,6 @@ void ihipInit()
     for (int i=0; i<accs.size(); i++) {
         // check if the device id is included in the HIP_VISIBLE_DEVICES env variable
         if (! accs[i].get_is_emulated()) {
-            //if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), (i-1)) == g_hip_visible_devices.end() && g_visible_device)
             if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), (i-1)) == g_hip_visible_devices.end() && g_visible_device)
             {
                 //If device is not in visible devices list, ignore
@@ -998,13 +1016,6 @@ bool ihipIsValidDevice(unsigned deviceIndex)
     // deviceIndex is unsigned so always > 0
     return (deviceIndex < g_deviceCnt);
 }
-
-/*// check if the device ID is set as visible*/
-//INLINE bool ihipIsVisibleDevice(unsigned deviceIndex)
-//{
-    //return std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(),
-            //(int)deviceIndex) != g_hip_visible_devices.end();
-/*}*/
 
 //---
 ihipDevice_t *ihipGetTlsDefaultDevice()
