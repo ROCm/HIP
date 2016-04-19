@@ -253,7 +253,11 @@ hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
                 for(int i=0;i<g_deviceCnt;i++){
                     vecAcc.push_back(g_devices[i]._acc);
                 }
+#if USE_HCC_LOCK_API
                 am_status = hc::am_memory_host_lock(device->_acc, hostPtr, sizeBytes, &vecAcc[0], vecAcc.size());
+#else
+                am_status = AM_ERROR_MISC;
+#endif
                 if(am_status == AM_SUCCESS){
                     hip_status = hipSuccess;
                 }else{
@@ -276,7 +280,11 @@ hipError_t hipHostUnregister(void *hostPtr)
     if(hostPtr == NULL){
         hip_status = hipErrorInvalidValue;
     }else{
+#if USE_HCC_LOCK_API
         am_status_t am_status = hc::am_memory_host_unlock(device->_acc, hostPtr);
+#else
+        am_status_t am_status = AM_ERROR_MISC;
+#endif
         if(am_status != AM_SUCCESS){
             hip_status = hipErrorHostMemoryNotRegistered;
         }

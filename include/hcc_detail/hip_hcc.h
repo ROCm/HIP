@@ -39,10 +39,10 @@ THE SOFTWARE.
 // >= 3 : use hc::am_memtracker_update_peers(...)
 #define USE_PEER_TO_PEER 2
 
-// Use new lock API in HCC:
-#define USE_HCC_LOCK 0
 
-//#define INLINE static inline
+// Use new am_memory_host_lock APIs:
+#define USE_HCC_LOCK_API 0
+
 
 //---
 // Environment variables:
