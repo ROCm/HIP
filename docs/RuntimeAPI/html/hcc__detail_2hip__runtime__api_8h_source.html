@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/hip_git/rel0.84.0/include/hcc_detail/hip_runtime_api.h Source File</title>
+<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/hip_git/release_0.84.00/include/hcc_detail/hip_runtime_api.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -117,9 +117,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;<span class="preprocessor">#include &lt;stdint.h&gt;</span></div>
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="preprocessor">#include &lt;stddef.h&gt;</span></div>
 <div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="host__defines_8h.html">hcc_detail/host_defines.h</a>&gt;</span></div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#include &lt;<a class="code" href="hcc__detail_2hip__runtime__api_8h.html">hip_runtime_api.h</a>&gt;</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="comment">//#include &quot;hip_hcc.h&quot;</span></div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;<span class="preprocessor">#include &lt;hip/hcc_detail/host_defines.h&gt;</span></div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;<span class="preprocessor">#include &lt;hip/hip_runtime_api.h&gt;</span></div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="comment">//#include &quot;hip/hip_hcc.h&quot;</span></div>
 <div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;</div>
 <div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="preprocessor">#if defined (__HCC__) &amp;&amp;  (__hcc_workweek__ &lt; 16155)</span></div>
 <div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#error(&quot;This version of HIP requires a newer version of HCC.&quot;);</span></div>
@@ -411,7 +411,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="ttc" id="group__Memory_html_gad55fa9f5980b711bc93c52820149ba18"><div class="ttname"><a href="group__Memory.html#gad55fa9f5980b711bc93c52820149ba18">hipMemcpyAsync</a></div><div class="ttdeci">hipError_t hipMemcpyAsync(void *dst, const void *src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream)</div><div class="ttdoc">Copy data from src to dst asynchronously. </div><div class="ttdef"><b>Definition:</b> hip_memory.cpp:343</div></div>
 <div class="ttc" id="group__Error_html_ga1dd660bc739f7e13edd34615660f0148"><div class="ttname"><a href="group__Error.html#ga1dd660bc739f7e13edd34615660f0148">hipPeekAtLastError</a></div><div class="ttdeci">hipError_t hipPeekAtLastError(void)</div><div class="ttdoc">Return last error returned by any HIP runtime API call. </div></div>
 <div class="ttc" id="group__GlobalDefs_html_gacb37281795c3567d0b10a61c056d512b"><div class="ttname"><a href="group__GlobalDefs.html#gacb37281795c3567d0b10a61c056d512b">dim3</a></div><div class="ttdeci">struct dim3 dim3</div></div>
-<div class="ttc" id="host__defines_8h_html"><div class="ttname"><a href="host__defines_8h.html">host_defines.h</a></div><div class="ttdoc">TODO-doc. </div></div>
 <div class="ttc" id="group__Device_html_ga77c20744e2a88c31440992d6c7754b5f"><div class="ttname"><a href="group__Device.html#ga77c20744e2a88c31440992d6c7754b5f">hipGetDeviceProperties</a></div><div class="ttdeci">hipError_t hipGetDeviceProperties(hipDeviceProp_t *prop, int device)</div><div class="ttdoc">Returns device properties. </div><div class="ttdef"><b>Definition:</b> hip_device.cpp:267</div></div>
 <div class="ttc" id="group__Memory_html_ga131ac5c1ba04e186112491cb9bf964bc"><div class="ttname"><a href="group__Memory.html#ga131ac5c1ba04e186112491cb9bf964bc">hipMemcpyToSymbol</a></div><div class="ttdeci">hipError_t hipMemcpyToSymbol(const char *symbolName, const void *src, size_t sizeBytes, size_t offset, hipMemcpyKind kind)</div><div class="ttdoc">Copies sizeBytes bytes from the memory area pointed to by src to the memory area pointed to by offset...</div><div class="ttdef"><b>Definition:</b> hip_memory.cpp:291</div></div>
 <div class="ttc" id="group__Device_html_gadd94a910c2b840833cc325b1e5425702"><div class="ttname"><a href="group__Device.html#gadd94a910c2b840833cc325b1e5425702">hipFuncSetCacheConfig</a></div><div class="ttdeci">hipError_t hipFuncSetCacheConfig(hipFuncCache config)</div><div class="ttdoc">Set Cache configuration for a specific function. </div><div class="ttdef"><b>Definition:</b> hip_device.cpp:90</div></div>
@@ -478,7 +477,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="ttc" id="classihipStream__t_html"><div class="ttname"><a href="classihipStream__t.html">ihipStream_t</a></div><div class="ttdef"><b>Definition:</b> hip_hcc.h:399</div></div>
 <div class="ttc" id="group__PeerToPeer_html_ga5512f45e25c08052667c8ffe7162333b"><div class="ttname"><a href="group__PeerToPeer.html#ga5512f45e25c08052667c8ffe7162333b">hipMemcpyPeer</a></div><div class="ttdeci">hipError_t hipMemcpyPeer(void *dst, int dstDeviceId, const void *src, int srcDeviceId, size_t sizeBytes)</div><div class="ttdoc">Copies memory from one device to memory on another device. </div><div class="ttdef"><b>Definition:</b> hip_peer.cpp:131</div></div>
 <div class="ttc" id="group__Stream_html_gaff5b62d6e9502d80879f7176f4d03102"><div class="ttname"><a href="group__Stream.html#gaff5b62d6e9502d80879f7176f4d03102">hipStreamCreate</a></div><div class="ttdeci">hipError_t hipStreamCreate(hipStream_t *stream)</div><div class="ttdoc">Create an asynchronous stream. </div><div class="ttdef"><b>Definition:</b> hip_stream.cpp:63</div></div>
-<div class="ttc" id="hcc__detail_2hip__runtime__api_8h_html"><div class="ttname"><a href="hcc__detail_2hip__runtime__api_8h.html">hip_runtime_api.h</a></div><div class="ttdoc">Contains C function APIs for HIP runtime. This file does not use any HCC builtin or special language ...</div></div>
 <div class="ttc" id="group__Memory_html_gac1a055d288302edd641c6d7416858e1e"><div class="ttname"><a href="group__Memory.html#gac1a055d288302edd641c6d7416858e1e">hipMemcpy</a></div><div class="ttdeci">hipError_t hipMemcpy(void *dst, const void *src, size_t sizeBytes, hipMemcpyKind kind)</div><div class="ttdoc">Copy data from src to dst. </div><div class="ttdef"><b>Definition:</b> hip_memory.cpp:312</div></div>
 <div class="ttc" id="group__Event_html_ga5df2309c9f29ca4c8e669db658d411b4"><div class="ttname"><a href="group__Event.html#ga5df2309c9f29ca4c8e669db658d411b4">hipEventCreate</a></div><div class="ttdeci">hipError_t hipEventCreate(hipEvent_t *event)</div><div class="ttdef"><b>Definition:</b> hip_event.cpp:61</div></div>
 <div class="ttc" id="group__Memory_html_gad2164cc3d49da53052f4b83b789e90c9"><div class="ttname"><a href="group__Memory.html#gad2164cc3d49da53052f4b83b789e90c9">hipFreeHost</a></div><div class="ttdeci">hipError_t hipFreeHost(void *ptr) __attribute__((deprecated(&quot;use hipHostFree instead&quot;)))</div><div class="ttdoc">Free memory allocated by the hcc hip host memory allocation API. </div><div class="ttdef"><b>Definition:</b> hip_memory.cpp:513</div></div>
@@ -492,7 +490,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Apr 16 2016 14:52:10 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Apr 19 2016 22:44:02 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
