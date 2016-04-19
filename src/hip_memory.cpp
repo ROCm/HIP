@@ -381,7 +381,7 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
         hc::completion_future cf ;
 
         if ((sizeBytes & 0x3) == 0) {
-            // use a faster word-per-workitem copy:
+            // use a faster dword-per-workitem copy:
             try {
                 value = value & 0xff;
                 unsigned value32 = (value << 24) | (value << 16) | (value << 8) | (value) ;
@@ -404,9 +404,9 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
 
 
         if (HIP_LAUNCH_BLOCKING) {
-            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING wait for completion [stream:%p].\n", __func__, (void*)stream);
+            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING wait for memset [stream:%p].\n", __func__, (void*)stream);
             cf.wait();
-            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING completed [stream:%p].\n", __func__, (void*)stream);
+            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING memset completed [stream:%p].\n", __func__, (void*)stream);
         }
     } else {
         e = hipErrorInvalidValue;

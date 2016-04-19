@@ -530,12 +530,16 @@ public:
     bool removePeer(ihipDevice_t *peer);
     void resetPeers(ihipDevice_t *thisDevice);
 
+
+    void addStream(ihipStream_t *stream);
+
     uint32_t peerCnt() const { return _peerCnt; };
     hsa_agent_t *peerAgents() const { return _peerAgents; };
 
 
 private:
-    std::list<ihipStream_t*> _streams;   // streams associated with this device.
+    //std::list< std::shared_ptr<ihipStream_t> > _streams;   // streams associated with this device. TODO - convert to shared_ptr.
+    std::list< ihipStream_t* > _streams;   // streams associated with this device.
     ihipStream_t::SeqNum_t   _stream_id;
 
     // These reflect the currently Enabled set of peers for this GPU:

@@ -113,36 +113,21 @@ void enablePeerFirst()
     HIPCHECK (hipSetDevice(g_currentDevice));
     HIPCHECK (hipMalloc(&A_d0, Nbytes) );
     HIPCHECK (hipMemset(A_d0, memsetval, Nbytes) ); 
-    // TODO - remove me:
-    HIPCHECK (hipDeviceSynchronize());
 
     // allocate and initialize memory on peer device
     HIPCHECK (hipSetDevice(g_peerDevice));
     HIPCHECK (hipMalloc(&A_d1, Nbytes) );
     HIPCHECK (hipMemset(A_d1, 0x13, Nbytes) ); 
 
-    // TODO - remove me:
-    HIPCHECK (hipDeviceSynchronize());
 
 
     // Device0 push to device1, using P2P:
     HIPCHECK (hipSetDevice(p_memcpyWithPeer ? g_peerDevice : g_currentDevice));
     HIPCHECK (hipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyDefault)); // This is P2P copy.
 
-    // TODO - remove me:
-    if (1) {
-        HIPCHECK (hipSetDevice(g_currentDevice));
-        HIPCHECK (hipDeviceSynchronize());
-        HIPCHECK (hipSetDevice(g_peerDevice));
-        HIPCHECK (hipDeviceSynchronize());
-    }
-
     // Copy data back to host:
     HIPCHECK (hipSetDevice(g_peerDevice));
     HIPCHECK (hipMemcpy(A_h, A_d1, Nbytes, hipMemcpyDeviceToHost));
-
-    // TODO - remove me:
-    HIPCHECK (hipDeviceSynchronize());
 
     // Check host data:
     for (int i=0; i<N; i++) {
