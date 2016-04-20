@@ -21,8 +21,8 @@ THE SOFTWARE.
 #define HIP_HCC_H
 
 #include <hc.hpp>
-#include "hcc_detail/hip_util.h"
-#include "hcc_detail/staging_buffer.h"
+#include "hip/hcc_detail/hip_util.h"
+#include "hip/hcc_detail/staging_buffer.h"
 
 #define HIP_HCC
 
@@ -530,6 +530,9 @@ public:
     bool addPeer(ihipDevice_t *peer);
     bool removePeer(ihipDevice_t *peer);
     void resetPeers(ihipDevice_t *thisDevice);
+
+
+    void addStream(ihipStream_t *stream);
 
     uint32_t peerCnt() const { return _peerCnt; };
     hsa_agent_t *peerAgents() const { return _peerAgents; };

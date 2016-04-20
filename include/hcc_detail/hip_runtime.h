@@ -40,8 +40,8 @@ THE SOFTWARE.
 
 #define CUDA_SUCCESS hipSuccess
 
-#include <hip_runtime_api.h>
-//#include "hcc_detail/hip_hcc.h"
+#include <hip/hip_runtime_api.h>
+//#include "hip/hcc_detail/hip_hcc.h"
 //---
 // Remainder of this file only compiles with HCC
 #ifdef __HCC__
@@ -55,9 +55,9 @@ extern int HIP_TRACE_API;
 //typedef grid_launch_parm hipLaunchParm ;
 #define hipLaunchParm grid_launch_parm
 #ifdef __cplusplus
-#include <hcc_detail/hip_texture.h>
+#include <hip/hcc_detail/hip_texture.h>
 #endif
-#include <hcc_detail/host_defines.h>
+#include <hip/hcc_detail/host_defines.h>
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
 #if defined (__KALMAR_ACCELERATOR__) && !defined (__HCC_ACCELERATOR__)
 #define __HCC_ACCELERATOR__  __KALMAR_ACCELERATOR__
