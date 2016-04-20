@@ -30,18 +30,19 @@ THE SOFTWARE.
 #define HIP_ASSERT(x) (assert((x)==hipSuccess))
 
 
-#define WIDTH     1024
-#define HEIGHT    1024
+#define WIDTH     8
+#define HEIGHT    8
 
 #define NUM       (WIDTH*HEIGHT)
 
-#define THREADS_PER_BLOCK_X  16
-#define THREADS_PER_BLOCK_Y  16
+#define THREADS_PER_BLOCK_X  8
+#define THREADS_PER_BLOCK_Y  8
 #define THREADS_PER_BLOCK_Z  1
 
+template<typename T>
 __global__ void 
 vectoradd_float(hipLaunchParm lp,
-             float* a, const float*  bm, const float* cm, int width, int height) 
+             T* a, const T*  bm, const T* cm, int width, int height) 
 
   {
       int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
@@ -72,46 +73,35 @@ __kernel__ void vectoradd_float(float* a, const float* b, const float* c, int wi
 
 using namespace std;
 
-int main() {
-  
-  float* hostA;
-  float* hostB;
-  float* hostC;
+template<typename T>
+bool dataTypesRun(){
+  T* hostA;
+  T* hostB;
+  T* hostC;
 
-  float* deviceA;
-  float* deviceB;
-  float* deviceC;
-
-  hipDeviceProp_t devProp;
-  hipGetDeviceProperties(&devProp, 0);
-  cout << " System minor " << devProp.minor << endl;
-  cout << " System major " << devProp.major << endl;
-  cout << " agent prop name " << devProp.name << endl;
-
-
-
-  cout << "__ldg " << endl ;
-
+  T* deviceA;
+  T* deviceB;
+  T* deviceC;
 
   int i;
   int errors;
 
-  hostA = (float*)malloc(NUM * sizeof(float));
-  hostB = (float*)malloc(NUM * sizeof(float));
-  hostC = (float*)malloc(NUM * sizeof(float));
+  hostA = (T*)malloc(NUM * sizeof(T));
+  hostB = (T*)malloc(NUM * sizeof(T));
+  hostC = (T*)malloc(NUM * sizeof(T));
   
   // initialize the input data
   for (i = 0; i < NUM; i++) {
-    hostB[i] = (float)i;
-    hostC[i] = (float)i*100.0f;
+    hostB[i] = (T)i;
+    hostC[i] = (T)i;
   }
   
-  HIP_ASSERT(hipMalloc((void**)&deviceA, NUM * sizeof(float)));
-  HIP_ASSERT(hipMalloc((void**)&deviceB, NUM * sizeof(float)));
-  HIP_ASSERT(hipMalloc((void**)&deviceC, NUM * sizeof(float)));
+  HIP_ASSERT(hipMalloc((void**)&deviceA, NUM * sizeof(T)));
+  HIP_ASSERT(hipMalloc((void**)&deviceB, NUM * sizeof(T)));
+  HIP_ASSERT(hipMalloc((void**)&deviceC, NUM * sizeof(T)));
   
-  HIP_ASSERT(hipMemcpy(deviceB, hostB, NUM*sizeof(float), hipMemcpyHostToDevice));
-  HIP_ASSERT(hipMemcpy(deviceC, hostC, NUM*sizeof(float), hipMemcpyHostToDevice));
+  HIP_ASSERT(hipMemcpy(deviceB, hostB, NUM*sizeof(T), hipMemcpyHostToDevice));
+  HIP_ASSERT(hipMemcpy(deviceC, hostC, NUM*sizeof(T), hipMemcpyHostToDevice));
 
 
   hipLaunchKernel(vectoradd_float, 
@@ -121,8 +111,9 @@ int main() {
                   deviceA ,deviceB ,deviceC ,WIDTH ,HEIGHT);
 
 
-  HIP_ASSERT(hipMemcpy(hostA, deviceA, NUM*sizeof(float), hipMemcpyDeviceToHost));
+  HIP_ASSERT(hipMemcpy(hostA, deviceA, NUM*sizeof(T), hipMemcpyDeviceToHost));
 
+  bool ret = false;
   // verify the results
   errors = 0;
   for (i = 0; i < NUM; i++) {
@@ -132,8 +123,10 @@ int main() {
   }
   if (errors!=0) {
     printf("FAILED: %d errors\n",errors);
+    ret = false;
   } else {
       printf ("PASSED!\n");
+      ret = true;
   }
 
   HIP_ASSERT(hipFree(deviceA));
@@ -144,6 +137,25 @@ int main() {
   free(hostB);
   free(hostC);
 
+  return ret;
+
+}
+
+
+int main() {
+  
+  hipDeviceProp_t devProp;
+  hipGetDeviceProperties(&devProp, 0);
+  cout << " System minor " << devProp.minor << endl;
+  cout << " System major " << devProp.major << endl;
+  cout << " agent prop name " << devProp.name << endl;
+
+  int errors;
+    errors = dataTypesRun<char>();
+    errors = dataTypesRun<signed char>();
+    errors = dataTypesRun<short>();
+    errors = dataTypesRun<int>();
+  cout << "__ldg " << endl ;
   //hipResetDefaultAccelerator();
 
   return errors;

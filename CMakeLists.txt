@@ -101,6 +101,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
                      src/hip_device.cpp
                      src/hip_error.cpp
                      src/hip_event.cpp
+                     src/hip_ldg.cpp
                      src/hip_memory.cpp
                      src/hip_peer.cpp
                      src/hip_stream.cpp
