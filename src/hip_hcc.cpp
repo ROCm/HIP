@@ -1236,12 +1236,12 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
 
     bool dstTracked = (hc::am_memtracker_getinfo(&dstPtrInfo, dst) == AM_SUCCESS);
     bool srcTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) == AM_SUCCESS);
+    bool srcInDeviceMem = srcPtrInfo._isInDeviceMem;
+    bool dstInDeviceMem = dstPtrInfo._isInDeviceMem;
 
     // Resolve default to a specific Kind so we know which algorithm to use:
     if (kind == hipMemcpyDefault) {
-        bool srcInDeviceMem = (srcTracked && srcPtrInfo._isInDeviceMem);
-        bool dstInDeviceMem = (dstTracked && dstPtrInfo._isInDeviceMem);
-        kind = resolveMemcpyDirection(srcTracked, dstTracked, srcPtrInfo._isInDeviceMem, dstPtrInfo._isInDeviceMem);
+        kind = resolveMemcpyDirection(srcTracked, dstTracked, srcInDeviceMem, dstInDeviceMem);
     };
 
     hsa_signal_t depSignal;
@@ -1259,26 +1259,26 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
 
     if (kind == hipMemcpyHostToDevice) {
         int depSignalCnt = preCopyCommand(crit, NULL, &depSignal, ihipCommandCopyH2D);
-        if (HIP_STAGING_BUFFERS) {
-            tprintf(DB_COPY1, "D2H && !dstTracked: staged copy H2D dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
+            if (HIP_STAGING_BUFFERS) {
+                tprintf(DB_COPY1, "D2H && !dstTracked: staged copy H2D dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
 
-            if (HIP_PININPLACE) {
-                device->_staging_buffer[0]->CopyHostToDevicePinInPlace(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
-            } else  {
-                device->_staging_buffer[0]->CopyHostToDevice(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
-            }
+                if (HIP_PININPLACE) {
+                    device->_staging_buffer[0]->CopyHostToDevicePinInPlace(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                } else  {
+                    device->_staging_buffer[0]->CopyHostToDevice(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                }
 
-            // The copy waits for inputs and then completes before returning so can reset queue to empty:
-            this->wait(crit, true);
-        } else {
-            // TODO - remove, slow path.
-            tprintf(DB_COPY1, "H2D && ! srcTracked: am_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
+                // The copy waits for inputs and then completes before returning so can reset queue to empty:
+                this->wait(crit, true);
+            } else {
+                // TODO - remove, slow path.
+                tprintf(DB_COPY1, "H2D && ! srcTracked: am_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
 #if USE_AV_COPY
-            _av.copy(src,dst,sizeBytes);
+                _av.copy(src,dst,sizeBytes);
 #else
-            hc::am_copy(dst, src, sizeBytes);
+                hc::am_copy(dst, src, sizeBytes);
 #endif
-        }
+            }
     } else if (kind == hipMemcpyDeviceToHost) {
         int depSignalCnt = preCopyCommand(crit, NULL, &depSignal, ihipCommandCopyD2H);
         if (HIP_STAGING_BUFFERS) {

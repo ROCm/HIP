@@ -56,6 +56,7 @@ extern int HIP_TRACE_API;
 #define hipLaunchParm grid_launch_parm
 #ifdef __cplusplus
 #include <hcc_detail/hip_texture.h>
+#include <hcc_detail/hip_ldg.h>
 #endif
 #include <hcc_detail/host_defines.h>
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
