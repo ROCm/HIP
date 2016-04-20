@@ -424,7 +424,7 @@ __device__ float __shfl_xor(float input, int lane_mask, int width);
 #endif
 
 __host__ __device__ int min(int arg1, int arg2);
-__host__ __device__ int max(int arg1, int arg2);  
+__host__ __device__ int max(int arg1, int arg2);
 
 //TODO - add a couple fast math operations here, the set here will grow :
 __device__ float __cosf(float x);
@@ -515,8 +515,8 @@ do {\
   lp.cf = &cf;  \
   hipStream_t trueStream = (ihipPreLaunchKernel(_stream, &lp.av)); \
     if (HIP_TRACE_API) {\
-        fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:[%d.%d.%d] groupDim:[%d.%d.%d] groupMem:+%d stream=%p\n" KNRM, \
-                #_kernelName, lp.gridDim.z, lp.gridDim.y, lp.gridDim.x, lp.groupDim.z, lp.groupDim.y, lp.groupDim.x, lp.groupMemBytes, (void*)(_stream));\
+        fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d stream=%p\n" KNRM, \
+                #_kernelName, lp.gridDim.x, lp.gridDim.y, lp.gridDim.z, lp.groupDim.x, lp.groupDim.y, lp.groupDim.z, lp.groupMemBytes, (void*)(_stream));\
     }\
   _kernelName (lp, __VA_ARGS__);\
   ihipPostLaunchKernel(trueStream, cf);\
