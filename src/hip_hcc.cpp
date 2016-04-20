@@ -1259,6 +1259,7 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
 
     if (kind == hipMemcpyHostToDevice) {
         int depSignalCnt = preCopyCommand(crit, NULL, &depSignal, ihipCommandCopyH2D);
+        if(!srcTracked){
             if (HIP_STAGING_BUFFERS) {
                 tprintf(DB_COPY1, "D2H && !dstTracked: staged copy H2D dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
 
@@ -1279,24 +1280,65 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
                 hc::am_copy(dst, src, sizeBytes);
 #endif
             }
+        }else{
+            hsa_agent_t dstAgent = *(static_cast<hsa_agent_t*>(dstPtrInfo._acc.get_hsa_agent()));
+            hsa_agent_t srcAgent = *(static_cast<hsa_agent_t*>(srcPtrInfo._acc.get_hsa_agent()));
+
+            ihipSignal_t *ihipSignal = allocSignal(crit);
+            hsa_signal_t copyCompleteSignal = ihipSignal->_hsa_signal;
+
+            hsa_signal_store_relaxed(copyCompleteSignal, 1);
+            void *devPtrSrc = srcPtrInfo._devicePointer;
+            tprintf(DB_COPY1, "HSA Async_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
+
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, dstAgent, devPtrSrc, srcAgent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, copyCompleteSignal);
+
+        // This is sync copy, so let's wait for copy right here:
+            if (hsa_status == HSA_STATUS_SUCCESS) {
+                waitCopy(crit, ihipSignal); // wait for copy, and return to pool.
+            } else {
+                throw ihipException(hipErrorInvalidValue);
+            }
+        }
     } else if (kind == hipMemcpyDeviceToHost) {
         int depSignalCnt = preCopyCommand(crit, NULL, &depSignal, ihipCommandCopyD2H);
-        if (HIP_STAGING_BUFFERS) {
-            tprintf(DB_COPY1, "D2H && !dstTracked: staged copy D2H dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
-            //printf ("staged-copy- read dep signals\n");
-            device->_staging_buffer[1]->CopyDeviceToHost(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+        if (!dstTracked){
+            if (HIP_STAGING_BUFFERS) {
+                tprintf(DB_COPY1, "D2H && !dstTracked: staged copy D2H dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
+                //printf ("staged-copy- read dep signals\n");
+                device->_staging_buffer[1]->CopyDeviceToHost(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+    
+                // The copy completes before returning so can reset queue to empty:
+                this->wait(crit, true);
 
-            // The copy completes before returning so can reset queue to empty:
-            this->wait(crit, true);
-
-        } else {
+            } else {
             // TODO - remove, slow path.
-            tprintf(DB_COPY1, "D2H && !dstTracked: am_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
+                tprintf(DB_COPY1, "D2H && !dstTracked: am_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
 #if USE_AV_COPY
-            _av.copy(src, dst, sizeBytes);
+                _av.copy(src, dst, sizeBytes);
 #else
-            hc::am_copy(dst, src, sizeBytes);
+                hc::am_copy(dst, src, sizeBytes);
 #endif
+            }
+        }else{
+            hsa_agent_t dstAgent = *(static_cast<hsa_agent_t*>(dstPtrInfo._acc.get_hsa_agent()));
+            hsa_agent_t srcAgent = *(static_cast<hsa_agent_t*>(srcPtrInfo._acc.get_hsa_agent()));
+
+            ihipSignal_t *ihipSignal = allocSignal(crit);
+            hsa_signal_t copyCompleteSignal = ihipSignal->_hsa_signal;
+
+            hsa_signal_store_relaxed(copyCompleteSignal, 1);
+            void *devPtrDst = dstPtrInfo._devicePointer;
+            tprintf(DB_COPY1, "HSA Async_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
+
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(devPtrDst, dstAgent, src, srcAgent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, copyCompleteSignal);
+
+        // This is sync copy, so let's wait for copy right here:
+            if (hsa_status == HSA_STATUS_SUCCESS) {
+                waitCopy(crit, ihipSignal); // wait for copy, and return to pool.
+            } else {
+                throw ihipException(hipErrorInvalidValue);
+            }
         }
     } else if (kind == hipMemcpyHostToHost)  {
         int depSignalCnt = preCopyCommand(crit, NULL, &depSignal, ihipCommandCopyH2H);
@@ -1305,9 +1347,7 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
             // host waits before doing host memory copy.
             hsa_signal_wait_acquire(depSignal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
         }
-        tprintf(DB_COPY1, "H2H memcpy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
         memcpy(dst, src, sizeBytes);
-
     } else if ((kind == hipMemcpyDeviceToDevice) && !copyEngineCanSeeSrcAndDest)  {
         int depSignalCnt = preCopyCommand(crit, NULL, &depSignal, ihipCommandCopyP2P);
         if (HIP_STAGING_BUFFERS) {

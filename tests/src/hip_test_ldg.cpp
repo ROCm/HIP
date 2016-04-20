@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include <stdlib.h>
 #include<iostream>
 #include "hip_runtime.h"
-
+#include "test_common.h"
 
 #define HIP_ASSERT(x) (assert((x)==hipSuccess))
 
@@ -125,7 +125,6 @@ bool dataTypesRun(){
     printf("FAILED: %d errors\n",errors);
     ret = false;
   } else {
-      printf ("PASSED!\n");
       ret = true;
   }
 
@@ -150,13 +149,14 @@ int main() {
   cout << " System major " << devProp.major << endl;
   cout << " agent prop name " << devProp.name << endl;
 
-  int errors;
-    errors = dataTypesRun<char>();
-    errors = dataTypesRun<signed char>();
-    errors = dataTypesRun<short>();
-    errors = dataTypesRun<int>();
-  cout << "__ldg " << endl ;
+   int errors = dataTypesRun<char>() &
+           dataTypesRun<signed char>() &
+           dataTypesRun<short>() &
+           dataTypesRun<int>();
   //hipResetDefaultAccelerator();
+    if(errors == 1){
+        passed();
+        return 0;
+    }
 
-  return errors;
 }
