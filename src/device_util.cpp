@@ -799,4 +799,36 @@ __device__  float __dsqrt_rn(double x) {return hc::fast_math::sqrt(x); };
 __device__  float __dsqrt_ru(double x) {return hc::fast_math::sqrt(x); };
 __device__  float __dsqrt_rz(double x) {return hc::fast_math::sqrt(x); };
 
+__HIP_DEVICE__ char1 make_char1(signed char x)
+{
+    char1 c1;
+    c1.x = x;
+    return c1;
+}
 
+__HIP_DEVICE__ char2 make_char2(signed char x, signed char y)
+{
+    char2 c2;
+    c2.x = x;
+    c2.y = y;
+    return c2;
+}
+
+__HIP_DEVICE__ char3 make_char3(signed char x, signed char y, signed char z)
+{
+    char3 c3;
+    c3.x = x;
+    c3.y = y;
+    c3.z = z;
+    return c3;
+}
+
+__HIP_DEVICE__ char4 make_char4(signed char x, signed char y, signed char z, signed char w)
+{
+    char4 c4;
+    c4.x = x;
+    c4.y = y;
+    c4.z = z;
+    c4.w = w;
+    return c4;
+}

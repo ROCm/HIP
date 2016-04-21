@@ -115,7 +115,74 @@ typedef hc::short_vector::double2 double2;
 typedef hc::short_vector::double3 double3;
 typedef hc::short_vector::double4 double4;
 
+#if __HCC__
+#include"host_defines.h"
+#define __HIP_DEVICE__ __device__ __host__
+#else
+#define __HIP_DEVICE__
+#endif
 
+__HIP_DEVICE__ char1 make_char1(signed char );
+__HIP_DEVICE__ char2 make_char2(signed char, signed char );
+__HIP_DEVICE__ char3 make_char3(signed char, signed char, signed char );
+__HIP_DEVICE__ char4 make_char4(signed char, signed char, signed char, signed char );
+
+__HIP_DEVICE__ short1 make_short1(short );
+__HIP_DEVICE__ short2 make_short2(short, short );
+__HIP_DEVICE__ short3 make_short3(short, short, short );
+__HIP_DEVICE__ short4 make_short4(short, short, short, short );
+
+__HIP_DEVICE__ int1 make_int1(int );
+__HIP_DEVICE__ int2 make_int2(int, int );
+__HIP_DEVICE__ int3 make_int3(int, int, int );
+__HIP_DEVICE__ int4 make_int4(int, int, int, int );
+
+__HIP_DEVICE__ long1 make_long1(long );
+__HIP_DEVICE__ long2 make_long2(long, long );
+__HIP_DEVICE__ long3 make_long3(long, long, long );
+__HIP_DEVICE__ long4 make_long4(long, long, long, long );
+
+__HIP_DEVICE__ longlong1 make_longlong1(long long );
+__HIP_DEVICE__ longlong2 make_longlong2(long long, long long );
+__HIP_DEVICE__ longlong3 make_longlong3(long long, long long, long long );
+__HIP_DEVICE__ longlong4 make_longlong4(long long, long long, long long, long long );
+
+__HIP_DEVICE__ uchar1 make_uchar1(unsigned char );
+__HIP_DEVICE__ uchar2 make_uchar2(unsigned char, unsigned char );
+__HIP_DEVICE__ uchar3 make_uchar3(unsigned char, unsigned char, unsigned char );
+__HIP_DEVICE__ uchar4 make_uchar4(unsigned char, unsigned char, unsigned char, unsigned char );
+
+__HIP_DEVICE__ ushort1 make_ushort1(unsigned short );
+__HIP_DEVICE__ ushort2 make_ushort2(unsigned short, unsigned short );
+__HIP_DEVICE__ ushort3 make_ushort3(unsigned short, unsigned short, unsigned short );
+__HIP_DEVICE__ ushort4 make_ushort4(unsigned short, unsigned short, unsigned short, unsigned short );
+
+__HIP_DEVICE__ uint1 make_uint1(unsigned int );
+__HIP_DEVICE__ uint2 make_uint2(unsigned int, unsigned int );
+__HIP_DEVICE__ uint3 make_uint3(unsigned int, unsigned int, unsigned int );
+__HIP_DEVICE__ uint4 make_uint4(unsigned int, unsigned int, unsigned int, unsigned int );
+
+__HIP_DEVICE__ ulong1 make_ulong1(unsigned long );
+__HIP_DEVICE__ ulong2 make_ulong2(unsigned long, unsigned long );
+__HIP_DEVICE__ ulong3 make_ulong3(unsigned long, unsigned long, unsigned long );
+__HIP_DEVICE__ ulong4 make_ulong4(unsigned long, unsigned long, unsigned long, unsigned long );
+
+__HIP_DEVICE__ ulonglong1 make_ulonglong1(unsigned long long );
+__HIP_DEVICE__ ulonglong2 make_ulonglong2(unsigned long long, unsigned long long);
+__HIP_DEVICE__ ulonglong3 make_ulonglong3(unsigned long long, unsigned long long, unsigned long long);
+__HIP_DEVICE__ ulonglong4 make_ulonglong4(unsigned long long, unsigned long long, unsigned long long, unsigned long long );
+
+__HIP_DEVICE__ float1 make_float1(float );
+__HIP_DEVICE__ float2 make_float2(float, float );
+__HIP_DEVICE__ float3 make_float3(float, float, float );
+__HIP_DEVICE__ float4 make_float4(float, float, float, float );
+
+__HIP_DEVICE__ double1 make_double1(double );
+__HIP_DEVICE__ double2 make_double2(double, double );
+__HIP_DEVICE__ double3 make_double3(double, double, double );
+__HIP_DEVICE__ double4 make_double4(double, double, double, double );
+
+/*
 ///---
 // Inline functions for creating vector types from basic types
 #define ONE_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT (T x) { VT t; t.x = x; return t; };
@@ -198,7 +265,7 @@ ONE_COMPONENT_ACCESS  (double, double1);
 TWO_COMPONENT_ACCESS  (double, double2);
 THREE_COMPONENT_ACCESS(double, double3);
 FOUR_COMPONENT_ACCESS (double, double4);
-
+*/
 
 #endif
 
