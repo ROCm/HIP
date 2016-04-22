@@ -21,10 +21,16 @@ THE SOFTWARE.
 #define HIP_LDG_H
 
 #if __HCC__
+<<<<<<< HEAD
+#include"hip_vector_types.h"
+#include"host_defines.h"
+#if __hcc_workweek__ >= 16164
+=======
 #include"hip/hip_vector_types.h"
 #include"hip/hcc_detail/host_defines.h"
 
 
+>>>>>>> 75532471b2d124c4af823e838bf983a20debe6c4
 __device__ char                 __ldg(const char* );
 __device__ char1                __ldg(const char1* );
 __device__ char2                __ldg(const char2* );
@@ -94,6 +100,14 @@ __device__ double2              __ldg(const double2* );
 __device__ double3              __ldg(const double3* );
 __device__ double4              __ldg(const double4* );
 
+<<<<<<< HEAD
+#endif  // __hcc_workweek__
+
+#endif  // __HCC__
+
+#endif  // HIP_LDG_H
+=======
 #endif
 
 #endif
+>>>>>>> 75532471b2d124c4af823e838bf983a20debe6c4
