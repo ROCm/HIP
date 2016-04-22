@@ -18,7 +18,6 @@ THE SOFTWARE.
 */
 
 #include"hcc_detail/hip_ldg.h"
-<<<<<<< HEAD
 #if __hcc_workweek__ >= 16164
 __device__ char                 __ldg(const char* ptr)
 {
@@ -139,63 +138,36 @@ __device__ long3                __ldg(const long3* ptr)
 }
 
 __device__ long4                __ldg(const long4* ptr)
-=======
-
-__device__ char __ldg(const char* ptr)
-{
-    return *ptr;
-}
-
-__device__ signed char __ldg(const signed char* ptr)
->>>>>>> 75532471b2d124c4af823e838bf983a20debe6c4
 {
     return ptr[0];
 }
 
-<<<<<<< HEAD
 __device__ unsigned long        __ldg(const unsigned long* ptr)
-=======
-__device__ short __ldg(const short* ptr)
->>>>>>> 75532471b2d124c4af823e838bf983a20debe6c4
 {
     return ptr[0];
 }
 
-<<<<<<< HEAD
 
 __device__ long long            __ldg(const long long* ptr)
-=======
-__device__ int __ldg(const int* ptr)
->>>>>>> 75532471b2d124c4af823e838bf983a20debe6c4
 {
     return ptr[0];
 }
 
-<<<<<<< HEAD
 __device__ longlong1            __ldg(const longlong1* ptr)
-=======
-__device__ long long __ldg(const long long* ptr)
->>>>>>> 75532471b2d124c4af823e838bf983a20debe6c4
 {
     return ptr[0];
 }
 
-<<<<<<< HEAD
 __device__ longlong2            __ldg(const longlong2* ptr)
 {
     return ptr[0];
 }
 
 __device__ longlong3            __ldg(const longlong3* ptr)
-=======
-
-__device__ int2 __ldg(const int2* ptr)
->>>>>>> 75532471b2d124c4af823e838bf983a20debe6c4
 {
     return ptr[0];
 }
 
-<<<<<<< HEAD
 __device__ longlong4            __ldg(const longlong4* ptr)
 {
     return ptr[0];
@@ -208,14 +180,10 @@ __device__ unsigned long long   __ldg(const unsigned long long* ptr)
 
 
 __device__ uchar1               __ldg(const uchar1* ptr)
-=======
-__device__ int4 __ldg(const int4* ptr)
->>>>>>> 75532471b2d124c4af823e838bf983a20debe6c4
 {
     return ptr[0];
 }
 
-<<<<<<< HEAD
 __device__ uchar2               __ldg(const uchar2* ptr)
 {
     return ptr[0];
@@ -348,9 +316,4 @@ __device__ double4              __ldg(const double4* ptr)
 
 #endif
 
-=======
-__device__ float __ldg(const float* ptr)
-{
-    return ptr[0];
-}
->>>>>>> 75532471b2d124c4af823e838bf983a20debe6c4
+
