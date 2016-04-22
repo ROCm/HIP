@@ -213,7 +213,7 @@ make_test(hipHostAlloc " ")
 # BS- comment out since test appears broken - asks for device pointer but pointer was never allocated.
 #make_test(hipHostGetFlags " ")
 make_test(hipHcc  " " )
-make_test(hipHostRegister " ")
+#make_test(hipHostRegister " ")
 make_test(hipStreamL5 " ")
 make_test(hipRandomMemcpyAsync " ")
 #make_test(hipAPIStreamEnable " ")

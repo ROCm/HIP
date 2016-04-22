@@ -12,7 +12,7 @@ ROCMDIR=/opt/rocm
 HIPDIR=$ROCMDIR/hip
 
 # Remove soft-links to libraries
-HIPLIBFILES=$HIPDIR/hip/lib/*
+HIPLIBFILES=$HIPDIR/lib/*
 ROCMLIBDIR=$ROCMDIR/lib
 pushd $ROCMLIBDIR
 for f in $HIPLIBFILES

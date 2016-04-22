@@ -120,6 +120,9 @@ Functions</h2></td></tr>
 <tr class="memitem:ga9b1f279084e76691cedfbfadf9c717ee"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#ga9b1f279084e76691cedfbfadf9c717ee">hipDeviceSetSharedMemConfig</a> (<a class="el" href="group__GlobalDefs.html#ga2e17b71d94ac350f2ccd914fd49d104e">hipSharedMemConfig</a> config)</td></tr>
 <tr class="memdesc:ga9b1f279084e76691cedfbfadf9c717ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set Shared memory bank configuration.  <a href="#ga9b1f279084e76691cedfbfadf9c717ee">More...</a><br/></td></tr>
 <tr class="separator:ga9b1f279084e76691cedfbfadf9c717ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga6e54db382768827e84725632018307aa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Device.html#ga6e54db382768827e84725632018307aa">hipSetDeviceFlags</a> (unsigned flags)</td></tr>
+<tr class="memdesc:ga6e54db382768827e84725632018307aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set Device flags.  <a href="#ga6e54db382768827e84725632018307aa">More...</a><br/></td></tr>
+<tr class="separator:ga6e54db382768827e84725632018307aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <h2>----------------------------------------------------------------------------------------------&mdash; </h2>
@@ -396,12 +399,7 @@ Functions</h2></td></tr>
 </dl>
 <p>Populates hipGetDeviceProperties with information for the specified device.</p>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d" title="DeviceID must be in range 0...#compute-devices. ">hipErrorInvalidDevice</a> </dd></dl>
-<dl class="bug"><dt><b><a class="el" href="bug.html#_bug000002">Bug:</a></b></dt><dd><p class="startdd">HCC always returns 0 for maxThreadsPerMultiProcessor </p>
-<p>HCC always returns 0 for regsPerBlock </p>
-<p class="enddd">HCC always returns 0 for l2CacheSize </p>
-</dd></dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d" title="DeviceID must be in range 0...#compute-devices. ">hipErrorInvalidDevice</a> </dd></dl>
-<dl class="bug"><dt><b><a class="el" href="bug.html#_bug000005">Bug:</a></b></dt><dd><p class="startdd">HCC always returns 0 for maxThreadsPerMultiProcessor </p>
+<dl class="bug"><dt><b><a class="el" href="bug.html#_bug000001">Bug:</a></b></dt><dd><p class="startdd">HCC always returns 0 for maxThreadsPerMultiProcessor </p>
 <p>HCC always returns 0 for regsPerBlock </p>
 <p class="enddd">HCC always returns 0 for l2CacheSize </p>
 </dd></dl>
@@ -443,10 +441,29 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="ga6e54db382768827e84725632018307aa"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipSetDeviceFlags </td>
+          <td>(</td>
+          <td class="paramtype">unsigned&#160;</td>
+          <td class="paramname"><em>flags</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Set Device flags. </p>
+<p>Note: Only hipDeviceScheduleAuto and hipDeviceMapHost are supported </p>
+
+</div>
+</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Mar 23 2016 23:11:07 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Apr 19 2016 22:44:02 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

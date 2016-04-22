@@ -42,9 +42,7 @@ __host__ void single_precision_math_functions()
     copysignf(1.0f, -2.0f);
     cosf(0.0f);
     coshf(0.0f);
-#if __hcc_workweek__ >= 16073
     cospif(0.0f);
-#endif
     //cyl_bessel_i0f(0.0f);
     //cyl_bessel_i1f(0.0f);
     erfcf(0.0f);
@@ -103,9 +101,7 @@ __host__ void single_precision_math_functions()
     //rnorm4df(0.0f, 0.0f, 0.0f, 1.0f);
     //fX = 1.0f; rnormf(1, &fX);
     roundf(0.0f);
-#if __hcc_workweek__ >= 16073
     rsqrtf(1.0f);
-#endif
     ///scalblnf(0.0f, 1);
     scalbnf(0.0f, 1);
     signbit(1.0f);
@@ -113,9 +109,7 @@ __host__ void single_precision_math_functions()
     //sincospif(0.0f, &fX, &fY);
     sinf(0.0f);
     sinhf(0.0f);
-#if __hcc_workweek__ >= 16073
     sinpif(0.0f);
-#endif
     sqrtf(0.0f);
     tanf(0.0f);
     tanhf(0.0f);

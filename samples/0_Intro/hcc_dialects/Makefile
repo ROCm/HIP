@@ -7,7 +7,10 @@ HCC_LDFLAGS= `$(HCC_HOME)/bin/hcc-config --ldflags`
 CPPAMP_CFLAGS= -std=c++amp -stdlib=libc++ -I$(HCC_HOME)/include
 CPPAMP_LDFLAGS=  -std=c++amp -L$(HCC_HOME)/lib -Wl,--rpath=$(HCC_HOME)/lib -lc++ -lc++abi -ldl -lpthread -Wl,--whole-archive -lmcwamp -Wl,--no-whole-archive 
 
-HIP_PATH?=/opt/rocm/hip
+HIP_PATH?= $(wildcard /opt/rocm/hip)
+ifeq (,$(HIP_PATH))
+	HIP_PATH=../../..
+endif
 HIPCC=$(HIP_PATH)/bin/hipcc
 HIP_PLATFORM=$(shell $(HIP_PATH)/bin/hipconfig --platform)
 

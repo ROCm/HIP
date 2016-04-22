@@ -21,8 +21,9 @@ THE SOFTWARE.
 #define HIP_LDG_H
 
 #if __HCC__
-#include"hip_vector_types.h"
-#include"host_defines.h"
+#include"hip/hip_vector_types.h"
+#include"hip/hcc_detail/host_defines.h"
+
 
 __device__ char                 __ldg(const char* );
 __device__ char1                __ldg(const char1* );

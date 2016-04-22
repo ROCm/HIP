@@ -116,7 +116,7 @@ typedef hc::short_vector::double3 double3;
 typedef hc::short_vector::double4 double4;
 
 #if __HCC__
-#include"host_defines.h"
+#include"hip/hcc_detail/host_defines.h"
 #define __HIP_DEVICE__ __device__ __host__
 #else
 #define __HIP_DEVICE__
