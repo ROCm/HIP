@@ -16,8 +16,8 @@ Stay tuned - the work for many of these features is already in-flight.
 ## Revision History:
 
 ===================================================================================================
-Release:0.84.00
-Date:
+Release:0.84.01
+Date: 2016.04.25
 - Refactor HIP make and install system:
     - Move to CMake. Refer to the installation section in README.md for details.
     - Split source into multiple modular .cpp and .h files.
