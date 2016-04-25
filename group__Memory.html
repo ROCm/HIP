@@ -90,32 +90,53 @@ Functions</h2></td></tr>
 <tr class="memitem:ga4c6fcfe80010069d2792780d00dcead2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga4c6fcfe80010069d2792780d00dcead2">hipMalloc</a> (void **ptr, size_t size)</td></tr>
 <tr class="memdesc:ga4c6fcfe80010069d2792780d00dcead2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocate memory on the default accelerator.  <a href="#ga4c6fcfe80010069d2792780d00dcead2">More...</a><br/></td></tr>
 <tr class="separator:ga4c6fcfe80010069d2792780d00dcead2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga66399e729223ff5b66ffc16297c0710e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga66399e729223ff5b66ffc16297c0710e">hipMallocHost</a> (void **ptr, size_t size)</td></tr>
-<tr class="memdesc:ga66399e729223ff5b66ffc16297c0710e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocate pinned host memory.  <a href="#ga66399e729223ff5b66ffc16297c0710e">More...</a><br/></td></tr>
-<tr class="separator:ga66399e729223ff5b66ffc16297c0710e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad3d3cdf82eb0058fc9eac1f939cd9d30"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gad3d3cdf82eb0058fc9eac1f939cd9d30">hipMallocHost</a> (void **ptr, size_t size) __attribute__((deprecated(&quot;use <a class="el" href="group__Memory.html#gaad40bc7d97ccc799403ef5a9a8c246e1">hipHostMalloc</a> instead&quot;)))</td></tr>
+<tr class="memdesc:gad3d3cdf82eb0058fc9eac1f939cd9d30"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocate pinned host memory.  <a href="#gad3d3cdf82eb0058fc9eac1f939cd9d30">More...</a><br/></td></tr>
+<tr class="separator:gad3d3cdf82eb0058fc9eac1f939cd9d30"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaad40bc7d97ccc799403ef5a9a8c246e1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gaad40bc7d97ccc799403ef5a9a8c246e1">hipHostMalloc</a> (void **ptr, size_t size, unsigned int flags)</td></tr>
+<tr class="memdesc:gaad40bc7d97ccc799403ef5a9a8c246e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocate device accessible page locked host memory.  <a href="#gaad40bc7d97ccc799403ef5a9a8c246e1">More...</a><br/></td></tr>
+<tr class="separator:gaad40bc7d97ccc799403ef5a9a8c246e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac5ae7f11cefc7085f39ee7868e71724a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gac5ae7f11cefc7085f39ee7868e71724a"></a>
+<a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>hipHostAlloc</b> (void **ptr, size_t size, unsigned int flags) __attribute__((deprecated(&quot;use <a class="el" href="group__Memory.html#gaad40bc7d97ccc799403ef5a9a8c246e1">hipHostMalloc</a> instead&quot;)))</td></tr>
+<tr class="separator:gac5ae7f11cefc7085f39ee7868e71724a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8fa7a0478020b835a24785cd6bb89725"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga8fa7a0478020b835a24785cd6bb89725">hipHostGetDevicePointer</a> (void **devPtr, void *hstPtr, unsigned int flags)</td></tr>
+<tr class="memdesc:ga8fa7a0478020b835a24785cd6bb89725"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get Device pointer from Host Pointer allocated through hipHostAlloc.  <a href="#ga8fa7a0478020b835a24785cd6bb89725">More...</a><br/></td></tr>
+<tr class="separator:ga8fa7a0478020b835a24785cd6bb89725"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4d26915873b3e3534ceb4dc310f8709a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga4d26915873b3e3534ceb4dc310f8709a">hipHostGetFlags</a> (unsigned int *flagsPtr, void *hostPtr)</td></tr>
+<tr class="memdesc:ga4d26915873b3e3534ceb4dc310f8709a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get flags associated with host pointer.  <a href="#ga4d26915873b3e3534ceb4dc310f8709a">More...</a><br/></td></tr>
+<tr class="separator:ga4d26915873b3e3534ceb4dc310f8709a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab8258f051e1a1f7385f794a15300e674"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gab8258f051e1a1f7385f794a15300e674">hipHostRegister</a> (void *hostPtr, size_t sizeBytes, unsigned int flags)</td></tr>
+<tr class="memdesc:gab8258f051e1a1f7385f794a15300e674"><td class="mdescLeft">&#160;</td><td class="mdescRight">Register host memory so it can be accessed from the current device.  <a href="#gab8258f051e1a1f7385f794a15300e674">More...</a><br/></td></tr>
+<tr class="separator:gab8258f051e1a1f7385f794a15300e674"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga4c9e1810b9f5858d36c4d28c91c86924"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga4c9e1810b9f5858d36c4d28c91c86924">hipHostUnregister</a> (void *hostPtr)</td></tr>
+<tr class="memdesc:ga4c9e1810b9f5858d36c4d28c91c86924"><td class="mdescLeft">&#160;</td><td class="mdescRight">Un-register host pointer.  <a href="#ga4c9e1810b9f5858d36c4d28c91c86924">More...</a><br/></td></tr>
+<tr class="separator:ga4c9e1810b9f5858d36c4d28c91c86924"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga740d08da65cae1441ba32f8fedb863d1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga740d08da65cae1441ba32f8fedb863d1">hipFree</a> (void *ptr)</td></tr>
 <tr class="memdesc:ga740d08da65cae1441ba32f8fedb863d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free memory allocated by the hcc hip memory allocation API. This API performs an implicit <a class="el" href="group__Device.html#gaefdc2847fb1d6c3fb1354e827a191ebd" title="Blocks until the default device has completed all preceding requested tasks. ">hipDeviceSynchronize()</a> call.  <a href="#ga740d08da65cae1441ba32f8fedb863d1">More...</a><br/></td></tr>
 <tr class="separator:ga740d08da65cae1441ba32f8fedb863d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga28d7d92836116dfadeb62e416ee887d3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga28d7d92836116dfadeb62e416ee887d3">hipFreeHost</a> (void *ptr)</td></tr>
-<tr class="memdesc:ga28d7d92836116dfadeb62e416ee887d3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free memory allocated by the hcc hip host memory allocation API.  <a href="#ga28d7d92836116dfadeb62e416ee887d3">More...</a><br/></td></tr>
-<tr class="separator:ga28d7d92836116dfadeb62e416ee887d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad2164cc3d49da53052f4b83b789e90c9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gad2164cc3d49da53052f4b83b789e90c9">hipFreeHost</a> (void *ptr) __attribute__((deprecated(&quot;use <a class="el" href="group__Memory.html#ga2e543f58ee4544e317cd695d6d82e0a3">hipHostFree</a> instead&quot;)))</td></tr>
+<tr class="memdesc:gad2164cc3d49da53052f4b83b789e90c9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free memory allocated by the hcc hip host memory allocation API.  <a href="#gad2164cc3d49da53052f4b83b789e90c9">More...</a><br/></td></tr>
+<tr class="separator:gad2164cc3d49da53052f4b83b789e90c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga2e543f58ee4544e317cd695d6d82e0a3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga2e543f58ee4544e317cd695d6d82e0a3">hipHostFree</a> (void *ptr)</td></tr>
+<tr class="memdesc:ga2e543f58ee4544e317cd695d6d82e0a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free memory allocated by the hcc hip host memory allocation API.  <a href="#ga2e543f58ee4544e317cd695d6d82e0a3">More...</a><br/></td></tr>
+<tr class="separator:ga2e543f58ee4544e317cd695d6d82e0a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gac1a055d288302edd641c6d7416858e1e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gac1a055d288302edd641c6d7416858e1e">hipMemcpy</a> (void *dst, const void *src, size_t sizeBytes, <a class="el" href="group__GlobalDefs.html#ga232e222db36b1fc672ba98054d036a18">hipMemcpyKind</a> kind)</td></tr>
 <tr class="memdesc:gac1a055d288302edd641c6d7416858e1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy data from src to dst.  <a href="#gac1a055d288302edd641c6d7416858e1e">More...</a><br/></td></tr>
 <tr class="separator:gac1a055d288302edd641c6d7416858e1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga131ac5c1ba04e186112491cb9bf964bc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga131ac5c1ba04e186112491cb9bf964bc">hipMemcpyToSymbol</a> (const char *symbolName, const void *src, size_t sizeBytes, size_t offset, <a class="el" href="group__GlobalDefs.html#ga232e222db36b1fc672ba98054d036a18">hipMemcpyKind</a> kind)</td></tr>
 <tr class="memdesc:ga131ac5c1ba04e186112491cb9bf964bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies <code>sizeBytes</code> bytes from the memory area pointed to by <code>src</code> to the memory area pointed to by <code>offset</code> bytes from the start of symbol <code>symbol</code>.  <a href="#ga131ac5c1ba04e186112491cb9bf964bc">More...</a><br/></td></tr>
 <tr class="separator:ga131ac5c1ba04e186112491cb9bf964bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga8ad5a0b13458917e1b9437732b21af54"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga8ad5a0b13458917e1b9437732b21af54">hipMemcpyAsync</a> (void *dst, const void *src, size_t sizeBytes, <a class="el" href="group__GlobalDefs.html#ga232e222db36b1fc672ba98054d036a18">hipMemcpyKind</a> kind, hipStream_t stream=0)</td></tr>
-<tr class="memdesc:ga8ad5a0b13458917e1b9437732b21af54"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy data from src to dst asynchronously.  <a href="#ga8ad5a0b13458917e1b9437732b21af54">More...</a><br/></td></tr>
-<tr class="separator:ga8ad5a0b13458917e1b9437732b21af54"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad55fa9f5980b711bc93c52820149ba18"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gad55fa9f5980b711bc93c52820149ba18">hipMemcpyAsync</a> (void *dst, const void *src, size_t sizeBytes, <a class="el" href="group__GlobalDefs.html#ga232e222db36b1fc672ba98054d036a18">hipMemcpyKind</a> kind, hipStream_t stream)</td></tr>
+<tr class="memdesc:gad55fa9f5980b711bc93c52820149ba18"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy data from src to dst asynchronously.  <a href="#gad55fa9f5980b711bc93c52820149ba18">More...</a><br/></td></tr>
+<tr class="separator:gad55fa9f5980b711bc93c52820149ba18"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gac7441e74affcce4b8b69dba996c5ebc4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gac7441e74affcce4b8b69dba996c5ebc4">hipMemset</a> (void *dst, int value, size_t sizeBytes)</td></tr>
 <tr class="memdesc:gac7441e74affcce4b8b69dba996c5ebc4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy data from src to dst asynchronously.  <a href="#gac7441e74affcce4b8b69dba996c5ebc4">More...</a><br/></td></tr>
 <tr class="separator:gac7441e74affcce4b8b69dba996c5ebc4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaee4ed665ce0a60c661a809c175320a0c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gaee4ed665ce0a60c661a809c175320a0c">hipMemsetAsync</a> (void *dst, int value, size_t sizeBytes, hipStream_t=0)</td></tr>
-<tr class="memdesc:gaee4ed665ce0a60c661a809c175320a0c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fills the first sizeBytes bytes of the memory area pointed to by dev with the constant byte value value.  <a href="#gaee4ed665ce0a60c661a809c175320a0c">More...</a><br/></td></tr>
-<tr class="separator:gaee4ed665ce0a60c661a809c175320a0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga311c3e246a21590de14478b8bd063be2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga311c3e246a21590de14478b8bd063be2"></a>
-<a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>hipMemGetInfo</b> (size_t *free, size_t *total)</td></tr>
+<tr class="memitem:gae7d90e14c387e49f10db597f12915c54"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gae7d90e14c387e49f10db597f12915c54">hipMemsetAsync</a> (void *dst, int value, size_t sizeBytes, hipStream_t stream)</td></tr>
+<tr class="memdesc:gae7d90e14c387e49f10db597f12915c54"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fills the first sizeBytes bytes of the memory area pointed to by dev with the constant byte value value.  <a href="#gae7d90e14c387e49f10db597f12915c54">More...</a><br/></td></tr>
+<tr class="separator:gae7d90e14c387e49f10db597f12915c54"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga311c3e246a21590de14478b8bd063be2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga311c3e246a21590de14478b8bd063be2">hipMemGetInfo</a> (size_t *free, size_t *total)</td></tr>
+<tr class="memdesc:ga311c3e246a21590de14478b8bd063be2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Query memory info. Return snapshot of free memory, and total allocatable memory on the device.  <a href="#ga311c3e246a21590de14478b8bd063be2">More...</a><br/></td></tr>
 <tr class="separator:ga311c3e246a21590de14478b8bd063be2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -152,7 +173,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga28d7d92836116dfadeb62e416ee887d3"></a>
+<a class="anchor" id="gad2164cc3d49da53052f4b83b789e90c9"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -174,6 +195,231 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a813b3f014e2a3932d1f0e3e712cf9d3c" title="Memory free error. ">hipErrorMemoryFree</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga2e543f58ee4544e317cd695d6d82e0a3"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipHostFree </td>
+          <td>(</td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>ptr</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Free memory allocated by the hcc hip host memory allocation API. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">ptr</td><td>Pointer to memory to be freed </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a813b3f014e2a3932d1f0e3e712cf9d3c" title="Memory free error. ">hipErrorMemoryFree</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga8fa7a0478020b835a24785cd6bb89725"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipHostGetDevicePointer </td>
+          <td>(</td>
+          <td class="paramtype">void **&#160;</td>
+          <td class="paramname"><em>devPtr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>hstPtr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>flags</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get Device pointer from Host Pointer allocated through hipHostAlloc. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">dstPtr</td><td>Device Pointer mapped to passed host pointer </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">hstPtr</td><td>Host Pointer allocated through hipHostAlloc </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>Flags to be passed for extension </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Error code </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga4d26915873b3e3534ceb4dc310f8709a"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipHostGetFlags </td>
+          <td>(</td>
+          <td class="paramtype">unsigned int *&#160;</td>
+          <td class="paramname"><em>flagsPtr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>hostPtr</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Get flags associated with host pointer. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">flagsPtr</td><td>Memory location to store flags </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">hostPtr</td><td>Host Pointer allocated through hipHostMalloc </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Error code </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gaad40bc7d97ccc799403ef5a9a8c246e1"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipHostMalloc </td>
+          <td>(</td>
+          <td class="paramtype">void **&#160;</td>
+          <td class="paramname"><em>ptr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>flags</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Allocate device accessible page locked host memory. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">ptr</td><td>Pointer to the allocated host pinned memory </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">size</td><td>Requested memory size </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">flags</td><td>Type of host memory allocation </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Error code </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="gab8258f051e1a1f7385f794a15300e674"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipHostRegister </td>
+          <td>(</td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>hostPtr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>sizeBytes</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">unsigned int&#160;</td>
+          <td class="paramname"><em>flags</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Register host memory so it can be accessed from the current device. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">hostPtr</td><td>Pointer to host memory to be registered. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">sizeBytes</td><td>size of the host memory </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">flags.</td><td>See below.</td></tr>
+  </table>
+  </dd>
+</dl>
+<p>Flags:</p>
+<ul>
+<li><a class="el" href="group__GlobalDefs.html#gac7c100d241ff84ad10109bb00b7b25dc" title="Flags that can be used with hipHostRegister. ">hipHostRegisterDefault</a> Memory is Mapped and Portable</li>
+<li><a class="el" href="group__GlobalDefs.html#ga2db444f2315d412d3c7ba80ec6049583" title="Memory is considered registered by all contexts. HIP only supports one context so this is always assu...">hipHostRegisterPortable</a> Memory is considered registered by all contexts. HIP only supports one context so this is always assumed true.</li>
+<li><a class="el" href="group__GlobalDefs.html#gacfa4edcfcb39fc61bff6bdecb14d7618" title="Map the allocation into the address space for the current device. The device pointer can be obtained ...">hipHostRegisterMapped</a> Map the allocation into the address space for the current device. The device pointer can be obtained with <a class="el" href="group__Memory.html#ga8fa7a0478020b835a24785cd6bb89725" title="Get Device pointer from Host Pointer allocated through hipHostAlloc. ">hipHostGetDevicePointer</a>.</li>
+</ul>
+<p>After registering the memory, use <a class="el" href="group__Memory.html#ga8fa7a0478020b835a24785cd6bb89725" title="Get Device pointer from Host Pointer allocated through hipHostAlloc. ">hipHostGetDevicePointer</a> to obtain the mapped device pointer. On many systems, the mapped device pointer will have a different value than the mapped host pointer. Applications must use the device pointer in device code, and the host pointer in device code.</p>
+<p>On some systems, registered memory is pinned. On some systems, registered memory may not be actually be pinned but uses OS or hardware facilities to all GPU access to the host memory.</p>
+<p>Developers are strongly encouraged to register memory blocks which are aligned to the host cache-line size. (typically 64-bytes but can be obtains from the CPUID instruction).</p>
+<p>If registering non-aligned pointers, the application must take care when register pointers from the same cache line on different devices. HIP's coarse-grained synchronization model does not guarantee correct results if different devices write to different parts of the same cache block - typically one of the writes will "win" and overwrite data from the other registered memory region.</p>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a8293288a10109874749afe2562db09f2" title="Memory allocation error. ">hipErrorMemoryAllocation</a> </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga4c9e1810b9f5858d36c4d28c91c86924"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipHostUnregister </td>
+          <td>(</td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>hostPtr</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Un-register host pointer. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">hostPtr</td><td>Host pointer previously registered with <a class="el" href="group__Memory.html#gab8258f051e1a1f7385f794a15300e674" title="Register host memory so it can be accessed from the current device. ">hipHostRegister</a> </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Error code </dd></dl>
 
 </div>
 </div>
@@ -212,11 +458,10 @@ Functions</h2></td></tr>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a></dd>
 <dd>
 <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a> <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a8293288a10109874749afe2562db09f2" title="Memory allocation error. ">hipErrorMemoryAllocation</a> </dd></dl>
-<dl class="bug"><dt><b><a class="el" href="bug.html#_bug000004">Bug:</a></b></dt><dd>The March ROCK driver has a bug related to allocating and copying &gt; 64MB of data. This causes the kmeans and some directed tests to fail. This issue will be addressed soon. </dd></dl>
 
 </div>
 </div>
-<a class="anchor" id="ga66399e729223ff5b66ffc16297c0710e"></a>
+<a class="anchor" id="gad3d3cdf82eb0058fc9eac1f939cd9d30"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -289,7 +534,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Copy data from src to dst. </p>
-<p>It supports memory from host to device, device to host, device to device and host to host The src and dst must not overlap. TODO: cudaErrorInvalidMemcpyDirection error code is not supported right now, use hipErrorUnknown for now</p>
+<p>It supports memory from host to device, device to host, device to device and host to host The src and dst must not overlap.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">dst</td><td>Data being copy to </td></tr>
@@ -303,7 +548,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga8ad5a0b13458917e1b9437732b21af54"></a>
+<a class="anchor" id="gad55fa9f5980b711bc93c52820149ba18"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -346,7 +591,7 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Copy data from src to dst asynchronously. </p>
-<p>TODO: cudaErrorInvalidMemcpyDirection error code is not supported right now, use hipErrorUnknown for now</p>
+<dl class="section warning"><dt>Warning</dt><dd>If host or dest are not pinned, the memory copy will be performed synchronously. For best performance, use hipHostMalloc to allocate host memory that is transferred asynchronously.</dd></dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">dst</td><td>Data being copy to </td></tr>
@@ -358,7 +603,9 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a813b3f014e2a3932d1f0e3e712cf9d3c" title="Memory free error. ">hipErrorMemoryFree</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa74e64c5b2f5fb0d6a92681f5b234073" title="Unknown error. ">hipErrorUnknown</a></dd>
 <dd>
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d" title="DeviceID must be in range 0...#compute-devices. ">hipErrorInvalidDevice</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ae35ad9fb66b7c33f21a021efe89975b0" title="Invalid memory copy direction. ">hipErrorInvalidMemcpyDirection</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a> </dd></dl>
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d" title="DeviceID must be in range 0...#compute-devices. ">hipErrorInvalidDevice</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ae35ad9fb66b7c33f21a021efe89975b0" title="Invalid memory copy direction. ">hipErrorInvalidMemcpyDirection</a>, </dd>
+<dd>
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a> : If dst==NULL or src==NULL, or other bad argument. </dd></dl>
 <dl class="section warning"><dt>Warning</dt><dd>on HCC hipMemcpyAsync does not support overlapped H2D and D2H copies. </dd>
 <dd>
 on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hipMallocHost call). </dd></dl>
@@ -423,6 +670,35 @@ on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hip
 
 </div>
 </div>
+<a class="anchor" id="ga311c3e246a21590de14478b8bd063be2"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipMemGetInfo </td>
+          <td>(</td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>free</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>total</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Query memory info. Return snapshot of free memory, and total allocatable memory on the device. </p>
+<p>Returns in *free a snapshot of the current free memory o </p>
+
+</div>
+</div>
 <a class="anchor" id="gac7441e74affcce4b8b69dba996c5ebc4"></a>
 <div class="memitem">
 <div class="memproto">
@@ -468,7 +744,7 @@ on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hip
 
 </div>
 </div>
-<a class="anchor" id="gaee4ed665ce0a60c661a809c175320a0c"></a>
+<a class="anchor" id="gae7d90e14c387e49f10db597f12915c54"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -505,7 +781,7 @@ on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hip
 </div><div class="memdoc">
 
 <p>Fills the first sizeBytes bytes of the memory area pointed to by dev with the constant byte value value. </p>
-<p><a class="el" href="group__Memory.html#gaee4ed665ce0a60c661a809c175320a0c" title="Fills the first sizeBytes bytes of the memory area pointed to by dev with the constant byte value val...">hipMemsetAsync()</a> is asynchronous with respect to the host, so the call may return before the memset is complete. The operation can optionally be associated to a stream by passing a non-zero stream argument. If stream is non-zero, the operation may overlap with operations in other streams.</p>
+<p><a class="el" href="group__Memory.html#gae7d90e14c387e49f10db597f12915c54" title="Fills the first sizeBytes bytes of the memory area pointed to by dev with the constant byte value val...">hipMemsetAsync()</a> is asynchronous with respect to the host, so the call may return before the memset is complete. The operation can optionally be associated to a stream by passing a non-zero stream argument. If stream is non-zero, the operation may overlap with operations in other streams.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">dst</td><td>Pointer to device memory </td></tr>
@@ -553,7 +829,7 @@ on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hip
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Mar 8 2016 14:46:06 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Apr 25 2016 12:08:53 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
