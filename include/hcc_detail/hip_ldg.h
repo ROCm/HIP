@@ -102,3 +102,4 @@ __device__ double4              __ldg(const double4* );
 #endif  // __HCC__
 
 #endif  // HIP_LDG_H
+
