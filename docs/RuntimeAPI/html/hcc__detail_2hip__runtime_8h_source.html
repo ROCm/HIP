@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/hip_git/release_0.84.00/include/hcc_detail/hip_runtime.h Source File</title>
+<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/hip_git/release_0.84.01/include/hcc_detail/hip_runtime.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -510,7 +510,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;<span class="preprocessor"></span></div>
 <div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;<a class="code" href="host__defines_8h.html#a803050db3c78e0db3ea59a0c35499622">__host__</a> __device__ <span class="keywordtype">int</span> min(<span class="keywordtype">int</span> arg1, <span class="keywordtype">int</span> arg2);</div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;<a class="code" href="host__defines_8h.html#a803050db3c78e0db3ea59a0c35499622">__host__</a> __device__ <span class="keywordtype">int</span> max(<span class="keywordtype">int</span> arg1, <span class="keywordtype">int</span> arg2);  </div>
+<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;<a class="code" href="host__defines_8h.html#a803050db3c78e0db3ea59a0c35499622">__host__</a> __device__ <span class="keywordtype">int</span> max(<span class="keywordtype">int</span> arg1, <span class="keywordtype">int</span> arg2);</div>
 <div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;</div>
 <div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;<span class="comment">//TODO - add a couple fast math operations here, the set here will grow :</span></div>
 <div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;__device__ <span class="keywordtype">float</span> __cosf(<span class="keywordtype">float</span> x);</div>
@@ -598,8 +598,8 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;<span class="preprocessor">  lp.cf = &amp;cf;  \</span></div>
 <div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;<span class="preprocessor">  hipStream_t trueStream = (ihipPreLaunchKernel(_stream, &amp;lp.av)); \</span></div>
 <div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;<span class="preprocessor">    if (HIP_TRACE_API) {\</span></div>
-<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;<span class="preprocessor">        fprintf(stderr, KGRN &quot;&lt;&lt;hip-api: hipLaunchKernel &#39;%s&#39; gridDim:[%d.%d.%d] groupDim:[%d.%d.%d] groupMem:+%d stream=%p\n&quot; KNRM, \</span></div>
-<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;<span class="preprocessor">                #_kernelName, lp.gridDim.z, lp.gridDim.y, lp.gridDim.x, lp.groupDim.z, lp.groupDim.y, lp.groupDim.x, lp.groupMemBytes, (void*)(_stream));\</span></div>
+<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;<span class="preprocessor">        fprintf(stderr, KGRN &quot;&lt;&lt;hip-api: hipLaunchKernel &#39;%s&#39; gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d stream=%p\n&quot; KNRM, \</span></div>
+<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;<span class="preprocessor">                #_kernelName, lp.gridDim.x, lp.gridDim.y, lp.gridDim.z, lp.groupDim.x, lp.groupDim.y, lp.groupDim.z, lp.groupMemBytes, (void*)(_stream));\</span></div>
 <div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;<span class="preprocessor">    }\</span></div>
 <div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;<span class="preprocessor">  _kernelName (lp, __VA_ARGS__);\</span></div>
 <div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;<span class="preprocessor">  ihipPostLaunchKernel(trueStream, cf);\</span></div>
@@ -650,7 +650,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Apr 19 2016 22:44:02 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Apr 25 2016 12:08:53 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
