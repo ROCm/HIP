@@ -534,7 +534,7 @@ void ihipDevice_t::init(unsigned device_index, unsigned deviceCnt, hc::accelerat
 
     locked_reset();
 
-    
+
     tprintf(DB_SYNC, "created device with default_stream=%p\n", _default_stream);
 
     hsa_region_t *pinnedHostRegion;

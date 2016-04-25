@@ -799,4 +799,412 @@ __device__  float __dsqrt_rn(double x) {return hc::fast_math::sqrt(x); };
 __device__  float __dsqrt_ru(double x) {return hc::fast_math::sqrt(x); };
 __device__  float __dsqrt_rz(double x) {return hc::fast_math::sqrt(x); };
 
+__HIP_DEVICE__ char1 make_char1(signed char x)
+{
+    char1 c1;
+    c1.x = x;
+    return c1;
+}
+
+__HIP_DEVICE__ char2 make_char2(signed char x, signed char y)
+{
+    char2 c2;
+    c2.x = x;
+    c2.y = y;
+    return c2;
+}
+
+__HIP_DEVICE__ char3 make_char3(signed char x, signed char y, signed char z)
+{
+    char3 c3;
+    c3.x = x;
+    c3.y = y;
+    c3.z = z;
+    return c3;
+}
+
+__HIP_DEVICE__ char4 make_char4(signed char x, signed char y, signed char z, signed char w)
+{
+    char4 c4;
+    c4.x = x;
+    c4.y = y;
+    c4.z = z;
+    c4.w = w;
+    return c4;
+}
+
+__HIP_DEVICE__ short1 make_short1(short x)
+{
+    short1 s1;
+    s1.x = x;
+    return s1;
+}
+
+__HIP_DEVICE__ short2 make_short2(short x, short y)
+{
+    short2 s2;
+    s2.x = x;
+    s2.y = y;
+    return s2;
+}
+
+__HIP_DEVICE__ short3 make_short3(short x, short y, short z)
+{
+    short3 s3;
+    s3.x = x;
+    s3.y = y;
+    s3.z = z;
+    return s3;
+}
+
+__HIP_DEVICE__ short4 make_short4(short x, short y, short z, short w)
+{
+    short4 s4;
+    s4.x = x;
+    s4.y = y;
+    s4.z = z;
+    s4.w = w;
+    return s4;
+}
+
+__HIP_DEVICE__ int1 make_int1(int x)
+{
+    int1 i1;
+    i1.x = x;
+    return i1;
+}
+
+__HIP_DEVICE__ int2 make_int2(int x, int y)
+{
+    int2 i2;
+    i2.x = x;
+    i2.y = y;
+    return i2;
+}
+
+__HIP_DEVICE__ int3 make_int3(int x, int y, int z)
+{
+    int3 i3;
+    i3.x = x;
+    i3.y = y;
+    i3.z = z;
+    return i3;
+}
+
+__HIP_DEVICE__ int4 make_int4(int x, int y, int z, int w)
+{
+    int4 i4;
+    i4.x = x;
+    i4.y = y;
+    i4.z = z;
+    i4.w = w;
+    return i4;
+}
+
+__HIP_DEVICE__ long1 make_long1(long x)
+{
+    long1 l1;
+    l1.x = x;
+    return l1;
+}
+
+__HIP_DEVICE__ long2 make_long2(long x, long y)
+{
+    long2 l2;
+    l2.x = x;
+    l2.y = y;
+    return l2;
+}
+
+__HIP_DEVICE__ long3 make_long3(long x, long y, long z)
+{
+    long3 l3;
+    l3.x = x;
+    l3.y = y;
+    l3.z = z;
+    return l3;
+}
+
+__HIP_DEVICE__ long4 make_long4(long x, long y, long z, long w)
+{
+    long4 l4;
+    l4.x = x;
+    l4.y = y;
+    l4.z = z;
+    l4.w = w;
+    return l4;
+}
+
+__HIP_DEVICE__ longlong1 make_longlong1(long long x)
+{
+    longlong1 l1;
+    l1.x = x;
+    return l1;
+}
+
+__HIP_DEVICE__ longlong2 make_longlong2(long long x, long long y)
+{
+    longlong2 l2;
+    l2.x = x;
+    l2.y = y;
+    return l2;
+}
+
+__HIP_DEVICE__ longlong3 make_longlong3(long long x, long long y, long long z)
+{
+    longlong3 l3;
+    l3.x = x;
+    l3.y = y;
+    l3.z = z;
+    return l3;
+}
+
+__HIP_DEVICE__ longlong4 make_longlong4(long long x, long long y, long long z, long long w)
+{
+    longlong4 l4;
+    l4.x = x;
+    l4.y = y;
+    l4.z = z;
+    l4.w = w;
+    return l4;
+}
+
+__HIP_DEVICE__ uchar1 make_uchar1(unsigned char x)
+{
+    uchar1 c1;
+    c1.x = x;
+    return c1;
+}
+
+__HIP_DEVICE__ uchar2 make_uchar2(unsigned char x, unsigned char y)
+{
+    uchar2 c2;
+    c2.x = x;
+    c2.y = y;
+    return c2;
+}
+
+__HIP_DEVICE__ uchar3 make_uchar3(unsigned char x, unsigned char y, unsigned char z)
+{
+    uchar3 c3;
+    c3.x = x;
+    c3.y = y;
+    c3.z = z;
+    return c3;
+}
+
+__HIP_DEVICE__ uchar4 make_uchar4(unsigned char x, unsigned char y, unsigned char z, unsigned char w)
+{
+    uchar4 c4;
+    c4.x = x;
+    c4.y = y;
+    c4.z = z;
+    c4.w = w;
+    return c4;
+}
+
+__HIP_DEVICE__ ushort1 make_ushort1(unsigned short x)
+{
+    ushort1 s1;
+    s1.x = x;
+    return s1;
+}
+
+__HIP_DEVICE__ ushort2 make_ushort2(unsigned short x, unsigned short y)
+{
+    ushort2 s2;
+    s2.x = x;
+    s2.y = y;
+    return s2;
+}
+
+__HIP_DEVICE__ ushort3 make_ushort3(unsigned short x, unsigned short y, unsigned short z)
+{
+    ushort3 s3;
+    s3.x = x;
+    s3.y = y;
+    s3.z = z;
+    return s3;
+}
+
+__HIP_DEVICE__ ushort4 make_ushort4(unsigned short x, unsigned short y, unsigned short z, unsigned short w)
+{
+    ushort4 s4;
+    s4.x = x;
+    s4.y = y;
+    s4.z = z;
+    s4.w = w;
+    return s4;
+}
+
+__HIP_DEVICE__ uint1 make_uint1(unsigned int x)
+{
+    uint1 i1;
+    i1.x = x;
+    return i1;
+}
+
+__HIP_DEVICE__ uint2 make_uint2(unsigned int x, unsigned int y)
+{
+    uint2 i2;
+    i2.x = x;
+    i2.y = y;
+    return i2;
+}
+
+__HIP_DEVICE__ uint3 make_uint3(unsigned int x, unsigned int y, unsigned int z)
+{
+    uint3 i3;
+    i3.x = x;
+    i3.y = y;
+    i3.z = z;
+    return i3;
+}
+
+__HIP_DEVICE__ uint4 make_uint4(unsigned int x, unsigned int y, unsigned int z, unsigned int w)
+{
+    uint4 i4;
+    i4.x = x;
+    i4.y = y;
+    i4.z = z;
+    i4.w = w;
+    return i4;
+}
+
+__HIP_DEVICE__ ulong1 make_ulong1(unsigned long x)
+{
+    ulong1 l1;
+    l1.x = x;
+    return l1;
+}
+
+__HIP_DEVICE__ ulong2 make_ulong2(unsigned long x, unsigned long y)
+{
+    ulong2 l2;
+    l2.x = x;
+    l2.y = y;
+    return l2;
+}
+
+__HIP_DEVICE__ ulong3 make_ulong3(unsigned long x, unsigned long y, unsigned long z)
+{
+    ulong3 l3;
+    l3.x = x;
+    l3.y = y;
+    l3.z = z;
+    return l3;
+}
+
+__HIP_DEVICE__ ulong4 make_ulong4(unsigned long x, unsigned long y, unsigned long z, unsigned long w)
+{
+    ulong4 l4;
+    l4.x = x;
+    l4.y = y;
+    l4.z = z;
+    l4.w = w;
+    return l4;
+}
+
+__HIP_DEVICE__ ulonglong1 make_ulonglong1(unsigned long long x)
+{
+    ulonglong1 l1;
+    l1.x = x;
+    return l1;
+}
+
+__HIP_DEVICE__ ulonglong2 make_ulonglong2(unsigned long long x, unsigned long long y)
+{
+    ulonglong2 l2;
+    l2.x = x;
+    l2.y = y;
+    return l2;
+}
+
+__HIP_DEVICE__ ulonglong3 make_ulonglong3(unsigned long long x, unsigned long long y, unsigned long long z)
+{
+    ulonglong3 l3;
+    l3.x = x;
+    l3.y = y;
+    l3.z = z;
+    return l3;
+}
+
+__HIP_DEVICE__ ulonglong4 make_ulonglong4(unsigned long long x, unsigned long long y, unsigned long long z, unsigned long long w)
+{
+    ulonglong4 l4;
+    l4.x = x;
+    l4.y = y;
+    l4.z = z;
+    l4.w = w;
+    return l4;
+}
+
+__HIP_DEVICE__ float1 make_float1(float x)
+{
+    float1 f1;
+    f1.x = x;
+    return f1;
+}
+
+__HIP_DEVICE__ float2 make_float2(float x, float y)
+{
+    float2 f2;
+    f2.x = x;
+    f2.y = y;
+    return f2;
+}
+
+__HIP_DEVICE__ float3 make_float3(float x, float y, float z)
+{
+    float3 f3;
+    f3.x = x;
+    f3.y = y;
+    f3.z = z;
+    return f3;
+}
+
+__HIP_DEVICE__ float4 make_float4(float x, float y, float z, float w)
+{
+    float4 f4;
+    f4.x = x;
+    f4.y = y;
+    f4.z = z;
+    f4.w = w;
+    return f4;
+}
+
+__HIP_DEVICE__ double1 make_double1(double x)
+{
+    double1 d1;
+    d1.x = x;
+    return d1;
+}
+
+__HIP_DEVICE__ double2 make_double2(double x, double y)
+{
+    double2 d2;
+    d2.x = x;
+    d2.y = y;
+    return d2;
+}
+
+__HIP_DEVICE__ double3 make_double3(double x, double y, double z)
+{
+    double3 d3;
+    d3.x = x;
+    d3.y = y;
+    d3.z = z;
+    return d3;
+}
+
+__HIP_DEVICE__ double4 make_double4(double x, double y, double z, double w)
+{
+    double4 d4;
+    d4.x = x;
+    d4.y = y;
+    d4.z = z;
+    d4.w = w;
+    return d4;
+}
+
 

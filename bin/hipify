@@ -228,8 +228,8 @@ while (@ARGV) {
 
         #--------
         #Includes:
-        $countIncludes += s/(\s*#\s*include\s+)[<"]cuda_runtime\.h[>"]/$1<hip_runtime.h>/;
-        $countIncludes += s/(\s*#\s*include\s+)[<"]cuda_runtime_api\.h[>"]/$1<hip_runtime_api.h>/;
+        $countIncludes += s/(\s*#\s*include\s+)[<"]cuda_runtime\.h[>"]/$1<hip\/hip_runtime.h>/;
+        $countIncludes += s/(\s*#\s*include\s+)[<"]cuda_runtime_api\.h[>"]/$1<hip\/hip_runtime_api.h>/;
 
 
         #--------
@@ -559,7 +559,7 @@ while (@ARGV) {
                 # If this file makes kernel builtin calls, and does not include the cuda_runtime.h,
                 # then add an #include to match "magic" includes provided by NVCC.
 				# This logic can miss cases where cuda_runtime.h is included by another include file.
-                print $OUTFILE '#include "hip_runtime.h"' . ($is_dos ? "\r\n" : "\n");
+                print $OUTFILE '#include "hip/hip_runtime.h"' . ($is_dos ? "\r\n" : "\n");
             }
             print $OUTFILE  "$_";
         }

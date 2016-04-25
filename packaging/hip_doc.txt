@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(hip_doc)
 
-install(DIRECTORY @hip_SOURCE_DIR@/docs/RuntimeAPI/html DESTINATION .)
+install(DIRECTORY @hip_SOURCE_DIR@/docs/RuntimeAPI/html DESTINATION docs)
 
 #############################
 # Packaging steps

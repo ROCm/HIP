@@ -21,8 +21,8 @@ THE SOFTWARE.
 #define HIP_HCC_H
 
 #include <hc.hpp>
-#include "hcc_detail/hip_util.h"
-#include "hcc_detail/staging_buffer.h"
+#include "hip/hcc_detail/hip_util.h"
+#include "hip/hcc_detail/staging_buffer.h"
 
 
 #if defined(__HCC__) && (__hcc_workweek__ < 1502)
