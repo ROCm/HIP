@@ -246,8 +246,13 @@ hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
 	}
 	if(device){
 	if(flags == hipHostRegisterDefault){
-		hsa_status_t hsa_status = hsa_amd_memory_lock(hostPtr, sizeBytes, &device->_hsa_agent, 1, &srcPtr);
-		if(hsa_status == HSA_STATUS_SUCCESS){
+#if USE_HCC_LOCK
+                am_status_t am_status = hc::am_memtracker_host_memory_lock(device->_acc, hostPtr, sizeBytes);
+#else
+                am_status_t am_status  = AM_ERROR_MISC;
+#endif
+//		hsa_status_t hsa_status = hsa_amd_memory_lock(hostPtr, sizeBytes, &device->_hsa_agent, 1, &srcPtr);
+		if(am_status == AM_SUCCESS){
 			hip_status = hipSuccess;	
 		}else{
 			hip_status = hipErrorMemoryAllocation;

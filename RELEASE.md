@@ -30,7 +30,8 @@ Date:
 - Deprecate hipDeviceGetProp (Replace with hipGetDeviceProp)
 - Deprecate hipMallocHost (Replace with hipHostMalloc)
 - Deprecate hipFreeHost (Replace with hipHostFree)
-
+- The mixbench benchmark tool for measuring operational intensity now has a HIP target, in addition to CUDA and OpenCL.  Let the comparisons begin. :)    
+See here for more : https://github.com/ekondis/mixbench.
 
 
 ===================================================================================================
