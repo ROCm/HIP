@@ -24,42 +24,47 @@ THE SOFTWARE.
  *  @brief Contains definitions of APIs for HIP runtime.
  */
 
-#pragma once
+//#pragma once
+#ifndef HIP_RUNTIME_H
+#define HIP_RUNTIME_H
 
 //---
 // Top part of file can be compiled with any compiler
 
 
-#include <cstring>
-#include <cmath>
+//#include <cstring>
+//#include <cmath>
 #include <string.h>
 #include <stddef.h>
 
 
 #define CUDA_SUCCESS hipSuccess
 
-#include <hip_runtime_api.h>
-
+#include <hip/hip_runtime_api.h>
+//#include "hip/hcc_detail/hip_hcc.h"
 //---
 // Remainder of this file only compiles with HCC
 #ifdef __HCC__
+#if __cplusplus
 #include <hc.hpp>
+#endif
 #include <grid_launch.h>
+extern int HIP_TRACE_API;
 
 //TODO-HCC-GL - change this to typedef.
 //typedef grid_launch_parm hipLaunchParm ;
 #define hipLaunchParm grid_launch_parm
-
-#include <hcc_detail/hip_texture.h>
-#include <hcc_detail/host_defines.h>
-
+#ifdef __cplusplus
+#include <hip/hcc_detail/hip_texture.h>
+#endif
+#include <hip/hcc_detail/host_defines.h>
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
-#if defined (__KALMAR_ACCELERATOR__) && not defined (__HCC_ACCELERATOR__)
+#if defined (__KALMAR_ACCELERATOR__) && !defined (__HCC_ACCELERATOR__)
 #define __HCC_ACCELERATOR__  __KALMAR_ACCELERATOR__
 #endif
 
 // Feature tests:
-#if defined(__HCC_ACCELERATOR__) and (__HCC_ACCELERATOR__ != 0)
+#if defined(__HCC_ACCELERATOR__) && (__HCC_ACCELERATOR__ != 0)
 // Device compile and not host compile:
 
 //TODO-HCC enable __HIP_ARCH_HAS_ATOMICS__ when HCC supports these.
@@ -95,9 +100,6 @@ THE SOFTWARE.
 #endif
 
 
-
-
-
 //TODO-HCC  this is currently ignored by HCC target of HIP
 #define __launch_bounds__(requiredMaxThreadsPerBlock, minBlocksPerMultiprocessor)
 
@@ -108,326 +110,366 @@ THE SOFTWARE.
 #define __HCC_C__
 #endif
 
+#if __cplusplus
+__device__ float acosf(float x);
+__device__ float acoshf(float x);
+__device__ float asinf(float x);
+__device__ float asinhf(float x);
+__device__ float atan2f(float y, float x);
+__device__ float atanf(float x);
+__device__ float atanhf(float x);
+__device__ float cbrtf(float x);
+__device__ float ceilf(float x);
+__device__ float copysignf(float x, float y);
+__device__ float cosf(float x);
+__device__ float coshf(float x);
+__device__ float cyl_bessel_i0f(float x);
+__device__ float cyl_bessel_i1f(float x);
+__device__ float erfcf(float x);
+__device__ float erfcinvf(float y);
+__device__ float erfcxf(float x);
+__device__ float erff(float x);
+__device__ float erfinvf(float y);
+__device__ float exp10f(float x);
+__device__ float exp2f(float x);
+__device__ float expf(float x);
+__device__ float expm1f(float x);
+__device__ float fabsf(float x);
+__device__ float fdimf(float x, float y);
+__device__ float fdividef(float x, float y);
+__device__ float floorf(float x);
+__device__ float fmaf(float x, float y, float z);
+__device__ float fmaxf(float x, float y);
+__device__ float fminf(float x, float y);
+__device__ float fmodf(float x, float y);
+__device__ float frexpf(float x, float y);
+__device__ float hypotf(float x, float y);
+__device__ float ilogbf(float x);
+__device__ unsigned isfinite(float a);
+__device__ unsigned isinf(float a);
+__device__ unsigned isnan(float a);
+__device__ float j0f(float x);
+__device__ float j1f(float x);
+__device__ float jnf(int n, float x);
+__device__ float ldexpf(float x, int exp);
+__device__ float lgammaf(float x);
+__device__ long long int llrintf(float x);
+__device__ long long int llroundf(float x);
+__device__ float log10f(float x);
+__device__ float log1pf(float x);
+__device__ float log2f(float x);
+__device__ float logbf(float x);
+__device__ float logf(float x);
+__device__ long int lrintf(float x);
+__device__ long int lroundf(float x);
+__device__ float modff(float x, float *iptr);
+__device__ float nanf(const char* tagp);
+__device__ float nearbyintf(float x);
+__device__ float nextafterf(float x, float y);
+__device__ float norm3df(float a, float b, float c);
+__device__ float norm4df(float a, float b, float c, float d);
+__device__ float normcdff(float y);
+__device__ float normcdfinvf(float y);
+__device__ float normf(int dim, const float *a);
+__device__ float powf(float x, float y);
+__device__ float rcbtrf(float x);
+__device__ float remainderf(float x, float y);
+__device__ float remquof(float x, float y, int *quo);
+__device__ float rhypotf(float x, float y);
+__device__ float rintf(float x);
+__device__ float rnorm3df(float a, float b, float c);
+__device__ float rnorm4df(float a, float b, float c, float d);
+__device__ float rnormf(int dim, const float* a);
+__device__ float roundf(float x);
+__device__ float rsqrtf(float x);
+__device__ float scalblnf(float x, long int n);
+__device__ float scalbnf(float x, int n);
+__device__ unsigned signbit(float a);
+__device__ void sincosf(float x, float *sptr, float *cptr);
+__device__ void sincospif(float x, float *sptr, float *cptr);
+__device__ float sinf(float x);
+__device__ float sinhf(float x);
+__device__ float sinpif(float x);
+__device__ float sqrtf(float x);
+__device__ float tanf(float x);
+__device__ float tanhf(float x);
+__device__ float tgammaf(float x);
+__device__ float truncf(float x);
+__device__ float y0f(float x);
+__device__ float y1f(float x);
+__device__ float ynf(int n, float x);
+
+__host__ __device__ float cospif(float x);
+__host__ __device__ float sinpif(float x);
+__device__ float sqrtf(float x);
+__host__ __device__ float rsqrtf(float x);
+
+__device__ double acos(double x);
+__device__ double acosh(double x);
+__device__ double asin(double x);
+__device__ double asinh(double x);
+__device__ double atan(double x);
+__device__ double atan2(double y, double x);
+__device__ double atanh(double x);
+__device__ double cbrt(double x);
+__device__ double ceil(double x);
+__device__ double copysign(double x, double y);
+__device__ double cos(double x);
+__device__ double cosh(double x);
+__host__ __device__ double cospi(double x);
+__device__ double cyl_bessel_i0(double x);
+__device__ double cyl_bessel_i1(double x);
+__device__ double erf(double x);
+__device__ double erfc(double x);
+__device__ double erfcinv(double y);
+__device__ double erfcx(double x);
+__device__ double exp(double x);
+__device__ double exp10(double x);
+__device__ double exp2(double x);
+__device__ double expm1(double x);
+__device__ double fabs(double x);
+__device__ double fdim(double x, double y);
+__device__ double floor(double x);
+__device__ double fma(double x, double y, double z);
+__device__ double fmax(double x, double y);
+__device__ double fmin(double x, double y);
+__device__ double fmod(double x, double y);
+__device__ double frexp(double x, int *nptr);
+__device__ double hypot(double x, double y);
+__device__ double ilogb(double x);
+__device__ unsigned isfinite(double x);
+__device__ unsigned isinf(double x);
+__device__ unsigned isnan(double x);
+__device__ double j0(double x);
+__device__ double j1(double x);
+__device__ double jn(int n, double x);
+__device__ double ldexp(double x, int exp);
+__device__ double lgamma(double x);
+__device__ long long llrint(double x);
+__device__ long llround(double x);
+__device__ double log(double x);
+__device__ double log10(double x);
+__device__ double log1p(double x);
+__device__ double log2(double x);
+__device__ double logb(double x);
+__device__ long int lrint(double x);
+__device__ long int lround(double x);
+__device__ double modf(double x, double *iptr);
+__device__ double nan(const char* tagp);
+__device__ double nearbyint(double x);
+__device__ double nextafter(double x, double y);
+__device__ double norm(int dim, const double* t);
+__device__ double norm3d(double a, double b, double c);
+__device__ double norm4d(double a, double b, double d);
+__device__ double normcdf(double y);
+__device__ double normcdfinv(double y);
+__device__ double pow(double x, double y);
+__device__ double rcbrt(double x);
+__device__ double remainder(double x, double y);
+__device__ double remquo(double x, double y, int *quo);
+__device__ double rhypot(double x, double y);
+__device__ double rint(double x);
+__device__ double rnorm(int dim, const double* t);
+__device__ double rnorm3d(double a, double b, double c);
+__device__ double rnorm4d(double a, double b, double c, double d);
+__device__ double round(double x);
+__host__ __device__ double rsqrt(double x);
+__device__ double scalbln(double x, long int n);
+__device__ double scalbn(double x, int n);
+__device__ unsigned signbit(double a);
+__device__ double sin(double a);
+__device__ double sincos(double x, double *sptr, double *cptr);
+__device__ double sincospi(double x, double *sptr, double *cptr);
+__device__ double sinh(double x);
+__host__ __device__ double sinpi(double x);
+__device__ double sqrt(double x);
+__device__ double tan(double x);
+__device__ double tanh(double x);
+__device__ double tgamma(double x);
+__device__ double trunc(double x);
+__device__ double y0(double x);
+__device__ double y1(double y);
+__device__ double yn(int n, double x);
+#endif
 
 // TODO - hipify-clang - change to use the function call.
 //#define warpSize hc::__wavesize()
-const int warpSize  = 64;
+extern const int warpSize;
 
 
 #define clock_t long long int
-__device__ inline long long int clock64() { return (long long int)hc::__clock_u64(); };
-__device__ inline clock_t clock() { return (clock_t)hc::__clock_u64(); };
-
+__device__ long long int clock64();
+__device__ clock_t clock();
+#if __cplusplus
 //atomicAdd()
-__device__ inline int atomicAdd(int* address, int val)
-{
-	return hc::atomic_fetch_add(address,val);
-}
-__device__ inline unsigned int atomicAdd(unsigned int* address,
-                       unsigned int val)
-{
-   return hc::atomic_fetch_add(address,val);
-}
-__device__ inline unsigned long long int atomicAdd(unsigned long long int* address,
-                                 unsigned long long int val)
-{
- return (long long int)hc::atomic_fetch_add((uint64_t*)address,(uint64_t)val);
-}
-__device__ inline float atomicAdd(float* address, float val)
-{
-	return hc::atomic_fetch_add(address,val);
-}
+__device__ int atomicAdd(int* address, int val);
+__device__ unsigned int atomicAdd(unsigned int* address,
+                       unsigned int val);
+
+__device__ unsigned long long int atomicAdd(unsigned long long int* address,
+                                 unsigned long long int val);
+
+__device__ float atomicAdd(float* address, float val);
+
 
 //atomicSub()
-__device__ inline int atomicSub(int* address, int val)
-{
-	return hc::atomic_fetch_sub(address,val);
-}
-__device__ inline unsigned int atomicSub(unsigned int* address,
-                       unsigned int val)
-{
-   return hc::atomic_fetch_sub(address,val);
-}
+__device__ int atomicSub(int* address, int val);
+
+__device__ unsigned int atomicSub(unsigned int* address,
+                       unsigned int val);
+
 
 //atomicExch()
-__device__ inline int atomicExch(int* address, int val)
-{
-	return hc::atomic_exchange(address,val);
-}
-__device__ inline unsigned int atomicExch(unsigned int* address,
-                        unsigned int val)
-{
-	return hc::atomic_exchange(address,val);
-}
-__device__ inline unsigned long long int atomicExch(unsigned long long int* address,
-                                  unsigned long long int val)
-{
-	return (long long int)hc::atomic_exchange((uint64_t*)address,(uint64_t)val);
-}
-__device__ inline float atomicExch(float* address, float val)
-{
-	return hc::atomic_exchange(address,val);
-}
+__device__ int atomicExch(int* address, int val);
+
+__device__ unsigned int atomicExch(unsigned int* address,
+                        unsigned int val);
+
+__device__ unsigned long long int atomicExch(unsigned long long int* address,
+                                  unsigned long long int val);
+
+__device__ float atomicExch(float* address, float val);
+
 
 //atomicMin()
-__device__ inline int atomicMin(int* address, int val)
-{
-	return hc::atomic_fetch_min(address,val);
-}
-__device__ inline unsigned int atomicMin(unsigned int* address,
-                       unsigned int val)
-{
-	return hc::atomic_fetch_min(address,val);
-}
-__device__ inline unsigned long long int atomicMin(unsigned long long int* address,
-                                 unsigned long long int val)
-{
-	return (long long int)hc::atomic_fetch_min((uint64_t*)address,(uint64_t)val);
-}
+__device__ int atomicMin(int* address, int val);
+__device__ unsigned int atomicMin(unsigned int* address,
+                       unsigned int val);
+__device__ unsigned long long int atomicMin(unsigned long long int* address,
+                                 unsigned long long int val);
+
 
 //atomicMax()
-__device__ inline int atomicMax(int* address, int val)
-{
-	return hc::atomic_fetch_max(address,val);
-}
-__device__ inline unsigned int atomicMax(unsigned int* address,
-                       unsigned int val)
-{
-	return hc::atomic_fetch_max(address,val);
-}
-__device__ inline unsigned long long int atomicMax(unsigned long long int* address,
-                                 unsigned long long int val)
-{
-	return (long long int)hc::atomic_fetch_max((uint64_t*)address,(uint64_t)val);
-}
+__device__ int atomicMax(int* address, int val);
+__device__ unsigned int atomicMax(unsigned int* address,
+                       unsigned int val);
+__device__ unsigned long long int atomicMax(unsigned long long int* address,
+                                 unsigned long long int val);
+
 
 //atomicCAS()
-__device__ inline int atomicCAS(int* address, int compare, int val)
-{
-	hc::atomic_compare_exchange(address,&compare,val);
-	return *address;
-}
-__device__ inline unsigned int atomicCAS(unsigned int* address,
+__device__ int atomicCAS(int* address, int compare, int val);
+__device__ unsigned int atomicCAS(unsigned int* address,
                        unsigned int compare,
-                       unsigned int val)
-{
-	hc::atomic_compare_exchange(address,&compare,val);
-	return *address;
-}
-__device__ inline unsigned long long int atomicCAS(unsigned long long int* address,
+                       unsigned int val);
+__device__ unsigned long long int atomicCAS(unsigned long long int* address,
                                  unsigned long long int compare,
-                                 unsigned long long int val)
-{
-	hc::atomic_compare_exchange((uint64_t*)address,(uint64_t*)&compare,(uint64_t)val);
-	return *address;
-}
+                                 unsigned long long int val);
+
 
 //atomicAnd()
-__device__ inline int atomicAnd(int* address, int val)
-{
-	return hc::atomic_fetch_and(address,val);
-}
-__device__ inline unsigned int atomicAnd(unsigned int* address,
-                       unsigned int val)
-{
-	return hc::atomic_fetch_and(address,val);
-}
-__device__ inline unsigned long long int atomicAnd(unsigned long long int* address,
-                                 unsigned long long int val)
-{
-	return (long long int)hc::atomic_fetch_and((uint64_t*)address,(uint64_t)val);
-}
+__device__ int atomicAnd(int* address, int val);
+__device__ unsigned int atomicAnd(unsigned int* address,
+                       unsigned int val);
+__device__ unsigned long long int atomicAnd(unsigned long long int* address,
+                                 unsigned long long int val);
+
 
 //atomicOr()
-__device__ inline int atomicOr(int* address, int val)
-{
-	return hc::atomic_fetch_or(address,val);
-}
-__device__ inline unsigned int atomicOr(unsigned int* address,
-                      unsigned int val)
-{
-	return hc::atomic_fetch_or(address,val);
-}
-__device__ inline unsigned long long int atomicOr(unsigned long long int* address,
-                                unsigned long long int val)
-{
-	return (long long int)hc::atomic_fetch_or((uint64_t*)address,(uint64_t)val);
-}
+__device__ int atomicOr(int* address, int val);
+__device__ unsigned int atomicOr(unsigned int* address,
+                      unsigned int val);
+__device__ unsigned long long int atomicOr(unsigned long long int* address,
+                                unsigned long long int val);
+
 
 //atomicXor()
-__device__ inline int atomicXor(int* address, int val)
-{
-	return hc::atomic_fetch_xor(address,val);
-}
-__device__ inline unsigned int atomicXor(unsigned int* address,
-                       unsigned int val)
-{
-	return hc::atomic_fetch_xor(address,val);
-}
-__device__ inline unsigned long long int atomicXor(unsigned long long int* address,
-                                 unsigned long long int val)
-{
-	return (long long int)hc::atomic_fetch_xor((uint64_t*)address,(uint64_t)val);
-}
+__device__ int atomicXor(int* address, int val);
+__device__ unsigned int atomicXor(unsigned int* address,
+                       unsigned int val);
+__device__ unsigned long long int atomicXor(unsigned long long int* address,
+                                 unsigned long long int val);
 
-#include <hc.hpp>
+
 // integer intrinsic function __poc __clz __ffs __brev
-__device__ inline unsigned int __popc( unsigned int input)
-{
-	return hc::__popcount_u32_b32( input);
-}
+__device__ unsigned int __popc( unsigned int input);
+__device__ unsigned int __popcll( unsigned long long int input);
+__device__ unsigned int __clz(unsigned int input);
+__device__ unsigned int __clzll(unsigned long long int input);
+__device__ unsigned int __clz(int input);
+__device__ unsigned int __clzll(long long int input);
+__device__ unsigned int __ffs(unsigned int input);
+__device__ unsigned int __ffsll(unsigned long long int input);
+__device__ unsigned int __ffs(int input);
+__device__ unsigned int __ffsll(long long int input);
+__device__ unsigned int __brev( unsigned int input);
+__device__ unsigned long long int __brevll( unsigned long long int input);
 
-__device__ inline unsigned int __popcll( unsigned long long int input)
-{
-	return hc::__popcount_u32_b64(input);
-}
-
-__device__ inline unsigned int __clz(unsigned int input)
-{
-	return hc::__firstbit_u32_u32( input);
-}
-
-__device__ inline unsigned int __clzll(unsigned long long int input)
-{
-	return hc::__firstbit_u32_u64( input);
-}
-
-__device__ inline unsigned int __clz(int input)
-{
-	return hc::__firstbit_u32_s32(  input);
-}
-
-__device__ inline unsigned int __clzll(long long int input)
-{
-	return hc::__firstbit_u32_s64( input);
-}
-
-__device__ inline unsigned int __ffs(unsigned int input)
-{
-	return hc::__lastbit_u32_u32( input)+1;
-}
-
-__device__ inline unsigned int __ffsll(unsigned long long int input)
-{
-	return hc::__lastbit_u32_u64( input)+1;
-}
-
-__device__ inline unsigned int __ffs(int input)
-{
-	return hc::__lastbit_u32_s32( input)+1;
-}
-
-__device__ inline unsigned int __ffsll(long long int input)
-{
-	return hc::__lastbit_u32_s64( input)+1;
-}
-
-__device__ inline unsigned int __brev( unsigned int input)
-{
-	return hc::__bitrev_b32( input);
-}
-
-__device__ inline unsigned long long int __brevll( unsigned long long int input)
-{
-	return hc::__bitrev_b64( input);
-}
 
 // warp vote function __all __any __ballot
-__device__ inline int __all(  int input)
-{
-	return hc::__all( input);
-}
-
-
-__device__ inline int __any( int input)
-{
-	if( hc::__any( input)!=0) return 1;
-	else return 0;
-}
-
-__device__ inline unsigned long long int __ballot( int input)
-{
-	return hc::__ballot( input);
-}
+__device__ int __all(  int input);
+__device__ int __any( int input);
+__device__  unsigned long long int __ballot( int input);
 
 // warp shuffle functions
-__device__ inline int __shfl(int input, int lane, int width=warpSize)
-{
-  return hc::__shfl(input,lane,width);
-}
+#ifdef __cplusplus
 
-__device__ inline int __shfl_up(int input, unsigned int lane_delta, int width=warpSize)
-{
-  return hc::__shfl_up(input,lane_delta,width);
-}
-
-__device__ inline int __shfl_down(int input, unsigned int lane_delta, int width=warpSize)
-{
-  return hc::__shfl_down(input,lane_delta,width);
-}
-
-__device__ inline int __shfl_xor(int input, int lane_mask, int width=warpSize)
-{
-  return hc::__shfl_xor(input,lane_mask,width);
-}
-
-__device__ inline float __shfl(float input, int lane, int width=warpSize)
-{
-  return hc::__shfl(input,lane,width);
-}
-
-__device__ inline float __shfl_up(float input, unsigned int lane_delta, int width=warpSize)
-{
-  return hc::__shfl_up(input,lane_delta,width);
-}
-
-__device__ inline float __shfl_down(float input, unsigned int lane_delta, int width=warpSize)
-{
-  return hc::__shfl_down(input,lane_delta,width);
-}
-
-__device__ inline float __shfl_xor(float input, int lane_mask, int width=warpSize)
-{
-  return hc::__shfl_xor(input,lane_mask,width);
-}
-
-
-#include <hc_math.hpp>
-// TODO: Choose whether default is precise math or fast math based on compilation flag.
-#ifdef __HCC_ACCELERATOR__
-using namespace hc::precise_math;
+__device__ int __shfl(int input, int lane, int width=warpSize);
+__device__ int __shfl_up(int input, unsigned int lane_delta, int width=warpSize);
+__device__ int __shfl_down(int input, unsigned int lane_delta, int width=warpSize);
+__device__ int __shfl_xor(int input, int lane_mask, int width=warpSize);
+__device__ float __shfl(float input, int lane, int width=warpSize);
+__device__ float __shfl_up(float input, unsigned int lane_delta, int width=warpSize);
+__device__ float __shfl_down(float input, unsigned int lane_delta, int width=warpSize);
+__device__ float __shfl_xor(float input, int lane_mask, int width=warpSize);
+#else
+__device__ int __shfl(int input, int lane, int width);
+__device__ int __shfl_up(int input, unsigned int lane_delta, int width);
+__device__ int __shfl_down(int input, unsigned int lane_delta, int width);
+__device__ int __shfl_xor(int input, int lane_mask, int width);
+__device__ float __shfl(float input, int lane, int width);
+__device__ float __shfl_up(float input, unsigned int lane_delta, int width);
+__device__ float __shfl_down(float input, unsigned int lane_delta, int width);
+__device__ float __shfl_xor(float input, int lane_mask, int width);
 #endif
 
-//TODO: Undo this once min/max functions are supported by hc
-inline int min(int arg1, int arg2) __attribute((hc,cpu)) { \
-  return (int)(hc::precise_math::fmin((float)arg1, (float)arg2));}
-inline int max(int arg1, int arg2) __attribute((hc,cpu)) { \
-  return (int)(hc::precise_math::fmax((float)arg1, (float)arg2));}
-
+__host__ __device__ int min(int arg1, int arg2);
+__host__ __device__ int max(int arg1, int arg2);
 
 //TODO - add a couple fast math operations here, the set here will grow :
-__device__ inline float __cosf(float x) {return hc::fast_math::cosf(x); };
-__device__ inline float __expf(float x) {return hc::fast_math::expf(x); };
-__device__ inline float __frsqrt_rn(float x) {return hc::fast_math::rsqrt(x); };
-__device__ inline float __fsqrt_rd(float x) {return hc::fast_math::sqrt(x); };
-__device__ inline float __fsqrt_rn(float x) {return hc::fast_math::sqrt(x); };
-__device__ inline float __fsqrt_ru(float x) {return hc::fast_math::sqrt(x); };
-__device__ inline float __fsqrt_rz(float x) {return hc::fast_math::sqrt(x); };
-__device__ inline float __log10f(float x) {return hc::fast_math::log10f(x); };
-__device__ inline float __log2f(float x) {return hc::fast_math::log2f(x); };
-__device__ inline float __logf(float x) {return hc::fast_math::logf(x); };
-__device__ inline float __powf(float base, float exponent) {return hc::fast_math::powf(base, exponent); };
-__device__ inline void __sincosf(float x, float *s, float *c) {return hc::fast_math::sincosf(x, s, c); };
-__device__ inline float __sinf(float x) {return hc::fast_math::sinf(x); };
-__device__ inline float __tanf(float x) {return hc::fast_math::tanf(x); };
-__device__ inline float __dsqrt_rd(double x) {return hc::fast_math::sqrt(x); };
-__device__ inline float __dsqrt_rn(double x) {return hc::fast_math::sqrt(x); };
-__device__ inline float __dsqrt_ru(double x) {return hc::fast_math::sqrt(x); };
-__device__ inline float __dsqrt_rz(double x) {return hc::fast_math::sqrt(x); };
-
+__device__ float __cosf(float x);
+__device__ float __expf(float x);
+__device__ float __frsqrt_rn(float x);
+__device__ float __fsqrt_rd(float x);
+__device__ float __fsqrt_rn(float x);
+__device__ float __fsqrt_ru(float x);
+__device__ float __fsqrt_rz(float x);
+__device__ float __log10f(float x);
+__device__ float __log2f(float x);
+__device__ float __logf(float x);
+__device__ float __powf(float base, float exponent);
+__device__ void __sincosf(float x, float *s, float *c) ;
+__device__ float __sinf(float x);
+__device__ float __tanf(float x);
+__device__ float __dsqrt_rd(double x);
+__device__ float __dsqrt_rn(double x);
+__device__ float __dsqrt_ru(double x);
+__device__ float __dsqrt_rz(double x);
+#endif
 /**
  * Kernel launching
  */
+
+#if __hcc_workweek__ >= 16123
+
+#define hipThreadIdx_x (amp_get_local_id(0))
+#define hipThreadIdx_y (amp_get_local_id(1))
+#define hipThreadIdx_z (amp_get_local_id(2))
+
+#define hipBlockIdx_x  (hc_get_group_id(0))
+#define hipBlockIdx_y  (hc_get_group_id(1))
+#define hipBlockIdx_z  (hc_get_group_id(2))
+
+#define hipBlockDim_x  (amp_get_local_size(0))
+#define hipBlockDim_y  (amp_get_local_size(1))
+#define hipBlockDim_z  (amp_get_local_size(2))
+
+#define hipGridDim_x   (hc_get_num_groups(0))
+#define hipGridDim_y   (hc_get_num_groups(1))
+#define hipGridDim_z   (hc_get_num_groups(2))
+
+#else
+
 #define hipThreadIdx_x (amp_get_local_id(2))
 #define hipThreadIdx_y (amp_get_local_id(1))
 #define hipThreadIdx_z (amp_get_local_id(0))
@@ -444,49 +486,19 @@ __device__ inline float __dsqrt_rz(double x) {return hc::fast_math::sqrt(x); };
 #define hipGridDim_y   (hc_get_num_groups(1))
 #define hipGridDim_z   (hc_get_num_groups(0))
 
-
-
+#endif
 
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
 
-
-#if 0
-#define KALMAR_PFE_BEGIN() \
-      hc::extent<3> ext(lp.gridDim.x, lp.gridDim.y, lp.gridDim.z);\
-      auto __hipExtTile = ext.tile(lp.groupDim.x, lp.groupDim.y, lp.groupDim.z);\
-      __hipExtTile.set_dynamic_group_segment_size(lp.groupMemBytes);\
-    \
-      hc::completion_future cf = hc::parallel_for_each (\
-              *lp.av,\
-              __hipExtTile,\
-              [=] (hc::tiled_index<3> __hipIdx) mutable [[hc]]
-
-
-
-#define KALMAR_PFE_END \
-              );  \
-    if (HIP_LAUNCH_BLOCKING) {\
-        if (HIP_TRACE_API) {\
-            fprintf(stderr, "hiptrace1: HIP_LAUNCH_BLOCKING ...\n");\
-        }\
-        cf.wait(); \
-        if (HIP_TRACE_API) {\
-            fprintf(stderr, "hiptrace1: ...completed.\n");\
-        }\
-    }
-#endif
-
-
-
-/**
- * @bug HIP currently requires that kernels be called from the same compilation unit where they are defined.  Calling a kernel defined in another compilation unit will produce an error similar to “undefined reference to `__hcLaunchKernel__ZN4XXX”.
- */
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
-
 
 #ifdef __HCC_CPP__
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, hc::accelerator_view **av);
 void ihipPostLaunchKernel(hipStream_t stream, hc::completion_future &cf);
+
+// TODO - move to common header file.
+#define KNRM  "\x1B[0m"
+#define KGRN  "\x1B[32m"
 
 #if not defined(DISABLE_GRID_LAUNCH)
 #define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...) \
@@ -503,8 +515,8 @@ do {\
   lp.cf = &cf;  \
   hipStream_t trueStream = (ihipPreLaunchKernel(_stream, &lp.av)); \
     if (HIP_TRACE_API) {\
-        fprintf(stderr, "hiptrace1: launch '%s' gridDim:[%d.%d.%d] groupDim:[%d.%d.%d] groupMem:+%d stream=%p\n", \
-                #_kernelName, lp.gridDim.z, lp.gridDim.y, lp.gridDim.x, lp.groupDim.z, lp.groupDim.y, lp.groupDim.x, lp.groupMemBytes, (void*)(_stream));\
+        fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d stream=%p\n" KNRM, \
+                #_kernelName, lp.gridDim.x, lp.gridDim.y, lp.gridDim.z, lp.groupDim.x, lp.groupDim.y, lp.groupDim.z, lp.groupMemBytes, (void*)(_stream));\
     }\
   _kernelName (lp, __VA_ARGS__);\
   ihipPostLaunchKernel(trueStream, cf);\
@@ -527,7 +539,7 @@ do {\
   lp.cf = &cf;  \
   hipStream_t trueStream = (ihipPreLaunchKernel(_stream, &lp.av)); \
     if (HIP_TRACE_API) {\
-        fprintf(stderr, "hiptrace1: launch '%s' gridDim:[%d.%d.%d] groupDim:[%d.%d.%d] groupMem:+%d stream=%p\n", \
+        fprintf(stderr, "==hip-api: launch '%s' gridDim:[%d.%d.%d] groupDim:[%d.%d.%d] groupMem:+%d stream=%p\n", \
                 #_kernelName, lp.gridDim.z, lp.gridDim.y, lp.gridDim.x, lp.groupDim.z, lp.groupDim.y, lp.groupDim.x, lp.groupMemBytes, (void*)(_stream));\
     }\
   _kernelName (lp, __VA_ARGS__);\
@@ -542,46 +554,6 @@ do {\
 
 #endif
 
-
-#if not defined(DISABLE_GRID_LAUNCH)
-// TODO -In GL these are no-ops and can be removed:
-// Keep them around for a little while as a fallback.
-#define KERNELBEGIN
-#define KERNELEND
-
-#else
-
-// TODO-GL:
-// These wrap the kernel in a PFE loop with macros.
-// Not required with GL but exist here as a fallback.
-#define KERNELBEGIN \
-      hc::extent<3> ext(lp.gridDim.x, lp.gridDim.y, lp.gridDim.z);\
-      auto __hipExtTile = ext.tile(lp.groupDim.x, lp.groupDim.y, lp.groupDim.z);\
-      __hipExtTile.set_dynamic_group_segment_size(lp.groupMemBytes);\
-      \
-      hc::completion_future cf = \
-      hc::parallel_for_each (\
-              *lp.av,\
-              __hipExtTile,\
-              [=] (hc::tiled_index<3> __hipIdx) mutable [[hc]] \
-      {
-
-
-#define KERNELEND \
-              });  \
-    if (HIP_LAUNCH_BLOCKING) {\
-        if (HIP_TRACE_API) {\
-            fprintf(stderr, "hiptrace1: HIP_LAUNCH_BLOCKING ...\n");\
-        }\
-        cf.wait(); \
-        if (HIP_TRACE_API) {\
-            fprintf(stderr, "hiptrace1: ...completed.\n");\
-        }\
-    }
-
-#endif /*DISABLE_GRID_LAUNCH*/
-
-
 #endif // __HCC__
 
 
@@ -589,9 +561,9 @@ do {\
  * @defgroup HIP-ENV HIP Environment Variables
  * @{
  */
-extern int HIP_PRINT_ENV ;   ///< Print all HIP-related environment variables.
-extern int HIP_TRACE_API;    ///< Trace HIP APIs.
-extern int HIP_LAUNCH_BLOCKING ; ///< Make all HIP APIs host-synchronous
+//extern int HIP_PRINT_ENV ;   ///< Print all HIP-related environment variables.
+//extern int HIP_TRACE_API;    ///< Trace HIP APIs.
+//extern int HIP_LAUNCH_BLOCKING ; ///< Make all HIP APIs host-synchronous
 
 /**
  * @}
@@ -604,4 +576,4 @@ extern int HIP_LAUNCH_BLOCKING ; ///< Make all HIP APIs host-synchronous
  */
 
 
-
+#endif

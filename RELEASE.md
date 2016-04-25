@@ -13,8 +13,26 @@ We have attempted to document known bugs and limitations - in particular the [HI
 
 Stay tuned - the work for many of these features is already in-flight.
 
-
 ## Revision History:
+
+===================================================================================================
+Release:0.84.01
+Date: 2016.04.25
+- Refactor HIP make and install system:
+    - Move to CMake. Refer to the installation section in README.md for details.
+    - Split source into multiple modular .cpp and .h files.
+    - Create static library and link.
+    - Set HIP_PATH to install.
+- Make hipDevice and hipStream thread-safe.
+    - Prefered hipStream usage is still to create new streams for each new thread, but it works even if you don;t.
+- Improve automated platform detection: If AMD GPU is installed and detected by driver, default HIP_PLATFORM to hcc.
+- HIP_TRACE_API now prints arguments to the HIP function (in addition to name of function).
+- Deprecate hipDeviceGetProp (Replace with hipGetDeviceProp)
+- Deprecate hipMallocHost (Replace with hipHostMalloc)
+- Deprecate hipFreeHost (Replace with hipHostFree)
+- The mixbench benchmark tool for measuring operational intensity now has a HIP target, in addition to CUDA and OpenCL.  Let the comparisons begin. :)    
+See here for more : https://github.com/ekondis/mixbench.
+
 
 ===================================================================================================
 Release:0.82.00
@@ -42,11 +60,11 @@ Date: 2016.02.18
 - Update Runtime Documentation.
 - Improve implementations of cross-lane operations (_ballot, _any, _all).
 - Provide shuffle intrinsics (performance optimization in-progress).
-- Support hipDeviceAttribute for querying "one-shot" device attributes, as an alternative to hipDeviceGetProperties.
+- Support hipDeviceAttribute for querying "one-shot" device attributes, as an alternative to hipGetDeviceProperties.
 
 
 ===================================================================================================
-Release:0.80.00 :
+Release:0.80.00
 Date: 2016.01.25
 
 Initial release with GPUOpen Launch.

@@ -24,17 +24,18 @@ THE SOFTWARE.
 #include <hip_runtime.h>
 
 
-#define CHECK(error) \
+#define CHECK(cmd) \
+{\
+    hipError_t error  = cmd;\
     if (error != hipSuccess) { \
       fprintf(stderr, "error: '%s'(%d) at %s:%d\n", hipGetErrorString(error), error,__FILE__, __LINE__); \
     exit(EXIT_FAILURE);\
-	}
+	}\
+}
 
 void __global__
 bit_extract_kernel(hipLaunchParm lp, uint32_t *C_d, const uint32_t *A_d, size_t N)
 {
-    KERNELBEGIN;
-
     size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
     size_t stride = hipBlockDim_x * hipGridDim_x ;
 
@@ -45,8 +46,6 @@ bit_extract_kernel(hipLaunchParm lp, uint32_t *C_d, const uint32_t *A_d, size_t 
 		C_d[i] = ((A_d[i] & 0xf00)  >> 8);
 #endif
 	}
-
-    KERNELEND;
 }
 
 
@@ -60,7 +59,7 @@ int main(int argc, char *argv[])
     int deviceId;
     CHECK (hipGetDevice(&deviceId));
 	hipDeviceProp_t props;
-	CHECK(hipDeviceGetProperties(&props, deviceId));
+	CHECK(hipGetDeviceProperties(&props, deviceId));
 	printf ("info: running on device #%d %s\n", deviceId, props.name);
 
 

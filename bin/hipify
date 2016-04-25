@@ -228,8 +228,8 @@ while (@ARGV) {
 
         #--------
         #Includes:
-        $countIncludes += s/(\s*#\s*include\s+)[<"]cuda_runtime\.h[>"]/$1<hip_runtime.h>/;
-        $countIncludes += s/(\s*#\s*include\s+)[<"]cuda_runtime_api\.h[>"]/$1<hip_runtime_api.h>/;
+        $countIncludes += s/(\s*#\s*include\s+)[<"]cuda_runtime\.h[>"]/$1<hip\/hip_runtime.h>/;
+        $countIncludes += s/(\s*#\s*include\s+)[<"]cuda_runtime_api\.h[>"]/$1<hip\/hip_runtime_api.h>/;
 
 
         #--------
@@ -283,10 +283,15 @@ while (@ARGV) {
         #--------
         # Memory management:
         $ft{'mem'} += s/\bcudaMalloc\b/hipMalloc/g;
-        $ft{'mem'} += s/\bcudaMallocHost\b/hipMallocHost/g;
+        $ft{'mem'} += s/\bcudaMallocHost\b/hipHostMalloc/g;  # note conversion to standard hipHost* naming convention
         $ft{'mem'} += s/\bcudaFree\b/hipFree/g;
-        $ft{'mem'} += s/\bcudaFreeHost\b/hipFreeHost/g;
-
+        $ft{'mem'} += s/\bcudaFreeHost\b/hipHostFree/g;    # note conversion to standard hipHost* naming convention
+		$ft{'mem'} += s/\bcudaHostAlloc\b/hipHostAlloc/g;
+		$ft{'mem'} += s/\bcudaHostGetDevicePointer\b/hipHostGetDevicePointer/g;
+		$ft{'mem'} += s/\bcudaHostAllocDefault\b/hipHostMallocDefault/g;
+		$ft{'mem'} += s/\bcudaHostAllocPortable\b/hipHostMallocPortable/g;
+		$ft{'mem'} += s/\bcudaHostAllocMapped\b/hipHostMallocMapped/g;
+		$ft{'mem'} += s/\bcudaHostAllocWriteCombined\b/hipHostMallocWriteCombined/g;
 
 
         #--------
@@ -345,7 +350,7 @@ while (@ARGV) {
         #--------
         # Device 
         $ft{'dev'} += s/\bcudaDeviceProp\b/hipDeviceProp_t/g;
-        $ft{'dev'} += s/\bcudaGetDeviceProperties\b/hipDeviceGetProperties/g;
+        $ft{'dev'} += s/\bcudaGetDeviceProperties\b/hipGetDeviceProperties/g;
 
         # Attribute
         $ft{'err'} += s/\bcudaDevAttrMaxThreadsPerBlock\b/hipDeviceAttributeMaxThreadsPerBlock/g;
@@ -554,7 +559,7 @@ while (@ARGV) {
                 # If this file makes kernel builtin calls, and does not include the cuda_runtime.h,
                 # then add an #include to match "magic" includes provided by NVCC.
 				# This logic can miss cases where cuda_runtime.h is included by another include file.
-                print $OUTFILE '#include "hip_runtime.h"' . ($is_dos ? "\r\n" : "\n");
+                print $OUTFILE '#include "hip/hip_runtime.h"' . ($is_dos ? "\r\n" : "\n");
             }
             print $OUTFILE  "$_";
         }

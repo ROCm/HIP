@@ -75,92 +75,20 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
 
 <div class="header">
-  <div class="summary">
-<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">HCC-Specific Accessors<div class="ingroups"><a class="el" href="group__API.html">HIP API</a></div></div>  </div>
 </div><!--header-->
 <div class="contents">
-<table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
-Functions</h2></td></tr>
-<tr class="memitem:ga0d24b3157fd1b16d38672bb157ec4cd4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__HCC__Specific.html#ga0d24b3157fd1b16d38672bb157ec4cd4">hipHccGetAccelerator</a> (int deviceId, hc::accelerator *acc)</td></tr>
-<tr class="memdesc:ga0d24b3157fd1b16d38672bb157ec4cd4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return hc::accelerator associated with the specified deviceId.  <a href="#ga0d24b3157fd1b16d38672bb157ec4cd4">More...</a><br/></td></tr>
-<tr class="separator:ga0d24b3157fd1b16d38672bb157ec4cd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga1a7087ea9c3c3323270d7cce73650b44"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__HCC__Specific.html#ga1a7087ea9c3c3323270d7cce73650b44">hipHccGetAcceleratorView</a> (hipStream_t stream, hc::accelerator_view **av)</td></tr>
-<tr class="memdesc:ga1a7087ea9c3c3323270d7cce73650b44"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return hc::accelerator_view associated with the specified stream.  <a href="#ga1a7087ea9c3c3323270d7cce73650b44">More...</a><br/></td></tr>
-<tr class="separator:ga1a7087ea9c3c3323270d7cce73650b44"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <h2>----------------------------------------------------------------------------------------------&mdash; </h2>
 <p>The following calls are only supported when compiler HIP with HCC. To produce portable code, use of these calls must be guarded #ifdef checks: </p>
 <div class="fragment"><div class="line"><span class="preprocessor">#ifdef __HCC__</span></div>
 <div class="line"><span class="preprocessor"></span> hc::accelerator acc;</div>
-<div class="line"> <a class="code" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> err = <a class="code" href="group__HCC__Specific.html#ga0d24b3157fd1b16d38672bb157ec4cd4">hipHccGetAccelerator</a>(deviceId, &amp;acc)</div>
+<div class="line"> <a class="code" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> err = <a class="code" href="hip__hcc_8cpp.html#a0d24b3157fd1b16d38672bb157ec4cd4">hipHccGetAccelerator</a>(deviceId, &amp;acc)</div>
 <div class="line"><span class="preprocessor">#endif</span></div>
-</div><!-- fragment --> <h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="ga0d24b3157fd1b16d38672bb157ec4cd4"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipHccGetAccelerator </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>deviceId</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">hc::accelerator *&#160;</td>
-          <td class="paramname"><em>acc</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Return hc::accelerator associated with the specified deviceId. </p>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d" title="DeviceID must be in range 0...#compute-devices. ">hipErrorInvalidDevice</a> </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="ga1a7087ea9c3c3323270d7cce73650b44"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipHccGetAcceleratorView </td>
-          <td>(</td>
-          <td class="paramtype">hipStream_t&#160;</td>
-          <td class="paramname"><em>stream</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">hc::accelerator_view **&#160;</td>
-          <td class="paramname"><em>av</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Return hc::accelerator_view associated with the specified stream. </p>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a> </dd></dl>
-
-</div>
-</div>
-</div><!-- contents -->
+</div><!-- fragment --> </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Mar 8 2016 14:46:06 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Apr 25 2016 12:08:53 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

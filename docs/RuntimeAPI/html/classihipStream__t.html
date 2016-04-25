@@ -84,69 +84,93 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#friends">Friends</a> &#124;
 <a href="classihipStream__t-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">ihipStream_t Class Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a592c5b87b96e6af39ca138aaef37f17e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a592c5b87b96e6af39ca138aaef37f17e"></a>
+typedef uint64_t&#160;</td><td class="memItemRight" valign="bottom"><b>SeqNum_t</b></td></tr>
+<tr class="separator:a592c5b87b96e6af39ca138aaef37f17e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a907974a5f150c0e551097f8f8e9fec1f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a907974a5f150c0e551097f8f8e9fec1f"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>ihipStream_t</b> (unsigned device_index, hc::accelerator_view av, unsigned int flags)</td></tr>
 <tr class="separator:a907974a5f150c0e551097f8f8e9fec1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acc7575e1bdc82acd20c6b29c2fa6855e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acc7575e1bdc82acd20c6b29c2fa6855e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>reclaimSignals</b> (SIGSEQNUM sigNum)</td></tr>
-<tr class="separator:acc7575e1bdc82acd20c6b29c2fa6855e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a894e1e5a9d2bed748de94dc71292c94f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a894e1e5a9d2bed748de94dc71292c94f"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>waitAndReclaimOlder</b> (<a class="el" href="structihipSignal__t.html">ihipSignal_t</a> *signal)</td></tr>
-<tr class="separator:a894e1e5a9d2bed748de94dc71292c94f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad1f8082237f5d9e030845c5ffa7c3019"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad1f8082237f5d9e030845c5ffa7c3019"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>wait</b> ()</td></tr>
-<tr class="separator:ad1f8082237f5d9e030845c5ffa7c3019"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7da781a2ece3b60af109089cb196115d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7da781a2ece3b60af109089cb196115d"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>copySync</b> (<a class="el" href="classLockedAccessor.html">LockedAccessor_StreamCrit_t</a> &amp;crit, void *dst, const void *src, size_t sizeBytes, unsigned kind)</td></tr>
+<tr class="separator:a7da781a2ece3b60af109089cb196115d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a488989c39b6dc1da96912df471858f6f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a488989c39b6dc1da96912df471858f6f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>locked_copySync</b> (void *dst, const void *src, size_t sizeBytes, unsigned kind)</td></tr>
+<tr class="separator:a488989c39b6dc1da96912df471858f6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b92fc6a35358e7bf9c8153bd609ed4b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9b92fc6a35358e7bf9c8153bd609ed4b"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>copyAsync</b> (void *dst, const void *src, size_t sizeBytes, unsigned kind)</td></tr>
+<tr class="separator:a9b92fc6a35358e7bf9c8153bd609ed4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a55f51d767064728b71456cd08747b6ed"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a55f51d767064728b71456cd08747b6ed"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>lockopen_preKernelCommand</b> ()</td></tr>
+<tr class="separator:a55f51d767064728b71456cd08747b6ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1a935f935f43816a5d5d66b29ccf09fa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1a935f935f43816a5d5d66b29ccf09fa"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>lockclose_postKernelCommand</b> (hc::completion_future &amp;kernel_future)</td></tr>
+<tr class="separator:a1a935f935f43816a5d5d66b29ccf09fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6dc1f0eab49b67359361dfd6936767d4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6dc1f0eab49b67359361dfd6936767d4"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>preCopyCommand</b> (<a class="el" href="classLockedAccessor.html">LockedAccessor_StreamCrit_t</a> &amp;crit, <a class="el" href="structihipSignal__t.html">ihipSignal_t</a> *lastCopy, hsa_signal_t *waitSignal, ihipCommand_t copyType)</td></tr>
+<tr class="separator:a6dc1f0eab49b67359361dfd6936767d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3da127c5a5353eb4c089d3f5ff044773"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3da127c5a5353eb4c089d3f5ff044773"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>locked_reclaimSignals</b> (SIGSEQNUM sigNum)</td></tr>
+<tr class="separator:a3da127c5a5353eb4c089d3f5ff044773"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9376e8486f4cce31e5a0e9cc0a51d72a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9376e8486f4cce31e5a0e9cc0a51d72a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>locked_wait</b> (bool assertQueueEmpty=false)</td></tr>
+<tr class="separator:a9376e8486f4cce31e5a0e9cc0a51d72a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a15b68a0ee8e8f35b2fafeec6a3232659"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a15b68a0ee8e8f35b2fafeec6a3232659"></a>
+SIGSEQNUM&#160;</td><td class="memItemRight" valign="bottom"><b>locked_lastCopySeqId</b> ()</td></tr>
+<tr class="separator:a15b68a0ee8e8f35b2fafeec6a3232659"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6e28587b86f243c325154b458004bac1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6e28587b86f243c325154b458004bac1"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>wait</b> (<a class="el" href="classLockedAccessor.html">LockedAccessor_StreamCrit_t</a> &amp;crit, bool assertQueueEmpty=false)</td></tr>
+<tr class="separator:a6e28587b86f243c325154b458004bac1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3cf158e279f8014c5dbf137b172a3ba3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3cf158e279f8014c5dbf137b172a3ba3"></a>
+SIGSEQNUM&#160;</td><td class="memItemRight" valign="bottom"><b>lastCopySeqId</b> (<a class="el" href="classLockedAccessor.html">LockedAccessor_StreamCrit_t</a> &amp;crit)</td></tr>
+<tr class="separator:a3cf158e279f8014c5dbf137b172a3ba3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a62d4df2d44e24c452063a57defca948f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a62d4df2d44e24c452063a57defca948f"></a>
+<a class="el" href="structihipSignal__t.html">ihipSignal_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>allocSignal</b> (<a class="el" href="classLockedAccessor.html">LockedAccessor_StreamCrit_t</a> &amp;crit)</td></tr>
+<tr class="separator:a62d4df2d44e24c452063a57defca948f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8fa2432de855550f4973e3c4a06f13e1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8fa2432de855550f4973e3c4a06f13e1"></a>
-<a class="el" href="structihipDevice__t.html">ihipDevice_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>getDevice</b> () const </td></tr>
+<a class="el" href="classihipDevice__t.html">ihipDevice_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>getDevice</b> () const </td></tr>
 <tr class="separator:a8fa2432de855550f4973e3c4a06f13e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad53897cfaac1ebbb26ee2e93d82596e1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad53897cfaac1ebbb26ee2e93d82596e1"></a>
-<a class="el" href="structihipSignal__t.html">ihipSignal_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>getSignal</b> ()</td></tr>
-<tr class="separator:ad53897cfaac1ebbb26ee2e93d82596e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2a5ae69180d96c5953640456f3bd17fb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2a5ae69180d96c5953640456f3bd17fb"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>preKernelCommand</b> ()</td></tr>
-<tr class="separator:a2a5ae69180d96c5953640456f3bd17fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a62635a39ddb70022184574bafeaae2b2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a62635a39ddb70022184574bafeaae2b2"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>postKernelCommand</b> (hc::completion_future &amp;kernel_future)</td></tr>
-<tr class="separator:a62635a39ddb70022184574bafeaae2b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af5428fedb53c86adfcc2f02de631abed"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af5428fedb53c86adfcc2f02de631abed"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>copyCommand</b> (<a class="el" href="structihipSignal__t.html">ihipSignal_t</a> *lastCopy, hsa_signal_t *waitSignal, ihipCommand_t copyType)</td></tr>
-<tr class="separator:af5428fedb53c86adfcc2f02de631abed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afcad5f7e8a38d3bf8de4862e5c263051"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afcad5f7e8a38d3bf8de4862e5c263051"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>resetToEmpty</b> ()</td></tr>
-<tr class="separator:afcad5f7e8a38d3bf8de4862e5c263051"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aafb77ca2853239b7d74f6df8b0edadc2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aafb77ca2853239b7d74f6df8b0edadc2"></a>
-SIGSEQNUM&#160;</td><td class="memItemRight" valign="bottom"><b>lastCopySeqId</b> ()</td></tr>
-<tr class="separator:aafb77ca2853239b7d74f6df8b0edadc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a08ef6d0c3ed57463f7b04fc1e79f7906"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a08ef6d0c3ed57463f7b04fc1e79f7906"></a>
-std::mutex &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>mutex</b> ()</td></tr>
-<tr class="separator:a08ef6d0c3ed57463f7b04fc1e79f7906"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
+<tr class="memitem:a598f1a2618fa756b2b3f2aa67b3049bd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a598f1a2618fa756b2b3f2aa67b3049bd"></a>
+SeqNum_t&#160;</td><td class="memItemRight" valign="bottom"><b>_id</b></td></tr>
+<tr class="separator:a598f1a2618fa756b2b3f2aa67b3049bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9cbeb760947de69b9834121678780669"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9cbeb760947de69b9834121678780669"></a>
 hc::accelerator_view&#160;</td><td class="memItemRight" valign="bottom"><b>_av</b></td></tr>
 <tr class="separator:a9cbeb760947de69b9834121678780669"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a61c71982dcf1097dba05b431d55a056f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a61c71982dcf1097dba05b431d55a056f"></a>
 unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>_flags</b></td></tr>
 <tr class="separator:a61c71982dcf1097dba05b431d55a056f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:a87ec2e4405353137e645ba1e55f25ff6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a87ec2e4405353137e645ba1e55f25ff6"></a>
+std::ostream &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (std::ostream &amp;os, const <a class="el" href="classihipStream__t.html">ihipStream_t</a> &amp;s)</td></tr>
+<tr class="separator:a87ec2e4405353137e645ba1e55f25ff6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<hr/>The documentation for this class was generated from the following file:<ul>
-<li>/home/mangupta/hip_git/wip.pub/src/<a class="el" href="hip__hcc_8cpp.html">hip_hcc.cpp</a></li>
+<hr/>The documentation for this class was generated from the following files:<ul>
+<li>/home/mangupta/hip_git/release_0.84.01/include/hcc_detail/<a class="el" href="hip__hcc_8h_source.html">hip_hcc.h</a></li>
+<li>/home/mangupta/hip_git/release_0.84.01/src/<a class="el" href="hip__hcc_8cpp.html">hip_hcc.cpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Mar 8 2016 14:46:06 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Apr 25 2016 12:08:53 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

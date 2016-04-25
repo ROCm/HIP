@@ -108,7 +108,7 @@ int main(int argc, char **argv)
         hipSetDevice(device);
         hipDeviceProp_t devProp;
 
-        hipDeviceGetProperties(&devProp, device);
+        hipGetDeviceProperties(&devProp, device);
         if (devProp.major < 1) {
             printf("%d does not support HIP\n", device);
             return -1;

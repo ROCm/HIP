@@ -115,7 +115,7 @@ void testSimple()
     hipError_t e;
 
     HIPCHECK ( hipMalloc(&A_d, Nbytes) );
-    HIPCHECK ( hipMallocHost(&A_Pinned_h, Nbytes) );
+    HIPCHECK ( hipHostMalloc((void**)&A_Pinned_h, Nbytes, hipHostMallocDefault) );
     A_OSAlloc_h = (char*)malloc(Nbytes);
 
     size_t free, total;
@@ -168,7 +168,7 @@ void testSimple()
 
 
     // Device-visible host memory
-    printf ("\nDevice-visible host memory (hipMallocHost)\n");
+    printf ("\nDevice-visible host memory (hipHostMalloc)\n");
     HIPCHECK( hipPointerGetAttributes(&attribs, A_Pinned_h));
     printf("getAttr:%-20s", "A_pinned_h"); printAttribs(&attribs);
 
@@ -178,7 +178,7 @@ void testSimple()
     HIPASSERT((char*)attribs.hostPointer+Nbytes/2 == (char*)attribs2.hostPointer);
 
 
-    hipFreeHost(A_Pinned_h);
+    hipHostFree(A_Pinned_h);
     e = hipPointerGetAttributes(&attribs, A_Pinned_h);
     HIPASSERT(e == hipErrorUnknown); // Just freed the pointer, this should return an error.
     printf("getAttr:%-20s err=%d (%s), neg-test expected\n", "A_d+NBytes", e, hipGetErrorString(e));
@@ -277,13 +277,13 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize)
         void * ptr;
         if (isDevice) {
             totalDeviceAllocated[reference[i]._attrib.device] += reference[i]._sizeBytes;
-            HIPCHECK(hipMalloc(&ptr, reference[i]._sizeBytes));
+            HIPCHECK(hipMalloc((void**)&ptr, reference[i]._sizeBytes));
             reference[i]._attrib.memoryType    = hipMemoryTypeDevice;
             reference[i]._attrib.devicePointer = ptr;
             reference[i]._attrib.hostPointer   = NULL;
             reference[i]._attrib.allocationFlags = 0; // TODO-randomize these.
         } else {
-            HIPCHECK(hipMallocHost(&ptr, reference[i]._sizeBytes));
+            HIPCHECK(hipHostMalloc((void**)&ptr, reference[i]._sizeBytes, hipHostMallocDefault));
             reference[i]._attrib.memoryType    = hipMemoryTypeHost;
             reference[i]._attrib.devicePointer = ptr;
             reference[i]._attrib.hostPointer   = ptr;
@@ -304,7 +304,7 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize)
         size_t free, total;
         HIPCHECK(hipSetDevice(i));
         HIPCHECK(hipMemGetInfo(&free, &total));
-        printf ("  device#%d: hipMemGetInfo: free=%zu (%4.2fMB) clusterAllocTotalDevice=%lu (%4.2fMB) total=%zu (%4.2fMB)\n",
+        printf ("  device#%d: hipMemGetInfo: free=%zu (%4.2fMB) totalDevice=%lu (%4.2fMB) total=%zu (%4.2fMB)\n",
                 i, free, (float)(free/1024.0/1024.0), totalDeviceAllocated[i], (float)(totalDeviceAllocated[i])/1024.0/1024.0, total, (float)(total/1024.0/1024.0));
         HIPASSERT(free + totalDeviceAllocated[i] <= total);
     }
@@ -322,7 +322,7 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize)
         if (ref._attrib.memoryType == hipMemoryTypeDevice) {
             hipFree(ref._pointer);
         } else {
-            hipFreeHost(ref._pointer);
+            hipHostFree(ref._pointer);
         }
 
     }

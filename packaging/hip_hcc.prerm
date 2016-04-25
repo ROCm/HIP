@@ -1,0 +1,24 @@
+#!/bin/bash
+
+pushd () {
+    command pushd "$@" > /dev/null
+}
+
+popd () {
+    command popd "$@" > /dev/null
+}
+
+ROCMDIR=/opt/rocm
+HIPDIR=$ROCMDIR/hip
+
+# Remove soft-links to libraries
+HIPLIBFILES=$HIPDIR/lib/*
+ROCMLIBDIR=$ROCMDIR/lib
+pushd $ROCMLIBDIR
+for f in $HIPLIBFILES
+do
+rm $(basename $f)
+done
+popd
+rmdir --ignore-fail-on-non-empty $ROCMLIBDIR
+

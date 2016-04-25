@@ -30,7 +30,7 @@ THE SOFTWARE.
 
 
 #include <string.h> // for getDeviceProp
-#include <hip_common.h>
+#include <hip/hip_common.h>
 
 typedef struct {
     // 32-bit Atomics
@@ -97,6 +97,7 @@ typedef struct hipDeviceProp_t {
     int pciDeviceID;                            ///< PCI Device ID.
     size_t maxSharedMemoryPerMultiProcessor;    ///< Maximum Shared Memory Per Multiprocessor.
     int isMultiGpuBoard;                        ///< 1 if device is on a multi-GPU board, 0 if not.
+    int canMapHostMemory;                       ///< Check whether HIP can map host memory
  } hipDeviceProp_t;
 
 
@@ -137,7 +138,7 @@ typedef struct hipPointerAttribute_t {
  * @enum
  * @ingroup Enumerations
  */
-// Developer note - when updating these, update the hipErrorName and hipErrorString functions
+// Developer note - when updating these, update the hipErrorName and hipErrorString functions in NVCC and HCC paths
 typedef enum hipError_t {
      hipSuccess = 0                   ///< Successful completion.
     ,hipErrorMemoryAllocation         ///< Memory allocation error.
@@ -148,10 +149,16 @@ typedef enum hipError_t {
     ,hipErrorInvalidResourceHandle    ///< Resource handle (hipEvent_t or hipStream_t) invalid.
     ,hipErrorInvalidDevice            ///< DeviceID must be in range 0...#compute-devices.
     ,hipErrorInvalidMemcpyDirection   ///< Invalid memory copy direction 
+    ,hipErrorInvalidDevicePointer     ///< Invalid Device Pointer
+    ,hipErrorInitializationError      ///< TODO comment from hipErrorInitializationError
 
     ,hipErrorNoDevice                 ///< Call to hipGetDeviceCount returned 0 devices
     ,hipErrorNotReady                 ///< Indicates that asynchronous operations enqueued earlier are not ready.  This is not actually an error, but is used to distinguish from hipSuccess (which indicates completion).  APIs that return this error include hipEventQuery and hipStreamQuery.
     ,hipErrorUnknown                  ///< Unknown error.
+    ,hipErrorPeerAccessNotEnabled     ///< Peer access was never enabled from the current device.
+    ,hipErrorPeerAccessAlreadyEnabled ///< Peer access was already enabled from the current device.
+    ,hipErrorRuntimeMemory            ///< HSA runtime memory call returned error.  Typically not seen in production systems.
+    ,hipErrorRuntimeOther             ///< HSA runtime call other than memory returned error.  Typically not seen in production systems.
     ,hipErrorTbd                      ///< Marker that more error codes are needed.
 } hipError_t;
 
@@ -192,10 +199,10 @@ typedef enum hipDeviceAttribute_t {
  *     @}
  */
 
-#if defined(__HIP_PLATFORM_HCC__) and not defined (__HIP_PLATFORM_NVCC__)
-#include "hcc_detail/hip_runtime_api.h"
-#elif defined(__HIP_PLATFORM_NVCC__) and not defined (__HIP_PLATFORM_HCC__)
-#include "nvcc_detail/hip_runtime_api.h"
+#if defined(__HIP_PLATFORM_HCC__) && !defined (__HIP_PLATFORM_NVCC__)
+#include "hip/hcc_detail/hip_runtime_api.h"
+#elif defined(__HIP_PLATFORM_NVCC__) && !defined (__HIP_PLATFORM_HCC__)
+#include "hip/nvcc_detail/hip_runtime_api.h"
 #else
 #error("Must define exactly one of __HIP_PLATFORM_HCC__ or __HIP_PLATFORM_NVCC__");
 #endif
@@ -215,9 +222,10 @@ static inline hipError_t hipMalloc ( T** devPtr, size_t size)
     return hipMalloc((void**)devPtr, size);
 }
 
+// Provide an override to automatically typecast the pointer type from void**, and also provide a default for the flags.
 template<class T>
-static inline hipError_t hipMallocHost ( T** ptr, size_t size)
+static inline hipError_t hipHostMalloc( T** ptr, size_t size, unsigned int flags = hipHostMallocDefault)
 {
-    return hipMallocHost((void**)ptr, size);
+    return hipHostMalloc((void**)ptr, size, flags);
 }
 #endif

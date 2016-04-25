@@ -19,7 +19,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#pragma once
+
+//#pragma once
+
+#ifndef HIP_TEXTURE_H
+#define HIP_TEXTURE_H
+
 /**
  *  @file  hcc_detail/hip_texture.h
  *  @brief HIP C++ Texture API for hcc compiler
@@ -27,7 +32,7 @@ THE SOFTWARE.
 
 #include <limits.h>
 
-#include <hip_runtime.h>
+#include <hip/hip_runtime.h>
 
 //----
 //Texture - TODO - likely need to move this to a separate file only included with kernel compilation.
@@ -55,7 +60,7 @@ struct textureReference {
     bool                 normalized;
     hipChannelFormatDesc channelDesc;
 };
-
+#if __cplusplus
 template <class T, int texType=hipTextureType1D, enum hipTextureReadMode=hipReadModeElementType>
 struct texture : public textureReference {
 
@@ -63,7 +68,7 @@ struct texture : public textureReference {
 
     //texture() : filterMode(hipFilterModePoint), normalized(false), _dataPtr(NULL) {};
 };
-
+#endif
 
 
 
@@ -201,3 +206,6 @@ hipError_t  hipUnbindTexture(struct texture<T, dim, readMode> *tex)
 /**
  *   @}
  */
+
+#endif
+

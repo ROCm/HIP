@@ -1,6 +1,9 @@
 #Dependencies : [MYHIP]/bin must be in user's path.
 
-HIP_PATH?=$(shell hipconfig --path)
+HIP_PATH?= $(wildcard /opt/rocm/hip)
+ifeq (,$(HIP_PATH))
+	HIP_PATH=../../..
+endif
 HIP_PLATFORM=$(shell $(HIP_PATH)/bin/hipconfig --platform)
 HIPCC=$(HIP_PATH)/bin/hipcc
 

@@ -23,7 +23,7 @@ THE SOFTWARE.
 
 #include <cuda_runtime.h>
 
-#include <hip_runtime_api.h>
+#include <hip/hip_runtime_api.h>
 
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
 

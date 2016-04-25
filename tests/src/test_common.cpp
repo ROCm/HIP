@@ -111,7 +111,7 @@ int parseStandardArguments(int argc, char *argv[], bool failOnUndefinedArg)
                failed("Bad iterations argument"); 
             }
 
-        } else if (!strcmp(arg, "--gpu") || (!strcmp(arg, "-g"))) {
+        } else if (!strcmp(arg, "--gpu") ||  (!strcmp(arg, "-gpuDevice")) || (!strcmp(arg, "-g"))) {
             if (++i >= argc || !HipTest::parseInt(argv[i], &p_gpuDevice)) {
                failed("Bad gpuDevice argument"); 
             }
@@ -144,7 +144,7 @@ unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlock, size_t N)
     int device;
     HIPCHECK(hipGetDevice(&device));
     hipDeviceProp_t props;
-    HIPCHECK(hipDeviceGetProperties(&props, device));
+    HIPCHECK(hipGetDeviceProperties(&props, device));
 
     unsigned blocks = props.multiProcessorCount * blocksPerCU;
     if (blocks * threadsPerBlock > N) {

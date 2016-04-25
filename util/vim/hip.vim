@@ -92,7 +92,7 @@ syn keyword hipFunctionName hipD3D9ResourceSetMapFlags
 syn keyword hipFunctionName hipD3D9SetDirect3DDevice 
 syn keyword hipFunctionName hipD3D9UnmapResources 
 syn keyword hipFunctionName hipD3D9UnregisterResource 
-syn keyword hipFunctionName hipDeviceGetProperties 
+syn keyword hipFunctionName hipGetDeviceProperties 
 syn keyword hipFunctionName hipDeviceSynchronize 
 syn keyword hipFunctionName hipDeviceReset 
 syn keyword hipFunctionName hipEventCreate 
@@ -103,7 +103,13 @@ syn keyword hipFunctionName hipEventRecord
 syn keyword hipFunctionName hipEventSynchronize 
 syn keyword hipFunctionName hipFree 
 syn keyword hipFunctionName hipFreeArray 
-syn keyword hipFunctionName hipFreeHost  
+syn keyword hipFunctionName hipHostMalloc  
+syn keyword hipFunctionName hipHostFree  
+syn keyword hipFunctionName hipHostGetDevicePointer  
+syn keyword hipFunctionName hipHostGetFlags  
+syn keyword hipFunctionName hipHostRegister  
+syn keyword hipFunctionName hipHostUnregister  
+
 syn keyword hipFunctionName hipGetChannelDesc 
 syn keyword hipFunctionName hipGetDevice 
 syn keyword hipFunctionName hipGetDeviceCount 
@@ -144,6 +150,7 @@ syn keyword hipFunctionName hipMemset2D
 syn keyword hipFunctionName hipMemset3D 
 syn keyword hipFunctionName hipSetDevice 
 syn keyword hipFunctionName hipSetupArgument 
+syn keyword hipFunctionName hipStreamCreateWithFlags
 syn keyword hipFunctionName hipStreamCreate 
 syn keyword hipFunctionName hipStreamDestroy 
 syn keyword hipFunctionName hipStreamQuery 
@@ -151,6 +158,12 @@ syn keyword hipFunctionName hipStreamSynchronize
 syn keyword hipFunctionName hipThreadExit 
 syn keyword hipFunctionName hipThreadSynchronize 
 syn keyword hipFunctionName hipUnbindTexture 
+syn keyword hipFunctionName hipDeviceCanAccessPeer 
+syn keyword hipFunctionName hipDeviceEnablePeerAccess
+syn keyword hipFunctionName hipDeviceDisablePeerAccess
+syn keyword hipFunctionName hipMemcpyPeer
+syn keyword hipFunctionName hipMemcpyPeerAsync
+
 
 " HIP Flags
 syn keyword hipFlags hipFilterModePoint 
@@ -164,6 +177,16 @@ syn keyword hipFlags hipMemcpyDefault
 syn keyword hipFlags hipReadModeElementType 
 syn keyword hipFlags hipSuccess 
 syn keyword hipFlags hipTextureType1D 
+
+syn keyword hipFlags hipHostMallocDefault
+syn keyword hipFlags hipHostMallocPortable
+syn keyword hipFlags hipHostMallocMapped
+syn keyword hipFlags hipHostMallocWriteCombined
+
+syn keyword hipFlags hipHostRegisterDefault
+syn keyword hipFlags hipHostRegisterPortable
+syn keyword hipFlags hipHostRegisterMapped
+syn keyword hipFlags hipHostRegisterIoMemory
 
 " Define the default highlighting.
 " For version 5.7 and earlier: only when not done already

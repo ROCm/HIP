@@ -43,13 +43,20 @@ hipMemcpyHostToHost
 
 // hipErrorNoDevice.
 
-/*typedef enum hipTextureFilterMode 
+/*typedef enum hipTextureFilterMode
 {
     hipFilterModePoint = cudaFilterModePoint,  ///< Point filter mode.
 //! @warning cudaFilterModeLinear is not supported.
 } hipTextureFilterMode;*/
 #define hipFilterModePoint cudaFilterModePoint
 
+#define hipHostMallocDefault cudaHostAllocDefault
+#define hipHostMallocPortable cudaHostAllocPortable
+#define hipHostMallocMapped cudaHostAllocMapped
+#define hipHostMallocWriteCombined cudaHostAllocWriteCombined
+
+#define hipHostRegisterPortable cudaHostRegisterPortable
+#define hipHostRegisterMapped cudaHostRegisterMapped
 
 typedef cudaEvent_t hipEvent_t;
 typedef cudaStream_t hipStream_t;
@@ -69,7 +76,7 @@ default:
     return hipErrorUnknown;
 }
 }
-// TODO   match the error enum names of hip and cuda 
+// TODO   match the error enum names of hip and cuda
 inline static cudaError_t hipErrorToCudaError(hipError_t hError) {
 switch(hError) {
 case hipSuccess:
@@ -112,12 +119,41 @@ inline static hipError_t hipFree(void* ptr) {
     return hipCUDAErrorTohipError(cudaFree(ptr));
 }
 
+inline static hipError_t hipMallocHost(void** ptr, size_t size) __attribute__((deprecated("use hipHostMalloc instead")));
+
 inline static hipError_t hipMallocHost(void** ptr, size_t size) {
     return hipCUDAErrorTohipError(cudaMallocHost(ptr, size));
 }
+
+inline static hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags){
+	return hipCUDAErrorTohipError(cudaHostAlloc(ptr, size, flags));
+}
+
+inline static hipError_t hipHostGetDevicePointer(void** devPtr, void* hostPtr, unsigned int flags){
+	return hipCUDAErrorTohipError(cudaHostGetDevicePointer(devPtr, hostPtr, flags));
+}
+
+inline static hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr){
+	return hipCUDAErrorTohipError(cudaHostGetFlags(flagsPtr, hostPtr));
+}
+
+inline static hipError_t hipHostRegister(void* ptr, size_t size, unsigned int flags){
+	return hipCUDAErrorTohipError(cudaHostRegister(ptr, size, flags));
+}
+
+inline static hipError_t hipHostUnregister(void* ptr){
+	return hipCUDAErrorTohipError(cudaHostUnregister(ptr));
+}
+
+inline static hipError_t hipFreeHost(void* ptr) __attribute__((deprecated("use hipHostFree instead")));
 inline static hipError_t hipFreeHost(void* ptr) {
     return hipCUDAErrorTohipError(cudaFreeHost(ptr));
 }
+
+inline static hipError_t hipHostFree(void* ptr)  {
+    return hipCUDAErrorTohipError(cudaFreeHost(ptr));
+}
+
 inline static hipError_t hipSetDevice(int device) {
     return hipCUDAErrorTohipError(cudaSetDevice(device));
 }
@@ -154,7 +190,11 @@ inline static hipError_t hipMemset(void* devPtr,int value, size_t count) {
     return hipCUDAErrorTohipError(cudaMemset(devPtr, value, count));
 }
 
-inline static hipError_t hipDeviceGetProperties(hipDeviceProp_t *p_prop, int device)
+inline static hipError_t hipMemsetAsync(void* devPtr,int value, size_t count) {
+    return hipCUDAErrorTohipError(cudaMemsetAsync(devPtr, value, count));
+}
+
+inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t *p_prop, int device)
 {
 	cudaDeviceProp cdprop;
 	cudaError_t cerror;
@@ -177,9 +217,12 @@ inline static hipError_t hipDeviceGetProperties(hipDeviceProp_t *p_prop, int dev
 	p_prop->l2CacheSize = cdprop.l2CacheSize ;
 	p_prop->maxThreadsPerMultiProcessor = cdprop.maxThreadsPerMultiProcessor ;
 	p_prop->computeMode = cdprop.computeMode ;
+	p_prop->canMapHostMemory = cdprop.canMapHostMemory;
+    p_prop->memoryClockRate = cdprop.memoryClockRate;
+    p_prop->memoryBusWidth = cdprop.memoryBusWidth;
 
 	// Same as clock-rate:
-	p_prop->clockInstructionRate = cdprop.clockRate; 
+	p_prop->clockInstructionRate = cdprop.clockRate;
 
 	int ccVers = p_prop->major*100 + p_prop->minor * 10;
 
@@ -216,7 +259,7 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
 {
     cudaDeviceAttr cdattr;
     cudaError_t cerror;
-    
+
     switch (attr) {
     case hipDeviceAttributeMaxThreadsPerBlock:
         cdattr = cudaDevAttrMaxThreadsPerBlock; break;
@@ -307,7 +350,7 @@ inline static hipError_t hipEventCreate( hipEvent_t* event)
 {
     return hipCUDAErrorTohipError(cudaEventCreate(event));
 }
- 
+
 inline static hipError_t hipEventRecord( hipEvent_t event, hipStream_t stream = NULL)
 {
     return hipCUDAErrorTohipError(cudaEventRecord(event,stream));
@@ -340,14 +383,18 @@ inline static hipError_t hipStreamCreate(hipStream_t *stream)
     return hipCUDAErrorTohipError(cudaStreamCreate(stream));
 }
 
+inline static hipError_t hipStreamSynchronize(hipStream_t stream)
+{
+    return hipCUDAErrorTohipError(cudaStreamSynchronize(stream));
+}
 
-inline static hipError_t hipStreamDestroy(hipStream_t stream) 
+inline static hipError_t hipStreamDestroy(hipStream_t stream)
 {
     return hipCUDAErrorTohipError(cudaStreamDestroy(stream));
 }
 
 
-inline static hipError_t hipDriverGetVersion(int *driverVersion) 
+inline static hipError_t hipDriverGetVersion(int *driverVersion)
 {
 	cudaError_t err = cudaDriverGetVersion(driverVersion);
 
@@ -402,11 +449,11 @@ inline static hipError_t  hipBindTexture(size_t *offset,
 }
 
 template <class T, int dim, enum cudaTextureReadMode readMode>
-inline static hipError_t  hipBindTexture(size_t *offset, 
-                                     struct texture<T, dim, readMode> *tex, 
-                                     const void *devPtr, 
-                                     const struct hipChannelFormatDesc *desc, 
-                                     size_t size=UINT_MAX) 
+inline static hipError_t  hipBindTexture(size_t *offset,
+                                     struct texture<T, dim, readMode> *tex,
+                                     const void *devPtr,
+                                     const struct hipChannelFormatDesc *desc,
+                                     size_t size=UINT_MAX)
 {
 		return  hipCUDAErrorTohipError(cudaBindTexture(offset, tex, devPtr, desc, size));
 }

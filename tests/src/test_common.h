@@ -1,4 +1,24 @@
+/*
+Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 #include <iostream>
+#include <iomanip>
 #include <sys/time.h>
 #include <stddef.h>
 
@@ -122,13 +142,13 @@ void initArrays(T **A_d, T **B_d, T **C_d,
 
     if (usePinnedHost) {
         if (A_h) {
-            HIPCHECK ( hipMallocHost(A_h, Nbytes) );
+            HIPCHECK ( hipHostMalloc((void**)A_h, Nbytes) );
         }
         if (B_h) {
-            HIPCHECK ( hipMallocHost(B_h, Nbytes) );
+            HIPCHECK ( hipHostMalloc((void**)B_h, Nbytes) );
         }
         if (C_h) {
-            HIPCHECK ( hipMallocHost(C_h, Nbytes) );
+            HIPCHECK ( hipHostMalloc((void**)C_h, Nbytes) );
         }
     } else {
         if (A_h) {
@@ -174,13 +194,13 @@ void freeArrays(T *A_d, T *B_d, T *C_d,
 
     if (usePinnedHost) {
         if (A_h) {
-            HIPCHECK (hipFreeHost(A_h));
+            HIPCHECK (hipHostFree(A_h));
         }
         if (B_h) {
-            HIPCHECK (hipFreeHost(B_h));
+            HIPCHECK (hipHostFree(B_h));
         }
         if (C_h) {
-            HIPCHECK (hipFreeHost(C_h));
+            HIPCHECK (hipHostFree(C_h));
         }
     } else {
         if (A_h) {
@@ -213,7 +233,10 @@ void checkVectorADD(T* A_h, T* B_h, T* result_H, size_t N, bool expectMatch=true
             }
             mismatchCount++;
             if ((mismatchCount <= mismatchesToPrint) && expectMatch) {
-                std::cout << "At " << i << "  Computed:" << result_H[i] << ", expected:" << expected << std::endl;
+                std::cout << std::fixed << std::setprecision(32);
+                std::cout << "At " << i << std::endl;
+                std::cout << "  Computed:" << result_H[i]  << std::endl;
+                std::cout << "  Expected:" << expected << std::endl;
             }
         }
     }
@@ -239,7 +262,7 @@ struct Pinned {
     static void *Alloc(size_t sizeBytes) 
 	{
         void *p; 
-        HIPCHECK(hipMallocHost(&p, sizeBytes));
+        HIPCHECK(hipHostMalloc((void**)&p, sizeBytes));
         return p;
     };
 };

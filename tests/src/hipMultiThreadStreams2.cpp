@@ -34,21 +34,21 @@ Array[tx] = Array[tx] + T(1);
 void run1(size_t size, hipStream_t stream){
 	float *Ah, *Bh, *Cd, *Dd, *Eh;
 
-	hipMallocHost(&Ah, size);
-	hipMallocHost(&Bh, size);
-	hipMalloc(&Cd, size);
-	hipMalloc(&Dd, size);
-	hipMallocHost(&Eh, size);
+	HIPCHECK(hipHostMalloc((void**)&Ah, size, hipHostMallocDefault));
+	HIPCHECK(hipHostMalloc((void**)&Bh, size, hipHostMallocDefault));
+	HIPCHECK(hipMalloc(&Cd, size));
+	HIPCHECK(hipMalloc(&Dd, size));
+	HIPCHECK(hipHostMalloc((void**)&Eh, size, hipHostMallocDefault));
 
 	for(int i=0;i<N;i++){
 		Ah[i] = 1.0f;
 	}
 
-	hipMemcpyAsync(Bh, Ah, size, hipMemcpyHostToHost, stream);
-	hipMemcpyAsync(Cd, Bh, size, hipMemcpyHostToDevice, stream);
+	HIPCHECK(hipMemcpyAsync(Bh, Ah, size, hipMemcpyHostToHost, stream));
+	HIPCHECK(hipMemcpyAsync(Cd, Bh, size, hipMemcpyHostToDevice, stream));
 	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream, Cd);
-	hipMemcpyAsync(Dd, Cd, size, hipMemcpyDeviceToDevice, stream);
-	hipMemcpyAsync(Eh, Dd, size, hipMemcpyDeviceToHost, stream);
+	HIPCHECK(hipMemcpyAsync(Dd, Cd, size, hipMemcpyDeviceToDevice, stream));
+	HIPCHECK(hipMemcpyAsync(Eh, Dd, size, hipMemcpyDeviceToHost, stream));
 	HIPCHECK(hipDeviceSynchronize());
 	HIPASSERT(Eh[10] == Ah[10] + 1.0f);
 }
@@ -58,27 +58,27 @@ void run(size_t size, hipStream_t stream1, hipStream_t stream2){
 	float *Ah, *Bh, *Cd, *Dd, *Eh;
 	float *Ahh, *Bhh, *Cdd, *Ddd, *Ehh;
 
-	hipMallocHost(&Ah, size);
-	hipMallocHost(&Bh, size);
-	hipMalloc(&Cd, size);
-	hipMalloc(&Dd, size);
-	hipMallocHost(&Eh, size);
-	hipMallocHost(&Ahh, size);
-	hipMallocHost(&Bhh, size);
-	hipMalloc(&Cdd, size);
-	hipMalloc(&Ddd, size);
-	hipMallocHost(&Ehh, size);
+	HIPCHECK(hipHostMalloc((void**)&Ah, size, hipHostMallocDefault));
+	HIPCHECK(hipHostMalloc((void**)&Bh, size, hipHostMallocDefault));
+	HIPCHECK(hipMalloc(&Cd, size));
+	HIPCHECK(hipMalloc(&Dd, size));
+	HIPCHECK(hipHostMalloc((void**)&Eh, size, hipHostMallocDefault));
+	HIPCHECK(hipHostMalloc((void**)&Ahh, size, hipHostMallocDefault));
+	HIPCHECK(hipHostMalloc((void**)&Bhh, size, hipHostMallocDefault));
+	HIPCHECK(hipMalloc(&Cdd, size));
+	HIPCHECK(hipMalloc(&Ddd, size));
+	HIPCHECK(hipHostMalloc((void**)&Ehh, size, hipHostMallocDefault));
 
-	hipMemcpyAsync(Bh, Ah, size, hipMemcpyHostToHost, stream1);
-	hipMemcpyAsync(Bhh, Ahh, size, hipMemcpyHostToHost, stream2);
-	hipMemcpyAsync(Cd, Bh, size, hipMemcpyHostToDevice, stream1);
-	hipMemcpyAsync(Cdd, Bhh, size, hipMemcpyHostToDevice, stream2);
+	HIPCHECK(hipMemcpyAsync(Bh, Ah, size, hipMemcpyHostToHost, stream1));
+	HIPCHECK(hipMemcpyAsync(Bhh, Ahh, size, hipMemcpyHostToHost, stream2));
+	HIPCHECK(hipMemcpyAsync(Cd, Bh, size, hipMemcpyHostToDevice, stream1));
+	HIPCHECK(hipMemcpyAsync(Cdd, Bhh, size, hipMemcpyHostToDevice, stream2));
 	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream1, Cd);
 	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/500), dim3(500), 0, stream2, Cdd);
-	hipMemcpyAsync(Dd, Cd, size, hipMemcpyDeviceToDevice, stream1);
-	hipMemcpyAsync(Ddd, Cdd, size, hipMemcpyDeviceToDevice, stream2);
-	hipMemcpyAsync(Eh, Dd, size, hipMemcpyDeviceToHost, stream1);
-	hipMemcpyAsync(Ehh, Ddd, size, hipMemcpyDeviceToHost, stream2);
+	HIPCHECK(hipMemcpyAsync(Dd, Cd, size, hipMemcpyDeviceToDevice, stream1));
+	HIPCHECK(hipMemcpyAsync(Ddd, Cdd, size, hipMemcpyDeviceToDevice, stream2));
+	HIPCHECK(hipMemcpyAsync(Eh, Dd, size, hipMemcpyDeviceToHost, stream1));
+	HIPCHECK(hipMemcpyAsync(Ehh, Ddd, size, hipMemcpyDeviceToHost, stream2));
 	HIPCHECK(hipDeviceSynchronize());
 	HIPASSERT(Eh[10] = Ah[10] + 1.0f);
 	HIPASSERT(Ehh[10] = Ahh[10] + 1.0f);

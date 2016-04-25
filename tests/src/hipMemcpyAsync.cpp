@@ -1,8 +1,26 @@
+/*
+Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 // Test under-development.  Calls async mem-copy API, experiment with functionality.
 
 #include "hip_runtime.h"
 #include "test_common.h"
-
 unsigned p_streams = 2;
 
 
@@ -14,13 +32,13 @@ void simpleNegTest()
 
     size_t Nbytes = N*sizeof(float);
     A_malloc = (float*)malloc(Nbytes);
-    HIPCHECK(hipMallocHost(&A_pinned, Nbytes));
+    HIPCHECK(hipHostMalloc((void**)&A_pinned, Nbytes, hipHostMallocDefault));
+    A_d = NULL;
     HIPCHECK(hipMalloc(&A_d, Nbytes));
-
-
+    HIPASSERT(A_d != NULL);
     // Can't use default with async copy
     e = hipMemcpyAsync(A_pinned, A_d, Nbytes, hipMemcpyDefault, NULL);
-    HIPASSERT (e == hipSuccess);
+//    HIPASSERT (e == hipSuccess);
 
 
     // Not sure what happens here, the memory must be pinned.
@@ -42,7 +60,7 @@ struct HostTraits<Pinned>
 
     static void *Alloc(size_t sizeBytes) {
         void *p; 
-        HIPCHECK(hipMallocHost(&p, sizeBytes));
+        HIPCHECK(hipHostMalloc((void**)&p, sizeBytes, hipHostMallocDefault));
         return p;
     };
 };
@@ -80,8 +98,8 @@ void test_pingpong(hipStream_t stream, size_t numElements, int numInflight, int 
     printf ("testing: %s<%s>  Nbytes=%zu (%6.1f MB) numPongs=%d numInflight=%d eachCopyElements=%zu eachCopyBytes=%zu\n", 
             __func__, HostTraits<AllocType>::Name(), Nbytes, (double)(Nbytes)/1024.0/1024.0, numPongs, numInflight, eachCopyElements, eachCopyBytes);
 
-    T *A_h;
-    T *A_d;
+    T *A_h = NULL;
+    T *A_d = NULL;
 
     A_h = (T*)(HostTraits<AllocType>::Alloc(Nbytes));
     HIPCHECK(hipMalloc(&A_d, Nbytes));
@@ -97,12 +115,14 @@ void test_pingpong(hipStream_t stream, size_t numElements, int numInflight, int 
 
     for (int k=0; k<numPongs; k++ ) {
         for (int i=0; i<numInflight; i++) {
+            HIPASSERT(A_d + i*eachCopyElements < A_d + Nbytes);
             HIPCHECK(hipMemcpyAsync(&A_d[i*eachCopyElements], &A_h[i*eachCopyElements], eachCopyBytes, hipMemcpyHostToDevice, stream));
         }
 
         hipLaunchKernel(addK<T>, dim3(blocks), dim3(threadsPerBlock), 0, stream,   A_d, 2, numElements);
 
         for (int i=0; i<numInflight; i++ ) {
+            HIPASSERT(A_d + i*eachCopyElements < A_d + Nbytes);
             HIPCHECK(hipMemcpyAsync(&A_h[i*eachCopyElements], &A_d[i*eachCopyElements], eachCopyBytes, hipMemcpyDeviceToHost, stream));
         }
 
@@ -140,7 +160,7 @@ void test_pingpong(hipStream_t stream, size_t numElements, int numInflight, int 
     }
 
 
-    HIPCHECK(hipFreeHost(A_h));
+    HIPCHECK(hipHostFree(A_h));
     HIPCHECK(hipFree(A_d));
 }
 
@@ -162,8 +182,8 @@ void test_manyInflightCopies(hipStream_t stream, int numElements, int numCopies,
     T *A_d;
     T *A_h1, *A_h2;
 
-    HIPCHECK(hipMallocHost(&A_h1, Nbytes));
-    HIPCHECK(hipMallocHost(&A_h2, Nbytes));
+    HIPCHECK(hipHostMalloc((void**)&A_h1, Nbytes, hipHostMallocDefault));
+    HIPCHECK(hipHostMalloc((void**)&A_h2, Nbytes, hipHostMallocDefault));
     HIPCHECK(hipMalloc(&A_d, Nbytes));
 
     for (int i=0; i<numElements; i++) {
@@ -176,6 +196,7 @@ void test_manyInflightCopies(hipStream_t stream, int numElements, int numCopies,
 
     for (int i=0; i<numCopies; i++) 
     {
+        HIPASSERT(A_d + i*eachCopyElements < A_d + Nbytes);
         HIPCHECK(hipMemcpyAsync(&A_d[i*eachCopyElements], &A_h1[i*eachCopyElements], eachCopyBytes, hipMemcpyHostToDevice, stream));
     }
 
@@ -185,6 +206,7 @@ void test_manyInflightCopies(hipStream_t stream, int numElements, int numCopies,
 
     for (int i=0; i<numCopies; i++) 
     {
+        HIPASSERT(A_d + i*eachCopyElements < A_d + Nbytes);
         HIPCHECK(hipMemcpyAsync(&A_h2[i*eachCopyElements], &A_d[i*eachCopyElements], eachCopyBytes, hipMemcpyDeviceToHost, stream));
     }
 
@@ -197,8 +219,8 @@ void test_manyInflightCopies(hipStream_t stream, int numElements, int numCopies,
     }
 
 
-    HIPCHECK(hipFreeHost(A_h1));
-    HIPCHECK(hipFreeHost(A_h2));
+    HIPCHECK(hipHostFree(A_h1));
+    HIPCHECK(hipHostFree(A_h2));
     HIPCHECK(hipFree(A_d));
 }
 
@@ -247,7 +269,9 @@ void test_chunkedAsyncExample(int nStreams, bool useNullStream, bool useSyncMemc
         size_t workBytes = work * sizeof(int);
 
         size_t offset = i*workPerStream;
-
+        HIPASSERT(A_d + offset < A_d + Nbytes);
+        HIPASSERT(B_d + offset < B_d + Nbytes);
+        HIPASSERT(C_d + offset < C_d + Nbytes);
         if (useSyncMemcpyH2D) {
             HIPCHECK ( hipMemcpy(&A_d[offset], &A_h[offset], workBytes, hipMemcpyHostToDevice));
             HIPCHECK ( hipMemcpy(&B_d[offset], &B_h[offset], workBytes, hipMemcpyHostToDevice));

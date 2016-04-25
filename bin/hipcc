@@ -16,8 +16,8 @@ use File::Basename;
 # Other environment variable controls:
 # HIP_PATH  : Path to HIP directory, default is one dir level above location of this script 
 # CUDA_PATH : Path to CUDA SDK (default /usr/local/cuda). Used on NVIDIA platforms only.
-# HCC_HOME  : Path to HCC SDK (default /opt/hcc).  Used on AMD platforms only.
-# HSA_PATH  : Path to HSA dir (default /opt/hsa).  Used on AMD platforms only.
+# HCC_HOME  : Path to HCC SDK (default /opt/rocm/hcc).  Used on AMD platforms only.
+# HSA_PATH  : Path to HSA dir (default /opt/rocm/hsa).  Used on AMD platforms only.
 
 if(scalar @ARGV == 0){
 print "No Arguments passed, exiting ...\n";
@@ -26,7 +26,7 @@ exit(-1);
 
 $verbose = $ENV{'HIPCC_VERBOSE'};
 $verbose = 0 unless defined $verbose;
-# Verbose: 0x1=commands, 0x2=paths, 0x4=hippc args, 0x8=force remake hip_hcc.o, 16=remake hip_hcc in debug.
+# Verbose: 0x1=commands, 0x2=paths, 0x4=hippc args
 
 $HIP_PATH=$ENV{'HIP_PATH'};
 $HIP_PATH=dirname (dirname $0) unless defined $HIP_PATH;        # use parent directory of hipcc
@@ -36,6 +36,9 @@ $HIP_PATH=dirname (dirname $0) unless defined $HIP_PATH;        # use parent dir
 $CUDA_PATH=$ENV{'CUDA_PATH'};
 $CUDA_PATH='/usr/local/cuda' unless defined $CUDA_PATH;
 
+$CODEXL_PATH = $ENV{'CODEXL_PATH'};
+$CODEXL_PATH = "/opt/AMD/CodeXL" unless defined $CODEXL_PATH;
+$marker_path = "$CODEXL_PATH/SDK/AMDTActivityLogger";
 
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
@@ -52,27 +55,45 @@ if ($verbose & 0x2) {
 	print ("CUDA_PATH=$CUDA_PATH\n");
 }
 
-
+$enablestdcpplib = 0;
 
 if ($HIP_PLATFORM eq "hcc") {
 	$HSA_PATH=$ENV{'HSA_PATH'};
-	$HSA_PATH="/opt/hsa" unless defined $HSA_PATH;
+	$HSA_PATH="/opt/rocm/hsa" unless defined $HSA_PATH;
 
     $HCC_HOME=$ENV{'HCC_HOME'};
-    $HCC_HOME="/opt/hcc" unless defined $HCC_HOME;
+    $HCC_HOME="/opt/rocm/hcc" unless defined $HCC_HOME;
+
+    $ROCM_PATH=$ENV{'ROCM_PATH'};
+    $ROCM_PATH="/opt/rocm" unless defined $ROCM_PATH;
 
     # HCC* may be used to compile src/hip_hcc.o (and also feed the HIPCXXFLAGS below)
     $HCC = "$HCC_HOME/bin/hcc";
-    $HCCFLAGS = " -hc -I$HCC_HOME/include  -stdlib=libc++";
+    $HCCFLAGS = "-hc -I$HCC_HOME/include ";
 
     $HIPCC=$HCC;
     $HIPCXXFLAGS = $HCCFLAGS;
     $HIPCXXFLAGS .= " -I$HIP_PATH/include/hcc_detail/cuda";
-
+    $HIPCXXFLAGS .= " -I$HSA_PATH/include";
 	$HIPLDFLAGS =  "-hc -L$HCC_HOME/lib -Wl,--rpath=$HCC_HOME/lib -lc++ -ldl -lpthread -Wl,--whole-archive -lmcwamp -Wl,--no-whole-archive";
-        # Suppress linker warnings in case HCC distribution contains OpenCL/SPIR symbols
-        $HIPLDFLAGS .= " -Wl,--defsym=_binary_kernel_spir_end=0 -Wl,--defsym=_binary_kernel_spir_start=0 -Wl,--defsym=_binary_kernel_cl_start=0 -Wl,--defsym=_binary_kernel_cl_end=0";
-	$HIPLDFLAGS .= " -L$HSA_PATH/lib -lhsa-runtime64 -lhc_am";
+    # Suppress linker warnings in case HCC distribution contains OpenCL/SPIR symbols
+    $HIPLDFLAGS .= " -Wl,--defsym=_binary_kernel_spir_end=0 -Wl,--defsym=_binary_kernel_spir_start=0 -Wl,--defsym=_binary_kernel_cl_start=0 -Wl,--defsym=_binary_kernel_cl_end=0";
+    # Satisfy HCC dependencies
+    $HIPLDFLAGS .= " -lc++abi";
+	$HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am";
+
+    # Add trace marker library:
+    # TODO - once we cleanly separate the HIP API headers from HIP library headers this logic should move to CMakebuild option - apps do not need to see the marker library.
+    $marker_inc_path = "$marker_path/include";
+    if (-e $marker_inc_path) {
+        $HIPCXXFLAGS .= " -I$marker_inc_path";
+    }
+
+    $marker_lib_path = "$marker_path/bin/x86_64";
+    if (-e $marker_lib_path) {
+        $HIPLDFLAGS .= " -L$marker_lib_path -lAMDTActivityLogger";
+    }
+
 	# Add C++ libs for GCC.
 	$HIPLDFLAGS .= " -lstdc++";
 	$HIPLDFLAGS .= " -lm";
@@ -112,8 +133,10 @@ if ($verbose & 0x4) {
 	print "hipcc-args: ", join (" ", @ARGV), "\n";
 }
 
+my $toolArgs = "";  # arguments to pass to the hcc or nvcc tool
 foreach $arg (@ARGV) 
 {
+    my $swallowArg = 0;
     if ($arg eq '-c') {
         $compileOnly = 1;
         $needCXXFLAGS = 1;
@@ -123,10 +146,25 @@ foreach $arg (@ARGV)
         $needLDFLAGS = 1;
     }
 
+    if($arg eq '-stdlib=libstdc++' and $enablestdcpplib eq 0)
+    {
+	$HIPCXXFLAGS .= " -stdlib=libstdc++";
+	$enablestdcpplib = 1;
+    }
 
     if ($arg =~ m/^-/) {
         # options start with -
-        push (@options, $arg);
+        
+        # Process HIPCC options here:
+        if ($arg =~ m/^--hipcc/) {
+            $swallowArg = 1;
+            if ($arg eq "--hipcc_explicit_lib") {
+                # Some environments (ie cmake tests) already link their own hip_hcc.o, so don't add here:
+                $needHipHcc = 0;
+            }
+        } else {
+            push (@options, $arg);
+        }
         #print "O: <$arg>\n";
     } else  {
         # input files and libraries 
@@ -139,13 +177,10 @@ foreach $arg (@ARGV)
             $needCXXFLAGS = 1;
         }
 
-        if (($arg =~ /hip_hcc\.o$/) or ($arg =~ /hip_hcc\.cpp/)) {
-            $needHipHcc = 0;
-        }
-
         push (@inputs, $arg);
         #print "I: <$arg>\n";
     }
+    $toolArgs .= " $arg" unless $swallowArg;
 }
 
 if ($hasC and $HIP_PLATFORM eq 'nvcc') {
@@ -155,33 +190,21 @@ if ($hasCU and $HIP_PLATFORM eq 'hcc') {
     $HIPCXXFLAGS .= " -x c++";
 }
 
-if (($verbose & 0x18) and ($HIP_PLATFORM eq 'hcc')) {
-    $needHipHcc = 1; 
+if ($enablestdcpplib eq 0 and $HIP_PLATFORM eq 'hcc')
+{
+    $HIPCXXFLAGS .= " -stdlib=libc++";
 }
 
 if ($needHipHcc) {
-    # See if we need to remake the .o file:
-    my $source = "$HIP_PATH/src/hip_hcc.cpp" ;
-    my $object = "$HIP_PATH/src/hip_hcc.o" ;
+    $HIP_USE_SHARED_LIBRARY = $ENV{'HIP_USE_SHARED_LIBRARY'};
+    $HIP_USE_SHARED_LIBRARY = 0 unless defined $HIP_USE_SHARED_LIBRARY;
 
-    # remake if object does not exist, or if source is newer than object:
-    if ((not -e $object) or ((stat($source))[9] > (stat($object))[9]))  {
-        my $CMD = "$HCC $HCCFLAGS  -I$HSA_PATH/include -I$HIP_PATH/include -Wall -c $source -o $object";
-        if ($verbose & 0x10) {
-            $CMD .= " -g -O0" ;
-        } else {
-            $CMD .= " -O3" ;
-        }
-
-        if ($verbose & 0x1) {
-            print "remake-deps:", $CMD, "\n";
-        }
-        system ("$CMD") and die ("remake-deps failed");
-
-        
+    #$HIPLDFLAGS .= " -L/opt/rocm/hip/lib -lhip_hcc" ;
+    if ($HIP_USE_SHARED_LIBRARY) {
+        $HIPLDFLAGS .= " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc";
+    } else {
+        $HIPLDFLAGS .= " $HIP_PATH/lib/device_util.cpp.o $HIP_PATH/lib/hip_device.cpp.o $HIP_PATH/lib/hip_error.cpp.o $HIP_PATH/lib/hip_event.cpp.o $HIP_PATH/lib/hip_hcc.cpp.o $HIP_PATH/lib/hip_memory.cpp.o $HIP_PATH/lib/hip_peer.cpp.o $HIP_PATH/lib/hip_stream.cpp.o $HIP_PATH/lib/staging_buffer.cpp.o";
     }
-    
-    $HIPLDFLAGS .= " $HIP_PATH/src/hip_hcc.o" ;
 }
 
 # hipcc currrently requires separate compilation of source files, ie it is not possible to pass
@@ -190,7 +213,6 @@ if ($needHipHcc) {
 # pass-through CPP mode.
 
 
-$args = join(" ", @ARGV);
 
 my $CMD="$HIPCC";
 if ($needCXXFLAGS) {
@@ -199,7 +221,7 @@ if ($needCXXFLAGS) {
 if ($needLDFLAGS and not $compileOnly) {
     $CMD .= " $HIPLDFLAGS";
 }
-$CMD .= " $args";
+$CMD .= " $toolArgs";
 
 if ($verbose & 0x1) {
     print "hipcc-cmd: ", $CMD, "\n";

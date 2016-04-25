@@ -22,11 +22,14 @@ THE SOFTWARE.
 #include <stdio.h>
 #include <hip_runtime.h>
 
-#define CHECK(error) \
+#define CHECK(cmd) \
+{\
+    hipError_t error  = cmd;\
     if (error != hipSuccess) { \
       fprintf(stderr, "error: '%s'(%d) at %s:%d\n", hipGetErrorString(error), error,__FILE__, __LINE__); \
     exit(EXIT_FAILURE);\
-	}
+	}\
+}
 
 
 /* 
@@ -53,7 +56,7 @@ int main(int argc, char *argv[])
 	size_t Nbytes = N * sizeof(float);
 
 	hipDeviceProp_t props;
-	CHECK(hipDeviceGetProperties(&props, 0/*deviceID*/));
+	CHECK(hipGetDeviceProperties(&props, 0/*deviceID*/));
 	printf ("info: running on device %s\n", props.name);
 
 	printf ("info: allocate host mem (%6.2f MB)\n", 2*Nbytes/1024.0/1024.0);

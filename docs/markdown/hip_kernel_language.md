@@ -26,6 +26,7 @@
   - [Single Precision Mathematical Functions](#single-precision-mathematical-functions)
   - [Double Precision Mathematical Functions](#double-precision-mathematical-functions)
   - [Integer Intrinsics](#integer-intrinsics)
+  - [Floating-point Intrinsics](#floating-point-intrinsics)
 - [Texture Functions](#texture-functions)
 - [Surface Functions](#surface-functions)
 - [Timer Functions](#timer-functions)
@@ -427,7 +428,7 @@ Nvidia devices implement the timer as a per-compute-unit clock that increments o
 To obtain the clock frequency, use the hipDeviceProp_t.clockInstructionRate field:
 
 ```
-hipDeviceGetProperties(&deviceProps, deviceId);
+hipGetDeviceProperties(&deviceProps, deviceId);
 // Compute time in ms--device_ticks is based on values reported from clock() device function
 float time = device_ticks / (float)deviceProps.clockInstructionRate;
 ```
