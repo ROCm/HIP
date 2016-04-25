@@ -87,6 +87,9 @@ Functions</h2></td></tr>
 <tr class="memitem:gaf2382e3cc6632332a8983a0f58e43494"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Stream.html#gaf2382e3cc6632332a8983a0f58e43494">hipStreamCreateWithFlags</a> (hipStream_t *stream, unsigned int flags)</td></tr>
 <tr class="memdesc:gaf2382e3cc6632332a8983a0f58e43494"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an asynchronous stream.  <a href="#gaf2382e3cc6632332a8983a0f58e43494">More...</a><br/></td></tr>
 <tr class="separator:gaf2382e3cc6632332a8983a0f58e43494"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaff5b62d6e9502d80879f7176f4d03102"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Stream.html#gaff5b62d6e9502d80879f7176f4d03102">hipStreamCreate</a> (hipStream_t *stream)</td></tr>
+<tr class="memdesc:gaff5b62d6e9502d80879f7176f4d03102"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an asynchronous stream.  <a href="#gaff5b62d6e9502d80879f7176f4d03102">More...</a><br/></td></tr>
+<tr class="separator:gaff5b62d6e9502d80879f7176f4d03102"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gacdd84c8f8ef1539c96c57c1d5bcae633"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Stream.html#gacdd84c8f8ef1539c96c57c1d5bcae633">hipStreamWaitEvent</a> (hipStream_t stream, <a class="el" href="structhipEvent__t.html">hipEvent_t</a> event, unsigned int flags)</td></tr>
 <tr class="memdesc:gacdd84c8f8ef1539c96c57c1d5bcae633"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make the specified compute stream wait for an event.  <a href="#gacdd84c8f8ef1539c96c57c1d5bcae633">More...</a><br/></td></tr>
 <tr class="separator:gacdd84c8f8ef1539c96c57c1d5bcae633"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -108,6 +111,33 @@ Functions</h2></td></tr>
 <li>cudaStreamGetPriority </li>
 </ul>
 <h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="gaff5b62d6e9502d80879f7176f4d03102"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipStreamCreate </td>
+          <td>(</td>
+          <td class="paramtype">hipStream_t *&#160;</td>
+          <td class="paramname"><em>stream</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Create an asynchronous stream. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">stream</td><td>Valid pointer to hipStream_t. This function writes the memory with the newly created stream. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a></dd></dl>
+<p>Create a new asynchronous stream. <code>stream</code> returns an opaque handle that can be used to reference the newly created stream in subsequent hipStream* commands. The stream is allocated on the heap and will remain allocated even if the handle goes out-of-scope. To release the memory used by the stream, applicaiton must call hipStreamDestroy.</p>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__Stream.html#ga3076a3499ed2c7821311006100bb95ec" title="Destroys the specified stream. ">hipStreamDestroy</a> </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="gaf2382e3cc6632332a8983a0f58e43494"></a>
 <div class="memitem">
 <div class="memproto">
@@ -277,15 +307,14 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a88e525a7c8f35552dfada58e9f2f6d3a" title="Resource handle (hipEvent_t or hipStream_t) invalid. ">hipErrorInvalidResourceHandle</a></dd></dl>
 <p>This function inserts a wait operation into the specified stream. All future work submitted to <code>stream</code> will wait until <code>event</code> reports completion before beginning execution. This function is host-asynchronous and the function may return before the wait has completed.</p>
-<dl class="bug"><dt><b><a class="el" href="bug.html#_bug000003">Bug:</a></b></dt><dd>This function conservatively waits for all work in the specified stream to complete. </dd></dl>
-<dl class="bug"><dt><b><a class="el" href="bug.html#_bug000006">Bug:</a></b></dt><dd>This function conservatively waits for all work in the specified stream to complete. </dd></dl>
+<dl class="bug"><dt><b><a class="el" href="bug.html#_bug000004">Bug:</a></b></dt><dd>This function conservatively waits for all work in the specified stream to complete. </dd></dl>
 
 </div>
 </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Mar 23 2016 23:11:07 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Apr 19 2016 22:44:02 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
