@@ -12,6 +12,8 @@ make install
 export HIP_PATH= 
 ```
 
+After making HIP, don't forget the "make install" step !
+
 
 
 ## Adding a new HIP API
