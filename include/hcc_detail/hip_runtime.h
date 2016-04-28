@@ -96,7 +96,7 @@ extern int HIP_TRACE_API;
 #define __HIP_ARCH_HAS_3DGRID__                     (1)
 #define __HIP_ARCH_HAS_DYNAMIC_PARALLEL__           (0)
 
-#endif
+#endif /* Device feature flags */
 
 
 //TODO-HCC  this is currently ignored by HCC target of HIP
@@ -298,7 +298,7 @@ extern const int warpSize;
 #define clock_t long long int
 __device__ long long int clock64();
 __device__ clock_t clock();
-#if __cplusplus
+
 //atomicAdd()
 __device__ int atomicAdd(int* address, int val);
 __device__ unsigned int atomicAdd(unsigned int* address,
@@ -401,7 +401,6 @@ __device__  unsigned long long int __ballot( int input);
 
 // warp shuffle functions
 #ifdef __cplusplus
-
 __device__ int __shfl(int input, int lane, int width=warpSize);
 __device__ int __shfl_up(int input, unsigned int lane_delta, int width=warpSize);
 __device__ int __shfl_down(int input, unsigned int lane_delta, int width=warpSize);
@@ -448,6 +447,7 @@ __device__ float __dsqrt_rz(double x);
  * Kernel launching
  */
 
+// Choose correct polarity of xyz/zyx ordering:
 #if __hcc_workweek__ >= 16123
 
 #define hipThreadIdx_x (amp_get_local_id(0))
@@ -484,12 +484,12 @@ __device__ float __dsqrt_rz(double x);
 #define hipGridDim_y   (hc_get_num_groups(1))
 #define hipGridDim_z   (hc_get_num_groups(0))
 
-#endif
+#endif // __hcc_workweek__ check
 
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
 
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
-#include<grid_launch.h>
+
 #ifdef __HCC_CPP__
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, grid_launch_parm *lp);
 void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp);
@@ -572,5 +572,4 @@ do {\
  */
 
 
-#endif
 #endif
