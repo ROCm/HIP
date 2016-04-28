@@ -109,7 +109,6 @@ extern int HIP_TRACE_API;
 #define __HCC_C__
 #endif
 
-#ifdef DISABLED_MATH_FUNC // TODO - remove this flag.
 __device__ float acosf(float x);
 __device__ float acoshf(float x);
 __device__ float asinf(float x);
@@ -442,7 +441,6 @@ __device__ float __dsqrt_rd(double x);
 __device__ float __dsqrt_rn(double x);
 __device__ float __dsqrt_ru(double x);
 __device__ float __dsqrt_rz(double x);
-#endif /* DISABLED_MATH_FUNC*/
 /**
  * Kernel launching
  */
