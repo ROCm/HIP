@@ -8,6 +8,8 @@ set(HIP_VERSION_MAJOR "0")
 set(HIP_VERSION_MINOR "84")
 set(HIP_VERSION_PATCH "0")
 
+add_subdirectory(clang-hipify)
+
 #############################
 # Configure variables
 #############################
@@ -16,10 +18,9 @@ if(NOT DEFINED HIP_PLATFORM)
     if(NOT DEFINED ENV{HIP_PLATFORM})
         execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/hipconfig --platform
                         OUTPUT_VARIABLE HIP_PLATFORM
-                        OUTPUT_STRIP_TRAILING_WHITESPACE)
     else()
         set(HIP_PLATFORM $ENV{HIP_PLATFORM} CACHE STRING "HIP Platform")
-    endif()
+                        OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
 message(STATUS "HIP Platform: " ${HIP_PLATFORM})
 
