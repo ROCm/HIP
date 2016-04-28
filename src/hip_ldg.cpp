@@ -17,8 +17,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <hc.hpp>
 #include"hcc_detail/hip_ldg.h"
-#if __hcc_workweek__ >= 16164
+
+#if __hcc_workweek__ >= 16164 and defined (USE_LDG) 
 __device__ char                 __ldg(const char* ptr)
 {
     return ptr[0];
