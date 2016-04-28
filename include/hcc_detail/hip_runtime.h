@@ -46,7 +46,6 @@ THE SOFTWARE.
 // Remainder of this file only compiles with HCC
 #ifdef __HCC__
 #include <grid_launch.h>
-#include <kalmar_defines.h>
 extern int HIP_TRACE_API;
 
 //TODO-HCC-GL - change this to typedef.
