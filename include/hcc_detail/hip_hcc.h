@@ -440,8 +440,12 @@ public:
     hc::accelerator_view        _av;
     unsigned                    _flags;
 
-private: // Critical Data.  THis MUST be accessed through LockedAccessor_StreamCrit_t
+private:
+    // Critical Data.  THis MUST be accessed through LockedAccessor_StreamCrit_t
     ihipStreamCritical_t        _criticalData;
+
+    // Array of dependency completion_future.
+    std::vector<hc::completion_future> _depFutures;
 
 private:
     void                        enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal);

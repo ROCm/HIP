@@ -181,6 +181,8 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty
     // Reset the stream to "empty" - next command will not set up an inpute dependency on any older signal.
     crit->_last_command_type = ihipCommandCopyH2D;
     crit->_last_copy_signal = NULL;
+
+    _depFutures.clear();
 }
 
 
@@ -428,6 +430,9 @@ int ihipStream_t::preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t
             needSync = 1;
             hsa_signal_t *hsaSignal = (static_cast<hsa_signal_t*> (crit->_last_kernel_future.get_native_handle()));
             if (hsaSignal) {
+                // Keep reference to the kernel future in order to keep the
+                // dependent signal alive.
+                _depFutures.push_back(crit->_last_kernel_future);
                 *waitSignal = * hsaSignal;
             } else {
                 assert(0); // if NULL signal, and we return 1, hsa_amd_memory_copy_async will fail.  Confirm this never happens.
