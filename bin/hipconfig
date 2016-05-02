@@ -97,9 +97,9 @@ if (!$printed or $p_full) {
         print ("HSA_PATH     : $HSA_PATH\n");
         print ("HCC_HOME     : $HCC_HOME\n");
         system("$HCC_HOME/bin/hcc --version");
-        print ("HCC-cxxflags: "); 
+        print ("HCC-cxxflags : "); 
         system("$HCC_HOME/bin/hcc-config --cxxflags");
-        print ("HCC-ldflags : "); 
+        print ("HCC-ldflags  : "); 
         system("$HCC_HOME/bin/hcc-config --ldflags");
         printf("\n");
     }
@@ -119,6 +119,7 @@ if (!$printed or $p_full) {
 
     print "\n" ;
     print "== Linux Kernel\n";
+    print "Hostname     : "; system ("hostname");
     system ("uname -a");
 
     if (-e "/usr/bin/lsb_release") {

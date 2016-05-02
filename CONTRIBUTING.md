@@ -1,5 +1,20 @@
 # Contributor Guidelines 
 
+## Make Tips
+When building HIP, you will likely want to build and install to a local user-accessible directory (rather than /opt/rocm).  
+This can be easily be done by setting the -DCMAKE_INSTALL_PREFIX variable when running cmake.  Typical use case is to 
+set CMAKE_INSTALL_PREFIX to your HIP git root, and then ensure HIP_PATH points to this directory.   For example
+
+```
+cmake .. -DCMAKE_INSTALL_PREFIX=..
+make install
+
+export HIP_PATH= 
+```
+
+After making HIP, don't forget the "make install" step !
+
+
 
 ## Adding a new HIP API
 

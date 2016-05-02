@@ -64,6 +64,9 @@ if ($HIP_PLATFORM eq "hcc") {
     $HCC_HOME=$ENV{'HCC_HOME'};
     $HCC_HOME="/opt/rocm/hcc" unless defined $HCC_HOME;
 
+    $ROCM_PATH=$ENV{'ROCM_PATH'};
+    $ROCM_PATH="/opt/rocm" unless defined $ROCM_PATH;
+
     # HCC* may be used to compile src/hip_hcc.o (and also feed the HIPCXXFLAGS below)
     $HCC = "$HCC_HOME/bin/hcc";
     $HCCFLAGS = "-hc -I$HCC_HOME/include ";
@@ -77,7 +80,7 @@ if ($HIP_PLATFORM eq "hcc") {
     $HIPLDFLAGS .= " -Wl,--defsym=_binary_kernel_spir_end=0 -Wl,--defsym=_binary_kernel_spir_start=0 -Wl,--defsym=_binary_kernel_cl_start=0 -Wl,--defsym=_binary_kernel_cl_end=0";
     # Satisfy HCC dependencies
     $HIPLDFLAGS .= " -lc++abi";
-	$HIPLDFLAGS .= " -L$HSA_PATH/lib -lhsa-runtime64 -lhc_am";
+	$HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am";
 
     # Add trace marker library:
     # TODO - once we cleanly separate the HIP API headers from HIP library headers this logic should move to CMakebuild option - apps do not need to see the marker library.
@@ -200,7 +203,7 @@ if ($needHipHcc) {
     if ($HIP_USE_SHARED_LIBRARY) {
         $HIPLDFLAGS .= " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc";
     } else {
-        $HIPLDFLAGS .= " $HIP_PATH/lib/device_util.cpp.o $HIP_PATH/lib/hip_device.cpp.o $HIP_PATH/lib/hip_error.cpp.o $HIP_PATH/lib/hip_event.cpp.o $HIP_PATH/lib/hip_hcc.cpp.o $HIP_PATH/lib/hip_memory.cpp.o $HIP_PATH/lib/hip_peer.cpp.o $HIP_PATH/lib/hip_stream.cpp.o $HIP_PATH/lib/staging_buffer.cpp.o";
+        $HIPLDFLAGS .= " $HIP_PATH/lib/device_util.cpp.o $HIP_PATH/lib/hip_device.cpp.o $HIP_PATH/lib/hip_error.cpp.o $HIP_PATH/lib/hip_event.cpp.o $HIP_PATH/lib/hip_hcc.cpp.o $HIP_PATH/lib/hip_memory.cpp.o $HIP_PATH/lib/hip_peer.cpp.o $HIP_PATH/lib/hip_stream.cpp.o $HIP_PATH/lib/staging_buffer.cpp.o $HIP_PATH/lib/hip_ldg.cpp.o";
     }
 }
 

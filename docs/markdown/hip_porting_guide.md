@@ -8,7 +8,7 @@ and provides practical suggestions on how to port CUDA code and work through com
 
  * [HIP Porting Guide](#hip-porting-guide)
       * [Table of Contents](#table-of-contents)
-    * [Porting a New Cuda Project TO](#porting-a-new-cuda-project)
+    * [Porting a New Cuda Project To HIP](#porting-a-new-cuda-project)
       * [General Tips](#general-tips" aria-hidden="true"><span aria-hidden="true)
       * [Scanning existing CUDA code to scope the porting effort](#scanning-existing-cuda-code-to-scope-the-porting-effort" aria-hidden="true"><span aria-hidden="true)
     * [Distinguishing Compiler Modes](#distinguishing-compiler-modes" aria-hidden="true"><span aria-hidden="true)
@@ -434,9 +434,10 @@ On an hcc/AMD platform, set the HIP_TRACE_API environment variable to see a text
 On hcc/AMD platforms, set the HIP_PRINT_ENV environment variable to 1 and run an application that calls a HIP API to see all HIP-supported environment variables and their current values:
 
 - HIP_PRINT_ENV = 1: print HIP environment variables
-- HIP_TRACE_API = 0: trace each HIP API call. Print the function name and return code to stderr as the program executes.
+- HIP_TRACE_API = 1: trace each HIP API call. Print the function name and return code to stderr as the program executes.
 - HIP_LAUNCH_BLOCKING = 0: make HIP APIs host-synchronous so they are blocked until any kernel launches or data-copy commands are complete (an alias is CUDA_LAUNCH_BLOCKING)
 
+- KMDUMPISA = 1 : Will dump the GCN ISA for all kernels into the local directory.
 
 
 ### Debugging hipcc

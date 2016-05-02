@@ -21,11 +21,11 @@ THE SOFTWARE.
 #define HIP_HCC_H
 
 #include <hc.hpp>
-#include "hcc_detail/hip_util.h"
-#include "hcc_detail/staging_buffer.h"
+#include "hip/hcc_detail/hip_util.h"
+#include "hip/hcc_detail/staging_buffer.h"
 
 
-#if defined(__HCC__) && (__hcc_workweek__ < 1502)
+#if defined(__HCC__) && (__hcc_workweek__ < 16155)
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
@@ -39,10 +39,10 @@ THE SOFTWARE.
 // >= 3 : use hc::am_memtracker_update_peers(...)
 #define USE_PEER_TO_PEER 2
 
-// Use new lock API in HCC:
-#define USE_HCC_LOCK 0
 
-//#define INLINE static inline
+// Use new am_memory_host_lock APIs:
+#define USE_HCC_LOCK_API 1
+
 
 //---
 // Environment variables:
@@ -440,8 +440,12 @@ public:
     hc::accelerator_view        _av;
     unsigned                    _flags;
 
-private: // Critical Data.  THis MUST be accessed through LockedAccessor_StreamCrit_t
+private:
+    // Critical Data.  THis MUST be accessed through LockedAccessor_StreamCrit_t
     ihipStreamCritical_t        _criticalData;
+
+    // Array of dependency completion_future.
+    std::vector<hc::completion_future> _depFutures;
 
 private:
     void                        enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal);

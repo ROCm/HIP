@@ -87,9 +87,11 @@ Functions</h2></td></tr>
 <tr class="memitem:gae86a5acb1b22b61bc9ecb9c28fc71b75"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Event.html#gae86a5acb1b22b61bc9ecb9c28fc71b75">hipEventCreateWithFlags</a> (<a class="el" href="structhipEvent__t.html">hipEvent_t</a> *event, unsigned flags)</td></tr>
 <tr class="memdesc:gae86a5acb1b22b61bc9ecb9c28fc71b75"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create an event with the specified flags.  <a href="#gae86a5acb1b22b61bc9ecb9c28fc71b75">More...</a><br/></td></tr>
 <tr class="separator:gae86a5acb1b22b61bc9ecb9c28fc71b75"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gace88ebd8c7ec42a6c2cebda2e8b0cb38"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Event.html#gace88ebd8c7ec42a6c2cebda2e8b0cb38">hipEventRecord</a> (<a class="el" href="structhipEvent__t.html">hipEvent_t</a> event, hipStream_t stream=NULL)</td></tr>
-<tr class="memdesc:gace88ebd8c7ec42a6c2cebda2e8b0cb38"><td class="mdescLeft">&#160;</td><td class="mdescRight">Record an event in the specified stream.  <a href="#gace88ebd8c7ec42a6c2cebda2e8b0cb38">More...</a><br/></td></tr>
-<tr class="separator:gace88ebd8c7ec42a6c2cebda2e8b0cb38"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga5df2309c9f29ca4c8e669db658d411b4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Event.html#ga5df2309c9f29ca4c8e669db658d411b4">hipEventCreate</a> (<a class="el" href="structhipEvent__t.html">hipEvent_t</a> *event)</td></tr>
+<tr class="separator:ga5df2309c9f29ca4c8e669db658d411b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga553b6f7a8e7b7dd9536d8a64c24d7e29"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Event.html#ga553b6f7a8e7b7dd9536d8a64c24d7e29">hipEventRecord</a> (<a class="el" href="structhipEvent__t.html">hipEvent_t</a> event, hipStream_t stream)</td></tr>
+<tr class="memdesc:ga553b6f7a8e7b7dd9536d8a64c24d7e29"><td class="mdescLeft">&#160;</td><td class="mdescRight">Record an event in the specified stream.  <a href="#ga553b6f7a8e7b7dd9536d8a64c24d7e29">More...</a><br/></td></tr>
+<tr class="separator:ga553b6f7a8e7b7dd9536d8a64c24d7e29"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga83260357dce0c39e8c6a3c74ec97484c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Event.html#ga83260357dce0c39e8c6a3c74ec97484c">hipEventDestroy</a> (<a class="el" href="structhipEvent__t.html">hipEvent_t</a> event)</td></tr>
 <tr class="memdesc:ga83260357dce0c39e8c6a3c74ec97484c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destroy the specified event.  <a href="#ga83260357dce0c39e8c6a3c74ec97484c">More...</a><br/></td></tr>
 <tr class="separator:ga83260357dce0c39e8c6a3c74ec97484c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -106,6 +108,29 @@ Functions</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <h2>----------------------------------------------------------------------------------------------&mdash; </h2>
 <h2 class="groupheader">Function Documentation</h2>
+<a class="anchor" id="ga5df2309c9f29ca4c8e669db658d411b4"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipEventCreate </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structhipEvent__t.html">hipEvent_t</a> *&#160;</td>
+          <td class="paramname"><em>event</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Create an event</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in,out]</td><td class="paramname">event</td><td>Returns the newly created event. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
 <a class="anchor" id="gae86a5acb1b22b61bc9ecb9c28fc71b75"></a>
 <div class="memitem">
 <div class="memproto">
@@ -243,7 +268,7 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="gace88ebd8c7ec42a6c2cebda2e8b0cb38"></a>
+<a class="anchor" id="ga553b6f7a8e7b7dd9536d8a64c24d7e29"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
@@ -257,7 +282,7 @@ Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">hipStream_t&#160;</td>
-          <td class="paramname"><em>stream</em> = <code>NULL</code>&#160;</td>
+          <td class="paramname"><em>stream</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -315,7 +340,7 @@ Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Mar 23 2016 23:11:07 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Apr 19 2016 22:44:02 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

@@ -30,11 +30,11 @@ THE SOFTWARE.
 #include <stdint.h>
 #include <stddef.h>
 
-#include <hcc_detail/host_defines.h>
-#include <hip_runtime_api.h>
-//#include "hip_hcc.h"
+#include <hip/hcc_detail/host_defines.h>
+#include <hip/hip_runtime_api.h>
+//#include "hip/hip_hcc.h"
 
-#if defined (__HCC__) &&  (__hcc_workweek__ < 16074)
+#if defined (__HCC__) &&  (__hcc_workweek__ < 16155)
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
@@ -910,6 +910,8 @@ hipError_t hipMemGetInfo  (size_t * free, size_t * total)   ;
  *  @defgroup PeerToPeer Device Memory Access
  *  @{
  *
+ *  @warning PeerToPeer support is experimental.
+ *
  */
 
 /**
@@ -926,6 +928,7 @@ hipError_t hipMemGetInfo  (size_t * free, size_t * total)   ;
  *
  * @returns #hipSuccess, 
  * @returns #hipErrorInvalidDevice if deviceId or peerDeviceId are not valid devices
+ * @warning PeerToPeer support is experimental.
  */
 hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int deviceId, int peerDeviceId);
 
@@ -943,6 +946,7 @@ hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int deviceId, int peerDev
  *
  * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, 
  * @returns #hipErrorPeerAccessAlreadyEnabled if peer access is already enabled for this device.
+ * @warning PeerToPeer support is experimental.
  */
 hipError_t  hipDeviceEnablePeerAccess (int  peerDeviceId, unsigned int flags);
 
@@ -954,11 +958,13 @@ hipError_t  hipDeviceEnablePeerAccess (int  peerDeviceId, unsigned int flags);
  *
  * @param [in] peerDeviceId
  *
- * Returns #hipSuccess, #hipErrorPeerAccessNotEnabled
+ * @returns #hipSuccess, #hipErrorPeerAccessNotEnabled
+ * @warning PeerToPeer support is experimental.
  */
 hipError_t  hipDeviceDisablePeerAccess (int peerDeviceId);
 
 
+#ifdef PEER_NON_UNIFIED
 /**
  * @brief Copies memory from one device to memory on another device.
  *
@@ -968,7 +974,8 @@ hipError_t  hipDeviceDisablePeerAccess (int peerDeviceId);
  * @param [in] srcDeviceId - Source device
  * @param [in] sizeBytes - Size of memory copy in bytes
  *
- * Returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
+ * @warning PeerToPeer support is experimental.
  */
 hipError_t hipMemcpyPeer (void* dst, int dstDeviceId, const void* src, int srcDeviceId, size_t sizeBytes);
 
@@ -982,17 +989,21 @@ hipError_t hipMemcpyPeer (void* dst, int dstDeviceId, const void* src, int srcDe
  * @param [in] sizeBytes - Size of memory copy in bytes
  * @param [in] stream - Stream identifier
  *
- * Returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
  */
 #if __cplusplus
 hipError_t hipMemcpyPeerAsync ( void* dst, int  dstDeviceId, const void* src, int  srcDevice, size_t sizeBytes, hipStream_t stream=0 );
 #else
 hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int srcDevice, size_t sizeBytes, hipStream_t stream);
 #endif
+#endif
+
+
 // doxygen end PeerToPeer
 /**
  * @}
  */
+
 
 
 /**

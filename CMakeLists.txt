@@ -8,6 +8,15 @@ set(HIP_VERSION_MAJOR "0")
 set(HIP_VERSION_MINOR "84")
 set(HIP_VERSION_PATCH "0")
 
+
+if(NOT DEFINED BUILD_CLANG_HIPIFY)
+    set(BUILD_CLANG_HIPIFY 0)
+endif()
+
+if(BUILD_CLANG_HIPIFY)
+    add_subdirectory(clang-hipify)
+endif()
+
 #############################
 # Configure variables
 #############################
@@ -101,6 +110,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
                      src/hip_device.cpp
                      src/hip_error.cpp
                      src/hip_event.cpp
+                     src/hip_ldg.cpp
                      src/hip_memory.cpp
                      src/hip_peer.cpp
                      src/hip_stream.cpp
