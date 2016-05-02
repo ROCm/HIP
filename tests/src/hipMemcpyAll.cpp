@@ -40,6 +40,8 @@ int num;
 hipGetDeviceCount(&num);
 if(num < 2)
 {
+    printf ("warning: Not enough GPUs to run the test, exiting without running.\n");
+    passed();
     return 0;
 }
 

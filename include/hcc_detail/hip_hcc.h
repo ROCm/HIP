@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "hip/hcc_detail/staging_buffer.h"
 
 
-#if defined(__HCC__) && (__hcc_workweek__ < 1502)
+#if defined(__HCC__) && (__hcc_workweek__ < 16155)
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
@@ -41,7 +41,7 @@ THE SOFTWARE.
 
 
 // Use new am_memory_host_lock APIs:
-#define USE_HCC_LOCK_API 0
+#define USE_HCC_LOCK_API 1
 
 
 //---
@@ -440,8 +440,12 @@ public:
     hc::accelerator_view        _av;
     unsigned                    _flags;
 
-private: // Critical Data.  THis MUST be accessed through LockedAccessor_StreamCrit_t
+private:
+    // Critical Data.  THis MUST be accessed through LockedAccessor_StreamCrit_t
     ihipStreamCritical_t        _criticalData;
+
+    // Array of dependency completion_future.
+    std::vector<hc::completion_future> _depFutures;
 
 private:
     void                        enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal);
