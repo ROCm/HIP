@@ -33,8 +33,6 @@ $HIP_PATH=dirname (dirname $0) unless defined $HIP_PATH;        # use parent dir
 
 #print "HIP_PATH=$HIP_PATH\n";
 
-$CUDA_PATH=$ENV{'CUDA_PATH'};
-$CUDA_PATH='/usr/local/cuda' unless defined $CUDA_PATH;
 
 $CODEXL_PATH = $ENV{'CODEXL_PATH'};
 $CODEXL_PATH = "/opt/AMD/CodeXL" unless defined $CODEXL_PATH;
@@ -42,17 +40,14 @@ $marker_path = "$CODEXL_PATH/SDK/AMDTActivityLogger";
 
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
-$HIP_PLATFORM=$ENV{'HIP_PLATFORM'};
-if (not defined $HIP_PLATFORM and (-e "$CUDA_PATH/bin/nvcc")) {
-    $HIP_PLATFORM="nvcc";
-} 
+$HIP_PLATFORM= `$HIP_PATH/bin/hipconfig --platform`;
+
 $HIP_PLATFORM="hcc" unless defined $HIP_PLATFORM;
 
 
 if ($verbose & 0x2) {
 	print ("HIP_PATH=$HIP_PATH\n");
 	print ("HIP_PLATFORM=$HIP_PLATFORM\n");
-	print ("CUDA_PATH=$CUDA_PATH\n");
 }
 
 $enablestdcpplib = 0;
@@ -104,6 +99,11 @@ if ($HIP_PLATFORM eq "hcc") {
     }
 
 } elsif ($HIP_PLATFORM eq "nvcc") {
+    if ($verbose & 0x2) {
+        print ("CUDA_PATH=$CUDA_PATH\n");
+    }
+    $CUDA_PATH=$ENV{'CUDA_PATH'};
+    $CUDA_PATH='/usr/local/cuda' unless defined $CUDA_PATH;
 
     $HIPCC="$CUDA_PATH/bin/nvcc";
     $HIPCXXFLAGS .= " -I$CUDA_PATH/include";
