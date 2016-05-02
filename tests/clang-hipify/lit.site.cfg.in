@@ -1,0 +1,15 @@
+import sys
+
+config.llvm_tools_dir = "@LLVM_TOOLS_BINARY_DIR@"
+config.obj_root = "@BINARY_DIR@"
+
+# Support substitution of the tools and libs dirs with user parameters. This is
+# used when we can't determine the tool dir at configuration time.
+try:
+    config.llvm_tools_dir = config.llvm_tools_dir % lit_config.params
+    config.obj_root = config.obj_root % lit_config.params
+except KeyError:
+    e = sys.exc_info()[1]
+    key, = e.args
+    lit_config.fatal("unable to find %r parameter, use '--param=%s=VALUE'" % (key,key))
+
