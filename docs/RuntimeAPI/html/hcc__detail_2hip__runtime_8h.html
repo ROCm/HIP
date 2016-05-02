@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: /home/bensander/HIP-privatestaging/include/hcc_detail/hip_runtime.h File Reference</title>
+<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/hip_git/release_0.84.00/include/hcc_detail/hip_runtime.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -96,16 +96,11 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <p>Contains definitions of APIs for HIP runtime.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;cstring&gt;</code><br/>
-<code>#include &lt;cmath&gt;</code><br/>
-<code>#include &lt;string.h&gt;</code><br/>
+<div class="textblock"><code>#include &lt;string.h&gt;</code><br/>
 <code>#include &lt;stddef.h&gt;</code><br/>
-<code>#include &lt;<a class="el" href="hcc__detail_2hip__runtime__api_8h_source.html">hip_runtime_api.h</a>&gt;</code><br/>
-<code>#include &lt;hc.hpp&gt;</code><br/>
+<code>#include &lt;hip/hip_runtime_api.h&gt;</code><br/>
 <code>#include &lt;grid_launch.h&gt;</code><br/>
-<code>#include &lt;<a class="el" href="hip__texture_8h_source.html">hcc_detail/hip_texture.h</a>&gt;</code><br/>
-<code>#include &lt;<a class="el" href="host__defines_8h_source.html">hcc_detail/host_defines.h</a>&gt;</code><br/>
-<code>#include &lt;hc_math.hpp&gt;</code><br/>
+<code>#include &lt;hip/hcc_detail/host_defines.h&gt;</code><br/>
 </div>
 <p><a href="hcc__detail_2hip__runtime_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -164,10 +159,6 @@ Macros</h2></td></tr>
 <tr class="memitem:a1ae4bd590189ae294b70ee4f3d3de5dc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1ae4bd590189ae294b70ee4f3d3de5dc"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_KERNEL_NAME</b>(...)&#160;&#160;&#160;__VA_ARGS__</td></tr>
 <tr class="separator:a1ae4bd590189ae294b70ee4f3d3de5dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad55ac6a8f4c288efbe4af7f44bc93653"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>KERNELBEGIN</b></td></tr>
-<tr class="separator:ad55ac6a8f4c288efbe4af7f44bc93653"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6895918192432884ae3ceb90f5f5364d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>KERNELEND</b></td></tr>
-<tr class="separator:a6895918192432884ae3ceb90f5f5364d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -177,239 +168,15 @@ __device__ long long int&#160;</td><td class="memItemRight" valign="bottom"><b>c
 <tr class="memitem:adbdee7d7e8ea8f9f8d02f89eba4c221b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="adbdee7d7e8ea8f9f8d02f89eba4c221b"></a>
 __device__ clock_t&#160;</td><td class="memItemRight" valign="bottom"><b>clock</b> ()</td></tr>
 <tr class="separator:adbdee7d7e8ea8f9f8d02f89eba4c221b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abcc0d8e2df65334ca8e3765bd5a0bb7f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abcc0d8e2df65334ca8e3765bd5a0bb7f"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicAdd</b> (int *address, int val)</td></tr>
-<tr class="separator:abcc0d8e2df65334ca8e3765bd5a0bb7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5f03cbc6840e02b83f6db2788b898950"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5f03cbc6840e02b83f6db2788b898950"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicAdd</b> (unsigned int *address, unsigned int val)</td></tr>
-<tr class="separator:a5f03cbc6840e02b83f6db2788b898950"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a95ba309520dda78d7f4b83f05129ed4a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a95ba309520dda78d7f4b83f05129ed4a"></a>
-__device__ unsigned long long int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicAdd</b> (unsigned long long int *address, unsigned long long int val)</td></tr>
-<tr class="separator:a95ba309520dda78d7f4b83f05129ed4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a403a0e10baf201afaf4df1b153f3096c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a403a0e10baf201afaf4df1b153f3096c"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>atomicAdd</b> (float *address, float val)</td></tr>
-<tr class="separator:a403a0e10baf201afaf4df1b153f3096c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6a953b38768ed03f5838a12927326ba2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6a953b38768ed03f5838a12927326ba2"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicSub</b> (int *address, int val)</td></tr>
-<tr class="separator:a6a953b38768ed03f5838a12927326ba2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a87bdfe4beba8e821ec0e41e931f62ddf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a87bdfe4beba8e821ec0e41e931f62ddf"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicSub</b> (unsigned int *address, unsigned int val)</td></tr>
-<tr class="separator:a87bdfe4beba8e821ec0e41e931f62ddf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea70a585c1821977e4849f9f54fcc55b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aea70a585c1821977e4849f9f54fcc55b"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicExch</b> (int *address, int val)</td></tr>
-<tr class="separator:aea70a585c1821977e4849f9f54fcc55b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9dda360556f0e26a0245a3cf63475dea"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9dda360556f0e26a0245a3cf63475dea"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicExch</b> (unsigned int *address, unsigned int val)</td></tr>
-<tr class="separator:a9dda360556f0e26a0245a3cf63475dea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e9d497590858bd2cc8eca3d116fde8c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4e9d497590858bd2cc8eca3d116fde8c"></a>
-__device__ unsigned long long int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicExch</b> (unsigned long long int *address, unsigned long long int val)</td></tr>
-<tr class="separator:a4e9d497590858bd2cc8eca3d116fde8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa8aeb4c9d879d5284f89728e52a0d4b0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa8aeb4c9d879d5284f89728e52a0d4b0"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>atomicExch</b> (float *address, float val)</td></tr>
-<tr class="separator:aa8aeb4c9d879d5284f89728e52a0d4b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab89a742ea3fd1295fae921f405eb2e80"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab89a742ea3fd1295fae921f405eb2e80"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicMin</b> (int *address, int val)</td></tr>
-<tr class="separator:ab89a742ea3fd1295fae921f405eb2e80"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a792731eaec99030e34af6a665471d264"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a792731eaec99030e34af6a665471d264"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicMin</b> (unsigned int *address, unsigned int val)</td></tr>
-<tr class="separator:a792731eaec99030e34af6a665471d264"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae2b78da10f82fe39e791dc8a81a78744"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae2b78da10f82fe39e791dc8a81a78744"></a>
-__device__ unsigned long long int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicMin</b> (unsigned long long int *address, unsigned long long int val)</td></tr>
-<tr class="separator:ae2b78da10f82fe39e791dc8a81a78744"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afb5c691375fa437cb0b229ebb9306eb1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afb5c691375fa437cb0b229ebb9306eb1"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicMax</b> (int *address, int val)</td></tr>
-<tr class="separator:afb5c691375fa437cb0b229ebb9306eb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a88dd6082b39d6031b6e85e686fc1a74a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a88dd6082b39d6031b6e85e686fc1a74a"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicMax</b> (unsigned int *address, unsigned int val)</td></tr>
-<tr class="separator:a88dd6082b39d6031b6e85e686fc1a74a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a23c22b5463ad7822e5162fc1d29510e1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a23c22b5463ad7822e5162fc1d29510e1"></a>
-__device__ unsigned long long int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicMax</b> (unsigned long long int *address, unsigned long long int val)</td></tr>
-<tr class="separator:a23c22b5463ad7822e5162fc1d29510e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a438c18227b61ddc3869a8746b2d9dc30"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a438c18227b61ddc3869a8746b2d9dc30"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicCAS</b> (int *address, int compare, int val)</td></tr>
-<tr class="separator:a438c18227b61ddc3869a8746b2d9dc30"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac2107704c0b1c805b96ae83d90c147c9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac2107704c0b1c805b96ae83d90c147c9"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicCAS</b> (unsigned int *address, unsigned int compare, unsigned int val)</td></tr>
-<tr class="separator:ac2107704c0b1c805b96ae83d90c147c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a276d6117ae1d0aeaafdbc7621ff80a7d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a276d6117ae1d0aeaafdbc7621ff80a7d"></a>
-__device__ unsigned long long int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicCAS</b> (unsigned long long int *address, unsigned long long int compare, unsigned long long int val)</td></tr>
-<tr class="separator:a276d6117ae1d0aeaafdbc7621ff80a7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a97a217f6df4cc18e92a708ff289fbadd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a97a217f6df4cc18e92a708ff289fbadd"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicAnd</b> (int *address, int val)</td></tr>
-<tr class="separator:a97a217f6df4cc18e92a708ff289fbadd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae14f267ed65079758f76d2d7caf7dcee"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae14f267ed65079758f76d2d7caf7dcee"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicAnd</b> (unsigned int *address, unsigned int val)</td></tr>
-<tr class="separator:ae14f267ed65079758f76d2d7caf7dcee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a77c55cc1835a436310c157a9ab427d4a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a77c55cc1835a436310c157a9ab427d4a"></a>
-__device__ unsigned long long int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicAnd</b> (unsigned long long int *address, unsigned long long int val)</td></tr>
-<tr class="separator:a77c55cc1835a436310c157a9ab427d4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad966a1cfff343d367b5940b329a5d324"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad966a1cfff343d367b5940b329a5d324"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicOr</b> (int *address, int val)</td></tr>
-<tr class="separator:ad966a1cfff343d367b5940b329a5d324"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a897b415a5e2e8222c778b71f8716607f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a897b415a5e2e8222c778b71f8716607f"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicOr</b> (unsigned int *address, unsigned int val)</td></tr>
-<tr class="separator:a897b415a5e2e8222c778b71f8716607f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa6375f57ca6be98a6ec4d0837c58d385"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa6375f57ca6be98a6ec4d0837c58d385"></a>
-__device__ unsigned long long int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicOr</b> (unsigned long long int *address, unsigned long long int val)</td></tr>
-<tr class="separator:aa6375f57ca6be98a6ec4d0837c58d385"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a02a234c564af604bc23de85c9d3f48da"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a02a234c564af604bc23de85c9d3f48da"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicXor</b> (int *address, int val)</td></tr>
-<tr class="separator:a02a234c564af604bc23de85c9d3f48da"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa3fa0a3baa5b7faaab4cdfa0bfcbc084"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa3fa0a3baa5b7faaab4cdfa0bfcbc084"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicXor</b> (unsigned int *address, unsigned int val)</td></tr>
-<tr class="separator:aa3fa0a3baa5b7faaab4cdfa0bfcbc084"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f45bfdc2aa11e7969dcb39f5c0e06ef"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0f45bfdc2aa11e7969dcb39f5c0e06ef"></a>
-__device__ unsigned long long int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicXor</b> (unsigned long long int *address, unsigned long long int val)</td></tr>
-<tr class="separator:a0f45bfdc2aa11e7969dcb39f5c0e06ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5bf9c743fcdf623f951d68de66618b91"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5bf9c743fcdf623f951d68de66618b91"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>__popc</b> (unsigned int input)</td></tr>
-<tr class="separator:a5bf9c743fcdf623f951d68de66618b91"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac30d8c96e7c4c672625d9d80422317a7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac30d8c96e7c4c672625d9d80422317a7"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>__popcll</b> (unsigned long long int input)</td></tr>
-<tr class="separator:ac30d8c96e7c4c672625d9d80422317a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2fb14ee01f4c19bee7ae596db54fd610"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2fb14ee01f4c19bee7ae596db54fd610"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>__clz</b> (unsigned int input)</td></tr>
-<tr class="separator:a2fb14ee01f4c19bee7ae596db54fd610"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afb00ca5e6898a401c6520bf810a25067"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afb00ca5e6898a401c6520bf810a25067"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>__clzll</b> (unsigned long long int input)</td></tr>
-<tr class="separator:afb00ca5e6898a401c6520bf810a25067"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab0942fde627a6113a5cabe86506588a6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab0942fde627a6113a5cabe86506588a6"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>__clz</b> (int input)</td></tr>
-<tr class="separator:ab0942fde627a6113a5cabe86506588a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aed84645864b7996c7759106e6fe4d2d3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aed84645864b7996c7759106e6fe4d2d3"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>__clzll</b> (long long int input)</td></tr>
-<tr class="separator:aed84645864b7996c7759106e6fe4d2d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae1b089e42f5c969c5f80aa72f3419496"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae1b089e42f5c969c5f80aa72f3419496"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>__ffs</b> (unsigned int input)</td></tr>
-<tr class="separator:ae1b089e42f5c969c5f80aa72f3419496"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af1bc368fb13eecb10b990e43ad9f8b19"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af1bc368fb13eecb10b990e43ad9f8b19"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>__ffsll</b> (unsigned long long int input)</td></tr>
-<tr class="separator:af1bc368fb13eecb10b990e43ad9f8b19"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a74b2841c3fe038d9e5c166519f44f012"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a74b2841c3fe038d9e5c166519f44f012"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>__ffs</b> (int input)</td></tr>
-<tr class="separator:a74b2841c3fe038d9e5c166519f44f012"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af5f5c2bb84c9e58bab5730b923b667d3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af5f5c2bb84c9e58bab5730b923b667d3"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>__ffsll</b> (long long int input)</td></tr>
-<tr class="separator:af5f5c2bb84c9e58bab5730b923b667d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3f15db7be18704007ca3cb2358edfcaf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3f15db7be18704007ca3cb2358edfcaf"></a>
-__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>__brev</b> (unsigned int input)</td></tr>
-<tr class="separator:a3f15db7be18704007ca3cb2358edfcaf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab0e3f49364e6c05a75cf92d5844bcf61"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab0e3f49364e6c05a75cf92d5844bcf61"></a>
-__device__ unsigned long long int&#160;</td><td class="memItemRight" valign="bottom"><b>__brevll</b> (unsigned long long int input)</td></tr>
-<tr class="separator:ab0e3f49364e6c05a75cf92d5844bcf61"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab428e0e248df106b2df05c3f4f28917a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab428e0e248df106b2df05c3f4f28917a"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>__all</b> (int input)</td></tr>
-<tr class="separator:ab428e0e248df106b2df05c3f4f28917a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3d1a67823b169ce8f39da14cd3c3eb38"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3d1a67823b169ce8f39da14cd3c3eb38"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>__any</b> (int input)</td></tr>
-<tr class="separator:a3d1a67823b169ce8f39da14cd3c3eb38"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa2230562f67a1e7e3393026372f6e31f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa2230562f67a1e7e3393026372f6e31f"></a>
-__device__ unsigned long long int&#160;</td><td class="memItemRight" valign="bottom"><b>__ballot</b> (int input)</td></tr>
-<tr class="separator:aa2230562f67a1e7e3393026372f6e31f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5307a30ea822f88f8d6de9573c864686"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5307a30ea822f88f8d6de9573c864686"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl</b> (int input, int lane, int width=warpSize)</td></tr>
-<tr class="separator:a5307a30ea822f88f8d6de9573c864686"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3361f1338bdb6b197f4e7e1c476e99fe"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3361f1338bdb6b197f4e7e1c476e99fe"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl_up</b> (int input, unsigned int lane_delta, int width=warpSize)</td></tr>
-<tr class="separator:a3361f1338bdb6b197f4e7e1c476e99fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afe8dbf7d44ba3ed5d9be3b6f682cdfb8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afe8dbf7d44ba3ed5d9be3b6f682cdfb8"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl_down</b> (int input, unsigned int lane_delta, int width=warpSize)</td></tr>
-<tr class="separator:afe8dbf7d44ba3ed5d9be3b6f682cdfb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7836ca24eaaeba8c103c08ee9a46f18d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7836ca24eaaeba8c103c08ee9a46f18d"></a>
-__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl_xor</b> (int input, int lane_mask, int width=warpSize)</td></tr>
-<tr class="separator:a7836ca24eaaeba8c103c08ee9a46f18d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad7b7829763268e2c7a4c7cdef032e6d7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad7b7829763268e2c7a4c7cdef032e6d7"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl</b> (float input, int lane, int width=warpSize)</td></tr>
-<tr class="separator:ad7b7829763268e2c7a4c7cdef032e6d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acdcfcd64772896e09902efd9b56fe959"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acdcfcd64772896e09902efd9b56fe959"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl_up</b> (float input, unsigned int lane_delta, int width=warpSize)</td></tr>
-<tr class="separator:acdcfcd64772896e09902efd9b56fe959"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad314c55944b099be7d7e3ee4fc94ce5c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad314c55944b099be7d7e3ee4fc94ce5c"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl_down</b> (float input, unsigned int lane_delta, int width=warpSize)</td></tr>
-<tr class="separator:ad314c55944b099be7d7e3ee4fc94ce5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad2086d178995020d6a1fedb0d474c9d7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad2086d178995020d6a1fedb0d474c9d7"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__shfl_xor</b> (float input, int lane_mask, int width=warpSize)</td></tr>
-<tr class="separator:ad2086d178995020d6a1fedb0d474c9d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a48c1aefd76f1b35b9813e487de3b048c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a48c1aefd76f1b35b9813e487de3b048c"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>min</b> (int arg1, int arg2) __attribute((hc</td></tr>
-<tr class="separator:a48c1aefd76f1b35b9813e487de3b048c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a84d1ff73f7a5b6e303920e42c385fe7a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a84d1ff73f7a5b6e303920e42c385fe7a"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>max</b> (int arg1, int arg2) __attribute((hc</td></tr>
-<tr class="separator:a84d1ff73f7a5b6e303920e42c385fe7a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a129ff4afc615da9a5886c77713094c32"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a129ff4afc615da9a5886c77713094c32"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__cosf</b> (float x)</td></tr>
-<tr class="separator:a129ff4afc615da9a5886c77713094c32"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1beeb3ae544cfdde4a0a724ace025aed"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1beeb3ae544cfdde4a0a724ace025aed"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__expf</b> (float x)</td></tr>
-<tr class="separator:a1beeb3ae544cfdde4a0a724ace025aed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a71ee45580cbeeea206297f0112aff42c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a71ee45580cbeeea206297f0112aff42c"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__frsqrt_rn</b> (float x)</td></tr>
-<tr class="separator:a71ee45580cbeeea206297f0112aff42c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a59566bdd0638a5b249dbda757f2bb06b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a59566bdd0638a5b249dbda757f2bb06b"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__fsqrt_rd</b> (float x)</td></tr>
-<tr class="separator:a59566bdd0638a5b249dbda757f2bb06b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af021e85b5e9de141a0fc2ff6fbe85875"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af021e85b5e9de141a0fc2ff6fbe85875"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__fsqrt_rn</b> (float x)</td></tr>
-<tr class="separator:af021e85b5e9de141a0fc2ff6fbe85875"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab429e39b1790b4dfae0d0c4926f53fe2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab429e39b1790b4dfae0d0c4926f53fe2"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__fsqrt_ru</b> (float x)</td></tr>
-<tr class="separator:ab429e39b1790b4dfae0d0c4926f53fe2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a094bf489bf492287424b1080569189f1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a094bf489bf492287424b1080569189f1"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__fsqrt_rz</b> (float x)</td></tr>
-<tr class="separator:a094bf489bf492287424b1080569189f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2b7358a27b8231b592da81ff3143b9a8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2b7358a27b8231b592da81ff3143b9a8"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__log10f</b> (float x)</td></tr>
-<tr class="separator:a2b7358a27b8231b592da81ff3143b9a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afcc053f9040d50975aab00e44e7c6093"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afcc053f9040d50975aab00e44e7c6093"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__log2f</b> (float x)</td></tr>
-<tr class="separator:afcc053f9040d50975aab00e44e7c6093"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aed5cef656578096892f104a27d5287c4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aed5cef656578096892f104a27d5287c4"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__logf</b> (float x)</td></tr>
-<tr class="separator:aed5cef656578096892f104a27d5287c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acfd05a3bcd8058ad9656c3859988fa4d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acfd05a3bcd8058ad9656c3859988fa4d"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__powf</b> (float base, float exponent)</td></tr>
-<tr class="separator:acfd05a3bcd8058ad9656c3859988fa4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa361f7ab8560d7ce4c98430b43cf4deb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa361f7ab8560d7ce4c98430b43cf4deb"></a>
-__device__ void&#160;</td><td class="memItemRight" valign="bottom"><b>__sincosf</b> (float x, float *s, float *c)</td></tr>
-<tr class="separator:aa361f7ab8560d7ce4c98430b43cf4deb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afa0ea4b2cee94521792ead0deb03addb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afa0ea4b2cee94521792ead0deb03addb"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__sinf</b> (float x)</td></tr>
-<tr class="separator:afa0ea4b2cee94521792ead0deb03addb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4fc8b7c67526a0195b9cb47287b5c121"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4fc8b7c67526a0195b9cb47287b5c121"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__tanf</b> (float x)</td></tr>
-<tr class="separator:a4fc8b7c67526a0195b9cb47287b5c121"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a974e7d13d50e3195515c0ec9754f406a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a974e7d13d50e3195515c0ec9754f406a"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__dsqrt_rd</b> (double x)</td></tr>
-<tr class="separator:a974e7d13d50e3195515c0ec9754f406a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f15d9b7b2f24b45da16c05ec1683fb8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0f15d9b7b2f24b45da16c05ec1683fb8"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__dsqrt_rn</b> (double x)</td></tr>
-<tr class="separator:a0f15d9b7b2f24b45da16c05ec1683fb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1a67bc21c1cd42e98684bb5611c02a76"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1a67bc21c1cd42e98684bb5611c02a76"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__dsqrt_ru</b> (double x)</td></tr>
-<tr class="separator:a1a67bc21c1cd42e98684bb5611c02a76"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a98b73f8a6d5d4647b83064880423cff1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a98b73f8a6d5d4647b83064880423cff1"></a>
-__device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__dsqrt_rz</b> (double x)</td></tr>
-<tr class="separator:a98b73f8a6d5d4647b83064880423cff1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
+<tr class="memitem:aae9c541f3e25b8f002762337a03fec28"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aae9c541f3e25b8f002762337a03fec28"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_TRACE_API</b></td></tr>
+<tr class="separator:aae9c541f3e25b8f002762337a03fec28"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5318f692fa09f8c7c31576c63cbf8894"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5318f692fa09f8c7c31576c63cbf8894"></a>
-const int&#160;</td><td class="memItemRight" valign="bottom"><b>warpSize</b> = 64</td></tr>
+const int&#160;</td><td class="memItemRight" valign="bottom"><b>warpSize</b></td></tr>
 <tr class="separator:a5318f692fa09f8c7c31576c63cbf8894"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a41a58b7c4446ab1abce89f43531cd523"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><b>cpu</b></td></tr>
-<tr class="separator:a41a58b7c4446ab1abce89f43531cd523"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga1e1c85dbb250f1acfb484c1be1f3b28a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga1e1c85dbb250f1acfb484c1be1f3b28a"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__HIP-ENV.html#ga1e1c85dbb250f1acfb484c1be1f3b28a">HIP_PRINT_ENV</a></td></tr>
-<tr class="memdesc:ga1e1c85dbb250f1acfb484c1be1f3b28a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Print all HIP-related environment variables. <br/></td></tr>
-<tr class="separator:ga1e1c85dbb250f1acfb484c1be1f3b28a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaae9c541f3e25b8f002762337a03fec28"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gaae9c541f3e25b8f002762337a03fec28"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__HIP-ENV.html#gaae9c541f3e25b8f002762337a03fec28">HIP_TRACE_API</a></td></tr>
-<tr class="memdesc:gaae9c541f3e25b8f002762337a03fec28"><td class="mdescLeft">&#160;</td><td class="mdescRight">Trace HIP APIs. <br/></td></tr>
-<tr class="separator:gaae9c541f3e25b8f002762337a03fec28"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga8049b329f2663b4572d81e7a9aa8a155"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga8049b329f2663b4572d81e7a9aa8a155"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__HIP-ENV.html#ga8049b329f2663b4572d81e7a9aa8a155">HIP_LAUNCH_BLOCKING</a></td></tr>
-<tr class="memdesc:ga8049b329f2663b4572d81e7a9aa8a155"><td class="mdescLeft">&#160;</td><td class="mdescRight">Make all HIP APIs host-synchronous. <br/></td></tr>
-<tr class="separator:ga8049b329f2663b4572d81e7a9aa8a155"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains definitions of APIs for HIP runtime. </p>
@@ -427,71 +194,10 @@ int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group
 
 </div>
 </div>
-<a class="anchor" id="ad55ac6a8f4c288efbe4af7f44bc93653"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define KERNELBEGIN</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">hc::extent&lt;3&gt; ext(lp.gridDim.x, lp.gridDim.y, lp.gridDim.z);\</div>
-<div class="line">      auto __hipExtTile = ext.tile(lp.groupDim.x, lp.groupDim.y, lp.groupDim.z);\</div>
-<div class="line">      __hipExtTile.set_dynamic_group_segment_size(lp.groupMemBytes);\</div>
-<div class="line">      \</div>
-<div class="line">      hc::completion_future cf = \</div>
-<div class="line">      hc::parallel_for_each (\</div>
-<div class="line">              *lp.av,\</div>
-<div class="line">              __hipExtTile,\</div>
-<div class="line">              [=] (hc::tiled_index&lt;3&gt; __hipIdx) <span class="keyword">mutable</span> [[hc]] \</div>
-<div class="line">      {</div>
-</div><!-- fragment -->
-</div>
-</div>
-<a class="anchor" id="a6895918192432884ae3ceb90f5f5364d"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define KERNELEND</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<b>Value:</b><div class="fragment"><div class="line">});  \</div>
-<div class="line">    if (<a class="code" href="group__HIP-ENV.html#ga8049b329f2663b4572d81e7a9aa8a155">HIP_LAUNCH_BLOCKING</a>) {\</div>
-<div class="line">        if (<a class="code" href="group__HIP-ENV.html#gaae9c541f3e25b8f002762337a03fec28">HIP_TRACE_API</a>) {\</div>
-<div class="line">            fprintf(stderr, <span class="stringliteral">&quot;hiptrace1: HIP_LAUNCH_BLOCKING ...\n&quot;</span>);\</div>
-<div class="line">        }\</div>
-<div class="line">        cf.wait(); \</div>
-<div class="line">        if (<a class="code" href="group__HIP-ENV.html#gaae9c541f3e25b8f002762337a03fec28">HIP_TRACE_API</a>) {\</div>
-<div class="line">            fprintf(stderr, <span class="stringliteral">&quot;hiptrace1: ...completed.\n&quot;</span>);\</div>
-<div class="line">        }\</div>
-<div class="line">    }</div>
-<div class="ttc" id="group__HIP-ENV_html_gaae9c541f3e25b8f002762337a03fec28"><div class="ttname"><a href="group__HIP-ENV.html#gaae9c541f3e25b8f002762337a03fec28">HIP_TRACE_API</a></div><div class="ttdeci">int HIP_TRACE_API</div><div class="ttdoc">Trace HIP APIs. </div><div class="ttdef"><b>Definition:</b> hip_hcc.cpp:73</div></div>
-<div class="ttc" id="group__HIP-ENV_html_ga8049b329f2663b4572d81e7a9aa8a155"><div class="ttname"><a href="group__HIP-ENV.html#ga8049b329f2663b4572d81e7a9aa8a155">HIP_LAUNCH_BLOCKING</a></div><div class="ttdeci">int HIP_LAUNCH_BLOCKING</div><div class="ttdoc">Make all HIP APIs host-synchronous. </div><div class="ttdef"><b>Definition:</b> hip_hcc.cpp:70</div></div>
-</div><!-- fragment -->
-</div>
-</div>
-<h2 class="groupheader">Variable Documentation</h2>
-<a class="anchor" id="a41a58b7c4446ab1abce89f43531cd523"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int cpu</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<b>Initial value:</b><div class="fragment"><div class="line">{ </div>
-<div class="line">  <span class="keywordflow">return</span> (<span class="keywordtype">int</span>)(hc::precise_math::fmin((<span class="keywordtype">float</span>)arg1, (<span class="keywordtype">float</span>)arg2))</div>
-</div><!-- fragment -->
-</div>
-</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Mar 23 2016 23:11:07 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Apr 19 2016 22:44:02 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

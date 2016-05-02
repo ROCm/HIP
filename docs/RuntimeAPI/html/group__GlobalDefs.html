@@ -141,6 +141,24 @@ Macros</h2></td></tr>
 #define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#gaefa79f1b4481d6a1d1091c14b24f33d0">hipHostRegisterIoMemory</a>&#160;&#160;&#160;0x4</td></tr>
 <tr class="memdesc:gaefa79f1b4481d6a1d1091c14b24f33d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Not supported. <br/></td></tr>
 <tr class="separator:gaefa79f1b4481d6a1d1091c14b24f33d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga9032d35eb7383948828ee48e1e19f5fd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga9032d35eb7383948828ee48e1e19f5fd"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipDeviceScheduleAuto</b>&#160;&#160;&#160;0x0</td></tr>
+<tr class="separator:ga9032d35eb7383948828ee48e1e19f5fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga713d962bafb7758dc1ff0675e4239453"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga713d962bafb7758dc1ff0675e4239453"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipDeviceScheduleSpin</b>&#160;&#160;&#160;0x1</td></tr>
+<tr class="separator:ga713d962bafb7758dc1ff0675e4239453"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaaf1e2706430c06601aa12a8af2a0ba5a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gaaf1e2706430c06601aa12a8af2a0ba5a"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipDeviceScheduleYield</b>&#160;&#160;&#160;0x2</td></tr>
+<tr class="separator:gaaf1e2706430c06601aa12a8af2a0ba5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga16fb739f8a2d8664902334d64072bbd8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga16fb739f8a2d8664902334d64072bbd8"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipDeviceBlockingSync</b>&#160;&#160;&#160;0x4</td></tr>
+<tr class="separator:ga16fb739f8a2d8664902334d64072bbd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0b7ffad8d7cfcbf9d3c863d30ef651ae"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga0b7ffad8d7cfcbf9d3c863d30ef651ae"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipDeviceMapHost</b>&#160;&#160;&#160;0x8</td></tr>
+<tr class="separator:ga0b7ffad8d7cfcbf9d3c863d30ef651ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad1c4f8c9fab30ce95f59e2cc404f4d96"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gad1c4f8c9fab30ce95f59e2cc404f4d96"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipDeviceLmemResizeToMax</b>&#160;&#160;&#160;0x16</td></tr>
+<tr class="separator:gad1c4f8c9fab30ce95f59e2cc404f4d96"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
@@ -156,6 +174,8 @@ typedef enum <a class="el" href="group__GlobalDefs.html#gacc0acd7b9bda126c6bb3df
 <tr class="separator:ga6b1ca424fa26a5fb718937d662eaee7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gacb37281795c3567d0b10a61c056d512b"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structdim3.html">dim3</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#gacb37281795c3567d0b10a61c056d512b">dim3</a></td></tr>
 <tr class="separator:gacb37281795c3567d0b10a61c056d512b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga0c04e67413ce030817361f02673e5c85"><td class="memItemLeft" align="right" valign="top">typedef enum <a class="el" href="group__GlobalDefs.html#ga232e222db36b1fc672ba98054d036a18">hipMemcpyKind</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#ga0c04e67413ce030817361f02673e5c85">hipMemcpyKind</a></td></tr>
+<tr class="separator:ga0c04e67413ce030817361f02673e5c85"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
 Enumerations</h2></td></tr>
@@ -177,10 +197,12 @@ Enumerations</h2></td></tr>
 <br/>
 &#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1">hipErrorNotReady</a>, 
 <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa74e64c5b2f5fb0d6a92681f5b234073">hipErrorUnknown</a>, 
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1159eb9a6be66bea740a8bfb61378723">hipErrorRuntimeMemory</a>, 
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a44f847c5914be2177feac107dcb096d1">hipErrorRuntimeOther</a>, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a2ee0bf2e64840f253e4a1b12bbaf2d09">hipErrorPeerAccessNotEnabled</a>, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a5399c146f91246f8b77abcd4ea30e7ac">hipErrorPeerAccessAlreadyEnabled</a>, 
 <br/>
-&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ab556409e11ddb0c4cf77a2f4fc91ea9e">hipErrorTbd</a>
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1159eb9a6be66bea740a8bfb61378723">hipErrorRuntimeMemory</a>, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a44f847c5914be2177feac107dcb096d1">hipErrorRuntimeOther</a>, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ab556409e11ddb0c4cf77a2f4fc91ea9e">hipErrorTbd</a>
 <br/>
  }</td></tr>
 <tr class="separator:gadf5010f6e140a53ecbdf949e73e87594"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -299,7 +321,7 @@ Enumerations</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Flags that can be used with hipStreamCreateWithFlags. </p>
-<p>Default stream creation flags. These are used with hipStreamCreate(). </p>
+<p>Default stream creation flags. These are used with <a class="el" href="group__Stream.html#gaff5b62d6e9502d80879f7176f4d03102" title="Create an asynchronous stream. ">hipStreamCreate()</a>. </p>
 
 </div>
 </div>
@@ -327,6 +349,19 @@ Enumerations</h2></td></tr>
       </table>
 </div><div class="memdoc">
 <dl class="section warning"><dt>Warning</dt><dd>On AMD devices and recent Nvidia devices, these hints and controls are ignored. </dd></dl>
+
+</div>
+</div>
+<a class="anchor" id="ga0c04e67413ce030817361f02673e5c85"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef enum <a class="el" href="group__GlobalDefs.html#ga232e222db36b1fc672ba98054d036a18">hipMemcpyKind</a>  <a class="el" href="group__GlobalDefs.html#ga232e222db36b1fc672ba98054d036a18">hipMemcpyKind</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Memory copy types </p>
 
 </div>
 </div>
@@ -485,6 +520,12 @@ Enumerations</h2></td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594aa74e64c5b2f5fb0d6a92681f5b234073"></a>hipErrorUnknown</em>&#160;</td><td class="fielddoc">
 <p>Unknown error. </p>
 </td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a2ee0bf2e64840f253e4a1b12bbaf2d09"></a>hipErrorPeerAccessNotEnabled</em>&#160;</td><td class="fielddoc">
+<p>Peer access was never enabled from the current device. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a5399c146f91246f8b77abcd4ea30e7ac"></a>hipErrorPeerAccessAlreadyEnabled</em>&#160;</td><td class="fielddoc">
+<p>Peer access was already enabled from the current device. </p>
+</td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a1159eb9a6be66bea740a8bfb61378723"></a>hipErrorRuntimeMemory</em>&#160;</td><td class="fielddoc">
 <p>HSA runtime memory call returned error. Typically not seen in production systems. </p>
 </td></tr>
@@ -582,7 +623,7 @@ Enumerations</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Mar 23 2016 23:11:07 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Apr 19 2016 22:44:02 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

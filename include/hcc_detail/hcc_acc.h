@@ -1,6 +1,6 @@
 #ifndef HCC_ACC_H
 #define HCC_ACC_H
-#include "hip_runtime_api.h"
+#include "hip/hip_runtime_api.h"
 
 #if __cplusplus
 #ifdef __HCC__
