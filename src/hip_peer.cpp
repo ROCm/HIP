@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include "hcc_detail/trace_helper.h"
 
 /**
- * @warning HCC returns 0 in *canAccessPeer ; Need to update this function when RT supports P2P
+ * HCC returns 0 in *canAccessPeer ; Need to update this function when RT supports P2P
  */
 //---
 hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int  deviceId, int peerDeviceId)
@@ -145,7 +145,7 @@ hipError_t hipMemcpyPeer (void* dst, int  dstDevice, const void* src, int  srcDe
 
 
 /**
- * @bug This function uses a synchronous copy
+ * This function uses a synchronous copy
  */
 //---
 hipError_t hipMemcpyPeerAsync (void* dst, int  dstDevice, const void* src, int  srcDevice, size_t sizeBytes, hipStream_t stream)
