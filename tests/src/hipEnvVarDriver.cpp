@@ -20,6 +20,8 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string>
+
 using namespace std;
 
 //./hipEnvVar -c -d 0 -h
