@@ -16,6 +16,7 @@
 int main(int argc, char *argv[])
 {
     int sizeElements = 1000000;
+    bool pass = true;
 
     // Allocate auto-managed host/device views of data:
     hc::array_view<float> A(sizeElements);
@@ -43,6 +44,8 @@ int main(int argc, char *argv[])
         // Because C is an array_view, the HCC runtime will copy C back to host at first access here:
         if (C[i] != ref) {
             printf ("error:%d computed=%6.2f, reference=%6.2f\n", i, C[i], ref);
+            pass = false;
         }
     };
+    if (pass) printf ("PASSED!\n");
 }
