@@ -11,6 +11,7 @@ int main(int argc, char *argv[])
 {
     int sizeElements = 1000000;
     size_t sizeBytes = sizeElements * sizeof(float);
+    bool pass = true;
 
     // Allocate host memory
     float *A_h = (float*)malloc(sizeBytes);
@@ -48,6 +49,8 @@ int main(int argc, char *argv[])
         float ref= 1.618f * i + 3.142f * i;
         if (C_h[i] != ref) {
             printf ("error:%d computed=%6.2f, reference=%6.2f\n", i, C_h[i], ref);
+            pass = false;
         }
     };
+    if (pass) printf ("PASSED!\n");
 }
