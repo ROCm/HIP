@@ -199,12 +199,7 @@ if ($hasCU and $HIP_PLATFORM eq 'hcc') {
 
 if ($setStdLib eq 0 and $HIP_PLATFORM eq 'hcc')
 {
-    $defaultLibCpp = 0;   # TODO - should be 0 for best interop with G++
-    if ($defaultLibCpp) {
-        $HIPCXXFLAGS .= " -stdlib=libc++";  # TODO - remove me, defaults to libc++.
-    } else {
-        $HIPCXXFLAGS .= " -stdlib=libstdc++";
-    }
+    $HIPCXXFLAGS .= " -stdlib=libstdc++";
 }
 
 if ($needHipHcc) {
