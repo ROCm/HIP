@@ -77,8 +77,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
 
         if (stream == NULL) {
             // If stream == NULL, wait on all queues.
-            // This matches behavior described in CUDA 7 RT APIs, which say that "This function uses standard default stream semantics".
-            // TODO-HCC fix this - is CUDA this conservative or still uses device timestamps?
+            // TODO-HCC fix this - is this conservative or still uses device timestamps?
             // TODO-HCC can we use barrier or event marker to implement better solution?
             ihipDevice_t *device = ihipGetTlsDefaultDevice();
             device->locked_syncDefaultStream(true);
