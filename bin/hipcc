@@ -51,7 +51,7 @@ if ($verbose & 0x2) {
 }
 
 # set if user explicitly requests -stdlib=libc++. (else we default to libstdc++ for better interop with g++):
-$enablelibcpp = 0;  # TODO - set to 0
+$setStdLib = 0;  # TODO - set to 0
 
 if ($HIP_PLATFORM eq "hcc") {
 	$HSA_PATH=$ENV{'HSA_PATH'};
@@ -69,9 +69,6 @@ if ($HIP_PLATFORM eq "hcc") {
 
     $HIPCC=$HCC;
     $HIPCXXFLAGS = $HCCFLAGS;
-
-    # To interoperate cleanly with G++, we default to using libc++ library:
-    $HIPCXXFLAGS .= " -stdlib=libstdc++";
 
     $HIPCXXFLAGS .= " -I$HIP_PATH/include/hcc_detail/cuda";
     $HIPCXXFLAGS .= " -I$HSA_PATH/include";
@@ -151,10 +148,15 @@ foreach $arg (@ARGV)
         $needLDFLAGS = 1;
     }
 
-    if($arg eq '-stdlib=libc++' and $enablelibcpp eq 0)
+    if($arg eq '-stdlib=libc++' and $setStdLib eq 0)
     {
         $HIPCXXFLAGS .= " -stdlib=libc++";
-        $enablelibcpp = 1;
+        $setStdLib = 1;
+    }
+    if($arg eq '-stdlib=libstdc++' and $setStdLib eq 0)
+    {
+        $HIPCXXFLAGS .= " -stdlib=libstdc++";
+        $setStdLib = 1;
     }
 
     if ($arg =~ m/^-/) {
@@ -195,14 +197,14 @@ if ($hasCU and $HIP_PLATFORM eq 'hcc') {
     $HIPCXXFLAGS .= " -x c++";
 }
 
-if ($enablelibcpp eq 0 and $HIP_PLATFORM eq 'hcc')
+if ($setStdLib eq 0 and $HIP_PLATFORM eq 'hcc')
 {
-    $HIPCXXFLAGS .= " -stdlib=libstdc++";
-}
-# TODO -remove me.
-if ($enablelibcpp eq 2 and $HIP_PLATFORM eq 'hcc')
-{ 
-    $HIPCXXFLAGS .= " -stdlib=libc++";
+    $defaultLibCpp = 0;   # TODO - should be 0 for best interop with G++
+    if ($defaultLibCpp) {
+        $HIPCXXFLAGS .= " -stdlib=libc++";  # TODO - remove me, defaults to libc++.
+    } else {
+        $HIPCXXFLAGS .= " -stdlib=libstdc++";
+    }
 }
 
 if ($needHipHcc) {
