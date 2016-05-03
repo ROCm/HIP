@@ -3,6 +3,7 @@
 int main(int argc, char *argv[])
 {
     int size = 1000000;
+    bool pass = true;
 
     // Allocate auto-managed host/device views of data:
     hc::array_view<float> A(size);
@@ -28,6 +29,8 @@ int main(int argc, char *argv[])
         float ref= 1.618f * i + 3.142f * i;
         if (C[i] != ref) {
             printf ("error:%d computed=%6.2f, reference=%6.2f\n", i, C[i], ref);
+            pass = false;
         }
     };
+    if (pass) printf ("PASSED!\n");
 }
