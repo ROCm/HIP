@@ -43,7 +43,7 @@ cd samples/01_Intro/bit_extract
 make
 ```
 
-* Guide to [Porting a New Cuda Project](docs/markdown/hip_porting_guide.md#porting-a-new-cuda-project" aria-hidden="true"><span aria-hidden="true)
+* Guide to [Porting a New Cuda Project](docs/markdown/hip_porting_guide.md#porting-a-new-cuda-project")
 
  
 ## More Examples
