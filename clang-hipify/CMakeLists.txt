@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 2.8.8)
-  
 project(hipify-clang)
 
-find_package(LLVM 3.8 REQUIRED PATHS ${LLVM_DIR} NO_DEFAULT_PATH)
+# Find LLVM package
+find_package(LLVM 3.8 QUIET PATHS ${LLVM_DIR} NO_DEFAULT_PATH)
+if (NOT ${LLVM_FOUND})
+    message(FATAL_ERROR "Don't know where to find LLVM (v3.8) package. Please specify absolute path using -DLLVM_DIR")
+endif()
 
 list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
 include(AddLLVM)
