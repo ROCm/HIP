@@ -8,15 +8,6 @@ set(HIP_VERSION_MAJOR "0")
 set(HIP_VERSION_MINOR "84")
 set(HIP_VERSION_PATCH "0")
 
-
-if(NOT DEFINED BUILD_CLANG_HIPIFY)
-    set(BUILD_CLANG_HIPIFY 0)
-endif()
-
-if(BUILD_CLANG_HIPIFY)
-    add_subdirectory(clang-hipify)
-endif()
-
 #############################
 # Configure variables
 #############################
@@ -91,9 +82,23 @@ else()
     set(HIP_USE_SHARED_LIBRARY $ENV{HIP_USE_SHARED_LIBRARY})
 endif()
 
+# Check if we need to build clang hipify
+if(NOT DEFINED BUILD_CLANG_HIPIFY)
+    if(NOT DEFINED ENV{BUILD_CLANG_HIPIFY})
+        set(BUILD_CLANG_HIPIFY 0)
+    else()
+        set(BUILD_CLANG_HIPIFY $ENV{BUILD_CLANG_HIPIFY})
+    endif()
+endif()
+
 #############################
 # Build steps
 #############################
+# Build clang hipify if enabled
+if(BUILD_CLANG_HIPIFY)
+    add_subdirectory(clang-hipify)
+endif()
+
 # Build hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
     include_directories(${PROJECT_SOURCE_DIR}/include)
