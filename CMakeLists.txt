@@ -5,7 +5,7 @@ project(hip)
 # Setup version information
 #############################
 set(HIP_VERSION_MAJOR "0")
-set(HIP_VERSION_MINOR "84")
+set(HIP_VERSION_MINOR "86")
 set(HIP_VERSION_PATCH "0")
 
 #############################
