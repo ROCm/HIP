@@ -34,7 +34,11 @@ if(HIP_PLATFORM STREQUAL "hcc")
         endif()
     endif()
     if(IS_ABSOLUTE ${HCC_HOME} AND EXISTS ${HCC_HOME} AND IS_DIRECTORY ${HCC_HOME})
-        message(STATUS "Looking for HCC in: " ${HCC_HOME})
+        execute_process(COMMAND ${HCC_HOME}/bin/hcc --version
+                        COMMAND cut -d\  -f9
+                        OUTPUT_VARIABLE HCC_VERSION
+                        OUTPUT_STRIP_TRAILING_WHITESPACE)
+        message(STATUS "Looking for HCC in: " ${HCC_HOME} ". Found version: " ${HCC_VERSION})
     else()
         message(FATAL_ERROR "Don't know where to find HCC. Please specify abolute path using -DHCC_HOME")
     endif()
