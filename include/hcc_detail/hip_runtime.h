@@ -376,6 +376,15 @@ __device__ unsigned int atomicXor(unsigned int* address,
 __device__ unsigned long long int atomicXor(unsigned long long int* address,
                                  unsigned long long int val);
 
+//atomicInc()
+__device__ unsigned int atomicInc(unsigned int* address,
+                       unsigned int val);
+
+
+//atomicDec()
+__device__ unsigned int atomicDec(unsigned int* address,
+                       unsigned int val);
+
 
 // integer intrinsic function __poc __clz __ffs __brev
 __device__ unsigned int __popc( unsigned int input);
