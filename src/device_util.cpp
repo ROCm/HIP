@@ -657,7 +657,19 @@ __device__  unsigned long long int atomicXor(unsigned long long int* address,
 	return (long long int)hc::atomic_fetch_xor((uint64_t*)address,(uint64_t)val);
 }
 
+//atomicInc
+__device__  int atomicInc(unsigned int* address,
+                       unsigned int val)
+{
+	return hc::__atomic_wrapinc(address,val);
+}
 
+//atomicDec
+__device__  int atomicDec(unsigned int* address,
+                       unsigned int val)
+{
+	return hc::__atomic_wrapdec(address,val);
+}
 
 
 __device__ unsigned int test__popc(unsigned int input)
