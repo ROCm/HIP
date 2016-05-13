@@ -121,8 +121,7 @@ int computeGold(int *gpuData, const int len)
 
     for (int i = 0; i < len; ++i)
     {
-        //val = (val >= limit) ? 0 : val+1;
-        val = val+1;
+        val = (val >= limit) ? 0 : val+1;
     }
 
     if (val != gpuData[5])
@@ -136,8 +135,7 @@ int computeGold(int *gpuData, const int len)
 
     for (int i = 0; i < len; ++i)
     {
-        //val = ((val == 0) || (val > limit)) ? limit : val-1;
-        val = val-1;
+        val = ((val == 0) || (val > limit)) ? limit : val-1;
     }
 
     if (val != gpuData[6])
@@ -234,12 +232,10 @@ __global__ void testKernel(hipLaunchParm lp,int *g_odata)
     atomicMin(&g_odata[4], tid);
 
     // Atomic increment (modulo 17+1)
-    //atomicInc((unsigned int *)&g_odata[5], 17);
-    //atomicInc((unsigned int *)&g_odata[5]);
-
+    atomicInc((unsigned int *)&g_odata[5], 17);
+ 
     // Atomic decrement
-   // atomicDec((unsigned int *)&g_odata[6], 137);
-    //atomicDec((unsigned int *)&g_odata[6]);
+    atomicDec((unsigned int *)&g_odata[6], 137);
 
     // Atomic compare-and-swap
     atomicCAS(&g_odata[7], tid-1, tid);
