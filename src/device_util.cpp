@@ -658,14 +658,14 @@ __device__  unsigned long long int atomicXor(unsigned long long int* address,
 }
 
 //atomicInc
-__device__  int atomicInc(unsigned int* address,
+__device__  unsigned int atomicInc(unsigned int* address,
                        unsigned int val)
 {
 	return hc::__atomic_wrapinc(address,val);
 }
 
 //atomicDec
-__device__  int atomicDec(unsigned int* address,
+__device__  unsigned int atomicDec(unsigned int* address,
                        unsigned int val)
 {
 	return hc::__atomic_wrapdec(address,val);
