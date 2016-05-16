@@ -1,3 +1,11 @@
+# HIP's internal servers have moved to GERRIT!  
+
+Please see here:
+http://git.amd.com:8080/#/q/project:compute/ec/hip
+
+The move integrates HIP with standard release flow for other ROCm projects and provides code review and automated regressions.  
+
+
 ## What is this repository for? ###
 
 HIP allows developers to convert CUDA code to portable C++.  The same source code can be compiled to run on NVIDIA or AMD GPUs. 
