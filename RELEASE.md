@@ -1,7 +1,5 @@
 # Release notes
 
-Since this is an early access release and we are still in development towards the production ready version Boltzmann Driver and runtime we recommend this release be used for research and early application development.  
-
 We have attempted to document known bugs and limitations - in particular the [HIP Kernel Language](docs/markdown/hip_kernel_language.md) document uses the phrase "Under Development", and the [HIP Runtime API bug list](http://gpuopen-professionalcompute-tools.github.io/HIP/bug.html) lists known bugs.    Some of the key items we are working on:
 - Tuning built-in functions, including shfl.
 - Performance optimization.
@@ -10,20 +8,22 @@ We have attempted to document known bugs and limitations - in particular the [HI
 Stay tuned - the work for many of these features is already in-flight.
 
 ===================================================================================================
-- clang-hipify : clang-based hipify tool.  Improved parsing of source code, and automates 
+Release:0.86.00
+Date: 2016.05.xx
+- Add clang-hipify : clang-based hipify tool.  Improved parsing of source code, and automates 
   creation of hipLaunchParm variable.
-- Memory register / unregister commands (hipHostRegister, hipHostUnregister)
-- Improve cross-linking support between G++ and HCC, in particular for interfaces that use
+- Implement memory register / unregister commands (hipHostRegister, hipHostUnregister)
+- Add cross-linking support between G++ and HCC, in particular for interfaces that use
   standard C++ libraries (ie std::vectors, std::strings).  HIPCC now uses libstdc++ by default on the HCC
   compilation path.
-- More samples including GPUBurn and SHOC.  See [HIP-Examples](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP-Examples)
+- More samples including gpu-burn, SHOC, nbody, rtm.  See [HIP-Examples](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP-Examples)
 ===================================================================================================
 
 ## Revision History:
 
 ===================================================================================================
-Release:0.84.00
-Date:
+Release:0.84.01
+Date: 2016.04.25
 - Refactor HIP make and install system:
     - Move to CMake. Refer to the installation section in README.md for details.
     - Split source into multiple modular .cpp and .h files.
