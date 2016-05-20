@@ -100,7 +100,9 @@ endmacro()
 # Make a hip executable, using libc++
 macro (make_hip_executable_libcpp exe cpp)  
     make_hip_executable( ${exe} ${cpp} ${ARGN} )
-    set_source_files_properties (${cpp} i${ARGN} PROPERTIES COMPILE_FLAGS --stdlib=libc++ ) 
+    if (${HIP_PLATFORM} STREQUAL "hcc")
+        set_source_files_properties (${cpp} i${ARGN} PROPERTIES COMPILE_FLAGS --stdlib=libc++ )
+    endif()
 endmacro()
 
 macro (make_named_test exe testname )
