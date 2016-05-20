@@ -420,17 +420,7 @@ HIP provides the following built-in functions for reading a high-resolution time
 clock_t clock()
 long long int clock64()
 ```
-
-AMD devices employ a per-GPU timer that increments at a constant time interval regardless of any dynamic frequency changes. All compute units in the system share the timer. 
-Nvidia devices implement the timer as a per-compute-unit clock that increments on every clock cycle.  
-
-To obtain the clock frequency, use the hipDeviceProp_t.clockInstructionRate field:
-
-```
-hipGetDeviceProperties(&deviceProps, deviceId);
-// Compute time in ms--device_ticks is based on values reported from clock() device function
-float time = device_ticks / (float)deviceProps.clockInstructionRate;
-```
+Returns the value of counter that is incremented every clock cycle on device. Difference in values returned provides the cycles used.
 
 ## Atomic Functions
 
