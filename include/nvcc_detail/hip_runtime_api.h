@@ -430,7 +430,10 @@ inline static hipError_t hipMemcpyPeerAsync ( void* dst, int  dstDevice, const v
     return hipCUDAErrorTohipError(cudaMemcpyPeerAsync ( dst, dstDevice, src, srcDevice, count, stream ));
 };
 
-
+inline static hipError_t hipSetDeviceFlags (unsigned int flags)
+{
+    return hipCUDAErrorTohipError(cudaSetDeviceFlags( flags ));
+}
 
 
 #ifdef __cplusplus
