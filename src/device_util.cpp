@@ -501,8 +501,8 @@ __device__ double trunc(double x)
 
 const int warpSize = 64;
 
-__device__ long long int clock64() { return (long long int)hc::__clock_u64(); };
-__device__ clock_t clock() { return (clock_t)hc::__clock_u64(); };
+__device__ long long int clock64() { return (long long int)hc::__cycle_u64(); };
+__device__ clock_t clock() { return (clock_t)hc::__cycle_u64(); };
 
 
 //atomicAdd()
