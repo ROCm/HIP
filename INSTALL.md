@@ -11,9 +11,6 @@
   - [HCC Options](#hcc-options)
     - [Using HIP with the AMD Native-GCN compiler.](#using-hip-with-the-amd-native-gcn-compiler)
     - [Compiling CodeXL markers for HIP Functions](#compiling-codexl-markers-for-hip-functions)
-    - [Using clang-hipify](#using-clang-hipify)
-      - [Building](#building)
-      - [Running and using clang-hipify](#running-and-using-clang-hipify)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -147,43 +144,3 @@ HIP_TRACE_API=1 HIP_DB=0x2 ./myHipApp
 ```
 
 Note this trace mode uses colors.  "less -r" can handle raw control characters and will display the debug output in proper colors.
-
-
-### Using clang-hipify
-
-Clang-hipify is a clang-based tool which can automate the translation of CUDA source code into portable HIP C++.  
-The clang-hipify tool can automatically add extra HIP arguments (notably the "hipLaunchParm" required at the 
-beginning of every HIP kernel call).   Clang-hipify has some additional dependencies explained below and 
-can be built as a separate make step.
-
-
-#### Building
-
-1.  Download and unpack clang+llvm 3.8 binary package preqrequisite:
-```
-wget http://llvm.org/releases/3.8.0/clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
-tar xvfJ clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz 
-```
-
-2. Enable build of clang-hipify and specify path to LLVM:
-Note LLVM_DIR must be a full absolute path (not relative) to the location extracted above.  Here's an example assuming we 
-extract the clang 3.8 package into ~/HIP-privatestaging/clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-14.04/.
-```
-cd HIP-privatestaging
-mkdir build.clang-hipify
-cd build.clang-hipify
-cmake -DBUILD_CLANG_HIPIFY=1 -DLLVM_DIR=~/HIP-privatestaging/clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-14.04/ -DCMAKE_BUILD_TYPE=Release ..
-make
-make install
-```
-
-#### Running and using clang-hipify
-clang-hipify performs an initial compile of the CUDA source code into a "symbol tree", and thus needs access to the appropriate header files:
- 1. Download "deb(network)" variant of target installer from https://developer.nvidia.com/cuda-downloads.  The commands below show how to download and install a recent version from the http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1404/x86_64/cuda-repo-ubuntu1404_7.5-18_amd64.deb.
-
-```
-wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1404/x86_64/cuda-repo-ubuntu1404_7.5-18_amd64.deb
-sudo dpkg -i cuda-repo-ubuntu1404_7.5-18_amd64.deb
-sudo apt-get update && sudo apt-get install cuda-minimal-build-7-5 cuda-curand-dev-7-5
-```
-
