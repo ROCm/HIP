@@ -32,6 +32,8 @@ THE SOFTWARE.
 #define tprintf(trace_level, ...) 
 #endif
 
+extern hsa_agent_t g_cpu_agent; // defined in hip_hcc.cpp
+
 //-------------------------------------------------------------------------------------------------
 StagingBuffer::StagingBuffer(hsa_agent_t hsaAgent, hsa_region_t systemRegion, size_t bufferSize, int numBuffers) :
     _hsa_agent(hsaAgent),
@@ -106,7 +108,7 @@ void StagingBuffer::CopyHostToDevicePinInPlace(void* dst, const void* src, size_
 
         hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
 
-        hsa_status = hsa_amd_memory_async_copy(dstp, _hsa_agent, locked_srcp, _hsa_agent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
+        hsa_status = hsa_amd_memory_async_copy(dstp, _hsa_agent, locked_srcp, g_cpu_agent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
         tprintf (DB_COPY2, "H2D: bytesRemaining=%zu: async_copy %zu bytes %p to %p status=%x\n", bytesRemaining, theseBytes, _pinnedStagingBuffer[bufferIndex], dstp, hsa_status);
 
         if (hsa_status != HSA_STATUS_SUCCESS) {
@@ -169,7 +171,7 @@ void StagingBuffer::CopyHostToDevice(void* dst, const void* src, size_t sizeByte
 
         hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
 
-        hsa_status_t hsa_status = hsa_amd_memory_async_copy(dstp, _hsa_agent, _pinnedStagingBuffer[bufferIndex], _hsa_agent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
+        hsa_status_t hsa_status = hsa_amd_memory_async_copy(dstp, _hsa_agent, _pinnedStagingBuffer[bufferIndex], g_cpu_agent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
         tprintf (DB_COPY2, "H2D: bytesRemaining=%zu: async_copy %zu bytes %p to %p status=%x\n", bytesRemaining, theseBytes, _pinnedStagingBuffer[bufferIndex], dstp, hsa_status);
 
         if (hsa_status != HSA_STATUS_SUCCESS) {
@@ -223,7 +225,7 @@ void StagingBuffer::CopyDeviceToHost(void* dst, const void* src, size_t sizeByte
 
             tprintf (DB_COPY2, "D2H: bytesRemaining0=%zu  async_copy %zu bytes src:%p to staging:%p\n", bytesRemaining0, theseBytes, srcp0, _pinnedStagingBuffer[bufferIndex]);
             hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
-            hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], _hsa_agent, srcp0, _hsa_agent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], g_cpu_agent, srcp0, _hsa_agent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
             if (hsa_status != HSA_STATUS_SUCCESS) {
                 THROW_ERROR (hipErrorRuntimeMemory);
             }
@@ -287,7 +289,7 @@ void StagingBuffer::CopyPeerToPeer(void* dst, hsa_agent_t dstAgent, const void* 
 
             tprintf (DB_COPY2, "P2P: bytesRemaining0=%zu  async_copy %zu bytes src:%p to staging:%p\n", bytesRemaining0, theseBytes, srcp0, _pinnedStagingBuffer[bufferIndex]);
             hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
-            hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], srcAgent, srcp0, srcAgent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], g_cpu_agent, srcp0, srcAgent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
             if (hsa_status != HSA_STATUS_SUCCESS) {
                 THROW_ERROR (hipErrorRuntimeMemory);
             }
@@ -315,7 +317,7 @@ void StagingBuffer::CopyPeerToPeer(void* dst, hsa_agent_t dstAgent, const void* 
 
             tprintf (DB_COPY2, "P2P: bytesRemaining1=%zu copy %zu bytes stagingBuf[%d]:%p to device:%p\n", bytesRemaining1, theseBytes, bufferIndex, _pinnedStagingBuffer[bufferIndex], dstp1);
             hsa_signal_store_relaxed(_completion_signal2[bufferIndex], 1);
-            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dstp1, dstAgent, _pinnedStagingBuffer[bufferIndex], dstAgent /*not used*/, theseBytes, 
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dstp1, dstAgent, _pinnedStagingBuffer[bufferIndex], g_cpu_agent /*not used*/, theseBytes,
                                       hostWait ? 0:1, hostWait ? NULL : &_completion_signal[bufferIndex], 
                                       _completion_signal2[bufferIndex]);
 
