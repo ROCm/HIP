@@ -60,12 +60,12 @@ if (${HIP_PLATFORM} STREQUAL "hcc")
         set (CMAKE_CXX_FLAGS --hipcc_explicit_lib)
     endif()
 
-    
+
 elseif (${HIP_PLATFORM} STREQUAL "nvcc")
 	MESSAGE ("HIP_PLATFORM=nvcc")
 
 	#Need C++11 for threads in some of the tests.
-	add_definitions(-std=c++11) 
+	add_definitions(-std=c++11)
 
 	# NVCC does not not support -rdynamic option
 	set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS )
@@ -83,7 +83,7 @@ add_library(test_common OBJECT test_common.cpp )
 
 
 # usage : make_hip_executable (exe_name CPP_FILES)
-macro (make_hip_executable exe cpp)  
+macro (make_hip_executable exe cpp)
     if (${HIP_PLATFORM} STREQUAL "hcc")
         if (${HIP_BUILD_LOCAL})
             #target_link_libraries(${exe} hip_hcc)
@@ -93,12 +93,12 @@ macro (make_hip_executable exe cpp)
         endif()
     else()
         add_executable (${exe} ${cpp} ${ARGN} $<TARGET_OBJECTS:test_common> )
-    endif() 
+    endif()
 endmacro()
 
 
 # Make a hip executable, using libc++
-macro (make_hip_executable_libcpp exe cpp)  
+macro (make_hip_executable_libcpp exe cpp)
     make_hip_executable( ${exe} ${cpp} ${ARGN} )
     if (${HIP_PLATFORM} STREQUAL "hcc")
         set_source_files_properties (${cpp} i${ARGN} PROPERTIES COMPILE_FLAGS --stdlib=libc++ )
@@ -106,7 +106,7 @@ macro (make_hip_executable_libcpp exe cpp)
 endmacro()
 
 macro (make_named_test exe testname )
-  add_test (NAME ${testname} 
+  add_test (NAME ${testname}
       COMMAND ${PROJECT_BINARY_DIR}/${exe} ${ARGN}
             )
   set_tests_properties (${testname}
@@ -126,7 +126,7 @@ macro (make_hipify_test sourceFile )
     #string (REPLACE " " "" smush_args ${ARGN})
   set (testname ${sourceFile}${smush_args}.tst)
 
-  add_test (NAME ${testname} 
+  add_test (NAME ${testname}
       COMMAND ${HIP_PATH}/bin/hipify ${PROJECT_SOURCE_DIR}/${sourceFile} ${ARGN} 
             )
 endmacro()
@@ -135,7 +135,7 @@ endmacro()
 macro (make_test_matches exe match_string)
   string (REPLACE " " "" smush_args ${ARGN})
   set (testname ${exe}${smush_args}.tst)
-  add_test (NAME ${testname} 
+  add_test (NAME ${testname}
       COMMAND ${PROJECT_BINARY_DIR}/${exe} ${ARGN}
             )
   set_tests_properties (${testname}
@@ -143,38 +143,44 @@ macro (make_test_matches exe match_string)
     )
 endmacro()
 
-
+macro (make_hip_executable_ldg exe cpp)
+ if (${HIP_PLATFORM} STREQUAL "hcc")
+    make_hip_executable( ${exe} ${cpp} ${ARGN} )
+else ()
+make_hip_executable( ${exe} ${cpp} ${ARGN} )
+    set_source_files_properties (${cpp} i${ARGN} PROPERTIES COMPILE_FLAGS --gpu-architecture=sm_35 ) 
+endif()
+endmacro()
 
 #make_hip_executable (hipAPIStreamEnable hipAPIStreamEnable.cpp)
 #make_hip_executable (hipAPIStreamDisable hipAPIStreamDisable.cpp)
 make_hip_executable (hip_ballot hip_ballot.cpp)
-make_hip_executable (hip_anyall hip_anyall.cpp) 
-make_hip_executable (hip_popc hip_popc.cpp) 
-make_hip_executable (hip_clz hip_clz.cpp) 
-make_hip_executable (hip_brev hip_brev.cpp) 
-make_hip_executable (hip_ffs hip_ffs.cpp) 
-if (${HIP_PLATFORM} STREQUAL "hcc")
-    make_hip_executable (hip_test_ldg hip_test_ldg.cpp)
-endif()
+make_hip_executable (hip_anyall hip_anyall.cpp)
+make_hip_executable (hip_popc hip_popc.cpp)
+make_hip_executable (hip_clz hip_clz.cpp)
+make_hip_executable (hip_brev hip_brev.cpp)
+make_hip_executable (hip_ffs hip_ffs.cpp)
+make_hip_executable_ldg (hip_test_ldg hip_test_ldg.cpp)
+
 make_hip_executable (hipGetDeviceAttribute hipGetDeviceAttribute.cpp) 
-make_hip_executable (hipEnvVar hipEnvVar.cpp) 
+make_hip_executable (hipEnvVar hipEnvVar.cpp)
 make_hip_executable (hipEnvVarDriver hipEnvVarDriver.cpp) 
 make_hip_executable (hipMemcpy_simple hipMemcpy_simple.cpp) 
-make_hip_executable (hipMemcpy hipMemcpy.cpp) 
-make_hip_executable (hipMemcpyAsync hipMemcpyAsync.cpp) 
-make_hip_executable (hipMemset hipMemset.cpp) 
-make_hip_executable (hipEventRecord hipEventRecord.cpp) 
-make_hip_executable_libcpp (hipLanguageExtensions hipLanguageExtensions.cpp) 
-make_hip_executable (hipGridLaunch hipGridLaunch.cpp) 
+make_hip_executable (hipMemcpy hipMemcpy.cpp)
+make_hip_executable (hipMemcpyAsync hipMemcpyAsync.cpp)
+make_hip_executable (hipMemset hipMemset.cpp)
+make_hip_executable (hipEventRecord hipEventRecord.cpp)
+make_hip_executable_libcpp (hipLanguageExtensions hipLanguageExtensions.cpp)
+make_hip_executable (hipGridLaunch hipGridLaunch.cpp)
 
 make_hip_executable_libcpp (hipHcc hipHcc.cpp)
-#set_source_files_properties (hipHcc.cpp PROPERTIES COMPILE_FLAGS --stdlib=libc++ ) 
+#set_source_files_properties (hipHcc.cpp PROPERTIES COMPILE_FLAGS --stdlib=libc++ )
 
 make_hip_executable (hipSimpleAtomicsTest hipSimpleAtomicsTest.cpp)
 make_hip_executable (hipMathFunctionsHost hipMathFunctions.cpp hipSinglePrecisionMathHost.cpp hipDoublePrecisionMathHost.cpp)
 make_hip_executable (hipMathFunctionsDevice hipMathFunctions.cpp hipSinglePrecisionMathDevice.cpp hipDoublePrecisionMathDevice.cpp)
 make_hip_executable (hipIntrinsics hipMathFunctions.cpp hipSinglePrecisionIntrinsics.cpp hipDoublePrecisionIntrinsics.cpp hipIntegerIntrinsics.cpp)
-make_hip_executable_libcpp (hipPointerAttrib hipPointerAttrib.cpp) 
+make_hip_executable_libcpp (hipPointerAttrib hipPointerAttrib.cpp)
 make_hip_executable (hipMultiThreadStreams1 hipMultiThreadStreams1.cpp)
 make_hip_executable (hipMultiThreadStreams2 hipMultiThreadStreams2.cpp) 
 make_hip_executable (hipHostAlloc hipHostAlloc.cpp)
@@ -187,7 +193,7 @@ make_hip_executable (hipFuncSetDeviceFlags hipFuncSetDeviceFlags.cpp)
 make_hip_executable (hipFuncGetDevice hipFuncGetDevice.cpp)
 make_hip_executable (hipFuncSetDevice hipFuncSetDevice.cpp)
 make_hip_executable (hipFuncDeviceSynchronize hipFuncDeviceSynchronize.cpp)
-make_hip_executable (hipPeerToPeer_simple hipPeerToPeer_simple.cpp) 
+make_hip_executable (hipPeerToPeer_simple hipPeerToPeer_simple.cpp)
 make_hip_executable (hipMemcpyAll hipMemcpyAll.cpp)
 make_hip_executable (hipMultiThreadDevice hipMultiThreadDevice.cpp) 
 make_hip_executable (hipTestMemcpyPin hipTestMemcpyPin.cpp)
@@ -216,7 +222,7 @@ make_test(hipMemcpy_simple  " " )
 make_named_test(hipMemcpy "hipMemcpy-modes" --tests 0x1 )
 make_named_test(hipMemcpy "hipMemcpy-size" --tests 0x6 )
 make_named_test(hipMemcpy "hipMemcpy-multithreaded" --tests 0x8 )
-
+make_test(hip_test_ldg " " )
 # Debug synchronization, then enable.
 #make_named_test(hipMemcpy_simple "hipMemcpyAsync-simple" --async)
 
@@ -239,14 +245,13 @@ make_named_test (hipMultiThreadDevice "hipMultiThreadDevice-pyramid" --tests 0x4
 make_named_test (hipMultiThreadDevice "hipMultiThreadDevice-nearzero" --tests 0x10) 
 
 if (${HIP_MULTI_GPU})
-    make_test(hipPeerToPeer_simple " ")                  # use current device for copy, this fails. 
-    make_test(hipPeerToPeer_simple --memcpyWithPeer)  
+    make_test(hipPeerToPeer_simple " ")                  # use current device for copy, this fails.
+    make_test(hipPeerToPeer_simple --memcpyWithPeer)
     make_test(hipPeerToPeer_simple --mirrorPeers)    # mirror mapping: test to ensure mirror doesn't destroy orig mapping.
 
 endif()
 
 if (${HIP_PLATFORM} STREQUAL "hcc")
-    make_test(hip_test_ldg " " )
     make_test(hipMemoryAllocate " ")
     make_test(hipFuncSetDevice " ")
 endif()
