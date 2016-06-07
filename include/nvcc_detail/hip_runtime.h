@@ -95,6 +95,13 @@ kernelName<<<numblocks,numthreads,memperblock,streamId>>>(0, __VA_ARGS__);\
 #define hipGridDim_y  gridDim.y
 #define hipGridDim_z  gridDim.z
 
+/**
+ * extern __shared__
+ */
+
+#define HIP_DYNAMIC_SHARED(type, var) \
+    extern __shared__ type var[]; \
+
 #endif
 
 

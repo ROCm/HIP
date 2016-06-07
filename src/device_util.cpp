@@ -808,6 +808,11 @@ __host__ __device__ int max(int arg1, int arg2)
   return (int)(hc::precise_math::fmax((float)arg1, (float)arg2));
 }
 
+__device__ __attribute__((address_space(3))) void* __get_dynamicgroupbaseptr()
+{
+  return hc::get_dynamic_group_segment_base_pointer();
+}
+
 
 
 //TODO - add a couple fast math operations here, the set here will grow :
