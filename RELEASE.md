@@ -17,6 +17,7 @@ Date: 2016.06.06
   standard C++ libraries (ie std::vectors, std::strings).  HIPCC now uses libstdc++ by default on the HCC
   compilation path.
 - More samples including gpu-burn, SHOC, nbody, rtm.  See [HIP-Examples](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP-Examples)
+
 ===================================================================================================
 
 ## Revision History:
