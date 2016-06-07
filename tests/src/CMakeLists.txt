@@ -191,6 +191,7 @@ make_hip_executable (hipPeerToPeer_simple hipPeerToPeer_simple.cpp)
 make_hip_executable (hipMemcpyAll hipMemcpyAll.cpp)
 make_hip_executable (hipMultiThreadDevice hipMultiThreadDevice.cpp) 
 make_hip_executable (hipTestMemcpyPin hipTestMemcpyPin.cpp)
+make_hip_executable (hipDynamicShared hipDynamicShared.cpp)
 
 make_test(hip_ballot " " )
 make_test(hip_anyall " " )
@@ -251,3 +252,5 @@ if (${HIP_PLATFORM} STREQUAL "hcc")
 endif()
 
 make_hipify_test(specialFunc.cu )
+
+make_test(hipDynamicShared " ")
