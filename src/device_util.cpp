@@ -1,3 +1,22 @@
+/*
+Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANNTY OF ANY KIND, EXPRESS OR
+IMPLIED, INNCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANNY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER INN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 #include"hip_runtime.h"
 #include<hc.hpp>
 #include<grid_launch.h>
@@ -482,8 +501,8 @@ __device__ double trunc(double x)
 
 const int warpSize = 64;
 
-__device__ long long int clock64() { return (long long int)hc::__clock_u64(); };
-__device__ clock_t clock() { return (clock_t)hc::__clock_u64(); };
+__device__ long long int clock64() { return (long long int)hc::__cycle_u64(); };
+__device__ clock_t clock() { return (clock_t)hc::__cycle_u64(); };
 
 
 //atomicAdd()
@@ -638,7 +657,19 @@ __device__  unsigned long long int atomicXor(unsigned long long int* address,
 	return (long long int)hc::atomic_fetch_xor((uint64_t*)address,(uint64_t)val);
 }
 
+//atomicInc
+__device__  unsigned int atomicInc(unsigned int* address,
+                       unsigned int val)
+{
+	return hc::__atomic_wrapinc(address,val);
+}
 
+//atomicDec
+__device__  unsigned int atomicDec(unsigned int* address,
+                       unsigned int val)
+{
+	return hc::__atomic_wrapdec(address,val);
+}
 
 
 __device__ unsigned int test__popc(unsigned int input)
@@ -775,6 +806,11 @@ __host__ __device__ int min(int arg1, int arg2)
 __host__ __device__ int max(int arg1, int arg2) 
 {
   return (int)(hc::precise_math::fmax((float)arg1, (float)arg2));
+}
+
+__device__ __attribute__((address_space(3))) void* __get_dynamicgroupbaseptr()
+{
+  return hc::get_dynamic_group_segment_base_pointer();
 }
 
 

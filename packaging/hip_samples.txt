@@ -1,19 +1,19 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(hip_hcc)
+project(hip_samples)
 
-#execute_process(COMMAND @CMAKE_CURRENT_SOURCE_DIR@/bin/hipconfig --full 2>/dev/null | grep clang | cut -d" " -f9
-#                OUTPUT_VARIABLE HCC_VERSION
-#                OUTPUT_STRIP_TRAILING_WHITESPACE)
-                
-install(DIRECTORY @PROJECT_BINARY_DIR@/CMakeFiles/hip_hcc.dir/src/ DESTINATION lib)
+add_custom_target(create_installer_script ALL
+                  COMMAND tar cvzf ${PROJECT_BINARY_DIR}/samples.tgz --exclude='*.o' .
+                  COMMAND @hip_SOURCE_DIR@/packaging/create_hip_samples_installer.sh ${PROJECT_BINARY_DIR}/samples.tgz ${PROJECT_BINARY_DIR}/unpack_hip_samples.sh
+                  WORKING_DIRECTORY @hip_SOURCE_DIR@/samples)
+install(PROGRAMS unpack_hip_samples.sh DESTINATION bin)
 
 #############################
 # Packaging steps
 #############################
 set(CPACK_SET_DESTDIR TRUE)
 set(CPACK_INSTALL_PREFIX "/opt/rocm/hip")
-set(CPACK_PACKAGE_NAME "hip_hcc")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "HIP: Heterogenous-computing Interface for Portability [HCC]")
+set(CPACK_PACKAGE_NAME "hip_samples")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "HIP: Heterogenous-computing Interface for Portability [SAMPLES]")
 set(CPACK_PACKAGE_VENDOR "Advanced Micro Devices, Inc.")
 set(CPACK_PACKAGE_CONTACT "Maneesh Gupta <maneesh.gupta@amd.com>")
 set(CPACK_PACKAGE_VERSION @HIP_VERSION_MAJOR@.@HIP_VERSION_MINOR@.@HIP_VERSION_PATCH@)
@@ -23,13 +23,10 @@ set(CPACK_PACKAGE_VERSION_PATCH @HIP_VERSION_PATCH@)
 set(CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH})
 set(CPACK_GENERATOR "TGZ;DEB;RPM")
 set(CPACK_BINARY_DEB "ON")
-set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${PROJECT_BINARY_DIR}/postinst;${PROJECT_BINARY_DIR}/prerm")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "hip_base (= ${CPACK_PACKAGE_VERSION}), hcc_lc (= @HCC_VERSION@)")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "hip_base (= ${CPACK_PACKAGE_VERSION})")
 set(CPACK_BINARY_RPM "ON")
 set(CPACK_RPM_PACKAGE_ARCHITECTURE "x86_64")
-set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/postinst")
-set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/prerm")
 set(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
-set(CPACK_RPM_PACKAGE_REQUIRES "hip_base = ${CPACK_PACKAGE_VERSION}, hcc_lc = @HCC_VERSION@")
+set(CPACK_RPM_PACKAGE_REQUIRES "hip_base = ${CPACK_PACKAGE_VERSION}")
 set(CPACK_SOURCE_GENERATOR "TGZ")
 include(CPack)

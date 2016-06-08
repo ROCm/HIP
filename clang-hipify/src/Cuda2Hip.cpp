@@ -769,27 +769,26 @@ private:
 } // end anonymous namespace
 
 // Set up the command line options
-static cl::OptionCategory
-    ToolTemplateCategory("CUDA to HIP source translator options");
-static cl::extrahelp MoreHelp("<source0> specify the path of source file\n\n");
+static cl::opt<std::string>
+InputFilename(cl::Positional, cl::desc("<input file>"), cl::init("-"));
 
 static cl::opt<std::string> OutputFilename("o", cl::desc("Output filename"),
-                                           cl::value_desc("filename"),
-                                           cl::cat(ToolTemplateCategory));
+                                           cl::value_desc("filename"));
 
 static cl::opt<bool>
     Inplace("inplace",
             cl::desc("Modify input file inplace, replacing input with hipified "
                      "output, save backup in .prehip file. "),
-            cl::value_desc("inplace"), cl::cat(ToolTemplateCategory));
+            cl::value_desc("inplace"));
 
 static cl::opt<bool>
     NoOutput("no-output",
              cl::desc("don't write any translated output to stdout"),
-             cl::value_desc("no-output"), cl::cat(ToolTemplateCategory));
+             cl::value_desc("no-output"));
+
 static cl::opt<bool>
     PrintStats("print-stats", cl::desc("print the command-line, like a header"),
-               cl::value_desc("print-stats"), cl::cat(ToolTemplateCategory));
+               cl::value_desc("print-stats"));
 
 int main(int argc, const char **argv) {
 
@@ -797,12 +796,13 @@ int main(int argc, const char **argv) {
 
   int Result;
 
-  CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory,
-                                    llvm::cl::Required);
+  std::unique_ptr<CompilationDatabase> Compilations(
+    new FixedCompilationDatabase(".",std::vector<std::string>()));
+  cl::ParseCommandLineOptions(argc, argv);
+
   std::string dst = OutputFilename;
-  std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
   if (dst.empty()) {
-    dst = fileSources[0];
+    dst = InputFilename;
     if (!Inplace) {
       size_t pos = dst.rfind(".cu");
       if (pos != std::string::npos) {
@@ -820,13 +820,13 @@ int main(int argc, const char **argv) {
   }
 
   // copy source file since tooling makes changes "inplace"
-  std::ifstream source(fileSources[0], std::ios::binary);
+  std::ifstream source(InputFilename, std::ios::binary);
   std::ofstream dest(Inplace ? dst + ".prehip" : dst, std::ios::binary);
   dest << source.rdbuf();
   source.close();
   dest.close();
 
-  RefactoringTool Tool(OptionsParser.getCompilations(), dst);
+  RefactoringTool Tool(*Compilations, dst);
   ast_matchers::MatchFinder Finder;
   Cuda2HipCallback Callback(&Tool.getReplacements(), &Finder);
   HipifyPPCallbacks PPCallbacks(&Tool.getReplacements());
@@ -931,7 +931,7 @@ int main(int argc, const char **argv) {
       llvm::outs() << counterNames[i] << ':'
                    << Callback.countReps[i] + PPCallbacks.countReps[i] << ' ';
     }
-    llvm::outs() << ") in \'" << fileSources[0] << "\'\n";
+    llvm::outs() << ") in \'" << InputFilename << "\'\n";
   }
   return Result;
 }
