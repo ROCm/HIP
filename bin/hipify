@@ -84,7 +84,7 @@ push (@warn_whitelist, split(',',$warn_whitelist));
 
 #---
 #Stats tracking code:
-@statNames = ("dev", "mem", "kern", 'coord_func', "math_func", "special_func", "stream", "event", "err", "def", "tex", "other");
+@statNames = ("dev", "mem", "kern", 'coord_func', "math_func", "special_func", "stream", "event", "err", "def", "tex", "extern_shared", "other");
 
 
 #---
@@ -427,6 +427,34 @@ while (@ARGV) {
 
         $countKeywords += m/__global__/;
         $countKeywords += m/__shared__/;
+
+        #--------
+        # CUDA extern __shared__ syntax
+        # Note these only work if declaration is on a single line.
+        {
+            # match uses ? for <.*> which will be unitialized if this is not present in launch syntax.
+            no warnings qw/uninitialized/;
+
+            my $k = 0;
+ 
+            # Match extern __shared__ type foo[]; syntax
+            # Replace as HIP_DYNAMIC_SHARED() macro
+            $k += s/extern\s+([\w\(\)]+)?\s*__shared__\s+([\w:<>\s]+)\s+(\w+)\s*\[\s*\]\s*;/HIP_DYNAMIC_SHARED($1 $2, $3)/g;
+
+            # test patterns for the regular expression above:
+            #'extern __shared__ double foo[];'
+            #'extern __shared__ unsigned int foo[];'
+            #'extern volatile __shared__ double foo[];'
+            #'extern volatile __shared__ unsigned int sdata[];'
+            #'extern __shared__ volatile unsigned int sdata[];'
+            #'extern __shared__ T s[];'
+            #'extern __shared__ T::type s[];'
+            #'extern __shared__ blah<T>::type s[];'
+            #'extern __shared__ typename mapper<Float>::type s_data[];'
+            #'extern __attribute__((used)) __shared__ typename mapper<Float>::type s_data[];'
+
+            $ft{'extern_shared'} += $k;
+        }
 
         #--------
         # CUDA Launch Syntax

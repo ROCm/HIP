@@ -22,6 +22,9 @@ THE SOFTWARE.
 #include <stdio.h>
 #include <iostream>
 #include <hip_runtime.h>
+#ifdef __HIP_PLATFORM_HCC__
+#include <hc.hpp>
+#endif
 
 
 #define CHECK(cmd) \

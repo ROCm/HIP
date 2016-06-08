@@ -376,6 +376,15 @@ __device__ unsigned int atomicXor(unsigned int* address,
 __device__ unsigned long long int atomicXor(unsigned long long int* address,
                                  unsigned long long int val);
 
+//atomicInc()
+__device__ unsigned int atomicInc(unsigned int* address,
+                       unsigned int val);
+
+
+//atomicDec()
+__device__ unsigned int atomicDec(unsigned int* address,
+                       unsigned int val);
+
 
 // integer intrinsic function __poc __clz __ffs __brev
 __device__ unsigned int __popc( unsigned int input);
@@ -420,6 +429,8 @@ __device__ float __shfl_xor(float input, int lane_mask, int width);
 
 __host__ __device__ int min(int arg1, int arg2);
 __host__ __device__ int max(int arg1, int arg2);
+
+__device__ __attribute__((address_space(3))) void* __get_dynamicgroupbaseptr();
 
 //TODO - add a couple fast math operations here, the set here will grow :
 __device__ float __cosf(float x);
@@ -546,6 +557,16 @@ do {\
 //TODO - develop C interface.
 
 #endif
+
+/**
+ * extern __shared__
+ */
+
+// Macro to replace extern __shared__ declarations
+// to local variable definitions
+#define HIP_DYNAMIC_SHARED(type, var) \
+    __attribute__((address_space(3))) type* var = \
+    (__attribute__((address_space(3))) type*)__get_dynamicgroupbaseptr(); \
 
 #endif // __HCC__
 

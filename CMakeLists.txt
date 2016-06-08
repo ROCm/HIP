@@ -34,7 +34,11 @@ if(HIP_PLATFORM STREQUAL "hcc")
         endif()
     endif()
     if(IS_ABSOLUTE ${HCC_HOME} AND EXISTS ${HCC_HOME} AND IS_DIRECTORY ${HCC_HOME})
-        message(STATUS "Looking for HCC in: " ${HCC_HOME})
+        execute_process(COMMAND ${HCC_HOME}/bin/hcc --version
+                        COMMAND cut -d\  -f9
+                        OUTPUT_VARIABLE HCC_VERSION
+                        OUTPUT_STRIP_TRAILING_WHITESPACE)
+        message(STATUS "Looking for HCC in: " ${HCC_HOME} ". Found version: " ${HCC_VERSION})
     else()
         message(FATAL_ERROR "Don't know where to find HCC. Please specify abolute path using -DHCC_HOME")
     endif()
@@ -204,6 +208,17 @@ add_custom_target(pkg_hip_doc  COMMAND ${CMAKE_COMMAND} .
                                COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
                                WORKING_DIRECTORY ${BUILD_DIR})
 
+# Package: hip_samples
+set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_samples)
+configure_file(packaging/hip_samples.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+add_custom_target(pkg_hip_samples COMMAND ${CMAKE_COMMAND} .
+                                  COMMAND rm -rf *.deb *.rpm *.tar.gz
+                                  COMMAND make package
+                                  COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+                                  COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+                                  COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+                                  WORKING_DIRECTORY ${BUILD_DIR})
+
 # Package: all
-add_custom_target(package DEPENDS pkg_hip_base pkg_hip_hcc pkg_hip_nvcc pkg_hip_doc)
+add_custom_target(package DEPENDS pkg_hip_base pkg_hip_hcc pkg_hip_nvcc pkg_hip_doc pkg_hip_samples)
 
