@@ -25,6 +25,8 @@ var searchData=
   ['hipdeviceattributepcideviceid',['hipDeviceAttributePciDeviceId',['../group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7ca955d90286e87be9e3528f0b817ab32ff',1,'hip_runtime_api.h']]],
   ['hipdeviceattributetotalconstantmemory',['hipDeviceAttributeTotalConstantMemory',['../group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7cac6089ac3a0f9c77cc382fb0eaa73ae9c',1,'hip_runtime_api.h']]],
   ['hipdeviceattributewarpsize',['hipDeviceAttributeWarpSize',['../group__GlobalDefs.html#ggacc0acd7b9bda126c6bb3dfd6e2796d7caffd94133e823247a6f1215343232f6ec',1,'hip_runtime_api.h']]],
+  ['hiperrorhostmemoryalreadyregistered',['hipErrorHostMemoryAlreadyRegistered',['../group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a9d7173cea72aace620a83d502569de1b',1,'hip_runtime_api.h']]],
+  ['hiperrorhostmemorynotregistered',['hipErrorHostMemoryNotRegistered',['../group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a6901476ca88eed786fb8be003d9661d9',1,'hip_runtime_api.h']]],
   ['hiperrorinitializationerror',['hipErrorInitializationError',['../group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a7e935ae88ee1f9ff3920156ac6864520',1,'hip_runtime_api.h']]],
   ['hiperrorinvaliddevice',['hipErrorInvalidDevice',['../group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d',1,'hip_runtime_api.h']]],
   ['hiperrorinvaliddevicepointer',['hipErrorInvalidDevicePointer',['../group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a37a93fcd2b0aed9bf52b82fa26031e6f',1,'hip_runtime_api.h']]],

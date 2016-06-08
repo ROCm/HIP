@@ -9,7 +9,7 @@ Stay tuned - the work for many of these features is already in-flight.
 
 ===================================================================================================
 Release:0.86.00
-Date: 2016.05.xx
+Date: 2016.06.06
 - Add clang-hipify : clang-based hipify tool.  Improved parsing of source code, and automates 
   creation of hipLaunchParm variable.
 - Implement memory register / unregister commands (hipHostRegister, hipHostUnregister)
@@ -17,6 +17,7 @@ Date: 2016.05.xx
   standard C++ libraries (ie std::vectors, std::strings).  HIPCC now uses libstdc++ by default on the HCC
   compilation path.
 - More samples including gpu-burn, SHOC, nbody, rtm.  See [HIP-Examples](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP-Examples)
+
 ===================================================================================================
 
 ## Revision History:
