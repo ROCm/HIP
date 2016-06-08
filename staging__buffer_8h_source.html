@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/hip_git/release_0.84.01/include/hcc_detail/staging_buffer.h Source File</title>
+<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/git/hip/release_0.86.00/include/hcc_detail/staging_buffer.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -141,23 +141,26 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="keywordtype">void</span> CopyDeviceToHost   (<span class="keywordtype">void</span>* dst, <span class="keyword">const</span> <span class="keywordtype">void</span>* src, <span class="keywordtype">size_t</span> sizeBytes, hsa_signal_t *waitFor);</div>
 <div class="line"><a name="l00051"></a><span class="lineno">   51</span>&#160;    <span class="keywordtype">void</span> CopyDeviceToHostPinInPlace(<span class="keywordtype">void</span>* dst, <span class="keyword">const</span> <span class="keywordtype">void</span>* src, <span class="keywordtype">size_t</span> sizeBytes, hsa_signal_t *waitFor);</div>
 <div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;</div>
-<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;</div>
-<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;    hsa_agent_t     _hsa_agent;</div>
-<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;    <span class="keywordtype">size_t</span>          _bufferSize;  <span class="comment">// Size of the buffers.</span></div>
-<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    <span class="keywordtype">int</span>             _numBuffers;</div>
-<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
-<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    <span class="keywordtype">char</span>            *_pinnedStagingBuffer[_max_buffers];</div>
-<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    hsa_signal_t     _completion_signal[_max_buffers];</div>
-<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    std::mutex       _copy_lock;    <span class="comment">// provide thread-safe access </span></div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;};</div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;</div>
-<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;    <span class="keywordtype">void</span> CopyPeerToPeer( <span class="keywordtype">void</span>* dst, hsa_agent_t dstAgent, <span class="keyword">const</span> <span class="keywordtype">void</span>* src, hsa_agent_t srcAgent, <span class="keywordtype">size_t</span> sizeBytes, hsa_signal_t *waitFor);</div>
+<div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;</div>
+<div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;<span class="keyword">private</span>:</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    hsa_agent_t     _hsa_agent;</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;    <span class="keywordtype">size_t</span>          _bufferSize;  <span class="comment">// Size of the buffers.</span></div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    <span class="keywordtype">int</span>             _numBuffers;</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;    <span class="keywordtype">char</span>            *_pinnedStagingBuffer[_max_buffers];</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;    hsa_signal_t     _completion_signal[_max_buffers];</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    hsa_signal_t     _completion_signal2[_max_buffers]; <span class="comment">// P2P needs another set of signals.</span></div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    std::mutex       _copy_lock;    <span class="comment">// provide thread-safe access </span></div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;};</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;<span class="preprocessor">#endif</span></div>
 <div class="ttc" id="structStagingBuffer_html"><div class="ttname"><a href="structStagingBuffer.html">StagingBuffer</a></div><div class="ttdef"><b>Definition:</b> staging_buffer.h:40</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Apr 25 2016 12:08:52 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat May 21 2016 14:34:09 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/hip_git/release_0.84.01/src/hip_hcc.cpp File Reference</title>
+<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/git/hip/release_0.86.00/src/hip_hcc.cpp File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -112,9 +112,6 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:a6cdfff25aad8796bad4bbf2976aa0780"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6cdfff25aad8796bad4bbf2976aa0780"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_HCC</b></td></tr>
-<tr class="separator:a6cdfff25aad8796bad4bbf2976aa0780"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a70838c4fa8cfbdb44e3b771caf2ccda3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a70838c4fa8cfbdb44e3b771caf2ccda3"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>DeviceErrorCheck</b>(x)&#160;&#160;&#160;if (x != HSA_STATUS_SUCCESS) { return <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d">hipErrorInvalidDevice</a>; }</td></tr>
 <tr class="separator:a70838c4fa8cfbdb44e3b771caf2ccda3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -132,6 +129,9 @@ const char *&#160;</td><td class="memItemRight" valign="bottom"><b>ihipErrorStri
 <tr class="memitem:a561c8030bb5c9835b7381130106278e2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a561c8030bb5c9835b7381130106278e2"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>ihipIsValidDevice</b> (unsigned deviceIndex)</td></tr>
 <tr class="separator:a561c8030bb5c9835b7381130106278e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aadf47755f7bd8c4cf6c761d07a6b566b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aadf47755f7bd8c4cf6c761d07a6b566b"></a>
+<a class="el" href="classihipDevice__t.html">ihipDevice_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>getDevice</b> (unsigned deviceIndex)</td></tr>
+<tr class="separator:aadf47755f7bd8c4cf6c761d07a6b566b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a93c32584eb46790f4947ef90da127613"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a93c32584eb46790f4947ef90da127613"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>error_check</b> (hsa_status_t hsa_error_code, int line_num, std::string str)</td></tr>
 <tr class="separator:a93c32584eb46790f4947ef90da127613"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -153,12 +153,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipInit</b> ()</td><
 <tr class="memitem:aaf16ac37517d2e0a1642f822b7aafe0f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaf16ac37517d2e0a1642f822b7aafe0f"></a>
 hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>ihipSyncAndResolveStream</b> (hipStream_t stream)</td></tr>
 <tr class="separator:aaf16ac37517d2e0a1642f822b7aafe0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a597cb8f006c2f7dbe1c0b45051838e26"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a597cb8f006c2f7dbe1c0b45051838e26"></a>
-hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPreLaunchKernel</b> (hipStream_t stream, hc::accelerator_view **av)</td></tr>
-<tr class="separator:a597cb8f006c2f7dbe1c0b45051838e26"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac57c37c7954286ecdf6f032cf64599b9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac57c37c7954286ecdf6f032cf64599b9"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPostLaunchKernel</b> (hipStream_t stream, hc::completion_future &amp;kernelFuture)</td></tr>
-<tr class="separator:ac57c37c7954286ecdf6f032cf64599b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a92524ad83b4a318729aad695bada8766"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a92524ad83b4a318729aad695bada8766"></a>
+hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPreLaunchKernel</b> (hipStream_t stream, grid_launch_parm *lp)</td></tr>
+<tr class="separator:a92524ad83b4a318729aad695bada8766"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a306767aedd231497c964972aade8cf80"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a306767aedd231497c964972aade8cf80"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPostLaunchKernel</b> (hipStream_t stream, grid_launch_parm &amp;lp)</td></tr>
+<tr class="separator:a306767aedd231497c964972aade8cf80"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d30a0554ca00fc1db8442d03e285ef2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1d30a0554ca00fc1db8442d03e285ef2"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipSetTs</b> (<a class="el" href="structhipEvent__t.html">hipEvent_t</a> e)</td></tr>
 <tr class="separator:a1d30a0554ca00fc1db8442d03e285ef2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -335,7 +335,7 @@ hsa_agent_t&#160;</td><td class="memItemRight" valign="bottom"><b>g_cpu_agent</b
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Apr 25 2016 12:08:53 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat May 21 2016 14:34:09 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/hip_git/release_0.84.01/include/hcc_detail/hip_vector_types.h File Reference</title>
+<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/git/hip/release_0.86.00/include/hcc_detail/hip_vector_types.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -96,25 +96,15 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <p>Defines the different newt vector types for HIP runtime.  
 <a href="#details">More...</a></p>
-
+<div class="textblock"><code>#include &quot;hip/hcc_detail/host_defines.h&quot;</code><br/>
+</div>
 <p><a href="hcc__detail_2hip__vector__types_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:add5d9c0f058c5a52c2b9165a66035d0e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="add5d9c0f058c5a52c2b9165a66035d0e"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hcc__detail_2hip__vector__types_8h.html#add5d9c0f058c5a52c2b9165a66035d0e">ONE_COMPONENT_ACCESS</a>(T, VT)&#160;&#160;&#160;inline VT make_ ##VT (T x) { VT t; t.x = x; return t; };</td></tr>
-<tr class="memdesc:add5d9c0f058c5a52c2b9165a66035d0e"><td class="mdescLeft">&#160;</td><td class="mdescRight"><hr/>
- <br/></td></tr>
-<tr class="separator:add5d9c0f058c5a52c2b9165a66035d0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5350c6307447b047b059e23110fc20ee"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5350c6307447b047b059e23110fc20ee"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>TWO_COMPONENT_ACCESS</b>(T, VT)&#160;&#160;&#160;inline VT make_ ##VT (T x, T y) { VT t; t.x=x; t.y=y; return t; };</td></tr>
-<tr class="separator:a5350c6307447b047b059e23110fc20ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a021a4324dd067f0f4988e6aa3d357b65"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a021a4324dd067f0f4988e6aa3d357b65"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>THREE_COMPONENT_ACCESS</b>(T, VT)&#160;&#160;&#160;inline VT make_ ##VT (T x, T y, T z) { VT t; t.x=x; t.y=y; t.z=z; return t; };</td></tr>
-<tr class="separator:a021a4324dd067f0f4988e6aa3d357b65"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9caa25bf8887f450c93e5cf79d5c5b1b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9caa25bf8887f450c93e5cf79d5c5b1b"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>FOUR_COMPONENT_ACCESS</b>(T, VT)&#160;&#160;&#160;inline VT make_ ##VT (T x, T y, T z, T w) { VT t; t.x=x; t.y=y; t.z=z; t.w=w; return t; };</td></tr>
-<tr class="separator:a9caa25bf8887f450c93e5cf79d5c5b1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3c8eb65a21613e0a1c7d7add796beb4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac3c8eb65a21613e0a1c7d7add796beb4"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>__HIP_DEVICE__</b>&#160;&#160;&#160;__device__ <a class="el" href="host__defines_8h.html#a803050db3c78e0db3ea59a0c35499622">__host__</a></td></tr>
+<tr class="separator:ac3c8eb65a21613e0a1c7d7add796beb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="typedef-members"></a>
 Typedefs</h2></td></tr>
@@ -269,181 +259,157 @@ typedef hc::short_vector::double4&#160;</td><td class="memItemRight" valign="bot
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:a5b98a4cf3b5fa952fd8e5597d78e307b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5b98a4cf3b5fa952fd8e5597d78e307b"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ONE_COMPONENT_ACCESS</b> (signed char, char1)</td></tr>
-<tr class="separator:a5b98a4cf3b5fa952fd8e5597d78e307b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8563ce5b698985e170b9681cedd4cf49"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8563ce5b698985e170b9681cedd4cf49"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TWO_COMPONENT_ACCESS</b> (signed char, char2)</td></tr>
-<tr class="separator:a8563ce5b698985e170b9681cedd4cf49"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a833d529921356465cd9858f273182bcc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a833d529921356465cd9858f273182bcc"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>THREE_COMPONENT_ACCESS</b> (signed char, char3)</td></tr>
-<tr class="separator:a833d529921356465cd9858f273182bcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d1fcc48ee01507a569862f95ef54429"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0d1fcc48ee01507a569862f95ef54429"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>FOUR_COMPONENT_ACCESS</b> (signed char, char4)</td></tr>
-<tr class="separator:a0d1fcc48ee01507a569862f95ef54429"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7516e4cd143862fe6b20ad3b10e72dfd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7516e4cd143862fe6b20ad3b10e72dfd"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ONE_COMPONENT_ACCESS</b> (short, short1)</td></tr>
-<tr class="separator:a7516e4cd143862fe6b20ad3b10e72dfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a750cc27537f492369f3320bb975c6604"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a750cc27537f492369f3320bb975c6604"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TWO_COMPONENT_ACCESS</b> (short, short2)</td></tr>
-<tr class="separator:a750cc27537f492369f3320bb975c6604"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae89d1359322f03bdc1f6cf7891f9b118"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae89d1359322f03bdc1f6cf7891f9b118"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>THREE_COMPONENT_ACCESS</b> (short, short3)</td></tr>
-<tr class="separator:ae89d1359322f03bdc1f6cf7891f9b118"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0268bd984656ab239ef84ee0619e1726"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0268bd984656ab239ef84ee0619e1726"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>FOUR_COMPONENT_ACCESS</b> (short, short4)</td></tr>
-<tr class="separator:a0268bd984656ab239ef84ee0619e1726"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac5be2a267f219b600656a48507084194"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac5be2a267f219b600656a48507084194"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ONE_COMPONENT_ACCESS</b> (int, int1)</td></tr>
-<tr class="separator:ac5be2a267f219b600656a48507084194"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acb97993c6d57cd8156013b3f0da4b906"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acb97993c6d57cd8156013b3f0da4b906"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TWO_COMPONENT_ACCESS</b> (int, int2)</td></tr>
-<tr class="separator:acb97993c6d57cd8156013b3f0da4b906"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af4f3eb5600de99d0c0b6f63ad33998f2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af4f3eb5600de99d0c0b6f63ad33998f2"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>THREE_COMPONENT_ACCESS</b> (int, int3)</td></tr>
-<tr class="separator:af4f3eb5600de99d0c0b6f63ad33998f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a742edf9c7fa4a3c23b7597bfb1db4b1b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a742edf9c7fa4a3c23b7597bfb1db4b1b"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>FOUR_COMPONENT_ACCESS</b> (int, int4)</td></tr>
-<tr class="separator:a742edf9c7fa4a3c23b7597bfb1db4b1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7505d738391629b47452d1b106262e3a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7505d738391629b47452d1b106262e3a"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ONE_COMPONENT_ACCESS</b> (long int, long1)</td></tr>
-<tr class="separator:a7505d738391629b47452d1b106262e3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a14f6c74d5cb91f7654666751a5ef67d6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a14f6c74d5cb91f7654666751a5ef67d6"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TWO_COMPONENT_ACCESS</b> (long int, long2)</td></tr>
-<tr class="separator:a14f6c74d5cb91f7654666751a5ef67d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a694744cc484f8b09c7705800d6656ba0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a694744cc484f8b09c7705800d6656ba0"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>THREE_COMPONENT_ACCESS</b> (long int, long3)</td></tr>
-<tr class="separator:a694744cc484f8b09c7705800d6656ba0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3990b6656ba1f68776b6f57806edfbcc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3990b6656ba1f68776b6f57806edfbcc"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>FOUR_COMPONENT_ACCESS</b> (long int, long4)</td></tr>
-<tr class="separator:a3990b6656ba1f68776b6f57806edfbcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a79549bfabb7a8ce41728ef8b2f77de61"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a79549bfabb7a8ce41728ef8b2f77de61"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ONE_COMPONENT_ACCESS</b> (long long int, ulong1)</td></tr>
-<tr class="separator:a79549bfabb7a8ce41728ef8b2f77de61"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a74e26474c56dbc3c3b418e4e105f1d9e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a74e26474c56dbc3c3b418e4e105f1d9e"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TWO_COMPONENT_ACCESS</b> (long long int, ulong2)</td></tr>
-<tr class="separator:a74e26474c56dbc3c3b418e4e105f1d9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a55bf056070a17d361da6c79431eb4aa9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a55bf056070a17d361da6c79431eb4aa9"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>THREE_COMPONENT_ACCESS</b> (long long int, ulong3)</td></tr>
-<tr class="separator:a55bf056070a17d361da6c79431eb4aa9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a03bee33bc52b0b67198b7a85b40e03d5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a03bee33bc52b0b67198b7a85b40e03d5"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>FOUR_COMPONENT_ACCESS</b> (long long int, ulong4)</td></tr>
-<tr class="separator:a03bee33bc52b0b67198b7a85b40e03d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5ad15096666240c0aab143a8b3ce0dc3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5ad15096666240c0aab143a8b3ce0dc3"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ONE_COMPONENT_ACCESS</b> (long long int, longlong1)</td></tr>
-<tr class="separator:a5ad15096666240c0aab143a8b3ce0dc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1a352d48c3e29e0c1e99c192a483524b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1a352d48c3e29e0c1e99c192a483524b"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TWO_COMPONENT_ACCESS</b> (long long int, longlong2)</td></tr>
-<tr class="separator:a1a352d48c3e29e0c1e99c192a483524b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0a6db087ecd2f4d1a953a632165a9899"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0a6db087ecd2f4d1a953a632165a9899"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>THREE_COMPONENT_ACCESS</b> (long long int, longlong3)</td></tr>
-<tr class="separator:a0a6db087ecd2f4d1a953a632165a9899"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ace98577b23bd2ffc61541be91ad6bdcf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ace98577b23bd2ffc61541be91ad6bdcf"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>FOUR_COMPONENT_ACCESS</b> (long long int, longlong4)</td></tr>
-<tr class="separator:ace98577b23bd2ffc61541be91ad6bdcf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a29f9993fe8050d0426f72956928ca02b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a29f9993fe8050d0426f72956928ca02b"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ONE_COMPONENT_ACCESS</b> (unsigned char, uchar1)</td></tr>
-<tr class="separator:a29f9993fe8050d0426f72956928ca02b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac1de24e591cb501de8898d58174a7bc3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac1de24e591cb501de8898d58174a7bc3"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TWO_COMPONENT_ACCESS</b> (unsigned char, uchar2)</td></tr>
-<tr class="separator:ac1de24e591cb501de8898d58174a7bc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a238ef54adfba7eec39e462e2be4aa2d6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a238ef54adfba7eec39e462e2be4aa2d6"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>THREE_COMPONENT_ACCESS</b> (unsigned char, uchar3)</td></tr>
-<tr class="separator:a238ef54adfba7eec39e462e2be4aa2d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9979db6df4ead1261bdc33ad9843fb5c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9979db6df4ead1261bdc33ad9843fb5c"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>FOUR_COMPONENT_ACCESS</b> (unsigned char, uchar4)</td></tr>
-<tr class="separator:a9979db6df4ead1261bdc33ad9843fb5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aaf0accf500445c95038046c95afbcc20"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaf0accf500445c95038046c95afbcc20"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ONE_COMPONENT_ACCESS</b> (unsigned short, ushort1)</td></tr>
-<tr class="separator:aaf0accf500445c95038046c95afbcc20"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acf007291ff2165cb5e3eed8a300327b1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acf007291ff2165cb5e3eed8a300327b1"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TWO_COMPONENT_ACCESS</b> (unsigned short, ushort2)</td></tr>
-<tr class="separator:acf007291ff2165cb5e3eed8a300327b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acd3c52862ccce3b314ecf4305e102e5b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acd3c52862ccce3b314ecf4305e102e5b"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>THREE_COMPONENT_ACCESS</b> (unsigned short, ushort3)</td></tr>
-<tr class="separator:acd3c52862ccce3b314ecf4305e102e5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae199dad9a3afdf3efbf4f62cd02644bd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae199dad9a3afdf3efbf4f62cd02644bd"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>FOUR_COMPONENT_ACCESS</b> (unsigned short, ushort4)</td></tr>
-<tr class="separator:ae199dad9a3afdf3efbf4f62cd02644bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1408147a5a1134d855b573e4fcc10537"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1408147a5a1134d855b573e4fcc10537"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ONE_COMPONENT_ACCESS</b> (unsigned int, uint1)</td></tr>
-<tr class="separator:a1408147a5a1134d855b573e4fcc10537"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3544d702d6239b417d4042ec41586431"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3544d702d6239b417d4042ec41586431"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TWO_COMPONENT_ACCESS</b> (unsigned int, uint2)</td></tr>
-<tr class="separator:a3544d702d6239b417d4042ec41586431"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2b71f9f0e1454e6957bc7784146a7351"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2b71f9f0e1454e6957bc7784146a7351"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>THREE_COMPONENT_ACCESS</b> (unsigned int, uint3)</td></tr>
-<tr class="separator:a2b71f9f0e1454e6957bc7784146a7351"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af3df938292ec2b95cbdc7b836cd08763"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af3df938292ec2b95cbdc7b836cd08763"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>FOUR_COMPONENT_ACCESS</b> (unsigned int, uint4)</td></tr>
-<tr class="separator:af3df938292ec2b95cbdc7b836cd08763"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a12e7df6dfeb02511cd60fada7823052d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a12e7df6dfeb02511cd60fada7823052d"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ONE_COMPONENT_ACCESS</b> (unsigned long int, ulong1)</td></tr>
-<tr class="separator:a12e7df6dfeb02511cd60fada7823052d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a989f210dc40c76dffc9881ef394a5312"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a989f210dc40c76dffc9881ef394a5312"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TWO_COMPONENT_ACCESS</b> (unsigned long int, ulong2)</td></tr>
-<tr class="separator:a989f210dc40c76dffc9881ef394a5312"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aecff00d2e928581ff89f3fd2a2017d14"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aecff00d2e928581ff89f3fd2a2017d14"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>THREE_COMPONENT_ACCESS</b> (unsigned long int, ulong3)</td></tr>
-<tr class="separator:aecff00d2e928581ff89f3fd2a2017d14"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a458a92969863cdbd319c246b7c7ae160"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a458a92969863cdbd319c246b7c7ae160"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>FOUR_COMPONENT_ACCESS</b> (unsigned long int, ulong4)</td></tr>
-<tr class="separator:a458a92969863cdbd319c246b7c7ae160"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9bbd409aa7d018d68f4305e6d6b6f7fc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9bbd409aa7d018d68f4305e6d6b6f7fc"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ONE_COMPONENT_ACCESS</b> (unsigned long long int, ulong1)</td></tr>
-<tr class="separator:a9bbd409aa7d018d68f4305e6d6b6f7fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a91260aa331388da16283c0a2131f8a1a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a91260aa331388da16283c0a2131f8a1a"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TWO_COMPONENT_ACCESS</b> (unsigned long long int, ulong2)</td></tr>
-<tr class="separator:a91260aa331388da16283c0a2131f8a1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0acf30ab5655bce08ba343a146c6a3fb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0acf30ab5655bce08ba343a146c6a3fb"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>THREE_COMPONENT_ACCESS</b> (unsigned long long int, ulong3)</td></tr>
-<tr class="separator:a0acf30ab5655bce08ba343a146c6a3fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a17fac82a362a5e9a41adb13d4d5e7b0d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a17fac82a362a5e9a41adb13d4d5e7b0d"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>FOUR_COMPONENT_ACCESS</b> (unsigned long long int, ulong4)</td></tr>
-<tr class="separator:a17fac82a362a5e9a41adb13d4d5e7b0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8fc4aeed9d19522339e11e50f185c243"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8fc4aeed9d19522339e11e50f185c243"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ONE_COMPONENT_ACCESS</b> (unsigned long long int, ulonglong1)</td></tr>
-<tr class="separator:a8fc4aeed9d19522339e11e50f185c243"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a01cbecebcbeb53119f23c8beb6c232b5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a01cbecebcbeb53119f23c8beb6c232b5"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TWO_COMPONENT_ACCESS</b> (unsigned long long int, ulonglong2)</td></tr>
-<tr class="separator:a01cbecebcbeb53119f23c8beb6c232b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5ab59191df2091f246263d178c1e3dda"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5ab59191df2091f246263d178c1e3dda"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>THREE_COMPONENT_ACCESS</b> (unsigned long long int, ulonglong3)</td></tr>
-<tr class="separator:a5ab59191df2091f246263d178c1e3dda"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab5a72d337fa4b178862242ffdaa08338"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab5a72d337fa4b178862242ffdaa08338"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>FOUR_COMPONENT_ACCESS</b> (unsigned long long int, ulonglong4)</td></tr>
-<tr class="separator:ab5a72d337fa4b178862242ffdaa08338"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a406d27f25bc354784ceff049ffb88092"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a406d27f25bc354784ceff049ffb88092"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ONE_COMPONENT_ACCESS</b> (float, float1)</td></tr>
-<tr class="separator:a406d27f25bc354784ceff049ffb88092"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a85264c6ef939b5dfab2a7ce055d45643"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a85264c6ef939b5dfab2a7ce055d45643"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TWO_COMPONENT_ACCESS</b> (float, float2)</td></tr>
-<tr class="separator:a85264c6ef939b5dfab2a7ce055d45643"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a689b8ede928f45202c5962fc41ae7294"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a689b8ede928f45202c5962fc41ae7294"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>THREE_COMPONENT_ACCESS</b> (float, float3)</td></tr>
-<tr class="separator:a689b8ede928f45202c5962fc41ae7294"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7399660e81376d2c0a29d9602eac04a3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7399660e81376d2c0a29d9602eac04a3"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>FOUR_COMPONENT_ACCESS</b> (float, float4)</td></tr>
-<tr class="separator:a7399660e81376d2c0a29d9602eac04a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae1b37589730eac8a45c11f0a92fd89bf"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae1b37589730eac8a45c11f0a92fd89bf"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ONE_COMPONENT_ACCESS</b> (double, double1)</td></tr>
-<tr class="separator:ae1b37589730eac8a45c11f0a92fd89bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa1e7e50dd41cbec7bed04b25ebda7f64"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa1e7e50dd41cbec7bed04b25ebda7f64"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>TWO_COMPONENT_ACCESS</b> (double, double2)</td></tr>
-<tr class="separator:aa1e7e50dd41cbec7bed04b25ebda7f64"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab1e37a743f50a71945ff95b5faa83dc1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab1e37a743f50a71945ff95b5faa83dc1"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>THREE_COMPONENT_ACCESS</b> (double, double3)</td></tr>
-<tr class="separator:ab1e37a743f50a71945ff95b5faa83dc1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab213d6d5238ec3e1a944aa8f74609583"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab213d6d5238ec3e1a944aa8f74609583"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>FOUR_COMPONENT_ACCESS</b> (double, double4)</td></tr>
-<tr class="separator:ab213d6d5238ec3e1a944aa8f74609583"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a78e83a520ef639b43ef8694fc99b1a05"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a78e83a520ef639b43ef8694fc99b1a05"></a>
+__HIP_DEVICE__ char1&#160;</td><td class="memItemRight" valign="bottom"><b>make_char1</b> (signed char)</td></tr>
+<tr class="separator:a78e83a520ef639b43ef8694fc99b1a05"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a99e8d26c15ab40a9613bcf1896395f8a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a99e8d26c15ab40a9613bcf1896395f8a"></a>
+__HIP_DEVICE__ char2&#160;</td><td class="memItemRight" valign="bottom"><b>make_char2</b> (signed char, signed char)</td></tr>
+<tr class="separator:a99e8d26c15ab40a9613bcf1896395f8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aae87481cf19ed451d3e8f7a35c119b4e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aae87481cf19ed451d3e8f7a35c119b4e"></a>
+__HIP_DEVICE__ char3&#160;</td><td class="memItemRight" valign="bottom"><b>make_char3</b> (signed char, signed char, signed char)</td></tr>
+<tr class="separator:aae87481cf19ed451d3e8f7a35c119b4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8fbf0beb9fdf27f6ca4f1d3e52de18b4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8fbf0beb9fdf27f6ca4f1d3e52de18b4"></a>
+__HIP_DEVICE__ char4&#160;</td><td class="memItemRight" valign="bottom"><b>make_char4</b> (signed char, signed char, signed char, signed char)</td></tr>
+<tr class="separator:a8fbf0beb9fdf27f6ca4f1d3e52de18b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acef33f278b359603fcc7ff6296ebba1d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acef33f278b359603fcc7ff6296ebba1d"></a>
+__HIP_DEVICE__ short1&#160;</td><td class="memItemRight" valign="bottom"><b>make_short1</b> (short)</td></tr>
+<tr class="separator:acef33f278b359603fcc7ff6296ebba1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a298d6e831f522fa31a4f232622c99597"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a298d6e831f522fa31a4f232622c99597"></a>
+__HIP_DEVICE__ short2&#160;</td><td class="memItemRight" valign="bottom"><b>make_short2</b> (short, short)</td></tr>
+<tr class="separator:a298d6e831f522fa31a4f232622c99597"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0904581a313c0627b3b56071e0574786"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0904581a313c0627b3b56071e0574786"></a>
+__HIP_DEVICE__ short3&#160;</td><td class="memItemRight" valign="bottom"><b>make_short3</b> (short, short, short)</td></tr>
+<tr class="separator:a0904581a313c0627b3b56071e0574786"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a854fe473e885f95aaa96045125a5583e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a854fe473e885f95aaa96045125a5583e"></a>
+__HIP_DEVICE__ short4&#160;</td><td class="memItemRight" valign="bottom"><b>make_short4</b> (short, short, short, short)</td></tr>
+<tr class="separator:a854fe473e885f95aaa96045125a5583e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb509271a6c4d0c5a0ead842955b04d6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abb509271a6c4d0c5a0ead842955b04d6"></a>
+__HIP_DEVICE__ int1&#160;</td><td class="memItemRight" valign="bottom"><b>make_int1</b> (int)</td></tr>
+<tr class="separator:abb509271a6c4d0c5a0ead842955b04d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab62eac8d02aaceceb1953e43ce2539c0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab62eac8d02aaceceb1953e43ce2539c0"></a>
+__HIP_DEVICE__ int2&#160;</td><td class="memItemRight" valign="bottom"><b>make_int2</b> (int, int)</td></tr>
+<tr class="separator:ab62eac8d02aaceceb1953e43ce2539c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af2ce7f611e10034222d06605a27c75a5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af2ce7f611e10034222d06605a27c75a5"></a>
+__HIP_DEVICE__ int3&#160;</td><td class="memItemRight" valign="bottom"><b>make_int3</b> (int, int, int)</td></tr>
+<tr class="separator:af2ce7f611e10034222d06605a27c75a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7fd8db04b0da0e191070e4d558927cc6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7fd8db04b0da0e191070e4d558927cc6"></a>
+__HIP_DEVICE__ int4&#160;</td><td class="memItemRight" valign="bottom"><b>make_int4</b> (int, int, int, int)</td></tr>
+<tr class="separator:a7fd8db04b0da0e191070e4d558927cc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4f2f92e620f8c69c8c77be18caeed18f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4f2f92e620f8c69c8c77be18caeed18f"></a>
+__HIP_DEVICE__ long1&#160;</td><td class="memItemRight" valign="bottom"><b>make_long1</b> (long)</td></tr>
+<tr class="separator:a4f2f92e620f8c69c8c77be18caeed18f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeedcd184d6b3938936e077f17fbe267e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aeedcd184d6b3938936e077f17fbe267e"></a>
+__HIP_DEVICE__ long2&#160;</td><td class="memItemRight" valign="bottom"><b>make_long2</b> (long, long)</td></tr>
+<tr class="separator:aeedcd184d6b3938936e077f17fbe267e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a181cb016f81c61e4754ef4a894f287d9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a181cb016f81c61e4754ef4a894f287d9"></a>
+__HIP_DEVICE__ long3&#160;</td><td class="memItemRight" valign="bottom"><b>make_long3</b> (long, long, long)</td></tr>
+<tr class="separator:a181cb016f81c61e4754ef4a894f287d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac7712819efde22e42b9acfec1cbbdbcb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac7712819efde22e42b9acfec1cbbdbcb"></a>
+__HIP_DEVICE__ long4&#160;</td><td class="memItemRight" valign="bottom"><b>make_long4</b> (long, long, long, long)</td></tr>
+<tr class="separator:ac7712819efde22e42b9acfec1cbbdbcb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a95bee6bdeb494f8b051468a37676b0ac"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a95bee6bdeb494f8b051468a37676b0ac"></a>
+__HIP_DEVICE__ longlong1&#160;</td><td class="memItemRight" valign="bottom"><b>make_longlong1</b> (long long)</td></tr>
+<tr class="separator:a95bee6bdeb494f8b051468a37676b0ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee5157442f0e2115f652877930a9f38b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aee5157442f0e2115f652877930a9f38b"></a>
+__HIP_DEVICE__ longlong2&#160;</td><td class="memItemRight" valign="bottom"><b>make_longlong2</b> (long long, long long)</td></tr>
+<tr class="separator:aee5157442f0e2115f652877930a9f38b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a425c8fc8683cb1f830fd7368a8378c5f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a425c8fc8683cb1f830fd7368a8378c5f"></a>
+__HIP_DEVICE__ longlong3&#160;</td><td class="memItemRight" valign="bottom"><b>make_longlong3</b> (long long, long long, long long)</td></tr>
+<tr class="separator:a425c8fc8683cb1f830fd7368a8378c5f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8c86b4e953f20f8338d2be870c25ea36"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8c86b4e953f20f8338d2be870c25ea36"></a>
+__HIP_DEVICE__ longlong4&#160;</td><td class="memItemRight" valign="bottom"><b>make_longlong4</b> (long long, long long, long long, long long)</td></tr>
+<tr class="separator:a8c86b4e953f20f8338d2be870c25ea36"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85f46f3923e2bcab83a642a9ffe4ba41"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a85f46f3923e2bcab83a642a9ffe4ba41"></a>
+__HIP_DEVICE__ uchar1&#160;</td><td class="memItemRight" valign="bottom"><b>make_uchar1</b> (unsigned char)</td></tr>
+<tr class="separator:a85f46f3923e2bcab83a642a9ffe4ba41"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1126c9ef45bde1ab51c46cd793eb2151"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1126c9ef45bde1ab51c46cd793eb2151"></a>
+__HIP_DEVICE__ uchar2&#160;</td><td class="memItemRight" valign="bottom"><b>make_uchar2</b> (unsigned char, unsigned char)</td></tr>
+<tr class="separator:a1126c9ef45bde1ab51c46cd793eb2151"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4bb3268762ba011823ab5989fa3969d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac4bb3268762ba011823ab5989fa3969d"></a>
+__HIP_DEVICE__ uchar3&#160;</td><td class="memItemRight" valign="bottom"><b>make_uchar3</b> (unsigned char, unsigned char, unsigned char)</td></tr>
+<tr class="separator:ac4bb3268762ba011823ab5989fa3969d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8263521cb73e85adcfce826670a0db7c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8263521cb73e85adcfce826670a0db7c"></a>
+__HIP_DEVICE__ uchar4&#160;</td><td class="memItemRight" valign="bottom"><b>make_uchar4</b> (unsigned char, unsigned char, unsigned char, unsigned char)</td></tr>
+<tr class="separator:a8263521cb73e85adcfce826670a0db7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2c0f4af63beaae7e7da632b8067ae937"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2c0f4af63beaae7e7da632b8067ae937"></a>
+__HIP_DEVICE__ ushort1&#160;</td><td class="memItemRight" valign="bottom"><b>make_ushort1</b> (unsigned short)</td></tr>
+<tr class="separator:a2c0f4af63beaae7e7da632b8067ae937"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aef456cb606a88a085f114f2d3852a307"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aef456cb606a88a085f114f2d3852a307"></a>
+__HIP_DEVICE__ ushort2&#160;</td><td class="memItemRight" valign="bottom"><b>make_ushort2</b> (unsigned short, unsigned short)</td></tr>
+<tr class="separator:aef456cb606a88a085f114f2d3852a307"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae18269ca6a18853c18d26b494cfe3935"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae18269ca6a18853c18d26b494cfe3935"></a>
+__HIP_DEVICE__ ushort3&#160;</td><td class="memItemRight" valign="bottom"><b>make_ushort3</b> (unsigned short, unsigned short, unsigned short)</td></tr>
+<tr class="separator:ae18269ca6a18853c18d26b494cfe3935"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a970e929a26f40e60d97338b407faf408"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a970e929a26f40e60d97338b407faf408"></a>
+__HIP_DEVICE__ ushort4&#160;</td><td class="memItemRight" valign="bottom"><b>make_ushort4</b> (unsigned short, unsigned short, unsigned short, unsigned short)</td></tr>
+<tr class="separator:a970e929a26f40e60d97338b407faf408"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad65a533d8087215ce8b7d18af587cce0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad65a533d8087215ce8b7d18af587cce0"></a>
+__HIP_DEVICE__ uint1&#160;</td><td class="memItemRight" valign="bottom"><b>make_uint1</b> (unsigned int)</td></tr>
+<tr class="separator:ad65a533d8087215ce8b7d18af587cce0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3b5eb7b7737e6f60757ed534ec4a117"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa3b5eb7b7737e6f60757ed534ec4a117"></a>
+__HIP_DEVICE__ uint2&#160;</td><td class="memItemRight" valign="bottom"><b>make_uint2</b> (unsigned int, unsigned int)</td></tr>
+<tr class="separator:aa3b5eb7b7737e6f60757ed534ec4a117"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a396fba1f0ce71c69aac8fb418ec5a5c0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a396fba1f0ce71c69aac8fb418ec5a5c0"></a>
+__HIP_DEVICE__ uint3&#160;</td><td class="memItemRight" valign="bottom"><b>make_uint3</b> (unsigned int, unsigned int, unsigned int)</td></tr>
+<tr class="separator:a396fba1f0ce71c69aac8fb418ec5a5c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0bbe6598c3db7b996ebc3079e91cf984"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0bbe6598c3db7b996ebc3079e91cf984"></a>
+__HIP_DEVICE__ uint4&#160;</td><td class="memItemRight" valign="bottom"><b>make_uint4</b> (unsigned int, unsigned int, unsigned int, unsigned int)</td></tr>
+<tr class="separator:a0bbe6598c3db7b996ebc3079e91cf984"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af8b600007c93cadf6d0a01d9471b16db"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af8b600007c93cadf6d0a01d9471b16db"></a>
+__HIP_DEVICE__ ulong1&#160;</td><td class="memItemRight" valign="bottom"><b>make_ulong1</b> (unsigned long)</td></tr>
+<tr class="separator:af8b600007c93cadf6d0a01d9471b16db"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a11c5d4e7edf21b1ea294881f824a38a5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a11c5d4e7edf21b1ea294881f824a38a5"></a>
+__HIP_DEVICE__ ulong2&#160;</td><td class="memItemRight" valign="bottom"><b>make_ulong2</b> (unsigned long, unsigned long)</td></tr>
+<tr class="separator:a11c5d4e7edf21b1ea294881f824a38a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8e62626cf120f8c57d380e4fad43437d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8e62626cf120f8c57d380e4fad43437d"></a>
+__HIP_DEVICE__ ulong3&#160;</td><td class="memItemRight" valign="bottom"><b>make_ulong3</b> (unsigned long, unsigned long, unsigned long)</td></tr>
+<tr class="separator:a8e62626cf120f8c57d380e4fad43437d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d4633e39ec3975df6e9532cf9b0bd44"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5d4633e39ec3975df6e9532cf9b0bd44"></a>
+__HIP_DEVICE__ ulong4&#160;</td><td class="memItemRight" valign="bottom"><b>make_ulong4</b> (unsigned long, unsigned long, unsigned long, unsigned long)</td></tr>
+<tr class="separator:a5d4633e39ec3975df6e9532cf9b0bd44"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a8faa980c3aa85c4b6481ff048e8a24"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2a8faa980c3aa85c4b6481ff048e8a24"></a>
+__HIP_DEVICE__ ulonglong1&#160;</td><td class="memItemRight" valign="bottom"><b>make_ulonglong1</b> (unsigned long long)</td></tr>
+<tr class="separator:a2a8faa980c3aa85c4b6481ff048e8a24"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a12c873fa460bdc2a230a87347fb9abee"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a12c873fa460bdc2a230a87347fb9abee"></a>
+__HIP_DEVICE__ ulonglong2&#160;</td><td class="memItemRight" valign="bottom"><b>make_ulonglong2</b> (unsigned long long, unsigned long long)</td></tr>
+<tr class="separator:a12c873fa460bdc2a230a87347fb9abee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08cf17f39df416b573431a53f44de185"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a08cf17f39df416b573431a53f44de185"></a>
+__HIP_DEVICE__ ulonglong3&#160;</td><td class="memItemRight" valign="bottom"><b>make_ulonglong3</b> (unsigned long long, unsigned long long, unsigned long long)</td></tr>
+<tr class="separator:a08cf17f39df416b573431a53f44de185"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a02e4a74a283339e461012cfb3986a4cb"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a02e4a74a283339e461012cfb3986a4cb"></a>
+__HIP_DEVICE__ ulonglong4&#160;</td><td class="memItemRight" valign="bottom"><b>make_ulonglong4</b> (unsigned long long, unsigned long long, unsigned long long, unsigned long long)</td></tr>
+<tr class="separator:a02e4a74a283339e461012cfb3986a4cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa49d74ffe83ae78256c72fd2da334f6f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa49d74ffe83ae78256c72fd2da334f6f"></a>
+__HIP_DEVICE__ float1&#160;</td><td class="memItemRight" valign="bottom"><b>make_float1</b> (float)</td></tr>
+<tr class="separator:aa49d74ffe83ae78256c72fd2da334f6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a348c1286a3b7c96ece19e6efd1ed96b3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a348c1286a3b7c96ece19e6efd1ed96b3"></a>
+__HIP_DEVICE__ float2&#160;</td><td class="memItemRight" valign="bottom"><b>make_float2</b> (float, float)</td></tr>
+<tr class="separator:a348c1286a3b7c96ece19e6efd1ed96b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a401aaa554e7f85a389920724fc828473"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a401aaa554e7f85a389920724fc828473"></a>
+__HIP_DEVICE__ float3&#160;</td><td class="memItemRight" valign="bottom"><b>make_float3</b> (float, float, float)</td></tr>
+<tr class="separator:a401aaa554e7f85a389920724fc828473"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a73a2cc7cebb9356ee5441d7879a54d37"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a73a2cc7cebb9356ee5441d7879a54d37"></a>
+__HIP_DEVICE__ float4&#160;</td><td class="memItemRight" valign="bottom"><b>make_float4</b> (float, float, float, float)</td></tr>
+<tr class="separator:a73a2cc7cebb9356ee5441d7879a54d37"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0a63eb2fcfed0a31ee14be202efde749"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0a63eb2fcfed0a31ee14be202efde749"></a>
+__HIP_DEVICE__ double1&#160;</td><td class="memItemRight" valign="bottom"><b>make_double1</b> (double)</td></tr>
+<tr class="separator:a0a63eb2fcfed0a31ee14be202efde749"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8d1fc66fadd86065c920c019c5e8deab"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8d1fc66fadd86065c920c019c5e8deab"></a>
+__HIP_DEVICE__ double2&#160;</td><td class="memItemRight" valign="bottom"><b>make_double2</b> (double, double)</td></tr>
+<tr class="separator:a8d1fc66fadd86065c920c019c5e8deab"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a181e6ea5d92aa0a71282c993f544ee29"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a181e6ea5d92aa0a71282c993f544ee29"></a>
+__HIP_DEVICE__ double3&#160;</td><td class="memItemRight" valign="bottom"><b>make_double3</b> (double, double, double)</td></tr>
+<tr class="separator:a181e6ea5d92aa0a71282c993f544ee29"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab098cf5db7916be4b838bcecd3c3fc60"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab098cf5db7916be4b838bcecd3c3fc60"></a>
+__HIP_DEVICE__ double4&#160;</td><td class="memItemRight" valign="bottom"><b>make_double4</b> (double, double, double, double)</td></tr>
+<tr class="separator:ab098cf5db7916be4b838bcecd3c3fc60"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Defines the different newt vector types for HIP runtime. </p>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Apr 25 2016 12:08:53 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat May 21 2016 14:34:09 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

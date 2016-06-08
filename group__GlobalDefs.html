@@ -202,7 +202,10 @@ Enumerations</h2></td></tr>
 <br/>
 &#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1159eb9a6be66bea740a8bfb61378723">hipErrorRuntimeMemory</a>, 
 <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a44f847c5914be2177feac107dcb096d1">hipErrorRuntimeOther</a>, 
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ab556409e11ddb0c4cf77a2f4fc91ea9e">hipErrorTbd</a>
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a9d7173cea72aace620a83d502569de1b">hipErrorHostMemoryAlreadyRegistered</a>, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a6901476ca88eed786fb8be003d9661d9">hipErrorHostMemoryNotRegistered</a>, 
+<br/>
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ab556409e11ddb0c4cf77a2f4fc91ea9e">hipErrorTbd</a>
 <br/>
  }</td></tr>
 <tr class="separator:gadf5010f6e140a53ecbdf949e73e87594"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -532,6 +535,12 @@ Enumerations</h2></td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a44f847c5914be2177feac107dcb096d1"></a>hipErrorRuntimeOther</em>&#160;</td><td class="fielddoc">
 <p>HSA runtime call other than memory returned error. Typically not seen in production systems. </p>
 </td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a9d7173cea72aace620a83d502569de1b"></a>hipErrorHostMemoryAlreadyRegistered</em>&#160;</td><td class="fielddoc">
+<p>Produced when trying to lock a page-locked memory. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a6901476ca88eed786fb8be003d9661d9"></a>hipErrorHostMemoryNotRegistered</em>&#160;</td><td class="fielddoc">
+<p>Produced when trying to unlock a non-page-locked memory. </p>
+</td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594ab556409e11ddb0c4cf77a2f4fc91ea9e"></a>hipErrorTbd</em>&#160;</td><td class="fielddoc">
 <p>Marker that more error codes are needed. </p>
 </td></tr>
@@ -623,7 +632,7 @@ Enumerations</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Apr 25 2016 12:08:53 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat May 21 2016 14:34:09 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
