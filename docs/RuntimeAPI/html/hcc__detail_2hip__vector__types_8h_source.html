@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/hip_git/release_0.84.00/include/hcc_detail/hip_vector_types.h Source File</title>
+<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/git/hip/release_0.86.00/include/hcc_detail/hip_vector_types.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -201,97 +201,163 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00115"></a><span class="lineno">  115</span>&#160;<span class="keyword">typedef</span> hc::short_vector::double3 double3;</div>
 <div class="line"><a name="l00116"></a><span class="lineno">  116</span>&#160;<span class="keyword">typedef</span> hc::short_vector::double4 double4;</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;</div>
-<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;</div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;<span class="comment">// Inline functions for creating vector types from basic types</span></div>
-<div class="line"><a name="l00121"></a><span class="lineno"><a class="line" href="hcc__detail_2hip__vector__types_8h.html#add5d9c0f058c5a52c2b9165a66035d0e">  121</a></span>&#160;<span class="preprocessor">#define ONE_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT (T x) { VT t; t.x = x; return t; };</span></div>
-<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define TWO_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT (T x, T y) { VT t; t.x=x; t.y=y; return t; };</span></div>
-<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define THREE_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT (T x, T y, T z) { VT t; t.x=x; t.y=y; t.z=z; return t; };</span></div>
-<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define FOUR_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT (T x, T y, T z, T w) { VT t; t.x=x; t.y=y; t.z=z; t.w=w; return t; };</span></div>
-<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;<span class="preprocessor"></span></div>
-<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;</div>
-<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;<span class="comment">//signed:</span></div>
-<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;<a class="code" href="hcc__detail_2hip__vector__types_8h.html#add5d9c0f058c5a52c2b9165a66035d0e">ONE_COMPONENT_ACCESS</a>  (<span class="keywordtype">signed</span> <span class="keywordtype">char</span>, char1);</div>
-<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;TWO_COMPONENT_ACCESS  (<span class="keywordtype">signed</span> <span class="keywordtype">char</span>, char2);</div>
-<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;THREE_COMPONENT_ACCESS(<span class="keywordtype">signed</span> <span class="keywordtype">char</span>, char3);</div>
-<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;FOUR_COMPONENT_ACCESS (<span class="keywordtype">signed</span> <span class="keywordtype">char</span>, char4);</div>
-<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;</div>
-<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;<a class="code" href="hcc__detail_2hip__vector__types_8h.html#add5d9c0f058c5a52c2b9165a66035d0e">ONE_COMPONENT_ACCESS</a>  (<span class="keywordtype">short</span>, short1);</div>
-<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;TWO_COMPONENT_ACCESS  (<span class="keywordtype">short</span>, short2);</div>
-<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;THREE_COMPONENT_ACCESS(<span class="keywordtype">short</span>, short3);</div>
-<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;FOUR_COMPONENT_ACCESS (<span class="keywordtype">short</span>, short4);</div>
-<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;</div>
-<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;<a class="code" href="hcc__detail_2hip__vector__types_8h.html#add5d9c0f058c5a52c2b9165a66035d0e">ONE_COMPONENT_ACCESS</a>  (<span class="keywordtype">int</span>, int1);</div>
-<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;TWO_COMPONENT_ACCESS  (<span class="keywordtype">int</span>, int2);</div>
-<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;THREE_COMPONENT_ACCESS(<span class="keywordtype">int</span>, int3);</div>
-<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;FOUR_COMPONENT_ACCESS (<span class="keywordtype">int</span>, int4);</div>
-<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;</div>
-<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;<a class="code" href="hcc__detail_2hip__vector__types_8h.html#add5d9c0f058c5a52c2b9165a66035d0e">ONE_COMPONENT_ACCESS</a>  (<span class="keywordtype">long</span> <span class="keywordtype">int</span>, long1);</div>
-<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;TWO_COMPONENT_ACCESS  (<span class="keywordtype">long</span> <span class="keywordtype">int</span>, long2);</div>
-<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;THREE_COMPONENT_ACCESS(<span class="keywordtype">long</span> <span class="keywordtype">int</span>, long3);</div>
-<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;FOUR_COMPONENT_ACCESS (<span class="keywordtype">long</span> <span class="keywordtype">int</span>, long4);</div>
-<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;</div>
-<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;<a class="code" href="hcc__detail_2hip__vector__types_8h.html#add5d9c0f058c5a52c2b9165a66035d0e">ONE_COMPONENT_ACCESS</a>  (<span class="keywordtype">long</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, ulong1);</div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;TWO_COMPONENT_ACCESS  (<span class="keywordtype">long</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, ulong2);</div>
-<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;THREE_COMPONENT_ACCESS(<span class="keywordtype">long</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, ulong3);</div>
-<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;FOUR_COMPONENT_ACCESS (<span class="keywordtype">long</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, ulong4);</div>
-<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;</div>
-<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;<a class="code" href="hcc__detail_2hip__vector__types_8h.html#add5d9c0f058c5a52c2b9165a66035d0e">ONE_COMPONENT_ACCESS</a>  (<span class="keywordtype">long</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, longlong1);</div>
-<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;TWO_COMPONENT_ACCESS  (<span class="keywordtype">long</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, longlong2);</div>
-<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;THREE_COMPONENT_ACCESS(<span class="keywordtype">long</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, longlong3);</div>
-<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;FOUR_COMPONENT_ACCESS (<span class="keywordtype">long</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, longlong4);</div>
-<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;</div>
-<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;</div>
-<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;<span class="comment">// unsigned:</span></div>
-<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;<a class="code" href="hcc__detail_2hip__vector__types_8h.html#add5d9c0f058c5a52c2b9165a66035d0e">ONE_COMPONENT_ACCESS</a>  (<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span>, uchar1);</div>
-<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;TWO_COMPONENT_ACCESS  (<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span>, uchar2);</div>
-<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;THREE_COMPONENT_ACCESS(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span>, uchar3);</div>
-<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;FOUR_COMPONENT_ACCESS (<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span>, uchar4);</div>
+<div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;<span class="preprocessor">#if __HCC__</span></div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#include&quot;hip/hcc_detail/host_defines.h&quot;</span></div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;<span class="preprocessor">#define __HIP_DEVICE__ __device__ __host__</span></div>
+<div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#else</span></div>
+<div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#define __HIP_DEVICE__</span></div>
+<div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;<span class="preprocessor"></span><span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;<span class="preprocessor"></span></div>
+<div class="line"><a name="l00125"></a><span class="lineno">  125</span>&#160;__HIP_DEVICE__ char1 make_char1(<span class="keywordtype">signed</span> <span class="keywordtype">char</span> );</div>
+<div class="line"><a name="l00126"></a><span class="lineno">  126</span>&#160;__HIP_DEVICE__ char2 make_char2(<span class="keywordtype">signed</span> <span class="keywordtype">char</span>, <span class="keywordtype">signed</span> <span class="keywordtype">char</span> );</div>
+<div class="line"><a name="l00127"></a><span class="lineno">  127</span>&#160;__HIP_DEVICE__ char3 make_char3(<span class="keywordtype">signed</span> <span class="keywordtype">char</span>, <span class="keywordtype">signed</span> <span class="keywordtype">char</span>, <span class="keywordtype">signed</span> <span class="keywordtype">char</span> );</div>
+<div class="line"><a name="l00128"></a><span class="lineno">  128</span>&#160;__HIP_DEVICE__ char4 make_char4(<span class="keywordtype">signed</span> <span class="keywordtype">char</span>, <span class="keywordtype">signed</span> <span class="keywordtype">char</span>, <span class="keywordtype">signed</span> <span class="keywordtype">char</span>, <span class="keywordtype">signed</span> <span class="keywordtype">char</span> );</div>
+<div class="line"><a name="l00129"></a><span class="lineno">  129</span>&#160;</div>
+<div class="line"><a name="l00130"></a><span class="lineno">  130</span>&#160;__HIP_DEVICE__ short1 make_short1(<span class="keywordtype">short</span> );</div>
+<div class="line"><a name="l00131"></a><span class="lineno">  131</span>&#160;__HIP_DEVICE__ short2 make_short2(<span class="keywordtype">short</span>, <span class="keywordtype">short</span> );</div>
+<div class="line"><a name="l00132"></a><span class="lineno">  132</span>&#160;__HIP_DEVICE__ short3 make_short3(<span class="keywordtype">short</span>, <span class="keywordtype">short</span>, <span class="keywordtype">short</span> );</div>
+<div class="line"><a name="l00133"></a><span class="lineno">  133</span>&#160;__HIP_DEVICE__ short4 make_short4(<span class="keywordtype">short</span>, <span class="keywordtype">short</span>, <span class="keywordtype">short</span>, <span class="keywordtype">short</span> );</div>
+<div class="line"><a name="l00134"></a><span class="lineno">  134</span>&#160;</div>
+<div class="line"><a name="l00135"></a><span class="lineno">  135</span>&#160;__HIP_DEVICE__ int1 make_int1(<span class="keywordtype">int</span> );</div>
+<div class="line"><a name="l00136"></a><span class="lineno">  136</span>&#160;__HIP_DEVICE__ int2 make_int2(<span class="keywordtype">int</span>, <span class="keywordtype">int</span> );</div>
+<div class="line"><a name="l00137"></a><span class="lineno">  137</span>&#160;__HIP_DEVICE__ int3 make_int3(<span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span> );</div>
+<div class="line"><a name="l00138"></a><span class="lineno">  138</span>&#160;__HIP_DEVICE__ int4 make_int4(<span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span>, <span class="keywordtype">int</span> );</div>
+<div class="line"><a name="l00139"></a><span class="lineno">  139</span>&#160;</div>
+<div class="line"><a name="l00140"></a><span class="lineno">  140</span>&#160;__HIP_DEVICE__ long1 make_long1(<span class="keywordtype">long</span> );</div>
+<div class="line"><a name="l00141"></a><span class="lineno">  141</span>&#160;__HIP_DEVICE__ long2 make_long2(<span class="keywordtype">long</span>, <span class="keywordtype">long</span> );</div>
+<div class="line"><a name="l00142"></a><span class="lineno">  142</span>&#160;__HIP_DEVICE__ long3 make_long3(<span class="keywordtype">long</span>, <span class="keywordtype">long</span>, <span class="keywordtype">long</span> );</div>
+<div class="line"><a name="l00143"></a><span class="lineno">  143</span>&#160;__HIP_DEVICE__ long4 make_long4(<span class="keywordtype">long</span>, <span class="keywordtype">long</span>, <span class="keywordtype">long</span>, <span class="keywordtype">long</span> );</div>
+<div class="line"><a name="l00144"></a><span class="lineno">  144</span>&#160;</div>
+<div class="line"><a name="l00145"></a><span class="lineno">  145</span>&#160;__HIP_DEVICE__ longlong1 make_longlong1(<span class="keywordtype">long</span> <span class="keywordtype">long</span> );</div>
+<div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;__HIP_DEVICE__ longlong2 make_longlong2(<span class="keywordtype">long</span> <span class="keywordtype">long</span>, <span class="keywordtype">long</span> <span class="keywordtype">long</span> );</div>
+<div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;__HIP_DEVICE__ longlong3 make_longlong3(<span class="keywordtype">long</span> <span class="keywordtype">long</span>, <span class="keywordtype">long</span> <span class="keywordtype">long</span>, <span class="keywordtype">long</span> <span class="keywordtype">long</span> );</div>
+<div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160;__HIP_DEVICE__ longlong4 make_longlong4(<span class="keywordtype">long</span> <span class="keywordtype">long</span>, <span class="keywordtype">long</span> <span class="keywordtype">long</span>, <span class="keywordtype">long</span> <span class="keywordtype">long</span>, <span class="keywordtype">long</span> <span class="keywordtype">long</span> );</div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;</div>
+<div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160;__HIP_DEVICE__ uchar1 make_uchar1(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> );</div>
+<div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;__HIP_DEVICE__ uchar2 make_uchar2(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> );</div>
+<div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160;__HIP_DEVICE__ uchar3 make_uchar3(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> );</div>
+<div class="line"><a name="l00153"></a><span class="lineno">  153</span>&#160;__HIP_DEVICE__ uchar4 make_uchar4(<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> );</div>
+<div class="line"><a name="l00154"></a><span class="lineno">  154</span>&#160;</div>
+<div class="line"><a name="l00155"></a><span class="lineno">  155</span>&#160;__HIP_DEVICE__ ushort1 make_ushort1(<span class="keywordtype">unsigned</span> <span class="keywordtype">short</span> );</div>
+<div class="line"><a name="l00156"></a><span class="lineno">  156</span>&#160;__HIP_DEVICE__ ushort2 make_ushort2(<span class="keywordtype">unsigned</span> <span class="keywordtype">short</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">short</span> );</div>
+<div class="line"><a name="l00157"></a><span class="lineno">  157</span>&#160;__HIP_DEVICE__ ushort3 make_ushort3(<span class="keywordtype">unsigned</span> <span class="keywordtype">short</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">short</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">short</span> );</div>
+<div class="line"><a name="l00158"></a><span class="lineno">  158</span>&#160;__HIP_DEVICE__ ushort4 make_ushort4(<span class="keywordtype">unsigned</span> <span class="keywordtype">short</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">short</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">short</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">short</span> );</div>
+<div class="line"><a name="l00159"></a><span class="lineno">  159</span>&#160;</div>
+<div class="line"><a name="l00160"></a><span class="lineno">  160</span>&#160;__HIP_DEVICE__ uint1 make_uint1(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> );</div>
+<div class="line"><a name="l00161"></a><span class="lineno">  161</span>&#160;__HIP_DEVICE__ uint2 make_uint2(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> );</div>
+<div class="line"><a name="l00162"></a><span class="lineno">  162</span>&#160;__HIP_DEVICE__ uint3 make_uint3(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> );</div>
+<div class="line"><a name="l00163"></a><span class="lineno">  163</span>&#160;__HIP_DEVICE__ uint4 make_uint4(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> );</div>
 <div class="line"><a name="l00164"></a><span class="lineno">  164</span>&#160;</div>
-<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;<a class="code" href="hcc__detail_2hip__vector__types_8h.html#add5d9c0f058c5a52c2b9165a66035d0e">ONE_COMPONENT_ACCESS</a>  (<span class="keywordtype">unsigned</span> <span class="keywordtype">short</span>, ushort1);</div>
-<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;TWO_COMPONENT_ACCESS  (<span class="keywordtype">unsigned</span> <span class="keywordtype">short</span>, ushort2);</div>
-<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;THREE_COMPONENT_ACCESS(<span class="keywordtype">unsigned</span> <span class="keywordtype">short</span>, ushort3);</div>
-<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;FOUR_COMPONENT_ACCESS (<span class="keywordtype">unsigned</span> <span class="keywordtype">short</span>, ushort4);</div>
+<div class="line"><a name="l00165"></a><span class="lineno">  165</span>&#160;__HIP_DEVICE__ ulong1 make_ulong1(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> );</div>
+<div class="line"><a name="l00166"></a><span class="lineno">  166</span>&#160;__HIP_DEVICE__ ulong2 make_ulong2(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> );</div>
+<div class="line"><a name="l00167"></a><span class="lineno">  167</span>&#160;__HIP_DEVICE__ ulong3 make_ulong3(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> );</div>
+<div class="line"><a name="l00168"></a><span class="lineno">  168</span>&#160;__HIP_DEVICE__ ulong4 make_ulong4(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> );</div>
 <div class="line"><a name="l00169"></a><span class="lineno">  169</span>&#160;</div>
-<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;<a class="code" href="hcc__detail_2hip__vector__types_8h.html#add5d9c0f058c5a52c2b9165a66035d0e">ONE_COMPONENT_ACCESS</a>  (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>, uint1);</div>
-<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;TWO_COMPONENT_ACCESS  (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>, uint2);</div>
-<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;THREE_COMPONENT_ACCESS(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>, uint3);</div>
-<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;FOUR_COMPONENT_ACCESS (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>, uint4);</div>
+<div class="line"><a name="l00170"></a><span class="lineno">  170</span>&#160;__HIP_DEVICE__ ulonglong1 make_ulonglong1(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> );</div>
+<div class="line"><a name="l00171"></a><span class="lineno">  171</span>&#160;__HIP_DEVICE__ ulonglong2 make_ulonglong2(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>);</div>
+<div class="line"><a name="l00172"></a><span class="lineno">  172</span>&#160;__HIP_DEVICE__ ulonglong3 make_ulonglong3(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>);</div>
+<div class="line"><a name="l00173"></a><span class="lineno">  173</span>&#160;__HIP_DEVICE__ ulonglong4 make_ulonglong4(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span>, <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> );</div>
 <div class="line"><a name="l00174"></a><span class="lineno">  174</span>&#160;</div>
-<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;<a class="code" href="hcc__detail_2hip__vector__types_8h.html#add5d9c0f058c5a52c2b9165a66035d0e">ONE_COMPONENT_ACCESS</a>  (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, ulong1);</div>
-<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;TWO_COMPONENT_ACCESS  (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, ulong2);</div>
-<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;THREE_COMPONENT_ACCESS(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, ulong3);</div>
-<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;FOUR_COMPONENT_ACCESS (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, ulong4);</div>
+<div class="line"><a name="l00175"></a><span class="lineno">  175</span>&#160;__HIP_DEVICE__ float1 make_float1(<span class="keywordtype">float</span> );</div>
+<div class="line"><a name="l00176"></a><span class="lineno">  176</span>&#160;__HIP_DEVICE__ float2 make_float2(<span class="keywordtype">float</span>, <span class="keywordtype">float</span> );</div>
+<div class="line"><a name="l00177"></a><span class="lineno">  177</span>&#160;__HIP_DEVICE__ float3 make_float3(<span class="keywordtype">float</span>, <span class="keywordtype">float</span>, <span class="keywordtype">float</span> );</div>
+<div class="line"><a name="l00178"></a><span class="lineno">  178</span>&#160;__HIP_DEVICE__ float4 make_float4(<span class="keywordtype">float</span>, <span class="keywordtype">float</span>, <span class="keywordtype">float</span>, <span class="keywordtype">float</span> );</div>
 <div class="line"><a name="l00179"></a><span class="lineno">  179</span>&#160;</div>
-<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;<a class="code" href="hcc__detail_2hip__vector__types_8h.html#add5d9c0f058c5a52c2b9165a66035d0e">ONE_COMPONENT_ACCESS</a>  (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, ulong1);</div>
-<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;TWO_COMPONENT_ACCESS  (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, ulong2);</div>
-<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;THREE_COMPONENT_ACCESS(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, ulong3);</div>
-<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;FOUR_COMPONENT_ACCESS (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, ulong4);</div>
+<div class="line"><a name="l00180"></a><span class="lineno">  180</span>&#160;__HIP_DEVICE__ double1 make_double1(<span class="keywordtype">double</span> );</div>
+<div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;__HIP_DEVICE__ double2 make_double2(<span class="keywordtype">double</span>, <span class="keywordtype">double</span> );</div>
+<div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;__HIP_DEVICE__ double3 make_double3(<span class="keywordtype">double</span>, <span class="keywordtype">double</span>, <span class="keywordtype">double</span> );</div>
+<div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;__HIP_DEVICE__ double4 make_double4(<span class="keywordtype">double</span>, <span class="keywordtype">double</span>, <span class="keywordtype">double</span>, <span class="keywordtype">double</span> );</div>
 <div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;</div>
-<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;<a class="code" href="hcc__detail_2hip__vector__types_8h.html#add5d9c0f058c5a52c2b9165a66035d0e">ONE_COMPONENT_ACCESS</a>  (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, ulonglong1);</div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;TWO_COMPONENT_ACCESS  (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, ulonglong2);</div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;THREE_COMPONENT_ACCESS(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, ulonglong3);</div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;FOUR_COMPONENT_ACCESS (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> <span class="keywordtype">long</span> <span class="keywordtype">int</span>, ulonglong4);</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;</div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;<span class="comment">//Floating point</span></div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;<a class="code" href="hcc__detail_2hip__vector__types_8h.html#add5d9c0f058c5a52c2b9165a66035d0e">ONE_COMPONENT_ACCESS</a>  (<span class="keywordtype">float</span>, float1);</div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;TWO_COMPONENT_ACCESS  (<span class="keywordtype">float</span>, float2);</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;THREE_COMPONENT_ACCESS(<span class="keywordtype">float</span>, float3);</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;FOUR_COMPONENT_ACCESS (<span class="keywordtype">float</span>, float4);</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;</div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;<a class="code" href="hcc__detail_2hip__vector__types_8h.html#add5d9c0f058c5a52c2b9165a66035d0e">ONE_COMPONENT_ACCESS</a>  (<span class="keywordtype">double</span>, double1);</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;TWO_COMPONENT_ACCESS  (<span class="keywordtype">double</span>, double2);</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;THREE_COMPONENT_ACCESS(<span class="keywordtype">double</span>, double3);</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;FOUR_COMPONENT_ACCESS (<span class="keywordtype">double</span>, double4);</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;<span class="preprocessor"></span></div>
-<div class="ttc" id="hcc__detail_2hip__vector__types_8h_html_add5d9c0f058c5a52c2b9165a66035d0e"><div class="ttname"><a href="hcc__detail_2hip__vector__types_8h.html#add5d9c0f058c5a52c2b9165a66035d0e">ONE_COMPONENT_ACCESS</a></div><div class="ttdeci">#define ONE_COMPONENT_ACCESS(T, VT)</div><div class="ttdoc"> </div><div class="ttdef"><b>Definition:</b> hip_vector_types.h:121</div></div>
+<div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;<span class="comment">/*</span></div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;<span class="comment">// Inline functions for creating vector types from basic types</span></div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<span class="comment">#define ONE_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT (T x) { VT t; t.x = x; return t; };</span></div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;<span class="comment">#define TWO_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT (T x, T y) { VT t; t.x=x; t.y=y; return t; };</span></div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;<span class="comment">#define THREE_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT (T x, T y, T z) { VT t; t.x=x; t.y=y; t.z=z; return t; };</span></div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;<span class="comment">#define FOUR_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT (T x, T y, T z, T w) { VT t; t.x=x; t.y=y; t.z=z; t.w=w; return t; };</span></div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;<span class="comment"></span></div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;<span class="comment"></span></div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;<span class="comment">//signed:</span></div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;<span class="comment">ONE_COMPONENT_ACCESS  (signed char, char1);</span></div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;<span class="comment">TWO_COMPONENT_ACCESS  (signed char, char2);</span></div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;<span class="comment">THREE_COMPONENT_ACCESS(signed char, char3);</span></div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;<span class="comment">FOUR_COMPONENT_ACCESS (signed char, char4);</span></div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;<span class="comment"></span></div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;<span class="comment">ONE_COMPONENT_ACCESS  (short, short1);</span></div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;<span class="comment">TWO_COMPONENT_ACCESS  (short, short2);</span></div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;<span class="comment">THREE_COMPONENT_ACCESS(short, short3);</span></div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;<span class="comment">FOUR_COMPONENT_ACCESS (short, short4);</span></div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;<span class="comment"></span></div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;<span class="comment">ONE_COMPONENT_ACCESS  (int, int1);</span></div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;<span class="comment">TWO_COMPONENT_ACCESS  (int, int2);</span></div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;<span class="comment">THREE_COMPONENT_ACCESS(int, int3);</span></div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;<span class="comment">FOUR_COMPONENT_ACCESS (int, int4);</span></div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;<span class="comment"></span></div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;<span class="comment">ONE_COMPONENT_ACCESS  (long int, long1);</span></div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;<span class="comment">TWO_COMPONENT_ACCESS  (long int, long2);</span></div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;<span class="comment">THREE_COMPONENT_ACCESS(long int, long3);</span></div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;<span class="comment">FOUR_COMPONENT_ACCESS (long int, long4);</span></div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;<span class="comment"></span></div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;<span class="comment">ONE_COMPONENT_ACCESS  (long long int, ulong1);</span></div>
+<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;<span class="comment">TWO_COMPONENT_ACCESS  (long long int, ulong2);</span></div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;<span class="comment">THREE_COMPONENT_ACCESS(long long int, ulong3);</span></div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;<span class="comment">FOUR_COMPONENT_ACCESS (long long int, ulong4);</span></div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;<span class="comment"></span></div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;<span class="comment">ONE_COMPONENT_ACCESS  (long long int, longlong1);</span></div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;<span class="comment">TWO_COMPONENT_ACCESS  (long long int, longlong2);</span></div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;<span class="comment">THREE_COMPONENT_ACCESS(long long int, longlong3);</span></div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;<span class="comment">FOUR_COMPONENT_ACCESS (long long int, longlong4);</span></div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;<span class="comment"></span></div>
+<div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160;<span class="comment"></span></div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;<span class="comment">// unsigned:</span></div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;<span class="comment">ONE_COMPONENT_ACCESS  (unsigned char, uchar1);</span></div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;<span class="comment">TWO_COMPONENT_ACCESS  (unsigned char, uchar2);</span></div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;<span class="comment">THREE_COMPONENT_ACCESS(unsigned char, uchar3);</span></div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;<span class="comment">FOUR_COMPONENT_ACCESS (unsigned char, uchar4);</span></div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;<span class="comment"></span></div>
+<div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;<span class="comment">ONE_COMPONENT_ACCESS  (unsigned short, ushort1);</span></div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;<span class="comment">TWO_COMPONENT_ACCESS  (unsigned short, ushort2);</span></div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;<span class="comment">THREE_COMPONENT_ACCESS(unsigned short, ushort3);</span></div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;<span class="comment">FOUR_COMPONENT_ACCESS (unsigned short, ushort4);</span></div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;<span class="comment"></span></div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;<span class="comment">ONE_COMPONENT_ACCESS  (unsigned int, uint1);</span></div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;<span class="comment">TWO_COMPONENT_ACCESS  (unsigned int, uint2);</span></div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;<span class="comment">THREE_COMPONENT_ACCESS(unsigned int, uint3);</span></div>
+<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;<span class="comment">FOUR_COMPONENT_ACCESS (unsigned int, uint4);</span></div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;<span class="comment"></span></div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;<span class="comment">ONE_COMPONENT_ACCESS  (unsigned long int, ulong1);</span></div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;<span class="comment">TWO_COMPONENT_ACCESS  (unsigned long int, ulong2);</span></div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;<span class="comment">THREE_COMPONENT_ACCESS(unsigned long int, ulong3);</span></div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;<span class="comment">FOUR_COMPONENT_ACCESS (unsigned long int, ulong4);</span></div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;<span class="comment"></span></div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;<span class="comment">ONE_COMPONENT_ACCESS  (unsigned long long int, ulong1);</span></div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;<span class="comment">TWO_COMPONENT_ACCESS  (unsigned long long int, ulong2);</span></div>
+<div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;<span class="comment">THREE_COMPONENT_ACCESS(unsigned long long int, ulong3);</span></div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;<span class="comment">FOUR_COMPONENT_ACCESS (unsigned long long int, ulong4);</span></div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;<span class="comment"></span></div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;<span class="comment">ONE_COMPONENT_ACCESS  (unsigned long long int, ulonglong1);</span></div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;<span class="comment">TWO_COMPONENT_ACCESS  (unsigned long long int, ulonglong2);</span></div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;<span class="comment">THREE_COMPONENT_ACCESS(unsigned long long int, ulonglong3);</span></div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;<span class="comment">FOUR_COMPONENT_ACCESS (unsigned long long int, ulonglong4);</span></div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;<span class="comment"></span></div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;<span class="comment"></span></div>
+<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;<span class="comment">//Floating point</span></div>
+<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;<span class="comment">ONE_COMPONENT_ACCESS  (float, float1);</span></div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;<span class="comment">TWO_COMPONENT_ACCESS  (float, float2);</span></div>
+<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;<span class="comment">THREE_COMPONENT_ACCESS(float, float3);</span></div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;<span class="comment">FOUR_COMPONENT_ACCESS (float, float4);</span></div>
+<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;<span class="comment"></span></div>
+<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;<span class="comment">ONE_COMPONENT_ACCESS  (double, double1);</span></div>
+<div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160;<span class="comment">TWO_COMPONENT_ACCESS  (double, double2);</span></div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;<span class="comment">THREE_COMPONENT_ACCESS(double, double3);</span></div>
+<div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160;<span class="comment">FOUR_COMPONENT_ACCESS (double, double4);</span></div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;<span class="comment">*/</span></div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;</div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;<span class="preprocessor"></span></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Apr 19 2016 22:44:02 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat May 21 2016 14:34:09 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
