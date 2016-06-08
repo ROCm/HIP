@@ -93,15 +93,10 @@ Functions</h2></td></tr>
 <tr class="memitem:ga85030c72824fb60aaddc7374ab60481b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__PeerToPeer.html#ga85030c72824fb60aaddc7374ab60481b">hipDeviceDisablePeerAccess</a> (int peerDeviceId)</td></tr>
 <tr class="memdesc:ga85030c72824fb60aaddc7374ab60481b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Disable direct access from current device's virtual address space to memory allocations physically located on a peer device.  <a href="#ga85030c72824fb60aaddc7374ab60481b">More...</a><br/></td></tr>
 <tr class="separator:ga85030c72824fb60aaddc7374ab60481b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga5512f45e25c08052667c8ffe7162333b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__PeerToPeer.html#ga5512f45e25c08052667c8ffe7162333b">hipMemcpyPeer</a> (void *dst, int dstDeviceId, const void *src, int srcDeviceId, size_t sizeBytes)</td></tr>
-<tr class="memdesc:ga5512f45e25c08052667c8ffe7162333b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies memory from one device to memory on another device.  <a href="#ga5512f45e25c08052667c8ffe7162333b">More...</a><br/></td></tr>
-<tr class="separator:ga5512f45e25c08052667c8ffe7162333b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga216f951370c931d22e80c089ab724ed9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__PeerToPeer.html#ga216f951370c931d22e80c089ab724ed9">hipMemcpyPeerAsync</a> (void *dst, int dstDevice, const void *src, int srcDevice, size_t sizeBytes, hipStream_t stream)</td></tr>
-<tr class="memdesc:ga216f951370c931d22e80c089ab724ed9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copies memory from one device to memory on another device.  <a href="#ga216f951370c931d22e80c089ab724ed9">More...</a><br/></td></tr>
-<tr class="separator:ga216f951370c931d22e80c089ab724ed9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <h2>----------------------------------------------------------------------------------------------&mdash; </h2>
+<dl class="section warning"><dt>Warning</dt><dd>PeerToPeer support is experimental. </dd></dl>
 <h2 class="groupheader">Function Documentation</h2>
 <a class="anchor" id="ga0a1c9ccd775758d9d7d5b5a1f525b719"></a>
 <div class="memitem">
@@ -136,17 +131,19 @@ Functions</h2></td></tr>
 <p>Determine if a device can access a peer's memory. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">canAccessPeer</td><td>returns true if specified devices are peers. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td></td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">peerDevice</td><td>Returns "1" in <code>canAccessPeer</code> if the specified <code>device</code> is capable of directly accessing memory physically located on peerDevice , or "0" if not.</td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">canAccessPeer</td><td>Returns the peer access capability (0 or 1) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">device</td><td>- device from where memory may be accessed. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">peerDevice</td><td>- device where memory is physically located</td></tr>
   </table>
   </dd>
 </dl>
+<p>Returns "1" in <code>canAccessPeer</code> if the specified <code>device</code> is capable of directly accessing memory physically located on peerDevice , or "0" if not.</p>
 <p>Returns "0" in <code>canAccessPeer</code> if deviceId == peerDeviceId, and both are valid devices : a device is not a peer of itself.</p>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, </dd>
 <dd>
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d" title="DeviceID must be in range 0...#compute-devices. ">hipErrorInvalidDevice</a> if deviceId or peerDeviceId are not valid devices</dd></dl>
-<dl class="section warning"><dt>Warning</dt><dd>HCC returns 0 in *canAccessPeer ; Need to update this function when RT supports P2P </dd></dl>
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d" title="DeviceID must be in range 0...#compute-devices. ">hipErrorInvalidDevice</a> if deviceId or peerDeviceId are not valid devices </dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>PeerToPeer support is experimental.</dd></dl>
+<p>HCC returns 0 in *canAccessPeer ; Need to update this function when RT supports P2P </p>
 
 </div>
 </div>
@@ -168,10 +165,12 @@ Functions</h2></td></tr>
 <p>Returns hipErrorPeerAccessNotEnabled if direct access to memory on peerDevice has not yet been enabled from the current device.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">peerDeviceId</td><td>Returns <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a2ee0bf2e64840f253e4a1b12bbaf2d09" title="Peer access was never enabled from the current device. ">hipErrorPeerAccessNotEnabled</a> </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">peerDeviceId</td><td></td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a2ee0bf2e64840f253e4a1b12bbaf2d09" title="Peer access was never enabled from the current device. ">hipErrorPeerAccessNotEnabled</a> </dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>PeerToPeer support is experimental. </dd></dl>
 
 </div>
 </div>
@@ -209,135 +208,14 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a5399c146f91246f8b77abcd4ea30e7ac" title="Peer access was already enabled from the current device. ">hipErrorPeerAccessAlreadyEnabled</a> if peer access is already enabled for this device. </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="ga5512f45e25c08052667c8ffe7162333b"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipMemcpyPeer </td>
-          <td>(</td>
-          <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>dst</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>dstDeviceId</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const void *&#160;</td>
-          <td class="paramname"><em>src</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>srcDeviceId</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>sizeBytes</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Copies memory from one device to memory on another device. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">dst</td><td>- Destination device pointer. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dstDeviceId</td><td>- Destination device </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">src</td><td>- Source device pointer </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">srcDeviceId</td><td>- Source device </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">sizeBytes</td><td>- Size of memory copy in bytes</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>Returns <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d" title="DeviceID must be in range 0...#compute-devices. ">hipErrorInvalidDevice</a> </p>
-
-</div>
-</div>
-<a class="anchor" id="ga216f951370c931d22e80c089ab724ed9"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipMemcpyPeerAsync </td>
-          <td>(</td>
-          <td class="paramtype">void *&#160;</td>
-          <td class="paramname"><em>dst</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>dstDevice</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const void *&#160;</td>
-          <td class="paramname"><em>src</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>srcDevice</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>sizeBytes</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">hipStream_t&#160;</td>
-          <td class="paramname"><em>stream</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Copies memory from one device to memory on another device. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[out]</td><td class="paramname">dst</td><td>- Destination device pointer. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">dstDevice</td><td>- Destination device </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">src</td><td>- Source device pointer </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">srcDevice</td><td>- Source device </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">sizeBytes</td><td>- Size of memory copy in bytes </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">stream</td><td>- Stream identifier</td></tr>
-  </table>
-  </dd>
-</dl>
-<p>Returns <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d" title="DeviceID must be in range 0...#compute-devices. ">hipErrorInvalidDevice</a></p>
-<dl class="bug"><dt><b><a class="el" href="bug.html#_bug000003">Bug:</a></b></dt><dd>This function uses a synchronous copy </dd></dl>
+<dl class="section warning"><dt>Warning</dt><dd>PeerToPeer support is experimental. </dd></dl>
 
 </div>
 </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Apr 19 2016 22:44:02 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat May 21 2016 14:34:09 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

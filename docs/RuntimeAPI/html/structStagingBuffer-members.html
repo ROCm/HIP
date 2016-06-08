@@ -95,12 +95,13 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>CopyDeviceToHostPinInPlace</b>(void *dst, const void *src, size_t sizeBytes, hsa_signal_t *waitFor) (defined in <a class="el" href="structStagingBuffer.html">StagingBuffer</a>)</td><td class="entry"><a class="el" href="structStagingBuffer.html">StagingBuffer</a></td><td class="entry"></td></tr>
   <tr bgcolor="#f0f0f0"><td class="entry"><b>CopyHostToDevice</b>(void *dst, const void *src, size_t sizeBytes, hsa_signal_t *waitFor) (defined in <a class="el" href="structStagingBuffer.html">StagingBuffer</a>)</td><td class="entry"><a class="el" href="structStagingBuffer.html">StagingBuffer</a></td><td class="entry"></td></tr>
   <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>CopyHostToDevicePinInPlace</b>(void *dst, const void *src, size_t sizeBytes, hsa_signal_t *waitFor) (defined in <a class="el" href="structStagingBuffer.html">StagingBuffer</a>)</td><td class="entry"><a class="el" href="structStagingBuffer.html">StagingBuffer</a></td><td class="entry"></td></tr>
-  <tr bgcolor="#f0f0f0"><td class="entry"><b>StagingBuffer</b>(hsa_agent_t hsaAgent, hsa_region_t systemRegion, size_t bufferSize, int numBuffers) (defined in <a class="el" href="structStagingBuffer.html">StagingBuffer</a>)</td><td class="entry"><a class="el" href="structStagingBuffer.html">StagingBuffer</a></td><td class="entry"></td></tr>
-  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>~StagingBuffer</b>() (defined in <a class="el" href="structStagingBuffer.html">StagingBuffer</a>)</td><td class="entry"><a class="el" href="structStagingBuffer.html">StagingBuffer</a></td><td class="entry"></td></tr>
+  <tr bgcolor="#f0f0f0"><td class="entry"><b>CopyPeerToPeer</b>(void *dst, hsa_agent_t dstAgent, const void *src, hsa_agent_t srcAgent, size_t sizeBytes, hsa_signal_t *waitFor) (defined in <a class="el" href="structStagingBuffer.html">StagingBuffer</a>)</td><td class="entry"><a class="el" href="structStagingBuffer.html">StagingBuffer</a></td><td class="entry"></td></tr>
+  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>StagingBuffer</b>(hsa_agent_t hsaAgent, hsa_region_t systemRegion, size_t bufferSize, int numBuffers) (defined in <a class="el" href="structStagingBuffer.html">StagingBuffer</a>)</td><td class="entry"><a class="el" href="structStagingBuffer.html">StagingBuffer</a></td><td class="entry"></td></tr>
+  <tr bgcolor="#f0f0f0"><td class="entry"><b>~StagingBuffer</b>() (defined in <a class="el" href="structStagingBuffer.html">StagingBuffer</a>)</td><td class="entry"><a class="el" href="structStagingBuffer.html">StagingBuffer</a></td><td class="entry"></td></tr>
 </table></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Apr 19 2016 22:44:02 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat May 21 2016 14:34:09 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
