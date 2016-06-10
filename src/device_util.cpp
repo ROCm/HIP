@@ -112,7 +112,10 @@ __device__ float fdimf(float x, float y)
 {
     return hc::precise_math::fdimf(x, y);
 }
-__device__ float fdividef(float x, float y);
+__device__ float fdividef(float x, float y)
+{
+    return x/y;
+}
 __device__ float floorf(float x)
 {
     return hc::precise_math::floorf(x);
@@ -162,9 +165,18 @@ __device__ float ldexpf(float x, int exp)
     return hc::precise_math::ldexpf(x, exp);
 }
 __device__ float lgammaf(float x);
-__device__ long long int llrintf(float x);
-__device__ long long int llroundf(float x);
-__device__ float log10f(float x)
+__device__ long long int llrintf(float x)
+{
+    int y = hc::precise_math::roundf(x);
+    long long int z = y;
+    return z;
+}
+__device__ long long int llroundf(float x)
+{
+    int y = hc::precise_math::roundf(x);
+    long long int z = y;
+    return z;
+}__device__ float log10f(float x)
 {
     return hc::precise_math::log10f(x);
 }
@@ -184,8 +196,17 @@ __device__ float logf(float x)
 {
     return hc::precise_math::logf(x);
 }
-__device__ long int lrintf(float x);
-__device__ long int lroundf(float x);
+__device__ long int lrintf(float x)
+{
+    int y = hc::precise_math::roundf(x);
+    long int z = y;
+    return z;
+}
+__device__ long int lroundf(float x)
+{
+    long int y = hc::precise_math::roundf(x);
+    return y;
+}
 __device__ float modff(float x, float *iptr);
 __device__ float nanf(const char* tagp)
 {
@@ -196,11 +217,28 @@ __device__ float nearbyintf(float x)
     return hc::precise_math::nearbyintf(x);
 }
 __device__ float nextafterf(float x, float y);
-__device__ float norm3df(float a, float b, float c);
-__device__ float norm4df(float a, float b, float c, float d);
+__device__ float norm3df(float a, float b, float c)
+{
+     float x = a*a + b*b + c*c;
+     return hc::precise_math::sqrtf(x);
+}
+__device__ float norm4df(float a, float b, float c, float d)
+{
+     float x = a*a + b*b;
+     float y = c*c + d*d;
+     return hc::precise_math::sqrtf(x+y);
+}
 __device__ float normcdff(float y);
 __device__ float normcdfinvf(float y);
-__device__ float normf(int dim, const float *a);
+__device__ float normf(int dim, const float *a)
+{
+    float x = 0.0f;
+    for(int i=0;i<dim;i++)
+    {
+        x = hc::precise_math::fmaf(a[i], a[i], x);
+    }
+    return hc::precise_math::sqrtf(x);
+}
 __device__ float powf(float x, float y)
 {
     return hc::precise_math::powf(x, y);
@@ -211,11 +249,34 @@ __device__ float remainderf(float x, float y)
     return hc::precise_math::remainderf(x, y);
 }
 __device__ float remquof(float x, float y, int *quo);
-__device__ float rhypotf(float x, float y);
-__device__ float rintf(float x);
-__device__ float rnorm3df(float a, float b, float c);
-__device__ float rnorm4df(float a, float b, float c, float d);
-__device__ float rnormf(int dim, const float* a);
+__device__ float rhypotf(float x, float y)
+{
+    return 1/hc::precise_math::hypotf(x, y);
+}
+__device__ float rintf(float x)
+{
+    return hc::precise_math::roundf(x);
+}
+__device__ float rnorm3df(float a, float b, float c)
+{
+    float x = a*a + b*b + c*c;
+    return 1/hc::precise_math::sqrtf(x);
+}
+__device__ float rnorm4df(float a, float b, float c, float d)
+{
+    float x = a*a + b*b;
+    float y = c*c + d*d;
+    return 1/hc::precise_math::sqrtf(x+y);
+}
+__device__ float rnormf(int dim, const float* a)
+{
+    float x = 0.0f;
+    for(int i=0;i<dim;i++)
+    {
+        x = hc::precise_math::fmaf(a[i], a[i], x);
+    }
+    return 1/hc::precise_math::sqrtf(x);
+}
 __device__ float roundf(float x)
 {
     return hc::precise_math::roundf(x);
@@ -229,8 +290,16 @@ __device__ unsigned signbit(float a)
 {
     return hc::precise_math::signbit(a);
 }
-__device__ void sincosf(float x, float *sptr, float *cptr);
-__device__ void sincospif(float x, float *sptr, float *cptr);
+__device__ void sincosf(float x, float *sptr, float *cptr)
+{
+    *sptr = hc::precise_math::sinf(x);
+    *cptr = hc::precise_math::cosf(x);
+}
+__device__ void sincospif(float x, float *sptr, float *cptr)
+{
+    *sptr = hc::precise_math::sinpif(x);
+    *cptr = hc::precise_math::cospif(x);
+}
 __device__ float sinf(float x)
 {
     return hc::precise_math::sinf(x);
