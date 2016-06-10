@@ -48,11 +48,11 @@ template<typename T>
 {
     T count = sizeof(num) * 8 - 1;
     T reverse_num = num;
-     
-    num >>= 1; 
+
+    num >>= 1;
     while(num)
     {
-       reverse_num <<= 1;       
+       reverse_num <<= 1;
        reverse_num |= num & 1;
        num >>= 1;
        count--;
@@ -60,12 +60,12 @@ template<typename T>
     reverse_num <<= count;
     return reverse_num;
 }
- 
-__global__ void 
-HIP_kernel(hipLaunchParm lp, 
-             unsigned int* a, unsigned int* b,unsigned long long int* c, unsigned long long int* d, int width, int height) 
+
+__global__ void
+HIP_kernel(hipLaunchParm lp,
+             unsigned int* a, unsigned int* b,unsigned long long int* c, unsigned long long int* d, int width, int height)
   {
- 
+
       int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
       int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
 
@@ -82,10 +82,10 @@ HIP_kernel(hipLaunchParm lp,
 using namespace std;
 
 int main() {
-  
+
   unsigned int* hostA;
   unsigned int* hostB;
-  unsigned long long int* hostC; 
+  unsigned long long int* hostC;
   unsigned long long int* hostD;
 
   unsigned int* deviceA;
@@ -115,17 +115,17 @@ int main() {
     hostB[i] = i;
 	hostD[i] = i;
   }
-  
+
   HIP_ASSERT(hipMalloc((void**)&deviceA, NUM * sizeof(unsigned int)));
   HIP_ASSERT(hipMalloc((void**)&deviceB, NUM * sizeof(unsigned int)));
   HIP_ASSERT(hipMalloc((void**)&deviceC, NUM * sizeof(unsigned long long int)));
   HIP_ASSERT(hipMalloc((void**)&deviceD, NUM * sizeof(unsigned long long int)));
-  
+
   HIP_ASSERT(hipMemcpy(deviceB, hostB, NUM*sizeof(unsigned int), hipMemcpyHostToDevice));
   HIP_ASSERT(hipMemcpy(deviceD, hostD, NUM*sizeof(unsigned long long int), hipMemcpyHostToDevice));
 
 
-  hipLaunchKernel(HIP_kernel, 
+  hipLaunchKernel(HIP_kernel,
                   dim3(WIDTH/THREADS_PER_BLOCK_X, HEIGHT/THREADS_PER_BLOCK_Y),
                   dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
                   0, 0,
@@ -134,31 +134,34 @@ int main() {
 
   HIP_ASSERT(hipMemcpy(hostA, deviceA, NUM*sizeof(unsigned int), hipMemcpyDeviceToHost));
   HIP_ASSERT(hipMemcpy(hostC, deviceC, NUM*sizeof(unsigned long long int), hipMemcpyDeviceToHost));
+
   // verify the results
   errors = 0;
   for (i = 0; i < NUM; i++) {
-	printf("gpu_brev =%d, cpu_brev =%d \n",hostA[i],bitreverse(hostB[i]));
 	  if (hostA[i] != bitreverse(hostB[i])) {
       errors++;
     }
   }
   if (errors!=0) {
-    printf("FAILED: %d errors\n",errors);
+    cout << "__brev() FAILED\n" << endl;
+    return -1;
   } else {
-      printf ("__brev() PASSED!\n");
+    cout << "__brev() checked!" << endl;
   }
   errors = 0;
   for (i = 0; i < NUM; i++) {
-	printf("gpu_brevll =%llu, cpu_brevll =%llu \n",hostC[i],bitreverse(hostD[i]));
 	  if (hostC[i] != bitreverse(hostD[i])) {
       errors++;
     }
   }
   if (errors!=0) {
-    printf("FAILED: %d errors\n",errors);
+    cout << "__brevll() FAILED" << endl;
+    return -1;
   } else {
-      printf ("__brevll() PASSED!\n");
+    cout << "__brevll() checked!" << endl;
   }
+
+    cout << "__brev() and __brevll() PASSED!" << endl;
 
   HIP_ASSERT(hipFree(deviceA));
   HIP_ASSERT(hipFree(deviceB));
@@ -170,19 +173,6 @@ int main() {
   free(hostC);
   free(hostD);
 
-
-  //hipResetDefaultAccelerator();
-
   return errors;
 }
-
-
-
-
-
-
-
-
-
-
 
