@@ -139,12 +139,12 @@ typedef struct hipPointerAttribute_t {
  * @ingroup Enumerations
  */
 // Developer note - when updating these, update the hipErrorName and hipErrorString functions in NVCC and HCC paths
+// Also update the hipCUDAErrorTohipError function in NVCC path.
+
 typedef enum hipError_t {
      hipSuccess = 0                   ///< Successful completion.
     ,hipErrorMemoryAllocation         ///< Memory allocation error.
-    ,hipErrorMemoryFree               ///< Memory free error.
-    ,hipErrorUnknownSymbol            ///< Unknown symbol.
-    ,hipErrorOutOfResources           ///< Out of resources error.
+    ,hipErrorLaunchOutOfResources     ///< Out of resources error.
     ,hipErrorInvalidValue             ///< One or more of the parameters passed to the API call is NULL or not in an acceptable range.
     ,hipErrorInvalidResourceHandle    ///< Resource handle (hipEvent_t or hipStream_t) invalid.
     ,hipErrorInvalidDevice            ///< DeviceID must be in range 0...#compute-devices.

@@ -28,24 +28,23 @@ int main(){
     hipHostMalloc((void**)&Bd, SIZE, hipHostMallocDefault);
     hipHostMalloc((void**)&Bm, SIZE, hipHostMallocMapped);
     hipHostMalloc((void**)&C, SIZE, hipHostMallocMapped);
-    hipHostGetDevicePointer((void**)&Cd, C, SIZE);
 
-    HIPASSERT(hipFree(Ad) == hipSuccess);
-    HIPASSERT(hipHostFree(Ad) == hipErrorInvalidDevicePointer);
+    hipHostGetDevicePointer((void**)&Cd, C, 0/*flags*/);
 
-    HIPASSERT(hipFree(B) == hipErrorInvalidDevicePointer);
-    HIPASSERT(hipFree(Bd) == hipErrorInvalidDevicePointer);
-    HIPASSERT(hipFree(Bm) == hipErrorInvalidDevicePointer);
-    HIPASSERT(hipHostFree(Bd) == hipSuccess);
-    HIPASSERT(hipHostFree(Bm) == hipSuccess);
+    HIPCHECK_API(hipFree(Ad) ,  hipSuccess);
+    HIPCHECK_API(hipHostFree(Ad) , hipErrorInvalidValue);
 
-    HIPASSERT(hipFree(C) == hipErrorInvalidDevicePointer);
-    HIPASSERT(hipFree(Cd) == hipErrorInvalidDevicePointer);
-    HIPASSERT(hipHostFree(C) == hipSuccess);
-    HIPASSERT(hipHostFree(Cd) == hipErrorInvalidDevicePointer);
-    HIPASSERT(hipFree(Cd) == hipErrorInvalidDevicePointer);
+    HIPCHECK_API(hipFree(B)  , hipErrorInvalidDevicePointer); // try to hipFree on malloced memory
+    HIPCHECK_API(hipFree(Bd) , hipErrorInvalidDevicePointer);
+    HIPCHECK_API(hipFree(Bm) , hipErrorInvalidDevicePointer);
+    HIPCHECK_API(hipHostFree(Bd) , hipSuccess);
+    HIPCHECK_API(hipHostFree(Bm) , hipSuccess);
 
-    HIPASSERT(hipFree(NULL) == hipErrorInvalidDevicePointer);
-    HIPASSERT(hipHostFree(NULL) == hipErrorInvalidDevicePointer);
+    HIPCHECK_API(hipFree(C) , hipErrorInvalidDevicePointer);
+    HIPCHECK_API(hipHostFree(C) , hipSuccess);
+
+
+    HIPCHECK_API(hipFree(NULL) , hipSuccess);
+    HIPCHECK_API(hipHostFree(NULL) , hipSuccess);
     passed();
 }

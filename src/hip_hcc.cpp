@@ -100,7 +100,7 @@ hsa_agent_t g_cpu_agent;
 ihipSignal_t::ihipSignal_t() :  _sig_id(0)
 {
     if (hsa_signal_create(0/*value*/, 0, NULL, &_hsa_signal) != HSA_STATUS_SUCCESS) {
-        throw ihipException(hipErrorOutOfResources);
+        throw ihipException(hipErrorRuntimeMemory);
     }
     //tprintf (DB_SIGNAL, "  allocated hsa_signal=%lu\n", (_hsa_signal.handle));
 }
@@ -110,7 +110,7 @@ ihipSignal_t::~ihipSignal_t()
 {
     tprintf (DB_SIGNAL, "  destroy hsa_signal #%lu (#%lu)\n", (_hsa_signal.handle), _sig_id);
     if (hsa_signal_destroy(_hsa_signal) != HSA_STATUS_SUCCESS) {
-       throw ihipException(hipErrorOutOfResources);
+       throw ihipException(hipErrorRuntimeOther);
     }
 };
 
@@ -1137,9 +1137,7 @@ const char *ihipErrorString(hipError_t hip_error)
     switch (hip_error) {
         case hipSuccess                         : return "hipSuccess";
         case hipErrorMemoryAllocation           : return "hipErrorMemoryAllocation";
-        case hipErrorMemoryFree                 : return "hipErrorMemoryFree";
-        case hipErrorUnknownSymbol              : return "hipErrorUnknownSymbol";
-        case hipErrorOutOfResources             : return "hipErrorOutOfResources";
+        case hipErrorLaunchOutOfResources       : return "hipErrorLaunchOutOfResources";
         case hipErrorInvalidValue               : return "hipErrorInvalidValue";
         case hipErrorInvalidResourceHandle      : return "hipErrorInvalidResourceHandle";
         case hipErrorInvalidDevice              : return "hipErrorInvalidDevice";

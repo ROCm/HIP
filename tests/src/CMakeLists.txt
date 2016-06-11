@@ -200,6 +200,8 @@ make_hip_executable (hipTestMemcpyPin hipTestMemcpyPin.cpp)
 make_hip_executable (hipDynamicShared hipDynamicShared.cpp)
 make_hip_executable (hipTestDevice hipTestDevice.cpp)
 make_hip_executable (hipTestDeviceDouble hipTestDeviceDouble.cpp)
+
+
 make_test(hip_ballot " " )
 make_test(hip_anyall " " )
 make_test(hip_popc " " )
@@ -245,6 +247,7 @@ make_test(hipTestDevice " ")
 make_named_test (hipMultiThreadDevice "hipMultiThreadDevice-serial" --tests 0x1) 
 make_named_test (hipMultiThreadDevice "hipMultiThreadDevice-pyramid" --tests 0x4) 
 make_named_test (hipMultiThreadDevice "hipMultiThreadDevice-nearzero" --tests 0x10) 
+make_test(hipMemoryAllocate " ")
 
 if (${HIP_MULTI_GPU})
     make_test(hipPeerToPeer_simple " ")                  # use current device for copy, this fails.
@@ -254,7 +257,6 @@ if (${HIP_MULTI_GPU})
 endif()
 
 if (${HIP_PLATFORM} STREQUAL "hcc")
-    make_test(hipMemoryAllocate " ")
     make_test(hipFuncSetDevice " ")
 endif()
 

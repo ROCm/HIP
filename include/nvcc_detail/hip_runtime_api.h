@@ -65,29 +65,50 @@ typedef cudaStream_t hipStream_t;
 
 inline static hipError_t hipCUDAErrorTohipError(cudaError_t cuError) {
 switch(cuError) {
-case cudaSuccess:
-    return hipSuccess;
-case cudaErrorMemoryAllocation:
-    return hipErrorMemoryAllocation;
-case cudaErrorInvalidDevicePointer:
-case cudaErrorInitializationError:
-    return hipErrorMemoryFree;
-default:
-    return hipErrorUnknown;
+    case cudaSuccess                             : return hipSuccess;
+    case cudaErrorMemoryAllocation               : return hipErrorMemoryAllocation            ;
+    case cudaErrorLaunchOutOfResources           : return hipErrorLaunchOutOfResources        ;
+    case cudaErrorInvalidValue                   : return hipErrorInvalidValue                ;
+    case cudaErrorInvalidResourceHandle          : return hipErrorInvalidResourceHandle       ;
+    case cudaErrorInvalidDevice                  : return hipErrorInvalidDevice               ;
+    case cudaErrorInvalidMemcpyDirection         : return hipErrorInvalidMemcpyDirection      ;
+    case cudaErrorInvalidDevicePointer           : return hipErrorInvalidDevicePointer        ;
+    case cudaErrorInitializationError            : return hipErrorInitializationError         ;
+    case cudaErrorNoDevice                       : return hipErrorNoDevice                    ;
+    case cudaErrorNotReady                       : return hipErrorNotReady                    ;
+    case cudaErrorUnknown                        : return hipErrorUnknown                     ;
+    case cudaErrorPeerAccessNotEnabled           : return hipErrorPeerAccessNotEnabled        ;
+    case cudaErrorPeerAccessAlreadyEnabled       : return hipErrorPeerAccessAlreadyEnabled    ;
+    case cudaErrorHostMemoryAlreadyRegistered    : return hipErrorHostMemoryAlreadyRegistered ;
+    case cudaErrorHostMemoryNotRegistered        : return hipErrorHostMemoryNotRegistered     ;
+    default                                      : return hipErrorUnknown;  // Note - translated error.
+}; 
 }
-}
+
 // TODO   match the error enum names of hip and cuda
 inline static cudaError_t hipErrorToCudaError(hipError_t hError) {
 switch(hError) {
-case hipSuccess:
-    return cudaSuccess;
-case hipErrorMemoryAllocation:
-    return cudaErrorMemoryAllocation;
-case hipErrorMemoryFree:
-    return cudaErrorInitializationError;
-default:
-    return cudaErrorUnknown;
-}
+    case hipSuccess                             : return cudaSuccess;
+    case hipErrorMemoryAllocation               : return cudaErrorMemoryAllocation            ;
+    case hipErrorLaunchOutOfResources           : return cudaErrorLaunchOutOfResources        ;
+    case hipErrorInvalidValue                   : return cudaErrorInvalidValue                ;
+    case hipErrorInvalidResourceHandle          : return cudaErrorInvalidResourceHandle       ;
+    case hipErrorInvalidDevice                  : return cudaErrorInvalidDevice               ;
+    case hipErrorInvalidMemcpyDirection         : return cudaErrorInvalidMemcpyDirection      ;
+    case hipErrorInvalidDevicePointer           : return cudaErrorInvalidDevicePointer        ;
+    case hipErrorInitializationError            : return cudaErrorInitializationError         ;
+    case hipErrorNoDevice                       : return cudaErrorNoDevice                    ;
+    case hipErrorNotReady                       : return cudaErrorNotReady                    ;
+    case hipErrorUnknown                        : return cudaErrorUnknown                     ;
+    case hipErrorPeerAccessNotEnabled           : return cudaErrorPeerAccessNotEnabled        ;
+    case hipErrorPeerAccessAlreadyEnabled       : return cudaErrorPeerAccessAlreadyEnabled    ;
+    case hipErrorRuntimeMemory                  : return cudaErrorUnknown              ; // Does not exist in CUDA
+    case hipErrorRuntimeOther                   : return cudaErrorUnknown              ; // Does not exist in CUDA
+    case hipErrorHostMemoryAlreadyRegistered    : return cudaErrorHostMemoryAlreadyRegistered ;
+    case hipErrorHostMemoryNotRegistered        : return cudaErrorHostMemoryNotRegistered     ;
+    case hipErrorTbd                            : return cudaErrorUnknown;  // Note - translated error.
+    default                                     : return cudaErrorUnknown;  // Note - translated error.
+} 
 }
 
 inline static cudaMemcpyKind hipMemcpyKindToCudaMemcpyKind(hipMemcpyKind kind) {
@@ -176,6 +197,10 @@ inline static hipError_t hipDeviceSynchronize() {
 
 inline static const char* hipGetErrorString(hipError_t error){
     return cudaGetErrorString( hipErrorToCudaError(error) );
+}
+
+inline static const char* hipGetErrorName(hipError_t error){
+    return cudaGetErrorName( hipErrorToCudaError(error) );
 }
 
 inline static hipError_t hipGetDeviceCount(int * count){
@@ -329,7 +354,7 @@ inline static hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attribut
 			case cudaMemoryTypeHost:
 		        attributes->memoryType = hipMemoryTypeHost; break;
 			default:
-		        return hipErrorUnknownSymbol;
+		        return hipErrorUnknown;
 		}
 		attributes->device = cPA.device;
 		attributes->devicePointer = cPA.devicePointer;
