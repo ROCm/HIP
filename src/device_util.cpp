@@ -228,7 +228,14 @@ __device__ float norm4df(float a, float b, float c, float d)
      float y = c*c + d*d;
      return hc::precise_math::sqrtf(x+y);
 }
-__device__ float normcdff(float y);
+/*
+The below conversion seems easy, takes a
+full page of integral calculus to deduce the following equation
+*/
+__device__ float normcdff(float y)
+{
+     return ((hc::precise_math::erff(y)/1.41421356237) + 1)/2;
+}
 __device__ float normcdfinvf(float y);
 __device__ float normf(int dim, const float *a)
 {
@@ -540,6 +547,10 @@ __device__ double norm4d(double a, double b, double c, double d)
     double x = a*a + b*b;
     double y = c*c + d*d;
     return hc::precise_math::sqrt(x+y);
+}
+__device__ double normcdf(float y)
+{
+     return ((hc::precise_math::erf(y)/1.41421356237) + 1)/2;
 }
 __device__ double pow(double x, double y)
 {
