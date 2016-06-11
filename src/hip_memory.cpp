@@ -89,6 +89,8 @@ hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsi
 
     hipError_t e = hipSuccess;
 
+    *devicePointer = NULL;
+
     // Flags must be 0:
     if (flags != 0) {
         e = hipErrorInvalidValue;
@@ -100,7 +102,6 @@ hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsi
             *devicePointer = amPointerInfo._devicePointer;
         } else {
             e = hipErrorMemoryAllocation;
-            *devicePointer = NULL;
         }
     }
     return ihipLogStatus(e);
@@ -530,6 +531,9 @@ hipError_t hipFree(void* ptr)
                 hipStatus = hipSuccess;
             }
         }
+    } else {
+        // free NULL pointer succeeds and is common technique to initialize runtime
+        hipStatus = hipSuccess;  
     }
 
     return ihipLogStatus(hipStatus);
@@ -540,10 +544,11 @@ hipError_t hipHostFree(void* ptr)
 {
     HIP_INIT_API(ptr);
 
-    // TODO - ensure this pointer was created by hipMallocHost and not hipMalloc
-    std::call_once(hip_initialized, ihipInit);
+   // Synchronize to ensure all work has finished.
+    ihipGetTlsDefaultDevice()->locked_waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
 
-    hipError_t hipStatus = hipErrorInvalidDevicePointer;
+
+    hipError_t hipStatus = hipErrorInvalidValue;
     if (ptr) {
         hc::accelerator acc;
         hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
@@ -554,6 +559,9 @@ hipError_t hipHostFree(void* ptr)
                 hipStatus = hipSuccess;
             }
         }
+    } else {
+        // free NULL pointer succeeds and is common technique to initialize runtime
+        hipStatus = hipSuccess;  
     }
 
     return ihipLogStatus(hipStatus);

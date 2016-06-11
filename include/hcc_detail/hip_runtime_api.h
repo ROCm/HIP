@@ -764,28 +764,32 @@ hipError_t hipHostUnregister(void* hostPtr) ;
 /**
  *  @brief Free memory allocated by the hcc hip memory allocation API.
  *  This API performs an implicit hipDeviceSynchronize() call.
+ *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
  *
  *  @param[in] ptr Pointer to memory to be freed
- *  @return #hipSuccess, #hipErrorMemoryFree
+ *  @return #hipSuccess 
+ *  @return #hipErrorInvalidDevicePointer (if pointer is invalid, including host pointers allocated with hipHostMalloc)
  */
 hipError_t hipFree(void* ptr);
 
 
 
 /**
- *  @brief Free memory allocated by the hcc hip host memory allocation API
+ *  @brief Free memory allocated by the hcc hip host memory allocation API.  [Deprecated.]
  *
- *  @param[in] ptr Pointer to memory to be freed
- *  @return #hipSuccess, #hipErrorMemoryFree
+ *  @see hipHostFree
  */
 hipError_t hipFreeHost(void* ptr) __attribute__((deprecated("use hipHostFree instead")))  ;
 
 
 /**
  *  @brief Free memory allocated by the hcc hip host memory allocation API
+ *  This API performs an implicit hipDeviceSynchronize() call.
+ *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
  *
  *  @param[in] ptr Pointer to memory to be freed
- *  @return #hipSuccess, #hipErrorMemoryFree
+ *  @return #hipSuccess, 
+ *          #hipErrorInvalidValue (if pointer is invalid, including device pointers allocated with hipMalloc)
  */
 hipError_t hipHostFree(void* ptr);
 

@@ -57,6 +57,12 @@ THE SOFTWARE.
     printf ("error: TEST FAILED\n%s", KNRM );\
     abort();
 
+#define warn(...) \
+    printf ("%swarn: ", KYEL);\
+    printf (__VA_ARGS__);\
+    printf ("\n");\
+    printf ("warn: TEST WARNING\n%s", KNRM );\
+
 
 #define HIPCHECK(error) \
 {\
@@ -75,6 +81,18 @@ THE SOFTWARE.
                KRED, #condition,\
               __FILE__, __LINE__,KNRM); \
     }
+
+
+#define HIPCHECK_API(API_CALL, EXPECTED_ERROR) \
+{\
+    hipError_t _e = (API_CALL);\
+    if (_e != (EXPECTED_ERROR) ) { \
+        failed("%sAPI '%s' returned %d(%s) but test expected %d(%s) at %s:%d%s \n", \
+               KRED, #API_CALL, _e, hipGetErrorName(_e), \
+               EXPECTED_ERROR, hipGetErrorName(EXPECTED_ERROR), \
+              __FILE__, __LINE__,KNRM); \
+    }\
+}
 
 // standard command-line variables:
 extern size_t N;
