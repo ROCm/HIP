@@ -169,7 +169,7 @@ __device__ float normcdff(float y);
 __device__ float normcdfinvf(float y);
 __device__ float normf(int dim, const float *a);
 __device__ float powf(float x, float y);
-__device__ float rcbtrf(float x);
+__device__ float rcbrtf(float x);
 __device__ float remainderf(float x, float y);
 __device__ float remquof(float x, float y, int *quo);
 __device__ float rhypotf(float x, float y);
