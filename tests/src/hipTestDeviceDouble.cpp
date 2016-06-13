@@ -88,6 +88,11 @@ __global__ void test_rnorm(hipLaunchParm lp, double *a, double *b){
     b[tid] = rnorm(N, a);
 }
 
+__global__ void test_erfinv(hipLaunchParm lp, double *a, double *b){
+    int tid = hipThreadIdx_x;
+    b[tid] = erf(erfinv(a[tid]));
+}
+
 bool run_sincos(){
 double *A, *Ad, *B, *C, *Bd, *Cd;
 A = new double[N];
@@ -517,12 +522,38 @@ assert(passed == 1);
 return false;
 }
 
+bool run_erfinv(){
+double *A, *Ad, *B, *Bd;
+A = new double[N];
+B = new double[N];
+for(int i=0;i<N;i++){
+A[i] = -0.6;
+B[i] = 0.0;
+}
+hipMalloc((void**)&Ad, SIZE);
+hipMalloc((void**)&Bd, SIZE);
+hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
+hipLaunchKernel(test_erfinv, dim3(1), dim3(N), 0, 0, Ad, Bd);
+hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost);
+int passed = 0;
+for(int i=0;i<512;i++){
+    if(B[i] - A[i] < 0.000001){
+        passed = 1;
+    }
+}
+free(A);
+if(passed == 1){
+    return true;
+}
+assert(passed == 1);
+return false;
+}
 
 int main(){
 if(run_sincos() && run_sincospi() && run_llrint() && run_norm3d() && run_norm4d() &&
    run_rnorm3d() && run_rnorm4d() &&
    run_rnorm() && run_lround() && run_llround() &&
-   run_rint() && run_rhypot()
+   run_rint() && run_rhypot() && run_erfinv()
 ){
 passed();
 }
