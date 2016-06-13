@@ -486,6 +486,16 @@ __device__ double log(double x)
 {
     return hc::precise_math::log(x);
 }
+__device__ long long int llrint(double x)
+{
+    long long int y = hc::precise_math::round(x);
+    return y;
+}
+__device__ long long int llround(double x)
+{
+    long long int y = hc::precise_math::round(x);
+    return y;
+}
 __device__ double log10(double x)
 {
     return hc::precise_math::log10(x);
@@ -502,6 +512,16 @@ __device__ double logb(double x)
 {
     return hc::precise_math::logb(x);
 }
+__device__ long int lrint(double x)
+{
+    long int y = hc::precise_math::round(x);
+    return y;
+}
+__device__ long int lround(double x)
+{
+    long int y = hc::precise_math::round(x);
+    return y;
+}
 __device__ double nan(const char *tagp)
 {
     return hc::precise_math::nan((int)*tagp);
@@ -510,6 +530,17 @@ __device__ double nearbyint(double x)
 {
     return hc::precise_math::nearbyint(x);
 }
+__device__ double norm3d(double a, double b, double c)
+{
+    double x = a*a + b*b + c*c;
+    return hc::precise_math::sqrt(x);
+}
+__device__ double norm4d(double a, double b, double c, double d)
+{
+    double x = a*a + b*b;
+    double y = c*c + d*d;
+    return hc::precise_math::sqrt(x+y);
+}
 __device__ double pow(double x, double y)
 {
     return hc::precise_math::pow(x, y);
@@ -517,6 +548,31 @@ __device__ double pow(double x, double y)
 __device__ double remainder(double x, double y)
 {
     return hc::precise_math::remainder(x, y);
+}
+__device__ double rhypot(double x, double y)
+{
+    return 1/hc::precise_math::sqrt(x*x + y*y);
+}
+__device__ double rint(double x)
+{
+    return hc::precise_math::round(x);
+}
+__device__ double rnorm3d(double a, double b, double c)
+{
+    return hc::precise_math::rsqrt(a*a + b*b + c*c);
+}
+__device__ double rnorm4d(double a, double b, double c, double d)
+{
+    return hc::precise_math::rsqrt(a*a + b*b + c*c + d*d);
+}
+__device__ double rnorm(int dim, const double* t)
+{
+    double x = 0.0;
+    for(int i=0;i<dim;i++)
+    {
+        x = hc::precise_math::fma(t[i], t[i], x);
+    }
+    return 1/x;
 }
 __device__ double round(double x)
 {
@@ -537,6 +593,16 @@ __device__ unsigned signbit(double x)
 __device__ double sin(double x)
 {
     return hc::precise_math::sin(x);
+}
+__device__ void sincos(double x, double *sptr, double *cptr)
+{
+    *sptr = hc::precise_math::sin(x);
+    *cptr = hc::precise_math::cos(x);
+}
+__device__ void sincospi(double x, double *sptr, double *cptr)
+{
+    *sptr = hc::precise_math::sinpi(x);
+    *cptr = hc::precise_math::cospi(x);
 }
 __device__ double sinh(double x)
 {
