@@ -136,7 +136,10 @@ __device__ float fmodf(float x, float y)
 {
     return hc::precise_math::fmodf(x, y);
 }
-__device__ float frexpf(float x, float y);
+__device__ float frexpf(float x, int *nptr)
+{
+    return hc::precise_math::frexpf(x, nptr);
+}
 __device__ float hypotf(float x, float y)
 {
     return hc::precise_math::hypotf(x, y);
@@ -164,7 +167,10 @@ __device__ float ldexpf(float x, int exp)
 {
     return hc::precise_math::ldexpf(x, exp);
 }
-__device__ float lgammaf(float x);
+__device__ float lgammaf(float x, int *sign)
+{
+    return hc::precise_math::lgammaf(x, sign);
+}
 __device__ long long int llrintf(float x)
 {
     int y = hc::precise_math::roundf(x);
@@ -207,7 +213,10 @@ __device__ long int lroundf(float x)
     long int y = hc::precise_math::roundf(x);
     return y;
 }
-__device__ float modff(float x, float *iptr);
+__device__ float modff(float x, float *iptr)
+{
+    return hc::precise_math::modff(x, iptr);
+}
 __device__ float nanf(const char* tagp)
 {
     return hc::precise_math::nanf((int)*tagp);
@@ -216,7 +225,10 @@ __device__ float nearbyintf(float x)
 {
     return hc::precise_math::nearbyintf(x);
 }
-__device__ float nextafterf(float x, float y);
+__device__ float nextafterf(float x, float y)
+{
+    return hc::precise_math::nextafter(x, y);
+}
 __device__ float norm3df(float a, float b, float c)
 {
      float x = a*a + b*b + c*c;
@@ -250,12 +262,18 @@ __device__ float powf(float x, float y)
 {
     return hc::precise_math::powf(x, y);
 }
-__device__ float rcbtrf(float x);
+__device__ float rcbrtf(float x)
+{
+    return hc::precise_math::rcbrtf(x);
+}
 __device__ float remainderf(float x, float y)
 {
     return hc::precise_math::remainderf(x, y);
 }
-__device__ float remquof(float x, float y, int *quo);
+__device__ float remquof(float x, float y, int *quo)
+{
+    return hc::precise_math::remquof(x, y, quo);
+}
 __device__ float rhypotf(float x, float y)
 {
     return 1/hc::precise_math::hypotf(x, y);
@@ -288,7 +306,10 @@ __device__ float roundf(float x)
 {
     return hc::precise_math::roundf(x);
 }
-__device__ float scalblnf(float x, long int n);
+__device__ float scalblnf(float x, long int n)
+{
+    return hc::precise_math::scalb(x, n);
+}
 __device__ float scalbnf(float x, int n)
 {
     return hc::precise_math::scalbnf(x, n);
@@ -465,6 +486,10 @@ __device__ double fmod(double x, double y)
 {
     return hc::precise_math::fmod(x, y);
 }
+__device__ double frexp(double x, int *y)
+{
+    return hc::precise_math::frexp(x, y);
+}
 __device__ double hypot(double x, double y)
 {
     return hc::precise_math::hypot(x, y);
@@ -488,6 +513,10 @@ __device__ unsigned isnan(double x)
 __device__ double ldexp(double x, int exp)
 {
     return hc::precise_math::ldexp(x, exp);
+}
+__device__ double lgamma(double x, int *sign)
+{
+    return hc::precise_math::lgamma(x, sign);
 }
 __device__ double log(double x)
 {
@@ -529,6 +558,10 @@ __device__ long int lround(double x)
     long int y = hc::precise_math::round(x);
     return y;
 }
+__device__ double modf(double x, double *iptr)
+{
+    return hc::precise_math::modf(x, iptr);
+}
 __device__ double nan(const char *tagp)
 {
     return hc::precise_math::nan((int)*tagp);
@@ -536,6 +569,10 @@ __device__ double nan(const char *tagp)
 __device__ double nearbyint(double x)
 {
     return hc::precise_math::nearbyint(x);
+}
+__device__ double nextafter(double x, double y)
+{
+    return hc::precise_math::nextafter(x, y);
 }
 __device__ double norm3d(double a, double b, double c)
 {
@@ -556,9 +593,17 @@ __device__ double pow(double x, double y)
 {
     return hc::precise_math::pow(x, y);
 }
+__device__ double rcbrt(double x)
+{
+    return hc::precise_math::rcbrt(x);
+}
 __device__ double remainder(double x, double y)
 {
     return hc::precise_math::remainder(x, y);
+}
+__device__ double remquo(double x, double y, int *quo)
+{
+    return hc::precise_math::remquo(x, y, quo);
 }
 __device__ double rhypot(double x, double y)
 {
@@ -592,6 +637,10 @@ __device__ double round(double x)
 __device__ double rsqrt(double x)
 {
     return hc::precise_math::rsqrt(x);
+}
+__device__ double scalbln(double x, long int n)
+{
+    return hc::precise_math::scalb(x, n);
 }
 __device__ double scalbn(double x, int n)
 {
