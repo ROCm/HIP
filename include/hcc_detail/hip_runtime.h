@@ -220,6 +220,7 @@ __device__ double erf(double x);
 __device__ double erfc(double x);
 __device__ double erfcinv(double y);
 __device__ double erfcx(double x);
+__device__ double erfinv(double x);
 __device__ double exp(double x);
 __device__ double exp10(double x);
 __device__ double exp2(double x);
