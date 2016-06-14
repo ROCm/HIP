@@ -2,15 +2,18 @@ cmake_minimum_required(VERSION 2.8.3)
 project(hip)
 
 #############################
-# Setup version information
-#############################
-set(HIP_VERSION_MAJOR "0")
-set(HIP_VERSION_MINOR "86")
-set(HIP_VERSION_PATCH "0")
-
-#############################
 # Configure variables
 #############################
+# Determine HIP_VERSION
+execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/hipcc --short-version
+                OUTPUT_VARIABLE HIP_VERSION
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+string(REPLACE "." ";" VERSION_LIST ${HIP_VERSION})
+list(GET VERSION_LIST 0 HIP_VERSION_MAJOR)
+list(GET VERSION_LIST 1 HIP_VERSION_MINOR)
+list(GET VERSION_LIST 2 HIP_VERSION_PATCH)
+
+
 # Determine HIP_PLATFORM
 if(NOT DEFINED HIP_PLATFORM)
     if(NOT DEFINED ENV{HIP_PLATFORM})
