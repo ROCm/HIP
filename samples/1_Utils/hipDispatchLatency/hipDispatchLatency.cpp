@@ -30,7 +30,7 @@ if(status != hipSuccess){ \
 
 #define LEN 1024*1024
 #define SIZE LEN * sizeof(float)
-#define ITER 10000
+#define ITER 5120
 
 __global__ void One(hipLaunchParm lp, float* Ad){
 }
