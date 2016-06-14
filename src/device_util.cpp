@@ -2023,4 +2023,256 @@ __HIP_DEVICE__ double4 make_double4(double x, double y, double z, double w)
     return d4;
 }
 
+float __hip_host_erfinvf(float x)
+{
+    float ret;
+    int  sign;
+    if (x < -1 || x > 1){
+        return NAN;
+    }
+    if (x == 0){
+        return 0;
+    }
+    if (x > 0){
+        sign = 1;
+    } else {
+        sign = -1;
+        x = -x;
+    }
+    if (x <= 0.7) {
+        float x1 = x * x;
+        float x2 = std::fma(__hip_erfinva3, x1, __hip_erfinva2);
+        float x3 = std::fma(x2, x1, __hip_erfinva1);
+        float x4 = x * std::fma(x3, x1, __hip_erfinva0);
 
+        float r1 = std::fma(__hip_erfinvb4, x1, __hip_erfinvb3);
+        float r2 = std::fma(r1, x1, __hip_erfinvb2);
+        float r3 = std::fma(r2, x1, __hip_erfinvb1);
+        ret = x4 / std::fma(r3, x1, __hip_erfinvb0);
+    } else {
+        float x1 = std::sqrt(-std::log((1 - x) / 2));
+        float x2 = std::fma(__hip_erfinvc3, x1, __hip_erfinvc2);
+        float x3 = std::fma(x2, x1, __hip_erfinvc1);
+        float x4 = std::fma(x3, x1, __hip_erfinvc0);
+
+        float r1 = std::fma(__hip_erfinvd2, x1, __hip_erfinvd1);
+        ret = x4 / std::fma(r1, x1, __hip_erfinvd0);
+    }
+
+    ret = ret * sign;
+    x = x * sign;
+
+    ret -= (std::erf(ret) - x) / (2 / std::sqrt(HIP_PI) * std::exp(-ret * ret));
+    ret -= (std::erf(ret) - x) / (2 / std::sqrt(HIP_PI) * std::exp(-ret * ret));
+
+    return ret;
+
+}
+
+double __hip_host_erfinv(double x)
+{
+    double ret;
+    int  sign;
+    if (x < -1 || x > 1){
+        return NAN;
+    }
+    if (x == 0){
+        return 0;
+    }
+    if (x > 0){
+        sign = 1;
+    } else {
+        sign = -1;
+        x = -x;
+    }
+    if (x <= 0.7) {
+        double x1 = x * x;
+        double x2 = std::fma(__hip_erfinva3, x1, __hip_erfinva2);
+        double x3 = std::fma(x2, x1, __hip_erfinva1);
+        double x4 = x * std::fma(x3, x1, __hip_erfinva0);
+
+        double r1 = std::fma(__hip_erfinvb4, x1, __hip_erfinvb3);
+        double r2 = std::fma(r1, x1, __hip_erfinvb2);
+        double r3 = std::fma(r2, x1, __hip_erfinvb1);
+        ret = x4 / std::fma(r3, x1, __hip_erfinvb0);
+    } else {
+        double x1 = std::sqrt(-std::log((1 - x) / 2));
+        double x2 = std::fma(__hip_erfinvc3, x1, __hip_erfinvc2);
+        double x3 = std::fma(x2, x1, __hip_erfinvc1);
+        double x4 = std::fma(x3, x1, __hip_erfinvc0);
+
+        double r1 = std::fma(__hip_erfinvd2, x1, __hip_erfinvd1);
+        ret = x4 / std::fma(r1, x1, __hip_erfinvd0);
+    }
+
+    ret = ret * sign;
+    x = x * sign;
+
+    ret -= (std::erf(ret) - x) / (2 / std::sqrt(HIP_PI) * std::exp(-ret * ret));
+    ret -= (std::erf(ret) - x) / (2 / std::sqrt(HIP_PI) * std::exp(-ret * ret));
+
+    return ret;
+
+}
+
+float __hip_host_erfcinvf(float y)
+{
+    return __hip_host_erfinvf(1 - y);
+}
+
+double __hip_host_erfcinv(double y)
+{
+    return __hip_host_erfinv(1 - y);
+}
+
+__host__ float erfcinvf(float y)
+{
+    return __hip_host_erfcinvf(y);
+}
+
+__host__ double erfcinv(double y)
+{
+    return __hip_host_erfcinv(y);
+}
+
+__host__ float erfinvf(float x)
+{
+    return __hip_host_erfinvf(x);
+}
+
+__host__ double erfinv(double x)
+{
+    return __hip_host_erfinv(x);
+}
+
+__host__ float normcdff(float t)
+{
+     return (1 - std::erf(-t/std::sqrt(2)))/2;
+}
+
+__host__ double normcdf(double x)
+{
+     return (1 - std::erf(-x/std::sqrt(2)))/2;
+}
+
+__host__ float erfcxf(float x)
+{
+     return std::exp(x*x) * std::erfc(x);
+}
+
+__host__ double erfcx(double x)
+{
+     return std::exp(x*x) * std::erfc(x);
+}
+
+__host__ float rhypotf(float x, float y)
+{
+     return 1 / std::sqrt(x*x + y*y);
+}
+
+__host__ double rhypot(double x, double y)
+{
+    return 1 / std::sqrt(x*x + y*y);
+}
+
+__host__ float rcbrtf(float a)
+{
+    return 1 / std::cbrt(a);
+}
+
+__host__ double rcbrt(double a)
+{
+    return 1 / std::cbrt(a);
+}
+
+__host__ float normf(int dim, const float *a)
+{
+    float val = 0.0f;
+    for(int i=0;i<dim;i++)
+    {
+        val = val + a[i] * a[i];
+    }
+    return val;
+}
+
+__host__ double norm(int dim, const double *a)
+{
+    double val = 0.0;
+    for(int i=0;i<dim;i++)
+    {
+        val = val + a[i] * a[i];
+    }
+    return val;
+}
+
+__host__ float rnormf(int dim, const float *t)
+{
+    float val = 0.0f;
+    for(int i=0;i<dim;i++)
+    {
+        val = val + t[i] * t[i];
+    }
+    return 1 / val;
+}
+
+__host__ double rnorm(int dim, const double *t)
+{
+    double val = 0.0;
+    for(int i=0;i<dim;i++)
+    {
+        val = val + t[i] * t[i];
+    }
+    return 1 / val;
+}
+
+__host__ float rnorm4df(float a, float b, float c, float d)
+{
+    return 1 / std::sqrt(a*a + b*b + c*c + d*d);
+}
+
+__host__ double rnorm4d(double a, double b, double c, double d)
+{
+    return 1 / std::sqrt(a*a + b*b + c*c + d*d);
+}
+
+__host__ float rnorm3df(float a, float b, float c)
+{
+    return 1 / std::sqrt(a*a + b*b + c*c);
+}
+
+__host__ double rnorm3d(double a, double b, double c)
+{
+    return 1 / std::sqrt(a*a + b*b + c*c);
+}
+
+__host__ void sincospif(float x, float *sptr, float *cptr)
+{
+    *sptr = std::sin(HIP_PI*x);
+    *cptr = std::cos(HIP_PI*x);
+}
+
+__host__ void sincospi(double x, double *sptr, double *cptr)
+{
+    *sptr = std::sin(HIP_PI*x);
+    *cptr = std::cos(HIP_PI*x);
+}
+
+__host__ float normcdfinvf(float x)
+{
+    return std::sqrt(2) * erfinv(2*x-1);
+}
+
+__host__ double normcdfinv(double x)
+{
+    return std::sqrt(2) * erfinv(2*x-1);
+}
+
+__host__ float nextafterf(float x, float y)
+{
+    return std::nextafter(x, y);
+}
+
+__host__ double nextafter(double x, double y)
+{
+    return std::nextafter(x, y);
+}
