@@ -24,6 +24,10 @@ print "No Arguments passed, exiting ...\n";
 exit(-1);
 }
 
+$HIP_VERSION_MAJOR = "0";
+$HIP_VERSION_MINOR = "95";
+$HIP_VERSION_PATCH = "0";
+
 $verbose = $ENV{'HIPCC_VERBOSE'};
 $verbose = 0 unless defined $verbose;
 # Verbose: 0x1=commands, 0x2=paths, 0x4=hippc args
@@ -126,7 +130,8 @@ my $needLDFLAGS = 1;   # need to add LDFLAGS to compile step.
 my $hasC = 0;          # options contain a c-style file (NVCC must force recognition as GPU file)
 my $hasCU = 0;         # options contain a cu-style file (HCC must force recognition as GPU file)
 my $needHipHcc = ($HIP_PLATFORM eq 'hcc');      # set if we need to link hip_hcc.o from src tree. (some builds, ie cmake, provide their own)
-
+my $printHipVersion = 0;    # print HIP version
+my $runCmd = 1;
 
 my @options = ();
 my @inputs  = ();
@@ -157,6 +162,13 @@ foreach $arg (@ARGV)
     {
         $HIPCXXFLAGS .= " -stdlib=libstdc++";
         $setStdLib = 1;
+    }
+    if($arg eq '--version') {
+        $printHipVersion = 1;
+    }
+    if($arg eq '--short-version') {
+        $printHipVersion = 1;
+        $runCmd = 0;
     }
 
     if ($arg =~ m/^-/) {
@@ -234,4 +246,12 @@ if ($verbose & 0x1) {
     print "hipcc-cmd: ", $CMD, "\n";
 }
 
-system ("$CMD") and die ();
+if ($printHipVersion) {
+    if ($runCmd) {
+        print "HIP version: "
+    }
+    print $HIP_VERSION_MAJOR, ".", $HIP_VERSION_MINOR, ".", $HIP_VERSION_PATCH, "\n";
+}
+if ($runCmd) {
+    system ("$CMD") and die ();
+}
