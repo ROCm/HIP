@@ -137,6 +137,473 @@ __device__ double __hip_erfinv(double x){
     return ret;
 }
 
+#define __hip_j0a1 57568490574.0
+#define __hip_j0a2 -13362590354.0
+#define __hip_j0a3 651619640.7
+#define __hip_j0a4 -11214424.18
+#define __hip_j0a5 77392.33017
+#define __hip_j0a6 -184.9052456
+
+#define __hip_j0b1 57568490411.0
+#define __hip_j0b2 1029532985.0
+#define __hip_j0b3 9494680.718
+#define __hip_j0b4 59272.64853
+#define __hip_j0b5 267.8532712
+
+#define __hip_j0c 0.785398164
+#define __hip_j0c1 -0.1098628627e-2
+#define __hip_j0c2 0.2734510407e-4
+#define __hip_j0c3 -0.2073370639e-5
+#define __hip_j0c4 0.2093887211e-6
+
+#define __hip_j0d1 -0.1562499995e-1
+#define __hip_j0d2 0.1430488765e-3
+#define __hip_j0d3 0.6911147651e-5
+#define __hip_j0d4 0.7621095161e-6
+#define __hip_j0d5 0.934935152e-7
+
+#define __hip_j0e 0.636619772
+
+__device__ double __hip_j0(double x)
+{
+    double ret, a = hc::precise_math::fabs(x);
+    if (a < 8.0) {
+        double y = x*x;
+        double y1 = __hip_j0a6 * y + __hip_j0a5;
+        double z1 = 1.0 * y + __hip_j0b5;
+
+        double y2 = y1 * y + __hip_j0a4;
+        double z2 = z1 * y + __hip_j0b4;
+
+        double y3 = y2 * y + __hip_j0a3;
+        double z3 = z2 * y + __hip_j0b3;
+
+        double y4 = y3 * y + __hip_j0a2;
+        double z4 = z3 * y + __hip_j0b2;
+
+        double y5 = y4 * y + __hip_j0a1;
+        double z5 = z4 * y + __hip_j0b1;
+
+        ret = y5 / z5;
+
+    }
+    else {
+        double z = 8.0 / a;
+        double y = z*z;
+        double x1 = a - __hip_j0c;
+
+        double y1 = __hip_j0c4 * y + __hip_j0c3;
+        double z1 = __hip_j0d5 * y + __hip_j0d4;
+
+        double y2 = y1 * y + __hip_j0c2;
+        double z2 = z1 * z + __hip_j0d3;
+
+        double y3 = y2 * y + __hip_j0c1;
+        double z3 = z2 * y + __hip_j0d2;
+
+        double y4 = y3 * y + 1.0;
+        double z4 = z3 * y + __hip_j0d1;
+
+        ret = hc::precise_math::sqrt(__hip_j0e / a)*(hc::precise_math::cos(x1) * y4 - z * hc::precise_math::sin(x1) * z4);
+    }
+    return ret;
+}
+
+__device__ float __hip_j0f(float x)
+{
+    float ret, a = hc::precise_math::fabsf(x);
+    if (a < 8.0) {
+        float y = x*x;
+        float y1 = __hip_j0a6 * y + __hip_j0a5;
+        float z1 = 1.0 * y + __hip_j0b5;
+
+        float y2 = y1 * y + __hip_j0a4;
+        float z2 = z1 * y + __hip_j0b4;
+
+        float y3 = y2 * y + __hip_j0a3;
+        float z3 = z2 * y + __hip_j0b3;
+
+        float y4 = y3 * y + __hip_j0a2;
+        float z4 = z3 * y + __hip_j0b2;
+
+        float y5 = y4 * y + __hip_j0a1;
+        float z5 = z4 * y + __hip_j0b1;
+
+        ret = y5 / z5;
+
+    }
+    else {
+        float z = 8.0 / a;
+        float y = z*z;
+        float x1 = a - __hip_j0c;
+
+        float y1 = __hip_j0c4 * y + __hip_j0c3;
+        float z1 = __hip_j0d5 * y + __hip_j0d4;
+
+        float y2 = y1 * y + __hip_j0c2;
+        float z2 = z1 * z + __hip_j0d3;
+
+        float y3 = y2 * y + __hip_j0c1;
+        float z3 = z2 * y + __hip_j0d2;
+
+        float y4 = y3 * y + 1.0;
+        float z4 = z3 * y + __hip_j0d1;
+
+        ret = hc::precise_math::sqrtf(__hip_j0e / a)*(hc::precise_math::cosf(x1) * y4 - z * hc::precise_math::sinf(x1) * z4);
+    }
+    return ret;
+}
+
+#define __hip_j1a1 -30.16036606
+#define __hip_j1a2 15704.48260
+#define __hip_j1a3 -2972611.439
+#define __hip_j1a4 242396853.1
+#define __hip_j1a5 -7895059235.0
+#define __hip_j1a6 72362614232.0
+
+#define __hip_j1b1 376.9991397
+#define __hip_j1b2 99447.43394
+#define __hip_j1b3 18583304.74
+#define __hip_j1b4 2300535178.0
+#define __hip_j1b5 144725228442.0
+
+#define __hip_j1c 2.356194491
+#define __hip_j1c1 -0.240337019e-6
+#define __hip_j1c2 0.2457520174e-5
+#define __hip_j1c3 -0.3516396496e-4
+#define __hip_j1c4 0.183105e-2
+
+#define __hip_j1d1 0.105787412e-6
+#define __hip_j1d2 -0.88228987e-6
+#define __hip_j1d3 0.8449199096e-5
+#define __hip_j1d4 -0.2002690873e-3
+#define __hip_j1d5 0.04687499995
+
+#define __hip_j1e 0.636619772
+
+__device__ double __hip_j1(double x)
+{
+    double ret, a = hc::precise_math::fabs(x);
+    if (a < 8.0) {
+        double y = x*x;
+
+        double y1 = __hip_j1a1 * y + __hip_j1a2;
+        double z1 = 1.0 * y + __hip_j1b1;
+
+        double y2 = y1 * y + __hip_j1a3;
+        double z2 = z1 * y + __hip_j1b2;
+
+        double y3 = y2 * y + __hip_j1a4;
+        double z3 = z2 * y + __hip_j1b3;
+
+        double y4 = y3 * y + __hip_j1a5;
+        double z4 = z3 * y + __hip_j1b4;
+
+        double y5 = y4 * y + __hip_j1a6;
+        double z5 = z4 * y + __hip_j1b5;
+
+        ret = x * y5 / z5;
+
+    }
+    else {
+        double z = 8.0 / a;
+        double y = z*z;
+        double x1 = a - __hip_j1c;
+
+        double y1 = __hip_j1c1 * y + __hip_j1c2;
+        double y2 = y1 * y + __hip_j1c3;
+        double y3 = y2 * y + __hip_j1c4;
+        double y4 = y3 * y + 1.0;
+
+        double z1 = __hip_j1d1 * y + __hip_j1d2;
+        double z2 = z1 * y + __hip_j1d3;
+        double z3 = z2 * y + __hip_j1d4;
+        double z4 = z3 * y + __hip_j1d5;
+
+        ret = hc::precise_math::sqrt(__hip_j1e / a)*(hc::precise_math::cos(x1)*y4 - z*hc::precise_math::sin(x1)*z4);
+        if (x < 0.0) ret = -ret;
+    }
+    return ret;
+}
+
+__device__ float __hip_j1f(float x)
+{
+    double ret, a = hc::precise_math::fabsf(x);
+    if (a < 8.0) {
+        float y = x*x;
+
+        float y1 = __hip_j1a1 * y + __hip_j1a2;
+        float z1 = 1.0 * y + __hip_j1b1;
+
+        float y2 = y1 * y + __hip_j1a3;
+        float z2 = z1 * y + __hip_j1b2;
+
+        float y3 = y2 * y + __hip_j1a4;
+        float z3 = z2 * y + __hip_j1b3;
+
+        float y4 = y3 * y + __hip_j1a5;
+        float z4 = z3 * y + __hip_j1b4;
+
+        float y5 = y4 * y + __hip_j1a6;
+        float z5 = z4 * y + __hip_j1b5;
+
+        ret = x * y5 / z5;
+
+    }
+    else {
+        float z = 8.0 / a;
+        float y = z*z;
+        float x1 = a - __hip_j1c;
+
+        float y1 = __hip_j1c1 * y + __hip_j1c2;
+        float y2 = y1 * y + __hip_j1c3;
+        float y3 = y2 * y + __hip_j1c4;
+        float y4 = y3 * y + 1.0;
+
+        float z1 = __hip_j1d1 * y + __hip_j1d2;
+        float z2 = z1 * y + __hip_j1d3;
+        float z3 = z2 * y + __hip_j1d4;
+        float z4 = z3 * y + __hip_j1d5;
+
+        ret = hc::precise_math::sqrtf(__hip_j1e / a)*(hc::precise_math::cosf(x1)*y4 - z*hc::precise_math::sinf(x1)*z4);
+        if (x < 0.0) ret = -ret;
+    }
+    return ret;
+}
+
+#define __hip_y0a1 228.4622733
+#define __hip_y0a2 -86327.92757
+#define __hip_y0a3 10879881.29
+#define __hip_y0a4 -512359803.6
+#define __hip_y0a5 7062834065.0
+#define __hip_y0a6 -2957821389.0
+
+#define __hip_y0b1 226.1030244
+#define __hip_y0b2 47447.26470
+#define __hip_y0b3 7189466.438
+#define __hip_y0b4 745249964.8
+#define __hip_y0b5 40076544269.0
+
+#define __hip_y0c 0.636619772
+
+#define __hip_y0d 0.785398164
+
+#define __hip_y0e1 0.2093887211e-6
+#define __hip_y0e2 -0.2073370639e-5
+#define __hip_y0e3 0.2734510407e-4
+#define __hip_y0e4 -0.1098628627e-2
+
+
+#define __hip_y0f1 -0.934945152e-7
+#define __hip_y0f2 0.7621095161e-6
+#define __hip_y0f3 -0.6911147651e-5
+#define __hip_y0f4 0.1430488765e-3
+#define __hip_y0f5 -0.1562499995e-1
+
+#define __hip_y1g 0.636619772
+
+__device__ double __hip_y0(double x)
+{
+    double ret;
+
+    if (x < 8.0) {
+        double y = x*x;
+        double y1 = __hip_y0a1 * y + __hip_y0a2;
+        double y2 = y1 * y + __hip_y0a3;
+        double y3 = y2 * y + __hip_y0a4;
+        double y4 = y3 * y + __hip_y0a5;
+        double y5 = y4 * y + __hip_y0a6;
+
+        double z1 = 1.0 * y + __hip_y0b1;
+        double z2 = z1 * y + __hip_y0b2;
+        double z3 = z2 * y + __hip_y0b3;
+        double z4 = z3 * y + __hip_y0b4;
+        double z5 = z4 * y + __hip_y0b5;
+
+
+        ret = (y5 / z5) + __hip_y0c * __hip_j0(x) * hc::precise_math::log(x);
+    }
+    else {
+        double z = 8.0 / x;
+        double y = z*z;
+        double x1 = x - __hip_y0d;
+
+        double y1 = __hip_y0e1 * y + __hip_y0e2;
+        double y2 = y1 * y + __hip_y0e3;
+        double y3 = y2 * y + __hip_y0e4;
+        double y4 = y3 * y + 1.0;
+
+        double z1 = __hip_y0f1 * y + __hip_y0f2;
+        double z2 = z1 * y + __hip_y0f3;
+        double z3 = z2 * y + __hip_y0f4;
+        double z4 = z3 * y + __hip_y0f5;
+
+        ret = hc::precise_math::sqrt(__hip_y1g / x)*(hc::precise_math::sin(x1)*y4 + z * hc::precise_math::cos(x1) * z4);
+    }
+    return ret;
+
+}
+
+
+__device__ float __hip_y0f(float x)
+{
+    float ret;
+
+    if (x < 8.0) {
+        float y = x*x;
+        float y1 = __hip_y0a1 * y + __hip_y0a2;
+        float y2 = y1 * y + __hip_y0a3;
+        float y3 = y2 * y + __hip_y0a4;
+        float y4 = y3 * y + __hip_y0a5;
+        float y5 = y4 * y + __hip_y0a6;
+
+        float z1 = 1.0 * y + __hip_y0b1;
+        float z2 = z1 * y + __hip_y0b2;
+        float z3 = z2 * y + __hip_y0b3;
+        float z4 = z3 * y + __hip_y0b4;
+        float z5 = z4 * y + __hip_y0b5;
+
+
+        ret = (y5 / z5) + __hip_y0c * __hip_j0f(x) * hc::precise_math::logf(x);
+    }
+    else {
+        float z = 8.0 / x;
+        float y = z*z;
+        float x1 = x - __hip_y0d;
+
+        float y1 = __hip_y0e1 * y + __hip_y0e2;
+        float y2 = y1 * y + __hip_y0e3;
+        float y3 = y2 * y + __hip_y0e4;
+        float y4 = y3 * y + 1.0;
+
+        float z1 = __hip_y0f1 * y + __hip_y0f2;
+        float z2 = z1 * y + __hip_y0f3;
+        float z3 = z2 * y + __hip_y0f4;
+        float z4 = z3 * y + __hip_y0f5;
+
+        ret = hc::precise_math::sqrtf(__hip_y1g / x)*(hc::precise_math::sinf(x1)*y4 + z * hc::precise_math::cosf(x1) * z4);
+    }
+    return ret;
+
+}
+
+#define __hip_y1a1 0.8511937935e4
+#define __hip_y1a2 -0.4237922726e7
+#define __hip_y1a3 0.7349264551e9
+#define __hip_y1a4 -0.5153438139e11
+#define __hip_y1a5 0.1275274390e13
+#define __hip_y1a6 -0.4900604943e13
+
+#define __hip_y1b1 0.3549632885e3
+#define __hip_y1b2 0.1020426050e6
+#define __hip_y1b3 0.2245904002e8
+#define __hip_y1b4 0.3733650367e10
+#define __hip_y1b5 0.4244419664e12
+#define __hip_y1b6 0.2499580570e14
+
+#define __hip_y1c 0.636619772
+
+#define __hip_y1d 2.356194491
+
+#define __hip_y1e1 -0.240337019e-6
+#define __hip_y1e2 0.2457520174e-5
+#define __hip_y1e3 -0.3516396496e-4
+#define __hip_y1e4 0.183105e-2
+
+#define __hip_y1f1 0.105787412e-6
+#define __hip_y1f2 -0.88228987e-6
+#define __hip_y1f3 0.8449199096e-5
+#define __hip_y1f4 -0.2002690873e-3
+#define __hip_y1f5 0.04687499995
+
+#define __hip_y1g 0.636619772
+
+__device__ double __hip_y1(double x)
+{
+    double ret;
+
+    if (x < 8.0) {
+        double y = x*x;
+
+        double y1 = __hip_y1a1 * y + __hip_y1a2;
+        double y2 = y1 * y + __hip_y1a3;
+        double y3 = y2 * y + __hip_y1a4;
+        double y4 = y3 * y + __hip_y1a5;
+        double y5 = y4 * y + __hip_y1a6;
+        double y6 = x * y5;
+
+        double z1 = __hip_y1b1 + y;
+        double z2 = z1 * y + __hip_y1b2;
+        double z3 = z2 * y + __hip_y1b3;
+        double z4 = z3 * y + __hip_y1b4;
+        double z5 = z4 * y + __hip_y1b5;
+        double z6 = z5 * y + __hip_y1b6;
+
+        ret = (y6 / z6) + __hip_y1c * (__hip_j1(x) * hc::precise_math::log(x) - 1.0 / x);
+    }
+    else {
+        double z = 8.0 / x;
+        double y = z*z;
+        double x1 = x - __hip_y1d;
+
+        double y1 = __hip_y1e1 * y + __hip_y1e2;
+        double y2 = y1 * y + __hip_y1e3;
+        double y3 = y2 * y + __hip_y1e4;
+        double y4 = y3 * y + 1.0;
+
+        double z1 = __hip_y1f1 * y + __hip_y1f2;
+        double z2 = z1 * y + __hip_y1f3;
+        double z3 = z2 * y + __hip_y1f4;
+        double z4 = z3 * y + __hip_y1f5;
+
+        ret = hc::precise_math::sqrt(__hip_y1g / x)*(hc::precise_math::sin(x1)*y4 + z*hc::precise_math::cos(x1)*z4);
+    }
+    return ret;
+}
+
+__device__ float __hip_y1f(float x)
+{
+    float ret;
+
+    if (x < 8.0) {
+        float y = x*x;
+
+        float y1 = __hip_y1a1 * y + __hip_y1a2;
+        float y2 = y1 * y + __hip_y1a3;
+        float y3 = y2 * y + __hip_y1a4;
+        float y4 = y3 * y + __hip_y1a5;
+        float y5 = y4 * y + __hip_y1a6;
+        float y6 = x * y5;
+
+        float z1 = __hip_y1b1 + y;
+        float z2 = z1 * y + __hip_y1b2;
+        float z3 = z2 * y + __hip_y1b3;
+        float z4 = z3 * y + __hip_y1b4;
+        float z5 = z4 * y + __hip_y1b5;
+        float z6 = z5 * y + __hip_y1b6;
+
+        ret = (y6 / z6) + __hip_y1c * (__hip_j1f(x) * hc::precise_math::logf(x) - 1.0 / x);
+    }
+    else {
+        float z = 8.0 / x;
+        float y = z*z;
+        float x1 = x - __hip_y1d;
+
+        float y1 = __hip_y1e1 * y + __hip_y1e2;
+        float y2 = y1 * y + __hip_y1e3;
+        float y3 = y2 * y + __hip_y1e4;
+        float y4 = y3 * y + 1.0;
+
+        float z1 = __hip_y1f1 * y + __hip_y1f2;
+        float z2 = z1 * y + __hip_y1f3;
+        float z3 = z2 * y + __hip_y1f4;
+        float z4 = z3 * y + __hip_y1f5;
+
+        ret = hc::precise_math::sqrtf(__hip_y1g / x)*(hc::precise_math::sinf(x1)*y4 + z*hc::precise_math::cosf(x1)*z4);
+    }
+    return ret;
+}
+
 
 __device__ float acosf(float x)
 {
