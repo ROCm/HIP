@@ -27,6 +27,8 @@ THE SOFTWARE.
 using namespace hc::precise_math;
 #endif
 
+#define HIP_SQRT_2 1.41421356237
+
 #define __hip_erfinva3 -0.140543331
 #define __hip_erfinva2 0.914624893
 #define __hip_erfinva1 -1.645349621
@@ -66,22 +68,22 @@ __device__ float __hip_erfinvf(float x){
     }
     if (x <= 0.7) {
         float x1 = x * x;
-        float x2 = hc::precise_math::fmaf(__hip_erfinva3, x1, __hip_erfinva2);
-        float x3 = hc::precise_math::fmaf(x2, x1, __hip_erfinva1);
-        float x4 = x * hc::precise_math::fmaf(x3, x1, __hip_erfinva0);
+        float x2 = __hip_erfinva3 * x1 + __hip_erfinva2;
+        float x3 = x2 * x1 + __hip_erfinva1;
+        float x4 = x * (x3 * x1 + __hip_erfinva0);
 
-        float r1 = hc::precise_math::fmaf(__hip_erfinvb4, x1, __hip_erfinvb3);
-        float r2 = hc::precise_math::fmaf(r1, x1, __hip_erfinvb2);
-        float r3 = hc::precise_math::fmaf(r2, x1, __hip_erfinvb1);
-        ret = x4 / hc::precise_math::fmaf(r3, x1, __hip_erfinvb0);
+        float r1 = __hip_erfinvb4 * x1 + __hip_erfinvb3;
+        float r2 = r1 * x1 + __hip_erfinvb2;
+        float r3 = r2 * x1 + __hip_erfinvb1;
+        ret = x4 / (r3 * x1 + __hip_erfinvb0);
     } else {
         float x1 = hc::precise_math::sqrtf(-hc::precise_math::logf((1 - x) / 2));
-        float x2 = hc::precise_math::fmaf(__hip_erfinvc3, x1, __hip_erfinvc2);
-        float x3 = hc::precise_math::fmaf(x2, x1, __hip_erfinvc1);
-        float x4 = hc::precise_math::fmaf(x3, x1, __hip_erfinvc0);
+        float x2 = __hip_erfinvc3 * x1 + __hip_erfinvc2;
+        float x3 = x2 * x1 + __hip_erfinvc1;
+        float x4 = x3 * x1 + __hip_erfinvc0;
 
-        float r1 = hc::precise_math::fmaf(__hip_erfinvd2, x1, __hip_erfinvd1);
-        ret = x4 / hc::precise_math::fmaf(r1, x1, __hip_erfinvd0);
+        float r1 = __hip_erfinvd2 * x1 + __hip_erfinvd1;
+        ret = x4 / (r1 * x1 + __hip_erfinvd0);
     }
 
     ret = ret * sign;
@@ -110,22 +112,22 @@ __device__ double __hip_erfinv(double x){
     }
     if (x <= 0.7) {
         double x1 = x * x;
-        double x2 = hc::precise_math::fma(__hip_erfinva3, x1, __hip_erfinva2);
-        double x3 = hc::precise_math::fma(x2, x1, __hip_erfinva1);
-        double x4 = x * hc::precise_math::fma(x3, x1, __hip_erfinva0);
+        double x2 = __hip_erfinva3 * x1 + __hip_erfinva2;
+        double x3 = x2 * x1 + __hip_erfinva1;
+        double x4 = x * (x3 * x1 + __hip_erfinva0);
 
-        double r1 = hc::precise_math::fma(__hip_erfinvb4, x1, __hip_erfinvb3);
-        double r2 = hc::precise_math::fma(r1, x1, __hip_erfinvb2);
-        double r3 = hc::precise_math::fma(r2, x1, __hip_erfinvb1);
-        ret = x4 / hc::precise_math::fma(r3, x1, __hip_erfinvb0);
+        double r1 = __hip_erfinvb4 * x1 + __hip_erfinvb3;
+        double r2 = r1 * x1 + __hip_erfinvb2;
+        double r3 = r2 * x1 + __hip_erfinvb1;
+        ret = x4 / (r3 * x1 + __hip_erfinvb0);
     } else {
         double x1 = hc::precise_math::sqrt(-hc::precise_math::log((1 - x) / 2));
-        double x2 = hc::precise_math::fma(__hip_erfinvc3, x1, __hip_erfinvc2);
-        double x3 = hc::precise_math::fma(x2, x1, __hip_erfinvc1);
-        double x4 = hc::precise_math::fma(x3, x1, __hip_erfinvc0);
+        double x2 = __hip_erfinvc3 * x1 + __hip_erfinvc2;
+        double x3 = x2 * x1 + __hip_erfinvc1;
+        double x4 = x3 * x1 + __hip_erfinvc0;
 
-        double r1 = hc::precise_math::fma(__hip_erfinvd2, x1, __hip_erfinvd1);
-        ret = x4 / hc::precise_math::fma(r1, x1, __hip_erfinvd0);
+        double r1 = __hip_erfinvd2 * x1 + __hip_erfinvd1;
+        ret = x4 / (r1 * x1 + __hip_erfinvd0);
     }
 
     ret = ret * sign;
@@ -659,8 +661,14 @@ __device__ float erfcf(float x)
 {
     return hc::precise_math::erfcf(x);
 }
-__device__ float erfcinvf(float y);
-__device__ float erfcxf(float x);
+__device__ float erfcinvf(float y)
+{
+    return __hip_erfinvf(1 - y); 
+}
+__device__ float erfcxf(float x)
+{
+    return hc::precise_math::expf(x*x)*hc::precise_math::erfcf(x);
+}
 __device__ float erff(float x)
 {
     return hc::precise_math::erff(x);
@@ -741,8 +749,14 @@ __device__ unsigned isnan(float a)
 {
     return hc::precise_math::isnan(a);
 }
-__device__ float j0f(float x);
-__device__ float j1f(float x);
+__device__ float j0f(float x)
+{
+    return __hip_j0f(x);
+}
+__device__ float j1f(float x)
+{
+    return __hip_j1f(x);
+}
 __device__ float jnf(int n, float x);
 __device__ float ldexpf(float x, int exp)
 {
@@ -821,15 +835,15 @@ __device__ float norm4df(float a, float b, float c, float d)
      float y = c*c + d*d;
      return hc::precise_math::sqrtf(x+y);
 }
-/*
-The below conversion seems easy, takes a
-full page of integral calculus to deduce the following equation
-*/
+
 __device__ float normcdff(float y)
 {
      return ((hc::precise_math::erff(y)/1.41421356237) + 1)/2;
 }
-__device__ float normcdfinvf(float y);
+__device__ float normcdfinvf(float y)
+{
+     return HIP_SQRT_2 * __hip_erfinvf(2*y-1);
+}
 __device__ float normf(int dim, const float *a)
 {
     float x = 0.0f;
@@ -933,8 +947,14 @@ __device__ float truncf(float x)
 {
     return hc::precise_math::truncf(x);
 }
-__device__ float y0f(float x);
-__device__ float y1f(float x);
+__device__ float y0f(float x)
+{
+    return __hip_y0f(x);
+}
+__device__ float y1f(float x)
+{
+    return __hip_y1f(x);
+}
 __device__ float ynf(int n, float x);
 
 
@@ -966,7 +986,6 @@ __device__ double acos(double x)
 {
     return hc::precise_math::acos(x);
 }
-
 __device__ double acosh(double x)
 {
     return hc::precise_math::acosh(x);
@@ -1015,6 +1034,8 @@ __device__ double cospi(double x)
 {
     return hc::precise_math::cospi(x);
 }
+__device__ double cyl_bessel_i0(double x);
+__device__ double cyl_bessel_i1(double x);
 __device__ double erf(double x)
 {
     return hc::precise_math::erf(x);
@@ -1022,6 +1043,14 @@ __device__ double erf(double x)
 __device__ double erfc(double x)
 {
     return hc::precise_math::erfc(x);
+}
+__device__ double erfcinv(double x)
+{
+    return __hip_erfinv(1 - x);
+}
+__device__ double erfcx(double x)
+{
+    return hc::precise_math::exp(x*x)*hc::precise_math::erf(x);
 }
 __device__ double erfinv(double x)
 {
@@ -1095,6 +1124,15 @@ __device__ unsigned isnan(double x)
 {
     return hc::precise_math::isnan(x);
 }
+__device__ double j0(double x)
+{
+    return __hip_j0(x);
+}
+__device__ double j1(double x)
+{
+    return __hip_j1(x);
+}
+__device__ double jn(double x);
 __device__ double ldexp(double x, int exp)
 {
     return hc::precise_math::ldexp(x, exp);
@@ -1102,10 +1140,6 @@ __device__ double ldexp(double x, int exp)
 __device__ double lgamma(double x, int *sign)
 {
     return hc::precise_math::lgamma(x, sign);
-}
-__device__ double log(double x)
-{
-    return hc::precise_math::log(x);
 }
 __device__ long long int llrint(double x)
 {
@@ -1116,6 +1150,10 @@ __device__ long long int llround(double x)
 {
     long long int y = hc::precise_math::round(x);
     return y;
+}
+__device__ double log(double x)
+{
+    return hc::precise_math::log(x);
 }
 __device__ double log10(double x)
 {
@@ -1172,7 +1210,7 @@ __device__ double norm4d(double a, double b, double c, double d)
 }
 __device__ double normcdf(float y)
 {
-     return ((hc::precise_math::erf(y)/1.41421356237) + 1)/2;
+     return ((hc::precise_math::erf(y)/HIP_SQRT_2) + 1)/2;
 }
 __device__ double pow(double x, double y)
 {
@@ -1277,7 +1315,15 @@ __device__ double trunc(double x)
 {
     return hc::precise_math::trunc(x);
 }
-
+__device__ double y0(double x)
+{
+    return __hip_y0(x);
+}
+__device__ double y1(double x)
+{
+    return __hip_y1(x);
+}
+__device__ double yn(int n, double x);
 
 const int warpSize = 64;
 
@@ -2123,6 +2169,11 @@ float __hip_host_erfcinvf(float y)
 double __hip_host_erfcinv(double y)
 {
     return __hip_host_erfinv(1 - y);
+}
+
+__host__ float modff(float x, float *iptr)
+{
+    return std::modf(x, iptr);
 }
 
 __host__ float erfcinvf(float y)
