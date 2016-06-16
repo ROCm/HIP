@@ -88,6 +88,7 @@ int main(int argc, char *argv[])
 
     hipLaunchKernel(myKern, dim3(blocks), dim3(p_blockSize), 0, 0, C_d, A_d, N, 0);
 
+#ifdef __HIP_PLATFORM_NVCC__
     cudaFuncAttributes attrib;
     cudaFuncGetAttributes (&attrib, myKern);
     printf ("binaryVersion = %d\n", attrib.binaryVersion);
@@ -98,6 +99,7 @@ int main(int argc, char *argv[])
     printf ("numRegs = %d\n", attrib.numRegs);
     printf ("ptxVersion = %d\n", attrib.ptxVersion);
     printf ("sharedSizeBytes = %zud\n", attrib.sharedSizeBytes);
+#endif
 
     HIPCHECK ( hipDeviceSynchronize() );
 
