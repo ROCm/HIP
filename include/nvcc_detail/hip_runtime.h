@@ -35,9 +35,6 @@ kernelName<<<numblocks,numthreads,memperblock,streamId>>>(0, __VA_ARGS__);\
 } while(0)
 
 
-#define KERNELBEGIN
-#define KERNELEND
-
 #define hipReadModeElementType cudaReadModeElementType
 
 #ifdef __CUDA_ARCH__
