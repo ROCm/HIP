@@ -2,7 +2,9 @@ cmake_minimum_required (VERSION 2.6)
 project (HIP_Unit_Tests)
 include(CTest)
 
-include_directories( ${PROJECT_SOURCE_DIR}/include )
+
+#include_directories( ${PROJECT_SOURCE_DIR}/include )
+set (HIPTEST_SOURCE_DIR ${PROJECT_SOURCE_DIR} )
 
 # The version number.
 set (HIP_Unit_Test_VERSION_MAJOR 1)
@@ -22,7 +24,7 @@ endif()
 
 set(HIP_PATH $ENV{HIP_PATH})
 if (NOT DEFINED HIP_PATH)
-	set (HIP_PATH ../..)
+    get_filename_component (HIP_PATH ../.. ABSOLUTE)
 endif()
 
 execute_process(COMMAND ${HIP_PATH}/bin/hipconfig --platform OUTPUT_VARIABLE HIP_PLATFORM)
@@ -105,14 +107,14 @@ macro (make_hip_executable_libcpp exe cpp)
     endif()
 endmacro()
 
-macro (make_named_test exe testname )
+function (make_named_test exe testname )
   add_test (NAME ${testname}
       COMMAND ${PROJECT_BINARY_DIR}/${exe} ${ARGN}
             )
   set_tests_properties (${testname}
       PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
     )
-endmacro()
+endfunction()
 
 macro (make_test exe )
   string (REPLACE " " "" smush_args ${ARGN})
@@ -263,3 +265,6 @@ endif()
 make_hipify_test(specialFunc.cu )
 
 make_test(hipDynamicShared " ")
+
+# Add subdirs here:
+add_subdirectory(launch_bounds)
