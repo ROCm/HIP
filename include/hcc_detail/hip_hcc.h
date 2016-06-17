@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "hip/hcc_detail/staging_buffer.h"
 
 
-#if defined(__HCC__) && (__hcc_workweek__ < 16155)
+#if defined(__HCC__) && (__hcc_workweek__ < 16186)
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
@@ -37,11 +37,7 @@ THE SOFTWARE.
 // Compile peer-to-peer support.
 // >= 2 : use HCC hc:accelerator::get_is_peer
 // >= 3 : use hc::am_memtracker_update_peers(...)
-#define USE_PEER_TO_PEER 2
-
-
-// Use new am_memory_host_lock APIs:
-#define USE_HCC_LOCK_API 1
+#define USE_PEER_TO_PEER 3
 
 
 //---

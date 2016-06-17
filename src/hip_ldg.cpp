@@ -20,7 +20,6 @@ THE SOFTWARE.
 #include <hc.hpp>
 #include"hcc_detail/hip_ldg.h"
 
-#if __hcc_workweek__ >= 16164
 __device__ char                 __ldg(const char* ptr)
 {
     return ptr[0];
@@ -167,6 +166,5 @@ __device__ double2              __ldg(const double2* ptr)
     return ptr[0];
 }
 
-#endif
 
 
