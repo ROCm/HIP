@@ -8,6 +8,18 @@ We have attempted to document known bugs and limitations - in particular the [HI
 Stay tuned - the work for many of these features is already in-flight.
 
 ===================================================================================================
+Release:0.95.00
+Date: 2016.06.xx
+-Support dynamic shared memory allocations
+-Min HCC compiler version is > 16186.
+-Expanded math functions (device and host).  Document unsupported functions.
+-Initial support for hipBlas headers.
+-hipFree with null pointer initializes runtime and returns success.
+-Improve error code reporting on nvcc.
+-add hipPeekAtError for nvcc..
+===================================================================================================
+
+===================================================================================================
 Release:0.86.00
 Date: 2016.06.06
 - Add clang-hipify : clang-based hipify tool.  Improved parsing of source code, and automates 
