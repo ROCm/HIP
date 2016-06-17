@@ -22,6 +22,7 @@ THE SOFTWARE.
 // Collection of code to make sure that various features in the hip kernel language compile.
 
 #include <hip_runtime.h>
+#include <test_common.h>
 
 #ifdef __HCC__
 #include <amp.h>
@@ -125,4 +126,5 @@ vectorADD(const hipLaunchParm lp,
 
 int main() {
     printf ("Hello world\n");
+    passed();
 }
