@@ -213,7 +213,6 @@ bool dataTypesRun2(){
   HIP_ASSERT(hipMalloc((void**)&deviceB, NUM * sizeof(T)));
 
   HIP_ASSERT(hipMemcpy(deviceB, hostB, NUM*sizeof(T), hipMemcpyHostToDevice));
-
   hipLaunchKernel(vectoradd_float,
                   dim3(WIDTH/THREADS_PER_BLOCK_X, HEIGHT/THREADS_PER_BLOCK_Y),
                   dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
@@ -227,7 +226,7 @@ bool dataTypesRun2(){
   // verify the results
   errors = 0;
   for (i = 0; i < NUM; i++) {
-if (hostA[i].x != (hostB[i].x) && hostA[i].y != (hostB[i].y)) {
+    if (hostA[i].x != (hostB[i].x) && hostA[i].y != (hostB[i].y)) {
       errors++;
     }
   }
@@ -235,7 +234,7 @@ if (hostA[i].x != (hostB[i].x) && hostA[i].y != (hostB[i].y)) {
     std::cout << "FAILED\n"<<std::endl;
     ret = false;
   } else {
-      ret = true;
+    ret = true;
   }
 
   HIP_ASSERT(hipFree(deviceA));
@@ -315,6 +314,7 @@ int main() {
   cout << " System minor " << devProp.minor << endl;
   cout << " System major " << devProp.major << endl;
   cout << " agent prop name " << devProp.name << endl;
+
     int errors;
 
     errors =    dataTypesRun<char,char>() &
@@ -339,6 +339,7 @@ int main() {
         return -1;
     }
 
+#if 1
     errors =    dataTypesRun2<int2,int>() &
 		dataTypesRun2<short2,short>() &
 		dataTypesRun2<ushort2,unsigned short>() &
@@ -355,8 +356,10 @@ int main() {
         std::cout<<"Failed two element vector data types"<<std::endl;
         return -1;
     }
+#endif
 
 
+#if 1
 
     errors =    dataTypesRun4<int4,int>() &
                 dataTypesRun4<char4,signed char>() &
@@ -372,6 +375,7 @@ int main() {
         std::cout<<"Failed four element vector data types"<<std::endl;
         return -1;
     }
+#endif
 
 	std::cout<<"ldg test PASSED \n"<<std::endl;
 
