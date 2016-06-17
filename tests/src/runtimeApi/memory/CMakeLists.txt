@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 2.6)
 
-project (runtime_api)
+project (runtimeApi/memory)
 
 include_directories( ${HIPTEST_SOURCE_DIR} )
 
