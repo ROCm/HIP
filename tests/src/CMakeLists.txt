@@ -1,4 +1,13 @@
 cmake_minimum_required (VERSION 2.6)
+
+# Must set CMAKE_CXX_COMPILER before any project commands to appease CMAKE
+set(HIP_PATH $ENV{HIP_PATH})
+if (NOT DEFINED HIP_PATH)
+    get_filename_component (HIP_PATH ../.. ABSOLUTE)
+endif()
+set (HIPCC ${HIP_PATH}/bin/hipcc)
+set (CMAKE_CXX_COMPILER ${HIPCC})
+
 project (HIP_Unit_Tests)
 include(CTest)
 
@@ -22,10 +31,6 @@ if(NOT DEFINED HIP_BUILD_LOCAL)
     endif()
 endif()
 
-set(HIP_PATH $ENV{HIP_PATH})
-if (NOT DEFINED HIP_PATH)
-    get_filename_component (HIP_PATH ../.. ABSOLUTE)
-endif()
 
 execute_process(COMMAND ${HIP_PATH}/bin/hipconfig --platform OUTPUT_VARIABLE HIP_PLATFORM)
 
@@ -77,8 +82,6 @@ else()
 	MESSAGE (FATAL_ERROR "UNKNOWN HIP_PLATFORM=" ${HIP_PLATFORM})
 endif()
 
-set (HIPCC ${HIP_PATH}/bin/hipcc)
-set (CMAKE_CXX_COMPILER ${HIPCC})
 
 
 add_library(test_common OBJECT test_common.cpp )
@@ -199,7 +202,7 @@ make_hip_executable (hipPeerToPeer_simple hipPeerToPeer_simple.cpp)
 make_hip_executable (hipMemcpyAll hipMemcpyAll.cpp)
 make_hip_executable (hipMultiThreadDevice hipMultiThreadDevice.cpp) 
 make_hip_executable (hipTestMemcpyPin hipTestMemcpyPin.cpp)
-make_hip_executable (hipDynamicShared hipDynamicShared.cpp)
+#make_hip_executable (hipDynamicShared hipDynamicShared.cpp)
 make_hip_executable (hipTestDevice hipTestDevice.cpp)
 make_hip_executable (hipTestDeviceDouble hipTestDeviceDouble.cpp)
 
