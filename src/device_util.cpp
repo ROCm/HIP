@@ -1254,6 +1254,10 @@ __device__ double fdim(double x, double y)
 {
     return hc::precise_math::fdim(x, y);
 }
+__device__ double fdivide(double x, double y)
+{
+    return x/y;
+}
 __device__ double floor(double x)
 {
     return hc::precise_math::floor(x);
@@ -2884,6 +2888,11 @@ __host__ double erfinv(double x)
     return __hip_host_erfinv(x);
 }
 
+__host__ double fdivide(double x, double y)
+{
+    return x/y;
+}
+
 __host__ float normcdff(float t)
 {
      return (1 - std::erf(-t/std::sqrt(2)))/2;
@@ -2951,7 +2960,7 @@ __host__ float rnormf(int dim, const float *t)
     {
         val = val + t[i] * t[i];
     }
-    return 1 / val;
+    return 1 / std::sqrt(val);
 }
 
 __host__ double rnorm(int dim, const double *t)
@@ -2961,7 +2970,7 @@ __host__ double rnorm(int dim, const double *t)
     {
         val = val + t[i] * t[i];
     }
-    return 1 / val;
+    return 1 / std::sqrt(val);
 }
 
 __host__ float rnorm4df(float a, float b, float c, float d)
@@ -3014,4 +3023,24 @@ __host__ float nextafterf(float x, float y)
 __host__ double nextafter(double x, double y)
 {
     return std::nextafter(x, y);
+}
+
+__host__ float norm3df(float a, float b, float c)
+{
+    return std::sqrt(a*a + b*b + c*c);
+}
+
+__host__ float norm4df(float a, float b, float c, float d)
+{
+    return std::sqrt(a*a + b*b + c*c + d*d);
+}
+
+__host__ double norm3d(double a, double b, double c)
+{
+    return std::sqrt(a*a + b*b + c*c);
+}
+
+__host__ double norm4d(double a, double b, double c, double d)
+{
+    return std::sqrt(a*a + b*b + c*c + d*d);
 }
