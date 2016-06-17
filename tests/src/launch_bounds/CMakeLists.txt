@@ -1,5 +1,4 @@
 cmake_minimum_required (VERSION 2.6)
-project ( ${PROJECT_SOURCE_DIR}/launch_bounds)
 
 include_directories( ${HIPTEST_SOURCE_DIR} )
 
