@@ -529,7 +529,10 @@ __device__ float __dsqrt_rz(double x);
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
 
 #ifdef __HCC_CPP__
-hipStream_t ihipPreLaunchKernel(hipStream_t stream, grid_launch_parm *lp);
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp);
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm *lp);
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm *lp);
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm *lp);
 void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp);
 
 // TODO - move to common header file.
@@ -540,14 +543,8 @@ void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp);
 #define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...) \
 do {\
   grid_launch_parm lp;\
-  lp.gridDim.x = _numBlocks3D.x; \
-  lp.gridDim.y = _numBlocks3D.y; \
-  lp.gridDim.z = _numBlocks3D.z; \
-  lp.groupDim.x = _blockDim3D.x; \
-  lp.groupDim.y = _blockDim3D.y; \
-  lp.groupDim.z = _blockDim3D.z; \
   lp.groupMemBytes = _groupMemBytes; \
-  hipStream_t trueStream = (ihipPreLaunchKernel(_stream, &lp)); \
+  hipStream_t trueStream = (ihipPreLaunchKernel(_stream, _numBlocks3D, _blockDim3D, &lp)); \
     if (HIP_TRACE_API) {\
         fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d stream=%p\n" KNRM, \
                 #_kernelName, lp.gridDim.x, lp.gridDim.y, lp.gridDim.z, lp.groupDim.x, lp.groupDim.y, lp.groupDim.z, lp.groupMemBytes, (void*)(_stream));\

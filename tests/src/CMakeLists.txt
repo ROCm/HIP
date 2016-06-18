@@ -178,10 +178,11 @@ build_hip_executable (hipFuncDeviceSynchronize hipFuncDeviceSynchronize.cpp)
 build_hip_executable (hipPeerToPeer_simple hipPeerToPeer_simple.cpp)
 build_hip_executable (hipTestMemcpyPin hipTestMemcpyPin.cpp)
 #build_hip_executable (hipDynamicShared hipDynamicShared.cpp)
-
+build_hip_executable (hipLaunchParm hipLaunchParm.cpp)
 
 make_test(hipEventRecord --iterations 10)
 make_test(hipEnvVarDriver " " )
+make_test(hipLaunchParm " ")
 #TODO -reenable
 #make_test(hipPointerAttrib " " )
 
