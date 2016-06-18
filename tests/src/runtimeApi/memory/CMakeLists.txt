@@ -25,7 +25,7 @@ make_named_test(hipMemcpy_simple "hipMemcpyAsync-simple" --async)
 build_hip_executable (hipMemoryAllocate hipMemoryAllocate.cpp)
 
 build_hip_executable (hipMemcpyAll hipMemcpyAll.cpp)
-make_test(hipMemcpyAll " ")
+#make_test(hipMemcpyAll " ")
 
 # Debug synchronization, then enable.
 make_test(hipMemoryAllocate " ")
