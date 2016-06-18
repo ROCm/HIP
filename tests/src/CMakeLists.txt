@@ -210,7 +210,7 @@ endif()
 
 make_hipify_test(specialFunc.cu )
 
-make_test(hipDynamicShared " ")
+#make_test(hipDynamicShared " ")
 
 # Add subdirs here:
 add_subdirectory(deviceLib)
