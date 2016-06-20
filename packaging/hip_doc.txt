@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(hip_doc)
 
-install(DIRECTORY @hip_SOURCE_DIR@/docs/RuntimeAPI/html DESTINATION docs)
+add_custom_target(build_doxygen ALL
+                  COMMAND HIP_PATH=@hip_SOURCE_DIR@ doxygen @hip_SOURCE_DIR@/docs/doxygen-input/doxy.cfg)
+install(DIRECTORY RuntimeAPI/html DESTINATION docs)
 
 #############################
 # Packaging steps
