@@ -1,13 +1,5 @@
 cmake_minimum_required (VERSION 2.6)
 
-# Must set CMAKE_CXX_COMPILER before any project commands to appease CMAKE
-set(HIP_PATH $ENV{HIP_PATH})
-if (NOT DEFINED HIP_PATH)
-    get_filename_component (HIP_PATH ../.. ABSOLUTE)
-endif()
-set (HIPCC ${HIP_PATH}/bin/hipcc)
-set (CMAKE_CXX_COMPILER ${HIPCC})
-
 message (CMAKE_CXX_COMPILER = ${CMAKE_CXX_COMPILER} )
 
 project (HIP_Unit_Tests)
@@ -33,6 +25,10 @@ if(NOT DEFINED HIP_BUILD_LOCAL)
     endif()
 endif()
 
+set(HIP_PATH $ENV{HIP_PATH})
+if (NOT DEFINED HIP_PATH)
+    get_filename_component (HIP_PATH ../.. ABSOLUTE)
+endif()
 
 execute_process(COMMAND ${HIP_PATH}/bin/hipconfig --platform OUTPUT_VARIABLE HIP_PLATFORM)
 
@@ -85,6 +81,8 @@ else()
 endif()
 
 
+set (HIPCC ${HIP_PATH}/bin/hipcc)
+set (CMAKE_CXX_COMPILER ${HIPCC} CACHE FILEPATH "CXX Compiler" FORCE)
 
 add_library(test_common OBJECT test_common.cpp )
 
