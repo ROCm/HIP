@@ -38,8 +38,6 @@ THE SOFTWARE.
 #include <stddef.h>
 
 
-// Use field names for grid_launch 2.0 structure:
-#define USE_GRID_LAUNCH_20 0
 
 
 #define CUDA_SUCCESS hipSuccess
@@ -50,6 +48,16 @@ THE SOFTWARE.
 // Remainder of this file only compiles with HCC
 #ifdef __HCC__
 #include <grid_launch.h>
+
+#if defined (GRID_LAUNCH_VERSION) and (GRID_LAUNCH_VERSION >= 20) 
+// Use field names for grid_launch 2.0 structure, if HCC supports GL 2.0.
+#define USE_GRID_LAUNCH_20 1
+#else
+#define USE_GRID_LAUNCH_20 0
+#endif
+
+
+
 extern int HIP_TRACE_API;
 
 //TODO-HCC-GL - change this to typedef.
@@ -529,7 +537,7 @@ do {\
   hipStream_t trueStream = (ihipPreLaunchKernel(_stream, _numBlocks3D, _blockDim3D, &lp)); \
     if (HIP_TRACE_API) {\
         fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d stream=%p\n" KNRM, \
-                #_kernelName, lp.grid_dim.x, lp.grid_dim.y, lp.grid_dim.z, lp.group_dim.x, lp.group_dim.y, lp.group_dim.z, lp.groupMemBytes, (void*)(_stream));\
+                #_kernelName, lp.grid_dim.x, lp.grid_dim.y, lp.grid_dim.z, lp.group_dim.x, lp.group_dim.y, lp.group_dim.z, lp.dynamic_group_mem_bytes, (void*)(_stream));\
     }\
   _kernelName (lp, ##__VA_ARGS__);\
   ihipPostLaunchKernel(trueStream, lp);\
@@ -545,7 +553,7 @@ do {\
                 #_kernelName, lp.gridDim.x, lp.gridDim.y, lp.gridDim.z, lp.groupDim.x, lp.groupDim.y, lp.groupDim.z, lp.groupMemBytes, (void*)(_stream));\
     }\
   _kernelName (lp, ##__VA_ARGS__);\
-  ihipPostLaunchKernel(trueStream, cf);\
+  ihipPostLaunchKernel(trueStream, lp);\
 } while(0)
 
 #endif
