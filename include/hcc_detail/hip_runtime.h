@@ -549,7 +549,7 @@ do {\
         fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d stream=%p\n" KNRM, \
                 #_kernelName, lp.gridDim.x, lp.gridDim.y, lp.gridDim.z, lp.groupDim.x, lp.groupDim.y, lp.groupDim.z, lp.groupMemBytes, (void*)(_stream));\
     }\
-  _kernelName (lp, __VA_ARGS__);\
+  _kernelName (lp, ##__VA_ARGS__);\
   ihipPostLaunchKernel(trueStream, lp);\
 } while(0)
 
@@ -573,7 +573,7 @@ do {\
         fprintf(stderr, "==hip-api: launch '%s' gridDim:[%d.%d.%d] groupDim:[%d.%d.%d] groupMem:+%d stream=%p\n", \
                 #_kernelName, lp.gridDim.z, lp.gridDim.y, lp.gridDim.x, lp.groupDim.z, lp.groupDim.y, lp.groupDim.x, lp.groupMemBytes, (void*)(_stream));\
     }\
-  _kernelName (lp, __VA_ARGS__);\
+  _kernelName (lp, ##__VA_ARGS__);\
   ihipPostLaunchKernel(trueStream, cf);\
 } while(0)
 /*end hipLaunchKernel */
