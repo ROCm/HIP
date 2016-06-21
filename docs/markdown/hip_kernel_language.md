@@ -299,6 +299,42 @@ Following is the list of supported single precision mathematical functions.
 | float tanhf ( float  x ) <br><sub>Calculate the hyperbolic tangent of the input argument.</sub> | ✓ | ✓ |
 | float truncf ( float  x ) <br><sub>Truncate input argument to the integral part.</sub> | ✓ | ✓ |
 | float tgammaf ( float  x ) <br><sub>Calculate the gamma function of the input argument.</sub> | ✓ | ✓ |
+| float erfcinvf ( float  y ) <br><sub>Calculate the inverse complementary function of the input argument.</sub> | ✓ | ✓ |
+| float erfcxf ( float  x ) <br><sub>Calculate the scaled complementary error function of the input argument.</sub> | ✓ | ✓ |
+| float erfinvf ( float  y ) <br><sub>Calculate the inverse error function of the input argument.</sub> | ✓ | ✓ |
+| float fdividef ( float x, float  y ) <br><sub>Divide two floating point values.</sub> | ✓ | ✓ |
+| float frexpf ( float  x, int *nptr ) <br><sub>Extract mantissa and exponent of a floating-point value.</sub> | ✓ | ✓ |
+| float j0f ( float  x ) <br><sub>Calculate the value of the Bessel function of the first kind of order 0 for the input argument.</sub> | ✓ | ✓ |
+| float j1f ( float  x ) <br><sub>Calculate the value of the Bessel function of the first kind of order 1 for the input argument.</sub> | ✓ | ✓ |
+| float jnf ( int n, float  x ) <br><sub>Calculate the value of the Bessel function of the first kind of order n for the input argument.</sub> | ✓ | ✓ |
+| float lgammaf ( float  x ) <br><sub>Calculate the natural logarithm of the absolute value of the gamma function of the input argument.</sub> | ✓ | ✓ |
+| long long int llrintf ( float  x ) <br><sub>Round input to nearest integer value.</sub> | ✓ | ✓ |
+| long long int llroundf ( float  x ) <br><sub>Round to nearest integer value.</sub> | ✓ | ✓ |
+| long int lrintf ( float  x ) <br><sub>Round input to nearest integer value.</sub> | ✓ | ✓ |
+| long int lroundf ( float  x ) <br><sub>Round to nearest integer value.</sub> | ✓ | ✓ |
+| float modff ( float  x, float *iptr ) <br><sub>Break down the input argument into fractional and integral parts.</sub> | ✓ | ✓ |
+| float nextafterf ( float  x, float y ) <br><sub>Returns next representable single-precision floating-point value after argument.</sub> | ✓ | ✓ |
+| float norm3df ( float  a, float b, float c ) <br><sub>Calculate the square root of the sum of squares of three coordinates of the argument.</sub> | ✓ | ✓ |
+| float norm4df ( float  a, float b, float c, float d ) <br><sub>Calculate the square root of the sum of squares of four coordinates of the argument.</sub> | ✓ | ✓ |
+| float normcdff ( float  y ) <br><sub>Calculate the standard normal cumulative distribution function.</sub> | ✓ | ✓ |
+| float normcdfinvf ( float  y ) <br><sub>Calculate the inverse of the standard normal cumulative distribution function.</sub> | ✓ | ✓ |
+| float normf ( int dim, const float *a ) <br><sub>Calculate the square root of the sum of squares of any number of coordinates.</sub> | ✓ | ✓ |
+| float rcbrtf ( float x ) <br><sub>Calculate the reciprocal cube root function.</sub> | ✓ | ✓ |
+| float remquof ( float x, float y, int *quo ) <br><sub>Compute single-precision floating-point remainder and part of quotient.</sub> | ✓ | ✓ |
+| float rhypotf ( float x, float y ) <br><sub>Calculate one over the square root of the sum of squares of two arguments.</sub> | ✓ | ✓ |
+| float rintf ( float x ) <br><sub>Round input to nearest integer value in floating-point.</sub> | ✓ | ✓ |
+| float rnorm3df ( float  a, float b, float c ) <br><sub>Calculate one over the square root of the sum of squares of three coordinates of the argument.</sub> | ✓ | ✓ |
+| float rnorm4df ( float  a, float b, float c, float d ) <br><sub>Calculate one over the square root of the sum of squares of four coordinates of the argument.</sub> | ✓ | ✓ |
+| float rnormf ( int dim, const float *a ) <br><sub>Calculate the reciprocal of square root of the sum of squares of any number of coordinates.</sub> | ✓ | ✓ |
+| float scalblnf ( float x, long int n ) <br><sub>Scale floating-point input by integer power of two.</sub> | ✓ | ✓ |
+| void sincosf ( float x, float *sptr, float *cptr ) <br><sub>Calculate the sine and cosine of the first input argument.</sub> | ✓ | ✓ |
+| void sincospif ( float x, float *sptr, float *cptr ) <br><sub>Calculate the sine and cosine of the first input argument multiplied by PI.</sub> | ✓ | ✓ |
+| float y0f ( float  x ) <br><sub>Calculate the value of the Bessel function of the second kind of order 0 for the input argument.</sub> | ✓ | ✓ |
+| float y1f ( float  x ) <br><sub>Calculate the value of the Bessel function of the second kind of order 1 for the input argument.</sub> | ✓ | ✓ |
+| float ynf ( int n, float  x ) <br><sub>Calculate the value of the Bessel function of the second kind of order n for the input argument.</sub> | ✓ | ✓ |
+
+
+
 <sub><b id="f1"><sup>[1]</sup></b> __RETURN_TYPE is dependent on compiler. It is usually 'int' for C compilers and 'bool' for C++ compilers.</sub> [↩](#a1)
 
 ### Double Precision Mathematical Functions
@@ -360,6 +396,40 @@ Following is the list of supported double precision mathematical functions.
 | double tanh ( double  x ) <br><sub>Calculate the hyperbolic tangent of the input argument.</sub> | ✓ | ✓ |
 | double tgamma ( double  x ) <br><sub>Calculate the gamma function of the input argument.</sub> | ✓ | ✓ |
 | double trunc ( double  x ) <br><sub>Truncate input argument to the integral part.</sub> | ✓ | ✓ |
+| double erfcinv ( double  y ) <br><sub>Calculate the inverse complementary function of the input argument.</sub> | ✓ | ✓ |
+| double erfcx ( double  x ) <br><sub>Calculate the scaled complementary error function of the input argument.</sub> | ✓ | ✓ |
+| double erfinv ( double  y ) <br><sub>Calculate the inverse error function of the input argument.</sub> | ✓ | ✓ |
+| double frexp ( float  x, int *nptr ) <br><sub>Extract mantissa and exponent of a floating-point value.</sub> | ✓ | ✓ |
+| double j0 ( double  x ) <br><sub>Calculate the value of the Bessel function of the first kind of order 0 for the input argument.</sub> | ✓ | ✓ |
+| double j1 ( double  x ) <br><sub>Calculate the value of the Bessel function of the first kind of order 1 for the input argument.</sub> | ✓ | ✓ |
+| double jn ( int n, double  x ) <br><sub>Calculate the value of the Bessel function of the first kind of order n for the input argument.</sub> | ✓ | ✓ |
+| double lgamma ( double  x ) <br><sub>Calculate the natural logarithm of the absolute value of the gamma function of the input argument.</sub> | ✓ | ✓ |
+| long long int llrint ( double  x ) <br><sub>Round input to nearest integer value.</sub> | ✓ | ✓ |
+| long long int llround ( double  x ) <br><sub>Round to nearest integer value.</sub> | ✓ | ✓ |
+| long int lrint ( double  x ) <br><sub>Round input to nearest integer value.</sub> | ✓ | ✓ |
+| long int lround ( double  x ) <br><sub>Round to nearest integer value.</sub> | ✓ | ✓ |
+| double modf ( double  x, double *iptr ) <br><sub>Break down the input argument into fractional and integral parts.</sub> | ✓ | ✓ |
+| double nextafter ( double  x, double y ) <br><sub>Returns next representable single-precision floating-point value after argument.</sub> | ✓ | ✓ |
+| double norm3d ( double  a, double b, double c ) <br><sub>Calculate the square root of the sum of squares of three coordinates of the argument.</sub> | ✓ | ✓ |
+| float norm4d ( double  a, double b, double c, double d ) <br><sub>Calculate the square root of the sum of squares of four coordinates of the argument.</sub> | ✓ | ✓ |
+| double normcdf ( double  y ) <br><sub>Calculate the standard normal cumulative distribution function.</sub> | ✓ | ✓ |
+| double normcdfinv ( double  y ) <br><sub>Calculate the inverse of the standard normal cumulative distribution function.</sub> | ✓ | ✓ |
+| double rcbrt ( double x ) <br><sub>Calculate the reciprocal cube root function.</sub> | ✓ | ✓ |
+| double remquo ( double x, double y, int *quo ) <br><sub>Compute single-precision floating-point remainder and part of quotient.</sub> | ✓ | ✓ |
+| double rhypot ( double x, double y ) <br><sub>Calculate one over the square root of the sum of squares of two arguments.</sub> | ✓ | ✓ |
+| double rint ( double x ) <br><sub>Round input to nearest integer value in floating-point.</sub> | ✓ | ✓ |
+| double rnorm3d ( double a, double b, double c ) <br><sub>Calculate one over the square root of the sum of squares of three coordinates of the argument.</sub> | ✓ | ✓ |
+| double rnorm4d ( double a, double b, double c, double d ) <br><sub>Calculate one over the square root of the sum of squares of four coordinates of the argument.</sub> | ✓ | ✓ |
+| double rnorm ( int dim, const double *a ) <br><sub>Calculate the reciprocal of square root of the sum of squares of any number of coordinates.</sub> | ✓ | ✓ |
+| double scalbln ( double x, long int n ) <br><sub>Scale floating-point input by integer power of two.</sub> | ✓ | ✓ |
+| void sincos ( double x, double *sptr, double *cptr ) <br><sub>Calculate the sine and cosine of the first input argument.</sub> | ✓ | ✓ |
+| void sincospi ( double x, double *sptr, double *cptr ) <br><sub>Calculate the sine and cosine of the first input argument multiplied by PI.</sub> | ✓ | ✓ |
+| double y0f ( double  x ) <br><sub>Calculate the value of the Bessel function of the second kind of order 0 for the input argument.</sub> | ✓ | ✓ |
+| double y1 ( double  x ) <br><sub>Calculate the value of the Bessel function of the second kind of order 1 for the input argument.</sub> | ✓ | ✓ |
+| double yn ( int n, double  x ) <br><sub>Calculate the value of the Bessel function of the second kind of order n for the input argument.</sub> | ✓ | ✓ |
+
+
+
 <sub><b id="f2"><sup>[1]</sup></b> __RETURN_TYPE is dependent on compiler. It is usually 'int' for C compilers and 'bool' for C++ compilers.</sub> [↩](#a2)
 
 ### Integer Intrinsics
