@@ -35,11 +35,7 @@ THE SOFTWARE.
 #define __host__     __attribute__((cpu))
 #define __device__   __attribute__((hc))
 
-#ifndef DISABLE_GRID_LAUNCH
 #define __global__  __attribute__((hc_grid_launch))
-#else
-#define __global__
-#endif
 
 #define __noinline__      __attribute__((noinline))
 #define __forceinline__   __attribute__((always_inline))

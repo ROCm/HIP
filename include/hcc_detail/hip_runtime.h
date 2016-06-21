@@ -38,6 +38,10 @@ THE SOFTWARE.
 #include <stddef.h>
 
 
+// Use field names for grid_launch 2.0 structure:
+#define USE_GRID_LAUNCH_20 0
+
+
 #define CUDA_SUCCESS hipSuccess
 
 #include <hip/hip_runtime_api.h>
@@ -517,7 +521,20 @@ void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp);
 #define KNRM  "\x1B[0m"
 #define KGRN  "\x1B[32m"
 
-#if not defined(DISABLE_GRID_LAUNCH)
+#if USE_GRID_LAUNCH_20
+#define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...) \
+do {\
+  grid_launch_parm lp;\
+  lp.dynamic_group_mem_bytes = _groupMemBytes; \
+  hipStream_t trueStream = (ihipPreLaunchKernel(_stream, _numBlocks3D, _blockDim3D, &lp)); \
+    if (HIP_TRACE_API) {\
+        fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d stream=%p\n" KNRM, \
+                #_kernelName, lp.grid_dim.x, lp.grid_dim.y, lp.grid_dim.z, lp.group_dim.x, lp.group_dim.y, lp.group_dim.z, lp.groupMemBytes, (void*)(_stream));\
+    }\
+  _kernelName (lp, ##__VA_ARGS__);\
+  ihipPostLaunchKernel(trueStream, lp);\
+} while(0)
+#else
 #define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...) \
 do {\
   grid_launch_parm lp;\
@@ -528,34 +545,11 @@ do {\
                 #_kernelName, lp.gridDim.x, lp.gridDim.y, lp.gridDim.z, lp.groupDim.x, lp.groupDim.y, lp.groupDim.z, lp.groupMemBytes, (void*)(_stream));\
     }\
   _kernelName (lp, ##__VA_ARGS__);\
-  ihipPostLaunchKernel(trueStream, lp);\
-} while(0)
-
-#else
-#warning(DISABLE_GRID_LAUNCH set)
-
-#define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...) \
-do {\
-  grid_launch_parm lp;\
-  lp.gridDim.x = _numBlocks3D.x * _blockDim3D.x;/*Convert from #blocks to #threads*/ \
-  lp.gridDim.y = _numBlocks3D.y * _blockDim3D.y;/*Convert from #blocks to #threads*/ \
-  lp.gridDim.z = _numBlocks3D.z * _blockDim3D.z;/*Convert from #blocks to #threads*/ \
-  lp.groupDim.x = _blockDim3D.x; \
-  lp.groupDim.y = _blockDim3D.y; \
-  lp.groupDim.z = _blockDim3D.z; \
-  lp.groupMemBytes = _groupMemBytes;\
-  hc::completion_future cf;\
-  lp.cf = &cf;  \
-  hipStream_t trueStream = (ihipPreLaunchKernel(_stream, &lp.av)); \
-    if (HIP_TRACE_API) {\
-        fprintf(stderr, "==hip-api: launch '%s' gridDim:[%d.%d.%d] groupDim:[%d.%d.%d] groupMem:+%d stream=%p\n", \
-                #_kernelName, lp.gridDim.z, lp.gridDim.y, lp.gridDim.x, lp.groupDim.z, lp.groupDim.y, lp.groupDim.x, lp.groupMemBytes, (void*)(_stream));\
-    }\
-  _kernelName (lp, ##__VA_ARGS__);\
   ihipPostLaunchKernel(trueStream, cf);\
 } while(0)
-/*end hipLaunchKernel */
+
 #endif
+
 
 #elif defined (__HCC_C__)
 
