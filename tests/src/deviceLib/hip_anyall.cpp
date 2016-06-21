@@ -27,7 +27,7 @@ THE SOFTWARE.
 #include <hip_runtime.h>
 #define HIP_ASSERT(x) (assert((x)==hipSuccess))
 
-__global__ void 
+__global__ void
 	warpvote(hipLaunchParm lp, int* device_any, int* device_all , int Num_Warps_per_Block, int pshift)
 {
 
@@ -36,13 +36,11 @@ __global__ void
    device_all[hipThreadIdx_x>>pshift] = __all(tid -77);
 }
 
-
-
 int main(int argc, char *argv[])
 { int warpSize, pshift;
   hipDeviceProp_t devProp;
   hipGetDeviceProperties(&devProp, 0);
-  if(strncmp(devProp.name,"Fiji",1)==0) 
+  if(strncmp(devProp.name,"Fiji",1)==0)
 { warpSize =64;
   pshift =6;
 }
@@ -53,14 +51,14 @@ int main(int argc, char *argv[])
   int Num_Blocks_per_Grid        = 1;
   int Num_Warps_per_Block        = Num_Threads_per_Block/warpSize;
   int Num_Warps_per_Grid         = (Num_Threads_per_Block*Num_Blocks_per_Grid)/warpSize;
-  
+
   int * host_any  = ( int*)malloc(Num_Warps_per_Grid*sizeof(int));
   int * host_all  = ( int*)malloc(Num_Warps_per_Grid*sizeof(int));
-  int *device_any; 
+  int *device_any;
   int *device_all;
   HIP_ASSERT(hipMalloc((void**)&device_any,Num_Warps_per_Grid*sizeof( int)));
   HIP_ASSERT(hipMalloc((void**)&device_all,Num_Warps_per_Grid*sizeof(int)));
-for (int i=0; i<Num_Warps_per_Grid; i++) 
+for (int i=0; i<Num_Warps_per_Grid; i++)
 {
 	host_any[i] = 0;
 	host_all[i] = 0;
@@ -77,11 +75,20 @@ for (int i=0; i<Num_Warps_per_Grid; i++)
 
     printf("warp no. %d __any = %d \n",i,host_any[i]);
     printf("warp no. %d __all = %d \n",i,host_all[i]);
-    if (host_any[i]!=1) ++anycount;
-    if (host_all[i]!=1) ++allcount; 
 
+    if (host_all[i]!=1) ++allcount;
+#if defined (__HIP_PLATFORM_HCC__) &&  !defined ( NVCC_COMPAT )
+    if (host_any[i]!=64) ++anycount;
+#else
+    if (host_any[i]!=1) ++anycount;
+#endif
 }
-if (anycount == 0 && allcount ==1) printf("PASSED\n"); else printf("FAILED\n");
+
+#if defined (__HIP_PLATFORM_HCC__) &&  !defined ( NVCC_COMPAT )
+    if (anycount == 1 && allcount ==1) printf("PASSED\n"); else printf("FAILED\n");
+#else
+    if (anycount == 0 && allcount ==1) printf("PASSED\n"); else printf("FAILED\n");
+#endif
 
   return EXIT_SUCCESS;
 
