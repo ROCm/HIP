@@ -8,7 +8,7 @@ We have attempted to document known bugs and limitations - in particular the [HI
 Stay tuned - the work for many of these features is already in-flight.
 
 ===================================================================================================
-Release:0.95.00
+Release:0.90.00
 Date: 2016.06.xx
 -Support dynamic shared memory allocations
 -Min HCC compiler version is > 16186.
