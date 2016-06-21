@@ -485,44 +485,22 @@ __device__ float __dsqrt_rz(double x);
  * Kernel launching
  */
 
-// Choose correct polarity of xyz/zyx ordering:
-#if __hcc_workweek__ >= 16123
 
-#define hipThreadIdx_x (amp_get_local_id(0))
-#define hipThreadIdx_y (amp_get_local_id(1))
-#define hipThreadIdx_z (amp_get_local_id(2))
+#define hipThreadIdx_x (hc_get_workitem_id(0))
+#define hipThreadIdx_y (hc_get_workitem_id(1))
+#define hipThreadIdx_z (hc_get_workitem_id(2))
 
 #define hipBlockIdx_x  (hc_get_group_id(0))
 #define hipBlockIdx_y  (hc_get_group_id(1))
 #define hipBlockIdx_z  (hc_get_group_id(2))
 
-#define hipBlockDim_x  (amp_get_local_size(0))
-#define hipBlockDim_y  (amp_get_local_size(1))
-#define hipBlockDim_z  (amp_get_local_size(2))
+#define hipBlockDim_x  (hc_get_group_size(0))
+#define hipBlockDim_y  (hc_get_group_size(1))
+#define hipBlockDim_z  (hc_get_group_size(2))
 
 #define hipGridDim_x   (hc_get_num_groups(0))
 #define hipGridDim_y   (hc_get_num_groups(1))
 #define hipGridDim_z   (hc_get_num_groups(2))
-
-#else
-
-#define hipThreadIdx_x (amp_get_local_id(2))
-#define hipThreadIdx_y (amp_get_local_id(1))
-#define hipThreadIdx_z (amp_get_local_id(0))
-
-#define hipBlockIdx_x  (hc_get_group_id(2))
-#define hipBlockIdx_y  (hc_get_group_id(1))
-#define hipBlockIdx_z  (hc_get_group_id(0))
-
-#define hipBlockDim_x  (amp_get_local_size(2))
-#define hipBlockDim_y  (amp_get_local_size(1))
-#define hipBlockDim_z  (amp_get_local_size(0))
-
-#define hipGridDim_x   (hc_get_num_groups(2))
-#define hipGridDim_y   (hc_get_num_groups(1))
-#define hipGridDim_z   (hc_get_num_groups(0))
-
-#endif // __hcc_workweek__ check
 
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
 
