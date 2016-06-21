@@ -134,11 +134,7 @@ hipError_t hipEventSynchronize(hipEvent_t event)
             device->locked_syncDefaultStream(true);
             return ihipLogStatus(hipSuccess);
         } else {
-#if __hcc_workweek__ >= 16033
             eh->_marker.wait((eh->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked : hc::hcWaitModeActive);
-#else
-            eh->_marker.wait();
-#endif
             eh->_stream->locked_reclaimSignals(eh->_copy_seq_id);
 
             return ihipLogStatus(hipSuccess);

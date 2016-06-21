@@ -25,7 +25,7 @@ exit(-1);
 }
 
 $HIP_VERSION_MAJOR = "0";
-$HIP_VERSION_MINOR = "95";
+$HIP_VERSION_MINOR = "90";
 $HIP_VERSION_PATCH = "0";
 
 $verbose = $ENV{'HIPCC_VERBOSE'};

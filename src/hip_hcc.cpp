@@ -1087,12 +1087,72 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 // TODO - data-up to data-down:
 // Called just before a kernel is launched from hipLaunchKernel.
 // Allows runtime to track some information about the stream.
-hipStream_t ihipPreLaunchKernel(hipStream_t stream, grid_launch_parm *lp)
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp)
 {
 	std::call_once(hip_initialized, ihipInit);
     stream = ihipSyncAndResolveStream(stream);
+    lp->gridDim.x = grid.x;
+    lp->gridDim.y = grid.y;
+    lp->gridDim.z = grid.z;
+    lp->groupDim.x = block.x;
+    lp->groupDim.y = block.y;
+    lp->groupDim.z = block.z;
+    stream->lockopen_preKernelCommand();
+//    *av = &stream->_av;
+    lp->av = &stream->_av;
+    lp->cf = new hc::completion_future;
+//    lp->av = static_cast<void*>(av);
+//    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
+    return (stream);
+}
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm *lp)
+{
+	std::call_once(hip_initialized, ihipInit);
+    stream = ihipSyncAndResolveStream(stream);
+    lp->gridDim.x = grid;
+    lp->gridDim.y = 1;
+    lp->gridDim.z = 1;
+    lp->groupDim.x = block.x;
+    lp->groupDim.y = block.y;
+    lp->groupDim.z = block.z;
+    stream->lockopen_preKernelCommand();
+//    *av = &stream->_av;
+    lp->av = &stream->_av;
+    lp->cf = new hc::completion_future;
+//    lp->av = static_cast<void*>(av);
+//    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
+    return (stream);
+}
 
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm *lp)
+{
+	std::call_once(hip_initialized, ihipInit);
+    stream = ihipSyncAndResolveStream(stream);
+    lp->gridDim.x = grid.x;
+    lp->gridDim.y = grid.y;
+    lp->gridDim.z = grid.z;
+    lp->groupDim.x = block;
+    lp->groupDim.y = 1;
+    lp->groupDim.z = 1;
+    stream->lockopen_preKernelCommand();
+//    *av = &stream->_av;
+    lp->av = &stream->_av;
+    lp->cf = new hc::completion_future;
+//    lp->av = static_cast<void*>(av);
+//    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
+    return (stream);
+}
 
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm *lp)
+{
+	std::call_once(hip_initialized, ihipInit);
+    stream = ihipSyncAndResolveStream(stream);
+    lp->gridDim.x = grid;
+    lp->gridDim.y = 1;
+    lp->gridDim.z = 1;
+    lp->groupDim.x = block;
+    lp->groupDim.y = 1;
+    lp->groupDim.z = 1;
     stream->lockopen_preKernelCommand();
 //    *av = &stream->_av;
     lp->av = &stream->_av;

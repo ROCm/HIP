@@ -34,6 +34,7 @@ using namespace hc::precise_math;
 #endif
 
 #define HIP_SQRT_2 1.41421356237
+#define HIP_SQRT_PI 1.77245385091
 
 #define __hip_erfinva3 -0.140543331
 #define __hip_erfinva2 0.914624893
@@ -95,8 +96,8 @@ __device__ float __hip_erfinvf(float x){
     ret = ret * sign;
     x = x * sign;
 
-    ret -= (hc::precise_math::erff(ret) - x) / (2 / hc::precise_math::sqrtf(HIP_PI) * hc::precise_math::expf(-ret * ret));
-    ret -= (hc::precise_math::erff(ret) - x) / (2 / hc::precise_math::sqrtf(HIP_PI) * hc::precise_math::expf(-ret * ret));
+    ret -= (hc::precise_math::erff(ret) - x) / (2 / HIP_SQRT_PI * hc::precise_math::expf(-ret * ret));
+    ret -= (hc::precise_math::erff(ret) - x) / (2 / HIP_SQRT_PI * hc::precise_math::expf(-ret * ret));
 
     return ret;
 }
@@ -139,8 +140,8 @@ __device__ double __hip_erfinv(double x){
     ret = ret * sign;
     x = x * sign;
 
-    ret -= (hc::precise_math::erf(ret) - x) / (2 / hc::precise_math::sqrt(HIP_PI) * hc::precise_math::exp(-ret * ret));
-    ret -= (hc::precise_math::erf(ret) - x) / (2 / hc::precise_math::sqrt(HIP_PI) * hc::precise_math::exp(-ret * ret));
+    ret -= (hc::precise_math::erf(ret) - x) / (2 / HIP_SQRT_PI * hc::precise_math::exp(-ret * ret));
+    ret -= (hc::precise_math::erf(ret) - x) / (2 / HIP_SQRT_PI * hc::precise_math::exp(-ret * ret));
 
     return ret;
 }
@@ -612,6 +613,167 @@ __device__ float __hip_y1f(float x)
     return ret;
 }
 
+#define __hip_k1 40.0
+#define __hip_k2 1.0e10
+#define __hip_k3 1.0e-10
+
+__device__ double __hip_jn(int n, double x)
+{
+    int    sum = 0, m;
+    double a, b0, b1, b2, val, t, ret;
+    if (n < 0){
+        return NAN;
+    }
+    a = hc::precise_math::fabs(x);
+    if (n == 0){
+        return(__hip_j0(a));
+    }
+    if (n == 1){
+        return(__hip_j1(a));
+    }
+    if (a == 0.0){
+        return 0.0;
+    }
+    else if (a > (double)n) {
+        t = 2.0 / a;
+        b1 = __hip_j0(a);
+        b0 = __hip_j1(a);
+        for (int i = 1; i<n; i++) {
+            b2 = i*t*b0 - b1;
+            b1 = b0;
+            b0 = b2;
+        }
+        ret = b0;
+    }
+    else {
+        t = 2.0 / a;
+        m = 2 * ((n + (int)hc::precise_math::sqrt(__hip_k1*n)) / 2);
+        b2 = ret = val = 0.0;
+        b0 = 1.0;
+        for (int i = m; i>0; i--) {
+            b1 = i*t*b0 - b2;
+            b2 = b0;
+            b0 = b1;
+            if (hc::precise_math::fabs(b0) > __hip_k2) {
+                b0 *= __hip_k3;
+                b2 *= __hip_k3;
+                ret *= __hip_k3;
+                val *= __hip_k3;
+            }
+            if (sum) val += b0;
+            sum = !sum;
+            if (i == n) ret = b2;
+        }
+        val = 2.0*val - b0;
+        ret /= val;
+    }
+    return  x < 0.0 && n % 2 == 1 ? -ret : ret;
+}
+
+__device__ float __hip_jnf(int n, float x)
+{
+    int    sum = 0, m;
+    float a, b0, b1, b2, val, t, ret;
+    if (n < 0){
+        return NAN;
+    }
+    a = hc::precise_math::fabsf(x);
+    if (n == 0){
+        return(__hip_j0f(a));
+    }
+    if (n == 1){
+        return(__hip_j1f(a));
+    }
+    if (a == 0.0){
+        return 0.0;
+    }
+    else if (a > (float)n) {
+        t = 2.0 / a;
+        b1 = __hip_j0f(a);
+        b0 = __hip_j1f(a);
+        for (int i = 1; i<n; i++) {
+            b2 = i*t*b0 - b1;
+            b1 = b0;
+            b0 = b2;
+        }
+        ret = b0;
+    }
+    else {
+        t = 2.0 / a;
+        m = 2 * ((n + (int)hc::precise_math::sqrtf(__hip_k1*n)) / 2);
+        b2 = ret = val = 0.0;
+        b0 = 1.0;
+        for (int i = m; i>0; i--) {
+            b1 = i*t*b0 - b2;
+            b2 = b0;
+            b0 = b1;
+            if (hc::precise_math::fabsf(b0) > __hip_k2) {
+                b0 *= __hip_k3;
+                b2 *= __hip_k3;
+                ret *= __hip_k3;
+                val *= __hip_k3;
+            }
+            if (sum) val += b0;
+            sum = !sum;
+            if (i == n) ret = b2;
+        }
+        val = 2.0*val - b0;
+        ret /= val;
+    }
+    return  x < 0.0 && n % 2 == 1 ? -ret : ret;
+}
+
+__device__ double __hip_yn(int n, double x)
+{
+    double b0, b1, b2, t;
+
+    if (n < 0 || x == 0.0)
+    {
+        return NAN;
+    }
+    if (n == 0){
+        return(__hip_y0(x));
+    }
+    if (n == 1){
+        return(__hip_y1(x));
+    }
+    t = 2.0 / x;
+    b0 = __hip_y1(x);
+    b1 = __hip_y0(x);
+    for (int i = 1; i<n; i++) {
+        b2 = i*t*b0 - b1;
+        b1 = b0;
+        b0 = b2;
+    }
+    return b0;
+}
+
+__device__ float __hip_ynf(int n, float x)
+{
+    float b0, b1, b2, t;
+
+    if (n < 0 || x == 0.0)
+    {
+        return NAN;
+    }
+    if (n == 0){
+        return(__hip_y0f(x));
+    }
+    if (n == 1){
+        return(__hip_y1f(x));
+    }
+    t = 2.0 / x;
+    b0 = __hip_y1f(x);
+    b1 = __hip_y0f(x);
+    for (int i = 1; i<n; i++) {
+        b2 = i*t*b0 - b1;
+        b1 = b0;
+        b0 = b2;
+    }
+    return b0;
+}
+
+
 #if __hcc_workweek__ > 16186
 #define USE_DYNAMIC_SHARED 1
 #else
@@ -768,7 +930,10 @@ __device__ float j1f(float x)
 {
     return __hip_j1f(x);
 }
-__device__ float jnf(int n, float x);
+__device__ float jnf(int n, float x)
+{
+    return __hip_jnf(n, x);
+}
 __device__ float ldexpf(float x, int exp)
 {
     return hc::precise_math::ldexpf(x, exp);
@@ -966,24 +1131,22 @@ __device__ float y1f(float x)
 {
     return __hip_y1f(x);
 }
-__device__ float ynf(int n, float x);
-
-
+__device__ float ynf(int n, float x)
+{
+    return __hip_ynf(n, x);
+}
 __device__ float cospif(float x)
 {
     return hc::precise_math::cospif(x);
 }
-
 __device__ float sinpif(float x)
 {
     return hc::precise_math::sinpif(x);
 }
-
 __device__ float sqrtf(float x)
 {
     return hc::precise_math::sqrtf(x);
 }
-
 __device__ float rsqrtf(float x)
 {
     return hc::precise_math::rsqrtf(x);
@@ -1091,6 +1254,10 @@ __device__ double fdim(double x, double y)
 {
     return hc::precise_math::fdim(x, y);
 }
+__device__ double fdivide(double x, double y)
+{
+    return x/y;
+}
 __device__ double floor(double x)
 {
     return hc::precise_math::floor(x);
@@ -1143,7 +1310,10 @@ __device__ double j1(double x)
 {
     return __hip_j1(x);
 }
-__device__ double jn(double x);
+__device__ double jn(int n, double x)
+{
+    return __hip_jn(n, x);
+}
 __device__ double ldexp(double x, int exp)
 {
     return hc::precise_math::ldexp(x, exp);
@@ -1334,7 +1504,10 @@ __device__ double y1(double x)
 {
     return __hip_y1(x);
 }
-__device__ double yn(int n, double x);
+__device__ double yn(int n, double x)
+{
+    return __hip_yn(n, x);
+}
 
 const int warpSize = 64;
 
@@ -2184,6 +2357,512 @@ double __hip_host_erfcinv(double y)
     return __hip_host_erfinv(1 - y);
 }
 
+double __hip_host_j0(double x)
+{
+    double ret, a = std::fabs(x);
+    if (a < 8.0) {
+        double y = x*x;
+        double y1 = __hip_j0a6 * y + __hip_j0a5;
+        double z1 = 1.0 * y + __hip_j0b5;
+
+        double y2 = y1 * y + __hip_j0a4;
+        double z2 = z1 * y + __hip_j0b4;
+
+        double y3 = y2 * y + __hip_j0a3;
+        double z3 = z2 * y + __hip_j0b3;
+
+        double y4 = y3 * y + __hip_j0a2;
+        double z4 = z3 * y + __hip_j0b2;
+
+        double y5 = y4 * y + __hip_j0a1;
+        double z5 = z4 * y + __hip_j0b1;
+
+        ret = y5 / z5;
+
+    }
+    else {
+        double z = 8.0 / a;
+        double y = z*z;
+        double x1 = a - __hip_j0c;
+
+        double y1 = __hip_j0c4 * y + __hip_j0c3;
+        double z1 = __hip_j0d5 * y + __hip_j0d4;
+
+        double y2 = y1 * y + __hip_j0c2;
+        double z2 = z1 * z + __hip_j0d3;
+
+        double y3 = y2 * y + __hip_j0c1;
+        double z3 = z2 * y + __hip_j0d2;
+
+        double y4 = y3 * y + 1.0;
+        double z4 = z3 * y + __hip_j0d1;
+
+        ret = std::sqrt(__hip_j0e / a)*(std::cos(x1) * y4 - z * std::sin(x1) * z4);
+    }
+    return ret;
+}
+
+float __hip_host_j0f(float x)
+{
+    float ret, a = fabs(x);
+    if (a < 8.0) {
+        float y = x*x;
+        float y1 = __hip_j0a6 * y + __hip_j0a5;
+        float z1 = 1.0 * y + __hip_j0b5;
+
+        float y2 = y1 * y + __hip_j0a4;
+        float z2 = z1 * y + __hip_j0b4;
+
+        float y3 = y2 * y + __hip_j0a3;
+        float z3 = z2 * y + __hip_j0b3;
+
+        float y4 = y3 * y + __hip_j0a2;
+        float z4 = z3 * y + __hip_j0b2;
+
+        float y5 = y4 * y + __hip_j0a1;
+        float z5 = z4 * y + __hip_j0b1;
+
+        ret = y5 / z5;
+
+    }
+    else {
+        float z = 8.0 / a;
+        float y = z*z;
+        float x1 = a - __hip_j0c;
+
+        float y1 = __hip_j0c4 * y + __hip_j0c3;
+        float z1 = __hip_j0d5 * y + __hip_j0d4;
+
+        float y2 = y1 * y + __hip_j0c2;
+        float z2 = z1 * z + __hip_j0d3;
+
+        float y3 = y2 * y + __hip_j0c1;
+        float z3 = z2 * y + __hip_j0d2;
+
+        float y4 = y3 * y + 1.0;
+        float z4 = z3 * y + __hip_j0d1;
+
+        ret = std::sqrt(__hip_j0e / a)*(std::cos(x1) * y4 - z * std::sin(x1) * z4);
+    }
+    return ret;
+}
+
+double __hip_host_j1(double x)
+{
+    double ret, a = std::fabs(x);
+    if (a < 8.0) {
+        double y = x*x;
+
+        double y1 = __hip_j1a1 * y + __hip_j1a2;
+        double z1 = 1.0 * y + __hip_j1b1;
+
+        double y2 = y1 * y + __hip_j1a3;
+        double z2 = z1 * y + __hip_j1b2;
+
+        double y3 = y2 * y + __hip_j1a4;
+        double z3 = z2 * y + __hip_j1b3;
+
+        double y4 = y3 * y + __hip_j1a5;
+        double z4 = z3 * y + __hip_j1b4;
+
+        double y5 = y4 * y + __hip_j1a6;
+        double z5 = z4 * y + __hip_j1b5;
+
+        ret = x * y5 / z5;
+
+    }
+    else {
+        double z = 8.0 / a;
+        double y = z*z;
+        double x1 = a - __hip_j1c;
+
+        double y1 = __hip_j1c1 * y + __hip_j1c2;
+        double y2 = y1 * y + __hip_j1c3;
+        double y3 = y2 * y + __hip_j1c4;
+        double y4 = y3 * y + 1.0;
+
+        double z1 = __hip_j1d1 * y + __hip_j1d2;
+        double z2 = z1 * y + __hip_j1d3;
+        double z3 = z2 * y + __hip_j1d4;
+        double z4 = z3 * y + __hip_j1d5;
+
+        ret = std::sqrt(__hip_j1e / a)*(std::cos(x1)*y4 - z*std::sin(x1)*z4);
+        if (x < 0.0) ret = -ret;
+    }
+    return ret;
+}
+
+float __hip_host_j1f(float x)
+{
+    double ret, a = fabs(x);
+    if (a < 8.0) {
+        float y = x*x;
+
+        float y1 = __hip_j1a1 * y + __hip_j1a2;
+        float z1 = 1.0 * y + __hip_j1b1;
+
+        float y2 = y1 * y + __hip_j1a3;
+        float z2 = z1 * y + __hip_j1b2;
+
+        float y3 = y2 * y + __hip_j1a4;
+        float z3 = z2 * y + __hip_j1b3;
+
+        float y4 = y3 * y + __hip_j1a5;
+        float z4 = z3 * y + __hip_j1b4;
+
+        float y5 = y4 * y + __hip_j1a6;
+        float z5 = z4 * y + __hip_j1b5;
+
+        ret = x * y5 / z5;
+
+    }
+    else {
+        float z = 8.0 / a;
+        float y = z*z;
+        float x1 = a - __hip_j1c;
+
+        float y1 = __hip_j1c1 * y + __hip_j1c2;
+        float y2 = y1 * y + __hip_j1c3;
+        float y3 = y2 * y + __hip_j1c4;
+        float y4 = y3 * y + 1.0;
+
+        float z1 = __hip_j1d1 * y + __hip_j1d2;
+        float z2 = z1 * y + __hip_j1d3;
+        float z3 = z2 * y + __hip_j1d4;
+        float z4 = z3 * y + __hip_j1d5;
+
+        ret = std::sqrt(__hip_j1e / a)*(std::cos(x1)*y4 - z*std::sin(x1)*z4);
+        if (x < 0.0) ret = -ret;
+    }
+    return ret;
+}
+
+double __hip_host_y0(double x)
+{
+    double ret;
+
+    if (x < 8.0) {
+        double y = x*x;
+        double y1 = __hip_y0a1 * y + __hip_y0a2;
+        double y2 = y1 * y + __hip_y0a3;
+        double y3 = y2 * y + __hip_y0a4;
+        double y4 = y3 * y + __hip_y0a5;
+        double y5 = y4 * y + __hip_y0a6;
+
+        double z1 = 1.0 * y + __hip_y0b1;
+        double z2 = z1 * y + __hip_y0b2;
+        double z3 = z2 * y + __hip_y0b3;
+        double z4 = z3 * y + __hip_y0b4;
+        double z5 = z4 * y + __hip_y0b5;
+
+
+        ret = (y5 / z5) + __hip_y0c * __hip_host_j0(x) * std::log(x);
+    }
+    else {
+        double z = 8.0 / x;
+        double y = z*z;
+        double x1 = x - __hip_y0d;
+
+        double y1 = __hip_y0e1 * y + __hip_y0e2;
+        double y2 = y1 * y + __hip_y0e3;
+        double y3 = y2 * y + __hip_y0e4;
+        double y4 = y3 * y + 1.0;
+
+        double z1 = __hip_y0f1 * y + __hip_y0f2;
+        double z2 = z1 * y + __hip_y0f3;
+        double z3 = z2 * y + __hip_y0f4;
+        double z4 = z3 * y + __hip_y0f5;
+
+        ret = std::sqrt(__hip_y1g / x)*(std::sin(x1)*y4 + z * std::cos(x1) * z4);
+    }
+    return ret;
+
+}
+
+float __hip_host_y0f(float x)
+{
+    float ret;
+
+    if (x < 8.0) {
+        float y = x*x;
+        float y1 = __hip_y0a1 * y + __hip_y0a2;
+        float y2 = y1 * y + __hip_y0a3;
+        float y3 = y2 * y + __hip_y0a4;
+        float y4 = y3 * y + __hip_y0a5;
+        float y5 = y4 * y + __hip_y0a6;
+
+        float z1 = 1.0 * y + __hip_y0b1;
+        float z2 = z1 * y + __hip_y0b2;
+        float z3 = z2 * y + __hip_y0b3;
+        float z4 = z3 * y + __hip_y0b4;
+        float z5 = z4 * y + __hip_y0b5;
+
+
+        ret = (y5 / z5) + __hip_y0c * __hip_host_j0f(x) * log(x);
+    }
+    else {
+        float z = 8.0 / x;
+        float y = z*z;
+        float x1 = x - __hip_y0d;
+
+        float y1 = __hip_y0e1 * y + __hip_y0e2;
+        float y2 = y1 * y + __hip_y0e3;
+        float y3 = y2 * y + __hip_y0e4;
+        float y4 = y3 * y + 1.0;
+
+        float z1 = __hip_y0f1 * y + __hip_y0f2;
+        float z2 = z1 * y + __hip_y0f3;
+        float z3 = z2 * y + __hip_y0f4;
+        float z4 = z3 * y + __hip_y0f5;
+
+        ret = std::sqrt(__hip_y1g / x)*(std::sin(x1)*y4 + z * std::cos(x1) * z4);
+    }
+    return ret;
+
+}
+
+double __hip_host_y1(double x)
+{
+    double ret;
+
+    if (x < 8.0) {
+        double y = x*x;
+
+        double y1 = __hip_y1a1 * y + __hip_y1a2;
+        double y2 = y1 * y + __hip_y1a3;
+        double y3 = y2 * y + __hip_y1a4;
+        double y4 = y3 * y + __hip_y1a5;
+        double y5 = y4 * y + __hip_y1a6;
+        double y6 = x * y5;
+
+        double z1 = __hip_y1b1 + y;
+        double z2 = z1 * y + __hip_y1b2;
+        double z3 = z2 * y + __hip_y1b3;
+        double z4 = z3 * y + __hip_y1b4;
+        double z5 = z4 * y + __hip_y1b5;
+        double z6 = z5 * y + __hip_y1b6;
+
+        ret = (y6 / z6) + __hip_y1c * (__hip_host_j1(x) * std::log(x) - 1.0 / x);
+    }
+    else {
+        double z = 8.0 / x;
+        double y = z*z;
+        double x1 = x - __hip_y1d;
+
+        double y1 = __hip_y1e1 * y + __hip_y1e2;
+        double y2 = y1 * y + __hip_y1e3;
+        double y3 = y2 * y + __hip_y1e4;
+        double y4 = y3 * y + 1.0;
+
+        double z1 = __hip_y1f1 * y + __hip_y1f2;
+        double z2 = z1 * y + __hip_y1f3;
+        double z3 = z2 * y + __hip_y1f4;
+        double z4 = z3 * y + __hip_y1f5;
+
+        ret = std::sqrt(__hip_y1g / x)*(std::sin(x1)*y4 + z * std::cos(x1)*z4);
+    }
+    return ret;
+}
+
+float __hip_host_y1f(float x)
+{
+    float ret;
+
+    if (x < 8.0) {
+        float y = x*x;
+
+        float y1 = __hip_y1a1 * y + __hip_y1a2;
+        float y2 = y1 * y + __hip_y1a3;
+        float y3 = y2 * y + __hip_y1a4;
+        float y4 = y3 * y + __hip_y1a5;
+        float y5 = y4 * y + __hip_y1a6;
+        float y6 = x * y5;
+
+        float z1 = __hip_y1b1 + y;
+        float z2 = z1 * y + __hip_y1b2;
+        float z3 = z2 * y + __hip_y1b3;
+        float z4 = z3 * y + __hip_y1b4;
+        float z5 = z4 * y + __hip_y1b5;
+        float z6 = z5 * y + __hip_y1b6;
+
+        ret = (y6 / z6) + __hip_y1c * (__hip_host_j1f(x) * log(x) - 1.0 / x);
+    }
+    else {
+        float z = 8.0 / x;
+        float y = z*z;
+        float x1 = x - __hip_y1d;
+
+        float y1 = __hip_y1e1 * y + __hip_y1e2;
+        float y2 = y1 * y + __hip_y1e3;
+        float y3 = y2 * y + __hip_y1e4;
+        float y4 = y3 * y + 1.0;
+
+        float z1 = __hip_y1f1 * y + __hip_y1f2;
+        float z2 = z1 * y + __hip_y1f3;
+        float z3 = z2 * y + __hip_y1f4;
+        float z4 = z3 * y + __hip_y1f5;
+
+        ret = std::sqrt(__hip_y1g / x)*(std::sin(x1)*y4 + z*std::cos(x1)*z4);
+    }
+    return ret;
+}
+
+double __hip_host_jn(int n, double x)
+{
+    int    sum = 0, m;
+    double a, b0, b1, b2, val, t, ret;
+    if (n < 0){
+        return NAN;
+    }
+    a = std::fabs(x);
+    if (n == 0){
+        return(__hip_host_j0(a));
+    }
+    if (n == 1){
+        return(__hip_host_j1(a));
+    }
+    if (a == 0.0){
+        return 0.0;
+    }
+    else if (a > (double)n) {
+        t = 2.0 / a;
+        b1 = __hip_host_j0(a);
+        b0 = __hip_host_j1(a);
+        for (int i = 1; i<n; i++) {
+            b2 = i*t*b0 - b1;
+            b1 = b0;
+            b0 = b2;
+        }
+        ret = b0;
+    }
+    else {
+        t = 2.0 / a;
+        m = 2 * ((n + (int)std::sqrt(__hip_k1*n)) / 2);
+        b2 = ret = val = 0.0;
+        b0 = 1.0;
+        for (int i = m; i>0; i--) {
+            b1 = i*t*b0 - b2;
+            b2 = b0;
+            b0 = b1;
+            if (std::fabs(b0) > __hip_k2) {
+                b0 *= __hip_k3;
+                b2 *= __hip_k3;
+                ret *= __hip_k3;
+                val *= __hip_k3;
+            }
+            if (sum) val += b0;
+            sum = !sum;
+            if (i == n) ret = b2;
+        }
+        val = 2.0*val - b0;
+        ret /= val;
+    }
+    return  x < 0.0 && n % 2 == 1 ? -ret : ret;
+}
+
+float __hip_host_jnf(int n, float x)
+{
+    int    sum = 0, m;
+    float a, b0, b1, b2, val, t, ret;
+    if (n < 0){
+        return NAN;
+    }
+    a = fabs(x);
+    if (n == 0){
+        return(__hip_host_j0f(a));
+    }
+    if (n == 1){
+        return(__hip_host_j1f(a));
+    }
+    if (a == 0.0){
+        return 0.0;
+    }
+    else if (a > (float)n) {
+        t = 2.0 / a;
+        b1 = __hip_host_j0f(a);
+        b0 = __hip_host_j1f(a);
+        for (int i = 1; i<n; i++) {
+            b2 = i*t*b0 - b1;
+            b1 = b0;
+            b0 = b2;
+        }
+        ret = b0;
+    }
+    else {
+        t = 2.0 / a;
+        m = 2 * ((n + (int)std::sqrt(__hip_k1*n)) / 2);
+        b2 = ret = val = 0.0;
+        b0 = 1.0;
+        for (int i = m; i>0; i--) {
+            b1 = i*t*b0 - b2;
+            b2 = b0;
+            b0 = b1;
+            if (std::fabs(b0) > __hip_k2) {
+                b0 *= __hip_k3;
+                b2 *= __hip_k3;
+                ret *= __hip_k3;
+                val *= __hip_k3;
+            }
+            if (sum) val += b0;
+            sum = !sum;
+            if (i == n) ret = b2;
+        }
+        val = 2.0*val - b0;
+        ret /= val;
+    }
+    return  x < 0.0 && n % 2 == 1 ? -ret : ret;
+}
+
+double __hip_host_yn(int n, double x)
+{
+    double b0, b1, b2, t;
+
+    if (n < 0 || x == 0.0)
+    {
+        return NAN;
+    }
+    if (n == 0){
+        return(__hip_host_y0(x));
+    }
+    if (n == 1){
+        return(__hip_host_y1(x));
+    }
+    t = 2.0 / x;
+    b0 = __hip_host_y1(x);
+    b1 = __hip_host_y0(x);
+    for (int i = 1; i<n; i++) {
+        b2 = i*t*b0 - b1;
+        b1 = b0;
+        b0 = b2;
+    }
+    return b0;
+}
+
+float __hip_host_ynf(int n, float x)
+{
+    float b0, b1, b2, t;
+
+    if (n < 0 || x == 0.0)
+    {
+        return NAN;
+    }
+    if (n == 0){
+        return(__hip_host_y0f(x));
+    }
+    if (n == 1){
+        return(__hip_host_y1f(x));
+    }
+    t = 2.0 / x;
+    b0 = __hip_host_y1f(x);
+    b1 = __hip_host_y0f(x);
+    for (int i = 1; i<n; i++) {
+        b2 = i*t*b0 - b1;
+        b1 = b0;
+        b0 = b2;
+    }
+    return b0;
+}
+
 __host__ float modff(float x, float *iptr)
 {
     return std::modf(x, iptr);
@@ -2207,6 +2886,11 @@ __host__ float erfinvf(float x)
 __host__ double erfinv(double x)
 {
     return __hip_host_erfinv(x);
+}
+
+__host__ double fdivide(double x, double y)
+{
+    return x/y;
 }
 
 __host__ float normcdff(float t)
@@ -2276,7 +2960,7 @@ __host__ float rnormf(int dim, const float *t)
     {
         val = val + t[i] * t[i];
     }
-    return 1 / val;
+    return 1 / std::sqrt(val);
 }
 
 __host__ double rnorm(int dim, const double *t)
@@ -2286,7 +2970,7 @@ __host__ double rnorm(int dim, const double *t)
     {
         val = val + t[i] * t[i];
     }
-    return 1 / val;
+    return 1 / std::sqrt(val);
 }
 
 __host__ float rnorm4df(float a, float b, float c, float d)
@@ -2339,4 +3023,24 @@ __host__ float nextafterf(float x, float y)
 __host__ double nextafter(double x, double y)
 {
     return std::nextafter(x, y);
+}
+
+__host__ float norm3df(float a, float b, float c)
+{
+    return std::sqrt(a*a + b*b + c*c);
+}
+
+__host__ float norm4df(float a, float b, float c, float d)
+{
+    return std::sqrt(a*a + b*b + c*c + d*d);
+}
+
+__host__ double norm3d(double a, double b, double c)
+{
+    return std::sqrt(a*a + b*b + c*c);
+}
+
+__host__ double norm4d(double a, double b, double c, double d)
+{
+    return std::sqrt(a*a + b*b + c*c + d*d);
 }
