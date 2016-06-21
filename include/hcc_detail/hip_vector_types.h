@@ -185,10 +185,10 @@ __HIP_DEVICE__ double4 make_double4(double, double, double, double );
 /*
 ///---
 // Inline functions for creating vector types from basic types
-#define ONE_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT (T x) { VT t; t.x = x; return t; };
-#define TWO_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT (T x, T y) { VT t; t.x=x; t.y=y; return t; };
-#define THREE_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT (T x, T y, T z) { VT t; t.x=x; t.y=y; t.z=z; return t; };
-#define FOUR_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT (T x, T y, T z, T w) { VT t; t.x=x; t.y=y; t.z=z; t.w=w; return t; };
+#define ONE_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT [[hc]] [[cpu]] (T x) { VT t; t.x = x; return t; };
+#define TWO_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT [[hc]] [[cpu]] (T x, T y) { VT t; t.x=x; t.y=y; return t; };
+#define THREE_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT [[hc]] [[cpu]] (T x, T y, T z) { VT t; t.x=x; t.y=y; t.z=z; return t; };
+#define FOUR_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT [[hc]] [[cpu]] (T x, T y, T z, T w) { VT t; t.x=x; t.y=y; t.z=z; t.w=w; return t; };
 
 
 //signed:
