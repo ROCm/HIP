@@ -132,6 +132,10 @@ inline static hipError_t hipGetLastError() {
     return hipCUDAErrorTohipError(cudaGetLastError());
 }
 
+inline static hipError_t hipPeekAtLastError() {
+    return hipCUDAErrorTohipError(cudaPeekAtLastError());
+}
+
 inline static hipError_t hipMalloc(void** ptr, size_t size) {
     return hipCUDAErrorTohipError(cudaMalloc(ptr, size));
 }

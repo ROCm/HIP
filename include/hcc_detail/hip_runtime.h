@@ -167,19 +167,28 @@ __device__ float nanf(const char* tagp);
 __device__ float nearbyintf(float x);
 __device__ float nextafterf(float x, float y);
 __device__ float norm3df(float a, float b, float c);
+__host__ float norm3df(float a, float b, float c);
 __device__ float norm4df(float a, float b, float c, float d);
+__host__ float norm4df(float a, float b, float c, float d);
 __device__ float normcdff(float y);
+__host__ float normcdff(float y);
 __device__ float normcdfinvf(float y);
+__host__ float normcdfinvf(float y);
 __device__ float normf(int dim, const float *a);
 __device__ float powf(float x, float y);
 __device__ float rcbrtf(float x);
+__host__ float rcbrtf(float x);
 __device__ float remainderf(float x, float y);
 __device__ float remquof(float x, float y, int *quo);
 __device__ float rhypotf(float x, float y);
+__host__ float rhypotf(float x, float y);
 __device__ float rintf(float x);
 __device__ float rnorm3df(float a, float b, float c);
+__host__ float rnorm3df(float a, float b, float c);
 __device__ float rnorm4df(float a, float b, float c, float d);
+__host__ float rnorm4df(float a, float b, float c, float d);
 __device__ float rnormf(int dim, const float* a);
+__host__ float rnormf(int dim, const float* a);
 __device__ float roundf(float x);
 __device__ float rsqrtf(float x);
 __device__ float scalblnf(float x, long int n);
@@ -187,6 +196,7 @@ __device__ float scalbnf(float x, int n);
 __host__ __device__ unsigned signbit(float a);
 __device__ void sincosf(float x, float *sptr, float *cptr);
 __device__ void sincospif(float x, float *sptr, float *cptr);
+__host__ void sincospif(float x, float *sptr, float *cptr);
 __device__ float sinf(float x);
 __device__ float sinhf(float x);
 __device__ float sinpif(float x);
@@ -230,6 +240,7 @@ __device__ double exp2(double x);
 __device__ double expm1(double x);
 __device__ double fabs(double x);
 __device__ double fdim(double x, double y);
+__device__ double fdivide(double x, double y);
 __device__ double floor(double x);
 __device__ double fma(double x, double y, double z);
 __device__ double fmax(double x, double y);
@@ -261,18 +272,27 @@ __device__ double nearbyint(double x);
 __device__ double nextafter(double x, double y);
 __device__ double norm(int dim, const double* t);
 __device__ double norm3d(double a, double b, double c);
+__host__ double norm3d(double a, double b, double c);
 __device__ double norm4d(double a, double b, double c, double d);
+__host__ double norm4d(double a, double b, double c, double d);
 __device__ double normcdf(double y);
+__host__ double normcdf(double y);
 __device__ double normcdfinv(double y);
+__host__ double normcdfinv(double y);
 __device__ double pow(double x, double y);
 __device__ double rcbrt(double x);
+__host__ double rcbrt(double x);
 __device__ double remainder(double x, double y);
 __device__ double remquo(double x, double y, int *quo);
 __device__ double rhypot(double x, double y);
+__host__ double rhypot(double x, double y);
 __device__ double rint(double x);
 __device__ double rnorm(int dim, const double* t);
+__host__ double rnorm(int dim, const double* t);
 __device__ double rnorm3d(double a, double b, double c);
+__host__ double rnorm3d(double a, double b, double c);
 __device__ double rnorm4d(double a, double b, double c, double d);
+__host__ double rnorm4d(double a, double b, double c, double d);
 __device__ double round(double x);
 __host__ __device__ double rsqrt(double x);
 __device__ double scalbln(double x, long int n);
@@ -281,6 +301,7 @@ __host__ __device__ unsigned signbit(double a);
 __device__ double sin(double a);
 __device__ void sincos(double x, double *sptr, double *cptr);
 __device__ void sincospi(double x, double *sptr, double *cptr);
+__host__ void sincospi(double x, double *sptr, double *cptr);
 __device__ double sinh(double x);
 __host__ __device__ double sinpi(double x);
 __device__ double sqrt(double x);
@@ -291,6 +312,11 @@ __device__ double trunc(double x);
 __device__ double y0(double x);
 __device__ double y1(double y);
 __device__ double yn(int n, double x);
+
+__host__ double erfcinv(double y);
+__host__ double erfcx(double x);
+__host__ double erfinv(double y);
+__host__ double fdivide(double x, double y);
 
 // TODO - hipify-clang - change to use the function call.
 //#define warpSize hc::__wavesize()
@@ -503,7 +529,10 @@ __device__ float __dsqrt_rz(double x);
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
 
 #ifdef __HCC_CPP__
-hipStream_t ihipPreLaunchKernel(hipStream_t stream, grid_launch_parm *lp);
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp);
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm *lp);
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm *lp);
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm *lp);
 void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp);
 
 // TODO - move to common header file.
@@ -514,14 +543,8 @@ void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp);
 #define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...) \
 do {\
   grid_launch_parm lp;\
-  lp.gridDim.x = _numBlocks3D.x; \
-  lp.gridDim.y = _numBlocks3D.y; \
-  lp.gridDim.z = _numBlocks3D.z; \
-  lp.groupDim.x = _blockDim3D.x; \
-  lp.groupDim.y = _blockDim3D.y; \
-  lp.groupDim.z = _blockDim3D.z; \
   lp.groupMemBytes = _groupMemBytes; \
-  hipStream_t trueStream = (ihipPreLaunchKernel(_stream, &lp)); \
+  hipStream_t trueStream = (ihipPreLaunchKernel(_stream, _numBlocks3D, _blockDim3D, &lp)); \
     if (HIP_TRACE_API) {\
         fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d stream=%p\n" KNRM, \
                 #_kernelName, lp.gridDim.x, lp.gridDim.y, lp.gridDim.z, lp.groupDim.x, lp.groupDim.y, lp.groupDim.z, lp.groupMemBytes, (void*)(_stream));\
