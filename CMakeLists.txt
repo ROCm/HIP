@@ -134,8 +134,11 @@ if(HIP_PLATFORM STREQUAL "hcc")
         #add_library(hip_hcc STATIC ${SOURCE_FILES})
         add_library(hip_hcc OBJECT ${SOURCE_FILES})
     endif()
-
 endif()
+
+# Build doxygen documentation
+add_custom_target(doc COMMAND HIP_PATH=${CMAKE_CURRENT_SOURCE_DIR} doxygen ${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen-input/doxy.cfg
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docs)
 
 #############################
 # Install steps
