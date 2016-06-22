@@ -69,13 +69,14 @@ enum ConvTypes {
   CONV_OTHER,
   CONV_INCLUDE,
   CONV_LITERAL,
+  CONV_BLAS,
   CONV_LAST
 };
 
 const char *counterNames[ConvTypes::CONV_LAST] = {
     "dev",          "mem",    "kern",    "coord_func", "math_func",
     "special_func", "stream", "event",   "err",        "def",
-    "tex",          "other",  "include", "literal"};
+    "tex",          "other",  "include", "literal",    "blas"};
 
 namespace {
 
@@ -87,6 +88,10 @@ struct cuda2hipMap {
     // includes
     cuda2hipRename["cuda_runtime.h"] = {"hip_runtime.h", CONV_INCLUDE};
     cuda2hipRename["cuda_runtime_api.h"] = {"hip_runtime_api.h", CONV_INCLUDE};
+
+    // TODO: make blas optional
+    cuda2hipRename["cublas.h"] = {"hipblas.h", CONV_INCLUDE};
+    cuda2hipRename["cublas_v2.h"] = {"hipblas.h", CONV_INCLUDE};
 
     // Error codes and return types:
     cuda2hipRename["cudaError_t"] = {"hipError_t", CONV_ERR};
@@ -274,8 +279,7 @@ struct cuda2hipMap {
     cuda2hipRename["cudaGetDeviceCount"] = {"hipGetDeviceCount", CONV_DEV};
 
     // Profiler
-    // cuda2hipRename["cudaProfilerInitialize"] = "hipProfilerInitialize";  //
-    // see if these are called anywhere.
+//    cuda2hipRename["cudaProfilerInitialize"] = {"hipProfilerInitialize", CONV_OTHER};
     cuda2hipRename["cudaProfilerStart"] = {"hipProfilerStart", CONV_OTHER};
     cuda2hipRename["cudaProfilerStop"] = {"hipProfilerStop", CONV_OTHER};
 
@@ -289,6 +293,70 @@ struct cuda2hipMap {
                                                CONV_TEX};
     cuda2hipRename["cudaBindTexture"] = {"hipBindTexture", CONV_TEX};
     cuda2hipRename["cudaUnbindTexture"] = {"hipUnbindTexture", CONV_TEX};
+
+    // Blas
+    cuda2hipRename["cublasHandle_t"] = {"hipblasHandle_t", CONV_BLAS};
+    cuda2hipRename["cublasOperation_t"] = {"hipblasOperation_t", CONV_BLAS};
+    cuda2hipRename["cublasStatus_t"] = {"hipblasStatus_t", CONV_BLAS};
+    cuda2hipRename["cublasCgemm"] = {"hipblasCgemm", CONV_BLAS};
+    cuda2hipRename["cublasCreate"] = {"hipblasCreate", CONV_BLAS};
+    cuda2hipRename["cublasDestroy"] = {"hipblasDestroy", CONV_BLAS};
+    cuda2hipRename["cublasSetVector"] = {"hipblasSetVector", CONV_BLAS};
+    cuda2hipRename["cublasGetVector"] = {"hipblasGetVector", CONV_BLAS};
+    cuda2hipRename["cublasSetMatrix"] = {"hipblasSetMatrix", CONV_BLAS};
+    cuda2hipRename["cublasGetMatrix"] = {"hipblasGetMatrix", CONV_BLAS};
+    cuda2hipRename["cublasSasum"] = {"hipblasSasum", CONV_BLAS};
+    cuda2hipRename["cublasDasum"] = {"hipblasDasum", CONV_BLAS};
+    cuda2hipRename["cublasSasumBatched"] = {"hipblasSasumBatched", CONV_BLAS};
+    cuda2hipRename["cublasDasumBatched"] = {"hipblasDasumBatched", CONV_BLAS};
+    cuda2hipRename["cublasSaxpy"] = {"hipblasSaxpy", CONV_BLAS};
+    cuda2hipRename["cublasSaxpyBatched"] = {"hipblasSaxpyBatched", CONV_BLAS};
+    cuda2hipRename["cublasScopy"] = {"hipblasScopy", CONV_BLAS};
+    cuda2hipRename["cublasDcopy"] = {"hipblasDcopy", CONV_BLAS};
+    cuda2hipRename["cublasScopyBatched"] = {"hipblasScopyBatched", CONV_BLAS};
+    cuda2hipRename["cublasDcopyBatched"] = {"hipblasDcopyBatched", CONV_BLAS};
+    cuda2hipRename["cublasSdot"] = {"hipblasSdot", CONV_BLAS};
+    cuda2hipRename["cublasDdot"] = {"hipblasDdot", CONV_BLAS};
+    cuda2hipRename["cublasSdotBatched"] = {"hipblasSdotBatched", CONV_BLAS};
+    cuda2hipRename["cublasDdotBatched"] = {"hipblasDdotBatched", CONV_BLAS};
+    cuda2hipRename["cublasSscal"] = {"hipblasSscal", CONV_BLAS};
+    cuda2hipRename["cublasDscal"] = {"hipblasDscal", CONV_BLAS};
+    cuda2hipRename["cublasSscalBatched"] = {"hipblasSscalBatched", CONV_BLAS};
+    cuda2hipRename["cublasDscalBatched"] = {"hipblasDscalBatched", CONV_BLAS};
+    cuda2hipRename["cublasSgemv"] = {"hipblasSgemv", CONV_BLAS};
+    cuda2hipRename["cublasSgemvBatched"] = {"hipblasSgemvBatched", CONV_BLAS};
+    cuda2hipRename["cublasSger"] = {"hipblasSger", CONV_BLAS};
+    cuda2hipRename["cublasSgerBatched"] = {"hipblasSgerBatched", CONV_BLAS};
+    cuda2hipRename["cublasSgemm"] = {"hipblasSgemm", CONV_BLAS};
+    cuda2hipRename["cublasCgemm"] = {"hipblasCgemm", CONV_BLAS};
+    cuda2hipRename["cublasSgemmBatched"] = {"hipblasSgemmBatched", CONV_BLAS};
+    cuda2hipRename["cublasCgemmBatched"] = {"hipblasCgemmBatched", CONV_BLAS};
+
+    // Blas operations
+    cuda2hipRename["CUBLAS_OP_N"] = {"HIPBLAS_OP_N", CONV_BLAS};
+    cuda2hipRename["CUBLAS_OP_T"] = {"HIPBLAS_OP_T", CONV_BLAS};
+    cuda2hipRename["CUBLAS_OP_C"] = {"HIPBLAS_OP_C", CONV_BLAS};
+
+    // Blas statuses
+    cuda2hipRename["CUBLAS_STATUS_SUCCESS"] = {"HIPBLAS_STATUS_SUCCESS", CONV_BLAS};
+    cuda2hipRename["CUBLAS_STATUS_NOT_INITIALIZED"] = {"HIPBLAS_STATUS_NOT_INITIALIZED", CONV_BLAS};
+    cuda2hipRename["CUBLAS_STATUS_ALLOC_FAILED"] = {"HIPBLAS_STATUS_ALLOC_FAILED", CONV_BLAS};
+    cuda2hipRename["CUBLAS_STATUS_INVALID_VALUE"] = {"HIPBLAS_STATUS_INVALID_VALUE", CONV_BLAS};
+    cuda2hipRename["CUBLAS_STATUS_MAPPING_ERROR"] = {"HIPBLAS_STATUS_MAPPING_ERROR", CONV_BLAS};
+    cuda2hipRename["CUBLAS_STATUS_EXECUTION_FAILED"] = {"HIPBLAS_STATUS_EXECUTION_FAILED", CONV_BLAS};
+    cuda2hipRename["CUBLAS_STATUS_INTERNAL_ERROR"] = {"HIPBLAS_STATUS_INTERNAL_ERROR", CONV_BLAS};
+    cuda2hipRename["CUBLAS_STATUS_NOT_SUPPORTED"] = {"HIPBLAS_STATUS_INTERNAL_ERROR", CONV_BLAS};
+    cuda2hipRename["CUBLAS_STATUS_INTERNAL_ERROR"] = {"HIPBLAS_STATUS_INTERNAL_ERROR", CONV_BLAS};
+
+    // Blas v2
+//    cuda2hipRename["cublasSetStream_v2"] = {"TODO", CONV_BLAS};
+    cuda2hipRename["cublasCreate_v2"] = { "hipblasCreate", CONV_BLAS };
+    cuda2hipRename["cublasDestroy_v2"] = { "hipblasDestroy", CONV_BLAS };
+    cuda2hipRename["cublasSgemm_v2"] = { "hipblasSgemm", CONV_BLAS };
+    cuda2hipRename["cublasSaxpy_v2"] = { "hipblasSaxpy", CONV_BLAS };
+    cuda2hipRename["cublasSdot_v2"] = { "hipblasSdot", CONV_BLAS };
+//    cuda2hipRename["cublasGetMatrixAsync"] = {"hipblasGetMatrixAsync", CONV_BLAS};
+//    cuda2hipRename["cublasSetMatrixAsync"] = {"hipblasSetMatrixAsync", CONV_BLAS};
   }
 
   struct HipNames {
@@ -310,7 +378,8 @@ static void processString(StringRef s, const cuda2hipMap &map,
                           SourceLocation start,
                           int64_t countReps[ConvTypes::CONV_LAST]) {
   size_t begin = 0;
-  while ((begin = s.find("cuda", begin)) != StringRef::npos) {
+  while ((begin = s.find("cuda", begin)) != StringRef::npos ||
+         (begin = s.find("cublas", begin)) != StringRef::npos) {
     const size_t end = s.find_first_of(" ", begin + 4);
     StringRef name = s.slice(begin, end);
     const auto found = map.cuda2hipRename.find(name);
@@ -481,8 +550,8 @@ public:
     OS << "hipLaunchParm lp";
     size_t replacementLength = OS.str().size();
     SourceLocation sl = kernelDecl->getNameInfo().getEndLoc();
-    SourceLocation kernelArgListStart = clang::Lexer::findLocationAfterToken(
-        sl, clang::tok::l_paren, *SM, DefaultLangOptions, true);
+    SourceLocation kernelArgListStart = Lexer::findLocationAfterToken(
+        sl, tok::l_paren, *SM, DefaultLangOptions, true);
     DEBUG(dbgs() << kernelArgListStart.printToString(*SM));
     if (kernelDecl->getNumParams() > 0) {
       const ParmVarDecl *pvdFirst = kernelDecl->getParamDecl(0);
@@ -490,7 +559,7 @@ public:
           kernelDecl->getParamDecl(kernelDecl->getNumParams() - 1);
       SourceLocation kernelArgListStart(pvdFirst->getLocStart());
       SourceLocation kernelArgListEnd(pvdLast->getLocEnd());
-      SourceLocation stop = clang::Lexer::getLocForEndOfToken(
+      SourceLocation stop = Lexer::getLocForEndOfToken(
           kernelArgListEnd, 0, *SM, DefaultLangOptions);
       replacementLength +=
           SM->getCharacterData(stop) - SM->getCharacterData(kernelArgListStart);
@@ -510,7 +579,7 @@ public:
     LangOptions DefaultLangOptions;
 
     if (const CallExpr *call =
-            Result.Nodes.getNodeAs<clang::CallExpr>("cudaCall")) {
+            Result.Nodes.getNodeAs<CallExpr>("cudaCall")) {
       const FunctionDecl *funcDcl = call->getDirectCallee();
       StringRef name = funcDcl->getDeclName().getAsString();
       const auto found = N.cuda2hipRename.find(name);
@@ -518,17 +587,23 @@ public:
         countReps[found->second.countType]++;
         StringRef repName = found->second.hipName;
         SourceLocation sl = call->getLocStart();
-        Replacement Rep(*SM, SM->isMacroArgExpansion(sl)
-                                 ? SM->getImmediateSpellingLoc(sl)
-                                 : sl,
-                        name.size(), repName);
+        size_t length = name.size();
+        if (SM->isMacroArgExpansion(sl)) {
+          sl = SM->getImmediateSpellingLoc(sl);
+        }
+        else if (SM->isMacroBodyExpansion(sl)) {
+          sl = SM->getExpansionLoc(sl);
+          SourceLocation sl_end =
+            Lexer::getLocForEndOfToken(sl, 0, *SM, DefaultLangOptions);
+          length = SM->getCharacterData(sl_end) - SM->getCharacterData(sl);
+        }
+        Replacement Rep(*SM, sl, length, repName);
         Replace->insert(Rep);
       }
     }
 
     if (const CUDAKernelCallExpr *launchKernel =
-            Result.Nodes.getNodeAs<clang::CUDAKernelCallExpr>(
-                "cudaLaunchKernel")) {
+            Result.Nodes.getNodeAs<CUDAKernelCallExpr>("cudaLaunchKernel")) {
       SmallString<40> XStr;
       raw_svector_ostream OS(XStr);
       StringRef calleeName;
@@ -562,7 +637,7 @@ public:
           SourceLocation sl(arg->getLocStart());
           SourceLocation el(arg->getLocEnd());
           SourceLocation stop =
-              clang::Lexer::getLocForEndOfToken(el, 0, *SM, DefaultLangOptions);
+              Lexer::getLocForEndOfToken(el, 0, *SM, DefaultLangOptions);
           StringRef outs(SM->getCharacterData(sl),
                          SM->getCharacterData(stop) - SM->getCharacterData(sl));
           DEBUG(dbgs() << "args[ " << argno << "]" << outs << " <"
@@ -581,7 +656,7 @@ public:
         SourceLocation sl(arg->getLocStart());
         SourceLocation el(arg->getLocEnd());
         SourceLocation stop =
-            clang::Lexer::getLocForEndOfToken(el, 0, *SM, DefaultLangOptions);
+            Lexer::getLocForEndOfToken(el, 0, *SM, DefaultLangOptions);
         std::string outs(SM->getCharacterData(sl),
                          SM->getCharacterData(stop) - SM->getCharacterData(sl));
         DEBUG(dbgs() << outs << "\n");
@@ -590,7 +665,7 @@ public:
       XStr.pop_back();
       OS << ")";
       size_t length =
-          SM->getCharacterData(clang::Lexer::getLocForEndOfToken(
+          SM->getCharacterData(Lexer::getLocForEndOfToken(
               launchKernel->getLocEnd(), 0, *SM, DefaultLangOptions)) -
           SM->getCharacterData(launchKernel->getLocStart());
       Replacement Rep(*SM, launchKernel->getLocStart(), length, OS.str());
@@ -599,14 +674,14 @@ public:
     }
 
     if (const FunctionTemplateDecl *templateDecl =
-            Result.Nodes.getNodeAs<clang::FunctionTemplateDecl>(
+            Result.Nodes.getNodeAs<FunctionTemplateDecl>(
                 "unresolvedTemplateName")) {
       FunctionDecl *kernelDecl = templateDecl->getTemplatedDecl();
       convertKernelDecl(kernelDecl, Result);
     }
 
     if (const MemberExpr *threadIdx =
-            Result.Nodes.getNodeAs<clang::MemberExpr>("cudaBuiltin")) {
+            Result.Nodes.getNodeAs<MemberExpr>("cudaBuiltin")) {
       if (const OpaqueValueExpr *refBase =
               dyn_cast<OpaqueValueExpr>(threadIdx->getBase())) {
         if (const DeclRefExpr *declRef =
@@ -630,7 +705,7 @@ public:
     }
 
     if (const DeclRefExpr *cudaEnumConstantRef =
-            Result.Nodes.getNodeAs<clang::DeclRefExpr>("cudaEnumConstantRef")) {
+            Result.Nodes.getNodeAs<DeclRefExpr>("cudaEnumConstantRef")) {
       StringRef name = cudaEnumConstantRef->getDecl()->getNameAsString();
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
@@ -643,9 +718,14 @@ public:
     }
 
     if (const VarDecl *cudaEnumConstantDecl =
-            Result.Nodes.getNodeAs<clang::VarDecl>("cudaEnumConstantDecl")) {
+            Result.Nodes.getNodeAs<VarDecl>("cudaEnumConstantDecl")) {
       StringRef name =
           cudaEnumConstantDecl->getType()->getAsTagDecl()->getNameAsString();
+      // anonymous typedef enum
+      if (name.empty()) {
+        QualType QT = cudaEnumConstantDecl->getType().getUnqualifiedType();
+        name = QT.getAsString();
+      }
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
         countReps[found->second.countType]++;
@@ -656,8 +736,22 @@ public:
       }
     }
 
+    if (const VarDecl *cudaTypedefVar =
+      Result.Nodes.getNodeAs<VarDecl>("cudaTypedefVar")) {
+      QualType QT = cudaTypedefVar->getType().getUnqualifiedType();
+      StringRef name = QT.getAsString();
+      const auto found = N.cuda2hipRename.find(name);
+      if (found != N.cuda2hipRename.end()) {
+        countReps[found->second.countType]++;
+        StringRef repName = found->second.hipName;
+        SourceLocation sl = cudaTypedefVar->getLocStart();
+        Replacement Rep(*SM, sl, name.size(), repName);
+        Replace->insert(Rep);
+      }
+    }
+
     if (const VarDecl *cudaStructVar =
-            Result.Nodes.getNodeAs<clang::VarDecl>("cudaStructVar")) {
+            Result.Nodes.getNodeAs<VarDecl>("cudaStructVar")) {
       StringRef name = cudaStructVar->getType()
                            ->getAsStructureType()
                            ->getDecl()
@@ -674,7 +768,7 @@ public:
     }
 
     if (const VarDecl *cudaStructVarPtr =
-            Result.Nodes.getNodeAs<clang::VarDecl>("cudaStructVarPtr")) {
+            Result.Nodes.getNodeAs<VarDecl>("cudaStructVarPtr")) {
       const Type *t = cudaStructVarPtr->getType().getTypePtrOrNull();
       if (t) {
         StringRef name = t->getPointeeCXXRecordDecl()->getName();
@@ -691,7 +785,7 @@ public:
     }
 
     if (const ParmVarDecl *cudaParamDecl =
-            Result.Nodes.getNodeAs<clang::ParmVarDecl>("cudaParamDecl")) {
+            Result.Nodes.getNodeAs<ParmVarDecl>("cudaParamDecl")) {
       QualType QT = cudaParamDecl->getOriginalType().getUnqualifiedType();
       StringRef name = QT.getAsString();
       const Type *t = QT.getTypePtr();
@@ -710,7 +804,7 @@ public:
     }
 
     if (const ParmVarDecl *cudaParamDeclPtr =
-            Result.Nodes.getNodeAs<clang::ParmVarDecl>("cudaParamDeclPtr")) {
+            Result.Nodes.getNodeAs<ParmVarDecl>("cudaParamDeclPtr")) {
       const Type *pt = cudaParamDeclPtr->getType().getTypePtrOrNull();
       if (pt) {
         QualType QT = pt->getPointeeType();
@@ -731,7 +825,7 @@ public:
     }
 
     if (const StringLiteral *stringLiteral =
-            Result.Nodes.getNodeAs<clang::StringLiteral>("stringLiteral")) {
+            Result.Nodes.getNodeAs<StringLiteral>("stringLiteral")) {
       if (stringLiteral->getCharByteWidth() == 1) {
         StringRef s = stringLiteral->getString();
         processString(s, N, Replace, *SM, stringLiteral->getLocStart(),
@@ -740,7 +834,7 @@ public:
     }
 
     if (const UnaryExprOrTypeTraitExpr *expr =
-            Result.Nodes.getNodeAs<clang::UnaryExprOrTypeTraitExpr>(
+            Result.Nodes.getNodeAs<UnaryExprOrTypeTraitExpr>(
                 "cudaStructSizeOf")) {
       TypeSourceInfo *typeInfo = expr->getArgumentTypeInfo();
       QualType QT = typeInfo->getType().getUnqualifiedType();
@@ -769,11 +863,10 @@ private:
 } // end anonymous namespace
 
 // Set up the command line options
-static cl::opt<std::string>
-InputFilename(cl::Positional, cl::desc("<input file>"), cl::init("-"));
+static cl::OptionCategory ToolTemplateCategory("CUDA to HIP source translator options");
 
 static cl::opt<std::string> OutputFilename("o", cl::desc("Output filename"),
-                                           cl::value_desc("filename"));
+       cl::value_desc("filename"), cl::cat(ToolTemplateCategory));
 
 static cl::opt<bool>
     Inplace("inplace",
@@ -796,13 +889,13 @@ int main(int argc, const char **argv) {
 
   int Result;
 
-  std::unique_ptr<CompilationDatabase> Compilations(
-    new FixedCompilationDatabase(".",std::vector<std::string>()));
-  cl::ParseCommandLineOptions(argc, argv);
+  CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::Required);
+
+  std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
 
   std::string dst = OutputFilename;
   if (dst.empty()) {
-    dst = InputFilename;
+    dst = fileSources[0];
     if (!Inplace) {
       size_t pos = dst.rfind(".cu");
       if (pos != std::string::npos) {
@@ -820,65 +913,69 @@ int main(int argc, const char **argv) {
   }
 
   // copy source file since tooling makes changes "inplace"
-  std::ifstream source(InputFilename, std::ios::binary);
+  std::ifstream source(fileSources[0], std::ios::binary);
   std::ofstream dest(Inplace ? dst + ".prehip" : dst, std::ios::binary);
   dest << source.rdbuf();
   source.close();
   dest.close();
 
-  RefactoringTool Tool(*Compilations, dst);
+  RefactoringTool Tool(OptionsParser.getCompilations(), dst);
   ast_matchers::MatchFinder Finder;
   Cuda2HipCallback Callback(&Tool.getReplacements(), &Finder);
   HipifyPPCallbacks PPCallbacks(&Tool.getReplacements());
   Finder.addMatcher(callExpr(isExpansionInMainFile(),
-                             callee(functionDecl(matchesName("cuda.*"))))
-                        .bind("cudaCall"),
-                    &Callback);
+                             callee(functionDecl(matchesName("cuda.*|cublas.*"))))
+                             .bind("cudaCall"),
+                             &Callback);
   Finder.addMatcher(cudaKernelCallExpr().bind("cudaLaunchKernel"), &Callback);
   Finder.addMatcher(memberExpr(isExpansionInMainFile(),
                                hasObjectExpression(hasType(cxxRecordDecl(
-                                   matchesName("__cuda_builtin_")))))
-                        .bind("cudaBuiltin"),
-                    &Callback);
+                               matchesName("__cuda_builtin_")))))
+                               .bind("cudaBuiltin"),
+                               &Callback);
   Finder.addMatcher(declRefExpr(isExpansionInMainFile(),
-                                to(enumConstantDecl(matchesName("cuda.*"))))
-                        .bind("cudaEnumConstantRef"),
-                    &Callback);
-  Finder.addMatcher(
-      varDecl(isExpansionInMainFile(), hasType(enumDecl(matchesName("cuda.*"))))
-          .bind("cudaEnumConstantDecl"),
-      &Callback);
+                                to(enumConstantDecl(
+                                matchesName("cuda.*|cublas.*|CUDA.*|CUBLAS*"))))
+                                .bind("cudaEnumConstantRef"),
+                                &Callback);
   Finder.addMatcher(varDecl(isExpansionInMainFile(),
-                            hasType(cxxRecordDecl(matchesName("cuda.*"))))
-                        .bind("cudaStructVar"),
-                    &Callback);
-  Finder.addMatcher(
-      varDecl(isExpansionInMainFile(),
-              hasType(pointsTo(cxxRecordDecl(matchesName("cuda.*")))))
-          .bind("cudaStructVarPtr"),
-      &Callback);
+                            hasType(enumDecl()))
+                            .bind("cudaEnumConstantDecl"),
+                            &Callback);
+  Finder.addMatcher(varDecl(isExpansionInMainFile(),
+                            hasType(typedefDecl(matchesName("cuda.*|cublas.*"))))
+                            .bind("cudaTypedefVar"),
+                            &Callback);
+  Finder.addMatcher(varDecl(isExpansionInMainFile(),
+                            hasType(cxxRecordDecl(matchesName("cuda.*|cublas.*"))))
+                            .bind("cudaStructVar"),
+                            &Callback);
+  Finder.addMatcher(varDecl(isExpansionInMainFile(),
+                            hasType(pointsTo(cxxRecordDecl(
+                                             matchesName("cuda.*|cublas.*")))))
+                            .bind("cudaStructVarPtr"),
+                            &Callback);
   Finder.addMatcher(parmVarDecl(isExpansionInMainFile(),
-                                hasType(namedDecl(matchesName("cuda.*"))))
-                        .bind("cudaParamDecl"),
-                    &Callback);
-  Finder.addMatcher(
-      parmVarDecl(isExpansionInMainFile(),
-                  hasType(pointsTo(namedDecl(matchesName("cuda.*")))))
-          .bind("cudaParamDeclPtr"),
-      &Callback);
+                                hasType(namedDecl(matchesName("cuda.*|cublas.*"))))
+                                .bind("cudaParamDecl"),
+                                &Callback);
+  Finder.addMatcher(parmVarDecl(isExpansionInMainFile(),
+                                hasType(pointsTo(namedDecl(
+                                                 matchesName("cuda.*|cublas.*")))))
+                                .bind("cudaParamDeclPtr"),
+                                &Callback);
   Finder.addMatcher(expr(isExpansionInMainFile(),
                          sizeOfExpr(hasArgumentOfType(recordType(hasDeclaration(
-                             cxxRecordDecl(matchesName("cuda.*")))))))
+                             cxxRecordDecl(matchesName("cuda.*|cublas.*")))))))
                         .bind("cudaStructSizeOf"),
-                    &Callback);
-  Finder.addMatcher(
-      stringLiteral(isExpansionInMainFile()).bind("stringLiteral"), &Callback);
+                         &Callback);
+  Finder.addMatcher(stringLiteral(isExpansionInMainFile()).bind("stringLiteral"),
+                                  &Callback);
 
   auto action = newFrontendActionFactory(&Finder, &PPCallbacks);
 
   std::vector<const char *> compilationStages;
   compilationStages.push_back("--cuda-host-only");
-  //compilationStages.push_back("--cuda-device-only");
 
   for (auto Stage : compilationStages) {
     Tool.appendArgumentsAdjuster(
@@ -931,7 +1028,7 @@ int main(int argc, const char **argv) {
       llvm::outs() << counterNames[i] << ':'
                    << Callback.countReps[i] + PPCallbacks.countReps[i] << ' ';
     }
-    llvm::outs() << ") in \'" << InputFilename << "\'\n";
+    llvm::outs() << ") in \'" << fileSources[0] << "\'\n";
   }
   return Result;
 }
