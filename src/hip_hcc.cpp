@@ -42,6 +42,7 @@ THE SOFTWARE.
 #include "hip_runtime.h"
 #include "hcc_detail/hip_hcc.h"
 #include "hsa_ext_amd.h"
+#include "hsakmt.h"
 
 // TODO, re-org header order.
 extern const char *ihipErrorString(hipError_t hip_error);
@@ -720,17 +721,18 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     prop->computeMode = 0;
 
     // Get Max Threads Per Multiprocessor
-/*
+
     HsaSystemProperties props;
     hsaKmtReleaseSystemProperties();
     if(HSAKMT_STATUS_SUCCESS == hsaKmtAcquireSystemProperties(&props)) {
         HsaNodeProperties node_prop = {0};
         if(HSAKMT_STATUS_SUCCESS == hsaKmtGetNodeProperties(node, &node_prop)) {
             uint32_t waves_per_cu = node_prop.MaxWavesPerSIMD;
-            prop-> maxThreadsPerMultiProcessor = prop->warpsize*waves_per_cu;
+            uint32_t simd_per_cu = node_prop.NumSIMDPerCU;
+            prop-> maxThreadsPerMultiProcessor = prop->warpSize*waves_per_cu*simd_per_cu;
         }
     }
-*/
+
 
     // Get memory properties
     err = hsa_agent_iterate_regions(_hsa_agent, get_region_info, prop);
