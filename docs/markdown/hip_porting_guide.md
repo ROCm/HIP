@@ -464,37 +464,6 @@ hipcc-cmd: /opt/hcc/bin/hcc  -hc -I/opt/hcc/include -stdlib=libc++ -I../../../..
 If you pass a ".cu" file, hcc will attempt to compile it as a Cuda language file. You must tell hcc that its in fact a C++ file: use the "-x c++" option.
 
 
-#### grid_launch kernel dispatch - fallback
-HIP uses an hcc language feature called "grid_launch". The [[hc_grid_launch]] attribute that can be attached to a function definition, and the first parameter is of type grid_launch_parm.
-When a [[hc_grid_launch]] function is called, hcc runtime uses the grid_launch_parm to control the execution configuration of the kernel 
-(including the grid and group dimensions, the queue, and dynamic group memory allocations).   By default, the hipLaunchKernel macro creates a grid_launch_parm structure and launches a
-[[hc_grid_launch]] kernel.  grid_launch is a relatively new addition to hcc so this section describes how to fall back to a traditional calling sequence which invokes a standard host function
-which calls a hc::parallel_for_each to launch the kernel.  
-
-First, set DISABLE_GRID_LAUNCH:
-include/hip_common.h
-```
-// Set this define to disable GRID_LAUNCH
-#define DISABLE_GRID_LAUNCH
-```
-
-Inside any kernel use the KERNELBEGIN as the first line in the kernel function, and KERNELEND as the last line.  For example:
-```
-__global__ void
-MyKernel(hipLaunchParm lp, float *C, const float *A, size_t N)
-{
-    KERNELBEGIN; // Required if hc_grid_launch is disabled
-
-	int tid = hipBlockIdx_x*MAX_THREADS_PER_BLOCK + hipThreadIdx_x;
-
-    if (tid < N) {
-        C[tid] = A[tid];
-    }
-
-    KERNELEND; // Required if hc_grid_launch is disabled
-}
-```
-
 #### HIP Environment Variables
 
 On the HCC path, HIP provides a number of environment variables that control the behavior of HIP.  Some of these are useful for appliction development (for example HIP_VISIBLE_DEVICES, HIP_LAUNCH_BLOCKING),

@@ -22,9 +22,6 @@ THE SOFTWARE.
 
 #pragma once
 
-// Disable use of grid_launch feature in HCC compiler.
-//#define DISABLE_GRID_LAUNCH
-
 // Common code included at start of every hip file.
 // Auto enable __HIP_PLATFORM_HCC__ if compiling with HCC
 // Other compiler (GCC,ICC,etc) need to set one of these macros explicitly

@@ -21,7 +21,6 @@ THE SOFTWARE.
 */
 // Test the Grid_Launch syntax.
 
-#undef DISABLE_GRID_LAUNCH /* Tell hip_*.h to compile in GL mode */
 #include "hip_runtime.h"
 #include "test_common.h"
 

@@ -1093,12 +1093,23 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
 {
 	std::call_once(hip_initialized, ihipInit);
     stream = ihipSyncAndResolveStream(stream);
+#if USE_GRID_LAUNCH_20 
+    lp->grid_dim.x = grid.x;
+    lp->grid_dim.y = grid.y;
+    lp->grid_dim.z = grid.z;
+    lp->group_dim.x = block.x;
+    lp->group_dim.y = block.y;
+    lp->group_dim.z = block.z;
+    lp->barrier_bit = barrier_bit_queue_default;
+    lp->launch_fence = -1;
+#else
     lp->gridDim.x = grid.x;
     lp->gridDim.y = grid.y;
     lp->gridDim.z = grid.z;
     lp->groupDim.x = block.x;
     lp->groupDim.y = block.y;
     lp->groupDim.z = block.z;
+#endif
     stream->lockopen_preKernelCommand();
 //    *av = &stream->_av;
     lp->av = &stream->_av;
@@ -1111,12 +1122,23 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, gri
 {
 	std::call_once(hip_initialized, ihipInit);
     stream = ihipSyncAndResolveStream(stream);
+#if USE_GRID_LAUNCH_20 
+    lp->grid_dim.x = grid;
+    lp->grid_dim.y = 1;
+    lp->grid_dim.z = 1;
+    lp->group_dim.x = block.x;
+    lp->group_dim.y = block.y;
+    lp->group_dim.z = block.z;
+    lp->barrier_bit = barrier_bit_queue_default;
+    lp->launch_fence = -1;
+#else
     lp->gridDim.x = grid;
     lp->gridDim.y = 1;
     lp->gridDim.z = 1;
     lp->groupDim.x = block.x;
     lp->groupDim.y = block.y;
     lp->groupDim.z = block.z;
+#endif
     stream->lockopen_preKernelCommand();
 //    *av = &stream->_av;
     lp->av = &stream->_av;
@@ -1130,12 +1152,23 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, gri
 {
 	std::call_once(hip_initialized, ihipInit);
     stream = ihipSyncAndResolveStream(stream);
+#if USE_GRID_LAUNCH_20 
+    lp->grid_dim.x = grid.x;
+    lp->grid_dim.y = grid.y;
+    lp->grid_dim.z = grid.z;
+    lp->group_dim.x = block;
+    lp->group_dim.y = 1;
+    lp->group_dim.z = 1;
+    lp->barrier_bit = barrier_bit_queue_default;
+    lp->launch_fence = -1;
+#else
     lp->gridDim.x = grid.x;
     lp->gridDim.y = grid.y;
     lp->gridDim.z = grid.z;
     lp->groupDim.x = block;
     lp->groupDim.y = 1;
     lp->groupDim.z = 1;
+#endif
     stream->lockopen_preKernelCommand();
 //    *av = &stream->_av;
     lp->av = &stream->_av;
@@ -1149,12 +1182,23 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, g
 {
 	std::call_once(hip_initialized, ihipInit);
     stream = ihipSyncAndResolveStream(stream);
+#if USE_GRID_LAUNCH_20 
+    lp->grid_dim.x = grid;
+    lp->grid_dim.y = 1;
+    lp->grid_dim.z = 1;
+    lp->group_dim.x = block;
+    lp->group_dim.y = 1;
+    lp->group_dim.z = 1;
+    lp->barrier_bit = barrier_bit_queue_default;
+    lp->launch_fence = -1;
+#else
     lp->gridDim.x = grid;
     lp->gridDim.y = 1;
     lp->gridDim.z = 1;
     lp->groupDim.x = block;
     lp->groupDim.y = 1;
     lp->groupDim.z = 1;
+#endif
     stream->lockopen_preKernelCommand();
 //    *av = &stream->_av;
     lp->av = &stream->_av;
