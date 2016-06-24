@@ -1,17 +1,13 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(hip_samples)
 
-add_custom_target(create_installer_script ALL
-                  COMMAND tar cvzf ${PROJECT_BINARY_DIR}/samples.tgz --exclude='*.o' .
-                  COMMAND @hip_SOURCE_DIR@/packaging/create_hip_samples_installer.sh ${PROJECT_BINARY_DIR}/samples.tgz ${PROJECT_BINARY_DIR}/unpack_hip_samples.sh
-                  WORKING_DIRECTORY @hip_SOURCE_DIR@/samples)
-install(PROGRAMS unpack_hip_samples.sh DESTINATION bin)
+install(DIRECTORY @hip_SOURCE_DIR@/samples DESTINATION .)
 
 #############################
 # Packaging steps
 #############################
 set(CPACK_SET_DESTDIR TRUE)
-set(CPACK_INSTALL_PREFIX "/opt/rocm")
+set(CPACK_INSTALL_PREFIX "/opt/rocm/hip")
 set(CPACK_PACKAGE_NAME "hip_samples")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "HIP: Heterogenous-computing Interface for Portability [SAMPLES]")
 set(CPACK_PACKAGE_VENDOR "Advanced Micro Devices, Inc.")
