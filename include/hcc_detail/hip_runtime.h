@@ -38,6 +38,8 @@ THE SOFTWARE.
 #include <stddef.h>
 
 
+
+
 #define CUDA_SUCCESS hipSuccess
 
 #include <hip/hip_runtime_api.h>
@@ -46,6 +48,16 @@ THE SOFTWARE.
 // Remainder of this file only compiles with HCC
 #ifdef __HCC__
 #include <grid_launch.h>
+
+#if defined (GRID_LAUNCH_VERSION) and (GRID_LAUNCH_VERSION >= 20) 
+// Use field names for grid_launch 2.0 structure, if HCC supports GL 2.0.
+#define USE_GRID_LAUNCH_20 1
+#else
+#define USE_GRID_LAUNCH_20 0
+#endif
+
+
+
 extern int HIP_TRACE_API;
 
 //TODO-HCC-GL - change this to typedef.
@@ -485,44 +497,22 @@ __device__ float __dsqrt_rz(double x);
  * Kernel launching
  */
 
-// Choose correct polarity of xyz/zyx ordering:
-#if __hcc_workweek__ >= 16123
 
-#define hipThreadIdx_x (amp_get_local_id(0))
-#define hipThreadIdx_y (amp_get_local_id(1))
-#define hipThreadIdx_z (amp_get_local_id(2))
+#define hipThreadIdx_x (hc_get_workitem_id(0))
+#define hipThreadIdx_y (hc_get_workitem_id(1))
+#define hipThreadIdx_z (hc_get_workitem_id(2))
 
 #define hipBlockIdx_x  (hc_get_group_id(0))
 #define hipBlockIdx_y  (hc_get_group_id(1))
 #define hipBlockIdx_z  (hc_get_group_id(2))
 
-#define hipBlockDim_x  (amp_get_local_size(0))
-#define hipBlockDim_y  (amp_get_local_size(1))
-#define hipBlockDim_z  (amp_get_local_size(2))
+#define hipBlockDim_x  (hc_get_group_size(0))
+#define hipBlockDim_y  (hc_get_group_size(1))
+#define hipBlockDim_z  (hc_get_group_size(2))
 
 #define hipGridDim_x   (hc_get_num_groups(0))
 #define hipGridDim_y   (hc_get_num_groups(1))
 #define hipGridDim_z   (hc_get_num_groups(2))
-
-#else
-
-#define hipThreadIdx_x (amp_get_local_id(2))
-#define hipThreadIdx_y (amp_get_local_id(1))
-#define hipThreadIdx_z (amp_get_local_id(0))
-
-#define hipBlockIdx_x  (hc_get_group_id(2))
-#define hipBlockIdx_y  (hc_get_group_id(1))
-#define hipBlockIdx_z  (hc_get_group_id(0))
-
-#define hipBlockDim_x  (amp_get_local_size(2))
-#define hipBlockDim_y  (amp_get_local_size(1))
-#define hipBlockDim_z  (amp_get_local_size(0))
-
-#define hipGridDim_x   (hc_get_num_groups(2))
-#define hipGridDim_y   (hc_get_num_groups(1))
-#define hipGridDim_z   (hc_get_num_groups(0))
-
-#endif // __hcc_workweek__ check
 
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
 
@@ -539,7 +529,20 @@ void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp);
 #define KNRM  "\x1B[0m"
 #define KGRN  "\x1B[32m"
 
-#if not defined(DISABLE_GRID_LAUNCH)
+#if USE_GRID_LAUNCH_20
+#define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...) \
+do {\
+  grid_launch_parm lp;\
+  lp.dynamic_group_mem_bytes = _groupMemBytes; \
+  hipStream_t trueStream = (ihipPreLaunchKernel(_stream, _numBlocks3D, _blockDim3D, &lp)); \
+    if (HIP_TRACE_API) {\
+        fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d stream=%p\n" KNRM, \
+                #_kernelName, lp.grid_dim.x, lp.grid_dim.y, lp.grid_dim.z, lp.group_dim.x, lp.group_dim.y, lp.group_dim.z, lp.dynamic_group_mem_bytes, (void*)(_stream));\
+    }\
+  _kernelName (lp, ##__VA_ARGS__);\
+  ihipPostLaunchKernel(trueStream, lp);\
+} while(0)
+#else
 #define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...) \
 do {\
   grid_launch_parm lp;\
@@ -553,31 +556,8 @@ do {\
   ihipPostLaunchKernel(trueStream, lp);\
 } while(0)
 
-#else
-#warning(DISABLE_GRID_LAUNCH set)
-
-#define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...) \
-do {\
-  grid_launch_parm lp;\
-  lp.gridDim.x = _numBlocks3D.x * _blockDim3D.x;/*Convert from #blocks to #threads*/ \
-  lp.gridDim.y = _numBlocks3D.y * _blockDim3D.y;/*Convert from #blocks to #threads*/ \
-  lp.gridDim.z = _numBlocks3D.z * _blockDim3D.z;/*Convert from #blocks to #threads*/ \
-  lp.groupDim.x = _blockDim3D.x; \
-  lp.groupDim.y = _blockDim3D.y; \
-  lp.groupDim.z = _blockDim3D.z; \
-  lp.groupMemBytes = _groupMemBytes;\
-  hc::completion_future cf;\
-  lp.cf = &cf;  \
-  hipStream_t trueStream = (ihipPreLaunchKernel(_stream, &lp.av)); \
-    if (HIP_TRACE_API) {\
-        fprintf(stderr, "==hip-api: launch '%s' gridDim:[%d.%d.%d] groupDim:[%d.%d.%d] groupMem:+%d stream=%p\n", \
-                #_kernelName, lp.gridDim.z, lp.gridDim.y, lp.gridDim.x, lp.groupDim.z, lp.groupDim.y, lp.groupDim.x, lp.groupMemBytes, (void*)(_stream));\
-    }\
-  _kernelName (lp, ##__VA_ARGS__);\
-  ihipPostLaunchKernel(trueStream, cf);\
-} while(0)
-/*end hipLaunchKernel */
 #endif
+
 
 #elif defined (__HCC_C__)
 
