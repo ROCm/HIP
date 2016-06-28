@@ -1403,7 +1403,7 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
             void *devPtrSrc = srcPtrInfo._devicePointer;
             tprintf(DB_COPY1, "HSA Async_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
 
-            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, dstAgent, devPtrSrc, srcAgent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, copyCompleteSignal);
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, dstAgent, devPtrSrc, g_cpu_agent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, copyCompleteSignal);
 
         // This is sync copy, so let's wait for copy right here:
             if (hsa_status == HSA_STATUS_SUCCESS) {
@@ -1443,7 +1443,7 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
             void *devPtrDst = dstPtrInfo._devicePointer;
             tprintf(DB_COPY1, "HSA Async_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
 
-            hsa_status_t hsa_status = hsa_amd_memory_async_copy(devPtrDst, dstAgent, src, srcAgent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, copyCompleteSignal);
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(devPtrDst, g_cpu_agent, src, srcAgent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, copyCompleteSignal);
 
         // This is sync copy, so let's wait for copy right here:
             if (hsa_status == HSA_STATUS_SUCCESS) {
