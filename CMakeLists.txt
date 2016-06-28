@@ -126,6 +126,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
                      src/hip_memory.cpp
                      src/hip_peer.cpp
                      src/hip_stream.cpp
+					 src/hip_fp16.cpp
                      src/staging_buffer.cpp)
 
     if(${HIP_USE_SHARED_LIBRARY} EQUAL 1)

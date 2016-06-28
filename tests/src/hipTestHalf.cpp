@@ -28,15 +28,15 @@ __global__ void half_scale_kernel(hipLaunchParm lp, float *din, float *dout, int
 
   int idx = hipThreadIdx_x+ hipBlockDim_x*hipBlockIdx_x;
   if (idx < dsize){
-    __half scf = cvt_float_to_half(SCF);
-    __half kin = cvt_float_to_half(din[idx]);
+    __half scf = __float2half(SCF);
+    __half kin = __float2half(din[idx]);
     __half kout;
 
     kout = __hmul(kin, scf);
 
 //    kout = cvt_float_to_half(cvt_half_to_float(kin)*cvt_half_to_float(scf));
 
-    dout[idx] = cvt_half_to_float(kout);
+    dout[idx] = __half2float(kout);
     }
 }
 
