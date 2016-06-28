@@ -1288,7 +1288,11 @@ public:
 
     if (const VarDecl *cudaTypedefVar =
       Result.Nodes.getNodeAs<VarDecl>("cudaTypedefVar")) {
-      QualType QT = cudaTypedefVar->getType().getUnqualifiedType();
+      QualType QT = cudaTypedefVar->getType();
+      if (QT->isArrayType()) {
+        QT = QT.getTypePtr()->getAsArrayTypeUnsafe()->getElementType();
+      }
+      QT = QT.getUnqualifiedType();
       StringRef name = QT.getAsString();
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
@@ -1494,6 +1498,12 @@ int main(int argc, const char **argv) {
                             &Callback);
   Finder.addMatcher(varDecl(isExpansionInMainFile(),
                             hasType(typedefDecl(matchesName("cuda.*|cublas.*"))))
+                            .bind("cudaTypedefVar"),
+                            &Callback);
+  // Array of elements of typedef type, Example: cudaStream_t streams[2];
+  Finder.addMatcher(varDecl(isExpansionInMainFile(),
+                            hasType(arrayType(hasElementType(typedefType(
+                            hasDeclaration(typedefDecl(matchesName("cuda.*|cublas.*"))))))))
                             .bind("cudaTypedefVar"),
                             &Callback);
   Finder.addMatcher(varDecl(isExpansionInMainFile(),
