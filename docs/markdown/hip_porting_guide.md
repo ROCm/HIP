@@ -1,3 +1,49 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [HIP Porting Guide](#hip-porting-guide)
+- [###Table of Contents](#table-of-contents)
+  - [Porting a New Cuda Project](#porting-a-new-cuda-project)
+    - [General Tips](#general-tips)
+    - [Scanning existing CUDA code to scope the porting effort](#scanning-existing-cuda-code-to-scope-the-porting-effort)
+    - [Converting a project "in-place"](#converting-a-project-in-place)
+  - [Distinguishing Compiler Modes](#distinguishing-compiler-modes)
+    - [Identifying HIP Target Platform](#identifying-hip-target-platform)
+    - [Identifying the Compiler: hcc or nvcc](#identifying-the-compiler-hcc-or-nvcc)
+    - [Identifying Current Compilation Pass: Host or Device](#identifying-current-compilation-pass-host-or-device)
+    - [Compiler Defines: Summary](#compiler-defines-summary)
+  - [Identifying Architecture Features](#identifying-architecture-features)
+    - [HIP_ARCH Defines](#hip_arch-defines)
+    - [Device-Architecture Properties](#device-architecture-properties)
+    - [Table of Architecture Properties](#table-of-architecture-properties)
+  - [Finding HIP](#finding-hip)
+  - [Compiler Options](#compiler-options)
+  - [Linking Issues](#linking-issues)
+    - [Linking With hipcc](#linking-with-hipcc)
+    - [-lm Option](#-lm-option)
+  - [Linking Code With Other Compilers](#linking-code-with-other-compilers)
+    - [libc++ and libstdc++](#libc-and-libstdc)
+    - [HIP Headers (hip_runtime.h, hip_runtime_api.h)](#hip-headers-hip_runtimeh-hip_runtime_apih)
+    - [Using a Standard C++ Compiler](#using-a-standard-c-compiler)
+      - [cuda.h](#cudah)
+    - [Choosing HIP File Extensions](#choosing-hip-file-extensions)
+    - [Workarounds](#workarounds)
+      - [warpSize](#warpsize)
+      - [Textures and Cache Control](#textures-and-cache-control)
+  - [More Tips](#more-tips)
+    - [hcc CPU Mode](#hcc-cpu-mode)
+    - [HIPTRACE Mode](#hiptrace-mode)
+    - [Environment Variables](#environment-variables)
+    - [Debugging hipcc](#debugging-hipcc)
+    - [What Does This Error Mean?](#what-does-this-error-mean)
+      - [/usr/include/c++/v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();](#usrincludecv1memory517215-error-call-to-implicitly-deleted-default-constructor-of-std__1bad_weak_ptr-throw-bad_weak_ptr)
+      - [grid_launch kernel dispatch - fallback](#grid_launch-kernel-dispatch---fallback)
+      - [HIP Environment Variables](#hip-environment-variables)
+      - [Editor Highlighting](#editor-highlighting)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # HIP Porting Guide 
 In addition to providing a portable C++ programmming environement for GPUs, HIP is designed to ease
 the porting of existing CUDA code into the HIP environment.  This section describes the available tools 
