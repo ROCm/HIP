@@ -94,20 +94,29 @@ struct cuda2hipMap {
     cuda2hipRename["cublas_v2.h"]        = {"hipblas.h", CONV_INCLUDE};
 
     // Error codes and return types
-    cuda2hipRename["cudaError_t"]                    = {"hipError_t", CONV_ERR};
-    cuda2hipRename["cudaError"]                      = {"hipError", CONV_ERR};
-    cuda2hipRename["cudaSuccess"]                    = {"hipSuccess", CONV_ERR};
-    cuda2hipRename["cudaErrorUnknown"]               = {"hipErrorUnknown", CONV_ERR};
-    cuda2hipRename["cudaErrorMemoryAllocation"]      = {"hipErrorMemoryAllocation", CONV_ERR};
-    cuda2hipRename["cudaErrorMemoryFree"]            = {"hipErrorMemoryFree", CONV_ERR};
-    cuda2hipRename["cudaErrorUnknownSymbol"]         = {"hipErrorUnknownSymbol", CONV_ERR};
-    cuda2hipRename["cudaErrorOutOfResources"]        = {"hipErrorOutOfResources", CONV_ERR};
-    cuda2hipRename["cudaErrorInvalidValue"]          = {"hipErrorInvalidValue", CONV_ERR};
-    cuda2hipRename["cudaErrorInvalidResourceHandle"] = {"hipErrorInvalidResourceHandle", CONV_ERR};
-    cuda2hipRename["cudaErrorInvalidDevice"]         = {"hipErrorInvalidDevice", CONV_ERR};
-    cuda2hipRename["cudaErrorNoDevice"]              = {"hipErrorNoDevice", CONV_ERR};
-    cuda2hipRename["cudaErrorNotReady"]              = {"hipErrorNotReady", CONV_ERR};
-    cuda2hipRename["cudaErrorUnknown"]               = {"hipErrorUnknown", CONV_ERR};
+    cuda2hipRename["cudaError_t"]                          = {"hipError_t", CONV_ERR};
+    cuda2hipRename["cudaError"]                            = {"hipError", CONV_ERR};
+    cuda2hipRename["cudaSuccess"]                          = {"hipSuccess", CONV_ERR};
+    cuda2hipRename["cudaErrorUnknown"]                     = {"hipErrorUnknown", CONV_ERR};
+    cuda2hipRename["cudaErrorMemoryAllocation"]            = {"hipErrorMemoryAllocation", CONV_ERR};
+    cuda2hipRename["cudaErrorMemoryFree"]                  = {"hipErrorMemoryFree", CONV_ERR};
+    cuda2hipRename["cudaErrorUnknownSymbol"]               = {"hipErrorUnknownSymbol", CONV_ERR};
+    cuda2hipRename["cudaErrorOutOfResources"]              = {"hipErrorOutOfResources", CONV_ERR};
+    cuda2hipRename["cudaErrorInvalidValue"]                = {"hipErrorInvalidValue", CONV_ERR};
+    cuda2hipRename["cudaErrorInvalidResourceHandle"]       = {"hipErrorInvalidResourceHandle", CONV_ERR};
+    cuda2hipRename["cudaErrorInvalidDevice"]               = {"hipErrorInvalidDevice", CONV_ERR};
+    cuda2hipRename["cudaErrorInvalidMemcpyDirection"]      = {"hipErrorInvalidMemcpyDirection", CONV_ERR};
+    cuda2hipRename["cudaErrorInvalidDevicePointer"]        = {"hipErrorInvalidDevicePointer", CONV_ERR};
+    cuda2hipRename["cudaErrorInitializationError"]         = {"hipErrorInvalidDevicePointer", CONV_ERR};
+    cuda2hipRename["cudaErrorNoDevice"]                    = {"hipErrorNoDevice", CONV_ERR};
+    cuda2hipRename["cudaErrorNotReady"]                    = {"hipErrorNotReady", CONV_ERR};
+    cuda2hipRename["cudaErrorPeerAccessNotEnabled"]        = {"hipErrorPeerAccessNotEnabled", CONV_ERR};
+    cuda2hipRename["cudaErrorPeerAccessAlreadyEnabled"]    = {"hipErrorPeerAccessAlreadyEnabled", CONV_ERR};
+    // NOTE: no corresponding error type in CUDA
+    //cuda2hipRename["cudaErrorRuntimeMemory"]               = {"hipErrorRuntimeMemory", CONV_ERR};
+    //cuda2hipRename["cudaErrorRuntimeOther"]                = {"hipErrorRuntimeOther", CONV_ERR};
+    cuda2hipRename["cudaErrorHostMemoryAlreadyRegistered"] = {"hipErrorHostMemoryAlreadyRegistered", CONV_ERR};
+    cuda2hipRename["cudaErrorHostMemoryNotRegistered"]     = {"hipErrorHostMemoryNotRegistered", CONV_ERR};
 
     // Error API
     cuda2hipRename["cudaGetLastError"]               = {"hipGetLastError", CONV_ERR};
@@ -195,19 +204,44 @@ struct cuda2hipMap {
     cuda2hipRename["cudaSetDevice"]         = {"hipSetDevice", CONV_DEV};
     cuda2hipRename["cudaGetDevice"]         = {"hipGetDevice", CONV_DEV};
 
-    // Attribute
-    cuda2hipRename["bcudaDeviceAttr"]         = {"hipDeviceAttribute_t", CONV_DEV};
-    cuda2hipRename["bcudaDeviceGetAttribute"] = {"hipDeviceGetAttribute", CONV_DEV};
+    // Attributes
+    cuda2hipRename["cudaDeviceAttr"]          = {"hipDeviceAttribute_t", CONV_DEV};
+    cuda2hipRename["cudaDeviceGetAttribute"]  = {"hipDeviceGetAttribute", CONV_DEV};
+
+    cuda2hipRename["cudaDevAttrMaxThreadsPerBlock"]               = {"hipDeviceAttributeMaxThreadsPerBlock", CONV_DEV};
+    cuda2hipRename["cudaDevAttrMaxBlockDimX"]                     = {"hipDeviceAttributeMaxBlockDimX", CONV_DEV};
+    cuda2hipRename["cudaDevAttrMaxBlockDimY"]                     = {"hipDeviceAttributeMaxBlockDimY", CONV_DEV};
+    cuda2hipRename["cudaDevAttrMaxBlockDimZ"]                     = {"hipDeviceAttributeMaxBlockDimZ", CONV_DEV};
+    cuda2hipRename["cudaDevAttrMaxGridDimX"]                      = {"hipDeviceAttributeMaxGridDimX", CONV_DEV};
+    cuda2hipRename["cudaDevAttrMaxGridDimY"]                      = {"hipDeviceAttributeMaxGridDimY", CONV_DEV};
+    cuda2hipRename["cudaDevAttrMaxGridDimZ"]                      = {"hipDeviceAttributeMaxGridDimZ", CONV_DEV};
+    cuda2hipRename["cudaDevAttrMaxSharedMemoryPerBlock"]          = {"hipDeviceAttributeMaxSharedMemoryPerBlock", CONV_DEV};
+    cuda2hipRename["cudaDevAttrTotalConstantMemory"]              = {"hipDeviceAttributeTotalConstantMemory", CONV_DEV};
+    cuda2hipRename["cudaDevAttrWarpSize"]                         = {"hipDeviceAttributeWarpSize", CONV_DEV};
+    cuda2hipRename["cudaDevAttrMaxRegistersPerBlock"]             = {"hipDeviceAttributeMaxRegistersPerBlock", CONV_DEV};
+    cuda2hipRename["cudaDevAttrClockRate"]                        = {"hipDeviceAttributeClockRate", CONV_DEV};
+    cuda2hipRename["cudaDevAttrMemoryClockRate"]                  = {"hipDeviceAttributeMemoryClockRate", CONV_DEV};
+    cuda2hipRename["cudaDevAttrGlobalMemoryBusWidth"]             = {"hipDeviceAttributeMemoryBusWidth", CONV_DEV};
+    cuda2hipRename["cudaDevAttrMultiProcessorCount"]              = {"hipDeviceAttributeMultiprocessorCount", CONV_DEV};
+    cuda2hipRename["cudaDevAttrComputeMode"]                      = {"hipDeviceAttributeComputeMode", CONV_DEV};
+    cuda2hipRename["cudaDevAttrL2CacheSize"]                      = {"hipDeviceAttributeL2CacheSize", CONV_DEV};
+    cuda2hipRename["cudaDevAttrMaxThreadsPerMultiProcessor"]      = {"hipDeviceAttributeMaxThreadsPerMultiProcessor", CONV_DEV};
+    cuda2hipRename["cudaDevAttrComputeCapabilityMajor"]           = {"hipDeviceAttributeComputeCapabilityMajor", CONV_DEV};
+    cuda2hipRename["cudaDevAttrConcurrentKernels"]                = {"hipDeviceAttributeConcurrentKernels", CONV_DEV};
+    cuda2hipRename["cudaDevAttrPciBusId"]                         = {"hipDeviceAttributePciBusId", CONV_DEV};
+    cuda2hipRename["cudaDevAttrPciDeviceId"]                      = {"hipDeviceAttributePciDeviceId", CONV_DEV};
+    cuda2hipRename["cudaDevAttrMaxSharedMemoryPerMultiprocessor"] = {"hipDeviceAttributeMaxSharedMemoryPerMultiprocessor", CONV_DEV};
+    cuda2hipRename["cudaDevAttrIsMultiGpuBoard"]                  = {"hipDeviceAttributeIsMultiGpuBoard", CONV_DEV};
 
     // Device
-    cuda2hipRename["cudaDeviceProp"]          = {"hipDeviceProp_t", CONV_DEV};
-    cuda2hipRename["cudaGetDeviceProperties"] = {"hipGetDeviceProperties", CONV_DEV};
+    cuda2hipRename["cudaDeviceProp"]            = {"hipDeviceProp_t", CONV_DEV};
+    cuda2hipRename["cudaGetDeviceProperties"]   = {"hipGetDeviceProperties", CONV_DEV};
 
     // Cache config
     cuda2hipRename["cudaDeviceSetCacheConfig"]  = {"hipDeviceSetCacheConfig", CONV_DEV};
     // translate deprecated
-    cuda2hipRename["cudaThreadSetCacheConfig"] = {"hipDeviceSetCacheConfig", CONV_DEV};
-    cuda2hipRename["cudaDeviceGetCacheConfig"] = {"hipDeviceGetCacheConfig", CONV_DEV};
+    cuda2hipRename["cudaThreadSetCacheConfig"]  = {"hipDeviceSetCacheConfig", CONV_DEV};
+    cuda2hipRename["cudaDeviceGetCacheConfig"]  = {"hipDeviceGetCacheConfig", CONV_DEV};
     // translate deprecated
     cuda2hipRename["cudaThreadGetCacheConfig"]  = {"hipDeviceGetCacheConfig", CONV_DEV};
     cuda2hipRename["cudaFuncCache"]             = {"hipFuncCache", CONV_DEV};
@@ -219,7 +253,7 @@ struct cuda2hipMap {
 
     // Driver/Runtime
     cuda2hipRename["cudaDriverGetVersion"] = {"hipDriverGetVersion", CONV_DEV};
-    cuda2hipRename["cudaGetDeviceCount"]   = { "hipGetDeviceCount", CONV_DEV };
+    cuda2hipRename["cudaGetDeviceCount"]   = {"hipGetDeviceCount", CONV_DEV};
     // unsupported yet
     //cuda2hipRename["cudaRuntimeGetVersion"] = {"hipRuntimeGetVersion", CONV_DEV};
 
