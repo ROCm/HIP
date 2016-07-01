@@ -46,6 +46,7 @@ THE SOFTWARE.
 
 #include <cstdio>
 #include <fstream>
+#include <set>
 
 using namespace clang;
 using namespace clang::ast_matchers;
@@ -82,12 +83,19 @@ namespace {
 
 struct cuda2hipMap {
   cuda2hipMap() {
+
+    // Replacement Excludes
+    cudaExcludes = {"CHECK_CUDA_ERROR", "CUDA_SAFE_CALL"};
+
     // Defines
     cuda2hipRename["__CUDACC__"] = {"__HIPCC__", CONV_DEF};
 
     // CUDA includes
     cuda2hipRename["cuda_runtime.h"]     = {"hip_runtime.h", CONV_INCLUDE};
     cuda2hipRename["cuda_runtime_api.h"] = {"hip_runtime_api.h", CONV_INCLUDE};
+
+    // HIP includes
+    cuda2hipRename["cudacommon.h.prehip"] = {"cudacommon.h", CONV_INCLUDE};
 
     // CUBLAS includes
     cuda2hipRename["cublas.h"]           = {"hipblas.h", CONV_INCLUDE};
@@ -941,7 +949,7 @@ struct cuda2hipMap {
     // ROTMG
     //cuda2hipRename["cublasSrotmg_v2"] = {"hipblasSrotmg", CONV_BLAS};
     //cuda2hipRename["cublasDrotmg_v2"] = {"hipblasDrotmg", CONV_BLAS};
-}
+  }
 
   struct HipNames {
     StringRef hipName;
@@ -949,6 +957,7 @@ struct cuda2hipMap {
   };
 
   SmallDenseMap<StringRef, HipNames> cuda2hipRename;
+  std::set<StringRef> cudaExcludes;
 };
 
 StringRef unquoteStr(StringRef s) {
@@ -1055,47 +1064,48 @@ struct HipifyPPCallbacks : public PPCallbacks, public SourceFileCallbacks {
                             const MacroDefinition &MD, SourceRange Range,
                             const MacroArgs *Args) override {
     if (_sm->isWrittenInMainFile(MacroNameTok.getLocation())) {
-      for (unsigned int i = 0; Args && i < MD.getMacroInfo()->getNumArgs();
-           i++) {
-        StringRef macroName = MacroNameTok.getIdentifierInfo()->getName();
-        std::vector<Token> toks;
-        // Code below is a kind of stolen from 'MacroArgs::getPreExpArgument'
-        // to workaround the 'const' MacroArgs passed into this hook.
-        const Token *start = Args->getUnexpArgument(i);
-        size_t len = Args->getArgLength(start) + 1;
-#if (LLVM_VERSION_MAJOR >= 3) && (LLVM_VERSION_MINOR >= 9)
-        _pp->EnterTokenStream(ArrayRef<Token>(start, len), false);
-#else
-        _pp->EnterTokenStream(start, len, false, false);
-#endif
-        do {
-          toks.push_back(Token());
-          Token &tk = toks.back();
-          _pp->Lex(tk);
-        } while (toks.back().isNot(tok::eof));
-        _pp->RemoveTopOfLexerStack();
-        // end of stolen code
-        for (auto tok : toks) {
-          if (tok.isAnyIdentifier()) {
-            StringRef name = tok.getIdentifierInfo()->getName();
-            const auto found = N.cuda2hipRename.find(name);
-            if (found != N.cuda2hipRename.end()) {
-              countReps[found->second.countType]++;
-              StringRef repName = found->second.hipName;
-              DEBUG(dbgs()
-                    << "Identifier " << name
-                    << " found as an actual argument in expansion of macro "
-                    << macroName << "\n"
-                    << "will be replaced with: " << repName << "\n");
-              SourceLocation sl = tok.getLocation();
-              Replacement Rep(*_sm, sl, name.size(), repName);
-              Replace->insert(Rep);
+      StringRef macroName = MacroNameTok.getIdentifierInfo()->getName();
+      if (N.cudaExcludes.end() == N.cudaExcludes.find(macroName)) {
+        for (unsigned int i = 0; Args && i < MD.getMacroInfo()->getNumArgs(); i++) {
+          std::vector<Token> toks;
+          // Code below is a kind of stolen from 'MacroArgs::getPreExpArgument'
+          // to workaround the 'const' MacroArgs passed into this hook.
+          const Token *start = Args->getUnexpArgument(i);
+          size_t len = Args->getArgLength(start) + 1;
+  #if (LLVM_VERSION_MAJOR >= 3) && (LLVM_VERSION_MINOR >= 9)
+          _pp->EnterTokenStream(ArrayRef<Token>(start, len), false);
+  #else
+          _pp->EnterTokenStream(start, len, false, false);
+  #endif
+          do {
+            toks.push_back(Token());
+            Token &tk = toks.back();
+            _pp->Lex(tk);
+          } while (toks.back().isNot(tok::eof));
+          _pp->RemoveTopOfLexerStack();
+          // end of stolen code
+          for (auto tok : toks) {
+            if (tok.isAnyIdentifier()) {
+              StringRef name = tok.getIdentifierInfo()->getName();
+              const auto found = N.cuda2hipRename.find(name);
+              if (found != N.cuda2hipRename.end()) {
+                countReps[found->second.countType]++;
+                StringRef repName = found->second.hipName;
+                DEBUG(dbgs()
+                      << "Identifier " << name
+                      << " found as an actual argument in expansion of macro "
+                      << macroName << "\n"
+                      << "will be replaced with: " << repName << "\n");
+                SourceLocation sl = tok.getLocation();
+                Replacement Rep(*_sm, sl, name.size(), repName);
+                Replace->insert(Rep);
+              }
             }
-          }
-          if (tok.is(tok::string_literal)) {
-            StringRef s(tok.getLiteralData(), tok.getLength());
-            processString(unquoteStr(s), N, Replace, *_sm, tok.getLocation(),
-                          countReps);
+            if (tok.is(tok::string_literal)) {
+              StringRef s(tok.getLiteralData(), tok.getLength());
+              processString(unquoteStr(s), N, Replace, *_sm, tok.getLocation(),
+                            countReps);
+            }
           }
         }
       }
@@ -1168,21 +1178,29 @@ public:
       StringRef name = funcDcl->getDeclName().getAsString();
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
-        countReps[found->second.countType]++;
         StringRef repName = found->second.hipName;
         SourceLocation sl = call->getLocStart();
         size_t length = name.size();
+        bool bReplace = true;
         if (SM->isMacroArgExpansion(sl)) {
           sl = SM->getImmediateSpellingLoc(sl);
         }
         else if (SM->isMacroBodyExpansion(sl)) {
-          sl = SM->getExpansionLoc(sl);
-          SourceLocation sl_end =
-            Lexer::getLocForEndOfToken(sl, 0, *SM, DefaultLangOptions);
-          length = SM->getCharacterData(sl_end) - SM->getCharacterData(sl);
+          SourceLocation sl_macro = SM->getExpansionLoc(sl);
+          SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *SM, DefaultLangOptions);
+          length = SM->getCharacterData(sl_end) - SM->getCharacterData(sl_macro);
+          StringRef macroName = StringRef(SM->getCharacterData(sl_macro), length);
+          if (N.cudaExcludes.end() != N.cudaExcludes.find(macroName)) {
+            bReplace = false;
+          } else {
+            sl = sl_macro;
+          }
         }
-        Replacement Rep(*SM, sl, length, repName);
-        Replace->insert(Rep);
+        if (bReplace) {
+          countReps[found->second.countType]++;
+          Replacement Rep(*SM, sl, length, repName);
+          Replace->insert(Rep);
+        }
       }
     }
 
