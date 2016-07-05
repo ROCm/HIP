@@ -836,7 +836,7 @@ __device__ float erfcf(float x)
 }
 __device__ float erfcinvf(float y)
 {
-    return __hip_erfinvf(1 - y); 
+    return __hip_erfinvf(1 - y);
 }
 __device__ float erfcxf(float x)
 {
@@ -1697,75 +1697,111 @@ __device__ unsigned int test__popc(unsigned int input);
 
 __device__ unsigned int __popcll( unsigned long long int input)
 {
-	return hc::__popcount_u32_b64(input);
+    return hc::__popcount_u32_b64(input);
 }
 
 __device__ unsigned int __clz(unsigned int input)
 {
-	return hc::__firstbit_u32_u32( input);
+#ifdef NVCC_COMPAT
+    return input == 0 ? 32 : hc::__firstbit_u32_u32( input);
+#else
+    return hc::__firstbit_u32_u32( input);
+#endif
 }
 
 __device__ unsigned int __clzll(unsigned long long int input)
 {
-	return hc::__firstbit_u32_u64( input);
+#ifdef NVCC_COMPAT
+    return input == 0 ? 64 : hc::__firstbit_u32_u64( input);
+#else
+    return hc::__firstbit_u32_u64( input);
+#endif
 }
 
-__device__ unsigned int __clz(int input)
+__device__ unsigned int __clz( int input)
 {
-	return hc::__firstbit_u32_s32(  input);
+#ifdef NVCC_COMPAT
+    return input == 0 ? 32 : hc::__firstbit_u32_s32( input);
+#else
+    return hc::__firstbit_u32_s32( input);
+#endif
 }
 
-__device__ unsigned int __clzll(long long int input)
+__device__ unsigned int __clzll( long long int input)
 {
-	return hc::__firstbit_u32_s64( input);
+#ifdef NVCC_COMPAT
+    return input == 0 ? 64 : hc::__firstbit_u32_s64( input);
+#else
+    return hc::__firstbit_u32_s64( input);
+#endif
 }
 
 __device__ unsigned int __ffs(unsigned int input)
 {
-	return hc::__lastbit_u32_u32( input)+1;
+#ifdef NVCC_COMPAT
+    return hc::__lastbit_u32_u32( input)+1;
+#else
+    return hc::__lastbit_u32_u32( input);
+#endif
 }
 
 __device__ unsigned int __ffsll(unsigned long long int input)
 {
-	return hc::__lastbit_u32_u64( input)+1;
+#ifdef NVCC_COMPAT
+    return hc::__lastbit_u32_u64( input)+1;
+#else
+    return hc::__lastbit_u32_u64( input);
+#endif
 }
 
-__device__ unsigned int __ffs(int input)
+__device__ unsigned int __ffs( int input)
 {
-	return hc::__lastbit_u32_s32( input)+1;
+#ifdef NVCC_COMPAT
+    return hc::__lastbit_u32_s32( input)+1;
+#else
+    return hc::__lastbit_u32_s32( input);
+#endif
 }
 
-__device__ unsigned int __ffsll(long long int input)
+__device__ unsigned int __ffsll( long long int input)
 {
-	return hc::__lastbit_u32_s64( input)+1;
+#ifdef NVCC_COMPAT
+    return hc::__lastbit_u32_s64( input)+1;
+#else
+    return hc::__lastbit_u32_s64( input);
+#endif
 }
 
 __device__ unsigned int __brev( unsigned int input)
 {
-	return hc::__bitrev_b32( input);
+    return hc::__bitrev_b32( input);
 }
 
 __device__ unsigned long long int __brevll( unsigned long long int input)
 {
-	return hc::__bitrev_b64( input);
+    return hc::__bitrev_b64( input);
 }
 
 // warp vote function __all __any __ballot
 __device__ int __all(  int input)
 {
-	return hc::__all( input);
+    return hc::__all( input);
 }
 
 
 __device__ int __any( int input)
 {
-	if( hc::__any( input)!=0) return 1;
-	else return 0;
+#ifdef NVCC_COMPAT
+    if( hc::__any( input)!=0) return 1;
+    else return 0;
+#else
+    return hc::__any( input);
+#endif
 }
 
 __device__ unsigned long long int __ballot( int input)
 {
-	return hc::__ballot( input);
+    return hc::__ballot( input);
 }
 
 // warp shuffle functions
@@ -1809,11 +1845,11 @@ __device__  float __shfl_xor(float input, int lane_mask, int width)
   return hc::__shfl_xor(input,lane_mask,width);
 }
 
-__host__ __device__ int min(int arg1, int arg2) 
-{ 
+__host__ __device__ int min(int arg1, int arg2)
+{
   return (int)(hc::precise_math::fmin((float)arg1, (float)arg2));
 }
-__host__ __device__ int max(int arg1, int arg2) 
+__host__ __device__ int max(int arg1, int arg2)
 {
   return (int)(hc::precise_math::fmax((float)arg1, (float)arg2));
 }

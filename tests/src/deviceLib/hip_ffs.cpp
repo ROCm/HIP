@@ -31,8 +31,8 @@ THE SOFTWARE.
 #define HIP_ASSERT(x) (assert((x)==hipSuccess))
 
 
-#define WIDTH     32
-#define HEIGHT    32
+#define WIDTH     8
+#define HEIGHT    8
 
 #define NUM       (WIDTH*HEIGHT)
 
@@ -44,12 +44,20 @@ template<typename T>
 int  lastbit( T a)
 {
    if (a == 0)
+#if defined (__HIP_PLATFORM_HCC__) &&  !defined ( NVCC_COMPAT )
+      return -1;
+#else
       return 0;
+#endif
    int pos = 1;
     while ((a&1) != 1) {
        a >>= 1; pos++;
    }
-   return pos;
+#if defined (__HIP_PLATFORM_HCC__) &&  !defined ( NVCC_COMPAT )
+      return pos-1;
+#else
+      return pos;
+#endif
 }
 
 
@@ -130,6 +138,7 @@ int main() {
   // verify the results
   errors = 0;
   for (i = 0; i < NUM; i++) {
+	printf("gpu_ffs =%d, cpu_ffs =%d \n",hostA[i],lastbit(hostB[i]));
 	  if (hostA[i] != lastbit(hostB[i])) {
       errors++;
     }
@@ -142,6 +151,7 @@ int main() {
   }
   errors = 0;
   for (i = 0; i < NUM; i++) {
+	printf("gpu_ffsll =%d, cpu_ffsll =%d \n",hostC[i],lastbit(hostD[i]));
 	  if (hostC[i] != lastbit(hostD[i])) {
       errors++;
     }
