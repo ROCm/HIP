@@ -464,6 +464,15 @@ inline static hipError_t hipSetDeviceFlags (unsigned int flags)
     return hipCUDAErrorTohipError(cudaSetDeviceFlags( flags ));
 }
 
+inline static hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned int flags)
+{
+	return hipCUDAErrorTohipError(cudaEventCreateWithFlags(event, flags));
+}
+
+inline static hipError_t hipEventQuery(hipEvent_t event)
+{
+	return hipCUDAErrorTohipError(cudaEventQuery(event));
+}
 
 #ifdef __cplusplus
 }
