@@ -95,7 +95,8 @@ struct cuda2hipMap {
     cuda2hipRename["cuda_runtime_api.h"] = {"hip_runtime_api.h", CONV_INCLUDE};
 
     // HIP includes
-    cuda2hipRename["cudacommon.h.prehip"] = {"cudacommon.h", CONV_INCLUDE};
+    // TODO: uncomment this when hip/cudacommon.h will be renamed to hip/hipcommon.h
+    //cuda2hipRename["cudacommon.h"] = {"hipcommon.h", CONV_INCLUDE};
 
     // CUBLAS includes
     cuda2hipRename["cublas.h"]           = {"hipblas.h", CONV_INCLUDE};
@@ -134,23 +135,44 @@ struct cuda2hipMap {
 
     // Memcpy
     cuda2hipRename["cudaMemcpy"]               = {"hipMemcpy", CONV_MEM};
-    cuda2hipRename["cudaMemcpyHostToHost"]     = {"hipMemcpyHostToHost", CONV_MEM};
-    cuda2hipRename["cudaMemcpyHostToDevice"]   = {"hipMemcpyHostToDevice", CONV_MEM};
-    cuda2hipRename["cudaMemcpyDeviceToHost"]   = {"hipMemcpyDeviceToHost", CONV_MEM};
-    cuda2hipRename["cudaMemcpyDeviceToDevice"] = {"hipMemcpyDeviceToDevice", CONV_MEM};
-    cuda2hipRename["cudaMemcpyDefault"]        = {"hipMemcpyDefault", CONV_MEM};
     cuda2hipRename["cudaMemcpyToSymbol"]       = {"hipMemcpyToSymbol", CONV_MEM};
     cuda2hipRename["cudaMemset"]               = {"hipMemset", CONV_MEM};
     cuda2hipRename["cudaMemsetAsync"]          = {"hipMemsetAsync", CONV_MEM};
     cuda2hipRename["cudaMemcpyAsync"]          = {"hipMemcpyAsync", CONV_MEM};
     cuda2hipRename["cudaMemGetInfo"]           = {"hipMemGetInfo", CONV_MEM};
+    // Memcpy kind
     cuda2hipRename["cudaMemcpyKind"]           = {"hipMemcpyKind", CONV_MEM};
+    cuda2hipRename["cudaMemcpyHostToHost"]     = {"hipMemcpyHostToHost", CONV_MEM};
+    cuda2hipRename["cudaMemcpyHostToDevice"]   = {"hipMemcpyHostToDevice", CONV_MEM};
+    cuda2hipRename["cudaMemcpyDeviceToHost"]   = {"hipMemcpyDeviceToHost", CONV_MEM};
+    cuda2hipRename["cudaMemcpyDeviceToDevice"] = {"hipMemcpyDeviceToDevice", CONV_MEM};
+    cuda2hipRename["cudaMemcpyDefault"]        = {"hipMemcpyDefault", CONV_MEM};
 
     // Memory management
-    cuda2hipRename["cudaMalloc"]     = {"hipMalloc", CONV_MEM};
-    cuda2hipRename["cudaMallocHost"] = {"hipHostAlloc", CONV_MEM};
-    cuda2hipRename["cudaFree"]       = {"hipFree", CONV_MEM};
-    cuda2hipRename["cudaFreeHost"]   = {"hipHostFree", CONV_MEM};
+    cuda2hipRename["cudaMalloc"]         = {"hipMalloc", CONV_MEM};
+    cuda2hipRename["cudaMallocHost"]     = {"hipHostMalloc", CONV_MEM};
+    cuda2hipRename["cudaFree"]           = {"hipFree", CONV_MEM};
+    cuda2hipRename["cudaFreeHost"]       = {"hipHostFree", CONV_MEM};
+    cuda2hipRename["cudaHostRegister"]   = {"hipHostRegister", CONV_MEM};
+    cuda2hipRename["cudaHostUnregister"] = {"hipHostUnregister", CONV_MEM};
+
+    // Memory types
+    cuda2hipRename["cudaMemoryType"]       = {"hipMemoryType", CONV_MEM};
+    cuda2hipRename["cudaMemoryTypeHost"]   = {"hipMemoryTypeHost", CONV_MEM};
+    cuda2hipRename["cudaMemoryTypeDevice"] = {"hipMemoryTypeDevice", CONV_MEM};
+
+    // Host Malloc Flags
+    cuda2hipRename["cudaHostAllocDefault"]       = {"hipHostMallocDefault", CONV_MEM};
+    cuda2hipRename["cudaHostAllocPortable"]      = {"hipHostMallocPortable", CONV_MEM};
+    cuda2hipRename["cudaHostAllocMapped"]        = {"hipHostMallocMapped", CONV_MEM};
+    cuda2hipRename["cudaHostAllocWriteCombined"] = {"hipHostMallocWriteCombined", CONV_MEM};
+
+    // Host Register Flags
+    cuda2hipRename["cudaHostGetFlags"]         = {"hipHostGetFlags", CONV_MEM};
+    cuda2hipRename["cudaHostRegisterDefault"]  = {"hipHostRegisterDefault", CONV_MEM};
+    cuda2hipRename["cudaHostRegisterPortable"] = {"hipHostRegisterPortable", CONV_MEM};
+    cuda2hipRename["cudaHostRegisterMapped"]   = {"hipHostRegisterMapped", CONV_MEM};
+    cuda2hipRename["cudaHostRegisterIoMemory"] = {"hipHostRegisterIoMemory", CONV_MEM};
 
     // Coordinate Indexing and Dimensions
     cuda2hipRename["threadIdx.x"] = {"hipThreadIdx_x", CONV_COORD_FUNC};
@@ -191,14 +213,22 @@ struct cuda2hipMap {
     cuda2hipRename["cudaEventRecord"]          = {"hipEventRecord", CONV_EVENT};
     cuda2hipRename["cudaEventElapsedTime"]     = {"hipEventElapsedTime", CONV_EVENT};
     cuda2hipRename["cudaEventSynchronize"]     = {"hipEventSynchronize", CONV_EVENT};
+    cuda2hipRename["cudaEventQuery"]           = {"hipEventQuery", CONV_EVENT};
+    // Event Flags
+    cuda2hipRename["cudaEventDefault"]         = {"hipEventDefault", CONV_EVENT};
+    cuda2hipRename["cudaEventBlockingSync"]    = {"hipEventBlockingSync", CONV_EVENT};
+    cuda2hipRename["cudaEventDisableTiming"]   = {"hipEventDisableTiming", CONV_EVENT};
+    cuda2hipRename["cudaEventInterprocess"]    = {"hipEventInterprocess", CONV_EVENT};
 
     // Streams
     cuda2hipRename["cudaStream_t"]              = {"hipStream_t", CONV_STREAM};
     cuda2hipRename["cudaStreamCreate"]          = {"hipStreamCreate", CONV_STREAM};
     cuda2hipRename["cudaStreamCreateWithFlags"] = {"hipStreamCreateWithFlags", CONV_STREAM};
     cuda2hipRename["cudaStreamDestroy"]         = {"hipStreamDestroy", CONV_STREAM};
-    cuda2hipRename["cudaStreamWaitEvent"]       = {"hipStreamWaitEven", CONV_STREAM};
+    cuda2hipRename["cudaStreamWaitEvent"]       = {"hipStreamWaitEvent", CONV_STREAM};
     cuda2hipRename["cudaStreamSynchronize"]     = {"hipStreamSynchronize", CONV_STREAM};
+    // Stream Flags
+    cuda2hipRename["cudaStreamGetFlags"]        = {"hipStreamGetFlags", CONV_STREAM};
     cuda2hipRename["cudaStreamDefault"]         = {"hipStreamDefault", CONV_STREAM};
     cuda2hipRename["cudaStreamNonBlocking"]     = {"hipStreamNonBlocking", CONV_STREAM};
 
@@ -241,9 +271,30 @@ struct cuda2hipMap {
     cuda2hipRename["cudaDevAttrMaxSharedMemoryPerMultiprocessor"] = {"hipDeviceAttributeMaxSharedMemoryPerMultiprocessor", CONV_DEV};
     cuda2hipRename["cudaDevAttrIsMultiGpuBoard"]                  = {"hipDeviceAttributeIsMultiGpuBoard", CONV_DEV};
 
+    // Pointer Attributes
+    cuda2hipRename["cudaPointerAttributes"]      = {"hipPointerAttribute_t", CONV_MEM};
+    cuda2hipRename["cudaPointerGetAttributes"]   = {"hipPointerGetAttributes", CONV_MEM};
+
+    cuda2hipRename["cudaHostGetDevicePointer"]   = {"hipHostGetDevicePointer", CONV_MEM};
+
     // Device
     cuda2hipRename["cudaDeviceProp"]            = {"hipDeviceProp_t", CONV_DEV};
     cuda2hipRename["cudaGetDeviceProperties"]   = {"hipGetDeviceProperties", CONV_DEV};
+
+    // Device Flags
+    cuda2hipRename["cudaSetDeviceFlags"]               = {"hipSetDeviceFlags", CONV_DEV};
+    cuda2hipRename["cudaDeviceScheduleAuto"]           = {"hipDeviceScheduleAuto", CONV_DEV};
+    cuda2hipRename["cudaDeviceScheduleSpin"]           = {"hipDeviceScheduleSpin", CONV_DEV};
+    cuda2hipRename["cudaDeviceScheduleYield"]          = {"hipDeviceScheduleYield", CONV_DEV};
+    // deprecated as of CUDA 4.0 and replaced with cudaDeviceScheduleBlockingSync
+    cuda2hipRename["cudaDeviceBlockingSync"]           = {"hipDeviceBlockingSync", CONV_DEV};
+    // unsupported yet
+    //cuda2hipRename["cudaDeviceScheduleBlockingSync"] = {"hipDeviceScheduleBlockingSync", CONV_DEV};
+    //cuda2hipRename["cudaDeviceScheduleMask"]         = {"hipDeviceScheduleMask", CONV_DEV};
+    cuda2hipRename["cudaDeviceMapHost"]                = {"hipDeviceMapHost", CONV_DEV};
+    // unsupported yet
+    //cuda2hipRename["cudaDeviceLmemResizeToMax"]      = {"hipDeviceLmemResizeToMax", CONV_DEV};
+    //cuda2hipRename["cudaDeviceMask"]                 = {"hipDeviceMask", CONV_DEV};
 
     // Cache config
     cuda2hipRename["cudaDeviceSetCacheConfig"]  = {"hipDeviceSetCacheConfig", CONV_DEV};
