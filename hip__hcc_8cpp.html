@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/git/hip/release_0.86.00/src/hip_hcc.cpp File Reference</title>
+<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/git/hip/release_0.90.00/src/hip_hcc.cpp File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -108,6 +108,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <code>#include &quot;hip_runtime.h&quot;</code><br/>
 <code>#include &quot;hcc_detail/hip_hcc.h&quot;</code><br/>
 <code>#include &quot;hsa_ext_amd.h&quot;</code><br/>
+<code>#include &quot;hsakmt.h&quot;</code><br/>
 <code>#include &quot;hcc_detail/trace_helper.h&quot;</code><br/>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
@@ -153,9 +154,18 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipInit</b> ()</td><
 <tr class="memitem:aaf16ac37517d2e0a1642f822b7aafe0f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaf16ac37517d2e0a1642f822b7aafe0f"></a>
 hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>ihipSyncAndResolveStream</b> (hipStream_t stream)</td></tr>
 <tr class="separator:aaf16ac37517d2e0a1642f822b7aafe0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a92524ad83b4a318729aad695bada8766"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a92524ad83b4a318729aad695bada8766"></a>
-hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPreLaunchKernel</b> (hipStream_t stream, grid_launch_parm *lp)</td></tr>
-<tr class="separator:a92524ad83b4a318729aad695bada8766"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6cc798eff8b4d57e7153a6d32a1a031b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6cc798eff8b4d57e7153a6d32a1a031b"></a>
+hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPreLaunchKernel</b> (hipStream_t stream, <a class="el" href="structdim3.html">dim3</a> grid, <a class="el" href="structdim3.html">dim3</a> block, grid_launch_parm *lp)</td></tr>
+<tr class="separator:a6cc798eff8b4d57e7153a6d32a1a031b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f8d1c4b4c24921f008217709f67ecf3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9f8d1c4b4c24921f008217709f67ecf3"></a>
+hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPreLaunchKernel</b> (hipStream_t stream, size_t grid, <a class="el" href="structdim3.html">dim3</a> block, grid_launch_parm *lp)</td></tr>
+<tr class="separator:a9f8d1c4b4c24921f008217709f67ecf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a011f187b70bf791abd0f376d73ce7bfa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a011f187b70bf791abd0f376d73ce7bfa"></a>
+hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPreLaunchKernel</b> (hipStream_t stream, <a class="el" href="structdim3.html">dim3</a> grid, size_t block, grid_launch_parm *lp)</td></tr>
+<tr class="separator:a011f187b70bf791abd0f376d73ce7bfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96452c8b78af21165691eb4e9b20a1c8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a96452c8b78af21165691eb4e9b20a1c8"></a>
+hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPreLaunchKernel</b> (hipStream_t stream, size_t grid, size_t block, grid_launch_parm *lp)</td></tr>
+<tr class="separator:a96452c8b78af21165691eb4e9b20a1c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a306767aedd231497c964972aade8cf80"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a306767aedd231497c964972aade8cf80"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPostLaunchKernel</b> (hipStream_t stream, grid_launch_parm &amp;lp)</td></tr>
 <tr class="separator:a306767aedd231497c964972aade8cf80"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -335,7 +345,7 @@ hsa_agent_t&#160;</td><td class="memItemRight" valign="bottom"><b>g_cpu_agent</b
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat May 21 2016 14:34:09 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Jul 8 2016 20:56:55 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

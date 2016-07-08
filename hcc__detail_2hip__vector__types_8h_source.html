@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/git/hip/release_0.86.00/include/hcc_detail/hip_vector_types.h Source File</title>
+<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/git/hip/release_0.90.00/include/hcc_detail/hip_vector_types.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -270,10 +270,10 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;</div>
 <div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;<span class="comment">/*</span></div>
 <div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;<span class="comment">// Inline functions for creating vector types from basic types</span></div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<span class="comment">#define ONE_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT (T x) { VT t; t.x = x; return t; };</span></div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;<span class="comment">#define TWO_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT (T x, T y) { VT t; t.x=x; t.y=y; return t; };</span></div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;<span class="comment">#define THREE_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT (T x, T y, T z) { VT t; t.x=x; t.y=y; t.z=z; return t; };</span></div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;<span class="comment">#define FOUR_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT (T x, T y, T z, T w) { VT t; t.x=x; t.y=y; t.z=z; t.w=w; return t; };</span></div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<span class="comment">#define ONE_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT [[hc]] [[cpu]] (T x) { VT t; t.x = x; return t; };</span></div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;<span class="comment">#define TWO_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT [[hc]] [[cpu]] (T x, T y) { VT t; t.x=x; t.y=y; return t; };</span></div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;<span class="comment">#define THREE_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT [[hc]] [[cpu]] (T x, T y, T z) { VT t; t.x=x; t.y=y; t.z=z; return t; };</span></div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;<span class="comment">#define FOUR_COMPONENT_ACCESS(T, VT) inline VT make_ ##VT [[hc]] [[cpu]] (T x, T y, T z, T w) { VT t; t.x=x; t.y=y; t.z=z; t.w=w; return t; };</span></div>
 <div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;<span class="comment"></span></div>
 <div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;<span class="comment"></span></div>
 <div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;<span class="comment">//signed:</span></div>
@@ -357,7 +357,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat May 21 2016 14:34:09 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Jul 8 2016 20:56:55 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

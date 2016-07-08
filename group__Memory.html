@@ -112,13 +112,13 @@ Functions</h2></td></tr>
 <tr class="memdesc:ga4c9e1810b9f5858d36c4d28c91c86924"><td class="mdescLeft">&#160;</td><td class="mdescRight">Un-register host pointer.  <a href="#ga4c9e1810b9f5858d36c4d28c91c86924">More...</a><br/></td></tr>
 <tr class="separator:ga4c9e1810b9f5858d36c4d28c91c86924"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga740d08da65cae1441ba32f8fedb863d1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga740d08da65cae1441ba32f8fedb863d1">hipFree</a> (void *ptr)</td></tr>
-<tr class="memdesc:ga740d08da65cae1441ba32f8fedb863d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free memory allocated by the hcc hip memory allocation API. This API performs an implicit <a class="el" href="group__Device.html#gaefdc2847fb1d6c3fb1354e827a191ebd" title="Blocks until the default device has completed all preceding requested tasks. ">hipDeviceSynchronize()</a> call.  <a href="#ga740d08da65cae1441ba32f8fedb863d1">More...</a><br/></td></tr>
+<tr class="memdesc:ga740d08da65cae1441ba32f8fedb863d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free memory allocated by the hcc hip memory allocation API. This API performs an implicit <a class="el" href="group__Device.html#gaefdc2847fb1d6c3fb1354e827a191ebd" title="Blocks until the default device has completed all preceding requested tasks. ">hipDeviceSynchronize()</a> call. If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.  <a href="#ga740d08da65cae1441ba32f8fedb863d1">More...</a><br/></td></tr>
 <tr class="separator:ga740d08da65cae1441ba32f8fedb863d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gad2164cc3d49da53052f4b83b789e90c9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gad2164cc3d49da53052f4b83b789e90c9">hipFreeHost</a> (void *ptr) __attribute__((deprecated(&quot;use <a class="el" href="group__Memory.html#ga2e543f58ee4544e317cd695d6d82e0a3">hipHostFree</a> instead&quot;)))</td></tr>
-<tr class="memdesc:gad2164cc3d49da53052f4b83b789e90c9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free memory allocated by the hcc hip host memory allocation API.  <a href="#gad2164cc3d49da53052f4b83b789e90c9">More...</a><br/></td></tr>
+<tr class="memdesc:gad2164cc3d49da53052f4b83b789e90c9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free memory allocated by the hcc hip host memory allocation API. [Deprecated.].  <a href="#gad2164cc3d49da53052f4b83b789e90c9">More...</a><br/></td></tr>
 <tr class="separator:gad2164cc3d49da53052f4b83b789e90c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2e543f58ee4544e317cd695d6d82e0a3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga2e543f58ee4544e317cd695d6d82e0a3">hipHostFree</a> (void *ptr)</td></tr>
-<tr class="memdesc:ga2e543f58ee4544e317cd695d6d82e0a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free memory allocated by the hcc hip host memory allocation API.  <a href="#ga2e543f58ee4544e317cd695d6d82e0a3">More...</a><br/></td></tr>
+<tr class="memdesc:ga2e543f58ee4544e317cd695d6d82e0a3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free memory allocated by the hcc hip host memory allocation API This API performs an implicit <a class="el" href="group__Device.html#gaefdc2847fb1d6c3fb1354e827a191ebd" title="Blocks until the default device has completed all preceding requested tasks. ">hipDeviceSynchronize()</a> call. If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.  <a href="#ga2e543f58ee4544e317cd695d6d82e0a3">More...</a><br/></td></tr>
 <tr class="separator:ga2e543f58ee4544e317cd695d6d82e0a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gac1a055d288302edd641c6d7416858e1e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#gac1a055d288302edd641c6d7416858e1e">hipMemcpy</a> (void *dst, const void *src, size_t sizeBytes, <a class="el" href="group__GlobalDefs.html#ga232e222db36b1fc672ba98054d036a18">hipMemcpyKind</a> kind)</td></tr>
 <tr class="memdesc:gac1a055d288302edd641c6d7416858e1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Copy data from src to dst.  <a href="#gac1a055d288302edd641c6d7416858e1e">More...</a><br/></td></tr>
@@ -162,14 +162,16 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Free memory allocated by the hcc hip memory allocation API. This API performs an implicit <a class="el" href="group__Device.html#gaefdc2847fb1d6c3fb1354e827a191ebd" title="Blocks until the default device has completed all preceding requested tasks. ">hipDeviceSynchronize()</a> call. </p>
+<p>Free memory allocated by the hcc hip memory allocation API. This API performs an implicit <a class="el" href="group__Device.html#gaefdc2847fb1d6c3fb1354e827a191ebd" title="Blocks until the default device has completed all preceding requested tasks. ">hipDeviceSynchronize()</a> call. If pointer is NULL, the hip runtime is initialized and hipSuccess is returned. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">ptr</td><td>Pointer to memory to be freed </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a813b3f014e2a3932d1f0e3e712cf9d3c" title="Memory free error. ">hipErrorMemoryFree</a> </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a> </dd>
+<dd>
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a37a93fcd2b0aed9bf52b82fa26031e6f" title="Invalid Device Pointer. ">hipErrorInvalidDevicePointer</a> (if pointer is invalid, including host pointers allocated with hipHostMalloc) </dd></dl>
 
 </div>
 </div>
@@ -187,14 +189,8 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Free memory allocated by the hcc hip host memory allocation API. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramdir">[in]</td><td class="paramname">ptr</td><td>Pointer to memory to be freed </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a813b3f014e2a3932d1f0e3e712cf9d3c" title="Memory free error. ">hipErrorMemoryFree</a> </dd></dl>
+<p>Free memory allocated by the hcc hip host memory allocation API. [Deprecated.]. </p>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__Memory.html#ga2e543f58ee4544e317cd695d6d82e0a3" title="Free memory allocated by the hcc hip host memory allocation API This API performs an implicit hipDevi...">hipHostFree</a> </dd></dl>
 
 </div>
 </div>
@@ -212,14 +208,14 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Free memory allocated by the hcc hip host memory allocation API. </p>
+<p>Free memory allocated by the hcc hip host memory allocation API This API performs an implicit <a class="el" href="group__Device.html#gaefdc2847fb1d6c3fb1354e827a191ebd" title="Blocks until the default device has completed all preceding requested tasks. ">hipDeviceSynchronize()</a> call. If pointer is NULL, the hip runtime is initialized and hipSuccess is returned. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[in]</td><td class="paramname">ptr</td><td>Pointer to memory to be freed </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a813b3f014e2a3932d1f0e3e712cf9d3c" title="Memory free error. ">hipErrorMemoryFree</a> </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a> (if pointer is invalid, including device pointers allocated with hipMalloc) </dd></dl>
 
 </div>
 </div>
@@ -545,7 +541,7 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a813b3f014e2a3932d1f0e3e712cf9d3c" title="Memory free error. ">hipErrorMemoryFree</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa74e64c5b2f5fb0d6a92681f5b234073" title="Unknown error. ">hipErrorUnknown</a> </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a>, #hipErrorMemoryFree, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa74e64c5b2f5fb0d6a92681f5b234073" title="Unknown error. ">hipErrorUnknown</a> </dd></dl>
 
 </div>
 </div>
@@ -604,7 +600,7 @@ Functions</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a813b3f014e2a3932d1f0e3e712cf9d3c" title="Memory free error. ">hipErrorMemoryFree</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa74e64c5b2f5fb0d6a92681f5b234073" title="Unknown error. ">hipErrorUnknown</a></dd>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a>, #hipErrorMemoryFree, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa74e64c5b2f5fb0d6a92681f5b234073" title="Unknown error. ">hipErrorUnknown</a></dd>
 <dd>
 <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d" title="DeviceID must be in range 0...#compute-devices. ">hipErrorInvalidDevice</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ae35ad9fb66b7c33f21a021efe89975b0" title="Invalid memory copy direction. ">hipErrorInvalidMemcpyDirection</a>, </dd>
 <dd>
@@ -669,7 +665,7 @@ on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hip
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a813b3f014e2a3932d1f0e3e712cf9d3c" title="Memory free error. ">hipErrorMemoryFree</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa74e64c5b2f5fb0d6a92681f5b234073" title="Unknown error. ">hipErrorUnknown</a> </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a>, #hipErrorMemoryFree, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa74e64c5b2f5fb0d6a92681f5b234073" title="Unknown error. ">hipErrorUnknown</a> </dd></dl>
 
 </div>
 </div>
@@ -743,7 +739,7 @@ on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hip
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a813b3f014e2a3932d1f0e3e712cf9d3c" title="Memory free error. ">hipErrorMemoryFree</a> </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a>, #hipErrorMemoryFree </dd></dl>
 
 </div>
 </div>
@@ -794,7 +790,7 @@ on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hip
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a813b3f014e2a3932d1f0e3e712cf9d3c" title="Memory free error. ">hipErrorMemoryFree</a></dd>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a>, #hipErrorMemoryFree</dd>
 <dd>
 <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a> </dd></dl>
 
@@ -832,7 +828,7 @@ on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hip
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat May 21 2016 14:34:09 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Jul 8 2016 20:56:55 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
