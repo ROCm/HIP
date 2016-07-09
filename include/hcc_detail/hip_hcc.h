@@ -606,7 +606,7 @@ public: // Data, set at initialization:
     unsigned                _compute_units;
 
     StagingBuffer           *_staging_buffer[2]; // one buffer for each direction.
-
+    int                     isLargeBar;
 
     unsigned                _device_flags;
 

@@ -35,7 +35,7 @@ THE SOFTWARE.
 #include <deque>
 #include <vector>
 #include <algorithm>
-
+#include <atomic>
 #include <hc.hpp>
 #include <hc_am.hpp>
 
@@ -50,6 +50,9 @@ extern const char *ihipErrorString(hipError_t hip_error);
 
 const int release = 1;
 
+#define MEMCPY_D2H_STAGING_VS_PININPLACE_COPY_THRESHOLD    4194304
+#define MEMCPY_H2D_DIRECT_VS_STAGING_COPY_THRESHOLD    65336
+#define MEMCPY_H2D_STAGING_VS_PININPLACE_COPY_THRESHOLD    1048576
 
 int HIP_LAUNCH_BLOCKING = 0;
 
@@ -60,6 +63,10 @@ int HIP_DB= 0;
 int HIP_STAGING_SIZE = 64;   /* size of staging buffers, in KB */
 int HIP_STAGING_BUFFERS = 2;    // TODO - remove, two buffers should be enough.
 int HIP_PININPLACE = 0;
+int HIP_OPTIMAL_MEM_TRANSFER = 0; //ENV Variable to test different memory transfer logics
+int HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING = 0;
+int HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE = 0;
+int HIP_D2H_MEM_TRANSFER_THRESHOLD = 0;
 int HIP_STREAM_SIGNALS = 2;  /* number of signals to allocate at stream creation */
 int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
 
@@ -616,9 +623,122 @@ ihipDevice_t::~ihipDevice_t()
 #define ErrorCheck(x) error_check(x, __LINE__, __FILE__)
 
 void error_check(hsa_status_t hsa_error_code, int line_num, std::string str) {
-  if (hsa_error_code != HSA_STATUS_SUCCESS) {
+  if ((hsa_error_code != HSA_STATUS_SUCCESS)&& (hsa_error_code != HSA_STATUS_INFO_BREAK))  {
     printf("HSA reported error!\n In file: %s\nAt line: %d\n", str.c_str(),line_num);
   }
+}
+
+// CPU agent used for verification
+hsa_agent_t cpu_agent_;
+hsa_agent_t gpu_agent_;
+int gpu_region_count;
+// System region
+hsa_amd_memory_pool_t sys_region_;
+hsa_amd_memory_pool_t gpu_region_;
+
+hsa_status_t FindGpuDevice(hsa_agent_t agent, void* data) {
+    if (data == NULL) {
+        return HSA_STATUS_ERROR_INVALID_ARGUMENT;
+    }
+
+    hsa_device_type_t hsa_device_type;
+    hsa_status_t hsa_error_code =
+    hsa_agent_get_info(agent, HSA_AGENT_INFO_DEVICE, &hsa_device_type);
+    if (hsa_error_code != HSA_STATUS_SUCCESS) {
+        return hsa_error_code;
+    }
+
+    if (hsa_device_type == HSA_DEVICE_TYPE_GPU) {
+        *((hsa_agent_t*)data) = agent;
+        return HSA_STATUS_INFO_BREAK;
+    }
+
+    return HSA_STATUS_SUCCESS;
+}
+
+hsa_status_t FindCpuDevice(hsa_agent_t agent, void* data) {
+    if (data == NULL) {
+        return HSA_STATUS_ERROR_INVALID_ARGUMENT;
+    }
+
+    hsa_device_type_t hsa_device_type;
+    hsa_status_t hsa_error_code =
+    hsa_agent_get_info(agent, HSA_AGENT_INFO_DEVICE, &hsa_device_type);
+    if (hsa_error_code != HSA_STATUS_SUCCESS) {
+        return hsa_error_code;
+    }
+
+    if (hsa_device_type == HSA_DEVICE_TYPE_CPU) {
+        *((hsa_agent_t*)data) = agent;
+        return HSA_STATUS_INFO_BREAK;
+    }
+
+    return HSA_STATUS_SUCCESS;
+}
+
+hsa_status_t GetDeviceRegion(hsa_amd_memory_pool_t region, void* data) {
+    if (NULL == data) {
+        return HSA_STATUS_ERROR_INVALID_ARGUMENT;
+    }
+
+    hsa_status_t err;
+    hsa_amd_segment_t segment;
+    uint32_t flag;
+
+    err = hsa_amd_memory_pool_get_info(region, HSA_AMD_MEMORY_POOL_INFO_SEGMENT, &segment);
+    ErrorCheck(err);
+    if (HSA_AMD_SEGMENT_GLOBAL != segment) return HSA_STATUS_SUCCESS;
+    err = hsa_amd_memory_pool_get_info(region, HSA_AMD_MEMORY_POOL_INFO_GLOBAL_FLAGS, &flag);
+    ErrorCheck(err);
+    *((hsa_amd_memory_pool_t*)data) = region;
+    return HSA_STATUS_SUCCESS;
+}
+
+hsa_status_t FindGlobalRegion(hsa_amd_memory_pool_t region, void* data) {
+    if (NULL == data) {
+        return HSA_STATUS_ERROR_INVALID_ARGUMENT;
+    }
+
+    hsa_status_t err;
+    hsa_amd_segment_t segment;
+    uint32_t flag;
+    err = hsa_amd_memory_pool_get_info(region, HSA_AMD_MEMORY_POOL_INFO_SEGMENT, &segment);
+    ErrorCheck(err);
+
+    err = hsa_amd_memory_pool_get_info(region, HSA_AMD_MEMORY_POOL_INFO_GLOBAL_FLAGS, &flag);
+    ErrorCheck(err);
+    if ((HSA_AMD_SEGMENT_GLOBAL == segment) &&
+        (flag & HSA_AMD_MEMORY_POOL_GLOBAL_FLAG_FINE_GRAINED)) {
+        *((hsa_amd_memory_pool_t*)data) = region;
+    }
+    return HSA_STATUS_SUCCESS;
+}
+
+void FindDeviceRegion()
+{
+    hsa_status_t err = hsa_iterate_agents(FindGpuDevice, &gpu_agent_);
+    ErrorCheck(err);
+
+    err = hsa_amd_agent_iterate_memory_pools(gpu_agent_, GetDeviceRegion, &gpu_region_);
+    ErrorCheck(err);
+}
+
+void FindSystemRegion()
+{
+    hsa_status_t err = hsa_iterate_agents(FindCpuDevice, &cpu_agent_);
+    ErrorCheck(err);
+
+    err = hsa_amd_agent_iterate_memory_pools(cpu_agent_, FindGlobalRegion, &sys_region_);
+    ErrorCheck(err);
+}
+
+int checkAccess(hsa_agent_t agent, hsa_amd_memory_pool_t pool)
+{
+    hsa_status_t err;
+    hsa_amd_memory_pool_access_t access;
+    err = hsa_amd_agent_memory_pool_get_info(agent, pool, HSA_AMD_AGENT_MEMORY_POOL_INFO_ACCESS, &access);
+    ErrorCheck(err);
+    return access;
 }
 
 hsa_status_t get_region_info(hsa_region_t region, void* data)
@@ -756,6 +876,17 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
 
     /* Computemode for HSA Devices is always : cudaComputeModeDefault */
     prop->computeMode = 0;
+
+    FindSystemRegion();
+    FindDeviceRegion();
+    int access=checkAccess(cpu_agent_, gpu_region_);
+    if(0!= access){
+        isLargeBar= 1;
+    }
+    else{
+        isLargeBar=0;
+    }
+
 
     // Get Max Threads Per Multiprocessor
 
@@ -994,13 +1125,30 @@ void ihipInit()
     READ_ENV_I(release, HIP_STAGING_SIZE, 0, "Size of each staging buffer (in KB)" );
     READ_ENV_I(release, HIP_STAGING_BUFFERS, 0, "Number of staging buffers to use in each direction. 0=use hsa_memory_copy.");
     READ_ENV_I(release, HIP_PININPLACE, 0, "For unpinned transfers, pin the memory in-place in chunks before doing the copy. Under development.");
+    READ_ENV_I(release, HIP_OPTIMAL_MEM_TRANSFER, 0, "For optimal memory transfers for unpinned memory.Under testing.");
+    READ_ENV_I(release, HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING, 0, "Threshold value for H2D unpinned memory transfer decision between direct copy or staging buffer usage,Under testing.");
+    READ_ENV_I(release, HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE, 0, "Threshold value for H2D unpinned memory transfer decision between staging buffer usage or pininplace usage .Under testing.");
+    READ_ENV_I(release, HIP_D2H_MEM_TRANSFER_THRESHOLD, 0, "Threshold value for D2H unpinned memory transfer decision between staging buffer usage or pininplace usage .Under testing.");
     READ_ENV_I(release, HIP_STREAM_SIGNALS, 0, "Number of signals to allocate when new stream is created (signal pool will grow on demand)");
     READ_ENV_I(release, HIP_VISIBLE_DEVICES, CUDA_VISIBLE_DEVICES, "Only devices whose index is present in the secquence are visible to HIP applications and they are enumerated in the order of secquence" );
 
     READ_ENV_I(release, HIP_DISABLE_HW_KERNEL_DEP, 0, "Disable HW dependencies before kernel commands  - instead wait for dependency on host. -1 means ignore these dependencies. (debug mode)");
     READ_ENV_I(release, HIP_DISABLE_HW_COPY_DEP, 0, "Disable HW dependencies before copy commands  - instead wait for dependency on host. -1 means ifnore these dependencies (debug mode)");
 
+    if (HIP_OPTIMAL_MEM_TRANSFER && !HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING) {
+        HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING= MEMCPY_H2D_DIRECT_VS_STAGING_COPY_THRESHOLD;
+        fprintf (stderr, "warning: env var HIP_OPTIMAL_MEM_TRANSFER=0x%x but HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING=0.Using default value for this.\n", HIP_OPTIMAL_MEM_TRANSFER);
+    }
 
+    if (HIP_OPTIMAL_MEM_TRANSFER && !HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE) {
+        HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE= MEMCPY_H2D_STAGING_VS_PININPLACE_COPY_THRESHOLD;
+        fprintf (stderr, "warning: env var HIP_OPTIMAL_MEM_TRANSFER=0x%x but HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE=0.Using default value for this.\n", HIP_OPTIMAL_MEM_TRANSFER);
+    }
+
+    if (HIP_OPTIMAL_MEM_TRANSFER && !HIP_D2H_MEM_TRANSFER_THRESHOLD) {
+        HIP_D2H_MEM_TRANSFER_THRESHOLD= MEMCPY_D2H_STAGING_VS_PININPLACE_COPY_THRESHOLD;
+        fprintf (stderr, "warning: env var HIP_OPTIMAL_MEM_TRANSFER=0x%x but HIP_D2H_MEM_TRANSFER_THRESHOLD=0.Using default value for this.\n", HIP_OPTIMAL_MEM_TRANSFER);
+    }
     // Some flags have both compile-time and runtime flags - generate a warning if user enables the runtime flag but the compile-time flag is disabled.
     if (HIP_DB && !COMPILE_HIP_DB) {
         fprintf (stderr, "warning: env var HIP_DB=0x%x but COMPILE_HIP_DB=0.  (perhaps enable COMPILE_HIP_DB in src code before compiling?)", HIP_DB);
@@ -1437,16 +1585,32 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
         if(!srcTracked){
             if (HIP_STAGING_BUFFERS) {
                 tprintf(DB_COPY1, "D2H && !dstTracked: staged copy H2D dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
-
-                if (HIP_PININPLACE) {
-                    device->_staging_buffer[0]->CopyHostToDevicePinInPlace(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
-                } else  {
-                    device->_staging_buffer[0]->CopyHostToDevice(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                if(HIP_OPTIMAL_MEM_TRANSFER)
+                {
+                    if((device->isLargeBar)&&(sizeBytes < HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING)){
+                        memcpy(dst,src,sizeBytes);
+                        std::atomic_thread_fence(std::memory_order_release);
+                    }
+                    else{
+                        if(sizeBytes > HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE){
+                        //if (HIP_PININPLACE) {
+                            device->_staging_buffer[0]->CopyHostToDevicePinInPlace(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                        } else {
+                            device->_staging_buffer[0]->CopyHostToDevice(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                        }
+                        // The copy waits for inputs and then completes before returning so can reset queue to empty:
+                        this->wait(crit, true);
+                    }
                 }
-
-                // The copy waits for inputs and then completes before returning so can reset queue to empty:
-                this->wait(crit, true);
-            } else {
+                else {
+                    if (HIP_PININPLACE) {
+                        device->_staging_buffer[0]->CopyHostToDevicePinInPlace(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                    } else {
+                        device->_staging_buffer[0]->CopyHostToDevice(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                    }
+               }
+            }
+            else {
                 // TODO - remove, slow path.
                 tprintf(DB_COPY1, "H2D && ! srcTracked: am_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
 #if USE_AV_COPY
@@ -1481,10 +1645,21 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
             if (HIP_STAGING_BUFFERS) {
                 tprintf(DB_COPY1, "D2H && !dstTracked: staged copy D2H dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
                 //printf ("staged-copy- read dep signals\n");
-                device->_staging_buffer[1]->CopyDeviceToHost(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                if(HIP_OPTIMAL_MEM_TRANSFER)
+                {
+                    if(sizeBytes> HIP_D2H_MEM_TRANSFER_THRESHOLD){
+                        device->_staging_buffer[1]->CopyDeviceToHostPinInPlace(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                    }else {
+                         //printf ("staged-copy- read dep signals\n");
+                         device->_staging_buffer[1]->CopyDeviceToHost(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                    }
+                }else
+                {
+                    device->_staging_buffer[1]->CopyDeviceToHost(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                }
                 if(crit->_last_command_type == ihipCommandKernel){
                     std::cout<<"Destroying depSignal MemcpySync"<<std::endl;
-                    hsa_signal_destroy(depSignal); 
+                    hsa_signal_destroy(depSignal);
                 }
                 // The copy completes before returning so can reset queue to empty:
                 this->wait(crit, true);
