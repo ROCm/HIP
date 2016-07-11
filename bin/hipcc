@@ -24,10 +24,6 @@ print "No Arguments passed, exiting ...\n";
 exit(-1);
 }
 
-$HIP_VERSION_MAJOR = "0";
-$HIP_VERSION_MINOR = "90";
-$HIP_VERSION_PATCH = "0";
-
 $verbose = $ENV{'HIPCC_VERBOSE'};
 $verbose = 0 unless defined $verbose;
 # Verbose: 0x1=commands, 0x2=paths, 0x4=hippc args
@@ -45,6 +41,7 @@ $marker_path = "$CODEXL_PATH/SDK/AMDTActivityLogger";
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
 $HIP_PLATFORM= `$HIP_PATH/bin/hipconfig --platform`;
+$HIP_VERSION= `$HIP_PATH/bin/hipconfig --version`;
 
 $HIP_PLATFORM="hcc" unless defined $HIP_PLATFORM;
 
@@ -250,7 +247,7 @@ if ($printHipVersion) {
     if ($runCmd) {
         print "HIP version: "
     }
-    print $HIP_VERSION_MAJOR, ".", $HIP_VERSION_MINOR, ".", $HIP_VERSION_PATCH, "\n";
+    print $HIP_VERSION, "\n";
 }
 if ($runCmd) {
     system ("$CMD") and die ();
