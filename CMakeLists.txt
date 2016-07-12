@@ -5,7 +5,7 @@ project(hip)
 # Configure variables
 #############################
 # Determine HIP_VERSION
-execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/hipcc --short-version
+execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/hipconfig --version
                 OUTPUT_VARIABLE HIP_VERSION
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
 string(REPLACE "." ";" VERSION_LIST ${HIP_VERSION})
