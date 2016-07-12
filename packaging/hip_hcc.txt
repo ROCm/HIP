@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(hip_hcc)
 
-#execute_process(COMMAND @CMAKE_CURRENT_SOURCE_DIR@/bin/hipconfig --full 2>/dev/null | grep clang | cut -d" " -f9
-#                OUTPUT_VARIABLE HCC_VERSION
-#                OUTPUT_STRIP_TRAILING_WHITESPACE)
-                
 install(DIRECTORY @PROJECT_BINARY_DIR@/CMakeFiles/hip_hcc.dir/src/ DESTINATION lib)
 
 #############################
