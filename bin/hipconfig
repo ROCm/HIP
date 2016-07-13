@@ -1,4 +1,9 @@
 #!/usr/bin/perl -w
+
+$HIP_VERSION_MAJOR = "0";
+$HIP_VERSION_MINOR = "90";
+$HIP_VERSION_PATCH = "0";
+
 use Getopt::Long;
 use Cwd;
 
@@ -15,6 +20,7 @@ GetOptions(
     ,"platform|P" => \$p_platform
     ,"cpp_config|cxx_config|C" => \$p_cpp_config
     ,"full|f|info" => \$p_full,
+    ,"version|v" => \$p_version,
     ,"check" => \$p_check,
     ,"newline|n" => \$p_newline
 );
@@ -26,12 +32,14 @@ if ($p_help) {
     print "  --compiler, -c     : print compiler (hcc or nvcc)\n";
     print "  --platform, -P     : print platform (hcc or nvcc)\n";
     print "  --full, -f         : print full config\n";
+    print "  --version, -v      : print hip version\n";
     print "  --check            : check configuration\n";
     print "  --newline, -n      : print newline\n";
     print "  --help, -h         : print help message\n";
     exit();
 }
 
+$HIP_VERSION="$HIP_VERSION_MAJOR.$HIP_VERSION_MINOR.$HIP_VERSION_PATCH";
 
 $CUDA_PATH=$ENV{'CUDA_PATH'};
 $CUDA_PATH='/usr/local/cuda' unless defined $CUDA_PATH;
@@ -83,9 +91,13 @@ if ($p_compiler or $p_platform) {
     $printed = 1;
 }
 
-
+if ($p_version) {
+    print $HIP_VERSION;
+    $printed = 1;
+}
 
 if (!$printed or $p_full) {
+    print "HIP version  : ", $HIP_VERSION, "\n\n";
     print "== hipconfig\n";
     print "HIP_PATH     : ", $HIP_PATH, "\n";
     print "HIP_PLATFORM : ", $HIP_PLATFORM, "\n";

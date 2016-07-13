@@ -5,7 +5,7 @@ project(hip)
 # Configure variables
 #############################
 # Determine HIP_VERSION
-execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/hipcc --short-version
+execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/hipconfig --version
                 OUTPUT_VARIABLE HIP_VERSION
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
 string(REPLACE "." ";" VERSION_LIST ${HIP_VERSION})
@@ -118,7 +118,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set(CMAKE_C_FLAGS   " -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include/libhsakmt -stdlib=libc++ -DHIP_HCC")
 
     set(SOURCE_FILES src/device_util.cpp
-                     src/hip_hcc.cpp 
+                     src/hip_hcc.cpp
                      src/hip_device.cpp
                      src/hip_error.cpp
                      src/hip_event.cpp
@@ -126,7 +126,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
                      src/hip_memory.cpp
                      src/hip_peer.cpp
                      src/hip_stream.cpp
-					 src/hip_fp16.cpp
+                     src/hip_fp16.cpp
                      src/staging_buffer.cpp)
 
     if(${HIP_USE_SHARED_LIBRARY} EQUAL 1)
