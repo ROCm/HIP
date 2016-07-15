@@ -4,23 +4,21 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [FAQ](#faq)
-- [Table of Contents](#table-of-contents)
-    - [What APIs does HIP support?](#what-apis-does-hip-support)
-    - [What is not supported?](#what-is-not-supported)
-      - [Run-time features:](#run-time-features)
-    - [How does HIP compare with OpenCL?](#how-does-hip-compare-with-opencl)
-    - [What hardware does HIP support?](#what-hardware-does-hip-support)
-    - [Does Hipify automatically convert all source code?](#does-hipify-automatically-convert-all-source-code)
-    - [What is NVCC?](#what-is-nvcc)
-    - [What is HCC?](#what-is-hcc)
-    - [Why use HIP rather than supporting CUDA directly?](#why-use-hip-rather-than-supporting-cuda-directly)
-    - [Can I develop HIP code on an Nvidia CUDA platform?](#can-i-develop-hip-code-on-an-nvidia-cuda-platform)
-    - [Can I develop HIP code on an AMD HCC platform?](#can-i-develop-hip-code-on-an-amd-hcc-platform)
-    - [Can a HIP binary run on both AMD and Nvidia platforms?](#can-a-hip-binary-run-on-both-amd-and-nvidia-platforms)
-    - [Hmmm](#hmmm)
-    - [Link2 Is it ready?](#link2-is-it-ready)
-    - [What's the difference between HIP and hc?](#whats-the-difference-between-hip-and-hc)
+- [What APIs does HIP support ?](#what-apis-does-hip-support-)
+- [What is not supported?](#what-is-not-supported)
+  - [Run-time features](#run-time-features)
+  - [Kernel language features](#kernel-language-features)
+- [How does HIP compare with OpenCL?](#how-does-hip-compare-with-opencl)
+- [What hardware does HIP support?](#what-hardware-does-hip-support)
+- [Does Hipify automatically convert all source code?](#does-hipify-automatically-convert-all-source-code)
+- [What is NVCC?](#what-is-nvcc)
+- [What is HCC?](#what-is-hcc)
+- [Why use HIP rather than supporting CUDA directly?](#why-use-hip-rather-than-supporting-cuda-directly)
+- [Can I develop HIP code on an Nvidia CUDA platform?](#can-i-develop-hip-code-on-an-nvidia-cuda-platform)
+- [Can I develop HIP code on an AMD HCC platform?](#can-i-develop-hip-code-on-an-amd-hcc-platform)
+- [Can a HIP binary run on both AMD and Nvidia platforms?](#can-a-hip-binary-run-on-both-amd-and-nvidia-platforms)
+- [What's the difference between HIP and hc?](#whats-the-difference-between-hip-and-hc)
+- [HIP detected my platform (hcc vs nvcc) incorrectly - what should I do?](#hip-detected-my-platform-hcc-vs-nvcc-incorrectly---what-should-i-do)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 =================
