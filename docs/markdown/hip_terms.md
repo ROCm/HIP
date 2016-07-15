@@ -1,3 +1,11 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Table Comparing Syntax for Different Compute APIs](#table-comparing-syntax-for-different-compute-apis)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Table Comparing Syntax for Different Compute APIs
 
 |Term|CUDA|HIP|HC|C++AMP|OpenCL|

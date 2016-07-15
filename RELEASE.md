@@ -9,15 +9,17 @@ Stay tuned - the work for many of these features is already in-flight.
 
 ===================================================================================================
 Release:0.90.00
-Date: 2016.06.xx
--Support dynamic shared memory allocations
--Min HCC compiler version is > 16186.
--Expanded math functions (device and host).  Document unsupported functions.
--Initial support for hipBlas headers.
--hipFree with null pointer initializes runtime and returns success.
--Improve error code reporting on nvcc.
--add hipPeekAtError for nvcc..
+Date: 2016.06.29
+- Support dynamic shared memory allocations
+- Min HCC compiler version is > 16186.
+- Expanded math functions (device and host).  Document unsupported functions.
+- hipFree with null pointer initializes runtime and returns success.
+- Improve error code reporting on nvcc.
+- Add hipPeekAtError for nvcc.
+
 ===================================================================================================
+
+## Revision History:
 
 ===================================================================================================
 Release:0.86.00
@@ -30,9 +32,6 @@ Date: 2016.06.06
   compilation path.
 - More samples including gpu-burn, SHOC, nbody, rtm.  See [HIP-Examples](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP-Examples)
 
-===================================================================================================
-
-## Revision History:
 
 ===================================================================================================
 Release:0.84.01
