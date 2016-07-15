@@ -26,6 +26,7 @@
   - [Single Precision Mathematical Functions](#single-precision-mathematical-functions)
   - [Double Precision Mathematical Functions](#double-precision-mathematical-functions)
   - [Integer Intrinsics](#integer-intrinsics)
+  - [Floating-point Intrinsics](#floating-point-intrinsics)
 - [Texture Functions](#texture-functions)
 - [Surface Functions](#surface-functions)
 - [Timer Functions](#timer-functions)

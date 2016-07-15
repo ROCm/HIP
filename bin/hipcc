@@ -60,6 +60,9 @@ if ($HIP_PLATFORM eq "hcc") {
     $ROCM_PATH=$ENV{'ROCM_PATH'};
     $ROCM_PATH="/opt/rocm" unless defined $ROCM_PATH;
 
+    $ROCM_TARGET=$ENV{'ROCM_TARGET'};
+    $ROCM_TARGET="fiji" unless defined $ROCM_TARGET;
+
     # HCC* may be used to compile src/hip_hcc.o (and also feed the HIPCXXFLAGS below)
     $HCC = "$HCC_HOME/bin/hcc";
     $HCCFLAGS = "-hc -I$HCC_HOME/include ";
@@ -72,11 +75,25 @@ if ($HIP_PLATFORM eq "hcc") {
     $HIPLDFLAGS =  "-hc -L$HCC_HOME/lib -Wl,--rpath=$HCC_HOME/lib -lc++ -ldl -lpthread -Wl,--whole-archive -lmcwamp -Wl,--no-whole-archive";
 
     # Suppress linker warnings in case HCC distribution contains OpenCL/SPIR symbols
-    #$HIPLDFLAGS .= " -Wl,--defsym=_binary_kernel_spir_end=0 -Wl,--defsym=_binary_kernel_spir_start=0 -Wl,--defsym=_binary_kernel_cl_start=0 -Wl,--defsym=_binary_kernel_cl_end=0";
+    $HOST_OSNAME= `cat /etc/os-release | grep "^ID\=" | cut -d= -f2 | tr -d '\n'`;
+    $HOST_OSVER= `cat /etc/os-release | grep "^VERSION_ID\=" | cut -d= -f2 | tr -d '\n'`;
+    if ($HOST_OSNAME eq "ubuntu" and $HOST_OSVER eq "\"16.04\"") {
+        # No additional flags required
+    } else {
+        $HIPLDFLAGS .= " -Wl,--defsym=_binary_kernel_spir_end=0 -Wl,--defsym=_binary_kernel_spir_start=0 -Wl,--defsym=_binary_kernel_cl_start=0 -Wl,--defsym=_binary_kernel_cl_end=0";
+    }
 
     # Satisfy HCC dependencies
     $HIPLDFLAGS .= " -lc++abi";
     $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am -lhsakmt";
+
+    # Handle ROCm target platform
+    if ($ROCM_TARGET eq "fiji") {
+        $HIPLDFLAGS .= " -amdgpu-target=AMD:AMDGPU:8:0:3";
+    }
+    if ($ROCM_TARGET eq "hawaii") {
+        $HIPLDFLAGS .= " -amdgpu-target=AMD:AMDGPU:7:0:1";
+    }
 
     # Add trace marker library:
     # TODO - once we cleanly separate the HIP API headers from HIP library headers this logic should move to CMakebuild option - apps do not need to see the marker library.
