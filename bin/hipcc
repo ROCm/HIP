@@ -75,7 +75,13 @@ if ($HIP_PLATFORM eq "hcc") {
     $HIPLDFLAGS =  "-hc -L$HCC_HOME/lib -Wl,--rpath=$HCC_HOME/lib -lc++ -ldl -lpthread -Wl,--whole-archive -lmcwamp -Wl,--no-whole-archive";
 
     # Suppress linker warnings in case HCC distribution contains OpenCL/SPIR symbols
-    #$HIPLDFLAGS .= " -Wl,--defsym=_binary_kernel_spir_end=0 -Wl,--defsym=_binary_kernel_spir_start=0 -Wl,--defsym=_binary_kernel_cl_start=0 -Wl,--defsym=_binary_kernel_cl_end=0";
+    $HOST_OSNAME= `cat /etc/os-release | grep "^ID\=" | cut -d= -f2 | tr -d '\n'`;
+    $HOST_OSVER= `cat /etc/os-release | grep "^VERSION_ID\=" | cut -d= -f2 | tr -d '\n'`;
+    if ($HOST_OSNAME eq "ubuntu" and $HOST_OSVER eq "\"16.04\"") {
+        # No additional flags required
+    } else {
+        $HIPLDFLAGS .= " -Wl,--defsym=_binary_kernel_spir_end=0 -Wl,--defsym=_binary_kernel_spir_start=0 -Wl,--defsym=_binary_kernel_cl_start=0 -Wl,--defsym=_binary_kernel_cl_end=0";
+    }
 
     # Satisfy HCC dependencies
     $HIPLDFLAGS .= " -lc++abi";
