@@ -83,10 +83,12 @@ else()
 endif()
 
 # Set if we need to build shared or static library
-if(NOT DEFINED ENV{HIP_USE_SHARED_LIBRARY})
-    set(HIP_USE_SHARED_LIBRARY 0)
-else()
-    set(HIP_USE_SHARED_LIBRARY $ENV{HIP_USE_SHARED_LIBRARY})
+if(NOT DEFINED HIP_USE_SHARED_LIBRARY)
+    if(NOT DEFINED ENV{HIP_USE_SHARED_LIBRARY})
+        set(HIP_USE_SHARED_LIBRARY 0)
+    else()
+        set(HIP_USE_SHARED_LIBRARY $ENV{HIP_USE_SHARED_LIBRARY})
+    endif()
 endif()
 
 # Check if we need to build clang hipify
@@ -118,7 +120,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set(CMAKE_C_FLAGS   " -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include/libhsakmt -stdlib=libc++ -DHIP_HCC")
 
     set(SOURCE_FILES src/device_util.cpp
-                     src/hip_hcc.cpp 
+                     src/hip_hcc.cpp
                      src/hip_device.cpp
                      src/hip_error.cpp
                      src/hip_event.cpp
@@ -227,4 +229,3 @@ add_custom_target(pkg_hip_samples COMMAND ${CMAKE_COMMAND} .
 
 # Package: all
 add_custom_target(package DEPENDS pkg_hip_base pkg_hip_hcc pkg_hip_nvcc pkg_hip_doc pkg_hip_samples)
-
