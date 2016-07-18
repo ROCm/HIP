@@ -12,16 +12,15 @@ Key features include:
 New projects can be developed directly in the portable HIP C++ language and can run on either NVIDIA or AMD platforms.  Additionally, HIP provides porting tools which make it easy to port existing CUDA codes to the HIP layer, with no loss of performance as compared to the original CUDA application.  HIP is not intended to be a drop-in replacement for CUDA, and developers should expect to do some manual coding and performance tuning work to complete the port.
 
 ## More Info:
-- [Installation](INSTALL.md) and [clang-hipify](clang-hipify/README.md)
+- [Installation](INSTALL.md) 
 - [HIP FAQ](docs/markdown/hip_faq.md)
 - [HIP Kernel Language](docs/markdown/hip_kernel_language.md)
 - [HIP Runtime API (Doxygen)](http://gpuopen-professionalcompute-tools.github.io/HIP)
 - [HIP Porting Guide](docs/markdown/hip_porting_guide.md)
 - [HIP Terminology](docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenL)
+- [clang-hipify](clang-hipify/README.md)
 - [Developer/CONTRIBUTING Info](CONTRIBUTING.md)
 - [Release Notes](RELEASE.md)
-
-
 ## How do I get set up?
 
 See the [Installation](INSTALL.md) notes.
