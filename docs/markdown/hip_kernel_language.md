@@ -1,6 +1,4 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+**Table of Contents**  
 
 - [Introduction](#introduction)
 - [Function-Type Qualifiers](#function-type-qualifiers)
@@ -44,8 +42,6 @@
 - [Pragma Unroll](#pragma-unroll)
 - [In-Line Assembly](#in-line-assembly)
 - [C++ Support](#c-support)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
 
@@ -98,9 +94,9 @@ HIP parses the `__noinline__` and `__forceinline__` keywords and converts them t
 `__global__` functions are often referred to as *kernels,* and calling one is termed *launching the kernel.* These functions require the caller to specify an "execution configuration" that includes the grid and block dimensions. The execution configuration can also include other information for the launch, such as the amount of additional shared memory to allocate and the stream where the kernel should execute. HIP introduces a standard C++ calling convention to pass the execution configuration to the kernel (this convention replaces the Cuda <<< >>> syntax). In HIP,
 - Kernels launch with the "hipLaunchKernel" function
 - The first five parameters to hipLaunchKernel are the following:
-   - **symbol kernelName**: the name of the kernel to launch
-   - **dim3 gridDim**: 3D-grid dimensions
-   - **dim3 blockDim**: 3D-block dimensions
+   - **symbol kernelName**: the name of the kernel to launch.  To support template kernels which contains "," use the HIP_KERNEL_NAME macro.   The hipify tools insert this automatically.
+   - **dim3 gridDim**: 3D-grid dimensions specifying the number of blocks to launch.
+   - **dim3 blockDim**: 3D-block dimensions specifying the number of threads in each block.
    - **size_t dynamicShared**: amount of additional shared memory to allocate when launching the kernel (see [__shared__](#__shared__))
    - **hipStream_t**: stream where the kernel should execute. A value of 0 corresponds to the NULL stream (see [Synchronization Functions](#synchronization-functions)).
 - Kernel arguments follow these first five parameters
@@ -629,6 +625,9 @@ The compiler ensures that the kernel uses fewer registers than both allowed maxi
 
 HIP/hcc will parse the `launch_bounds` attribute but silently ignores the performance hint. Full support is under development.
 
+The hcc compiler does not support the "--maxregcount" option like nvcc.  Instead, users are encouraged to use the hip_launch_bounds directive since the parameters are more intuitive and portable than
+micro-architecture details like registers, and also the directive allows per-kernel control rather than an entire file.  hip_launch_bounds works on both hcc and nvcc targets.
+
 
 ## Register Keyword
 The register keyword affects code generation in neither nvcc nor hcc.  It’s deprecated in standard C++, so hcc will generate a warning. (nvcc silently ignores use of this keyword.) To disable the warning, you can pass the option `-Wno-deprecated-register` to hcc.
@@ -636,8 +635,7 @@ The register keyword affects code generation in neither nvcc nor hcc.  It’s de
 
 ## Pragma Unroll
 
-hcc support for the unroll pragma is under development and is slated to arrive with the Lightning Compiler.
-
+Unroll with a bounds that is known at compile-time is supported.  For example:
 
 ```
 #pragma unroll 16 /* hint to compiler to unroll next loop by 16 */
@@ -645,14 +643,17 @@ for (int i=0; i<16; i++) ...
 ```
 
 ```
+#pragma unroll 1  /* tell compiler to never unroll the loop */
+for (int i=0; i<16; i++) ...
+```
+
+
+Unbounded loop unroll is under development on HCC compiler.
+```
 #pragma unroll /* hint to compiler to completely unroll next loop. */
 for (int i=0; i<16; i++) ...
 ```
 
-```
-#pragma unroll 1  /* tell compiler to never unroll the loop */
-for (int i=0; i<16; i++) ...
-```
 
 ## In-Line Assembly
 
