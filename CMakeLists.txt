@@ -227,5 +227,12 @@ add_custom_target(pkg_hip_samples COMMAND ${CMAKE_COMMAND} .
                                   WORKING_DIRECTORY ${BUILD_DIR})
 
 # Package: all
+if(POLICY CMP0037)
+    cmake_policy(PUSH)
+    cmake_policy(SET CMP0037 OLD)
+endif()
 add_custom_target(package DEPENDS pkg_hip_base pkg_hip_hcc pkg_hip_nvcc pkg_hip_doc pkg_hip_samples)
+if(POLICY CMP0037)
+    cmake_policy(POP)
+endif()
 
