@@ -1085,6 +1085,28 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
     }
 }
 
+// HIP uses only 64 kernels. If the performance decrease, add more
+uint32_t kernelCount = 0;
+std::vector<hc::completion_future*> vCF(64);
+
+void incKernelCnt(hc::completion_future *cf){
+    vCF[kernelCount] = cf;
+    kernelCount++;
+}
+
+void decKernelCnt(){
+    if(kernelCount > 63){
+        uint32_t len = kernelCount;
+        for(uint32_t i =0;i<len;i++){
+            if(vCF[i] != NULL){
+                vCF[i]->wait();
+            }
+            delete vCF[i];
+            vCF[i] = NULL;
+            kernelCount--;
+        }
+    }
+}
 
 // TODO - data-up to data-down:
 // Called just before a kernel is launched from hipLaunchKernel.
@@ -1114,6 +1136,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
 //    *av = &stream->_av;
     lp->av = &stream->_av;
     lp->cf = new hc::completion_future;
+    incKernelCnt(lp->cf);
 //    lp->av = static_cast<void*>(av);
 //    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
     return (stream);
@@ -1143,6 +1166,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, gri
 //    *av = &stream->_av;
     lp->av = &stream->_av;
     lp->cf = new hc::completion_future;
+    incKernelCnt(lp->cf);
 //    lp->av = static_cast<void*>(av);
 //    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
     return (stream);
@@ -1173,6 +1197,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, gri
 //    *av = &stream->_av;
     lp->av = &stream->_av;
     lp->cf = new hc::completion_future;
+    incKernelCnt(lp->cf);
 //    lp->av = static_cast<void*>(av);
 //    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
     return (stream);
@@ -1203,6 +1228,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, g
 //    *av = &stream->_av;
     lp->av = &stream->_av;
     lp->cf = new hc::completion_future;
+    incKernelCnt(lp->cf);
 //    lp->av = static_cast<void*>(av);
 //    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
     return (stream);
@@ -1215,6 +1241,7 @@ void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp)
 {
 //    stream->lockclose_postKernelCommand(cf);
     stream->lockclose_postKernelCommand(*lp.cf);
+    decKernelCnt();
     if (HIP_LAUNCH_BLOCKING) {
         tprintf(DB_SYNC, " stream:%p LAUNCH_BLOCKING for kernel completion\n", stream);
     }
