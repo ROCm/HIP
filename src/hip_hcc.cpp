@@ -934,7 +934,7 @@ static hsa_status_t findCpuAgent(hsa_agent_t agent, void *data)
 void ihipInit()
 {
 
-#if COMPILE_TRACE_MARKER
+#if COMPILE_HIP_ATP_MARKER
     amdtInitializeActivityLogger();
     amdtScopedMarker("ihipInit", "HIP", NULL);
 #endif
