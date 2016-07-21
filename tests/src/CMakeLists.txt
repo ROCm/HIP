@@ -178,6 +178,10 @@ build_hip_executable (hipTestMemcpyPin hipTestMemcpyPin.cpp)
 #build_hip_executable (hipDynamicShared hipDynamicShared.cpp)
 build_hip_executable (hipLaunchParm hipLaunchParm.cpp)
 
+if (${HIP_PLATFORM} STREQUAL "hcc")
+    build_hip_executable (hipArray hipArray.cpp)
+endif()
+
 make_test(hipEventRecord --iterations 10)
 make_test(hipEnvVarDriver " " )
 make_test(hipLaunchParm " ")
@@ -204,6 +208,7 @@ if (${HIP_MULTI_GPU})
 endif()
 
 if (${HIP_PLATFORM} STREQUAL "hcc")
+    make_test(hipArray " ")
     make_test(hipFuncSetDevice " ")
 endif()
 

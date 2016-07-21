@@ -38,9 +38,20 @@ THE SOFTWARE.
 //Texture - TODO - likely need to move this to a separate file only included with kernel compilation.
 #define hipTextureType1D 1
 
+typedef enum {
+  hipChannelFormatKindSigned = 0,
+  hipChannelFormatKindUnsigned,
+  hipChannelFormatKindFloat,
+  hipChannelFormatKindNone
+
+} hipChannelFormatKind;
+
 typedef struct hipChannelFormatDesc {
-    // TODO - this has 4-5 well-defined fields, we could just copy...
-    int _dummy;
+  int x;
+  int y;
+  int z;
+  int w;
+  hipChannelFormatKind f;
 } hipChannelFormatDesc;
 
 typedef enum hipTextureReadMode
@@ -67,14 +78,39 @@ struct texture : public textureReference {
     const T * _dataPtr;  // pointer to underlying data.
 
     //texture() : filterMode(hipFilterModePoint), normalized(false), _dataPtr(NULL) {};
+    unsigned int width;
+    unsigned int height;
+
 };
 #endif
 
+typedef struct hipArray {
+  unsigned int width;
+  unsigned int height;
+  hipChannelFormatKind f;
+  void* data; //FIXME: generalize this
+} hipArray;
 
 
 #define tex1Dfetch(_tex, _addr) (_tex._dataPtr[_addr])
 
+#define tex2D(_tex, _dx, _dy) \
+  _tex._dataPtr[(unsigned int)_dx + (unsigned int)_dy*(_tex.width)]
 
+hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
+                          size_t width, size_t height = 0, unsigned int flags = 0);
+
+hipError_t hipFreeArray(hipArray* array);
+  //
+// dpitch, spitch, and width in bytes
+hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind);
+
+// wOffset, width, and spitch in bytes
+hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
+                              size_t spitch, size_t width, size_t height, hipMemcpyKind kind);
+
+hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset,
+                            const void* src, size_t count, hipMemcpyKind kind);
 
 
 /**
@@ -125,11 +161,31 @@ hipChannelFormatDesc  hipBindTexture(size_t *offset, struct textureReference *te
  *
  *
  **/
-template <class T>
-hipChannelFormatDesc  hipCreateChannelDesc()
-{
-    hipChannelFormatDesc desc;
-    return desc;
+hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f);
+
+// descriptors
+template <typename T> inline hipChannelFormatDesc hipCreateChannelDesc() {
+  return hipCreateChannelDesc(0, 0, 0, 0, hipChannelFormatKindNone);
+}
+template <> inline hipChannelFormatDesc hipCreateChannelDesc<int>() {
+  int e = (int)sizeof(int) * 8;
+  return hipCreateChannelDesc(e, 0, 0, 0, hipChannelFormatKindSigned);
+}
+template <> inline hipChannelFormatDesc hipCreateChannelDesc<unsigned int>() {
+  int e = (int)sizeof(unsigned int) * 8;
+  return hipCreateChannelDesc(e, 0, 0, 0, hipChannelFormatKindUnsigned);
+}
+template <> inline hipChannelFormatDesc hipCreateChannelDesc<long>() {
+  int e = (int)sizeof(long) * 8;
+  return hipCreateChannelDesc(e, 0, 0, 0, hipChannelFormatKindSigned);
+}
+template <> inline hipChannelFormatDesc hipCreateChannelDesc<unsigned long>() {
+  int e = (int)sizeof(unsigned long) * 8;
+  return hipCreateChannelDesc(e, 0, 0, 0, hipChannelFormatKindUnsigned);
+}
+template <> inline hipChannelFormatDesc hipCreateChannelDesc<float>() {
+  int e = (int)sizeof(float) * 8;
+  return hipCreateChannelDesc(e, 0, 0, 0, hipChannelFormatKindFloat);
 }
 
 /*
@@ -178,6 +234,13 @@ hipError_t  hipBindTexture(size_t *offset,
     return  hipBindTexture(offset, tex, devPtr, &tex.channelDesc, size);
 }
 
+template <class T, int dim, enum hipTextureReadMode readMode>
+hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> &tex, hipArray* array) {
+  tex.width = array->width;
+  tex.height = array->height;
+  tex._dataPtr = static_cast<const T*>(array->data);
+  return hipSuccess;
+}
 
 /*
  * @brief Unbinds the textuer bound to @p tex
@@ -187,9 +250,9 @@ hipError_t  hipBindTexture(size_t *offset,
  *  @return #hipSuccess
  **/
 template <class T, int dim, enum hipTextureReadMode readMode>
-hipError_t  hipUnbindTexture(struct texture<T, dim, readMode> *tex)
+hipError_t  hipUnbindTexture(struct texture<T, dim, readMode> &tex)
 {
-    tex->_dataPtr = NULL;
+    tex._dataPtr = NULL;
 
     return hipSuccess;
 }
