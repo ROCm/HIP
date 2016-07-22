@@ -121,7 +121,6 @@ typedef struct dim3 {
 } dim3;
 
 
-
 /**
  * Memory copy types
  *

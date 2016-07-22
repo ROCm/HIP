@@ -1113,7 +1113,7 @@ void decKernelCnt(){
 // Allows runtime to track some information about the stream.
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp)
 {
-	std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(stream, grid, block, lp);
     stream = ihipSyncAndResolveStream(stream);
 #if USE_GRID_LAUNCH_20 
     lp->grid_dim.x = grid.x;
@@ -1143,7 +1143,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
 }
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm *lp)
 {
-	std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(stream, grid, block, lp);
     stream = ihipSyncAndResolveStream(stream);
 #if USE_GRID_LAUNCH_20 
     lp->grid_dim.x = grid;
@@ -1174,7 +1174,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, gri
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm *lp)
 {
-	std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(stream, grid, block, lp);
     stream = ihipSyncAndResolveStream(stream);
 #if USE_GRID_LAUNCH_20 
     lp->grid_dim.x = grid.x;
@@ -1205,7 +1205,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, gri
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm *lp)
 {
-	std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(stream, grid, block, lp);
     stream = ihipSyncAndResolveStream(stream);
 #if USE_GRID_LAUNCH_20 
     lp->grid_dim.x = grid;
@@ -1253,8 +1253,8 @@ void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp)
 // HIP API Implementation
 //
 // Implementor notes:
-// _ All functions should call ihipInit as first action:
-//    std::call_once(hip_initialized, ihipInit);
+// _ All functions should call HIP_INIT_API as first action:
+//    HIP_INIT_API(<function_arguments>);
 //
 // - ALl functions should use ihipLogStatus to return error code (not return error directly).
 //=================================================================================================
@@ -1629,7 +1629,7 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsig
 //---
 hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator *acc)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(deviceId, acc);
 
     ihipDevice_t *d = ihipGetDevice(deviceId);
     hipError_t err;
@@ -1649,7 +1649,7 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator *acc)
 //---
 hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **av)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(stream, av);
 
     if (stream == hipStreamNull ) {
         ihipDevice_t *device = ihipGetTlsDefaultDevice();

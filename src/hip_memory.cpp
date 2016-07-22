@@ -36,7 +36,7 @@ THE SOFTWARE.
  */
 hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(attributes, ptr);
 
     hipError_t e = hipSuccess;
 
@@ -85,7 +85,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
  */
 hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsigned flags)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(devicePointer, hostPointer, flags);
 
     hipError_t e = hipSuccess;
 
