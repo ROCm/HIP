@@ -61,7 +61,7 @@ hipError_t hipGetDeviceCount(int *count)
  */
 hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig )
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(cacheConfig);
 
     // Nop, AMD does not support variable cache configs.
 
@@ -75,7 +75,7 @@ hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig )
  */
 hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig )
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(cacheConfig);
 
     *cacheConfig = hipFuncCachePreferNone;
 
@@ -89,7 +89,7 @@ hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig )
  */
 hipError_t hipFuncSetCacheConfig ( hipFuncCache cacheConfig )
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(cacheConfig);
 
     // Nop, AMD does not support variable cache configs.
 
@@ -104,7 +104,7 @@ hipError_t hipFuncSetCacheConfig ( hipFuncCache cacheConfig )
  */
 hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config )
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(config);
 
     // Nop, AMD does not support variable shared mem configs.
 
@@ -119,7 +119,7 @@ hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config )
  */
 hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig )
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(pConfig);
 
     *pConfig = hipSharedMemBankSizeFourByte;
 
@@ -184,7 +184,7 @@ hipError_t hipDeviceReset(void)
  */
 hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(attr, device);
 
     hipError_t e = hipSuccess;
 

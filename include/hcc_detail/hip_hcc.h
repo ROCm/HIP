@@ -466,6 +466,17 @@ inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s)
     return os;
 }
 
+inline std::ostream & operator<<(std::ostream& os, const dim3& s)
+{
+    os << '{';
+    os << s.x;
+    os << ',';
+    os << s.y;
+    os << ',';
+    os << s.z;
+    os << '}';
+    return os;
+}
 
 //----
 // Internal event structure:
