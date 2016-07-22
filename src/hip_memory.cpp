@@ -295,7 +295,7 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
               if (crit->peerCnt() > 1) { // peerCnt includes self so only call allow_access if other peers involved:
                   hsa_status_t hsa_status = hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
                   if (hsa_status != HSA_STATUS_SUCCESS) {
-                      hip_status = hipErrorMemoryAllocation; 
+                      hip_status = hipErrorMemoryAllocation;
                   }
               }
           }
@@ -443,7 +443,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 
 
 /**
- * @result #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidMemcpyDirection, 
+ * @result #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidMemcpyDirection,
  * @result #hipErrorInvalidValue : If dst==NULL or src==NULL, or other bad argument.
  * @warning on HCC hipMemcpyAsync does not support overlapped H2D and D2H copies.
  * @warning on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hipMallocHost call).
@@ -703,7 +703,7 @@ hipError_t hipMemGetInfo  (size_t *free, size_t *total)
             size_t deviceMemSize, hostMemSize, userMemSize;
             hc::am_memtracker_sizeinfo(hipDevice->_acc, &deviceMemSize, &hostMemSize, &userMemSize);
             printf ("deviceMemSize=%zu\n", deviceMemSize);
-        
+
             *free =  hipDevice->_props.totalGlobalMem - deviceMemSize;
         }
 
@@ -737,7 +737,7 @@ hipError_t hipFree(void* ptr)
         }
     } else {
         // free NULL pointer succeeds and is common technique to initialize runtime
-        hipStatus = hipSuccess;  
+        hipStatus = hipSuccess;
     }
 
     return ihipLogStatus(hipStatus);
@@ -765,7 +765,7 @@ hipError_t hipHostFree(void* ptr)
         }
     } else {
         // free NULL pointer succeeds and is common technique to initialize runtime
-        hipStatus = hipSuccess;  
+        hipStatus = hipSuccess;
     }
 
     return ihipLogStatus(hipStatus);
@@ -802,4 +802,16 @@ hipError_t hipFreeArray(hipArray* array)
   return ihipLogStatus(hipStatus);
 }
 
+// Stubs of threadfence operations
+__device__ void  __threadfence_block(void){
+    // no-op
+}
+
+__device__ void  __threadfence(void){
+    // no-op
+}
+
+__device__ void  __threadfence_system(void){
+    // no-op
+}
 

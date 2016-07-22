@@ -48,7 +48,7 @@ THE SOFTWARE.
 #ifdef __HCC__
 #include <grid_launch.h>
 
-#if defined (GRID_LAUNCH_VERSION) and (GRID_LAUNCH_VERSION >= 20) 
+#if defined (GRID_LAUNCH_VERSION) and (GRID_LAUNCH_VERSION >= 20)
 // Use field names for grid_launch 2.0 structure, if HCC supports GL 2.0.
 #define USE_GRID_LAUNCH_20 1
 #else
@@ -494,6 +494,59 @@ __device__ float __dsqrt_ru(double x);
 __device__ float __dsqrt_rz(double x);
 /**
  * Kernel launching
+ */
+
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup Memory Fence Functions
+ *  @{
+ *
+ *
+ *  @warning The HIP memory fence functions are currently not supported yet.
+ *  If any of those threadfence stubs are reached by the application, you should set "export HSA_DISABLE_CACHE=1" to disable L1 and L2 caches.
+ *
+ *
+ *  On AMD platforms, the threadfence* routines are currently empty stubs.
+ */
+
+ /**
+ * @brief threadfence_block makes writes visible to threads running in same block.
+ *
+ * @Returns void
+ *
+ * @param void
+ *
+ * @warning __threadfence_block is a stub and map to no-op.
+ */
+__device__ void  __threadfence_block(void);
+
+ /**
+  * @brief threadfence makes wirtes visible to other threads running on same GPU.
+ *
+ * @Returns void
+ *
+ * @param void
+ *
+ * @warning __threadfence is a stub and map to no-op, application should set "export HSA_DISABLE_CACHE=1" to disable both L1 and L2 caches.
+ */
+__device__ void  __threadfence(void);
+
+/**
+ * @brief threadfence_system makes writes to pinned system memory visible on host CPU.
+ *
+ * @Returns void
+ *
+ * @param void
+ *
+ * @warning __threadfence_system is a stub and map to no-op, application should set "export HSA_DISABLE_CACHE=1" to disable both L1 and L2 caches.
+ */
+__device__ void  __threadfence_system(void);
+
+
+// doxygen end Memory Fence
+/**
+ * @}
  */
 
 

@@ -230,6 +230,9 @@ typedef struct dim3 {
 
 ## Memory-Fence Instructions
 HIP support for __threadfence(), __threadfence_block() and __threadfence_system() is under development.
+The stubs for the threadfence routines are defined in hcc_details/hip_runtime.h.
+Applications that use these threadfence features should disable both of the L1 and L2 caches by:
+"export HSA_DISABLE_CACHE=1"
 
 ## Synchronization Functions
 The __syncthreads() built-in function is supported in HIP. The __syncthreads_count(int), __syncthreads_and(int) and __syncthreads_or(int) functions are under development.  
