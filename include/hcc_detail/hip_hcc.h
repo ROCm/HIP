@@ -445,6 +445,7 @@ private:
 
 private:
     void                        enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal);
+    void                        enqueueBarrier(hsa_queue_t* queue, hsa_signal_t *depSignal);
     void                        waitCopy(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *signal);
 
     // The unsigned return is hipMemcpyKind
