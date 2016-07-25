@@ -5,7 +5,10 @@ We have attempted to document known bugs and limitations - in particular the [HI
 ===================================================================================================
 Upcoming:
 - hipLaunchKernel supports one-dimensional grid and/or block dims, without explicit cast to dim3 type.
-
+- Stability: Enforce perioidic host synchronization to reclaim resources if the application has launched a large
+  number of commands (>10K) without synchronizing.  
+- Doc updates: Add some more frequently asked questions to FAQ, fix TOC in some files, review.
+- Register keyword now silently ignored on HCC (previously would emit warning).
 ===================================================================================================
 Release:0.90.00
 Date: 2016.06.29

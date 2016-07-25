@@ -25,7 +25,7 @@
 | `cudaIpcOpenEventHandle`                                  |                               | Opens an interprocess event handle for use in the current process.                                                             |
 | `cudaIpcOpenMemHandle`                                    |                               | Opens an interprocess memory handle exported from another process and returns a device pointer usable in the local process.    |
 | `cudaSetDevice`                                           | `hipSetDevice`                | Set device to be used for GPU executions.                                                                                      |
-| `cudaSetDeviceFlags`                                      |                               | Sets flags to be used for device executions.                                                                                   |
+| `cudaSetDeviceFlags`                                      | `hipSetDeviceFlags`           | Sets flags to be used for device executions.                                                                                   |
 | `cudaSetValidDevices`                                     |                               | Set a list of devices that can be used for CUDA.                                                                               |`
 
 **2. Error Handling**
