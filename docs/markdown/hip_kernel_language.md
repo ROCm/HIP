@@ -628,12 +628,12 @@ The compiler ensures that the kernel uses fewer registers than both allowed maxi
 
 HIP/hcc will parse the `launch_bounds` attribute but silently ignores the performance hint. Full support is under development.
 
-The hcc compiler does not support the "--maxregcount" option like nvcc.  Instead, users are encouraged to use the hip_launch_bounds directive since the parameters are more intuitive and portable than
+Unlike nvcc, hcc does not support the "--maxregcount" option.  Instead, users are encouraged to use the hip_launch_bounds directive since the parameters are more intuitive and portable than
 micro-architecture details like registers, and also the directive allows per-kernel control rather than an entire file.  hip_launch_bounds works on both hcc and nvcc targets.
 
 
 ## Register Keyword
-The register keyword affects code generation in neither nvcc nor hcc.  It’s deprecated in standard C++, so hcc will generate a warning. (nvcc silently ignores use of this keyword.) To disable the warning, you can pass the option `-Wno-deprecated-register` to hcc.
+The register keyword is deprecated in C++, and is silently ignored by both nvcc and hcc.  To see warnings, you can pass the option `-Wdeprecated-register` to hcc.
 
 
 ## Pragma Unroll

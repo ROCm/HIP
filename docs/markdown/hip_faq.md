@@ -56,7 +56,7 @@ No. HIP provides porting tools which do most of the work do convert CUDA code in
 Most developers will port their code from CUDA to HIP and then maintain the HIP version. 
 HIP code provides the same performance as coding in native CUDA, plus the benefit that the code can also run on AMD platforms.
 
-### What version of CUDA is supported?<a name="Q4"></a>
+### What specific version of CUDA does HIP support?<a name="Q4"></a>
 HIP APIs and features do not map to a specific CUDA version.  HIP provides a strong subset of functionality provided in CUDA, and the hipify tools can 
 scan code to identify any unsupported CUDA functions - this is very useful for identifying the specific features required by a given application.
 
