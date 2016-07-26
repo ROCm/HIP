@@ -16,8 +16,10 @@
 - [Can I develop HIP code on an Nvidia CUDA platform?](#can-i-develop-hip-code-on-an-nvidia-cuda-platform)
 - [Can I develop HIP code on an AMD HCC platform?](#can-i-develop-hip-code-on-an-amd-hcc-platform)
 - [Can a HIP binary run on both AMD and Nvidia platforms?](#can-a-hip-binary-run-on-both-amd-and-nvidia-platforms)
+- [Can I link HIP code with host code compiled with another compiler such as gcc, icc, or clang ?]
 - [What's the difference between HIP and hc?](#whats-the-difference-between-hip-and-hc)
 - [HIP detected my platform (hcc vs nvcc) incorrectly - what should I do?](#hip-detected-my-platform-hcc-vs-nvcc-incorrectly---what-should-i-do)
+- [Can I install both CUDA SDK and HCC on same machine?](#Q100)
 
 
 
@@ -146,6 +148,12 @@ HIP is a portable C++ language that supports a strong subset of the CUDA run-tim
 A C++ dialect, hc is supported by the AMD HCC compiler. It provides C++ run time, C++ kernel-launch APIs (parallel_for_each), C++ kernel language, and several memory-management options, including pointers, arrays and array_view (with implicit data synchronization). It's intended to be a leading indicator of the ISO C++ standard.
 
 
+### [On HCC, can I link HIP code with host code compiled with another compiler such as gcc, icc, or clang ?
+Yes!  HIP/HCC generates the object code which conforms to the GCC ABI, and also links with libstdc++.  This means you can compile host code with the compiler of your choice and link this
+with GPU code compiler with HIP.  Larger projects often contain a mixture of accelerator code (initially written in CUDA with nvcc) plus host code (compiled with gcc, icc, or clang).   These projects
+can convert the accelerator code to HIP, compile that code with hipcc, and link with object code from the preferred compiler.
+
+
 ### HIP detected my platform (hcc vs nvcc) incorrectly - what should I do?
 
 HIP will set the platform to HCC if it sees that the AMD graphics driver is installed and has detected an AMD GPU.
@@ -157,3 +165,6 @@ export HIP_PLATFORM=hcc
 One symptom of this problem is the message "error: 'unknown error'(11) at square.hipref.cpp:56".  This can occur if you have a CUDA installation on an AMD platform, and HIP incorrectly detects the platform as nvcc.  HIP may be able to compile the application using the nvcc tool-chain, but will generate this error at runtime since the platform does not have a CUDA device. The fix is to set HIP_PLATFORM=hcc and rebuild the issue. 
 
 If you see issues related to incorrect platform detection, please file an issue with the GitHub issue tracker so we can improve HIP's platform detection logic.
+
+### [Can I install both CUDA SDK and HCC on same machine?]<a name="Q100"></a>
+Yes. You can use HIP_PLATFORM to choose which path hipcc targets.  This configuration can be useful when using HIP to develop an application which is portable to both AMD and NVIDIA.
