@@ -393,7 +393,7 @@ typedef LockedAccessor<ihipStreamCritical_t> LockedAccessor_StreamCrit_t;
 class ihipStream_t {
 public:
 typedef uint64_t SeqNum_t ;
-
+    uint32_t kernelCnt;
     ihipStream_t(unsigned device_index, hc::accelerator_view av, unsigned int flags);
     ~ihipStream_t();
 
