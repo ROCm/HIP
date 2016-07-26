@@ -130,7 +130,7 @@ class ihipDevice_t;
 // TODO - currently we print the trace message at the beginning. if we waited, we could also include return codes, and any values returned
 // through ptr-to-args (ie the pointers allocated by hipMalloc).
 #if COMPILE_HIP_ATP_MARKER
-#include "AMDTActivityLogger.h"
+#include "CXLActivityLogger.h"
 #define SCOPED_MARKER(markerName,group,userString) amdtScopedMarker(markerName, group, userString)
 #else 
 // Swallow scoped markers:
@@ -445,6 +445,7 @@ private:
 
 private:
     void                        enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal);
+    void                        enqueueBarrier(hsa_queue_t* queue, hsa_signal_t *depSignal);
     void                        waitCopy(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *signal);
 
     // The unsigned return is hipMemcpyKind
@@ -466,6 +467,17 @@ inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s)
     return os;
 }
 
+inline std::ostream & operator<<(std::ostream& os, const dim3& s)
+{
+    os << '{';
+    os << s.x;
+    os << ',';
+    os << s.y;
+    os << ',';
+    os << s.z;
+    os << '}';
+    return os;
+}
 
 //----
 // Internal event structure:
@@ -594,7 +606,7 @@ public: // Data, set at initialization:
     unsigned                _compute_units;
 
     StagingBuffer           *_staging_buffer[2]; // one buffer for each direction.
-
+    int                     isLargeBar;
 
     unsigned                _device_flags;
 
