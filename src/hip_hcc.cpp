@@ -338,7 +338,7 @@ ihipSignal_t *ihipStream_t::allocSignal(LockedAccessor_StreamCrit_t &crit)
 
 
 //---
-void ihipStream_t::enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal)
+void ihipStream_t::enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal, ihipSignal_t *completionSignal)
 {
 
     // Obtain the write index for the command queue
@@ -356,9 +356,9 @@ void ihipStream_t::enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal)
     //header |= HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE;
     barrier->header = header;
 
-    barrier->dep_signal[0] = depSignal->_hsa_signal;
+    barrier->dep_signal[0].handle = depSignal ? depSignal->_hsa_signal.handle: 0;
 
-    barrier->completion_signal.handle = 0;
+    barrier->completion_signal.handle = completionSignal ? completionSignal->_hsa_signal.handle : 0;
 
     // TODO - check queue overflow, return error:
     // Increment write index and ring doorbell to dispatch the kernel
@@ -390,10 +390,7 @@ void ihipStream_t::enqueueBarrier(hsa_queue_t* queue, hsa_signal_t *depSignal)
     barrier->dep_signal[3].handle = 0;
     barrier->dep_signal[4].handle = 0;
 
-    hsa_signal_t signal;
-    hsa_signal_create(1, 0, NULL, &signal);
-    *depSignal = signal;
-    barrier->completion_signal = signal;
+    barrier->completion_signal = *depSignal;
 
     // TODO - check queue overflow, return error:
     // Increment write index and ring doorbell to dispatch the kernel
@@ -421,7 +418,7 @@ bool ihipStream_t::lockopen_preKernelCommand()
 
             hsa_queue_t * q =  (hsa_queue_t*)_av.get_hsa_queue();
             if (HIP_DISABLE_HW_KERNEL_DEP == 0) {
-                this->enqueueBarrier(q, crit->_last_copy_signal);
+                this->enqueueBarrier(q, crit->_last_copy_signal, NULL);
                 tprintf (DB_SYNC, "stream %p switch %s to %s (barrier pkt inserted with wait on #%lu)\n",
                         this, ihipCommandName[crit->_last_command_type], ihipCommandName[ihipCommandKernel], crit->_last_copy_signal->_sig_id)
 
@@ -472,7 +469,10 @@ int ihipStream_t::preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t
             tprintf (DB_SYNC, "stream %p switch %s to %s (async copy dep on prev kernel)\n",
                     this, ihipCommandName[crit->_last_command_type], ihipCommandName[copyType]);
             needSync = 1;
-            this->enqueueBarrier(static_cast<hsa_queue_t*>(_av.get_hsa_queue()), waitSignal);
+            ihipSignal_t *depSignal = allocSignal(crit);
+            hsa_signal_store_relaxed(depSignal->_hsa_signal,1);
+            this->enqueueBarrier(static_cast<hsa_queue_t*>(_av.get_hsa_queue()), NULL, depSignal);
+            *waitSignal = depSignal->_hsa_signal;
 //            hsa_signal_t *hsaSignal = (static_cast<hsa_signal_t*> (crit->_last_kernel_future.get_native_handle()));
 /*            if (hsaSignal) {
                 // Keep reference to the kernel future in order to keep the
@@ -1272,7 +1272,7 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 
 // HIP uses only 64 kernels. If the performance decrease, add more
 uint32_t kernelCount = 0;
-std::vector<hc::completion_future*> vCF(64);
+std::vector<hc::completion_future*> vCF(1024);
 
 void incKernelCnt(hc::completion_future *cf){
     vCF[kernelCount] = cf;
@@ -1280,7 +1280,7 @@ void incKernelCnt(hc::completion_future *cf){
 }
 
 void decKernelCnt(){
-    if(kernelCount > 63){
+    if(kernelCount > 1023){
         uint32_t len = kernelCount;
         for(uint32_t i =0;i<len;i++){
             if(vCF[i] != NULL){
@@ -1743,9 +1743,6 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
             throw ihipException(hipErrorInvalidValue);
         }
     }
-    if(crit->_last_command_type == ihipCommandKernel){
-        hsa_signal_destroy(depSignal); 
-    }
 
 }
 
@@ -1820,9 +1817,6 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsig
 
             hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, dstAgent, src, srcAgent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, ihip_signal->_hsa_signal);
 
-            if (crit->_last_command_type == ihipCommandKernel) {
-                hsa_signal_destroy(depSignal);
-            }
 
             if (hsa_status == HSA_STATUS_SUCCESS) {
                 if (HIP_LAUNCH_BLOCKING) {
