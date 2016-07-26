@@ -1657,10 +1657,6 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
                 {
                     device->_staging_buffer[1]->CopyDeviceToHost(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
                 }
-                if(crit->_last_command_type == ihipCommandKernel){
-                    std::cout<<"Destroying depSignal MemcpySync"<<std::endl;
-                    hsa_signal_destroy(depSignal);
-                }
                 // The copy completes before returning so can reset queue to empty:
                 this->wait(crit, true);
 
