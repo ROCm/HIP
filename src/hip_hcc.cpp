@@ -134,7 +134,6 @@ ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, unsig
     _flags(flags),
     _device_index(device_index)
 {
-    kernelCnt = 0;
     tprintf(DB_SYNC, " streamCreate: stream=%p\n", this);
 };
 
@@ -181,6 +180,7 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty
     if (! assertQueueEmpty) {
         tprintf (DB_SYNC, "stream %p wait for queue-empty..\n", this);
         _av.wait();
+        crit->_kernelCnt = 0;
     }
     if (crit->_last_copy_signal) {
         tprintf (DB_SYNC, "stream %p wait for lastCopy:#%lu...\n", this, lastCopySeqId(crit) );
@@ -399,7 +399,7 @@ void ihipStream_t::enqueueBarrier(hsa_queue_t* queue, hsa_signal_t *depSignal)
     hsa_signal_store_relaxed(queue->doorbell_signal, index);
 }
 
-#define HIP_NUM_KERNELS_INFLIGHT 128
+int HIP_NUM_KERNELS_INFLIGHT = 128;
 
 //--
 //When the commands in a stream change types (ie kernel command follows a data command,
@@ -412,11 +412,12 @@ bool ihipStream_t::lockopen_preKernelCommand()
     LockedAccessor_StreamCrit_t crit(_criticalData, false/*no unlock at destruction*/);
 
     bool addedSync = false;
-    if(kernelCnt > HIP_NUM_KERNELS_INFLIGHT){
+
+    if(crit->_kernelCnt > HIP_NUM_KERNELS_INFLIGHT){
         this->wait(crit);
-        kernelCnt = 0;
+       crit->_kernelCnt = 0;
     }
-    kernelCnt++;
+    crit->_kernelCnt++;
     // If switching command types, we need to add a barrier packet to synchronize things.
     if (crit->_last_command_type != ihipCommandKernel) {
         if (crit->_last_copy_signal) {
@@ -1140,6 +1141,8 @@ void ihipInit()
 
     READ_ENV_I(release, HIP_DISABLE_HW_KERNEL_DEP, 0, "Disable HW dependencies before kernel commands  - instead wait for dependency on host. -1 means ignore these dependencies. (debug mode)");
     READ_ENV_I(release, HIP_DISABLE_HW_COPY_DEP, 0, "Disable HW dependencies before copy commands  - instead wait for dependency on host. -1 means ifnore these dependencies (debug mode)");
+
+    READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Number of kernels per stream ");
 
     if (HIP_OPTIMAL_MEM_TRANSFER && !HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING) {
         HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING= MEMCPY_H2D_DIRECT_VS_STAGING_COPY_THRESHOLD;
