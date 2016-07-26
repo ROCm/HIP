@@ -142,21 +142,10 @@ vectorADD(hipLaunchParm lp,
 
 
 template <typename T>
-void initArrays(T **A_d, T **B_d, T **C_d,
-                T **A_h, T **B_h, T **C_h, 
-                size_t N, bool usePinnedHost=false) 
+void initArraysForHost(T **A_h, T **B_h, T **C_h,
+                size_t N, bool usePinnedHost=false)
 {
     size_t Nbytes = N*sizeof(T);
-
-    if (A_d) {
-        HIPCHECK ( hipMalloc(A_d, Nbytes) );
-    }
-    if (B_d) {
-        HIPCHECK ( hipMalloc(B_d, Nbytes) );
-    }
-    if (C_d) {
-        HIPCHECK ( hipMalloc(C_d, Nbytes) );
-    }
 
     if (usePinnedHost) {
         if (A_h) {
@@ -173,7 +162,7 @@ void initArrays(T **A_d, T **B_d, T **C_d,
             *A_h = (T*)malloc(Nbytes);
             HIPASSERT(*A_h != NULL);
         }
-        
+
         if (B_h) {
             *B_h = (T*)malloc(Nbytes);
             HIPASSERT(*B_h != NULL);
@@ -185,7 +174,6 @@ void initArrays(T **A_d, T **B_d, T **C_d,
         }
     }
 
-
     // Initialize the host data:
     for (size_t i=0; i<N; i++) {
         if (A_h) 
@@ -195,21 +183,31 @@ void initArrays(T **A_d, T **B_d, T **C_d,
     }
 }
 
-
 template <typename T>
-void freeArrays(T *A_d, T *B_d, T *C_d,
-                T *A_h, T *B_h, T *C_h, bool usePinnedHost) 
+void initArrays(T **A_d, T **B_d, T **C_d,
+                T **A_h, T **B_h, T **C_h, 
+                size_t N, bool usePinnedHost=false) 
 {
+    size_t Nbytes = N*sizeof(T);
+
     if (A_d) {
-        HIPCHECK ( hipFree(A_d) );
+        HIPCHECK ( hipMalloc(A_d, Nbytes) );
     }
     if (B_d) {
-        HIPCHECK ( hipFree(B_d) );
+        HIPCHECK ( hipMalloc(B_d, Nbytes) );
     }
     if (C_d) {
-        HIPCHECK ( hipFree(C_d) );
+        HIPCHECK ( hipMalloc(C_d, Nbytes) );
     }
 
+    initArraysForHost(A_h, B_h, C_h, N, usePinnedHost);
+
+}
+
+
+template <typename T>
+void freeArraysForHost(T *A_h, T *B_h, T *C_h, bool usePinnedHost)
+{
     if (usePinnedHost) {
         if (A_h) {
             HIPCHECK (hipHostFree(A_h));
@@ -231,9 +229,63 @@ void freeArrays(T *A_d, T *B_d, T *C_d,
             free (C_h);
         }
     }
-    
+
 }
 
+template <typename T>
+void freeArrays(T *A_d, T *B_d, T *C_d,
+                T *A_h, T *B_h, T *C_h, bool usePinnedHost) 
+{
+    if (A_d) {
+        HIPCHECK ( hipFree(A_d) );
+    }
+    if (B_d) {
+        HIPCHECK ( hipFree(B_d) );
+    }
+    if (C_d) {
+        HIPCHECK ( hipFree(C_d) );
+    }
+
+    freeArraysForHost(A_h, B_h, C_h, usePinnedHost);
+}
+
+#if defined(__HIP_PLATFORM_HCC__)
+template <typename T>
+void initArrays2DPitch(T **A_d, T **B_d, T **C_d,
+                     size_t *pitch_A, size_t *pitch_B, size_t *pitch_C,
+                     size_t numW, size_t numH)
+{
+  if (A_d) {
+    HIPCHECK ( hipMallocPitch((void**)A_d, pitch_A, numW*sizeof(T), numH) );
+  }
+  if (B_d) {
+    HIPCHECK ( hipMallocPitch((void**)B_d, pitch_B, numW*sizeof(T), numH) );
+  }
+  if (C_d) {
+    HIPCHECK ( hipMallocPitch((void**)C_d, pitch_C, numW*sizeof(T), numH) );
+  }
+
+  HIPASSERT(*pitch_A == *pitch_B);
+  HIPASSERT(*pitch_A == *pitch_C)
+
+}
+
+inline void initHIPArrays(hipArray **A_d, hipArray **B_d, hipArray **C_d,
+                   const hipChannelFormatDesc *desc, const size_t numW, const size_t numH, const unsigned int flags)
+{
+
+  if (A_d) {
+    HIPCHECK( hipMallocArray(A_d, desc, numW, numH, flags));
+  }
+  if (B_d) {
+    HIPCHECK( hipMallocArray(B_d, desc, numW, numH, flags));
+  }
+  if (C_d) {
+    HIPCHECK( hipMallocArray(C_d, desc, numW, numH, flags));
+  }
+
+}
+#endif
 
 // Assumes C_h contains vector add of A_h + B_h
 // Calls the test "failed" macro if a mismatch is detected.

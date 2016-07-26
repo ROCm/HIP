@@ -1,11 +1,10 @@
 # Release notes
 
-We have attempted to document known bugs and limitations - in particular the [HIP Kernel Language](docs/markdown/hip_kernel_language.md) document uses the phrase "Under Development", and the [HIP Runtime API bug list](http://gpuopen-professionalcompute-tools.github.io/HIP/bug.html) lists known bugs.    Some of the key items we are working on:
-- Tuning built-in functions, including shfl.
-- Performance optimization.
+We have attempted to document known bugs and limitations - in particular the [HIP Kernel Language](docs/markdown/hip_kernel_language.md) document uses the phrase "Under Development", and the [HIP Runtime API bug list](http://gpuopen-professionalcompute-tools.github.io/HIP/bug.html) lists known bugs. 
 
-
-Stay tuned - the work for many of these features is already in-flight.
+===================================================================================================
+Upcoming:
+- hipLaunchKernel supports one-dimensional grid and/or block dims, without explicit cast to dim3 type.
 
 ===================================================================================================
 Release:0.90.00

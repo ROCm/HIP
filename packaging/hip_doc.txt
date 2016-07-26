@@ -3,7 +3,10 @@ project(hip_doc)
 
 add_custom_target(build_doxygen ALL
                   COMMAND HIP_PATH=@hip_SOURCE_DIR@ doxygen @hip_SOURCE_DIR@/docs/doxygen-input/doxy.cfg)
-install(DIRECTORY RuntimeAPI/html DESTINATION docs)
+add_custom_target(convert_md_to_html ALL
+                  COMMAND @hip_SOURCE_DIR@/packaging/convert_md_to_html.sh @hip_SOURCE_DIR@ ${PROJECT_BINARY_DIR}/md2html)
+install(DIRECTORY RuntimeAPI/html DESTINATION docs/docs/RuntimeAPI)
+install(DIRECTORY md2html/ DESTINATION docs)
 
 #############################
 # Packaging steps

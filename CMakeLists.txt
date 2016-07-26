@@ -98,6 +98,15 @@ if(NOT DEFINED BUILD_CLANG_HIPIFY)
     endif()
 endif()
 
+# Check if we need to enable ATP marker
+if(NOT DEFINED COMPILE_HIP_ATP_MARKER)
+    if(NOT DEFINED ENV{COMPILE_HIP_ATP_MARKER})
+        set(COMPILE_HIP_ATP_MARKER 0)
+    else()
+        set(COMPILE_HIP_ATP_MARKER $ENV{COMPILE_HIP_ATP_MARKER})
+    endif()
+endif()
+
 #############################
 # Build steps
 #############################
@@ -109,13 +118,18 @@ endif()
 # Build hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
     include_directories(${PROJECT_SOURCE_DIR}/include)
+    if(COMPILE_HIP_ATP_MARKER)
+        include_directories(/opt/rocm/profiler/CXLActivityLogger/include)
+        set(CMAKE_CXX_FLAGS " -DCOMPILE_HIP_ATP_MARKER=1 ${CMAKE_CXX_FLAGS}")
+        set(CMAKE_C_FLAGS   " -DCOMPILE_HIP_ATP_MARKER=1 ${CMAKE_C_FLAGS}")
+    endif()
 
     set(CMAKE_CXX_COMPILER "${HCC_HOME}/bin/hcc")
     set(CMAKE_C_COMPILER   "${HCC_HOME}/bin/hcc")
 
     # Set HIP_HCC so we know this is HIP compile, some files are shared with HCC (staging_buffer).
-    set(CMAKE_CXX_FLAGS " -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include/libhsakmt -stdlib=libc++ -DHIP_HCC")
-    set(CMAKE_C_FLAGS   " -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include/libhsakmt -stdlib=libc++ -DHIP_HCC")
+    set(CMAKE_CXX_FLAGS " -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include/libhsakmt -stdlib=libc++ -DHIP_HCC ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS   " -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include/libhsakmt -stdlib=libc++ -DHIP_HCC ${CMAKE_C_FLAGS}")
 
     set(SOURCE_FILES src/device_util.cpp
                      src/hip_hcc.cpp
@@ -227,5 +241,12 @@ add_custom_target(pkg_hip_samples COMMAND ${CMAKE_COMMAND} .
                                   WORKING_DIRECTORY ${BUILD_DIR})
 
 # Package: all
+if(POLICY CMP0037)
+    cmake_policy(PUSH)
+    cmake_policy(SET CMP0037 OLD)
+endif()
 add_custom_target(package DEPENDS pkg_hip_base pkg_hip_hcc pkg_hip_nvcc pkg_hip_doc pkg_hip_samples)
+if(POLICY CMP0037)
+    cmake_policy(POP)
+endif()
 

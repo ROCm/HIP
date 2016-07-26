@@ -69,7 +69,7 @@ hipError_t hipEventCreate(hipEvent_t* event)
 //---
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(event, stream);
 
     ihipEvent_t *eh = event._handle;
     if (eh && eh->_state != hipEventStatusUnitialized)   {
@@ -104,7 +104,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
 //---
 hipError_t hipEventDestroy(hipEvent_t event)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(event);
 
     event._handle->_state  = hipEventStatusUnitialized;
 
@@ -119,7 +119,7 @@ hipError_t hipEventDestroy(hipEvent_t event)
 //---
 hipError_t hipEventSynchronize(hipEvent_t event)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(event);
 
     ihipEvent_t *eh = event._handle;
 
@@ -148,7 +148,7 @@ hipError_t hipEventSynchronize(hipEvent_t event)
 //---
 hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(ms, start, stop);
 
     ihipEvent_t *start_eh = start._handle;
     ihipEvent_t *stop_eh = stop._handle;
@@ -193,7 +193,7 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop)
 //---
 hipError_t hipEventQuery(hipEvent_t event)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(event);
 
     ihipEvent_t *eh = event._handle;
 
