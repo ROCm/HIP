@@ -134,6 +134,7 @@ ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, unsig
     _flags(flags),
     _device_index(device_index)
 {
+    kernelCnt = 0;
     tprintf(DB_SYNC, " streamCreate: stream=%p\n", this);
 };
 
@@ -398,7 +399,7 @@ void ihipStream_t::enqueueBarrier(hsa_queue_t* queue, hsa_signal_t *depSignal)
     hsa_signal_store_relaxed(queue->doorbell_signal, index);
 }
 
-
+#define HIP_NUM_KERNELS_INFLIGHT 128
 
 //--
 //When the commands in a stream change types (ie kernel command follows a data command,
@@ -411,6 +412,11 @@ bool ihipStream_t::lockopen_preKernelCommand()
     LockedAccessor_StreamCrit_t crit(_criticalData, false/*no unlock at destruction*/);
 
     bool addedSync = false;
+    if(kernelCnt > HIP_NUM_KERNELS_INFLIGHT){
+        this->wait(crit);
+        kernelCnt = 0;
+    }
+    kernelCnt++;
     // If switching command types, we need to add a barrier packet to synchronize things.
     if (crit->_last_command_type != ihipCommandKernel) {
         if (crit->_last_copy_signal) {
@@ -1270,28 +1276,6 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
     }
 }
 
-// HIP uses only 64 kernels. If the performance decrease, add more
-uint32_t kernelCount = 0;
-std::vector<hc::completion_future*> vCF(1024);
-
-void incKernelCnt(hc::completion_future *cf){
-    vCF[kernelCount] = cf;
-    kernelCount++;
-}
-
-void decKernelCnt(){
-    if(kernelCount > 1023){
-        uint32_t len = kernelCount;
-        for(uint32_t i =0;i<len;i++){
-            if(vCF[i] != NULL){
-                vCF[i]->wait();
-            }
-            delete vCF[i];
-            vCF[i] = NULL;
-            kernelCount--;
-        }
-    }
-}
 
 // TODO - data-up to data-down:
 // Called just before a kernel is launched from hipLaunchKernel.
@@ -1321,7 +1305,6 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
 //    *av = &stream->_av;
     lp->av = &stream->_av;
     lp->cf = new hc::completion_future;
-    incKernelCnt(lp->cf);
 //    lp->av = static_cast<void*>(av);
 //    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
     return (stream);
@@ -1351,7 +1334,6 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, gri
 //    *av = &stream->_av;
     lp->av = &stream->_av;
     lp->cf = new hc::completion_future;
-    incKernelCnt(lp->cf);
 //    lp->av = static_cast<void*>(av);
 //    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
     return (stream);
@@ -1382,7 +1364,6 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, gri
 //    *av = &stream->_av;
     lp->av = &stream->_av;
     lp->cf = new hc::completion_future;
-    incKernelCnt(lp->cf);
 //    lp->av = static_cast<void*>(av);
 //    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
     return (stream);
@@ -1413,7 +1394,6 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, g
 //    *av = &stream->_av;
     lp->av = &stream->_av;
     lp->cf = new hc::completion_future;
-    incKernelCnt(lp->cf);
 //    lp->av = static_cast<void*>(av);
 //    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
     return (stream);
@@ -1426,7 +1406,6 @@ void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp)
 {
 //    stream->lockclose_postKernelCommand(cf);
     stream->lockclose_postKernelCommand(*lp.cf);
-    decKernelCnt();
     if (HIP_LAUNCH_BLOCKING) {
         tprintf(DB_SYNC, " stream:%p LAUNCH_BLOCKING for kernel completion\n", stream);
     }
