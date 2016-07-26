@@ -444,7 +444,7 @@ private:
     std::vector<hc::completion_future> _depFutures;
 
 private:
-    void                        enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal);
+    void                        enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal, ihipSignal_t *completionSignal);
     void                        enqueueBarrier(hsa_queue_t* queue, hsa_signal_t *depSignal);
     void                        waitCopy(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *signal);
 
