@@ -379,7 +379,7 @@ public:
     SIGSEQNUM                   _oldest_live_sig_id; // oldest live seq_id, anything < this can be allocated.
     std::deque<ihipSignal_t>    _signalPool;   // Pool of signals for use by this stream.
 
-
+    uint32_t                    _kernelCnt;
     SIGSEQNUM                   _stream_sig_id;      // Monotonically increasing unique signal id.
 };
 
@@ -393,7 +393,6 @@ typedef LockedAccessor<ihipStreamCritical_t> LockedAccessor_StreamCrit_t;
 class ihipStream_t {
 public:
 typedef uint64_t SeqNum_t ;
-    uint32_t kernelCnt;
     ihipStream_t(unsigned device_index, hc::accelerator_view av, unsigned int flags);
     ~ihipStream_t();
 
