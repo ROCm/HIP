@@ -3,8 +3,19 @@
 We have attempted to document known bugs and limitations - in particular the [HIP Kernel Language](docs/markdown/hip_kernel_language.md) document uses the phrase "Under Development", and the [HIP Runtime API bug list](http://gpuopen-professionalcompute-tools.github.io/HIP/bug.html) lists known bugs. 
 
 ===================================================================================================
-Upcoming:
-- hipLaunchKernel supports one-dimensional grid and/or block dims, without explicit cast to dim3 type.
+Release:0.92.00
+- hipLaunchKernel supports one-dimensional grid and/or block dims, without explicit cast to dim3 type (actually in 0.90.00)
+- fp16 software support
+- Support for Hawaii dGPUs using environment variable ROCM_TARGET=hawaii
+- Support hipArray
+- Improved profiler support
+- Documentation updates
+- Improvements to clang-hipify
+
+
+===================================================================================================
+
+## Revision History:
 
 ===================================================================================================
 Release:0.90.00
@@ -16,9 +27,6 @@ Date: 2016.06.29
 - Improve error code reporting on nvcc.
 - Add hipPeekAtError for nvcc.
 
-===================================================================================================
-
-## Revision History:
 
 ===================================================================================================
 Release:0.86.00
