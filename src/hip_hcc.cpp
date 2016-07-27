@@ -146,6 +146,9 @@ ihipStream_t::~ihipStream_t()
 
 
 //---
+//TODO - this function is dangerous since it does not propertly account
+//for younger commands which may be depending on the signals we are reclaiming.
+//Will fix when we move to HCC management of copy signals.
 void ihipStream_t::locked_reclaimSignals(SIGSEQNUM sigNum)
 {
     LockedAccessor_StreamCrit_t crit(_criticalData);
@@ -180,18 +183,21 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty
     if (! assertQueueEmpty) {
         tprintf (DB_SYNC, "stream %p wait for queue-empty..\n", this);
         _av.wait();
-        crit->_kernelCnt = 0;
+    } else {
+        assert (crit->_kernelCnt == 0);
     }
+     
     if (crit->_last_copy_signal) {
         tprintf (DB_SYNC, "stream %p wait for lastCopy:#%lu...\n", this, lastCopySeqId(crit) );
         this->waitCopy(crit, crit->_last_copy_signal);
     }
 
+    crit->_kernelCnt = 0;
+
     // Reset the stream to "empty" - next command will not set up an inpute dependency on any older signal.
     crit->_last_command_type = ihipCommandCopyH2D;
     crit->_last_copy_signal = NULL;
-
-    _depFutures.clear();
+    crit->_signalCnt = 0;
 }
 
 
@@ -306,7 +312,6 @@ ihipSignal_t *ihipStream_t::allocSignal(LockedAccessor_StreamCrit_t &crit)
 
     crit->_signalCnt++;
     if(crit->_signalCnt == HIP_NUM_SIGNALS_PER_STREAM){
-        crit->_signalCnt = 0;
         this->wait(crit);
     }
 
@@ -470,13 +475,11 @@ void ihipStream_t::lockclose_postKernelCommand(hc::completion_future &kernelFutu
 //---
 // Called whenever a copy command is set to the stream.
 // Examines the last command sent to this stream and returns a signal to wait on, if required.
-int ihipStream_t::preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *lastCopy, hsa_signal_t *waitSignal, ihipCommand_t copyType)
+int ihipStream_t::preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *copyCompletionSignal, hsa_signal_t *waitSignal, ihipCommand_t copyType)
 {
     int needSync = 0;
 
     waitSignal->handle = 0;
-
-    //_mutex.lock(); // will be unlocked in postCopyCommand
 
     // If switching command types, we need to add a barrier packet to synchronize things.
     if (FORCE_SAMEDIR_COPY_DEP || (crit->_last_command_type != copyType)) {
@@ -490,15 +493,6 @@ int ihipStream_t::preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t
             hsa_signal_store_relaxed(depSignal->_hsa_signal,1);
             this->enqueueBarrier(static_cast<hsa_queue_t*>(_av.get_hsa_queue()), NULL, depSignal);
             *waitSignal = depSignal->_hsa_signal;
-//            hsa_signal_t *hsaSignal = (static_cast<hsa_signal_t*> (crit->_last_kernel_future.get_native_handle()));
-/*            if (hsaSignal) {
-                // Keep reference to the kernel future in order to keep the
-                // dependent signal alive.
-                _depFutures.push_back(crit->_last_kernel_future);
-                *waitSignal = * hsaSignal;
-            } else {
-                assert(0); // if NULL signal, and we return 1, hsa_amd_memory_copy_async will fail.  Confirm this never happens.
-            }*/
         } else if (crit->_last_copy_signal) {
             needSync = 1;
             tprintf (DB_SYNC, "stream %p switch %s to %s (async copy dep on other copy #%lu)\n",
@@ -521,7 +515,7 @@ int ihipStream_t::preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t
         crit->_last_command_type = copyType;
     }
 
-    crit->_last_copy_signal = lastCopy;
+    crit->_last_copy_signal = copyCompletionSignal;
 
     return needSync;
 }
@@ -1611,7 +1605,8 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
                 hc::am_copy(dst, src, sizeBytes);
 #endif
             }
-        }else{
+        } else {
+            // This is H2D copy, and source is pinned host memory : we can copy directly w/o using staging buffer.
             hsa_agent_t dstAgent = *(static_cast<hsa_agent_t*>(dstPtrInfo._acc.get_hsa_agent()));
             hsa_agent_t srcAgent = *(static_cast<hsa_agent_t*>(srcPtrInfo._acc.get_hsa_agent()));
 
@@ -1661,7 +1656,8 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
                 hc::am_copy(dst, src, sizeBytes);
 #endif
             }
-        }else{
+        } else {
+            // This is D2H copy, and destination is pinned host memory : we can copy directly w/o using staging buffer.
             hsa_agent_t dstAgent = *(static_cast<hsa_agent_t*>(dstPtrInfo._acc.get_hsa_agent()));
             hsa_agent_t srcAgent = *(static_cast<hsa_agent_t*>(srcPtrInfo._acc.get_hsa_agent()));
 
