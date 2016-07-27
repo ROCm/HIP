@@ -184,7 +184,7 @@ hipError_t hipDeviceReset(void)
  */
 hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
 {
-    HIP_INIT_API(attr, device);
+    HIP_INIT_API(pi, attr, device);
 
     hipError_t e = hipSuccess;
 
