@@ -293,6 +293,8 @@ ihipDevice_t * ihipStream_t::getDevice() const
     return ::getDevice(_device_index);
 };
 
+#define HIP_NUM_SIGNALS_PER_STREAM 32
+
 
 //---
 // Allocate a new signal from the signal pool.
@@ -301,8 +303,16 @@ ihipDevice_t * ihipStream_t::getDevice() const
 ihipSignal_t *ihipStream_t::allocSignal(LockedAccessor_StreamCrit_t &crit)
 {
     int numToScan = crit->_signalPool.size();
+
+    crit->_signalCnt++;
+    if(crit->_signalCnt == HIP_NUM_SIGNALS_PER_STREAM){
+        crit->_signalCnt = 0;
+        this->wait(crit);
+    }
+
     do {
         auto thisCursor = crit->_signalCursor;
+
         if (++crit->_signalCursor == crit->_signalPool.size()) {
             crit->_signalCursor = 0;
         }

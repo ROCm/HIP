@@ -351,7 +351,9 @@ public:
         _last_copy_signal(NULL),
         _signalCursor(0),
         _oldest_live_sig_id(1),
-        _stream_sig_id(0)
+        _stream_sig_id(0),
+        _kernelCnt(0),
+        _signalCnt(0)
     {
         _signalPool.resize(HIP_STREAM_SIGNALS > 0 ? HIP_STREAM_SIGNALS : 1);
     };
@@ -378,7 +380,7 @@ public:
     int                         _signalCursor;
     SIGSEQNUM                   _oldest_live_sig_id; // oldest live seq_id, anything < this can be allocated.
     std::deque<ihipSignal_t>    _signalPool;   // Pool of signals for use by this stream.
-
+    uint32_t                    _signalCnt;
     uint32_t                    _kernelCnt;
     SIGSEQNUM                   _stream_sig_id;      // Monotonically increasing unique signal id.
 };
