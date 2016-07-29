@@ -382,37 +382,6 @@ void ihipStream_t::enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal, i
     hsa_signal_store_relaxed(queue->doorbell_signal, index);
 }
 
-void ihipStream_t::enqueueBarrier(hsa_queue_t* queue, hsa_signal_t *depSignal)
-{
-
-    // Obtain the write index for the command queue
-    uint64_t index = hsa_queue_load_write_index_relaxed(queue);
-    const uint32_t queueMask = queue->size - 1;
-
-    // Define the barrier packet to be at the calculated queue index address
-    hsa_barrier_and_packet_t* barrier = &(((hsa_barrier_and_packet_t*)(queue->base_address))[index&queueMask]);
-    memset(barrier, 0, sizeof(hsa_barrier_and_packet_t));
-
-    // setup header
-    uint16_t header = HSA_PACKET_TYPE_BARRIER_AND << HSA_PACKET_HEADER_TYPE;
-    header |= 1 << HSA_PACKET_HEADER_BARRIER;
-    //header |= HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE;
-    //header |= HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE;
-    barrier->header = header;
-
-    barrier->dep_signal[0].handle = 0;
-    barrier->dep_signal[1].handle = 0;
-    barrier->dep_signal[2].handle = 0;
-    barrier->dep_signal[3].handle = 0;
-    barrier->dep_signal[4].handle = 0;
-
-    barrier->completion_signal = *depSignal;
-
-    // TODO - check queue overflow, return error:
-    // Increment write index and ring doorbell to dispatch the kernel
-    hsa_queue_store_write_index_relaxed(queue, index+1);
-    hsa_signal_store_relaxed(queue->doorbell_signal, index);
-}
 
 int HIP_NUM_KERNELS_INFLIGHT = 128;
 
