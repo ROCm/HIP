@@ -67,7 +67,7 @@ int HIP_OPTIMAL_MEM_TRANSFER = 0; //ENV Variable to test different memory transf
 int HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING = 0;
 int HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE = 0;
 int HIP_D2H_MEM_TRANSFER_THRESHOLD = 0;
-int HIP_STREAM_SIGNALS = 2;  /* number of signals to allocate at stream creation */
+int HIP_STREAM_SIGNALS = 32;  /* number of signals to allocate at stream creation */
 int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
 
 
@@ -197,7 +197,7 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty
     // Reset the stream to "empty" - next command will not set up an inpute dependency on any older signal.
     crit->_last_command_type = ihipCommandCopyH2D;
     crit->_last_copy_signal = NULL;
-    crit->_signalCnt = 0;
+//    crit->_signalCnt = 0;
 }
 
 
@@ -309,11 +309,13 @@ ihipDevice_t * ihipStream_t::getDevice() const
 ihipSignal_t *ihipStream_t::allocSignal(LockedAccessor_StreamCrit_t &crit)
 {
     int numToScan = crit->_signalPool.size();
-
     crit->_signalCnt++;
-    if(crit->_signalCnt == HIP_NUM_SIGNALS_PER_STREAM){
+    if(crit->_signalCnt == HIP_STREAM_SIGNALS){
         this->wait(crit);
+        crit->_signalCnt = 0;
     }
+
+    return &crit->_signalPool[crit->_signalCnt];
 
     do {
         auto thisCursor = crit->_signalCursor;
