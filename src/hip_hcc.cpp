@@ -183,9 +183,7 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty
     if (! assertQueueEmpty) {
         tprintf (DB_SYNC, "stream %p wait for queue-empty..\n", this);
         _av.wait();
-    } else {
-        assert (crit->_kernelCnt == 0);
-    }
+    } 
      
     if (crit->_last_copy_signal) {
         tprintf (DB_SYNC, "stream %p wait for lastCopy:#%lu...\n", this, lastCopySeqId(crit) );
