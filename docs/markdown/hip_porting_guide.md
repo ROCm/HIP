@@ -4,7 +4,6 @@ the porting of existing CUDA code into the HIP environment.  This section descri
 and provides practical suggestions on how to port CUDA code and work through common issues. 
 
 ## Table of Contents
-=================
 
 <!-- toc -->
 
@@ -41,8 +40,8 @@ and provides practical suggestions on how to port CUDA code and work through com
   * [Debugging hipcc](#debugging-hipcc)
   * [What Does This Error Mean?](#what-does-this-error-mean)
     + [/usr/include/c++/v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();](#usrincludecv1memory517215-error-call-to-implicitly-deleted-default-constructor-of-std__1bad_weak_ptr-throw-bad_weak_ptr)
-    + [HIP Environment Variables](#hip-environment-variables)
-    + [Editor Highlighting](#editor-highlighting)
+  * [HIP Environment Variables](#hip-environment-variables)
+  * [Editor Highlighting](#editor-highlighting)
 
 <!-- tocstop -->
 
@@ -461,7 +460,7 @@ hipcc-cmd: /opt/hcc/bin/hcc  -hc -I/opt/hcc/include -stdlib=libc++ -I../../../..
 If you pass a ".cu" file, hcc will attempt to compile it as a Cuda language file. You must tell hcc that its in fact a C++ file: use the "-x c++" option.
 
 
-#### HIP Environment Variables
+### HIP Environment Variables
 
 On the HCC path, HIP provides a number of environment variables that control the behavior of HIP.  Some of these are useful for appliction development (for example HIP_VISIBLE_DEVICES, HIP_LAUNCH_BLOCKING),
 some are useful for performance tuning or experimentation (for example HIP_STAGING*), and some are useful for debugging (HIP_DB).  You can see the environment variables supported by HIP as well as
@@ -484,5 +483,5 @@ HIP_DISABLE_HW_COPY_DEP        =  1 : Disable HW dependencies before copy comman
 ```
 
 
-#### Editor Highlighting
+### Editor Highlighting
 See the utils/vim or utils/gedit directories to add handy highlighting to hip files.
