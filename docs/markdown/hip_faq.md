@@ -1,12 +1,14 @@
 # FAQ
 
-- [What APIs and features does HIP support ?](#Q1)
-- [What is not supported?](#Q2)
-  - [Run-time features](#run-time-features)
-  - [Kernel language features](#kernel-language-features)
-- [Is HIP a drop-in replacement for CUDA?](#Q3)
-- [What version of CUDA is supported?](#Q4)
-- [What libraries does HIP support?](#Q5)
+<!-- toc -->
+
+- [What APIs and features does HIP support?](#what-apis-and-features-does-hip-support)
+- [What is not supported?](#what-is-not-supported)
+  * [Run-time features](#run-time-features)
+  * [Kernel language features](#kernel-language-features)
+- [Is HIP a drop-in replacement for CUDA?](#is-hip-a-drop-in-replacement-for-cuda)
+- [What specific version of CUDA does HIP support?](#what-specific-version-of-cuda-does-hip-support)
+- [What libraries does HIP support?](#what-libraries-does-hip-support)
 - [How does HIP compare with OpenCL?](#how-does-hip-compare-with-opencl)
 - [What hardware does HIP support?](#what-hardware-does-hip-support)
 - [Does Hipify automatically convert all source code?](#does-hipify-automatically-convert-all-source-code)
@@ -16,14 +18,17 @@
 - [Can I develop HIP code on an Nvidia CUDA platform?](#can-i-develop-hip-code-on-an-nvidia-cuda-platform)
 - [Can I develop HIP code on an AMD HCC platform?](#can-i-develop-hip-code-on-an-amd-hcc-platform)
 - [Can a HIP binary run on both AMD and Nvidia platforms?](#can-a-hip-binary-run-on-both-amd-and-nvidia-platforms)
-- [Can I link HIP code with host code compiled with another compiler such as gcc, icc, or clang ?]
 - [What's the difference between HIP and hc?](#whats-the-difference-between-hip-and-hc)
+- [On HCC, can I link HIP code with host code compiled with another compiler such as gcc, icc, or clang ?](#on-hcc-can-i-link-hip-code-with-host-code-compiled-with-another-compiler-such-as-gcc-icc-or-clang-)
 - [HIP detected my platform (hcc vs nvcc) incorrectly - what should I do?](#hip-detected-my-platform-hcc-vs-nvcc-incorrectly---what-should-i-do)
-- [Can I install both CUDA SDK and HCC on same machine?](#Q100)
+- [Can I install both CUDA SDK and HCC on same machine?](#can-i-install-both-cuda-sdk-and-hcc-on-same-machine)
+- [How do I trace HIP application flow?](#how-do-i-trace-hip-application-flow)
+  * [Using CodeXL markers for HIP Functions](#using-codexl-markers-for-hip-functions)
+  * [Using HIP_TRACE_API](#using-hip_trace_api)
 
+<!-- tocstop -->
 
-
-### What APIs and features does HIP support?<a name="Q1"></a>
+### What APIs and features does HIP support?
 HIP provides the following:
 - Devices (hipSetDevice(), hipGetDeviceProperties(), etc.)
 - Memory management (hipMalloc(), hipMemcpy(), hipFree(), etc.)
@@ -36,7 +41,7 @@ HIP provides the following:
 
 The HIP API documentation describes each API and its limitations, if any, compared with the equivalent CUDA API.
 
-### What is not supported?<a name="Q2"></a>
+### What is not supported?
 #### Run-time features
 - Textures 
 - MemcpyToSymbol functions
@@ -53,19 +58,19 @@ The HIP API documentation describes each API and its limitations, if any, compar
 - PTX assembly (CUDA 4.0)
 - Several kernel features are under development.  See the [HIP Kernel Language](hip_kernel_language.md) for more information.
 
-### Is HIP a drop-in replacement for CUDA?<a name="Q3"></a>
+### Is HIP a drop-in replacement for CUDA?
 No. HIP provides porting tools which do most of the work do convert CUDA code into portable C++ code that uses the HIP APIs.
 Most developers will port their code from CUDA to HIP and then maintain the HIP version. 
 HIP code provides the same performance as coding in native CUDA, plus the benefit that the code can also run on AMD platforms.
 
-### What specific version of CUDA does HIP support?<a name="Q4"></a>
+### What specific version of CUDA does HIP support?
 HIP APIs and features do not map to a specific CUDA version.  HIP provides a strong subset of functionality provided in CUDA, and the hipify tools can 
 scan code to identify any unsupported CUDA functions - this is very useful for identifying the specific features required by a given application.
 
 However, we can provide a rough summary of the features included in each CUDA SDK and the support level in HIP:
 
 - CUDA 4.0 and earlier :  
-    - HIP supports CUDA 4.0 except for the limitations described [above](#Q2).
+    - HIP supports CUDA 4.0 except for the limitations described above.
 - CUDA 5.0 : 
     - Dynamic Parallelism (not supported) 
     - cuIpc functions (under development).
@@ -83,7 +88,7 @@ However, we can provide a rough summary of the features included in each CUDA SD
 - CUDA 8.0
     - No new language features.
 
-### What libraries does HIP support? <a name="Q5"></a>
+### What libraries does HIP support?
 HIP includes growing support for the 4 key math libraries using hcBlas, hcFft, hcrng, and hcsparse).
 These offer pointer-based memory interfaces (as opposed to opaque buffers) and can be easily interfaces with other HCC code.  Developers should use conditional compliation if portability to nvcc systems is desired - using calls to cu* routines on one path and hc* routines on the other.  
 
@@ -148,14 +153,13 @@ HIP is a portable C++ language that supports a strong subset of the CUDA run-tim
 A C++ dialect, hc is supported by the AMD HCC compiler. It provides C++ run time, C++ kernel-launch APIs (parallel_for_each), C++ kernel language, and several memory-management options, including pointers, arrays and array_view (with implicit data synchronization). It's intended to be a leading indicator of the ISO C++ standard.
 
 
-### [On HCC, can I link HIP code with host code compiled with another compiler such as gcc, icc, or clang ?
+### On HCC, can I link HIP code with host code compiled with another compiler such as gcc, icc, or clang ?
 Yes!  HIP/HCC generates the object code which conforms to the GCC ABI, and also links with libstdc++.  This means you can compile host code with the compiler of your choice and link this
 with GPU code compiler with HIP.  Larger projects often contain a mixture of accelerator code (initially written in CUDA with nvcc) plus host code (compiled with gcc, icc, or clang).   These projects
 can convert the accelerator code to HIP, compile that code with hipcc, and link with object code from the preferred compiler.
 
 
 ### HIP detected my platform (hcc vs nvcc) incorrectly - what should I do?
-
 HIP will set the platform to HCC if it sees that the AMD graphics driver is installed and has detected an AMD GPU.
 Sometimes this isn't what you want - you can force HIP to recognize the platform by setting HIP_PLATFORM to hcc (or nvcc)
 ```
@@ -166,5 +170,41 @@ One symptom of this problem is the message "error: 'unknown error'(11) at square
 
 If you see issues related to incorrect platform detection, please file an issue with the GitHub issue tracker so we can improve HIP's platform detection logic.
 
-### [Can I install both CUDA SDK and HCC on same machine?]<a name="Q100"></a>
+### Can I install both CUDA SDK and HCC on same machine?
 Yes. You can use HIP_PLATFORM to choose which path hipcc targets.  This configuration can be useful when using HIP to develop an application which is portable to both AMD and NVIDIA.
+
+### How do I trace HIP application flow?
+#### Using CodeXL markers for HIP Functions
+HIP can generate markers at function being/end which are displayed on the CodeXL timeline view.
+To do this, you need to install ROCm-Profiler and enable HIP to generate the markers:
+
+1. Install ROCm-Profiler
+Installing HIP from the [rocm](http://gpuopen.com/getting-started-with-boltzmann-components-platforms-installation/) pre-built packages, installs the ROCm-Profiler as well.
+Alternatively, you can build ROCm-Profiler using the instructions [here](https://github.com/RadeonOpenCompute/ROCm-Profiler#building-the-rocm-profiler).
+
+2. Build HIP with ATP markers enabled
+HIP pre-built packages are enabled with ATP marker support by default.
+To enable ATP marker support when building HIP from source, use the option ```-DCOMPILE_HIP_ATP_MARKER=1``` during the cmake configure step.
+
+3. Set HIP_ATP_MARKER
+```shell
+export HIP_ATP_MARKER=1
+```
+
+4. Recompile the target application
+
+5. Run with profiler enabled to generate ATP file.
+```shell
+# Use profile to generate timeline view:
+/opt/rocm/bin/rocm-profiler -o <outputATPFileName> -A <applicationName> <applicationArguments>
+```
+
+#### Using HIP_TRACE_API
+You can also print the HIP function strings to stderr using HIP_TRACE_API environment variable. This can also be combined with the more detailed debug information provided
+by the HIP_DB switch. For example:
+```shell
+# Trace to stderr showing being/end of each function (with arguments) + intermediate debug trace during the execution of each function.
+HIP_TRACE_API=1 HIP_DB=0x2 ./myHipApp
+```
+
+Note this trace mode uses colors. "less -r" can handle raw control characters and will display the debug output in proper colors.
