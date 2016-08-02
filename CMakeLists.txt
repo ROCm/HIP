@@ -128,8 +128,8 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set(CMAKE_C_COMPILER   "${HCC_HOME}/bin/hcc")
 
     # Set HIP_HCC so we know this is HIP compile, some files are shared with HCC (staging_buffer).
-    set(CMAKE_CXX_FLAGS " -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include/libhsakmt -stdlib=libc++ -DHIP_HCC ${CMAKE_CXX_FLAGS}")
-    set(CMAKE_C_FLAGS   " -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include/libhsakmt -stdlib=libc++ -DHIP_HCC ${CMAKE_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS " -fPIC -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include/libhsakmt -stdlib=libc++ -DHIP_HCC ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS   " -fPIC -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include/libhsakmt -stdlib=libc++ -DHIP_HCC ${CMAKE_C_FLAGS}")
 
     set(SOURCE_FILES src/device_util.cpp
                      src/hip_hcc.cpp
