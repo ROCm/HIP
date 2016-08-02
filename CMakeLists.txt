@@ -36,6 +36,8 @@ if(HIP_PLATFORM STREQUAL "hcc")
             set(HCC_HOME $ENV{HCC_HOME} CACHE PATH "Path to which HCC has been installed")
         endif()
     endif()
+    message(STATUS ${HCC_HOME})
+    file(WRITE "./bin/.hip-config" ${HCC_HOME})
     if(IS_ABSOLUTE ${HCC_HOME} AND EXISTS ${HCC_HOME} AND IS_DIRECTORY ${HCC_HOME})
         execute_process(COMMAND ${HCC_HOME}/bin/hcc --version
                         COMMAND cut -d\  -f9
