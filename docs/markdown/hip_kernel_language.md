@@ -1,38 +1,40 @@
-**Table of Contents**  
+## Table of Contents
+
+<!-- toc -->
 
 - [Introduction](#introduction)
 - [Function-Type Qualifiers](#function-type-qualifiers)
-  - [`__device__`](#__device__)
-  - [`__global__`](#__global__)
-  - [`__host__`](#__host__)
+  * [`__device__`](#__device__)
+  * [`__global__`](#__global__)
+  * [`__host__`](#__host__)
 - [Calling `__global__` Functions](#calling-__global__-functions)
 - [Kernel-Launch Example](#kernel-launch-example)
 - [Variable-Type Qualifiers](#variable-type-qualifiers)
-  - [`__constant__`](#__constant__)
-  - [`__shared__`](#__shared__)
-  - [`__managed__`](#__managed__)
-  - [`__restrict__`](#__restrict__)
+  * [`__constant__`](#__constant__)
+  * [`__shared__`](#__shared__)
+  * [`__managed__`](#__managed__)
+  * [`__restrict__`](#__restrict__)
 - [Built-In Variables](#built-in-variables)
-  - [Coordinate Built-Ins](#coordinate-built-ins)
-  - [warpSize](#warpsize)
+  * [Coordinate Built-Ins](#coordinate-built-ins)
+  * [warpSize](#warpsize)
 - [Vector Types](#vector-types)
-  - [Short Vector Types](#short-vector-types)
-  - [dim3](#dim3)
+  * [Short Vector Types](#short-vector-types)
+  * [dim3](#dim3)
 - [Memory-Fence Instructions](#memory-fence-instructions)
 - [Synchronization Functions](#synchronization-functions)
 - [Math Functions](#math-functions)
-  - [Single Precision Mathematical Functions](#single-precision-mathematical-functions)
-  - [Double Precision Mathematical Functions](#double-precision-mathematical-functions)
-  - [Integer Intrinsics](#integer-intrinsics)
-  - [Floating-point Intrinsics](#floating-point-intrinsics)
+  * [Single Precision Mathematical Functions](#single-precision-mathematical-functions)
+  * [Double Precision Mathematical Functions](#double-precision-mathematical-functions)
+  * [Integer Intrinsics](#integer-intrinsics)
+  * [Floating-point Intrinsics](#floating-point-intrinsics)
 - [Texture Functions](#texture-functions)
 - [Surface Functions](#surface-functions)
 - [Timer Functions](#timer-functions)
 - [Atomic Functions](#atomic-functions)
-  - [Caveats and Features Under-Development:](#caveats-and-features-under-development)
+  * [Caveats and Features Under-Development:](#caveats-and-features-under-development)
 - [Warp Cross-Lane Functions](#warp-cross-lane-functions)
-  - [Warp Vote and Ballot Functions](#warp-vote-and-ballot-functions)
-  - [Warp Shuffle Functions](#warp-shuffle-functions)
+  * [Warp Vote and Ballot Functions](#warp-vote-and-ballot-functions)
+  * [Warp Shuffle Functions](#warp-shuffle-functions)
 - [Profiler Counter Function](#profiler-counter-function)
 - [Assert](#assert)
 - [Printf](#printf)
@@ -43,7 +45,7 @@
 - [In-Line Assembly](#in-line-assembly)
 - [C++ Support](#c-support)
 
-
+<!-- tocstop -->
 
 ## Introduction
 
@@ -628,12 +630,12 @@ The compiler ensures that the kernel uses fewer registers than both allowed maxi
 
 HIP/hcc will parse the `launch_bounds` attribute but silently ignores the performance hint. Full support is under development.
 
-The hcc compiler does not support the "--maxregcount" option like nvcc.  Instead, users are encouraged to use the hip_launch_bounds directive since the parameters are more intuitive and portable than
+Unlike nvcc, hcc does not support the "--maxregcount" option.  Instead, users are encouraged to use the hip_launch_bounds directive since the parameters are more intuitive and portable than
 micro-architecture details like registers, and also the directive allows per-kernel control rather than an entire file.  hip_launch_bounds works on both hcc and nvcc targets.
 
 
 ## Register Keyword
-The register keyword affects code generation in neither nvcc nor hcc.  It’s deprecated in standard C++, so hcc will generate a warning. (nvcc silently ignores use of this keyword.) To disable the warning, you can pass the option `-Wno-deprecated-register` to hcc.
+The register keyword is deprecated in C++, and is silently ignored by both nvcc and hcc.  To see warnings, you can pass the option `-Wdeprecated-register` to hcc.
 
 
 ## Pragma Unroll

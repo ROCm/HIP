@@ -351,7 +351,9 @@ public:
         _last_copy_signal(NULL),
         _signalCursor(0),
         _oldest_live_sig_id(1),
-        _stream_sig_id(0)
+        _stream_sig_id(0),
+        _kernelCnt(0),
+        _signalCnt(0)
     {
         _signalPool.resize(HIP_STREAM_SIGNALS > 0 ? HIP_STREAM_SIGNALS : 1);
     };
@@ -361,7 +363,6 @@ public:
     }
 
     ihipStreamCriticalBase_t<StreamMutex>  * mlock() { LockedBase<MUTEX_TYPE>::lock(); return this;};
-
 
 public:
     // Critical Data:
@@ -378,8 +379,10 @@ public:
     int                         _signalCursor;
     SIGSEQNUM                   _oldest_live_sig_id; // oldest live seq_id, anything < this can be allocated.
     std::deque<ihipSignal_t>    _signalPool;   // Pool of signals for use by this stream.
-
-
+    uint32_t                    _signalCnt;    // Count of inflight commands using signals from the signal pool.   
+                                               // Each copy may use 1-2 signals depending on command transitions: 
+                                               //   2 are required if a barrier packet is inserted.
+    uint32_t                    _kernelCnt;    // Count of inflight kernels in this stream.  Reset at ::wait().
     SIGSEQNUM                   _stream_sig_id;      // Monotonically increasing unique signal id.
 };
 
@@ -393,7 +396,6 @@ typedef LockedAccessor<ihipStreamCritical_t> LockedAccessor_StreamCrit_t;
 class ihipStream_t {
 public:
 typedef uint64_t SeqNum_t ;
-
     ihipStream_t(unsigned device_index, hc::accelerator_view av, unsigned int flags);
     ~ihipStream_t();
 
@@ -420,7 +422,7 @@ typedef uint64_t SeqNum_t ;
 
 
     // Non-threadsafe accessors - must be protected by high-level stream lock with accessor passed to function.
-    SIGSEQNUM            lastCopySeqId (LockedAccessor_StreamCrit_t &crit) { return crit->_last_copy_signal ? crit->_last_copy_signal->_sig_id : 0; };
+    SIGSEQNUM            lastCopySeqId (LockedAccessor_StreamCrit_t &crit) const { return crit->_last_copy_signal ? crit->_last_copy_signal->_sig_id : 0; };
     ihipSignal_t *       allocSignal (LockedAccessor_StreamCrit_t &crit);
 
 
@@ -440,13 +442,11 @@ private:
     // Critical Data.  THis MUST be accessed through LockedAccessor_StreamCrit_t
     ihipStreamCritical_t        _criticalData;
 
-    // Array of dependency completion_future.
-    std::vector<hc::completion_future> _depFutures;
-
 private:
-    void                        enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal);
-    void                        enqueueBarrier(hsa_queue_t* queue, hsa_signal_t *depSignal);
+    void                        enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal, ihipSignal_t *completionSignal);
     void                        waitCopy(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *signal);
+
+
 
     // The unsigned return is hipMemcpyKind
     unsigned resolveMemcpyDirection(bool srcTracked, bool dstTracked, bool srcInDeviceMem, bool dstInDeviceMem);
