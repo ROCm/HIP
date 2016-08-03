@@ -57,9 +57,7 @@ if ($HIP_PLATFORM eq "hcc") {
     $ROCM_PATH="/opt/rocm" unless defined $ROCM_PATH;
 
     $HIP_ATP_MARKER=$ENV{'HIP_ATP_MARKER'};
-    if ($HIP_ATP_MARKER) {
-        $marker_path = "$ROCM_PATH/profiler/CXLActivityLogger";
-    }
+    $marker_path = "$ROCM_PATH/profiler/CXLActivityLogger";
 
     $ROCM_TARGET=$ENV{'ROCM_TARGET'};
     $ROCM_TARGET="fiji" unless defined $ROCM_TARGET;
@@ -104,11 +102,11 @@ if ($HIP_PLATFORM eq "hcc") {
         if (-e $marker_inc_path) {
             $HIPCXXFLAGS .= " -I$marker_inc_path";
         }
+    }
 
-        $marker_lib_path = "$marker_path/bin/x86_64";
-        if (-e $marker_lib_path) {
-            $HIPLDFLAGS .= " -L$marker_lib_path -lCXLActivityLogger -Wl,--rpath=$marker_lib_path";
-        }
+    $marker_lib_path = "$marker_path/bin/x86_64";
+    if (-e $marker_lib_path) {
+        $HIPLDFLAGS .= " -L$marker_lib_path -lCXLActivityLogger -Wl,--rpath=$marker_lib_path";
     }
 
     # Add C++ libs for GCC.
