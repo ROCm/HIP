@@ -1,11 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
-
-- [Table Comparing Syntax for Different Compute APIs](#table-comparing-syntax-for-different-compute-apis)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 # Table Comparing Syntax for Different Compute APIs
 
 |Term|CUDA|HIP|HC|C++AMP|OpenCL|
@@ -45,6 +37,4 @@
 1. For HC and C++AMP, assume a captured _tiled_ext_ named "t_ext" and captured _extent_ named "ext".  These languages use captured variables to pass information to the kernel rather than using special built-in functions so the exact variable name may vary.
 2. The indexing functions (starting with `thread-index`) show the terminology for a 1D grid.  Some APIs use reverse order of xyz / 012 indexing for 3D grids.
 3. HC allows tile dimensions to be specified at runtime while C++AMP requires that tile dimensions be specified at compile-time.  Thus hc syntax for tile dims is `t_ext.tile_dim[0]` while C++AMP is t_ext.tile_dim0.
-
-
 

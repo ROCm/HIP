@@ -1,3 +1,14 @@
+## Table of Contents
+
+<!-- toc -->
+
+- [Using hipify-clang](#using-hipify-clang)
+  * [Build and install](#build-and-install)
+  * [Running and using hipify-clang](#running-and-using-hipify-clang)
+    + [Disclaimer](#disclaimer)
+
+<!-- tocstop -->
+
 ## Using hipify-clang
 
 `hipify-clang` is a clang-based tool which can automate the translation of CUDA source code into portable HIP C++.
