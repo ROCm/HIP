@@ -172,7 +172,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
     endif()
 
     # Install .hipconfig
-    install(FILES ${PROJECT_BINARY_DIR}/.hipconfig DESTINATION bin)
+    install(FILES ${PROJECT_BINARY_DIR}/.hipconfig DESTINATION lib)
 endif()
 
 # Install src, bin, include if necessary
