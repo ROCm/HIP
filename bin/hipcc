@@ -52,6 +52,7 @@ if ($HIP_PLATFORM eq "hcc") {
 
     $HCC_HOME=$ENV{'HCC_HOME'};
     $HCC_HOME="/opt/rocm/hcc" unless defined $HCC_HOME;
+    $HCC_VERSION=`${HCC_HOME}/bin/hcc --version | cut -d" " -f9 | tr -d "\n"`;
 
     $ROCM_PATH=$ENV{'ROCM_PATH'};
     $ROCM_PATH="/opt/rocm" unless defined $ROCM_PATH;
@@ -240,6 +241,24 @@ if ($needHipHcc) {
     }
 }
 
+# Read .hipconfig
+my %hipConfig = ();
+$hipConfig{'VALID'}=0;
+if (open (CONFIG, "$HIP_PATH/bin/.hipconfig")) {
+    while (<CONFIG>) {
+        my $config_line=$_;
+        chop ($config_line);
+        $config_line =~ s/^\s*//;
+        $config_line =~ s/\s*$//;
+        if (($config_line !~ /^#/) && ($config_line ne "")) {
+            my ($name, $value) = split (/=/, $config_line);
+            $hipConfig{$name} = $value;
+            $hipConfig{'VALID'}=1;
+        }
+    }
+    close(CONFIG);
+}
+
 # hipcc currrently requires separate compilation of source files, ie it is not possible to pass
 # CPP files combined with .O files
 # Reason is that NVCC uses the file extension to determine whether to compile in CUDA mode or
@@ -267,5 +286,8 @@ if ($printHipVersion) {
     print $HIP_VERSION, "\n";
 }
 if ($runCmd) {
+    if ($hipConfig{'VALID'} and $HIP_PLATFORM eq "hcc" and $HCC_VERSION ne $hipConfig{'HCC_VERSION'}) {
+        print ("HIP was built using $hipConfig{'HCC_VERSION'}, but you are using $HCC_VERSION. Please rebuild HIP.\n") && die ();
+    }
     system ("$CMD") and die ();
 }
