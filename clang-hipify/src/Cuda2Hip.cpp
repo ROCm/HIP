@@ -1424,6 +1424,42 @@ public:
       }
     }
 
+    if (const VarDecl *sharedVar =
+      Result.Nodes.getNodeAs<VarDecl>("cudaSharedIncompleteArrayVar")) {
+      // Example: extern __shared__ uint sRadix1[];
+      if (sharedVar->hasExternalFormalLinkage()) {
+        QualType QT = sharedVar->getType();
+        StringRef typeName;
+        if (QT->isIncompleteArrayType()) {
+          const ArrayType *AT = QT.getTypePtr()->getAsArrayTypeUnsafe();
+          QT = AT->getElementType();
+          if (QT.getTypePtr()->isBuiltinType()) {
+            QT = QT.getCanonicalType();
+            const BuiltinType *BT = dyn_cast<BuiltinType>(QT);
+            if (BT) {
+              LangOptions LO;
+              LO.CUDA = true;
+              PrintingPolicy policy(LO);
+              typeName = BT->getName(policy);
+            }
+          } else {
+            typeName = QT.getAsString();
+          }
+        }
+        if (!typeName.empty()) {
+          SourceLocation slStart = sharedVar->getLocStart();
+          SourceLocation slEnd = sharedVar->getLocEnd();
+          size_t repLength = SM->getCharacterData(slEnd) - SM->getCharacterData(slStart) + 1;
+          SmallString<128> tmpData;
+          StringRef varName = sharedVar->getNameAsString();
+          StringRef repName = Twine("HIP_DYNAMIC_SHARED(" + typeName + ", " + varName + ")").toStringRef(tmpData);
+          Replacement Rep(*SM, slStart, repLength, repName);
+          Replace->insert(Rep);
+          countReps[CONV_MEM]++;
+        }
+      }
+    }
+
     if (const VarDecl *cudaStructVarPtr =
             Result.Nodes.getNodeAs<VarDecl>("cudaStructVarPtr")) {
       const Type *t = cudaStructVarPtr->getType().getTypePtrOrNull();
@@ -1634,6 +1670,11 @@ int main(int argc, const char **argv) {
                          &Callback);
   Finder.addMatcher(stringLiteral(isExpansionInMainFile()).bind("stringLiteral"),
                                   &Callback);
+  Finder.addMatcher(varDecl(isExpansionInMainFile(), allOf(
+                            hasAttr(attr::CUDAShared),
+                            hasType(incompleteArrayType())))
+                           .bind("cudaSharedIncompleteArrayVar"),
+                            &Callback);
 
   auto action = newFrontendActionFactory(&Finder, &PPCallbacks);
 
