@@ -183,8 +183,8 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty
     if (! assertQueueEmpty) {
         tprintf (DB_SYNC, "stream %p wait for queue-empty..\n", this);
         _av.wait();
-    } 
-     
+    }
+
     if (crit->_last_copy_signal) {
         tprintf (DB_SYNC, "stream %p wait for lastCopy:#%lu...\n", this, lastCopySeqId(crit) );
         this->waitCopy(crit, crit->_last_copy_signal);
@@ -212,7 +212,7 @@ void ihipStream_t::locked_wait(bool assertQueueEmpty)
 
 // Recompute the peercnt and the packed _peerAgents whenever a peer is added or deleted.
 // The packed _peerAgents can efficiently be used on each memory allocation.
-template<> 
+template<>
 void ihipDeviceCriticalBase_t<DeviceMutex>::recomputePeerAgents()
 {
     _peerCnt = 0;
@@ -223,7 +223,7 @@ void ihipDeviceCriticalBase_t<DeviceMutex>::recomputePeerAgents()
 
 
 template<>
-bool ihipDeviceCriticalBase_t<DeviceMutex>::isPeer(const ihipDevice_t *peer) 
+bool ihipDeviceCriticalBase_t<DeviceMutex>::isPeer(const ihipDevice_t *peer)
 {
     auto match = std::find(_peers.begin(), _peers.end(), peer);
     return (match != std::end(_peers));
@@ -231,7 +231,7 @@ bool ihipDeviceCriticalBase_t<DeviceMutex>::isPeer(const ihipDevice_t *peer)
 
 
 template<>
-bool ihipDeviceCriticalBase_t<DeviceMutex>::addPeer(ihipDevice_t *peer) 
+bool ihipDeviceCriticalBase_t<DeviceMutex>::addPeer(ihipDevice_t *peer)
 {
     auto match = std::find(_peers.begin(), _peers.end(), peer);
     if (match == std::end(_peers)) {
@@ -247,7 +247,7 @@ bool ihipDeviceCriticalBase_t<DeviceMutex>::addPeer(ihipDevice_t *peer)
 
 
 template<>
-bool ihipDeviceCriticalBase_t<DeviceMutex>::removePeer(ihipDevice_t *peer) 
+bool ihipDeviceCriticalBase_t<DeviceMutex>::removePeer(ihipDevice_t *peer)
 {
     auto match = std::find(_peers.begin(), _peers.end(), peer);
     if (match != std::end(_peers)) {
@@ -281,7 +281,7 @@ void ihipDeviceCriticalBase_t<DeviceMutex>::addStream(ihipStream_t *stream)
 
 //---
 //Flavor that takes device index.
-ihipDevice_t * getDevice(unsigned deviceIndex) 
+ihipDevice_t * getDevice(unsigned deviceIndex)
 {
     if (ihipIsValidDevice(deviceIndex)) {
         return &g_devices[deviceIndex];
@@ -512,7 +512,7 @@ void ihipDevice_t::locked_reset()
         ihipStream_t *stream = *streamI;
         (*streamI)->locked_wait();
         tprintf(DB_SYNC, " delete stream=%p\n", stream);
-        
+
         delete stream;
     }
     // Clear the list.
@@ -562,10 +562,8 @@ void ihipDevice_t::init(unsigned device_index, unsigned deviceCnt, hc::accelerat
 
     tprintf(DB_SYNC, "created device with default_stream=%p\n", _default_stream);
 
-    hsa_region_t *pinnedHostRegion;
-    pinnedHostRegion = static_cast<hsa_region_t*>(_acc.get_hsa_am_system_region());
-    _staging_buffer[0] = new StagingBuffer(_hsa_agent, *pinnedHostRegion, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
-    _staging_buffer[1] = new StagingBuffer(_hsa_agent, *pinnedHostRegion, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
+    _staging_buffer[0] = new StagingBuffer(_hsa_agent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
+    _staging_buffer[1] = new StagingBuffer(_hsa_agent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
 
 };
 
@@ -608,13 +606,8 @@ void error_check(hsa_status_t hsa_error_code, int line_num, std::string str) {
   }
 }
 
-// CPU agent used for verification
-hsa_agent_t cpu_agent_;
 hsa_agent_t gpu_agent_;
-int gpu_region_count;
-// System region
-hsa_amd_memory_pool_t sys_region_;
-hsa_amd_memory_pool_t gpu_region_;
+hsa_amd_memory_pool_t gpu_pool_;
 
 hsa_status_t FindGpuDevice(hsa_agent_t agent, void* data) {
     if (data == NULL) {
@@ -636,27 +629,7 @@ hsa_status_t FindGpuDevice(hsa_agent_t agent, void* data) {
     return HSA_STATUS_SUCCESS;
 }
 
-hsa_status_t FindCpuDevice(hsa_agent_t agent, void* data) {
-    if (data == NULL) {
-        return HSA_STATUS_ERROR_INVALID_ARGUMENT;
-    }
-
-    hsa_device_type_t hsa_device_type;
-    hsa_status_t hsa_error_code =
-    hsa_agent_get_info(agent, HSA_AGENT_INFO_DEVICE, &hsa_device_type);
-    if (hsa_error_code != HSA_STATUS_SUCCESS) {
-        return hsa_error_code;
-    }
-
-    if (hsa_device_type == HSA_DEVICE_TYPE_CPU) {
-        *((hsa_agent_t*)data) = agent;
-        return HSA_STATUS_INFO_BREAK;
-    }
-
-    return HSA_STATUS_SUCCESS;
-}
-
-hsa_status_t GetDeviceRegion(hsa_amd_memory_pool_t region, void* data) {
+hsa_status_t GetDevicePool(hsa_amd_memory_pool_t pool, void* data) {
     if (NULL == data) {
         return HSA_STATUS_ERROR_INVALID_ARGUMENT;
     }
@@ -665,50 +638,21 @@ hsa_status_t GetDeviceRegion(hsa_amd_memory_pool_t region, void* data) {
     hsa_amd_segment_t segment;
     uint32_t flag;
 
-    err = hsa_amd_memory_pool_get_info(region, HSA_AMD_MEMORY_POOL_INFO_SEGMENT, &segment);
+    err = hsa_amd_memory_pool_get_info(pool, HSA_AMD_MEMORY_POOL_INFO_SEGMENT, &segment);
     ErrorCheck(err);
     if (HSA_AMD_SEGMENT_GLOBAL != segment) return HSA_STATUS_SUCCESS;
-    err = hsa_amd_memory_pool_get_info(region, HSA_AMD_MEMORY_POOL_INFO_GLOBAL_FLAGS, &flag);
+    err = hsa_amd_memory_pool_get_info(pool, HSA_AMD_MEMORY_POOL_INFO_GLOBAL_FLAGS, &flag);
     ErrorCheck(err);
-    *((hsa_amd_memory_pool_t*)data) = region;
+    *((hsa_amd_memory_pool_t*)data) = pool;
     return HSA_STATUS_SUCCESS;
 }
 
-hsa_status_t FindGlobalRegion(hsa_amd_memory_pool_t region, void* data) {
-    if (NULL == data) {
-        return HSA_STATUS_ERROR_INVALID_ARGUMENT;
-    }
-
-    hsa_status_t err;
-    hsa_amd_segment_t segment;
-    uint32_t flag;
-    err = hsa_amd_memory_pool_get_info(region, HSA_AMD_MEMORY_POOL_INFO_SEGMENT, &segment);
-    ErrorCheck(err);
-
-    err = hsa_amd_memory_pool_get_info(region, HSA_AMD_MEMORY_POOL_INFO_GLOBAL_FLAGS, &flag);
-    ErrorCheck(err);
-    if ((HSA_AMD_SEGMENT_GLOBAL == segment) &&
-        (flag & HSA_AMD_MEMORY_POOL_GLOBAL_FLAG_FINE_GRAINED)) {
-        *((hsa_amd_memory_pool_t*)data) = region;
-    }
-    return HSA_STATUS_SUCCESS;
-}
-
-void FindDeviceRegion()
+void FindDevicePool()
 {
     hsa_status_t err = hsa_iterate_agents(FindGpuDevice, &gpu_agent_);
     ErrorCheck(err);
 
-    err = hsa_amd_agent_iterate_memory_pools(gpu_agent_, GetDeviceRegion, &gpu_region_);
-    ErrorCheck(err);
-}
-
-void FindSystemRegion()
-{
-    hsa_status_t err = hsa_iterate_agents(FindCpuDevice, &cpu_agent_);
-    ErrorCheck(err);
-
-    err = hsa_amd_agent_iterate_memory_pools(cpu_agent_, FindGlobalRegion, &sys_region_);
+    err = hsa_amd_agent_iterate_memory_pools(gpu_agent_, GetDevicePool, &gpu_pool_);
     ErrorCheck(err);
 }
 
@@ -857,9 +801,8 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     /* Computemode for HSA Devices is always : cudaComputeModeDefault */
     prop->computeMode = 0;
 
-    FindSystemRegion();
-    FindDeviceRegion();
-    int access=checkAccess(cpu_agent_, gpu_region_);
+    FindDevicePool();
+    int access=checkAccess(g_cpu_agent, gpu_pool_);
     if(0!= access){
         isLargeBar= 1;
     }
@@ -1166,6 +1109,12 @@ void ihipInit()
         }
     }
 
+    hsa_status_t err = hsa_iterate_agents(findCpuAgent, &g_cpu_agent);
+    if (err != HSA_STATUS_INFO_BREAK) {
+        // didn't find a CPU.
+        throw ihipException(hipErrorRuntimeOther);
+    }
+
     g_devices = new ihipDevice_t[deviceCnt];
     g_deviceCnt = 0;
     for (int i=0; i<accs.size(); i++) {
@@ -1185,14 +1134,6 @@ void ihipInit()
     if(!g_visible_device) {
         assert(deviceCnt == g_deviceCnt);
     }
-
-
-    hsa_status_t err = hsa_iterate_agents(findCpuAgent, &g_cpu_agent);
-    if (err != HSA_STATUS_INFO_BREAK) {
-        // didn't find a CPU.
-        throw ihipException(hipErrorRuntimeOther);
-    }
-
 
     tprintf(DB_SYNC, "pid=%u %-30s\n", getpid(), "<ihipInit>");
 }
@@ -1260,7 +1201,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
 {
     HIP_INIT_API(stream, grid, block, lp);
     stream = ihipSyncAndResolveStream(stream);
-#if USE_GRID_LAUNCH_20 
+#if USE_GRID_LAUNCH_20
     lp->grid_dim.x = grid.x;
     lp->grid_dim.y = grid.y;
     lp->grid_dim.z = grid.z;
@@ -1289,7 +1230,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, gri
 {
     HIP_INIT_API(stream, grid, block, lp);
     stream = ihipSyncAndResolveStream(stream);
-#if USE_GRID_LAUNCH_20 
+#if USE_GRID_LAUNCH_20
     lp->grid_dim.x = grid;
     lp->grid_dim.y = 1;
     lp->grid_dim.z = 1;
@@ -1319,7 +1260,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, gri
 {
     HIP_INIT_API(stream, grid, block, lp);
     stream = ihipSyncAndResolveStream(stream);
-#if USE_GRID_LAUNCH_20 
+#if USE_GRID_LAUNCH_20
     lp->grid_dim.x = grid.x;
     lp->grid_dim.y = grid.y;
     lp->grid_dim.z = grid.z;
@@ -1349,7 +1290,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, g
 {
     HIP_INIT_API(stream, grid, block, lp);
     stream = ihipSyncAndResolveStream(stream);
-#if USE_GRID_LAUNCH_20 
+#if USE_GRID_LAUNCH_20
     lp->grid_dim.x = grid;
     lp->grid_dim.y = 1;
     lp->grid_dim.z = 1;
@@ -1479,7 +1420,7 @@ unsigned ihipStream_t::resolveMemcpyDirection(bool srcTracked, bool dstTracked, 
 
 
 // Setup the copyCommandType and the copy agents (for hsa_amd_memory_async_copy)
-// srcPhysAcc is the physical location of the src data.  For many copies this is the 
+// srcPhysAcc is the physical location of the src data.  For many copies this is the
 void ihipStream_t::setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent)
 {
     // current* represents the device associated with the specified stream.
@@ -1669,8 +1610,8 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
 
         } else {
             assert(0); // currently no fallback for this path.
-        } 
-        
+        }
+
     } else {
         // If not special case - these can all be handled by the hsa async copy:
         ihipCommand_t commandType;
