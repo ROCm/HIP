@@ -204,7 +204,7 @@ hipError_t hipDeviceReset(void) ;
 /**
  * @brief Set default device to be used for subsequent hip API calls from this thread.
  *
- * @param[in] device Valid device in range 0...hipGetDeviceCount().
+ * @param[in] deviceId Valid device in range 0...hipGetDeviceCount().
  *
  * Sets @p device as the default device for the calling host thread.  Valid device id's are 0... (hipGetDeviceCount()-1).
  *
@@ -225,7 +225,7 @@ hipError_t hipDeviceReset(void) ;
  *
  * @see hipGetDevice, hipGetDeviceCount
  */
-hipError_t hipSetDevice(int device);
+hipError_t hipSetDevice(int deviceId);
 
 
 /**
@@ -239,7 +239,7 @@ hipError_t hipSetDevice(int device);
  *
  * @see hipSetDevice, hipGetDevicesizeBytes
  */
-hipError_t hipGetDevice(int *device);
+hipError_t hipGetDevice(int *deviceId);
 
 
 /**
@@ -255,19 +255,19 @@ hipError_t hipGetDeviceCount(int *count);
  * @brief Query device attribute.
  * @param [out] pi pointer to value to return
  * @param [in] attr attribute to query
- * @param [in] device which device to query for information
+ * @param [in] deviceId which device to query for information
  */
-hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device);
+hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int deviceId);
 
 /**
  * @brief Returns device properties.
  *
  * @param [out] prop written with device properties
- * @param [in]  device which device to query for information
+ * @param [in]  deviceId which device to query for information
  *
  * Populates hipGetDeviceProperties with information for the specified device.
  */
-hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int device);
+hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
 
 
 
@@ -379,14 +379,14 @@ const char *hipGetErrorName(hipError_t hip_error);
 /**
  * @brief Return handy text string message to explain the error which occurred
  *
- * @param hip_error Error code to convert to string.
+ * @param hipError Error code to convert to string.
  * @return const char pointer to the NULL-terminated error string
  *
  * @warning : on HCC, this function returns the name of the error (same as hipGetErrorName)
  *
  * @see hipGetErrorName, hipGetLastError, hipPeakAtLastError, hipError_t
  */
-const char *hipGetErrorString(hipError_t hip_error);
+const char *hipGetErrorString(hipError_t hipError);
 
 // end doxygen Error
 /**
