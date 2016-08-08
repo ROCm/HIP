@@ -224,9 +224,6 @@ extern "C" {
 #endif
 
 typedef class ihipStream_t* hipStream_t;
-//typedef struct hipEvent_t {
-//    struct ihipEvent_t *_handle;
-//} hipEvent_t;
 
 #ifdef __cplusplus
 }
@@ -396,7 +393,7 @@ typedef LockedAccessor<ihipStreamCritical_t> LockedAccessor_StreamCrit_t;
 class ihipStream_t {
 public:
 typedef uint64_t SeqNum_t ;
-    ihipStream_t(unsigned device_index, hc::accelerator_view av, unsigned int flags);
+    ihipStream_t(ihipDevice_t *ctx, hc::accelerator_view av, unsigned int flags);
     ~ihipStream_t();
 
     // kind is hipMemcpyKind
@@ -452,7 +449,7 @@ private:
     unsigned resolveMemcpyDirection(bool srcTracked, bool dstTracked, bool srcInDeviceMem, bool dstInDeviceMem);
     void setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent);
 
-    unsigned                    _device_index;       // index into the g_device array 
+    ihipDevice_t  *_ctx;  // parent context that owns this stream.
 
     friend std::ostream& operator<<(std::ostream& os, const ihipStream_t& s);
 };
@@ -461,7 +458,7 @@ private:
 inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s)
 {
     os << "stream#";
-    os << s._device_index;
+    //os << s._ctx->getDeviceIndex();;  // FIXME
     os << '.';
     os << s._id;
     return os;
@@ -599,7 +596,7 @@ public: // Data, set at initialization:
     hsa_agent_t             _hsa_agent;    // hsa agent handle
 
     // The NULL stream is used if no other stream is specified.
-    // NULL has special synchronization properties with other streams.
+    // Default stream has special synchronization properties with other streams.
     ihipStream_t            *_default_stream;
 
 

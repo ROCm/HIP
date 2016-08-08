@@ -128,11 +128,11 @@ ihipSignal_t::~ihipSignal_t()
 // ihipStream_t:
 //=================================================================================================
 //---
-ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, unsigned int flags) :
+ihipStream_t::ihipStream_t(ihipDevice_t *ctx, hc::accelerator_view av, unsigned int flags) :
     _id(0), // will be set by add function.
     _av(av),
     _flags(flags),
-    _device_index(device_index)
+    _ctx(ctx)
 {
     tprintf(DB_SYNC, " streamCreate: stream=%p\n", this);
 };
@@ -294,7 +294,7 @@ ihipDevice_t * getDevice(unsigned deviceIndex)
 //---
 ihipDevice_t * ihipStream_t::getDevice() const
 {
-    return ::getDevice(_device_index);
+    return _ctx;
 };
 
 #define HIP_NUM_SIGNALS_PER_STREAM 32
@@ -520,7 +520,7 @@ void ihipDevice_t::locked_reset()
 
 
     // Create a fresh default stream and add it:
-    _default_stream = new ihipStream_t(_device_index, _acc.get_default_view(), hipStreamDefault);
+    _default_stream = new ihipStream_t(this, _acc.get_default_view(), hipStreamDefault);
     crit->addStream(_default_stream);
 
 
