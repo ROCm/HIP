@@ -79,8 +79,7 @@ int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU ident
 int HIP_DISABLE_HW_KERNEL_DEP = 0;
 int HIP_DISABLE_HW_COPY_DEP = 0;
 
-thread_local int tls_defaultDevice = 0;
-thread_local hipError_t tls_lastHipError = hipSuccess;
+
 
 
 
@@ -101,8 +100,22 @@ hsa_agent_t gpu_agent_;
 hsa_amd_memory_pool_t gpu_pool_;
 
 //=================================================================================================
-// "free" functions:
+// Thread-local storage:
+//=================================================================================================
+thread_local int tls_defaultDeviceId = 0;
 
+// This is the implicit context used by all HIP commands.
+// It can be set by hipSetDevice or by the CTX manipulation commands:
+thread_local ihipCtx_t *tls_defaultCtx;  
+
+thread_local hipError_t tls_lastHipError = hipSuccess;
+
+
+
+
+//=================================================================================================
+// Top-level "free" functions:
+//=================================================================================================
 static inline bool ihipIsValidDevice(unsigned deviceIndex)
 {
     // deviceIndex is unsigned so always > 0
@@ -134,9 +147,9 @@ ihipCtx_t *ihipGetTlsDefaultCtx()
     // If this is invalid, the TLS state is corrupt.
     // This can fire if called before devices are initialized.
     // TODO - consider replacing assert with error code
-    assert (ihipIsValidDevice(tls_defaultDevice));
+    assert (ihipIsValidDevice(tls_defaultDeviceId));
 
-    return ihipGetPrimaryCtx(tls_defaultDevice);
+    return ihipGetPrimaryCtx(tls_defaultDeviceId);
 }
 
 

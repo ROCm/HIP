@@ -36,7 +36,7 @@ THE SOFTWARE.
  * HCC returns 0 in *canAccessPeer ; Need to update this function when RT supports P2P
  */
 //---
-hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, hipCtx_t *thisCtx, hipCtx_t *peerCtx)
+hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, hipCtx_t thisCtx, hipCtx_t peerCtx)
 {
     HIP_INIT_API(canAccessPeer, thisCtx, peerCtx);
 
@@ -67,7 +67,7 @@ hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, hipCtx_t *thisCtx, hipCtx
 //---
 // Disable visibility of this device into memory allocated on peer device.
 // Remove this device from peer device peerlist.
-hipError_t hipDeviceDisablePeerAccess (hipCtx_t *peerCtx)
+hipError_t hipDeviceDisablePeerAccess (hipCtx_t peerCtx)
 {
     HIP_INIT_API(peerCtx);
 
@@ -109,7 +109,7 @@ hipError_t hipDeviceDisablePeerAccess (hipCtx_t *peerCtx)
 //---
 // Allow the current device to see all memory allocated on peerDevice.
 // This should add this device to the peer-device peer list.
-hipError_t hipDeviceEnablePeerAccess (hipCtx_t *peerCtx, unsigned int flags)
+hipError_t hipDeviceEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags)
 {
     HIP_INIT_API(peerCtx, flags);
 
@@ -140,7 +140,7 @@ hipError_t hipDeviceEnablePeerAccess (hipCtx_t *peerCtx, unsigned int flags)
 
 
 //---
-hipError_t hipMemcpyPeer (void* dst, hipCtx_t *dstCtx, const void* src, hipCtx_t *srcCtx, size_t sizeBytes)
+hipError_t hipMemcpyPeer (void* dst, hipCtx_t dstCtx, const void* src, hipCtx_t srcCtx, size_t sizeBytes)
 {
     HIP_INIT_API(dst, dstCtx, src, srcCtx, sizeBytes);
 
@@ -150,7 +150,7 @@ hipError_t hipMemcpyPeer (void* dst, hipCtx_t *dstCtx, const void* src, hipCtx_t
 
 
 //---
-hipError_t hipMemcpyPeerAsync (void* dst, hipCtx_t *dstDevice, const void* src, hipCtx_t *srcDevice, size_t sizeBytes, hipStream_t stream)
+hipError_t hipMemcpyPeerAsync (void* dst, hipCtx_t dstDevice, const void* src, hipCtx_t srcDevice, size_t sizeBytes, hipStream_t stream)
 {
     HIP_INIT_API(dst, dstDevice, src, srcDevice, sizeBytes, stream);
     // HCC has a unified memory architecture so device specifiers are not required.
@@ -201,19 +201,5 @@ hipError_t hipMemcpyPeerAsync (void* dst, int  dstDevice, const void* src, int  
 }
 
 
-/**
- * @return #hipSuccess
- */
-//---
-hipError_t hipDriverGetVersion(int *driverVersion)
-{
-    HIP_INIT_API(driverVersion);
-
-    if (driverVersion) {
-        *driverVersion = 4;
-    }
-
-    return ihipLogStatus(hipSuccess);
-}
 
 
