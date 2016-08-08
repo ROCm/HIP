@@ -69,6 +69,7 @@ extern int HIP_DISABLE_HW_COPY_DEP;
 extern thread_local int tls_defaultDevice;
 extern thread_local hipError_t tls_lastHipError;
 class ihipStream_t;
+class ihipDevice_t;
 class ihipCtx_t;
 
 
@@ -90,7 +91,7 @@ class ihipCtx_t;
 #define STREAM_THREAD_SAFE 1
 
 
-#define DEVICE_THREAD_SAFE 1
+#define CTX_THREAD_SAFE 1
 
 // If FORCE_COPY_DEP=1 , HIP runtime will add 
 // synchronization for copy commands in the same stream, regardless of command type.
@@ -227,7 +228,6 @@ public:
 extern "C" {
 #endif
 
-typedef class ihipStream_t* hipStream_t;
 
 #ifdef __cplusplus
 }
@@ -287,10 +287,11 @@ typedef std::mutex StreamMutex;
 typedef FakeMutex StreamMutex;
 #endif
 
-#if DEVICE_THREAD_SAFE
-typedef std::mutex DeviceMutex;
+// Pair Device and Ctx together, these could also be toggled separately if desired.
+#if CTX_THREAD_SAFE
+typedef std::mutex CtxMutex;
 #else
-typedef FakeMutex DeviceMutex;
+typedef FakeMutex CtxMutex;
 #warning "Device thread-safe disabled"
 #endif
 
@@ -429,7 +430,8 @@ typedef uint64_t SeqNum_t ;
 
     //-- Non-racy accessors:
     // These functions access fields set at initialization time and are non-racy (so do not acquire mutex)
-    ihipCtx_t *              getDevice() const;
+    const ihipDevice_t *     getDevice() const;
+    ihipCtx_t *              getCtx() const;
 
 
 public:
@@ -440,21 +442,22 @@ public:
     unsigned                    _flags;
 
 private:
-    // Critical Data.  THis MUST be accessed through LockedAccessor_StreamCrit_t
-    ihipStreamCritical_t        _criticalData;
-
-private:
-    void                        enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal, ihipSignal_t *completionSignal);
-    void                        waitCopy(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *signal);
-
+    void     enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal, ihipSignal_t *completionSignal);
+    void     waitCopy(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *signal);
 
 
     // The unsigned return is hipMemcpyKind
     unsigned resolveMemcpyDirection(bool srcTracked, bool dstTracked, bool srcInDeviceMem, bool dstInDeviceMem);
-    void setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent);
+    void     setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent);
+
+
+private: // Data
+    // Critical Data.  THis MUST be accessed through LockedAccessor_StreamCrit_t
+    ihipStreamCritical_t        _criticalData;
 
     ihipCtx_t  *_ctx;  // parent context that owns this stream.
 
+    // Friends:
     friend std::ostream& operator<<(std::ostream& os, const ihipStream_t& s);
 };
 
@@ -507,117 +510,145 @@ struct ihipEvent_t {
 
 
 
-//---
-// Data that must be protected with thread-safe access
-// All members are private - this class must be accessed through friend LockedAccessor which 
-// will lock the mutex on construction and unlock on destruction.
-//
-// MUTEX_TYPE is template argument so can easily convert to FakeMutex for performance or stress testing.
-template <class MUTEX_TYPE>
-class ihipDeviceCriticalBase_t : LockedBase<MUTEX_TYPE>
+//----
+// Properties of the HIP device.
+// Multiple contexts can point to same device.
+class ihipDevice_t
 {
 public:
-    ihipDeviceCriticalBase_t() :  _stream_id(0), _peerAgents(nullptr) {};
-   
-    void init(unsigned deviceCnt) {
-        assert(_peerAgents == nullptr);
+    ihipDevice_t(unsigned deviceIndex, unsigned deviceCnt, hc::accelerator &acc);
+    ~ihipDevice_t();
+
+    // Accessors:
+    ihipCtx_t *getPrimaryCtx() const { return _primaryCtx; };
+
+public:
+    unsigned                _device_index; // device ID
+
+    hc::accelerator         _acc;
+    hsa_agent_t             _hsa_agent;    // hsa agent handle
+
+    //! Number of compute units supported by the device:
+    unsigned                _compute_units; 
+    hipDeviceProp_t         _props;        // saved device properties.
+    
+    StagingBuffer           *_staging_buffer[2]; // one buffer for each direction.
+    int                     isLargeBar;
+
+    ihipCtx_t               *_primaryCtx;
+
+private:
+    hipError_t initProperties(hipDeviceProp_t* prop);
+};
+//=============================================================================
+
+
+
+//=============================================================================
+//class ihipCtxCriticalBase_t
+template <typename MUTEX_TYPE>
+class ihipCtxCriticalBase_t : LockedBase<MUTEX_TYPE>
+{
+public:
+    ihipCtxCriticalBase_t(unsigned deviceCnt) :  
+         _peerCnt(0) 
+    {
         _peerAgents = new hsa_agent_t[deviceCnt];
     };
 
-    ~ihipDeviceCriticalBase_t()  {
+    ~ihipCtxCriticalBase_t()  {
         if (_peerAgents != nullptr) {
             delete _peerAgents;
             _peerAgents = nullptr;
         }
+        _peerCnt = 0;
     }
-    friend class LockedAccessor<ihipDeviceCriticalBase_t>;
 
+    // Streams:
+    void addStream(ihipStream_t *stream);
     std::list<ihipStream_t*> &streams() { return _streams; };
     const std::list<ihipStream_t*> &const_streams() const { return _streams; };
 
-    // "Allocate" a stream ID:
-    ihipStream_t::SeqNum_t  incStreamId() { return _stream_id++; };
 
+    // Peer Accessor classes:
     bool isPeer(const ihipCtx_t *peer); // returns Trus if peer has access to memory physically located on this device.
     bool addPeer(ihipCtx_t *peer);
     bool removePeer(ihipCtx_t *peer);
     void resetPeers(ihipCtx_t *thisDevice);
 
-
-    void addStream(ihipStream_t *stream);
-
     uint32_t peerCnt() const { return _peerCnt; };
     hsa_agent_t *peerAgents() const { return _peerAgents; };
 
 
-private:
-    //std::list< std::shared_ptr<ihipStream_t> > _streams;   // streams associated with this device. TODO - convert to shared_ptr.
-    std::list< ihipStream_t* > _streams;   // streams associated with this device.
-    ihipStream_t::SeqNum_t   _stream_id;
 
+    friend class LockedAccessor<ihipCtxCriticalBase_t>;
+private:
+    //--- Stream Tracker:
+    std::list< ihipStream_t* > _streams;   // streams associated with this device.
+
+
+    //--- Peer Tracker:
     // These reflect the currently Enabled set of peers for this GPU:
     // Enabled peers have permissions to access the memory physically allocated on this device.
-    std::list<ihipCtx_t*>  _peers;     // list of enabled peer devices.
+    std::list<ihipCtx_t*>     _peers;     // list of enabled peer devices.
     uint32_t                  _peerCnt;     // number of enabled peers
     hsa_agent_t              *_peerAgents;  // efficient packed array of enabled agents (to use for allocations.) 
 private:
     void recomputePeerAgents();
 };
-
-// Note Mutex selected based on DeviceMutex
-typedef ihipDeviceCriticalBase_t<DeviceMutex> ihipDeviceCritical_t;  
+// Note Mutex type Real/Fake selected based on CtxMutex
+typedef ihipCtxCriticalBase_t<CtxMutex> ihipCtxCritical_t;  
 
 // This type is used by functions that need access to the critical device structures.
-typedef LockedAccessor<ihipDeviceCritical_t> LockedAccessor_DeviceCrit_t;
+typedef LockedAccessor<ihipCtxCritical_t> LockedAccessor_CtxCrit_t;
+//=============================================================================
 
 
-
-//-------------------------------------------------------------------------------------------------
-// Functions which read or write the critical data are named locked_.
-// ihipCtx_t does not use recursive locks so the ihip implementation must avoid calling a locked_ function from within a locked_ function.
-// External functions which call several locked_ functions will acquire and release the lock for each function.  if this occurs in 
-// performance-sensitive code we may want to refactor by adding non-locked functions and creating a new locked_ member function to call them all.
+//=============================================================================
+//class ihipCtx_t:
+// A HIP CTX (context) points at one of the existing devices and contains the streams, 
+// peer-to-peer mappings, creation flags.  Multiple contexts can point to the same
+// device.
+//
 class ihipCtx_t
 {
 public: // Functions:
-    ihipCtx_t() {}; // note: calls constructor for _criticalData 
-    void init(unsigned device_index, unsigned deviceCnt, hc::accelerator &acc, unsigned flags);
+    ihipCtx_t(const ihipDevice_t *device, unsigned deviceCnt, unsigned flags); // note: calls constructor for _criticalData 
     ~ihipCtx_t();
 
+    // Functions which read or write the critical data are named locked_.
+    // ihipCtx_t does not use recursive locks so the ihip implementation must avoid calling a locked_ function from within a locked_ function.
+    // External functions which call several locked_ functions will acquire and release the lock for each function.  if this occurs in 
+    // performance-sensitive code we may want to refactor by adding non-locked functions and creating a new locked_ member function to call them all.
     void locked_addStream(ihipStream_t *s);
     void locked_removeStream(ihipStream_t *s);
     void locked_reset();
     void locked_waitAllStreams();
     void locked_syncDefaultStream(bool waitOnSelf);
 
-    ihipDeviceCritical_t  &criticalData() { return _criticalData; }; // TODO, move private.  Fix P2P.
+    ihipCtxCritical_t  &criticalData() { return _criticalData; }; // TODO, move private.  Fix P2P.
 
-public: // Data, set at initialization:
-    unsigned                _device_index; // device ID
+    const ihipDevice_t *getDevice() const { return _device; };
 
-    hipDeviceProp_t         _props;        // saved device properties.
-    hc::accelerator         _acc;
-    hsa_agent_t             _hsa_agent;    // hsa agent handle
+    // TODO - review uses of getWriteableDevice(), can these be converted to getDevice()
+    ihipDevice_t *getWriteableDevice() const { return const_cast<ihipDevice_t*> (_device); };
 
+public:  // Data
     // The NULL stream is used if no other stream is specified.
     // Default stream has special synchronization properties with other streams.
     ihipStream_t            *_default_stream;
 
-
-    unsigned                _compute_units;
-
-    StagingBuffer           *_staging_buffer[2]; // one buffer for each direction.
-    int                     isLargeBar;
-
-    unsigned                _device_flags;
+    // Flags specified when the context is created:
+    unsigned                _ctxFlags;
 
 private:
-    hipError_t getProperties(hipDeviceProp_t* prop);
+    const ihipDevice_t      *_device;
+
 
 private:  // Critical data, protected with locked access:
     // Members of _protected data MUST be accessed through the LockedAccessor.
-    // Search for LockedAccessor<ihipDeviceCritical_t> for examples; do not access _criticalData directly.
-    ihipDeviceCritical_t  _criticalData;
+    // Search for LockedAccessor<ihipCtxCritical_t> for examples; do not access _criticalData directly.
+    ihipCtxCritical_t  _criticalData;
 
 };
 
@@ -633,8 +664,11 @@ extern hsa_agent_t g_cpu_agent ;   // the CPU agent.
 // Extern functions:
 extern void ihipInit();
 extern const char *ihipErrorString(hipError_t);
-extern ihipCtx_t *ihipGetTlsDefaultCtx();
-extern ihipCtx_t *ihipGetDevice(int);
+extern ihipCtx_t    *ihipGetTlsDefaultCtx();
+
+extern ihipDevice_t *ihipGetDevice(int);
+ihipCtx_t * ihipGetPrimaryCtx(unsigned deviceIndex);
+
 extern void ihipSetTs(hipEvent_t e);
 
 template<typename T>
