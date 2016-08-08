@@ -130,7 +130,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
         if (sizeBytes && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
         } else {
-            hc::am_memtracker_update(*ptr, device->_device_index, 0);
+            hc::am_memtracker_update(*ptr, device->_deviceId, 0);
             {
                 LockedAccessor_CtxCrit_t crit(ctx->criticalData());
                 if (crit->peerCnt()) {
@@ -163,7 +163,7 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
             if(sizeBytes < 1 && (*ptr == NULL)){
                 hip_status = hipErrorMemoryAllocation;
             } else {
-                hc::am_memtracker_update(*ptr, device->_device_index, amHostPinned);
+                hc::am_memtracker_update(*ptr, device->_deviceId, amHostPinned);
             }
             tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
         } else if(flags & hipHostMallocMapped){
@@ -171,7 +171,7 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
             if(sizeBytes && (*ptr == NULL)){
                 hip_status = hipErrorMemoryAllocation;
             }else{
-                hc::am_memtracker_update(*ptr, device->_device_index, flags);
+                hc::am_memtracker_update(*ptr, device->_deviceId, flags);
                 {
                     LockedAccessor_CtxCrit_t crit(ctx->criticalData());
                     if (crit->peerCnt()) {
@@ -227,7 +227,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
         if (sizeBytes && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
         } else {
-            hc::am_memtracker_update(*ptr, device->_device_index, 0);
+            hc::am_memtracker_update(*ptr, device->_deviceId, 0);
             {
                 LockedAccessor_CtxCrit_t crit(ctx->criticalData());
                 if (crit->peerCnt() > 1) { // peerCnt includes self so only call allow_access if other peers involved:
@@ -297,7 +297,7 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
         if (size && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
         } else {
-            hc::am_memtracker_update(*ptr, device->_device_index, 0);
+            hc::am_memtracker_update(*ptr, device->_deviceId, 0);
             {
                 LockedAccessor_CtxCrit_t crit(ctx->criticalData());
                 if (crit->peerCnt() > 1) { // peerCnt includes self so only call allow_access if other peers involved:
@@ -592,7 +592,7 @@ template <typename T>
 hc::completion_future
 ihipMemsetKernel(hipStream_t stream, T * ptr, T val, size_t sizeBytes)
 {
-    int wg = std::min((unsigned)8, stream->getDevice()->_compute_units);
+    int wg = std::min((unsigned)8, stream->getDevice()->_computeUnits);
     const int threads_per_wg = 256;
 
     int threads = wg * threads_per_wg;
@@ -627,7 +627,7 @@ template <typename T>
 hc::completion_future
 ihipMemcpyKernel(hipStream_t stream, T * c, const T * a, size_t sizeBytes)
 {
-    int wg = std::min((unsigned)8, stream->getDevice()->_compute_units);
+    int wg = std::min((unsigned)8, stream->getDevice()->_computeUnits);
     const int threads_per_wg = 256;
 
     int threads = wg * threads_per_wg;

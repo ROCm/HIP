@@ -164,15 +164,15 @@ class ihipCtx_t;
 	std::call_once(hip_initialized, ihipInit);\
     API_TRACE(__VA_ARGS__);
 
-#define ihipLogStatus(_hip_status) \
+#define ihipLogStatus(hipStatus) \
     ({\
-        hipError_t _local_hip_status = _hip_status; /*local copy so _hip_status only evaluated once*/ \
-        tls_lastHipError = _local_hip_status;\
+        hipError_t localHipStatus = hipStatus; /*local copy so hipStatus only evaluated once*/ \
+        tls_lastHipError = localHipStatus;\
         \
         if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API) {\
-            fprintf(stderr, "  %ship-api: %-30s ret=%2d (%s)>>\n" KNRM, (_local_hip_status == 0) ? API_COLOR:KRED, __func__, _local_hip_status, ihipErrorString(_local_hip_status));\
+            fprintf(stderr, "  %ship-api: %-30s ret=%2d (%s)>>\n" KNRM, (localHipStatus == 0) ? API_COLOR:KRED, __func__, localHipStatus, ihipErrorString(localHipStatus));\
         }\
-        _local_hip_status;\
+        localHipStatus;\
     })
 
 
@@ -259,9 +259,9 @@ typedef uint64_t SIGSEQNUM;
 // TODO-someday refactor this class so it can be stored in a vector<>
 // we already store the index here so we can use for garbage collection.
 struct ihipSignal_t {
-    hsa_signal_t   _hsa_signal; // hsa signal handle
+    hsa_signal_t   _hsaSignal; // hsa signal handle
     int            _index;      // Index in pool, used for garbage collection.
-    SIGSEQNUM      _sig_id;     // unique sequentially increasing ID.
+    SIGSEQNUM      _sigId;     // unique sequentially increasing ID.
 
     ihipSignal_t();
     ~ihipSignal_t();
@@ -353,7 +353,7 @@ public:
         _last_copy_signal(NULL),
         _signalCursor(0),
         _oldest_live_sig_id(1),
-        _stream_sig_id(0),
+        _streamSigId(0),
         _kernelCnt(0),
         _signalCnt(0)
     {
@@ -385,7 +385,7 @@ public:
                                                // Each copy may use 1-2 signals depending on command transitions: 
                                                //   2 are required if a barrier packet is inserted.
     uint32_t                    _kernelCnt;    // Count of inflight kernels in this stream.  Reset at ::wait().
-    SIGSEQNUM                   _stream_sig_id;      // Monotonically increasing unique signal id.
+    SIGSEQNUM                   _streamSigId;      // Monotonically increasing unique signal id.
 };
 
 
@@ -424,7 +424,7 @@ typedef uint64_t SeqNum_t ;
 
 
     // Non-threadsafe accessors - must be protected by high-level stream lock with accessor passed to function.
-    SIGSEQNUM            lastCopySeqId (LockedAccessor_StreamCrit_t &crit) const { return crit->_last_copy_signal ? crit->_last_copy_signal->_sig_id : 0; };
+    SIGSEQNUM            lastCopySeqId (LockedAccessor_StreamCrit_t &crit) const { return crit->_last_copy_signal ? crit->_last_copy_signal->_sigId : 0; };
     ihipSignal_t *       allocSignal (LockedAccessor_StreamCrit_t &crit);
 
 
@@ -462,26 +462,6 @@ private: // Data
 };
 
 
-inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s)
-{
-    os << "stream#";
-    //os << s._ctx->getDeviceIndex();;  // FIXME
-    os << '.';
-    os << s._id;
-    return os;
-}
-
-inline std::ostream & operator<<(std::ostream& os, const dim3& s)
-{
-    os << '{';
-    os << s.x;
-    os << ',';
-    os << s.y;
-    os << ',';
-    os << s.z;
-    os << '}';
-    return os;
-}
 
 //----
 // Internal event structure:
@@ -503,7 +483,7 @@ struct ihipEvent_t {
     hc::completion_future _marker;
     uint64_t              _timestamp;  // store timestamp, may be set on host or by marker.
 
-    SIGSEQNUM             _copy_seq_id;
+    SIGSEQNUM             _copySeqId;
 } ;
 
 
@@ -516,24 +496,24 @@ struct ihipEvent_t {
 class ihipDevice_t
 {
 public:
-    ihipDevice_t(unsigned deviceIndex, unsigned deviceCnt, hc::accelerator &acc);
+    ihipDevice_t(unsigned deviceId, unsigned deviceCnt, hc::accelerator &acc);
     ~ihipDevice_t();
 
     // Accessors:
     ihipCtx_t *getPrimaryCtx() const { return _primaryCtx; };
 
 public:
-    unsigned                _device_index; // device ID
+    unsigned                _deviceId; // device ID
 
     hc::accelerator         _acc;
-    hsa_agent_t             _hsa_agent;    // hsa agent handle
+    hsa_agent_t             _hsaAgent;    // hsa agent handle
 
     //! Number of compute units supported by the device:
-    unsigned                _compute_units; 
+    unsigned                _computeUnits; 
     hipDeviceProp_t         _props;        // saved device properties.
     
-    StagingBuffer           *_staging_buffer[2]; // one buffer for each direction.
-    int                     isLargeBar;
+    StagingBuffer           *_stagingBuffer[2]; // one buffer for each direction.
+    int                     _isLargeBar;
 
     ihipCtx_t               *_primaryCtx;
 
@@ -613,7 +593,7 @@ typedef LockedAccessor<ihipCtxCritical_t> LockedAccessor_CtxCrit_t;
 class ihipCtx_t
 {
 public: // Functions:
-    ihipCtx_t(const ihipDevice_t *device, unsigned deviceCnt, unsigned flags); // note: calls constructor for _criticalData 
+    ihipCtx_t(ihipDevice_t *device, unsigned deviceCnt, unsigned flags); // note: calls constructor for _criticalData 
     ~ihipCtx_t();
 
     // Functions which read or write the critical data are named locked_.
@@ -631,24 +611,24 @@ public: // Functions:
     const ihipDevice_t *getDevice() const { return _device; };
 
     // TODO - review uses of getWriteableDevice(), can these be converted to getDevice()
-    ihipDevice_t *getWriteableDevice() const { return const_cast<ihipDevice_t*> (_device); };
+    ihipDevice_t *getWriteableDevice() const { return _device; };
 
 public:  // Data
     // The NULL stream is used if no other stream is specified.
     // Default stream has special synchronization properties with other streams.
-    ihipStream_t            *_default_stream;
+    ihipStream_t            *_defaultStream;
 
     // Flags specified when the context is created:
     unsigned                _ctxFlags;
 
 private:
-    const ihipDevice_t      *_device;
+    ihipDevice_t            *_device;
 
 
 private:  // Critical data, protected with locked access:
     // Members of _protected data MUST be accessed through the LockedAccessor.
     // Search for LockedAccessor<ihipCtxCritical_t> for examples; do not access _criticalData directly.
-    ihipCtxCritical_t  _criticalData;
+    ihipCtxCritical_t       _criticalData;
 
 };
 
@@ -674,6 +654,29 @@ extern void ihipSetTs(hipEvent_t e);
 
 hipStream_t ihipSyncAndResolveStream(hipStream_t);
 
+
+
+// Stream printf functions:
+inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s)
+{
+    os << "stream#";
+    os << s.getDevice()->_deviceId;;  
+    os << '.';
+    os << s._id;
+    return os;
+}
+
+inline std::ostream & operator<<(std::ostream& os, const dim3& s)
+{
+    os << '{';
+    os << s.x;
+    os << ',';
+    os << s.y;
+    os << ',';
+    os << s.z;
+    os << '}';
+    return os;
+}
 
 
 #endif
