@@ -66,8 +66,16 @@ extern int HIP_VISIBLE_DEVICES; /* Contains a comma-separated sequence of GPU id
 extern int HIP_DISABLE_HW_KERNEL_DEP;
 extern int HIP_DISABLE_HW_COPY_DEP;
 
-extern thread_local int tls_defaultDevice;
+//---
+//Extern tls
+extern thread_local int tls_defaultDeviceId;
+extern thread_local ihipCtx_t *tls_defaultCtx;  
+
 extern thread_local hipError_t tls_lastHipError;
+
+
+//---
+//Forward defs:
 class ihipStream_t;
 class ihipDevice_t;
 class ihipCtx_t;

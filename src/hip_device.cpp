@@ -28,11 +28,11 @@ THE SOFTWARE.
 /**
  * @return  #hipSuccess
  */
-hipError_t hipGetDevice(int *device)
+hipError_t hipGetDevice(int *deviceId)
 {
-    HIP_INIT_API(device);
+    HIP_INIT_API(deviceId);
 
-    *device = tls_defaultDevice;
+    *deviceId = tls_defaultDeviceId;
     return ihipLogStatus(hipSuccess);
 }
 
@@ -130,13 +130,14 @@ hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig )
 /**
  * @return #hipSuccess, #hipErrorInvalidDevice
  */
-hipError_t hipSetDevice(int device)
+hipError_t hipSetDevice(int deviceId)
 {
-    HIP_INIT_API(device);
-    if ((device < 0) || (device >= g_deviceCnt)) {
+    HIP_INIT_API(deviceId);
+    if ((deviceId < 0) || (deviceId >= g_deviceCnt)) {
         return ihipLogStatus(hipErrorInvalidDevice);
     } else {
-        tls_defaultDevice = device;
+        tls_defaultDeviceId = deviceId;
+        tls_defaultCtx = ihipGetPrimaryCtx(deviceId);
         return ihipLogStatus(hipSuccess);
     }
 }

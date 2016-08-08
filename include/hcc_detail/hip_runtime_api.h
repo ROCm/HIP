@@ -43,7 +43,13 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
-typedef struct ihipCtx_t hipCtx_t;
+//---
+//API-visible structures
+typedef struct ihipCtx_t    *hipCtx_t;
+
+// Note many APIs also use integer deviceIds as an alternative to the device pointer:
+typedef struct ihipDevice_t *hipDevice_t;
+
 typedef struct ihipStream_t *hipStream_t;
 typedef struct hipEvent_t {
     struct ihipEvent_t *_handle;
@@ -1023,15 +1029,28 @@ hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int src
  * @}
  */
 
-
-
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup Version Management
+ *  @defgroup Driver Initialization and Version 
  *  @{
  *
  */
+
+/**
+ * @brief Explicitly initializes the HIP runtime.
+ * 
+ * Most HIP APIs implicitly initialize the HIP runtime.  
+ * This API provides control over the timing of the initialization.
+ */
+// TODO-ctx - more description on error codes.
+hipError_t hipInit(unsigned int flags) ;
+
+
+
+// TODO-ctx
+hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device);
+
 
 /**
  * @brief Returns the approximate HIP driver version.

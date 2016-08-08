@@ -133,6 +133,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
 
     set(SOURCE_FILES src/device_util.cpp
                      src/hip_hcc.cpp
+                     src/hip_context.cpp
                      src/hip_device.cpp
                      src/hip_error.cpp
                      src/hip_event.cpp
