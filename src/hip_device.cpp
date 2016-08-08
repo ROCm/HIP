@@ -283,15 +283,18 @@ hipError_t hipSetDeviceFlags( unsigned int flags)
 
     hipError_t e;
 
-    auto * hipDevice = ihipGetTlsDefaultCtx();
-    if(hipDevice){
-       hipDevice->_device_flags = hipDevice->_device_flags | flags;
+    auto * ctx = ihipGetTlsDefaultCtx();
+
+    // TODO : does this really OR in the flags or replaces previous flags:
+    // TODO : Review error handling behavior for this function, it often returns ErrorSetOnActiveProcess
+    if (ctx) {
+       ctx->_ctxFlags = ctx->_ctxFlags | flags;
        e = hipSuccess;
-    }else{
+    } else {
        e = hipErrorInvalidDevice;
     }
 
     return ihipLogStatus(e);
-}
+};
 
 

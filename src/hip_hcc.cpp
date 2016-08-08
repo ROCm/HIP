@@ -48,6 +48,11 @@ THE SOFTWARE.
 extern const char *ihipErrorString(hipError_t hip_error);
 #include "hcc_detail/trace_helper.h"
 
+
+
+//=================================================================================================
+//Global variables:
+//=================================================================================================
 const int release = 1;
 
 #define MEMCPY_D2H_STAGING_VS_PININPLACE_COPY_THRESHOLD    4194304
@@ -81,19 +86,21 @@ thread_local hipError_t tls_lastHipError = hipSuccess;
 
 
 
-//=================================================================================================
-//Forward Declarations:
-//=================================================================================================
 std::once_flag hip_initialized;
 
-// Array of primary contexts for each device:
-ihipCtx_t *g_primaryCtxArray;  ;
+// Array of pointers to devices.  
+ihipDevice_t **g_deviceArray;
+
+
 bool g_visible_device = false;
 unsigned g_deviceCnt;
 std::vector<int> g_hip_visible_devices;
 hsa_agent_t g_cpu_agent;
 
 
+// TODO, remove these if possible:
+hsa_agent_t gpu_agent_;
+hsa_amd_memory_pool_t gpu_pool_;
 
 //=================================================================================================
 // Implementation:
@@ -106,29 +113,29 @@ static inline bool ihipIsValidDevice(unsigned deviceIndex)
     return (deviceIndex < g_deviceCnt);
 }
 
-//---
-ihipCtx_t * ihipGetPrimaryCtx(unsigned deviceIndex)
+
+ihipDevice_t * ihipGetDevice(int deviceIndex)
 {
     if (ihipIsValidDevice(deviceIndex)) {
-        return &g_primaryCtxArray[deviceIndex];
-    } else {
-        return NULL;
-    }
-};
-
-
-// FIXME- index the new g_deviceArray data structure
-ihipCtx_t * ihipGetDevice(int deviceIndex)
-{
-    if (ihipIsValidDevice(deviceIndex)) {
-        return &g_primaryCtxArray[deviceIndex];
+        return g_deviceArray[deviceIndex];
     } else {
         return NULL;
     }
 }
 
+//---
+//FIXME - is this function dead?
+ihipCtx_t * ihipGetPrimaryCtx(unsigned deviceIndex)
+{
+    ihipDevice_t *device = ihipGetDevice(deviceIndex);
+    return device ? device->getPrimaryCtx() : NULL;
+};
+
+
+
 
 //---
+//FIXME - this needs to return the active context for this CPU thread - not primary for device.
 ihipCtx_t *ihipGetTlsDefaultCtx()
 {
     // If this is invalid, the TLS state is corrupt.
@@ -136,8 +143,9 @@ ihipCtx_t *ihipGetTlsDefaultCtx()
     // TODO - consider replacing assert with error code
     assert (ihipIsValidDevice(tls_defaultDevice));
 
-    return &g_primaryCtxArray[tls_defaultDevice];
+    return ihipGetPrimaryCtx(tls_defaultDevice);
 }
+
 
 
 //=================================================================================================
@@ -249,83 +257,26 @@ void ihipStream_t::locked_wait(bool assertQueueEmpty)
 
 };
 
-
-// Recompute the peercnt and the packed _peerAgents whenever a peer is added or deleted.
-// The packed _peerAgents can efficiently be used on each memory allocation.
-template<>
-void ihipDeviceCriticalBase_t<DeviceMutex>::recomputePeerAgents()
-{
-    _peerCnt = 0;
-    std::for_each (_peers.begin(), _peers.end(), [this](ihipCtx_t* ctx) {
-        _peerAgents[_peerCnt++] = ctx->_hsa_agent;
-    });
-}
+//=============================================================================
 
 
-template<>
-bool ihipDeviceCriticalBase_t<DeviceMutex>::isPeer(const ihipCtx_t *peer)
-{
-    auto match = std::find(_peers.begin(), _peers.end(), peer);
-    return (match != std::end(_peers));
-}
-
-
-template<>
-bool ihipDeviceCriticalBase_t<DeviceMutex>::addPeer(ihipCtx_t *peer)
-{
-    auto match = std::find(_peers.begin(), _peers.end(), peer);
-    if (match == std::end(_peers)) {
-        // Not already a peer, let's update the list:
-        _peers.push_back(peer);
-        recomputePeerAgents();
-        return true;
-    }
-
-    // If we get here - peer was already on list, silently ignore.
-    return false;
-}
-
-
-template<>
-bool ihipDeviceCriticalBase_t<DeviceMutex>::removePeer(ihipCtx_t *peer)
-{
-    auto match = std::find(_peers.begin(), _peers.end(), peer);
-    if (match != std::end(_peers)) {
-        // Found a valid peer, let's remove it.
-        _peers.remove(peer);
-        recomputePeerAgents();
-        return true;
-    } else {
-        return false;
-    }
-}
-
-
-template<>
-void ihipDeviceCriticalBase_t<DeviceMutex>::resetPeers(ihipCtx_t *thisDevice)
-{
-    _peers.clear();
-    _peerCnt = 0;
-    addPeer(thisDevice); // peer-list always contains self agent.
-}
-
-
-template<>
-void ihipDeviceCriticalBase_t<DeviceMutex>::addStream(ihipStream_t *stream)
-{
-    _streams.push_back(stream);
-    stream->_id = incStreamId();
-}
 
 //-------------------------------------------------------------------------------------------------
 
 
-
 //---
-ihipCtx_t * ihipStream_t::getDevice() const
+const ihipDevice_t * ihipStream_t::getDevice() const
+{
+    return _ctx->getDevice();
+};
+
+
+
+ihipCtx_t * ihipStream_t::getCtx() const
 {
     return _ctx;
 };
+
 
 #define HIP_NUM_SIGNALS_PER_STREAM 32
 
@@ -521,56 +472,80 @@ int ihipStream_t::preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t
 
 
 
-
-//=================================================================================================
-//
-//Reset the device - this is called from hipDeviceReset.
-//Device may be reset multiple times, and may be reset after init.
-void ihipCtx_t::locked_reset()
+//=============================================================================
+// Recompute the peercnt and the packed _peerAgents whenever a peer is added or deleted.
+// The packed _peerAgents can efficiently be used on each memory allocation.
+template<>
+void ihipCtxCriticalBase_t<CtxMutex>::recomputePeerAgents()
 {
-    // Obtain mutex access to the device critical data, release by destructor
-    LockedAccessor_DeviceCrit_t  crit(_criticalData);
+    _peerCnt = 0;
+    std::for_each (_peers.begin(), _peers.end(), [this](ihipCtx_t* ctx) {
+        _peerAgents[_peerCnt++] = ctx->getDevice()->_hsa_agent;
+    });
+}
 
 
-    //---
-    //Wait for pending activity to complete?  TODO - check if this is required behavior:
-    tprintf(DB_SYNC, "locked_reset waiting for activity to complete.\n");
+template<>
+bool ihipCtxCriticalBase_t<CtxMutex>::isPeer(const ihipCtx_t *peer)
+{
+    auto match = std::find(_peers.begin(), _peers.end(), peer);
+    return (match != std::end(_peers));
+}
 
-    // Reset and remove streams:
-    // Delete all created streams including the default one.
-    for (auto streamI=crit->const_streams().begin(); streamI!=crit->const_streams().end(); streamI++) {
-        ihipStream_t *stream = *streamI;
-        (*streamI)->locked_wait();
-        tprintf(DB_SYNC, " delete stream=%p\n", stream);
 
-        delete stream;
+template<>
+bool ihipCtxCriticalBase_t<CtxMutex>::addPeer(ihipCtx_t *peer)
+{
+    auto match = std::find(_peers.begin(), _peers.end(), peer);
+    if (match == std::end(_peers)) {
+        // Not already a peer, let's update the list:
+        _peers.push_back(peer);
+        recomputePeerAgents();
+        return true;
     }
-    // Clear the list.
-    crit->streams().clear();
+
+    // If we get here - peer was already on list, silently ignore.
+    return false;
+}
 
 
-    // Create a fresh default stream and add it:
-    _default_stream = new ihipStream_t(this, _acc.get_default_view(), hipStreamDefault);
-    crit->addStream(_default_stream);
-
-
-    // This resest peer list to just me:
-    crit->resetPeers(this);
-
-    // Reset and release all memory stored in the tracker:
-    // Reset will remove peer mapping so don't need to do this explicitly.
-    am_memtracker_reset(_acc);
-
-};
-
-
-//---
-void ihipCtx_t::init(unsigned device_index, unsigned deviceCnt, hc::accelerator &acc, unsigned flags)
+template<>
+bool ihipCtxCriticalBase_t<CtxMutex>::removePeer(ihipCtx_t *peer)
 {
-    _device_index = device_index;
-    _device_flags = flags;
-    _acc = acc;
+    auto match = std::find(_peers.begin(), _peers.end(), peer);
+    if (match != std::end(_peers)) {
+        // Found a valid peer, let's remove it.
+        _peers.remove(peer);
+        recomputePeerAgents();
+        return true;
+    } else {
+        return false;
+    }
+}
 
+
+template<>
+void ihipCtxCriticalBase_t<CtxMutex>::resetPeers(ihipCtx_t *thisDevice)
+{
+    _peers.clear();
+    _peerCnt = 0;
+    addPeer(thisDevice); // peer-list always contains self agent.
+}
+
+
+template<>
+void ihipCtxCriticalBase_t<CtxMutex>::addStream(ihipStream_t *stream)
+{
+    stream->_id = _streams.size();
+    _streams.push_back(stream);
+}
+//=============================================================================
+
+//==============================================================================================
+ihipDevice_t::ihipDevice_t(unsigned device_index, unsigned deviceCnt, hc::accelerator &acc) :
+    _device_index(device_index), 
+    _acc(acc)
+{
     hsa_agent_t *agent = static_cast<hsa_agent_t*> (acc.get_hsa_agent());
     if (agent) {
         int err = hsa_agent_get_info(*agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_COMPUTE_UNIT_COUNT, &_compute_units);
@@ -583,30 +558,17 @@ void ihipCtx_t::init(unsigned device_index, unsigned deviceCnt, hc::accelerator 
         _hsa_agent.handle = static_cast<uint64_t> (-1);
     }
 
-    getProperties(&_props);
-
-    _criticalData.init(deviceCnt);
-
-    locked_reset();
-
-
-    tprintf(DB_SYNC, "created device with default_stream=%p\n", _default_stream);
+    initProperties(&_props);
 
     _staging_buffer[0] = new StagingBuffer(_hsa_agent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
     _staging_buffer[1] = new StagingBuffer(_hsa_agent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
 
-};
+    _primaryCtx = new ihipCtx_t(this, deviceCnt, hipDeviceMapHost);
+}
 
 
-
-
-ihipCtx_t::~ihipCtx_t()
+ihipDevice_t::~ihipDevice_t()
 {
-    if (_default_stream) {
-        delete _default_stream;
-        _default_stream = NULL;
-    }
-
     for (int i=0; i<2; i++) {
         if (_staging_buffer[i]) {
             delete _staging_buffer[i];
@@ -615,18 +577,7 @@ ihipCtx_t::~ihipCtx_t()
     }
 }
 
-//----
 
-
-
-
-//=================================================================================================
-// Utility functions, these are not part of the public HIP API
-//=================================================================================================
-
-//=================================================================================================
-
-#define DeviceErrorCheck(x) if (x != HSA_STATUS_SUCCESS) { return hipErrorInvalidDevice; }
 
 #define ErrorCheck(x) error_check(x, __LINE__, __FILE__)
 
@@ -636,8 +587,28 @@ void error_check(hsa_status_t hsa_error_code, int line_num, std::string str) {
   }
 }
 
-hsa_agent_t gpu_agent_;
-hsa_amd_memory_pool_t gpu_pool_;
+
+
+//---
+// Helper for initProperties
+// Determines if the given agent is of type HSA_DEVICE_TYPE_GPU and counts it.
+static hsa_status_t countGpuAgents(hsa_agent_t agent, void *data) {
+    if (data == NULL) {
+        return HSA_STATUS_ERROR_INVALID_ARGUMENT;
+    }
+    hsa_device_type_t device_type;
+    hsa_status_t status = hsa_agent_get_info(agent, HSA_AGENT_INFO_DEVICE, &device_type);
+    if (status != HSA_STATUS_SUCCESS) {
+        return status;
+    }
+    if (device_type == HSA_DEVICE_TYPE_GPU) {
+        (*static_cast<int*>(data))++;
+    }
+    return HSA_STATUS_SUCCESS;
+}
+
+
+
 
 hsa_status_t FindGpuDevice(hsa_agent_t agent, void* data) {
     if (data == NULL) {
@@ -717,24 +688,30 @@ hsa_status_t get_region_info(hsa_region_t region, void* data)
     return HSA_STATUS_SUCCESS;
 }
 
+
 // Determines if the given agent is of type HSA_DEVICE_TYPE_GPU and counts it.
-static hsa_status_t countGpuAgents(hsa_agent_t agent, void *data) {
-    if (data == NULL) {
-        return HSA_STATUS_ERROR_INVALID_ARGUMENT;
-    }
+static hsa_status_t findCpuAgent(hsa_agent_t agent, void *data)
+{
     hsa_device_type_t device_type;
     hsa_status_t status = hsa_agent_get_info(agent, HSA_AGENT_INFO_DEVICE, &device_type);
     if (status != HSA_STATUS_SUCCESS) {
         return status;
     }
-    if (device_type == HSA_DEVICE_TYPE_GPU) {
-        (*static_cast<int*>(data))++;
+    if (device_type == HSA_DEVICE_TYPE_CPU) {
+        (*static_cast<hsa_agent_t*>(data)) = agent;
+        return HSA_STATUS_INFO_BREAK;
     }
+
     return HSA_STATUS_SUCCESS;
 }
 
-// Internal version,
-hipError_t ihipCtx_t::getProperties(hipDeviceProp_t* prop)
+
+#define DeviceErrorCheck(x) if (x != HSA_STATUS_SUCCESS) { return hipErrorInvalidDevice; }
+
+//---
+// Initialize properties for the device.
+// Call this once when the ihipDevice_t is created:
+hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
 {
     hipError_t e = hipSuccess;
     hsa_status_t err;
@@ -898,14 +875,103 @@ hipError_t ihipCtx_t::getProperties(hipDeviceProp_t* prop)
     prop->arch.has3dGrid                   = 1;
     prop->arch.hasDynamicParallelism       = 0;
 
-    prop->concurrentKernels = 1; // All ROCR hardware supports executing multiple kernels concurrently
+    prop->concurrentKernels = 1; // All ROCm hardware supports executing multiple kernels concurrently
+
+    prop->canMapHostMemory = 1;  // All ROCm devices can map host memory
+#if 0
+    // TODO - code broken below since it always returns 1.
+    // Are the flags part of the context or part of the device?
     if ( _device_flags | hipDeviceMapHost) {
         prop->canMapHostMemory = 1;
     } else {
         prop->canMapHostMemory = 0;
     }
+#endif
     return e;
 }
+
+
+//=================================================================================================
+// ihipDevice_t
+//=================================================================================================
+//---
+ihipCtx_t::ihipCtx_t(const ihipDevice_t *device, unsigned deviceCnt, unsigned flags) :
+    _ctxFlags(flags),
+    _device(device),
+    _criticalData(deviceCnt)
+{
+    locked_reset();
+
+    tprintf(DB_SYNC, "created ctx with default_stream=%p\n", _default_stream);
+};
+
+
+
+
+ihipCtx_t::~ihipCtx_t()
+{
+    if (_default_stream) {
+        delete _default_stream;
+        _default_stream = NULL;
+    }
+}
+//Reset the device - this is called from hipDeviceReset.
+//Device may be reset multiple times, and may be reset after init.
+void ihipCtx_t::locked_reset()
+{
+    // Obtain mutex access to the device critical data, release by destructor
+    LockedAccessor_CtxCrit_t  crit(_criticalData);
+
+
+    //---
+    //Wait for pending activity to complete?  TODO - check if this is required behavior:
+    tprintf(DB_SYNC, "locked_reset waiting for activity to complete.\n");
+
+    // Reset and remove streams:
+    // Delete all created streams including the default one.
+    for (auto streamI=crit->const_streams().begin(); streamI!=crit->const_streams().end(); streamI++) {
+        ihipStream_t *stream = *streamI;
+        (*streamI)->locked_wait();
+        tprintf(DB_SYNC, " delete stream=%p\n", stream);
+
+        delete stream;
+    }
+    // Clear the list.
+    crit->streams().clear();
+
+
+    // Create a fresh default stream and add it:
+    _default_stream = new ihipStream_t(this, getDevice()->_acc.get_default_view(), hipStreamDefault);
+    crit->addStream(_default_stream);
+
+
+    // Reset peer list to just me:
+    crit->resetPeers(this);
+
+    // Reset and release all memory stored in the tracker:
+    // Reset will remove peer mapping so don't need to do this explicitly.
+    // FIXME - This is clearly a non-const action!  Is this a context reset or a device reset - maybe should reference count?
+    ihipDevice_t *device = const_cast<ihipDevice_t*> (getDevice());
+    am_memtracker_reset(device->_acc);
+
+};
+
+
+
+//----
+
+
+
+
+//=================================================================================================
+// Utility functions, these are not part of the public HIP API
+//=================================================================================================
+
+//=================================================================================================
+
+
+
+
 
 
 // Implement "default" stream syncronization
@@ -913,7 +979,7 @@ hipError_t ihipCtx_t::getProperties(hipDeviceProp_t* prop)
 //   If waitOnSelf is set, this additionally waits for the default stream to empty.
 void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf)
 {
-    LockedAccessor_DeviceCrit_t  crit(_criticalData);
+    LockedAccessor_CtxCrit_t  crit(_criticalData);
 
     tprintf(DB_SYNC, "syncDefaultStream\n");
 
@@ -936,7 +1002,7 @@ void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf)
 //---
 void ihipCtx_t::locked_addStream(ihipStream_t *s)
 {
-    LockedAccessor_DeviceCrit_t  crit(_criticalData);
+    LockedAccessor_CtxCrit_t  crit(_criticalData);
 
     crit->addStream(s);
 }
@@ -944,7 +1010,7 @@ void ihipCtx_t::locked_addStream(ihipStream_t *s)
 //---
 void ihipCtx_t::locked_removeStream(ihipStream_t *s)
 {
-    LockedAccessor_DeviceCrit_t  crit(_criticalData);
+    LockedAccessor_CtxCrit_t  crit(_criticalData);
 
     crit->streams().remove(s);
 }
@@ -954,7 +1020,7 @@ void ihipCtx_t::locked_removeStream(ihipStream_t *s)
 //Heavyweight synchronization that waits on all streams, ignoring hipStreamNonBlocking flag.
 void ihipCtx_t::locked_waitAllStreams()
 {
-    LockedAccessor_DeviceCrit_t  crit(_criticalData);
+    LockedAccessor_CtxCrit_t  crit(_criticalData);
 
     tprintf(DB_SYNC, "waitAllStream\n");
     for (auto streamI=crit->const_streams().begin(); streamI!=crit->const_streams().end(); streamI++) {
@@ -1029,21 +1095,6 @@ void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, c
 
 #endif
 
-// Determines if the given agent is of type HSA_DEVICE_TYPE_GPU and counts it.
-static hsa_status_t findCpuAgent(hsa_agent_t agent, void *data)
-{
-    hsa_device_type_t device_type;
-    hsa_status_t status = hsa_agent_get_info(agent, HSA_AGENT_INFO_DEVICE, &device_type);
-    if (status != HSA_STATUS_SUCCESS) {
-        return status;
-    }
-    if (device_type == HSA_DEVICE_TYPE_CPU) {
-        (*static_cast<hsa_agent_t*>(data)) = agent;
-        return HSA_STATUS_INFO_BREAK;
-    }
-
-    return HSA_STATUS_SUCCESS;
-}
 
 
 //---
@@ -1145,7 +1196,7 @@ void ihipInit()
         throw ihipException(hipErrorRuntimeOther);
     }
 
-    g_primaryCtxArray = new ihipCtx_t[deviceCnt];
+    g_deviceArray = new ihipDevice_t*  [deviceCnt];
     g_deviceCnt = 0;
     for (int i=0; i<accs.size(); i++) {
         // check if the device id is included in the HIP_VISIBLE_DEVICES env variable
@@ -1155,7 +1206,7 @@ void ihipInit()
                 //If device is not in visible devices list, ignore
                 continue;
             }
-            g_primaryCtxArray[g_deviceCnt].init(g_deviceCnt, deviceCnt, accs[i], hipDeviceMapHost);
+            g_deviceArray[g_deviceCnt] = new ihipDevice_t(g_deviceCnt, deviceCnt, accs[i]);
             g_deviceCnt++;
         }
     }
@@ -1190,7 +1241,7 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
         // Have to wait for legacy default stream to be empty:
         if (!(stream->_flags & hipStreamNonBlocking))  {
             tprintf(DB_SYNC, "stream %p wait default stream\n", stream);
-            stream->getDevice()->_default_stream->locked_wait();
+            stream->getCtx()->_default_stream->locked_wait();
         }
 
         return stream;
@@ -1428,7 +1479,7 @@ unsigned ihipStream_t::resolveMemcpyDirection(bool srcTracked, bool dstTracked, 
 void ihipStream_t::setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent)
 {
     // current* represents the device associated with the specified stream.
-    ihipCtx_t *streamDevice = this->getDevice();
+    const ihipDevice_t *streamDevice = this->getDevice();
     hsa_agent_t streamAgent = streamDevice->_hsa_agent;
 
     // ROCR runtime logic is :
@@ -1448,7 +1499,9 @@ void ihipStream_t::setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType,
 
 void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const void* src, size_t sizeBytes, unsigned kind)
 {
-    ihipCtx_t *device = this->getDevice();
+    ihipCtx_t *ctx = this->getCtx();
+    const ihipDevice_t *device = ctx->getDevice();
+
     if (device == NULL) {
         throw ihipException(hipErrorInvalidDevice);
     }
@@ -1472,9 +1525,11 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
     bool copyEngineCanSeeSrcAndDest = false;
     if (kind == hipMemcpyDeviceToDevice) {
 #if USE_PEER_TO_PEER>=2
-        // TODO - consider refactor.  Do we need to support simul access of enable/disable peers with access?
-        LockedAccessor_DeviceCrit_t  dcrit(device->criticalData());
-        if (dcrit->isPeer(ihipGetDevice(dstPtrInfo._appId)) && (dcrit->isPeer(ihipGetDevice(srcPtrInfo._appId)))) {
+        // Lock to prevent another thread from modifying peer list while we are trying to look at it.
+        LockedAccessor_CtxCrit_t  dcrit(ctx->criticalData());
+        // FIXME - this assumes peer access only from primary context.
+        // Would need to change the tracker to store a void * parameter that we could map to the ctx where the pointer is allocated.
+        if (dcrit->isPeer(ihipGetPrimaryCtx(dstPtrInfo._appId)) && (dcrit->isPeer(ihipGetPrimaryCtx(srcPtrInfo._appId)))) {
             copyEngineCanSeeSrcAndDest = true;
         }
 #endif
@@ -1658,9 +1713,9 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsig
 {
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
-    ihipCtx_t *device = this->getDevice();
+    const ihipCtx_t *ctx = this->getCtx();
 
-    if (device == NULL) {
+    if ((ctx == nullptr) || (ctx->getDevice() == nullptr)) {
         throw ihipException(hipErrorInvalidDevice);
     }
 
@@ -1744,12 +1799,12 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator *acc)
 {
     HIP_INIT_API(deviceId, acc);
 
-    ihipCtx_t *d = ihipGetDevice(deviceId);
+    const ihipDevice_t *device = ihipGetDevice(deviceId);
     hipError_t err;
-    if (d == NULL) {
+    if (device == NULL) {
         err =  hipErrorInvalidDevice;
     } else {
-        *acc = d->_acc;
+        *acc = device->_acc;
         err = hipSuccess;
     }
     return ihipLogStatus(err);

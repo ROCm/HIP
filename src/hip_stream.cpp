@@ -31,22 +31,28 @@ THE SOFTWARE.
 hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags)
 {
     ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
-    hc::accelerator acc = ctx->_acc;
 
-    // TODO - se try-catch loop to detect memory exception?
-    //
-    //
-    //Note this is an execute_in_order queue, so all kernels submitted will atuomatically wait for prev to complete:
-    //This matches CUDA stream behavior:
+    hipError_t e = hipSuccess;
 
-    auto istream = new ihipStream_t(ctx, acc.create_view(), flags);
+    if (ctx) {
+        hc::accelerator acc = ctx->getWriteableDevice()->_acc;
 
-    ctx->locked_addStream(istream);
+        // TODO - se try-catch loop to detect memory exception?
+        //
+        //Note this is an execute_in_order queue, so all kernels submitted will atuomatically wait for prev to complete:
+        //This matches CUDA stream behavior:
 
-    *stream = istream;
-    tprintf(DB_SYNC, "hipStreamCreate, stream=%p\n", *stream);
+        auto istream = new ihipStream_t(ctx, acc.create_view(), flags);
 
-    return hipSuccess;
+        ctx->locked_addStream(istream);
+
+        *stream = istream;
+        tprintf(DB_SYNC, "hipStreamCreate, stream=%p\n", *stream);
+    } else {
+        e = hipErrorInvalidDevice;
+    }
+
+    return ihipLogStatus(e);
 }
 
 
@@ -129,7 +135,7 @@ hipError_t hipStreamDestroy(hipStream_t stream)
         e = hipSuccess;
     }
 
-    ihipCtx_t *ctx = stream->getDevice();
+    ihipCtx_t *ctx = stream->getCtx();
 
     if (ctx) {
         ctx->locked_removeStream(stream);

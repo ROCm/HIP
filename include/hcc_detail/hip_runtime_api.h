@@ -43,6 +43,7 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
+typedef struct ihipCtx_t hipCtx_t;
 typedef struct ihipStream_t *hipStream_t;
 typedef struct hipEvent_t {
     struct ihipEvent_t *_handle;
@@ -417,7 +418,6 @@ const char *hipGetErrorString(hipError_t hip_error);
  *
  * even if the handle goes out-of-scope.  To release the memory used by the stream, applicaiton must call hipStreamDestroy.
  * Flags controls behavior of the stream.  See #hipStreamDefault, #hipStreamNonBlocking.
- * @error hipStream_t are under development - with current HIP use the NULL stream.
  */
 
 hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags);
@@ -436,6 +436,8 @@ hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags);
  * 
  *
  * @see hipStreamDestroy
+ *
+ * @return 
  *
  */
 hipError_t hipStreamCreate(hipStream_t *stream);
