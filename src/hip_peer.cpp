@@ -66,7 +66,7 @@ hipError_t hipDeviceDisablePeerAccess (int peerDeviceId)
 
     hipError_t err = hipSuccess;
 
-    auto thisDevice = ihipGetTlsDefaultDevice();
+    auto thisDevice = ihipGetTlsDefaultCtx();
     auto peerDevice = ihipGetDevice(peerDeviceId);
     if ((thisDevice != NULL) && (peerDevice != NULL)) {
 #if USE_PEER_TO_PEER>=2
@@ -111,7 +111,7 @@ hipError_t hipDeviceEnablePeerAccess (int peerDeviceId, unsigned int flags)
     if (flags != 0) {
         err = hipErrorInvalidValue;
     } else {
-        auto thisDevice = ihipGetTlsDefaultDevice();
+        auto thisDevice = ihipGetTlsDefaultCtx();
         auto peerDevice = ihipGetDevice(peerDeviceId);
         if (thisDevice == peerDevice)  {
             err = hipErrorInvalidDevice;  // Can't enable peer access to self.

@@ -150,7 +150,7 @@ hipError_t hipDeviceSynchronize(void)
 {
     HIP_INIT_API();
 
-    ihipGetTlsDefaultDevice()->locked_waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
+    ihipGetTlsDefaultCtx()->locked_waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
 
     return ihipLogStatus(hipSuccess);
 }
@@ -164,16 +164,16 @@ hipError_t hipDeviceReset(void)
 {
     HIP_INIT_API();
 
-    ihipDevice_t *device = ihipGetTlsDefaultDevice();
+    auto *ctx = ihipGetTlsDefaultCtx();
 
     // TODO-HCC
     // This function currently does a user-level cleanup of known resources.
     // It could benefit from KFD support to perform a more "nuclear" clean that would include any associated kernel resources and page table entries.
 
 
-    if (device) {
-        // Release device resources (streams and memory):
-        device->locked_reset(); 
+    if (ctx) {
+        // Release ctx resources (streams and memory):
+        ctx->locked_reset(); 
     }
 
     return ihipLogStatus(hipSuccess);
@@ -188,7 +188,7 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
 
     hipError_t e = hipSuccess;
 
-    ihipDevice_t * hipDevice = ihipGetDevice(device);
+    auto * hipDevice = ihipGetDevice(device);
     hipDeviceProp_t *prop = &hipDevice->_props;
     if (hipDevice) {
         switch (attr) {
@@ -264,7 +264,7 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device)
 
     hipError_t e;
 
-    ihipDevice_t * hipDevice = ihipGetDevice(device);
+    auto * hipDevice = ihipGetDevice(device);
     if (hipDevice) {
         // copy saved props
         *props = hipDevice->_props;
@@ -283,7 +283,7 @@ hipError_t hipSetDeviceFlags( unsigned int flags)
 
     hipError_t e;
 
-    ihipDevice_t * hipDevice = ihipGetDevice(tls_defaultDevice);
+    auto * hipDevice = ihipGetTlsDefaultCtx();
     if(hipDevice){
        hipDevice->_device_flags = hipDevice->_device_flags | flags;
        e = hipSuccess;

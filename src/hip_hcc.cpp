@@ -84,10 +84,10 @@ thread_local hipError_t tls_lastHipError = hipSuccess;
 //=================================================================================================
 //Forward Declarations:
 //=================================================================================================
-bool ihipIsValidDevice(unsigned deviceIndex);
-
 std::once_flag hip_initialized;
-ihipDevice_t *g_devices;
+
+// Array of primary contexts for each device:
+ihipCtx_t *g_primaryCtxArray;  ;
 bool g_visible_device = false;
 unsigned g_deviceCnt;
 std::vector<int> g_hip_visible_devices;
@@ -98,6 +98,46 @@ hsa_agent_t g_cpu_agent;
 //=================================================================================================
 // Implementation:
 //=================================================================================================
+// static global functions:
+
+static inline bool ihipIsValidDevice(unsigned deviceIndex)
+{
+    // deviceIndex is unsigned so always > 0
+    return (deviceIndex < g_deviceCnt);
+}
+
+//---
+ihipCtx_t * ihipGetPrimaryCtx(unsigned deviceIndex)
+{
+    if (ihipIsValidDevice(deviceIndex)) {
+        return &g_primaryCtxArray[deviceIndex];
+    } else {
+        return NULL;
+    }
+};
+
+
+// FIXME- index the new g_deviceArray data structure
+ihipCtx_t * ihipGetDevice(int deviceIndex)
+{
+    if (ihipIsValidDevice(deviceIndex)) {
+        return &g_primaryCtxArray[deviceIndex];
+    } else {
+        return NULL;
+    }
+}
+
+
+//---
+ihipCtx_t *ihipGetTlsDefaultCtx()
+{
+    // If this is invalid, the TLS state is corrupt.
+    // This can fire if called before devices are initialized.
+    // TODO - consider replacing assert with error code
+    assert (ihipIsValidDevice(tls_defaultDevice));
+
+    return &g_primaryCtxArray[tls_defaultDevice];
+}
 
 
 //=================================================================================================
@@ -128,7 +168,7 @@ ihipSignal_t::~ihipSignal_t()
 // ihipStream_t:
 //=================================================================================================
 //---
-ihipStream_t::ihipStream_t(ihipDevice_t *ctx, hc::accelerator_view av, unsigned int flags) :
+ihipStream_t::ihipStream_t(ihipCtx_t *ctx, hc::accelerator_view av, unsigned int flags) :
     _id(0), // will be set by add function.
     _av(av),
     _flags(flags),
@@ -216,14 +256,14 @@ template<>
 void ihipDeviceCriticalBase_t<DeviceMutex>::recomputePeerAgents()
 {
     _peerCnt = 0;
-    std::for_each (_peers.begin(), _peers.end(), [this](ihipDevice_t* device) {
-        _peerAgents[_peerCnt++] = device->_hsa_agent;
+    std::for_each (_peers.begin(), _peers.end(), [this](ihipCtx_t* ctx) {
+        _peerAgents[_peerCnt++] = ctx->_hsa_agent;
     });
 }
 
 
 template<>
-bool ihipDeviceCriticalBase_t<DeviceMutex>::isPeer(const ihipDevice_t *peer)
+bool ihipDeviceCriticalBase_t<DeviceMutex>::isPeer(const ihipCtx_t *peer)
 {
     auto match = std::find(_peers.begin(), _peers.end(), peer);
     return (match != std::end(_peers));
@@ -231,7 +271,7 @@ bool ihipDeviceCriticalBase_t<DeviceMutex>::isPeer(const ihipDevice_t *peer)
 
 
 template<>
-bool ihipDeviceCriticalBase_t<DeviceMutex>::addPeer(ihipDevice_t *peer)
+bool ihipDeviceCriticalBase_t<DeviceMutex>::addPeer(ihipCtx_t *peer)
 {
     auto match = std::find(_peers.begin(), _peers.end(), peer);
     if (match == std::end(_peers)) {
@@ -247,7 +287,7 @@ bool ihipDeviceCriticalBase_t<DeviceMutex>::addPeer(ihipDevice_t *peer)
 
 
 template<>
-bool ihipDeviceCriticalBase_t<DeviceMutex>::removePeer(ihipDevice_t *peer)
+bool ihipDeviceCriticalBase_t<DeviceMutex>::removePeer(ihipCtx_t *peer)
 {
     auto match = std::find(_peers.begin(), _peers.end(), peer);
     if (match != std::end(_peers)) {
@@ -262,7 +302,7 @@ bool ihipDeviceCriticalBase_t<DeviceMutex>::removePeer(ihipDevice_t *peer)
 
 
 template<>
-void ihipDeviceCriticalBase_t<DeviceMutex>::resetPeers(ihipDevice_t *thisDevice)
+void ihipDeviceCriticalBase_t<DeviceMutex>::resetPeers(ihipCtx_t *thisDevice)
 {
     _peers.clear();
     _peerCnt = 0;
@@ -279,20 +319,10 @@ void ihipDeviceCriticalBase_t<DeviceMutex>::addStream(ihipStream_t *stream)
 
 //-------------------------------------------------------------------------------------------------
 
-//---
-//Flavor that takes device index.
-ihipDevice_t * getDevice(unsigned deviceIndex)
-{
-    if (ihipIsValidDevice(deviceIndex)) {
-        return &g_devices[deviceIndex];
-    } else {
-        return NULL;
-    }
-};
 
 
 //---
-ihipDevice_t * ihipStream_t::getDevice() const
+ihipCtx_t * ihipStream_t::getDevice() const
 {
     return _ctx;
 };
@@ -496,7 +526,7 @@ int ihipStream_t::preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t
 //
 //Reset the device - this is called from hipDeviceReset.
 //Device may be reset multiple times, and may be reset after init.
-void ihipDevice_t::locked_reset()
+void ihipCtx_t::locked_reset()
 {
     // Obtain mutex access to the device critical data, release by destructor
     LockedAccessor_DeviceCrit_t  crit(_criticalData);
@@ -535,7 +565,7 @@ void ihipDevice_t::locked_reset()
 
 
 //---
-void ihipDevice_t::init(unsigned device_index, unsigned deviceCnt, hc::accelerator &acc, unsigned flags)
+void ihipCtx_t::init(unsigned device_index, unsigned deviceCnt, hc::accelerator &acc, unsigned flags)
 {
     _device_index = device_index;
     _device_flags = flags;
@@ -570,7 +600,7 @@ void ihipDevice_t::init(unsigned device_index, unsigned deviceCnt, hc::accelerat
 
 
 
-ihipDevice_t::~ihipDevice_t()
+ihipCtx_t::~ihipCtx_t()
 {
     if (_default_stream) {
         delete _default_stream;
@@ -704,7 +734,7 @@ static hsa_status_t countGpuAgents(hsa_agent_t agent, void *data) {
 }
 
 // Internal version,
-hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
+hipError_t ihipCtx_t::getProperties(hipDeviceProp_t* prop)
 {
     hipError_t e = hipSuccess;
     hsa_status_t err;
@@ -881,7 +911,7 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
 // Implement "default" stream syncronization
 //   This waits for all other streams to drain before continuing.
 //   If waitOnSelf is set, this additionally waits for the default stream to empty.
-void ihipDevice_t::locked_syncDefaultStream(bool waitOnSelf)
+void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf)
 {
     LockedAccessor_DeviceCrit_t  crit(_criticalData);
 
@@ -904,7 +934,7 @@ void ihipDevice_t::locked_syncDefaultStream(bool waitOnSelf)
 }
 
 //---
-void ihipDevice_t::locked_addStream(ihipStream_t *s)
+void ihipCtx_t::locked_addStream(ihipStream_t *s)
 {
     LockedAccessor_DeviceCrit_t  crit(_criticalData);
 
@@ -912,7 +942,7 @@ void ihipDevice_t::locked_addStream(ihipStream_t *s)
 }
 
 //---
-void ihipDevice_t::locked_removeStream(ihipStream_t *s)
+void ihipCtx_t::locked_removeStream(ihipStream_t *s)
 {
     LockedAccessor_DeviceCrit_t  crit(_criticalData);
 
@@ -922,7 +952,7 @@ void ihipDevice_t::locked_removeStream(ihipStream_t *s)
 
 //---
 //Heavyweight synchronization that waits on all streams, ignoring hipStreamNonBlocking flag.
-void ihipDevice_t::locked_waitAllStreams()
+void ihipCtx_t::locked_waitAllStreams()
 {
     LockedAccessor_DeviceCrit_t  crit(_criticalData);
 
@@ -1115,7 +1145,7 @@ void ihipInit()
         throw ihipException(hipErrorRuntimeOther);
     }
 
-    g_devices = new ihipDevice_t[deviceCnt];
+    g_primaryCtxArray = new ihipCtx_t[deviceCnt];
     g_deviceCnt = 0;
     for (int i=0; i<accs.size(); i++) {
         // check if the device id is included in the HIP_VISIBLE_DEVICES env variable
@@ -1125,7 +1155,7 @@ void ihipInit()
                 //If device is not in visible devices list, ignore
                 continue;
             }
-            g_devices[g_deviceCnt].init(g_deviceCnt, deviceCnt, accs[i], hipDeviceMapHost);
+            g_primaryCtxArray[g_deviceCnt].init(g_deviceCnt, deviceCnt, accs[i], hipDeviceMapHost);
             g_deviceCnt++;
         }
     }
@@ -1139,34 +1169,8 @@ void ihipInit()
 }
 
 
-bool ihipIsValidDevice(unsigned deviceIndex)
-{
-    // deviceIndex is unsigned so always > 0
-    return (deviceIndex < g_deviceCnt);
-}
-
-//---
-ihipDevice_t *ihipGetTlsDefaultDevice()
-{
-    // If this is invalid, the TLS state is corrupt.
-    // This can fire if called before devices are initialized.
-    // TODO - consider replacing assert with error code
-    assert (ihipIsValidDevice(tls_defaultDevice));
-
-    return &g_devices[tls_defaultDevice];
-}
 
 
-//---
-ihipDevice_t *ihipGetDevice(int deviceId)
-{
-    if ((deviceId >= 0) && (deviceId < g_deviceCnt)) {
-        return &g_devices[deviceId];
-    } else {
-        return NULL;
-    }
-
-}
 
 //---
 // Get the stream to use for a command submission.
@@ -1176,7 +1180,7 @@ ihipDevice_t *ihipGetDevice(int deviceId)
 hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 {
     if (stream == hipStreamNull ) {
-        ihipDevice_t *device = ihipGetTlsDefaultDevice();
+        ihipCtx_t *device = ihipGetTlsDefaultCtx();
 
 #ifndef HIP_API_PER_THREAD_DEFAULT_STREAM
         device->locked_syncDefaultStream(false);
@@ -1424,7 +1428,7 @@ unsigned ihipStream_t::resolveMemcpyDirection(bool srcTracked, bool dstTracked, 
 void ihipStream_t::setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent)
 {
     // current* represents the device associated with the specified stream.
-    ihipDevice_t *streamDevice = this->getDevice();
+    ihipCtx_t *streamDevice = this->getDevice();
     hsa_agent_t streamAgent = streamDevice->_hsa_agent;
 
     // ROCR runtime logic is :
@@ -1444,7 +1448,7 @@ void ihipStream_t::setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType,
 
 void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const void* src, size_t sizeBytes, unsigned kind)
 {
-    ihipDevice_t *device = this->getDevice();
+    ihipCtx_t *device = this->getDevice();
     if (device == NULL) {
         throw ihipException(hipErrorInvalidDevice);
     }
@@ -1470,7 +1474,7 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
 #if USE_PEER_TO_PEER>=2
         // TODO - consider refactor.  Do we need to support simul access of enable/disable peers with access?
         LockedAccessor_DeviceCrit_t  dcrit(device->criticalData());
-        if (dcrit->isPeer(::getDevice(dstPtrInfo._appId)) && (dcrit->isPeer(::getDevice(srcPtrInfo._appId)))) {
+        if (dcrit->isPeer(ihipGetDevice(dstPtrInfo._appId)) && (dcrit->isPeer(ihipGetDevice(srcPtrInfo._appId)))) {
             copyEngineCanSeeSrcAndDest = true;
         }
 #endif
@@ -1654,7 +1658,7 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsig
 {
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
-    ihipDevice_t *device = this->getDevice();
+    ihipCtx_t *device = this->getDevice();
 
     if (device == NULL) {
         throw ihipException(hipErrorInvalidDevice);
@@ -1740,7 +1744,7 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator *acc)
 {
     HIP_INIT_API(deviceId, acc);
 
-    ihipDevice_t *d = ihipGetDevice(deviceId);
+    ihipCtx_t *d = ihipGetDevice(deviceId);
     hipError_t err;
     if (d == NULL) {
         err =  hipErrorInvalidDevice;
@@ -1761,7 +1765,7 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **a
     HIP_INIT_API(stream, av);
 
     if (stream == hipStreamNull ) {
-        ihipDevice_t *device = ihipGetTlsDefaultDevice();
+        ihipCtx_t *device = ihipGetTlsDefaultCtx();
         stream = device->_default_stream;
     }
 
@@ -1775,7 +1779,7 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **a
 // TODO - describe naming convention. ihip _.  No accessors.  No early returns from functions. Set status to success at top, only set error codes in implementation.  No tabs.
 //        Caps convention _ or camelCase
 //        if { }
-//        Should use ihip* data structures inside code rather than app-facing hip.  For example, use ihipDevice_t (rather than hipDevice_t), ihipStream_t (rather than hipStream_t).
+//        Should use ihip* data structures inside code rather than app-facing hip.  For example, use ihipCtx_t (rather than hipDevice_t), ihipStream_t (rather than hipStream_t).
 //        locked_
 // TODO - describe MT strategy
 //
