@@ -79,8 +79,8 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
             // If stream == NULL, wait on all queues.
             // TODO-HCC fix this - is this conservative or still uses device timestamps?
             // TODO-HCC can we use barrier or event marker to implement better solution?
-            ihipDevice_t *device = ihipGetTlsDefaultDevice();
-            device->locked_syncDefaultStream(true);
+            ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
+            ctx->locked_syncDefaultStream(true);
 
             eh->_timestamp = hc::get_system_ticks();
             eh->_state = hipEventStatusRecorded;
@@ -130,8 +130,8 @@ hipError_t hipEventSynchronize(hipEvent_t event)
             // Created but not actually recorded on any device:
             return ihipLogStatus(hipSuccess);
         } else if (eh->_stream == NULL) {
-            ihipDevice_t *device = ihipGetTlsDefaultDevice();
-            device->locked_syncDefaultStream(true);
+            auto *ctx = ihipGetTlsDefaultCtx();
+            ctx->locked_syncDefaultStream(true);
             return ihipLogStatus(hipSuccess);
         } else {
             eh->_marker.wait((eh->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked : hc::hcWaitModeActive);

@@ -69,7 +69,7 @@ extern int HIP_DISABLE_HW_COPY_DEP;
 extern thread_local int tls_defaultDevice;
 extern thread_local hipError_t tls_lastHipError;
 class ihipStream_t;
-class ihipDevice_t;
+class ihipCtx_t;
 
 
 // Color defs for debug messages:
@@ -209,6 +209,10 @@ static const char *dbName [] =
 /* Compile to empty code */
 #define tprintf(trace_level, ...) 
 #endif
+
+
+
+
 
 class ihipException : public std::exception
 {
@@ -393,7 +397,7 @@ typedef LockedAccessor<ihipStreamCritical_t> LockedAccessor_StreamCrit_t;
 class ihipStream_t {
 public:
 typedef uint64_t SeqNum_t ;
-    ihipStream_t(ihipDevice_t *ctx, hc::accelerator_view av, unsigned int flags);
+    ihipStream_t(ihipCtx_t *ctx, hc::accelerator_view av, unsigned int flags);
     ~ihipStream_t();
 
     // kind is hipMemcpyKind
@@ -425,7 +429,7 @@ typedef uint64_t SeqNum_t ;
 
     //-- Non-racy accessors:
     // These functions access fields set at initialization time and are non-racy (so do not acquire mutex)
-    ihipDevice_t *              getDevice() const;
+    ihipCtx_t *              getDevice() const;
 
 
 public:
@@ -449,7 +453,7 @@ private:
     unsigned resolveMemcpyDirection(bool srcTracked, bool dstTracked, bool srcInDeviceMem, bool dstInDeviceMem);
     void setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent);
 
-    ihipDevice_t  *_ctx;  // parent context that owns this stream.
+    ihipCtx_t  *_ctx;  // parent context that owns this stream.
 
     friend std::ostream& operator<<(std::ostream& os, const ihipStream_t& s);
 };
@@ -534,10 +538,10 @@ public:
     // "Allocate" a stream ID:
     ihipStream_t::SeqNum_t  incStreamId() { return _stream_id++; };
 
-    bool isPeer(const ihipDevice_t *peer); // returns Trus if peer has access to memory physically located on this device.
-    bool addPeer(ihipDevice_t *peer);
-    bool removePeer(ihipDevice_t *peer);
-    void resetPeers(ihipDevice_t *thisDevice);
+    bool isPeer(const ihipCtx_t *peer); // returns Trus if peer has access to memory physically located on this device.
+    bool addPeer(ihipCtx_t *peer);
+    bool removePeer(ihipCtx_t *peer);
+    void resetPeers(ihipCtx_t *thisDevice);
 
 
     void addStream(ihipStream_t *stream);
@@ -553,7 +557,7 @@ private:
 
     // These reflect the currently Enabled set of peers for this GPU:
     // Enabled peers have permissions to access the memory physically allocated on this device.
-    std::list<ihipDevice_t*>  _peers;     // list of enabled peer devices.
+    std::list<ihipCtx_t*>  _peers;     // list of enabled peer devices.
     uint32_t                  _peerCnt;     // number of enabled peers
     hsa_agent_t              *_peerAgents;  // efficient packed array of enabled agents (to use for allocations.) 
 private:
@@ -570,15 +574,15 @@ typedef LockedAccessor<ihipDeviceCritical_t> LockedAccessor_DeviceCrit_t;
 
 //-------------------------------------------------------------------------------------------------
 // Functions which read or write the critical data are named locked_.
-// ihipDevice_t does not use recursive locks so the ihip implementation must avoid calling a locked_ function from within a locked_ function.
+// ihipCtx_t does not use recursive locks so the ihip implementation must avoid calling a locked_ function from within a locked_ function.
 // External functions which call several locked_ functions will acquire and release the lock for each function.  if this occurs in 
 // performance-sensitive code we may want to refactor by adding non-locked functions and creating a new locked_ member function to call them all.
-class ihipDevice_t
+class ihipCtx_t
 {
 public: // Functions:
-    ihipDevice_t() {}; // note: calls constructor for _criticalData 
+    ihipCtx_t() {}; // note: calls constructor for _criticalData 
     void init(unsigned device_index, unsigned deviceCnt, hc::accelerator &acc, unsigned flags);
-    ~ihipDevice_t();
+    ~ihipCtx_t();
 
     void locked_addStream(ihipStream_t *s);
     void locked_removeStream(ihipStream_t *s);
@@ -589,7 +593,7 @@ public: // Functions:
     ihipDeviceCritical_t  &criticalData() { return _criticalData; }; // TODO, move private.  Fix P2P.
 
 public: // Data, set at initialization:
-    unsigned                _device_index; // index into g_devices.
+    unsigned                _device_index; // device ID
 
     hipDeviceProp_t         _props;        // saved device properties.
     hc::accelerator         _acc;
@@ -619,19 +623,19 @@ private:  // Critical data, protected with locked access:
 
 
 
+//=================================================================================================
 // Global variable definition:
 extern std::once_flag hip_initialized;
-extern ihipDevice_t *g_devices; // Array of all non-emulated (ie GPU) accelerators in the system.
-extern bool g_visible_device; // Set the flag when HIP_VISIBLE_DEVICES is set
 extern unsigned g_deviceCnt;
-extern std::vector<int> g_hip_visible_devices; /* vector of integers that contains the visible device IDs */
 extern hsa_agent_t g_cpu_agent ;   // the CPU agent.
+
 //=================================================================================================
-void ihipInit();
-const char *ihipErrorString(hipError_t);
-ihipDevice_t *ihipGetTlsDefaultDevice();
-ihipDevice_t *ihipGetDevice(int);
-void ihipSetTs(hipEvent_t e);
+// Extern functions:
+extern void ihipInit();
+extern const char *ihipErrorString(hipError_t);
+extern ihipCtx_t *ihipGetTlsDefaultCtx();
+extern ihipCtx_t *ihipGetDevice(int);
+extern void ihipSetTs(hipEvent_t e);
 
 template<typename T>
 hc::completion_future ihipMemcpyKernel(hipStream_t, T*, const T*, size_t);
