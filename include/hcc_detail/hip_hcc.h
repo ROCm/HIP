@@ -671,82 +671,9 @@ ihipCtx_t * ihipGetPrimaryCtx(unsigned deviceIndex);
 
 extern void ihipSetTs(hipEvent_t e);
 
-template<typename T>
-hc::completion_future ihipMemcpyKernel(hipStream_t, T*, const T*, size_t);
-
-template<typename T>
-hc::completion_future ihipMemsetKernel(hipStream_t, T*, T, size_t);
 
 hipStream_t ihipSyncAndResolveStream(hipStream_t);
-template <typename T>
-
-hc::completion_future
-ihipMemsetKernel(hipStream_t stream, T * ptr, T val, size_t sizeBytes)
-{
-    int wg = std::min((unsigned)8, stream->getDevice()->_compute_units);
-    const int threads_per_wg = 256;
-
-    int threads = wg * threads_per_wg;
-    if (threads > sizeBytes) {
-        threads = ((sizeBytes + threads_per_wg - 1) / threads_per_wg) * threads_per_wg;
-    }
 
 
-    hc::extent<1> ext(threads);
-    auto ext_tile = ext.tile(threads_per_wg);
-
-    hc::completion_future cf =
-    hc::parallel_for_each(
-            stream->_av,
-            ext_tile,
-            [=] (hc::tiled_index<1> idx)
-            __attribute__((hc))
-    {
-        int offset = amp_get_global_id(0);
-        // TODO-HCC - change to hc_get_local_size()
-        int stride = amp_get_local_size(0) * hc_get_num_groups(0) ;
-
-        for (int i=offset; i<sizeBytes; i+=stride) {
-            ptr[i] = val;
-        }
-    });
-
-    return cf;
-}
-
-template <typename T>
-hc::completion_future
-ihipMemcpyKernel(hipStream_t stream, T * c, const T * a, size_t sizeBytes)
-{
-    int wg = std::min((unsigned)8, stream->getDevice()->_compute_units);
-    const int threads_per_wg = 256;
-
-    int threads = wg * threads_per_wg;
-    if (threads > sizeBytes) {
-        threads = ((sizeBytes + threads_per_wg - 1) / threads_per_wg) * threads_per_wg;
-    }
-
-
-    hc::extent<1> ext(threads);
-    auto ext_tile = ext.tile(threads_per_wg);
-
-    hc::completion_future cf =
-    hc::parallel_for_each(
-            stream->_av,
-            ext_tile,
-            [=] (hc::tiled_index<1> idx)
-            __attribute__((hc))
-    {
-        int offset = amp_get_global_id(0);
-        // TODO-HCC - change to hc_get_local_size()
-        int stride = amp_get_local_size(0) * hc_get_num_groups(0) ;
-
-        for (int i=offset; i<sizeBytes; i+=stride) {
-            c[i] = a[i];
-        }
-    });
-
-    return cf;
-}
 
 #endif
