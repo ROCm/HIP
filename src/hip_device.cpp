@@ -26,14 +26,25 @@ THE SOFTWARE.
 //-------------------------------------------------------------------------------------------------
 //---
 /**
- * @return  #hipSuccess
+ * @return  #hipSuccess, hipErrorInvalidDevice
  */
+// TODO - does this initialize HIP runtime?
 hipError_t hipGetDevice(int *deviceId)
 {
     HIP_INIT_API(deviceId);
 
-    *deviceId = tls_defaultDeviceId;
-    return ihipLogStatus(hipSuccess);
+    hipError_t e = hipSuccess;
+
+    auto ctx = ihipGetTlsDefaultCtx();
+
+    if (ctx == nullptr) {
+        e = hipErrorInvalidDevice; // TODO, check error code.
+        *deviceId = -1;
+    } else {
+        *deviceId = ctx->getDevice()->_deviceId;
+    }
+
+    return ihipLogStatus(e);
 }
 
 
@@ -41,6 +52,7 @@ hipError_t hipGetDevice(int *deviceId)
 /**
  * @return  #hipSuccess, #hipErrorNoDevice
  */
+// TODO - does this initialize HIP runtime?
 hipError_t hipGetDeviceCount(int *count)
 {
     HIP_INIT_API(count);
@@ -136,8 +148,7 @@ hipError_t hipSetDevice(int deviceId)
     if ((deviceId < 0) || (deviceId >= g_deviceCnt)) {
         return ihipLogStatus(hipErrorInvalidDevice);
     } else {
-        tls_defaultDeviceId = deviceId;
-        tls_defaultCtx = ihipGetPrimaryCtx(deviceId);
+        ihipSetTlsDefaultCtx(ihipGetPrimaryCtx(deviceId));
         return ihipLogStatus(hipSuccess);
     }
 }
@@ -299,3 +310,20 @@ hipError_t hipSetDeviceFlags( unsigned int flags)
 };
 
 
+
+
+hipError_t hipDeviceGetFromId(hipDevice_t *device, int deviceId)
+{
+    HIP_INIT_API(device, deviceId);
+
+    hipError_t e = hipSuccess;
+
+    *device = ihipGetDevice(deviceId);
+
+    if (device == nullptr) {
+        e = hipErrorInvalidDevice;
+    }
+
+
+    return ihipLogStatus(e);
+}

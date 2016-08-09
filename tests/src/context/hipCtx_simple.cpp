@@ -27,12 +27,12 @@ int main(int argc, char *argv[])
 {
     HipTest::parseStandardArguments(argc, argv, true);
 
-    HIPCHECK(hipInit());
+    HIPCHECK(hipInit(0));
 
     hipDevice_t device;
     hipCtx_t    ctx;
 
-    HIPCHECK(hipDeviceGet(&device, 1));
+    HIPCHECK(hipDeviceGetFromId(&device, 0));
     HIPCHECK(hipCtxCreate(&ctx, 0, device));
 
     passed();

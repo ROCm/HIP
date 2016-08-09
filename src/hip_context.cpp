@@ -51,7 +51,7 @@ hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device)
     hipError_t e = hipSuccess;
 
     *ctx = new ihipCtx_t(device, g_deviceCnt, flags);
-    tls_defaultCtx = *ctx;
+    ihipSetTlsDefaultCtx(*ctx);
     tls_ctxStack.push(*ctx);
 
     return ihipLogStatus(e);
