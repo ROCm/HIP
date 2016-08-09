@@ -85,7 +85,7 @@ int HIP_DISABLE_HW_COPY_DEP = 0;
 
 std::once_flag hip_initialized;
 
-// Array of pointers to devices.  
+// Array of pointers to devices.
 ihipDevice_t **g_deviceArray;
 
 
@@ -106,7 +106,7 @@ thread_local int tls_defaultDeviceId = 0;
 
 // This is the implicit context used by all HIP commands.
 // It can be set by hipSetDevice or by the CTX manipulation commands:
-thread_local ihipCtx_t *tls_defaultCtx;  
+thread_local ihipCtx_t *tls_defaultCtx;
 
 thread_local hipError_t tls_lastHipError = hipSuccess;
 
@@ -550,7 +550,7 @@ void ihipCtxCriticalBase_t<CtxMutex>::addStream(ihipStream_t *stream)
 // ihipDevice_t
 //=================================================================================================
 ihipDevice_t::ihipDevice_t(unsigned deviceId, unsigned deviceCnt, hc::accelerator &acc) :
-    _deviceId(deviceId), 
+    _deviceId(deviceId),
     _acc(acc)
 {
     hsa_agent_t *agent = static_cast<hsa_agent_t*> (acc.get_hsa_agent());
@@ -567,8 +567,8 @@ ihipDevice_t::ihipDevice_t(unsigned deviceId, unsigned deviceCnt, hc::accelerato
 
     initProperties(&_props);
 
-    _stagingBuffer[0] = new StagingBuffer(_hsaAgent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS,HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING,HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE,HIP_D2H_MEM_TRANSFER_THRESHOLD);
-    _stagingBuffer[1] = new StagingBuffer(_hsaAgent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS,HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING,HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE,HIP_D2H_MEM_TRANSFER_THRESHOLD);
+    _stagingBuffer[0] = new UnpinnedCopyEngine(_hsaAgent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS,HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING,HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE,HIP_D2H_MEM_TRANSFER_THRESHOLD);
+    _stagingBuffer[1] = new UnpinnedCopyEngine(_hsaAgent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS,HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING,HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE,HIP_D2H_MEM_TRANSFER_THRESHOLD);
 
     _primaryCtx = new ihipCtx_t(this, deviceCnt, hipDeviceMapHost);
 }
@@ -1832,5 +1832,5 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **a
 //// TODO - add identifier numbers for streams and devices to help with debugging.
 
 #if ONE_OBJECT_FILE
-#include "staging_buffer.cpp"
+#include "unpinned_copy_engine.cpp"
 #endif

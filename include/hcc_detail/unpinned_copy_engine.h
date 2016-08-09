@@ -37,12 +37,12 @@ THE SOFTWARE.
 // engine.  This routine is under development.
 //
 // Staging buffer provides thread-safe access via a mutex.
-struct StagingBuffer {
+struct UnpinnedCopyEngine {
 
     static const int _max_buffers = 4;
 
-    StagingBuffer(hsa_agent_t hsaAgent,hsa_agent_t cpuAgent, size_t bufferSize, int numBuffers,int thresholdH2D_directStaging,int thresholdH2D_stagingPinInPlace,int thresholdD2H) ;
-    ~StagingBuffer();
+    UnpinnedCopyEngine(hsa_agent_t hsaAgent,hsa_agent_t cpuAgent, size_t bufferSize, int numBuffers,int thresholdH2D_directStaging,int thresholdH2D_stagingPinInPlace,int thresholdD2H) ;
+    ~UnpinnedCopyEngine();
 
     void CopyHostToDevice(int tempIndex,int isLargeBar,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
     void CopyHostToDevicePinInPlace(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);

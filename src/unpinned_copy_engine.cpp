@@ -21,7 +21,7 @@ THE SOFTWARE.
 
 #include "hsa_ext_amd.h"
 
-#include "hcc_detail/staging_buffer.h"
+#include "hcc_detail/unpinned_copy_engine.h"
 
 #ifdef HIP_HCC
 #include "hcc_detail/hip_runtime.h"
@@ -62,7 +62,7 @@ hsa_status_t findGlobalPool(hsa_amd_memory_pool_t pool, void* data) {
 }
 
 //-------------------------------------------------------------------------------------------------
-StagingBuffer::StagingBuffer(hsa_agent_t hsaAgent, hsa_agent_t cpuAgent, size_t bufferSize, int numBuffers, int thresholdH2DDirectStaging,int thresholdH2DStagingPinInPlace,int thresholdD2H) :
+UnpinnedCopyEngine::UnpinnedCopyEngine(hsa_agent_t hsaAgent, hsa_agent_t cpuAgent, size_t bufferSize, int numBuffers, int thresholdH2DDirectStaging,int thresholdH2DStagingPinInPlace,int thresholdD2H) :
     _hsaAgent(hsaAgent),
     _cpuAgent(cpuAgent),
     _bufferSize(bufferSize),
@@ -93,7 +93,7 @@ StagingBuffer::StagingBuffer(hsa_agent_t hsaAgent, hsa_agent_t cpuAgent, size_t 
 
 
 //---
-StagingBuffer::~StagingBuffer()
+UnpinnedCopyEngine::~UnpinnedCopyEngine()
 {
     for (int i=0; i<_numBuffers; i++) {
         if (_pinnedStagingBuffer[i]) {
@@ -112,7 +112,7 @@ StagingBuffer::~StagingBuffer()
 //IN: dst - dest pointer - must be accessible from host CPU.
 //IN: src - src pointer for copy.  Must be accessible from agent this buffer is associated with (via _hsaAgent)
 //IN: waitFor - hsaSignal to wait for - the copy will begin only when the specified dependency is resolved.  May be NULL indicating no dependency.
-void StagingBuffer::CopyHostToDevicePinInPlace(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
+void UnpinnedCopyEngine::CopyHostToDevicePinInPlace(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
 {
     std::lock_guard<std::mutex> l (_copy_lock);
 
@@ -166,7 +166,7 @@ void StagingBuffer::CopyHostToDevicePinInPlace(void* dst, const void* src, size_
 //IN: dst - dest pointer - must be accessible from host CPU.
 //IN: src - src pointer for copy.  Must be accessible from agent this buffer is associated with (via _hsaAgent)
 //IN: waitFor - hsaSignal to wait for - the copy will begin only when the specified dependency is resolved.  May be NULL indicating no dependency.
-void StagingBuffer::CopyHostToDevice(int tempIndex,int isLargeBar,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
+void UnpinnedCopyEngine::CopyHostToDevice(int tempIndex,int isLargeBar,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
 {
     if((tempIndex==1)&&(isLargeBar)&&(sizeBytes < _hipH2DTransferThresholdDirectOrStaging)){
 	    memcpy(dst,src,sizeBytes);
@@ -227,7 +227,7 @@ void StagingBuffer::CopyHostToDevice(int tempIndex,int isLargeBar,void* dst, con
 }
 
 
-void StagingBuffer::CopyDeviceToHostPinInPlace(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
+void UnpinnedCopyEngine::CopyDeviceToHostPinInPlace(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
 {
     std::lock_guard<std::mutex> l (_copy_lock);
 
@@ -272,7 +272,7 @@ void StagingBuffer::CopyDeviceToHostPinInPlace(void* dst, const void* src, size_
 //IN: dst - dest pointer - must be accessible from agent this buffer is associated with (via _hsaAgent).
 //IN: src - src pointer for copy.  Must be accessible from host CPU.
 //IN: waitFor - hsaSignal to wait for - the copy will begin only when the specified dependency is resolved.  May be NULL indicating no dependency.
-void StagingBuffer::CopyDeviceToHost(int tempIndex,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
+void UnpinnedCopyEngine::CopyDeviceToHost(int tempIndex,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
 {
 	if((tempIndex==1) && (sizeBytes> _hipD2HTransferThreshold)){
         CopyDeviceToHostPinInPlace(dst, src, sizeBytes, waitFor);
@@ -339,7 +339,7 @@ void StagingBuffer::CopyDeviceToHost(int tempIndex,void* dst, const void* src, s
 //IN: dst - dest pointer - must be accessible from agent this buffer is associated with (via _hsaAgent).
 //IN: src - src pointer for copy.  Must be accessible from host CPU.
 //IN: waitFor - hsaSignal to wait for - the copy will begin only when the specified dependency is resolved.  May be NULL indicating no dependency.
-void StagingBuffer::CopyPeerToPeer(void* dst, hsa_agent_t dstAgent, const void* src, hsa_agent_t srcAgent, size_t sizeBytes, hsa_signal_t *waitFor)
+void UnpinnedCopyEngine::CopyPeerToPeer(void* dst, hsa_agent_t dstAgent, const void* src, hsa_agent_t srcAgent, size_t sizeBytes, hsa_signal_t *waitFor)
 {
     std::lock_guard<std::mutex> l (_copy_lock);
 
