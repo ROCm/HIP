@@ -41,21 +41,21 @@ struct StagingBuffer {
 
     static const int _max_buffers = 4;
 
-    StagingBuffer(hsa_agent_t hsaAgent,hsa_agent_t cpuAgent, size_t bufferSize, int numBuffers) ;
+    StagingBuffer(hsa_agent_t hsaAgent,hsa_agent_t cpuAgent, size_t bufferSize, int numBuffers,int thresholdH2D_directStaging,int thresholdH2D_stagingPinInPlace,int thresholdD2H) ;
     ~StagingBuffer();
 
-    void CopyHostToDevice(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
+    void CopyHostToDevice(int tempIndex,int isLargeBar,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
     void CopyHostToDevicePinInPlace(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
 
-    void CopyDeviceToHost   (void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
+    void CopyDeviceToHost   (int tempIndex,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
     void CopyDeviceToHostPinInPlace(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
 
     void CopyPeerToPeer( void* dst, hsa_agent_t dstAgent, const void* src, hsa_agent_t srcAgent, size_t sizeBytes, hsa_signal_t *waitFor);
 
 
 private:
-    hsa_agent_t     _hsa_agent;
-    hsa_agent_t     _cpu_agent;
+    hsa_agent_t     _hsaAgent;
+    hsa_agent_t     _cpuAgent;
     size_t          _bufferSize;  // Size of the buffers.
     int             _numBuffers;
 
@@ -63,6 +63,9 @@ private:
     hsa_signal_t     _completion_signal[_max_buffers];
     hsa_signal_t     _completion_signal2[_max_buffers]; // P2P needs another set of signals.
     std::mutex       _copy_lock;    // provide thread-safe access
+    int              _hipH2DTransferThresholdDirectOrStaging;
+    int              _hipH2DTransferThresholdStagingOrPininplace;
+    int              _hipD2HTransferThreshold;
 };
 
 #endif

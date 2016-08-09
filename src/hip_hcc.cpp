@@ -567,8 +567,8 @@ ihipDevice_t::ihipDevice_t(unsigned deviceId, unsigned deviceCnt, hc::accelerato
 
     initProperties(&_props);
 
-    _stagingBuffer[0] = new StagingBuffer(_hsaAgent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
-    _stagingBuffer[1] = new StagingBuffer(_hsaAgent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
+    _stagingBuffer[0] = new StagingBuffer(_hsaAgent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS,HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING,HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE,HIP_D2H_MEM_TRANSFER_THRESHOLD);
+    _stagingBuffer[1] = new StagingBuffer(_hsaAgent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS,HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING,HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE,HIP_D2H_MEM_TRANSFER_THRESHOLD);
 
     _primaryCtx = new ihipCtx_t(this, deviceCnt, hipDeviceMapHost);
 }
@@ -1547,28 +1547,17 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
                 tprintf(DB_COPY1, "D2H && !dstTracked: staged copy H2D dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
                 if(HIP_OPTIMAL_MEM_TRANSFER)
                 {
-                    if((device->_isLargeBar)&&(sizeBytes < HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING)){
-                        memcpy(dst,src,sizeBytes);
-                        std::atomic_thread_fence(std::memory_order_release);
-                    }
-                    else{
-                        if(sizeBytes > HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE){
-                        //if (HIP_PININPLACE) {
-                            device->_stagingBuffer[0]->CopyHostToDevicePinInPlace(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
-                        } else {
-                            device->_stagingBuffer[0]->CopyHostToDevice(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
-                        }
-                        // The copy waits for inputs and then completes before returning so can reset queue to empty:
-                        this->wait(crit, true);
-                    }
+                    device->_stagingBuffer[0]->CopyHostToDevice(1,device->_isLargeBar,dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
                 }
                 else {
                     if (HIP_PININPLACE) {
                         device->_stagingBuffer[0]->CopyHostToDevicePinInPlace(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
                     } else {
-                        device->_stagingBuffer[0]->CopyHostToDevice(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                        device->_stagingBuffer[0]->CopyHostToDevice(0,0,dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
                     }
                }
+               // The copy waits for inputs and then completes before returning so can reset queue to empty:
+               this->wait(crit, true);
             }
             else {
                 // TODO - remove, slow path.
@@ -1608,15 +1597,12 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
                 //printf ("staged-copy- read dep signals\n");
                 if(HIP_OPTIMAL_MEM_TRANSFER)
                 {
-                    if(sizeBytes> HIP_D2H_MEM_TRANSFER_THRESHOLD){
-                        device->_stagingBuffer[1]->CopyDeviceToHostPinInPlace(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
-                    }else {
-                         //printf ("staged-copy- read dep signals\n");
-                         device->_stagingBuffer[1]->CopyDeviceToHost(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
-                    }
-                }else
+                    //printf ("staged-copy- read dep signals\n");
+                    device->_stagingBuffer[1]->CopyDeviceToHost(1,dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                }
+                else
                 {
-                    device->_stagingBuffer[1]->CopyDeviceToHost(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                    device->_stagingBuffer[1]->CopyDeviceToHost(0,dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
                 }
                 // The copy completes before returning so can reset queue to empty:
                 this->wait(crit, true);
