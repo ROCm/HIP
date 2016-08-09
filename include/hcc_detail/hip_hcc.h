@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #include <hc.hpp>
 #include "hip/hcc_detail/hip_util.h"
-#include "hip/hcc_detail/staging_buffer.h"
+#include "hip/hcc_detail/unpinned_copy_engine.h"
 
 
 #if defined(__HCC__) && (__hcc_workweek__ < 16186)
@@ -69,7 +69,7 @@ extern int HIP_DISABLE_HW_COPY_DEP;
 //---
 //Extern tls
 extern thread_local int tls_defaultDeviceId;
-extern thread_local ihipCtx_t *tls_defaultCtx;  
+extern thread_local ihipCtx_t *tls_defaultCtx;
 
 extern thread_local hipError_t tls_lastHipError;
 
@@ -101,11 +101,11 @@ class ihipCtx_t;
 
 #define CTX_THREAD_SAFE 1
 
-// If FORCE_COPY_DEP=1 , HIP runtime will add 
+// If FORCE_COPY_DEP=1 , HIP runtime will add
 // synchronization for copy commands in the same stream, regardless of command type.
 // If FORCE_COPY_DEP=0 data copies of the same kind (H2H, H2D, D2H, D2D) are assumed to be implicitly ordered.
-// ROCR runtime implementation currently provides this guarantee when using SDMA queues but not 
-// when using shader queues.  
+// ROCR runtime implementation currently provides this guarantee when using SDMA queues but not
+// when using shader queues.
 // TODO - measure if this matters for performance, in particular for back-to-back small copies.
 // If not, we can simplify the copy dependency tracking by collapsing to a single Copy type, and always forcing dependencies for copy commands.
 #define FORCE_SAMEDIR_COPY_DEP 1
@@ -121,7 +121,7 @@ class ihipCtx_t;
 // 0x2 = prints a simple message with function name + return code when function exits.
 // 0x3 = print both.
 // Must be enabled at runtime with HIP_TRACE_API
-#define COMPILE_HIP_TRACE_API 0x3 
+#define COMPILE_HIP_TRACE_API 0x3
 
 
 // Compile code that generates trace markers for CodeXL ATP at HIP function begin/end.
@@ -141,13 +141,13 @@ class ihipCtx_t;
 #if COMPILE_HIP_ATP_MARKER
 #include "CXLActivityLogger.h"
 #define SCOPED_MARKER(markerName,group,userString) amdtScopedMarker(markerName, group, userString)
-#else 
+#else
 // Swallow scoped markers:
-#define SCOPED_MARKER(markerName,group,userString) 
+#define SCOPED_MARKER(markerName,group,userString)
 #endif
 
 
-#if COMPILE_HIP_ATP_MARKER || (COMPILE_HIP_TRACE_API & 0x1) 
+#if COMPILE_HIP_ATP_MARKER || (COMPILE_HIP_TRACE_API & 0x1)
 #define API_TRACE(...)\
 {\
     if (HIP_ATP_MARKER || (COMPILE_HIP_DB && HIP_TRACE_API)) {\
@@ -198,7 +198,7 @@ class ihipCtx_t;
 
 static const char *dbName [] =
 {
-    KNRM "hip-api", // not used, 
+    KNRM "hip-api", // not used,
     KYEL "hip-sync",
     KCYN "hip-mem",
     KMAG "hip-copy1",
@@ -214,9 +214,9 @@ static const char *dbName [] =
         fprintf (stderr, "%s", KNRM); \
     }\
 }
-#else 
+#else
 /* Compile to empty code */
-#define tprintf(trace_level, ...) 
+#define tprintf(trace_level, ...)
 #endif
 
 
@@ -228,7 +228,7 @@ class ihipException : public std::exception
 public:
     ihipException(hipError_t e) : _code(e) {};
 
-    hipError_t _code; 
+    hipError_t _code;
 };
 
 
@@ -246,7 +246,7 @@ const hipStream_t hipStreamNull = 0x0;
 
 enum ihipCommand_t {
     ihipCommandCopyH2H,
-    ihipCommandCopyH2D,  
+    ihipCommandCopyH2D,
     ihipCommandCopyD2H,
     ihipCommandCopyD2D,
     ihipCommandCopyP2P,
@@ -311,7 +311,7 @@ template<typename T>
 class LockedAccessor
 {
 public:
-    LockedAccessor(T &criticalData, bool autoUnlock=true) : 
+    LockedAccessor(T &criticalData, bool autoUnlock=true) :
         _criticalData(&criticalData),
         _autoUnlock(autoUnlock)
 
@@ -319,14 +319,14 @@ public:
         _criticalData->_mutex.lock();
     };
 
-    ~LockedAccessor() 
+    ~LockedAccessor()
     {
         if (_autoUnlock) {
             _criticalData->_mutex.unlock();
         }
     }
 
-    void unlock() 
+    void unlock()
     {
        _criticalData->_mutex.unlock();
     }
@@ -343,7 +343,7 @@ private:
 template <typename MUTEX_TYPE>
 struct LockedBase {
 
-    // Experts-only interface for explicit locking.  
+    // Experts-only interface for explicit locking.
     // Most uses should use the lock-accessor.
     void lock() { _mutex.lock(); }
     void unlock() { _mutex.unlock(); }
@@ -352,8 +352,8 @@ struct LockedBase {
 };
 
 
-template <typename MUTEX_TYPE> 
-class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE> 
+template <typename MUTEX_TYPE>
+class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE>
 {
 public:
     ihipStreamCriticalBase_t() :
@@ -389,15 +389,15 @@ public:
     int                         _signalCursor;
     SIGSEQNUM                   _oldest_live_sig_id; // oldest live seq_id, anything < this can be allocated.
     std::deque<ihipSignal_t>    _signalPool;   // Pool of signals for use by this stream.
-    uint32_t                    _signalCnt;    // Count of inflight commands using signals from the signal pool.   
-                                               // Each copy may use 1-2 signals depending on command transitions: 
+    uint32_t                    _signalCnt;    // Count of inflight commands using signals from the signal pool.
+                                               // Each copy may use 1-2 signals depending on command transitions:
                                                //   2 are required if a barrier packet is inserted.
     uint32_t                    _kernelCnt;    // Count of inflight kernels in this stream.  Reset at ::wait().
     SIGSEQNUM                   _streamSigId;      // Monotonically increasing unique signal id.
 };
 
 
-typedef ihipStreamCriticalBase_t<StreamMutex> ihipStreamCritical_t;  
+typedef ihipStreamCriticalBase_t<StreamMutex> ihipStreamCritical_t;
 typedef LockedAccessor<ihipStreamCritical_t> LockedAccessor_StreamCrit_t;
 
 
@@ -517,10 +517,10 @@ public:
     hsa_agent_t             _hsaAgent;    // hsa agent handle
 
     //! Number of compute units supported by the device:
-    unsigned                _computeUnits; 
+    unsigned                _computeUnits;
     hipDeviceProp_t         _props;        // saved device properties.
-    
-    StagingBuffer           *_stagingBuffer[2]; // one buffer for each direction.
+
+    UnpinnedCopyEngine      *_stagingBuffer[2]; // one buffer for each direction.
     int                     _isLargeBar;
 
     ihipCtx_t               *_primaryCtx;
@@ -538,8 +538,8 @@ template <typename MUTEX_TYPE>
 class ihipCtxCriticalBase_t : LockedBase<MUTEX_TYPE>
 {
 public:
-    ihipCtxCriticalBase_t(unsigned deviceCnt) :  
-         _peerCnt(0) 
+    ihipCtxCriticalBase_t(unsigned deviceCnt) :
+         _peerCnt(0)
     {
         _peerAgents = new hsa_agent_t[deviceCnt];
     };
@@ -580,12 +580,12 @@ private:
     // Enabled peers have permissions to access the memory physically allocated on this device.
     std::list<ihipCtx_t*>     _peers;     // list of enabled peer devices.
     uint32_t                  _peerCnt;     // number of enabled peers
-    hsa_agent_t              *_peerAgents;  // efficient packed array of enabled agents (to use for allocations.) 
+    hsa_agent_t              *_peerAgents;  // efficient packed array of enabled agents (to use for allocations.)
 private:
     void recomputePeerAgents();
 };
 // Note Mutex type Real/Fake selected based on CtxMutex
-typedef ihipCtxCriticalBase_t<CtxMutex> ihipCtxCritical_t;  
+typedef ihipCtxCriticalBase_t<CtxMutex> ihipCtxCritical_t;
 
 // This type is used by functions that need access to the critical device structures.
 typedef LockedAccessor<ihipCtxCritical_t> LockedAccessor_CtxCrit_t;
@@ -594,19 +594,19 @@ typedef LockedAccessor<ihipCtxCritical_t> LockedAccessor_CtxCrit_t;
 
 //=============================================================================
 //class ihipCtx_t:
-// A HIP CTX (context) points at one of the existing devices and contains the streams, 
+// A HIP CTX (context) points at one of the existing devices and contains the streams,
 // peer-to-peer mappings, creation flags.  Multiple contexts can point to the same
 // device.
 //
 class ihipCtx_t
 {
 public: // Functions:
-    ihipCtx_t(ihipDevice_t *device, unsigned deviceCnt, unsigned flags); // note: calls constructor for _criticalData 
+    ihipCtx_t(ihipDevice_t *device, unsigned deviceCnt, unsigned flags); // note: calls constructor for _criticalData
     ~ihipCtx_t();
 
     // Functions which read or write the critical data are named locked_.
     // ihipCtx_t does not use recursive locks so the ihip implementation must avoid calling a locked_ function from within a locked_ function.
-    // External functions which call several locked_ functions will acquire and release the lock for each function.  if this occurs in 
+    // External functions which call several locked_ functions will acquire and release the lock for each function.  if this occurs in
     // performance-sensitive code we may want to refactor by adding non-locked functions and creating a new locked_ member function to call them all.
     void locked_addStream(ihipStream_t *s);
     void locked_removeStream(ihipStream_t *s);
@@ -668,7 +668,7 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t);
 inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s)
 {
     os << "stream#";
-    os << s.getDevice()->_deviceId;;  
+    os << s.getDevice()->_deviceId;;
     os << '.';
     os << s._id;
     return os;
