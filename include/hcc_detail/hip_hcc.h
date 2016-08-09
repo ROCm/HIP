@@ -68,9 +68,6 @@ extern int HIP_DISABLE_HW_COPY_DEP;
 
 //---
 //Extern tls
-extern thread_local int tls_defaultDeviceId;
-extern thread_local ihipCtx_t *tls_defaultCtx;
-
 extern thread_local hipError_t tls_lastHipError;
 
 
@@ -653,6 +650,7 @@ extern hsa_agent_t g_cpu_agent ;   // the CPU agent.
 extern void ihipInit();
 extern const char *ihipErrorString(hipError_t);
 extern ihipCtx_t    *ihipGetTlsDefaultCtx();
+extern void          ihipSetTlsDefaultCtx(ihipCtx_t *ctx);
 
 extern ihipDevice_t *ihipGetDevice(int);
 ihipCtx_t * ihipGetPrimaryCtx(unsigned deviceIndex);

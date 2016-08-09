@@ -219,6 +219,7 @@ make_hipify_test(specialFunc.cu )
 #make_test(hipDynamicShared " ")
 
 # Add subdirs here:
+add_subdirectory(context)
 add_subdirectory(deviceLib)
 add_subdirectory(runtimeApi)
 add_subdirectory(kernel)

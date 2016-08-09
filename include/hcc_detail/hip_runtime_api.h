@@ -244,6 +244,8 @@ hipError_t hipSetDevice(int deviceId);
  * hipGetDevice returns in * @p device the default device for the calling host thread.
  *
  * @see hipSetDevice, hipGetDevicesizeBytes
+ *
+ * @returns hipSuccess, hipErrorInvalidDevice
  */
 hipError_t hipGetDevice(int *deviceId);
 
@@ -1050,6 +1052,13 @@ hipError_t hipInit(unsigned int flags) ;
 
 // TODO-ctx
 hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device);
+
+
+// TODO-ctx
+/**
+ * @return hipSuccess, hipErrorInvalidDevice
+ */
+hipError_t hipDeviceGetFromId(hipDevice_t *device, int deviceId);
 
 
 /**

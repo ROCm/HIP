@@ -102,11 +102,9 @@ hsa_amd_memory_pool_t gpu_pool_;
 //=================================================================================================
 // Thread-local storage:
 //=================================================================================================
-thread_local int tls_defaultDeviceId = 0;
 
 // This is the implicit context used by all HIP commands.
 // It can be set by hipSetDevice or by the CTX manipulation commands:
-thread_local ihipCtx_t *tls_defaultCtx;
 
 thread_local hipError_t tls_lastHipError = hipSuccess;
 
@@ -139,17 +137,25 @@ ihipCtx_t * ihipGetPrimaryCtx(unsigned deviceIndex)
 };
 
 
+static thread_local ihipCtx_t *tls_defaultCtx = nullptr;  
+void ihipSetTlsDefaultCtx(ihipCtx_t *ctx)
+{
+    tls_defaultCtx = ctx;
+}
+
 
 //---
-//FIXME - this needs to return the active context for this CPU thread - not primary for device.
+//TODO - review the context creation strategy here.  Really should be:
+//  - first "non-device" runtime call creates the context for this thread.  Allowed to call setDevice first.
+//  - hipDeviceReset destroys the primary context for device?
+//  - Then context is created again for next usage.
 ihipCtx_t *ihipGetTlsDefaultCtx()
 {
-    // If this is invalid, the TLS state is corrupt.
-    // This can fire if called before devices are initialized.
-    // TODO - consider replacing assert with error code
-    assert (ihipIsValidDevice(tls_defaultDeviceId));
-
-    return ihipGetPrimaryCtx(tls_defaultDeviceId);
+    // Per-thread initialization of the TLS:
+    if ((tls_defaultCtx == nullptr) && (g_deviceCnt>0)) {
+        ihipSetTlsDefaultCtx(ihipGetPrimaryCtx(0));
+    }
+    return tls_defaultCtx;
 }
 
 
@@ -1220,6 +1226,7 @@ void ihipInit()
     if(!g_visible_device) {
         assert(deviceCnt == g_deviceCnt);
     }
+
 
     tprintf(DB_SYNC, "pid=%u %-30s\n", getpid(), "<ihipInit>");
 }
