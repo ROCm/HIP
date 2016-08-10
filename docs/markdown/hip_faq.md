@@ -208,3 +208,9 @@ HIP_TRACE_API=1 HIP_DB=0x2 ./myHipApp
 ```
 
 Note this trace mode uses colors. "less -r" can handle raw control characters and will display the debug output in proper colors.
+
+### What if HIP generates error of "symbol multiply defined!" only on AMD machine?
+Unlike CUDA, in HCC, for functions defined in the header files, the keyword of "__forceinline__" does not imply "static".
+Thus, if failed to define "static" keyword, you might see a lot of "symbol multiply defined!" errors at compilation.
+The workaround is to explicitly add the keyword of "static" before any functions that were defined as "__forceinline__".
+
