@@ -1,5 +1,7 @@
 cmake_minimum_required (VERSION 2.6)
 
+# remove CMAKE_CXX_COMPILER entry from cache since it will be pointing to hipcc
+unset(CMAKE_CXX_COMPILER CACHE)
 message (CMAKE_CXX_COMPILER = ${CMAKE_CXX_COMPILER} )
 
 project (HIP_Unit_Tests)
