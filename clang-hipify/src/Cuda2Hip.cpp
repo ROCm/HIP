@@ -1151,11 +1151,29 @@ struct HipifyPPCallbacks : public PPCallbacks, public SourceFileCallbacks {
                 Replacement Rep(*_sm, sl, name.size(), repName);
                 Replace->insert(Rep);
               }
-            }
-            if (tok.is(tok::string_literal)) {
-              StringRef s(tok.getLiteralData(), tok.getLength());
-              processString(unquoteStr(s), N, Replace, *_sm, tok.getLocation(),
-                            countReps);
+            } else if (tok.isLiteral()) {
+              SourceLocation sl = tok.getLocation();
+              if (_sm->isMacroBodyExpansion(sl)) {
+                LangOptions DefaultLangOptions;
+                SourceLocation sl_macro = _sm->getExpansionLoc(sl);
+                SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *_sm, DefaultLangOptions);
+                size_t length = _sm->getCharacterData(sl_end) - _sm->getCharacterData(sl_macro);
+                StringRef name = StringRef(_sm->getCharacterData(sl_macro), length);
+                const auto found = N.cuda2hipRename.find(name);
+                if (found != N.cuda2hipRename.end()) {
+                  sl = sl_macro;
+                  countReps[found->second.countType]++;
+                  StringRef repName = found->second.hipName;
+                  Replacement Rep(*_sm, sl, length, repName);
+                  Replace->insert(Rep);
+                }
+              } else {
+                if (tok.is(tok::string_literal)) {
+                  StringRef s(tok.getLiteralData(), tok.getLength());
+                  processString(unquoteStr(s), N, Replace, *_sm, tok.getLocation(),
+                    countReps);
+                }
+              }
             }
           }
         }
