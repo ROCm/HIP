@@ -72,10 +72,12 @@ if ($HIP_PLATFORM eq "hcc") {
     if($hipConfig{'VALID'} == 0){
         $HCC_HOME=$ENV{'HCC_HOME'};
         $HCC_HOME="/opt/rocm/hcc" unless defined $HCC_HOME;
-        $HCC_VERSION=`${HCC_HOME}/bin/hcc --version | cut -d" " -f9 | tr -d "\n"`;
     }else{
         $HCC_HOME=$hipConfig{'HCC_HOME'};
     }
+
+    $HCC_VERSION=`${HCC_HOME}/bin/hcc --version | cut -d" " -f9 | tr -d "\n"`;
+
     $ROCM_PATH=$ENV{'ROCM_PATH'};
     $ROCM_PATH="/opt/rocm" unless defined $ROCM_PATH;
 
