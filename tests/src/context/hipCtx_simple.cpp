@@ -30,13 +30,14 @@ int main(int argc, char *argv[])
     HIPCHECK(hipInit(0));
 
     hipDevice_t device;
+    hipDevice_t device1;
     hipCtx_t    ctx;
     hipCtx_t    ctx1;
 
     HIPCHECK(hipDeviceGetFromId(&device, 0));
     HIPCHECK(hipCtxCreate(&ctx, 0, device));
     HIPCHECK(hipCtxGetCurrent(&ctx1));
-
+    HIPCHECK(hipCtxGetDevice(&device1));
     HIPCHECK(hipCtxPopCurrent(&ctx1));
     HIPCHECK(hipCtxGetCurrent(&ctx1));
 
