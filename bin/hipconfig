@@ -1,9 +1,5 @@
 #!/usr/bin/perl -w
 
-$HIP_VERSION_MAJOR = "0";
-$HIP_VERSION_MINOR = "92";
-$HIP_VERSION_PATCH = "0";
-
 use Getopt::Long;
 use Cwd;
 
@@ -39,8 +35,6 @@ if ($p_help) {
     exit();
 }
 
-$HIP_VERSION="$HIP_VERSION_MAJOR.$HIP_VERSION_MINOR.$HIP_VERSION_PATCH";
-
 $CUDA_PATH=$ENV{'CUDA_PATH'};
 $CUDA_PATH='/usr/local/cuda' unless defined $CUDA_PATH;
 
@@ -55,7 +49,7 @@ $HSA_PATH='/opt/rocm/hsa' unless defined $HSA_PATH;
 $HIP_PLATFORM=$ENV{'HIP_PLATFORM'};
 if (not defined $HIP_PLATFORM) {
     $NAMDGPUNODES=`cat /sys/class/kfd/kfd/topology/nodes/*/properties 2>/dev/null | grep -c 'simd_count [1-9]'`;
-    
+
     if ($NAMDGPUNODES > 0) {
         $HIP_PLATFORM = "hcc"
     } else {
@@ -74,11 +68,35 @@ if ($HIP_PLATFORM eq "nvcc") {
     $CPP_CONFIG = " -D__HIP_PLATFORM_NVCC__=  -I$HIP_PATH/include -I$CUDA_PATH/include";
 };
 
+#---
+# Read .version
+my %hipVersion = ();
+$hipVersion{'VALID'}=0;
+if (open (CONFIG, "$HIP_PATH/bin/.version")) {
+    while (<CONFIG>) {
+        my $config_line=$_;
+        chop ($config_line);
+        $config_line =~ s/^\s*//;
+        $config_line =~ s/\s*$//;
+        if (($config_line !~ /^#/) && ($config_line ne "")) {
+            my ($name, $value) = split (/=/, $config_line);
+            $hipVersion{$name} = $value;
+            $hipVersion{'VALID'}=1;
+        }
+    }
+    close(CONFIG);
+}
+
+$HIP_VERSION_MAJOR = $hipVersion{'HIP_VERSION_MAJOR'};
+$HIP_VERSION_MINOR = $hipVersion{'HIP_VERSION_MINOR'};
+$HIP_VERSION_PATCH = $hipVersion{'HIP_VERSION_PATCH'};
+$HIP_VERSION="$HIP_VERSION_MAJOR.$HIP_VERSION_MINOR.$HIP_VERSION_PATCH";
+
 if ($p_path) {
     print "$HIP_PATH";
     $printed = 1;
 }
-    
+
 
 if ($p_cpp_config) {
     print $CPP_CONFIG;
@@ -102,16 +120,16 @@ if (!$printed or $p_full) {
     print "HIP_PATH     : ", $HIP_PATH, "\n";
     print "HIP_PLATFORM : ", $HIP_PLATFORM, "\n";
     print "CPP_CONFIG   : ", $CPP_CONFIG, "\n";
-    if ($HIP_PLATFORM eq "hcc") 
+    if ($HIP_PLATFORM eq "hcc")
     {
         print "\n" ;
         print "== hcc\n";
         print ("HSA_PATH     : $HSA_PATH\n");
         print ("HCC_HOME     : $HCC_HOME\n");
         system("$HCC_HOME/bin/hcc --version");
-        print ("HCC-cxxflags : "); 
+        print ("HCC-cxxflags : ");
         system("$HCC_HOME/bin/hcc-config --cxxflags");
-        print ("HCC-ldflags  : "); 
+        print ("HCC-ldflags  : ");
         system("$HCC_HOME/bin/hcc-config --ldflags");
         printf("\n");
     }
