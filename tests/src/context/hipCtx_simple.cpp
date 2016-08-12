@@ -31,9 +31,16 @@ int main(int argc, char *argv[])
 
     hipDevice_t device;
     hipCtx_t    ctx;
+    hipCtx_t    ctx1;
 
     HIPCHECK(hipDeviceGetFromId(&device, 0));
     HIPCHECK(hipCtxCreate(&ctx, 0, device));
+    HIPCHECK(hipCtxGetCurrent(&ctx1));
+
+    HIPCHECK(hipCtxPopCurrent(&ctx1));
+    HIPCHECK(hipCtxGetCurrent(&ctx1));
+
+    HIPCHECK(hipCtxDestroy(ctx));
 
     passed();
 };
