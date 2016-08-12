@@ -1063,6 +1063,7 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx);
 
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
 
+hipError_t hipCtxGetDevice(hipDevice_t *device);
 
 // TODO-ctx
 /**

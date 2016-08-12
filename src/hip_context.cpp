@@ -152,3 +152,17 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx)
     return ihipLogStatus(e);
 }
 
+hipError_t hipCtxGetDevice(hipDevice_t *device)
+{
+    hipError_t e = hipSuccess;
+
+    ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
+
+    if(ctx == nullptr) {
+        e = hipErrorInvalidContext;
+    }
+    else {
+        *device = (ihipDevice_t*)ctx->getDevice();
+    }
+    return ihipLogStatus(e);
+}
