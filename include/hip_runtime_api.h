@@ -161,6 +161,7 @@ typedef enum hipError_t {
     ,hipErrorRuntimeOther             ///< HSA runtime call other than memory returned error.  Typically not seen in production systems.
     ,hipErrorHostMemoryAlreadyRegistered ///< Produced when trying to lock a page-locked memory.
     ,hipErrorHostMemoryNotRegistered  ///< Produced when trying to unlock a non-page-locked memory.
+    ,hipErrorInvalidContext           ///< Produced when input context is invalid.
     ,hipErrorTbd                      ///< Marker that more error codes are needed.
 } hipError_t;
 

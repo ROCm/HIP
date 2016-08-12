@@ -87,3 +87,68 @@ hipError_t hipDriverGetVersion(int *driverVersion)
 
     return ihipLogStatus(hipSuccess);
 }
+
+hipError_t hipCtxDestroy(hipCtx_t ctx)
+{
+    hipError_t e = hipSuccess;
+    ihipCtx_t* currentCtx= ihipGetTlsDefaultCtx();
+    if(currentCtx == ctx) {
+        //need to destroy the ctx associated with calling thread
+        tls_ctxStack.pop();
+    }
+    delete ctx; //As per CUDA docs , attempting to access ctx from those threads which has this ctx as current, will result in the error HIP_ERROR_CONTEXT_IS_DESTROYED.
+    return ihipLogStatus(e);
+}
+
+hipError_t hipCtxPopCurrent(hipCtx_t* ctx)
+{
+    hipError_t e = hipSuccess;
+    tls_ctxStack.pop();
+    if(!tls_ctxStack.empty()) {
+        *ctx= tls_ctxStack.top();
+    }
+    else { 
+        *ctx = nullptr;
+    }
+    
+    ihipSetTlsDefaultCtx(*ctx); //TOD0 - Shall check for NULL?
+    return ihipLogStatus(e);
+}
+
+hipError_t hipCtxPushCurrent(hipCtx_t ctx)
+{
+    hipError_t e = hipSuccess;
+    if(ctx != NULL) {    //TODO- is this check needed?
+        ihipSetTlsDefaultCtx(ctx);
+        tls_ctxStack.push(ctx);
+    }
+    else {
+        e = hipErrorInvalidContext;
+    }
+    return ihipLogStatus(e);
+}
+
+hipError_t hipCtxGetCurrent(hipCtx_t* ctx)
+{
+    hipError_t e = hipSuccess;
+
+    *ctx = ihipGetTlsDefaultCtx();
+    if(*ctx == nullptr) {
+        *ctx = NULL;    //TODO - is it required? Can return nullptr?
+    }
+    return ihipLogStatus(e);
+}
+
+hipError_t hipCtxSetCurrent(hipCtx_t ctx)
+{
+    hipError_t e = hipSuccess;
+    if(ctx == NULL) {
+        tls_ctxStack.pop();
+    }
+    else {
+        ihipSetTlsDefaultCtx(ctx);
+        tls_ctxStack.push(ctx);
+    }
+    return ihipLogStatus(e);
+}
+

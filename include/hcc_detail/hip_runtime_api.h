@@ -1053,6 +1053,16 @@ hipError_t hipInit(unsigned int flags) ;
 // TODO-ctx
 hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device);
 
+hipError_t hipCtxDestroy(hipCtx_t ctx);
+
+hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
+
+hipError_t hipCtxPushCurrent(hipCtx_t ctx);
+
+hipError_t hipCtxSetCurrent(hipCtx_t ctx);
+
+hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
+
 
 // TODO-ctx
 /**
