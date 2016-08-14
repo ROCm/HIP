@@ -1,5 +1,10 @@
 #!/usr/bin/perl -w
 
+$HIP_BASE_VERSION_MAJOR = "0";
+$HIP_BASE_VERSION_MINOR = "92";
+
+# Need perl > 5.10 to use logic-defined or
+use 5.006; use v5.10.1;
 use Getopt::Long;
 use Cwd;
 
@@ -35,14 +40,28 @@ if ($p_help) {
     exit();
 }
 
-$CUDA_PATH=$ENV{'CUDA_PATH'};
-$CUDA_PATH='/usr/local/cuda' unless defined $CUDA_PATH;
+#---
+# Function to parse config file
+sub parse_config_file {
+    my ($file, $config) = @_;
+    if (open (CONFIG, "$file")) {
+        while (<CONFIG>) {
+            my $config_line=$_;
+            chop ($config_line);
+            $config_line =~ s/^\s*//;
+            $config_line =~ s/\s*$//;
+            if (($config_line !~ /^#/) && ($config_line ne "")) {
+                my ($name, $value) = split (/=/, $config_line);
+                $$config{$name} = $value;
+            }
+        }
+        close(CONFIG);
+    }
+}
 
-$HCC_HOME=$ENV{'HCC_HOME'};
-$HCC_HOME='/opt/rocm/hcc' unless defined $HCC_HOME;
-
-$HSA_PATH=$ENV{'HSA_PATH'};
-$HSA_PATH='/opt/rocm/hsa' unless defined $HSA_PATH;
+$CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
+$HCC_HOME=$ENV{'HCC_HOME'} // '/opt/rocm/hcc';
+$HSA_PATH=$ENV{'HSA_PATH'} // '/opt/rocm/hsa';
 
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
@@ -57,9 +76,7 @@ if (not defined $HIP_PLATFORM) {
     }
 }
 
-$HIP_PATH=$ENV{'HIP_PATH'};
-$HIP_PATH=Cwd::realpath (dirname (dirname $0)) unless defined $HIP_PATH;        # use parent directory of this tool
-
+$HIP_PATH=$ENV{'HIP_PATH'} // Cwd::realpath (dirname (dirname $0)); # use parent directory of this tool
 
 if ($HIP_PLATFORM eq "hcc") {
     $CPP_CONFIG= " -D__HIP_PLATFORM_HCC__=   -I$HIP_PATH/include -I$HCC_HOME/include";
@@ -71,25 +88,10 @@ if ($HIP_PLATFORM eq "nvcc") {
 #---
 # Read .version
 my %hipVersion = ();
-$hipVersion{'VALID'}=0;
-if (open (CONFIG, "$HIP_PATH/bin/.version")) {
-    while (<CONFIG>) {
-        my $config_line=$_;
-        chop ($config_line);
-        $config_line =~ s/^\s*//;
-        $config_line =~ s/\s*$//;
-        if (($config_line !~ /^#/) && ($config_line ne "")) {
-            my ($name, $value) = split (/=/, $config_line);
-            $hipVersion{$name} = $value;
-            $hipVersion{'VALID'}=1;
-        }
-    }
-    close(CONFIG);
-}
-
-$HIP_VERSION_MAJOR = $hipVersion{'HIP_VERSION_MAJOR'};
-$HIP_VERSION_MINOR = $hipVersion{'HIP_VERSION_MINOR'};
-$HIP_VERSION_PATCH = $hipVersion{'HIP_VERSION_PATCH'};
+parse_config_file("$HIP_PATH/bin/.version", \%hipVersion);
+$HIP_VERSION_MAJOR = $hipVersion{'HIP_VERSION_MAJOR'} // $HIP_BASE_VERSION_MAJOR;
+$HIP_VERSION_MINOR = $hipVersion{'HIP_VERSION_MINOR'} // $HIP_BASE_VERSION_MINOR;
+$HIP_VERSION_PATCH = $hipVersion{'HIP_VERSION_PATCH'} // "0";
 $HIP_VERSION="$HIP_VERSION_MAJOR.$HIP_VERSION_MINOR.$HIP_VERSION_PATCH";
 
 if ($p_path) {

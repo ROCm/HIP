@@ -3,6 +3,7 @@ project(hip_base)
 
 install(DIRECTORY @hip_SOURCE_DIR@/bin DESTINATION . USE_SOURCE_PERMISSIONS)
 install(DIRECTORY @hip_SOURCE_DIR@/include DESTINATION . PATTERN "hip" EXCLUDE)
+install(FILES @PROJECT_BINARY_DIR@/.version DESTINATION bin)
 
 #############################
 # Packaging steps
