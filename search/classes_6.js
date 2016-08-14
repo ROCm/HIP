@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['texturereference',['textureReference',['../structtextureReference.html',1,'']]]
+  ['stagingbuffer',['StagingBuffer',['../structStagingBuffer.html',1,'']]],
+  ['struct_5ffloat',['struct_float',['../structstruct__float.html',1,'']]]
 ];

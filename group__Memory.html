@@ -111,6 +111,8 @@ Functions</h2></td></tr>
 <tr class="memitem:ga4c9e1810b9f5858d36c4d28c91c86924"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga4c9e1810b9f5858d36c4d28c91c86924">hipHostUnregister</a> (void *hostPtr)</td></tr>
 <tr class="memdesc:ga4c9e1810b9f5858d36c4d28c91c86924"><td class="mdescLeft">&#160;</td><td class="mdescRight">Un-register host pointer.  <a href="#ga4c9e1810b9f5858d36c4d28c91c86924">More...</a><br/></td></tr>
 <tr class="separator:ga4c9e1810b9f5858d36c4d28c91c86924"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga805c7320498926e444616fe090c727ee"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga805c7320498926e444616fe090c727ee">hipMallocPitch</a> (void **ptr, size_t *pitch, size_t width, size_t height)</td></tr>
+<tr class="separator:ga805c7320498926e444616fe090c727ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga740d08da65cae1441ba32f8fedb863d1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Memory.html#ga740d08da65cae1441ba32f8fedb863d1">hipFree</a> (void *ptr)</td></tr>
 <tr class="memdesc:ga740d08da65cae1441ba32f8fedb863d1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Free memory allocated by the hcc hip memory allocation API. This API performs an implicit <a class="el" href="group__Device.html#gaefdc2847fb1d6c3fb1354e827a191ebd" title="Blocks until the default device has completed all preceding requested tasks. ">hipDeviceSynchronize()</a> call. If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.  <a href="#ga740d08da65cae1441ba32f8fedb863d1">More...</a><br/></td></tr>
 <tr class="separator:ga740d08da65cae1441ba32f8fedb863d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -493,6 +495,55 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="ga805c7320498926e444616fe090c727ee"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipMallocPitch </td>
+          <td>(</td>
+          <td class="paramtype">void **&#160;</td>
+          <td class="paramname"><em>ptr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t *&#160;</td>
+          <td class="paramname"><em>pitch</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>width</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>height</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Allocates at least width (in bytes) * height bytes of linear memory Padding may occur to ensure alighnment requirements are met for the given row The change in width size due to padding will be returned in *pitch. Currently the alignment is set to 128 bytes</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">ptr</td><td>Pointer to the allocated device memory </td></tr>
+    <tr><td class="paramdir">[out]</td><td class="paramname">pitch</td><td>Pitch for allocation (in bytes) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">width</td><td>Requested pitched allocation width (in bytes) </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">height</td><td>Requested pitched allocation height </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Error code </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="gac1a055d288302edd641c6d7416858e1e"></a>
 <div class="memitem">
 <div class="memproto">
@@ -828,7 +879,7 @@ on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hip
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jul 8 2016 20:56:55 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Aug 4 2016 10:05:52 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
