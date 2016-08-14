@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/git/hip/release_0.90.00/src/hip_hcc.cpp File Reference</title>
+<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/git/hip/release/release_0.92.00/src/hip_hcc.cpp File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -154,6 +154,16 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipInit</b> ()</td><
 <tr class="memitem:aaf16ac37517d2e0a1642f822b7aafe0f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaf16ac37517d2e0a1642f822b7aafe0f"></a>
 hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>ihipSyncAndResolveStream</b> (hipStream_t stream)</td></tr>
 <tr class="separator:aaf16ac37517d2e0a1642f822b7aafe0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7257e759e82dc2742ff84344147a8c64"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7257e759e82dc2742ff84344147a8c64"></a>
+std::vector<br class="typebreak"/>
+&lt; hc::completion_future * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>vCF</b> (64)</td></tr>
+<tr class="separator:a7257e759e82dc2742ff84344147a8c64"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3ba162e3faa61d98f86a502b7469577a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3ba162e3faa61d98f86a502b7469577a"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>incKernelCnt</b> (hc::completion_future *cf)</td></tr>
+<tr class="separator:a3ba162e3faa61d98f86a502b7469577a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8bce2f2fcc19a71aa010a41f0e2ef391"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8bce2f2fcc19a71aa010a41f0e2ef391"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>decKernelCnt</b> ()</td></tr>
+<tr class="separator:a8bce2f2fcc19a71aa010a41f0e2ef391"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6cc798eff8b4d57e7153a6d32a1a031b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6cc798eff8b4d57e7153a6d32a1a031b"></a>
 hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPreLaunchKernel</b> (hipStream_t stream, <a class="el" href="structdim3.html">dim3</a> grid, <a class="el" href="structdim3.html">dim3</a> block, grid_launch_parm *lp)</td></tr>
 <tr class="separator:a6cc798eff8b4d57e7153a6d32a1a031b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -242,6 +252,9 @@ std::vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>g
 <tr class="memitem:a51cbfc1cd7ef93745edcd0486cb2257e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a51cbfc1cd7ef93745edcd0486cb2257e"></a>
 hsa_agent_t&#160;</td><td class="memItemRight" valign="bottom"><b>g_cpu_agent</b></td></tr>
 <tr class="separator:a51cbfc1cd7ef93745edcd0486cb2257e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad2ac1df898ba934151b9cb467700d541"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad2ac1df898ba934151b9cb467700d541"></a>
+uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>kernelCount</b> = 0</td></tr>
+<tr class="separator:ad2ac1df898ba934151b9cb467700d541"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains definitions for functions that are large enough that we don't want to inline them everywhere. This file is compiled and linked into apps running HIP / HCC path. </p>
@@ -345,7 +358,7 @@ hsa_agent_t&#160;</td><td class="memItemRight" valign="bottom"><b>g_cpu_agent</b
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jul 8 2016 20:56:55 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Aug 4 2016 10:05:52 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

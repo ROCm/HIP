@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/git/hip/release_0.90.00/include/hcc_detail/hip_runtime.h File Reference</title>
+<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/git/hip/release/release_0.92.00/include/hcc_detail/hip_runtime.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -107,9 +107,15 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
+<tr class="memitem:a8876e9008f3e67e55b41222c9e6e2d7d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8876e9008f3e67e55b41222c9e6e2d7d"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>NVCC_COMPAT</b></td></tr>
+<tr class="separator:a8876e9008f3e67e55b41222c9e6e2d7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b04412e00a9dd149c9078eb4c0bf99a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3b04412e00a9dd149c9078eb4c0bf99a"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>CUDA_SUCCESS</b>&#160;&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063">hipSuccess</a></td></tr>
 <tr class="separator:a3b04412e00a9dd149c9078eb4c0bf99a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a63b7c2571b010bca4de15870145aeaf0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a63b7c2571b010bca4de15870145aeaf0"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>USE_GRID_LAUNCH_20</b>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:a63b7c2571b010bca4de15870145aeaf0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a21df7e40dc66a8a36e64137a13e353ef"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a21df7e40dc66a8a36e64137a13e353ef"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>hipLaunchParm</b>&#160;&#160;&#160;grid_launch_parm</td></tr>
 <tr class="separator:a21df7e40dc66a8a36e64137a13e353ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -119,40 +125,40 @@ Macros</h2></td></tr>
 <tr class="memitem:a33f6338b5bbb294b41e5c35a8d0f5bf3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a33f6338b5bbb294b41e5c35a8d0f5bf3"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>clock_t</b>&#160;&#160;&#160;long long int</td></tr>
 <tr class="separator:a33f6338b5bbb294b41e5c35a8d0f5bf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a48f5f9da77c5fab1fbcf0205bb347d89"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hcc__detail_2hip__runtime_8h.html#a48f5f9da77c5fab1fbcf0205bb347d89">hipThreadIdx_x</a>&#160;&#160;&#160;(amp_get_local_id(2))</td></tr>
+<tr class="memitem:a48f5f9da77c5fab1fbcf0205bb347d89"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hcc__detail_2hip__runtime_8h.html#a48f5f9da77c5fab1fbcf0205bb347d89">hipThreadIdx_x</a>&#160;&#160;&#160;(hc_get_workitem_id(0))</td></tr>
 <tr class="separator:a48f5f9da77c5fab1fbcf0205bb347d89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a939ddbdeda33c3a6bfafc7704a4ade88"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a939ddbdeda33c3a6bfafc7704a4ade88"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipThreadIdx_y</b>&#160;&#160;&#160;(amp_get_local_id(1))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipThreadIdx_y</b>&#160;&#160;&#160;(hc_get_workitem_id(1))</td></tr>
 <tr class="separator:a939ddbdeda33c3a6bfafc7704a4ade88"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8bc16a17315622c7ef9a53c4e10e6daa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8bc16a17315622c7ef9a53c4e10e6daa"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipThreadIdx_z</b>&#160;&#160;&#160;(amp_get_local_id(0))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipThreadIdx_z</b>&#160;&#160;&#160;(hc_get_workitem_id(2))</td></tr>
 <tr class="separator:a8bc16a17315622c7ef9a53c4e10e6daa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6baf7aebe9f49c5dd47e7093c24e22a3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6baf7aebe9f49c5dd47e7093c24e22a3"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipBlockIdx_x</b>&#160;&#160;&#160;(hc_get_group_id(2))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipBlockIdx_x</b>&#160;&#160;&#160;(hc_get_group_id(0))</td></tr>
 <tr class="separator:a6baf7aebe9f49c5dd47e7093c24e22a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad6e9de3b58078117ef362536694447c2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad6e9de3b58078117ef362536694447c2"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>hipBlockIdx_y</b>&#160;&#160;&#160;(hc_get_group_id(1))</td></tr>
 <tr class="separator:ad6e9de3b58078117ef362536694447c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a233db23a587aeb436aa3e9dc3a4cef58"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a233db23a587aeb436aa3e9dc3a4cef58"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipBlockIdx_z</b>&#160;&#160;&#160;(hc_get_group_id(0))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipBlockIdx_z</b>&#160;&#160;&#160;(hc_get_group_id(2))</td></tr>
 <tr class="separator:a233db23a587aeb436aa3e9dc3a4cef58"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4b71966ad0958fda5d8ff9499967871c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4b71966ad0958fda5d8ff9499967871c"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipBlockDim_x</b>&#160;&#160;&#160;(amp_get_local_size(2))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipBlockDim_x</b>&#160;&#160;&#160;(hc_get_group_size(0))</td></tr>
 <tr class="separator:a4b71966ad0958fda5d8ff9499967871c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a51c1dac32644f94056d5db33d5a09fc0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a51c1dac32644f94056d5db33d5a09fc0"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipBlockDim_y</b>&#160;&#160;&#160;(amp_get_local_size(1))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipBlockDim_y</b>&#160;&#160;&#160;(hc_get_group_size(1))</td></tr>
 <tr class="separator:a51c1dac32644f94056d5db33d5a09fc0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1b9c4603c1426502ff8148c1e2e61bd7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1b9c4603c1426502ff8148c1e2e61bd7"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipBlockDim_z</b>&#160;&#160;&#160;(amp_get_local_size(0))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipBlockDim_z</b>&#160;&#160;&#160;(hc_get_group_size(2))</td></tr>
 <tr class="separator:a1b9c4603c1426502ff8148c1e2e61bd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a300eb57008240b0a0acb3edb412c8646"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a300eb57008240b0a0acb3edb412c8646"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipGridDim_x</b>&#160;&#160;&#160;(hc_get_num_groups(2))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipGridDim_x</b>&#160;&#160;&#160;(hc_get_num_groups(0))</td></tr>
 <tr class="separator:a300eb57008240b0a0acb3edb412c8646"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a396ec40c093b35af1340a645e1ec2614"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a396ec40c093b35af1340a645e1ec2614"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>hipGridDim_y</b>&#160;&#160;&#160;(hc_get_num_groups(1))</td></tr>
 <tr class="separator:a396ec40c093b35af1340a645e1ec2614"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6e9947dbaa1343a5515541570580979c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6e9947dbaa1343a5515541570580979c"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipGridDim_z</b>&#160;&#160;&#160;(hc_get_num_groups(0))</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipGridDim_z</b>&#160;&#160;&#160;(hc_get_num_groups(2))</td></tr>
 <tr class="separator:a6e9947dbaa1343a5515541570580979c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d71a6ed991854dbafa20f282905c262"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1d71a6ed991854dbafa20f282905c262"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>__syncthreads</b>()&#160;&#160;&#160;hc_barrier(CLK_LOCAL_MEM_FENCE)</td></tr>
@@ -968,7 +974,7 @@ const int&#160;</td><td class="memItemRight" valign="bottom"><b>warpSize</b></td
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define hipThreadIdx_x&#160;&#160;&#160;(amp_get_local_id(2))</td>
+          <td class="memname">#define hipThreadIdx_x&#160;&#160;&#160;(hc_get_workitem_id(0))</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -979,7 +985,7 @@ const int&#160;</td><td class="memItemRight" valign="bottom"><b>warpSize</b></td
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Jul 8 2016 20:56:55 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Aug 4 2016 10:05:52 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
