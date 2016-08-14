@@ -1,12 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
-
-- [Terms used in HIP Documentation](#terms-used-in-hip-documentation)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-
 # Terms used in HIP Documentation
 
 - host,  host cpu : Executes the HIP runtime API and is capable of initiating kernel launches to one or more devices.
@@ -23,7 +14,4 @@ The default device can be set with hipSetDevice.
 
 - hipify - tool to convert CUDA(R) code to portable C++ code.
 - hipconfig - tool to report various confoguration properties of the target platform.
-
-
-
 

@@ -934,7 +934,7 @@ static hsa_status_t findCpuAgent(hsa_agent_t agent, void *data)
 void ihipInit()
 {
 
-#if COMPILE_TRACE_MARKER
+#if COMPILE_HIP_ATP_MARKER
     amdtInitializeActivityLogger();
     amdtScopedMarker("ihipInit", "HIP", NULL);
 #endif
@@ -1085,42 +1085,88 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
     }
 }
 
+// HIP uses only 64 kernels. If the performance decrease, add more
+uint32_t kernelCount = 0;
+std::vector<hc::completion_future*> vCF(64);
+
+void incKernelCnt(hc::completion_future *cf){
+    vCF[kernelCount] = cf;
+    kernelCount++;
+}
+
+void decKernelCnt(){
+    if(kernelCount > 63){
+        uint32_t len = kernelCount;
+        for(uint32_t i =0;i<len;i++){
+            if(vCF[i] != NULL){
+                vCF[i]->wait();
+            }
+            delete vCF[i];
+            vCF[i] = NULL;
+            kernelCount--;
+        }
+    }
+}
 
 // TODO - data-up to data-down:
 // Called just before a kernel is launched from hipLaunchKernel.
 // Allows runtime to track some information about the stream.
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp)
 {
-	std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(stream, grid, block, lp);
     stream = ihipSyncAndResolveStream(stream);
+#if USE_GRID_LAUNCH_20 
+    lp->grid_dim.x = grid.x;
+    lp->grid_dim.y = grid.y;
+    lp->grid_dim.z = grid.z;
+    lp->group_dim.x = block.x;
+    lp->group_dim.y = block.y;
+    lp->group_dim.z = block.z;
+    lp->barrier_bit = barrier_bit_queue_default;
+    lp->launch_fence = -1;
+#else
     lp->gridDim.x = grid.x;
     lp->gridDim.y = grid.y;
     lp->gridDim.z = grid.z;
     lp->groupDim.x = block.x;
     lp->groupDim.y = block.y;
     lp->groupDim.z = block.z;
+#endif
     stream->lockopen_preKernelCommand();
 //    *av = &stream->_av;
     lp->av = &stream->_av;
     lp->cf = new hc::completion_future;
+    incKernelCnt(lp->cf);
 //    lp->av = static_cast<void*>(av);
 //    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
     return (stream);
 }
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm *lp)
 {
-	std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(stream, grid, block, lp);
     stream = ihipSyncAndResolveStream(stream);
+#if USE_GRID_LAUNCH_20 
+    lp->grid_dim.x = grid;
+    lp->grid_dim.y = 1;
+    lp->grid_dim.z = 1;
+    lp->group_dim.x = block.x;
+    lp->group_dim.y = block.y;
+    lp->group_dim.z = block.z;
+    lp->barrier_bit = barrier_bit_queue_default;
+    lp->launch_fence = -1;
+#else
     lp->gridDim.x = grid;
     lp->gridDim.y = 1;
     lp->gridDim.z = 1;
     lp->groupDim.x = block.x;
     lp->groupDim.y = block.y;
     lp->groupDim.z = block.z;
+#endif
     stream->lockopen_preKernelCommand();
 //    *av = &stream->_av;
     lp->av = &stream->_av;
     lp->cf = new hc::completion_future;
+    incKernelCnt(lp->cf);
 //    lp->av = static_cast<void*>(av);
 //    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
     return (stream);
@@ -1128,18 +1174,30 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, gri
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm *lp)
 {
-	std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(stream, grid, block, lp);
     stream = ihipSyncAndResolveStream(stream);
+#if USE_GRID_LAUNCH_20 
+    lp->grid_dim.x = grid.x;
+    lp->grid_dim.y = grid.y;
+    lp->grid_dim.z = grid.z;
+    lp->group_dim.x = block;
+    lp->group_dim.y = 1;
+    lp->group_dim.z = 1;
+    lp->barrier_bit = barrier_bit_queue_default;
+    lp->launch_fence = -1;
+#else
     lp->gridDim.x = grid.x;
     lp->gridDim.y = grid.y;
     lp->gridDim.z = grid.z;
     lp->groupDim.x = block;
     lp->groupDim.y = 1;
     lp->groupDim.z = 1;
+#endif
     stream->lockopen_preKernelCommand();
 //    *av = &stream->_av;
     lp->av = &stream->_av;
     lp->cf = new hc::completion_future;
+    incKernelCnt(lp->cf);
 //    lp->av = static_cast<void*>(av);
 //    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
     return (stream);
@@ -1147,18 +1205,30 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, gri
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm *lp)
 {
-	std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(stream, grid, block, lp);
     stream = ihipSyncAndResolveStream(stream);
+#if USE_GRID_LAUNCH_20 
+    lp->grid_dim.x = grid;
+    lp->grid_dim.y = 1;
+    lp->grid_dim.z = 1;
+    lp->group_dim.x = block;
+    lp->group_dim.y = 1;
+    lp->group_dim.z = 1;
+    lp->barrier_bit = barrier_bit_queue_default;
+    lp->launch_fence = -1;
+#else
     lp->gridDim.x = grid;
     lp->gridDim.y = 1;
     lp->gridDim.z = 1;
     lp->groupDim.x = block;
     lp->groupDim.y = 1;
     lp->groupDim.z = 1;
+#endif
     stream->lockopen_preKernelCommand();
 //    *av = &stream->_av;
     lp->av = &stream->_av;
     lp->cf = new hc::completion_future;
+    incKernelCnt(lp->cf);
 //    lp->av = static_cast<void*>(av);
 //    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
     return (stream);
@@ -1171,6 +1241,7 @@ void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp)
 {
 //    stream->lockclose_postKernelCommand(cf);
     stream->lockclose_postKernelCommand(*lp.cf);
+    decKernelCnt();
     if (HIP_LAUNCH_BLOCKING) {
         tprintf(DB_SYNC, " stream:%p LAUNCH_BLOCKING for kernel completion\n", stream);
     }
@@ -1182,8 +1253,8 @@ void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp)
 // HIP API Implementation
 //
 // Implementor notes:
-// _ All functions should call ihipInit as first action:
-//    std::call_once(hip_initialized, ihipInit);
+// _ All functions should call HIP_INIT_API as first action:
+//    HIP_INIT_API(<function_arguments>);
 //
 // - ALl functions should use ihipLogStatus to return error code (not return error directly).
 //=================================================================================================
@@ -1359,7 +1430,7 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
             void *devPtrSrc = srcPtrInfo._devicePointer;
             tprintf(DB_COPY1, "HSA Async_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
 
-            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, dstAgent, devPtrSrc, srcAgent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, copyCompleteSignal);
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, dstAgent, devPtrSrc, g_cpu_agent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, copyCompleteSignal);
 
         // This is sync copy, so let's wait for copy right here:
             if (hsa_status == HSA_STATUS_SUCCESS) {
@@ -1399,7 +1470,7 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
             void *devPtrDst = dstPtrInfo._devicePointer;
             tprintf(DB_COPY1, "HSA Async_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
 
-            hsa_status_t hsa_status = hsa_amd_memory_async_copy(devPtrDst, dstAgent, src, srcAgent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, copyCompleteSignal);
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(devPtrDst, g_cpu_agent, src, srcAgent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, copyCompleteSignal);
 
         // This is sync copy, so let's wait for copy right here:
             if (hsa_status == HSA_STATUS_SUCCESS) {
@@ -1558,7 +1629,7 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsig
 //---
 hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator *acc)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(deviceId, acc);
 
     ihipDevice_t *d = ihipGetDevice(deviceId);
     hipError_t err;
@@ -1578,7 +1649,7 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator *acc)
 //---
 hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **av)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(stream, av);
 
     if (stream == hipStreamNull ) {
         ihipDevice_t *device = ihipGetTlsDefaultDevice();

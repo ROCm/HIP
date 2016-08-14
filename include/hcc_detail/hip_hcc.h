@@ -130,7 +130,7 @@ class ihipDevice_t;
 // TODO - currently we print the trace message at the beginning. if we waited, we could also include return codes, and any values returned
 // through ptr-to-args (ie the pointers allocated by hipMalloc).
 #if COMPILE_HIP_ATP_MARKER
-#include "AMDTActivityLogger.h"
+#include "CXLActivityLogger.h"
 #define SCOPED_MARKER(markerName,group,userString) amdtScopedMarker(markerName, group, userString)
 #else 
 // Swallow scoped markers:
@@ -466,6 +466,17 @@ inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s)
     return os;
 }
 
+inline std::ostream & operator<<(std::ostream& os, const dim3& s)
+{
+    os << '{';
+    os << s.x;
+    os << ',';
+    os << s.y;
+    os << ',';
+    os << s.z;
+    os << '}';
+    return os;
+}
 
 //----
 // Internal event structure:

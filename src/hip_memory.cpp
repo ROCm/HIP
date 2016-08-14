@@ -36,7 +36,7 @@ THE SOFTWARE.
  */
 hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(attributes, ptr);
 
     hipError_t e = hipSuccess;
 
@@ -85,7 +85,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
  */
 hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsigned flags)
 {
-    std::call_once(hip_initialized, ihipInit);
+    HIP_INIT_API(devicePointer, hostPointer, flags);
 
     hipError_t e = hipSuccess;
 
@@ -196,6 +196,116 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags)
 hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
 {
     return hipHostMalloc(ptr, sizeBytes, 0);
+}
+
+// width in bytes
+hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height) {
+
+  HIP_INIT_API(ptr, pitch, width, height);
+
+  hipError_t  hip_status = hipSuccess;
+
+  if(width == 0 || height == 0)
+    return ihipLogStatus(hipErrorUnknown);
+
+  // hardcoded 128 bytes
+  *pitch = ((((int)width-1)/128) + 1)*128;
+  const size_t sizeBytes = (*pitch)*height;
+
+  auto device = ihipGetTlsDefaultDevice();
+
+  //err = hipMalloc(ptr, (*pitch)*height);
+  if (device) {
+    const unsigned am_flags = 0;
+    *ptr = hc::am_alloc(sizeBytes, device->_acc, am_flags);
+
+    if (sizeBytes && (*ptr == NULL)) {
+      hip_status = hipErrorMemoryAllocation;
+    } else {
+      hc::am_memtracker_update(*ptr, device->_device_index, 0);
+      {
+        LockedAccessor_DeviceCrit_t crit(device->criticalData());
+        if (crit->peerCnt() > 1) { // peerCnt includes self so only call allow_access if other peers involved:
+          hsa_status_t hsa_status = hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
+          if (hsa_status != HSA_STATUS_SUCCESS) {
+            hip_status = hipErrorMemoryAllocation;
+          }
+        }
+      }
+    }
+  } else {
+      hip_status = hipErrorMemoryAllocation;
+  }
+
+  return ihipLogStatus(hip_status);
+
+}
+
+hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f) {
+  hipChannelFormatDesc cd;
+  cd.x = x; cd.y = y; cd.z = z; cd.w = w;
+  cd.f = f;
+  return cd;
+}
+
+hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
+                          size_t width, size_t height, unsigned int flags) {
+
+    HIP_INIT_API(array, desc, width, height, flags);
+
+    hipError_t  hip_status = hipSuccess;
+
+    auto device = ihipGetTlsDefaultDevice();
+
+    *array = (hipArray*)malloc(sizeof(hipArray));
+    array[0]->width = width;
+    array[0]->height = height;
+
+    array[0]->f = desc->f;
+
+    void ** ptr = &array[0]->data;
+
+    if (device) {
+      const unsigned am_flags = 0;
+      const size_t size = width*height;
+
+      switch(desc->f) {
+        case hipChannelFormatKindSigned:
+          *ptr = hc::am_alloc(size*sizeof(int), device->_acc, am_flags);
+          break;
+        case hipChannelFormatKindUnsigned:
+          *ptr = hc::am_alloc(size*sizeof(unsigned int), device->_acc, am_flags);
+          break;
+        case hipChannelFormatKindFloat:
+          *ptr = hc::am_alloc(size*sizeof(float), device->_acc, am_flags);
+          break;
+        case hipChannelFormatKindNone:
+          *ptr = hc::am_alloc(size*sizeof(size_t), device->_acc, am_flags);
+          break;
+        default:
+          hip_status = hipErrorUnknown;
+          break;
+      }
+      if (size && (*ptr == NULL)) {
+          hip_status = hipErrorMemoryAllocation;
+      } else {
+          hc::am_memtracker_update(*ptr, device->_device_index, 0);
+          {
+              LockedAccessor_DeviceCrit_t crit(device->criticalData());
+              if (crit->peerCnt() > 1) { // peerCnt includes self so only call allow_access if other peers involved:
+                  hsa_status_t hsa_status = hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
+                  if (hsa_status != HSA_STATUS_SUCCESS) {
+                      hip_status = hipErrorMemoryAllocation; 
+                  }
+              }
+          }
+      }
+
+    } else {
+        hip_status = hipErrorMemoryAllocation;
+    }
+
+    return ihipLogStatus(hip_status);
 }
 
 
@@ -362,6 +472,108 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
     }
 
     return ihipLogStatus(e);
+}
+
+// dpitch, spitch, and width in bytes
+hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
+                       size_t width, size_t height, hipMemcpyKind kind) {
+
+  HIP_INIT_API(dst, dpitch, src, spitch, width, height, kind);
+
+  if(width > dpitch || width > spitch)
+    return ihipLogStatus(hipErrorUnknown);
+
+  hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+  hc::completion_future marker;
+
+  hipError_t e = hipSuccess;
+
+  try {
+    for(int i = 0; i < height; ++i) {
+      stream->locked_copySync((unsigned char*)dst + i*dpitch, (unsigned char*)src + i*spitch, width, kind);
+    }
+  }
+  catch (ihipException ex) {
+    e = ex._code;
+  }
+
+  return ihipLogStatus(e);
+}
+
+// wOffset, width, and spitch in bytes
+hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
+                                    size_t spitch, size_t width, size_t height, hipMemcpyKind kind) {
+
+  HIP_INIT_API(dst, wOffset, hOffset, src, spitch, width, height, kind);
+
+  hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+  hc::completion_future marker;
+
+  hipError_t e = hipSuccess;
+
+  size_t byteSize;
+  if(dst) {
+    switch(dst[0].f) {
+      case hipChannelFormatKindSigned:
+        byteSize = sizeof(int);
+        break;
+      case hipChannelFormatKindUnsigned:
+        byteSize = sizeof(unsigned int);
+        break;
+      case hipChannelFormatKindFloat:
+        byteSize = sizeof(float);
+        break;
+      case hipChannelFormatKindNone:
+        byteSize = sizeof(size_t);
+        break;
+      default:
+        byteSize = 0;
+        break;
+    }
+  } else {
+    return ihipLogStatus(hipErrorUnknown);
+  }
+
+  if((wOffset + width > (dst->width * byteSize)) || width > spitch) {
+    return ihipLogStatus(hipErrorUnknown);
+  }
+
+  size_t src_w = spitch;
+  size_t dst_w = (dst->width)*byteSize;
+
+  try {
+    for(int i = 0; i < height; ++i) {
+      stream->locked_copySync((unsigned char*)dst->data + i*dst_w, (unsigned char*)src + i*src_w, width, kind);
+    }
+  }
+  catch (ihipException ex) {
+    e = ex._code;
+  }
+
+  return ihipLogStatus(e);
+}
+
+hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset,
+                            const void* src, size_t count, hipMemcpyKind kind) {
+
+  HIP_INIT_API(dst, wOffset, hOffset, src, count, kind);
+
+  hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+  hc::completion_future marker;
+
+  hipError_t e = hipSuccess;
+
+  try {
+    stream->locked_copySync((char *)dst->data + wOffset, src, count, kind);
+  }
+  catch (ihipException ex) {
+    e = ex._code;
+  }
+
+  return ihipLogStatus(e);
 }
 
 
@@ -566,5 +778,28 @@ hipError_t hipFreeHost(void* ptr)
     return hipHostFree(ptr);
 }
 
+hipError_t hipFreeArray(hipArray* array)
+{
+  HIP_INIT_API(array);
+
+  hipError_t hipStatus = hipErrorInvalidDevicePointer;
+
+  // Synchronize to ensure all work has finished.
+  ihipGetTlsDefaultDevice()->locked_waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
+
+  if(array->data) {
+    hc::accelerator acc;
+    hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+    am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, array->data);
+    if(status == AM_SUCCESS){
+      if(amPointerInfo._hostPointer == NULL){
+        hc::am_free(array->data);
+          hipStatus = hipSuccess;
+      }
+    }
+  }
+
+  return ihipLogStatus(hipStatus);
+}
 
 

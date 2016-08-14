@@ -1,95 +1,49 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
-
-- [HIP Porting Guide](#hip-porting-guide)
-- [###Table of Contents](#table-of-contents)
-  - [Porting a New Cuda Project](#porting-a-new-cuda-project)
-    - [General Tips](#general-tips)
-    - [Scanning existing CUDA code to scope the porting effort](#scanning-existing-cuda-code-to-scope-the-porting-effort)
-    - [Converting a project "in-place"](#converting-a-project-in-place)
-  - [Distinguishing Compiler Modes](#distinguishing-compiler-modes)
-    - [Identifying HIP Target Platform](#identifying-hip-target-platform)
-    - [Identifying the Compiler: hcc or nvcc](#identifying-the-compiler-hcc-or-nvcc)
-    - [Identifying Current Compilation Pass: Host or Device](#identifying-current-compilation-pass-host-or-device)
-    - [Compiler Defines: Summary](#compiler-defines-summary)
-  - [Identifying Architecture Features](#identifying-architecture-features)
-    - [HIP_ARCH Defines](#hip_arch-defines)
-    - [Device-Architecture Properties](#device-architecture-properties)
-    - [Table of Architecture Properties](#table-of-architecture-properties)
-  - [Finding HIP](#finding-hip)
-  - [Compiler Options](#compiler-options)
-  - [Linking Issues](#linking-issues)
-    - [Linking With hipcc](#linking-with-hipcc)
-    - [-lm Option](#-lm-option)
-  - [Linking Code With Other Compilers](#linking-code-with-other-compilers)
-    - [libc++ and libstdc++](#libc-and-libstdc)
-    - [HIP Headers (hip_runtime.h, hip_runtime_api.h)](#hip-headers-hip_runtimeh-hip_runtime_apih)
-    - [Using a Standard C++ Compiler](#using-a-standard-c-compiler)
-      - [cuda.h](#cudah)
-    - [Choosing HIP File Extensions](#choosing-hip-file-extensions)
-    - [Workarounds](#workarounds)
-      - [warpSize](#warpsize)
-      - [Textures and Cache Control](#textures-and-cache-control)
-  - [More Tips](#more-tips)
-    - [hcc CPU Mode](#hcc-cpu-mode)
-    - [HIPTRACE Mode](#hiptrace-mode)
-    - [Environment Variables](#environment-variables)
-    - [Debugging hipcc](#debugging-hipcc)
-    - [What Does This Error Mean?](#what-does-this-error-mean)
-      - [/usr/include/c++/v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();](#usrincludecv1memory517215-error-call-to-implicitly-deleted-default-constructor-of-std__1bad_weak_ptr-throw-bad_weak_ptr)
-      - [grid_launch kernel dispatch - fallback](#grid_launch-kernel-dispatch---fallback)
-      - [HIP Environment Variables](#hip-environment-variables)
-      - [Editor Highlighting](#editor-highlighting)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 # HIP Porting Guide 
 In addition to providing a portable C++ programmming environement for GPUs, HIP is designed to ease
 the porting of existing CUDA code into the HIP environment.  This section describes the available tools 
 and provides practical suggestions on how to port CUDA code and work through common issues. 
 
-###Table of Contents
-=================
+## Table of Contents
 
- * [HIP Porting Guide](#hip-porting-guide)
-      * [Table of Contents](#table-of-contents)
-    * [Porting a New Cuda Project To HIP](#porting-a-new-cuda-project)
-      * [General Tips](#general-tips" aria-hidden="true"><span aria-hidden="true)
-      * [Scanning existing CUDA code to scope the porting effort](#scanning-existing-cuda-code-to-scope-the-porting-effort" aria-hidden="true"><span aria-hidden="true)
-    * [Distinguishing Compiler Modes](#distinguishing-compiler-modes" aria-hidden="true"><span aria-hidden="true)
-      * [Identifying HIP Target Platform](#identifying-hip-target-platform" aria-hidden="true"><span aria-hidden="true)
-      * [Identifying the Compiler: hcc or nvcc](#identifying-the-compiler-hcc-or-nvcc" aria-hidden="true"><span aria-hidden="true)
-      * [Identifying Current Compilation Pass: Host or Device](#identifying-current-compilation-pass-host-or-device" aria-hidden="true"><span aria-hidden="true)
-      * [Compiler Defines: Summary](#compiler-defines-summary" aria-hidden="true"><span aria-hidden="true)
-    * [Identifying Architecture Features](#identifying-architecture-features" aria-hidden="true"><span aria-hidden="true)
-      * [HIP_ARCH Defines](#hip_arch-defines" aria-hidden="true"><span aria-hidden="true)
-      * [Device-Architecture Properties](#device-architecture-properties" aria-hidden="true"><span aria-hidden="true)
-      * [Table of Architecture Properties](#table-of-architecture-properties" aria-hidden="true"><span aria-hidden="true)
-    * [Finding HIP](#finding-hip" aria-hidden="true"><span aria-hidden="true)
-    * [Compiler Options](#compiler-options" aria-hidden="true"><span aria-hidden="true)
-    * [Linking Issues](#linking-issues" aria-hidden="true"><span aria-hidden="true)
-      * [Linking With hipcc](#linking-with-hipcc" aria-hidden="true"><span aria-hidden="true)
-      * [-lm Option](#-lm-option" aria-hidden="true"><span aria-hidden="true)
-    * [Linking Code With Other Compilers](#linking-code-with-other-compilers" aria-hidden="true"><span aria-hidden="true)
-      * [libc and libstdc  ](#libc-and-libstdc" aria-hidden="true"><span aria-hidden="true)
-      * [HIP Headers (hip_runtime.h, hip_runtime_api.h)](#hip-headers-hip_runtimeh-hip_runtime_apih" aria-hidden="true"><span aria-hidden="true)
-      * [Using a Standard C   Compiler](#using-a-standard-c-compiler" aria-hidden="true"><span aria-hidden="true)
-        * [cuda.h](#cudah" aria-hidden="true"><span aria-hidden="true)
-      * [Choosing HIP File Extensions](#choosing-hip-file-extensions" aria-hidden="true"><span aria-hidden="true)
-      * [Workarounds](#workarounds" aria-hidden="true"><span aria-hidden="true)
-        * [warpSize](#warpsize" aria-hidden="true"><span aria-hidden="true)
-        * [Textures and Cache Control](#textures-and-cache-control" aria-hidden="true"><span aria-hidden="true)
-    * [More Tips](#more-tips" aria-hidden="true"><span aria-hidden="true)
-      * [hcc CPU Mode](#hcc-cpu-mode" aria-hidden="true"><span aria-hidden="true)
-      * [HIPTRACE Mode](#hiptrace-mode" aria-hidden="true"><span aria-hidden="true)
-      * [Environment Variables](#environment-variables" aria-hidden="true"><span aria-hidden="true)
-      * [Debugging hipcc](#debugging-hipcc" aria-hidden="true"><span aria-hidden="true)
-      * [What Does This Error Mean?](#what-does-this-error-mean" aria-hidden="true"><span aria-hidden="true)
-        * [/usr/include/c  /v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();](#usrincludecv1memory517215-error-call-to-implicitly-deleted-default-constructor-of-std__1bad_weak_ptr-throw-bad_weak_ptr" aria-hidden="true"><span aria-hidden="true)
-        * [grid_launch kernel dispatch - fallback](#grid_launch-kernel-dispatch---fallback" aria-hidden="true"><span aria-hidden="true)
-        * [Editor Highlighting](#editor-highlighting)
+<!-- toc -->
 
+- [Porting a New Cuda Project](#porting-a-new-cuda-project)
+  * [General Tips](#general-tips)
+  * [Scanning existing CUDA code to scope the porting effort](#scanning-existing-cuda-code-to-scope-the-porting-effort)
+  * [Converting a project "in-place"](#converting-a-project-in-place)
+- [Distinguishing Compiler Modes](#distinguishing-compiler-modes)
+  * [Identifying HIP Target Platform](#identifying-hip-target-platform)
+  * [Identifying the Compiler: hcc or nvcc](#identifying-the-compiler-hcc-or-nvcc)
+  * [Identifying Current Compilation Pass: Host or Device](#identifying-current-compilation-pass-host-or-device)
+  * [Compiler Defines: Summary](#compiler-defines-summary)
+- [Identifying Architecture Features](#identifying-architecture-features)
+  * [HIP_ARCH Defines](#hip_arch-defines)
+  * [Device-Architecture Properties](#device-architecture-properties)
+  * [Table of Architecture Properties](#table-of-architecture-properties)
+- [Finding HIP](#finding-hip)
+- [Compiler Options](#compiler-options)
+- [Linking Issues](#linking-issues)
+  * [Linking With hipcc](#linking-with-hipcc)
+  * [-lm Option](#-lm-option)
+- [Linking Code With Other Compilers](#linking-code-with-other-compilers)
+  * [libc++ and libstdc++](#libc-and-libstdc)
+  * [HIP Headers (hip_runtime.h, hip_runtime_api.h)](#hip-headers-hip_runtimeh-hip_runtime_apih)
+  * [Using a Standard C++ Compiler](#using-a-standard-c-compiler)
+    + [cuda.h](#cudah)
+  * [Choosing HIP File Extensions](#choosing-hip-file-extensions)
+  * [Workarounds](#workarounds)
+    + [warpSize](#warpsize)
+    + [Textures and Cache Control](#textures-and-cache-control)
+- [More Tips](#more-tips)
+  * [HIPTRACE Mode](#hiptrace-mode)
+  * [Environment Variables](#environment-variables)
+  * [Debugging hipcc](#debugging-hipcc)
+  * [What Does This Error Mean?](#what-does-this-error-mean)
+    + [/usr/include/c++/v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();](#usrincludecv1memory517215-error-call-to-implicitly-deleted-default-constructor-of-std__1bad_weak_ptr-throw-bad_weak_ptr)
+  * [HIP Environment Variables](#hip-environment-variables)
+  * [Editor Highlighting](#editor-highlighting)
+
+<!-- tocstop -->
 
 ## Porting a New Cuda Project
 
@@ -463,17 +417,13 @@ void myFunc ()
 
 ``` 
 
+Additionally, many of the Rodinia benchmarks demonstrate how to modify hipified programs so that textures are not required - search for USE_TEXTURES define in the rodinia source directory.   
+For example, [here
+
 
 Cuda programs that employ sampler hardware must either wait for hcc texture support or use more-sophisticated workarounds.
 
 ## More Tips
-### hcc CPU Mode
-Recent hcc versions support CPU accelerator targets. This feature enables some interesting possibilities for HIP porting:
-
-- hcc can run on any machine, including perhaps a cross-compiling environment on a machine also running nvcc
-- Standard CPU debuggers can debug CPU code
-- A single code path can run on an AMD or Nvidia GPU or CPU, but the CPU accelerator is a low-performance target---its just a single core and lacks SIMD acceleration  
-
 ### HIPTRACE Mode
 
 On an hcc/AMD platform, set the HIP_TRACE_API environment variable to see a textural API trace. Use the following bit mask:
@@ -490,7 +440,7 @@ On hcc/AMD platforms, set the HIP_PRINT_ENV environment variable to 1 and run an
 - HIP_TRACE_API = 1: trace each HIP API call. Print the function name and return code to stderr as the program executes.
 - HIP_LAUNCH_BLOCKING = 0: make HIP APIs host-synchronous so they are blocked until any kernel launches or data-copy commands are complete (an alias is CUDA_LAUNCH_BLOCKING)
 
-- KMDUMPISA = 1 : Will dump the GCN ISA for all kernels into the local directory.
+- KMDUMPISA = 1 : Will dump the GCN ISA for all kernels into the local directory. (This flag is provided by HCC).
 
 
 ### Debugging hipcc
@@ -510,38 +460,7 @@ hipcc-cmd: /opt/hcc/bin/hcc  -hc -I/opt/hcc/include -stdlib=libc++ -I../../../..
 If you pass a ".cu" file, hcc will attempt to compile it as a Cuda language file. You must tell hcc that its in fact a C++ file: use the "-x c++" option.
 
 
-#### grid_launch kernel dispatch - fallback
-HIP uses an hcc language feature called "grid_launch". The [[hc_grid_launch]] attribute that can be attached to a function definition, and the first parameter is of type grid_launch_parm.
-When a [[hc_grid_launch]] function is called, hcc runtime uses the grid_launch_parm to control the execution configuration of the kernel 
-(including the grid and group dimensions, the queue, and dynamic group memory allocations).   By default, the hipLaunchKernel macro creates a grid_launch_parm structure and launches a
-[[hc_grid_launch]] kernel.  grid_launch is a relatively new addition to hcc so this section describes how to fall back to a traditional calling sequence which invokes a standard host function
-which calls a hc::parallel_for_each to launch the kernel.  
-
-First, set DISABLE_GRID_LAUNCH:
-include/hip_common.h
-```
-// Set this define to disable GRID_LAUNCH
-#define DISABLE_GRID_LAUNCH
-```
-
-Inside any kernel use the KERNELBEGIN as the first line in the kernel function, and KERNELEND as the last line.  For example:
-```
-__global__ void
-MyKernel(hipLaunchParm lp, float *C, const float *A, size_t N)
-{
-    KERNELBEGIN; // Required if hc_grid_launch is disabled
-
-	int tid = hipBlockIdx_x*MAX_THREADS_PER_BLOCK + hipThreadIdx_x;
-
-    if (tid < N) {
-        C[tid] = A[tid];
-    }
-
-    KERNELEND; // Required if hc_grid_launch is disabled
-}
-```
-
-#### HIP Environment Variables
+### HIP Environment Variables
 
 On the HCC path, HIP provides a number of environment variables that control the behavior of HIP.  Some of these are useful for appliction development (for example HIP_VISIBLE_DEVICES, HIP_LAUNCH_BLOCKING),
 some are useful for performance tuning or experimentation (for example HIP_STAGING*), and some are useful for debugging (HIP_DB).  You can see the environment variables supported by HIP as well as
@@ -564,5 +483,5 @@ HIP_DISABLE_HW_COPY_DEP        =  1 : Disable HW dependencies before copy comman
 ```
 
 
-#### Editor Highlighting
+### Editor Highlighting
 See the utils/vim or utils/gedit directories to add handy highlighting to hip files.
