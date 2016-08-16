@@ -77,7 +77,6 @@ class ihipStream_t;
 class ihipDevice_t;
 class ihipCtx_t;
 
-
 // Color defs for debug messages:
 #define KNRM  "\x1B[0m"
 #define KRED  "\x1B[31m"
@@ -397,8 +396,6 @@ public:
 typedef ihipStreamCriticalBase_t<StreamMutex> ihipStreamCritical_t;
 typedef LockedAccessor<ihipStreamCritical_t> LockedAccessor_StreamCrit_t;
 
-
-
 // Internal stream structure.
 class ihipStream_t {
 public:
@@ -659,8 +656,6 @@ extern void ihipSetTs(hipEvent_t e);
 
 
 hipStream_t ihipSyncAndResolveStream(hipStream_t);
-
-
 
 // Stream printf functions:
 inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s)
