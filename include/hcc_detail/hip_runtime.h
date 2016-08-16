@@ -627,6 +627,8 @@ do {\
     __attribute__((address_space(3))) type* var = \
     (__attribute__((address_space(3))) type*)__get_dynamicgroupbaseptr(); \
 
+#define HIP_DYNAMIC_SHARED_ATTRIBUTE __attribute__((address_space(3)))
+
 #endif // __HCC__
 
 
