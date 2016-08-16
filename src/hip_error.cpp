@@ -40,12 +40,11 @@ hipError_t hipGetLastError()
 
 
 //---
-hipError_t hipPeakAtLastError()
+hipError_t hipPeekAtLastError()
 {
     HIP_INIT_API();
 
-   
-    // peak at last error, but don't reset it. 
+    // peek at last error, but don't reset it.
     return ihipLogStatus(tls_lastHipError);
 }
 

@@ -82,7 +82,7 @@ switch(cuError) {
     case cudaErrorHostMemoryAlreadyRegistered    : return hipErrorHostMemoryAlreadyRegistered ;
     case cudaErrorHostMemoryNotRegistered        : return hipErrorHostMemoryNotRegistered     ;
     default                                      : return hipErrorUnknown;  // Note - translated error.
-}; 
+};
 }
 
 // TODO   match the error enum names of hip and cuda
@@ -108,7 +108,7 @@ switch(hError) {
     case hipErrorHostMemoryNotRegistered        : return cudaErrorHostMemoryNotRegistered     ;
     case hipErrorTbd                            : return cudaErrorUnknown;  // Note - translated error.
     default                                     : return cudaErrorUnknown;  // Note - translated error.
-} 
+}
 }
 
 inline static cudaMemcpyKind hipMemcpyKindToCudaMemcpyKind(hipMemcpyKind kind) {
@@ -347,6 +347,31 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
     return hipCUDAErrorTohipError(cerror);
 }
 
+template<class T>
+inline static hipError_t hipOccupancyMaxPotentialBlockSize(
+        int *minGridSize,
+        int *blockSize,
+        T func,
+        size_t dynamicSMemSize = 0,
+        int blockSizeLimit = 0,
+        unsigned int flags = 0
+        ){
+    cudaError_t cerror;
+    cerror =  cudaOccupancyMaxPotentialBlockSize(minGridSize, blockSize, func, dynamicSMemSize, blockSizeLimit, flags);
+    return hipCUDAErrorTohipError(cerror);
+}
+
+inline static hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
+        int *numBlocks,
+        const void* func,
+        int blockSize,
+        size_t dynamicSMemSize
+        )
+{
+    cudaError_t cerror;
+    cerror =  cudaOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, func, blockSize, dynamicSMemSize);
+    return hipCUDAErrorTohipError(cerror);
+}
 
 inline static hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr){
 	cudaPointerAttributes cPA;
