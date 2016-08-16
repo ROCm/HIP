@@ -51,6 +51,11 @@ typedef struct ihipCtx_t    *hipCtx_t;
 typedef struct ihipDevice_t *hipDevice_t;
 
 typedef struct ihipStream_t *hipStream_t;
+
+typedef uint64_t hipFunction;
+
+typedef uint64_t hipModule;
+
 typedef struct hipEvent_t {
     struct ihipEvent_t *_handle;
 } hipEvent_t;
@@ -1085,6 +1090,21 @@ hipError_t hipDeviceGetFromId(hipDevice_t *device, int deviceId);
 hipError_t hipDriverGetVersion(int *driverVersion) ;
 
 
+hipError_t hipModuleLoad(hipModule *module, const char *fname);
+
+hipError_t hipModuleGetFunction(hipFunction *function, hipModule module, const char *kname);
+
+hipError_t hipDrvLaunchKernel(hipFunction f, 
+                              unsigned int gridDimX,
+                              unsigned int gridDimY,
+                              unsigned int gridDimZ,
+                              unsigned int blockDimX,
+                              unsigned int blockDimY,
+                              unsigned int blockDimZ,
+                              unsigned int sharedMemBytes,
+                              hipStream_t stream,
+                              void **kernelParams,
+                              void **extra) __attribute__((deprecated("kernelParams is not fully supported, use extra instead"))) ;
 
 // doxygen end Version Management
 /**

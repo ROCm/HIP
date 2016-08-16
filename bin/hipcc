@@ -258,7 +258,7 @@ if ($needHipHcc) {
     if ($HIP_USE_SHARED_LIBRARY) {
         $HIPLDFLAGS .= " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc";
     } else {
-        $HIPLDFLAGS .= " $HIP_PATH/lib/device_util.cpp.o $HIP_PATH/lib/hip_device.cpp.o $HIP_PATH/lib/hip_error.cpp.o $HIP_PATH/lib/hip_event.cpp.o $HIP_PATH/lib/hip_hcc.cpp.o $HIP_PATH/lib/hip_memory.cpp.o $HIP_PATH/lib/hip_peer.cpp.o $HIP_PATH/lib/hip_stream.cpp.o $HIP_PATH/lib/unpinned_copy_engine.cpp.o $HIP_PATH/lib/hip_ldg.cpp.o $HIP_PATH/lib/hip_fp16.cpp.o $HIP_PATH/lib/hip_context.cpp.o";
+        $HIPLDFLAGS .= " $HIP_PATH/lib/device_util.cpp.o $HIP_PATH/lib/hip_device.cpp.o $HIP_PATH/lib/hip_error.cpp.o $HIP_PATH/lib/hip_event.cpp.o $HIP_PATH/lib/hip_hcc.cpp.o $HIP_PATH/lib/hip_memory.cpp.o $HIP_PATH/lib/hip_peer.cpp.o $HIP_PATH/lib/hip_stream.cpp.o $HIP_PATH/lib/unpinned_copy_engine.cpp.o $HIP_PATH/lib/hip_ldg.cpp.o $HIP_PATH/lib/hip_fp16.cpp.o $HIP_PATH/lib/hip_context.cpp.o $HIP_PATH/lib/hip_module.cpp.o";
     }
 }
 

@@ -165,7 +165,8 @@ if(HIP_PLATFORM STREQUAL "hcc")
                      src/hip_peer.cpp
                      src/hip_stream.cpp
                      src/hip_fp16.cpp
-                     src/unpinned_copy_engine.cpp)
+                     src/unpinned_copy_engine.cpp
+                     src/hip_module.cpp)
 
     if(${HIP_USE_SHARED_LIBRARY} EQUAL 1)
         add_library(hip_hcc SHARED ${SOURCE_FILES})
