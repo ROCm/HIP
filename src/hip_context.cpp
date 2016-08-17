@@ -26,20 +26,20 @@ THE SOFTWARE.
 #include "hcc_detail/hip_hcc.h"
 #include "hcc_detail/trace_helper.h"
 
-// Stack of contexts 
+// Stack of contexts
 thread_local std::stack<ihipCtx_t *>  tls_ctxStack;
 
 
 hipError_t hipInit(unsigned int flags)
 {
     HIP_INIT_API(flags);
-    
+
     hipError_t e = hipSuccess;
 
     // Flags must be 0
     if (flags != 0) {
         e = hipErrorInvalidValue;
-    } 
+    }
 
     return ihipLogStatus(e);
 }
@@ -47,7 +47,7 @@ hipError_t hipInit(unsigned int flags)
 
 hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device)
 {
-    HIP_INIT_API(ctx, flags, device); // FIXME - review if we want to init 
+    HIP_INIT_API(ctx, flags, device); // FIXME - review if we want to init
     hipError_t e = hipSuccess;
 
     *ctx = new ihipCtx_t(device, g_deviceCnt, flags);
@@ -60,7 +60,7 @@ hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device)
 
 hipError_t hipDeviceGet(hipDevice_t *device, int deviceId)
 {
-    HIP_INIT_API(device, deviceId); // FIXME - review if we want to init 
+    HIP_INIT_API(device, deviceId); // FIXME - review if we want to init
 
     *device = ihipGetDevice(deviceId);
 
@@ -103,15 +103,19 @@ hipError_t hipCtxDestroy(hipCtx_t ctx)
 hipError_t hipCtxPopCurrent(hipCtx_t* ctx)
 {
     hipError_t e = hipSuccess;
-    tls_ctxStack.pop();
+    ihipCtx_t* tempCtx;
+    *ctx = ihipGetTlsDefaultCtx();
     if(!tls_ctxStack.empty()) {
-        *ctx= tls_ctxStack.top();
+        tls_ctxStack.pop();
     }
-    else { 
-        *ctx = nullptr;
+    if(!tls_ctxStack.empty()) {
+        tempCtx= tls_ctxStack.top();
     }
-    
-    ihipSetTlsDefaultCtx(*ctx); //TOD0 - Shall check for NULL?
+    else {
+        tempCtx = nullptr;
+    }
+
+    ihipSetTlsDefaultCtx(tempCtx); //TOD0 - Shall check for NULL?
     return ihipLogStatus(e);
 }
 
@@ -165,4 +169,51 @@ hipError_t hipCtxGetDevice(hipDevice_t *device)
         *device = (ihipDevice_t*)ctx->getDevice();
     }
     return ihipLogStatus(e);
+}
+
+hipError_t hipCtxGetApiVersion (hipCtx_t ctx,int *apiVersion)
+{
+    HIP_INIT_API(apiVersion);
+
+    if (apiVersion) {
+        *apiVersion = 4;
+    }
+
+    return ihipLogStatus(hipSuccess);
+}
+
+hipError_t hipCtxGetCacheConfig ( hipFuncCache *cacheConfig )
+{
+    HIP_INIT_API(cacheConfig);
+
+    *cacheConfig = hipFuncCachePreferNone;
+
+    return ihipLogStatus(hipSuccess);
+}
+
+hipError_t hipCtxSetCacheConfig ( hipFuncCache cacheConfig )
+{
+    HIP_INIT_API(cacheConfig);
+
+    // Nop, AMD does not support variable cache configs.
+
+    return ihipLogStatus(hipSuccess);
+}
+
+hipError_t hipCtxSetSharedMemConfig ( hipSharedMemConfig config )
+{
+    HIP_INIT_API(config);
+
+    // Nop, AMD does not support variable shared mem configs.
+
+    return ihipLogStatus(hipSuccess);
+}
+
+hipError_t hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig )
+{
+    HIP_INIT_API(pConfig);
+
+    *pConfig = hipSharedMemBankSizeFourByte;
+
+    return ihipLogStatus(hipSuccess);
 }
