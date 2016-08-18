@@ -1104,7 +1104,7 @@ hipError_t hipModuleLoad(hipModule *module, const char *fname);
 
 hipError_t hipModuleGetFunction(hipFunction *function, hipModule module, const char *kname);
 
-hipError_t hipDrvLaunchKernel(hipFunction f,
+hipError_t hipLaunchModuleKernel(hipFunction f,
                               unsigned int gridDimX,
                               unsigned int gridDimY,
                               unsigned int gridDimZ,

@@ -55,7 +55,9 @@ THE SOFTWARE.
 #define USE_GRID_LAUNCH_20 0
 #endif
 
-
+#define HIP_LAUNCH_PARAM_BUFFER_POINTER ((void*) 0x01)
+#define HIP_LAUNCH_PARAM_BUFFER_SIZE    ((void*) 0x02)
+#define HIP_LAUNCH_PARAM_END            ((void*) 0x03)
 
 extern int HIP_TRACE_API;
 
