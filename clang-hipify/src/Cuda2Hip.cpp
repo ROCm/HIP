@@ -69,15 +69,17 @@ enum ConvTypes {
   CONV_TEX,
   CONV_OTHER,
   CONV_INCLUDE,
+  CONV_INCLUDE_CUDA_MAIN_H,
   CONV_LITERAL,
   CONV_BLAS,
   CONV_LAST
 };
 
 const char *counterNames[ConvTypes::CONV_LAST] = {
-    "dev",          "mem",    "kern",    "coord_func", "math_func",
-    "special_func", "stream", "event",   "err",        "def",
-    "tex",          "other",  "include", "literal",    "blas"};
+    "dev",          "mem",    "kern",    "coord_func",   "math_func",
+    "special_func", "stream", "event",   "err",          "def",
+    "tex",          "other",  "include", "include_cuda_main_header",
+    "literal",      "blas"};
 
 namespace {
 
@@ -91,7 +93,8 @@ struct cuda2hipMap {
     cuda2hipRename["__CUDACC__"] = {"__HIPCC__", CONV_DEF};
 
     // CUDA includes
-    cuda2hipRename["cuda_runtime.h"]     = {"hip_runtime.h", CONV_INCLUDE};
+    cuda2hipRename["cuda.h"]             = {"hip_runtime.h", CONV_INCLUDE_CUDA_MAIN_H};
+    cuda2hipRename["cuda_runtime.h"] =     {"hip_runtime.h", CONV_INCLUDE_CUDA_MAIN_H};
     cuda2hipRename["cuda_runtime_api.h"] = {"hip_runtime_api.h", CONV_INCLUDE};
 
     // HIP includes
@@ -1040,7 +1043,10 @@ static void processString(StringRef s, const cuda2hipMap &map,
   }
 }
 
-struct HipifyPPCallbacks : public PPCallbacks, public SourceFileCallbacks {
+class Cuda2HipCallback;
+
+class HipifyPPCallbacks : public PPCallbacks, public SourceFileCallbacks {
+public:
   HipifyPPCallbacks(Replacements *R)
       : SeenEnd(false), _sm(nullptr), _pp(nullptr), Replace(R) {}
 
@@ -1054,6 +1060,8 @@ struct HipifyPPCallbacks : public PPCallbacks, public SourceFileCallbacks {
     setPreprocessor(&PP);
     return true;
   }
+
+  virtual void handleEndSource() override;
 
   virtual void InclusionDirective(SourceLocation hash_loc,
                                   const Token &include_token,
@@ -1186,21 +1194,23 @@ struct HipifyPPCallbacks : public PPCallbacks, public SourceFileCallbacks {
   bool SeenEnd;
   void setSourceManager(SourceManager *sm) { _sm = sm; }
   void setPreprocessor(Preprocessor *pp) { _pp = pp; }
-
+  void setMatch(Cuda2HipCallback *match) { Match = match; }
   int64_t countReps[ConvTypes::CONV_LAST] = {0};
 
 private:
   SourceManager *_sm;
   Preprocessor *_pp;
-
+  Cuda2HipCallback *Match;
   Replacements *Replace;
   struct cuda2hipMap N;
 };
 
 class Cuda2HipCallback : public MatchFinder::MatchCallback {
 public:
-  Cuda2HipCallback(Replacements *Replace, ast_matchers::MatchFinder *parent)
-      : Replace(Replace), owner(parent) {}
+  Cuda2HipCallback(Replacements *Replace, ast_matchers::MatchFinder *parent, HipifyPPCallbacks *PPCallbacks)
+    : Replace(Replace), owner(parent), PP(PPCallbacks) {
+    PP->setMatch(this);
+  }
 
   void convertKernelDecl(const FunctionDecl *kernelDecl,
                          const MatchFinder::MatchResult &Result) {
@@ -1561,6 +1571,14 @@ public:
         Replace->insert(Rep);
       }
     }
+
+    if (PP->countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 &&
+            countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 && Replace->size() > 0) {
+      StringRef repName = "#include <hip_runtime.h>\n";
+      Replacement Rep(*SM, SM->getLocForStartOfFile(SM->getMainFileID()), 0, repName);
+      Replace->insert(Rep);
+      countReps[CONV_INCLUDE_CUDA_MAIN_H]++;
+    }
   }
 
   int64_t countReps[ConvTypes::CONV_LAST] = {0};
@@ -1568,8 +1586,19 @@ public:
 private:
   Replacements *Replace;
   ast_matchers::MatchFinder *owner;
+  HipifyPPCallbacks *PP;
   struct cuda2hipMap N;
 };
+
+void HipifyPPCallbacks::handleEndSource() {
+  if (Match->countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 &&
+    countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 && Replace->size() > 0) {
+    StringRef repName = "#include <hip_runtime.h>\n";
+    Replacement Rep(*_sm, _sm->getLocForStartOfFile(_sm->getMainFileID()), 0, repName);
+    Replace->insert(Rep);
+    countReps[CONV_INCLUDE_CUDA_MAIN_H]++;
+  }
+}
 
 } // end anonymous namespace
 
@@ -1632,8 +1661,9 @@ int main(int argc, const char **argv) {
 
   RefactoringTool Tool(OptionsParser.getCompilations(), dst);
   ast_matchers::MatchFinder Finder;
-  Cuda2HipCallback Callback(&Tool.getReplacements(), &Finder);
   HipifyPPCallbacks PPCallbacks(&Tool.getReplacements());
+  Cuda2HipCallback Callback(&Tool.getReplacements(), &Finder, &PPCallbacks);
+
   Finder.addMatcher(callExpr(isExpansionInMainFile(),
                              callee(functionDecl(matchesName("cuda.*|cublas.*"))))
                              .bind("cudaCall"),
