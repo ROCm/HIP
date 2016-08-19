@@ -39,7 +39,7 @@ hipError_t ihipEventCreate(hipEvent_t* event, unsigned flags)
         eh->_stream = NULL;
         eh->_flags  = flags;
         eh->_timestamp  = 0;
-        eh->_copy_seq_id  = 0;
+        eh->_copySeqId  = 0;
     } else {
         e = hipErrorInvalidValue;
     }
@@ -79,8 +79,8 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
             // If stream == NULL, wait on all queues.
             // TODO-HCC fix this - is this conservative or still uses device timestamps?
             // TODO-HCC can we use barrier or event marker to implement better solution?
-            ihipDevice_t *device = ihipGetTlsDefaultDevice();
-            device->locked_syncDefaultStream(true);
+            ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
+            ctx->locked_syncDefaultStream(true);
 
             eh->_timestamp = hc::get_system_ticks();
             eh->_state = hipEventStatusRecorded;
@@ -91,7 +91,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
             eh->_timestamp = 0;
             eh->_marker = stream->_av.create_marker();
             
-            eh->_copy_seq_id = stream->locked_lastCopySeqId();
+            eh->_copySeqId = stream->locked_lastCopySeqId();
 
             return ihipLogStatus(hipSuccess);
         }
@@ -130,12 +130,12 @@ hipError_t hipEventSynchronize(hipEvent_t event)
             // Created but not actually recorded on any device:
             return ihipLogStatus(hipSuccess);
         } else if (eh->_stream == NULL) {
-            ihipDevice_t *device = ihipGetTlsDefaultDevice();
-            device->locked_syncDefaultStream(true);
+            auto *ctx = ihipGetTlsDefaultCtx();
+            ctx->locked_syncDefaultStream(true);
             return ihipLogStatus(hipSuccess);
         } else {
             eh->_marker.wait((eh->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked : hc::hcWaitModeActive);
-            eh->_stream->locked_reclaimSignals(eh->_copy_seq_id);
+            eh->_stream->locked_reclaimSignals(eh->_copySeqId);
 
             return ihipLogStatus(hipSuccess);
         }

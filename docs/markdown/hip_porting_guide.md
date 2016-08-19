@@ -264,6 +264,38 @@ Makefiles can use the following syntax to conditionally provide a default HIP_PA
 HIP_PATH ?= $(shell hipconfig --path)
 ```
 
+## hipLaunchKernel 
+
+hipLaunchKernel is a variadic macro which accepts as parameters the launch configurations (grid dims, group dims, stream, dynamic shared size) followed by a variable number of kernel arguments.
+This sequence is then expanded into the appropriate kernel launch syntax depending on the platform.  
+While this can be a convenient single-line kernel launch syntax, the macro implementation can cause issues when nested inside other macros.  For example, consider the following:
+
+```
+// Will cause compile error:
+#define MY_LAUNCH(command, doTrace) \
+{\
+    if (doTrace) printf ("TRACE: %s\n", #command); \
+    (command);   /* The nested ( ) will cause compile error */\
+}
+
+MY_LAUNCH (hipLaunchKernel(vAdd, dim3(1024), dim3(1), 0, 0, Ad), true, "firstCall");
+```
+
+Avoid nesting macro parameters inside parenthesis - here's an alternative that will work:
+
+```
+#define MY_LAUNCH(command, doTrace) \
+{\
+    if (doTrace) printf ("TRACE: %s\n", #command); \
+    command;\ 
+}
+
+MY_LAUNCH (hipLaunchKernel(vAdd, dim3(1024), dim3(1), 0, 0, Ad), true, "firstCall");
+```
+
+
+
+
 ## Compiler Options
 
 hipcc is a portable compiler driver that will call nvcc or hcc (depending on the target system) and attach all required include and library options. It passes options through to the target compiler. Tools that call hipcc must ensure the compiler options are appropriate for the target compiler. The `hipconfig` script may helpful in making

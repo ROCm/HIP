@@ -32,6 +32,13 @@ THE SOFTWARE.
 #include <string.h> // for getDeviceProp
 #include <hip/hip_common.h>
 
+enum {
+HIP_SUCCESS = 0,
+HIP_ERROR_INVALID_VALUE,
+HIP_ERROR_NOT_INITIALIZED,
+HIP_ERROR_LAUNCH_OUT_OF_RESOURCES
+};
+
 typedef struct {
     // 32-bit Atomics
     unsigned hasGlobalInt32Atomics    : 1;   ///< 32-bit integer atomics for global memory.
@@ -142,26 +149,67 @@ typedef struct hipPointerAttribute_t {
 // Also update the hipCUDAErrorTohipError function in NVCC path.
 
 typedef enum hipError_t {
-     hipSuccess = 0                   ///< Successful completion.
-    ,hipErrorMemoryAllocation         ///< Memory allocation error.
-    ,hipErrorLaunchOutOfResources     ///< Out of resources error.
-    ,hipErrorInvalidValue             ///< One or more of the parameters passed to the API call is NULL or not in an acceptable range.
-    ,hipErrorInvalidResourceHandle    ///< Resource handle (hipEvent_t or hipStream_t) invalid.
-    ,hipErrorInvalidDevice            ///< DeviceID must be in range 0...#compute-devices.
-    ,hipErrorInvalidMemcpyDirection   ///< Invalid memory copy direction 
-    ,hipErrorInvalidDevicePointer     ///< Invalid Device Pointer
-    ,hipErrorInitializationError      ///< TODO comment from hipErrorInitializationError
+    hipSuccess                      = 0,    ///< Successful completion.
+    hipErrorOutOfMemory             = 2,
+    hipErrorNotInitialized          = 3,
+    hipErrorDeinitialized           = 4,
+    hipErrorProfilerDisabled        = 5,
+    hipErrorProfilerNotInitialized  = 6,
+    hipErrorProfilerAlreadyStarted  = 7,
+    hipErrorProfilerAlreadyStopped  = 8,
+    hipErrorInvalidImage            = 200,
+    hipErrorInvalidContext          = 201,  ///< Produced when input context is invalid.
+    hipErrorContextAlreadyCurrent   = 202,
+    hipErrorMapFailed               = 205,
+    hipErrorUnmapFailed             = 206,
+    hipErrorArrayIsMapped           = 207,
+    hipErrorAlreadyMapped           = 208,
+    hipErrorNoBinaryForGpu          = 209,
+    hipErrorAlreadyAcquired         = 210,
+    hipErrorNotMapped               = 211,
+    hipErrorNotMappedAsArray        = 212,
+    hipErrorNotMappedAsPointer      = 213,
+    hipErrorECCNotCorrectable       = 214,
+    hipErrorUnsupportedLimit        = 215,
+    hipErrorContextAlreadyInUse     = 216,
+    hipErrorPeerAccessUnsupported   = 217,
+    hipErrorInvalidKernelFile       = 218,  ///< In CUDA DRV, it is CUDA_ERROR_INVALID_PTX
+    hipErrorInvalidGraphicsContext  = 219,
+    hipErrorInvalidSource           = 300,
+    hipErrorFileNotFound            = 301,
+    hipErrorSharedObjectSymbolNotFound = 302,
+    hipErrorSharedObjectInitFailed  = 303,
+    hipErrorOperatingSystem         = 304,
+    hipErrorInvalidHandle           = 400,
+    hipErrorNotFound                = 500,
+    hipErrorIllegalAddress          = 700,
 
-    ,hipErrorNoDevice                 ///< Call to hipGetDeviceCount returned 0 devices
-    ,hipErrorNotReady                 ///< Indicates that asynchronous operations enqueued earlier are not ready.  This is not actually an error, but is used to distinguish from hipSuccess (which indicates completion).  APIs that return this error include hipEventQuery and hipStreamQuery.
-    ,hipErrorUnknown                  ///< Unknown error.
-    ,hipErrorPeerAccessNotEnabled     ///< Peer access was never enabled from the current device.
-    ,hipErrorPeerAccessAlreadyEnabled ///< Peer access was already enabled from the current device.
-    ,hipErrorRuntimeMemory            ///< HSA runtime memory call returned error.  Typically not seen in production systems.
-    ,hipErrorRuntimeOther             ///< HSA runtime call other than memory returned error.  Typically not seen in production systems.
-    ,hipErrorHostMemoryAlreadyRegistered ///< Produced when trying to lock a page-locked memory.
-    ,hipErrorHostMemoryNotRegistered  ///< Produced when trying to unlock a non-page-locked memory.
-    ,hipErrorTbd                      ///< Marker that more error codes are needed.
+// Runtime Error Codes start here.
+    hipErrorMissingConfiguration    = 1,
+    hipErrorMemoryAllocation        = 2,    ///< Memory allocation error.
+    hipErrorInitializationError     = 3,    ///< TODO comment from hipErrorInitializationError
+    hipErrorLaunchFailure           = 4,
+    hipErrorPriorLaunchFailure      = 5,
+    hipErrorLaunchTimeOut           = 6,
+    hipErrorLaunchOutOfResources    = 7,    ///< Out of resources error.
+    hipErrorInvalidDeviceFunction   = 8,
+    hipErrorInvalidConfiguration    = 9,
+    hipErrorInvalidDevice           = 10,   ///< DeviceID must be in range 0...#compute-devices.
+    hipErrorInvalidValue            = 11,   ///< One or more of the parameters passed to the API call is NULL or not in an acceptable range.
+    hipErrorInvalidDevicePointer    = 17,   ///< Invalid Device Pointer
+    hipErrorInvalidMemcpyDirection  = 21,   ///< Invalid memory copy direction 
+    hipErrorUnknown                 = 30,   ///< Unknown error.
+    hipErrorInvalidResourceHandle   = 33,   ///< Resource handle (hipEvent_t or hipStream_t) invalid.
+    hipErrorNotReady                = 34,   ///< Indicates that asynchronous operations enqueued earlier are not ready.  This is not actually an error, but is used to distinguish from hipSuccess (which indicates completion).  APIs that return this error include hipEventQuery and hipStreamQuery.
+    hipErrorNoDevice                = 38,   ///< Call to hipGetDeviceCount returned 0 devices
+    hipErrorPeerAccessAlreadyEnabled = 50,  ///< Peer access was already enabled from the current device.
+
+    hipErrorPeerAccessNotEnabled    = 51,   ///< Peer access was never enabled from the current device.
+    hipErrorRuntimeMemory,                  ///< HSA runtime memory call returned error.  Typically not seen in production systems.
+    hipErrorRuntimeOther,                   ///< HSA runtime call other than memory returned error.  Typically not seen in production systems.
+    hipErrorHostMemoryAlreadyRegistered = 61, ///< Produced when trying to lock a page-locked memory.
+    hipErrorHostMemoryNotRegistered = 62,   ///< Produced when trying to unlock a non-page-locked memory.
+    hipErrorTbd                             ///< Marker that more error codes are needed.
 } hipError_t;
 
 /*

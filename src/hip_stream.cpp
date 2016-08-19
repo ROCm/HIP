@@ -30,23 +30,29 @@ THE SOFTWARE.
 //---
 hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags)
 {
-    ihipDevice_t *device = ihipGetTlsDefaultDevice();
-    hc::accelerator acc = device->_acc;
+    ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
 
-    // TODO - se try-catch loop to detect memory exception?
-    //
-    //
-    //Note this is an execute_in_order queue, so all kernels submitted will atuomatically wait for prev to complete:
-    //This matches CUDA stream behavior:
+    hipError_t e = hipSuccess;
 
-    auto istream = new ihipStream_t(device->_device_index, acc.create_view(), flags);
+    if (ctx) {
+        hc::accelerator acc = ctx->getWriteableDevice()->_acc;
 
-    device->locked_addStream(istream);
+        // TODO - se try-catch loop to detect memory exception?
+        //
+        //Note this is an execute_in_order queue, so all kernels submitted will atuomatically wait for prev to complete:
+        //This matches CUDA stream behavior:
 
-    *stream = istream;
-    tprintf(DB_SYNC, "hipStreamCreate, stream=%p\n", *stream);
+        auto istream = new ihipStream_t(ctx, acc.create_view(), flags);
 
-    return hipSuccess;
+        ctx->locked_addStream(istream);
+
+        *stream = istream;
+        tprintf(DB_SYNC, "hipStreamCreate, stream=%p\n", *stream);
+    } else {
+        e = hipErrorInvalidDevice;
+    }
+
+    return ihipLogStatus(e);
 }
 
 
@@ -98,8 +104,8 @@ hipError_t hipStreamSynchronize(hipStream_t stream)
     hipError_t e = hipSuccess;
 
     if (stream == NULL) {
-        ihipDevice_t *device = ihipGetTlsDefaultDevice();
-        device->locked_syncDefaultStream(true/*waitOnSelf*/);
+        ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
+        ctx->locked_syncDefaultStream(true/*waitOnSelf*/);
     } else {
         stream->locked_wait();
         e = hipSuccess;
@@ -122,17 +128,17 @@ hipError_t hipStreamDestroy(hipStream_t stream)
 
     //--- Drain the stream:
     if (stream == NULL) {
-        ihipDevice_t *device = ihipGetTlsDefaultDevice();
-        device->locked_syncDefaultStream(true/*waitOnSelf*/);
+        ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
+        ctx->locked_syncDefaultStream(true/*waitOnSelf*/);
     } else {
         stream->locked_wait();
         e = hipSuccess;
     }
 
-    ihipDevice_t *device = stream->getDevice();
+    ihipCtx_t *ctx = stream->getCtx();
 
-    if (device) {
-        device->locked_removeStream(stream);
+    if (ctx) {
+        ctx->locked_removeStream(stream);
         delete stream;
     } else {
         e = hipErrorInvalidResourceHandle;
