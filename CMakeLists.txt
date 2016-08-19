@@ -114,11 +114,14 @@ else()
 endif()
 
 # Set if we need to build shared or static library
-if(NOT DEFINED ENV{HIP_USE_SHARED_LIBRARY})
-    set(HIP_USE_SHARED_LIBRARY 0)
-else()
-    set(HIP_USE_SHARED_LIBRARY $ENV{HIP_USE_SHARED_LIBRARY})
+if(NOT DEFINED HIP_LIB_TYPE)
+    if(NOT DEFINED ENV{HIP_LIB_TYPE})
+        set(HIP_LIB_TYPE 0)
+    else()
+        set(HIP_LIB_TYPE $ENV{HIP_LIB_TYPE})
+    endif()
 endif()
+add_to_config(_buildInfo HIP_LIB_TYPE)
 
 # Check if we need to build clang hipify
 if(NOT DEFINED BUILD_CLANG_HIPIFY)
@@ -177,11 +180,12 @@ if(HIP_PLATFORM STREQUAL "hcc")
                      src/unpinned_copy_engine.cpp
                      src/hip_module.cpp)
 
-    if(${HIP_USE_SHARED_LIBRARY} EQUAL 1)
-        add_library(hip_hcc SHARED ${SOURCE_FILES})
-    else()
-        #add_library(hip_hcc STATIC ${SOURCE_FILES})
+    if(${HIP_LIB_TYPE} EQUAL 0)
         add_library(hip_hcc OBJECT ${SOURCE_FILES})
+    elseif(${HIP_LIB_TYPE} EQUAL 1)
+        add_library(hip_hcc STATIC ${SOURCE_FILES})
+    else()
+        add_library(hip_hcc SHARED ${SOURCE_FILES})
     endif()
 
     # Generate .buildInfo
@@ -200,11 +204,10 @@ add_custom_target(doc COMMAND HIP_PATH=${CMAKE_CURRENT_SOURCE_DIR} doxygen ${CMA
 #############################
 # Install hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
-    if(${HIP_USE_SHARED_LIBRARY} EQUAL 1)
-        install(TARGETS hip_hcc DESTINATION lib)
-    else()
-        #install(TARGETS hip_hcc DESTINATION lib)
+    if(${HIP_LIB_TYPE} EQUAL 0)
         install(DIRECTORY ${PROJECT_BINARY_DIR}/CMakeFiles/hip_hcc.dir/src/ DESTINATION lib)
+    else()
+        install(TARGETS hip_hcc DESTINATION lib)
     endif()
 
     # Install .buildInfo
