@@ -252,13 +252,14 @@ if ($setStdLib eq 0 and $HIP_PLATFORM eq 'hcc')
 }
 
 if ($needHipHcc) {
-    $HIP_USE_SHARED_LIBRARY = $ENV{'HIP_USE_SHARED_LIBRARY'} // 0;
+    $HIP_LIB_TYPE = $hipConfig{'HIP_LIB_TYPE'} // 0;
 
-    #$HIPLDFLAGS .= " -L/opt/rocm/hip/lib -lhip_hcc" ;
-    if ($HIP_USE_SHARED_LIBRARY) {
-        $HIPLDFLAGS .= " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc";
-    } else {
+    if ($HIP_LIB_TYPE eq 0) {
         $HIPLDFLAGS .= " $HIP_PATH/lib/device_util.cpp.o $HIP_PATH/lib/hip_device.cpp.o $HIP_PATH/lib/hip_error.cpp.o $HIP_PATH/lib/hip_event.cpp.o $HIP_PATH/lib/hip_hcc.cpp.o $HIP_PATH/lib/hip_memory.cpp.o $HIP_PATH/lib/hip_peer.cpp.o $HIP_PATH/lib/hip_stream.cpp.o $HIP_PATH/lib/unpinned_copy_engine.cpp.o $HIP_PATH/lib/hip_ldg.cpp.o $HIP_PATH/lib/hip_fp16.cpp.o $HIP_PATH/lib/hip_context.cpp.o $HIP_PATH/lib/hip_module.cpp.o";
+    } elsif ($HIP_LIB_TYPE eq 1) {
+        $HIPLDFLAGS .= " -L$HIP_PATH/lib -lhip_hcc" ;
+    } else {
+        $HIPLDFLAGS .= " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc";
     }
 }
 
