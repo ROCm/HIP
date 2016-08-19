@@ -99,6 +99,8 @@ kernelName<<<numblocks,numthreads,memperblock,streamId>>>(0, ##__VA_ARGS__);\
 #define HIP_DYNAMIC_SHARED(type, var) \
     extern __shared__ type var[]; \
 
+#define HIP_DYNAMIC_SHARED_ATTRIBUTE
+
 #endif
 
 

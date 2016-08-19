@@ -44,10 +44,13 @@ THE SOFTWARE.
 #include "hsa_ext_amd.h"
 #include "hsakmt.h"
 
-// TODO, re-org header order.
-extern const char *ihipErrorString(hipError_t hip_error);
 #include "hcc_detail/trace_helper.h"
 
+
+
+//=================================================================================================
+//Global variables:
+//=================================================================================================
 const int release = 1;
 
 #define MEMCPY_D2H_STAGING_VS_PININPLACE_COPY_THRESHOLD    4194304
@@ -76,28 +79,85 @@ int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU ident
 int HIP_DISABLE_HW_KERNEL_DEP = 0;
 int HIP_DISABLE_HW_COPY_DEP = 0;
 
-thread_local int tls_defaultDevice = 0;
-thread_local hipError_t tls_lastHipError = hipSuccess;
 
 
 
-//=================================================================================================
-//Forward Declarations:
-//=================================================================================================
-bool ihipIsValidDevice(unsigned deviceIndex);
 
 std::once_flag hip_initialized;
-ihipDevice_t *g_devices;
+
+// Array of pointers to devices.
+ihipDevice_t **g_deviceArray;
+
+
 bool g_visible_device = false;
 unsigned g_deviceCnt;
 std::vector<int> g_hip_visible_devices;
 hsa_agent_t g_cpu_agent;
 
 
+// TODO, remove these if possible:
+hsa_agent_t gpu_agent_;
+hsa_amd_memory_pool_t gpu_pool_;
 
 //=================================================================================================
-// Implementation:
+// Thread-local storage:
 //=================================================================================================
+
+// This is the implicit context used by all HIP commands.
+// It can be set by hipSetDevice or by the CTX manipulation commands:
+
+thread_local hipError_t tls_lastHipError = hipSuccess;
+
+
+
+
+//=================================================================================================
+// Top-level "free" functions:
+//=================================================================================================
+static inline bool ihipIsValidDevice(unsigned deviceIndex)
+{
+    // deviceIndex is unsigned so always > 0
+    return (deviceIndex < g_deviceCnt);
+}
+
+
+ihipDevice_t * ihipGetDevice(int deviceIndex)
+{
+    if (ihipIsValidDevice(deviceIndex)) {
+        return g_deviceArray[deviceIndex];
+    } else {
+        return NULL;
+    }
+}
+
+ihipCtx_t * ihipGetPrimaryCtx(unsigned deviceIndex)
+{
+    ihipDevice_t *device = ihipGetDevice(deviceIndex);
+    return device ? device->getPrimaryCtx() : NULL;
+};
+
+
+static thread_local ihipCtx_t *tls_defaultCtx = nullptr;  
+void ihipSetTlsDefaultCtx(ihipCtx_t *ctx)
+{
+    tls_defaultCtx = ctx;
+}
+
+
+//---
+//TODO - review the context creation strategy here.  Really should be:
+//  - first "non-device" runtime call creates the context for this thread.  Allowed to call setDevice first.
+//  - hipDeviceReset destroys the primary context for device?
+//  - Then context is created again for next usage.
+ihipCtx_t *ihipGetTlsDefaultCtx()
+{
+    // Per-thread initialization of the TLS:
+    if ((tls_defaultCtx == nullptr) && (g_deviceCnt>0)) {
+        ihipSetTlsDefaultCtx(ihipGetPrimaryCtx(0));
+    }
+    return tls_defaultCtx;
+}
+
 
 
 //=================================================================================================
@@ -105,19 +165,19 @@ hsa_agent_t g_cpu_agent;
 //=================================================================================================
 //
 //---
-ihipSignal_t::ihipSignal_t() :  _sig_id(0)
+ihipSignal_t::ihipSignal_t() :  _sigId(0)
 {
-    if (hsa_signal_create(0/*value*/, 0, NULL, &_hsa_signal) != HSA_STATUS_SUCCESS) {
+    if (hsa_signal_create(0/*value*/, 0, NULL, &_hsaSignal) != HSA_STATUS_SUCCESS) {
         throw ihipException(hipErrorRuntimeMemory);
     }
-    //tprintf (DB_SIGNAL, "  allocated hsa_signal=%lu\n", (_hsa_signal.handle));
+    //tprintf (DB_SIGNAL, "  allocated hsa_signal=%lu\n", (_hsaSignal.handle));
 }
 
 //---
 ihipSignal_t::~ihipSignal_t()
 {
-    tprintf (DB_SIGNAL, "  destroy hsa_signal #%lu (#%lu)\n", (_hsa_signal.handle), _sig_id);
-    if (hsa_signal_destroy(_hsa_signal) != HSA_STATUS_SUCCESS) {
+    tprintf (DB_SIGNAL, "  destroy hsa_signal #%lu (#%lu)\n", (_hsaSignal.handle), _sigId);
+    if (hsa_signal_destroy(_hsaSignal) != HSA_STATUS_SUCCESS) {
        throw ihipException(hipErrorRuntimeOther);
     }
 };
@@ -128,11 +188,11 @@ ihipSignal_t::~ihipSignal_t()
 // ihipStream_t:
 //=================================================================================================
 //---
-ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, unsigned int flags) :
+ihipStream_t::ihipStream_t(ihipCtx_t *ctx, hc::accelerator_view av, unsigned int flags) :
     _id(0), // will be set by add function.
     _av(av),
     _flags(flags),
-    _device_index(device_index)
+    _ctx(ctx)
 {
     tprintf(DB_SYNC, " streamCreate: stream=%p\n", this);
 };
@@ -142,7 +202,6 @@ ihipStream_t::ihipStream_t(unsigned device_index, hc::accelerator_view av, unsig
 ihipStream_t::~ihipStream_t()
 {
 }
-
 
 
 //---
@@ -162,10 +221,10 @@ void ihipStream_t::locked_reclaimSignals(SIGSEQNUM sigNum)
 //---
 void ihipStream_t::waitCopy(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *signal)
 {
-    SIGSEQNUM sigNum = signal->_sig_id;
+    SIGSEQNUM sigNum = signal->_sigId;
     tprintf(DB_SYNC, "waitCopy signal:#%lu\n", sigNum);
 
-    hsa_signal_wait_acquire(signal->_hsa_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+    hsa_signal_wait_acquire(signal->_hsaSignal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
 
 
     tprintf(DB_SIGNAL, "waitCopy reclaim signal #%lu\n", sigNum);
@@ -183,8 +242,8 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty
     if (! assertQueueEmpty) {
         tprintf (DB_SYNC, "stream %p wait for queue-empty..\n", this);
         _av.wait();
-    } 
-     
+    }
+
     if (crit->_last_copy_signal) {
         tprintf (DB_SYNC, "stream %p wait for lastCopy:#%lu...\n", this, lastCopySeqId(crit) );
         this->waitCopy(crit, crit->_last_copy_signal);
@@ -209,93 +268,26 @@ void ihipStream_t::locked_wait(bool assertQueueEmpty)
 
 };
 
-
-// Recompute the peercnt and the packed _peerAgents whenever a peer is added or deleted.
-// The packed _peerAgents can efficiently be used on each memory allocation.
-template<> 
-void ihipDeviceCriticalBase_t<DeviceMutex>::recomputePeerAgents()
-{
-    _peerCnt = 0;
-    std::for_each (_peers.begin(), _peers.end(), [this](ihipDevice_t* device) {
-        _peerAgents[_peerCnt++] = device->_hsa_agent;
-    });
-}
+//=============================================================================
 
 
-template<>
-bool ihipDeviceCriticalBase_t<DeviceMutex>::isPeer(const ihipDevice_t *peer) 
-{
-    auto match = std::find(_peers.begin(), _peers.end(), peer);
-    return (match != std::end(_peers));
-}
-
-
-template<>
-bool ihipDeviceCriticalBase_t<DeviceMutex>::addPeer(ihipDevice_t *peer) 
-{
-    auto match = std::find(_peers.begin(), _peers.end(), peer);
-    if (match == std::end(_peers)) {
-        // Not already a peer, let's update the list:
-        _peers.push_back(peer);
-        recomputePeerAgents();
-        return true;
-    }
-
-    // If we get here - peer was already on list, silently ignore.
-    return false;
-}
-
-
-template<>
-bool ihipDeviceCriticalBase_t<DeviceMutex>::removePeer(ihipDevice_t *peer) 
-{
-    auto match = std::find(_peers.begin(), _peers.end(), peer);
-    if (match != std::end(_peers)) {
-        // Found a valid peer, let's remove it.
-        _peers.remove(peer);
-        recomputePeerAgents();
-        return true;
-    } else {
-        return false;
-    }
-}
-
-
-template<>
-void ihipDeviceCriticalBase_t<DeviceMutex>::resetPeers(ihipDevice_t *thisDevice)
-{
-    _peers.clear();
-    _peerCnt = 0;
-    addPeer(thisDevice); // peer-list always contains self agent.
-}
-
-
-template<>
-void ihipDeviceCriticalBase_t<DeviceMutex>::addStream(ihipStream_t *stream)
-{
-    _streams.push_back(stream);
-    stream->_id = incStreamId();
-}
 
 //-------------------------------------------------------------------------------------------------
 
+
 //---
-//Flavor that takes device index.
-ihipDevice_t * getDevice(unsigned deviceIndex) 
+const ihipDevice_t * ihipStream_t::getDevice() const
 {
-    if (ihipIsValidDevice(deviceIndex)) {
-        return &g_devices[deviceIndex];
-    } else {
-        return NULL;
-    }
+    return _ctx->getDevice();
 };
 
 
-//---
-ihipDevice_t * ihipStream_t::getDevice() const
+
+ihipCtx_t * ihipStream_t::getCtx() const
 {
-    return ::getDevice(_device_index);
+    return _ctx;
 };
+
 
 #define HIP_NUM_SIGNALS_PER_STREAM 32
 
@@ -322,12 +314,12 @@ ihipSignal_t *ihipStream_t::allocSignal(LockedAccessor_StreamCrit_t &crit)
             crit->_signalCursor = 0;
         }
 
-        if (crit->_signalPool[thisCursor]._sig_id < crit->_oldest_live_sig_id) {
-            SIGSEQNUM oldSigId = crit->_signalPool[thisCursor]._sig_id;
+        if (crit->_signalPool[thisCursor]._sigId < crit->_oldest_live_sig_id) {
+            SIGSEQNUM oldSigId = crit->_signalPool[thisCursor]._sigId;
             crit->_signalPool[thisCursor]._index = thisCursor;
-            crit->_signalPool[thisCursor]._sig_id  =  ++crit->_stream_sig_id;  // allocate it.
+            crit->_signalPool[thisCursor]._sigId  =  ++crit->_streamSigId;  // allocate it.
             tprintf(DB_SIGNAL, "allocatSignal #%lu at pos:%i (old sigId:%lu < oldest_live:%lu)\n",
-                    crit->_signalPool[thisCursor]._sig_id,
+                    crit->_signalPool[thisCursor]._sigId,
                     thisCursor, oldSigId, crit->_oldest_live_sig_id);
 
 
@@ -372,9 +364,9 @@ void ihipStream_t::enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal, i
     //header |= HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE;
     barrier->header = header;
 
-    barrier->dep_signal[0].handle = depSignal ? depSignal->_hsa_signal.handle: 0;
+    barrier->dep_signal[0].handle = depSignal ? depSignal->_hsaSignal.handle: 0;
 
-    barrier->completion_signal.handle = completionSignal ? completionSignal->_hsa_signal.handle : 0;
+    barrier->completion_signal.handle = completionSignal ? completionSignal->_hsaSignal.handle : 0;
 
     // TODO - check queue overflow, return error:
     // Increment write index and ring doorbell to dispatch the kernel
@@ -411,7 +403,7 @@ bool ihipStream_t::lockopen_preKernelCommand()
             if (HIP_DISABLE_HW_KERNEL_DEP == 0) {
                 this->enqueueBarrier(q, crit->_last_copy_signal, NULL);
                 tprintf (DB_SYNC, "stream %p switch %s to %s (barrier pkt inserted with wait on #%lu)\n",
-                        this, ihipCommandName[crit->_last_command_type], ihipCommandName[ihipCommandKernel], crit->_last_copy_signal->_sig_id)
+                        this, ihipCommandName[crit->_last_command_type], ihipCommandName[ihipCommandKernel], crit->_last_copy_signal->_sigId)
 
             } else if (HIP_DISABLE_HW_KERNEL_DEP>0) {
                     tprintf (DB_SYNC, "stream %p switch %s to %s (HOST wait for previous...)\n",
@@ -459,14 +451,14 @@ int ihipStream_t::preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t
                     this, ihipCommandName[crit->_last_command_type], ihipCommandName[copyType]);
             needSync = 1;
             ihipSignal_t *depSignal = allocSignal(crit);
-            hsa_signal_store_relaxed(depSignal->_hsa_signal,1);
+            hsa_signal_store_relaxed(depSignal->_hsaSignal,1);
             this->enqueueBarrier(static_cast<hsa_queue_t*>(_av.get_hsa_queue()), NULL, depSignal);
-            *waitSignal = depSignal->_hsa_signal;
+            *waitSignal = depSignal->_hsaSignal;
         } else if (crit->_last_copy_signal) {
             needSync = 1;
             tprintf (DB_SYNC, "stream %p switch %s to %s (async copy dep on other copy #%lu)\n",
-                    this, ihipCommandName[crit->_last_command_type], ihipCommandName[copyType], crit->_last_copy_signal->_sig_id);
-            *waitSignal = crit->_last_copy_signal->_hsa_signal;
+                    this, ihipCommandName[crit->_last_command_type], ihipCommandName[copyType], crit->_last_copy_signal->_sigId);
+            *waitSignal = crit->_last_copy_signal->_hsaSignal;
         }
 
         if (HIP_DISABLE_HW_COPY_DEP && needSync) {
@@ -491,114 +483,114 @@ int ihipStream_t::preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t
 
 
 
+//=============================================================================
+// Recompute the peercnt and the packed _peerAgents whenever a peer is added or deleted.
+// The packed _peerAgents can efficiently be used on each memory allocation.
+template<>
+void ihipCtxCriticalBase_t<CtxMutex>::recomputePeerAgents()
+{
+    _peerCnt = 0;
+    std::for_each (_peers.begin(), _peers.end(), [this](ihipCtx_t* ctx) {
+        _peerAgents[_peerCnt++] = ctx->getDevice()->_hsaAgent;
+    });
+}
+
+
+template<>
+bool ihipCtxCriticalBase_t<CtxMutex>::isPeer(const ihipCtx_t *peer)
+{
+    auto match = std::find(_peers.begin(), _peers.end(), peer);
+    return (match != std::end(_peers));
+}
+
+
+template<>
+bool ihipCtxCriticalBase_t<CtxMutex>::addPeer(ihipCtx_t *peer)
+{
+    auto match = std::find(_peers.begin(), _peers.end(), peer);
+    if (match == std::end(_peers)) {
+        // Not already a peer, let's update the list:
+        _peers.push_back(peer);
+        recomputePeerAgents();
+        return true;
+    }
+
+    // If we get here - peer was already on list, silently ignore.
+    return false;
+}
+
+
+template<>
+bool ihipCtxCriticalBase_t<CtxMutex>::removePeer(ihipCtx_t *peer)
+{
+    auto match = std::find(_peers.begin(), _peers.end(), peer);
+    if (match != std::end(_peers)) {
+        // Found a valid peer, let's remove it.
+        _peers.remove(peer);
+        recomputePeerAgents();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+template<>
+void ihipCtxCriticalBase_t<CtxMutex>::resetPeers(ihipCtx_t *thisDevice)
+{
+    _peers.clear();
+    _peerCnt = 0;
+    addPeer(thisDevice); // peer-list always contains self agent.
+}
+
+
+template<>
+void ihipCtxCriticalBase_t<CtxMutex>::addStream(ihipStream_t *stream)
+{
+    stream->_id = _streams.size();
+    _streams.push_back(stream);
+}
+//=============================================================================
 
 //=================================================================================================
-//
-//Reset the device - this is called from hipDeviceReset.
-//Device may be reset multiple times, and may be reset after init.
-void ihipDevice_t::locked_reset()
+// ihipDevice_t
+//=================================================================================================
+ihipDevice_t::ihipDevice_t(unsigned deviceId, unsigned deviceCnt, hc::accelerator &acc) :
+    _deviceId(deviceId),
+    _acc(acc)
 {
-    // Obtain mutex access to the device critical data, release by destructor
-    LockedAccessor_DeviceCrit_t  crit(_criticalData);
-
-
-    //---
-    //Wait for pending activity to complete?  TODO - check if this is required behavior:
-    tprintf(DB_SYNC, "locked_reset waiting for activity to complete.\n");
-
-    // Reset and remove streams:
-    // Delete all created streams including the default one.
-    for (auto streamI=crit->const_streams().begin(); streamI!=crit->const_streams().end(); streamI++) {
-        ihipStream_t *stream = *streamI;
-        (*streamI)->locked_wait();
-        tprintf(DB_SYNC, " delete stream=%p\n", stream);
-        
-        delete stream;
-    }
-    // Clear the list.
-    crit->streams().clear();
-
-
-    // Create a fresh default stream and add it:
-    _default_stream = new ihipStream_t(_device_index, _acc.get_default_view(), hipStreamDefault);
-    crit->addStream(_default_stream);
-
-
-    // This resest peer list to just me:
-    crit->resetPeers(this);
-
-    // Reset and release all memory stored in the tracker:
-    // Reset will remove peer mapping so don't need to do this explicitly.
-    am_memtracker_reset(_acc);
-
-};
-
-
-//---
-void ihipDevice_t::init(unsigned device_index, unsigned deviceCnt, hc::accelerator &acc, unsigned flags)
-{
-    _device_index = device_index;
-    _device_flags = flags;
-    _acc = acc;
-
     hsa_agent_t *agent = static_cast<hsa_agent_t*> (acc.get_hsa_agent());
     if (agent) {
-        int err = hsa_agent_get_info(*agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_COMPUTE_UNIT_COUNT, &_compute_units);
+        int err = hsa_agent_get_info(*agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_COMPUTE_UNIT_COUNT, &_computeUnits);
         if (err != HSA_STATUS_SUCCESS) {
-            _compute_units = 1;
+            _computeUnits = 1;
         }
 
-        _hsa_agent = *agent;
+        _hsaAgent = *agent;
     } else {
-        _hsa_agent.handle = static_cast<uint64_t> (-1);
+        _hsaAgent.handle = static_cast<uint64_t> (-1);
     }
 
-    getProperties(&_props);
+    initProperties(&_props);
 
-    _criticalData.init(deviceCnt);
+    _stagingBuffer[0] = new UnpinnedCopyEngine(_hsaAgent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS,HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING,HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE,HIP_D2H_MEM_TRANSFER_THRESHOLD);
+    _stagingBuffer[1] = new UnpinnedCopyEngine(_hsaAgent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS,HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING,HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE,HIP_D2H_MEM_TRANSFER_THRESHOLD);
 
-    locked_reset();
-
-
-    tprintf(DB_SYNC, "created device with default_stream=%p\n", _default_stream);
-
-    hsa_region_t *pinnedHostRegion;
-    pinnedHostRegion = static_cast<hsa_region_t*>(_acc.get_hsa_am_system_region());
-    _staging_buffer[0] = new StagingBuffer(_hsa_agent, *pinnedHostRegion, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
-    _staging_buffer[1] = new StagingBuffer(_hsa_agent, *pinnedHostRegion, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS);
-
-};
-
-
+    _primaryCtx = new ihipCtx_t(this, deviceCnt, hipDeviceMapHost);
+}
 
 
 ihipDevice_t::~ihipDevice_t()
 {
-    if (_default_stream) {
-        delete _default_stream;
-        _default_stream = NULL;
-    }
-
     for (int i=0; i<2; i++) {
-        if (_staging_buffer[i]) {
-            delete _staging_buffer[i];
-            _staging_buffer[i] = NULL;
+        if (_stagingBuffer[i]) {
+            delete _stagingBuffer[i];
+            _stagingBuffer[i] = NULL;
         }
     }
 }
 
-//----
 
-
-
-
-//=================================================================================================
-// Utility functions, these are not part of the public HIP API
-//=================================================================================================
-
-//=================================================================================================
-
-#define DeviceErrorCheck(x) if (x != HSA_STATUS_SUCCESS) { return hipErrorInvalidDevice; }
 
 #define ErrorCheck(x) error_check(x, __LINE__, __FILE__)
 
@@ -608,13 +600,28 @@ void error_check(hsa_status_t hsa_error_code, int line_num, std::string str) {
   }
 }
 
-// CPU agent used for verification
-hsa_agent_t cpu_agent_;
-hsa_agent_t gpu_agent_;
-int gpu_region_count;
-// System region
-hsa_amd_memory_pool_t sys_region_;
-hsa_amd_memory_pool_t gpu_region_;
+
+
+//---
+// Helper for initProperties
+// Determines if the given agent is of type HSA_DEVICE_TYPE_GPU and counts it.
+static hsa_status_t countGpuAgents(hsa_agent_t agent, void *data) {
+    if (data == NULL) {
+        return HSA_STATUS_ERROR_INVALID_ARGUMENT;
+    }
+    hsa_device_type_t device_type;
+    hsa_status_t status = hsa_agent_get_info(agent, HSA_AGENT_INFO_DEVICE, &device_type);
+    if (status != HSA_STATUS_SUCCESS) {
+        return status;
+    }
+    if (device_type == HSA_DEVICE_TYPE_GPU) {
+        (*static_cast<int*>(data))++;
+    }
+    return HSA_STATUS_SUCCESS;
+}
+
+
+
 
 hsa_status_t FindGpuDevice(hsa_agent_t agent, void* data) {
     if (data == NULL) {
@@ -636,27 +643,7 @@ hsa_status_t FindGpuDevice(hsa_agent_t agent, void* data) {
     return HSA_STATUS_SUCCESS;
 }
 
-hsa_status_t FindCpuDevice(hsa_agent_t agent, void* data) {
-    if (data == NULL) {
-        return HSA_STATUS_ERROR_INVALID_ARGUMENT;
-    }
-
-    hsa_device_type_t hsa_device_type;
-    hsa_status_t hsa_error_code =
-    hsa_agent_get_info(agent, HSA_AGENT_INFO_DEVICE, &hsa_device_type);
-    if (hsa_error_code != HSA_STATUS_SUCCESS) {
-        return hsa_error_code;
-    }
-
-    if (hsa_device_type == HSA_DEVICE_TYPE_CPU) {
-        *((hsa_agent_t*)data) = agent;
-        return HSA_STATUS_INFO_BREAK;
-    }
-
-    return HSA_STATUS_SUCCESS;
-}
-
-hsa_status_t GetDeviceRegion(hsa_amd_memory_pool_t region, void* data) {
+hsa_status_t GetDevicePool(hsa_amd_memory_pool_t pool, void* data) {
     if (NULL == data) {
         return HSA_STATUS_ERROR_INVALID_ARGUMENT;
     }
@@ -665,50 +652,21 @@ hsa_status_t GetDeviceRegion(hsa_amd_memory_pool_t region, void* data) {
     hsa_amd_segment_t segment;
     uint32_t flag;
 
-    err = hsa_amd_memory_pool_get_info(region, HSA_AMD_MEMORY_POOL_INFO_SEGMENT, &segment);
+    err = hsa_amd_memory_pool_get_info(pool, HSA_AMD_MEMORY_POOL_INFO_SEGMENT, &segment);
     ErrorCheck(err);
     if (HSA_AMD_SEGMENT_GLOBAL != segment) return HSA_STATUS_SUCCESS;
-    err = hsa_amd_memory_pool_get_info(region, HSA_AMD_MEMORY_POOL_INFO_GLOBAL_FLAGS, &flag);
+    err = hsa_amd_memory_pool_get_info(pool, HSA_AMD_MEMORY_POOL_INFO_GLOBAL_FLAGS, &flag);
     ErrorCheck(err);
-    *((hsa_amd_memory_pool_t*)data) = region;
+    *((hsa_amd_memory_pool_t*)data) = pool;
     return HSA_STATUS_SUCCESS;
 }
 
-hsa_status_t FindGlobalRegion(hsa_amd_memory_pool_t region, void* data) {
-    if (NULL == data) {
-        return HSA_STATUS_ERROR_INVALID_ARGUMENT;
-    }
-
-    hsa_status_t err;
-    hsa_amd_segment_t segment;
-    uint32_t flag;
-    err = hsa_amd_memory_pool_get_info(region, HSA_AMD_MEMORY_POOL_INFO_SEGMENT, &segment);
-    ErrorCheck(err);
-
-    err = hsa_amd_memory_pool_get_info(region, HSA_AMD_MEMORY_POOL_INFO_GLOBAL_FLAGS, &flag);
-    ErrorCheck(err);
-    if ((HSA_AMD_SEGMENT_GLOBAL == segment) &&
-        (flag & HSA_AMD_MEMORY_POOL_GLOBAL_FLAG_FINE_GRAINED)) {
-        *((hsa_amd_memory_pool_t*)data) = region;
-    }
-    return HSA_STATUS_SUCCESS;
-}
-
-void FindDeviceRegion()
+void FindDevicePool()
 {
     hsa_status_t err = hsa_iterate_agents(FindGpuDevice, &gpu_agent_);
     ErrorCheck(err);
 
-    err = hsa_amd_agent_iterate_memory_pools(gpu_agent_, GetDeviceRegion, &gpu_region_);
-    ErrorCheck(err);
-}
-
-void FindSystemRegion()
-{
-    hsa_status_t err = hsa_iterate_agents(FindCpuDevice, &cpu_agent_);
-    ErrorCheck(err);
-
-    err = hsa_amd_agent_iterate_memory_pools(cpu_agent_, FindGlobalRegion, &sys_region_);
+    err = hsa_amd_agent_iterate_memory_pools(gpu_agent_, GetDevicePool, &gpu_pool_);
     ErrorCheck(err);
 }
 
@@ -743,24 +701,30 @@ hsa_status_t get_region_info(hsa_region_t region, void* data)
     return HSA_STATUS_SUCCESS;
 }
 
+
 // Determines if the given agent is of type HSA_DEVICE_TYPE_GPU and counts it.
-static hsa_status_t countGpuAgents(hsa_agent_t agent, void *data) {
-    if (data == NULL) {
-        return HSA_STATUS_ERROR_INVALID_ARGUMENT;
-    }
+static hsa_status_t findCpuAgent(hsa_agent_t agent, void *data)
+{
     hsa_device_type_t device_type;
     hsa_status_t status = hsa_agent_get_info(agent, HSA_AGENT_INFO_DEVICE, &device_type);
     if (status != HSA_STATUS_SUCCESS) {
         return status;
     }
-    if (device_type == HSA_DEVICE_TYPE_GPU) {
-        (*static_cast<int*>(data))++;
+    if (device_type == HSA_DEVICE_TYPE_CPU) {
+        (*static_cast<hsa_agent_t*>(data)) = agent;
+        return HSA_STATUS_INFO_BREAK;
     }
+
     return HSA_STATUS_SUCCESS;
 }
 
-// Internal version,
-hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
+
+#define DeviceErrorCheck(x) if (x != HSA_STATUS_SUCCESS) { return hipErrorInvalidDevice; }
+
+//---
+// Initialize properties for the device.
+// Call this once when the ihipDevice_t is created:
+hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
 {
     hipError_t e = hipSuccess;
     hsa_status_t err;
@@ -772,7 +736,7 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     prop-> maxThreadsPerMultiProcessor = 0;
     prop->regsPerBlock = 0;
 
-    if (_hsa_agent.handle == -1) {
+    if (_hsaAgent.handle == -1) {
         return hipErrorInvalidDevice;
     }
 
@@ -786,39 +750,39 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     prop->isMultiGpuBoard = 0 ? gpuAgentsCount < 2 : 1;
 
     // Get agent name
-    err = hsa_agent_get_info(_hsa_agent, HSA_AGENT_INFO_NAME, &(prop->name));
+    err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_NAME, &(prop->name));
     DeviceErrorCheck(err);
 
     // Get agent node
     uint32_t node;
-    err = hsa_agent_get_info(_hsa_agent, HSA_AGENT_INFO_NODE, &node);
+    err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_NODE, &node);
     DeviceErrorCheck(err);
 
     // Get wavefront size
-    err = hsa_agent_get_info(_hsa_agent, HSA_AGENT_INFO_WAVEFRONT_SIZE,&prop->warpSize);
+    err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_WAVEFRONT_SIZE,&prop->warpSize);
     DeviceErrorCheck(err);
 
     // Get max total number of work-items in a workgroup
-    err = hsa_agent_get_info(_hsa_agent, HSA_AGENT_INFO_WORKGROUP_MAX_SIZE, &prop->maxThreadsPerBlock );
+    err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_WORKGROUP_MAX_SIZE, &prop->maxThreadsPerBlock );
     DeviceErrorCheck(err);
 
     // Get max number of work-items of each dimension of a work-group
     uint16_t work_group_max_dim[3];
-    err = hsa_agent_get_info(_hsa_agent, HSA_AGENT_INFO_WORKGROUP_MAX_DIM, work_group_max_dim);
+    err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_WORKGROUP_MAX_DIM, work_group_max_dim);
     DeviceErrorCheck(err);
     for( int i =0; i< 3 ; i++) {
         prop->maxThreadsDim[i]= work_group_max_dim[i];
     }
 
     hsa_dim3_t grid_max_dim;
-    err = hsa_agent_get_info(_hsa_agent, HSA_AGENT_INFO_GRID_MAX_DIM, &grid_max_dim);
+    err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_GRID_MAX_DIM, &grid_max_dim);
     DeviceErrorCheck(err);
     prop->maxGridSize[0]= (int) ((grid_max_dim.x == UINT32_MAX) ? (INT32_MAX) : grid_max_dim.x);
     prop->maxGridSize[1]= (int) ((grid_max_dim.y == UINT32_MAX) ? (INT32_MAX) : grid_max_dim.y);
     prop->maxGridSize[2]= (int) ((grid_max_dim.z == UINT32_MAX) ? (INT32_MAX) : grid_max_dim.z);
 
     // Get Max clock frequency
-    err = hsa_agent_get_info(_hsa_agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_MAX_CLOCK_FREQUENCY, &prop->clockRate);
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_MAX_CLOCK_FREQUENCY, &prop->clockRate);
     prop->clockRate *= 1000.0;   // convert Mhz to Khz.
     DeviceErrorCheck(err);
 
@@ -830,7 +794,7 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
 
     // Get Agent BDFID (bus/device/function ID)
     uint16_t bdf_id = 1;
-    err = hsa_agent_get_info(_hsa_agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_BDFID, &bdf_id);
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_BDFID, &bdf_id);
     DeviceErrorCheck(err);
 
     // BDFID is 16bit uint: [8bit - BusID | 5bit - Device ID | 3bit - Function/DomainID]
@@ -845,26 +809,24 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     prop->minor = 0;
 
     // Get number of Compute Unit
-    err = hsa_agent_get_info(_hsa_agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_COMPUTE_UNIT_COUNT, &(prop->multiProcessorCount));
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_COMPUTE_UNIT_COUNT, &(prop->multiProcessorCount));
     DeviceErrorCheck(err);
 
     // TODO-hsart - this appears to return 0?
     uint32_t cache_size[4];
-    err = hsa_agent_get_info(_hsa_agent, HSA_AGENT_INFO_CACHE_SIZE, cache_size);
+    err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_CACHE_SIZE, cache_size);
     DeviceErrorCheck(err);
     prop->l2CacheSize = cache_size[1];
 
     /* Computemode for HSA Devices is always : cudaComputeModeDefault */
     prop->computeMode = 0;
 
-    FindSystemRegion();
-    FindDeviceRegion();
-    int access=checkAccess(cpu_agent_, gpu_region_);
-    if(0!= access){
-        isLargeBar= 1;
-    }
-    else{
-        isLargeBar=0;
+    FindDevicePool();
+    int access=checkAccess(g_cpu_agent, gpu_pool_);
+    if (0!= access){
+        _isLargeBar= 1;
+    } else {
+        _isLargeBar=0;
     }
 
 
@@ -883,7 +845,7 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
 
 
     // Get memory properties
-    err = hsa_agent_iterate_regions(_hsa_agent, get_region_info, prop);
+    err = hsa_agent_iterate_regions(_hsaAgent, get_region_info, prop);
     DeviceErrorCheck(err);
 
     // Get the size of the region we are using for Accelerator Memory allocations:
@@ -925,22 +887,110 @@ hipError_t ihipDevice_t::getProperties(hipDeviceProp_t* prop)
     prop->arch.has3dGrid                   = 1;
     prop->arch.hasDynamicParallelism       = 0;
 
-    prop->concurrentKernels = 1; // All ROCR hardware supports executing multiple kernels concurrently
+    prop->concurrentKernels = 1; // All ROCm hardware supports executing multiple kernels concurrently
+
+    prop->canMapHostMemory = 1;  // All ROCm devices can map host memory
+#if 0
+    // TODO - code broken below since it always returns 1.
+    // Are the flags part of the context or part of the device?
     if ( _device_flags | hipDeviceMapHost) {
         prop->canMapHostMemory = 1;
     } else {
         prop->canMapHostMemory = 0;
     }
+#endif
     return e;
 }
+
+
+//=================================================================================================
+// ihipCtx_t
+//=================================================================================================
+ihipCtx_t::ihipCtx_t(ihipDevice_t *device, unsigned deviceCnt, unsigned flags) :
+    _ctxFlags(flags),
+    _device(device),
+    _criticalData(deviceCnt)
+{
+    locked_reset();
+
+    tprintf(DB_SYNC, "created ctx with defaultStream=%p\n", _defaultStream);
+};
+
+
+
+
+ihipCtx_t::~ihipCtx_t()
+{
+    if (_defaultStream) {
+        delete _defaultStream;
+        _defaultStream = NULL;
+    }
+}
+//Reset the device - this is called from hipDeviceReset.
+//Device may be reset multiple times, and may be reset after init.
+void ihipCtx_t::locked_reset()
+{
+    // Obtain mutex access to the device critical data, release by destructor
+    LockedAccessor_CtxCrit_t  crit(_criticalData);
+
+
+    //---
+    //Wait for pending activity to complete?  TODO - check if this is required behavior:
+    tprintf(DB_SYNC, "locked_reset waiting for activity to complete.\n");
+
+    // Reset and remove streams:
+    // Delete all created streams including the default one.
+    for (auto streamI=crit->const_streams().begin(); streamI!=crit->const_streams().end(); streamI++) {
+        ihipStream_t *stream = *streamI;
+        (*streamI)->locked_wait();
+        tprintf(DB_SYNC, " delete stream=%p\n", stream);
+
+        delete stream;
+    }
+    // Clear the list.
+    crit->streams().clear();
+
+
+    // Create a fresh default stream and add it:
+    _defaultStream = new ihipStream_t(this, getDevice()->_acc.get_default_view(), hipStreamDefault);
+    crit->addStream(_defaultStream);
+
+
+    // Reset peer list to just me:
+    crit->resetPeers(this);
+
+    // Reset and release all memory stored in the tracker:
+    // Reset will remove peer mapping so don't need to do this explicitly.
+    // FIXME - This is clearly a non-const action!  Is this a context reset or a device reset - maybe should reference count?
+    ihipDevice_t *device = getWriteableDevice();
+    am_memtracker_reset(device->_acc);
+
+};
+
+
+
+//----
+
+
+
+
+//=================================================================================================
+// Utility functions, these are not part of the public HIP API
+//=================================================================================================
+
+//=================================================================================================
+
+
+
+
 
 
 // Implement "default" stream syncronization
 //   This waits for all other streams to drain before continuing.
 //   If waitOnSelf is set, this additionally waits for the default stream to empty.
-void ihipDevice_t::locked_syncDefaultStream(bool waitOnSelf)
+void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf)
 {
-    LockedAccessor_DeviceCrit_t  crit(_criticalData);
+    LockedAccessor_CtxCrit_t  crit(_criticalData);
 
     tprintf(DB_SYNC, "syncDefaultStream\n");
 
@@ -951,7 +1001,7 @@ void ihipDevice_t::locked_syncDefaultStream(bool waitOnSelf)
         // And - don't wait for the NULL stream
         if (!(stream->_flags & hipStreamNonBlocking)) {
 
-            if (waitOnSelf || (stream != _default_stream)) {
+            if (waitOnSelf || (stream != _defaultStream)) {
                 // TODO-hcc - use blocking or active wait here?
                 // TODO-sync - cudaDeviceBlockingSync
                 stream->locked_wait();
@@ -961,17 +1011,17 @@ void ihipDevice_t::locked_syncDefaultStream(bool waitOnSelf)
 }
 
 //---
-void ihipDevice_t::locked_addStream(ihipStream_t *s)
+void ihipCtx_t::locked_addStream(ihipStream_t *s)
 {
-    LockedAccessor_DeviceCrit_t  crit(_criticalData);
+    LockedAccessor_CtxCrit_t  crit(_criticalData);
 
     crit->addStream(s);
 }
 
 //---
-void ihipDevice_t::locked_removeStream(ihipStream_t *s)
+void ihipCtx_t::locked_removeStream(ihipStream_t *s)
 {
-    LockedAccessor_DeviceCrit_t  crit(_criticalData);
+    LockedAccessor_CtxCrit_t  crit(_criticalData);
 
     crit->streams().remove(s);
 }
@@ -979,9 +1029,9 @@ void ihipDevice_t::locked_removeStream(ihipStream_t *s)
 
 //---
 //Heavyweight synchronization that waits on all streams, ignoring hipStreamNonBlocking flag.
-void ihipDevice_t::locked_waitAllStreams()
+void ihipCtx_t::locked_waitAllStreams()
 {
-    LockedAccessor_DeviceCrit_t  crit(_criticalData);
+    LockedAccessor_CtxCrit_t  crit(_criticalData);
 
     tprintf(DB_SYNC, "waitAllStream\n");
     for (auto streamI=crit->const_streams().begin(); streamI!=crit->const_streams().end(); streamI++) {
@@ -1056,21 +1106,6 @@ void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, c
 
 #endif
 
-// Determines if the given agent is of type HSA_DEVICE_TYPE_GPU and counts it.
-static hsa_status_t findCpuAgent(hsa_agent_t agent, void *data)
-{
-    hsa_device_type_t device_type;
-    hsa_status_t status = hsa_agent_get_info(agent, HSA_AGENT_INFO_DEVICE, &device_type);
-    if (status != HSA_STATUS_SUCCESS) {
-        return status;
-    }
-    if (device_type == HSA_DEVICE_TYPE_CPU) {
-        (*static_cast<hsa_agent_t*>(data)) = agent;
-        return HSA_STATUS_INFO_BREAK;
-    }
-
-    return HSA_STATUS_SUCCESS;
-}
 
 
 //---
@@ -1166,7 +1201,13 @@ void ihipInit()
         }
     }
 
-    g_devices = new ihipDevice_t[deviceCnt];
+    hsa_status_t err = hsa_iterate_agents(findCpuAgent, &g_cpu_agent);
+    if (err != HSA_STATUS_INFO_BREAK) {
+        // didn't find a CPU.
+        throw ihipException(hipErrorRuntimeOther);
+    }
+
+    g_deviceArray = new ihipDevice_t*  [deviceCnt];
     g_deviceCnt = 0;
     for (int i=0; i<accs.size(); i++) {
         // check if the device id is included in the HIP_VISIBLE_DEVICES env variable
@@ -1176,7 +1217,7 @@ void ihipInit()
                 //If device is not in visible devices list, ignore
                 continue;
             }
-            g_devices[g_deviceCnt].init(g_deviceCnt, deviceCnt, accs[i], hipDeviceMapHost);
+            g_deviceArray[g_deviceCnt] = new ihipDevice_t(g_deviceCnt, deviceCnt, accs[i]);
             g_deviceCnt++;
         }
     }
@@ -1187,45 +1228,12 @@ void ihipInit()
     }
 
 
-    hsa_status_t err = hsa_iterate_agents(findCpuAgent, &g_cpu_agent);
-    if (err != HSA_STATUS_INFO_BREAK) {
-        // didn't find a CPU.
-        throw ihipException(hipErrorRuntimeOther);
-    }
-
-
     tprintf(DB_SYNC, "pid=%u %-30s\n", getpid(), "<ihipInit>");
 }
 
 
-bool ihipIsValidDevice(unsigned deviceIndex)
-{
-    // deviceIndex is unsigned so always > 0
-    return (deviceIndex < g_deviceCnt);
-}
-
-//---
-ihipDevice_t *ihipGetTlsDefaultDevice()
-{
-    // If this is invalid, the TLS state is corrupt.
-    // This can fire if called before devices are initialized.
-    // TODO - consider replacing assert with error code
-    assert (ihipIsValidDevice(tls_defaultDevice));
-
-    return &g_devices[tls_defaultDevice];
-}
 
 
-//---
-ihipDevice_t *ihipGetDevice(int deviceId)
-{
-    if ((deviceId >= 0) && (deviceId < g_deviceCnt)) {
-        return &g_devices[deviceId];
-    } else {
-        return NULL;
-    }
-
-}
 
 //---
 // Get the stream to use for a command submission.
@@ -1235,17 +1243,17 @@ ihipDevice_t *ihipGetDevice(int deviceId)
 hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 {
     if (stream == hipStreamNull ) {
-        ihipDevice_t *device = ihipGetTlsDefaultDevice();
+        ihipCtx_t *device = ihipGetTlsDefaultCtx();
 
 #ifndef HIP_API_PER_THREAD_DEFAULT_STREAM
         device->locked_syncDefaultStream(false);
 #endif
-        return device->_default_stream;
+        return device->_defaultStream;
     } else {
         // Have to wait for legacy default stream to be empty:
         if (!(stream->_flags & hipStreamNonBlocking))  {
             tprintf(DB_SYNC, "stream %p wait default stream\n", stream);
-            stream->getDevice()->_default_stream->locked_wait();
+            stream->getCtx()->_defaultStream->locked_wait();
         }
 
         return stream;
@@ -1260,7 +1268,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
 {
     HIP_INIT_API(stream, grid, block, lp);
     stream = ihipSyncAndResolveStream(stream);
-#if USE_GRID_LAUNCH_20 
+#if USE_GRID_LAUNCH_20
     lp->grid_dim.x = grid.x;
     lp->grid_dim.y = grid.y;
     lp->grid_dim.z = grid.z;
@@ -1289,7 +1297,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, gri
 {
     HIP_INIT_API(stream, grid, block, lp);
     stream = ihipSyncAndResolveStream(stream);
-#if USE_GRID_LAUNCH_20 
+#if USE_GRID_LAUNCH_20
     lp->grid_dim.x = grid;
     lp->grid_dim.y = 1;
     lp->grid_dim.z = 1;
@@ -1319,7 +1327,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, gri
 {
     HIP_INIT_API(stream, grid, block, lp);
     stream = ihipSyncAndResolveStream(stream);
-#if USE_GRID_LAUNCH_20 
+#if USE_GRID_LAUNCH_20
     lp->grid_dim.x = grid.x;
     lp->grid_dim.y = grid.y;
     lp->grid_dim.z = grid.z;
@@ -1349,7 +1357,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, g
 {
     HIP_INIT_API(stream, grid, block, lp);
     stream = ihipSyncAndResolveStream(stream);
-#if USE_GRID_LAUNCH_20 
+#if USE_GRID_LAUNCH_20
     lp->grid_dim.x = grid;
     lp->grid_dim.y = 1;
     lp->grid_dim.z = 1;
@@ -1479,12 +1487,12 @@ unsigned ihipStream_t::resolveMemcpyDirection(bool srcTracked, bool dstTracked, 
 
 
 // Setup the copyCommandType and the copy agents (for hsa_amd_memory_async_copy)
-// srcPhysAcc is the physical location of the src data.  For many copies this is the 
+// srcPhysAcc is the physical location of the src data.  For many copies this is the
 void ihipStream_t::setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent)
 {
     // current* represents the device associated with the specified stream.
-    ihipDevice_t *streamDevice = this->getDevice();
-    hsa_agent_t streamAgent = streamDevice->_hsa_agent;
+    const ihipDevice_t *streamDevice = this->getDevice();
+    hsa_agent_t streamAgent = streamDevice->_hsaAgent;
 
     // ROCR runtime logic is :
     // -    If both src and dst are cpu agent, launch thread and memcpy.  We want to avoid this.
@@ -1503,7 +1511,9 @@ void ihipStream_t::setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType,
 
 void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const void* src, size_t sizeBytes, unsigned kind)
 {
-    ihipDevice_t *device = this->getDevice();
+    ihipCtx_t *ctx = this->getCtx();
+    const ihipDevice_t *device = ctx->getDevice();
+
     if (device == NULL) {
         throw ihipException(hipErrorInvalidDevice);
     }
@@ -1527,9 +1537,11 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
     bool copyEngineCanSeeSrcAndDest = false;
     if (kind == hipMemcpyDeviceToDevice) {
 #if USE_PEER_TO_PEER>=2
-        // TODO - consider refactor.  Do we need to support simul access of enable/disable peers with access?
-        LockedAccessor_DeviceCrit_t  dcrit(device->criticalData());
-        if (dcrit->isPeer(::getDevice(dstPtrInfo._appId)) && (dcrit->isPeer(::getDevice(srcPtrInfo._appId)))) {
+        // Lock to prevent another thread from modifying peer list while we are trying to look at it.
+        LockedAccessor_CtxCrit_t  dcrit(ctx->criticalData());
+        // FIXME - this assumes peer access only from primary context.
+        // Would need to change the tracker to store a void * parameter that we could map to the ctx where the pointer is allocated.
+        if (dcrit->isPeer(ihipGetPrimaryCtx(dstPtrInfo._appId)) && (dcrit->isPeer(ihipGetPrimaryCtx(srcPtrInfo._appId)))) {
             copyEngineCanSeeSrcAndDest = true;
         }
 #endif
@@ -1542,28 +1554,17 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
                 tprintf(DB_COPY1, "D2H && !dstTracked: staged copy H2D dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
                 if(HIP_OPTIMAL_MEM_TRANSFER)
                 {
-                    if((device->isLargeBar)&&(sizeBytes < HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING)){
-                        memcpy(dst,src,sizeBytes);
-                        std::atomic_thread_fence(std::memory_order_release);
-                    }
-                    else{
-                        if(sizeBytes > HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE){
-                        //if (HIP_PININPLACE) {
-                            device->_staging_buffer[0]->CopyHostToDevicePinInPlace(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
-                        } else {
-                            device->_staging_buffer[0]->CopyHostToDevice(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
-                        }
-                        // The copy waits for inputs and then completes before returning so can reset queue to empty:
-                        this->wait(crit, true);
-                    }
+                    device->_stagingBuffer[0]->CopyHostToDevice(1,device->_isLargeBar,dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
                 }
                 else {
                     if (HIP_PININPLACE) {
-                        device->_staging_buffer[0]->CopyHostToDevicePinInPlace(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                        device->_stagingBuffer[0]->CopyHostToDevicePinInPlace(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
                     } else {
-                        device->_staging_buffer[0]->CopyHostToDevice(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                        device->_stagingBuffer[0]->CopyHostToDevice(0,0,dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
                     }
                }
+               // The copy waits for inputs and then completes before returning so can reset queue to empty:
+               this->wait(crit, true);
             }
             else {
                 // TODO - remove, slow path.
@@ -1580,7 +1581,7 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
             hsa_agent_t srcAgent = *(static_cast<hsa_agent_t*>(srcPtrInfo._acc.get_hsa_agent()));
 
             ihipSignal_t *ihipSignal = allocSignal(crit);
-            hsa_signal_t copyCompleteSignal = ihipSignal->_hsa_signal;
+            hsa_signal_t copyCompleteSignal = ihipSignal->_hsaSignal;
 
             hsa_signal_store_relaxed(copyCompleteSignal, 1);
             void *devPtrSrc = srcPtrInfo._devicePointer;
@@ -1603,15 +1604,12 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
                 //printf ("staged-copy- read dep signals\n");
                 if(HIP_OPTIMAL_MEM_TRANSFER)
                 {
-                    if(sizeBytes> HIP_D2H_MEM_TRANSFER_THRESHOLD){
-                        device->_staging_buffer[1]->CopyDeviceToHostPinInPlace(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
-                    }else {
-                         //printf ("staged-copy- read dep signals\n");
-                         device->_staging_buffer[1]->CopyDeviceToHost(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
-                    }
-                }else
+                    //printf ("staged-copy- read dep signals\n");
+                    device->_stagingBuffer[1]->CopyDeviceToHost(1,dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                }
+                else
                 {
-                    device->_staging_buffer[1]->CopyDeviceToHost(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                    device->_stagingBuffer[1]->CopyDeviceToHost(0,dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
                 }
                 // The copy completes before returning so can reset queue to empty:
                 this->wait(crit, true);
@@ -1631,7 +1629,7 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
             hsa_agent_t srcAgent = *(static_cast<hsa_agent_t*>(srcPtrInfo._acc.get_hsa_agent()));
 
             ihipSignal_t *ihipSignal = allocSignal(crit);
-            hsa_signal_t copyCompleteSignal = ihipSignal->_hsa_signal;
+            hsa_signal_t copyCompleteSignal = ihipSignal->_hsaSignal;
 
             hsa_signal_store_relaxed(copyCompleteSignal, 1);
             void *devPtrDst = dstPtrInfo._devicePointer;
@@ -1662,15 +1660,15 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
             hsa_agent_t dstAgent = * (static_cast<hsa_agent_t*> (dstPtrInfo._acc.get_hsa_agent()));
             hsa_agent_t srcAgent = * (static_cast<hsa_agent_t*> (srcPtrInfo._acc.get_hsa_agent()));
 
-            device->_staging_buffer[1]->CopyPeerToPeer(dst, dstAgent, src, srcAgent, sizeBytes, depSignalCnt ? &depSignal : NULL);
+            device->_stagingBuffer[1]->CopyPeerToPeer(dst, dstAgent, src, srcAgent, sizeBytes, depSignalCnt ? &depSignal : NULL);
 
             // The copy completes before returning so can reset queue to empty:
             this->wait(crit, true);
 
         } else {
             assert(0); // currently no fallback for this path.
-        } 
-        
+        }
+
     } else {
         // If not special case - these can all be handled by the hsa async copy:
         ihipCommand_t commandType;
@@ -1681,7 +1679,7 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
 
         // Get a completion signal:
         ihipSignal_t *ihipSignal = allocSignal(crit);
-        hsa_signal_t copyCompleteSignal = ihipSignal->_hsa_signal;
+        hsa_signal_t copyCompleteSignal = ihipSignal->_hsaSignal;
 
         hsa_signal_store_relaxed(copyCompleteSignal, 1);
 
@@ -1713,9 +1711,9 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsig
 {
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
-    ihipDevice_t *device = this->getDevice();
+    const ihipCtx_t *ctx = this->getCtx();
 
-    if (device == NULL) {
+    if ((ctx == nullptr) || (ctx->getDevice() == nullptr)) {
         throw ihipException(hipErrorInvalidDevice);
     }
 
@@ -1754,7 +1752,7 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsig
 
 
         ihipSignal_t *ihip_signal = allocSignal(crit);
-        hsa_signal_store_relaxed(ihip_signal->_hsa_signal, 1);
+        hsa_signal_store_relaxed(ihip_signal->_hsaSignal, 1);
 
 
         if(trueAsync == true){
@@ -1766,9 +1764,9 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsig
             hsa_signal_t depSignal;
             int depSignalCnt = preCopyCommand(crit, ihip_signal, &depSignal, commandType);
 
-            tprintf (DB_SYNC, " copy-async, waitFor=%lu completion=#%lu(%lu)\n", depSignalCnt? depSignal.handle:0x0, ihip_signal->_sig_id, ihip_signal->_hsa_signal.handle);
+            tprintf (DB_SYNC, " copy-async, waitFor=%lu completion=#%lu(%lu)\n", depSignalCnt? depSignal.handle:0x0, ihip_signal->_sigId, ihip_signal->_hsaSignal.handle);
 
-            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, dstAgent, src, srcAgent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, ihip_signal->_hsa_signal);
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, dstAgent, src, srcAgent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, ihip_signal->_hsaSignal);
 
 
             if (hsa_status == HSA_STATUS_SUCCESS) {
@@ -1799,12 +1797,12 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator *acc)
 {
     HIP_INIT_API(deviceId, acc);
 
-    ihipDevice_t *d = ihipGetDevice(deviceId);
+    const ihipDevice_t *device = ihipGetDevice(deviceId);
     hipError_t err;
-    if (d == NULL) {
+    if (device == NULL) {
         err =  hipErrorInvalidDevice;
     } else {
-        *acc = d->_acc;
+        *acc = device->_acc;
         err = hipSuccess;
     }
     return ihipLogStatus(err);
@@ -1820,8 +1818,8 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **a
     HIP_INIT_API(stream, av);
 
     if (stream == hipStreamNull ) {
-        ihipDevice_t *device = ihipGetTlsDefaultDevice();
-        stream = device->_default_stream;
+        ihipCtx_t *device = ihipGetTlsDefaultCtx();
+        stream = device->_defaultStream;
     }
 
     *av = &(stream->_av);
@@ -1834,12 +1832,12 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **a
 // TODO - describe naming convention. ihip _.  No accessors.  No early returns from functions. Set status to success at top, only set error codes in implementation.  No tabs.
 //        Caps convention _ or camelCase
 //        if { }
-//        Should use ihip* data structures inside code rather than app-facing hip.  For example, use ihipDevice_t (rather than hipDevice_t), ihipStream_t (rather than hipStream_t).
+//        Should use ihip* data structures inside code rather than app-facing hip.  For example, use ihipCtx_t (rather than hipDevice_t), ihipStream_t (rather than hipStream_t).
 //        locked_
 // TODO - describe MT strategy
 //
 //// TODO - add identifier numbers for streams and devices to help with debugging.
 
 #if ONE_OBJECT_FILE
-#include "staging_buffer.cpp"
+#include "unpinned_copy_engine.cpp"
 #endif

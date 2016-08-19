@@ -43,7 +43,19 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
+//---
+//API-visible structures
+typedef struct ihipCtx_t    *hipCtx_t;
+
+// Note many APIs also use integer deviceIds as an alternative to the device pointer:
+typedef struct ihipDevice_t *hipDevice_t;
+
 typedef struct ihipStream_t *hipStream_t;
+
+typedef uint64_t hipFunction;
+
+typedef uint64_t hipModule;
+
 typedef struct hipEvent_t {
     struct ihipEvent_t *_handle;
 } hipEvent_t;
@@ -203,7 +215,7 @@ hipError_t hipDeviceReset(void) ;
 /**
  * @brief Set default device to be used for subsequent hip API calls from this thread.
  *
- * @param[in] device Valid device in range 0...hipGetDeviceCount().
+ * @param[in] deviceId Valid device in range 0...hipGetDeviceCount().
  *
  * Sets @p device as the default device for the calling host thread.  Valid device id's are 0... (hipGetDeviceCount()-1).
  *
@@ -224,7 +236,7 @@ hipError_t hipDeviceReset(void) ;
  *
  * @see hipGetDevice, hipGetDeviceCount
  */
-hipError_t hipSetDevice(int device);
+hipError_t hipSetDevice(int deviceId);
 
 
 /**
@@ -237,8 +249,10 @@ hipError_t hipSetDevice(int device);
  * hipGetDevice returns in * @p device the default device for the calling host thread.
  *
  * @see hipSetDevice, hipGetDevicesizeBytes
+ *
+ * @returns hipSuccess, hipErrorInvalidDevice
  */
-hipError_t hipGetDevice(int *device);
+hipError_t hipGetDevice(int *deviceId);
 
 
 /**
@@ -254,19 +268,19 @@ hipError_t hipGetDeviceCount(int *count);
  * @brief Query device attribute.
  * @param [out] pi pointer to value to return
  * @param [in] attr attribute to query
- * @param [in] device which device to query for information
+ * @param [in] deviceId which device to query for information
  */
-hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device);
+hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int deviceId);
 
 /**
  * @brief Returns device properties.
  *
  * @param [out] prop written with device properties
- * @param [in]  device which device to query for information
+ * @param [in]  deviceId which device to query for information
  *
  * Populates hipGetDeviceProperties with information for the specified device.
  */
-hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int device);
+hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
 
 
 
@@ -378,14 +392,14 @@ const char *hipGetErrorName(hipError_t hip_error);
 /**
  * @brief Return handy text string message to explain the error which occurred
  *
- * @param hip_error Error code to convert to string.
+ * @param hipError Error code to convert to string.
  * @return const char pointer to the NULL-terminated error string
  *
  * @warning : on HCC, this function returns the name of the error (same as hipGetErrorName)
  *
  * @see hipGetErrorName, hipGetLastError, hipPeakAtLastError, hipError_t
  */
-const char *hipGetErrorString(hipError_t hip_error);
+const char *hipGetErrorString(hipError_t hipError);
 
 // end doxygen Error
 /**
@@ -413,11 +427,10 @@ const char *hipGetErrorString(hipError_t hip_error);
  * @return #hipSuccess, #hipErrorInvalidValue
  *
  * Create a new asynchronous stream.  @p stream returns an opaque handle that can be used to reference the newly
- * created stream in subsequent hipStream* commands.  The stream is allocated on the heap and will remain allocated 
+ * created stream in subsequent hipStream* commands.  The stream is allocated on the heap and will remain allocated
  *
  * even if the handle goes out-of-scope.  To release the memory used by the stream, applicaiton must call hipStreamDestroy.
  * Flags controls behavior of the stream.  See #hipStreamDefault, #hipStreamNonBlocking.
- * @error hipStream_t are under development - with current HIP use the NULL stream.
  */
 
 hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags);
@@ -431,11 +444,13 @@ hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags);
  * @return #hipSuccess, #hipErrorInvalidValue
  *
  * Create a new asynchronous stream.  @p stream returns an opaque handle that can be used to reference the newly
- * created stream in subsequent hipStream* commands.  The stream is allocated on the heap and will remain allocated 
+ * created stream in subsequent hipStream* commands.  The stream is allocated on the heap and will remain allocated
  * even if the handle goes out-of-scope.  To release the memory used by the stream, applicaiton must call hipStreamDestroy.
- * 
+ *
  *
  * @see hipStreamDestroy
+ *
+ * @return
  *
  */
 hipError_t hipStreamCreate(hipStream_t *stream);
@@ -690,7 +705,7 @@ hipError_t hipMalloc(void** ptr, size_t size) ;
 hipError_t hipMallocHost(void** ptr, size_t size) __attribute__((deprecated("use hipHostMalloc instead"))) ;
 
 /**
- *  @brief Allocate device accessible page locked host memory 
+ *  @brief Allocate device accessible page locked host memory
  *
  *  @param[out]  ptr Pointer to the allocated host pinned memory
  *  @param[in] size Requested memory size
@@ -732,9 +747,9 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) ;
  *  - #hipHostRegisterMapped    Map the allocation into the address space for the current device.  The device pointer can be obtained with #hipHostGetDevicePointer.
  *
  *
- *  After registering the memory, use #hipHostGetDevicePointer to obtain the mapped device pointer.  
+ *  After registering the memory, use #hipHostGetDevicePointer to obtain the mapped device pointer.
  *  On many systems, the mapped device pointer will have a different value than the mapped host pointer.  Applications
- *  must use the device pointer in device code, and the host pointer in device code.  
+ *  must use the device pointer in device code, and the host pointer in device code.
  *
  *  On some systems, registered memory is pinned.  On some systems, registered memory may not be actually be pinned
  *  but uses OS or hardware facilities to all GPU access to the host memory.
@@ -742,7 +757,7 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) ;
  *  Developers are strongly encouraged to register memory blocks which are aligned to the host cache-line size.
  *  (typically 64-bytes but can be obtains from the CPUID instruction).
  *
- *  If registering non-aligned pointers, the application must take care when register pointers from the same cache line 
+ *  If registering non-aligned pointers, the application must take care when register pointers from the same cache line
  *  on different devices.  HIP's coarse-grained synchronization model does not guarantee correct results if different
  *  devices write to different parts of the same cache block - typically one of the writes will "win" and overwrite data
  *  from the other registered memory region.
@@ -780,7 +795,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
  *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
  *
  *  @param[in] ptr Pointer to memory to be freed
- *  @return #hipSuccess 
+ *  @return #hipSuccess
  *  @return #hipErrorInvalidDevicePointer (if pointer is invalid, including host pointers allocated with hipHostMalloc)
  */
 hipError_t hipFree(void* ptr);
@@ -801,7 +816,7 @@ hipError_t hipFreeHost(void* ptr) __attribute__((deprecated("use hipHostFree ins
  *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
  *
  *  @param[in] ptr Pointer to memory to be freed
- *  @return #hipSuccess, 
+ *  @return #hipSuccess,
  *          #hipErrorInvalidValue (if pointer is invalid, including device pointers allocated with hipMalloc)
  */
 hipError_t hipHostFree(void* ptr);
@@ -817,7 +832,7 @@ hipError_t hipHostFree(void* ptr);
  *
  *  For hipMemcpy, the copy is always performed by the current device (set by hipSetDevice).
  *  For multi-gpu or peer-to-peer configurations, it is recommended to set the current device to the device where the src data is physically located.
- *  For optimal peer-to-peer copies, the copy device must be able to access the src and dst pointers (by calling hipDeviceEnablePeerAccess with copy agent as the 
+ *  For optimal peer-to-peer copies, the copy device must be able to access the src and dst pointers (by calling hipDeviceEnablePeerAccess with copy agent as the
  *  current device and src/dest as the peerDevice argument.  if this is not done, the hipMemcpy will still work, but will perform the copy using a staging buffer
  *  on the host.
  *
@@ -835,7 +850,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
  *
  *  The memory areas may not overlap. Symbol can either be a variable that resides in global or constant memory space, or it can be a character string,
  *  naming a variable that resides in global or constant memory space. Kind can be either hipMemcpyHostToDevice or hipMemcpyDeviceToDevice
- *  TODO: cudaErrorInvalidSymbol and cudaErrorInvalidMemcpyDirection is not supported, use hipErrorUnknown for now.  
+ *  TODO: cudaErrorInvalidSymbol and cudaErrorInvalidMemcpyDirection is not supported, use hipErrorUnknown for now.
  *
  *  @param[in]  symbolName - Symbol destination on device
  *  @param[in]  src - Data being copy from
@@ -856,7 +871,7 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t siz
  *  For hipMemcpy, the copy is always performed by the device associated with the specified stream.
  *
  *  For multi-gpu or peer-to-peer configurations, it is recommended to use a stream which is a attached to the device where the src data is physically located.
- *  For optimal peer-to-peer copies, the copy device must be able to access the src and dst pointers (by calling hipDeviceEnablePeerAccess with copy agent as the 
+ *  For optimal peer-to-peer copies, the copy device must be able to access the src and dst pointers (by calling hipDeviceEnablePeerAccess with copy agent as the
  *  current device and src/dest as the peerDevice argument.  if this is not done, the hipMemcpy will still work, but will perform the copy using a staging buffer
  *  on the host.
  *
@@ -943,7 +958,7 @@ hipError_t hipMemGetInfo  (size_t * free, size_t * total)   ;
  *
  * Returns "0" in @p canAccessPeer if deviceId == peerDeviceId, and both are valid devices : a device is not a peer of itself.
  *
- * @returns #hipSuccess, 
+ * @returns #hipSuccess,
  * @returns #hipErrorInvalidDevice if deviceId or peerDeviceId are not valid devices
  * @warning PeerToPeer support is experimental.
  */
@@ -951,7 +966,7 @@ hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int deviceId, int peerDev
 
 
 /**
- * @brief Enable direct access from current device's virtual address space to memory allocations physically located on a peer device.  
+ * @brief Enable direct access from current device's virtual address space to memory allocations physically located on a peer device.
  *
  * Memory which already allocated on peer device will be mapped into the address space of the current device.  In addition, all
  * future memory allocations on peerDeviceId will be mapped into the address space of the current device when the memory is allocated.
@@ -961,7 +976,7 @@ hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int deviceId, int peerDev
  * @param [in] peerDeviceId
  * @param [in] flags
  *
- * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, 
+ * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue,
  * @returns #hipErrorPeerAccessAlreadyEnabled if peer access is already enabled for this device.
  * @warning PeerToPeer support is experimental.
  */
@@ -969,7 +984,7 @@ hipError_t  hipDeviceEnablePeerAccess (int  peerDeviceId, unsigned int flags);
 
 
 /**
- * @brief Disable direct access from current device's virtual address space to memory allocations physically located on a peer device.  
+ * @brief Disable direct access from current device's virtual address space to memory allocations physically located on a peer device.
  *
  * Returns hipErrorPeerAccessNotEnabled if direct access to memory on peerDevice has not yet been enabled from the current device.
  *
@@ -1021,15 +1036,56 @@ hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int src
  * @}
  */
 
-
-
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup Version Management
+ *  @defgroup Driver Initialization and Version
  *  @{
  *
  */
+
+/**
+ * @brief Explicitly initializes the HIP runtime.
+ *
+ * Most HIP APIs implicitly initialize the HIP runtime.
+ * This API provides control over the timing of the initialization.
+ */
+// TODO-ctx - more description on error codes.
+hipError_t hipInit(unsigned int flags) ;
+
+
+
+// TODO-ctx
+hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device);
+
+hipError_t hipCtxDestroy(hipCtx_t ctx);
+
+hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
+
+hipError_t hipCtxPushCurrent(hipCtx_t ctx);
+
+hipError_t hipCtxSetCurrent(hipCtx_t ctx);
+
+hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
+
+hipError_t hipCtxGetDevice(hipDevice_t *device);
+
+hipError_t hipCtxGetApiVersion (hipCtx_t ctx,int *apiVersion);
+
+hipError_t hipCtxGetCacheConfig ( hipFuncCache *cacheConfig );
+
+hipError_t hipCtxSetCacheConfig ( hipFuncCache cacheConfig );
+
+hipError_t hipCtxSetSharedMemConfig ( hipSharedMemConfig config );
+
+hipError_t hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig );
+
+// TODO-ctx
+/**
+ * @return hipSuccess, hipErrorInvalidDevice
+ */
+hipError_t hipDeviceGetFromId(hipDevice_t *device, int deviceId);
+
 
 /**
  * @brief Returns the approximate HIP driver version.
@@ -1044,6 +1100,21 @@ hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int src
 hipError_t hipDriverGetVersion(int *driverVersion) ;
 
 
+hipError_t hipModuleLoad(hipModule *module, const char *fname);
+
+hipError_t hipModuleGetFunction(hipFunction *function, hipModule module, const char *kname);
+
+hipError_t hipLaunchModuleKernel(hipFunction f,
+                              unsigned int gridDimX,
+                              unsigned int gridDimY,
+                              unsigned int gridDimZ,
+                              unsigned int blockDimX,
+                              unsigned int blockDimY,
+                              unsigned int blockDimZ,
+                              unsigned int sharedMemBytes,
+                              hipStream_t stream,
+                              void **kernelParams,
+                              void **extra) __attribute__((deprecated("kernelParams is not fully supported, use extra instead"))) ;
 
 // doxygen end Version Management
 /**

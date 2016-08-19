@@ -90,6 +90,33 @@ The HIP interface is designed to be very familiar for CUDA programmers.
 
 Differences or limitations of HIP APIs as compared to CUDA APIs should be clearly documented and described. 
 
+## Coding Guidelines (in brief)
+- Code Indentation:
+    - Tabs should be expanded to spaces.
+    - Use 4 spaces indendation.
+- Capitaliziation and Naming
+    - Prefer camelCase for HIP interfaces and internal symbols.  Note HCC uses _ for separator.  
+      This guideline is not yet consistently followed in HIP code - eventual compliance is aspirational.
+    - Member variables should begin with a leading "_".  This allows them to be easily distinguished from other variables or functions.
+    
+
+- {} placement
+    - For functions, the opening { should be placed on a new line.
+    - For if/else blocks, the opening { is placed on same line as the if/else. Use a space to separate {/" from if/else.  Example
+'''
+    if (foo) {
+        doFoo() 
+    } else { 
+        doFooElse();
+    }
+'''
+    - Single-line if statement should still use {/} pair (even though C++ does not require).
+- Miscellaneous
+    - All references in function parameter lists should be const.  
+    - "ihip" = internal hip structures.  These should not be exposed through the HIP API.
+    - Keyword TODO refers to a note that should be addressed in long-term.  Could be style issue, software architecture, or known bugs.
+    - FIXME refers to a short-term bug that needs to be addressed.
+
 
 #### Presubmit Testing:
 Before checking in or submitting a pull request, run all Rodinia tests and ensure pass results match starting point:

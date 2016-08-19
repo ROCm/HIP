@@ -1,5 +1,8 @@
 #!/usr/bin/perl -w
 
+
+# Need perl > 5.10 to use logic-defined or
+use 5.006; use v5.10.1;
 use File::Basename;
 
 # HIP compiler driver
@@ -24,38 +27,39 @@ print "No Arguments passed, exiting ...\n";
 exit(-1);
 }
 
-$verbose = $ENV{'HIPCC_VERBOSE'};
-$verbose = 0 unless defined $verbose;
+#---
+# Function to parse config file
+sub parse_config_file {
+    my ($file, $config) = @_;
+    if (open (CONFIG, "$file")) {
+        while (<CONFIG>) {
+            my $config_line=$_;
+            chop ($config_line);
+            $config_line =~ s/^\s*//;
+            $config_line =~ s/\s*$//;
+            if (($config_line !~ /^#/) && ($config_line ne "")) {
+                my ($name, $value) = split (/=/, $config_line);
+                $$config{$name} = $value;
+            }
+        }
+        close(CONFIG);
+    }
+}
+
+$verbose = $ENV{'HIPCC_VERBOSE'} // 0;
 # Verbose: 0x1=commands, 0x2=paths, 0x4=hippc args
 
-$HIP_PATH=$ENV{'HIP_PATH'};
-$HIP_PATH=dirname (dirname $0) unless defined $HIP_PATH;        # use parent directory of hipcc
+$HIP_PATH=$ENV{'HIP_PATH'} // dirname (dirname $0); # use parent directory of hipcc
 
 #---
-# Read .hipconfig
+# Read .buildInfo
 my %hipConfig = ();
-$hipConfig{'VALID'}=0;
-if (open (CONFIG, "$HIP_PATH/lib/.hipconfig")) {
-    while (<CONFIG>) {
-        my $config_line=$_;
-        chop ($config_line);
-        $config_line =~ s/^\s*//;
-        $config_line =~ s/\s*$//;
-        if (($config_line !~ /^#/) && ($config_line ne "")) {
-            my ($name, $value) = split (/=/, $config_line);
-            $hipConfig{$name} = $value;
-            $hipConfig{'VALID'}=1;
-        }
-    }
-    close(CONFIG);
-}
+parse_config_file("$HIP_PATH/lib/.buildInfo", \%hipConfig);
 
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
-$HIP_PLATFORM= `$HIP_PATH/bin/hipconfig --platform`;
+$HIP_PLATFORM= `$HIP_PATH/bin/hipconfig --platform` // "hcc";
 $HIP_VERSION= `$HIP_PATH/bin/hipconfig --version`;
-
-$HIP_PLATFORM="hcc" unless defined $HIP_PLATFORM;
 
 if ($verbose & 0x2) {
     print ("HIP_PATH=$HIP_PATH\n");
@@ -66,21 +70,18 @@ if ($verbose & 0x2) {
 $setStdLib = 0;  # TODO - set to 0
 
 if ($HIP_PLATFORM eq "hcc") {
-    $HSA_PATH=$ENV{'HSA_PATH'};
-    $HSA_PATH="/opt/rocm/hsa" unless defined $HSA_PATH;
+    $HSA_PATH=$ENV{'HSA_PATH'} // "/opt/rocm/hsa";
 
-    $HCC_HOME=$ENV{'HCC_HOME'};
-    $HCC_HOME="/opt/rocm/hcc" unless defined $HCC_HOME;
+    $HCC_HOME=$ENV{'HCC_HOME'} // $hipConfig{'HCC_HOME'} // "/opt/rocm/hcc";
+
     $HCC_VERSION=`${HCC_HOME}/bin/hcc --version | cut -d" " -f9 | tr -d "\n"`;
 
-    $ROCM_PATH=$ENV{'ROCM_PATH'};
-    $ROCM_PATH="/opt/rocm" unless defined $ROCM_PATH;
+    $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
 
     $HIP_ATP_MARKER=$ENV{'HIP_ATP_MARKER'};
     $marker_path = "$ROCM_PATH/profiler/CXLActivityLogger";
 
-    $ROCM_TARGET=$ENV{'ROCM_TARGET'};
-    $ROCM_TARGET="fiji" unless defined $ROCM_TARGET;
+    $ROCM_TARGET=$ENV{'ROCM_TARGET'} // "fiji";
 
     # HCC* may be used to compile src/hip_hcc.o (and also feed the HIPCXXFLAGS below)
     $HCC = "$HCC_HOME/bin/hcc";
@@ -110,6 +111,9 @@ if ($HIP_PLATFORM eq "hcc") {
     # Handle ROCm target platform
     if ($ROCM_TARGET eq "fiji") {
         $HIPLDFLAGS .= " -amdgpu-target=AMD:AMDGPU:8:0:3";
+    }
+    if ($ROCM_TARGET eq "carrizo") {
+        $HIPLDFLAGS .= " -amdgpu-target=AMD:AMDGPU:8:0:1";
     }
     if ($ROCM_TARGET eq "hawaii") {
         $HIPLDFLAGS .= " -amdgpu-target=AMD:AMDGPU:7:0:1";
@@ -142,8 +146,7 @@ if ($HIP_PLATFORM eq "hcc") {
     if ($verbose & 0x2) {
         print ("CUDA_PATH=$CUDA_PATH\n");
     }
-    $CUDA_PATH=$ENV{'CUDA_PATH'};
-    $CUDA_PATH='/usr/local/cuda' unless defined $CUDA_PATH;
+    $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
 
     $HIPCC="$CUDA_PATH/bin/nvcc";
     $HIPCXXFLAGS .= " -I$CUDA_PATH/include";
@@ -249,14 +252,14 @@ if ($setStdLib eq 0 and $HIP_PLATFORM eq 'hcc')
 }
 
 if ($needHipHcc) {
-    $HIP_USE_SHARED_LIBRARY = $ENV{'HIP_USE_SHARED_LIBRARY'};
-    $HIP_USE_SHARED_LIBRARY = 0 unless defined $HIP_USE_SHARED_LIBRARY;
+    $HIP_LIB_TYPE = $hipConfig{'HIP_LIB_TYPE'} // 0;
 
-    #$HIPLDFLAGS .= " -L/opt/rocm/hip/lib -lhip_hcc" ;
-    if ($HIP_USE_SHARED_LIBRARY) {
-        $HIPLDFLAGS .= " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc";
+    if ($HIP_LIB_TYPE eq 0) {
+        $HIPLDFLAGS .= " $HIP_PATH/lib/device_util.cpp.o $HIP_PATH/lib/hip_device.cpp.o $HIP_PATH/lib/hip_error.cpp.o $HIP_PATH/lib/hip_event.cpp.o $HIP_PATH/lib/hip_hcc.cpp.o $HIP_PATH/lib/hip_memory.cpp.o $HIP_PATH/lib/hip_peer.cpp.o $HIP_PATH/lib/hip_stream.cpp.o $HIP_PATH/lib/unpinned_copy_engine.cpp.o $HIP_PATH/lib/hip_ldg.cpp.o $HIP_PATH/lib/hip_fp16.cpp.o $HIP_PATH/lib/hip_context.cpp.o $HIP_PATH/lib/hip_module.cpp.o";
+    } elsif ($HIP_LIB_TYPE eq 1) {
+        $HIPLDFLAGS .= " -L$HIP_PATH/lib -lhip_hcc" ;
     } else {
-        $HIPLDFLAGS .= " $HIP_PATH/lib/device_util.cpp.o $HIP_PATH/lib/hip_device.cpp.o $HIP_PATH/lib/hip_error.cpp.o $HIP_PATH/lib/hip_event.cpp.o $HIP_PATH/lib/hip_hcc.cpp.o $HIP_PATH/lib/hip_memory.cpp.o $HIP_PATH/lib/hip_peer.cpp.o $HIP_PATH/lib/hip_stream.cpp.o $HIP_PATH/lib/staging_buffer.cpp.o $HIP_PATH/lib/hip_ldg.cpp.o $HIP_PATH/lib/hip_fp16.cpp.o";
+        $HIPLDFLAGS .= " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc";
     }
 }
 
@@ -287,7 +290,7 @@ if ($printHipVersion) {
     print $HIP_VERSION, "\n";
 }
 if ($runCmd) {
-    if ($hipConfig{'VALID'} and $HIP_PLATFORM eq "hcc" and $HCC_VERSION ne $hipConfig{'HCC_VERSION'}) {
+    if ($HIP_PLATFORM eq "hcc" and exists($hipConfig{'HCC_VERSION'}) and $HCC_VERSION ne $hipConfig{'HCC_VERSION'}) {
         print ("HIP was built using $hipConfig{'HCC_VERSION'}, but you are using $HCC_VERSION. Please rebuild HIP.\n") && die ();
     }
     system ("$CMD") and die ();

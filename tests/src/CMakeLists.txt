@@ -1,5 +1,7 @@
 cmake_minimum_required (VERSION 2.6)
 
+# remove CMAKE_CXX_COMPILER entry from cache since it will be pointing to hipcc
+unset(CMAKE_CXX_COMPILER CACHE)
 message (CMAKE_CXX_COMPILER = ${CMAKE_CXX_COMPILER} )
 
 project (HIP_Unit_Tests)
@@ -175,7 +177,7 @@ build_hip_executable (hipFuncSetDevice hipFuncSetDevice.cpp)
 build_hip_executable (hipFuncDeviceSynchronize hipFuncDeviceSynchronize.cpp)
 build_hip_executable (hipPeerToPeer_simple hipPeerToPeer_simple.cpp)
 build_hip_executable (hipTestMemcpyPin hipTestMemcpyPin.cpp)
-#build_hip_executable (hipDynamicShared hipDynamicShared.cpp)
+build_hip_executable (hipDynamicShared hipDynamicShared.cpp)
 build_hip_executable (hipLaunchParm hipLaunchParm.cpp)
 
 if (${HIP_PLATFORM} STREQUAL "hcc")
@@ -214,9 +216,10 @@ endif()
 
 make_hipify_test(specialFunc.cu )
 
-#make_test(hipDynamicShared " ")
+make_test(hipDynamicShared " ")
 
 # Add subdirs here:
+add_subdirectory(context)
 add_subdirectory(deviceLib)
 add_subdirectory(runtimeApi)
 add_subdirectory(kernel)

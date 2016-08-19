@@ -1389,7 +1389,7 @@ __device__ double norm4d(double a, double b, double c, double d)
     double y = c*c + d*d;
     return hc::precise_math::sqrt(x+y);
 }
-__device__ double normcdf(float y)
+__device__ double normcdf(double y)
 {
      return ((hc::precise_math::erf(y)/HIP_SQRT_2) + 1)/2;
 }

@@ -26,14 +26,25 @@ THE SOFTWARE.
 //-------------------------------------------------------------------------------------------------
 //---
 /**
- * @return  #hipSuccess
+ * @return  #hipSuccess, hipErrorInvalidDevice
  */
-hipError_t hipGetDevice(int *device)
+// TODO - does this initialize HIP runtime?
+hipError_t hipGetDevice(int *deviceId)
 {
-    HIP_INIT_API(device);
+    HIP_INIT_API(deviceId);
 
-    *device = tls_defaultDevice;
-    return ihipLogStatus(hipSuccess);
+    hipError_t e = hipSuccess;
+
+    auto ctx = ihipGetTlsDefaultCtx();
+
+    if (ctx == nullptr) {
+        e = hipErrorInvalidDevice; // TODO, check error code.
+        *deviceId = -1;
+    } else {
+        *deviceId = ctx->getDevice()->_deviceId;
+    }
+
+    return ihipLogStatus(e);
 }
 
 
@@ -41,6 +52,7 @@ hipError_t hipGetDevice(int *device)
 /**
  * @return  #hipSuccess, #hipErrorNoDevice
  */
+// TODO - does this initialize HIP runtime?
 hipError_t hipGetDeviceCount(int *count)
 {
     HIP_INIT_API(count);
@@ -130,13 +142,13 @@ hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig )
 /**
  * @return #hipSuccess, #hipErrorInvalidDevice
  */
-hipError_t hipSetDevice(int device)
+hipError_t hipSetDevice(int deviceId)
 {
-    HIP_INIT_API(device);
-    if ((device < 0) || (device >= g_deviceCnt)) {
+    HIP_INIT_API(deviceId);
+    if ((deviceId < 0) || (deviceId >= g_deviceCnt)) {
         return ihipLogStatus(hipErrorInvalidDevice);
     } else {
-        tls_defaultDevice = device;
+        ihipSetTlsDefaultCtx(ihipGetPrimaryCtx(deviceId));
         return ihipLogStatus(hipSuccess);
     }
 }
@@ -150,7 +162,7 @@ hipError_t hipDeviceSynchronize(void)
 {
     HIP_INIT_API();
 
-    ihipGetTlsDefaultDevice()->locked_waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
+    ihipGetTlsDefaultCtx()->locked_waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
 
     return ihipLogStatus(hipSuccess);
 }
@@ -164,16 +176,16 @@ hipError_t hipDeviceReset(void)
 {
     HIP_INIT_API();
 
-    ihipDevice_t *device = ihipGetTlsDefaultDevice();
+    auto *ctx = ihipGetTlsDefaultCtx();
 
     // TODO-HCC
     // This function currently does a user-level cleanup of known resources.
     // It could benefit from KFD support to perform a more "nuclear" clean that would include any associated kernel resources and page table entries.
 
 
-    if (device) {
-        // Release device resources (streams and memory):
-        device->locked_reset(); 
+    if (ctx) {
+        // Release ctx resources (streams and memory):
+        ctx->locked_reset(); 
     }
 
     return ihipLogStatus(hipSuccess);
@@ -188,7 +200,7 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
 
     hipError_t e = hipSuccess;
 
-    ihipDevice_t * hipDevice = ihipGetDevice(device);
+    auto * hipDevice = ihipGetDevice(device);
     hipDeviceProp_t *prop = &hipDevice->_props;
     if (hipDevice) {
         switch (attr) {
@@ -264,7 +276,7 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device)
 
     hipError_t e;
 
-    ihipDevice_t * hipDevice = ihipGetDevice(device);
+    auto * hipDevice = ihipGetDevice(device);
     if (hipDevice) {
         // copy saved props
         *props = hipDevice->_props;
@@ -283,15 +295,35 @@ hipError_t hipSetDeviceFlags( unsigned int flags)
 
     hipError_t e;
 
-    ihipDevice_t * hipDevice = ihipGetDevice(tls_defaultDevice);
-    if(hipDevice){
-       hipDevice->_device_flags = hipDevice->_device_flags | flags;
+    auto * ctx = ihipGetTlsDefaultCtx();
+
+    // TODO : does this really OR in the flags or replaces previous flags:
+    // TODO : Review error handling behavior for this function, it often returns ErrorSetOnActiveProcess
+    if (ctx) {
+       ctx->_ctxFlags = ctx->_ctxFlags | flags;
        e = hipSuccess;
-    }else{
+    } else {
        e = hipErrorInvalidDevice;
     }
 
     return ihipLogStatus(e);
+};
+
+
+
+
+hipError_t hipDeviceGetFromId(hipDevice_t *device, int deviceId)
+{
+    HIP_INIT_API(device, deviceId);
+
+    hipError_t e = hipSuccess;
+
+    *device = ihipGetDevice(deviceId);
+
+    if (device == nullptr) {
+        e = hipErrorInvalidDevice;
+    }
+
+
+    return ihipLogStatus(e);
 }
-
-
