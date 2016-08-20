@@ -17,37 +17,15 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#pragma once
 
-#include<iostream>
-#include<hip/hip_runtime.h>
-#include<hip/hip_runtime_api.h>
-#include<hip/hcc_detail/hipComplex.h>
+#include <hip/hip_common.h>
 
-#define LEN 64
-#define SIZE 64<<2
+#if defined(__HIP_PLATFORM_HCC__) && !defined (__HIP_PLATFORM_NVCC__)
+#include <hip/hcc_detail/hipComplex.h>
+#elif defined(__HIP_PLATFORM_NVCC__) && !defined (__HIP_PLATFORM_HCC__)
+#include "cuComplex.h"
+#else
+#error("Must define exactly one of __HIP_PLATFORM_HCC__ or __HIP_PLATFORM_NVCC__");
+#endif
 
-__global__  void getSqAbs(hipLaunchParm lp, float *A, float *B, float *C){
-    int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
-    C[tx] = hipCsqabsf(make_hipFloatComplex(A[tx], B[tx]));
-}
-
-int main(){
-    float *A, *Ad, *B, *Bd, *C, *Cd;
-    A = new float[LEN];
-    B = new float[LEN];
-    C = new float[LEN];
-    for(uint32_t i=0;i<LEN;i++){
-        A[i] = i*1.0f;
-        B[i] = i*1.0f;
-        C[i] = i*1.0f;
-    }
-
-    hipMalloc((void**)&Ad, SIZE);
-    hipMalloc((void**)&Bd, SIZE);
-    hipMalloc((void**)&Cd, SIZE);
-    hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
-    hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(getSqAbs, dim3(1), dim3(LEN), 0, 0, Ad, Bd, Cd);
-    hipMemcpy(C, Cd, SIZE, hipMemcpyDeviceToHost);
-    std::cout<<A[11]<<" "<<B[11]<<" "<<C[11]<<std::endl;
-}

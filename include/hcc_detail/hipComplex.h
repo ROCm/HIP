@@ -1,6 +1,25 @@
+/*
+Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANNTY OF ANY KIND, EXPRESS OR
+IMPLIED, INNCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANNY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER INN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
+
 #ifndef HIPCOMPLEX_H
 #define HIPCOMPLEX_H
-
 
 typedef struct{
     float x;
@@ -112,5 +131,44 @@ __device__ hipDoubleComplex hipCdiv(hipDoubleComplex p, hipDoubleComplex q){
 __device__ inline double hipCabs(hipDoubleComplex z){
     return sqrtf(hipCsqabs(z));
 }
+
+typedef hipFloatComplex hipComplex;
+
+__device__ inline hipComplex make_hipComplex(float x,
+                                            float y){
+    return make_hipFloatComplex(x, y);
+}
+
+__device__ inline hipFloatComplex hipComplexDoubleToFloat
+(hipDoubleComplex z){
+    return make_hipFloatComplex((float)z.x, (float)z.y);
+}
+
+__device__ inline hipDoubleComplex hipComplexFloatToDouble
+(hipFloatComplex z){
+    return make_hipDoubleComplex((double)z.x, (double)z.y);
+}
+
+__device__ inline hipComplex hipCfmaf(hipComplex p, hipComplex q, hipComplex r){
+    float real = (p.x * q.x) + r.x;
+    float imag = (q.x * p.y) + r.y;
+
+    real = -(p.y * q.y) + real;
+    imag = (p.x * q.y) + imag;
+
+    return make_hipComplex(real, imag);
+}
+
+__device__ inline hipDoubleComplex hipCfma(hipDoubleComplex p, hipDoubleComplex q, hipDoubleComplex r){
+    float real = (p.x * q.x) + r.x;
+    float imag = (q.x * p.y) + r.y;
+
+    real = -(p.y * q.y) + real;
+    imag = (p.x * q.y) + imag;
+
+    return make_hipDoubleComplex(real, imag);
+}
+
+
 
 #endif
