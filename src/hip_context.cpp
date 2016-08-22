@@ -217,3 +217,17 @@ hipError_t hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig )
 
     return ihipLogStatus(hipSuccess);
 }
+
+hipError_t hipCtxSynchronize ( void )
+{
+    return ihipSynchronize(); //TODP Shall check validity of ctx?
+}
+
+hipError_t hipCtxGetFlags ( unsigned int* flags )
+{
+    hipError_t e = hipSuccess;
+    ihipCtx_t* tempCtx;
+    tempCtx = ihipGetTlsDefaultCtx();
+    *flags = tempCtx->_ctxFlags;
+    return ihipLogStatus(e);
+}

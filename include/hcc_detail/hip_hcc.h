@@ -648,6 +648,7 @@ extern void ihipInit();
 extern const char *ihipErrorString(hipError_t);
 extern ihipCtx_t    *ihipGetTlsDefaultCtx();
 extern void          ihipSetTlsDefaultCtx(ihipCtx_t *ctx);
+extern hipError_t    ihipSynchronize(void);
 
 extern ihipDevice_t *ihipGetDevice(int);
 ihipCtx_t * ihipGetPrimaryCtx(unsigned deviceIndex);

@@ -1086,6 +1086,11 @@ hipError_t hipCtxSetSharedMemConfig ( hipSharedMemConfig config );
 
 hipError_t hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig );
 
+hipError_t hipCtxSynchronize ( void );
+
+hipError_t hipCtxGetFlags ( unsigned int* flags );
+
+
 // TODO-ctx
 /**
  * @return hipSuccess, hipErrorInvalidDevice
