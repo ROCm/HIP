@@ -26,45 +26,45 @@ typedef struct{
     float y;
 }hipFloatComplex;
 
-__device__ inline float hipCrealf(hipFloatComplex z){
+__device__ static inline float hipCrealf(hipFloatComplex z){
     return z.x;
 }
 
-__device__ inline float hipCimagf(hipFloatComplex z){
+__device__ static inline float hipCimagf(hipFloatComplex z){
     return z.y;
 }
 
-__device__ inline hipFloatComplex make_hipFloatComplex(float a, float b){
+__device__ static inline hipFloatComplex make_hipFloatComplex(float a, float b){
     hipFloatComplex z;
     z.x = a;
     z.y = b;
     return z;
 }
 
-__device__ inline hipFloatComplex hipConjf(hipFloatComplex z){
+__device__ static inline hipFloatComplex hipConjf(hipFloatComplex z){
     hipFloatComplex ret;
     ret.x = z.x;
-    ret.y = z.y;
+    ret.y = -z.y;
     return ret;
 }
 
-__device__ inline float hipCsqabsf(hipFloatComplex z){
+__device__ static inline float hipCsqabsf(hipFloatComplex z){
     return z.x * z.x + z.y * z.y;
 }
 
-__device__ hipFloatComplex hipCaddf(hipFloatComplex p, hipFloatComplex q){
+__device__ static inline hipFloatComplex hipCaddf(hipFloatComplex p, hipFloatComplex q){
     return make_hipFloatComplex(p.x + q.x, p.y + q.y);
 }
 
-__device__ hipFloatComplex hipCsubf(hipFloatComplex p, hipFloatComplex q){
+__device__ static inline hipFloatComplex hipCsubf(hipFloatComplex p, hipFloatComplex q){
     return make_hipFloatComplex(p.x - q.x, p.y - q.y);
 }
 
-__device__ hipFloatComplex hipCmulf(hipFloatComplex p, hipFloatComplex q){
+__device__ static inline hipFloatComplex hipCmulf(hipFloatComplex p, hipFloatComplex q){
     return make_hipFloatComplex(p.x * q.x - p.y * q.y, p.y * q.x + p.x * q.y);
 }
 
-__device__ hipFloatComplex hipCdivf(hipFloatComplex p, hipFloatComplex q){
+__device__ static inline hipFloatComplex hipCdivf(hipFloatComplex p, hipFloatComplex q){
     float sqabs = hipCsqabsf(q);
     hipFloatComplex ret;
     ret.x = (p.x * q.x + p.y * q.y)/sqabs;
@@ -72,7 +72,7 @@ __device__ hipFloatComplex hipCdivf(hipFloatComplex p, hipFloatComplex q){
     return ret;
 }
 
-__device__ float hipCabsf(hipFloatComplex z){
+__device__ static inline float hipCabsf(hipFloatComplex z){
     return sqrtf(hipCsqabsf(z));
 }
 
@@ -82,45 +82,45 @@ typedef struct{
     double y;
 }hipDoubleComplex;
 
-__device__ inline double hipCreal(hipDoubleComplex z){
+__device__ static inline double hipCreal(hipDoubleComplex z){
     return z.x;
 }
 
-__device__ inline double hipCimag(hipDoubleComplex z){
+__device__ static inline double hipCimag(hipDoubleComplex z){
     return z.y;
 }
 
-__device__ inline hipDoubleComplex make_hipDoubleComplex(double a, double b){
+__device__ static inline hipDoubleComplex make_hipDoubleComplex(double a, double b){
     hipDoubleComplex z;
     z.x = a;
     z.y = b;
     return z;
 }
 
-__device__ inline hipDoubleComplex hipConj(hipDoubleComplex z){
+__device__ static inline hipDoubleComplex hipConj(hipDoubleComplex z){
     hipDoubleComplex ret;
     ret.x = z.x;
     ret.y = z.y;
     return ret;
 }
 
-__device__ inline double hipCsqabs(hipDoubleComplex z){
+__device__ static inline double hipCsqabs(hipDoubleComplex z){
     return z.x * z.x + z.y * z.y;
 }
 
-__device__ hipDoubleComplex hipCadd(hipDoubleComplex p, hipDoubleComplex q){
+__device__ static inline hipDoubleComplex hipCadd(hipDoubleComplex p, hipDoubleComplex q){
     return make_hipDoubleComplex(p.x + q.x, p.y + q.y);
 }
 
-__device__ hipDoubleComplex hipCsub(hipDoubleComplex p, hipDoubleComplex q){
+__device__ static inline hipDoubleComplex hipCsub(hipDoubleComplex p, hipDoubleComplex q){
     return make_hipDoubleComplex(p.x - q.x, p.y - q.y);
 }
 
-__device__ hipDoubleComplex hipCmul(hipDoubleComplex p, hipDoubleComplex q){
+__device__ static inline hipDoubleComplex hipCmul(hipDoubleComplex p, hipDoubleComplex q){
     return make_hipDoubleComplex(p.x * q.x - p.y * q.y, p.y * q.x + p.x * q.y);
 }
 
-__device__ hipDoubleComplex hipCdiv(hipDoubleComplex p, hipDoubleComplex q){
+__device__ static inline hipDoubleComplex hipCdiv(hipDoubleComplex p, hipDoubleComplex q){
     double sqabs = hipCsqabs(q);
     hipDoubleComplex ret;
     ret.x = (p.x * q.x + p.y * q.y)/sqabs;
@@ -128,28 +128,28 @@ __device__ hipDoubleComplex hipCdiv(hipDoubleComplex p, hipDoubleComplex q){
     return ret;
 }
 
-__device__ inline double hipCabs(hipDoubleComplex z){
+__device__ static inline double hipCabs(hipDoubleComplex z){
     return sqrtf(hipCsqabs(z));
 }
 
 typedef hipFloatComplex hipComplex;
 
-__device__ inline hipComplex make_hipComplex(float x,
+__device__ static inline hipComplex make_hipComplex(float x,
                                             float y){
     return make_hipFloatComplex(x, y);
 }
 
-__device__ inline hipFloatComplex hipComplexDoubleToFloat
+__device__ static inline hipFloatComplex hipComplexDoubleToFloat
 (hipDoubleComplex z){
     return make_hipFloatComplex((float)z.x, (float)z.y);
 }
 
-__device__ inline hipDoubleComplex hipComplexFloatToDouble
+__device__ static inline hipDoubleComplex hipComplexFloatToDouble
 (hipFloatComplex z){
     return make_hipDoubleComplex((double)z.x, (double)z.y);
 }
 
-__device__ inline hipComplex hipCfmaf(hipComplex p, hipComplex q, hipComplex r){
+__device__ static inline hipComplex hipCfmaf(hipComplex p, hipComplex q, hipComplex r){
     float real = (p.x * q.x) + r.x;
     float imag = (q.x * p.y) + r.y;
 
@@ -159,7 +159,7 @@ __device__ inline hipComplex hipCfmaf(hipComplex p, hipComplex q, hipComplex r){
     return make_hipComplex(real, imag);
 }
 
-__device__ inline hipDoubleComplex hipCfma(hipDoubleComplex p, hipDoubleComplex q, hipDoubleComplex r){
+__device__ static inline hipDoubleComplex hipCfma(hipDoubleComplex p, hipDoubleComplex q, hipDoubleComplex r){
     float real = (p.x * q.x) + r.x;
     float imag = (q.x * p.y) + r.y;
 
@@ -168,7 +168,5 @@ __device__ inline hipDoubleComplex hipCfma(hipDoubleComplex p, hipDoubleComplex 
 
     return make_hipDoubleComplex(real, imag);
 }
-
-
 
 #endif
