@@ -423,7 +423,7 @@ typedef uint64_t SeqNum_t ;
     // Use this if we already have the stream critical data mutex:
     void                 wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty=false);
 
-
+    void launchModuleKernel(hsa_signal_t signal, uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ, uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ, uint32_t sharedMemBytes, void *kernarg, size_t kernSize, uint64_t kernel);
 
     // Non-threadsafe accessors - must be protected by high-level stream lock with accessor passed to function.
     SIGSEQNUM            lastCopySeqId (LockedAccessor_StreamCrit_t &crit) const { return crit->_last_copy_signal ? crit->_last_copy_signal->_sigId : 0; };
@@ -442,6 +442,7 @@ public:
     SeqNum_t                    _id;   // monotonic sequence ID
     hc::accelerator_view        _av;
     unsigned                    _flags;
+
 
 private:
     void     enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal, ihipSignal_t *completionSignal);

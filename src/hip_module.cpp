@@ -49,26 +49,6 @@ namespace hipdrv{
         return HSA_STATUS_SUCCESS;
     }
 
-    hsa_status_t findKernArgRegions(hsa_region_t region, void *data){
-        hsa_region_segment_t segment_id;
-        hsa_region_get_info(region, HSA_REGION_INFO_SEGMENT, &segment_id);
-
-        if(segment_id != HSA_REGION_SEGMENT_GLOBAL){
-            return HSA_STATUS_SUCCESS;
-        }
-
-        hsa_region_global_flag_t flags;
-        hsa_region_get_info(region, HSA_REGION_INFO_GLOBAL_FLAGS, &flags);
-
-        hsa_region_t *reg = (hsa_region_t*)data;
-
-        if(flags & HSA_REGION_GLOBAL_FLAG_KERNARG){
-            *reg = region;
-        }
-
-        return HSA_STATUS_SUCCESS;
-    }
-
 }   // End namespace hipdrv
 
 
@@ -100,6 +80,7 @@ hipError_t hipModuleLoad(hipModule *module, const char *fname){
             hsa_region_t sysRegion;
             hsa_status_t status = hsa_agent_iterate_regions(agent, hipdrv::findSystemRegions, &sysRegion);
             status = hsa_memory_allocate(sysRegion, size, (void**)&p);
+
             if(status != HSA_STATUS_SUCCESS){
                 return hipErrorOutOfMemory;
             }
@@ -221,71 +202,32 @@ hipError_t hipLaunchModuleKernel(hipFunction f,
 /*
 Kernel argument preparation.
 */
-
-        hsa_region_t kernArg;
-        hsa_status_t status = hsa_agent_iterate_regions(gpuAgent, hipdrv::findKernArgRegions, &kernArg);
-        void *kern;
-        status = hsa_memory_allocate(kernArg, kernSize, &kern);
-
-        if(status != HSA_STATUS_SUCCESS){
-            return hipErrorLaunchOutOfResources;
-        }
-
-        memcpy(kern, config[1], kernSize);
-
-
+        hsa_status_t status;
+        grid_launch_parm lp;
+        hStream = ihipPreLaunchKernel(hStream, 0, 0, &lp);
 
 /*
-Pre kernel launch 
-
-    stream = ihipSyncAndResolveStream(stream);
-    stream->lockopen_preKernelCommand();
-    hc::accelerator_view av = &stream->_av;
-    hc::completion_future cf = new hc::completion_future;
+  Create signal
 */
 
-        hStream = ihipSyncAndResolveStream(hStream);
-        hc::accelerator_view *av = &hStream->_av;
-        hsa_queue_t *Queue = (hsa_queue_t*)av->get_hsa_queue();
         hsa_signal_t signal;
         status = hsa_signal_create(1, 0, NULL, &signal);
 
-//        hsa_memory_pool_t pool = av->get_hsa_kernarg_region();
-//        status = hsa_amd_memory_pool_allocate(pool, kernSize, 0, &kernArg);
-//        assert(status == HSA_STATUS_SUCCESS);
+/*
+  Launch AQL packet
+*/
+        hStream->launchModuleKernel(signal, blockDimX, blockDimY, blockDimZ,
+                  gridDimX, gridDimY, gridDimZ, sharedMemBytes, config[1], kernSize, f.kernel);
 
 /*
-Creating the packets
+  Wait for signal
 */
 
-        const uint32_t queue_mask = Queue->size-1;
-        uint32_t packet_index = hsa_queue_load_write_index_relaxed(Queue);
-        hsa_kernel_dispatch_packet_t *dispatch_packet = &(((hsa_kernel_dispatch_packet_t*)(Queue->base_address))[packet_index & queue_mask]);
-
-        dispatch_packet->completion_signal = signal;
-        dispatch_packet->workgroup_size_x = blockDimX;
-        dispatch_packet->workgroup_size_y = blockDimY;
-        dispatch_packet->workgroup_size_z = blockDimZ;
-        dispatch_packet->grid_size_x = blockDimX * gridDimX;
-        dispatch_packet->grid_size_y = blockDimY * gridDimY;
-        dispatch_packet->grid_size_z = blockDimZ * gridDimZ;
-        dispatch_packet->group_segment_size = 0;
-        dispatch_packet->private_segment_size = sharedMemBytes;
-        dispatch_packet->kernarg_address = kern;
-        dispatch_packet->kernel_object = f.kernel;
-        uint16_t header = (HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE) |
-        (1 << HSA_PACKET_HEADER_BARRIER) |
-        (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
-        (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
-
-        uint16_t setup = 1 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
-        uint32_t header32 = header | (setup << 16);
-
-        __atomic_store_n((uint32_t*)(dispatch_packet), header32, __ATOMIC_RELEASE);
-
-        hsa_queue_store_write_index_relaxed(Queue, packet_index+1);
-        hsa_signal_store_relaxed(Queue->doorbell_signal, packet_index);
         hsa_signal_value_t value = hsa_signal_wait_acquire(signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_BLOCKED);
+
+
+        ihipPostLaunchKernel(hStream, lp);
+                
     }
 
     return ret;
