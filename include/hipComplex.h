@@ -24,7 +24,7 @@ THE SOFTWARE.
 #if defined(__HIP_PLATFORM_HCC__) && !defined (__HIP_PLATFORM_NVCC__)
 #include <hip/hcc_detail/hipComplex.h>
 #elif defined(__HIP_PLATFORM_NVCC__) && !defined (__HIP_PLATFORM_HCC__)
-#include "cuComplex.h"
+#include <hip/nvcc_detail/hipComplex.h>
 #else
 #error("Must define exactly one of __HIP_PLATFORM_HCC__ or __HIP_PLATFORM_NVCC__");
 #endif
