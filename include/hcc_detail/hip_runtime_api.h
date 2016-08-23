@@ -1113,6 +1113,8 @@ hipError_t hipDriverGetVersion(int *driverVersion) ;
 
 hipError_t hipModuleLoad(hipModule *module, const char *fname);
 
+hipError_t hipModuleUnload(hipModule module);
+
 hipError_t hipModuleGetFunction(hipFunction *function, hipModule module, const char *kname);
 
 hipError_t hipLaunchModuleKernel(hipFunction f,
