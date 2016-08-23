@@ -116,6 +116,19 @@ hipError_t hipModuleLoad(hipModule *module, const char *fname){
     return ret;
 }
 
+hipError_t hipModuleUnload(hipModule hmod){
+    hsa_executable_t exec;
+    hsa_code_object_t co;
+    hipError_t ret = hipSuccess;
+    exec.handle = hmod.executable;
+    co.handle = hmod.object;
+    hsa_status_t status = hsa_executable_destroy(exec);
+    if(status != HSA_STATUS_SUCCESS){ret = hipErrorInvalidValue; }
+    status = hsa_code_object_destroy(co);
+    if(status != HSA_STATUS_SUCCESS){ret = hipErrorInvalidValue; }
+    return ret;
+}
+
 hipError_t hipModuleGetFunction(hipFunction *func, hipModule hmod, const char *name){
     HIP_INIT_API(name);
     auto ctx = ihipGetTlsDefaultCtx();
