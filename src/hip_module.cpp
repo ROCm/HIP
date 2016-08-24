@@ -56,6 +56,7 @@ namespace hipdrv{
 hipError_t hipModuleLoad(hipModule *module, const char *fname){
     HIP_INIT_API(fname);
     hipError_t ret = hipSuccess;
+    *module = new ihipModule_t;
 
     if(module == NULL){
         return hipErrorInvalidValue;
@@ -74,6 +75,8 @@ hipError_t hipModuleLoad(hipModule *module, const char *fname){
             return hipErrorFileNotFound;
 
         }else{
+
+            *module = new ihipModule_t;
             size_t size = std::string::size_type(in.tellg());
             void *p = NULL;
             hsa_agent_t agent = currentDevice->_hsaAgent;
@@ -90,26 +93,19 @@ hipError_t hipModuleLoad(hipModule *module, const char *fname){
                 return hipErrorOutOfMemory;
             }
 
-            hsa_code_object_t obj;
             in.seekg(0, std::ios::beg);
             std::copy(std::istreambuf_iterator<char>(in),
                       std::istreambuf_iterator<char>(), ptr);
-            status = hsa_code_object_deserialize(ptr, size, NULL, &obj);
+            status = hsa_code_object_deserialize(ptr, size, NULL, &(*module)->object);
 
             if(status != HSA_STATUS_SUCCESS){
                 return hipErrorSharedObjectInitFailed;
             }
 
-            module->object = obj.handle;
-
-            hsa_executable_t executable;
-            status = hsa_executable_create(HSA_PROFILE_FULL, HSA_EXECUTABLE_STATE_UNFROZEN, NULL, &executable);
+            status = hsa_executable_create(HSA_PROFILE_FULL, HSA_EXECUTABLE_STATE_UNFROZEN, NULL, &(*module)->executable);
             if(status != HSA_STATUS_SUCCESS){
                 return hipErrorNotInitialized;
             }
-
-            module->executable = executable.handle;
-
         }
     }
 
@@ -117,15 +113,12 @@ hipError_t hipModuleLoad(hipModule *module, const char *fname){
 }
 
 hipError_t hipModuleUnload(hipModule hmod){
-    hsa_executable_t exec;
-    hsa_code_object_t co;
     hipError_t ret = hipSuccess;
-    exec.handle = hmod.executable;
-    co.handle = hmod.object;
-    hsa_status_t status = hsa_executable_destroy(exec);
+    hsa_status_t status = hsa_executable_destroy(hmod->executable);
     if(status != HSA_STATUS_SUCCESS){ret = hipErrorInvalidValue; }
-    status = hsa_code_object_destroy(co);
+    status = hsa_code_object_destroy(hmod->object);
     if(status != HSA_STATUS_SUCCESS){ret = hipErrorInvalidValue; }
+    delete hmod;
     return ret;
 }
 
@@ -142,40 +135,35 @@ hipError_t hipModuleGetFunction(hipFunction *func, hipModule hmod, const char *n
         ret = hipErrorInvalidContext;
 
     }else{
+        *func = new ihipFunction_t;
         int deviceId = ctx->getDevice()->_deviceId;
         ihipDevice_t *currentDevice = ihipGetDevice(deviceId);
         hsa_agent_t gpuAgent = (hsa_agent_t)currentDevice->_hsaAgent;
 
         hsa_status_t status;
-        hsa_executable_t executable;
-        hsa_executable_symbol_t kernel_symbol;
-        executable.handle = hmod.executable;
         if(status != HSA_STATUS_SUCCESS){
             return hipErrorNotInitialized;
         }
 
-        hsa_code_object_t obj;
-        obj.handle = hmod.object;
-        status = hsa_executable_load_code_object(executable, gpuAgent, obj, NULL);
+        status = hsa_executable_load_code_object(hmod->executable, gpuAgent, hmod->object, NULL);
         if(status != HSA_STATUS_SUCCESS){
             return hipErrorNotInitialized;
         }
 
-        status = hsa_executable_freeze(executable, NULL);
-        status = hsa_executable_get_symbol(executable, NULL, name, gpuAgent, 0, &kernel_symbol);
+        status = hsa_executable_freeze(hmod->executable, NULL);
+        status = hsa_executable_get_symbol(hmod->executable, NULL, name, gpuAgent, 0, &(*func)->kernel_symbol);
         if(status != HSA_STATUS_SUCCESS){
             return hipErrorNotFound;
         }
 
-        status = hsa_executable_symbol_get_info(kernel_symbol,
+        status = hsa_executable_symbol_get_info((*func)->kernel_symbol,
                                    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_OBJECT,
-                                   &func->kernel);
+                                   &(*func)->kernel);
 
         if(status != HSA_STATUS_SUCCESS){
             return hipErrorNotFound;
         }
 
-        func->symbol = kernel_symbol.handle;
 
     }
 
@@ -187,7 +175,7 @@ hipError_t hipLaunchModuleKernel(hipFunction f,
             uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
             uint32_t sharedMemBytes, hipStream_t hStream,
             void **kernelParams, void **extra){
-    HIP_INIT_API(f.kernel);
+    HIP_INIT_API(f->kernel);
     auto ctx = ihipGetTlsDefaultCtx();
     hipError_t ret = hipSuccess;
 
@@ -230,7 +218,7 @@ Kernel argument preparation.
   Launch AQL packet
 */
         hStream->launchModuleKernel(signal, blockDimX, blockDimY, blockDimZ,
-                  gridDimX, gridDimY, gridDimZ, sharedMemBytes, config[1], kernSize, f.kernel);
+                  gridDimX, gridDimY, gridDimZ, sharedMemBytes, config[1], kernSize, f->kernel);
 
 /*
   Wait for signal

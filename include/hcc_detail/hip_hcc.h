@@ -396,6 +396,20 @@ public:
 typedef ihipStreamCriticalBase_t<StreamMutex> ihipStreamCritical_t;
 typedef LockedAccessor<ihipStreamCritical_t> LockedAccessor_StreamCrit_t;
 
+class ihipModule_t{
+public:
+  hsa_executable_t executable;
+  hsa_code_object_t object;
+  std::string fileName;
+};
+
+
+class ihipFunction_t{
+public:
+  hsa_executable_symbol_t kernel_symbol;
+  uint64_t kernel;
+};
+
 // Internal stream structure.
 class ihipStream_t {
 public:

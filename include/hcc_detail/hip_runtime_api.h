@@ -52,15 +52,9 @@ typedef struct ihipDevice_t *hipDevice_t;
 
 typedef struct ihipStream_t *hipStream_t;
 
-typedef struct {
-uint64_t kernel;
-uint64_t symbol;
-}hipFunction;
+typedef struct ihipModule_t *hipModule;
 
-typedef struct{
-uint64_t executable;
-uint64_t object;
-} hipModule;
+typedef struct ihipFunction_t *hipFunction;
 
 typedef struct hipEvent_t {
     struct ihipEvent_t *_handle;
