@@ -1493,7 +1493,7 @@ const char *ihipErrorString(hipError_t hip_error)
 
 void ihipSetTs(hipEvent_t e)
 {
-    ihipEvent_t *eh = e._handle;
+    ihipEvent_t *eh = e;
     if (eh->_state == hipEventStatusRecorded) {
         // already recorded, done:
         return;

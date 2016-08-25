@@ -58,9 +58,7 @@ typedef struct ihipFunction_t *hipFunction;
 
 typedef void* hipDeviceptr;
 
-typedef struct hipEvent_t {
-    struct ihipEvent_t *_handle;
-} hipEvent_t;
+typedef struct ihipEvent_t *hipEvent_t;
 
 
 /**
