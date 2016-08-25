@@ -42,21 +42,34 @@ HIP provides the following:
 The HIP API documentation describes each API and its limitations, if any, compared with the equivalent CUDA API.
 
 ### What is not supported?
-#### Run-time features
+#### Runtime/Driver API features
+At a high-level, the following features are not supported:
 - Textures 
-- MemcpyToSymbol functions
 - Dynamic parallelism (CUDA 5.0)
 - Managed memory (CUDA 6.5)
 - Graphics interoperation with OpenGL or Direct3D
+- CUDA Driver API (Under Development)
+- CUDA IPC Functions (Under Development)
+
 - CUDA array, mipmappedArray and pitched memory
-- CUDA Driver API
+- MemcpyToSymbol functions
+
+See the [API Support Table](CUDA_Runtime_API_functions_supported_by_HIP.md) for more detailed information.
 
 #### Kernel language features
 - Device-side dynamic memory allocations (malloc, free, new, delete) (CUDA 4.0)
 - Virtual functions, indirect functions and try/catch (CUDA 4.0)
 - `__prof_trigger` 
 - PTX assembly (CUDA 4.0)
-- Several kernel features are under development.  See the [HIP Kernel Language](hip_kernel_language.md) for more information.
+- Several kernel features are under development.  See the [HIP Kernel Language](hip_kernel_language.md) for more information.  These include:
+  - printf
+  - assert__
+  - `__restrict__`
+  - `__launch_bounds__`
+  - `__threadfence*_`, `__syncthreads*`
+  - Unbounded loop unroll
+
+
 
 ### Is HIP a drop-in replacement for CUDA?
 No. HIP provides porting tools which do most of the work do convert CUDA code into portable C++ code that uses the HIP APIs.
