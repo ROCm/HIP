@@ -156,7 +156,7 @@ The `__constant__` keyword is supported. The host writes constant memory before 
 ### `__shared__` 
 The `__shared__` keyword is supported.
 
-`extern __shared__` allows the host to dynamically allocate shared memory and is specified as a launch parameter. This feature is under development.
+`extern __shared__` allows the host to dynamically allocate shared memory and is specified as a launch parameter.  HIP uses an alternate syntax based on the HIP_DYNAMIC_SHARED macro.
 
 ### `__managed__`
 Managed memory, including the `__managed__` keyword, are not supported in HIP.
@@ -537,7 +537,6 @@ HIP supports the following atomic operations.
 ### Caveats and Features Under-Development:
 
 - HIP enables atomic operations on 32-bit integers. Additionally, it supports an atomic float add. AMD hardware, however, implements the float add using a CAS loop, so this function may not perform efficiently.
-- wrapping increment and decrement are under development.
 
 ## Warp Cross-Lane Functions
 
@@ -572,8 +571,6 @@ Applications can test whether the target platform supports the any/all instructi
 
 
 ### Warp Shuffle Functions 
-
-The following warp shuffle instructions are under development.
 
 Half-float shuffles are not supported. The default width is warpSize---see [Warp Cross-Lane Functions](#warp-cross-lane-functions). Applications should not assume the warpSize is 32 or 64.
 
