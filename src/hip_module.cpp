@@ -24,6 +24,9 @@ THE SOFTWARE.
 #include "hcc_detail/hip_hcc.h"
 #include "hcc_detail/trace_helper.h"
 #include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <elf.h>
 
 //TODO Use Pool APIs from HCC to get memory regions.
 
@@ -51,7 +54,49 @@ namespace hipdrv{
 
 }   // End namespace hipdrv
 
+uint64_t PrintSymbolSizes(const void *emi, const char *name){
+    const Elf64_Ehdr *ehdr = (const Elf64_Ehdr*)emi;
+    if(NULL == ehdr || EV_CURRENT != ehdr->e_version){}
+    const Elf64_Shdr * shdr = (const Elf64_Shdr*)((char*)emi + ehdr->e_shoff);
+    for(uint16_t i=0;i<ehdr->e_shnum;++i){
+        if(shdr[i].sh_type == SHT_SYMTAB){
+            const Elf64_Sym *syms = (const Elf64_Sym*)((char*)emi + shdr[i].sh_offset);
+            assert(syms);
+            uint64_t numSyms = shdr[i].sh_size/shdr[i].sh_entsize;
+            const char* strtab = (const char*)((char*)emi + shdr[shdr[i].sh_link].sh_offset);
+            assert(strtab);
+            for(uint64_t i=0;i<numSyms;++i){
+                const char *symname = strtab + syms[i].st_name;
+                assert(symname);
+                uint64_t size = syms[i].st_size;
+                if(strcmp(name, symname) == 0){
+                    return size;
+                }
+            }
+        }
+    }
+    return 0;
+}
 
+uint64_t ElfSize(const void *emi){
+    const Elf64_Ehdr *ehdr = (const Elf64_Ehdr*)emi;
+    const Elf64_Shdr *shdr = (const Elf64_Shdr*)((char*)emi + ehdr->e_shoff);
+
+    uint64_t max_offset = ehdr->e_shoff;
+    uint64_t total_size = max_offset + ehdr->e_shentsize * ehdr->e_shnum;
+
+    for(uint16_t i=0;i < ehdr->e_shnum;++i){
+        uint64_t cur_offset = static_cast<uint64_t>(shdr[i].sh_offset);
+        if(max_offset < cur_offset){
+            max_offset = cur_offset;
+            total_size = max_offset;
+            if(SHT_NOBITS != shdr[i].sh_type){
+                total_size += static_cast<uint64_t>(shdr[i].sh_size);
+            }
+        }
+    }
+    return total_size;
+}
 
 hipError_t hipModuleLoad(hipModule *module, const char *fname){
     HIP_INIT_API(fname);
@@ -92,10 +137,12 @@ hipError_t hipModuleLoad(hipModule *module, const char *fname){
             if(!ptr){
                 return hipErrorOutOfMemory;
             }
-
+            (*module)->ptr = p;
+            (*module)->size = size;
             in.seekg(0, std::ios::beg);
             std::copy(std::istreambuf_iterator<char>(in),
                       std::istreambuf_iterator<char>(), ptr);
+
             status = hsa_code_object_deserialize(ptr, size, NULL, &(*module)->object);
 
             if(status != HSA_STATUS_SUCCESS){
@@ -231,5 +278,68 @@ Kernel argument preparation.
                 
     }
 
+    return ret;
+}
+
+
+hipError_t hipModuleGetGlobal(hipDeviceptr *dptr, size_t *bytes,
+                              hipModule hmod, const char* name){
+    hipError_t ret = hipSuccess;
+    if(dptr == NULL || bytes == NULL){
+        return hipErrorInvalidValue;
+    }
+    if(name == NULL || hmod == NULL){
+        return hipErrorNotInitialized;
+    }
+    else{
+        hipFunction func;
+        hipModuleGetFunction(&func, hmod, name);
+        *bytes = PrintSymbolSizes(hmod->ptr, name) + sizeof(amd_kernel_code_t);
+        *dptr = reinterpret_cast<void*>(func->kernel);
+        return ret;
+    }
+}
+
+hipError_t hipModuleLoadData(hipModule *module, const void *image){
+    hipError_t ret;
+    if(image == NULL || module == NULL){
+        return hipErrorNotInitialized;
+    }else{
+        auto ctx = ihipGetTlsDefaultCtx();
+        *module = new ihipModule_t;
+        int deviceId = ctx->getDevice()->_deviceId;
+        ihipDevice_t *currentDevice = ihipGetDevice(deviceId);
+
+        void *p;
+        uint64_t size = ElfSize(image);
+        hsa_agent_t agent = currentDevice->_hsaAgent;
+        hsa_region_t sysRegion;
+        hsa_status_t status = hsa_agent_iterate_regions(agent, hipdrv::findSystemRegions, &sysRegion);
+        status = hsa_memory_allocate(sysRegion, size, (void**)&p);
+
+        if(status != HSA_STATUS_SUCCESS){
+            return hipErrorOutOfMemory;
+        }
+
+        char *ptr = (char*)p;
+        if(!ptr){
+           return hipErrorOutOfMemory;
+        }
+        (*module)->ptr = p;
+        (*module)->size = size;
+
+        memcpy(ptr, image, size);
+
+        status = hsa_code_object_deserialize(ptr, size, NULL, &(*module)->object);
+
+        if(status != HSA_STATUS_SUCCESS){
+            return hipErrorSharedObjectInitFailed;
+        }
+
+        status = hsa_executable_create(HSA_PROFILE_FULL, HSA_EXECUTABLE_STATE_UNFROZEN, NULL, &(*module)->executable);
+        if(status != HSA_STATUS_SUCCESS){
+            return hipErrorNotInitialized;
+        }
+    }
     return ret;
 }

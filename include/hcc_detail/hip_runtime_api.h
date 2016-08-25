@@ -56,6 +56,8 @@ typedef struct ihipModule_t *hipModule;
 
 typedef struct ihipFunction_t *hipFunction;
 
+typedef void* hipDeviceptr;
+
 typedef struct hipEvent_t {
     struct ihipEvent_t *_handle;
 } hipEvent_t;
@@ -1110,6 +1112,10 @@ hipError_t hipModuleLoad(hipModule *module, const char *fname);
 hipError_t hipModuleUnload(hipModule module);
 
 hipError_t hipModuleGetFunction(hipFunction *function, hipModule module, const char *kname);
+
+hipError_t hipModuleGetGlobal(hipDeviceptr *dptr, size_t *bytes, hipModule hmod, const char *name);
+
+hipError_t hipModuleLoadData(hipModule *module, const void *image);
 
 hipError_t hipLaunchModuleKernel(hipFunction f,
                               unsigned int gridDimX,
