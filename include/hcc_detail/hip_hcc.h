@@ -401,6 +401,8 @@ public:
   hsa_executable_t executable;
   hsa_code_object_t object;
   std::string fileName;
+  void *ptr;
+  size_t size;
 };
 
 
