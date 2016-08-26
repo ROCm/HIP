@@ -32,7 +32,6 @@ thread_local std::stack<ihipCtx_t *>  tls_ctxStack;
 hipError_t ihipCtxStackUpdate()
 {
     //HIP_INIT_API();
-    printf("Inside ihipCtxStackUpdate\n");
     hipError_t e = hipSuccess;
 
     if(tls_ctxStack.empty()) {

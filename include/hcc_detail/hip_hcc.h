@@ -421,8 +421,9 @@ typedef uint64_t SeqNum_t ;
     ~ihipStream_t();
 
     // kind is hipMemcpyKind
-    void copySync (LockedAccessor_StreamCrit_t &crit, void* dst, const void* src, size_t sizeBytes, unsigned kind);
-    void locked_copySync (void* dst, const void* src, size_t sizeBytes, unsigned kind);
+    void copySync (LockedAccessor_StreamCrit_t &crit, void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn = true);
+    void locked_copySync (void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn = true);
+
 
     void copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind);
 

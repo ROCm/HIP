@@ -844,6 +844,14 @@ hipError_t hipHostFree(void* ptr);
  */
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind);
 
+hipError_t hipMemcpyHtoD(hipDeviceptr dst, hipDeviceptr src, size_t sizeBytes);
+
+hipError_t hipMemcpyDtoH(hipDeviceptr dst, hipDeviceptr src, size_t sizeBytes);
+
+hipError_t hipMemcpyDtoD(hipDeviceptr dst, hipDeviceptr src, size_t sizeBytes);
+
+hipError_t hipMemcpyHtoH(hipDeviceptr dst, hipDeviceptr src, size_t sizeBytes);
+
 
 /**
  *  @brief Copies @p sizeBytes bytes from the memory area pointed to by @p src to the memory area pointed to by @p offset bytes from the start of symbol @p symbol.

@@ -1563,7 +1563,7 @@ void ihipStream_t::setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType,
 }
 
 
-void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const void* src, size_t sizeBytes, unsigned kind)
+void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn)
 {
     ihipCtx_t *ctx = this->getCtx();
     const ihipDevice_t *device = ctx->getDevice();
@@ -1582,7 +1582,7 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
     bool dstInDeviceMem = dstPtrInfo._isInDeviceMem;
 
     // Resolve default to a specific Kind so we know which algorithm to use:
-    if (kind == hipMemcpyDefault) {
+    if (kind == hipMemcpyDefault && resolveOn) {
         kind = resolveMemcpyDirection(srcTracked, dstTracked, srcInDeviceMem, dstInDeviceMem);
     };
 
@@ -1753,13 +1753,11 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
 
 
 // Sync copy that acquires lock:
-void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes, unsigned kind)
+void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn)
 {
     LockedAccessor_StreamCrit_t crit (_criticalData);
-    copySync(crit, dst, src, sizeBytes, kind);
+    copySync(crit, dst, src, sizeBytes, kind, resolveOn);
 }
-
-
 
 void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind)
 {

@@ -446,10 +446,94 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
         e = ex._code;
     }
 
+    return ihipLogStatus(e);
+}
 
+hipError_t hipMemcpyHtoD(hipDeviceptr dst, hipDeviceptr src, size_t sizeBytes)
+{
+    HIP_INIT_API(dst, src, sizeBytes);
+
+    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+    hc::completion_future marker;
+
+    hipError_t e = hipSuccess;
+
+    try {
+
+        stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyHostToDevice, false);
+    }
+    catch (ihipException ex) {
+        e = ex._code;
+    }
 
     return ihipLogStatus(e);
 }
+
+
+hipError_t hipMemcpyDtoH(hipDeviceptr dst, hipDeviceptr src, size_t sizeBytes)
+{
+    HIP_INIT_API(dst, src, sizeBytes);
+
+    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+    hc::completion_future marker;
+
+    hipError_t e = hipSuccess;
+
+    try {
+
+        stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyDeviceToHost, false);
+    }
+    catch (ihipException ex) {
+        e = ex._code;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemcpyDtoD(hipDeviceptr dst, hipDeviceptr src, size_t sizeBytes)
+{
+    HIP_INIT_API(dst, src, sizeBytes);
+
+    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+    hc::completion_future marker;
+
+    hipError_t e = hipSuccess;
+
+    try {
+
+        stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyDeviceToDevice, false);
+    }
+    catch (ihipException ex) {
+        e = ex._code;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemcpyHtoH(hipDeviceptr dst, hipDeviceptr src, size_t sizeBytes)
+{
+    HIP_INIT_API(dst, src, sizeBytes);
+
+    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+    hc::completion_future marker;
+
+    hipError_t e = hipSuccess;
+
+    try {
+
+        stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyHostToHost, false);
+    }
+    catch (ihipException ex) {
+        e = ex._code;
+    }
+
+    return ihipLogStatus(e);
+}
+
 
 
 /**
