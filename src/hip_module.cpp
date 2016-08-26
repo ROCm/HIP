@@ -98,7 +98,7 @@ uint64_t ElfSize(const void *emi){
     return total_size;
 }
 
-hipError_t hipModuleLoad(hipModule *module, const char *fname){
+hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
     HIP_INIT_API(fname);
     hipError_t ret = hipSuccess;
     *module = new ihipModule_t;
@@ -159,7 +159,7 @@ hipError_t hipModuleLoad(hipModule *module, const char *fname){
     return ret;
 }
 
-hipError_t hipModuleUnload(hipModule hmod){
+hipError_t hipModuleUnload(hipModule_t hmod){
     hipError_t ret = hipSuccess;
     hsa_status_t status = hsa_executable_destroy(hmod->executable);
     if(status != HSA_STATUS_SUCCESS){ret = hipErrorInvalidValue; }
@@ -169,7 +169,7 @@ hipError_t hipModuleUnload(hipModule hmod){
     return ret;
 }
 
-hipError_t hipModuleGetFunction(hipFunction *func, hipModule hmod, const char *name){
+hipError_t ihipModuleGetFunction(hipFunction_t *func, hipModule_t hmod, const char *name){
     HIP_INIT_API(name);
     auto ctx = ihipGetTlsDefaultCtx();
     hipError_t ret = hipSuccess;
@@ -217,7 +217,13 @@ hipError_t hipModuleGetFunction(hipFunction *func, hipModule hmod, const char *n
     return ret;
 }
 
-hipError_t hipLaunchModuleKernel(hipFunction f,
+hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod,
+                                const char *name)
+{
+    return ihipModuleGetFunction(hfunc, hmod, name);
+}
+
+hipError_t hipLaunchModuleKernel(hipFunction_t f,
             uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
             uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
             uint32_t sharedMemBytes, hipStream_t hStream,
@@ -283,7 +289,7 @@ Kernel argument preparation.
 
 
 hipError_t hipModuleGetGlobal(hipDeviceptr *dptr, size_t *bytes,
-                              hipModule hmod, const char* name){
+                              hipModule_t hmod, const char* name){
     hipError_t ret = hipSuccess;
     if(dptr == NULL || bytes == NULL){
         return hipErrorInvalidValue;
@@ -292,15 +298,15 @@ hipError_t hipModuleGetGlobal(hipDeviceptr *dptr, size_t *bytes,
         return hipErrorNotInitialized;
     }
     else{
-        hipFunction func;
-        hipModuleGetFunction(&func, hmod, name);
+        hipFunction_t func;
+        ihipModuleGetFunction(&func, hmod, name);
         *bytes = PrintSymbolSizes(hmod->ptr, name) + sizeof(amd_kernel_code_t);
         *dptr = reinterpret_cast<void*>(func->kernel);
         return ret;
     }
 }
 
-hipError_t hipModuleLoadData(hipModule *module, const void *image){
+hipError_t hipModuleLoadData(hipModule_t *module, const void *image){
     hipError_t ret;
     if(image == NULL || module == NULL){
         return hipErrorNotInitialized;

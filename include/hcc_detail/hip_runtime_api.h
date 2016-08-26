@@ -52,9 +52,9 @@ typedef struct ihipDevice_t *hipDevice_t;
 
 typedef struct ihipStream_t *hipStream_t;
 
-typedef struct ihipModule_t *hipModule;
+typedef struct ihipModule_t *hipModule_t;
 
-typedef struct ihipFunction_t *hipFunction;
+typedef struct ihipFunction_t *hipFunction_t;
 
 typedef void* hipDeviceptr;
 
@@ -1134,17 +1134,17 @@ hipError_t hipDeviceGetFromId(hipDevice_t *device, int deviceId);
 hipError_t hipDriverGetVersion(int *driverVersion) ;
 
 
-hipError_t hipModuleLoad(hipModule *module, const char *fname);
+hipError_t hipModuleLoad(hipModule_t *module, const char *fname);
 
-hipError_t hipModuleUnload(hipModule module);
+hipError_t hipModuleUnload(hipModule_t module);
 
-hipError_t hipModuleGetFunction(hipFunction *function, hipModule module, const char *kname);
+hipError_t hipModuleGetFunction(hipFunction_t *function, hipModule_t module, const char *kname);
 
-hipError_t hipModuleGetGlobal(hipDeviceptr *dptr, size_t *bytes, hipModule hmod, const char *name);
+hipError_t hipModuleGetGlobal(hipDeviceptr *dptr, size_t *bytes, hipModule_t hmod, const char *name);
 
-hipError_t hipModuleLoadData(hipModule *module, const void *image);
+hipError_t hipModuleLoadData(hipModule_t *module, const void *image);
 
-hipError_t hipLaunchModuleKernel(hipFunction f,
+hipError_t hipLaunchModuleKernel(hipFunction_t f,
                               unsigned int gridDimX,
                               unsigned int gridDimY,
                               unsigned int gridDimZ,

@@ -64,6 +64,10 @@ typedef CUcontext hipCtx_t;
 typedef CUsharedconfig hipSharedMemConfig;
 typedef CUfunc_cache hipFuncCache;
 typedef CUdevice hipDevice_t;
+typedef CUModule hipModule_t;
+typedef CUFunction hipFunction_t;
+typedef CUdeviceptr hipDeviceptr;
+
 //typedef cudaChannelFormatDesc hipChannelFormatDesc;
 #define hipChannelFormatDesc cudaChannelFormatDesc
 
@@ -579,6 +583,33 @@ inline static hipError_t  hipCtxSynchronize ( void )
 inline static hipError_t  hipCtxGetFlags ( unsigned int* flags )
 {
     return hipCUResultTohipError(cuCtxGetFlags ( flags ));
+}
+
+inline static hipError_t hipModuleGetFunction(hipFunction_t *function,
+                         hipModule_t module, const char *kname)
+{
+    return hipCUResultTohipError(cuModuleGetFunction(function, module, kname));
+}
+
+inline static hipError_t hipModuleGetGlobal(hipDeviceptr *dptr, size_t *bytes,
+                         hipModule_t hmod, const char* name)
+{
+    return hipCUResultTohipError(cuModuleGetGlobal(dptr, bytes, hmod, name));
+}
+
+inline static hipError_t hipModuleLoad(hipModule_t *module, const char* fname)
+{
+    return hipCUResultTohipError(cuModuleLoad(module, fname));
+}
+
+inline static hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
+{
+    return hipCUResultTohipError(cuModuleLoadData(module, image));
+}
+
+inline static hipError_t hipModuleUnload(hipModule_t hmod)
+{
+    return hipCUResultTohipError(cuModuleUnload(hmod));
 }
 
 #ifdef __cplusplus
