@@ -166,6 +166,7 @@ class ihipCtx_t;
 // generate trace string that can be output to stderr or to ATP file.
 #define HIP_INIT_API(...) \
 	std::call_once(hip_initialized, ihipInit);\
+    ihipCtxStackUpdate();\
     API_TRACE(__VA_ARGS__);
 
 #define ihipLogStatus(hipStatus) \
@@ -666,6 +667,7 @@ extern const char *ihipErrorString(hipError_t);
 extern ihipCtx_t    *ihipGetTlsDefaultCtx();
 extern void          ihipSetTlsDefaultCtx(ihipCtx_t *ctx);
 extern hipError_t    ihipSynchronize(void);
+extern hipError_t    ihipCtxStackUpdate();
 
 extern ihipDevice_t *ihipGetDevice(int);
 ihipCtx_t * ihipGetPrimaryCtx(unsigned deviceIndex);

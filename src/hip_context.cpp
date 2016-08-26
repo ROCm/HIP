@@ -29,6 +29,18 @@ THE SOFTWARE.
 // Stack of contexts
 thread_local std::stack<ihipCtx_t *>  tls_ctxStack;
 
+hipError_t ihipCtxStackUpdate()
+{
+    //HIP_INIT_API();
+    printf("Inside ihipCtxStackUpdate\n");
+    hipError_t e = hipSuccess;
+
+    if(tls_ctxStack.empty()) {
+            tls_ctxStack.push(ihipGetTlsDefaultCtx());
+    }
+
+    return ihipLogStatus(e);
+}
 
 hipError_t hipInit(unsigned int flags)
 {
@@ -92,11 +104,20 @@ hipError_t hipCtxDestroy(hipCtx_t ctx)
 {
     hipError_t e = hipSuccess;
     ihipCtx_t* currentCtx= ihipGetTlsDefaultCtx();
-    if(currentCtx == ctx) {
-        //need to destroy the ctx associated with calling thread
-        tls_ctxStack.pop();
+    ihipCtx_t* primaryCtx= ((ihipDevice_t*)ctx->getDevice())->_primaryCtx;
+    if(primaryCtx== ctx)
+    {
+        e = hipErrorInvalidValue;
     }
-    delete ctx; //As per CUDA docs , attempting to access ctx from those threads which has this ctx as current, will result in the error HIP_ERROR_CONTEXT_IS_DESTROYED.
+    else
+    {
+        if(currentCtx == ctx) {
+            //need to destroy the ctx associated with calling thread
+            tls_ctxStack.pop();
+        }
+        delete ctx; //As per CUDA docs , attempting to access ctx from those threads which has this ctx as current, will result in the error HIP_ERROR_CONTEXT_IS_DESTROYED.
+    }
+
     return ihipLogStatus(e);
 }
 
@@ -135,10 +156,17 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx)
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx)
 {
     hipError_t e = hipSuccess;
-
+#if 0
     *ctx = ihipGetTlsDefaultCtx();
     if(*ctx == nullptr) {
         *ctx = NULL;    //TODO - is it required? Can return nullptr?
+    }
+#endif
+    if(!tls_ctxStack.empty()) {
+        *ctx= tls_ctxStack.top();
+    }
+    else {
+        *ctx = NULL;
     }
     return ihipLogStatus(e);
 }
