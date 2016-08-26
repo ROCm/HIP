@@ -1084,6 +1084,35 @@ hipError_t hipCtxSynchronize ( void );
 
 hipError_t hipCtxGetFlags ( unsigned int* flags );
 
+/**
+ * @brief Enables direct access to memory allocations in a peer context.
+ *
+ * Memory which already allocated on peer device will be mapped into the address space of the current device.  In addition, all
+ * future memory allocations on peerDeviceId will be mapped into the address space of the current device when the memory is allocated.
+ * The peer memory remains accessible from the current device until a call to hipDeviceDisablePeerAccess or hipDeviceReset.
+ *
+ *
+ * @param [in] peerCtx
+ * @param [in] flags
+ *
+ * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue,
+ * @returns #hipErrorPeerAccessAlreadyEnabled if peer access is already enabled for this device.
+ * @warning PeerToPeer support is experimental.
+ */
+hipError_t  hipCtxEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags);
+
+/**
+ * @brief Disable direct access from current device's virtual address space to memory allocations physically located on a peer device through contex.Disables direct access to memory allocations in a peer context and unregisters any registered allocations.
+ *
+ * Returns hipErrorPeerAccessNotEnabled if direct access to memory on peerDevice has not yet been enabled from the current device.
+ *
+ * @param [in] peerCtx
+ *
+ * @returns #hipSuccess, #hipErrorPeerAccessNotEnabled
+ * @warning PeerToPeer support is experimental.
+ */
+hipError_t  hipCtxDisablePeerAccess (hipCtx_t peerCtx);
+
 
 // TODO-ctx
 /**

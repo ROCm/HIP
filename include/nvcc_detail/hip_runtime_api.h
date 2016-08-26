@@ -474,6 +474,16 @@ inline static hipError_t  hipDeviceEnablePeerAccess ( int  peerDevice, unsigned 
     return hipCUDAErrorTohipError(cudaDeviceEnablePeerAccess ( peerDevice, flags ));
 }
 
+inline static hipError_t  hipCtxDisablePeerAccess ( hipCtx_t peerCtx )
+{
+    return hipCUDAErrorTohipError(cudaCtxDisablePeerAccess ( peerCtx ));
+}
+
+inline static hipError_t  hipCtxEnablePeerAccess ( hipCtx_t peerCtx, unsigned int  flags )
+{
+    return hipCUDAErrorTohipError(cudaCtxEnablePeerAccess ( peerCtx, flags ));
+}
+
 inline static hipError_t hipMemcpyPeer ( void* dst, int  dstDevice, const void* src, int  srcDevice, size_t count )
 {
     return hipCUDAErrorTohipError(cudaMemcpyPeer ( dst, dstDevice, src, srcDevice, count ));
