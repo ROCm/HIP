@@ -1,0 +1,173 @@
+# Porting CUDA Driver API
+
+## Introduction to the CUDA Driver and Runtime APIs
+CUDA provides a separate CUDA Driver and Runtime APIs.  The two APis have significant overlap in functionality:  
+- Both APIs support events, streams, memory management, memory copy, and error handling.
+- Both APIs deliver similar performance.  
+- Driver APIs calls begin with the prefix `cu` while Runtime APIs begin with the prefix `cuda`.  For example, the Driver API API contains `cuEventCreate` while the Runtime API contains `cudaEventCreate`, with similar functionality.
+- The Driver API defines a different but largely overlapping error code code space than the Runtime API, and uses a different coding convention.  For example, Driver API defines `CUDA_ERROR_INVALID_VALUE` while the Runtime API defines `cudaErrorInvalidValue`
+
+
+The Driver API offers two additional pieces of functionality not provided by the Runtime API: cuModule and cuCtx APIs.
+
+### cuModule API
+The Module section of the Driver API provides additional control over how and when accelerator
+ code objects are loaded.
+For example, the driver API allows code objects to be loaded from files or memory pointers.
+Symbols for kernels or global data can be extracted from the loaded code objects.
+In contrast, the Runtime API automatically loads and (if necessary) compiles all of the 
+kernels from a executable binary when run.
+In this mode, NVCC must be used to compile kernel code so the automatic loading can function correctly.
+
+Both Driver and Runtime APIs define a function for launching kernels (called `cuLaunchKernel` or `cudaLaunchKernel`.
+The kernel arguments and the execution configuration (grid dimensions, group dimensions, dynamic shared memory, and stream) are passed as arguments to the launch function.
+The Runtime additionally provides the `<<< >>>` syntax for launching kernels, which resembles
+a special function call and is easier to use than explicit launch API (in particular with respect to
+handling of kernel arguments).
+However, this syntax is not standard C++ and is available only when NVCC is used to compile the host code.  
+
+The Module features are useful in an environment which generate the code objects directly, such as a new
+accelerator language front-end.  Here, NVCC is not used.   Instead, the environment may have a 
+different kernel language or different compilation flow.
+Other environments have many kernels and do not want them to be all loaded automatically.
+The Module functions can be used to load the generated code objects and launch kernels.
+As we will see below, HIP defines a Module API which provides similar explict control over code
+object managemenet.
+
+### cuCtx API
+The Driver API defines "Context" and "Devices" as separate entities.  
+Contexts contain a single device, and a device can theoretically have multiple contexts.  
+Each context contains a set of streams and events specific to the context.  
+Historically contexts also defined a unique address space for the GPU, though this may not longer be the case in Unified Memory platforms (since the CPU and all the devices in the same process share a single unified address space).  
+The Context APIs also provide a mechanism to switch between devices, which allowed
+a single CPU thread to send commands to different GPUs.  HIP as well as a recent versions
+of CUDA Runtime provide other mechanisms to accomplish this feat - for example using streams or
+`cudaSetDevice`.
+
+The CUDA Runtime API unifies the Context API with the Device API.  This simplifies the APIs
+and has little loss of functionality since each Context can contain a single device, 
+and the benefits of multiple contexts has been replaced with other interfaces.   HIP provides
+a context API to facilitate easy porting from existing Driver codes.  
+In HIP, the Ctx functions largely provide an alternate syntax for changing the active device. 
+Most new applications will prefer to use `hipSetDevice` or the stream APIs.
+
+## HIP Module and Ctx APIs
+
+Rather than present two separate APIs, HIP extends the HIP API with new APIs for Modules 
+and Ctx control.   
+
+### hipModule API
+
+Like the CUDA Driver API, the Module API provides additional control 
+over how code is loaded, including options to load code from files or from in-memory pointers.  
+NVCC and HCC target different architectures and use different code object formats : NVCC
+is `cubin` or `ptx` files, while the HCC path is the `hsaco` format.   The external
+compilers which generate these code objects are responsible for generating and loading
+the correct code object for each platform.  Notably, there is not a fat binary format that
+can contain code for both NVCC and HCC platforms.     The following table summarizes the
+formats used on each platform:
+
+| Format        | APIs                         | NVCC               | HCC               |
+| ---           | ---                          | ---                | ---               |
+| Code Object   | hipModuleLoad, hipModuleLoadData | .cubin or PTX text | .hsaco            |
+| Fat Binary    | hipModuleLoadFatBin          | .fatbin            | Under Development | 
+
+hipcc uses NVCC and HCC to compile host codes.  Both of these may embed code objects
+into the final executable, and these code objects will be automatically loaded when
+the application starts.
+The hipModule API can be used to load additional code objects, and in this way
+provides an extended capability to the automatically loaded code objects.  HCC allows
+both of these capabilities to be used together, if desired.  Of course it is possible
+to create a program with no kernels and thus no automatic loading.
+
+
+### hipCtx API
+HIP provides a `Ctx` API as a thin layer over the existing Device functions.  This Ctx API
+can be used to set the current context, or to query properties of the device associated with
+the context.  The current context is implicitly used by other APIs such as `hipStreamCreate`.
+
+### hipify translation of CUDA Driver API
+The hipify tool will convert CUDA Driver APIs for streams, events, memory management to 
+the equivalent HIP driver calls.   For example, `cuEventCreate` will be translated to 
+`hipEventCreate`.  Hipify also converts error code from the Driver namespace and coding
+convention to the equivalent HIP error code.  Thus, HIP unifies the APis for these common functions.
+[hipify support for translating driver API is Under Development]
+
+The memory copy APIs require additional explanation.  The CUDA driver includes the memory
+direction in the name of the API (ie `cuMemcpyH2D`) while the CUDA driver API provides
+a single memory copy API with a parameter that specifies the direction and additionally
+supports a "default" direction where the runtime determines the direction automatically.
+HIP provides APis with both styles: for example, `hipMemcpyH2D` as well as `hipMemcpy`.
+The first flavor may be faster in some cases since they avoid host overhead to detect the 
+different memory directions.
+
+HIP defines a single error space, and uses camel-case for all errors (i.e. `hipErrorInvalidValue`).  
+
+### HCC Implementation Notes
+#### .hsaco
+The .hsaco format used by HCC is described in more detail [here](https://github.com/RadeonOpenCompute/ROCm-ComputeABI-Doc).
+An example and blog that show how to use the format is [here](http://gpuopen.com/rocm-with-harmony-combining-opencl-hcc-hsa-in-a-single-program).  hsaco can be generated by hcc + extractkernel tool,
+cloc, the GCN assembler, or other tools.
+
+#### Address Spaces
+HCC defines a process-wide address space where the CPU and all devices allocate
+addresses from a single unified pool.  Thus addresses may be shared between contexts, and 
+unlike the original CUDA definition a new context does not create a new address space for
+the device.   
+
+#### Additional Information
+HCC allocates staging buffers (used for unpinned copies) on a per-device basis.
+
+### NVCC Implementation Notes
+
+#### Interoperation between HIP and CUDA Driver
+CUDA applications may want to mix CUDA driver code with HIP code (see example below).  This
+table shows the type equivalence to enable this interaction.
+
+|**HIP Type** |**CU Driver Type**|  **CUDA Runtime Type** |
+| ----        | ----             | ---- | 
+| hipModule   |  CUmodule        |   			|
+| hipFunction |  CUfunction      | 			|
+| hipCtx_t    |  CUcontext       | 			|
+| hipDevice_t |  CUdevice        |  			|
+| hipStream_t |  CUstream        | cudaStream_t         |
+| hipEvent_t  |  CUevent         | cudaEvent_t          |
+| hipArray    |  CUarray         | cudaArray            |
+
+
+
+#### Compilation Flags
+The hipModule interface does not support the hipModuleLoadEx function, which is used to control PTX compilaton options.
+HCC does not use PTX and does not support the same compilation options.
+In fact, HCC code objects always contain fully compiled ISA and do not require additional compilation as part of the load step.
+Code which requires this functionaly should use platform-specific coding, calling `cuModuleLoadEx` 
+on the NVCC path and hipModuleLoad on the hcc path.  For example:
+
+```
+hipModule module;
+void *imagePtr = ... ;  // Somehow populate data pointer with code object
+
+#ifdef __HIP_PLATFORM_NVCC__
+// Use CUDA driver API but write to hipModule since they are same type:
+const int numOptions = 1;
+CUJit_option options[numOptions];
+void * optionValues[numOptions];
+
+options[0] = CU_JIT_MAX_REGISTERS;
+unsigned maxRegs=15;
+optionValues[0] = (void*) (&maxRegs);
+
+cuModuleLoadDataEx(module, imagePtr, numOptions, options, optionValues);
+
+#else // __HIP_PLATFORM_HCC__
+
+// HCC path does not support or require JIT options, so just load the module.
+hipModuleLoadData(&module, imagePtr);
+
+#endif
+
+// Back to unified code - both paths above loaded the "module" variable.
+hipFunction k;
+hipModuleGetFunction(&k, module, "myKernel");
+```
+
