@@ -509,6 +509,76 @@ inline static hipError_t hipEventQuery(hipEvent_t event)
 	return hipCUDAErrorTohipError(cudaEventQuery(event));
 }
 
+inline static hipError_t  hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device)
+{
+    return hipCUDAErrorTohipError(cuCtxCreate ( ctx,flags,device ));
+}
+
+inline static hipError_t  hipCtxDestroy(hipCtx_t ctx)
+{
+    return hipCUDAErrorTohipError(cuCtxDestroy ( ctx ));
+}
+
+inline static hipError_t  hipCtxPopCurrent(hipCtx_t* ctx)
+{
+    return hipCUDAErrorTohipError(cuCtxPopCurrent ( ctx ));
+}
+
+inline static hipError_t  hipCtxPushCurrent(hipCtx_t ctx)
+{
+    return hipCUDAErrorTohipError(cuCtxPushCurrent ( ctx ));
+}
+
+inline static hipError_t  hipCtxSetCurrent(hipCtx_t ctx)
+{
+    return hipCUDAErrorTohipError(cuCtxSetCurrent ( ctx ));
+}
+
+inline static hipError_t  hipCtxGetCurrent(hipCtx_t* ctx)
+{
+    return hipCUDAErrorTohipError(cuCtxGetCurrent ( ctx ));
+}
+
+inline static hipError_t  hipCtxGetDevice(hipDevice_t *device)
+{
+    return hipCUDAErrorTohipError(cuCtxGetDevice ( device ));
+}
+
+inline static hipError_t  hipCtxGetApiVersion (hipCtx_t ctx,int *apiVersion)
+{
+    return hipCUDAErrorTohipError(cuCtxGetApiVersion ( ctx,apiVersion ));
+}
+
+inline static hipError_t  hipCtxGetCacheConfig ( hipFuncCache *cacheConfig )
+{
+    return hipCUDAErrorTohipError(cuCtxGetCacheConfig ( cacheConfig ));
+}
+
+inline static hipError_t  hipCtxSetCacheConfig ( hipFuncCache cacheConfig )
+{
+    return hipCUDAErrorTohipError(cuCtxSetCacheConfig ( cacheConfig ));
+}
+
+inline static hipError_t  hipCtxSetSharedMemConfig ( hipSharedMemConfig config )
+{
+    return hipCUDAErrorTohipError(cuCtxSetSharedMemConfig ( config ));
+}
+
+inline static hipError_t  hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig )
+{
+    return hipCUDAErrorTohipError(cuCtxGetSharedMemConfig ( pConfig ));
+}
+
+inline static hipError_t  hipCtxSynchronize ( void )
+{
+    return hipCUDAErrorTohipError(cuCtxSynchronize ( void ));
+}
+
+inline static hipError_t  hipCtxGetFlags ( unsigned int* flags )
+{
+    return hipCUDAErrorTohipError(cuCtxGetFlags ( flags ));
+}
+
 #ifdef __cplusplus
 }
 #endif
