@@ -21,9 +21,6 @@ THE SOFTWARE.
 #include<hip_runtime_api.h>
 #include<iostream>
 #include<fstream>
-#include<hsa/hsa.h>
-#include<hsa/amd_hsa_kernel_code.h>
-#include<hsa/hsa_ven_amd_loader.h>
 #include<vector>
 
 #define LEN 64
@@ -53,8 +50,8 @@ int main(){
 
   hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
   hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice);
-  hipModule Module;
-  hipFunction Function;
+  hipModule_t Module;
+  hipFunction_t Function;
   hipModuleLoad(&Module, fileName);
   hipModuleGetFunction(&Function, Module, kernel_name);
   hipStream_t stream;
