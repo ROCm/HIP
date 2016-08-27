@@ -568,6 +568,55 @@ __device__ void  __threadfence_system(void);
 #define hipGridDim_y   (hc_get_num_groups(1))
 #define hipGridDim_z   (hc_get_num_groups(2))
 
+// loop unrolling
+__device__ static inline void* memcpy(void* dst, void* src, size_t size)
+{
+    uint64_t i = 0;
+    uint64_t totalLength = size/sizeof(uint32_t);
+    for(i=hipThreadIdx_x+hipBlockIdx_x*hipBlockDim_x;
+                  i<(totalLength/4);
+                  i = i + hipBlockDim_x * hipGridDim_x)
+    {
+        ((uint32_t*)dst)[4*i] = ((uint32_t*)src)[4*i];
+        ((uint32_t*)dst)[4*i+1] = ((uint32_t*)src)[4*i+1];
+        ((uint32_t*)dst)[4*i+2] = ((uint32_t*)src)[4*i+2];
+        ((uint32_t*)dst)[4*i+3] = ((uint32_t*)src)[4*i+3];
+    }
+    if(4*i < totalLength){
+        ((uint32_t*)dst)[4*i] = ((uint32_t*)src)[4*i];
+        ((uint32_t*)dst)[4*i+1] = ((uint32_t*)src)[4*i+1];
+        ((uint32_t*)dst)[4*i+2] = ((uint32_t*)src)[4*i+2];
+        ((uint32_t*)dst)[4*i+3] = ((uint32_t*)src)[4*i+3];
+
+    }
+    return nullptr;
+}
+
+__device__ static inline void* memset(void* ptr, uint8_t val, size_t size)
+{
+    uint32_t _val = 0;
+    _val = (val | val << 8 | val << 16 | val << 24);
+    uint64_t totalLength = size/sizeof(uint32_t);
+    uint64_t i = 0;
+    for(i=hipThreadIdx_x+hipBlockIdx_x*hipBlockDim_x;
+                  i<(totalLength/4);
+                  i = i + hipBlockDim_x * hipGridDim_x)
+    {
+        ((uint32_t*)ptr)[4*i] = _val;
+        ((uint32_t*)ptr)[4*i+1] = _val;
+        ((uint32_t*)ptr)[4*i+2] = _val;
+        ((uint32_t*)ptr)[4*i+3] = _val;
+    }
+    if(4*i < totalLength){
+        ((uint32_t*)ptr)[4*i] = _val;
+        ((uint32_t*)ptr)[4*i+1] = _val;
+        ((uint32_t*)ptr)[4*i+2] = _val;
+        ((uint32_t*)ptr)[4*i+3] = _val;
+
+    }
+    return nullptr;
+}
+
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
 
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
@@ -651,6 +700,8 @@ do {\
 /**
  *   @}
  */
+
+
 
 
 #endif
