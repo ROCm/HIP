@@ -170,7 +170,6 @@ hipError_t hipModuleUnload(hipModule_t hmod){
 }
 
 hipError_t ihipModuleGetFunction(hipFunction_t *func, hipModule_t hmod, const char *name){
-    HIP_INIT_API(name);
     auto ctx = ihipGetTlsDefaultCtx();
     hipError_t ret = hipSuccess;
 
@@ -206,20 +205,17 @@ hipError_t ihipModuleGetFunction(hipFunction_t *func, hipModule_t hmod, const ch
         if(status != HSA_STATUS_SUCCESS){
             return hipErrorNotFound;
         }
-
-
     }
-
     return ret;
 }
 
 hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod,
-                                const char *name)
-{
+                                const char *name){
+    HIP_INIT_API(name);
     return ihipModuleGetFunction(hfunc, hmod, name);
 }
 
-hipError_t hipLaunchModuleKernel(hipFunction_t f,
+hipError_t hipModuleLaunchKernel(hipFunction_t f,
             uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
             uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
             uint32_t sharedMemBytes, hipStream_t hStream,
@@ -286,6 +282,7 @@ Kernel argument preparation.
 
 hipError_t hipModuleGetGlobal(hipDeviceptr *dptr, size_t *bytes,
                               hipModule_t hmod, const char* name){
+    HIP_INIT_API(name);
     hipError_t ret = hipSuccess;
     if(dptr == NULL || bytes == NULL){
         return hipErrorInvalidValue;
@@ -303,7 +300,8 @@ hipError_t hipModuleGetGlobal(hipDeviceptr *dptr, size_t *bytes,
 }
 
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image){
-    hipError_t ret;
+    HIP_INIT_API(image);
+    hipError_t ret = hipSuccess;
     if(image == NULL || module == NULL){
         return hipErrorNotInitialized;
     }else{
@@ -345,3 +343,5 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image){
     }
     return ret;
 }
+
+

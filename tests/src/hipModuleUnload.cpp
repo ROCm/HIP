@@ -24,7 +24,7 @@ THE SOFTWARE.
 #define fileName "vcpy_isa.co"
 
 int main(){
-    hipModule module;
+    hipModule_t module;
     hipModuleLoad(&module, fileName);
     hipModuleUnload(module);
 }

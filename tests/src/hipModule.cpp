@@ -71,7 +71,7 @@ int main(){
       HIP_LAUNCH_PARAM_END
     };
 
-    hipLaunchModuleKernel(Function, 1, 1, 1, LEN, 1, 1, 0, stream, NULL, (void**)&config); 
+    hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, stream, NULL, (void**)&config); 
 
     hipStreamDestroy(stream);
 
