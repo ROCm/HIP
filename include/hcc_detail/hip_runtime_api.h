@@ -1162,7 +1162,7 @@ hipError_t hipLaunchModuleKernel(hipFunction_t f,
                               unsigned int sharedMemBytes,
                               hipStream_t stream,
                               void **kernelParams,
-                              void **extra) __attribute__((deprecated("kernelParams is not fully supported, use extra instead"))) ;
+                              void **extra) ;
 
 // doxygen end Version Management
 /**
