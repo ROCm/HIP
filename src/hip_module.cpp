@@ -188,10 +188,6 @@ hipError_t ihipModuleGetFunction(hipFunction_t *func, hipModule_t hmod, const ch
         hsa_agent_t gpuAgent = (hsa_agent_t)currentDevice->_hsaAgent;
 
         hsa_status_t status;
-        if(status != HSA_STATUS_SUCCESS){
-            return hipErrorNotInitialized;
-        }
-
         status = hsa_executable_load_code_object(hmod->executable, gpuAgent, hmod->object, NULL);
         if(status != HSA_STATUS_SUCCESS){
             return hipErrorNotInitialized;
