@@ -1152,7 +1152,7 @@ hipError_t hipModuleGetGlobal(hipDeviceptr *dptr, size_t *bytes, hipModule_t hmo
 
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image);
 
-hipError_t hipLaunchModuleKernel(hipFunction_t f,
+hipError_t hipModuleLaunchKernel(hipFunction_t f,
                               unsigned int gridDimX,
                               unsigned int gridDimY,
                               unsigned int gridDimZ,
