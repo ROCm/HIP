@@ -148,6 +148,11 @@ default:
 }
 }
 
+inline static hipError_t hipInit(unsigned int flags)
+{
+    return hipCUResultTohipError(cuInit(flags));
+}
+
 inline static hipError_t hipDeviceReset() {
     return hipCUDAErrorTohipError(cudaDeviceReset());
 }
@@ -217,6 +222,12 @@ inline static hipError_t hipMemcpyDtoH(void* dst,
                   hipDeviceptr_t src, size_t size)
 {
     return hipCUResultTohipError(cuMemcpyDtoH(dst, src, size));
+}
+
+inline static hipError_t hipMemcpyDtoD(hipDeviceptr_t dst,
+            hipDeviceptr_t src, size_t size)
+{
+    return hipCUResultTohipError(cuMemcpyDtoD(dst, src, size));
 }
 
 inline static hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind copyKind) {
