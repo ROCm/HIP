@@ -585,6 +585,16 @@ inline static hipError_t  hipCtxGetFlags ( unsigned int* flags )
     return hipCUResultTohipError(cuCtxGetFlags ( flags ));
 }
 
+inline static hipError_t hipModuleLoad(hipModule_t *module, const char* fname)
+{
+    return hipCUResultTohipError(cuModuleLoad(module, fname));
+}
+
+inline static hipError_t hipModuleUnload(hipModule_t hmod)
+{
+    return hipCUResultTohipError(cuModuleUnload(hmod));
+}
+
 inline static hipError_t hipModuleGetFunction(hipFunction_t *function,
                          hipModule_t module, const char *kname)
 {
@@ -597,19 +607,21 @@ inline static hipError_t hipModuleGetGlobal(hipDeviceptr *dptr, size_t *bytes,
     return hipCUResultTohipError(cuModuleGetGlobal(dptr, bytes, hmod, name));
 }
 
-inline static hipError_t hipModuleLoad(hipModule_t *module, const char* fname)
-{
-    return hipCUResultTohipError(cuModuleLoad(module, fname));
-}
-
 inline static hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
 {
     return hipCUResultTohipError(cuModuleLoadData(module, image));
 }
 
-inline static hipError_t hipModuleUnload(hipModule_t hmod)
+inline static hipError_t hipModuleLaunchKernel(hipFunction_t f,
+      unsigned int gridDimX, unsigned int gridDimY, unsigned int gridDimZ,
+      unsigned int blockDimX, unsigned int blockDimY, unsigned int blockDimZ,
+      unsigned int sharedMemBytes, hipStream_t stream,
+      void **kernelParams, void **extra)
 {
-    return hipCUResultTohipError(cuModuleUnload(hmod));
+    return hipCUResultTohipError(cuLaunchKernel(f, 
+                    gridDimX, gridDimY, gridDimZ,
+                    blockDimX, blockDimY, blockDimZ,
+                    shreadMemBytes, stream, kernelParams, extra);
 }
 
 #ifdef __cplusplus
