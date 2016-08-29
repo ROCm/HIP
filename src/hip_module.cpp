@@ -280,7 +280,7 @@ Kernel argument preparation.
 }
 
 
-hipError_t hipModuleGetGlobal(hipDeviceptr *dptr, size_t *bytes,
+hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes,
                               hipModule_t hmod, const char* name){
     HIP_INIT_API(name);
     hipError_t ret = hipSuccess;

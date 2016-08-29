@@ -56,7 +56,7 @@ typedef struct ihipModule_t *hipModule_t;
 
 typedef struct ihipFunction_t *hipFunction_t;
 
-typedef void* hipDeviceptr;
+typedef void* hipDeviceptr_t;
 
 typedef struct ihipEvent_t *hipEvent_t;
 
@@ -844,13 +844,13 @@ hipError_t hipHostFree(void* ptr);
  */
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind);
 
-hipError_t hipMemcpyHtoD(hipDeviceptr dst, hipDeviceptr src, size_t sizeBytes);
+hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes);
 
-hipError_t hipMemcpyDtoH(hipDeviceptr dst, hipDeviceptr src, size_t sizeBytes);
+hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes);
 
-hipError_t hipMemcpyDtoD(hipDeviceptr dst, hipDeviceptr src, size_t sizeBytes);
+hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes);
 
-hipError_t hipMemcpyHtoH(hipDeviceptr dst, hipDeviceptr src, size_t sizeBytes);
+hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes);
 
 
 /**
@@ -1148,7 +1148,7 @@ hipError_t hipModuleUnload(hipModule_t module);
 
 hipError_t hipModuleGetFunction(hipFunction_t *function, hipModule_t module, const char *kname);
 
-hipError_t hipModuleGetGlobal(hipDeviceptr *dptr, size_t *bytes, hipModule_t hmod, const char *name);
+hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes, hipModule_t hmod, const char *name);
 
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image);
 
