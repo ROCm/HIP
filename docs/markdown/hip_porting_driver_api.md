@@ -115,6 +115,9 @@ addresses from a single unified pool.  Thus addresses may be shared between cont
 unlike the original CUDA definition a new context does not create a new address space for
 the device.   
 
+#### Using hipModuleLaunchKernel
+`hipModuleLaunchKernel` is `cuLaunchKernel` in HIP world. It takes the same arguments as `cuLaunchKernel`. The argument `kernelParams` is not fully implemented for HCC. The workaround for it is, to use platform specific macros for each target. Or, `extra` argument can be used which works on both the platforms.
+
 #### Additional Information
 HCC allocates staging buffers (used for unpinned copies) on a per-device basis.
 
