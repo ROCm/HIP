@@ -1314,13 +1314,20 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
     }
 }
 
+void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, const hipStream_t stream) 
+{
+    std::string streamString = ToString(stream);
+    fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d %s\n" KNRM, \
+            kernelName, lp->grid_dim.x, lp->grid_dim.y, lp->grid_dim.z, lp->group_dim.x, lp->group_dim.y, lp->group_dim.z, 
+            lp->dynamic_group_mem_bytes, streamString.c_str());\
+}
 
 // TODO - data-up to data-down:
 // Called just before a kernel is launched from hipLaunchKernel.
 // Allows runtime to track some information about the stream.
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp)
 {
-    HIP_INIT_API(stream, grid, block, lp);
+    HIP_INIT();
     stream = ihipSyncAndResolveStream(stream);
 #if USE_GRID_LAUNCH_20
     lp->grid_dim.x = grid.x;
