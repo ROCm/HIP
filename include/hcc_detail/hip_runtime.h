@@ -622,11 +622,12 @@ __device__ static inline void* memset(void* ptr, uint8_t val, size_t size)
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
 
 #ifdef __HCC_CPP__
-hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp);
-hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm *lp);
-hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm *lp);
-hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm *lp);
-void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp);
+extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp);
+extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm *lp);
+extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm *lp);
+extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm *lp);
+extern void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, const hipStream_t stream);
+extern void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp);
 
 // TODO - move to common header file.
 #define KNRM  "\x1B[0m"
@@ -638,10 +639,9 @@ do {\
   grid_launch_parm lp;\
   lp.dynamic_group_mem_bytes = _groupMemBytes; \
   hipStream_t trueStream = (ihipPreLaunchKernel(_stream, _numBlocks3D, _blockDim3D, &lp)); \
-    if (HIP_TRACE_API) {\
-        fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d stream=%p\n" KNRM, \
-                #_kernelName, lp.grid_dim.x, lp.grid_dim.y, lp.grid_dim.z, lp.group_dim.x, lp.group_dim.y, lp.group_dim.z, lp.dynamic_group_mem_bytes, (void*)(_stream));\
-    }\
+  if (HIP_TRACE_API) {\
+      ihipPrintKernelLaunch(#_kernelName, &lp, _stream); \
+  }\
   _kernelName (lp, ##__VA_ARGS__);\
   ihipPostLaunchKernel(trueStream, lp);\
 } while(0)

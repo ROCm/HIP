@@ -160,13 +160,17 @@ class ihipCtx_t;
 #endif
 
 
+// Just initialize the HIP runtime, but don't log any trace information.
+#define HIP_INIT()\
+	std::call_once(hip_initialized, ihipInit);\
+    ihipCtxStackUpdate();
+
 
 // This macro should be called at the beginning of every HIP API.
 // It initialies the hip runtime (exactly once), and
 // generate trace string that can be output to stderr or to ATP file.
 #define HIP_INIT_API(...) \
-	std::call_once(hip_initialized, ihipInit);\
-    ihipCtxStackUpdate();\
+    HIP_INIT()\
     API_TRACE(__VA_ARGS__);
 
 #define ihipLogStatus(hipStatus) \
