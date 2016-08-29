@@ -58,15 +58,19 @@ hipMemcpyHostToHost
 #define hipHostRegisterPortable cudaHostRegisterPortable
 #define hipHostRegisterMapped cudaHostRegisterMapped
 
+#define HIP_LAUNCH_PARAM_BUFFER_POINTER CU_LAUNCH_PARAM_BUFFER_POINTER
+#define HIP_LAUNCH_PARAM_BUFFER_SIZE     CU_LAUNCH_PARAM_BUFFER_SIZE
+#define HIP_LAUNCH_PARAM_END            CU_LAUNCH_PARAM_END
+
 typedef cudaEvent_t hipEvent_t;
 typedef cudaStream_t hipStream_t;
 typedef CUcontext hipCtx_t;
 typedef CUsharedconfig hipSharedMemConfig;
 typedef CUfunc_cache hipFuncCache;
 typedef CUdevice hipDevice_t;
-typedef CUModule hipModule_t;
-typedef CUFunction hipFunction_t;
-typedef CUdeviceptr hipDeviceptr;
+typedef CUmodule hipModule_t;
+typedef CUfunction hipFunction_t;
+typedef CUdeviceptr hipDeviceptr_t;
 
 //typedef cudaChannelFormatDesc hipChannelFormatDesc;
 #define hipChannelFormatDesc cudaChannelFormatDesc
@@ -202,6 +206,19 @@ inline static hipError_t hipHostFree(void* ptr)  {
 inline static hipError_t hipSetDevice(int device) {
     return hipCUDAErrorTohipError(cudaSetDevice(device));
 }
+
+inline static hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, 
+                  void* src, size_t size)
+{
+    return hipCUResultTohipError(cuMemcpyHtoD(dst, src, size));
+}
+
+inline static hipError_t hipMemcpyDtoH(void* dst, 
+                  hipDeviceptr_t src, size_t size)
+{
+    return hipCUResultTohipError(cuMemcpyDtoH(dst, src, size));
+}
+
 inline static hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind copyKind) {
   return hipCUDAErrorTohipError(cudaMemcpy(dst, src, sizeBytes, hipMemcpyKindToCudaMemcpyKind(copyKind)));
 }
@@ -464,7 +481,6 @@ inline static hipError_t hipDriverGetVersion(int *driverVersion)
 	return hipCUDAErrorTohipError(err);
 }
 
-
 inline static hipError_t hipDeviceCanAccessPeer ( int* canAccessPeer, int  device, int  peerDevice )
 {
     return hipCUDAErrorTohipError(cudaDeviceCanAccessPeer(canAccessPeer, device, peerDevice));
@@ -585,6 +601,16 @@ inline static hipError_t  hipCtxGetFlags ( unsigned int* flags )
     return hipCUResultTohipError(cuCtxGetFlags ( flags ));
 }
 
+inline static hipError_t hipCtxDetach(hipCtx_t ctx)
+{
+    return hipCUResultTohipError(cuCtxDetach(ctx));
+}
+
+inline static hipError_t hipDeviceGet(hipDevice_t *device, int ordinal)
+{
+    return hipCUResultTohipError(cuDeviceGet(device, ordinal));
+}
+
 inline static hipError_t hipModuleLoad(hipModule_t *module, const char* fname)
 {
     return hipCUResultTohipError(cuModuleLoad(module, fname));
@@ -601,7 +627,7 @@ inline static hipError_t hipModuleGetFunction(hipFunction_t *function,
     return hipCUResultTohipError(cuModuleGetFunction(function, module, kname));
 }
 
-inline static hipError_t hipModuleGetGlobal(hipDeviceptr *dptr, size_t *bytes,
+inline static hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes,
                          hipModule_t hmod, const char* name)
 {
     return hipCUResultTohipError(cuModuleGetGlobal(dptr, bytes, hmod, name));
@@ -621,7 +647,7 @@ inline static hipError_t hipModuleLaunchKernel(hipFunction_t f,
     return hipCUResultTohipError(cuLaunchKernel(f, 
                     gridDimX, gridDimY, gridDimZ,
                     blockDimX, blockDimY, blockDimZ,
-                    shreadMemBytes, stream, kernelParams, extra);
+                    sharedMemBytes, stream, kernelParams, extra));
 }
 
 #ifdef __cplusplus
