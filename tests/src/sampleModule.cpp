@@ -50,7 +50,7 @@ int main(){
 
 
 #ifdef __HIP_PLATFORM_NVCC__
-  	cuInit(0);
+  	hipInit(0);
 	  hipDevice_t device;
 	  hipCtx_t context;
 	  hipDeviceGet(&device, 0);
