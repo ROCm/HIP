@@ -32,10 +32,12 @@
 HIP provides the following:
 - Devices (hipSetDevice(), hipGetDeviceProperties(), etc.)
 - Memory management (hipMalloc(), hipMemcpy(), hipFree(), etc.)
-- Streams (hipStreamCreate(), etc.)
+- Streams (hipStreamCreate(),hipStreamSynchronize(), hipStreamWaitEvent(),  etc.)
 - Events (hipEventRecord(), hipEventElapsedTime(), etc.)
 - Kernel launching (hipLaunchKernel is a standard C/C++ function that replaces <<< >>>)
+- HIP Module API to control when adn how code is loaded.
 - CUDA-style kernel coordinate functions (threadIdx, blockIdx, blockDim, gridDim)
+- Cross-lane instructions including shfl, ballot, any, all
 - Most device-side math built-ins
 - Error reporting (hipGetLastError(), hipGetErrorString())
 
@@ -53,6 +55,7 @@ At a high-level, the following features are not supported:
 
 - CUDA array, mipmappedArray and pitched memory
 - MemcpyToSymbol functions
+- Queue priority controls
 
 See the [API Support Table](CUDA_Runtime_API_functions_supported_by_HIP.md) for more detailed information.
 
@@ -60,10 +63,10 @@ See the [API Support Table](CUDA_Runtime_API_functions_supported_by_HIP.md) for 
 - Device-side dynamic memory allocations (malloc, free, new, delete) (CUDA 4.0)
 - Virtual functions, indirect functions and try/catch (CUDA 4.0)
 - `__prof_trigger` 
-- PTX assembly (CUDA 4.0)
+- PTX assembly (CUDA 4.0).  HCC supports inline GCN assembly.
 - Several kernel features are under development.  See the [HIP Kernel Language](hip_kernel_language.md) for more information.  These include:
   - printf
-  - assert__
+  - assert
   - `__restrict__`
   - `__launch_bounds__`
   - `__threadfence*_`, `__syncthreads*`
@@ -74,7 +77,7 @@ See the [API Support Table](CUDA_Runtime_API_functions_supported_by_HIP.md) for 
 ### Is HIP a drop-in replacement for CUDA?
 No. HIP provides porting tools which do most of the work do convert CUDA code into portable C++ code that uses the HIP APIs.
 Most developers will port their code from CUDA to HIP and then maintain the HIP version. 
-HIP code provides the same performance as coding in native CUDA, plus the benefit that the code can also run on AMD platforms.
+HIP code provides the same performance as native CUDA code, plus the benefits of running on AMD platforms.
 
 ### What specific version of CUDA does HIP support?
 HIP APIs and features do not map to a specific CUDA version.  HIP provides a strong subset of functionality provided in CUDA, and the hipify tools can 

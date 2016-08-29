@@ -395,13 +395,53 @@ For new projects or ports which can be re-factored, we recommend the use of the 
 This indicates that the code is standard C++ code, but also provides a unique indication for make tools to
 run hipcc when appropriate.
 
-### Workarounds
+## Workarounds
 
-#### warpSize
+### warpSize
 Code should not assume a warp size of 32 or 64.  See [Warp Cross-Lane Functions](hip_kernel_language.md#warp-cross-lane-functions) for information on how to write portable wave-aware code.
 
+## memcpyToSymbol
 
-#### Textures and Cache Control
+HIP support for hipMemCpyToSymbol is under-development.  This feature allows a kernel
+to define a device-side data symbol which can be accessed on the host side.  The symbol
+can be in __constant or device space.  As a workaround, programs can pass the symbol
+as an argument to the kernel, and use standard hipMemcpy routines to initialize it.
+
+For example:
+
+Device Code:
+```
+// Cuda Device Code
+__constant__ float Array[1024];
+__global__ void Inc(float *Out){
+   Int tx = hipThreadIdx_x;
+   Out[tx] = Array[tx] + 1;
+}
+ 
+// HIP Device Code
+__global__ void Inc(hipLaunchParm lp, float *Array, float *Out){
+   Int tx = hipThreadIdx_x;
+   Out[tx] = Array[tx] + 1;
+}
+```
+ 
+Host Code:
+```
+// CUDA Host Code
+cudaMemcpyToSymbol(Array, hostArray, sizeofArray);
+ 
+// HIP Host Code
+hipMemcpy(Array, hostArray, sizeofArray);
+```
+ 
+## threadfence_system
+Threadfence_system makes all device memory writes, all writes to mapped host memory, and all writes to peer memory visible to CPU and other GPU devices.
+Some implementations can provide this behavior by flushing the GPU L2 cache.
+HIP/HCC does not provide this functionality.  As a workaround, users can set the environment variable `HSA_DISABLE_CACHE=1` to 
+disable the GPU L2 cache. This will affect all accesses and for all kernels and so may have 
+a performance impact.
+
+### Textures and Cache Control
 
 >Texture support is under-development and not yet supported by HIP.
 
