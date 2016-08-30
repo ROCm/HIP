@@ -1141,17 +1141,80 @@ hipError_t hipDeviceGetFromId(hipDevice_t *device, int deviceId);
  */
 hipError_t hipDriverGetVersion(int *driverVersion) ;
 
-
+/**
+ * @brief Loads code object from file into a hipModule_t
+ *
+ * @param [in] fname
+ * @param [out] module
+ * 
+ * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidContext, hipErrorFileNotFound, hipErrorOutOfMemory, hipErrorSharedObjectInitFailed, hipErrorNotInitialized
+ *
+ * 
+ */
 hipError_t hipModuleLoad(hipModule_t *module, const char *fname);
+
+/**
+ * @brief Freeing the module
+ *
+ * @param [in] module
+ *
+ * @returns hipSuccess, hipInvalidValue
+ * module is freed and the code objects associated with it are destroyed
+ * 
+ */
 
 hipError_t hipModuleUnload(hipModule_t module);
 
+/**
+ * @brief Function with kname will be extracted present in module
+ *
+ * @param [in] module
+ * @param [in] kname
+ * @param [out] function
+ *
+ * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidContext, hipErrorNotInitialized, hipErrorNotFound, 
+ */
 hipError_t hipModuleGetFunction(hipFunction_t *function, hipModule_t module, const char *kname);
 
+/**
+ * @brief returns device memory pointer and size of the kernel present in the module with symbol - name
+ *
+ * @param [in] moodule
+ * @param [in] name
+ * @param [out] dptr
+ * @param [out[ bytes
+ *
+ * @returns hipSuccess, hipErrorInvalidValue, hipErrorNotInitialized
+ */
 hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes, hipModule_t hmod, const char *name);
 
+/**
+ * @brief builds module from code object which resides in host memory. And image is pointer to that location.
+ *
+ * @param [in] image
+ * @param [out] module
+ *
+ * @returns hipSuccess, hipErrorNotInitialized, hipErrorOutOfMemory, hipErrorNotInitialized
+ */
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image);
 
+/**
+ * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed to kerneelparams or extra
+ *
+ * @param [in[ f
+ * @param [in] gridDimX
+ * @param [in] gridDimY
+ * @param [in] gridDimZ
+ * @param [in] blockDimX
+ * @param [in] blockDimY
+ * @param [in] blockDimZ
+ * @param [in] sharedMemBytes
+ * @param [in] stream
+ * @param [in] kernelParams
+ * @param [in] extraa
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ */
 hipError_t hipModuleLaunchKernel(hipFunction_t f,
                               unsigned int gridDimX,
                               unsigned int gridDimY,
