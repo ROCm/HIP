@@ -678,9 +678,12 @@ hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset,
 
 
 
+// TODO - make member function of stream?
 template <typename T>
 hc::completion_future
-ihipMemsetKernel(hipStream_t stream, T * ptr, T val, size_t sizeBytes)
+ihipMemsetKernel(hipStream_t stream, 
+    LockedAccessor_StreamCrit_t &crit,
+    T * ptr, T val, size_t sizeBytes)
 {
     int wg = std::min((unsigned)8, stream->getDevice()->_computeUnits);
     const int threads_per_wg = 256;
@@ -696,7 +699,7 @@ ihipMemsetKernel(hipStream_t stream, T * ptr, T val, size_t sizeBytes)
 
     hc::completion_future cf =
     hc::parallel_for_each(
-            stream->_av,
+            crit->_av,
             ext_tile,
             [=] (hc::tiled_index<1> idx)
             __attribute__((hc))
@@ -707,41 +710,6 @@ ihipMemsetKernel(hipStream_t stream, T * ptr, T val, size_t sizeBytes)
 
         for (int i=offset; i<sizeBytes; i+=stride) {
             ptr[i] = val;
-        }
-    });
-
-    return cf;
-}
-
-template <typename T>
-hc::completion_future
-ihipMemcpyKernel(hipStream_t stream, T * c, const T * a, size_t sizeBytes)
-{
-    int wg = std::min((unsigned)8, stream->getDevice()->_computeUnits);
-    const int threads_per_wg = 256;
-
-    int threads = wg * threads_per_wg;
-    if (threads > sizeBytes) {
-        threads = ((sizeBytes + threads_per_wg - 1) / threads_per_wg) * threads_per_wg;
-    }
-
-
-    hc::extent<1> ext(threads);
-    auto ext_tile = ext.tile(threads_per_wg);
-
-    hc::completion_future cf =
-    hc::parallel_for_each(
-            stream->_av,
-            ext_tile,
-            [=] (hc::tiled_index<1> idx)
-            __attribute__((hc))
-    {
-        int offset = amp_get_global_id(0);
-        // TODO-HCC - change to hc_get_local_size()
-        int stride = amp_get_local_size(0) * hc_get_num_groups(0) ;
-
-        for (int i=offset; i<sizeBytes; i+=stride) {
-            c[i] = a[i];
         }
     });
 
@@ -762,7 +730,7 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
     stream =  ihipSyncAndResolveStream(stream);
 
     if (stream) {
-        stream->lockopen_preKernelCommand();
+        auto crit = stream->lockopen_preKernelCommand();
 
         hc::completion_future cf ;
 
@@ -771,7 +739,7 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
             try {
                 value = value & 0xff;
                 unsigned value32 = (value << 24) | (value << 16) | (value << 8) | (value) ;
-                cf = ihipMemsetKernel<unsigned> (stream, static_cast<unsigned*> (dst), value32, sizeBytes/sizeof(unsigned));
+                cf = ihipMemsetKernel<unsigned> (stream, crit, static_cast<unsigned*> (dst), value32, sizeBytes/sizeof(unsigned));
             }
             catch (std::exception &ex) {
                 e = hipErrorInvalidValue;
@@ -779,7 +747,7 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
         } else {
             // use a slow byte-per-workitem copy:
             try {
-                cf = ihipMemsetKernel<char> (stream, static_cast<char*> (dst), value, sizeBytes);
+                cf = ihipMemsetKernel<char> (stream, crit, static_cast<char*> (dst), value, sizeBytes);
             }
             catch (std::exception &ex) {
                 e = hipErrorInvalidValue;
@@ -814,7 +782,7 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
     stream =  ihipSyncAndResolveStream(stream);
 
     if (stream) {
-        stream->lockopen_preKernelCommand();
+        auto crit = stream->lockopen_preKernelCommand();
 
         hc::completion_future cf ;
 
@@ -823,7 +791,7 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
             try {
                 value = value & 0xff;
                 unsigned value32 = (value << 24) | (value << 16) | (value << 8) | (value) ;
-                cf = ihipMemsetKernel<unsigned> (stream, static_cast<unsigned*> (dst), value32, sizeBytes/sizeof(unsigned));
+                cf = ihipMemsetKernel<unsigned> (stream, crit, static_cast<unsigned*> (dst), value32, sizeBytes/sizeof(unsigned));
             }
             catch (std::exception &ex) {
                 e = hipErrorInvalidValue;
@@ -831,7 +799,7 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
         } else {
             // use a slow byte-per-workitem copy:
             try {
-                cf = ihipMemsetKernel<char> (stream, static_cast<char*> (dst), value, sizeBytes);
+                cf = ihipMemsetKernel<char> (stream, crit, static_cast<char*> (dst), value, sizeBytes);
             }
             catch (std::exception &ex) {
                 e = hipErrorInvalidValue;

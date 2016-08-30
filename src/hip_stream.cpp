@@ -84,6 +84,10 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
 
     hipError_t e = hipSuccess;
 
+#ifdef USE_AV_COPY
+     printf ("USE_AV_COPY\n");
+#endif
+
     {
         // TODO-hcc Convert to use create_blocking_marker(...) functionality.
         // Currently we have a super-conservative version of this - block on host, and drain the queue.
