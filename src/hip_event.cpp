@@ -72,9 +72,8 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
 {
     HIP_INIT_API(event, stream);
 
-    ihipEvent_t *eh = event;
-    if (eh && eh->_state != hipEventStatusUnitialized)   {
-        eh->_stream = stream;
+    if (event && event->_state != hipEventStatusUnitialized)   {
+        event->_stream = stream;
 
         if (stream == NULL) {
             // If stream == NULL, wait on all queues.
@@ -83,16 +82,16 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
             ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
             ctx->locked_syncDefaultStream(true);
 
-            eh->_timestamp = hc::get_system_ticks();
-            eh->_state = hipEventStatusRecorded;
+            event->_timestamp = hc::get_system_ticks();
+            event->_state = hipEventStatusRecorded;
             return ihipLogStatus(hipSuccess);
         } else {
-            eh->_state  = hipEventStatusRecording;
+            event->_state  = hipEventStatusRecording;
             // Clear timestamps
-            eh->_timestamp = 0;
-            eh->_marker = stream->_av.create_marker();
-            
-            eh->_copySeqId = stream->locked_lastCopySeqId();
+            event->_timestamp = 0;
+
+            // Record the event in the stream:
+            stream->locked_recordEvent(event);
 
             return ihipLogStatus(hipSuccess);
         }

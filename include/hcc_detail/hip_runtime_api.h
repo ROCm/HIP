@@ -1307,7 +1307,7 @@ hipError_t hipDriverGetVersion(int *driverVersion) ;
 hipError_t hipModuleLoad(hipModule_t *module, const char *fname);
 
 /**
- * @brief Freeing the module
+ * @brief Frees the module
  *
  * @param [in] module
  *
@@ -1319,7 +1319,7 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname);
 hipError_t hipModuleUnload(hipModule_t module);
 
 /**
- * @brief Function with kname will be extracted present in module
+ * @brief Function with kname will be extracted if present in module
  *
  * @param [in] module
  * @param [in] kname
@@ -1330,19 +1330,20 @@ hipError_t hipModuleUnload(hipModule_t module);
 hipError_t hipModuleGetFunction(hipFunction_t *function, hipModule_t module, const char *kname);
 
 /**
- * @brief returns device memory pointer and size of the kernel present in the module with symbol - name
+ * @brief returns device memory pointer and size of the kernel present in the module with symbol @p name
  *
- * @param [in] moodule
- * @param [in] name
  * @param [out] dptr
  * @param [out[ bytes
+ * @param [in] hmod
+ * @param [in] name
  *
  * @returns hipSuccess, hipErrorInvalidValue, hipErrorNotInitialized
  */
 hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes, hipModule_t hmod, const char *name);
 
+
 /**
- * @brief builds module from code object which resides in host memory. And image is pointer to that location.
+ * @brief builds module from code object which resides in host memory. Image is pointer to that location.
  *
  * @param [in] image
  * @param [out] module
@@ -1351,8 +1352,9 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes, hipModule_t h
  */
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image);
 
+
 /**
- * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed to kerneelparams or extra
+ * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed to kernelparams or extra
  *
  * @param [in[ f
  * @param [in] gridDimX
