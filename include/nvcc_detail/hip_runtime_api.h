@@ -103,8 +103,10 @@ switch(cuError) {
     case CUDA_ERROR_OUT_OF_MEMORY                : return hipErrorMemoryAllocation            ;
     case CUDA_ERROR_INVALID_VALUE                : return hipErrorInvalidValue                ;
     case CUDA_ERROR_INVALID_DEVICE               : return hipErrorInvalidDevice               ;
-    case CUDA_ERROR_DEINITIALIZED            : return hipErrorInitializationError         ;
-    case CUDA_ERROR_NO_DEVICE                  : return hipErrorNoDevice                    ;
+    case CUDA_ERROR_DEINITIALIZED                : return hipErrorDeinitialized               ;
+    case CUDA_ERROR_NO_DEVICE                    : return hipErrorNoDevice                    ;
+    case CUDA_ERROR_INVALID_CONTEXT              : return hipErrorInvalidContext              ;
+    case CUDA_ERROR_NOT_INITIALIZED              : return hipErrorNotInitialized              ;
     default                                      : return hipErrorUnknown;  // Note - translated error.
 };
 }
