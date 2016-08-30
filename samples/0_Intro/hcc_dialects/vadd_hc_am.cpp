@@ -32,23 +32,30 @@ int main(int argc, char *argv[])
     for (int i=0; i<sizeElements; i++) {
         A_h[i] = 1.618f * i; 
         B_h[i] = 3.142f * i;
+        C_h[i] = 0;
     }
 
-    av.copy(A_h, A_d); // C++ copy H2D
-    av.copy(B_h, B_d); //C++  copy H2D
+    av.copy(A_h, A_d, sizeBytes); // C++ copy H2D
+    av.copy(B_h, B_d, sizeBytes); // C++ copy H2D
 
     // Launch kernel onto AV.  
     // Because the kernel PFE and the copies are submitted to same AV, they will execute in order
     // and we don't need additional synchronization to ensure the copies complete before the PFE begins.
+#if 1
+    hc::completion_future cf=
     hc::parallel_for_each(av,  hc::extent<1> (sizeElements),
       [&] (hc::index<1> idx) [[hc]] { 
         int i = idx[0];
-        C_d[i] = A_d[i] + B_d[i];
+        //C_d[i] = A_d[i] + B_d[i];
+        C_d[0] = A_d[1] + B_d[2];
     });
+    cf.wait();
+#endif
+
 
    
     // This copy is in same AV as the kernel and thus will wait for the kernel to finish before executing.
-    av.copy(C_d, C_h); // C++ copy D2H
+    av.copy(C_d, C_h, sizeBytes); // C++ copy D2H
 
 
     for (int i=0; i<sizeElements; i++) {
