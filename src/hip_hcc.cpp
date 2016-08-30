@@ -160,8 +160,6 @@ ihipCtx_t *ihipGetTlsDefaultCtx()
 
 hipError_t ihipSynchronize(void)
 {
-    HIP_INIT_API();
-
     ihipGetTlsDefaultCtx()->locked_waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
 
     return ihipLogStatus(hipSuccess);
