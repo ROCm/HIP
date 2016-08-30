@@ -101,6 +101,7 @@ hipError_t hipDriverGetVersion(int *driverVersion)
 
 hipError_t hipCtxDestroy(hipCtx_t ctx)
 {
+    HIP_INIT_API(ctx);
     hipError_t e = hipSuccess;
     ihipCtx_t* currentCtx= ihipGetTlsDefaultCtx();
     ihipCtx_t* primaryCtx= ((ihipDevice_t*)ctx->getDevice())->_primaryCtx;
@@ -122,6 +123,7 @@ hipError_t hipCtxDestroy(hipCtx_t ctx)
 
 hipError_t hipCtxPopCurrent(hipCtx_t* ctx)
 {
+    HIP_INIT_API(ctx);
     hipError_t e = hipSuccess;
     ihipCtx_t* tempCtx;
     *ctx = ihipGetTlsDefaultCtx();
@@ -141,6 +143,7 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx)
 
 hipError_t hipCtxPushCurrent(hipCtx_t ctx)
 {
+    HIP_INIT_API(ctx);
     hipError_t e = hipSuccess;
     if(ctx != NULL) {    //TODO- is this check needed?
         ihipSetTlsDefaultCtx(ctx);
@@ -154,6 +157,7 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx)
 
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx)
 {
+    HIP_INIT_API(ctx);
     hipError_t e = hipSuccess;
 #if 0
     *ctx = ihipGetTlsDefaultCtx();
@@ -172,6 +176,7 @@ hipError_t hipCtxGetCurrent(hipCtx_t* ctx)
 
 hipError_t hipCtxSetCurrent(hipCtx_t ctx)
 {
+    HIP_INIT_API(ctx);
     hipError_t e = hipSuccess;
     if(ctx == NULL) {
         tls_ctxStack.pop();
@@ -185,6 +190,7 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx)
 
 hipError_t hipCtxGetDevice(hipDevice_t *device)
 {
+    HIP_INIT_API(device);
     hipError_t e = hipSuccess;
 
     ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
@@ -247,11 +253,13 @@ hipError_t hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig )
 
 hipError_t hipCtxSynchronize ( void )
 {
+    HIP_INIT_API(1);
     return ihipSynchronize(); //TODP Shall check validity of ctx?
 }
 
 hipError_t hipCtxGetFlags ( unsigned int* flags )
 {
+    HIP_INIT_API(flags);
     hipError_t e = hipSuccess;
     ihipCtx_t* tempCtx;
     tempCtx = ihipGetTlsDefaultCtx();
