@@ -1213,7 +1213,10 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image);
  * @param [in] kernelParams
  * @param [in] extraa
  *
+ * The function takes the above arguments and run the kernel in hipFunction_t f.  with launch parameters specified in gridDimX, gridDimY, gridDimZ,  blockDimX, blockDimY and blockDimmZ. The amount of shared memory is specificed and can be used with HIP_DYNAMIC_SHARED. The arguemt extra is used to pass in the arguments for the kernel.
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ *
+ * @warning kernellParams argument is not yet implemented in HIP. Please use extra instead. Please refer to hip_porting_driver_api.md for sample usage.
  */
 hipError_t hipModuleLaunchKernel(hipFunction_t f,
                               unsigned int gridDimX,
