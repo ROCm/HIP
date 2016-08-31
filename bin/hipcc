@@ -157,6 +157,16 @@ if ($HIP_PLATFORM eq "hcc") {
     exit (-1);
 }
 
+my $ISACMD="hipgenisa.sh ";
+$ISACMD .= $ROCM_PATH;
+if($ARGV[0] eq "--genisa"){
+  foreach $isaarg (@ARGV){
+    $ISACMD .= " ";
+    $ISACMD .= $isaarg;
+  }
+  system($ISACMD);
+  exit(-1);
+}
 
 # Add paths to common HIP includes:
 $HIPCXXFLAGS .= " -I$HIP_PATH/include" ;
@@ -178,6 +188,7 @@ if ($verbose & 0x4) {
 }
 
 my $toolArgs = "";  # arguments to pass to the hcc or nvcc tool
+
 foreach $arg (@ARGV)
 {
     my $swallowArg = 0;
