@@ -165,7 +165,7 @@ if($ARGV[0] eq "--genisa"){
     $ISACMD .= $isaarg;
   }
   system($ISACMD);
-  exit(-1);
+  exit(0);
 }
 
 # Add paths to common HIP includes:
