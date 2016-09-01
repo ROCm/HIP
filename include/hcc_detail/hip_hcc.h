@@ -715,5 +715,12 @@ inline std::ostream & operator<<(std::ostream& os, const dim3& s)
     return os;
 }
 
+// Stream printf functions:
+inline std::ostream& operator<<(std::ostream& os, const hipEvent_t& e)
+{
+    os << "event:" << std::hex << static_cast<void*> (e);
+    return os;
+}
+
 
 #endif
