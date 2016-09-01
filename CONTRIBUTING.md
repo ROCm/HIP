@@ -121,6 +121,8 @@ Differences or limitations of HIP APIs as compared to CUDA APIs should be clearl
 - HIP_INIT_API() should be placed at the start of each top-level HIP API.  This function will make sure the HIP runtime is initialized,
   and also constructs an appropriate API string for tracing and CodeXL marker tracing.  The arguments to HIP_INIT_API should match
   those of the parent fucntion.  
+- ihipLogStatus should only be called from top-level HIP APIs,and should be called to log and return the error code.  The error code 
+  is used by the GetLastError and PeekLastError functions - if a HIP API simply returns, then the error will not be logged correctly.
 
 
 #### Presubmit Testing:
