@@ -484,6 +484,12 @@ inline static hipError_t hipStreamDestroy(hipStream_t stream)
 }
 
 
+inline static hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags)
+{
+    return hipCUDAErrorTohipError(cudaStreamWaitEvent(stream, event, flags));
+}
+
+
 inline static hipError_t hipDriverGetVersion(int *driverVersion)
 {
 	cudaError_t err = cudaDriverGetVersion(driverVersion);
