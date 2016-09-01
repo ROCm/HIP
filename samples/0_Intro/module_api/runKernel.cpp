@@ -66,8 +66,9 @@ int main(){
     hipModuleLoad(&Module, fileName);
     hipModuleGetFunction(&Function, Module, kernel_name);
 
-  uint32_t len = LEN;
-  uint32_t one = 1;
+#ifdef __HIP_PLATFORM_HCC__
+    uint32_t len = LEN;
+    uint32_t one = 1;
 
     std::vector<void*>argBuffer(5);
     uint32_t *ptr32_t = (uint32_t*)&argBuffer[0];
@@ -79,7 +80,13 @@ int main(){
     memcpy(ptr32_t + 5, &one, sizeof(uint32_t));
     memcpy(&argBuffer[3], &Ad, sizeof(void*));
     memcpy(&argBuffer[4], &Bd, sizeof(void*));
+#endif
 
+#ifdef __HIP_PLATFORM_NVCC__
+    std::vector<void*>argBuffer(2);
+    memcpy(&argBuffer[0], &Ad, sizeof(void*));
+    memcpy(&argBuffer[1], &Bd, sizeof(void*));
+#endif
 
 
     size_t size = argBuffer.size()*sizeof(void*);
