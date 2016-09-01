@@ -157,7 +157,8 @@ if ($HIP_PLATFORM eq "hcc") {
     exit (-1);
 }
 
-my $ISACMD="hipgenisa.sh ";
+my $ISACMD=$HIP_PATH;
+$ISACMD .= "/bin/hipgenisa.sh ";
 $ISACMD .= $ROCM_PATH;
 if($ARGV[0] eq "--genisa"){
   foreach $isaarg (@ARGV){
