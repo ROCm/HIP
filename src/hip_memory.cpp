@@ -148,6 +148,8 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
         hip_status = hipErrorMemoryAllocation;
     }
 
+    //printf ("  hipMalloc allocated %p\n", *ptr);
+
     return ihipLogStatus(hip_status);
 }
 
