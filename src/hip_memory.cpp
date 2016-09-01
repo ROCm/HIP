@@ -119,7 +119,13 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
     HIP_INIT_API(ptr, sizeBytes);
 
     hipError_t  hip_status = hipSuccess;
-
+    // return NULL pointer when malloc size is 0  
+    if (sizeBytes == 0)
+    {
+        *ptr = NULL;
+        return ihipLogStatus(hip_status);
+    }
+   
     auto ctx = ihipGetTlsDefaultCtx();
 
     if (ctx) {
