@@ -40,7 +40,7 @@ hipError_t ihipEventCreate(hipEvent_t* event, unsigned flags)
         eh->_flags  = flags;
         eh->_timestamp  = 0;
         eh->_copySeqId  = 0;
-        *event = eh;
+        *event = eh; // TODO - allocat the event directly, no copy needed.
     } else {
         e = hipErrorInvalidValue;
     }
@@ -121,21 +121,19 @@ hipError_t hipEventSynchronize(hipEvent_t event)
 {
     HIP_INIT_API(event);
 
-    ihipEvent_t *eh = event;
-
-    if (eh) {
-        if (eh->_state == hipEventStatusUnitialized) {
+    if (event) {
+        if (event->_state == hipEventStatusUnitialized) {
             return ihipLogStatus(hipErrorInvalidResourceHandle);
-        } else if (eh->_state == hipEventStatusCreated ) {
+        } else if (event->_state == hipEventStatusCreated ) {
             // Created but not actually recorded on any device:
             return ihipLogStatus(hipSuccess);
-        } else if (eh->_stream == NULL) {
+        } else if (event->_stream == NULL) {
             auto *ctx = ihipGetTlsDefaultCtx();
             ctx->locked_syncDefaultStream(true);
             return ihipLogStatus(hipSuccess);
         } else {
-            eh->_marker.wait((eh->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked : hc::hcWaitModeActive);
-            eh->_stream->locked_reclaimSignals(eh->_copySeqId);
+            event->_marker.wait((event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked : hc::hcWaitModeActive);
+            event->_stream->locked_reclaimSignals(event->_copySeqId);
 
             return ihipLogStatus(hipSuccess);
         }
@@ -195,12 +193,11 @@ hipError_t hipEventQuery(hipEvent_t event)
 {
     HIP_INIT_API(event);
 
-    ihipEvent_t *eh = event;
 
     // TODO-stream - need to read state of signal here:  The event may have become ready after recording..
     // TODO-HCC - use get_hsa_signal here.
 
-    if (eh->_state == hipEventStatusRecording) {
+    if (event->_state == hipEventStatusRecording) {
         return ihipLogStatus(hipErrorNotReady);
     } else {
         return ihipLogStatus(hipSuccess);
