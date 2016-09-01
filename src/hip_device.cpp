@@ -160,6 +160,7 @@ hipError_t hipSetDevice(int deviceId)
  */
 hipError_t hipDeviceSynchronize(void)
 {
+    HIP_INIT_API(1);
     return ihipSynchronize();
 }
 
