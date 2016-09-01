@@ -568,16 +568,66 @@ __device__ void  __threadfence_system(void);
 #define hipGridDim_y   (hc_get_num_groups(1))
 #define hipGridDim_z   (hc_get_num_groups(2))
 
+// loop unrolling
+__device__ static inline void* memcpy(void* dst, void* src, size_t size)
+{
+    uint64_t i = 0;
+    uint64_t totalLength = size/sizeof(uint32_t);
+    for(i=hipThreadIdx_x+hipBlockIdx_x*hipBlockDim_x;
+                  i<(totalLength/4);
+                  i = i + hipBlockDim_x * hipGridDim_x)
+    {
+        ((uint32_t*)dst)[4*i] = ((uint32_t*)src)[4*i];
+        ((uint32_t*)dst)[4*i+1] = ((uint32_t*)src)[4*i+1];
+        ((uint32_t*)dst)[4*i+2] = ((uint32_t*)src)[4*i+2];
+        ((uint32_t*)dst)[4*i+3] = ((uint32_t*)src)[4*i+3];
+    }
+    if(4*i < totalLength){
+        ((uint32_t*)dst)[4*i] = ((uint32_t*)src)[4*i];
+        ((uint32_t*)dst)[4*i+1] = ((uint32_t*)src)[4*i+1];
+        ((uint32_t*)dst)[4*i+2] = ((uint32_t*)src)[4*i+2];
+        ((uint32_t*)dst)[4*i+3] = ((uint32_t*)src)[4*i+3];
+
+    }
+    return nullptr;
+}
+
+__device__ static inline void* memset(void* ptr, uint8_t val, size_t size)
+{
+    uint32_t _val = 0;
+    _val = (val | val << 8 | val << 16 | val << 24);
+    uint64_t totalLength = size/sizeof(uint32_t);
+    uint64_t i = 0;
+    for(i=hipThreadIdx_x+hipBlockIdx_x*hipBlockDim_x;
+                  i<(totalLength/4);
+                  i = i + hipBlockDim_x * hipGridDim_x)
+    {
+        ((uint32_t*)ptr)[4*i] = _val;
+        ((uint32_t*)ptr)[4*i+1] = _val;
+        ((uint32_t*)ptr)[4*i+2] = _val;
+        ((uint32_t*)ptr)[4*i+3] = _val;
+    }
+    if(4*i < totalLength){
+        ((uint32_t*)ptr)[4*i] = _val;
+        ((uint32_t*)ptr)[4*i+1] = _val;
+        ((uint32_t*)ptr)[4*i+2] = _val;
+        ((uint32_t*)ptr)[4*i+3] = _val;
+
+    }
+    return nullptr;
+}
+
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
 
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
 
 #ifdef __HCC_CPP__
-hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp);
-hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm *lp);
-hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm *lp);
-hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm *lp);
-void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp);
+extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp);
+extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm *lp);
+extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm *lp);
+extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm *lp);
+extern void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, const hipStream_t stream);
+extern void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp);
 
 // TODO - move to common header file.
 #define KNRM  "\x1B[0m"
@@ -589,10 +639,9 @@ do {\
   grid_launch_parm lp;\
   lp.dynamic_group_mem_bytes = _groupMemBytes; \
   hipStream_t trueStream = (ihipPreLaunchKernel(_stream, _numBlocks3D, _blockDim3D, &lp)); \
-    if (HIP_TRACE_API) {\
-        fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d stream=%p\n" KNRM, \
-                #_kernelName, lp.grid_dim.x, lp.grid_dim.y, lp.grid_dim.z, lp.group_dim.x, lp.group_dim.y, lp.group_dim.z, lp.dynamic_group_mem_bytes, (void*)(_stream));\
-    }\
+  if (HIP_TRACE_API) {\
+      ihipPrintKernelLaunch(#_kernelName, &lp, _stream); \
+  }\
   _kernelName (lp, ##__VA_ARGS__);\
   ihipPostLaunchKernel(trueStream, lp);\
 } while(0)
@@ -651,6 +700,8 @@ do {\
 /**
  *   @}
  */
+
+
 
 
 #endif

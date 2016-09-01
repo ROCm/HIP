@@ -446,10 +446,94 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
         e = ex._code;
     }
 
+    return ihipLogStatus(e);
+}
 
+hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes)
+{
+    HIP_INIT_API(dst, src, sizeBytes);
+
+    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+    hc::completion_future marker;
+
+    hipError_t e = hipSuccess;
+
+    try {
+
+        stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyHostToDevice, false);
+    }
+    catch (ihipException ex) {
+        e = ex._code;
+    }
 
     return ihipLogStatus(e);
 }
+
+
+hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes)
+{
+    HIP_INIT_API(dst, src, sizeBytes);
+
+    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+    hc::completion_future marker;
+
+    hipError_t e = hipSuccess;
+
+    try {
+
+        stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyDeviceToHost, false);
+    }
+    catch (ihipException ex) {
+        e = ex._code;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes)
+{
+    HIP_INIT_API(dst, src, sizeBytes);
+
+    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+    hc::completion_future marker;
+
+    hipError_t e = hipSuccess;
+
+    try {
+
+        stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyDeviceToDevice, false);
+    }
+    catch (ihipException ex) {
+        e = ex._code;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes)
+{
+    HIP_INIT_API(dst, src, sizeBytes);
+
+    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+    hc::completion_future marker;
+
+    hipError_t e = hipSuccess;
+
+    try {
+
+        stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyHostToHost, false);
+    }
+    catch (ihipException ex) {
+        e = ex._code;
+    }
+
+    return ihipLogStatus(e);
+}
+
 
 
 /**
@@ -786,7 +870,6 @@ hipError_t hipMemGetInfo  (size_t *free, size_t *total)
             // TODO - replace with kernel-level for reporting free memory:
             size_t deviceMemSize, hostMemSize, userMemSize;
             hc::am_memtracker_sizeinfo(device->_acc, &deviceMemSize, &hostMemSize, &userMemSize);
-            printf ("deviceMemSize=%zu\n", deviceMemSize);
 
             *free =  device->_props.totalGlobalMem - deviceMemSize;
         }

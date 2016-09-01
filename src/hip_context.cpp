@@ -29,7 +29,22 @@ THE SOFTWARE.
 // Stack of contexts
 thread_local std::stack<ihipCtx_t *>  tls_ctxStack;
 
+hipError_t ihipCtxStackUpdate()
+{
+    //HIP_INIT_API();
+    hipError_t e = hipSuccess;
 
+    if(tls_ctxStack.empty()) {
+            tls_ctxStack.push(ihipGetTlsDefaultCtx());
+    }
+
+    return ihipLogStatus(e);
+}
+
+/**
+ * @return #hipSuccess, #hipErrorInvalidValue
+ */
+//---
 hipError_t hipInit(unsigned int flags)
 {
     HIP_INIT_API(flags);
@@ -44,7 +59,10 @@ hipError_t hipInit(unsigned int flags)
     return ihipLogStatus(e);
 }
 
-
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device)
 {
     HIP_INIT_API(ctx, flags, device); // FIXME - review if we want to init
@@ -57,7 +75,10 @@ hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device)
     return ihipLogStatus(e);
 }
 
-
+/**
+ * @return #hipSuccess, #hipErrorInvalidDevice
+ */
+//---
 hipError_t hipDeviceGet(hipDevice_t *device, int deviceId)
 {
     HIP_INIT_API(device, deviceId); // FIXME - review if we want to init
@@ -88,20 +109,39 @@ hipError_t hipDriverGetVersion(int *driverVersion)
     return ihipLogStatus(hipSuccess);
 }
 
+/**
+ * @return #hipSuccess, #hipErrorInvalidValue
+ */
+//---
 hipError_t hipCtxDestroy(hipCtx_t ctx)
 {
+    HIP_INIT_API(ctx);
     hipError_t e = hipSuccess;
     ihipCtx_t* currentCtx= ihipGetTlsDefaultCtx();
-    if(currentCtx == ctx) {
-        //need to destroy the ctx associated with calling thread
-        tls_ctxStack.pop();
+    ihipCtx_t* primaryCtx= ((ihipDevice_t*)ctx->getDevice())->_primaryCtx;
+    if(primaryCtx== ctx)
+    {
+        e = hipErrorInvalidValue;
     }
-    delete ctx; //As per CUDA docs , attempting to access ctx from those threads which has this ctx as current, will result in the error HIP_ERROR_CONTEXT_IS_DESTROYED.
+    else
+    {
+        if(currentCtx == ctx) {
+            //need to destroy the ctx associated with calling thread
+            tls_ctxStack.pop();
+        }
+        delete ctx; //As per CUDA docs , attempting to access ctx from those threads which has this ctx as current, will result in the error HIP_ERROR_CONTEXT_IS_DESTROYED.
+    }
+
     return ihipLogStatus(e);
 }
 
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxPopCurrent(hipCtx_t* ctx)
 {
+    HIP_INIT_API(ctx);
     hipError_t e = hipSuccess;
     ihipCtx_t* tempCtx;
     *ctx = ihipGetTlsDefaultCtx();
@@ -119,8 +159,13 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx)
     return ihipLogStatus(e);
 }
 
+/**
+ * @return #hipSuccess, #hipErrorInvalidContext
+ */
+//---
 hipError_t hipCtxPushCurrent(hipCtx_t ctx)
 {
+    HIP_INIT_API(ctx);
     hipError_t e = hipSuccess;
     if(ctx != NULL) {    //TODO- is this check needed?
         ihipSetTlsDefaultCtx(ctx);
@@ -132,19 +177,30 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx)
     return ihipLogStatus(e);
 }
 
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx)
 {
+    HIP_INIT_API(ctx);
     hipError_t e = hipSuccess;
-
-    *ctx = ihipGetTlsDefaultCtx();
-    if(*ctx == nullptr) {
-        *ctx = NULL;    //TODO - is it required? Can return nullptr?
+    if(!tls_ctxStack.empty()) {
+        *ctx= tls_ctxStack.top();
+    }
+    else {
+        *ctx = NULL;
     }
     return ihipLogStatus(e);
 }
 
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxSetCurrent(hipCtx_t ctx)
 {
+    HIP_INIT_API(ctx);
     hipError_t e = hipSuccess;
     if(ctx == NULL) {
         tls_ctxStack.pop();
@@ -156,8 +212,13 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx)
     return ihipLogStatus(e);
 }
 
+/**
+ * @return #hipSuccess, #hipErrorInvalidContext
+ */
+//---
 hipError_t hipCtxGetDevice(hipDevice_t *device)
 {
+    HIP_INIT_API(device);
     hipError_t e = hipSuccess;
 
     ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
@@ -171,6 +232,10 @@ hipError_t hipCtxGetDevice(hipDevice_t *device)
     return ihipLogStatus(e);
 }
 
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxGetApiVersion (hipCtx_t ctx,int *apiVersion)
 {
     HIP_INIT_API(apiVersion);
@@ -182,6 +247,10 @@ hipError_t hipCtxGetApiVersion (hipCtx_t ctx,int *apiVersion)
     return ihipLogStatus(hipSuccess);
 }
 
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxGetCacheConfig ( hipFuncCache *cacheConfig )
 {
     HIP_INIT_API(cacheConfig);
@@ -191,6 +260,10 @@ hipError_t hipCtxGetCacheConfig ( hipFuncCache *cacheConfig )
     return ihipLogStatus(hipSuccess);
 }
 
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxSetCacheConfig ( hipFuncCache cacheConfig )
 {
     HIP_INIT_API(cacheConfig);
@@ -200,6 +273,10 @@ hipError_t hipCtxSetCacheConfig ( hipFuncCache cacheConfig )
     return ihipLogStatus(hipSuccess);
 }
 
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxSetSharedMemConfig ( hipSharedMemConfig config )
 {
     HIP_INIT_API(config);
@@ -209,6 +286,10 @@ hipError_t hipCtxSetSharedMemConfig ( hipSharedMemConfig config )
     return ihipLogStatus(hipSuccess);
 }
 
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig )
 {
     HIP_INIT_API(pConfig);
@@ -216,4 +297,28 @@ hipError_t hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig )
     *pConfig = hipSharedMemBankSizeFourByte;
 
     return ihipLogStatus(hipSuccess);
+}
+
+/**
+ * @return #hipSuccess
+ */
+//---
+hipError_t hipCtxSynchronize ( void )
+{
+    HIP_INIT_API(1);
+    return ihipSynchronize(); //TODP Shall check validity of ctx?
+}
+
+/**
+ * @return #hipSuccess
+ */
+//---
+hipError_t hipCtxGetFlags ( unsigned int* flags )
+{
+    HIP_INIT_API(flags);
+    hipError_t e = hipSuccess;
+    ihipCtx_t* tempCtx;
+    tempCtx = ihipGetTlsDefaultCtx();
+    *flags = tempCtx->_ctxFlags;
+    return ihipLogStatus(e);
 }

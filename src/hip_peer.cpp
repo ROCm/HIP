@@ -67,7 +67,7 @@ hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, hipCtx_t thisCtx, hipCtx_
 //---
 // Disable visibility of this device into memory allocated on peer device.
 // Remove this device from peer device peerlist.
-hipError_t hipDeviceDisablePeerAccess (hipCtx_t peerCtx)
+hipError_t ihipDisablePeerAccess (hipCtx_t peerCtx)
 {
     HIP_INIT_API(peerCtx);
 
@@ -109,7 +109,7 @@ hipError_t hipDeviceDisablePeerAccess (hipCtx_t peerCtx)
 //---
 // Allow the current device to see all memory allocated on peerDevice.
 // This should add this device to the peer-device peer list.
-hipError_t hipDeviceEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags)
+hipError_t ihipEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags)
 {
     HIP_INIT_API(peerCtx, flags);
 
@@ -175,7 +175,7 @@ hipError_t hipDeviceDisablePeerAccess (int peerDeviceId)
 {
     HIP_INIT_API(peerDeviceId);
 
-    return hipDeviceDisablePeerAccess(ihipGetPrimaryCtx(peerDeviceId));
+    return ihipDisablePeerAccess(ihipGetPrimaryCtx(peerDeviceId));
 }
 
 
@@ -183,7 +183,7 @@ hipError_t hipDeviceEnablePeerAccess (int peerDeviceId, unsigned int flags)
 {
     HIP_INIT_API(peerDeviceId, flags);
 
-    return hipDeviceEnablePeerAccess(ihipGetPrimaryCtx(peerDeviceId), flags);
+    return ihipEnablePeerAccess(ihipGetPrimaryCtx(peerDeviceId), flags);
 }
 
 
@@ -200,6 +200,16 @@ hipError_t hipMemcpyPeerAsync (void* dst, int  dstDevice, const void* src, int  
     return hipMemcpyPeerAsync(dst, ihipGetPrimaryCtx(dstDevice), src, ihipGetPrimaryCtx(srcDevice), sizeBytes, stream);
 }
 
+hipError_t hipCtxEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags)
+{
+    HIP_INIT_API(peerCtx, flags);
 
+    return ihipEnablePeerAccess(peerCtx, flags);
+}
 
+hipError_t hipCtxDisablePeerAccess (hipCtx_t peerCtx)
+{
+    HIP_INIT_API(peerCtx);
 
+    return ihipDisablePeerAccess(peerCtx);
+}
