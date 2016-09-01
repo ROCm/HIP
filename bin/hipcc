@@ -176,7 +176,7 @@ if($HIP_PLATFORM eq "nvcc"){
   if($ARGV[0] eq "--gencodeobject"){
     foreach $isaarg (@ARGV){
       $ISACMD .= " ";
-      $ISACMD .= $isarg;
+      $ISACMD .= $isaarg;
     }
     system($ISACMD);
     exit(0);
