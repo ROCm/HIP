@@ -157,16 +157,30 @@ if ($HIP_PLATFORM eq "hcc") {
     exit (-1);
 }
 
+
 my $ISACMD=$HIP_PATH;
-$ISACMD .= "/bin/hipgenisa.sh ";
-$ISACMD .= $ROCM_PATH;
-if($ARGV[0] eq "--genisa"){
-  foreach $isaarg (@ARGV){
-    $ISACMD .= " ";
-    $ISACMD .= $isaarg;
+if($HIP_PLATFORM eq "hcc"){
+  $ISACMD .= "/bin/hipgenisa.sh ";
+  $ISACMD .= $ROCM_PATH;
+  if($ARGV[0] eq "--gencodeobject"){
+    foreach $isaarg (@ARGV){
+      $ISACMD .= " ";
+      $ISACMD .= $isaarg;
+    }
+    system($ISACMD);
+    exit(0);
   }
-  system($ISACMD);
-  exit(0);
+}
+
+if($HIP_PLATFORM eq "nvcc"){
+  if($ARGV[0] eq "--gencodeobject"){
+    foreach $isaarg (@ARGV){
+      $ISACMD .= " ";
+      $ISACMD .= $isarg;
+    }
+    system($ISACMD);
+    exit(0);
+  }
 }
 
 # Add paths to common HIP includes:
