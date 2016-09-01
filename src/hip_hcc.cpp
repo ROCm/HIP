@@ -273,6 +273,16 @@ void ihipStream_t::locked_wait(bool assertQueueEmpty)
 
 };
 
+#if USE_AV_COPY
+// Causes current stream to wait for specified event to complete:
+void ihipStream_t::locked_waitEvent(hipEvent_t event)
+{
+    LockedAccessor_StreamCrit_t crit(_criticalData);
+
+    // TODO - check state of event here:
+    crit->_av.create_blocking_marker(event->_marker);
+}
+#endif
 
 // Create a marker in this stream.
 // Save state in the event so it can track the status of the event.
