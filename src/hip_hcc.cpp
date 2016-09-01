@@ -158,7 +158,12 @@ ihipCtx_t *ihipGetTlsDefaultCtx()
     return tls_defaultCtx;
 }
 
+hipError_t ihipSynchronize(void)
+{
+    ihipGetTlsDefaultCtx()->locked_waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
 
+    return ihipLogStatus(hipSuccess);
+}
 
 //=================================================================================================
 // ihipSignal_t:
@@ -481,6 +486,53 @@ int ihipStream_t::preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t
     return needSync;
 }
 
+
+void ihipStream_t::launchModuleKernel(hsa_signal_t signal,
+                        uint32_t blockDimX,
+                        uint32_t blockDimY,
+                        uint32_t blockDimZ,
+                        uint32_t gridDimX,
+                        uint32_t gridDimY,
+                        uint32_t gridDimZ,
+                        uint32_t sharedMemBytes,
+                        void *kernarg,
+                        size_t kernSize,
+                        uint64_t kernel){
+    hsa_status_t status;
+    void *kern;
+    hsa_amd_memory_pool_t *pool = reinterpret_cast<hsa_amd_memory_pool_t*>(_av.get_hsa_kernarg_region());
+    status = hsa_amd_memory_pool_allocate(*pool, kernSize, 0, &kern);
+    status = hsa_amd_agents_allow_access(1, (hsa_agent_t*)_av.get_hsa_agent(), 0, kern);
+    memcpy(kern, kernarg, kernSize);
+    hsa_queue_t *Queue = (hsa_queue_t*)_av.get_hsa_queue();
+    const uint32_t queue_mask = Queue->size-1;
+    uint32_t packet_index = hsa_queue_load_write_index_relaxed(Queue);
+    hsa_kernel_dispatch_packet_t *dispatch_packet = &(((hsa_kernel_dispatch_packet_t*)(Queue->base_address))[packet_index & queue_mask]);
+
+    dispatch_packet->completion_signal = signal;
+    dispatch_packet->workgroup_size_x = blockDimX;
+    dispatch_packet->workgroup_size_y = blockDimY;
+    dispatch_packet->workgroup_size_z = blockDimZ;
+    dispatch_packet->grid_size_x = blockDimX * gridDimX;
+    dispatch_packet->grid_size_y = blockDimY * gridDimY;
+    dispatch_packet->grid_size_z = blockDimZ * gridDimZ;
+    dispatch_packet->group_segment_size = 0;
+    dispatch_packet->private_segment_size = sharedMemBytes;
+    dispatch_packet->kernarg_address = kern;
+    dispatch_packet->kernel_object = kernel;
+    uint16_t header = (HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE) |
+    (1 << HSA_PACKET_HEADER_BARRIER) |
+    (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
+    (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
+
+    uint16_t setup = 1 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
+    uint32_t header32 = header | (setup << 16);
+
+    __atomic_store_n((uint32_t*)(dispatch_packet), header32, __ATOMIC_RELEASE);
+
+    hsa_queue_store_write_index_relaxed(Queue, packet_index + 1);
+    hsa_signal_store_relaxed(Queue->doorbell_signal, packet_index);
+}
 
 
 //=============================================================================
@@ -1260,13 +1312,20 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
     }
 }
 
+void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, const hipStream_t stream) 
+{
+    std::string streamString = ToString(stream);
+    fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d %s\n" KNRM, \
+            kernelName, lp->grid_dim.x, lp->grid_dim.y, lp->grid_dim.z, lp->group_dim.x, lp->group_dim.y, lp->group_dim.z, 
+            lp->dynamic_group_mem_bytes, streamString.c_str());\
+}
 
 // TODO - data-up to data-down:
 // Called just before a kernel is launched from hipLaunchKernel.
 // Allows runtime to track some information about the stream.
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp)
 {
-    HIP_INIT_API(stream, grid, block, lp);
+    HIP_INIT();
     stream = ihipSyncAndResolveStream(stream);
 #if USE_GRID_LAUNCH_20
     lp->grid_dim.x = grid.x;
@@ -1439,7 +1498,7 @@ const char *ihipErrorString(hipError_t hip_error)
 
 void ihipSetTs(hipEvent_t e)
 {
-    ihipEvent_t *eh = e._handle;
+    ihipEvent_t *eh = e;
     if (eh->_state == hipEventStatusRecorded) {
         // already recorded, done:
         return;
@@ -1509,7 +1568,7 @@ void ihipStream_t::setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType,
 }
 
 
-void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const void* src, size_t sizeBytes, unsigned kind)
+void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn)
 {
     ihipCtx_t *ctx = this->getCtx();
     const ihipDevice_t *device = ctx->getDevice();
@@ -1528,7 +1587,7 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
     bool dstInDeviceMem = dstPtrInfo._isInDeviceMem;
 
     // Resolve default to a specific Kind so we know which algorithm to use:
-    if (kind == hipMemcpyDefault) {
+    if (kind == hipMemcpyDefault && resolveOn) {
         kind = resolveMemcpyDirection(srcTracked, dstTracked, srcInDeviceMem, dstInDeviceMem);
     };
 
@@ -1699,13 +1758,11 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
 
 
 // Sync copy that acquires lock:
-void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes, unsigned kind)
+void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn)
 {
     LockedAccessor_StreamCrit_t crit (_criticalData);
-    copySync(crit, dst, src, sizeBytes, kind);
+    copySync(crit, dst, src, sizeBytes, kind, resolveOn);
 }
-
-
 
 void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind)
 {

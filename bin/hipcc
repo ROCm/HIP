@@ -105,7 +105,7 @@ if ($HIP_PLATFORM eq "hcc") {
     }
 
     # Satisfy HCC dependencies
-    $HIPLDFLAGS .= " -lc++abi";
+    $HIPLDFLAGS .= " -lc++abi -lsupc++";
     $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am -lhsakmt";
 
     # Handle ROCm target platform
@@ -151,12 +151,11 @@ if ($HIP_PLATFORM eq "hcc") {
     $HIPCC="$CUDA_PATH/bin/nvcc";
     $HIPCXXFLAGS .= " -I$CUDA_PATH/include";
 
-    $HIPLDFLAGS = "";
+    $HIPLDFLAGS = "-lcuda -lcudart";
 } else {
     printf ("error: unknown HIP_PLATFORM = '$HIP_PLATFORM'");
     exit (-1);
 }
-
 
 # Add paths to common HIP includes:
 $HIPCXXFLAGS .= " -I$HIP_PATH/include" ;
@@ -177,7 +176,41 @@ if ($verbose & 0x4) {
     print "hipcc-args: ", join (" ", @ARGV), "\n";
 }
 
+# Handle code object generation
+my $ISACMD="";
+if($HIP_PLATFORM eq "hcc"){
+  $ISACMD .= "$HIP_PATH/bin/hipgenisa.sh ";
+  $ISACMD .= $ROCM_PATH;
+  if($ARGV[0] eq "--gencodeobject"){
+    foreach $isaarg (@ARGV[1..$#ARGV]){
+      $ISACMD .= " ";
+      $ISACMD .= $isaarg;
+    }
+    if ($verbose & 0x1) {
+      print "hipcc-cmd: ", $ISACMD, "\n";
+    }
+    system($ISACMD) and die();
+    exit(0);
+  }
+}
+
+if($HIP_PLATFORM eq "nvcc"){
+  $ISACMD .= "$HIP_PATH/bin/hipcc -ptx ";
+  if($ARGV[0] eq "--gencodeobject"){
+    foreach $isaarg (@ARGV[1..$#ARGV]){
+      $ISACMD .= " ";
+      $ISACMD .= $isaarg;
+    }
+    if ($verbose & 0x1) {
+      print "hipcc-cmd: ", $ISACMD, "\n";
+    }
+    system($ISACMD) and die();
+    exit(0);
+  }
+}
+
 my $toolArgs = "";  # arguments to pass to the hcc or nvcc tool
+
 foreach $arg (@ARGV)
 {
     my $swallowArg = 0;

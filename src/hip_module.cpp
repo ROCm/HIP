@@ -20,137 +20,188 @@ THE SOFTWARE.
 #include "hip_runtime.h"
 #include "hsa/hsa.h"
 #include "hsa/hsa_ext_amd.h"
+#include "hsa/amd_hsa_kernel_code.h"
 #include "hcc_detail/hip_hcc.h"
 #include "hcc_detail/trace_helper.h"
 #include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <elf.h>
 
 //TODO Use Pool APIs from HCC to get memory regions.
 
 namespace hipdrv{
-hsa_status_t findSystemRegions(hsa_region_t region, void *data){
-  hsa_region_segment_t segment_id;
-  hsa_region_get_info(region, HSA_REGION_INFO_SEGMENT, &segment_id);
 
-  if(segment_id != HSA_REGION_SEGMENT_GLOBAL){
-    return HSA_STATUS_SUCCESS;
-  }
+    hsa_status_t findSystemRegions(hsa_region_t region, void *data){
+        hsa_region_segment_t segment_id;
+        hsa_region_get_info(region, HSA_REGION_INFO_SEGMENT, &segment_id);
 
-  hsa_region_global_flag_t flags;
-  hsa_region_get_info(region, HSA_REGION_INFO_GLOBAL_FLAGS, &flags);
+        if(segment_id != HSA_REGION_SEGMENT_GLOBAL){
+            return HSA_STATUS_SUCCESS;
+        }
 
-  hsa_region_t *reg = (hsa_region_t*)data;
+        hsa_region_global_flag_t flags;
+        hsa_region_get_info(region, HSA_REGION_INFO_GLOBAL_FLAGS, &flags);
 
-  if(flags & HSA_REGION_GLOBAL_FLAG_FINE_GRAINED){
-    *reg = region;
-  }
+        hsa_region_t *reg = (hsa_region_t*)data;
 
-  return HSA_STATUS_SUCCESS;
+        if(flags & HSA_REGION_GLOBAL_FLAG_FINE_GRAINED){
+            *reg = region;
+        }
+
+        return HSA_STATUS_SUCCESS;
+    }
+
+}   // End namespace hipdrv
+
+uint64_t PrintSymbolSizes(const void *emi, const char *name){
+    const Elf64_Ehdr *ehdr = (const Elf64_Ehdr*)emi;
+    if(NULL == ehdr || EV_CURRENT != ehdr->e_version){}
+    const Elf64_Shdr * shdr = (const Elf64_Shdr*)((char*)emi + ehdr->e_shoff);
+    for(uint16_t i=0;i<ehdr->e_shnum;++i){
+        if(shdr[i].sh_type == SHT_SYMTAB){
+            const Elf64_Sym *syms = (const Elf64_Sym*)((char*)emi + shdr[i].sh_offset);
+            assert(syms);
+            uint64_t numSyms = shdr[i].sh_size/shdr[i].sh_entsize;
+            const char* strtab = (const char*)((char*)emi + shdr[shdr[i].sh_link].sh_offset);
+            assert(strtab);
+            for(uint64_t i=0;i<numSyms;++i){
+                const char *symname = strtab + syms[i].st_name;
+                assert(symname);
+                uint64_t size = syms[i].st_size;
+                if(strcmp(name, symname) == 0){
+                    return size;
+                }
+            }
+        }
+    }
+    return 0;
 }
 
-hsa_status_t findKernArgRegions(hsa_region_t region, void *data){
-  hsa_region_segment_t segment_id;
-  hsa_region_get_info(region, HSA_REGION_INFO_SEGMENT, &segment_id);
+uint64_t ElfSize(const void *emi){
+    const Elf64_Ehdr *ehdr = (const Elf64_Ehdr*)emi;
+    const Elf64_Shdr *shdr = (const Elf64_Shdr*)((char*)emi + ehdr->e_shoff);
 
-  if(segment_id != HSA_REGION_SEGMENT_GLOBAL){
-    return HSA_STATUS_SUCCESS;
-  }
+    uint64_t max_offset = ehdr->e_shoff;
+    uint64_t total_size = max_offset + ehdr->e_shentsize * ehdr->e_shnum;
 
-  hsa_region_global_flag_t flags;
-  hsa_region_get_info(region, HSA_REGION_INFO_GLOBAL_FLAGS, &flags);
-
-  hsa_region_t *reg = (hsa_region_t*)data;
-
-  if(flags & HSA_REGION_GLOBAL_FLAG_KERNARG){
-    *reg = region;
-  }
-
-  return HSA_STATUS_SUCCESS;
+    for(uint16_t i=0;i < ehdr->e_shnum;++i){
+        uint64_t cur_offset = static_cast<uint64_t>(shdr[i].sh_offset);
+        if(max_offset < cur_offset){
+            max_offset = cur_offset;
+            total_size = max_offset;
+            if(SHT_NOBITS != shdr[i].sh_type){
+                total_size += static_cast<uint64_t>(shdr[i].sh_size);
+            }
+        }
+    }
+    return total_size;
 }
 
-
-}
-
-
-
-hipError_t hipModuleLoad(hipModule *module, const char *fname){
+hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
     HIP_INIT_API(fname);
     hipError_t ret = hipSuccess;
+    *module = new ihipModule_t;
+
     if(module == NULL){
-        ret = hipErrorInvalidValue;
+        return hipErrorInvalidValue;
     }
+
     auto ctx = ihipGetTlsDefaultCtx();
     if(ctx == nullptr){
         ret = hipErrorInvalidContext;
+
     }else{
         int deviceId = ctx->getDevice()->_deviceId;
         ihipDevice_t *currentDevice = ihipGetDevice(deviceId);
         std::ifstream in(fname, std::ios::binary | std::ios::ate);
+
         if(!in){
             return hipErrorFileNotFound;
+
         }else{
+
+            *module = new ihipModule_t;
             size_t size = std::string::size_type(in.tellg());
             void *p = NULL;
             hsa_agent_t agent = currentDevice->_hsaAgent;
             hsa_region_t sysRegion;
             hsa_status_t status = hsa_agent_iterate_regions(agent, hipdrv::findSystemRegions, &sysRegion);
             status = hsa_memory_allocate(sysRegion, size, (void**)&p);
+
             if(status != HSA_STATUS_SUCCESS){
                 return hipErrorOutOfMemory;
             }
+
             char *ptr = (char*)p;
             if(!ptr){
                 return hipErrorOutOfMemory;
-                std::cout<<"Error: failed to allocate memory for code object"<<std::endl;
             }
-            hsa_code_object_t obj;
+            (*module)->ptr = p;
+            (*module)->size = size;
             in.seekg(0, std::ios::beg);
             std::copy(std::istreambuf_iterator<char>(in),
                       std::istreambuf_iterator<char>(), ptr);
-            status = hsa_code_object_deserialize(ptr, size, NULL, &obj);
+
+            status = hsa_code_object_deserialize(ptr, size, NULL, &(*module)->object);
+
             if(status != HSA_STATUS_SUCCESS){
                 return hipErrorSharedObjectInitFailed;
             }
-            *module = obj.handle;
+
+            status = hsa_executable_create(HSA_PROFILE_FULL, HSA_EXECUTABLE_STATE_UNFROZEN, NULL, &(*module)->executable);
+            if(status != HSA_STATUS_SUCCESS){
+                return hipErrorNotInitialized;
+            }
         }
     }
+
     return ret;
 }
 
-hipError_t hipModuleGetFunction(hipFunction *func, hipModule hmod, const char *name){
-    HIP_INIT_API(name);
+hipError_t hipModuleUnload(hipModule_t hmod){
+    hipError_t ret = hipSuccess;
+    hsa_status_t status = hsa_executable_destroy(hmod->executable);
+    if(status != HSA_STATUS_SUCCESS){ret = hipErrorInvalidValue; }
+    status = hsa_code_object_destroy(hmod->object);
+    if(status != HSA_STATUS_SUCCESS){ret = hipErrorInvalidValue; }
+    delete hmod;
+    return ret;
+}
+
+hipError_t ihipModuleGetFunction(hipFunction_t *func, hipModule_t hmod, const char *name){
     auto ctx = ihipGetTlsDefaultCtx();
     hipError_t ret = hipSuccess;
-    if(name == nullptr || hmod == 0){
+
+    if(name == nullptr){
         return hipErrorInvalidValue;
     }
+
     if(ctx == nullptr){
         ret = hipErrorInvalidContext;
+
     }else{
+        *func = new ihipFunction_t;
         int deviceId = ctx->getDevice()->_deviceId;
         ihipDevice_t *currentDevice = ihipGetDevice(deviceId);
         hsa_agent_t gpuAgent = (hsa_agent_t)currentDevice->_hsaAgent;
 
         hsa_status_t status;
-        hsa_executable_symbol_t kernel_symbol;
-        hsa_executable_t executable;
-        status = hsa_executable_create(HSA_PROFILE_FULL, HSA_EXECUTABLE_STATE_UNFROZEN, NULL, &executable);
+        status = hsa_executable_load_code_object(hmod->executable, gpuAgent, hmod->object, NULL);
         if(status != HSA_STATUS_SUCCESS){
             return hipErrorNotInitialized;
         }
-        hsa_code_object_t obj;
-        obj.handle = hmod;
-        status = hsa_executable_load_code_object(executable, gpuAgent, obj, NULL);
-        if(status != HSA_STATUS_SUCCESS){
-            return hipErrorNotInitialized;
-        }
-        status = hsa_executable_freeze(executable, NULL);
-        status = hsa_executable_get_symbol(executable, NULL, name, gpuAgent, 0, &kernel_symbol);
+
+        status = hsa_executable_freeze(hmod->executable, NULL);
+        status = hsa_executable_get_symbol(hmod->executable, NULL, name, gpuAgent, 0, &(*func)->kernel_symbol);
         if(status != HSA_STATUS_SUCCESS){
             return hipErrorNotFound;
         }
-        status = hsa_executable_symbol_get_info(kernel_symbol,
+
+        status = hsa_executable_symbol_get_info((*func)->kernel_symbol,
                                    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_OBJECT,
-                                   func);
+                                   &(*func)->kernel);
+
         if(status != HSA_STATUS_SUCCESS){
             return hipErrorNotFound;
         }
@@ -158,16 +209,24 @@ hipError_t hipModuleGetFunction(hipFunction *func, hipModule hmod, const char *n
     return ret;
 }
 
-hipError_t hipLaunchModuleKernel(hipFunction f,
+hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod,
+                                const char *name){
+    HIP_INIT_API(name);
+    return ihipModuleGetFunction(hfunc, hmod, name);
+}
+
+hipError_t hipModuleLaunchKernel(hipFunction_t f,
             uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
             uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
             uint32_t sharedMemBytes, hipStream_t hStream,
             void **kernelParams, void **extra){
-    HIP_INIT_API(f);
+    HIP_INIT_API(f->kernel);
     auto ctx = ihipGetTlsDefaultCtx();
     hipError_t ret = hipSuccess;
+
     if(ctx == nullptr){
         ret = hipErrorInvalidDevice;
+
     }else{
         int deviceId = ctx->getDevice()->_deviceId;
         ihipDevice_t *currentDevice = ihipGetDevice(deviceId);
@@ -189,66 +248,100 @@ hipError_t hipLaunchModuleKernel(hipFunction f,
 /*
 Kernel argument preparation.
 */
-
-        hsa_region_t kernArg;
-        hsa_status_t status = hsa_agent_iterate_regions(gpuAgent, hipdrv::findKernArgRegions, &kernArg);
-        void *kern;
-        status = hsa_memory_allocate(kernArg, kernSize, &kern);
-        if(status != HSA_STATUS_SUCCESS){
-            return hipErrorLaunchOutOfResources;
-        }
-        memcpy(kern, config[1], kernSize);
-
+        hsa_status_t status;
+        grid_launch_parm lp;
+        hStream = ihipPreLaunchKernel(hStream, 0, 0, &lp);
 
 /*
-Pre kernel launch 
-
-    stream = ihipSyncAndResolveStream(stream);
-    stream->lockopen_preKernelCommand();
-    hc::accelerator_view av = &stream->_av;
-    hc::completion_future cf = new hc::completion_future;
+  Create signal
 */
 
-        hStream = ihipSyncAndResolveStream(hStream);
-        hc::accelerator_view *av = &hStream->_av;
-        hsa_queue_t *Queue = (hsa_queue_t*)av->get_hsa_queue();
         hsa_signal_t signal;
         status = hsa_signal_create(1, 0, NULL, &signal);
 
 /*
-Creating the packets
+  Launch AQL packet
+*/
+        hStream->launchModuleKernel(signal, blockDimX, blockDimY, blockDimZ,
+                  gridDimX, gridDimY, gridDimZ, sharedMemBytes, config[1], kernSize, f->kernel);
+
+/*
+  Wait for signal
 */
 
-        const uint32_t queue_mask = Queue->size-1;
-        uint32_t packet_index = hsa_queue_load_write_index_relaxed(Queue);
-        hsa_kernel_dispatch_packet_t *dispatch_packet = &(((hsa_kernel_dispatch_packet_t*)(Queue->base_address))[packet_index & queue_mask]);
-
-        dispatch_packet->completion_signal = signal;
-        dispatch_packet->workgroup_size_x = blockDimX;
-        dispatch_packet->workgroup_size_y = blockDimY;
-        dispatch_packet->workgroup_size_z = blockDimZ;
-        dispatch_packet->grid_size_x = blockDimX * gridDimX;
-        dispatch_packet->grid_size_y = blockDimY * gridDimY;
-        dispatch_packet->grid_size_z = blockDimZ * gridDimZ;
-
-        dispatch_packet->group_segment_size = 0;
-        dispatch_packet->private_segment_size = sharedMemBytes;
-        dispatch_packet->kernarg_address = kern;
-        dispatch_packet->kernel_object = f;
-        uint16_t header = (HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE) |
-        (1 << HSA_PACKET_HEADER_BARRIER) |
-        (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
-        (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
-
-
-        uint16_t setup = 1 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
-        uint32_t header32 = header | (setup << 16);
-
-        __atomic_store_n((uint32_t*)(dispatch_packet), header32, __ATOMIC_RELEASE);
-
-        hsa_queue_store_write_index_relaxed(Queue, packet_index+1);
-        hsa_signal_store_relaxed(Queue->doorbell_signal, packet_index);
         hsa_signal_value_t value = hsa_signal_wait_acquire(signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_BLOCKED);
+
+
+        ihipPostLaunchKernel(hStream, lp);
+                
+    }
+
+    return ret;
+}
+
+
+hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes,
+                              hipModule_t hmod, const char* name){
+    HIP_INIT_API(name);
+    hipError_t ret = hipSuccess;
+    if(dptr == NULL || bytes == NULL){
+        return hipErrorInvalidValue;
+    }
+    if(name == NULL || hmod == NULL){
+        return hipErrorNotInitialized;
+    }
+    else{
+        hipFunction_t func;
+        ihipModuleGetFunction(&func, hmod, name);
+        *bytes = PrintSymbolSizes(hmod->ptr, name) + sizeof(amd_kernel_code_t);
+        *dptr = reinterpret_cast<void*>(func->kernel);
+        return ret;
+    }
+}
+
+hipError_t hipModuleLoadData(hipModule_t *module, const void *image){
+    HIP_INIT_API(image);
+    hipError_t ret = hipSuccess;
+    if(image == NULL || module == NULL){
+        return hipErrorNotInitialized;
+    }else{
+        auto ctx = ihipGetTlsDefaultCtx();
+        *module = new ihipModule_t;
+        int deviceId = ctx->getDevice()->_deviceId;
+        ihipDevice_t *currentDevice = ihipGetDevice(deviceId);
+
+        void *p;
+        uint64_t size = ElfSize(image);
+        hsa_agent_t agent = currentDevice->_hsaAgent;
+        hsa_region_t sysRegion;
+        hsa_status_t status = hsa_agent_iterate_regions(agent, hipdrv::findSystemRegions, &sysRegion);
+        status = hsa_memory_allocate(sysRegion, size, (void**)&p);
+
+        if(status != HSA_STATUS_SUCCESS){
+            return hipErrorOutOfMemory;
+        }
+
+        char *ptr = (char*)p;
+        if(!ptr){
+           return hipErrorOutOfMemory;
+        }
+        (*module)->ptr = p;
+        (*module)->size = size;
+
+        memcpy(ptr, image, size);
+
+        status = hsa_code_object_deserialize(ptr, size, NULL, &(*module)->object);
+
+        if(status != HSA_STATUS_SUCCESS){
+            return hipErrorSharedObjectInitFailed;
+        }
+
+        status = hsa_executable_create(HSA_PROFILE_FULL, HSA_EXECUTABLE_STATE_UNFROZEN, NULL, &(*module)->executable);
+        if(status != HSA_STATUS_SUCCESS){
+            return hipErrorNotInitialized;
+        }
     }
     return ret;
 }
+
+

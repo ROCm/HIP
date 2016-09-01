@@ -52,13 +52,13 @@ typedef struct ihipDevice_t *hipDevice_t;
 
 typedef struct ihipStream_t *hipStream_t;
 
-typedef uint64_t hipFunction;
+typedef struct ihipModule_t *hipModule_t;
 
-typedef uint64_t hipModule;
+typedef struct ihipFunction_t *hipFunction_t;
 
-typedef struct hipEvent_t {
-    struct ihipEvent_t *_handle;
-} hipEvent_t;
+typedef void* hipDeviceptr_t;
+
+typedef struct ihipEvent_t *hipEvent_t;
 
 
 /**
@@ -844,6 +844,14 @@ hipError_t hipHostFree(void* ptr);
  */
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind);
 
+hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes);
+
+hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes);
+
+hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes);
+
+hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes);
+
 
 /**
  *  @brief Copies @p sizeBytes bytes from the memory area pointed to by @p src to the memory area pointed to by @p offset bytes from the start of symbol @p symbol.
@@ -1054,31 +1062,172 @@ hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int src
 hipError_t hipInit(unsigned int flags) ;
 
 
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup Context Management
+ *  @{
+ */
 
-// TODO-ctx
+/**
+ * @brief Create a context and set it as current/ default context
+ *
+ * @param [out] ctx
+ * @param [in] flags
+ * @param [in] associated device handle
+ *
+ * @returns #hipSuccess, #hipErrorInvalidContext
+ */
 hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device);
 
 hipError_t hipCtxDestroy(hipCtx_t ctx);
 
+/**
+ * @brief Pop the current/default context and return the popped context.
+ *
+ * @param [out] ctx
+ *
+ * @returns #hipSuccess
+ */
+
 hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
+
+/**
+ * @brief Push the context to be set as current/ default context
+ *
+ * @param [in] ctx
+ *
+ * @returns #hipSuccess, #hipErrorInvalidContext
+ */
 
 hipError_t hipCtxPushCurrent(hipCtx_t ctx);
 
+/**
+ * @brief Set the passed context as current/default
+ *
+ * @param [in] ctx
+ *
+ * @returns #hipSuccess
+ */
+
 hipError_t hipCtxSetCurrent(hipCtx_t ctx);
+
+/**
+ * @brief Get the handle of the current/ default context
+ *
+ * @param [out] ctx
+ *
+ * @returns #hipSuccess
+ */
 
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
 
+/**
+ * @brief Get the handle of the device associated with current/default context
+ *
+ * @param [out] device
+ *
+ * @returns #hipSuccess, #hipErrorInvalidContext
+ */
+
 hipError_t hipCtxGetDevice(hipDevice_t *device);
 
+/**
+ * @brief Returns the approximate HIP api version.
+ *
+ * @warning The HIP feature set does not correspond to an exact CUDA SDK api revision.
+ * This function always set *apiVersion to 4 as an approximation though HIP supports
+ * some features which were introduced in later CUDA SDK revisions.
+ * HIP apps code should not rely on the api revision number here and should
+ * use arch feature flags to test device capabilities or conditional compilation.
+ *
+ */
 hipError_t hipCtxGetApiVersion (hipCtx_t ctx,int *apiVersion);
 
+/**
+ * @brief Set Cache configuration for a specific function
+ *
+ * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ *
+ */
 hipError_t hipCtxGetCacheConfig ( hipFuncCache *cacheConfig );
 
+/**
+ * @brief Set L1/Shared cache partition.
+ *
+ * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ *
+ */
 hipError_t hipCtxSetCacheConfig ( hipFuncCache cacheConfig );
 
+/**
+ * @brief Set Shared memory bank configuration.
+ *
+ * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ *
+ */
 hipError_t hipCtxSetSharedMemConfig ( hipSharedMemConfig config );
 
+/**
+ * @brief Get Shared memory bank configuration.
+ *
+ * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ *
+ */
 hipError_t hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig );
+
+/**
+ * @brief Blocks until the default context has completed all preceding requested tasks.
+ *
+ * This function waits for all streams on the default context to complete execution, and then returns.
+ *
+ * @returns #hipSuccess.
+*/
+hipError_t hipCtxSynchronize ( void );
+
+/**
+ * @brief Get flags used for creating current/default context.
+ *
+ * @param [out] flags
+ *
+ * @returns #hipSuccess.
+*/
+
+hipError_t hipCtxGetFlags ( unsigned int* flags );
+
+/**
+ * @brief Enables direct access to memory allocations in a peer context.
+ *
+ * Memory which already allocated on peer device will be mapped into the address space of the current device.  In addition, all
+ * future memory allocations on peerDeviceId will be mapped into the address space of the current device when the memory is allocated.
+ * The peer memory remains accessible from the current device until a call to hipDeviceDisablePeerAccess or hipDeviceReset.
+ *
+ *
+ * @param [in] peerCtx
+ * @param [in] flags
+ *
+ * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue,
+ * @returns #hipErrorPeerAccessAlreadyEnabled if peer access is already enabled for this device.
+ * @warning PeerToPeer support is experimental.
+ */
+hipError_t  hipCtxEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags);
+
+/**
+ * @brief Disable direct access from current context's virtual address space to memory allocations physically located on a peer context.Disables direct access to memory allocations in a peer context and unregisters any registered allocations.
+ *
+ * Returns hipErrorPeerAccessNotEnabled if direct access to memory on peerDevice has not yet been enabled from the current device.
+ *
+ * @param [in] peerCtx
+ *
+ * @returns #hipSuccess, #hipErrorPeerAccessNotEnabled
+ * @warning PeerToPeer support is experimental.
+ */
+hipError_t  hipCtxDisablePeerAccess (hipCtx_t peerCtx);
+// doxygen end Context Management
+/**
+ * @}
+ */
+
 
 // TODO-ctx
 /**
@@ -1099,12 +1248,84 @@ hipError_t hipDeviceGetFromId(hipDevice_t *device, int deviceId);
  */
 hipError_t hipDriverGetVersion(int *driverVersion) ;
 
+/**
+ * @brief Loads code object from file into a hipModule_t
+ *
+ * @param [in] fname
+ * @param [out] module
+ * 
+ * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidContext, hipErrorFileNotFound, hipErrorOutOfMemory, hipErrorSharedObjectInitFailed, hipErrorNotInitialized
+ *
+ * 
+ */
+hipError_t hipModuleLoad(hipModule_t *module, const char *fname);
 
-hipError_t hipModuleLoad(hipModule *module, const char *fname);
+/**
+ * @brief Freeing the module
+ *
+ * @param [in] module
+ *
+ * @returns hipSuccess, hipInvalidValue
+ * module is freed and the code objects associated with it are destroyed
+ * 
+ */
 
-hipError_t hipModuleGetFunction(hipFunction *function, hipModule module, const char *kname);
+hipError_t hipModuleUnload(hipModule_t module);
 
-hipError_t hipLaunchModuleKernel(hipFunction f,
+/**
+ * @brief Function with kname will be extracted present in module
+ *
+ * @param [in] module
+ * @param [in] kname
+ * @param [out] function
+ *
+ * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidContext, hipErrorNotInitialized, hipErrorNotFound, 
+ */
+hipError_t hipModuleGetFunction(hipFunction_t *function, hipModule_t module, const char *kname);
+
+/**
+ * @brief returns device memory pointer and size of the kernel present in the module with symbol - name
+ *
+ * @param [in] moodule
+ * @param [in] name
+ * @param [out] dptr
+ * @param [out[ bytes
+ *
+ * @returns hipSuccess, hipErrorInvalidValue, hipErrorNotInitialized
+ */
+hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes, hipModule_t hmod, const char *name);
+
+/**
+ * @brief builds module from code object which resides in host memory. And image is pointer to that location.
+ *
+ * @param [in] image
+ * @param [out] module
+ *
+ * @returns hipSuccess, hipErrorNotInitialized, hipErrorOutOfMemory, hipErrorNotInitialized
+ */
+hipError_t hipModuleLoadData(hipModule_t *module, const void *image);
+
+/**
+ * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed to kerneelparams or extra
+ *
+ * @param [in[ f
+ * @param [in] gridDimX
+ * @param [in] gridDimY
+ * @param [in] gridDimZ
+ * @param [in] blockDimX
+ * @param [in] blockDimY
+ * @param [in] blockDimZ
+ * @param [in] sharedMemBytes
+ * @param [in] stream
+ * @param [in] kernelParams
+ * @param [in] extraa
+ *
+ * The function takes the above arguments and run the kernel in hipFunction_t f.  with launch parameters specified in gridDimX, gridDimY, gridDimZ,  blockDimX, blockDimY and blockDimmZ. The amount of shared memory is specificed and can be used with HIP_DYNAMIC_SHARED. The arguemt extra is used to pass in the arguments for the kernel.
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ *
+ * @warning kernellParams argument is not yet implemented in HIP. Please use extra instead. Please refer to hip_porting_driver_api.md for sample usage.
+ */
+hipError_t hipModuleLaunchKernel(hipFunction_t f,
                               unsigned int gridDimX,
                               unsigned int gridDimY,
                               unsigned int gridDimZ,
@@ -1114,7 +1335,7 @@ hipError_t hipLaunchModuleKernel(hipFunction f,
                               unsigned int sharedMemBytes,
                               hipStream_t stream,
                               void **kernelParams,
-                              void **extra) __attribute__((deprecated("kernelParams is not fully supported, use extra instead"))) ;
+                              void **extra) ;
 
 // doxygen end Version Management
 /**

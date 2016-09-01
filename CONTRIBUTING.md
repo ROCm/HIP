@@ -117,6 +117,10 @@ Differences or limitations of HIP APIs as compared to CUDA APIs should be clearl
     - Keyword TODO refers to a note that should be addressed in long-term.  Could be style issue, software architecture, or known bugs.
     - FIXME refers to a short-term bug that needs to be addressed.
 
+- HIP_INIT_API() should be placed at the start of each top-level HIP API.  This function will make sure the HIP runtime is initialized,
+  and also constructs an appropriate API string for tracing and CodeXL marker tracing.  The arguments to HIP_INIT_API should match
+  those of the parent fucntion.  
+
 
 #### Presubmit Testing:
 Before checking in or submitting a pull request, run all Rodinia tests and ensure pass results match starting point:

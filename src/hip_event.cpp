@@ -33,13 +33,14 @@ hipError_t ihipEventCreate(hipEvent_t* event, unsigned flags)
 
     // TODO - support hipEventDefault, hipEventBlockingSync, hipEventDisableTiming
     if (flags == 0) {
-        ihipEvent_t *eh = event->_handle = new ihipEvent_t();
+        ihipEvent_t *eh = new ihipEvent_t();
 
         eh->_state  = hipEventStatusCreated;
         eh->_stream = NULL;
         eh->_flags  = flags;
         eh->_timestamp  = 0;
         eh->_copySeqId  = 0;
+        *event = eh;
     } else {
         e = hipErrorInvalidValue;
     }
@@ -71,7 +72,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
 {
     HIP_INIT_API(event, stream);
 
-    ihipEvent_t *eh = event._handle;
+    ihipEvent_t *eh = event;
     if (eh && eh->_state != hipEventStatusUnitialized)   {
         eh->_stream = stream;
 
@@ -106,10 +107,10 @@ hipError_t hipEventDestroy(hipEvent_t event)
 {
     HIP_INIT_API(event);
 
-    event._handle->_state  = hipEventStatusUnitialized;
+    event->_state  = hipEventStatusUnitialized;
 
-    delete event._handle;
-    event._handle = NULL;
+    delete event;
+    event = NULL;
 
     // TODO - examine return additional error codes
     return ihipLogStatus(hipSuccess);
@@ -121,7 +122,7 @@ hipError_t hipEventSynchronize(hipEvent_t event)
 {
     HIP_INIT_API(event);
 
-    ihipEvent_t *eh = event._handle;
+    ihipEvent_t *eh = event;
 
     if (eh) {
         if (eh->_state == hipEventStatusUnitialized) {
@@ -150,8 +151,8 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop)
 {
     HIP_INIT_API(ms, start, stop);
 
-    ihipEvent_t *start_eh = start._handle;
-    ihipEvent_t *stop_eh = stop._handle;
+    ihipEvent_t *start_eh = start;
+    ihipEvent_t *stop_eh = stop;
 
     ihipSetTs(start);
     ihipSetTs(stop);
@@ -195,7 +196,7 @@ hipError_t hipEventQuery(hipEvent_t event)
 {
     HIP_INIT_API(event);
 
-    ihipEvent_t *eh = event._handle;
+    ihipEvent_t *eh = event;
 
     // TODO-stream - need to read state of signal here:  The event may have become ready after recording..
     // TODO-HCC - use get_hsa_signal here.

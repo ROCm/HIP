@@ -160,12 +160,17 @@ class ihipCtx_t;
 #endif
 
 
+// Just initialize the HIP runtime, but don't log any trace information.
+#define HIP_INIT()\
+	std::call_once(hip_initialized, ihipInit);\
+    ihipCtxStackUpdate();
+
 
 // This macro should be called at the beginning of every HIP API.
 // It initialies the hip runtime (exactly once), and
 // generate trace string that can be output to stderr or to ATP file.
 #define HIP_INIT_API(...) \
-	std::call_once(hip_initialized, ihipInit);\
+    HIP_INIT()\
     API_TRACE(__VA_ARGS__);
 
 #define ihipLogStatus(hipStatus) \
@@ -396,6 +401,22 @@ public:
 typedef ihipStreamCriticalBase_t<StreamMutex> ihipStreamCritical_t;
 typedef LockedAccessor<ihipStreamCritical_t> LockedAccessor_StreamCrit_t;
 
+class ihipModule_t{
+public:
+  hsa_executable_t executable;
+  hsa_code_object_t object;
+  std::string fileName;
+  void *ptr;
+  size_t size;
+};
+
+
+class ihipFunction_t{
+public:
+  hsa_executable_symbol_t kernel_symbol;
+  uint64_t kernel;
+};
+
 // Internal stream structure.
 class ihipStream_t {
 public:
@@ -404,8 +425,9 @@ typedef uint64_t SeqNum_t ;
     ~ihipStream_t();
 
     // kind is hipMemcpyKind
-    void copySync (LockedAccessor_StreamCrit_t &crit, void* dst, const void* src, size_t sizeBytes, unsigned kind);
-    void locked_copySync (void* dst, const void* src, size_t sizeBytes, unsigned kind);
+    void copySync (LockedAccessor_StreamCrit_t &crit, void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn = true);
+    void locked_copySync (void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn = true);
+
 
     void copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind);
 
@@ -423,7 +445,7 @@ typedef uint64_t SeqNum_t ;
     // Use this if we already have the stream critical data mutex:
     void                 wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty=false);
 
-
+    void launchModuleKernel(hsa_signal_t signal, uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ, uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ, uint32_t sharedMemBytes, void *kernarg, size_t kernSize, uint64_t kernel);
 
     // Non-threadsafe accessors - must be protected by high-level stream lock with accessor passed to function.
     SIGSEQNUM            lastCopySeqId (LockedAccessor_StreamCrit_t &crit) const { return crit->_last_copy_signal ? crit->_last_copy_signal->_sigId : 0; };
@@ -442,6 +464,7 @@ public:
     SeqNum_t                    _id;   // monotonic sequence ID
     hc::accelerator_view        _av;
     unsigned                    _flags;
+
 
 private:
     void     enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal, ihipSignal_t *completionSignal);
@@ -648,6 +671,8 @@ extern void ihipInit();
 extern const char *ihipErrorString(hipError_t);
 extern ihipCtx_t    *ihipGetTlsDefaultCtx();
 extern void          ihipSetTlsDefaultCtx(ihipCtx_t *ctx);
+extern hipError_t    ihipSynchronize(void);
+extern hipError_t    ihipCtxStackUpdate();
 
 extern ihipDevice_t *ihipGetDevice(int);
 ihipCtx_t * ihipGetPrimaryCtx(unsigned deviceIndex);
