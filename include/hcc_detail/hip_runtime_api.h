@@ -1062,33 +1062,136 @@ hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int src
 hipError_t hipInit(unsigned int flags) ;
 
 
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup Context Management
+ *  @{
+ */
 
-// TODO-ctx
+/**
+ * @brief Create a context and set it as current/ default context
+ *
+ * @param [out] ctx
+ * @param [in] flags
+ * @param [in] associated device handle
+ *
+ * @returns #hipSuccess, #hipErrorInvalidContext
+ */
 hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device);
 
 hipError_t hipCtxDestroy(hipCtx_t ctx);
 
+/**
+ * @brief Pop the current/default context and return the popped context.
+ *
+ * @param [out] ctx
+ *
+ * @returns #hipSuccess
+ */
+
 hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
+
+/**
+ * @brief Push the context to be set as current/ default context
+ *
+ * @param [in] ctx
+ *
+ * @returns #hipSuccess, #hipErrorInvalidContext
+ */
 
 hipError_t hipCtxPushCurrent(hipCtx_t ctx);
 
+/**
+ * @brief Set the passed context as current/default
+ *
+ * @param [in] ctx
+ *
+ * @returns #hipSuccess
+ */
+
 hipError_t hipCtxSetCurrent(hipCtx_t ctx);
+
+/**
+ * @brief Get the handle of the current/ default context
+ *
+ * @param [out] ctx
+ *
+ * @returns #hipSuccess
+ */
 
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
 
+/**
+ * @brief Get the handle of the device associated with current/default context
+ *
+ * @param [out] device
+ *
+ * @returns #hipSuccess, #hipErrorInvalidContext
+ */
+
 hipError_t hipCtxGetDevice(hipDevice_t *device);
 
+/**
+ * @brief Returns the approximate HIP api version.
+ *
+ * @warning The HIP feature set does not correspond to an exact CUDA SDK api revision.
+ * This function always set *apiVersion to 4 as an approximation though HIP supports
+ * some features which were introduced in later CUDA SDK revisions.
+ * HIP apps code should not rely on the api revision number here and should
+ * use arch feature flags to test device capabilities or conditional compilation.
+ *
+ */
 hipError_t hipCtxGetApiVersion (hipCtx_t ctx,int *apiVersion);
 
+/**
+ * @brief Set Cache configuration for a specific function
+ *
+ * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ *
+ */
 hipError_t hipCtxGetCacheConfig ( hipFuncCache *cacheConfig );
 
+/**
+ * @brief Set L1/Shared cache partition.
+ *
+ * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ *
+ */
 hipError_t hipCtxSetCacheConfig ( hipFuncCache cacheConfig );
 
+/**
+ * @brief Set Shared memory bank configuration.
+ *
+ * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ *
+ */
 hipError_t hipCtxSetSharedMemConfig ( hipSharedMemConfig config );
 
+/**
+ * @brief Get Shared memory bank configuration.
+ *
+ * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ *
+ */
 hipError_t hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig );
 
+/**
+ * @brief Blocks until the default context has completed all preceding requested tasks.
+ *
+ * This function waits for all streams on the default context to complete execution, and then returns.
+ *
+ * @returns #hipSuccess.
+*/
 hipError_t hipCtxSynchronize ( void );
+
+/**
+ * @brief Get flags used for creating current/default context.
+ *
+ * @param [out] flags
+ *
+ * @returns #hipSuccess.
+*/
 
 hipError_t hipCtxGetFlags ( unsigned int* flags );
 
@@ -1110,7 +1213,7 @@ hipError_t hipCtxGetFlags ( unsigned int* flags );
 hipError_t  hipCtxEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags);
 
 /**
- * @brief Disable direct access from current device's virtual address space to memory allocations physically located on a peer device through contex.Disables direct access to memory allocations in a peer context and unregisters any registered allocations.
+ * @brief Disable direct access from current context's virtual address space to memory allocations physically located on a peer context.Disables direct access to memory allocations in a peer context and unregisters any registered allocations.
  *
  * Returns hipErrorPeerAccessNotEnabled if direct access to memory on peerDevice has not yet been enabled from the current device.
  *
@@ -1120,6 +1223,10 @@ hipError_t  hipCtxEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags);
  * @warning PeerToPeer support is experimental.
  */
 hipError_t  hipCtxDisablePeerAccess (hipCtx_t peerCtx);
+// doxygen end Context Management
+/**
+ * @}
+ */
 
 
 // TODO-ctx
