@@ -41,6 +41,10 @@ hipError_t ihipCtxStackUpdate()
     return ihipLogStatus(e);
 }
 
+/**
+ * @return #hipSuccess, #hipErrorInvalidValue
+ */
+//---
 hipError_t hipInit(unsigned int flags)
 {
     HIP_INIT_API(flags);
@@ -55,7 +59,10 @@ hipError_t hipInit(unsigned int flags)
     return ihipLogStatus(e);
 }
 
-
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device)
 {
     HIP_INIT_API(ctx, flags, device); // FIXME - review if we want to init
@@ -68,7 +75,10 @@ hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device)
     return ihipLogStatus(e);
 }
 
-
+/**
+ * @return #hipSuccess, #hipErrorInvalidDevice
+ */
+//---
 hipError_t hipDeviceGet(hipDevice_t *device, int deviceId)
 {
     HIP_INIT_API(device, deviceId); // FIXME - review if we want to init
@@ -99,6 +109,10 @@ hipError_t hipDriverGetVersion(int *driverVersion)
     return ihipLogStatus(hipSuccess);
 }
 
+/**
+ * @return #hipSuccess, #hipErrorInvalidValue
+ */
+//---
 hipError_t hipCtxDestroy(hipCtx_t ctx)
 {
     HIP_INIT_API(ctx);
@@ -121,6 +135,10 @@ hipError_t hipCtxDestroy(hipCtx_t ctx)
     return ihipLogStatus(e);
 }
 
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxPopCurrent(hipCtx_t* ctx)
 {
     HIP_INIT_API(ctx);
@@ -141,6 +159,10 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx)
     return ihipLogStatus(e);
 }
 
+/**
+ * @return #hipSuccess, #hipErrorInvalidContext
+ */
+//---
 hipError_t hipCtxPushCurrent(hipCtx_t ctx)
 {
     HIP_INIT_API(ctx);
@@ -155,16 +177,14 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx)
     return ihipLogStatus(e);
 }
 
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx)
 {
     HIP_INIT_API(ctx);
     hipError_t e = hipSuccess;
-#if 0
-    *ctx = ihipGetTlsDefaultCtx();
-    if(*ctx == nullptr) {
-        *ctx = NULL;    //TODO - is it required? Can return nullptr?
-    }
-#endif
     if(!tls_ctxStack.empty()) {
         *ctx= tls_ctxStack.top();
     }
@@ -174,6 +194,10 @@ hipError_t hipCtxGetCurrent(hipCtx_t* ctx)
     return ihipLogStatus(e);
 }
 
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxSetCurrent(hipCtx_t ctx)
 {
     HIP_INIT_API(ctx);
@@ -188,6 +212,10 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx)
     return ihipLogStatus(e);
 }
 
+/**
+ * @return #hipSuccess, #hipErrorInvalidContext
+ */
+//---
 hipError_t hipCtxGetDevice(hipDevice_t *device)
 {
     HIP_INIT_API(device);
@@ -204,6 +232,10 @@ hipError_t hipCtxGetDevice(hipDevice_t *device)
     return ihipLogStatus(e);
 }
 
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxGetApiVersion (hipCtx_t ctx,int *apiVersion)
 {
     HIP_INIT_API(apiVersion);
@@ -215,6 +247,10 @@ hipError_t hipCtxGetApiVersion (hipCtx_t ctx,int *apiVersion)
     return ihipLogStatus(hipSuccess);
 }
 
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxGetCacheConfig ( hipFuncCache *cacheConfig )
 {
     HIP_INIT_API(cacheConfig);
@@ -224,6 +260,10 @@ hipError_t hipCtxGetCacheConfig ( hipFuncCache *cacheConfig )
     return ihipLogStatus(hipSuccess);
 }
 
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxSetCacheConfig ( hipFuncCache cacheConfig )
 {
     HIP_INIT_API(cacheConfig);
@@ -233,6 +273,10 @@ hipError_t hipCtxSetCacheConfig ( hipFuncCache cacheConfig )
     return ihipLogStatus(hipSuccess);
 }
 
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxSetSharedMemConfig ( hipSharedMemConfig config )
 {
     HIP_INIT_API(config);
@@ -242,6 +286,10 @@ hipError_t hipCtxSetSharedMemConfig ( hipSharedMemConfig config )
     return ihipLogStatus(hipSuccess);
 }
 
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig )
 {
     HIP_INIT_API(pConfig);
@@ -251,12 +299,20 @@ hipError_t hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig )
     return ihipLogStatus(hipSuccess);
 }
 
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxSynchronize ( void )
 {
     HIP_INIT_API(1);
     return ihipSynchronize(); //TODP Shall check validity of ctx?
 }
 
+/**
+ * @return #hipSuccess
+ */
+//---
 hipError_t hipCtxGetFlags ( unsigned int* flags )
 {
     HIP_INIT_API(flags);
