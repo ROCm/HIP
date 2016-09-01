@@ -157,32 +157,6 @@ if ($HIP_PLATFORM eq "hcc") {
     exit (-1);
 }
 
-
-my $ISACMD=$HIP_PATH;
-if($HIP_PLATFORM eq "hcc"){
-  $ISACMD .= "/bin/hipgenisa.sh ";
-  $ISACMD .= $ROCM_PATH;
-  if($ARGV[0] eq "--gencodeobject"){
-    foreach $isaarg (@ARGV){
-      $ISACMD .= " ";
-      $ISACMD .= $isaarg;
-    }
-    system($ISACMD);
-    exit(0);
-  }
-}
-
-if($HIP_PLATFORM eq "nvcc"){
-  if($ARGV[0] eq "--gencodeobject"){
-    foreach $isaarg (@ARGV){
-      $ISACMD .= " ";
-      $ISACMD .= $isaarg;
-    }
-    system($ISACMD);
-    exit(0);
-  }
-}
-
 # Add paths to common HIP includes:
 $HIPCXXFLAGS .= " -I$HIP_PATH/include" ;
 
@@ -200,6 +174,39 @@ my @inputs  = ();
 
 if ($verbose & 0x4) {
     print "hipcc-args: ", join (" ", @ARGV), "\n";
+}
+
+# Handle code object generation
+my $ISACMD="";
+if($HIP_PLATFORM eq "hcc"){
+  $ISACMD .= "$HIP_PATH/bin/hipgenisa.sh ";
+  $ISACMD .= $ROCM_PATH;
+  if($ARGV[0] eq "--gencodeobject"){
+    foreach $isaarg (@ARGV[1..$#ARGV]){
+      $ISACMD .= " ";
+      $ISACMD .= $isaarg;
+    }
+    if ($verbose & 0x1) {
+      print "hipcc-cmd: ", $ISACMD, "\n";
+    }
+    system($ISACMD) and die();
+    exit(0);
+  }
+}
+
+if($HIP_PLATFORM eq "nvcc"){
+  $ISACMD .= "$HIP_PATH/bin/hipcc -ptx ";
+  if($ARGV[0] eq "--gencodeobject"){
+    foreach $isaarg (@ARGV[1..$#ARGV]){
+      $ISACMD .= " ";
+      $ISACMD .= $isaarg;
+    }
+    if ($verbose & 0x1) {
+      print "hipcc-cmd: ", $ISACMD, "\n";
+    }
+    system($ISACMD) and die();
+    exit(0);
+  }
 }
 
 my $toolArgs = "";  # arguments to pass to the hcc or nvcc tool
