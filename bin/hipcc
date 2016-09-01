@@ -181,7 +181,7 @@ my $ISACMD="";
 if($HIP_PLATFORM eq "hcc"){
   $ISACMD .= "$HIP_PATH/bin/hipgenisa.sh ";
   $ISACMD .= $ROCM_PATH;
-  if($ARGV[0] eq "--gencodeobject"){
+  if($ARGV[0] eq "--genco"){
     foreach $isaarg (@ARGV[1..$#ARGV]){
       $ISACMD .= " ";
       $ISACMD .= $isaarg;
@@ -196,7 +196,7 @@ if($HIP_PLATFORM eq "hcc"){
 
 if($HIP_PLATFORM eq "nvcc"){
   $ISACMD .= "$HIP_PATH/bin/hipcc -ptx ";
-  if($ARGV[0] eq "--gencodeobject"){
+  if($ARGV[0] eq "--genco"){
     foreach $isaarg (@ARGV[1..$#ARGV]){
       $ISACMD .= " ";
       $ISACMD .= $isaarg;
