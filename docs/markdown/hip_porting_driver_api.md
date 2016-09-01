@@ -119,7 +119,8 @@ the device.
 `hipModuleLaunchKernel` is `cuLaunchKernel` in HIP world. It takes the same arguments as `cuLaunchKernel`. The argument `kernelParams` is not fully implemented for HCC. The workaround for it is, to use platform specific macros for each target. Or, `extra` argument can be used which works on both the platforms.
 
 #### Additional Information
-HCC allocates staging buffers (used for unpinned copies) on a per-device basis.
+- HCC allocates staging buffers (used for unpinned copies) on a per-device basis.
+- HCC creates a primary context when the HIP API is called.  So in a pure driver API code, HIP/HCC will create a primary context while HIP/NVCC will have empty context stack.  HIP/HCC will push primary context to context stack when it is empty. This can have subtle differences on applications which mix the runtime and driver APIs.
 
 ### NVCC Implementation Notes
 
