@@ -29,16 +29,11 @@ THE SOFTWARE.
 // Stack of contexts
 thread_local std::stack<ihipCtx_t *>  tls_ctxStack;
 
-hipError_t ihipCtxStackUpdate()
+void ihipCtxStackUpdate()
 {
-    //HIP_INIT_API();
-    hipError_t e = hipSuccess;
-
     if(tls_ctxStack.empty()) {
-            tls_ctxStack.push(ihipGetTlsDefaultCtx());
+         tls_ctxStack.push(ihipGetTlsDefaultCtx());
     }
-
-    return ihipLogStatus(e);
 }
 
 hipError_t hipInit(unsigned int flags)
