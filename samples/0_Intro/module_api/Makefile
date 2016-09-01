@@ -10,7 +10,7 @@ runKernel.cuda.out: runKernel.cpp
 	nvcc runKernel.cpp -o $@
 
 vcpy_isa.compile: vcpy_isa.cpp
-	$(HIPCC) --genisa --target-isa=fiji vcpy_isa.cpp -o vcpy_isa.co	
+	$(HIPCC) --gencodeobject --target-isa=fiji vcpy_isa.cpp -o vcpy_isa.co
 
 runKernel.hip.out: runKernel.cpp
 	$(HIPCC) runKernel.cpp -o runKernel.hip.out
