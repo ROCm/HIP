@@ -117,29 +117,132 @@ struct cuda2hipMap {
     cuda2hipRename["cublas_v2.h"]        = {"hipblas.h", CONV_INCLUDE, API_BLAS};
 
     // Error codes and return types
+    cuda2hipRename["CUresult"]                             = {"hipError_t", CONV_TYPE, API_DRIVER};
     cuda2hipRename["cudaError_t"]                          = {"hipError_t", CONV_TYPE, API_RUNTIME};
     cuda2hipRename["cudaError"]                            = {"hipError", CONV_TYPE, API_RUNTIME};
-    cuda2hipRename["cudaSuccess"]                          = {"hipSuccess", CONV_ERR, API_RUNTIME};
-    cuda2hipRename["cudaErrorUnknown"]                     = {"hipErrorUnknown", CONV_ERR, API_RUNTIME};
-    cuda2hipRename["cudaErrorMemoryAllocation"]            = {"hipErrorMemoryAllocation", CONV_ERR, API_RUNTIME};
-    cuda2hipRename["cudaErrorMemoryFree"]                  = {"hipErrorMemoryFree", CONV_ERR, API_RUNTIME};
-    cuda2hipRename["cudaErrorUnknownSymbol"]               = {"hipErrorUnknownSymbol", CONV_ERR, API_RUNTIME};
-    cuda2hipRename["cudaErrorOutOfResources"]              = {"hipErrorOutOfResources", CONV_ERR, API_RUNTIME};
-    cuda2hipRename["cudaErrorInvalidValue"]                = {"hipErrorInvalidValue", CONV_ERR, API_RUNTIME};
-    cuda2hipRename["cudaErrorInvalidResourceHandle"]       = {"hipErrorInvalidResourceHandle", CONV_ERR, API_RUNTIME};
-    cuda2hipRename["cudaErrorInvalidDevice"]               = {"hipErrorInvalidDevice", CONV_ERR, API_RUNTIME};
+
+    // CUDA Driver API error code only
+    cuda2hipRename["CUDA_ERROR_INVALID_CONTEXT"]           = {"hipErrorInvalidContext", CONV_ERR, API_DRIVER};
+    cuda2hipRename["CUDA_ERROR_CONTEXT_ALREADY_CURRENT"]   = {"hipErrorContextAlreadyCurrent", CONV_ERR, API_DRIVER};
+    cuda2hipRename["CUDA_ERROR_MAP_FAILED"]                = {"hipErrorMapFailed", CONV_ERR, API_DRIVER};
+    cuda2hipRename["CUDA_ERROR_UNMAP_FAILED"]              = {"hipErrorUnmapFailed", CONV_ERR, API_DRIVER};
+    cuda2hipRename["CUDA_ERROR_ARRAY_IS_MAPPED"]           = {"hipErrorArrayIsMapped", CONV_ERR, API_DRIVER};
+    cuda2hipRename["CUDA_ERROR_ALREADY_MAPPED"]            = {"hipErrorAlreadyMapped", CONV_ERR, API_DRIVER};
+    cuda2hipRename["CUDA_ERROR_ALREADY_ACQUIRED"]          = {"hipErrorAlreadyAcquired", CONV_ERR, API_DRIVER};
+    cuda2hipRename["CUDA_ERROR_NOT_MAPPED"]                = {"hipErrorNotMapped", CONV_ERR, API_DRIVER};
+    cuda2hipRename["CUDA_ERROR_NOT_MAPPED_AS_ARRAY"]       = {"hipErrorNotMappedAsArray", CONV_ERR, API_DRIVER};
+    cuda2hipRename["CUDA_ERROR_NOT_MAPPED_AS_POINTER"]     = {"hipErrorNotMappedAsPointer", CONV_ERR, API_DRIVER};
+    cuda2hipRename["CUDA_ERROR_CONTEXT_ALREADY_IN_USE"]    = {"hipErrorContextAlreadyInUse", CONV_ERR, API_DRIVER};
+    cuda2hipRename["CUDA_ERROR_INVALID_SOURCE"]            = {"hipErrorInvalidSource", CONV_ERR, API_DRIVER};
+    cuda2hipRename["CUDA_ERROR_FILE_NOT_FOUND"]            = {"hipErrorFileNotFound", CONV_ERR, API_DRIVER};
+    cuda2hipRename["CUDA_ERROR_NOT_FOUND"]                 = {"hipErrorNotFound", CONV_ERR, API_DRIVER};
+
+    // CUDA RT API error code only
+    cuda2hipRename["cudaErrorInvalidDeviceFunction"]       = {"hipErrorInvalidDeviceFunction", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["cudaErrorInvalidConfiguration"]        = {"hipErrorInvalidConfiguration", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["cudaErrorPriorLaunchFailure"]          = {"hipErrorPriorLaunchFailure", CONV_ERR, API_RUNTIME};
     cuda2hipRename["cudaErrorInvalidMemcpyDirection"]      = {"hipErrorInvalidMemcpyDirection", CONV_ERR, API_RUNTIME};
     cuda2hipRename["cudaErrorInvalidDevicePointer"]        = {"hipErrorInvalidDevicePointer", CONV_ERR, API_RUNTIME};
-    cuda2hipRename["cudaErrorInitializationError"]         = {"hipErrorInvalidDevicePointer", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["cudaErrorMissingConfiguration"]        = {"hipErrorMissingConfiguration", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_SUCCESS"]                         = {"hipSuccess", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaSuccess"]                          = {"hipSuccess", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_UNKNOWN"]                   = {"hipErrorUnknown", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorUnknown"]                     = {"hipErrorUnknown", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_NOT_INITIALIZED"]           = {"hipErrorNotInitialized", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorInitializationError"]         = {"hipErrorNotInitialized", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_DEINITIALIZED"]             = {"hipErrorDeinitialized", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorCudartUnloading"]             = {"hipErrorDeinitialized", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_OUT_OF_MEMORY"]             = {"hipErrorMemoryAllocation", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorMemoryAllocation"]            = {"hipErrorMemoryAllocation", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_INVALID_HANDLE"]            = {"hipErrorInvalidResourceHandle", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorInvalidResourceHandle"]       = {"hipErrorInvalidResourceHandle", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_INVALID_VALUE"]             = {"hipErrorInvalidValue", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorInvalidValue"]                = {"hipErrorInvalidValue", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_INVALID_DEVICE"]            = {"hipErrorInvalidDevice", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorInvalidDevice"]               = {"hipErrorInvalidDevice", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_NOT_INITIALIZED"]           = {"hipErrorInitializationError", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorInitializationError"]         = {"hipErrorInitializationError", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_NO_DEVICE"]                 = {"hipErrorNoDevice", CONV_ERR, API_DRIVER};
     cuda2hipRename["cudaErrorNoDevice"]                    = {"hipErrorNoDevice", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_NOT_READY"]                 = {"hipErrorNotReady", CONV_ERR, API_DRIVER};
     cuda2hipRename["cudaErrorNotReady"]                    = {"hipErrorNotReady", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_PEER_ACCESS_NOT_ENABLED"]   = {"hipErrorPeerAccessNotEnabled", CONV_ERR, API_DRIVER};
     cuda2hipRename["cudaErrorPeerAccessNotEnabled"]        = {"hipErrorPeerAccessNotEnabled", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_PEER_ACCESS_ALREADY_ENABLED"] = {"hipErrorPeerAccessAlreadyEnabled", CONV_ERR, API_DRIVER};
     cuda2hipRename["cudaErrorPeerAccessAlreadyEnabled"]    = {"hipErrorPeerAccessAlreadyEnabled", CONV_ERR, API_RUNTIME};
-    // NOTE: no corresponding error type in CUDA
-    //cuda2hipRename["cudaErrorRuntimeMemory"]               = {"hipErrorRuntimeMemory", CONV_ERR, API_RUNTIME};
-    //cuda2hipRename["cudaErrorRuntimeOther"]                = {"hipErrorRuntimeOther", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_PEER_ACCESS_UNSUPPORTED"]   = {"hipErrorPeerAccessUnsupported", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorPeerAccessUnsupported"]       = {"hipErrorPeerAccessUnsupported", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_INVALID_PTX"]               = {"hipErrorInvalidKernelFile", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorInvalidPtx"]                  = {"hipErrorInvalidKernelFile", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_INVALID_GRAPHICS_CONTEXT"]  = {"hipErrorInvalidGraphicsContext", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorInvalidGraphicsContext"]      = {"hipErrorInvalidGraphicsContext", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND"] = {"hipErrorSharedObjectSymbolNotFound", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorSharedObjectSymbolNotFound"]  = {"hipErrorSharedObjectSymbolNotFound", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_SHARED_OBJECT_INIT_FAILED"] = {"hipErrorSharedObjectInitFailed", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorSharedObjectInitFailed"]      = {"hipErrorSharedObjectInitFailed", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_OPERATING_SYSTEM"]          = {"hipErrorOperatingSystem", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorOperatingSystem"]             = {"hipErrorOperatingSystem", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_ILLEGAL_ADDRESS"]           = {"hipErrorIllegalAddress", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorIllegalAddress"]              = {"hipErrorIllegalAddress", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_LAUNCH_FAILED"]             = {"hipErrorLaunchFailure", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorLaunchFailure"]               = {"hipErrorLaunchFailure", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_LAUNCH_TIMEOUT"]            = {"hipErrorLaunchTimeOut", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorLaunchTimeout"]               = {"hipErrorLaunchTimeOut", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES"]   = {"hipErrorLaunchOutOfResources", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorLaunchOutOfResources"]        = {"hipErrorLaunchOutOfResources", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_ECC_UNCORRECTABLE"]         = {"hipErrorECCNotCorrectable", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorECCUncorrectable"]            = {"hipErrorECCNotCorrectable", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_HOST_MEMORY_ALREADY_REGISTERED"] = {"hipErrorHostMemoryAlreadyRegistered", CONV_ERR, API_DRIVER};
     cuda2hipRename["cudaErrorHostMemoryAlreadyRegistered"] = {"hipErrorHostMemoryAlreadyRegistered", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_HOST_MEMORY_NOT_REGISTERED"] = {"hipErrorHostMemoryNotRegistered", CONV_ERR, API_DRIVER};
     cuda2hipRename["cudaErrorHostMemoryNotRegistered"]     = {"hipErrorHostMemoryNotRegistered", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_NO_BINARY_FOR_GPU"]         = {"hipErrorNoBinaryForGpu", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorNoKernelImageForDevice"]      = {"hipErrorNoBinaryForGpu", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_UNSUPPORTED_LIMIT"]         = {"hipErrorUnsupportedLimit", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorUnsupportedLimit"]            = {"hipErrorUnsupportedLimit", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_INVALID_IMAGE"]             = {"hipErrorInvalidImage", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorInvalidKernelImage"]          = {"hipErrorInvalidImage", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_PROFILER_DISABLED"]         = {"hipErrorProfilerDisabled", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorProfilerDisabled"]            = {"hipErrorProfilerDisabled", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_PROFILER_NOT_INITIALIZED"]  = {"hipErrorProfilerNotInitialized", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorProfilerNotInitialized"]      = {"hipErrorProfilerNotInitialized", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_PROFILER_ALREADY_STARTED"]  = {"hipErrorProfilerAlreadyStarted", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorProfilerAlreadyStarted"]      = {"hipErrorProfilerAlreadyStarted", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_PROFILER_ALREADY_STOPPED"]  = {"hipErrorProfilerAlreadyStopped", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorProfilerAlreadyStopped"]      = {"hipErrorProfilerAlreadyStopped", CONV_ERR, API_RUNTIME};
 
     // Error API
     cuda2hipRename["cudaGetLastError"]               = {"hipGetLastError", CONV_ERR, API_RUNTIME};
@@ -1038,8 +1141,7 @@ static void processString(StringRef s, const cuda2hipMap &map,
                           int64_t countReps[CONV_LAST],
                           int64_t countApiReps[API_LAST]) {
   size_t begin = 0;
-  while ((begin = s.find("cuda", begin)) != StringRef::npos ||
-         (begin = s.find("cublas", begin)) != StringRef::npos) {
+  while ((begin = s.find("cu", begin)) != StringRef::npos) {
     const size_t end = s.find_first_of(" ", begin + 4);
     StringRef name = s.slice(begin, end);
     const auto found = map.cuda2hipRename.find(name);
@@ -1709,7 +1811,7 @@ static cl::opt<bool>
 
 void addAllMatchers(ast_matchers::MatchFinder &Finder, Cuda2HipCallback *Callback) {
   Finder.addMatcher(callExpr(isExpansionInMainFile(),
-                             callee(functionDecl(matchesName("cuda.*|cublas.*"))))
+                             callee(functionDecl(matchesName("cu.*"))))
                              .bind("cudaCall"),
                              Callback);
   Finder.addMatcher(cudaKernelCallExpr().bind("cudaLaunchKernel"), Callback);
@@ -1720,7 +1822,7 @@ void addAllMatchers(ast_matchers::MatchFinder &Finder, Cuda2HipCallback *Callbac
                                Callback);
   Finder.addMatcher(declRefExpr(isExpansionInMainFile(),
                                 to(enumConstantDecl(
-                                matchesName("cuda.*|cublas.*|CUDA.*|CUBLAS*"))))
+                                matchesName("cu.*|CU.*"))))
                                 .bind("cudaEnumConstantRef"),
                                 Callback);
   Finder.addMatcher(varDecl(isExpansionInMainFile(),
@@ -1728,36 +1830,36 @@ void addAllMatchers(ast_matchers::MatchFinder &Finder, Cuda2HipCallback *Callbac
                             .bind("cudaEnumConstantDecl"),
                             Callback);
   Finder.addMatcher(varDecl(isExpansionInMainFile(),
-                            hasType(typedefDecl(matchesName("cuda.*|cublas.*"))))
+                            hasType(typedefDecl(matchesName("cu.*|CU.*"))))
                             .bind("cudaTypedefVar"),
                             Callback);
   // Array of elements of typedef type, Example: cudaStream_t streams[2];
   Finder.addMatcher(varDecl(isExpansionInMainFile(),
                             hasType(arrayType(hasElementType(typedefType(
-                            hasDeclaration(typedefDecl(matchesName("cuda.*|cublas.*"))))))))
+                            hasDeclaration(typedefDecl(matchesName("cu.*|CU.*"))))))))
                             .bind("cudaTypedefVar"),
                             Callback);
   Finder.addMatcher(varDecl(isExpansionInMainFile(),
-                            hasType(cxxRecordDecl(matchesName("cuda.*|cublas.*"))))
+                            hasType(cxxRecordDecl(matchesName("cu.*|CU.*"))))
                             .bind("cudaStructVar"),
                             Callback);
   Finder.addMatcher(varDecl(isExpansionInMainFile(),
                             hasType(pointsTo(cxxRecordDecl(
-                                             matchesName("cuda.*|cublas.*")))))
+                                             matchesName("cu.*|CU.*")))))
                             .bind("cudaStructVarPtr"),
                             Callback);
   Finder.addMatcher(parmVarDecl(isExpansionInMainFile(),
-                                hasType(namedDecl(matchesName("cuda.*|cublas.*"))))
+                                hasType(namedDecl(matchesName("cu.*|CU.*"))))
                                 .bind("cudaParamDecl"),
                                 Callback);
   Finder.addMatcher(parmVarDecl(isExpansionInMainFile(),
                                 hasType(pointsTo(namedDecl(
-                                                 matchesName("cuda.*|cublas.*")))))
+                                                 matchesName("cu.*|CU.*")))))
                                 .bind("cudaParamDeclPtr"),
                                 Callback);
   Finder.addMatcher(expr(isExpansionInMainFile(),
                          sizeOfExpr(hasArgumentOfType(recordType(hasDeclaration(
-                             cxxRecordDecl(matchesName("cuda.*|cublas.*")))))))
+                             cxxRecordDecl(matchesName("cu.*|CU.*")))))))
                         .bind("cudaStructSizeOf"),
                          Callback);
   Finder.addMatcher(stringLiteral(isExpansionInMainFile()).bind("stringLiteral"),
