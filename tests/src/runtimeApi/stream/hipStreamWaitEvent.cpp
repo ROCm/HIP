@@ -62,7 +62,7 @@ Streamer<T>::Streamer(size_t numElements) :
 template <typename T>
 void Streamer<T>::runAsync()
 {
-    printf ("testing: %s  numElements=%zu\n", __func__, _numElements);
+    printf ("testing: %s  numElements=%zu size=%6.2fMB\n", __func__, _numElements, _numElements * sizeof(T) / 1024.0/1024.0);
     unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, _numElements);
     hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, _stream, _A_d, _B_d, _C_d, _numElements);
     HIPCHECK(hipEventRecord(_event, _stream));
@@ -117,4 +117,6 @@ int main(int argc, char *argv[])
     }
 
     HIPCHECK(hipDeviceSynchronize());
+
+    passed();
 }
