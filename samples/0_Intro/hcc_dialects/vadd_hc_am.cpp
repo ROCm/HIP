@@ -41,17 +41,12 @@ int main(int argc, char *argv[])
     // Launch kernel onto AV.  
     // Because the kernel PFE and the copies are submitted to same AV, they will execute in order
     // and we don't need additional synchronization to ensure the copies complete before the PFE begins.
-#if 1
     hc::completion_future cf=
     hc::parallel_for_each(av,  hc::extent<1> (sizeElements),
-      [&] (hc::index<1> idx) [[hc]] { 
+      [=] (hc::index<1> idx) [[hc]] { 
         int i = idx[0];
-        //C_d[i] = A_d[i] + B_d[i];
-        C_d[0] = A_d[1] + B_d[2];
+        C_d[i] = A_d[i] + B_d[i];
     });
-    cf.wait();
-#endif
-
 
    
     // This copy is in same AV as the kernel and thus will wait for the kernel to finish before executing.
