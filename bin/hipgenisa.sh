@@ -18,9 +18,11 @@ fi
 
 export KMDUMPISA=1
 export KMDUMPLLVM=1
+mkdir /tmp/hipgenisa
 hipcc $FILE_NAMES -o /tmp/hipgenisa/a.out
 mv dump.* /tmp/hipgenisa/
 ${ROCM_PATH}/hcc-lc/bin/llvm-mc -arch=amdgcn -mcpu=$TARGET -filetype=obj /tmp/hipgenisa/dump.isa -o /tmp/hipgenisa/dump.o
 ${ROCM_PATH}/llvm/bin/clang -target amdgcn--amdhsa /tmp/hipgenisa/dump.o -o $OUTPUT_FILE
+rm -r /tmp/hipgenisa
 export KMDUMPISA=0
 export KMDUMPLLVM=0
