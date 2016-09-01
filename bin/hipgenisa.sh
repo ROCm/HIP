@@ -6,10 +6,10 @@ exit
 fi
 
 ROCM_PATH=$1
-GEN_ISA=$3
-FILE_NAMES=$4
-OUT=$5
-OUTPUT_FILE=$6
+GEN_ISA=$2
+FILE_NAMES=$3
+OUT=$4
+OUTPUT_FILE=$5
 TARGET=""
 if [ ${GEN_ISA:0:12} = "--target-isa" ]
 then
