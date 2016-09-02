@@ -489,6 +489,11 @@ inline static hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event
     return hipCUDAErrorTohipError(cudaStreamWaitEvent(stream, event, flags));
 }
 
+inline static hipError_t hipStreamQuery(hipStream_t stream)
+{
+    return hipCUDAErrorTohipError(cudaStreamQuery(stream));
+}
+
 
 inline static hipError_t hipDriverGetVersion(int *driverVersion)
 {
