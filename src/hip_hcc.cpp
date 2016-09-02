@@ -137,7 +137,7 @@ ihipCtx_t * ihipGetPrimaryCtx(unsigned deviceIndex)
 };
 
 
-static thread_local ihipCtx_t *tls_defaultCtx = nullptr;  
+static thread_local ihipCtx_t *tls_defaultCtx = nullptr;
 void ihipSetTlsDefaultCtx(ihipCtx_t *ctx)
 {
     tls_defaultCtx = ctx;
@@ -512,7 +512,10 @@ int ihipStream_t::preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t
 }
 
 
-void ihipStream_t::launchModuleKernel(hsa_signal_t signal,
+// Precursor: the stream is already locked,specifically so this routine can enqueue work into the specified av.
+void ihipStream_t::launchModuleKernel(
+                        hc::accelerator_view av,
+                        hsa_signal_t signal,
                         uint32_t blockDimX,
                         uint32_t blockDimY,
                         uint32_t blockDimZ,
@@ -525,11 +528,6 @@ void ihipStream_t::launchModuleKernel(hsa_signal_t signal,
                         uint64_t kernel){
     hsa_status_t status;
     void *kern;
-
-    // Lock stream to prevent other threads from enqueueing kernels at same time.
-    LockedAccessor_StreamCrit_t crit (_criticalData);
-
-    hc::accelerator_view av = crit->_av;
 
     hsa_amd_memory_pool_t *pool = reinterpret_cast<hsa_amd_memory_pool_t*>(av.get_hsa_kernarg_region());
     status = hsa_amd_memory_pool_allocate(*pool, kernSize, 0, &kern);
@@ -1344,11 +1342,11 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
     }
 }
 
-void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, const hipStream_t stream) 
+void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, const hipStream_t stream)
 {
     std::string streamString = ToString(stream);
     fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d %s\n" KNRM, \
-            kernelName, lp->grid_dim.x, lp->grid_dim.y, lp->grid_dim.z, lp->group_dim.x, lp->group_dim.y, lp->group_dim.z, 
+            kernelName, lp->grid_dim.x, lp->grid_dim.y, lp->grid_dim.z, lp->group_dim.x, lp->group_dim.y, lp->group_dim.z,
             lp->dynamic_group_mem_bytes, streamString.c_str());\
 }
 
