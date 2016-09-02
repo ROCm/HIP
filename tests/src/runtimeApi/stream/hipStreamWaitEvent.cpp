@@ -21,6 +21,7 @@ THE SOFTWARE.
 
 #include "hip_runtime.h"
 #include "test_common.h"
+#include <vector>
 unsigned p_streams = 6;
 
 
