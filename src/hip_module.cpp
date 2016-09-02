@@ -162,9 +162,15 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
 hipError_t hipModuleUnload(hipModule_t hmod){
     hipError_t ret = hipSuccess;
     hsa_status_t status = hsa_executable_destroy(hmod->executable);
-    if(status != HSA_STATUS_SUCCESS){ret = hipErrorInvalidValue; }
+    if(status != HSA_STATUS_SUCCESS)
+		{
+				ret = hipErrorInvalidValue;
+		}
     status = hsa_code_object_destroy(hmod->object);
-    if(status != HSA_STATUS_SUCCESS){ret = hipErrorInvalidValue; }
+    if(status != HSA_STATUS_SUCCESS)
+		{
+				ret = hipErrorInvalidValue;
+		}
     delete hmod;
     return ret;
 }
