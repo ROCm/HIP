@@ -221,6 +221,7 @@ hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod,
     return ihipModuleGetFunction(hfunc, hmod, name);
 }
 
+
 hipError_t hipModuleLaunchKernel(hipFunction_t f,
             uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
             uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
@@ -268,7 +269,7 @@ Kernel argument preparation.
 /*
   Launch AQL packet
 */
-        hStream->launchModuleKernel(signal, blockDimX, blockDimY, blockDimZ,
+        hStream->launchModuleKernel(*lp.av, signal, blockDimX, blockDimY, blockDimZ,
                   gridDimX, gridDimY, gridDimZ, sharedMemBytes, config[1], kernSize, f->kernel);
 
 /*
@@ -279,7 +280,7 @@ Kernel argument preparation.
 
 
         ihipPostLaunchKernel(hStream, lp);
-                
+
     }
 
     return ihipLogStatus(ret);

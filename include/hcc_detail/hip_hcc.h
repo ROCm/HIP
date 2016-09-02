@@ -32,7 +32,7 @@ THE SOFTWARE.
 // #define USE_MEMCPYTOSYMBOL
 //
 //Use the new HCC accelerator_view::copy instead of am_copy
-#define USE_AV_COPY (__hcc_workweek__ >= 16351) 
+#define USE_AV_COPY (__hcc_workweek__ >= 16351)
 
 // Compile peer-to-peer support.
 // >= 2 : use HCC hc:accelerator::get_is_peer
@@ -457,7 +457,10 @@ typedef uint64_t SeqNum_t ;
     // Use this if we already have the stream critical data mutex:
     void                 wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty=false);
 
-    void launchModuleKernel(hsa_signal_t signal, uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ, uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ, uint32_t sharedMemBytes, void *kernarg, size_t kernSize, uint64_t kernel);
+    void launchModuleKernel(hc::accelerator_view av, hsa_signal_t signal,
+                            uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
+                            uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
+                            uint32_t sharedMemBytes, void *kernarg, size_t kernSize, uint64_t kernel);
 
     // Non-threadsafe accessors - must be protected by high-level stream lock with accessor passed to function.
     SIGSEQNUM            lastCopySeqId (LockedAccessor_StreamCrit_t &crit) const { return crit->_last_copy_signal ? crit->_last_copy_signal->_sigId : 0; };
