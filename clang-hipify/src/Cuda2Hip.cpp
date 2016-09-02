@@ -244,6 +244,40 @@ struct cuda2hipMap {
     cuda2hipRename["CUDA_ERROR_PROFILER_ALREADY_STOPPED"]  = {"hipErrorProfilerAlreadyStopped", CONV_ERR, API_DRIVER};
     cuda2hipRename["cudaErrorProfilerAlreadyStopped"]      = {"hipErrorProfilerAlreadyStopped", CONV_ERR, API_RUNTIME};
 
+    ///////////////////////////// CUDA DRIVER API /////////////////////////////
+    // Types
+    // NOTE: CUdevice might be changed to typedef int in the future.
+    cuda2hipRename["CUdevice"]                             = {"hipDevice_t", CONV_TYPE, API_DRIVER};
+
+    cuda2hipRename["CUdevice_attribute_enum"]              = {"hipDeviceAttribute_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUdevice_attribute"]                   = {"hipDeviceAttribute_t", CONV_TYPE, API_DRIVER};
+
+    cuda2hipRename["CUdevprop_st"]                         = {"hipDeviceProp_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUdevprop"]                            = {"hipDeviceProp_t", CONV_TYPE, API_DRIVER};
+
+    // TODO: Analogues enum is needed in HIP. Couldn't map enum to struct hipPointerAttribute_t.
+    // TODO: Do for Pointer Attributes the same as for Device Attributes.
+    // cuda2hipRename["CUpointer_attribute_enum"]             = {"hipPointerAttribute_t", CONV_TYPE, API_DRIVER};
+    // cuda2hipRename["CUpointer_attribute"]                  = {"hipPointerAttribute_t", CONV_TYPE, API_DRIVER};
+
+    cuda2hipRename["CUfunction"]                           = {"hipFunction_t", CONV_TYPE, API_DRIVER};
+
+    // unsupported yet by HIP
+    // cuda2hipRename["CUfunction_attribute_enum"]            = {"hipFuncAttribute_t", CONV_TYPE, API_DRIVER};
+    // cuda2hipRename["CUfunction_attribute"]                 = {"hipFuncAttribute_t", CONV_TYPE, API_DRIVER};
+
+    cuda2hipRename["CUfunc_cache_enum"]                    = {"hipFuncCache", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUfunc_cache"]                         = {"hipFuncCache", CONV_TYPE, API_DRIVER};
+
+    cuda2hipRename["CUsharedconfig_enum"]                  = {"hipSharedMemConfig", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUsharedconfig"]                       = {"hipSharedMemConfig", CONV_TYPE, API_DRIVER};
+
+    cuda2hipRename["CUcontext"]                            = {"hipCtx_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUmodule"]                             = {"hipModule_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUevent"]                              = {"hipEvent_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUstream"]                             = {"hipStream_t", CONV_TYPE, API_DRIVER};
+
+    /////////////////////////////// CUDA RT API ///////////////////////////////
     // Error API
     cuda2hipRename["cudaGetLastError"]               = {"hipGetLastError", CONV_ERR, API_RUNTIME};
     cuda2hipRename["cudaPeekAtLastError"]            = {"hipPeekAtLastError", CONV_ERR, API_RUNTIME};
