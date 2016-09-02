@@ -1235,6 +1235,15 @@ hipError_t  hipCtxDisablePeerAccess (hipCtx_t peerCtx);
  */
 hipError_t hipDeviceGetFromId(hipDevice_t *device, int deviceId);
 
+/**
+ * @brief Returns a handle to a compute device
+ * @param [out] device
+ * @param [in] ordinal
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceGet(hipDevice_t *device, int ordinal);
+
 
 /**
  * @brief Returns the approximate HIP driver version.
