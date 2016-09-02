@@ -213,6 +213,9 @@ export HIP_ATP_MARKER=1
 ```shell
 # Use profile to generate timeline view:
 /opt/rocm/bin/rocm-profiler -o <outputATPFileName> -A <applicationName> <applicationArguments>
+
+Or
+/opt/rocm/bin/rocm-profiler -e HIP_ATP_MARKER=1 -o <outputATPFileName> -A <applicationName> <applicationArguments>
 ```
 
 #### Using HIP_TRACE_API
