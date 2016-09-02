@@ -247,35 +247,68 @@ struct cuda2hipMap {
     ///////////////////////////// CUDA DRIVER API /////////////////////////////
     // Types
     // NOTE: CUdevice might be changed to typedef int in the future.
-    cuda2hipRename["CUdevice"]                             = {"hipDevice_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUdevice"]                                  = {"hipDevice_t", CONV_TYPE, API_DRIVER};
 
-    cuda2hipRename["CUdevice_attribute_enum"]              = {"hipDeviceAttribute_t", CONV_TYPE, API_DRIVER};
-    cuda2hipRename["CUdevice_attribute"]                   = {"hipDeviceAttribute_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUdevice_attribute_enum"]                   = {"hipDeviceAttribute_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUdevice_attribute"]                        = {"hipDeviceAttribute_t", CONV_TYPE, API_DRIVER};
 
-    cuda2hipRename["CUdevprop_st"]                         = {"hipDeviceProp_t", CONV_TYPE, API_DRIVER};
-    cuda2hipRename["CUdevprop"]                            = {"hipDeviceProp_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK"]                = {"hipDeviceAttributeMaxThreadsPerBlock", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_X"]                      = {"hipDeviceAttributeMaxBlockDimX", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Y"]                      = {"hipDeviceAttributeMaxBlockDimY", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Z"]                      = {"hipDeviceAttributeMaxBlockDimZ", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X"]                       = {"hipDeviceAttributeMaxGridDimX", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Y"]                       = {"hipDeviceAttributeMaxGridDimY", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Z"]                       = {"hipDeviceAttributeMaxGridDimZ", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK"]          = {"hipDeviceAttributeMaxSharedMemoryPerBlock", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY"]                = {"hipDeviceAttributeTotalConstantMemory", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_WARP_SIZE"]                            = {"hipDeviceAttributeWarpSize", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK"]              = {"hipDeviceAttributeMaxRegistersPerBlock", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_CLOCK_RATE"]                           = {"hipDeviceAttributeClockRate", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MEMORY_CLOCK_RATE"]                    = {"hipDeviceAttributeMemoryClockRate", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_GLOBAL_MEMORY_BUS_WIDTH"]              = {"hipDeviceAttributeMemoryBusWidth", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_GLOBAL_MEMORY_BUS_WIDTH"]              = {"hipDeviceAttributeMultiprocessorCount", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_COMPUTE_MODE"]                         = {"hipDeviceAttributeComputeMode", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_L2_CACHE_SIZE"]                        = {"hipDeviceAttributeL2CacheSize", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_MULTIPROCESSOR"]       = {"hipDeviceAttributeMaxThreadsPerMultiProcessor", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR"]             = {"hipDeviceAttributeComputeCapabilityMajor", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR"]             = {"hipDeviceAttributeComputeCapabilityMinor", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_CONCURRENT_KERNELS"]                   = {"hipDeviceAttributeConcurrentKernels", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_PCI_BUS_ID"]                           = {"hipDeviceAttributePciBusId", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_PCI_DEVICE_ID"]                        = {"hipDeviceAttributePciDeviceId", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_MULTIPROCESSOR"] = {"hipDeviceAttributeMaxSharedMemoryPerMultiprocessor", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD"]                      = {"hipDeviceAttributeIsMultiGpuBoard", CONV_DEV, API_DRIVER};
+
+    cuda2hipRename["CUdevprop_st"]                              = {"hipDeviceProp_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUdevprop"]                                 = {"hipDeviceProp_t", CONV_TYPE, API_DRIVER};
 
     // TODO: Analogues enum is needed in HIP. Couldn't map enum to struct hipPointerAttribute_t.
     // TODO: Do for Pointer Attributes the same as for Device Attributes.
-    // cuda2hipRename["CUpointer_attribute_enum"]             = {"hipPointerAttribute_t", CONV_TYPE, API_DRIVER};
-    // cuda2hipRename["CUpointer_attribute"]                  = {"hipPointerAttribute_t", CONV_TYPE, API_DRIVER};
+    // cuda2hipRename["CUpointer_attribute_enum"]               = {"hipPointerAttribute_t", CONV_TYPE, API_DRIVER};
+    // cuda2hipRename["CUpointer_attribute"]                    = {"hipPointerAttribute_t", CONV_TYPE, API_DRIVER};
 
-    cuda2hipRename["CUfunction"]                           = {"hipFunction_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUfunction"]                                = {"hipFunction_t", CONV_TYPE, API_DRIVER};
 
     // unsupported yet by HIP
-    // cuda2hipRename["CUfunction_attribute_enum"]            = {"hipFuncAttribute_t", CONV_TYPE, API_DRIVER};
-    // cuda2hipRename["CUfunction_attribute"]                 = {"hipFuncAttribute_t", CONV_TYPE, API_DRIVER};
+    // cuda2hipRename["CUfunction_attribute_enum"]              = {"hipFuncAttribute_t", CONV_TYPE, API_DRIVER};
+    // cuda2hipRename["CUfunction_attribute"]                   = {"hipFuncAttribute_t", CONV_TYPE, API_DRIVER};
 
-    cuda2hipRename["CUfunc_cache_enum"]                    = {"hipFuncCache", CONV_TYPE, API_DRIVER};
-    cuda2hipRename["CUfunc_cache"]                         = {"hipFuncCache", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUfunc_cache_enum"]                         = {"hipFuncCache", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUfunc_cache"]                              = {"hipFuncCache", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CU_FUNC_CACHE_PREFER_NONE"]                 = {"hipFuncCachePreferNone", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_FUNC_CACHE_PREFER_SHARED"]               = {"hipFuncCachePreferShared", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_FUNC_CACHE_PREFER_L1"]                   = {"hipFuncCachePreferL1", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_FUNC_CACHE_PREFER_EQUAL"]                = {"hipFuncCachePreferEqual", CONV_DEV, API_DRIVER};
 
-    cuda2hipRename["CUsharedconfig_enum"]                  = {"hipSharedMemConfig", CONV_TYPE, API_DRIVER};
-    cuda2hipRename["CUsharedconfig"]                       = {"hipSharedMemConfig", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUsharedconfig_enum"]                       = {"hipSharedMemConfig", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUsharedconfig"]                            = {"hipSharedMemConfig", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CU_SHARED_MEM_CONFIG_DEFAULT_BANK_SIZE"]    = {"hipSharedMemBankSizeDefault", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_SHARED_MEM_CONFIG_FOUR_BYTE_BANK_SIZE"]  = {"hipSharedMemBankSizeFourByte", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_SHARED_MEM_CONFIG_EIGHT_BYTE_BANK_SIZE"] = {"hipSharedMemBankSizeEightByte", CONV_DEV, API_DRIVER};
 
-    cuda2hipRename["CUcontext"]                            = {"hipCtx_t", CONV_TYPE, API_DRIVER};
-    cuda2hipRename["CUmodule"]                             = {"hipModule_t", CONV_TYPE, API_DRIVER};
-    cuda2hipRename["CUevent"]                              = {"hipEvent_t", CONV_TYPE, API_DRIVER};
-    cuda2hipRename["CUstream"]                             = {"hipStream_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUcontext"]                                 = {"hipCtx_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUmodule"]                                  = {"hipModule_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUevent"]                                   = {"hipEvent_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUstream"]                                  = {"hipStream_t", CONV_TYPE, API_DRIVER};
 
     /////////////////////////////// CUDA RT API ///////////////////////////////
     // Error API
@@ -416,6 +449,7 @@ struct cuda2hipMap {
     cuda2hipRename["cudaDevAttrL2CacheSize"]                      = {"hipDeviceAttributeL2CacheSize", CONV_DEV, API_RUNTIME};
     cuda2hipRename["cudaDevAttrMaxThreadsPerMultiProcessor"]      = {"hipDeviceAttributeMaxThreadsPerMultiProcessor", CONV_DEV, API_RUNTIME};
     cuda2hipRename["cudaDevAttrComputeCapabilityMajor"]           = {"hipDeviceAttributeComputeCapabilityMajor", CONV_DEV, API_RUNTIME};
+    cuda2hipRename["cudaDevAttrComputeCapabilityMinor"]           = {"hipDeviceAttributeComputeCapabilityMinor", CONV_DEV, API_RUNTIME};
     cuda2hipRename["cudaDevAttrConcurrentKernels"]                = {"hipDeviceAttributeConcurrentKernels", CONV_DEV, API_RUNTIME};
     cuda2hipRename["cudaDevAttrPciBusId"]                         = {"hipDeviceAttributePciBusId", CONV_DEV, API_RUNTIME};
     cuda2hipRename["cudaDevAttrPciDeviceId"]                      = {"hipDeviceAttributePciDeviceId", CONV_DEV, API_RUNTIME};
