@@ -6,4 +6,3 @@ __global__ void hello_world(hipLaunchParm lp, float *a, float *b)
     b[tx] = a[tx];
 }
 
-int main(){}

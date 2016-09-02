@@ -11,8 +11,8 @@ ifeq (${HIP_PLATFORM}, hcc)
 
 all: runKernel.hip.out
 
-vcpy_isa.compile: vcpy_isa.cpp
-	$(HIPCC) --genco $(GENCODEOBJECT_FLAGS) vcpy_isa.cpp -o vcpy_isa.co
+vcpy_kernel.compile: vcpy_kernel.cpp
+	$(HIPCC) --genco $(GENCODEOBJECT_FLAGS) vcpy_kernel.cpp -o vcpy_kernel.co
 
 clean:
 	rm -f *.co *.out
@@ -21,15 +21,15 @@ endif
 
 ifeq (${HIP_PLATFORM}, nvcc)
 
-vcpy_isa.compile: vcpy_isa.cu
-	$(HIPCC) --genco vcpy_isa.cu -o vcpy_isa.ptx
+vcpy_kernel.compile: vcpy_kernel.cpp
+	$(HIPCC) --genco vcpy_kernel.cpp -o vcpy_kernel.ptx
 
 clean:
 	rm -f *.ptx *.out
 
 endif
 
-all: vcpy_isa.compile runKernel.hip.out
+all: vcpy_kernel.compile runKernel.hip.out
 
 runKernel.hip.out: runKernel.cpp
 	$(HIPCC) $(OPT) runKernel.cpp -o runKernel.hip.out
