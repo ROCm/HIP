@@ -330,7 +330,7 @@ int main(int argc, char *argv[])
     parseMyArguments(argc, argv);
 
 
-    printf ("info: set device to %d\n", p_gpuDevice);
+    printf ("info: set device to %d  tests=%x\n", p_gpuDevice, p_tests);
     HIPCHECK(hipSetDevice(p_gpuDevice));
 
     if (p_tests & 0x01) {
