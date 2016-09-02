@@ -726,7 +726,7 @@ hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) __attribute
 hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, unsigned int flags) ;
 
 /**
- *  @brief Get flags associated with host pointer
+ *  @brief Return flags associated with host pointer 
  *
  *  @param[out]  flagsPtr Memory location to store flags
  *  @param[in] hostPtr Host Pointer allocated through hipHostMalloc
@@ -1186,13 +1186,12 @@ hipError_t hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig );
 hipError_t hipCtxSynchronize ( void );
 
 /**
- * @brief Get flags used for creating current/default context.
+ * @brief Return flags used for creating default context.
  *
  * @param [out] flags
  *
  * @returns #hipSuccess.
 */
-
 hipError_t hipCtxGetFlags ( unsigned int* flags );
 
 /**
