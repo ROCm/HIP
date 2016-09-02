@@ -57,10 +57,14 @@ const int release = 1;
 #define MEMCPY_H2D_DIRECT_VS_STAGING_COPY_THRESHOLD    65336
 #define MEMCPY_H2D_STAGING_VS_PININPLACE_COPY_THRESHOLD    1048576
 
+const char *API_COLOR = KGRN;
+const char *API_COLOR_END = KNRM;
+
 int HIP_LAUNCH_BLOCKING = 0;
 
 int HIP_PRINT_ENV = 0;
 int HIP_TRACE_API= 0;
+std::string HIP_TRACE_API_COLOR("green");
 int HIP_ATP_MARKER= 0;
 int HIP_DB= 0;
 int HIP_STAGING_SIZE = 64;   /* size of staging buffers, in KB */
@@ -1123,6 +1127,7 @@ void ihipCtx_t::locked_waitAllStreams()
 
 
 
+//---
 // Read environment variables.
 void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, const char *description)
 {
@@ -1133,6 +1138,7 @@ void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, c
         env = getenv(var_name2);
     }
 
+    // TODO: Refactor this code so it is a separate call rather than being part of ihipReadEnv_I, which should only read integers.
     // Check if the environment variable is either HIP_VISIBLE_DEVICES or CUDA_LAUNCH_BLOCKING, which
     // contains a sequence of comma-separated device IDs
     if (!(strcmp(var_name1,"HIP_VISIBLE_DEVICES") && strcmp(var_name2, "CUDA_VISIBLE_DEVICES")) && env){
@@ -1170,8 +1176,26 @@ void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, c
             printf ("%-30s = %2d : %s\n", var_name1, *var_ptr, description);
         }
     }
-
 }
+
+
+void ihipReadEnv_S(std::string *var_ptr, const char *var_name1, const char *var_name2, const char *description)
+{
+    char * env = getenv(var_name1);
+
+    // Check second name if first not defined, used to allow HIP_ or CUDA_ env vars.
+    if ((env == NULL) && strcmp(var_name2, "0")) {
+        env = getenv(var_name2);
+    }
+
+    if (env) {
+        *var_ptr = env;
+    }
+    if (HIP_PRINT_ENV) {
+        printf ("%-30s = %s : %s\n", var_name1, var_ptr->c_str(), description);
+    }
+}
+
 
 #if defined (DEBUG)
 
@@ -1179,12 +1203,21 @@ void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, c
     if ((_build == release) || (_build == debug) {\
         ihipReadEnv_I(&_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description);\
     };
+#define READ_ENV_S(_build, _ENV_VAR, _ENV_VAR2, _description) \
+    if ((_build == release) || (_build == debug) {\
+        ihipReadEnv_S(&_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description);\
+    };
 
 #else
 
 #define READ_ENV_I(_build, _ENV_VAR, _ENV_VAR2, _description) \
     if (_build == release) {\
         ihipReadEnv_I(&_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description);\
+    };
+
+#define READ_ENV_S(_build, _ENV_VAR, _ENV_VAR2, _description) \
+    if (_build == release) {\
+        ihipReadEnv_S(&_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description);\
     };
 
 #endif
@@ -1219,6 +1252,7 @@ void ihipInit()
     }
 
     READ_ENV_I(release, HIP_TRACE_API, 0,  "Trace each HIP API call.  Print function name and return code to stderr as program executes.");
+    READ_ENV_S(release, HIP_TRACE_API_COLOR, 0,  "Color to use for HIP_API.  None/Red/Green/Yellow/Blue/Magenta/Cyan/White");
     READ_ENV_I(release, HIP_ATP_MARKER, 0,  "Add HIP function begin/end to ATP file generated with CodeXL");
     READ_ENV_I(release, HIP_STAGING_SIZE, 0, "Size of each staging buffer (in KB)" );
     READ_ENV_I(release, HIP_STAGING_BUFFERS, 0, "Number of staging buffers to use in each direction. 0=use hsa_memory_copy.");
@@ -1261,6 +1295,31 @@ void ihipInit()
     if (HIP_ATP_MARKER && !COMPILE_HIP_ATP_MARKER) {
         fprintf (stderr, "warning: env var HIP_ATP_MARKER=0x%x but COMPILE_HIP_ATP_MARKER=0.  (perhaps enable COMPILE_HIP_DB in src code before compiling?)", HIP_ATP_MARKER);
     }
+
+    std::transform(HIP_TRACE_API_COLOR.begin(),  HIP_TRACE_API_COLOR.end(), HIP_TRACE_API_COLOR.begin(), ::tolower);
+
+    if (HIP_TRACE_API_COLOR == "none") {
+        API_COLOR = "";
+        API_COLOR_END = "";
+    } else if (HIP_TRACE_API_COLOR == "red") {
+        API_COLOR = KRED;
+    } else if (HIP_TRACE_API_COLOR == "green") {
+        API_COLOR = KGRN;
+    } else if (HIP_TRACE_API_COLOR == "yellow") {
+        API_COLOR = KYEL;
+    } else if (HIP_TRACE_API_COLOR == "blue") {
+        API_COLOR = KBLU;
+    } else if (HIP_TRACE_API_COLOR == "magenta") {
+        API_COLOR = KMAG;
+    } else if (HIP_TRACE_API_COLOR == "cyan") {
+        API_COLOR = KCYN;
+    } else if (HIP_TRACE_API_COLOR == "white") {
+        API_COLOR = KWHT;
+    } else {
+        fprintf (stderr, "warning: env var HIP_TRACE_API_COLOR=%s must be None/Red/Green/Yellow/Blue/Magenta/Cyan/White", HIP_TRACE_API_COLOR.c_str());
+    };
+
+
 
 
     /*
@@ -1333,7 +1392,7 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 #endif
         return device->_defaultStream;
     } else {
-        // Have to wait for legacy default stream to be empty:
+        // ALl streams have to wait for legacy default stream to be empty:
         if (!(stream->_flags & hipStreamNonBlocking))  {
             tprintf(DB_SYNC, "stream %p wait default stream\n", stream);
             stream->getCtx()->_defaultStream->locked_wait();
@@ -1345,16 +1404,25 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 
 void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, const hipStream_t stream)
 {
-    std::string streamString = ToString(stream);
-    fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d %s\n" KNRM, \
-            kernelName, lp->grid_dim.x, lp->grid_dim.y, lp->grid_dim.z, lp->group_dim.x, lp->group_dim.y, lp->group_dim.z,
-            lp->dynamic_group_mem_bytes, streamString.c_str());\
+    std::stringstream os;
+    os << API_COLOR << "<<hip-api: hipLaunchKernel '" << kernelName << "'"
+        << " gridDim:"  << lp->grid_dim
+        << " groupDim:" << lp->group_dim
+        << " sharedMem:+" << lp->dynamic_group_mem_bytes
+        << " " << *stream
+        << API_COLOR_END << std::endl;
+
+    std::cerr << os.str();
+
+    //fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d %s\n" KNRM, \
+    //        kernelName, lp->grid_dim.x, lp->grid_dim.y, lp->grid_dim.z, lp->group_dim.x, lp->group_dim.y, lp->group_dim.z,
+    //        lp->dynamic_group_mem_bytes, streamString.c_str());
 }
 
 // TODO - data-up to data-down:
 // Called just before a kernel is launched from hipLaunchKernel.
 // Allows runtime to track some information about the stream.
-hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp)
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp, const char *kernelNameStr)
 {
     HIP_INIT();
     stream = ihipSyncAndResolveStream(stream);
@@ -1370,6 +1438,11 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
     auto crit = stream->lockopen_preKernelCommand();
     lp->av = &(crit->_av);
     lp->cf = new hc::completion_future;
+
+    if (HIP_TRACE_API) {
+        ihipPrintKernelLaunch(kernelNameStr, lp, stream);
+    }
+
     return (stream);
 }
 

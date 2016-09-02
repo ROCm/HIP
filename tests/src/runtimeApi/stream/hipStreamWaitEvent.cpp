@@ -27,7 +27,7 @@ unsigned p_streams = 6;
 
 //------
 // Structure for one stream;
-template <typename T> 
+template <typename T>
 class Streamer {
 public:
     Streamer(size_t numElements);
@@ -99,7 +99,7 @@ void parseMyArguments(int argc, char *argv[])
 //---
 int main(int argc, char *argv[])
 {
-    HipTest::parseStandardArguments(argc, argv, true);
+    HipTest::parseStandardArguments(argc, argv, false);
     parseMyArguments(argc, argv);
 
     typedef Streamer<float> FloatStreamer;
