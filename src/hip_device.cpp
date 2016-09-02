@@ -354,3 +354,10 @@ hipError_t hipDeviceGetPCIBusId (int *pciBusId,int len,hipDevice_t device)
     return ihipLogStatus(e);
 }
 
+hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device)
+{
+    HIP_INIT_API(bytes, device);
+    hipError_t e = hipSuccess;
+    *bytes= device->_props.totalGlobalMem;
+    return ihipLogStatus(e);
+}

@@ -645,6 +645,11 @@ inline static hipError_t hipDeviceGetPCIBusId (int *pciBusId,int len,hipDevice_t
     return hipCUResultTohipError(cuDeviceGetPCIBusId((char*)pciBusId,len,device));
 }
 
+inline static hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device)
+{
+    return hipCUResultTohipError(cuDeviceTotalMem(bytes,device));
+}
+
 inline static hipError_t hipModuleLoad(hipModule_t *module, const char* fname)
 {
     return hipCUResultTohipError(cuModuleLoad(module, fname));
