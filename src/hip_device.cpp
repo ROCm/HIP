@@ -324,3 +324,33 @@ hipError_t hipDeviceGetFromId(hipDevice_t *device, int deviceId)
 
     return ihipLogStatus(e);
 }
+
+hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device)
+{
+    HIP_INIT_API(major,minor, device);
+    hipError_t e = hipSuccess;
+    int deviceId= device->_deviceId;
+    e = hipDeviceGetAttribute(major, hipDeviceAttributeComputeCapabilityMajor, deviceId);
+    e = hipDeviceGetAttribute(minor, hipDeviceAttributeComputeCapabilityMinor, deviceId);
+    return ihipLogStatus(e);
+}
+
+hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
+{
+    HIP_INIT_API(name,len, device);
+    hipError_t e = hipSuccess;
+    int nameLen = strlen(device->_props.name);
+    if(nameLen <= len)
+        memcpy(name,device->_props.name,nameLen);
+    return ihipLogStatus(e);
+}
+
+hipError_t hipDeviceGetPCIBusId (int *pciBusId,int len,hipDevice_t device)
+{
+    HIP_INIT_API(pciBusId,len, device);
+    hipError_t e = hipSuccess;
+    int deviceId= device->_deviceId;
+    e = hipDeviceGetAttribute(pciBusId, hipDeviceAttributePciBusId, deviceId);
+    return ihipLogStatus(e);
+}
+

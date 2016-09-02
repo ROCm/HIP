@@ -1244,6 +1244,35 @@ hipError_t hipDeviceGetFromId(hipDevice_t *device, int deviceId);
  */
 hipError_t hipDeviceGet(hipDevice_t *device, int ordinal);
 
+/**
+ * @brief Returns the compute capability of the device
+ * @param [out] major
+ * @param [out] minor
+ * @param [in] device
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceComputeCapability(int *major,int *minor,hipDevice_t device);
+
+/**
+ * @brief Returns an identifer string for the device.
+ * @param [out] name
+ * @param [in] len
+ * @param [in] device
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device);
+
+/**
+ * @brief Returns a PCI Bus Id string for the device.
+ * @param [out] pciBusId
+ * @param [in] len
+ * @param [in] device
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceGetPCIBusId (int *pciBusId,int len,hipDevice_t device);
 
 /**
  * @brief Returns the approximate HIP driver version.
