@@ -38,7 +38,7 @@ __global__ void vAdd(hipLaunchParm lp, float *a){}
         cmd;\
         hipDeviceSynchronize();\
         gettimeofday(&stop, NULL);\
-    } while(0); 
+    } while(0);
 
 
 
@@ -61,7 +61,9 @@ int main()
 {
     float *Ad;
     hipMalloc((void**)&Ad, 1024);
-    hipLaunchKernel(vAdd, 1024, 1, 0, 0, Ad);
+
+    // Test the different hipLaunchParm options:
+    hipLaunchKernel(vAdd, size_t(1024), 1, 0, 0, Ad);
     hipLaunchKernel(vAdd, 1024, dim3(1), 0, 0, Ad);
     hipLaunchKernel(vAdd, dim3(1024), 1, 0, 0, Ad);
     hipLaunchKernel(vAdd, dim3(1024), dim3(1), 0, 0, Ad);

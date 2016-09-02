@@ -161,7 +161,7 @@ hipError_t hipSetDevice(int deviceId)
 hipError_t hipDeviceSynchronize(void)
 {
     HIP_INIT_API();
-    return ihipSynchronize();
+    return ihipLogStatus(ihipSynchronize());
 }
 
 
@@ -182,7 +182,7 @@ hipError_t hipDeviceReset(void)
 
     if (ctx) {
         // Release ctx resources (streams and memory):
-        ctx->locked_reset(); 
+        ctx->locked_reset();
     }
 
     return ihipLogStatus(hipSuccess);

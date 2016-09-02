@@ -87,7 +87,8 @@ class ihipCtx_t;
 #define KCYN  "\x1B[36m"
 #define KWHT  "\x1B[37m"
 
-#define API_COLOR KGRN
+extern const char *API_COLOR;
+extern const char *API_COLOR_END;
 
 
 // If set, thread-safety is enforced on all stream functions.
@@ -149,7 +150,7 @@ class ihipCtx_t;
     if (HIP_ATP_MARKER || (COMPILE_HIP_DB && HIP_TRACE_API)) {\
         std::string s = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
         if (COMPILE_HIP_DB && HIP_TRACE_API) {\
-            fprintf (stderr, API_COLOR "<<hip-api: %s\n" KNRM, s.c_str());\
+            fprintf (stderr, "%s<<hip-api: %s\n%s" , API_COLOR, s.c_str(), API_COLOR_END);\
         }\
         SCOPED_MARKER(s.c_str(), "HIP", NULL);\
     }\
@@ -179,7 +180,7 @@ class ihipCtx_t;
         tls_lastHipError = localHipStatus;\
         \
         if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API) {\
-            fprintf(stderr, "  %ship-api: %-30s ret=%2d (%s)>>\n" KNRM, (localHipStatus == 0) ? API_COLOR:KRED, __func__, localHipStatus, ihipErrorString(localHipStatus));\
+            fprintf(stderr, "  %ship-api: %-30s ret=%2d (%s)>>%s\n", (localHipStatus == 0) ? API_COLOR:KRED, __func__, localHipStatus, ihipErrorString(localHipStatus), API_COLOR_END);\
         }\
         localHipStatus;\
     })
@@ -365,8 +366,23 @@ public:
 
 class ihipFunction_t{
 public:
-  hsa_executable_symbol_t kernel_symbol;
-  uint64_t kernel;
+    ihipFunction_t(const char *name) {
+        size_t nameSz = strlen(name);
+        char *kernelName = (char*)malloc(nameSz);
+        strncpy(kernelName, name, nameSz);
+        _kernelName = kernelName;
+    };
+
+    ~ihipFunction_t() {
+        if (_kernelName) {
+            free((void*)_kernelName);
+            _kernelName = NULL;
+        };
+    };
+public:
+    const char             *_kernelName;
+    hsa_executable_symbol_t _kernelSymbol;
+    uint64_t _kernel;
 };
 
 
@@ -708,6 +724,18 @@ inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s)
 }
 
 inline std::ostream & operator<<(std::ostream& os, const dim3& s)
+{
+    os << '{';
+    os << s.x;
+    os << ',';
+    os << s.y;
+    os << ',';
+    os << s.z;
+    os << '}';
+    return os;
+}
+
+inline std::ostream & operator<<(std::ostream& os, const gl_dim3& s)
 {
     os << '{';
     os << s.x;

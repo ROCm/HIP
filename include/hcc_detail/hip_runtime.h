@@ -621,25 +621,19 @@ __device__ static inline void* memset(void* ptr, uint8_t val, size_t size)
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
 
 #ifdef __HCC_CPP__
-extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp);
+extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp, const char *kernelNameStr);
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm *lp);
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm *lp);
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm *lp);
-extern void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, const hipStream_t stream);
 extern void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp);
 
-// TODO - move to common header file.
-#define KNRM  "\x1B[0m"
-#define KGRN  "\x1B[32m"
 
+// Due to multiple overloaded versions of ihipPreLaunchKernel, the numBlocks3D and blockDim3D can be either size_t or dim3 types
 #define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...) \
 do {\
   grid_launch_parm lp;\
   lp.dynamic_group_mem_bytes = _groupMemBytes; \
-  hipStream_t trueStream = (ihipPreLaunchKernel(_stream, _numBlocks3D, _blockDim3D, &lp)); \
-  if (HIP_TRACE_API) {\
-      ihipPrintKernelLaunch(#_kernelName, &lp, _stream); \
-  }\
+  hipStream_t trueStream = (ihipPreLaunchKernel(_stream, _numBlocks3D, _blockDim3D, &lp, #_kernelName)); \
   _kernelName (lp, ##__VA_ARGS__);\
   ihipPostLaunchKernel(trueStream, lp);\
 } while(0)
