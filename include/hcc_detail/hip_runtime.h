@@ -531,7 +531,7 @@ __device__ void  __threadfence_block(void);
  *
  * @warning __threadfence is a stub and map to no-op, application should set "export HSA_DISABLE_CACHE=1" to disable both L1 and L2 caches.
  */
-__device__ void  __threadfence(void);
+__device__ void  __threadfence(void) __attribute__((deprecated("Provided for compile-time compatibility, not yet functional")));
 
 /**
  * @brief threadfence_system makes writes to pinned system memory visible on host CPU.
@@ -542,7 +542,7 @@ __device__ void  __threadfence(void);
  *
  * @warning __threadfence_system is a stub and map to no-op, application should set "export HSA_DISABLE_CACHE=1" to disable both L1 and L2 caches.
  */
-__device__ void  __threadfence_system(void);
+__device__ void  __threadfence_system(void) __attribute__((deprecated("Provided for compile-time compatibility, not yet functional")));
 
 
 // doxygen end Memory Fence
