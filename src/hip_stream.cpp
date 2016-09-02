@@ -66,7 +66,7 @@ hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
 }
 
 //---
-hipError_t hipStreamCreate(hipStream_t *stream) 
+hipError_t hipStreamCreate(hipStream_t *stream)
 {
     HIP_INIT_API(stream);
 
@@ -95,7 +95,6 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
 
 #if USE_AV_COPY
         if (stream != hipStreamNull) {
-            printf ("HIP: wait locked stream\n");
             stream->locked_waitEvent(event);
 
             fastWait = true; // don't use the slow host-side synchronization.
