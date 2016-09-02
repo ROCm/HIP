@@ -1275,6 +1275,15 @@ hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device);
 hipError_t hipDeviceGetPCIBusId (int *pciBusId,int len,hipDevice_t device);
 
 /**
+ * @brief Returns the total amount of memory on the device.
+ * @param [out] bytes
+ * @param [in] device
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device);
+
+/**
  * @brief Returns the approximate HIP driver version.
  *
  * @warning The HIP feature set does not correspond to an exact CUDA SDK driver revision.
