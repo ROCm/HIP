@@ -630,6 +630,21 @@ inline static hipError_t hipDeviceGet(hipDevice_t *device, int ordinal)
     return hipCUResultTohipError(cuDeviceGet(device, ordinal));
 }
 
+inline static hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device)
+{
+    return hipCUResultTohipError(cuDeviceComputeCapability(major,minor,device));
+}
+
+inline static hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
+{
+    return hipCUResultTohipError(cuDeviceGetName(name,len,device));
+}
+
+inline static hipError_t hipDeviceGetPCIBusId (int *pciBusId,int len,hipDevice_t device)
+{
+    return hipCUResultTohipError(cuDeviceGetPCIBusId((char*)pciBusId,len,device));
+}
+
 inline static hipError_t hipModuleLoad(hipModule_t *module, const char* fname)
 {
     return hipCUResultTohipError(cuModuleLoad(module, fname));
