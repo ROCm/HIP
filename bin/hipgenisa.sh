@@ -22,10 +22,15 @@ HIP_PATH="$( command cd -P "$( dirname "$SOURCE" )/.." && pwd )"
 export KMDUMPISA=1
 export KMDUMPLLVM=1
 mkdir /tmp/hipgenisa
-$HIP_PATH/bin/hipcc $FILE_NAMES -o /tmp/hipgenisa/a.out
+cp $FILE_NAMES $FILE_NAMES.kernel.tmp.cpp
+echo "
+int main(){}
+" >> $FILE_NAMES.kernel.tmp.cpp
+$HIP_PATH/bin/hipcc $FILE_NAMES.kernel.tmp.cpp -o /tmp/hipgenisa/a.out
 mv dump.* /tmp/hipgenisa/
 $ROCM_PATH/hcc-lc/bin/llvm-mc -arch=amdgcn -mcpu=$TARGET -filetype=obj /tmp/hipgenisa/dump.isa -o /tmp/hipgenisa/dump.o
 $ROCM_PATH/llvm/bin/clang -target amdgcn--amdhsa /tmp/hipgenisa/dump.o -o $OUTPUT_FILE
+rm $FILE_NAMES.kernel.tmp.cpp
 rm -r /tmp/hipgenisa
 export KMDUMPISA=0
 export KMDUMPLLVM=0
