@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 #ifdef __HIP_PLATFORM_HCC__ 
 #define fileName "vcpy_kernel.co"
-#define kernel_name "ZN12_GLOBAL__N_146_Z11hello_world16grid_launch_parmPfS0__functor19__cxxamp_trampolineEiiiiiiPKfPf"
+#define kernel_name "hello_world"
 #endif
 
 #ifdef __HIP_PLATFORM_NVCC__
