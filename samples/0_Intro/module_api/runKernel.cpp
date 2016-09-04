@@ -26,15 +26,8 @@ THE SOFTWARE.
 #define LEN 64
 #define SIZE LEN<<2
 
-#ifdef __HIP_PLATFORM_HCC__ 
-#define fileName "vcpy_kernel.co"
+#define fileName "vcpy_kernel.code"
 #define kernel_name "hello_world"
-#endif
-
-#ifdef __HIP_PLATFORM_NVCC__
-#define fileName "vcpy_kernel.ptx"
-#define kernel_name "hello_world"
-#endif
 
 int main(){
     float *A, *B;
