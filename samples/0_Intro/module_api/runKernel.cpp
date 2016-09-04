@@ -83,9 +83,12 @@ int main(){
 #endif
 
 #ifdef __HIP_PLATFORM_NVCC__
-    std::vector<void*>argBuffer(2);
-    memcpy(&argBuffer[0], &Ad, sizeof(void*));
-    memcpy(&argBuffer[1], &Bd, sizeof(void*));
+	uint32_t one = 1;
+    std::vector<void*>argBuffer(3);
+    uint32_t *ptr32_t = (uint32_t*)&argBuffer[0];
+    memcpy(ptr32_t + 0, &one, sizeof(uint32_t));
+    memcpy(&argBuffer[1], &Ad, sizeof(void*));
+    memcpy(&argBuffer[2], &Bd, sizeof(void*));
 #endif
 
 
