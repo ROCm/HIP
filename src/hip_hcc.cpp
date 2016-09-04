@@ -1404,19 +1404,20 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 
 void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, const hipStream_t stream)
 {
-    std::stringstream os;
-    os << API_COLOR << "<<hip-api: hipLaunchKernel '" << kernelName << "'"
-        << " gridDim:"  << lp->grid_dim
-        << " groupDim:" << lp->group_dim
-        << " sharedMem:+" << lp->dynamic_group_mem_bytes
-        << " " << *stream
-        << API_COLOR_END << std::endl;
+    if (HIP_ATP_MARKER || (COMPILE_HIP_DB && HIP_TRACE_API)) {
+        std::stringstream os;
+        os  << "<<hip-api: hipLaunchKernel '" << kernelName << "'"
+            << " gridDim:"  << lp->grid_dim
+            << " groupDim:" << lp->group_dim
+            << " sharedMem:+" << lp->dynamic_group_mem_bytes
+            << " " << *stream;
 
-    std::cerr << os.str();
 
-    //fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d %s\n" KNRM, \
-    //        kernelName, lp->grid_dim.x, lp->grid_dim.y, lp->grid_dim.z, lp->group_dim.x, lp->group_dim.y, lp->group_dim.z,
-    //        lp->dynamic_group_mem_bytes, streamString.c_str());
+        if (COMPILE_HIP_DB && HIP_TRACE_API) {
+            std::cerr << API_COLOR << os.str() << API_COLOR_END << std::endl;
+        }
+        SCOPED_MARKER(os.str().c_str(), "HIP", NULL);
+    }
 }
 
 // TODO - data-up to data-down:
@@ -1439,15 +1440,13 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
     lp->av = &(crit->_av);
     lp->cf = new hc::completion_future;
 
-    if (HIP_TRACE_API) {
-        ihipPrintKernelLaunch(kernelNameStr, lp, stream);
-    }
+    ihipPrintKernelLaunch(kernelNameStr, lp, stream);
 
     return (stream);
 }
 
 
-hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm *lp)
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm *lp, const char *kernelNameStr)
 {
     HIP_INIT();
     stream = ihipSyncAndResolveStream(stream);
@@ -1463,11 +1462,13 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, gri
     auto crit = stream->lockopen_preKernelCommand();
     lp->av = &(crit->_av);
     lp->cf = new hc::completion_future;
+
+    ihipPrintKernelLaunch(kernelNameStr, lp, stream);
     return (stream);
 }
 
 
-hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm *lp)
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm *lp, const char *kernelNameStr)
 {
     HIP_INIT();
     stream = ihipSyncAndResolveStream(stream);
@@ -1483,11 +1484,12 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, gri
     auto crit = stream->lockopen_preKernelCommand();
     lp->av = &(crit->_av);
     lp->cf = new hc::completion_future;
+    ihipPrintKernelLaunch(kernelNameStr, lp, stream);
     return (stream);
 }
 
 
-hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm *lp)
+hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm *lp, const char *kernelNameStr)
 {
     HIP_INIT();
     stream = ihipSyncAndResolveStream(stream);
@@ -1503,6 +1505,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, g
     auto crit = stream->lockopen_preKernelCommand();
     lp->av = &(crit->_av);
     lp->cf = new hc::completion_future; // TODO, is this necessary?
+    ihipPrintKernelLaunch(kernelNameStr, lp, stream);
     return (stream);
 }
 

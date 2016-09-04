@@ -515,6 +515,7 @@ private: // Data
 
     // Friends:
     friend std::ostream& operator<<(std::ostream& os, const ihipStream_t& s);
+    friend hipError_t hipStreamQuery(hipStream_t);
 };
 
 
