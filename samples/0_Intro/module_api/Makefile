@@ -21,8 +21,8 @@ endif
 
 ifeq (${HIP_PLATFORM}, nvcc)
 
-vcpy_kernel.compile: vcpy_kernel.cpp
-	$(HIPCC) --genco vcpy_kernel.cpp -o vcpy_kernel.ptx
+vcpy_kernel.compile: vcpy_kernel.cu
+	$(HIPCC) --genco vcpy_kernel.cu -o vcpy_kernel.ptx
 
 clean:
 	rm -f *.ptx *.out
