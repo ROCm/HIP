@@ -27,11 +27,6 @@ THE SOFTWARE.
 using namespace hc::precise_math;
 #endif
 
-#if __hcc_workweek__ > 16186
-#define USE_DYNAMIC_SHARED 1
-#else
-#define USE_DYNAMIC_SHARED 0
-#endif
 
 #define HIP_SQRT_2 1.41421356237
 #define HIP_SQRT_PI 1.77245385091
@@ -774,11 +769,6 @@ __device__ float __hip_ynf(int n, float x)
 }
 
 
-#if __hcc_workweek__ > 16186
-#define USE_DYNAMIC_SHARED 1
-#else
-#define USE_DYNAMIC_SHARED 0
-#endif
 
 __device__ float acosf(float x)
 {
@@ -1854,12 +1844,10 @@ __host__ __device__ int max(int arg1, int arg2)
   return (int)(hc::precise_math::fmax((float)arg1, (float)arg2));
 }
 
-#if USE_DYNAMIC_SHARED
 __device__ __attribute__((address_space(3))) void* __get_dynamicgroupbaseptr()
 {
   return hc::get_dynamic_group_segment_base_pointer();
 }
-#endif
 
 
 

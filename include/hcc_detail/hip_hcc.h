@@ -32,7 +32,7 @@ THE SOFTWARE.
 // #define USE_MEMCPYTOSYMBOL
 //
 //Use the new HCC accelerator_view::copy instead of am_copy
-#define USE_AV_COPY 0
+#define USE_AV_COPY (__hcc_workweek__ >= 16351)
 
 // Compile peer-to-peer support.
 // >= 2 : use HCC hc:accelerator::get_is_peer
@@ -353,18 +353,36 @@ struct LockedBase {
 };
 
 
+class ihipModule_t{
+public:
+  hsa_executable_t executable;
+  hsa_code_object_t object;
+  std::string fileName;
+  void *ptr;
+  size_t size;
+};
+
+
+class ihipFunction_t{
+public:
+  hsa_executable_symbol_t kernel_symbol;
+  uint64_t kernel;
+};
+
+
 template <typename MUTEX_TYPE>
 class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE>
 {
 public:
-    ihipStreamCriticalBase_t() :
+    ihipStreamCriticalBase_t(hc::accelerator_view av) :
         _last_command_type(ihipCommandCopyH2H),
         _last_copy_signal(NULL),
         _signalCursor(0),
         _oldest_live_sig_id(1),
         _streamSigId(0),
         _kernelCnt(0),
-        _signalCnt(0)
+        _signalCnt(0),
+        _av(av)
     {
         _signalPool.resize(HIP_STREAM_SIGNALS > 0 ? HIP_STREAM_SIGNALS : 1);
     };
@@ -395,27 +413,14 @@ public:
                                                //   2 are required if a barrier packet is inserted.
     uint32_t                    _kernelCnt;    // Count of inflight kernels in this stream.  Reset at ::wait().
     SIGSEQNUM                   _streamSigId;      // Monotonically increasing unique signal id.
+
+    hc::accelerator_view        _av;
 };
 
 
 typedef ihipStreamCriticalBase_t<StreamMutex> ihipStreamCritical_t;
 typedef LockedAccessor<ihipStreamCritical_t> LockedAccessor_StreamCrit_t;
 
-class ihipModule_t{
-public:
-  hsa_executable_t executable;
-  hsa_code_object_t object;
-  std::string fileName;
-  void *ptr;
-  size_t size;
-};
-
-
-class ihipFunction_t{
-public:
-  hsa_executable_symbol_t kernel_symbol;
-  uint64_t kernel;
-};
 
 // Internal stream structure.
 class ihipStream_t {
@@ -431,21 +436,31 @@ typedef uint64_t SeqNum_t ;
 
     void copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind);
 
+    int                  preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *lastCopy, hsa_signal_t *waitSignal, ihipCommand_t copyType);
+
     //---
-    // Thread-safe accessors - these acquire / release mutex:
-    bool                 lockopen_preKernelCommand();
+    // Member functions that begin with locked_ are thread-safe accessors - these acquire / release the critical mutex.
+    LockedAccessor_StreamCrit_t  lockopen_preKernelCommand();
     void                 lockclose_postKernelCommand(hc::completion_future &kernel_future);
 
-    int                  preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *lastCopy, hsa_signal_t *waitSignal, ihipCommand_t copyType);
 
     void                 locked_reclaimSignals(SIGSEQNUM sigNum);
     void                 locked_wait(bool assertQueueEmpty=false);
-    SIGSEQNUM            locked_lastCopySeqId() {LockedAccessor_StreamCrit_t crit(_criticalData); return lastCopySeqId(crit); };
+
+    hc::accelerator_view* locked_getAv() { LockedAccessor_StreamCrit_t crit(_criticalData); return &(crit->_av); };
+
+    void                 locked_waitEvent(hipEvent_t event);
+    void                 locked_recordEvent(hipEvent_t event);
+
+    //---
 
     // Use this if we already have the stream critical data mutex:
     void                 wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty=false);
 
-    void launchModuleKernel(hsa_signal_t signal, uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ, uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ, uint32_t sharedMemBytes, void *kernarg, size_t kernSize, uint64_t kernel);
+    void launchModuleKernel(hc::accelerator_view av, hsa_signal_t signal,
+                            uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
+                            uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
+                            uint32_t sharedMemBytes, void *kernarg, size_t kernSize, uint64_t kernel);
 
     // Non-threadsafe accessors - must be protected by high-level stream lock with accessor passed to function.
     SIGSEQNUM            lastCopySeqId (LockedAccessor_StreamCrit_t &crit) const { return crit->_last_copy_signal ? crit->_last_copy_signal->_sigId : 0; };
@@ -462,7 +477,6 @@ public:
     //---
     //Public member vars - these are set at initialization and never change:
     SeqNum_t                    _id;   // monotonic sequence ID
-    hc::accelerator_view        _av;
     unsigned                    _flags;
 
 
@@ -672,7 +686,7 @@ extern const char *ihipErrorString(hipError_t);
 extern ihipCtx_t    *ihipGetTlsDefaultCtx();
 extern void          ihipSetTlsDefaultCtx(ihipCtx_t *ctx);
 extern hipError_t    ihipSynchronize(void);
-extern hipError_t    ihipCtxStackUpdate();
+extern void          ihipCtxStackUpdate();
 
 extern ihipDevice_t *ihipGetDevice(int);
 ihipCtx_t * ihipGetPrimaryCtx(unsigned deviceIndex);
@@ -701,6 +715,13 @@ inline std::ostream & operator<<(std::ostream& os, const dim3& s)
     os << ',';
     os << s.z;
     os << '}';
+    return os;
+}
+
+// Stream printf functions:
+inline std::ostream& operator<<(std::ostream& os, const hipEvent_t& e)
+{
+    os << "event:" << std::hex << static_cast<void*> (e);
     return os;
 }
 

@@ -104,7 +104,7 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
     *module = new ihipModule_t;
 
     if(module == NULL){
-        return hipErrorInvalidValue;
+        return ihipLogStatus(hipErrorInvalidValue);
     }
 
     auto ctx = ihipGetTlsDefaultCtx();
@@ -117,7 +117,7 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
         std::ifstream in(fname, std::ios::binary | std::ios::ate);
 
         if(!in){
-            return hipErrorFileNotFound;
+            return ihipLogStatus(hipErrorFileNotFound);
 
         }else{
 
@@ -130,12 +130,12 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
             status = hsa_memory_allocate(sysRegion, size, (void**)&p);
 
             if(status != HSA_STATUS_SUCCESS){
-                return hipErrorOutOfMemory;
+                return ihipLogStatus(hipErrorOutOfMemory);
             }
 
             char *ptr = (char*)p;
             if(!ptr){
-                return hipErrorOutOfMemory;
+                return ihipLogStatus(hipErrorOutOfMemory);
             }
             (*module)->ptr = p;
             (*module)->size = size;
@@ -146,27 +146,33 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
             status = hsa_code_object_deserialize(ptr, size, NULL, &(*module)->object);
 
             if(status != HSA_STATUS_SUCCESS){
-                return hipErrorSharedObjectInitFailed;
+                return ihipLogStatus(hipErrorSharedObjectInitFailed);
             }
 
             status = hsa_executable_create(HSA_PROFILE_FULL, HSA_EXECUTABLE_STATE_UNFROZEN, NULL, &(*module)->executable);
             if(status != HSA_STATUS_SUCCESS){
-                return hipErrorNotInitialized;
+                return ihipLogStatus(hipErrorNotInitialized);
             }
         }
     }
 
-    return ret;
+    return ihipLogStatus(ret);
 }
 
 hipError_t hipModuleUnload(hipModule_t hmod){
     hipError_t ret = hipSuccess;
     hsa_status_t status = hsa_executable_destroy(hmod->executable);
-    if(status != HSA_STATUS_SUCCESS){ret = hipErrorInvalidValue; }
+    if(status != HSA_STATUS_SUCCESS)
+		{
+				ret = hipErrorInvalidValue;
+		}
     status = hsa_code_object_destroy(hmod->object);
-    if(status != HSA_STATUS_SUCCESS){ret = hipErrorInvalidValue; }
+    if(status != HSA_STATUS_SUCCESS)
+		{
+				ret = hipErrorInvalidValue;
+		}
     delete hmod;
-    return ret;
+    return ihipLogStatus(ret);
 }
 
 hipError_t ihipModuleGetFunction(hipFunction_t *func, hipModule_t hmod, const char *name){
@@ -174,7 +180,7 @@ hipError_t ihipModuleGetFunction(hipFunction_t *func, hipModule_t hmod, const ch
     hipError_t ret = hipSuccess;
 
     if(name == nullptr){
-        return hipErrorInvalidValue;
+        return ihipLogStatus(hipErrorInvalidValue);
     }
 
     if(ctx == nullptr){
@@ -189,13 +195,13 @@ hipError_t ihipModuleGetFunction(hipFunction_t *func, hipModule_t hmod, const ch
         hsa_status_t status;
         status = hsa_executable_load_code_object(hmod->executable, gpuAgent, hmod->object, NULL);
         if(status != HSA_STATUS_SUCCESS){
-            return hipErrorNotInitialized;
+            return ihipLogStatus(hipErrorNotInitialized);
         }
 
         status = hsa_executable_freeze(hmod->executable, NULL);
         status = hsa_executable_get_symbol(hmod->executable, NULL, name, gpuAgent, 0, &(*func)->kernel_symbol);
         if(status != HSA_STATUS_SUCCESS){
-            return hipErrorNotFound;
+            return ihipLogStatus(hipErrorNotFound);
         }
 
         status = hsa_executable_symbol_get_info((*func)->kernel_symbol,
@@ -203,10 +209,10 @@ hipError_t ihipModuleGetFunction(hipFunction_t *func, hipModule_t hmod, const ch
                                    &(*func)->kernel);
 
         if(status != HSA_STATUS_SUCCESS){
-            return hipErrorNotFound;
+            return ihipLogStatus(hipErrorNotFound);
         }
     }
-    return ret;
+    return ihipLogStatus(ret);
 }
 
 hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod,
@@ -214,6 +220,7 @@ hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod,
     HIP_INIT_API(name);
     return ihipModuleGetFunction(hfunc, hmod, name);
 }
+
 
 hipError_t hipModuleLaunchKernel(hipFunction_t f,
             uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
@@ -240,10 +247,10 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
             if(config[0] == HIP_LAUNCH_PARAM_BUFFER_POINTER && config[2] == HIP_LAUNCH_PARAM_BUFFER_SIZE && config[4] == HIP_LAUNCH_PARAM_END){
                 kernSize = *(size_t*)(config[3]);
             }else{
-                return hipErrorNotInitialized;
+                return ihipLogStatus(hipErrorNotInitialized);
             }
         }else{
-            return hipErrorInvalidValue;
+            return ihipLogStatus(hipErrorInvalidValue);
         }
 /*
 Kernel argument preparation.
@@ -262,7 +269,7 @@ Kernel argument preparation.
 /*
   Launch AQL packet
 */
-        hStream->launchModuleKernel(signal, blockDimX, blockDimY, blockDimZ,
+        hStream->launchModuleKernel(*lp.av, signal, blockDimX, blockDimY, blockDimZ,
                   gridDimX, gridDimY, gridDimZ, sharedMemBytes, config[1], kernSize, f->kernel);
 
 /*
@@ -273,10 +280,10 @@ Kernel argument preparation.
 
 
         ihipPostLaunchKernel(hStream, lp);
-                
+
     }
 
-    return ret;
+    return ihipLogStatus(ret);
 }
 
 
@@ -285,17 +292,17 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes,
     HIP_INIT_API(name);
     hipError_t ret = hipSuccess;
     if(dptr == NULL || bytes == NULL){
-        return hipErrorInvalidValue;
+        return ihipLogStatus(hipErrorInvalidValue);
     }
     if(name == NULL || hmod == NULL){
-        return hipErrorNotInitialized;
+        return ihipLogStatus(hipErrorNotInitialized);
     }
     else{
         hipFunction_t func;
         ihipModuleGetFunction(&func, hmod, name);
         *bytes = PrintSymbolSizes(hmod->ptr, name) + sizeof(amd_kernel_code_t);
         *dptr = reinterpret_cast<void*>(func->kernel);
-        return ret;
+        return ihipLogStatus(ret);
     }
 }
 
@@ -303,7 +310,7 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image){
     HIP_INIT_API(image);
     hipError_t ret = hipSuccess;
     if(image == NULL || module == NULL){
-        return hipErrorNotInitialized;
+        return ihipLogStatus(hipErrorNotInitialized);
     }else{
         auto ctx = ihipGetTlsDefaultCtx();
         *module = new ihipModule_t;
@@ -318,12 +325,12 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image){
         status = hsa_memory_allocate(sysRegion, size, (void**)&p);
 
         if(status != HSA_STATUS_SUCCESS){
-            return hipErrorOutOfMemory;
+            return ihipLogStatus(hipErrorOutOfMemory);
         }
 
         char *ptr = (char*)p;
         if(!ptr){
-           return hipErrorOutOfMemory;
+           return ihipLogStatus(hipErrorOutOfMemory);
         }
         (*module)->ptr = p;
         (*module)->size = size;
@@ -333,15 +340,15 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image){
         status = hsa_code_object_deserialize(ptr, size, NULL, &(*module)->object);
 
         if(status != HSA_STATUS_SUCCESS){
-            return hipErrorSharedObjectInitFailed;
+            return ihipLogStatus(hipErrorSharedObjectInitFailed);
         }
 
         status = hsa_executable_create(HSA_PROFILE_FULL, HSA_EXECUTABLE_STATE_UNFROZEN, NULL, &(*module)->executable);
         if(status != HSA_STATUS_SUCCESS){
-            return hipErrorNotInitialized;
+            return ihipLogStatus(hipErrorNotInitialized);
         }
     }
-    return ret;
+    return ihipLogStatus(ret);
 }
 
 

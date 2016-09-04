@@ -94,7 +94,7 @@ Differences or limitations of HIP APIs as compared to CUDA APIs should be clearl
 - Code Indentation:
     - Tabs should be expanded to spaces.
     - Use 4 spaces indendation.
-- Capitaliziation and Naming
+- Capitalization and Naming
     - Prefer camelCase for HIP interfaces and internal symbols.  Note HCC uses _ for separator.  
       This guideline is not yet consistently followed in HIP code - eventual compliance is aspirational.
     - Member variables should begin with a leading "_".  This allows them to be easily distinguished from other variables or functions.
@@ -110,6 +110,7 @@ Differences or limitations of HIP APIs as compared to CUDA APIs should be clearl
         doFooElse();
     }
 '''
+    - namespace should be on same line as { and separated by a space.
     - Single-line if statement should still use {/} pair (even though C++ does not require).
 - Miscellaneous
     - All references in function parameter lists should be const.  
@@ -120,6 +121,8 @@ Differences or limitations of HIP APIs as compared to CUDA APIs should be clearl
 - HIP_INIT_API() should be placed at the start of each top-level HIP API.  This function will make sure the HIP runtime is initialized,
   and also constructs an appropriate API string for tracing and CodeXL marker tracing.  The arguments to HIP_INIT_API should match
   those of the parent fucntion.  
+- ihipLogStatus should only be called from top-level HIP APIs,and should be called to log and return the error code.  The error code 
+  is used by the GetLastError and PeekLastError functions - if a HIP API simply returns, then the error will not be logged correctly.
 
 
 #### Presubmit Testing:

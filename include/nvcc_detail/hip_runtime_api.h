@@ -484,6 +484,17 @@ inline static hipError_t hipStreamDestroy(hipStream_t stream)
 }
 
 
+inline static hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags)
+{
+    return hipCUDAErrorTohipError(cudaStreamWaitEvent(stream, event, flags));
+}
+
+inline static hipError_t hipStreamQuery(hipStream_t stream)
+{
+    return hipCUDAErrorTohipError(cudaStreamQuery(stream));
+}
+
+
 inline static hipError_t hipDriverGetVersion(int *driverVersion)
 {
 	cudaError_t err = cudaDriverGetVersion(driverVersion);
@@ -622,6 +633,26 @@ inline static hipError_t hipCtxDetach(hipCtx_t ctx)
 inline static hipError_t hipDeviceGet(hipDevice_t *device, int ordinal)
 {
     return hipCUResultTohipError(cuDeviceGet(device, ordinal));
+}
+
+inline static hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device)
+{
+    return hipCUResultTohipError(cuDeviceComputeCapability(major,minor,device));
+}
+
+inline static hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
+{
+    return hipCUResultTohipError(cuDeviceGetName(name,len,device));
+}
+
+inline static hipError_t hipDeviceGetPCIBusId (int *pciBusId,int len,hipDevice_t device)
+{
+    return hipCUResultTohipError(cuDeviceGetPCIBusId((char*)pciBusId,len,device));
+}
+
+inline static hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device)
+{
+    return hipCUResultTohipError(cuDeviceTotalMem(bytes,device));
 }
 
 inline static hipError_t hipModuleLoad(hipModule_t *module, const char* fname)

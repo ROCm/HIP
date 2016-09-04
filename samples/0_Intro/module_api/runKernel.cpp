@@ -27,12 +27,12 @@ THE SOFTWARE.
 #define SIZE LEN<<2
 
 #ifdef __HIP_PLATFORM_HCC__ 
-#define fileName "vcpy_isa.co"
-#define kernel_name "ZN12_GLOBAL__N_146_Z11hello_world16grid_launch_parmPfS0__functor19__cxxamp_trampolineEiiiiiiPKfPf"
+#define fileName "vcpy_kernel.co"
+#define kernel_name "hello_world"
 #endif
 
 #ifdef __HIP_PLATFORM_NVCC__
-#define fileName "vcpy_isa.ptx"
+#define fileName "vcpy_kernel.ptx"
 #define kernel_name "hello_world"
 #endif
 
@@ -66,8 +66,9 @@ int main(){
     hipModuleLoad(&Module, fileName);
     hipModuleGetFunction(&Function, Module, kernel_name);
 
-  uint32_t len = LEN;
-  uint32_t one = 1;
+#ifdef __HIP_PLATFORM_HCC__
+		uint32_t len = LEN;
+		uint32_t one = 1;
 
     std::vector<void*>argBuffer(5);
     uint32_t *ptr32_t = (uint32_t*)&argBuffer[0];
@@ -79,7 +80,16 @@ int main(){
     memcpy(ptr32_t + 5, &one, sizeof(uint32_t));
     memcpy(&argBuffer[3], &Ad, sizeof(void*));
     memcpy(&argBuffer[4], &Bd, sizeof(void*));
+#endif
 
+#ifdef __HIP_PLATFORM_NVCC__
+	uint32_t one = 1;
+    std::vector<void*>argBuffer(3);
+    uint32_t *ptr32_t = (uint32_t*)&argBuffer[0];
+    memcpy(ptr32_t + 0, &one, sizeof(uint32_t));
+    memcpy(&argBuffer[1], &Ad, sizeof(void*));
+    memcpy(&argBuffer[2], &Bd, sizeof(void*));
+#endif
 
 
     size_t size = argBuffer.size()*sizeof(void*);

@@ -50,9 +50,8 @@ THE SOFTWARE.
 
 #if defined (GRID_LAUNCH_VERSION) and (GRID_LAUNCH_VERSION >= 20)
 // Use field names for grid_launch 2.0 structure, if HCC supports GL 2.0.
-#define USE_GRID_LAUNCH_20 1
 #else
-#define USE_GRID_LAUNCH_20 0
+#error (HCC must support GRID_LAUNCH_20)
 #endif
 
 #define HIP_LAUNCH_PARAM_BUFFER_POINTER ((void*) 0x01)
@@ -532,7 +531,7 @@ __device__ void  __threadfence_block(void);
  *
  * @warning __threadfence is a stub and map to no-op, application should set "export HSA_DISABLE_CACHE=1" to disable both L1 and L2 caches.
  */
-__device__ void  __threadfence(void);
+__device__ void  __threadfence(void) __attribute__((deprecated("Provided for compile-time compatibility, not yet functional")));
 
 /**
  * @brief threadfence_system makes writes to pinned system memory visible on host CPU.
@@ -543,7 +542,7 @@ __device__ void  __threadfence(void);
  *
  * @warning __threadfence_system is a stub and map to no-op, application should set "export HSA_DISABLE_CACHE=1" to disable both L1 and L2 caches.
  */
-__device__ void  __threadfence_system(void);
+__device__ void  __threadfence_system(void) __attribute__((deprecated("Provided for compile-time compatibility, not yet functional")));
 
 
 // doxygen end Memory Fence
@@ -633,7 +632,6 @@ extern void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp);
 #define KNRM  "\x1B[0m"
 #define KGRN  "\x1B[32m"
 
-#if USE_GRID_LAUNCH_20
 #define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...) \
 do {\
   grid_launch_parm lp;\
@@ -645,21 +643,6 @@ do {\
   _kernelName (lp, ##__VA_ARGS__);\
   ihipPostLaunchKernel(trueStream, lp);\
 } while(0)
-#else
-#define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...) \
-do {\
-  grid_launch_parm lp;\
-  lp.groupMemBytes = _groupMemBytes; \
-  hipStream_t trueStream = (ihipPreLaunchKernel(_stream, _numBlocks3D, _blockDim3D, &lp)); \
-    if (HIP_TRACE_API) {\
-        fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d stream=%p\n" KNRM, \
-                #_kernelName, lp.gridDim.x, lp.gridDim.y, lp.gridDim.z, lp.groupDim.x, lp.groupDim.y, lp.groupDim.z, lp.groupMemBytes, (void*)(_stream));\
-    }\
-  _kernelName (lp, ##__VA_ARGS__);\
-  ihipPostLaunchKernel(trueStream, lp);\
-} while(0)
-
-#endif
 
 
 #elif defined (__HCC_C__)

@@ -168,6 +168,8 @@ my $hasCU = 0;         # options contain a cu-style file (HCC must force recogni
 my $needHipHcc = ($HIP_PLATFORM eq 'hcc');      # set if we need to link hip_hcc.o from src tree. (some builds, ie cmake, provide their own)
 my $printHipVersion = 0;    # print HIP version
 my $runCmd = 1;
+my $buildDeps = 0;
+
 
 my @options = ();
 my @inputs  = ();
@@ -181,7 +183,7 @@ my $ISACMD="";
 if($HIP_PLATFORM eq "hcc"){
   $ISACMD .= "$HIP_PATH/bin/hipgenisa.sh ";
   $ISACMD .= $ROCM_PATH;
-  if($ARGV[0] eq "--gencodeobject"){
+  if($ARGV[0] eq "--genco"){
     foreach $isaarg (@ARGV[1..$#ARGV]){
       $ISACMD .= " ";
       $ISACMD .= $isaarg;
@@ -196,7 +198,7 @@ if($HIP_PLATFORM eq "hcc"){
 
 if($HIP_PLATFORM eq "nvcc"){
   $ISACMD .= "$HIP_PATH/bin/hipcc -ptx ";
-  if($ARGV[0] eq "--gencodeobject"){
+  if($ARGV[0] eq "--genco"){
     foreach $isaarg (@ARGV[1..$#ARGV]){
       $ISACMD .= " ";
       $ISACMD .= $isaarg;
@@ -240,6 +242,10 @@ foreach $arg (@ARGV)
         $printHipVersion = 1;
         $runCmd = 0;
     }
+    if($arg eq '-M') {
+        $compileOnly = 1;
+        $buildDeps = 1;
+    }
 
     if ($arg =~ m/^-/) {
         # options start with -
@@ -277,6 +283,9 @@ if ($hasC and $HIP_PLATFORM eq 'nvcc') {
 }
 if ($hasCU and $HIP_PLATFORM eq 'hcc') {
     $HIPCXXFLAGS .= " -x c++";
+}
+if ($buildDeps and $HIP_PLATFORM eq 'nvcc') {
+    $HIPCXXFLAGS .= " -M -D__CUDACC__";
 }
 
 if ($setStdLib eq 0 and $HIP_PLATFORM eq 'hcc')

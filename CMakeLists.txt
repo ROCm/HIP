@@ -217,13 +217,14 @@ endif()
 # Install .version
 install(FILES ${PROJECT_BINARY_DIR}/.version DESTINATION bin)
 
-# Install src, bin, include if necessary
+# Install src, bin, include & cmake if necessary
 execute_process(COMMAND test ${CMAKE_INSTALL_PREFIX} -ef ${CMAKE_CURRENT_SOURCE_DIR}
                 RESULT_VARIABLE INSTALL_SOURCE)
 if(NOT ${INSTALL_SOURCE} EQUAL 0)
     install(DIRECTORY src DESTINATION .)
     install(DIRECTORY bin DESTINATION . USE_SOURCE_PERMISSIONS)
     install(DIRECTORY include DESTINATION .)
+    install(DIRECTORY cmake DESTINATION .)
 endif()
 
 #############################
