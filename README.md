@@ -11,6 +11,20 @@ Key features include:
 
 New projects can be developed directly in the portable HIP C++ language and can run on either NVIDIA or AMD platforms.  Additionally, HIP provides porting tools which make it easy to port existing CUDA codes to the HIP layer, with no loss of performance as compared to the original CUDA application.  HIP is not intended to be a drop-in replacement for CUDA, and developers should expect to do some manual coding and performance tuning work to complete the port.
 
+## Repository branches:
+
+The HIP repository maintains several branches. The branches that are of importance are:
+
+* master branch: This is the stable branch. All stable releases are based on this branch.
+* developer-preview branch: This is the branch were the new features still under development are visible. While this maybe of interest to many, it should be noted that this branch and the features under development might not be stable.
+
+## Release tagging:
+
+HIP releases are typically of two types. The tag naming convention is different for both types of releases to help differentiate them.
+
+* release_x.yy.zzzz: These are the stable releases based on the master branch. This type of release is typically made once a month.
+* preview_x.yy.zzzz: These denote pre-release code and are based on the developer-preview branch. This type of release is typically made once a week.
+
 ## More Info:
 - [Installation](INSTALL.md) 
 - [HIP FAQ](docs/markdown/hip_faq.md)
