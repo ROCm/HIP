@@ -475,6 +475,20 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
 
 
 /**
+ * @brief Return #hipSuccess if all of the operations in the specified @p stream have completed, or #hipErrorNotReady if not.
+ *
+ * @param[in] stream stream to query
+ *
+ * @return #hipSuccess, #hipErrorNotReady
+ *
+ * This is thread-safe and returns a snapshot of the current state of the queue.  However, if other host threads are sending work to the stream,
+ * the status may change immediately after the function is called.  It is typically used for debug.
+ */
+hipError_t hipStreamQuery(hipStream_t stream);
+
+
+
+/**
  * @brief Wait for all commands in stream to complete.
  *
  * If the null stream is specified, this command blocks until all
@@ -726,7 +740,7 @@ hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) __attribute
 hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, unsigned int flags) ;
 
 /**
- *  @brief Return flags associated with host pointer 
+ *  @brief Return flags associated with host pointer
  *
  *  @param[out]  flagsPtr Memory location to store flags
  *  @param[in] hostPtr Host Pointer allocated through hipHostMalloc
@@ -1299,10 +1313,10 @@ hipError_t hipDriverGetVersion(int *driverVersion) ;
  *
  * @param [in] fname
  * @param [out] module
- * 
+ *
  * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidContext, hipErrorFileNotFound, hipErrorOutOfMemory, hipErrorSharedObjectInitFailed, hipErrorNotInitialized
  *
- * 
+ *
  */
 hipError_t hipModuleLoad(hipModule_t *module, const char *fname);
 
@@ -1313,7 +1327,7 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname);
  *
  * @returns hipSuccess, hipInvalidValue
  * module is freed and the code objects associated with it are destroyed
- * 
+ *
  */
 
 hipError_t hipModuleUnload(hipModule_t module);
@@ -1325,7 +1339,7 @@ hipError_t hipModuleUnload(hipModule_t module);
  * @param [in] kname
  * @param [out] function
  *
- * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidContext, hipErrorNotInitialized, hipErrorNotFound, 
+ * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidContext, hipErrorNotInitialized, hipErrorNotFound,
  */
 hipError_t hipModuleGetFunction(hipFunction_t *function, hipModule_t module, const char *kname);
 
