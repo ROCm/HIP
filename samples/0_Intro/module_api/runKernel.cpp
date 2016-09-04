@@ -26,15 +26,8 @@ THE SOFTWARE.
 #define LEN 64
 #define SIZE LEN<<2
 
-#ifdef __HIP_PLATFORM_HCC__ 
-#define fileName "vcpy_kernel.co"
+#define fileName "vcpy_kernel.code"
 #define kernel_name "hello_world"
-#endif
-
-#ifdef __HIP_PLATFORM_NVCC__
-#define fileName "vcpy_kernel.ptx"
-#define kernel_name "hello_world"
-#endif
 
 int main(){
     float *A, *B;
@@ -47,14 +40,11 @@ int main(){
         B[i] = 0.0f;
     }
 
-
-#ifdef __HIP_PLATFORM_NVCC__
   	hipInit(0);
-	  hipDevice_t device;
-	  hipCtx_t context;
-	  hipDeviceGet(&device, 0);
-	  hipCtxCreate(&context, 0, device);
-#endif
+	hipDevice_t device;
+	hipCtx_t context;
+	hipDeviceGet(&device, 0);
+    hipCtxCreate(&context, 0, device);
 
     hipMalloc((void**)&Ad, SIZE);
     hipMalloc((void**)&Bd, SIZE);
@@ -107,9 +97,6 @@ int main(){
         std::cout<<A[i]<<" - "<<B[i]<<std::endl;
     }
 
-#ifdef __HIP_PLATFORM_NVCC__
-	  hipCtxDetach(context);
-#endif 
-
+    hipCtxDestroy(context);
     return 0;
 }
