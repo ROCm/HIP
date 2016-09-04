@@ -1,8 +1,9 @@
 HCC_HOME?=/opt/rocm/hcc
 HCC = $(HCC_HOME)/bin/hcc
 
-HCC_CFLAGS= `$(HCC_HOME)/bin/hcc-config --cxxflags` 
-HCC_LDFLAGS= `$(HCC_HOME)/bin/hcc-config --ldflags`
+OPT=-O2
+HCC_CFLAGS= `$(HCC_HOME)/bin/hcc-config --cxxflags` ${OPT}
+HCC_LDFLAGS= `$(HCC_HOME)/bin/hcc-config --ldflags` ${OPT}
 
 CPPAMP_CFLAGS= -std=c++amp -stdlib=libc++ -I$(HCC_HOME)/include
 CPPAMP_LDFLAGS=  -std=c++amp -L$(HCC_HOME)/lib -Wl,--rpath=$(HCC_HOME)/lib -lc++ -lc++abi -ldl -lpthread -Wl,--whole-archive -lmcwamp -Wl,--no-whole-archive 
@@ -19,7 +20,7 @@ $(error hcc_dialects requires hcc compiler and only runs on hcc platform)
 endif
 
 
-TARGETS=vadd_hc_arrayview vadd_hc_array vadd_amp_arrayview  vadd_hip  
+TARGETS=vadd_hc_arrayview vadd_hc_array vadd_hc_am vadd_amp_arrayview  vadd_hip  
 
 all: $(TARGETS)
 
@@ -51,7 +52,7 @@ vadd_hc_array: vadd_hc_array.o
 vadd_hc_am.o: vadd_hc_am.cpp
 	$(HCC) $(HCC_CFLAGS) -c $< -o $@
 vadd_hc_am: vadd_hc_am.o
-	$(HCC) $(HCC_LDFLAGS) $< -o $@
+	$(HCC) $(HCC_LDFLAGS) -lhc_am $< -o $@
 
 
 

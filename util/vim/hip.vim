@@ -65,6 +65,7 @@ syn keyword hipFunctionName expf __expf exp logf __logf log
 syn keyword hipType hipDeviceProp_t 
 syn keyword hipType hipError_t 
 syn keyword hipType hipStream_t
+syn keyword hipType hipEvent_t
 
 " Runtime functions
 syn keyword hipFunctionName hipBindTexture hipBindTextureToArray 

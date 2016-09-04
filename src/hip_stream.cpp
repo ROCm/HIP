@@ -66,7 +66,7 @@ hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
 }
 
 //---
-hipError_t hipStreamCreate(hipStream_t *stream) 
+hipError_t hipStreamCreate(hipStream_t *stream)
 {
     HIP_INIT_API(stream);
 
@@ -74,23 +74,42 @@ hipError_t hipStreamCreate(hipStream_t *stream)
 }
 
 
+#if USE_AV_COPY==0
 //---
 /**
  * @bug This function conservatively waits for all work in the specified stream to complete.
  */
+#endif
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags)
 {
     HIP_INIT_API(stream, event, flags);
 
     hipError_t e = hipSuccess;
 
-    {
-        // TODO-hcc Convert to use create_blocking_marker(...) functionality.
-        // Currently we have a super-conservative version of this - block on host, and drain the queue.
-        // This should create a barrier packet in the target queue.
-        stream->locked_wait();
-        e = hipSuccess;
-    }
+    if (event == nullptr) {
+        e = hipErrorInvalidResourceHandle;
+
+    } else if (event->_state != hipEventStatusUnitialized) {
+
+        bool fastWait = false;
+
+#if USE_AV_COPY
+        if (stream != hipStreamNull) {
+            stream->locked_waitEvent(event);
+
+            fastWait = true; // don't use the slow host-side synchronization.
+        }
+        // TODO - clean up if/else logic when USE_AV_COPY enabled.
+#endif
+
+        if (!fastWait) {
+            // TODO-hcc Convert to use create_blocking_marker(...) functionality.
+            // Currently we have a super-conservative version of this - block on host, and drain the queue.
+            // This should create a barrier packet in the target queue.
+            stream->locked_wait();
+            e = hipSuccess;
+        }
+    } // else event not recorded, return immediately and don't create marker.
 
     return ihipLogStatus(e);
 };

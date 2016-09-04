@@ -12,7 +12,7 @@ There are two possible ways to transfer data from Host to Device (H2D) and Devic
 
 #### On Large BAR Setup
 
-There are two possible ways to transfer data from Host to Device (H2D)
+There are three possible ways to transfer data from Host to Device (H2D)
  * Using Staging Buffers
  * Using PinInPlace
  * Direct Memcpy
@@ -24,12 +24,9 @@ There are two possible ways to transfer data from Host to Device (H2D)
 Some GPUs may not be able to directly access host memory, and in these cases we need to
 stage the copy through an optimized pinned staging buffer, to implement H2D and D2H copies.The copy is broken into buffer-sized chunks to limit the size of the buffer and also to provide better performance by overlapping the CPU copies with the DMA copies.
 
-PinInPlace is another algorithm which pins the host memory "in-place", and copies it with the DMA
-engine.
+PinInPlace is another algorithm which pins the host memory "in-place", and copies it with the DMA engine.  
 
-By default staging buffers are used for unpinned memory transfers, however other ways can be used by enabling few environment variables (so no need to build the code again!!!)
-
-Following environment variables can be used:
+By default staging buffers are used for unpinned memory transfers. Environment variables allow control over the unpinned copy algorithm and parameters:
 
 - HIP_PININPLACE - This environment variable forces the use of PinInPlace logic for all unpinned memory copies
 

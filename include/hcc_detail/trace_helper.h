@@ -63,7 +63,9 @@ inline std::string ToString(T v)
 template <>
 inline std::string ToString(hipEvent_t v) 
 {
-    return ToString(&v);
+    std::ostringstream ss;
+    ss << v;
+    return ss.str();
 };
 
 

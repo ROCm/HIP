@@ -726,7 +726,7 @@ hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) __attribute
 hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, unsigned int flags) ;
 
 /**
- *  @brief Get flags associated with host pointer
+ *  @brief Return flags associated with host pointer 
  *
  *  @param[out]  flagsPtr Memory location to store flags
  *  @param[in] hostPtr Host Pointer allocated through hipHostMalloc
@@ -1186,13 +1186,12 @@ hipError_t hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig );
 hipError_t hipCtxSynchronize ( void );
 
 /**
- * @brief Get flags used for creating current/default context.
+ * @brief Return flags used for creating default context.
  *
  * @param [out] flags
  *
  * @returns #hipSuccess.
 */
-
 hipError_t hipCtxGetFlags ( unsigned int* flags );
 
 /**
@@ -1235,6 +1234,53 @@ hipError_t  hipCtxDisablePeerAccess (hipCtx_t peerCtx);
  */
 hipError_t hipDeviceGetFromId(hipDevice_t *device, int deviceId);
 
+/**
+ * @brief Returns a handle to a compute device
+ * @param [out] device
+ * @param [in] ordinal
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceGet(hipDevice_t *device, int ordinal);
+
+/**
+ * @brief Returns the compute capability of the device
+ * @param [out] major
+ * @param [out] minor
+ * @param [in] device
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceComputeCapability(int *major,int *minor,hipDevice_t device);
+
+/**
+ * @brief Returns an identifer string for the device.
+ * @param [out] name
+ * @param [in] len
+ * @param [in] device
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device);
+
+/**
+ * @brief Returns a PCI Bus Id string for the device.
+ * @param [out] pciBusId
+ * @param [in] len
+ * @param [in] device
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceGetPCIBusId (int *pciBusId,int len,hipDevice_t device);
+
+/**
+ * @brief Returns the total amount of memory on the device.
+ * @param [out] bytes
+ * @param [in] device
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device);
 
 /**
  * @brief Returns the approximate HIP driver version.
@@ -1261,7 +1307,7 @@ hipError_t hipDriverGetVersion(int *driverVersion) ;
 hipError_t hipModuleLoad(hipModule_t *module, const char *fname);
 
 /**
- * @brief Freeing the module
+ * @brief Frees the module
  *
  * @param [in] module
  *
@@ -1273,7 +1319,7 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname);
 hipError_t hipModuleUnload(hipModule_t module);
 
 /**
- * @brief Function with kname will be extracted present in module
+ * @brief Function with kname will be extracted if present in module
  *
  * @param [in] module
  * @param [in] kname
@@ -1284,19 +1330,20 @@ hipError_t hipModuleUnload(hipModule_t module);
 hipError_t hipModuleGetFunction(hipFunction_t *function, hipModule_t module, const char *kname);
 
 /**
- * @brief returns device memory pointer and size of the kernel present in the module with symbol - name
+ * @brief returns device memory pointer and size of the kernel present in the module with symbol @p name
  *
- * @param [in] moodule
- * @param [in] name
  * @param [out] dptr
  * @param [out[ bytes
+ * @param [in] hmod
+ * @param [in] name
  *
  * @returns hipSuccess, hipErrorInvalidValue, hipErrorNotInitialized
  */
 hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes, hipModule_t hmod, const char *name);
 
+
 /**
- * @brief builds module from code object which resides in host memory. And image is pointer to that location.
+ * @brief builds module from code object which resides in host memory. Image is pointer to that location.
  *
  * @param [in] image
  * @param [out] module
@@ -1305,8 +1352,9 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes, hipModule_t h
  */
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image);
 
+
 /**
- * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed to kerneelparams or extra
+ * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed to kernelparams or extra
  *
  * @param [in[ f
  * @param [in] gridDimX

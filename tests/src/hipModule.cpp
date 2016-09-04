@@ -23,6 +23,8 @@ THE SOFTWARE.
 #include<fstream>
 #include<vector>
 
+#include "test_common.h"
+
 #define LEN 64
 #define SIZE LEN<<2
 
@@ -45,17 +47,17 @@ int main(){
     std::cout<<A[i] << " "<<B[i]<<std::endl;
   }
 
-  hipMalloc((void**)&Ad, SIZE);
-  hipMalloc((void**)&Bd, SIZE);
+  HIPCHECK(hipMalloc((void**)&Ad, SIZE));
+  HIPCHECK(hipMalloc((void**)&Bd, SIZE));
 
-  hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
-  hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice);
+  HIPCHECK(hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice));
+  HIPCHECK(hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice));
   hipModule_t Module;
   hipFunction_t Function;
-  hipModuleLoad(&Module, fileName);
-  hipModuleGetFunction(&Function, Module, kernel_name);
+  HIPCHECK(hipModuleLoad(&Module, fileName));
+  HIPCHECK(hipModuleGetFunction(&Function, Module, kernel_name));
   hipStream_t stream;
-  hipStreamCreate(&stream);
+  HIPCHECK(hipStreamCreate(&stream));
   void *args[2] = {&Ad, &Bd};
 
 
@@ -73,9 +75,9 @@ int main(){
 
     hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, stream, NULL, (void**)&config); 
 
-    hipStreamDestroy(stream);
+    HIPCHECK(hipStreamDestroy(stream));
 
- hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost);
+  HIPCHECK(hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost));
 
   for(uint32_t i=0;i<LEN;i++){
   std::cout<<A[i]<<" - "<<B[i]<<std::endl;
@@ -83,3 +85,4 @@ int main(){
 
   return 0;
 }
+

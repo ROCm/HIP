@@ -68,8 +68,9 @@ THE SOFTWARE.
 {\
     hipError_t localError = error; \
     if (localError != hipSuccess) { \
-      printf("%serror: '%s'(%d) at %s:%d%s\n", \
+      printf("%serror: '%s'(%d) from %s at %s:%d%s\n", \
           KRED,hipGetErrorString(localError), localError,\
+          #error,\
       __FILE__, __LINE__,KNRM); \
         failed("API returned error code.");\
     }\

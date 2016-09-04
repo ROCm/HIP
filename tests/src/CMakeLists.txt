@@ -166,7 +166,8 @@ build_hip_executable (hipEventRecord hipEventRecord.cpp)
 build_hip_executable_libcpp (hipHcc hipHcc.cpp)
 #set_source_files_properties (hipHcc.cpp PROPERTIES COMPILE_FLAGS --stdlib=libc++ )
 
-build_hip_executable_libcpp (hipPointerAttrib hipPointerAttrib.cpp)
+# __workweek fix.
+#build_hip_executable_libcpp (hipPointerAttrib hipPointerAttrib.cpp)
 build_hip_executable (hipHostAlloc hipHostAlloc.cpp)
 build_hip_executable (hipHostGetFlags hipHostGetFlags.cpp)
 build_hip_executable (hipHostRegister hipHostRegister.cpp)

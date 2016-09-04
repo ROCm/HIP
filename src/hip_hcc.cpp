@@ -137,7 +137,7 @@ ihipCtx_t * ihipGetPrimaryCtx(unsigned deviceIndex)
 };
 
 
-static thread_local ihipCtx_t *tls_defaultCtx = nullptr;  
+static thread_local ihipCtx_t *tls_defaultCtx = nullptr;
 void ihipSetTlsDefaultCtx(ihipCtx_t *ctx)
 {
     tls_defaultCtx = ctx;
@@ -162,7 +162,7 @@ hipError_t ihipSynchronize(void)
 {
     ihipGetTlsDefaultCtx()->locked_waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
 
-    return ihipLogStatus(hipSuccess);
+    return (hipSuccess);
 }
 
 //=================================================================================================
@@ -195,9 +195,9 @@ ihipSignal_t::~ihipSignal_t()
 //---
 ihipStream_t::ihipStream_t(ihipCtx_t *ctx, hc::accelerator_view av, unsigned int flags) :
     _id(0), // will be set by add function.
-    _av(av),
     _flags(flags),
-    _ctx(ctx)
+    _ctx(ctx),
+    _criticalData(av)
 {
     tprintf(DB_SYNC, " streamCreate: stream=%p\n", this);
 };
@@ -246,7 +246,7 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty
 {
     if (! assertQueueEmpty) {
         tprintf (DB_SYNC, "stream %p wait for queue-empty..\n", this);
-        _av.wait();
+        crit->_av.wait();
     }
 
     if (crit->_last_copy_signal) {
@@ -272,6 +272,28 @@ void ihipStream_t::locked_wait(bool assertQueueEmpty)
     wait(crit, assertQueueEmpty);
 
 };
+
+#if USE_AV_COPY
+// Causes current stream to wait for specified event to complete:
+void ihipStream_t::locked_waitEvent(hipEvent_t event)
+{
+    LockedAccessor_StreamCrit_t crit(_criticalData);
+
+    // TODO - check state of event here:
+    crit->_av.create_blocking_marker(event->_marker);
+}
+#endif
+
+// Create a marker in this stream.
+// Save state in the event so it can track the status of the event.
+void ihipStream_t::locked_recordEvent(hipEvent_t event)
+{
+    // Lock the stream to prevent simultaneous access
+    LockedAccessor_StreamCrit_t crit(_criticalData);
+
+    event->_marker = crit->_av.create_marker();
+    event->_copySeqId = lastCopySeqId(crit);
+}
 
 //=============================================================================
 
@@ -388,11 +410,10 @@ int HIP_NUM_KERNELS_INFLIGHT = 128;
 //into the stream to mimic CUDA stream semantics.  (some hardware uses separate
 //queues for data commands and kernel commands, and no implicit ordering is provided).
 //
-bool ihipStream_t::lockopen_preKernelCommand()
+LockedAccessor_StreamCrit_t ihipStream_t::lockopen_preKernelCommand()
 {
     LockedAccessor_StreamCrit_t crit(_criticalData, false/*no unlock at destruction*/);
 
-    bool addedSync = false;
 
     if(crit->_kernelCnt > HIP_NUM_KERNELS_INFLIGHT){
         this->wait(crit);
@@ -402,9 +423,8 @@ bool ihipStream_t::lockopen_preKernelCommand()
     // If switching command types, we need to add a barrier packet to synchronize things.
     if (crit->_last_command_type != ihipCommandKernel) {
         if (crit->_last_copy_signal) {
-            addedSync = true;
 
-            hsa_queue_t * q =  (hsa_queue_t*)_av.get_hsa_queue();
+            hsa_queue_t * q =  (hsa_queue_t*) (crit->_av.get_hsa_queue());
             if (HIP_DISABLE_HW_KERNEL_DEP == 0) {
                 this->enqueueBarrier(q, crit->_last_copy_signal, NULL);
                 tprintf (DB_SYNC, "stream %p switch %s to %s (barrier pkt inserted with wait on #%lu)\n",
@@ -422,7 +442,7 @@ bool ihipStream_t::lockopen_preKernelCommand()
         crit->_last_command_type = ihipCommandKernel;
     }
 
-    return addedSync;
+    return crit;
 }
 
 
@@ -432,6 +452,11 @@ void ihipStream_t::lockclose_postKernelCommand(hc::completion_future &kernelFutu
 {
     // We locked _criticalData in the lockopen_preKernelCommand() so OK to access here:
     _criticalData._last_kernel_future = kernelFuture;
+
+    if (HIP_LAUNCH_BLOCKING) {
+        kernelFuture.wait();
+        tprintf(DB_SYNC, " %s LAUNCH_BLOCKING for kernel completion\n", ToString(this).c_str());
+    }
 
     _criticalData.unlock(); // paired with lock from lockopen_preKernelCommand.
 };
@@ -457,7 +482,7 @@ int ihipStream_t::preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t
             needSync = 1;
             ihipSignal_t *depSignal = allocSignal(crit);
             hsa_signal_store_relaxed(depSignal->_hsaSignal,1);
-            this->enqueueBarrier(static_cast<hsa_queue_t*>(_av.get_hsa_queue()), NULL, depSignal);
+            this->enqueueBarrier(static_cast<hsa_queue_t*>(crit->_av.get_hsa_queue()), NULL, depSignal);
             *waitSignal = depSignal->_hsaSignal;
         } else if (crit->_last_copy_signal) {
             needSync = 1;
@@ -487,7 +512,10 @@ int ihipStream_t::preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t
 }
 
 
-void ihipStream_t::launchModuleKernel(hsa_signal_t signal,
+// Precursor: the stream is already locked,specifically so this routine can enqueue work into the specified av.
+void ihipStream_t::launchModuleKernel(
+                        hc::accelerator_view av,
+                        hsa_signal_t signal,
                         uint32_t blockDimX,
                         uint32_t blockDimY,
                         uint32_t blockDimZ,
@@ -500,11 +528,12 @@ void ihipStream_t::launchModuleKernel(hsa_signal_t signal,
                         uint64_t kernel){
     hsa_status_t status;
     void *kern;
-    hsa_amd_memory_pool_t *pool = reinterpret_cast<hsa_amd_memory_pool_t*>(_av.get_hsa_kernarg_region());
+
+    hsa_amd_memory_pool_t *pool = reinterpret_cast<hsa_amd_memory_pool_t*>(av.get_hsa_kernarg_region());
     status = hsa_amd_memory_pool_allocate(*pool, kernSize, 0, &kern);
-    status = hsa_amd_agents_allow_access(1, (hsa_agent_t*)_av.get_hsa_agent(), 0, kern);
+    status = hsa_amd_agents_allow_access(1, (hsa_agent_t*)av.get_hsa_agent(), 0, kern);
     memcpy(kern, kernarg, kernSize);
-    hsa_queue_t *Queue = (hsa_queue_t*)_av.get_hsa_queue();
+    hsa_queue_t *Queue = (hsa_queue_t*)av.get_hsa_queue();
     const uint32_t queue_mask = Queue->size-1;
     uint32_t packet_index = hsa_queue_load_write_index_relaxed(Queue);
     hsa_kernel_dispatch_packet_t *dispatch_packet = &(((hsa_kernel_dispatch_packet_t*)(Queue->base_address))[packet_index & queue_mask]);
@@ -1117,8 +1146,9 @@ void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, c
         while (std::getline(ss, device_id, ',')) {
             if (atoi(device_id.c_str()) >= 0) {
                 g_hip_visible_devices.push_back(atoi(device_id.c_str()));
-            }else// Any device number after invalid number will not present
+            } else { // Any device number after invalid number will not present
                 break;
+            }
         }
         // Print out the number of ids
         if (HIP_PRINT_ENV) {
@@ -1312,11 +1342,11 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
     }
 }
 
-void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, const hipStream_t stream) 
+void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, const hipStream_t stream)
 {
     std::string streamString = ToString(stream);
     fprintf(stderr, KGRN "<<hip-api: hipLaunchKernel '%s' gridDim:(%d,%d,%d) groupDim:(%d,%d,%d) groupMem:+%d %s\n" KNRM, \
-            kernelName, lp->grid_dim.x, lp->grid_dim.y, lp->grid_dim.z, lp->group_dim.x, lp->group_dim.y, lp->group_dim.z, 
+            kernelName, lp->grid_dim.x, lp->grid_dim.y, lp->grid_dim.z, lp->group_dim.x, lp->group_dim.y, lp->group_dim.z,
             lp->dynamic_group_mem_bytes, streamString.c_str());\
 }
 
@@ -1327,7 +1357,6 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
 {
     HIP_INIT();
     stream = ihipSyncAndResolveStream(stream);
-#if USE_GRID_LAUNCH_20
     lp->grid_dim.x = grid.x;
     lp->grid_dim.y = grid.y;
     lp->grid_dim.z = grid.z;
@@ -1336,27 +1365,18 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
     lp->group_dim.z = block.z;
     lp->barrier_bit = barrier_bit_queue_default;
     lp->launch_fence = -1;
-#else
-    lp->gridDim.x = grid.x;
-    lp->gridDim.y = grid.y;
-    lp->gridDim.z = grid.z;
-    lp->groupDim.x = block.x;
-    lp->groupDim.y = block.y;
-    lp->groupDim.z = block.z;
-#endif
-    stream->lockopen_preKernelCommand();
-//    *av = &stream->_av;
-    lp->av = &stream->_av;
+
+    auto crit = stream->lockopen_preKernelCommand();
+    lp->av = &(crit->_av);
     lp->cf = new hc::completion_future;
-//    lp->av = static_cast<void*>(av);
-//    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
     return (stream);
 }
+
+
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm *lp)
 {
-    HIP_INIT_API(stream, grid, block, lp);
+    HIP_INIT();
     stream = ihipSyncAndResolveStream(stream);
-#if USE_GRID_LAUNCH_20
     lp->grid_dim.x = grid;
     lp->grid_dim.y = 1;
     lp->grid_dim.z = 1;
@@ -1365,28 +1385,18 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, gri
     lp->group_dim.z = block.z;
     lp->barrier_bit = barrier_bit_queue_default;
     lp->launch_fence = -1;
-#else
-    lp->gridDim.x = grid;
-    lp->gridDim.y = 1;
-    lp->gridDim.z = 1;
-    lp->groupDim.x = block.x;
-    lp->groupDim.y = block.y;
-    lp->groupDim.z = block.z;
-#endif
-    stream->lockopen_preKernelCommand();
-//    *av = &stream->_av;
-    lp->av = &stream->_av;
+
+    auto crit = stream->lockopen_preKernelCommand();
+    lp->av = &(crit->_av);
     lp->cf = new hc::completion_future;
-//    lp->av = static_cast<void*>(av);
-//    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
     return (stream);
 }
+
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm *lp)
 {
-    HIP_INIT_API(stream, grid, block, lp);
+    HIP_INIT();
     stream = ihipSyncAndResolveStream(stream);
-#if USE_GRID_LAUNCH_20
     lp->grid_dim.x = grid.x;
     lp->grid_dim.y = grid.y;
     lp->grid_dim.z = grid.z;
@@ -1395,28 +1405,18 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, gri
     lp->group_dim.z = 1;
     lp->barrier_bit = barrier_bit_queue_default;
     lp->launch_fence = -1;
-#else
-    lp->gridDim.x = grid.x;
-    lp->gridDim.y = grid.y;
-    lp->gridDim.z = grid.z;
-    lp->groupDim.x = block;
-    lp->groupDim.y = 1;
-    lp->groupDim.z = 1;
-#endif
-    stream->lockopen_preKernelCommand();
-//    *av = &stream->_av;
-    lp->av = &stream->_av;
+
+    auto crit = stream->lockopen_preKernelCommand();
+    lp->av = &(crit->_av);
     lp->cf = new hc::completion_future;
-//    lp->av = static_cast<void*>(av);
-//    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
     return (stream);
 }
 
+
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm *lp)
 {
-    HIP_INIT_API(stream, grid, block, lp);
+    HIP_INIT();
     stream = ihipSyncAndResolveStream(stream);
-#if USE_GRID_LAUNCH_20
     lp->grid_dim.x = grid;
     lp->grid_dim.y = 1;
     lp->grid_dim.z = 1;
@@ -1425,37 +1425,23 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, g
     lp->group_dim.z = 1;
     lp->barrier_bit = barrier_bit_queue_default;
     lp->launch_fence = -1;
-#else
-    lp->gridDim.x = grid;
-    lp->gridDim.y = 1;
-    lp->gridDim.z = 1;
-    lp->groupDim.x = block;
-    lp->groupDim.y = 1;
-    lp->groupDim.z = 1;
-#endif
-    stream->lockopen_preKernelCommand();
-//    *av = &stream->_av;
-    lp->av = &stream->_av;
-    lp->cf = new hc::completion_future;
-//    lp->av = static_cast<void*>(av);
-//    lp->cf = static_cast<void*>(malloc(sizeof(hc::completion_future)));
+
+    auto crit = stream->lockopen_preKernelCommand();
+    lp->av = &(crit->_av);
+    lp->cf = new hc::completion_future; // TODO, is this necessary?
     return (stream);
 }
 
 
 //---
 //Called after kernel finishes execution.
+//This releases the lock on the stream.
 void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp)
 {
-//    stream->lockclose_postKernelCommand(cf);
-    stream->lockclose_postKernelCommand(*lp.cf);
-    if (HIP_LAUNCH_BLOCKING) {
-        tprintf(DB_SYNC, " stream:%p LAUNCH_BLOCKING for kernel completion\n", stream);
-    }
+    stream->lockclose_postKernelCommand(*(lp.cf));
 }
 
 
-//
 //=================================================================================================
 // HIP API Implementation
 //
@@ -1629,7 +1615,7 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
                 // TODO - remove, slow path.
                 tprintf(DB_COPY1, "H2D && ! srcTracked: am_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
 #if USE_AV_COPY
-                _av.copy(src,dst,sizeBytes);
+                crit->_av.copy(src,dst,sizeBytes);
 #else
                 hc::am_copy(dst, src, sizeBytes);
 #endif
@@ -1677,7 +1663,7 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
             // TODO - remove, slow path.
                 tprintf(DB_COPY1, "D2H && !dstTracked: am_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
 #if USE_AV_COPY
-                _av.copy(src, dst, sizeBytes);
+                crit->_av.copy(src, dst, sizeBytes);
 #else
                 hc::am_copy(dst, src, sizeBytes);
 #endif
@@ -1879,7 +1865,7 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **a
         stream = device->_defaultStream;
     }
 
-    *av = &(stream->_av);
+    *av = stream->locked_getAv();
 
     hipError_t err = hipSuccess;
     return ihipLogStatus(err);
