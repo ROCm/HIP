@@ -678,5 +678,5 @@ The file format for binary is `.co` which means Code Object. The following comma
 [INPUT FILE] = Name of the file containing kernels
 [OUTPUT FILE] = Name of the generated code object file```
 
-
+Note that one important fact to remember when using binary code objects is that the number of arguments to the kernel are different on HCC and NVCC path. Refer to the sample in samples/0_Intro/module_api for differences in the arguments to be passed to the kernel.
 
