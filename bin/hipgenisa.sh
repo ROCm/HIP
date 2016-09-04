@@ -22,7 +22,8 @@ HIP_PATH="$( command cd -P "$( dirname "$SOURCE" )/.." && pwd )"
 export KMDUMPISA=1
 export KMDUMPLLVM=1
 mkdir /tmp/hipgenisa
-cp $FILE_NAMES $FILE_NAMES.kernel.tmp.cpp
+#cp $FILE_NAMES $FILE_NAMES.kernel.tmp.cpp
+sed 's/extern \+"C" \+//g' $FILE_NAMES > $FILE_NAMES.kernel.tmp.cpp
 echo "
 int main(){}
 " >> $FILE_NAMES.kernel.tmp.cpp
