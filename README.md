@@ -31,6 +31,7 @@ HIP releases are typically of two types. The tag naming convention is different 
 - [HIP Kernel Language](docs/markdown/hip_kernel_language.md)
 - [HIP Runtime API (Doxygen)](http://gpuopen-professionalcompute-tools.github.io/HIP)
 - [HIP Porting Guide](docs/markdown/hip_porting_guide.md)
+- [HIP Porting Driver Guide](docs/markdown/hip_porting_driver_api.md)
 - [HIP Terminology](docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenL)
 - [clang-hipify](clang-hipify/README.md)
 - [Developer/CONTRIBUTING Info](CONTRIBUTING.md)

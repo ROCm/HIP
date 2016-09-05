@@ -179,7 +179,7 @@ hip_find_helper_file(run_hipcc cmake)
 ###############################################################################
 
 ###############################################################################
-# MACRO: Seperate the options from the sources
+# MACRO: Separate the options from the sources
 ###############################################################################
 macro(HIP_GET_SOURCES_AND_OPTIONS _sources _cmake_options _hipcc_options _hcc_options _nvcc_options)
     set(${_sources})
