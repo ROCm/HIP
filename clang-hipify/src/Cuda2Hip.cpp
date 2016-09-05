@@ -328,8 +328,21 @@ struct cuda2hipMap {
     cuda2hipRename["cuCtxEnablePeerAccess"]                     = {"hipCtxEnablePeerAccess", CONV_DEV, API_DRIVER};
     cuda2hipRename["cuCtxDisablePeerAccess"]                    = {"hipCtxDisablePeerAccess", CONV_DEV, API_DRIVER};
     // unsupported yet by HIP
-    // cuda2hipRename["cuCtxSetLimit"]                             = {"hipCtxSetLimit", CONV_DEV, API_DRIVER};
-    // cuda2hipRename["cuCtxGetLimit"]                             = {"hipCtxGetLimit", CONV_DEV, API_DRIVER};
+    // cuda2hipRename["cuCtxSetLimit"]                          = {"hipCtxSetLimit", CONV_DEV, API_DRIVER};
+    // cuda2hipRename["cuCtxGetLimit"]                          = {"hipCtxGetLimit", CONV_DEV, API_DRIVER};
+
+    // Device
+    cuda2hipRename["cuDeviceGet"]                               = {"hipGetDevice", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["cuDeviceGetName"]                           = {"hipDeviceGetName", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["cuDeviceGetCount"]                          = {"hipGetDeviceCount", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["cuDeviceGetAttribute"]                      = {"hipDeviceGetAttribute", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["cuDeviceGetProperties"]                     = {"hipGetDeviceProperties", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["cuDeviceGetPCIBusId"]                       = {"hipDeviceGetPCIBusId", CONV_TYPE, API_DRIVER};
+    // unsupported yet by HIP
+    // cuda2hipRename["cuDeviceGetByPCIBusId"]                  = {"hipDeviceGetByPCIBusId", CONV_DEV, API_DRIVER};
+    cuda2hipRename["cuDeviceTotalMem_v2"]                       = {"hipDeviceTotalMem", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["cuDeviceComputeCapability"]                 = {"hipDeviceComputeCapability", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["cuDeviceCanAccessPeer"]                     = {"hipDeviceCanAccessPeer", CONV_TYPE, API_DRIVER};
 
     /////////////////////////////// CUDA RT API ///////////////////////////////
     // Error API
