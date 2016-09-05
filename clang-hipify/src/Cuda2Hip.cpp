@@ -310,6 +310,27 @@ struct cuda2hipMap {
     cuda2hipRename["CUevent"]                                   = {"hipEvent_t", CONV_TYPE, API_DRIVER};
     cuda2hipRename["CUstream"]                                  = {"hipStream_t", CONV_TYPE, API_DRIVER};
 
+    // Context
+    cuda2hipRename["cuCtxCreate_v2"]                            = {"hipCtxCreate", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["cuCtxDestroy_v2"]                           = {"hipCtxDestroy", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["cuCtxPopCurrent_v2"]                        = {"hipCtxPopCurrent", CONV_DEV, API_DRIVER};
+    cuda2hipRename["cuCtxPushCurrent_v2"]                       = {"hipCtxPushCurrent", CONV_DEV, API_DRIVER};
+    cuda2hipRename["cuCtxSetCurrent"]                           = {"hipCtxSetCurrent", CONV_DEV, API_DRIVER};
+    cuda2hipRename["cuCtxGetCurrent"]                           = {"hipCtxGetCurrent", CONV_DEV, API_DRIVER};
+    cuda2hipRename["cuCtxGetDevice"]                            = {"hipCtxGetDevice", CONV_DEV, API_DRIVER};
+    cuda2hipRename["cuCtxGetApiVersion"]                        = {"hipCtxGetApiVersion", CONV_DEV, API_DRIVER};
+    cuda2hipRename["cuCtxGetCacheConfig"]                       = {"hipCtxGetCacheConfig", CONV_DEV, API_DRIVER};
+    cuda2hipRename["cuCtxSetCacheConfig"]                       = {"hipCtxSetCacheConfig", CONV_DEV, API_DRIVER};
+    cuda2hipRename["cuCtxSetSharedMemConfig"]                   = {"hipCtxSetSharedMemConfig", CONV_DEV, API_DRIVER};
+    cuda2hipRename["cuCtxGetSharedMemConfig"]                   = {"hipCtxGetSharedMemConfig", CONV_DEV, API_DRIVER};
+    cuda2hipRename["cuCtxSynchronize"]                          = {"hipCtxSynchronize", CONV_DEV, API_DRIVER};
+    cuda2hipRename["cuCtxGetFlags"]                             = {"hipCtxGetFlags", CONV_DEV, API_DRIVER};
+    cuda2hipRename["cuCtxEnablePeerAccess"]                     = {"hipCtxEnablePeerAccess", CONV_DEV, API_DRIVER};
+    cuda2hipRename["cuCtxDisablePeerAccess"]                    = {"hipCtxDisablePeerAccess", CONV_DEV, API_DRIVER};
+    // unsupported yet by HIP
+    // cuda2hipRename["cuCtxSetLimit"]                             = {"hipCtxSetLimit", CONV_DEV, API_DRIVER};
+    // cuda2hipRename["cuCtxGetLimit"]                             = {"hipCtxGetLimit", CONV_DEV, API_DRIVER};
+
     /////////////////////////////// CUDA RT API ///////////////////////////////
     // Error API
     cuda2hipRename["cudaGetLastError"]               = {"hipGetLastError", CONV_ERR, API_RUNTIME};
