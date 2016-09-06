@@ -1,8 +1,7 @@
 #!/bin/bash
 
-if [ $1 = " " ]
-then
-exit
+if [ $# = 0 ]; then
+  >&2 echo "$(basename $0): Invalid number of arguments" && exit 1
 fi
 
 : ${ROCM_PATH:=/opt/rocm}
