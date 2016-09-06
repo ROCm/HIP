@@ -5,11 +5,11 @@ then
 exit
 fi
 
-ROCM_PATH=$1
-GEN_ISA=$2
-FILE_NAMES=$3
-OUT=$4
-OUTPUT_FILE=$5
+: ${ROCM_PATH:=/opt/rocm}
+GEN_ISA=$1
+FILE_NAMES=$2
+OUT=$3
+OUTPUT_FILE=$4
 TARGET=""
 if [ ${GEN_ISA:0:12} = "--target-isa" ]
 then
