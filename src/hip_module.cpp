@@ -260,14 +260,14 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         }
 
         uint32_t groupSegmentSize;
-        hsa_status_t status = hsa_executable_symbol_get_info(f->kernel_symbol,
-                                                                                        HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE,
-                                                                                        &groupSegmentSize);
+        hsa_status_t status = hsa_executable_symbol_get_info(f->_kernelSymbol,
+                                                             HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE,
+                                                             &groupSegmentSize);
 
         uint32_t privateSegmentSize;
-        status = hsa_executable_symbol_get_info(f->kernel_symbol,
-                                                                                        HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_PRIVATE_SEGMENT_SIZE,
-                                                                                        &privateSegmentSize);
+        status = hsa_executable_symbol_get_info(f->_kernelSymbol,
+                                                HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_PRIVATE_SEGMENT_SIZE,
+                                                &privateSegmentSize);
         privateSegmentSize += sharedMemBytes;
 
 
