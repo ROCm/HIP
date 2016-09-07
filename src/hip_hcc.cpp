@@ -522,7 +522,8 @@ void ihipStream_t::launchModuleKernel(
                         uint32_t gridDimX,
                         uint32_t gridDimY,
                         uint32_t gridDimZ,
-                        uint32_t sharedMemBytes,
+                        uint32_t groupSegmentSize,
+												uint32_t privateSegmentSize,
                         void *kernarg,
                         size_t kernSize,
                         uint64_t kernel){
@@ -545,8 +546,8 @@ void ihipStream_t::launchModuleKernel(
     dispatch_packet->grid_size_x = blockDimX * gridDimX;
     dispatch_packet->grid_size_y = blockDimY * gridDimY;
     dispatch_packet->grid_size_z = blockDimZ * gridDimZ;
-    dispatch_packet->group_segment_size = 0;
-    dispatch_packet->private_segment_size = sharedMemBytes;
+    dispatch_packet->group_segment_size = groupSegmentSize;
+    dispatch_packet->private_segment_size = privateSegmentSize;
     dispatch_packet->kernarg_address = kern;
     dispatch_packet->kernel_object = kernel;
     uint16_t header = (HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE) |
