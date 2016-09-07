@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "hip/hcc_detail/unpinned_copy_engine.h"
 
 
-#if defined(__HCC__) && (__hcc_workweek__ < 16186)
+#if defined(__HCC__) && (__hcc_workweek__ < 16354)
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
