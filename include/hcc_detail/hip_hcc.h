@@ -460,7 +460,8 @@ typedef uint64_t SeqNum_t ;
     void launchModuleKernel(hc::accelerator_view av, hsa_signal_t signal,
                             uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
                             uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
-                            uint32_t sharedMemBytes, void *kernarg, size_t kernSize, uint64_t kernel);
+														uint32_t groupSegmentSize, uint32_t sharedMemBytes, 
+														void *kernarg, size_t kernSize, uint64_t kernel);
 
     // Non-threadsafe accessors - must be protected by high-level stream lock with accessor passed to function.
     SIGSEQNUM            lastCopySeqId (LockedAccessor_StreamCrit_t &crit) const { return crit->_last_copy_signal ? crit->_last_copy_signal->_sigId : 0; };

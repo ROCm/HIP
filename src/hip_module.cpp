@@ -252,10 +252,23 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         }else{
             return ihipLogStatus(hipErrorInvalidValue);
         }
+
+				uint32_t groupSegmentSize;
+				hsa_status_t status = hsa_executable_symbol_get_info(f->kernel_symbol,
+																								HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE,
+																								&groupSegmentSize);
+
+				uint32_t privateSegmentSize;
+				status = hsa_executable_symbol_get_info(f->kernel_symbol,
+																								HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_PRIVATE_SEGMENT_SIZE,
+																								&privateSegmentSize);
+
+				privateSegmentSize += sharedMemBytes;
+
+
 /*
 Kernel argument preparation.
 */
-        hsa_status_t status;
         grid_launch_parm lp;
         hStream = ihipPreLaunchKernel(hStream, 0, 0, &lp);
 
@@ -270,7 +283,7 @@ Kernel argument preparation.
   Launch AQL packet
 */
         hStream->launchModuleKernel(*lp.av, signal, blockDimX, blockDimY, blockDimZ,
-                  gridDimX, gridDimY, gridDimZ, sharedMemBytes, config[1], kernSize, f->kernel);
+                  gridDimX, gridDimY, gridDimZ, groupSegmentSize, privateSegmentSize, config[1], kernSize, f->kernel);
 
 /*
   Wait for signal
