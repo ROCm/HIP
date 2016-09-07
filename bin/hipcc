@@ -181,7 +181,7 @@ if ($verbose & 0x4) {
 # Handle code object generation
 my $ISACMD="";
 if($HIP_PLATFORM eq "hcc"){
-  $ISACMD .= "set ROCM_PATH=$ROCM_PATH && set ROCM_TARGET=$ROCM_TARGET && $HIP_PATH/bin/hipgenisa.sh ";
+  $ISACMD .= "set ROCM_PATH=$ROCM_PATH && set ROCM_TARGET=$ROCM_TARGET && $HIP_PATH/bin/hccgenco.sh ";
   if($ARGV[0] eq "--genco"){
     foreach $isaarg (@ARGV[1..$#ARGV]){
       $ISACMD .= " ";
