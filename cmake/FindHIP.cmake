@@ -303,7 +303,7 @@ macro(HIP_INCLUDE_HIPCC_DEPENDENCIES dependency_file)
         endforeach()
     else()
         # No dependencies, so regenerate the file
-        set(CUDA_NVCC_DEPEND_REGENERATE TRUE)
+        set(HIP_HIPCC_DEPEND_REGENERATE TRUE)
     endif()
 
     # Regenerate the dependency file if needed
@@ -416,7 +416,7 @@ macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files)
 
         # Create up the comment string
         file(RELATIVE_PATH generated_file_relative_path "${CMAKE_BINARY_DIR}" "${generated_file}")
-        set(hip_build_comment_string "Building HIPCC (${cuda_build_type}) object ${generated_file_relative_path}")
+        set(hip_build_comment_string "Building HIPCC (using ${HIP_PLATFORM}) object ${generated_file_relative_path}")
 
         # Build the generated file and dependency file
         add_custom_command(
@@ -453,11 +453,9 @@ macro(HIP_ADD_EXECUTABLE hip_target)
     # Separate the sources from the options
     HIP_GET_SOURCES_AND_OPTIONS(_sources _cmake_options _hipcc_options _hcc_options _nvcc_options ${ARGN})
     HIP_PREPARE_TARGET_COMMANDS(${hip_target} OBJ _generated_files ${_sources} HIPCC_OPTIONS ${_hipcc_options} HCC_OPTIONS ${_hcc_options} NVCC_OPTIONS ${_nvcc_options})
-    set(HIP_CMAKE_CXX_LINK_EXECUTABLE ${CMAKE_CXX_LINK_EXECUTABLE})
-    set(CMAKE_CXX_LINK_EXECUTABLE "${HIP_HIPCC_EXECUTABLE} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET>")
+    set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_EXECUTABLE} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET>")
     add_executable(${hip_target} ${_cmake_options} ${_generated_files} ${_sources})
-    set_target_properties(${hip_target} PROPERTIES LINKER_LANGUAGE ${HIP_C_OR_CXX})
-    #set(CMAKE_CXX_COMPILER ${ORIGINAL_CMAKE_CXX_COMPILER})
+    set_target_properties(${hip_target} PROPERTIES LINKER_LANGUAGE HIP)
 endmacro()
 
 # vim: ts=4:sw=4:expandtab:smartindent
