@@ -278,6 +278,11 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int deviceI
  * @param [out] prop written with device properties
  * @param [in]  deviceId which device to query for information
  *
+ * @return #hipSuccess, #hipErrorInvalidDevice
+ * @bug HCC always returns 0 for maxThreadsPerMultiProcessor
+ * @bug HCC always returns 0 for regsPerBlock
+ * @bug HCC always returns 0 for l2CacheSize
+ *
  * Populates hipGetDeviceProperties with information for the specified device.
  */
 hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
@@ -289,6 +294,7 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
 /**
  * @brief Set L1/Shared cache partition.
  *
+ * @returns #hipSuccess
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
@@ -298,6 +304,7 @@ hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig );
 /**
  * @brief Set Cache configuration for a specific function
  *
+ * @returns #hipSuccess
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
@@ -307,6 +314,7 @@ hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig );
 /**
  * @brief Set Cache configuration for a specific function
  *
+ * @returns #hipSuccess
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
@@ -318,6 +326,7 @@ hipError_t hipFuncSetCacheConfig ( hipFuncCache config );
 /**
  * @brief Get Shared memory bank configuration.
  *
+ * @returns #hipSuccess
  * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
  *
  */
@@ -327,6 +336,7 @@ hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig );
 /**
  * @brief Set Shared memory bank configuration.
  *
+ * @returns #hipSuccess
  * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
  *
  */
@@ -335,6 +345,7 @@ hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config );
 /**
  * @brief Set Device flags
  *
+ * @returns #hipSuccess
  * Note: Only hipDeviceScheduleAuto and hipDeviceMapHost are supported
  *
 */
