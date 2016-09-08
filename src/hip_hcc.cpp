@@ -250,7 +250,8 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty
 {
     if (! assertQueueEmpty) {
         tprintf (DB_SYNC, "stream %p wait for queue-empty..\n", this);
-        crit->_av.wait();
+//        crit->_av.wait();
+        waitOnAllCFs(crit);
     }
 
     if (crit->_last_copy_signal) {
@@ -266,6 +267,21 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty
 //    crit->_signalCnt = 0;
 }
 
+void ihipStream_t::addCFtoStream(LockedAccessor_StreamCrit_t &crit, hc::completion_future *cf)
+{
+    crit->_cfs.push_back(cf);
+}
+
+void ihipStream_t::waitOnAllCFs(LockedAccessor_StreamCrit_t &crit)
+{
+    for(uint32_t i=0;i<crit->_cfs.size();i++){
+        if(crit->_cfs[i] != NULL){
+            crit->_cfs[i]->wait();
+            delete crit->_cfs[i];
+        }
+    }
+    crit->_cfs.clear();
+}
 
 //---
 //Wait for all kernel and data copy commands in this stream to complete.
@@ -1439,7 +1455,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
     auto crit = stream->lockopen_preKernelCommand();
     lp->av = &(crit->_av);
     lp->cf = new hc::completion_future;
-
+    stream->addCFtoStream(crit, lp->cf);
     ihipPrintKernelLaunch(kernelNameStr, lp, stream);
 
     return (stream);
@@ -1462,7 +1478,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, gri
     auto crit = stream->lockopen_preKernelCommand();
     lp->av = &(crit->_av);
     lp->cf = new hc::completion_future;
-
+    stream->addCFtoStream(crit, lp->cf);
     ihipPrintKernelLaunch(kernelNameStr, lp, stream);
     return (stream);
 }
@@ -1484,6 +1500,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, gri
     auto crit = stream->lockopen_preKernelCommand();
     lp->av = &(crit->_av);
     lp->cf = new hc::completion_future;
+    stream->addCFtoStream(crit, lp->cf);
     ihipPrintKernelLaunch(kernelNameStr, lp, stream);
     return (stream);
 }
@@ -1505,6 +1522,9 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, g
     auto crit = stream->lockopen_preKernelCommand();
     lp->av = &(crit->_av);
     lp->cf = new hc::completion_future; // TODO, is this necessary?
+
+    stream->addCFtoStream(crit, lp->cf);
+
     ihipPrintKernelLaunch(kernelNameStr, lp, stream);
     return (stream);
 }
