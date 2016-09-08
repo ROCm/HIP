@@ -345,6 +345,14 @@ hipError_t hipSetDeviceFlags ( unsigned flags);
  * @}
  */
 
+/**
+ * @brief Select compute-device which best matches criteria.
+ *
+ * @param [out] device ID
+ * @param [in]  device properties pointer
+ *
+ */
+hipError_t hipChooseDevice(int *device,hipDeviceProp_t* prop);
 
 /**
  *-------------------------------------------------------------------------------------------------
