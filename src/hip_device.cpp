@@ -361,3 +361,40 @@ hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device)
     *bytes= device->_props.totalGlobalMem;
     return ihipLogStatus(e);
 }
+
+hipError_t hipChooseDevice( int* device, const hipDeviceProp_t* prop )
+{
+    hipDeviceProp_t  tempProp;
+    int deviceCount;
+    int inPropCount=0;
+    int matchedPropCount=0;
+    hipError_t e = hipSuccess;
+    hipGetDeviceCount( &deviceCount );
+    *device = 0;
+    for (int i=0; i< deviceCount; i++) {
+        hipGetDeviceProperties( &tempProp, i );
+        if(prop->major !=0) {
+            inPropCount++;
+            if(tempProp.major >= prop->major) {
+                matchedPropCount++;
+            }
+            if(prop->minor !=0) {
+                inPropCount++;
+                 if(tempProp.minor >= prop->minor) {
+                     matchedPropCount++;
+                 }
+            }
+        }
+
+        if(inPropCount == matchedPropCount) {
+            *device = i;
+        }
+#if 0
+        else{
+            e= hipErrorInvalidValue;
+        }
+#endif
+    }
+    return ihipLogStatus(e);
+}
+
