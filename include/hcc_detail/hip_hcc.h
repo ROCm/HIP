@@ -431,6 +431,9 @@ public:
     SIGSEQNUM                   _streamSigId;      // Monotonically increasing unique signal id.
 
     hc::accelerator_view        _av;
+
+		std::vector<hc::completion_future*> _cfs;
+
 };
 
 
@@ -467,6 +470,9 @@ typedef uint64_t SeqNum_t ;
 
     void                 locked_waitEvent(hipEvent_t event);
     void                 locked_recordEvent(hipEvent_t event);
+
+    void                 addCFtoStream(LockedAccessor_StreamCrit_t &crit, hc::completion_future* cf);
+    void                 waitOnAllCFs(LockedAccessor_StreamCrit_t &crit);
 
     //---
 
