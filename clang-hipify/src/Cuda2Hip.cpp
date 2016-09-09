@@ -66,6 +66,7 @@ enum ConvTypes {
   CONV_STREAM,
   CONV_EVENT,
   CONV_CONTEXT,
+  CONV_MODULE,
   CONV_CACHE,
   CONV_ERR,
   CONV_DEF,
@@ -80,10 +81,10 @@ enum ConvTypes {
 };
 
 const char *counterNames[CONV_LAST] = {
-    "driver",       "dev",      "mem",   "kern",    "coord_func", "math_func",
-    "special_func", "stream",   "event", "ctx",     "cache",      "err",
-    "def",          "tex",      "other", "include", "include_cuda_main_header",
-    "type",         "literal",  "numeric_literal"}; 
+    "driver",       "dev",     "mem",   "kern",  "coord_func", "math_func",
+    "special_func", "stream",  "event", "ctx",   "module",     "cache",
+    "err",          "def",     "tex",   "other", "include",    "include_cuda_main_header",
+    "type",         "literal", "numeric_literal"};
 enum ApiTypes {
   API_DRIVER = 0,
   API_RUNTIME,
@@ -362,6 +363,17 @@ struct cuda2hipMap {
     cuda2hipRename["cuEventQuery"]                              = {"hipEventQuery", CONV_EVENT, API_DRIVER};
     cuda2hipRename["cuEventRecord"]                             = {"hipEventRecord", CONV_EVENT, API_DRIVER};
     cuda2hipRename["cuEventSynchronize"]                        = {"hipEventSynchronize", CONV_EVENT, API_DRIVER};
+
+    // Module
+    cuda2hipRename["cuModuleGetFunction"]                       = {"hipModuleGetFunction", CONV_MODULE, API_DRIVER};
+    cuda2hipRename["cuModuleGetGlobal_v2"]                      = {"hipModuleGetGlobal", CONV_MODULE, API_DRIVER};
+    cuda2hipRename["cuModuleLoad"]                              = {"hipModuleLoad", CONV_MODULE, API_DRIVER};
+    cuda2hipRename["cuModuleLoadData"]                          = {"hipModuleLoadData", CONV_MODULE, API_DRIVER};
+    // unsupported yet by HIP
+    // cuda2hipRename["cuModuleLoadDataEx"]                     = {"hipModuleLoadDataEx", CONV_MODULE, API_DRIVER};
+    // cuda2hipRename["cuModuleLoadFatBinary"]                  = {"hipModuleLoadFatBinary", CONV_MODULE, API_DRIVER};
+    cuda2hipRename["cuModuleUnload"]                            = {"hipModuleUnload", CONV_MODULE, API_DRIVER};
+    cuda2hipRename["cuLaunchKernel"]                            = {"hipModuleLaunchKernel", CONV_MODULE, API_DRIVER};
 
     /////////////////////////////// CUDA RT API ///////////////////////////////
     // Error API
