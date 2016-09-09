@@ -48,10 +48,11 @@ if(NOT DEFINED HIP_PATH)
                 COMMAND "${CMAKE_COMMAND}" --build . --target install
                 WORKING_DIRECTORY hip
                 RESULT_VARIABLE hip_build_result
-                OUTPUT_QUIET
+                OUTPUT_VARIABLE hip_build_log
                 ERROR_QUIET
                 )
         if(hip_build_result)
+            message(${hip_build_log})
             message(FATAL_ERROR "Error building HIP")
         else()
             # Building HIP is successful. Point HIP_PATH to this location.
