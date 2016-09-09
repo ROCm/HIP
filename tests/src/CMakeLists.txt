@@ -214,11 +214,11 @@ endif()
 if (${HIP_PLATFORM} STREQUAL "hcc")
     make_test(hipArray " ")
     make_test(hipFuncSetDevice " ")
+    make_test(hipDynamicShared " ")
 endif()
 
 make_hipify_test(specialFunc.cu )
 
-make_test(hipDynamicShared " ")
 
 # Add subdirs here:
 add_subdirectory(context)
