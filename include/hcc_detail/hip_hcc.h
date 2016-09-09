@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "hip/hcc_detail/unpinned_copy_engine.h"
 
 
-#if defined(__HCC__) && (__hcc_workweek__ < 16186)
+#if defined(__HCC__) && (__hcc_workweek__ < 16354)
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
@@ -87,7 +87,8 @@ class ihipCtx_t;
 #define KCYN  "\x1B[36m"
 #define KWHT  "\x1B[37m"
 
-#define API_COLOR KGRN
+extern const char *API_COLOR;
+extern const char *API_COLOR_END;
 
 
 // If set, thread-safety is enforced on all stream functions.
@@ -149,7 +150,7 @@ class ihipCtx_t;
     if (HIP_ATP_MARKER || (COMPILE_HIP_DB && HIP_TRACE_API)) {\
         std::string s = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
         if (COMPILE_HIP_DB && HIP_TRACE_API) {\
-            fprintf (stderr, API_COLOR "<<hip-api: %s\n" KNRM, s.c_str());\
+            fprintf (stderr, "%s<<hip-api: %s\n%s" , API_COLOR, s.c_str(), API_COLOR_END);\
         }\
         SCOPED_MARKER(s.c_str(), "HIP", NULL);\
     }\
@@ -179,7 +180,7 @@ class ihipCtx_t;
         tls_lastHipError = localHipStatus;\
         \
         if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API) {\
-            fprintf(stderr, "  %ship-api: %-30s ret=%2d (%s)>>\n" KNRM, (localHipStatus == 0) ? API_COLOR:KRED, __func__, localHipStatus, ihipErrorString(localHipStatus));\
+            fprintf(stderr, "  %ship-api: %-30s ret=%2d (%s)>>%s\n", (localHipStatus == 0) ? API_COLOR:KRED, __func__, localHipStatus, ihipErrorString(localHipStatus), API_COLOR_END);\
         }\
         localHipStatus;\
     })
@@ -365,8 +366,23 @@ public:
 
 class ihipFunction_t{
 public:
-  hsa_executable_symbol_t kernel_symbol;
-  uint64_t kernel;
+    ihipFunction_t(const char *name) {
+        size_t nameSz = strlen(name);
+        char *kernelName = (char*)malloc(nameSz);
+        strncpy(kernelName, name, nameSz);
+        _kernelName = kernelName;
+    };
+
+    ~ihipFunction_t() {
+        if (_kernelName) {
+            free((void*)_kernelName);
+            _kernelName = NULL;
+        };
+    };
+public:
+    const char             *_kernelName;
+    hsa_executable_symbol_t _kernelSymbol;
+    uint64_t _kernel;
 };
 
 
@@ -415,6 +431,9 @@ public:
     SIGSEQNUM                   _streamSigId;      // Monotonically increasing unique signal id.
 
     hc::accelerator_view        _av;
+
+		std::vector<hc::completion_future*> _cfs;
+
 };
 
 
@@ -452,6 +471,9 @@ typedef uint64_t SeqNum_t ;
     void                 locked_waitEvent(hipEvent_t event);
     void                 locked_recordEvent(hipEvent_t event);
 
+    void                 addCFtoStream(LockedAccessor_StreamCrit_t &crit, hc::completion_future* cf);
+    void                 waitOnAllCFs(LockedAccessor_StreamCrit_t &crit);
+
     //---
 
     // Use this if we already have the stream critical data mutex:
@@ -460,7 +482,8 @@ typedef uint64_t SeqNum_t ;
     void launchModuleKernel(hc::accelerator_view av, hsa_signal_t signal,
                             uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
                             uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
-                            uint32_t sharedMemBytes, void *kernarg, size_t kernSize, uint64_t kernel);
+														uint32_t groupSegmentSize, uint32_t sharedMemBytes, 
+														void *kernarg, size_t kernSize, uint64_t kernel);
 
     // Non-threadsafe accessors - must be protected by high-level stream lock with accessor passed to function.
     SIGSEQNUM            lastCopySeqId (LockedAccessor_StreamCrit_t &crit) const { return crit->_last_copy_signal ? crit->_last_copy_signal->_sigId : 0; };
@@ -498,6 +521,7 @@ private: // Data
 
     // Friends:
     friend std::ostream& operator<<(std::ostream& os, const ihipStream_t& s);
+    friend hipError_t hipStreamQuery(hipStream_t);
 };
 
 
@@ -707,6 +731,18 @@ inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s)
 }
 
 inline std::ostream & operator<<(std::ostream& os, const dim3& s)
+{
+    os << '{';
+    os << s.x;
+    os << ',';
+    os << s.y;
+    os << ',';
+    os << s.z;
+    os << '}';
+    return os;
+}
+
+inline std::ostream & operator<<(std::ostream& os, const gl_dim3& s)
 {
     os << '{';
     os << s.x;

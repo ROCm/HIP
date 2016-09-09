@@ -278,6 +278,11 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int deviceI
  * @param [out] prop written with device properties
  * @param [in]  deviceId which device to query for information
  *
+ * @return #hipSuccess, #hipErrorInvalidDevice
+ * @bug HCC always returns 0 for maxThreadsPerMultiProcessor
+ * @bug HCC always returns 0 for regsPerBlock
+ * @bug HCC always returns 0 for l2CacheSize
+ *
  * Populates hipGetDeviceProperties with information for the specified device.
  */
 hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
@@ -289,6 +294,7 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
 /**
  * @brief Set L1/Shared cache partition.
  *
+ * @returns #hipSuccess
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
@@ -298,6 +304,7 @@ hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig );
 /**
  * @brief Set Cache configuration for a specific function
  *
+ * @returns #hipSuccess
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
@@ -307,6 +314,7 @@ hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig );
 /**
  * @brief Set Cache configuration for a specific function
  *
+ * @returns #hipSuccess
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
@@ -318,6 +326,7 @@ hipError_t hipFuncSetCacheConfig ( hipFuncCache config );
 /**
  * @brief Get Shared memory bank configuration.
  *
+ * @returns #hipSuccess
  * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
  *
  */
@@ -327,6 +336,7 @@ hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig );
 /**
  * @brief Set Shared memory bank configuration.
  *
+ * @returns #hipSuccess
  * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
  *
  */
@@ -335,6 +345,7 @@ hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config );
 /**
  * @brief Set Device flags
  *
+ * @returns #hipSuccess
  * Note: Only hipDeviceScheduleAuto and hipDeviceMapHost are supported
  *
 */
@@ -345,6 +356,14 @@ hipError_t hipSetDeviceFlags ( unsigned flags);
  * @}
  */
 
+/**
+ * @brief Select compute-device which best matches criteria.
+ *
+ * @param [out] device ID
+ * @param [in]  device properties pointer
+ *
+ */
+hipError_t hipChooseDevice(int *device,hipDeviceProp_t* prop);
 
 /**
  *-------------------------------------------------------------------------------------------------
@@ -472,6 +491,20 @@ hipError_t hipStreamCreate(hipStream_t *stream);
  *
  */
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags);
+
+
+/**
+ * @brief Return #hipSuccess if all of the operations in the specified @p stream have completed, or #hipErrorNotReady if not.
+ *
+ * @param[in] stream stream to query
+ *
+ * @return #hipSuccess, #hipErrorNotReady
+ *
+ * This is thread-safe and returns a snapshot of the current state of the queue.  However, if other host threads are sending work to the stream,
+ * the status may change immediately after the function is called.  It is typically used for debug.
+ */
+hipError_t hipStreamQuery(hipStream_t stream);
+
 
 
 /**
@@ -726,7 +759,7 @@ hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) __attribute
 hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, unsigned int flags) ;
 
 /**
- *  @brief Return flags associated with host pointer 
+ *  @brief Return flags associated with host pointer
  *
  *  @param[out]  flagsPtr Memory location to store flags
  *  @param[in] hostPtr Host Pointer allocated through hipHostMalloc
@@ -1227,13 +1260,6 @@ hipError_t  hipCtxDisablePeerAccess (hipCtx_t peerCtx);
  * @}
  */
 
-
-// TODO-ctx
-/**
- * @return hipSuccess, hipErrorInvalidDevice
- */
-hipError_t hipDeviceGetFromId(hipDevice_t *device, int deviceId);
-
 /**
  * @brief Returns a handle to a compute device
  * @param [out] device
@@ -1299,10 +1325,10 @@ hipError_t hipDriverGetVersion(int *driverVersion) ;
  *
  * @param [in] fname
  * @param [out] module
- * 
+ *
  * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidContext, hipErrorFileNotFound, hipErrorOutOfMemory, hipErrorSharedObjectInitFailed, hipErrorNotInitialized
  *
- * 
+ *
  */
 hipError_t hipModuleLoad(hipModule_t *module, const char *fname);
 
@@ -1313,7 +1339,7 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname);
  *
  * @returns hipSuccess, hipInvalidValue
  * module is freed and the code objects associated with it are destroyed
- * 
+ *
  */
 
 hipError_t hipModuleUnload(hipModule_t module);
@@ -1325,7 +1351,7 @@ hipError_t hipModuleUnload(hipModule_t module);
  * @param [in] kname
  * @param [out] function
  *
- * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidContext, hipErrorNotInitialized, hipErrorNotFound, 
+ * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidContext, hipErrorNotInitialized, hipErrorNotFound,
  */
 hipError_t hipModuleGetFunction(hipFunction_t *function, hipModule_t module, const char *kname);
 

@@ -27,7 +27,12 @@ template<typename T>
 __global__ void testExternSharedKernel(hipLaunchParm lp, const T* A_d, const T* B_d, T* C_d, size_t numElements, size_t groupElements) {
 
     // declare dynamic shared memory
+#if defined(__HIP_PLATFORM_HCC__)
     HIP_DYNAMIC_SHARED(T, sdata)
+#else
+    HIP_DYNAMIC_SHARED(__align__(sizeof(T)) unsigned char, my_sdata)
+    T *sdata = reinterpret_cast<T *>(my_sdata);
+#endif
 
     size_t gid = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
     size_t tid = hipThreadIdx_x;

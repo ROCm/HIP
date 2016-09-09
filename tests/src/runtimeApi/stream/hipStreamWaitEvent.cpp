@@ -27,13 +27,14 @@ unsigned p_streams = 6;
 
 //------
 // Structure for one stream;
-template <typename T> 
+template <typename T>
 class Streamer {
 public:
     Streamer(size_t numElements);
     ~Streamer();
     void runAsync();
-    void waitComplete();
+    void queryUntilComplete();
+
 
 private:
     T *_A_h;
@@ -66,11 +67,24 @@ void Streamer<T>::runAsync()
     printf ("testing: %s  numElements=%zu size=%6.2fMB\n", __func__, _numElements, _numElements * sizeof(T) / 1024.0/1024.0);
     unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, _numElements);
     hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, _stream, _A_d, _B_d, _C_d, _numElements);
+
+    // Test case where hipStreamWaitEvent waits on same event we just placed into the queue.
     HIPCHECK(hipEventRecord(_event, _stream));
     HIPCHECK(hipStreamWaitEvent(_stream, _event, 0));
-
 }
 
+template <typename T>
+void Streamer<T>::queryUntilComplete()
+{
+    int numQueries = 0;
+    hipError_t e = hipSuccess;
+    do {
+        numQueries++;
+        e = hipStreamQuery(_stream);
+    } while (e != hipSuccess) ;
+
+    printf ("completed after %d queries\n", numQueries);
+};
 
 
 
@@ -99,7 +113,7 @@ void parseMyArguments(int argc, char *argv[])
 //---
 int main(int argc, char *argv[])
 {
-    HipTest::parseStandardArguments(argc, argv, true);
+    HipTest::parseStandardArguments(argc, argv, false);
     parseMyArguments(argc, argv);
 
     typedef Streamer<float> FloatStreamer;
@@ -113,11 +127,28 @@ int main(int argc, char *argv[])
         streamers.push_back(s);
     }
 
-    for (int i=0; i<p_streams; i++) {
-        streamers[i]->runAsync();
+    if (p_tests & 0x1) {
+        printf ("==> Test 0x1 runAsnc\n");
+        for (int i=0; i<p_streams; i++) {
+            streamers[i]->runAsync();
+        }
+        HIPCHECK(hipDeviceSynchronize());
     }
 
-    HIPCHECK(hipDeviceSynchronize());
+    if (p_tests & 0x2) {
+        printf ("==> Test 0x2 queryUntilComplete\n");
+        for (int i=0; i<p_streams; i++) {
+            streamers[i]->runAsync();
+            streamers[i]->queryUntilComplete();
+        }
+        HIPCHECK(hipDeviceSynchronize());
+    }
+
+    if (p_tests & 0x4) {
+        hipStreamQuery(0/* try null stream*/);
+
+    }
+
 
     passed();
 }

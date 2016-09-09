@@ -699,12 +699,12 @@ sub warnUnsupportedSpecialFunctions
         #"__ballot",
 
         #"__popc",
-        #"__clz",        
+        #"__clz",
 
-        "__shfl",
-        "__shfl_up",  
-        "__shfl_down",  
-        "__shfl_xor",  
+        #"__shfl",
+        #"__shfl_up",
+        #"__shfl_down",
+        #"__shfl_xor",
 
         "__prof_trigger",
 

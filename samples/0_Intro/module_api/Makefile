@@ -5,17 +5,13 @@ endif
 HIPCC=$(HIP_PATH)/bin/hipcc
 HIP_PLATFORM=$(shell $(HIP_PATH)/bin/hipconfig --compiler)
 
-ifeq (${HIP_PLATFORM}, hcc)
-	GENCO_FLAGS=--target-isa=fiji
-endif
-
 all: vcpy_kernel.code runKernel.hip.out
 
 runKernel.hip.out: runKernel.cpp
 	$(HIPCC) $(HIPCC_FLAGS) $< -o $@
 
 vcpy_kernel.code: vcpy_kernel.cpp
-	$(HIPCC) --genco $(GENCO_FLAGS) $< -o $@
+	$(HIPCC) --genco $(GENCO_FLAGS) $^ -o $@
 
 clean:
 	rm -f *.code *.out

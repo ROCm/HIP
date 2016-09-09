@@ -56,7 +56,9 @@ __host__ void single_precision_math_functions()
     expm1f(0.0f);
     fabsf(1.0f);
     fdimf(1.0f, 0.0f);
+#if defined(__HIP_PLATFORM_HCC__)
     fdividef(0.0f, 1.0f);
+#endif
     floorf(0.0f);
     fmaf(1.0f, 2.0f, 3.0f);
     fmaxf(0.0f, 0.0f);
@@ -86,8 +88,10 @@ __host__ void single_precision_math_functions()
     nanf("1");
     nearbyintf(0.0f);
     //nextafterf(0.0f);
+#if defined(__HIP_PLATFORM_HCC__)
     norm3df(1.0f, 0.0f, 0.0f);
     norm4df(1.0f, 0.0f, 0.0f, 0.0f);
+#endif
     normcdff(0.0f);
     normcdfinvf(1.0f);
     //fX = 1.0f; normf(1, &fX);
@@ -95,11 +99,15 @@ __host__ void single_precision_math_functions()
     rcbrtf(1.0f);
     remainderf(2.0f, 1.0f);
     remquof(1.0f, 2.0f, &iX);
+#if defined(__HIP_PLATFORM_HCC__)
     rhypotf(0.0f, 1.0f);
+#endif
     rintf(1.0f);
+#if defined(__HIP_PLATFORM_HCC__)
     rnorm3df(0.0f, 0.0f, 1.0f);
     rnorm4df(0.0f, 0.0f, 0.0f, 1.0f);
     fX = 1.0f; rnormf(1, &fX);
+#endif
     roundf(0.0f);
     rsqrtf(1.0f);
     scalblnf(0.0f, 1);
