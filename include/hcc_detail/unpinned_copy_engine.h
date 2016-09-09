@@ -46,15 +46,23 @@ struct UnpinnedCopyEngine {
     UnpinnedCopyEngine(hsa_agent_t hsaAgent,hsa_agent_t cpuAgent, size_t bufferSize, int numBuffers,int thresholdH2D_directStaging,int thresholdH2D_stagingPinInPlace,int thresholdD2H) ;
     ~UnpinnedCopyEngine();
 
-    /* Use hueristic to choose best copy algorithm */
+    // Use hueristic to choose best copy algorithm 
+    void CopyHostToDevice(CopyMode copyMode, int isLargeBar,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
+    void CopyDeviceToHost(CopyMode copyMode, void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
 
-    void CopyHostToDeviceBest(CopyMode copyMode, int isLargeBar,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
+
+    // Specific H2D copy algorithm implementations:
     void CopyHostToDeviceStaging(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
     void CopyHostToDevicePinInPlace(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
+    void CopyHostToDeviceMemcpy(int isLargeBar, void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
 
-    void CopyDeviceToHost(int tempIndex,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
+
+    // Specific D2H copy algorithm implementations:
+    void CopyDeviceToHostStaging(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
     void CopyDeviceToHostPinInPlace(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
 
+
+    // P2P Copy implementation:
     void CopyPeerToPeer( void* dst, hsa_agent_t dstAgent, const void* src, hsa_agent_t srcAgent, size_t sizeBytes, hsa_signal_t *waitFor);
 
 

@@ -159,7 +159,20 @@ void UnpinnedCopyEngine::CopyHostToDevicePinInPlace(void* dst, const void* src, 
 }
 
 
-void UnpinnedCopyEngine::CopyHostToDeviceBest(UnpinnedCopyEngine::CopyMode copyMode, int isLargeBar,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
+// Copy using simple memcpy.  Only works on large-bar systems.
+void UnpinnedCopyEngine::CopyHostToDeviceMemcpy(int isLargeBar, void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
+{
+    if (!isLargeBar) {
+        THROW_ERROR (hipErrorInvalidValue);
+    }
+
+    memcpy(dst,src,sizeBytes);
+    std::atomic_thread_fence(std::memory_order_release);
+};
+
+
+
+void UnpinnedCopyEngine::CopyHostToDevice(UnpinnedCopyEngine::CopyMode copyMode, int isLargeBar,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
 {
     if (copyMode == ChooseBest) {
         if (isLargeBar && (sizeBytes < _hipH2DTransferThresholdDirectOrStaging)) {
@@ -173,12 +186,7 @@ void UnpinnedCopyEngine::CopyHostToDeviceBest(UnpinnedCopyEngine::CopyMode copyM
 
     if (copyMode == UseMemcpy) {
 
-        if (!isLargeBar) {
-            THROW_ERROR (hipErrorInvalidValue);
-        }
 
-	    memcpy(dst,src,sizeBytes);
-		std::atomic_thread_fence(std::memory_order_release);
 
 	} else if (copyMode == UsePinInPlace) {
         CopyHostToDevicePinInPlace(dst, src, sizeBytes, waitFor);
@@ -291,17 +299,35 @@ void UnpinnedCopyEngine::CopyDeviceToHostPinInPlace(void* dst, const void* src, 
     waitFor = NULL;
 }
 
+
+void UnpinnedCopyEngine::CopyDeviceToHost(CopyMode copyMode ,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
+{
+    if (copyMode == ChooseBest) {
+        if (sizeBytes > _hipD2HTransferThreshold) {
+            copyMode = UsePinInPlace;
+        } else {
+            copyMode = UseStaging;
+        }
+    }
+
+
+	if (copyMode == UsePinInPlace) {
+        CopyDeviceToHostPinInPlace(dst, src, sizeBytes, waitFor);
+    } if (copyMode == UseStaging) { 
+        CopyDeviceToHostStaging(dst, src, sizeBytes, waitFor);
+    } else {
+        // Unknown copy mode.
+        THROW_ERROR(hipErrorInvalidValue);
+    }
+}
+
 //---
 //Copies sizeBytes from src to dst, using either a copy to a staging buffer or a staged pin-in-place strategy
 //IN: dst - dest pointer - must be accessible from agent this buffer is associated with (via _hsaAgent).
 //IN: src - src pointer for copy.  Must be accessible from host CPU.
 //IN: waitFor - hsaSignal to wait for - the copy will begin only when the specified dependency is resolved.  May be NULL indicating no dependency.
-void UnpinnedCopyEngine::CopyDeviceToHost(int tempIndex,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
+void UnpinnedCopyEngine::CopyDeviceToHostStaging(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
 {
-	if((tempIndex==1) && (sizeBytes> _hipD2HTransferThreshold)){
-        CopyDeviceToHostPinInPlace(dst, src, sizeBytes, waitFor);
-    }
-    else
     {
         std::lock_guard<std::mutex> l (_copyLock);
 
