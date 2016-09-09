@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     hipCtx_t    ctx;
     hipCtx_t    ctx1;
 
-    HIPCHECK(hipDeviceGetFromId(&device, 0));
+    HIPCHECK(hipDeviceGet(&device, 0));
     HIPCHECK(hipCtxCreate(&ctx, 0, device));
     HIPCHECK(hipCtxGetCurrent(&ctx1));
     HIPCHECK(hipCtxGetDevice(&device1));

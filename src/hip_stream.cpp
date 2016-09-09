@@ -116,6 +116,27 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
 
 
 //---
+hipError_t hipStreamQuery(hipStream_t stream)
+{
+    HIP_INIT_API(stream);
+
+    // Use default stream if 0 specified:
+    if (stream == hipStreamNull) {
+        ihipCtx_t *device = ihipGetTlsDefaultCtx();
+        stream =  device->_defaultStream;
+    }
+
+    LockedAccessor_StreamCrit_t crit(stream->_criticalData);
+    int pendingOps = crit->_av.get_pending_async_ops();
+
+
+    hipError_t e = (pendingOps > 0) ? hipErrorNotReady : hipSuccess;
+
+    return ihipLogStatus(e);
+}
+
+
+//---
 hipError_t hipStreamSynchronize(hipStream_t stream)
 {
     HIP_INIT_API(stream);

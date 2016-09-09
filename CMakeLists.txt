@@ -116,7 +116,7 @@ endif()
 # Set if we need to build shared or static library
 if(NOT DEFINED HIP_LIB_TYPE)
     if(NOT DEFINED ENV{HIP_LIB_TYPE})
-        set(HIP_LIB_TYPE 0)
+        set(HIP_LIB_TYPE 1)
     else()
         set(HIP_LIB_TYPE $ENV{HIP_LIB_TYPE})
     endif()
