@@ -1436,7 +1436,6 @@ void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, c
     }
 }
 
-// TODO - data-up to data-down:
 // Called just before a kernel is launched from hipLaunchKernel.
 // Allows runtime to track some information about the stream.
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp, const char *kernelNameStr)
@@ -1733,22 +1732,17 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
 #endif
     }
 
+
     if (kind == hipMemcpyHostToDevice) {
         int depSignalCnt = preCopyCommand(crit, NULL, &depSignal, ihipCommandCopyH2D);
         if(!srcTracked){
             if (HIP_STAGING_BUFFERS) {
                 tprintf(DB_COPY1, "D2H && !dstTracked: staged copy H2D dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
-                if(HIP_OPTIMAL_MEM_TRANSFER)
-                {
-                    device->_stagingBuffer[0]->CopyHostToDevice(1,device->_isLargeBar,dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
-                }
-                else {
-                    if (HIP_PININPLACE) {
-                        device->_stagingBuffer[0]->CopyHostToDevicePinInPlace(dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
-                    } else {
-                        device->_stagingBuffer[0]->CopyHostToDevice(0,0,dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
-                    }
-               }
+                UnpinnedCopyEngine::CopyMode copyMode = UnpinnedCopyEngine::ChooseBest;
+                if (HIP_PININPLACE) {
+                    copyMode = UnpinnedCopyEngine::UsePinInPlace;
+                } 
+                device->_stagingBuffer[0]->CopyHostToDeviceBest(copyMode, device->_isLargeBar, dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
                // The copy waits for inputs and then completes before returning so can reset queue to empty:
                this->wait(crit, true);
             }
