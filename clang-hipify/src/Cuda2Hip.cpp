@@ -56,7 +56,8 @@ using namespace llvm;
 #define DEBUG_TYPE "cuda2hip"
 
 enum ConvTypes {
-  CONV_DEV = 0,
+  CONV_DRIVER = 0,
+  CONV_DEV,
   CONV_MEM,
   CONV_KERN,
   CONV_COORD_FUNC,
@@ -79,11 +80,10 @@ enum ConvTypes {
 };
 
 const char *counterNames[CONV_LAST] = {
-    "dev",          "mem",      "kern",  "coord_func", "math_func",
-    "special_func", "stream",   "event", "ctx",        "cache",
-    "err",          "def",      "tex",   "other",      "include",
-    "include_cuda_main_header", "type",  "literal",    "numeric_literal"};
-
+    "driver",       "dev",      "mem",   "kern",    "coord_func", "math_func",
+    "special_func", "stream",   "event", "ctx",     "cache",      "err",
+    "def",          "tex",      "other", "include", "include_cuda_main_header",
+    "type",         "literal",  "numeric_literal"}; 
 enum ApiTypes {
   API_DRIVER = 0,
   API_RUNTIME,
@@ -92,7 +92,7 @@ enum ApiTypes {
 };
 
 const char *apiNames[API_LAST] = {
-    "CUDA API", "CUDA RT API", "CUDA BLAS API"};
+    "CUDA", "CUDA RT", "CUBLAS"};
 
 namespace {
 
@@ -352,6 +352,9 @@ struct cuda2hipMap {
     cuda2hipRename["cuDeviceComputeCapability"]                 = {"hipDeviceComputeCapability", CONV_DEV, API_DRIVER};
     cuda2hipRename["cuDeviceCanAccessPeer"]                     = {"hipDeviceCanAccessPeer", CONV_DEV, API_DRIVER};
 
+    // Driver
+    cuda2hipRename["cuDriverGetVersion"]                        = {"hipDriverGetVersion", CONV_DRIVER, API_DRIVER};
+
     /////////////////////////////// CUDA RT API ///////////////////////////////
     // Error API
     cuda2hipRename["cudaGetLastError"]               = {"hipGetLastError", CONV_ERR, API_RUNTIME};
@@ -467,6 +470,7 @@ struct cuda2hipMap {
     cuda2hipRename["cudaThreadExit"]        = {"hipDeviceReset", CONV_DEV, API_RUNTIME};
     cuda2hipRename["cudaSetDevice"]         = {"hipSetDevice", CONV_DEV, API_RUNTIME};
     cuda2hipRename["cudaGetDevice"]         = {"hipGetDevice", CONV_DEV, API_RUNTIME};
+    cuda2hipRename["cudaGetDeviceCount"]    = {"hipGetDeviceCount", CONV_DEV, API_RUNTIME};
 
     // Attributes
     cuda2hipRename["cudaDeviceAttr"]          = {"hipDeviceAttribute_t", CONV_TYPE, API_RUNTIME};
@@ -538,8 +542,7 @@ struct cuda2hipMap {
     cuda2hipRename["cudaFuncSetCacheConfig"]    = {"hipFuncSetCacheConfig", CONV_CACHE, API_RUNTIME};
 
     // Driver/Runtime
-    cuda2hipRename["cudaDriverGetVersion"] = {"hipDriverGetVersion", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaGetDeviceCount"]   = {"hipGetDeviceCount", CONV_DEV, API_RUNTIME};
+    cuda2hipRename["cudaDriverGetVersion"]      = {"hipDriverGetVersion", CONV_DRIVER, API_RUNTIME};
     // unsupported yet
     //cuda2hipRename["cudaRuntimeGetVersion"] = {"hipRuntimeGetVersion", CONV_DEV, API_RUNTIME};
 
