@@ -355,6 +355,14 @@ struct cuda2hipMap {
     // Driver
     cuda2hipRename["cuDriverGetVersion"]                        = {"hipDriverGetVersion", CONV_DRIVER, API_DRIVER};
 
+    // Events
+    cuda2hipRename["cuEventCreate"]                             = {"hipEventCreate", CONV_EVENT, API_DRIVER};
+    cuda2hipRename["cuEventDestroy_v2"]                         = {"hipEventDestroy", CONV_EVENT, API_DRIVER};
+    cuda2hipRename["cuEventElapsedTime"]                        = {"hipEventElapsedTime", CONV_EVENT, API_DRIVER};
+    cuda2hipRename["cuEventQuery"]                              = {"hipEventQuery", CONV_EVENT, API_DRIVER};
+    cuda2hipRename["cuEventRecord"]                             = {"hipEventRecord", CONV_EVENT, API_DRIVER};
+    cuda2hipRename["cuEventSynchronize"]                        = {"hipEventSynchronize", CONV_EVENT, API_DRIVER};
+
     /////////////////////////////// CUDA RT API ///////////////////////////////
     // Error API
     cuda2hipRename["cudaGetLastError"]               = {"hipGetLastError", CONV_ERR, API_RUNTIME};
