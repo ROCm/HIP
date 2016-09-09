@@ -85,8 +85,8 @@ UnpinnedCopyEngine::UnpinnedCopyEngine(hsa_agent_t hsaAgent, hsa_agent_t cpuAgen
         err = hsa_amd_agents_allow_access(1, &hsaAgent, NULL, _pinnedStagingBuffer[i]);
         ErrorCheck(err);
 
-        hsa_signal_create(0, 0, NULL, &_completion_signal[i]);
-        hsa_signal_create(0, 0, NULL, &_completion_signal2[i]);
+        hsa_signal_create(0, 0, NULL, &_completionSignal[i]);
+        hsa_signal_create(0, 0, NULL, &_completionSignal2[i]);
     }
 
 };
@@ -100,8 +100,8 @@ UnpinnedCopyEngine::~UnpinnedCopyEngine()
             hsa_amd_memory_pool_free(_pinnedStagingBuffer[i]);
             _pinnedStagingBuffer[i] = NULL;
         }
-        hsa_signal_destroy(_completion_signal[i]);
-        hsa_signal_destroy(_completion_signal2[i]);
+        hsa_signal_destroy(_completionSignal[i]);
+        hsa_signal_destroy(_completionSignal2[i]);
     }
 }
 
@@ -114,13 +114,13 @@ UnpinnedCopyEngine::~UnpinnedCopyEngine()
 //IN: waitFor - hsaSignal to wait for - the copy will begin only when the specified dependency is resolved.  May be NULL indicating no dependency.
 void UnpinnedCopyEngine::CopyHostToDevicePinInPlace(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
 {
-    std::lock_guard<std::mutex> l (_copy_lock);
+    std::lock_guard<std::mutex> l (_copyLock);
 
     const char *srcp = static_cast<const char*> (src);
     char *dstp = static_cast<char*> (dst);
 
     for (int i=0; i<_numBuffers; i++) {
-        hsa_signal_store_relaxed(_completion_signal[i], 0);
+        hsa_signal_store_relaxed(_completionSignal[i], 0);
     }
 
     if (sizeBytes >= UINT64_MAX/2) {
@@ -129,8 +129,8 @@ void UnpinnedCopyEngine::CopyHostToDevicePinInPlace(void* dst, const void* src, 
     int bufferIndex = 0;
 
     size_t theseBytes= sizeBytes;
-    //tprintf (DB_COPY2, "H2D: waiting... on completion signal handle=%lu\n", _completion_signal[bufferIndex].handle);
-    //hsa_signal_wait_acquire(_completion_signal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+    //tprintf (DB_COPY2, "H2D: waiting... on completion signal handle=%lu\n", _completionSignal[bufferIndex].handle);
+    //hsa_signal_wait_acquire(_completionSignal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
 
     //void * masked_srcp = (void*) ((uintptr_t)srcp & (uintptr_t)(~0x3f)) ; // TODO
     void *locked_srcp;
@@ -143,22 +143,54 @@ void UnpinnedCopyEngine::CopyHostToDevicePinInPlace(void* dst, const void* src, 
         THROW_ERROR (hipErrorRuntimeMemory);
     }
 
-    hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
+    hsa_signal_store_relaxed(_completionSignal[bufferIndex], 1);
 
-    hsa_status = hsa_amd_memory_async_copy(dstp, _hsaAgent, locked_srcp, _cpuAgent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
+    hsa_status = hsa_amd_memory_async_copy(dstp, _hsaAgent, locked_srcp, _cpuAgent, theseBytes, waitFor ? 1:0, waitFor, _completionSignal[bufferIndex]);
     //tprintf (DB_COPY2, "H2D: bytesRemaining=%zu: async_copy %zu bytes %p to %p status=%x\n", bytesRemaining, theseBytes, _pinnedStagingBuffer[bufferIndex], dstp, hsa_status);
 
     if (hsa_status != HSA_STATUS_SUCCESS) {
         THROW_ERROR (hipErrorRuntimeMemory);
     }
-    tprintf (DB_COPY2, "H2D: waiting... on completion signal handle=%lu\n", _completion_signal[bufferIndex].handle);
-    hsa_signal_wait_acquire(_completion_signal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+    tprintf (DB_COPY2, "H2D: waiting... on completion signal handle=%lu\n", _completionSignal[bufferIndex].handle);
+    hsa_signal_wait_acquire(_completionSignal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
     hsa_amd_memory_unlock(const_cast<char*> (srcp));
     // Assume subsequent commands are dependent on previous and don't need dependency after first copy submitted, HIP_ONESHOT_COPY_DEP=1
     waitFor = NULL;
 }
 
 
+void UnpinnedCopyEngine::CopyHostToDeviceBest(UnpinnedCopyEngine::CopyMode copyMode, int isLargeBar,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
+{
+    if (copyMode == ChooseBest) {
+        if (isLargeBar && (sizeBytes < _hipH2DTransferThresholdDirectOrStaging)) {
+            copyMode = UseMemcpy;
+        } else if (sizeBytes > _hipH2DTransferThresholdStagingOrPininplace) {
+            copyMode = UsePinInPlace;
+        } else {
+            copyMode = UseStaging;
+        }
+    }
+
+    if (copyMode == UseMemcpy) {
+
+        if (!isLargeBar) {
+            THROW_ERROR (hipErrorInvalidValue);
+        }
+
+	    memcpy(dst,src,sizeBytes);
+		std::atomic_thread_fence(std::memory_order_release);
+
+	} else if (copyMode == UsePinInPlace) {
+        CopyHostToDevicePinInPlace(dst, src, sizeBytes, waitFor);
+
+	} else if (copyMode == UseStaging) {
+        CopyHostToDeviceStaging(dst, src, sizeBytes, waitFor);
+
+    } else {
+        // Unknown copy mode.
+        THROW_ERROR(hipErrorInvalidValue);
+    }
+}
 
 
 //---
@@ -166,24 +198,16 @@ void UnpinnedCopyEngine::CopyHostToDevicePinInPlace(void* dst, const void* src, 
 //IN: dst - dest pointer - must be accessible from host CPU.
 //IN: src - src pointer for copy.  Must be accessible from agent this buffer is associated with (via _hsaAgent)
 //IN: waitFor - hsaSignal to wait for - the copy will begin only when the specified dependency is resolved.  May be NULL indicating no dependency.
-void UnpinnedCopyEngine::CopyHostToDevice(int tempIndex,int isLargeBar,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
+void UnpinnedCopyEngine::CopyHostToDeviceStaging(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
 {
-    if((tempIndex==1)&&(isLargeBar)&&(sizeBytes < _hipH2DTransferThresholdDirectOrStaging)){
-	    memcpy(dst,src,sizeBytes);
-		std::atomic_thread_fence(std::memory_order_release);
-	}
-	else if((tempIndex==1) && (sizeBytes > _hipH2DTransferThresholdStagingOrPininplace)){
-		        CopyHostToDevicePinInPlace(dst, src, sizeBytes, waitFor);
-    }
-	else
 	{
-        std::lock_guard<std::mutex> l (_copy_lock);
+        std::lock_guard<std::mutex> l (_copyLock);
 
         const char *srcp = static_cast<const char*> (src);
         char *dstp = static_cast<char*> (dst);
 
         for (int i=0; i<_numBuffers; i++) {
-            hsa_signal_store_relaxed(_completion_signal[i], 0);
+            hsa_signal_store_relaxed(_completionSignal[i], 0);
         }
 
         if (sizeBytes >= UINT64_MAX/2) {
@@ -194,16 +218,16 @@ void UnpinnedCopyEngine::CopyHostToDevice(int tempIndex,int isLargeBar,void* dst
 
             size_t theseBytes = (bytesRemaining > _bufferSize) ? _bufferSize : bytesRemaining;
 
-            tprintf (DB_COPY2, "H2D: waiting... on completion signal handle=%lu\n", _completion_signal[bufferIndex].handle);
-            hsa_signal_wait_acquire(_completion_signal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+            tprintf (DB_COPY2, "H2D: waiting... on completion signal handle=%lu\n", _completionSignal[bufferIndex].handle);
+            hsa_signal_wait_acquire(_completionSignal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
 
             tprintf (DB_COPY2, "H2D: bytesRemaining=%zu: copy %zu bytes %p to stagingBuf[%d]:%p\n", bytesRemaining, theseBytes, srcp, bufferIndex, _pinnedStagingBuffer[bufferIndex]);
             // TODO - use uncached memcpy, someday.
             memcpy(_pinnedStagingBuffer[bufferIndex], srcp, theseBytes);
 
 
-            hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
-            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dstp, _hsaAgent, _pinnedStagingBuffer[bufferIndex], _cpuAgent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
+            hsa_signal_store_relaxed(_completionSignal[bufferIndex], 1);
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dstp, _hsaAgent, _pinnedStagingBuffer[bufferIndex], _cpuAgent, theseBytes, waitFor ? 1:0, waitFor, _completionSignal[bufferIndex]);
             tprintf (DB_COPY2, "H2D: bytesRemaining=%zu: async_copy %zu bytes %p to %p status=%x\n", bytesRemaining, theseBytes, _pinnedStagingBuffer[bufferIndex], dstp, hsa_status);
             if (hsa_status != HSA_STATUS_SUCCESS) {
                 THROW_ERROR ((hipErrorRuntimeMemory));
@@ -221,7 +245,7 @@ void UnpinnedCopyEngine::CopyHostToDevice(int tempIndex,int isLargeBar,void* dst
 
 
         for (int i=0; i<_numBuffers; i++) {
-            hsa_signal_wait_acquire(_completion_signal[i], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+            hsa_signal_wait_acquire(_completionSignal[i], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
         }
 	}
 }
@@ -229,13 +253,13 @@ void UnpinnedCopyEngine::CopyHostToDevice(int tempIndex,int isLargeBar,void* dst
 
 void UnpinnedCopyEngine::CopyDeviceToHostPinInPlace(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
 {
-    std::lock_guard<std::mutex> l (_copy_lock);
+    std::lock_guard<std::mutex> l (_copyLock);
 
     const char *srcp = static_cast<const char*> (src);
     char *dstp = static_cast<char*> (dst);
 
     for (int i=0; i<_numBuffers; i++) {
-        hsa_signal_store_relaxed(_completion_signal[i], 0);
+        hsa_signal_store_relaxed(_completionSignal[i], 0);
     }
 
     if (sizeBytes >= UINT64_MAX/2) {
@@ -252,15 +276,15 @@ void UnpinnedCopyEngine::CopyDeviceToHostPinInPlace(void* dst, const void* src, 
         THROW_ERROR (hipErrorRuntimeMemory);
     }
 
-    hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
+    hsa_signal_store_relaxed(_completionSignal[bufferIndex], 1);
 
-    hsa_status = hsa_amd_memory_async_copy(locked_destp,_cpuAgent , srcp, _hsaAgent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
+    hsa_status = hsa_amd_memory_async_copy(locked_destp,_cpuAgent , srcp, _hsaAgent, theseBytes, waitFor ? 1:0, waitFor, _completionSignal[bufferIndex]);
 
     if (hsa_status != HSA_STATUS_SUCCESS) {
         THROW_ERROR (hipErrorRuntimeMemory);
     }
-    tprintf (DB_COPY2, "D2H: waiting... on completion signal handle=%lu\n", _completion_signal[bufferIndex].handle);
-    hsa_signal_wait_acquire(_completion_signal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+    tprintf (DB_COPY2, "D2H: waiting... on completion signal handle=%lu\n", _completionSignal[bufferIndex].handle);
+    hsa_signal_wait_acquire(_completionSignal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
     hsa_amd_memory_unlock(const_cast<char*> (dstp));
 
     // Assume subsequent commands are dependent on previous and don't need dependency after first copy submitted, HIP_ONESHOT_COPY_DEP=1
@@ -279,13 +303,13 @@ void UnpinnedCopyEngine::CopyDeviceToHost(int tempIndex,void* dst, const void* s
     }
     else
     {
-        std::lock_guard<std::mutex> l (_copy_lock);
+        std::lock_guard<std::mutex> l (_copyLock);
 
         const char *srcp0 = static_cast<const char*> (src);
         char *dstp1 = static_cast<char*> (dst);
 
         for (int i=0; i<_numBuffers; i++) {
-            hsa_signal_store_relaxed(_completion_signal[i], 0);
+            hsa_signal_store_relaxed(_completionSignal[i], 0);
         }
 
         if (sizeBytes >= UINT64_MAX/2) {
@@ -303,8 +327,8 @@ void UnpinnedCopyEngine::CopyDeviceToHost(int tempIndex,void* dst, const void* s
                 size_t theseBytes = (bytesRemaining0 > _bufferSize) ? _bufferSize : bytesRemaining0;
 
                 tprintf (DB_COPY2, "D2H: bytesRemaining0=%zu  async_copy %zu bytes src:%p to staging:%p\n", bytesRemaining0, theseBytes, srcp0, _pinnedStagingBuffer[bufferIndex]);
-                hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
-                hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], _cpuAgent, srcp0, _hsaAgent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
+                hsa_signal_store_relaxed(_completionSignal[bufferIndex], 1);
+                hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], _cpuAgent, srcp0, _hsaAgent, theseBytes, waitFor ? 1:0, waitFor, _completionSignal[bufferIndex]);
                 if (hsa_status != HSA_STATUS_SUCCESS) {
                     THROW_ERROR (hipErrorRuntimeMemory);
                 }
@@ -322,7 +346,7 @@ void UnpinnedCopyEngine::CopyDeviceToHost(int tempIndex,void* dst, const void* s
                 size_t theseBytes = (bytesRemaining1 > _bufferSize) ? _bufferSize : bytesRemaining1;
 
                 tprintf (DB_COPY2, "D2H: wait_completion[%d] bytesRemaining=%zu\n", bufferIndex, bytesRemaining1);
-                hsa_signal_wait_acquire(_completion_signal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+                hsa_signal_wait_acquire(_completionSignal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
 
                 tprintf (DB_COPY2, "D2H: bytesRemaining1=%zu copy %zu bytes stagingBuf[%d]:%p to dst:%p\n", bytesRemaining1, theseBytes, bufferIndex, _pinnedStagingBuffer[bufferIndex], dstp1);
                 memcpy(dstp1, _pinnedStagingBuffer[bufferIndex], theseBytes);
@@ -341,14 +365,14 @@ void UnpinnedCopyEngine::CopyDeviceToHost(int tempIndex,void* dst, const void* s
 //IN: waitFor - hsaSignal to wait for - the copy will begin only when the specified dependency is resolved.  May be NULL indicating no dependency.
 void UnpinnedCopyEngine::CopyPeerToPeer(void* dst, hsa_agent_t dstAgent, const void* src, hsa_agent_t srcAgent, size_t sizeBytes, hsa_signal_t *waitFor)
 {
-    std::lock_guard<std::mutex> l (_copy_lock);
+    std::lock_guard<std::mutex> l (_copyLock);
 
     const char *srcp0 = static_cast<const char*> (src);
     char *dstp1 = static_cast<char*> (dst);
 
     for (int i=0; i<_numBuffers; i++) {
-        hsa_signal_store_relaxed(_completion_signal[i], 0);
-        hsa_signal_store_relaxed(_completion_signal2[i], 0);
+        hsa_signal_store_relaxed(_completionSignal[i], 0);
+        hsa_signal_store_relaxed(_completionSignal2[i], 0);
     }
 
     if (sizeBytes >= UINT64_MAX/2) {
@@ -365,11 +389,11 @@ void UnpinnedCopyEngine::CopyPeerToPeer(void* dst, hsa_agent_t dstAgent, const v
             size_t theseBytes = (bytesRemaining0 > _bufferSize) ? _bufferSize : bytesRemaining0;
 
             // Wait to make sure we are not overwriting a buffer before it has been drained:
-            hsa_signal_wait_acquire(_completion_signal2[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+            hsa_signal_wait_acquire(_completionSignal2[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
 
             tprintf (DB_COPY2, "P2P: bytesRemaining0=%zu  async_copy %zu bytes src:%p to staging:%p\n", bytesRemaining0, theseBytes, srcp0, _pinnedStagingBuffer[bufferIndex]);
-            hsa_signal_store_relaxed(_completion_signal[bufferIndex], 1);
-            hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], _cpuAgent, srcp0, srcAgent, theseBytes, waitFor ? 1:0, waitFor, _completion_signal[bufferIndex]);
+            hsa_signal_store_relaxed(_completionSignal[bufferIndex], 1);
+            hsa_status_t hsa_status = hsa_amd_memory_async_copy(_pinnedStagingBuffer[bufferIndex], _cpuAgent, srcp0, srcAgent, theseBytes, waitFor ? 1:0, waitFor, _completionSignal[bufferIndex]);
             if (hsa_status != HSA_STATUS_SUCCESS) {
                 THROW_ERROR (hipErrorRuntimeMemory);
             }
@@ -392,14 +416,14 @@ void UnpinnedCopyEngine::CopyPeerToPeer(void* dst, hsa_agent_t dstAgent, const v
 
             if (hostWait) {
                 // Host-side wait, should not be necessary:
-                hsa_signal_wait_acquire(_completion_signal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+                hsa_signal_wait_acquire(_completionSignal[bufferIndex], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
             }
 
             tprintf (DB_COPY2, "P2P: bytesRemaining1=%zu copy %zu bytes stagingBuf[%d]:%p to device:%p\n", bytesRemaining1, theseBytes, bufferIndex, _pinnedStagingBuffer[bufferIndex], dstp1);
-            hsa_signal_store_relaxed(_completion_signal2[bufferIndex], 1);
+            hsa_signal_store_relaxed(_completionSignal2[bufferIndex], 1);
             hsa_status_t hsa_status = hsa_amd_memory_async_copy(dstp1, dstAgent, _pinnedStagingBuffer[bufferIndex], _cpuAgent /*not used*/, theseBytes,
-                                      hostWait ? 0:1, hostWait ? NULL : &_completion_signal[bufferIndex],
-                                      _completion_signal2[bufferIndex]);
+                                      hostWait ? 0:1, hostWait ? NULL : &_completionSignal[bufferIndex],
+                                      _completionSignal2[bufferIndex]);
 
             dstp1 += theseBytes;
         }
@@ -408,6 +432,6 @@ void UnpinnedCopyEngine::CopyPeerToPeer(void* dst, hsa_agent_t dstAgent, const v
 
     // Wait for the staging-buffer to dest copies to complete:
     for (int i=0; i<_numBuffers; i++) {
-        hsa_signal_wait_acquire(_completion_signal2[i], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+        hsa_signal_wait_acquire(_completionSignal2[i], HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
     }
 }

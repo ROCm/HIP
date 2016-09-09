@@ -39,15 +39,20 @@ THE SOFTWARE.
 // Staging buffer provides thread-safe access via a mutex.
 struct UnpinnedCopyEngine {
 
+    enum CopyMode {ChooseBest, UsePinInPlace, UseStaging, UseMemcpy} ; 
+
     static const int _max_buffers = 4;
 
     UnpinnedCopyEngine(hsa_agent_t hsaAgent,hsa_agent_t cpuAgent, size_t bufferSize, int numBuffers,int thresholdH2D_directStaging,int thresholdH2D_stagingPinInPlace,int thresholdD2H) ;
     ~UnpinnedCopyEngine();
 
-    void CopyHostToDevice(int tempIndex,int isLargeBar,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
+    /* Use hueristic to choose best copy algorithm */
+
+    void CopyHostToDeviceBest(CopyMode copyMode, int isLargeBar,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
+    void CopyHostToDeviceStaging(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
     void CopyHostToDevicePinInPlace(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
 
-    void CopyDeviceToHost   (int tempIndex,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
+    void CopyDeviceToHost(int tempIndex,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
     void CopyDeviceToHostPinInPlace(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
 
     void CopyPeerToPeer( void* dst, hsa_agent_t dstAgent, const void* src, hsa_agent_t srcAgent, size_t sizeBytes, hsa_signal_t *waitFor);
@@ -60,12 +65,12 @@ private:
     int             _numBuffers;
 
     char            *_pinnedStagingBuffer[_max_buffers];
-    hsa_signal_t     _completion_signal[_max_buffers];
-    hsa_signal_t     _completion_signal2[_max_buffers]; // P2P needs another set of signals.
-    std::mutex       _copy_lock;    // provide thread-safe access
-    int              _hipH2DTransferThresholdDirectOrStaging;
-    int              _hipH2DTransferThresholdStagingOrPininplace;
-    int              _hipD2HTransferThreshold;
+    hsa_signal_t     _completionSignal[_max_buffers];
+    hsa_signal_t     _completionSignal2[_max_buffers]; // P2P needs another set of signals.
+    std::mutex       _copyLock;    // provide thread-safe access
+    size_t              _hipH2DTransferThresholdDirectOrStaging;
+    size_t              _hipH2DTransferThresholdStagingOrPininplace;
+    size_t              _hipD2HTransferThreshold;
 };
 
 #endif
