@@ -1260,13 +1260,6 @@ hipError_t  hipCtxDisablePeerAccess (hipCtx_t peerCtx);
  * @}
  */
 
-
-// TODO-ctx
-/**
- * @return hipSuccess, hipErrorInvalidDevice
- */
-hipError_t hipDeviceGetFromId(hipDevice_t *device, int deviceId);
-
 /**
  * @brief Returns a handle to a compute device
  * @param [out] device
