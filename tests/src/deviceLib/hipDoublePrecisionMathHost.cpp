@@ -86,19 +86,25 @@ __host__ void double_precision_math_functions()
     nearbyint(0.0);
     //nextafter(0.0);
     //fX = 1.0; norm(1, &fX);
+#if defined(__HIP_PLATFORM_HCC__)
     norm3d(1.0, 0.0, 0.0);
     norm4d(1.0, 0.0, 0.0, 0.0);
+#endif
     normcdf(0.0);
     normcdfinv(1.0);
     pow(1.0, 0.0);
     rcbrt(1.0);
     remainder(2.0, 1.0);
     remquo(1.0, 2.0, &iX);
+#if defined(__HIP_PLATFORM_HCC__)
     rhypot(0.0, 1.0);
+#endif
     rint(1.0);
+#if defined(__HIP_PLATFORM_HCC__)
     fX = 1.0; rnorm(1, &fX);
     rnorm3d(0.0, 0.0, 1.0);
     rnorm4d(0.0, 0.0, 0.0, 1.0);
+#endif
     round(0.0);
     rsqrt(1.0);
     scalbln(0.0, 1);
