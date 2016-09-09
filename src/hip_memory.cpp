@@ -576,6 +576,85 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
     return ihipLogStatus(e);
 }
 
+hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, void* src, size_t sizeBytes, hipStream_t stream)
+{
+    HIP_INIT_API(dst, src, sizeBytes, stream);
+
+    hipError_t e = hipSuccess;
+
+    stream = ihipSyncAndResolveStream(stream);
+
+    hipMemcpyKind kind = hipMemcpyHostToDevice;
+
+    if ((dst == NULL) || (src == NULL)) {
+        e= hipErrorInvalidValue;
+    } else if (stream) {
+        try {
+            stream->copyAsync((void*)dst, src, sizeBytes, kind);
+        }
+        catch (ihipException ex) {
+            e = ex._code;
+        }
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes, hipStream_t stream)
+{
+    HIP_INIT_API(dst, src, sizeBytes, stream);
+
+    hipError_t e = hipSuccess;
+
+    hipMemcpyKind kind = hipMemcpyDeviceToDevice;
+
+    stream = ihipSyncAndResolveStream(stream);
+
+
+    if ((dst == NULL) || (src == NULL)) {
+        e= hipErrorInvalidValue;
+    } else if (stream) {
+        try {
+            stream->copyAsync((void*)dst, (void*)src, sizeBytes, kind);
+        }
+        catch (ihipException ex) {
+            e = ex._code;
+        }
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, hipStream_t stream)
+{
+    HIP_INIT_API(dst, src, sizeBytes, stream);
+
+    hipError_t e = hipSuccess;
+
+    stream = ihipSyncAndResolveStream(stream);
+
+    hipMemcpyKind kind = hipMemcpyDeviceToHost;
+
+    if ((dst == NULL) || (src == NULL)) {
+        e= hipErrorInvalidValue;
+    } else if (stream) {
+        try {
+            stream->copyAsync(dst, (void*)src, sizeBytes, kind);
+        }
+        catch (ihipException ex) {
+            e = ex._code;
+        }
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
+
 // dpitch, spitch, and width in bytes
 hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
         size_t width, size_t height, hipMemcpyKind kind) {
