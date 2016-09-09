@@ -245,22 +245,6 @@ hipError_t hipSetDeviceFlags( unsigned int flags)
     return ihipLogStatus(e);
 };
 
-hipError_t hipDeviceGetFromId(hipDevice_t *device, int deviceId)
-{
-    HIP_INIT_API(device, deviceId);
-
-    hipError_t e = hipSuccess;
-
-    *device = ihipGetDevice(deviceId);
-
-    if (device == nullptr) {
-        e = hipErrorInvalidDevice;
-    }
-
-
-    return ihipLogStatus(e);
-}
-
 hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device)
 {
     HIP_INIT_API(major,minor, device);
