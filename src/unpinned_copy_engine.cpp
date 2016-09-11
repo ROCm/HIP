@@ -19,7 +19,7 @@ THE SOFTWARE.
 
 #include <hc_am.hpp>
 
-#include "hsa_ext_amd.h"
+#include <hsa/hsa_ext_amd.h>
 
 #include "hcc_detail/unpinned_copy_engine.h"
 
@@ -62,11 +62,14 @@ hsa_status_t findGlobalPool(hsa_amd_memory_pool_t pool, void* data) {
 }
 
 //-------------------------------------------------------------------------------------------------
-UnpinnedCopyEngine::UnpinnedCopyEngine(hsa_agent_t hsaAgent, hsa_agent_t cpuAgent, size_t bufferSize, int numBuffers, int thresholdH2DDirectStaging,int thresholdH2DStagingPinInPlace,int thresholdD2H) :
+UnpinnedCopyEngine::UnpinnedCopyEngine(hsa_agent_t hsaAgent, hsa_agent_t cpuAgent, size_t bufferSize, int numBuffers, 
+                                       bool isLargeBar, int thresholdH2DDirectStaging, 
+                                       int thresholdH2DStagingPinInPlace, int thresholdD2H) :
     _hsaAgent(hsaAgent),
     _cpuAgent(cpuAgent),
     _bufferSize(bufferSize),
     _numBuffers(numBuffers > _max_buffers ? _max_buffers : numBuffers),
+    _isLargeBar(isLargeBar),
     _hipH2DTransferThresholdDirectOrStaging(thresholdH2DDirectStaging),
     _hipH2DTransferThresholdStagingOrPininplace(thresholdH2DStagingPinInPlace),
     _hipD2HTransferThreshold(thresholdD2H)
@@ -160,9 +163,9 @@ void UnpinnedCopyEngine::CopyHostToDevicePinInPlace(void* dst, const void* src, 
 
 
 // Copy using simple memcpy.  Only works on large-bar systems.
-void UnpinnedCopyEngine::CopyHostToDeviceMemcpy(int isLargeBar, void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
+void UnpinnedCopyEngine::CopyHostToDeviceMemcpy(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
 {
-    if (!isLargeBar) {
+    if (!_isLargeBar) {
         THROW_ERROR (hipErrorInvalidValue);
     }
 
@@ -172,10 +175,10 @@ void UnpinnedCopyEngine::CopyHostToDeviceMemcpy(int isLargeBar, void* dst, const
 
 
 
-void UnpinnedCopyEngine::CopyHostToDevice(UnpinnedCopyEngine::CopyMode copyMode, int isLargeBar,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
+void UnpinnedCopyEngine::CopyHostToDevice(UnpinnedCopyEngine::CopyMode copyMode, void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor)
 {
     if (copyMode == ChooseBest) {
-        if (isLargeBar && (sizeBytes < _hipH2DTransferThresholdDirectOrStaging)) {
+        if (_isLargeBar && (sizeBytes < _hipH2DTransferThresholdDirectOrStaging)) {
             copyMode = UseMemcpy;
         } else if (sizeBytes > _hipH2DTransferThresholdStagingOrPininplace) {
             copyMode = UsePinInPlace;

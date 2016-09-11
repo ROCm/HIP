@@ -21,7 +21,7 @@ THE SOFTWARE.
 #ifndef STAGING_BUFFER_H
 #define STAGING_BUFFER_H
 
-#include "hsa.h"
+#include "hsa/hsa.h"
 
 
 //-------------------------------------------------------------------------------------------------
@@ -43,18 +43,19 @@ struct UnpinnedCopyEngine {
 
     static const int _max_buffers = 4;
 
-    UnpinnedCopyEngine(hsa_agent_t hsaAgent,hsa_agent_t cpuAgent, size_t bufferSize, int numBuffers,int thresholdH2D_directStaging,int thresholdH2D_stagingPinInPlace,int thresholdD2H) ;
+    UnpinnedCopyEngine(hsa_agent_t hsaAgent,hsa_agent_t cpuAgent, size_t bufferSize, int numBuffers, 
+                       bool isLargeBar, int thresholdH2D_directStaging, int thresholdH2D_stagingPinInPlace, int thresholdD2H) ;
     ~UnpinnedCopyEngine();
 
     // Use hueristic to choose best copy algorithm 
-    void CopyHostToDevice(CopyMode copyMode, int isLargeBar,void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
+    void CopyHostToDevice(CopyMode copyMode, void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
     void CopyDeviceToHost(CopyMode copyMode, void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
 
 
     // Specific H2D copy algorithm implementations:
     void CopyHostToDeviceStaging(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
     void CopyHostToDevicePinInPlace(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
-    void CopyHostToDeviceMemcpy(int isLargeBar, void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
+    void CopyHostToDeviceMemcpy(void* dst, const void* src, size_t sizeBytes, hsa_signal_t *waitFor);
 
 
     // Specific D2H copy algorithm implementations:
@@ -71,6 +72,9 @@ private:
     hsa_agent_t     _cpuAgent;
     size_t          _bufferSize;  // Size of the buffers.
     int             _numBuffers;
+
+    // True if system supports large-bar and thus can benefit from CPU directly performing copy operation.
+    bool            _isLargeBar;
 
     char            *_pinnedStagingBuffer[_max_buffers];
     hsa_signal_t     _completionSignal[_max_buffers];
