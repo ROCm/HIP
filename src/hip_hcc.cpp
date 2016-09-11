@@ -68,7 +68,7 @@ std::string HIP_TRACE_API_COLOR("green");
 int HIP_ATP_MARKER= 0;
 int HIP_DB= 0;
 int HIP_STAGING_SIZE = 64;   /* size of staging buffers, in KB */
-int HIP_STAGING_BUFFERS = 2;    // TODO - remove, two buffers should be enough.
+static const int HIP_STAGING_BUFFERS = 2;    
 int HIP_PININPLACE = 0;
 int HIP_OPTIMAL_MEM_TRANSFER = 0; //ENV Variable to test different memory transfer logics
 int HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING = 0;
@@ -1279,7 +1279,6 @@ void ihipInit()
     READ_ENV_S(release, HIP_TRACE_API_COLOR, 0,  "Color to use for HIP_API.  None/Red/Green/Yellow/Blue/Magenta/Cyan/White");
     READ_ENV_I(release, HIP_ATP_MARKER, 0,  "Add HIP function begin/end to ATP file generated with CodeXL");
     READ_ENV_I(release, HIP_STAGING_SIZE, 0, "Size of each staging buffer (in KB)" );
-    READ_ENV_I(release, HIP_STAGING_BUFFERS, 0, "Number of staging buffers to use in each direction. 0=use hsa_memory_copy.");
     READ_ENV_I(release, HIP_PININPLACE, 0, "For unpinned transfers, pin the memory in-place in chunks before doing the copy.");
     READ_ENV_I(release, HIP_OPTIMAL_MEM_TRANSFER, 0, "For optimal memory transfers for unpinned memory.Under testing.");
     READ_ENV_I(release, HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING, 0, "Threshold value for H2D unpinned memory transfer decision between direct copy or staging buffer usage,Under testing.");
@@ -1744,28 +1743,17 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
     if (kind == hipMemcpyHostToDevice) {
         int depSignalCnt = preCopyCommand(crit, NULL, &depSignal, ihipCommandCopyH2D);
         if(!srcTracked){
-            if (HIP_STAGING_BUFFERS) {
-                tprintf(DB_COPY1, "D2H && !dstTracked: staged copy H2D dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
-                UnpinnedCopyEngine::CopyMode copyMode = UnpinnedCopyEngine::UseStaging;
+            tprintf(DB_COPY1, "D2H && !dstTracked: staged copy H2D dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
+            UnpinnedCopyEngine::CopyMode copyMode = UnpinnedCopyEngine::UseStaging;
 
-                if (HIP_OPTIMAL_MEM_TRANSFER) {
-                    copyMode = UnpinnedCopyEngine::ChooseBest;
-                } else  if (HIP_PININPLACE) {
-                    copyMode = UnpinnedCopyEngine::UsePinInPlace;
-                }
-                device->_stagingBuffer[0]->CopyHostToDevice(copyMode, dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
-               // The copy waits for inputs and then completes before returning so can reset queue to empty:
-               this->wait(crit, true);
+            if (HIP_OPTIMAL_MEM_TRANSFER) {
+                copyMode = UnpinnedCopyEngine::ChooseBest;
+            } else  if (HIP_PININPLACE) {
+                copyMode = UnpinnedCopyEngine::UsePinInPlace;
             }
-            else {
-                // TODO - remove, slow path.
-                tprintf(DB_COPY1, "H2D && ! srcTracked: am_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
-#if USE_AV_COPY
-                crit->_av.copy(src,dst,sizeBytes);
-#else
-                hc::am_copy(dst, src, sizeBytes);
-#endif
-            }
+            device->_stagingBuffer[0]->CopyHostToDevice(copyMode, dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+           // The copy waits for inputs and then completes before returning so can reset queue to empty:
+           this->wait(crit, true);
         } else {
             // This is H2D copy, and source is pinned host memory : we can copy directly w/o using staging buffer.
             hsa_agent_t dstAgent = *(static_cast<hsa_agent_t*>(dstPtrInfo._acc.get_hsa_agent()));
@@ -1790,30 +1778,19 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
     } else if (kind == hipMemcpyDeviceToHost) {
         int depSignalCnt = preCopyCommand(crit, NULL, &depSignal, ihipCommandCopyD2H);
         if (!dstTracked){
-            if (HIP_STAGING_BUFFERS) {
-                tprintf(DB_COPY1, "D2H && !dstTracked: staged copy D2H dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
-                UnpinnedCopyEngine::CopyMode copyMode = UnpinnedCopyEngine::UseStaging;
+            tprintf(DB_COPY1, "D2H && !dstTracked: staged copy D2H dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
+            UnpinnedCopyEngine::CopyMode copyMode = UnpinnedCopyEngine::UseStaging;
 
-                if (HIP_OPTIMAL_MEM_TRANSFER) {
-                    copyMode = UnpinnedCopyEngine::ChooseBest;
-                } else  if (HIP_PININPLACE) {
-                    copyMode = UnpinnedCopyEngine::UsePinInPlace;
-                }
-
-                device->_stagingBuffer[1]->CopyDeviceToHost(copyMode, dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
-
-                // The copy completes before returning so can reset queue to empty:
-                this->wait(crit, true);
-
-            } else {
-            // TODO - remove, slow path.
-                tprintf(DB_COPY1, "D2H && !dstTracked: am_copy dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
-#if USE_AV_COPY
-                crit->_av.copy(src, dst, sizeBytes);
-#else
-                hc::am_copy(dst, src, sizeBytes);
-#endif
+            if (HIP_OPTIMAL_MEM_TRANSFER) {
+                copyMode = UnpinnedCopyEngine::ChooseBest;
+            } else  if (HIP_PININPLACE) {
+                copyMode = UnpinnedCopyEngine::UsePinInPlace;
             }
+
+            device->_stagingBuffer[1]->CopyDeviceToHost(copyMode, dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+
+            // The copy completes before returning so can reset queue to empty:
+            this->wait(crit, true);
         } else {
             // This is D2H copy, and destination is pinned host memory : we can copy directly w/o using staging buffer.
             hsa_agent_t dstAgent = *(static_cast<hsa_agent_t*>(dstPtrInfo._acc.get_hsa_agent()));
@@ -1845,21 +1822,15 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
         memcpy(dst, src, sizeBytes);
     } else if ((kind == hipMemcpyDeviceToDevice) && !copyEngineCanSeeSrcAndDest)  {
         int depSignalCnt = preCopyCommand(crit, NULL, &depSignal, ihipCommandCopyP2P);
-        if (HIP_STAGING_BUFFERS) {
-            tprintf(DB_COPY1, "P2P but engine can't see both pointers: staged copy P2P dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
-            //printf ("staged-copy- read dep signals\n");
-            hsa_agent_t dstAgent = * (static_cast<hsa_agent_t*> (dstPtrInfo._acc.get_hsa_agent()));
-            hsa_agent_t srcAgent = * (static_cast<hsa_agent_t*> (srcPtrInfo._acc.get_hsa_agent()));
+        tprintf(DB_COPY1, "P2P but engine can't see both pointers: staged copy P2P dst=%p src=%p sz=%zu\n", dst, src, sizeBytes);
+        //printf ("staged-copy- read dep signals\n");
+        hsa_agent_t dstAgent = * (static_cast<hsa_agent_t*> (dstPtrInfo._acc.get_hsa_agent()));
+        hsa_agent_t srcAgent = * (static_cast<hsa_agent_t*> (srcPtrInfo._acc.get_hsa_agent()));
 
-            device->_stagingBuffer[1]->CopyPeerToPeer(dst, dstAgent, src, srcAgent, sizeBytes, depSignalCnt ? &depSignal : NULL);
+        device->_stagingBuffer[1]->CopyPeerToPeer(dst, dstAgent, src, srcAgent, sizeBytes, depSignalCnt ? &depSignal : NULL);
 
-            // The copy completes before returning so can reset queue to empty:
-            this->wait(crit, true);
-
-        } else {
-            assert(0); // currently no fallback for this path.
-        }
-
+        // The copy completes before returning so can reset queue to empty:
+        this->wait(crit, true);
     } else {
         // If not special case - these can all be handled by the hsa async copy:
         ihipCommand_t commandType;
@@ -1895,6 +1866,7 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     LockedAccessor_StreamCrit_t crit (_criticalData);
     copySync(crit, dst, src, sizeBytes, kind, resolveOn);
 }
+
 
 void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind)
 {
