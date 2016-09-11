@@ -189,6 +189,7 @@ void UnpinnedCopyEngine::CopyHostToDevice(UnpinnedCopyEngine::CopyMode copyMode,
 
     if (copyMode == UseMemcpy) {
 
+        CopyHostToDeviceMemcpy(dst, src, sizeBytes, waitFor);
 
 
 	} else if (copyMode == UsePinInPlace) {
@@ -316,7 +317,7 @@ void UnpinnedCopyEngine::CopyDeviceToHost(CopyMode copyMode ,void* dst, const vo
 
 	if (copyMode == UsePinInPlace) {
         CopyDeviceToHostPinInPlace(dst, src, sizeBytes, waitFor);
-    } if (copyMode == UseStaging) { 
+    } else if (copyMode == UseStaging) { 
         CopyDeviceToHostStaging(dst, src, sizeBytes, waitFor);
     } else {
         // Unknown copy mode.
