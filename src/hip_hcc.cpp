@@ -293,7 +293,6 @@ void ihipStream_t::locked_wait(bool assertQueueEmpty)
 
 };
 
-#if USE_AV_COPY
 // Causes current stream to wait for specified event to complete:
 void ihipStream_t::locked_waitEvent(hipEvent_t event)
 {
@@ -302,7 +301,6 @@ void ihipStream_t::locked_waitEvent(hipEvent_t event)
     // TODO - check state of event here:
     crit->_av.create_blocking_marker(event->_marker);
 }
-#endif
 
 // Create a marker in this stream.
 // Save state in the event so it can track the status of the event.
@@ -1728,7 +1726,6 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
 
     bool copyEngineCanSeeSrcAndDest = false;
     if (kind == hipMemcpyDeviceToDevice) {
-#if USE_PEER_TO_PEER>=2
         // Lock to prevent another thread from modifying peer list while we are trying to look at it.
         LockedAccessor_CtxCrit_t  dcrit(ctx->criticalData());
         // FIXME - this assumes peer access only from primary context.
@@ -1736,7 +1733,6 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
         if (dcrit->isPeer(ihipGetPrimaryCtx(dstPtrInfo._appId)) && (dcrit->isPeer(ihipGetPrimaryCtx(srcPtrInfo._appId)))) {
             copyEngineCanSeeSrcAndDest = true;
         }
-#endif
     }
 
 

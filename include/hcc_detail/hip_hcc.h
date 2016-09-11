@@ -31,13 +31,6 @@ THE SOFTWARE.
 
 // #define USE_MEMCPYTOSYMBOL
 //
-//Use the new HCC accelerator_view::copy instead of am_copy
-#define USE_AV_COPY (__hcc_workweek__ >= 16351)
-
-// Compile peer-to-peer support.
-// >= 2 : use HCC hc:accelerator::get_is_peer
-// >= 3 : use hc::am_memtracker_update_peers(...)
-#define USE_PEER_TO_PEER 3
 
 
 //---

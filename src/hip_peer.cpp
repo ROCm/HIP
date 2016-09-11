@@ -47,11 +47,7 @@ hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, hipCtx_t thisCtx, hipCtx_
         if (thisCtx == peerCtx) {
             *canAccessPeer = 0;
         } else {
-#if USE_PEER_TO_PEER>=2
              *canAccessPeer = peerCtx->getDevice()->_acc.get_is_peer(thisCtx->getDevice()->_acc);
-#else
-            *canAccessPeer = 0;
-#endif
         }
 
     } else {
@@ -75,12 +71,8 @@ hipError_t ihipDisablePeerAccess (hipCtx_t peerCtx)
 
     auto thisCtx = ihipGetTlsDefaultCtx();
     if ((thisCtx != NULL) && (peerCtx != NULL)) {
-#if USE_PEER_TO_PEER>=2
         // Return true if thisCtx can access peerCtx's memory:
         bool canAccessPeer =  peerCtx->getDevice()->_acc.get_is_peer(thisCtx->getDevice()->_acc);
-#else
-        bool canAccessPeer = 0;
-#endif
 
         if (! canAccessPeer) {
             err = hipErrorInvalidDevice;  // P2P not allowed between these devices.
@@ -90,10 +82,8 @@ hipError_t ihipDisablePeerAccess (hipCtx_t peerCtx)
             LockedAccessor_CtxCrit_t peerCrit(peerCtx->criticalData());
             bool changed = peerCrit->removePeer(thisCtx);
             if (changed) {
-#if USE_PEER_TO_PEER>=3
                 // Update the peers for all memory already saved in the tracker:
                 am_memtracker_update_peers(peerCtx->getDevice()->_acc, peerCrit->peerCnt(), peerCrit->peerAgents());
-#endif
             } else {
                 err = hipErrorPeerAccessNotEnabled; // never enabled P2P access.
             }
@@ -124,9 +114,7 @@ hipError_t ihipEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags)
             LockedAccessor_CtxCrit_t peerCrit(peerCtx->criticalData());
             bool isNewPeer = peerCrit->addPeer(thisCtx);
             if (isNewPeer) {
-#if USE_PEER_TO_PEER>=3
                 am_memtracker_update_peers(peerCtx->getDevice()->_acc, peerCrit->peerCnt(), peerCrit->peerAgents());
-#endif
             } else {
                 err = hipErrorPeerAccessAlreadyEnabled;
             }
