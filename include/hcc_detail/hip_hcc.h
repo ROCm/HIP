@@ -55,7 +55,6 @@ extern int HIP_ATP_MARKER;
 extern int HIP_ATP;
 extern int HIP_DB;
 extern int HIP_STAGING_SIZE;   /* size of staging buffers, in KB */
-extern int HIP_STAGING_BUFFERS;    // TODO - remove, two buffers should be enough.
 extern int HIP_PININPLACE;
 extern int HIP_STREAM_SIGNALS;  /* number of signals to allocate at stream creation */
 extern int HIP_VISIBLE_DEVICES; /* Contains a comma-separated sequence of GPU identifiers */
