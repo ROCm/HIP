@@ -675,8 +675,16 @@ ihipDevice_t::ihipDevice_t(unsigned deviceId, unsigned deviceCnt, hc::accelerato
 
     initProperties(&_props);
 
-    _stagingBuffer[0] = new UnpinnedCopyEngine(_hsaAgent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS,HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING,HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE,HIP_D2H_MEM_TRANSFER_THRESHOLD);
-    _stagingBuffer[1] = new UnpinnedCopyEngine(_hsaAgent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS,HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING,HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE,HIP_D2H_MEM_TRANSFER_THRESHOLD);
+    _stagingBuffer[0] = new UnpinnedCopyEngine(_hsaAgent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS,
+                                               _isLargeBar, 
+                                               HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING,
+                                               HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE,
+                                               HIP_D2H_MEM_TRANSFER_THRESHOLD);
+    _stagingBuffer[1] = new UnpinnedCopyEngine(_hsaAgent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS,
+                                               _isLargeBar, 
+                                               HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING,
+                                               HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE,
+                                               HIP_D2H_MEM_TRANSFER_THRESHOLD);
 
     _primaryCtx = new ihipCtx_t(this, deviceCnt, hipDeviceMapHost);
 }
@@ -925,7 +933,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
 
     FindDevicePool();
     int access=checkAccess(g_cpu_agent, gpu_pool_);
-    if (0!= access){
+    if (0 != access){
         _isLargeBar= 1;
     } else {
         _isLargeBar=0;
@@ -1745,7 +1753,7 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
                 } else  if (HIP_PININPLACE) {
                     copyMode = UnpinnedCopyEngine::UsePinInPlace;
                 }
-                device->_stagingBuffer[0]->CopyHostToDevice(copyMode, device->_isLargeBar, dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
+                device->_stagingBuffer[0]->CopyHostToDevice(copyMode, dst, src, sizeBytes, depSignalCnt ? &depSignal : NULL);
                // The copy waits for inputs and then completes before returning so can reset queue to empty:
                this->wait(crit, true);
             }
