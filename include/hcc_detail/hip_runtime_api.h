@@ -189,9 +189,12 @@ typedef enum hipMemcpyKind {
  */
 
 /**
- * @brief Blocks until the default device has completed all preceding requested tasks.
+ * @brief Waits on all active streams on current device
  *
- * This function waits for all streams on the default device to complete execution, and then returns.
+ * When this command is invoked, the host thread gets blocked until all the commands associated
+ * with streams associated with the device. HIP does not support multiple blocking modes (yet!).
+ *
+ * @returns hipSuccess
  *
  * @see hipSetDevice, hipDeviceReset
 */
@@ -200,12 +203,12 @@ hipError_t hipDeviceSynchronize(void);
 
 
 /**
- * @brief Destroy all resources and reset all state on the default device in the current process.
+ * @brief The state of current device is discarded and updated to a fresh state.
  *
- * Explicity destroy all memory allocations, events, and queues associated with the default device in the current process.
+ * Calling this function deletes all streams created, memory allocated, kernels running, events created.
+ * Make sure that no other thread is using the device or streams, memory, kernels, events associated with the current device.
  *
- * This function will reset the device immmediately, and then return after all resources have been freed.
- * The caller must ensure that the device is not being accessed by any other host threads from the active process when this function is called.
+ * @returns hipSuccess
  *
  * @see hipDeviceSynchronize
  */
@@ -234,6 +237,8 @@ hipError_t hipDeviceReset(void) ;
  * Thread-pool implementations may inherit the default device of the previous thread.  A good practice is to always call hipSetDevice
  * at the start of HIP coding sequency to establish a known standard device.
  *
+ * @returns hipSuccess, hipErrorInvalidDevice, hipErrorDeviceAlreadyInUse
+ *
  * @see hipGetDevice, hipGetDeviceCount
  */
 hipError_t hipSetDevice(int deviceId);
@@ -250,25 +255,32 @@ hipError_t hipSetDevice(int deviceId);
  *
  * @see hipSetDevice, hipGetDevicesizeBytes
  *
- * @returns hipSuccess, hipErrorInvalidDevice
+ * @returns hipSuccess
  */
 hipError_t hipGetDevice(int *deviceId);
 
 
 /**
  * @brief Return number of compute-capable devices.
+ *
  * @param [output] count Returns number of compute-capable devices.
  *
+ * @returns hipSuccess, hipErrorNoDevice
+ *
+ * 
  * Returns in @p *count the number of devices that have ability to run compute commands.  If there are no such devices, then @ref hipGetDeviceCount will return #hipErrorNoDevice.
  * If 1 or more devices can be found, then hipGetDeviceCount returns #hipSuccess.
  */
 hipError_t hipGetDeviceCount(int *count);
 
 /**
- * @brief Query device attribute.
+ * @brief Query for a specific device attribute.
+ *
  * @param [out] pi pointer to value to return
  * @param [in] attr attribute to query
  * @param [in] deviceId which device to query for information
+ * 
+ * @returns hipSuccess, hipErrorInvalidDevice, hipErrorInvalidValue
  */
 hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int deviceId);
 
@@ -278,7 +290,7 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int deviceI
  * @param [out] prop written with device properties
  * @param [in]  deviceId which device to query for information
  *
- * @return #hipSuccess, #hipErrorInvalidDevice
+ * @return hipSuccess, hipErrorInvalidDevice
  * @bug HCC always returns 0 for maxThreadsPerMultiProcessor
  * @bug HCC always returns 0 for regsPerBlock
  * @bug HCC always returns 0 for l2CacheSize
@@ -288,13 +300,12 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int deviceI
 hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
 
 
-
-//Cache partitioning functions:
-
 /**
  * @brief Set L1/Shared cache partition.
  *
- * @returns #hipSuccess
+ * @param [in] cacheConfig
+ *
+ * @returns hipSuccess, hipErrorInitializationError
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
@@ -304,7 +315,9 @@ hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig );
 /**
  * @brief Set Cache configuration for a specific function
  *
- * @returns #hipSuccess
+ * @param [in] cacheConfig
+ *
+ * @returns hipSuccess, hipErrorInitializationError
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
@@ -314,19 +327,21 @@ hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig );
 /**
  * @brief Set Cache configuration for a specific function
  *
- * @returns #hipSuccess
+ * @param [in] config;
+ * 
+ * @returns hipSuccess, hipErrorInitializationError
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
 hipError_t hipFuncSetCacheConfig ( hipFuncCache config );
 
-//---
-//Shared bank config functions:
-
 /**
- * @brief Get Shared memory bank configuration.
+ * @brief Returns bank width of shared memory for current device
  *
- * @returns #hipSuccess
+ * @param [out] pConfig
+ *
+ * @returns hipSuccess, hipErrorInvalidValue, hipErrorInitializationError
+ *
  * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
  *
  */
@@ -334,36 +349,43 @@ hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig );
 
 
 /**
- * @brief Set Shared memory bank configuration.
+ * @brief The bank width of shared memory on current device is set
  *
- * @returns #hipSuccess
+ * @param [in] config
+ *
+ * @returns hipSuccess, hipErrorInvalidValue, hipErrorInitializationError
+ *
  * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
  *
  */
 hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config );
 
 /**
- * @brief Set Device flags
+ * @brief The current device behavior is changed according the flags passed.
  *
- * @returns #hipSuccess
+ * @param [in] flags
+ *
+ * @returns hipSuccess, hipErrorInvalidDevice, hipErrorSetOnActiveProcess
+ *
  * Note: Only hipDeviceScheduleAuto and hipDeviceMapHost are supported
  *
 */
 hipError_t hipSetDeviceFlags ( unsigned flags);
 
-// end doxygen Device
 /**
- * @}
- */
-
-/**
- * @brief Select compute-device which best matches criteria.
+ * @brief Device which matches hipDeviceProp_t is returned
  *
  * @param [out] device ID
  * @param [in]  device properties pointer
  *
+ * @returns hipSuccess, hipErrorInvalidValue
  */
-hipError_t hipChooseDevice(int *device,hipDeviceProp_t* prop);
+hipError_t hipChooseDevice(int *device, hipDeviceProp_t* prop);
+
+// end doxygen Device
+/**
+ * @}
+ */
 
 /**
  *-------------------------------------------------------------------------------------------------
