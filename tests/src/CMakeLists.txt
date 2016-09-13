@@ -19,102 +19,77 @@ if(NOT DEFINED HIP_MULTI_GPU)
     set(HIP_MULTI_GPU 0 CACHE BOOL "Run tests requiring more than one GPU")
 endif()
 
-# Determine HIP_BUILD_LOCAL
-if(NOT DEFINED HIP_BUILD_LOCAL)
-    if(NOT DEFINED ENV{HIP_BUILD_LOCAL})
-        set(HIP_BUILD_LOCAL 1 CACHE BOOL "Build HIP in local folder")
-    else()
-        set(HIP_BUILD_LOCAL $ENV{HIP_BUILD_LOCAL} CACHE BOOL "Build HIP in local folder")
-    endif()
+# We are going to use HIP source...
+get_filename_component(HIP_SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../.. ABSOLUTE)
+
+# ...so we first need to determine the options to cascade to HIP build.
+if(DEFINED HIP_PLATFORM)
+    set(ENV{HIP_PLATFORM} ${HIP_PLATFORM})
+endif()
+if(DEFINED HCC_HOME)
+    get_filename_component(HCC_HOME ${HCC_HOME} ABSOLUTE)
+    set(ENV{HCC_HOME} ${HCC_HOME})
+    set(ENV{HIP_DEVELOPER} 1)
+endif()
+if(DEFINED HIP_LIB_TYPE)
+    set(ENV{HIP_LIB_TYPE} ${HIP_LIB_TYPE})
 endif()
 
-# Determine HIP_PATH
-if(HIP_BUILD_LOCAL)
-    # We are going to use HIP source...
-    get_filename_component(HIP_SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../.. ABSOLUTE)
+# Purge previous HIP installation...
+execute_process(
+    COMMAND "${CMAKE_COMMAND}" -E remove_directory hip
+    OUTPUT_QUIET
+    ERROR_QUIET
+    )
+execute_process(
+    COMMAND "${CMAKE_COMMAND}" -E make_directory hip
+    OUTPUT_QUIET
+    ERROR_QUIET
+    )
+message(STATUS "Configuring HIP")
 
-    # ...so we first need to determine the options to cascade to HIP build.
-    if(DEFINED HIP_PLATFORM)
-        set(ENV{HIP_PLATFORM} ${HIP_PLATFORM})
-    endif()
-    if(DEFINED HCC_HOME)
-        get_filename_component(HCC_HOME ${HCC_HOME} ABSOLUTE)
-        set(ENV{HCC_HOME} ${HCC_HOME})
-        set(ENV{HIP_DEVELOPER} 1)
-    endif()
-    if(DEFINED HIP_LIB_TYPE)
-        set(ENV{HIP_LIB_TYPE} ${HIP_LIB_TYPE})
-    endif()
+# ...and now build HIP locally.
+execute_process(
+    COMMAND "${CMAKE_COMMAND}" -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/hip/localbuild ${HIP_SRC_PATH}
+    WORKING_DIRECTORY hip
+    RESULT_VARIABLE hip_build_result
+    OUTPUT_VARIABLE hip_build_log
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+    )
+message("${Magenta}${hip_build_log}${ColorReset}")
 
-    # Purge previous HIP installation...
-    execute_process(
-        COMMAND "${CMAKE_COMMAND}" -E remove_directory hip
-        OUTPUT_QUIET
-        ERROR_QUIET
-       )
-    execute_process(
-        COMMAND "${CMAKE_COMMAND}" -E make_directory hip
-        OUTPUT_QUIET
-        ERROR_QUIET
-       )
-    message(STATUS "Configuring HIP")
-
-    # ...and now build HIP locally.
-    execute_process(
-        COMMAND "${CMAKE_COMMAND}" -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/hip/localbuild ${HIP_SRC_PATH}
-        WORKING_DIRECTORY hip
-        RESULT_VARIABLE hip_build_result
-        OUTPUT_VARIABLE hip_build_log
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_QUIET
-       )
-    message("${Magenta}${hip_build_log}${ColorReset}")
-
-    if(hip_build_result)
-        message(FATAL_ERROR "Error configuring HIP")
-    else()
-        message(STATUS "Configuring HIP - done")
-        message(STATUS "Building HIP")
-    endif()
-    execute_process(
-        COMMAND "${CMAKE_COMMAND}" --build . --target install
-        WORKING_DIRECTORY hip
-        RESULT_VARIABLE hip_build_result
-        OUTPUT_VARIABLE hip_build_log
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_QUIET
-       )
-
-    # Show HIP build errors if any.
-    if(hip_build_result)
-        message("${Red}${hip_build_log}${ColorReset}")
-        message(FATAL_ERROR "Error building HIP")
-    else()
-        # Building HIP is successful. Point HIP_PATH to this location.
-        message(STATUS "Building HIP - done")
-        get_filename_component(HIP_PATH ${CMAKE_CURRENT_BINARY_DIR}/hip/localbuild ABSOLUTE)
-    endif()
-
-    # Add a target to rebuild HIP if HIP source changes.
-    add_custom_target(
-        hip ALL
-        COMMAND "${CMAKE_COMMAND}" --build . --target install
-        WORKING_DIRECTORY hip
-       )
+if(hip_build_result)
+    message(FATAL_ERROR "Error configuring HIP")
 else()
-    if(NOT DEFINED HIP_PATH)
-        if(NOT DEFINED ENV{HIP_PATH})
-            # We set to to default HIP installation path.
-            set(HIP_PATH /opt/rocm/hip CACHE PATH "Path to installed HIP")
-        else()
-            # We are using HIP_PATH from env.
-            set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to installed HIP")
-        endif()
-    endif()
-    # Create a fake target since we are using an installed HIP.
-    add_custom_target(hip ALL)
+    message(STATUS "Configuring HIP - done")
+    message(STATUS "Building HIP")
 endif()
-MESSAGE("HIP_PATH=" ${HIP_PATH})
+execute_process(
+    COMMAND "${CMAKE_COMMAND}" --build . --target install
+    WORKING_DIRECTORY hip
+    RESULT_VARIABLE hip_build_result
+    OUTPUT_VARIABLE hip_build_log
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+    )
+
+# Show HIP build errors if any.
+if(hip_build_result)
+    message("${Red}${hip_build_log}${ColorReset}")
+    message(FATAL_ERROR "Error building HIP")
+else()
+    # Building HIP is successful. Point HIP_PATH to this location.
+    message(STATUS "Building HIP - done")
+    get_filename_component(HIP_PATH ${CMAKE_CURRENT_BINARY_DIR}/hip/localbuild ABSOLUTE)
+endif()
+
+# Add a target to rebuild HIP if HIP source changes.
+add_custom_target(
+    hip ALL
+    COMMAND "${CMAKE_COMMAND}" --build . --target install
+    WORKING_DIRECTORY hip
+    )
 
 # Determine HIP_PLATFORM
 execute_process(COMMAND ${HIP_PATH}/bin/hipconfig --platform OUTPUT_VARIABLE HIP_PLATFORM)
@@ -156,10 +131,10 @@ endmacro()
 function(make_named_test exe testname)
     add_test(NAME ${testname}
         COMMAND ${PROJECT_BINARY_DIR}/${exe} ${ARGN}
-       )
+        )
     set_tests_properties(${testname}
         PROPERTIES PASS_REGULAR_EXPRESSION "PASSED"
-       )
+        )
 endfunction()
 
 macro(make_test exe)
@@ -176,7 +151,7 @@ macro(make_hipify_test sourceFile)
 
     add_test(NAME ${testname}
         COMMAND ${HIP_PATH}/bin/hipify ${PROJECT_SOURCE_DIR}/${sourceFile} ${ARGN}
-       )
+        )
 endmacro()
 
 
@@ -185,10 +160,10 @@ macro(make_test_matches exe match_string)
     set(testname ${exe}${smush_args}.tst)
     add_test(NAME ${testname}
         COMMAND ${PROJECT_BINARY_DIR}/${exe} ${ARGN}
-       )
+        )
     set_tests_properties(${testname}
         PROPERTIES PASS_REGULAR_EXPRESSION ${match_string}
-       )
+        )
 endmacro()
 
 macro(build_hip_executable_sm35 exe cpp)
