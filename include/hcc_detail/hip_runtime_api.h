@@ -397,9 +397,12 @@ hipError_t hipChooseDevice(int *device, hipDeviceProp_t* prop);
 /**
  * @brief Return last error returned by any HIP runtime API call and resets the stored error code to #hipSuccess
  *
+ * @returns return code from last HIP called from the active host thread
+ *
  * Returns the last error that has been returned by any of the runtime calls in the same host thread,
  * and then resets the saved error to #hipSuccess.
  *
+ * @see hipGetErrorString, hipGetLastError, hipPeakAtLastError, hipError_t
  */
 hipError_t hipGetLastError(void);
 
@@ -412,8 +415,7 @@ hipError_t hipGetLastError(void);
  * Returns the last error that has been returned by any of the runtime calls in the same host thread.
  * Unlike hipGetLastError, this function does not reset the saved error code.
  *
- *
- *
+ * @see hipGetErrorString, hipGetLastError, hipPeakAtLastError, hipError_t
  */
 hipError_t hipPeekAtLastError(void);
 

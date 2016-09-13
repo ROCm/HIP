@@ -25,9 +25,7 @@ THE SOFTWARE.
 //-------------------------------------------------------------------------------------------------
 // Error Handling
 //---
-/**
- * @returns return code from last HIP called from the active host thread.
- */
+
 hipError_t hipGetLastError()
 {
     HIP_INIT_API();
@@ -38,8 +36,6 @@ hipError_t hipGetLastError()
     return e;
 }
 
-
-//---
 hipError_t hipPeekAtLastError()
 {
     HIP_INIT_API();
@@ -48,7 +44,6 @@ hipError_t hipPeekAtLastError()
     return ihipLogStatus(tls_lastHipError);
 }
 
-//---
 const char *hipGetErrorName(hipError_t hip_error)
 {
     HIP_INIT_API(hip_error);
@@ -56,12 +51,6 @@ const char *hipGetErrorName(hipError_t hip_error)
     return ihipErrorString(hip_error);
 }
 
-
-/**
- * @warning : hipGetErrorString returns string from hipGetErrorName
- */
-
-//---
 const char *hipGetErrorString(hipError_t hip_error)
 {
     HIP_INIT_API(hip_error);
