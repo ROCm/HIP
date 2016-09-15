@@ -1559,6 +1559,7 @@ const char *ihipErrorString(hipError_t hip_error)
 {
     switch (hip_error) {
         case hipSuccess                         : return "hipSuccess";
+        case hipErrorOutofMemory                : return "hipOutofMemory";
         case hipErrorMemoryAllocation           : return "hipErrorMemoryAllocation";
         case hipErrorLaunchOutOfResources       : return "hipErrorLaunchOutOfResources";
         case hipErrorInvalidValue               : return "hipErrorInvalidValue";
