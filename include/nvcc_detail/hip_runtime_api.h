@@ -241,13 +241,13 @@ inline static hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst,
 inline static hipError_t hipMemcpyDtoHAsync(void* dst, 
                   hipDeviceptr_t src, size_t size, hipStream_t stream)
 {
-    return hipCUResultTohipError(cuMemcpyDtoH(dst, src, size, stream));
+    return hipCUResultTohipError(cuMemcpyDtoH(dst, src, size));
 }
 
 inline static hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst,
             hipDeviceptr_t src, size_t size, hipStream_t stream)
 {
-    return hipCUResultTohipError(cuMemcpyDtoD(dst, src, size, stream));
+    return hipCUResultTohipError(cuMemcpyDtoD(dst, src, size));
 }
 
 inline static hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind copyKind) {
