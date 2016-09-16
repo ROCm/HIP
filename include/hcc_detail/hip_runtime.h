@@ -500,7 +500,7 @@ __device__ float __dsqrt_rz(double x);
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup Memory Fence Functions
+ *  @defgroup Fence Fence Functions
  *  @{
  *
  *
@@ -545,7 +545,7 @@ __device__ void  __threadfence(void) __attribute__((deprecated("Provided for com
 __device__ void  __threadfence_system(void) __attribute__((deprecated("Provided for compile-time compatibility, not yet functional")));
 
 
-// doxygen end Memory Fence
+// doxygen end Fence Fence
 /**
  * @}
  */
