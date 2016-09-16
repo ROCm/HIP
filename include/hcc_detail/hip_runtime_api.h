@@ -43,10 +43,22 @@ THE SOFTWARE.
 extern "C" {
 #endif
 
+//---
+//API-visible structures
+typedef struct ihipCtx_t    *hipCtx_t;
+
+// Note many APIs also use integer deviceIds as an alternative to the device pointer:
+typedef struct ihipDevice_t *hipDevice_t;
+
 typedef struct ihipStream_t *hipStream_t;
-typedef struct hipEvent_t {
-    struct ihipEvent_t *_handle;
-} hipEvent_t;
+
+typedef struct ihipModule_t *hipModule_t;
+
+typedef struct ihipFunction_t *hipFunction_t;
+
+typedef void* hipDeviceptr_t;
+
+typedef struct ihipEvent_t *hipEvent_t;
 
 
 /**
@@ -206,7 +218,7 @@ hipError_t hipDeviceReset(void) ;
 /**
  * @brief Set default device to be used for subsequent hip API calls from this thread.
  *
- * @param[in] device Valid device in range 0...hipGetDeviceCount().
+ * @param[in] deviceId Valid device in range 0...hipGetDeviceCount().
  *
  * Sets @p device as the default device for the calling host thread.  Valid device id's are 0... (hipGetDeviceCount()-1).
  *
@@ -229,7 +241,7 @@ hipError_t hipDeviceReset(void) ;
  *
  * @see hipGetDevice, hipGetDeviceCount
  */
-hipError_t hipSetDevice(int device);
+hipError_t hipSetDevice(int deviceId);
 
 
 /**
@@ -245,7 +257,7 @@ hipError_t hipSetDevice(int device);
  *
  * @see hipSetDevice, hipGetDevicesizeBytes
  */
-hipError_t hipGetDevice(int *device);
+hipError_t hipGetDevice(int *deviceId);
 
 
 /**
@@ -255,7 +267,7 @@ hipError_t hipGetDevice(int *device);
  *
  * @returns #hipSuccess, #hipErrorNoDevice
  *
- *
+ * 
  * Returns in @p *count the number of devices that have ability to run compute commands.  If there are no such devices, then @ref hipGetDeviceCount will return #hipErrorNoDevice.
  * If 1 or more devices can be found, then hipGetDeviceCount returns #hipSuccess.
  */
@@ -267,16 +279,16 @@ hipError_t hipGetDeviceCount(int *count);
  * @param [out] pi pointer to value to return
  * @param [in] attr attribute to query
  * @param [in] deviceId which device to query for information
- *
+ * 
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  */
-hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device);
+hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int deviceId);
 
 /**
  * @brief Returns device properties.
  *
  * @param [out] prop written with device properties
- * @param [in]  device which device to query for information
+ * @param [in]  deviceId which device to query for information
  *
  * @return #hipSuccess, #hipErrorInvalidDevice
  * @bug HCC always returns 0 for maxThreadsPerMultiProcessor
@@ -285,7 +297,7 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
  *
  * Populates hipGetDeviceProperties with information for the specified device.
  */
-hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int device);
+hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
 
 
 /**
@@ -316,7 +328,7 @@ hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig );
  * @brief Set Cache configuration for a specific function
  *
  * @param [in] config;
- *
+ * 
  * @returns #hipSuccess, #hipErrorInitializationError
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
@@ -423,14 +435,14 @@ const char *hipGetErrorName(hipError_t hip_error);
 /**
  * @brief Return handy text string message to explain the error which occurred
  *
- * @param hip_error Error code to convert to string.
+ * @param hipError Error code to convert to string.
  * @return const char pointer to the NULL-terminated error string
  *
  * @warning : on HCC, this function returns the name of the error (same as hipGetErrorName)
  *
  * @see hipGetErrorName, hipGetLastError, hipPeakAtLastError, hipError_t
  */
-const char *hipGetErrorString(hipError_t hip_error);
+const char *hipGetErrorString(hipError_t hipError);
 
 // end doxygen Error
 /**
@@ -446,11 +458,8 @@ const char *hipGetErrorString(hipError_t hip_error);
  *  @{
  *
  *  The following Stream APIs are not (yet) supported in HIP:
- *  - cudaStreamAddCallback
- *  - cudaStreamAttachMemAsync
  *  - cudaStreamCreateWithPriority
  *  - cudaStreamGetPriority
- *  - cudaStreamWaitEvent
  */
 
 /**
@@ -462,12 +471,9 @@ const char *hipGetErrorString(hipError_t hip_error);
  *
  * Create a new asynchronous stream.  @p stream returns an opaque handle that can be used to reference the newly
  * created stream in subsequent hipStream* commands.  The stream is allocated on the heap and will remain allocated
+ *
  * even if the handle goes out-of-scope.  To release the memory used by the stream, applicaiton must call hipStreamDestroy.
  * Flags controls behavior of the stream.  See #hipStreamDefault, #hipStreamNonBlocking.
- * @error hipStream_t are under development - with current HIP use the NULL stream.
- *
- *
- * @see hipStreamCreate, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
  */
 
 hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags);
@@ -485,7 +491,9 @@ hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags);
  * even if the handle goes out-of-scope.  To release the memory used by the stream, applicaiton must call hipStreamDestroy.
  *
  *
- * @see hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
+ * @see hipStreamDestroy
+ *
+ * @return
  *
  */
 hipError_t hipStreamCreate(hipStream_t *stream);
@@ -795,7 +803,7 @@ hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) __attribute
  *  @param[out] dstPtr Device Pointer mapped to passed host pointer
  *  @param[in]  hstPtr Host Pointer allocated through hipHostAlloc
  *  @param[in]  flags Flags to be passed for extension
- *
+ * 
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryAllocation
  *
  *  @see hipSetDeviceFlags, hipHostAlloc
@@ -842,7 +850,7 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) ;
  *  from the other registered memory region.
  *
  *  @return #hipSuccess, #hipErrorMemoryAllocation
- *
+ * 
  *  @see hipHostUnregister, hipHostGetFlags, hipHostGetDevicePointer
  */
 hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) ;
@@ -868,7 +876,7 @@ hipError_t hipHostUnregister(void* hostPtr) ;
  *  @param[in]  width Requested pitched allocation width (in bytes)
  *  @param[in]  height Requested pitched allocation height
  *  @return Error code
- *
+ * 
  *  @see hipMalloc, hipFree, hipMallocArray, hipFreeArray, hipMallocHost, hipFreeHost, hipMalloc3D, hipMalloc3DArray, hipHostAlloc
  */
 
@@ -1216,14 +1224,39 @@ hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int src
  * @}
  */
 
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup Driver Initialization and Version
+ *  @{
+ *
+ */
+
+/**
+ * @brief Explicitly initializes the HIP runtime.
+ *
+ * Most HIP APIs implicitly initialize the HIP runtime.
+ * This API provides control over the timing of the initialization.
+ */
+// TODO-ctx - more description on error codes.
+hipError_t hipInit(unsigned int flags) ;
 
 
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup Version Management
+ *  @defgroup Context Management
  *  @{
+ */
+
+/**
+ * @brief Create a context and set it as current/ default context
  *
+ * @param [out] ctx
+ * @param [in] flags
+ * @param [in] associated device handle
+ *
+ * @returns #hipSuccess, #hipErrorInvalidContext
  */
 hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device);
 
@@ -1421,6 +1454,7 @@ hipError_t hipDeviceGetPCIBusId (int *pciBusId,int len,hipDevice_t device);
  * @returns #hipSuccess, #hipErrorInavlidDevice
  */
 hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device);
+
 /**
  * @brief Returns the approximate HIP driver version.
  *
