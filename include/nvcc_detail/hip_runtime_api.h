@@ -214,6 +214,29 @@ inline static hipError_t hipSetDevice(int device) {
     return hipCUDAErrorTohipError(cudaSetDevice(device));
 }
 
+inline static hipError_t hipChooseDevice( int* device, const hipDeviceProp_t* prop )
+{
+    cudaDeviceProp cdprop;
+    memset(&cdprop,0x0,sizeof(cudaDeviceProp));
+    cdprop.major= prop->major;
+    cdprop.minor = prop->minor;
+    cdprop.totalGlobalMem = prop->totalGlobalMem ;
+    cdprop.sharedMemPerBlock = prop->sharedMemPerBlock;
+    cdprop.regsPerBlock = prop->regsPerBlock;
+    cdprop.warpSize = prop->warpSize ;
+    cdprop.maxThreadsPerBlock = prop->maxThreadsPerBlock ;
+    cdprop.clockRate = prop->clockRate;
+    cdprop.totalConstMem = prop->totalConstMem ;
+    cdprop.multiProcessorCount = prop->multiProcessorCount ;
+    cdprop.l2CacheSize = prop->l2CacheSize ;
+    cdprop.maxThreadsPerMultiProcessor = prop->maxThreadsPerMultiProcessor ;
+    cdprop.computeMode = prop->computeMode ;
+    cdprop.canMapHostMemory = prop->canMapHostMemory;
+    cdprop.memoryClockRate = prop->memoryClockRate;
+    cdprop.memoryBusWidth = prop->memoryBusWidth;
+    return hipCUDAErrorTohipError(cudaChooseDevice(device,&cdprop));
+}
+
 inline static hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, 
                   void* src, size_t size)
 {
@@ -228,6 +251,24 @@ inline static hipError_t hipMemcpyDtoH(void* dst,
 
 inline static hipError_t hipMemcpyDtoD(hipDeviceptr_t dst,
             hipDeviceptr_t src, size_t size)
+{
+    return hipCUResultTohipError(cuMemcpyDtoD(dst, src, size));
+}
+
+inline static hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, 
+                  void* src, size_t size, hipStream_t stream)
+{
+    return hipCUResultTohipError(cuMemcpyHtoDAsync(dst, src, size, stream));
+}
+
+inline static hipError_t hipMemcpyDtoHAsync(void* dst, 
+                  hipDeviceptr_t src, size_t size, hipStream_t stream)
+{
+    return hipCUResultTohipError(cuMemcpyDtoH(dst, src, size));
+}
+
+inline static hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst,
+            hipDeviceptr_t src, size_t size, hipStream_t stream)
 {
     return hipCUResultTohipError(cuMemcpyDtoD(dst, src, size));
 }

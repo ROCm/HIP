@@ -141,7 +141,7 @@ typedef struct hipPointerAttribute_t {
 
 
 /*
- asdasd* @brief hipError_t
+ * @brief hipError_t
  * @enum
  * @ingroup Enumerations
  */
@@ -185,30 +185,30 @@ typedef enum hipError_t {
     hipErrorIllegalAddress          = 700,
 
 // Runtime Error Codes start here.
-    hipErrorMissingConfiguration    = 1,
-    hipErrorMemoryAllocation        = 2,    ///< Memory allocation error.
-    hipErrorInitializationError     = 3,    ///< TODO comment from hipErrorInitializationError
-    hipErrorLaunchFailure           = 4,
-    hipErrorPriorLaunchFailure      = 5,
-    hipErrorLaunchTimeOut           = 6,
-    hipErrorLaunchOutOfResources    = 7,    ///< Out of resources error.
-    hipErrorInvalidDeviceFunction   = 8,
-    hipErrorInvalidConfiguration    = 9,
-    hipErrorInvalidDevice           = 10,   ///< DeviceID must be in range 0...#compute-devices.
-    hipErrorInvalidValue            = 11,   ///< One or more of the parameters passed to the API call is NULL or not in an acceptable range.
-    hipErrorInvalidDevicePointer    = 17,   ///< Invalid Device Pointer
-    hipErrorInvalidMemcpyDirection  = 21,   ///< Invalid memory copy direction 
-    hipErrorUnknown                 = 30,   ///< Unknown error.
-    hipErrorInvalidResourceHandle   = 33,   ///< Resource handle (hipEvent_t or hipStream_t) invalid.
-    hipErrorNotReady                = 34,   ///< Indicates that asynchronous operations enqueued earlier are not ready.  This is not actually an error, but is used to distinguish from hipSuccess (which indicates completion).  APIs that return this error include hipEventQuery and hipStreamQuery.
-    hipErrorNoDevice                = 38,   ///< Call to hipGetDeviceCount returned 0 devices
-    hipErrorPeerAccessAlreadyEnabled = 50,  ///< Peer access was already enabled from the current device.
+    hipErrorMissingConfiguration    = 1001,
+    hipErrorMemoryAllocation        = 1002,    ///< Memory allocation error.
+    hipErrorInitializationError     = 1003,    ///< TODO comment from hipErrorInitializationError
+    hipErrorLaunchFailure           = 1004,    ///< An exception occurred on the device while executing a kernel.
+    hipErrorPriorLaunchFailure      = 1005,
+    hipErrorLaunchTimeOut           = 1006,
+    hipErrorLaunchOutOfResources    = 1007,    ///< Out of resources error.
+    hipErrorInvalidDeviceFunction   = 1008,
+    hipErrorInvalidConfiguration    = 1009,
+    hipErrorInvalidDevice           = 1010,   ///< DeviceID must be in range 0...#compute-devices.
+    hipErrorInvalidValue            = 1011,   ///< One or more of the parameters passed to the API call is NULL or not in an acceptable range.
+    hipErrorInvalidDevicePointer    = 1017,   ///< Invalid Device Pointer
+    hipErrorInvalidMemcpyDirection  = 1021,   ///< Invalid memory copy direction 
+    hipErrorUnknown                 = 1030,   ///< Unknown error.
+    hipErrorInvalidResourceHandle   = 1033,   ///< Resource handle (hipEvent_t or hipStream_t) invalid.
+    hipErrorNotReady                = 1034,   ///< Indicates that asynchronous operations enqueued earlier are not ready.  This is not actually an error, but is used to distinguish from hipSuccess (which indicates completion).  APIs that return this error include hipEventQuery and hipStreamQuery.
+    hipErrorNoDevice                = 1038,   ///< Call to hipGetDeviceCount returned 0 devices
+    hipErrorPeerAccessAlreadyEnabled = 1050,  ///< Peer access was already enabled from the current device.
 
-    hipErrorPeerAccessNotEnabled    = 51,   ///< Peer access was never enabled from the current device.
-    hipErrorRuntimeMemory,                  ///< HSA runtime memory call returned error.  Typically not seen in production systems.
-    hipErrorRuntimeOther,                   ///< HSA runtime call other than memory returned error.  Typically not seen in production systems.
-    hipErrorHostMemoryAlreadyRegistered = 61, ///< Produced when trying to lock a page-locked memory.
-    hipErrorHostMemoryNotRegistered = 62,   ///< Produced when trying to unlock a non-page-locked memory.
+    hipErrorPeerAccessNotEnabled    = 1051,   ///< Peer access was never enabled from the current device.
+    hipErrorRuntimeMemory           = 1052,                  ///< HSA runtime memory call returned error.  Typically not seen in production systems.
+    hipErrorRuntimeOther            = 1053,                   ///< HSA runtime call other than memory returned error.  Typically not seen in production systems.
+    hipErrorHostMemoryAlreadyRegistered = 1061, ///< Produced when trying to lock a page-locked memory.
+    hipErrorHostMemoryNotRegistered = 1062,   ///< Produced when trying to unlock a non-page-locked memory.
     hipErrorTbd                             ///< Marker that more error codes are needed.
 } hipError_t;
 
