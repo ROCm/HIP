@@ -342,6 +342,24 @@ macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files)
     HIP_PARSE_HIPCC_OPTIONS(HIP_HCC_FLAGS ${_hcc_options})
     HIP_PARSE_HIPCC_OPTIONS(HIP_NVCC_FLAGS ${_nvcc_options})
 
+    # Check if we are building shared library.
+    set(_hip_build_shared_libs FALSE)
+    list(FIND _hip_cmake_options SHARED _hip_found_SHARED)
+    list(FIND _hip_cmake_options MODULE _hip_found_MODULE)
+    if(_hip_found_SHARED GREATER -1 OR _hip_found_MODULE GREATER -1)
+        set(_hip_build_shared_libs TRUE)
+    endif()
+    list(FIND _hip_cmake_options STATIC _hip_found_STATIC)
+    if(_hip_found_STATIC GREATER -1)
+        set(_hip_build_shared_libs FALSE)
+    endif()
+
+    # If we are building a shared library, add extra flags to HIP_HIPCC_FLAGS
+    if(_hip_build_shared_libs)
+        list(APPEND HIP_HCC_FLAGS "-fPIC")
+        list(APPEND HIP_NVCC_FLAGS "--shared -Xcompiler '-fPIC'")
+    endif()
+
     # Set host compiler
     set(HIP_HOST_COMPILER "${CMAKE_${HIP_C_OR_CXX}_COMPILER}")
 
@@ -456,6 +474,17 @@ macro(HIP_ADD_EXECUTABLE hip_target)
     set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_EXECUTABLE} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET>")
     add_executable(${hip_target} ${_cmake_options} ${_generated_files} ${_sources})
     set_target_properties(${hip_target} PROPERTIES LINKER_LANGUAGE HIP)
+endmacro()
+
+###############################################################################
+# HIP_ADD_LIBRARY
+###############################################################################
+macro(HIP_ADD_LIBRARY hip_target)
+    # Separate the sources from the options
+    HIP_GET_SOURCES_AND_OPTIONS(_sources _cmake_options _hipcc_options _hcc_options _nvcc_options ${ARGN})
+    HIP_PREPARE_TARGET_COMMANDS(${hip_target} OBJ _generated_files ${_sources} ${_cmake_options} HIPCC_OPTIONS ${_hipcc_options} HCC_OPTIONS ${_hcc_options} NVCC_OPTIONS ${_nvcc_options})
+    add_library(${hip_target} ${_cmake_options} ${_generated_files} ${_sources})
+    set_target_properties(${hip_target} PROPERTIES LINKER_LANGUAGE ${HIP_C_OR_CXX})
 endmacro()
 
 # vim: ts=4:sw=4:expandtab:smartindent
