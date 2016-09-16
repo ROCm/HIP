@@ -194,7 +194,7 @@ typedef enum hipMemcpyKind {
  * When this command is invoked, the host thread gets blocked until all the commands associated
  * with streams associated with the device. HIP does not support multiple blocking modes (yet!).
  *
- * @returns hipSuccess
+ * @returns #hipSuccess
  *
  * @see hipSetDevice, hipDeviceReset
 */
@@ -208,7 +208,7 @@ hipError_t hipDeviceSynchronize(void);
  * Calling this function deletes all streams created, memory allocated, kernels running, events created.
  * Make sure that no other thread is using the device or streams, memory, kernels, events associated with the current device.
  *
- * @returns hipSuccess
+ * @returns #hipSuccess
  *
  * @see hipDeviceSynchronize
  */
@@ -237,7 +237,7 @@ hipError_t hipDeviceReset(void) ;
  * Thread-pool implementations may inherit the default device of the previous thread.  A good practice is to always call hipSetDevice
  * at the start of HIP coding sequency to establish a known standard device.
  *
- * @returns hipSuccess, hipErrorInvalidDevice, hipErrorDeviceAlreadyInUse
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorDeviceAlreadyInUse
  *
  * @see hipGetDevice, hipGetDeviceCount
  */
@@ -253,9 +253,9 @@ hipError_t hipSetDevice(int deviceId);
  * This device is used implicitly for HIP runtime APIs called by this thread.
  * hipGetDevice returns in * @p device the default device for the calling host thread.
  *
- * @see hipSetDevice, hipGetDevicesizeBytes
+ * @returns #hipSuccess
  *
- * @returns hipSuccess
+ * @see hipSetDevice, hipGetDevicesizeBytes
  */
 hipError_t hipGetDevice(int *deviceId);
 
@@ -265,7 +265,7 @@ hipError_t hipGetDevice(int *deviceId);
  *
  * @param [output] count Returns number of compute-capable devices.
  *
- * @returns hipSuccess, hipErrorNoDevice
+ * @returns #hipSuccess, #hipErrorNoDevice
  *
  * 
  * Returns in @p *count the number of devices that have ability to run compute commands.  If there are no such devices, then @ref hipGetDeviceCount will return #hipErrorNoDevice.
@@ -280,7 +280,7 @@ hipError_t hipGetDeviceCount(int *count);
  * @param [in] attr attribute to query
  * @param [in] deviceId which device to query for information
  * 
- * @returns hipSuccess, hipErrorInvalidDevice, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  */
 hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int deviceId);
 
@@ -290,7 +290,7 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int deviceI
  * @param [out] prop written with device properties
  * @param [in]  deviceId which device to query for information
  *
- * @return hipSuccess, hipErrorInvalidDevice
+ * @return #hipSuccess, #hipErrorInvalidDevice
  * @bug HCC always returns 0 for maxThreadsPerMultiProcessor
  * @bug HCC always returns 0 for regsPerBlock
  * @bug HCC always returns 0 for l2CacheSize
@@ -305,7 +305,7 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
  *
  * @param [in] cacheConfig
  *
- * @returns hipSuccess, hipErrorInitializationError
+ * @returns #hipSuccess, #hipErrorInitializationError
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
@@ -317,7 +317,7 @@ hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig );
  *
  * @param [in] cacheConfig
  *
- * @returns hipSuccess, hipErrorInitializationError
+ * @returns #hipSuccess, #hipErrorInitializationError
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
@@ -329,7 +329,7 @@ hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig );
  *
  * @param [in] config;
  * 
- * @returns hipSuccess, hipErrorInitializationError
+ * @returns #hipSuccess, #hipErrorInitializationError
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
@@ -340,7 +340,7 @@ hipError_t hipFuncSetCacheConfig ( hipFuncCache config );
  *
  * @param [out] pConfig
  *
- * @returns hipSuccess, hipErrorInvalidValue, hipErrorInitializationError
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInitializationError
  *
  * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
  *
@@ -353,7 +353,7 @@ hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig );
  *
  * @param [in] config
  *
- * @returns hipSuccess, hipErrorInvalidValue, hipErrorInitializationError
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInitializationError
  *
  * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
  *
@@ -365,7 +365,7 @@ hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config );
  *
  * @param [in] flags
  *
- * @returns hipSuccess, hipErrorInvalidDevice, hipErrorSetOnActiveProcess
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorSetOnActiveProcess
  *
  * Note: Only hipDeviceScheduleAuto and hipDeviceMapHost are supported
  *
@@ -378,7 +378,7 @@ hipError_t hipSetDeviceFlags ( unsigned flags);
  * @param [out] device ID
  * @param [in]  device properties pointer
  *
- * @returns hipSuccess, hipErrorInvalidValue
+ * @returns #hipSuccess, #hipErrorInvalidValue
  */
 hipError_t hipChooseDevice(int *device, hipDeviceProp_t* prop);
 
