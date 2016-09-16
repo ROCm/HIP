@@ -28,12 +28,6 @@
 // Memory
 //
 //
-//
-
-//---
-/**
- * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
- */
 hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
 {
     HIP_INIT_API(attributes, ptr);
@@ -77,12 +71,6 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
     return ihipLogStatus(e);
 }
 
-
-/**
- * @returns #hipSuccess,
- * @returns #hipErrorInvalidValue if flags are not 0
- * @returns #hipErrorMemoryAllocation if hostPointer is not a tracked allocation.
- */
 hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsigned flags)
 {
     HIP_INIT_API(devicePointer, hostPointer, flags);
@@ -107,13 +95,6 @@ hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsi
     return ihipLogStatus(e);
 }
 
-
-
-
-//---
-/**
- * @returns #hipSuccess #hipErrorMemoryAllocation
- */
 hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 {
     HIP_INIT_API(ptr, sizeBytes);
@@ -153,8 +134,6 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
     return ihipLogStatus(hip_status);
 }
 
-
-
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
     HIP_INIT_API(ptr, sizeBytes, flags);
@@ -193,14 +172,12 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
     return ihipLogStatus(hip_status);
 }
 
-
 //---
 // TODO - remove me, this is deprecated.
 hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
     return hipHostMalloc(ptr, sizeBytes, flags);
 };
-
 
 //---
 // TODO - remove me, this is deprecated.
@@ -253,7 +230,6 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
     return ihipLogStatus(hip_status);
 }
 
-
 hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f) 
 {
     hipChannelFormatDesc cd;
@@ -261,7 +237,6 @@ hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannel
     cd.f = f;
     return cd;
 }
-
 
 hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
         size_t width, size_t height, unsigned int flags) 
@@ -324,8 +299,6 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
     return ihipLogStatus(hip_status);
 }
 
-
-//---
 hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr)
 {
     HIP_INIT_API(flagsPtr, hostPtr);
@@ -350,8 +323,6 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr)
     return ihipLogStatus(hip_status);
 }
 
-
-//---
 hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
 {
     HIP_INIT_API(hostPtr, sizeBytes, flags);
@@ -395,7 +366,6 @@ hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
     return ihipLogStatus(hip_status);
 }
 
-//---
 hipError_t hipHostUnregister(void *hostPtr)
 {
     HIP_INIT_API(hostPtr);
@@ -413,8 +383,6 @@ hipError_t hipHostUnregister(void *hostPtr)
     return ihipLogStatus(hip_status);
 }
 
-
-//---
 hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind)
 {
     HIP_INIT_API(symbolName, src, count, offset, kind);
@@ -477,7 +445,6 @@ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes)
 
     return ihipLogStatus(e);
 }
-
 
 hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes)
 {
@@ -542,15 +509,6 @@ hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes)
     return ihipLogStatus(e);
 }
 
-
-
-/**
- * @result #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidMemcpyDirection,
- * @result #hipErrorInvalidValue : If dst==NULL or src==NULL, or other bad argument.
- * @warning on HCC hipMemcpyAsync does not support overlapped H2D and D2H copies.
- * @warning on HCC hipMemcpyAsync requires that any host pointers are pinned (ie via the hipMallocHost call).
- */
-//---
 hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream)
 {
     HIP_INIT_API(dst, src, sizeBytes, kind, stream);
@@ -655,7 +613,6 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
     return ihipLogStatus(e);
 }
 
-// dpitch, spitch, and width in bytes
 hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
         size_t width, size_t height, hipMemcpyKind kind) {
 
@@ -682,7 +639,6 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
     return ihipLogStatus(e);
 }
 
-// wOffset, width, and spitch in bytes
 hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
         size_t spitch, size_t width, size_t height, hipMemcpyKind kind) {
 
@@ -757,8 +713,6 @@ hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset,
     return ihipLogStatus(e);
 }
 
-
-
 // TODO - make member function of stream?
 template <typename T>
 hc::completion_future
@@ -797,11 +751,7 @@ ihipMemsetKernel(hipStream_t stream,
     return cf;
 }
 
-
-
 // TODO-sync: function is async unless target is pinned host memory - then these are fully sync.
-/** @return #hipErrorInvalidValue
-*/
 hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t stream )
 {
     HIP_INIT_API(dst, value, sizeBytes, stream);
@@ -850,7 +800,6 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
 
     return ihipLogStatus(e);
 };
-
 
 hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
 {
@@ -903,11 +852,6 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
     return ihipLogStatus(e);
 }
 
-
-/*
- * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue (if free != NULL due to bug)S
- * @warning On HCC, the free memory only accounts for memory allocated by this process and may be optimistic.
- */
 hipError_t hipMemGetInfo  (size_t *free, size_t *total)
 {
     HIP_INIT_API(free, total);
@@ -936,8 +880,6 @@ hipError_t hipMemGetInfo  (size_t *free, size_t *total)
     return ihipLogStatus(e);
 }
 
-
-//---
 hipError_t hipFree(void* ptr)
 {
     HIP_INIT_API(ptr);
@@ -965,7 +907,6 @@ hipError_t hipFree(void* ptr)
     return ihipLogStatus(hipStatus);
 }
 
-
 hipError_t hipHostFree(void* ptr)
 {
     HIP_INIT_API(ptr);
@@ -992,7 +933,6 @@ hipError_t hipHostFree(void* ptr)
 
     return ihipLogStatus(hipStatus);
 };
-
 
 // TODO - deprecated function.
 hipError_t hipFreeHost(void* ptr)
