@@ -305,7 +305,48 @@ hipError_t hipChooseDevice( int* device, const hipDeviceProp_t* prop )
                  }
             }
         }
-
+        if(prop->totalGlobalMem != 0) {
+            inPropCount++;
+            if(tempProp.totalGlobalMem >= prop->totalGlobalMem) {
+                matchedPropCount++;
+            }
+        }
+        if(prop->sharedMemPerBlock != 0) {
+            inPropCount++;
+            if(tempProp.sharedMemPerBlock >= prop->sharedMemPerBlock) {
+                matchedPropCount++;
+            }
+        }
+        if(prop->maxThreadsPerBlock  != 0) {
+            inPropCount++;
+            if(tempProp.maxThreadsPerBlock >= prop->maxThreadsPerBlock ) {
+                matchedPropCount++;
+            }
+        }
+        if(prop->totalConstMem  != 0) {
+            inPropCount++;
+            if(tempProp.totalConstMem >= prop->totalConstMem ) {
+                matchedPropCount++;
+            }
+        }
+        if(prop->multiProcessorCount  != 0) {
+            inPropCount++;
+            if(tempProp.multiProcessorCount >= prop->multiProcessorCount ) {
+                matchedPropCount++;
+            }
+        }
+        if(prop->maxThreadsPerMultiProcessor  != 0) {
+            inPropCount++;
+            if(tempProp.maxThreadsPerMultiProcessor >= prop->maxThreadsPerMultiProcessor ) {
+                matchedPropCount++;
+            }
+        }
+        if(prop->memoryClockRate  != 0) {
+            inPropCount++;
+            if(tempProp.memoryClockRate >= prop->memoryClockRate ) {
+                matchedPropCount++;
+            }
+        }
         if(inPropCount == matchedPropCount) {
             *device = i;
         }
