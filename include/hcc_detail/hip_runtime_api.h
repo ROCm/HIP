@@ -596,11 +596,13 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags);
  * @brief Create an event with the specified flags
  *
  * @param[in,out] event Returns the newly created event.
- * @param[in] flags     Flags to control event behavior.  #hipEventDefault, #hipEventBlockingSync, #hipEventDisableTiming, #hipEventInterprocess
+ * @param[in] flags     Flags to control event behavior.  Valid values are #hipEventDefault, #hipEventBlockingSync, #hipEventDisableTiming, #hipEventInterprocess
  *
- * @warning On HCC platform, #hipEventInterprocess is not supported.
+ * @warning On HCC platform, flags must be #hipEventDefault.
  *
- * @returns #cudaSuccess
+ * @returns #hipSuccess, #hipErrorInitializationError, #hipErrorInvalidValue, #hipErrorLaunchFailure, #hipErrorMemoryAllocation
+ *
+ * @see hipEventCreate, hipEventSynchronize, hipEventDestroy, hipEventElapsedTime
  */
 hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags);
 
@@ -610,6 +612,9 @@ hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags);
  *
  * @param[in,out] event Returns the newly created event.
  *
+ * @returns #hipSuccess, #hipErrorInitializationError, #hipErrorInvalidValue, #hipErrorLaunchFailure, #hipErrorMemoryAllocation
+ *
+ * @see hipEventCreateWithFlags, hipEventRecord, hipEventQuery, hipEventSynchronize, hipEventDestroy, hipEventElapsedTime
  */
 hipError_t hipEventCreate(hipEvent_t* event);
 
@@ -619,7 +624,7 @@ hipError_t hipEventCreate(hipEvent_t* event);
  *
  * @param[in] event event to record.
  * @param[in] stream stream in which to record event.
- * @returns #hipSuccess, #hipErrorInvalidResourceHandle
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInitializationError, #hipErrorInvalidResourceHandle, #hipErrorLaunchFailure
  *
  * hipEventQuery or hipEventSynchronize must be used to determine when the event
  * transitions from "recording" (after eventRecord is called) to "recorded"
@@ -635,7 +640,7 @@ hipError_t hipEventCreate(hipEvent_t* event);
  * If this function is called on a an event that is currently being recorded, results are undefined - either
  * outstanding recording may save state into the event, and the order is not guaranteed.  This shoul be avoided.
  *
- * @see hipEventElapsedTime
+ * @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventSynchronize, hipEventDestroy, hipEventElapsedTime
  *
  */
 #ifdef __cplusplus
@@ -648,17 +653,18 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream);
  *  @brief Destroy the specified event.
  *
  *  @param[in] event Event to destroy.
- *  @return : #hipSuccess,
+ *  @returns #hipSuccess, #hipErrorInitializationError, #hipErrorInvalidValue, #hipErrorLaunchFailure
  *
  *  Releases memory associated with the event.  If the event is recording but has not completed recording when hipEventDestroy is called,
  *  the function will return immediately and the completion_future resources will be released later, when the hipDevice is synchronized.
  *
+ * @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventSynchronize, hipEventRecord, hipEventElapsedTime
  */
 hipError_t hipEventDestroy(hipEvent_t event);
 
 
 /**
- *  @brief: Wait for an event to complete.
+ *  @brief Wait for an event to complete.
  *
  *  This function will block until the event is ready, waiting for all previous work in the stream specified when event was recorded with hipEventRecord.
  *
@@ -667,8 +673,9 @@ hipError_t hipEventDestroy(hipEvent_t event);
  *  TODO-hcc - This function needs to support hipEventBlockingSync parameter.
  *
  *  @param[in] event Event on which to wait.
- *  @return #hipSuccess, #hipErrorInvalidResourceHandle,
+ *  @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInitializationError, #hipErrorInvalidResourceHandle, #hipErrorLaunchFailure
  *
+ *  @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventDestroy, hipEventRecord, hipEventElapsedTime
  */
 hipError_t hipEventSynchronize(hipEvent_t event);
 
@@ -676,10 +683,10 @@ hipError_t hipEventSynchronize(hipEvent_t event);
 /**
  * @brief Return the elapsed time between two events.
  *
- * @param[out]] ms : Return time between start and stop in ms.
+ * @param[out] ms : Return time between start and stop in ms.
  * @param[in]   start : Start event.
  * @param[in]   stop  : Stop event.
- * @return : #hipSuccess, #hipErrorInvalidResourceHandle, #hipErrorNotReady,
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotReady, #hipErrorInvalidResourceHandle, #hipErrorInitializationError, #hipErrorLaunchFailure
  *
  * Computes the elapsed time between two events. Time is computed in ms, with
  * a resolution of approximately 1 us.
@@ -696,6 +703,8 @@ hipError_t hipEventSynchronize(hipEvent_t event);
  * If hipEventRecord has been called on both events, but the timestamp has not yet been recorded on one or
  * both events (that is, hipEventQuery would return #hipErrorNotReady on at least one of the events), then
  * #hipErrorNotReady is returned.
+ *
+ * @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventDestroy, hipEventRecord, hipEventSynchronize
  */
 hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop);
 
@@ -704,13 +713,13 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop);
  * @brief Query event status
  *
  * @param[in] event Event to query.
- * @returns #hipSuccess, hipEventNotReady
+ * @returns #hipSuccess, #hipErrorNotReady, #hipErrorInvalidResourceHandle, #hipErrorInvalidValue, #hipErrorInitializationError, #hipErrorLaunchFailure
  *
  * Query the status of the specified event.  This function will return #hipErrorNotReady if all commands
  * in the appropriate stream (specified to hipEventRecord) have completed.  If that work has not completed,
  * or if hipEventRecord was not called on the event, then hipSuccess is returned.
  *
- *
+ * @see hipEventCreate, hipEventCreateWithFlags, hipEventRecord, hipEventDestroy, hipEventSynchronize, hipEventElapsedTime
  */
 hipError_t hipEventQuery(hipEvent_t event) ;
 
