@@ -141,7 +141,7 @@ typedef struct hipPointerAttribute_t {
 
 
 /*
- asdasd* @brief hipError_t
+ * @brief hipError_t
  * @enum
  * @ingroup Enumerations
  */
@@ -188,7 +188,7 @@ typedef enum hipError_t {
     hipErrorMissingConfiguration    = 1001,
     hipErrorMemoryAllocation        = 1002,    ///< Memory allocation error.
     hipErrorInitializationError     = 1003,    ///< TODO comment from hipErrorInitializationError
-    hipErrorLaunchFailure           = 1004,
+    hipErrorLaunchFailure           = 1004,    ///< An exception occurred on the device while executing a kernel.
     hipErrorPriorLaunchFailure      = 1005,
     hipErrorLaunchTimeOut           = 1006,
     hipErrorLaunchOutOfResources    = 1007,    ///< Out of resources error.
