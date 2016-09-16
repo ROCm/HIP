@@ -1042,6 +1042,7 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t siz
  *  @warning If host or dest are not pinned, the memory copy will be performed synchronously.  For best performance, use hipHostMalloc to
  *  allocate host memory that is transferred asynchronously.
  *
+ *  @warning on HCC hipMemcpyAsync does not support overlapped H2D and D2H copies.
  *  For hipMemcpy, the copy is always performed by the device associated with the specified stream.
  *
  *  For multi-gpu or peer-to-peer configurations, it is recommended to use a stream which is a attached to the device where the src data is physically located.
@@ -1101,7 +1102,9 @@ hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t st
  * @brief Query memory info.
  * Return snapshot of free memory, and total allocatable memory on the device.
  *
- * Returns in *free a snapshot of the current free memory o
+ * Returns in *free a snapshot of the current free memory.
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue (if free != NULL due to bugs)
+ * @warning On HCC, the free memory only accounts for memory allocated by this process and may be optimistic.
  **/
 hipError_t hipMemGetInfo  (size_t * free, size_t * total)   ;
 
