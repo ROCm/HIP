@@ -416,7 +416,7 @@ macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files)
 
         # Create up the comment string
         file(RELATIVE_PATH generated_file_relative_path "${CMAKE_BINARY_DIR}" "${generated_file}")
-        set(hip_build_comment_string "Building HIPCC (using ${HIP_PLATFORM}) object ${generated_file_relative_path}")
+        set(hip_build_comment_string "Building HIPCC object ${generated_file_relative_path}")
 
         # Build the generated file and dependency file
         add_custom_command(
