@@ -22,8 +22,8 @@ endif()
 
 # Set these up as variables to make reading the generated file easier
 set(HIP_HIPCC_EXECUTABLE "@HIP_HIPCC_EXECUTABLE@") # path
+set(HIP_HIPCONFIG_EXECUTABLE "@HIP_HIPCONFIG_EXECUTABLE@") #path
 set(HIP_HOST_COMPILER "@HIP_HOST_COMPILER@") # path
-set(HIP_PLATFORM "@HIP_PLATFORM@") #string
 set(CMAKE_COMMAND "@CMAKE_COMMAND@") # path
 set(HIP_run_make2cmake "@HIP_run_make2cmake@") # path
 
@@ -38,6 +38,7 @@ set(source_file "@source_file@") # path
 set(host_flag "@host_flag@") # bool
 
 # Determine compiler and compiler flags
+execute_process(COMMAND ${HIP_HIPCONFIG_EXECUTABLE} --platform OUTPUT_VARIABLE HIP_PLATFORM OUTPUT_STRIP_TRAILING_WHITESPACE)
 if(NOT host_flag)
     set(__CC ${HIP_HIPCC_EXECUTABLE})
     if(HIP_PLATFORM STREQUAL "hcc")

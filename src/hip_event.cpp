@@ -48,16 +48,12 @@ hipError_t ihipEventCreate(hipEvent_t* event, unsigned flags)
     return e;
 }
 
-/**
- * @warning : flags must be 0.
- */
 hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags)
 {
     HIP_INIT_API(event, flags);
 
     return ihipLogStatus(ihipEventCreate(event, flags));
 }
-
 
 hipError_t hipEventCreate(hipEvent_t* event)
 {
@@ -66,8 +62,6 @@ hipError_t hipEventCreate(hipEvent_t* event)
     return ihipLogStatus(ihipEventCreate(event, 0));
 }
 
-
-//---
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
 {
     HIP_INIT_API(event, stream);
@@ -100,8 +94,6 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
     }
 }
 
-
-//---
 hipError_t hipEventDestroy(hipEvent_t event)
 {
     HIP_INIT_API(event);
@@ -115,8 +107,6 @@ hipError_t hipEventDestroy(hipEvent_t event)
     return ihipLogStatus(hipSuccess);
 }
 
-
-//---
 hipError_t hipEventSynchronize(hipEvent_t event)
 {
     HIP_INIT_API(event);
@@ -142,8 +132,6 @@ hipError_t hipEventSynchronize(hipEvent_t event)
     }
 }
 
-
-//---
 hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop)
 {
     HIP_INIT_API(ms, start, stop);
@@ -187,8 +175,6 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop)
     return ihipLogStatus(status);
 }
 
-
-//---
 hipError_t hipEventQuery(hipEvent_t event)
 {
     HIP_INIT_API(event);
