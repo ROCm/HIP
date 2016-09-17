@@ -102,7 +102,7 @@ However, we can provide a rough summary of the features included in each CUDA SD
 - CUDA 7.5
     - float16 (under development)
 - CUDA 8.0
-    - No new language features.
+    - TBD.
 
 ### What libraries does HIP support?
 HIP includes growing support for the 4 key math libraries using hcBlas, hcFft, hcrng, and hcsparse).
@@ -126,6 +126,19 @@ HIP offers several benefits over OpenCL:
 - HIP provides pointers and host-side pointer arithmetic.
 - HIP provides device-level control over memory allocation and placement.
 - HIP offers an offline compilation model.
+
+### How does porting CUDA to HIP compare to porting CUDA to OpenCL?
+Both HIP and CUDA are dialects of C++, and thus porting between them is relatively straightforward.
+Both dialects support templates, classes, lambdas, and other C++ constructs.
+As one example, the hipify tool was originally a perl script that used simple text conversions from CUDA to HIP.
+HIP and CUDA provide similar math library calls as well.  In summary, the HIP philospohy was to make the HIP language close enough to CUDA that the porting effort is relatively simple.
+This reduces the potential for error, and also makes it easy to automate the translation.  HIP's goal is to quickly get the ported program running on both platforms with little manual intervention,
+so that the programmer can focus on performance optimizations.
+
+There have been several tools that have attempted to convert CUDA into OpenCL, such as CU2CL.  OpenCL is a C99-based kernel language (rather than C++) and also does not support single-source compilation.  
+As a result, the OpenCL syntax is quite different than CUDA, and the porting tools have to perform some heroic transformations to bridge this gap.
+The tools also struggle with more complex CUDA applications, in particular those that use templates, classes, or other C++ features inside the kernel.  
+
 
 ### What hardware does HIP support?
 - For AMD platforms, HIP runs on the same hardware that the HCC "hc" mode supports.  See the ROCM documentation for the list of supported platforms.
