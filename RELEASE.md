@@ -7,6 +7,7 @@ Upcoming:
   number of commands (>1K) without synchronizing.  
 - Register keyword now silently ignored on HCC (previously would emit warning).
 - Doc updates: Add some more frequently asked questions to FAQ, fix TOC in some files, review.
+- Cookbook.
 
 ===================================================================================================
 
