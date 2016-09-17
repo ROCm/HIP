@@ -613,6 +613,7 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
     return ihipLogStatus(e);
 }
 
+// TODO - review and optimize
 hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
         size_t width, size_t height, hipMemcpyKind kind) {
 
