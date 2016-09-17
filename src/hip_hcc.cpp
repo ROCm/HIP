@@ -1973,9 +1973,6 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsig
 //-------------------------------------------------------------------------------------------------
 // HCC-specific accessor functions:
 
-/**
- * @return #hipSuccess, #hipErrorInvalidDevice
- */
 //---
 hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator *acc)
 {
@@ -1993,9 +1990,6 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator *acc)
 }
 
 
-/**
- * @return #hipSuccess
- */
 //---
 hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **av)
 {
