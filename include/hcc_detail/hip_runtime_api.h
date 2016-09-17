@@ -1112,7 +1112,7 @@ hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t st
  * Return snapshot of free memory, and total allocatable memory on the device.
  *
  * Returns in *free a snapshot of the current free memory.
- * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue (if free != NULL due to bugs)
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  * @warning On HCC, the free memory only accounts for memory allocated by this process and may be optimistic.
  **/
 hipError_t hipMemGetInfo  (size_t * free, size_t * total)   ;

@@ -864,6 +864,9 @@ hipError_t hipMemGetInfo  (size_t *free, size_t *total)
         if (total) {
             *total = device->_props.totalGlobalMem;
         }
+        else {
+             e = hipErrorInvalidValue;
+        }
 
         if (free) {
             // TODO - replace with kernel-level for reporting free memory:
@@ -871,6 +874,9 @@ hipError_t hipMemGetInfo  (size_t *free, size_t *total)
             hc::am_memtracker_sizeinfo(device->_acc, &deviceMemSize, &hostMemSize, &userMemSize);
 
             *free =  device->_props.totalGlobalMem - deviceMemSize;
+        }
+        else {
+             e = hipErrorInvalidValue;
         }
 
     } else {
