@@ -81,7 +81,6 @@ int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU ident
 //---
 // Chicken bits for disabling functionality to work around potential issues:
 int HIP_DISABLE_HW_KERNEL_DEP = 0;
-int HIP_DISABLE_HW_COPY_DEP = 0;
 
 
 
@@ -480,54 +479,6 @@ void ihipStream_t::lockclose_postKernelCommand(hc::completion_future &kernelFutu
 };
 
 
-
-//---
-// Called whenever a copy command is set to the stream.
-// Examines the last command sent to this stream and returns a signal to wait on, if required.
-int ihipStream_t::preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *copyCompletionSignal, hsa_signal_t *waitSignal, ihipCommand_t copyType)
-{
-    int needSync = 0;
-
-    waitSignal->handle = 0;
-
-    // If switching command types, we need to add a barrier packet to synchronize things.
-    if (FORCE_SAMEDIR_COPY_DEP || (crit->_last_command_type != copyType)) {
-
-
-        if (crit->_last_command_type == ihipCommandKernel) {
-            tprintf (DB_SYNC, "stream %p switch %s to %s (async copy dep on prev kernel)\n",
-                    this, ihipCommandName[crit->_last_command_type], ihipCommandName[copyType]);
-            needSync = 1;
-            ihipSignal_t *depSignal = allocSignal(crit);
-            hsa_signal_store_relaxed(depSignal->_hsaSignal,1);
-            this->enqueueBarrier(static_cast<hsa_queue_t*>(crit->_av.get_hsa_queue()), NULL, depSignal);
-            *waitSignal = depSignal->_hsaSignal;
-        } else if (crit->_last_copy_signal) {
-            needSync = 1;
-            tprintf (DB_SYNC, "stream %p switch %s to %s (async copy dep on other copy #%lu)\n",
-                    this, ihipCommandName[crit->_last_command_type], ihipCommandName[copyType], crit->_last_copy_signal->_sigId);
-            *waitSignal = crit->_last_copy_signal->_hsaSignal;
-        }
-
-        if (HIP_DISABLE_HW_COPY_DEP && needSync) {
-            if (HIP_DISABLE_HW_COPY_DEP == -1) {
-                tprintf (DB_SYNC, "IGNORE copy dependency\n")
-
-            } else {
-                tprintf (DB_SYNC, "HOST-wait for copy dependency\n")
-                // do the wait here on the host, and disable the device-side command resolution.
-                hsa_signal_wait_acquire(*waitSignal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
-                needSync = 0;
-            }
-        }
-
-        crit->_last_command_type = copyType;
-    }
-
-    crit->_last_copy_signal = copyCompletionSignal;
-
-    return needSync;
-}
 
 
 // Precursor: the stream is already locked,specifically so this routine can enqueue work into the specified av.
@@ -1286,7 +1237,6 @@ void ihipInit()
     READ_ENV_I(release, HIP_VISIBLE_DEVICES, CUDA_VISIBLE_DEVICES, "Only devices whose index is present in the secquence are visible to HIP applications and they are enumerated in the order of secquence" );
 
     READ_ENV_I(release, HIP_DISABLE_HW_KERNEL_DEP, 0, "Disable HW dependencies before kernel commands  - instead wait for dependency on host. -1 means ignore these dependencies. (debug mode)");
-    READ_ENV_I(release, HIP_DISABLE_HW_COPY_DEP, 0, "Disable HW dependencies before copy commands  - instead wait for dependency on host. -1 means ifnore these dependencies (debug mode)");
 
     READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Number of kernels per stream ");
 
