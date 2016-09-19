@@ -21,8 +21,8 @@ THE SOFTWARE.
 #define HIP_HCC_H
 
 #include <hc.hpp>
+#include <hsa/hsa.h>
 #include "hip/hcc_detail/hip_util.h"
-#include "hip/hcc_detail/unpinned_copy_engine.h"
 
 
 #if defined(__HCC__) && (__hcc_workweek__ < 16354)
@@ -107,10 +107,6 @@ extern const char *API_COLOR_END;
 #ifndef COMPILE_HIP_ATP_MARKER
 #define COMPILE_HIP_ATP_MARKER 0
 #endif
-
-
-// #include CPP files to produce one object file
-#define ONE_OBJECT_FILE 0
 
 
 // Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function boundary.
