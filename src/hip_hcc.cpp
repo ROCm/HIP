@@ -67,21 +67,8 @@ int HIP_TRACE_API= 0;
 std::string HIP_TRACE_API_COLOR("green");
 int HIP_ATP_MARKER= 0;
 int HIP_DB= 0;
-int HIP_STAGING_SIZE = 64;   /* size of staging buffers, in KB */
-static const int HIP_STAGING_BUFFERS = 2;    
-int HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING = 0;
-int HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE = 0;
-int HIP_D2H_MEM_TRANSFER_THRESHOLD = 0;
-int HIP_STREAM_SIGNALS = 32;  /* number of signals to allocate at stream creation */
 int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
-
-
-//---
-// Chicken bits for disabling functionality to work around potential issues:
-int HIP_DISABLE_HW_KERNEL_DEP = 0;
-
-
-
+int HIP_NUM_KERNELS_INFLIGHT = 128;
 
 
 std::once_flag hip_initialized;
@@ -96,9 +83,6 @@ std::vector<int> g_hip_visible_devices;
 hsa_agent_t g_cpu_agent;
 
 
-// TODO, remove these if possible:
-hsa_agent_t gpu_agent_;
-hsa_amd_memory_pool_t gpu_pool_;
 
 //=================================================================================================
 // Thread-local storage:
@@ -166,29 +150,6 @@ hipError_t ihipSynchronize(void)
     return (hipSuccess);
 }
 
-//=================================================================================================
-// ihipSignal_t:
-//=================================================================================================
-//
-//---
-ihipSignal_t::ihipSignal_t() :  _sigId(0)
-{
-    if (hsa_signal_create(0/*value*/, 0, NULL, &_hsaSignal) != HSA_STATUS_SUCCESS) {
-        throw ihipException(hipErrorRuntimeMemory);
-    }
-    //tprintf (DB_SIGNAL, "  allocated hsa_signal=%lu\n", (_hsaSignal.handle));
-}
-
-//---
-ihipSignal_t::~ihipSignal_t()
-{
-    tprintf (DB_SIGNAL, "  destroy hsa_signal #%lu (#%lu)\n", (_hsaSignal.handle), _sigId);
-    if (hsa_signal_destroy(_hsaSignal) != HSA_STATUS_SUCCESS) {
-       throw ihipException(hipErrorRuntimeOther);
-    }
-};
-
-
 
 //=================================================================================================
 // ihipStream_t:
@@ -210,45 +171,16 @@ ihipStream_t::~ihipStream_t()
 }
 
 
-//---
-void ihipStream_t::waitCopy(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *signal)
-{
-    SIGSEQNUM sigNum = signal->_sigId;
-    tprintf(DB_SYNC, "waitCopy signal:#%lu\n", sigNum);
-
-    hsa_signal_wait_acquire(signal->_hsaSignal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
-
-
-    tprintf(DB_SIGNAL, "waitCopy reclaim signal #%lu\n", sigNum);
-}
-
 //Wait for all kernel and data copy commands in this stream to complete.
 //This signature should be used in routines that already have locked the stream mutex
 void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty)
 {
     if (! assertQueueEmpty) {
         tprintf (DB_SYNC, "stream %p wait for queue-empty..\n", this);
-//        crit->_av.wait();
-        waitOnAllCFs(crit);
+        crit->_av.wait();
     }
 
     crit->_kernelCnt = 0;
-}
-
-void ihipStream_t::addCFtoStream(LockedAccessor_StreamCrit_t &crit, hc::completion_future *cf)
-{
-    crit->_cfs.push_back(cf);
-}
-
-void ihipStream_t::waitOnAllCFs(LockedAccessor_StreamCrit_t &crit)
-{
-    for(uint32_t i=0;i<crit->_cfs.size();i++){
-        if(crit->_cfs[i] != NULL){
-            crit->_cfs[i]->wait();
-            delete crit->_cfs[i];
-        }
-    }
-    crit->_cfs.clear();
 }
 
 //---
@@ -301,40 +233,7 @@ ihipCtx_t * ihipStream_t::getCtx() const
 };
 
 
-#define HIP_NUM_SIGNALS_PER_STREAM 32
 
-
-//---
-void ihipStream_t::enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal, ihipSignal_t *completionSignal)
-{
-
-    // Obtain the write index for the command queue
-    uint64_t index = hsa_queue_load_write_index_relaxed(queue);
-    const uint32_t queueMask = queue->size - 1;
-
-    // Define the barrier packet to be at the calculated queue index address
-    hsa_barrier_and_packet_t* barrier = &(((hsa_barrier_and_packet_t*)(queue->base_address))[index&queueMask]);
-    memset(barrier, 0, sizeof(hsa_barrier_and_packet_t));
-
-    // setup header
-    uint16_t header = HSA_PACKET_TYPE_BARRIER_AND << HSA_PACKET_HEADER_TYPE;
-    header |= 1 << HSA_PACKET_HEADER_BARRIER;
-    //header |= HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE;
-    //header |= HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE;
-    barrier->header = header;
-
-    barrier->dep_signal[0].handle = depSignal ? depSignal->_hsaSignal.handle: 0;
-
-    barrier->completion_signal.handle = completionSignal ? completionSignal->_hsaSignal.handle : 0;
-
-    // TODO - check queue overflow, return error:
-    // Increment write index and ring doorbell to dispatch the kernel
-    hsa_queue_store_write_index_relaxed(queue, index+1);
-    hsa_signal_store_relaxed(queue->doorbell_signal, index);
-}
-
-
-int HIP_NUM_KERNELS_INFLIGHT = 128;
 
 //--
 // Lock the stream to prevent other threads from intervening.
@@ -511,16 +410,6 @@ ihipDevice_t::ihipDevice_t(unsigned deviceId, unsigned deviceCnt, hc::accelerato
 
     initProperties(&_props);
 
-    _stagingBuffer[0] = new UnpinnedCopyEngine(_hsaAgent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS,
-                                               _isLargeBar, 
-                                               HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING,
-                                               HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE,
-                                               HIP_D2H_MEM_TRANSFER_THRESHOLD);
-    _stagingBuffer[1] = new UnpinnedCopyEngine(_hsaAgent,g_cpu_agent, HIP_STAGING_SIZE*1024, HIP_STAGING_BUFFERS,
-                                               _isLargeBar, 
-                                               HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING,
-                                               HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE,
-                                               HIP_D2H_MEM_TRANSFER_THRESHOLD);
 
     _primaryCtx = new ihipCtx_t(this, deviceCnt, hipDeviceMapHost);
 }
@@ -528,12 +417,8 @@ ihipDevice_t::ihipDevice_t(unsigned deviceId, unsigned deviceCnt, hc::accelerato
 
 ihipDevice_t::~ihipDevice_t()
 {
-    for (int i=0; i<2; i++) {
-        if (_stagingBuffer[i]) {
-            delete _stagingBuffer[i];
-            _stagingBuffer[i] = NULL;
-        }
-    }
+    delete _primaryCtx;
+    _primaryCtx = NULL;
 }
 
 
@@ -607,14 +492,6 @@ hsa_status_t GetDevicePool(hsa_amd_memory_pool_t pool, void* data) {
     return HSA_STATUS_SUCCESS;
 }
 
-void FindDevicePool()
-{
-    hsa_status_t err = hsa_iterate_agents(FindGpuDevice, &gpu_agent_);
-    ErrorCheck(err);
-
-    err = hsa_amd_agent_iterate_memory_pools(gpu_agent_, GetDevicePool, &gpu_pool_);
-    ErrorCheck(err);
-}
 
 int checkAccess(hsa_agent_t agent, hsa_amd_memory_pool_t pool)
 {
@@ -767,14 +644,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     /* Computemode for HSA Devices is always : cudaComputeModeDefault */
     prop->computeMode = 0;
 
-    FindDevicePool();
-    int access=checkAccess(g_cpu_agent, gpu_pool_);
-    if (0 != access){
-        _isLargeBar= 1;
-    } else {
-        _isLargeBar=0;
-    }
-
+    _isLargeBar = _acc.has_cpu_accessible_am();
 
     // Get Max Threads Per Multiprocessor
 
@@ -1115,14 +985,8 @@ void ihipInit()
     READ_ENV_I(release, HIP_TRACE_API, 0,  "Trace each HIP API call.  Print function name and return code to stderr as program executes.");
     READ_ENV_S(release, HIP_TRACE_API_COLOR, 0,  "Color to use for HIP_API.  None/Red/Green/Yellow/Blue/Magenta/Cyan/White");
     READ_ENV_I(release, HIP_ATP_MARKER, 0,  "Add HIP function begin/end to ATP file generated with CodeXL");
-    READ_ENV_I(release, HIP_STAGING_SIZE, 0, "Size of each staging buffer (in KB)" );
-    READ_ENV_I(release, HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING, 0, "Threshold value for H2D unpinned memory transfer decision between direct copy or staging buffer usage,Under testing.");
-    READ_ENV_I(release, HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE, 0, "Threshold value for H2D unpinned memory transfer decision between staging buffer usage or pininplace usage .Under testing.");
-    READ_ENV_I(release, HIP_D2H_MEM_TRANSFER_THRESHOLD, 0, "Threshold value for D2H unpinned memory transfer decision between staging buffer usage or pininplace usage .Under testing.");
-    READ_ENV_I(release, HIP_STREAM_SIGNALS, 0, "Number of signals to allocate when new stream is created (signal pool will grow on demand)");
     READ_ENV_I(release, HIP_VISIBLE_DEVICES, CUDA_VISIBLE_DEVICES, "Only devices whose index is present in the secquence are visible to HIP applications and they are enumerated in the order of secquence" );
 
-    READ_ENV_I(release, HIP_DISABLE_HW_KERNEL_DEP, 0, "Disable HW dependencies before kernel commands  - instead wait for dependency on host. -1 means ignore these dependencies. (debug mode)");
 
     READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Number of kernels per stream ");
 
@@ -1281,7 +1145,6 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
     auto crit = stream->lockopen_preKernelCommand();
     lp->av = &(crit->_av);
     lp->cf = new hc::completion_future;
-    stream->addCFtoStream(crit, lp->cf);
     ihipPrintKernelLaunch(kernelNameStr, lp, stream);
 
     return (stream);
@@ -1304,7 +1167,6 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, gri
     auto crit = stream->lockopen_preKernelCommand();
     lp->av = &(crit->_av);
     lp->cf = new hc::completion_future;
-    stream->addCFtoStream(crit, lp->cf);
     ihipPrintKernelLaunch(kernelNameStr, lp, stream);
     return (stream);
 }
@@ -1326,7 +1188,6 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, gri
     auto crit = stream->lockopen_preKernelCommand();
     lp->av = &(crit->_av);
     lp->cf = new hc::completion_future;
-    stream->addCFtoStream(crit, lp->cf);
     ihipPrintKernelLaunch(kernelNameStr, lp, stream);
     return (stream);
 }
@@ -1349,7 +1210,6 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, g
     lp->av = &(crit->_av);
     lp->cf = new hc::completion_future; // TODO, is this necessary?
 
-    stream->addCFtoStream(crit, lp->cf);
 
     ihipPrintKernelLaunch(kernelNameStr, lp, stream);
     return (stream);
@@ -1495,29 +1355,6 @@ unsigned ihipStream_t::resolveMemcpyDirection(bool srcTracked, bool dstTracked, 
 
     assert (kind != hipMemcpyDefault);
     return kind;
-}
-
-
-// Setup the copyCommandType and the copy agents (for hsa_amd_memory_async_copy)
-// srcPhysAcc is the physical location of the src data.  For many copies this is the
-void ihipStream_t::setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent)
-{
-    // current* represents the device associated with the specified stream.
-    const ihipDevice_t *streamDevice = this->getDevice();
-    hsa_agent_t streamAgent = streamDevice->_hsaAgent;
-
-    // ROCR runtime logic is :
-    // -    If both src and dst are cpu agent, launch thread and memcpy.  We want to avoid this.
-    // -    If either/both src or dst is a gpu agent, use the first gpu agent’s DMA engine to perform the copy.
-
-    switch (kind) {
-        //case hipMemcpyHostToHost     : *commandType = ihipCommandCopyH2H; *srcAgent=streamAgent; *dstAgent=streamAgent; break;  // TODO - enable me, for async copy use SDMA.
-        case hipMemcpyHostToHost     : *commandType = ihipCommandCopyH2H; *srcAgent=g_cpu_agent; *dstAgent=g_cpu_agent; break;
-        case hipMemcpyHostToDevice   : *commandType = ihipCommandCopyH2D; *srcAgent=g_cpu_agent; *dstAgent=streamAgent; break;
-        case hipMemcpyDeviceToHost   : *commandType = ihipCommandCopyD2H; *srcAgent=streamAgent; *dstAgent=g_cpu_agent; break;
-        case hipMemcpyDeviceToDevice : *commandType = ihipCommandCopyD2D; *srcAgent=streamAgent; *dstAgent=streamAgent; break;
-        default: throw ihipException(hipErrorInvalidMemcpyDirection);
-    };
 }
 
 
