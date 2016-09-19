@@ -213,20 +213,6 @@ ihipStream_t::~ihipStream_t()
 
 
 //---
-//TODO - this function is dangerous since it does not propertly account
-//for younger commands which may be depending on the signals we are reclaiming.
-//Will fix when we move to HCC management of copy signals.
-void ihipStream_t::locked_reclaimSignals(SIGSEQNUM sigNum)
-{
-    LockedAccessor_StreamCrit_t crit(_criticalData);
-
-    tprintf(DB_SIGNAL, "reclaim signal #%lu\n", sigNum);
-    // Mark all signals older and including this one as available for re-allocation.
-    crit->_oldest_live_sig_id = sigNum+1;
-}
-
-
-//---
 void ihipStream_t::waitCopy(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *signal)
 {
     SIGSEQNUM sigNum = signal->_sigId;
@@ -253,17 +239,7 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty
         waitOnAllCFs(crit);
     }
 
-    if (crit->_last_copy_signal) {
-        tprintf (DB_SYNC, "stream %p wait for lastCopy:#%lu...\n", this, lastCopySeqId(crit) );
-        this->waitCopy(crit, crit->_last_copy_signal);
-    }
-
     crit->_kernelCnt = 0;
-
-    // Reset the stream to "empty" - next command will not set up an inpute dependency on any older signal.
-    crit->_last_command_type = ihipCommandCopyH2D;
-    crit->_last_copy_signal = NULL;
-//    crit->_signalCnt = 0;
 }
 
 void ihipStream_t::addCFtoStream(LockedAccessor_StreamCrit_t &crit, hc::completion_future *cf)
@@ -309,7 +285,6 @@ void ihipStream_t::locked_recordEvent(hipEvent_t event)
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
     event->_marker = crit->_av.create_marker();
-    event->_copySeqId = lastCopySeqId(crit);
 }
 
 //=============================================================================
@@ -422,42 +397,16 @@ void ihipStream_t::enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal, i
 int HIP_NUM_KERNELS_INFLIGHT = 128;
 
 //--
-//When the commands in a stream change types (ie kernel command follows a data command,
-//or data command follows a kernel command), then we need to add a barrier packet
-//into the stream to mimic CUDA stream semantics.  (some hardware uses separate
-//queues for data commands and kernel commands, and no implicit ordering is provided).
-//
+// Lock the stream to prevent other threads from intervening.
 LockedAccessor_StreamCrit_t ihipStream_t::lockopen_preKernelCommand()
 {
     LockedAccessor_StreamCrit_t crit(_criticalData, false/*no unlock at destruction*/);
 
-
     if(crit->_kernelCnt > HIP_NUM_KERNELS_INFLIGHT){
-        this->wait(crit);
+       this->wait(crit);
        crit->_kernelCnt = 0;
     }
     crit->_kernelCnt++;
-    // If switching command types, we need to add a barrier packet to synchronize things.
-    if (crit->_last_command_type != ihipCommandKernel) {
-        if (crit->_last_copy_signal) {
-
-            hsa_queue_t * q =  (hsa_queue_t*) (crit->_av.get_hsa_queue());
-            if (HIP_DISABLE_HW_KERNEL_DEP == 0) {
-                this->enqueueBarrier(q, crit->_last_copy_signal, NULL);
-                tprintf (DB_SYNC, "stream %p switch %s to %s (barrier pkt inserted with wait on #%lu)\n",
-                        this, ihipCommandName[crit->_last_command_type], ihipCommandName[ihipCommandKernel], crit->_last_copy_signal->_sigId)
-
-            } else if (HIP_DISABLE_HW_KERNEL_DEP>0) {
-                    tprintf (DB_SYNC, "stream %p switch %s to %s (HOST wait for previous...)\n",
-                            this, ihipCommandName[crit->_last_command_type], ihipCommandName[ihipCommandKernel]);
-                    this->waitCopy(crit, crit->_last_copy_signal);
-            } else if (HIP_DISABLE_HW_KERNEL_DEP==-1) {
-                tprintf (DB_SYNC, "stream %p switch %s to %s (IGNORE dependency)\n",
-                        this, ihipCommandName[crit->_last_command_type], ihipCommandName[ihipCommandKernel]);
-            }
-        }
-        crit->_last_command_type = ihipCommandKernel;
-    }
 
     return crit;
 }
@@ -467,8 +416,6 @@ LockedAccessor_StreamCrit_t ihipStream_t::lockopen_preKernelCommand()
 // Must be called after kernel finishes, this releases the lock on the stream so other commands can submit.
 void ihipStream_t::lockclose_postKernelCommand(hc::completion_future &kernelFuture)
 {
-    // We locked _criticalData in the lockopen_preKernelCommand() so OK to access here:
-    _criticalData._last_kernel_future = kernelFuture;
 
     if (HIP_LAUNCH_BLOCKING) {
         kernelFuture.wait();
@@ -1217,6 +1164,7 @@ void ihipInit()
     READ_ENV_I(release, HIP_PRINT_ENV, 0,  "Print HIP environment variables.");
     //-- READ HIP_PRINT_ENV env first, since it has impact on later env var reading
 
+    // TODO: In HIP/hcc, this variable blocks after both kernel commmands and data transfer.  Maybe should be bit-mask for each command type?
     READ_ENV_I(release, HIP_LAUNCH_BLOCKING, CUDA_LAUNCH_BLOCKING, "Make HIP APIs 'host-synchronous', so they block until any kernel launches or data copy commands complete. Alias: CUDA_LAUNCH_BLOCKING." );
     READ_ENV_I(release, HIP_DB, 0,  "Print various debug info.  Bitmask, see hip_hcc.cpp for more information.");
     if ((HIP_DB & (1<<DB_API))  && (HIP_TRACE_API == 0)) {
