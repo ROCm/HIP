@@ -227,40 +227,6 @@ extern "C" {
 const hipStream_t hipStreamNull = 0x0;
 
 
-enum ihipCommand_t {
-    ihipCommandCopyH2H,
-    ihipCommandCopyH2D,
-    ihipCommandCopyD2H,
-    ihipCommandCopyD2D,
-    ihipCommandCopyP2P,
-    ihipCommandKernel,
-};
-
-static const char* ihipCommandName[] = {
-    "CopyH2H", "CopyH2D", "CopyD2H", "CopyD2D", "CopyP2P", "Kernel"
-};
-
-
-
-typedef uint64_t SIGSEQNUM;
-
-//---
-// Small wrapper around signals.
-// Designed to be used from stream.
-// TODO-someday refactor this class so it can be stored in a vector<>
-// we already store the index here so we can use for garbage collection.
-struct ihipSignal_t {
-    hsa_signal_t   _hsaSignal; // hsa signal handle
-    int            _index;      // Index in pool, used for garbage collection.
-    SIGSEQNUM      _sigId;     // unique sequentially increasing ID.
-
-    ihipSignal_t();
-    ~ihipSignal_t();
-
-    void release();
-};
-
-
 // Used to remove lock, for performance or stimulating bugs.
 class FakeMutex
 {
@@ -384,13 +350,8 @@ public:
 
 public:
     // TODO - remove _kernelCnt mechanism:
-
     uint32_t                    _kernelCnt;    // Count of inflight kernels in this stream.  Reset at ::wait().
-
     hc::accelerator_view        _av;
-
-		std::vector<hc::completion_future*> _cfs;
-
 };
 
 
@@ -426,8 +387,6 @@ typedef uint64_t SeqNum_t ;
     void                 locked_waitEvent(hipEvent_t event);
     void                 locked_recordEvent(hipEvent_t event);
 
-    void                 addCFtoStream(LockedAccessor_StreamCrit_t &crit, hc::completion_future* cf);
-    void                 waitOnAllCFs(LockedAccessor_StreamCrit_t &crit);
 
     //---
 
@@ -456,17 +415,14 @@ public:
 
 
 private:
-    void     enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal, ihipSignal_t *completionSignal);
-    void     waitCopy(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *signal);
 
 
     // The unsigned return is hipMemcpyKind
     unsigned resolveMemcpyDirection(bool srcTracked, bool dstTracked, bool srcInDeviceMem, bool dstInDeviceMem);
-    void     setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent);
 
 
 private: // Data
-    // Critical Data.  THis MUST be accessed through LockedAccessor_StreamCrit_t
+    // Critical Data - MUST be accessed through LockedAccessor_StreamCrit_t
     ihipStreamCritical_t        _criticalData;
 
     ihipCtx_t  *_ctx;  // parent context that owns this stream.
@@ -525,7 +481,7 @@ public:
     unsigned                _computeUnits;
     hipDeviceProp_t         _props;        // saved device properties.
 
-    UnpinnedCopyEngine      *_stagingBuffer[2]; // one buffer for each direction.
+    // TODO - report this through device properties, base on HCC API call.
     int                     _isLargeBar;
 
     ihipCtx_t               *_primaryCtx;
