@@ -1480,16 +1480,4 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **a
     return ihipLogStatus(err);
 }
 
-// TODO - review signal / error reporting code.
-// TODO - describe naming convention. ihip _.  No accessors.  No early returns from functions. Set status to success at top, only set error codes in implementation.  No tabs.
-//        Caps convention _ or camelCase
-//        if { }
-//        Should use ihip* data structures inside code rather than app-facing hip.  For example, use ihipCtx_t (rather than hipDevice_t), ihipStream_t (rather than hipStream_t).
-//        locked_
-// TODO - describe MT strategy
-//
 //// TODO - add identifier numbers for streams and devices to help with debugging.
-
-#if ONE_OBJECT_FILE
-#include "unpinned_copy_engine.cpp"
-#endif
