@@ -39,7 +39,6 @@ hipError_t ihipEventCreate(hipEvent_t* event, unsigned flags)
         eh->_stream = NULL;
         eh->_flags  = flags;
         eh->_timestamp  = 0;
-        eh->_copySeqId  = 0;
         *event = eh; // TODO - allocat the event directly, no copy needed.
     } else {
         e = hipErrorInvalidValue;
@@ -123,7 +122,6 @@ hipError_t hipEventSynchronize(hipEvent_t event)
             return ihipLogStatus(hipSuccess);
         } else {
             event->_marker.wait((event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked : hc::hcWaitModeActive);
-            event->_stream->locked_reclaimSignals(event->_copySeqId);
 
             return ihipLogStatus(hipSuccess);
         }

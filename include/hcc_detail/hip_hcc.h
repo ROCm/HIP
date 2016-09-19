@@ -373,8 +373,6 @@ class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE>
 {
 public:
     ihipStreamCriticalBase_t(hc::accelerator_view av) :
-        _last_command_type(ihipCommandCopyH2H),
-        _last_copy_signal(NULL),
         _signalCursor(0),
         _oldest_live_sig_id(1),
         _streamSigId(0),
@@ -392,15 +390,6 @@ public:
     ihipStreamCriticalBase_t<StreamMutex>  * mlock() { LockedBase<MUTEX_TYPE>::lock(); return this;};
 
 public:
-    // Critical Data:
-    ihipCommand_t               _last_command_type;  // type of the last command
-
-    // signal of last copy command sent to the stream.
-    // May be NULL, indicating the previous command has completley finished and future commands don't need to create a dependency.
-    // Copy can be either H2D or D2H.
-    ihipSignal_t                *_last_copy_signal;
-
-    hc::completion_future       _last_kernel_future;  // Completion future of last kernel command sent to GPU.
 
     // Signal pool:
     int                         _signalCursor;
@@ -444,7 +433,6 @@ typedef uint64_t SeqNum_t ;
     void                 lockclose_postKernelCommand(hc::completion_future &kernel_future);
 
 
-    void                 locked_reclaimSignals(SIGSEQNUM sigNum);
     void                 locked_wait(bool assertQueueEmpty=false);
 
     hc::accelerator_view* locked_getAv() { LockedAccessor_StreamCrit_t crit(_criticalData); return &(crit->_av); };
@@ -467,7 +455,6 @@ typedef uint64_t SeqNum_t ;
 														void *kernarg, size_t kernSize, uint64_t kernel);
 
     // Non-threadsafe accessors - must be protected by high-level stream lock with accessor passed to function.
-    SIGSEQNUM            lastCopySeqId (LockedAccessor_StreamCrit_t &crit) const { return crit->_last_copy_signal ? crit->_last_copy_signal->_sigId : 0; };
     ihipSignal_t *       allocSignal (LockedAccessor_StreamCrit_t &crit);
 
 
@@ -526,8 +513,6 @@ struct ihipEvent_t {
 
     hc::completion_future _marker;
     uint64_t              _timestamp;  // store timestamp, may be set on host or by marker.
-
-    SIGSEQNUM             _copySeqId;
 } ;
 
 
