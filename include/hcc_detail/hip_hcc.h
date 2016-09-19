@@ -56,7 +56,6 @@ extern int HIP_VISIBLE_DEVICES; /* Contains a comma-separated sequence of GPU id
 //---
 // Chicken bits for disabling functionality to work around potential issues:
 extern int HIP_DISABLE_HW_KERNEL_DEP;
-extern int HIP_DISABLE_HW_COPY_DEP;
 
 //---
 //Extern tls
@@ -89,15 +88,6 @@ extern const char *API_COLOR_END;
 
 
 #define CTX_THREAD_SAFE 1
-
-// If FORCE_COPY_DEP=1 , HIP runtime will add
-// synchronization for copy commands in the same stream, regardless of command type.
-// If FORCE_COPY_DEP=0 data copies of the same kind (H2H, H2D, D2H, D2D) are assumed to be implicitly ordered.
-// ROCR runtime implementation currently provides this guarantee when using SDMA queues but not
-// when using shader queues.
-// TODO - measure if this matters for performance, in particular for back-to-back small copies.
-// If not, we can simplify the copy dependency tracking by collapsing to a single Copy type, and always forcing dependencies for copy commands.
-#define FORCE_SAMEDIR_COPY_DEP 1
 
 
 // Compile debug trace mode - this prints debug messages to stderr when env var HIP_DB is set.
@@ -447,7 +437,6 @@ typedef uint64_t SeqNum_t ;
 
     void copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind);
 
-    int                  preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *lastCopy, hsa_signal_t *waitSignal, ihipCommand_t copyType);
 
     //---
     // Member functions that begin with locked_ are thread-safe accessors - these acquire / release the critical mutex.
