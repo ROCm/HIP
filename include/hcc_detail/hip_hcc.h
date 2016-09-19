@@ -48,7 +48,6 @@ extern int HIP_ATP_MARKER;
 extern int HIP_ATP;
 extern int HIP_DB;
 extern int HIP_STAGING_SIZE;   /* size of staging buffers, in KB */
-extern int HIP_PININPLACE;
 extern int HIP_STREAM_SIGNALS;  /* number of signals to allocate at stream creation */
 extern int HIP_VISIBLE_DEVICES; /* Contains a comma-separated sequence of GPU identifiers */
 
@@ -373,33 +372,20 @@ class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE>
 {
 public:
     ihipStreamCriticalBase_t(hc::accelerator_view av) :
-        _signalCursor(0),
-        _oldest_live_sig_id(1),
-        _streamSigId(0),
         _kernelCnt(0),
-        _signalCnt(0),
         _av(av)
     {
-        _signalPool.resize(HIP_STREAM_SIGNALS > 0 ? HIP_STREAM_SIGNALS : 1);
     };
 
     ~ihipStreamCriticalBase_t() {
-        _signalPool.clear();
     }
 
     ihipStreamCriticalBase_t<StreamMutex>  * mlock() { LockedBase<MUTEX_TYPE>::lock(); return this;};
 
 public:
+    // TODO - remove _kernelCnt mechanism:
 
-    // Signal pool:
-    int                         _signalCursor;
-    SIGSEQNUM                   _oldest_live_sig_id; // oldest live seq_id, anything < this can be allocated.
-    std::deque<ihipSignal_t>    _signalPool;   // Pool of signals for use by this stream.
-    uint32_t                    _signalCnt;    // Count of inflight commands using signals from the signal pool.
-                                               // Each copy may use 1-2 signals depending on command transitions:
-                                               //   2 are required if a barrier packet is inserted.
     uint32_t                    _kernelCnt;    // Count of inflight kernels in this stream.  Reset at ::wait().
-    SIGSEQNUM                   _streamSigId;      // Monotonically increasing unique signal id.
 
     hc::accelerator_view        _av;
 
@@ -454,8 +440,6 @@ typedef uint64_t SeqNum_t ;
 														uint32_t groupSegmentSize, uint32_t sharedMemBytes, 
 														void *kernarg, size_t kernSize, uint64_t kernel);
 
-    // Non-threadsafe accessors - must be protected by high-level stream lock with accessor passed to function.
-    ihipSignal_t *       allocSignal (LockedAccessor_StreamCrit_t &crit);
 
 
     //-- Non-racy accessors:
