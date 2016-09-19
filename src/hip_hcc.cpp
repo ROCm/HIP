@@ -69,8 +69,6 @@ int HIP_ATP_MARKER= 0;
 int HIP_DB= 0;
 int HIP_STAGING_SIZE = 64;   /* size of staging buffers, in KB */
 static const int HIP_STAGING_BUFFERS = 2;    
-int HIP_PININPLACE = 0;
-int HIP_OPTIMAL_MEM_TRANSFER = 0; //ENV Variable to test different memory transfer logics
 int HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING = 0;
 int HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE = 0;
 int HIP_D2H_MEM_TRANSFER_THRESHOLD = 0;
@@ -222,11 +220,6 @@ void ihipStream_t::waitCopy(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *sig
 
 
     tprintf(DB_SIGNAL, "waitCopy reclaim signal #%lu\n", sigNum);
-    // Mark all signals older and including this one as available for reclaim
-    if (sigNum > crit->_oldest_live_sig_id) {
-        crit->_oldest_live_sig_id = sigNum+1; // TODO, +1 here seems dangerous.
-    }
-
 }
 
 //Wait for all kernel and data copy commands in this stream to complete.
@@ -309,59 +302,6 @@ ihipCtx_t * ihipStream_t::getCtx() const
 
 
 #define HIP_NUM_SIGNALS_PER_STREAM 32
-
-
-//---
-// Allocate a new signal from the signal pool.
-// Returned signals have value of 0.
-// Signals are intended for use in this stream and are always reclaimed "in-order".
-ihipSignal_t *ihipStream_t::allocSignal(LockedAccessor_StreamCrit_t &crit)
-{
-    int numToScan = crit->_signalPool.size();
-    crit->_signalCnt++;
-    if(crit->_signalCnt == HIP_STREAM_SIGNALS){
-        this->wait(crit);
-        crit->_signalCnt = 0;
-    }
-
-    return &crit->_signalPool[crit->_signalCnt];
-
-    do {
-        auto thisCursor = crit->_signalCursor;
-
-        if (++crit->_signalCursor == crit->_signalPool.size()) {
-            crit->_signalCursor = 0;
-        }
-
-        if (crit->_signalPool[thisCursor]._sigId < crit->_oldest_live_sig_id) {
-            SIGSEQNUM oldSigId = crit->_signalPool[thisCursor]._sigId;
-            crit->_signalPool[thisCursor]._index = thisCursor;
-            crit->_signalPool[thisCursor]._sigId  =  ++crit->_streamSigId;  // allocate it.
-            tprintf(DB_SIGNAL, "allocatSignal #%lu at pos:%i (old sigId:%lu < oldest_live:%lu)\n",
-                    crit->_signalPool[thisCursor]._sigId,
-                    thisCursor, oldSigId, crit->_oldest_live_sig_id);
-
-
-
-            return &crit->_signalPool[thisCursor];
-        }
-
-    } while (--numToScan) ;
-
-    assert(numToScan == 0);
-
-    // Have to grow the pool:
-    crit->_signalCursor = crit->_signalPool.size(); // set to the beginning of the new entries:
-    if (crit->_signalCursor > 10000) {
-        fprintf (stderr, "warning: signal pool size=%d, may indicate runaway number of inflight commands\n", crit->_signalCursor);
-    }
-    crit->_signalPool.resize(crit->_signalPool.size() * 2);
-    tprintf (DB_SIGNAL, "grow signal pool to %zu entries, cursor=%d\n", crit->_signalPool.size(), crit->_signalCursor);
-    return allocSignal(crit);  // try again,
-
-    // Should never reach here.
-    assert(0);
-}
 
 
 //---
@@ -1176,8 +1116,6 @@ void ihipInit()
     READ_ENV_S(release, HIP_TRACE_API_COLOR, 0,  "Color to use for HIP_API.  None/Red/Green/Yellow/Blue/Magenta/Cyan/White");
     READ_ENV_I(release, HIP_ATP_MARKER, 0,  "Add HIP function begin/end to ATP file generated with CodeXL");
     READ_ENV_I(release, HIP_STAGING_SIZE, 0, "Size of each staging buffer (in KB)" );
-    READ_ENV_I(release, HIP_PININPLACE, 0, "For unpinned transfers, pin the memory in-place in chunks before doing the copy.");
-    READ_ENV_I(release, HIP_OPTIMAL_MEM_TRANSFER, 0, "For optimal memory transfers for unpinned memory.Under testing.");
     READ_ENV_I(release, HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING, 0, "Threshold value for H2D unpinned memory transfer decision between direct copy or staging buffer usage,Under testing.");
     READ_ENV_I(release, HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE, 0, "Threshold value for H2D unpinned memory transfer decision between staging buffer usage or pininplace usage .Under testing.");
     READ_ENV_I(release, HIP_D2H_MEM_TRANSFER_THRESHOLD, 0, "Threshold value for D2H unpinned memory transfer decision between staging buffer usage or pininplace usage .Under testing.");
@@ -1188,20 +1126,6 @@ void ihipInit()
 
     READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Number of kernels per stream ");
 
-    if (HIP_OPTIMAL_MEM_TRANSFER && !HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING) {
-        HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING= MEMCPY_H2D_DIRECT_VS_STAGING_COPY_THRESHOLD;
-        fprintf (stderr, "warning: env var HIP_OPTIMAL_MEM_TRANSFER=0x%x but HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING=0.Using default value for this.\n", HIP_OPTIMAL_MEM_TRANSFER);
-    }
-
-    if (HIP_OPTIMAL_MEM_TRANSFER && !HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE) {
-        HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE= MEMCPY_H2D_STAGING_VS_PININPLACE_COPY_THRESHOLD;
-        fprintf (stderr, "warning: env var HIP_OPTIMAL_MEM_TRANSFER=0x%x but HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE=0.Using default value for this.\n", HIP_OPTIMAL_MEM_TRANSFER);
-    }
-
-    if (HIP_OPTIMAL_MEM_TRANSFER && !HIP_D2H_MEM_TRANSFER_THRESHOLD) {
-        HIP_D2H_MEM_TRANSFER_THRESHOLD= MEMCPY_D2H_STAGING_VS_PININPLACE_COPY_THRESHOLD;
-        fprintf (stderr, "warning: env var HIP_OPTIMAL_MEM_TRANSFER=0x%x but HIP_D2H_MEM_TRANSFER_THRESHOLD=0.Using default value for this.\n", HIP_OPTIMAL_MEM_TRANSFER);
-    }
     // Some flags have both compile-time and runtime flags - generate a warning if user enables the runtime flag but the compile-time flag is disabled.
     if (HIP_DB && !COMPILE_HIP_DB) {
         fprintf (stderr, "warning: env var HIP_DB=0x%x but COMPILE_HIP_DB=0.  (perhaps enable COMPILE_HIP_DB in src code before compiling?)", HIP_DB);
