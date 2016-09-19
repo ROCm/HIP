@@ -1757,42 +1757,28 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsig
             trueAsync = false;
         }
 
-        if (kind == hipMemcpyDefault) {
-            bool srcInDeviceMem = (srcTracked && srcPtrInfo._isInDeviceMem);
-            bool dstInDeviceMem = (dstTracked && dstPtrInfo._isInDeviceMem);
-            kind = resolveMemcpyDirection(srcTracked, dstTracked, srcPtrInfo._isInDeviceMem, dstPtrInfo._isInDeviceMem);
-        }
 
 
-        ihipSignal_t *ihip_signal = allocSignal(crit);
-        hsa_signal_store_relaxed(ihip_signal->_hsaSignal, 1);
+        if (trueAsync == true) {
+            // Perform a syncrhonous copy:
+            try {
+                crit->_av.copy_async(src, dst, sizeBytes);
+            } catch (Kalmar::runtime_exception) {
+                throw ihipException(hipErrorRuntimeOther);
+            }; 
 
 
-        if(trueAsync == true){
-
-            ihipCommand_t commandType;
-            hsa_agent_t srcAgent, dstAgent;
-            setAsyncCopyAgents(kind, &commandType, &srcAgent, &dstAgent);
-
-            hsa_signal_t depSignal;
-            int depSignalCnt = preCopyCommand(crit, ihip_signal, &depSignal, commandType);
-
-            tprintf (DB_SYNC, " copy-async, waitFor=%lu completion=#%lu(%lu)\n", depSignalCnt? depSignal.handle:0x0, ihip_signal->_sigId, ihip_signal->_hsaSignal.handle);
-
-            hsa_status_t hsa_status = hsa_amd_memory_async_copy(dst, dstAgent, src, srcAgent, sizeBytes, depSignalCnt, depSignalCnt ? &depSignal:0x0, ihip_signal->_hsaSignal);
-
-
-            if (hsa_status == HSA_STATUS_SUCCESS) {
-                if (HIP_LAUNCH_BLOCKING) {
-                    tprintf(DB_SYNC, "LAUNCH_BLOCKING for completion of hipMemcpyAsync(%zu)\n", sizeBytes);
-                    this->wait(crit);
-                }
-            } else {
-                // This path can be hit if src or dst point to unpinned host memory.
-                // TODO-stream - does async-copy fall back to sync if input pointers are not pinned?
-                throw ihipException(hipErrorInvalidValue);
-            }
+            if (HIP_LAUNCH_BLOCKING) {
+                tprintf(DB_SYNC, "LAUNCH_BLOCKING for completion of hipMemcpyAsync(%zu)\n", sizeBytes);
+                this->wait(crit);
+            } 
         } else {
+            // Perform a syncrhonous copy:
+            if (kind == hipMemcpyDefault) {
+                bool srcInDeviceMem = (srcTracked && srcPtrInfo._isInDeviceMem);
+                bool dstInDeviceMem = (dstTracked && dstPtrInfo._isInDeviceMem);
+                kind = resolveMemcpyDirection(srcTracked, dstTracked, srcPtrInfo._isInDeviceMem, dstPtrInfo._isInDeviceMem);
+            }
             copySync(crit, dst, src, sizeBytes, kind);
         }
     }
