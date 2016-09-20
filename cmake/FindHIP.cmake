@@ -316,7 +316,7 @@ endmacro()
 ###############################################################################
 # MACRO: Prepare cmake commands for the target
 ###############################################################################
-macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files)
+macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files _source_files)
     set(_hip_flags "")
     set(_hip_build_configuration "${CMAKE_BUILD_TYPE}")
     if(HIP_HOST_COMPILATION_CPP)
@@ -378,6 +378,7 @@ macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files)
 
     # Reset the output variable
     set(_hip_generated_files "")
+    set(_hip_source_files "")
 
     # Iterate over all arguments and create custom commands for all source files
     foreach(file ${ARGN})
@@ -457,11 +458,13 @@ macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files)
             # Make sure the build system knows the file is generated
             set_source_files_properties(${generated_file} PROPERTIES GENERATED TRUE)
             list(APPEND _hip_generated_files ${generated_file})
+            list(APPEND _hip_source_files ${file})
         endif()
     endforeach()
 
     # Set the return parameter
     set(${_generated_files} ${_hip_generated_files})
+    set(${_source_files} ${_hip_source_files})
 endmacro()
 
 ###############################################################################
@@ -470,7 +473,8 @@ endmacro()
 macro(HIP_ADD_EXECUTABLE hip_target)
     # Separate the sources from the options
     HIP_GET_SOURCES_AND_OPTIONS(_sources _cmake_options _hipcc_options _hcc_options _nvcc_options ${ARGN})
-    HIP_PREPARE_TARGET_COMMANDS(${hip_target} OBJ _generated_files ${_sources} HIPCC_OPTIONS ${_hipcc_options} HCC_OPTIONS ${_hcc_options} NVCC_OPTIONS ${_nvcc_options})
+    HIP_PREPARE_TARGET_COMMANDS(${hip_target} OBJ _generated_files _source_files ${_sources} HIPCC_OPTIONS ${_hipcc_options} HCC_OPTIONS ${_hcc_options} NVCC_OPTIONS ${_nvcc_options})
+    list(REMOVE_ITEM _sources ${_source_files})
     set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_EXECUTABLE} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET>")
     add_executable(${hip_target} ${_cmake_options} ${_generated_files} ${_sources})
     set_target_properties(${hip_target} PROPERTIES LINKER_LANGUAGE HIP)
@@ -482,7 +486,8 @@ endmacro()
 macro(HIP_ADD_LIBRARY hip_target)
     # Separate the sources from the options
     HIP_GET_SOURCES_AND_OPTIONS(_sources _cmake_options _hipcc_options _hcc_options _nvcc_options ${ARGN})
-    HIP_PREPARE_TARGET_COMMANDS(${hip_target} OBJ _generated_files ${_sources} ${_cmake_options} HIPCC_OPTIONS ${_hipcc_options} HCC_OPTIONS ${_hcc_options} NVCC_OPTIONS ${_nvcc_options})
+    HIP_PREPARE_TARGET_COMMANDS(${hip_target} OBJ _generated_files _source_files ${_sources} ${_cmake_options} HIPCC_OPTIONS ${_hipcc_options} HCC_OPTIONS ${_hcc_options} NVCC_OPTIONS ${_nvcc_options})
+    list(REMOVE_ITEM _sources ${_source_files})
     add_library(${hip_target} ${_cmake_options} ${_generated_files} ${_sources})
     set_target_properties(${hip_target} PROPERTIES LINKER_LANGUAGE ${HIP_C_OR_CXX})
 endmacro()
