@@ -193,9 +193,15 @@ macro(HIP_GET_SOURCES_AND_OPTIONS _sources _cmake_options _hipcc_options _hcc_op
     foreach(arg ${ARGN})
         if("x${arg}" STREQUAL "xHIPCC_OPTIONS")
             set(_hipcc_found_options TRUE)
+            set(_hcc_found_options FALSE)
+            set(_nvcc_found_options FALSE)
         elseif("x${arg}" STREQUAL "xHCC_OPTIONS")
+            set(_hipcc_found_options FALSE)
             set(_hcc_found_options TRUE)
+            set(_nvcc_found_options FALSE)
         elseif("x${arg}" STREQUAL "xNVCC_OPTIONS")
+            set(_hipcc_found_options FALSE)
+            set(_hcc_found_options FALSE)
             set(_nvcc_found_options TRUE)
         elseif(
                 "x${arg}" STREQUAL "xEXCLUDE_FROM_ALL" OR
