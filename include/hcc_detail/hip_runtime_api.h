@@ -267,7 +267,7 @@ hipError_t hipGetDevice(int *deviceId);
  *
  * @returns #hipSuccess, #hipErrorNoDevice
  *
- * 
+ *
  * Returns in @p *count the number of devices that have ability to run compute commands.  If there are no such devices, then @ref hipGetDeviceCount will return #hipErrorNoDevice.
  * If 1 or more devices can be found, then hipGetDeviceCount returns #hipSuccess.
  */
@@ -279,7 +279,7 @@ hipError_t hipGetDeviceCount(int *count);
  * @param [out] pi pointer to value to return
  * @param [in] attr attribute to query
  * @param [in] deviceId which device to query for information
- * 
+ *
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  */
 hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int deviceId);
@@ -328,7 +328,7 @@ hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig );
  * @brief Set Cache configuration for a specific function
  *
  * @param [in] config;
- * 
+ *
  * @returns #hipSuccess, #hipErrorInitializationError
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
@@ -458,26 +458,12 @@ const char *hipGetErrorString(hipError_t hipError);
  *  @{
  *
  *  The following Stream APIs are not (yet) supported in HIP:
+ *  - cudaStreamAddCallback
+ *  - cudaStreamAttachMemAsync
  *  - cudaStreamCreateWithPriority
  *  - cudaStreamGetPriority
+ *  - cudaStreamWaitEvent
  */
-
-/**
- * @brief Create an asynchronous stream.
- *
- * @param[in, out] stream Pointer to new stream
- * @param[in ] flags to control stream creation.
- * @return #hipSuccess, #hipErrorInvalidValue
- *
- * Create a new asynchronous stream.  @p stream returns an opaque handle that can be used to reference the newly
- * created stream in subsequent hipStream* commands.  The stream is allocated on the heap and will remain allocated
- *
- * even if the handle goes out-of-scope.  To release the memory used by the stream, applicaiton must call hipStreamDestroy.
- * Flags controls behavior of the stream.  See #hipStreamDefault, #hipStreamNonBlocking.
- */
-
-hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags);
-
 
 
 /**
@@ -490,13 +476,80 @@ hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags);
  * created stream in subsequent hipStream* commands.  The stream is allocated on the heap and will remain allocated
  * even if the handle goes out-of-scope.  To release the memory used by the stream, applicaiton must call hipStreamDestroy.
  *
+ * @return #hipSuccess, #hipErrorInvalidValue
  *
- * @see hipStreamDestroy
- *
- * @return
- *
+ * @see hipStreamCreateWithFlags, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
  */
 hipError_t hipStreamCreate(hipStream_t *stream);
+
+
+/**
+ * @brief Create an asynchronous stream.
+ *
+ * @param[in, out] stream Pointer to new stream
+ * @param[in ] flags to control stream creation.
+ * @return #hipSuccess, #hipErrorInvalidValue
+ *
+ * Create a new asynchronous stream.  @p stream returns an opaque handle that can be used to reference the newly
+ * created stream in subsequent hipStream* commands.  The stream is allocated on the heap and will remain allocated
+ * even if the handle goes out-of-scope.  To release the memory used by the stream, applicaiton must call hipStreamDestroy.
+ * Flags controls behavior of the stream.  See #hipStreamDefault, #hipStreamNonBlocking.
+ *
+ *
+ * @see hipStreamCreate, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
+ */
+
+hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags);
+
+
+/**
+ * @brief Destroys the specified stream.
+ *
+ * @param[in, out] stream Valid pointer to hipStream_t.  This function writes the memory with the newly created stream.
+ * @return #hipSuccess #hipErrorInvalidResourceHandle
+ *
+ * Destroys the specified stream.
+ *
+ * If commands are still executing on the specified stream, some may complete execution before the queue is deleted.
+ *
+ * The queue may be destroyed while some commands are still inflight, or may wait for all commands queued to the stream
+ * before destroying it.
+ *
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamQuery, hipStreamWaitEvent, hipStreamSynchronize
+ */
+hipError_t hipStreamDestroy(hipStream_t stream);
+
+
+/**
+ * @brief Return #hipSuccess if all of the operations in the specified @p stream have completed, or #hipErrorNotReady if not.
+ *
+ * @param[in] stream stream to query
+ *
+ * @return #hipSuccess, #hipErrorNotReady, #hipErrorInvalidResourceHandle
+ *
+ * This is thread-safe and returns a snapshot of the current state of the queue.  However, if other host threads are sending work to the stream,
+ * the status may change immediately after the function is called.  It is typically used for debug.
+ *
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamWaitEvent, hipStreamSynchronize, hipStreamDestroy
+ */
+hipError_t hipStreamQuery(hipStream_t stream);
+
+
+/**
+ * @brief Wait for all commands in stream to complete.
+ *
+ * @param[in] stream stream identifier.
+ * 
+ * @return #hipSuccess, #hipErrorInvalidResourceHandle
+ *
+ * If the null stream is specified, this command blocks until all
+ * This command honors the hipDeviceLaunchBlocking flag, which controls whether the wait is active or blocking.
+ * This command is host-synchronous : the host will block until the stream is empty.
+ *
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamWaitEvent, hipStreamDestroy 
+ *
+ */
+hipError_t hipStreamSynchronize(hipStream_t stream);
 
 
 /**
@@ -512,67 +565,25 @@ hipError_t hipStreamCreate(hipStream_t *stream);
  * All future work submitted to @p stream will wait until @p event reports completion before beginning execution.
  * This function is host-asynchronous and the function may return before the wait has completed.
  *
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamSynchronize, hipStreamDestroy 
  *
  */
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags);
 
 
-/**
- * @brief Return #hipSuccess if all of the operations in the specified @p stream have completed, or #hipErrorNotReady if not.
- *
- * @param[in] stream stream to query
- *
- * @return #hipSuccess, #hipErrorNotReady
- *
- * This is thread-safe and returns a snapshot of the current state of the queue.  However, if other host threads are sending work to the stream,
- * the status may change immediately after the function is called.  It is typically used for debug.
- */
-hipError_t hipStreamQuery(hipStream_t stream);
-
-
-
-/**
- * @brief Wait for all commands in stream to complete.
- *
- * If the null stream is specified, this command blocks until all
- *
- * This command honors the hipDeviceLaunchBlocking flag, which controls whether the wait is active or blocking.
- *
- * This command is host-synchronous : the host will block until the stream is empty.
- *
- * TODO
- */
-hipError_t hipStreamSynchronize(hipStream_t stream);
-
-
-/**
- * @brief Destroys the specified stream.
- *
- * @param[in, out] stream Valid pointer to hipStream_t.  This function writes the memory with the newly created stream.
- * @return #hipSuccess
- *
- * Destroys the specified stream.
- *
- * If commands are still executing on the specified stream, some may complete execution before the queue is deleted.
- *
- * The queue may be destroyed while some commands are still inflight, or may wait for all commands queued to the stream
- * before destroying it.
- */
-hipError_t hipStreamDestroy(hipStream_t stream);
-
 
 /**
  * @brief Return flags associated with this stream.
  *
- * @param[in] stream
- * @param[in,out] flags
+ * @param[in] stream stream to be queried
+ * @param[in,out] flags Pointer to an unsigned integer in which the stream's flags are returned
  * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidResourceHandle
+ *
+ * @returns #hipSuccess #hipErrorInvalidValue #hipErrorInvalidResourceHandle
  *
  * Return flags associated with this stream in *@p flags.
  *
- * @see hipStreamCreateWithFlags
- *
- * @returns #hipSuccess
+ * @see hipStreamCreateWithFlags 
  */
 hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags);
 
@@ -803,7 +814,7 @@ hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) __attribute
  *  @param[out] dstPtr Device Pointer mapped to passed host pointer
  *  @param[in]  hstPtr Host Pointer allocated through hipHostAlloc
  *  @param[in]  flags Flags to be passed for extension
- * 
+ *
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryAllocation
  *
  *  @see hipSetDeviceFlags, hipHostAlloc
@@ -850,7 +861,7 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) ;
  *  from the other registered memory region.
  *
  *  @return #hipSuccess, #hipErrorMemoryAllocation
- * 
+ *
  *  @see hipHostUnregister, hipHostGetFlags, hipHostGetDevicePointer
  */
 hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) ;
@@ -876,7 +887,7 @@ hipError_t hipHostUnregister(void* hostPtr) ;
  *  @param[in]  width Requested pitched allocation width (in bytes)
  *  @param[in]  height Requested pitched allocation height
  *  @return Error code
- * 
+ *
  *  @see hipMalloc, hipFree, hipMallocArray, hipFreeArray, hipMallocHost, hipFreeHost, hipMalloc3D, hipMalloc3DArray, hipHostAlloc
  */
 
