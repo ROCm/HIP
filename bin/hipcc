@@ -333,7 +333,7 @@ if ($printHipVersion) {
 }
 if ($runCmd) {
     if ($HIP_PLATFORM eq "hcc" and exists($hipConfig{'HCC_VERSION'}) and $HCC_VERSION ne $hipConfig{'HCC_VERSION'}) {
-        print ("HIP was built using $hipConfig{'HCC_VERSION'}, but you are using $HCC_VERSION. Please rebuild HIP.\n") && die ();
+        print ("HIP ($HIP_PATH) was built using hcc $hipConfig{'HCC_VERSION'}, but you are using hcc $HCC_VERSION. Please rebuild HIP including cmake.\n") && die ();
     }
     system ("$CMD") and die ();
 }

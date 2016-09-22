@@ -146,11 +146,11 @@ The tools also struggle with more complex CUDA applications, in particular those
 - For Nvidia platforms, HIP requires Unified Memory and should run on a device which runs the CUDA SDK 6.0 or newer. We have tested the Nvidia Titan and K40.
 
 ### Does Hipify automatically convert all source code?
-Typically, Hipify can automatically convert almost all run-time code, and the coordinate indexing device code. 
+Typically, Hipify can automatically convert almost all run-time code, and the coordinate indexing device code (i.e. threadIdx.x -> hipThreadIdx_x).  
 Most device code needs no additional conversion, since HIP and CUDA have similar names for math and built-in functions. 
-HIP currently requires manual addition of one more arguments to the kernel so that the host can communicate the execution configuration to the device. 
+The clang-hipify tool will automatically modify the kernel signature as needed (automating a step that used to be done manually)
 Additional porting may be required to deal with architecture feature queries or with CUDA capabilities that HIP doesn't support. 
-Developers should always expect to perform some platform-specific tuning and optimization.
+In general, developers should always expect to perform some platform-specific tuning and optimization.
 
 ### What is NVCC?
 NVCC is Nvidia's compiler driver for compiling "CUDA C++" code into PTX or device code for Nvidia GPUs. It's a closed-source binary product that comes with CUDA SDKs.
