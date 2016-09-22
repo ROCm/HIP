@@ -33,6 +33,15 @@ int  p_peerDevice = -1;  // explicly specify which peer to use, else use p_gpuDe
 int g_currentDevice;
 int g_peerDevice;
 
+void help(char *argv[])
+{
+    printf ("usage: %s [OPTIONS]\n", argv[0]);
+    printf (" --memcpyWithPeer : Perform memcpy with peer.\n");
+    printf (" --mirrorPeersi   : Mirror memory onto both default device and peerdevice.  If 0, memory is mapped only on the default device.\n");
+    printf (" --peerDevice N   : Set peer device.\n");
+};
+
+
 void parseMyArguments(int argc, char *argv[])
 {
     int more_argc = HipTest::parseStandardArguments(argc, argv, false);
@@ -40,7 +49,10 @@ void parseMyArguments(int argc, char *argv[])
     for (int i = 1; i < more_argc; i++) {
         const char *arg = argv[i];
 
-        if (!strcmp(arg, "--memcpyWithPeer")) {
+        if (!strcmp(arg, "--help")) {
+            help(argv);
+            exit(-1);
+        } else if (!strcmp(arg, "--memcpyWithPeer")) {
             p_memcpyWithPeer = true;
         } else if (!strcmp(arg, "--mirrorPeers")) {
             p_mirrorPeers = true;
@@ -90,10 +102,12 @@ void enablePeerFirst()
 
     setupPeerTests();
 
+    // Always enable g_currentDevice to see the allocations on peerDevice.
     HIPCHECK(hipSetDevice(g_currentDevice));
     HIPCHECK(hipDeviceEnablePeerAccess(g_peerDevice, 0));
 
     if (p_mirrorPeers) {
+        // Mirror peers allows the peer device to see the allocations on currentDevice.
         int canAccessPeer;
         HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, g_peerDevice, g_currentDevice));
         assert(canAccessPeer);
@@ -122,6 +136,8 @@ void enablePeerFirst()
 
 
     // Device0 push to device1, using P2P:
+    // NOTE : if p_mirrorPeers=0 and p_memcpyWithPeer=1, then peer device does not have mapping for A_d1 and we need to use a 
+    //        a host staging copy for the P2P access.
     HIPCHECK (hipSetDevice(p_memcpyWithPeer ? g_peerDevice : g_currentDevice));
     HIPCHECK (hipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyDefault)); // This is P2P copy.
 

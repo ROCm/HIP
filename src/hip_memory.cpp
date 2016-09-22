@@ -104,7 +104,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
     if (sizeBytes == 0)
     {
         *ptr = NULL;
-        return ihipLogStatus(hip_status);
+        return ihipLogStatus(hipSuccess);
     }
    
     auto ctx = ihipGetTlsDefaultCtx();

@@ -382,6 +382,18 @@ void ihipCtxCriticalBase_t<CtxMutex>::resetPeers(ihipCtx_t *thisDevice)
 
 
 template<>
+void ihipCtxCriticalBase_t<CtxMutex>::printPeers(FILE *f) const
+{
+    for (auto iter = _peers.begin(); iter!=_peers.end(); iter++) {
+        fprintf (f, "%s ", (*iter)->toString().c_str()); 
+    };
+}
+
+
+
+
+
+template<>
 void ihipCtxCriticalBase_t<CtxMutex>::addStream(ihipStream_t *stream)
 {
     stream->_id = _streams.size();
@@ -784,6 +796,13 @@ void ihipCtx_t::locked_reset()
 };
 
 
+//---
+std::string ihipCtx_t::toString() const
+{
+  std::ostringstream ss;
+  ss << this;
+  return ss.str();
+};
 
 //----
 
@@ -1328,8 +1347,36 @@ void ihipSetTs(hipEvent_t e)
 }
 
 
+// Returns true if thisCtx can see the memory allocated on dstCtx and srcCtx.
+// The peer-list for a context controls which contexts have access to the memory allocated on that context.
+// So we check dstCtx's and srcCtx's peerList to see if the booth include thisCtx. 
+bool ihipStream_t::canSeePeerMemory(const ihipCtx_t *thisCtx, ihipCtx_t *dstCtx, ihipCtx_t *srcCtx)
+{
+    tprintf (DB_COPY1, "Checking if direct copy can be used.  thisCtx:%s;  dstCtx:%s ;  srcCtx:%s\n", 
+            thisCtx->toString().c_str(), dstCtx->toString().c_str(), srcCtx->toString().c_str());
+
+    // Use blocks to control scope of critical sections.
+    {
+        LockedAccessor_CtxCrit_t  ctxCrit(dstCtx->criticalData());
+        if (!ctxCrit->isPeer(thisCtx)) {
+            return false;
+        };
+    }
+
+    {
+        LockedAccessor_CtxCrit_t  ctxCrit(srcCtx->criticalData());
+        if (!ctxCrit->isPeer(thisCtx)) {
+            return false;
+        };
+    }
+
+    return true;
+};
+
+
 
 // Resolve hipMemcpyDefault to a known type.
+// TODO - review why is this so complicated, does this need srcTracked and dstTracked?
 unsigned ihipStream_t::resolveMemcpyDirection(bool srcTracked, bool dstTracked, bool srcInDeviceMem, bool dstInDeviceMem)
 {
     hipMemcpyKind kind = hipMemcpyDefault;
@@ -1358,6 +1405,7 @@ unsigned ihipStream_t::resolveMemcpyDirection(bool srcTracked, bool dstTracked, 
 }
 
 
+// TODO - remove kind parm from here or use it below?
 void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn)
 {
     ihipCtx_t *ctx = this->getCtx();
@@ -1367,7 +1415,38 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
         throw ihipException(hipErrorInvalidDevice);
     }
 
-    crit->_av.copy(src, dst, sizeBytes);
+    hc::accelerator acc;
+    hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
+    hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
+    bool dstTracked = (hc::am_memtracker_getinfo(&dstPtrInfo, dst) == AM_SUCCESS);
+    bool srcTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) == AM_SUCCESS);
+
+    if (kind == hipMemcpyDefault) {
+        kind = resolveMemcpyDirection(srcTracked, dstTracked, srcPtrInfo._isInDeviceMem, dstPtrInfo._isInDeviceMem);
+    }
+    hc::hcCommandKind hcCopyDir;
+    switch (kind) {
+        case hipMemcpyHostToHost:     hcCopyDir = hc::hcMemcpyHostToHost; break;
+        case hipMemcpyHostToDevice:   hcCopyDir = hc::hcMemcpyHostToDevice; break;
+        case hipMemcpyDeviceToHost:   hcCopyDir = hc::hcMemcpyDeviceToHost; break;
+        case hipMemcpyDeviceToDevice: hcCopyDir = hc::hcMemcpyDeviceToDevice; break;
+    };
+
+
+    // If this is P2P accessi, we need to check to see if the copy agent (specified by the stream where the copy is enqueued) 
+    // has peer access enabled to both the source and dest.  If this is true, then the copy agent can see both pointers 
+    // and we can perform the access with the copy engine from the current stream.  If not true, then we will copy through the host. (forceHostCopyEngine=true).
+    bool forceHostCopyEngine = false;
+    if (hcCopyDir == hc::hcMemcpyDeviceToDevice) {
+        if (!canSeePeerMemory(ctx, ihipGetPrimaryCtx(dstPtrInfo._appId), ihipGetPrimaryCtx(srcPtrInfo._appId))) {
+            forceHostCopyEngine = true;
+            tprintf (DB_COPY1, "Forcing use of host copy engine.\n");
+        } else {
+            tprintf (DB_COPY1, "Will use SDMA engine on streamDevice=%s.\n", ctx->toString().c_str());
+        }
+    };
+
+    crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceHostCopyEngine);
 }
 
 
@@ -1410,16 +1489,23 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsig
         bool srcTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) == AM_SUCCESS);
 
 
-        // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.
-        // If both pointers are not tracked, we need to fall back to a sync copy.
-        if (!dstTracked || !srcTracked) {
-            trueAsync = false;
+        bool copyEngineCanSeeSrcAndDest = true;
+        if (kind == hipMemcpyDeviceToDevice) {
+            copyEngineCanSeeSrcAndDest = canSeePeerMemory(ctx, ihipGetPrimaryCtx(dstPtrInfo._appId), ihipGetPrimaryCtx(srcPtrInfo._appId));
         }
 
 
 
+
+        // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.
+        // If both pointers are not tracked, we need to fall back to a sync copy.
+        if (!dstTracked || !srcTracked || !copyEngineCanSeeSrcAndDest) {
+            trueAsync = false;
+        }
+
+
         if (trueAsync == true) {
-            // Perform a syncrhonous copy:
+            // Perform a synchronous copy:
             try {
                 crit->_av.copy_async(src, dst, sizeBytes);
             } catch (Kalmar::runtime_exception) {
@@ -1432,10 +1518,8 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsig
                 this->wait(crit);
             } 
         } else {
-            // Perform a syncrhonous copy:
+            // Perform a synchronous copy:
             if (kind == hipMemcpyDefault) {
-                bool srcInDeviceMem = (srcTracked && srcPtrInfo._isInDeviceMem);
-                bool dstInDeviceMem = (dstTracked && dstPtrInfo._isInDeviceMem);
                 kind = resolveMemcpyDirection(srcTracked, dstTracked, srcPtrInfo._isInDeviceMem, dstPtrInfo._isInDeviceMem);
             }
             copySync(crit, dst, src, sizeBytes, kind);
@@ -1481,3 +1565,4 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **a
 }
 
 //// TODO - add identifier numbers for streams and devices to help with debugging.
+//TODO - add a contect sequence number for debug. Print operator<< ctx:0.1 (device.ctx)
