@@ -140,15 +140,17 @@ switch(hError) {
 }
 
 inline static cudaMemcpyKind hipMemcpyKindToCudaMemcpyKind(hipMemcpyKind kind) {
-switch(kind) {
-case hipMemcpyHostToHost:
-    return cudaMemcpyHostToHost;
-case hipMemcpyHostToDevice:
-    return cudaMemcpyHostToDevice;
-case hipMemcpyDeviceToHost:
-    return cudaMemcpyDeviceToHost;
-default:
-    return cudaMemcpyDefault;
+    switch(kind) {
+    case hipMemcpyHostToHost:
+        return cudaMemcpyHostToHost;
+    case hipMemcpyHostToDevice:
+        return cudaMemcpyHostToDevice;
+    case hipMemcpyDeviceToHost:
+        return cudaMemcpyDeviceToHost;
+    case hipMemcpyDeviceToDevice:
+        return cudaMemcpyDeviceToDevice;
+    default:
+        return cudaMemcpyDefault;
 }
 }
 
