@@ -51,9 +51,11 @@ ctest -R Memcpy
 ```
 
 
-### If a test fails:
+### If a test fails - how to debug a test
 
 Extract the commandline from the testing log:
+
+(From the test build directory, perhaps hip/tests/build)
 $ grep -A3 -m2  hipMemcpy-size  Testing/Temporary/LastTest.log
 36/47 Testing: hipMemcpy-size
 36/47 Test: hipMemcpy-size

@@ -49,7 +49,7 @@
 | `cudaStreamDestroy`                                       | `hipStreamDestroy`            | Destroys and cleans up an asynchronous stream.                                                                                 |
 | `cudaStreamGetFlags`                                      | `hipStreamGetFlags`           | Query the flags of a stream.                                                                                                   |
 | `cudaStreamGetPriority`                                   |                               | Query the priority of a stream.                                                                                                |
-| `cudaStreamQuery`                                         |                               | Queries an asynchronous stream for completion status.                                                                          |
+| `cudaStreamQuery`                                         | `hipStreamQuery`              | Queries an asynchronous stream for completion status.                                                                          |
 | `cudaStreamSynchronize`                                   | `hipStreamSynchronize`        | Waits for stream tasks to complete.                                                                                            |
 | `cudaStreamWaitEvent`                                     | `hipStreamWaitEvent`          | Make a compute stream wait on an event.                                                                                        |
 
