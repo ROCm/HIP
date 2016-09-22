@@ -1468,6 +1468,10 @@ hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device);
 
 /**
  * @brief Returns the approximate HIP driver version.
+ * 
+ * @param [out] driverVersion
+ *
+ * @returns #hipSuccess, #hipErrorInavlidValue
  *
  * @warning The HIP feature set does not correspond to an exact CUDA SDK driver revision.
  * This function always set *driverVersion to 4 as an approximation though HIP supports
@@ -1475,8 +1479,23 @@ hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device);
  * HIP apps code should not rely on the driver revision number here and should
  * use arch feature flags to test device capabilities or conditional compilation.
  *
+ * @see hipRuntimeGetVersion
  */
 hipError_t hipDriverGetVersion(int *driverVersion) ;
+
+/**
+ * @brief Returns the approximate HIP Runtime version.
+ *
+ * @param [out] runtimeVersion
+ *
+ * @returns #hipSuccess, #hipErrorInavlidValue
+ *
+ * @warning On HIP/HCC path this function returns HIP runtime patch version however on
+ * HIP/NVCC path this function return CUDA runtime version.
+ *
+ * @see hipDriverGetVersion
+ */
+hipError_t hipRuntimeGetVersion(int *runtimeVersion) ;
 
 /**
  * @brief Loads code object from file into a hipModule_t

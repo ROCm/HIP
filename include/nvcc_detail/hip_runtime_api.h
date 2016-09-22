@@ -546,6 +546,11 @@ inline static hipError_t hipDriverGetVersion(int *driverVersion)
 	return hipCUDAErrorTohipError(err);
 }
 
+inline static hipError_t hipRuntimeGetVersion(int *runtimeVersion)
+{
+    return hipCUDAErrorTohipError(cudaRuntimeGetVersion(runtimeVersion));
+}
+
 inline static hipError_t hipDeviceCanAccessPeer ( int* canAccessPeer, int  device, int  peerDevice )
 {
     return hipCUDAErrorTohipError(cudaDeviceCanAccessPeer(canAccessPeer, device, peerDevice));
