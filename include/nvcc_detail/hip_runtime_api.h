@@ -64,6 +64,8 @@ hipMemcpyHostToHost
 
 typedef cudaEvent_t hipEvent_t;
 typedef cudaStream_t hipStream_t;
+typedef cudaIpcEventHandle_t hipIpcEventHandle_t;
+typedef cudaIpcMemHandle_t hipIpcMemHandle_t;
 typedef CUcontext hipCtx_t;
 typedef CUsharedconfig hipSharedMemConfig;
 typedef CUfunc_cache hipFuncCache;
@@ -304,6 +306,26 @@ inline static hipError_t hipGetDeviceCount(int * count){
 
 inline static hipError_t hipGetDevice(int * device){
     return hipCUDAErrorTohipError(cudaGetDevice(device));
+}
+
+inline static hipError_t hipIpcCloseMemHandle(void *devPtr){
+    return hipCUDAErrorTohipError(cudaIpcCloseMemHandle(devPtr));
+}
+
+inline static hipError_t hipIpcGetEventHandle(hipIpcEventHandle_t* handle, hipEvent_t event){
+    return hipCUDAErrorTohipError(cudaIpcGetEventHandle(handle, event));
+}
+
+inline static hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr){
+    return hipCUDAErrorTohipError(cudaIpcGetMemHandle(handle, devPtr));
+}
+
+inline static hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle){
+    return hipCUDAErrorTohipError(cudaIpcOpenEventHandle(event, handle));
+}
+
+inline static hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags){
+    return hipCUDAErrorTohipError(cudaIpcOpenMemHandle(devPtr, handle, flags));
 }
 
 inline static hipError_t hipMemset(void* devPtr,int value, size_t count) {
