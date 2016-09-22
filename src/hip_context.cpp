@@ -76,7 +76,7 @@ hipError_t hipDeviceGet(hipDevice_t *device, int deviceId)
     return ihipLogStatus(e);
 };
 
-pError_t hipDriverGetVersion(int *driverVersion)
+hipError_t hipDriverGetVersion(int *driverVersion)
 {
     HIP_INIT_API(driverVersion);
     hipError_t e = hipSuccess;
