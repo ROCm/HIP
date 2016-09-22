@@ -60,6 +60,7 @@ parse_config_file("$HIP_PATH/lib/.buildInfo", \%hipConfig);
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
 $HIP_PLATFORM= `$HIP_PATH/bin/hipconfig --platform` // "hcc";
 $HIP_VERSION= `$HIP_PATH/bin/hipconfig --version`;
+($HIP_VERSION_MAJOR, $HIP_VERSION_MINOR, $HIP_VERSION_PATCH) = split(/\./, $HIP_VERSION);
 
 if ($verbose & 0x2) {
     print ("HIP_PATH=$HIP_PATH\n");
@@ -158,7 +159,7 @@ if ($HIP_PLATFORM eq "hcc") {
 }
 
 # Add paths to common HIP includes:
-$HIPCXXFLAGS .= " -I$HIP_PATH/include" ;
+$HIPCXXFLAGS .= " -I$HIP_PATH/include -DHIP_VERSION_MAJOR=$HIP_VERSION_MAJOR -DHIP_VERSION_MINOR=$HIP_VERSION_MINOR -DHIP_VERSION_PATCH=$HIP_VERSION_PATCH" ;
 
 my $compileOnly = 0;
 my $needCXXFLAGS = 0;  # need to add CXX flags to compile step
