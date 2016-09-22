@@ -416,6 +416,8 @@ private:
     // The unsigned return is hipMemcpyKind
     unsigned resolveMemcpyDirection(bool srcTracked, bool dstTracked, bool srcInDeviceMem, bool dstInDeviceMem);
 
+    bool canSeePeerMemory(const ihipCtx_t *thisCtx, ihipCtx_t *dstCtx, ihipCtx_t *srcCtx);
+
 
 private: // Data
     // Critical Data - MUST be accessed through LockedAccessor_StreamCrit_t
@@ -516,10 +518,11 @@ public:
 
 
     // Peer Accessor classes:
-    bool isPeer(const ihipCtx_t *peer); // returns Trus if peer has access to memory physically located on this device.
+    bool isPeer(const ihipCtx_t *peer); // returns True if peer has access to memory physically located on this device.
     bool addPeer(ihipCtx_t *peer);
     bool removePeer(ihipCtx_t *peer);
     void resetPeers(ihipCtx_t *thisDevice);
+    void printPeers(FILE *f) const;
 
     uint32_t peerCnt() const { return _peerCnt; };
     hsa_agent_t *peerAgents() const { return _peerAgents; };
@@ -535,6 +538,7 @@ private:
     //--- Peer Tracker:
     // These reflect the currently Enabled set of peers for this GPU:
     // Enabled peers have permissions to access the memory physically allocated on this device.
+    // Note the peers always contain the self agent for easy interfacing with HSA APIs.
     std::list<ihipCtx_t*>     _peers;     // list of enabled peer devices.
     uint32_t                  _peerCnt;     // number of enabled peers
     hsa_agent_t              *_peerAgents;  // efficient packed array of enabled agents (to use for allocations.)
@@ -577,6 +581,8 @@ public: // Functions:
 
     // TODO - review uses of getWriteableDevice(), can these be converted to getDevice()
     ihipDevice_t *getWriteableDevice() const { return _device; };
+
+    std::string toString() const; 
 
 public:  // Data
     // The NULL stream is used if no other stream is specified.
@@ -660,6 +666,13 @@ inline std::ostream & operator<<(std::ostream& os, const gl_dim3& s)
 inline std::ostream& operator<<(std::ostream& os, const hipEvent_t& e)
 {
     os << "event:" << std::hex << static_cast<void*> (e);
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const ihipCtx_t* c)
+{
+    os << "ctx:" << static_cast<const void*> (c) 
+       << " dev:" << c->getDevice()->_deviceId;
     return os;
 }
 
