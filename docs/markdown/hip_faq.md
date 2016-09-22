@@ -10,6 +10,7 @@
 - [What specific version of CUDA does HIP support?](#what-specific-version-of-cuda-does-hip-support)
 - [What libraries does HIP support?](#what-libraries-does-hip-support)
 - [How does HIP compare with OpenCL?](#how-does-hip-compare-with-opencl)
+- [How does porting CUDA to HIP compare to porting CUDA to OpenCL?]
 - [What hardware does HIP support?](#what-hardware-does-hip-support)
 - [Does Hipify automatically convert all source code?](#does-hipify-automatically-convert-all-source-code)
 - [What is NVCC?](#what-is-nvcc)
@@ -185,7 +186,9 @@ A C++ dialect, hc is supported by the AMD HCC compiler. It provides C++ run time
 ### On HCC, can I link HIP code with host code compiled with another compiler such as gcc, icc, or clang ?
 Yes!  HIP/HCC generates the object code which conforms to the GCC ABI, and also links with libstdc++.  This means you can compile host code with the compiler of your choice and link this
 with GPU code compiler with HIP.  Larger projects often contain a mixture of accelerator code (initially written in CUDA with nvcc) plus host code (compiled with gcc, icc, or clang).   These projects
-can convert the accelerator code to HIP, compile that code with hipcc, and link with object code from the preferred compiler.
+can convert the accelerator code to HIP, compile that code with hipcc, and link with object code from the preferred compiler.S
+
+
 
 
 ### HIP detected my platform (hcc vs nvcc) incorrectly - what should I do?
@@ -201,6 +204,29 @@ If you see issues related to incorrect platform detection, please file an issue 
 
 ### Can I install both CUDA SDK and HCC on same machine?
 Yes. You can use HIP_PLATFORM to choose which path hipcc targets.  This configuration can be useful when using HIP to develop an application which is portable to both AMD and NVIDIA.
+
+
+### On CUDA, can I mix CUDA code with HIP code?
+Yes.  Most HIP data structures (hipStream_t, hipEvent_t) are typedefs to CUDA equivalents and can be intermixed.  Both CUDA and HIP use integer device ids .
+One notable exception is that hipError_t is a new type, and cannot be used where a cudaError_t is expected.  In these cases, refactor the code to remove the expectation.  Alternatively, hip_runtime_api.h defines functions which convert between the error code spaces:
+
+hipErrorToCudaError
+hipCUDAErrorTohipError
+hipCUResultTohipError
+
+If platform portability is important, use #ifdef __HIP_PLATFORM_NVCC__ to guard the CUDA-specific code.
+
+### On HCC, can I use HC functionality with HIP?
+Yes.  
+The code can include hc.hpp and use HC functions inside the kernel.  A typical use case is to use AMD-specific hardware features such as the permute, swizzle, or DPP operations.
+The "-stdlib=libc++" must be passed to hipcc in order to compile hc.hpp.  See the 'bit_extract' sample for an example. 
+
+Also these functions can be used to extract HCC acclerator and accelerator_view structures from the HIP deviceId and hipStream_t:
+hipHccGetAccelerator(int deviceId, hc::accelerator *acc);
+hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **av);
+
+If platform portability is important, use #ifdef __HIP_PLATFORM_HIPCC__ to guard the HCC-specific code.
+
 
 ### How do I trace HIP application flow?
 #### Using CodeXL markers for HIP Functions
