@@ -253,10 +253,12 @@ void ResultDatabase::DumpDetailed(ostream &out)
 
         out << endl;
     }
-    out << endl
-        << "Note: Any results marked with (*) had missing values." << endl
-        << "      This can occur on systems with a mixture of" << endl
-        << "      device types or architectural capabilities." << endl;
+    if (0) {
+        out << endl
+            << "Note: Any results marked with (*) had missing values." << endl
+            << "      This can occur on systems with a mixture of" << endl
+            << "      device types or architectural capabilities." << endl;
+    }
 }
 
 
@@ -330,9 +332,11 @@ void ResultDatabase::DumpSummary(ostream &out)
 
         out << endl;
     }
-    out << endl
+    if (0) {
+        out << endl
         << "Note: results marked with (*) had missing values such as" << endl
         << "might occur with a mixture of architectural capabilities." << endl;
+    }
 }
 
 // ****************************************************************************
