@@ -9,4 +9,5 @@ set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
 include(${HIP_SRC_PATH}/tests/hit/HIT.cmake)
 
 # Add tests
-hit_add_directory(${HIP_SRC_PATH}/tests/src)
+include_directories(${HIP_SRC_PATH}/tests/src)
+hit_add_directory_recursive(${HIP_SRC_PATH}/tests/src)
