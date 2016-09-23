@@ -17,6 +17,12 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD: %t %s test_common.cpp
+ * RUN: %t EXCLUDE_HIP_PLATFORM
+ * HIT_END
+ */
+
 #include "test_common.h"
 
 int main(){

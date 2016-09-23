@@ -22,6 +22,12 @@ THE SOFTWARE.
  * hipError_t hipGetDevice(int *device);
  */
 
+/* HIT_START
+ * BUILD: %t %s test_common.cpp
+ * RUN: %t
+ * HIT_END
+ */
+
 #include "test_common.h"
 
 int main()
