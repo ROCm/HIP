@@ -1,0 +1,78 @@
+#!/usr/bin/perl -w
+
+use 5.006; use v5.10.1;
+use File::Basename;
+use File::Spec;
+
+# Scan input file for HIT information
+sub parse_file {
+    my $file = shift;
+    (my $exe = $file) =~ s/\.[^.]+$//g;
+    my (@buildCMDs, @runCMDs);
+    if (open (SOURCE, '<:encoding(UTF-8)', "$file")) {
+        while (<SOURCE>) {
+            my $line=$_;
+            # Look for BUILD instructions
+            if ($line =~ /^ \* BUILD:/) {
+                $line =~ s/^ \* BUILD: //g; # Remove " * BUILD: "
+                $line =~ s/%s/$file/g;      # Substitute %s -> filename
+                $line =~ s/%t/$exe/g;       # Substitute %t -> targetname
+                $line =~ s/\R//g;           # Remove line endings
+                push @buildCMDs, $line;
+            }
+            # Look for RUN instructions
+            if ($line =~ /^ \* RUN:/) {
+                $line =~ s/^ \* RUN: //g;   # Remove " * RUN: "
+                $line =~ s/%t/$exe/g;       # Subsitute %t -> targetname
+                $line =~ s/\R//g;           # Remove line endings
+                push @runCMDs, $line;
+            }
+        }
+        close(SOURCE);
+    }
+    return (\@buildCMDs, \@runCMDs);
+}
+
+# Exit if no arguments specified
+if(scalar @ARGV == 0){
+    print "No Arguments passed, exiting ...\n";
+    exit(-1);
+}
+
+# Parse command
+my @options = ();
+my $retBuildCMDs = 0;
+my $retRunCMDs = 0;
+foreach $arg (@ARGV) {
+    if ($retBuildCMDs or $retRunCMDs) {
+        push (@options, $arg);
+    }
+    if ($arg eq '--buildCMDs') {
+        $retBuildCMDs = 1;
+    }
+    if ($arg eq '--runCMDs') {
+        $retRunCMDs = 1;
+    }
+}
+
+# Atleast one command needs to be specified
+if ($retBuildCMDs eq 0 and $retRunCMDs eq 0) {
+    die "Usage: $0 <--buildCMDs|--runCMDs> FILENAMEs\n";
+}
+
+# Iterate over input files
+foreach $file (@options) {
+    # Convert absolute path to path relative to working directory
+    my $relfile = File::Spec->abs2rel($file);
+    my ($buildCMDs, $runCMDs) = parse_file("$relfile");
+    if ($retBuildCMDs) {
+        # print "BuildCMDs:\n";
+        print "$_\n" for @$buildCMDs;
+    }
+    if ($retRunCMDs) {
+        # print "RunCMDs:\n";
+        print "$_\n" for @$runCMDs;
+    }
+}
+
+# vim: ts=4:sw=4:expandtab:smartindent
