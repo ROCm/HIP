@@ -304,3 +304,24 @@ if(POLICY CMP0037)
     cmake_policy(POP)
 endif()
 
+#############################
+# Testing steps
+#############################
+# Target: test
+set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/hip_tests)
+configure_file(tests/hip_tests.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+if(POLICY CMP0037)
+    cmake_policy(PUSH)
+    cmake_policy(SET CMP0037 OLD)
+endif()
+add_custom_target(install_for_test COMMAND "${CMAKE_COMMAND}" --build . --target install
+                                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+add_custom_target(test COMMAND ${CMAKE_COMMAND} .
+                       COMMAND make
+                       COMMAND make test
+                       WORKING_DIRECTORY ${BUILD_DIR}
+                       DEPENDS install_for_test)
+if(POLICY CMP0037)
+    cmake_policy(POP)
+endif()
+
