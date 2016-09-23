@@ -146,8 +146,15 @@ endmacro()
 
 # Macro: HIT_ADD_DIRECTORY_RECURSIVE to scan+add all files in a directory+subdirectories for testing
 macro(HIT_ADD_DIRECTORY_RECURSIVE _dir)
-    file(GLOB_RECURSE files "${_dir}/*.c*")
-    hit_add_files(${_dir} ${files})
+    file(GLOB children RELATIVE ${_dir} ${_dir}/*)
+    set(dirlist "")
+    foreach(child ${children})
+        if(IS_DIRECTORY ${_dir}/${child})
+            hit_add_directory_recursive(${_dir}/${child})
+        else()
+            hit_add_files(${_dir} ${child})
+        endif()
+    endforeach()
 endmacro()
 
 # vim: ts=4:sw=4:expandtab:smartindent
