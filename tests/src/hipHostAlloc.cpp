@@ -20,6 +20,12 @@
    THE SOFTWARE.
    */
 
+/* HIT_START
+ * BUILD: %t %s test_common.cpp
+ * RUN: %t
+ * HIT_END
+ */
+
 #include"test_common.h"
 
 #define LEN 1024*1024
