@@ -373,7 +373,7 @@ typedef uint64_t SeqNum_t ;
     //---
     // Member functions that begin with locked_ are thread-safe accessors - these acquire / release the critical mutex.
     LockedAccessor_StreamCrit_t  lockopen_preKernelCommand();
-    void                 lockclose_postKernelCommand(hc::completion_future &kernel_future);
+    void                 lockclose_postKernelCommand(hc::accelerator_view *av);
 
 
     void                 locked_wait(bool assertQueueEmpty=false);
