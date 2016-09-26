@@ -179,13 +179,6 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags)
     return hipHostMalloc(ptr, sizeBytes, flags);
 };
 
-//---
-// TODO - remove me, this is deprecated.
-hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
-{
-    return hipHostMalloc(ptr, sizeBytes, 0);
-}
-
 // width in bytes
 hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height) 
 {
