@@ -225,12 +225,12 @@ foreach $arg (@ARGV)
         $needLDFLAGS = 1;
     }
 
-    if($arg eq '-stdlib=libc++' and $setStdLib eq 0)
+    if(($arg eq '-stdlib=libc++') and ($setStdLib eq 0))
     {
         $HIPCXXFLAGS .= " -stdlib=libc++";
         $setStdLib = 1;
     }
-    if($arg eq '-stdlib=libstdc++' and $setStdLib eq 0)
+    if(($arg eq '-stdlib=libstdc++') and ($setStdLib eq 0))
     {
         $HIPCXXFLAGS .= " -stdlib=libstdc++";
         $setStdLib = 1;
