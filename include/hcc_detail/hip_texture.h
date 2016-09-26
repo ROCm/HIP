@@ -97,18 +97,78 @@ typedef struct hipArray {
 #define tex2D(_tex, _dx, _dy) \
   _tex._dataPtr[(unsigned int)_dx + (unsigned int)_dy*(_tex.width)]
 
+/**
+ *  @brief Allocate an array on the device.
+ *
+ *  @param[out]  array  Pointer to allocated array in device memory
+ *  @param[in]   desc   Requested channel format
+ *  @param[in]   width  Requested array allocation width
+ *  @param[in]   height Requested array allocation height
+ *  @param[in]   flags  Requested properties of allocated array
+ *  @return      #hipSuccess, #hipErrorMemoryAllocation
+ *
+ *  @see hipMalloc, hipMallocPitch, hipFree, hipFreeArray, hipHostMalloc, hipHostFree
+ */
 hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
                           size_t width, size_t height = 0, unsigned int flags = 0);
 
+/**
+ *  @brief Frees an array on the device. 
+ *
+ *  @param[in]  array  Pointer to array to free
+ *  @return     #hipSuccess, #hipErrorInvalidValue, #hipErrorInitializationError
+ *
+ *  @see hipMalloc, hipMallocPitch, hipFree, hipMallocArray, hipHostMalloc, hipHostFree
+ */
 hipError_t hipFreeArray(hipArray* array);
-  //
-// dpitch, spitch, and width in bytes
+
+/**
+ *  @brief Copies data between host and device. 
+ *
+ *  @param[in]   dst    Destination memory address
+ *  @param[in]   dpitch Pitch of destination memory
+ *  @param[in]   src    Source memory address
+ *  @param[in]   spitch Pitch of source memory 
+ *  @param[in]   width  Width of matrix transfer (columns in bytes)
+ *  @param[in]   height Height of matrix transfer (rows)
+ *  @param[in]   kind   Type of transfer
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue, #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpyToSymbol, hipMemcpyAsync
+ */
 hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind);
 
-// wOffset, width, and spitch in bytes
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dst    Destination memory address
+ *  @param[in]   dpitch Pitch of destination memory
+ *  @param[in]   src    Source memory address
+ *  @param[in]   spitch Pitch of source memory
+ *  @param[in]   width  Width of matrix transfer (columns in bytes)
+ *  @param[in]   height Height of matrix transfer (rows)
+ *  @param[in]   kind   Type of transfer
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue, #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol, hipMemcpyAsync
+ */
 hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
                               size_t spitch, size_t width, size_t height, hipMemcpyKind kind);
 
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dst    Destination memory address
+ *  @param[in]   dpitch Pitch of destination memory
+ *  @param[in]   src    Source memory address
+ *  @param[in]   spitch Pitch of source memory
+ *  @param[in]   width  Width of matrix transfer (columns in bytes)
+ *  @param[in]   height Height of matrix transfer (rows)
+ *  @param[in]   kind   Type of transfer
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue, #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol, hipMemcpyAsync
+ */
 hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset,
                             const void* src, size_t count, hipMemcpyKind kind);
 
@@ -152,15 +212,17 @@ hipChannelFormatDesc  hipBindTexture(size_t *offset, struct textureReference *te
 }
 #endif
 
-/*
- * @brief Returns a channel descriptor with format f and number of bits of each ocmponent x,y,z and w.
+/**
+ *  @brief Returns a channel descriptor using the specified format.
  *
- * @par Parameters
- *      None.
- * @return Channel descriptor
+ *  @param[in]   x    X component
+ *  @param[in]   y    Y component
+ *  @param[in]   z    Z component
+ *  @param[in]   w    W component
+ *  @param[in]   f    Channel format
+ *  @return      Channel descriptor with format f 
  *
- *
- **/
+ */
 hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f);
 
 // descriptors
