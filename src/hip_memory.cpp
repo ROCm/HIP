@@ -772,7 +772,7 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
             }
         }
 
-        stream->lockclose_postKernelCommand(cf);
+        stream->lockclose_postKernelCommand(&crit->_av);
 
 
         if (HIP_LAUNCH_BLOCKING) {
@@ -822,9 +822,10 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
                 e = hipErrorInvalidValue;
             }
         }
+        // TODO - is hipMemset supposed to be async?
         cf.wait();
 
-        stream->lockclose_postKernelCommand(cf);
+        stream->lockclose_postKernelCommand(&crit->_av);
 
 
         if (HIP_LAUNCH_BLOCKING) {

@@ -253,11 +253,12 @@ LockedAccessor_StreamCrit_t ihipStream_t::lockopen_preKernelCommand()
 
 //---
 // Must be called after kernel finishes, this releases the lock on the stream so other commands can submit.
-void ihipStream_t::lockclose_postKernelCommand(hc::completion_future &kernelFuture)
+void ihipStream_t::lockclose_postKernelCommand(hc::accelerator_view *av)
 {
 
     if (HIP_LAUNCH_BLOCKING) {
-        kernelFuture.wait();
+        // TODO - fix this so it goes through proper stream::wait() call.
+        av->wait();  // direct wait OK since we know the stream is locked. 
         tprintf(DB_SYNC, " %s LAUNCH_BLOCKING for kernel completion\n", ToString(this).c_str());
     }
 
@@ -1163,7 +1164,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
 
     auto crit = stream->lockopen_preKernelCommand();
     lp->av = &(crit->_av);
-    lp->cf = new hc::completion_future;
+    lp->cf = nullptr;
     ihipPrintKernelLaunch(kernelNameStr, lp, stream);
 
     return (stream);
@@ -1185,7 +1186,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, gri
 
     auto crit = stream->lockopen_preKernelCommand();
     lp->av = &(crit->_av);
-    lp->cf = new hc::completion_future;
+    lp->cf = nullptr;
     ihipPrintKernelLaunch(kernelNameStr, lp, stream);
     return (stream);
 }
@@ -1206,7 +1207,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, gri
 
     auto crit = stream->lockopen_preKernelCommand();
     lp->av = &(crit->_av);
-    lp->cf = new hc::completion_future;
+    lp->cf = nullptr;
     ihipPrintKernelLaunch(kernelNameStr, lp, stream);
     return (stream);
 }
@@ -1227,7 +1228,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, g
 
     auto crit = stream->lockopen_preKernelCommand();
     lp->av = &(crit->_av);
-    lp->cf = new hc::completion_future; // TODO, is this necessary?
+    lp->cf = nullptr;
 
 
     ihipPrintKernelLaunch(kernelNameStr, lp, stream);
@@ -1240,7 +1241,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, g
 //This releases the lock on the stream.
 void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp)
 {
-    stream->lockclose_postKernelCommand(*(lp.cf));
+    stream->lockclose_postKernelCommand(lp.av);
 }
 
 
