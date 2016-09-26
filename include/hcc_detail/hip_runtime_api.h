@@ -1237,10 +1237,21 @@ hipError_t hipInit(unsigned int flags) ;
  * @param [in] flags
  * @param [in] associated device handle
  *
- * @returns #hipSuccess, #hipErrorInvalidContext
+ * @return #hipSuccess
+ *
+ * @see hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
 hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device);
 
+/**
+ * @brief Destroy a HIP context.
+ *
+ * @param [in] ctx Context to destroy
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @see hipCtxCreate, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
+ */
 hipError_t hipCtxDestroy(hipCtx_t ctx);
 
 /**
@@ -1248,9 +1259,10 @@ hipError_t hipCtxDestroy(hipCtx_t ctx);
  *
  * @param [out] ctx
  *
- * @returns #hipSuccess
+ * @returns #hipSuccess, #hipErrorInvalidContext
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxSetCurrent, hipCtxGetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-
 hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
 
 /**
@@ -1259,8 +1271,9 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
  * @param [in] ctx
  *
  * @returns #hipSuccess, #hipErrorInvalidContext
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
  */
-
 hipError_t hipCtxPushCurrent(hipCtx_t ctx);
 
 /**
@@ -1268,9 +1281,10 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx);
  *
  * @param [in] ctx
  *
- * @returns #hipSuccess
+ * @returns #hipSuccess, #hipErrorInvalidContext
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
  */
-
 hipError_t hipCtxSetCurrent(hipCtx_t ctx);
 
 /**
@@ -1278,9 +1292,10 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx);
  *
  * @param [out] ctx
  *
- * @returns #hipSuccess
+ * @returns #hipSuccess, #hipErrorInvalidContext
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetDevice, hipCtxGetFlags, hipCtxPopCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
 
 /**
@@ -1289,6 +1304,8 @@ hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
  * @param [out] device
  *
  * @returns #hipSuccess, #hipErrorInvalidContext
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize
  */
 
 hipError_t hipCtxGetDevice(hipDevice_t *device);
@@ -1296,53 +1313,81 @@ hipError_t hipCtxGetDevice(hipDevice_t *device);
 /**
  * @brief Returns the approximate HIP api version.
  *
+ * @param [in]  ctx Context to check 
+ * @param [out] apiVersion
+ * 
+ * @return #hipSuccess
+ *
  * @warning The HIP feature set does not correspond to an exact CUDA SDK api revision.
  * This function always set *apiVersion to 4 as an approximation though HIP supports
  * some features which were introduced in later CUDA SDK revisions.
  * HIP apps code should not rely on the api revision number here and should
  * use arch feature flags to test device capabilities or conditional compilation.
  *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetDevice, hipCtxGetFlags, hipCtxPopCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
 hipError_t hipCtxGetApiVersion (hipCtx_t ctx,int *apiVersion);
 
 /**
  * @brief Set Cache configuration for a specific function
  *
- * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ * @param [out] cacheConfiguration
  *
+ * @return #hipSuccess
+ *
+ * @warning AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
 hipError_t hipCtxGetCacheConfig ( hipFuncCache *cacheConfig );
 
 /**
  * @brief Set L1/Shared cache partition.
+ * 
+ * @param [in] cacheConfiguration
  *
- * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ * @return #hipSuccess
  *
+ * @warning AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
 hipError_t hipCtxSetCacheConfig ( hipFuncCache cacheConfig );
 
 /**
  * @brief Set Shared memory bank configuration.
  *
- * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ * @param [in] sharedMemoryConfiguration
  *
+ * @return #hipSuccess
+ *
+ * @warning AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
 hipError_t hipCtxSetSharedMemConfig ( hipSharedMemConfig config );
 
 /**
  * @brief Get Shared memory bank configuration.
  *
- * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ * @param [out] sharedMemoryConfiguration
  *
+ * @return #hipSuccess
+ *
+ * @warning AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
 hipError_t hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig );
 
 /**
  * @brief Blocks until the default context has completed all preceding requested tasks.
  *
- * This function waits for all streams on the default context to complete execution, and then returns.
+ * @return #hipSuccess
  *
- * @returns #hipSuccess.
+ * @warning This function waits for all streams on the default context to complete execution, and then returns.
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxGetDevice
 */
 hipError_t hipCtxSynchronize ( void );
 
@@ -1351,7 +1396,9 @@ hipError_t hipCtxSynchronize ( void );
  *
  * @param [out] flags
  *
- * @returns #hipSuccess.
+ * @returns #hipSuccess
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
 */
 hipError_t hipCtxGetFlags ( unsigned int* flags );
 
@@ -1366,8 +1413,9 @@ hipError_t hipCtxGetFlags ( unsigned int* flags );
  * @param [in] peerCtx
  * @param [in] flags
  *
- * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue,
- * @returns #hipErrorPeerAccessAlreadyEnabled if peer access is already enabled for this device.
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, #hipErrorPeerAccessAlreadyEnabled
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning PeerToPeer support is experimental.
  */
 hipError_t  hipCtxEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags);
@@ -1380,9 +1428,12 @@ hipError_t  hipCtxEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags);
  * @param [in] peerCtx
  *
  * @returns #hipSuccess, #hipErrorPeerAccessNotEnabled
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning PeerToPeer support is experimental.
  */
 hipError_t  hipCtxDisablePeerAccess (hipCtx_t peerCtx);
+
 // doxygen end Context Management
 /**
  * @}
