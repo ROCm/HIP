@@ -941,12 +941,6 @@ hipError_t hipHostFree(void* ptr)
     return ihipLogStatus(hipStatus);
 };
 
-// TODO - deprecated function.
-hipError_t hipFreeHost(void* ptr)
-{
-    return hipHostFree(ptr);
-}
-
 hipError_t hipFreeArray(hipArray* array)
 {
     HIP_INIT_API(array);

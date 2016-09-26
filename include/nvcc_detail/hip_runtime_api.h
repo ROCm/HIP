@@ -205,11 +205,6 @@ inline static hipError_t hipHostUnregister(void* ptr){
 	return hipCUDAErrorTohipError(cudaHostUnregister(ptr));
 }
 
-inline static hipError_t hipFreeHost(void* ptr) __attribute__((deprecated("use hipHostFree instead")));
-inline static hipError_t hipFreeHost(void* ptr) {
-    return hipCUDAErrorTohipError(cudaFreeHost(ptr));
-}
-
 inline static hipError_t hipHostFree(void* ptr)  {
     return hipCUDAErrorTohipError(cudaFreeHost(ptr));
 }
