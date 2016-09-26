@@ -172,13 +172,6 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
     return ihipLogStatus(hip_status);
 }
 
-//---
-// TODO - remove me, this is deprecated.
-hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags)
-{
-    return hipHostMalloc(ptr, sizeBytes, flags);
-};
-
 // width in bytes
 hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height) 
 {

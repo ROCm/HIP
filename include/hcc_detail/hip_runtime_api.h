@@ -793,18 +793,17 @@ hipError_t hipMalloc(void** ptr, size_t size) ;
  *  @see hipSetDeviceFlags, hipHostFree
  */
 hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags) ;
-hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) __attribute__((deprecated("use hipHostMalloc instead"))) ;;
 
 /**
- *  @brief Get Device pointer from Host Pointer allocated through hipHostAlloc
+ *  @brief Get Device pointer from Host Pointer allocated through hipHostMalloc
  *
  *  @param[out] dstPtr Device Pointer mapped to passed host pointer
- *  @param[in]  hstPtr Host Pointer allocated through hipHostAlloc
+ *  @param[in]  hstPtr Host Pointer allocated through hipHostMalloc
  *  @param[in]  flags Flags to be passed for extension
  *
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryAllocation
  *
- *  @see hipSetDeviceFlags, hipHostAlloc
+ *  @see hipSetDeviceFlags, hipHostMalloc
  */
 hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, unsigned int flags) ;
 
@@ -815,7 +814,7 @@ hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, unsigned int fla
  *  @param[in]  hostPtr Host Pointer allocated through hipHostMalloc
  *  @return #hipSuccess, #hipErrorInvalidValue
  *
- *  @see hipHostAlloc
+ *  @see hipHostMalloc
  */
 hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) ;
 

@@ -184,7 +184,7 @@ build_hip_executable_libcpp(hipHcc hipHcc.cpp)
 
 # __workweek fix.
 #build_hip_executable_libcpp(hipPointerAttrib hipPointerAttrib.cpp)
-build_hip_executable(hipHostAlloc hipHostAlloc.cpp)
+build_hip_executable(hipHostMalloc hipHostMalloc.cpp)
 build_hip_executable(hipHostGetFlags hipHostGetFlags.cpp)
 build_hip_executable(hipHostRegister hipHostRegister.cpp)
 build_hip_executable(hipRandomMemcpyAsync hipRandomMemcpyAsync.cpp)
@@ -208,7 +208,7 @@ make_test(hipLaunchParm " ")
 #make_test(hipPointerAttrib " ")
 
 
-make_test(hipHostAlloc " ")
+make_test(hipHostMalloc " ")
 # BS- comment out since test appears broken - asks for device pointer but pointer was never allocated.
 #make_test(hipHostGetFlags " ")
 make_test(hipHcc  " ")
