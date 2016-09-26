@@ -777,7 +777,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
  *
  *  @return #hipSuccess
  *
- *  @see hipMallocPitch, hipFree, hipMallocArray, hipFreeArray, hipMalloc3D, hipMalloc3DArray, hipMallocHost, hipFreeHost, hipHostAlloc
+ *  @see hipMallocPitch, hipFree, hipMallocArray, hipFreeArray, hipMalloc3D, hipMalloc3DArray, hipMallocHost, hipHostFree, hipHostAlloc
  */
 hipError_t hipMalloc(void** ptr, size_t size) ;
 
@@ -790,7 +790,7 @@ hipError_t hipMalloc(void** ptr, size_t size) ;
  *
  *  @return #hipSuccess, #hipErrorMemoryAllocation
  *
- *  @see hipMalloc, hipMallocPitch, hipMallocArray, hipMalloc3D, hipMalloc3DArray, hipHostAlloc, hipFree, hipFreeArray, hipMallocHost, hipFreeHost, hipHostAlloc
+ *  @see hipMalloc, hipMallocPitch, hipMallocArray, hipMalloc3D, hipMalloc3DArray, hipHostAlloc, hipFree, hipFreeArray, hipMallocHost, hipHostFree, hipHostAlloc
  */
 hipError_t hipMallocHost(void** ptr, size_t size) __attribute__((deprecated("use hipHostMalloc instead"))) ;
 
@@ -803,7 +803,7 @@ hipError_t hipMallocHost(void** ptr, size_t size) __attribute__((deprecated("use
  *
  *  @return #hipSuccess, #hipErrorMemoryAllocation
  *
- *  @see hipSetDeviceFlags, hipMallocHost, hipFreeHost
+ *  @see hipSetDeviceFlags, hipMallocHost, hipHostFree
  */
 hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags) ;
 hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) __attribute__((deprecated("use hipHostMalloc instead"))) ;;
@@ -888,7 +888,7 @@ hipError_t hipHostUnregister(void* hostPtr) ;
  *  @param[in]  height Requested pitched allocation height
  *  @return Error code
  *
- *  @see hipMalloc, hipFree, hipMallocArray, hipFreeArray, hipMallocHost, hipFreeHost, hipMalloc3D, hipMalloc3DArray, hipHostAlloc
+ *  @see hipMalloc, hipFree, hipMallocArray, hipFreeArray, hipMallocHost, hipHostFree, hipMalloc3D, hipMalloc3DArray, hipHostAlloc
  */
 
 hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height);
@@ -902,23 +902,9 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
  *  @return #hipSuccess
  *  @return #hipErrorInvalidDevicePointer (if pointer is invalid, including host pointers allocated with hipHostMalloc)
  *
- *  @see hipMalloc, hipMallocPitch, hipMallocArray, hipFreeArray, hipMallocHost, hipFreeHost, hipMalloc3D, hipMalloc3DArray, hipHostAlloc
+ *  @see hipMalloc, hipMallocPitch, hipMallocArray, hipFreeArray, hipMallocHost, hipHostFree, hipMalloc3D, hipMalloc3DArray, hipHostAlloc
  */
 hipError_t hipFree(void* ptr);
-
-
-
-/**
- *  @brief Free memory allocated by the hcc hip host memory allocation API.  [Deprecated.]
- *
- *  @param[in] ptr Pointer to memory to be freed
- *  @return #hipSuccess,
- *          #hipErrorInvalidValue (if pointer is invalid, including device pointers allocated with hipMalloc)
-
- *  @see hipHostFree
- */
-hipError_t hipFreeHost(void* ptr) __attribute__((deprecated("use hipHostFree instead")))  ;
-
 
 /**
  *  @brief Free memory allocated by the hcc hip host memory allocation API
@@ -932,8 +918,6 @@ hipError_t hipFreeHost(void* ptr) __attribute__((deprecated("use hipHostFree ins
  *  @see hipMalloc, hipMallocPitch, hipFree, hipMallocArray, hipFreeArray, hipMallocHost, hipMalloc3D, hipMalloc3DArray, hipHostAlloc
  */
 hipError_t hipHostFree(void* ptr);
-
-
 
 /**
  *  @brief Copy data from src to dst.
