@@ -52,13 +52,20 @@ hipError_t hipGetDeviceCount(int *count)
 {
     HIP_INIT_API(count);
 
-    *count = g_deviceCnt;
+    hipError_t e = hipSuccess;
 
-    if (*count > 0) {
-        return ihipLogStatus(hipSuccess);
+    if(count != nullptr) {
+        *count = g_deviceCnt;
+
+        if (*count > 0) {
+            e = ihipLogStatus(hipSuccess);
+        } else {
+            e = ihipLogStatus(hipErrorNoDevice);
+        }
     } else {
-        return ihipLogStatus(hipErrorNoDevice);
+        e = ihipLogStatus(hipErrorNoDevice);
     }
+    return e;
 }
 
 hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig )
@@ -217,12 +224,16 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device)
 
     hipError_t e;
 
-    auto * hipDevice = ihipGetDevice(device);
-    if (hipDevice) {
+    if(props != nullptr){
+        auto * hipDevice = ihipGetDevice(device);
+        if (hipDevice) {
         // copy saved props
-        *props = hipDevice->_props;
-        e = hipSuccess;
-    } else {
+            *props = hipDevice->_props;
+            e = hipSuccess;
+        } else {
+            e = hipErrorInvalidDevice;
+        }
+    }else{
         e = hipErrorInvalidDevice;
     }
 
