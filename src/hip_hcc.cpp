@@ -1359,6 +1359,7 @@ bool ihipStream_t::canSeePeerMemory(const ihipCtx_t *thisCtx, ihipCtx_t *dstCtx,
     // Use blocks to control scope of critical sections.
     {
         LockedAccessor_CtxCrit_t  ctxCrit(dstCtx->criticalData());
+        tprintf(DB_SYNC, "dstCrit lock succeeded\n");
         if (!ctxCrit->isPeer(thisCtx)) {
             return false;
         };
@@ -1366,6 +1367,7 @@ bool ihipStream_t::canSeePeerMemory(const ihipCtx_t *thisCtx, ihipCtx_t *dstCtx,
 
     {
         LockedAccessor_CtxCrit_t  ctxCrit(srcCtx->criticalData());
+        tprintf(DB_SYNC, "srcCrit lock succeeded\n");
         if (!ctxCrit->isPeer(thisCtx)) {
             return false;
         };

@@ -109,6 +109,19 @@ extern const char *API_COLOR_END;
 #endif
 
 
+#define DB_SHOW_TID 1
+
+#if DB_SHOW_TID
+#define COMPUTE_TID_STR \
+    std::stringstream tid_ss;\
+    std::stringstream tid_ss_num;\
+    tid_ss_num << std::this_thread::get_id();\
+    tid_ss << " tid:" << std::hex << std::stoull(tid_ss_num.str());
+#else
+#define COMPUTE_TID_STR std::stringstream tid_ss;
+#endif
+
+
 // Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function boundary.
 // TODO - currently we print the trace message at the beginning. if we waited, we could also include return codes, and any values returned
 // through ptr-to-args (ie the pointers allocated by hipMalloc).
@@ -127,7 +140,8 @@ extern const char *API_COLOR_END;
     if (HIP_ATP_MARKER || (COMPILE_HIP_DB && HIP_TRACE_API)) {\
         std::string s = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
         if (COMPILE_HIP_DB && HIP_TRACE_API) {\
-            fprintf (stderr, "%s<<hip-api: %s\n%s" , API_COLOR, s.c_str(), API_COLOR_END);\
+            COMPUTE_TID_STR\
+            fprintf (stderr, "%s<<hip-api:%s %s\n%s" , API_COLOR, tid_ss.str().c_str(), s.c_str(), API_COLOR_END);\
         }\
         SCOPED_MARKER(s.c_str(), "HIP", NULL);\
     }\
@@ -185,12 +199,15 @@ static const char *dbName [] =
     KNRM "hip-copy2",
 };
 
+ 
+
 #if COMPILE_HIP_DB
 #define tprintf(trace_level, ...) {\
     if (HIP_DB & (1<<(trace_level))) {\
-        fprintf (stderr, "  %s:", dbName[trace_level]); \
-        fprintf (stderr, __VA_ARGS__);\
-        fprintf (stderr, "%s", KNRM); \
+        char msgStr[1000];\
+        snprintf(msgStr, 2000, __VA_ARGS__);\
+        COMPUTE_TID_STR\
+        fprintf (stderr, "  %s%s:%s%s", dbName[trace_level], tid_ss.str().c_str(), msgStr, KNRM); \
     }\
 }
 #else
@@ -261,18 +278,21 @@ public:
         _autoUnlock(autoUnlock)
 
     {
+        tprintf(DB_SYNC, "lock critical data %s.%p\n", typeid(T).name(), _criticalData);
         _criticalData->_mutex.lock();
     };
 
     ~LockedAccessor()
     {
         if (_autoUnlock) {
+        tprintf(DB_SYNC, "auto-unlock critical data %s.%p\n",typeid(T).name(),  _criticalData);
             _criticalData->_mutex.unlock();
         }
     }
 
     void unlock()
     {
+        tprintf(DB_SYNC, "unlock critical data %s.%p\n", typeid(T).name(), _criticalData);
        _criticalData->_mutex.unlock();
     }
 
