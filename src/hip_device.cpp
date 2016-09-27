@@ -33,11 +33,15 @@ hipError_t hipGetDevice(int *deviceId)
 
     auto ctx = ihipGetTlsDefaultCtx();
 
-    if (ctx == nullptr) {
-        e = hipErrorInvalidDevice; // TODO, check error code.
-        *deviceId = -1;
-    } else {
-        *deviceId = ctx->getDevice()->_deviceId;
+    if(deviceId != nullptr){
+        if (ctx == nullptr) {
+            e = hipErrorInvalidDevice; // TODO, check error code.
+            *deviceId = -1;
+        } else {
+            *deviceId = ctx->getDevice()->_deviceId;
+        }
+    }else{
+        e = hipErrorInvalidDevice;
     }
 
     return ihipLogStatus(e);
