@@ -1409,7 +1409,7 @@ unsigned ihipStream_t::resolveMemcpyDirection(bool srcTracked, bool dstTracked, 
 
 
 // TODO - remove kind parm from here or use it below?
-void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn)
+void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn)
 {
     ihipCtx_t *ctx = this->getCtx();
     const ihipDevice_t *device = ctx->getDevice();
@@ -1436,7 +1436,7 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
     };
 
 
-    // If this is P2P accessi, we need to check to see if the copy agent (specified by the stream where the copy is enqueued) 
+    // If this is P2P access, we need to check to see if the copy agent (specified by the stream where the copy is enqueued) 
     // has peer access enabled to both the source and dest.  If this is true, then the copy agent can see both pointers 
     // and we can perform the access with the copy engine from the current stream.  If not true, then we will copy through the host. (forceHostCopyEngine=true).
     bool forceHostCopyEngine = false;
@@ -1449,21 +1449,15 @@ void ihipStream_t::copySync(LockedAccessor_StreamCrit_t &crit, void* dst, const 
         }
     };
 
-    crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceHostCopyEngine);
+    {
+        LockedAccessor_StreamCrit_t crit (_criticalData);
+        crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceHostCopyEngine);
+    }
 }
 
 
-// Sync copy that acquires lock:
-void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn)
+void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind)
 {
-    LockedAccessor_StreamCrit_t crit (_criticalData);
-    copySync(crit, dst, src, sizeBytes, kind, resolveOn);
-}
-
-
-void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind)
-{
-    LockedAccessor_StreamCrit_t crit(_criticalData);
 
     const ihipCtx_t *ctx = this->getCtx();
 
@@ -1478,12 +1472,12 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsig
         /* As this is a CPU op, we need to wait until all
         the commands in current stream are finished.
         */
+        LockedAccessor_StreamCrit_t crit(_criticalData);
         this->wait(crit);
 
         memcpy(dst, src, sizeBytes);
 
     } else {
-        bool trueAsync = true;
 
         hc::accelerator acc;
         hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
@@ -1498,17 +1492,12 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsig
         }
 
 
-
-
         // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.
         // If both pointers are not tracked, we need to fall back to a sync copy.
-        if (!dstTracked || !srcTracked || !copyEngineCanSeeSrcAndDest) {
-            trueAsync = false;
-        }
+        if (dstTracked && srcTracked && copyEngineCanSeeSrcAndDest) {
+            LockedAccessor_StreamCrit_t crit(_criticalData);
 
-
-        if (trueAsync == true) {
-            // Perform a synchronous copy:
+            // Perform asynchronous copy:
             try {
                 crit->_av.copy_async(src, dst, sizeBytes);
             } catch (Kalmar::runtime_exception) {
@@ -1520,12 +1509,9 @@ void ihipStream_t::copyAsync(void* dst, const void* src, size_t sizeBytes, unsig
                 tprintf(DB_SYNC, "LAUNCH_BLOCKING for completion of hipMemcpyAsync(%zu)\n", sizeBytes);
                 this->wait(crit);
             } 
+
         } else {
-            // Perform a synchronous copy:
-            if (kind == hipMemcpyDefault) {
-                kind = resolveMemcpyDirection(srcTracked, dstTracked, srcPtrInfo._isInDeviceMem, dstPtrInfo._isInDeviceMem);
-            }
-            copySync(crit, dst, src, sizeBytes, kind);
+            locked_copySync(dst, src, sizeBytes, kind);
         }
     }
 }
