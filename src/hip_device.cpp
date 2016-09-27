@@ -155,6 +155,8 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
 
     hipError_t e = hipSuccess;
 
+    if(pi != nullptr) {
+
     auto * hipDevice = ihipGetDevice(device);
     hipDeviceProp_t *prop = &hipDevice->_props;
     if (hipDevice) {
@@ -213,6 +215,9 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
             e = hipErrorInvalidValue; break;
         }
     } else {
+        e = hipErrorInvalidDevice;
+    }
+    }else{
         e = hipErrorInvalidDevice;
     }
     return ihipLogStatus(e);
