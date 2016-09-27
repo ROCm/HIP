@@ -31,6 +31,8 @@ THE SOFTWARE.
 #include<thread>
 #define N 1000
 
+
+
 template<typename T>
 __global__ void Inc(hipLaunchParm lp, T *Array){
 int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
@@ -90,7 +92,10 @@ void run(size_t size, hipStream_t stream1, hipStream_t stream2){
 	HIPASSERT(Ehh[10] = Ahh[10] + 1.0f);
 }
 
-int main(int argc, char **argv){
+int main(int argc, char **argv)
+{
+    iterations = 100;
+
 	HipTest::parseStandardArguments(argc, argv, true);
 
 
@@ -100,6 +105,8 @@ int main(int argc, char **argv){
 	}
 
 	const size_t size = N * sizeof(float);
+    
+    for (int i=0; i< iterations; i++) {
 
 	std::thread t1(run1, size, stream[0]);
 	std::thread t2(run1, size, stream[0]);
@@ -109,6 +116,7 @@ int main(int argc, char **argv){
 	t2.join();
 //	std::cout<<"T2"<<std::endl;
 	t3.join(); 
+    }
 	passed();
 }
 
