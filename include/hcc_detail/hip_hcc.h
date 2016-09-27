@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Link errors represented as this:Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -371,10 +371,17 @@ public:
 };
 
 
+// if HIP code needs to acquire locks for both ihipCtx_t and ihipStream_t, it should first acquire the lock
+// for the ihipCtx_t and then for the individual streams.  The locks should not be acquired in reverse order
+// or deadlock may occur.  In some cases, it may be possible to reduce the range where the locks must be held.
+// HIP routines should avoid acquiring and releasing the same lock during the execution of a single HIP API.
+
+
 typedef ihipStreamCriticalBase_t<StreamMutex> ihipStreamCritical_t;
 typedef LockedAccessor<ihipStreamCritical_t> LockedAccessor_StreamCrit_t;
 
 
+//---
 // Internal stream structure.
 class ihipStream_t {
 public:
@@ -383,11 +390,10 @@ typedef uint64_t SeqNum_t ;
     ~ihipStream_t();
 
     // kind is hipMemcpyKind
-    void copySync (LockedAccessor_StreamCrit_t &crit, void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn = true);
     void locked_copySync (void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn = true);
 
 
-    void copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind);
+    void locked_copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind);
 
 
     //---

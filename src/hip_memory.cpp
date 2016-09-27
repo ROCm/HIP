@@ -508,7 +508,7 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
         e= hipErrorInvalidValue;
     } else if (stream) {
         try {
-            stream->copyAsync(dst, src, sizeBytes, kind);
+            stream->locked_copyAsync(dst, src, sizeBytes, kind);
         }
         catch (ihipException ex) {
             e = ex._code;
@@ -534,7 +534,7 @@ hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, void* src, size_t sizeBytes, h
         e= hipErrorInvalidValue;
     } else if (stream) {
         try {
-            stream->copyAsync((void*)dst, src, sizeBytes, kind);
+            stream->locked_copyAsync((void*)dst, src, sizeBytes, kind);
         }
         catch (ihipException ex) {
             e = ex._code;
@@ -561,7 +561,7 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
         e= hipErrorInvalidValue;
     } else if (stream) {
         try {
-            stream->copyAsync((void*)dst, (void*)src, sizeBytes, kind);
+            stream->locked_copyAsync((void*)dst, (void*)src, sizeBytes, kind);
         }
         catch (ihipException ex) {
             e = ex._code;
@@ -587,7 +587,7 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
         e= hipErrorInvalidValue;
     } else if (stream) {
         try {
-            stream->copyAsync(dst, (void*)src, sizeBytes, kind);
+            stream->locked_copyAsync(dst, (void*)src, sizeBytes, kind);
         }
         catch (ihipException ex) {
             e = ex._code;
