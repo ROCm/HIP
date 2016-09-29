@@ -50,6 +50,12 @@ hipMemcpyHostToHost
 } hipTextureFilterMode;*/
 #define hipFilterModePoint cudaFilterModePoint
 
+//! Flags that can be used with hipEventCreateWithFlags:
+#define hipEventDefault             cudaEventDefault
+#define hipEventBlockingSync        cudaEventBlockingSync
+#define hipEventDisableTiming       cudaEventDisableTiming
+#define hipEventInterprocess        cudaEventInterprocess
+
 #define hipHostMallocDefault cudaHostAllocDefault
 #define hipHostMallocPortable cudaHostAllocPortable
 #define hipHostMallocMapped cudaHostAllocMapped
@@ -230,13 +236,13 @@ inline static hipError_t hipChooseDevice( int* device, const hipDeviceProp_t* pr
     return hipCUDAErrorTohipError(cudaChooseDevice(device,&cdprop));
 }
 
-inline static hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, 
+inline static hipError_t hipMemcpyHtoD(hipDeviceptr_t dst,
                   void* src, size_t size)
 {
     return hipCUResultTohipError(cuMemcpyHtoD(dst, src, size));
 }
 
-inline static hipError_t hipMemcpyDtoH(void* dst, 
+inline static hipError_t hipMemcpyDtoH(void* dst,
                   hipDeviceptr_t src, size_t size)
 {
     return hipCUResultTohipError(cuMemcpyDtoH(dst, src, size));
@@ -248,13 +254,13 @@ inline static hipError_t hipMemcpyDtoD(hipDeviceptr_t dst,
     return hipCUResultTohipError(cuMemcpyDtoD(dst, src, size));
 }
 
-inline static hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, 
+inline static hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst,
                   void* src, size_t size, hipStream_t stream)
 {
     return hipCUResultTohipError(cuMemcpyHtoDAsync(dst, src, size, stream));
 }
 
-inline static hipError_t hipMemcpyDtoHAsync(void* dst, 
+inline static hipError_t hipMemcpyDtoHAsync(void* dst,
                   hipDeviceptr_t src, size_t size, hipStream_t stream)
 {
     return hipCUResultTohipError(cuMemcpyDtoH(dst, src, size));
@@ -747,7 +753,7 @@ inline static hipError_t hipModuleLaunchKernel(hipFunction_t f,
       unsigned int sharedMemBytes, hipStream_t stream,
       void **kernelParams, void **extra)
 {
-    return hipCUResultTohipError(cuLaunchKernel(f, 
+    return hipCUResultTohipError(cuLaunchKernel(f,
                     gridDimX, gridDimY, gridDimZ,
                     blockDimX, blockDimY, blockDimZ,
                     sharedMemBytes, stream, kernelParams, extra));
