@@ -145,6 +145,9 @@ add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 #############################
 # Build steps
 #############################
+# Rebuild cmake cache updates .buildInfo and .version
+add_custom_target(update_build_and_version_info ALL COMMAND make rebuild_cache)
+
 # Build clang hipify if enabled
 if(BUILD_CLANG_HIPIFY)
     add_subdirectory(clang-hipify)
@@ -191,6 +194,13 @@ if(HIP_PLATFORM STREQUAL "hcc")
     else()
         add_library(hip_hcc SHARED ${SOURCE_FILES})
     endif()
+
+    # Generate hcc_version.txt
+    add_custom_target(query_hcc_version COMMAND ${HCC_HOME}/bin/hcc --version > ${PROJECT_BINARY_DIR}/hcc_version.tmp)
+    add_custom_target(check_hcc_version COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PROJECT_BINARY_DIR}/hcc_version.tmp ${PROJECT_BINARY_DIR}/hcc_version.txt DEPENDS query_hcc_version)
+    set_source_files_properties(${PROJECT_BINARY_DIR}/hcc_version.txt PROPERTIES GENERATED TRUE)
+    set_source_files_properties(${SOURCE_FILES} PROPERTIES OBJECT_DEPENDS ${PROJECT_BINARY_DIR}/hcc_version.txt)
+    add_dependencies(hip_hcc check_hcc_version update_build_and_version_info)
 
     # Generate .buildInfo
     file(WRITE "${PROJECT_BINARY_DIR}/.buildInfo" ${_buildInfo})
