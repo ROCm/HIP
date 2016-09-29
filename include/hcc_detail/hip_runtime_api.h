@@ -1083,7 +1083,7 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes );
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
  */
 #if __cplusplus
-hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t = 0 );
+hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t stream = 0 );
 #else
 hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream);
 #endif
