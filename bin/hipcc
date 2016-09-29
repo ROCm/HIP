@@ -152,7 +152,7 @@ if ($HIP_PLATFORM eq "hcc") {
     $HIPCC="$CUDA_PATH/bin/nvcc";
     $HIPCXXFLAGS .= " -I$CUDA_PATH/include";
 
-    $HIPLDFLAGS = "-lcuda -lcudart";
+    $HIPLDFLAGS = "-lcuda -lcudart -L$CUDA_PATH/lib64";
 } else {
     printf ("error: unknown HIP_PLATFORM = '$HIP_PLATFORM'");
     exit (-1);
