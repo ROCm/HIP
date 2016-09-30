@@ -17,6 +17,11 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD: %t %s ../../test_common.cpp
+ * HIT_END
+ */
+
 #include<iostream>
 #include"test_common.h"
 

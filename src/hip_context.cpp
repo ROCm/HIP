@@ -79,12 +79,29 @@ hipError_t hipDeviceGet(hipDevice_t *device, int deviceId)
 hipError_t hipDriverGetVersion(int *driverVersion)
 {
     HIP_INIT_API(driverVersion);
-
+    hipError_t e = hipSuccess;
     if (driverVersion) {
         *driverVersion = 4;
     }
+    else {
+        e = hipErrorInvalidValue;
+    }
 
-    return ihipLogStatus(hipSuccess);
+    return ihipLogStatus(e);
+}
+
+hipError_t hipRuntimeGetVersion(int *runtimeVersion)
+{
+    HIP_INIT_API(runtimeVersion);
+    hipError_t e = hipSuccess;
+    if (runtimeVersion) {
+        *runtimeVersion = HIP_VERSION_PATCH;
+    }
+    else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
 }
 
 hipError_t hipCtxDestroy(hipCtx_t ctx)

@@ -33,10 +33,13 @@ THE SOFTWARE.
 
 
 //#include <cstring>
+#if __cplusplus
 #include <cmath>
+#else
+#include <math.h>
 #include <string.h>
 #include <stddef.h>
-
+#endif
 // Define NVCC_COMPAT for CUDA compatibility
 #define NVCC_COMPAT
 #define CUDA_SUCCESS hipSuccess
@@ -493,6 +496,13 @@ __device__ float __dsqrt_rd(double x);
 __device__ float __dsqrt_rn(double x);
 __device__ float __dsqrt_ru(double x);
 __device__ float __dsqrt_rz(double x);
+
+/**
+ * CUDA 8 device function features
+
+ */
+
+
 /**
  * Kernel launching
  */

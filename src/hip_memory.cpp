@@ -104,7 +104,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
     if (sizeBytes == 0)
     {
         *ptr = NULL;
-        return ihipLogStatus(hip_status);
+        return ihipLogStatus(hipSuccess);
     }
    
     auto ctx = ihipGetTlsDefaultCtx();
@@ -170,20 +170,6 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
         }
     }
     return ihipLogStatus(hip_status);
-}
-
-//---
-// TODO - remove me, this is deprecated.
-hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags)
-{
-    return hipHostMalloc(ptr, sizeBytes, flags);
-};
-
-//---
-// TODO - remove me, this is deprecated.
-hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
-{
-    return hipHostMalloc(ptr, sizeBytes, 0);
 }
 
 // width in bytes
@@ -522,7 +508,7 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
         e= hipErrorInvalidValue;
     } else if (stream) {
         try {
-            stream->copyAsync(dst, src, sizeBytes, kind);
+            stream->locked_copyAsync(dst, src, sizeBytes, kind);
         }
         catch (ihipException ex) {
             e = ex._code;
@@ -548,7 +534,7 @@ hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, void* src, size_t sizeBytes, h
         e= hipErrorInvalidValue;
     } else if (stream) {
         try {
-            stream->copyAsync((void*)dst, src, sizeBytes, kind);
+            stream->locked_copyAsync((void*)dst, src, sizeBytes, kind);
         }
         catch (ihipException ex) {
             e = ex._code;
@@ -575,7 +561,7 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
         e= hipErrorInvalidValue;
     } else if (stream) {
         try {
-            stream->copyAsync((void*)dst, (void*)src, sizeBytes, kind);
+            stream->locked_copyAsync((void*)dst, (void*)src, sizeBytes, kind);
         }
         catch (ihipException ex) {
             e = ex._code;
@@ -601,7 +587,7 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
         e= hipErrorInvalidValue;
     } else if (stream) {
         try {
-            stream->copyAsync(dst, (void*)src, sizeBytes, kind);
+            stream->locked_copyAsync(dst, (void*)src, sizeBytes, kind);
         }
         catch (ihipException ex) {
             e = ex._code;
@@ -613,6 +599,7 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
     return ihipLogStatus(e);
 }
 
+// TODO - review and optimize
 hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
         size_t width, size_t height, hipMemcpyKind kind) {
 
@@ -785,7 +772,7 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
             }
         }
 
-        stream->lockclose_postKernelCommand(cf);
+        stream->lockclose_postKernelCommand(&crit->_av);
 
 
         if (HIP_LAUNCH_BLOCKING) {
@@ -835,9 +822,10 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
                 e = hipErrorInvalidValue;
             }
         }
+        // TODO - is hipMemset supposed to be async?
         cf.wait();
 
-        stream->lockclose_postKernelCommand(cf);
+        stream->lockclose_postKernelCommand(&crit->_av);
 
 
         if (HIP_LAUNCH_BLOCKING) {
@@ -864,6 +852,9 @@ hipError_t hipMemGetInfo  (size_t *free, size_t *total)
         if (total) {
             *total = device->_props.totalGlobalMem;
         }
+        else {
+             e = hipErrorInvalidValue;
+        }
 
         if (free) {
             // TODO - replace with kernel-level for reporting free memory:
@@ -871,6 +862,9 @@ hipError_t hipMemGetInfo  (size_t *free, size_t *total)
             hc::am_memtracker_sizeinfo(device->_acc, &deviceMemSize, &hostMemSize, &userMemSize);
 
             *free =  device->_props.totalGlobalMem - deviceMemSize;
+        }
+        else {
+             e = hipErrorInvalidValue;
         }
 
     } else {
@@ -933,12 +927,6 @@ hipError_t hipHostFree(void* ptr)
 
     return ihipLogStatus(hipStatus);
 };
-
-// TODO - deprecated function.
-hipError_t hipFreeHost(void* ptr)
-{
-    return hipHostFree(ptr);
-}
 
 hipError_t hipFreeArray(hipArray* array)
 {

@@ -32,11 +32,11 @@ THE SOFTWARE.
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
-#if __cplusplus
+#if __HCC__
 #include <hc_short_vector.hpp>
 
 using namespace hc::short_vector;
-#endif
+
 
 //-- Signed
 // Define char vector types
@@ -114,6 +114,151 @@ typedef hc::short_vector::double1 double1;
 typedef hc::short_vector::double2 double2;
 typedef hc::short_vector::double3 double3;
 typedef hc::short_vector::double4 double4;
+
+#else
+
+#define __hip_align(name, val, data) \
+    __attribute__((aligned(val))) name \
+    { data }
+
+struct __hip_align(char1, 1, signed char x;);
+struct __hip_align(uchar1, 1, unsigned char x;);
+
+struct __hip_align(char2, 2, signed char x; signed char y;);
+struct __hip_align(uchar2, 2, unsigned char x; unsigned char y;);
+
+struct char3
+{
+    signed char x, y, z;
+};
+
+struct uchar3
+{
+    unsigned char x, y, z;
+};
+
+struct __hip_align(char4, 4, signed char x; signed char y; signed char z; signed char w;);
+struct __hip_align(uchar4, 4, unsigned char x; unsigned char y; unsigned char z; unsigned char w;);
+
+struct __hip_align(short1, 2, signed short x;);
+struct __hip_align(ushort1, 2, unsigned short x;);
+
+struct __hip_align(short2, 4, signed short x; signed short y;);
+struct __hip_align(ushort2, 4, unsigned short x; unsigned short y;);
+
+struct short3
+{
+    signed short x, y, z;
+};
+
+struct ushort3
+{
+    unsigned short x, y, z;
+};
+
+struct __hip_align(short4, 8, signed short x; signed short y; signed short z; signed short w;);
+struct __hip_align(ushort4, 8, unsigned short x; unsigned short y; unsigned short z; unsigned short w;);
+
+struct __hip_align(int1, 4, signed int x;);
+struct __hip_align(uint1, 4, unsigned int x;);
+
+struct __hip_align(int2, 8, signed int x; signed int y;);
+struct __hip_align(uint2, 8, unsigned int x; unsigned int y;);
+
+struct int3{
+    signed int x, y, z;
+};
+struct uint3{
+    unsigned int x, y, z;
+};
+
+struct __hip_align(int4, 16, signed int x; signed int y; signed int z; signed int w;);
+struct __hip_align(uint4, 16, unsigned int x; unsigned int y; unsigned int z; unsigned int w;);
+
+struct __hip_align(long1, 8, long int x;);
+struct __hip_align(ulong1, 8, unsigned long x;);
+
+struct __hip_align(long2, 16, long int x; long int y;);
+struct __hip_align(ulong2, 16, unsigned long x; unsigned long y;);
+
+struct long3{
+    long int x, y, z;
+};
+struct ulong3{
+    unsigned long x, y, z;
+};
+
+struct __hip_align(long4, 32, long int x; long int y; long int z; long int w;);
+struct __hip_align(ulong4, 32, unsigned long x; unsigned long y; unsigned long z; unsigned long w;);
+
+struct float1
+{
+    float x;
+};
+
+struct __hip_align(float2, 8, float x; float y;);
+
+struct float3
+{
+    float x, y, z;
+};
+
+struct __hip_align(float4, 16, float x; float y; float z; float w;);
+
+struct __hip_align(longlong1, 16, long long int x;);
+struct __hip_align(ulonglong1, 16, unsigned long long int x;);
+
+struct __attribute__((aligned(32))) longlong2
+{
+    long long int x, y;
+};
+
+struct __attribute__((aligned(32))) ulonglong2
+{
+    unsigned long long int x, y;
+};
+
+struct longlong3
+{
+    long long int x, y, z;
+};
+
+struct ulonglong3
+{
+    unsigned long long int x, y, z;
+};
+
+struct __attribute__((aligned(64))) longlong4
+{
+    long long int x, y, z, w;
+};
+
+struct __attribute__((aligned(64))) ulonglong4
+{
+    unsigned long long int x, y, z, w;
+};
+
+struct double1
+{
+    double x;
+};
+
+struct __attribute__((aligned(16))) double2
+{
+    double x, y;
+};
+
+struct double3
+{
+    double x, y, z;
+};
+
+struct __attribute__((aligned(32))) double4
+{
+    double x, y, z, w;
+};
+
+#endif
 
 #if __HCC__
 #include"hip/hcc_detail/host_defines.h"

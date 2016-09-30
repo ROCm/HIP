@@ -60,6 +60,7 @@ parse_config_file("$HIP_PATH/lib/.buildInfo", \%hipConfig);
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
 $HIP_PLATFORM= `$HIP_PATH/bin/hipconfig --platform` // "hcc";
 $HIP_VERSION= `$HIP_PATH/bin/hipconfig --version`;
+($HIP_VERSION_MAJOR, $HIP_VERSION_MINOR, $HIP_VERSION_PATCH) = split(/\./, $HIP_VERSION);
 
 if ($verbose & 0x2) {
     print ("HIP_PATH=$HIP_PATH\n");
@@ -151,14 +152,14 @@ if ($HIP_PLATFORM eq "hcc") {
     $HIPCC="$CUDA_PATH/bin/nvcc";
     $HIPCXXFLAGS .= " -I$CUDA_PATH/include";
 
-    $HIPLDFLAGS = "-lcuda -lcudart";
+    $HIPLDFLAGS = "-lcuda -lcudart -L$CUDA_PATH/lib64";
 } else {
     printf ("error: unknown HIP_PLATFORM = '$HIP_PLATFORM'");
     exit (-1);
 }
 
 # Add paths to common HIP includes:
-$HIPCXXFLAGS .= " -I$HIP_PATH/include" ;
+$HIPCXXFLAGS .= " -I$HIP_PATH/include -DHIP_VERSION_MAJOR=$HIP_VERSION_MAJOR -DHIP_VERSION_MINOR=$HIP_VERSION_MINOR -DHIP_VERSION_PATCH=$HIP_VERSION_PATCH" ;
 
 my $compileOnly = 0;
 my $needCXXFLAGS = 0;  # need to add CXX flags to compile step
@@ -224,12 +225,12 @@ foreach $arg (@ARGV)
         $needLDFLAGS = 1;
     }
 
-    if($arg eq '-stdlib=libc++' and $setStdLib eq 0)
+    if(($arg eq '-stdlib=libc++') and ($setStdLib eq 0))
     {
         $HIPCXXFLAGS .= " -stdlib=libc++";
         $setStdLib = 1;
     }
-    if($arg eq '-stdlib=libstdc++' and $setStdLib eq 0)
+    if(($arg eq '-stdlib=libstdc++') and ($setStdLib eq 0))
     {
         $HIPCXXFLAGS .= " -stdlib=libstdc++";
         $setStdLib = 1;
@@ -296,7 +297,7 @@ if ($needHipHcc) {
     $HIP_LIB_TYPE = $hipConfig{'HIP_LIB_TYPE'} // 0;
 
     if ($HIP_LIB_TYPE eq 0) {
-        $HIPLDFLAGS .= " $HIP_PATH/lib/device_util.cpp.o $HIP_PATH/lib/hip_device.cpp.o $HIP_PATH/lib/hip_error.cpp.o $HIP_PATH/lib/hip_event.cpp.o $HIP_PATH/lib/hip_hcc.cpp.o $HIP_PATH/lib/hip_memory.cpp.o $HIP_PATH/lib/hip_peer.cpp.o $HIP_PATH/lib/hip_stream.cpp.o $HIP_PATH/lib/unpinned_copy_engine.cpp.o $HIP_PATH/lib/hip_ldg.cpp.o $HIP_PATH/lib/hip_fp16.cpp.o $HIP_PATH/lib/hip_context.cpp.o $HIP_PATH/lib/hip_module.cpp.o";
+        $HIPLDFLAGS .= " $HIP_PATH/lib/device_util.cpp.o $HIP_PATH/lib/hip_device.cpp.o $HIP_PATH/lib/hip_error.cpp.o $HIP_PATH/lib/hip_event.cpp.o $HIP_PATH/lib/hip_hcc.cpp.o $HIP_PATH/lib/hip_memory.cpp.o $HIP_PATH/lib/hip_peer.cpp.o $HIP_PATH/lib/hip_stream.cpp.o $HIP_PATH/lib/hip_ldg.cpp.o $HIP_PATH/lib/hip_fp16.cpp.o $HIP_PATH/lib/hip_context.cpp.o $HIP_PATH/lib/hip_module.cpp.o";
     } elsif ($HIP_LIB_TYPE eq 1) {
         $HIPLDFLAGS .= " -L$HIP_PATH/lib -lhip_hcc" ;
     } else {
@@ -332,7 +333,7 @@ if ($printHipVersion) {
 }
 if ($runCmd) {
     if ($HIP_PLATFORM eq "hcc" and exists($hipConfig{'HCC_VERSION'}) and $HCC_VERSION ne $hipConfig{'HCC_VERSION'}) {
-        print ("HIP was built using $hipConfig{'HCC_VERSION'}, but you are using $HCC_VERSION. Please rebuild HIP.\n") && die ();
+        print ("HIP ($HIP_PATH) was built using hcc $hipConfig{'HCC_VERSION'}, but you are using hcc $HCC_VERSION. Please rebuild HIP including cmake.\n") && die ();
     }
     system ("$CMD") and die ();
 }

@@ -193,9 +193,15 @@ macro(HIP_GET_SOURCES_AND_OPTIONS _sources _cmake_options _hipcc_options _hcc_op
     foreach(arg ${ARGN})
         if("x${arg}" STREQUAL "xHIPCC_OPTIONS")
             set(_hipcc_found_options TRUE)
+            set(_hcc_found_options FALSE)
+            set(_nvcc_found_options FALSE)
         elseif("x${arg}" STREQUAL "xHCC_OPTIONS")
+            set(_hipcc_found_options FALSE)
             set(_hcc_found_options TRUE)
+            set(_nvcc_found_options FALSE)
         elseif("x${arg}" STREQUAL "xNVCC_OPTIONS")
+            set(_hipcc_found_options FALSE)
+            set(_hcc_found_options FALSE)
             set(_nvcc_found_options TRUE)
         elseif(
                 "x${arg}" STREQUAL "xEXCLUDE_FROM_ALL" OR
@@ -235,9 +241,9 @@ endmacro()
 function(HIP_COMPUTE_BUILD_PATH path build_path)
     # Convert to cmake style paths
     file(TO_CMAKE_PATH "${path}" bpath)
-    if (IS_ABSOLUTE "${bpath}")
+    if(IS_ABSOLUTE "${bpath}")
         string(FIND "${bpath}" "${CMAKE_CURRENT_BINARY_DIR}" _binary_dir_pos)
-        if (_binary_dir_pos EQUAL 0)
+        if(_binary_dir_pos EQUAL 0)
             file(RELATIVE_PATH bpath "${CMAKE_CURRENT_BINARY_DIR}" "${bpath}")
         else()
             file(RELATIVE_PATH bpath "${CMAKE_CURRENT_SOURCE_DIR}" "${bpath}")
@@ -316,7 +322,7 @@ endmacro()
 ###############################################################################
 # MACRO: Prepare cmake commands for the target
 ###############################################################################
-macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files)
+macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files _source_files)
     set(_hip_flags "")
     set(_hip_build_configuration "${CMAKE_BUILD_TYPE}")
     if(HIP_HOST_COMPILATION_CPP)
@@ -378,6 +384,7 @@ macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files)
 
     # Reset the output variable
     set(_hip_generated_files "")
+    set(_hip_source_files "")
 
     # Iterate over all arguments and create custom commands for all source files
     foreach(file ${ARGN})
@@ -391,77 +398,79 @@ macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files)
             set(host_flag TRUE)
         endif()
 
-        if (NOT host_flag)
-        # Determine output directory
-        HIP_COMPUTE_BUILD_PATH("${file}" hip_build_path)
-        set(hip_compile_output_dir "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${_target}.dir/${hip_build_path}")
+        if(NOT host_flag)
+            # Determine output directory
+            HIP_COMPUTE_BUILD_PATH("${file}" hip_build_path)
+            set(hip_compile_output_dir "${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/${_target}.dir/${hip_build_path}")
 
-        get_filename_component(basename ${file} NAME)
-        set(generated_file_path "${hip_compile_output_dir}/${CMAKE_CFG_INTDIR}")
-        set(generated_file_basename "${_target}_generated_${basename}${generated_extension}")
+            get_filename_component(basename ${file} NAME)
+            set(generated_file_path "${hip_compile_output_dir}/${CMAKE_CFG_INTDIR}")
+            set(generated_file_basename "${_target}_generated_${basename}${generated_extension}")
 
-        # Set file names
-        set(generated_file "${generated_file_path}/${generated_file_basename}")
-        set(cmake_dependency_file "${hip_compile_output_dir}/${generated_file_basename}.depend")
-        set(custom_target_script_pregen "${hip_compile_output_dir}/${generated_file_basename}.cmake.pre-gen")
-        set(custom_target_script "${hip_compile_output_dir}/${generated_file_basename}.cmake")
+            # Set file names
+            set(generated_file "${generated_file_path}/${generated_file_basename}")
+            set(cmake_dependency_file "${hip_compile_output_dir}/${generated_file_basename}.depend")
+            set(custom_target_script_pregen "${hip_compile_output_dir}/${generated_file_basename}.cmake.pre-gen")
+            set(custom_target_script "${hip_compile_output_dir}/${generated_file_basename}.cmake")
 
-        # Set properties for object files
-        set_source_files_properties("${generated_file}"
-            PROPERTIES
-            EXTERNAL_OBJECT true # This is an object file not to be compiled, but only be linked
-            )
+            # Set properties for object files
+            set_source_files_properties("${generated_file}"
+                PROPERTIES
+                EXTERNAL_OBJECT true # This is an object file not to be compiled, but only be linked
+                )
 
-        # Don't add CMAKE_CURRENT_SOURCE_DIR if the path is already an absolute path
-        get_filename_component(file_path "${file}" PATH)
-        if(IS_ABSOLUTE "${file_path}")
-            set(source_file "${file}")
-        else()
-            set(source_file "${CMAKE_CURRENT_SOURCE_DIR}/${file}")
-        endif()
+            # Don't add CMAKE_CURRENT_SOURCE_DIR if the path is already an absolute path
+            get_filename_component(file_path "${file}" PATH)
+            if(IS_ABSOLUTE "${file_path}")
+                set(source_file "${file}")
+            else()
+                set(source_file "${CMAKE_CURRENT_SOURCE_DIR}/${file}")
+            endif()
 
-        # Bring in the dependencies
-        HIP_INCLUDE_HIPCC_DEPENDENCIES(${cmake_dependency_file})
+            # Bring in the dependencies
+            HIP_INCLUDE_HIPCC_DEPENDENCIES(${cmake_dependency_file})
 
-        # Configure the build script
-        configure_file("${HIP_run_hipcc}" "${custom_target_script_pregen}" @ONLY)
-        file(GENERATE
-            OUTPUT "${custom_target_script}"
-            INPUT "${custom_target_script_pregen}"
-            )
-        set(main_dep DEPENDS ${source_file})
-        set(verbose_output "$(VERBOSE)")
+            # Configure the build script
+            configure_file("${HIP_run_hipcc}" "${custom_target_script_pregen}" @ONLY)
+            file(GENERATE
+                OUTPUT "${custom_target_script}"
+                INPUT "${custom_target_script_pregen}"
+                )
+            set(main_dep DEPENDS ${source_file})
+            set(verbose_output "$(VERBOSE)")
 
-        # Create up the comment string
-        file(RELATIVE_PATH generated_file_relative_path "${CMAKE_BINARY_DIR}" "${generated_file}")
-        set(hip_build_comment_string "Building HIPCC object ${generated_file_relative_path}")
+            # Create up the comment string
+            file(RELATIVE_PATH generated_file_relative_path "${CMAKE_BINARY_DIR}" "${generated_file}")
+            set(hip_build_comment_string "Building HIPCC object ${generated_file_relative_path}")
 
-        # Build the generated file and dependency file
-        add_custom_command(
-            OUTPUT ${generated_file}
-            # These output files depend on the source_file and the contents of cmake_dependency_file
-            ${main_dep}
-            DEPENDS ${HIP_HIPCC_DEPEND}
-            DEPENDS ${custom_target_script}
-            # Make sure the output directory exists before trying to write to it.
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${generated_file_path}"
-            COMMAND ${CMAKE_COMMAND} ARGS
-            -D verbose:BOOL=${verbose_output}
-            -D build_configuration:STRING=${_hip_build_configuration}
-            -D "generated_file:STRING=${generated_file}"
-            -P "${custom_target_script}"
-            WORKING_DIRECTORY "${hip_compile_output_dir}"
-            COMMENT "${hip_build_comment_string}"
-            )
+            # Build the generated file and dependency file
+            add_custom_command(
+                OUTPUT ${generated_file}
+                # These output files depend on the source_file and the contents of cmake_dependency_file
+                ${main_dep}
+                DEPENDS ${HIP_HIPCC_DEPEND}
+                DEPENDS ${custom_target_script}
+                # Make sure the output directory exists before trying to write to it.
+                COMMAND ${CMAKE_COMMAND} -E make_directory "${generated_file_path}"
+                COMMAND ${CMAKE_COMMAND} ARGS
+                -D verbose:BOOL=${verbose_output}
+                -D build_configuration:STRING=${_hip_build_configuration}
+                -D "generated_file:STRING=${generated_file}"
+                -P "${custom_target_script}"
+                WORKING_DIRECTORY "${hip_compile_output_dir}"
+                COMMENT "${hip_build_comment_string}"
+                )
 
-        # Make sure the build system knows the file is generated
-        set_source_files_properties(${generated_file} PROPERTIES GENERATED TRUE)
-        list(APPEND _hip_generated_files ${generated_file})
+            # Make sure the build system knows the file is generated
+            set_source_files_properties(${generated_file} PROPERTIES GENERATED TRUE)
+            list(APPEND _hip_generated_files ${generated_file})
+            list(APPEND _hip_source_files ${file})
         endif()
     endforeach()
 
     # Set the return parameter
     set(${_generated_files} ${_hip_generated_files})
+    set(${_source_files} ${_hip_source_files})
 endmacro()
 
 ###############################################################################
@@ -470,7 +479,8 @@ endmacro()
 macro(HIP_ADD_EXECUTABLE hip_target)
     # Separate the sources from the options
     HIP_GET_SOURCES_AND_OPTIONS(_sources _cmake_options _hipcc_options _hcc_options _nvcc_options ${ARGN})
-    HIP_PREPARE_TARGET_COMMANDS(${hip_target} OBJ _generated_files ${_sources} HIPCC_OPTIONS ${_hipcc_options} HCC_OPTIONS ${_hcc_options} NVCC_OPTIONS ${_nvcc_options})
+    HIP_PREPARE_TARGET_COMMANDS(${hip_target} OBJ _generated_files _source_files ${_sources} HIPCC_OPTIONS ${_hipcc_options} HCC_OPTIONS ${_hcc_options} NVCC_OPTIONS ${_nvcc_options})
+    list(REMOVE_ITEM _sources ${_source_files})
     set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_EXECUTABLE} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET>")
     add_executable(${hip_target} ${_cmake_options} ${_generated_files} ${_sources})
     set_target_properties(${hip_target} PROPERTIES LINKER_LANGUAGE HIP)
@@ -482,7 +492,8 @@ endmacro()
 macro(HIP_ADD_LIBRARY hip_target)
     # Separate the sources from the options
     HIP_GET_SOURCES_AND_OPTIONS(_sources _cmake_options _hipcc_options _hcc_options _nvcc_options ${ARGN})
-    HIP_PREPARE_TARGET_COMMANDS(${hip_target} OBJ _generated_files ${_sources} ${_cmake_options} HIPCC_OPTIONS ${_hipcc_options} HCC_OPTIONS ${_hcc_options} NVCC_OPTIONS ${_nvcc_options})
+    HIP_PREPARE_TARGET_COMMANDS(${hip_target} OBJ _generated_files _source_files ${_sources} ${_cmake_options} HIPCC_OPTIONS ${_hipcc_options} HCC_OPTIONS ${_hcc_options} NVCC_OPTIONS ${_nvcc_options})
+    list(REMOVE_ITEM _sources ${_source_files})
     add_library(${hip_target} ${_cmake_options} ${_generated_files} ${_sources})
     set_target_properties(${hip_target} PROPERTIES LINKER_LANGUAGE ${HIP_C_OR_CXX})
 endmacro()

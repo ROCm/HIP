@@ -65,7 +65,7 @@ double bytesToGB(size_t s)
 void printDeviceProp (int deviceId)
 {
     using namespace std;
-    const int w1 = 30;
+    const int w1 = 34;
 
     cout << left;
 

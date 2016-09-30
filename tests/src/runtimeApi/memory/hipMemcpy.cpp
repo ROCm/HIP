@@ -19,6 +19,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
+/* HIT_START
+ * BUILD: %t %s ../../test_common.cpp
+ * RUN_NAMED: %t hipMemcpy-modes --tests 0x1
+ * RUN_NAMED: %t hipMemcpy-size --tests 0x6
+ * RUN_NAMED: %t hipMemcpy-multithreaded --tests 0x8
+ * HIT_END
+ */
+
+#include "hip_runtime.h"
 #include "hip_runtime.h"
 #include "test_common.h"
 

@@ -145,6 +145,9 @@ add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 #############################
 # Build steps
 #############################
+# Rebuild cmake cache updates .buildInfo and .version
+add_custom_target(update_build_and_version_info ALL COMMAND make rebuild_cache)
+
 # Build clang hipify if enabled
 if(BUILD_CLANG_HIPIFY)
     add_subdirectory(clang-hipify)
@@ -153,18 +156,23 @@ endif()
 # Build hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
     include_directories(${PROJECT_SOURCE_DIR}/include)
+    set(HIP_HCC_BUILD_FLAGS)
     if(COMPILE_HIP_ATP_MARKER)
         include_directories(/opt/rocm/profiler/CXLActivityLogger/include)
-        set(CMAKE_CXX_FLAGS " -DCOMPILE_HIP_ATP_MARKER=1 ${CMAKE_CXX_FLAGS}")
-        set(CMAKE_C_FLAGS   " -DCOMPILE_HIP_ATP_MARKER=1 ${CMAKE_C_FLAGS}")
+        set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DCOMPILE_HIP_ATP_MARKER=1")
     endif()
 
+    # Add HIP_VERSION to CMAKE_<LANG>_FLAGS
+    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DHIP_VERSION_MAJOR=${HIP_VERSION_MAJOR} -DHIP_VERSION_MINOR=${HIP_VERSION_MINOR} -DHIP_VERSION_PATCH=${HIP_VERSION_PATCH}")
+
+    # Add remaining flags
+    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include/libhsakmt -stdlib=libc++")
+
+    # Set compiler and compiler flags
     set(CMAKE_CXX_COMPILER "${HCC_HOME}/bin/hcc")
     set(CMAKE_C_COMPILER   "${HCC_HOME}/bin/hcc")
-
-    # Set HIP_HCC so we know this is HIP compile, some files are shared with HCC (staging_buffer).
-    set(CMAKE_CXX_FLAGS " -fPIC -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include/libhsakmt -stdlib=libc++ -DHIP_HCC ${CMAKE_CXX_FLAGS}")
-    set(CMAKE_C_FLAGS   " -fPIC -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include/libhsakmt -stdlib=libc++ -DHIP_HCC ${CMAKE_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HCC_BUILD_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HIP_HCC_BUILD_FLAGS}")
 
     set(SOURCE_FILES src/device_util.cpp
                      src/hip_hcc.cpp
@@ -177,7 +185,6 @@ if(HIP_PLATFORM STREQUAL "hcc")
                      src/hip_peer.cpp
                      src/hip_stream.cpp
                      src/hip_fp16.cpp
-                     src/unpinned_copy_engine.cpp
                      src/hip_module.cpp)
 
     if(${HIP_LIB_TYPE} EQUAL 0)
@@ -187,6 +194,13 @@ if(HIP_PLATFORM STREQUAL "hcc")
     else()
         add_library(hip_hcc SHARED ${SOURCE_FILES})
     endif()
+
+    # Generate hcc_version.txt
+    add_custom_target(query_hcc_version COMMAND ${HCC_HOME}/bin/hcc --version > ${PROJECT_BINARY_DIR}/hcc_version.tmp)
+    add_custom_target(check_hcc_version COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PROJECT_BINARY_DIR}/hcc_version.tmp ${PROJECT_BINARY_DIR}/hcc_version.txt DEPENDS query_hcc_version)
+    set_source_files_properties(${PROJECT_BINARY_DIR}/hcc_version.txt PROPERTIES GENERATED TRUE)
+    set_source_files_properties(${SOURCE_FILES} PROPERTIES OBJECT_DEPENDS ${PROJECT_BINARY_DIR}/hcc_version.txt)
+    add_dependencies(hip_hcc check_hcc_version update_build_and_version_info)
 
     # Generate .buildInfo
     file(WRITE "${PROJECT_BINARY_DIR}/.buildInfo" ${_buildInfo})
@@ -296,6 +310,28 @@ if(POLICY CMP0037)
     cmake_policy(SET CMP0037 OLD)
 endif()
 add_custom_target(package DEPENDS pkg_hip_base pkg_hip_hcc pkg_hip_nvcc pkg_hip_doc pkg_hip_samples)
+if(POLICY CMP0037)
+    cmake_policy(POP)
+endif()
+
+#############################
+# Testing steps
+#############################
+# Target: test
+set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/hip_tests)
+configure_file(tests/hip_tests.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+if(POLICY CMP0037)
+    cmake_policy(PUSH)
+    cmake_policy(SET CMP0037 OLD)
+endif()
+add_custom_target(install_for_test COMMAND "${CMAKE_COMMAND}" --build . --target install
+                                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+execute_process(COMMAND getconf _NPROCESSORS_ONLN OUTPUT_VARIABLE DASH_JAY OUTPUT_STRIP_TRAILING_WHITESPACE)
+add_custom_target(test COMMAND ${CMAKE_COMMAND} .
+                       COMMAND make -j ${DASH_JAY}
+                       COMMAND make test
+                       WORKING_DIRECTORY ${BUILD_DIR}
+                       DEPENDS install_for_test)
 if(POLICY CMP0037)
     cmake_policy(POP)
 endif()

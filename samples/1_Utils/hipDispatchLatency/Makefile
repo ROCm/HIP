@@ -6,10 +6,12 @@ HIPCC=$(HIP_PATH)/bin/hipcc
 
 EXE=hipDispatchLatency
 
-all: install
+CXXFLAGS = -O3
 
-$(EXE): hipDispatchLatency.cpp
-	$(HIPCC) hipDispatchLatency.cpp ResultDatabase.cpp -o $@
+all: ${EXE}
+
+$(EXE): hipDispatchLatency.cpp ResultDatabase.cpp
+	$(HIPCC) $(CXXFLAGS) hipDispatchLatency.cpp ResultDatabase.cpp -o $@
 
 install: $(EXE)
 	cp $(EXE) $(HIP_PATH)/bin
