@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 2.8.3)
+project(hip_tests)
+
+# Setup
+set(HIP_PATH @CMAKE_INSTALL_PREFIX@)
+set(ENV{HIP_PATH} ${HIP_PATH})
+set(HIP_SRC_PATH @hip_SOURCE_DIR@)
+set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
+include(${HIP_SRC_PATH}/tests/hit/HIT.cmake)
+
+# Add tests
+include_directories(${HIP_SRC_PATH}/tests/src)
+hit_add_directory_recursive(${HIP_SRC_PATH}/tests/src "directed_tests")

@@ -267,7 +267,7 @@ hipError_t hipGetDevice(int *deviceId);
  *
  * @returns #hipSuccess, #hipErrorNoDevice
  *
- * 
+ *
  * Returns in @p *count the number of devices that have ability to run compute commands.  If there are no such devices, then @ref hipGetDeviceCount will return #hipErrorNoDevice.
  * If 1 or more devices can be found, then hipGetDeviceCount returns #hipSuccess.
  */
@@ -279,7 +279,7 @@ hipError_t hipGetDeviceCount(int *count);
  * @param [out] pi pointer to value to return
  * @param [in] attr attribute to query
  * @param [in] deviceId which device to query for information
- * 
+ *
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  */
 hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int deviceId);
@@ -328,7 +328,7 @@ hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig );
  * @brief Set Cache configuration for a specific function
  *
  * @param [in] config;
- * 
+ *
  * @returns #hipSuccess, #hipErrorInitializationError
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
@@ -458,26 +458,12 @@ const char *hipGetErrorString(hipError_t hipError);
  *  @{
  *
  *  The following Stream APIs are not (yet) supported in HIP:
+ *  - cudaStreamAddCallback
+ *  - cudaStreamAttachMemAsync
  *  - cudaStreamCreateWithPriority
  *  - cudaStreamGetPriority
+ *  - cudaStreamWaitEvent
  */
-
-/**
- * @brief Create an asynchronous stream.
- *
- * @param[in, out] stream Pointer to new stream
- * @param[in ] flags to control stream creation.
- * @return #hipSuccess, #hipErrorInvalidValue
- *
- * Create a new asynchronous stream.  @p stream returns an opaque handle that can be used to reference the newly
- * created stream in subsequent hipStream* commands.  The stream is allocated on the heap and will remain allocated
- *
- * even if the handle goes out-of-scope.  To release the memory used by the stream, applicaiton must call hipStreamDestroy.
- * Flags controls behavior of the stream.  See #hipStreamDefault, #hipStreamNonBlocking.
- */
-
-hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags);
-
 
 
 /**
@@ -490,13 +476,80 @@ hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags);
  * created stream in subsequent hipStream* commands.  The stream is allocated on the heap and will remain allocated
  * even if the handle goes out-of-scope.  To release the memory used by the stream, applicaiton must call hipStreamDestroy.
  *
+ * @return #hipSuccess, #hipErrorInvalidValue
  *
- * @see hipStreamDestroy
- *
- * @return
- *
+ * @see hipStreamCreateWithFlags, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
  */
 hipError_t hipStreamCreate(hipStream_t *stream);
+
+
+/**
+ * @brief Create an asynchronous stream.
+ *
+ * @param[in, out] stream Pointer to new stream
+ * @param[in ] flags to control stream creation.
+ * @return #hipSuccess, #hipErrorInvalidValue
+ *
+ * Create a new asynchronous stream.  @p stream returns an opaque handle that can be used to reference the newly
+ * created stream in subsequent hipStream* commands.  The stream is allocated on the heap and will remain allocated
+ * even if the handle goes out-of-scope.  To release the memory used by the stream, applicaiton must call hipStreamDestroy.
+ * Flags controls behavior of the stream.  See #hipStreamDefault, #hipStreamNonBlocking.
+ *
+ *
+ * @see hipStreamCreate, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
+ */
+
+hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags);
+
+
+/**
+ * @brief Destroys the specified stream.
+ *
+ * @param[in, out] stream Valid pointer to hipStream_t.  This function writes the memory with the newly created stream.
+ * @return #hipSuccess #hipErrorInvalidResourceHandle
+ *
+ * Destroys the specified stream.
+ *
+ * If commands are still executing on the specified stream, some may complete execution before the queue is deleted.
+ *
+ * The queue may be destroyed while some commands are still inflight, or may wait for all commands queued to the stream
+ * before destroying it.
+ *
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamQuery, hipStreamWaitEvent, hipStreamSynchronize
+ */
+hipError_t hipStreamDestroy(hipStream_t stream);
+
+
+/**
+ * @brief Return #hipSuccess if all of the operations in the specified @p stream have completed, or #hipErrorNotReady if not.
+ *
+ * @param[in] stream stream to query
+ *
+ * @return #hipSuccess, #hipErrorNotReady, #hipErrorInvalidResourceHandle
+ *
+ * This is thread-safe and returns a snapshot of the current state of the queue.  However, if other host threads are sending work to the stream,
+ * the status may change immediately after the function is called.  It is typically used for debug.
+ *
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamWaitEvent, hipStreamSynchronize, hipStreamDestroy
+ */
+hipError_t hipStreamQuery(hipStream_t stream);
+
+
+/**
+ * @brief Wait for all commands in stream to complete.
+ *
+ * @param[in] stream stream identifier.
+ * 
+ * @return #hipSuccess, #hipErrorInvalidResourceHandle
+ *
+ * If the null stream is specified, this command blocks until all
+ * This command honors the hipDeviceLaunchBlocking flag, which controls whether the wait is active or blocking.
+ * This command is host-synchronous : the host will block until the stream is empty.
+ *
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamWaitEvent, hipStreamDestroy 
+ *
+ */
+hipError_t hipStreamSynchronize(hipStream_t stream);
 
 
 /**
@@ -512,67 +565,25 @@ hipError_t hipStreamCreate(hipStream_t *stream);
  * All future work submitted to @p stream will wait until @p event reports completion before beginning execution.
  * This function is host-asynchronous and the function may return before the wait has completed.
  *
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamSynchronize, hipStreamDestroy 
  *
  */
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags);
 
 
-/**
- * @brief Return #hipSuccess if all of the operations in the specified @p stream have completed, or #hipErrorNotReady if not.
- *
- * @param[in] stream stream to query
- *
- * @return #hipSuccess, #hipErrorNotReady
- *
- * This is thread-safe and returns a snapshot of the current state of the queue.  However, if other host threads are sending work to the stream,
- * the status may change immediately after the function is called.  It is typically used for debug.
- */
-hipError_t hipStreamQuery(hipStream_t stream);
-
-
-
-/**
- * @brief Wait for all commands in stream to complete.
- *
- * If the null stream is specified, this command blocks until all
- *
- * This command honors the hipDeviceLaunchBlocking flag, which controls whether the wait is active or blocking.
- *
- * This command is host-synchronous : the host will block until the stream is empty.
- *
- * TODO
- */
-hipError_t hipStreamSynchronize(hipStream_t stream);
-
-
-/**
- * @brief Destroys the specified stream.
- *
- * @param[in, out] stream Valid pointer to hipStream_t.  This function writes the memory with the newly created stream.
- * @return #hipSuccess
- *
- * Destroys the specified stream.
- *
- * If commands are still executing on the specified stream, some may complete execution before the queue is deleted.
- *
- * The queue may be destroyed while some commands are still inflight, or may wait for all commands queued to the stream
- * before destroying it.
- */
-hipError_t hipStreamDestroy(hipStream_t stream);
-
 
 /**
  * @brief Return flags associated with this stream.
  *
- * @param[in] stream
- * @param[in,out] flags
+ * @param[in] stream stream to be queried
+ * @param[in,out] flags Pointer to an unsigned integer in which the stream's flags are returned
  * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidResourceHandle
+ *
+ * @returns #hipSuccess #hipErrorInvalidValue #hipErrorInvalidResourceHandle
  *
  * Return flags associated with this stream in *@p flags.
  *
- * @see hipStreamCreateWithFlags
- *
- * @returns #hipSuccess
+ * @see hipStreamCreateWithFlags 
  */
 hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags);
 
@@ -766,22 +777,9 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
  *
  *  @return #hipSuccess
  *
- *  @see hipMallocPitch, hipFree, hipMallocArray, hipFreeArray, hipMalloc3D, hipMalloc3DArray, hipMallocHost, hipFreeHost, hipHostAlloc
+ *  @see hipMallocPitch, hipFree, hipMallocArray, hipFreeArray, hipMalloc3D, hipMalloc3DArray, hipHostFree, hipHostMalloc
  */
 hipError_t hipMalloc(void** ptr, size_t size) ;
-
-
-/**
- *  @brief Allocate pinned host memory
- *
- *  @param[out] ptr Pointer to the allocated host pinned memory
- *  @param[in]  size Requested memory size
- *
- *  @return #hipSuccess, #hipErrorMemoryAllocation
- *
- *  @see hipMalloc, hipMallocPitch, hipMallocArray, hipMalloc3D, hipMalloc3DArray, hipHostAlloc, hipFree, hipFreeArray, hipMallocHost, hipFreeHost, hipHostAlloc
- */
-hipError_t hipMallocHost(void** ptr, size_t size) __attribute__((deprecated("use hipHostMalloc instead"))) ;
 
 /**
  *  @brief Allocate device accessible page locked host memory
@@ -792,21 +790,20 @@ hipError_t hipMallocHost(void** ptr, size_t size) __attribute__((deprecated("use
  *
  *  @return #hipSuccess, #hipErrorMemoryAllocation
  *
- *  @see hipSetDeviceFlags, hipMallocHost, hipFreeHost
+ *  @see hipSetDeviceFlags, hipHostFree
  */
 hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags) ;
-hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) __attribute__((deprecated("use hipHostMalloc instead"))) ;;
 
 /**
- *  @brief Get Device pointer from Host Pointer allocated through hipHostAlloc
+ *  @brief Get Device pointer from Host Pointer allocated through hipHostMalloc
  *
  *  @param[out] dstPtr Device Pointer mapped to passed host pointer
- *  @param[in]  hstPtr Host Pointer allocated through hipHostAlloc
+ *  @param[in]  hstPtr Host Pointer allocated through hipHostMalloc
  *  @param[in]  flags Flags to be passed for extension
- * 
+ *
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryAllocation
  *
- *  @see hipSetDeviceFlags, hipHostAlloc
+ *  @see hipSetDeviceFlags, hipHostMalloc
  */
 hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, unsigned int flags) ;
 
@@ -817,7 +814,7 @@ hipError_t hipHostGetDevicePointer(void** devPtr, void* hstPtr, unsigned int fla
  *  @param[in]  hostPtr Host Pointer allocated through hipHostMalloc
  *  @return #hipSuccess, #hipErrorInvalidValue
  *
- *  @see hipHostAlloc
+ *  @see hipHostMalloc
  */
 hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) ;
 
@@ -850,7 +847,7 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) ;
  *  from the other registered memory region.
  *
  *  @return #hipSuccess, #hipErrorMemoryAllocation
- * 
+ *
  *  @see hipHostUnregister, hipHostGetFlags, hipHostGetDevicePointer
  */
 hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) ;
@@ -876,8 +873,8 @@ hipError_t hipHostUnregister(void* hostPtr) ;
  *  @param[in]  width Requested pitched allocation width (in bytes)
  *  @param[in]  height Requested pitched allocation height
  *  @return Error code
- * 
- *  @see hipMalloc, hipFree, hipMallocArray, hipFreeArray, hipMallocHost, hipFreeHost, hipMalloc3D, hipMalloc3DArray, hipHostAlloc
+ *
+ *  @see hipMalloc, hipFree, hipMallocArray, hipFreeArray, hipHostFree, hipMalloc3D, hipMalloc3DArray, hipHostMalloc
  */
 
 hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height);
@@ -891,23 +888,9 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
  *  @return #hipSuccess
  *  @return #hipErrorInvalidDevicePointer (if pointer is invalid, including host pointers allocated with hipHostMalloc)
  *
- *  @see hipMalloc, hipMallocPitch, hipMallocArray, hipFreeArray, hipMallocHost, hipFreeHost, hipMalloc3D, hipMalloc3DArray, hipHostAlloc
+ *  @see hipMalloc, hipMallocPitch, hipMallocArray, hipFreeArray, hipHostFree, hipMalloc3D, hipMalloc3DArray, hipHostMalloc
  */
 hipError_t hipFree(void* ptr);
-
-
-
-/**
- *  @brief Free memory allocated by the hcc hip host memory allocation API.  [Deprecated.]
- *
- *  @param[in] ptr Pointer to memory to be freed
- *  @return #hipSuccess,
- *          #hipErrorInvalidValue (if pointer is invalid, including device pointers allocated with hipMalloc)
-
- *  @see hipHostFree
- */
-hipError_t hipFreeHost(void* ptr) __attribute__((deprecated("use hipHostFree instead")))  ;
-
 
 /**
  *  @brief Free memory allocated by the hcc hip host memory allocation API
@@ -918,11 +901,9 @@ hipError_t hipFreeHost(void* ptr) __attribute__((deprecated("use hipHostFree ins
  *  @return #hipSuccess,
  *          #hipErrorInvalidValue (if pointer is invalid, including device pointers allocated with hipMalloc)
  *
- *  @see hipMalloc, hipMallocPitch, hipFree, hipMallocArray, hipFreeArray, hipMallocHost, hipMalloc3D, hipMalloc3DArray, hipHostAlloc
+ *  @see hipMalloc, hipMallocPitch, hipFree, hipMallocArray, hipFreeArray, hipMalloc3D, hipMalloc3DArray, hipHostMalloc
  */
 hipError_t hipHostFree(void* ptr);
-
-
 
 /**
  *  @brief Copy data from src to dst.
@@ -1102,7 +1083,7 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes );
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
  */
 #if __cplusplus
-hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t = 0 );
+hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t stream = 0 );
 #else
 hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream);
 #endif
@@ -1112,7 +1093,7 @@ hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t st
  * Return snapshot of free memory, and total allocatable memory on the device.
  *
  * Returns in *free a snapshot of the current free memory.
- * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue (if free != NULL due to bugs)
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  * @warning On HCC, the free memory only accounts for memory allocated by this process and may be optimistic.
  **/
 hipError_t hipMemGetInfo  (size_t * free, size_t * total)   ;
@@ -1256,10 +1237,21 @@ hipError_t hipInit(unsigned int flags) ;
  * @param [in] flags
  * @param [in] associated device handle
  *
- * @returns #hipSuccess, #hipErrorInvalidContext
+ * @return #hipSuccess
+ *
+ * @see hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
 hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device);
 
+/**
+ * @brief Destroy a HIP context.
+ *
+ * @param [in] ctx Context to destroy
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @see hipCtxCreate, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
+ */
 hipError_t hipCtxDestroy(hipCtx_t ctx);
 
 /**
@@ -1267,9 +1259,10 @@ hipError_t hipCtxDestroy(hipCtx_t ctx);
  *
  * @param [out] ctx
  *
- * @returns #hipSuccess
+ * @returns #hipSuccess, #hipErrorInvalidContext
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxSetCurrent, hipCtxGetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-
 hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
 
 /**
@@ -1278,8 +1271,9 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
  * @param [in] ctx
  *
  * @returns #hipSuccess, #hipErrorInvalidContext
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
  */
-
 hipError_t hipCtxPushCurrent(hipCtx_t ctx);
 
 /**
@@ -1287,9 +1281,10 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx);
  *
  * @param [in] ctx
  *
- * @returns #hipSuccess
+ * @returns #hipSuccess, #hipErrorInvalidContext
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
  */
-
 hipError_t hipCtxSetCurrent(hipCtx_t ctx);
 
 /**
@@ -1297,9 +1292,10 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx);
  *
  * @param [out] ctx
  *
- * @returns #hipSuccess
+ * @returns #hipSuccess, #hipErrorInvalidContext
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetDevice, hipCtxGetFlags, hipCtxPopCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
 
 /**
@@ -1308,6 +1304,8 @@ hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
  * @param [out] device
  *
  * @returns #hipSuccess, #hipErrorInvalidContext
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize
  */
 
 hipError_t hipCtxGetDevice(hipDevice_t *device);
@@ -1315,53 +1313,81 @@ hipError_t hipCtxGetDevice(hipDevice_t *device);
 /**
  * @brief Returns the approximate HIP api version.
  *
+ * @param [in]  ctx Context to check 
+ * @param [out] apiVersion
+ * 
+ * @return #hipSuccess
+ *
  * @warning The HIP feature set does not correspond to an exact CUDA SDK api revision.
  * This function always set *apiVersion to 4 as an approximation though HIP supports
  * some features which were introduced in later CUDA SDK revisions.
  * HIP apps code should not rely on the api revision number here and should
  * use arch feature flags to test device capabilities or conditional compilation.
  *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetDevice, hipCtxGetFlags, hipCtxPopCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
 hipError_t hipCtxGetApiVersion (hipCtx_t ctx,int *apiVersion);
 
 /**
  * @brief Set Cache configuration for a specific function
  *
- * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ * @param [out] cacheConfiguration
  *
+ * @return #hipSuccess
+ *
+ * @warning AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
 hipError_t hipCtxGetCacheConfig ( hipFuncCache *cacheConfig );
 
 /**
  * @brief Set L1/Shared cache partition.
+ * 
+ * @param [in] cacheConfiguration
  *
- * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ * @return #hipSuccess
  *
+ * @warning AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
 hipError_t hipCtxSetCacheConfig ( hipFuncCache cacheConfig );
 
 /**
  * @brief Set Shared memory bank configuration.
  *
- * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ * @param [in] sharedMemoryConfiguration
  *
+ * @return #hipSuccess
+ *
+ * @warning AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
 hipError_t hipCtxSetSharedMemConfig ( hipSharedMemConfig config );
 
 /**
  * @brief Get Shared memory bank configuration.
  *
- * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ * @param [out] sharedMemoryConfiguration
  *
+ * @return #hipSuccess
+ *
+ * @warning AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
 hipError_t hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig );
 
 /**
  * @brief Blocks until the default context has completed all preceding requested tasks.
  *
- * This function waits for all streams on the default context to complete execution, and then returns.
+ * @return #hipSuccess
  *
- * @returns #hipSuccess.
+ * @warning This function waits for all streams on the default context to complete execution, and then returns.
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxGetDevice
 */
 hipError_t hipCtxSynchronize ( void );
 
@@ -1370,7 +1396,9 @@ hipError_t hipCtxSynchronize ( void );
  *
  * @param [out] flags
  *
- * @returns #hipSuccess.
+ * @returns #hipSuccess
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
 */
 hipError_t hipCtxGetFlags ( unsigned int* flags );
 
@@ -1385,8 +1413,9 @@ hipError_t hipCtxGetFlags ( unsigned int* flags );
  * @param [in] peerCtx
  * @param [in] flags
  *
- * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue,
- * @returns #hipErrorPeerAccessAlreadyEnabled if peer access is already enabled for this device.
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, #hipErrorPeerAccessAlreadyEnabled
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning PeerToPeer support is experimental.
  */
 hipError_t  hipCtxEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags);
@@ -1399,9 +1428,12 @@ hipError_t  hipCtxEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags);
  * @param [in] peerCtx
  *
  * @returns #hipSuccess, #hipErrorPeerAccessNotEnabled
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning PeerToPeer support is experimental.
  */
 hipError_t  hipCtxDisablePeerAccess (hipCtx_t peerCtx);
+
 // doxygen end Context Management
 /**
  * @}
@@ -1457,6 +1489,10 @@ hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device);
 
 /**
  * @brief Returns the approximate HIP driver version.
+ * 
+ * @param [out] driverVersion
+ *
+ * @returns #hipSuccess, #hipErrorInavlidValue
  *
  * @warning The HIP feature set does not correspond to an exact CUDA SDK driver revision.
  * This function always set *driverVersion to 4 as an approximation though HIP supports
@@ -1464,8 +1500,23 @@ hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device);
  * HIP apps code should not rely on the driver revision number here and should
  * use arch feature flags to test device capabilities or conditional compilation.
  *
+ * @see hipRuntimeGetVersion
  */
 hipError_t hipDriverGetVersion(int *driverVersion) ;
+
+/**
+ * @brief Returns the approximate HIP Runtime version.
+ *
+ * @param [out] runtimeVersion
+ *
+ * @returns #hipSuccess, #hipErrorInavlidValue
+ *
+ * @warning On HIP/HCC path this function returns HIP runtime patch version however on
+ * HIP/NVCC path this function return CUDA runtime version.
+ *
+ * @see hipDriverGetVersion
+ */
+hipError_t hipRuntimeGetVersion(int *runtimeVersion) ;
 
 /**
  * @brief Loads code object from file into a hipModule_t

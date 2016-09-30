@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Link errors represented as this:Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -21,8 +21,8 @@ THE SOFTWARE.
 #define HIP_HCC_H
 
 #include <hc.hpp>
+#include <hsa/hsa.h>
 #include "hip/hcc_detail/hip_util.h"
-#include "hip/hcc_detail/unpinned_copy_engine.h"
 
 
 #if defined(__HCC__) && (__hcc_workweek__ < 16354)
@@ -31,13 +31,6 @@ THE SOFTWARE.
 
 // #define USE_MEMCPYTOSYMBOL
 //
-//Use the new HCC accelerator_view::copy instead of am_copy
-#define USE_AV_COPY (__hcc_workweek__ >= 16351)
-
-// Compile peer-to-peer support.
-// >= 2 : use HCC hc:accelerator::get_is_peer
-// >= 3 : use hc::am_memtracker_update_peers(...)
-#define USE_PEER_TO_PEER 3
 
 
 //---
@@ -55,8 +48,6 @@ extern int HIP_ATP_MARKER;
 extern int HIP_ATP;
 extern int HIP_DB;
 extern int HIP_STAGING_SIZE;   /* size of staging buffers, in KB */
-extern int HIP_STAGING_BUFFERS;    // TODO - remove, two buffers should be enough.
-extern int HIP_PININPLACE;
 extern int HIP_STREAM_SIGNALS;  /* number of signals to allocate at stream creation */
 extern int HIP_VISIBLE_DEVICES; /* Contains a comma-separated sequence of GPU identifiers */
 
@@ -64,7 +55,6 @@ extern int HIP_VISIBLE_DEVICES; /* Contains a comma-separated sequence of GPU id
 //---
 // Chicken bits for disabling functionality to work around potential issues:
 extern int HIP_DISABLE_HW_KERNEL_DEP;
-extern int HIP_DISABLE_HW_COPY_DEP;
 
 //---
 //Extern tls
@@ -98,15 +88,6 @@ extern const char *API_COLOR_END;
 
 #define CTX_THREAD_SAFE 1
 
-// If FORCE_COPY_DEP=1 , HIP runtime will add
-// synchronization for copy commands in the same stream, regardless of command type.
-// If FORCE_COPY_DEP=0 data copies of the same kind (H2H, H2D, D2H, D2D) are assumed to be implicitly ordered.
-// ROCR runtime implementation currently provides this guarantee when using SDMA queues but not
-// when using shader queues.
-// TODO - measure if this matters for performance, in particular for back-to-back small copies.
-// If not, we can simplify the copy dependency tracking by collapsing to a single Copy type, and always forcing dependencies for copy commands.
-#define FORCE_SAMEDIR_COPY_DEP 1
-
 
 // Compile debug trace mode - this prints debug messages to stderr when env var HIP_DB is set.
 // May be set to 0 to remove debug if checks - possible code size and performance difference?
@@ -128,8 +109,17 @@ extern const char *API_COLOR_END;
 #endif
 
 
-// #include CPP files to produce one object file
-#define ONE_OBJECT_FILE 0
+#define DB_SHOW_TID 1
+
+#if DB_SHOW_TID
+#define COMPUTE_TID_STR \
+    std::stringstream tid_ss;\
+    std::stringstream tid_ss_num;\
+    tid_ss_num << std::this_thread::get_id();\
+    tid_ss << " tid:" << std::hex << std::stoull(tid_ss_num.str());
+#else
+#define COMPUTE_TID_STR std::stringstream tid_ss;
+#endif
 
 
 // Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function boundary.
@@ -150,7 +140,8 @@ extern const char *API_COLOR_END;
     if (HIP_ATP_MARKER || (COMPILE_HIP_DB && HIP_TRACE_API)) {\
         std::string s = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
         if (COMPILE_HIP_DB && HIP_TRACE_API) {\
-            fprintf (stderr, "%s<<hip-api: %s\n%s" , API_COLOR, s.c_str(), API_COLOR_END);\
+            COMPUTE_TID_STR\
+            fprintf (stderr, "%s<<hip-api:%s %s\n%s" , API_COLOR, tid_ss.str().c_str(), s.c_str(), API_COLOR_END);\
         }\
         SCOPED_MARKER(s.c_str(), "HIP", NULL);\
     }\
@@ -208,12 +199,15 @@ static const char *dbName [] =
     KNRM "hip-copy2",
 };
 
+ 
+
 #if COMPILE_HIP_DB
 #define tprintf(trace_level, ...) {\
     if (HIP_DB & (1<<(trace_level))) {\
-        fprintf (stderr, "  %s:", dbName[trace_level]); \
-        fprintf (stderr, __VA_ARGS__);\
-        fprintf (stderr, "%s", KNRM); \
+        char msgStr[1000];\
+        snprintf(msgStr, 2000, __VA_ARGS__);\
+        COMPUTE_TID_STR\
+        fprintf (stderr, "  %s%s:%s%s", dbName[trace_level], tid_ss.str().c_str(), msgStr, KNRM); \
     }\
 }
 #else
@@ -244,40 +238,6 @@ extern "C" {
 #endif
 
 const hipStream_t hipStreamNull = 0x0;
-
-
-enum ihipCommand_t {
-    ihipCommandCopyH2H,
-    ihipCommandCopyH2D,
-    ihipCommandCopyD2H,
-    ihipCommandCopyD2D,
-    ihipCommandCopyP2P,
-    ihipCommandKernel,
-};
-
-static const char* ihipCommandName[] = {
-    "CopyH2H", "CopyH2D", "CopyD2H", "CopyD2D", "CopyP2P", "Kernel"
-};
-
-
-
-typedef uint64_t SIGSEQNUM;
-
-//---
-// Small wrapper around signals.
-// Designed to be used from stream.
-// TODO-someday refactor this class so it can be stored in a vector<>
-// we already store the index here so we can use for garbage collection.
-struct ihipSignal_t {
-    hsa_signal_t   _hsaSignal; // hsa signal handle
-    int            _index;      // Index in pool, used for garbage collection.
-    SIGSEQNUM      _sigId;     // unique sequentially increasing ID.
-
-    ihipSignal_t();
-    ~ihipSignal_t();
-
-    void release();
-};
 
 
 // Used to remove lock, for performance or stimulating bugs.
@@ -318,18 +278,21 @@ public:
         _autoUnlock(autoUnlock)
 
     {
+        tprintf(DB_SYNC, "lock critical data %s.%p\n", typeid(T).name(), _criticalData);
         _criticalData->_mutex.lock();
     };
 
     ~LockedAccessor()
     {
         if (_autoUnlock) {
+        tprintf(DB_SYNC, "auto-unlock critical data %s.%p\n",typeid(T).name(),  _criticalData);
             _criticalData->_mutex.unlock();
         }
     }
 
     void unlock()
     {
+        tprintf(DB_SYNC, "unlock critical data %s.%p\n", typeid(T).name(), _criticalData);
        _criticalData->_mutex.unlock();
     }
 
@@ -391,56 +354,34 @@ class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE>
 {
 public:
     ihipStreamCriticalBase_t(hc::accelerator_view av) :
-        _last_command_type(ihipCommandCopyH2H),
-        _last_copy_signal(NULL),
-        _signalCursor(0),
-        _oldest_live_sig_id(1),
-        _streamSigId(0),
         _kernelCnt(0),
-        _signalCnt(0),
         _av(av)
     {
-        _signalPool.resize(HIP_STREAM_SIGNALS > 0 ? HIP_STREAM_SIGNALS : 1);
     };
 
     ~ihipStreamCriticalBase_t() {
-        _signalPool.clear();
     }
 
     ihipStreamCriticalBase_t<StreamMutex>  * mlock() { LockedBase<MUTEX_TYPE>::lock(); return this;};
 
 public:
-    // Critical Data:
-    ihipCommand_t               _last_command_type;  // type of the last command
-
-    // signal of last copy command sent to the stream.
-    // May be NULL, indicating the previous command has completley finished and future commands don't need to create a dependency.
-    // Copy can be either H2D or D2H.
-    ihipSignal_t                *_last_copy_signal;
-
-    hc::completion_future       _last_kernel_future;  // Completion future of last kernel command sent to GPU.
-
-    // Signal pool:
-    int                         _signalCursor;
-    SIGSEQNUM                   _oldest_live_sig_id; // oldest live seq_id, anything < this can be allocated.
-    std::deque<ihipSignal_t>    _signalPool;   // Pool of signals for use by this stream.
-    uint32_t                    _signalCnt;    // Count of inflight commands using signals from the signal pool.
-                                               // Each copy may use 1-2 signals depending on command transitions:
-                                               //   2 are required if a barrier packet is inserted.
+    // TODO - remove _kernelCnt mechanism:
     uint32_t                    _kernelCnt;    // Count of inflight kernels in this stream.  Reset at ::wait().
-    SIGSEQNUM                   _streamSigId;      // Monotonically increasing unique signal id.
-
     hc::accelerator_view        _av;
-
-		std::vector<hc::completion_future*> _cfs;
-
 };
+
+
+// if HIP code needs to acquire locks for both ihipCtx_t and ihipStream_t, it should first acquire the lock
+// for the ihipCtx_t and then for the individual streams.  The locks should not be acquired in reverse order
+// or deadlock may occur.  In some cases, it may be possible to reduce the range where the locks must be held.
+// HIP routines should avoid acquiring and releasing the same lock during the execution of a single HIP API.
 
 
 typedef ihipStreamCriticalBase_t<StreamMutex> ihipStreamCritical_t;
 typedef LockedAccessor<ihipStreamCritical_t> LockedAccessor_StreamCrit_t;
 
 
+//---
 // Internal stream structure.
 class ihipStream_t {
 public:
@@ -449,21 +390,18 @@ typedef uint64_t SeqNum_t ;
     ~ihipStream_t();
 
     // kind is hipMemcpyKind
-    void copySync (LockedAccessor_StreamCrit_t &crit, void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn = true);
     void locked_copySync (void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn = true);
 
 
-    void copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind);
+    void locked_copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind);
 
-    int                  preCopyCommand(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *lastCopy, hsa_signal_t *waitSignal, ihipCommand_t copyType);
 
     //---
     // Member functions that begin with locked_ are thread-safe accessors - these acquire / release the critical mutex.
     LockedAccessor_StreamCrit_t  lockopen_preKernelCommand();
-    void                 lockclose_postKernelCommand(hc::completion_future &kernel_future);
+    void                 lockclose_postKernelCommand(hc::accelerator_view *av);
 
 
-    void                 locked_reclaimSignals(SIGSEQNUM sigNum);
     void                 locked_wait(bool assertQueueEmpty=false);
 
     hc::accelerator_view* locked_getAv() { LockedAccessor_StreamCrit_t crit(_criticalData); return &(crit->_av); };
@@ -471,8 +409,6 @@ typedef uint64_t SeqNum_t ;
     void                 locked_waitEvent(hipEvent_t event);
     void                 locked_recordEvent(hipEvent_t event);
 
-    void                 addCFtoStream(LockedAccessor_StreamCrit_t &crit, hc::completion_future* cf);
-    void                 waitOnAllCFs(LockedAccessor_StreamCrit_t &crit);
 
     //---
 
@@ -485,9 +421,6 @@ typedef uint64_t SeqNum_t ;
 														uint32_t groupSegmentSize, uint32_t sharedMemBytes, 
 														void *kernarg, size_t kernSize, uint64_t kernel);
 
-    // Non-threadsafe accessors - must be protected by high-level stream lock with accessor passed to function.
-    SIGSEQNUM            lastCopySeqId (LockedAccessor_StreamCrit_t &crit) const { return crit->_last_copy_signal ? crit->_last_copy_signal->_sigId : 0; };
-    ihipSignal_t *       allocSignal (LockedAccessor_StreamCrit_t &crit);
 
 
     //-- Non-racy accessors:
@@ -504,17 +437,16 @@ public:
 
 
 private:
-    void     enqueueBarrier(hsa_queue_t* queue, ihipSignal_t *depSignal, ihipSignal_t *completionSignal);
-    void     waitCopy(LockedAccessor_StreamCrit_t &crit, ihipSignal_t *signal);
 
 
     // The unsigned return is hipMemcpyKind
     unsigned resolveMemcpyDirection(bool srcTracked, bool dstTracked, bool srcInDeviceMem, bool dstInDeviceMem);
-    void     setAsyncCopyAgents(unsigned kind, ihipCommand_t *commandType, hsa_agent_t *srcAgent, hsa_agent_t *dstAgent);
+
+    bool canSeePeerMemory(const ihipCtx_t *thisCtx, ihipCtx_t *dstCtx, ihipCtx_t *srcCtx);
 
 
 private: // Data
-    // Critical Data.  THis MUST be accessed through LockedAccessor_StreamCrit_t
+    // Critical Data - MUST be accessed through LockedAccessor_StreamCrit_t
     ihipStreamCritical_t        _criticalData;
 
     ihipCtx_t  *_ctx;  // parent context that owns this stream.
@@ -545,8 +477,6 @@ struct ihipEvent_t {
 
     hc::completion_future _marker;
     uint64_t              _timestamp;  // store timestamp, may be set on host or by marker.
-
-    SIGSEQNUM             _copySeqId;
 } ;
 
 
@@ -575,7 +505,7 @@ public:
     unsigned                _computeUnits;
     hipDeviceProp_t         _props;        // saved device properties.
 
-    UnpinnedCopyEngine      *_stagingBuffer[2]; // one buffer for each direction.
+    // TODO - report this through device properties, base on HCC API call.
     int                     _isLargeBar;
 
     ihipCtx_t               *_primaryCtx;
@@ -614,10 +544,11 @@ public:
 
 
     // Peer Accessor classes:
-    bool isPeer(const ihipCtx_t *peer); // returns Trus if peer has access to memory physically located on this device.
+    bool isPeer(const ihipCtx_t *peer); // returns True if peer has access to memory physically located on this device.
     bool addPeer(ihipCtx_t *peer);
     bool removePeer(ihipCtx_t *peer);
     void resetPeers(ihipCtx_t *thisDevice);
+    void printPeers(FILE *f) const;
 
     uint32_t peerCnt() const { return _peerCnt; };
     hsa_agent_t *peerAgents() const { return _peerAgents; };
@@ -633,6 +564,7 @@ private:
     //--- Peer Tracker:
     // These reflect the currently Enabled set of peers for this GPU:
     // Enabled peers have permissions to access the memory physically allocated on this device.
+    // Note the peers always contain the self agent for easy interfacing with HSA APIs.
     std::list<ihipCtx_t*>     _peers;     // list of enabled peer devices.
     uint32_t                  _peerCnt;     // number of enabled peers
     hsa_agent_t              *_peerAgents;  // efficient packed array of enabled agents (to use for allocations.)
@@ -675,6 +607,8 @@ public: // Functions:
 
     // TODO - review uses of getWriteableDevice(), can these be converted to getDevice()
     ihipDevice_t *getWriteableDevice() const { return _device; };
+
+    std::string toString() const; 
 
 public:  // Data
     // The NULL stream is used if no other stream is specified.
@@ -758,6 +692,13 @@ inline std::ostream & operator<<(std::ostream& os, const gl_dim3& s)
 inline std::ostream& operator<<(std::ostream& os, const hipEvent_t& e)
 {
     os << "event:" << std::hex << static_cast<void*> (e);
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const ihipCtx_t* c)
+{
+    os << "ctx:" << static_cast<const void*> (c) 
+       << " dev:" << c->getDevice()->_deviceId;
     return os;
 }
 

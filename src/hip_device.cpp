@@ -33,11 +33,15 @@ hipError_t hipGetDevice(int *deviceId)
 
     auto ctx = ihipGetTlsDefaultCtx();
 
-    if (ctx == nullptr) {
-        e = hipErrorInvalidDevice; // TODO, check error code.
-        *deviceId = -1;
-    } else {
-        *deviceId = ctx->getDevice()->_deviceId;
+    if(deviceId != nullptr){
+        if (ctx == nullptr) {
+            e = hipErrorInvalidDevice; // TODO, check error code.
+            *deviceId = -1;
+        } else {
+            *deviceId = ctx->getDevice()->_deviceId;
+        }
+    }else{
+        e = hipErrorInvalidDevice;
     }
 
     return ihipLogStatus(e);
@@ -48,13 +52,20 @@ hipError_t hipGetDeviceCount(int *count)
 {
     HIP_INIT_API(count);
 
-    *count = g_deviceCnt;
+    hipError_t e = hipSuccess;
 
-    if (*count > 0) {
-        return ihipLogStatus(hipSuccess);
+    if(count != nullptr) {
+        *count = g_deviceCnt;
+
+        if (*count > 0) {
+            e = ihipLogStatus(hipSuccess);
+        } else {
+            e = ihipLogStatus(hipErrorNoDevice);
+        }
     } else {
-        return ihipLogStatus(hipErrorNoDevice);
+        e = ihipLogStatus(hipErrorNoDevice);
     }
+    return e;
 }
 
 hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig )
@@ -144,6 +155,8 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
 
     hipError_t e = hipSuccess;
 
+    if(pi != nullptr) {
+
     auto * hipDevice = ihipGetDevice(device);
     hipDeviceProp_t *prop = &hipDevice->_props;
     if (hipDevice) {
@@ -204,6 +217,9 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
     } else {
         e = hipErrorInvalidDevice;
     }
+    }else{
+        e = hipErrorInvalidDevice;
+    }
     return ihipLogStatus(e);
 }
 
@@ -213,12 +229,16 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device)
 
     hipError_t e;
 
-    auto * hipDevice = ihipGetDevice(device);
-    if (hipDevice) {
+    if(props != nullptr){
+        auto * hipDevice = ihipGetDevice(device);
+        if (hipDevice) {
         // copy saved props
-        *props = hipDevice->_props;
-        e = hipSuccess;
-    } else {
+            *props = hipDevice->_props;
+            e = hipSuccess;
+        } else {
+            e = hipErrorInvalidDevice;
+        }
+    }else{
         e = hipErrorInvalidDevice;
     }
 

@@ -17,6 +17,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD: %t %s ../../test_common.cpp
+ * RUN: %t
+ * HIT_END
+ */
+
 // Test under-development.  Calls async mem-copy API, experiment with functionality.
 
 #include "hip_runtime.h"
