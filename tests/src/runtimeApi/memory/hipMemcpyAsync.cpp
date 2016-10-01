@@ -326,7 +326,7 @@ void parseMyArguments(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-    HipTest::parseStandardArguments(argc, argv, true);
+    HipTest::parseStandardArguments(argc, argv, false);
     parseMyArguments(argc, argv);
 
 
