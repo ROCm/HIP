@@ -411,27 +411,53 @@ For example:
 
 Device Code:
 ```
-// Cuda Device Code
-__constant__ float Array[1024];
-__global__ void Inc(float *Out){
-   Int tx = hipThreadIdx_x;
-   Out[tx] = Array[tx] + 1;
+#include<hip_runtime_api.h>
+#include<hip_runtime.h>
+#include<iostream>
+
+#ifdef __HIP_PLATFORM_HCC__
+__global__ void Inc(hipLaunchParm lp, float *Ad, float *Out)
+#endif
+#ifdef __HIP_PLATFORM_NVCC__
+__constant__ float Ad[1024];
+__global__ void Inc(hipLaunchParm lp, float *Out)
+#endif
+{
+    int tx = hipThreadIdx_x;
+    Out[tx] = Ad[tx] + 1.0f;
 }
- 
-// HIP Device Code
-__global__ void Inc(hipLaunchParm lp, float *Array, float *Out){
-   Int tx = hipThreadIdx_x;
-   Out[tx] = Array[tx] + 1;
+
+int main()
+{
+    float *A, *Ad;
+    float *Out, *Outd;
+    A = new float[1024];
+    Out = new float[1024];
+
+    for(uint32_t i=0;i<1024;i++)
+    {
+        A[i] = 1.0f*i;
+        Out[i] = 0.0f;
+    }
+
+    hipMalloc((void**)&Ad, 1024*sizeof(float));
+    hipMalloc((void**)&Outd, 1024*sizeof(float));
+
+    hipMemcpy(Outd, Out, 1024*sizeof(float), hipMemcpyHostToDevice);
+
+#ifdef __HIP_PLATFORM_HCC__
+    assert(hipSuccess == hipMemcpy(Ad, A, 1024*sizeof(float), hipMemcpyHostToDevice));
+    hipLaunchKernel(Inc, dim3(1,1,1), dim3(1024,1,1), 0, 0, Ad, Outd);
+#endif
+#ifdef __HIP_PLATFORM_NVCC__
+    assert(hipSuccess == hipMemcpyToSymbol(Ad, A, 1024*sizeof(float)));
+    hipLaunchKernel(Inc, dim3(1,1,1), dim3(1024,1,1), 0, 0, Outd);
+#endif
+
+    hipMemcpy(Out, Outd, 1024*sizeof(float), hipMemcpyDeviceToHost);
+    std::cout<<Out[10]<<" "<<A[10]<<std::endl;
+    assert(Out[10] - A[10] == 1.0f);
 }
-```
- 
-Host Code:
-```
-// CUDA Host Code
-cudaMemcpyToSymbol(Array, hostArray, sizeofArray);
- 
-// HIP Host Code
-hipMemcpy(Array, hostArray, sizeofArray);
 ```
  
 ## threadfence_system
