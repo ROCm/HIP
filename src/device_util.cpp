@@ -1681,6 +1681,17 @@ __device__  unsigned int atomicDec(unsigned int* address,
 	return hc::__atomic_wrapdec(address,val);
 }
 
+//__mul24 __umul24
+__device__  int __mul24(int arg1,
+                       int arg2)
+{
+	return hc::__mul24(arg1, arg2);
+}
+__device__  unsigned int __umul24(unsigned int arg1,
+                       unsigned int arg2)
+{
+	return hc::__mul24(arg1, arg2);
+}
 
 __device__ unsigned int test__popc(unsigned int input)
 {
