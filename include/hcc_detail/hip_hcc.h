@@ -109,7 +109,7 @@ extern const char *API_COLOR_END;
 #endif
 
 
-#define DB_SHOW_TID 1
+#define DB_SHOW_TID 0
 
 #if DB_SHOW_TID
 #define COMPUTE_TID_STR \
