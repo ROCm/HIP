@@ -17,7 +17,7 @@ Programmers familiar with CUDA, OpenCL will be able to quickly learn and start c
 
 We will be using the Simple Matrix Transpose application from the previous tutorial and modify it to learn how to get the performance score for memory transfer and kernel execution time.
 
-## hipEnvent_t
+## hipEvent_t
 
 We'll learn how to use the event management functionality of HIP runtime api. In the same sourcecode, we used for MatrixTranspose we will declare the following events as follows:
 
