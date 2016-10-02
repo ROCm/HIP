@@ -451,6 +451,8 @@ Following is the list of supported integer intrinsics. Note that intrinsics are 
 | unsigned int __ffsll(long long int x) <br><sub>Find the position of least signigicant bit set to 1 in a 64 bit signed integer.</sub> |
 | unsigned int __popc ( unsigned int x ) <br><sub>Count the number of bits that are set to 1 in a 32 bit integer.</sub> |
 | int __popcll ( unsigned long long int x )<br><sub>Count the number of bits that are set to 1 in a 64 bit integer.</sub> |
+| int __mul24 ( int x, int y )<br><sub>Multiply two 24bit integers.</sub> |
+| unsigned int __umul24 ( unsigned int x, unsigned int y )<br><sub>Multiply two 24bit unsigned integers.</sub> |
 <sub><b id="f3"><sup>[1]</sup></b> 
 The hcc implementation of __ffs() and __ffsll() contains code to add a constant +1 to produce the ffs result format.
 For the cases where this overhead is not acceptable and programmer is willing to specialize for the platform, 
