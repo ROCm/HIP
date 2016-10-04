@@ -28,8 +28,5 @@ ROCMINCDIR=$ROCMDIR/include
 pushd $ROCMINCDIR
 rm hip
 popd
-pushd $HIPINCDIR
-rm hip
-popd
 rmdir --ignore-fail-on-non-empty $ROCMINCDIR
 

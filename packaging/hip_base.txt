@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(hip_base)
 
 install(DIRECTORY @hip_SOURCE_DIR@/bin DESTINATION . USE_SOURCE_PERMISSIONS)
-install(DIRECTORY @hip_SOURCE_DIR@/include DESTINATION . PATTERN "hip" EXCLUDE)
+install(DIRECTORY @hip_SOURCE_DIR@/include DESTINATION .)
 install(FILES @PROJECT_BINARY_DIR@/.version DESTINATION bin)
 install(DIRECTORY @hip_SOURCE_DIR@/cmake DESTINATION .)
 
