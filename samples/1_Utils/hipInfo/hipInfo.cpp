@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 #include <iostream>
 #include <iomanip>
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 
 #define KNRM  "\x1B[0m"
 #define KRED  "\x1B[31m"

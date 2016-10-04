@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include <hip_runtime.h>
+#include "hip/hip_runtime.h"
 
 #include "ResultDatabase.h"
 

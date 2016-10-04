@@ -1,4 +1,4 @@
-#include <hip_runtime.h>
+#include "hip/hip_runtime.h"
 
 __global__ void vadd_hip(hipLaunchParm lp, const float *a, const float *b, float *c, int N)
 {
