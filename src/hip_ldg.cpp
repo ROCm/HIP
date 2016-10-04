@@ -18,7 +18,8 @@ THE SOFTWARE.
 */
 
 #include <hc.hpp>
-#include"hcc_detail/hip_ldg.h"
+
+#include "hip/hcc_detail/hip_ldg.h"
 
 __device__ char                 __ldg(const char* ptr)
 {

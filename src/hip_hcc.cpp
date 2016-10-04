@@ -36,15 +36,15 @@ THE SOFTWARE.
 #include <vector>
 #include <algorithm>
 #include <atomic>
+
 #include <hc.hpp>
 #include <hc_am.hpp>
+#include "hsa/hsa_ext_amd.h"
+#include "libhsakmt/hsakmt.h"
 
-#include "hip_runtime.h"
-#include "hcc_detail/hip_hcc.h"
-#include "hsa_ext_amd.h"
-#include "hsakmt.h"
-
-#include "hcc_detail/trace_helper.h"
+#include "hip/hip_runtime.h"
+#include "hip/hcc_detail/hip_hcc.h"
+#include "hip/hcc_detail/trace_helper.h"
 
 
 

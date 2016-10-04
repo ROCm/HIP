@@ -17,9 +17,9 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "hip_runtime.h"
-#include "hcc_detail/hip_hcc.h"
-#include "hcc_detail/trace_helper.h"
+#include "hip/hip_runtime.h"
+#include "hip/hcc_detail/hip_hcc.h"
+#include "hip/hcc_detail/trace_helper.h"
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------

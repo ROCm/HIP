@@ -166,7 +166,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DHIP_VERSION_MAJOR=${HIP_VERSION_MAJOR} -DHIP_VERSION_MINOR=${HIP_VERSION_MINOR} -DHIP_VERSION_PATCH=${HIP_VERSION_PATCH}")
 
     # Add remaining flags
-    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include/libhsakmt -stdlib=libc++")
+    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include -stdlib=libc++")
 
     # Set compiler and compiler flags
     set(CMAKE_CXX_COMPILER "${HCC_HOME}/bin/hcc")
