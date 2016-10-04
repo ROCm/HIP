@@ -22,7 +22,7 @@ THE SOFTWARE.
 #include<iostream>
 
 // hip header file
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 
 
 #define WIDTH     1024
