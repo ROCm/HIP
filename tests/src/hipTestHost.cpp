@@ -18,8 +18,8 @@ THE SOFTWARE.
 */
 #include "test_common.h"
 #include <iostream>
-#include "hip_runtime.h"
-#include "hip_runtime_api.h"
+#include "hip/hip_runtime.h"
+#include "hip/hip_runtime_api.h"
 
 #define N 512
 

@@ -25,7 +25,7 @@ THE SOFTWARE.
 #define GXXHIPAPI_H
 
 #include<stdlib.h>
-#include"hip_runtime_api.h"
+#include "hip/hip_runtime_api.h"
 
 class memManager{
 private:

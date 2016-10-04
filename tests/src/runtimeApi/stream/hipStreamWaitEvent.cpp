@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 // Test under-development.  Calls async mem-copy API, experiment with functionality.
 
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 #include "test_common.h"
 #include <vector>
 unsigned p_streams = 6;

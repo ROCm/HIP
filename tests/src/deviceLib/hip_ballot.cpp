@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 #include <iostream>
 
-#include <hip_runtime.h>
+#include "hip/hip_runtime.h"
 #define HIP_ASSERT(x) (assert((x)==hipSuccess))
 
 __global__ void 

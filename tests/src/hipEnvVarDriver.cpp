@@ -27,7 +27,7 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
 #include <stdlib.h>
 #include <assert.h>
 #include <string>
-#include <hip_runtime.h>
+#include "hip/hip_runtime.h"
 using namespace std;
 
 int getDeviceNumber(){

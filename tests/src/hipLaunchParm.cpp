@@ -23,9 +23,9 @@ THE SOFTWARE.
  * HIT_END
  */
 
-#include"hip_runtime.h"
+#include "hip/hip_runtime.h"
 #include"test_common.h"
-#include"hip_runtime_api.h"
+#include "hip/hip_runtime_api.h"
 #include<iostream>
 
 __global__ void vAdd(hipLaunchParm lp, float *a){}

@@ -1,4 +1,4 @@
-#include"hip_runtime.h"
+#include "hip/hip_runtime.h"
 #include<stdio.h>
 
 #define ITER 1<<20

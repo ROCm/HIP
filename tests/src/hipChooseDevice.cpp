@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <hip_runtime.h>
+#include "hip/hip_runtime.h"
 int main( void ) {
     hipDeviceProp_t  prop;
     int dev;

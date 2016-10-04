@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 // Test launch bounds and initialization conditions.
 
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 #include "test_common.h"
 
 int p_blockSize = 256;
