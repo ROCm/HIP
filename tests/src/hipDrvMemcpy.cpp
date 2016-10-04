@@ -1,6 +1,6 @@
 #include<iostream>
-#include<hip/hip_runtime.h>
-#include<hip/hip_runtime_api.h>
+#include "hip/hip_runtime.h"
+#include "hip/hip_runtime_api.h"
 
 #define LEN 1024
 #define SIZE LEN<<2

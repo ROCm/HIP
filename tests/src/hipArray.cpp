@@ -4,7 +4,7 @@
  * HIT_END
  */
 
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 #include "test_common.h"
 
 void printSep()

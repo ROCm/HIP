@@ -22,7 +22,7 @@ THE SOFTWARE.
  * hipError_t hipDeviceSynchronize();
 */
 
-#include"hip_runtime.h"
+#include "hip/hip_runtime.h"
 #include<iostream>
 
 #define _SIZE sizeof(int)*1024*1024

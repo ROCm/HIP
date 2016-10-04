@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 #include "test_common.h"
 
 #define WIDTH     1024

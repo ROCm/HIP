@@ -17,7 +17,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include"hip_runtime.h"
+#include "hip/hip_runtime.h"
 #include<iostream>
 #include<time.h>
 
