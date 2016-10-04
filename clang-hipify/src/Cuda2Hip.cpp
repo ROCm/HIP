@@ -107,9 +107,9 @@ struct cuda2hipMap {
     cuda2hipRename["__CUDACC__"] = {"__HIPCC__", CONV_DEF, API_RUNTIME};
 
     // CUDA includes
-    cuda2hipRename["cuda.h"]             = {"hip_runtime.h", CONV_INCLUDE_CUDA_MAIN_H, API_DRIVER};
-    cuda2hipRename["cuda_runtime.h"] =     {"hip_runtime.h", CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME};
-    cuda2hipRename["cuda_runtime_api.h"] = {"hip_runtime_api.h", CONV_INCLUDE, API_RUNTIME};
+    cuda2hipRename["cuda.h"]             = {"hip/hip_runtime.h", CONV_INCLUDE_CUDA_MAIN_H, API_DRIVER};
+    cuda2hipRename["cuda_runtime.h"] =     {"hip/hip_runtime.h", CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME};
+    cuda2hipRename["cuda_runtime_api.h"] = {"hip/hip_runtime_api.h", CONV_INCLUDE, API_RUNTIME};
 
     // HIP includes
     // TODO: uncomment this when hip/cudacommon.h will be renamed to hip/hipcommon.h
@@ -1939,7 +1939,7 @@ public:
     } while (false);
     if (PP->countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 &&
             countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 && Replace->size() > 0) {
-      StringRef repName = "#include <hip_runtime.h>\n";
+      StringRef repName = "#include <hip/hip_runtime.h>\n";
       SourceManager *SM = Result.SourceManager;
       Replacement Rep(*SM, SM->getLocForStartOfFile(SM->getMainFileID()), 0, repName);
       Replace->insert(Rep);
@@ -1961,7 +1961,7 @@ private:
 void HipifyPPCallbacks::handleEndSource() {
   if (Match->countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 &&
              countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 && Replace->size() > 0) {
-    StringRef repName = "#include <hip_runtime.h>\n";
+    StringRef repName = "#include <hip/hip_runtime.h>\n";
     Replacement Rep(*_sm, _sm->getLocForStartOfFile(_sm->getMainFileID()), 0, repName);
     Replace->insert(Rep);
     countReps[CONV_INCLUDE_CUDA_MAIN_H]++;
