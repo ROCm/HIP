@@ -33,7 +33,7 @@ HIP releases are typically of two types. The tag naming convention is different 
 - [HIP Porting Guide](docs/markdown/hip_porting_guide.md)
 - [HIP Porting Driver Guide](docs/markdown/hip_porting_driver_api.md)
 - [HIP Terminology](docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenL)
-- [clang-hipify](clang-hipify/README.md)
+- [hipify-clang](hipify-clang/README.md)
 - [Developer/CONTRIBUTING Info](CONTRIBUTING.md)
 - [Release Notes](RELEASE.md)
 

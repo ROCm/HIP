@@ -114,7 +114,7 @@ These offer pointer-based memory interfaces (as opposed to opaque buffers) and c
 - [hcsparse](https://bitbucket.org/multicoreware/hcsparse)
 - [hcrng](https://bitbucket.org/multicoreware/hcrng)
    
-Additionally, some of the cublas routines are automatically converted to hipblas equivalents by the clang-hipify tool.  These APIs use cublas or hcblas depending on the platform, and replace the need
+Additionally, some of the cublas routines are automatically converted to hipblas equivalents by the hipify-clang tool.  These APIs use cublas or hcblas depending on the platform, and replace the need
 to use conditional compilation. 
 
 ### How does HIP compare with OpenCL?
@@ -148,7 +148,7 @@ The tools also struggle with more complex CUDA applications, in particular those
 ### Does Hipify automatically convert all source code?
 Typically, Hipify can automatically convert almost all run-time code, and the coordinate indexing device code (i.e. threadIdx.x -> hipThreadIdx_x).  
 Most device code needs no additional conversion, since HIP and CUDA have similar names for math and built-in functions. 
-The clang-hipify tool will automatically modify the kernel signature as needed (automating a step that used to be done manually)
+The hipify-clang tool will automatically modify the kernel signature as needed (automating a step that used to be done manually)
 Additional porting may be required to deal with architecture feature queries or with CUDA capabilities that HIP doesn't support. 
 In general, developers should always expect to perform some platform-specific tuning and optimization.
 
