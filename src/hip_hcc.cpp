@@ -53,10 +53,6 @@ THE SOFTWARE.
 //=================================================================================================
 const int release = 1;
 
-#define MEMCPY_D2H_STAGING_VS_PININPLACE_COPY_THRESHOLD    4194304
-#define MEMCPY_H2D_DIRECT_VS_STAGING_COPY_THRESHOLD    65336
-#define MEMCPY_H2D_STAGING_VS_PININPLACE_COPY_THRESHOLD    1048576
-
 const char *API_COLOR = KGRN;
 const char *API_COLOR_END = KNRM;
 
@@ -70,6 +66,8 @@ int HIP_DB= 0;
 int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
 int HIP_NUM_KERNELS_INFLIGHT = 128;
 int HIP_BLOCKING_SYNC = 0;
+
+//#define DISABLE_COPY_EXT 1
 
 
 std::once_flag hip_initialized;
@@ -1454,7 +1452,13 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
 
     {
         LockedAccessor_StreamCrit_t crit (_criticalData);
+#if DISABLE_COPY_EXT
+#warning ("Disabled copy_ext path, P2P host staging copies will not work")
+        // Note - peer-to-peer copies which require host staging will not work in this path.
+        crit->_av.copy(src, dst, sizeBytes);
+#else
         crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceHostCopyEngine);
+#endif
     }
 }
 
