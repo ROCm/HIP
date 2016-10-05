@@ -52,7 +52,7 @@ hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags)
         e = hipErrorInvalidDevice;
     }
 
-    return ihipLogStatus(e);
+    return e;
 }
 
 
