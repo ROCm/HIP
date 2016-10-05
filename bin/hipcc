@@ -91,7 +91,7 @@ if ($HIP_PLATFORM eq "hcc") {
     $HIPCC=$HCC;
     $HIPCXXFLAGS = $HCCFLAGS;
 
-    $HIPCXXFLAGS .= " -I$HIP_PATH/include/hcc_detail/cuda";
+    $HIPCXXFLAGS .= " -I$HIP_PATH/include/hip/hcc_detail/cuda";
     $HIPCXXFLAGS .= " -I$HSA_PATH/include";
     $HIPCXXFLAGS .= " -Wno-deprecated-register";
     $HIPLDFLAGS =  "-hc -L$HCC_HOME/lib -Wl,--rpath=$HCC_HOME/lib -lc++ -ldl -lpthread -Wl,--whole-archive -lmcwamp -Wl,--no-whole-archive";
