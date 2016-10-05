@@ -245,13 +245,24 @@ set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_base)
 configure_file(packaging/hip_base.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
 configure_file(packaging/hip_base.postinst ${BUILD_DIR}/postinst @ONLY)
 configure_file(packaging/hip_base.prerm ${BUILD_DIR}/prerm @ONLY)
-add_custom_target(pkg_hip_base COMMAND ${CMAKE_COMMAND} .
-    COMMAND rm -rf *.deb *.rpm *.tar.gz
-    COMMAND make package
-    COMMAND cp *.deb ${PROJECT_BINARY_DIR}
-    COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
-    COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
-    WORKING_DIRECTORY ${BUILD_DIR})
+if(NOT BUILD_HIPIFY_CLANG)
+    add_custom_target(pkg_hip_base COMMAND ${CMAKE_COMMAND} .
+        COMMAND rm -rf *.deb *.rpm *.tar.gz
+        COMMAND make package
+        COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+        COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+        COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+        WORKING_DIRECTORY ${BUILD_DIR})
+else()
+    add_custom_target(pkg_hip_base COMMAND ${CMAKE_COMMAND} .
+        COMMAND rm -rf *.deb *.rpm *.tar.gz
+        COMMAND make package
+        COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+        COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+        COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+        WORKING_DIRECTORY ${BUILD_DIR}
+        DEPENDS hipify-clang)
+endif()
 
 # Package: hip_hcc
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_hcc)

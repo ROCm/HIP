@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.8)
 project(hipify-clang)
 
+set(BUILD_HIPIFY_CLANG 0 PARENT_SCOPE)
+
 # Find LLVM package
 find_package(LLVM 3.8 QUIET PATHS ${HIPIFY_CLANG_LLVM_DIR} NO_DEFAULT_PATH)
 if (NOT ${LLVM_FOUND})
@@ -73,6 +75,8 @@ else()
     add_custom_target(test-hipify-clang)
     add_dependencies(test-hipify-clang test-hipify)
     set_target_properties(test-hipify-clang PROPERTIES FOLDER "Tests")
+
+    set(BUILD_HIPIFY_CLANG 1 PARENT_SCOPE)
 endif()
 
 # vim: ts=4:sw=4:expandtab:smartindent
