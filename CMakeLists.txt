@@ -123,12 +123,10 @@ if(NOT DEFINED HIP_LIB_TYPE)
 endif()
 add_to_config(_buildInfo HIP_LIB_TYPE)
 
-# Check if we need to build clang hipify
-if(NOT DEFINED BUILD_CLANG_HIPIFY)
-    if(NOT DEFINED ENV{BUILD_CLANG_HIPIFY})
-        set(BUILD_CLANG_HIPIFY 0)
-    else()
-        set(BUILD_CLANG_HIPIFY $ENV{BUILD_CLANG_HIPIFY})
+# Check if we need to build hipify-clang
+if(NOT DEFINED HIPIFY_CLANG_LLVM_DIR)
+    if(DEFINED ENV{HIPIFY_CLANG_LLVM_DIR})
+        set(HIPIFY_CLANG_LLVM_DIR $ENV{HIPIFY_CLANG_LLVM_DIR})
     endif()
 endif()
 
@@ -149,9 +147,7 @@ add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 add_custom_target(update_build_and_version_info ALL COMMAND make rebuild_cache)
 
 # Build clang hipify if enabled
-if(BUILD_CLANG_HIPIFY)
-    add_subdirectory(clang-hipify)
-endif()
+add_subdirectory(hipify-clang)
 
 # Build hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
