@@ -102,7 +102,7 @@ if ($HIP_PLATFORM eq "hcc") {
     if ($HOST_OSNAME eq "ubuntu" and $HOST_OSVER eq "\"16.04\"") {
         # No additional flags required
     } else {
-        $HIPLDFLAGS .= " -Wl,--defsym=_binary_kernel_spir_end=0 -Wl,--defsym=_binary_kernel_spir_start=0 -Wl,--defsym=_binary_kernel_cl_start=0 -Wl,--defsym=_binary_kernel_cl_end=0";
+        $HIPLDFLAGS .= " -Wl,--defsym=_binary_kernel_spir_end=1 -Wl,--defsym=_binary_kernel_spir_start=1 -Wl,--defsym=_binary_kernel_cl_start=1 -Wl,--defsym=_binary_kernel_cl_end=1";
     }
 
     # Satisfy HCC dependencies
