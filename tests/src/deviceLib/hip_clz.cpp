@@ -31,7 +31,7 @@ THE SOFTWARE.
 #include <algorithm>
 #include <stdlib.h>
 #include <iostream>
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 
 #define HIP_ASSERT(x) (assert((x)==hipSuccess))
 #define WIDTH     8

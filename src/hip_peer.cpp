@@ -19,9 +19,9 @@ THE SOFTWARE.
 
 #include <hc_am.hpp>
 
-#include "hip_runtime.h"
-#include "hcc_detail/hip_hcc.h"
-#include "hcc_detail/trace_helper.h"
+#include "hip/hip_runtime.h"
+#include "hip/hcc_detail/hip_hcc.h"
+#include "hip/hcc_detail/trace_helper.h"
 
 
 // Peer access functions.

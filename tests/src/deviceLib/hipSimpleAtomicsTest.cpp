@@ -31,7 +31,7 @@ THE SOFTWARE.
 
 
 // Includes HIP Runtime
-#include <hip_runtime.h>
+#include "hip/hip_runtime.h"
 #include <test_common.h>
 
 #define EXIT_WAIVED	2

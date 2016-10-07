@@ -1,5 +1,5 @@
-#include<hip_runtime.h>
-#include<hip_runtime_api.h>
+#include "hip/hip_runtime.h"
+#include "hip/hip_runtime_api.h"
 
 __global__ void Kernel(hipLaunchParm lp, float *Ad){
     int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;

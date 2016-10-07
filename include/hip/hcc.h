@@ -2,7 +2,7 @@
 #define HCC_H
 
 #if defined(__HIP_PLATFORM_HCC__) && !defined (__HIP_PLATFORM_NVCC__)
-#include <hcc_detail/hcc_acc.h>
+#include "hip/hcc_detail/hcc_acc.h"
 #endif
 
 #endif

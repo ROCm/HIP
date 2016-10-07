@@ -23,7 +23,7 @@ THE SOFTWARE.
 
 // Test pointer tracking logic: allocate memory and retrieve stats with hipPointerGetAttributes
 
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 #include "test_common.h"
 #include <vector>
 

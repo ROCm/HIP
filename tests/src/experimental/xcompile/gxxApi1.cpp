@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 
 #include"gxxApi1.h"
-#include"hip_runtime_api.h"
+#include "hip/hip_runtime_api.h"
 
 void* mallocHip(size_t size)
 {

@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 
-#include"hip_runtime.h"
-#include"hip_runtime_api.h"
+#include "hip/hip_runtime.h"
+#include "hip/hip_runtime_api.h"
 #include"gxxApi1.h"
 
 #define len 1024*1024

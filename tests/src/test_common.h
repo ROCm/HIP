@@ -22,7 +22,7 @@ THE SOFTWARE.
 #include <sys/time.h>
 #include <stddef.h>
 
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 
 #define HC __attribute__((hc))
 

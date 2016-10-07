@@ -16,8 +16,8 @@ endmacro()
 #############################
 # Determine HIP_BASE_VERSION
 execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/hipconfig --version
-                OUTPUT_VARIABLE HIP_BASE_VERSION
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
+    OUTPUT_VARIABLE HIP_BASE_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
 string(REPLACE "." ";" VERSION_LIST ${HIP_BASE_VERSION})
 list(GET VERSION_LIST 0 HIP_VERSION_MAJOR)
 list(GET VERSION_LIST 1 HIP_VERSION_MINOR)
@@ -27,11 +27,11 @@ list(GET VERSION_LIST 1 HIP_VERSION_MINOR)
 # use the commit date, instead of build date
 # add xargs to remove strange trailing newline character
 execute_process(COMMAND git show -s --format=@%ct
-                COMMAND xargs
-                COMMAND date -f - --utc +%y%U%w
-                WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-                OUTPUT_VARIABLE HIP_VERSION_PATCH
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
+    COMMAND xargs
+    COMMAND date -f - --utc +%y%U%w
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    OUTPUT_VARIABLE HIP_VERSION_PATCH
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 set(HIP_VERSION $HIP_VERSION_MAJOR.$HIP_VERSION_MINOR.$HIP_VERSION_PATCH)
 add_to_config(_versionInfo HIP_VERSION_MAJOR)
@@ -45,8 +45,8 @@ add_to_config(_versionInfo HIP_VERSION_PATCH)
 if(NOT DEFINED HIP_PLATFORM)
     if(NOT DEFINED ENV{HIP_PLATFORM})
         execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/hipconfig --platform
-                        OUTPUT_VARIABLE HIP_PLATFORM
-                        OUTPUT_STRIP_TRAILING_WHITESPACE)
+            OUTPUT_VARIABLE HIP_PLATFORM
+            OUTPUT_STRIP_TRAILING_WHITESPACE)
     else()
         set(HIP_PLATFORM $ENV{HIP_PLATFORM} CACHE STRING "HIP Platform")
     endif()
@@ -68,9 +68,9 @@ if(HIP_PLATFORM STREQUAL "hcc")
     endif()
     if(IS_ABSOLUTE ${HCC_HOME} AND EXISTS ${HCC_HOME} AND IS_DIRECTORY ${HCC_HOME})
         execute_process(COMMAND ${HCC_HOME}/bin/hcc --version
-                        COMMAND cut -d\  -f9
-                        OUTPUT_VARIABLE HCC_VERSION
-                        OUTPUT_STRIP_TRAILING_WHITESPACE)
+            COMMAND cut -d\  -f9
+            OUTPUT_VARIABLE HCC_VERSION
+            OUTPUT_STRIP_TRAILING_WHITESPACE)
         message(STATUS "Looking for HCC in: " ${HCC_HOME} ". Found version: " ${HCC_VERSION})
     else()
         message(FATAL_ERROR "Don't know where to find HCC. Please specify abolute path using -DHCC_HOME")
@@ -100,9 +100,9 @@ endif()
 # Determine HIP install path
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT AND CMAKE_INSTALL_PREFIX MATCHES "/usr/local")
     if(CMAKE_BUILD_TYPE MATCHES Debug)
-            set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "Installation path for HIP" FORCE)
+        set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "Installation path for HIP" FORCE)
     elseif(CMAKE_BUILD_TYPE MATCHES Release)
-            set(CMAKE_INSTALL_PREFIX "/opt/rocm/hip" CACHE PATH "Installation path for HIP" FORCE)
+        set(CMAKE_INSTALL_PREFIX "/opt/rocm/hip" CACHE PATH "Installation path for HIP" FORCE)
     else()
         message(FATAL_ERROR "Invalid CMAKE_BUILD_TYPE specified. Valid values are Debug and Release")
     endif()
@@ -123,12 +123,10 @@ if(NOT DEFINED HIP_LIB_TYPE)
 endif()
 add_to_config(_buildInfo HIP_LIB_TYPE)
 
-# Check if we need to build clang hipify
-if(NOT DEFINED BUILD_CLANG_HIPIFY)
-    if(NOT DEFINED ENV{BUILD_CLANG_HIPIFY})
-        set(BUILD_CLANG_HIPIFY 0)
-    else()
-        set(BUILD_CLANG_HIPIFY $ENV{BUILD_CLANG_HIPIFY})
+# Check if we need to build hipify-clang
+if(NOT DEFINED HIPIFY_CLANG_LLVM_DIR)
+    if(DEFINED ENV{HIPIFY_CLANG_LLVM_DIR})
+        set(HIPIFY_CLANG_LLVM_DIR $ENV{HIPIFY_CLANG_LLVM_DIR})
     endif()
 endif()
 
@@ -149,9 +147,7 @@ add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 add_custom_target(update_build_and_version_info ALL COMMAND make rebuild_cache)
 
 # Build clang hipify if enabled
-if(BUILD_CLANG_HIPIFY)
-    add_subdirectory(clang-hipify)
-endif()
+add_subdirectory(hipify-clang)
 
 # Build hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
@@ -166,7 +162,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DHIP_VERSION_MAJOR=${HIP_VERSION_MAJOR} -DHIP_VERSION_MINOR=${HIP_VERSION_MINOR} -DHIP_VERSION_PATCH=${HIP_VERSION_PATCH}")
 
     # Add remaining flags
-    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include/libhsakmt -stdlib=libc++")
+    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include -stdlib=libc++")
 
     # Set compiler and compiler flags
     set(CMAKE_CXX_COMPILER "${HCC_HOME}/bin/hcc")
@@ -175,17 +171,17 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HIP_HCC_BUILD_FLAGS}")
 
     set(SOURCE_FILES src/device_util.cpp
-                     src/hip_hcc.cpp
-                     src/hip_context.cpp
-                     src/hip_device.cpp
-                     src/hip_error.cpp
-                     src/hip_event.cpp
-                     src/hip_ldg.cpp
-                     src/hip_memory.cpp
-                     src/hip_peer.cpp
-                     src/hip_stream.cpp
-                     src/hip_fp16.cpp
-                     src/hip_module.cpp)
+        src/hip_hcc.cpp
+        src/hip_context.cpp
+        src/hip_device.cpp
+        src/hip_error.cpp
+        src/hip_event.cpp
+        src/hip_ldg.cpp
+        src/hip_memory.cpp
+        src/hip_peer.cpp
+        src/hip_stream.cpp
+        src/hip_fp16.cpp
+        src/hip_module.cpp)
 
     if(${HIP_LIB_TYPE} EQUAL 0)
         add_library(hip_hcc OBJECT ${SOURCE_FILES})
@@ -211,7 +207,7 @@ file(WRITE "${PROJECT_BINARY_DIR}/.version" ${_versionInfo})
 
 # Build doxygen documentation
 add_custom_target(doc COMMAND HIP_PATH=${CMAKE_CURRENT_SOURCE_DIR} doxygen ${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen-input/doxy.cfg
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docs)
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docs)
 
 #############################
 # Install steps
@@ -233,7 +229,7 @@ install(FILES ${PROJECT_BINARY_DIR}/.version DESTINATION bin)
 
 # Install src, bin, include & cmake if necessary
 execute_process(COMMAND test ${CMAKE_INSTALL_PREFIX} -ef ${CMAKE_CURRENT_SOURCE_DIR}
-                RESULT_VARIABLE INSTALL_SOURCE)
+    RESULT_VARIABLE INSTALL_SOURCE)
 if(NOT ${INSTALL_SOURCE} EQUAL 0)
     install(DIRECTORY src DESTINATION .)
     install(DIRECTORY bin DESTINATION . USE_SOURCE_PERMISSIONS)
@@ -249,13 +245,24 @@ set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_base)
 configure_file(packaging/hip_base.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
 configure_file(packaging/hip_base.postinst ${BUILD_DIR}/postinst @ONLY)
 configure_file(packaging/hip_base.prerm ${BUILD_DIR}/prerm @ONLY)
-add_custom_target(pkg_hip_base COMMAND ${CMAKE_COMMAND} .
-                               COMMAND rm -rf *.deb *.rpm *.tar.gz
-                               COMMAND make package
-                               COMMAND cp *.deb ${PROJECT_BINARY_DIR}
-                               COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
-                               COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
-                               WORKING_DIRECTORY ${BUILD_DIR})
+if(NOT BUILD_HIPIFY_CLANG)
+    add_custom_target(pkg_hip_base COMMAND ${CMAKE_COMMAND} .
+        COMMAND rm -rf *.deb *.rpm *.tar.gz
+        COMMAND make package
+        COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+        COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+        COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+        WORKING_DIRECTORY ${BUILD_DIR})
+else()
+    add_custom_target(pkg_hip_base COMMAND ${CMAKE_COMMAND} .
+        COMMAND rm -rf *.deb *.rpm *.tar.gz
+        COMMAND make package
+        COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+        COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+        COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+        WORKING_DIRECTORY ${BUILD_DIR}
+        DEPENDS hipify-clang)
+endif()
 
 # Package: hip_hcc
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_hcc)
@@ -263,46 +270,46 @@ configure_file(packaging/hip_hcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
 configure_file(packaging/hip_hcc.postinst ${BUILD_DIR}/postinst @ONLY)
 configure_file(packaging/hip_hcc.prerm ${BUILD_DIR}/prerm @ONLY)
 add_custom_target(pkg_hip_hcc  COMMAND ${CMAKE_COMMAND} .
-                               COMMAND rm -rf *.deb *.rpm *.tar.gz
-                               COMMAND make package
-                               COMMAND cp *.deb ${PROJECT_BINARY_DIR}
-                               COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
-                               COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
-                               WORKING_DIRECTORY ${BUILD_DIR}
-                               DEPENDS hip_hcc)
+    COMMAND rm -rf *.deb *.rpm *.tar.gz
+    COMMAND make package
+    COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+    COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+    COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+    WORKING_DIRECTORY ${BUILD_DIR}
+    DEPENDS hip_hcc)
 
 # Package: hip_nvcc
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_nvcc)
 configure_file(packaging/hip_nvcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
 add_custom_target(pkg_hip_nvcc COMMAND ${CMAKE_COMMAND} .
-                               COMMAND rm -rf *.deb *.rpm *.tar.gz
-                               COMMAND make package
-                               COMMAND cp *.deb ${PROJECT_BINARY_DIR}
-                               COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
-                               COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
-                               WORKING_DIRECTORY ${BUILD_DIR})
+    COMMAND rm -rf *.deb *.rpm *.tar.gz
+    COMMAND make package
+    COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+    COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+    COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+    WORKING_DIRECTORY ${BUILD_DIR})
 
 # Package: hip_doc
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_doc)
 configure_file(packaging/hip_doc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
 add_custom_target(pkg_hip_doc  COMMAND ${CMAKE_COMMAND} .
-                               COMMAND rm -rf *.deb *.rpm *.tar.gz
-                               COMMAND make package
-                               COMMAND cp *.deb ${PROJECT_BINARY_DIR}
-                               COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
-                               COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
-                               WORKING_DIRECTORY ${BUILD_DIR})
+    COMMAND rm -rf *.deb *.rpm *.tar.gz
+    COMMAND make package
+    COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+    COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+    COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+    WORKING_DIRECTORY ${BUILD_DIR})
 
 # Package: hip_samples
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_samples)
 configure_file(packaging/hip_samples.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
 add_custom_target(pkg_hip_samples COMMAND ${CMAKE_COMMAND} .
-                                  COMMAND rm -rf *.deb *.rpm *.tar.gz
-                                  COMMAND make package
-                                  COMMAND cp *.deb ${PROJECT_BINARY_DIR}
-                                  COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
-                                  COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
-                                  WORKING_DIRECTORY ${BUILD_DIR})
+    COMMAND rm -rf *.deb *.rpm *.tar.gz
+    COMMAND make package
+    COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+    COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+    COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+    WORKING_DIRECTORY ${BUILD_DIR})
 
 # Package: all
 if(POLICY CMP0037)
@@ -325,14 +332,15 @@ if(POLICY CMP0037)
     cmake_policy(SET CMP0037 OLD)
 endif()
 add_custom_target(install_for_test COMMAND "${CMAKE_COMMAND}" --build . --target install
-                                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 execute_process(COMMAND getconf _NPROCESSORS_ONLN OUTPUT_VARIABLE DASH_JAY OUTPUT_STRIP_TRAILING_WHITESPACE)
 add_custom_target(test COMMAND ${CMAKE_COMMAND} .
-                       COMMAND make -j ${DASH_JAY}
-                       COMMAND make test
-                       WORKING_DIRECTORY ${BUILD_DIR}
-                       DEPENDS install_for_test)
+    COMMAND make -j ${DASH_JAY}
+    COMMAND make test
+    WORKING_DIRECTORY ${BUILD_DIR}
+    DEPENDS install_for_test)
 if(POLICY CMP0037)
     cmake_policy(POP)
 endif()
 
+# vim: ts=4:sw=4:expandtab:smartindent

@@ -20,7 +20,7 @@ THE SOFTWARE.
 #ifndef HIP_FP16_H
 #define HIP_FP16_H
 
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 
 typedef struct{
   unsigned x: 16;

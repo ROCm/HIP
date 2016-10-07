@@ -5,7 +5,7 @@
 #include <cmath>
 
 // header file for the GPU API
-#include <hip_runtime.h>
+#include "hip/hip_runtime.h"
 #include <hipblas.h>
 
 #define N  (1024 * 500)

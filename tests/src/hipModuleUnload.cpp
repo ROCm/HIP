@@ -17,8 +17,8 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include<hip/hip_runtime.h>
-#include<hip/hip_runtime_api.h>
+#include "hip/hip_runtime.h"
+#include "hip/hip_runtime_api.h"
 #include<iostream>
 
 #define fileName "vcpy_isa.co"

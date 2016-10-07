@@ -30,7 +30,7 @@ THE SOFTWARE.
 #include <getopt.h>
 #include <iostream>
 #include <string>
-#include <hip_runtime.h>
+#include "hip/hip_runtime.h"
 
 using namespace std;
 

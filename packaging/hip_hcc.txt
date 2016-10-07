@@ -1,7 +1,14 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(hip_hcc)
 
-install(DIRECTORY @PROJECT_BINARY_DIR@/CMakeFiles/hip_hcc.dir/src/ DESTINATION lib)
+if(@HIP_LIB_TYPE@ EQUAL 0)
+    install(DIRECTORY @PROJECT_BINARY_DIR@/CMakeFiles/hip_hcc.dir/src/ DESTINATION lib)
+elseif(@HIP_LIB_TYPE@ EQUAL 1)
+    install(FILES @PROJECT_BINARY_DIR@/libhip_hcc.a DESTINATION lib)
+else()
+    install(FILES @PROJECT_BINARY_DIR@/libhip_hcc.so DESTINATION lib)
+endif()
+install(FILES @PROJECT_BINARY_DIR@/.buildInfo DESTINATION lib)
 
 #############################
 # Packaging steps
@@ -20,12 +27,12 @@ set(CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}
 set(CPACK_GENERATOR "TGZ;DEB;RPM")
 set(CPACK_BINARY_DEB "ON")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${PROJECT_BINARY_DIR}/postinst;${PROJECT_BINARY_DIR}/prerm")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "hip_base (= ${CPACK_PACKAGE_VERSION}), hcc_lc (= @HCC_VERSION@)")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "hip_base (= ${CPACK_PACKAGE_VERSION}), hcc_lc (= @HCC_VERSION@), rocm-profiler")
 set(CPACK_BINARY_RPM "ON")
 set(CPACK_RPM_PACKAGE_ARCHITECTURE "x86_64")
 set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/postinst")
 set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE "${PROJECT_BINARY_DIR}/prerm")
 set(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
-set(CPACK_RPM_PACKAGE_REQUIRES "hip_base = ${CPACK_PACKAGE_VERSION}, hcc_lc = @HCC_VERSION@")
+set(CPACK_RPM_PACKAGE_REQUIRES "hip_base = ${CPACK_PACKAGE_VERSION}, hcc_lc = @HCC_VERSION@, rocm-profiler")
 set(CPACK_SOURCE_GENERATOR "TGZ")
 include(CPack)
