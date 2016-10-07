@@ -30,7 +30,7 @@ THE SOFTWARE.
  * HIT_END
  */
 
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 #include "test_common.h"
 
 bool p_memcpyWithPeer = false; // use the peer device for the P2P copy

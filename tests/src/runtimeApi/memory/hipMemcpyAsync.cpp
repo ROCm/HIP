@@ -19,7 +19,7 @@ THE SOFTWARE.
 
 // Test under-development.  Calls async mem-copy API, experiment with functionality.
 
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 #include "test_common.h"
 unsigned p_streams = 2;
 
@@ -326,7 +326,7 @@ void parseMyArguments(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-    HipTest::parseStandardArguments(argc, argv, true);
+    HipTest::parseStandardArguments(argc, argv, false);
     parseMyArguments(argc, argv);
 
 

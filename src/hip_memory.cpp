@@ -17,12 +17,14 @@
    THE SOFTWARE.
    */
 
-#include "hip_runtime.h"
-#include "hcc_detail/hip_hcc.h"
-#include "hcc_detail/trace_helper.h"
-#include <hsa.h>
 #include <hc_am.hpp>
-#include <hsa_ext_amd.h>
+#include "hsa/hsa.h"
+#include "hsa/hsa_ext_amd.h"
+
+#include "hip/hip_runtime.h"
+#include "hip/hcc_detail/hip_hcc.h"
+#include "hip/hcc_detail/trace_helper.h"
+
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 // Memory

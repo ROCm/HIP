@@ -411,27 +411,53 @@ For example:
 
 Device Code:
 ```
-// Cuda Device Code
-__constant__ float Array[1024];
-__global__ void Inc(float *Out){
-   Int tx = hipThreadIdx_x;
-   Out[tx] = Array[tx] + 1;
+#include<hip_runtime_api.h>
+#include<hip_runtime.h>
+#include<iostream>
+
+#ifdef __HIP_PLATFORM_HCC__
+__global__ void Inc(hipLaunchParm lp, float *Ad, float *Out)
+#endif
+#ifdef __HIP_PLATFORM_NVCC__
+__constant__ float Ad[1024];
+__global__ void Inc(hipLaunchParm lp, float *Out)
+#endif
+{
+    int tx = hipThreadIdx_x;
+    Out[tx] = Ad[tx] + 1.0f;
 }
- 
-// HIP Device Code
-__global__ void Inc(hipLaunchParm lp, float *Array, float *Out){
-   Int tx = hipThreadIdx_x;
-   Out[tx] = Array[tx] + 1;
+
+int main()
+{
+    float *A, *Ad;
+    float *Out, *Outd;
+    A = new float[1024];
+    Out = new float[1024];
+
+    for(uint32_t i=0;i<1024;i++)
+    {
+        A[i] = 1.0f*i;
+        Out[i] = 0.0f;
+    }
+
+    hipMalloc((void**)&Ad, 1024*sizeof(float));
+    hipMalloc((void**)&Outd, 1024*sizeof(float));
+
+    hipMemcpy(Outd, Out, 1024*sizeof(float), hipMemcpyHostToDevice);
+
+#ifdef __HIP_PLATFORM_HCC__
+    assert(hipSuccess == hipMemcpy(Ad, A, 1024*sizeof(float), hipMemcpyHostToDevice));
+    hipLaunchKernel(Inc, dim3(1,1,1), dim3(1024,1,1), 0, 0, Ad, Outd);
+#endif
+#ifdef __HIP_PLATFORM_NVCC__
+    assert(hipSuccess == hipMemcpyToSymbol(Ad, A, 1024*sizeof(float)));
+    hipLaunchKernel(Inc, dim3(1,1,1), dim3(1024,1,1), 0, 0, Outd);
+#endif
+
+    hipMemcpy(Out, Outd, 1024*sizeof(float), hipMemcpyDeviceToHost);
+    std::cout<<Out[10]<<" "<<A[10]<<std::endl;
+    assert(Out[10] - A[10] == 1.0f);
 }
-```
- 
-Host Code:
-```
-// CUDA Host Code
-cudaMemcpyToSymbol(Array, hostArray, sizeofArray);
- 
-// HIP Host Code
-hipMemcpy(Array, hostArray, sizeofArray);
 ```
  
 ## threadfence_system
@@ -544,13 +570,10 @@ HIP_PRINT_ENV                  =  1 : Print HIP environment variables.
 HIP_LAUNCH_BLOCKING            =  0 : Make HIP APIs 'host-synchronous', so they block until any kernel launches or data copy commands complete. Alias: CUDA_LAUNCH_BLOCKING.
 HIP_DB                         =  0 : Print various debug info.  Bitmask, see hip_hcc.cpp for more information.
 HIP_TRACE_API                  =  0 : Trace each HIP API call.  Print function name and return code to stderr as program executes.
-HIP_STAGING_SIZE               = 64 : Size of each staging buffer (in KB)
-HIP_STAGING_BUFFERS            =  2 : Number of staging buffers to use in each direction. 0=use hsa_memory_copy.
-HIP_PININPLACE                 =  0 : For unpinned transfers, pin the memory in-place in chunks before doing the copy.  Under development.
-HIP_STREAM_SIGNALS             =  2 : Number of signals to allocate when new stream is created (signal pool will grow on demand)
+HIP_TRACE_API_COLOR            = green : Color to use for HIP_API.  None/Red/Green/Yellow/Blue/Magenta/Cyan/White
+HIP_ATP_MARKER                 =  0 : Add HIP function begin/end to ATP file generated with CodeXL
 HIP_VISIBLE_DEVICES            =  0 : Only devices whose index is present in the secquence are visible to HIP applications and they are enumerated in the order of secquence
-HIP_DISABLE_HW_KERNEL_DEP      =  1 : Disable HW dependencies before kernel commands  - instead wait for dependency on host. -1 means ignore these dependencies. (debug mode)
-HIP_DISABLE_HW_COPY_DEP        =  1 : Disable HW dependencies before copy commands  - instead wait for dependency on host. -1 means ifnore these dependencies (debug mode)
+HIP_NUM_KERNELS_INFLIGHT       = 128 : Number of kernels per stream
 
 ```
 

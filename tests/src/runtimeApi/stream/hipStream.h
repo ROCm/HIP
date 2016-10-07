@@ -19,7 +19,7 @@ THE SOFTWARE.
 
 #ifndef HIPSTREAM_H
 #define HIPSTREAM_H
-#include<hip_runtime.h>
+#include "hip/hip_runtime.h"
 
 #define NUM_STREAMS 4
 

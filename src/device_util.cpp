@@ -17,11 +17,12 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include"hip_runtime.h"
-#include<hc.hpp>
-#include<grid_launch.h>
-
+#include <hc.hpp>
+#include <grid_launch.h>
 #include <hc_math.hpp>
+
+#include "hip/hip_runtime.h"
+
 // TODO: Choose whether default is precise math or fast math based on compilation flag.
 #ifdef __HCC_ACCELERATOR__
 using namespace hc::precise_math;
@@ -1671,6 +1672,17 @@ __device__  unsigned int atomicDec(unsigned int* address,
 	return hc::__atomic_wrapdec(address,val);
 }
 
+//__mul24 __umul24
+__device__  int __mul24(int arg1,
+                       int arg2)
+{
+	return hc::__mul24(arg1, arg2);
+}
+__device__  unsigned int __umul24(unsigned int arg1,
+                       unsigned int arg2)
+{
+	return hc::__mul24(arg1, arg2);
+}
 
 __device__ unsigned int test__popc(unsigned int input)
 {

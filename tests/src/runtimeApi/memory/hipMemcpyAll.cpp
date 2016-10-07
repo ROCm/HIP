@@ -22,7 +22,7 @@ THE SOFTWARE.
  * HIT_END
  */
 
-#include<hip_runtime.h>
+#include "hip/hip_runtime.h"
 #include<iostream>
 #include<assert.h>
 #include"test_common.h"

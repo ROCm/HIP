@@ -30,7 +30,7 @@ THE SOFTWARE.
  * HIT_END
  */
 
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 #include "test_common.h"
 
 int main(int argc, char *argv[])

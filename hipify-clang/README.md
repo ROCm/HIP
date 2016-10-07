@@ -25,12 +25,12 @@ tar xvfJ clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
 
 - Enable build of hipify-clang and specify path to LLVM.
 
-Note LLVM_DIR must be a full absolute path to the location extracted above. Here's an example assuming we extract the clang 3.8 package into ~/HIP/clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-14.04/
+Note HIPIFY_CLANG_LLVM_DIR must be a full absolute path to the location extracted above. Here's an example assuming we extract the clang 3.8 package into ~/HIP/clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-14.04/
 ```shell
 cd HIP
 mkdir build
 cd build
-cmake -DBUILD_CLANG_HIPIFY=1 -DLLVM_DIR=~/HIP/clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-14.04/ -DCMAKE_BUILD_TYPE=Release ..
+cmake -DHIPIFY_CLANG_LLVM_DIR=~/HIP/clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-14.04/ -DCMAKE_BUILD_TYPE=Release ..
 make
 make install
 ```

@@ -19,7 +19,7 @@ THE SOFTWARE.
 
 #include <stdio.h>
 #include <hip/hip_fp16.h>
-#include "hip_runtime_api.h"
+#include "hip/hip_runtime_api.h"
 
 #define DSIZE 4
 #define SCF 0.5f

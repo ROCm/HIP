@@ -22,12 +22,9 @@ done
 popd >/dev/null
 
 # Soft-link to headers
-HIPINCDIR=$HIPDIR/include
+HIPINCDIR=$HIPDIR/include/hip
 ROCMINCDIR=$ROCMDIR/include
 mkdir -p $ROCMINCDIR
 pushd $ROCMINCDIR
     ln -s $HIPINCDIR hip
-popd
-pushd $HIPINCDIR
-ln -s $HIPINCDIR hip
 popd

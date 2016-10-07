@@ -36,15 +36,15 @@ THE SOFTWARE.
 #include <vector>
 #include <algorithm>
 #include <atomic>
+
 #include <hc.hpp>
 #include <hc_am.hpp>
+#include "hsa/hsa_ext_amd.h"
+#include "libhsakmt/hsakmt.h"
 
-#include "hip_runtime.h"
-#include "hcc_detail/hip_hcc.h"
-#include "hsa_ext_amd.h"
-#include "hsakmt.h"
-
-#include "hcc_detail/trace_helper.h"
+#include "hip/hip_runtime.h"
+#include "hip/hcc_detail/hip_hcc.h"
+#include "hip/hcc_detail/trace_helper.h"
 
 
 
@@ -52,10 +52,6 @@ THE SOFTWARE.
 //Global variables:
 //=================================================================================================
 const int release = 1;
-
-#define MEMCPY_D2H_STAGING_VS_PININPLACE_COPY_THRESHOLD    4194304
-#define MEMCPY_H2D_DIRECT_VS_STAGING_COPY_THRESHOLD    65336
-#define MEMCPY_H2D_STAGING_VS_PININPLACE_COPY_THRESHOLD    1048576
 
 const char *API_COLOR = KGRN;
 const char *API_COLOR_END = KNRM;
@@ -69,6 +65,9 @@ int HIP_ATP_MARKER= 0;
 int HIP_DB= 0;
 int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
 int HIP_NUM_KERNELS_INFLIGHT = 128;
+int HIP_BLOCKING_SYNC = 0;
+
+//#define DISABLE_COPY_EXT 1
 
 
 std::once_flag hip_initialized;
@@ -177,7 +176,7 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty
 {
     if (! assertQueueEmpty) {
         tprintf (DB_SYNC, "stream %p wait for queue-empty..\n", this);
-        crit->_av.wait();
+        crit->_av.wait(HIP_BLOCKING_SYNC ? hc::hcWaitModeBlocked : hc::hcWaitModeActive);
     }
 
     crit->_kernelCnt = 0;
@@ -257,8 +256,8 @@ void ihipStream_t::lockclose_postKernelCommand(hc::accelerator_view *av)
 {
 
     if (HIP_LAUNCH_BLOCKING) {
-        // TODO - fix this so it goes through proper stream::wait() call.
-        av->wait();  // direct wait OK since we know the stream is locked. 
+        // TODO - fix this so it goes through proper stream::wait() call.// direct wait OK since we know the stream is locked. 
+        av->wait(hc::hcWaitModeActive);  
         tprintf(DB_SYNC, " %s LAUNCH_BLOCKING for kernel completion\n", ToString(this).c_str());
     }
 
@@ -1008,7 +1007,9 @@ void ihipInit()
     READ_ENV_I(release, HIP_VISIBLE_DEVICES, CUDA_VISIBLE_DEVICES, "Only devices whose index is present in the secquence are visible to HIP applications and they are enumerated in the order of secquence" );
 
 
-    READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Number of kernels per stream ");
+    READ_ENV_I(release, HIP_BLOCKING_SYNC, 0, "Use blocking synchronization for stream waits.  This may increase latency but is friendlier to other processes. If 0, spin-wait.");
+
+    READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Max number of inflight kernels per stream before active synchronization is forced.");
 
     // Some flags have both compile-time and runtime flags - generate a warning if user enables the runtime flag but the compile-time flag is disabled.
     if (HIP_DB && !COMPILE_HIP_DB) {
@@ -1451,7 +1452,13 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
 
     {
         LockedAccessor_StreamCrit_t crit (_criticalData);
+#if DISABLE_COPY_EXT
+#warning ("Disabled copy_ext path, P2P host staging copies will not work")
+        // Note - peer-to-peer copies which require host staging will not work in this path.
+        crit->_av.copy(src, dst, sizeBytes);
+#else
         crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceHostCopyEngine);
+#endif
     }
 }
 

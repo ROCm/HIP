@@ -19,7 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 #include "test_common.h"
 
 #pragma GCC diagnostic ignored "-Wall"
@@ -35,7 +35,7 @@ __device__ void integer_intrinsics()
     __ffs((int)10);
     __ffsll((long long)10);
     //__hadd((int)1, (int)3);
-    //__mul24((int)1, (int)2);
+    __mul24((int)1, (int)2);
     //__mul64hi((long long)1, (long long)2);
     //__mulhi((int)1, (int)2);
     __popc((unsigned int)4);
@@ -45,7 +45,7 @@ __device__ void integer_intrinsics()
     //__rhadd((int)1, (int)2);
     //__sad((int)1, (int)2, 0);
     //__uhadd((unsigned int)1, (unsigned int)3);
-    //__umul24((unsigned int)1, (unsigned int)2);
+    __umul24((unsigned int)1, (unsigned int)2);
     //__umul64hi((unsigned long long)1, (unsigned long long)2);
     //__umulhi((unsigned int)1, (unsigned int)2);
     //__urhadd((unsigned int)1, (unsigned int)2);

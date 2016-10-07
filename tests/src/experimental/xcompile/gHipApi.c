@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 
 #include"gHipApi.h"
-#include"hip_runtime_api.h"
+#include "hip/hip_runtime_api.h"
 #include"stdio.h"
 
 void _h2d(mem_manager *self){
