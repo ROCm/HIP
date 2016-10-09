@@ -174,6 +174,16 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
     return ihipLogStatus(hip_status);
 }
 
+hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
+{
+    return hipHostMalloc(ptr, sizeBytes, 0);
+}
+
+hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags)
+{
+    return hipHostMalloc(ptr, sizeBytes, flags);
+};
+
 // width in bytes
 hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height) 
 {
@@ -929,6 +939,11 @@ hipError_t hipHostFree(void* ptr)
 
     return ihipLogStatus(hipStatus);
 };
+
+hipError_t hipFreeHost(void* ptr)
+{
+    return hipHostFree(ptr);
+}
 
 hipError_t hipFreeArray(hipArray* array)
 {

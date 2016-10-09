@@ -782,6 +782,18 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
 hipError_t hipMalloc(void** ptr, size_t size) ;
 
 /**
+ *  @brief Allocate pinned host memory [Deprecated]
+ *
+ *  @param[out] ptr Pointer to the allocated host pinned memory
+ *  @param[in]  size Requested memory size
+ *
+ *  @return #hipSuccess, #hipErrorMemoryAllocation
+ *
+ *  @deprecated use hipHostMalloc() instead
+ */
+hipError_t hipMallocHost(void** ptr, size_t size) __attribute__((deprecated("use hipHostMalloc instead"))) ;
+
+/**
  *  @brief Allocate device accessible page locked host memory
  *
  *  @param[out] ptr Pointer to the allocated host pinned memory
@@ -793,6 +805,19 @@ hipError_t hipMalloc(void** ptr, size_t size) ;
  *  @see hipSetDeviceFlags, hipHostFree
  */
 hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags) ;
+
+/**
+ *  @brief Allocate device accessible page locked host memory [Deprecated]
+ *
+ *  @param[out] ptr Pointer to the allocated host pinned memory
+ *  @param[in]  size Requested memory size
+ *  @param[in]  flags Type of host memory allocation
+ *
+ *  @return #hipSuccess, #hipErrorMemoryAllocation
+ *
+ *  @deprecated use hipHostMalloc() instead
+ */
+hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) __attribute__((deprecated("use hipHostMalloc instead"))) ;
 
 /**
  *  @brief Get Device pointer from Host Pointer allocated through hipHostMalloc
@@ -891,6 +916,17 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
  *  @see hipMalloc, hipMallocPitch, hipMallocArray, hipFreeArray, hipHostFree, hipMalloc3D, hipMalloc3DArray, hipHostMalloc
  */
 hipError_t hipFree(void* ptr);
+
+/**
+ *  @brief Free memory allocated by the hcc hip host memory allocation API.  [Deprecated]
+ *
+ *  @param[in] ptr Pointer to memory to be freed
+ *  @return #hipSuccess,
+ *          #hipErrorInvalidValue (if pointer is invalid, including device pointers allocated with hipMalloc)
+
+ *  @deprecated use hipHostFree() instead
+ */
+hipError_t hipFreeHost(void* ptr) __attribute__((deprecated("use hipHostFree instead")));
 
 /**
  *  @brief Free memory allocated by the hcc hip host memory allocation API
