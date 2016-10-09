@@ -185,6 +185,16 @@ inline static hipError_t hipFree(void* ptr) {
     return hipCUDAErrorTohipError(cudaFree(ptr));
 }
 
+inline static hipError_t hipMallocHost(void** ptr, size_t size) __attribute__((deprecated("use hipHostMalloc instead")));
+inline static hipError_t hipMallocHost(void** ptr, size_t size) {
+    return hipCUDAErrorTohipError(cudaMallocHost(ptr, size));
+}
+
+inline static hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) __attribute__((deprecated("use hipHostMalloc instead")));
+inline static hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags){
+	return hipCUDAErrorTohipError(cudaHostAlloc(ptr, size, flags));
+}
+
 inline static hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags){
 	return hipCUDAErrorTohipError(cudaHostAlloc(ptr, size, flags));
 }
@@ -203,6 +213,11 @@ inline static hipError_t hipHostRegister(void* ptr, size_t size, unsigned int fl
 
 inline static hipError_t hipHostUnregister(void* ptr){
 	return hipCUDAErrorTohipError(cudaHostUnregister(ptr));
+}
+
+inline static hipError_t hipFreeHost(void* ptr) __attribute__((deprecated("use hipHostFree instead")));
+inline static hipError_t hipFreeHost(void* ptr) {
+    return hipCUDAErrorTohipError(cudaFreeHost(ptr));
 }
 
 inline static hipError_t hipHostFree(void* ptr)  {
