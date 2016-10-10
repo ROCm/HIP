@@ -222,6 +222,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
 
     # Install .buildInfo
     install(FILES ${PROJECT_BINARY_DIR}/.buildInfo DESTINATION lib)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_ir.ll DESTINATION lib)
 endif()
 
 # Install .version

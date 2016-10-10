@@ -196,6 +196,11 @@ if($HIP_PLATFORM eq "hcc"){
   }
 }
 
+if($HIP_PLATFORM eq "hcc"){
+    $EXPORT_LL=" ";
+    $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_ir.ll\n";
+}
+
 if($HIP_PLATFORM eq "nvcc"){
   $ISACMD .= "$HIP_PATH/bin/hipcc -ptx ";
   if($ARGV[0] eq "--genco"){

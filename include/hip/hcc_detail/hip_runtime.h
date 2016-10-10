@@ -533,7 +533,8 @@ __device__ float __dsqrt_rz(double x);
  *
  * @warning __threadfence_block is a stub and map to no-op.
  */
-__device__ void  __threadfence_block(void);
+// __device__ void  __threadfence_block(void);
+extern "C" __device__ void __threadfence_block(void);
 
  /**
   * @brief threadfence makes wirtes visible to other threads running on same GPU.
@@ -544,7 +545,8 @@ __device__ void  __threadfence_block(void);
  *
  * @warning __threadfence is a stub and map to no-op, application should set "export HSA_DISABLE_CACHE=1" to disable both L1 and L2 caches.
  */
-__device__ void  __threadfence(void) __attribute__((deprecated("Provided for compile-time compatibility, not yet functional")));
+// __device__ void  __threadfence(void) __attribute__((deprecated("Provided for compile-time compatibility, not yet functional")));
+extern "C" __device__ void __threadfence(void);
 
 /**
  * @brief threadfence_system makes writes to pinned system memory visible on host CPU.
