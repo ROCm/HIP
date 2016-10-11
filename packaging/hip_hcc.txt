@@ -8,7 +8,7 @@ elseif(@HIP_LIB_TYPE@ EQUAL 1)
 else()
     install(FILES @PROJECT_BINARY_DIR@/libhip_hcc.so DESTINATION lib)
 endif()
-install(FILES @PROJECT_BINARY_DIR@/.buildInfo DESTINATION lib)
+install(FILES @PROJECT_BINARY_DIR@/.hipInfo DESTINATION lib)
 
 #############################
 # Packaging steps

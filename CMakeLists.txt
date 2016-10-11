@@ -143,7 +143,7 @@ add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 #############################
 # Build steps
 #############################
-# Rebuild cmake cache updates .buildInfo and .version
+# Rebuild cmake cache updates .hipInfo and .hipVersion
 add_custom_target(update_build_and_version_info ALL COMMAND make rebuild_cache)
 
 # Build clang hipify if enabled
@@ -198,12 +198,12 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set_source_files_properties(${SOURCE_FILES} PROPERTIES OBJECT_DEPENDS ${PROJECT_BINARY_DIR}/hcc_version.txt)
     add_dependencies(hip_hcc check_hcc_version update_build_and_version_info)
 
-    # Generate .buildInfo
-    file(WRITE "${PROJECT_BINARY_DIR}/.buildInfo" ${_buildInfo})
+    # Generate .hipInfo
+    file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
 endif()
 
-# Generate .version
-file(WRITE "${PROJECT_BINARY_DIR}/.version" ${_versionInfo})
+# Generate .hipVersion
+file(WRITE "${PROJECT_BINARY_DIR}/.hipVersion" ${_versionInfo})
 
 # Build doxygen documentation
 add_custom_target(doc COMMAND HIP_PATH=${CMAKE_CURRENT_SOURCE_DIR} doxygen ${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen-input/doxy.cfg
@@ -219,14 +219,14 @@ if(HIP_PLATFORM STREQUAL "hcc")
     else()
         install(TARGETS hip_hcc DESTINATION lib)
     endif()
-
-    # Install .buildInfo
-    install(FILES ${PROJECT_BINARY_DIR}/.buildInfo DESTINATION lib)
     install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_ir.ll DESTINATION lib)
+
+    # Install .hipInfo
+    install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)
 endif()
 
-# Install .version
-install(FILES ${PROJECT_BINARY_DIR}/.version DESTINATION bin)
+# Install .hipVersion
+install(FILES ${PROJECT_BINARY_DIR}/.hipVersion DESTINATION bin)
 
 # Install src, bin, include & cmake if necessary
 execute_process(COMMAND test ${CMAKE_INSTALL_PREFIX} -ef ${CMAKE_CURRENT_SOURCE_DIR}

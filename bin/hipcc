@@ -52,9 +52,9 @@ $verbose = $ENV{'HIPCC_VERBOSE'} // 0;
 $HIP_PATH=$ENV{'HIP_PATH'} // dirname (dirname $0); # use parent directory of hipcc
 
 #---
-# Read .buildInfo
+# Read .hipInfo
 my %hipConfig = ();
-parse_config_file("$HIP_PATH/lib/.buildInfo", \%hipConfig);
+parse_config_file("$HIP_PATH/lib/.hipInfo", \%hipConfig);
 
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
