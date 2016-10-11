@@ -24,8 +24,13 @@ THE SOFTWARE.
 #define NUM 1024
 #define SIZE 1024*4
 
+#ifdef __HIP_PLATFORM_HCC__
 __attribute__((address_space(1))) int global[NUM];
+#endif
 
+#ifdef __HIP_PLATFORM_NVCC__
+__device__ int global[NUM];
+#endif
 
 __global__ void Assign(hipLaunchParm lp, int* Out)
 {
@@ -47,7 +52,12 @@ int main()
 
     hipStream_t stream;
     hipStreamCreate(&stream);
+#ifdef __HIP_PLATFORM_HCC__
     hipMemcpyToSymbolAsync("global", A, SIZE, 0, hipMemcpyHostToDevice, stream);
+#endif
+#ifdef __HIP_PLATFORM_NVCC__
+    hipMemcpyToSymbolAsync(global, A, SIZE, 0, hipMemcpyHostToDevice, stream);
+#endif
     hipStreamSynchronize(stream);
     hipLaunchKernel(Assign, dim3(1,1,1), dim3(NUM,1,1), 0, 0, Ad);
     hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost);
@@ -60,8 +70,12 @@ int main()
         A[i] = -2*i;
         B[i] = 0;
     }
-
+#ifdef __HIP_PLATFORM_HCC__
     hipMemcpyToSymbol("global", A, SIZE, 0, hipMemcpyHostToDevice);
+#endif
+#ifdef __HIP_PLATFORM_NVCC__
+    hipMemcpyToSymbol(global, A, SIZE, 0, hipMemcpyHostToDevice);
+#endif
     hipLaunchKernel(Assign, dim3(1,1,1), dim3(NUM,1,1), 0, 0, Ad);
     hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost);
     for(unsigned i=0;i<NUM;i++) {
