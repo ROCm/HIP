@@ -38,13 +38,29 @@ int main()
     int *A, *B, *Ad;
     A = new int[NUM];
     B = new int[NUM];
-    for(unsigned i=0;i<NUM;i++)
-    {
+    for(unsigned i=0;i<NUM;i++) {
         A[i] = -1*i;
         B[i] = 0;
     }
 
     hipMalloc((void**)&Ad, SIZE);
+
+    hipStream_t stream;
+    hipStreamCreate(&stream);
+    hipMemcpyToSymbolAsync("global", A, SIZE, 0, hipMemcpyHostToDevice, stream);
+    hipStreamSynchronize(stream);
+    hipLaunchKernel(Assign, dim3(1,1,1), dim3(NUM,1,1), 0, 0, Ad);
+    hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost);
+
+    for(unsigned i=0;i<NUM;i++) {
+        assert(A[i] == B[i]);
+    }
+
+    for(unsigned i=0;i<NUM;i++) {
+        A[i] = -2*i;
+        B[i] = 0;
+    }
+
     hipMemcpyToSymbol("global", A, SIZE, 0, hipMemcpyHostToDevice);
     hipLaunchKernel(Assign, dim3(1,1,1), dim3(NUM,1,1), 0, 0, Ad);
     hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost);

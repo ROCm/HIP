@@ -183,7 +183,7 @@ typedef enum hipError_t {
     hipErrorInvalidHandle           = 400,
     hipErrorNotFound                = 500,
     hipErrorIllegalAddress          = 700,
-
+    hipErrorInvalidSymbol           = 701,
 // Runtime Error Codes start here.
     hipErrorMissingConfiguration    = 1001,
     hipErrorMemoryAllocation        = 1002,    ///< Memory allocation error.

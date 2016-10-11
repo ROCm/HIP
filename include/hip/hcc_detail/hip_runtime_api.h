@@ -1063,6 +1063,27 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t siz
 
 
 /**
+ *  @brief Copies @p sizeBytes bytes from the memory area pointed to by @p src to the memory area pointed to by @p offset bytes from the start of symbol @p symbol 
+ *
+ *  The memory areas may not overlap. Symbol can either be a variable that resides in global or constant memory space, or it can be a character string,
+ *  naming a variable that resides in global or constant memory space. Kind can be either hipMemcpyHostToDevice or hipMemcpyDeviceToDevice
+ *  hipMemcpyToSymbolAsync() is asynchronous with respect to the host, so the call may return before copy is complete.
+ *  TODO: cudaErrorInvalidSymbol and cudaErrorInvalidMemcpyDirection is not supported, use hipErrorUnknown for now.
+ *
+ *  @param[in]  symbolName - Symbol destination on device
+ *  @param[in]  src - Data being copy from
+ *  @param[in]  sizeBytes - Data size in bytes
+ *  @param[in]  offset - Offset from start of symbol in bytes
+ *  @param[in]  kind - Type of transfer
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
+ *
+ *  @see hipMemcpy, hipMemcpy2D, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpy2DFromArray, hipMemcpyArrayToArray, hipMemcpy2DArrayToArray, hipMemcpyFromSymbol, hipMemcpyAsync, hipMemcpy2DAsync, hipMemcpyToArrayAsync, hipMemcpy2DToArrayAsync, hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync, hipMemcpyFromSymbolAsync
+ */
+hipError_t hipMemcpyToSymbolAsync(const char* symbolName, const void *src, size_t sizeBytes, size_t offset, hipMemcpyKind kind, hipStream_t stream);
+
+
+
+/**
  *  @brief Copy data from src to dst asynchronously.
  *
  *  @warning If host or dest are not pinned, the memory copy will be performed synchronously.  For best performance, use hipHostMalloc to
