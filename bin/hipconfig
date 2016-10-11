@@ -86,9 +86,9 @@ if ($HIP_PLATFORM eq "nvcc") {
 };
 
 #---
-# Read .version
+# Read .hipVersion
 my %hipVersion = ();
-parse_config_file("$HIP_PATH/bin/.version", \%hipVersion);
+parse_config_file("$HIP_PATH/bin/.hipVersion", \%hipVersion);
 $HIP_VERSION_MAJOR = $hipVersion{'HIP_VERSION_MAJOR'} // $HIP_BASE_VERSION_MAJOR;
 $HIP_VERSION_MINOR = $hipVersion{'HIP_VERSION_MINOR'} // $HIP_BASE_VERSION_MINOR;
 $HIP_VERSION_PATCH = $hipVersion{'HIP_VERSION_PATCH'} // "0";

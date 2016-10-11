@@ -6,7 +6,7 @@ if(@BUILD_HIPIFY_CLANG@)
     install(PROGRAMS @PROJECT_BINARY_DIR@/hipify-clang/hipify-clang DESTINATION bin)
 endif()
 install(DIRECTORY @hip_SOURCE_DIR@/include DESTINATION .)
-install(FILES @PROJECT_BINARY_DIR@/.version DESTINATION bin)
+install(FILES @PROJECT_BINARY_DIR@/.hipVersion DESTINATION bin)
 install(DIRECTORY @hip_SOURCE_DIR@/cmake DESTINATION .)
 
 #############################
