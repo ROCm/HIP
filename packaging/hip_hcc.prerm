@@ -19,6 +19,7 @@ for f in $HIPLIBFILES
 do
 rm $(basename $f)
 done
+rm .hipInfo
 popd
 rmdir --ignore-fail-on-non-empty $ROCMLIBDIR
 

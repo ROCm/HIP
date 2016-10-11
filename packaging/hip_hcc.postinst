@@ -19,5 +19,6 @@ for f in $HIPLIBFILES
 do
     ln -s $f $(basename $f)
 done
+    ln -s $HIPDIR/lib/.hipInfo .hipInfo
 popd
 
