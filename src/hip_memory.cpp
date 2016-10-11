@@ -385,22 +385,65 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t cou
 {
     HIP_INIT_API(symbolName, src, count, offset, kind);
 
-#ifdef USE_MEMCPYTOSYMBOL
-    if(kind != hipMemcpyHostToDevice)
+    if(symbolName == nullptr)
     {
-        return ihipLogStatus(hipErrorInvalidValue);
+        return ihipLogStatus(hipErrorInvalidSymbol);
     }
-    auto ctx = ihipGetTlsDefaultCtx();
 
-    //hsa_signal_t depSignal;
-    //int depSignalCnt = ctx._default_stream->preCopyCommand(NULL, &depSignal, ihipCommandCopyH2D);
-    assert(0);  // Need to properly synchronize the copy - do something with depSignal if != NULL.
+    auto ctx = ihipGetTlsDefaultCtx();
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    acc.memcpy_symbol(symbolName, (void*) src,count, offset);
-#endif
+    void *ptr = acc.get_symbol_address(symbolName);
+
+    if(ptr == nullptr)
+    {
+        return ihipLogStatus(hipErrorInvalidSymbol);
+    }
+
+    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+    stream->locked_copySync(ptr, src, count + offset, kind);
+
     return ihipLogStatus(hipSuccess);
+}
+
+hipError_t hipMemcpyToSymbolAsync(const char* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind, hipStream_t stream)
+{
+    HIP_INIT_API(symbolName, src, count, offset, kind, stream);
+
+    if(symbolName == nullptr)
+    {
+        return ihipLogStatus(hipErrorInvalidSymbol);
+    }
+
+    hipError_t e = hipSuccess;
+
+    auto ctx = ihipGetTlsDefaultCtx();
+
+    hc::accelerator acc = ctx->getDevice()->_acc;
+
+    void *ptr = acc.get_symbol_address(symbolName);
+
+    if(ptr == nullptr)
+    {
+        return ihipLogStatus(hipErrorInvalidSymbol);
+    }
+
+    if (stream) {
+        try {
+            stream->locked_copyAsync(ptr, src, count + offset, kind);
+        }
+        catch (ihipException ex) {
+            e = ex._code;
+        }
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+
+
 }
 
 //---
