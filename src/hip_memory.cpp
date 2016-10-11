@@ -102,13 +102,13 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
     HIP_INIT_API(ptr, sizeBytes);
 
     hipError_t  hip_status = hipSuccess;
-    // return NULL pointer when malloc size is 0  
+    // return NULL pointer when malloc size is 0
     if (sizeBytes == 0)
     {
         *ptr = NULL;
         return ihipLogStatus(hipSuccess);
     }
-   
+
     auto ctx = ihipGetTlsDefaultCtx();
 
     if (ctx) {
@@ -185,7 +185,7 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags)
 };
 
 // width in bytes
-hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height) 
+hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height)
 {
     HIP_INIT_API(ptr, pitch, width, height);
 
@@ -228,7 +228,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
     return ihipLogStatus(hip_status);
 }
 
-hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f) 
+hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f)
 {
     hipChannelFormatDesc cd;
     cd.x = x; cd.y = y; cd.z = z; cd.w = w;
@@ -237,7 +237,7 @@ hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannel
 }
 
 hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
-        size_t width, size_t height, unsigned int flags) 
+        size_t width, size_t height, unsigned int flags)
 {
     HIP_INIT_API(array, desc, width, height, flags);
 
@@ -396,7 +396,9 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t cou
     //int depSignalCnt = ctx._default_stream->preCopyCommand(NULL, &depSignal, ihipCommandCopyH2D);
     assert(0);  // Need to properly synchronize the copy - do something with depSignal if != NULL.
 
-    ctx->_acc.memcpy_symbol(symbolName, (void*) src,count, offset);
+    hc::accelerator acc = ctx->getDevice()->_acc;
+
+    acc.memcpy_symbol(symbolName, (void*) src,count, offset);
 #endif
     return ihipLogStatus(hipSuccess);
 }
@@ -715,7 +717,7 @@ hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset,
 // TODO - make member function of stream?
 template <typename T>
 hc::completion_future
-ihipMemsetKernel(hipStream_t stream, 
+ihipMemsetKernel(hipStream_t stream,
     LockedAccessor_StreamCrit_t &crit,
     T * ptr, T val, size_t sizeBytes)
 {
@@ -969,16 +971,7 @@ hipError_t hipFreeArray(hipArray* array)
     return ihipLogStatus(hipStatus);
 }
 
-// Stubs of threadfence operations
-__device__ void  __threadfence_block(void){
-    // no-op
-}
-
-__device__ void  __threadfence(void){
-    // no-op
-}
 
 __device__ void  __threadfence_system(void){
     // no-op
 }
-
