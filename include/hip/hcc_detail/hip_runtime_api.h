@@ -60,7 +60,10 @@ typedef void* hipDeviceptr_t;
 
 typedef struct ihipEvent_t *hipEvent_t;
 
-typedef unsigned hipLimit;
+enum hipLimit_t
+{
+    hipLimitMallocHeapSize = 0x02,
+};
 
 /**
  * @addtogroup GlobalDefs More
@@ -98,7 +101,6 @@ typedef unsigned hipLimit;
 #define hipDeviceMapHost            0x8
 #define hipDeviceLmemResizeToMax    0x16
 
-#define hipLimitMallocHeapSize      0x2
 
 /**
  * @warning On AMD devices and recent Nvidia devices, these hints and controls are ignored.
@@ -336,7 +338,7 @@ hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig );
  * Note: Currently, only hipLimitMallocHeapSize is available
  *
  */
-hipError_t hipDeviceGetLimit(size_t *pValue, hipLimit limit);
+hipError_t hipDeviceGetLimit(size_t *pValue, hipLimit_t limit);
 
 
 /**
