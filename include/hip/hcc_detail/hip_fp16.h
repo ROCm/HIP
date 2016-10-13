@@ -34,13 +34,6 @@ typedef struct __attribute__((aligned(4))){
 typedef __half half;
 typedef __half2 half2;
 
-typedef struct{
-  union{
-    float f;
-    unsigned u;
-  };
-} struct_float;
-
 /*
 Arithmetic functions
 */

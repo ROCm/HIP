@@ -119,6 +119,9 @@ if ($HIP_PLATFORM eq "hcc") {
     if ($ROCM_TARGET eq "hawaii") {
         $HIPLDFLAGS .= " -amdgpu-target=AMD:AMDGPU:7:0:1";
     }
+    if ($ROCM_TARGET eq "polaris") {
+        $HIPLDFLAGS .= " -amdgpu-target=AMD:AMDGPU:8:0:3";
+    }
 
     # Add trace marker library:
     # TODO - once we cleanly separate the HIP API headers from HIP library headers this logic should move to CMakebuild option - apps do not need to see the marker library.
