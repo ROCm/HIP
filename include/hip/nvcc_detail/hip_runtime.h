@@ -45,7 +45,7 @@ kernelName<<<numblocks,numthreads,memperblock,streamId>>>(0, ##__VA_ARGS__);\
 #define __HIP_ARCH_HAS_GLOBAL_FLOAT_ATOMIC_EXCH__   (__CUDA_ARCH__ >= 110)
 #define __HIP_ARCH_HAS_SHARED_INT32_ATOMICS__       (__CUDA_ARCH__ >= 120)
 #define __HIP_ARCH_HAS_SHARED_FLOAT_ATOMIC_EXCH__   (__CUDA_ARCH__ >= 120)
-#define __HIP_ARCH_HAS_FLOAT_ATOMIC_ADD__           
+#define __HIP_ARCH_HAS_FLOAT_ATOMIC_ADD__
 
 // 64-bit Atomics:
 #define __HIP_ARCH_HAS_GLOBAL_INT64_ATOMICS__       (__CUDA_ARCH__ >= 200)
@@ -92,6 +92,8 @@ kernelName<<<numblocks,numthreads,memperblock,streamId>>>(0, ##__VA_ARGS__);\
 #define hipGridDim_y  gridDim.y
 #define hipGridDim_z  gridDim.z
 
+#define HIP_SYMBOL(X) X
+
 /**
  * extern __shared__
  */
@@ -102,5 +104,3 @@ kernelName<<<numblocks,numthreads,memperblock,streamId>>>(0, ##__VA_ARGS__);\
 #define HIP_DYNAMIC_SHARED_ATTRIBUTE
 
 #endif
-
-
