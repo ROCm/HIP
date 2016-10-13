@@ -645,7 +645,6 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     // Set some defaults in case we don't find the appropriate regions:
     prop->totalGlobalMem = 0;
     prop->totalConstMem = 0;
-    prop->sharedMemPerBlock = 0;
     prop-> maxThreadsPerMultiProcessor = 0;
     prop->regsPerBlock = 0;
 
@@ -796,6 +795,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop->concurrentKernels = 1; // All ROCm hardware supports executing multiple kernels concurrently
 
     prop->canMapHostMemory = 1;  // All ROCm devices can map host memory
+    prop->totalConstMem = 16384;
 #if 0
     // TODO - code broken below since it always returns 1.
     // Are the flags part of the context or part of the device?
