@@ -21,6 +21,8 @@ THE SOFTWARE.
 #include<hip/hip_runtime_api.h>
 #include<iostream>
 
+#define HIP_ASSERT(status) assert(hipSuccess == status);
+
 #define NUM  1024
 #define SIZE NUM * 8
 
@@ -41,12 +43,18 @@ int main()
     for(uint32_t i=0;i<NUM;i++) {
         hPtr[i] = 1;
     }
-    hipMalloc((void**)&dPtr, SIZE);
-    hipMemcpy(dPtr, hPtr, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(Alloc, dim3(1,1,1), dim3(NUM,1,1), 0, 0, dPtr);
-    hipMemcpy(hPtr, dPtr, SIZE, hipMemcpyDeviceToHost);
-    
-    for(uint32_t i=1;i<NUM;i++) {
-        assert(hPtr[i] == hPtr[i-1] + 4096);
+    int devCnt;
+    hipGetDeviceCount(&devCnt);
+    for(uint32_t i=0;i<devCnt;i++){
+        HIP_ASSERT(hipSetDevice(i));
+        HIP_ASSERT(hipMalloc((void**)&dPtr, SIZE));
+        HIP_ASSERT(hipMemcpy(dPtr, hPtr, SIZE, hipMemcpyHostToDevice));
+        hipLaunchKernel(Alloc, dim3(1,1,1), dim3(NUM,1,1), 0, 0, dPtr);
+        HIP_ASSERT(hipMemcpy(hPtr, dPtr, SIZE, hipMemcpyDeviceToHost));
+        hipLaunchKernel(Free, dim3(1,1,1), dim3(NUM,1,1), 0, 0, dPtr);
+        HIP_ASSERT(hipFree(dPtr));
+        for(uint32_t i=1;i<NUM;i++) {
+            assert(hPtr[i] == hPtr[i-1] + 4096);
+        }
     }
 }
