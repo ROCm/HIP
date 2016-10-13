@@ -620,6 +620,7 @@ __device__ static inline void* free(void *ptr)
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
 
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
+#define HIP_SYMBOL(X) #X
 
 #ifdef __HCC_CPP__
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp, const char *kernelNameStr);
