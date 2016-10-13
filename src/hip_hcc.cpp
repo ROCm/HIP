@@ -81,6 +81,90 @@ unsigned g_deviceCnt;
 std::vector<int> g_hip_visible_devices;
 hsa_agent_t g_cpu_agent;
 
+/*
+ Implementation of malloc and free device functions.
+
+ This is the best place to put them because the device
+ global variables need to be initialized at the start.
+
+
+*/
+
+#define NUM_PAGES_PER_THREAD  16
+#define SIZE_OF_PAGE          64
+#define NUM_THREADS_PER_CU    64
+#define NUM_CUS_PER_GPU       64
+#define NUM_PAGES NUM_PAGES_PER_THREAD * NUM_THREADS_PER_CU * NUM_CUS_PER_GPU
+#define SIZE_MALLOC NUM_PAGES * SIZE_OF_PAGE
+#define SIZE_OF_HEAP SIZE_MALLOC
+
+struct heapTracker_t {
+  void *ptr;
+  uint32_t *flags;
+  uint32_t next;
+};
+
+__attribute__((address_space(1))) char gpuHeap[SIZE_OF_HEAP];
+__attribute__((address_space(1))) uint32_t gpuFlags[NUM_PAGES];
+
+__device__ void *__hip_hc_malloc(size_t size){
+  char *heap = (char*)gpuHeap;
+  if(size > SIZE_OF_HEAP)
+  {
+      return (void*)nullptr;
+  }
+  uint32_t totalThreads = hipBlockDim_x * hipGridDim_x * hipBlockDim_y * hipGridDim_y * hipBlockDim_z * hipGridDim_z;
+  uint32_t currentWorkItem = hipThreadIdx_x + hipBlockDim_x * hipBlockIdx_x;
+
+  uint32_t numHeapsPerWorkItem = NUM_PAGES / totalThreads;
+  uint32_t heapSizePerWorkItem = SIZE_OF_HEAP / totalThreads;
+
+  uint32_t stride = size / SIZE_OF_PAGE;
+  uint32_t start = numHeapsPerWorkItem * currentWorkItem;
+
+  uint32_t k=0;
+
+  while(gpuFlags[k] > 0)
+  {
+      k++;
+  }
+
+  for(uint32_t i=0;i<stride-1;i++)
+  {
+      gpuFlags[i+start+k] = 1;
+  }
+
+  gpuFlags[start+stride-1+k] = 2;
+
+  void *ptr = (void*)(heap + heapSizePerWorkItem * currentWorkItem + k*SIZE_OF_PAGE);
+
+  return ptr;
+}
+
+__device__ void* __hip_hc_free(void *ptr)
+{
+    if(ptr == nullptr)
+    {
+       return nullptr;
+    }
+
+    uint32_t offsetByte = (uint64_t)ptr - (uint64_t)gpuHeap;
+    uint32_t offsetPage = offsetByte / SIZE_OF_PAGE;
+
+    while(gpuFlags[offsetPage] != 0)
+    {
+        if(gpuFlags[offsetPage] == 2){
+          gpuFlags[offsetPage] = 0;
+          offsetPage++;
+          break;
+        }else{
+          gpuFlags[offsetPage] = 0;
+          offsetPage++;
+        }
+    }
+
+    return nullptr;
+}
 
 
 //=================================================================================================
@@ -256,8 +340,8 @@ void ihipStream_t::lockclose_postKernelCommand(hc::accelerator_view *av)
 {
 
     if (HIP_LAUNCH_BLOCKING) {
-        // TODO - fix this so it goes through proper stream::wait() call.// direct wait OK since we know the stream is locked. 
-        av->wait(hc::hcWaitModeActive);  
+        // TODO - fix this so it goes through proper stream::wait() call.// direct wait OK since we know the stream is locked.
+        av->wait(hc::hcWaitModeActive);
         tprintf(DB_SYNC, " %s LAUNCH_BLOCKING for kernel completion\n", ToString(this).c_str());
     }
 
@@ -385,7 +469,7 @@ template<>
 void ihipCtxCriticalBase_t<CtxMutex>::printPeers(FILE *f) const
 {
     for (auto iter = _peers.begin(); iter!=_peers.end(); iter++) {
-        fprintf (f, "%s ", (*iter)->toString().c_str()); 
+        fprintf (f, "%s ", (*iter)->toString().c_str());
     };
 }
 
@@ -1097,7 +1181,6 @@ void ihipInit()
         assert(deviceCnt == g_deviceCnt);
     }
 
-
     tprintf(DB_SYNC, "pid=%u %-30s\n", getpid(), "<ihipInit>");
 }
 
@@ -1351,10 +1434,10 @@ void ihipSetTs(hipEvent_t e)
 
 // Returns true if thisCtx can see the memory allocated on dstCtx and srcCtx.
 // The peer-list for a context controls which contexts have access to the memory allocated on that context.
-// So we check dstCtx's and srcCtx's peerList to see if the booth include thisCtx. 
+// So we check dstCtx's and srcCtx's peerList to see if the booth include thisCtx.
 bool ihipStream_t::canSeePeerMemory(const ihipCtx_t *thisCtx, ihipCtx_t *dstCtx, ihipCtx_t *srcCtx)
 {
-    tprintf (DB_COPY1, "Checking if direct copy can be used.  thisCtx:%s;  dstCtx:%s ;  srcCtx:%s\n", 
+    tprintf (DB_COPY1, "Checking if direct copy can be used.  thisCtx:%s;  dstCtx:%s ;  srcCtx:%s\n",
             thisCtx->toString().c_str(), dstCtx->toString().c_str(), srcCtx->toString().c_str());
 
     // Use blocks to control scope of critical sections.
@@ -1437,8 +1520,8 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     };
 
 
-    // If this is P2P access, we need to check to see if the copy agent (specified by the stream where the copy is enqueued) 
-    // has peer access enabled to both the source and dest.  If this is true, then the copy agent can see both pointers 
+    // If this is P2P access, we need to check to see if the copy agent (specified by the stream where the copy is enqueued)
+    // has peer access enabled to both the source and dest.  If this is true, then the copy agent can see both pointers
     // and we can perform the access with the copy engine from the current stream.  If not true, then we will copy through the host. (forceHostCopyEngine=true).
     bool forceHostCopyEngine = false;
     if (hcCopyDir == hc::hcMemcpyDeviceToDevice) {
@@ -1509,13 +1592,13 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
                 crit->_av.copy_async(src, dst, sizeBytes);
             } catch (Kalmar::runtime_exception) {
                 throw ihipException(hipErrorRuntimeOther);
-            }; 
+            };
 
 
             if (HIP_LAUNCH_BLOCKING) {
                 tprintf(DB_SYNC, "LAUNCH_BLOCKING for completion of hipMemcpyAsync(%zu)\n", sizeBytes);
                 this->wait(crit);
-            } 
+            }
 
         } else {
             locked_copySync(dst, src, sizeBytes, kind);
