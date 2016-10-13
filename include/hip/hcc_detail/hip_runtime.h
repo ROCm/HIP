@@ -604,6 +604,19 @@ __device__ static inline void* memset(void* ptr, uint8_t val, size_t size)
     return nullptr;
 }
 
+extern "C" __device__ void* __hip_hc_malloc(size_t);
+extern "C" __device__ void* __hip_hc_free(void *ptr);
+
+__device__ static inline void* malloc(size_t size)
+{
+    return __hip_hc_malloc(size);
+}
+
+__device__ static inline void* free(void *ptr)
+{
+    return __hip_hc_free(ptr);
+}
+
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
 
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
