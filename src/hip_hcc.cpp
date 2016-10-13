@@ -67,7 +67,7 @@ int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU ident
 int HIP_NUM_KERNELS_INFLIGHT = 128;
 int HIP_BLOCKING_SYNC = 0;
 
-#define HIP_USE_PRODUCET_NAME 0
+#define HIP_USE_PRODUCT_NAME 0
 //#define DISABLE_COPY_EXT 1
 
 
@@ -663,7 +663,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop->isMultiGpuBoard = 0 ? gpuAgentsCount < 2 : 1;
 
     // Get agent name
-#ifdef HIP_USE_PRODUCET_NAME
+#if HIP_USE_PRODUCT_NAME
     err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_PRODUCT_NAME, &(prop->name));
 #else
     err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_NAME, &(prop->name));
