@@ -25,6 +25,13 @@ static const __half __half_value_zero_float = {0x0};
 static const unsigned __half_pos_inf = 0x7C00;
 static const unsigned __half_neg_inf = 0xFC00;
 
+typedef struct{
+  union{
+    float f;
+    unsigned u;
+  };
+} struct_float;
+
 static __device__ float cvt_half_to_float(__half a){
   struct_float ret = {0};
   if(a.x == 0){
@@ -362,4 +369,3 @@ __device__ __half2 __lowhigh2highlow(const __half2 a){
 __device__ __half2 __low2half2(const __half2 a, const __half2 b){
   return {a.q, b.q};
 }
-
