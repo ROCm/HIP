@@ -86,8 +86,6 @@ hsa_agent_t g_cpu_agent;
 
  This is the best place to put them because the device
  global variables need to be initialized at the start.
-
-
 */
 
 #define NUM_PAGES_PER_THREAD  16
@@ -98,47 +96,44 @@ hsa_agent_t g_cpu_agent;
 #define SIZE_MALLOC NUM_PAGES * SIZE_OF_PAGE
 #define SIZE_OF_HEAP SIZE_MALLOC
 
-struct heapTracker_t {
-  void *ptr;
-  uint32_t *flags;
-  uint32_t next;
-};
+size_t g_malloc_heap_size = SIZE_OF_HEAP;
 
 __attribute__((address_space(1))) char gpuHeap[SIZE_OF_HEAP];
 __attribute__((address_space(1))) uint32_t gpuFlags[NUM_PAGES];
 
-__device__ void *__hip_hc_malloc(size_t size){
-  char *heap = (char*)gpuHeap;
-  if(size > SIZE_OF_HEAP)
-  {
-      return (void*)nullptr;
-  }
-  uint32_t totalThreads = hipBlockDim_x * hipGridDim_x * hipBlockDim_y * hipGridDim_y * hipBlockDim_z * hipGridDim_z;
-  uint32_t currentWorkItem = hipThreadIdx_x + hipBlockDim_x * hipBlockIdx_x;
+__device__ void *__hip_hc_malloc(size_t size) 
+{
+    char *heap = (char*)gpuHeap;
+    if(size > SIZE_OF_HEAP)
+    {
+        return (void*)nullptr;
+    }
+    uint32_t totalThreads = hipBlockDim_x * hipGridDim_x * hipBlockDim_y * hipGridDim_y * hipBlockDim_z * hipGridDim_z;
+    uint32_t currentWorkItem = hipThreadIdx_x + hipBlockDim_x * hipBlockIdx_x;
 
-  uint32_t numHeapsPerWorkItem = NUM_PAGES / totalThreads;
-  uint32_t heapSizePerWorkItem = SIZE_OF_HEAP / totalThreads;
+    uint32_t numHeapsPerWorkItem = NUM_PAGES / totalThreads;
+    uint32_t heapSizePerWorkItem = SIZE_OF_HEAP / totalThreads;
 
-  uint32_t stride = size / SIZE_OF_PAGE;
-  uint32_t start = numHeapsPerWorkItem * currentWorkItem;
+    uint32_t stride = size / SIZE_OF_PAGE;
+    uint32_t start = numHeapsPerWorkItem * currentWorkItem;
 
-  uint32_t k=0;
+    uint32_t k=0;
 
-  while(gpuFlags[k] > 0)
-  {
-      k++;
-  }
+    while(gpuFlags[k] > 0)
+    {
+        k++;
+    }
 
-  for(uint32_t i=0;i<stride-1;i++)
-  {
-      gpuFlags[i+start+k] = 1;
-  }
+    for(uint32_t i=0;i<stride-1;i++)
+    {
+        gpuFlags[i+start+k] = 1;
+    }
 
-  gpuFlags[start+stride-1+k] = 2;
+    gpuFlags[start+stride-1+k] = 2;
 
-  void *ptr = (void*)(heap + heapSizePerWorkItem * currentWorkItem + k*SIZE_OF_PAGE);
+    void* ptr = (void*)(heap + heapSizePerWorkItem * currentWorkItem + k*SIZE_OF_PAGE);
 
-  return ptr;
+    return ptr;
 }
 
 __device__ void* __hip_hc_free(void *ptr)
@@ -151,15 +146,14 @@ __device__ void* __hip_hc_free(void *ptr)
     uint32_t offsetByte = (uint64_t)ptr - (uint64_t)gpuHeap;
     uint32_t offsetPage = offsetByte / SIZE_OF_PAGE;
 
-    while(gpuFlags[offsetPage] != 0)
-    {
-        if(gpuFlags[offsetPage] == 2){
-          gpuFlags[offsetPage] = 0;
-          offsetPage++;
-          break;
-        }else{
-          gpuFlags[offsetPage] = 0;
-          offsetPage++;
+    while(gpuFlags[offsetPage] != 0) {
+        if(gpuFlags[offsetPage] == 2) {
+            gpuFlags[offsetPage] = 0;
+            offsetPage++;
+            break;
+        } else {
+            gpuFlags[offsetPage] = 0;
+            offsetPage++;
         }
     }
 
