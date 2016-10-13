@@ -663,7 +663,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop->isMultiGpuBoard = 0 ? gpuAgentsCount < 2 : 1;
 
     // Get agent name
-    err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_NAME, &(prop->name));
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_PRODUCT_NAME, &(prop->name));
     DeviceErrorCheck(err);
 
     // Get agent node
