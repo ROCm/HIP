@@ -68,7 +68,7 @@ hipError_t hipGetDeviceCount(int *count)
     return e;
 }
 
-hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig )
+hipError_t hipDeviceSetCacheConfig(hipFuncCache cacheConfig)
 {
     HIP_INIT_API(cacheConfig);
 
@@ -77,7 +77,7 @@ hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig )
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig )
+hipError_t hipDeviceGetCacheConfig(hipFuncCache *cacheConfig)
 {
     HIP_INIT_API(cacheConfig);
 
@@ -86,7 +86,23 @@ hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig )
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t hipFuncSetCacheConfig ( hipFuncCache cacheConfig )
+extern "C" size_t g_malloc_heap_size;
+
+hipError_t hipDeviceGetLimit (size_t *pValue, hipLimit limit)
+{
+    HIP_INIT_API(pValue, limit);
+    if(pValue == nullptr) {
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
+    if(limit == hipLimitMallocHeapSize) {
+        *pValue = g_malloc_heap_size;
+        return ihipLogStatus(hipSuccess);
+    }else{
+        return ihipLogStatus(hipErrorUnsupportedLimit);
+    }
+}
+
+hipError_t hipFuncSetCacheConfig (hipFuncCache cacheConfig)
 {
     HIP_INIT_API(cacheConfig);
 
@@ -95,7 +111,7 @@ hipError_t hipFuncSetCacheConfig ( hipFuncCache cacheConfig )
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config )
+hipError_t hipDeviceSetSharedMemConfig (hipSharedMemConfig config)
 {
     HIP_INIT_API(config);
 
@@ -104,7 +120,7 @@ hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config )
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig )
+hipError_t hipDeviceGetSharedMemConfig (hipSharedMemConfig *pConfig)
 {
     HIP_INIT_API(pConfig);
 
