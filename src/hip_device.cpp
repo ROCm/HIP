@@ -88,7 +88,7 @@ hipError_t hipDeviceGetCacheConfig(hipFuncCache *cacheConfig)
 
 extern "C" size_t g_malloc_heap_size;
 
-hipError_t hipDeviceGetLimit (size_t *pValue, hipLimit limit)
+hipError_t hipDeviceGetLimit (size_t *pValue, hipLimit_t limit)
 {
     HIP_INIT_API(pValue, limit);
     if(pValue == nullptr) {
