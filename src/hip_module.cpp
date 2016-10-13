@@ -118,10 +118,10 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
         ihipDevice_t *currentDevice = ihipGetDevice(deviceId);
         std::ifstream in(fname, std::ios::binary | std::ios::ate);
 
-        if(!in){
+        if(!in.is_open() ){
             return ihipLogStatus(hipErrorFileNotFound);
 
-        }else{
+        } else {
 
             *module = new ihipModule_t;
             size_t size = std::string::size_type(in.tellg());
