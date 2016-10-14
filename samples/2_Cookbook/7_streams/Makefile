@@ -7,10 +7,10 @@ HIPCC=$(HIP_PATH)/bin/hipcc
 
 TARGET=hcc
 
-SOURCES = sharedMemory.cpp
+SOURCES = stream.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
-EXECUTABLE=./sharedMemory
+EXECUTABLE=./stream
 
 .PHONY: test
 

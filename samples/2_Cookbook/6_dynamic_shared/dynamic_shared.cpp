@@ -19,14 +19,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
 #include<iostream>
 
 // hip header file
 #include "hip/hip_runtime.h"
 
-
-#define WIDTH     4
+#define WIDTH     16
 
 #define NUM       (WIDTH*WIDTH)
 
@@ -41,11 +39,17 @@ __global__ void matrixTranspose(hipLaunchParm lp,
                                 float *in,
                                 const int width)
 {
+    // declare dynamic shared memory
+    HIP_DYNAMIC_SHARED(float, sharedMem);
+
     int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
     int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
-    float val = in[y*width + x];
 
-    out[x*width + y] = __shfl(val,y*width + x);
+    sharedMem[y * width + x] = in[x * width + y];
+
+    __syncthreads();
+
+    out[y * width + x] = sharedMem[y * width + x];
 }
 
 // CPU implementation of matrix transpose
@@ -98,9 +102,9 @@ int main() {
 
   // Lauching kernel from host
   hipLaunchKernel(matrixTranspose,
-                  dim3(1),
-                  dim3(THREADS_PER_BLOCK_X , THREADS_PER_BLOCK_Y),
-                  0, 0,
+                  dim3(WIDTH/THREADS_PER_BLOCK_X, WIDTH/THREADS_PER_BLOCK_Y),
+                  dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
+                  sizeof(float)*WIDTH*WIDTH, 0,
                   gpuTransposeMatrix , gpuMatrix, WIDTH);
 
   // Memory transfer from device to host
@@ -113,7 +117,7 @@ int main() {
   errors = 0;
   double eps = 1.0E-6;
   for (i = 0; i < NUM; i++) {
-    if (std::abs(TransposeMatrix[i] - cpuTransposeMatrix[i]) > eps) {
+    if (std::abs(TransposeMatrix[i] - cpuTransposeMatrix[i]) > eps ) {
     printf("%d cpu: %f gpu  %f\n",i,cpuTransposeMatrix[i],TransposeMatrix[i]);
       errors++;
     }
@@ -121,7 +125,7 @@ int main() {
   if (errors!=0) {
     printf("FAILED: %d errors\n",errors);
   } else {
-    printf ("PASSED!\n");
+    printf ("dynamic_shared PASSED!\n");
   }
 
   //free the resources on device side

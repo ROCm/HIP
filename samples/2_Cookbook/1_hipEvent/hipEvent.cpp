@@ -26,12 +26,11 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 
 #define WIDTH     1024
-#define HEIGHT    1024
 
-#define NUM       (WIDTH*HEIGHT)
+#define NUM       (WIDTH*WIDTH)
 
-#define THREADS_PER_BLOCK_X  16
-#define THREADS_PER_BLOCK_Y  16
+#define THREADS_PER_BLOCK_X  4
+#define THREADS_PER_BLOCK_Y  4
 #define THREADS_PER_BLOCK_Z  1
 
 // Device (Kernel) function, it must be void
@@ -39,27 +38,25 @@ THE SOFTWARE.
 __global__ void matrixTranspose(hipLaunchParm lp,
                                 float *out,
                                 float *in,
-                                const int width,
-                                const int height)
+                                const int width)
 {
     int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
     int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
 
-    out[y * width + x] = in[x * height + y];
+    out[y * width + x] = in[x * width + y];
 }
 
 // CPU implementation of matrix transpose
 void matrixTransposeCPUReference(
     float * output,
     float * input,
-    const unsigned int width,
-    const unsigned int height)
+    const unsigned int width)
 {
-    for(unsigned int j=0; j < height; j++)
+    for(unsigned int j=0; j < width; j++)
     {
         for(unsigned int i=0; i < width; i++)
         {
-            output[i*height + j] = input[j*width + i];
+            output[i*width + j] = input[j*width + i];
         }
     }
 }
@@ -118,10 +115,10 @@ int main() {
 
   // Lauching kernel from host
   hipLaunchKernel(matrixTranspose,
-                  dim3(WIDTH/THREADS_PER_BLOCK_X, HEIGHT/THREADS_PER_BLOCK_Y),
+                  dim3(WIDTH/THREADS_PER_BLOCK_X, WIDTH/THREADS_PER_BLOCK_Y),
                   dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
                   0, 0,
-                  gpuTransposeMatrix , gpuMatrix, WIDTH ,HEIGHT);
+                  gpuTransposeMatrix , gpuMatrix, WIDTH);
 
   // Record the stop event
   hipEventRecord(stop, NULL);
@@ -146,13 +143,13 @@ int main() {
   printf ("hipMemcpyDeviceToHost time taken  = %6.3fms\n", eventMs);
 
   // CPU MatrixTranspose computation
-  matrixTransposeCPUReference(cpuTransposeMatrix, Matrix, WIDTH, HEIGHT);
+  matrixTransposeCPUReference(cpuTransposeMatrix, Matrix, WIDTH);
 
   // verify the results
   errors = 0;
   double eps = 1.0E-6;
   for (i = 0; i < NUM; i++) {
-    if (std::abs(TransposeMatrix[i] - cpuTransposeMatrix[i]) > 0 ) {
+    if (std::abs(TransposeMatrix[i] - cpuTransposeMatrix[i]) > eps ) {
       errors++;
     }
   }
