@@ -7,10 +7,10 @@ HIPCC=$(HIP_PATH)/bin/hipcc
 
 TARGET=hcc
 
-SOURCES = sharedMemory.cpp
+SOURCES = dynamic_shared.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
-EXECUTABLE=./sharedMemory
+EXECUTABLE=./dynamic_shared
 
 .PHONY: test
 
