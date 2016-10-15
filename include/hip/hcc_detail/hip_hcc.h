@@ -30,6 +30,8 @@ THE SOFTWARE.
 #endif
 
 #define USE_MEMCPYTOSYMBOL
+
+#define USE_DISPATCH_HSA_KERNEL 0
 //
 
 
