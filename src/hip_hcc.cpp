@@ -1435,7 +1435,7 @@ void ihipSetTs(hipEvent_t e)
 
 // Returns true if thisCtx can see the memory allocated on dstCtx and srcCtx.
 // The peer-list for a context controls which contexts have access to the memory allocated on that context.
-// So we check dstCtx's and srcCtx's peerList to see if the booth include thisCtx.
+// So we check dstCtx's and srcCtx's peerList to see if the both include thisCtx.
 bool ihipStream_t::canSeePeerMemory(const ihipCtx_t *thisCtx, ihipCtx_t *dstCtx, ihipCtx_t *srcCtx)
 {
     tprintf (DB_COPY1, "Checking if direct copy can be used.  thisCtx:%s;  dstCtx:%s ;  srcCtx:%s\n",
