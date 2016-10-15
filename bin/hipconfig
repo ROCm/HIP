@@ -129,6 +129,7 @@ if (!$printed or $p_full) {
         print ("HSA_PATH     : $HSA_PATH\n");
         print ("HCC_HOME     : $HCC_HOME\n");
         system("$HCC_HOME/bin/hcc --version");
+        system("$HCC_HOME/compiler/bin/llc --version");
         print ("HCC-cxxflags : ");
         system("$HCC_HOME/bin/hcc-config --cxxflags");
         print ("HCC-ldflags  : ");
