@@ -346,6 +346,7 @@ void ihipStream_t::lockclose_postKernelCommand(hc::accelerator_view *av)
 
 
 
+#if USE_DISPATCH_HSA_KERNEL==0
 // Precursor: the stream is already locked,specifically so this routine can enqueue work into the specified av.
 void ihipStream_t::launchModuleKernel(
                         hc::accelerator_view av,
@@ -397,6 +398,7 @@ void ihipStream_t::launchModuleKernel(
     hsa_queue_store_write_index_relaxed(Queue, packet_index + 1);
     hsa_signal_store_relaxed(Queue->doorbell_signal, packet_index);
 }
+#endif
 
 
 //=============================================================================

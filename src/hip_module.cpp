@@ -248,12 +248,12 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         hsa_agent_t gpuAgent = (hsa_agent_t)currentDevice->_hsaAgent;
 
         void *config[5] = {0};
-        size_t kernSize;
+        size_t kernArgSize;
 
         if(extra != NULL){
             memcpy(config, extra, sizeof(size_t)*5);
             if(config[0] == HIP_LAUNCH_PARAM_BUFFER_POINTER && config[2] == HIP_LAUNCH_PARAM_BUFFER_SIZE && config[4] == HIP_LAUNCH_PARAM_END){
-                kernSize = *(size_t*)(config[3]);
+                kernArgSize = *(size_t*)(config[3]);
             } else {
                 return ihipLogStatus(hipErrorNotInitialized);
             }
@@ -279,6 +279,33 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         grid_launch_parm lp;
         hStream = ihipPreLaunchKernel(hStream, 0, 0, &lp, f->_kernelName);
 
+#if USE_DISPATCH_HSA_KERNEL
+
+        hsa_kernel_dispatch_packet_t aql;
+
+        memset(&aql, 0, sizeof(aql));
+
+        //aql.completion_signal._handle = 0;
+        //aql.kernarg_address = 0;
+
+        aql.workgroup_size_x = blockDimX;
+        aql.workgroup_size_y = blockDimY;
+        aql.workgroup_size_z = blockDimZ;
+        aql.grid_size_x = blockDimX * gridDimX;
+        aql.grid_size_y = blockDimY * gridDimY;
+        aql.grid_size_z = blockDimZ * gridDimZ;
+        aql.group_segment_size = groupSegmentSize;
+        aql.private_segment_size = privateSegmentSize;
+        aql.kernel_object = f->_kernel;
+        aql.setup = 1 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
+        aql.header =   (HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE) |
+                                    (1 << HSA_PACKET_HEADER_BARRIER) |
+                                    (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
+                                    (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
+
+        lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize);
+#else
+
         /*
           Create signal
         */
@@ -286,17 +313,21 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         hsa_signal_t signal;
         status = hsa_signal_create(1, 0, NULL, &signal);
 
+
         /*
           Launch AQL packet
         */
         hStream->launchModuleKernel(*lp.av, signal, blockDimX, blockDimY, blockDimZ,
-                  gridDimX, gridDimY, gridDimZ, groupSegmentSize, privateSegmentSize, config[1], kernSize, f->_kernel);
+                  gridDimX, gridDimY, gridDimZ, groupSegmentSize, privateSegmentSize, config[1], kernArgSize, f->_kernel);
+
 
         /*
           Wait for signal
         */
 
         hsa_signal_value_t value = hsa_signal_wait_acquire(signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_BLOCKED);
+
+#endif // USE_DISPATCH_HSA_KERNEL
 
 
         ihipPostLaunchKernel(hStream, lp);
