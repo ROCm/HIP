@@ -59,9 +59,9 @@ Selected multilib: .;@m64
 
 The unix `date` command can print the HCC-format work-week for a specific date , ie:
 ```
-> date --utc +%y%W%w -d 2015-11-09  
+> date --utc +%y%U%w -d 2015-11-09
 15451
-
+```
 
 ## Unit Testing Environment
 
