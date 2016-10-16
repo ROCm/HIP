@@ -626,8 +626,12 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags);
  *
  * @param[in,out] event Returns the newly created event.
  * @param[in] flags     Flags to control event behavior.  Valid values are #hipEventDefault, #hipEventBlockingSync, #hipEventDisableTiming, #hipEventInterprocess
- *
- * @warning On HCC platform, flags must be #hipEventDefault.
+ 
+ * #hipEventDefault : Default flag.  The event will use active synchronization and will support timing.  Blocking synchronization provides lowest possible latency at the expense of dedicating a CPU to poll on the eevent.
+ * #hipEventBlockingSync : The event will use blocking synchronization : if hipEventSynchronize is called on this event, the thread will block until the event completes.  This can increase latency for the synchroniation but can result in lower power and more resources for other CPU threads.
+ * #hipEventDisableTiming : Disable recording of timing information.  On ROCM platform, timing information is always recorded and this flag has no performance benefit.
+ 
+ * @warning On HCC platform, hipEventInterprocess support is under development.  Use of this flag will return an error.
  *
  * @returns #hipSuccess, #hipErrorInitializationError, #hipErrorInvalidValue, #hipErrorLaunchFailure, #hipErrorMemoryAllocation
  *

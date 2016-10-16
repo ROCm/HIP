@@ -34,15 +34,16 @@ hipError_t ihipEventCreate(hipEvent_t* event, unsigned flags)
 {
     hipError_t e = hipSuccess;
 
-    // TODO - support hipEventDefault, hipEventBlockingSync, hipEventDisableTiming
-    if (flags == 0) {
+    // TODO-IPC - support hipEventInterprocess.
+    unsigned supportedFlags = hipEventDefault | hipEventBlockingSync | hipEventDisableTiming;
+    if ((flags & ~supportedFlags) != 0) {
         ihipEvent_t *eh = new ihipEvent_t();
 
         eh->_state  = hipEventStatusCreated;
         eh->_stream = NULL;
         eh->_flags  = flags;
         eh->_timestamp  = 0;
-        *event = eh; // TODO - allocat the event directly, no copy needed.
+        *event = eh; 
     } else {
         e = hipErrorInvalidValue;
     }
@@ -152,7 +153,6 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop)
 
             int64_t tickDiff = (stop_eh->_timestamp - start_eh->_timestamp);
 
-            // TODO-move this to a variable saved with each agent.
             uint64_t freqHz;
             hsa_system_get_info(HSA_SYSTEM_INFO_TIMESTAMP_FREQUENCY, &freqHz);
             if (freqHz) {
