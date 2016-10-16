@@ -30,8 +30,8 @@ THE SOFTWARE.
 #include "hsa/amd_hsa_kernel_code.h"
 
 #include "hip/hip_runtime.h"
-#include "hip/hcc_detail/hip_hcc.h"
-#include "hip/hcc_detail/trace_helper.h"
+#include "hip_hcc.h"
+#include "trace_helper.h"
 
 //TODO Use Pool APIs from HCC to get memory regions.
 

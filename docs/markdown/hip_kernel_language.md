@@ -231,10 +231,10 @@ typedef struct dim3 {
 ```
 
 ## Memory-Fence Instructions
-HIP support for __threadfence(), __threadfence_block() and __threadfence_system() is under development.
-The stubs for the threadfence routines are defined in hcc_details/hip_runtime.h.
-Applications that use these threadfence features should disable both of the L1 and L2 caches by:
-"export HSA_DISABLE_CACHE=1"
+HIP supports __threadfence() and  __threadfence_block().
+
+Applications that use threadfence_system can disable the L1 and L2 caches on the GPU by:
+"export HSA_DISABLE_CACHE=1".  See the hip_porting_guide.md#threadfence_system for more information.
 
 ## Synchronization Functions
 The __syncthreads() built-in function is supported in HIP. The __syncthreads_count(int), __syncthreads_and(int) and __syncthreads_or(int) functions are under development.  
@@ -602,7 +602,8 @@ The printf function is under development.
 
 ## Device-Side Dynamic Global Memory Allocation
 
-Device-side dynamic global memory allocation is not supported.
+Device-side dynamic global memory allocation is under development.  HIP now includes a preliminary
+implementation of malloc and free that can be called from device functions.
 
 ## `__launch_bounds__`
 GPU multiprocessors have a fixed pool of resources (primarily registers and shared memory) that are shared among the active warps. Using more resources can increase the kernel’s IPC, but it reduces the resources available for other warps and limits the number of warps that can run simultaneously. Thus, GPUs exhibit a complex relationship between resource usage and performance. `__launch_bounds__` allows the application to provide usage hints that influence the resources (primarily registers) employed by the generated code. It’s a function attribute that must be attached to a `__global__` function:
