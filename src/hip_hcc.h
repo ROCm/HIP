@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 #include <hc.hpp>
 #include <hsa/hsa.h>
-#include "hip/hcc_detail/hip_util.h"
+#include "hip_util.h"
 
 
 #if defined(__HCC__) && (__hcc_workweek__ < 16354)
