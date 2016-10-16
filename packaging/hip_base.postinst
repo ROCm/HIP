@@ -19,7 +19,8 @@ for f in $HIPBINFILES
 do
     ln -s $f $(basename $f)
 done
-popd >/dev/null
+    ln -s $HIPDIR/bin/.hipVersion .hipVersion
+popd
 
 # Soft-link to headers
 HIPINCDIR=$HIPDIR/include/hip

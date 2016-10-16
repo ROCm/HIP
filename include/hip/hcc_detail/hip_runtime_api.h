@@ -19,6 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 //#pragma once
 #ifndef HIP_RUNTIME_API_H
 #define HIP_RUNTIME_API_H
@@ -60,6 +61,10 @@ typedef void* hipDeviceptr_t;
 
 typedef struct ihipEvent_t *hipEvent_t;
 
+enum hipLimit_t
+{
+    hipLimitMallocHeapSize = 0x02,
+};
 
 /**
  * @addtogroup GlobalDefs More
@@ -96,6 +101,7 @@ typedef struct ihipEvent_t *hipEvent_t;
 #define hipDeviceBlockingSync       0x4
 #define hipDeviceMapHost            0x8
 #define hipDeviceLmemResizeToMax    0x16
+
 
 /**
  * @warning On AMD devices and recent Nvidia devices, these hints and controls are ignored.
@@ -322,6 +328,18 @@ hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig );
  *
  */
 hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig );
+
+/**
+ * @brief Get Resource limits of current device
+ *
+ * @param [out] pValue
+ * @param [in]  limit
+ *
+ * @returns #hipSuccess, #hipErrorUnsupportedLimit, #hipErrorInvalidValue
+ * Note: Currently, only hipLimitMallocHeapSize is available
+ *
+ */
+hipError_t hipDeviceGetLimit(size_t *pValue, hipLimit_t limit);
 
 
 /**
@@ -782,6 +800,18 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
 hipError_t hipMalloc(void** ptr, size_t size) ;
 
 /**
+ *  @brief Allocate pinned host memory [Deprecated]
+ *
+ *  @param[out] ptr Pointer to the allocated host pinned memory
+ *  @param[in]  size Requested memory size
+ *
+ *  @return #hipSuccess, #hipErrorMemoryAllocation
+ *
+ *  @deprecated use hipHostMalloc() instead
+ */
+hipError_t hipMallocHost(void** ptr, size_t size) __attribute__((deprecated("use hipHostMalloc instead"))) ;
+
+/**
  *  @brief Allocate device accessible page locked host memory
  *
  *  @param[out] ptr Pointer to the allocated host pinned memory
@@ -793,6 +823,19 @@ hipError_t hipMalloc(void** ptr, size_t size) ;
  *  @see hipSetDeviceFlags, hipHostFree
  */
 hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags) ;
+
+/**
+ *  @brief Allocate device accessible page locked host memory [Deprecated]
+ *
+ *  @param[out] ptr Pointer to the allocated host pinned memory
+ *  @param[in]  size Requested memory size
+ *  @param[in]  flags Type of host memory allocation
+ *
+ *  @return #hipSuccess, #hipErrorMemoryAllocation
+ *
+ *  @deprecated use hipHostMalloc() instead
+ */
+hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) __attribute__((deprecated("use hipHostMalloc instead"))) ;
 
 /**
  *  @brief Get Device pointer from Host Pointer allocated through hipHostMalloc
@@ -891,6 +934,17 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
  *  @see hipMalloc, hipMallocPitch, hipMallocArray, hipFreeArray, hipHostFree, hipMalloc3D, hipMalloc3DArray, hipHostMalloc
  */
 hipError_t hipFree(void* ptr);
+
+/**
+ *  @brief Free memory allocated by the hcc hip host memory allocation API.  [Deprecated]
+ *
+ *  @param[in] ptr Pointer to memory to be freed
+ *  @return #hipSuccess,
+ *          #hipErrorInvalidValue (if pointer is invalid, including device pointers allocated with hipMalloc)
+
+ *  @deprecated use hipHostFree() instead
+ */
+hipError_t hipFreeHost(void* ptr) __attribute__((deprecated("use hipHostFree instead")));
 
 /**
  *  @brief Free memory allocated by the hcc hip host memory allocation API
@@ -1024,6 +1078,27 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
  *  @see hipMemcpy, hipMemcpy2D, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpy2DFromArray, hipMemcpyArrayToArray, hipMemcpy2DArrayToArray, hipMemcpyFromSymbol, hipMemcpyAsync, hipMemcpy2DAsync, hipMemcpyToArrayAsync, hipMemcpy2DToArrayAsync, hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync, hipMemcpyFromSymbolAsync
  */
 hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t sizeBytes, size_t offset, hipMemcpyKind kind);
+
+
+/**
+ *  @brief Copies @p sizeBytes bytes from the memory area pointed to by @p src to the memory area pointed to by @p offset bytes from the start of symbol @p symbol 
+ *
+ *  The memory areas may not overlap. Symbol can either be a variable that resides in global or constant memory space, or it can be a character string,
+ *  naming a variable that resides in global or constant memory space. Kind can be either hipMemcpyHostToDevice or hipMemcpyDeviceToDevice
+ *  hipMemcpyToSymbolAsync() is asynchronous with respect to the host, so the call may return before copy is complete.
+ *  TODO: cudaErrorInvalidSymbol and cudaErrorInvalidMemcpyDirection is not supported, use hipErrorUnknown for now.
+ *
+ *  @param[in]  symbolName - Symbol destination on device
+ *  @param[in]  src - Data being copy from
+ *  @param[in]  sizeBytes - Data size in bytes
+ *  @param[in]  offset - Offset from start of symbol in bytes
+ *  @param[in]  kind - Type of transfer
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
+ *
+ *  @see hipMemcpy, hipMemcpy2D, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpy2DFromArray, hipMemcpyArrayToArray, hipMemcpy2DArrayToArray, hipMemcpyFromSymbol, hipMemcpyAsync, hipMemcpy2DAsync, hipMemcpyToArrayAsync, hipMemcpy2DToArrayAsync, hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync, hipMemcpyFromSymbolAsync
+ */
+hipError_t hipMemcpyToSymbolAsync(const char* symbolName, const void *src, size_t sizeBytes, size_t offset, hipMemcpyKind kind, hipStream_t stream);
+
 
 
 /**

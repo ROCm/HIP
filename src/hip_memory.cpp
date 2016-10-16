@@ -1,21 +1,24 @@
 /*
-   Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
-   Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
-   furnished to do so, subject to the following conditions:
-   The above copyright notice and this permission notice shall be included in
-   all copies or substantial portions of the Software.
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANNTY OF ANY KIND, EXPRESS OR
-   IMPLIED, INNCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANNY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER INN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-   THE SOFTWARE.
-   */
+Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
 
 #include <hc_am.hpp>
 #include "hsa/hsa.h"
@@ -102,13 +105,13 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
     HIP_INIT_API(ptr, sizeBytes);
 
     hipError_t  hip_status = hipSuccess;
-    // return NULL pointer when malloc size is 0  
+    // return NULL pointer when malloc size is 0
     if (sizeBytes == 0)
     {
         *ptr = NULL;
         return ihipLogStatus(hipSuccess);
     }
-   
+
     auto ctx = ihipGetTlsDefaultCtx();
 
     if (ctx) {
@@ -174,8 +177,18 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
     return ihipLogStatus(hip_status);
 }
 
+hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
+{
+    return hipHostMalloc(ptr, sizeBytes, 0);
+}
+
+hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags)
+{
+    return hipHostMalloc(ptr, sizeBytes, flags);
+};
+
 // width in bytes
-hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height) 
+hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height)
 {
     HIP_INIT_API(ptr, pitch, width, height);
 
@@ -218,7 +231,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
     return ihipLogStatus(hip_status);
 }
 
-hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f) 
+hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f)
 {
     hipChannelFormatDesc cd;
     cd.x = x; cd.y = y; cd.z = z; cd.w = w;
@@ -227,7 +240,7 @@ hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannel
 }
 
 hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
-        size_t width, size_t height, unsigned int flags) 
+        size_t width, size_t height, unsigned int flags)
 {
     HIP_INIT_API(array, desc, width, height, flags);
 
@@ -375,20 +388,65 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t cou
 {
     HIP_INIT_API(symbolName, src, count, offset, kind);
 
-#ifdef USE_MEMCPYTOSYMBOL
-    if(kind != hipMemcpyHostToDevice)
+    if(symbolName == nullptr)
     {
-        return ihipLogStatus(hipErrorInvalidValue);
+        return ihipLogStatus(hipErrorInvalidSymbol);
     }
+
     auto ctx = ihipGetTlsDefaultCtx();
 
-    //hsa_signal_t depSignal;
-    //int depSignalCnt = ctx._default_stream->preCopyCommand(NULL, &depSignal, ihipCommandCopyH2D);
-    assert(0);  // Need to properly synchronize the copy - do something with depSignal if != NULL.
+    hc::accelerator acc = ctx->getDevice()->_acc;
 
-    ctx->_acc.memcpy_symbol(symbolName, (void*) src,count, offset);
-#endif
+    void *ptr = acc.get_symbol_address(symbolName);
+
+    if(ptr == nullptr)
+    {
+        return ihipLogStatus(hipErrorInvalidSymbol);
+    }
+
+    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+    stream->locked_copySync(ptr, src, count + offset, kind);
+
     return ihipLogStatus(hipSuccess);
+}
+
+hipError_t hipMemcpyToSymbolAsync(const char* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind, hipStream_t stream)
+{
+    HIP_INIT_API(symbolName, src, count, offset, kind, stream);
+
+    if(symbolName == nullptr)
+    {
+        return ihipLogStatus(hipErrorInvalidSymbol);
+    }
+
+    hipError_t e = hipSuccess;
+
+    auto ctx = ihipGetTlsDefaultCtx();
+
+    hc::accelerator acc = ctx->getDevice()->_acc;
+
+    void *ptr = acc.get_symbol_address(symbolName);
+
+    if(ptr == nullptr)
+    {
+        return ihipLogStatus(hipErrorInvalidSymbol);
+    }
+
+    if (stream) {
+        try {
+            stream->locked_copyAsync(ptr, src, count + offset, kind);
+        }
+        catch (ihipException ex) {
+            e = ex._code;
+        }
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+
+
 }
 
 //---
@@ -705,7 +763,7 @@ hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset,
 // TODO - make member function of stream?
 template <typename T>
 hc::completion_future
-ihipMemsetKernel(hipStream_t stream, 
+ihipMemsetKernel(hipStream_t stream,
     LockedAccessor_StreamCrit_t &crit,
     T * ptr, T val, size_t sizeBytes)
 {
@@ -930,6 +988,11 @@ hipError_t hipHostFree(void* ptr)
     return ihipLogStatus(hipStatus);
 };
 
+hipError_t hipFreeHost(void* ptr)
+{
+    return hipHostFree(ptr);
+}
+
 hipError_t hipFreeArray(hipArray* array)
 {
     HIP_INIT_API(array);
@@ -954,16 +1017,7 @@ hipError_t hipFreeArray(hipArray* array)
     return ihipLogStatus(hipStatus);
 }
 
-// Stubs of threadfence operations
-__device__ void  __threadfence_block(void){
-    // no-op
-}
-
-__device__ void  __threadfence(void){
-    // no-op
-}
 
 __device__ void  __threadfence_system(void){
     // no-op
 }
-

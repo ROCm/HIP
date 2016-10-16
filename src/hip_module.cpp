@@ -1,19 +1,22 @@
 /*
 Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANNTY OF ANY KIND, EXPRESS OR
-IMPLIED, INNCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANNY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER INN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
@@ -118,10 +121,10 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
         ihipDevice_t *currentDevice = ihipGetDevice(deviceId);
         std::ifstream in(fname, std::ios::binary | std::ios::ate);
 
-        if(!in){
+        if(!in.is_open() ){
             return ihipLogStatus(hipErrorFileNotFound);
 
-        }else{
+        } else {
 
             *module = new ihipModule_t;
             size_t size = std::string::size_type(in.tellg());
@@ -248,12 +251,12 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         hsa_agent_t gpuAgent = (hsa_agent_t)currentDevice->_hsaAgent;
 
         void *config[5] = {0};
-        size_t kernSize;
+        size_t kernArgSize;
 
         if(extra != NULL){
             memcpy(config, extra, sizeof(size_t)*5);
             if(config[0] == HIP_LAUNCH_PARAM_BUFFER_POINTER && config[2] == HIP_LAUNCH_PARAM_BUFFER_SIZE && config[4] == HIP_LAUNCH_PARAM_END){
-                kernSize = *(size_t*)(config[3]);
+                kernArgSize = *(size_t*)(config[3]);
             } else {
                 return ihipLogStatus(hipErrorNotInitialized);
             }
@@ -279,6 +282,33 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         grid_launch_parm lp;
         hStream = ihipPreLaunchKernel(hStream, 0, 0, &lp, f->_kernelName);
 
+#if USE_DISPATCH_HSA_KERNEL
+
+        hsa_kernel_dispatch_packet_t aql;
+
+        memset(&aql, 0, sizeof(aql));
+
+        //aql.completion_signal._handle = 0;
+        //aql.kernarg_address = 0;
+
+        aql.workgroup_size_x = blockDimX;
+        aql.workgroup_size_y = blockDimY;
+        aql.workgroup_size_z = blockDimZ;
+        aql.grid_size_x = blockDimX * gridDimX;
+        aql.grid_size_y = blockDimY * gridDimY;
+        aql.grid_size_z = blockDimZ * gridDimZ;
+        aql.group_segment_size = groupSegmentSize;
+        aql.private_segment_size = privateSegmentSize;
+        aql.kernel_object = f->_kernel;
+        aql.setup = 1 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
+        aql.header =   (HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE) |
+                                    (1 << HSA_PACKET_HEADER_BARRIER) |
+                                    (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
+                                    (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
+
+        lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize);
+#else
+
         /*
           Create signal
         */
@@ -286,17 +316,21 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         hsa_signal_t signal;
         status = hsa_signal_create(1, 0, NULL, &signal);
 
+
         /*
           Launch AQL packet
         */
         hStream->launchModuleKernel(*lp.av, signal, blockDimX, blockDimY, blockDimZ,
-                  gridDimX, gridDimY, gridDimZ, groupSegmentSize, privateSegmentSize, config[1], kernSize, f->_kernel);
+                  gridDimX, gridDimY, gridDimZ, groupSegmentSize, privateSegmentSize, config[1], kernArgSize, f->_kernel);
+
 
         /*
           Wait for signal
         */
 
         hsa_signal_value_t value = hsa_signal_wait_acquire(signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_BLOCKED);
+
+#endif // USE_DISPATCH_HSA_KERNEL
 
 
         ihipPostLaunchKernel(hStream, lp);

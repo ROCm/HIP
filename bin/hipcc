@@ -52,9 +52,9 @@ $verbose = $ENV{'HIPCC_VERBOSE'} // 0;
 $HIP_PATH=$ENV{'HIP_PATH'} // dirname (dirname $0); # use parent directory of hipcc
 
 #---
-# Read .buildInfo
+# Read .hipInfo
 my %hipConfig = ();
-parse_config_file("$HIP_PATH/lib/.buildInfo", \%hipConfig);
+parse_config_file("$HIP_PATH/lib/.hipInfo", \%hipConfig);
 
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
@@ -118,6 +118,9 @@ if ($HIP_PLATFORM eq "hcc") {
     }
     if ($ROCM_TARGET eq "hawaii") {
         $HIPLDFLAGS .= " -amdgpu-target=AMD:AMDGPU:7:0:1";
+    }
+    if ($ROCM_TARGET eq "polaris") {
+        $HIPLDFLAGS .= " -amdgpu-target=AMD:AMDGPU:8:0:3";
     }
 
     # Add trace marker library:
@@ -194,6 +197,11 @@ if($HIP_PLATFORM eq "hcc"){
     system($ISACMD) and die();
     exit(0);
   }
+}
+
+if(($HIP_PLATFORM eq "hcc") and defined $ENV{HIP_EXPERIMENTAL}){
+    $EXPORT_LL=" ";
+    $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_ir.ll\n";
 }
 
 if($HIP_PLATFORM eq "nvcc"){
