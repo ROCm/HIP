@@ -36,7 +36,7 @@ hipError_t ihipEventCreate(hipEvent_t* event, unsigned flags)
 
     // TODO-IPC - support hipEventInterprocess.
     unsigned supportedFlags = hipEventDefault | hipEventBlockingSync | hipEventDisableTiming;
-    if ((flags & ~supportedFlags) != 0) {
+    if ((flags & ~supportedFlags) == 0) {
         ihipEvent_t *eh = new ihipEvent_t();
 
         eh->_state  = hipEventStatusCreated;
@@ -180,11 +180,7 @@ hipError_t hipEventQuery(hipEvent_t event)
 {
     HIP_INIT_API(event);
 
-
-    // TODO-stream - need to read state of signal here:  The event may have become ready after recording..
-    // TODO-HCC - use get_hsa_signal here.
-
-    if (event->_state == hipEventStatusRecording) {
+    if ((event->_state == hipEventStatusRecording) && (!event->_marker.is_ready())) {
         return ihipLogStatus(hipErrorNotReady);
     } else {
         return ihipLogStatus(hipSuccess);
