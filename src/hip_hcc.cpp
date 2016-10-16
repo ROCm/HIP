@@ -19,6 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 /**
  * @file hip_hcc.cpp
  *
@@ -67,6 +68,7 @@ int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU ident
 int HIP_NUM_KERNELS_INFLIGHT = 128;
 int HIP_BLOCKING_SYNC = 0;
 
+#define HIP_USE_PRODUCT_NAME 0
 //#define DISABLE_COPY_EXT 1
 
 
@@ -81,6 +83,84 @@ unsigned g_deviceCnt;
 std::vector<int> g_hip_visible_devices;
 hsa_agent_t g_cpu_agent;
 
+/*
+ Implementation of malloc and free device functions.
+
+ This is the best place to put them because the device
+ global variables need to be initialized at the start.
+*/
+
+#define NUM_PAGES_PER_THREAD  16
+#define SIZE_OF_PAGE          64
+#define NUM_THREADS_PER_CU    64
+#define NUM_CUS_PER_GPU       64
+#define NUM_PAGES NUM_PAGES_PER_THREAD * NUM_THREADS_PER_CU * NUM_CUS_PER_GPU
+#define SIZE_MALLOC NUM_PAGES * SIZE_OF_PAGE
+#define SIZE_OF_HEAP SIZE_MALLOC
+
+size_t g_malloc_heap_size = SIZE_OF_HEAP;
+
+__attribute__((address_space(1))) char gpuHeap[SIZE_OF_HEAP];
+__attribute__((address_space(1))) uint32_t gpuFlags[NUM_PAGES];
+
+__device__ void *__hip_hc_malloc(size_t size)
+{
+    char *heap = (char*)gpuHeap;
+    if(size > SIZE_OF_HEAP)
+    {
+        return (void*)nullptr;
+    }
+    uint32_t totalThreads = hipBlockDim_x * hipGridDim_x * hipBlockDim_y * hipGridDim_y * hipBlockDim_z * hipGridDim_z;
+    uint32_t currentWorkItem = hipThreadIdx_x + hipBlockDim_x * hipBlockIdx_x;
+
+    uint32_t numHeapsPerWorkItem = NUM_PAGES / totalThreads;
+    uint32_t heapSizePerWorkItem = SIZE_OF_HEAP / totalThreads;
+
+    uint32_t stride = size / SIZE_OF_PAGE;
+    uint32_t start = numHeapsPerWorkItem * currentWorkItem;
+
+    uint32_t k=0;
+
+    while(gpuFlags[k] > 0)
+    {
+        k++;
+    }
+
+    for(uint32_t i=0;i<stride-1;i++)
+    {
+        gpuFlags[i+start+k] = 1;
+    }
+
+    gpuFlags[start+stride-1+k] = 2;
+
+    void* ptr = (void*)(heap + heapSizePerWorkItem * currentWorkItem + k*SIZE_OF_PAGE);
+
+    return ptr;
+}
+
+__device__ void* __hip_hc_free(void *ptr)
+{
+    if(ptr == nullptr)
+    {
+       return nullptr;
+    }
+
+    uint32_t offsetByte = (uint64_t)ptr - (uint64_t)gpuHeap;
+    uint32_t offsetPage = offsetByte / SIZE_OF_PAGE;
+
+    while(gpuFlags[offsetPage] != 0) {
+        if(gpuFlags[offsetPage] == 2) {
+            gpuFlags[offsetPage] = 0;
+            offsetPage++;
+            break;
+        } else {
+            gpuFlags[offsetPage] = 0;
+            offsetPage++;
+        }
+    }
+
+    return nullptr;
+}
 
 
 //=================================================================================================
@@ -256,8 +336,8 @@ void ihipStream_t::lockclose_postKernelCommand(hc::accelerator_view *av)
 {
 
     if (HIP_LAUNCH_BLOCKING) {
-        // TODO - fix this so it goes through proper stream::wait() call.// direct wait OK since we know the stream is locked. 
-        av->wait(hc::hcWaitModeActive);  
+        // TODO - fix this so it goes through proper stream::wait() call.// direct wait OK since we know the stream is locked.
+        av->wait(hc::hcWaitModeActive);
         tprintf(DB_SYNC, " %s LAUNCH_BLOCKING for kernel completion\n", ToString(this).c_str());
     }
 
@@ -267,6 +347,7 @@ void ihipStream_t::lockclose_postKernelCommand(hc::accelerator_view *av)
 
 
 
+#if USE_DISPATCH_HSA_KERNEL==0
 // Precursor: the stream is already locked,specifically so this routine can enqueue work into the specified av.
 void ihipStream_t::launchModuleKernel(
                         hc::accelerator_view av,
@@ -318,6 +399,7 @@ void ihipStream_t::launchModuleKernel(
     hsa_queue_store_write_index_relaxed(Queue, packet_index + 1);
     hsa_signal_store_relaxed(Queue->doorbell_signal, packet_index);
 }
+#endif
 
 
 //=============================================================================
@@ -385,7 +467,7 @@ template<>
 void ihipCtxCriticalBase_t<CtxMutex>::printPeers(FILE *f) const
 {
     for (auto iter = _peers.begin(); iter!=_peers.end(); iter++) {
-        fprintf (f, "%s ", (*iter)->toString().c_str()); 
+        fprintf (f, "%s ", (*iter)->toString().c_str());
     };
 }
 
@@ -567,7 +649,6 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     // Set some defaults in case we don't find the appropriate regions:
     prop->totalGlobalMem = 0;
     prop->totalConstMem = 0;
-    prop->sharedMemPerBlock = 0;
     prop-> maxThreadsPerMultiProcessor = 0;
     prop->regsPerBlock = 0;
 
@@ -585,7 +666,11 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop->isMultiGpuBoard = 0 ? gpuAgentsCount < 2 : 1;
 
     // Get agent name
+#if HIP_USE_PRODUCT_NAME
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_PRODUCT_NAME, &(prop->name));
+#else
     err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_NAME, &(prop->name));
+#endif
     DeviceErrorCheck(err);
 
     // Get agent node
@@ -718,6 +803,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop->concurrentKernels = 1; // All ROCm hardware supports executing multiple kernels concurrently
 
     prop->canMapHostMemory = 1;  // All ROCm devices can map host memory
+    prop->totalConstMem = 16384;
 #if 0
     // TODO - code broken below since it always returns 1.
     // Are the flags part of the context or part of the device?
@@ -1097,7 +1183,6 @@ void ihipInit()
         assert(deviceCnt == g_deviceCnt);
     }
 
-
     tprintf(DB_SYNC, "pid=%u %-30s\n", getpid(), "<ihipInit>");
 }
 
@@ -1351,10 +1436,10 @@ void ihipSetTs(hipEvent_t e)
 
 // Returns true if thisCtx can see the memory allocated on dstCtx and srcCtx.
 // The peer-list for a context controls which contexts have access to the memory allocated on that context.
-// So we check dstCtx's and srcCtx's peerList to see if the booth include thisCtx. 
+// So we check dstCtx's and srcCtx's peerList to see if the both include thisCtx.
 bool ihipStream_t::canSeePeerMemory(const ihipCtx_t *thisCtx, ihipCtx_t *dstCtx, ihipCtx_t *srcCtx)
 {
-    tprintf (DB_COPY1, "Checking if direct copy can be used.  thisCtx:%s;  dstCtx:%s ;  srcCtx:%s\n", 
+    tprintf (DB_COPY1, "Checking if direct copy can be used.  thisCtx:%s;  dstCtx:%s ;  srcCtx:%s\n",
             thisCtx->toString().c_str(), dstCtx->toString().c_str(), srcCtx->toString().c_str());
 
     // Use blocks to control scope of critical sections.
@@ -1437,8 +1522,8 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     };
 
 
-    // If this is P2P access, we need to check to see if the copy agent (specified by the stream where the copy is enqueued) 
-    // has peer access enabled to both the source and dest.  If this is true, then the copy agent can see both pointers 
+    // If this is P2P access, we need to check to see if the copy agent (specified by the stream where the copy is enqueued)
+    // has peer access enabled to both the source and dest.  If this is true, then the copy agent can see both pointers
     // and we can perform the access with the copy engine from the current stream.  If not true, then we will copy through the host. (forceHostCopyEngine=true).
     bool forceHostCopyEngine = false;
     if (hcCopyDir == hc::hcMemcpyDeviceToDevice) {
@@ -1509,13 +1594,13 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
                 crit->_av.copy_async(src, dst, sizeBytes);
             } catch (Kalmar::runtime_exception) {
                 throw ihipException(hipErrorRuntimeOther);
-            }; 
+            };
 
 
             if (HIP_LAUNCH_BLOCKING) {
                 tprintf(DB_SYNC, "LAUNCH_BLOCKING for completion of hipMemcpyAsync(%zu)\n", sizeBytes);
                 this->wait(crit);
-            } 
+            }
 
         } else {
             locked_copySync(dst, src, sizeBytes, kind);

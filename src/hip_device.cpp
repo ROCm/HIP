@@ -1,19 +1,22 @@
 /*
 Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANNTY OF ANY KIND, EXPRESS OR
-IMPLIED, INNCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANNY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER INN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
@@ -68,7 +71,7 @@ hipError_t hipGetDeviceCount(int *count)
     return e;
 }
 
-hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig )
+hipError_t hipDeviceSetCacheConfig(hipFuncCache cacheConfig)
 {
     HIP_INIT_API(cacheConfig);
 
@@ -77,7 +80,7 @@ hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig )
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig )
+hipError_t hipDeviceGetCacheConfig(hipFuncCache *cacheConfig)
 {
     HIP_INIT_API(cacheConfig);
 
@@ -86,7 +89,23 @@ hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig )
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t hipFuncSetCacheConfig ( hipFuncCache cacheConfig )
+extern "C" size_t g_malloc_heap_size;
+
+hipError_t hipDeviceGetLimit (size_t *pValue, hipLimit_t limit)
+{
+    HIP_INIT_API(pValue, limit);
+    if(pValue == nullptr) {
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
+    if(limit == hipLimitMallocHeapSize) {
+        *pValue = g_malloc_heap_size;
+        return ihipLogStatus(hipSuccess);
+    }else{
+        return ihipLogStatus(hipErrorUnsupportedLimit);
+    }
+}
+
+hipError_t hipFuncSetCacheConfig (hipFuncCache cacheConfig)
 {
     HIP_INIT_API(cacheConfig);
 
@@ -95,7 +114,7 @@ hipError_t hipFuncSetCacheConfig ( hipFuncCache cacheConfig )
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config )
+hipError_t hipDeviceSetSharedMemConfig (hipSharedMemConfig config)
 {
     HIP_INIT_API(config);
 
@@ -104,7 +123,7 @@ hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config )
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig )
+hipError_t hipDeviceGetSharedMemConfig (hipSharedMemConfig *pConfig)
 {
     HIP_INIT_API(pConfig);
 

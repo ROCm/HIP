@@ -19,6 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 /**
  *  @file  hcc_detail/hip_runtime.h
  *  @brief Contains definitions of APIs for HIP runtime.
@@ -533,7 +534,8 @@ __device__ float __dsqrt_rz(double x);
  *
  * @warning __threadfence_block is a stub and map to no-op.
  */
-__device__ void  __threadfence_block(void);
+// __device__ void  __threadfence_block(void);
+extern "C" __device__ void __threadfence_block(void);
 
  /**
   * @brief threadfence makes wirtes visible to other threads running on same GPU.
@@ -544,7 +546,8 @@ __device__ void  __threadfence_block(void);
  *
  * @warning __threadfence is a stub and map to no-op, application should set "export HSA_DISABLE_CACHE=1" to disable both L1 and L2 caches.
  */
-__device__ void  __threadfence(void) __attribute__((deprecated("Provided for compile-time compatibility, not yet functional")));
+// __device__ void  __threadfence(void) __attribute__((deprecated("Provided for compile-time compatibility, not yet functional")));
+extern "C" __device__ void __threadfence(void);
 
 /**
  * @brief threadfence_system makes writes to pinned system memory visible on host CPU.
@@ -583,55 +586,42 @@ __device__ void  __threadfence_system(void) __attribute__((deprecated("Provided 
 // loop unrolling
 __device__ static inline void* memcpy(void* dst, void* src, size_t size)
 {
-    uint64_t i = 0;
-    uint64_t totalLength = size/sizeof(uint32_t);
-    for(i=hipThreadIdx_x+hipBlockIdx_x*hipBlockDim_x;
-                  i<(totalLength/4);
-                  i = i + hipBlockDim_x * hipGridDim_x)
-    {
-        ((uint32_t*)dst)[4*i] = ((uint32_t*)src)[4*i];
-        ((uint32_t*)dst)[4*i+1] = ((uint32_t*)src)[4*i+1];
-        ((uint32_t*)dst)[4*i+2] = ((uint32_t*)src)[4*i+2];
-        ((uint32_t*)dst)[4*i+3] = ((uint32_t*)src)[4*i+3];
-    }
-    if(4*i < totalLength){
-        ((uint32_t*)dst)[4*i] = ((uint32_t*)src)[4*i];
-        ((uint32_t*)dst)[4*i+1] = ((uint32_t*)src)[4*i+1];
-        ((uint32_t*)dst)[4*i+2] = ((uint32_t*)src)[4*i+2];
-        ((uint32_t*)dst)[4*i+3] = ((uint32_t*)src)[4*i+3];
-
+    uint8_t *dstPtr, *srcPtr;
+    dstPtr = (uint8_t*)dst;
+    srcPtr = (uint8_t*)src;
+    for(uint32_t i=0;i<size;i++) {
+        dstPtr[i] = srcPtr[i];
     }
     return nullptr;
 }
 
 __device__ static inline void* memset(void* ptr, uint8_t val, size_t size)
 {
-    uint32_t _val = 0;
-    _val = (val | val << 8 | val << 16 | val << 24);
-    uint64_t totalLength = size/sizeof(uint32_t);
-    uint64_t i = 0;
-    for(i=hipThreadIdx_x+hipBlockIdx_x*hipBlockDim_x;
-                  i<(totalLength/4);
-                  i = i + hipBlockDim_x * hipGridDim_x)
-    {
-        ((uint32_t*)ptr)[4*i] = _val;
-        ((uint32_t*)ptr)[4*i+1] = _val;
-        ((uint32_t*)ptr)[4*i+2] = _val;
-        ((uint32_t*)ptr)[4*i+3] = _val;
-    }
-    if(4*i < totalLength){
-        ((uint32_t*)ptr)[4*i] = _val;
-        ((uint32_t*)ptr)[4*i+1] = _val;
-        ((uint32_t*)ptr)[4*i+2] = _val;
-        ((uint32_t*)ptr)[4*i+3] = _val;
-
+    uint8_t *dstPtr;
+    dstPtr = (uint8_t*)ptr;
+    for(uint32_t i=0;i<size;i++) {
+        dstPtr[i] = val;
     }
     return nullptr;
+}
+
+extern "C" __device__ void* __hip_hc_malloc(size_t);
+extern "C" __device__ void* __hip_hc_free(void *ptr);
+
+__device__ static inline void* malloc(size_t size)
+{
+    return __hip_hc_malloc(size);
+}
+
+__device__ static inline void* free(void *ptr)
+{
+    return __hip_hc_free(ptr);
 }
 
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
 
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
+#define HIP_SYMBOL(X) #X
 
 #ifdef __HCC_CPP__
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp, const char *kernelNameStr);

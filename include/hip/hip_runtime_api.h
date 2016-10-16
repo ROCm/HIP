@@ -19,6 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 /**
  * @file hip_runtime_api.h
  *
@@ -183,7 +184,7 @@ typedef enum hipError_t {
     hipErrorInvalidHandle           = 400,
     hipErrorNotFound                = 500,
     hipErrorIllegalAddress          = 700,
-
+    hipErrorInvalidSymbol           = 701,
 // Runtime Error Codes start here.
     hipErrorMissingConfiguration    = 1001,
     hipErrorMemoryAllocation        = 1002,    ///< Memory allocation error.
