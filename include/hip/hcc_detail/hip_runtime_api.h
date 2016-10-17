@@ -692,6 +692,8 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream);
  *  the function will return immediately and the completion_future resources will be released later, when the hipDevice is synchronized.
  *
  * @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventSynchronize, hipEventRecord, hipEventElapsedTime
+ *
+ * @returns #hipSuccess
  */
 hipError_t hipEventDestroy(hipEvent_t event);
 

@@ -277,7 +277,6 @@ void ihipStream_t::locked_waitEvent(hipEvent_t event)
 {
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
-    // TODO - check state of event here:
     crit->_av.create_blocking_marker(event->_marker);
 }
 
@@ -706,11 +705,10 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop->clockRate *= 1000.0;   // convert Mhz to Khz.
     DeviceErrorCheck(err);
 
-    //uint64_t counterHz;
-    //err = hsa_system_get_info(HSA_SYSTEM_INFO_TIMESTAMP_FREQUENCY, &counterHz);
-    //DeviceErrorCheck(err);
-    //prop->clockInstructionRate = counterHz / 1000;
-    prop->clockInstructionRate = 100*1000; /* TODO-RT - hard-code until HSART has function to properly report clock */
+    uint64_t counterHz;
+    err = hsa_system_get_info(HSA_SYSTEM_INFO_TIMESTAMP_FREQUENCY, &counterHz);
+    DeviceErrorCheck(err);
+    prop->clockInstructionRate = counterHz / 1000;
 
     // Get Agent BDFID (bus/device/function ID)
     uint16_t bdf_id = 1;
@@ -718,7 +716,6 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     DeviceErrorCheck(err);
 
     // BDFID is 16bit uint: [8bit - BusID | 5bit - Device ID | 3bit - Function/DomainID]
-    // TODO/Clarify: cudaDeviceProp::pciDomainID how to report?
     // prop->pciDomainID =  bdf_id & 0x7;
     prop->pciDeviceID =  (bdf_id>>3) & 0x1F;
     prop->pciBusID =  (bdf_id>>8) & 0xFF;
@@ -789,7 +786,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop->arch.hasFloatAtomicAdd           = 0;
     prop->arch.hasGlobalInt64Atomics       = 1;
     prop->arch.hasSharedInt64Atomics       = 1;
-    prop->arch.hasDoubles                  = 1; // TODO - true for Fiji.
+    prop->arch.hasDoubles                  = 1; 
     prop->arch.hasWarpVote                 = 1;
     prop->arch.hasWarpBallot               = 1;
     prop->arch.hasWarpShuffle              = 1;
