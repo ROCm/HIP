@@ -51,6 +51,7 @@ int main()
         HIP_ASSERT(hipMemcpy(dPtr, hPtr, SIZE, hipMemcpyHostToDevice));
         hipLaunchKernel(Alloc, dim3(1,1,1), dim3(NUM,1,1), 0, 0, dPtr);
         HIP_ASSERT(hipMemcpy(hPtr, dPtr, SIZE, hipMemcpyDeviceToHost));
+        assert(hPtr[0] != 0);
         hipLaunchKernel(Free, dim3(1,1,1), dim3(NUM,1,1), 0, 0, dPtr);
         HIP_ASSERT(hipFree(dPtr));
         for(uint32_t i=1;i<NUM;i++) {
