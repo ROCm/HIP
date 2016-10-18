@@ -66,7 +66,7 @@ int HIP_ATP_MARKER= 0;
 int HIP_DB= 0;
 int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
 int HIP_NUM_KERNELS_INFLIGHT = 128;
-int HIP_BLOCKING_SYNC = 0;
+int HIP_FORCE_BLOCKING_SYNC = 0;
 
 #define HIP_USE_PRODUCT_NAME 0
 //#define DISABLE_COPY_EXT 1
@@ -82,6 +82,7 @@ bool g_visible_device = false;
 unsigned g_deviceCnt;
 std::vector<int> g_hip_visible_devices;
 hsa_agent_t g_cpu_agent;
+unsigned g_numLogicalThreads;
 
 /*
  Implementation of malloc and free device functions.
@@ -240,6 +241,19 @@ ihipStream_t::ihipStream_t(ihipCtx_t *ctx, hc::accelerator_view av, unsigned int
     _ctx(ctx),
     _criticalData(av)
 {
+    unsigned schedBits = ctx->_ctxFlags & hipDeviceScheduleMask;
+
+    switch (schedBits) {
+        case hipDeviceScheduleAuto          : _scheduleMode = Auto; break;
+        case hipDeviceScheduleSpin          : _scheduleMode = Spin; break;
+        case hipDeviceScheduleYield         : _scheduleMode = Yield; break;
+        case hipDeviceScheduleBlockingSync  : _scheduleMode = Yield; break;
+        default:_scheduleMode = Auto;
+    };
+
+
+
+
     tprintf(DB_SYNC, " streamCreate: stream=%p\n", this);
 };
 
@@ -256,7 +270,23 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty
 {
     if (! assertQueueEmpty) {
         tprintf (DB_SYNC, "stream %p wait for queue-empty..\n", this);
-        crit->_av.wait(HIP_BLOCKING_SYNC ? hc::hcWaitModeBlocked : hc::hcWaitModeActive);
+        hc::hcWaitMode waitMode = hc::hcWaitModeActive;
+
+        if (_scheduleMode == Auto) {
+            if (g_deviceCnt > g_numLogicalThreads) {
+                waitMode = hc::hcWaitModeActive;
+            } else {
+                waitMode = hc::hcWaitModeBlocked;
+            }
+        } else if (_scheduleMode == Spin) {
+            waitMode = hc::hcWaitModeActive;
+        } else if (_scheduleMode == Yield) {
+            waitMode = hc::hcWaitModeBlocked;
+        } else {
+            assert(0); // bad wait mode.
+        }
+            
+        crit->_av.wait(HIP_FORCE_BLOCKING_SYNC ? hc::hcWaitModeBlocked : waitMode);
     }
 
     crit->_kernelCnt = 0;
@@ -1090,7 +1120,7 @@ void ihipInit()
     READ_ENV_I(release, HIP_VISIBLE_DEVICES, CUDA_VISIBLE_DEVICES, "Only devices whose index is present in the secquence are visible to HIP applications and they are enumerated in the order of secquence" );
 
 
-    READ_ENV_I(release, HIP_BLOCKING_SYNC, 0, "Use blocking synchronization for stream waits.  This may increase latency but is friendlier to other processes. If 0, spin-wait.");
+    READ_ENV_I(release, HIP_FORCE_BLOCKING_SYNC, 0, "Force blocking synchronization for stream waits.  This may increase latency but is friendlier to other processes. If 0, used .");
 
     READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Max number of inflight kernels per stream before active synchronization is forced.");
 
@@ -1174,13 +1204,14 @@ void ihipInit()
             g_deviceCnt++;
         }
     }
+    g_numLogicalThreads = std::thread::hardware_concurrency();
 
     // If HIP_VISIBLE_DEVICES is not set, make sure all devices are initialized
     if(!g_visible_device) {
         assert(deviceCnt == g_deviceCnt);
     }
 
-    tprintf(DB_SYNC, "pid=%u %-30s\n", getpid(), "<ihipInit>");
+    tprintf(DB_SYNC, "pid=%u %-30s g_numLogicalThreads=%u\n", getpid(), "<ihipInit>", g_numLogicalThreads);
 }
 
 

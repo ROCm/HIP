@@ -268,7 +268,7 @@ hipError_t hipSetDeviceFlags( unsigned int flags)
 {
     HIP_INIT_API(flags);
 
-    hipError_t e;
+    hipError_t e = hipSuccess;
 
     auto * ctx = ihipGetTlsDefaultCtx();
 
@@ -276,7 +276,25 @@ hipError_t hipSetDeviceFlags( unsigned int flags)
     // TODO : Review error handling behavior for this function, it often returns ErrorSetOnActiveProcess
     if (ctx) {
        ctx->_ctxFlags = ctx->_ctxFlags | flags;
-       e = hipSuccess;
+       if (flags & hipDeviceScheduleMask) {
+           switch (hipDeviceScheduleMask) {
+              case hipDeviceScheduleAuto:
+              case hipDeviceScheduleSpin:
+              case hipDeviceScheduleYield:
+              case hipDeviceScheduleBlockingSync:
+                   e = hipSuccess;
+                   break;
+               default:
+                   e = hipErrorInvalidValue;
+                   break;
+           }
+       }
+
+       unsigned supportedFlags = hipDeviceScheduleMask | hipDeviceMapHost | hipDeviceLmemResizeToMax; 
+
+       if (flags & ~supportedFlags) {
+          e = hipErrorInvalidValue;
+       }
     } else {
        e = hipErrorInvalidDevice;
     }

@@ -95,10 +95,12 @@ enum hipLimit_t
 #define hipHostRegisterIoMemory     0x4  ///< Not supported.
 
 
-#define hipDeviceScheduleAuto       0x0
-#define hipDeviceScheduleSpin       0x1
-#define hipDeviceScheduleYield      0x2
-#define hipDeviceBlockingSync       0x4
+#define hipDeviceScheduleAuto       0x0  ///< Automatically select between Spin and Yield
+#define hipDeviceScheduleSpin       0x1  ///< Dedicate a CPU core to spin-wait.  Provides lowest latency, but burns a CPU core and may consume more power.
+#define hipDeviceScheduleYield      0x2  ///< Yield the CPU to the operating system when waiting.  May increase latency, but lowers power and is friendlier to other threads in the system.
+#define hipDeviceScheduleBlockingSync 0x4
+#define hipDeviceScheduleMask       0x7 
+
 #define hipDeviceMapHost            0x8
 #define hipDeviceLmemResizeToMax    0x16
 
@@ -383,9 +385,18 @@ hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config );
  *
  * @param [in] flags
  *
+ * The schedule flags impact how HIP waits for the completion of a command running on a device.  
+ * hipDeviceScheduleSpin         : HIP runtime will actively spin in the thread which submitted the work until the command completes.  This offers the lowest latency, but will consume a CPU core and may increase power.
+ * hipDeviceScheduleYield        : The HIP runtime will yield the CPU to system so that other tasks can use it.  This may increase latency to detect the completion but will consume less power and is friendlier to other tasks in the system.
+ * hipDeviceScheduleBlockingSync : On ROCm platform, this is a synonym for hipDeviceScheduleYield.
+ * hipDeviceScheduleAuto         : Use a hueristic to select between Spin and Yield modes.  If the number of HIP contexts is greater than the number of logical processors in the system, use Spin scheduling.  Else use Yield scheduling.
+ *
+ *
+ * hipDeviceMapHost              : Allow mapping host memory.  On ROCM, this is always allowed and the flag is ignored.
+ * hipDeviceLmemResizeToMax      : @warning ROCm silently ignores this flag.  
+ *
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorSetOnActiveProcess
  *
- * Note: Only hipDeviceScheduleAuto and hipDeviceMapHost are supported
  *
 */
 hipError_t hipSetDeviceFlags ( unsigned flags);

@@ -384,11 +384,14 @@ typedef ihipStreamCriticalBase_t<StreamMutex> ihipStreamCritical_t;
 typedef LockedAccessor<ihipStreamCritical_t> LockedAccessor_StreamCrit_t;
 
 
+
 //---
 // Internal stream structure.
 class ihipStream_t {
 public:
-typedef uint64_t SeqNum_t ;
+    enum ScheduleMode {Auto, Spin, Yield};
+    typedef uint64_t SeqNum_t ;
+
     ihipStream_t(ihipCtx_t *ctx, hc::accelerator_view av, unsigned int flags);
     ~ihipStream_t();
 
@@ -457,6 +460,8 @@ private: // Data
     // Friends:
     friend std::ostream& operator<<(std::ostream& os, const ihipStream_t& s);
     friend hipError_t hipStreamQuery(hipStream_t);
+
+    ScheduleMode                _scheduleMode;
 };
 
 
