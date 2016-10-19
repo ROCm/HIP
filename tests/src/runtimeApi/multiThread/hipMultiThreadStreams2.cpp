@@ -90,6 +90,17 @@ void run(size_t size, hipStream_t stream1, hipStream_t stream2){
 	HIPCHECK(hipDeviceSynchronize());
 	HIPASSERT(Eh[10] = Ah[10] + 1.0f);
 	HIPASSERT(Ehh[10] = Ahh[10] + 1.0f);
+
+    HIPCHECK(hipHostFree(Ah));
+    HIPCHECK(hipHostFree(Bh));
+    HIPCHECK(hipHostFree(Eh));
+    HIPCHECK(hipHostFree(Ahh));
+    HIPCHECK(hipHostFree(Bhh));
+    HIPCHECK(hipHostFree(Ehh));
+    HIPCHECK(hipFree(Cd));
+    HIPCHECK(hipFree(Dd));
+    HIPCHECK(hipFree(Cdd));
+    HIPCHECK(hipFree(Ddd));
 }
 
 int main(int argc, char **argv)
