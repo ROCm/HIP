@@ -92,8 +92,8 @@ if ($HIP_PLATFORM eq "hcc") {
     $HIPCXXFLAGS = $HCCFLAGS;
 
     #### GCC system includes workaround ####
-    $WA = $ENV{'HCC_SYS_INCLUDES_WA'};
-    if (!defined($WA) || ${WA} ne "0") {
+    $WA = $ENV{'HIP_HCC_SYS_INCLUDES_WA'};
+    if (defined($WA) and ${WA} ne "0") {
         my $GCC_CUR_VER = `gcc -dumpversion`;
         my $GPP_CUR_VER = `g++ -dumpversion`;
         $GCC_CUR_VER =~ s/\R//g;
