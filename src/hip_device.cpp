@@ -285,14 +285,15 @@ hipError_t hipSetDeviceFlags( unsigned int flags)
                    e = hipSuccess;
                    break;
                default:
-                   e = hipErrorInvalidValue;
+                   e = hipSuccess; // TODO - should this be error?  Map to Auto?
+                   //e = hipErrorInvalidValue;
                    break;
            }
        }
 
        unsigned supportedFlags = hipDeviceScheduleMask | hipDeviceMapHost | hipDeviceLmemResizeToMax; 
 
-       if (flags & ~supportedFlags) {
+       if (flags & (~supportedFlags)) {
           e = hipErrorInvalidValue;
        }
     } else {
