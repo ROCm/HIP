@@ -130,6 +130,7 @@ endmacro()
 #-------------------------------------------------------------------------------
 
 # Macro: HIT_ADD_FILES used to scan+add multiple files for testing.
+file(GLOB HIP_LIB_FILES ${HIP_PATH}/lib/*)
 macro(HIT_ADD_FILES _dir _label)
     foreach (file ${ARGN})
         # Build tests
@@ -148,7 +149,7 @@ macro(HIT_ADD_FILES _dir _label)
             else()
                 set_source_files_properties(${_sources} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
                 hip_add_executable(${target} ${_sources} HIPCC_OPTIONS ${_hipcc_options} HCC_OPTIONS ${_hcc_options} NVCC_OPTIONS ${_nvcc_options})
-                set_target_properties(${target} PROPERTIES OUTPUT_NAME ${_target} RUNTIME_OUTPUT_DIRECTORY ${_label})
+                set_target_properties(${target} PROPERTIES OUTPUT_NAME ${_target} RUNTIME_OUTPUT_DIRECTORY ${_label} LINK_DEPENDS "${HIP_LIB_FILES}")
             endif()
         endforeach()
 
