@@ -66,7 +66,7 @@ int HIP_ATP_MARKER= 0;
 int HIP_DB= 0;
 int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
 int HIP_NUM_KERNELS_INFLIGHT = 128;
-int HIP_FORCE_BLOCKING_SYNC = 0;
+int HIP_WAIT_MODE = 0;
 
 #define HIP_USE_PRODUCT_NAME 0
 //#define DISABLE_COPY_EXT 1
@@ -285,8 +285,14 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty
         } else {
             assert(0); // bad wait mode.
         }
+
+        if (HIP_WAIT_MODE == 1) {
+            waitMode = hc::hcWaitModeBlocked;
+        } else if (HIP_WAIT_MODE == 2) {
+            waitMode = hc::hcWaitModeActive;
+        }
             
-        crit->_av.wait(HIP_FORCE_BLOCKING_SYNC ? hc::hcWaitModeBlocked : waitMode);
+        crit->_av.wait(waitMode);
     }
 
     crit->_kernelCnt = 0;
@@ -1120,7 +1126,7 @@ void ihipInit()
     READ_ENV_I(release, HIP_VISIBLE_DEVICES, CUDA_VISIBLE_DEVICES, "Only devices whose index is present in the secquence are visible to HIP applications and they are enumerated in the order of secquence" );
 
 
-    READ_ENV_I(release, HIP_FORCE_BLOCKING_SYNC, 0, "Force blocking synchronization for stream waits.  This may increase latency but is friendlier to other processes. If 0, used .");
+    READ_ENV_I(release, HIP_WAIT_MODE, 0, "Force synchronization mode. 1= force yield, 2=force spin, 0=defaults specified in application");
 
     READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Max number of inflight kernels per stream before active synchronization is forced.");
 
