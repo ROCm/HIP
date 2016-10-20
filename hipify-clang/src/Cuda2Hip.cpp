@@ -2002,7 +2002,7 @@ static cl::opt<bool> NoOutput("no-output",
        cl::cat(ToolTemplateCategory));
 
 static cl::opt<bool> PrintStats("print-stats",
-       cl::desc("Print translation statisitics"),
+       cl::desc("Print translation statistics"),
        cl::value_desc("print-stats"),
        cl::cat(ToolTemplateCategory));
 
