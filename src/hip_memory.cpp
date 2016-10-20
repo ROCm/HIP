@@ -150,7 +150,7 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
     if(ctx){
         // am_alloc requires writeable __acc, perhaps could be refactored?
         auto device = ctx->getWriteableDevice();
-        if(flags == hipHostMallocDefault){
+        if((flags == hipHostMallocDefault)|| (flags == hipHostMallocPortable)){
             *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
             if(sizeBytes < 1 && (*ptr == NULL)){
                 hip_status = hipErrorMemoryAllocation;
