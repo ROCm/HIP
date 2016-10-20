@@ -177,7 +177,9 @@ syn keyword hipFlags hipMemcpyDeviceToDevice
 syn keyword hipFlags hipMemcpyDefault 
 syn keyword hipFlags hipReadModeElementType 
 syn keyword hipFlags hipSuccess 
+syn keyword hipFlags hipErrorNotReady 
 syn keyword hipFlags hipTextureType1D 
+
 
 syn keyword hipFlags hipHostMallocDefault
 syn keyword hipFlags hipHostMallocPortable

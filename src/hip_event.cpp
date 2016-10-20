@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 #include "hip/hip_runtime.h"
-#include "hip/hcc_detail/hip_hcc.h"
-#include "hip/hcc_detail/trace_helper.h"
+#include "hip_hcc.h"
+#include "trace_helper.h"
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -34,15 +34,16 @@ hipError_t ihipEventCreate(hipEvent_t* event, unsigned flags)
 {
     hipError_t e = hipSuccess;
 
-    // TODO - support hipEventDefault, hipEventBlockingSync, hipEventDisableTiming
-    if (flags == 0) {
+    // TODO-IPC - support hipEventInterprocess.
+    unsigned supportedFlags = hipEventDefault | hipEventBlockingSync | hipEventDisableTiming;
+    if ((flags & ~supportedFlags) == 0) {
         ihipEvent_t *eh = new ihipEvent_t();
 
         eh->_state  = hipEventStatusCreated;
         eh->_stream = NULL;
         eh->_flags  = flags;
         eh->_timestamp  = 0;
-        *event = eh; // TODO - allocat the event directly, no copy needed.
+        *event = eh; 
     } else {
         e = hipErrorInvalidValue;
     }
@@ -152,7 +153,6 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop)
 
             int64_t tickDiff = (stop_eh->_timestamp - start_eh->_timestamp);
 
-            // TODO-move this to a variable saved with each agent.
             uint64_t freqHz;
             hsa_system_get_info(HSA_SYSTEM_INFO_TIMESTAMP_FREQUENCY, &freqHz);
             if (freqHz) {
@@ -180,11 +180,7 @@ hipError_t hipEventQuery(hipEvent_t event)
 {
     HIP_INIT_API(event);
 
-
-    // TODO-stream - need to read state of signal here:  The event may have become ready after recording..
-    // TODO-HCC - use get_hsa_signal here.
-
-    if (event->_state == hipEventStatusRecording) {
+    if ((event->_state == hipEventStatusRecording) && (!event->_marker.is_ready())) {
         return ihipLogStatus(hipErrorNotReady);
     } else {
         return ihipLogStatus(hipSuccess);

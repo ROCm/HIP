@@ -95,10 +95,12 @@ enum hipLimit_t
 #define hipHostRegisterIoMemory     0x4  ///< Not supported.
 
 
-#define hipDeviceScheduleAuto       0x0
-#define hipDeviceScheduleSpin       0x1
-#define hipDeviceScheduleYield      0x2
-#define hipDeviceBlockingSync       0x4
+#define hipDeviceScheduleAuto       0x0  ///< Automatically select between Spin and Yield
+#define hipDeviceScheduleSpin       0x1  ///< Dedicate a CPU core to spin-wait.  Provides lowest latency, but burns a CPU core and may consume more power.
+#define hipDeviceScheduleYield      0x2  ///< Yield the CPU to the operating system when waiting.  May increase latency, but lowers power and is friendlier to other threads in the system.
+#define hipDeviceScheduleBlockingSync 0x4
+#define hipDeviceScheduleMask       0x7 
+
 #define hipDeviceMapHost            0x8
 #define hipDeviceLmemResizeToMax    0x16
 
@@ -383,9 +385,18 @@ hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config );
  *
  * @param [in] flags
  *
+ * The schedule flags impact how HIP waits for the completion of a command running on a device.  
+ * hipDeviceScheduleSpin         : HIP runtime will actively spin in the thread which submitted the work until the command completes.  This offers the lowest latency, but will consume a CPU core and may increase power.
+ * hipDeviceScheduleYield        : The HIP runtime will yield the CPU to system so that other tasks can use it.  This may increase latency to detect the completion but will consume less power and is friendlier to other tasks in the system.
+ * hipDeviceScheduleBlockingSync : On ROCm platform, this is a synonym for hipDeviceScheduleYield.
+ * hipDeviceScheduleAuto         : Use a hueristic to select between Spin and Yield modes.  If the number of HIP contexts is greater than the number of logical processors in the system, use Spin scheduling.  Else use Yield scheduling.
+ *
+ *
+ * hipDeviceMapHost              : Allow mapping host memory.  On ROCM, this is always allowed and the flag is ignored.
+ * hipDeviceLmemResizeToMax      : @warning ROCm silently ignores this flag.  
+ *
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorSetOnActiveProcess
  *
- * Note: Only hipDeviceScheduleAuto and hipDeviceMapHost are supported
  *
 */
 hipError_t hipSetDeviceFlags ( unsigned flags);
@@ -626,8 +637,12 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags);
  *
  * @param[in,out] event Returns the newly created event.
  * @param[in] flags     Flags to control event behavior.  Valid values are #hipEventDefault, #hipEventBlockingSync, #hipEventDisableTiming, #hipEventInterprocess
- *
- * @warning On HCC platform, flags must be #hipEventDefault.
+ 
+ * #hipEventDefault : Default flag.  The event will use active synchronization and will support timing.  Blocking synchronization provides lowest possible latency at the expense of dedicating a CPU to poll on the eevent.
+ * #hipEventBlockingSync : The event will use blocking synchronization : if hipEventSynchronize is called on this event, the thread will block until the event completes.  This can increase latency for the synchroniation but can result in lower power and more resources for other CPU threads.
+ * #hipEventDisableTiming : Disable recording of timing information.  On ROCM platform, timing information is always recorded and this flag has no performance benefit.
+ 
+ * @warning On HCC platform, hipEventInterprocess support is under development.  Use of this flag will return an error.
  *
  * @returns #hipSuccess, #hipErrorInitializationError, #hipErrorInvalidValue, #hipErrorLaunchFailure, #hipErrorMemoryAllocation
  *
@@ -688,6 +703,8 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream);
  *  the function will return immediately and the completion_future resources will be released later, when the hipDevice is synchronized.
  *
  * @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventSynchronize, hipEventRecord, hipEventElapsedTime
+ *
+ * @returns #hipSuccess
  */
 hipError_t hipEventDestroy(hipEvent_t event);
 

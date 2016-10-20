@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 #include <hc.hpp>
 #include <hsa/hsa.h>
-#include "hip/hcc_detail/hip_util.h"
+#include "hip_util.h"
 
 
 #if defined(__HCC__) && (__hcc_workweek__ < 16354)
@@ -384,11 +384,14 @@ typedef ihipStreamCriticalBase_t<StreamMutex> ihipStreamCritical_t;
 typedef LockedAccessor<ihipStreamCritical_t> LockedAccessor_StreamCrit_t;
 
 
+
 //---
 // Internal stream structure.
 class ihipStream_t {
 public:
-typedef uint64_t SeqNum_t ;
+    enum ScheduleMode {Auto, Spin, Yield};
+    typedef uint64_t SeqNum_t ;
+
     ihipStream_t(ihipCtx_t *ctx, hc::accelerator_view av, unsigned int flags);
     ~ihipStream_t();
 
@@ -457,6 +460,8 @@ private: // Data
     // Friends:
     friend std::ostream& operator<<(std::ostream& os, const ihipStream_t& s);
     friend hipError_t hipStreamQuery(hipStream_t);
+
+    ScheduleMode                _scheduleMode;
 };
 
 

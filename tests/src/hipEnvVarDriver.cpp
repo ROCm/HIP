@@ -90,7 +90,7 @@ int main() {
         setenv("CUDA_VISIBLE_DEVICES",(char*)std::to_string(i).c_str(),1);
         if (devPCINum[i] != getDevicePCIBusNumRemote(0)) {
             std::cout << "The returned PciBusID is not correct"<< std::endl;
-            std::cout << "Expected "<< devPCINum[i] << ", but get " << getDevicePCIBusNum << endl;
+            std::cout << "Expected "<< devPCINum[i] << ", but get " << getDevicePCIBusNum(i) << endl;
             exit(-1);
         } else {
             continue;

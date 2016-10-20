@@ -10,7 +10,7 @@ TARGET=hcc
 SOURCES = shfl.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
-EXECUTABLE=./exe
+EXECUTABLE=./shfl
 
 .PHONY: test
 
@@ -22,7 +22,7 @@ CXX=$(HIPCC)
 
 
 $(EXECUTABLE): $(OBJECTS)
-	$(HIPCC) $(OBJECTS) -o $@
+	$(HIPCC)  $(OBJECTS) -o $@
 
 
 test: $(EXECUTABLE)

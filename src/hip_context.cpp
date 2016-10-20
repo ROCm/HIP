@@ -26,8 +26,8 @@ THE SOFTWARE.
 #include <stack>
 
 #include "hip/hip_runtime.h"
-#include "hip/hcc_detail/hip_hcc.h"
-#include "hip/hcc_detail/trace_helper.h"
+#include "hip_hcc.h"
+#include "trace_helper.h"
 
 // Stack of contexts
 thread_local std::stack<ihipCtx_t *>  tls_ctxStack;
