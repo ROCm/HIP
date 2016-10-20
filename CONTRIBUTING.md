@@ -124,6 +124,11 @@ Differences or limitations of HIP APIs as compared to CUDA APIs should be clearl
 - ihipLogStatus should only be called from top-level HIP APIs,and should be called to log and return the error code.  The error code 
   is used by the GetLastError and PeekLastError functions - if a HIP API simply returns, then the error will not be logged correctly.
 
+- All HIP environment variables should begin with the keyword HIP_
+    Environment variables should be long enough to describe their purpose but short enough so they can be remembered - perhaps 10-20 characters, with 3-4 parts separated by underscores.
+    To see the list of current environment variables, along with their values, set HIP_PRINT_ENV and run any hip applications on ROCM platform .
+    HIPCC or other tools may support additional environment variables which should follow the above convention.  
+
 
 
 #### Presubmit Testing:
