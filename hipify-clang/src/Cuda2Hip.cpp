@@ -1985,23 +1985,33 @@ void HipifyPPCallbacks::handleEndSource() {
 // Set up the command line options
 static cl::OptionCategory ToolTemplateCategory("CUDA to HIP source translator options");
 
-static cl::opt<std::string> OutputFilename("o", cl::desc("Output filename"),
-       cl::value_desc("filename"), cl::cat(ToolTemplateCategory));
+static cl::opt<std::string> OutputFilename("o",
+       cl::desc("Output filename"),
+       cl::value_desc("filename"),
+       cl::cat(ToolTemplateCategory));
 
-static cl::opt<bool>
-    Inplace("inplace",
-            cl::desc("Modify input file inplace, replacing input with hipified "
-                     "output, save backup in .prehip file. "),
-            cl::value_desc("inplace"));
+static cl::opt<bool> Inplace("inplace",
+       cl::desc("Modify input file inplace, replacing input with hipified "
+                "output, save backup in .prehip file"),
+       cl::value_desc("inplace"),
+       cl::cat(ToolTemplateCategory));
 
-static cl::opt<bool>
-    NoOutput("no-output",
-             cl::desc("don't write any translated output to stdout"),
-             cl::value_desc("no-output"));
+static cl::opt<bool> NoOutput("no-output",
+       cl::desc("Don't write any translated output to stdout"),
+       cl::value_desc("no-output"),
+       cl::cat(ToolTemplateCategory));
 
-static cl::opt<bool>
-    PrintStats("print-stats", cl::desc("print the command-line, like a header"),
-    cl::value_desc("print-stats"));
+static cl::opt<bool> PrintStats("print-stats",
+       cl::desc("Print translation statisitics"),
+       cl::value_desc("print-stats"),
+       cl::cat(ToolTemplateCategory));
+
+static cl::opt<bool> N("n",
+       cl::desc("Combines -no-output and -print-stats options"),
+       cl::value_desc("n"),
+       cl::cat(ToolTemplateCategory));
+
+static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 
 void addAllMatchers(ast_matchers::MatchFinder &Finder, Cuda2HipCallback *Callback) {
   Finder.addMatcher(callExpr(isExpansionInMainFile(),
@@ -2086,6 +2096,9 @@ int main(int argc, const char **argv) {
   CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::Required);
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
   std::string dst = OutputFilename;
+  if (N) {
+    NoOutput = PrintStats = true;
+  }
   if (dst.empty()) {
     dst = fileSources[0];
     if (!Inplace) {
