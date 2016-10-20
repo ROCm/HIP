@@ -190,16 +190,23 @@ extern const char *API_COLOR_END;
 #define DB_COPY1  3 /* 0x08 - trace memory copy commands. . */
 #define DB_SIGNAL 4 /* 0x10 - trace signal pool commands */
 #define DB_COPY2  5 /* 0x20 - trace memory copy commands. Detailed. */
+#define DB_MAX_BITPOS 5
 // When adding a new debug flag, also add to the char name table below.
+//
 
-static const char *dbName [] =
+struct DbName {
+    const char *_color;
+    const char *_shortName;
+};
+
+static const DbName dbName [] =
 {
-    KNRM "hip-api", // not used,
-    KYEL "hip-sync",
-    KCYN "hip-mem",
-    KMAG "hip-copy1",
-    KRED "hip-signal",
-    KNRM "hip-copy2",
+    {KGRN, "api"}, // not used,
+    {KYEL, "sync"},
+    {KCYN, "mem"},
+    {KMAG, "copy1"},
+    {KRED, "signal"},
+    {KNRM, "copy2"},
 };
 
  
@@ -210,7 +217,7 @@ static const char *dbName [] =
         char msgStr[1000];\
         snprintf(msgStr, 2000, __VA_ARGS__);\
         COMPUTE_TID_STR\
-        fprintf (stderr, "  %s%s:%s%s", dbName[trace_level], tid_ss.str().c_str(), msgStr, KNRM); \
+        fprintf (stderr, "  %ship-%s%s:%s%s", dbName[trace_level]._color, dbName[trace_level]._shortName, tid_ss.str().c_str(), msgStr, KNRM); \
     }\
 }
 #else
