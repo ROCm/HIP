@@ -10,7 +10,7 @@ TARGET=hcc
 SOURCES = MatrixTranspose.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
-EXECUTABLE=./exe
+EXECUTABLE=./MatrixTranspose
 
 .PHONY: test
 

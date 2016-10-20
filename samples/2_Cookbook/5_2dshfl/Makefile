@@ -10,7 +10,7 @@ TARGET=hcc
 SOURCES = 2dshfl.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
-EXECUTABLE=./exe
+EXECUTABLE=./2dshfl
 
 .PHONY: test
 

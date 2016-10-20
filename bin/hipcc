@@ -91,6 +91,18 @@ if ($HIP_PLATFORM eq "hcc") {
     $HIPCC=$HCC;
     $HIPCXXFLAGS = $HCCFLAGS;
 
+    #### GCC system includes workaround ####
+    $WA = $ENV{'HIP_HCC_SYS_INCLUDES_WA'} // 0;
+    if (${WA}) {
+        my $GCC_CUR_VER = `gcc -dumpversion`;
+        my $GPP_CUR_VER = `g++ -dumpversion`;
+        $GCC_CUR_VER =~ s/\R//g;
+        $GPP_CUR_VER =~ s/\R//g;
+        if (${GCC_CUR_VER} eq ${GPP_CUR_VER}) {
+            $HIPCXXFLAGS .= "-I/usr/include/x86_64-linux-gnu -I/usr/include/x86_64-linux-gnu/c++/${GCC_CUR_VER} -I/usr/include/c++/${GCC_CUR_VER}";
+        }
+    }
+
     $HIPCXXFLAGS .= " -I$HIP_PATH/include/hip/hcc_detail/cuda";
     $HIPCXXFLAGS .= " -I$HSA_PATH/include";
     $HIPCXXFLAGS .= " -Wno-deprecated-register";

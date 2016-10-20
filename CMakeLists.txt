@@ -76,6 +76,8 @@ if(HIP_PLATFORM STREQUAL "hcc")
         message(FATAL_ERROR "Don't know where to find HCC. Please specify abolute path using -DHCC_HOME")
     endif()
     add_to_config(_buildInfo HCC_VERSION)
+    string(REPLACE "-" ";" HCC_VERSION_LIST ${HCC_VERSION})
+    list(GET HCC_VERSION_LIST 0 HCC_PACKAGE_VERSION)
 
     # Determine HSA_PATH
     if(NOT DEFINED HSA_PATH)

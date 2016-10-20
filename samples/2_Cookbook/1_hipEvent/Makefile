@@ -10,7 +10,7 @@ TARGET=hcc
 SOURCES = hipEvent.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
 
-EXECUTABLE=./exe
+EXECUTABLE=./hipEvent
 
 .PHONY: test
 

@@ -38,8 +38,10 @@ int main()
         HIPCHECK(hipSetDevice(j));
 
         for(int i=0;i<4;i++){
-            flag = 1 < i;
+            flag = 1 << i;
+            printf ("Flag=%x\n", flag);
             HIPCHECK(hipSetDeviceFlags(flag));
+            //HIPCHECK_API(hipSetDeviceFlags(flag), hipErrorInvalidValue);
         }
 
         flag = 0;
