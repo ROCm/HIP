@@ -741,7 +741,7 @@ inline static hipError_t hipDeviceGetPCIBusId(int *pciBusId,int len,hipDevice_t 
 
 inline static hipError_t hipDeviceGetLimit(size_t *pValue, hipLimit_t limit)
 {
-    return hipCUDAErrorTohipError(cudaDeviceGetLimit(pValue, limit);
+    return hipCUDAErrorTohipError(cudaDeviceGetLimit(pValue, limit));
 }
 
 inline static hipError_t hipDeviceTotalMem(size_t *bytes,hipDevice_t device)
