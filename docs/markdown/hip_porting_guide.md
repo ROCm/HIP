@@ -402,61 +402,54 @@ Code should not assume a warp size of 32 or 64.  See [Warp Cross-Lane Functions]
 
 ## memcpyToSymbol
 
-HIP support for hipMemCpyToSymbol is under-development.  This feature allows a kernel
+HIP support for hipMemCpyToSymbol is complete.  This feature allows a kernel
 to define a device-side data symbol which can be accessed on the host side.  The symbol
-can be in __constant or device space.  As a workaround, programs can pass the symbol
-as an argument to the kernel, and use standard hipMemcpy routines to initialize it.
+can be in __constant or device space.
 
 For example:
 
 Device Code:
 ```
-#include<hip_runtime_api.h>
-#include<hip_runtime.h>
+#include<hip/hip_runtime.h>
+#include<hip/hip_runtime_api.h>
 #include<iostream>
 
-#ifdef __HIP_PLATFORM_HCC__
-__global__ void Inc(hipLaunchParm lp, float *Ad, float *Out)
-#endif
-#ifdef __HIP_PLATFORM_NVCC__
-__constant__ float Ad[1024];
-__global__ void Inc(hipLaunchParm lp, float *Out)
-#endif
+#define HIP_ASSERT(status) \
+    assert(status == hipSuccess)
+
+#define LEN 512
+#define SIZE 2048
+
+__constant__ int Value[LEN];
+
+__global__ void Get(hipLaunchParm lp, int *Ad)
 {
-    int tx = hipThreadIdx_x;
-    Out[tx] = Ad[tx] + 1.0f;
+    int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+    Ad[tid] = Value[tid];
 }
 
 int main()
 {
-    float *A, *Ad;
-    float *Out, *Outd;
-    A = new float[1024];
-    Out = new float[1024];
-
-    for(uint32_t i=0;i<1024;i++)
+    int *A, *B, *Ad;
+    A = new int[LEN];
+    B = new int[LEN];
+    for(unsigned i=0;i<LEN;i++)
     {
-        A[i] = 1.0f*i;
-        Out[i] = 0.0f;
+        A[i] = -1*i;
+        B[i] = 0;
     }
 
-    hipMalloc((void**)&Ad, 1024*sizeof(float));
-    hipMalloc((void**)&Outd, 1024*sizeof(float));
+    HIP_ASSERT(hipMalloc((void**)&Ad, SIZE));
 
-    hipMemcpy(Outd, Out, 1024*sizeof(float), hipMemcpyHostToDevice);
+    HIP_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(Value), A, SIZE, 0, hipMemcpyHostToDevice));
+    hipLaunchKernel(Get, dim3(1,1,1), dim3(LEN,1,1), 0, 0, Ad);
+    HIP_ASSERT(hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost));
 
-#ifdef __HIP_PLATFORM_HCC__
-    assert(hipSuccess == hipMemcpy(Ad, A, 1024*sizeof(float), hipMemcpyHostToDevice));
-    hipLaunchKernel(Inc, dim3(1,1,1), dim3(1024,1,1), 0, 0, Ad, Outd);
-#endif
-#ifdef __HIP_PLATFORM_NVCC__
-    assert(hipSuccess == hipMemcpyToSymbol(Ad, A, 1024*sizeof(float)));
-    hipLaunchKernel(Inc, dim3(1,1,1), dim3(1024,1,1), 0, 0, Outd);
-#endif
-
-    hipMemcpy(Out, Outd, 1024*sizeof(float), hipMemcpyDeviceToHost);
-    std::cout<<Out[10]<<" "<<A[10]<<std::endl;
-    assert(Out[10] - A[10] == 1.0f);
+    for(unsigned i=0;i<LEN;i++)
+    {
+        assert(A[i] == B[i]);
+    }
+    std::cout<<"Passed"<<std::endl;
 }
 ```
  
