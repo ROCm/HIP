@@ -198,4 +198,13 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags)
 }
 
 
-
+//---
+hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void *userData, unsigned int flags)
+{
+    HIP_INIT_API(stream, callback, userData, flags);
+    hipError_t e = hipSuccess;
+    //--- explicitly synchronize stream to add callback routines 
+    hipStreamSynchronize(stream);
+    callback(stream, e, userData);
+    return ihipLogStatus(e);
+}
