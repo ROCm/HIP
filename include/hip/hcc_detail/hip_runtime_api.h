@@ -99,7 +99,7 @@ enum hipLimit_t
 #define hipDeviceScheduleSpin       0x1  ///< Dedicate a CPU core to spin-wait.  Provides lowest latency, but burns a CPU core and may consume more power.
 #define hipDeviceScheduleYield      0x2  ///< Yield the CPU to the operating system when waiting.  May increase latency, but lowers power and is friendlier to other threads in the system.
 #define hipDeviceScheduleBlockingSync 0x4
-#define hipDeviceScheduleMask       0x7 
+#define hipDeviceScheduleMask       0x7
 
 #define hipDeviceMapHost            0x8
 #define hipDeviceLmemResizeToMax    0x16
@@ -385,7 +385,7 @@ hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config );
  *
  * @param [in] flags
  *
- * The schedule flags impact how HIP waits for the completion of a command running on a device.  
+ * The schedule flags impact how HIP waits for the completion of a command running on a device.
  * hipDeviceScheduleSpin         : HIP runtime will actively spin in the thread which submitted the work until the command completes.  This offers the lowest latency, but will consume a CPU core and may increase power.
  * hipDeviceScheduleYield        : The HIP runtime will yield the CPU to system so that other tasks can use it.  This may increase latency to detect the completion but will consume less power and is friendlier to other tasks in the system.
  * hipDeviceScheduleBlockingSync : On ROCm platform, this is a synonym for hipDeviceScheduleYield.
@@ -393,7 +393,7 @@ hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config );
  *
  *
  * hipDeviceMapHost              : Allow mapping host memory.  On ROCM, this is always allowed and the flag is ignored.
- * hipDeviceLmemResizeToMax      : @warning ROCm silently ignores this flag.  
+ * hipDeviceLmemResizeToMax      : @warning ROCm silently ignores this flag.
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorSetOnActiveProcess
  *
@@ -568,14 +568,14 @@ hipError_t hipStreamQuery(hipStream_t stream);
  * @brief Wait for all commands in stream to complete.
  *
  * @param[in] stream stream identifier.
- * 
+ *
  * @return #hipSuccess, #hipErrorInvalidResourceHandle
  *
  * If the null stream is specified, this command blocks until all
  * This command honors the hipDeviceLaunchBlocking flag, which controls whether the wait is active or blocking.
  * This command is host-synchronous : the host will block until the stream is empty.
  *
- * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamWaitEvent, hipStreamDestroy 
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamWaitEvent, hipStreamDestroy
  *
  */
 hipError_t hipStreamSynchronize(hipStream_t stream);
@@ -594,7 +594,7 @@ hipError_t hipStreamSynchronize(hipStream_t stream);
  * All future work submitted to @p stream will wait until @p event reports completion before beginning execution.
  * This function is host-asynchronous and the function may return before the wait has completed.
  *
- * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamSynchronize, hipStreamDestroy 
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamSynchronize, hipStreamDestroy
  *
  */
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags);
@@ -612,9 +612,30 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
  *
  * Return flags associated with this stream in *@p flags.
  *
- * @see hipStreamCreateWithFlags 
+ * @see hipStreamCreateWithFlags
  */
 hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags);
+
+/**
+ * Stream CallBack struct
+ */
+typedef void(* hipStreamCallback_t)(hipStream_t stream,  hipError_t status, void* userData);
+
+/**
+ * @brief Adds a callback to be called on the host after all currently enqueued
+ * items in the stream have completed.  For each
+ * cudaStreamAddCallback call, a callback will be executed exactly once.
+ * The callback will block later work in the stream until it is finished.
+ * @param[in] stream   - Stream to add callback to
+ * @param[in] callback - The function to call once preceding stream operations are complete
+ * @param[in] userData - User specified data to be passed to the callback function
+ * @param[in] flags    - Reserved for future use, must be 0
+ * @return #hipSuccess, #hipErrorInvalidResourceHandle, #hipErrorNotSupported
+ *
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamQuery, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
+ *
+ */
+hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void *userData, unsigned int flags);
 
 
 // end doxygen Stream
@@ -637,11 +658,11 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags);
  *
  * @param[in,out] event Returns the newly created event.
  * @param[in] flags     Flags to control event behavior.  Valid values are #hipEventDefault, #hipEventBlockingSync, #hipEventDisableTiming, #hipEventInterprocess
- 
+
  * #hipEventDefault : Default flag.  The event will use active synchronization and will support timing.  Blocking synchronization provides lowest possible latency at the expense of dedicating a CPU to poll on the eevent.
  * #hipEventBlockingSync : The event will use blocking synchronization : if hipEventSynchronize is called on this event, the thread will block until the event completes.  This can increase latency for the synchroniation but can result in lower power and more resources for other CPU threads.
  * #hipEventDisableTiming : Disable recording of timing information.  On ROCM platform, timing information is always recorded and this flag has no performance benefit.
- 
+
  * @warning On HCC platform, hipEventInterprocess support is under development.  Use of this flag will return an error.
  *
  * @returns #hipSuccess, #hipErrorInitializationError, #hipErrorInvalidValue, #hipErrorLaunchFailure, #hipErrorMemoryAllocation
@@ -1098,7 +1119,7 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t siz
 
 
 /**
- *  @brief Copies @p sizeBytes bytes from the memory area pointed to by @p src to the memory area pointed to by @p offset bytes from the start of symbol @p symbol 
+ *  @brief Copies @p sizeBytes bytes from the memory area pointed to by @p src to the memory area pointed to by @p offset bytes from the start of symbol @p symbol
  *
  *  The memory areas may not overlap. Symbol can either be a variable that resides in global or constant memory space, or it can be a character string,
  *  naming a variable that resides in global or constant memory space. Kind can be either hipMemcpyHostToDevice or hipMemcpyDeviceToDevice
@@ -1405,9 +1426,9 @@ hipError_t hipCtxGetDevice(hipDevice_t *device);
 /**
  * @brief Returns the approximate HIP api version.
  *
- * @param [in]  ctx Context to check 
+ * @param [in]  ctx Context to check
  * @param [out] apiVersion
- * 
+ *
  * @return #hipSuccess
  *
  * @warning The HIP feature set does not correspond to an exact CUDA SDK api revision.
@@ -1435,7 +1456,7 @@ hipError_t hipCtxGetCacheConfig ( hipFuncCache *cacheConfig );
 
 /**
  * @brief Set L1/Shared cache partition.
- * 
+ *
  * @param [in] cacheConfiguration
  *
  * @return #hipSuccess
@@ -1581,7 +1602,7 @@ hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device);
 
 /**
  * @brief Returns the approximate HIP driver version.
- * 
+ *
  * @param [out] driverVersion
  *
  * @returns #hipSuccess, #hipErrorInavlidValue
