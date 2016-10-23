@@ -28,21 +28,6 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 #define HIPRT_CB
-const int NN = 1 << 21;
-
-__global__ void kernel(hipLaunchParm lp, float *x, float *y, int n){
-	int tid = hipThreadIdx_x;
-	if(tid < 1){
-		for(int i=0;i<n;i++){
-			x[i] = sqrt(pow(3.14159,i));
-		}
-		y[tid] = y[tid] + 1.0f;
-	}
-}
-__global__ void nKernel(hipLaunchParm lp, float *y){
-	int tid = hipThreadIdx_x;
-	y[tid] = y[tid] + 1.0f;
-}
 
 class CallbackClass
 {
@@ -65,31 +50,11 @@ void CallbackClass::callbackFunc(hipError_t status)
 }
 
 int main(){
-	const int num_streams = 8;
-	hipStream_t streams[num_streams];
-   /* float *data[num_streams], *yd, *xd;*/
-	//float y = 1.0f, x = 1.0f;
-	//HIPCHECK(hipMalloc((void**)&yd, sizeof(float)));
-	//HIPCHECK(hipMalloc((void**)&xd, sizeof(float)));
-	//HIPCHECK(hipMemcpy(yd, &y, sizeof(float), hipMemcpyHostToDevice));
-	//HIPCHECK(hipMemcpy(xd, &x, sizeof(float), hipMemcpyHostToDevice));
-	//for(int i=0;i<num_streams;i++){
-		//HIPCHECK(hipStreamCreate(&streams[i]));
-		//HIPCHECK(hipMalloc(&data[i], NN * sizeof(float)));
-		//hipLaunchKernel(HIP_KERNEL_NAME(kernel), dim3(1), dim3(1), 0, streams[i], data[i], xd, N);
-		//hipLaunchKernel(HIP_KERNEL_NAME(nKernel), dim3(1), dim3(1), 0, 0, yd);
-	//}
-
-	//HIPCHECK(hipMemcpy(&x, xd, sizeof(float), hipMemcpyDeviceToHost));
-	//HIPCHECK(hipMemcpy(&y, yd, sizeof(float), hipMemcpyDeviceToHost));
-	//std::cout<<x<<" "<<y<<std::endl;
-	//HIPASSERT(x<y);
-
-    //hipStream_t mystream = streams[0];
-    hipStream_t mystream = NULL;
-     CallbackClass* obj = new CallbackClass;
-     hipStreamAddCallback(mystream, CallbackClass::Callback, obj, 0);
-
+    hipStream_t mystream;
+    HIPCHECK(hipStreamCreate(&mystream));
+    CallbackClass* obj = new CallbackClass;
+    HIPCHECK(hipStreamAddCallback(mystream, CallbackClass::Callback, obj, 0));
+    HIPCHECK(hipStreamAddCallback(NULL, CallbackClass::Callback, obj, 0));
 
 	passed();
 }
