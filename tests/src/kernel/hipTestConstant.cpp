@@ -1,16 +1,13 @@
 /*
 Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
@@ -20,51 +17,43 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-/**
- *  @file  hcc_detail/host_defines.h
- *  @brief TODO-doc
- */
+#include<hip/hip_runtime.h>
+#include<hip/hip_runtime_api.h>
+#include<iostream>
 
-#ifndef HOST_DEFINES_H
-#define HOST_DEFINES_H
+#define HIP_ASSERT(status) \
+    assert(status == hipSuccess)
 
-#ifdef __HCC__
-/**
- * Function and kernel markers
- */
-#define __host__     __attribute__((cpu))
-#define __device__   __attribute__((hc))
+#define LEN 512
+#define SIZE 2048
 
-#define __global__  __attribute__((hc_grid_launch))
+__constant__ int Value[LEN];
 
-#define __noinline__      __attribute__((noinline))
-#define __forceinline__   __attribute__((always_inline))
+__global__ void Get(hipLaunchParm lp, int *Ad)
+{
+    int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+    Ad[tid] = Value[tid];
+}
 
+int main()
+{
+    int *A, *B, *Ad;
+    A = new int[LEN];
+    B = new int[LEN];
+    for(unsigned i=0;i<LEN;i++)
+    {
+        A[i] = -1*i;
+        B[i] = 0;
+    }
 
+    HIP_ASSERT(hipMalloc((void**)&Ad, SIZE));
 
-/*
- * Variable Type Qualifiers:
- */
-// _restrict is supported by the compiler
-#define __shared__     tile_static
-#define __constant__   __attribute__((address_space(1)))
+    HIP_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(Value), A, SIZE, 0, hipMemcpyHostToDevice));
+    hipLaunchKernel(Get, dim3(1,1,1), dim3(LEN,1,1), 0, 0, Ad);
+    HIP_ASSERT(hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost));
 
-#else
-// Non-HCC compiler
-/**
- * Function and kernel markers
- */
-#define __host__
-#define __device__
-
-#define __global__
-
-#define __noinline__
-#define __forceinline__
-
-#define __shared__
-#define __constant__
-
-#endif
-
-#endif
+    for(unsigned i=0;i<LEN;i++)
+    {
+        assert(A[i] == B[i]);
+    }
+}
