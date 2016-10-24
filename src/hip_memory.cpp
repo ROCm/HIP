@@ -125,7 +125,8 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
             hc::am_memtracker_update(*ptr, device->_deviceId, 0);
             {
                 LockedAccessor_CtxCrit_t crit(ctx->criticalData());
-                if (crit->peerCnt()) {
+                // the peerCnt always stores self so make sure the trace actually 
+                if (crit->peerCnt() > 1) {
                     hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
                 }
             }
