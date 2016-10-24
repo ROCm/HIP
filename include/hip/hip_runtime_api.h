@@ -198,7 +198,7 @@ typedef enum hipError_t {
     hipErrorInvalidDevice           = 1010,   ///< DeviceID must be in range 0...#compute-devices.
     hipErrorInvalidValue            = 1011,   ///< One or more of the parameters passed to the API call is NULL or not in an acceptable range.
     hipErrorInvalidDevicePointer    = 1017,   ///< Invalid Device Pointer
-    hipErrorInvalidMemcpyDirection  = 1021,   ///< Invalid memory copy direction 
+    hipErrorInvalidMemcpyDirection  = 1021,   ///< Invalid memory copy direction
     hipErrorUnknown                 = 1030,   ///< Unknown error.
     hipErrorInvalidResourceHandle   = 1033,   ///< Resource handle (hipEvent_t or hipStream_t) invalid.
     hipErrorNotReady                = 1034,   ///< Indicates that asynchronous operations enqueued earlier are not ready.  This is not actually an error, but is used to distinguish from hipSuccess (which indicates completion).  APIs that return this error include hipEventQuery and hipStreamQuery.

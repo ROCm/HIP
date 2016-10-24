@@ -1120,6 +1120,8 @@ void ihipInit()
         HIP_TRACE_API = 1;
     }
 
+
+
     READ_ENV_I(release, HIP_TRACE_API, 0,  "Trace each HIP API call.  Print function name and return code to stderr as program executes.");
     READ_ENV_S(release, HIP_TRACE_API_COLOR, 0,  "Color to use for HIP_API.  None/Red/Green/Yellow/Blue/Magenta/Cyan/White");
     READ_ENV_I(release, HIP_ATP_MARKER, 0,  "Add HIP function begin/end to ATP file generated with CodeXL");
@@ -1141,6 +1143,22 @@ void ihipInit()
 
     if (HIP_ATP_MARKER && !COMPILE_HIP_ATP_MARKER) {
         fprintf (stderr, "warning: env var HIP_ATP_MARKER=0x%x but COMPILE_HIP_ATP_MARKER=0.  (perhaps enable COMPILE_HIP_DB in src code before compiling?)", HIP_ATP_MARKER);
+    }
+
+    if (HIP_DB) {
+        fprintf (stderr, "HIP_DB=0x%x [", HIP_DB);
+        bool first=true;
+        for (int i=0; i<DB_MAX_BITPOS; i++) {
+            if (HIP_DB & (1<<i)) {
+                if (first) {
+                    fprintf (stderr, "%s%s%s", dbName[i]._color, dbName[i]._shortName, KNRM);
+                } else {
+                    fprintf (stderr, "+%s%s%s", dbName[i]._color, dbName[i]._shortName, KNRM);
+                };
+                first=false;
+            };
+        }
+        fprintf (stderr, "]\n");
     }
 
     std::transform(HIP_TRACE_API_COLOR.begin(),  HIP_TRACE_API_COLOR.end(), HIP_TRACE_API_COLOR.begin(), ::tolower);
@@ -1497,6 +1515,21 @@ bool ihipStream_t::canSeePeerMemory(const ihipCtx_t *thisCtx, ihipCtx_t *dstCtx,
 };
 
 
+#define CASE_STRING(X)  case X: return #X ;break;
+
+const char* memcpyStr(unsigned memKind)
+{
+    switch (memKind) {
+        CASE_STRING(hipMemcpyHostToHost);
+        CASE_STRING(hipMemcpyHostToDevice);
+        CASE_STRING(hipMemcpyDeviceToHost);
+        CASE_STRING(hipMemcpyDeviceToDevice);
+        CASE_STRING(hipMemcpyDefault);
+        default : return ("unknown memcpyKind");
+    };
+}
+
+
 
 // Resolve hipMemcpyDefault to a known type.
 // TODO - review why is this so complicated, does this need srcTracked and dstTracked?
@@ -1553,6 +1586,7 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
         case hipMemcpyHostToDevice:   hcCopyDir = hc::hcMemcpyHostToDevice; break;
         case hipMemcpyDeviceToHost:   hcCopyDir = hc::hcMemcpyDeviceToHost; break;
         case hipMemcpyDeviceToDevice: hcCopyDir = hc::hcMemcpyDeviceToDevice; break;
+        default: throw ihipException(hipErrorRuntimeOther);
     };
 
 
@@ -1568,6 +1602,8 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
             tprintf (DB_COPY1, "Will use SDMA engine on streamDevice=%s.\n", ctx->toString().c_str());
         }
     };
+
+    tprintf (DB_COPY1, "locked_copy dir=%s dst=%p src=%p sz=%zu\n", memcpyStr(kind), src, dst, sizeBytes);
 
     {
         LockedAccessor_StreamCrit_t crit (_criticalData);
@@ -1588,11 +1624,12 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
     const ihipCtx_t *ctx = this->getCtx();
 
     if ((ctx == nullptr) || (ctx->getDevice() == nullptr)) {
+        tprintf (DB_COPY1, "locked_copyAsync bad ctx or device\n");
         throw ihipException(hipErrorInvalidDevice);
     }
 
     if (kind == hipMemcpyHostToHost) {
-        tprintf (DB_COPY2, "Asyc: H2H with memcpy");
+        tprintf (DB_COPY1, "locked_copyAsync: H2H with memcpy");
 
         // TODO - consider if we want to perhaps use the GPU SDMA engines anyway, to avoid the host-side sync here and keep everything flowing on the GPU.
         /* As this is a CPU op, we need to wait until all
@@ -1613,9 +1650,13 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
 
 
         bool copyEngineCanSeeSrcAndDest = true;
-        if (kind == hipMemcpyDeviceToDevice) {
+        if ((kind == hipMemcpyDeviceToDevice) || 
+            ((kind == hipMemcpyDefault) && srcTracked && dstTracked)) {
             copyEngineCanSeeSrcAndDest = canSeePeerMemory(ctx, ihipGetPrimaryCtx(dstPtrInfo._appId), ihipGetPrimaryCtx(srcPtrInfo._appId));
         }
+
+        tprintf (DB_COPY1, "locked_copyAsync:  async memcpy dstTracked=%d srcTracked=%d copyEngineCanSeeSrcAndDest=%d\n",
+                dstTracked, srcTracked, copyEngineCanSeeSrcAndDest);
 
 
         // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.
@@ -1637,6 +1678,7 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
             }
 
         } else {
+            // TODO - call copy_ext directly here?
             locked_copySync(dst, src, sizeBytes, kind);
         }
     }
