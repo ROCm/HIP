@@ -59,9 +59,23 @@ extern int HIP_VISIBLE_DEVICES; /* Contains a comma-separated sequence of GPU id
 // Chicken bits for disabling functionality to work around potential issues:
 extern int HIP_DISABLE_HW_KERNEL_DEP;
 
+
+// Class to assign a short TID to each new thread, for HIP debugging purposes.
+class ShortTid {
+public:
+
+    ShortTid() ;
+
+    int tid() { return _shortTid; };
+private:
+
+    int _shortTid;
+};
+
 //---
 //Extern tls
 extern thread_local hipError_t tls_lastHipError;
+extern thread_local ShortTid tls_shortTid;
 
 
 //---
@@ -112,18 +126,6 @@ extern const char *API_COLOR_END;
 #endif
 
 
-#define DB_SHOW_TID 0
-
-#if DB_SHOW_TID
-#define COMPUTE_TID_STR \
-    std::stringstream tid_ss;\
-    std::stringstream tid_ss_num;\
-    tid_ss_num << std::this_thread::get_id();\
-    tid_ss << " tid:" << std::hex << std::stoull(tid_ss_num.str());
-#else
-#define COMPUTE_TID_STR std::stringstream tid_ss;
-#endif
-
 
 // Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function boundary.
 // TODO - currently we print the trace message at the beginning. if we waited, we could also include return codes, and any values returned
@@ -143,8 +145,7 @@ extern const char *API_COLOR_END;
     if (HIP_ATP_MARKER || (COMPILE_HIP_DB && HIP_TRACE_API)) {\
         std::string s = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
         if (COMPILE_HIP_DB && HIP_TRACE_API) {\
-            COMPUTE_TID_STR\
-            fprintf (stderr, "%s<<hip-api:%s %s\n%s" , API_COLOR, tid_ss.str().c_str(), s.c_str(), API_COLOR_END);\
+            fprintf (stderr, "%s<<hip-api:tid:%d %s\n%s" , API_COLOR, tls_shortTid.tid(), s.c_str(), API_COLOR_END);\
         }\
         SCOPED_MARKER(s.c_str(), "HIP", NULL);\
     }\
@@ -174,7 +175,7 @@ extern const char *API_COLOR_END;
         tls_lastHipError = localHipStatus;\
         \
         if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API) {\
-            fprintf(stderr, "  %ship-api: %-30s ret=%2d (%s)>>%s\n", (localHipStatus == 0) ? API_COLOR:KRED, __func__, localHipStatus, ihipErrorString(localHipStatus), API_COLOR_END);\
+            fprintf(stderr, "  %ship-api:tid:%d %-30s ret=%2d (%s)>>%s\n", (localHipStatus == 0) ? API_COLOR:KRED, tls_shortTid.tid(), __func__, localHipStatus, ihipErrorString(localHipStatus), API_COLOR_END);\
         }\
         localHipStatus;\
     })
@@ -216,8 +217,7 @@ static const DbName dbName [] =
     if (HIP_DB & (1<<(trace_level))) {\
         char msgStr[1000];\
         snprintf(msgStr, 2000, __VA_ARGS__);\
-        COMPUTE_TID_STR\
-        fprintf (stderr, "  %ship-%s%s:%s%s", dbName[trace_level]._color, dbName[trace_level]._shortName, tid_ss.str().c_str(), msgStr, KNRM); \
+        fprintf (stderr, "  %ship-%s tid:%d:%s%s", dbName[trace_level]._color, dbName[trace_level]._shortName, tls_shortTid.tid(), msgStr, KNRM); \
     }\
 }
 #else

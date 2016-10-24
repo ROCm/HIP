@@ -84,6 +84,11 @@ std::vector<int> g_hip_visible_devices;
 hsa_agent_t g_cpu_agent;
 unsigned g_numLogicalThreads;
 
+std::atomic<int> g_lastShortTid(1);
+
+
+thread_local ShortTid tls_shortTid;
+
 /*
  Implementation of malloc and free device functions.
 
@@ -230,6 +235,22 @@ hipError_t ihipSynchronize(void)
     return (hipSuccess);
 }
 
+//=================================================================================================
+// ihipStream_t:
+//=================================================================================================
+ShortTid::ShortTid() 
+{ 
+    _shortTid = g_lastShortTid.fetch_add(1); 
+
+    if (HIP_DB & (1<<DB_API)) {
+        std::stringstream tid_ss;
+        std::stringstream tid_ss_num;
+        tid_ss_num << std::this_thread::get_id();
+        tid_ss << std::hex << std::stoull(tid_ss_num.str());
+
+        tprintf(DB_API, "HIP initialized short_tid#%d (maps to full_tid: 0x%s)\n", _shortTid, tid_ss.str().c_str());
+    };
+}
 
 //=================================================================================================
 // ihipStream_t:
@@ -1138,11 +1159,11 @@ void ihipInit()
     }
 
     if (HIP_TRACE_API && !COMPILE_HIP_TRACE_API) {
-        fprintf (stderr, "warning: env var HIP_TRACE_API=0x%x but COMPILE_HIP_TRACE_API=0.  (perhaps enable COMPILE_HIP_DB in src code before compiling?)", HIP_DB);
+        fprintf (stderr, "warning: env var HIP_TRACE_API=0x%x but COMPILE_HIP_TRACE_API=0.  (perhaps enable COMPILE_HIP_TRACE_API in src code before compiling?)", HIP_DB);
     }
 
     if (HIP_ATP_MARKER && !COMPILE_HIP_ATP_MARKER) {
-        fprintf (stderr, "warning: env var HIP_ATP_MARKER=0x%x but COMPILE_HIP_ATP_MARKER=0.  (perhaps enable COMPILE_HIP_DB in src code before compiling?)", HIP_ATP_MARKER);
+        fprintf (stderr, "warning: env var HIP_ATP_MARKER=0x%x but COMPILE_HIP_ATP_MARKER=0.  (perhaps enable COMPILE_HIP_ATP_MARKER in src code before compiling?)", HIP_ATP_MARKER);
     }
 
     if (HIP_DB) {
