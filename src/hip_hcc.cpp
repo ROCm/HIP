@@ -87,7 +87,6 @@ unsigned g_numLogicalThreads;
 std::atomic<int> g_lastShortTid(1);
 
 
-thread_local ShortTid tls_shortTid;
 
 /*
  Implementation of malloc and free device functions.
@@ -175,8 +174,10 @@ __device__ void* __hip_hc_free(void *ptr)
 
 // This is the implicit context used by all HIP commands.
 // It can be set by hipSetDevice or by the CTX manipulation commands:
-
 thread_local hipError_t tls_lastHipError = hipSuccess;
+
+
+thread_local ShortTid tls_shortTid;
 
 
 
@@ -238,7 +239,8 @@ hipError_t ihipSynchronize(void)
 //=================================================================================================
 // ihipStream_t:
 //=================================================================================================
-ShortTid::ShortTid() 
+ShortTid::ShortTid()  :
+    _apiSeqNum(0)
 { 
     _shortTid = g_lastShortTid.fetch_add(1); 
 
@@ -271,8 +273,6 @@ ihipStream_t::ihipStream_t(ihipCtx_t *ctx, hc::accelerator_view av, unsigned int
         case hipDeviceScheduleBlockingSync  : _scheduleMode = Yield; break;
         default:_scheduleMode = Auto;
     };
-
-
 
 
     tprintf(DB_SYNC, " streamCreate: stream=%p\n", this);
@@ -1292,7 +1292,8 @@ void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, c
 {
     if (HIP_ATP_MARKER || (COMPILE_HIP_DB && HIP_TRACE_API)) {
         std::stringstream os;
-        os  << "<<hip-api: hipLaunchKernel '" << kernelName << "'"
+        os  << "<<hip-api tid:" << tls_shortTid.tid() << "." << tls_shortTid.incApiSeqNum()
+            << " hipLaunchKernel '" << kernelName << "'"
             << " gridDim:"  << lp->grid_dim
             << " groupDim:" << lp->group_dim
             << " sharedMem:+" << lp->dynamic_group_mem_bytes
