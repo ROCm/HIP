@@ -77,11 +77,34 @@ private:
     uint64_t _apiSeqNum; 
 };
 
+struct ProfTrigger {
+
+    static const uint64_t MAX_TRIGGER = std::numeric_limits<uint64_t>::max();
+
+    void print (int tid) {
+        std::cout << "Enabling tracing for ";
+        for (auto iter=_profTrigger.begin(); iter != _profTrigger.end(); iter++) {
+            std::cout << "tid:" << tid << "." << *iter << ",";
+        }
+        std::cout << "\n";
+    };
+
+    uint64_t nextTrigger() { return _profTrigger.empty() ? MAX_TRIGGER : _profTrigger.back(); };
+    void add(uint64_t trigger) { _profTrigger.push_back(trigger); };
+    void sort() { std::sort (_profTrigger.begin(), _profTrigger.end(), std::greater<int>()); };
+private:
+    std::vector<uint64_t> _profTrigger;
+};
+
+
+
 //---
 //Extern tls
 extern thread_local hipError_t tls_lastHipError;
 extern thread_local ShortTid tls_shortTid;
 
+extern std::vector<ProfTrigger> g_profStartTriggers;
+extern std::vector<ProfTrigger> g_profStopTriggers;
 
 //---
 //Forward defs:
@@ -138,21 +161,23 @@ extern const char *API_COLOR_END;
 #if COMPILE_HIP_ATP_MARKER
 #include "CXLActivityLogger.h"
 #define SCOPED_MARKER(markerName,group,userString) amdtScopedMarker(markerName, group, userString)
+#define RESUME_PROFILING amdtResumeProfiling(AMDT_ALL_PROFILING);
+#define STOP_PROFILING   amdtStopProfiling(AMDT_ALL_PROFILING);
 #else
 // Swallow scoped markers:
 #define SCOPED_MARKER(markerName,group,userString)
+#define RESUME_PROFILING 
+#define STOP_PROFILING   
 #endif
 
+
+extern void recordApiTrace(const std::string &s);
 
 #if COMPILE_HIP_ATP_MARKER || (COMPILE_HIP_TRACE_API & 0x1)
 #define API_TRACE(...)\
 {\
     if (HIP_ATP_MARKER || (COMPILE_HIP_DB && HIP_TRACE_API)) {\
-        std::string s = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
-        if (COMPILE_HIP_DB && HIP_TRACE_API) {\
-            fprintf (stderr, "%s<<hip-api tid:%d.%lu %s\n%s" , API_COLOR, tls_shortTid.tid(), tls_shortTid.incApiSeqNum(), s.c_str(), API_COLOR_END);\
-        }\
-        SCOPED_MARKER(s.c_str(), "HIP", NULL);\
+        recordApiTrace(std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')');\
     }\
 }
 #else

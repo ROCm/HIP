@@ -49,6 +49,7 @@ THE SOFTWARE.
 
 
 
+
 //=================================================================================================
 //Global variables:
 //=================================================================================================
@@ -63,10 +64,15 @@ int HIP_PRINT_ENV = 0;
 int HIP_TRACE_API= 0;
 std::string HIP_TRACE_API_COLOR("green");
 int HIP_ATP_MARKER= 0;
+std::string HIP_PROFILE_START_API;
+std::string HIP_PROFILE_STOP_API;
 int HIP_DB= 0;
 int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
 int HIP_NUM_KERNELS_INFLIGHT = 128;
 int HIP_WAIT_MODE = 0;
+
+
+
 
 #define HIP_USE_PRODUCT_NAME 0
 //#define DISABLE_COPY_EXT 1
@@ -85,6 +91,11 @@ hsa_agent_t g_cpu_agent;
 unsigned g_numLogicalThreads;
 
 std::atomic<int> g_lastShortTid(1);
+
+// Indexed by short-tid:
+// 
+std::vector<ProfTrigger> g_profStartTriggers;
+std::vector<ProfTrigger> g_profStopTriggers;
 
 
 
@@ -185,6 +196,30 @@ thread_local ShortTid tls_shortTid;
 //=================================================================================================
 // Top-level "free" functions:
 //=================================================================================================
+void recordApiTrace(const std::string &s)
+{
+    auto apiSeqNum = tls_shortTid.incApiSeqNum();
+    auto tid = tls_shortTid.tid();
+
+    if ((tid < g_profStartTriggers.size()) && (apiSeqNum >= g_profStartTriggers[tid].nextTrigger())) {
+        printf ("info: resume profiling at %lu\n", apiSeqNum);
+        RESUME_PROFILING; 
+        g_profStartTriggers.pop_back();
+    };
+    if ((tid < g_profStopTriggers.size()) && (apiSeqNum >= g_profStopTriggers[tid].nextTrigger())) {
+        printf ("info: stop profiling at %lu\n", apiSeqNum);
+        STOP_PROFILING; 
+        g_profStopTriggers.pop_back();
+    };
+
+
+    if (COMPILE_HIP_DB && HIP_TRACE_API) {
+        fprintf (stderr, "%s<<hip-api tid:%d.%lu %s\n%s" , API_COLOR, tid, apiSeqNum, s.c_str(), API_COLOR_END);
+    }
+    SCOPED_MARKER(s.c_str(), "HIP", NULL);
+}
+
+
 static inline bool ihipIsValidDevice(unsigned deviceIndex)
 {
     // deviceIndex is unsigned so always > 0
@@ -1112,6 +1147,71 @@ void ihipReadEnv_S(std::string *var_ptr, const char *var_name1, const char *var_
 #endif
 
 
+static void tokenize(const std::string &s, char delim, std::vector<std::string> *tokens)
+{
+    std::stringstream ss;
+    ss.str(s);
+    std::string item;
+    while (getline(ss, item, delim)) {
+        item.erase (std::remove (item.begin(), item.end(), ' '), item.end()); // remove whitespace.
+        tokens->push_back(item);
+    }
+}
+
+static void trim(std::string *s)
+{
+    // trim whitespace from beginning and end:
+    const char *t =  "\t\n\r\f\v";
+    s->erase(0, s->find_first_not_of(t));
+    s->erase(s->find_last_not_of(t)+1);
+}
+
+static void ltrim(std::string *s)
+{
+    // trim whitespace from beginning
+    const char *t =  "\t\n\r\f\v";
+    s->erase(0, s->find_first_not_of(t));
+}
+
+
+// TODO - change last arg to pointer.
+void parseTrigger(std::string triggerString, std::vector<ProfTrigger> &profTriggers )
+{
+    std::vector<std::string> tidApiTokens;
+    tokenize(std::string(triggerString), ',', &tidApiTokens);
+    for (auto t=tidApiTokens.begin(); t != tidApiTokens.end(); t++) {
+        std::vector<std::string> oneToken;
+        //std::cout << "token=" << *t << "\n";
+        tokenize(std::string(*t), '.', &oneToken);
+        int tid = 1;
+        uint64_t apiTrigger = 0;
+        if (oneToken.size() == 1) {
+            // the case with just apiNum
+            apiTrigger = std::strtoull(oneToken[0].c_str(), nullptr, 0);
+        } else if (oneToken.size() == 2) {
+            // the case with tid.apiNum
+            tid = std::strtoul(oneToken[0].c_str(), nullptr, 0);
+            apiTrigger = std::strtoull(oneToken[1].c_str(), nullptr, 0);
+        } else {
+            throw ihipException(hipErrorRuntimeOther); // TODO -> bad env var?
+        }
+
+        if (tid > 10000) {
+            throw ihipException(hipErrorRuntimeOther); // TODO -> bad env var?
+        } else {
+            profTriggers.resize(tid+1);
+            //std::cout << "tid:" << tid << " add: " << apiTrigger << "\n";
+            profTriggers[tid].add(apiTrigger);
+        }
+    }
+
+
+    for (int tid=1; tid<profTriggers.size(); tid++) {
+        profTriggers[tid].sort();
+        profTriggers[tid].print(tid);
+    }
+}
+
 
 //---
 //Function called one-time at initialization time to construct a table of all GPU devices.
@@ -1146,6 +1246,9 @@ void ihipInit()
     READ_ENV_I(release, HIP_TRACE_API, 0,  "Trace each HIP API call.  Print function name and return code to stderr as program executes.");
     READ_ENV_S(release, HIP_TRACE_API_COLOR, 0,  "Color to use for HIP_API.  None/Red/Green/Yellow/Blue/Magenta/Cyan/White");
     READ_ENV_I(release, HIP_ATP_MARKER, 0,  "Add HIP function begin/end to ATP file generated with CodeXL");
+    READ_ENV_S(release, HIP_PROFILE_START_API, 0,  "tid.api_seq_num for when to start profiling.");
+    READ_ENV_S(release, HIP_PROFILE_STOP_API, 0,  "tid.api_seq_num for when to stop profiling.");
+    
     READ_ENV_I(release, HIP_VISIBLE_DEVICES, CUDA_VISIBLE_DEVICES, "Only devices whose index is present in the secquence are visible to HIP applications and they are enumerated in the order of secquence" );
 
 
@@ -1204,6 +1307,9 @@ void ihipInit()
     } else {
         fprintf (stderr, "warning: env var HIP_TRACE_API_COLOR=%s must be None/Red/Green/Yellow/Blue/Magenta/Cyan/White", HIP_TRACE_API_COLOR.c_str());
     };
+
+    parseTrigger(HIP_PROFILE_START_API, g_profStartTriggers);
+    parseTrigger(HIP_PROFILE_STOP_API,  g_profStopTriggers);
 
 
 
@@ -1401,6 +1507,8 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, g
 //This releases the lock on the stream.
 void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp)
 {
+    tprintf(DB_SYNC, "ihipPostLaunchKernel, unlocking stream\n");
+
     stream->lockclose_postKernelCommand(lp.av);
 }
 
