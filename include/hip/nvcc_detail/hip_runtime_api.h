@@ -106,7 +106,7 @@ switch(cuError) {
     case cudaErrorHostMemoryNotRegistered        : return hipErrorHostMemoryNotRegistered     ;
     case cudaErrorUnsupportedLimit               : return hipErrorUnsupportedLimit            ;
     default                                      : return hipErrorUnknown;  // Note - translated error.
-};
+}
 }
 
 inline static hipError_t hipCUResultTohipError(CUresult cuError) { //TODO Populate further
@@ -120,7 +120,7 @@ switch(cuError) {
     case CUDA_ERROR_INVALID_CONTEXT              : return hipErrorInvalidContext              ;
     case CUDA_ERROR_NOT_INITIALIZED              : return hipErrorNotInitialized              ;
     default                                      : return hipErrorUnknown;  // Note - translated error.
-};
+}
 }
 
 // TODO   match the error enum names of hip and cuda
@@ -319,11 +319,11 @@ inline static hipError_t hipDeviceSynchronize() {
 }
 
 inline static const char* hipGetErrorString(hipError_t error){
-    return cudaGetErrorString( hipErrorToCudaError(error) );
+    return cudaGetErrorString(hipErrorToCudaError(error));
 }
 
 inline static const char* hipGetErrorName(hipError_t error){
-    return cudaGetErrorName( hipErrorToCudaError(error) );
+    return cudaGetErrorName(hipErrorToCudaError(error));
 }
 
 inline static hipError_t hipGetDeviceCount(int * count){
@@ -611,12 +611,12 @@ inline static hipError_t hipDeviceCanAccessPeer ( int* canAccessPeer, int  devic
 
 inline static hipError_t  hipDeviceDisablePeerAccess ( int  peerDevice )
 {
-    return hipCUDAErrorTohipError(cudaDeviceDisablePeerAccess ( peerDevice ));
-};
+    return hipCUDAErrorTohipError(cudaDeviceDisablePeerAccess(peerDevice));
+}
 
 inline static hipError_t  hipDeviceEnablePeerAccess ( int  peerDevice, unsigned int  flags )
 {
-    return hipCUDAErrorTohipError(cudaDeviceEnablePeerAccess ( peerDevice, flags ));
+    return hipCUDAErrorTohipError(cudaDeviceEnablePeerAccess(peerDevice, flags));
 }
 
 inline static hipError_t  hipCtxDisablePeerAccess ( hipCtx_t peerCtx )
@@ -626,22 +626,22 @@ inline static hipError_t  hipCtxDisablePeerAccess ( hipCtx_t peerCtx )
 
 inline static hipError_t  hipCtxEnablePeerAccess ( hipCtx_t peerCtx, unsigned int  flags )
 {
-    return hipCUResultTohipError(cuCtxEnablePeerAccess ( peerCtx, flags ));
+    return hipCUResultTohipError(cuCtxEnablePeerAccess(peerCtx, flags));
 }
 
 inline static hipError_t hipMemcpyPeer ( void* dst, int  dstDevice, const void* src, int  srcDevice, size_t count )
 {
-    return hipCUDAErrorTohipError(cudaMemcpyPeer ( dst, dstDevice, src, srcDevice, count ));
-};
+    return hipCUDAErrorTohipError(cudaMemcpyPeer(dst, dstDevice, src, srcDevice, count));
+}
 
 inline static hipError_t hipMemcpyPeerAsync ( void* dst, int  dstDevice, const void* src, int  srcDevice, size_t count, hipStream_t stream=0 )
 {
-    return hipCUDAErrorTohipError(cudaMemcpyPeerAsync ( dst, dstDevice, src, srcDevice, count, stream ));
-};
+    return hipCUDAErrorTohipError(cudaMemcpyPeerAsync(dst, dstDevice, src, srcDevice, count, stream));
+}
 
 inline static hipError_t hipSetDeviceFlags (unsigned int flags)
 {
-    return hipCUDAErrorTohipError(cudaSetDeviceFlags( flags ));
+    return hipCUDAErrorTohipError(cudaSetDeviceFlags(flags));
 }
 
 inline static hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned int flags)
@@ -656,62 +656,62 @@ inline static hipError_t hipEventQuery(hipEvent_t event)
 
 inline static hipError_t  hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device)
 {
-    return hipCUResultTohipError(cuCtxCreate ( ctx,flags,device ));
+    return hipCUResultTohipError(cuCtxCreate(ctx,flags,device));
 }
 
 inline static hipError_t  hipCtxDestroy(hipCtx_t ctx)
 {
-    return hipCUResultTohipError(cuCtxDestroy ( ctx ));
+    return hipCUResultTohipError(cuCtxDestroy(ctx));
 }
 
 inline static hipError_t  hipCtxPopCurrent(hipCtx_t* ctx)
 {
-    return hipCUResultTohipError(cuCtxPopCurrent ( ctx ));
+    return hipCUResultTohipError(cuCtxPopCurrent(ctx));
 }
 
 inline static hipError_t  hipCtxPushCurrent(hipCtx_t ctx)
 {
-    return hipCUResultTohipError(cuCtxPushCurrent ( ctx ));
+    return hipCUResultTohipError(cuCtxPushCurrent(ctx));
 }
 
 inline static hipError_t  hipCtxSetCurrent(hipCtx_t ctx)
 {
-    return hipCUResultTohipError(cuCtxSetCurrent ( ctx ));
+    return hipCUResultTohipError(cuCtxSetCurrent(ctx));
 }
 
 inline static hipError_t  hipCtxGetCurrent(hipCtx_t* ctx)
 {
-    return hipCUResultTohipError(cuCtxGetCurrent ( ctx ));
+    return hipCUResultTohipError(cuCtxGetCurrent(ctx));
 }
 
 inline static hipError_t  hipCtxGetDevice(hipDevice_t *device)
 {
-    return hipCUResultTohipError(cuCtxGetDevice ( device ));
+    return hipCUResultTohipError(cuCtxGetDevice(device));
 }
 
 inline static hipError_t  hipCtxGetApiVersion (hipCtx_t ctx,int *apiVersion)
 {
-    return hipCUResultTohipError(cuCtxGetApiVersion ( ctx,(unsigned int*)apiVersion ));
+    return hipCUResultTohipError(cuCtxGetApiVersion(ctx,(unsigned int*)apiVersion));
 }
 
-inline static hipError_t  hipCtxGetCacheConfig ( hipFuncCache *cacheConfig )
+inline static hipError_t  hipCtxGetCacheConfig (hipFuncCache *cacheConfig)
 {
-    return hipCUResultTohipError(cuCtxGetCacheConfig ( cacheConfig ));
+    return hipCUResultTohipError(cuCtxGetCacheConfig(cacheConfig));
 }
 
-inline static hipError_t  hipCtxSetCacheConfig ( hipFuncCache cacheConfig )
+inline static hipError_t  hipCtxSetCacheConfig (hipFuncCache cacheConfig)
 {
-    return hipCUResultTohipError(cuCtxSetCacheConfig ( cacheConfig ));
+    return hipCUResultTohipError(cuCtxSetCacheConfig(cacheConfig));
 }
 
-inline static hipError_t  hipCtxSetSharedMemConfig ( hipSharedMemConfig config )
+inline static hipError_t  hipCtxSetSharedMemConfig (hipSharedMemConfig config)
 {
-    return hipCUResultTohipError(cuCtxSetSharedMemConfig ( config ));
+    return hipCUResultTohipError(cuCtxSetSharedMemConfig(config));
 }
 
 inline static hipError_t  hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig )
 {
-    return hipCUResultTohipError(cuCtxGetSharedMemConfig ( pConfig ));
+    return hipCUResultTohipError(cuCtxGetSharedMemConfig(pConfig));
 }
 
 inline static hipError_t  hipCtxSynchronize ( void )
@@ -721,7 +721,7 @@ inline static hipError_t  hipCtxSynchronize ( void )
 
 inline static hipError_t  hipCtxGetFlags ( unsigned int* flags )
 {
-    return hipCUResultTohipError(cuCtxGetFlags ( flags ));
+    return hipCUResultTohipError(cuCtxGetFlags(flags));
 }
 
 inline static hipError_t hipCtxDetach(hipCtx_t ctx)
