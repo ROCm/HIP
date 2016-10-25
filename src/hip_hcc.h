@@ -66,10 +66,15 @@ public:
 
     ShortTid() ;
 
-    int tid() { return _shortTid; };
-private:
+    int      tid()       const { return _shortTid; };
+    uint64_t incApiSeqNum() { return ++_apiSeqNum; };
+    uint64_t apiSeqNum() const { return _apiSeqNum; };
 
-    int _shortTid;
+private:
+    int      _shortTid;
+
+    // monotonically increasing API sequence number for this threa.
+    uint64_t _apiSeqNum; 
 };
 
 //---
@@ -145,7 +150,7 @@ extern const char *API_COLOR_END;
     if (HIP_ATP_MARKER || (COMPILE_HIP_DB && HIP_TRACE_API)) {\
         std::string s = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
         if (COMPILE_HIP_DB && HIP_TRACE_API) {\
-            fprintf (stderr, "%s<<hip-api:tid:%d %s\n%s" , API_COLOR, tls_shortTid.tid(), s.c_str(), API_COLOR_END);\
+            fprintf (stderr, "%s<<hip-api tid:%d.%lu %s\n%s" , API_COLOR, tls_shortTid.tid(), tls_shortTid.incApiSeqNum(), s.c_str(), API_COLOR_END);\
         }\
         SCOPED_MARKER(s.c_str(), "HIP", NULL);\
     }\
@@ -175,7 +180,7 @@ extern const char *API_COLOR_END;
         tls_lastHipError = localHipStatus;\
         \
         if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API) {\
-            fprintf(stderr, "  %ship-api:tid:%d %-30s ret=%2d (%s)>>%s\n", (localHipStatus == 0) ? API_COLOR:KRED, tls_shortTid.tid(), __func__, localHipStatus, ihipErrorString(localHipStatus), API_COLOR_END);\
+            fprintf(stderr, "  %ship-api tid:%d.%lu %-30s ret=%2d (%s)>>%s\n", (localHipStatus == 0) ? API_COLOR:KRED, tls_shortTid.tid(),tls_shortTid.apiSeqNum(),  __func__, localHipStatus, ihipErrorString(localHipStatus), API_COLOR_END);\
         }\
         localHipStatus;\
     })
