@@ -211,7 +211,7 @@ if($HIP_PLATFORM eq "hcc"){
   }
 }
 
-if(($HIP_PLATFORM eq "hcc") and defined $ENV{HIP_EXPERIMENTAL}){
+if($HIP_PLATFORM eq "hcc"){
     $EXPORT_LL=" ";
     $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_ir.ll\n";
 }
