@@ -769,7 +769,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     uint32_t cache_size[4];
     err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_CACHE_SIZE, cache_size);
     DeviceErrorCheck(err);
-    prop->l2CacheSize = cache_size[1];
+    prop->l2CacheSize = cache_size[0];
 
     /* Computemode for HSA Devices is always : cudaComputeModeDefault */
     prop->computeMode = 0;
