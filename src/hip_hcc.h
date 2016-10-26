@@ -46,7 +46,7 @@ extern const int release;
 extern int HIP_LAUNCH_BLOCKING;
 
 extern int HIP_PRINT_ENV;
-extern int HIP_ATP_MARKER;
+extern int HIP_PROFILE_API;
 //extern int HIP_TRACE_API;
 extern int HIP_ATP;
 extern int HIP_DB;
@@ -103,8 +103,8 @@ private:
 extern thread_local hipError_t tls_lastHipError;
 extern thread_local ShortTid tls_shortTid;
 
-extern std::vector<ProfTrigger> g_profStartTriggers;
-extern std::vector<ProfTrigger> g_profStopTriggers;
+extern std::vector<ProfTrigger> g_dbStartTriggers;
+extern std::vector<ProfTrigger> g_dbStopTriggers;
 
 //---
 //Forward defs:
@@ -176,7 +176,7 @@ extern void recordApiTrace(const std::string &s);
 #if COMPILE_HIP_ATP_MARKER || (COMPILE_HIP_TRACE_API & 0x1)
 #define API_TRACE(...)\
 {\
-    if (HIP_ATP_MARKER || (COMPILE_HIP_DB && HIP_TRACE_API)) {\
+    if (HIP_PROFILE_API || (COMPILE_HIP_DB && HIP_TRACE_API)) {\
         recordApiTrace(std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')');\
     }\
 }

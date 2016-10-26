@@ -229,43 +229,7 @@ If platform portability is important, use #ifdef __HIP_PLATFORM_HIPCC__ to guard
 
 
 ### How do I trace HIP application flow?
-#### Using CodeXL markers for HIP Functions
-HIP can generate markers at function being/end which are displayed on the CodeXL timeline view.
-To do this, you need to install ROCm-Profiler and enable HIP to generate the markers:
-
-1. Install ROCm-Profiler
-Installing HIP from the [rocm](http://gpuopen.com/getting-started-with-boltzmann-components-platforms-installation/) pre-built packages, installs the ROCm-Profiler as well.
-Alternatively, you can build ROCm-Profiler using the instructions [here](https://github.com/RadeonOpenCompute/ROCm-Profiler#building-the-rocm-profiler).
-
-2. Build HIP with ATP markers enabled
-HIP pre-built packages are enabled with ATP marker support by default.
-To enable ATP marker support when building HIP from source, use the option ```-DCOMPILE_HIP_ATP_MARKER=1``` during the cmake configure step.
-
-3. Set HIP_ATP_MARKER
-```shell
-export HIP_ATP_MARKER=1
-```
-
-4. Recompile the target application
-
-5. Run with profiler enabled to generate ATP file.
-```shell
-# Use profile to generate timeline view:
-/opt/rocm/bin/rocm-profiler -o <outputATPFileName> -A <applicationName> <applicationArguments>
-
-Or
-/opt/rocm/bin/rocm-profiler -e HIP_ATP_MARKER=1 -o <outputATPFileName> -A <applicationName> <applicationArguments>
-```
-
-#### Using HIP_TRACE_API
-You can also print the HIP function strings to stderr using HIP_TRACE_API environment variable. This can also be combined with the more detailed debug information provided
-by the HIP_DB switch. For example:
-```shell
-# Trace to stderr showing being/end of each function (with arguments) + intermediate debug trace during the execution of each function.
-HIP_TRACE_API=1 HIP_DB=0x2 ./myHipApp
-```
-
-Note this trace mode uses colors. "less -r" can handle raw control characters and will display the debug output in proper colors.
+See the [HIP Profiling Guide](hip_porting_guide.md) for more information.
 
 ### What if HIP generates error of "symbol multiply defined!" only on AMD machine?
 Unlike CUDA, in HCC, for functions defined in the header files, the keyword of "__forceinline__" does not imply "static".
