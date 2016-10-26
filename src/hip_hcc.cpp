@@ -1113,10 +1113,29 @@ void ihipReadEnv_S(std::string *var_ptr, const char *var_name1, const char *var_
     }
 
     if (env) {
-        *var_ptr = env;
+        *static_cast<std::string*>(var_ptr) = env;
     }
     if (HIP_PRINT_ENV) {
         printf ("%-30s = %s : %s\n", var_name1, var_ptr->c_str(), description);
+    }
+}
+
+
+void ihipReadEnv_Callback(void *var_ptr, const char *var_name1, const char *var_name2, const char *description, std::string (*setterCallback)(void * var_ptr, const char * env))
+{
+    char * env = getenv(var_name1);
+
+    // Check second name if first not defined, used to allow HIP_ or CUDA_ env vars.
+    if ((env == NULL) && strcmp(var_name2, "0")) {
+        env = getenv(var_name2);
+    }
+
+    std::string var_string = "TBD";
+    if (env) {
+        var_string = setterCallback(var_ptr, env);
+    }
+    if (HIP_PRINT_ENV) {
+        printf ("%-30s = %s : %s\n", var_name1, var_string.c_str(), description);
     }
 }
 
@@ -1131,6 +1150,10 @@ void ihipReadEnv_S(std::string *var_ptr, const char *var_name1, const char *var_
     if ((_build == release) || (_build == debug) {\
         ihipReadEnv_S(&_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description);\
     };
+#define READ_ENV_C(_build, _ENV_VAR, _ENV_VAR2, _description, _callback) \
+    if ((_build == release) || (_build == debug) {\
+        ihipReadEnv_Callback(&_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description, _callback);\
+    };
 
 #else
 
@@ -1142,6 +1165,10 @@ void ihipReadEnv_S(std::string *var_ptr, const char *var_name1, const char *var_
 #define READ_ENV_S(_build, _ENV_VAR, _ENV_VAR2, _description) \
     if (_build == release) {\
         ihipReadEnv_S(&_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description);\
+    };
+#define READ_ENV_C(_build, _ENV_VAR, _ENV_VAR2, _description, _callback) \
+    if (_build == release) {\
+        ihipReadEnv_Callback(&_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description, _callback);\
     };
 
 #endif
@@ -1212,6 +1239,57 @@ void parseTrigger(std::string triggerString, std::vector<ProfTrigger> &profTrigg
     }
 }
 
+std::string HIP_DB_string(unsigned db)
+{
+    std::string dbStr;
+    bool first=true;
+    for (int i=0; i<DB_MAX_FLAG; i++) {
+        if (db & (1<<i)) {
+            if (!first) {
+                dbStr += "+";
+            };
+            dbStr += dbName[i]._color;
+            dbStr += dbName[i]._shortName;
+            dbStr += KNRM;
+            first=false;
+        };
+    }
+
+    return dbStr;
+}
+
+// Callback used to process HIP_DB input, supports either
+// integer or chars separated by +
+std::string HIP_DB_callback(void *var_ptr, const char *envVarString)
+{
+    int * var_ptr_int = static_cast<int *> (var_ptr);
+
+    std::string e(envVarString);
+    trim(&e);
+    if (!e.empty() && isdigit(e.c_str()[0])) {
+        long int v = strtol(envVarString, NULL, 0);
+        *var_ptr_int = (int) (v);
+    } else {
+        *var_ptr_int = 0;
+        std::vector<std::string> tokens;
+        tokenize(e, '+', &tokens);
+        for (auto t=tokens.begin(); t!= tokens.end(); t++) {
+            for (int i=0; i<DB_MAX_FLAG; i++) {
+                if (!strcmp(t->c_str(), dbName[i]._shortName)) {
+                    *var_ptr_int |= (1<<i);
+                }
+            }
+        }
+    }
+
+    return HIP_DB_string(*var_ptr_int);;
+}
+
+
+void HIP_VISIBLE_DEVICES_callback(void *var_ptr, const char *envVarString)
+{
+}
+
 
 //---
 //Function called one-time at initialization time to construct a table of all GPU devices.
@@ -1235,7 +1313,7 @@ void ihipInit()
 
     // TODO: In HIP/hcc, this variable blocks after both kernel commmands and data transfer.  Maybe should be bit-mask for each command type?
     READ_ENV_I(release, HIP_LAUNCH_BLOCKING, CUDA_LAUNCH_BLOCKING, "Make HIP APIs 'host-synchronous', so they block until any kernel launches or data copy commands complete. Alias: CUDA_LAUNCH_BLOCKING." );
-    READ_ENV_I(release, HIP_DB, 0,  "Print various debug info.  Bitmask, see hip_hcc.cpp for more information.");
+    READ_ENV_C(release, HIP_DB, 0,  "Print debug info.  Bitmask (HIP_DB=0xff) or flags separated by '+' (HIP_DB=api+sync+mem+copy)", HIP_DB_callback);
     if ((HIP_DB & (1<<DB_API))  && (HIP_TRACE_API == 0)) {
         // Set HIP_TRACE_API default before we read it, so it is printed correctly.
         HIP_TRACE_API = 1;
@@ -1270,19 +1348,7 @@ void ihipInit()
     }
 
     if (HIP_DB) {
-        fprintf (stderr, "HIP_DB=0x%x [", HIP_DB);
-        bool first=true;
-        for (int i=0; i<DB_MAX_BITPOS; i++) {
-            if (HIP_DB & (1<<i)) {
-                if (first) {
-                    fprintf (stderr, "%s%s%s", dbName[i]._color, dbName[i]._shortName, KNRM);
-                } else {
-                    fprintf (stderr, "+%s%s%s", dbName[i]._color, dbName[i]._shortName, KNRM);
-                };
-                first=false;
-            };
-        }
-        fprintf (stderr, "]\n");
+        fprintf (stderr, "HIP_DB=0x%x [%s]\n", HIP_DB, HIP_DB_string(HIP_DB).c_str());
     }
 
     std::transform(HIP_TRACE_API_COLOR.begin(),  HIP_TRACE_API_COLOR.end(), HIP_TRACE_API_COLOR.begin(), ::tolower);

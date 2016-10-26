@@ -221,7 +221,7 @@ extern void recordApiTrace(const std::string &s);
 #define DB_COPY1  3 /* 0x08 - trace memory copy commands. . */
 #define DB_SIGNAL 4 /* 0x10 - trace signal pool commands */
 #define DB_COPY2  5 /* 0x20 - trace memory copy commands. Detailed. */
-#define DB_MAX_BITPOS 5
+#define DB_MAX_FLAG 5
 // When adding a new debug flag, also add to the char name table below.
 //
 
