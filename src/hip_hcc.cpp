@@ -63,9 +63,9 @@ int HIP_LAUNCH_BLOCKING = 0;
 int HIP_PRINT_ENV = 0;
 int HIP_TRACE_API= 0;
 std::string HIP_TRACE_API_COLOR("green");
-int HIP_ATP_MARKER= 0;
-std::string HIP_PROFILE_START_API;
-std::string HIP_PROFILE_STOP_API;
+int HIP_PROFILE_API= 0;
+std::string HIP_DB_START_API;
+std::string HIP_DB_STOP_API;
 int HIP_DB= 0;
 int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
 int HIP_NUM_KERNELS_INFLIGHT = 128;
@@ -94,8 +94,8 @@ std::atomic<int> g_lastShortTid(1);
 
 // Indexed by short-tid:
 // 
-std::vector<ProfTrigger> g_profStartTriggers;
-std::vector<ProfTrigger> g_profStopTriggers;
+std::vector<ProfTrigger> g_dbStartTriggers;
+std::vector<ProfTrigger> g_dbStopTriggers;
 
 
 
@@ -201,15 +201,15 @@ void recordApiTrace(const std::string &s)
     auto apiSeqNum = tls_shortTid.incApiSeqNum();
     auto tid = tls_shortTid.tid();
 
-    if ((tid < g_profStartTriggers.size()) && (apiSeqNum >= g_profStartTriggers[tid].nextTrigger())) {
+    if ((tid < g_dbStartTriggers.size()) && (apiSeqNum >= g_dbStartTriggers[tid].nextTrigger())) {
         printf ("info: resume profiling at %lu\n", apiSeqNum);
         RESUME_PROFILING; 
-        g_profStartTriggers.pop_back();
+        g_dbStartTriggers.pop_back();
     };
-    if ((tid < g_profStopTriggers.size()) && (apiSeqNum >= g_profStopTriggers[tid].nextTrigger())) {
+    if ((tid < g_dbStopTriggers.size()) && (apiSeqNum >= g_dbStopTriggers[tid].nextTrigger())) {
         printf ("info: stop profiling at %lu\n", apiSeqNum);
         STOP_PROFILING; 
-        g_profStopTriggers.pop_back();
+        g_dbStopTriggers.pop_back();
     };
 
 
@@ -1062,43 +1062,14 @@ void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, c
         env = getenv(var_name2);
     }
 
-    // TODO: Refactor this code so it is a separate call rather than being part of ihipReadEnv_I, which should only read integers.
-    // Check if the environment variable is either HIP_VISIBLE_DEVICES or CUDA_LAUNCH_BLOCKING, which
-    // contains a sequence of comma-separated device IDs
-    if (!(strcmp(var_name1,"HIP_VISIBLE_DEVICES") && strcmp(var_name2, "CUDA_VISIBLE_DEVICES")) && env){
-        // Parse the string stream of env and store the device ids to g_hip_visible_devices global variable
-        std::string str = env;
-        std::istringstream ss(str);
-        std::string device_id;
-        // Clean up the defult value
-        g_hip_visible_devices.clear();
-        g_visible_device = true;
-        // Read the visible device numbers
-        while (std::getline(ss, device_id, ',')) {
-            if (atoi(device_id.c_str()) >= 0) {
-                g_hip_visible_devices.push_back(atoi(device_id.c_str()));
-            } else { // Any device number after invalid number will not present
-                break;
-            }
-        }
-        // Print out the number of ids
-        if (HIP_PRINT_ENV) {
-            printf ("%-30s = ", var_name1);
-            for(int i=0;i<g_hip_visible_devices.size();i++)
-                printf ("%2d ", g_hip_visible_devices[i]);
-            printf (": %s\n", description);
-        }
+    // Default is set when variable is initialized (at top of this file), so only override if we find
+    // an environment variable.
+    if (env) {
+        long int v = strtol(env, NULL, 0);
+        *var_ptr = (int) (v);
     }
-    else { // Parse environment variables with sigle value
-        // Default is set when variable is initialized (at top of this file), so only override if we find
-        // an environment variable.
-        if (env) {
-            long int v = strtol(env, NULL, 0);
-            *var_ptr = (int) (v);
-        }
-        if (HIP_PRINT_ENV) {
-            printf ("%-30s = %2d : %s\n", var_name1, *var_ptr, description);
-        }
+    if (HIP_PRINT_ENV) {
+        printf ("%-30s = %2d : %s\n", var_name1, *var_ptr, description);
     }
 }
 
@@ -1259,7 +1230,7 @@ std::string HIP_DB_string(unsigned db)
 }
 
 // Callback used to process HIP_DB input, supports either
-// integer or chars separated by +
+// integer or flag names separated by +
 std::string HIP_DB_callback(void *var_ptr, const char *envVarString)
 {
     int * var_ptr_int = static_cast<int *> (var_ptr);
@@ -1275,9 +1246,9 @@ std::string HIP_DB_callback(void *var_ptr, const char *envVarString)
         tokenize(e, '+', &tokens);
         for (auto t=tokens.begin(); t!= tokens.end(); t++) {
             for (int i=0; i<DB_MAX_FLAG; i++) {
-                if (!strcmp(t->c_str(), dbName[i]._shortName)) {
+                if (!strcmp(t->c_str(), dbName[i]._shortName)) { 
                     *var_ptr_int |= (1<<i);
-                }
+                } // TODO - else throw error?
             }
         }
     }
@@ -1286,8 +1257,33 @@ std::string HIP_DB_callback(void *var_ptr, const char *envVarString)
 }
 
 
-void HIP_VISIBLE_DEVICES_callback(void *var_ptr, const char *envVarString)
+// Callback used to process list of visible devices.
+std::string HIP_VISIBLE_DEVICES_callback(void *var_ptr, const char *envVarString)
 {
+    // Parse the string stream of env and store the device ids to g_hip_visible_devices global variable
+    std::string str = envVarString;
+    std::istringstream ss(str);
+    std::string device_id;
+    // Clean up the defult value
+    g_hip_visible_devices.clear();
+    g_visible_device = true;
+    // Read the visible device numbers
+    while (std::getline(ss, device_id, ',')) {
+        if (atoi(device_id.c_str()) >= 0) {
+            g_hip_visible_devices.push_back(atoi(device_id.c_str()));
+        } else { // Any device number after invalid number will not present
+            break;
+        }
+    }
+
+    std::string valueString;
+    // Print out the number of ids
+    for(int i=0;i<g_hip_visible_devices.size();i++) {
+        valueString += std::to_string((g_hip_visible_devices[i]));
+        valueString += ' ';
+    }
+
+    return valueString;
 }
 
 
@@ -1323,11 +1319,11 @@ void ihipInit()
 
     READ_ENV_I(release, HIP_TRACE_API, 0,  "Trace each HIP API call.  Print function name and return code to stderr as program executes.");
     READ_ENV_S(release, HIP_TRACE_API_COLOR, 0,  "Color to use for HIP_API.  None/Red/Green/Yellow/Blue/Magenta/Cyan/White");
-    READ_ENV_I(release, HIP_ATP_MARKER, 0,  "Add HIP function begin/end to ATP file generated with CodeXL");
-    READ_ENV_S(release, HIP_PROFILE_START_API, 0,  "tid.api_seq_num for when to start profiling.");
-    READ_ENV_S(release, HIP_PROFILE_STOP_API, 0,  "tid.api_seq_num for when to stop profiling.");
+    READ_ENV_I(release, HIP_PROFILE_API, 0,  "Add HIP API markers to ATP file generated with CodeXL");
+    READ_ENV_S(release, HIP_DB_START_API, 0,  "Comma-separted list of tid.api_seq_num for when to start debug and profiling.");
+    READ_ENV_S(release, HIP_DB_STOP_API, 0,  "Comma-separated list of tid.api_seq_num for when to stop debug and profiling.");
     
-    READ_ENV_I(release, HIP_VISIBLE_DEVICES, CUDA_VISIBLE_DEVICES, "Only devices whose index is present in the secquence are visible to HIP applications and they are enumerated in the order of secquence" );
+    READ_ENV_C(release, HIP_VISIBLE_DEVICES, CUDA_VISIBLE_DEVICES, "Only devices whose index is present in the sequence are visible to HIP applications and they are enumerated in the order of sequence.", HIP_VISIBLE_DEVICES_callback );
 
 
     READ_ENV_I(release, HIP_WAIT_MODE, 0, "Force synchronization mode. 1= force yield, 2=force spin, 0=defaults specified in application");
@@ -1343,8 +1339,8 @@ void ihipInit()
         fprintf (stderr, "warning: env var HIP_TRACE_API=0x%x but COMPILE_HIP_TRACE_API=0.  (perhaps enable COMPILE_HIP_TRACE_API in src code before compiling?)", HIP_DB);
     }
 
-    if (HIP_ATP_MARKER && !COMPILE_HIP_ATP_MARKER) {
-        fprintf (stderr, "warning: env var HIP_ATP_MARKER=0x%x but COMPILE_HIP_ATP_MARKER=0.  (perhaps enable COMPILE_HIP_ATP_MARKER in src code before compiling?)", HIP_ATP_MARKER);
+    if (HIP_PROFILE_API && !COMPILE_HIP_ATP_MARKER) {
+        fprintf (stderr, "warning: env var HIP_PROFILE_API=0x%x but COMPILE_HIP_ATP_MARKER=0.  (perhaps enable COMPILE_HIP_ATP_MARKER in src code before compiling?)", HIP_PROFILE_API);
     }
 
     if (HIP_DB) {
@@ -1374,8 +1370,8 @@ void ihipInit()
         fprintf (stderr, "warning: env var HIP_TRACE_API_COLOR=%s must be None/Red/Green/Yellow/Blue/Magenta/Cyan/White", HIP_TRACE_API_COLOR.c_str());
     };
 
-    parseTrigger(HIP_PROFILE_START_API, g_profStartTriggers);
-    parseTrigger(HIP_PROFILE_STOP_API,  g_profStopTriggers);
+    parseTrigger(HIP_DB_START_API, g_dbStartTriggers);
+    parseTrigger(HIP_DB_STOP_API,  g_dbStopTriggers);
 
 
 
@@ -1462,7 +1458,7 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 
 void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, const hipStream_t stream)
 {
-    if (HIP_ATP_MARKER || (COMPILE_HIP_DB && HIP_TRACE_API)) {
+    if (HIP_PROFILE_API || (COMPILE_HIP_DB && HIP_TRACE_API)) {
         std::stringstream os;
         os  << "<<hip-api tid:" << tls_shortTid.tid() << "." << tls_shortTid.incApiSeqNum()
             << " hipLaunchKernel '" << kernelName << "'"

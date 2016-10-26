@@ -564,7 +564,7 @@ HIP_LAUNCH_BLOCKING            =  0 : Make HIP APIs 'host-synchronous', so they 
 HIP_DB                         =  0 : Print various debug info.  Bitmask, see hip_hcc.cpp for more information.
 HIP_TRACE_API                  =  0 : Trace each HIP API call.  Print function name and return code to stderr as program executes.
 HIP_TRACE_API_COLOR            = green : Color to use for HIP_API.  None/Red/Green/Yellow/Blue/Magenta/Cyan/White
-HIP_ATP_MARKER                 =  0 : Add HIP function begin/end to ATP file generated with CodeXL
+HIP_PROFILE_API                 =  0 : Add HIP function begin/end to ATP file generated with CodeXL
 HIP_VISIBLE_DEVICES            =  0 : Only devices whose index is present in the secquence are visible to HIP applications and they are enumerated in the order of secquence
 HIP_NUM_KERNELS_INFLIGHT       = 128 : Number of kernels per stream
 
