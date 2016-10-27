@@ -83,6 +83,10 @@ typedef CUmodule hipModule_t;
 typedef CUfunction hipFunction_t;
 typedef CUdeviceptr hipDeviceptr_t;
 
+// Flags that can be used with hipStreamCreateWithFlags
+#define hipStreamDefault            0x00 ///< Default stream creation flags
+#define hipStreamNonBlocking        0x01 ///< Stream does not implicitly synchronize with null stream
+
 //typedef cudaChannelFormatDesc hipChannelFormatDesc;
 #define hipChannelFormatDesc cudaChannelFormatDesc
 
