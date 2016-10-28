@@ -182,7 +182,8 @@ extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
         std::string apiStr = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
         std::string fullStr;\
         recordApiTrace(&fullStr, apiStr);\
-        MARKER_BEGIN(fullStr.c_str(), "HIP");\
+        if      (HIP_PROFILE_API == 0x1) {MARKER_BEGIN(__func__, "HIP") }\
+        else if (HIP_PROFILE_API == 0x2) {MARKER_BEGIN(fullStr.c_str(), "HIP"); }\
     }\
 }
 #else
