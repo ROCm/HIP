@@ -1610,7 +1610,11 @@ private:
         }
       }
       XStr.clear();
-      OS << "hipLaunchKernel(HIP_KERNEL_NAME(" << calleeName << "),";
+      if (calleeName.find(',') != StringRef::npos) {
+        SmallString<128> tmpData;
+        calleeName = Twine("HIP_KERNEL_NAME(" + calleeName + ")").toStringRef(tmpData);
+      }
+      OS << "hipLaunchKernel(" << calleeName << ",";
       const CallExpr *config = launchKernel->getConfig();
       DEBUG(dbgs() << "Kernel config arguments:" << "\n");
       SourceManager *SM = Result.SourceManager;
