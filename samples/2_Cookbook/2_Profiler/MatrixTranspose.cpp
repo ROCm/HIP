@@ -34,6 +34,8 @@ THE SOFTWARE.
 #define THREADS_PER_BLOCK_Y  4
 #define THREADS_PER_BLOCK_Z  1
 
+#define ITERATIONS 10
+
 // Device (Kernel) function, it must be void
 // hipLaunchParm provides the execution configuration
 __global__ void matrixTranspose(hipLaunchParm lp,
@@ -62,10 +64,72 @@ void matrixTransposeCPUReference(
     }
 }
 
-int main() {
 
-  //HIP_SCOPED_MARKER(__func__, "MainFunc");
-  HIP_BEGIN_MARKER(__func__, "MainFunc");
+// Use a separate function to demonstrate how to use function name as part of scoped marker:
+void runGPU(float *Matrix, float *TransposeMatrix, 
+            float* gpuMatrix, float* gpuTransposeMatrix)  {
+
+  // __func__ is a standard C++ macro which expands to the name of the function, in this case "runGPU"
+  HIP_SCOPED_MARKER(__func__, "MyGroup");
+
+  for (int i=0; i<ITERATIONS; i++) {
+
+    float eventMs = 0.0f;
+
+    hipEvent_t start, stop;
+    hipEventCreate(&start);
+    hipEventCreate(&stop);
+
+
+    // Record the start event
+    hipEventRecord(start, NULL);
+
+    // Memory transfer from host to device
+    hipMemcpy(gpuMatrix, Matrix, NUM*sizeof(float), hipMemcpyHostToDevice);
+
+    // Record the stop event
+    hipEventRecord(stop, NULL);
+    hipEventSynchronize(stop);
+
+    hipEventElapsedTime(&eventMs, start, stop);
+
+    printf ("hipMemcpyHostToDevice time taken  = %6.3fms\n", eventMs);
+
+    // Record the start event
+    hipEventRecord(start, NULL);
+
+    // Lauching kernel from host
+    hipLaunchKernel(matrixTranspose,
+                    dim3(WIDTH/THREADS_PER_BLOCK_X, WIDTH/THREADS_PER_BLOCK_Y),
+                    dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
+                    0, 0,
+                    gpuTransposeMatrix , gpuMatrix, WIDTH);
+
+    // Record the stop event
+    hipEventRecord(stop, NULL);
+    hipEventSynchronize(stop);
+    hipEventElapsedTime(&eventMs, start, stop);
+
+    printf ("kernel Execution time             = %6.3fms\n", eventMs);
+
+    // Record the start event
+    hipEventRecord(start, NULL);
+
+    // Memory transfer from device to host
+    hipMemcpy(TransposeMatrix, gpuTransposeMatrix, NUM*sizeof(float), hipMemcpyDeviceToHost);
+
+    // Record the stop event
+    hipEventRecord(stop, NULL);
+    hipEventSynchronize(stop);
+
+    hipEventElapsedTime(&eventMs, start, stop);
+
+    printf ("hipMemcpyDeviceToHost time taken  = %6.3fms\n", eventMs);
+  }
+};
+
+
+int main() {
 
   float* Matrix;
   float* TransposeMatrix;
@@ -79,18 +143,14 @@ int main() {
 
   std::cout << "Device name " << devProp.name << std::endl;
 
-  hipEvent_t start, stop;
-  float eventMs = 1.0f;
   {
       // Show example of how to create a "scoped marker".  
       // The scoped marker records the time spent inside the { scope } of the marker - the begin timestamp is at the
       // beginning of the code scope, and the end is recorded when the SCOPE exits.  This can be viewed in CodeXL
       // timeline relative to other GPU and CPU events.
       // This marker captures the time spent in setup including host allocation, initialization, and device memory allocation.
-      HIP_SCOPED_MARKER("Setup", "App");
+      HIP_SCOPED_MARKER("Setup", "MyGroup");
 
-      hipEventCreate(&start);
-      hipEventCreate(&stop);
 
 
       Matrix = (float*)malloc(NUM * sizeof(float));
@@ -103,91 +163,46 @@ int main() {
       }
 
 
-
       // allocate the memory on the device side
       hipMalloc((void**)&gpuMatrix, NUM * sizeof(float));
       hipMalloc((void**)&gpuTransposeMatrix, NUM * sizeof(float));
   }
 
-  {
-      HIP_SCOPED_MARKER("Loop", "App");
+  runGPU(Matrix, TransposeMatrix, gpuMatrix, gpuTransposeMatrix);
 
-      // Record the start event
-      hipEventRecord(start, NULL);
 
-      // Memory transfer from host to device
-      hipMemcpy(gpuMatrix, Matrix, NUM*sizeof(float), hipMemcpyHostToDevice);
-
-      // Record the stop event
-      hipEventRecord(stop, NULL);
-      hipEventSynchronize(stop);
-
-      hipEventElapsedTime(&eventMs, start, stop);
-
-      printf ("hipMemcpyHostToDevice time taken  = %6.3fms\n", eventMs);
-
-      // Record the start event
-      hipEventRecord(start, NULL);
-
-      // Lauching kernel from host
-      hipLaunchKernel(matrixTranspose,
-                      dim3(WIDTH/THREADS_PER_BLOCK_X, WIDTH/THREADS_PER_BLOCK_Y),
-                      dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
-                      0, 0,
-                      gpuTransposeMatrix , gpuMatrix, WIDTH);
-
-      // Record the stop event
-      hipEventRecord(stop, NULL);
-      hipEventSynchronize(stop);
-      hipEventElapsedTime(&eventMs, start, stop);
-  }
+  // show how to use explicit begin/end markers:
+  // We begin the timed region with HIP_BEGIN_MARKER, passing in the markerName and group:
+  // The region will stop when HIP_END_MARKER is called
+  // This is another way to mark begin/end - as an alternative to scoped markers.
+  HIP_BEGIN_MARKER("Check&TearDown", "MyGroup");
 
   int errors = 0;
-  {
-      HIP_SCOPED_MARKER("Teardown", "App");
 
+  // CPU MatrixTranspose computation
+  matrixTransposeCPUReference(cpuTransposeMatrix, Matrix, WIDTH);
 
-      printf ("kernel Execution time             = %6.3fms\n", eventMs);
-
-      // Record the start event
-      hipEventRecord(start, NULL);
-
-      // Memory transfer from device to host
-      hipMemcpy(TransposeMatrix, gpuTransposeMatrix, NUM*sizeof(float), hipMemcpyDeviceToHost);
-
-      // Record the stop event
-      hipEventRecord(stop, NULL);
-      hipEventSynchronize(stop);
-
-      hipEventElapsedTime(&eventMs, start, stop);
-
-      printf ("hipMemcpyDeviceToHost time taken  = %6.3fms\n", eventMs);
-
-      // CPU MatrixTranspose computation
-      matrixTransposeCPUReference(cpuTransposeMatrix, Matrix, WIDTH);
-
-      // verify the results
-      double eps = 1.0E-6;
-      for (int i = 0; i < NUM; i++) {
-        if (std::abs(TransposeMatrix[i] - cpuTransposeMatrix[i]) > eps ) {
-          errors++;
-        }
-      }
-      if (errors!=0) {
-        printf("FAILED: %d errors\n",errors);
-      } else {
-        printf ("PASSED!\n");
-      }
-
-      //free the resources on device side
-      hipFree(gpuMatrix);
-      hipFree(gpuTransposeMatrix);
-
-      //free the resources on host side
-      free(Matrix);
-      free(TransposeMatrix);
-      free(cpuTransposeMatrix);
+  // verify the results
+  double eps = 1.0E-6;
+  for (int i = 0; i < NUM; i++) {
+    if (std::abs(TransposeMatrix[i] - cpuTransposeMatrix[i]) > eps ) {
+      errors++;
+    }
   }
+  if (errors!=0) {
+    printf("FAILED: %d errors\n",errors);
+  } else {
+    printf ("PASSED!\n");
+  }
+
+  //free the resources on device side
+  hipFree(gpuMatrix);
+  hipFree(gpuTransposeMatrix);
+
+  //free the resources on host side
+  free(Matrix);
+  free(TransposeMatrix);
+  free(cpuTransposeMatrix);
 
   HIP_END_MARKER();
   
