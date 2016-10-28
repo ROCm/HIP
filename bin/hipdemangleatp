@@ -16,3 +16,6 @@ done
 #    real_sym=$(c++filt $(c++filt $mangled_sym | cut -d: -f3 | sed 's/_functor//g') | cut -d\( -f1 | cut -d" " -f2)
 #    sed -i "s/$mangled_sym/$real_sym/g" $1
 #done
+#
+#sed -e "s/^/_/g; s/_EC_/$/g" < test.txt | c++filt
+
