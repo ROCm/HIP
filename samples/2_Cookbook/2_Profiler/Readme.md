@@ -1,6 +1,6 @@
 ## Using hipEvents to measure performance ###
 
-This tutorial is follow-up of the previous two tutorial where we learn how to write our first hip program, in which we compute Matrix Transpose and in second one, we added feature to measure time taken for memory transfer and kernel execution. In this tutorial, we won't make amy changes to the source code. We'll explain how to use the  codexl/rocm-profiler for hip timeline tracing.
+This tutorial is follow-up of the previous two tutorial where we learn how to write our first hip program, in which we compute Matrix Transpose and in second one, we added feature to measure time taken for memory transfer and kernel execution. In this tutorial, we'll explain how to use the codexl/rocm-profiler for hip timeline tracing.  Also, we will augment the source code with additional markers so we can see the high-level application flow alongside the information that CodeXL automatically collects.
 
 
 ## Introduction:
@@ -24,15 +24,11 @@ HIP can generate markers at function being/end which are displayed on the CodeXL
 
 1. Install ROCm-Profiler Installing HIP from the rocm pre-built packages, installs the ROCm-Profiler as well. Alternatively, you can build ROCm-Profiler using the instructions given below.
 
-2. Build HIP with ATP markers enabled HIP pre-built packages are enabled with ATP marker support by default. To enable ATP marker support when building HIP from source, use the option -DCOMPILE_HIP_ATP_MARKER=1 during the cmake configure step.
 
-3. Set HIP_ATP_MARKER
-`export HIP_ATP_MARKER=1`
-
-4. Recompile the target application
-
-5. Run with profiler enabled to generate ATP file.
-`/opt/rocm/bin/rocm-profiler -o <outputATPFileName> -A <applicationName> <applicationArguments>`
+2. Run with profiler enabled to generate ATP file.
+(These steps are also captured in the Makefile)
+The HIP_PROFILE_API enables display of the HIP APIs on the CodeXL trimeline view.
+`/opt/rocm/bin/rocm-profiler -o <outputATPFileName> -A <applicationName> -e HIP_PROFILE_API=1 <applicationArguments>`
 
 ##Using HIP_TRACE_API
 

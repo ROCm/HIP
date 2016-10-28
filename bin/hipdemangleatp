@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# usage: hipdemangleatp.sh ATP_FILE
+
+# HIP kernels
+kernels=$(grep grid_launch_parm $1 | cut -d" " -f1 | sort | uniq)
+for mangled_sym in $kernels; do
+    real_sym=$(c++filt -p $(c++filt _$mangled_sym | cut -d: -f3 | sed 's/_functor//g'))
+    echo "$mangled_sym => $real_sym" >> $1.log
+    sed -i "s/$mangled_sym/$real_sym/g" $1
+done
+
+# HC kernels
+#kernels=$(grep cxxamp_trampoline $1 | cut -d" " -f1 | sort | uniq)
+#for mangled_sym in $kernels; do
+#    real_sym=$(c++filt $(c++filt $mangled_sym | cut -d: -f3 | sed 's/_functor//g') | cut -d\( -f1 | cut -d" " -f2)
+#    sed -i "s/$mangled_sym/$real_sym/g" $1
+#done
