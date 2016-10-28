@@ -63,7 +63,7 @@ int HIP_LAUNCH_BLOCKING = 0;
 int HIP_PRINT_ENV = 0;
 int HIP_TRACE_API= 0;
 std::string HIP_TRACE_API_COLOR("green");
-int HIP_PROFILE_API= 0;S
+int HIP_PROFILE_API= 0;
 
 // TODO - DB_START/STOP need more testing.
 std::string HIP_DB_START_API;
@@ -1478,11 +1478,11 @@ void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, c
             << " " << *stream;
 
         if (HIP_PROFILE_API == 0x1) {
-            MARKER_BEGIN(os.str().c_str(), "HIP");
-        } else if (HIP_PROFILE_API == 0x2) {
             std::string shortAtpString("hipLaunchKernel:");
             shortAtpString += kernelName;
             MARKER_BEGIN(shortAtpString.c_str(), "HIP");
+        } else if (HIP_PROFILE_API == 0x2) {
+            MARKER_BEGIN(os.str().c_str(), "HIP");
         }
 
         if (COMPILE_HIP_DB && HIP_TRACE_API) {
