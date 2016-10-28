@@ -423,7 +423,11 @@ struct cuda2hipMap {
     cuda2hipRename["cuMemHostRegister_v2"]                      = {"hipHostRegister", CONV_MEM, API_DRIVER};
     cuda2hipRename["cuMemHostUnregister"]                       = {"hipHostUnregister", CONV_MEM, API_DRIVER};
 
-
+    // Profiler
+    // unsupported yet by HIP
+    // cuda2hipRename["cuProfilerInitialize"]                   = {"hipProfilerInitialize", CONV_OTHER, API_DRIVER};
+    cuda2hipRename["cuProfilerStart"]                           = {"hipProfilerStart", CONV_OTHER, API_DRIVER};
+    cuda2hipRename["cuProfilerStop"]                            = {"hipProfilerStop", CONV_OTHER, API_DRIVER};
 
     /////////////////////////////// CUDA RT API ///////////////////////////////
     // Error API
