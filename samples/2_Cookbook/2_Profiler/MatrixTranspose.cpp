@@ -36,6 +36,10 @@ THE SOFTWARE.
 
 #define ITERATIONS 10
 
+// Cmdline parms to control start and stop triggers
+int startTriggerIteration=-1;
+int stopTriggerIteration=-1;
+
 // Device (Kernel) function, it must be void
 // hipLaunchParm provides the execution configuration
 __global__ void matrixTranspose(hipLaunchParm lp,
@@ -73,6 +77,13 @@ void runGPU(float *Matrix, float *TransposeMatrix,
   HIP_SCOPED_MARKER(__func__, "MyGroup");
 
   for (int i=0; i<ITERATIONS; i++) {
+
+    if (i==startTriggerIteration) {
+      hipProfilerStart();
+    }
+    if (i==stopTriggerIteration) {
+      hipProfilerStop();
+    }
 
     float eventMs = 0.0f;
 
@@ -129,7 +140,16 @@ void runGPU(float *Matrix, float *TransposeMatrix,
 };
 
 
-int main() {
+int main(int argc, char *argv[]) {
+
+  if (argc >= 2) {
+    startTriggerIteration = atoi(argv[1]);
+    printf ("info : will start tracing at iteration:%d\n", startTriggerIteration);
+  } 
+  if (argc >= 3) {
+    stopTriggerIteration = atoi(argv[2]);
+    printf ("info : will stop tracing at iteration:%d\n", stopTriggerIteration);
+  }
 
   float* Matrix;
   float* TransposeMatrix;
@@ -166,6 +186,8 @@ int main() {
       // allocate the memory on the device side
       hipMalloc((void**)&gpuMatrix, NUM * sizeof(float));
       hipMalloc((void**)&gpuTransposeMatrix, NUM * sizeof(float));
+
+      // FYI, the scoped-marker will be destroyed here when the scope exits, and will record its "end" timestamp.
   }
 
   runGPU(Matrix, TransposeMatrix, gpuMatrix, gpuTransposeMatrix);
@@ -204,7 +226,8 @@ int main() {
   free(TransposeMatrix);
   free(cpuTransposeMatrix);
 
-  HIP_END_MARKER();
+  // This ends the last marker started in this thread, in this case "Check&TearDown"
+  HIP_END_MARKER();  
   
   return errors;
 }

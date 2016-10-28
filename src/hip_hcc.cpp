@@ -63,7 +63,9 @@ int HIP_LAUNCH_BLOCKING = 0;
 int HIP_PRINT_ENV = 0;
 int HIP_TRACE_API= 0;
 std::string HIP_TRACE_API_COLOR("green");
-int HIP_PROFILE_API= 0;
+int HIP_PROFILE_API= 0;S
+
+// TODO - DB_START/STOP need more testing.
 std::string HIP_DB_START_API;
 std::string HIP_DB_STOP_API;
 int HIP_DB= 0;
@@ -1890,6 +1892,31 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
         }
     }
 }
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+//Profiler, really these should live elsewhere:
+hipError_t hipProfilerStart()
+{
+    HIP_INIT_API();
+#if COMPILE_HIP_ATP_MARKER
+    amdtResumeProfiling(AMDT_ALL_PROFILING);
+#endif
+
+    return ihipLogStatus(hipSuccess);
+};
+
+
+hipError_t hipProfilerStop()
+{
+    HIP_INIT_API();
+#if COMPILE_HIP_ATP_MARKER
+    amdtStopProfiling(AMDT_ALL_PROFILING);
+#endif
+
+    return ihipLogStatus(hipSuccess);
+};
+
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
