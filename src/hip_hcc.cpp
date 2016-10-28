@@ -196,7 +196,7 @@ thread_local ShortTid tls_shortTid;
 //=================================================================================================
 // Top-level "free" functions:
 //=================================================================================================
-void recordApiTrace(const std::string &s)
+void recordApiTrace(std::string *fullStr, const std::string &apiStr)
 {
     auto apiSeqNum = tls_shortTid.incApiSeqNum();
     auto tid = tls_shortTid.tid();
@@ -212,11 +212,16 @@ void recordApiTrace(const std::string &s)
         g_dbStopTriggers.pop_back();
     };
 
+    fullStr->reserve(16 + apiStr.length());
+    *fullStr = std::to_string(tid) + ".";
+    *fullStr += std::to_string(apiSeqNum);
+    *fullStr += " ";
+    *fullStr += apiStr;
+
 
     if (COMPILE_HIP_DB && HIP_TRACE_API) {
-        fprintf (stderr, "%s<<hip-api tid:%d.%lu %s\n%s" , API_COLOR, tid, apiSeqNum, s.c_str(), API_COLOR_END);
+        fprintf (stderr, "%s<<hip-api tid:%s%s\n" , API_COLOR, fullStr->c_str(), API_COLOR_END);
     }
-    SCOPED_MARKER(s.c_str(), "HIP", NULL);
 }
 
 
@@ -1332,15 +1337,15 @@ void ihipInit()
 
     // Some flags have both compile-time and runtime flags - generate a warning if user enables the runtime flag but the compile-time flag is disabled.
     if (HIP_DB && !COMPILE_HIP_DB) {
-        fprintf (stderr, "warning: env var HIP_DB=0x%x but COMPILE_HIP_DB=0.  (perhaps enable COMPILE_HIP_DB in src code before compiling?)", HIP_DB);
+        fprintf (stderr, "warning: env var HIP_DB=0x%x but COMPILE_HIP_DB=0.  (perhaps enable COMPILE_HIP_DB in src code before compiling?)\n", HIP_DB);
     }
 
     if (HIP_TRACE_API && !COMPILE_HIP_TRACE_API) {
-        fprintf (stderr, "warning: env var HIP_TRACE_API=0x%x but COMPILE_HIP_TRACE_API=0.  (perhaps enable COMPILE_HIP_TRACE_API in src code before compiling?)", HIP_DB);
+        fprintf (stderr, "warning: env var HIP_TRACE_API=0x%x but COMPILE_HIP_TRACE_API=0.  (perhaps enable COMPILE_HIP_TRACE_API in src code before compiling?)\n", HIP_DB);
     }
 
     if (HIP_PROFILE_API && !COMPILE_HIP_ATP_MARKER) {
-        fprintf (stderr, "warning: env var HIP_PROFILE_API=0x%x but COMPILE_HIP_ATP_MARKER=0.  (perhaps enable COMPILE_HIP_ATP_MARKER in src code before compiling?)", HIP_PROFILE_API);
+        fprintf (stderr, "warning: env var HIP_PROFILE_API=0x%x but COMPILE_HIP_ATP_MARKER=0.  (perhaps enable COMPILE_HIP_ATP_MARKER in src code before compiling?)\n", HIP_PROFILE_API);
     }
 
     if (HIP_DB) {
@@ -1459,19 +1464,21 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, const hipStream_t stream)
 {
     if (HIP_PROFILE_API || (COMPILE_HIP_DB && HIP_TRACE_API)) {
+        std::stringstream os_pre;
         std::stringstream os;
-        os  << "<<hip-api tid:" << tls_shortTid.tid() << "." << tls_shortTid.incApiSeqNum()
+        os_pre  << "<<hip-api tid:";
+        os  << tls_shortTid.tid() << "." << tls_shortTid.incApiSeqNum()
             << " hipLaunchKernel '" << kernelName << "'"
             << " gridDim:"  << lp->grid_dim
             << " groupDim:" << lp->group_dim
             << " sharedMem:+" << lp->dynamic_group_mem_bytes
             << " " << *stream;
 
+        MARKER_BEGIN(os.str().c_str(), "HIP");
 
         if (COMPILE_HIP_DB && HIP_TRACE_API) {
             std::cerr << API_COLOR << os.str() << API_COLOR_END << std::endl;
         }
-        SCOPED_MARKER(os.str().c_str(), "HIP", NULL);
     }
 }
 
@@ -1572,6 +1579,7 @@ void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp)
     tprintf(DB_SYNC, "ihipPostLaunchKernel, unlocking stream\n");
 
     stream->lockclose_postKernelCommand(lp.av);
+    MARKER_END();
 }
 
 

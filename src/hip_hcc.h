@@ -160,24 +160,29 @@ extern const char *API_COLOR_END;
 // through ptr-to-args (ie the pointers allocated by hipMalloc).
 #if COMPILE_HIP_ATP_MARKER
 #include "CXLActivityLogger.h"
-#define SCOPED_MARKER(markerName,group,userString) amdtScopedMarker(markerName, group, userString)
+#define MARKER_BEGIN(markerName,group) amdtBeginMarker(markerName, group, nullptr);
+#define MARKER_END() amdtEndMarker();
 #define RESUME_PROFILING amdtResumeProfiling(AMDT_ALL_PROFILING);
 #define STOP_PROFILING   amdtStopProfiling(AMDT_ALL_PROFILING);
 #else
 // Swallow scoped markers:
-#define SCOPED_MARKER(markerName,group,userString)
+#define MARKER_BEGIN(markerName,group)
+#define MARKER_END()
 #define RESUME_PROFILING 
 #define STOP_PROFILING   
 #endif
 
 
-extern void recordApiTrace(const std::string &s);
+extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
 
 #if COMPILE_HIP_ATP_MARKER || (COMPILE_HIP_TRACE_API & 0x1)
 #define API_TRACE(...)\
 {\
     if (HIP_PROFILE_API || (COMPILE_HIP_DB && HIP_TRACE_API)) {\
-        recordApiTrace(std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')');\
+        std::string apiStr = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
+        std::string fullStr;\
+        recordApiTrace(&fullStr, apiStr);\
+        MARKER_BEGIN(fullStr.c_str(), "HIP");\
     }\
 }
 #else
@@ -207,6 +212,7 @@ extern void recordApiTrace(const std::string &s);
         if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API) {\
             fprintf(stderr, "  %ship-api tid:%d.%lu %-30s ret=%2d (%s)>>%s\n", (localHipStatus == 0) ? API_COLOR:KRED, tls_shortTid.tid(),tls_shortTid.apiSeqNum(),  __func__, localHipStatus, ihipErrorString(localHipStatus), API_COLOR_END);\
         }\
+        if (HIP_PROFILE_API) { MARKER_END(); }\
         localHipStatus;\
     })
 
