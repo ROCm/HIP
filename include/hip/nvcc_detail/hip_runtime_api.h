@@ -643,6 +643,18 @@ inline static hipError_t hipMemcpyPeerAsync ( void* dst, int  dstDevice, const v
     return hipCUDAErrorTohipError(cudaMemcpyPeerAsync(dst, dstDevice, src, srcDevice, count, stream));
 }
 
+// Profile APIs:
+inline hipError_t hipProfilerStart() 
+{ 
+    return hipCUDAErrorTohipError(cudaProfileStart());
+}
+
+inline hipError_t hipProfilerStop() 
+{ 
+    return hipCUDAErrorTohipError(cudaProfileStop());
+}
+
+
 inline static hipError_t hipSetDeviceFlags (unsigned int flags)
 {
     return hipCUDAErrorTohipError(cudaSetDeviceFlags(flags));
@@ -801,6 +813,8 @@ inline static hipError_t hipModuleLaunchKernel(hipFunction_t f,
                     blockDimX, blockDimY, blockDimZ,
                     sharedMemBytes, stream, kernelParams, extra));
 }
+
+
 
 #ifdef __cplusplus
 }

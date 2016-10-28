@@ -35,6 +35,13 @@ profile: $(EXECUTABLE)
 	$(HIPPROFILER_POST_CMD)
 
 
+# Pass option to control start and stop iterations for profiling - see MatrixTranspose.cpp for implementation:
+# Note we start profiler in --startdisabled mode - no timing collected until app enabled it via hipProfilerStart()
+profile_trigger: $(EXECUTABLE)
+	$(HIPPROFILER) $(PROFILER_OPT)  --startdisabled   $(EXECUTABLE) 3 6
+	$(HIPPROFILER_POST_CMD)
+
+
 run: $(EXECUTABLE)
 	$(EXECUTABLE)
 

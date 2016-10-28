@@ -1737,9 +1737,22 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
  *
  *  @warning The cudaProfilerInitialize API format for "configFile" is not supported.
  *
- *  On AMD platforms, hipProfilerStart and hipProfilerStop require installation of AMD's GPU
- *  perf counter API and defining GPU_PERF
  */
+
+
+// TODO - expand descriptions:
+/**
+ * @brief Start recording of profiling information
+ * @warning : hipProfilerStart API is under development.
+ */
+hipError_t hipProfilerStart();
+
+
+/**
+ * @brief Stop recording of profiling information.
+ * @warning : hipProfilerStop API is under development.
+ */
+hipError_t hipProfilerStop();
 
 
 /**
