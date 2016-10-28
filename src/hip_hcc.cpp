@@ -1324,7 +1324,7 @@ void ihipInit()
 
     READ_ENV_I(release, HIP_TRACE_API, 0,  "Trace each HIP API call.  Print function name and return code to stderr as program executes.");
     READ_ENV_S(release, HIP_TRACE_API_COLOR, 0,  "Color to use for HIP_API.  None/Red/Green/Yellow/Blue/Magenta/Cyan/White");
-    READ_ENV_I(release, HIP_PROFILE_API, 0,  "Add HIP API markers to ATP file generated with CodeXL");
+    READ_ENV_I(release, HIP_PROFILE_API, 0,  "Add HIP API markers to ATP file generated with CodeXL. 0x1=short API name, 0x2=full API name including args.");
     READ_ENV_S(release, HIP_DB_START_API, 0,  "Comma-separted list of tid.api_seq_num for when to start debug and profiling.");
     READ_ENV_S(release, HIP_DB_STOP_API, 0,  "Comma-separated list of tid.api_seq_num for when to stop debug and profiling.");
     
@@ -1346,6 +1346,7 @@ void ihipInit()
 
     if (HIP_PROFILE_API && !COMPILE_HIP_ATP_MARKER) {
         fprintf (stderr, "warning: env var HIP_PROFILE_API=0x%x but COMPILE_HIP_ATP_MARKER=0.  (perhaps enable COMPILE_HIP_ATP_MARKER in src code before compiling?)\n", HIP_PROFILE_API);
+        HIP_PROFILE_API = 0;
     }
 
     if (HIP_DB) {
@@ -1474,7 +1475,13 @@ void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, c
             << " sharedMem:+" << lp->dynamic_group_mem_bytes
             << " " << *stream;
 
-        MARKER_BEGIN(os.str().c_str(), "HIP");
+        if (HIP_PROFILE_API == 0x1) {
+            MARKER_BEGIN(os.str().c_str(), "HIP");
+        } else if (HIP_PROFILE_API == 0x2) {
+            std::string shortAtpString("hipLaunchKernel:");
+            shortAtpString += kernelName;
+            MARKER_BEGIN(shortAtpString.c_str(), "HIP");
+        }
 
         if (COMPILE_HIP_DB && HIP_TRACE_API) {
             std::cerr << API_COLOR << os.str() << API_COLOR_END << std::endl;
