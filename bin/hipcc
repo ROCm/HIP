@@ -79,7 +79,7 @@ if ($HIP_PLATFORM eq "hcc") {
 
     $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
 
-    $HIP_ATP_MARKER=$ENV{'HIP_ATP_MARKER'};
+    $HIP_ATP_MARKER=$ENV{'HIP_ATP_MARKER'} // 1;
     $marker_path = "$ROCM_PATH/profiler/CXLActivityLogger";
 
     $ROCM_TARGET=$ENV{'ROCM_TARGET'} // "fiji";
@@ -273,10 +273,9 @@ foreach $arg (@ARGV)
         # Process HIPCC options here:
         if ($arg =~ m/^--hipcc/) {
             $swallowArg = 1;
-            if ($arg eq "--hipcc_explicit_lib") {
-                # Some environments (ie cmake tests) already link their own hip_hcc.o, so don't add here:
-                $needHipHcc = 0;
-            }
+            #if $arg eq "--hipcc_profile") {  # Example argument here, hipcc
+            #
+            #}
         } else {
             push (@options, $arg);
         }
