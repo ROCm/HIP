@@ -560,6 +560,15 @@ extern "C" __device__ void __threadfence(void);
  */
 __device__ void  __threadfence_system(void) __attribute__((deprecated("Provided for compile-time compatibility, not yet functional")));
 
+__device__ unsigned __hip_ds_bpermute(int index, unsigned src);
+__device__ float __hip_ds_bpermutef(int index, float src);
+__device__ unsigned __hip_ds_permute(int index, unsigned src);
+__device__ float __hip_ds_permutef(int index, float src);
+
+__device__ unsigned __hip_ds_swizzle(unsigned int src, int pattern);
+__device__ float __hip_ds_swizzlef(float src, int pattern);
+
+__device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask, bool bound_ctrl);
 
 // doxygen end Fence Fence
 /**
