@@ -1592,6 +1592,16 @@ hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device);
 hipError_t hipDeviceGetPCIBusId (int *pciBusId,int len,hipDevice_t device);
 
 /**
+ * @brief Returns a handle to a compute device.
+ * @param [out] device handle
+ * @param [in] PCI Bus ID
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice, #hipErrorInvalidValue
+ */
+hipError_t hipDeviceGetByPCIBusId ( int*  device,const int* pciBusId );
+
+
+/**
  * @brief Returns the total amount of memory on the device.
  * @param [out] bytes
  * @param [in] device
