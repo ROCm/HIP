@@ -340,8 +340,28 @@ hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device)
     return ihipLogStatus(e);
 }
 
+hipError_t hipDeviceGetByPCIBusId (int*  device, const int* pciBusId )
+{
+    HIP_INIT_API(device,pciBusId);
+    hipDeviceProp_t  tempProp;
+    int deviceCount;
+    hipError_t e = hipErrorInvalidValue;
+    hipGetDeviceCount( &deviceCount );
+    *device = 0;
+    for (int i=0; i< deviceCount; i++) {
+        hipGetDeviceProperties( &tempProp, i );
+        if(tempProp.pciBusID == *pciBusId) {
+            *device =i;
+            e = hipSuccess;
+            break;
+        }
+    }
+    return ihipLogStatus(e);
+}
+
 hipError_t hipChooseDevice( int* device, const hipDeviceProp_t* prop )
 {
+    HIP_INIT_API(device,prop);
     hipDeviceProp_t  tempProp;
     int deviceCount;
     int inPropCount=0;
