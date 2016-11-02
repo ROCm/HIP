@@ -556,7 +556,7 @@ extern "C" __device__ void __threadfence(void);
  *
  * @param void
  *
- * @warning __threadfence_system is a stub and map to no-op, application should set "export HSA_DISABLE_CACHE=1" to disable both L1 and L2 caches.
+ * @warning __threadfence_system is a stub and map to no-op.
  */
 __device__ void  __threadfence_system(void) __attribute__((deprecated("Provided for compile-time compatibility, not yet functional")));
 
