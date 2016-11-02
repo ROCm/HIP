@@ -84,8 +84,8 @@ typedef CUfunction hipFunction_t;
 typedef CUdeviceptr hipDeviceptr_t;
 
 // Flags that can be used with hipStreamCreateWithFlags
-#define hipStreamDefault            0x00 ///< Default stream creation flags
-#define hipStreamNonBlocking        0x01 ///< Stream does not implicitly synchronize with null stream
+#define hipStreamDefault            cudaStreamDefault
+#define hipStreamNonBlocking        cudaStreamNonBlocking
 
 //typedef cudaChannelFormatDesc hipChannelFormatDesc;
 #define hipChannelFormatDesc cudaChannelFormatDesc
@@ -644,13 +644,13 @@ inline static hipError_t hipMemcpyPeerAsync ( void* dst, int  dstDevice, const v
 }
 
 // Profile APIs:
-inline hipError_t hipProfilerStart() 
-{ 
+inline hipError_t hipProfilerStart()
+{
     return hipCUDAErrorTohipError(cudaProfileStart());
 }
 
-inline hipError_t hipProfilerStop() 
-{ 
+inline hipError_t hipProfilerStop()
+{
     return hipCUDAErrorTohipError(cudaProfileStop());
 }
 
