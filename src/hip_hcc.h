@@ -489,7 +489,9 @@ private:
 
 
     // The unsigned return is hipMemcpyKind
-    unsigned resolveMemcpyDirection(bool srcTracked, bool dstTracked, bool srcInDeviceMem, bool dstInDeviceMem);
+    unsigned resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDeviceMem);
+    void resolveHcMemcpyDirection(unsigned hipMemKind, const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo, 
+                                  hc::hcCommandKind *hcCopyDir, bool *forceHostCopyEngine);
 
     bool canSeePeerMemory(const ihipCtx_t *thisCtx, ihipCtx_t *dstCtx, ihipCtx_t *srcCtx);
 

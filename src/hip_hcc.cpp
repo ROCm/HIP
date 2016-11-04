@@ -1759,7 +1759,7 @@ bool ihipStream_t::canSeePeerMemory(const ihipCtx_t *thisCtx, ihipCtx_t *dstCtx,
 
 #define CASE_STRING(X)  case X: return #X ;break;
 
-const char* memcpyStr(unsigned memKind)
+const char* hipMemcpyStr(unsigned memKind)
 {
     switch (memKind) {
         CASE_STRING(hipMemcpyHostToHost);
@@ -1771,35 +1771,68 @@ const char* memcpyStr(unsigned memKind)
     };
 }
 
+const char* hcMemcpyStr(hc::hcCommandKind memKind)
+{
+    using namespace hc;
+    switch (memKind) {
+        CASE_STRING(hcMemcpyHostToHost);
+        CASE_STRING(hcMemcpyHostToDevice);
+        CASE_STRING(hcMemcpyDeviceToHost);
+        CASE_STRING(hcMemcpyDeviceToDevice);
+        //CASE_STRING(hcMemcpyDefault);
+        default : return ("unknown memcpyKind");
+    };
+}
+
 
 
 // Resolve hipMemcpyDefault to a known type.
 // TODO - review why is this so complicated, does this need srcTracked and dstTracked?
-unsigned ihipStream_t::resolveMemcpyDirection(bool srcTracked, bool dstTracked, bool srcInDeviceMem, bool dstInDeviceMem)
+unsigned ihipStream_t::resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDeviceMem)
 {
     hipMemcpyKind kind = hipMemcpyDefault;
-    if(!srcTracked && !dstTracked)
-    {
-        kind = hipMemcpyHostToHost;
-    }
-    if(!srcTracked && dstTracked)
-    {
-        if(dstInDeviceMem) { kind = hipMemcpyHostToDevice; }
-        else{ kind = hipMemcpyHostToHost; }
-    }
-    if (srcTracked && !dstTracked) {
-        if(srcInDeviceMem) { kind = hipMemcpyDeviceToHost; }
-        else { kind = hipMemcpyHostToHost; }
-    }
-    if (srcTracked && dstTracked) {
-        if(srcInDeviceMem && dstInDeviceMem) { kind = hipMemcpyDeviceToDevice; }
-        if(srcInDeviceMem && !dstInDeviceMem) { kind = hipMemcpyDeviceToHost; }
-        if(!srcInDeviceMem && !dstInDeviceMem) { kind = hipMemcpyHostToHost; }
-        if(!srcInDeviceMem && dstInDeviceMem) { kind = hipMemcpyHostToDevice; }
-    }
+
+    if( srcInDeviceMem  &&  dstInDeviceMem) { kind = hipMemcpyDeviceToDevice; }
+    if( srcInDeviceMem  && !dstInDeviceMem) { kind = hipMemcpyDeviceToHost; }
+    if(!srcInDeviceMem  && !dstInDeviceMem) { kind = hipMemcpyHostToHost; }
+    if(!srcInDeviceMem  &&  dstInDeviceMem) { kind = hipMemcpyHostToDevice; }
 
     assert (kind != hipMemcpyDefault);
     return kind;
+}
+
+
+// hipMemKind must be "resolved" to a specific direction - cannot be default.
+void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind, const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo, 
+                                        hc::hcCommandKind *hcCopyDir, bool *forceHostCopyEngine)
+{
+    ihipCtx_t *ctx = this->getCtx();
+
+    if (hipMemKind == hipMemcpyDefault) {
+        hipMemKind = resolveMemcpyDirection(srcPtrInfo->_isInDeviceMem, dstPtrInfo->_isInDeviceMem);
+    }
+
+    switch (hipMemKind) {
+        case hipMemcpyHostToHost:     *hcCopyDir = hc::hcMemcpyHostToHost; break;
+        case hipMemcpyHostToDevice:   *hcCopyDir = hc::hcMemcpyHostToDevice; break;
+        case hipMemcpyDeviceToHost:   *hcCopyDir = hc::hcMemcpyDeviceToHost; break;
+        case hipMemcpyDeviceToDevice: *hcCopyDir = hc::hcMemcpyDeviceToDevice; break;
+        default: throw ihipException(hipErrorRuntimeOther);
+    };
+
+
+    // If this is P2P access, we need to check to see if the copy agent (specified by the stream where the copy is enqueued)
+    // has peer access enabled to both the source and dest.  If this is true, then the copy agent can see both pointers
+    // and we can perform the access with the copy engine from the current stream.  If not true, then we will copy through the host. (*forceHostCopyEngine=true).
+    *forceHostCopyEngine = false;
+    if (*hcCopyDir == hc::hcMemcpyDeviceToDevice) {
+        if (!canSeePeerMemory(ctx, ihipGetPrimaryCtx(dstPtrInfo->_appId), ihipGetPrimaryCtx(srcPtrInfo->_appId))) {
+            *forceHostCopyEngine = true;
+            tprintf (DB_COPY, "Forcing use of host copy engine.\n");
+        } else {
+            tprintf (DB_COPY, "Will use SDMA engine on streamDevice=%s.\n", ctx->toString().c_str());
+        }
+    };
 }
 
 
@@ -1819,33 +1852,13 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     bool dstTracked = (hc::am_memtracker_getinfo(&dstPtrInfo, dst) == AM_SUCCESS);
     bool srcTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) == AM_SUCCESS);
 
-    if (kind == hipMemcpyDefault) {
-        kind = resolveMemcpyDirection(srcTracked, dstTracked, srcPtrInfo._isInDeviceMem, dstPtrInfo._isInDeviceMem);
-    }
+
     hc::hcCommandKind hcCopyDir;
-    switch (kind) {
-        case hipMemcpyHostToHost:     hcCopyDir = hc::hcMemcpyHostToHost; break;
-        case hipMemcpyHostToDevice:   hcCopyDir = hc::hcMemcpyHostToDevice; break;
-        case hipMemcpyDeviceToHost:   hcCopyDir = hc::hcMemcpyDeviceToHost; break;
-        case hipMemcpyDeviceToDevice: hcCopyDir = hc::hcMemcpyDeviceToDevice; break;
-        default: throw ihipException(hipErrorRuntimeOther);
-    };
+    bool forceHostCopyEngine;
+    resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &forceHostCopyEngine);
 
 
-    // If this is P2P access, we need to check to see if the copy agent (specified by the stream where the copy is enqueued)
-    // has peer access enabled to both the source and dest.  If this is true, then the copy agent can see both pointers
-    // and we can perform the access with the copy engine from the current stream.  If not true, then we will copy through the host. (forceHostCopyEngine=true).
-    bool forceHostCopyEngine = false;
-    if (hcCopyDir == hc::hcMemcpyDeviceToDevice) {
-        if (!canSeePeerMemory(ctx, ihipGetPrimaryCtx(dstPtrInfo._appId), ihipGetPrimaryCtx(srcPtrInfo._appId))) {
-            forceHostCopyEngine = true;
-            tprintf (DB_COPY, "Forcing use of host copy engine.\n");
-        } else {
-            tprintf (DB_COPY, "Will use SDMA engine on streamDevice=%s.\n", ctx->toString().c_str());
-        }
-    };
-
-    tprintf (DB_COPY, "locked_copy dir=%s dst=%p src=%p sz=%zu\n", memcpyStr(kind), src, dst, sizeBytes);
+    tprintf (DB_COPY, "locked_copy dir=%s dst=%p src=%p sz=%zu\n", hcMemcpyStr(hcCopyDir), src, dst, sizeBytes);
 
     {
         LockedAccessor_StreamCrit_t crit (_criticalData);
