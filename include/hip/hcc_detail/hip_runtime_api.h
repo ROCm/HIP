@@ -1278,7 +1278,11 @@ hipError_t  hipDeviceEnablePeerAccess (int  peerDeviceId, unsigned int flags);
 hipError_t  hipDeviceDisablePeerAccess (int peerDeviceId);
 
 
-#ifdef PEER_NON_UNIFIED
+#ifndef USE_PEER_NON_UNIFIED
+#define USE_PEER_NON_UNIFIED 1
+#endif
+
+#if USE_PEER_NON_UNIFIED==1
 /**
  * @brief Copies memory from one device to memory on another device.
  *

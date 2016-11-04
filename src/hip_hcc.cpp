@@ -73,6 +73,8 @@ int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU ident
 int HIP_NUM_KERNELS_INFLIGHT = 128;
 int HIP_WAIT_MODE = 0;
 
+int HIP_FORCE_P2P_HOST = 0;
+
 
 
 
@@ -540,7 +542,7 @@ void ihipCtxCriticalBase_t<CtxMutex>::recomputePeerAgents()
 
 
 template<>
-bool ihipCtxCriticalBase_t<CtxMutex>::isPeer(const ihipCtx_t *peer)
+bool ihipCtxCriticalBase_t<CtxMutex>::isPeerWatcher(const ihipCtx_t *peer)
 {
     auto match = std::find(_peers.begin(), _peers.end(), peer);
     return (match != std::end(_peers));
@@ -548,12 +550,14 @@ bool ihipCtxCriticalBase_t<CtxMutex>::isPeer(const ihipCtx_t *peer)
 
 
 template<>
-bool ihipCtxCriticalBase_t<CtxMutex>::addPeer(ihipCtx_t *peer)
+bool ihipCtxCriticalBase_t<CtxMutex>::addPeerWatcher(const ihipCtx_t *thisCtx, ihipCtx_t *peerWatcher)
 {
-    auto match = std::find(_peers.begin(), _peers.end(), peer);
+    auto match = std::find(_peers.begin(), _peers.end(), peerWatcher);
     if (match == std::end(_peers)) {
         // Not already a peer, let's update the list:
-        _peers.push_back(peer);
+        tprintf(DB_COPY, "addPeerWatcher.  Allocations on %s now visible to peerWatcher %s.\n", 
+                          thisCtx->toString().c_str(), peerWatcher->toString().c_str());
+        _peers.push_back(peerWatcher);
         recomputePeerAgents();
         return true;
     }
@@ -564,12 +568,14 @@ bool ihipCtxCriticalBase_t<CtxMutex>::addPeer(ihipCtx_t *peer)
 
 
 template<>
-bool ihipCtxCriticalBase_t<CtxMutex>::removePeer(ihipCtx_t *peer)
+bool ihipCtxCriticalBase_t<CtxMutex>::removePeerWatcher(const ihipCtx_t *thisCtx, ihipCtx_t *peerWatcher)
 {
-    auto match = std::find(_peers.begin(), _peers.end(), peer);
+    auto match = std::find(_peers.begin(), _peers.end(), peerWatcher);
     if (match != std::end(_peers)) {
         // Found a valid peer, let's remove it.
-        _peers.remove(peer);
+        tprintf(DB_COPY, "removePeerWatcher.  Allocations on %s no longer visible to former peerWatcher %s.\n", 
+                          thisCtx->toString().c_str(), peerWatcher->toString().c_str());
+        _peers.remove(peerWatcher);
         recomputePeerAgents();
         return true;
     } else {
@@ -579,16 +585,17 @@ bool ihipCtxCriticalBase_t<CtxMutex>::removePeer(ihipCtx_t *peer)
 
 
 template<>
-void ihipCtxCriticalBase_t<CtxMutex>::resetPeers(ihipCtx_t *thisDevice)
+void ihipCtxCriticalBase_t<CtxMutex>::resetPeerWatchers(ihipCtx_t *thisCtx)
 {
+    tprintf(DB_COPY, "resetPeerWatchers for context=%s\n", thisCtx->toString().c_str());
     _peers.clear();
     _peerCnt = 0;
-    addPeer(thisDevice); // peer-list always contains self agent.
+    addPeerWatcher(thisCtx, thisCtx); // peer-list always contains self agent.
 }
 
 
 template<>
-void ihipCtxCriticalBase_t<CtxMutex>::printPeers(FILE *f) const
+void ihipCtxCriticalBase_t<CtxMutex>::printPeerWatchers(FILE *f) const
 {
     for (auto iter = _peers.begin(); iter!=_peers.end(); iter++) {
         fprintf (f, "%s ", (*iter)->toString().c_str());
@@ -993,7 +1000,7 @@ void ihipCtx_t::locked_reset()
 
 
     // Reset peer list to just me:
-    crit->resetPeers(this);
+    crit->resetPeerWatchers(this);
 
     // Reset and release all memory stored in the tracker:
     // Reset will remove peer mapping so don't need to do this explicitly.
@@ -1360,7 +1367,7 @@ void ihipInit()
 
 
     READ_ENV_I(release, HIP_WAIT_MODE, 0, "Force synchronization mode. 1= force yield, 2=force spin, 0=defaults specified in application");
-
+    READ_ENV_I(release, HIP_FORCE_P2P_HOST, 0, "Force use of host/staging copy for peer-to-peer copiecopies"); 
     READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Max number of inflight kernels per stream before active synchronization is forced.");
 
     // Some flags have both compile-time and runtime flags - generate a warning if user enables the runtime flag but the compile-time flag is disabled.
@@ -1726,14 +1733,14 @@ void ihipSetTs(hipEvent_t e)
 // So we check dstCtx's and srcCtx's peerList to see if the both include thisCtx.
 bool ihipStream_t::canSeePeerMemory(const ihipCtx_t *thisCtx, ihipCtx_t *dstCtx, ihipCtx_t *srcCtx)
 {
-    tprintf (DB_COPY1, "Checking if direct copy can be used.  thisCtx:%s;  dstCtx:%s ;  srcCtx:%s\n",
+    tprintf (DB_COPY, "Checking if direct copy can be used.  thisCtx:%s;  dstCtx:%s ;  srcCtx:%s\n",
             thisCtx->toString().c_str(), dstCtx->toString().c_str(), srcCtx->toString().c_str());
 
     // Use blocks to control scope of critical sections.
     {
         LockedAccessor_CtxCrit_t  ctxCrit(dstCtx->criticalData());
         tprintf(DB_SYNC, "dstCrit lock succeeded\n");
-        if (!ctxCrit->isPeer(thisCtx)) {
+        if (!ctxCrit->isPeerWatcher(thisCtx)) {
             return false;
         };
     }
@@ -1741,7 +1748,7 @@ bool ihipStream_t::canSeePeerMemory(const ihipCtx_t *thisCtx, ihipCtx_t *dstCtx,
     {
         LockedAccessor_CtxCrit_t  ctxCrit(srcCtx->criticalData());
         tprintf(DB_SYNC, "srcCrit lock succeeded\n");
-        if (!ctxCrit->isPeer(thisCtx)) {
+        if (!ctxCrit->isPeerWatcher(thisCtx)) {
             return false;
         };
     }
@@ -1832,13 +1839,13 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     if (hcCopyDir == hc::hcMemcpyDeviceToDevice) {
         if (!canSeePeerMemory(ctx, ihipGetPrimaryCtx(dstPtrInfo._appId), ihipGetPrimaryCtx(srcPtrInfo._appId))) {
             forceHostCopyEngine = true;
-            tprintf (DB_COPY1, "Forcing use of host copy engine.\n");
+            tprintf (DB_COPY, "Forcing use of host copy engine.\n");
         } else {
-            tprintf (DB_COPY1, "Will use SDMA engine on streamDevice=%s.\n", ctx->toString().c_str());
+            tprintf (DB_COPY, "Will use SDMA engine on streamDevice=%s.\n", ctx->toString().c_str());
         }
     };
 
-    tprintf (DB_COPY1, "locked_copy dir=%s dst=%p src=%p sz=%zu\n", memcpyStr(kind), src, dst, sizeBytes);
+    tprintf (DB_COPY, "locked_copy dir=%s dst=%p src=%p sz=%zu\n", memcpyStr(kind), src, dst, sizeBytes);
 
     {
         LockedAccessor_StreamCrit_t crit (_criticalData);
@@ -1859,12 +1866,12 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
     const ihipCtx_t *ctx = this->getCtx();
 
     if ((ctx == nullptr) || (ctx->getDevice() == nullptr)) {
-        tprintf (DB_COPY1, "locked_copyAsync bad ctx or device\n");
+        tprintf (DB_COPY, "locked_copyAsync bad ctx or device\n");
         throw ihipException(hipErrorInvalidDevice);
     }
 
     if (kind == hipMemcpyHostToHost) {
-        tprintf (DB_COPY1, "locked_copyAsync: H2H with memcpy");
+        tprintf (DB_COPY, "locked_copyAsync: H2H with memcpy");
 
         // TODO - consider if we want to perhaps use the GPU SDMA engines anyway, to avoid the host-side sync here and keep everything flowing on the GPU.
         /* As this is a CPU op, we need to wait until all
@@ -1890,7 +1897,7 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
             copyEngineCanSeeSrcAndDest = canSeePeerMemory(ctx, ihipGetPrimaryCtx(dstPtrInfo._appId), ihipGetPrimaryCtx(srcPtrInfo._appId));
         }
 
-        tprintf (DB_COPY1, "locked_copyAsync:  async memcpy dstTracked=%d srcTracked=%d copyEngineCanSeeSrcAndDest=%d\n",
+        tprintf (DB_COPY, "locked_copyAsync:  async memcpy dstTracked=%d srcTracked=%d copyEngineCanSeeSrcAndDest=%d\n",
                 dstTracked, srcTracked, copyEngineCanSeeSrcAndDest);
 
 
@@ -1915,6 +1922,7 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
         } else {
             // TODO - call copy_ext directly here?
             locked_copySync(dst, src, sizeBytes, kind);
+            //crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceHostCopyEngine);
         }
     }
 }

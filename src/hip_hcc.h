@@ -43,6 +43,7 @@ THE SOFTWARE.
 //static const int debug = 0;
 extern const int release;
 
+// TODO - this blocks both kernels and memory ops.  Perhaps should have separate env var for kernels?
 extern int HIP_LAUNCH_BLOCKING;
 
 extern int HIP_PRINT_ENV;
@@ -225,9 +226,8 @@ extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
 #define DB_API    0 /* 0x01 - shortcut to enable HIP_TRACE_API on single switch */
 #define DB_SYNC   1 /* 0x02 - trace synchronization pieces */
 #define DB_MEM    2 /* 0x04 - trace memory allocation / deallocation */
-#define DB_COPY1  3 /* 0x08 - trace memory copy commands. . */
+#define DB_COPY   3 /* 0x08 - trace memory copy and peer commands. . */
 #define DB_SIGNAL 4 /* 0x10 - trace signal pool commands */
-#define DB_COPY2  5 /* 0x20 - trace memory copy commands. Detailed. */
 #define DB_MAX_FLAG 5
 // When adding a new debug flag, also add to the char name table below.
 //
@@ -242,9 +242,8 @@ static const DbName dbName [] =
     {KGRN, "api"}, // not used,
     {KYEL, "sync"},
     {KCYN, "mem"},
-    {KMAG, "copy1"},
+    {KMAG, "copy"},
     {KRED, "signal"},
-    {KNRM, "copy2"},
 };
 
  
@@ -596,11 +595,11 @@ public:
 
 
     // Peer Accessor classes:
-    bool isPeer(const ihipCtx_t *peer); // returns True if peer has access to memory physically located on this device.
-    bool addPeer(ihipCtx_t *peer);
-    bool removePeer(ihipCtx_t *peer);
-    void resetPeers(ihipCtx_t *thisDevice);
-    void printPeers(FILE *f) const;
+    bool isPeerWatcher(const ihipCtx_t *peer); // returns True if peer has access to memory physically located on this device.
+    bool addPeerWatcher(const ihipCtx_t *thisCtx, ihipCtx_t *peer);
+    bool removePeerWatcher(const ihipCtx_t *thisCtx, ihipCtx_t *peer);
+    void resetPeerWatchers(ihipCtx_t *thisDevice);
+    void printPeerWatchers(FILE *f) const;
 
     uint32_t peerCnt() const { return _peerCnt; };
     hsa_agent_t *peerAgents() const { return _peerAgents; };
@@ -750,7 +749,7 @@ inline std::ostream& operator<<(std::ostream& os, const hipEvent_t& e)
 inline std::ostream& operator<<(std::ostream& os, const ihipCtx_t* c)
 {
     os << "ctx:" << static_cast<const void*> (c) 
-       << " dev:" << c->getDevice()->_deviceId;
+       << ".dev:" << c->getDevice()->_deviceId;
     return os;
 }
 
