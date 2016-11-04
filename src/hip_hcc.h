@@ -657,6 +657,7 @@ public: // Functions:
     ihipCtxCritical_t  &criticalData() { return _criticalData; }; // TODO, move private.  Fix P2P.
 
     const ihipDevice_t *getDevice() const { return _device; };
+    int                 getDeviceNum() const { return _device->_deviceId; };
 
     // TODO - review uses of getWriteableDevice(), can these be converted to getDevice()
     ihipDevice_t *getWriteableDevice() const { return _device; };
