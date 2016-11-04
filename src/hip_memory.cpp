@@ -123,22 +123,25 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
             hip_status = hipErrorMemoryAllocation;
         } else {
             hc::am_memtracker_update(*ptr, device->_deviceId, 0);
+            int peerCnt=0;
             {
                 LockedAccessor_CtxCrit_t crit(ctx->criticalData());
                 // the peerCnt always stores self so make sure the trace actually 
-                if (crit->peerCnt() > 1) {
+                peerCnt = crit->peerCnt();
+                if (peerCnt > 1) {
                     hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
                 }
             }
+            tprintf(DB_MEM, " allocated %p (size=%zu) on dev:%d and allowed %d other peer(s) access\n", *ptr, sizeBytes, device->_deviceId, peerCnt-1);
         }
     } else {
         hip_status = hipErrorMemoryAllocation;
     }
 
-    //printf ("  hipMalloc allocated %p\n", *ptr);
 
     return ihipLogStatus(hip_status);
 }
+
 
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
@@ -153,26 +156,28 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
         auto device = ctx->getWriteableDevice();
         if((flags == hipHostMallocDefault)|| (flags == hipHostMallocPortable)){
             *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
-            if(sizeBytes < 1 && (*ptr == NULL)){
+            if (sizeBytes < 1 && (*ptr == NULL)) {
                 hip_status = hipErrorMemoryAllocation;
             } else {
                 hc::am_memtracker_update(*ptr, device->_deviceId, amHostPinned);
             }
-            tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
-        } else if(flags & hipHostMallocMapped){
+            tprintf(DB_MEM, "allocated pinned host ptr=%p on dev=%d\n", *ptr, device->_deviceId);
+        } else if(flags & hipHostMallocMapped) {
             *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
-            if(sizeBytes && (*ptr == NULL)){
+            if (sizeBytes && (*ptr == NULL)) {
                 hip_status = hipErrorMemoryAllocation;
-            }else{
+            } else {
                 hc::am_memtracker_update(*ptr, device->_deviceId, flags);
+                int peerCnt=0;
                 {
                     LockedAccessor_CtxCrit_t crit(ctx->criticalData());
-                    if (crit->peerCnt()) {
+                    peerCnt = crit->peerCnt();
+                    if (peerCnt) {
                         hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
                     }
                 }
+                tprintf(DB_MEM, "allocated pinned host ptr=%p on dev=%d, allow access to %d peer(s)\n", *ptr, device->_deviceId, peerCnt);
             }
-            tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
         }
     }
     return ihipLogStatus(hip_status);
@@ -355,6 +360,8 @@ hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
                     vecAcc.push_back(ihipGetDevice(i)->_acc);
                 }
                 am_status = hc::am_memory_host_lock(device->_acc, hostPtr, sizeBytes, &vecAcc[0], vecAcc.size());
+
+                tprintf(DB_MEM, " %s registered ptr=%p\n", __func__, hostPtr);
                 if(am_status == AM_SUCCESS){
                     hip_status = hipSuccess;
                 } else {
@@ -378,6 +385,7 @@ hipError_t hipHostUnregister(void *hostPtr)
     }else{
         auto device = ctx->getWriteableDevice();
         am_status_t am_status = hc::am_memory_host_unlock(device->_acc, hostPtr);
+        tprintf(DB_MEM, " %s unregistered ptr=%p\n", __func__, hostPtr);
         if(am_status != AM_SUCCESS){
             hip_status = hipErrorHostMemoryNotRegistered;
         }
@@ -399,6 +407,7 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t cou
     hc::accelerator acc = ctx->getDevice()->_acc;
 
     void *ptr = acc.get_symbol_address(symbolName);
+    tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, ptr);
 
     if(ptr == nullptr)
     {
@@ -428,6 +437,7 @@ hipError_t hipMemcpyToSymbolAsync(const char* symbolName, const void *src, size_
     hc::accelerator acc = ctx->getDevice()->_acc;
 
     void *ptr = acc.get_symbol_address(symbolName);
+    tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, ptr);
 
     if(ptr == nullptr)
     {
