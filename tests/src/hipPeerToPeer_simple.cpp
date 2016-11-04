@@ -50,6 +50,16 @@ void help(char *argv[])
 };
 
 
+static hipError_t myHipMemcpy(void *dest, const void *src, size_t sizeBytes, hipMemcpyKind kind,  hipStream_t stream, bool async) 
+{
+    if (async) {
+		return hipMemcpyAsync(dest, src, sizeBytes, kind, stream);
+    } else {
+		return hipMemcpy(dest, src, sizeBytes, kind);
+    };
+}
+
+
 void parseMyArguments(int argc, char *argv[])
 {
     int more_argc = HipTest::parseStandardArguments(argc, argv, false);
@@ -104,9 +114,9 @@ void setupPeerTests()
 
 //---
 // Test which enables peer2peer first, then allocates the memory.
-void enablePeerFirst()
+void enablePeerFirst(bool useAsyncCopy)
 {
-    printf ("\n==testing: %s\n", __func__);
+    printf ("\n==testing: %s useAsyncCopy=%d\n", __func__, useAsyncCopy);
 
     setupPeerTests();
 
@@ -147,11 +157,11 @@ void enablePeerFirst()
     // NOTE : if p_mirrorPeers=0 and p_memcpyWithPeer=1, then peer device does not have mapping for A_d1 and we need to use a 
     //        a host staging copy for the P2P access.
     HIPCHECK (hipSetDevice(p_memcpyWithPeer ? g_peerDevice : g_currentDevice));
-    HIPCHECK (hipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyDefault)); // This is P2P copy.
+    HIPCHECK (myHipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyDefault, 0/*stream*/, useAsyncCopy)); // This is P2P copy.
 
     // Copy data back to host:
     HIPCHECK (hipSetDevice(g_peerDevice));
-    HIPCHECK (hipMemcpy(A_h, A_d1, Nbytes, hipMemcpyDeviceToHost));
+    HIPCHECK (myHipMemcpy(A_h, A_d1, Nbytes, hipMemcpyDeviceToHost, 0/*stream*/, useAsyncCopy));
 
     // Check host data:
     for (int i=0; i<N; i++) {
@@ -160,16 +170,16 @@ void enablePeerFirst()
         }
     }
 
-    printf ("==done: %s\n\n", __func__);
+    printf ("==done: %s useAsyncCopy:%d\n\n", __func__, useAsyncCopy);
 }
 
 
 //---
 // Test which allocated memory first, then enables peer2peer.
 // Enabling peer needs to scan all allocated memory and enable peer access.
-void allocMemoryFirst()
+void allocMemoryFirst(bool useAsyncCopy)
 {
-    printf ("\n==testing: %s\n", __func__);
+    printf ("\n==testing: %s useAsyncCopy=%d\n", __func__, useAsyncCopy);
 
     setupPeerTests();
 
@@ -211,11 +221,11 @@ void allocMemoryFirst()
     // Copies to test functionality:
     // Device0 push to device1, using P2P:
     HIPCHECK (hipSetDevice(p_memcpyWithPeer ? g_peerDevice : g_currentDevice));
-    HIPCHECK (hipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyDefault));
+    HIPCHECK (myHipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyDefault, 0/*stream*/, useAsyncCopy));
 
     // Copy data back to host:
     HIPCHECK (hipSetDevice(g_peerDevice));
-    HIPCHECK (hipMemcpy(A_h, A_d1, Nbytes, hipMemcpyDeviceToHost));
+    HIPCHECK (myHipMemcpy(A_h, A_d1, Nbytes, hipMemcpyDeviceToHost, 0/*stream*/, useAsyncCopy));
 
 
     //---
@@ -225,8 +235,86 @@ void allocMemoryFirst()
             failed("mismatch at index:%d computed:0x%02x, golden memsetval:0x%02x\n", i, (int)A_h[i], (int)memsetval);
         }
     }
-    printf ("==done: %s\n\n", __func__);
+    printf ("==done: %s useAsyncCopy=%d\n\n", __func__, useAsyncCopy);
 }
+
+
+//---
+// Test which tests peer H2D copy - ie: copy-engine=1, dst=1, src=0 (Host)
+// A_d0 is pinned host on dev0 (this)
+// A_d1 is device memory on dev1 (peer)
+// 
+void testPeerHostToDevice(bool useAsyncCopy)
+{
+    printf ("\n==testing: %s useAsyncCopy=%d\n", __func__, useAsyncCopy);
+
+    setupPeerTests();
+
+    // Always enable g_currentDevice to see the allocations on peerDevice.
+    HIPCHECK(hipSetDevice(g_currentDevice));
+    HIPCHECK(hipDeviceEnablePeerAccess(g_peerDevice, 0));
+
+    if (p_mirrorPeers) {
+        // Mirror peers allows the peer device to see the allocations on currentDevice.
+        int canAccessPeer;
+        HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, g_peerDevice, g_currentDevice));
+        assert(canAccessPeer);
+
+        HIPCHECK(hipSetDevice(g_peerDevice));
+        HIPCHECK(hipDeviceEnablePeerAccess(g_currentDevice, 0));
+    }
+
+    size_t Nbytes = N*sizeof(char);
+
+    char *A_d0, *A_d1;
+    char *A_h;
+
+    A_h = (char*)malloc(Nbytes);
+
+    // allocate and initialize memory on device0
+    HIPCHECK (hipSetDevice(g_currentDevice));
+    HIPCHECK (hipHostMalloc(&A_d0, Nbytes) );
+    HIPCHECK (hipMemset(A_d0, memsetval, Nbytes) ); 
+
+    // allocate and initialize memory on peer device
+    HIPCHECK (hipSetDevice(g_peerDevice));
+    HIPCHECK (hipMalloc(&A_d1, Nbytes) );
+    HIPCHECK (hipMemset(A_d1, 0x13, Nbytes) ); 
+
+
+
+    // Device0 push to device1, using P2P:
+    // NOTE : if p_mirrorPeers=0 and p_memcpyWithPeer=1, then peer device does not have mapping for A_d1 and we need to use a 
+    //        a host staging copy for the P2P access.
+    if (p_memcpyWithPeer) {
+        // p_memcpyWithPeer=1 case is HostToDevice.
+        // if p_mirrorPeers = 1, this is accelerated copy over PCIe.  
+        // if p_mirrorPeers = 0, this should fall back to host (because peer can't see A_d0)
+        HIPCHECK (hipSetDevice(g_peerDevice));
+        HIPCHECK (myHipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyHostToDevice, 0/*stream*/, useAsyncCopy)); // This is P2P copy.
+    } else {
+        // p_memcpyWithPeer=0 case is HostToDevice.
+        // if p_mirrorPeers = 1, this is accelerated copy over PCIe.  
+        // if p_mirrorPeers = 0, this should fall back to host (because device0 can't see A_d1)
+        HIPCHECK (hipSetDevice(g_currentDevice));
+        HIPCHECK (myHipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyHostToDevice, 0/*stream*/, useAsyncCopy)); // This is P2P copy.
+    }
+
+    // Copy data back to host:
+    HIPCHECK (hipSetDevice(g_peerDevice));
+    HIPCHECK (myHipMemcpy(A_h, A_d1, Nbytes, hipMemcpyDeviceToHost, 0/*stream*/, useAsyncCopy));
+
+    // Check host data:
+    for (int i=0; i<N; i++) {
+        if (A_h[i] != memsetval) {
+            failed("mismatch at index:%d computed:0x%02x, golden memsetval:0x%02x\n", i, (int)A_h[i], (int)memsetval);
+        }
+    }
+
+    printf ("==done: %s useAsyncCopy:%d\n\n", __func__, useAsyncCopy);
+}
+
+
 
 void simpleNegative()
 {
@@ -269,16 +357,27 @@ int main(int argc, char *argv[])
 {
     parseMyArguments(argc, argv);
 
+
+    testPeerHostToDevice(false/*useAsyncCopy*/);
+    testPeerHostToDevice(true/*useAsyncCopy*/);
+
     if (p_tests & 0x1) {
-        enablePeerFirst();
+        enablePeerFirst(false/*useAsyncCopy*/);
     }
 
     if (p_tests & 0x2) {
-        allocMemoryFirst();
+        allocMemoryFirst(false/*useAsyncCopy*/);
     }
 
     if (p_tests & 0x4) {
         simpleNegative();
+    }
+
+    if (p_tests & 0x8) {
+        enablePeerFirst(true/*useAsyncCopy*/);
+    }
+    if (p_tests & 0x10) {
+        allocMemoryFirst(true/*useAsyncCopy*/);
     }
 
     passed();
