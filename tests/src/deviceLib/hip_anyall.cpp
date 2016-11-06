@@ -45,11 +45,15 @@ int main(int argc, char *argv[])
 { int warpSize, pshift;
   hipDeviceProp_t devProp;
   hipGetDeviceProperties(&devProp, 0);
-  if(strncmp(devProp.name,"Fiji",1)==0)
-{ warpSize =64;
-  pshift =6;
-}
-  else {warpSize =32; pshift=5;}
+  warpSize = devProp.warpSize;
+
+  int w = warpSize;
+  pshift = 0; 
+  while (w >>= 1) ++pshift;
+
+  printf ("warpSize=%d pshift=%d\n", warpSize, pshift);
+
+
   int anycount =0;
   int allcount =0;
   int Num_Threads_per_Block      = 1024;
