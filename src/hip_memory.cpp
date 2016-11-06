@@ -119,6 +119,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
         const unsigned am_flags = 0;
         *ptr = hc::am_alloc(sizeBytes, device->_acc, am_flags);
 
+
         if (sizeBytes && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
         } else {
@@ -128,11 +129,23 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
                 LockedAccessor_CtxCrit_t crit(ctx->criticalData());
                 // the peerCnt always stores self so make sure the trace actually
                 peerCnt = crit->peerCnt();
-                if (peerCnt > 1) {
-                    hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
+                tprintf(DB_MEM, " allocated device_mem ptr:%p size:%zu on dev:%d and allowed %d other peer(s) access\n", 
+                        *ptr, sizeBytes, device->_deviceId, peerCnt-1);
+                if (peerCnt > 1) { 
+                    
+                    //printf ("peer self access\n");
+                     
+                    // TODOD - remove me:
+                    for (auto iter = crit->_peers.begin(); iter!=crit->_peers.end(); iter++) {
+                        tprintf (DB_MEM, "   allow access to peer: %s%s\n", (*iter)->toString().c_str(), (iter == crit->_peers.begin()) ? " (self)":"");
+                    };
+
+                    hsa_status_t e = hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
+                    if (e != HSA_STATUS_SUCCESS) {
+                        hip_status = hipErrorMemoryAllocation;
+                    }
                 }
             }
-            tprintf(DB_MEM, " allocated %p (size=%zu) on dev:%d and allowed %d other peer(s) access\n", *ptr, sizeBytes, device->_deviceId, peerCnt-1);
         }
     } else {
         hip_status = hipErrorMemoryAllocation;
@@ -153,9 +166,14 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 
     if(ctx){
         // am_alloc requires writeable __acc, perhaps could be refactored?
+        // TODO-P1 - Review and test this logic.  Seems : 
+        //    hipHostMallocPortable should map the host memory into all contexts, regardless of peer status.  
+        //    peer mappings should always be honored.
+        //    hipHostMallocMapped should be ignored on ROCM - all memory is mapped to host.
         auto device = ctx->getWriteableDevice();
         // If HIP_COHERENT_HOST_ALLOC is defined, we always alloc coherent host system memroy
 #if HIP_COHERENT_HOST_ALLOC
+        // TODOD - let's make this an environment variable
         *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
         if(sizeBytes < 1 && (*ptr == NULL)){
             hip_status = hipErrorMemoryAllocation;
@@ -164,14 +182,14 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
         }
         tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
 #else
-        if((flags == hipHostMallocDefault)|| (flags == hipHostMallocPortable)){
+        if ((flags == hipHostMallocDefault) || (flags == hipHostMallocPortable)) {
             *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
             if (sizeBytes < 1 && (*ptr == NULL)) {
                 hip_status = hipErrorMemoryAllocation;
             } else {
                 hc::am_memtracker_update(*ptr, device->_deviceId, amHostPinned);
             }
-            tprintf(DB_MEM, "allocated pinned host ptr=%p on dev=%d\n", *ptr, device->_deviceId);
+            tprintf(DB_MEM, "allocated pinned_host ptr:%p size:%zu on dev:%d\n", *ptr, sizeBytes, device->_deviceId);
         } else if(flags & hipHostMallocMapped) {
             *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
             if (sizeBytes && (*ptr == NULL)) {
@@ -186,7 +204,7 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
                         hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
                     }
                 }
-                tprintf(DB_MEM, "allocated pinned host ptr=%p on dev=%d, allow access to %d peer(s)\n", *ptr, device->_deviceId, peerCnt);
+                tprintf(DB_MEM, "allocated pinned_host ptr:%p size:%zu on dev:%d, allow access to %d peer(s)\n", *ptr, sizeBytes, device->_deviceId, peerCnt);
             }
         }
 #endif //HIP_COHERENT_HOST_ALLOC

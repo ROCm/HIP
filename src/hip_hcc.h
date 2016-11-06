@@ -613,6 +613,8 @@ public:
     hsa_agent_t *peerAgents() const { return _peerAgents; };
 
 
+    // TODO - move private
+    std::list<ihipCtx_t*>     _peers;     // list of enabled peer devices.
 
     friend class LockedAccessor<ihipCtxCriticalBase_t>;
 private:
@@ -624,7 +626,6 @@ private:
     // These reflect the currently Enabled set of peers for this GPU:
     // Enabled peers have permissions to access the memory physically allocated on this device.
     // Note the peers always contain the self agent for easy interfacing with HSA APIs.
-    std::list<ihipCtx_t*>     _peers;     // list of enabled peer devices.
     uint32_t                  _peerCnt;     // number of enabled peers
     hsa_agent_t              *_peerAgents;  // efficient packed array of enabled agents (to use for allocations.)
 private:
