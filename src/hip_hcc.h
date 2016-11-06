@@ -493,7 +493,7 @@ private:
     void resolveHcMemcpyDirection(unsigned hipMemKind, const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo, 
                                   hc::hcCommandKind *hcCopyDir, bool *forceHostCopyEngine);
 
-    bool canSeePeerMemory(const ihipCtx_t *thisCtx, ihipCtx_t *dstCtx, ihipCtx_t *srcCtx);
+    bool canSeePeerMemory(const ihipCtx_t *thisCtx, const hc::AmPointerInfo *dstInfo, const hc::AmPointerInfo *srcInfo);
 
 
 private: // Data

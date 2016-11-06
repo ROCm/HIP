@@ -53,7 +53,9 @@ void help(char *argv[])
 static hipError_t myHipMemcpy(void *dest, const void *src, size_t sizeBytes, hipMemcpyKind kind,  hipStream_t stream, bool async) 
 {
     if (async) {
-		return hipMemcpyAsync(dest, src, sizeBytes, kind, stream);
+		hipError_t e = hipMemcpyAsync(dest, src, sizeBytes, kind, stream);
+        //HIPCHECK(hipStreamSynchronize(stream));
+        return (e);
     } else {
 		return hipMemcpy(dest, src, sizeBytes, kind);
     };
@@ -83,6 +85,19 @@ void parseMyArguments(int argc, char *argv[])
         }
     };
 };
+
+void syncBothDevices()
+{
+    int saveDevice;
+    HIPCHECK(hipGetDevice(&saveDevice));
+    HIPCHECK(hipSetDevice(g_currentDevice));
+    HIPCHECK(hipDeviceSynchronize());
+
+    HIPCHECK(hipSetDevice(g_peerDevice));
+    HIPCHECK(hipDeviceSynchronize());
+
+    HIPCHECK(hipSetDevice(saveDevice));
+}
 
 
 // Sets globals g_currentDevice, g_peerDevice
@@ -162,6 +177,9 @@ void enablePeerFirst(bool useAsyncCopy)
     // Copy data back to host:
     HIPCHECK (hipSetDevice(g_peerDevice));
     HIPCHECK (myHipMemcpy(A_h, A_d1, Nbytes, hipMemcpyDeviceToHost, 0/*stream*/, useAsyncCopy));
+    HIPCHECK(hipDeviceSynchronize());
+
+    HIPCHECK (hipSetDevice(g_currentDevice));
 
     // Check host data:
     for (int i=0; i<N; i++) {
@@ -226,6 +244,9 @@ void allocMemoryFirst(bool useAsyncCopy)
     // Copy data back to host:
     HIPCHECK (hipSetDevice(g_peerDevice));
     HIPCHECK (myHipMemcpy(A_h, A_d1, Nbytes, hipMemcpyDeviceToHost, 0/*stream*/, useAsyncCopy));
+    HIPCHECK(hipDeviceSynchronize());
+
+    HIPCHECK (hipSetDevice(g_currentDevice));
 
 
     //---
@@ -281,6 +302,10 @@ void testPeerHostToDevice(bool useAsyncCopy)
     HIPCHECK (hipMalloc(&A_d1, Nbytes) );
     HIPCHECK (hipMemset(A_d1, 0x13, Nbytes) ); 
 
+    bool firstAsyncCopy = useAsyncCopy; /*TODO - should be useAsyncCopy*/
+
+    syncBothDevices();
+
 
 
     // Device0 push to device1, using P2P:
@@ -291,18 +316,24 @@ void testPeerHostToDevice(bool useAsyncCopy)
         // if p_mirrorPeers = 1, this is accelerated copy over PCIe.  
         // if p_mirrorPeers = 0, this should fall back to host (because peer can't see A_d0)
         HIPCHECK (hipSetDevice(g_peerDevice));
-        HIPCHECK (myHipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyHostToDevice, 0/*stream*/, useAsyncCopy)); // This is P2P copy.
+        HIPCHECK (myHipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyHostToDevice, 0/*stream*/, firstAsyncCopy)); // This is P2P copy.
     } else {
         // p_memcpyWithPeer=0 case is HostToDevice.
         // if p_mirrorPeers = 1, this is accelerated copy over PCIe.  
         // if p_mirrorPeers = 0, this should fall back to host (because device0 can't see A_d1)
         HIPCHECK (hipSetDevice(g_currentDevice));
-        HIPCHECK (myHipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyHostToDevice, 0/*stream*/, useAsyncCopy)); // This is P2P copy.
+        HIPCHECK (myHipMemcpy(A_d1, A_d0, Nbytes, hipMemcpyHostToDevice, 0/*stream*/, firstAsyncCopy)); // This is P2P copy.
     }
+
+    syncBothDevices();
 
     // Copy data back to host:
     HIPCHECK (hipSetDevice(g_peerDevice));
     HIPCHECK (myHipMemcpy(A_h, A_d1, Nbytes, hipMemcpyDeviceToHost, 0/*stream*/, useAsyncCopy));
+    HIPCHECK(hipDeviceSynchronize());
+
+    HIPCHECK (hipSetDevice(g_currentDevice));
+    HIPCHECK(hipDeviceSynchronize());
 
     // Check host data:
     for (int i=0; i<N; i++) {
@@ -358,7 +389,9 @@ int main(int argc, char *argv[])
     parseMyArguments(argc, argv);
 
 
-    testPeerHostToDevice(false/*useAsyncCopy*/);
+    if (p_tests & 0x100) {
+        testPeerHostToDevice(false/*useAsyncCopy*/);
+    }
     testPeerHostToDevice(true/*useAsyncCopy*/);
 
     if (p_tests & 0x1) {
