@@ -77,6 +77,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
   <div id="navrow4" class="tabs3">
     <ul class="tablist">
+      <li><a href="#index__"><span>_</span></a></li>
       <li class="current"><a href="#index_h"><span>h</span></a></li>
     </ul>
   </div>
@@ -86,7 +87,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Groups</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Friends</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Groups</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(11)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -98,9 +99,79 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="contents">
 &#160;
 
+<h3><a class="anchor" id="index__"></a>- _ -</h3><ul>
+<li>__threadfence()
+: <a class="el" href="group__Fence.html#ga8ed093b29d5c05d46a1240e7a35a6d13">hip_runtime.h</a>
+</li>
+<li>__threadfence_block()
+: <a class="el" href="group__Fence.html#ga675c8823d497b2fd91abc42085e5ae25">hip_runtime.h</a>
+</li>
+<li>__threadfence_system()
+: <a class="el" href="group__Fence.html#ga90cf73529a5fdfd88526430fc40e2f3d">hip_runtime.h</a>
+</li>
+</ul>
+
+
 <h3><a class="anchor" id="index_h"></a>- h -</h3><ul>
+<li>hipChooseDevice()
+: <a class="el" href="group__Device.html#gaa751b3042e5e92f95e2f5de9d4685189">hip_runtime_api.h</a>
+</li>
+<li>hipCreateChannelDesc()
+: <a class="el" href="group__Texture.html#gac9b0ae733fa849842342fab6d42c7b6f">hip_texture.h</a>
+</li>
+<li>hipCtxCreate()
+: <a class="el" href="group__Context.html#gab6dbcff5c5b1249a5ac5cf39ae9d08bc">hip_runtime_api.h</a>
+</li>
+<li>hipCtxDestroy()
+: <a class="el" href="group__Context.html#ga9a65fe43238ef303a6d97826c05fd14e">hip_runtime_api.h</a>
+</li>
+<li>hipCtxDisablePeerAccess()
+: <a class="el" href="group__Context.html#gaf48e4e9c3b6bbad5deaeff10d2e28b31">hip_runtime_api.h</a>
+</li>
+<li>hipCtxEnablePeerAccess()
+: <a class="el" href="group__Context.html#ga834dfd99d72082fe8770142fa30b30e2">hip_runtime_api.h</a>
+</li>
+<li>hipCtxGetApiVersion()
+: <a class="el" href="group__Context.html#gabe5941e6798c71a8351b7d51311e7e8f">hip_runtime_api.h</a>
+</li>
+<li>hipCtxGetCacheConfig()
+: <a class="el" href="group__Context.html#ga387c7bcc82f17261a2c955fc31ecbaba">hip_runtime_api.h</a>
+</li>
+<li>hipCtxGetCurrent()
+: <a class="el" href="group__Context.html#ga741786101d348fdbfa1f64546860357a">hip_runtime_api.h</a>
+</li>
+<li>hipCtxGetDevice()
+: <a class="el" href="group__Context.html#ga8aa32cf64272da929f23ecbafefefcee">hip_runtime_api.h</a>
+</li>
+<li>hipCtxGetFlags()
+: <a class="el" href="group__Context.html#ga12a7a993e10f775fbf61a0b14288ed1b">hip_runtime_api.h</a>
+</li>
+<li>hipCtxGetSharedMemConfig()
+: <a class="el" href="group__Context.html#ga3c78b22dd03435a7ca88621a45409565">hip_runtime_api.h</a>
+</li>
+<li>hipCtxPopCurrent()
+: <a class="el" href="group__Context.html#ga2cc4ea5a6b78d9d7990a88a7863467d4">hip_runtime_api.h</a>
+</li>
+<li>hipCtxPushCurrent()
+: <a class="el" href="group__Context.html#ga9c9d92f29d68cacdea4c062c97e50a8a">hip_runtime_api.h</a>
+</li>
+<li>hipCtxSetCacheConfig()
+: <a class="el" href="group__Context.html#ga9399ad61b387aff6cfa77292d3c82d4d">hip_runtime_api.h</a>
+</li>
+<li>hipCtxSetCurrent()
+: <a class="el" href="group__Context.html#ga834a192f70c2bfc0269c309436776feb">hip_runtime_api.h</a>
+</li>
+<li>hipCtxSetSharedMemConfig()
+: <a class="el" href="group__Context.html#gad5c1d4ced27f584a74ed550dd002fa5a">hip_runtime_api.h</a>
+</li>
+<li>hipCtxSynchronize()
+: <a class="el" href="group__Context.html#gad45cd968e8e3dcfd24ef050cab2f41c8">hip_runtime_api.h</a>
+</li>
 <li>hipDeviceCanAccessPeer()
 : <a class="el" href="group__PeerToPeer.html#ga0a1c9ccd775758d9d7d5b5a1f525b719">hip_runtime_api.h</a>
+</li>
+<li>hipDeviceComputeCapability()
+: <a class="el" href="group__Driver.html#ga0a1cf94d2b571ca3279577d5af0d1672">hip_runtime_api.h</a>
 </li>
 <li>hipDeviceDisablePeerAccess()
 : <a class="el" href="group__PeerToPeer.html#ga85030c72824fb60aaddc7374ab60481b">hip_runtime_api.h</a>
@@ -108,11 +179,23 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>hipDeviceEnablePeerAccess()
 : <a class="el" href="group__PeerToPeer.html#ga0caca59034134d7a7bb893cc1caa653e">hip_runtime_api.h</a>
 </li>
+<li>hipDeviceGet()
+: <a class="el" href="group__Driver.html#gadf6c74aaf7c22fea80e9ac3400d43704">hip_runtime_api.h</a>
+</li>
 <li>hipDeviceGetAttribute()
-: <a class="el" href="group__Device.html#gac49518ff2b26b98ea2ec9e9268761a24">hip_runtime_api.h</a>
+: <a class="el" href="group__Device.html#ga7080a145a4239a7276e0dc22062026c1">hip_runtime_api.h</a>
 </li>
 <li>hipDeviceGetCacheConfig()
 : <a class="el" href="group__Device.html#gaeeffa2456c5430400bea75ecd6ad1e68">hip_runtime_api.h</a>
+</li>
+<li>hipDeviceGetLimit()
+: <a class="el" href="group__Device.html#gaa72baeb520f1d52fe17817e852937218">hip_runtime_api.h</a>
+</li>
+<li>hipDeviceGetName()
+: <a class="el" href="group__Driver.html#ga24df15e180a7b2b351cd362e5b7d2dac">hip_runtime_api.h</a>
+</li>
+<li>hipDeviceGetPCIBusId()
+: <a class="el" href="group__Driver.html#ga681cef187c0c173749f8fda568a9d92a">hip_runtime_api.h</a>
 </li>
 <li>hipDeviceGetSharedMemConfig()
 : <a class="el" href="group__Device.html#ga1bb08f774a34a468d969a8a04791c9bb">hip_runtime_api.h</a>
@@ -129,8 +212,11 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>hipDeviceSynchronize()
 : <a class="el" href="group__Device.html#gaefdc2847fb1d6c3fb1354e827a191ebd">hip_runtime_api.h</a>
 </li>
+<li>hipDeviceTotalMem()
+: <a class="el" href="group__Driver.html#ga8991e535d0ef1ead0524e73364623041">hip_runtime_api.h</a>
+</li>
 <li>hipDriverGetVersion()
-: <a class="el" href="group__Version.html#gaf6c342f52d2a29a0aca5cdd89b4dd47c">hip_runtime_api.h</a>
+: <a class="el" href="group__Driver.html#gaf6c342f52d2a29a0aca5cdd89b4dd47c">hip_runtime_api.h</a>
 </li>
 <li>hipEventCreate()
 : <a class="el" href="group__Event.html#ga5df2309c9f29ca4c8e669db658d411b4">hip_runtime_api.h</a>
@@ -156,6 +242,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>hipFree()
 : <a class="el" href="group__Memory.html#ga740d08da65cae1441ba32f8fedb863d1">hip_runtime_api.h</a>
 </li>
+<li>hipFreeArray()
+: <a class="el" href="hip__texture_8h.html#ae29935073517245c69bc64790dd2747a">hip_texture.h</a>
+</li>
 <li>hipFreeHost()
 : <a class="el" href="group__Memory.html#gad2164cc3d49da53052f4b83b789e90c9">hip_runtime_api.h</a>
 </li>
@@ -163,28 +252,25 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 : <a class="el" href="group__Device.html#gadd94a910c2b840833cc325b1e5425702">hip_runtime_api.h</a>
 </li>
 <li>hipGetDevice()
-: <a class="el" href="group__Device.html#gaffc83567f2df3bbe2d37a19872d60f24">hip_runtime_api.h</a>
+: <a class="el" href="group__Device.html#ga7e0e2e8c5f78e3c7449764657c254e0a">hip_runtime_api.h</a>
 </li>
 <li>hipGetDeviceCount()
 : <a class="el" href="group__Device.html#ga8555d5c76d88c50ddbf54ae70b568394">hip_runtime_api.h</a>
 </li>
 <li>hipGetDeviceProperties()
-: <a class="el" href="group__Device.html#ga77c20744e2a88c31440992d6c7754b5f">hip_runtime_api.h</a>
+: <a class="el" href="group__Device.html#ga32208513b7cd491f0cb5fc884053f790">hip_runtime_api.h</a>
 </li>
 <li>hipGetErrorName()
 : <a class="el" href="group__Error.html#ga88c474d77635523dbf6ca67be7b56999">hip_runtime_api.h</a>
 </li>
 <li>hipGetErrorString()
-: <a class="el" href="group__Error.html#ga5959779a654bbc98ffe6d36ab536740a">hip_runtime_api.h</a>
+: <a class="el" href="group__Error.html#ga1421a2ee561f30d5b1dbed3ecb28b264">hip_runtime_api.h</a>
 </li>
 <li>hipGetLastError()
 : <a class="el" href="group__Error.html#ga533daeb9114d7fc2db8d867adf9e419b">hip_runtime_api.h</a>
 </li>
-<li>hipHccGetAccelerator()
-: <a class="el" href="hip__hcc_8cpp.html#a0d24b3157fd1b16d38672bb157ec4cd4">hip_hcc.cpp</a>
-</li>
-<li>hipHccGetAcceleratorView()
-: <a class="el" href="hip__hcc_8cpp.html#a1a7087ea9c3c3323270d7cce73650b44">hip_hcc.cpp</a>
+<li>hipHostAlloc()
+: <a class="el" href="group__Memory.html#gac5ae7f11cefc7085f39ee7868e71724a">hip_runtime_api.h</a>
 </li>
 <li>hipHostFree()
 : <a class="el" href="group__Memory.html#ga2e543f58ee4544e317cd695d6d82e0a3">hip_runtime_api.h</a>
@@ -204,8 +290,14 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>hipHostUnregister()
 : <a class="el" href="group__Memory.html#ga4c9e1810b9f5858d36c4d28c91c86924">hip_runtime_api.h</a>
 </li>
+<li>hipInit()
+: <a class="el" href="group__Driver.html#ga01baa652dda5815c594d047060496caa">hip_runtime_api.h</a>
+</li>
 <li>hipMalloc()
 : <a class="el" href="group__Memory.html#ga4c6fcfe80010069d2792780d00dcead2">hip_runtime_api.h</a>
+</li>
+<li>hipMallocArray()
+: <a class="el" href="hip__texture_8h.html#aea2f071ae2e4a0847f6aa42d1ef56129">hip_texture.h</a>
 </li>
 <li>hipMallocHost()
 : <a class="el" href="group__Memory.html#gad3d3cdf82eb0058fc9eac1f939cd9d30">hip_runtime_api.h</a>
@@ -216,11 +308,41 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>hipMemcpy()
 : <a class="el" href="group__Memory.html#gac1a055d288302edd641c6d7416858e1e">hip_runtime_api.h</a>
 </li>
+<li>hipMemcpy2D()
+: <a class="el" href="hip__texture_8h.html#a8af4597ff0cd17247d8a857c4d8bfa8a">hip_texture.h</a>
+</li>
+<li>hipMemcpy2DToArray()
+: <a class="el" href="hip__texture_8h.html#ab08b0bd6cdbb57e79df40ef1cd0374e0">hip_texture.h</a>
+</li>
 <li>hipMemcpyAsync()
 : <a class="el" href="group__Memory.html#gad55fa9f5980b711bc93c52820149ba18">hip_runtime_api.h</a>
 </li>
+<li>hipMemcpyDtoD()
+: <a class="el" href="group__Memory.html#ga814f245b8918f173c1f2f8c1480f7f93">hip_runtime_api.h</a>
+</li>
+<li>hipMemcpyDtoDAsync()
+: <a class="el" href="group__Memory.html#gad3bba6016cba62f0e933cdfb4c312d27">hip_runtime_api.h</a>
+</li>
+<li>hipMemcpyDtoH()
+: <a class="el" href="group__Memory.html#gae61f4e35ff1b9643c6328bc45d091c3f">hip_runtime_api.h</a>
+</li>
+<li>hipMemcpyDtoHAsync()
+: <a class="el" href="group__Memory.html#gad69da1994a646b843fb1fa465dbeb623">hip_runtime_api.h</a>
+</li>
+<li>hipMemcpyHtoD()
+: <a class="el" href="group__Memory.html#gaa415ecdd2535e1eb618ed8a31a6f03af">hip_runtime_api.h</a>
+</li>
+<li>hipMemcpyHtoDAsync()
+: <a class="el" href="group__Memory.html#gae3e76acb34bed5e3b19b4c1822975bcd">hip_runtime_api.h</a>
+</li>
+<li>hipMemcpyToArray()
+: <a class="el" href="hip__texture_8h.html#a2e631f0b6757b47b74cdaa2911784be9">hip_texture.h</a>
+</li>
 <li>hipMemcpyToSymbol()
 : <a class="el" href="group__Memory.html#ga131ac5c1ba04e186112491cb9bf964bc">hip_runtime_api.h</a>
+</li>
+<li>hipMemcpyToSymbolAsync()
+: <a class="el" href="group__Memory.html#ga7dd66b9e8e0e7159177b42a250fe23c4">hip_runtime_api.h</a>
 </li>
 <li>hipMemGetInfo()
 : <a class="el" href="group__Memory.html#ga311c3e246a21590de14478b8bd063be2">hip_runtime_api.h</a>
@@ -231,17 +353,41 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>hipMemsetAsync()
 : <a class="el" href="group__Memory.html#gae7d90e14c387e49f10db597f12915c54">hip_runtime_api.h</a>
 </li>
+<li>hipModuleGetFunction()
+: <a class="el" href="group__Driver.html#ga9648b457bb837838cb936b417b56a65d">hip_runtime_api.h</a>
+</li>
+<li>hipModuleGetGlobal()
+: <a class="el" href="group__Driver.html#ga3e425a680285f495e776f096e9632c89">hip_runtime_api.h</a>
+</li>
+<li>hipModuleLaunchKernel()
+: <a class="el" href="group__Driver.html#ga2e4de5937aa8171e9eda16c881ed0674">hip_runtime_api.h</a>
+</li>
+<li>hipModuleLoad()
+: <a class="el" href="group__Driver.html#ga31d806d976e91d36bd990ae3004d8760">hip_runtime_api.h</a>
+</li>
+<li>hipModuleLoadData()
+: <a class="el" href="group__Driver.html#gaabdbd73e952a741e861d01109c4790f3">hip_runtime_api.h</a>
+</li>
+<li>hipModuleUnload()
+: <a class="el" href="group__Driver.html#gae58e345f55bb3ec13dca80d2df88e0ed">hip_runtime_api.h</a>
+</li>
 <li>hipPeekAtLastError()
 : <a class="el" href="group__Error.html#ga1dd660bc739f7e13edd34615660f0148">hip_runtime_api.h</a>
 </li>
 <li>hipPointerGetAttributes()
 : <a class="el" href="group__Memory.html#ga3d68ba64959615d4ab84f10caa12433b">hip_runtime_api.h</a>
 </li>
+<li>hipRuntimeGetVersion()
+: <a class="el" href="group__Driver.html#gae8b7ba34d2e11e334650aa51a4dd87ee">hip_runtime_api.h</a>
+</li>
 <li>hipSetDevice()
-: <a class="el" href="group__Device.html#ga8ec0b093af0adadc7fe98bf33fa21620">hip_runtime_api.h</a>
+: <a class="el" href="group__Device.html#ga43c1e7f15925eeb762195ccb5e063eae">hip_runtime_api.h</a>
 </li>
 <li>hipSetDeviceFlags()
 : <a class="el" href="group__Device.html#ga6e54db382768827e84725632018307aa">hip_runtime_api.h</a>
+</li>
+<li>hipStreamAddCallback()
+: <a class="el" href="group__Stream.html#ga3e098cd7478828b2104abb41a7bb00d3">hip_runtime_api.h</a>
 </li>
 <li>hipStreamCreate()
 : <a class="el" href="group__Stream.html#gaff5b62d6e9502d80879f7176f4d03102">hip_runtime_api.h</a>
@@ -255,6 +401,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <li>hipStreamGetFlags()
 : <a class="el" href="group__Stream.html#ga3249555a26439591b8873f70b39bb116">hip_runtime_api.h</a>
 </li>
+<li>hipStreamQuery()
+: <a class="el" href="group__Stream.html#ga925b39ff78d3b5fd458bd9e2cade9f4e">hip_runtime_api.h</a>
+</li>
 <li>hipStreamSynchronize()
 : <a class="el" href="group__Stream.html#gabbfb9f573a6ebe8c478605ecb5504a74">hip_runtime_api.h</a>
 </li>
@@ -265,7 +414,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Aug 4 2016 10:05:53 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Nov 8 2016 16:33:49 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

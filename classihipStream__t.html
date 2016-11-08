@@ -72,7 +72,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Groups</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Friends</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Groups</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(11)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -96,63 +96,62 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
+<tr class="memitem:aebdaf39cb9b44f08a7e8332b0ca84ba5"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><b>ScheduleMode</b> { <b>Auto</b>, 
+<b>Spin</b>, 
+<b>Yield</b>
+ }</td></tr>
+<tr class="separator:aebdaf39cb9b44f08a7e8332b0ca84ba5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a592c5b87b96e6af39ca138aaef37f17e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a592c5b87b96e6af39ca138aaef37f17e"></a>
 typedef uint64_t&#160;</td><td class="memItemRight" valign="bottom"><b>SeqNum_t</b></td></tr>
 <tr class="separator:a592c5b87b96e6af39ca138aaef37f17e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a907974a5f150c0e551097f8f8e9fec1f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a907974a5f150c0e551097f8f8e9fec1f"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>ihipStream_t</b> (unsigned device_index, hc::accelerator_view av, unsigned int flags)</td></tr>
-<tr class="separator:a907974a5f150c0e551097f8f8e9fec1f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7da781a2ece3b60af109089cb196115d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7da781a2ece3b60af109089cb196115d"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>copySync</b> (<a class="el" href="classLockedAccessor.html">LockedAccessor_StreamCrit_t</a> &amp;crit, void *dst, const void *src, size_t sizeBytes, unsigned kind)</td></tr>
-<tr class="separator:a7da781a2ece3b60af109089cb196115d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a488989c39b6dc1da96912df471858f6f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a488989c39b6dc1da96912df471858f6f"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>locked_copySync</b> (void *dst, const void *src, size_t sizeBytes, unsigned kind)</td></tr>
-<tr class="separator:a488989c39b6dc1da96912df471858f6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9b92fc6a35358e7bf9c8153bd609ed4b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9b92fc6a35358e7bf9c8153bd609ed4b"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>copyAsync</b> (void *dst, const void *src, size_t sizeBytes, unsigned kind)</td></tr>
-<tr class="separator:a9b92fc6a35358e7bf9c8153bd609ed4b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a55f51d767064728b71456cd08747b6ed"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a55f51d767064728b71456cd08747b6ed"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>lockopen_preKernelCommand</b> ()</td></tr>
-<tr class="separator:a55f51d767064728b71456cd08747b6ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1a935f935f43816a5d5d66b29ccf09fa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1a935f935f43816a5d5d66b29ccf09fa"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>lockclose_postKernelCommand</b> (hc::completion_future &amp;kernel_future)</td></tr>
-<tr class="separator:a1a935f935f43816a5d5d66b29ccf09fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6dc1f0eab49b67359361dfd6936767d4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6dc1f0eab49b67359361dfd6936767d4"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>preCopyCommand</b> (<a class="el" href="classLockedAccessor.html">LockedAccessor_StreamCrit_t</a> &amp;crit, <a class="el" href="structihipSignal__t.html">ihipSignal_t</a> *lastCopy, hsa_signal_t *waitSignal, ihipCommand_t copyType)</td></tr>
-<tr class="separator:a6dc1f0eab49b67359361dfd6936767d4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3da127c5a5353eb4c089d3f5ff044773"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3da127c5a5353eb4c089d3f5ff044773"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>locked_reclaimSignals</b> (SIGSEQNUM sigNum)</td></tr>
-<tr class="separator:a3da127c5a5353eb4c089d3f5ff044773"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9bed2cc8f49b05fdf0b41920d7ce9d6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad9bed2cc8f49b05fdf0b41920d7ce9d6"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ihipStream_t</b> (<a class="el" href="classihipCtx__t.html">ihipCtx_t</a> *ctx, hc::accelerator_view av, unsigned int flags)</td></tr>
+<tr class="separator:ad9bed2cc8f49b05fdf0b41920d7ce9d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3f606f41d68609853a3d52abad1c4769"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3f606f41d68609853a3d52abad1c4769"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>locked_copySync</b> (void *dst, const void *src, size_t sizeBytes, unsigned kind, bool resolveOn=true)</td></tr>
+<tr class="separator:a3f606f41d68609853a3d52abad1c4769"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a48b9a87170947d4c69451c8e4bf49824"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a48b9a87170947d4c69451c8e4bf49824"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>locked_copyAsync</b> (void *dst, const void *src, size_t sizeBytes, unsigned kind)</td></tr>
+<tr class="separator:a48b9a87170947d4c69451c8e4bf49824"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d7349d43032b28306d1ad46a712fd9d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2d7349d43032b28306d1ad46a712fd9d"></a>
+<a class="el" href="classLockedAccessor.html">LockedAccessor_StreamCrit_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>lockopen_preKernelCommand</b> ()</td></tr>
+<tr class="separator:a2d7349d43032b28306d1ad46a712fd9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb4a0e85217d33100d1dd587e0c64935"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aeb4a0e85217d33100d1dd587e0c64935"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>lockclose_postKernelCommand</b> (hc::accelerator_view *av)</td></tr>
+<tr class="separator:aeb4a0e85217d33100d1dd587e0c64935"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9376e8486f4cce31e5a0e9cc0a51d72a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9376e8486f4cce31e5a0e9cc0a51d72a"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>locked_wait</b> (bool assertQueueEmpty=false)</td></tr>
 <tr class="separator:a9376e8486f4cce31e5a0e9cc0a51d72a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a15b68a0ee8e8f35b2fafeec6a3232659"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a15b68a0ee8e8f35b2fafeec6a3232659"></a>
-SIGSEQNUM&#160;</td><td class="memItemRight" valign="bottom"><b>locked_lastCopySeqId</b> ()</td></tr>
-<tr class="separator:a15b68a0ee8e8f35b2fafeec6a3232659"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad48a742010b1b581cbf58af6e5b41c41"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad48a742010b1b581cbf58af6e5b41c41"></a>
+hc::accelerator_view *&#160;</td><td class="memItemRight" valign="bottom"><b>locked_getAv</b> ()</td></tr>
+<tr class="separator:ad48a742010b1b581cbf58af6e5b41c41"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acdd5cc28e15e953a75f62b0cc6112bcc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="acdd5cc28e15e953a75f62b0cc6112bcc"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>locked_waitEvent</b> (<a class="el" href="structihipEvent__t.html">hipEvent_t</a> event)</td></tr>
+<tr class="separator:acdd5cc28e15e953a75f62b0cc6112bcc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1250b237387601c5b2b867baeccd3d4f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1250b237387601c5b2b867baeccd3d4f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>locked_recordEvent</b> (<a class="el" href="structihipEvent__t.html">hipEvent_t</a> event)</td></tr>
+<tr class="separator:a1250b237387601c5b2b867baeccd3d4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6e28587b86f243c325154b458004bac1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6e28587b86f243c325154b458004bac1"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>wait</b> (<a class="el" href="classLockedAccessor.html">LockedAccessor_StreamCrit_t</a> &amp;crit, bool assertQueueEmpty=false)</td></tr>
 <tr class="separator:a6e28587b86f243c325154b458004bac1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3cf158e279f8014c5dbf137b172a3ba3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3cf158e279f8014c5dbf137b172a3ba3"></a>
-SIGSEQNUM&#160;</td><td class="memItemRight" valign="bottom"><b>lastCopySeqId</b> (<a class="el" href="classLockedAccessor.html">LockedAccessor_StreamCrit_t</a> &amp;crit)</td></tr>
-<tr class="separator:a3cf158e279f8014c5dbf137b172a3ba3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a62d4df2d44e24c452063a57defca948f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a62d4df2d44e24c452063a57defca948f"></a>
-<a class="el" href="structihipSignal__t.html">ihipSignal_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>allocSignal</b> (<a class="el" href="classLockedAccessor.html">LockedAccessor_StreamCrit_t</a> &amp;crit)</td></tr>
-<tr class="separator:a62d4df2d44e24c452063a57defca948f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8fa2432de855550f4973e3c4a06f13e1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8fa2432de855550f4973e3c4a06f13e1"></a>
-<a class="el" href="classihipDevice__t.html">ihipDevice_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>getDevice</b> () const </td></tr>
-<tr class="separator:a8fa2432de855550f4973e3c4a06f13e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ada8d17a62d569a62962e8ba1ce55dbdc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ada8d17a62d569a62962e8ba1ce55dbdc"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>launchModuleKernel</b> (hc::accelerator_view av, hsa_signal_t signal, uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ, uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ, uint32_t groupSegmentSize, uint32_t sharedMemBytes, void *kernarg, size_t kernSize, uint64_t kernel)</td></tr>
+<tr class="separator:ada8d17a62d569a62962e8ba1ce55dbdc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d8a44bbf098e21c533741d87315ce99"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9d8a44bbf098e21c533741d87315ce99"></a>
+const <a class="el" href="classihipDevice__t.html">ihipDevice_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>getDevice</b> () const </td></tr>
+<tr class="separator:a9d8a44bbf098e21c533741d87315ce99"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85d6a442bd0e933e4a14135659a0889c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a85d6a442bd0e933e4a14135659a0889c"></a>
+<a class="el" href="classihipCtx__t.html">ihipCtx_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>getCtx</b> () const </td></tr>
+<tr class="separator:a85d6a442bd0e933e4a14135659a0889c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a598f1a2618fa756b2b3f2aa67b3049bd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a598f1a2618fa756b2b3f2aa67b3049bd"></a>
 SeqNum_t&#160;</td><td class="memItemRight" valign="bottom"><b>_id</b></td></tr>
 <tr class="separator:a598f1a2618fa756b2b3f2aa67b3049bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9cbeb760947de69b9834121678780669"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9cbeb760947de69b9834121678780669"></a>
-hc::accelerator_view&#160;</td><td class="memItemRight" valign="bottom"><b>_av</b></td></tr>
-<tr class="separator:a9cbeb760947de69b9834121678780669"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a61c71982dcf1097dba05b431d55a056f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a61c71982dcf1097dba05b431d55a056f"></a>
 unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>_flags</b></td></tr>
 <tr class="separator:a61c71982dcf1097dba05b431d55a056f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -162,15 +161,54 @@ Friends</h2></td></tr>
 <tr class="memitem:a87ec2e4405353137e645ba1e55f25ff6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a87ec2e4405353137e645ba1e55f25ff6"></a>
 std::ostream &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (std::ostream &amp;os, const <a class="el" href="classihipStream__t.html">ihipStream_t</a> &amp;s)</td></tr>
 <tr class="separator:a87ec2e4405353137e645ba1e55f25ff6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a46bba2e3bfbb0915a08fb608aed31858"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classihipStream__t.html#a46bba2e3bfbb0915a08fb608aed31858">hipStreamQuery</a> (<a class="el" href="classihipStream__t.html">hipStream_t</a>)</td></tr>
+<tr class="memdesc:a46bba2e3bfbb0915a08fb608aed31858"><td class="mdescLeft">&#160;</td><td class="mdescRight">Return <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a> if all of the operations in the specified <code>stream</code> have completed, or <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1" title="Indicates that asynchronous operations enqueued earlier are not ready. This is not actually an error...">hipErrorNotReady</a> if not.  <a href="#a46bba2e3bfbb0915a08fb608aed31858">More...</a><br/></td></tr>
+<tr class="separator:a46bba2e3bfbb0915a08fb608aed31858"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Friends And Related Function Documentation</h2>
+<a class="anchor" id="a46bba2e3bfbb0915a08fb608aed31858"></a>
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipStreamQuery </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classihipStream__t.html">hipStream_t</a>&#160;</td>
+          <td class="paramname"><em>stream</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Return <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a> if all of the operations in the specified <code>stream</code> have completed, or <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1" title="Indicates that asynchronous operations enqueued earlier are not ready. This is not actually an error...">hipErrorNotReady</a> if not. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[in]</td><td class="paramname">stream</td><td>stream to query</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1" title="Indicates that asynchronous operations enqueued earlier are not ready. This is not actually an error...">hipErrorNotReady</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a88e525a7c8f35552dfada58e9f2f6d3a" title="Resource handle (hipEvent_t or hipStream_t) invalid. ">hipErrorInvalidResourceHandle</a></dd></dl>
+<p>This is thread-safe and returns a snapshot of the current state of the queue. However, if other host threads are sending work to the stream, the status may change immediately after the function is called. It is typically used for debug.</p>
+<dl class="section see"><dt>See Also</dt><dd><a class="el" href="group__Stream.html#gaff5b62d6e9502d80879f7176f4d03102" title="Create an asynchronous stream. ">hipStreamCreate</a>, <a class="el" href="group__Stream.html#gaf2382e3cc6632332a8983a0f58e43494" title="Create an asynchronous stream. ">hipStreamCreateWithFlags</a>, <a class="el" href="group__Stream.html#gacdd84c8f8ef1539c96c57c1d5bcae633" title="Make the specified compute stream wait for an event. ">hipStreamWaitEvent</a>, <a class="el" href="group__Stream.html#gabbfb9f573a6ebe8c478605ecb5504a74" title="Wait for all commands in stream to complete. ">hipStreamSynchronize</a>, <a class="el" href="group__Stream.html#ga3076a3499ed2c7821311006100bb95ec" title="Destroys the specified stream. ">hipStreamDestroy</a> </dd></dl>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>/home/mangupta/git/hip/release/release_0.92.00/include/hcc_detail/<a class="el" href="hip__hcc_8h_source.html">hip_hcc.h</a></li>
-<li>/home/mangupta/git/hip/release/release_0.92.00/src/<a class="el" href="hip__hcc_8cpp.html">hip_hcc.cpp</a></li>
+<li>/home/mangupta/git/hip/hip/src/<a class="el" href="hip__hcc_8h_source.html">hip_hcc.h</a></li>
+<li>/home/mangupta/git/hip/hip/src/<a class="el" href="hip__hcc_8cpp.html">hip_hcc.cpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Aug 4 2016 10:05:52 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Nov 8 2016 16:33:49 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

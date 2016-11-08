@@ -72,7 +72,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Groups</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Friends</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Groups</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(11)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -103,6 +103,9 @@ Inheritance diagram for ihipStreamCriticalBase_t&lt; MUTEX_TYPE &gt;:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:aca5af79d641a9bdfe3661c31553c8ad0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aca5af79d641a9bdfe3661c31553c8ad0"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>ihipStreamCriticalBase_t</b> (hc::accelerator_view av)</td></tr>
+<tr class="separator:aca5af79d641a9bdfe3661c31553c8ad0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9508ba554a25eb6d1d07f079811fa81e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9508ba554a25eb6d1d07f079811fa81e"></a>
 <a class="el" href="classihipStreamCriticalBase__t.html">ihipStreamCriticalBase_t</a><br class="typebreak"/>
 &lt; StreamMutex &gt; *&#160;</td><td class="memItemRight" valign="bottom"><b>mlock</b> ()</td></tr>
@@ -117,39 +120,24 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>unlock</b> ()</td></t
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:abe38813427aaa3e0857ff297004e7ed6"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abe38813427aaa3e0857ff297004e7ed6"></a>
-ihipCommand_t&#160;</td><td class="memItemRight" valign="bottom"><b>_last_command_type</b></td></tr>
-<tr class="separator:abe38813427aaa3e0857ff297004e7ed6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab36cd8c710e3d1055774742fcbae980a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab36cd8c710e3d1055774742fcbae980a"></a>
-<a class="el" href="structihipSignal__t.html">ihipSignal_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>_last_copy_signal</b></td></tr>
-<tr class="separator:ab36cd8c710e3d1055774742fcbae980a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abce48180604bd8b2a2c0a63f783a0c18"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abce48180604bd8b2a2c0a63f783a0c18"></a>
-hc::completion_future&#160;</td><td class="memItemRight" valign="bottom"><b>_last_kernel_future</b></td></tr>
-<tr class="separator:abce48180604bd8b2a2c0a63f783a0c18"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa8425e69079022178e5a7705bc80658b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa8425e69079022178e5a7705bc80658b"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>_signalCursor</b></td></tr>
-<tr class="separator:aa8425e69079022178e5a7705bc80658b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a28f7b020cd8240abf96b85afe5114320"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a28f7b020cd8240abf96b85afe5114320"></a>
-SIGSEQNUM&#160;</td><td class="memItemRight" valign="bottom"><b>_oldest_live_sig_id</b></td></tr>
-<tr class="separator:a28f7b020cd8240abf96b85afe5114320"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab52d602cb0316f8c194647969ac58874"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab52d602cb0316f8c194647969ac58874"></a>
-std::deque&lt; <a class="el" href="structihipSignal__t.html">ihipSignal_t</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>_signalPool</b></td></tr>
-<tr class="separator:ab52d602cb0316f8c194647969ac58874"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a838fa083e400d53cdceda7429ce8166c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a838fa083e400d53cdceda7429ce8166c"></a>
-SIGSEQNUM&#160;</td><td class="memItemRight" valign="bottom"><b>_stream_sig_id</b></td></tr>
-<tr class="separator:a838fa083e400d53cdceda7429ce8166c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ad3c6ef24046d00615db365dfaf8939"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9ad3c6ef24046d00615db365dfaf8939"></a>
+uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>_kernelCnt</b></td></tr>
+<tr class="separator:a9ad3c6ef24046d00615db365dfaf8939"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae733b7cc0e876f4544e256abd6bf6320"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae733b7cc0e876f4544e256abd6bf6320"></a>
+hc::accelerator_view&#160;</td><td class="memItemRight" valign="bottom"><b>_av</b></td></tr>
+<tr class="separator:ae733b7cc0e876f4544e256abd6bf6320"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_attribs_structLockedBase"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_structLockedBase')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="structLockedBase.html">LockedBase&lt; MUTEX_TYPE &gt;</a></td></tr>
 <tr class="memitem:a9f06ef8dd0ca387f29f4bfce78171ce6 inherit pub_attribs_structLockedBase"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9f06ef8dd0ca387f29f4bfce78171ce6"></a>
 MUTEX_TYPE&#160;</td><td class="memItemRight" valign="bottom"><b>_mutex</b></td></tr>
 <tr class="separator:a9f06ef8dd0ca387f29f4bfce78171ce6 inherit pub_attribs_structLockedBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>/home/mangupta/git/hip/release/release_0.92.00/include/hcc_detail/<a class="el" href="hip__hcc_8h_source.html">hip_hcc.h</a></li>
+<li>/home/mangupta/git/hip/hip/src/<a class="el" href="hip__hcc_8h_source.html">hip_hcc.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Aug 4 2016 10:05:52 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Nov 8 2016 16:33:49 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
