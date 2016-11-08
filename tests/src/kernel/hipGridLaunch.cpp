@@ -21,7 +21,13 @@ THE SOFTWARE.
 */
 // Test the Grid_Launch syntax.
 
-#include "hip_runtime.h"
+/* HIT_START
+ * BUILD: %t %s ../test_common.cpp
+ * RUN: %t
+ * HIT_END
+ */
+
+#include "hip/hip_runtime.h"
 #include "test_common.h"
 
 

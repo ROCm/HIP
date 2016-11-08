@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include <hip_runtime.h>
+#include "hip/hip_runtime.h"
 
 #include "ResultDatabase.h"
 
@@ -49,8 +49,8 @@ std::string sizeToString(int size)
     using namespace std;
     stringstream ss;
     if (size < 0) {
-        // char (09, horiz tab) lexically sorts before " " so will cause Byte values to be displayed before kB.
-        ss << char(0x09)/*tab*/ << setfill('0') << setw(3) << -size <<  "B";
+        // char (-) lexically sorts before " " so will cause Byte values to be displayed before kB.
+        ss << "+" << setfill('0') << setw(3) << -size <<  "By";
     } else {
         ss << size << "kB";
     }

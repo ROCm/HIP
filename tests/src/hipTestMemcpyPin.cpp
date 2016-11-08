@@ -17,7 +17,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include<hip_runtime.h>
+/* HIT_START
+ * BUILD: %t %s test_common.cpp
+ * RUN: %t
+ * HIT_END
+ */
+
+#include "hip/hip_runtime.h"
 #include"test_common.h"
 
 #define len 1024*1024

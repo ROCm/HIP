@@ -1,65 +1,77 @@
 /*
 Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANNTY OF ANY KIND, EXPRESS OR
-IMPLIED, INNCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANNY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER INN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "hip_runtime.h"
-#include "hcc_detail/hip_hcc.h"
-#include "hcc_detail/trace_helper.h"
+#include "hip/hip_runtime.h"
+#include "hip_hcc.h"
+#include "trace_helper.h"
 
 //-------------------------------------------------------------------------------------------------
 //Devices
 //-------------------------------------------------------------------------------------------------
-//---
-/**
- * @return  #hipSuccess
- */
-hipError_t hipGetDevice(int *device)
+// TODO - does this initialize HIP runtime?
+hipError_t hipGetDevice(int *deviceId)
 {
-    HIP_INIT_API(device);
+    HIP_INIT_API(deviceId);
 
-    *device = tls_defaultDevice;
-    return ihipLogStatus(hipSuccess);
+    hipError_t e = hipSuccess;
+
+    auto ctx = ihipGetTlsDefaultCtx();
+
+    if(deviceId != nullptr){
+        if (ctx == nullptr) {
+            e = hipErrorInvalidDevice; // TODO, check error code.
+            *deviceId = -1;
+        } else {
+            *deviceId = ctx->getDevice()->_deviceId;
+        }
+    }else{
+        e = hipErrorInvalidDevice;
+    }
+
+    return ihipLogStatus(e);
 }
 
-
-//---
-/**
- * @return  #hipSuccess, #hipErrorNoDevice
- */
+// TODO - does this initialize HIP runtime?
 hipError_t hipGetDeviceCount(int *count)
 {
     HIP_INIT_API(count);
 
-    *count = g_deviceCnt;
+    hipError_t e = hipSuccess;
 
-    if (*count > 0) {
-        return ihipLogStatus(hipSuccess);
+    if(count != nullptr) {
+        *count = g_deviceCnt;
+
+        if (*count > 0) {
+            e = ihipLogStatus(hipSuccess);
+        } else {
+            e = ihipLogStatus(hipErrorNoDevice);
+        }
     } else {
-        return ihipLogStatus(hipErrorNoDevice);
+        e = ihipLogStatus(hipErrorNoDevice);
     }
+    return e;
 }
 
-
-//---
-/**
- * @returns #hipSuccess
- */
-hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig )
+hipError_t hipDeviceSetCacheConfig(hipFuncCache cacheConfig)
 {
     HIP_INIT_API(cacheConfig);
 
@@ -68,12 +80,7 @@ hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig )
     return ihipLogStatus(hipSuccess);
 }
 
-
-//---
-/**
- * @returns #hipSuccess
- */
-hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig )
+hipError_t hipDeviceGetCacheConfig(hipFuncCache *cacheConfig)
 {
     HIP_INIT_API(cacheConfig);
 
@@ -82,12 +89,23 @@ hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig )
     return ihipLogStatus(hipSuccess);
 }
 
+extern "C" size_t g_malloc_heap_size;
 
-//---
-/**
- * @returns #hipSuccess
- */
-hipError_t hipFuncSetCacheConfig ( hipFuncCache cacheConfig )
+hipError_t hipDeviceGetLimit (size_t *pValue, hipLimit_t limit)
+{
+    HIP_INIT_API(pValue, limit);
+    if(pValue == nullptr) {
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
+    if(limit == hipLimitMallocHeapSize) {
+        *pValue = g_malloc_heap_size;
+        return ihipLogStatus(hipSuccess);
+    }else{
+        return ihipLogStatus(hipErrorUnsupportedLimit);
+    }
+}
+
+hipError_t hipFuncSetCacheConfig (hipFuncCache cacheConfig)
 {
     HIP_INIT_API(cacheConfig);
 
@@ -96,13 +114,7 @@ hipError_t hipFuncSetCacheConfig ( hipFuncCache cacheConfig )
     return ihipLogStatus(hipSuccess);
 }
 
-
-
-//---
-/**
- * @returns #hipSuccess
- */
-hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config )
+hipError_t hipDeviceSetSharedMemConfig (hipSharedMemConfig config)
 {
     HIP_INIT_API(config);
 
@@ -111,13 +123,7 @@ hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config )
     return ihipLogStatus(hipSuccess);
 }
 
-
-
-//---
-/**
- * @returns #hipSuccess
- */
-hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig )
+hipError_t hipDeviceGetSharedMemConfig (hipSharedMemConfig *pConfig)
 {
     HIP_INIT_API(pConfig);
 
@@ -126,69 +132,51 @@ hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig )
     return ihipLogStatus(hipSuccess);
 }
 
-//---
-/**
- * @return #hipSuccess, #hipErrorInvalidDevice
- */
-hipError_t hipSetDevice(int device)
+hipError_t hipSetDevice(int deviceId)
 {
-    HIP_INIT_API(device);
-    if ((device < 0) || (device >= g_deviceCnt)) {
+    HIP_INIT_API(deviceId);
+    if ((deviceId < 0) || (deviceId >= g_deviceCnt)) {
         return ihipLogStatus(hipErrorInvalidDevice);
     } else {
-        tls_defaultDevice = device;
+        ihipSetTlsDefaultCtx(ihipGetPrimaryCtx(deviceId));
         return ihipLogStatus(hipSuccess);
     }
 }
 
-
-//---
-/**
- * @return #hipSuccess
- */
 hipError_t hipDeviceSynchronize(void)
 {
     HIP_INIT_API();
-
-    ihipGetTlsDefaultDevice()->locked_waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
-
-    return ihipLogStatus(hipSuccess);
+    return ihipLogStatus(ihipSynchronize());
 }
 
-
-//---
-/**
- * @return @ref hipSuccess
- */
 hipError_t hipDeviceReset(void)
 {
     HIP_INIT_API();
 
-    ihipDevice_t *device = ihipGetTlsDefaultDevice();
+    auto *ctx = ihipGetTlsDefaultCtx();
 
     // TODO-HCC
     // This function currently does a user-level cleanup of known resources.
     // It could benefit from KFD support to perform a more "nuclear" clean that would include any associated kernel resources and page table entries.
 
 
-    if (device) {
-        // Release device resources (streams and memory):
-        device->locked_reset(); 
+    if (ctx) {
+        // Release ctx resources (streams and memory):
+        ctx->locked_reset();
     }
 
     return ihipLogStatus(hipSuccess);
 }
 
-/**
- *
- */
 hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
 {
-    HIP_INIT_API(attr, device);
+    HIP_INIT_API(pi, attr, device);
 
     hipError_t e = hipSuccess;
 
-    ihipDevice_t * hipDevice = ihipGetDevice(device);
+    if(pi != nullptr) {
+
+    auto * hipDevice = ihipGetDevice(device);
     hipDeviceProp_t *prop = &hipDevice->_props;
     if (hipDevice) {
         switch (attr) {
@@ -248,50 +236,184 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
     } else {
         e = hipErrorInvalidDevice;
     }
+    }else{
+        e = hipErrorInvalidDevice;
+    }
     return ihipLogStatus(e);
 }
 
-
-/**
- * @return #hipSuccess, #hipErrorInvalidDevice
- * @bug HCC always returns 0 for maxThreadsPerMultiProcessor
- * @bug HCC always returns 0 for regsPerBlock
- * @bug HCC always returns 0 for l2CacheSize
- */
 hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device)
 {
     HIP_INIT_API(props, device);
 
     hipError_t e;
 
-    ihipDevice_t * hipDevice = ihipGetDevice(device);
-    if (hipDevice) {
+    if(props != nullptr){
+        auto * hipDevice = ihipGetDevice(device);
+        if (hipDevice) {
         // copy saved props
-        *props = hipDevice->_props;
-        e = hipSuccess;
-    } else {
+            *props = hipDevice->_props;
+            e = hipSuccess;
+        } else {
+            e = hipErrorInvalidDevice;
+        }
+    }else{
         e = hipErrorInvalidDevice;
     }
 
     return ihipLogStatus(e);
 }
 
-
 hipError_t hipSetDeviceFlags( unsigned int flags)
 {
     HIP_INIT_API(flags);
 
-    hipError_t e;
+    hipError_t e = hipSuccess;
 
-    ihipDevice_t * hipDevice = ihipGetDevice(tls_defaultDevice);
-    if(hipDevice){
-       hipDevice->_device_flags = hipDevice->_device_flags | flags;
-       e = hipSuccess;
-    }else{
+    auto * ctx = ihipGetTlsDefaultCtx();
+
+    // TODO : does this really OR in the flags or replaces previous flags:
+    // TODO : Review error handling behavior for this function, it often returns ErrorSetOnActiveProcess
+    if (ctx) {
+       ctx->_ctxFlags = ctx->_ctxFlags | flags;
+       if (flags & hipDeviceScheduleMask) {
+           switch (hipDeviceScheduleMask) {
+              case hipDeviceScheduleAuto:
+              case hipDeviceScheduleSpin:
+              case hipDeviceScheduleYield:
+              case hipDeviceScheduleBlockingSync:
+                   e = hipSuccess;
+                   break;
+               default:
+                   e = hipSuccess; // TODO - should this be error?  Map to Auto?
+                   //e = hipErrorInvalidValue;
+                   break;
+           }
+       }
+
+       unsigned supportedFlags = hipDeviceScheduleMask | hipDeviceMapHost | hipDeviceLmemResizeToMax; 
+
+       if (flags & (~supportedFlags)) {
+          e = hipErrorInvalidValue;
+       }
+    } else {
        e = hipErrorInvalidDevice;
     }
 
     return ihipLogStatus(e);
+};
+
+hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device)
+{
+    HIP_INIT_API(major,minor, device);
+    hipError_t e = hipSuccess;
+    int deviceId= device->_deviceId;
+    e = hipDeviceGetAttribute(major, hipDeviceAttributeComputeCapabilityMajor, deviceId);
+    e = hipDeviceGetAttribute(minor, hipDeviceAttributeComputeCapabilityMinor, deviceId);
+    return ihipLogStatus(e);
 }
 
+hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
+{
+    HIP_INIT_API(name,len, device);
+    hipError_t e = hipSuccess;
+    int nameLen = strlen(device->_props.name);
+    if(nameLen <= len)
+        memcpy(name,device->_props.name,nameLen);
+    return ihipLogStatus(e);
+}
+
+hipError_t hipDeviceGetPCIBusId (int *pciBusId,int len,hipDevice_t device)
+{
+    HIP_INIT_API(pciBusId,len, device);
+    hipError_t e = hipSuccess;
+    int deviceId= device->_deviceId;
+    e = hipDeviceGetAttribute(pciBusId, hipDeviceAttributePciBusId, deviceId);
+    return ihipLogStatus(e);
+}
+
+hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device)
+{
+    HIP_INIT_API(bytes, device);
+    hipError_t e = hipSuccess;
+    *bytes= device->_props.totalGlobalMem;
+    return ihipLogStatus(e);
+}
+
+hipError_t hipChooseDevice( int* device, const hipDeviceProp_t* prop )
+{
+    hipDeviceProp_t  tempProp;
+    int deviceCount;
+    int inPropCount=0;
+    int matchedPropCount=0;
+    hipError_t e = hipSuccess;
+    hipGetDeviceCount( &deviceCount );
+    *device = 0;
+    for (int i=0; i< deviceCount; i++) {
+        hipGetDeviceProperties( &tempProp, i );
+        if(prop->major !=0) {
+            inPropCount++;
+            if(tempProp.major >= prop->major) {
+                matchedPropCount++;
+            }
+            if(prop->minor !=0) {
+                inPropCount++;
+                 if(tempProp.minor >= prop->minor) {
+                     matchedPropCount++;
+                 }
+            }
+        }
+        if(prop->totalGlobalMem != 0) {
+            inPropCount++;
+            if(tempProp.totalGlobalMem >= prop->totalGlobalMem) {
+                matchedPropCount++;
+            }
+        }
+        if(prop->sharedMemPerBlock != 0) {
+            inPropCount++;
+            if(tempProp.sharedMemPerBlock >= prop->sharedMemPerBlock) {
+                matchedPropCount++;
+            }
+        }
+        if(prop->maxThreadsPerBlock  != 0) {
+            inPropCount++;
+            if(tempProp.maxThreadsPerBlock >= prop->maxThreadsPerBlock ) {
+                matchedPropCount++;
+            }
+        }
+        if(prop->totalConstMem  != 0) {
+            inPropCount++;
+            if(tempProp.totalConstMem >= prop->totalConstMem ) {
+                matchedPropCount++;
+            }
+        }
+        if(prop->multiProcessorCount  != 0) {
+            inPropCount++;
+            if(tempProp.multiProcessorCount >= prop->multiProcessorCount ) {
+                matchedPropCount++;
+            }
+        }
+        if(prop->maxThreadsPerMultiProcessor  != 0) {
+            inPropCount++;
+            if(tempProp.maxThreadsPerMultiProcessor >= prop->maxThreadsPerMultiProcessor ) {
+                matchedPropCount++;
+            }
+        }
+        if(prop->memoryClockRate  != 0) {
+            inPropCount++;
+            if(tempProp.memoryClockRate >= prop->memoryClockRate ) {
+                matchedPropCount++;
+            }
+        }
+        if(inPropCount == matchedPropCount) {
+            *device = i;
+        }
+#if 0
+        else{
+            e= hipErrorInvalidValue;
+        }
+#endif
+    }
+    return ihipLogStatus(e);
+}
 

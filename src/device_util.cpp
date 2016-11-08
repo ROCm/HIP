@@ -1,37 +1,36 @@
 /*
 Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANNTY OF ANY KIND, EXPRESS OR
-IMPLIED, INNCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANNY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER INN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include"hip_runtime.h"
-#include<hc.hpp>
-#include<grid_launch.h>
-
+#include <hc.hpp>
+#include <grid_launch.h>
 #include <hc_math.hpp>
+
+#include "hip/hip_runtime.h"
+
 // TODO: Choose whether default is precise math or fast math based on compilation flag.
 #ifdef __HCC_ACCELERATOR__
 using namespace hc::precise_math;
 #endif
 
-#if __hcc_workweek__ > 16186
-#define USE_DYNAMIC_SHARED 1
-#else
-#define USE_DYNAMIC_SHARED 0
-#endif
 
 #define HIP_SQRT_2 1.41421356237
 #define HIP_SQRT_PI 1.77245385091
@@ -774,11 +773,6 @@ __device__ float __hip_ynf(int n, float x)
 }
 
 
-#if __hcc_workweek__ > 16186
-#define USE_DYNAMIC_SHARED 1
-#else
-#define USE_DYNAMIC_SHARED 0
-#endif
 
 __device__ float acosf(float x)
 {
@@ -1389,7 +1383,7 @@ __device__ double norm4d(double a, double b, double c, double d)
     double y = c*c + d*d;
     return hc::precise_math::sqrt(x+y);
 }
-__device__ double normcdf(float y)
+__device__ double normcdf(double y)
 {
      return ((hc::precise_math::erf(y)/HIP_SQRT_2) + 1)/2;
 }
@@ -1681,6 +1675,17 @@ __device__  unsigned int atomicDec(unsigned int* address,
 	return hc::__atomic_wrapdec(address,val);
 }
 
+//__mul24 __umul24
+__device__  int __mul24(int arg1,
+                       int arg2)
+{
+	return hc::__mul24(arg1, arg2);
+}
+__device__  unsigned int __umul24(unsigned int arg1,
+                       unsigned int arg2)
+{
+	return hc::__mul24(arg1, arg2);
+}
 
 __device__ unsigned int test__popc(unsigned int input)
 {
@@ -1854,12 +1859,10 @@ __host__ __device__ int max(int arg1, int arg2)
   return (int)(hc::precise_math::fmax((float)arg1, (float)arg2));
 }
 
-#if USE_DYNAMIC_SHARED
 __device__ __attribute__((address_space(3))) void* __get_dynamicgroupbaseptr()
 {
   return hc::get_dynamic_group_segment_base_pointer();
 }
-#endif
 
 
 

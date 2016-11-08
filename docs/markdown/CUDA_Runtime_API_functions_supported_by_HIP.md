@@ -2,17 +2,17 @@
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaChooseDevice`                                        |                               | Select compute-device which best matches criteria.                                                                             |
+| `cudaChooseDevice`                                        | `hipChooseDevice`                              | Select compute-device which best matches criteria.                                                                             |
 | `cudaDeviceGetAttribute`                                  | `hipDeviceGetAttribute`       | Returns information about the device.                                                                                          |
 | `cudaDeviceGetByPCIBusId`                                 |                               | Returns a handle to a compute device.                                                                                          |
 | `cudaDeviceGetCacheConfig`                                | `hipDeviceGetCacheConfig`     | Returns the preferred cache configuration for the current device.                                                              |
-| `cudaDeviceGetLimit`                                      |                               | Returns resource limits.                                                                                                       |
+| `cudaDeviceGetLimit`                                      | `hipDeviceGetLimit`                              | Returns resource limits.                                                                                                       |
 | `cudaDeviceGetPCIBusId`                                   |                               | Returns a PCI Bus Id string for the device.                                                                                    |
 | `cudaDeviceGetSharedMemConfig`                            | `hipDeviceGetSharedMemConfig` | Returns the shared memory configuration for the current device.                                                                |
 | `cudaDeviceGetStreamPriorityRange`                        |                               | Returns numerical values that correspond to the least and greatest stream priorities.                                          |
 | `cudaDeviceReset`                                         | `hipDeviceReset`              | Destroy all allocations and reset all state on the current device in the current process.                                      |
 | `cudaDeviceSetCacheConfig`                                | `hipDeviceSetCacheConfig`     | Sets the preferred cache configuration for the current device.                                                                 |
-| `cudaDeviceSetLimit`                                      |                               | Set resource limits.                                                                                                           |
+| `cudaDeviceSetLimit`                                      | `hipDeviceSetLimit`                              | Set resource limits.                                                                                                           |
 | `cudaDeviceSetSharedMemConfig`                            | `hipDeviceSetSharedMemConfig` | Sets the shared memory configuration for the current device.                                                                   |
 | `cudaDeviceSynchronize`                                   | `hipDeviceSynchronize`        | Wait for compute device to finish.                                                                                             |
 | `cudaGetDevice`                                           | `hipGetDevice`                | Returns which device is currently being used.                                                                                  |
@@ -25,7 +25,7 @@
 | `cudaIpcOpenEventHandle`                                  |                               | Opens an interprocess event handle for use in the current process.                                                             |
 | `cudaIpcOpenMemHandle`                                    |                               | Opens an interprocess memory handle exported from another process and returns a device pointer usable in the local process.    |
 | `cudaSetDevice`                                           | `hipSetDevice`                | Set device to be used for GPU executions.                                                                                      |
-| `cudaSetDeviceFlags`                                      |                               | Sets flags to be used for device executions.                                                                                   |
+| `cudaSetDeviceFlags`                                      | `hipSetDeviceFlags`           | Sets flags to be used for device executions.                                                                                   |
 | `cudaSetValidDevices`                                     |                               | Set a list of devices that can be used for CUDA.                                                                               |`
 
 **2. Error Handling**
@@ -42,14 +42,14 @@
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
 | `cudaStreamAddCallback`                                   |                               | Add a callback to a compute stream.                                                                                            |
-| `cudaStreamAttachMemAsync`                                |                               | Attach memory to a stream asynchronously.                                                                                      |
+| `cudaStreamAttachMemAsync`                                |                               | Attach managed memory to a stream asynchronously.                                                                                      |
 | `cudaStreamCreate`                                        | `hipStreamCreate`             | Create an asynchronous stream.                                                                                                 |
 | `cudaStreamCreateWithFlags`                               | `hipStreamCreateWithFlags`    | Create an asynchronous stream.                                                                                                 |
 | `cudaStreamCreateWithPriority`                            |                               | Create an asynchronous stream with the specified priority.                                                                     |
 | `cudaStreamDestroy`                                       | `hipStreamDestroy`            | Destroys and cleans up an asynchronous stream.                                                                                 |
-| `cudaStreamGetFlags`                                      |                               | Query the flags of a stream.                                                                                                   |
+| `cudaStreamGetFlags`                                      | `hipStreamGetFlags`           | Query the flags of a stream.                                                                                                   |
 | `cudaStreamGetPriority`                                   |                               | Query the priority of a stream.                                                                                                |
-| `cudaStreamQuery`                                         |                               | Queries an asynchronous stream for completion status.                                                                          |
+| `cudaStreamQuery`                                         | `hipStreamQuery`              | Queries an asynchronous stream for completion status.                                                                          |
 | `cudaStreamSynchronize`                                   | `hipStreamSynchronize`        | Waits for stream tasks to complete.                                                                                            |
 | `cudaStreamWaitEvent`                                     | `hipStreamWaitEvent`          | Make a compute stream wait on an event.                                                                                        |
 
@@ -100,8 +100,8 @@
 | `cudaHostAlloc`                                           | `hipHostMalloc`                | Allocates page-locked memory on the host.                                                                                      |
 | `cudaHostGetDevicePointer`                                | `hipHostGetDevicePointer`    | Passes back device pointer of mapped host memory allocated by cudaHostAlloc or registered by cudaHostRegister.                 |
 | `cudaHostGetFlags`                                        | `hipHostGetFlags`           | Passes back flags used to allocate pinned host memory allocated by cudaHostAlloc.                                              |
-| `cudaHostRegister`                                        |                               | Registers an existing host memory range for use by CUDA.                                                                       |
-| `cudaHostUnregister`                                      |                               | Unregisters a memory range that was registered with cudaHostRegister.                                                          |
+| `cudaHostRegister`                                        | `hipHostRegister`             | Registers an existing host memory range for use by CUDA.                                                                       |
+| `cudaHostUnregister`                                      | `hipHostUnregister`           | Unregisters a memory range that was registered with cudaHostRegister.                                                          |
 | `cudaMalloc`                                              | `hipMalloc`                   | Allocate memory on the device.                                                                                                 |
 | `cudaMalloc3D`                                            |                               | Allocates logical 1D, 2D, or 3D memory objects on the device.                                                                  |
 | `cudaMalloc3DArray`                                       |                               | Allocate an array on the device.                                                                                               |
@@ -231,7 +231,7 @@
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaBindSurfaceToArra`y                                  |                               | Binds an array to a surface.                                                                                                   |
+| `cudaBindSurfaceToArray`                                  |                               | Binds an array to a surface.                                                                                                   |
 | `cudaBindTexture`                                         |                               | Binds a memory area to a texture.                                                                                              |
 | `cudaBindTexture2D`                                       |                               | Binds a 2D memory area to a texture.                                                                                           |
 | `cudaBindTextureToArray`                                  |                               | Binds an array to a texture.                                                                                                   |

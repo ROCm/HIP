@@ -16,9 +16,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
+/* HIT_START
+ * BUILD: %t %s ../test_common.cpp
+ * RUN: %t
+ * HIT_END
+ */
+
 #include"test_common.h"
-#include"hip_runtime.h"
-#include"hip_runtime_api.h"
+#include "hip/hip_runtime.h"
+#include "hip/hip_runtime_api.h"
 
 #define N 512
 #define SIZE N*sizeof(float)

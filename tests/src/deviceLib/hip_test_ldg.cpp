@@ -19,12 +19,19 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
+/* HIT_START
+ * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS --gpu-architecture=sm_35
+ * RUN: %t
+ * HIT_END
+ */
+
 #include <assert.h>
 #include <stdio.h>
 #include <algorithm>
 #include <stdlib.h>
 #include<iostream>
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 #include "test_common.h"
 
 #if (__hcc_workweek__ >= 16164) || defined (__HIP_PLATFORM_NVCC__)

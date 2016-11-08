@@ -288,7 +288,7 @@ while (@ARGV) {
         $ft{'mem'} += s/\bcudaMallocHost\b/hipHostMalloc/g;  # note conversion to standard hipHost* naming convention
         $ft{'mem'} += s/\bcudaFree\b/hipFree/g;
         $ft{'mem'} += s/\bcudaFreeHost\b/hipHostFree/g;    # note conversion to standard hipHost* naming convention
-		$ft{'mem'} += s/\bcudaHostAlloc\b/hipHostAlloc/g;
+		$ft{'mem'} += s/\bcudaHostAlloc\b/hipHostMalloc/g;
 		$ft{'mem'} += s/\bcudaHostGetDevicePointer\b/hipHostGetDevicePointer/g;
 		$ft{'mem'} += s/\bcudaHostAllocDefault\b/hipHostMallocDefault/g;
 		$ft{'mem'} += s/\bcudaHostAllocPortable\b/hipHostMallocPortable/g;
@@ -699,12 +699,12 @@ sub warnUnsupportedSpecialFunctions
         #"__ballot",
 
         #"__popc",
-        #"__clz",        
+        #"__clz",
 
-        "__shfl",
-        "__shfl_up",  
-        "__shfl_down",  
-        "__shfl_xor",  
+        #"__shfl",
+        #"__shfl_up",
+        #"__shfl_down",
+        #"__shfl_xor",
 
         "__prof_trigger",
 

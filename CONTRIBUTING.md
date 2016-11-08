@@ -18,9 +18,9 @@ After making HIP, don't forget the "make install" step !
 
 ## Adding a new HIP API
 
-    - Add a translation to the bin/hipify tool ; many examples abound.
+    - Add a translation to the hipify-clang tool ; many examples abound.
        - For stat tracking purposes, place the API into an appropriate stat category ("dev", "mem", "stream", etc).
-    - Add a inlined NVCC implementation for the function in include/nvcc_detail/hip_runtime_api.h.
+    - Add a inlined NVCC implementation for the function in include/hip/nvcc_detail/hip_runtime_api.h.
        - These are typically headers 
     - Add an HCC definition and Doxygen comments for the function in include/hcc_detail/hip_runtime_api.h
        - Source implementation typically go in src/hcc_detail/hip_hcc.cpp. The implementation may involve 
@@ -59,7 +59,7 @@ Selected multilib: .;@m64
 
 The unix `date` command can print the HCC-format work-week for a specific date , ie:
 ```
-> date --utc +%y%W%w -d 2015-11-09  
+> date --utc +%y%U%w -d 2015-11-09
 15451
 ```
 
@@ -90,61 +90,64 @@ The HIP interface is designed to be very familiar for CUDA programmers.
 
 Differences or limitations of HIP APIs as compared to CUDA APIs should be clearly documented and described. 
 
+## Coding Guidelines (in brief)
+- Code Indentation:
+    - Tabs should be expanded to spaces.
+    - Use 4 spaces indendation.
+- Capitalization and Naming
+    - Prefer camelCase for HIP interfaces and internal symbols.  Note HCC uses _ for separator.  
+      This guideline is not yet consistently followed in HIP code - eventual compliance is aspirational.
+    - Member variables should begin with a leading "_".  This allows them to be easily distinguished from other variables or functions.
+    
+
+- {} placement
+    - For functions, the opening { should be placed on a new line.
+    - For if/else blocks, the opening { is placed on same line as the if/else. Use a space to separate {/" from if/else.  Example
+'''
+    if (foo) {
+        doFoo() 
+    } else { 
+        doFooElse();
+    }
+'''
+    - namespace should be on same line as { and separated by a space.
+    - Single-line if statement should still use {/} pair (even though C++ does not require).
+- Miscellaneous
+    - All references in function parameter lists should be const.  
+    - "ihip" = internal hip structures.  These should not be exposed through the HIP API.
+    - Keyword TODO refers to a note that should be addressed in long-term.  Could be style issue, software architecture, or known bugs.
+    - FIXME refers to a short-term bug that needs to be addressed.
+
+- HIP_INIT_API() should be placed at the start of each top-level HIP API.  This function will make sure the HIP runtime is initialized,
+  and also constructs an appropriate API string for tracing and CodeXL marker tracing.  The arguments to HIP_INIT_API should match
+  those of the parent fucntion.  
+- ihipLogStatus should only be called from top-level HIP APIs,and should be called to log and return the error code.  The error code 
+  is used by the GetLastError and PeekLastError functions - if a HIP API simply returns, then the error will not be logged correctly.
+
+
 
 #### Presubmit Testing:
-Before checking in or submitting a pull request, run all Rodinia tests and ensure pass results match starting point:
+Before checking in or submitting a pull request, run all directed tests (see tests/README.md) and all Rodinia tests.  
+Ensure pass results match starting point:
 
 ```shell
        > cd examples/
        > ./run_all.sh
 ```
 
-Recent results :
 
-```
-hip2/examples/rodinia_3.0/hip$ make test
---TESTING: b+tree
-executing: ../../test/b+tree/run0.cmd...      PASSED!
---TESTING: backprop
-executing: ../../test/backprop/run0.cmd...      PASSED!
---TESTING: bfs
-executing: ../../test/bfs/run0.cmd...      PASSED!
-executing: ../../test/bfs/run1.cmd...      PASSED!
---TESTING: cfd
-executing: ../../test/cfd/run0.cmd...      PASSED!
-executing: ../../test/cfd/run1.cmd...      PASSED!
---TESTING: gaussian
-executing: ../../test/gaussian/run0.cmd...      PASSED!
---TESTING: heartwall
-executing: ../../test/heartwall/run0.cmd...      PASSED!
---TESTING: hotspot
-executing: ../../test/hotspot/run0.cmd...      PASSED!
---TESTING: kmeans
-executing: ../../test/kmeans/run0.cmd...      PASSED!
-executing: ../../test/kmeans/run1.cmd...      PASSED!
-executing: ../../test/kmeans/run2.cmd...      PASSED!
-executing: ../../test/kmeans/run3.cmd...      PASSED!
---TESTING: lavaMD
-executing: ../../test/lavaMD/run0.cmd...      PASSED!
-executing: ../../test/lavaMD/run1.cmd...      PASSED!
-executing: ../../test/lavaMD/run2.cmd...      PASSED!
-executing: ../../test/lavaMD/run3.cmd...      PASSED!
-executing: ../../test/lavaMD/run4.cmd...      PASSED!
---TESTING: lud
-executing: ../../test/lud/run0.cmd...      PASSED!
---TESTING: myocyte
-executing: ../../test/myocyte/run0.cmd...      PASSED!
---TESTING: nn
-executing: ../../test/nn/run0.cmd...      PASSED!
---TESTING: nw
-executing: ../../test/nw/run0.cmd...      PASSED!
---TESTING: pathfinder
-executing: ../../test/pathfinder/run0.cmd...      PASSED!
---TESTING: srad
-executing: ../../test/srad/run0.cmd...      PASSED!
---TESTING: streamcluster
-executing: ../../test/streamcluster/run0.cmd...    PASSED!
-```
+#### Checkin messages
+Follow existing best practice for writing a good Git commit message.    Some tips:
+    http://chris.beams.io/posts/git-commit/
+    https://robots.thoughtbot.com/5-useful-tips-for-a-better-commit-message
+
+In particular : 
+   - Use imperative voice, ie "Fix this bug", "Refactor the XYZ routine", "Update the doc".  
+     Not : "Fixing the bug", "Fixed the bug", "Bug fix", etc.
+   - Subject should summarize the commit.  Do not end subject with a period.  Use a blank line
+     after the subject.
+
+
 
 ## Doxygen Editing Guidelines
 

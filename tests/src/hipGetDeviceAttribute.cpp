@@ -21,9 +21,15 @@ THE SOFTWARE.
 */
 // Test the device info API extensions for HIP:
 
+/* HIT_START
+ * BUILD: %t %s test_common.cpp
+ * RUN: %t EXCLUDE_HIP_PLATFORM nvcc
+ * HIT_END
+ */
+
 #include <stdio.h>
 #include <iostream>
-#include <hip_runtime.h>
+#include "hip/hip_runtime.h"
 
 #include "test_common.h"
 
@@ -70,15 +76,15 @@ int main(int argc, char *argv[])
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMemoryClockRate, props.memoryClockRate));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMemoryBusWidth, props.memoryBusWidth));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMultiprocessorCount, props.multiProcessorCount));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeIsMultiGpuBoard, props.isMultiGpuBoard));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeIsMultiGpuBoard, props.isMultiGpuBoard));//
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeComputeMode, props.computeMode));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeL2CacheSize, props.l2CacheSize));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxThreadsPerMultiProcessor, props.maxThreadsPerMultiProcessor));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeComputeCapabilityMajor, props.major));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeComputeCapabilityMinor, props.minor));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeComputeCapabilityMinor, props.minor));//
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeConcurrentKernels, props.concurrentKernels));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributePciBusId, props.pciBusID));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributePciDeviceId, props.pciDeviceID));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributePciDeviceId, props.pciDeviceID));//
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxSharedMemoryPerMultiprocessor, props.maxSharedMemoryPerMultiProcessor));
     passed();
 

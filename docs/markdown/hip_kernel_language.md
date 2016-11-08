@@ -156,7 +156,7 @@ The `__constant__` keyword is supported. The host writes constant memory before 
 ### `__shared__` 
 The `__shared__` keyword is supported.
 
-`extern __shared__` allows the host to dynamically allocate shared memory and is specified as a launch parameter. This feature is under development.
+`extern __shared__` allows the host to dynamically allocate shared memory and is specified as a launch parameter.  HIP uses an alternate syntax based on the HIP_DYNAMIC_SHARED macro.
 
 ### `__managed__`
 Managed memory, including the `__managed__` keyword, are not supported in HIP.
@@ -231,7 +231,10 @@ typedef struct dim3 {
 ```
 
 ## Memory-Fence Instructions
-HIP support for __threadfence(), __threadfence_block() and __threadfence_system() is under development.
+HIP supports __threadfence() and  __threadfence_block().
+
+Applications that use threadfence_system can disable the L1 and L2 caches on the GPU by:
+"export HSA_DISABLE_CACHE=1".  See the hip_porting_guide.md#threadfence_system for more information.
 
 ## Synchronization Functions
 The __syncthreads() built-in function is supported in HIP. The __syncthreads_count(int), __syncthreads_and(int) and __syncthreads_or(int) functions are under development.  
@@ -448,6 +451,8 @@ Following is the list of supported integer intrinsics. Note that intrinsics are 
 | unsigned int __ffsll(long long int x) <br><sub>Find the position of least signigicant bit set to 1 in a 64 bit signed integer.</sub> |
 | unsigned int __popc ( unsigned int x ) <br><sub>Count the number of bits that are set to 1 in a 32 bit integer.</sub> |
 | int __popcll ( unsigned long long int x )<br><sub>Count the number of bits that are set to 1 in a 64 bit integer.</sub> |
+| int __mul24 ( int x, int y )<br><sub>Multiply two 24bit integers.</sub> |
+| unsigned int __umul24 ( unsigned int x, unsigned int y )<br><sub>Multiply two 24bit unsigned integers.</sub> |
 <sub><b id="f3"><sup>[1]</sup></b> 
 The hcc implementation of __ffs() and __ffsll() contains code to add a constant +1 to produce the ffs result format.
 For the cases where this overhead is not acceptable and programmer is willing to specialize for the platform, 
@@ -534,7 +539,6 @@ HIP supports the following atomic operations.
 ### Caveats and Features Under-Development:
 
 - HIP enables atomic operations on 32-bit integers. Additionally, it supports an atomic float add. AMD hardware, however, implements the float add using a CAS loop, so this function may not perform efficiently.
-- wrapping increment and decrement are under development.
 
 ## Warp Cross-Lane Functions
 
@@ -570,8 +574,6 @@ Applications can test whether the target platform supports the any/all instructi
 
 ### Warp Shuffle Functions 
 
-The following warp shuffle instructions are under development.
-
 Half-float shuffles are not supported. The default width is warpSize---see [Warp Cross-Lane Functions](#warp-cross-lane-functions). Applications should not assume the warpSize is 32 or 64.
 
 ```
@@ -600,7 +602,8 @@ The printf function is under development.
 
 ## Device-Side Dynamic Global Memory Allocation
 
-Device-side dynamic global memory allocation is not supported.
+Device-side dynamic global memory allocation is under development.  HIP now includes a preliminary
+implementation of malloc and free that can be called from device functions.
 
 ## `__launch_bounds__`
 GPU multiprocessors have a fixed pool of resources (primarily registers and shared memory) that are shared among the active warps. Using more resources can increase the kernel’s IPC, but it reduces the resources available for other warps and limits the number of warps that can run simultaneously. Thus, GPUs exhibit a complex relationship between resource usage and performance. `__launch_bounds__` allows the application to provide usage hints that influence the resources (primarily registers) employed by the generated code. It’s a function attribute that must be attached to a `__global__` function:
@@ -627,12 +630,12 @@ The compiler ensures that the kernel uses fewer registers than both allowed maxi
 
 HIP/hcc will parse the `launch_bounds` attribute but silently ignores the performance hint. Full support is under development.
 
-The hcc compiler does not support the "--maxregcount" option like nvcc.  Instead, users are encouraged to use the hip_launch_bounds directive since the parameters are more intuitive and portable than
+Unlike nvcc, hcc does not support the "--maxregcount" option.  Instead, users are encouraged to use the hip_launch_bounds directive since the parameters are more intuitive and portable than
 micro-architecture details like registers, and also the directive allows per-kernel control rather than an entire file.  hip_launch_bounds works on both hcc and nvcc targets.
 
 
 ## Register Keyword
-The register keyword affects code generation in neither nvcc nor hcc.  It’s deprecated in standard C++, so hcc will generate a warning. (nvcc silently ignores use of this keyword.) To disable the warning, you can pass the option `-Wno-deprecated-register` to hcc.
+The register keyword is deprecated in C++, and is silently ignored by both nvcc and hcc.  To see warnings, you can pass the option `-Wdeprecated-register` to hcc.
 
 
 ## Pragma Unroll
@@ -667,3 +670,16 @@ The following C++ features are not supported:
 - Run-time-type information (RTTI)
 - Virtual functions
 - Try/catch
+
+## Kernel Compilation
+hipcc now supports compiling C++/HIP kernels to binary code objects. 
+The user can specify the target for which the binary can be generated. HIP/HCC does not yet support fat binaries so only a single target may be specified.
+The file format for binary is `.co` which means Code Object. The following command builds the code object using `hipcc`.
+
+`hipcc --genco --target-isa=[TARGET GPU] [INPUT FILE] -o [OUTPUT FILE]`
+```[TARGET GPU] = fiji/hawaii
+[INPUT FILE] = Name of the file containing kernels
+[OUTPUT FILE] = Name of the generated code object file```
+
+Note that one important fact to remember when using binary code objects is that the number of arguments to the kernel are different on HCC and NVCC path. Refer to the sample in samples/0_Intro/module_api for differences in the arguments to be passed to the kernel.
+

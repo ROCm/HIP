@@ -23,7 +23,7 @@ THE SOFTWARE.
 
 #include"gxxHipApi.h"
 #include<vector>
-#include"hip_runtime.h"
+#include "hip/hip_runtime.h"
 
 #define LEN 1024*1024
 #define SIZE LEN * sizeof(float)

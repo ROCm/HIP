@@ -20,10 +20,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD: %t %s ../../test_common.cpp
+ * RUN: %t
+ * HIT_END
+ */
+
 #include<iostream>
 #include"test_common.h"
 #include<thread>
 #define N 1000
+
+
 
 template<typename T>
 __global__ void Inc(hipLaunchParm lp, T *Array){
@@ -82,9 +90,23 @@ void run(size_t size, hipStream_t stream1, hipStream_t stream2){
 	HIPCHECK(hipDeviceSynchronize());
 	HIPASSERT(Eh[10] = Ah[10] + 1.0f);
 	HIPASSERT(Ehh[10] = Ahh[10] + 1.0f);
+
+    HIPCHECK(hipHostFree(Ah));
+    HIPCHECK(hipHostFree(Bh));
+    HIPCHECK(hipHostFree(Eh));
+    HIPCHECK(hipHostFree(Ahh));
+    HIPCHECK(hipHostFree(Bhh));
+    HIPCHECK(hipHostFree(Ehh));
+    HIPCHECK(hipFree(Cd));
+    HIPCHECK(hipFree(Dd));
+    HIPCHECK(hipFree(Cdd));
+    HIPCHECK(hipFree(Ddd));
 }
 
-int main(int argc, char **argv){
+int main(int argc, char **argv)
+{
+    iterations = 100;
+
 	HipTest::parseStandardArguments(argc, argv, true);
 
 
@@ -94,6 +116,8 @@ int main(int argc, char **argv){
 	}
 
 	const size_t size = N * sizeof(float);
+    
+    for (int i=0; i< iterations; i++) {
 
 	std::thread t1(run1, size, stream[0]);
 	std::thread t2(run1, size, stream[0]);
@@ -103,6 +127,7 @@ int main(int argc, char **argv){
 	t2.join();
 //	std::cout<<"T2"<<std::endl;
 	t3.join(); 
+    }
 	passed();
 }
 

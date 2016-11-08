@@ -31,13 +31,73 @@ HIP releases are typically of two types. The tag naming convention is different 
 - [HIP Kernel Language](docs/markdown/hip_kernel_language.md)
 - [HIP Runtime API (Doxygen)](http://gpuopen-professionalcompute-tools.github.io/HIP)
 - [HIP Porting Guide](docs/markdown/hip_porting_guide.md)
+- [HIP Porting Driver Guide](docs/markdown/hip_porting_driver_api.md)
 - [HIP Terminology](docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenL)
-- [clang-hipify](clang-hipify/README.md)
+- [hipify-clang](hipify-clang/README.md)
 - [Developer/CONTRIBUTING Info](CONTRIBUTING.md)
 - [Release Notes](RELEASE.md)
+
 ## How do I get set up?
 
 See the [Installation](INSTALL.md) notes.
+
+## Simple Example
+The HIP API includes functions such as hipMalloc, hipMemcpy, and hipFree.  
+Programmers familiar with CUDA will also be able to quickly learn and start coding with the HIP API.
+Compute kernels are launched with the "hipLaunchKernel" macro call.    Here is simple example showing a
+snippet of HIP API code:
+
+```cpp
+hipMalloc(&A_d, Nbytes));
+hipMalloc(&C_d, Nbytes));
+
+hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice);
+
+const unsigned blocks = 512;
+const unsigned threadsPerBlock = 256;
+hipLaunchKernel(vector_square,   /* compute kernel*/
+                dim3(blocks), dim3(threadsPerBlock), 0/*dynamic shared*/, 0/*stream*/,     /* launch config*/
+                C_d, A_d, N);  /* arguments to the compute kernel */
+
+hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost); 
+```
+
+
+The HIP kernel language defines builtins for determining grid and block coordinates, math functions, short vectors, 
+atomics, and timer functions. It also specifies additional defines and keywords for function types, address spaces, and 
+optimization controls.  (See the [HIP Kernel Language](docs/markdown/hip_kernel_language.md) for a full description).
+Here's an example of defining a simple 'vector_square' kernel.  
+
+
+
+```cpp
+template <typename T>
+__global__ void
+vector_square(T *C_d, const T *A_d, size_t N)
+{
+    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    size_t stride = hipBlockDim_x * hipGridDim_x ;
+
+    for (size_t i=offset; i<N; i+=stride) {
+        C_d[i] = A_d[i] * A_d[i];
+    }
+}
+```
+
+The HIP Runtime API code and compute kernel definition can exist in the same source file - HIP takes care of generating host and device code appropriately.
+
+## HIP Portability and Compiler Technology
+HIP C++ code can be compiled with either :
+- On the Nvidia CUDA platform, HIP provides header file which translate from the HIP runtime APIs to CUDA runtime APIs.  The header file contains mostly inlined 
+  functions and thus has very low overhead - developers coding in HIP should expect the same perforamnce as coding in native CUDA.  The code is then 
+  compiled with nvcc, the standard C++ compiler provided with the CUDA SDK.  Developers can use any tools supported by the CUDA SDK including the CUDA
+  profiler and debugger.
+- On the AMD ROCm platform, HIP provides a header and runtime library built on top of hcc compiler.  The HIP runtime implements HIP streams, events, and memory APIs, 
+  and is a object library that is linked with the application.  The source code for all headers and the library implementation is available on GitHub.  
+  HIP developers on ROCm can use AMD's CodeXL for debugging and profiling.
+
+Thus HIP source code can be compiled to run on either platform.  Platform-specific features can be isolated to a specific platform using conditional compilation.  Thus HIP
+provides source portability to either platform.   HIP provides the _hipcc_ compiler driver which will call the appropriate toolchain depending on the desired platform.
 
 
 ## Examples and Getting Started:

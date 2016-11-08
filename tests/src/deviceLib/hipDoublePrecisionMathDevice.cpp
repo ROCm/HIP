@@ -19,7 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 #include "test_common.h"
 
 #pragma GCC diagnostic ignored "-Wall"
@@ -47,9 +47,9 @@ __device__ void double_precision_math_functions()
     //cyl_bessel_i1(0.0);
     erf(0.0);
     erfc(0.0);
-    //erfcinv(2.0);
-    //erfcx(0.0);
-    //erfinv(1.0);
+    erfcinv(2.0);
+    erfcx(0.0);
+    erfinv(1.0);
     exp(0.0);
     exp10(0.0);
     exp2(0.0);
@@ -67,46 +67,46 @@ __device__ void double_precision_math_functions()
     isfinite(0.0);
     isinf(0.0);
     isnan(0.0);
-    //j0(0.0);
-    //j1(0.0);
-    //jn(-1.0, 1.0);
+    j0(0.0);
+    j1(0.0);
+    jn(-1.0, 1.0);
     ldexp(0.0, 0);
     //lgamma(1.0);
-    //llrint(0.0);
-    //llround(0.0);
+    llrint(0.0);
+    llround(0.0);
     log(1.0);
     log10(1.0);
     log1p(-1.0);
     log2(1.0);
     logb(1.0);
-    //lrint(0.0);
-    //lround(0.0);
+    lrint(0.0);
+    lround(0.0);
     //modf(0.0, &fX);
     nan("1");
     nearbyint(0.0);
     //nextafter(0.0);
     //fX = 1.0; norm(1, &fX);
-    //norm3d(1.0, 0.0, 0.0);
-    //norm4d(1.0, 0.0, 0.0, 0.0);
-    //normcdf(0.0);
+    norm3d(1.0, 0.0, 0.0);
+    norm4d(1.0, 0.0, 0.0, 0.0);
+    normcdf(0.0);
     //normcdfinv(1.0);
     pow(1.0, 0.0);
-    //rcbrt(1.0);
+    rcbrt(1.0);
     remainder(2.0, 1.0);
     //remquo(1.0, 2.0, &iX);
-    //rhypot(0.0, 1.0);
-    //rint(1.0);
-    //fX = 1.0; rnorm(1, &fX);
-    //rnorm3d(0.0, 0.0, 1.0);
-    //rnorm4d(0.0, 0.0, 0.0, 1.0);
+    rhypot(0.0, 1.0);
+    rint(1.0);
+    fX = 1.0; rnorm(1, &fX);
+    rnorm3d(0.0, 0.0, 1.0);
+    rnorm4d(0.0, 0.0, 0.0, 1.0);
     round(0.0);
     rsqrt(1.0);
-    //scalbln(0.0, 1);
+    scalbln(0.0, 1);
     scalbn(0.0, 1);
     signbit(1.0);
     sin(0.0);
-    //sincos(0.0, &fX, &fY);
-    //sincospi(0.0, &fX, &fY);
+    sincos(0.0, &fX, &fY);
+    sincospi(0.0, &fX, &fY);
     sinh(0.0);
     sinpi(0.0);
     sqrt(0.0);
@@ -114,9 +114,9 @@ __device__ void double_precision_math_functions()
     tanh(0.0);
     tgamma(2.0);
     trunc(0.0);
-    //y0(1.0);
-    //y1(1.0);
-    //yn(1, 1.0);
+    y0(1.0);
+    y1(1.0);
+    yn(1, 1.0);
 }
 
 __global__ void compileDoublePrecisionMathOnDevice(hipLaunchParm lp, int ignored)

@@ -1,0 +1,95 @@
+#!/usr/bin/perl -w
+
+use 5.006; use v5.10.1;
+use File::Basename;
+use File::Spec;
+
+# Scan input file for HIT information
+sub parse_file {
+    my $file = shift;
+    (my $exe = $file) =~ s/\.[^.]+$//g;
+    my (@buildCMDs, @runCMDs, @runNamedCMDs);
+    if (open (SOURCE, '<:encoding(UTF-8)', "$file")) {
+        while (<SOURCE>) {
+            my $line=$_;
+            # Look for BUILD instructions
+            if ($line =~ /^ \* BUILD:/) {
+                $line =~ s/^ \* BUILD: //g;     # Remove " * BUILD: "
+                $line =~ s/%s/$file/g;          # Substitute %s -> filename
+                $line =~ s/%t/$exe/g;           # Substitute %t -> targetname
+                $line =~ s/\R//g;               # Remove line endings
+                push @buildCMDs, $line;
+            }
+            # Look for RUN instructions
+            if ($line =~ /^ \* RUN:/) {
+                $line =~ s/^ \* RUN: //g;       # Remove " * RUN: "
+                $line =~ s/%s/$file/g;          # Substitute %s -> filename
+                $line =~ s/%t/$exe/g;           # Subsitute %t -> targetname
+                $line =~ s/\R//g;               # Remove line endings
+                push @runCMDs, $line;
+            }
+            # Look for RUN_NAMED instructions
+            if ($line =~ /^ \* RUN_NAMED:/) {
+                $line =~ s/^ \* RUN_NAMED: //g; # Remove " * RUN_NAMED: "
+                $line =~ s/%s/$file/g;          # Substitute %s -> filename
+                $line =~ s/%t/$exe/g;           # Subsitute %t -> targetname
+                $line =~ s/\R//g;               # Remove line endings
+                push @runNamedCMDs, $line;
+            }
+        }
+        close(SOURCE);
+    }
+    return (\@buildCMDs, \@runCMDs, \@runNamedCMDs);
+}
+
+# Exit if no arguments specified
+if(scalar @ARGV == 0){
+    print "No Arguments passed, exiting ...\n";
+    exit(-1);
+}
+
+# Parse command
+my @options = ();
+my $retBuildCMDs = 0;
+my $retRunCMDs = 0;
+my $retRunNamedCMDs = 0;
+foreach $arg (@ARGV) {
+    if ($retBuildCMDs or $retRunCMDs or $retRunNamedCMDs) {
+        push (@options, $arg);
+    }
+    if ($arg eq '--buildCMDs') {
+        $retBuildCMDs = 1;
+    }
+    if ($arg eq '--runCMDs') {
+        $retRunCMDs = 1;
+    }
+    if ($arg eq '--runNamedCMDs') {
+        $retRunNamedCMDs = 1;
+    }
+}
+
+# Atleast one command needs to be specified
+if (($retBuildCMDs eq 0) and ($retRunCMDs eq 0) and ($retRunNamedCMDs eq 0)) {
+    die "Usage: $0 <--buildCMDs|--runCMDs|--runNamedCMDs> FILENAMEs\n";
+}
+
+# Iterate over input files
+foreach $file (@options) {
+    # Convert absolute path to path relative to working directory
+    my $relfile = File::Spec->abs2rel($file);
+    my ($buildCMDs, $runCMDs, $runNamedCMDs) = parse_file("$relfile");
+    if ($retBuildCMDs) {
+        # print "BuildCMDs:\n";
+        print "$_\n" for @$buildCMDs;
+    }
+    if ($retRunCMDs) {
+        # print "RunCMDs:\n";
+        print "$_\n" for @$runCMDs;
+    }
+    if ($retRunNamedCMDs) {
+        # print "RunNamedCMDs:\n";
+        print "$_\n" for @$runNamedCMDs;
+    }
+}
+
+# vim: ts=4:sw=4:expandtab:smartindent

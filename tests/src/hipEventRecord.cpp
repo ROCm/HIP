@@ -23,8 +23,13 @@ THE SOFTWARE.
 // Through manual inspection of the reported timestamps, can determine if recording a NULL event forces synchronization : 
 // set 
 
+/* HIT_START
+ * BUILD: %t %s test_common.cpp
+ * RUN: %t --iterations 10
+ * HIT_END
+ */
 
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 #include "test_common.h"
 
 int main(int argc, char *argv[])

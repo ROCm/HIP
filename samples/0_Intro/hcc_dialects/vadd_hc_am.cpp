@@ -1,3 +1,25 @@
+/*
+Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 // Simple test showing how to use HC syntax with AM (accelerator memory).
 // AM provides a set of c-style memory management routines for allocating,
 // freeing, and copying memory.   am_alloc returns a device pointer
@@ -32,23 +54,25 @@ int main(int argc, char *argv[])
     for (int i=0; i<sizeElements; i++) {
         A_h[i] = 1.618f * i; 
         B_h[i] = 3.142f * i;
+        C_h[i] = 0;
     }
 
-    av.copy(A_h, A_d); // C++ copy H2D
-    av.copy(B_h, B_d); //C++  copy H2D
+    av.copy(A_h, A_d, sizeBytes); // C++ copy H2D
+    av.copy(B_h, B_d, sizeBytes); // C++ copy H2D
 
     // Launch kernel onto AV.  
     // Because the kernel PFE and the copies are submitted to same AV, they will execute in order
     // and we don't need additional synchronization to ensure the copies complete before the PFE begins.
+    hc::completion_future cf=
     hc::parallel_for_each(av,  hc::extent<1> (sizeElements),
-      [&] (hc::index<1> idx) [[hc]] { 
+      [=] (hc::index<1> idx) [[hc]] { 
         int i = idx[0];
         C_d[i] = A_d[i] + B_d[i];
     });
 
    
     // This copy is in same AV as the kernel and thus will wait for the kernel to finish before executing.
-    av.copy(C_d, C_h); // C++ copy D2H
+    av.copy(C_d, C_h, sizeBytes); // C++ copy D2H
 
 
     for (int i=0; i<sizeElements; i++) {

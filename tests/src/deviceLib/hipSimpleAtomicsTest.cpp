@@ -17,6 +17,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD: %t %s ../test_common.cpp
+ * RUN: %t
+ * HIT_END
+ */
+
 // includes, system
 #include <stdlib.h>
 #include <stdio.h>
@@ -25,7 +31,7 @@ THE SOFTWARE.
 
 
 // Includes HIP Runtime
-#include <hip_runtime.h>
+#include "hip/hip_runtime.h"
 #include <test_common.h>
 
 #define EXIT_WAIVED	2

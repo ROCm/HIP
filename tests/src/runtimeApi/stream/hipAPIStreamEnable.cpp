@@ -17,6 +17,11 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD: %t %s ../../test_common.cpp
+ * HIT_END
+ */
+
 //#define HIP_API_PER_THREAD_DEFAULT_STREAM
 
 #include<iostream>

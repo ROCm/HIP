@@ -17,6 +17,12 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD: %t %s test_common.cpp
+ * RUN: %t
+ * HIT_END
+ */
+
 #include "test_common.h"
 
 int main()
@@ -32,8 +38,10 @@ int main()
         HIPCHECK(hipSetDevice(j));
 
         for(int i=0;i<4;i++){
-            flag = 1 < i;
+            flag = 1 << i;
+            printf ("Flag=%x\n", flag);
             HIPCHECK(hipSetDeviceFlags(flag));
+            //HIPCHECK_API(hipSetDeviceFlags(flag), hipErrorInvalidValue);
         }
 
         flag = 0;

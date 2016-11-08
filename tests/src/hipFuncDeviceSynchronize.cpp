@@ -22,6 +22,12 @@ THE SOFTWARE.
  * hipError_t hipDeviceSynchronize();
 */
 
+/* HIT_START
+ * BUILD: %t %s test_common.cpp
+ * RUN: %t
+ * HIT_END
+ */
+
 #include"test_common.h"
 
 #define _SIZE sizeof(int)*1024*1024

@@ -19,6 +19,7 @@ for f in $HIPBINFILES
 do
 rm $(basename $f)
 done
+rm .hipVersion
 popd
 rmdir --ignore-fail-on-non-empty $ROCMBINDIR
 
@@ -26,9 +27,6 @@ rmdir --ignore-fail-on-non-empty $ROCMBINDIR
 HIPINCDIR=$HIPDIR/include
 ROCMINCDIR=$ROCMDIR/include
 pushd $ROCMINCDIR
-rm hip
-popd
-pushd $HIPINCDIR
 rm hip
 popd
 rmdir --ignore-fail-on-non-empty $ROCMINCDIR

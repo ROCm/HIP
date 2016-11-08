@@ -2,8 +2,36 @@
 
 We have attempted to document known bugs and limitations - in particular the [HIP Kernel Language](docs/markdown/hip_kernel_language.md) document uses the phrase "Under Development", and the [HIP Runtime API bug list](http://gpuopen-professionalcompute-tools.github.io/HIP/bug.html) lists known bugs. 
 
+Upcoming:
+- Stability: Enforce perioidic host synchronization to reclaim resources if the application has launched a large
+  number of commands (>1K) without synchronizing.  
+- Register keyword now silently ignored on HCC (previously would emit warning).
+- Doc updates: Add some more frequently asked questions to FAQ, fix TOC in some files, review.
+- Cookbook.
+
+===================================================================================================
+
+## Revision History:
+
+===================================================================================================
+Release:1.0
+Date: 2016.11.8
+- Initial implementation for FindHIP.cmake
+- HIP library now installs as a static library by default
+- Added support for HIP context and HIP module APIs
+- Major changes to HIP signal & memory management implementation
+- Support for complex data type and math functions
+- clang-hipify is now known as hipify-clang
+- Added several new HIP samples
+- Preliminary support for new APIs: hipMemcpyToSymbol, hipDeviceGetLimit, hipRuntimeGetVersion
+- Added support for async memcpy driver API (for example hipMemcpyHtoDAsync)
+- Support for memory management device functions: malloc, free, memcpy & memset
+- Removed deprecated HIP runtime header locations. Please include "hip/hip_runtime.h" instead of "hip_runtime.h". You can use `find . -type f -exec sed -i 's:#include "hip_runtime.h":#include "hip/hip_runtime.h":g' {} +` to replace all such references
+
+
 ===================================================================================================
 Release:0.92.00
+Date: 2016.8.14
 - hipLaunchKernel supports one-dimensional grid and/or block dims, without explicit cast to dim3 type (actually in 0.90.00)
 - fp16 software support
 - Support for Hawaii dGPUs using environment variable ROCM_TARGET=hawaii
@@ -12,10 +40,6 @@ Release:0.92.00
 - Documentation updates
 - Improvements to clang-hipify
 
-
-===================================================================================================
-
-## Revision History:
 
 ===================================================================================================
 Release:0.90.00

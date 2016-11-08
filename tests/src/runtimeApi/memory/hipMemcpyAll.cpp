@@ -17,8 +17,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD: %t %s ../../test_common.cpp
+ * HIT_END
+ */
 
-#include<hip_runtime.h>
+#include "hip/hip_runtime.h"
 #include<iostream>
 #include<assert.h>
 #include"test_common.h"

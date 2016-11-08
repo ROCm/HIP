@@ -17,10 +17,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD: %t %s test_common.cpp
+ * RUN: %t
+ * HIT_END
+ */
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 #include "test_common.h"
 
 #define WIDTH     1024

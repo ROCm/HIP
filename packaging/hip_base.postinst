@@ -19,15 +19,13 @@ for f in $HIPBINFILES
 do
     ln -s $f $(basename $f)
 done
-popd >/dev/null
+    ln -s $HIPDIR/bin/.hipVersion .hipVersion
+popd
 
 # Soft-link to headers
-HIPINCDIR=$HIPDIR/include
+HIPINCDIR=$HIPDIR/include/hip
 ROCMINCDIR=$ROCMDIR/include
 mkdir -p $ROCMINCDIR
 pushd $ROCMINCDIR
     ln -s $HIPINCDIR hip
-popd
-pushd $HIPINCDIR
-ln -s $HIPINCDIR hip
 popd

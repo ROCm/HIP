@@ -15,18 +15,20 @@ EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR
 THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
 
+/* HIT_START
+ * BUILD: %t %s test_common.cpp NVCC_OPTIONS -std=c++11
+ * RUN: %t
+ * HIT_END
+ */
+
 #include <iostream>
 #include <vector>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string>
-
+#include "hip/hip_runtime.h"
 using namespace std;
-
-//./hipEnvVar -c -d 0 -h
-  //putenv("SomeVariable=SomeValue");
- //putenv("export HIP_VISIBLE_DEVICES=0,1,2,3");
 
 int getDeviceNumber(){
    FILE *in;
@@ -40,7 +42,8 @@ int getDeviceNumber(){
     return atoi(buff);
 }
 
-int getDevicePCIBusNum(int deviceID){
+// Query the current device ID remotely to hipEnvVar
+int getDevicePCIBusNumRemote(int deviceID){
     FILE *in;
     char buff[512];
     string str = "./hipEnvVar -d ";
@@ -51,6 +54,19 @@ int getDevicePCIBusNum(int deviceID){
     fgets(buff, sizeof(buff), in);
     pclose(in);
     return atoi(buff);
+}
+
+// Query the current device ID locally
+int getDevicePCIBusNum(int deviceID){
+    hipSetDevice(deviceID);
+    hipDeviceProp_t devProp;
+
+    hipGetDeviceProperties(&devProp, deviceID);
+    if (devProp.major < 1) {
+        printf("%d does not support HIP\n", deviceID);
+        return -1;
+    }
+    return devProp.pciBusID;
 }
 
 int main() {
@@ -72,11 +88,9 @@ int main() {
     for (int i = 0; i < totalDeviceNum ; i++) {
         setenv("HIP_VISIBLE_DEVICES",(char*)std::to_string(i).c_str(),1);
         setenv("CUDA_VISIBLE_DEVICES",(char*)std::to_string(i).c_str(),1);
-        //cout<<"HIP_VISIBLE_DEVICES is "<<i<<" data in vector is "<<devPCINum[i]<<endl;
-        //std::cout <<"Returned pci number is"<< getDevicePCIBusNum(0) << std::endl;
-        if (devPCINum[i] != getDevicePCIBusNum(0)) {
-            std::cout << "The returned PciBusID is not correct"
-                << std::endl;
+        if (devPCINum[i] != getDevicePCIBusNumRemote(0)) {
+            std::cout << "The returned PciBusID is not correct"<< std::endl;
+            std::cout << "Expected "<< devPCINum[i] << ", but get " << getDevicePCIBusNum(i) << endl;
             exit(-1);
         } else {
             continue;

@@ -20,11 +20,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD: %t %s ../test_common.cpp
+ * RUN: %t
+ * HIT_END
+ */
 
 #include <stdio.h>
 #include <iostream>
 
-#include <hip_runtime.h>
+#include "hip/hip_runtime.h"
 #define HIP_ASSERT(x) (assert((x)==hipSuccess))
 
 __global__ void

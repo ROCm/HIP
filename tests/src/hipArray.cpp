@@ -1,4 +1,10 @@
-#include "hip_runtime.h"
+/* HIT_START
+ * BUILD: %t %s test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * RUN: %t EXCLUDE_HIP_PLATFORM
+ * HIT_END
+ */
+
+#include "hip/hip_runtime.h"
 #include "test_common.h"
 
 void printSep()
