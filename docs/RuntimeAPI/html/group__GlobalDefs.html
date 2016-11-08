@@ -65,7 +65,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Groups</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Friends</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Groups</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(11)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -135,24 +135,30 @@ Macros</h2></td></tr>
 <tr class="separator:ga2db444f2315d412d3c7ba80ec6049583"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gacfa4edcfcb39fc61bff6bdecb14d7618"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gacfa4edcfcb39fc61bff6bdecb14d7618"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#gacfa4edcfcb39fc61bff6bdecb14d7618">hipHostRegisterMapped</a>&#160;&#160;&#160;0x2</td></tr>
-<tr class="memdesc:gacfa4edcfcb39fc61bff6bdecb14d7618"><td class="mdescLeft">&#160;</td><td class="mdescRight">Map the allocation into the address space for the current device. The device pointer can be obtained with <a class="el" href="group__Memory.html#ga8fa7a0478020b835a24785cd6bb89725" title="Get Device pointer from Host Pointer allocated through hipHostAlloc. ">hipHostGetDevicePointer</a>. <br/></td></tr>
+<tr class="memdesc:gacfa4edcfcb39fc61bff6bdecb14d7618"><td class="mdescLeft">&#160;</td><td class="mdescRight">Map the allocation into the address space for the current device. The device pointer can be obtained with <a class="el" href="group__Memory.html#ga8fa7a0478020b835a24785cd6bb89725" title="Get Device pointer from Host Pointer allocated through hipHostMalloc. ">hipHostGetDevicePointer</a>. <br/></td></tr>
 <tr class="separator:gacfa4edcfcb39fc61bff6bdecb14d7618"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaefa79f1b4481d6a1d1091c14b24f33d0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gaefa79f1b4481d6a1d1091c14b24f33d0"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#gaefa79f1b4481d6a1d1091c14b24f33d0">hipHostRegisterIoMemory</a>&#160;&#160;&#160;0x4</td></tr>
 <tr class="memdesc:gaefa79f1b4481d6a1d1091c14b24f33d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Not supported. <br/></td></tr>
 <tr class="separator:gaefa79f1b4481d6a1d1091c14b24f33d0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga9032d35eb7383948828ee48e1e19f5fd"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga9032d35eb7383948828ee48e1e19f5fd"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipDeviceScheduleAuto</b>&#160;&#160;&#160;0x0</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#ga9032d35eb7383948828ee48e1e19f5fd">hipDeviceScheduleAuto</a>&#160;&#160;&#160;0x0</td></tr>
+<tr class="memdesc:ga9032d35eb7383948828ee48e1e19f5fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Automatically select between Spin and Yield. <br/></td></tr>
 <tr class="separator:ga9032d35eb7383948828ee48e1e19f5fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga713d962bafb7758dc1ff0675e4239453"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga713d962bafb7758dc1ff0675e4239453"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipDeviceScheduleSpin</b>&#160;&#160;&#160;0x1</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#ga713d962bafb7758dc1ff0675e4239453">hipDeviceScheduleSpin</a>&#160;&#160;&#160;0x1</td></tr>
+<tr class="memdesc:ga713d962bafb7758dc1ff0675e4239453"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dedicate a CPU core to spin-wait. Provides lowest latency, but burns a CPU core and may consume more power. <br/></td></tr>
 <tr class="separator:ga713d962bafb7758dc1ff0675e4239453"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaaf1e2706430c06601aa12a8af2a0ba5a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gaaf1e2706430c06601aa12a8af2a0ba5a"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipDeviceScheduleYield</b>&#160;&#160;&#160;0x2</td></tr>
+#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#gaaf1e2706430c06601aa12a8af2a0ba5a">hipDeviceScheduleYield</a>&#160;&#160;&#160;0x2</td></tr>
+<tr class="memdesc:gaaf1e2706430c06601aa12a8af2a0ba5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Yield the CPU to the operating system when waiting. May increase latency, but lowers power and is friendlier to other threads in the system. <br/></td></tr>
 <tr class="separator:gaaf1e2706430c06601aa12a8af2a0ba5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga16fb739f8a2d8664902334d64072bbd8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga16fb739f8a2d8664902334d64072bbd8"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipDeviceBlockingSync</b>&#160;&#160;&#160;0x4</td></tr>
-<tr class="separator:ga16fb739f8a2d8664902334d64072bbd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gac9480926da806dfe7241e3c8fa0bd060"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gac9480926da806dfe7241e3c8fa0bd060"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipDeviceScheduleBlockingSync</b>&#160;&#160;&#160;0x4</td></tr>
+<tr class="separator:gac9480926da806dfe7241e3c8fa0bd060"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad0ee225558955549785dc0bf37e53554"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gad0ee225558955549785dc0bf37e53554"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipDeviceScheduleMask</b>&#160;&#160;&#160;0x7</td></tr>
+<tr class="separator:gad0ee225558955549785dc0bf37e53554"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga0b7ffad8d7cfcbf9d3c863d30ef651ae"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga0b7ffad8d7cfcbf9d3c863d30ef651ae"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>hipDeviceMapHost</b>&#160;&#160;&#160;0x8</td></tr>
 <tr class="separator:ga0b7ffad8d7cfcbf9d3c863d30ef651ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -181,27 +187,77 @@ typedef enum <a class="el" href="group__GlobalDefs.html#gacc0acd7b9bda126c6bb3df
 Enumerations</h2></td></tr>
 <tr class="memitem:gadf5010f6e140a53ecbdf949e73e87594"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> { <br/>
 &#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063">hipSuccess</a> = 0, 
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a8293288a10109874749afe2562db09f2">hipErrorMemoryAllocation</a>, 
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a3ea57f211997a84fa1c582414bcabc47">hipErrorLaunchOutOfResources</a>, 
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83">hipErrorInvalidValue</a>, 
+<b>hipErrorOutOfMemory</b> = 2, 
+<b>hipErrorNotInitialized</b> = 3, 
+<b>hipErrorDeinitialized</b> = 4, 
 <br/>
-&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a88e525a7c8f35552dfada58e9f2f6d3a">hipErrorInvalidResourceHandle</a>, 
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d">hipErrorInvalidDevice</a>, 
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ae35ad9fb66b7c33f21a021efe89975b0">hipErrorInvalidMemcpyDirection</a>, 
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a37a93fcd2b0aed9bf52b82fa26031e6f">hipErrorInvalidDevicePointer</a>, 
+&#160;&#160;<b>hipErrorProfilerDisabled</b> = 5, 
+<b>hipErrorProfilerNotInitialized</b> = 6, 
+<b>hipErrorProfilerAlreadyStarted</b> = 7, 
+<b>hipErrorProfilerAlreadyStopped</b> = 8, 
 <br/>
-&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a7e935ae88ee1f9ff3920156ac6864520">hipErrorInitializationError</a>, 
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ad4406972c318df36d231310a15131c24">hipErrorNoDevice</a>, 
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1">hipErrorNotReady</a>, 
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa74e64c5b2f5fb0d6a92681f5b234073">hipErrorUnknown</a>, 
+&#160;&#160;<b>hipErrorInvalidImage</b> = 200, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ad9d895f7f4dbf63a4586b2aab593c9fe">hipErrorInvalidContext</a> = 201, 
+<b>hipErrorContextAlreadyCurrent</b> = 202, 
+<b>hipErrorMapFailed</b> = 205, 
 <br/>
-&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a2ee0bf2e64840f253e4a1b12bbaf2d09">hipErrorPeerAccessNotEnabled</a>, 
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a5399c146f91246f8b77abcd4ea30e7ac">hipErrorPeerAccessAlreadyEnabled</a>, 
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1159eb9a6be66bea740a8bfb61378723">hipErrorRuntimeMemory</a>, 
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a44f847c5914be2177feac107dcb096d1">hipErrorRuntimeOther</a>, 
+&#160;&#160;<b>hipErrorUnmapFailed</b> = 206, 
+<b>hipErrorArrayIsMapped</b> = 207, 
+<b>hipErrorAlreadyMapped</b> = 208, 
+<b>hipErrorNoBinaryForGpu</b> = 209, 
 <br/>
-&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a9d7173cea72aace620a83d502569de1b">hipErrorHostMemoryAlreadyRegistered</a>, 
-<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a6901476ca88eed786fb8be003d9661d9">hipErrorHostMemoryNotRegistered</a>, 
+&#160;&#160;<b>hipErrorAlreadyAcquired</b> = 210, 
+<b>hipErrorNotMapped</b> = 211, 
+<b>hipErrorNotMappedAsArray</b> = 212, 
+<b>hipErrorNotMappedAsPointer</b> = 213, 
+<br/>
+&#160;&#160;<b>hipErrorECCNotCorrectable</b> = 214, 
+<b>hipErrorUnsupportedLimit</b> = 215, 
+<b>hipErrorContextAlreadyInUse</b> = 216, 
+<b>hipErrorPeerAccessUnsupported</b> = 217, 
+<br/>
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ae508537d5e9a293bb1e63802d4a61380">hipErrorInvalidKernelFile</a> = 218, 
+<b>hipErrorInvalidGraphicsContext</b> = 219, 
+<b>hipErrorInvalidSource</b> = 300, 
+<b>hipErrorFileNotFound</b> = 301, 
+<br/>
+&#160;&#160;<b>hipErrorSharedObjectSymbolNotFound</b> = 302, 
+<b>hipErrorSharedObjectInitFailed</b> = 303, 
+<b>hipErrorOperatingSystem</b> = 304, 
+<b>hipErrorInvalidHandle</b> = 400, 
+<br/>
+&#160;&#160;<b>hipErrorNotFound</b> = 500, 
+<b>hipErrorIllegalAddress</b> = 700, 
+<b>hipErrorInvalidSymbol</b> = 701, 
+<b>hipErrorMissingConfiguration</b> = 1001, 
+<br/>
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a8293288a10109874749afe2562db09f2">hipErrorMemoryAllocation</a> = 1002, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a7e935ae88ee1f9ff3920156ac6864520">hipErrorInitializationError</a> = 1003, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a3df72146e762c5a901d3af06027a1de9">hipErrorLaunchFailure</a> = 1004, 
+<b>hipErrorPriorLaunchFailure</b> = 1005, 
+<br/>
+&#160;&#160;<b>hipErrorLaunchTimeOut</b> = 1006, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a3ea57f211997a84fa1c582414bcabc47">hipErrorLaunchOutOfResources</a> = 1007, 
+<b>hipErrorInvalidDeviceFunction</b> = 1008, 
+<b>hipErrorInvalidConfiguration</b> = 1009, 
+<br/>
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d">hipErrorInvalidDevice</a> = 1010, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83">hipErrorInvalidValue</a> = 1011, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a37a93fcd2b0aed9bf52b82fa26031e6f">hipErrorInvalidDevicePointer</a> = 1017, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ae35ad9fb66b7c33f21a021efe89975b0">hipErrorInvalidMemcpyDirection</a> = 1021, 
+<br/>
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa74e64c5b2f5fb0d6a92681f5b234073">hipErrorUnknown</a> = 1030, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a88e525a7c8f35552dfada58e9f2f6d3a">hipErrorInvalidResourceHandle</a> = 1033, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1">hipErrorNotReady</a> = 1034, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ad4406972c318df36d231310a15131c24">hipErrorNoDevice</a> = 1038, 
+<br/>
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a5399c146f91246f8b77abcd4ea30e7ac">hipErrorPeerAccessAlreadyEnabled</a> = 1050, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a2ee0bf2e64840f253e4a1b12bbaf2d09">hipErrorPeerAccessNotEnabled</a> = 1051, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1159eb9a6be66bea740a8bfb61378723">hipErrorRuntimeMemory</a> = 1052, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a44f847c5914be2177feac107dcb096d1">hipErrorRuntimeOther</a> = 1053, 
+<br/>
+&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a9d7173cea72aace620a83d502569de1b">hipErrorHostMemoryAlreadyRegistered</a> = 1061, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a6901476ca88eed786fb8be003d9661d9">hipErrorHostMemoryNotRegistered</a> = 1062, 
 <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ab556409e11ddb0c4cf77a2f4fc91ea9e">hipErrorTbd</a>
 <br/>
  }</td></tr>
@@ -481,44 +537,53 @@ Enumerations</h2></td></tr>
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063"></a>hipSuccess</em>&#160;</td><td class="fielddoc">
 <p>Successful completion. </p>
 </td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594ad9d895f7f4dbf63a4586b2aab593c9fe"></a>hipErrorInvalidContext</em>&#160;</td><td class="fielddoc">
+<p>Produced when input context is invalid. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594ae508537d5e9a293bb1e63802d4a61380"></a>hipErrorInvalidKernelFile</em>&#160;</td><td class="fielddoc">
+<p>In CUDA DRV, it is CUDA_ERROR_INVALID_PTX. </p>
+</td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a8293288a10109874749afe2562db09f2"></a>hipErrorMemoryAllocation</em>&#160;</td><td class="fielddoc">
 <p>Memory allocation error. </p>
-</td></tr>
-<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a3ea57f211997a84fa1c582414bcabc47"></a>hipErrorLaunchOutOfResources</em>&#160;</td><td class="fielddoc">
-<p>Out of resources error. </p>
-</td></tr>
-<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83"></a>hipErrorInvalidValue</em>&#160;</td><td class="fielddoc">
-<p>One or more of the parameters passed to the API call is NULL or not in an acceptable range. </p>
-</td></tr>
-<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a88e525a7c8f35552dfada58e9f2f6d3a"></a>hipErrorInvalidResourceHandle</em>&#160;</td><td class="fielddoc">
-<p>Resource handle (<a class="el" href="structhipEvent__t.html">hipEvent_t</a> or hipStream_t) invalid. </p>
-</td></tr>
-<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d"></a>hipErrorInvalidDevice</em>&#160;</td><td class="fielddoc">
-<p>DeviceID must be in range 0...#compute-devices. </p>
-</td></tr>
-<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594ae35ad9fb66b7c33f21a021efe89975b0"></a>hipErrorInvalidMemcpyDirection</em>&#160;</td><td class="fielddoc">
-<p>Invalid memory copy direction. </p>
-</td></tr>
-<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a37a93fcd2b0aed9bf52b82fa26031e6f"></a>hipErrorInvalidDevicePointer</em>&#160;</td><td class="fielddoc">
-<p>Invalid Device Pointer. </p>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a7e935ae88ee1f9ff3920156ac6864520"></a>hipErrorInitializationError</em>&#160;</td><td class="fielddoc">
 <p>TODO comment from hipErrorInitializationError. </p>
 </td></tr>
-<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594ad4406972c318df36d231310a15131c24"></a>hipErrorNoDevice</em>&#160;</td><td class="fielddoc">
-<p>Call to hipGetDeviceCount returned 0 devices. </p>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a3df72146e762c5a901d3af06027a1de9"></a>hipErrorLaunchFailure</em>&#160;</td><td class="fielddoc">
+<p>An exception occurred on the device while executing a kernel. </p>
 </td></tr>
-<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1"></a>hipErrorNotReady</em>&#160;</td><td class="fielddoc">
-<p>Indicates that asynchronous operations enqueued earlier are not ready. This is not actually an error, but is used to distinguish from hipSuccess (which indicates completion). APIs that return this error include hipEventQuery and hipStreamQuery. </p>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a3ea57f211997a84fa1c582414bcabc47"></a>hipErrorLaunchOutOfResources</em>&#160;</td><td class="fielddoc">
+<p>Out of resources error. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d"></a>hipErrorInvalidDevice</em>&#160;</td><td class="fielddoc">
+<p>DeviceID must be in range 0...#compute-devices. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83"></a>hipErrorInvalidValue</em>&#160;</td><td class="fielddoc">
+<p>One or more of the parameters passed to the API call is NULL or not in an acceptable range. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a37a93fcd2b0aed9bf52b82fa26031e6f"></a>hipErrorInvalidDevicePointer</em>&#160;</td><td class="fielddoc">
+<p>Invalid Device Pointer. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594ae35ad9fb66b7c33f21a021efe89975b0"></a>hipErrorInvalidMemcpyDirection</em>&#160;</td><td class="fielddoc">
+<p>Invalid memory copy direction. </p>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594aa74e64c5b2f5fb0d6a92681f5b234073"></a>hipErrorUnknown</em>&#160;</td><td class="fielddoc">
 <p>Unknown error. </p>
 </td></tr>
-<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a2ee0bf2e64840f253e4a1b12bbaf2d09"></a>hipErrorPeerAccessNotEnabled</em>&#160;</td><td class="fielddoc">
-<p>Peer access was never enabled from the current device. </p>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a88e525a7c8f35552dfada58e9f2f6d3a"></a>hipErrorInvalidResourceHandle</em>&#160;</td><td class="fielddoc">
+<p>Resource handle (hipEvent_t or hipStream_t) invalid. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594aa9638063c8746a9d1fda2b2069a0a9f1"></a>hipErrorNotReady</em>&#160;</td><td class="fielddoc">
+<p>Indicates that asynchronous operations enqueued earlier are not ready. This is not actually an error, but is used to distinguish from hipSuccess (which indicates completion). APIs that return this error include hipEventQuery and hipStreamQuery. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594ad4406972c318df36d231310a15131c24"></a>hipErrorNoDevice</em>&#160;</td><td class="fielddoc">
+<p>Call to hipGetDeviceCount returned 0 devices. </p>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a5399c146f91246f8b77abcd4ea30e7ac"></a>hipErrorPeerAccessAlreadyEnabled</em>&#160;</td><td class="fielddoc">
 <p>Peer access was already enabled from the current device. </p>
+</td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a2ee0bf2e64840f253e4a1b12bbaf2d09"></a>hipErrorPeerAccessNotEnabled</em>&#160;</td><td class="fielddoc">
+<p>Peer access was never enabled from the current device. </p>
 </td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a1159eb9a6be66bea740a8bfb61378723"></a>hipErrorRuntimeMemory</em>&#160;</td><td class="fielddoc">
 <p>HSA runtime memory call returned error. Typically not seen in production systems. </p>
@@ -623,7 +688,7 @@ Enumerations</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Aug 4 2016 10:05:52 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Nov 8 2016 16:33:49 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

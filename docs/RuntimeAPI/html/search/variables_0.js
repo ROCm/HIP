@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['arch',['arch',['../structhipDeviceProp__t.html#afc58158e44bef6ad26f2be401434b049',1,'hipDeviceProp_t']]]
+  ['_5fcomputeunits',['_computeUnits',['../classihipDevice__t.html#a655e03136394df32571a52707aa371c5',1,'ihipDevice_t']]]
 ];

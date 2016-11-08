@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/git/hip/release/release_0.92.00/include/hcc_detail/hip_runtime.h File Reference</title>
+<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/git/hip/hip/include/hip/hcc_detail/hip_runtime.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Groups</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Friends</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Groups</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(11)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -81,7 +81,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_6d8604cb65fa6b83549668eb0ce09cac.html">hcc_detail</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a class="el" href="dir_82c4e5e99cd964a390bd8b007f79d8a6.html">hip</a></li><li class="navelem"><a class="el" href="dir_ce4f9d092cd8b82b7c46cef8ba457558.html">hcc_detail</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
@@ -96,12 +96,12 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 
 <p>Contains definitions of APIs for HIP runtime.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;cmath&gt;</code><br/>
+<div class="textblock"><code>#include &lt;math.h&gt;</code><br/>
 <code>#include &lt;string.h&gt;</code><br/>
 <code>#include &lt;stddef.h&gt;</code><br/>
 <code>#include &lt;hip/hip_runtime_api.h&gt;</code><br/>
 <code>#include &lt;grid_launch.h&gt;</code><br/>
-<code>#include &lt;hip/hcc_detail/host_defines.h&gt;</code><br/>
+<code>#include &lt;<a class="el" href="host__defines_8h_source.html">hip/hcc_detail/host_defines.h</a>&gt;</code><br/>
 </div>
 <p><a href="hcc__detail_2hip__runtime_8h_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
@@ -113,9 +113,15 @@ Macros</h2></td></tr>
 <tr class="memitem:a3b04412e00a9dd149c9078eb4c0bf99a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3b04412e00a9dd149c9078eb4c0bf99a"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>CUDA_SUCCESS</b>&#160;&#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063">hipSuccess</a></td></tr>
 <tr class="separator:a3b04412e00a9dd149c9078eb4c0bf99a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a63b7c2571b010bca4de15870145aeaf0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a63b7c2571b010bca4de15870145aeaf0"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>USE_GRID_LAUNCH_20</b>&#160;&#160;&#160;0</td></tr>
-<tr class="separator:a63b7c2571b010bca4de15870145aeaf0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab78d63242f906b6d92cf766bd88a1898"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab78d63242f906b6d92cf766bd88a1898"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_LAUNCH_PARAM_BUFFER_POINTER</b>&#160;&#160;&#160;((void*) 0x01)</td></tr>
+<tr class="separator:ab78d63242f906b6d92cf766bd88a1898"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a529edcc8dc562e3f6f6c6d17bf868f03"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a529edcc8dc562e3f6f6c6d17bf868f03"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_LAUNCH_PARAM_BUFFER_SIZE</b>&#160;&#160;&#160;((void*) 0x02)</td></tr>
+<tr class="separator:a529edcc8dc562e3f6f6c6d17bf868f03"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86cd80c0b352a6679a7fac89e026f0f7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a86cd80c0b352a6679a7fac89e026f0f7"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_LAUNCH_PARAM_END</b>&#160;&#160;&#160;((void*) 0x03)</td></tr>
+<tr class="separator:a86cd80c0b352a6679a7fac89e026f0f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a21df7e40dc66a8a36e64137a13e353ef"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a21df7e40dc66a8a36e64137a13e353ef"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>hipLaunchParm</b>&#160;&#160;&#160;grid_launch_parm</td></tr>
 <tr class="separator:a21df7e40dc66a8a36e64137a13e353ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -125,7 +131,8 @@ Macros</h2></td></tr>
 <tr class="memitem:a33f6338b5bbb294b41e5c35a8d0f5bf3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a33f6338b5bbb294b41e5c35a8d0f5bf3"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>clock_t</b>&#160;&#160;&#160;long long int</td></tr>
 <tr class="separator:a33f6338b5bbb294b41e5c35a8d0f5bf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a48f5f9da77c5fab1fbcf0205bb347d89"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hcc__detail_2hip__runtime_8h.html#a48f5f9da77c5fab1fbcf0205bb347d89">hipThreadIdx_x</a>&#160;&#160;&#160;(hc_get_workitem_id(0))</td></tr>
+<tr class="memitem:a48f5f9da77c5fab1fbcf0205bb347d89"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a48f5f9da77c5fab1fbcf0205bb347d89"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>hipThreadIdx_x</b>&#160;&#160;&#160;(hc_get_workitem_id(0))</td></tr>
 <tr class="separator:a48f5f9da77c5fab1fbcf0205bb347d89"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a939ddbdeda33c3a6bfafc7704a4ade88"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a939ddbdeda33c3a6bfafc7704a4ade88"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>hipThreadIdx_y</b>&#160;&#160;&#160;(hc_get_workitem_id(1))</td></tr>
@@ -166,8 +173,14 @@ Macros</h2></td></tr>
 <tr class="memitem:a1ae4bd590189ae294b70ee4f3d3de5dc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1ae4bd590189ae294b70ee4f3d3de5dc"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_KERNEL_NAME</b>(...)&#160;&#160;&#160;__VA_ARGS__</td></tr>
 <tr class="separator:a1ae4bd590189ae294b70ee4f3d3de5dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a271b4e8a78a6c3b38c0e5e5df7cb9d30"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a271b4e8a78a6c3b38c0e5e5df7cb9d30"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_SYMBOL</b>(X)&#160;&#160;&#160;#X</td></tr>
+<tr class="separator:a271b4e8a78a6c3b38c0e5e5df7cb9d30"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1e7ec14fb6b74c03b6ec804d6ef7e0ea"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hcc__detail_2hip__runtime_8h.html#a1e7ec14fb6b74c03b6ec804d6ef7e0ea">HIP_DYNAMIC_SHARED</a>(type, var)</td></tr>
 <tr class="separator:a1e7ec14fb6b74c03b6ec804d6ef7e0ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a677e3ac7232253c2b7ef20732654f0d8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a677e3ac7232253c2b7ef20732654f0d8"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_DYNAMIC_SHARED_ATTRIBUTE</b>&#160;&#160;&#160;__attribute__((address_space(3)))</td></tr>
+<tr class="separator:a677e3ac7232253c2b7ef20732654f0d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
@@ -795,6 +808,12 @@ __device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>at
 <tr class="memitem:a87674396e78775b6653bce11c3ac5ba4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a87674396e78775b6653bce11c3ac5ba4"></a>
 __device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>atomicDec</b> (unsigned int *address, unsigned int val)</td></tr>
 <tr class="separator:a87674396e78775b6653bce11c3ac5ba4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd370398b55e6322605b7b546140cac7"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abd370398b55e6322605b7b546140cac7"></a>
+__device__ int&#160;</td><td class="memItemRight" valign="bottom"><b>__mul24</b> (int arg1, int arg2)</td></tr>
+<tr class="separator:abd370398b55e6322605b7b546140cac7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb6f6c58daf1d29fc557c86aeafb752e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aeb6f6c58daf1d29fc557c86aeafb752e"></a>
+__device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>__umul24</b> (unsigned int arg1, unsigned int arg2)</td></tr>
+<tr class="separator:aeb6f6c58daf1d29fc557c86aeafb752e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5bf9c743fcdf623f951d68de66618b91"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5bf9c743fcdf623f951d68de66618b91"></a>
 __device__ unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>__popc</b> (unsigned int input)</td></tr>
 <tr class="separator:a5bf9c743fcdf623f951d68de66618b91"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -927,6 +946,21 @@ __device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__dsqrt_r
 <tr class="memitem:a98b73f8a6d5d4647b83064880423cff1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a98b73f8a6d5d4647b83064880423cff1"></a>
 __device__ float&#160;</td><td class="memItemRight" valign="bottom"><b>__dsqrt_rz</b> (double x)</td></tr>
 <tr class="separator:a98b73f8a6d5d4647b83064880423cff1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga675c8823d497b2fd91abc42085e5ae25"><td class="memItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Fence.html#ga675c8823d497b2fd91abc42085e5ae25">__threadfence_block</a> (void)</td></tr>
+<tr class="memdesc:ga675c8823d497b2fd91abc42085e5ae25"><td class="mdescLeft">&#160;</td><td class="mdescRight">threadfence_block makes writes visible to threads running in same block.  <a href="group__Fence.html#ga675c8823d497b2fd91abc42085e5ae25">More...</a><br/></td></tr>
+<tr class="separator:ga675c8823d497b2fd91abc42085e5ae25"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8ed093b29d5c05d46a1240e7a35a6d13"><td class="memItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Fence.html#ga8ed093b29d5c05d46a1240e7a35a6d13">__threadfence</a> (void)</td></tr>
+<tr class="memdesc:ga8ed093b29d5c05d46a1240e7a35a6d13"><td class="mdescLeft">&#160;</td><td class="mdescRight">threadfence makes wirtes visible to other threads running on same GPU.  <a href="group__Fence.html#ga8ed093b29d5c05d46a1240e7a35a6d13">More...</a><br/></td></tr>
+<tr class="separator:ga8ed093b29d5c05d46a1240e7a35a6d13"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga90cf73529a5fdfd88526430fc40e2f3d"><td class="memItemLeft" align="right" valign="top">__device__ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Fence.html#ga90cf73529a5fdfd88526430fc40e2f3d">__threadfence_system</a> (void) __attribute__((deprecated(&quot;Provided for compile-time compatibility</td></tr>
+<tr class="memdesc:ga90cf73529a5fdfd88526430fc40e2f3d"><td class="mdescLeft">&#160;</td><td class="mdescRight">threadfence_system makes writes to pinned system memory visible on host CPU.  <a href="group__Fence.html#ga90cf73529a5fdfd88526430fc40e2f3d">More...</a><br/></td></tr>
+<tr class="separator:ga90cf73529a5fdfd88526430fc40e2f3d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5699212e93676c6118a7353451eb1c92"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5699212e93676c6118a7353451eb1c92"></a>
+__device__ void *&#160;</td><td class="memItemRight" valign="bottom"><b>__hip_hc_malloc</b> (size_t)</td></tr>
+<tr class="separator:a5699212e93676c6118a7353451eb1c92"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe82dc83c9ab13bd98afe479d67a6e58"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abe82dc83c9ab13bd98afe479d67a6e58"></a>
+__device__ void *&#160;</td><td class="memItemRight" valign="bottom"><b>__hip_hc_free</b> (void *ptr)</td></tr>
+<tr class="separator:abe82dc83c9ab13bd98afe479d67a6e58"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
@@ -936,6 +970,9 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_TRACE_API</b></td>
 <tr class="memitem:a5318f692fa09f8c7c31576c63cbf8894"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5318f692fa09f8c7c31576c63cbf8894"></a>
 const int&#160;</td><td class="memItemRight" valign="bottom"><b>warpSize</b></td></tr>
 <tr class="separator:a5318f692fa09f8c7c31576c63cbf8894"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaff739f8a88be85c32b03325e29e2a176"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="gaff739f8a88be85c32b03325e29e2a176"></a>
+__device__ void not yet&#160;</td><td class="memItemRight" valign="bottom"><b>functional</b></td></tr>
+<tr class="separator:gaff739f8a88be85c32b03325e29e2a176"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains definitions of APIs for HIP runtime. </p>
@@ -969,23 +1006,10 @@ const int&#160;</td><td class="memItemRight" valign="bottom"><b>warpSize</b></td
 
 </div>
 </div>
-<a class="anchor" id="a48f5f9da77c5fab1fbcf0205bb347d89"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">#define hipThreadIdx_x&#160;&#160;&#160;(hc_get_workitem_id(0))</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Kernel launching </p>
-
-</div>
-</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Aug 4 2016 10:05:52 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Nov 8 2016 16:33:49 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

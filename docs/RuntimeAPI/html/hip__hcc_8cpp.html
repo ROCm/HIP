@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.6"/>
-<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/git/hip/release/release_0.92.00/src/hip_hcc.cpp File Reference</title>
+<title>HIP: Heterogenous-computing Interface for Portability: /home/mangupta/git/hip/hip/src/hip_hcc.cpp File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
      onmouseover="return searchBox.OnSearchSelectShow()"
      onmouseout="return searchBox.OnSearchSelectHide()"
      onkeydown="return searchBox.OnSearchSelectKey(event)">
-<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Groups</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Pages</a></div>
+<a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(0)"><span class="SelectionMark">&#160;</span>All</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(1)"><span class="SelectionMark">&#160;</span>Classes</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(2)"><span class="SelectionMark">&#160;</span>Files</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(3)"><span class="SelectionMark">&#160;</span>Functions</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(4)"><span class="SelectionMark">&#160;</span>Variables</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(5)"><span class="SelectionMark">&#160;</span>Typedefs</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(6)"><span class="SelectionMark">&#160;</span>Enumerations</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(7)"><span class="SelectionMark">&#160;</span>Enumerator</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(8)"><span class="SelectionMark">&#160;</span>Friends</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(9)"><span class="SelectionMark">&#160;</span>Macros</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(10)"><span class="SelectionMark">&#160;</span>Groups</a><a class="SelectItem" href="javascript:void(0)" onclick="searchBox.OnSelectItem(11)"><span class="SelectionMark">&#160;</span>Pages</a></div>
 
 <!-- iframe showing the search results (closed by default) -->
 <div id="MSearchResultsWindow">
@@ -103,88 +103,143 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <code>#include &lt;deque&gt;</code><br/>
 <code>#include &lt;vector&gt;</code><br/>
 <code>#include &lt;algorithm&gt;</code><br/>
+<code>#include &lt;atomic&gt;</code><br/>
 <code>#include &lt;hc.hpp&gt;</code><br/>
 <code>#include &lt;hc_am.hpp&gt;</code><br/>
-<code>#include &quot;hip_runtime.h&quot;</code><br/>
-<code>#include &quot;hcc_detail/hip_hcc.h&quot;</code><br/>
-<code>#include &quot;hsa_ext_amd.h&quot;</code><br/>
-<code>#include &quot;hsakmt.h&quot;</code><br/>
-<code>#include &quot;hcc_detail/trace_helper.h&quot;</code><br/>
+<code>#include &quot;hsa/hsa_ext_amd.h&quot;</code><br/>
+<code>#include &quot;libhsakmt/hsakmt.h&quot;</code><br/>
+<code>#include &quot;hip/hip_runtime.h&quot;</code><br/>
+<code>#include &quot;hip_hcc.h&quot;</code><br/>
+<code>#include &quot;trace_helper.h&quot;</code><br/>
 </div><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
 Macros</h2></td></tr>
-<tr class="memitem:a70838c4fa8cfbdb44e3b771caf2ccda3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a70838c4fa8cfbdb44e3b771caf2ccda3"></a>
-#define&#160;</td><td class="memItemRight" valign="bottom"><b>DeviceErrorCheck</b>(x)&#160;&#160;&#160;if (x != HSA_STATUS_SUCCESS) { return <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d">hipErrorInvalidDevice</a>; }</td></tr>
-<tr class="separator:a70838c4fa8cfbdb44e3b771caf2ccda3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae427eb718d474a09a90033f33c2aa52f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae427eb718d474a09a90033f33c2aa52f"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_USE_PRODUCT_NAME</b>&#160;&#160;&#160;0</td></tr>
+<tr class="separator:ae427eb718d474a09a90033f33c2aa52f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a23e55e4968b23fcb9fe5c2e212f72b14"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a23e55e4968b23fcb9fe5c2e212f72b14"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>NUM_PAGES_PER_THREAD</b>&#160;&#160;&#160;16</td></tr>
+<tr class="separator:a23e55e4968b23fcb9fe5c2e212f72b14"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7b9cf46a20ce304b25d63411318bf36c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7b9cf46a20ce304b25d63411318bf36c"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>SIZE_OF_PAGE</b>&#160;&#160;&#160;64</td></tr>
+<tr class="separator:a7b9cf46a20ce304b25d63411318bf36c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad8e1075110881a7caf7b4b81227e84e1"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad8e1075110881a7caf7b4b81227e84e1"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>NUM_THREADS_PER_CU</b>&#160;&#160;&#160;64</td></tr>
+<tr class="separator:ad8e1075110881a7caf7b4b81227e84e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1307827d6b780d7c036edefdd08364b5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1307827d6b780d7c036edefdd08364b5"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>NUM_CUS_PER_GPU</b>&#160;&#160;&#160;64</td></tr>
+<tr class="separator:a1307827d6b780d7c036edefdd08364b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae12c40b3b2496ea64cbd1f626d4a5817"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae12c40b3b2496ea64cbd1f626d4a5817"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>NUM_PAGES</b>&#160;&#160;&#160;NUM_PAGES_PER_THREAD * NUM_THREADS_PER_CU * NUM_CUS_PER_GPU</td></tr>
+<tr class="separator:ae12c40b3b2496ea64cbd1f626d4a5817"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa7d1cfb9d481cd3d4660b2c5bc4fd378"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa7d1cfb9d481cd3d4660b2c5bc4fd378"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>SIZE_MALLOC</b>&#160;&#160;&#160;NUM_PAGES * SIZE_OF_PAGE</td></tr>
+<tr class="separator:aa7d1cfb9d481cd3d4660b2c5bc4fd378"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5b6371c3894e9d4c670399cf14d04375"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5b6371c3894e9d4c670399cf14d04375"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>SIZE_OF_HEAP</b>&#160;&#160;&#160;SIZE_MALLOC</td></tr>
+<tr class="separator:a5b6371c3894e9d4c670399cf14d04375"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aea6f15cc8a65f027003f4b0e77a41fc8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aea6f15cc8a65f027003f4b0e77a41fc8"></a>
 #define&#160;</td><td class="memItemRight" valign="bottom"><b>ErrorCheck</b>(x)&#160;&#160;&#160;error_check(x, __LINE__, __FILE__)</td></tr>
 <tr class="separator:aea6f15cc8a65f027003f4b0e77a41fc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a70838c4fa8cfbdb44e3b771caf2ccda3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a70838c4fa8cfbdb44e3b771caf2ccda3"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>DeviceErrorCheck</b>(x)&#160;&#160;&#160;if (x != HSA_STATUS_SUCCESS) { return <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d">hipErrorInvalidDevice</a>; }</td></tr>
+<tr class="separator:a70838c4fa8cfbdb44e3b771caf2ccda3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2b90029add81faa0bf675869ffc31354"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>READ_ENV_I</b>(_build, _ENV_VAR, _ENV_VAR2, _description)</td></tr>
 <tr class="separator:a2b90029add81faa0bf675869ffc31354"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb94daa38d639c3338d5b7e6b191320c"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><b>READ_ENV_S</b>(_build, _ENV_VAR, _ENV_VAR2, _description)</td></tr>
+<tr class="separator:aeb94daa38d639c3338d5b7e6b191320c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4de52c454435d124b61949761ea2250c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4de52c454435d124b61949761ea2250c"></a>
+#define&#160;</td><td class="memItemRight" valign="bottom"><b>CASE_STRING</b>(X)&#160;&#160;&#160;case X: return #X ;break;</td></tr>
+<tr class="separator:a4de52c454435d124b61949761ea2250c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:ae051e3d5b5904889c7cbc658c819ff47"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae051e3d5b5904889c7cbc658c819ff47"></a>
-const char *&#160;</td><td class="memItemRight" valign="bottom"><b>ihipErrorString</b> (<a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hip_error)</td></tr>
-<tr class="separator:ae051e3d5b5904889c7cbc658c819ff47"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a561c8030bb5c9835b7381130106278e2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a561c8030bb5c9835b7381130106278e2"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>ihipIsValidDevice</b> (unsigned deviceIndex)</td></tr>
-<tr class="separator:a561c8030bb5c9835b7381130106278e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aadf47755f7bd8c4cf6c761d07a6b566b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aadf47755f7bd8c4cf6c761d07a6b566b"></a>
-<a class="el" href="classihipDevice__t.html">ihipDevice_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>getDevice</b> (unsigned deviceIndex)</td></tr>
-<tr class="separator:aadf47755f7bd8c4cf6c761d07a6b566b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9362c02057e17633609cc5e95677e0f5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9362c02057e17633609cc5e95677e0f5"></a>
+std::string&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_TRACE_API_COLOR</b> (&quot;green&quot;)</td></tr>
+<tr class="separator:a9362c02057e17633609cc5e95677e0f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a524ba8e10e3143be80525f5c77ff6892"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a524ba8e10e3143be80525f5c77ff6892"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>__attribute__</b> ((address_space(1))) char gpuHeap[SIZE_OF_HEAP]</td></tr>
+<tr class="separator:a524ba8e10e3143be80525f5c77ff6892"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af9ab06b31d6d3cf1ff3cff447c529b79"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af9ab06b31d6d3cf1ff3cff447c529b79"></a>
+__device__ void *&#160;</td><td class="memItemRight" valign="bottom"><b>__hip_hc_malloc</b> (size_t size)</td></tr>
+<tr class="separator:af9ab06b31d6d3cf1ff3cff447c529b79"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe82dc83c9ab13bd98afe479d67a6e58"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abe82dc83c9ab13bd98afe479d67a6e58"></a>
+__device__ void *&#160;</td><td class="memItemRight" valign="bottom"><b>__hip_hc_free</b> (void *ptr)</td></tr>
+<tr class="separator:abe82dc83c9ab13bd98afe479d67a6e58"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0600188940786329452dafea4ee6bd9a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0600188940786329452dafea4ee6bd9a"></a>
+<a class="el" href="classihipDevice__t.html">ihipDevice_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>ihipGetDevice</b> (int deviceIndex)</td></tr>
+<tr class="separator:a0600188940786329452dafea4ee6bd9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3fbe38c4899396a8862bbd0255a7734e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3fbe38c4899396a8862bbd0255a7734e"></a>
+<a class="el" href="classihipCtx__t.html">ihipCtx_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>ihipGetPrimaryCtx</b> (unsigned deviceIndex)</td></tr>
+<tr class="separator:a3fbe38c4899396a8862bbd0255a7734e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a810fc134741863a7749cc4eacb427b30"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a810fc134741863a7749cc4eacb427b30"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipSetTlsDefaultCtx</b> (<a class="el" href="classihipCtx__t.html">ihipCtx_t</a> *ctx)</td></tr>
+<tr class="separator:a810fc134741863a7749cc4eacb427b30"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae8d1ec6d95d9ca50e98505af1b4da055"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae8d1ec6d95d9ca50e98505af1b4da055"></a>
+<a class="el" href="classihipCtx__t.html">ihipCtx_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>ihipGetTlsDefaultCtx</b> ()</td></tr>
+<tr class="separator:ae8d1ec6d95d9ca50e98505af1b4da055"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8b4a69d35d2651a9921ccbba8625fdd8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8b4a69d35d2651a9921ccbba8625fdd8"></a>
+<a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>ihipSynchronize</b> (void)</td></tr>
+<tr class="separator:a8b4a69d35d2651a9921ccbba8625fdd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a93c32584eb46790f4947ef90da127613"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a93c32584eb46790f4947ef90da127613"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>error_check</b> (hsa_status_t hsa_error_code, int line_num, std::string str)</td></tr>
 <tr class="separator:a93c32584eb46790f4947ef90da127613"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9c51e08c67fd7d86046fdf7f782795ec"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9c51e08c67fd7d86046fdf7f782795ec"></a>
+hsa_status_t&#160;</td><td class="memItemRight" valign="bottom"><b>FindGpuDevice</b> (hsa_agent_t agent, void *data)</td></tr>
+<tr class="separator:a9c51e08c67fd7d86046fdf7f782795ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab57794d7c45100410525f474dfecde48"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab57794d7c45100410525f474dfecde48"></a>
+hsa_status_t&#160;</td><td class="memItemRight" valign="bottom"><b>GetDevicePool</b> (hsa_amd_memory_pool_t pool, void *data)</td></tr>
+<tr class="separator:ab57794d7c45100410525f474dfecde48"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abb4fd9a826054adae472a160567f416a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abb4fd9a826054adae472a160567f416a"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>checkAccess</b> (hsa_agent_t agent, hsa_amd_memory_pool_t pool)</td></tr>
+<tr class="separator:abb4fd9a826054adae472a160567f416a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a99c93b4d7033368f833c44f8b7b6208b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a99c93b4d7033368f833c44f8b7b6208b"></a>
 hsa_status_t&#160;</td><td class="memItemRight" valign="bottom"><b>get_region_info</b> (hsa_region_t region, void *data)</td></tr>
 <tr class="separator:a99c93b4d7033368f833c44f8b7b6208b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a909b9051d30b31e4c93e81aa697cc95f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a909b9051d30b31e4c93e81aa697cc95f"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipReadEnv_I</b> (int *var_ptr, const char *var_name1, const char *var_name2, const char *description)</td></tr>
 <tr class="separator:a909b9051d30b31e4c93e81aa697cc95f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0cd50beb9dacd5b9d06228a38b7de6de"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0cd50beb9dacd5b9d06228a38b7de6de"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipReadEnv_S</b> (std::string *var_ptr, const char *var_name1, const char *var_name2, const char *description)</td></tr>
+<tr class="separator:a0cd50beb9dacd5b9d06228a38b7de6de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeabe36aa946ab6100b26602c7e3c23cc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aeabe36aa946ab6100b26602c7e3c23cc"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipInit</b> ()</td></tr>
 <tr class="separator:aeabe36aa946ab6100b26602c7e3c23cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a777c320c7079bd00f4a9e671cc4b7ded"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a777c320c7079bd00f4a9e671cc4b7ded"></a>
-<a class="el" href="classihipDevice__t.html">ihipDevice_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>ihipGetTlsDefaultDevice</b> ()</td></tr>
-<tr class="separator:a777c320c7079bd00f4a9e671cc4b7ded"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5ba41a3edca0836565d5d1b21d5887de"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5ba41a3edca0836565d5d1b21d5887de"></a>
-<a class="el" href="classihipDevice__t.html">ihipDevice_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>ihipGetDevice</b> (int deviceId)</td></tr>
-<tr class="separator:a5ba41a3edca0836565d5d1b21d5887de"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaf16ac37517d2e0a1642f822b7aafe0f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aaf16ac37517d2e0a1642f822b7aafe0f"></a>
-hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>ihipSyncAndResolveStream</b> (hipStream_t stream)</td></tr>
+<a class="el" href="classihipStream__t.html">hipStream_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>ihipSyncAndResolveStream</b> (<a class="el" href="classihipStream__t.html">hipStream_t</a> stream)</td></tr>
 <tr class="separator:aaf16ac37517d2e0a1642f822b7aafe0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7257e759e82dc2742ff84344147a8c64"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a7257e759e82dc2742ff84344147a8c64"></a>
-std::vector<br class="typebreak"/>
-&lt; hc::completion_future * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>vCF</b> (64)</td></tr>
-<tr class="separator:a7257e759e82dc2742ff84344147a8c64"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3ba162e3faa61d98f86a502b7469577a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a3ba162e3faa61d98f86a502b7469577a"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>incKernelCnt</b> (hc::completion_future *cf)</td></tr>
-<tr class="separator:a3ba162e3faa61d98f86a502b7469577a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8bce2f2fcc19a71aa010a41f0e2ef391"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8bce2f2fcc19a71aa010a41f0e2ef391"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>decKernelCnt</b> ()</td></tr>
-<tr class="separator:a8bce2f2fcc19a71aa010a41f0e2ef391"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6cc798eff8b4d57e7153a6d32a1a031b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6cc798eff8b4d57e7153a6d32a1a031b"></a>
-hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPreLaunchKernel</b> (hipStream_t stream, <a class="el" href="structdim3.html">dim3</a> grid, <a class="el" href="structdim3.html">dim3</a> block, grid_launch_parm *lp)</td></tr>
-<tr class="separator:a6cc798eff8b4d57e7153a6d32a1a031b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9f8d1c4b4c24921f008217709f67ecf3"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9f8d1c4b4c24921f008217709f67ecf3"></a>
-hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPreLaunchKernel</b> (hipStream_t stream, size_t grid, <a class="el" href="structdim3.html">dim3</a> block, grid_launch_parm *lp)</td></tr>
-<tr class="separator:a9f8d1c4b4c24921f008217709f67ecf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a011f187b70bf791abd0f376d73ce7bfa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a011f187b70bf791abd0f376d73ce7bfa"></a>
-hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPreLaunchKernel</b> (hipStream_t stream, <a class="el" href="structdim3.html">dim3</a> grid, size_t block, grid_launch_parm *lp)</td></tr>
-<tr class="separator:a011f187b70bf791abd0f376d73ce7bfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a96452c8b78af21165691eb4e9b20a1c8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a96452c8b78af21165691eb4e9b20a1c8"></a>
-hipStream_t&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPreLaunchKernel</b> (hipStream_t stream, size_t grid, size_t block, grid_launch_parm *lp)</td></tr>
-<tr class="separator:a96452c8b78af21165691eb4e9b20a1c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1fb023def4130dfde40fb56661ef1c2f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1fb023def4130dfde40fb56661ef1c2f"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPrintKernelLaunch</b> (const char *kernelName, const grid_launch_parm *lp, const <a class="el" href="classihipStream__t.html">hipStream_t</a> stream)</td></tr>
+<tr class="separator:a1fb023def4130dfde40fb56661ef1c2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab8b2a8d18dcd1c6132292fa1f77ab216"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ab8b2a8d18dcd1c6132292fa1f77ab216"></a>
+<a class="el" href="classihipStream__t.html">hipStream_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPreLaunchKernel</b> (<a class="el" href="classihipStream__t.html">hipStream_t</a> stream, <a class="el" href="structdim3.html">dim3</a> grid, <a class="el" href="structdim3.html">dim3</a> block, grid_launch_parm *lp, const char *kernelNameStr)</td></tr>
+<tr class="separator:ab8b2a8d18dcd1c6132292fa1f77ab216"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc884a98dc7efc7feff317e284b0f3b9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="afc884a98dc7efc7feff317e284b0f3b9"></a>
+<a class="el" href="classihipStream__t.html">hipStream_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPreLaunchKernel</b> (<a class="el" href="classihipStream__t.html">hipStream_t</a> stream, size_t grid, <a class="el" href="structdim3.html">dim3</a> block, grid_launch_parm *lp, const char *kernelNameStr)</td></tr>
+<tr class="separator:afc884a98dc7efc7feff317e284b0f3b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad9fe301ff284facb9648eca70d1f5069"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad9fe301ff284facb9648eca70d1f5069"></a>
+<a class="el" href="classihipStream__t.html">hipStream_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPreLaunchKernel</b> (<a class="el" href="classihipStream__t.html">hipStream_t</a> stream, <a class="el" href="structdim3.html">dim3</a> grid, size_t block, grid_launch_parm *lp, const char *kernelNameStr)</td></tr>
+<tr class="separator:ad9fe301ff284facb9648eca70d1f5069"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a04bfaa3d06b653d76dfc56d85947b1e2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a04bfaa3d06b653d76dfc56d85947b1e2"></a>
+<a class="el" href="classihipStream__t.html">hipStream_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPreLaunchKernel</b> (<a class="el" href="classihipStream__t.html">hipStream_t</a> stream, size_t grid, size_t block, grid_launch_parm *lp, const char *kernelNameStr)</td></tr>
+<tr class="separator:a04bfaa3d06b653d76dfc56d85947b1e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a306767aedd231497c964972aade8cf80"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a306767aedd231497c964972aade8cf80"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPostLaunchKernel</b> (hipStream_t stream, grid_launch_parm &amp;lp)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipPostLaunchKernel</b> (<a class="el" href="classihipStream__t.html">hipStream_t</a> stream, grid_launch_parm &amp;lp)</td></tr>
 <tr class="separator:a306767aedd231497c964972aade8cf80"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae051e3d5b5904889c7cbc658c819ff47"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae051e3d5b5904889c7cbc658c819ff47"></a>
+const char *&#160;</td><td class="memItemRight" valign="bottom"><b>ihipErrorString</b> (<a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hip_error)</td></tr>
+<tr class="separator:ae051e3d5b5904889c7cbc658c819ff47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d30a0554ca00fc1db8442d03e285ef2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1d30a0554ca00fc1db8442d03e285ef2"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipSetTs</b> (<a class="el" href="structhipEvent__t.html">hipEvent_t</a> e)</td></tr>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>ihipSetTs</b> (<a class="el" href="structihipEvent__t.html">hipEvent_t</a> e)</td></tr>
 <tr class="separator:a1d30a0554ca00fc1db8442d03e285ef2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d24b3157fd1b16d38672bb157ec4cd4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hip__hcc_8cpp.html#a0d24b3157fd1b16d38672bb157ec4cd4">hipHccGetAccelerator</a> (int deviceId, hc::accelerator *acc)</td></tr>
+<tr class="memitem:a27f2591074f238819beb3f75ffee35cc"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a27f2591074f238819beb3f75ffee35cc"></a>
+const char *&#160;</td><td class="memItemRight" valign="bottom"><b>memcpyStr</b> (unsigned memKind)</td></tr>
+<tr class="separator:a27f2591074f238819beb3f75ffee35cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0d24b3157fd1b16d38672bb157ec4cd4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0d24b3157fd1b16d38672bb157ec4cd4"></a>
+<a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>hipHccGetAccelerator</b> (int deviceId, hc::accelerator *acc)</td></tr>
 <tr class="separator:a0d24b3157fd1b16d38672bb157ec4cd4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1a7087ea9c3c3323270d7cce73650b44"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="hip__hcc_8cpp.html#a1a7087ea9c3c3323270d7cce73650b44">hipHccGetAcceleratorView</a> (hipStream_t stream, hc::accelerator_view **av)</td></tr>
+<tr class="memitem:a1a7087ea9c3c3323270d7cce73650b44"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1a7087ea9c3c3323270d7cce73650b44"></a>
+<a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>hipHccGetAcceleratorView</b> (<a class="el" href="classihipStream__t.html">hipStream_t</a> stream, hc::accelerator_view **av)</td></tr>
 <tr class="separator:a1a7087ea9c3c3323270d7cce73650b44"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
@@ -192,6 +247,12 @@ Variables</h2></td></tr>
 <tr class="memitem:af27ee928e1f3e786c464c52839294319"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af27ee928e1f3e786c464c52839294319"></a>
 const int&#160;</td><td class="memItemRight" valign="bottom"><b>release</b> = 1</td></tr>
 <tr class="separator:af27ee928e1f3e786c464c52839294319"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae113b586dc931f0a55eee6312a37220b"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ae113b586dc931f0a55eee6312a37220b"></a>
+const char *&#160;</td><td class="memItemRight" valign="bottom"><b>API_COLOR</b> = KGRN</td></tr>
+<tr class="separator:ae113b586dc931f0a55eee6312a37220b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5a2b20416f6d33114f94c53addcec0fa"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a5a2b20416f6d33114f94c53addcec0fa"></a>
+const char *&#160;</td><td class="memItemRight" valign="bottom"><b>API_COLOR_END</b> = KNRM</td></tr>
+<tr class="separator:a5a2b20416f6d33114f94c53addcec0fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8049b329f2663b4572d81e7a9aa8a155"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8049b329f2663b4572d81e7a9aa8a155"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_LAUNCH_BLOCKING</b> = 0</td></tr>
 <tr class="separator:a8049b329f2663b4572d81e7a9aa8a155"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -207,39 +268,21 @@ int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_ATP_MARKER</b> = 0
 <tr class="memitem:a8eadc52d4f7b612393d41f8c9581a8ca"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8eadc52d4f7b612393d41f8c9581a8ca"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_DB</b> = 0</td></tr>
 <tr class="separator:a8eadc52d4f7b612393d41f8c9581a8ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a646ea0d58d4d3cb3cce2e8c48eab1939"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a646ea0d58d4d3cb3cce2e8c48eab1939"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_STAGING_SIZE</b> = 64</td></tr>
-<tr class="separator:a646ea0d58d4d3cb3cce2e8c48eab1939"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac7f9f52be8923aa892f6bb80692443e8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ac7f9f52be8923aa892f6bb80692443e8"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_STAGING_BUFFERS</b> = 2</td></tr>
-<tr class="separator:ac7f9f52be8923aa892f6bb80692443e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8f1ce9edf50107e5cf5b85c21f682434"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a8f1ce9edf50107e5cf5b85c21f682434"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_PININPLACE</b> = 0</td></tr>
-<tr class="separator:a8f1ce9edf50107e5cf5b85c21f682434"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a834cd74d29c680a1a974a88b5b73ac6a"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a834cd74d29c680a1a974a88b5b73ac6a"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_STREAM_SIGNALS</b> = 2</td></tr>
-<tr class="separator:a834cd74d29c680a1a974a88b5b73ac6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a52375928714da2fcf0281c34eccc3ca4"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a52375928714da2fcf0281c34eccc3ca4"></a>
 int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_VISIBLE_DEVICES</b> = 0</td></tr>
 <tr class="separator:a52375928714da2fcf0281c34eccc3ca4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a90032487c6e75bbaf6a21103d067ad17"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a90032487c6e75bbaf6a21103d067ad17"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_DISABLE_HW_KERNEL_DEP</b> = 0</td></tr>
-<tr class="separator:a90032487c6e75bbaf6a21103d067ad17"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6de84e5835d354cf1e1591d337db7eed"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a6de84e5835d354cf1e1591d337db7eed"></a>
-int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_DISABLE_HW_COPY_DEP</b> = 0</td></tr>
-<tr class="separator:a6de84e5835d354cf1e1591d337db7eed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a89c4a58c7acbb945bd6e4c9d8fafb66c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a89c4a58c7acbb945bd6e4c9d8fafb66c"></a>
-thread_local int&#160;</td><td class="memItemRight" valign="bottom"><b>tls_defaultDevice</b> = 0</td></tr>
-<tr class="separator:a89c4a58c7acbb945bd6e4c9d8fafb66c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a40479a2de3cfe04b98028668d3297ed5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a40479a2de3cfe04b98028668d3297ed5"></a>
-thread_local <a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>tls_lastHipError</b> = <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063">hipSuccess</a></td></tr>
-<tr class="separator:a40479a2de3cfe04b98028668d3297ed5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed0a1cd91f4758fb5e718e481ff50fe2"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aed0a1cd91f4758fb5e718e481ff50fe2"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_NUM_KERNELS_INFLIGHT</b> = 128</td></tr>
+<tr class="separator:aed0a1cd91f4758fb5e718e481ff50fe2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a02995e5bc53a521e20c4b6a6f7e907ef"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a02995e5bc53a521e20c4b6a6f7e907ef"></a>
+int&#160;</td><td class="memItemRight" valign="bottom"><b>HIP_WAIT_MODE</b> = 0</td></tr>
+<tr class="separator:a02995e5bc53a521e20c4b6a6f7e907ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aae9776b40d05a39ead2dd0df7d82e46d"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aae9776b40d05a39ead2dd0df7d82e46d"></a>
 std::once_flag&#160;</td><td class="memItemRight" valign="bottom"><b>hip_initialized</b></td></tr>
 <tr class="separator:aae9776b40d05a39ead2dd0df7d82e46d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d549af4d8556c8cfde5c46720def76e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0d549af4d8556c8cfde5c46720def76e"></a>
-<a class="el" href="classihipDevice__t.html">ihipDevice_t</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>g_devices</b></td></tr>
-<tr class="separator:a0d549af4d8556c8cfde5c46720def76e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af31c3743df731bc7b5f69394373e150f"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="af31c3743df731bc7b5f69394373e150f"></a>
+<a class="el" href="classihipDevice__t.html">ihipDevice_t</a> **&#160;</td><td class="memItemRight" valign="bottom"><b>g_deviceArray</b></td></tr>
+<tr class="separator:af31c3743df731bc7b5f69394373e150f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01218bb30329b40a2ab1d0415f22ab66"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a01218bb30329b40a2ab1d0415f22ab66"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>g_visible_device</b> = false</td></tr>
 <tr class="separator:a01218bb30329b40a2ab1d0415f22ab66"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -252,9 +295,15 @@ std::vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>g
 <tr class="memitem:a51cbfc1cd7ef93745edcd0486cb2257e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a51cbfc1cd7ef93745edcd0486cb2257e"></a>
 hsa_agent_t&#160;</td><td class="memItemRight" valign="bottom"><b>g_cpu_agent</b></td></tr>
 <tr class="separator:a51cbfc1cd7ef93745edcd0486cb2257e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad2ac1df898ba934151b9cb467700d541"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad2ac1df898ba934151b9cb467700d541"></a>
-uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>kernelCount</b> = 0</td></tr>
-<tr class="separator:ad2ac1df898ba934151b9cb467700d541"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b7007a2e913a86e864cb2dcec834ea5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1b7007a2e913a86e864cb2dcec834ea5"></a>
+unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>g_numLogicalThreads</b></td></tr>
+<tr class="separator:a1b7007a2e913a86e864cb2dcec834ea5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4350b145127ae0170a71d29eef133ee9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4350b145127ae0170a71d29eef133ee9"></a>
+size_t&#160;</td><td class="memItemRight" valign="bottom"><b>g_malloc_heap_size</b> = SIZE_OF_HEAP</td></tr>
+<tr class="separator:a4350b145127ae0170a71d29eef133ee9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a40479a2de3cfe04b98028668d3297ed5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a40479a2de3cfe04b98028668d3297ed5"></a>
+thread_local <a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>tls_lastHipError</b> = <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063">hipSuccess</a></td></tr>
+<tr class="separator:a40479a2de3cfe04b98028668d3297ed5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Contains definitions for functions that are large enough that we don't want to inline them everywhere. This file is compiled and linked into apps running HIP / HCC path. </p>
@@ -300,22 +349,33 @@ uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>kernelCount</b> =
 </div><!-- fragment -->
 </div>
 </div>
-<h2 class="groupheader">Function Documentation</h2>
-<a class="anchor" id="a0d24b3157fd1b16d38672bb157ec4cd4"></a>
+<a class="anchor" id="aeb94daa38d639c3338d5b7e6b191320c"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipHccGetAccelerator </td>
+          <td class="memname">#define READ_ENV_S</td>
           <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>deviceId</em>, </td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">_build, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">hc::accelerator *&#160;</td>
-          <td class="paramname"><em>acc</em>&#160;</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">_ENV_VAR, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">_ENV_VAR2, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">_description&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -324,41 +384,16 @@ uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>kernelCount</b> =
         </tr>
       </table>
 </div><div class="memdoc">
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a07ab9b704ea693c1781a52741c60cd0d" title="DeviceID must be in range 0...#compute-devices. ">hipErrorInvalidDevice</a> </dd></dl>
-
-</div>
-</div>
-<a class="anchor" id="a1a7087ea9c3c3323270d7cce73650b44"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipHccGetAcceleratorView </td>
-          <td>(</td>
-          <td class="paramtype">hipStream_t&#160;</td>
-          <td class="paramname"><em>stream</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">hc::accelerator_view **&#160;</td>
-          <td class="paramname"><em>av</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a> </dd></dl>
-
+<b>Value:</b><div class="fragment"><div class="line"><span class="keywordflow">if</span> (_build == release) {\</div>
+<div class="line">        ihipReadEnv_S(&amp;_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description);\</div>
+<div class="line">    };</div>
+</div><!-- fragment -->
 </div>
 </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Aug 4 2016 10:05:52 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Tue Nov 8 2016 16:33:49 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

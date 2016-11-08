@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['stream_20management',['Stream Management',['../group__Stream.html',1,'']]]
+  ['initialization_20and_20version',['Initialization and Version',['../group__Driver.html',1,'']]]
 ];

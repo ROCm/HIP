@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['texture_20reference_20management',['Texture Reference Management',['../group__Texture.html',1,'']]]
+  ['management',['Management',['../group__Context.html',1,'']]],
+  ['memory_20management',['Memory Management',['../group__Memory.html',1,'']]]
 ];
