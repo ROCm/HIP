@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 #include <cuda_runtime_api.h>
 #include <cuda.h>
+#include <cuda_profiler_api.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -645,12 +646,12 @@ inline static hipError_t hipMemcpyPeerAsync ( void* dst, int  dstDevice, const v
 // Profile APIs:
 inline hipError_t hipProfilerStart()
 {
-    return hipCUDAErrorTohipError(cudaProfileStart());
+    return hipCUDAErrorTohipError(cudaProfilerStart());
 }
 
 inline hipError_t hipProfilerStop()
 {
-    return hipCUDAErrorTohipError(cudaProfileStop());
+    return hipCUDAErrorTohipError(cudaProfilerStop());
 }
 
 
