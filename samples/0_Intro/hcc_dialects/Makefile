@@ -5,8 +5,8 @@ OPT=-O2
 HCC_CFLAGS= `$(HCC_HOME)/bin/hcc-config --cxxflags` ${OPT}
 HCC_LDFLAGS= `$(HCC_HOME)/bin/hcc-config --ldflags` ${OPT}
 
-CPPAMP_CFLAGS= -std=c++amp -stdlib=libc++ -I$(HCC_HOME)/include
-CPPAMP_LDFLAGS=  -std=c++amp -L$(HCC_HOME)/lib -Wl,--rpath=$(HCC_HOME)/lib -lc++ -lc++abi -ldl -lpthread -Wl,--whole-archive -lmcwamp -Wl,--no-whole-archive 
+CPPAMP_CFLAGS= `$(HCC_HOME)/bin/clamp-config --cxxflags`
+CPPAMP_LDFLAGS= `$(HCC_HOME)/bin/clamp-config --ldflags`
 
 HIP_PATH?= $(wildcard /opt/rocm/hip)
 ifeq (,$(HIP_PATH))
