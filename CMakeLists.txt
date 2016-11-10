@@ -347,7 +347,7 @@ endif()
 add_custom_target(install_for_test COMMAND "${CMAKE_COMMAND}" --build . --target install
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 execute_process(COMMAND getconf _NPROCESSORS_ONLN OUTPUT_VARIABLE DASH_JAY OUTPUT_STRIP_TRAILING_WHITESPACE)
-add_custom_target(test COMMAND ${CMAKE_COMMAND} .
+add_custom_target(test COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} .
     COMMAND make -j ${DASH_JAY}
     COMMAND make test
     WORKING_DIRECTORY ${BUILD_DIR}
