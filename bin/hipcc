@@ -320,7 +320,7 @@ if ($setStdLib eq 0 and $HIP_PLATFORM eq 'hcc')
 }
 
 if ($needHipHcc) {
-    $HIP_LIB_TYPE = $hipConfig{'HIP_LIB_TYPE'} // 0;
+    $HIP_LIB_TYPE = $hipConfig{'HIP_LIB_TYPE'} // 1;
 
     # TODO - remove the old sea-of-objects solution:
     if ($HIP_LIB_TYPE eq 0) {
