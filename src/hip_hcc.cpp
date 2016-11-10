@@ -75,6 +75,11 @@ int HIP_WAIT_MODE = 0;
 
 int HIP_FORCE_P2P_HOST = 0;
 
+// Force async copies to actually use the synchronous copy interface. 
+int HIP_FORCE_SYNC_COPY = 0;
+
+
+
 
 
 
@@ -1368,6 +1373,7 @@ void ihipInit()
 
     READ_ENV_I(release, HIP_WAIT_MODE, 0, "Force synchronization mode. 1= force yield, 2=force spin, 0=defaults specified in application");
     READ_ENV_I(release, HIP_FORCE_P2P_HOST, 0, "Force use of host/staging copy for peer-to-peer copiecopies"); 
+    READ_ENV_I(release, HIP_FORCE_SYNC_COPY, 0, "Force all copies (even hipMemcpyAsync) to use sync copies"); 
     READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Max number of inflight kernels per stream before active synchronization is forced.");
 
     // Some flags have both compile-time and runtime flags - generate a warning if user enables the runtime flag but the compile-time flag is disabled.
@@ -1933,14 +1939,16 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
 
         // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.
         // If both pointers are not tracked, we need to fall back to a sync copy.
-        if (dstTracked && srcTracked && copyDevice) {
+        if (dstTracked && srcTracked && copyDevice/*code below assumes this is !nullptr*/) {
             LockedAccessor_StreamCrit_t crit(_criticalData);
 
-            // Perform fast asynchronous copy:
+            // Perform fast asynchronous copy - we know copyDevice != NULL based on check above
             try {
-                printf ("forcing copy to use synchronous path: !!!!!\n");
-                //crit->_av.copy_async_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice);
-                crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, &copyDevice->getDevice()->_acc );
+                if (HIP_FORCE_SYNC_COPY) {
+                    crit->_av.copy_ext      (src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, &copyDevice->getDevice()->_acc);
+                } else {
+                    crit->_av.copy_async_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, &copyDevice->getDevice()->_acc);
+                }
             } catch (Kalmar::runtime_exception) {
                 throw ihipException(hipErrorRuntimeOther);
             };
