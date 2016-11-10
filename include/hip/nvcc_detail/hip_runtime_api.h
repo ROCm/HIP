@@ -654,7 +654,6 @@ inline hipError_t hipProfilerStop()
     return hipCUDAErrorTohipError(cudaProfilerStop());
 }
 
-
 inline static hipError_t hipSetDeviceFlags (unsigned int flags)
 {
     return hipCUDAErrorTohipError(cudaSetDeviceFlags(flags));
