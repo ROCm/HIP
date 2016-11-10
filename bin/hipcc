@@ -116,9 +116,16 @@ if ($HIP_PLATFORM eq "hcc") {
     } else {
         $HIPLDFLAGS .= " -Wl,--defsym=_binary_kernel_spir_end=1 -Wl,--defsym=_binary_kernel_spir_start=1 -Wl,--defsym=_binary_kernel_cl_start=1 -Wl,--defsym=_binary_kernel_cl_end=1";
     }
+    if ($HOST_OSNAME eq "fedora") {
+        $HIPCXXFLAGS .= " -I/usr/local/include/c++/v1";
+    }
 
     # Satisfy HCC dependencies
-    $HIPLDFLAGS .= " -lc++abi -lsupc++";
+    if ($HOST_OSNAME eq "fedora") {
+        $HIPLDFLAGS .= " -lc++abi";
+    } else {
+        $HIPLDFLAGS .= " -lc++abi -lsupc++";
+    }
     $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am -lhsakmt";
 
     # Handle ROCm target platform
