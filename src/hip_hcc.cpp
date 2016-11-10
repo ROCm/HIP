@@ -1731,35 +1731,34 @@ void ihipSetTs(hipEvent_t e)
 // Returns true if thisCtx can see the memory allocated on dstCtx and srcCtx.
 // The peer-list for a context controls which contexts have access to the memory allocated on that context.
 // So we check dstCtx's and srcCtx's peerList to see if the both include thisCtx.
-bool ihipStream_t::canSeePeerMemory(const ihipCtx_t *thisCtx, const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo)
+// TODO- change these to use dst and src ptr info.
+bool ihipStream_t::chooseDirectPeerToPeer(const ihipCtx_t *copyEngineCtx, const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo)
 {
 
-    if (dstPtrInfo->_appId != -1)  {
-        // TODO - pointer-info stores a deviceID not a context,may have some unusual side-effects here:
-        ihipCtx_t *dstCtx = ihipGetPrimaryCtx(dstPtrInfo->_appId);
-        if (thisCtx != dstCtx) {
-            // Only checks peer list if contexts are different
-            LockedAccessor_CtxCrit_t  ctxCrit(dstCtx->criticalData());
-            //tprintf(DB_SYNC, "dstCrit lock succeeded\n");
-            if (!ctxCrit->isPeerWatcher(thisCtx)) {
-                return false;
-            };
-        }
+    // Make sure this is a device-to-device copy with all memory available to the requested copy engine
+    //
+    // TODO - pointer-info stores a deviceID not a context,may have some unusual side-effects here:
+    ihipCtx_t *dstCtx = ihipGetPrimaryCtx(dstPtrInfo->_appId);
+    if (copyEngineCtx != dstCtx) {
+        // Only checks peer list if contexts are different
+        LockedAccessor_CtxCrit_t  ctxCrit(dstCtx->criticalData());
+        //tprintf(DB_SYNC, "dstCrit lock succeeded\n");
+        if (!ctxCrit->isPeerWatcher(copyEngineCtx)) {
+            return false;
+        };
     }
-    
 
 
-    if (srcPtrInfo->_appId != -1)  {
-        // TODO - pointer-info stores a deviceID not a context,may have some unusual side-effects here:
-        ihipCtx_t *srcCtx = ihipGetPrimaryCtx(srcPtrInfo->_appId);
-        if (thisCtx != srcCtx) {
-            // Only checks peer list if contexts are different
-            LockedAccessor_CtxCrit_t  ctxCrit(srcCtx->criticalData());
-            //tprintf(DB_SYNC, "srcCrit lock succeeded\n");
-            if (!ctxCrit->isPeerWatcher(thisCtx)) {
-                return false;
-            };
-        }
+
+    // TODO - pointer-info stores a deviceID not a context,may have some unusual side-effects here:
+    ihipCtx_t *srcCtx = ihipGetPrimaryCtx(srcPtrInfo->_appId);
+    if (copyEngineCtx != srcCtx) {
+        // Only checks peer list if contexts are different
+        LockedAccessor_CtxCrit_t  ctxCrit(srcCtx->criticalData());
+        //tprintf(DB_SYNC, "srcCrit lock succeeded\n");
+        if (!ctxCrit->isPeerWatcher(copyEngineCtx)) {
+            return false;
+        };
     }
 
     return true;
@@ -1812,14 +1811,16 @@ unsigned ihipStream_t::resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDev
 
 
 // hipMemKind must be "resolved" to a specific direction - cannot be default.
-void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind, const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo, 
-                                        hc::hcCommandKind *hcCopyDir, bool *forceP2PCopyEngine)
+void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind, 
+                                            const hc::AmPointerInfo *dstPtrInfo, 
+                                            const hc::AmPointerInfo *srcPtrInfo, 
+                                            hc::hcCommandKind *hcCopyDir, 
+                                            ihipCtx_t **copyDevice)
 {
-    ihipCtx_t *ctx = this->getCtx();
+    // Ignore what the user tells us and always resolve the direction:
+    // Some apps apparently rely on this.
+    hipMemKind = resolveMemcpyDirection(srcPtrInfo->_isInDeviceMem, dstPtrInfo->_isInDeviceMem);
 
-    if (hipMemKind == hipMemcpyDefault) {
-        hipMemKind = resolveMemcpyDirection(srcPtrInfo->_isInDeviceMem, dstPtrInfo->_isInDeviceMem);
-    }
 
     switch (hipMemKind) {
         case hipMemcpyHostToHost:     *hcCopyDir = hc::hcMemcpyHostToHost; break;
@@ -1829,20 +1830,24 @@ void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind, const hc::AmPoi
         default: throw ihipException(hipErrorRuntimeOther);
     };
 
-
-    // If this is P2P access, we need to check to see if the copy agent (specified by the stream where the copy is enqueued)
-    // has peer access enabled to both the source and dest.  If this is true, then the copy agent can see both pointers
-    // and we can perform the access with the copy engine from the current stream.  If not true, then we will copy through the host. (*forceP2PCopyEngine=true).
-    *forceP2PCopyEngine = false;
-    if (!canSeePeerMemory(ctx, dstPtrInfo, srcPtrInfo)) {
-        *forceP2PCopyEngine = true;
-        tprintf (DB_COPY, "P2P: copy engine(dev:%d) cannot see both host and device pointers - forcing copy through staging buffers.\n", ctx->getDeviceNum());
+    if (srcPtrInfo->_isInDeviceMem) {
+        *copyDevice  = ihipGetPrimaryCtx(srcPtrInfo->_appId);
+    } else if (dstPtrInfo->_isInDeviceMem) {
+        *copyDevice  = ihipGetPrimaryCtx(dstPtrInfo->_appId);
     } else {
-        if (HIP_FORCE_P2P_HOST ) {
-            *forceP2PCopyEngine = true;
-            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d) can see src and dst but HIP_FORCE_P2P_HOST=0, forcing copy through staging buffers.\n", ctx->getDeviceNum());
+        *copyDevice = nullptr;
+    }
+
+    if (hipMemKind == hipMemcpyDeviceToDevice) {
+        if (chooseDirectPeerToPeer(*copyDevice, dstPtrInfo, srcPtrInfo)) {
+            if (HIP_FORCE_P2P_HOST ) {
+                tprintf (DB_COPY, "P2P.  Copy engine (dev:%d) can see src and dst but HIP_FORCE_P2P_HOST=0, forcing copy through staging buffers.\n", (*copyDevice)->getDeviceNum());
+            } else {
+                tprintf (DB_COPY, "P2P.  Copy engine (dev:%d) can see src and dst.\n",  (*copyDevice)->getDeviceNum());
+            }
         } else {
-            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d) can see src and dst.\n",  ctx->getDeviceNum());
+            *copyDevice = nullptr;
+            tprintf (DB_COPY, "P2P: copy engine(dev:%d) cannot see both host and device pointers - forcing copy through staging buffers.\n", (*copyDevice)->getDeviceNum());
         }
     }
 }
@@ -1866,25 +1871,20 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
 
 
     hc::hcCommandKind hcCopyDir;
-    bool forceP2PCopyEngine;
-    resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &forceP2PCopyEngine);
+    ihipCtx_t *copyDevice;
+    resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &copyDevice);
 
 
+    // copy_ext will use copy-engine to perform the copy.  nullptr then 
 
     {
         LockedAccessor_StreamCrit_t crit (_criticalData);
-#if DISABLE_COPY_EXT
-#warning ("Disabled copy_ext path, P2P host staging copies will not work")
-        tprintf (DB_COPY, "copySync copyEngine_dev:%d  dst=%p(home_dev:%d)  src=%p(home_dev:%d)   sz=%zu dstTracked=%d srcTracked=%d dir=%s forceP2PCopyEngine=%d.  Call HCC copy\n",
-                 ctx->getDeviceNum(), dst, dstPtrInfo._appId, src, srcPtrInfo._appId,   sizeBytes, dstTracked, srcTracked, hcMemcpyStr(hcCopyDir), forceP2PCopyEngine);
-        // Note - peer-to-peer copies which require host staging will not work in this path.
-        crit->_av.copy(src, dst, sizeBytes);
-#else
-        // If srcTracked == dstTracked =1 and forceP2PCopyEngine=0 then we wil use async SDMA. (assuming HCC implementation doesn't override somehow)
-        tprintf (DB_COPY, "copySync copyEngine_dev:%d  dst=%p(home_dev:%d)  src=%p(home_dev:%d)   sz=%zu dstTracked=%d srcTracked=%d dir=%s forceP2PCopyEngine=%d.  Call HCC copy_ext.\n",
-                 ctx->getDeviceNum(), dst, dstPtrInfo._appId, src, srcPtrInfo._appId,   sizeBytes, dstTracked, srcTracked, hcMemcpyStr(hcCopyDir), forceP2PCopyEngine);
-        crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceP2PCopyEngine);
-#endif
+        tprintf (DB_COPY, "copySync copyDev:%d  dst=%p(home_dev:%d, tracked:%d, isDevMem:%d)  src=%p(home_dev:%d, tracked:%d, isDevMem:%d)   sz=%zu dir=%s\n",
+                 copyDevice ? copyDevice->getDeviceNum():-1, 
+                 dst, dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem, 
+                 src, srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem,  
+                 sizeBytes, hcMemcpyStr(hcCopyDir));
+        crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice ? &copyDevice->getDevice()->_acc : nullptr);
     }
 }
 
@@ -1921,22 +1921,26 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
 
 
         hc::hcCommandKind hcCopyDir;
-        bool forceP2PCopyEngine;
-        resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &forceP2PCopyEngine);
+        ihipCtx_t *copyDevice;
+        resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &copyDevice);
 
 
-        tprintf (DB_COPY, "copyAsync dst=%p(home_dev:%d)  src=%p(home_dev:%d)   sz=%zu dstTracked=%d srcTracked=%d dir=%s forceP2PCopyEngine=%d\n",
-                 dst, dstPtrInfo._appId, src, srcPtrInfo._appId,   sizeBytes, dstTracked, srcTracked, hcMemcpyStr(hcCopyDir), forceP2PCopyEngine);
-
+        tprintf (DB_COPY, "copyASync copyEngine_dev:%d  dst=%p(home_dev:%d, tracked:%d, isDevMem:%d)  src=%p(home_dev:%d, tracked:%d, isDevMem:%d)   sz=%zu dir=%s .  \n",
+                 copyDevice->getDeviceNum(), 
+                 dst, dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem, 
+                 src, srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem,  
+                 sizeBytes, hcMemcpyStr(hcCopyDir));
 
         // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.
         // If both pointers are not tracked, we need to fall back to a sync copy.
-        if (dstTracked && srcTracked && !forceP2PCopyEngine) {
+        if (dstTracked && srcTracked && copyDevice) {
             LockedAccessor_StreamCrit_t crit(_criticalData);
 
-            // Perform asynchronous copy:
+            // Perform fast asynchronous copy:
             try {
-                crit->_av.copy_async(src, dst, sizeBytes);
+                printf ("forcing copy to use synchronous path: !!!!!\n");
+                //crit->_av.copy_async_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice);
+                crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, &copyDevice->getDevice()->_acc );
             } catch (Kalmar::runtime_exception) {
                 throw ihipException(hipErrorRuntimeOther);
             };
@@ -1949,16 +1953,11 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
 
         } else {
             LockedAccessor_StreamCrit_t crit(_criticalData);
-#if DISABLE_COPY_EXT
-#warning ("Disabled copy_ext path, P2P host staging copies will not work")
-        // Note - peer-to-peer copies which require host staging will not work in this path.
-            crit->_av.copy(src, dst, sizeBytes);
-#else
-            crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceP2PCopyEngine);
-#endif
+            crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice ? &copyDevice->getDevice()->_acc : nullptr);
         }
     }
 }
+
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------

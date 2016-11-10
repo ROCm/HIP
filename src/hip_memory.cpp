@@ -164,47 +164,50 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 
     auto ctx = ihipGetTlsDefaultCtx();
 
-    if(ctx){
-        // am_alloc requires writeable __acc, perhaps could be refactored?
-        // TODO-P1 - Review and test this logic.  Seems : 
-        //    hipHostMallocPortable should map the host memory into all contexts, regardless of peer status.  
-        //    peer mappings should always be honored.
-        //    hipHostMallocMapped should be ignored on ROCM - all memory is mapped to host.
-        auto device = ctx->getWriteableDevice();
-        // If HIP_COHERENT_HOST_ALLOC is defined, we always alloc coherent host system memroy
+    if (sizeBytes == 0) {
+        hip_status = hipSuccess;
+        // TODO - should size of 0 return err or be siliently ignored?
+    } else if ((ctx==nullptr) || (ptr == nullptr)) {
+        hip_status = hipErrorInvalidValue;
+    } else {
+        unsigned trueFlags = flags;
+        if (flags == hipHostMallocDefault) {
+            trueFlags = hipHostMallocMapped | hipHostMallocWriteCombined;
+        } 
+
+        const unsigned supportedFlags = hipHostMallocPortable | hipHostMallocMapped | hipHostMallocWriteCombined;
+
+        if (flags & ~supportedFlags) {
+            hip_status = hipErrorInvalidValue;
+        }  else {
 #if HIP_COHERENT_HOST_ALLOC
-        // TODOD - let's make this an environment variable
-        *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
-        if(sizeBytes < 1 && (*ptr == NULL)){
-            hip_status = hipErrorMemoryAllocation;
-        } else {
-            hc::am_memtracker_update(*ptr, device->_deviceId, amHostCoherent);
-        }
-        tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
-#else
-        if ((flags == hipHostMallocDefault) || (flags == hipHostMallocPortable)) {
+            // TODO - let's make this an environment variable
             *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
-            if (sizeBytes < 1 && (*ptr == NULL)) {
+            if(sizeBytes < 1 && (*ptr == NULL)){
                 hip_status = hipErrorMemoryAllocation;
             } else {
-                hc::am_memtracker_update(*ptr, device->_deviceId, amHostPinned);
+                hc::am_memtracker_update(*ptr, device->_deviceId, amHostCoherent);
             }
-            tprintf(DB_MEM, "allocated pinned_host ptr:%p size:%zu on dev:%d\n", *ptr, sizeBytes, device->_deviceId);
-        } else if(flags & hipHostMallocMapped) {
+            tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
+#else
+            // TODO - am_alloc requires writeable __acc, perhaps could be refactored?
+            // TODO - hipHostMallocMapped is be ignored on ROCM - all memory is mapped to host address space as WC.
+            auto device = ctx->getWriteableDevice();
             *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
-            if (sizeBytes && (*ptr == NULL)) {
+            if (*ptr == NULL) {
                 hip_status = hipErrorMemoryAllocation;
             } else {
                 hc::am_memtracker_update(*ptr, device->_deviceId, flags);
+                // TODO-hipHostMallocPortable should map the host memory into all contexts, regardless of peer status.  
                 int peerCnt=0;
                 {
                     LockedAccessor_CtxCrit_t crit(ctx->criticalData());
                     peerCnt = crit->peerCnt();
-                    if (peerCnt) {
+                    if (peerCnt > 1) {
                         hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
                     }
                 }
-                tprintf(DB_MEM, "allocated pinned_host ptr:%p size:%zu on dev:%d, allow access to %d peer(s)\n", *ptr, sizeBytes, device->_deviceId, peerCnt);
+                tprintf(DB_MEM, "allocated pinned_host ptr:%p size:%zu on dev:%d and allow access to %d other peer(s)\n", *ptr, sizeBytes, device->_deviceId, peerCnt-1);
             }
         }
 #endif //HIP_COHERENT_HOST_ALLOC
@@ -595,10 +598,13 @@ hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes)
     return ihipLogStatus(e);
 }
 
-hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream)
-{
-    HIP_INIT_API(dst, src, sizeBytes, kind, stream);
 
+
+// Internal copy sync:
+namespace hip_internal {
+
+hipError_t memcpyAsync (void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream)
+{
     hipError_t e = hipSuccess;
 
     stream = ihipSyncAndResolveStream(stream);
@@ -617,86 +623,39 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
         e = hipErrorInvalidValue;
     }
 
-    return ihipLogStatus(e);
+    return e;
 }
+} // end namespace hip_internal
+
+
+hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream)
+{
+    HIP_INIT_API(dst, src, sizeBytes, kind, stream);
+
+    return ihipLogStatus(hip_internal::memcpyAsync(dst, src, sizeBytes, kind, stream));
+
+}
+
 
 hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, void* src, size_t sizeBytes, hipStream_t stream)
 {
     HIP_INIT_API(dst, src, sizeBytes, stream);
 
-    hipError_t e = hipSuccess;
-
-    stream = ihipSyncAndResolveStream(stream);
-
-    hipMemcpyKind kind = hipMemcpyHostToDevice;
-
-    if ((dst == NULL) || (src == NULL)) {
-        e= hipErrorInvalidValue;
-    } else if (stream) {
-        try {
-            stream->locked_copyAsync((void*)dst, src, sizeBytes, kind);
-        }
-        catch (ihipException ex) {
-            e = ex._code;
-        }
-    } else {
-        e = hipErrorInvalidValue;
-    }
-
-    return ihipLogStatus(e);
+    return ihipLogStatus(hip_internal::memcpyAsync(dst, src, sizeBytes, hipMemcpyHostToDevice, stream));
 }
 
 hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes, hipStream_t stream)
 {
     HIP_INIT_API(dst, src, sizeBytes, stream);
 
-    hipError_t e = hipSuccess;
-
-    hipMemcpyKind kind = hipMemcpyDeviceToDevice;
-
-    stream = ihipSyncAndResolveStream(stream);
-
-
-    if ((dst == NULL) || (src == NULL)) {
-        e= hipErrorInvalidValue;
-    } else if (stream) {
-        try {
-            stream->locked_copyAsync((void*)dst, (void*)src, sizeBytes, kind);
-        }
-        catch (ihipException ex) {
-            e = ex._code;
-        }
-    } else {
-        e = hipErrorInvalidValue;
-    }
-
-    return ihipLogStatus(e);
+    return ihipLogStatus(hip_internal::memcpyAsync(dst, src, sizeBytes, hipMemcpyDeviceToDevice, stream));
 }
 
 hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, hipStream_t stream)
 {
     HIP_INIT_API(dst, src, sizeBytes, stream);
 
-    hipError_t e = hipSuccess;
-
-    stream = ihipSyncAndResolveStream(stream);
-
-    hipMemcpyKind kind = hipMemcpyDeviceToHost;
-
-    if ((dst == NULL) || (src == NULL)) {
-        e= hipErrorInvalidValue;
-    } else if (stream) {
-        try {
-            stream->locked_copyAsync(dst, (void*)src, sizeBytes, kind);
-        }
-        catch (ihipException ex) {
-            e = ex._code;
-        }
-    } else {
-        e = hipErrorInvalidValue;
-    }
-
-    return ihipLogStatus(e);
+    return ihipLogStatus(hip_internal::memcpyAsync(dst, src, sizeBytes, hipMemcpyDeviceToHost, stream));
 }
 
 // TODO - review and optimize

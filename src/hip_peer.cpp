@@ -149,7 +149,7 @@ hipError_t hipMemcpyPeer (void* dst, hipCtx_t dstCtx, const void* src, hipCtx_t 
 
     // TODO - move to ihip memory copy implementaion.
     // HCC has a unified memory architecture so device specifiers are not required.
-    return hipMemcpy(dst, src, sizeBytes, hipMemcpyDefault);
+    return ihipLogStatus(hipMemcpy(dst, src, sizeBytes, hipMemcpyDefault));
 };
 
 
@@ -160,7 +160,7 @@ hipError_t hipMemcpyPeerAsync (void* dst, hipCtx_t dstDevice, const void* src, h
 
     // TODO - move to ihip memory copy implementaion.
     // HCC has a unified memory architecture so device specifiers are not required.
-    return hipMemcpyAsync(dst, src, sizeBytes, hipMemcpyDefault, stream);
+    return ihipLogStatus(hip_internal::memcpyAsync(dst, src, sizeBytes, hipMemcpyDefault, stream));
 };
 
 
@@ -173,7 +173,7 @@ hipError_t hipMemcpyPeerAsync (void* dst, hipCtx_t dstDevice, const void* src, h
 hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int deviceId, int peerDeviceId)
 {
     HIP_INIT_API(canAccessPeer, deviceId, peerDeviceId);
-    return ihipDeviceCanAccessPeer(canAccessPeer, ihipGetPrimaryCtx(deviceId), ihipGetPrimaryCtx(peerDeviceId));
+    return ihipLogStatus(ihipDeviceCanAccessPeer(canAccessPeer, ihipGetPrimaryCtx(deviceId), ihipGetPrimaryCtx(peerDeviceId)));
 }
 
 
@@ -196,14 +196,14 @@ hipError_t hipDeviceEnablePeerAccess (int peerDeviceId, unsigned int flags)
 hipError_t hipMemcpyPeer (void* dst, int  dstDevice, const void* src, int  srcDevice, size_t sizeBytes)
 {
     HIP_INIT_API(dst, dstDevice, src, srcDevice, sizeBytes);
-    return hipMemcpyPeer(dst, ihipGetPrimaryCtx(dstDevice), src, ihipGetPrimaryCtx(srcDevice), sizeBytes);
+    return ihipLogStatus(hipMemcpyPeer(dst, ihipGetPrimaryCtx(dstDevice), src, ihipGetPrimaryCtx(srcDevice), sizeBytes));
 }
 
 
 hipError_t hipMemcpyPeerAsync (void* dst, int  dstDevice, const void* src, int  srcDevice, size_t sizeBytes, hipStream_t stream)
 {
     HIP_INIT_API(dst, dstDevice, src, srcDevice, sizeBytes, stream);
-    return hipMemcpyPeerAsync(dst, ihipGetPrimaryCtx(dstDevice), src, ihipGetPrimaryCtx(srcDevice), sizeBytes, stream);
+    return ihipLogStatus(hip_internal::memcpyAsync(dst, src, sizeBytes, hipMemcpyDefault, stream));
 }
 
 hipError_t hipCtxEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags)
