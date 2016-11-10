@@ -76,7 +76,7 @@ dim3 dimBlock(512,1,1);
 
 hipLaunchKernel(HIP_KERNEL_NAME(Add), dimGrid, dimBlock, 0, 0, Ad, Bd, Cd);
 
-HIPCHECK(hipMemcpy(C, Cd, SIZE, hipMemcpyDeviceToHost));
+HIPCHECK(hipMemcpy(C, Cd, SIZE, hipMemcpyDeviceToHost));  // Note this really HostToHost not DeviceToHost, since memory is mapped...
 HIPASSERT(C[10] == 3.0f);
 HIPASSERT(flagA == FlagA);
 HIPASSERT(flagB == FlagB);
