@@ -1,4 +1,1 @@
-:set tabstop=4
-:set shiftwidth=4
-:set expandtab
-:set smartindent
+:set makeprg=make\ -C\ build.hcc-LC.db

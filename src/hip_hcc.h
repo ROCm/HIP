@@ -496,10 +496,10 @@ private:
 
     // The unsigned return is hipMemcpyKind
     unsigned resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDeviceMem);
-    void resolveHcMemcpyDirection(unsigned hipMemKind, const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo,
-                                  hc::hcCommandKind *hcCopyDir, bool *forceHostCopyEngine);
+    void resolveHcMemcpyDirection(unsigned hipMemKind, const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo, 
+                                  hc::hcCommandKind *hcCopyDir, ihipCtx_t **copyDevice);
 
-    bool canSeePeerMemory(const ihipCtx_t *thisCtx, const hc::AmPointerInfo *dstInfo, const hc::AmPointerInfo *srcInfo);
+    bool chooseDirectPeerToPeer(const ihipCtx_t *thisCtx, const hc::AmPointerInfo *dstInfo, const hc::AmPointerInfo *srcInfo);
 
 
 private: // Data
@@ -762,6 +762,12 @@ inline std::ostream& operator<<(std::ostream& os, const ihipCtx_t* c)
        << ".dev:" << c->getDevice()->_deviceId;
     return os;
 }
+
+
+// Helper functions that are used across src files:
+namespace hip_internal {
+    hipError_t memcpyAsync (void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream);
+};
 
 
 #endif
