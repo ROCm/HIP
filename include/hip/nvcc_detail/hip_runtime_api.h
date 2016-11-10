@@ -764,6 +764,11 @@ inline static hipError_t hipDeviceGetPCIBusId(int *pciBusId,int len,hipDevice_t 
     return hipCUResultTohipError(cuDeviceGetPCIBusId((char*)pciBusId,len,device));
 }
 
+inline static hipError_t hipDeviceGetByPCIBusId(int* device, const int *pciBusId)
+{
+    return hipCUDAErrorTohipError(cudaDeviceGetByPCIBusId(device,(char*)pciBusId));
+}
+
 inline static hipError_t hipDeviceGetLimit(size_t *pValue, hipLimit_t limit)
 {
     return hipCUDAErrorTohipError(cudaDeviceGetLimit(pValue, limit));
