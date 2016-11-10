@@ -75,7 +75,7 @@ private:
     int      _shortTid;
 
     // monotonically increasing API sequence number for this threa.
-    uint64_t _apiSeqNum; 
+    uint64_t _apiSeqNum;
 };
 
 struct ProfTrigger {
@@ -155,6 +155,12 @@ extern const char *API_COLOR_END;
 #endif
 
 
+// Compile code that force hipHostMalloc only allocates finegrained system memory.
+#ifndef HIP_COHERENT_HOST_ALLOC
+#define HIP_COHERENT_HOST_ALLOC 0
+#endif
+
+
 
 // Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function boundary.
 // TODO - currently we print the trace message at the beginning. if we waited, we could also include return codes, and any values returned
@@ -169,8 +175,8 @@ extern const char *API_COLOR_END;
 // Swallow scoped markers:
 #define MARKER_BEGIN(markerName,group)
 #define MARKER_END()
-#define RESUME_PROFILING 
-#define STOP_PROFILING   
+#define RESUME_PROFILING
+#define STOP_PROFILING
 #endif
 
 
@@ -246,7 +252,7 @@ static const DbName dbName [] =
     {KRED, "signal"},
 };
 
- 
+
 
 #if COMPILE_HIP_DB
 #define tprintf(trace_level, ...) {\
@@ -467,7 +473,7 @@ public:
     void launchModuleKernel(hc::accelerator_view av, hsa_signal_t signal,
                             uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
                             uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
-														uint32_t groupSegmentSize, uint32_t sharedMemBytes, 
+														uint32_t groupSegmentSize, uint32_t sharedMemBytes,
 														void *kernarg, size_t kernSize, uint64_t kernel);
 
 
@@ -490,7 +496,7 @@ private:
 
     // The unsigned return is hipMemcpyKind
     unsigned resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDeviceMem);
-    void resolveHcMemcpyDirection(unsigned hipMemKind, const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo, 
+    void resolveHcMemcpyDirection(unsigned hipMemKind, const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo,
                                   hc::hcCommandKind *hcCopyDir, bool *forceHostCopyEngine);
 
     bool canSeePeerMemory(const ihipCtx_t *thisCtx, const hc::AmPointerInfo *dstInfo, const hc::AmPointerInfo *srcInfo);
@@ -662,7 +668,7 @@ public: // Functions:
     // TODO - review uses of getWriteableDevice(), can these be converted to getDevice()
     ihipDevice_t *getWriteableDevice() const { return _device; };
 
-    std::string toString() const; 
+    std::string toString() const;
 
 public:  // Data
     // The NULL stream is used if no other stream is specified.
@@ -751,7 +757,7 @@ inline std::ostream& operator<<(std::ostream& os, const hipEvent_t& e)
 
 inline std::ostream& operator<<(std::ostream& os, const ihipCtx_t* c)
 {
-    os << "ctx:" << static_cast<const void*> (c) 
+    os << "ctx:" << static_cast<const void*> (c)
        << ".dev:" << c->getDevice()->_deviceId;
     return os;
 }
