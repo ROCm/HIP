@@ -126,7 +126,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
             int peerCnt=0;
             {
                 LockedAccessor_CtxCrit_t crit(ctx->criticalData());
-                // the peerCnt always stores self so make sure the trace actually 
+                // the peerCnt always stores self so make sure the trace actually
                 peerCnt = crit->peerCnt();
                 if (peerCnt > 1) {
                     hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
@@ -154,8 +154,8 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
     if(ctx){
         // am_alloc requires writeable __acc, perhaps could be refactored?
         auto device = ctx->getWriteableDevice();
-        // If HIP_COHERENT_HOST_ALLOC is defined, we always alloc coherent host system memroy 
-    #ifdef HIP_COHERENT_HOST_ALLOC
+        // If HIP_COHERENT_HOST_ALLOC is defined, we always alloc coherent host system memroy
+#if HIP_COHERENT_HOST_ALLOC
         *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
         if(sizeBytes < 1 && (*ptr == NULL)){
             hip_status = hipErrorMemoryAllocation;
@@ -163,7 +163,7 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
             hc::am_memtracker_update(*ptr, device->_deviceId, amHostCoherent);
         }
         tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
-    #else
+#else
         if((flags == hipHostMallocDefault)|| (flags == hipHostMallocPortable)){
             *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
             if (sizeBytes < 1 && (*ptr == NULL)) {
@@ -189,7 +189,7 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
                 tprintf(DB_MEM, "allocated pinned host ptr=%p on dev=%d, allow access to %d peer(s)\n", *ptr, device->_deviceId, peerCnt);
             }
         }
-    #endif //HIP_COHERENT_HOST_ALLOC
+#endif //HIP_COHERENT_HOST_ALLOC
     }
     return ihipLogStatus(hip_status);
 }
