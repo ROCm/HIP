@@ -35,6 +35,7 @@ THE SOFTWARE.
 
 __global__ void Iter(hipLaunchParm lp, int *Ad, int num){
     int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+    // Kernel loop designed to execute very slowly... ... ...   so we can test timing-related behavior below
     if(tx == 0){
         for(int i = 0; i<num;i++){
             Ad[tx] += 1;
@@ -61,7 +62,11 @@ int main(){
     for(int i=0;i<NUM_STREAMS;i++){
         HIPCHECK(hipMemcpyAsync(A[i], Ad[i], _SIZE, hipMemcpyDeviceToHost, stream[i]));
     }
-    
+
+   
+   // This first check but relies on the kernel running for so long that the D2H async memcopy has not started yet.   
+   // This will be true in an optimal asynchronous implementation.  
+   // Conservative implementations which synchronize the hipMemcpyAsync will fail, ie if HIP_LAUNCH_BLOCKING=true
     HIPASSERT(1<<30 != A[NUM_STREAMS-1][0]-1);
     HIPCHECK(hipDeviceSynchronize());
     HIPASSERT(1<<30 == A[NUM_STREAMS-1][0]-1);
