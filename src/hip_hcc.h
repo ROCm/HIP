@@ -496,10 +496,13 @@ private:
 
     // The unsigned return is hipMemcpyKind
     unsigned resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDeviceMem);
-    void resolveHcMemcpyDirection(unsigned hipMemKind, const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo, 
-                                  hc::hcCommandKind *hcCopyDir, ihipCtx_t **copyDevice);
+    void resolveHcMemcpyDirection(unsigned hipMemKind, 
+                                  const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo, 
+                                  hc::hcCommandKind *hcCopyDir, 
+                                  ihipCtx_t **copyDevice,
+                                  bool *forceUnpinnedCopy);
 
-    bool chooseDirectPeerToPeer(const ihipCtx_t *thisCtx, const hc::AmPointerInfo *dstInfo, const hc::AmPointerInfo *srcInfo);
+    bool canSeeMemory(const ihipCtx_t *thisCtx, const hc::AmPointerInfo *dstInfo, const hc::AmPointerInfo *srcInfo);
 
 
 private: // Data
