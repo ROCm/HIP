@@ -54,6 +54,7 @@ extern int HIP_DB;
 extern int HIP_STAGING_SIZE;   /* size of staging buffers, in KB */
 extern int HIP_STREAM_SIGNALS;  /* number of signals to allocate at stream creation */
 extern int HIP_VISIBLE_DEVICES; /* Contains a comma-separated sequence of GPU identifiers */
+extern int HIP_FORCE_P2P_HOST;
 
 
 //---

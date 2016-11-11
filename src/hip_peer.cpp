@@ -43,13 +43,18 @@ hipError_t ihipDeviceCanAccessPeer (int* canAccessPeer, hipCtx_t thisCtx, hipCtx
 
 
     if ((thisCtx != NULL) && (peerCtx != NULL)) {
+
         if (thisCtx == peerCtx) {
             *canAccessPeer = 0;
-            tprintf(DB_COPY, "Can't be peer to self. (this=%s, peer=%s)\n", 
+            tprintf(DB_MEM, "Can't be peer to self. (this=%s, peer=%s)\n", 
                     thisCtx->toString().c_str(), peerCtx->toString().c_str()); 
+        } else  if (HIP_FORCE_P2P_HOST & 0x2) {
+            *canAccessPeer = false;
+            tprintf(DB_MEM, "HIP_FORCE_P2P_HOST denies peer access this=%s peer=%s  canAccessPeer=%d\n", 
+                    thisCtx->toString().c_str(), peerCtx->toString().c_str(), *canAccessPeer); 
         } else {
             *canAccessPeer = peerCtx->getDevice()->_acc.get_is_peer(thisCtx->getDevice()->_acc);
-            tprintf(DB_COPY, "deviceCanAccessPeer this=%s peer=%s  canAccessPeer=%d\n", 
+            tprintf(DB_MEM, "deviceCanAccessPeer this=%s peer=%s  canAccessPeer=%d\n", 
                     thisCtx->toString().c_str(), peerCtx->toString().c_str(), *canAccessPeer); 
         }
 
@@ -57,6 +62,7 @@ hipError_t ihipDeviceCanAccessPeer (int* canAccessPeer, hipCtx_t thisCtx, hipCtx
         *canAccessPeer = 0;
         err = hipErrorInvalidDevice;
     }
+
 
     return err;
 }
@@ -93,7 +99,7 @@ hipError_t ihipDisablePeerAccess (hipCtx_t peerCtx)
             LockedAccessor_CtxCrit_t peerCrit(peerCtx->criticalData());
             bool changed = peerCrit->removePeerWatcher(peerCtx, thisCtx);
             if (changed) {
-                tprintf(DB_COPY, "device %s disable access to memory allocated on peer:%s\n", 
+                tprintf(DB_MEM, "device %s disable access to memory allocated on peer:%s\n", 
                                   thisCtx->toString().c_str(), peerCtx->toString().c_str()); 
                 // Update the peers for all memory already saved in the tracker:
                 am_memtracker_update_peers(peerCtx->getDevice()->_acc, peerCrit->peerCnt(), peerCrit->peerAgents());
@@ -127,7 +133,7 @@ hipError_t ihipEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags)
             // Add thisCtx to peerCtx's access list so that new allocations on peer will be made visible to this device:
             bool isNewPeer = peerCrit->addPeerWatcher(peerCtx, thisCtx);
             if (isNewPeer) {
-                tprintf(DB_COPY, "device=%s can now see all memory allocated on peer=%s\n", 
+                tprintf(DB_MEM, "device=%s can now see all memory allocated on peer=%s\n", 
                                   thisCtx->toString().c_str(), peerCtx->toString().c_str()); 
                 am_memtracker_update_peers(peerCtx->getDevice()->_acc, peerCrit->peerCnt(), peerCrit->peerAgents());
             } else {
