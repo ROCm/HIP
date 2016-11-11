@@ -525,7 +525,7 @@ void ihipStream_t::launchModuleKernel(
     (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
     (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
 
-    uint16_t setup = 1 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
+    uint16_t setup = 3 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
     uint32_t header32 = header | (setup << 16);
 
     __atomic_store_n((uint32_t*)(dispatch_packet), header32, __ATOMIC_RELEASE);
