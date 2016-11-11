@@ -142,15 +142,6 @@ if(NOT DEFINED COMPILE_HIP_ATP_MARKER)
 endif()
 add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 
-# Check if we need to force finegrained system memory allocation
-if(NOT DEFINED HIP_COHERENT_HOST_ALLOC)
-    if(NOT DEFINED ENV{HIP_COHERENT_HOST_ALLOC})
-        set(HIP_COHERENT_HOST_ALLOC 0)
-    else()
-        set(HIP_COHERENT_HOST_ALLOC $ENV{HIP_COHERENT_HOST_ALLOC})
-    endif()
-endif()
-add_to_config(_buildInfo HIP_COHERENT_HOST_ALLOC)
 
 #############################
 # Build steps

@@ -129,12 +129,12 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
                 LockedAccessor_CtxCrit_t crit(ctx->criticalData());
                 // the peerCnt always stores self so make sure the trace actually
                 peerCnt = crit->peerCnt();
-                tprintf(DB_MEM, " allocated device_mem ptr:%p size:%zu on dev:%d and allowed %d other peer(s) access\n", 
+                tprintf(DB_MEM, " allocated device_mem ptr:%p size:%zu on dev:%d and allowed %d other peer(s) access\n",
                         *ptr, sizeBytes, device->_deviceId, peerCnt-1);
-                if (peerCnt > 1) { 
-                    
+                if (peerCnt > 1) {
+
                     //printf ("peer self access\n");
-                     
+
                     // TODOD - remove me:
                     for (auto iter = crit->_peers.begin(); iter!=crit->_peers.end(); iter++) {
                         tprintf (DB_MEM, "   allow access to peer: %s%s\n", (*iter)->toString().c_str(), (iter == crit->_peers.begin()) ? " (self)":"");
@@ -155,6 +155,20 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
     return ihipLogStatus(hip_status);
 }
 
+void ihipReadSingleEnv(int *var_ptr, const char *var_name1, const char *description)
+{
+    char * env = getenv(var_name1);
+
+    // Default is set when variable is initialized (at top of this file), so only override if we find
+    // an environment variable.
+    if (env) {
+        long int v = strtol(env, NULL, 0);
+        *var_ptr = (int) (v);
+    }
+    if (HIP_PRINT_ENV) {
+        printf ("%-30s = %2d : %s\n", var_name1, *var_ptr, description);
+    }
+}
 
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
@@ -173,44 +187,50 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
         unsigned trueFlags = flags;
         if (flags == hipHostMallocDefault) {
             trueFlags = hipHostMallocMapped | hipHostMallocWriteCombined;
-        } 
+        }
 
         const unsigned supportedFlags = hipHostMallocPortable | hipHostMallocMapped | hipHostMallocWriteCombined;
 
+        // Read from environment variable of HIP_COHERENT_HOST_ALLOC
+        int coherent_alloc=0;
+        ihipReadSingleEnv(&coherent_alloc, "HIP_COHERENT_HOST_ALLOC", "Flag to force allocate finegrained system memory");
+
         if (flags & ~supportedFlags) {
             hip_status = hipErrorInvalidValue;
-        }  else {
-#if HIP_COHERENT_HOST_ALLOC
-            // TODO - let's make this an environment variable
-            *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
-            if(sizeBytes < 1 && (*ptr == NULL)){
-                hip_status = hipErrorMemoryAllocation;
-            } else {
-                hc::am_memtracker_update(*ptr, device->_deviceId, amHostCoherent);
-            }
-            tprintf(DB_MEM, " %s: pinned ptr=%p\n", __func__, *ptr);
-#else
-            // TODO - am_alloc requires writeable __acc, perhaps could be refactored?
-            // TODO - hipHostMallocMapped is be ignored on ROCM - all memory is mapped to host address space as WC.
+        }
+        else {
             auto device = ctx->getWriteableDevice();
-            *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
-            if (*ptr == NULL) {
-                hip_status = hipErrorMemoryAllocation;
-            } else {
-                hc::am_memtracker_update(*ptr, device->_deviceId, flags);
-                // TODO-hipHostMallocPortable should map the host memory into all contexts, regardless of peer status.  
-                int peerCnt=0;
-                {
-                    LockedAccessor_CtxCrit_t crit(ctx->criticalData());
-                    peerCnt = crit->peerCnt();
-                    if (peerCnt > 1) {
-                        hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
-                    }
+            if(coherent_alloc){
+                // Force to allocate finedgrained system memory
+                *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
+                if(sizeBytes < 1 && (*ptr == NULL)){
+                    hip_status = hipErrorMemoryAllocation;
+                } else {
+                    hc::am_memtracker_update(*ptr, device->_deviceId, amHostCoherent);
                 }
-                tprintf(DB_MEM, "allocated pinned_host ptr:%p size:%zu on dev:%d and allow access to %d other peer(s)\n", *ptr, sizeBytes, device->_deviceId, peerCnt-1);
+                tprintf(DB_MEM, " %s: finegrained system memory ptr=%p\n", __func__, *ptr);
+             }
+            else{
+                // TODO - am_alloc requires writeable __acc, perhaps could be refactored?
+                // TODO - hipHostMallocMapped is be ignored on ROCM - all memory is mapped to host address space as WC.
+                *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
+                if (*ptr == NULL) {
+                    hip_status = hipErrorMemoryAllocation;
+                } else {
+                    hc::am_memtracker_update(*ptr, device->_deviceId, flags);
+                    // TODO-hipHostMallocPortable should map the host memory into all contexts, regardless of peer status.
+                    int peerCnt=0;
+                    {
+                        LockedAccessor_CtxCrit_t crit(ctx->criticalData());
+                        peerCnt = crit->peerCnt();
+                        if (peerCnt > 1) {
+                            hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
+                        }
+                    }
+                    tprintf(DB_MEM, "allocated pinned_host ptr:%p size:%zu on dev:%d and allow access to %d other peer(s)\n", *ptr, sizeBytes, device->_deviceId, peerCnt-1);
+                }
             }
         }
-#endif //HIP_COHERENT_HOST_ALLOC
     }
     return ihipLogStatus(hip_status);
 }
