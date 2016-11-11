@@ -48,7 +48,9 @@ THE SOFTWARE.
 #include "trace_helper.h"
 
 
-
+#ifndef USE_COPY_EXT_V2
+#define USE_COPY_EXT_V2 0
+#endif
 
 //=================================================================================================
 //Global variables:
@@ -1734,37 +1736,44 @@ void ihipSetTs(hipEvent_t e)
 }
 
 
-// Returns true if thisCtx can see the memory allocated on dstCtx and srcCtx.
+// Returns true if copyEngineCtx can see the memory allocated on dstCtx and srcCtx.
 // The peer-list for a context controls which contexts have access to the memory allocated on that context.
 // So we check dstCtx's and srcCtx's peerList to see if the both include thisCtx.
-// TODO- change these to use dst and src ptr info.
-bool ihipStream_t::chooseDirectPeerToPeer(const ihipCtx_t *copyEngineCtx, const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo)
+bool ihipStream_t::canSeeMemory(const ihipCtx_t *copyEngineCtx, const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo)
 {
 
     // Make sure this is a device-to-device copy with all memory available to the requested copy engine
     //
     // TODO - pointer-info stores a deviceID not a context,may have some unusual side-effects here:
-    ihipCtx_t *dstCtx = ihipGetPrimaryCtx(dstPtrInfo->_appId);
-    if (copyEngineCtx != dstCtx) {
-        // Only checks peer list if contexts are different
-        LockedAccessor_CtxCrit_t  ctxCrit(dstCtx->criticalData());
-        //tprintf(DB_SYNC, "dstCrit lock succeeded\n");
-        if (!ctxCrit->isPeerWatcher(copyEngineCtx)) {
-            return false;
-        };
+    if (dstPtrInfo->_sizeBytes == 0) {
+        return false;
+    } else {
+        ihipCtx_t *dstCtx = ihipGetPrimaryCtx(dstPtrInfo->_appId);
+        if (copyEngineCtx != dstCtx) {
+            // Only checks peer list if contexts are different
+            LockedAccessor_CtxCrit_t  ctxCrit(dstCtx->criticalData());
+            //tprintf(DB_SYNC, "dstCrit lock succeeded\n");
+            if (!ctxCrit->isPeerWatcher(copyEngineCtx)) {
+                return false;
+            };
+        }
     }
 
 
 
     // TODO - pointer-info stores a deviceID not a context,may have some unusual side-effects here:
-    ihipCtx_t *srcCtx = ihipGetPrimaryCtx(srcPtrInfo->_appId);
-    if (copyEngineCtx != srcCtx) {
-        // Only checks peer list if contexts are different
-        LockedAccessor_CtxCrit_t  ctxCrit(srcCtx->criticalData());
-        //tprintf(DB_SYNC, "srcCrit lock succeeded\n");
-        if (!ctxCrit->isPeerWatcher(copyEngineCtx)) {
-            return false;
-        };
+    if (srcPtrInfo->_sizeBytes == 0) {
+        return false;
+    } else {
+        ihipCtx_t *srcCtx = ihipGetPrimaryCtx(srcPtrInfo->_appId);
+        if (copyEngineCtx != srcCtx) {
+            // Only checks peer list if contexts are different
+            LockedAccessor_CtxCrit_t  ctxCrit(srcCtx->criticalData());
+            //tprintf(DB_SYNC, "srcCrit lock succeeded\n");
+            if (!ctxCrit->isPeerWatcher(copyEngineCtx)) {
+                return false;
+            };
+        }
     }
 
     return true;
@@ -1801,7 +1810,6 @@ const char* hcMemcpyStr(hc::hcCommandKind memKind)
 
 
 // Resolve hipMemcpyDefault to a known type.
-// TODO - review why is this so complicated, does this need srcTracked and dstTracked?
 unsigned ihipStream_t::resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDeviceMem)
 {
     hipMemcpyKind kind = hipMemcpyDefault;
@@ -1821,7 +1829,8 @@ void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind,
                                             const hc::AmPointerInfo *dstPtrInfo, 
                                             const hc::AmPointerInfo *srcPtrInfo, 
                                             hc::hcCommandKind *hcCopyDir, 
-                                            ihipCtx_t **copyDevice)
+                                            ihipCtx_t **copyDevice,
+                                            bool *forceUnpinnedCopy)
 {
     // Ignore what the user tells us and always resolve the direction:
     // Some apps apparently rely on this.
@@ -1844,17 +1853,18 @@ void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind,
         *copyDevice = nullptr;
     }
 
-    if (hipMemKind == hipMemcpyDeviceToDevice) {
-        if (chooseDirectPeerToPeer(*copyDevice, dstPtrInfo, srcPtrInfo)) {
-            if (HIP_FORCE_P2P_HOST ) {
-                tprintf (DB_COPY, "P2P.  Copy engine (dev:%d) can see src and dst but HIP_FORCE_P2P_HOST=0, forcing copy through staging buffers.\n", (*copyDevice)->getDeviceNum());
-            } else {
-                tprintf (DB_COPY, "P2P.  Copy engine (dev:%d) can see src and dst.\n",  (*copyDevice)->getDeviceNum());
-            }
+    *forceUnpinnedCopy = false;
+    if (canSeeMemory(*copyDevice, dstPtrInfo, srcPtrInfo)) {
+
+        if (HIP_FORCE_P2P_HOST ) {
+            *forceUnpinnedCopy = true;
+            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d) can see src and dst but HIP_FORCE_P2P_HOST=0, forcing copy through staging buffers.\n", (*copyDevice)->getDeviceNum());
         } else {
-            *copyDevice = nullptr;
-            tprintf (DB_COPY, "P2P: copy engine(dev:%d) cannot see both host and device pointers - forcing copy through staging buffers.\n", (*copyDevice)->getDeviceNum());
+            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d) can see src and dst.\n",  (*copyDevice)->getDeviceNum());
         }
+    } else {
+        *forceUnpinnedCopy = true;
+        tprintf (DB_COPY, "P2P: copy engine(dev:%d) cannot see both host and device pointers - forcing copy with unpinned engine.\n", (*copyDevice)->getDeviceNum());
     }
 }
 
@@ -1878,19 +1888,22 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
 
     hc::hcCommandKind hcCopyDir;
     ihipCtx_t *copyDevice;
-    resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &copyDevice);
-
-
-    // copy_ext will use copy-engine to perform the copy.  nullptr then 
+    bool forceUnpinnedCopy;
+    resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &copyDevice, &forceUnpinnedCopy);
 
     {
         LockedAccessor_StreamCrit_t crit (_criticalData);
-        tprintf (DB_COPY, "copySync copyDev:%d  dst=%p(home_dev:%d, tracked:%d, isDevMem:%d)  src=%p(home_dev:%d, tracked:%d, isDevMem:%d)   sz=%zu dir=%s\n",
+        tprintf (DB_COPY, "copySync copyDev:%d  dst=%p(home_dev:%d, tracked:%d, isDevMem:%d)  src=%p(home_dev:%d, tracked:%d, isDevMem:%d)   sz=%zu dir=%s forceUnpinnedCopy=%d\n",
                  copyDevice ? copyDevice->getDeviceNum():-1, 
                  dst, dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem, 
                  src, srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem,  
-                 sizeBytes, hcMemcpyStr(hcCopyDir));
-        crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice ? &copyDevice->getDevice()->_acc : nullptr);
+                 sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
+
+#if USE_COPY_EXT_V2
+        crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice ? &copyDevice->getDevice()->_acc : nullptr, forceUnpinnedCopy);
+#else
+        crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceUnpinnedCopy);
+#endif
     }
 }
 
@@ -1928,26 +1941,36 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
 
         hc::hcCommandKind hcCopyDir;
         ihipCtx_t *copyDevice;
-        resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &copyDevice);
+        bool forceUnpinnedCopy;
+        resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &copyDevice, &forceUnpinnedCopy);
 
 
-        tprintf (DB_COPY, "copyASync copyEngine_dev:%d  dst=%p(home_dev:%d, tracked:%d, isDevMem:%d)  src=%p(home_dev:%d, tracked:%d, isDevMem:%d)   sz=%zu dir=%s .  \n",
+        tprintf (DB_COPY, "copyASync copyEngine_dev:%d  dst=%p(home_dev:%d, tracked:%d, isDevMem:%d)  src=%p(home_dev:%d, tracked:%d, isDevMem:%d)   sz=%zu dir=%s.  forceUnpinnedCopy=%d \n",
                  copyDevice->getDeviceNum(), 
                  dst, dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem, 
                  src, srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem,  
-                 sizeBytes, hcMemcpyStr(hcCopyDir));
+                 sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
 
         // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.
         // If both pointers are not tracked, we need to fall back to a sync copy.
-        if (dstTracked && srcTracked && copyDevice/*code below assumes this is !nullptr*/) {
+        if (dstTracked && srcTracked && !forceUnpinnedCopy && copyDevice/*code below assumes this is !nullptr*/) {
             LockedAccessor_StreamCrit_t crit(_criticalData);
 
             // Perform fast asynchronous copy - we know copyDevice != NULL based on check above
             try {
                 if (HIP_FORCE_SYNC_COPY) {
-                    crit->_av.copy_ext      (src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, &copyDevice->getDevice()->_acc);
+#if USE_COPY_EXT_V2
+                    crit->_av.copy_ext      (src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, &copyDevice->getDevice()->_acc, forceUnpinnedCopy);
+#else
+                    crit->_av.copy_ext      (src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceUnpinnedCopy);
+#endif
+
                 } else {
+#if USE_COPY_EXT_V2
                     crit->_av.copy_async_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, &copyDevice->getDevice()->_acc);
+#else
+                    crit->_av.copy_async(src, dst, sizeBytes);
+#endif
                 }
             } catch (Kalmar::runtime_exception) {
                 throw ihipException(hipErrorRuntimeOther);
@@ -1961,7 +1984,11 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
 
         } else {
             LockedAccessor_StreamCrit_t crit(_criticalData);
-            crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice ? &copyDevice->getDevice()->_acc : nullptr);
+#if USE_COPY_EXT_V2
+            crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice ? &copyDevice->getDevice()->_acc : nullptr, forceUnpinnedCopy);
+#else
+            crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceUnpinnedCopy);
+#endif
         }
     }
 }
