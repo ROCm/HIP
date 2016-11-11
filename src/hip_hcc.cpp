@@ -76,6 +76,7 @@ int HIP_NUM_KERNELS_INFLIGHT = 128;
 int HIP_WAIT_MODE = 0;
 
 int HIP_FORCE_P2P_HOST = 0;
+int HIP_DENY_PEER_ACCESS = 0;
 
 // Force async copies to actually use the synchronous copy interface. 
 int HIP_FORCE_SYNC_COPY = 0;
@@ -1374,7 +1375,7 @@ void ihipInit()
 
 
     READ_ENV_I(release, HIP_WAIT_MODE, 0, "Force synchronization mode. 1= force yield, 2=force spin, 0=defaults specified in application");
-    READ_ENV_I(release, HIP_FORCE_P2P_HOST, 0, "Force use of host/staging copy for peer-to-peer copiecopies"); 
+    READ_ENV_I(release, HIP_FORCE_P2P_HOST, 0, "Force use of host/staging copy for peer-to-peer copies.1=always use copies, 2=always return false for hipDeviceCanAccessPeer"); 
     READ_ENV_I(release, HIP_FORCE_SYNC_COPY, 0, "Force all copies (even hipMemcpyAsync) to use sync copies"); 
     READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Max number of inflight kernels per stream before active synchronization is forced.");
 
@@ -1856,7 +1857,7 @@ void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind,
     *forceUnpinnedCopy = false;
     if (canSeeMemory(*copyDevice, dstPtrInfo, srcPtrInfo)) {
 
-        if (HIP_FORCE_P2P_HOST ) {
+        if (HIP_FORCE_P2P_HOST & 0x1) {
             *forceUnpinnedCopy = true;
             tprintf (DB_COPY, "P2P.  Copy engine (dev:%d) can see src and dst but HIP_FORCE_P2P_HOST=0, forcing copy through staging buffers.\n", (*copyDevice)->getDeviceNum());
         } else {
