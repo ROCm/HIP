@@ -167,6 +167,7 @@ inline static cudaMemcpyKind hipMemcpyKindToCudaMemcpyKind(hipMemcpyKind kind) {
 /**
  * Stream CallBack struct
  */
+#define HIPRT_CB CUDART_CB
 typedef void(* hipStreamCallback_t)(hipStream_t stream,  hipError_t status, void* userData);
 
 inline static hipError_t hipInit(unsigned int flags)
@@ -585,8 +586,7 @@ inline static hipError_t hipStreamQuery(hipStream_t stream)
 
 inline static hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void *userData, unsigned int flags)
 {
-    return hipCUDAErrorTohipError(cudaStreamAddCallback(cudaStream_t stream,
-        cudaStreamCallback_t callback, void *userData, unsigned int flags));
+    return hipCUDAErrorTohipError(cudaStreamAddCallback(stream, (cudaStreamCallback_t)callback, userData, flags));
 }
 
 inline static hipError_t hipDriverGetVersion(int *driverVersion)
