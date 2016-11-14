@@ -53,11 +53,11 @@ ctest -R Memcpy
 
 ### If a test fails - how to debug a test
 
-Extract the commandline from the testing log:
+Find the test and commandline that fail:
 
 (From the test build directory, perhaps hip/tests/build)
-$ grep -A3 -m2  hipMemcpy-size  Testing/Temporary/LastTest.log
-36/47 Testing: hipMemcpy-size
-36/47 Test: hipMemcpy-size
-Command: "/home/bensander/git/compute/external/hip/hip/tests/b6.hcc-LC.debug/runtimeApi/memory/hipMemcpy" "--tests" "0x6"
-Directory: /home/bensander/git/compute/external/hip/hip/tests/b6.hcc-LC.debug/runtimeApi/memory
+grep -IR hipMemcpy-modes -IR ../tests/
+../tests/src/runtimeApi/memory/hipMemcpy.cpp: * RUN_NAMED: %t hipMemcpy-modes --tests 0x1
+
+
+

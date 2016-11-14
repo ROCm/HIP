@@ -1278,7 +1278,11 @@ hipError_t  hipDeviceEnablePeerAccess (int  peerDeviceId, unsigned int flags);
 hipError_t  hipDeviceDisablePeerAccess (int peerDeviceId);
 
 
-#ifdef PEER_NON_UNIFIED
+#ifndef USE_PEER_NON_UNIFIED
+#define USE_PEER_NON_UNIFIED 1
+#endif
+
+#if USE_PEER_NON_UNIFIED==1
 /**
  * @brief Copies memory from one device to memory on another device.
  *
@@ -1592,6 +1596,16 @@ hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device);
 hipError_t hipDeviceGetPCIBusId (int *pciBusId,int len,hipDevice_t device);
 
 /**
+ * @brief Returns a handle to a compute device.
+ * @param [out] device handle
+ * @param [in] PCI Bus ID
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice, #hipErrorInvalidValue
+ */
+hipError_t hipDeviceGetByPCIBusId ( int*  device,const int* pciBusId );
+
+
+/**
  * @brief Returns the total amount of memory on the device.
  * @param [out] bytes
  * @param [in] device
@@ -1737,9 +1751,22 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
  *
  *  @warning The cudaProfilerInitialize API format for "configFile" is not supported.
  *
- *  On AMD platforms, hipProfilerStart and hipProfilerStop require installation of AMD's GPU
- *  perf counter API and defining GPU_PERF
  */
+
+
+// TODO - expand descriptions:
+/**
+ * @brief Start recording of profiling information
+ * @warning : hipProfilerStart API is under development.
+ */
+hipError_t hipProfilerStart();
+
+
+/**
+ * @brief Stop recording of profiling information.
+ * @warning : hipProfilerStop API is under development.
+ */
+hipError_t hipProfilerStop();
 
 
 /**

@@ -43,26 +43,70 @@ THE SOFTWARE.
 //static const int debug = 0;
 extern const int release;
 
+// TODO - this blocks both kernels and memory ops.  Perhaps should have separate env var for kernels?
 extern int HIP_LAUNCH_BLOCKING;
 
 extern int HIP_PRINT_ENV;
-extern int HIP_ATP_MARKER;
+extern int HIP_PROFILE_API;
 //extern int HIP_TRACE_API;
 extern int HIP_ATP;
 extern int HIP_DB;
 extern int HIP_STAGING_SIZE;   /* size of staging buffers, in KB */
 extern int HIP_STREAM_SIGNALS;  /* number of signals to allocate at stream creation */
 extern int HIP_VISIBLE_DEVICES; /* Contains a comma-separated sequence of GPU identifiers */
+extern int HIP_FORCE_P2P_HOST;
 
 
 //---
 // Chicken bits for disabling functionality to work around potential issues:
 extern int HIP_DISABLE_HW_KERNEL_DEP;
 
+
+// Class to assign a short TID to each new thread, for HIP debugging purposes.
+class ShortTid {
+public:
+
+    ShortTid() ;
+
+    int      tid()       const { return _shortTid; };
+    uint64_t incApiSeqNum() { return ++_apiSeqNum; };
+    uint64_t apiSeqNum() const { return _apiSeqNum; };
+
+private:
+    int      _shortTid;
+
+    // monotonically increasing API sequence number for this threa.
+    uint64_t _apiSeqNum;
+};
+
+struct ProfTrigger {
+
+    static const uint64_t MAX_TRIGGER = std::numeric_limits<uint64_t>::max();
+
+    void print (int tid) {
+        std::cout << "Enabling tracing for ";
+        for (auto iter=_profTrigger.begin(); iter != _profTrigger.end(); iter++) {
+            std::cout << "tid:" << tid << "." << *iter << ",";
+        }
+        std::cout << "\n";
+    };
+
+    uint64_t nextTrigger() { return _profTrigger.empty() ? MAX_TRIGGER : _profTrigger.back(); };
+    void add(uint64_t trigger) { _profTrigger.push_back(trigger); };
+    void sort() { std::sort (_profTrigger.begin(), _profTrigger.end(), std::greater<int>()); };
+private:
+    std::vector<uint64_t> _profTrigger;
+};
+
+
+
 //---
 //Extern tls
 extern thread_local hipError_t tls_lastHipError;
+extern thread_local ShortTid tls_shortTid;
 
+extern std::vector<ProfTrigger> g_dbStartTriggers;
+extern std::vector<ProfTrigger> g_dbStopTriggers;
 
 //---
 //Forward defs:
@@ -112,17 +156,11 @@ extern const char *API_COLOR_END;
 #endif
 
 
-#define DB_SHOW_TID 0
-
-#if DB_SHOW_TID
-#define COMPUTE_TID_STR \
-    std::stringstream tid_ss;\
-    std::stringstream tid_ss_num;\
-    tid_ss_num << std::this_thread::get_id();\
-    tid_ss << " tid:" << std::hex << std::stoull(tid_ss_num.str());
-#else
-#define COMPUTE_TID_STR std::stringstream tid_ss;
+// Compile code that force hipHostMalloc only allocates finegrained system memory.
+#ifndef HIP_COHERENT_HOST_ALLOC
+#define HIP_COHERENT_HOST_ALLOC 0
 #endif
+
 
 
 // Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function boundary.
@@ -130,23 +168,30 @@ extern const char *API_COLOR_END;
 // through ptr-to-args (ie the pointers allocated by hipMalloc).
 #if COMPILE_HIP_ATP_MARKER
 #include "CXLActivityLogger.h"
-#define SCOPED_MARKER(markerName,group,userString) amdtScopedMarker(markerName, group, userString)
+#define MARKER_BEGIN(markerName,group) amdtBeginMarker(markerName, group, nullptr);
+#define MARKER_END() amdtEndMarker();
+#define RESUME_PROFILING amdtResumeProfiling(AMDT_ALL_PROFILING);
+#define STOP_PROFILING   amdtStopProfiling(AMDT_ALL_PROFILING);
 #else
 // Swallow scoped markers:
-#define SCOPED_MARKER(markerName,group,userString)
+#define MARKER_BEGIN(markerName,group)
+#define MARKER_END()
+#define RESUME_PROFILING
+#define STOP_PROFILING
 #endif
 
+
+extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
 
 #if COMPILE_HIP_ATP_MARKER || (COMPILE_HIP_TRACE_API & 0x1)
 #define API_TRACE(...)\
 {\
-    if (HIP_ATP_MARKER || (COMPILE_HIP_DB && HIP_TRACE_API)) {\
-        std::string s = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
-        if (COMPILE_HIP_DB && HIP_TRACE_API) {\
-            COMPUTE_TID_STR\
-            fprintf (stderr, "%s<<hip-api:%s %s\n%s" , API_COLOR, tid_ss.str().c_str(), s.c_str(), API_COLOR_END);\
-        }\
-        SCOPED_MARKER(s.c_str(), "HIP", NULL);\
+    if (HIP_PROFILE_API || (COMPILE_HIP_DB && HIP_TRACE_API)) {\
+        std::string apiStr = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
+        std::string fullStr;\
+        recordApiTrace(&fullStr, apiStr);\
+        if      (HIP_PROFILE_API == 0x1) {MARKER_BEGIN(__func__, "HIP") }\
+        else if (HIP_PROFILE_API == 0x2) {MARKER_BEGIN(fullStr.c_str(), "HIP"); }\
     }\
 }
 #else
@@ -174,8 +219,9 @@ extern const char *API_COLOR_END;
         tls_lastHipError = localHipStatus;\
         \
         if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API) {\
-            fprintf(stderr, "  %ship-api: %-30s ret=%2d (%s)>>%s\n", (localHipStatus == 0) ? API_COLOR:KRED, __func__, localHipStatus, ihipErrorString(localHipStatus), API_COLOR_END);\
+            fprintf(stderr, "  %ship-api tid:%d.%lu %-30s ret=%2d (%s)>>%s\n", (localHipStatus == 0) ? API_COLOR:KRED, tls_shortTid.tid(),tls_shortTid.apiSeqNum(),  __func__, localHipStatus, ihipErrorString(localHipStatus), API_COLOR_END);\
         }\
+        if (HIP_PROFILE_API) { MARKER_END(); }\
         localHipStatus;\
     })
 
@@ -187,10 +233,9 @@ extern const char *API_COLOR_END;
 #define DB_API    0 /* 0x01 - shortcut to enable HIP_TRACE_API on single switch */
 #define DB_SYNC   1 /* 0x02 - trace synchronization pieces */
 #define DB_MEM    2 /* 0x04 - trace memory allocation / deallocation */
-#define DB_COPY1  3 /* 0x08 - trace memory copy commands. . */
+#define DB_COPY   3 /* 0x08 - trace memory copy and peer commands. . */
 #define DB_SIGNAL 4 /* 0x10 - trace signal pool commands */
-#define DB_COPY2  5 /* 0x20 - trace memory copy commands. Detailed. */
-#define DB_MAX_BITPOS 5
+#define DB_MAX_FLAG 5
 // When adding a new debug flag, also add to the char name table below.
 //
 
@@ -204,20 +249,18 @@ static const DbName dbName [] =
     {KGRN, "api"}, // not used,
     {KYEL, "sync"},
     {KCYN, "mem"},
-    {KMAG, "copy1"},
+    {KMAG, "copy"},
     {KRED, "signal"},
-    {KNRM, "copy2"},
 };
 
- 
+
 
 #if COMPILE_HIP_DB
 #define tprintf(trace_level, ...) {\
     if (HIP_DB & (1<<(trace_level))) {\
         char msgStr[1000];\
         snprintf(msgStr, 2000, __VA_ARGS__);\
-        COMPUTE_TID_STR\
-        fprintf (stderr, "  %ship-%s%s:%s%s", dbName[trace_level]._color, dbName[trace_level]._shortName, tid_ss.str().c_str(), msgStr, KNRM); \
+        fprintf (stderr, "  %ship-%s tid:%d:%s%s", dbName[trace_level]._color, dbName[trace_level]._shortName, tls_shortTid.tid(), msgStr, KNRM); \
     }\
 }
 #else
@@ -431,7 +474,7 @@ public:
     void launchModuleKernel(hc::accelerator_view av, hsa_signal_t signal,
                             uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
                             uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
-														uint32_t groupSegmentSize, uint32_t sharedMemBytes, 
+														uint32_t groupSegmentSize, uint32_t sharedMemBytes,
 														void *kernarg, size_t kernSize, uint64_t kernel);
 
 
@@ -453,9 +496,14 @@ private:
 
 
     // The unsigned return is hipMemcpyKind
-    unsigned resolveMemcpyDirection(bool srcTracked, bool dstTracked, bool srcInDeviceMem, bool dstInDeviceMem);
+    unsigned resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDeviceMem);
+    void resolveHcMemcpyDirection(unsigned hipMemKind, 
+                                  const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo, 
+                                  hc::hcCommandKind *hcCopyDir, 
+                                  ihipCtx_t **copyDevice,
+                                  bool *forceUnpinnedCopy);
 
-    bool canSeePeerMemory(const ihipCtx_t *thisCtx, ihipCtx_t *dstCtx, ihipCtx_t *srcCtx);
+    bool canSeeMemory(const ihipCtx_t *thisCtx, const hc::AmPointerInfo *dstInfo, const hc::AmPointerInfo *srcInfo);
 
 
 private: // Data
@@ -559,16 +607,18 @@ public:
 
 
     // Peer Accessor classes:
-    bool isPeer(const ihipCtx_t *peer); // returns True if peer has access to memory physically located on this device.
-    bool addPeer(ihipCtx_t *peer);
-    bool removePeer(ihipCtx_t *peer);
-    void resetPeers(ihipCtx_t *thisDevice);
-    void printPeers(FILE *f) const;
+    bool isPeerWatcher(const ihipCtx_t *peer); // returns True if peer has access to memory physically located on this device.
+    bool addPeerWatcher(const ihipCtx_t *thisCtx, ihipCtx_t *peer);
+    bool removePeerWatcher(const ihipCtx_t *thisCtx, ihipCtx_t *peer);
+    void resetPeerWatchers(ihipCtx_t *thisDevice);
+    void printPeerWatchers(FILE *f) const;
 
     uint32_t peerCnt() const { return _peerCnt; };
     hsa_agent_t *peerAgents() const { return _peerAgents; };
 
 
+    // TODO - move private
+    std::list<ihipCtx_t*>     _peers;     // list of enabled peer devices.
 
     friend class LockedAccessor<ihipCtxCriticalBase_t>;
 private:
@@ -580,7 +630,6 @@ private:
     // These reflect the currently Enabled set of peers for this GPU:
     // Enabled peers have permissions to access the memory physically allocated on this device.
     // Note the peers always contain the self agent for easy interfacing with HSA APIs.
-    std::list<ihipCtx_t*>     _peers;     // list of enabled peer devices.
     uint32_t                  _peerCnt;     // number of enabled peers
     hsa_agent_t              *_peerAgents;  // efficient packed array of enabled agents (to use for allocations.)
 private:
@@ -619,11 +668,12 @@ public: // Functions:
     ihipCtxCritical_t  &criticalData() { return _criticalData; }; // TODO, move private.  Fix P2P.
 
     const ihipDevice_t *getDevice() const { return _device; };
+    int                 getDeviceNum() const { return _device->_deviceId; };
 
     // TODO - review uses of getWriteableDevice(), can these be converted to getDevice()
     ihipDevice_t *getWriteableDevice() const { return _device; };
 
-    std::string toString() const; 
+    std::string toString() const;
 
 public:  // Data
     // The NULL stream is used if no other stream is specified.
@@ -712,10 +762,16 @@ inline std::ostream& operator<<(std::ostream& os, const hipEvent_t& e)
 
 inline std::ostream& operator<<(std::ostream& os, const ihipCtx_t* c)
 {
-    os << "ctx:" << static_cast<const void*> (c) 
-       << " dev:" << c->getDevice()->_deviceId;
+    os << "ctx:" << static_cast<const void*> (c)
+       << ".dev:" << c->getDevice()->_deviceId;
     return os;
 }
+
+
+// Helper functions that are used across src files:
+namespace hip_internal {
+    hipError_t memcpyAsync (void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream);
+};
 
 
 #endif

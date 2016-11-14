@@ -233,8 +233,11 @@ typedef struct dim3 {
 ## Memory-Fence Instructions
 HIP supports __threadfence() and  __threadfence_block().
 
-Applications that use threadfence_system can disable the L1 and L2 caches on the GPU by:
-"export HSA_DISABLE_CACHE=1".  See the hip_porting_guide.md#threadfence_system for more information.
+HIP provides workaround for threadfence_system() under HCC path.
+To enable the workaround, HIP should be built with environment variable HIP_COHERENT_HOST_ALLOC enabled.
+In addition,the kernels that use __threadfence_system() should be modified as follows:
+- The kernel should only operate on finegrained system memory; which should be allocated with hipHostMalloc().
+- Remove all memcpy for those allocated finegrained system memory regions.
 
 ## Synchronization Functions
 The __syncthreads() built-in function is supported in HIP. The __syncthreads_count(int), __syncthreads_and(int) and __syncthreads_or(int) functions are under development.  

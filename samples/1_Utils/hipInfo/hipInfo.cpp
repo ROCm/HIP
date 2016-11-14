@@ -133,6 +133,15 @@ void printDeviceProp (int deviceId)
         }
     }
     cout << endl;
+    cout << setw(w1) << "non-peers: ";
+    for (int i=0; i<deviceCnt; i++) {
+        int isPeer;
+        hipDeviceCanAccessPeer(&isPeer, i, deviceId);
+        if (!isPeer) {
+            cout << "device#" << i << " ";
+        }
+    }
+    cout << endl;
 
 
 

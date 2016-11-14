@@ -1,7 +1,4 @@
 HIP_PATH?= $(wildcard /opt/rocm/hip)
-ifeq (,$(HIP_PATH))
-	HIP_PATH=../../..
-endif
 HIPCC=$(HIP_PATH)/bin/hipcc
 
 all: square.hip.out
@@ -11,9 +8,10 @@ square.cuda.out : square.cu
 
 #hipify square.cu > square.cpp
 # Then review & finish port in square.cpp
+#
 
 square.hip.out: square.hipref.cpp
-	$(HIPCC) square.hipref.cpp -o $@
+	$(HIPCC) $(CXXFLAGS) square.hipref.cpp -o $@
 
 
 
