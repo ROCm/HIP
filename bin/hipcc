@@ -79,7 +79,7 @@ if ($HIP_PLATFORM eq "hcc") {
 
     $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
 
-    $HIP_ATP_MARKER=$ENV{'HIP_ATP_MARKER'};
+    $HIP_ATP_MARKER=$ENV{'HIP_ATP_MARKER'} // 1;
     $marker_path = "$ROCM_PATH/profiler/CXLActivityLogger";
 
     $ROCM_TARGET=$ENV{'ROCM_TARGET'} // "fiji";
@@ -116,9 +116,16 @@ if ($HIP_PLATFORM eq "hcc") {
     } else {
         $HIPLDFLAGS .= " -Wl,--defsym=_binary_kernel_spir_end=1 -Wl,--defsym=_binary_kernel_spir_start=1 -Wl,--defsym=_binary_kernel_cl_start=1 -Wl,--defsym=_binary_kernel_cl_end=1";
     }
+    if ($HOST_OSNAME eq "fedora") {
+        $HIPCXXFLAGS .= " -I/usr/local/include/c++/v1";
+    }
 
     # Satisfy HCC dependencies
-    $HIPLDFLAGS .= " -lc++abi -lsupc++";
+    if ($HOST_OSNAME eq "fedora") {
+        $HIPLDFLAGS .= " -lc++abi";
+    } else {
+        $HIPLDFLAGS .= " -lc++abi -lsupc++";
+    }
     $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am -lhsakmt";
 
     # Handle ROCm target platform
@@ -273,10 +280,9 @@ foreach $arg (@ARGV)
         # Process HIPCC options here:
         if ($arg =~ m/^--hipcc/) {
             $swallowArg = 1;
-            if ($arg eq "--hipcc_explicit_lib") {
-                # Some environments (ie cmake tests) already link their own hip_hcc.o, so don't add here:
-                $needHipHcc = 0;
-            }
+            #if $arg eq "--hipcc_profile") {  # Example argument here, hipcc
+            #
+            #}
         } else {
             push (@options, $arg);
         }
@@ -314,14 +320,15 @@ if ($setStdLib eq 0 and $HIP_PLATFORM eq 'hcc')
 }
 
 if ($needHipHcc) {
-    $HIP_LIB_TYPE = $hipConfig{'HIP_LIB_TYPE'} // 0;
+    $HIP_LIB_TYPE = $hipConfig{'HIP_LIB_TYPE'} // 1;
 
+    # TODO - remove the old sea-of-objects solution:
     if ($HIP_LIB_TYPE eq 0) {
-        $HIPLDFLAGS .= " $HIP_PATH/lib/device_util.cpp.o $HIP_PATH/lib/hip_device.cpp.o $HIP_PATH/lib/hip_error.cpp.o $HIP_PATH/lib/hip_event.cpp.o $HIP_PATH/lib/hip_hcc.cpp.o $HIP_PATH/lib/hip_memory.cpp.o $HIP_PATH/lib/hip_peer.cpp.o $HIP_PATH/lib/hip_stream.cpp.o $HIP_PATH/lib/hip_ldg.cpp.o $HIP_PATH/lib/hip_fp16.cpp.o $HIP_PATH/lib/hip_context.cpp.o $HIP_PATH/lib/hip_module.cpp.o";
+        substr($HIPLDFLAGS,0,0) = " $HIP_PATH/lib/device_util.cpp.o $HIP_PATH/lib/hip_device.cpp.o $HIP_PATH/lib/hip_error.cpp.o $HIP_PATH/lib/hip_event.cpp.o $HIP_PATH/lib/hip_hcc.cpp.o $HIP_PATH/lib/hip_memory.cpp.o $HIP_PATH/lib/hip_peer.cpp.o $HIP_PATH/lib/hip_stream.cpp.o $HIP_PATH/lib/hip_ldg.cpp.o $HIP_PATH/lib/hip_fp16.cpp.o $HIP_PATH/lib/hip_context.cpp.o $HIP_PATH/lib/hip_module.cpp.o ";
     } elsif ($HIP_LIB_TYPE eq 1) {
-        $HIPLDFLAGS .= " -L$HIP_PATH/lib -lhip_hcc" ;
+        substr($HIPLDFLAGS,0,0) = " -L$HIP_PATH/lib -lhip_hcc " ;
     } else {
-        $HIPLDFLAGS .= " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc";
+        substr($HIPLDFLAGS,0,0) = " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc ";
     }
 }
 
@@ -353,7 +360,7 @@ if ($printHipVersion) {
 }
 if ($runCmd) {
     if ($HIP_PLATFORM eq "hcc" and exists($hipConfig{'HCC_VERSION'}) and $HCC_VERSION ne $hipConfig{'HCC_VERSION'}) {
-        print ("HIP ($HIP_PATH) was built using hcc $hipConfig{'HCC_VERSION'}, but you are using hcc $HCC_VERSION. Please rebuild HIP including cmake.\n") && die ();
+        print ("HIP ($HIP_PATH) was built using hcc $hipConfig{'HCC_VERSION'}, but you are using $HCC_HOME/hcc with version $HCC_VERSION from hipcc. Please rebuild HIP including cmake or update HCC_HOME variable.\n") && die ();
     }
     system ("$CMD") and die ();
 }

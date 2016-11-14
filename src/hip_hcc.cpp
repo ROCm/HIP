@@ -48,6 +48,9 @@ THE SOFTWARE.
 #include "trace_helper.h"
 
 
+#ifndef USE_COPY_EXT_V2
+#define USE_COPY_EXT_V2 0
+#endif
 
 //=================================================================================================
 //Global variables:
@@ -62,11 +65,26 @@ int HIP_LAUNCH_BLOCKING = 0;
 int HIP_PRINT_ENV = 0;
 int HIP_TRACE_API= 0;
 std::string HIP_TRACE_API_COLOR("green");
-int HIP_ATP_MARKER= 0;
+int HIP_PROFILE_API= 0;
+
+// TODO - DB_START/STOP need more testing.
+std::string HIP_DB_START_API;
+std::string HIP_DB_STOP_API;
 int HIP_DB= 0;
 int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
 int HIP_NUM_KERNELS_INFLIGHT = 128;
 int HIP_WAIT_MODE = 0;
+
+int HIP_FORCE_P2P_HOST = 0;
+int HIP_DENY_PEER_ACCESS = 0;
+
+// Force async copies to actually use the synchronous copy interface. 
+int HIP_FORCE_SYNC_COPY = 0;
+
+
+
+
+
 
 #define HIP_USE_PRODUCT_NAME 0
 //#define DISABLE_COPY_EXT 1
@@ -83,6 +101,15 @@ unsigned g_deviceCnt;
 std::vector<int> g_hip_visible_devices;
 hsa_agent_t g_cpu_agent;
 unsigned g_numLogicalThreads;
+
+std::atomic<int> g_lastShortTid(1);
+
+// Indexed by short-tid:
+// 
+std::vector<ProfTrigger> g_dbStartTriggers;
+std::vector<ProfTrigger> g_dbStopTriggers;
+
+
 
 /*
  Implementation of malloc and free device functions.
@@ -163,15 +190,43 @@ __device__ void* __hip_hc_free(void *ptr)
     return nullptr;
 }
 
+__device__ unsigned __hip_ds_bpermute(int index, unsigned src) {
+    return hc::__amdgcn_ds_bpermute(index, src);
+}
 
+__device__ float __hip_ds_bpermutef(int index, float src) {
+    return hc::__amdgcn_ds_bpermute(index, src);
+}
+
+__device__ unsigned __hip_ds_permute(int index, unsigned src) {
+    return hc::__amdgcn_ds_permute(index, src);
+}
+
+__device__ float __hip_ds_permutef(int index, float src) {
+    return hc::__amdgcn_ds_permute(index, src);
+}
+
+__device__ unsigned __hip_ds_swizzle(unsigned int src, int pattern) {
+    return hc::__amdgcn_ds_swizzle(src, pattern);
+}
+
+__device__ float __hip_ds_swizzlef(float src, int pattern) {
+    return hc::__amdgcn_ds_swizzle(src, pattern);
+}
+
+__device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask, bool bound_ctrl) {
+    return hc::__amdgcn_move_dpp(src, dpp_ctrl, row_mask, bank_mask, bound_ctrl);
+}
 //=================================================================================================
 // Thread-local storage:
 //=================================================================================================
 
 // This is the implicit context used by all HIP commands.
 // It can be set by hipSetDevice or by the CTX manipulation commands:
-
 thread_local hipError_t tls_lastHipError = hipSuccess;
+
+
+thread_local ShortTid tls_shortTid;
 
 
 
@@ -179,6 +234,35 @@ thread_local hipError_t tls_lastHipError = hipSuccess;
 //=================================================================================================
 // Top-level "free" functions:
 //=================================================================================================
+void recordApiTrace(std::string *fullStr, const std::string &apiStr)
+{
+    auto apiSeqNum = tls_shortTid.incApiSeqNum();
+    auto tid = tls_shortTid.tid();
+
+    if ((tid < g_dbStartTriggers.size()) && (apiSeqNum >= g_dbStartTriggers[tid].nextTrigger())) {
+        printf ("info: resume profiling at %lu\n", apiSeqNum);
+        RESUME_PROFILING; 
+        g_dbStartTriggers.pop_back();
+    };
+    if ((tid < g_dbStopTriggers.size()) && (apiSeqNum >= g_dbStopTriggers[tid].nextTrigger())) {
+        printf ("info: stop profiling at %lu\n", apiSeqNum);
+        STOP_PROFILING; 
+        g_dbStopTriggers.pop_back();
+    };
+
+    fullStr->reserve(16 + apiStr.length());
+    *fullStr = std::to_string(tid) + ".";
+    *fullStr += std::to_string(apiSeqNum);
+    *fullStr += " ";
+    *fullStr += apiStr;
+
+
+    if (COMPILE_HIP_DB && HIP_TRACE_API) {
+        fprintf (stderr, "%s<<hip-api tid:%s%s\n" , API_COLOR, fullStr->c_str(), API_COLOR_END);
+    }
+}
+
+
 static inline bool ihipIsValidDevice(unsigned deviceIndex)
 {
     // deviceIndex is unsigned so always > 0
@@ -230,6 +314,23 @@ hipError_t ihipSynchronize(void)
     return (hipSuccess);
 }
 
+//=================================================================================================
+// ihipStream_t:
+//=================================================================================================
+ShortTid::ShortTid()  :
+    _apiSeqNum(0)
+{ 
+    _shortTid = g_lastShortTid.fetch_add(1); 
+
+    if (HIP_DB & (1<<DB_API)) {
+        std::stringstream tid_ss;
+        std::stringstream tid_ss_num;
+        tid_ss_num << std::this_thread::get_id();
+        tid_ss << std::hex << std::stoull(tid_ss_num.str());
+
+        tprintf(DB_API, "HIP initialized short_tid#%d (maps to full_tid: 0x%s)\n", _shortTid, tid_ss.str().c_str());
+    };
+}
 
 //=================================================================================================
 // ihipStream_t:
@@ -250,8 +351,6 @@ ihipStream_t::ihipStream_t(ihipCtx_t *ctx, hc::accelerator_view av, unsigned int
         case hipDeviceScheduleBlockingSync  : _scheduleMode = Yield; break;
         default:_scheduleMode = Auto;
     };
-
-
 
 
     tprintf(DB_SYNC, " streamCreate: stream=%p\n", this);
@@ -426,7 +525,7 @@ void ihipStream_t::launchModuleKernel(
     (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
     (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
 
-    uint16_t setup = 1 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
+    uint16_t setup = 3 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
     uint32_t header32 = header | (setup << 16);
 
     __atomic_store_n((uint32_t*)(dispatch_packet), header32, __ATOMIC_RELEASE);
@@ -451,7 +550,7 @@ void ihipCtxCriticalBase_t<CtxMutex>::recomputePeerAgents()
 
 
 template<>
-bool ihipCtxCriticalBase_t<CtxMutex>::isPeer(const ihipCtx_t *peer)
+bool ihipCtxCriticalBase_t<CtxMutex>::isPeerWatcher(const ihipCtx_t *peer)
 {
     auto match = std::find(_peers.begin(), _peers.end(), peer);
     return (match != std::end(_peers));
@@ -459,12 +558,14 @@ bool ihipCtxCriticalBase_t<CtxMutex>::isPeer(const ihipCtx_t *peer)
 
 
 template<>
-bool ihipCtxCriticalBase_t<CtxMutex>::addPeer(ihipCtx_t *peer)
+bool ihipCtxCriticalBase_t<CtxMutex>::addPeerWatcher(const ihipCtx_t *thisCtx, ihipCtx_t *peerWatcher)
 {
-    auto match = std::find(_peers.begin(), _peers.end(), peer);
+    auto match = std::find(_peers.begin(), _peers.end(), peerWatcher);
     if (match == std::end(_peers)) {
         // Not already a peer, let's update the list:
-        _peers.push_back(peer);
+        tprintf(DB_COPY, "addPeerWatcher.  Allocations on %s now visible to peerWatcher %s.\n", 
+                          thisCtx->toString().c_str(), peerWatcher->toString().c_str());
+        _peers.push_back(peerWatcher);
         recomputePeerAgents();
         return true;
     }
@@ -475,12 +576,14 @@ bool ihipCtxCriticalBase_t<CtxMutex>::addPeer(ihipCtx_t *peer)
 
 
 template<>
-bool ihipCtxCriticalBase_t<CtxMutex>::removePeer(ihipCtx_t *peer)
+bool ihipCtxCriticalBase_t<CtxMutex>::removePeerWatcher(const ihipCtx_t *thisCtx, ihipCtx_t *peerWatcher)
 {
-    auto match = std::find(_peers.begin(), _peers.end(), peer);
+    auto match = std::find(_peers.begin(), _peers.end(), peerWatcher);
     if (match != std::end(_peers)) {
         // Found a valid peer, let's remove it.
-        _peers.remove(peer);
+        tprintf(DB_COPY, "removePeerWatcher.  Allocations on %s no longer visible to former peerWatcher %s.\n", 
+                          thisCtx->toString().c_str(), peerWatcher->toString().c_str());
+        _peers.remove(peerWatcher);
         recomputePeerAgents();
         return true;
     } else {
@@ -490,16 +593,17 @@ bool ihipCtxCriticalBase_t<CtxMutex>::removePeer(ihipCtx_t *peer)
 
 
 template<>
-void ihipCtxCriticalBase_t<CtxMutex>::resetPeers(ihipCtx_t *thisDevice)
+void ihipCtxCriticalBase_t<CtxMutex>::resetPeerWatchers(ihipCtx_t *thisCtx)
 {
+    tprintf(DB_COPY, "resetPeerWatchers for context=%s\n", thisCtx->toString().c_str());
     _peers.clear();
     _peerCnt = 0;
-    addPeer(thisDevice); // peer-list always contains self agent.
+    addPeerWatcher(thisCtx, thisCtx); // peer-list always contains self agent.
 }
 
 
 template<>
-void ihipCtxCriticalBase_t<CtxMutex>::printPeers(FILE *f) const
+void ihipCtxCriticalBase_t<CtxMutex>::printPeerWatchers(FILE *f) const
 {
     for (auto iter = _peers.begin(); iter!=_peers.end(); iter++) {
         fprintf (f, "%s ", (*iter)->toString().c_str());
@@ -904,7 +1008,7 @@ void ihipCtx_t::locked_reset()
 
 
     // Reset peer list to just me:
-    crit->resetPeers(this);
+    crit->resetPeerWatchers(this);
 
     // Reset and release all memory stored in the tracker:
     // Reset will remove peer mapping so don't need to do this explicitly.
@@ -1006,43 +1110,14 @@ void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, c
         env = getenv(var_name2);
     }
 
-    // TODO: Refactor this code so it is a separate call rather than being part of ihipReadEnv_I, which should only read integers.
-    // Check if the environment variable is either HIP_VISIBLE_DEVICES or CUDA_LAUNCH_BLOCKING, which
-    // contains a sequence of comma-separated device IDs
-    if (!(strcmp(var_name1,"HIP_VISIBLE_DEVICES") && strcmp(var_name2, "CUDA_VISIBLE_DEVICES")) && env){
-        // Parse the string stream of env and store the device ids to g_hip_visible_devices global variable
-        std::string str = env;
-        std::istringstream ss(str);
-        std::string device_id;
-        // Clean up the defult value
-        g_hip_visible_devices.clear();
-        g_visible_device = true;
-        // Read the visible device numbers
-        while (std::getline(ss, device_id, ',')) {
-            if (atoi(device_id.c_str()) >= 0) {
-                g_hip_visible_devices.push_back(atoi(device_id.c_str()));
-            } else { // Any device number after invalid number will not present
-                break;
-            }
-        }
-        // Print out the number of ids
-        if (HIP_PRINT_ENV) {
-            printf ("%-30s = ", var_name1);
-            for(int i=0;i<g_hip_visible_devices.size();i++)
-                printf ("%2d ", g_hip_visible_devices[i]);
-            printf (": %s\n", description);
-        }
+    // Default is set when variable is initialized (at top of this file), so only override if we find
+    // an environment variable.
+    if (env) {
+        long int v = strtol(env, NULL, 0);
+        *var_ptr = (int) (v);
     }
-    else { // Parse environment variables with sigle value
-        // Default is set when variable is initialized (at top of this file), so only override if we find
-        // an environment variable.
-        if (env) {
-            long int v = strtol(env, NULL, 0);
-            *var_ptr = (int) (v);
-        }
-        if (HIP_PRINT_ENV) {
-            printf ("%-30s = %2d : %s\n", var_name1, *var_ptr, description);
-        }
+    if (HIP_PRINT_ENV) {
+        printf ("%-30s = %2d : %s\n", var_name1, *var_ptr, description);
     }
 }
 
@@ -1057,10 +1132,29 @@ void ihipReadEnv_S(std::string *var_ptr, const char *var_name1, const char *var_
     }
 
     if (env) {
-        *var_ptr = env;
+        *static_cast<std::string*>(var_ptr) = env;
     }
     if (HIP_PRINT_ENV) {
         printf ("%-30s = %s : %s\n", var_name1, var_ptr->c_str(), description);
+    }
+}
+
+
+void ihipReadEnv_Callback(void *var_ptr, const char *var_name1, const char *var_name2, const char *description, std::string (*setterCallback)(void * var_ptr, const char * env))
+{
+    char * env = getenv(var_name1);
+
+    // Check second name if first not defined, used to allow HIP_ or CUDA_ env vars.
+    if ((env == NULL) && strcmp(var_name2, "0")) {
+        env = getenv(var_name2);
+    }
+
+    std::string var_string = "0";
+    if (env) {
+        var_string = setterCallback(var_ptr, env);
+    }
+    if (HIP_PRINT_ENV) {
+        printf ("%-30s = %s : %s\n", var_name1, var_string.c_str(), description);
     }
 }
 
@@ -1075,6 +1169,10 @@ void ihipReadEnv_S(std::string *var_ptr, const char *var_name1, const char *var_
     if ((_build == release) || (_build == debug) {\
         ihipReadEnv_S(&_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description);\
     };
+#define READ_ENV_C(_build, _ENV_VAR, _ENV_VAR2, _description, _callback) \
+    if ((_build == release) || (_build == debug) {\
+        ihipReadEnv_Callback(&_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description, _callback);\
+    };
 
 #else
 
@@ -1087,9 +1185,154 @@ void ihipReadEnv_S(std::string *var_ptr, const char *var_name1, const char *var_
     if (_build == release) {\
         ihipReadEnv_S(&_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description);\
     };
+#define READ_ENV_C(_build, _ENV_VAR, _ENV_VAR2, _description, _callback) \
+    if (_build == release) {\
+        ihipReadEnv_Callback(&_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description, _callback);\
+    };
 
 #endif
 
+
+static void tokenize(const std::string &s, char delim, std::vector<std::string> *tokens)
+{
+    std::stringstream ss;
+    ss.str(s);
+    std::string item;
+    while (getline(ss, item, delim)) {
+        item.erase (std::remove (item.begin(), item.end(), ' '), item.end()); // remove whitespace.
+        tokens->push_back(item);
+    }
+}
+
+static void trim(std::string *s)
+{
+    // trim whitespace from beginning and end:
+    const char *t =  "\t\n\r\f\v";
+    s->erase(0, s->find_first_not_of(t));
+    s->erase(s->find_last_not_of(t)+1);
+}
+
+static void ltrim(std::string *s)
+{
+    // trim whitespace from beginning
+    const char *t =  "\t\n\r\f\v";
+    s->erase(0, s->find_first_not_of(t));
+}
+
+
+// TODO - change last arg to pointer.
+void parseTrigger(std::string triggerString, std::vector<ProfTrigger> &profTriggers )
+{
+    std::vector<std::string> tidApiTokens;
+    tokenize(std::string(triggerString), ',', &tidApiTokens);
+    for (auto t=tidApiTokens.begin(); t != tidApiTokens.end(); t++) {
+        std::vector<std::string> oneToken;
+        //std::cout << "token=" << *t << "\n";
+        tokenize(std::string(*t), '.', &oneToken);
+        int tid = 1;
+        uint64_t apiTrigger = 0;
+        if (oneToken.size() == 1) {
+            // the case with just apiNum
+            apiTrigger = std::strtoull(oneToken[0].c_str(), nullptr, 0);
+        } else if (oneToken.size() == 2) {
+            // the case with tid.apiNum
+            tid = std::strtoul(oneToken[0].c_str(), nullptr, 0);
+            apiTrigger = std::strtoull(oneToken[1].c_str(), nullptr, 0);
+        } else {
+            throw ihipException(hipErrorRuntimeOther); // TODO -> bad env var?
+        }
+
+        if (tid > 10000) {
+            throw ihipException(hipErrorRuntimeOther); // TODO -> bad env var?
+        } else {
+            profTriggers.resize(tid+1);
+            //std::cout << "tid:" << tid << " add: " << apiTrigger << "\n";
+            profTriggers[tid].add(apiTrigger);
+        }
+    }
+
+
+    for (int tid=1; tid<profTriggers.size(); tid++) {
+        profTriggers[tid].sort();
+        profTriggers[tid].print(tid);
+    }
+}
+
+std::string HIP_DB_string(unsigned db)
+{
+    std::string dbStr;
+    bool first=true;
+    for (int i=0; i<DB_MAX_FLAG; i++) {
+        if (db & (1<<i)) {
+            if (!first) {
+                dbStr += "+";
+            };
+            dbStr += dbName[i]._color;
+            dbStr += dbName[i]._shortName;
+            dbStr += KNRM;
+            first=false;
+        };
+    }
+
+    return dbStr;
+}
+
+// Callback used to process HIP_DB input, supports either
+// integer or flag names separated by +
+std::string HIP_DB_callback(void *var_ptr, const char *envVarString)
+{
+    int * var_ptr_int = static_cast<int *> (var_ptr);
+
+    std::string e(envVarString);
+    trim(&e);
+    if (!e.empty() && isdigit(e.c_str()[0])) {
+        long int v = strtol(envVarString, NULL, 0);
+        *var_ptr_int = (int) (v);
+    } else {
+        *var_ptr_int = 0;
+        std::vector<std::string> tokens;
+        tokenize(e, '+', &tokens);
+        for (auto t=tokens.begin(); t!= tokens.end(); t++) {
+            for (int i=0; i<DB_MAX_FLAG; i++) {
+                if (!strcmp(t->c_str(), dbName[i]._shortName)) { 
+                    *var_ptr_int |= (1<<i);
+                } // TODO - else throw error?
+            }
+        }
+    }
+
+    return HIP_DB_string(*var_ptr_int);;
+}
+
+
+// Callback used to process list of visible devices.
+std::string HIP_VISIBLE_DEVICES_callback(void *var_ptr, const char *envVarString)
+{
+    // Parse the string stream of env and store the device ids to g_hip_visible_devices global variable
+    std::string str = envVarString;
+    std::istringstream ss(str);
+    std::string device_id;
+    // Clean up the defult value
+    g_hip_visible_devices.clear();
+    g_visible_device = true;
+    // Read the visible device numbers
+    while (std::getline(ss, device_id, ',')) {
+        if (atoi(device_id.c_str()) >= 0) {
+            g_hip_visible_devices.push_back(atoi(device_id.c_str()));
+        } else { // Any device number after invalid number will not present
+            break;
+        }
+    }
+
+    std::string valueString;
+    // Print out the number of ids
+    for(int i=0;i<g_hip_visible_devices.size();i++) {
+        valueString += std::to_string((g_hip_visible_devices[i]));
+        valueString += ' ';
+    }
+
+    return valueString;
+}
 
 
 //---
@@ -1114,7 +1357,7 @@ void ihipInit()
 
     // TODO: In HIP/hcc, this variable blocks after both kernel commmands and data transfer.  Maybe should be bit-mask for each command type?
     READ_ENV_I(release, HIP_LAUNCH_BLOCKING, CUDA_LAUNCH_BLOCKING, "Make HIP APIs 'host-synchronous', so they block until any kernel launches or data copy commands complete. Alias: CUDA_LAUNCH_BLOCKING." );
-    READ_ENV_I(release, HIP_DB, 0,  "Print various debug info.  Bitmask, see hip_hcc.cpp for more information.");
+    READ_ENV_C(release, HIP_DB, 0,  "Print debug info.  Bitmask (HIP_DB=0xff) or flags separated by '+' (HIP_DB=api+sync+mem+copy)", HIP_DB_callback);
     if ((HIP_DB & (1<<DB_API))  && (HIP_TRACE_API == 0)) {
         // Set HIP_TRACE_API default before we read it, so it is printed correctly.
         HIP_TRACE_API = 1;
@@ -1124,41 +1367,34 @@ void ihipInit()
 
     READ_ENV_I(release, HIP_TRACE_API, 0,  "Trace each HIP API call.  Print function name and return code to stderr as program executes.");
     READ_ENV_S(release, HIP_TRACE_API_COLOR, 0,  "Color to use for HIP_API.  None/Red/Green/Yellow/Blue/Magenta/Cyan/White");
-    READ_ENV_I(release, HIP_ATP_MARKER, 0,  "Add HIP function begin/end to ATP file generated with CodeXL");
-    READ_ENV_I(release, HIP_VISIBLE_DEVICES, CUDA_VISIBLE_DEVICES, "Only devices whose index is present in the secquence are visible to HIP applications and they are enumerated in the order of secquence" );
+    READ_ENV_I(release, HIP_PROFILE_API, 0,  "Add HIP API markers to ATP file generated with CodeXL. 0x1=short API name, 0x2=full API name including args.");
+    READ_ENV_S(release, HIP_DB_START_API, 0,  "Comma-separted list of tid.api_seq_num for when to start debug and profiling.");
+    READ_ENV_S(release, HIP_DB_STOP_API, 0,  "Comma-separated list of tid.api_seq_num for when to stop debug and profiling.");
+    
+    READ_ENV_C(release, HIP_VISIBLE_DEVICES, CUDA_VISIBLE_DEVICES, "Only devices whose index is present in the sequence are visible to HIP applications and they are enumerated in the order of sequence.", HIP_VISIBLE_DEVICES_callback );
 
 
     READ_ENV_I(release, HIP_WAIT_MODE, 0, "Force synchronization mode. 1= force yield, 2=force spin, 0=defaults specified in application");
-
+    READ_ENV_I(release, HIP_FORCE_P2P_HOST, 0, "Force use of host/staging copy for peer-to-peer copies.1=always use copies, 2=always return false for hipDeviceCanAccessPeer"); 
+    READ_ENV_I(release, HIP_FORCE_SYNC_COPY, 0, "Force all copies (even hipMemcpyAsync) to use sync copies"); 
     READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Max number of inflight kernels per stream before active synchronization is forced.");
 
     // Some flags have both compile-time and runtime flags - generate a warning if user enables the runtime flag but the compile-time flag is disabled.
     if (HIP_DB && !COMPILE_HIP_DB) {
-        fprintf (stderr, "warning: env var HIP_DB=0x%x but COMPILE_HIP_DB=0.  (perhaps enable COMPILE_HIP_DB in src code before compiling?)", HIP_DB);
+        fprintf (stderr, "warning: env var HIP_DB=0x%x but COMPILE_HIP_DB=0.  (perhaps enable COMPILE_HIP_DB in src code before compiling?)\n", HIP_DB);
     }
 
     if (HIP_TRACE_API && !COMPILE_HIP_TRACE_API) {
-        fprintf (stderr, "warning: env var HIP_TRACE_API=0x%x but COMPILE_HIP_TRACE_API=0.  (perhaps enable COMPILE_HIP_DB in src code before compiling?)", HIP_DB);
+        fprintf (stderr, "warning: env var HIP_TRACE_API=0x%x but COMPILE_HIP_TRACE_API=0.  (perhaps enable COMPILE_HIP_TRACE_API in src code before compiling?)\n", HIP_DB);
     }
 
-    if (HIP_ATP_MARKER && !COMPILE_HIP_ATP_MARKER) {
-        fprintf (stderr, "warning: env var HIP_ATP_MARKER=0x%x but COMPILE_HIP_ATP_MARKER=0.  (perhaps enable COMPILE_HIP_DB in src code before compiling?)", HIP_ATP_MARKER);
+    if (HIP_PROFILE_API && !COMPILE_HIP_ATP_MARKER) {
+        fprintf (stderr, "warning: env var HIP_PROFILE_API=0x%x but COMPILE_HIP_ATP_MARKER=0.  (perhaps enable COMPILE_HIP_ATP_MARKER in src code before compiling?)\n", HIP_PROFILE_API);
+        HIP_PROFILE_API = 0;
     }
 
     if (HIP_DB) {
-        fprintf (stderr, "HIP_DB=0x%x [", HIP_DB);
-        bool first=true;
-        for (int i=0; i<DB_MAX_BITPOS; i++) {
-            if (HIP_DB & (1<<i)) {
-                if (first) {
-                    fprintf (stderr, "%s%s%s", dbName[i]._color, dbName[i]._shortName, KNRM);
-                } else {
-                    fprintf (stderr, "+%s%s%s", dbName[i]._color, dbName[i]._shortName, KNRM);
-                };
-                first=false;
-            };
-        }
-        fprintf (stderr, "]\n");
+        fprintf (stderr, "HIP_DB=0x%x [%s]\n", HIP_DB, HIP_DB_string(HIP_DB).c_str());
     }
 
     std::transform(HIP_TRACE_API_COLOR.begin(),  HIP_TRACE_API_COLOR.end(), HIP_TRACE_API_COLOR.begin(), ::tolower);
@@ -1183,6 +1419,9 @@ void ihipInit()
     } else {
         fprintf (stderr, "warning: env var HIP_TRACE_API_COLOR=%s must be None/Red/Green/Yellow/Blue/Magenta/Cyan/White", HIP_TRACE_API_COLOR.c_str());
     };
+
+    parseTrigger(HIP_DB_START_API, g_dbStartTriggers);
+    parseTrigger(HIP_DB_STOP_API,  g_dbStopTriggers);
 
 
 
@@ -1269,19 +1508,28 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 
 void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, const hipStream_t stream)
 {
-    if (HIP_ATP_MARKER || (COMPILE_HIP_DB && HIP_TRACE_API)) {
+    if (HIP_PROFILE_API || (COMPILE_HIP_DB && HIP_TRACE_API)) {
+        std::stringstream os_pre;
         std::stringstream os;
-        os  << "<<hip-api: hipLaunchKernel '" << kernelName << "'"
+        os_pre  << "<<hip-api tid:";
+        os  << tls_shortTid.tid() << "." << tls_shortTid.incApiSeqNum()
+            << " hipLaunchKernel '" << kernelName << "'"
             << " gridDim:"  << lp->grid_dim
             << " groupDim:" << lp->group_dim
             << " sharedMem:+" << lp->dynamic_group_mem_bytes
             << " " << *stream;
 
+        if (HIP_PROFILE_API == 0x1) {
+            std::string shortAtpString("hipLaunchKernel:");
+            shortAtpString += kernelName;
+            MARKER_BEGIN(shortAtpString.c_str(), "HIP");
+        } else if (HIP_PROFILE_API == 0x2) {
+            MARKER_BEGIN(os.str().c_str(), "HIP");
+        }
 
         if (COMPILE_HIP_DB && HIP_TRACE_API) {
             std::cerr << API_COLOR << os.str() << API_COLOR_END << std::endl;
         }
-        SCOPED_MARKER(os.str().c_str(), "HIP", NULL);
     }
 }
 
@@ -1379,7 +1627,10 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, g
 //This releases the lock on the stream.
 void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp)
 {
+    tprintf(DB_SYNC, "ihipPostLaunchKernel, unlocking stream\n");
+
     stream->lockclose_postKernelCommand(lp.av);
+    MARKER_END();
 }
 
 
@@ -1486,29 +1737,44 @@ void ihipSetTs(hipEvent_t e)
 }
 
 
-// Returns true if thisCtx can see the memory allocated on dstCtx and srcCtx.
+// Returns true if copyEngineCtx can see the memory allocated on dstCtx and srcCtx.
 // The peer-list for a context controls which contexts have access to the memory allocated on that context.
 // So we check dstCtx's and srcCtx's peerList to see if the both include thisCtx.
-bool ihipStream_t::canSeePeerMemory(const ihipCtx_t *thisCtx, ihipCtx_t *dstCtx, ihipCtx_t *srcCtx)
+bool ihipStream_t::canSeeMemory(const ihipCtx_t *copyEngineCtx, const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo)
 {
-    tprintf (DB_COPY1, "Checking if direct copy can be used.  thisCtx:%s;  dstCtx:%s ;  srcCtx:%s\n",
-            thisCtx->toString().c_str(), dstCtx->toString().c_str(), srcCtx->toString().c_str());
 
-    // Use blocks to control scope of critical sections.
-    {
-        LockedAccessor_CtxCrit_t  ctxCrit(dstCtx->criticalData());
-        tprintf(DB_SYNC, "dstCrit lock succeeded\n");
-        if (!ctxCrit->isPeer(thisCtx)) {
-            return false;
-        };
+    // Make sure this is a device-to-device copy with all memory available to the requested copy engine
+    //
+    // TODO - pointer-info stores a deviceID not a context,may have some unusual side-effects here:
+    if (dstPtrInfo->_sizeBytes == 0) {
+        return false;
+    } else {
+        ihipCtx_t *dstCtx = ihipGetPrimaryCtx(dstPtrInfo->_appId);
+        if (copyEngineCtx != dstCtx) {
+            // Only checks peer list if contexts are different
+            LockedAccessor_CtxCrit_t  ctxCrit(dstCtx->criticalData());
+            //tprintf(DB_SYNC, "dstCrit lock succeeded\n");
+            if (!ctxCrit->isPeerWatcher(copyEngineCtx)) {
+                return false;
+            };
+        }
     }
 
-    {
-        LockedAccessor_CtxCrit_t  ctxCrit(srcCtx->criticalData());
-        tprintf(DB_SYNC, "srcCrit lock succeeded\n");
-        if (!ctxCrit->isPeer(thisCtx)) {
-            return false;
-        };
+
+
+    // TODO - pointer-info stores a deviceID not a context,may have some unusual side-effects here:
+    if (srcPtrInfo->_sizeBytes == 0) {
+        return false;
+    } else {
+        ihipCtx_t *srcCtx = ihipGetPrimaryCtx(srcPtrInfo->_appId);
+        if (copyEngineCtx != srcCtx) {
+            // Only checks peer list if contexts are different
+            LockedAccessor_CtxCrit_t  ctxCrit(srcCtx->criticalData());
+            //tprintf(DB_SYNC, "srcCrit lock succeeded\n");
+            if (!ctxCrit->isPeerWatcher(copyEngineCtx)) {
+                return false;
+            };
+        }
     }
 
     return true;
@@ -1517,7 +1783,7 @@ bool ihipStream_t::canSeePeerMemory(const ihipCtx_t *thisCtx, ihipCtx_t *dstCtx,
 
 #define CASE_STRING(X)  case X: return #X ;break;
 
-const char* memcpyStr(unsigned memKind)
+const char* hipMemcpyStr(unsigned memKind)
 {
     switch (memKind) {
         CASE_STRING(hipMemcpyHostToHost);
@@ -1529,35 +1795,78 @@ const char* memcpyStr(unsigned memKind)
     };
 }
 
+const char* hcMemcpyStr(hc::hcCommandKind memKind)
+{
+    using namespace hc;
+    switch (memKind) {
+        CASE_STRING(hcMemcpyHostToHost);
+        CASE_STRING(hcMemcpyHostToDevice);
+        CASE_STRING(hcMemcpyDeviceToHost);
+        CASE_STRING(hcMemcpyDeviceToDevice);
+        //CASE_STRING(hcMemcpyDefault);
+        default : return ("unknown memcpyKind");
+    };
+}
+
 
 
 // Resolve hipMemcpyDefault to a known type.
-// TODO - review why is this so complicated, does this need srcTracked and dstTracked?
-unsigned ihipStream_t::resolveMemcpyDirection(bool srcTracked, bool dstTracked, bool srcInDeviceMem, bool dstInDeviceMem)
+unsigned ihipStream_t::resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDeviceMem)
 {
     hipMemcpyKind kind = hipMemcpyDefault;
-    if(!srcTracked && !dstTracked)
-    {
-        kind = hipMemcpyHostToHost;
-    }
-    if(!srcTracked && dstTracked)
-    {
-        if(dstInDeviceMem) { kind = hipMemcpyHostToDevice; }
-        else{ kind = hipMemcpyHostToHost; }
-    }
-    if (srcTracked && !dstTracked) {
-        if(srcInDeviceMem) { kind = hipMemcpyDeviceToHost; }
-        else { kind = hipMemcpyHostToHost; }
-    }
-    if (srcTracked && dstTracked) {
-        if(srcInDeviceMem && dstInDeviceMem) { kind = hipMemcpyDeviceToDevice; }
-        if(srcInDeviceMem && !dstInDeviceMem) { kind = hipMemcpyDeviceToHost; }
-        if(!srcInDeviceMem && !dstInDeviceMem) { kind = hipMemcpyHostToHost; }
-        if(!srcInDeviceMem && dstInDeviceMem) { kind = hipMemcpyHostToDevice; }
-    }
+
+    if( srcInDeviceMem  &&  dstInDeviceMem) { kind = hipMemcpyDeviceToDevice; }
+    if( srcInDeviceMem  && !dstInDeviceMem) { kind = hipMemcpyDeviceToHost; }
+    if(!srcInDeviceMem  && !dstInDeviceMem) { kind = hipMemcpyHostToHost; }
+    if(!srcInDeviceMem  &&  dstInDeviceMem) { kind = hipMemcpyHostToDevice; }
 
     assert (kind != hipMemcpyDefault);
     return kind;
+}
+
+
+// hipMemKind must be "resolved" to a specific direction - cannot be default.
+void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind, 
+                                            const hc::AmPointerInfo *dstPtrInfo, 
+                                            const hc::AmPointerInfo *srcPtrInfo, 
+                                            hc::hcCommandKind *hcCopyDir, 
+                                            ihipCtx_t **copyDevice,
+                                            bool *forceUnpinnedCopy)
+{
+    // Ignore what the user tells us and always resolve the direction:
+    // Some apps apparently rely on this.
+    hipMemKind = resolveMemcpyDirection(srcPtrInfo->_isInDeviceMem, dstPtrInfo->_isInDeviceMem);
+
+
+    switch (hipMemKind) {
+        case hipMemcpyHostToHost:     *hcCopyDir = hc::hcMemcpyHostToHost; break;
+        case hipMemcpyHostToDevice:   *hcCopyDir = hc::hcMemcpyHostToDevice; break;
+        case hipMemcpyDeviceToHost:   *hcCopyDir = hc::hcMemcpyDeviceToHost; break;
+        case hipMemcpyDeviceToDevice: *hcCopyDir = hc::hcMemcpyDeviceToDevice; break;
+        default: throw ihipException(hipErrorRuntimeOther);
+    };
+
+    if (srcPtrInfo->_isInDeviceMem) {
+        *copyDevice  = ihipGetPrimaryCtx(srcPtrInfo->_appId);
+    } else if (dstPtrInfo->_isInDeviceMem) {
+        *copyDevice  = ihipGetPrimaryCtx(dstPtrInfo->_appId);
+    } else {
+        *copyDevice = nullptr;
+    }
+
+    *forceUnpinnedCopy = false;
+    if (canSeeMemory(*copyDevice, dstPtrInfo, srcPtrInfo)) {
+
+        if (HIP_FORCE_P2P_HOST & 0x1) {
+            *forceUnpinnedCopy = true;
+            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d) can see src and dst but HIP_FORCE_P2P_HOST=0, forcing copy through staging buffers.\n", (*copyDevice)->getDeviceNum());
+        } else {
+            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d) can see src and dst.\n",  (*copyDevice)->getDeviceNum());
+        }
+    } else {
+        *forceUnpinnedCopy = true;
+        tprintf (DB_COPY, "P2P: copy engine(dev:%d) cannot see both host and device pointers - forcing copy with unpinned engine.\n", (*copyDevice)->getDeviceNum());
+    }
 }
 
 
@@ -1577,42 +1886,24 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     bool dstTracked = (hc::am_memtracker_getinfo(&dstPtrInfo, dst) == AM_SUCCESS);
     bool srcTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) == AM_SUCCESS);
 
-    if (kind == hipMemcpyDefault) {
-        kind = resolveMemcpyDirection(srcTracked, dstTracked, srcPtrInfo._isInDeviceMem, dstPtrInfo._isInDeviceMem);
-    }
+
     hc::hcCommandKind hcCopyDir;
-    switch (kind) {
-        case hipMemcpyHostToHost:     hcCopyDir = hc::hcMemcpyHostToHost; break;
-        case hipMemcpyHostToDevice:   hcCopyDir = hc::hcMemcpyHostToDevice; break;
-        case hipMemcpyDeviceToHost:   hcCopyDir = hc::hcMemcpyDeviceToHost; break;
-        case hipMemcpyDeviceToDevice: hcCopyDir = hc::hcMemcpyDeviceToDevice; break;
-        default: throw ihipException(hipErrorRuntimeOther);
-    };
-
-
-    // If this is P2P access, we need to check to see if the copy agent (specified by the stream where the copy is enqueued)
-    // has peer access enabled to both the source and dest.  If this is true, then the copy agent can see both pointers
-    // and we can perform the access with the copy engine from the current stream.  If not true, then we will copy through the host. (forceHostCopyEngine=true).
-    bool forceHostCopyEngine = false;
-    if (hcCopyDir == hc::hcMemcpyDeviceToDevice) {
-        if (!canSeePeerMemory(ctx, ihipGetPrimaryCtx(dstPtrInfo._appId), ihipGetPrimaryCtx(srcPtrInfo._appId))) {
-            forceHostCopyEngine = true;
-            tprintf (DB_COPY1, "Forcing use of host copy engine.\n");
-        } else {
-            tprintf (DB_COPY1, "Will use SDMA engine on streamDevice=%s.\n", ctx->toString().c_str());
-        }
-    };
-
-    tprintf (DB_COPY1, "locked_copy dir=%s dst=%p src=%p sz=%zu\n", memcpyStr(kind), src, dst, sizeBytes);
+    ihipCtx_t *copyDevice;
+    bool forceUnpinnedCopy;
+    resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &copyDevice, &forceUnpinnedCopy);
 
     {
         LockedAccessor_StreamCrit_t crit (_criticalData);
-#if DISABLE_COPY_EXT
-#warning ("Disabled copy_ext path, P2P host staging copies will not work")
-        // Note - peer-to-peer copies which require host staging will not work in this path.
-        crit->_av.copy(src, dst, sizeBytes);
+        tprintf (DB_COPY, "copySync copyDev:%d  dst=%p(home_dev:%d, tracked:%d, isDevMem:%d)  src=%p(home_dev:%d, tracked:%d, isDevMem:%d)   sz=%zu dir=%s forceUnpinnedCopy=%d\n",
+                 copyDevice ? copyDevice->getDeviceNum():-1, 
+                 dst, dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem, 
+                 src, srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem,  
+                 sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
+
+#if USE_COPY_EXT_V2
+        crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice ? &copyDevice->getDevice()->_acc : nullptr, forceUnpinnedCopy);
 #else
-        crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceHostCopyEngine);
+        crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceUnpinnedCopy);
 #endif
     }
 }
@@ -1624,12 +1915,12 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
     const ihipCtx_t *ctx = this->getCtx();
 
     if ((ctx == nullptr) || (ctx->getDevice() == nullptr)) {
-        tprintf (DB_COPY1, "locked_copyAsync bad ctx or device\n");
+        tprintf (DB_COPY, "locked_copyAsync bad ctx or device\n");
         throw ihipException(hipErrorInvalidDevice);
     }
 
     if (kind == hipMemcpyHostToHost) {
-        tprintf (DB_COPY1, "locked_copyAsync: H2H with memcpy");
+        tprintf (DB_COPY, "locked_copyAsync: H2H with memcpy");
 
         // TODO - consider if we want to perhaps use the GPU SDMA engines anyway, to avoid the host-side sync here and keep everything flowing on the GPU.
         /* As this is a CPU op, we need to wait until all
@@ -1649,24 +1940,39 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
         bool srcTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) == AM_SUCCESS);
 
 
-        bool copyEngineCanSeeSrcAndDest = true;
-        if ((kind == hipMemcpyDeviceToDevice) || 
-            ((kind == hipMemcpyDefault) && srcTracked && dstTracked)) {
-            copyEngineCanSeeSrcAndDest = canSeePeerMemory(ctx, ihipGetPrimaryCtx(dstPtrInfo._appId), ihipGetPrimaryCtx(srcPtrInfo._appId));
-        }
+        hc::hcCommandKind hcCopyDir;
+        ihipCtx_t *copyDevice;
+        bool forceUnpinnedCopy;
+        resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &copyDevice, &forceUnpinnedCopy);
 
-        tprintf (DB_COPY1, "locked_copyAsync:  async memcpy dstTracked=%d srcTracked=%d copyEngineCanSeeSrcAndDest=%d\n",
-                dstTracked, srcTracked, copyEngineCanSeeSrcAndDest);
 
+        tprintf (DB_COPY, "copyASync copyEngine_dev:%d  dst=%p(home_dev:%d, tracked:%d, isDevMem:%d)  src=%p(home_dev:%d, tracked:%d, isDevMem:%d)   sz=%zu dir=%s.  forceUnpinnedCopy=%d \n",
+                 copyDevice->getDeviceNum(), 
+                 dst, dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem, 
+                 src, srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem,  
+                 sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
 
         // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.
         // If both pointers are not tracked, we need to fall back to a sync copy.
-        if (dstTracked && srcTracked && copyEngineCanSeeSrcAndDest) {
+        if (dstTracked && srcTracked && !forceUnpinnedCopy && copyDevice/*code below assumes this is !nullptr*/) {
             LockedAccessor_StreamCrit_t crit(_criticalData);
 
-            // Perform asynchronous copy:
+            // Perform fast asynchronous copy - we know copyDevice != NULL based on check above
             try {
-                crit->_av.copy_async(src, dst, sizeBytes);
+                if (HIP_FORCE_SYNC_COPY) {
+#if USE_COPY_EXT_V2
+                    crit->_av.copy_ext      (src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, &copyDevice->getDevice()->_acc, forceUnpinnedCopy);
+#else
+                    crit->_av.copy_ext      (src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceUnpinnedCopy);
+#endif
+
+                } else {
+#if USE_COPY_EXT_V2
+                    crit->_av.copy_async_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, &copyDevice->getDevice()->_acc);
+#else
+                    crit->_av.copy_async(src, dst, sizeBytes);
+#endif
+                }
             } catch (Kalmar::runtime_exception) {
                 throw ihipException(hipErrorRuntimeOther);
             };
@@ -1678,11 +1984,41 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
             }
 
         } else {
-            // TODO - call copy_ext directly here?
-            locked_copySync(dst, src, sizeBytes, kind);
+            LockedAccessor_StreamCrit_t crit(_criticalData);
+#if USE_COPY_EXT_V2
+            crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice ? &copyDevice->getDevice()->_acc : nullptr, forceUnpinnedCopy);
+#else
+            crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceUnpinnedCopy);
+#endif
         }
     }
 }
+
+
+//-------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------
+//Profiler, really these should live elsewhere:
+hipError_t hipProfilerStart()
+{
+    HIP_INIT_API();
+#if COMPILE_HIP_ATP_MARKER
+    amdtResumeProfiling(AMDT_ALL_PROFILING);
+#endif
+
+    return ihipLogStatus(hipSuccess);
+};
+
+
+hipError_t hipProfilerStop()
+{
+    HIP_INIT_API();
+#if COMPILE_HIP_ATP_MARKER
+    amdtStopProfiling(AMDT_ALL_PROFILING);
+#endif
+
+    return ihipLogStatus(hipSuccess);
+};
+
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------

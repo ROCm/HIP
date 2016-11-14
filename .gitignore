@@ -1,4 +1,5 @@
 .*
+!.gitignore
 *.o
 *.exe
 *.swp

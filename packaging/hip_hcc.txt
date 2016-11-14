@@ -9,6 +9,7 @@ else()
     install(FILES @PROJECT_BINARY_DIR@/libhip_hcc.so DESTINATION lib)
 endif()
 install(FILES @PROJECT_BINARY_DIR@/.hipInfo DESTINATION lib)
+install(FILES @hip_SOURCE_DIR@/src/hip_ir.ll DESTINATION lib)
 
 #############################
 # Packaging steps

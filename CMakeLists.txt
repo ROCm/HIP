@@ -142,6 +142,7 @@ if(NOT DEFINED COMPILE_HIP_ATP_MARKER)
 endif()
 add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 
+
 #############################
 # Build steps
 #############################
@@ -164,7 +165,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DHIP_VERSION_MAJOR=${HIP_VERSION_MAJOR} -DHIP_VERSION_MINOR=${HIP_VERSION_MINOR} -DHIP_VERSION_PATCH=${HIP_VERSION_PATCH}")
 
     # Add remaining flags
-    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include -stdlib=libc++")
+    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include -I/usr/local/include/c++/v1 -stdlib=libc++")
 
     # Set compiler and compiler flags
     set(CMAKE_CXX_COMPILER "${HCC_HOME}/bin/hcc")
@@ -337,7 +338,7 @@ endif()
 add_custom_target(install_for_test COMMAND "${CMAKE_COMMAND}" --build . --target install
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 execute_process(COMMAND getconf _NPROCESSORS_ONLN OUTPUT_VARIABLE DASH_JAY OUTPUT_STRIP_TRAILING_WHITESPACE)
-add_custom_target(test COMMAND ${CMAKE_COMMAND} .
+add_custom_target(test COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} .
     COMMAND make -j ${DASH_JAY}
     COMMAND make test
     WORKING_DIRECTORY ${BUILD_DIR}
