@@ -108,7 +108,7 @@ void disablePeer2Peer(int currentGpu, int peerGpu)
 
     HIPCHECK(hipSetDevice(currentGpu));
     hipDeviceCanAccessPeer(&canAccessPeer, currentGpu, peerGpu);
-	
+
     if(canAccessPeer==1){
         HIPCHECK(hipDeviceDisablePeerAccess(peerGpu));
     }
@@ -155,7 +155,7 @@ __global__ void matrixTranspose_dynamic_shared(hipLaunchParm lp,
 int main(){
 
     checkPeer2PeerSupport();
-    
+
     int gpuCount;
     int currentGpu, peerGpu;
 
@@ -191,10 +191,10 @@ int main(){
                     0, 0,
                     gpuTransposeMatrix[0], data[0], width);
 
-	HIPCHECK(hipSetDevice(peerGpu));
-	TransposeMatrix[1] = (float*)malloc(NUM * sizeof(float));
-	hipMalloc((void**)&gpuTransposeMatrix[1], NUM * sizeof(float));
-	hipMalloc((void**)&data[1], NUM * sizeof(float));
+    HIPCHECK(hipSetDevice(peerGpu));
+    TransposeMatrix[1] = (float*)malloc(NUM * sizeof(float));
+    hipMalloc((void**)&gpuTransposeMatrix[1], NUM * sizeof(float));
+    hipMalloc((void**)&data[1], NUM * sizeof(float));
     hipMemcpy(data[1], gpuTransposeMatrix[0], NUM * sizeof(float), hipMemcpyDeviceToDevice);
 
     hipLaunchKernel(matrixTranspose_dynamic_shared,
