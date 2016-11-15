@@ -49,7 +49,7 @@ THE SOFTWARE.
 
 
 #ifndef USE_COPY_EXT_V2
-#define USE_COPY_EXT_V2 0
+#define USE_COPY_EXT_V2 1
 #endif
 
 //=================================================================================================
