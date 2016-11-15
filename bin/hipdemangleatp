@@ -13,7 +13,7 @@ done
 # HC kernels
 kernels=$(grep cxxamp_trampoline $1 | cut -d" " -f1 | sort | uniq)
 for mangled_sym in $kernels; do
-    real_sym=$(echo $mangled_sym |  sed "s/^/_/g; s/_EC_/_$/g" | c++filt -p | cut -d\( -f1 | cut -d" " -f1 --complement | sed 's/ /\\\&nbsp/g')
+    real_sym=$(echo $mangled_sym |  sed "s/^/_/g; s/_EC_/$/g" | c++filt -p | cut -d\( -f1 | cut -d" " -f1 --complement | sed 's/ /\\\&nbsp/g')
     #echo "$mangled_sym => $real_sym" >> $1.log
     sed -i "s/$mangled_sym/$real_sym/g" $1
 done
