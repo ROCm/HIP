@@ -39,6 +39,10 @@ THE SOFTWARE.
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
+#define HIP_LAUNCH_PARAM_BUFFER_POINTER ((void*) 0x01)
+#define HIP_LAUNCH_PARAM_BUFFER_SIZE    ((void*) 0x02)
+#define HIP_LAUNCH_PARAM_END            ((void*) 0x03)
+
 // Structure definitions:
 #ifdef __cplusplus
 extern "C" {
