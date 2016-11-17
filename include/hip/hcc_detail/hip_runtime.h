@@ -68,7 +68,7 @@ extern int HIP_TRACE_API;
 //typedef grid_launch_parm hipLaunchParm ;
 #define hipLaunchParm grid_launch_parm
 #ifdef __cplusplus
-#include <hip/hcc_detail/hip_texture.h>
+//#include <hip/hcc_detail/hip_texture.h>
 #include <hip/hcc_detail/hip_ldg.h>
 #endif
 #include <hip/hcc_detail/host_defines.h>
