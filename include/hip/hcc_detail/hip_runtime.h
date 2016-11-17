@@ -58,10 +58,6 @@ THE SOFTWARE.
 #error (HCC must support GRID_LAUNCH_20)
 #endif
 
-#define HIP_LAUNCH_PARAM_BUFFER_POINTER ((void*) 0x01)
-#define HIP_LAUNCH_PARAM_BUFFER_SIZE    ((void*) 0x02)
-#define HIP_LAUNCH_PARAM_END            ((void*) 0x03)
-
 extern int HIP_TRACE_API;
 
 //TODO-HCC-GL - change this to typedef.
