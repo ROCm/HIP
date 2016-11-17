@@ -191,6 +191,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
     elseif(${HIP_LIB_TYPE} EQUAL 1)
         add_library(hip_hcc STATIC ${SOURCE_FILES})
     else()
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L${HCC_HOME}/lib -lmcwamp -Wl,-Bsymbolic")
         add_library(hip_hcc SHARED ${SOURCE_FILES})
     endif()
 
