@@ -32,7 +32,7 @@ THE SOFTWARE.
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
-#if __HCC__
+#if 0
 #include <hc_short_vector.hpp>
 
 using namespace hc::short_vector;
@@ -137,8 +137,24 @@ struct uchar3
     unsigned char x, y, z;
 };
 
-struct __hip_align(char4, 4, signed char x; signed char y; signed char z; signed char w;);
-struct __hip_align(uchar4, 4, unsigned char x; unsigned char y; unsigned char z; unsigned char w;);
+struct char4
+{
+    union {
+        signed char x, y, z, w;
+        unsigned int val;
+    };
+};
+
+struct uchar4
+{
+    union {
+        unsigned char x, y, z, w;
+        unsigned int val;
+    };
+};
+
+//struct __hip_align(char4, 4, signed char x; signed char y; signed char z; signed char w;);
+//struct __hip_align(uchar4, 4, unsigned char x; unsigned char y; unsigned char z; unsigned char w;);
 
 struct __hip_align(short1, 2, signed short x;);
 struct __hip_align(ushort1, 2, unsigned short x;);

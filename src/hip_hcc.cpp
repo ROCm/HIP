@@ -217,6 +217,42 @@ __device__ float __hip_ds_swizzlef(float src, int pattern) {
 __device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask, bool bound_ctrl) {
     return hc::__amdgcn_move_dpp(src, dpp_ctrl, row_mask, bank_mask, bound_ctrl);
 }
+
+#define MASK1 0x00ff00ff
+#define MASK2 0xff00ff00
+
+__device__ char4 __hip_hc_add8pk(char4 in1, char4 in2) {
+    char4 out;
+    unsigned one1 = in1.val & MASK1;
+    unsigned one2 = in2.val & MASK1;
+    out.val = (one1 + one2) & MASK1;
+    one1 = in1.val & MASK2;
+    one2 = in2.val & MASK2;
+    out.val = out.val | ((one1 + one2) & MASK2);
+    return out;
+}
+
+__device__ char4 __hip_hc_sub8pk(char4 in1, char4 in2) {
+    char4 out;
+    unsigned one1 = in1.val & MASK1;
+    unsigned one2 = in2.val & MASK1;
+    out.val = (one1 - one2) & MASK1;
+    one1 = in1.val & MASK2;
+    one2 = in2.val & MASK2;
+    out.val = out.val | ((one1 - one2) & MASK2);
+    return out; 
+}
+
+__device__ char4 __hip_hc_mul8pk(char4 in1, char4 in2) {
+    char4 out;
+    unsigned one1 = in1.val & MASK1;
+    unsigned one2 = in2.val & MASK1;
+    out.val = (one1 * one2) & MASK1;
+    one1 = in1.val & MASK2;
+    one2 = in2.val & MASK2;
+    out.val = out.val | ((one1 * one2) & MASK2);
+    return out;
+}
 //=================================================================================================
 // Thread-local storage:
 //=================================================================================================
