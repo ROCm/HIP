@@ -627,6 +627,10 @@ __device__ static inline void* free(void *ptr)
     return __hip_hc_free(ptr);
 }
 
+extern "C" __device__ char4 __hip_hc_add8pk(char4, char4);
+extern "C" __device__ char4 __hip_hc_sub8pk(char4, char4);
+extern "C" __device__ char4 __hip_hc_mul8pk(char4, char4);
+
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
 
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
