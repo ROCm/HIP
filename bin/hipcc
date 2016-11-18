@@ -328,7 +328,7 @@ if ($needHipHcc) {
     } elsif ($HIP_LIB_TYPE eq 1) {
         substr($HIPLDFLAGS,0,0) = " -L$HIP_PATH/lib -lhip_hcc " ;
     } else {
-        substr($HIPLDFLAGS,0,0) = " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc ";
+        substr($HIPLDFLAGS,0,0) = " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc -lhip_device ";
     }
 }
 

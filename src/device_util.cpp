@@ -26,6 +26,184 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 
+//=================================================================================================
+/*
+ Implementation of malloc and free device functions.
+
+ This is the best place to put them because the device
+ global variables need to be initialized at the start.
+*/
+
+#define NUM_PAGES_PER_THREAD  16
+#define SIZE_OF_PAGE          64
+#define NUM_THREADS_PER_CU    64
+#define NUM_CUS_PER_GPU       64
+#define NUM_PAGES NUM_PAGES_PER_THREAD * NUM_THREADS_PER_CU * NUM_CUS_PER_GPU
+#define SIZE_MALLOC NUM_PAGES * SIZE_OF_PAGE
+#define SIZE_OF_HEAP SIZE_MALLOC
+
+size_t g_malloc_heap_size = SIZE_OF_HEAP;
+
+__attribute__((address_space(1))) char gpuHeap[SIZE_OF_HEAP];
+__attribute__((address_space(1))) uint32_t gpuFlags[NUM_PAGES];
+
+__device__ void *__hip_hc_malloc(size_t size)
+{
+    char *heap = (char*)gpuHeap;
+    if(size > SIZE_OF_HEAP)
+    {
+        return (void*)nullptr;
+    }
+    uint32_t totalThreads = hipBlockDim_x * hipGridDim_x * hipBlockDim_y * hipGridDim_y * hipBlockDim_z * hipGridDim_z;
+    uint32_t currentWorkItem = hipThreadIdx_x + hipBlockDim_x * hipBlockIdx_x;
+
+    uint32_t numHeapsPerWorkItem = NUM_PAGES / totalThreads;
+    uint32_t heapSizePerWorkItem = SIZE_OF_HEAP / totalThreads;
+
+    uint32_t stride = size / SIZE_OF_PAGE;
+    uint32_t start = numHeapsPerWorkItem * currentWorkItem;
+
+    uint32_t k=0;
+
+    while(gpuFlags[k] > 0)
+    {
+        k++;
+    }
+
+    for(uint32_t i=0;i<stride-1;i++)
+    {
+        gpuFlags[i+start+k] = 1;
+    }
+
+    gpuFlags[start+stride-1+k] = 2;
+
+    void* ptr = (void*)(heap + heapSizePerWorkItem * currentWorkItem + k*SIZE_OF_PAGE);
+
+    return ptr;
+}
+
+__device__ void* __hip_hc_free(void *ptr)
+{
+    if(ptr == nullptr)
+    {
+       return nullptr;
+    }
+
+    uint32_t offsetByte = (uint64_t)ptr - (uint64_t)gpuHeap;
+    uint32_t offsetPage = offsetByte / SIZE_OF_PAGE;
+
+    while(gpuFlags[offsetPage] != 0) {
+        if(gpuFlags[offsetPage] == 2) {
+            gpuFlags[offsetPage] = 0;
+            offsetPage++;
+            break;
+        } else {
+            gpuFlags[offsetPage] = 0;
+            offsetPage++;
+        }
+    }
+
+    return nullptr;
+}
+
+__device__ unsigned __hip_ds_bpermute(int index, unsigned src) {
+    return hc::__amdgcn_ds_bpermute(index, src);
+}
+
+__device__ float __hip_ds_bpermutef(int index, float src) {
+    return hc::__amdgcn_ds_bpermute(index, src);
+}
+
+__device__ unsigned __hip_ds_permute(int index, unsigned src) {
+    return hc::__amdgcn_ds_permute(index, src);
+}
+
+__device__ float __hip_ds_permutef(int index, float src) {
+    return hc::__amdgcn_ds_permute(index, src);
+}
+
+__device__ unsigned __hip_ds_swizzle(unsigned int src, int pattern) {
+    return hc::__amdgcn_ds_swizzle(src, pattern);
+}
+
+__device__ float __hip_ds_swizzlef(float src, int pattern) {
+    return hc::__amdgcn_ds_swizzle(src, pattern);
+}
+
+__device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask, bool bound_ctrl) {
+    return hc::__amdgcn_move_dpp(src, dpp_ctrl, row_mask, bank_mask, bound_ctrl);
+}
+
+#define MASK1 0x00ff00ff
+#define MASK2 0xff00ff00
+
+__device__ char4 __hip_hc_add8pk(char4 in1, char4 in2) {
+    char4 out;
+    unsigned one1 = in1.val & MASK1;
+    unsigned one2 = in2.val & MASK1;
+    out.val = (one1 + one2) & MASK1;
+    one1 = in1.val & MASK2;
+    one2 = in2.val & MASK2;
+    out.val = out.val | ((one1 + one2) & MASK2);
+    return out;
+}
+
+__device__ char4 __hip_hc_sub8pk(char4 in1, char4 in2) {
+    char4 out;
+    unsigned one1 = in1.val & MASK1;
+    unsigned one2 = in2.val & MASK1;
+    out.val = (one1 - one2) & MASK1;
+    one1 = in1.val & MASK2;
+    one2 = in2.val & MASK2;
+    out.val = out.val | ((one1 - one2) & MASK2);
+    return out; 
+}
+
+__device__ char4 __hip_hc_mul8pk(char4 in1, char4 in2) {
+    char4 out;
+    unsigned one1 = in1.val & MASK1;
+    unsigned one2 = in2.val & MASK1;
+    out.val = (one1 * one2) & MASK1;
+    one1 = in1.val & MASK2;
+    one2 = in2.val & MASK2;
+    out.val = out.val | ((one1 * one2) & MASK2);
+    return out;
+}
+
+// loop unrolling
+__device__ void* memcpy(void* dst, void* src, size_t size)
+{
+    uint8_t *dstPtr, *srcPtr;
+    dstPtr = (uint8_t*)dst;
+    srcPtr = (uint8_t*)src;
+    for(uint32_t i=0;i<size;i++) {
+        dstPtr[i] = srcPtr[i];
+    }
+    return nullptr;
+}
+
+__device__ void* memset(void* ptr, uint8_t val, size_t size)
+{
+    uint8_t *dstPtr;
+    dstPtr = (uint8_t*)ptr;
+    for(uint32_t i=0;i<size;i++) {
+        dstPtr[i] = val;
+    }
+    return nullptr;
+}
+
+__device__ void* malloc(size_t size)
+{
+    return __hip_hc_malloc(size);
+}
+
+__device__ void* free(void *ptr)
+{
+    return __hip_hc_free(ptr);
+}
+
+//=================================================================================================
+
 // TODO: Choose whether default is precise math or fast math based on compilation flag.
 #ifdef __HCC_ACCELERATOR__
 using namespace hc::precise_math;
@@ -2292,6 +2470,10 @@ __HIP_DEVICE__ double4 make_double4(double x, double y, double z, double w)
     d4.z = z;
     d4.w = w;
     return d4;
+}
+
+__device__ void  __threadfence_system(void){
+    // no-op
 }
 
 float __hip_host_erfinvf(float x)
