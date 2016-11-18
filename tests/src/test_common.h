@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include <stddef.h>
 
 #include "hip/hip_runtime.h"
+#include "hip/hcc_detail/hip_texture.h"
 
 #define HC __attribute__((hc))
 
