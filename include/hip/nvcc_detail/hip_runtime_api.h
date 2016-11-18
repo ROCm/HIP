@@ -75,7 +75,11 @@ typedef cudaEvent_t hipEvent_t;
 typedef cudaStream_t hipStream_t;
 typedef cudaIpcEventHandle_t hipIpcEventHandle_t;
 typedef cudaIpcMemHandle_t hipIpcMemHandle_t;
+#ifdef __cplusplus
 typedef cudaLimit hipLimit_t;
+#else  //!__cplusplus
+typedef enum cudaLimit hipLimit_t;
+#endif
 typedef CUcontext hipCtx_t;
 typedef CUsharedconfig hipSharedMemConfig;
 typedef CUfunc_cache hipFuncCache;
@@ -154,6 +158,7 @@ switch(hError) {
 }
 }
 
+#ifdef __cplusplus
 inline static cudaMemcpyKind hipMemcpyKindToCudaMemcpyKind(hipMemcpyKind kind) {
     switch(kind) {
     case hipMemcpyHostToHost:
@@ -166,8 +171,25 @@ inline static cudaMemcpyKind hipMemcpyKindToCudaMemcpyKind(hipMemcpyKind kind) {
         return cudaMemcpyDeviceToDevice;
     default:
         return cudaMemcpyDefault;
+    }
 }
+#else
+inline static enum cudaMemcpyKind hipMemcpyKindToCudaMemcpyKind(hipMemcpyKind kind) {
+    switch(kind) {
+    case hipMemcpyHostToHost:
+        return cudaMemcpyHostToHost;
+    case hipMemcpyHostToDevice:
+        return cudaMemcpyHostToDevice;
+    case hipMemcpyDeviceToHost:
+        return cudaMemcpyDeviceToHost;
+    case hipMemcpyDeviceToDevice:
+        return cudaMemcpyDeviceToDevice;
+    default:
+        return cudaMemcpyDefault;
+    }
 }
+#endif
+
 
 /**
  * Stream CallBack struct
@@ -244,8 +266,13 @@ inline static hipError_t hipSetDevice(int device) {
 
 inline static hipError_t hipChooseDevice( int* device, const hipDeviceProp_t* prop )
 {
+#ifdef __cplusplus
     cudaDeviceProp cdprop;
     memset(&cdprop,0x0,sizeof(cudaDeviceProp));
+#else
+    struct cudaDeviceProp cdprop;
+    memset(&cdprop,0x0,sizeof(struct cudaDeviceProp));
+#endif 
     cdprop.major= prop->major;
     cdprop.minor = prop->minor;
     cdprop.totalGlobalMem = prop->totalGlobalMem ;
@@ -305,22 +332,39 @@ inline static hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes,
   return hipCUDAErrorTohipError(cudaMemcpy(dst, src, sizeBytes, hipMemcpyKindToCudaMemcpyKind(copyKind)));
 }
 
-
+#ifdef __cplusplus
 inline static hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind copyKind, hipStream_t stream=0) {
   return hipCUDAErrorTohipError(cudaMemcpyAsync(dst, src, sizeBytes, hipMemcpyKindToCudaMemcpyKind(copyKind), stream));
 }
+#else // !__cplusplus (C doesn;t allow default arguments)
+inline static hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind copyKind, hipStream_t stream) {
+  return hipCUDAErrorTohipError(cudaMemcpyAsync(dst, src, sizeBytes, hipMemcpyKindToCudaMemcpyKind(copyKind), stream));
+}
+#endif
 
 
+#ifdef __cplusplus
 inline static hipError_t hipMemcpyToSymbol(const void* symbol, const void* src, size_t sizeBytes, size_t offset = 0, hipMemcpyKind copyType = hipMemcpyHostToDevice) {
-	return hipCUDAErrorTohipError(cudaMemcpyToSymbol(symbol, src, sizeBytes, offset, hipMemcpyKindToCudaMemcpyKind(copyType)));
+  return hipCUDAErrorTohipError(cudaMemcpyToSymbol(symbol, src, sizeBytes, offset, hipMemcpyKindToCudaMemcpyKind(copyType)));
 }
 
 inline static hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src, size_t sizeBytes, size_t offset, hipMemcpyKind copyType, hipStream_t stream) {
-    return hipCUDAErrorTohipError(cudaMemcpyToSymbolAsync(symbol, src, sizeBytes, offset, hipMemcpyKindToCudaMemcpyKind(copyType)));
+  return hipCUDAErrorTohipError(cudaMemcpyToSymbolAsync(symbol, src, sizeBytes, offset, hipMemcpyKindToCudaMemcpyKind(copyType)));
 }
 
+#else
+inline static hipError_t hipMemcpyToSymbol(const void* symbol, const void* src, size_t sizeBytes, size_t offset, hipMemcpyKind copyType) {
+  return hipCUDAErrorTohipError(cudaMemcpyToSymbol(symbol, src, sizeBytes, offset, hipMemcpyKindToCudaMemcpyKind(copyType)));
+}
+
+inline static hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src, size_t sizeBytes, size_t offset, hipMemcpyKind copyType, hipStream_t stream) {
+  return hipCUDAErrorTohipError(cudaMemcpyToSymbolAsync(symbol, src, sizeBytes, offset, hipMemcpyKindToCudaMemcpyKind(copyType), 0));
+}
+#endif
+
+
 inline static hipError_t hipDeviceSynchronize() {
-    return hipCUDAErrorTohipError(cudaDeviceSynchronize());
+  return hipCUDAErrorTohipError(cudaDeviceSynchronize());
 }
 
 inline static const char* hipGetErrorString(hipError_t error){
@@ -363,41 +407,50 @@ inline static hipError_t hipMemset(void* devPtr,int value, size_t count) {
     return hipCUDAErrorTohipError(cudaMemset(devPtr, value, count));
 }
 
+#ifdef __cplusplus
 inline static hipError_t hipMemsetAsync(void* devPtr,int value, size_t count, hipStream_t stream = 0) {
     return hipCUDAErrorTohipError(cudaMemsetAsync(devPtr, value, count, stream));
 }
+#else
+inline static hipError_t hipMemsetAsync(void* devPtr,int value, size_t count, hipStream_t stream) {
+    return hipCUDAErrorTohipError(cudaMemsetAsync(devPtr, value, count, stream));
+}
+#endif
 
 inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t *p_prop, int device)
 {
-	cudaDeviceProp cdprop;
-	cudaError_t cerror;
-	cerror = cudaGetDeviceProperties(&cdprop,device);
-	strncpy(p_prop->name,cdprop.name, 256);
-	p_prop->totalGlobalMem = cdprop.totalGlobalMem ;
-	p_prop->sharedMemPerBlock = cdprop.sharedMemPerBlock;
-	p_prop->regsPerBlock = cdprop.regsPerBlock;
-	p_prop->warpSize = cdprop.warpSize ;
-	for (int i=0 ; i<3; i++) {
-		p_prop->maxThreadsDim[i] = cdprop.maxThreadsDim[i];
-		p_prop->maxGridSize[i] = cdprop.maxGridSize[i];
-	}
-	p_prop->maxThreadsPerBlock = cdprop.maxThreadsPerBlock ;
-	p_prop->clockRate = cdprop.clockRate;
-	p_prop->totalConstMem = cdprop.totalConstMem ;
-	p_prop->major = cdprop.major ;
-	p_prop->minor = cdprop. minor ;
-	p_prop->multiProcessorCount = cdprop.multiProcessorCount ;
-	p_prop->l2CacheSize = cdprop.l2CacheSize ;
-	p_prop->maxThreadsPerMultiProcessor = cdprop.maxThreadsPerMultiProcessor ;
-	p_prop->computeMode = cdprop.computeMode ;
-	p_prop->canMapHostMemory = cdprop.canMapHostMemory;
+#ifdef __cplusplus
+    cudaDeviceProp cdprop;
+#else
+    struct cudaDeviceProp cdprop;
+#endif 
+    cudaError_t cerror;
+    cerror = cudaGetDeviceProperties(&cdprop,device);
+    strncpy(p_prop->name,cdprop.name, 256);
+    p_prop->totalGlobalMem = cdprop.totalGlobalMem ;
+    p_prop->sharedMemPerBlock = cdprop.sharedMemPerBlock;
+    p_prop->regsPerBlock = cdprop.regsPerBlock;
+    p_prop->warpSize = cdprop.warpSize ;
+    for (int i=0 ; i<3; i++) {
+       p_prop->maxThreadsDim[i] = cdprop.maxThreadsDim[i];
+       p_prop->maxGridSize[i] = cdprop.maxGridSize[i];
+    }
+    p_prop->maxThreadsPerBlock = cdprop.maxThreadsPerBlock ;
+    p_prop->clockRate = cdprop.clockRate;
+    p_prop->totalConstMem = cdprop.totalConstMem ;
+    p_prop->major = cdprop.major ;
+    p_prop->minor = cdprop. minor ;
+    p_prop->multiProcessorCount = cdprop.multiProcessorCount ;
+    p_prop->l2CacheSize = cdprop.l2CacheSize ;
+    p_prop->maxThreadsPerMultiProcessor = cdprop.maxThreadsPerMultiProcessor ;
+    p_prop->computeMode = cdprop.computeMode ;
+    p_prop->canMapHostMemory = cdprop.canMapHostMemory;
     p_prop->memoryClockRate = cdprop.memoryClockRate;
     p_prop->memoryBusWidth = cdprop.memoryBusWidth;
 
-	// Same as clock-rate:
-	p_prop->clockInstructionRate = cdprop.clockRate;
-
-	int ccVers = p_prop->major*100 + p_prop->minor * 10;
+    // Same as clock-rate:
+    p_prop->clockInstructionRate = cdprop.clockRate;
+    int ccVers = p_prop->major*100 + p_prop->minor * 10;
 
     p_prop->arch.hasGlobalInt32Atomics       =  (ccVers >= 110);
     p_prop->arch.hasGlobalFloatAtomicExch    =  (ccVers >= 110);
@@ -430,7 +483,11 @@ inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t *p_prop, int dev
 
 inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
 {
+#ifdef __cplusplus
     cudaDeviceAttr cdattr;
+#else
+    enum cudaDeviceAttr cdattr;
+#endif
     cudaError_t cerror;
 
     switch (attr) {
@@ -504,7 +561,12 @@ inline static hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
 }
 
 inline static hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr){
+  
+#ifdef __cplusplus
 	cudaPointerAttributes cPA;
+#else
+	struct cudaPointerAttributes cPA;
+#endif
 	hipError_t err = hipCUDAErrorTohipError(cudaPointerGetAttributes(&cPA, ptr));
 	if(err == hipSuccess){
 		switch (cPA.memoryType){
@@ -535,10 +597,17 @@ inline static hipError_t hipEventCreate( hipEvent_t* event)
     return hipCUDAErrorTohipError(cudaEventCreate(event));
 }
 
+#ifdef __cplusplus
 inline static hipError_t hipEventRecord( hipEvent_t event, hipStream_t stream = NULL)
 {
     return hipCUDAErrorTohipError(cudaEventRecord(event,stream));
 }
+#else
+inline static hipError_t hipEventRecord( hipEvent_t event, hipStream_t stream)
+{
+    return hipCUDAErrorTohipError(cudaEventRecord(event,stream));
+}
+#endif
 
 inline static hipError_t hipEventSynchronize( hipEvent_t event)
 {
@@ -638,18 +707,25 @@ inline static hipError_t hipMemcpyPeer ( void* dst, int  dstDevice, const void* 
     return hipCUDAErrorTohipError(cudaMemcpyPeer(dst, dstDevice, src, srcDevice, count));
 }
 
+#ifdef __cplusplus
 inline static hipError_t hipMemcpyPeerAsync ( void* dst, int  dstDevice, const void* src, int  srcDevice, size_t count, hipStream_t stream=0 )
 {
     return hipCUDAErrorTohipError(cudaMemcpyPeerAsync(dst, dstDevice, src, srcDevice, count, stream));
 }
+#else
+inline static hipError_t hipMemcpyPeerAsync ( void* dst, int  dstDevice, const void* src, int  srcDevice, size_t count, hipStream_t stream)
+{
+    return hipCUDAErrorTohipError(cudaMemcpyPeerAsync(dst, dstDevice, src, srcDevice, count, stream));
+}
+#endif
 
 // Profile APIs:
-inline hipError_t hipProfilerStart()
+inline static hipError_t hipProfilerStart()
 {
     return hipCUDAErrorTohipError(cudaProfilerStart());
 }
 
-inline hipError_t hipProfilerStop()
+inline static  hipError_t hipProfilerStop()
 {
     return hipCUDAErrorTohipError(cudaProfilerStop());
 }
