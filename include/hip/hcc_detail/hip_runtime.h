@@ -588,40 +588,14 @@ __device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask
 #define hipGridDim_y   (hc_get_num_groups(1))
 #define hipGridDim_z   (hc_get_num_groups(2))
 
-// loop unrolling
-__device__ static inline void* memcpy(void* dst, void* src, size_t size)
-{
-    uint8_t *dstPtr, *srcPtr;
-    dstPtr = (uint8_t*)dst;
-    srcPtr = (uint8_t*)src;
-    for(uint32_t i=0;i<size;i++) {
-        dstPtr[i] = srcPtr[i];
-    }
-    return nullptr;
-}
-
-__device__ static inline void* memset(void* ptr, uint8_t val, size_t size)
-{
-    uint8_t *dstPtr;
-    dstPtr = (uint8_t*)ptr;
-    for(uint32_t i=0;i<size;i++) {
-        dstPtr[i] = val;
-    }
-    return nullptr;
-}
+//extern "C" __device__ void* memcpy(void* dst, void* src, size_t size);
+//extern "C" __device__ void* memset(void* ptr, uint8_t val, size_t size);
 
 extern "C" __device__ void* __hip_hc_malloc(size_t);
 extern "C" __device__ void* __hip_hc_free(void *ptr);
 
-__device__ static inline void* malloc(size_t size)
-{
-    return __hip_hc_malloc(size);
-}
-
-__device__ static inline void* free(void *ptr)
-{
-    return __hip_hc_free(ptr);
-}
+//extern "C" __device__ void* malloc(size_t size);
+//extern "C" __device__ void* free(void *ptr);
 
 extern "C" __device__ char4 __hip_hc_add8pk(char4, char4);
 extern "C" __device__ char4 __hip_hc_sub8pk(char4, char4);

@@ -1037,7 +1037,3 @@ hipError_t hipFreeArray(hipArray* array)
     return ihipLogStatus(hipStatus);
 }
 
-
-__device__ void  __threadfence_system(void){
-    // no-op
-}
