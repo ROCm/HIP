@@ -65,7 +65,7 @@ THE SOFTWARE.
     printf ("warn: TEST WARNING\n%s", KNRM );\
 
 #define HIP_PRINT_STATUS(status) \
-    std::cout<<hipGetErrorName(status)<<std::endl;
+    std::cout<<hipGetErrorName(status)<<" at line: "<<__LINE__<<std::endl;
 
 #define HIPCHECK(error) \
 {\
