@@ -112,12 +112,12 @@ enum hipLimit_t
 /**
  * @warning On AMD devices and recent Nvidia devices, these hints and controls are ignored.
  */
-typedef enum hipFuncCache {
+typedef enum hipFuncCache_t {
     hipFuncCachePreferNone, ///< no preference for shared memory or L1 (default)
     hipFuncCachePreferShared, ///< prefer larger shared memory and smaller L1 cache
     hipFuncCachePreferL1, ///< prefer larger L1 cache and smaller shared memory
     hipFuncCachePreferEqual, ///< prefer equal size L1 cache and shared memory
-} hipFuncCache;
+} hipFuncCache_t;
 
 
 /**

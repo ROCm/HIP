@@ -71,7 +71,7 @@ hipError_t hipGetDeviceCount(int *count)
     return e;
 }
 
-hipError_t hipDeviceSetCacheConfig(hipFuncCache cacheConfig)
+hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig)
 {
     HIP_INIT_API(cacheConfig);
 

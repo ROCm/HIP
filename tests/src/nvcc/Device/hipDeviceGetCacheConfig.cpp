@@ -22,18 +22,7 @@ THE SOFTWARE.
 
 int main()
 {
-    int val;
-    hipDeviceAttribute_t attr = hipDeviceAttributeMaxThreadsPerBlock;                   ///< Maximum number of threads per block.
-
-    HIP_PRINT_STATUS(hipDeviceGetAttribute(NULL, attr, 0));
-    HIP_PRINT_STATUS(hipDeviceGetAttribute(&val, attr, 0));
-    HIP_PRINT_STATUS(hipDeviceGetAttribute(NULL, attr, -1));
-    HIP_PRINT_STATUS(hipDeviceGetAttribute(&val, attr, -1));
-    attr = hipDeviceAttribute_t(91);
-
-    HIP_PRINT_STATUS(hipDeviceGetAttribute(NULL, attr, 0));
-    HIP_PRINT_STATUS(hipDeviceGetAttribute(&val, attr, 0));
-    HIP_PRINT_STATUS(hipDeviceGetAttribute(NULL, attr, -1));
-    HIP_PRINT_STATUS(hipDeviceGetAttribute(&val, attr, -1));
-
+    hipFuncCache_t pCacheConfig;
+    HIP_PRINT_STATUS(hipDeviceGetCacheConfig(&pCacheConfig));
+    HIP_PRINT_STATUS(hipDeviceGetCacheConfig(NULL));
 }
