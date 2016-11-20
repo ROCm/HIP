@@ -32,7 +32,7 @@ THE SOFTWARE.
 
 #include <limits.h>
 
-#include <hip/hip_runtime.h>
+#include <hip/hcc_detail/hip_runtime.h>
 
 //----
 //Texture - TODO - likely need to move this to a separate file only included with kernel compilation.
