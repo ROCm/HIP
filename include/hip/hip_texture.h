@@ -27,10 +27,8 @@ THE SOFTWARE.
 
 #if defined(__HIP_PLATFORM_HCC__) && !defined (__HIP_PLATFORM_NVCC__)
 #include <hip/hcc_detail/hip_texture.h>
-#warning "Including hcc"
 #elif defined(__HIP_PLATFORM_NVCC__) && !defined (__HIP_PLATFORM_HCC__)
 #include <hip/nvcc_detail/hip_texture.h>
-#warning "Including Nvcc"
 #else 
 #error("Must define exactly one of __HIP_PLATFORM_HCC__ or __HIP_PLATFORM_NVCC__");
 #endif 
