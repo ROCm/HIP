@@ -80,7 +80,7 @@ hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig)
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t hipDeviceGetCacheConfig(hipFuncCache *cacheConfig)
+hipError_t hipDeviceGetCacheConfig(hipFuncCache_t *cacheConfig)
 {
     HIP_INIT_API(cacheConfig);
 
@@ -105,7 +105,7 @@ hipError_t hipDeviceGetLimit (size_t *pValue, hipLimit_t limit)
     }
 }
 
-hipError_t hipFuncSetCacheConfig (hipFuncCache cacheConfig)
+hipError_t hipFuncSetCacheConfig (hipFuncCache_t cacheConfig)
 {
     HIP_INIT_API(cacheConfig);
 

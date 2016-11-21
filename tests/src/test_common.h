@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 #include "hip/hip_texture.h"
+#include "hip/hip_runtime_api.h"
 
 #define HC __attribute__((hc))
 
