@@ -217,7 +217,7 @@ hipError_t hipCtxGetApiVersion (hipCtx_t ctx,int *apiVersion)
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t hipCtxGetCacheConfig ( hipFuncCache *cacheConfig )
+hipError_t hipCtxGetCacheConfig ( hipFuncCache_t *cacheConfig )
 {
     HIP_INIT_API(cacheConfig);
 
@@ -226,7 +226,7 @@ hipError_t hipCtxGetCacheConfig ( hipFuncCache *cacheConfig )
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t hipCtxSetCacheConfig ( hipFuncCache cacheConfig )
+hipError_t hipCtxSetCacheConfig ( hipFuncCache_t cacheConfig )
 {
     HIP_INIT_API(cacheConfig);
 

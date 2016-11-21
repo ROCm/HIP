@@ -22,8 +22,8 @@ THE SOFTWARE.
 
 //#pragma once
 
-#ifndef HIP_TEXTURE_H
-#define HIP_TEXTURE_H
+#ifndef HIP_HCC_DETAIL_TEXTURE_H
+#define HIP_HCC_DETAIL_TEXTURE_H
 
 /**
  *  @file  hcc_detail/hip_texture.h
@@ -32,7 +32,7 @@ THE SOFTWARE.
 
 #include <limits.h>
 
-#include <hip/hcc_detail/hip_runtime.h>
+//#include <hip/hcc_detail/hip_runtime.h>
 
 //----
 //Texture - TODO - likely need to move this to a separate file only included with kernel compilation.
@@ -84,7 +84,7 @@ struct texture : public textureReference {
 };
 #endif
 
-typedef struct hipArray {
+typedef struct {
   unsigned int width;
   unsigned int height;
   hipChannelFormatKind f;

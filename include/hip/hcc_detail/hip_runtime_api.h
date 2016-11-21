@@ -321,7 +321,7 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
-hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig );
+hipError_t hipDeviceSetCacheConfig ( hipFuncCache_t cacheConfig );
 
 
 /**
@@ -333,7 +333,7 @@ hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig );
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
-hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig );
+hipError_t hipDeviceGetCacheConfig ( hipFuncCache_t *cacheConfig );
 
 /**
  * @brief Get Resource limits of current device
@@ -357,7 +357,7 @@ hipError_t hipDeviceGetLimit(size_t *pValue, hipLimit_t limit);
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
-hipError_t hipFuncSetCacheConfig ( hipFuncCache config );
+hipError_t hipFuncSetCacheConfig ( hipFuncCache_t config );
 
 /**
  * @brief Returns bank width of shared memory for current device
@@ -1460,7 +1460,7 @@ hipError_t hipCtxGetApiVersion (hipCtx_t ctx,int *apiVersion);
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxGetCacheConfig ( hipFuncCache *cacheConfig );
+hipError_t hipCtxGetCacheConfig ( hipFuncCache_t *cacheConfig );
 
 /**
  * @brief Set L1/Shared cache partition.
@@ -1473,7 +1473,7 @@ hipError_t hipCtxGetCacheConfig ( hipFuncCache *cacheConfig );
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxSetCacheConfig ( hipFuncCache cacheConfig );
+hipError_t hipCtxSetCacheConfig ( hipFuncCache_t cacheConfig );
 
 /**
  * @brief Set Shared memory bank configuration.
