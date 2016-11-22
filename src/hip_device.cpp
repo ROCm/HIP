@@ -44,7 +44,7 @@ hipError_t hipGetDevice(int *deviceId)
             *deviceId = ctx->getDevice()->_deviceId;
         }
     }else{
-        e = hipErrorInvalidDevice;
+        e = hipErrorInvalidValue;
     }
 
     return ihipLogStatus(e);
@@ -66,7 +66,7 @@ hipError_t hipGetDeviceCount(int *count)
             e = ihipLogStatus(hipErrorNoDevice);
         }
     } else {
-        e = ihipLogStatus(hipErrorNoDevice);
+        e = ihipLogStatus(hipErrorInvalidValue);
     }
     return e;
 }
@@ -83,6 +83,10 @@ hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig)
 hipError_t hipDeviceGetCacheConfig(hipFuncCache_t *cacheConfig)
 {
     HIP_INIT_API(cacheConfig);
+
+    if(cacheConfig == nullptr) {
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
 
     *cacheConfig = hipFuncCachePreferNone;
 
