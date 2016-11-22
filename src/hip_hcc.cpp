@@ -774,17 +774,12 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
 
     // Get Max Threads Per Multiprocessor
 
-    HsaSystemProperties props;
-    hsaKmtReleaseSystemProperties();
-    if(HSAKMT_STATUS_SUCCESS == hsaKmtAcquireSystemProperties(&props)) {
-        HsaNodeProperties node_prop = {0};
-        if(HSAKMT_STATUS_SUCCESS == hsaKmtGetNodeProperties(node, &node_prop)) {
-            uint32_t waves_per_cu = node_prop.MaxWavesPerSIMD;
-            uint32_t simd_per_cu = node_prop.NumSIMDPerCU;
-            prop-> maxThreadsPerMultiProcessor = prop->warpSize*waves_per_cu*simd_per_cu;
-        }
+    HsaNodeProperties node_prop = {0};
+    if(HSAKMT_STATUS_SUCCESS == hsaKmtGetNodeProperties(node, &node_prop)) {
+        uint32_t waves_per_cu = node_prop.MaxWavesPerSIMD;
+        uint32_t simd_per_cu = node_prop.NumSIMDPerCU;
+        prop-> maxThreadsPerMultiProcessor = prop->warpSize*waves_per_cu*simd_per_cu;
     }
-
 
     // Get memory properties
     err = hsa_agent_iterate_regions(_hsaAgent, get_region_info, prop);
