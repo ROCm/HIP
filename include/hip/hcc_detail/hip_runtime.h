@@ -479,26 +479,193 @@ __device__ __attribute__((address_space(3))) void* __get_dynamicgroupbaseptr();
 
 //TODO - add a couple fast math operations here, the set here will grow :
 
-__device__ float __expf(float x);
-__device__ float __frsqrt_rn(float x);
-__device__ float __fsqrt_rd(float x);
-__device__ float __fsqrt_rn(float x);
-__device__ float __fsqrt_ru(float x);
-__device__ float __fsqrt_rz(float x);
-__device__ float __log10f(float x);
-//__device__ float __log2f(float x);
-__device__ float __logf(float x);
-__device__ float __powf(float base, float exponent);
-__device__ void __sincosf(float x, float *s, float *c) ;
-extern __attribute__((const)) float __sinf(float) __asm("llvm.sin.f32");
-extern __attribute__((const)) float __cosf(float) __asm("llvm.cos.f32");
-extern __attribute__((const)) float __log2f(float) __asm("llvm.log2.f32");
-__device__ float __tanf(float x);
-__device__ float __dsqrt_rd(double x);
-__device__ float __dsqrt_rn(double x);
-__device__ float __dsqrt_ru(double x);
-__device__ float __dsqrt_rz(double x);
+// Single Precision Precise Math
+__device__ float __hip_precise_cosf(float);
+__device__ float __hip_precise_exp10f(float);
+__device__ float __hip_precise_expf(float);
+__device__ float __hip_precise_frsqrt_rn(float);
+__device__ float __hip_precise_fsqrt_rd(float);
+__device__ float __hip_precise_fsqrt_rn(float);
+__device__ float __hip_precise_fsqrt_ru(float);
+__device__ float __hip_precise_fsqrt_rz(float);
+__device__ float __hip_precise_log10f(float);
+__device__ float __hip_precise_log2f(float);
+__device__ float __hip_precise_logf(float);
+__device__ float __hip_precise_powf(float, float);
+__device__ void __hip_precise_sincosf(float,float*,float*);
+__device__ float __hip_precise_sinf(float);
+__device__ float __hip_precise_tanf(float);
 
+// Double Precision Precise Math
+__device__ double __hip_precise_dsqrt_rd(double);
+__device__ double __hip_precise_dsqrt_rn(double);
+__device__ double __hip_precise_dsqrt_ru(double);
+__device__ double __hip_precise_dsqrt_rz(double);
+
+// Single Precision Fast Math
+extern __attribute__((const)) float __hip_fast_cosf(float) __asm("llvm.cos.f32");
+extern __attribute__((const)) float __hip_fast_exp2f(float) __asm("llvm.exp2.f32");
+__device__ float __hip_fast_exp10f(float);
+__device__ float __hip_fast_expf(float);
+__device__ float __hip_fast_frsqrt_rn(float);
+extern __attribute__((const)) float __hip_fast_fsqrt_rd(float) __asm("llvm.sqrt.f32");
+__device__ float __hip_fast_fsqrt_rn(float);
+__device__ float __hip_fast_fsqrt_ru(float);
+__device__ float __hip_fast_fsqrt_rz(float);
+__device__ float __hip_fast_log10f(float);
+extern __attribute__((const)) float __hip_fast_log2f(float) __asm("llvm.log2.f32");
+__device__ float __hip_fast_logf(float);
+__device__ float __hip_fast_powf(float, float);
+__device__ void __hip_fast_sincosf(float,float*,float*);
+extern __attribute__((const)) float __hip_fast_sinf(float) __asm("llvm.sin.f32");
+__device__ float __hip_fast_tanf(float);
+
+#ifdef HIP_PRECISE_MATH
+// Single Precision Precise Math when enabled
+
+__device__ inline float __cosf(float x) {
+  return __hip_precise_cosf(x);
+}
+
+__device__ inline float __exp10f(float x) {
+  return __hip_precise_exp10f(x);
+}
+
+__device__ inline float __expf(float x) {
+  return __hip_precise_expf(x);
+}
+
+__device__ inline float __frsqrt_rn(float x) {
+  return __hip_precise_frsqrt_rn(x);
+}
+
+__device__ inline float __fsqrt_rd(float x) {
+  return __hip_precise_fsqrt_rd(x);
+}
+
+__device__ inline float __fsqrt_rn(float x) {
+  return __hip_precise_fsqrt_rn(x);
+}
+
+__device__ inline float __fsqrt_ru(float x) {
+  return __hip_precise_fsqrt_ru(x);
+}
+
+__device__ inline float __fsqrt_rz(float x) {
+  return __hip_precise_fsqrt_rz(x);
+}
+
+__device__ inline float __log10f(float x) {
+  return __hip_precise_log10f(x);
+}
+
+__device__ inline float __log2f(float x) {
+  return __hip_precise_log2f(x);
+}
+
+__device__ inline float __logf(float x) {
+  return __hip_precise_logf(x);
+}
+
+__device__ inline float __powf(float base, float exponent) {
+  return __hip_precise_powf(base, exponent);
+}
+
+__device__ inline void __sincosf(float x, float *s, float *c) {
+  return __hip_precise_sincosf(x, s, c);
+}
+
+__device__ inline float __sinf(float x) {
+  return __hip_precise_sinf(x);
+}
+
+__device__ inline float __tanf(float x) {
+  return __hip_precise_tanf(x);
+}
+
+// Double Precision
+
+__device__ double __dsqrt_rd(double x) {
+  return __hip_precise_dsqrt_rd(x);
+}
+
+__device__ double __dsqrt_rn(double x) {
+  return __hip_precise_dsqrt_rn(x);
+}
+
+__device__ double __dsqrt_ru(double x) {
+  return __hip_precise_dsqrt_ru(x);
+}
+
+__device__ double __dsqrt_rz(double x) {
+  return __hip_precise_dsqrt_rz(x);
+}
+
+#else
+
+// Single Precision Fast Math
+__device__ inline float __cosf(float x) {
+  return __hip_fast_cosf(x);
+}
+
+__device__ inline float __exp10f(float x) {
+  return __hip_fast_exp10f(x);
+}
+
+__device__ inline float __expf(float x) {
+  return __hip_fast_expf(x);
+}
+
+__device__ inline float __frsqrt_rn(float x) {
+  return __hip_fast_frsqrt_rn(x);
+}
+
+__device__ inline float __fsqrt_rd(float x) {
+  return __hip_fast_fsqrt_rd(x);
+}
+
+__device__ inline float __fsqrt_rn(float x) {
+  return __hip_fast_fsqrt_rn(x);
+}
+
+__device__ inline float __fsqrt_ru(float x) {
+  return __hip_fast_fsqrt_ru(x);
+}
+
+__device__ inline float __fsqrt_rz(float x) {
+  return __hip_fast_fsqrt_rz(x);
+}
+
+__device__ inline float __log10f(float x) {
+  return __hip_fast_log10f(x);
+}
+
+__device__ inline float __log2f(float x) {
+  return __hip_fast_log2f(x);
+}
+
+__device__ inline float __logf(float x) {
+  return __hip_fast_logf(x);
+}
+
+__device__ inline float __powf(float base, float exponent) {
+  return __hip_fast_powf(base, exponent);
+}
+
+__device__ inline void __sincosf(float x, float *s, float *c) {
+  return __hip_fast_sincosf(x, s, c);
+}
+
+__device__ inline float __sinf(float x) {
+  return __hip_fast_sinf(x);
+}
+
+__device__ inline float __tanf(float x) {
+  return __hip_fast_tanf(x);
+}
+
+
+#endif
 /**
  * CUDA 8 device function features
 

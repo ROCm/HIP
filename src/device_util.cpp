@@ -2043,26 +2043,151 @@ __device__ __attribute__((address_space(3))) void* __get_dynamicgroupbaseptr()
 }
 
 
+// Precise Math Functions
+__device__ float __hip_precise_cosf(float x) {
+  return hc::precise_math::cosf(x);
+}
 
-//TODO - add a couple fast math operations here, the set here will grow :
-//__device__  float __cosf(float x) {return hc::fast_math::cosf(x); };
-__device__  float __expf(float x) {return hc::fast_math::expf(x); };
-__device__  float __frsqrt_rn(float x) {return hc::fast_math::rsqrt(x); };
-__device__  float __fsqrt_rd(float x) {return hc::fast_math::sqrt(x); };
-__device__  float __fsqrt_rn(float x) {return hc::fast_math::sqrt(x); };
-__device__  float __fsqrt_ru(float x) {return hc::fast_math::sqrt(x); };
-__device__  float __fsqrt_rz(float x) {return hc::fast_math::sqrt(x); };
-__device__  float __log10f(float x) {return hc::fast_math::log10f(x); };
-//__device__  float __log2f(float x) {return hc::fast_math::log2f(x); };
-__device__  float __logf(float x) {return hc::fast_math::logf(x); };
-__device__  float __powf(float base, float exponent) {return hc::fast_math::powf(base, exponent); };
-__device__  void __sincosf(float x, float *s, float *c) { *s = __sinf(x); *c = __cosf(x); };
-//__device__  float __sinf(float x) {return hc::fast_math::sinf(x); };
-__device__  float __tanf(float x) {return __sinf(x)/__cosf(x); };
-__device__  float __dsqrt_rd(double x) {return hc::fast_math::sqrt(x); };
-__device__  float __dsqrt_rn(double x) {return hc::fast_math::sqrt(x); };
-__device__  float __dsqrt_ru(double x) {return hc::fast_math::sqrt(x); };
-__device__  float __dsqrt_rz(double x) {return hc::fast_math::sqrt(x); };
+__device__ float __hip_precise_exp10f(float x) {
+  return hc::precise_math::exp10f(x);
+}
+
+__device__ float __hip_precise_expf(float x) {
+  return hc::precise_math::expf(x);
+}
+
+__device__ float __hip_precise_frsqrt_rn(float x) {
+  return hc::precise_math::rsqrt(x);
+}
+
+__device__ float __hip_precise_fsqrt_rd(float x) {
+  return hc::precise_math::sqrt(x);
+}
+
+__device__ float __hip_precise_fsqrt_rn(float x) {
+  return hc::precise_math::sqrt(x);
+}
+
+__device__ float __hip_precise_fsqrt_ru(float x) {
+  return hc::precise_math::sqrt(x);
+}
+
+__device__ float __hip_precise_fsqrt_rz(float x) {
+  return hc::precise_math::sqrt(x);
+}
+
+__device__ float __hip_precise_log10f(float x) {
+  return hc::precise_math::log10(x);
+}
+
+__device__ float __hip_precise_log2f(float x) {
+  return hc::precise_math::log2(x);
+}
+
+__device__ float __hip_precise_logf(float x) {
+  return hc::precise_math::logf(x);
+}
+
+__device__ float __hip_precise_powf(float base, float exponent) {
+  return hc::precise_math::powf(base, exponent);
+}
+
+__device__ void __hip_precise_sincosf(float x, float *s, float *c) {
+  hc::precise_math::sincosf(x, s, c);
+}
+
+__device__ float __hip_precise_sinf(float x) {
+  return hc::precise_math::sinf(x);
+}
+
+__device__ float __hip_precise_tanf(float x) {
+  return hc::precise_math::tanf(x);
+}
+
+// Double Precision Math
+__device__ double __hip_precise_dsqrt_rd(double x) {
+  return hc::precise_math::sqrt(x);
+}
+
+__device__ double __hip_precise_dsqrt_rn(double x) {
+  return hc::precise_math::sqrt(x);
+}
+
+__device__ double __hip_precise_dsqrt_ru(double x) {
+  return hc::precise_math::sqrt(x);
+}
+
+__device__ double __hip_precise_dsqrt_rz(double x) {
+  return hc::precise_math::sqrt(x);
+}
+
+#define LOG_BASE2_E_DIV_2 0.4426950408894701
+#define LOG_BASE2_5 2.321928094887362
+#define ONE_DIV_LOG_BASE2_E 0.69314718056
+#define ONE_DIV_LOG_BASE2_10 0.30102999566
+
+// Fast Math Intrinsics
+__device__ float __hip_fast_exp10f(float x) {
+  return __hip_fast_exp2f(x*LOG_BASE2_E_DIV_2);
+}
+
+__device__ float __hip_fast_expf(float x) {
+  return __hip_fast_expf(x*LOG_BASE2_5);
+}
+
+__device__ float __hip_fast_frsqrt_rn(float x) {
+  return 1 / __hip_fast_fsqrt_rd(x);;
+}
+
+__device__ float __hip_fast_fsqrt_rn(float x) {
+  return __hip_fast_fsqrt_rd(x);
+}
+
+__device__ float __hip_fast_fsqrt_ru(float x) {
+  return __hip_fast_fsqrt_rd(x);
+}
+
+__device__ float __hip_fast_fsqrt_rz(float x) {
+  return __hip_fast_fsqrt_rd(x);
+}
+
+__device__ float __hip_fast_log10f(float x) {
+  return ONE_DIV_LOG_BASE2_E * __hip_fast_log2f(x);
+}
+
+__device__ float __hip_fast_logf(float x) {
+  return ONE_DIV_LOG_BASE2_10 * __hip_fast_log2f(x);
+}
+
+__device__ float __hip_fast_powf(float base, float exponent) {
+  return hc::fast_math::powf(base, exponent);
+}
+
+__device__ void __hip_fast_sincosf(float x, float *s, float *c) {
+  *s = __hip_fast_sinf(x);
+  *c = __hip_fast_cosf(x);
+}
+
+__device__ float __hip_fast_tanf(float x) {
+  return hc::fast_math::tanf(x);
+}
+
+// Double Precision Math
+__device__ double __hip_fast_dsqrt_rd(double x) {
+  return hc::fast_math::sqrt(x);
+}
+
+__device__ double __hip_fast_dsqrt_rn(double x) {
+  return hc::fast_math::sqrt(x);
+}
+
+__device__ double __hip_fast_dsqrt_ru(double x) {
+  return hc::fast_math::sqrt(x);
+}
+
+__device__ double __hip_fast_dsqrt_rz(double x) {
+  return hc::fast_math::sqrt(x);
+}
 
 __HIP_DEVICE__ char1 make_char1(signed char x)
 {
