@@ -478,7 +478,7 @@ __host__ __device__ int max(int arg1, int arg2);
 __device__ __attribute__((address_space(3))) void* __get_dynamicgroupbaseptr();
 
 //TODO - add a couple fast math operations here, the set here will grow :
-__device__ float __cosf(float x);
+
 __device__ float __expf(float x);
 __device__ float __frsqrt_rn(float x);
 __device__ float __fsqrt_rd(float x);
@@ -486,11 +486,13 @@ __device__ float __fsqrt_rn(float x);
 __device__ float __fsqrt_ru(float x);
 __device__ float __fsqrt_rz(float x);
 __device__ float __log10f(float x);
-__device__ float __log2f(float x);
+//__device__ float __log2f(float x);
 __device__ float __logf(float x);
 __device__ float __powf(float base, float exponent);
 __device__ void __sincosf(float x, float *s, float *c) ;
-__device__ float __sinf(float x);
+extern __attribute__((const)) float __sinf(float) __asm("llvm.sin.f32");
+extern __attribute__((const)) float __cosf(float) __asm("llvm.cos.f32");
+extern __attribute__((const)) float __log2f(float) __asm("llvm.log2.f32");
 __device__ float __tanf(float x);
 __device__ float __dsqrt_rd(double x);
 __device__ float __dsqrt_rn(double x);
