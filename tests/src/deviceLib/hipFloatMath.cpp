@@ -58,4 +58,5 @@ int main(){
   hipMalloc((void**)&Ind, SIZE);
   hipMalloc((void**)&Outd, SIZE);
   hipLaunchKernel(floatMath, dim3(LEN,1,1), dim3(1,1,1), 0, 0, Ind, Outd);
+  passed();
 }
