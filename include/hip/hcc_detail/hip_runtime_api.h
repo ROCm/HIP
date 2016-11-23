@@ -413,7 +413,7 @@ hipError_t hipSetDeviceFlags ( unsigned flags);
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  */
-hipError_t hipChooseDevice(int *device, hipDeviceProp_t* prop);
+hipError_t hipChooseDevice(int *device, const hipDeviceProp_t* prop);
 
 // end doxygen Device
 /**
