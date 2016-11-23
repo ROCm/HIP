@@ -732,13 +732,10 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     _isLargeBar = _acc.has_cpu_accessible_am();
 
     // Get Max Threads Per Multiprocessor
-
-    HsaNodeProperties node_prop = {0};
-    if(HSAKMT_STATUS_SUCCESS == hsaKmtGetNodeProperties(node, &node_prop)) {
-        uint32_t waves_per_cu = node_prop.MaxWavesPerSIMD;
-        uint32_t simd_per_cu = node_prop.NumSIMDPerCU;
-        prop-> maxThreadsPerMultiProcessor = prop->warpSize*waves_per_cu*simd_per_cu;
-    }
+    uint32_t max_waves_per_cu;
+    err = hsa_agent_get_info(_hsaAgent,(hsa_agent_info_t) HSA_AMD_AGENT_INFO_MAX_WAVES_PER_CU, &max_waves_per_cu);
+    DeviceErrorCheck(err);
+    prop-> maxThreadsPerMultiProcessor = prop->warpSize*max_waves_per_cu;
 
     // Get memory properties
     err = hsa_agent_iterate_regions(_hsaAgent, get_region_info, prop);
