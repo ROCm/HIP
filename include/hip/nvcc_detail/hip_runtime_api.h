@@ -70,6 +70,7 @@ hipMemcpyHostToHost
 #define HIP_LAUNCH_PARAM_BUFFER_SIZE     CU_LAUNCH_PARAM_BUFFER_SIZE
 #define HIP_LAUNCH_PARAM_END            CU_LAUNCH_PARAM_END
 #define hipLimitMallocHeapSize          cudaLimitMallocHeapSize
+#define hipIpcMemLazyEnablePeerAccess          cudaIpcMemLazyEnablePeerAccess
 
 typedef cudaEvent_t hipEvent_t;
 typedef cudaStream_t hipStream_t;
