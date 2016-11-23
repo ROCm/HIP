@@ -214,7 +214,7 @@ ShortTid::ShortTid()  :
 { 
     _shortTid = g_lastShortTid.fetch_add(1); 
 
-    if (HIP_DB & (1<<DB_API)) {
+    if (COMPILE_HIP_DB && HIP_TRACE_API) {
         std::stringstream tid_ss;
         std::stringstream tid_ss_num;
         tid_ss_num << std::this_thread::get_id();
@@ -1274,6 +1274,9 @@ void ihipInit()
     if (HIP_TRACE_API && !COMPILE_HIP_TRACE_API) {
         fprintf (stderr, "warning: env var HIP_TRACE_API=0x%x but COMPILE_HIP_TRACE_API=0.  (perhaps enable COMPILE_HIP_TRACE_API in src code before compiling?)\n", HIP_DB);
     }
+    if (HIP_TRACE_API) {
+        HIP_DB|=0x1;
+    }
 
     if (HIP_PROFILE_API && !COMPILE_HIP_ATP_MARKER) {
         fprintf (stderr, "warning: env var HIP_PROFILE_API=0x%x but COMPILE_HIP_ATP_MARKER=0.  (perhaps enable COMPILE_HIP_ATP_MARKER in src code before compiling?)\n", HIP_PROFILE_API);
@@ -1781,11 +1784,18 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
 
     {
         LockedAccessor_StreamCrit_t crit (_criticalData);
-        tprintf (DB_COPY, "copySync copyDev:%d  dst=%p(home_dev:%d, tracked:%d, isDevMem:%d)  src=%p(home_dev:%d, tracked:%d, isDevMem:%d)   sz=%zu dir=%s forceUnpinnedCopy=%d\n",
+        tprintf (DB_COPY, "copySync copyDev:%d  dst=%p (phys_dev:%d, isDevMem:%d)  src=%p(phys_dev:%d, isDevMem:%d)   sz=%zu dir=%s forceUnpinnedCopy=%d\n",
                  copyDevice ? copyDevice->getDeviceNum():-1, 
-                 dst, dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem, 
-                 src, srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem,  
+                 dst, dstPtrInfo._appId, dstPtrInfo._isInDeviceMem,
+                 src, srcPtrInfo._appId, srcPtrInfo._isInDeviceMem,
                  sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
+        tprintf (DB_COPY, "  dst=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d, isDevMem=%d\n",
+                 dst, dstPtrInfo._hostPointer, dstPtrInfo._devicePointer, dstPtrInfo._sizeBytes,
+                 dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem);
+        tprintf (DB_COPY, "  src=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d, isDevMem=%d\n",
+                 src, srcPtrInfo._hostPointer, srcPtrInfo._devicePointer, srcPtrInfo._sizeBytes,
+                 srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem);
+
 
 #if USE_COPY_EXT_V2
         crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice ? &copyDevice->getDevice()->_acc : nullptr, forceUnpinnedCopy);
@@ -1831,13 +1841,17 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
         ihipCtx_t *copyDevice;
         bool forceUnpinnedCopy;
         resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &copyDevice, &forceUnpinnedCopy);
-
-
-        tprintf (DB_COPY, "copyASync copyEngine_dev:%d  dst=%p(home_dev:%d, tracked:%d, isDevMem:%d)  src=%p(home_dev:%d, tracked:%d, isDevMem:%d)   sz=%zu dir=%s.  forceUnpinnedCopy=%d \n",
-                 copyDevice->getDeviceNum(), 
-                 dst, dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem, 
-                 src, srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem,  
+        tprintf (DB_COPY, "copyASync copyDev:%d  dst=%p (phys_dev:%d, isDevMem:%d)  src=%p(phys_dev:%d, isDevMem:%d)   sz=%zu dir=%s forceUnpinnedCopy=%d\n",
+                 copyDevice ? copyDevice->getDeviceNum():-1, 
+                 dst, dstPtrInfo._appId, dstPtrInfo._isInDeviceMem,
+                 src, srcPtrInfo._appId, srcPtrInfo._isInDeviceMem,
                  sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
+        tprintf (DB_COPY, "  dst=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d, isDevMem=%d\n",
+                 dst, dstPtrInfo._hostPointer, dstPtrInfo._devicePointer, dstPtrInfo._sizeBytes,
+                 dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem);
+        tprintf (DB_COPY, "  src=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d, isDevMem=%d\n",
+                 src, srcPtrInfo._hostPointer, srcPtrInfo._devicePointer, srcPtrInfo._sizeBytes,
+                 srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem);
 
         // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.
         // If both pointers are not tracked, we need to fall back to a sync copy.
