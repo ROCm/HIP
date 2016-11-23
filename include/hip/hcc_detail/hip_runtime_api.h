@@ -1761,6 +1761,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
 // TODO - expand descriptions:
 /**
  * @brief Start recording of profiling information
+ * When using this API, start the profiler with profiling disabled.  (--startdisabled)
  * @warning : hipProfilerStart API is under development.
  */
 hipError_t hipProfilerStart();
@@ -1768,6 +1769,7 @@ hipError_t hipProfilerStart();
 
 /**
  * @brief Stop recording of profiling information.
+ * When using this API, start the profiler with profiling disabled.  (--startdisabled)
  * @warning : hipProfilerStop API is under development.
  */
 hipError_t hipProfilerStop();
