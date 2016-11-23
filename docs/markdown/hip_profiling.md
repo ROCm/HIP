@@ -4,6 +4,27 @@ This section describes the profiling and debugging capabilities that HIP provide
 Profiling information can viewed in the CodeXL visualization tool or printed directly to stderr as the application runs.
 This document starts with some of the general capabilities of CodeXL and then describes some of the additional HIP marker and debug features.
 
+ * [CodeXL Profiling](#codexl-profiling)
+   * [Collecting and Viewing Traces](#collecting-and-viewing-traces)
+     * [Using rocm-profiler timestamp profiling](#using-rocm-profiler-timestamp-profiling)
+     * [Using rocm-profiler performance counter collection:](#using-rocm-profiler-performance-counter-collection)
+     * [Using CodeXL to view profiling results:](#using-codexl-to-view-profiling-results)
+     * [More information on CodeXL](#more-information-on-codexl)
+   * [HIP Markers](#hip-markers)
+     * [Profiling HIP APIs](#profiling-hip-apis)
+     * [Adding markers to applications](#adding-markers-to-applications)
+   * [Additional HIP Profiling Features](#additional-hip-profiling-features)
+     * [Demangling C   Kernel Names](#demangling-c-kernel-names)
+     * [Controlling when profiling starts and ends](#controlling-when-profiling-starts-and-ends)
+     * [Reducing timeline trace output file size](#reducing-timeline-trace-output-file-size)
+     * [How to enable profiling at HIP build time](#how-to-enable-profiling-at-hip-build-time)
+ * [Tracing and Debug](#tracing-and-debug)
+   * [Tracing HIP APIs](#tracing-hip-apis)
+     * [Color](#color)
+   * [Using HIP_DB](#using-hip_db)
+   * [Using ltrace](#using-ltrace)
+   * [Chicken bits](#chicken-bits)
+
 ## CodeXL Profiling
 
 ### Collecting and Viewing Traces
