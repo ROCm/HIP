@@ -51,10 +51,8 @@ hipError_t hipGetDevice(int *deviceId)
 }
 
 // TODO - does this initialize HIP runtime?
-hipError_t hipGetDeviceCount(int *count)
+hipError_t ihipGetDeviceCount(int *count)
 {
-    HIP_INIT_API(count);
-
     hipError_t e = hipSuccess;
 
     if(count != nullptr) {
@@ -69,6 +67,12 @@ hipError_t hipGetDeviceCount(int *count)
         e = ihipLogStatus(hipErrorInvalidValue);
     }
     return e;
+}
+
+hipError_t hipGetDeviceCount(int *count)
+{
+    HIP_INIT_API(count);
+    return ihipGetDeviceCount(count);
 }
 
 hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig)
@@ -172,10 +176,8 @@ hipError_t hipDeviceReset(void)
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
+hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
 {
-    HIP_INIT_API(pi, attr, device);
-
     hipError_t e = hipSuccess;
 
     if(pi == nullptr) {
@@ -245,10 +247,14 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
     return ihipLogStatus(e);
 }
 
-hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device)
+hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
 {
-    HIP_INIT_API(props, device);
+    HIP_INIT_API(pi, attr, device);
+    return ihipDeviceGetAttribute(pi,attr,device);
+}
 
+hipError_t ihipGetDeviceProperties(hipDeviceProp_t* props, int device)
+{
     hipError_t e;
 
     if(props != nullptr){
@@ -265,6 +271,12 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device)
     }
 
     return ihipLogStatus(e);
+}
+
+hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device)
+{
+    HIP_INIT_API(props, device);
+    return ihipGetDeviceProperties(props, device);
 }
 
 hipError_t hipSetDeviceFlags( unsigned int flags)
@@ -311,8 +323,8 @@ hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device
     HIP_INIT_API(major,minor, device);
     hipError_t e = hipSuccess;
     int deviceId= device->_deviceId;
-    e = hipDeviceGetAttribute(major, hipDeviceAttributeComputeCapabilityMajor, deviceId);
-    e = hipDeviceGetAttribute(minor, hipDeviceAttributeComputeCapabilityMinor, deviceId);
+    e = ihipDeviceGetAttribute(major, hipDeviceAttributeComputeCapabilityMajor, deviceId);
+    e = ihipDeviceGetAttribute(minor, hipDeviceAttributeComputeCapabilityMinor, deviceId);
     return ihipLogStatus(e);
 }
 
@@ -331,7 +343,7 @@ hipError_t hipDeviceGetPCIBusId (int *pciBusId,int len,hipDevice_t device)
     HIP_INIT_API(pciBusId,len, device);
     hipError_t e = hipSuccess;
     int deviceId= device->_deviceId;
-    e = hipDeviceGetAttribute(pciBusId, hipDeviceAttributePciBusId, deviceId);
+    e = ihipDeviceGetAttribute(pciBusId, hipDeviceAttributePciBusId, deviceId);
     return ihipLogStatus(e);
 }
 
@@ -349,10 +361,10 @@ hipError_t hipDeviceGetByPCIBusId (int*  device, const int* pciBusId )
     hipDeviceProp_t  tempProp;
     int deviceCount;
     hipError_t e = hipErrorInvalidValue;
-    hipGetDeviceCount( &deviceCount );
+    ihipGetDeviceCount( &deviceCount );
     *device = 0;
-    for (int i=0; i< deviceCount; i++) {
-        hipGetDeviceProperties( &tempProp, i );
+    for (int i = 0; i< deviceCount; i++) {
+        ihipGetDeviceProperties( &tempProp, i );
         if(tempProp.pciBusID == *pciBusId) {
             *device =i;
             e = hipSuccess;
@@ -367,19 +379,19 @@ hipError_t hipChooseDevice( int* device, const hipDeviceProp_t* prop )
     HIP_INIT_API(device,prop);
     hipDeviceProp_t  tempProp;
     int deviceCount;
-    int inPropCount=0;
-    int matchedPropCount=0;
+    int inPropCount = 0;
+    int matchedPropCount = 0;
     hipError_t e = hipSuccess;
-    hipGetDeviceCount( &deviceCount );
+    ihipGetDeviceCount( &deviceCount );
     *device = 0;
-    for (int i=0; i< deviceCount; i++) {
-        hipGetDeviceProperties( &tempProp, i );
-        if(prop->major !=0) {
+    for (int i = 0; i < deviceCount; i++) {
+        ihipGetDeviceProperties( &tempProp, i );
+        if(prop->major != 0) {
             inPropCount++;
             if(tempProp.major >= prop->major) {
                 matchedPropCount++;
             }
-            if(prop->minor !=0) {
+            if(prop->minor != 0) {
                 inPropCount++;
                  if(tempProp.minor >= prop->minor) {
                      matchedPropCount++;
@@ -398,31 +410,31 @@ hipError_t hipChooseDevice( int* device, const hipDeviceProp_t* prop )
                 matchedPropCount++;
             }
         }
-        if(prop->maxThreadsPerBlock  != 0) {
+        if(prop->maxThreadsPerBlock != 0) {
             inPropCount++;
             if(tempProp.maxThreadsPerBlock >= prop->maxThreadsPerBlock ) {
                 matchedPropCount++;
             }
         }
-        if(prop->totalConstMem  != 0) {
+        if(prop->totalConstMem != 0) {
             inPropCount++;
             if(tempProp.totalConstMem >= prop->totalConstMem ) {
                 matchedPropCount++;
             }
         }
-        if(prop->multiProcessorCount  != 0) {
+        if(prop->multiProcessorCount != 0) {
             inPropCount++;
             if(tempProp.multiProcessorCount >= prop->multiProcessorCount ) {
                 matchedPropCount++;
             }
         }
-        if(prop->maxThreadsPerMultiProcessor  != 0) {
+        if(prop->maxThreadsPerMultiProcessor != 0) {
             inPropCount++;
             if(tempProp.maxThreadsPerMultiProcessor >= prop->maxThreadsPerMultiProcessor ) {
                 matchedPropCount++;
             }
         }
-        if(prop->memoryClockRate  != 0) {
+        if(prop->memoryClockRate != 0) {
             inPropCount++;
             if(tempProp.memoryClockRate >= prop->memoryClockRate ) {
                 matchedPropCount++;
