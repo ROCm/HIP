@@ -20,19 +20,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 ##
-#usage hipify [OPTIONS] INPUT_FILE 
+#usage hipify [OPTIONS] INPUT_FILE
 use Getopt::Long;
 
 my $warn_whitelist ="";
 GetOptions(
       "print-stats" => \$print_stats                   # print the command-line, like a header.
     , "count-conversions" => \$count_conversions       # count conversions.
-    , "quiet-warnings" => \$quiet_warnings           # don't print warnings on unknown CUDA functions. 
-    , "warn-whitelist=s"=> \$warn_whitelist 
+    , "quiet-warnings" => \$quiet_warnings           # don't print warnings on unknown CUDA functions.
+    , "warn-whitelist=s"=> \$warn_whitelist
     , "no-translate-builtins" => \$no_translate_builtins      # don't translate math functions.
     , "no-translate-textures" => \$no_translate_textures
     , "no-output" => \$no_output                      # don't write any translated output to stdout.
-    , "inplace" => \$inplace                          # modify input file inplace, replacing input with hipified output, save backup in ".prehip" file. 
+    , "inplace" => \$inplace                          # modify input file inplace, replacing input with hipified output, save backup in ".prehip" file.
 														# If .prehip file exists, use that as input to hip.
     , "n" => \$n                                      # combination of print_stats + no-output.
 );
@@ -89,7 +89,7 @@ push (@warn_whitelist, split(',',$warn_whitelist));
 
 #---
 #Compute total of all individual counts:
-sub totalStats 
+sub totalStats
 {
     my %count = %{ shift() };
 
@@ -113,11 +113,11 @@ sub printStats
     my $total = totalStats(\%counts);
 
     printf STDERR "%s %d CUDA->HIP refs( ", $label, $total;
-    
+
     foreach $stat (@statNames) {
         printf STDERR "%s:%d ", $stat, $counts{$stat};
-    } 
-    
+    }
+
     printf STDERR ") warn:%d LOC:%d", $warnings, $loc;
 }
 
@@ -196,11 +196,11 @@ while (@ARGV) {
 
     # Note : \b is used in perl to indicate the start of a word - typically that is what we want in this case:
     #
-    
+
     # count of transforms in this file, init to 0 here:
     my %ft;
     clearStats(\%ft, \@statNames);
-    my $countIncludes = 0;  
+    my $countIncludes = 0;
     my $countKeywords = 0; # keywords like __global__, __shared__ - not converted by hipify but counted here.
     my $warnings = 0;
     my $warningsCublas = 0;
@@ -218,11 +218,11 @@ while (@ARGV) {
         # __CUDACC__ is set by NVCC to indicate it is treating the input file as CUDA code (as opposed to host)
         # Typically we want any code treated as CUDA code to be treated as accelerator code by Kalmar too
         # __HIPCC__ will set KALMARCC
-        $ft{'def'} += s/\b__CUDACC__\b/__HIPCC__/g;  
+        $ft{'def'} += s/\b__CUDACC__\b/__HIPCC__/g;
 
         # __CUDA_ARCH is often used to detect when a function or kernel is being compiled for the device.
         # Don't automaticall convert this - likely these will need special attention with HIP_ARCH_HAS_* macros
-        #$ft{'def'} += s/\b__CUDA_ARCH__\b/__HIP_ARCH__/g;  
+        #$ft{'def'} += s/\b__CUDA_ARCH__\b/__HIP_ARCH__/g;
 
 
 
@@ -294,6 +294,9 @@ while (@ARGV) {
 		$ft{'mem'} += s/\bcudaHostAllocPortable\b/hipHostMallocPortable/g;
 		$ft{'mem'} += s/\bcudaHostAllocMapped\b/hipHostMallocMapped/g;
 		$ft{'mem'} += s/\bcudaHostAllocWriteCombined\b/hipHostMallocWriteCombined/g;
+        $ft{'mem'} += s/\bcudaHostRegister\b/hipHostRegister/g;
+        $ft{'mem'} += s/\bcudaHostUnregister\b/hipHostUnregister/g;
+        $ft{'mem'} += s/\bcudaHostGetDevicePointer\b/hipHostGetDevicePointer/g;
 
         $ft{'mem'} += s/\bcudaMallocArray\b/hipMallocArray/g;
         $ft{'mem'} += s/\bcudaMallocPitch\b/hipMallocPitch/g;
@@ -308,7 +311,7 @@ while (@ARGV) {
         $ft{'coord_func'} += s/\bblockIdx\.x\b/hipBlockIdx_x/g;
         $ft{'coord_func'} += s/\bblockIdx\.y\b/hipBlockIdx_y/g;
         $ft{'coord_func'} += s/\bblockIdx\.z\b/hipBlockIdx_z/g;
-        
+
         $ft{'coord_func'} += s/\bblockDim\.x\b/hipBlockDim_x/g;
         $ft{'coord_func'} += s/\bblockDim\.y\b/hipBlockDim_y/g;
         $ft{'coord_func'} += s/\bblockDim\.z\b/hipBlockDim_z/g;
@@ -322,7 +325,7 @@ while (@ARGV) {
 
 
         #--------
-        # Events 
+        # Events
         $ft{'event'} += s/\bcudaEvent_t\b/hipEvent_t/g;
         $ft{'event'} += s/\bcudaEventCreate\b/hipEventCreate/g;
         $ft{'event'} += s/\bcudaEventCreateWithFlags\b/hipEventCreateWithFlags/g;
@@ -341,10 +344,10 @@ while (@ARGV) {
         $ft{'stream'} += s/\bcudaStreamSynchronize\b/hipStreamSynchronize/g;
         $ft{'stream'} += s/\bcudaStreamDefault\b/hipStreamDefault/g;
         $ft{'stream'} += s/\bcudaStreamNonBlocking\b/hipStreamNonBlocking/g;
-        
+
 
         #--------
-        # Other synchronization 
+        # Other synchronization
         $ft{'dev'} += s/\bcudaDeviceSynchronize\b/hipDeviceSynchronize/g;
         $ft{'dev'} += s/\bcudaThreadSynchronize\b/hipDeviceSynchronize/g;  # translate deprecated cudaThreadSynchronize
         $ft{'dev'} += s/\bcudaDeviceReset\b/hipDeviceReset/g;
@@ -353,9 +356,10 @@ while (@ARGV) {
         $ft{'dev'} += s/\bcudaGetDevice\b/hipGetDevice/g;
 
         #--------
-        # Device 
+        # Device
         $ft{'dev'} += s/\bcudaDeviceProp\b/hipDeviceProp_t/g;
         $ft{'dev'} += s/\bcudaGetDeviceProperties\b/hipGetDeviceProperties/g;
+        $ft{'dev'} += s/\bcudaDeviceGetPCIBusId\b/hipDeviceGetPCIBusId/g;
 
         # Attribute
         $ft{'err'} += s/\bcudaDevAttrMaxThreadsPerBlock\b/hipDeviceAttributeMaxThreadsPerBlock/g;
@@ -408,6 +412,9 @@ while (@ARGV) {
         $ft{'dev'} += s/\bcudaDeviceEnablePeerAccess\b/hipDeviceEnablePeerAccess/g;
         $ft{'mem'} += s/\bcudaMemcpyPeerAsync\b/hipMemcpyPeerAsync/g;
         $ft{'mem'} += s/\bcudaMemcpyPeer\b/hipMemcpyPeer/g;
+        $ft{'mem'} += s/\bcudaIpcOpenMemHandle\b/hipIpcOpenMemHandle/g;
+        $ft{'mem'} += s/\bcudaIpcCloseMemHandle\b/hipIpcCloseMemHandle/g;
+        $ft{'mem'} += s/\bcudaIpcGetMemHandle\b/hipIpcGetMemHandle/g;
 
 
         # Shared mem:
@@ -441,7 +448,7 @@ while (@ARGV) {
             no warnings qw/uninitialized/;
 
             my $k = 0;
- 
+
             # Match extern __shared__ type foo[]; syntax
             # Replace as HIP_DYNAMIC_SHARED() macro
             $k += s/extern\s+([\w\(\)]+)?\s*__shared__\s+([\w:<>\s]+)\s+(\w+)\s*\[\s*\]\s*;/HIP_DYNAMIC_SHARED($1 $2, $3)/g;
@@ -464,7 +471,7 @@ while (@ARGV) {
         #--------
         # CUDA Launch Syntax
         # Note these only work if launch is on a single line.
-        
+
         # Handle the <<numBlocks, blockDim>>> syntax:
         {
             # match uses ? for <.*> which will be unitialized if this is not present in launch syntax.
@@ -524,7 +531,7 @@ while (@ARGV) {
         unless ($quiet_warnings) {
             #print STDERR "Check WARNINGs\n";
             # copy into array of lines, process line-by-line to show warnings:
-            if ($hasDeviceCode or (/\bcuda/) or (/<<<.*>>>/) or (/(\bcublas[A-Z]\w+)/) or (/(\bcurand[A-Z]\w+)/) ) { 
+            if ($hasDeviceCode or (/\bcuda/) or (/<<<.*>>>/) or (/(\bcublas[A-Z]\w+)/) or (/(\bcurand[A-Z]\w+)/) ) {
                 my @lines = split /\n/, $_;
                 my $tmp = $_;  # copies the whole file, could be a little smarter here...
                 my $line_num = 0;
@@ -541,7 +548,7 @@ while (@ARGV) {
 					my $tag ;
                     if ((/(\bcuda[A-Z]\w+)/) or (/<<<.*>>>/)) {
                         # flag any remaining code that look like cuda API calls, may want to add these to hipify
-                        $tag = (defined $1) ? $1 : "Launch"; 
+                        $tag = (defined $1) ? $1 : "Launch";
 					} elsif (/(\bcublas[A-Z]\w+)/) {
                         $warningsCublas++;
 						$tag = $1;
@@ -552,7 +559,7 @@ while (@ARGV) {
 
 					if (defined $tag) {
                         $warnings++;
-                        $warningTags{$tag}++; 
+                        $warningTags{$tag}++;
                         print STDERR "  warning: $fileName:#$line_num : $_";
                         print STDERR "\n";
                     }
@@ -599,7 +606,7 @@ while (@ARGV) {
             print $OUTFILE  "$_";
         }
 
-        $lineCount = $_ =~ tr/\n//; 
+        $lineCount = $_ =~ tr/\n//;
 
     }
 
@@ -653,7 +660,7 @@ if ($count_conversions) {
 
 
 
-sub countSupportedSpecialFunctions 
+sub countSupportedSpecialFunctions
 {
     my $m = 0;
 
@@ -671,9 +678,9 @@ sub countSupportedSpecialFunctions
     return $m;
 }
 
-sub warnUnsupportedSpecialFunctions 
+sub warnUnsupportedSpecialFunctions
 {
-    my $line_num =  shift; 
+    my $line_num =  shift;
 
     my $m = 0;
 
