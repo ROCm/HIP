@@ -510,9 +510,11 @@ __device__ void __hip_fast_sincosf(float,float*,float*);
 extern __attribute__((const)) float __hip_fast_sinf(float) __asm("llvm.sin.f32");
 __device__ float __hip_fast_tanf(float);
 extern __attribute__((const)) float __hip_fast_fmaf(float,float,float) __asm("llvm.fma.f32");
+extern __attribute__((const)) float __hip_fast_frcp(float) __asm("llvm.amdgcn.rcp.f32");
 
 extern __attribute__((const)) double __hip_fast_dsqrt(double) __asm("llvm.sqrt.f64");
 extern __attribute__((const)) double __hip_fast_fma(double,double,double) __asm("llvm.fma.f64");
+extern __attribute__((const)) double __hip_fast_drcp(double) __asm("llvm.amdgcn.rcp.f64");
 
 #ifdef HIP_FAST_MATH
 // Single Precision Precise Math when enabled
@@ -648,6 +650,22 @@ __device__ inline float __fmaf_rz(float x, float y, float z) {
   return __hip_fast_fmaf(x, y, z);
 }
 
+__device__ inline float __frcp_rd(float x) {
+  return __hip_fast_frcp(x);
+}
+
+__device__ inline float __frcp_rn(float x) {
+  return __hip_fast_frcp(x);
+}
+
+__device__ inline float __frcp_ru(float x) {
+  return __hip_fast_frcp(x);
+}
+
+__device__ inline float __frcp_rz(float x) {
+  return __hip_fast_frcp(x);
+}
+
 __device__ inline double __dsqrt_rd(double x) {
   return __hip_fast_dsqrt(x);
 }
@@ -678,6 +696,22 @@ __device__ inline double __fma_ru(double x, double y, double z) {
 
 __device__ inline double __fma_rz(double x, double y, double z) {
   return __hip_fast_fma(x, y, z);
+}
+
+__device__ inline double __drcp_rd(double x) {
+  return __hip_fast_drcp(x);
+}
+
+__device__ inline double __drcp_rn(double x) {
+  return __hip_fast_drcp(x);
+}
+
+__device__ inline double __drcp_ru(double x) {
+  return __hip_fast_drcp(x);
+}
+
+__device__ inline double __drcp_rz(double x) {
+  return __hip_fast_drcp(x);
 }
 
 /**
