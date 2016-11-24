@@ -51,10 +51,10 @@ __device__ void double_precision_intrinsics()
     //__dsub_rn(2.0, 1.0);
     //__dsub_ru(2.0, 1.0);
     //__dsub_rz(2.0, 1.0);
-    //__fma_rd(1.0, 2.0, 3.0);
-    //__fma_rn(1.0, 2.0, 3.0);
-    //__fma_ru(1.0, 2.0, 3.0);
-    //__fma_rz(1.0, 2.0, 3.0);
+    __fma_rd(1.0, 2.0, 3.0);
+    __fma_rn(1.0, 2.0, 3.0);
+    __fma_ru(1.0, 2.0, 3.0);
+    __fma_rz(1.0, 2.0, 3.0);
 }
 
 __global__ void compileDoublePrecisionIntrinsics(hipLaunchParm lp, int ignored)
