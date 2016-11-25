@@ -52,12 +52,12 @@ The trace can be loaded and viewed in the CodeXL visualization tool:
   - [File->New Project, leave fields as is, just click "OK"]
   - [Profile->Switch to Profile Mode]
 - Load timestamp tracing results into a timeline view:
-  - Right click on the project
+  - Right click on the project in the CodeXL Explorer view
   - Click "Import Session..."
   - Select to $HOME/apitrace.atp (or appropriate .atp file if you used another file name)
 
 - Load the performance counter results
-  - Right click on the project
+  - Right click on the project in the CodeXL Explorer view
   - Click "Import Session..."
   - Select  $HOME/Session1.csv  (or appropriate .csv file if you used another file name)
 
@@ -66,6 +66,8 @@ The trace can be loaded and viewed in the CodeXL visualization tool:
 rocm-profiler --help will show additional options and usage guidelines.
 
 See this [blog](http://gpuopen.com/getting-up-to-speed-with-the-codexl-gpu-profiler-and-radeon-open-compute/) for more information on profiling ROCm apps (including HIP) with CodeXL.
+
+The 2.2 version of Windows CodeXL does not correctly handle Linux line-endings.  If you are collecting a trace on Linux and then viewing it with the 2.2 Windows CodeXL, first convert the line ending in the .atp file to Windows-style line endings.
 
 ### HIP Markers
 #### Profiling HIP APIs  
@@ -230,10 +232,10 @@ Here's an example for one API followed by a description for the sections of the 
 -  `tid:1.6` indicates that this API call came from thread #1 and is the 6th API call in that thread.   When the first API in a new thread is called, HIP will associates a short sequential ID with that thread.  You can see the full thread ID (reported by C++) as 0x7f6183b097c0 in the example below.  
 - `hipMemcpy` is the name of the API.
 - The first line then prints a comma-separated list of the arguments to the function.  APIs which return values to the caller by writing to pointers will show the pointer addresses rather than the pointer contents.  This behavior may change in the future.
-- The second line shows the completio of the API, including the numeric return value (`ret= 0`) as well as an string representation for the error code (`hipSuccess`).  If the returned error code is non-zero, then the csecond line message is shown in red (unless HIP_TRACE_API_COLOR is "none" - see below).
+- The second line shows the completion of the API, including the numeric return value (`ret= 0`) as well as an string representation for the error code (`hipSuccess`).  If the returned error code is non-zero, then the csecond line message is shown in red (unless HIP_TRACE_API_COLOR is "none" - see below).
 
 
-Heres a specific example showing the output of the square program running on HIP:
+Heres a specific example showing the output of the [square](samples/0_Intro/square) program running on HIP:
 
 ```
 $ HIP_TRACE_API=1  ./square.hip.out 
