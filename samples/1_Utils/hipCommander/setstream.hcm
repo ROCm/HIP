@@ -1,0 +1,3 @@
+setstream,1; 
+setstream,2;  H2D; NullKernel; D2H; 
+streamsync
