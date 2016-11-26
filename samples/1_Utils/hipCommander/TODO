@@ -1,0 +1,50 @@
+_ Add AQL kernel.
+_ Fix &*kernel command so the kernel name/type is an argument not a new command.
+
+_ Add command to parse only.
+_ Add regression to parse all the hcm files.
+
+_ Partition HCC, HIP, HSA, OpenCL commands into separate files.
+
+
+_ Show time for back-to-back copies.
+_ Add variables.
+  %loopcnt
+
+    ./hipCommander %loopcnt=4  
+
+_ Add datasize command.
+
+
+_ Add ( ) to parsing.
+_ Add argument parsing and checking.
+
+_ Add verbose option to print each step of setup.
+  - print deliniater between setup and run.  Add run start message.
+
+  - print sizes of all buffers.
+  - print each command before running.
+  - show start/stop of timer routine.
+
+_ 
+_ Clear documentation on what each oepration does.
+_ Add time instrumentation for each command.
+_ Add pcie atomic.
+
+
+_ Add tests for negative cases, ie endloop w/o opening loop.
+
+
+README tips
+---
+- HIP_API_TRACE combined with -v is useful to track the exact commands generates by hipCommander.
+
+
+Other ideas:
+---
+[ ] Perf guide : stream creation very slow on HCC and should be avoided.
+
+
+Scratch:
+
+

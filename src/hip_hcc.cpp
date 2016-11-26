@@ -1749,13 +1749,17 @@ void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind,
 
         if (HIP_FORCE_P2P_HOST & 0x1) {
             *forceUnpinnedCopy = true;
-            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d) can see src and dst but HIP_FORCE_P2P_HOST=0, forcing copy through staging buffers.\n", (*copyDevice)->getDeviceNum());
+            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d agent=0x%lx) can see src and dst but HIP_FORCE_P2P_HOST=0, forcing copy through staging buffers.\n", 
+                    (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
+
         } else {
-            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d) can see src and dst.\n",  (*copyDevice)->getDeviceNum());
+            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d agent=0x%lx) can see src and dst.\n",  
+                    (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
         }
     } else {
         *forceUnpinnedCopy = true;
-        tprintf (DB_COPY, "P2P: copy engine(dev:%d) cannot see both host and device pointers - forcing copy with unpinned engine.\n", (*copyDevice)->getDeviceNum());
+        tprintf (DB_COPY, "P2P: copy engine(dev:%d agent=0x%lx) cannot see both host and device pointers - forcing copy with unpinned engine.\n",
+                    (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
     }
 }
 
@@ -1789,10 +1793,10 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
                  dst, dstPtrInfo._appId, dstPtrInfo._isInDeviceMem,
                  src, srcPtrInfo._appId, srcPtrInfo._isInDeviceMem,
                  sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
-        tprintf (DB_COPY, "  dst=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d, isDevMem=%d\n",
+        tprintf (DB_COPY, "  dst=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d\n",
                  dst, dstPtrInfo._hostPointer, dstPtrInfo._devicePointer, dstPtrInfo._sizeBytes,
                  dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem);
-        tprintf (DB_COPY, "  src=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d, isDevMem=%d\n",
+        tprintf (DB_COPY, "  src=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d\n",
                  src, srcPtrInfo._hostPointer, srcPtrInfo._devicePointer, srcPtrInfo._sizeBytes,
                  srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem);
 
@@ -1846,10 +1850,10 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
                  dst, dstPtrInfo._appId, dstPtrInfo._isInDeviceMem,
                  src, srcPtrInfo._appId, srcPtrInfo._isInDeviceMem,
                  sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
-        tprintf (DB_COPY, "  dst=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d, isDevMem=%d\n",
+        tprintf (DB_COPY, "  dst=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d\n",
                  dst, dstPtrInfo._hostPointer, dstPtrInfo._devicePointer, dstPtrInfo._sizeBytes,
                  dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem);
-        tprintf (DB_COPY, "  src=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d, isDevMem=%d\n",
+        tprintf (DB_COPY, "  src=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d\n",
                  src, srcPtrInfo._hostPointer, srcPtrInfo._devicePointer, srcPtrInfo._sizeBytes,
                  srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem);
 
