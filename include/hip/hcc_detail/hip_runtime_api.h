@@ -39,6 +39,10 @@ THE SOFTWARE.
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
+#define HIP_LAUNCH_PARAM_BUFFER_POINTER ((void*) 0x01)
+#define HIP_LAUNCH_PARAM_BUFFER_SIZE    ((void*) 0x02)
+#define HIP_LAUNCH_PARAM_END            ((void*) 0x03)
+
 // Structure definitions:
 #ifdef __cplusplus
 extern "C" {
@@ -108,12 +112,12 @@ enum hipLimit_t
 /**
  * @warning On AMD devices and recent Nvidia devices, these hints and controls are ignored.
  */
-typedef enum hipFuncCache {
+typedef enum hipFuncCache_t {
     hipFuncCachePreferNone, ///< no preference for shared memory or L1 (default)
     hipFuncCachePreferShared, ///< prefer larger shared memory and smaller L1 cache
     hipFuncCachePreferL1, ///< prefer larger L1 cache and smaller shared memory
     hipFuncCachePreferEqual, ///< prefer equal size L1 cache and shared memory
-} hipFuncCache;
+} hipFuncCache_t;
 
 
 /**
@@ -317,7 +321,7 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
-hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig );
+hipError_t hipDeviceSetCacheConfig ( hipFuncCache_t cacheConfig );
 
 
 /**
@@ -329,7 +333,7 @@ hipError_t hipDeviceSetCacheConfig ( hipFuncCache cacheConfig );
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
-hipError_t hipDeviceGetCacheConfig ( hipFuncCache *cacheConfig );
+hipError_t hipDeviceGetCacheConfig ( hipFuncCache_t *cacheConfig );
 
 /**
  * @brief Get Resource limits of current device
@@ -353,7 +357,7 @@ hipError_t hipDeviceGetLimit(size_t *pValue, hipLimit_t limit);
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
-hipError_t hipFuncSetCacheConfig ( hipFuncCache config );
+hipError_t hipFuncSetCacheConfig ( hipFuncCache_t config );
 
 /**
  * @brief Returns bank width of shared memory for current device
@@ -409,7 +413,7 @@ hipError_t hipSetDeviceFlags ( unsigned flags);
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  */
-hipError_t hipChooseDevice(int *device, hipDeviceProp_t* prop);
+hipError_t hipChooseDevice(int *device, const hipDeviceProp_t* prop);
 
 // end doxygen Device
 /**
@@ -1456,7 +1460,7 @@ hipError_t hipCtxGetApiVersion (hipCtx_t ctx,int *apiVersion);
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxGetCacheConfig ( hipFuncCache *cacheConfig );
+hipError_t hipCtxGetCacheConfig ( hipFuncCache_t *cacheConfig );
 
 /**
  * @brief Set L1/Shared cache partition.
@@ -1469,7 +1473,7 @@ hipError_t hipCtxGetCacheConfig ( hipFuncCache *cacheConfig );
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxSetCacheConfig ( hipFuncCache cacheConfig );
+hipError_t hipCtxSetCacheConfig ( hipFuncCache_t cacheConfig );
 
 /**
  * @brief Set Shared memory bank configuration.
@@ -1757,6 +1761,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
 // TODO - expand descriptions:
 /**
  * @brief Start recording of profiling information
+ * When using this API, start the profiler with profiling disabled.  (--startdisabled)
  * @warning : hipProfilerStart API is under development.
  */
 hipError_t hipProfilerStart();
@@ -1764,6 +1769,7 @@ hipError_t hipProfilerStart();
 
 /**
  * @brief Stop recording of profiling information.
+ * When using this API, start the profiler with profiling disabled.  (--startdisabled)
  * @warning : hipProfilerStop API is under development.
  */
 hipError_t hipProfilerStop();

@@ -109,114 +109,6 @@ std::atomic<int> g_lastShortTid(1);
 std::vector<ProfTrigger> g_dbStartTriggers;
 std::vector<ProfTrigger> g_dbStopTriggers;
 
-
-
-/*
- Implementation of malloc and free device functions.
-
- This is the best place to put them because the device
- global variables need to be initialized at the start.
-*/
-
-#define NUM_PAGES_PER_THREAD  16
-#define SIZE_OF_PAGE          64
-#define NUM_THREADS_PER_CU    64
-#define NUM_CUS_PER_GPU       64
-#define NUM_PAGES NUM_PAGES_PER_THREAD * NUM_THREADS_PER_CU * NUM_CUS_PER_GPU
-#define SIZE_MALLOC NUM_PAGES * SIZE_OF_PAGE
-#define SIZE_OF_HEAP SIZE_MALLOC
-
-size_t g_malloc_heap_size = SIZE_OF_HEAP;
-
-__attribute__((address_space(1))) char gpuHeap[SIZE_OF_HEAP];
-__attribute__((address_space(1))) uint32_t gpuFlags[NUM_PAGES];
-
-__device__ void *__hip_hc_malloc(size_t size)
-{
-    char *heap = (char*)gpuHeap;
-    if(size > SIZE_OF_HEAP)
-    {
-        return (void*)nullptr;
-    }
-    uint32_t totalThreads = hipBlockDim_x * hipGridDim_x * hipBlockDim_y * hipGridDim_y * hipBlockDim_z * hipGridDim_z;
-    uint32_t currentWorkItem = hipThreadIdx_x + hipBlockDim_x * hipBlockIdx_x;
-
-    uint32_t numHeapsPerWorkItem = NUM_PAGES / totalThreads;
-    uint32_t heapSizePerWorkItem = SIZE_OF_HEAP / totalThreads;
-
-    uint32_t stride = size / SIZE_OF_PAGE;
-    uint32_t start = numHeapsPerWorkItem * currentWorkItem;
-
-    uint32_t k=0;
-
-    while(gpuFlags[k] > 0)
-    {
-        k++;
-    }
-
-    for(uint32_t i=0;i<stride-1;i++)
-    {
-        gpuFlags[i+start+k] = 1;
-    }
-
-    gpuFlags[start+stride-1+k] = 2;
-
-    void* ptr = (void*)(heap + heapSizePerWorkItem * currentWorkItem + k*SIZE_OF_PAGE);
-
-    return ptr;
-}
-
-__device__ void* __hip_hc_free(void *ptr)
-{
-    if(ptr == nullptr)
-    {
-       return nullptr;
-    }
-
-    uint32_t offsetByte = (uint64_t)ptr - (uint64_t)gpuHeap;
-    uint32_t offsetPage = offsetByte / SIZE_OF_PAGE;
-
-    while(gpuFlags[offsetPage] != 0) {
-        if(gpuFlags[offsetPage] == 2) {
-            gpuFlags[offsetPage] = 0;
-            offsetPage++;
-            break;
-        } else {
-            gpuFlags[offsetPage] = 0;
-            offsetPage++;
-        }
-    }
-
-    return nullptr;
-}
-
-__device__ unsigned __hip_ds_bpermute(int index, unsigned src) {
-    return hc::__amdgcn_ds_bpermute(index, src);
-}
-
-__device__ float __hip_ds_bpermutef(int index, float src) {
-    return hc::__amdgcn_ds_bpermute(index, src);
-}
-
-__device__ unsigned __hip_ds_permute(int index, unsigned src) {
-    return hc::__amdgcn_ds_permute(index, src);
-}
-
-__device__ float __hip_ds_permutef(int index, float src) {
-    return hc::__amdgcn_ds_permute(index, src);
-}
-
-__device__ unsigned __hip_ds_swizzle(unsigned int src, int pattern) {
-    return hc::__amdgcn_ds_swizzle(src, pattern);
-}
-
-__device__ float __hip_ds_swizzlef(float src, int pattern) {
-    return hc::__amdgcn_ds_swizzle(src, pattern);
-}
-
-__device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask, bool bound_ctrl) {
-    return hc::__amdgcn_move_dpp(src, dpp_ctrl, row_mask, bank_mask, bound_ctrl);
-}
 //=================================================================================================
 // Thread-local storage:
 //=================================================================================================
@@ -322,7 +214,7 @@ ShortTid::ShortTid()  :
 { 
     _shortTid = g_lastShortTid.fetch_add(1); 
 
-    if (HIP_DB & (1<<DB_API)) {
+    if (COMPILE_HIP_DB && HIP_TRACE_API) {
         std::stringstream tid_ss;
         std::stringstream tid_ss_num;
         tid_ss_num << std::this_thread::get_id();
@@ -882,17 +774,12 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
 
     // Get Max Threads Per Multiprocessor
 
-    HsaSystemProperties props;
-    hsaKmtReleaseSystemProperties();
-    if(HSAKMT_STATUS_SUCCESS == hsaKmtAcquireSystemProperties(&props)) {
-        HsaNodeProperties node_prop = {0};
-        if(HSAKMT_STATUS_SUCCESS == hsaKmtGetNodeProperties(node, &node_prop)) {
-            uint32_t waves_per_cu = node_prop.MaxWavesPerSIMD;
-            uint32_t simd_per_cu = node_prop.NumSIMDPerCU;
-            prop-> maxThreadsPerMultiProcessor = prop->warpSize*waves_per_cu*simd_per_cu;
-        }
+    HsaNodeProperties node_prop = {0};
+    if(HSAKMT_STATUS_SUCCESS == hsaKmtGetNodeProperties(node, &node_prop)) {
+        uint32_t waves_per_cu = node_prop.MaxWavesPerSIMD;
+        uint32_t simd_per_cu = node_prop.NumSIMDPerCU;
+        prop-> maxThreadsPerMultiProcessor = prop->warpSize*waves_per_cu*simd_per_cu;
     }
-
 
     // Get memory properties
     err = hsa_agent_iterate_regions(_hsaAgent, get_region_info, prop);
@@ -1368,7 +1255,7 @@ void ihipInit()
     READ_ENV_I(release, HIP_TRACE_API, 0,  "Trace each HIP API call.  Print function name and return code to stderr as program executes.");
     READ_ENV_S(release, HIP_TRACE_API_COLOR, 0,  "Color to use for HIP_API.  None/Red/Green/Yellow/Blue/Magenta/Cyan/White");
     READ_ENV_I(release, HIP_PROFILE_API, 0,  "Add HIP API markers to ATP file generated with CodeXL. 0x1=short API name, 0x2=full API name including args.");
-    READ_ENV_S(release, HIP_DB_START_API, 0,  "Comma-separted list of tid.api_seq_num for when to start debug and profiling.");
+    READ_ENV_S(release, HIP_DB_START_API, 0,  "Comma-separated list of tid.api_seq_num for when to start debug and profiling.");
     READ_ENV_S(release, HIP_DB_STOP_API, 0,  "Comma-separated list of tid.api_seq_num for when to stop debug and profiling.");
     
     READ_ENV_C(release, HIP_VISIBLE_DEVICES, CUDA_VISIBLE_DEVICES, "Only devices whose index is present in the sequence are visible to HIP applications and they are enumerated in the order of sequence.", HIP_VISIBLE_DEVICES_callback );
@@ -1386,6 +1273,9 @@ void ihipInit()
 
     if (HIP_TRACE_API && !COMPILE_HIP_TRACE_API) {
         fprintf (stderr, "warning: env var HIP_TRACE_API=0x%x but COMPILE_HIP_TRACE_API=0.  (perhaps enable COMPILE_HIP_TRACE_API in src code before compiling?)\n", HIP_DB);
+    }
+    if (HIP_TRACE_API) {
+        HIP_DB|=0x1;
     }
 
     if (HIP_PROFILE_API && !COMPILE_HIP_ATP_MARKER) {
@@ -1859,13 +1749,17 @@ void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind,
 
         if (HIP_FORCE_P2P_HOST & 0x1) {
             *forceUnpinnedCopy = true;
-            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d) can see src and dst but HIP_FORCE_P2P_HOST=0, forcing copy through staging buffers.\n", (*copyDevice)->getDeviceNum());
+            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d agent=0x%lx) can see src and dst but HIP_FORCE_P2P_HOST=0, forcing copy through staging buffers.\n", 
+                    (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
+
         } else {
-            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d) can see src and dst.\n",  (*copyDevice)->getDeviceNum());
+            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d agent=0x%lx) can see src and dst.\n",  
+                    (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
         }
     } else {
         *forceUnpinnedCopy = true;
-        tprintf (DB_COPY, "P2P: copy engine(dev:%d) cannot see both host and device pointers - forcing copy with unpinned engine.\n", (*copyDevice)->getDeviceNum());
+        tprintf (DB_COPY, "P2P: copy engine(dev:%d agent=0x%lx) cannot see both host and device pointers - forcing copy with unpinned engine.\n",
+                    (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
     }
 }
 
@@ -1894,11 +1788,18 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
 
     {
         LockedAccessor_StreamCrit_t crit (_criticalData);
-        tprintf (DB_COPY, "copySync copyDev:%d  dst=%p(home_dev:%d, tracked:%d, isDevMem:%d)  src=%p(home_dev:%d, tracked:%d, isDevMem:%d)   sz=%zu dir=%s forceUnpinnedCopy=%d\n",
+        tprintf (DB_COPY, "copySync copyDev:%d  dst=%p (phys_dev:%d, isDevMem:%d)  src=%p(phys_dev:%d, isDevMem:%d)   sz=%zu dir=%s forceUnpinnedCopy=%d\n",
                  copyDevice ? copyDevice->getDeviceNum():-1, 
-                 dst, dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem, 
-                 src, srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem,  
+                 dst, dstPtrInfo._appId, dstPtrInfo._isInDeviceMem,
+                 src, srcPtrInfo._appId, srcPtrInfo._isInDeviceMem,
                  sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
+        tprintf (DB_COPY, "  dst=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d\n",
+                 dst, dstPtrInfo._hostPointer, dstPtrInfo._devicePointer, dstPtrInfo._sizeBytes,
+                 dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem);
+        tprintf (DB_COPY, "  src=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d\n",
+                 src, srcPtrInfo._hostPointer, srcPtrInfo._devicePointer, srcPtrInfo._sizeBytes,
+                 srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem);
+
 
 #if USE_COPY_EXT_V2
         crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice ? &copyDevice->getDevice()->_acc : nullptr, forceUnpinnedCopy);
@@ -1944,13 +1845,17 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
         ihipCtx_t *copyDevice;
         bool forceUnpinnedCopy;
         resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &copyDevice, &forceUnpinnedCopy);
-
-
-        tprintf (DB_COPY, "copyASync copyEngine_dev:%d  dst=%p(home_dev:%d, tracked:%d, isDevMem:%d)  src=%p(home_dev:%d, tracked:%d, isDevMem:%d)   sz=%zu dir=%s.  forceUnpinnedCopy=%d \n",
-                 copyDevice->getDeviceNum(), 
-                 dst, dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem, 
-                 src, srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem,  
+        tprintf (DB_COPY, "copyASync copyDev:%d  dst=%p (phys_dev:%d, isDevMem:%d)  src=%p(phys_dev:%d, isDevMem:%d)   sz=%zu dir=%s forceUnpinnedCopy=%d\n",
+                 copyDevice ? copyDevice->getDeviceNum():-1, 
+                 dst, dstPtrInfo._appId, dstPtrInfo._isInDeviceMem,
+                 src, srcPtrInfo._appId, srcPtrInfo._isInDeviceMem,
                  sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
+        tprintf (DB_COPY, "  dst=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d\n",
+                 dst, dstPtrInfo._hostPointer, dstPtrInfo._devicePointer, dstPtrInfo._sizeBytes,
+                 dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem);
+        tprintf (DB_COPY, "  src=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d\n",
+                 src, srcPtrInfo._hostPointer, srcPtrInfo._devicePointer, srcPtrInfo._sizeBytes,
+                 srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem);
 
         // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.
         // If both pointers are not tracked, we need to fall back to a sync copy.

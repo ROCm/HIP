@@ -1,0 +1,3 @@
+setstream,1;
+NullKernel; streamsync;
+loop,10000; H2D;  NullKernel; streamsync; endloop,1;

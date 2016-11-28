@@ -1,0 +1,2 @@
+setstream,1;
+loop,1000; NullKernel; syncstream; endloop,1,

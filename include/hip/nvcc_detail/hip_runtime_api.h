@@ -70,12 +70,14 @@ hipMemcpyHostToHost
 #define HIP_LAUNCH_PARAM_BUFFER_SIZE     CU_LAUNCH_PARAM_BUFFER_SIZE
 #define HIP_LAUNCH_PARAM_END            CU_LAUNCH_PARAM_END
 #define hipLimitMallocHeapSize          cudaLimitMallocHeapSize
+#define hipIpcMemLazyEnablePeerAccess          cudaIpcMemLazyEnablePeerAccess
 
 typedef cudaEvent_t hipEvent_t;
 typedef cudaStream_t hipStream_t;
 typedef cudaIpcEventHandle_t hipIpcEventHandle_t;
 typedef cudaIpcMemHandle_t hipIpcMemHandle_t;
 typedef cudaLimit hipLimit_t;
+typedef cudaFuncCache hipFuncCache_t;
 typedef CUcontext hipCtx_t;
 typedef CUsharedconfig hipSharedMemConfig;
 typedef CUfunc_cache hipFuncCache;
@@ -321,6 +323,10 @@ inline static hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* 
 
 inline static hipError_t hipDeviceSynchronize() {
     return hipCUDAErrorTohipError(cudaDeviceSynchronize());
+}
+
+inline static hipError_t hipDeviceGetCacheConfig(hipFuncCache_t *pCacheConfig) {
+    return hipCUDAErrorTohipError(cudaDeviceGetCacheConfig(pCacheConfig));
 }
 
 inline static const char* hipGetErrorString(hipError_t error){
