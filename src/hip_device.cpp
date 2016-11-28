@@ -306,7 +306,7 @@ hipError_t hipSetDeviceFlags( unsigned int flags)
            }
        }
 
-       unsigned supportedFlags = hipDeviceScheduleMask | hipDeviceMapHost | hipDeviceLmemResizeToMax; 
+       unsigned supportedFlags = hipDeviceScheduleMask | hipDeviceMapHost | hipDeviceLmemResizeToMax;
 
        if (flags & (~supportedFlags)) {
           e = hipErrorInvalidValue;
@@ -338,12 +338,12 @@ hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
     return ihipLogStatus(e);
 }
 
-hipError_t hipDeviceGetPCIBusId (int *pciBusId,int len,hipDevice_t device)
+hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,hipDevice_t device)
 {
-    HIP_INIT_API(pciBusId,len, device);
+    HIP_INIT_API(pciBusId, len, device);
     hipError_t e = hipSuccess;
     int deviceId= device->_deviceId;
-    e = ihipDeviceGetAttribute(pciBusId, hipDeviceAttributePciBusId, deviceId);
+    e = ihipDeviceGetAttribute((int*)pciBusId, hipDeviceAttributePciBusId, deviceId);
     return ihipLogStatus(e);
 }
 
