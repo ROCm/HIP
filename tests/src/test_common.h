@@ -23,6 +23,8 @@ THE SOFTWARE.
 #include <stddef.h>
 
 #include "hip/hip_runtime.h"
+#include "hip/hip_texture.h"
+#include "hip/hip_runtime_api.h"
 
 #define HC __attribute__((hc))
 
@@ -63,6 +65,8 @@ THE SOFTWARE.
     printf ("\n");\
     printf ("warn: TEST WARNING\n%s", KNRM );\
 
+#define HIP_PRINT_STATUS(status) \
+    std::cout<<hipGetErrorName(status)<<" at line: "<<__LINE__<<std::endl;
 
 #define HIPCHECK(error) \
 {\

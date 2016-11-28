@@ -274,6 +274,11 @@ foreach $arg (@ARGV)
         $buildDeps = 1;
     }
 
+    if($arg eq '-use_fast_math') {
+        print "In fast Math";
+        $HIPCXXFLAGS .= " -DHIP_FAST_MATH ";
+    }
+
     if ($arg =~ m/^-/) {
         # options start with -
 
@@ -328,7 +333,7 @@ if ($needHipHcc) {
     } elsif ($HIP_LIB_TYPE eq 1) {
         substr($HIPLDFLAGS,0,0) = " -L$HIP_PATH/lib -lhip_hcc " ;
     } else {
-        substr($HIPLDFLAGS,0,0) = " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc ";
+        substr($HIPLDFLAGS,0,0) = " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc -lhip_device ";
     }
 }
 

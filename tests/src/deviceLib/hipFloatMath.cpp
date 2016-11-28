@@ -19,45 +19,44 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#include "hip/hip_runtime.h"
+
+/* HIT_START
+ * BUILD: %t %s
+ * RUN: %t
+ * HIT_END
+ */
+
 #include "test_common.h"
 
-#pragma GCC diagnostic ignored "-Wall"
-#pragma clang diagnostic ignored "-Wunused-variable"
+#define LEN 512
+#define SIZE LEN<<2
 
-__device__ void double_precision_intrinsics()
-{
-    //__dadd_rd(0.0, 1.0);
-    //__dadd_rn(0.0, 1.0);
-    //__dadd_ru(0.0, 1.0);
-    //__dadd_rz(0.0, 1.0);
-    //__ddiv_rd(0.0, 1.0);
-    //__ddiv_rn(0.0, 1.0);
-    //__ddiv_ru(0.0, 1.0);
-    //__ddiv_rz(0.0, 1.0);
-    //__dmul_rd(1.0, 2.0);
-    //__dmul_rn(1.0, 2.0);
-    //__dmul_ru(1.0, 2.0);
-    //__dmul_rz(1.0, 2.0);
-    __drcp_rd(2.0);
-    __drcp_rn(2.0);
-    __drcp_ru(2.0);
-    __drcp_rz(2.0);
-    __dsqrt_rd(4.0);
-    __dsqrt_rn(4.0);
-    __dsqrt_ru(4.0);
-    __dsqrt_rz(4.0);
-    //__dsub_rd(2.0, 1.0);
-    //__dsub_rn(2.0, 1.0);
-    //__dsub_ru(2.0, 1.0);
-    //__dsub_rz(2.0, 1.0);
-    __fma_rd(1.0, 2.0, 3.0);
-    __fma_rn(1.0, 2.0, 3.0);
-    __fma_ru(1.0, 2.0, 3.0);
-    __fma_rz(1.0, 2.0, 3.0);
+
+
+__global__ void floatMath(hipLaunchParm lp, float *In, float *Out) {
+  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  Out[tid] = __cosf(In[tid]);
+  Out[tid] = __exp10f(Out[tid]);
+  Out[tid] = __expf(Out[tid]);
+  Out[tid] = __frsqrt_rn(Out[tid]);
+  Out[tid] = __fsqrt_rd(Out[tid]);
+  Out[tid] = __fsqrt_rn(Out[tid]);
+  Out[tid] = __fsqrt_ru(Out[tid]);
+  Out[tid] = __fsqrt_rz(Out[tid]);
+  Out[tid] = __log10f(Out[tid]);
+  Out[tid] = __log2f(Out[tid]);
+  Out[tid] = __logf(Out[tid]);
+  Out[tid] = __powf(2.0f, Out[tid]);
+  __sincosf(Out[tid], &In[tid], &Out[tid]);
+  Out[tid] = __sinf(Out[tid]);
+  Out[tid] = __cosf(Out[tid]);
+  Out[tid] = __tanf(Out[tid]);
 }
 
-__global__ void compileDoublePrecisionIntrinsics(hipLaunchParm lp, int ignored)
-{
-    double_precision_intrinsics();
+int main(){
+  float *Inh, *Outh, *Ind, *Outd;
+  hipMalloc((void**)&Ind, SIZE);
+  hipMalloc((void**)&Outd, SIZE);
+  hipLaunchKernel(floatMath, dim3(LEN,1,1), dim3(1,1,1), 0, 0, Ind, Outd);
+  passed();
 }

@@ -26,6 +26,184 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 
+//=================================================================================================
+/*
+ Implementation of malloc and free device functions.
+
+ This is the best place to put them because the device
+ global variables need to be initialized at the start.
+*/
+
+#define NUM_PAGES_PER_THREAD  16
+#define SIZE_OF_PAGE          64
+#define NUM_THREADS_PER_CU    64
+#define NUM_CUS_PER_GPU       64
+#define NUM_PAGES NUM_PAGES_PER_THREAD * NUM_THREADS_PER_CU * NUM_CUS_PER_GPU
+#define SIZE_MALLOC NUM_PAGES * SIZE_OF_PAGE
+#define SIZE_OF_HEAP SIZE_MALLOC
+
+size_t g_malloc_heap_size = SIZE_OF_HEAP;
+
+__attribute__((address_space(1))) char gpuHeap[SIZE_OF_HEAP];
+__attribute__((address_space(1))) uint32_t gpuFlags[NUM_PAGES];
+
+__device__ void *__hip_hc_malloc(size_t size)
+{
+    char *heap = (char*)gpuHeap;
+    if(size > SIZE_OF_HEAP)
+    {
+        return (void*)nullptr;
+    }
+    uint32_t totalThreads = hipBlockDim_x * hipGridDim_x * hipBlockDim_y * hipGridDim_y * hipBlockDim_z * hipGridDim_z;
+    uint32_t currentWorkItem = hipThreadIdx_x + hipBlockDim_x * hipBlockIdx_x;
+
+    uint32_t numHeapsPerWorkItem = NUM_PAGES / totalThreads;
+    uint32_t heapSizePerWorkItem = SIZE_OF_HEAP / totalThreads;
+
+    uint32_t stride = size / SIZE_OF_PAGE;
+    uint32_t start = numHeapsPerWorkItem * currentWorkItem;
+
+    uint32_t k=0;
+
+    while(gpuFlags[k] > 0)
+    {
+        k++;
+    }
+
+    for(uint32_t i=0;i<stride-1;i++)
+    {
+        gpuFlags[i+start+k] = 1;
+    }
+
+    gpuFlags[start+stride-1+k] = 2;
+
+    void* ptr = (void*)(heap + heapSizePerWorkItem * currentWorkItem + k*SIZE_OF_PAGE);
+
+    return ptr;
+}
+
+__device__ void* __hip_hc_free(void *ptr)
+{
+    if(ptr == nullptr)
+    {
+       return nullptr;
+    }
+
+    uint32_t offsetByte = (uint64_t)ptr - (uint64_t)gpuHeap;
+    uint32_t offsetPage = offsetByte / SIZE_OF_PAGE;
+
+    while(gpuFlags[offsetPage] != 0) {
+        if(gpuFlags[offsetPage] == 2) {
+            gpuFlags[offsetPage] = 0;
+            offsetPage++;
+            break;
+        } else {
+            gpuFlags[offsetPage] = 0;
+            offsetPage++;
+        }
+    }
+
+    return nullptr;
+}
+
+__device__ unsigned __hip_ds_bpermute(int index, unsigned src) {
+    return hc::__amdgcn_ds_bpermute(index, src);
+}
+
+__device__ float __hip_ds_bpermutef(int index, float src) {
+    return hc::__amdgcn_ds_bpermute(index, src);
+}
+
+__device__ unsigned __hip_ds_permute(int index, unsigned src) {
+    return hc::__amdgcn_ds_permute(index, src);
+}
+
+__device__ float __hip_ds_permutef(int index, float src) {
+    return hc::__amdgcn_ds_permute(index, src);
+}
+
+__device__ unsigned __hip_ds_swizzle(unsigned int src, int pattern) {
+    return hc::__amdgcn_ds_swizzle(src, pattern);
+}
+
+__device__ float __hip_ds_swizzlef(float src, int pattern) {
+    return hc::__amdgcn_ds_swizzle(src, pattern);
+}
+
+__device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask, bool bound_ctrl) {
+    return hc::__amdgcn_move_dpp(src, dpp_ctrl, row_mask, bank_mask, bound_ctrl);
+}
+
+#define MASK1 0x00ff00ff
+#define MASK2 0xff00ff00
+
+__device__ char4 __hip_hc_add8pk(char4 in1, char4 in2) {
+    char4 out;
+    unsigned one1 = in1.val & MASK1;
+    unsigned one2 = in2.val & MASK1;
+    out.val = (one1 + one2) & MASK1;
+    one1 = in1.val & MASK2;
+    one2 = in2.val & MASK2;
+    out.val = out.val | ((one1 + one2) & MASK2);
+    return out;
+}
+
+__device__ char4 __hip_hc_sub8pk(char4 in1, char4 in2) {
+    char4 out;
+    unsigned one1 = in1.val & MASK1;
+    unsigned one2 = in2.val & MASK1;
+    out.val = (one1 - one2) & MASK1;
+    one1 = in1.val & MASK2;
+    one2 = in2.val & MASK2;
+    out.val = out.val | ((one1 - one2) & MASK2);
+    return out;
+}
+
+__device__ char4 __hip_hc_mul8pk(char4 in1, char4 in2) {
+    char4 out;
+    unsigned one1 = in1.val & MASK1;
+    unsigned one2 = in2.val & MASK1;
+    out.val = (one1 * one2) & MASK1;
+    one1 = in1.val & MASK2;
+    one2 = in2.val & MASK2;
+    out.val = out.val | ((one1 * one2) & MASK2);
+    return out;
+}
+
+// loop unrolling
+__device__ void* memcpy(void* dst, void* src, size_t size)
+{
+    uint8_t *dstPtr, *srcPtr;
+    dstPtr = (uint8_t*)dst;
+    srcPtr = (uint8_t*)src;
+    for(uint32_t i=0;i<size;i++) {
+        dstPtr[i] = srcPtr[i];
+    }
+    return nullptr;
+}
+
+__device__ void* memset(void* ptr, uint8_t val, size_t size)
+{
+    uint8_t *dstPtr;
+    dstPtr = (uint8_t*)ptr;
+    for(uint32_t i=0;i<size;i++) {
+        dstPtr[i] = val;
+    }
+    return nullptr;
+}
+
+__device__ void* malloc(size_t size)
+{
+    return __hip_hc_malloc(size);
+}
+
+__device__ void* free(void *ptr)
+{
+    return __hip_hc_free(ptr);
+}
+
+//=================================================================================================
+
 // TODO: Choose whether default is precise math or fast math based on compilation flag.
 #ifdef __HCC_ACCELERATOR__
 using namespace hc::precise_math;
@@ -1865,26 +2043,151 @@ __device__ __attribute__((address_space(3))) void* __get_dynamicgroupbaseptr()
 }
 
 
+// Precise Math Functions
+__device__ float __hip_precise_cosf(float x) {
+  return hc::precise_math::cosf(x);
+}
 
-//TODO - add a couple fast math operations here, the set here will grow :
-__device__  float __cosf(float x) {return hc::fast_math::cosf(x); };
-__device__  float __expf(float x) {return hc::fast_math::expf(x); };
-__device__  float __frsqrt_rn(float x) {return hc::fast_math::rsqrt(x); };
-__device__  float __fsqrt_rd(float x) {return hc::fast_math::sqrt(x); };
-__device__  float __fsqrt_rn(float x) {return hc::fast_math::sqrt(x); };
-__device__  float __fsqrt_ru(float x) {return hc::fast_math::sqrt(x); };
-__device__  float __fsqrt_rz(float x) {return hc::fast_math::sqrt(x); };
-__device__  float __log10f(float x) {return hc::fast_math::log10f(x); };
-__device__  float __log2f(float x) {return hc::fast_math::log2f(x); };
-__device__  float __logf(float x) {return hc::fast_math::logf(x); };
-__device__  float __powf(float base, float exponent) {return hc::fast_math::powf(base, exponent); };
-__device__  void __sincosf(float x, float *s, float *c) {return hc::fast_math::sincosf(x, s, c); };
-__device__  float __sinf(float x) {return hc::fast_math::sinf(x); };
-__device__  float __tanf(float x) {return hc::fast_math::tanf(x); };
-__device__  float __dsqrt_rd(double x) {return hc::fast_math::sqrt(x); };
-__device__  float __dsqrt_rn(double x) {return hc::fast_math::sqrt(x); };
-__device__  float __dsqrt_ru(double x) {return hc::fast_math::sqrt(x); };
-__device__  float __dsqrt_rz(double x) {return hc::fast_math::sqrt(x); };
+__device__ float __hip_precise_exp10f(float x) {
+  return hc::precise_math::exp10f(x);
+}
+
+__device__ float __hip_precise_expf(float x) {
+  return hc::precise_math::expf(x);
+}
+
+__device__ float __hip_precise_frsqrt_rn(float x) {
+  return hc::precise_math::rsqrt(x);
+}
+
+__device__ float __hip_precise_fsqrt_rd(float x) {
+  return hc::precise_math::sqrt(x);
+}
+
+__device__ float __hip_precise_fsqrt_rn(float x) {
+  return hc::precise_math::sqrt(x);
+}
+
+__device__ float __hip_precise_fsqrt_ru(float x) {
+  return hc::precise_math::sqrt(x);
+}
+
+__device__ float __hip_precise_fsqrt_rz(float x) {
+  return hc::precise_math::sqrt(x);
+}
+
+__device__ float __hip_precise_log10f(float x) {
+  return hc::precise_math::log10(x);
+}
+
+__device__ float __hip_precise_log2f(float x) {
+  return hc::precise_math::log2(x);
+}
+
+__device__ float __hip_precise_logf(float x) {
+  return hc::precise_math::logf(x);
+}
+
+__device__ float __hip_precise_powf(float base, float exponent) {
+  return hc::precise_math::powf(base, exponent);
+}
+
+__device__ void __hip_precise_sincosf(float x, float *s, float *c) {
+  hc::precise_math::sincosf(x, s, c);
+}
+
+__device__ float __hip_precise_sinf(float x) {
+  return hc::precise_math::sinf(x);
+}
+
+__device__ float __hip_precise_tanf(float x) {
+  return hc::precise_math::tanf(x);
+}
+
+// Double Precision Math
+__device__ double __hip_precise_dsqrt_rd(double x) {
+  return hc::precise_math::sqrt(x);
+}
+
+__device__ double __hip_precise_dsqrt_rn(double x) {
+  return hc::precise_math::sqrt(x);
+}
+
+__device__ double __hip_precise_dsqrt_ru(double x) {
+  return hc::precise_math::sqrt(x);
+}
+
+__device__ double __hip_precise_dsqrt_rz(double x) {
+  return hc::precise_math::sqrt(x);
+}
+
+#define LOG_BASE2_E_DIV_2 0.4426950408894701
+#define LOG_BASE2_5 2.321928094887362
+#define ONE_DIV_LOG_BASE2_E 0.69314718056
+#define ONE_DIV_LOG_BASE2_10 0.30102999566
+
+// Fast Math Intrinsics
+__device__ float __hip_fast_exp10f(float x) {
+  return __hip_fast_exp2f(x*LOG_BASE2_E_DIV_2);
+}
+
+__device__ float __hip_fast_expf(float x) {
+  return __hip_fast_expf(x*LOG_BASE2_5);
+}
+
+__device__ float __hip_fast_frsqrt_rn(float x) {
+  return 1 / __hip_fast_fsqrt_rd(x);;
+}
+
+__device__ float __hip_fast_fsqrt_rn(float x) {
+  return __hip_fast_fsqrt_rd(x);
+}
+
+__device__ float __hip_fast_fsqrt_ru(float x) {
+  return __hip_fast_fsqrt_rd(x);
+}
+
+__device__ float __hip_fast_fsqrt_rz(float x) {
+  return __hip_fast_fsqrt_rd(x);
+}
+
+__device__ float __hip_fast_log10f(float x) {
+  return ONE_DIV_LOG_BASE2_E * __hip_fast_log2f(x);
+}
+
+__device__ float __hip_fast_logf(float x) {
+  return ONE_DIV_LOG_BASE2_10 * __hip_fast_log2f(x);
+}
+
+__device__ float __hip_fast_powf(float base, float exponent) {
+  return hc::fast_math::powf(base, exponent);
+}
+
+__device__ void __hip_fast_sincosf(float x, float *s, float *c) {
+  *s = __hip_fast_sinf(x);
+  *c = __hip_fast_cosf(x);
+}
+
+__device__ float __hip_fast_tanf(float x) {
+  return hc::fast_math::tanf(x);
+}
+
+// Double Precision Math
+__device__ double __hip_fast_dsqrt_rd(double x) {
+  return hc::fast_math::sqrt(x);
+}
+
+__device__ double __hip_fast_dsqrt_rn(double x) {
+  return hc::fast_math::sqrt(x);
+}
+
+__device__ double __hip_fast_dsqrt_ru(double x) {
+  return hc::fast_math::sqrt(x);
+}
+
+__device__ double __hip_fast_dsqrt_rz(double x) {
+  return hc::fast_math::sqrt(x);
+}
 
 __HIP_DEVICE__ char1 make_char1(signed char x)
 {
@@ -2292,6 +2595,10 @@ __HIP_DEVICE__ double4 make_double4(double x, double y, double z, double w)
     d4.z = z;
     d4.w = w;
     return d4;
+}
+
+__device__ void  __threadfence_system(void){
+    // no-op
 }
 
 float __hip_host_erfinvf(float x)

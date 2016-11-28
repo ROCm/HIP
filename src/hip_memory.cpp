@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "hip_hcc.h"
 #include "trace_helper.h"
+#include "hip/hcc_detail/hip_texture.h"
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -1036,7 +1037,3 @@ hipError_t hipFreeArray(hipArray* array)
     return ihipLogStatus(hipStatus);
 }
 
-
-__device__ void  __threadfence_system(void){
-    // no-op
-}
