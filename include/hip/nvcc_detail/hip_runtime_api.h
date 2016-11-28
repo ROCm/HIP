@@ -765,7 +765,7 @@ inline static hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
     return hipCUResultTohipError(cuDeviceGetName(name,len,device));
 }
 
-inline static hipError_t hipDeviceGetPCIBusId(int *pciBusId,int len,hipDevice_t device)
+inline static hipError_t hipDeviceGetPCIBusId(char* pciBusId,int len,hipDevice_t device)
 {
     return hipCUResultTohipError(cuDeviceGetPCIBusId((char*)pciBusId,len,device));
 }
