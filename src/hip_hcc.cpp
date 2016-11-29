@@ -78,7 +78,7 @@ int HIP_WAIT_MODE = 0;
 int HIP_FORCE_P2P_HOST = 0;
 int HIP_DENY_PEER_ACCESS = 0;
 
-// Force async copies to actually use the synchronous copy interface. 
+// Force async copies to actually use the synchronous copy interface.
 int HIP_FORCE_SYNC_COPY = 0;
 
 
@@ -86,7 +86,7 @@ int HIP_FORCE_SYNC_COPY = 0;
 
 
 
-#define HIP_USE_PRODUCT_NAME 0
+#define HIP_USE_PRODUCT_NAME 1
 //#define DISABLE_COPY_EXT 1
 
 
@@ -105,7 +105,7 @@ unsigned g_numLogicalThreads;
 std::atomic<int> g_lastShortTid(1);
 
 // Indexed by short-tid:
-// 
+//
 std::vector<ProfTrigger> g_dbStartTriggers;
 std::vector<ProfTrigger> g_dbStopTriggers;
 
@@ -133,12 +133,12 @@ void recordApiTrace(std::string *fullStr, const std::string &apiStr)
 
     if ((tid < g_dbStartTriggers.size()) && (apiSeqNum >= g_dbStartTriggers[tid].nextTrigger())) {
         printf ("info: resume profiling at %lu\n", apiSeqNum);
-        RESUME_PROFILING; 
+        RESUME_PROFILING;
         g_dbStartTriggers.pop_back();
     };
     if ((tid < g_dbStopTriggers.size()) && (apiSeqNum >= g_dbStopTriggers[tid].nextTrigger())) {
         printf ("info: stop profiling at %lu\n", apiSeqNum);
-        STOP_PROFILING; 
+        STOP_PROFILING;
         g_dbStopTriggers.pop_back();
     };
 
@@ -211,8 +211,8 @@ hipError_t ihipSynchronize(void)
 //=================================================================================================
 ShortTid::ShortTid()  :
     _apiSeqNum(0)
-{ 
-    _shortTid = g_lastShortTid.fetch_add(1); 
+{
+    _shortTid = g_lastShortTid.fetch_add(1);
 
     if (COMPILE_HIP_DB && HIP_TRACE_API) {
         std::stringstream tid_ss;
@@ -282,7 +282,7 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty
         } else if (HIP_WAIT_MODE == 2) {
             waitMode = hc::hcWaitModeActive;
         }
-            
+
         crit->_av.wait(waitMode);
     }
 
@@ -455,7 +455,7 @@ bool ihipCtxCriticalBase_t<CtxMutex>::addPeerWatcher(const ihipCtx_t *thisCtx, i
     auto match = std::find(_peers.begin(), _peers.end(), peerWatcher);
     if (match == std::end(_peers)) {
         // Not already a peer, let's update the list:
-        tprintf(DB_COPY, "addPeerWatcher.  Allocations on %s now visible to peerWatcher %s.\n", 
+        tprintf(DB_COPY, "addPeerWatcher.  Allocations on %s now visible to peerWatcher %s.\n",
                           thisCtx->toString().c_str(), peerWatcher->toString().c_str());
         _peers.push_back(peerWatcher);
         recomputePeerAgents();
@@ -473,7 +473,7 @@ bool ihipCtxCriticalBase_t<CtxMutex>::removePeerWatcher(const ihipCtx_t *thisCtx
     auto match = std::find(_peers.begin(), _peers.end(), peerWatcher);
     if (match != std::end(_peers)) {
         // Found a valid peer, let's remove it.
-        tprintf(DB_COPY, "removePeerWatcher.  Allocations on %s no longer visible to former peerWatcher %s.\n", 
+        tprintf(DB_COPY, "removePeerWatcher.  Allocations on %s no longer visible to former peerWatcher %s.\n",
                           thisCtx->toString().c_str(), peerWatcher->toString().c_str());
         _peers.remove(peerWatcher);
         recomputePeerAgents();
@@ -813,7 +813,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop->arch.hasFloatAtomicAdd           = 0;
     prop->arch.hasGlobalInt64Atomics       = 1;
     prop->arch.hasSharedInt64Atomics       = 1;
-    prop->arch.hasDoubles                  = 1; 
+    prop->arch.hasDoubles                  = 1;
     prop->arch.hasWarpVote                 = 1;
     prop->arch.hasWarpBallot               = 1;
     prop->arch.hasWarpShuffle              = 1;
@@ -1181,7 +1181,7 @@ std::string HIP_DB_callback(void *var_ptr, const char *envVarString)
         tokenize(e, '+', &tokens);
         for (auto t=tokens.begin(); t!= tokens.end(); t++) {
             for (int i=0; i<DB_MAX_FLAG; i++) {
-                if (!strcmp(t->c_str(), dbName[i]._shortName)) { 
+                if (!strcmp(t->c_str(), dbName[i]._shortName)) {
                     *var_ptr_int |= (1<<i);
                 } // TODO - else throw error?
             }
@@ -1257,13 +1257,13 @@ void ihipInit()
     READ_ENV_I(release, HIP_PROFILE_API, 0,  "Add HIP API markers to ATP file generated with CodeXL. 0x1=short API name, 0x2=full API name including args.");
     READ_ENV_S(release, HIP_DB_START_API, 0,  "Comma-separated list of tid.api_seq_num for when to start debug and profiling.");
     READ_ENV_S(release, HIP_DB_STOP_API, 0,  "Comma-separated list of tid.api_seq_num for when to stop debug and profiling.");
-    
+
     READ_ENV_C(release, HIP_VISIBLE_DEVICES, CUDA_VISIBLE_DEVICES, "Only devices whose index is present in the sequence are visible to HIP applications and they are enumerated in the order of sequence.", HIP_VISIBLE_DEVICES_callback );
 
 
     READ_ENV_I(release, HIP_WAIT_MODE, 0, "Force synchronization mode. 1= force yield, 2=force spin, 0=defaults specified in application");
-    READ_ENV_I(release, HIP_FORCE_P2P_HOST, 0, "Force use of host/staging copy for peer-to-peer copies.1=always use copies, 2=always return false for hipDeviceCanAccessPeer"); 
-    READ_ENV_I(release, HIP_FORCE_SYNC_COPY, 0, "Force all copies (even hipMemcpyAsync) to use sync copies"); 
+    READ_ENV_I(release, HIP_FORCE_P2P_HOST, 0, "Force use of host/staging copy for peer-to-peer copies.1=always use copies, 2=always return false for hipDeviceCanAccessPeer");
+    READ_ENV_I(release, HIP_FORCE_SYNC_COPY, 0, "Force all copies (even hipMemcpyAsync) to use sync copies");
     READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Max number of inflight kernels per stream before active synchronization is forced.");
 
     // Some flags have both compile-time and runtime flags - generate a warning if user enables the runtime flag but the compile-time flag is disabled.
@@ -1716,10 +1716,10 @@ unsigned ihipStream_t::resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDev
 
 
 // hipMemKind must be "resolved" to a specific direction - cannot be default.
-void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind, 
-                                            const hc::AmPointerInfo *dstPtrInfo, 
-                                            const hc::AmPointerInfo *srcPtrInfo, 
-                                            hc::hcCommandKind *hcCopyDir, 
+void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind,
+                                            const hc::AmPointerInfo *dstPtrInfo,
+                                            const hc::AmPointerInfo *srcPtrInfo,
+                                            hc::hcCommandKind *hcCopyDir,
                                             ihipCtx_t **copyDevice,
                                             bool *forceUnpinnedCopy)
 {
@@ -1749,11 +1749,11 @@ void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind,
 
         if (HIP_FORCE_P2P_HOST & 0x1) {
             *forceUnpinnedCopy = true;
-            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d agent=0x%lx) can see src and dst but HIP_FORCE_P2P_HOST=0, forcing copy through staging buffers.\n", 
+            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d agent=0x%lx) can see src and dst but HIP_FORCE_P2P_HOST=0, forcing copy through staging buffers.\n",
                     (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
 
         } else {
-            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d agent=0x%lx) can see src and dst.\n",  
+            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d agent=0x%lx) can see src and dst.\n",
                     (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
         }
     } else {
@@ -1789,7 +1789,7 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     {
         LockedAccessor_StreamCrit_t crit (_criticalData);
         tprintf (DB_COPY, "copySync copyDev:%d  dst=%p (phys_dev:%d, isDevMem:%d)  src=%p(phys_dev:%d, isDevMem:%d)   sz=%zu dir=%s forceUnpinnedCopy=%d\n",
-                 copyDevice ? copyDevice->getDeviceNum():-1, 
+                 copyDevice ? copyDevice->getDeviceNum():-1,
                  dst, dstPtrInfo._appId, dstPtrInfo._isInDeviceMem,
                  src, srcPtrInfo._appId, srcPtrInfo._isInDeviceMem,
                  sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
@@ -1846,7 +1846,7 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
         bool forceUnpinnedCopy;
         resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &copyDevice, &forceUnpinnedCopy);
         tprintf (DB_COPY, "copyASync copyDev:%d  dst=%p (phys_dev:%d, isDevMem:%d)  src=%p(phys_dev:%d, isDevMem:%d)   sz=%zu dir=%s forceUnpinnedCopy=%d\n",
-                 copyDevice ? copyDevice->getDeviceNum():-1, 
+                 copyDevice ? copyDevice->getDeviceNum():-1,
                  dst, dstPtrInfo._appId, dstPtrInfo._isInDeviceMem,
                  src, srcPtrInfo._appId, srcPtrInfo._isInDeviceMem,
                  sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
