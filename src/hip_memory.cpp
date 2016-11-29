@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include "hip_hcc.h"
 #include "trace_helper.h"
 #include "hip/hcc_detail/hip_texture.h"
+#include <hc_am.hpp>
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -1037,3 +1038,17 @@ hipError_t hipFreeArray(hipArray* array)
     return ihipLogStatus(hipStatus);
 }
 
+hipError_t hipMemGetAddressRange ( hipDeviceptr_t* pbase, size_t* psize, hipDeviceptr_t dptr )
+{
+    HIP_INIT_API ( pbase , psize , dptr );
+    hipError_t hipStatus = hipSuccess;
+    hc::accelerator acc;
+    hc::AmPointerInfo amPointerInfo( NULL , NULL , 0 , acc , 0 , 0 );
+    am_status_t status = hc::am_memtracker_getinfo( &amPointerInfo , dptr );
+    if (status == AM_SUCCESS) {
+        *pbase = amPointerInfo._devicePointer;
+        *psize = amPointerInfo._sizeBytes;
+    }
+    hipStatus = hipErrorInvalidDevicePointer;
+    return hipStatus;
+}

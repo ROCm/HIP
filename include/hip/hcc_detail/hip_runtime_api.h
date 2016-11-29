@@ -1281,6 +1281,18 @@ hipError_t  hipDeviceEnablePeerAccess (int  peerDeviceId, unsigned int flags);
  */
 hipError_t  hipDeviceDisablePeerAccess (int peerDeviceId);
 
+/**
+ * @brief Get information on memory allocations.
+ *
+ * @param [out] pbase - BAse pointer address
+ * @param [out] psize - Size of allocation
+ * @param [in]  dptr- Device Pointer
+ *
+ * @returns #hipSuccess, #hipErrorInvalidDevicePointer
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ */
+hipError_t hipMemGetAddressRange ( hipDeviceptr_t* pbase, size_t* psize, hipDeviceptr_t dptr );
 
 #ifndef USE_PEER_NON_UNIFIED
 #define USE_PEER_NON_UNIFIED 1
