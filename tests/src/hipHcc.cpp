@@ -22,7 +22,7 @@ THE SOFTWARE.
 // Test the HCC-specific API extensions for HIP:
 
 /* HIT_START
- * BUILD: %t %s HCC_OPTIONS --stdlib=libc++
+ * BUILD: %t %s HCC_OPTIONS -stdlib=libc++
  * RUN: %t
  * HIT_END
  */
