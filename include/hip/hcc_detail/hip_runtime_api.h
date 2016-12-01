@@ -57,6 +57,30 @@ typedef struct ihipDevice_t *hipDevice_t;
 
 typedef struct ihipStream_t *hipStream_t;
 
+//TODO: IPC implementation
+
+#define hipIpcMemLazyEnablePeerAccess 0
+struct ihipIpcMemHandle_t;
+typedef struct ihipIpcMemHandle_t *hipIpcMemHandle_t;
+struct ihipIpcEventHandle_t;
+typedef struct ihipIpcEventHandle_t *hipIpcEventHandle_t;
+
+typedef std::nullptr_t nullptr_t ;
+
+__device__ double  
+__longlong_as_double(long long int x)
+{
+  return (double)x;
+}
+__device__ long long int    
+__double_as_longlong(double x)
+{
+  return (long long int)x; 
+}
+
+
+//END TODO
+
 typedef struct ihipModule_t *hipModule_t;
 
 typedef struct ihipFunction_t *hipFunction_t;
@@ -1605,11 +1629,23 @@ hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device);
  * @brief Returns a PCI Bus Id string for the device.
  * @param [out] pciBusId
  * @param [in] len
+ * @param [hipDevice_t] device
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+// hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,hipDevice_t device);
+
+
+/**
+ * @brief Returns a PCI Bus Id string for the device, overloaded to take int device ID.
+ * @param [out] pciBusId
+ * @param [in] len
  * @param [in] device
  *
  * @returns #hipSuccess, #hipErrorInavlidDevice
  */
-hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,hipDevice_t device);
+hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,int device);
+
 
 /**
  * @brief Returns a handle to a compute device.
@@ -1791,7 +1827,11 @@ hipError_t hipProfilerStop();
  * @}
  */
 
-
+//TODO: implement IPC apis
+hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr);
+hipError_t hipIpcCloseMemHandle(void *devPtr);
+hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle);
+hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags);
 
 
 #ifdef __cplusplus
