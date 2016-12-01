@@ -1034,3 +1034,18 @@ hipError_t hipMemGetAddressRange ( hipDeviceptr_t* pbase, size_t* psize, hipDevi
     hipStatus = hipErrorInvalidDevicePointer;
     return hipStatus;
 }
+
+
+//TODO: IPC implementaiton:
+hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr){
+    return hipSuccess;
+}
+hipError_t hipIpcCloseMemHandle(void *devPtr){
+    return hipSuccess;
+}
+hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle){
+    return hipSuccess;
+}
+hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags){
+    return hipSuccess;
+}
