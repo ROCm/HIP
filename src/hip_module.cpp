@@ -333,7 +333,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
 #endif // USE_DISPATCH_HSA_KERNEL
 
 
-        ihipPostLaunchKernel(hStream, lp);
+        ihipPostLaunchKernel(f->_kernelName, hStream, lp);
 
     }
 
