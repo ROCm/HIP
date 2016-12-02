@@ -45,6 +45,7 @@ extern const int release;
 
 // TODO - this blocks both kernels and memory ops.  Perhaps should have separate env var for kernels?
 extern int HIP_LAUNCH_BLOCKING;
+extern int HIP_API_BLOCKING;
 
 extern int HIP_PRINT_ENV;
 extern int HIP_PROFILE_API;
@@ -55,6 +56,8 @@ extern int HIP_STAGING_SIZE;   /* size of staging buffers, in KB */
 extern int HIP_STREAM_SIGNALS;  /* number of signals to allocate at stream creation */
 extern int HIP_VISIBLE_DEVICES; /* Contains a comma-separated sequence of GPU identifiers */
 extern int HIP_FORCE_P2P_HOST;
+
+extern int HIP_COHERENT_HOST_ALLOC;
 
 
 //---
@@ -155,11 +158,6 @@ extern const char *API_COLOR_END;
 #define COMPILE_HIP_ATP_MARKER 0
 #endif
 
-
-// Compile code that force hipHostMalloc only allocates finegrained system memory.
-#ifndef HIP_COHERENT_HOST_ALLOC
-#define HIP_COHERENT_HOST_ALLOC 0
-#endif
 
 
 
@@ -455,7 +453,7 @@ public:
     //---
     // Member functions that begin with locked_ are thread-safe accessors - these acquire / release the critical mutex.
     LockedAccessor_StreamCrit_t  lockopen_preKernelCommand();
-    void                 lockclose_postKernelCommand(hc::accelerator_view *av);
+    void                 lockclose_postKernelCommand(const char *kernelName, hc::accelerator_view *av);
 
 
     void                 locked_wait(bool assertQueueEmpty=false);

@@ -157,20 +157,6 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
     return ihipLogStatus(hip_status);
 }
 
-void ihipReadSingleEnv(int *var_ptr, const char *var_name1, const char *description)
-{
-    char * env = getenv(var_name1);
-
-    // Default is set when variable is initialized (at top of this file), so only override if we find
-    // an environment variable.
-    if (env) {
-        long int v = strtol(env, NULL, 0);
-        *var_ptr = (int) (v);
-    }
-    if (HIP_PRINT_ENV) {
-        printf ("%-30s = %2d : %s\n", var_name1, *var_ptr, description);
-    }
-}
 
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
@@ -193,16 +179,12 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 
         const unsigned supportedFlags = hipHostMallocPortable | hipHostMallocMapped | hipHostMallocWriteCombined;
 
-        // Read from environment variable of HIP_COHERENT_HOST_ALLOC
-        int coherent_alloc=0;
-        ihipReadSingleEnv(&coherent_alloc, "HIP_COHERENT_HOST_ALLOC", "Flag to force allocate finegrained system memory");
-
         if (flags & ~supportedFlags) {
             hip_status = hipErrorInvalidValue;
         }
         else {
             auto device = ctx->getWriteableDevice();
-            if(coherent_alloc){
+            if(HIP_COHERENT_HOST_ALLOC){
                 // Force to allocate finedgrained system memory
                 *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
                 if(sizeBytes < 1 && (*ptr == NULL)){
@@ -853,13 +835,13 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
             }
         }
 
-        stream->lockclose_postKernelCommand(&crit->_av);
+        stream->lockclose_postKernelCommand("hipMemsetAsync", &crit->_av);
 
 
-        if (HIP_LAUNCH_BLOCKING) {
-            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING wait for memset [stream:%p].\n", __func__, (void*)stream);
+        if (HIP_API_BLOCKING) {
+            tprintf (DB_SYNC, "%s LAUNCH_BLOCKING wait for hipMemsetAsync.\n", ToString(stream).c_str());
             cf.wait();
-            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING memset completed [stream:%p].\n", __func__, (void*)stream);
+            //tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING memset completed [stream:%p].\n", __func__, (void*)stream);
         }
     } else {
         e = hipErrorInvalidValue;
@@ -906,7 +888,7 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
         // TODO - is hipMemset supposed to be async?
         cf.wait();
 
-        stream->lockclose_postKernelCommand(&crit->_av);
+        stream->lockclose_postKernelCommand("hipMemset", &crit->_av);
 
 
         if (HIP_LAUNCH_BLOCKING) {
