@@ -282,8 +282,6 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         grid_launch_parm lp;
         hStream = ihipPreLaunchKernel(hStream, 0, 0, &lp, f->_kernelName);
 
-#if USE_DISPATCH_HSA_KERNEL
-
         hsa_kernel_dispatch_packet_t aql;
 
         memset(&aql, 0, sizeof(aql));
@@ -307,31 +305,6 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
                                     (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
 
         lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize);
-#else
-
-        /*
-          Create signal
-        */
-
-        hsa_signal_t signal;
-        status = hsa_signal_create(1, 0, NULL, &signal);
-
-
-        /*
-          Launch AQL packet
-        */
-        hStream->launchModuleKernel(*lp.av, signal, blockDimX, blockDimY, blockDimZ,
-                  gridDimX, gridDimY, gridDimZ, groupSegmentSize, privateSegmentSize, config[1], kernArgSize, f->_kernel);
-
-
-        /*
-          Wait for signal
-        */
-
-        hsa_signal_value_t value = hsa_signal_wait_acquire(signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_BLOCKED);
-
-#endif // USE_DISPATCH_HSA_KERNEL
-
 
         ihipPostLaunchKernel(f->_kernelName, hStream, lp);
 
