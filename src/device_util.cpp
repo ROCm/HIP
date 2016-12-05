@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include <hc.hpp>
 #include <grid_launch.h>
 #include <hc_math.hpp>
+#include "device_util.h"
 
 #include "hip/hip_runtime.h"
 
@@ -33,15 +34,6 @@ THE SOFTWARE.
  This is the best place to put them because the device
  global variables need to be initialized at the start.
 */
-
-#define NUM_PAGES_PER_THREAD  16
-#define SIZE_OF_PAGE          64
-#define NUM_THREADS_PER_CU    64
-#define NUM_CUS_PER_GPU       64
-#define NUM_PAGES NUM_PAGES_PER_THREAD * NUM_THREADS_PER_CU * NUM_CUS_PER_GPU
-#define SIZE_MALLOC NUM_PAGES * SIZE_OF_PAGE
-#define SIZE_OF_HEAP SIZE_MALLOC
-
 size_t g_malloc_heap_size = SIZE_OF_HEAP;
 
 __attribute__((address_space(1))) char gpuHeap[SIZE_OF_HEAP];
