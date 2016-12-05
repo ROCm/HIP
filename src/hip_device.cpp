@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "hip_hcc.h"
 #include "trace_helper.h"
+#include "device_util.h"
 
 //-------------------------------------------------------------------------------------------------
 //Devices
@@ -97,8 +98,6 @@ hipError_t hipDeviceGetCacheConfig(hipFuncCache_t *cacheConfig)
     return ihipLogStatus(hipSuccess);
 }
 
-extern "C" size_t g_malloc_heap_size;
-
 hipError_t hipDeviceGetLimit (size_t *pValue, hipLimit_t limit)
 {
     HIP_INIT_API(pValue, limit);
@@ -106,7 +105,7 @@ hipError_t hipDeviceGetLimit (size_t *pValue, hipLimit_t limit)
         return ihipLogStatus(hipErrorInvalidValue);
     }
     if(limit == hipLimitMallocHeapSize) {
-        *pValue = g_malloc_heap_size;
+        *pValue = (size_t)SIZE_OF_HEAP;
         return ihipLogStatus(hipSuccess);
     }else{
         return ihipLogStatus(hipErrorUnsupportedLimit);
