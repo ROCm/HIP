@@ -1037,15 +1037,24 @@ hipError_t hipMemGetAddressRange ( hipDeviceptr_t* pbase, size_t* psize, hipDevi
 
 
 //TODO: IPC implementaiton:
-hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr){
-    return hipSuccess;
-}
-hipError_t hipIpcCloseMemHandle(void *devPtr){
-    return hipSuccess;
-}
-hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle){
-    return hipSuccess;
-}
 hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags){
-    return hipSuccess;
+    // HIP_INIT_API ( devPtr, handle.handle , flags);
+    hipError_t hipStatus = hipSuccess;
+    return hipStatus;
 }
+
+hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr){
+    HIP_INIT_API ( handle, devPtr);
+    hipError_t hipStatus = hipSuccess;
+    return hipStatus;
+}
+
+hipError_t hipIpcCloseMemHandle(void *devPtr){
+    HIP_INIT_API ( devPtr );
+    hipError_t hipStatus = hipSuccess;
+    return hipStatus;
+}
+
+// hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle){
+//     return hipSuccess;
+// }

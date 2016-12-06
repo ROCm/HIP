@@ -771,7 +771,8 @@ extern "C" __device__ void __threadfence(void);
  *
  * @warning __threadfence_system is a stub and map to no-op.
  */
-__device__ void  __threadfence_system(void) __attribute__((deprecated("Provided with workaround configuration, see hip_kernel_language.md for details")));
+//__device__ void  __threadfence_system(void) __attribute__((deprecated("Provided with workaround configuration, see hip_kernel_language.md for details")));
+__device__ void  __threadfence_system(void) ;
 
 __device__ unsigned __hip_ds_bpermute(int index, unsigned src);
 __device__ float __hip_ds_bpermutef(int index, float src);
