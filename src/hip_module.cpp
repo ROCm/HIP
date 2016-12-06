@@ -163,7 +163,12 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
     return ihipLogStatus(ret);
 }
 
-hipError_t hipModuleUnload(hipModule_t hmod){
+hipError_t hipModuleUnload(hipModule_t hmod)
+{
+    // TODO - improve this synchronization so it is thread-safe.
+    // Currently we want for all inflight activity to complete, but don't prevent another
+    // thread from launching new kernels before we finish this operation.
+    ihipSynchronize();
     hipError_t ret = hipSuccess;
     hsa_status_t status = hsa_executable_destroy(hmod->executable);
     if(status != HSA_STATUS_SUCCESS)
