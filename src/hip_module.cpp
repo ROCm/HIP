@@ -126,7 +126,6 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
 
         } else {
 
-            *module = new ihipModule_t;
             size_t size = std::string::size_type(in.tellg());
             void *p = NULL;
             hsa_agent_t agent = currentDevice->_hsaAgent;
@@ -176,6 +175,11 @@ hipError_t hipModuleUnload(hipModule_t hmod){
 		{
 				ret = hipErrorInvalidValue;
 		}
+    status = hsa_memory_free(hmod->ptr);
+    if(status != HSA_STATUS_SUCCESS)
+		{
+				ret = hipErrorInvalidValue;
+		}
     delete hmod;
     return ihipLogStatus(ret);
 }
@@ -193,6 +197,7 @@ hipError_t ihipModuleGetFunction(hipFunction_t *func, hipModule_t hmod, const ch
 
     }else{
         *func = new ihipFunction_t(name);
+        hmod->registerFunction(*func);
         int deviceId = ctx->getDevice()->_deviceId;
         ihipDevice_t *currentDevice = ihipGetDevice(deviceId);
         hsa_agent_t gpuAgent = (hsa_agent_t)currentDevice->_hsaAgent;
@@ -268,11 +273,17 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         hsa_status_t status = hsa_executable_symbol_get_info(f->_kernelSymbol,
                                                              HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE,
                                                              &groupSegmentSize);
+        if(status != HSA_STATUS_SUCCESS){
+            return ihipLogStatus(hipErrorNotFound);
+        }
 
         uint32_t privateSegmentSize;
         status = hsa_executable_symbol_get_info(f->_kernelSymbol,
                                                 HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_PRIVATE_SEGMENT_SIZE,
                                                 &privateSegmentSize);
+        if(status != HSA_STATUS_SUCCESS){
+            return ihipLogStatus(hipErrorNotFound);
+        }
         privateSegmentSize += sharedMemBytes;
 
 
@@ -300,7 +311,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         aql.group_segment_size = groupSegmentSize;
         aql.private_segment_size = privateSegmentSize;
         aql.kernel_object = f->_kernel;
-        aql.setup = 1 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
+        aql.setup = 3 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
         aql.header =   (HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE) |
                                     (1 << HSA_PACKET_HEADER_BARRIER) |
                                     (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
@@ -315,13 +326,32 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
 
         hsa_signal_t signal;
         status = hsa_signal_create(1, 0, NULL, &signal);
+        if(status != HSA_STATUS_SUCCESS){
+            return ihipLogStatus(hipErrorNotFound);
+        }
+
+        /*
+           Allocate kernarg
+        */
+        void *kern = nullptr;
+
+        hsa_amd_memory_pool_t *pool = reinterpret_cast<hsa_amd_memory_pool_t*>(lp.av->get_hsa_kernarg_region());
+        status = hsa_amd_memory_pool_allocate(*pool, kernArgSize, 0, &kern);
+        if(status != HSA_STATUS_SUCCESS){
+            return ihipLogStatus(hipErrorNotFound);
+        }
+        status = hsa_amd_agents_allow_access(1, (hsa_agent_t*)lp.av->get_hsa_agent(), 0, kern);
+        if(status != HSA_STATUS_SUCCESS){
+            return ihipLogStatus(hipErrorNotFound);
+        }
+        memcpy(kern, config[1], kernArgSize);
 
 
         /*
           Launch AQL packet
         */
         hStream->launchModuleKernel(*lp.av, signal, blockDimX, blockDimY, blockDimZ,
-                  gridDimX, gridDimY, gridDimZ, groupSegmentSize, privateSegmentSize, config[1], kernArgSize, f->_kernel);
+                  gridDimX, gridDimY, gridDimZ, groupSegmentSize, privateSegmentSize, kern, kernArgSize, f->_kernel);
 
 
         /*
@@ -329,6 +359,22 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         */
 
         hsa_signal_value_t value = hsa_signal_wait_acquire(signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_BLOCKED);
+
+        /*
+           Destroy kernarg
+        */
+        status = hsa_amd_memory_pool_free(kern);
+        if(status != HSA_STATUS_SUCCESS){
+            return ihipLogStatus(hipErrorNotFound);
+        }
+
+        /*
+          Destroy the signal
+        */
+        status = hsa_signal_destroy(signal);
+        if(status != HSA_STATUS_SUCCESS){
+            return ihipLogStatus(hipErrorNotFound);
+        }
 
 #endif // USE_DISPATCH_HSA_KERNEL
 

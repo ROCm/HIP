@@ -367,17 +367,6 @@ struct LockedBase {
     MUTEX_TYPE  _mutex;
 };
 
-
-class ihipModule_t{
-public:
-  hsa_executable_t executable;
-  hsa_code_object_t object;
-  std::string fileName;
-  void *ptr;
-  size_t size;
-};
-
-
 class ihipFunction_t{
 public:
     ihipFunction_t(const char *name) {
@@ -399,6 +388,29 @@ public:
     uint64_t _kernel;
 };
 
+class ihipModule_t {
+public:
+  hsa_executable_t executable;
+  hsa_code_object_t object;
+  std::string fileName;
+  void *ptr;
+  size_t size;
+
+  ihipModule_t() : executable(), object(), fileName(), ptr(nullptr), size(0), hipFunctionTable() {}
+  ~ihipModule_t() {
+    for (int i = 0; i < hipFunctionTable.size(); ++i) {
+      ihipFunction_t *func = hipFunctionTable[i];
+      delete func;
+    }
+    hipFunctionTable.clear();
+  }
+
+  void registerFunction(ihipFunction_t* func) {
+    hipFunctionTable.push_back(func);
+  }
+private:
+  std::vector<ihipFunction_t*> hipFunctionTable;
+};
 
 template <typename MUTEX_TYPE>
 class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE>
