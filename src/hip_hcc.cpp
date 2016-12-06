@@ -401,17 +401,11 @@ void ihipStream_t::launchModuleKernel(
                         uint32_t gridDimY,
                         uint32_t gridDimZ,
                         uint32_t groupSegmentSize,
-						uint32_t privateSegmentSize,
+			uint32_t privateSegmentSize,
                         void *kernarg,
                         size_t kernSize,
                         uint64_t kernel){
     hsa_status_t status;
-    void *kern;
-
-    hsa_amd_memory_pool_t *pool = reinterpret_cast<hsa_amd_memory_pool_t*>(av.get_hsa_kernarg_region());
-    status = hsa_amd_memory_pool_allocate(*pool, kernSize, 0, &kern);
-    status = hsa_amd_agents_allow_access(1, (hsa_agent_t*)av.get_hsa_agent(), 0, kern);
-    memcpy(kern, kernarg, kernSize);
     hsa_queue_t *Queue = (hsa_queue_t*)av.get_hsa_queue();
     const uint32_t queue_mask = Queue->size-1;
     uint32_t packet_index = hsa_queue_load_write_index_relaxed(Queue);
@@ -426,7 +420,7 @@ void ihipStream_t::launchModuleKernel(
     dispatch_packet->grid_size_z = blockDimZ * gridDimZ;
     dispatch_packet->group_segment_size = groupSegmentSize;
     dispatch_packet->private_segment_size = privateSegmentSize;
-    dispatch_packet->kernarg_address = kern;
+    dispatch_packet->kernarg_address = kernarg;
     dispatch_packet->kernel_object = kernel;
     uint16_t header = (HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE) |
     (1 << HSA_PACKET_HEADER_BARRIER) |
