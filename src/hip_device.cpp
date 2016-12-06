@@ -337,16 +337,7 @@ hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
     return ihipLogStatus(e);
 }
 
-// hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,hipDevice_t device)
-// {
-//     HIP_INIT_API(pciBusId, len, device);
-//     hipError_t e = hipSuccess;
-//     int deviceId= device->_deviceId;
-//     e = ihipDeviceGetAttribute((int*)pciBusId, hipDeviceAttributePciBusId, deviceId);
-//     return ihipLogStatus(e);
-// }
-
-hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,int device)
+hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len, int device)
 {
     HIP_INIT_API(pciBusId, len, device);
     hipError_t e = hipSuccess;
@@ -358,7 +349,6 @@ hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,int device)
     }
     return ihipLogStatus(e);
 }
-
 hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device)
 {
     HIP_INIT_API(bytes, device);
