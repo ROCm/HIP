@@ -25,6 +25,7 @@ THE SOFTWARE.
 
 #include <hc.hpp>
 #include <hsa/hsa.h>
+#include "hsa/hsa_ext_amd.h"
 #include "hip_util.h"
 
 
@@ -367,6 +368,26 @@ struct LockedBase {
     MUTEX_TYPE  _mutex;
 };
 
+/**
+ * HIP IPC Handle Size
+ */
+#define HIP_IPC_HANDLE_SIZE 64
+struct __HIP_DEVICE__ ihipIpcMemHandle
+{
+    volatile hsa_amd_ipc_memory_t handle; ///< ipc memory handle on ROCr
+    char reserved[HIP_IPC_HANDLE_SIZE];
+};
+
+
+class ihipModule_t{
+public:
+  hsa_executable_t executable;
+  hsa_code_object_t object;
+  std::string fileName;
+  void *ptr;
+  size_t size;
+};
+
 class ihipFunction_t{
 public:
     ihipFunction_t(const char *name) {
@@ -507,9 +528,9 @@ private:
 
     // The unsigned return is hipMemcpyKind
     unsigned resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDeviceMem);
-    void resolveHcMemcpyDirection(unsigned hipMemKind, 
-                                  const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo, 
-                                  hc::hcCommandKind *hcCopyDir, 
+    void resolveHcMemcpyDirection(unsigned hipMemKind,
+                                  const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo,
+                                  hc::hcCommandKind *hcCopyDir,
                                   ihipCtx_t **copyDevice,
                                   bool *forceUnpinnedCopy);
 

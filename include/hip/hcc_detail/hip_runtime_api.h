@@ -60,23 +60,12 @@ typedef struct ihipStream_t *hipStream_t;
 //TODO: IPC implementation
 
 #define hipIpcMemLazyEnablePeerAccess 0
-struct ihipIpcMemHandle_t;
-typedef struct ihipIpcMemHandle_t *hipIpcMemHandle_t;
+
+typedef struct ihipIpcMemHandle *hipIpcMemHandle_t;
+
+//TODO: IPC event handle currently unsupported
 struct ihipIpcEventHandle_t;
 typedef struct ihipIpcEventHandle_t *hipIpcEventHandle_t;
-
-typedef std::nullptr_t nullptr_t ;
-
-__device__ double  
-__longlong_as_double(long long int x)
-{
-  return (double)x;
-}
-__device__ long long int    
-__double_as_longlong(double x)
-{
-  return (long long int)x; 
-}
 
 
 //END TODO
@@ -1828,10 +1817,97 @@ hipError_t hipProfilerStop();
  */
 
 //TODO: implement IPC apis
-hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr);
-hipError_t hipIpcCloseMemHandle(void *devPtr);
-hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle);
-hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags);
+
+/**
+ * @brief Gets an interprocess memory handle for an existing device memory
+ *          allocation
+ *
+ * Takes a pointer to the base of an existing device memory allocation created 
+ * with hipMalloc and exports it for use in another process. This is a 
+ * lightweight operation and may be called multiple times on an allocation
+ * without adverse effects. 
+ *
+ * If a region of memory is freed with hipFree and a subsequent call
+ * to hipMalloc returns memory with the same device address,
+ * hipIpcGetMemHandle will return a unique handle for the
+ * new memory. 
+ *
+ * @param handle - Pointer to user allocated hipIpcMemHandle to return
+ *                    the handle in.
+ * @param devPtr - Base pointer to previously allocated device memory 
+ *
+ * @returns
+ * hipSuccess,
+ * hipErrorInvalidResourceHandle,
+ * hipErrorMemoryAllocation,
+ * hipErrorMapBufferObjectFailed,
+ *
+ */
+extern __host__ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t *handle, void *devPtr);
+
+/**
+ * @brief Opens an interprocess memory handle exported from another process
+ *          and returns a device pointer usable in the local process.
+ *
+ * Maps memory exported from another process with hipIpcGetMemHandle into
+ * the current device address space. For contexts on different devices 
+ * hipIpcOpenMemHandle can attempt to enable peer access between the
+ * devices as if the user called hipDeviceEnablePeerAccess. This behavior is 
+ * controlled by the hipIpcMemLazyEnablePeerAccess flag. 
+ * hipDeviceCanAccessPeer can determine if a mapping is possible.
+ *
+ * Contexts that may open hipIpcMemHandles are restricted in the following way.
+ * hipIpcMemHandles from each device in a given process may only be opened 
+ * by one context per device per other process.
+ *
+ * Memory returned from hipIpcOpenMemHandle must be freed with
+ * hipIpcCloseMemHandle.
+ *
+ * Calling hipFree on an exported memory region before calling
+ * hipIpcCloseMemHandle in the importing context will result in undefined
+ * behavior.
+ * 
+ * @param devPtr - Returned device pointer
+ * @param handle - hipIpcMemHandle to open
+ * @param flags  - Flags for this operation. Must be specified as hipIpcMemLazyEnablePeerAccess
+ *
+ * @returns
+ * hipSuccess,
+ * hipErrorMapBufferObjectFailed,
+ * hipErrorInvalidResourceHandle,
+ * hipErrorTooManyPeers
+ *
+ * @note No guarantees are made about the address returned in @p *devPtr.  
+ * In particular, multiple processes may not receive the same address for the same @p handle.
+ *
+ */
+extern __host__ hipError_t hipIpcOpenMemHandle(void **devPtr, hipIpcMemHandle_t handle, unsigned int flags);
+
+/**
+ * @brief Close memory mapped with hipIpcOpenMemHandle
+ * 
+ * Unmaps memory returnd by hipIpcOpenMemHandle. The original allocation
+ * in the exporting process as well as imported mappings in other processes
+ * will be unaffected.
+ *
+ * Any resources used to enable peer access will be freed if this is the
+ * last mapping using them.
+ *
+ * @param devPtr - Device pointer returned by hipIpcOpenMemHandle
+ * 
+ * @returns
+ * hipSuccess,
+ * hipErrorMapBufferObjectFailed,
+ * hipErrorInvalidResourceHandle,
+ *
+ */
+extern __host__ hipError_t hipIpcCloseMemHandle(void *devPtr);
+
+
+// hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr);
+// hipError_t hipIpcCloseMemHandle(void *devPtr);
+// // hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle);
+// hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags);
 
 
 #ifdef __cplusplus
