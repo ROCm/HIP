@@ -343,7 +343,7 @@ hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,hipDevice_t device)
     hipError_t e = hipSuccess;
     int deviceId= device->_deviceId;
     int tempPciBusId = 0;
-    e = ihipDeviceGetAttribute( tempPciBusId, hipDeviceAttributePciBusId, deviceId);
+    e = ihipDeviceGetAttribute( &tempPciBusId, hipDeviceAttributePciBusId, deviceId);
     if( e == hipSuccess) {
         std::string tempPciStr = std::to_string(tempPciBusId);
         memcpy( pciBusId , tempPciStr.c_str() , tempPciStr.length() );
