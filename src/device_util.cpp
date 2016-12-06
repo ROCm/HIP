@@ -34,8 +34,6 @@ THE SOFTWARE.
  This is the best place to put them because the device
  global variables need to be initialized at the start.
 */
-size_t g_malloc_heap_size = SIZE_OF_HEAP;
-
 __attribute__((address_space(1))) char gpuHeap[SIZE_OF_HEAP];
 __attribute__((address_space(1))) uint32_t gpuFlags[NUM_PAGES];
 
