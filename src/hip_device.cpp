@@ -342,7 +342,12 @@ hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,hipDevice_t device)
     HIP_INIT_API(pciBusId, len, device);
     hipError_t e = hipSuccess;
     int deviceId= device->_deviceId;
-    e = ihipDeviceGetAttribute((int*)pciBusId, hipDeviceAttributePciBusId, deviceId);
+    int tempPciBusId = 0;
+    e = ihipDeviceGetAttribute( tempPciBusId, hipDeviceAttributePciBusId, deviceId);
+    if( e == hipSuccess) {
+        std::string tempPciStr = std::to_string(tempPciBusId);
+        memcpy( pciBusId , tempPciStr.c_str() , tempPciStr.length() );
+    }
     return ihipLogStatus(e);
 }
 
