@@ -1031,27 +1031,67 @@ hipError_t hipMemGetAddressRange ( hipDeviceptr_t* pbase, size_t* psize, hipDevi
         *pbase = amPointerInfo._devicePointer;
         *psize = amPointerInfo._sizeBytes;
     }
-    hipStatus = hipErrorInvalidDevicePointer;
+    else
+        hipStatus = hipErrorInvalidDevicePointer;
     return hipStatus;
 }
 
 
 //TODO: IPC implementaiton:
-hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags){
-    // HIP_INIT_API ( devPtr, handle.handle , flags);
-    hipError_t hipStatus = hipSuccess;
-    return hipStatus;
-}
 
 hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr){
     HIP_INIT_API ( handle, devPtr);
     hipError_t hipStatus = hipSuccess;
+    // Get the size of allocated pointer
+    size_t psize;
+    hc::accelerator acc;
+    hc::AmPointerInfo amPointerInfo( NULL , NULL , 0 , acc , 0 , 0 );
+    am_status_t status = hc::am_memtracker_getinfo( &amPointerInfo , devPtr );
+    if (status == AM_SUCCESS) {
+        psize = (size_t)amPointerInfo._sizeBytes;
+    }
+    else
+        hipStatus = hipErrorInvalidResourceHandle;
+
+    // Save the size of the pointer to hipIpcMemHandle
+    (*handle)->psize = psize;
+
+    // Create HSA ipc memory
+    hsa_status_t hsa_status =
+        hsa_amd_ipc_memory_create(devPtr, psize, &(*handle)->ipc_handle);
+    if(hsa_status!= HSA_STATUS_SUCCESS)
+        hipStatus = hipErrorMemoryAllocation;
+
+    return hipStatus;
+}
+
+hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags){
+// HIP_INIT_API ( devPtr, handle.handle , flags);
+    hipError_t hipStatus = hipSuccess;
+
+    // Get the current device agent.
+    hc::accelerator acc;
+    hsa_agent_t *agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
+    if(!agent)
+        return hipErrorInvalidResourceHandle;
+
+    //Attach ipc memory
+    hsa_status_t hsa_status =
+        hsa_amd_ipc_memory_attach(&handle->ipc_handle, handle->psize, 1, agent, devPtr);
+    if(hsa_status != HSA_STATUS_SUCCESS)
+        hipStatus = hipErrorMapBufferObjectFailed;
+
     return hipStatus;
 }
 
 hipError_t hipIpcCloseMemHandle(void *devPtr){
     HIP_INIT_API ( devPtr );
     hipError_t hipStatus = hipSuccess;
+
+    hsa_status_t hsa_status =
+        hsa_amd_ipc_memory_detach(devPtr);
+    if(hsa_status != HSA_STATUS_SUCCESS)
+        return hipErrorInvalidResourceHandle;
     return hipStatus;
 }
 

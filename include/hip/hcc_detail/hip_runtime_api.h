@@ -61,7 +61,7 @@ typedef struct ihipStream_t *hipStream_t;
 
 #define hipIpcMemLazyEnablePeerAccess 0
 
-typedef struct ihipIpcMemHandle *hipIpcMemHandle_t;
+typedef struct ihipIpcMemHandle_t *hipIpcMemHandle_t;
 
 //TODO: IPC event handle currently unsupported
 struct ihipIpcEventHandle_t;
@@ -1822,19 +1822,19 @@ hipError_t hipProfilerStop();
  * @brief Gets an interprocess memory handle for an existing device memory
  *          allocation
  *
- * Takes a pointer to the base of an existing device memory allocation created 
- * with hipMalloc and exports it for use in another process. This is a 
+ * Takes a pointer to the base of an existing device memory allocation created
+ * with hipMalloc and exports it for use in another process. This is a
  * lightweight operation and may be called multiple times on an allocation
- * without adverse effects. 
+ * without adverse effects.
  *
  * If a region of memory is freed with hipFree and a subsequent call
  * to hipMalloc returns memory with the same device address,
  * hipIpcGetMemHandle will return a unique handle for the
- * new memory. 
+ * new memory.
  *
  * @param handle - Pointer to user allocated hipIpcMemHandle to return
  *                    the handle in.
- * @param devPtr - Base pointer to previously allocated device memory 
+ * @param devPtr - Base pointer to previously allocated device memory
  *
  * @returns
  * hipSuccess,
@@ -1850,14 +1850,14 @@ extern __host__ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t *handle, void *d
  *          and returns a device pointer usable in the local process.
  *
  * Maps memory exported from another process with hipIpcGetMemHandle into
- * the current device address space. For contexts on different devices 
+ * the current device address space. For contexts on different devices
  * hipIpcOpenMemHandle can attempt to enable peer access between the
- * devices as if the user called hipDeviceEnablePeerAccess. This behavior is 
- * controlled by the hipIpcMemLazyEnablePeerAccess flag. 
+ * devices as if the user called hipDeviceEnablePeerAccess. This behavior is
+ * controlled by the hipIpcMemLazyEnablePeerAccess flag.
  * hipDeviceCanAccessPeer can determine if a mapping is possible.
  *
  * Contexts that may open hipIpcMemHandles are restricted in the following way.
- * hipIpcMemHandles from each device in a given process may only be opened 
+ * hipIpcMemHandles from each device in a given process may only be opened
  * by one context per device per other process.
  *
  * Memory returned from hipIpcOpenMemHandle must be freed with
@@ -1866,7 +1866,7 @@ extern __host__ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t *handle, void *d
  * Calling hipFree on an exported memory region before calling
  * hipIpcCloseMemHandle in the importing context will result in undefined
  * behavior.
- * 
+ *
  * @param devPtr - Returned device pointer
  * @param handle - hipIpcMemHandle to open
  * @param flags  - Flags for this operation. Must be specified as hipIpcMemLazyEnablePeerAccess
@@ -1877,15 +1877,16 @@ extern __host__ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t *handle, void *d
  * hipErrorInvalidResourceHandle,
  * hipErrorTooManyPeers
  *
- * @note No guarantees are made about the address returned in @p *devPtr.  
+ * @note No guarantees are made about the address returned in @p *devPtr.
  * In particular, multiple processes may not receive the same address for the same @p handle.
  *
  */
-extern __host__ hipError_t hipIpcOpenMemHandle(void **devPtr, hipIpcMemHandle_t handle, unsigned int flags);
+extern __host__ hipError_t hipIpcOpenMemHandle(void **devPtr,
+        hipIpcMemHandle_t handle, unsigned int flags);
 
 /**
  * @brief Close memory mapped with hipIpcOpenMemHandle
- * 
+ *
  * Unmaps memory returnd by hipIpcOpenMemHandle. The original allocation
  * in the exporting process as well as imported mappings in other processes
  * will be unaffected.
@@ -1894,7 +1895,7 @@ extern __host__ hipError_t hipIpcOpenMemHandle(void **devPtr, hipIpcMemHandle_t 
  * last mapping using them.
  *
  * @param devPtr - Device pointer returned by hipIpcOpenMemHandle
- * 
+ *
  * @returns
  * hipSuccess,
  * hipErrorMapBufferObjectFailed,
