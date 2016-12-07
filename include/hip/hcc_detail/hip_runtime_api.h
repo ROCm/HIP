@@ -1622,7 +1622,7 @@ hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device);
  *
  * @returns #hipSuccess, #hipErrorInavlidDevice
  */
-// hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,hipDevice_t device);
+hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,hipDevice_t device);
 
 
 /**
