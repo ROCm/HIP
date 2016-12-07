@@ -210,6 +210,7 @@ typedef enum hipError_t {
     hipErrorRuntimeOther            = 1053,                   ///< HSA runtime call other than memory returned error.  Typically not seen in production systems.
     hipErrorHostMemoryAlreadyRegistered = 1061, ///< Produced when trying to lock a page-locked memory.
     hipErrorHostMemoryNotRegistered = 1062,   ///< Produced when trying to unlock a non-page-locked memory.
+    hipErrorMapBufferObjectFailed = 1071,   ///< Produced when the IPC memory attach failed from ROCr.
     hipErrorTbd                             ///< Marker that more error codes are needed.
 } hipError_t;
 

@@ -372,10 +372,12 @@ struct LockedBase {
  * HIP IPC Handle Size
  */
 #define HIP_IPC_HANDLE_SIZE 64
-struct __HIP_DEVICE__ ihipIpcMemHandle
+class ihipIpcMemHandle_t
 {
-    volatile hsa_amd_ipc_memory_t handle; ///< ipc memory handle on ROCr
+public:
+    hsa_amd_ipc_memory_t ipc_handle; ///< ipc memory handle on ROCr
     char reserved[HIP_IPC_HANDLE_SIZE];
+    size_t psize;
 };
 
 class ihipFunction_t{
