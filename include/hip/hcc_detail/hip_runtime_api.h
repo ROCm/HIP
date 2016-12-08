@@ -1615,17 +1615,6 @@ hipError_t hipDeviceComputeCapability(int *major,int *minor,hipDevice_t device);
 hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device);
 
 /**
- * @brief Returns a PCI Bus Id string for the device.
- * @param [out] pciBusId
- * @param [in] len
- * @param [hipDevice_t] device
- *
- * @returns #hipSuccess, #hipErrorInavlidDevice
- */
-hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,hipDevice_t device);
-
-
-/**
  * @brief Returns a PCI Bus Id string for the device, overloaded to take int device ID.
  * @param [out] pciBusId
  * @param [in] len
@@ -1915,6 +1904,17 @@ hipError_t hipIpcCloseMemHandle(void *devPtr);
 } /* extern "c" */
 #endif
 
+#ifdef __cplusplus
+/**
+ * @brief Returns a PCI Bus Id string for the device.
+ * @param [out] pciBusId
+ * @param [in] len
+ * @param [hipDevice_t] device
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,hipDevice_t device);
+#endif
 
 /**
  *-------------------------------------------------------------------------------------------------
