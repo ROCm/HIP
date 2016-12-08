@@ -1843,7 +1843,7 @@ hipError_t hipProfilerStop();
  * hipErrorMapBufferObjectFailed,
  *
  */
-extern __host__ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t *handle, void *devPtr);
+hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t *handle, void *devPtr);
 
 /**
  * @brief Opens an interprocess memory handle exported from another process
@@ -1881,7 +1881,7 @@ extern __host__ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t *handle, void *d
  * In particular, multiple processes may not receive the same address for the same @p handle.
  *
  */
-extern __host__ hipError_t hipIpcOpenMemHandle(void **devPtr,
+hipError_t hipIpcOpenMemHandle(void **devPtr,
         hipIpcMemHandle_t handle, unsigned int flags);
 
 /**
@@ -1902,7 +1902,7 @@ extern __host__ hipError_t hipIpcOpenMemHandle(void **devPtr,
  * hipErrorInvalidResourceHandle,
  *
  */
-extern __host__ hipError_t hipIpcCloseMemHandle(void *devPtr);
+hipError_t hipIpcCloseMemHandle(void *devPtr);
 
 
 // hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr);
