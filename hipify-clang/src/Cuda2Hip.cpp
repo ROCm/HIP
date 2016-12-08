@@ -2004,6 +2004,11 @@ static cl::opt<bool> Inplace("inplace",
        cl::value_desc("inplace"),
        cl::cat(ToolTemplateCategory));
 
+static cl::opt<bool> NoBackup("no-backup",
+       cl::desc("Don't create a backup file for the hipified source"),
+       cl::value_desc("no-backup"),
+       cl::cat(ToolTemplateCategory));
+
 static cl::opt<bool> NoOutput("no-output",
        cl::desc("Don't write any translated output to stdout"),
        cl::value_desc("no-output"),
@@ -2134,12 +2139,14 @@ int main(int argc, const char **argv) {
     }
     dst += ".hip";
   }
-  // copy source file since tooling makes changes "inplace"
-  std::ifstream source(fileSources[0], std::ios::binary);
-  std::ofstream dest(Inplace ? dst + ".prehip" : dst, std::ios::binary);
-  dest << source.rdbuf();
-  source.close();
-  dest.close();
+  // backup source file since tooling may change "inplace"
+  if (!NoBackup || !Inplace) {
+    std::ifstream source(fileSources[0], std::ios::binary);
+    std::ofstream dest(Inplace ? dst + ".prehip" : dst, std::ios::binary);
+    dest << source.rdbuf();
+    source.close();
+    dest.close();
+  }
 
   RefactoringTool Tool(OptionsParser.getCompilations(), dst);
   ast_matchers::MatchFinder Finder;
