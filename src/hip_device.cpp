@@ -337,6 +337,7 @@ hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
     return ihipLogStatus(e);
 }
 
+#ifdef __cplusplus
 hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,hipDevice_t device)
 {
     HIP_INIT_API(pciBusId, len, device);
@@ -350,6 +351,7 @@ hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,hipDevice_t device)
     }
     return ihipLogStatus(e);
 }
+#endif
 
 hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len, int device)
 {
