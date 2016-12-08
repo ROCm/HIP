@@ -2107,6 +2107,16 @@ int main(int argc, const char **argv) {
   if (N) {
     NoOutput = PrintStats = true;
   }
+  if (NoOutput) {
+    if (Inplace) {
+      llvm::errs() << "Conflict: both -no-output and -inplace options are specified.\n";
+      return 1;
+    }
+    if (!dst.empty()) {
+      llvm::errs() << "Conflict: both -no-output and -o options are specified.\n";
+      return 1;
+    }
+  }
   if (dst.empty()) {
     dst = fileSources[0];
     if (!Inplace) {
@@ -2120,6 +2130,7 @@ int main(int argc, const char **argv) {
   } else {
     if (Inplace) {
       llvm::errs() << "Conflict: both -o and -inplace options are specified.\n";
+      return 1;
     }
     dst += ".hip";
   }
@@ -2167,14 +2178,17 @@ int main(int argc, const char **argv) {
   if (!Tool.applyAllReplacements(Rewrite)) {
     DEBUG(dbgs() << "Skipped some replacements.\n");
   }
-
-  Result = Rewrite.overwriteChangedFiles();
-
-  if (!Inplace) {
+  if (!NoOutput) {
+    Result = Rewrite.overwriteChangedFiles();
+  }
+  if (!Inplace && !NoOutput) {
     size_t pos = dst.rfind(".");
     if (pos != std::string::npos) {
       rename(dst.c_str(), dst.substr(0, pos).c_str());
     }
+  }
+  if (NoOutput) {
+    remove(dst.c_str());
   }
   if (PrintStats) {
     printStats(fileSources[0], PPCallbacks, Callback);
