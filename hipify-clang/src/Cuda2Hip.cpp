@@ -2110,19 +2110,18 @@ int main(int argc, const char **argv) {
   if (dst.empty()) {
     dst = fileSources[0];
     if (!Inplace) {
-      size_t pos = dst.rfind(".cu");
-      if (pos != std::string::npos) {
-        dst = dst.substr(0, pos) + ".hip.cu";
+      size_t pos = dst.rfind(".");
+      if (pos != std::string::npos && pos+1 < dst.size()) {
+        dst = dst.substr(0, pos) + ".hip." + dst.substr(pos+1, dst.size()-pos-1);
       } else {
-        llvm::errs() << "Input .cu file was not specified.\n";
-        return 1;
+        dst += ".hip.cu";
       }
     }
   } else {
     if (Inplace) {
-      llvm::errs() << "Conflict: both -o and -inplace options are specified.";
+      llvm::errs() << "Conflict: both -o and -inplace options are specified.\n";
     }
-    dst += ".cu";
+    dst += ".hip";
   }
   // copy source file since tooling makes changes "inplace"
   std::ifstream source(fileSources[0], std::ios::binary);
@@ -2172,7 +2171,7 @@ int main(int argc, const char **argv) {
   Result = Rewrite.overwriteChangedFiles();
 
   if (!Inplace) {
-    size_t pos = dst.rfind(".cu");
+    size_t pos = dst.rfind(".");
     if (pos != std::string::npos) {
       rename(dst.c_str(), dst.substr(0, pos).c_str());
     }
