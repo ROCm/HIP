@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp HCC_OPTIONS --stdlib=libc++
+ * BUILD: %t %s ../test_common.cpp HCC_OPTIONS -stdlib=libc++
  * RUN: %t
  * HIT_END
  */

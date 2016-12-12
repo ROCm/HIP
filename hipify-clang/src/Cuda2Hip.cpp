@@ -2004,6 +2004,11 @@ static cl::opt<bool> Inplace("inplace",
        cl::value_desc("inplace"),
        cl::cat(ToolTemplateCategory));
 
+static cl::opt<bool> NoBackup("no-backup",
+       cl::desc("Don't create a backup file for the hipified source"),
+       cl::value_desc("no-backup"),
+       cl::cat(ToolTemplateCategory));
+
 static cl::opt<bool> NoOutput("no-output",
        cl::desc("Don't write any translated output to stdout"),
        cl::value_desc("no-output"),
@@ -2107,29 +2112,41 @@ int main(int argc, const char **argv) {
   if (N) {
     NoOutput = PrintStats = true;
   }
+  if (NoOutput) {
+    if (Inplace) {
+      llvm::errs() << "Conflict: both -no-output and -inplace options are specified.\n";
+      return 1;
+    }
+    if (!dst.empty()) {
+      llvm::errs() << "Conflict: both -no-output and -o options are specified.\n";
+      return 1;
+    }
+  }
   if (dst.empty()) {
     dst = fileSources[0];
     if (!Inplace) {
-      size_t pos = dst.rfind(".cu");
-      if (pos != std::string::npos) {
-        dst = dst.substr(0, pos) + ".hip.cu";
+      size_t pos = dst.rfind(".");
+      if (pos != std::string::npos && pos+1 < dst.size()) {
+        dst = dst.substr(0, pos) + ".hip." + dst.substr(pos+1, dst.size()-pos-1);
       } else {
-        llvm::errs() << "Input .cu file was not specified.\n";
-        return 1;
+        dst += ".hip.cu";
       }
     }
   } else {
     if (Inplace) {
-      llvm::errs() << "Conflict: both -o and -inplace options are specified.";
+      llvm::errs() << "Conflict: both -o and -inplace options are specified.\n";
+      return 1;
     }
-    dst += ".cu";
+    dst += ".hip";
   }
-  // copy source file since tooling makes changes "inplace"
-  std::ifstream source(fileSources[0], std::ios::binary);
-  std::ofstream dest(Inplace ? dst + ".prehip" : dst, std::ios::binary);
-  dest << source.rdbuf();
-  source.close();
-  dest.close();
+  // backup source file since tooling may change "inplace"
+  if (!NoBackup || !Inplace) {
+    std::ifstream source(fileSources[0], std::ios::binary);
+    std::ofstream dest(Inplace ? dst + ".prehip" : dst, std::ios::binary);
+    dest << source.rdbuf();
+    source.close();
+    dest.close();
+  }
 
   RefactoringTool Tool(OptionsParser.getCompilations(), dst);
   ast_matchers::MatchFinder Finder;
@@ -2168,14 +2185,17 @@ int main(int argc, const char **argv) {
   if (!Tool.applyAllReplacements(Rewrite)) {
     DEBUG(dbgs() << "Skipped some replacements.\n");
   }
-
-  Result = Rewrite.overwriteChangedFiles();
-
-  if (!Inplace) {
-    size_t pos = dst.rfind(".cu");
+  if (!NoOutput) {
+    Result = Rewrite.overwriteChangedFiles();
+  }
+  if (!Inplace && !NoOutput) {
+    size_t pos = dst.rfind(".");
     if (pos != std::string::npos) {
       rename(dst.c_str(), dst.substr(0, pos).c_str());
     }
+  }
+  if (NoOutput) {
+    remove(dst.c_str());
   }
   if (PrintStats) {
     printStats(fileSources[0], PPCallbacks, Callback);

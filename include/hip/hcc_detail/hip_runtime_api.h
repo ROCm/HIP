@@ -57,6 +57,19 @@ typedef struct ihipDevice_t *hipDevice_t;
 
 typedef struct ihipStream_t *hipStream_t;
 
+//TODO: IPC implementation
+
+#define hipIpcMemLazyEnablePeerAccess 0
+
+typedef struct ihipIpcMemHandle_t *hipIpcMemHandle_t;
+
+//TODO: IPC event handle currently unsupported
+struct ihipIpcEventHandle_t;
+typedef struct ihipIpcEventHandle_t *hipIpcEventHandle_t;
+
+
+//END TODO
+
 typedef struct ihipModule_t *hipModule_t;
 
 typedef struct ihipFunction_t *hipFunction_t;
@@ -1281,6 +1294,18 @@ hipError_t  hipDeviceEnablePeerAccess (int  peerDeviceId, unsigned int flags);
  */
 hipError_t  hipDeviceDisablePeerAccess (int peerDeviceId);
 
+/**
+ * @brief Get information on memory allocations.
+ *
+ * @param [out] pbase - BAse pointer address
+ * @param [out] psize - Size of allocation
+ * @param [in]  dptr- Device Pointer
+ *
+ * @returns #hipSuccess, #hipErrorInvalidDevicePointer
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ */
+hipError_t hipMemGetAddressRange ( hipDeviceptr_t* pbase, size_t* psize, hipDeviceptr_t dptr );
 
 #ifndef USE_PEER_NON_UNIFIED
 #define USE_PEER_NON_UNIFIED 1
@@ -1590,14 +1615,15 @@ hipError_t hipDeviceComputeCapability(int *major,int *minor,hipDevice_t device);
 hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device);
 
 /**
- * @brief Returns a PCI Bus Id string for the device.
+ * @brief Returns a PCI Bus Id string for the device, overloaded to take int device ID.
  * @param [out] pciBusId
  * @param [in] len
  * @param [in] device
  *
  * @returns #hipSuccess, #hipErrorInavlidDevice
  */
-hipError_t hipDeviceGetPCIBusId (int *pciBusId,int len,hipDevice_t device);
+hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,int device);
+
 
 /**
  * @brief Returns a handle to a compute device.
@@ -1779,13 +1805,116 @@ hipError_t hipProfilerStop();
  * @}
  */
 
+//TODO: implement IPC apis
 
+/**
+ * @brief Gets an interprocess memory handle for an existing device memory
+ *          allocation
+ *
+ * Takes a pointer to the base of an existing device memory allocation created
+ * with hipMalloc and exports it for use in another process. This is a
+ * lightweight operation and may be called multiple times on an allocation
+ * without adverse effects.
+ *
+ * If a region of memory is freed with hipFree and a subsequent call
+ * to hipMalloc returns memory with the same device address,
+ * hipIpcGetMemHandle will return a unique handle for the
+ * new memory.
+ *
+ * @param handle - Pointer to user allocated hipIpcMemHandle to return
+ *                    the handle in.
+ * @param devPtr - Base pointer to previously allocated device memory
+ *
+ * @returns
+ * hipSuccess,
+ * hipErrorInvalidResourceHandle,
+ * hipErrorMemoryAllocation,
+ * hipErrorMapBufferObjectFailed,
+ *
+ */
+hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t *handle, void *devPtr);
+
+/**
+ * @brief Opens an interprocess memory handle exported from another process
+ *          and returns a device pointer usable in the local process.
+ *
+ * Maps memory exported from another process with hipIpcGetMemHandle into
+ * the current device address space. For contexts on different devices
+ * hipIpcOpenMemHandle can attempt to enable peer access between the
+ * devices as if the user called hipDeviceEnablePeerAccess. This behavior is
+ * controlled by the hipIpcMemLazyEnablePeerAccess flag.
+ * hipDeviceCanAccessPeer can determine if a mapping is possible.
+ *
+ * Contexts that may open hipIpcMemHandles are restricted in the following way.
+ * hipIpcMemHandles from each device in a given process may only be opened
+ * by one context per device per other process.
+ *
+ * Memory returned from hipIpcOpenMemHandle must be freed with
+ * hipIpcCloseMemHandle.
+ *
+ * Calling hipFree on an exported memory region before calling
+ * hipIpcCloseMemHandle in the importing context will result in undefined
+ * behavior.
+ *
+ * @param devPtr - Returned device pointer
+ * @param handle - hipIpcMemHandle to open
+ * @param flags  - Flags for this operation. Must be specified as hipIpcMemLazyEnablePeerAccess
+ *
+ * @returns
+ * hipSuccess,
+ * hipErrorMapBufferObjectFailed,
+ * hipErrorInvalidResourceHandle,
+ * hipErrorTooManyPeers
+ *
+ * @note No guarantees are made about the address returned in @p *devPtr.
+ * In particular, multiple processes may not receive the same address for the same @p handle.
+ *
+ */
+hipError_t hipIpcOpenMemHandle(void **devPtr,
+        hipIpcMemHandle_t handle, unsigned int flags);
+
+/**
+ * @brief Close memory mapped with hipIpcOpenMemHandle
+ *
+ * Unmaps memory returnd by hipIpcOpenMemHandle. The original allocation
+ * in the exporting process as well as imported mappings in other processes
+ * will be unaffected.
+ *
+ * Any resources used to enable peer access will be freed if this is the
+ * last mapping using them.
+ *
+ * @param devPtr - Device pointer returned by hipIpcOpenMemHandle
+ *
+ * @returns
+ * hipSuccess,
+ * hipErrorMapBufferObjectFailed,
+ * hipErrorInvalidResourceHandle,
+ *
+ */
+hipError_t hipIpcCloseMemHandle(void *devPtr);
+
+
+// hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr);
+// hipError_t hipIpcCloseMemHandle(void *devPtr);
+// // hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle);
+// hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags);
 
 
 #ifdef __cplusplus
 } /* extern "c" */
 #endif
 
+#ifdef __cplusplus
+/**
+ * @brief Returns a PCI Bus Id string for the device.
+ * @param [out] pciBusId
+ * @param [in] len
+ * @param [hipDevice_t] device
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,hipDevice_t device);
+#endif
 
 /**
  *-------------------------------------------------------------------------------------------------

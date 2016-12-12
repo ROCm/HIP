@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "hip_hcc.h"
 #include "trace_helper.h"
+#include "device_util.h"
 
 //-------------------------------------------------------------------------------------------------
 //Devices
@@ -97,8 +98,6 @@ hipError_t hipDeviceGetCacheConfig(hipFuncCache_t *cacheConfig)
     return ihipLogStatus(hipSuccess);
 }
 
-extern "C" size_t g_malloc_heap_size;
-
 hipError_t hipDeviceGetLimit (size_t *pValue, hipLimit_t limit)
 {
     HIP_INIT_API(pValue, limit);
@@ -106,7 +105,7 @@ hipError_t hipDeviceGetLimit (size_t *pValue, hipLimit_t limit)
         return ihipLogStatus(hipErrorInvalidValue);
     }
     if(limit == hipLimitMallocHeapSize) {
-        *pValue = g_malloc_heap_size;
+        *pValue = (size_t)SIZE_OF_HEAP;
         return ihipLogStatus(hipSuccess);
     }else{
         return ihipLogStatus(hipErrorUnsupportedLimit);
@@ -306,7 +305,7 @@ hipError_t hipSetDeviceFlags( unsigned int flags)
            }
        }
 
-       unsigned supportedFlags = hipDeviceScheduleMask | hipDeviceMapHost | hipDeviceLmemResizeToMax; 
+       unsigned supportedFlags = hipDeviceScheduleMask | hipDeviceMapHost | hipDeviceLmemResizeToMax;
 
        if (flags & (~supportedFlags)) {
           e = hipErrorInvalidValue;
@@ -338,15 +337,34 @@ hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
     return ihipLogStatus(e);
 }
 
-hipError_t hipDeviceGetPCIBusId (int *pciBusId,int len,hipDevice_t device)
+#ifdef __cplusplus
+hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,hipDevice_t device)
 {
-    HIP_INIT_API(pciBusId,len, device);
+    HIP_INIT_API(pciBusId, len, device);
     hipError_t e = hipSuccess;
     int deviceId= device->_deviceId;
-    e = ihipDeviceGetAttribute(pciBusId, hipDeviceAttributePciBusId, deviceId);
+    int tempPciBusId = 0;
+    e = ihipDeviceGetAttribute( &tempPciBusId, hipDeviceAttributePciBusId, deviceId);
+    if( e == hipSuccess) {
+        std::string tempPciStr = std::to_string(tempPciBusId);
+        memcpy( pciBusId , tempPciStr.c_str() , tempPciStr.length() );
+    }
     return ihipLogStatus(e);
 }
+#endif
 
+hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len, int device)
+{
+    HIP_INIT_API(pciBusId, len, device);
+    hipError_t e = hipSuccess;
+    int tempPciBusId = 0;
+    e = ihipDeviceGetAttribute( &tempPciBusId, hipDeviceAttributePciBusId, device);
+    if( e == hipSuccess) {
+        std::string tempPciStr = std::to_string(tempPciBusId);
+        memcpy( pciBusId , tempPciStr.c_str() , tempPciStr.length() );
+    }
+    return ihipLogStatus(e);
+}
 hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device)
 {
     HIP_INIT_API(bytes, device);

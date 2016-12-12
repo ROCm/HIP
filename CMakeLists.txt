@@ -115,16 +115,6 @@ else()
     message(FATAL_ERROR "Don't know where to install HIP. Please specify absolute path using -DCMAKE_INSTALL_PREFIX")
 endif()
 
-# Set if we need to build shared or static library
-if(NOT DEFINED HIP_LIB_TYPE)
-    if(NOT DEFINED ENV{HIP_LIB_TYPE})
-        set(HIP_LIB_TYPE 1)
-    else()
-        set(HIP_LIB_TYPE $ENV{HIP_LIB_TYPE})
-    endif()
-endif()
-add_to_config(_buildInfo HIP_LIB_TYPE)
-
 # Check if we need to build hipify-clang
 if(NOT DEFINED HIPIFY_CLANG_LLVM_DIR)
     if(DEFINED ENV{HIPIFY_CLANG_LLVM_DIR})
@@ -173,7 +163,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HCC_BUILD_FLAGS}")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HIP_HCC_BUILD_FLAGS}")
 
-    set(SOURCE_FILES_SHARED
+    set(SOURCE_FILES_RUNTIME
         src/hip_hcc.cpp
         src/hip_context.cpp
         src/hip_device.cpp
@@ -184,27 +174,23 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/hip_stream.cpp
         src/hip_module.cpp)
 
-    set(SOURCE_FILES_STATIC
+    set(SOURCE_FILES_DEVICE
         src/device_util.cpp
         src/hip_ldg.cpp
         src/hip_fp16.cpp)
 
-    if(${HIP_LIB_TYPE} EQUAL 0)
-        add_library(hip_hcc OBJECT ${SOURCE_FILES_SHARED} ${SOURCE_FILES_STATIC})
-    elseif(${HIP_LIB_TYPE} EQUAL 1)
-        add_library(hip_hcc STATIC ${SOURCE_FILES_SHARED} ${SOURCE_FILES_STATIC})
-    else()
-        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L${HCC_HOME}/lib -lmcwamp -Wl,-Bsymbolic")
-        add_library(hip_hcc SHARED ${SOURCE_FILES_SHARED})
-        add_library(hip_device STATIC ${SOURCE_FILES_STATIC})
-        add_dependencies(hip_device hip_hcc)
-    endif()
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L${HCC_HOME}/lib -lmcwamp -Wl,-Bsymbolic")
+    add_library(hip_hcc SHARED ${SOURCE_FILES_RUNTIME})
+    add_library(hip_hcc_static STATIC ${SOURCE_FILES_RUNTIME})
+    add_dependencies(hip_hcc_static hip_hcc)
+    add_library(hip_device STATIC ${SOURCE_FILES_DEVICE})
+    add_dependencies(hip_device hip_hcc)
 
     # Generate hcc_version.txt
     add_custom_target(query_hcc_version COMMAND ${HCC_HOME}/bin/hcc --version > ${PROJECT_BINARY_DIR}/hcc_version.tmp)
     add_custom_target(check_hcc_version COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PROJECT_BINARY_DIR}/hcc_version.tmp ${PROJECT_BINARY_DIR}/hcc_version.txt DEPENDS query_hcc_version)
     set_source_files_properties(${PROJECT_BINARY_DIR}/hcc_version.txt PROPERTIES GENERATED TRUE)
-    set_source_files_properties(${SOURCE_FILES_SHARED} ${SOURCE_FILES_STATIC} PROPERTIES OBJECT_DEPENDS ${PROJECT_BINARY_DIR}/hcc_version.txt)
+    set_source_files_properties(${SOURCE_FILES_RUNTIME} ${SOURCE_FILES_DEVICE} PROPERTIES OBJECT_DEPENDS ${PROJECT_BINARY_DIR}/hcc_version.txt)
     add_dependencies(hip_hcc check_hcc_version update_build_and_version_info)
 
     # Generate .hipInfo
@@ -223,13 +209,7 @@ add_custom_target(doc COMMAND HIP_PATH=${CMAKE_CURRENT_SOURCE_DIR} doxygen ${CMA
 #############################
 # Install hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
-    if(${HIP_LIB_TYPE} EQUAL 0)
-        install(DIRECTORY ${PROJECT_BINARY_DIR}/CMakeFiles/hip_hcc.dir/src/ DESTINATION lib)
-    elseif(${HIP_LIB_TYPE} EQUAL 1)
-        install(TARGETS hip_hcc DESTINATION lib)
-    else()
-        install(TARGETS hip_hcc hip_device DESTINATION lib)
-    endif()
+    install(TARGETS hip_hcc_static hip_hcc hip_device DESTINATION lib)
     install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_ir.ll DESTINATION lib)
 
     # Install .hipInfo

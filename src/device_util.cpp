@@ -14,8 +14,7 @@ all copies or substantial portions of the Software.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
@@ -23,6 +22,7 @@ THE SOFTWARE.
 #include <hc.hpp>
 #include <grid_launch.h>
 #include <hc_math.hpp>
+#include "device_util.h"
 
 #include "hip/hip_runtime.h"
 
@@ -33,17 +33,6 @@ THE SOFTWARE.
  This is the best place to put them because the device
  global variables need to be initialized at the start.
 */
-
-#define NUM_PAGES_PER_THREAD  16
-#define SIZE_OF_PAGE          64
-#define NUM_THREADS_PER_CU    64
-#define NUM_CUS_PER_GPU       64
-#define NUM_PAGES NUM_PAGES_PER_THREAD * NUM_THREADS_PER_CU * NUM_CUS_PER_GPU
-#define SIZE_MALLOC NUM_PAGES * SIZE_OF_PAGE
-#define SIZE_OF_HEAP SIZE_MALLOC
-
-size_t g_malloc_heap_size = SIZE_OF_HEAP;
-
 __attribute__((address_space(1))) char gpuHeap[SIZE_OF_HEAP];
 __attribute__((address_space(1))) uint32_t gpuFlags[NUM_PAGES];
 
@@ -2597,7 +2586,18 @@ __HIP_DEVICE__ double4 make_double4(double x, double y, double z, double w)
     return d4;
 }
 
-__device__ void  __threadfence_system(void){
+
+__HIP_DEVICE__ double  __longlong_as_double(long long int x)
+{
+  return static_cast<double>(x);
+}
+
+__HIP_DEVICE__ long long __double_as_longlong(double x)
+{
+  return static_cast<long long>(x);
+}
+
+__HIP_DEVICE__ void  __threadfence_system(void){
     // no-op
 }
 
@@ -3390,3 +3390,5 @@ __host__ double norm4d(double a, double b, double c, double d)
 {
     return std::sqrt(a*a + b*b + c*c + d*d);
 }
+
+

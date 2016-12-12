@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include "hip_hcc.h"
 #include "trace_helper.h"
 #include "hip/hcc_detail/hip_texture.h"
+#include <hc_am.hpp>
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -156,20 +157,6 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
     return ihipLogStatus(hip_status);
 }
 
-void ihipReadSingleEnv(int *var_ptr, const char *var_name1, const char *description)
-{
-    char * env = getenv(var_name1);
-
-    // Default is set when variable is initialized (at top of this file), so only override if we find
-    // an environment variable.
-    if (env) {
-        long int v = strtol(env, NULL, 0);
-        *var_ptr = (int) (v);
-    }
-    if (HIP_PRINT_ENV) {
-        printf ("%-30s = %2d : %s\n", var_name1, *var_ptr, description);
-    }
-}
 
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
@@ -192,16 +179,12 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 
         const unsigned supportedFlags = hipHostMallocPortable | hipHostMallocMapped | hipHostMallocWriteCombined;
 
-        // Read from environment variable of HIP_COHERENT_HOST_ALLOC
-        int coherent_alloc=0;
-        ihipReadSingleEnv(&coherent_alloc, "HIP_COHERENT_HOST_ALLOC", "Flag to force allocate finegrained system memory");
-
         if (flags & ~supportedFlags) {
             hip_status = hipErrorInvalidValue;
         }
         else {
             auto device = ctx->getWriteableDevice();
-            if(coherent_alloc){
+            if(HIP_COHERENT_HOST_ALLOC){
                 // Force to allocate finedgrained system memory
                 *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
                 if(sizeBytes < 1 && (*ptr == NULL)){
@@ -852,13 +835,13 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
             }
         }
 
-        stream->lockclose_postKernelCommand(&crit->_av);
+        stream->lockclose_postKernelCommand("hipMemsetAsync", &crit->_av);
 
 
-        if (HIP_LAUNCH_BLOCKING) {
-            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING wait for memset [stream:%p].\n", __func__, (void*)stream);
+        if (HIP_API_BLOCKING) {
+            tprintf (DB_SYNC, "%s LAUNCH_BLOCKING wait for hipMemsetAsync.\n", ToString(stream).c_str());
             cf.wait();
-            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING memset completed [stream:%p].\n", __func__, (void*)stream);
+            //tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING memset completed [stream:%p].\n", __func__, (void*)stream);
         }
     } else {
         e = hipErrorInvalidValue;
@@ -905,7 +888,7 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
         // TODO - is hipMemset supposed to be async?
         cf.wait();
 
-        stream->lockclose_postKernelCommand(&crit->_av);
+        stream->lockclose_postKernelCommand("hipMemset", &crit->_av);
 
 
         if (HIP_LAUNCH_BLOCKING) {
@@ -1037,3 +1020,81 @@ hipError_t hipFreeArray(hipArray* array)
     return ihipLogStatus(hipStatus);
 }
 
+hipError_t hipMemGetAddressRange ( hipDeviceptr_t* pbase, size_t* psize, hipDeviceptr_t dptr )
+{
+    HIP_INIT_API ( pbase , psize , dptr );
+    hipError_t hipStatus = hipSuccess;
+    hc::accelerator acc;
+    hc::AmPointerInfo amPointerInfo( NULL , NULL , 0 , acc , 0 , 0 );
+    am_status_t status = hc::am_memtracker_getinfo( &amPointerInfo , dptr );
+    if (status == AM_SUCCESS) {
+        *pbase = amPointerInfo._devicePointer;
+        *psize = amPointerInfo._sizeBytes;
+    }
+    else
+        hipStatus = hipErrorInvalidDevicePointer;
+    return hipStatus;
+}
+
+
+//TODO: IPC implementaiton:
+
+hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr){
+    HIP_INIT_API ( handle, devPtr);
+    hipError_t hipStatus = hipSuccess;
+    // Get the size of allocated pointer
+    size_t psize;
+    hc::accelerator acc;
+    hc::AmPointerInfo amPointerInfo( NULL , NULL , 0 , acc , 0 , 0 );
+    am_status_t status = hc::am_memtracker_getinfo( &amPointerInfo , devPtr );
+    if (status == AM_SUCCESS) {
+        psize = (size_t)amPointerInfo._sizeBytes;
+    }
+    else
+        hipStatus = hipErrorInvalidResourceHandle;
+
+    // Save the size of the pointer to hipIpcMemHandle
+    (*handle)->psize = psize;
+
+    // Create HSA ipc memory
+    hsa_status_t hsa_status =
+        hsa_amd_ipc_memory_create(devPtr, psize, &(*handle)->ipc_handle);
+    if(hsa_status!= HSA_STATUS_SUCCESS)
+        hipStatus = hipErrorMemoryAllocation;
+
+    return hipStatus;
+}
+
+hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags){
+// HIP_INIT_API ( devPtr, handle.handle , flags);
+    hipError_t hipStatus = hipSuccess;
+
+    // Get the current device agent.
+    hc::accelerator acc;
+    hsa_agent_t *agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
+    if(!agent)
+        return hipErrorInvalidResourceHandle;
+
+    //Attach ipc memory
+    hsa_status_t hsa_status =
+        hsa_amd_ipc_memory_attach(&handle->ipc_handle, handle->psize, 1, agent, devPtr);
+    if(hsa_status != HSA_STATUS_SUCCESS)
+        hipStatus = hipErrorMapBufferObjectFailed;
+
+    return hipStatus;
+}
+
+hipError_t hipIpcCloseMemHandle(void *devPtr){
+    HIP_INIT_API ( devPtr );
+    hipError_t hipStatus = hipSuccess;
+
+    hsa_status_t hsa_status =
+        hsa_amd_ipc_memory_detach(devPtr);
+    if(hsa_status != HSA_STATUS_SUCCESS)
+        return hipErrorInvalidResourceHandle;
+    return hipStatus;
+}
+
+// hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle){
+//     return hipSuccess;
+// }
