@@ -2106,11 +2106,12 @@ void printStats(std::string fileSource, HipifyPPCallbacks &PPCallbacks, Cuda2Hip
 
 int main(int argc, const char **argv) {
   llvm::sys::PrintStackTraceOnErrorSignal();
-  CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::Required);
+  CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::OneOrMore);
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
   std::string dst = OutputFilename;
-  if (N) {
-    NoOutput = PrintStats = true;
+  if (!dst.empty() && fileSources.size() > 1) {
+    llvm::errs() << "Conflict: -o and multiple source files are specified.\n";
+    return 1;
   }
   if (NoOutput) {
     if (Inplace) {
@@ -2122,84 +2123,92 @@ int main(int argc, const char **argv) {
       return 1;
     }
   }
-  if (dst.empty()) {
-    dst = fileSources[0];
-    if (!Inplace) {
-      size_t pos = dst.rfind(".");
-      if (pos != std::string::npos && pos+1 < dst.size()) {
-        dst = dst.substr(0, pos) + ".hip." + dst.substr(pos+1, dst.size()-pos-1);
-      } else {
-        dst += ".hip.cu";
+  if (N) {
+    NoOutput = PrintStats = true;
+  }
+  int Result = 0;
+  for (const auto & src : fileSources) {
+    if (dst.empty()) {
+      dst = src;
+      if (!Inplace) {
+        size_t pos = dst.rfind(".");
+        if (pos != std::string::npos && pos + 1 < dst.size()) {
+          dst = dst.substr(0, pos) + ".hip." + dst.substr(pos + 1, dst.size() - pos - 1);
+        }
+        else {
+          dst += ".hip.cu";
+        }
       }
     }
-  } else {
-    if (Inplace) {
-      llvm::errs() << "Conflict: both -o and -inplace options are specified.\n";
-      return 1;
+    else {
+      if (Inplace) {
+        llvm::errs() << "Conflict: both -o and -inplace options are specified.\n";
+        return 1;
+      }
+      dst += ".hip";
     }
-    dst += ".hip";
-  }
-  // backup source file since tooling may change "inplace"
-  if (!NoBackup || !Inplace) {
-    std::ifstream source(fileSources[0], std::ios::binary);
-    std::ofstream dest(Inplace ? dst + ".prehip" : dst, std::ios::binary);
-    dest << source.rdbuf();
-    source.close();
-    dest.close();
-  }
+    // backup source file since tooling may change "inplace"
+    if (!NoBackup || !Inplace) {
+      std::ifstream source(src, std::ios::binary);
+      std::ofstream dest(Inplace ? dst + ".prehip" : dst, std::ios::binary);
+      dest << source.rdbuf();
+      source.close();
+      dest.close();
+    }
 
-  RefactoringTool Tool(OptionsParser.getCompilations(), dst);
-  ast_matchers::MatchFinder Finder;
-  HipifyPPCallbacks PPCallbacks(&Tool.getReplacements());
-  Cuda2HipCallback Callback(&Tool.getReplacements(), &Finder, &PPCallbacks);
+    RefactoringTool Tool(OptionsParser.getCompilations(), dst);
+    ast_matchers::MatchFinder Finder;
+    HipifyPPCallbacks PPCallbacks(&Tool.getReplacements());
+    Cuda2HipCallback Callback(&Tool.getReplacements(), &Finder, &PPCallbacks);
 
-  addAllMatchers(Finder, &Callback);
+    addAllMatchers(Finder, &Callback);
 
-  auto action = newFrontendActionFactory(&Finder, &PPCallbacks);
-  std::vector<const char*> compilationStages;
-  compilationStages.push_back("--cuda-host-only");
-  Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(compilationStages[0], ArgumentInsertPosition::BEGIN));
-  Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-std=c++11"));
+    auto action = newFrontendActionFactory(&Finder, &PPCallbacks);
+    std::vector<const char*> compilationStages;
+    compilationStages.push_back("--cuda-host-only");
+    Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(compilationStages[0], ArgumentInsertPosition::BEGIN));
+    Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-std=c++11"));
 #if defined(HIPIFY_CLANG_RES)
-  Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-resource-dir=" HIPIFY_CLANG_RES));
+    Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-resource-dir=" HIPIFY_CLANG_RES));
 #endif
-  Tool.appendArgumentsAdjuster(getClangSyntaxOnlyAdjuster());
-  int Result = Tool.run(action.get());
-  Tool.clearArgumentsAdjusters();
+    Tool.appendArgumentsAdjuster(getClangSyntaxOnlyAdjuster());
+    Result += Tool.run(action.get());
+    Tool.clearArgumentsAdjusters();
 
-  LangOptions DefaultLangOptions;
-  IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts = new DiagnosticOptions();
-  TextDiagnosticPrinter DiagnosticPrinter(llvm::errs(), &*DiagOpts);
-  DiagnosticsEngine Diagnostics(
+    LangOptions DefaultLangOptions;
+    IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts = new DiagnosticOptions();
+    TextDiagnosticPrinter DiagnosticPrinter(llvm::errs(), &*DiagOpts);
+    DiagnosticsEngine Diagnostics(
       IntrusiveRefCntPtr<DiagnosticIDs>(new DiagnosticIDs()), &*DiagOpts,
       &DiagnosticPrinter, false);
 
-  DEBUG(dbgs() << "Replacements collected by the tool:\n");
-  for (const auto &r : Tool.getReplacements()) {
-    DEBUG(dbgs() << r.toString() << "\n");
-  }
+    DEBUG(dbgs() << "Replacements collected by the tool:\n");
+    for (const auto &r : Tool.getReplacements()) {
+      DEBUG(dbgs() << r.toString() << "\n");
+    }
 
-  SourceManager Sources(Diagnostics, Tool.getFiles());
-  Rewriter Rewrite(Sources, DefaultLangOptions);
+    SourceManager Sources(Diagnostics, Tool.getFiles());
+    Rewriter Rewrite(Sources, DefaultLangOptions);
 
-  if (!Tool.applyAllReplacements(Rewrite)) {
-    DEBUG(dbgs() << "Skipped some replacements.\n");
-  }
-  if (!NoOutput) {
-    Result = Rewrite.overwriteChangedFiles();
-  }
-  if (!Inplace && !NoOutput) {
-    size_t pos = dst.rfind(".");
-    if (pos != std::string::npos) {
-      rename(dst.c_str(), dst.substr(0, pos).c_str());
+    if (!Tool.applyAllReplacements(Rewrite)) {
+      DEBUG(dbgs() << "Skipped some replacements.\n");
+    }
+    if (!NoOutput) {
+      Result += Rewrite.overwriteChangedFiles();
+    }
+    if (!Inplace && !NoOutput) {
+      size_t pos = dst.rfind(".");
+      if (pos != std::string::npos) {
+        rename(dst.c_str(), dst.substr(0, pos).c_str());
+      }
+    }
+    if (NoOutput) {
+      remove(dst.c_str());
+    }
+    dst.clear();
+    if (PrintStats) {
+      printStats(src, PPCallbacks, Callback);
     }
   }
-  if (NoOutput) {
-    remove(dst.c_str());
-  }
-  if (PrintStats) {
-    printStats(fileSources[0], PPCallbacks, Callback);
-  }
-
   return Result;
 }
