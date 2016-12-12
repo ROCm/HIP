@@ -2019,7 +2019,7 @@ static cl::opt<bool> PrintStats("print-stats",
        cl::value_desc("print-stats"),
        cl::cat(ToolTemplateCategory));
 
-static cl::opt<bool> N("n",
+static cl::opt<bool> Examine("examine",
        cl::desc("Combines -no-output and -print-stats options"),
        cl::value_desc("n"),
        cl::cat(ToolTemplateCategory));
@@ -2123,7 +2123,7 @@ int main(int argc, const char **argv) {
       return 1;
     }
   }
-  if (N) {
+  if (Examine) {
     NoOutput = PrintStats = true;
   }
   int Result = 0;
