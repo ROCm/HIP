@@ -25,6 +25,7 @@ THE SOFTWARE.
 
 #include <hc.hpp>
 #include <hsa/hsa.h>
+#include "hsa/hsa_ext_amd.h"
 #include "hip_util.h"
 
 
@@ -32,7 +33,7 @@ THE SOFTWARE.
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
-#define USE_DISPATCH_HSA_KERNEL 0
+#define USE_DISPATCH_HSA_KERNEL 1
 //
 
 
@@ -45,6 +46,7 @@ extern const int release;
 
 // TODO - this blocks both kernels and memory ops.  Perhaps should have separate env var for kernels?
 extern int HIP_LAUNCH_BLOCKING;
+extern int HIP_API_BLOCKING;
 
 extern int HIP_PRINT_ENV;
 extern int HIP_PROFILE_API;
@@ -55,6 +57,8 @@ extern int HIP_STAGING_SIZE;   /* size of staging buffers, in KB */
 extern int HIP_STREAM_SIGNALS;  /* number of signals to allocate at stream creation */
 extern int HIP_VISIBLE_DEVICES; /* Contains a comma-separated sequence of GPU identifiers */
 extern int HIP_FORCE_P2P_HOST;
+
+extern int HIP_COHERENT_HOST_ALLOC;
 
 
 //---
@@ -155,11 +159,6 @@ extern const char *API_COLOR_END;
 #define COMPILE_HIP_ATP_MARKER 0
 #endif
 
-
-// Compile code that force hipHostMalloc only allocates finegrained system memory.
-#ifndef HIP_COHERENT_HOST_ALLOC
-#define HIP_COHERENT_HOST_ALLOC 0
-#endif
 
 
 
@@ -369,16 +368,17 @@ struct LockedBase {
     MUTEX_TYPE  _mutex;
 };
 
-
-class ihipModule_t{
+/**
+ * HIP IPC Handle Size
+ */
+#define HIP_IPC_HANDLE_SIZE 64
+class ihipIpcMemHandle_t
+{
 public:
-  hsa_executable_t executable;
-  hsa_code_object_t object;
-  std::string fileName;
-  void *ptr;
-  size_t size;
+    hsa_amd_ipc_memory_t ipc_handle; ///< ipc memory handle on ROCr
+    char reserved[HIP_IPC_HANDLE_SIZE];
+    size_t psize;
 };
-
 
 class ihipFunction_t{
 public:
@@ -401,6 +401,29 @@ public:
     uint64_t _kernel;
 };
 
+class ihipModule_t {
+public:
+  hsa_executable_t executable;
+  hsa_code_object_t object;
+  std::string fileName;
+  void *ptr;
+  size_t size;
+
+  ihipModule_t() : executable(), object(), fileName(), ptr(nullptr), size(0), hipFunctionTable() {}
+  ~ihipModule_t() {
+    for (int i = 0; i < hipFunctionTable.size(); ++i) {
+      ihipFunction_t *func = hipFunctionTable[i];
+      delete func;
+    }
+    hipFunctionTable.clear();
+  }
+
+  void registerFunction(ihipFunction_t* func) {
+    hipFunctionTable.push_back(func);
+  }
+private:
+  std::vector<ihipFunction_t*> hipFunctionTable;
+};
 
 template <typename MUTEX_TYPE>
 class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE>
@@ -455,7 +478,7 @@ public:
     //---
     // Member functions that begin with locked_ are thread-safe accessors - these acquire / release the critical mutex.
     LockedAccessor_StreamCrit_t  lockopen_preKernelCommand();
-    void                 lockclose_postKernelCommand(hc::accelerator_view *av);
+    void                 lockclose_postKernelCommand(const char *kernelName, hc::accelerator_view *av);
 
 
     void                 locked_wait(bool assertQueueEmpty=false);
@@ -497,9 +520,9 @@ private:
 
     // The unsigned return is hipMemcpyKind
     unsigned resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDeviceMem);
-    void resolveHcMemcpyDirection(unsigned hipMemKind, 
-                                  const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo, 
-                                  hc::hcCommandKind *hcCopyDir, 
+    void resolveHcMemcpyDirection(unsigned hipMemKind,
+                                  const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo,
+                                  hc::hcCommandKind *hcCopyDir,
                                   ihipCtx_t **copyDevice,
                                   bool *forceUnpinnedCopy);
 

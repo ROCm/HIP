@@ -771,7 +771,8 @@ extern "C" __device__ void __threadfence(void);
  *
  * @warning __threadfence_system is a stub and map to no-op.
  */
-__device__ void  __threadfence_system(void) __attribute__((deprecated("Provided with workaround configuration, see hip_kernel_language.md for details")));
+//__device__ void  __threadfence_system(void) __attribute__((deprecated("Provided with workaround configuration, see hip_kernel_language.md for details")));
+__device__ void  __threadfence_system(void) ;
 
 __device__ unsigned __hip_ds_bpermute(int index, unsigned src);
 __device__ float __hip_ds_bpermutef(int index, float src);
@@ -828,7 +829,7 @@ extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm *lp, const char *kernelNameStr);
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm *lp, const char *kernelNameStr);
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm *lp, const char *kernelNameStr);
-extern void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp);
+extern void ihipPostLaunchKernel(const char *kernelName, hipStream_t stream, grid_launch_parm &lp);
 
 
 // Due to multiple overloaded versions of ihipPreLaunchKernel, the numBlocks3D and blockDim3D can be either size_t or dim3 types
@@ -838,7 +839,7 @@ do {\
   lp.dynamic_group_mem_bytes = _groupMemBytes; \
   hipStream_t trueStream = (ihipPreLaunchKernel(_stream, _numBlocks3D, _blockDim3D, &lp, #_kernelName)); \
   _kernelName (lp, ##__VA_ARGS__);\
-  ihipPostLaunchKernel(trueStream, lp);\
+  ihipPostLaunchKernel(#_kernelName, trueStream, lp);\
 } while(0)
 
 

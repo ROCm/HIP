@@ -61,6 +61,9 @@ const char *API_COLOR = KGRN;
 const char *API_COLOR_END = KNRM;
 
 int HIP_LAUNCH_BLOCKING = 0;
+std::string HIP_LAUNCH_BLOCKING_KERNELS;
+std::vector<std::string> g_hipLaunchBlockingKernels;
+int HIP_API_BLOCKING = 0;
 
 int HIP_PRINT_ENV = 0;
 int HIP_TRACE_API= 0;
@@ -78,15 +81,17 @@ int HIP_WAIT_MODE = 0;
 int HIP_FORCE_P2P_HOST = 0;
 int HIP_DENY_PEER_ACCESS = 0;
 
-// Force async copies to actually use the synchronous copy interface. 
+// Force async copies to actually use the synchronous copy interface.
 int HIP_FORCE_SYNC_COPY = 0;
 
+int HIP_COHERENT_HOST_ALLOC = 0;
 
 
 
 
 
-#define HIP_USE_PRODUCT_NAME 0
+
+#define HIP_USE_PRODUCT_NAME 1
 //#define DISABLE_COPY_EXT 1
 
 
@@ -105,7 +110,7 @@ unsigned g_numLogicalThreads;
 std::atomic<int> g_lastShortTid(1);
 
 // Indexed by short-tid:
-// 
+//
 std::vector<ProfTrigger> g_dbStartTriggers;
 std::vector<ProfTrigger> g_dbStopTriggers;
 
@@ -133,12 +138,12 @@ void recordApiTrace(std::string *fullStr, const std::string &apiStr)
 
     if ((tid < g_dbStartTriggers.size()) && (apiSeqNum >= g_dbStartTriggers[tid].nextTrigger())) {
         printf ("info: resume profiling at %lu\n", apiSeqNum);
-        RESUME_PROFILING; 
+        RESUME_PROFILING;
         g_dbStartTriggers.pop_back();
     };
     if ((tid < g_dbStopTriggers.size()) && (apiSeqNum >= g_dbStopTriggers[tid].nextTrigger())) {
         printf ("info: stop profiling at %lu\n", apiSeqNum);
-        STOP_PROFILING; 
+        STOP_PROFILING;
         g_dbStopTriggers.pop_back();
     };
 
@@ -211,8 +216,8 @@ hipError_t ihipSynchronize(void)
 //=================================================================================================
 ShortTid::ShortTid()  :
     _apiSeqNum(0)
-{ 
-    _shortTid = g_lastShortTid.fetch_add(1); 
+{
+    _shortTid = g_lastShortTid.fetch_add(1);
 
     if (COMPILE_HIP_DB && HIP_TRACE_API) {
         std::stringstream tid_ss;
@@ -282,7 +287,7 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty
         } else if (HIP_WAIT_MODE == 2) {
             waitMode = hc::hcWaitModeActive;
         }
-            
+
         crit->_av.wait(waitMode);
     }
 
@@ -358,13 +363,24 @@ LockedAccessor_StreamCrit_t ihipStream_t::lockopen_preKernelCommand()
 
 //---
 // Must be called after kernel finishes, this releases the lock on the stream so other commands can submit.
-void ihipStream_t::lockclose_postKernelCommand(hc::accelerator_view *av)
+void ihipStream_t::lockclose_postKernelCommand(const char * kernelName, hc::accelerator_view *av)
 {
+    bool blockThisKernel = false;
 
-    if (HIP_LAUNCH_BLOCKING) {
+    if (!g_hipLaunchBlockingKernels.empty()) {
+        std::string kernelNameString(kernelName);
+        for (auto o=g_hipLaunchBlockingKernels.begin(); o!=g_hipLaunchBlockingKernels.end(); o++) {
+            if ((*o == kernelNameString)) {
+                //printf ("force blocking for kernel %s\n", o->c_str());
+                blockThisKernel = true;
+            }
+        }
+    }
+
+    if (HIP_LAUNCH_BLOCKING || blockThisKernel) {
         // TODO - fix this so it goes through proper stream::wait() call.// direct wait OK since we know the stream is locked.
         av->wait(hc::hcWaitModeActive);
-        tprintf(DB_SYNC, " %s LAUNCH_BLOCKING for kernel completion\n", ToString(this).c_str());
+        tprintf(DB_SYNC, "%s LAUNCH_BLOCKING for kernel '%s' completion\n", ToString(this).c_str(), kernelName);
     }
 
     _criticalData.unlock(); // paired with lock from lockopen_preKernelCommand.
@@ -385,17 +401,11 @@ void ihipStream_t::launchModuleKernel(
                         uint32_t gridDimY,
                         uint32_t gridDimZ,
                         uint32_t groupSegmentSize,
-						uint32_t privateSegmentSize,
+			uint32_t privateSegmentSize,
                         void *kernarg,
                         size_t kernSize,
                         uint64_t kernel){
     hsa_status_t status;
-    void *kern;
-
-    hsa_amd_memory_pool_t *pool = reinterpret_cast<hsa_amd_memory_pool_t*>(av.get_hsa_kernarg_region());
-    status = hsa_amd_memory_pool_allocate(*pool, kernSize, 0, &kern);
-    status = hsa_amd_agents_allow_access(1, (hsa_agent_t*)av.get_hsa_agent(), 0, kern);
-    memcpy(kern, kernarg, kernSize);
     hsa_queue_t *Queue = (hsa_queue_t*)av.get_hsa_queue();
     const uint32_t queue_mask = Queue->size-1;
     uint32_t packet_index = hsa_queue_load_write_index_relaxed(Queue);
@@ -410,7 +420,7 @@ void ihipStream_t::launchModuleKernel(
     dispatch_packet->grid_size_z = blockDimZ * gridDimZ;
     dispatch_packet->group_segment_size = groupSegmentSize;
     dispatch_packet->private_segment_size = privateSegmentSize;
-    dispatch_packet->kernarg_address = kern;
+    dispatch_packet->kernarg_address = kernarg;
     dispatch_packet->kernel_object = kernel;
     uint16_t header = (HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE) |
     (1 << HSA_PACKET_HEADER_BARRIER) |
@@ -455,7 +465,7 @@ bool ihipCtxCriticalBase_t<CtxMutex>::addPeerWatcher(const ihipCtx_t *thisCtx, i
     auto match = std::find(_peers.begin(), _peers.end(), peerWatcher);
     if (match == std::end(_peers)) {
         // Not already a peer, let's update the list:
-        tprintf(DB_COPY, "addPeerWatcher.  Allocations on %s now visible to peerWatcher %s.\n", 
+        tprintf(DB_COPY, "addPeerWatcher.  Allocations on %s now visible to peerWatcher %s.\n",
                           thisCtx->toString().c_str(), peerWatcher->toString().c_str());
         _peers.push_back(peerWatcher);
         recomputePeerAgents();
@@ -473,7 +483,7 @@ bool ihipCtxCriticalBase_t<CtxMutex>::removePeerWatcher(const ihipCtx_t *thisCtx
     auto match = std::find(_peers.begin(), _peers.end(), peerWatcher);
     if (match != std::end(_peers)) {
         // Found a valid peer, let's remove it.
-        tprintf(DB_COPY, "removePeerWatcher.  Allocations on %s no longer visible to former peerWatcher %s.\n", 
+        tprintf(DB_COPY, "removePeerWatcher.  Allocations on %s no longer visible to former peerWatcher %s.\n",
                           thisCtx->toString().c_str(), peerWatcher->toString().c_str());
         _peers.remove(peerWatcher);
         recomputePeerAgents();
@@ -813,7 +823,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop->arch.hasFloatAtomicAdd           = 0;
     prop->arch.hasGlobalInt64Atomics       = 1;
     prop->arch.hasSharedInt64Atomics       = 1;
-    prop->arch.hasDoubles                  = 1; 
+    prop->arch.hasDoubles                  = 1;
     prop->arch.hasWarpVote                 = 1;
     prop->arch.hasWarpBallot               = 1;
     prop->arch.hasWarpShuffle              = 1;
@@ -1181,7 +1191,7 @@ std::string HIP_DB_callback(void *var_ptr, const char *envVarString)
         tokenize(e, '+', &tokens);
         for (auto t=tokens.begin(); t!= tokens.end(); t++) {
             for (int i=0; i<DB_MAX_FLAG; i++) {
-                if (!strcmp(t->c_str(), dbName[i]._shortName)) { 
+                if (!strcmp(t->c_str(), dbName[i]._shortName)) {
                     *var_ptr_int |= (1<<i);
                 } // TODO - else throw error?
             }
@@ -1243,7 +1253,15 @@ void ihipInit()
     //-- READ HIP_PRINT_ENV env first, since it has impact on later env var reading
 
     // TODO: In HIP/hcc, this variable blocks after both kernel commmands and data transfer.  Maybe should be bit-mask for each command type?
-    READ_ENV_I(release, HIP_LAUNCH_BLOCKING, CUDA_LAUNCH_BLOCKING, "Make HIP APIs 'host-synchronous', so they block until any kernel launches or data copy commands complete. Alias: CUDA_LAUNCH_BLOCKING." );
+    READ_ENV_I(release, HIP_LAUNCH_BLOCKING, CUDA_LAUNCH_BLOCKING, "Make HIP kernel launches 'host-synchronous', so they block until any kernel launches. Alias: CUDA_LAUNCH_BLOCKING." );
+    READ_ENV_S(release, HIP_LAUNCH_BLOCKING_KERNELS, 0, "Comma-separated list of kernel names to make host-synchronous, so they block until completed.");
+    if (!HIP_LAUNCH_BLOCKING_KERNELS.empty()) {
+        tokenize(HIP_LAUNCH_BLOCKING_KERNELS, ',', &g_hipLaunchBlockingKernels);
+    }
+    READ_ENV_I(release, HIP_API_BLOCKING, 0, "Make HIP APIs 'host-synchronous', so they block until completed.  Impacts hipMemcpyAsync, hipMemsetAsync." );
+    
+
+
     READ_ENV_C(release, HIP_DB, 0,  "Print debug info.  Bitmask (HIP_DB=0xff) or flags separated by '+' (HIP_DB=api+sync+mem+copy)", HIP_DB_callback);
     if ((HIP_DB & (1<<DB_API))  && (HIP_TRACE_API == 0)) {
         // Set HIP_TRACE_API default before we read it, so it is printed correctly.
@@ -1252,19 +1270,25 @@ void ihipInit()
 
 
 
+
+
     READ_ENV_I(release, HIP_TRACE_API, 0,  "Trace each HIP API call.  Print function name and return code to stderr as program executes.");
     READ_ENV_S(release, HIP_TRACE_API_COLOR, 0,  "Color to use for HIP_API.  None/Red/Green/Yellow/Blue/Magenta/Cyan/White");
     READ_ENV_I(release, HIP_PROFILE_API, 0,  "Add HIP API markers to ATP file generated with CodeXL. 0x1=short API name, 0x2=full API name including args.");
     READ_ENV_S(release, HIP_DB_START_API, 0,  "Comma-separated list of tid.api_seq_num for when to start debug and profiling.");
     READ_ENV_S(release, HIP_DB_STOP_API, 0,  "Comma-separated list of tid.api_seq_num for when to stop debug and profiling.");
-    
+
     READ_ENV_C(release, HIP_VISIBLE_DEVICES, CUDA_VISIBLE_DEVICES, "Only devices whose index is present in the sequence are visible to HIP applications and they are enumerated in the order of sequence.", HIP_VISIBLE_DEVICES_callback );
 
 
     READ_ENV_I(release, HIP_WAIT_MODE, 0, "Force synchronization mode. 1= force yield, 2=force spin, 0=defaults specified in application");
     READ_ENV_I(release, HIP_FORCE_P2P_HOST, 0, "Force use of host/staging copy for peer-to-peer copies.1=always use copies, 2=always return false for hipDeviceCanAccessPeer"); 
     READ_ENV_I(release, HIP_FORCE_SYNC_COPY, 0, "Force all copies (even hipMemcpyAsync) to use sync copies"); 
+
+    // TODO - review, can we remove this?
     READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Max number of inflight kernels per stream before active synchronization is forced.");
+
+    READ_ENV_I(release, HIP_COHERENT_HOST_ALLOC, 0, "If set, all host memory will be allocated as fine-grained system memory.  This allows threadfence_system to work but prevents host memory from being cached on GPU which may have performance impact.");
 
     // Some flags have both compile-time and runtime flags - generate a warning if user enables the runtime flag but the compile-time flag is disabled.
     if (HIP_DB && !COMPILE_HIP_DB) {
@@ -1398,6 +1422,7 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 
 void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, const hipStream_t stream)
 {
+
     if (HIP_PROFILE_API || (COMPILE_HIP_DB && HIP_TRACE_API)) {
         std::stringstream os_pre;
         std::stringstream os;
@@ -1515,11 +1540,11 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, g
 //---
 //Called after kernel finishes execution.
 //This releases the lock on the stream.
-void ihipPostLaunchKernel(hipStream_t stream, grid_launch_parm &lp)
+void ihipPostLaunchKernel(const char *kernelName, hipStream_t stream, grid_launch_parm &lp)
 {
     tprintf(DB_SYNC, "ihipPostLaunchKernel, unlocking stream\n");
 
-    stream->lockclose_postKernelCommand(lp.av);
+    stream->lockclose_postKernelCommand(kernelName, lp.av);
     MARKER_END();
 }
 
@@ -1716,10 +1741,10 @@ unsigned ihipStream_t::resolveMemcpyDirection(bool srcInDeviceMem, bool dstInDev
 
 
 // hipMemKind must be "resolved" to a specific direction - cannot be default.
-void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind, 
-                                            const hc::AmPointerInfo *dstPtrInfo, 
-                                            const hc::AmPointerInfo *srcPtrInfo, 
-                                            hc::hcCommandKind *hcCopyDir, 
+void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind,
+                                            const hc::AmPointerInfo *dstPtrInfo,
+                                            const hc::AmPointerInfo *srcPtrInfo,
+                                            hc::hcCommandKind *hcCopyDir,
                                             ihipCtx_t **copyDevice,
                                             bool *forceUnpinnedCopy)
 {
@@ -1749,11 +1774,11 @@ void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind,
 
         if (HIP_FORCE_P2P_HOST & 0x1) {
             *forceUnpinnedCopy = true;
-            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d agent=0x%lx) can see src and dst but HIP_FORCE_P2P_HOST=0, forcing copy through staging buffers.\n", 
+            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d agent=0x%lx) can see src and dst but HIP_FORCE_P2P_HOST=0, forcing copy through staging buffers.\n",
                     (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
 
         } else {
-            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d agent=0x%lx) can see src and dst.\n",  
+            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d agent=0x%lx) can see src and dst.\n",
                     (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
         }
     } else {
@@ -1789,7 +1814,7 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     {
         LockedAccessor_StreamCrit_t crit (_criticalData);
         tprintf (DB_COPY, "copySync copyDev:%d  dst=%p (phys_dev:%d, isDevMem:%d)  src=%p(phys_dev:%d, isDevMem:%d)   sz=%zu dir=%s forceUnpinnedCopy=%d\n",
-                 copyDevice ? copyDevice->getDeviceNum():-1, 
+                 copyDevice ? copyDevice->getDeviceNum():-1,
                  dst, dstPtrInfo._appId, dstPtrInfo._isInDeviceMem,
                  src, srcPtrInfo._appId, srcPtrInfo._isInDeviceMem,
                  sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
@@ -1846,7 +1871,7 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
         bool forceUnpinnedCopy;
         resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &copyDevice, &forceUnpinnedCopy);
         tprintf (DB_COPY, "copyASync copyDev:%d  dst=%p (phys_dev:%d, isDevMem:%d)  src=%p(phys_dev:%d, isDevMem:%d)   sz=%zu dir=%s forceUnpinnedCopy=%d\n",
-                 copyDevice ? copyDevice->getDeviceNum():-1, 
+                 copyDevice ? copyDevice->getDeviceNum():-1,
                  dst, dstPtrInfo._appId, dstPtrInfo._isInDeviceMem,
                  src, srcPtrInfo._appId, srcPtrInfo._isInDeviceMem,
                  sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
@@ -1883,8 +1908,8 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
             };
 
 
-            if (HIP_LAUNCH_BLOCKING) {
-                tprintf(DB_SYNC, "LAUNCH_BLOCKING for completion of hipMemcpyAsync(%zu)\n", sizeBytes);
+            if (HIP_API_BLOCKING) {
+                tprintf(DB_SYNC, "%s LAUNCH_BLOCKING for completion of hipMemcpyAsync(sz=%zu)\n", ToString(this).c_str(), sizeBytes);
                 this->wait(crit);
             }
 

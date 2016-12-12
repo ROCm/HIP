@@ -76,6 +76,7 @@ if ($HIP_PLATFORM eq "hcc") {
     $HCC_HOME=$ENV{'HCC_HOME'} // $hipConfig{'HCC_HOME'} // "/opt/rocm/hcc";
 
     $HCC_VERSION=`${HCC_HOME}/bin/hcc --version | cut -d" " -f9 | tr -d "\n"`;
+    $HCC_VERSION_MAJOR=`${HCC_HOME}/bin/hcc --version | cut -d" " -f9 | cut -d"." -f1 | tr -d "\n"`;
 
     $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
 
@@ -92,14 +93,14 @@ if ($HIP_PLATFORM eq "hcc") {
     $HIPCXXFLAGS = $HCCFLAGS;
 
     #### GCC system includes workaround ####
-    $WA = $ENV{'HIP_HCC_SYS_INCLUDES_WA'} // 0;
-    if (${WA}) {
+    $HCC_WA_FLAGS = " ";
+    if ($HCC_VERSION_MAJOR eq 1) {
         my $GCC_CUR_VER = `gcc -dumpversion`;
         my $GPP_CUR_VER = `g++ -dumpversion`;
         $GCC_CUR_VER =~ s/\R//g;
         $GPP_CUR_VER =~ s/\R//g;
         if (${GCC_CUR_VER} eq ${GPP_CUR_VER}) {
-            $HIPCXXFLAGS .= "-I/usr/include/x86_64-linux-gnu -I/usr/include/x86_64-linux-gnu/c++/${GCC_CUR_VER} -I/usr/include/c++/${GCC_CUR_VER}";
+            $HCC_WA_FLAGS .= " -I/usr/include/x86_64-linux-gnu -I/usr/include/x86_64-linux-gnu/c++/${GCC_CUR_VER} -I/usr/include/c++/${GCC_CUR_VER} ";
         }
     }
 
@@ -192,7 +193,8 @@ my $needHipHcc = ($HIP_PLATFORM eq 'hcc');      # set if we need to link hip_hcc
 my $printHipVersion = 0;    # print HIP version
 my $runCmd = 1;
 my $buildDeps = 0;
-
+my $linkType = 0;
+my $setLinkType = 0;
 
 my @options = ();
 my @inputs  = ();
@@ -260,6 +262,7 @@ foreach $arg (@ARGV)
     if(($arg eq '-stdlib=libstdc++') and ($setStdLib eq 0))
     {
         $HIPCXXFLAGS .= " -stdlib=libstdc++";
+        $HIPCXXFLAGS .= $HCC_WA_FLAGS;
         $setStdLib = 1;
     }
     if($arg eq '--version') {
@@ -273,10 +276,19 @@ foreach $arg (@ARGV)
         $compileOnly = 1;
         $buildDeps = 1;
     }
-
     if($arg eq '-use_fast_math') {
         print "In fast Math";
         $HIPCXXFLAGS .= " -DHIP_FAST_MATH ";
+    }
+    if(($arg eq '-use-staticlib') and ($setLinkType eq 0))
+    {
+        $linkType = 0;
+        $setLinkType = 1;
+    }
+    if(($arg eq '-use-sharedlib') and ($setLinkType eq 0))
+    {
+        $linkType = 1;
+        $setLinkType = 1;
     }
 
     if ($arg =~ m/^-/) {
@@ -322,16 +334,12 @@ if ($buildDeps and $HIP_PLATFORM eq 'nvcc') {
 if ($setStdLib eq 0 and $HIP_PLATFORM eq 'hcc')
 {
     $HIPCXXFLAGS .= " -stdlib=libstdc++";
+    $HIPCXXFLAGS .= $HCC_WA_FLAGS;
 }
 
 if ($needHipHcc) {
-    $HIP_LIB_TYPE = $hipConfig{'HIP_LIB_TYPE'} // 1;
-
-    # TODO - remove the old sea-of-objects solution:
-    if ($HIP_LIB_TYPE eq 0) {
-        substr($HIPLDFLAGS,0,0) = " $HIP_PATH/lib/device_util.cpp.o $HIP_PATH/lib/hip_device.cpp.o $HIP_PATH/lib/hip_error.cpp.o $HIP_PATH/lib/hip_event.cpp.o $HIP_PATH/lib/hip_hcc.cpp.o $HIP_PATH/lib/hip_memory.cpp.o $HIP_PATH/lib/hip_peer.cpp.o $HIP_PATH/lib/hip_stream.cpp.o $HIP_PATH/lib/hip_ldg.cpp.o $HIP_PATH/lib/hip_fp16.cpp.o $HIP_PATH/lib/hip_context.cpp.o $HIP_PATH/lib/hip_module.cpp.o ";
-    } elsif ($HIP_LIB_TYPE eq 1) {
-        substr($HIPLDFLAGS,0,0) = " -L$HIP_PATH/lib -lhip_hcc " ;
+    if ($linkType eq 0) {
+        substr($HIPLDFLAGS,0,0) = " -L$HIP_PATH/lib -lhip_hcc_static -lhip_device " ;
     } else {
         substr($HIPLDFLAGS,0,0) = " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc -lhip_device ";
     }

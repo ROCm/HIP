@@ -19,46 +19,20 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-// Test the HCC-specific API extensions for HIP:
 
-/* HIT_START
- * BUILD: %t %s HCC_OPTIONS -stdlib=libc++
- * RUN: %t
- * HIT_END
- */
+#ifndef DEVICE_UTIL_H
+#define DEVICE_UTIL_H
 
-#include <stdio.h>
-#include <iostream>
-#include "hip/hip_runtime.h"
-#include "hip/hcc.h"
-#include "test_common.h"
+/*
+ Heap size computation for malloc and free device functions.
+*/
 
-#define CHECK(error) \
-    if (error != hipSuccess) { \
-      fprintf(stderr, "error: '%s'(%d) at %s:%d\n", hipGetErrorString(error), error,__FILE__, __LINE__); \
-    exit(EXIT_FAILURE);\
-    }
+#define NUM_PAGES_PER_THREAD  16
+#define SIZE_OF_PAGE          64
+#define NUM_THREADS_PER_CU    64
+#define NUM_CUS_PER_GPU       64
+#define NUM_PAGES NUM_PAGES_PER_THREAD * NUM_THREADS_PER_CU * NUM_CUS_PER_GPU
+#define SIZE_MALLOC NUM_PAGES * SIZE_OF_PAGE
+#define SIZE_OF_HEAP SIZE_MALLOC
 
-
-int main(int argc, char *argv[])
-{
-    int deviceId;
-    CHECK (hipGetDevice(&deviceId));
-    hipDeviceProp_t props;
-    CHECK(hipGetDeviceProperties(&props, deviceId));
-    printf ("info: running on device #%d %s\n", deviceId, props.name);
-
-#ifdef __HCC__
-    hc::accelerator acc;
-    CHECK(hipHccGetAccelerator(deviceId, &acc));
-    std::wcout << "device_path=" << acc.get_device_path() << "\n";
-
-    hc::accelerator_view *av;
-    CHECK(hipHccGetAcceleratorView(0/*nullStream*/, &av));
 #endif
-
-
-    passed();
-
-};
-

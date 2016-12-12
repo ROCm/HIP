@@ -639,6 +639,11 @@ inline static hipError_t  hipCtxEnablePeerAccess ( hipCtx_t peerCtx, unsigned in
     return hipCUResultTohipError(cuCtxEnablePeerAccess(peerCtx, flags));
 }
 
+inline static hipError_t hipMemGetAddressRange ( hipDeviceptr_t* pbase, size_t* psize, hipDeviceptr_t dptr )
+{
+    return hipCUResultTohipError(cuMemGetAddressRange( pbase , psize , dptr));
+}
+
 inline static hipError_t hipMemcpyPeer ( void* dst, int  dstDevice, const void* src, int  srcDevice, size_t count )
 {
     return hipCUDAErrorTohipError(cudaMemcpyPeer(dst, dstDevice, src, srcDevice, count));
@@ -765,9 +770,14 @@ inline static hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
     return hipCUResultTohipError(cuDeviceGetName(name,len,device));
 }
 
-inline static hipError_t hipDeviceGetPCIBusId(int *pciBusId,int len,hipDevice_t device)
+inline static hipError_t hipDeviceGetPCIBusId(char* pciBusId,int len,int device)
 {
-    return hipCUResultTohipError(cuDeviceGetPCIBusId((char*)pciBusId,len,device));
+    return hipCUDAErrorTohipError(cudaDeviceGetPCIBusId(pciBusId,len,device));
+}
+
+inline static hipError_t hipDeviceGetPCIBusId(char* pciBusId,int len,hipDevice_t device)
+{
+    return hipCUResultTohipError(cuDeviceGetPCIBusId(pciBusId,len,device));
 }
 
 inline static hipError_t hipDeviceGetByPCIBusId(int* device, const int *pciBusId)

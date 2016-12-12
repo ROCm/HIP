@@ -325,9 +325,18 @@ Some key information from the trace above.
 Chicken bits are environment variables which cause the HIP, HCC, or HSA driver to disable some feature or optimization.
 These are not intended for production but can be useful diagnose synchronization problems in the application (or driver).
 
-Some of the most useful chicken bits are described here:
+Some of the most useful chicken bits are described here. These bits are supported on the ROCm path:
 
-- HIP_LAUNCH_BLOCKING=1 : On ROCm, this flag waits on the host after each kernel launches and after each memory copy command.  On CUDA, the waits are only enforced after each kernel launch.  This is useful to isolate synchronization problems.  Specifically, if the code works with this flag set, then it indicates the kernels and memory management code are correct, and any failures likely are causes by improper or missing synchronization.
+HIP provides 3 environment variables in the HIP_*_BLOCKING family.  These introduce additional synchronization and can be useful to isolate synchronization problems. Specifically, if the code works with this flag set, then it indicates the kernels are executing correctly, and any failures likely are causes by improper or missing synchronization.  These flags will have performance impact and are not intended for production use.
+
+- HIP_LAUNCH_BLOCKING=1 : Waits on the host after each kernel launch.  Equivalent to setting CUDA_LAUNCH_BLOCKING.
+- HIP_LAUNCH_BLOCKING_KERNELS: A comma-separated list of kernel names.  The HIP runtime will wait on the host after one of the named kernels executes.  This provides a more targeted version of HIP_LAUNCH_BLOCKING and may be useful to isolate exactly which kernel needs further analysis if HIP_LAUNCH_BLOCKING=1 improves functionality.  There is no indication if kernel names are spelled incorrectly.  One mechanism to verify that the blocking is working is to run with HIP_DB=api+sync and search for debug messages with "LAUNCH_BLOCKING".
+- HIP_API_BLOCKING : Forces hipMemcpyAsync and hipMemsetAsync to be host-synchronous, meaning they will wait for the requested operation to complete before returning to the caller.
+
+These options cause HCC to serialize.  Useful if you have libraries or code which is calling HCC kernels directly rather than using HIP.  
+- HCC_SERIALZIE_KERNELS : 0x1=pre-serialize before each kernel launch, 0x2=post-serialize after each kernel launch., 0x3= pre- and post- serialize.
+- HCC_SERIALIZE_COPY    : 0x1=pre-serialize before each async copy, 0x2=post-serialize after each async copy., 0x3= pre- and post- serialize.0
+
 - HSA_ENABLE_SDMA=0     : Causes host-to-device and device-to-host copies to use compute shader blit kernels rather than the dedicated DMA copy engines.  Compute shader copies have low latency (typically < 5us) and can achieve approximately 80% of the bandwidth of the DMA copy engine.  This flag is useful to isolate issues with the hardware copy engines.
 - HSA_ENABLE_INTERRUPT=0 : Causes completion signals to be detected with memory-based polling rather than interrupts.  Can be useful to diagnose interrupt storm issues in the driver.
 - HSA_DISABLE_CACHE=1  : Disables the GPU L2 data cache.
