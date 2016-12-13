@@ -107,7 +107,7 @@ However, we can provide a rough summary of the features included in each CUDA SD
 
 ### What libraries does HIP support?
 HIP includes growing support for the 4 key math libraries using hcBlas, hcFft, hcrng, and hcsparse).
-These offer pointer-based memory interfaces (as opposed to opaque buffers) and can be easily interfaces with other HCC code.  Developers should use conditional compliation if portability to nvcc systems is desired - using calls to cu* routines on one path and hc* routines on the other.  
+These offer pointer-based memory interfaces (as opposed to opaque buffers) and can be easily interfaces with other HCC code.  Developers should use conditional compilation if portability to nvcc systems is desired - using calls to cu* routines on one path and hc* routines on the other.  
 
 - [hcblas](https://bitbucket.org/multicoreware/hcblas)
 - [hcfft](https://bitbucket.org/multicoreware/hcfft)
@@ -132,7 +132,7 @@ HIP offers several benefits over OpenCL:
 Both HIP and CUDA are dialects of C++, and thus porting between them is relatively straightforward.
 Both dialects support templates, classes, lambdas, and other C++ constructs.
 As one example, the hipify tool was originally a perl script that used simple text conversions from CUDA to HIP.
-HIP and CUDA provide similar math library calls as well.  In summary, the HIP philospohy was to make the HIP language close enough to CUDA that the porting effort is relatively simple.
+HIP and CUDA provide similar math library calls as well.  In summary, the HIP philosophy was to make the HIP language close enough to CUDA that the porting effort is relatively simple.
 This reduces the potential for error, and also makes it easy to automate the translation.  HIP's goal is to quickly get the ported program running on both platforms with little manual intervention,
 so that the programmer can focus on performance optimizations.
 
