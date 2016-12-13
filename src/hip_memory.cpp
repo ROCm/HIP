@@ -1038,7 +1038,7 @@ hipError_t hipMemGetAddressRange ( hipDeviceptr_t* pbase, size_t* psize, hipDevi
 
 
 //TODO: IPC implementaiton:
-
+#ifdef ENABLE_HIP_IPC
 hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr){
     HIP_INIT_API ( handle, devPtr);
     hipError_t hipStatus = hipSuccess;
@@ -1098,3 +1098,4 @@ hipError_t hipIpcCloseMemHandle(void *devPtr){
 // hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle){
 //     return hipSuccess;
 // }
+#endif

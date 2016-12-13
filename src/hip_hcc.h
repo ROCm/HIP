@@ -375,7 +375,9 @@ struct LockedBase {
 class ihipIpcMemHandle_t
 {
 public:
+#ifdef ENABLE_HIP_IPC
     hsa_amd_ipc_memory_t ipc_handle; ///< ipc memory handle on ROCr
+#endif
     char reserved[HIP_IPC_HANDLE_SIZE];
     size_t psize;
 };
