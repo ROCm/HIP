@@ -25,6 +25,10 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 
+#define __CLANG_VERSION__ __clang_major__ * 10 + __clang_minor__
+
+#if __CLANG_VERSION__ == 35
+
 typedef struct{
   unsigned x: 16;
 } __half;
@@ -174,4 +178,16 @@ __device__ __half2 __lowhigh2highlow(const __half2 a);
 
 __device__ __half2 __low2half2(const __half2 a, const __half2 b);
 
+#endif
+
+#if __CLANG_VERSION__ == 40
+
+typedef __fp16 __half;
+extern "C" __half __hip_hadd_clang40_gfx803(__half a, __half b);
+
+__device__ inline __half __hadd(__half a, __half b){
+  return __hip_hadd_clang40_gfx803(a, b);
+}
+
+#endif
 #endif
