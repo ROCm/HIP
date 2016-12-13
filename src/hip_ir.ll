@@ -34,4 +34,9 @@ define linkonce_odr spir_func i32 @__rocm_hadd(i32 %in1, i32 %in2) {
   ret i32 %val
 }
 
+define linkonce_odr spir_func half @__hip_hadd_clang40_gfx803(half %a, half %b) {
+  %val = tail call half asm "v_add_f16 $0, $1, $2","=v,v,v"(half %a, half %b)
+  ret half %val
+}
+
 attributes #1 = { alwaysinline nounwind }
