@@ -93,7 +93,7 @@ Differences or limitations of HIP APIs as compared to CUDA APIs should be clearl
 ## Coding Guidelines (in brief)
 - Code Indentation:
     - Tabs should be expanded to spaces.
-    - Use 4 spaces indendation.
+    - Use 4 spaces indentation.
 - Capitalization and Naming
     - Prefer camelCase for HIP interfaces and internal symbols.  Note HCC uses _ for separator.  
       This guideline is not yet consistently followed in HIP code - eventual compliance is aspirational.
@@ -120,7 +120,7 @@ Differences or limitations of HIP APIs as compared to CUDA APIs should be clearl
 
 - HIP_INIT_API() should be placed at the start of each top-level HIP API.  This function will make sure the HIP runtime is initialized,
   and also constructs an appropriate API string for tracing and CodeXL marker tracing.  The arguments to HIP_INIT_API should match
-  those of the parent fucntion.  
+  those of the parent function.  
 - ihipLogStatus should only be called from top-level HIP APIs,and should be called to log and return the error code.  The error code 
   is used by the GetLastError and PeekLastError functions - if a HIP API simply returns, then the error will not be logged correctly.
 
@@ -156,4 +156,4 @@ doxygen bug list.
 
 ##  Other Tips:
 ### Markdown Editing
-Recommended to use an offline Markown viewer to review documentation, such as Markdown Preview Plus extension in Chrome browser, or Remarkable.
+Recommended to use an offline Markdown viewer to review documentation, such as Markdown Preview Plus extension in Chrome browser, or Remarkable.

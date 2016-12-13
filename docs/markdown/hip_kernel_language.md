@@ -105,7 +105,7 @@ HIP parses the `__noinline__` and `__forceinline__` keywords and converts them t
 
 
 ```
-// Example psuedocode introducing hipLaunchKernel:
+// Example pseudo code introducing hipLaunchKernel:
 __global__ MyKernel(hipLaunchParm lp, float *A, float *B, float *C, size_t N)
 {
 ...

@@ -31,8 +31,8 @@ accelerator language front-end.  Here, NVCC is not used.   Instead, the environm
 different kernel language or different compilation flow.
 Other environments have many kernels and do not want them to be all loaded automatically.
 The Module functions can be used to load the generated code objects and launch kernels.
-As we will see below, HIP defines a Module API which provides similar explict control over code
-object managemenet.
+As we will see below, HIP defines a Module API which provides similar explicit control over code
+object management.
 
 ### cuCtx API
 The Driver API defines "Context" and "Devices" as separate entities.  
@@ -144,7 +144,7 @@ table shows the type equivalence to enable this interaction.
 The hipModule interface does not support the hipModuleLoadEx function, which is used to control PTX compilaton options.
 HCC does not use PTX and does not support the same compilation options.
 In fact, HCC code objects always contain fully compiled ISA and do not require additional compilation as part of the load step.
-Code which requires this functionaly should use platform-specific coding, calling `cuModuleLoadEx` 
+Code which requires this functionally should use platform-specific coding, calling `cuModuleLoadEx` 
 on the NVCC path and hipModuleLoad on the hcc path.  For example:
 
 ```
