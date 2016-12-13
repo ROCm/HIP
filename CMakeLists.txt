@@ -177,7 +177,8 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set(SOURCE_FILES_DEVICE
         src/device_util.cpp
         src/hip_ldg.cpp
-        src/hip_fp16.cpp)
+        src/hip_fp16.cpp
+        src/device_functions.cpp)
 
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L${HCC_HOME}/lib -lmcwamp -Wl,-Bsymbolic")
     add_library(hip_hcc SHARED ${SOURCE_FILES_RUNTIME})
