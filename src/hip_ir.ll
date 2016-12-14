@@ -54,7 +54,7 @@ define linkonce_odr spir_func half @__hip_hsub_gfx803(half %a, half %b) #1 {
   ret half %val
 }
 
-define linkonce_odr spir_func i32 @__hip_hadd2_gfx803(i32 %a i32 %b) #1 {
+define linkonce_odr spir_func i32 @__hip_hadd2_gfx803(i32 %a, i32 %b) #1 {
   %val = tail call i32 asm "v_add_f16_sdwa $0, $1, $2 dst_sel:WORD_0 dst_unused:UNUSED_PRESERVE src0_sel:WORD_0 src1_sel:WORD_0","=v,v,v"(i32 %a, i32 %b)
   ret i32 %val
 }

@@ -27,7 +27,7 @@ THE SOFTWARE.
 
 #define __CLANG_VERSION__ __clang_major__ * 10 + __clang_minor__
 
-#if __CLANG_VERSION__ == 40
+#ifdef HIP_HALF_HW_SUPPORT
 
 typedef __fp16 __half;
 
