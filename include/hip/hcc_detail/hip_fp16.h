@@ -27,20 +27,30 @@ THE SOFTWARE.
 
 #define __CLANG_VERSION__ __clang_major__ * 10 + __clang_minor__
 
-#ifdef HIP_HALF_HW_SUPPORT
+#if __CLANG_VERSION__ == 40
 
 typedef __fp16 __half;
+
+typedef struct __attribute__((aligned(4))){
+  int a;
+} __half2;
+
 extern "C" __half __hip_hadd_gfx803(__half a, __half b);
 extern "C" __half __hip_hfma_gfx803(__half a, __half b);
 extern "C" __half __hip_hmul_gfx803(__half a, __half b);
 extern "C" __half __hip_hsub_gfx803(__half a, __half b);
+
+extern "C" int __hip_hadd2_gfx803(int a, int b);
+extern "C" int __hip_hfma2_gfx803(int a, int b);
+extern "C" int __hip_hmul2_gfx803(int a, int b);
+extern "C" int __hip_hsub2_gfx803(int a, int b);
 
 __device__ inline __half __hadd(__half a, __half b) {
   return __hip_hadd_gfx803(a, b);
 }
 
 __device__ inline __half __hadd_sat(__half a, __half b) {
-  return __hip_add_gfx803(a, b);
+  return __hip_hadd_gfx803(a, b);
 }
 
 __device__ inline __half __hfma(__half a, __half b) {
@@ -65,6 +75,13 @@ __device__ inline __half __hsub(__half a, __half b) {
 
 __device__ inline __half __hsub_sat(__half a, __half b) {
   return __hip_hsub_gfx803(a, b);
+}
+
+
+__device__ inline __half2 __hadd2(__half2 a, __half2 b) {
+  __half2 ret;
+  ret.a = __hip_hadd2_gfx803(a.a, b.a);
+  return ret;
 }
 
 #else
