@@ -30,10 +30,41 @@ THE SOFTWARE.
 #ifdef HIP_HALF_HW_SUPPORT
 
 typedef __fp16 __half;
-extern "C" __half __hip_hadd_clang40_gfx803(__half a, __half b);
+extern "C" __half __hip_hadd_gfx803(__half a, __half b);
+extern "C" __half __hip_hfma_gfx803(__half a, __half b);
+extern "C" __half __hip_hmul_gfx803(__half a, __half b);
+extern "C" __half __hip_hsub_gfx803(__half a, __half b);
 
-__device__ inline __half __hadd(__half a, __half b){
-  return __hip_hadd_clang40_gfx803(a, b);
+__device__ inline __half __hadd(__half a, __half b) {
+  return __hip_hadd_gfx803(a, b);
+}
+
+__device__ inline __half __hadd_sat(__half a, __half b) {
+  return __hip_add_gfx803(a, b);
+}
+
+__device__ inline __half __hfma(__half a, __half b) {
+  return __hip_hfma_gfx803(a, b);
+}
+
+__device__ inline __half __hfma_sat(__half a, __half b) {
+  return __hip_hfma_gfx803(a, b);
+}
+
+__device__ inline __half __hmul(__half a, __half b) {
+  return __hip_hmul_gfx803(a, b);
+}
+
+__device__ inline __half __hmul_sat(__half a, __half b) {
+  return __hip_hmul_gfx803(a, b);
+}
+
+__device__ inline __half __hsub(__half a, __half b) {
+  return __hip_hsub_gfx803(a, b);
+}
+
+__device__ inline __half __hsub_sat(__half a, __half b) {
+  return __hip_hsub_gfx803(a, b);
 }
 
 #else
