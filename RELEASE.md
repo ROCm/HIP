@@ -3,7 +3,7 @@
 We have attempted to document known bugs and limitations - in particular the [HIP Kernel Language](docs/markdown/hip_kernel_language.md) document uses the phrase "Under Development", and the [HIP Runtime API bug list](http://gpuopen-professionalcompute-tools.github.io/HIP/bug.html) lists known bugs. 
 
 Upcoming:
-- Stability: Enforce perioidic host synchronization to reclaim resources if the application has launched a large
+- Stability: Enforce periodic host synchronization to reclaim resources if the application has launched a large
   number of commands (>1K) without synchronizing.  
 - Register keyword now silently ignored on HCC (previously would emit warning).
 - Doc updates: Add some more frequently asked questions to FAQ, fix TOC in some files, review.
@@ -73,7 +73,7 @@ Date: 2016.04.25
     - Create static library and link.
     - Set HIP_PATH to install.
 - Make hipDevice and hipStream thread-safe.
-    - Prefered hipStream usage is still to create new streams for each new thread, but it works even if you don;t.
+    - Preferred hipStream usage is still to create new streams for each new thread, but it works even if you don;t.
 - Improve automated platform detection: If AMD GPU is installed and detected by driver, default HIP_PLATFORM to hcc.
 - HIP_TRACE_API now prints arguments to the HIP function (in addition to name of function).
 - Deprecate hipDeviceGetProp (Replace with hipGetDeviceProp)

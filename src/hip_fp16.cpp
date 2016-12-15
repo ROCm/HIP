@@ -22,6 +22,8 @@ THE SOFTWARE.
 
 #include"hip/hip_fp16.h"
 
+#if __CLANG_VERSION__ == 35
+
 static const unsigned sign_val = 0x8000;
 static const __half __half_value_one_float = {0x3C00};
 static const __half __half_value_zero_float = {0x0};
@@ -372,3 +374,4 @@ __device__ __half2 __lowhigh2highlow(const __half2 a){
 __device__ __half2 __low2half2(const __half2 a, const __half2 b){
   return {a.q, b.q};
 }
+#endif

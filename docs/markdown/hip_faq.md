@@ -10,7 +10,7 @@
 - [What specific version of CUDA does HIP support?](#what-specific-version-of-cuda-does-hip-support)
 - [What libraries does HIP support?](#what-libraries-does-hip-support)
 - [How does HIP compare with OpenCL?](#how-does-hip-compare-with-opencl)
-- [How does porting CUDA to HIP compare to porting CUDA to OpenCL?]
+- [How does porting CUDA to HIP compare to porting CUDA to OpenCL?](#how-does-porting-cuda-to-hip-compare-to-porting-cuda-to-opencl)
 - [What hardware does HIP support?](#what-hardware-does-hip-support)
 - [Does Hipify automatically convert all source code?](#does-hipify-automatically-convert-all-source-code)
 - [What is NVCC?](#what-is-nvcc)
@@ -53,7 +53,6 @@ At a high-level, the following features are not supported:
 - Graphics interoperation with OpenGL or Direct3D
 - CUDA Driver API (Under Development)
 - CUDA IPC Functions (Under Development)
-
 - CUDA array, mipmappedArray and pitched memory
 - MemcpyToSymbol functions
 - Queue priority controls
@@ -107,7 +106,7 @@ However, we can provide a rough summary of the features included in each CUDA SD
 
 ### What libraries does HIP support?
 HIP includes growing support for the 4 key math libraries using hcBlas, hcFft, hcrng, and hcsparse).
-These offer pointer-based memory interfaces (as opposed to opaque buffers) and can be easily interfaces with other HCC code.  Developers should use conditional compliation if portability to nvcc systems is desired - using calls to cu* routines on one path and hc* routines on the other.  
+These offer pointer-based memory interfaces (as opposed to opaque buffers) and can be easily interfaces with other HCC code.  Developers should use conditional compilation if portability to nvcc systems is desired - using calls to cu* routines on one path and hc* routines on the other.  
 
 - [hcblas](https://bitbucket.org/multicoreware/hcblas)
 - [hcfft](https://bitbucket.org/multicoreware/hcfft)
@@ -132,7 +131,7 @@ HIP offers several benefits over OpenCL:
 Both HIP and CUDA are dialects of C++, and thus porting between them is relatively straightforward.
 Both dialects support templates, classes, lambdas, and other C++ constructs.
 As one example, the hipify tool was originally a perl script that used simple text conversions from CUDA to HIP.
-HIP and CUDA provide similar math library calls as well.  In summary, the HIP philospohy was to make the HIP language close enough to CUDA that the porting effort is relatively simple.
+HIP and CUDA provide similar math library calls as well.  In summary, the HIP philosophy was to make the HIP language close enough to CUDA that the porting effort is relatively simple.
 This reduces the potential for error, and also makes it easy to automate the translation.  HIP's goal is to quickly get the ported program running on both platforms with little manual intervention,
 so that the programmer can focus on performance optimizations.
 
@@ -196,8 +195,8 @@ HIP will set the platform to HCC if it sees that the AMD graphics driver is inst
 Sometimes this isn't what you want - you can force HIP to recognize the platform by setting HIP_PLATFORM to hcc (or nvcc)
 ```
 export HIP_PLATFORM=hcc
-
 ```
+
 One symptom of this problem is the message "error: 'unknown error'(11) at square.hipref.cpp:56".  This can occur if you have a CUDA installation on an AMD platform, and HIP incorrectly detects the platform as nvcc.  HIP may be able to compile the application using the nvcc tool-chain, but will generate this error at runtime since the platform does not have a CUDA device. The fix is to set HIP_PLATFORM=hcc and rebuild the issue. 
 
 If you see issues related to incorrect platform detection, please file an issue with the GitHub issue tracker so we can improve HIP's platform detection logic.

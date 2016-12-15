@@ -343,9 +343,6 @@ __HIP_DEVICE__ double2 make_double2(double, double );
 __HIP_DEVICE__ double3 make_double3(double, double, double );
 __HIP_DEVICE__ double4 make_double4(double, double, double, double );
 
-extern __HIP_DEVICE__ double  __longlong_as_double(long long int x);
-extern __HIP_DEVICE__ long long int __double_as_longlong(double x);
-
 
 /*
 ///---

@@ -34,6 +34,7 @@ THE SOFTWARE.
 #endif
 
 #define USE_DISPATCH_HSA_KERNEL 1
+#define USE_IPC 0
 //
 
 
@@ -375,7 +376,9 @@ struct LockedBase {
 class ihipIpcMemHandle_t
 {
 public:
+#if USE_IPC
     hsa_amd_ipc_memory_t ipc_handle; ///< ipc memory handle on ROCr
+#endif
     char reserved[HIP_IPC_HANDLE_SIZE];
     size_t psize;
 };

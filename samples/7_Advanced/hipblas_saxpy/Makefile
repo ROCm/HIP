@@ -12,7 +12,7 @@ endif
 ifeq (${HIP_PLATFORM}, hcc)
 	HCBLAS_ROOT?= $(wildcard /opt/rocm/hcblas)
 	HIPCC_FLAGS += -stdlib=libc++ -I$(HCBLAS_ROOT)/include
-	LIBS = -L$(HCBLAS_ROOT)/lib -lhcblas
+	LIBS = -L$(HCBLAS_ROOT)/lib -lhipblas -rpath $(HIP_PATH)/lib
 endif
 
 

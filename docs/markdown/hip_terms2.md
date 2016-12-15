@@ -13,7 +13,7 @@ The default device can be set with hipSetDevice.
 - hcc = Heterogeneous Compute Compiler (https://bitbucket.org/multicoreware/hcc/wiki/Home).  
 
 - hipify - tool to convert CUDA(R) code to portable C++ code.
-- hipconfig - tool to report various confoguration properties of the target platform.
+- hipconfig - tool to report various configuration properties of the target platform.
 
 - nvcc = nvcc compiler, do not capitalize.
 - hcc  = heterogeneous compute compiler, do not capitalize.
