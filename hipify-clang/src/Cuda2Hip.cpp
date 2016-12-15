@@ -1465,11 +1465,11 @@ public:
           // to workaround the 'const' MacroArgs passed into this hook.
           const Token *start = Args->getUnexpArgument(i);
           size_t len = Args->getArgLength(start) + 1;
-  #if (LLVM_VERSION_MAJOR >= 3) && (LLVM_VERSION_MINOR >= 9)
+#if (LLVM_VERSION_MAJOR >= 3) && (LLVM_VERSION_MINOR >= 9)
           _pp->EnterTokenStream(ArrayRef<Token>(start, len), false);
-  #else
+#else
           _pp->EnterTokenStream(start, len, false, false);
-  #endif
+#endif
           do {
             toks.push_back(Token());
             Token &tk = toks.back();
@@ -1489,8 +1489,17 @@ public:
                       << " found as an actual argument in expansion of macro "
                       << macroName << "\n"
                       << "will be replaced with: " << repName << "\n");
+                size_t length = name.size();
                 SourceLocation sl = tok.getLocation();
-                Replacement Rep(*_sm, sl, name.size(), repName);
+                if (_sm->isMacroBodyExpansion(sl)) {
+                  LangOptions DefaultLangOptions;
+                  SourceLocation sl_macro = _sm->getExpansionLoc(sl);
+                  SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *_sm, DefaultLangOptions);
+                  length = _sm->getCharacterData(sl_end) - _sm->getCharacterData(sl_macro);
+                  name = StringRef(_sm->getCharacterData(sl_macro), length);
+                  sl = sl_macro;
+                }
+                Replacement Rep(*_sm, sl, length, repName);
                 Replace->insert(Rep);
               }
             } else if (tok.isLiteral()) {
