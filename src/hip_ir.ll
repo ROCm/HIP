@@ -2,12 +2,12 @@ target datalayout = "e-p:32:32-p1:64:64-p2:64:64-p3:32:32-p4:64:64-p5:32:32-i64:
 target triple = "amdgcn--amdhsa"
 
 
-define void @__threadfence() #1 {
+define linkonce_odr spir_func void @__threadfence() #1 {
     fence syncscope(2) seq_cst
     ret void
 }
 
-define void @__threadfence_block()  #1 {
+define linkonce_odr spir_func void @__threadfence_block()  #1 {
     fence syncscope(3) seq_cst
     ret void
 }
@@ -31,6 +31,31 @@ define linkonce_odr spir_func i32 @__rocm_hfma(i32 %in1, i32 %in2, i32 %in3) {
 
 define linkonce_odr spir_func i32 @__rocm_hadd(i32 %in1, i32 %in2) {
 	%val = tail call i32 asm "v_add_f16 $0, $1, $2","=v,v,v"(i32 %in1, i32 %in2)
+  ret i32 %val
+}
+
+define linkonce_odr spir_func half @__hip_hadd_gfx803(half %a, half %b) #1 {
+  %val = tail call half asm "v_add_f16 $0, $1, $2","=v,v,v"(half %a, half %b)
+  ret half %val
+}
+
+define linkonce_odr spir_func half @__hip_hfma_gfx803(half %a, half %b, half %c) #1 {
+  %val = tail call half asm "v_fma_f16 $0, $1, $2, $3","=v,v,v,v"(half %a, half %b, half %c)
+  ret half %val
+}
+
+define linkonce_odr spir_func half @__hip_hmul_gfx803(half %a, half %b) #1 {
+  %val = tail call half asm "v_mul_f16 $0, $1, $2","=v,v,v"(half %a, half %b)
+  ret half %val
+}
+
+define linkonce_odr spir_func half @__hip_hsub_gfx803(half %a, half %b) #1 {
+  %val = tail call half asm "v_sub_f16 $0, $1, $2","=v,v,v"(half %a, half %b)
+  ret half %val
+}
+
+define linkonce_odr spir_func i32 @__hip_hadd2_gfx803(i32 %a, i32 %b) #1 {
+  %val = tail call i32 asm "v_add_f16_sdwa $0, $1, $2 dst_sel:WORD_0 dst_unused:UNUSED_PRESERVE src0_sel:WORD_0 src1_sel:WORD_0","=v,v,v"(i32 %a, i32 %b)
   ret i32 %val
 }
 

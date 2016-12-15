@@ -88,8 +88,8 @@ The HIP Runtime API code and compute kernel definition can exist in the same sou
 
 ## HIP Portability and Compiler Technology
 HIP C++ code can be compiled with either :
-- On the Nvidia CUDA platform, HIP provides header file which translate from the HIP runtime APIs to CUDA runtime APIs.  The header file contains mostly inlined 
-  functions and thus has very low overhead - developers coding in HIP should expect the same perforamnce as coding in native CUDA.  The code is then 
+- On the NVIDIA CUDA platform, HIP provides header file which translate from the HIP runtime APIs to CUDA runtime APIs.  The header file contains mostly inlined 
+  functions and thus has very low overhead - developers coding in HIP should expect the same performance as coding in native CUDA.  The code is then
   compiled with nvcc, the standard C++ compiler provided with the CUDA SDK.  Developers can use any tools supported by the CUDA SDK including the CUDA
   profiler and debugger.
 - On the AMD ROCm platform, HIP provides a header and runtime library built on top of hcc compiler.  The HIP runtime implements HIP streams, events, and memory APIs, 
@@ -120,7 +120,7 @@ make
 
  
 ## More Examples
-The GitHub repot [HIP-Examples](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP-Examples.git) contains a hipified vesion of the popular Rodinia benchmark suite.
+The GitHub repository [HIP-Examples](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP-Examples.git) contains a hipified version of the popular Rodinia benchmark suite.
 The README with the procedures and tips the team used during this porting effort is here: [Rodinia Porting Guide](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP-Examples/blob/master/rodinia_3.0/hip/README.hip_porting)
 
 ## Tour of the HIP Directories

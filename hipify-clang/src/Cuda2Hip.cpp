@@ -85,6 +85,7 @@ const char *counterNames[CONV_LAST] = {
     "special_func", "stream",  "event", "ctx",   "module",     "cache",
     "err",          "def",     "tex",   "other", "include",    "include_cuda_main_header",
     "type",         "literal", "numeric_literal"};
+
 enum ApiTypes {
   API_DRIVER = 0,
   API_RUNTIME,
@@ -96,6 +97,15 @@ const char *apiNames[API_LAST] = {
     "CUDA", "CUDA RT", "CUBLAS"};
 
 namespace {
+
+int64_t countRepsTotal[CONV_LAST] = { 0 };
+int64_t countApiRepsTotal[API_LAST] = { 0 };
+
+struct hipCounter {
+  StringRef hipName;
+  ConvTypes countType;
+  ApiTypes countApiType;
+};
 
 struct cuda2hipMap {
   cuda2hipMap() {
@@ -1317,13 +1327,7 @@ struct cuda2hipMap {
     //cuda2hipRename["cublasDrotmg_v2"] = {"hipblasDrotmg", CONV_MATH_FUNC, API_BLAS};
   }
 
-  struct HipNames {
-    StringRef hipName;
-    ConvTypes countType;
-    ApiTypes countApiType;
-  };
-
-  SmallDenseMap<StringRef, HipNames> cuda2hipRename;
+  SmallDenseMap<StringRef, hipCounter> cuda2hipRename;
   std::set<StringRef> cudaExcludes;
 };
 
@@ -1333,36 +1337,52 @@ StringRef unquoteStr(StringRef s) {
   return s;
 }
 
-static void processString(StringRef s, const cuda2hipMap &map,
-                          Replacements *Replace, SourceManager &SM,
-                          SourceLocation start,
-                          int64_t countReps[CONV_LAST],
-                          int64_t countApiReps[API_LAST]) {
-  size_t begin = 0;
-  while ((begin = s.find("cu", begin)) != StringRef::npos) {
-    const size_t end = s.find_first_of(" ", begin + 4);
-    StringRef name = s.slice(begin, end);
-    const auto found = map.cuda2hipRename.find(name);
-    if (found != map.cuda2hipRename.end()) {
-      StringRef repName = found->second.hipName;
-      countReps[CONV_LITERAL]++;
-      countApiReps[API_RUNTIME]++;
-      SourceLocation sl = start.getLocWithOffset(begin + 1);
-      Replacement Rep(SM, sl, name.size(), repName);
-      Replace->insert(Rep);
-    }
-    if (end == StringRef::npos)
-      break;
-    begin = end + 1;
+class Cuda2Hip {
+public:
+  Cuda2Hip(Replacements *R): Replace(R) {}
+
+  int64_t countReps[CONV_LAST] = { 0 };
+  int64_t countApiReps[API_LAST] = { 0 };
+
+protected:
+  struct cuda2hipMap N;
+  Replacements *Replace;
+
+  virtual void updateCounters(const hipCounter & counter) {
+    countReps[counter.countType]++;
+    countRepsTotal[counter.countType]++;
+    countApiReps[counter.countApiType]++;
+    countApiRepsTotal[counter.countApiType]++;
   }
-}
+
+  void processString(StringRef s, SourceManager &SM, SourceLocation start) {
+    size_t begin = 0;
+    while ((begin = s.find("cu", begin)) != StringRef::npos) {
+      const size_t end = s.find_first_of(" ", begin + 4);
+      StringRef name = s.slice(begin, end);
+      const auto found = N.cuda2hipRename.find(name);
+      if (found != N.cuda2hipRename.end()) {
+        StringRef repName = found->second.hipName;
+        hipCounter counter = { "", CONV_LITERAL, API_RUNTIME };
+        updateCounters(counter);
+        SourceLocation sl = start.getLocWithOffset(begin + 1);
+        Replacement Rep(SM, sl, name.size(), repName);
+        Replace->insert(Rep);
+      }
+      if (end == StringRef::npos) {
+        break;
+      }
+      begin = end + 1;
+    }
+  }
+};
 
 class Cuda2HipCallback;
 
-class HipifyPPCallbacks : public PPCallbacks, public SourceFileCallbacks {
+class HipifyPPCallbacks : public PPCallbacks, public SourceFileCallbacks, public Cuda2Hip {
 public:
   HipifyPPCallbacks(Replacements *R)
-      : SeenEnd(false), _sm(nullptr), _pp(nullptr), Replace(R) {}
+    : Cuda2Hip(R), SeenEnd(false), _sm(nullptr), _pp(nullptr) {}
 
   virtual bool handleBeginSource(CompilerInstance &CI,
                                  StringRef Filename) override {
@@ -1389,8 +1409,7 @@ public:
         const auto found = N.cuda2hipRename.find(file_name);
         if (found != N.cuda2hipRename.end()) {
           StringRef repName = found->second.hipName;
-          countReps[found->second.countType]++;
-          countApiReps[found->second.countApiType]++;
+          updateCounters(found->second);
           DEBUG(dbgs() << "Include file found: " << file_name << "\n"
                        << "SourceLocation:"
                        << filename_range.getBegin().printToString(*_sm) << "\n"
@@ -1418,8 +1437,7 @@ public:
           const auto found = N.cuda2hipRename.find(name);
           if (found != N.cuda2hipRename.end()) {
             StringRef repName = found->second.hipName;
-            countReps[found->second.countType]++;
-            countApiReps[found->second.countApiType]++;
+            updateCounters(found->second);
             SourceLocation sl = T.getLocation();
             DEBUG(dbgs() << "Identifier " << name
                          << " found in definition of macro "
@@ -1465,8 +1483,7 @@ public:
               const auto found = N.cuda2hipRename.find(name);
               if (found != N.cuda2hipRename.end()) {
                 StringRef repName = found->second.hipName;
-                countReps[found->second.countType]++;
-                countApiReps[found->second.countApiType]++;
+                updateCounters(found->second);
                 DEBUG(dbgs()
                       << "Identifier " << name
                       << " found as an actual argument in expansion of macro "
@@ -1488,16 +1505,14 @@ public:
                 if (found != N.cuda2hipRename.end()) {
                   sl = sl_macro;
                   StringRef repName = found->second.hipName;
-                  countReps[found->second.countType]++;
-                  countApiReps[found->second.countApiType]++;
+                  updateCounters(found->second);
                   Replacement Rep(*_sm, sl, length, repName);
                   Replace->insert(Rep);
                 }
               } else {
                 if (tok.is(tok::string_literal)) {
                   StringRef s(tok.getLiteralData(), tok.getLength());
-                  processString(unquoteStr(s), N, Replace, *_sm, tok.getLocation(),
-                    countReps, countApiReps);
+                  processString(unquoteStr(s), *_sm, tok.getLocation());
                 }
               }
             }
@@ -1513,18 +1528,14 @@ public:
   void setSourceManager(SourceManager *sm) { _sm = sm; }
   void setPreprocessor(Preprocessor *pp) { _pp = pp; }
   void setMatch(Cuda2HipCallback *match) { Match = match; }
-  int64_t countReps[CONV_LAST]  = { 0 };
-  int64_t countApiReps[API_LAST] = { 0 };
 
 private:
   SourceManager *_sm;
   Preprocessor *_pp;
   Cuda2HipCallback *Match;
-  Replacements *Replace;
-  struct cuda2hipMap N;
 };
 
-class Cuda2HipCallback : public MatchFinder::MatchCallback {
+class Cuda2HipCallback : public MatchFinder::MatchCallback, public Cuda2Hip {
 private:
   void convertKernelDecl(const FunctionDecl *kernelDecl, const MatchFinder::MatchResult &Result) {
     SourceManager *SM = Result.SourceManager;
@@ -1579,8 +1590,7 @@ private:
           }
         }
         if (bReplace) {
-          countReps[found->second.countType]++;
-          countApiReps[found->second.countApiType]++;
+          updateCounters(found->second);
           Replacement Rep(*SM, sl, length, repName);
           Replace->insert(Rep);
         }
@@ -1653,8 +1663,8 @@ private:
                         SM->getCharacterData(launchKernel->getLocStart());
       Replacement Rep(*SM, launchKernel->getLocStart(), length, OS.str());
       Replace->insert(Rep);
-      countReps[CONV_KERN]++;
-      countApiReps[API_RUNTIME]++;
+      hipCounter counter = { "", CONV_KERN, API_RUNTIME };
+      updateCounters(counter);
       return true;
     }
     return false;
@@ -1675,8 +1685,7 @@ private:
           const auto found = N.cuda2hipRename.find(name);
           if (found != N.cuda2hipRename.end()) {
             StringRef repName = found->second.hipName;
-            countReps[found->second.countType]++;
-            countApiReps[found->second.countApiType]++;
+            updateCounters(found->second);
             SourceLocation sl = threadIdx->getLocStart();
             SourceManager *SM = Result.SourceManager;
             Replacement Rep(*SM, sl, name.size(), repName);
@@ -1695,8 +1704,7 @@ private:
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
         StringRef repName = found->second.hipName;
-        countReps[found->second.countType]++;
-        countApiReps[found->second.countApiType]++;
+        updateCounters(found->second);
         SourceLocation sl = enumConstantRef->getLocStart();
         SourceManager *SM = Result.SourceManager;
         Replacement Rep(*SM, sl, name.size(), repName);
@@ -1719,8 +1727,7 @@ private:
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
         StringRef repName = found->second.hipName;
-        countReps[found->second.countType]++;
-        countApiReps[found->second.countApiType]++;
+        updateCounters(found->second);
         SourceLocation sl = enumConstantDecl->getLocStart();
         SourceManager *SM = Result.SourceManager;
         Replacement Rep(*SM, sl, name.size(), repName);
@@ -1742,8 +1749,7 @@ private:
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
         StringRef repName = found->second.hipName;
-        countReps[found->second.countType]++;
-        countApiReps[found->second.countApiType]++;
+        updateCounters(found->second);
         SourceLocation sl = typedefVar->getLocStart();
         SourceManager *SM = Result.SourceManager;
         Replacement Rep(*SM, sl, name.size(), repName);
@@ -1763,8 +1769,7 @@ private:
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
         StringRef repName = found->second.hipName;
-        countReps[found->second.countType]++;
-        countApiReps[found->second.countApiType]++;
+        updateCounters(found->second);
         TypeLoc TL = structVar->getTypeSourceInfo()->getTypeLoc();
         SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
         SourceManager *SM = Result.SourceManager;
@@ -1784,8 +1789,7 @@ private:
         const auto found = N.cuda2hipRename.find(name);
         if (found != N.cuda2hipRename.end()) {
           StringRef repName = found->second.hipName;
-          countReps[found->second.countType]++;
-          countApiReps[found->second.countApiType]++;
+          updateCounters(found->second);
           TypeLoc TL = structVarPtr->getTypeSourceInfo()->getTypeLoc();
           SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
           SourceManager *SM = Result.SourceManager;
@@ -1807,8 +1811,7 @@ private:
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
         StringRef repName = found->second.hipName;
-        countReps[found->second.countType]++;
-        countApiReps[found->second.countApiType]++;
+        updateCounters(found->second);
         TypeLoc TL = typeInfo->getTypeLoc();
         SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
         SourceManager *SM = Result.SourceManager;
@@ -1852,8 +1855,8 @@ private:
           StringRef repName = Twine("HIP_DYNAMIC_SHARED(" + typeName + ", " + varName + ")").toStringRef(tmpData);
           Replacement Rep(*SM, slStart, repLength, repName);
           Replace->insert(Rep);
-          countReps[CONV_MEM]++;
-          countApiReps[API_RUNTIME]++;
+          hipCounter counter = { "", CONV_MEM, API_RUNTIME };
+          updateCounters(counter);
         }
       }
       return true;
@@ -1872,8 +1875,7 @@ private:
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
         StringRef repName = found->second.hipName;
-        countReps[found->second.countType]++;
-        countApiReps[found->second.countApiType]++;
+        updateCounters(found->second);
         TypeLoc TL = paramDecl->getTypeSourceInfo()->getTypeLoc();
         SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
         SourceManager *SM = Result.SourceManager;
@@ -1897,8 +1899,7 @@ private:
         const auto found = N.cuda2hipRename.find(name);
         if (found != N.cuda2hipRename.end()) {
           StringRef repName = found->second.hipName;
-          countReps[found->second.countType]++;
-          countApiReps[found->second.countApiType]++;
+          updateCounters(found->second);
           TypeLoc TL = paramDeclPtr->getTypeSourceInfo()->getTypeLoc();
           SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
           SourceManager *SM = Result.SourceManager;
@@ -1925,7 +1926,7 @@ private:
       if (sLiteral->getCharByteWidth() == 1) {
         StringRef s = sLiteral->getString();
         SourceManager *SM = Result.SourceManager;
-        processString(s, N, Replace, *SM, sLiteral->getLocStart(), countReps, countApiReps);
+        processString(s, *SM, sLiteral->getLocStart());
       }
       return true;
     }
@@ -1934,7 +1935,7 @@ private:
 
 public:
   Cuda2HipCallback(Replacements *Replace, ast_matchers::MatchFinder *parent, HipifyPPCallbacks *PPCallbacks)
-    : Replace(Replace), owner(parent), PP(PPCallbacks) {
+    : Cuda2Hip(Replace), owner(parent), PP(PPCallbacks) {
     PP->setMatch(this);
   }
 
@@ -1962,19 +1963,14 @@ public:
       SourceManager *SM = Result.SourceManager;
       Replacement Rep(*SM, SM->getLocForStartOfFile(SM->getMainFileID()), 0, repName);
       Replace->insert(Rep);
-      countReps[CONV_INCLUDE_CUDA_MAIN_H]++;
-      countApiReps[API_RUNTIME]++;
+      hipCounter counter = { "", CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME };
+      updateCounters(counter);
     }
   }
 
-  int64_t countReps[CONV_LAST]  = { 0 };
-  int64_t countApiReps[API_LAST] = { 0 };
-
 private:
-  Replacements *Replace;
   ast_matchers::MatchFinder *owner;
   HipifyPPCallbacks *PP;
-  struct cuda2hipMap N;
 };
 
 void HipifyPPCallbacks::handleEndSource() {
@@ -1983,8 +1979,8 @@ void HipifyPPCallbacks::handleEndSource() {
     StringRef repName = "#include <hip/hip_runtime.h>\n";
     Replacement Rep(*_sm, _sm->getLocForStartOfFile(_sm->getMainFileID()), 0, repName);
     Replace->insert(Rep);
-    countReps[CONV_INCLUDE_CUDA_MAIN_H]++;
-    countApiReps[API_RUNTIME]++;
+    hipCounter counter = { "", CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME };
+    updateCounters(counter);
   }
 }
 
@@ -2019,7 +2015,7 @@ static cl::opt<bool> PrintStats("print-stats",
        cl::value_desc("print-stats"),
        cl::cat(ToolTemplateCategory));
 
-static cl::opt<bool> N("n",
+static cl::opt<bool> Examine("examine",
        cl::desc("Combines -no-output and -print-stats options"),
        cl::value_desc("n"),
        cl::cat(ToolTemplateCategory));
@@ -2088,12 +2084,12 @@ void addAllMatchers(ast_matchers::MatchFinder &Finder, Cuda2HipCallback *Callbac
                             Callback);
 }
 
-void printStats(std::string fileSource, HipifyPPCallbacks &PPCallbacks, Cuda2HipCallback &Callback) {
+int64_t printStats(std::string fileSource, HipifyPPCallbacks &PPCallbacks, Cuda2HipCallback &Callback) {
   int64_t sum = 0;
   for (int i = 0; i < CONV_LAST; i++) {
     sum += Callback.countReps[i] + PPCallbacks.countReps[i];
   }
-  llvm::outs() << "info: converted " << sum << " CUDA->HIP refs ( ";
+  llvm::outs() << "Info: converted " << sum << " CUDA->HIP refs ( ";
   for (int i = 0; i < CONV_LAST; i++) {
     llvm::outs() << counterNames[i] << ':' << Callback.countReps[i] + PPCallbacks.countReps[i] << ' ';
   }
@@ -2102,15 +2098,33 @@ void printStats(std::string fileSource, HipifyPPCallbacks &PPCallbacks, Cuda2Hip
     llvm::outs() << apiNames[i] << ':' << Callback.countApiReps[i] + PPCallbacks.countApiReps[i] << ' ';
   }
   llvm::outs() << ") in \'" << fileSource << "\'\n";
+  return sum;
+}
+
+void printAllStats(int64_t totalFiles, int64_t convertedFiles) {
+  int64_t sum = 0;
+  for (int i = 0; i < CONV_LAST; i++) {
+    sum += countRepsTotal[i];
+  }
+  llvm::outs() << "Info: totally converted " << sum << " CUDA->HIP refs ( ";
+  for (int i = 0; i < CONV_LAST; i++) {
+    llvm::outs() << counterNames[i] << ':' << countRepsTotal[i] << ' ';
+  }
+  llvm::outs() << "), by APIs ( ";
+  for (int i = 0; i < API_LAST; i++) {
+    llvm::outs() << apiNames[i] << ':' << countApiRepsTotal[i] << ' ';
+  }
+  llvm::outs() << ") in " << convertedFiles << " files of " << totalFiles << " processed files.\n";
 }
 
 int main(int argc, const char **argv) {
   llvm::sys::PrintStackTraceOnErrorSignal();
-  CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::Required);
+  CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::OneOrMore);
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
   std::string dst = OutputFilename;
-  if (N) {
-    NoOutput = PrintStats = true;
+  if (!dst.empty() && fileSources.size() > 1) {
+    llvm::errs() << "Conflict: -o and multiple source files are specified.\n";
+    return 1;
   }
   if (NoOutput) {
     if (Inplace) {
@@ -2122,84 +2136,98 @@ int main(int argc, const char **argv) {
       return 1;
     }
   }
-  if (dst.empty()) {
-    dst = fileSources[0];
-    if (!Inplace) {
-      size_t pos = dst.rfind(".");
-      if (pos != std::string::npos && pos+1 < dst.size()) {
-        dst = dst.substr(0, pos) + ".hip." + dst.substr(pos+1, dst.size()-pos-1);
-      } else {
-        dst += ".hip.cu";
+  if (Examine) {
+    NoOutput = PrintStats = true;
+  }
+  int Result = 0;
+  size_t filesTransleted = fileSources.size();
+  for (const auto & src : fileSources) {
+    if (dst.empty()) {
+      dst = src;
+      if (!Inplace) {
+        size_t pos = dst.rfind(".");
+        if (pos != std::string::npos && pos + 1 < dst.size()) {
+          dst = dst.substr(0, pos) + ".hip." + dst.substr(pos + 1, dst.size() - pos - 1);
+        }
+        else {
+          dst += ".hip.cu";
+        }
       }
     }
-  } else {
-    if (Inplace) {
-      llvm::errs() << "Conflict: both -o and -inplace options are specified.\n";
-      return 1;
+    else {
+      if (Inplace) {
+        llvm::errs() << "Conflict: both -o and -inplace options are specified.\n";
+        return 1;
+      }
+      dst += ".hip";
     }
-    dst += ".hip";
-  }
-  // backup source file since tooling may change "inplace"
-  if (!NoBackup || !Inplace) {
-    std::ifstream source(fileSources[0], std::ios::binary);
-    std::ofstream dest(Inplace ? dst + ".prehip" : dst, std::ios::binary);
-    dest << source.rdbuf();
-    source.close();
-    dest.close();
-  }
+    // backup source file since tooling may change "inplace"
+    if (!NoBackup || !Inplace) {
+      std::ifstream source(src, std::ios::binary);
+      std::ofstream dest(Inplace ? dst + ".prehip" : dst, std::ios::binary);
+      dest << source.rdbuf();
+      source.close();
+      dest.close();
+    }
 
-  RefactoringTool Tool(OptionsParser.getCompilations(), dst);
-  ast_matchers::MatchFinder Finder;
-  HipifyPPCallbacks PPCallbacks(&Tool.getReplacements());
-  Cuda2HipCallback Callback(&Tool.getReplacements(), &Finder, &PPCallbacks);
+    RefactoringTool Tool(OptionsParser.getCompilations(), dst);
+    ast_matchers::MatchFinder Finder;
+    HipifyPPCallbacks PPCallbacks(&Tool.getReplacements());
+    Cuda2HipCallback Callback(&Tool.getReplacements(), &Finder, &PPCallbacks);
 
-  addAllMatchers(Finder, &Callback);
+    addAllMatchers(Finder, &Callback);
 
-  auto action = newFrontendActionFactory(&Finder, &PPCallbacks);
-  std::vector<const char*> compilationStages;
-  compilationStages.push_back("--cuda-host-only");
-  Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(compilationStages[0], ArgumentInsertPosition::BEGIN));
-  Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-std=c++11"));
+    auto action = newFrontendActionFactory(&Finder, &PPCallbacks);
+    std::vector<const char*> compilationStages;
+    compilationStages.push_back("--cuda-host-only");
+    Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(compilationStages[0], ArgumentInsertPosition::BEGIN));
+    Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-std=c++11"));
 #if defined(HIPIFY_CLANG_RES)
-  Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-resource-dir=" HIPIFY_CLANG_RES));
+    Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-resource-dir=" HIPIFY_CLANG_RES));
 #endif
-  Tool.appendArgumentsAdjuster(getClangSyntaxOnlyAdjuster());
-  int Result = Tool.run(action.get());
-  Tool.clearArgumentsAdjusters();
+    Tool.appendArgumentsAdjuster(getClangSyntaxOnlyAdjuster());
+    Result += Tool.run(action.get());
+    Tool.clearArgumentsAdjusters();
 
-  LangOptions DefaultLangOptions;
-  IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts = new DiagnosticOptions();
-  TextDiagnosticPrinter DiagnosticPrinter(llvm::errs(), &*DiagOpts);
-  DiagnosticsEngine Diagnostics(
+    LangOptions DefaultLangOptions;
+    IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts = new DiagnosticOptions();
+    TextDiagnosticPrinter DiagnosticPrinter(llvm::errs(), &*DiagOpts);
+    DiagnosticsEngine Diagnostics(
       IntrusiveRefCntPtr<DiagnosticIDs>(new DiagnosticIDs()), &*DiagOpts,
       &DiagnosticPrinter, false);
 
-  DEBUG(dbgs() << "Replacements collected by the tool:\n");
-  for (const auto &r : Tool.getReplacements()) {
-    DEBUG(dbgs() << r.toString() << "\n");
-  }
+    DEBUG(dbgs() << "Replacements collected by the tool:\n");
+    for (const auto &r : Tool.getReplacements()) {
+      DEBUG(dbgs() << r.toString() << "\n");
+    }
 
-  SourceManager Sources(Diagnostics, Tool.getFiles());
-  Rewriter Rewrite(Sources, DefaultLangOptions);
+    SourceManager Sources(Diagnostics, Tool.getFiles());
+    Rewriter Rewrite(Sources, DefaultLangOptions);
 
-  if (!Tool.applyAllReplacements(Rewrite)) {
-    DEBUG(dbgs() << "Skipped some replacements.\n");
-  }
-  if (!NoOutput) {
-    Result = Rewrite.overwriteChangedFiles();
-  }
-  if (!Inplace && !NoOutput) {
-    size_t pos = dst.rfind(".");
-    if (pos != std::string::npos) {
-      rename(dst.c_str(), dst.substr(0, pos).c_str());
+    if (!Tool.applyAllReplacements(Rewrite)) {
+      DEBUG(dbgs() << "Skipped some replacements.\n");
+    }
+    if (!NoOutput) {
+      Result += Rewrite.overwriteChangedFiles();
+    }
+    if (!Inplace && !NoOutput) {
+      size_t pos = dst.rfind(".");
+      if (pos != std::string::npos) {
+        rename(dst.c_str(), dst.substr(0, pos).c_str());
+      }
+    }
+    if (NoOutput) {
+      remove(dst.c_str());
+    }
+    dst.clear();
+    if (PrintStats) {
+      if (0 == printStats(src, PPCallbacks, Callback)) {
+        filesTransleted--;
+      }
     }
   }
-  if (NoOutput) {
-    remove(dst.c_str());
+  if (PrintStats && fileSources.size() > 1) {
+    printAllStats(fileSources.size(), filesTransleted);
   }
-  if (PrintStats) {
-    printStats(fileSources[0], PPCallbacks, Callback);
-  }
-
   return Result;
 }
