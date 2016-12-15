@@ -335,7 +335,7 @@ HIP provides 3 environment variables in the HIP_*_BLOCKING family.  These introd
 
 These options cause HCC to serialize.  Useful if you have libraries or code which is calling HCC kernels directly rather than using HIP.  
 - HCC_SERIALZIE_KERNELS : 0x1=pre-serialize before each kernel launch, 0x2=post-serialize after each kernel launch., 0x3= pre- and post- serialize.
-- HCC_SERIALIZE_COPY    : 0x1=pre-serialize before each async copy, 0x2=post-serialize after each async copy., 0x3= pre- and post- serialize.0
+- HCC_SERIALIZE_COPY    : 0x1=pre-serialize before each async copy, 0x2=post-serialize after each async copy., 0x3= pre- and post- serialize.
 
 - HSA_ENABLE_SDMA=0     : Causes host-to-device and device-to-host copies to use compute shader blit kernels rather than the dedicated DMA copy engines.  Compute shader copies have low latency (typically < 5us) and can achieve approximately 80% of the bandwidth of the DMA copy engine.  This flag is useful to isolate issues with the hardware copy engines.
 - HSA_ENABLE_INTERRUPT=0 : Causes completion signals to be detected with memory-based polling rather than interrupts.  Can be useful to diagnose interrupt storm issues in the driver.
