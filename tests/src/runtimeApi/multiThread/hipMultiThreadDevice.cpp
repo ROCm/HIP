@@ -9,11 +9,12 @@
 #include "hip/hip_runtime_api.h"
 #include "test_common.h"
 
+#include <vector> // For std::vector.
 
 // Create a lot of streams and then destroy 'em.
 void createThenDestroyStreams(int iterations, int burstSize)
 {
-    hipStream_t *streams = new hipStream_t[burstSize];
+    std::vector<hipStream_t> streams(burstSize);
 
     for (int i=0; i<iterations; i++) {
         if (p_verbose & 0x1) {
@@ -32,8 +33,6 @@ void createThenDestroyStreams(int iterations, int burstSize)
             HIPCHECK( hipStreamDestroy(streams[j]));
         }
     }
-
-    delete streams;
 }
 
 
