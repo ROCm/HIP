@@ -57,8 +57,8 @@ hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device)
 {
     HIP_INIT_API(ctx, flags, device); // FIXME - review if we want to init
     hipError_t e = hipSuccess;
-
-    *ctx = new ihipCtx_t(device, g_deviceCnt, flags);
+    auto deviceHandle = ihipGetDevice(device);
+    *ctx = new ihipCtx_t(deviceHandle, g_deviceCnt, flags);
     ihipSetTlsDefaultCtx(*ctx);
     tls_ctxStack.push(*ctx);
 
@@ -69,11 +69,13 @@ hipError_t hipDeviceGet(hipDevice_t *device, int deviceId)
 {
     HIP_INIT_API(device, deviceId); // FIXME - review if we want to init
 
-    *device = ihipGetDevice(deviceId);
+    auto deviceHandle = ihipGetDevice(deviceId);
 
     hipError_t e = hipSuccess;
-    if (*device == NULL) {
+    if (deviceHandle == NULL) {
         e = hipErrorInvalidDevice;
+    } else {
+        *device = deviceId;
     }
 
     return ihipLogStatus(e);
@@ -199,9 +201,11 @@ hipError_t hipCtxGetDevice(hipDevice_t *device)
 
     if(ctx == nullptr) {
         e = hipErrorInvalidContext;
+        // TODO *device = nullptr;
     }
     else {
-        *device = (ihipDevice_t*)ctx->getDevice();
+        auto deviceHandle = ctx->getDevice();
+        *device = deviceHandle->_deviceId;
     }
     return ihipLogStatus(e);
 }
