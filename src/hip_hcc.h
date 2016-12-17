@@ -33,9 +33,7 @@ THE SOFTWARE.
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
-#define USE_DISPATCH_HSA_KERNEL 1
 #define USE_IPC 0
-//
 
 
 //---

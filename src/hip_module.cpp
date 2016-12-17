@@ -300,7 +300,6 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         grid_launch_parm lp;
         hStream = ihipPreLaunchKernel(hStream, 0, 0, &lp, "ModuleKernel");
 
-#if USE_DISPATCH_HSA_KERNEL
 
         hsa_kernel_dispatch_packet_t aql;
 
@@ -325,65 +324,6 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
                                     (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
 
         lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize);
-#else
-
-        /*
-          Create signal
-        */
-
-        hsa_signal_t signal;
-        status = hsa_signal_create(1, 0, NULL, &signal);
-        if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorNotFound);
-        }
-
-        /*
-           Allocate kernarg
-        */
-        void *kern = nullptr;
-
-        hsa_amd_memory_pool_t *pool = reinterpret_cast<hsa_amd_memory_pool_t*>(lp.av->get_hsa_kernarg_region());
-        status = hsa_amd_memory_pool_allocate(*pool, kernArgSize, 0, &kern);
-        if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorNotFound);
-        }
-        status = hsa_amd_agents_allow_access(1, (hsa_agent_t*)lp.av->get_hsa_agent(), 0, kern);
-        if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorNotFound);
-        }
-        memcpy(kern, config[1], kernArgSize);
-
-
-        /*
-          Launch AQL packet
-        */
-        hStream->launchModuleKernel(*lp.av, signal, blockDimX, blockDimY, blockDimZ,
-                  gridDimX, gridDimY, gridDimZ, groupSegmentSize, privateSegmentSize, kern, kernArgSize, f->_object);
-
-
-        /*
-          Wait for signal
-        */
-
-        hsa_signal_value_t value = hsa_signal_wait_acquire(signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_BLOCKED);
-
-        /*
-           Destroy kernarg
-        */
-        status = hsa_amd_memory_pool_free(kern);
-        if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorNotFound);
-        }
-
-        /*
-          Destroy the signal
-        */
-        status = hsa_signal_destroy(signal);
-        if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorNotFound);
-        }
-
-#endif // USE_DISPATCH_HSA_KERNEL
 
 
         ihipPostLaunchKernel("ModuleKernel", hStream, lp);
