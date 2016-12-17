@@ -321,9 +321,8 @@ hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device
 {
     HIP_INIT_API(major,minor, device);
     hipError_t e = hipSuccess;
-    int deviceId= device->_deviceId;
-    e = ihipDeviceGetAttribute(major, hipDeviceAttributeComputeCapabilityMajor, deviceId);
-    e = ihipDeviceGetAttribute(minor, hipDeviceAttributeComputeCapabilityMinor, deviceId);
+    e = ihipDeviceGetAttribute(major, hipDeviceAttributeComputeCapabilityMajor, device);
+    e = ihipDeviceGetAttribute(minor, hipDeviceAttributeComputeCapabilityMinor, device);
     return ihipLogStatus(e);
 }
 
@@ -331,27 +330,12 @@ hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
 {
     HIP_INIT_API(name,len, device);
     hipError_t e = hipSuccess;
-    int nameLen = strlen(device->_props.name);
+    auto deviceHandle = ihipGetDevice(device);
+    int nameLen = strlen(deviceHandle->_props.name);
     if(nameLen <= len)
-        memcpy(name,device->_props.name,nameLen);
+        memcpy(name,deviceHandle->_props.name,nameLen);
     return ihipLogStatus(e);
 }
-
-#ifdef __cplusplus
-hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,hipDevice_t device)
-{
-    HIP_INIT_API(pciBusId, len, device);
-    hipError_t e = hipSuccess;
-    int deviceId= device->_deviceId;
-    int tempPciBusId = 0;
-    e = ihipDeviceGetAttribute( &tempPciBusId, hipDeviceAttributePciBusId, deviceId);
-    if( e == hipSuccess) {
-        std::string tempPciStr = std::to_string(tempPciBusId);
-        memcpy( pciBusId , tempPciStr.c_str() , tempPciStr.length() );
-    }
-    return ihipLogStatus(e);
-}
-#endif
 
 hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len, int device)
 {
@@ -365,11 +349,13 @@ hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len, int device)
     }
     return ihipLogStatus(e);
 }
+
 hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device)
 {
     HIP_INIT_API(bytes, device);
     hipError_t e = hipSuccess;
-    *bytes= device->_props.totalGlobalMem;
+    auto deviceHandle = ihipGetDevice(device);
+    *bytes= deviceHandle->_props.totalGlobalMem;
     return ihipLogStatus(e);
 }
 

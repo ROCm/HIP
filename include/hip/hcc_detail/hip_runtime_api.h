@@ -53,7 +53,7 @@ extern "C" {
 typedef struct ihipCtx_t    *hipCtx_t;
 
 // Note many APIs also use integer deviceIds as an alternative to the device pointer:
-typedef struct ihipDevice_t *hipDevice_t;
+typedef int hipDevice_t;
 
 typedef struct ihipStream_t *hipStream_t;
 
@@ -1902,18 +1902,6 @@ hipError_t hipIpcCloseMemHandle(void *devPtr);
 
 #ifdef __cplusplus
 } /* extern "c" */
-#endif
-
-#ifdef __cplusplus
-/**
- * @brief Returns a PCI Bus Id string for the device.
- * @param [out] pciBusId
- * @param [in] len
- * @param [hipDevice_t] device
- *
- * @returns #hipSuccess, #hipErrorInavlidDevice
- */
-hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,hipDevice_t device);
 #endif
 
 /**
