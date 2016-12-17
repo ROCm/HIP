@@ -33,7 +33,7 @@ THE SOFTWARE.
 
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hip_runtime_api.h>
-//#include "hip/hip_hcc.h"
+#include <hsa/hsa.h>
 
 #if defined (__HCC__) &&  (__hcc_workweek__ < 16155)
 #error("This version of HIP requires a newer version of HCC.");
@@ -72,7 +72,12 @@ typedef struct ihipIpcEventHandle_t *hipIpcEventHandle_t;
 
 typedef struct ihipModule_t *hipModule_t;
 
-typedef struct ihipFunction_t *hipFunction_t;
+struct ihipModuleSymbol_t{
+    hsa_executable_symbol_t 	_hsaSymbol;
+    uint64_t 			_object;             // The kernel object.
+};
+
+typedef struct ihipModuleSymbol_t hipFunction_t;
 
 typedef void* hipDeviceptr_t;
 
