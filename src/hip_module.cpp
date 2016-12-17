@@ -243,7 +243,7 @@ hipError_t ihipModuleGetSymbol(hipFunction_t *func, hipModule_t hmod, const char
                                     &func->_privateSegmentSize);
         CHECK_HSA(status, hipErrorNotFound);
 
-        //func->_name = std::string(name);
+        strncpy(func->_name, name, sizeof(func->_name));
     }
     return ihipLogStatus(ret);
 }
@@ -297,9 +297,8 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         /*
           Kernel argument preparation.
         */
-        grid_launch_parm lp;
-        //hStream = ihipPreLaunchKernel(hStream, 0, 0, &lp, f._name.empty() ? "ModuleKernel" : f._name.c_str());
-        hStream = ihipPreLaunchKernel(hStream, 0, 0, &lp, "ModuleKernel");
+        grid_launch_parm lp; // TODO - dummy arg but values are printed during debug.
+        hStream = ihipPreLaunchKernel(hStream, 0, 0, &lp, f._name);
 
 
         hsa_kernel_dispatch_packet_t aql;
@@ -327,8 +326,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize);
 
 
-        //ihipPostLaunchKernel(f._name.empty() ? "ModuleKernel" : f._name.c_str(), hStream, lp);
-        ihipPostLaunchKernel("ModuleKernel", hStream, lp);
+        ihipPostLaunchKernel(f._name, hStream, lp);
     }
 
     return ihipLogStatus(ret);

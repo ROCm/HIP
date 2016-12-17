@@ -30,7 +30,6 @@ THE SOFTWARE.
 
 #include <stdint.h>
 #include <stddef.h>
-#include <string>
 
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hip_runtime_api.h>
@@ -76,7 +75,7 @@ struct ihipModuleSymbol_t{
     uint64_t    _object;             // The kernel object.
     uint32_t    _groupSegmentSize;
     uint32_t    _privateSegmentSize;
-    //std::string  _name;       // TODO - review for performance cost.  Name is just used for debug.
+    char        _name[64];       // TODO - review for performance cost.  Name is just used for debug.
 };
 
 typedef struct ihipModuleSymbol_t hipFunction_t;
