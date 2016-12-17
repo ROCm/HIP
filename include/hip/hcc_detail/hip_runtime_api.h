@@ -30,10 +30,10 @@ THE SOFTWARE.
 
 #include <stdint.h>
 #include <stddef.h>
+#include <string>
 
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hip_runtime_api.h>
-#include <hsa/hsa.h>
 
 #if defined (__HCC__) &&  (__hcc_workweek__ < 16155)
 #error("This version of HIP requires a newer version of HCC.");
@@ -73,8 +73,10 @@ typedef struct ihipIpcEventHandle_t *hipIpcEventHandle_t;
 typedef struct ihipModule_t *hipModule_t;
 
 struct ihipModuleSymbol_t{
-    hsa_executable_symbol_t 	_hsaSymbol;
-    uint64_t 			_object;             // The kernel object.
+    uint64_t    _object;             // The kernel object.
+    uint32_t    _groupSegmentSize;
+    uint32_t    _privateSegmentSize;
+    //std::string  _name;       // TODO - review for performance cost.  Name is just used for debug.
 };
 
 typedef struct ihipModuleSymbol_t hipFunction_t;
