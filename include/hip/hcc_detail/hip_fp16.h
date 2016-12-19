@@ -25,9 +25,7 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 
-#define __CLANG_VERSION__ __clang_major__ * 10 + __clang_minor__
-
-#ifdef HIP_HALF_HW_SUPPORT
+#if 0
 
 typedef __fp16 __half;
 

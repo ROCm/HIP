@@ -33,9 +33,7 @@ THE SOFTWARE.
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
-#define USE_DISPATCH_HSA_KERNEL 1
 #define USE_IPC 0
-//
 
 
 //---
@@ -383,26 +381,6 @@ public:
     size_t psize;
 };
 
-class ihipFunction_t{
-public:
-    ihipFunction_t(const char *name) {
-        size_t nameSz = strlen(name);
-        char *kernelName = (char*)malloc(nameSz);
-        strncpy(kernelName, name, nameSz);
-        _kernelName = kernelName;
-    };
-
-    ~ihipFunction_t() {
-        if (_kernelName) {
-            free((void*)_kernelName);
-            _kernelName = NULL;
-        };
-    };
-public:
-    const char             *_kernelName;
-    hsa_executable_symbol_t _kernelSymbol;
-    uint64_t _kernel;
-};
 
 class ihipModule_t {
 public:
@@ -412,20 +390,7 @@ public:
   void *ptr;
   size_t size;
 
-  ihipModule_t() : executable(), object(), fileName(), ptr(nullptr), size(0), hipFunctionTable() {}
-  ~ihipModule_t() {
-    for (int i = 0; i < hipFunctionTable.size(); ++i) {
-      ihipFunction_t *func = hipFunctionTable[i];
-      delete func;
-    }
-    hipFunctionTable.clear();
-  }
-
-  void registerFunction(ihipFunction_t* func) {
-    hipFunctionTable.push_back(func);
-  }
-private:
-  std::vector<ihipFunction_t*> hipFunctionTable;
+  ihipModule_t() : executable(), object(), fileName(), ptr(nullptr), size(0) {}
 };
 
 template <typename MUTEX_TYPE>

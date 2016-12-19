@@ -72,6 +72,15 @@ inline std::string ToString(hipEvent_t v)
     return ss.str();
 };
 
+//  hipEvent_t specialization. TODO - maybe add an event ID for debug?
+template <>
+inline std::string ToString(hipFunction_t v) 
+{
+    std::ostringstream ss;
+    ss << "0x" << std::hex << v._object;
+    return ss.str();
+};
+
 
 
 //  hipStream_t

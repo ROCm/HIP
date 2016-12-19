@@ -387,57 +387,6 @@ void ihipStream_t::lockclose_postKernelCommand(const char * kernelName, hc::acce
 };
 
 
-
-
-#if USE_DISPATCH_HSA_KERNEL==0
-// Precursor: the stream is already locked,specifically so this routine can enqueue work into the specified av.
-void ihipStream_t::launchModuleKernel(
-                        hc::accelerator_view av,
-                        hsa_signal_t signal,
-                        uint32_t blockDimX,
-                        uint32_t blockDimY,
-                        uint32_t blockDimZ,
-                        uint32_t gridDimX,
-                        uint32_t gridDimY,
-                        uint32_t gridDimZ,
-                        uint32_t groupSegmentSize,
-			uint32_t privateSegmentSize,
-                        void *kernarg,
-                        size_t kernSize,
-                        uint64_t kernel){
-    hsa_status_t status;
-    hsa_queue_t *Queue = (hsa_queue_t*)av.get_hsa_queue();
-    const uint32_t queue_mask = Queue->size-1;
-    uint32_t packet_index = hsa_queue_load_write_index_relaxed(Queue);
-    hsa_kernel_dispatch_packet_t *dispatch_packet = &(((hsa_kernel_dispatch_packet_t*)(Queue->base_address))[packet_index & queue_mask]);
-
-    dispatch_packet->completion_signal = signal;
-    dispatch_packet->workgroup_size_x = blockDimX;
-    dispatch_packet->workgroup_size_y = blockDimY;
-    dispatch_packet->workgroup_size_z = blockDimZ;
-    dispatch_packet->grid_size_x = blockDimX * gridDimX;
-    dispatch_packet->grid_size_y = blockDimY * gridDimY;
-    dispatch_packet->grid_size_z = blockDimZ * gridDimZ;
-    dispatch_packet->group_segment_size = groupSegmentSize;
-    dispatch_packet->private_segment_size = privateSegmentSize;
-    dispatch_packet->kernarg_address = kernarg;
-    dispatch_packet->kernel_object = kernel;
-    uint16_t header = (HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE) |
-    (1 << HSA_PACKET_HEADER_BARRIER) |
-    (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
-    (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
-
-    uint16_t setup = 3 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
-    uint32_t header32 = header | (setup << 16);
-
-    __atomic_store_n((uint32_t*)(dispatch_packet), header32, __ATOMIC_RELEASE);
-
-    hsa_queue_store_write_index_relaxed(Queue, packet_index + 1);
-    hsa_signal_store_relaxed(Queue->doorbell_signal, packet_index);
-}
-#endif
-
-
 //=============================================================================
 // Recompute the peercnt and the packed _peerAgents whenever a peer is added or deleted.
 // The packed _peerAgents can efficiently be used on each memory allocation.
@@ -783,13 +732,10 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     _isLargeBar = _acc.has_cpu_accessible_am();
 
     // Get Max Threads Per Multiprocessor
-
-    HsaNodeProperties node_prop = {0};
-    if(HSAKMT_STATUS_SUCCESS == hsaKmtGetNodeProperties(node, &node_prop)) {
-        uint32_t waves_per_cu = node_prop.MaxWavesPerSIMD;
-        uint32_t simd_per_cu = node_prop.NumSIMDPerCU;
-        prop-> maxThreadsPerMultiProcessor = prop->warpSize*waves_per_cu*simd_per_cu;
-    }
+    uint32_t max_waves_per_cu;
+    err = hsa_agent_get_info(_hsaAgent,(hsa_agent_info_t) HSA_AMD_AGENT_INFO_MAX_WAVES_PER_CU, &max_waves_per_cu);
+    DeviceErrorCheck(err);
+    prop-> maxThreadsPerMultiProcessor = prop->warpSize*max_waves_per_cu;
 
     // Get memory properties
     err = hsa_agent_iterate_regions(_hsaAgent, get_region_info, prop);

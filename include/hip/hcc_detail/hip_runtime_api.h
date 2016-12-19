@@ -33,7 +33,6 @@ THE SOFTWARE.
 
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hip_runtime_api.h>
-//#include "hip/hip_hcc.h"
 
 #if defined (__HCC__) &&  (__hcc_workweek__ < 16155)
 #error("This version of HIP requires a newer version of HCC.");
@@ -53,7 +52,7 @@ extern "C" {
 typedef struct ihipCtx_t    *hipCtx_t;
 
 // Note many APIs also use integer deviceIds as an alternative to the device pointer:
-typedef struct ihipDevice_t *hipDevice_t;
+typedef int hipDevice_t;
 
 typedef struct ihipStream_t *hipStream_t;
 
@@ -72,7 +71,14 @@ typedef struct ihipIpcEventHandle_t *hipIpcEventHandle_t;
 
 typedef struct ihipModule_t *hipModule_t;
 
-typedef struct ihipFunction_t *hipFunction_t;
+struct ihipModuleSymbol_t{
+    uint64_t    _object;             // The kernel object.
+    uint32_t    _groupSegmentSize;
+    uint32_t    _privateSegmentSize;
+    char        _name[64];       // TODO - review for performance cost.  Name is just used for debug.
+};
+
+typedef struct ihipModuleSymbol_t hipFunction_t;
 
 typedef void* hipDeviceptr_t;
 
@@ -1902,18 +1908,6 @@ hipError_t hipIpcCloseMemHandle(void *devPtr);
 
 #ifdef __cplusplus
 } /* extern "c" */
-#endif
-
-#ifdef __cplusplus
-/**
- * @brief Returns a PCI Bus Id string for the device.
- * @param [out] pciBusId
- * @param [in] len
- * @param [hipDevice_t] device
- *
- * @returns #hipSuccess, #hipErrorInavlidDevice
- */
-hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,hipDevice_t device);
 #endif
 
 /**
