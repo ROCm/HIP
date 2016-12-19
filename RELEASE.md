@@ -3,7 +3,7 @@
 We have attempted to document known bugs and limitations - in particular the [HIP Kernel Language](docs/markdown/hip_kernel_language.md) document uses the phrase "Under Development", and the [HIP Runtime API bug list](http://gpuopen-professionalcompute-tools.github.io/HIP/bug.html) lists known bugs. 
 
 Upcoming:
-- Stability: Enforce perioidic host synchronization to reclaim resources if the application has launched a large
+- Stability: Enforce periodic host synchronization to reclaim resources if the application has launched a large
   number of commands (>1K) without synchronizing.  
 - Register keyword now silently ignored on HCC (previously would emit warning).
 - Doc updates: Add some more frequently asked questions to FAQ, fix TOC in some files, review.

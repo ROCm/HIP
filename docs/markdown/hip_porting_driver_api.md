@@ -31,8 +31,8 @@ accelerator language front-end.  Here, NVCC is not used.   Instead, the environm
 different kernel language or different compilation flow.
 Other environments have many kernels and do not want them to be all loaded automatically.
 The Module functions can be used to load the generated code objects and launch kernels.
-As we will see below, HIP defines a Module API which provides similar explict control over code
-object managemenet.
+As we will see below, HIP defines a Module API which provides similar explicit control over code
+object management.
 
 ### cuCtx API
 The Driver API defines "Context" and "Devices" as separate entities.  
