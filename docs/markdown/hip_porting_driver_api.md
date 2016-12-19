@@ -1,7 +1,7 @@
 # Porting CUDA Driver API
 
 ## Introduction to the CUDA Driver and Runtime APIs
-CUDA provides a separate CUDA Driver and Runtime APIs.  The two APis have significant overlap in functionality:  
+CUDA provides a separate CUDA Driver and Runtime APIs.  The two APIs have significant overlap in functionality:  
 - Both APIs support events, streams, memory management, memory copy, and error handling.
 - Both APIs deliver similar performance.  
 - Driver APIs calls begin with the prefix `cu` while Runtime APIs begin with the prefix `cuda`.  For example, the Driver API API contains `cuEventCreate` while the Runtime API contains `cudaEventCreate`, with similar functionality.
@@ -90,14 +90,14 @@ the context.  The current context is implicitly used by other APIs such as `hipS
 The hipify tool will convert CUDA Driver APIs for streams, events, memory management to 
 the equivalent HIP driver calls.   For example, `cuEventCreate` will be translated to 
 `hipEventCreate`.  Hipify also converts error code from the Driver namespace and coding
-convention to the equivalent HIP error code.  Thus, HIP unifies the APis for these common functions.
+convention to the equivalent HIP error code.  Thus, HIP unifies the APIs for these common functions.
 [hipify support for translating driver API is Under Development]
 
 The memory copy APIs require additional explanation.  The CUDA driver includes the memory
 direction in the name of the API (ie `cuMemcpyH2D`) while the CUDA driver API provides
 a single memory copy API with a parameter that specifies the direction and additionally
 supports a "default" direction where the runtime determines the direction automatically.
-HIP provides APis with both styles: for example, `hipMemcpyH2D` as well as `hipMemcpy`.
+HIP provides APIs with both styles: for example, `hipMemcpyH2D` as well as `hipMemcpy`.
 The first flavor may be faster in some cases since they avoid host overhead to detect the 
 different memory directions.
 
