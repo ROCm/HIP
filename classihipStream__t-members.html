@@ -98,7 +98,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   <tr><td class="entry"><a class="el" href="classihipStream__t.html#a46bba2e3bfbb0915a08fb608aed31858">hipStreamQuery</a>(hipStream_t)</td><td class="entry"><a class="el" href="classihipStream__t.html">ihipStream_t</a></td><td class="entry"><span class="mlabel">friend</span></td></tr>
   <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>ihipStream_t</b>(ihipCtx_t *ctx, hc::accelerator_view av, unsigned int flags) (defined in <a class="el" href="classihipStream__t.html">ihipStream_t</a>)</td><td class="entry"><a class="el" href="classihipStream__t.html">ihipStream_t</a></td><td class="entry"></td></tr>
   <tr bgcolor="#f0f0f0"><td class="entry"><b>launchModuleKernel</b>(hc::accelerator_view av, hsa_signal_t signal, uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ, uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ, uint32_t groupSegmentSize, uint32_t sharedMemBytes, void *kernarg, size_t kernSize, uint64_t kernel) (defined in <a class="el" href="classihipStream__t.html">ihipStream_t</a>)</td><td class="entry"><a class="el" href="classihipStream__t.html">ihipStream_t</a></td><td class="entry"></td></tr>
-  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>lockclose_postKernelCommand</b>(hc::accelerator_view *av) (defined in <a class="el" href="classihipStream__t.html">ihipStream_t</a>)</td><td class="entry"><a class="el" href="classihipStream__t.html">ihipStream_t</a></td><td class="entry"></td></tr>
+  <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>lockclose_postKernelCommand</b>(const char *kernelName, hc::accelerator_view *av) (defined in <a class="el" href="classihipStream__t.html">ihipStream_t</a>)</td><td class="entry"><a class="el" href="classihipStream__t.html">ihipStream_t</a></td><td class="entry"></td></tr>
   <tr bgcolor="#f0f0f0"><td class="entry"><b>locked_copyAsync</b>(void *dst, const void *src, size_t sizeBytes, unsigned kind) (defined in <a class="el" href="classihipStream__t.html">ihipStream_t</a>)</td><td class="entry"><a class="el" href="classihipStream__t.html">ihipStream_t</a></td><td class="entry"></td></tr>
   <tr bgcolor="#f0f0f0" class="even"><td class="entry"><b>locked_copySync</b>(void *dst, const void *src, size_t sizeBytes, unsigned kind, bool resolveOn=true) (defined in <a class="el" href="classihipStream__t.html">ihipStream_t</a>)</td><td class="entry"><a class="el" href="classihipStream__t.html">ihipStream_t</a></td><td class="entry"></td></tr>
   <tr bgcolor="#f0f0f0"><td class="entry"><b>locked_getAv</b>() (defined in <a class="el" href="classihipStream__t.html">ihipStream_t</a>)</td><td class="entry"><a class="el" href="classihipStream__t.html">ihipStream_t</a></td><td class="entry"><span class="mlabel">inline</span></td></tr>
@@ -116,7 +116,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </table></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Nov 8 2016 16:33:49 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Dec 19 2016 04:03:44 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

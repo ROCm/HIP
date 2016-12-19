@@ -174,8 +174,8 @@ typedef enum <a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf94
 <tr class="memitem:ga98568c9e181d803c8b3ab6f36660a15c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ga98568c9e181d803c8b3ab6f36660a15c"></a>
 typedef enum <a class="el" href="group__GlobalDefs.html#gacc0acd7b9bda126c6bb3dfd6e2796d7c">hipDeviceAttribute_t</a>&#160;</td><td class="memItemRight" valign="bottom"><b>hipDeviceAttribute_t</b></td></tr>
 <tr class="separator:ga98568c9e181d803c8b3ab6f36660a15c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaad15dc7939a0a25b16e4aa161fb41eee"><td class="memItemLeft" align="right" valign="top">typedef enum <a class="el" href="group__GlobalDefs.html#gac7e4bfd88340fc06642136c839a3d822">hipFuncCache</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#gaad15dc7939a0a25b16e4aa161fb41eee">hipFuncCache</a></td></tr>
-<tr class="separator:gaad15dc7939a0a25b16e4aa161fb41eee"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga7effbca2af70714feaa3330bf1a77a72"><td class="memItemLeft" align="right" valign="top">typedef enum <a class="el" href="group__GlobalDefs.html#ga86e5c5692645963a9a673e1aa88ba6ca">hipFuncCache_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#ga7effbca2af70714feaa3330bf1a77a72">hipFuncCache_t</a></td></tr>
+<tr class="separator:ga7effbca2af70714feaa3330bf1a77a72"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga6b1ca424fa26a5fb718937d662eaee7f"><td class="memItemLeft" align="right" valign="top">typedef enum <a class="el" href="group__GlobalDefs.html#ga2e17b71d94ac350f2ccd914fd49d104e">hipSharedMemConfig</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#ga6b1ca424fa26a5fb718937d662eaee7f">hipSharedMemConfig</a></td></tr>
 <tr class="separator:ga6b1ca424fa26a5fb718937d662eaee7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gacb37281795c3567d0b10a61c056d512b"><td class="memItemLeft" align="right" valign="top">typedef struct <a class="el" href="structdim3.html">dim3</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#gacb37281795c3567d0b10a61c056d512b">dim3</a></td></tr>
@@ -258,6 +258,7 @@ Enumerations</h2></td></tr>
 <br/>
 &#160;&#160;<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a9d7173cea72aace620a83d502569de1b">hipErrorHostMemoryAlreadyRegistered</a> = 1061, 
 <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a6901476ca88eed786fb8be003d9661d9">hipErrorHostMemoryNotRegistered</a> = 1062, 
+<a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ab4de2174991cc16a3e1986f5da25262b">hipErrorMapBufferObjectFailed</a> = 1071, 
 <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594ab556409e11ddb0c4cf77a2f4fc91ea9e">hipErrorTbd</a>
 <br/>
  }</td></tr>
@@ -297,12 +298,12 @@ Enumerations</h2></td></tr>
 <br/>
  }</td></tr>
 <tr class="separator:gacc0acd7b9bda126c6bb3dfd6e2796d7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gac7e4bfd88340fc06642136c839a3d822"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#gac7e4bfd88340fc06642136c839a3d822">hipFuncCache</a> { <a class="el" href="group__GlobalDefs.html#ggac7e4bfd88340fc06642136c839a3d822a0813fbaa008ce1231ff9fed3911eb3af">hipFuncCachePreferNone</a>, 
-<a class="el" href="group__GlobalDefs.html#ggac7e4bfd88340fc06642136c839a3d822a9b34337dfbadba25ed2aa270bbcabc43">hipFuncCachePreferShared</a>, 
-<a class="el" href="group__GlobalDefs.html#ggac7e4bfd88340fc06642136c839a3d822a636a3c140db6b9d4a8bf7d5a61c398c5">hipFuncCachePreferL1</a>, 
-<a class="el" href="group__GlobalDefs.html#ggac7e4bfd88340fc06642136c839a3d822a0ddab0e840107634a152033103be44d7">hipFuncCachePreferEqual</a>
+<tr class="memitem:ga86e5c5692645963a9a673e1aa88ba6ca"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#ga86e5c5692645963a9a673e1aa88ba6ca">hipFuncCache_t</a> { <a class="el" href="group__GlobalDefs.html#gga86e5c5692645963a9a673e1aa88ba6caa0813fbaa008ce1231ff9fed3911eb3af">hipFuncCachePreferNone</a>, 
+<a class="el" href="group__GlobalDefs.html#gga86e5c5692645963a9a673e1aa88ba6caa9b34337dfbadba25ed2aa270bbcabc43">hipFuncCachePreferShared</a>, 
+<a class="el" href="group__GlobalDefs.html#gga86e5c5692645963a9a673e1aa88ba6caa636a3c140db6b9d4a8bf7d5a61c398c5">hipFuncCachePreferL1</a>, 
+<a class="el" href="group__GlobalDefs.html#gga86e5c5692645963a9a673e1aa88ba6caa0ddab0e840107634a152033103be44d7">hipFuncCachePreferEqual</a>
  }</td></tr>
-<tr class="separator:gac7e4bfd88340fc06642136c839a3d822"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:ga86e5c5692645963a9a673e1aa88ba6ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2e17b71d94ac350f2ccd914fd49d104e"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__GlobalDefs.html#ga2e17b71d94ac350f2ccd914fd49d104e">hipSharedMemConfig</a> { <a class="el" href="group__GlobalDefs.html#gga2e17b71d94ac350f2ccd914fd49d104eaf5b325c9b7bde878913f768eaba5014d">hipSharedMemBankSizeDefault</a>, 
 <a class="el" href="group__GlobalDefs.html#gga2e17b71d94ac350f2ccd914fd49d104ea0a95a6e0c33106c42d66ab9476ff954a">hipSharedMemBankSizeFourByte</a>, 
 <a class="el" href="group__GlobalDefs.html#gga2e17b71d94ac350f2ccd914fd49d104ea64518b4f5a25f536c883330167e79258">hipSharedMemBankSizeEightByte</a>
@@ -395,12 +396,12 @@ Enumerations</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="gaad15dc7939a0a25b16e4aa161fb41eee"></a>
+<a class="anchor" id="ga7effbca2af70714feaa3330bf1a77a72"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef enum <a class="el" href="group__GlobalDefs.html#gac7e4bfd88340fc06642136c839a3d822">hipFuncCache</a>  <a class="el" href="group__GlobalDefs.html#gac7e4bfd88340fc06642136c839a3d822">hipFuncCache</a></td>
+          <td class="memname">typedef enum <a class="el" href="group__GlobalDefs.html#ga86e5c5692645963a9a673e1aa88ba6ca">hipFuncCache_t</a>  <a class="el" href="group__GlobalDefs.html#ga86e5c5692645963a9a673e1aa88ba6ca">hipFuncCache_t</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -597,6 +598,9 @@ Enumerations</h2></td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594a6901476ca88eed786fb8be003d9661d9"></a>hipErrorHostMemoryNotRegistered</em>&#160;</td><td class="fielddoc">
 <p>Produced when trying to unlock a non-page-locked memory. </p>
 </td></tr>
+<tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594ab4de2174991cc16a3e1986f5da25262b"></a>hipErrorMapBufferObjectFailed</em>&#160;</td><td class="fielddoc">
+<p>Produced when the IPC memory attach failed from ROCr. </p>
+</td></tr>
 <tr><td class="fieldname"><em><a class="anchor" id="ggadf5010f6e140a53ecbdf949e73e87594ab556409e11ddb0c4cf77a2f4fc91ea9e"></a>hipErrorTbd</em>&#160;</td><td class="fielddoc">
 <p>Marker that more error codes are needed. </p>
 </td></tr>
@@ -604,27 +608,27 @@ Enumerations</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="gac7e4bfd88340fc06642136c839a3d822"></a>
+<a class="anchor" id="ga86e5c5692645963a9a673e1aa88ba6ca"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">enum <a class="el" href="group__GlobalDefs.html#gac7e4bfd88340fc06642136c839a3d822">hipFuncCache</a></td>
+          <td class="memname">enum <a class="el" href="group__GlobalDefs.html#ga86e5c5692645963a9a673e1aa88ba6ca">hipFuncCache_t</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 <dl class="section warning"><dt>Warning</dt><dd>On AMD devices and recent Nvidia devices, these hints and controls are ignored. </dd></dl>
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><em><a class="anchor" id="ggac7e4bfd88340fc06642136c839a3d822a0813fbaa008ce1231ff9fed3911eb3af"></a>hipFuncCachePreferNone</em>&#160;</td><td class="fielddoc">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><em><a class="anchor" id="gga86e5c5692645963a9a673e1aa88ba6caa0813fbaa008ce1231ff9fed3911eb3af"></a>hipFuncCachePreferNone</em>&#160;</td><td class="fielddoc">
 <p>no preference for shared memory or L1 (default) </p>
 </td></tr>
-<tr><td class="fieldname"><em><a class="anchor" id="ggac7e4bfd88340fc06642136c839a3d822a9b34337dfbadba25ed2aa270bbcabc43"></a>hipFuncCachePreferShared</em>&#160;</td><td class="fielddoc">
+<tr><td class="fieldname"><em><a class="anchor" id="gga86e5c5692645963a9a673e1aa88ba6caa9b34337dfbadba25ed2aa270bbcabc43"></a>hipFuncCachePreferShared</em>&#160;</td><td class="fielddoc">
 <p>prefer larger shared memory and smaller L1 cache </p>
 </td></tr>
-<tr><td class="fieldname"><em><a class="anchor" id="ggac7e4bfd88340fc06642136c839a3d822a636a3c140db6b9d4a8bf7d5a61c398c5"></a>hipFuncCachePreferL1</em>&#160;</td><td class="fielddoc">
+<tr><td class="fieldname"><em><a class="anchor" id="gga86e5c5692645963a9a673e1aa88ba6caa636a3c140db6b9d4a8bf7d5a61c398c5"></a>hipFuncCachePreferL1</em>&#160;</td><td class="fielddoc">
 <p>prefer larger L1 cache and smaller shared memory </p>
 </td></tr>
-<tr><td class="fieldname"><em><a class="anchor" id="ggac7e4bfd88340fc06642136c839a3d822a0ddab0e840107634a152033103be44d7"></a>hipFuncCachePreferEqual</em>&#160;</td><td class="fielddoc">
+<tr><td class="fieldname"><em><a class="anchor" id="gga86e5c5692645963a9a673e1aa88ba6caa0ddab0e840107634a152033103be44d7"></a>hipFuncCachePreferEqual</em>&#160;</td><td class="fielddoc">
 <p>prefer equal size L1 cache and shared memory </p>
 </td></tr>
 </table>
@@ -688,7 +692,7 @@ Enumerations</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Nov 8 2016 16:33:49 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Dec 19 2016 04:03:43 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

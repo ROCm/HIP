@@ -102,9 +102,12 @@ Functions</h2></td></tr>
 <tr class="memitem:ga24df15e180a7b2b351cd362e5b7d2dac"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Driver.html#ga24df15e180a7b2b351cd362e5b7d2dac">hipDeviceGetName</a> (char *name, int len, <a class="el" href="classihipDevice__t.html">hipDevice_t</a> device)</td></tr>
 <tr class="memdesc:ga24df15e180a7b2b351cd362e5b7d2dac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns an identifer string for the device.  <a href="#ga24df15e180a7b2b351cd362e5b7d2dac">More...</a><br/></td></tr>
 <tr class="separator:ga24df15e180a7b2b351cd362e5b7d2dac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga681cef187c0c173749f8fda568a9d92a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Driver.html#ga681cef187c0c173749f8fda568a9d92a">hipDeviceGetPCIBusId</a> (int *pciBusId, int len, <a class="el" href="classihipDevice__t.html">hipDevice_t</a> device)</td></tr>
-<tr class="memdesc:ga681cef187c0c173749f8fda568a9d92a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a PCI Bus Id string for the device.  <a href="#ga681cef187c0c173749f8fda568a9d92a">More...</a><br/></td></tr>
-<tr class="separator:ga681cef187c0c173749f8fda568a9d92a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaaa961c8ec8047903617f4245fa50256a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Driver.html#gaaa961c8ec8047903617f4245fa50256a">hipDeviceGetPCIBusId</a> (char *pciBusId, int len, int device)</td></tr>
+<tr class="memdesc:gaaa961c8ec8047903617f4245fa50256a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a PCI Bus Id string for the device, overloaded to take int device ID.  <a href="#gaaa961c8ec8047903617f4245fa50256a">More...</a><br/></td></tr>
+<tr class="separator:gaaa961c8ec8047903617f4245fa50256a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gafe08d5632ebd24edc26a19da380b2120"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Driver.html#gafe08d5632ebd24edc26a19da380b2120">hipDeviceGetByPCIBusId</a> (int *device, const int *pciBusId)</td></tr>
+<tr class="memdesc:gafe08d5632ebd24edc26a19da380b2120"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a handle to a compute device.  <a href="#gafe08d5632ebd24edc26a19da380b2120">More...</a><br/></td></tr>
+<tr class="separator:gafe08d5632ebd24edc26a19da380b2120"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga8991e535d0ef1ead0524e73364623041"><td class="memItemLeft" align="right" valign="top"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__Driver.html#ga8991e535d0ef1ead0524e73364623041">hipDeviceTotalMem</a> (size_t *bytes, <a class="el" href="classihipDevice__t.html">hipDevice_t</a> device)</td></tr>
 <tr class="memdesc:ga8991e535d0ef1ead0524e73364623041"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the total amount of memory on the device.  <a href="#ga8991e535d0ef1ead0524e73364623041">More...</a><br/></td></tr>
 <tr class="separator:ga8991e535d0ef1ead0524e73364623041"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -215,6 +218,42 @@ Functions</h2></td></tr>
 
 </div>
 </div>
+<a class="anchor" id="gafe08d5632ebd24edc26a19da380b2120"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipDeviceGetByPCIBusId </td>
+          <td>(</td>
+          <td class="paramtype">int *&#160;</td>
+          <td class="paramname"><em>device</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const int *&#160;</td>
+          <td class="paramname"><em>pciBusId</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns a handle to a compute device. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramdir">[out]</td><td class="paramname">device</td><td>handle </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">PCI</td><td>Bus ID</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594aadfbdb847b149723c684ebd764556063" title="Successful completion. ">hipSuccess</a>, #hipErrorInavlidDevice, <a class="el" href="group__GlobalDefs.html#ggadf5010f6e140a53ecbdf949e73e87594a1e8215fe1108a508bad3944bce7b4d83" title="One or more of the parameters passed to the API call is NULL or not in an acceptable range...">hipErrorInvalidValue</a> </dd></dl>
+
+</div>
+</div>
 <a class="anchor" id="ga24df15e180a7b2b351cd362e5b7d2dac"></a>
 <div class="memitem">
 <div class="memproto">
@@ -258,14 +297,14 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a class="anchor" id="ga681cef187c0c173749f8fda568a9d92a"></a>
+<a class="anchor" id="gaaa961c8ec8047903617f4245fa50256a"></a>
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="group__GlobalDefs.html#gadf5010f6e140a53ecbdf949e73e87594">hipError_t</a> hipDeviceGetPCIBusId </td>
           <td>(</td>
-          <td class="paramtype">int *&#160;</td>
+          <td class="paramtype">char *&#160;</td>
           <td class="paramname"><em>pciBusId</em>, </td>
         </tr>
         <tr>
@@ -277,7 +316,7 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classihipDevice__t.html">hipDevice_t</a>&#160;</td>
+          <td class="paramtype">int&#160;</td>
           <td class="paramname"><em>device</em>&#160;</td>
         </tr>
         <tr>
@@ -288,7 +327,7 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Returns a PCI Bus Id string for the device. </p>
+<p>Returns a PCI Bus Id string for the device, overloaded to take int device ID. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramdir">[out]</td><td class="paramname">pciBusId</td><td></td></tr>
@@ -703,7 +742,7 @@ Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Nov 8 2016 16:33:49 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Dec 19 2016 04:03:44 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>

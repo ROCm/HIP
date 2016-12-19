@@ -85,6 +85,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="#friends">Friends</a> &#124;
 <a href="classihipCtxCriticalBase__t-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -115,27 +116,33 @@ std::list&lt; <a class="el" href="classihipStream__t.html">ihipStream_t</a> * &g
 <tr class="memitem:a0509b657c8e43339411c30f5819a4852"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a0509b657c8e43339411c30f5819a4852"></a>
 const std::list&lt; <a class="el" href="classihipStream__t.html">ihipStream_t</a> * &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><b>const_streams</b> () const </td></tr>
 <tr class="separator:a0509b657c8e43339411c30f5819a4852"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad2c667cb4d359eeaa633e979990e762c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad2c667cb4d359eeaa633e979990e762c"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>isPeer</b> (const <a class="el" href="classihipCtx__t.html">ihipCtx_t</a> *peer)</td></tr>
-<tr class="separator:ad2c667cb4d359eeaa633e979990e762c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abe2161fa03568307442e01527a7b052c"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="abe2161fa03568307442e01527a7b052c"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>addPeer</b> (<a class="el" href="classihipCtx__t.html">ihipCtx_t</a> *peer)</td></tr>
-<tr class="separator:abe2161fa03568307442e01527a7b052c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1444b0fe2d8e6650c6836329acad2352"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a1444b0fe2d8e6650c6836329acad2352"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>removePeer</b> (<a class="el" href="classihipCtx__t.html">ihipCtx_t</a> *peer)</td></tr>
-<tr class="separator:a1444b0fe2d8e6650c6836329acad2352"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea708a0239fb74df4ada8305ebec1917"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aea708a0239fb74df4ada8305ebec1917"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>resetPeers</b> (<a class="el" href="classihipCtx__t.html">ihipCtx_t</a> *thisDevice)</td></tr>
-<tr class="separator:aea708a0239fb74df4ada8305ebec1917"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b4a34941c34ca1df06ab8e448f2f4c8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a4b4a34941c34ca1df06ab8e448f2f4c8"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>printPeers</b> (FILE *f) const </td></tr>
-<tr class="separator:a4b4a34941c34ca1df06ab8e448f2f4c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2af8a4afd647cf36d759c236f4b7962e"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a2af8a4afd647cf36d759c236f4b7962e"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>isPeerWatcher</b> (const <a class="el" href="classihipCtx__t.html">ihipCtx_t</a> *peer)</td></tr>
+<tr class="separator:a2af8a4afd647cf36d759c236f4b7962e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa7927066e9826b16032ff02a70b2a1b8"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="aa7927066e9826b16032ff02a70b2a1b8"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>addPeerWatcher</b> (const <a class="el" href="classihipCtx__t.html">ihipCtx_t</a> *thisCtx, <a class="el" href="classihipCtx__t.html">ihipCtx_t</a> *peer)</td></tr>
+<tr class="separator:aa7927066e9826b16032ff02a70b2a1b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad059ecf27cb65cd47e4ab6507a30b7f9"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad059ecf27cb65cd47e4ab6507a30b7f9"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>removePeerWatcher</b> (const <a class="el" href="classihipCtx__t.html">ihipCtx_t</a> *thisCtx, <a class="el" href="classihipCtx__t.html">ihipCtx_t</a> *peer)</td></tr>
+<tr class="separator:ad059ecf27cb65cd47e4ab6507a30b7f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a35b4eec6023d6029b8ab75fd3c1e8234"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a35b4eec6023d6029b8ab75fd3c1e8234"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>resetPeerWatchers</b> (<a class="el" href="classihipCtx__t.html">ihipCtx_t</a> *thisDevice)</td></tr>
+<tr class="separator:a35b4eec6023d6029b8ab75fd3c1e8234"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a94a8f0f50071870ab5277d54a1e04b29"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a94a8f0f50071870ab5277d54a1e04b29"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>printPeerWatchers</b> (FILE *f) const </td></tr>
+<tr class="separator:a94a8f0f50071870ab5277d54a1e04b29"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9bbe148b69f5d4ce6ee4d224fe8e0801"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a9bbe148b69f5d4ce6ee4d224fe8e0801"></a>
 uint32_t&#160;</td><td class="memItemRight" valign="bottom"><b>peerCnt</b> () const </td></tr>
 <tr class="separator:a9bbe148b69f5d4ce6ee4d224fe8e0801"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a52009249e42c168a9f3b3c373349b4a0"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="a52009249e42c168a9f3b3c373349b4a0"></a>
 hsa_agent_t *&#160;</td><td class="memItemRight" valign="bottom"><b>peerAgents</b> () const </td></tr>
 <tr class="separator:a52009249e42c168a9f3b3c373349b4a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:ad9d86b3e0537303740e6ed68555f38f5"><td class="memItemLeft" align="right" valign="top"><a class="anchor" id="ad9d86b3e0537303740e6ed68555f38f5"></a>
+std::list&lt; <a class="el" href="classihipCtx__t.html">ihipCtx_t</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>_peers</b></td></tr>
+<tr class="separator:ad9d86b3e0537303740e6ed68555f38f5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
@@ -144,12 +151,12 @@ class&#160;</td><td class="memItemRight" valign="bottom"><b>LockedAccessor&lt; i
 <tr class="separator:af32e5b59fc177bb54264b6c3eaa8e2da"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>/home/mangupta/git/hip/hip/src/<a class="el" href="hip__hcc_8h_source.html">hip_hcc.h</a></li>
+<li>/home/rocm/hip/src/<a class="el" href="hip__hcc_8h_source.html">hip_hcc.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Nov 8 2016 16:33:49 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Mon Dec 19 2016 04:03:44 for HIP: Heterogenous-computing Interface for Portability by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
