@@ -35,6 +35,16 @@ THE SOFTWARE.
 
 //TODO Use Pool APIs from HCC to get memory regions.
 
+#define CHECK_HSA(hsaStatus, hipStatus) \
+if (hsaStatus != HSA_STATUS_SUCCESS) {\
+    return hipStatus;\
+}
+
+#define CHECKLOG_HSA(hsaStatus, hipStatus) \
+if (hsaStatus != HSA_STATUS_SUCCESS) {\
+    return ihipLogStatus(hipStatus);\
+}
+
 namespace hipdrv {
 
     hsa_status_t findSystemRegions(hsa_region_t region, void *data){
@@ -103,6 +113,7 @@ uint64_t ElfSize(const void *emi){
     return total_size;
 }
 
+
 hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
     HIP_INIT_API(module, fname);
     hipError_t ret = hipSuccess;
@@ -154,14 +165,19 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
             }
 
             status = hsa_executable_create(HSA_PROFILE_FULL, HSA_EXECUTABLE_STATE_UNFROZEN, NULL, &(*module)->executable);
-            if(status != HSA_STATUS_SUCCESS){
-                return ihipLogStatus(hipErrorNotInitialized);
-            }
+            CHECKLOG_HSA(status, hipErrorNotInitialized);
+
+            status = hsa_executable_load_code_object((*module)->executable, agent, (*module)->object, NULL);
+            CHECKLOG_HSA(status, hipErrorNotInitialized);
+
+            status = hsa_executable_freeze((*module)->executable, NULL);
+            CHECKLOG_HSA(status, hipErrorNotInitialized);
         }
     }
 
     return ihipLogStatus(ret);
 }
+
 
 hipError_t hipModuleUnload(hipModule_t hmod)
 {
@@ -189,7 +205,7 @@ hipError_t hipModuleUnload(hipModule_t hmod)
     return ihipLogStatus(ret);
 }
 
-hipError_t ihipModuleGetFunction(hipFunction_t *func, hipModule_t hmod, const char *name){
+hipError_t ihipModuleGetSymbol(hipFunction_t *func, hipModule_t hmod, const char *name){
     auto ctx = ihipGetTlsDefaultCtx();
     hipError_t ret = hipSuccess;
 
@@ -201,31 +217,33 @@ hipError_t ihipModuleGetFunction(hipFunction_t *func, hipModule_t hmod, const ch
         ret = hipErrorInvalidContext;
 
     }else{
-        *func = new ihipFunction_t(name);
-        hmod->registerFunction(*func);
         int deviceId = ctx->getDevice()->_deviceId;
         ihipDevice_t *currentDevice = ihipGetDevice(deviceId);
         hsa_agent_t gpuAgent = (hsa_agent_t)currentDevice->_hsaAgent;
 
         hsa_status_t status;
-        status = hsa_executable_load_code_object(hmod->executable, gpuAgent, hmod->object, NULL);
-        if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorNotInitialized);
-        }
-
-        status = hsa_executable_freeze(hmod->executable, NULL);
-        status = hsa_executable_get_symbol(hmod->executable, NULL, name, gpuAgent, 0, &(*func)->_kernelSymbol);
+        hsa_executable_symbol_t 	symbol;
+        status = hsa_executable_get_symbol(hmod->executable, NULL, name, gpuAgent, 0, &symbol);
         if(status != HSA_STATUS_SUCCESS){
             return ihipLogStatus(hipErrorNotFound);
         }
 
-        status = hsa_executable_symbol_get_info((*func)->_kernelSymbol,
+        status = hsa_executable_symbol_get_info(symbol,
                                    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_OBJECT,
-                                   &(*func)->_kernel);
+                                   &func->_object);
+        CHECK_HSA(status, hipErrorNotFound);
 
-        if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorNotFound);
-        }
+        status = hsa_executable_symbol_get_info(symbol,
+                                    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE,
+                                    &func->_groupSegmentSize);
+        CHECK_HSA(status, hipErrorNotFound);
+
+        status = hsa_executable_symbol_get_info(symbol,
+                                    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_PRIVATE_SEGMENT_SIZE,
+                                    &func->_privateSegmentSize);
+        CHECK_HSA(status, hipErrorNotFound);
+
+        strncpy(func->_name, name, sizeof(func->_name));
     }
     return ihipLogStatus(ret);
 }
@@ -234,7 +252,7 @@ hipError_t ihipModuleGetFunction(hipFunction_t *func, hipModule_t hmod, const ch
 hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod,
                                 const char *name){
     HIP_INIT_API(hfunc, hmod, name);
-    return ihipModuleGetFunction(hfunc, hmod, name);
+    return ihipModuleGetSymbol(hfunc, hmod, name);
 }
 
 
@@ -274,31 +292,14 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
             return ihipLogStatus(hipErrorInvalidValue);
         }
 
-        uint32_t groupSegmentSize;
-        hsa_status_t status = hsa_executable_symbol_get_info(f->_kernelSymbol,
-                                                             HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE,
-                                                             &groupSegmentSize);
-        if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorNotFound);
-        }
-
-        uint32_t privateSegmentSize;
-        status = hsa_executable_symbol_get_info(f->_kernelSymbol,
-                                                HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_PRIVATE_SEGMENT_SIZE,
-                                                &privateSegmentSize);
-        if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorNotFound);
-        }
-        privateSegmentSize += sharedMemBytes;
 
 
         /*
           Kernel argument preparation.
         */
-        grid_launch_parm lp;
-        hStream = ihipPreLaunchKernel(hStream, 0, 0, &lp, f->_kernelName);
+        grid_launch_parm lp; // TODO - dummy arg but values are printed during debug.
+        hStream = ihipPreLaunchKernel(hStream, 0, 0, &lp, f._name);
 
-#if USE_DISPATCH_HSA_KERNEL
 
         hsa_kernel_dispatch_packet_t aql;
 
@@ -313,9 +314,9 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         aql.grid_size_x = blockDimX * gridDimX;
         aql.grid_size_y = blockDimY * gridDimY;
         aql.grid_size_z = blockDimZ * gridDimZ;
-        aql.group_segment_size = groupSegmentSize;
-        aql.private_segment_size = privateSegmentSize;
-        aql.kernel_object = f->_kernel;
+        aql.group_segment_size = f._groupSegmentSize + sharedMemBytes;
+        aql.private_segment_size = f._privateSegmentSize;
+        aql.kernel_object = f._object;
         aql.setup = 3 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
         aql.header =   (HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE) |
                                     (1 << HSA_PACKET_HEADER_BARRIER) |
@@ -323,69 +324,9 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
                                     (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
 
         lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize);
-#else
-
-        /*
-          Create signal
-        */
-
-        hsa_signal_t signal;
-        status = hsa_signal_create(1, 0, NULL, &signal);
-        if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorNotFound);
-        }
-
-        /*
-           Allocate kernarg
-        */
-        void *kern = nullptr;
-
-        hsa_amd_memory_pool_t *pool = reinterpret_cast<hsa_amd_memory_pool_t*>(lp.av->get_hsa_kernarg_region());
-        status = hsa_amd_memory_pool_allocate(*pool, kernArgSize, 0, &kern);
-        if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorNotFound);
-        }
-        status = hsa_amd_agents_allow_access(1, (hsa_agent_t*)lp.av->get_hsa_agent(), 0, kern);
-        if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorNotFound);
-        }
-        memcpy(kern, config[1], kernArgSize);
 
 
-        /*
-          Launch AQL packet
-        */
-        hStream->launchModuleKernel(*lp.av, signal, blockDimX, blockDimY, blockDimZ,
-                  gridDimX, gridDimY, gridDimZ, groupSegmentSize, privateSegmentSize, kern, kernArgSize, f->_kernel);
-
-
-        /*
-          Wait for signal
-        */
-
-        hsa_signal_value_t value = hsa_signal_wait_acquire(signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_BLOCKED);
-
-        /*
-           Destroy kernarg
-        */
-        status = hsa_amd_memory_pool_free(kern);
-        if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorNotFound);
-        }
-
-        /*
-          Destroy the signal
-        */
-        status = hsa_signal_destroy(signal);
-        if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorNotFound);
-        }
-
-#endif // USE_DISPATCH_HSA_KERNEL
-
-
-        ihipPostLaunchKernel(f->_kernelName, hStream, lp);
-
+        ihipPostLaunchKernel(f._name, hStream, lp);
     }
 
     return ihipLogStatus(ret);
@@ -405,9 +346,9 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes,
     }
     else{
         hipFunction_t func;
-        ihipModuleGetFunction(&func, hmod, name);
+        ihipModuleGetSymbol(&func, hmod, name);
         *bytes = PrintSymbolSizes(hmod->ptr, name) + sizeof(amd_kernel_code_t);
-        *dptr = reinterpret_cast<void*>(func->_kernel);
+        *dptr = reinterpret_cast<void*>(func._object);
         return ihipLogStatus(ret);
     }
 }
@@ -419,7 +360,7 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
     hipError_t ret = hipSuccess;
     if(image == NULL || module == NULL){
         return ihipLogStatus(hipErrorNotInitialized);
-    }else{
+    } else {
         auto ctx = ihipGetTlsDefaultCtx();
         *module = new ihipModule_t;
         int deviceId = ctx->getDevice()->_deviceId;
@@ -452,9 +393,13 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
         }
 
         status = hsa_executable_create(HSA_PROFILE_FULL, HSA_EXECUTABLE_STATE_UNFROZEN, NULL, &(*module)->executable);
-        if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorNotInitialized);
-        }
+        CHECKLOG_HSA(status, hipErrorNotInitialized);
+
+        status = hsa_executable_load_code_object((*module)->executable, agent, (*module)->object, NULL);
+        CHECKLOG_HSA(status, hipErrorNotInitialized);
+
+        status = hsa_executable_freeze((*module)->executable, NULL);
+        CHECKLOG_HSA(status, hipErrorNotInitialized);
     }
     return ihipLogStatus(ret);
 }
