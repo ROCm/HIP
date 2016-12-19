@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -54,6 +54,7 @@ using namespace clang::tooling;
 using namespace llvm;
 
 #define DEBUG_TYPE "cuda2hip"
+#define HIP_UNSUPPORTED -1
 
 enum ConvTypes {
   CONV_DRIVER = 0,
@@ -65,6 +66,7 @@ enum ConvTypes {
   CONV_SPECIAL_FUNC,
   CONV_STREAM,
   CONV_EVENT,
+  CONV_OCCUPANCY,
   CONV_CONTEXT,
   CONV_MODULE,
   CONV_CACHE,
@@ -81,10 +83,10 @@ enum ConvTypes {
 };
 
 const char *counterNames[CONV_LAST] = {
-    "driver",       "dev",     "mem",   "kern",  "coord_func", "math_func",
-    "special_func", "stream",  "event", "ctx",   "module",     "cache",
-    "err",          "def",     "tex",   "other", "include",    "include_cuda_main_header",
-    "type",         "literal", "numeric_literal"};
+    "driver",       "dev",      "mem",   "kern",      "coord_func", "math_func",
+    "special_func", "stream",   "event", "occupancy", "ctx",        "module",
+    "cache",        "err",      "def",   "tex",       "other",      "include",
+    "include_cuda_main_header", "type",  "literal",   "numeric_literal"};
 
 enum ApiTypes {
   API_DRIVER = 0,
@@ -100,14 +102,20 @@ namespace {
 
 int64_t countRepsTotal[CONV_LAST] = { 0 };
 int64_t countApiRepsTotal[API_LAST] = { 0 };
+int64_t countRepsTotalUnsupported[CONV_LAST] = { 0 };
+int64_t countApiRepsTotalUnsupported[API_LAST] = { 0 };
 
 struct hipCounter {
   StringRef hipName;
   ConvTypes countType;
   ApiTypes countApiType;
+  int unsupported;
 };
 
 struct cuda2hipMap {
+  SmallDenseMap<StringRef, hipCounter> cuda2hipRename;
+  std::set<StringRef> cudaExcludes;
+
   cuda2hipMap() {
 
     // Replacement Excludes
@@ -302,8 +310,8 @@ struct cuda2hipMap {
     cuda2hipRename["CUfunction"]                                = {"hipFunction_t", CONV_TYPE, API_DRIVER};
 
     // unsupported yet by HIP
-    // cuda2hipRename["CUfunction_attribute_enum"]              = {"hipFuncAttribute_t", CONV_TYPE, API_DRIVER};
-    // cuda2hipRename["CUfunction_attribute"]                   = {"hipFuncAttribute_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUfunction_attribute_enum"]                 = {"hipFuncAttribute_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CUfunction_attribute"]                      = {"hipFuncAttribute_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
 
     cuda2hipRename["CUfunc_cache_enum"]                         = {"hipFuncCache", CONV_TYPE, API_DRIVER};
     cuda2hipRename["CUfunc_cache"]                              = {"hipFuncCache", CONV_TYPE, API_DRIVER};
@@ -321,6 +329,7 @@ struct cuda2hipMap {
     cuda2hipRename["CUcontext"]                                 = {"hipCtx_t", CONV_TYPE, API_DRIVER};
     cuda2hipRename["CUmodule"]                                  = {"hipModule_t", CONV_TYPE, API_DRIVER};
     cuda2hipRename["CUevent"]                                   = {"hipEvent_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUevent_st"]                                = {"hipEvent_t", CONV_TYPE, API_DRIVER};
     // Event Flags
     cuda2hipRename["CU_EVENT_DEFAULT"]                          = {"hipEventDefault", CONV_EVENT, API_DRIVER};
     cuda2hipRename["CU_EVENT_BLOCKING_SYNC"]                    = {"hipEventBlockingSync", CONV_EVENT, API_DRIVER};
@@ -337,6 +346,15 @@ struct cuda2hipMap {
 
     // Driver
     cuda2hipRename["cuDriverGetVersion"]                        = {"hipDriverGetVersion", CONV_DRIVER, API_DRIVER};
+
+    // Occupancy
+    // unsupported yet by HIP
+    cuda2hipRename["cudaOccupancyMaxPotentialBlockSize"]                      = {"hipOccupancyMaxPotentialBlockSize", CONV_OCCUPANCY, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaOccupancyMaxPotentialBlockSizeWithFlags"]             = {"hipOccupancyMaxPotentialBlockSizeWithFlags", CONV_OCCUPANCY, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaOccupancyMaxActiveBlocksPerMultiprocessor"]           = {"hipOccupancyMaxActiveBlocksPerMultiprocessor", CONV_OCCUPANCY, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags"]  = {"hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags", CONV_OCCUPANCY, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaOccupancyMaxPotentialBlockSizeVariableSMem"]          = {"hipOccupancyMaxPotentialBlockSizeVariableSMem", CONV_OCCUPANCY, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaOccupancyMaxPotentialBlockSizeVariableSMemWithFlags"] = {"hipOccupancyMaxPotentialBlockSizeVariableSMemWithFlags", CONV_OCCUPANCY, API_DRIVER, HIP_UNSUPPORTED};
 
     // Context
     cuda2hipRename["cuCtxCreate_v2"]                            = {"hipCtxCreate", CONV_CONTEXT, API_DRIVER};
@@ -356,8 +374,8 @@ struct cuda2hipMap {
     cuda2hipRename["cuCtxEnablePeerAccess"]                     = {"hipCtxEnablePeerAccess", CONV_CONTEXT, API_DRIVER};
     cuda2hipRename["cuCtxDisablePeerAccess"]                    = {"hipCtxDisablePeerAccess", CONV_CONTEXT, API_DRIVER};
     // unsupported yet by HIP
-    // cuda2hipRename["cuCtxSetLimit"]                          = {"hipCtxSetLimit", CONV_CONTEXT, API_DRIVER};
-    // cuda2hipRename["cuCtxGetLimit"]                          = {"hipCtxGetLimit", CONV_CONTEXT, API_DRIVER};
+    cuda2hipRename["cuCtxSetLimit"]                             = {"hipCtxSetLimit", CONV_CONTEXT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cuCtxGetLimit"]                             = {"hipCtxGetLimit", CONV_CONTEXT, API_DRIVER, HIP_UNSUPPORTED};
 
     // Device
     cuda2hipRename["cuDeviceGet"]                               = {"hipGetDevice", CONV_DEV, API_DRIVER};
@@ -367,7 +385,8 @@ struct cuda2hipMap {
     cuda2hipRename["cuDeviceGetProperties"]                     = {"hipGetDeviceProperties", CONV_DEV, API_DRIVER};
     cuda2hipRename["cuDeviceGetPCIBusId"]                       = {"hipDeviceGetPCIBusId", CONV_DEV, API_DRIVER};
     // unsupported yet by HIP
-    // cuda2hipRename["cuDeviceGetByPCIBusId"]                  = {"hipDeviceGetByPCIBusId", CONV_DEV, API_DRIVER};
+    cuda2hipRename["cuDeviceGetByPCIBusId"]                     = {"hipDeviceGetByPCIBusId", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
+
     cuda2hipRename["cuDeviceTotalMem_v2"]                       = {"hipDeviceTotalMem", CONV_DEV, API_DRIVER};
     cuda2hipRename["cuDeviceComputeCapability"]                 = {"hipDeviceComputeCapability", CONV_DEV, API_DRIVER};
     cuda2hipRename["cuDeviceCanAccessPeer"]                     = {"hipDeviceCanAccessPeer", CONV_DEV, API_DRIVER};
@@ -386,14 +405,16 @@ struct cuda2hipMap {
     cuda2hipRename["cuModuleLoad"]                              = {"hipModuleLoad", CONV_MODULE, API_DRIVER};
     cuda2hipRename["cuModuleLoadData"]                          = {"hipModuleLoadData", CONV_MODULE, API_DRIVER};
     // unsupported yet by HIP
-    // cuda2hipRename["cuModuleLoadDataEx"]                     = {"hipModuleLoadDataEx", CONV_MODULE, API_DRIVER};
-    // cuda2hipRename["cuModuleLoadFatBinary"]                  = {"hipModuleLoadFatBinary", CONV_MODULE, API_DRIVER};
+    cuda2hipRename["cuModuleLoadDataEx"]                        = {"hipModuleLoadDataEx", CONV_MODULE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cuModuleLoadFatBinary"]                     = {"hipModuleLoadFatBinary", CONV_MODULE, API_DRIVER, HIP_UNSUPPORTED};
+
     cuda2hipRename["cuModuleUnload"]                            = {"hipModuleUnload", CONV_MODULE, API_DRIVER};
     cuda2hipRename["cuLaunchKernel"]                            = {"hipModuleLaunchKernel", CONV_MODULE, API_DRIVER};
 
     // Streams
     // unsupported yet by HIP
-    // cuda2hipRename["cuStreamAddCallback"]                    = {"hipStreamAddCallback", CONV_STREAM, API_DRIVER};
+    cuda2hipRename["cuStreamAddCallback"]                       = {"hipStreamAddCallback", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+
     cuda2hipRename["cuStreamCreate"]                            = {"hipStreamCreate", CONV_STREAM, API_DRIVER};
     cuda2hipRename["cuStreamDestroy_v2"]                        = {"hipStreamDestroy", CONV_STREAM, API_DRIVER};
     cuda2hipRename["cuStreamQuery"]                             = {"hipStreamQuery", CONV_STREAM, API_DRIVER};
@@ -415,19 +436,20 @@ struct cuda2hipMap {
     cuda2hipRename["cuMemcpyHtoDAsync_v2"]                      = {"hipMemcpyHtoDAsync", CONV_MEM, API_DRIVER};
 
     // unsupported yet by HIP
-    // cuda2hipRename["cuMemsetD8_v2"]                          = {"hipMemsetD8", CONV_STREAM, API_DRIVER};
-    // cuda2hipRename["cuMemsetD8Async"]                        = {"hipMemsetD8Async", CONV_STREAM, API_DRIVER};
-    // cuda2hipRename["cuMemsetD2D8_v2"]                        = {"hipMemsetD2D8", CONV_STREAM, API_DRIVER};
-    // cuda2hipRename["cuMemsetD2D8Async"]                      = {"hipMemsetD2D8Async", CONV_STREAM, API_DRIVER};
-    // cuda2hipRename["cuMemsetD16_v2"]                         = {"hipMemsetD16", CONV_STREAM, API_DRIVER};
-    // cuda2hipRename["cuMemsetD16Async"]                       = {"hipMemsetD16Async", CONV_STREAM, API_DRIVER};
-    // cuda2hipRename["cuMemsetD2D16_v2"]                       = {"hipMemsetD2D16", CONV_STREAM, API_DRIVER};
-    // cuda2hipRename["cuMemsetD2D16Async"]                     = {"hipMemsetD2D16Async", CONV_STREAM, API_DRIVER};
+    cuda2hipRename["cuMemsetD8_v2"]                             = {"hipMemsetD8", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cuMemsetD8Async"]                           = {"hipMemsetD8Async", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cuMemsetD2D8_v2"]                           = {"hipMemsetD2D8", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cuMemsetD2D8Async"]                         = {"hipMemsetD2D8Async", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cuMemsetD16_v2"]                            = {"hipMemsetD16", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cuMemsetD16Async"]                          = {"hipMemsetD16Async", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cuMemsetD2D16_v2"]                          = {"hipMemsetD2D16", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+     cuda2hipRename["cuMemsetD2D16Async"]                       = {"hipMemsetD2D16Async", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+
     cuda2hipRename["cuMemsetD32_v2"]                            = {"hipMemset", CONV_MEM, API_DRIVER};
     cuda2hipRename["cuMemsetD32Async"]                          = {"hipMemsetAsync", CONV_MEM, API_DRIVER};
     // unsupported yet by HIP
-    // cuda2hipRename["cuMemsetD2D32_v2"]                       = {"hipMemsetD2D32", CONV_STREAM, API_DRIVER};
-    // cuda2hipRename["cuMemsetD2D32Async"]                     = {"hipMemsetD2D32Async", CONV_STREAM, API_DRIVER};
+    cuda2hipRename["cuMemsetD2D32_v2"]                          = {"hipMemsetD2D32", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cuMemsetD2D32Async"]                        = {"hipMemsetD2D32Async", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
 
     cuda2hipRename["cuMemGetInfo_v2"]                           = {"hipMemGetInfo", CONV_MEM, API_DRIVER};
     cuda2hipRename["cuMemHostRegister_v2"]                      = {"hipHostRegister", CONV_MEM, API_DRIVER};
@@ -435,7 +457,8 @@ struct cuda2hipMap {
 
     // Profiler
     // unsupported yet by HIP
-    // cuda2hipRename["cuProfilerInitialize"]                   = {"hipProfilerInitialize", CONV_OTHER, API_DRIVER};
+    cuda2hipRename["cuProfilerInitialize"]                      = {"hipProfilerInitialize", CONV_OTHER, API_DRIVER, HIP_UNSUPPORTED};
+
     cuda2hipRename["cuProfilerStart"]                           = {"hipProfilerStart", CONV_OTHER, API_DRIVER};
     cuda2hipRename["cuProfilerStop"]                            = {"hipProfilerStop", CONV_OTHER, API_DRIVER};
 
@@ -603,13 +626,14 @@ struct cuda2hipMap {
     cuda2hipRename["cudaDeviceScheduleYield"]          = {"hipDeviceScheduleYield", CONV_DEV, API_RUNTIME};
     // deprecated as of CUDA 4.0 and replaced with cudaDeviceScheduleBlockingSync
     cuda2hipRename["cudaDeviceBlockingSync"]           = {"hipDeviceBlockingSync", CONV_DEV, API_RUNTIME};
-    // unsupported yet
-    //cuda2hipRename["cudaDeviceScheduleBlockingSync"] = {"hipDeviceScheduleBlockingSync", CONV_DEV, API_RUNTIME};
-    //cuda2hipRename["cudaDeviceScheduleMask"]         = {"hipDeviceScheduleMask", CONV_DEV, API_RUNTIME};
+    // unsupported yet by HIP
+    cuda2hipRename["cudaDeviceScheduleBlockingSync"]   = {"hipDeviceScheduleBlockingSync", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaDeviceScheduleMask"]           = {"hipDeviceScheduleMask", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
+
     cuda2hipRename["cudaDeviceMapHost"]                = {"hipDeviceMapHost", CONV_DEV, API_RUNTIME};
-    // unsupported yet
-    //cuda2hipRename["cudaDeviceLmemResizeToMax"]      = {"hipDeviceLmemResizeToMax", CONV_DEV, API_RUNTIME};
-    //cuda2hipRename["cudaDeviceMask"]                 = {"hipDeviceMask", CONV_DEV, API_RUNTIME};
+    // unsupported yet by HIP
+    cuda2hipRename["cudaDeviceLmemResizeToMax"]        = {"hipDeviceLmemResizeToMax", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaDeviceMask"]                   = {"hipDeviceMask", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
 
     // Cache config
     cuda2hipRename["cudaDeviceSetCacheConfig"]  = {"hipDeviceSetCacheConfig", CONV_CACHE, API_RUNTIME};
@@ -627,8 +651,8 @@ struct cuda2hipMap {
 
     // Driver/Runtime
     cuda2hipRename["cudaDriverGetVersion"]      = {"hipDriverGetVersion", CONV_DRIVER, API_RUNTIME};
-    // unsupported yet
-    //cuda2hipRename["cudaRuntimeGetVersion"] = {"hipRuntimeGetVersion", CONV_DEV, API_RUNTIME};
+    // unsupported yet by HIP
+    cuda2hipRename["cudaRuntimeGetVersion"]     = {"hipRuntimeGetVersion", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
 
     // Peer2Peer
     cuda2hipRename["cudaDeviceCanAccessPeer"]     = {"hipDeviceCanAccessPeer", CONV_DEV, API_RUNTIME};
@@ -651,18 +675,22 @@ struct cuda2hipMap {
 
     // Limits
     cuda2hipRename["cudaLimit"]                             = {"hipLimit_t", CONV_DEV, API_RUNTIME};
-    // unsupported yet
-    //cuda2hipRename["cudaLimitStackSize"]                    = {"hipLimitStackSize", CONV_DEV, API_RUNTIME};
-    //cuda2hipRename["cudaLimitPrintfFifoSize"]               = {"hipLimitPrintfFifoSize", CONV_DEV, API_RUNTIME};
-    // unsupported yet
+    // unsupported yet by HIP
+    cuda2hipRename["cudaLimitStackSize"]                    = {"hipLimitStackSize", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaLimitPrintfFifoSize"]               = {"hipLimitPrintfFifoSize", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
+
     cuda2hipRename["cudaLimitMallocHeapSize"]               = {"hipLimitMallocHeapSize", CONV_DEV, API_RUNTIME};
-    //cuda2hipRename["cudaLimitDevRuntimeSyncDepth"]          = {"hipLimitPrintfFifoSize", CONV_DEV, API_RUNTIME};
-    //cuda2hipRename["cudaLimitDevRuntimePendingLaunchCount"] = {"hipLimitMallocHeapSize", CONV_DEV, API_RUNTIME};
+
+    // unsupported yet by HIP
+    cuda2hipRename["cudaLimitDevRuntimeSyncDepth"]          = {"hipLimitPrintfFifoSize", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaLimitDevRuntimePendingLaunchCount"] = {"hipLimitMallocHeapSize", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
+
     cuda2hipRename["cudaDeviceGetLimit"]                    = {"hipDeviceGetLimit", CONV_DEV, API_RUNTIME};
 
     // Profiler
-    // unsupported yet
-    //cuda2hipRename["cudaProfilerInitialize"]  = {"hipProfilerInitialize", CONV_OTHER, API_RUNTIME};
+    // unsupported yet by HIP
+    cuda2hipRename["cudaProfilerInitialize"]  = {"hipProfilerInitialize", CONV_OTHER, API_RUNTIME, HIP_UNSUPPORTED};
+
     cuda2hipRename["cudaProfilerStart"]       = {"hipProfilerStart", CONV_OTHER, API_RUNTIME};
     cuda2hipRename["cudaProfilerStop"]        = {"hipProfilerStop", CONV_OTHER, API_RUNTIME};
     cuda2hipRename["cudaChannelFormatDesc"]   = {"hipChannelFormatDesc", CONV_TEX, API_RUNTIME};
@@ -694,103 +722,109 @@ struct cuda2hipMap {
     cuda2hipRename["CUBLAS_STATUS_NOT_SUPPORTED"]    = {"HIPBLAS_STATUS_INTERNAL_ERROR", CONV_NUMERIC_LITERAL, API_BLAS};
     // Blas Fill Modes
     // unsupported yet by hipblas/hcblas
-    //cuda2hipRename["cublasFillMode_t"]               = {"hipblasFillMode_t", CONV_TYPE, API_BLAS};
-    //cuda2hipRename["CUBLAS_FILL_MODE_LOWER"]         = {"HIPBLAS_FILL_MODE_LOWER", CONV_NUMERIC_LITERAL, API_BLAS};
-    //cuda2hipRename["CUBLAS_FILL_MODE_UPPER"]         = {"HIPBLAS_FILL_MODE_UPPER", CONV_NUMERIC_LITERAL, API_BLAS};
+    cuda2hipRename["cublasFillMode_t"]               = {"hipblasFillMode_t", CONV_TYPE, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["CUBLAS_FILL_MODE_LOWER"]         = {"HIPBLAS_FILL_MODE_LOWER", CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["CUBLAS_FILL_MODE_UPPER"]         = {"HIPBLAS_FILL_MODE_UPPER", CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED};
     // Blas Diag Types
     // unsupported yet by hipblas/hcblas
-    //cuda2hipRename["cublasDiagType_t"]               = {"hipblasDiagType_t", CONV_TYPE, API_BLAS};
-    //cuda2hipRename["CUBLAS_DIAG_NON_UNIT"]           = {"HIPBLAS_DIAG_NON_UNIT", CONV_NUMERIC_LITERAL, API_BLAS};
-    //cuda2hipRename["CUBLAS_DIAG_UNIT"]               = {"HIPBLAS_DIAG_UNIT", CONV_NUMERIC_LITERAL, API_BLAS};
+    cuda2hipRename["cublasDiagType_t"]               = {"hipblasDiagType_t", CONV_TYPE, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["CUBLAS_DIAG_NON_UNIT"]           = {"HIPBLAS_DIAG_NON_UNIT", CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["CUBLAS_DIAG_UNIT"]               = {"HIPBLAS_DIAG_UNIT", CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED};
     // Blas Side Modes
     // unsupported yet by hipblas/hcblas
-    //cuda2hipRename["cublasSideMode_t"]               = {"hipblasSideMode_t", CONV_TYPE, API_BLAS};
-    //cuda2hipRename["CUBLAS_SIDE_LEFT"]               = {"HIPBLAS_SIDE_LEFT", CONV_NUMERIC_LITERAL, API_BLAS};
-    //cuda2hipRename["CUBLAS_SIDE_RIGHT"]              = {"HIPBLAS_SIDE_RIGHT", CONV_NUMERIC_LITERAL, API_BLAS};
+    cuda2hipRename["cublasSideMode_t"]               = {"hipblasSideMode_t", CONV_TYPE, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["CUBLAS_SIDE_LEFT"]               = {"HIPBLAS_SIDE_LEFT", CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["CUBLAS_SIDE_RIGHT"]              = {"HIPBLAS_SIDE_RIGHT", CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED};
     // Blas Pointer Modes
     // unsupported yet by hipblas/hcblas
-    //cuda2hipRename["cublasPointerMode_t"]            = {"hipblasPointerMode_t", CONV_TYPE, API_BLAS};
-    //cuda2hipRename["CUBLAS_POINTER_MODE_HOST"]       = {"HIPBLAS_POINTER_MODE_HOST", CONV_NUMERIC_LITERAL, API_BLAS};
-    //cuda2hipRename["CUBLAS_POINTER_MODE_DEVICE"]     = {"HIPBLAS_POINTER_MODE_DEVICE", CONV_NUMERIC_LITERAL, API_BLAS};
+    cuda2hipRename["cublasPointerMode_t"]            = {"hipblasPointerMode_t", CONV_TYPE, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["CUBLAS_POINTER_MODE_HOST"]       = {"HIPBLAS_POINTER_MODE_HOST", CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["CUBLAS_POINTER_MODE_DEVICE"]     = {"HIPBLAS_POINTER_MODE_DEVICE", CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED};
     // Blas Atomics Modes
     // unsupported yet by hipblas/hcblas
-    //cuda2hipRename["cublasAtomicsMode_t"]            = {"hipblasAtomicsMode_t", CONV_TYPE, API_BLAS};
-    //cuda2hipRename["CUBLAS_ATOMICS_NOT_ALLOWED"]     = {"HIPBLAS_ATOMICS_NOT_ALLOWED", CONV_NUMERIC_LITERAL, API_BLAS};
-    //cuda2hipRename["CUBLAS_ATOMICS_ALLOWED"]         = {"HIPBLAS_ATOMICS_ALLOWED", CONV_NUMERIC_LITERAL, API_BLAS};
+    cuda2hipRename["cublasAtomicsMode_t"]            = {"hipblasAtomicsMode_t", CONV_TYPE, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["CUBLAS_ATOMICS_NOT_ALLOWED"]     = {"HIPBLAS_ATOMICS_NOT_ALLOWED", CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["CUBLAS_ATOMICS_ALLOWED"]         = {"HIPBLAS_ATOMICS_ALLOWED", CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED};
     // Blas Data Type
     // unsupported yet by hipblas/hcblas
-    //cuda2hipRename["cublasDataType_t"]               = {"hipblasDataType_t", CONV_TYPE, API_BLAS};
-    //cuda2hipRename["CUBLAS_DATA_FLOAT"]              = {"HIPBLAS_DATA_FLOAT", CONV_NUMERIC_LITERAL, API_BLAS};
-    //cuda2hipRename["CUBLAS_DATA_DOUBLE"]             = {"HIPBLAS_DATA_DOUBLE", CONV_NUMERIC_LITERAL, API_BLAS};
-    //cuda2hipRename["CUBLAS_DATA_HALF"]               = {"HIPBLAS_DATA_HALF", CONV_NUMERIC_LITERAL, API_BLAS};
-    //cuda2hipRename["CUBLAS_DATA_INT8"]               = {"HIPBLAS_DATA_INT8", CONV_NUMERIC_LITERAL, API_BLAS};
+    cuda2hipRename["cublasDataType_t"]               = {"hipblasDataType_t", CONV_TYPE, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["CUBLAS_DATA_FLOAT"]              = {"HIPBLAS_DATA_FLOAT", CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["CUBLAS_DATA_DOUBLE"]             = {"HIPBLAS_DATA_DOUBLE", CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["CUBLAS_DATA_HALF"]               = {"HIPBLAS_DATA_HALF", CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["CUBLAS_DATA_INT8"]               = {"HIPBLAS_DATA_INT8", CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED};
 
     // Blas1 (v1) Routines
-    cuda2hipRename["cublasCreate"]       = {"hipblasCreate", CONV_MATH_FUNC, API_BLAS};
-    cuda2hipRename["cublasDestroy"]      = {"hipblasDestroy", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasCreate"]                   = {"hipblasCreate", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasDestroy"]                  = {"hipblasDestroy", CONV_MATH_FUNC, API_BLAS};
 
-    cuda2hipRename["cublasSetVector"]    = {"hipblasSetVector", CONV_MATH_FUNC, API_BLAS};
-    cuda2hipRename["cublasGetVector"]    = {"hipblasGetVector", CONV_MATH_FUNC, API_BLAS};
-    cuda2hipRename["cublasSetMatrix"]    = {"hipblasSetMatrix", CONV_MATH_FUNC, API_BLAS};
-    cuda2hipRename["cublasGetMatrix"]    = {"hipblasGetMatrix", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSetVector"]                = {"hipblasSetVector", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasGetVector"]                = {"hipblasGetVector", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSetMatrix"]                = {"hipblasSetMatrix", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasGetMatrix"]                = {"hipblasGetMatrix", CONV_MATH_FUNC, API_BLAS};
 
     // unsupported yet by hipblas/hcblas
-    //cuda2hipRename["cublasGetMatrixAsync"] = {"hipblasGetMatrixAsync", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasSetMatrixAsync"] = {"hipblasSetMatrixAsync", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasGetMatrixAsync"]           = {"hipblasGetMatrixAsync", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasSetMatrixAsync"]           = {"hipblasSetMatrixAsync", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // NRM2
-    //cuda2hipRename["cublasSnrm2"]  = {"hipblasSnrm2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDnrm2"]  = {"hipblasDnrm2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasScnrm2"] = {"hipblasScnrm2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDznrm2"] = {"hipblasDznrm2", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSnrm2"]                    = {"hipblasSnrm2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDnrm2"]                    = {"hipblasDnrm2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasScnrm2"]                   = {"hipblasScnrm2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDznrm2"]                   = {"hipblasDznrm2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // DOT
-    cuda2hipRename["cublasSdot"]        = {"hipblasSdot", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSdot"]                     = {"hipblasSdot", CONV_MATH_FUNC, API_BLAS};
     // there is no such a function in CUDA
-    cuda2hipRename["cublasSdotBatched"] = {"hipblasSdotBatched",CONV_MATH_FUNC, API_BLAS};
-    cuda2hipRename["cublasDdot"]        = {"hipblasDdot", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSdotBatched"]              = {"hipblasSdotBatched",CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasDdot"]                     = {"hipblasDdot", CONV_MATH_FUNC, API_BLAS};
     // there is no such a function in CUDA
-    cuda2hipRename["cublasDdotBatched"] = {"hipblasDdotBatched", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCdotu"] = {"hipblasCdotu", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCdotc"] = {"hipblasCdotc", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZdotu"] = {"hipblasZdotu", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZdotc"] = {"hipblasZdotc", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasDdotBatched"]              = {"hipblasDdotBatched", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasCdotu"]                    = {"hipblasCdotu", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCdotc"]                    = {"hipblasCdotc", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZdotu"]                    = {"hipblasZdotu", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZdotc"]                    = {"hipblasZdotc", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SCAL
-    cuda2hipRename["cublasSscal"] = {"hipblasSscal", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSscal"]                    = {"hipblasSscal", CONV_MATH_FUNC, API_BLAS};
     // there is no such a function in CUDA
-    cuda2hipRename["cublasSscalBatched"] = {"hipblasSscalBatched", CONV_MATH_FUNC, API_BLAS};
-    cuda2hipRename["cublasDscal"] = {"hipblasDscal", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSscalBatched"]             = {"hipblasSscalBatched", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasDscal"]                    = {"hipblasDscal", CONV_MATH_FUNC, API_BLAS};
     // there is no such a function in CUDA
-    cuda2hipRename["cublasDscalBatched"] = {"hipblasDscalBatched", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCscal"]  = {"hipblasCscal", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCsscal"] = {"hipblasCsscal", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZscal"]  = {"hipblasZscal", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZdscal"] = {"hipblasZdscal", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasDscalBatched"]             = {"hipblasDscalBatched", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasCscal"]                    = {"hipblasCscal", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCsscal"]                   = {"hipblasCsscal", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZscal"]                    = {"hipblasZscal", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZdscal"]                   = {"hipblasZdscal", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // AXPY
-    cuda2hipRename["cublasSaxpy"] = {"hipblasSaxpy", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSaxpy"]                    = {"hipblasSaxpy", CONV_MATH_FUNC, API_BLAS};
     // there is no such a function in CUDA
-    cuda2hipRename["cublasSaxpyBatched"] = {"hipblasSaxpyBatched", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDaxpy"] = {"hipblasDaxpy", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCaxpy"] = {"hipblasCaxpy", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZaxpy"] = {"hipblasZaxpy", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSaxpyBatched"]             = {"hipblasSaxpyBatched", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasDaxpy"]                    = {"hipblasDaxpy", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCaxpy"]                    = {"hipblasCaxpy", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZaxpy"]                    = {"hipblasZaxpy", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // COPY
-    cuda2hipRename["cublasScopy"] = {"hipblasScopy", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasScopy"]                    = {"hipblasScopy", CONV_MATH_FUNC, API_BLAS};
     // there is no such a function in CUDA
-    cuda2hipRename["cublasScopyBatched"] = {"hipblasScopyBatched", CONV_MATH_FUNC, API_BLAS};
-    cuda2hipRename["cublasDcopy"] = {"hipblasDcopy", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasScopyBatched"]             = {"hipblasScopyBatched", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasDcopy"]                    = {"hipblasDcopy", CONV_MATH_FUNC, API_BLAS};
     // there is no such a function in CUDA
-    cuda2hipRename["cublasDcopyBatched"] = {"hipblasDcopyBatched", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCcopy"] = {"hipblasCcopy", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZcopy"] = {"hipblasZcopy", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasDcopyBatched"]             = {"hipblasDcopyBatched", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasCcopy"]                    = {"hipblasCcopy", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZcopy"]                    = {"hipblasZcopy", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SWAP
-    //cuda2hipRename["cublasSswap"] = {"hipblasSswap", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDswap"] = {"hipblasDswap", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCswap"] = {"hipblasCswap", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZswap"] = {"hipblasZswap", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSswap"]                    = {"hipblasSswap", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDswap"]                    = {"hipblasDswap", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCswap"]                    = {"hipblasCswap", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZswap"]                    = {"hipblasZswap", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // AMAX
     //cuda2hipRename["cublasIsamax"] = {"hipblasIsamax", CONV_MATH_FUNC, API_BLAS};
@@ -941,15 +975,21 @@ struct cuda2hipMap {
     // Blas3 (v1) Routines
     // GEMM
     cuda2hipRename["cublasSgemm"] = {"hipblasSgemm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDgemm"] = {"hipblasDgemm", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasDgemm"] = {"hipblasDgemm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+
     cuda2hipRename["cublasCgemm"] = {"hipblasCgemm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZgemm"] = {"hipblasZgemm", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasZgemm"] = {"hipblasZgemm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // BATCH GEMM
     cuda2hipRename["cublasSgemmBatched"] = {"hipblasSgemmBatched", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDgemmBatched"] = {"hipblasDgemmBatched", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasDgemmBatched"] = {"hipblasDgemmBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+
     cuda2hipRename["cublasCgemmBatched"] = {"hipblasCgemmBatched", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZgemmBatched"] = {"hipblasZgemmBatched", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasZgemmBatched"] = {"hipblasZgemmBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SYRK
     //cuda2hipRename["cublasSsyrk"] = {"hipblasSsyrk", CONV_MATH_FUNC, API_BLAS};
@@ -1255,6 +1295,7 @@ struct cuda2hipMap {
     // DOT
     cuda2hipRename["cublasSdot_v2"]  = {"hipblasSdot", CONV_MATH_FUNC, API_BLAS};
     cuda2hipRename["cublasDdot_v2"]  = {"hipblasDdot", CONV_MATH_FUNC, API_BLAS};
+
     //cuda2hipRename["cublasCdotu_v2"] = {"hipblasCdotu", CONV_MATH_FUNC, API_BLAS};
     //cuda2hipRename["cublasCdotc_v2"] = {"hipblasCdotc", CONV_MATH_FUNC, API_BLAS};
     //cuda2hipRename["cublasZdotu_v2"] = {"hipblasZdotu", CONV_MATH_FUNC, API_BLAS};
@@ -1326,9 +1367,6 @@ struct cuda2hipMap {
     //cuda2hipRename["cublasSrotmg_v2"] = {"hipblasSrotmg", CONV_MATH_FUNC, API_BLAS};
     //cuda2hipRename["cublasDrotmg_v2"] = {"hipblasDrotmg", CONV_MATH_FUNC, API_BLAS};
   }
-
-  SmallDenseMap<StringRef, hipCounter> cuda2hipRename;
-  std::set<StringRef> cudaExcludes;
 };
 
 StringRef unquoteStr(StringRef s) {
@@ -1343,16 +1381,25 @@ public:
 
   int64_t countReps[CONV_LAST] = { 0 };
   int64_t countApiReps[API_LAST] = { 0 };
+  int64_t countRepsUnsupported[CONV_LAST] = { 0 };
+  int64_t countApiRepsUnsupported[API_LAST] = { 0 };
 
 protected:
   struct cuda2hipMap N;
   Replacements *Replace;
 
   virtual void updateCounters(const hipCounter & counter) {
-    countReps[counter.countType]++;
-    countRepsTotal[counter.countType]++;
-    countApiReps[counter.countApiType]++;
-    countApiRepsTotal[counter.countApiType]++;
+    if (counter.unsupported) {
+      countRepsUnsupported[counter.countType]++;
+      countRepsTotalUnsupported[counter.countType]++;
+      countApiRepsUnsupported[counter.countApiType]++;
+      countApiRepsTotalUnsupported[counter.countApiType]++;
+    } else {
+      countReps[counter.countType]++;
+      countRepsTotal[counter.countType]++;
+      countApiReps[counter.countApiType]++;
+      countApiRepsTotal[counter.countApiType]++;
+    }
   }
 
   void processString(StringRef s, SourceManager &SM, SourceLocation start) {
@@ -1363,11 +1410,15 @@ protected:
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
         StringRef repName = found->second.hipName;
-        hipCounter counter = { "", CONV_LITERAL, API_RUNTIME };
+        hipCounter counter = { "", CONV_LITERAL, API_RUNTIME, found->second.unsupported };
         updateCounters(counter);
-        SourceLocation sl = start.getLocWithOffset(begin + 1);
-        Replacement Rep(SM, sl, name.size(), repName);
-        Replace->insert(Rep);
+        if (!counter.unsupported) {
+          SourceLocation sl = start.getLocWithOffset(begin + 1);
+          Replacement Rep(SM, sl, name.size(), repName);
+          Replace->insert(Rep);
+        }
+      } else {
+        // llvm::outs() << "warning: the following reference is not handled: '" << name << "' [string literal].\n";
       }
       if (end == StringRef::npos) {
         break;
@@ -1408,20 +1459,23 @@ public:
       if (is_angled) {
         const auto found = N.cuda2hipRename.find(file_name);
         if (found != N.cuda2hipRename.end()) {
-          StringRef repName = found->second.hipName;
           updateCounters(found->second);
-          DEBUG(dbgs() << "Include file found: " << file_name << "\n"
-                       << "SourceLocation:"
-                       << filename_range.getBegin().printToString(*_sm) << "\n"
-                       << "Will be replaced with " << repName << "\n");
-          SourceLocation sl = filename_range.getBegin();
-          SourceLocation sle = filename_range.getEnd();
-          const char *B = _sm->getCharacterData(sl);
-          const char *E = _sm->getCharacterData(sle);
-          SmallString<128> tmpData;
-          Replacement Rep(*_sm, sl, E - B,
-                          Twine("<" + repName + ">").toStringRef(tmpData));
-          Replace->insert(Rep);
+          if (!found->second.unsupported) {
+            StringRef repName = found->second.hipName;
+            DEBUG(dbgs() << "Include file found: " << file_name << "\n"
+                         << "SourceLocation:"
+                         << filename_range.getBegin().printToString(*_sm) << "\n"
+                         << "Will be replaced with " << repName << "\n");
+            SourceLocation sl = filename_range.getBegin();
+            SourceLocation sle = filename_range.getEnd();
+            const char *B = _sm->getCharacterData(sl);
+            const char *E = _sm->getCharacterData(sle);
+            SmallString<128> tmpData;
+            Replacement Rep(*_sm, sl, E - B, Twine("<" + repName + ">").toStringRef(tmpData));
+            Replace->insert(Rep);
+          }
+        } else {
+//          llvm::outs() << "warning: the following reference is not handled: '" << file_name << "' [inclusion directive].\n";
         }
       }
     }
@@ -1436,17 +1490,21 @@ public:
           StringRef name = T.getIdentifierInfo()->getName();
           const auto found = N.cuda2hipRename.find(name);
           if (found != N.cuda2hipRename.end()) {
-            StringRef repName = found->second.hipName;
             updateCounters(found->second);
-            SourceLocation sl = T.getLocation();
-            DEBUG(dbgs() << "Identifier " << name
-                         << " found in definition of macro "
-                         << MacroNameTok.getIdentifierInfo()->getName() << "\n"
-                         << "will be replaced with: " << repName << "\n"
-                         << "SourceLocation: " << sl.printToString(*_sm)
-                         << "\n");
-            Replacement Rep(*_sm, sl, name.size(), repName);
-            Replace->insert(Rep);
+            if (!found->second.unsupported) {
+              StringRef repName = found->second.hipName;
+              SourceLocation sl = T.getLocation();
+              DEBUG(dbgs() << "Identifier " << name
+                           << " found in definition of macro "
+                           << MacroNameTok.getIdentifierInfo()->getName() << "\n"
+                           << "will be replaced with: " << repName << "\n"
+                           << "SourceLocation: " << sl.printToString(*_sm)
+                           << "\n");
+              Replacement Rep(*_sm, sl, name.size(), repName);
+              Replace->insert(Rep);
+            }
+          } else {
+            // llvm::outs() << "warning: the following reference is not handled: '" << name << "' [macro].\n";
           }
         }
       }
@@ -1465,42 +1523,50 @@ public:
           // to workaround the 'const' MacroArgs passed into this hook.
           const Token *start = Args->getUnexpArgument(i);
           size_t len = Args->getArgLength(start) + 1;
-#if (LLVM_VERSION_MAJOR >= 3) && (LLVM_VERSION_MINOR >= 9)
+  #if (LLVM_VERSION_MAJOR >= 3) && (LLVM_VERSION_MINOR >= 9)
           _pp->EnterTokenStream(ArrayRef<Token>(start, len), false);
-#else
+  #else
           _pp->EnterTokenStream(start, len, false, false);
-#endif
+  #endif
+          int j = 0;
           do {
             toks.push_back(Token());
             Token &tk = toks.back();
             _pp->Lex(tk);
+            j++;
           } while (toks.back().isNot(tok::eof));
           _pp->RemoveTopOfLexerStack();
           // end of stolen code
+          j = 0;
           for (auto tok : toks) {
             if (tok.isAnyIdentifier()) {
               StringRef name = tok.getIdentifierInfo()->getName();
               const auto found = N.cuda2hipRename.find(name);
               if (found != N.cuda2hipRename.end()) {
-                StringRef repName = found->second.hipName;
                 updateCounters(found->second);
-                DEBUG(dbgs()
-                      << "Identifier " << name
-                      << " found as an actual argument in expansion of macro "
-                      << macroName << "\n"
-                      << "will be replaced with: " << repName << "\n");
-                size_t length = name.size();
-                SourceLocation sl = tok.getLocation();
-                if (_sm->isMacroBodyExpansion(sl)) {
-                  LangOptions DefaultLangOptions;
-                  SourceLocation sl_macro = _sm->getExpansionLoc(sl);
-                  SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *_sm, DefaultLangOptions);
-                  length = _sm->getCharacterData(sl_end) - _sm->getCharacterData(sl_macro);
-                  name = StringRef(_sm->getCharacterData(sl_macro), length);
-                  sl = sl_macro;
+                if (!found->second.unsupported) {
+                  StringRef repName = found->second.hipName;
+                  DEBUG(dbgs()
+                        << "Identifier " << name
+                        << " found as an actual argument in expansion of macro "
+                        << macroName << "\n"
+                        << "will be replaced with: " << repName << "\n");
+                  size_t length = name.size();
+                  SourceLocation sl = tok.getLocation();
+                  if (_sm->isMacroBodyExpansion(sl)) {
+                    LangOptions DefaultLangOptions;
+                    SourceLocation sl_macro = _sm->getExpansionLoc(sl);
+                    SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *_sm, DefaultLangOptions);
+                    length = _sm->getCharacterData(sl_end) - _sm->getCharacterData(sl_macro);
+                    name = StringRef(_sm->getCharacterData(sl_macro), length);
+                    sl = sl_macro;
+                  }
+                  Replacement Rep(*_sm, sl, length, repName);
+                  Replace->insert(Rep);
                 }
-                Replacement Rep(*_sm, sl, length, repName);
-                Replace->insert(Rep);
+              }
+              else {
+                // llvm::outs() << "warning: the following reference is not handled: '" << name << "' [macro expansion].\n";
               }
             } else if (tok.isLiteral()) {
               SourceLocation sl = tok.getLocation();
@@ -1512,11 +1578,15 @@ public:
                 StringRef name = StringRef(_sm->getCharacterData(sl_macro), length);
                 const auto found = N.cuda2hipRename.find(name);
                 if (found != N.cuda2hipRename.end()) {
-                  sl = sl_macro;
-                  StringRef repName = found->second.hipName;
                   updateCounters(found->second);
-                  Replacement Rep(*_sm, sl, length, repName);
-                  Replace->insert(Rep);
+                  if (!found->second.unsupported) {
+                    StringRef repName = found->second.hipName;
+                    sl = sl_macro;
+                    Replacement Rep(*_sm, sl, length, repName);
+                    Replace->insert(Rep);
+                  }
+                } else {
+                  // llvm::outs() << "warning: the following reference is not handled: '" << name << "' [literal macro expansion].\n";
                 }
               } else {
                 if (tok.is(tok::string_literal)) {
@@ -1525,6 +1595,7 @@ public:
                 }
               }
             }
+            j++;
           }
         }
       }
@@ -1579,30 +1650,36 @@ private:
       StringRef name = funcDcl->getDeclName().getAsString();
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
-        SourceManager *SM = Result.SourceManager;
-        StringRef repName = found->second.hipName;
-        SourceLocation sl = call->getLocStart();
-        size_t length = name.size();
-        bool bReplace = true;
-        if (SM->isMacroArgExpansion(sl)) {
-          sl = SM->getImmediateSpellingLoc(sl);
-        } else if (SM->isMacroBodyExpansion(sl)) {
-          LangOptions DefaultLangOptions;
-          SourceLocation sl_macro = SM->getExpansionLoc(sl);
-          SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *SM, DefaultLangOptions);
-          length = SM->getCharacterData(sl_end) - SM->getCharacterData(sl_macro);
-          StringRef macroName = StringRef(SM->getCharacterData(sl_macro), length);
-          if (N.cudaExcludes.end() != N.cudaExcludes.find(macroName)) {
-            bReplace = false;
-          } else {
-            sl = sl_macro;
+        if (!found->second.unsupported) {
+          SourceManager *SM = Result.SourceManager;
+          StringRef repName = found->second.hipName;
+          SourceLocation sl = call->getLocStart();
+          size_t length = name.size();
+          bool bReplace = true;
+          if (SM->isMacroArgExpansion(sl)) {
+            sl = SM->getImmediateSpellingLoc(sl);
+          } else if (SM->isMacroBodyExpansion(sl)) {
+            LangOptions DefaultLangOptions;
+            SourceLocation sl_macro = SM->getExpansionLoc(sl);
+            SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *SM, DefaultLangOptions);
+            length = SM->getCharacterData(sl_end) - SM->getCharacterData(sl_macro);
+            StringRef macroName = StringRef(SM->getCharacterData(sl_macro), length);
+            if (N.cudaExcludes.end() != N.cudaExcludes.find(macroName)) {
+              bReplace = false;
+            } else {
+              sl = sl_macro;
+            }
           }
-        }
-        if (bReplace) {
+          if (bReplace) {
+            updateCounters(found->second);
+            Replacement Rep(*SM, sl, length, repName);
+            Replace->insert(Rep);
+          }
+        } else {
           updateCounters(found->second);
-          Replacement Rep(*SM, sl, length, repName);
-          Replace->insert(Rep);
         }
+      } else {
+        llvm::outs() << "warning: the following reference is not handled: '" << name << "' [function call].\n";
       }
       return true;
     }
@@ -1693,12 +1770,16 @@ private:
           name = Twine(name + "." + memberName).toStringRef(tmpData);
           const auto found = N.cuda2hipRename.find(name);
           if (found != N.cuda2hipRename.end()) {
-            StringRef repName = found->second.hipName;
             updateCounters(found->second);
-            SourceLocation sl = threadIdx->getLocStart();
-            SourceManager *SM = Result.SourceManager;
-            Replacement Rep(*SM, sl, name.size(), repName);
-            Replace->insert(Rep);
+            if (!found->second.unsupported) {
+              StringRef repName = found->second.hipName;
+              SourceLocation sl = threadIdx->getLocStart();
+              SourceManager *SM = Result.SourceManager;
+              Replacement Rep(*SM, sl, name.size(), repName);
+              Replace->insert(Rep);
+            }
+          } else {
+            llvm::outs() << "warning: the following reference is not handled: '" << name << "' [builtin].\n";
           }
         }
       }
@@ -1712,12 +1793,16 @@ private:
       StringRef name = enumConstantRef->getDecl()->getNameAsString();
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
-        StringRef repName = found->second.hipName;
         updateCounters(found->second);
-        SourceLocation sl = enumConstantRef->getLocStart();
-        SourceManager *SM = Result.SourceManager;
-        Replacement Rep(*SM, sl, name.size(), repName);
-        Replace->insert(Rep);
+        if (!found->second.unsupported) {
+          StringRef repName = found->second.hipName;
+          SourceLocation sl = enumConstantRef->getLocStart();
+          SourceManager *SM = Result.SourceManager;
+          Replacement Rep(*SM, sl, name.size(), repName);
+          Replace->insert(Rep);
+        }
+      } else {
+        llvm::outs() << "warning: the following reference is not handled: '" << name << "' [enum constant ref].\n";
       }
       return true;
     }
@@ -1735,12 +1820,16 @@ private:
       }
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
-        StringRef repName = found->second.hipName;
         updateCounters(found->second);
-        SourceLocation sl = enumConstantDecl->getLocStart();
-        SourceManager *SM = Result.SourceManager;
-        Replacement Rep(*SM, sl, name.size(), repName);
-        Replace->insert(Rep);
+        if (!found->second.unsupported) {
+          StringRef repName = found->second.hipName;
+          SourceLocation sl = enumConstantDecl->getLocStart();
+          SourceManager *SM = Result.SourceManager;
+          Replacement Rep(*SM, sl, name.size(), repName);
+          Replace->insert(Rep);
+        }
+      } else {
+        llvm::outs() << "warning: the following reference is not handled: '" << name << "' [enum constant decl].\n";
       }
       return true;
     }
@@ -1757,12 +1846,16 @@ private:
       StringRef name = QT.getAsString();
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
-        StringRef repName = found->second.hipName;
         updateCounters(found->second);
-        SourceLocation sl = typedefVar->getLocStart();
-        SourceManager *SM = Result.SourceManager;
-        Replacement Rep(*SM, sl, name.size(), repName);
-        Replace->insert(Rep);
+        if (!found->second.unsupported) {
+          StringRef repName = found->second.hipName;
+          SourceLocation sl = typedefVar->getLocStart();
+          SourceManager *SM = Result.SourceManager;
+          Replacement Rep(*SM, sl, name.size(), repName);
+          Replace->insert(Rep);
+        }
+      } else {
+        llvm::outs() << "warning: the following reference is not handled: '" << name << "' [typedef var].\n";
       }
       return true;
     }
@@ -1777,13 +1870,17 @@ private:
         ->getNameAsString();
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
-        StringRef repName = found->second.hipName;
         updateCounters(found->second);
-        TypeLoc TL = structVar->getTypeSourceInfo()->getTypeLoc();
-        SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-        SourceManager *SM = Result.SourceManager;
-        Replacement Rep(*SM, sl, name.size(), repName);
-        Replace->insert(Rep);
+        if (!found->second.unsupported) {
+          StringRef repName = found->second.hipName;
+          TypeLoc TL = structVar->getTypeSourceInfo()->getTypeLoc();
+          SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
+          SourceManager *SM = Result.SourceManager;
+          Replacement Rep(*SM, sl, name.size(), repName);
+          Replace->insert(Rep);
+        }
+      } else {
+        llvm::outs() << "warning: the following reference is not handled: '" << name << "' [struct var].\n";
       }
       return true;
     }
@@ -1797,13 +1894,17 @@ private:
         StringRef name = t->getPointeeCXXRecordDecl()->getName();
         const auto found = N.cuda2hipRename.find(name);
         if (found != N.cuda2hipRename.end()) {
-          StringRef repName = found->second.hipName;
           updateCounters(found->second);
-          TypeLoc TL = structVarPtr->getTypeSourceInfo()->getTypeLoc();
-          SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-          SourceManager *SM = Result.SourceManager;
-          Replacement Rep(*SM, sl, name.size(), repName);
-          Replace->insert(Rep);
+          if (!found->second.unsupported) {
+            StringRef repName = found->second.hipName;
+            TypeLoc TL = structVarPtr->getTypeSourceInfo()->getTypeLoc();
+            SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
+            SourceManager *SM = Result.SourceManager;
+            Replacement Rep(*SM, sl, name.size(), repName);
+            Replace->insert(Rep);
+          }
+        } else {
+          llvm::outs() << "warning: the following reference is not handled: '" << name << "' [struct var ptr].\n";
         }
       }
       return true;
@@ -1819,13 +1920,17 @@ private:
       StringRef name = type->getAsCXXRecordDecl()->getName();
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
-        StringRef repName = found->second.hipName;
         updateCounters(found->second);
-        TypeLoc TL = typeInfo->getTypeLoc();
-        SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-        SourceManager *SM = Result.SourceManager;
-        Replacement Rep(*SM, sl, name.size(), repName);
-        Replace->insert(Rep);
+        if (!found->second.unsupported) {
+          StringRef repName = found->second.hipName;
+          TypeLoc TL = typeInfo->getTypeLoc();
+          SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
+          SourceManager *SM = Result.SourceManager;
+          Replacement Rep(*SM, sl, name.size(), repName);
+          Replace->insert(Rep);
+        }
+      } else {
+        llvm::outs() << "warning: the following reference is not handled: '" << name << "' [struct sizeof].\n";
       }
       return true;
     }
@@ -1883,13 +1988,17 @@ private:
       }
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
-        StringRef repName = found->second.hipName;
         updateCounters(found->second);
-        TypeLoc TL = paramDecl->getTypeSourceInfo()->getTypeLoc();
-        SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-        SourceManager *SM = Result.SourceManager;
-        Replacement Rep(*SM, sl, name.size(), repName);
-        Replace->insert(Rep);
+        if (!found->second.unsupported) {
+          StringRef repName = found->second.hipName;
+          TypeLoc TL = paramDecl->getTypeSourceInfo()->getTypeLoc();
+          SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
+          SourceManager *SM = Result.SourceManager;
+          Replacement Rep(*SM, sl, name.size(), repName);
+          Replace->insert(Rep);
+        }
+      } else {
+        llvm::outs() << "warning: the following reference is not handled: '" << name << "' [param decl].\n";
       }
       return true;
     }
@@ -1907,13 +2016,17 @@ private:
           : StringRef(QT.getAsString());
         const auto found = N.cuda2hipRename.find(name);
         if (found != N.cuda2hipRename.end()) {
-          StringRef repName = found->second.hipName;
           updateCounters(found->second);
-          TypeLoc TL = paramDeclPtr->getTypeSourceInfo()->getTypeLoc();
-          SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-          SourceManager *SM = Result.SourceManager;
-          Replacement Rep(*SM, sl, name.size(), repName);
-          Replace->insert(Rep);
+          if (!found->second.unsupported) {
+            StringRef repName = found->second.hipName;
+            TypeLoc TL = paramDeclPtr->getTypeSourceInfo()->getTypeLoc();
+            SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
+            SourceManager *SM = Result.SourceManager;
+            Replacement Rep(*SM, sl, name.size(), repName);
+            Replace->insert(Rep);
+          }
+        } else {
+          llvm::outs() << "warning: the following reference is not handled: '" << name << "' [param decl ptr].\n";
         }
       }
       return true;
@@ -1936,6 +2049,7 @@ private:
         StringRef s = sLiteral->getString();
         SourceManager *SM = Result.SourceManager;
         processString(s, *SM, sLiteral->getLocStart());
+//        llvm::outs() << "!!!!!!: the following reference is processed as string_Literal: '" << unquoteStr(s) << "' [literal macro expansion].\n";
       }
       return true;
     }
@@ -2098,7 +2212,7 @@ int64_t printStats(std::string fileSource, HipifyPPCallbacks &PPCallbacks, Cuda2
   for (int i = 0; i < CONV_LAST; i++) {
     sum += Callback.countReps[i] + PPCallbacks.countReps[i];
   }
-  llvm::outs() << "Info: converted " << sum << " CUDA->HIP refs ( ";
+  llvm::outs() << "info: converted " << sum << " CUDA->HIP refs ( ";
   for (int i = 0; i < CONV_LAST; i++) {
     llvm::outs() << counterNames[i] << ':' << Callback.countReps[i] + PPCallbacks.countReps[i] << ' ';
   }
@@ -2107,6 +2221,21 @@ int64_t printStats(std::string fileSource, HipifyPPCallbacks &PPCallbacks, Cuda2
     llvm::outs() << apiNames[i] << ':' << Callback.countApiReps[i] + PPCallbacks.countApiReps[i] << ' ';
   }
   llvm::outs() << ") in \'" << fileSource << "\'\n";
+  int64_t sum_unsupported = 0;
+  for (int i = 0; i < CONV_LAST; i++) {
+    sum_unsupported += Callback.countRepsUnsupported[i] + PPCallbacks.countRepsUnsupported[i];
+  }
+  if (sum_unsupported > 0) {
+    llvm::outs() << "info: unconverted " << sum_unsupported << " CUDA->HIP refs ( ";
+    for (int i = 0; i < CONV_LAST; i++) {
+      llvm::outs() << counterNames[i] << ':' << Callback.countRepsUnsupported[i] + PPCallbacks.countRepsUnsupported[i] << ' ';
+    }
+    llvm::outs() << "), by APIs ( ";
+    for (int i = 0; i < API_LAST; i++) {
+      llvm::outs() << apiNames[i] << ':' << Callback.countApiRepsUnsupported[i] + PPCallbacks.countApiRepsUnsupported[i] << ' ';
+    }
+    llvm::outs() << ") in \'" << fileSource << "\'\n";
+  }
   return sum;
 }
 
@@ -2115,7 +2244,7 @@ void printAllStats(int64_t totalFiles, int64_t convertedFiles) {
   for (int i = 0; i < CONV_LAST; i++) {
     sum += countRepsTotal[i];
   }
-  llvm::outs() << "Info: totally converted " << sum << " CUDA->HIP refs ( ";
+  llvm::outs() << "info: totally converted " << sum << " CUDA->HIP refs ( ";
   for (int i = 0; i < CONV_LAST; i++) {
     llvm::outs() << counterNames[i] << ':' << countRepsTotal[i] << ' ';
   }
