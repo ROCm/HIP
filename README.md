@@ -89,7 +89,7 @@ The HIP Runtime API code and compute kernel definition can exist in the same sou
 ## HIP Portability and Compiler Technology
 HIP C++ code can be compiled with either :
 - On the Nvidia CUDA platform, HIP provides header file which translate from the HIP runtime APIs to CUDA runtime APIs.  The header file contains mostly inlined 
-  functions and thus has very low overhead - developers coding in HIP should expect the same perforamnce as coding in native CUDA.  The code is then 
+  functions and thus has very low overhead - developers coding in HIP should expect the same performance as coding in native CUDA.  The code is then 
   compiled with nvcc, the standard C++ compiler provided with the CUDA SDK.  Developers can use any tools supported by the CUDA SDK including the CUDA
   profiler and debugger.
 - On the AMD ROCm platform, HIP provides a header and runtime library built on top of hcc compiler.  The HIP runtime implements HIP streams, events, and memory APIs, 

@@ -22,7 +22,7 @@ We will be using the Simple Matrix Transpose source code from the previous tutor
 
 HIP can generate markers at function being/end which are displayed on the CodeXL timeline view. To do this, you need to install ROCm-Profiler and enable HIP to generate the markers:
 
-1. Install ROCm-Profiler Installing HIP from the rocm pre-built packages, installs the ROCm-Profiler as well. Alternatively, you can build ROCm-Profiler using the instructions given below.
+1. Install ROCm-Profiler Installing HIP from the ROCm pre-built packages, installs the ROCm-Profiler as well. Alternatively, you can build ROCm-Profiler using the instructions given below.
 
 
 2. Run with profiler enabled to generate ATP file.
