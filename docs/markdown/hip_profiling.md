@@ -92,11 +92,11 @@ HIP_PROFILE_API supports two levels of information.
 
 #### Adding markers to applications
 
-Markers can be used to define application-specific events that will be recorded in the ATP file and displayed in the CodeXL gui.
+Markers can be used to define application-specific events that will be recorded in the ATP file and displayed in the CodeXL GUI.
 This can be particularly useful for visualizing how the higher-level phases of application behavior relate to the lower level HIP APIs, kernel launches, and data transfers.
 For example, an instrumented machine learning framework could show the beginning and ending of each layer in the network.
 
-Markers have a specific begin and end time, and can be nested.  Nested calls are displayed hierarchically in the CodeXL gui, with each level of the hierarchy occupying a different row.
+Markers have a specific begin and end time, and can be nested.  Nested calls are displayed hierarchically in the CodeXL GUI, with each level of the hierarchy occupying a different row.
 
 The HIP APis are defined in "hip_profile.h":
 ```
@@ -131,7 +131,7 @@ The HIP marker API is only supported on ROCm platform.  The marker macros are de
 
 This [HIP sample](samples/2_Cookbook/2_Profiler/) shows the profiler marker API used in a small application.
 
-More information on the marker API can be found in the profiler header file and PDF in a ROCM installation:
+More information on the marker API can be found in the profiler header file and PDF in a ROCm installation:
 - /opt/rocm/profiler/CXLActivityLogger/include/CXLActivityLogger.h
 - /opt/rocm/profiler/CXLActivityLogger/doc/CXLActivityLogger.pdf
 
@@ -185,7 +185,7 @@ $ nvprof --profile-from-start-off ...
 This feature is under development.
 
 #### Reducing timeline trace output file size
-If the application is already recording the HIP APIs, the HSA APIs are somewhat redundant and the ATP file size can be substantially reduced by not recording these APIs.  HIP includes a text file that lists all of the HSA APis and can assist in this filtering:
+If the application is already recording the HIP APIs, the HSA APIs are somewhat redundant and the ATP file size can be substantially reduced by not recording these APIs.  HIP includes a text file that lists all of the HSA APIs and can assist in this filtering:
 
 ```
 $ rocm-profiler -F hip/bin/hsa-api-filter-cxl.txt 
@@ -273,7 +273,7 @@ None will disable use of color control codes for both the opening and closing an
 
 This flag is primarily targeted to assist HIP development team in the development of the HIP runtime, but in some situations may be useful to HIP application developers as well.
 The HIP debug information is designed to print important information during the execution of a HIP API.  HIP provides
-different color-coded levels of debug informaton:
+different color-coded levels of debug information:
   - api  : Print the beginning and end of each HIP API, including the arguments and return codes.  This is equivalent to setting HIP_TRACE_API=1.
   - sync : Print multi-thread and other synchronization debug information.
   - copy : Print which engine is doing the copy, which copy flavor is selected, information on source and destination memory.

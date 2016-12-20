@@ -6,18 +6,18 @@ Please note that this document lists possible ways for experimenting with HIP st
  
 #### On Small BAR Setup
 
-There are two possible ways to transfer data from Host to Device (H2D) and Device to Host(D2H)
+There are two possible ways to transfer data from host-to-device (H2D) and device-to-host(D2H)
  * Using Staging Buffers
  * Using PinInPlace
 
 #### On Large BAR Setup
 
-There are three possible ways to transfer data from Host to Device (H2D)
+There are three possible ways to transfer data from host-to-device (H2D)
  * Using Staging Buffers
  * Using PinInPlace
  * Direct Memcpy
  
- And there are two possible ways to transfer data from Device to Host (D2H)
+ And there are two possible ways to transfer data from device-to-host (D2H)
  * Using Staging Buffers
  * Using PinInPlace
  
