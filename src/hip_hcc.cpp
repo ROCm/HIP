@@ -123,7 +123,7 @@ std::vector<ProfTrigger> g_dbStopTriggers;
 thread_local hipError_t tls_lastHipError = hipSuccess;
 
 
-thread_local ShortTid tls_shortTid;
+thread_local TidInfo tls_tidInfo;
 
 
 
@@ -133,8 +133,8 @@ thread_local ShortTid tls_shortTid;
 //=================================================================================================
 void recordApiTrace(std::string *fullStr, const std::string &apiStr)
 {
-    auto apiSeqNum = tls_shortTid.incApiSeqNum();
-    auto tid = tls_shortTid.tid();
+    auto apiSeqNum = tls_tidInfo.apiSeqNum();
+    auto tid = tls_tidInfo.tid();
 
     if ((tid < g_dbStartTriggers.size()) && (apiSeqNum >= g_dbStartTriggers[tid].nextTrigger())) {
         printf ("info: resume profiling at %lu\n", apiSeqNum);
@@ -214,7 +214,7 @@ hipError_t ihipSynchronize(void)
 //=================================================================================================
 // ihipStream_t:
 //=================================================================================================
-ShortTid::ShortTid()  :
+TidInfo::TidInfo()  :
     _apiSeqNum(0)
 {
     _shortTid = g_lastShortTid.fetch_add(1);
@@ -1373,7 +1373,7 @@ void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, c
         std::stringstream os_pre;
         std::stringstream os;
         os_pre  << "<<hip-api tid:";
-        os  << tls_shortTid.tid() << "." << tls_shortTid.incApiSeqNum()
+        os  << tls_tidInfo.tid() << "." << tls_tidInfo.apiSeqNum()
             << " hipLaunchKernel '" << kernelName << "'"
             << " gridDim:"  << lp->grid_dim
             << " groupDim:" << lp->group_dim

@@ -66,10 +66,10 @@ extern int HIP_DISABLE_HW_KERNEL_DEP;
 
 
 // Class to assign a short TID to each new thread, for HIP debugging purposes.
-class ShortTid {
+class TidInfo {
 public:
 
-    ShortTid() ;
+    TidInfo() ;
 
     int      tid()       const { return _shortTid; };
     uint64_t incApiSeqNum() { return ++_apiSeqNum; };
@@ -106,7 +106,7 @@ private:
 //---
 //Extern tls
 extern thread_local hipError_t tls_lastHipError;
-extern thread_local ShortTid tls_shortTid;
+extern thread_local TidInfo tls_tidInfo;
 
 extern std::vector<ProfTrigger> g_dbStartTriggers;
 extern std::vector<ProfTrigger> g_dbStopTriggers;
@@ -162,7 +162,7 @@ extern const char *API_COLOR_END;
 
 
 // Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function boundary.
-// TODO - currently we print the trace message at the beginning. if we waited, we could also include return codes, and any values returned
+// TODO - currently we print the trace message at the beginning. if we waited, we could also tls_tidInfo return codes, and any values returned
 // through ptr-to-args (ie the pointers allocated by hipMalloc).
 #if COMPILE_HIP_ATP_MARKER
 #include "CXLActivityLogger.h"
@@ -184,6 +184,7 @@ extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
 #if COMPILE_HIP_ATP_MARKER || (COMPILE_HIP_TRACE_API & 0x1)
 #define API_TRACE(...)\
 {\
+    tls_tidInfo.incApiSeqNum();\
     if (HIP_PROFILE_API || (COMPILE_HIP_DB && HIP_TRACE_API)) {\
         std::string apiStr = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
         std::string fullStr;\
@@ -194,7 +195,8 @@ extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
 }
 #else
 // Swallow API_TRACE
-#define API_TRACE(...)
+#define API_TRACE(...)\
+    tls_tidInfo.incApiSeqNum();
 #endif
 
 
@@ -217,7 +219,7 @@ extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
         tls_lastHipError = localHipStatus;\
         \
         if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API) {\
-            fprintf(stderr, "  %ship-api tid:%d.%lu %-30s ret=%2d (%s)>>%s\n", (localHipStatus == 0) ? API_COLOR:KRED, tls_shortTid.tid(),tls_shortTid.apiSeqNum(),  __func__, localHipStatus, ihipErrorString(localHipStatus), API_COLOR_END);\
+            fprintf(stderr, "  %ship-api tid:%d.%lu %-30s ret=%2d (%s)>>%s\n", (localHipStatus == 0) ? API_COLOR:KRED, tls_tidInfo.tid(),tls_tidInfo.apiSeqNum(),  __func__, localHipStatus, ihipErrorString(localHipStatus), API_COLOR_END);\
         }\
         if (HIP_PROFILE_API) { MARKER_END(); }\
         localHipStatus;\
@@ -258,7 +260,7 @@ static const DbName dbName [] =
     if (HIP_DB & (1<<(trace_level))) {\
         char msgStr[1000];\
         snprintf(msgStr, 2000, __VA_ARGS__);\
-        fprintf (stderr, "  %ship-%s tid:%d:%s%s", dbName[trace_level]._color, dbName[trace_level]._shortName, tls_shortTid.tid(), msgStr, KNRM); \
+        fprintf (stderr, "  %ship-%s tid:%d:%s%s", dbName[trace_level]._color, dbName[trace_level]._shortName, tls_tidInfo.tid(), msgStr, KNRM); \
     }\
 }
 #else
