@@ -47,6 +47,7 @@ THE SOFTWARE.
 #include <cstdio>
 #include <fstream>
 #include <set>
+#include <cmath>
 
 using namespace clang;
 using namespace clang::ast_matchers;
@@ -96,14 +97,52 @@ enum ApiTypes {
 };
 
 const char *apiNames[API_LAST] = {
-    "CUDA", "CUDA RT", "CUBLAS"};
+    "CUDA Driver API", "CUDA RT API", "CUBLAS API"};
+
+// Set up the command line options
+static cl::OptionCategory ToolTemplateCategory("CUDA to HIP source translator options");
+
+static cl::opt<std::string> OutputFilename("o",
+  cl::desc("Output filename"),
+  cl::value_desc("filename"),
+  cl::cat(ToolTemplateCategory));
+
+static cl::opt<bool> Inplace("inplace",
+  cl::desc("Modify input file inplace, replacing input with hipified "
+  "output, save backup in .prehip file"),
+  cl::value_desc("inplace"),
+  cl::cat(ToolTemplateCategory));
+
+static cl::opt<bool> NoBackup("no-backup",
+  cl::desc("Don't create a backup file for the hipified source"),
+  cl::value_desc("no-backup"),
+  cl::cat(ToolTemplateCategory));
+
+static cl::opt<bool> NoOutput("no-output",
+  cl::desc("Don't write any translated output to stdout"),
+  cl::value_desc("no-output"),
+  cl::cat(ToolTemplateCategory));
+
+static cl::opt<bool> PrintStats("print-stats",
+  cl::desc("Print translation statistics"),
+  cl::value_desc("print-stats"),
+  cl::cat(ToolTemplateCategory));
+
+static cl::opt<bool> Examine("examine",
+  cl::desc("Combines -no-output and -print-stats options"),
+  cl::value_desc("n"),
+  cl::cat(ToolTemplateCategory));
+
+static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 
 namespace {
 
-int64_t countRepsTotal[CONV_LAST] = { 0 };
-int64_t countApiRepsTotal[API_LAST] = { 0 };
-int64_t countRepsTotalUnsupported[CONV_LAST] = { 0 };
-int64_t countApiRepsTotalUnsupported[API_LAST] = { 0 };
+uint64_t countRepsTotal[CONV_LAST] = { 0 };
+uint64_t countApiRepsTotal[API_LAST] = { 0 };
+uint64_t countRepsTotalUnsupported[CONV_LAST] = { 0 };
+uint64_t countApiRepsTotalUnsupported[API_LAST] = { 0 };
+std::map<std::string, uint64_t> cuda2hipConvertedTotal;
+std::map<std::string, uint64_t> cuda2hipUnconvertedTotal;
 
 struct hipCounter {
   StringRef hipName;
@@ -113,7 +152,7 @@ struct hipCounter {
 };
 
 struct cuda2hipMap {
-  SmallDenseMap<StringRef, hipCounter> cuda2hipRename;
+  std::map<StringRef, hipCounter> cuda2hipRename;
   std::set<StringRef> cudaExcludes;
 
   cuda2hipMap() {
@@ -705,6 +744,8 @@ struct cuda2hipMap {
     //---------------------------------------BLAS-------------------------------------//
     // Blas types
     cuda2hipRename["cublasHandle_t"]                 = {"hipblasHandle_t", CONV_TYPE, API_BLAS};
+    // TODO: dereferencing: typedef struct cublasContext *cublasHandle_t;
+    cuda2hipRename["cublasContext"]                  = {"hipblasHandle_t", CONV_TYPE, API_BLAS};
     // Blas operations
     cuda2hipRename["cublasOperation_t"]              = {"hipblasOperation_t", CONV_TYPE, API_BLAS};
     cuda2hipRename["CUBLAS_OP_N"]                    = {"HIPBLAS_OP_N", CONV_NUMERIC_LITERAL, API_BLAS};
@@ -827,545 +868,629 @@ struct cuda2hipMap {
     cuda2hipRename["cublasZswap"]                    = {"hipblasZswap", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // AMAX
-    //cuda2hipRename["cublasIsamax"] = {"hipblasIsamax", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasIdamax"] = {"hipblasIdamax", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasIcamax"] = {"hipblasIcamax", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasIzamax"] = {"hipblasIzamax", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasIsamax"]                   = {"hipblasIsamax", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasIdamax"]                   = {"hipblasIdamax", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasIcamax"]                   = {"hipblasIcamax", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasIzamax"]                   = {"hipblasIzamax", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // AMIN
-    //cuda2hipRename["cublasIsamin"] = {"hipblasIsamin", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasIdamin"] = {"hipblasIdamin", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasIcamin"] = {"hipblasIcamin", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasIzamin"] = {"hipblasIzamin", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasIsamin"]                   = {"hipblasIsamin", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasIdamin"]                   = {"hipblasIdamin", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasIcamin"]                   = {"hipblasIcamin", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasIzamin"]                   = {"hipblasIzamin", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // ASUM
-    cuda2hipRename["cublasSasum"]        = {"hipblasSasum", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSasum"]                    = {"hipblasSasum", CONV_MATH_FUNC, API_BLAS};
     // there is no such a function in CUDA
-    cuda2hipRename["cublasSasumBatched"] = {"hipblasSasumBatched", CONV_MATH_FUNC, API_BLAS};
-    cuda2hipRename["cublasDasum"]        = {"hipblasDasum", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSasumBatched"]             = {"hipblasSasumBatched", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasDasum"]                    = {"hipblasDasum", CONV_MATH_FUNC, API_BLAS};
     // there is no such a function in CUDA
-    cuda2hipRename["cublasDasumBatched"] = {"hipblasDasumBatched", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasScasum"] = {"hipblasScasum", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDzasum"] = {"hipblasDzasum", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasDasumBatched"]             = {"hipblasDasumBatched", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasScasum"]                   = {"hipblasScasum", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDzasum"]                   = {"hipblasDzasum", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // ROT
-    //cuda2hipRename["cublasSrot"]  = {"hipblasSrot", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDrot"]  = {"hipblasDrot", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCrot"]  = {"hipblasCrot", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCsrot"] = {"hipblasCsrot", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZrot"]  = {"hipblasZrot", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZdrot"] = {"hipblasZdrot", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSrot"]                     = {"hipblasSrot", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDrot"]                     = {"hipblasDrot", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCrot"]                     = {"hipblasCrot", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCsrot"]                    = {"hipblasCsrot", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZrot"]                     = {"hipblasZrot", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZdrot"]                    = {"hipblasZdrot", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // ROTG
-    //cuda2hipRename["cublasSrotg"] = {"hipblasSrotg", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDrotg"] = {"hipblasDrotg", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCrotg"] = {"hipblasCrotg", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZrotg"] = {"hipblasZrotg", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSrotg"]                    = {"hipblasSrotg", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDrotg"]                    = {"hipblasDrotg", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCrotg"]                    = {"hipblasCrotg", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZrotg"]                    = {"hipblasZrotg", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // ROTM
-    //cuda2hipRename["cublasSrotm"] = {"hipblasSrotm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDrotm"] = {"hipblasDrotm", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSrotm"]                    = {"hipblasSrotm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDrotm"]                    = {"hipblasDrotm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // ROTMG
-    //cuda2hipRename["cublasSrotmg"] = {"hipblasSrotmg", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDrotmg"] = {"hipblasDrotmg", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSrotmg"]                   = {"hipblasSrotmg", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDrotmg"]                   = {"hipblasDrotmg", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // GEMV
-    cuda2hipRename["cublasSgemv"] = {"hipblasSgemv", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSgemv"]                    = {"hipblasSgemv", CONV_MATH_FUNC, API_BLAS};
     // there is no such a function in CUDA
-    cuda2hipRename["cublasSgemvBatched"] = {"hipblasSgemvBatched", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDgemv"] = {"hipblasDgemv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCgemv"] = {"hipblasCgemv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZgemv"] = {"hipblasZgemv", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSgemvBatched"]             = {"hipblasSgemvBatched", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasDgemv"]                    = {"hipblasDgemv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCgemv"]                    = {"hipblasCgemv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZgemv"]                    = {"hipblasZgemv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // GBMV
-    //cuda2hipRename["cublasSgbmv"] = {"hipblasSgbmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDgbmv"] = {"hipblasDgbmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCgbmv"] = {"hipblasCgbmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZgbmv"] = {"hipblasZgbmv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSgbmv"]                    = {"hipblasSgbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDgbmv"]                    = {"hipblasDgbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCgbmv"]                    = {"hipblasCgbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZgbmv"]                    = {"hipblasZgbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TRMV
-    //cuda2hipRename["cublasStrmv"] = {"hipblasStrmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDtrmv"] = {"hipblasDtrmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCtrmv"] = {"hipblasCtrmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZtrmv"] = {"hipblasZtrmv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStrmv"]                    = {"hipblasStrmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtrmv"]                    = {"hipblasDtrmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtrmv"]                    = {"hipblasCtrmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtrmv"]                    = {"hipblasZtrmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TBMV
-    //cuda2hipRename["cublasStbmv"] = {"hipblasStbmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDtbmv"] = {"hipblasDtbmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCtbmv"] = {"hipblasCtbmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZtbmv"] = {"hipblasZtbmv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStbmv"]                    = {"hipblasStbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtbmv"]                    = {"hipblasDtbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtbmv"]                    = {"hipblasCtbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtbmv"]                    = {"hipblasZtbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TPMV
-    //cuda2hipRename["cublasStpmv"] = {"hipblasStpmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDtpmv"] = {"hipblasDtpmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCtpmv"] = {"hipblasCtpmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZtpmv"] = {"hipblasZtpmv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStpmv"]                    = {"hipblasStpmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtpmv"]                    = {"hipblasDtpmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtpmv"]                    = {"hipblasCtpmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtpmv"]                    = {"hipblasZtpmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TRSV
-    //cuda2hipRename["cublasStrsv"] = {"hipblasStrsv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDtrsv"] = {"hipblasDtrsv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCtrsv"] = {"hipblasCtrsv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZtrsv"] = {"hipblasZtrsv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStrsv"]                    = {"hipblasStrsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtrsv"]                    = {"hipblasDtrsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtrsv"]                    = {"hipblasCtrsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtrsv"]                    = {"hipblasZtrsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TPSV
-    //cuda2hipRename["cublasStpsv"] = {"hipblasStpsv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDtpsv"] = {"hipblasDtpsv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCtpsv"] = {"hipblasCtpsv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZtpsv"] = {"hipblasZtpsv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStpsv"]                    = {"hipblasStpsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtpsv"]                    = {"hipblasDtpsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtpsv"]                    = {"hipblasCtpsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtpsv"]                    = {"hipblasZtpsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TBSV
-    //cuda2hipRename["cublasStbsv"] = {"hipblasStbsv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDtbsv"] = {"hipblasDtbsv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCtbsv"] = {"hipblasCtbsv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZtbsv"] = {"hipblasZtbsv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStbsv"]                    = {"hipblasStbsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtbsv"]                    = {"hipblasDtbsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtbsv"]                    = {"hipblasCtbsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtbsv"]                    = {"hipblasZtbsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SYMV/HEMV
-    //cuda2hipRename["cublasSsymv"] = {"hipblasSsymv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDsymv"] = {"hipblasDsymv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCsymv"] = {"hipblasCsymv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZsymv"] = {"hipblasZsymv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasChemv"] = {"hipblasChemv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZhemv"] = {"hipblasZhemv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSsymv"]                    = {"hipblasSsymv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDsymv"]                    = {"hipblasDsymv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCsymv"]                    = {"hipblasCsymv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZsymv"]                    = {"hipblasZsymv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasChemv"]                    = {"hipblasChemv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZhemv"]                    = {"hipblasZhemv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SBMV/HBMV
-    //cuda2hipRename["cublasSsbmv"] = {"hipblasSsbmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDsbmv"] = {"hpiblasDsbmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasChbmv"] = {"hipblasChbmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZhbmv"] = {"hipblasZhbmv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSsbmv"]                    = {"hipblasSsbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDsbmv"]                    = {"hpiblasDsbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasChbmv"]                    = {"hipblasChbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZhbmv"]                    = {"hipblasZhbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SPMV/HPMV
-    //cuda2hipRename["cublasSspmv"] = {"hipblasSspmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDspmv"] = {"hipblasDspmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasChpmv"] = {"hipblasChpmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZhpmv"] = {"hipblasZhpmv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSspmv"]                    = {"hipblasSspmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDspmv"]                    = {"hipblasDspmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasChpmv"]                    = {"hipblasChpmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZhpmv"]                    = {"hipblasZhpmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // GER
-    cuda2hipRename["cublasSger"] = {"hipblasSger", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDger"]  = {"hipblasDger", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCgeru"] = {"hipblasCgeru", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCgerc"] = {"hipblasCgerc", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZgeru"] = {"hipblasZgeru", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZgerc"] = {"hipblasZgerc", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSger"]                     = {"hipblasSger", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasDger"]                     = {"hipblasDger", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCgeru"]                    = {"hipblasCgeru", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCgerc"]                    = {"hipblasCgerc", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZgeru"]                    = {"hipblasZgeru", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZgerc"]                    = {"hipblasZgerc", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SYR/HER
-    //cuda2hipRename["cublasSsyr"] = {"hipblasSsyr", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDsyr"] = {"hipblasDsyr", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCher"] = {"hipblasCher", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZher"] = {"hipblasZher", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSsyr"]                     = {"hipblasSsyr", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDsyr"]                     = {"hipblasDsyr", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCher"]                     = {"hipblasCher", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZher"]                     = {"hipblasZher", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SPR/HPR
-    //cuda2hipRename["cublasSspr"] = {"hipblasSspr", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDspr"] = {"hipblasDspr", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasChpr"] = {"hipblasChpr", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZhpr"] = {"hipblasZhpr", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSspr"]                     = {"hipblasSspr", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDspr"]                     = {"hipblasDspr", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasChpr"]                     = {"hipblasChpr", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZhpr"]                     = {"hipblasZhpr", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SYR2/HER2
-    //cuda2hipRename["cublasSsyr2"] = {"hipblasSsyr2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDsyr2"] = {"hipblasDsyr2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCher2"] = {"hipblasCher2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZher2"] = {"hipblasZher2", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSsyr2"]                    = {"hipblasSsyr2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDsyr2"]                    = {"hipblasDsyr2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCher2"]                    = {"hipblasCher2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZher2"]                    = {"hipblasZher2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SPR2/HPR2
-    //cuda2hipRename["cublasSspr2"] = {"hipblasSspr2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDspr2"] = {"hipblasDspr2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasChpr2"] = {"hipblasChpr2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZhpr2"] = {"hipblasZhpr2", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSspr2"]                    = {"hipblasSspr2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDspr2"]                    = {"hipblasDspr2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasChpr2"]                    = {"hipblasChpr2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZhpr2"]                    = {"hipblasZhpr2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // Blas3 (v1) Routines
     // GEMM
-    cuda2hipRename["cublasSgemm"] = {"hipblasSgemm", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSgemm"]                    = {"hipblasSgemm", CONV_MATH_FUNC, API_BLAS};
     // unsupported yet by hipblas/hcblas
-    cuda2hipRename["cublasDgemm"] = {"hipblasDgemm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDgemm"]                    = {"hipblasDgemm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
-    cuda2hipRename["cublasCgemm"] = {"hipblasCgemm", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasCgemm"]                    = {"hipblasCgemm", CONV_MATH_FUNC, API_BLAS};
     // unsupported yet by hipblas/hcblas
-    cuda2hipRename["cublasZgemm"] = {"hipblasZgemm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZgemm"]                    = {"hipblasZgemm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // BATCH GEMM
-    cuda2hipRename["cublasSgemmBatched"] = {"hipblasSgemmBatched", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSgemmBatched"]             = {"hipblasSgemmBatched", CONV_MATH_FUNC, API_BLAS};
     // unsupported yet by hipblas/hcblas
-    cuda2hipRename["cublasDgemmBatched"] = {"hipblasDgemmBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDgemmBatched"]             = {"hipblasDgemmBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
-    cuda2hipRename["cublasCgemmBatched"] = {"hipblasCgemmBatched", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasCgemmBatched"]             = {"hipblasCgemmBatched", CONV_MATH_FUNC, API_BLAS};
     // unsupported yet by hipblas/hcblas
-    cuda2hipRename["cublasZgemmBatched"] = {"hipblasZgemmBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZgemmBatched"]             = {"hipblasZgemmBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SYRK
-    //cuda2hipRename["cublasSsyrk"] = {"hipblasSsyrk", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDsyrk"] = {"hipblasDsyrk", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCsyrk"] = {"hipblasCsyrk", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZsyrk"] = {"hipblasZsyrk", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSsyrk"]                    = {"hipblasSsyrk", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDsyrk"]                    = {"hipblasDsyrk", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCsyrk"]                    = {"hipblasCsyrk", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZsyrk"]                    = {"hipblasZsyrk", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // HERK
-    //cuda2hipRename["cublasCherk"] = {"hipblasCherk", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZherk"] = {"hipblasZherk", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasCherk"]                    = {"hipblasCherk", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZherk"]                    = {"hipblasZherk", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SYR2K
-    //cuda2hipRename["cublasSsyr2k"] = {"hipblasSsyr2k", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDsyr2k"] = {"hipblasDsyr2k", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCsyr2k"] = {"hipblasCsyr2k", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZsyr2k"] = {"hipblasZsyr2k", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSsyr2k"]                   = {"hipblasSsyr2k", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDsyr2k"]                   = {"hipblasDsyr2k", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCsyr2k"]                   = {"hipblasCsyr2k", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZsyr2k"]                   = {"hipblasZsyr2k", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SYRKX - eXtended SYRK
-    // cublasSsyrkx
-    // cublasDsyrkx
-    // cublasCsyrkx
-    // cublasZsyrkx
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSsyrkx"]                   = {"hipblasSsyrkx", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDsyrkx"]                   = {"hipblasDsyrkx", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCsyrkx"]                   = {"hipblasCsyrkx", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZsyrkx"]                   = {"hipblasZsyrkx", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+
 
     // HER2K
-    //cuda2hipRename["cublasCher2k"] = {"hipblasCher2k", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZher2k"] = {"hipblasZher2k", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasCher2k"]                   = {"hipblasCher2k", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZher2k"]                   = {"hipblasZher2k", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // HERKX - eXtended HERK
-    // cublasCherkx
-    // cublasZherkx
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasCherkx"]                   = {"hipblasCherkx", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZherkx"]                   = {"hipblasZherkx", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SYMM
-    //cuda2hipRename["cublasSsymm"] = {"hipblasSsymm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDsymm"] = {"hipblasDsymm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCsymm"] = {"hipblasCsymm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZsymm"] = {"hipblasZsymm", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSsymm"]                    = {"hipblasSsymm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDsymm"]                    = {"hipblasDsymm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCsymm"]                    = {"hipblasCsymm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZsymm"]                    = {"hipblasZsymm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // HEMM
-    //cuda2hipRename["cublasChemm"] = {"hipblasChemm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZhemm"] = {"hipblasZhemm", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasChemm"]                    = {"hipblasChemm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZhemm"]                    = {"hipblasZhemm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TRSM
-    //cuda2hipRename["cublasStrsm"] = {"hipblasStrsm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDtrsm"] = {"hipblasDtrsm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCtrsm"] = {"hipblasCtrsm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZtrsm"] = {"hipblasZtrsm", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStrsm"]                    = {"hipblasStrsm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtrsm"]                    = {"hipblasDtrsm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtrsm"]                    = {"hipblasCtrsm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtrsm"]                    = {"hipblasZtrsm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TRSM - Batched Triangular Solver
-    //cuda2hipRename["cublasStrsmBatched"] = {"hipblasStrsmBatched", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDtrsmBatched"] = {"hipblasDtrsmBatched", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCtrsmBatched"] = {"hipblasCtrsmBatched", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZtrsmBatched"] = {"hipblasZtrsmBatched", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStrsmBatched"]             = {"hipblasStrsmBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtrsmBatched"]             = {"hipblasDtrsmBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtrsmBatched"]             = {"hipblasCtrsmBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtrsmBatched"]             = {"hipblasZtrsmBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TRMM
-    //cuda2hipRename["cublasStrmm"] = {"hipblasStrmm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDtrmm"] = {"hipblasDtrmm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCtrmm"] = {"hipblasCtrmm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZtrmm"] = {"hipblasZtrmm", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStrmm"]                    = {"hipblasStrmm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtrmm"]                    = {"hipblasDtrmm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtrmm"]                    = {"hipblasCtrmm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtrmm"]                    = {"hipblasZtrmm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
-
-    // TO SUPPORT OR NOT? (cublas_api.h)
-    // ------------------------ CUBLAS BLAS - like extension
-
+    // ------------------------ CUBLAS BLAS - like extension (cublas_api.h)
     // GEAM
-    // cublasSgeam
-    // cublasDgeam
-    // cublasCgeam
-    // cublasZgeam
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSgeam"]                    = {"hipblasSgeam", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDgeam"]                    = {"hipblasDgeam", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCgeam"]                    = {"hipblasCgeam", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZgeam"]                    = {"hipblasZgeam", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // GETRF - Batched LU
-    // cublasSgetrfBatched
-    // cublasDgetrfBatched
-    // cublasCgetrfBatched
-    // cublasZgetrfBatched
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSgetrfBatched"]            = {"hipblasSgetrfBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDgetrfBatched"]            = {"hipblasDgetrfBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCgetrfBatched"]            = {"hipblasCgetrfBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZgetrfBatched"]            = {"hipblasZgetrfBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // Batched inversion based on LU factorization from getrf
-    // cublasSgetriBatched
-    // cublasDgetriBatched
-    // cublasCgetriBatched
-    // cublasZgetriBatched
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSgetriBatched"]            = {"hipblasSgetriBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDgetriBatched"]            = {"hipblasDgetriBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCgetriBatched"]            = {"hipblasCgetriBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZgetriBatched"]            = {"hipblasZgetriBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // Batched solver based on LU factorization from getrf
-    // cublasSgetrsBatched
-    // cublasDgetrsBatched
-    // cublasCgetrsBatched
-    // cublasZgetrsBatched
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSgetrsBatched"]            = {"hipblasSgetrsBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDgetrsBatched"]            = {"hipblasDgetrsBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCgetrsBatched"]            = {"hipblasCgetrsBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZgetrsBatched"]            = {"hipblasZgetrsBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TRSM - Batched Triangular Solver
-    // cublasStrsmBatched
-    // cublasDtrsmBatched
-    // cublasCtrsmBatched
-    // cublasZtrsmBatched
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStrsmBatched"]             = {"hipblasStrsmBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtrsmBatched"]             = {"hipblasDtrsmBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtrsmBatched"]             = {"hipblasCtrsmBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtrsmBatched"]             = {"hipblasZtrsmBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // MATINV - Batched
-    // cublasSmatinvBatched
-    // cublasDmatinvBatched
-    // cublasCmatinvBatched
-    // cublasZmatinvBatched
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSmatinvBatched"]           = {"hipblasSmatinvBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDmatinvBatched"]           = {"hipblasDmatinvBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCmatinvBatched"]           = {"hipblasCmatinvBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZmatinvBatched"]           = {"hipblasZmatinvBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // Batch QR Factorization
-    // cublasSgeqrfBatched
-    // cublasDgeqrfBatched
-    // cublasCgeqrfBatched
-    // cublasZgeqrfBatched
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSgeqrfBatched"]            = {"hipblasSgeqrfBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDgeqrfBatched"]            = {"hipblasDgeqrfBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCgeqrfBatched"]            = {"hipblasCgeqrfBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZgeqrfBatched"]            = {"hipblasZgeqrfBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // Least Square Min only m >= n and Non-transpose supported
-    // cublasSgelsBatched
-    // cublasDgelsBatched
-    // cublasCgelsBatched
-    // cublasZgelsBatched
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSgelsBatched"]             = {"hipblasSgelsBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDgelsBatched"]             = {"hipblasDgelsBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCgelsBatched"]             = {"hipblasCgelsBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZgelsBatched"]             = {"hipblasZgelsBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // DGMM
-    // cublasSdgmm
-    // cublasDdgmm
-    // cublasCdgmm
-    // cublasZdgmm
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSdgmm"]                    = {"hipblasSdgmm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDdgmm"]                    = {"hipblasDdgmm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCdgmm"]                    = {"hipblasCdgmm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZdgmm"]                    = {"hipblasZdgmm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TPTTR - Triangular Pack format to Triangular format
-    // cublasStpttr
-    // cublasDtpttr
-    // cublasCtpttr
-    // cublasZtpttr
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStpttr"]                   = {"hipblasStpttr", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtpttr"]                   = {"hipblasDtpttr", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtpttr"]                   = {"hipblasCtpttr", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtpttr"]                   = {"hipblasZtpttr", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TRTTP - Triangular format to Triangular Pack format
-    // cublasStrttp
-    // cublasDtrttp
-    // cublasCtrttp
-    // cublasZtrttp
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStrttp"]                   = {"hipblasStrttp", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtrttp"]                   = {"hipblasDtrttp", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtrttp"]                   = {"hipblasCtrttp", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtrttp"]                   = {"hipblasZtrttp", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // Blas2 (v2) Routines
-    cuda2hipRename["cublasCreate_v2"] =  {"hipblasCreate", CONV_MATH_FUNC, API_BLAS};
-    cuda2hipRename["cublasDestroy_v2"] = {"hipblasDestroy", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasCreate_v2"]                = {"hipblasCreate", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasDestroy_v2"]               = {"hipblasDestroy", CONV_MATH_FUNC, API_BLAS};
 
     // unsupported yet by hipblas/hcblas
-    //cuda2hipRename["cublasGetVersion_v2"]     = {"hipblasGetVersion", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasSetStream_v2"]      = {"hipblasSetStream", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasGetStream_v2"]      = {"hipblasGetStream", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasGetPointerMode_v2"] = {"hipblasGetPointerMode", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasSetPointerMode_v2"] = {"hipblasSetPointerMode", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasGetVersion_v2"]            = {"hipblasGetVersion", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasSetStream_v2"]             = {"hipblasSetStream", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasGetStream_v2"]             = {"hipblasGetStream", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasGetPointerMode_v2"]        = {"hipblasGetPointerMode", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasSetPointerMode_v2"]        = {"hipblasSetPointerMode", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // GEMV
-    cuda2hipRename["cublasSgemv_v2"] = {"hipblasSgemv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDgemv_v2"] = {"hipblasDgemv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCgemv_v2"] = {"hipblasCgemv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZgemv_v2"] = {"hipblasZgemv", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSgemv_v2"]                 = {"hipblasSgemv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasDgemv_v2"]                 = {"hipblasDgemv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCgemv_v2"]                 = {"hipblasCgemv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZgemv_v2"]                 = {"hipblasZgemv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // GBMV
-    //cuda2hipRename["cublasSgbmv_v2"] = {"hipblasSgbmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDgbmv_v2"] = {"hipblasDgbmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCgbmv_v2"] = {"hipblasCgbmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZgbmv_v2"] = {"hipblasZgbmv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSgbmv_v2"]                 = {"hipblasSgbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDgbmv_v2"]                 = {"hipblasDgbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCgbmv_v2"]                 = {"hipblasCgbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZgbmv_v2"]                 = {"hipblasZgbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TRMV
-    //cuda2hipRename["cublasStrmv_v2"] = {"hipblasStrmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDtrmv_v2"] = {"hipblasDtrmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCtrmv_v2"] = {"hipblasCtrmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZtrmv_v2"] = {"hipblasZtrmv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStrmv_v2"]                 = {"hipblasStrmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtrmv_v2"]                 = {"hipblasDtrmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtrmv_v2"]                 = {"hipblasCtrmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtrmv_v2"]                 = {"hipblasZtrmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TBMV
-    //cuda2hipRename["cublasStbmv_v2"] = {"hipblasStbmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDtbmv_v2"] = {"hipblasDtbmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCtbmv_v2"] = {"hipblasCtbmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZtbmv_v2"] = {"hipblasZtbmv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStbmv_v2"]                 = {"hipblasStbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtbmv_v2"]                 = {"hipblasDtbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtbmv_v2"]                 = {"hipblasCtbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtbmv_v2"]                 = {"hipblasZtbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TPMV
-    //cuda2hipRename["cublasStpmv_v2"] = {"hipblasStpmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDtpmv_v2"] = {"hipblasDtpmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCtpmv_v2"] = {"hipblasCtpmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZtpmv_v2"] = {"hipblasZtpmv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStpmv_v2"]                 = {"hipblasStpmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtpmv_v2"]                 = {"hipblasDtpmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtpmv_v2"]                 = {"hipblasCtpmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtpmv_v2"]                 = {"hipblasZtpmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TRSV
-    //cuda2hipRename["cublasStrsv_v2"] = {"hipblasStrsv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDtrsv_v2"] = {"hipblasDtrsv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCtrsv_v2"] = {"hipblasCtrsv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZtrsv_v2"] = {"hipblasZtrsv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStrsv_v2"]                 = {"hipblasStrsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtrsv_v2"]                 = {"hipblasDtrsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtrsv_v2"]                 = {"hipblasCtrsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtrsv_v2"]                 = {"hipblasZtrsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TPSV
-    //cuda2hipRename["cublasStpsv_v2"] = {"hipblasStpsv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDtpsv_v2"] = {"hipblasDtpsv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCtpsv_v2"] = {"hipblasCtpsv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZtpsv_v2"] = {"hipblasZtpsv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStpsv_v2"]                 = {"hipblasStpsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtpsv_v2"]                 = {"hipblasDtpsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtpsv_v2"]                 = {"hipblasCtpsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtpsv_v2"]                 = {"hipblasZtpsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TBSV
-    //cuda2hipRename["cublasStbsv_v2"] = {"hipblasStbsv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDtbsv_v2"] = {"hipblasDtbsv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCtbsv_v2"] = {"hipblasCtbsv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZtbsv_v2"] = {"hipblasZtbsv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStbsv_v2"]                 = {"hipblasStbsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtbsv_v2"]                 = {"hipblasDtbsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtbsv_v2"]                 = {"hipblasCtbsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtbsv_v2"]                 = {"hipblasZtbsv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SYMV/HEMV
-    //cuda2hipRename["cublasSsymv_v2"] = {"hipblasSsymv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDsymv_v2"] = {"hipblasDsymv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCsymv_v2"] = {"hipblasCsymv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZsymv_v2"] = {"hipblasZsymv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasChemv_v2"] = {"hipblasChemv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZhemv_v2"] = {"hipblasZhemv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSsymv_v2"]                 = {"hipblasSsymv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDsymv_v2"]                 = {"hipblasDsymv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCsymv_v2"]                 = {"hipblasCsymv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZsymv_v2"]                 = {"hipblasZsymv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasChemv_v2"]                 = {"hipblasChemv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZhemv_v2"]                 = {"hipblasZhemv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SBMV/HBMV
-    //cuda2hipRename["cublasSsbmv_v2"] = {"hipblasSsbmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDsbmv_v2"] = {"hpiblasDsbmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasChbmv_v2"] = {"hipblasChbmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZhbmv_v2"] = {"hipblasZhbmv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSsbmv_v2"]                 = {"hipblasSsbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDsbmv_v2"]                 = {"hpiblasDsbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasChbmv_v2"]                 = {"hipblasChbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZhbmv_v2"]                 = {"hipblasZhbmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SPMV/HPMV
-    //cuda2hipRename["cublasSspmv_v2"] = {"hipblasSspmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDspmv_v2"] = {"hipblasDspmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasChpmv_v2"] = {"hipblasChpmv", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZhpmv_v2"] = {"hipblasZhpmv", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSspmv_v2"]                 = {"hipblasSspmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDspmv_v2"]                 = {"hipblasDspmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasChpmv_v2"]                 = {"hipblasChpmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZhpmv_v2"]                 = {"hipblasZhpmv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // GER
-    cuda2hipRename["cublasSger_v2"]  = {"hipblasSger", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDger_v2"]  = {"hipblasDger", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCgeru_v2"] = {"hipblasCgeru", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCgerc_v2"] = {"hipblasCgerc", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZgeru_v2"] = {"hipblasZgeru", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZgerc_v2"] = {"hipblasZgerc", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSger_v2"]                  = {"hipblasSger", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasDger_v2"]                  = {"hipblasDger", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCgeru_v2"]                 = {"hipblasCgeru", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCgerc_v2"]                 = {"hipblasCgerc", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZgeru_v2"]                 = {"hipblasZgeru", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZgerc_v2"]                 = {"hipblasZgerc", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SYR/HER
-    //cuda2hipRename["cublasSsyr_v2"] = {"hipblasSsyr", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDsyr_v2"] = {"hipblasDsyr", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCsyr_v2"] = {"hipblasCsyr", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZsyr_v2"] = {"hipblasZsyr", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCher_v2"] = {"hipblasCher", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZher_v2"] = {"hipblasZher", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSsyr_v2"]                  = {"hipblasSsyr", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDsyr_v2"]                  = {"hipblasDsyr", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCsyr_v2"]                  = {"hipblasCsyr", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZsyr_v2"]                  = {"hipblasZsyr", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCher_v2"]                  = {"hipblasCher", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZher_v2"]                  = {"hipblasZher", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SPR/HPR
-    //cuda2hipRename["cublasSspr_v2"] = {"hipblasSspr", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDspr_v2"] = {"hipblasDspr", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasChpr_v2"] = {"hipblasChpr", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZhpr_v2"] = {"hipblasZhpr", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSspr_v2"]                  = {"hipblasSspr", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDspr_v2"]                  = {"hipblasDspr", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasChpr_v2"]                  = {"hipblasChpr", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZhpr_v2"]                  = {"hipblasZhpr", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SYR2/HER2
-    //cuda2hipRename["cublasSsyr2_v2"] = {"hipblasSsyr2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDsyr2_v2"] = {"hipblasDsyr2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCsyr2_v2"] = {"hipblasCsyr2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZsyr2_v2"] = {"hipblasZsyr2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCher2_v2"] = {"hipblasCher2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZher2_v2"] = {"hipblasZher2", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSsyr2_v2"]                 = {"hipblasSsyr2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDsyr2_v2"]                 = {"hipblasDsyr2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCsyr2_v2"]                 = {"hipblasCsyr2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZsyr2_v2"]                 = {"hipblasZsyr2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCher2_v2"]                 = {"hipblasCher2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZher2_v2"]                 = {"hipblasZher2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SPR2/HPR2
-    //cuda2hipRename["cublasSspr2_v2"] = {"hipblasSspr2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDspr2_v2"] = {"hipblasDspr2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasChpr2_v2"] = {"hipblasChpr2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZhpr2_v2"] = {"hipblasZhpr2", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSspr2_v2"]                 = {"hipblasSspr2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDspr2_v2"]                 = {"hipblasDspr2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasChpr2_v2"]                 = {"hipblasChpr2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZhpr2_v2"]                 = {"hipblasZhpr2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // Blas3 (v2) Routines
     // GEMM
-    cuda2hipRename["cublasSgemm_v2"] = {"hipblasSgemm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDgemm_v2"] = {"hipblasDgemm", CONV_MATH_FUNC, API_BLAS};
-    cuda2hipRename["cublasCgemm_v2"] = {"hipblasCgemm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZgemm_v2"] = {"hipblasZgemm", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSgemm_v2"]                 = {"hipblasSgemm", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasDgemm_v2"]                 = {"hipblasDgemm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+
+    cuda2hipRename["cublasCgemm_v2"]                 = {"hipblasCgemm", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasZgemm_v2"]                 = {"hipblasZgemm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     //IO in FP16 / FP32, computation in float
-    // cublasSgemmEx
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSgemmEx"]                  = {"hipblasSgemmEx", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SYRK
-    //cuda2hipRename["cublasSsyrk_v2"] = {"hipblasSsyrk", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDsyrk_v2"] = {"hipblasDsyrk", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCsyrk_v2"] = {"hipblasCsyrk", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZsyrk_v2"] = {"hipblasZsyrk", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSsyrk_v2"]                 = {"hipblasSsyrk", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDsyrk_v2"]                 = {"hipblasDsyrk", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCsyrk_v2"]                 = {"hipblasCsyrk", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZsyrk_v2"]                 = {"hipblasZsyrk", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // HERK
-    //cuda2hipRename["cublasCherk_v2"] = {"hipblasCherk", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZherk_v2"] = {"hipblasZherk", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasCherk_v2"]                 = {"hipblasCherk", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZherk_v2"]                 = {"hipblasZherk", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SYR2K
-    //cuda2hipRename["cublasSsyr2k_v2"] = {"hipblasSsyr2k", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDsyr2k_v2"] = {"hipblasDsyr2k", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCsyr2k_v2"] = {"hipblasCsyr2k", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZsyr2k_v2"] = {"hipblasZsyr2k", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSsyr2k_v2"]                = {"hipblasSsyr2k", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDsyr2k_v2"]                = {"hipblasDsyr2k", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCsyr2k_v2"]                = {"hipblasCsyr2k", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZsyr2k_v2"]                = {"hipblasZsyr2k", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // HER2K
-    //cuda2hipRename["cublasCher2k_v2"] = {"hipblasCher2k", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZher2k_v2"] = {"hipblasZher2k", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasCher2k_v2"]                = {"hipblasCher2k", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZher2k_v2"]                = {"hipblasZher2k", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SYMM
-    //cuda2hipRename["cublasSsymm_v2"] = {"hipblasSsymm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDsymm_v2"] = {"hipblasDsymm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCsymm_v2"] = {"hipblasCsymm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZsymm_v2"] = {"hipblasZsymm", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSsymm_v2"]                 = {"hipblasSsymm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDsymm_v2"]                 = {"hipblasDsymm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCsymm_v2"]                 = {"hipblasCsymm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZsymm_v2"]                 = {"hipblasZsymm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // HEMM
-    //cuda2hipRename["cublasChemm_v2"] = {"hipblasChemm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZhemm_v2"] = {"hipblasZhemm", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasChemm_v2"]                 = {"hipblasChemm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZhemm_v2"]                 = {"hipblasZhemm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TRSM
-    //cuda2hipRename["cublasStrsm_v2"] = {"hipblasStrsm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDtrsm_v2"] = {"hipblasDtrsm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCtrsm_v2"] = {"hipblasCtrsm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZtrsm_v2"] = {"hipblasZtrsm", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStrsm_v2"]                 = {"hipblasStrsm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtrsm_v2"]                 = {"hipblasDtrsm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtrsm_v2"]                 = {"hipblasCtrsm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtrsm_v2"]                 = {"hipblasZtrsm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // TRMM
-    //cuda2hipRename["cublasStrmm_v2"] = {"hipblasStrmm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDtrmm_v2"] = {"hipblasDtrmm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCtrmm_v2"] = {"hipblasCtrmm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZtrmm_v2"] = {"hipblasZtrmm", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasStrmm_v2"]                 = {"hipblasStrmm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDtrmm_v2"]                 = {"hipblasDtrmm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCtrmm_v2"]                 = {"hipblasCtrmm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZtrmm_v2"]                 = {"hipblasZtrmm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // NRM2
-    //cuda2hipRename["cublasSnrm2_v2"]  = {"hipblasSnrm2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDnrm2_v2"]  = {"hipblasDnrm2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasScnrm2_v2"] = {"hipblasScnrm2", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDznrm2_v2"] = {"hipblasDznrm2", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSnrm2_v2"]                 = {"hipblasSnrm2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDnrm2_v2"]                 = {"hipblasDnrm2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasScnrm2_v2"]                = {"hipblasScnrm2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDznrm2_v2"]                = {"hipblasDznrm2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // DOT
-    cuda2hipRename["cublasSdot_v2"]  = {"hipblasSdot", CONV_MATH_FUNC, API_BLAS};
-    cuda2hipRename["cublasDdot_v2"]  = {"hipblasDdot", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSdot_v2"]                  = {"hipblasSdot", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasDdot_v2"]                  = {"hipblasDdot", CONV_MATH_FUNC, API_BLAS};
 
-    //cuda2hipRename["cublasCdotu_v2"] = {"hipblasCdotu", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCdotc_v2"] = {"hipblasCdotc", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZdotu_v2"] = {"hipblasZdotu", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZdotc_v2"] = {"hipblasZdotc", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasCdotu_v2"]                 = {"hipblasCdotu", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCdotc_v2"]                 = {"hipblasCdotc", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZdotu_v2"]                 = {"hipblasZdotu", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZdotc_v2"]                 = {"hipblasZdotc", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SCAL
-    cuda2hipRename["cublasSscal_v2"]  = {"hipblasSscal", CONV_MATH_FUNC, API_BLAS};
-    cuda2hipRename["cublasDscal_v2"]  = {"hipblasDscal", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCscal_v2"]  = {"hipblasCscal", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCsscal_v2"] = {"hipblasCsscal", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZscal_v2"]  = {"hipblasZscal", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZdscal_v2"] = {"hipblasZdscal", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSscal_v2"]                 = {"hipblasSscal", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasDscal_v2"]                 = {"hipblasDscal", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasCscal_v2"]                 = {"hipblasCscal", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCsscal_v2"]                = {"hipblasCsscal", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZscal_v2"]                 = {"hipblasZscal", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZdscal_v2"]                = {"hipblasZdscal", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // AXPY
-    cuda2hipRename["cublasSaxpy_v2"] = {"hipblasSaxpy", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDaxpy_v2"] = {"hipblasDaxpy", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCaxpy_v2"] = {"hipblasCaxpy", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZaxpy_v2"] = {"hipblasZaxpy", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSaxpy_v2"]                 = {"hipblasSaxpy", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasDaxpy_v2"]                 = {"hipblasDaxpy", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCaxpy_v2"]                 = {"hipblasCaxpy", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZaxpy_v2"]                 = {"hipblasZaxpy", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // COPY
-    cuda2hipRename["cublasScopy_v2"] = {"hipblasScopy", CONV_MATH_FUNC, API_BLAS};
-    cuda2hipRename["cublasDcopy_v2"] = {"hipblasDcopy", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCcopy_v2"] = {"hipblasCcopy", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZcopy_v2"] = {"hipblasZcopy", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasScopy_v2"]                 = {"hipblasScopy", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasDcopy_v2"]                 = {"hipblasDcopy", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasCcopy_v2"]                 = {"hipblasCcopy", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZcopy_v2"]                 = {"hipblasZcopy", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // SWAP
-    //cuda2hipRename["cublasSswap_v2"] = {"hipblasSswap", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDswap_v2"] = {"hipblasDswap", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCswap_v2"] = {"hipblasCswap", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZswap_v2"] = {"hipblasZswap", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSswap_v2"]                 = {"hipblasSswap", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDswap_v2"]                 = {"hipblasDswap", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCswap_v2"]                 = {"hipblasCswap", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZswap_v2"]                 = {"hipblasZswap", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // AMAX
-    //cuda2hipRename["cublasIsamax_v2"] = {"hipblasIsamax", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasIdamax_v2"] = {"hipblasIdamax", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasIcamax_v2"] = {"hipblasIcamax", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasIzamax_v2"] = {"hipblasIzamax", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasIsamax_v2"]                = {"hipblasIsamax", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasIdamax_v2"]                = {"hipblasIdamax", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasIcamax_v2"]                = {"hipblasIcamax", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasIzamax_v2"]                = {"hipblasIzamax", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // AMIN
-    //cuda2hipRename["cublasIsamin_v2"] = {"hipblasIsamin", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasIdamin_v2"] = {"hipblasIdamin", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasIcamin_v2"] = {"hipblasIcamin", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasIzamin_v2"] = {"hipblasIzamin", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasIsamin_v2"]                = {"hipblasIsamin", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasIdamin_v2"]                = {"hipblasIdamin", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasIcamin_v2"]                = {"hipblasIcamin", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasIzamin_v2"]                = {"hipblasIzamin", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // ASUM
-    cuda2hipRename["cublasSasum_v2"]  = {"hipblasSasum", CONV_MATH_FUNC, API_BLAS};
-    cuda2hipRename["cublasDasum_v2"]  = {"hipblasDasum", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasScasum_v2"] = {"hipblasScasum", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDzasum_v2"] = {"hipblasDzasum", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasSasum_v2"]                 = {"hipblasSasum", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasDasum_v2"]                 = {"hipblasDasum", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasScasum_v2"]                = {"hipblasScasum", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDzasum_v2"]                = {"hipblasDzasum", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // ROT
-    //cuda2hipRename["cublasSrot_v2"]  = {"hipblasSrot", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDrot_v2"]  = {"hipblasDrot", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCrot_v2"]  = {"hipblasCrot", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCsrot_v2"] = {"hipblasCsrot", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZrot_v2"]  = {"hipblasZrot", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZdrot_v2"] = {"hipblasZdrot", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSrot_v2"]                  = {"hipblasSrot", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDrot_v2"]                  = {"hipblasDrot", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCrot_v2"]                  = {"hipblasCrot", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCsrot_v2"]                 = {"hipblasCsrot", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZrot_v2"]                  = {"hipblasZrot", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZdrot_v2"]                 = {"hipblasZdrot", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // ROTG
-    //cuda2hipRename["cublasSrotg_v2"] = {"hipblasSrotg", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDrotg_v2"] = {"hipblasDrotg", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasCrotg_v2"] = {"hipblasCrotg", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasZrotg_v2"] = {"hipblasZrotg", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSrotg_v2"]                 = {"hipblasSrotg", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDrotg_v2"]                 = {"hipblasDrotg", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasCrotg_v2"]                 = {"hipblasCrotg", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasZrotg_v2"]                 = {"hipblasZrotg", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // ROTM
-    //cuda2hipRename["cublasSrotm_v2"] = {"hipblasSrotm", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDrotm_v2"] = {"hipblasDrotm", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSrotm_v2"]                 = {"hipblasSrotm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDrotm_v2"]                 = {"hipblasDrotm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
     // ROTMG
-    //cuda2hipRename["cublasSrotmg_v2"] = {"hipblasSrotmg", CONV_MATH_FUNC, API_BLAS};
-    //cuda2hipRename["cublasDrotmg_v2"] = {"hipblasDrotmg", CONV_MATH_FUNC, API_BLAS};
+    // unsupported yet by hipblas/hcblas
+    cuda2hipRename["cublasSrotmg_v2"]                = {"hipblasSrotmg", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDrotmg_v2"]                = {"hipblasDrotmg", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
   }
 };
 
@@ -1379,16 +1504,43 @@ class Cuda2Hip {
 public:
   Cuda2Hip(Replacements *R): Replace(R) {}
 
-  int64_t countReps[CONV_LAST] = { 0 };
-  int64_t countApiReps[API_LAST] = { 0 };
-  int64_t countRepsUnsupported[CONV_LAST] = { 0 };
-  int64_t countApiRepsUnsupported[API_LAST] = { 0 };
+  uint64_t countReps[CONV_LAST] = { 0 };
+  uint64_t countApiReps[API_LAST] = { 0 };
+  uint64_t countRepsUnsupported[CONV_LAST] = { 0 };
+  uint64_t countApiRepsUnsupported[API_LAST] = { 0 };
+  std::map<std::string, uint64_t> cuda2hipConverted;
+  std::map<std::string, uint64_t> cuda2hipUnconverted;
 
 protected:
   struct cuda2hipMap N;
   Replacements *Replace;
 
-  virtual void updateCounters(const hipCounter & counter) {
+  void updateCountersExt(const hipCounter &counter, const std::string &cudaName) {
+    std::map<std::string, uint64_t> *map = &cuda2hipConverted;
+    std::map<std::string, uint64_t> *mapTotal = &cuda2hipConvertedTotal;
+    if (counter.unsupported) {
+      map = &cuda2hipUnconverted;
+      mapTotal = &cuda2hipUnconvertedTotal;
+    }
+    auto found = map->find(cudaName);
+    if (found == map->end()) {
+      map->insert(std::pair<std::string, uint64_t>(cudaName, 1));
+    } else {
+      found->second++;
+    }
+    auto foundT = mapTotal->find(cudaName);
+    if (foundT == mapTotal->end()) {
+      mapTotal->insert(std::pair<std::string, uint64_t>(cudaName, 1));
+    } else {
+      foundT->second++;
+    }
+  }
+
+  virtual void updateCounters(const hipCounter &counter, const std::string &cudaName) {
+    if (!PrintStats) {
+      return;
+    }
+    updateCountersExt(counter, cudaName);
     if (counter.unsupported) {
       countRepsUnsupported[counter.countType]++;
       countRepsTotalUnsupported[counter.countType]++;
@@ -1410,15 +1562,15 @@ protected:
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
         StringRef repName = found->second.hipName;
-        hipCounter counter = { "", CONV_LITERAL, API_RUNTIME, found->second.unsupported };
-        updateCounters(counter);
+        hipCounter counter = {"", CONV_LITERAL, API_RUNTIME, found->second.unsupported};
+        updateCounters(counter, name.str());
         if (!counter.unsupported) {
           SourceLocation sl = start.getLocWithOffset(begin + 1);
           Replacement Rep(SM, sl, name.size(), repName);
           Replace->insert(Rep);
         }
       } else {
-        // llvm::outs() << "warning: the following reference is not handled: '" << name << "' [string literal].\n";
+        // llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [string literal].\n";
       }
       if (end == StringRef::npos) {
         break;
@@ -1459,7 +1611,7 @@ public:
       if (is_angled) {
         const auto found = N.cuda2hipRename.find(file_name);
         if (found != N.cuda2hipRename.end()) {
-          updateCounters(found->second);
+          updateCounters(found->second, file_name.str());
           if (!found->second.unsupported) {
             StringRef repName = found->second.hipName;
             DEBUG(dbgs() << "Include file found: " << file_name << "\n"
@@ -1475,7 +1627,7 @@ public:
             Replace->insert(Rep);
           }
         } else {
-//          llvm::outs() << "warning: the following reference is not handled: '" << file_name << "' [inclusion directive].\n";
+//          llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << file_name << "' [inclusion directive].\n";
         }
       }
     }
@@ -1490,7 +1642,7 @@ public:
           StringRef name = T.getIdentifierInfo()->getName();
           const auto found = N.cuda2hipRename.find(name);
           if (found != N.cuda2hipRename.end()) {
-            updateCounters(found->second);
+            updateCounters(found->second, name.str());
             if (!found->second.unsupported) {
               StringRef repName = found->second.hipName;
               SourceLocation sl = T.getLocation();
@@ -1504,7 +1656,7 @@ public:
               Replace->insert(Rep);
             }
           } else {
-            // llvm::outs() << "warning: the following reference is not handled: '" << name << "' [macro].\n";
+            // llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [macro].\n";
           }
         }
       }
@@ -1543,7 +1695,7 @@ public:
               StringRef name = tok.getIdentifierInfo()->getName();
               const auto found = N.cuda2hipRename.find(name);
               if (found != N.cuda2hipRename.end()) {
-                updateCounters(found->second);
+                updateCounters(found->second, name.str());
                 if (!found->second.unsupported) {
                   StringRef repName = found->second.hipName;
                   DEBUG(dbgs()
@@ -1564,9 +1716,8 @@ public:
                   Replacement Rep(*_sm, sl, length, repName);
                   Replace->insert(Rep);
                 }
-              }
-              else {
-                // llvm::outs() << "warning: the following reference is not handled: '" << name << "' [macro expansion].\n";
+              } else {
+                // llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [macro expansion].\n";
               }
             } else if (tok.isLiteral()) {
               SourceLocation sl = tok.getLocation();
@@ -1578,7 +1729,7 @@ public:
                 StringRef name = StringRef(_sm->getCharacterData(sl_macro), length);
                 const auto found = N.cuda2hipRename.find(name);
                 if (found != N.cuda2hipRename.end()) {
-                  updateCounters(found->second);
+                  updateCounters(found->second, name.str());
                   if (!found->second.unsupported) {
                     StringRef repName = found->second.hipName;
                     sl = sl_macro;
@@ -1586,7 +1737,7 @@ public:
                     Replace->insert(Rep);
                   }
                 } else {
-                  // llvm::outs() << "warning: the following reference is not handled: '" << name << "' [literal macro expansion].\n";
+                  // llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [literal macro expansion].\n";
                 }
               } else {
                 if (tok.is(tok::string_literal)) {
@@ -1671,15 +1822,15 @@ private:
             }
           }
           if (bReplace) {
-            updateCounters(found->second);
+            updateCounters(found->second, name.str());
             Replacement Rep(*SM, sl, length, repName);
             Replace->insert(Rep);
           }
         } else {
-          updateCounters(found->second);
+          updateCounters(found->second, name.str());
         }
       } else {
-        llvm::outs() << "warning: the following reference is not handled: '" << name << "' [function call].\n";
+        llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [function call].\n";
       }
       return true;
     }
@@ -1687,7 +1838,8 @@ private:
   }
 
   bool cudaLaunchKernel(const MatchFinder::MatchResult &Result) {
-    if (const CUDAKernelCallExpr *launchKernel = Result.Nodes.getNodeAs<CUDAKernelCallExpr>("cudaLaunchKernel")) {
+    StringRef refName = "cudaLaunchKernel";
+    if (const CUDAKernelCallExpr *launchKernel = Result.Nodes.getNodeAs<CUDAKernelCallExpr>(refName)) {
       SmallString<40> XStr;
       raw_svector_ostream OS(XStr);
       StringRef calleeName;
@@ -1749,8 +1901,8 @@ private:
                         SM->getCharacterData(launchKernel->getLocStart());
       Replacement Rep(*SM, launchKernel->getLocStart(), length, OS.str());
       Replace->insert(Rep);
-      hipCounter counter = { "", CONV_KERN, API_RUNTIME };
-      updateCounters(counter);
+      hipCounter counter = {"hipLaunchKernel", CONV_KERN, API_RUNTIME};   
+      updateCounters(counter, refName.str());
       return true;
     }
     return false;
@@ -1770,7 +1922,7 @@ private:
           name = Twine(name + "." + memberName).toStringRef(tmpData);
           const auto found = N.cuda2hipRename.find(name);
           if (found != N.cuda2hipRename.end()) {
-            updateCounters(found->second);
+            updateCounters(found->second, name.str());
             if (!found->second.unsupported) {
               StringRef repName = found->second.hipName;
               SourceLocation sl = threadIdx->getLocStart();
@@ -1779,7 +1931,7 @@ private:
               Replace->insert(Rep);
             }
           } else {
-            llvm::outs() << "warning: the following reference is not handled: '" << name << "' [builtin].\n";
+            llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [builtin].\n";
           }
         }
       }
@@ -1793,7 +1945,7 @@ private:
       StringRef name = enumConstantRef->getDecl()->getNameAsString();
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
-        updateCounters(found->second);
+        updateCounters(found->second, name.str());
         if (!found->second.unsupported) {
           StringRef repName = found->second.hipName;
           SourceLocation sl = enumConstantRef->getLocStart();
@@ -1802,7 +1954,7 @@ private:
           Replace->insert(Rep);
         }
       } else {
-        llvm::outs() << "warning: the following reference is not handled: '" << name << "' [enum constant ref].\n";
+        llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [enum constant ref].\n";
       }
       return true;
     }
@@ -1820,7 +1972,7 @@ private:
       }
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
-        updateCounters(found->second);
+        updateCounters(found->second, name.str());
         if (!found->second.unsupported) {
           StringRef repName = found->second.hipName;
           SourceLocation sl = enumConstantDecl->getLocStart();
@@ -1829,7 +1981,7 @@ private:
           Replace->insert(Rep);
         }
       } else {
-        llvm::outs() << "warning: the following reference is not handled: '" << name << "' [enum constant decl].\n";
+        llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [enum constant decl].\n";
       }
       return true;
     }
@@ -1846,7 +1998,7 @@ private:
       StringRef name = QT.getAsString();
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
-        updateCounters(found->second);
+        updateCounters(found->second, name.str());
         if (!found->second.unsupported) {
           StringRef repName = found->second.hipName;
           SourceLocation sl = typedefVar->getLocStart();
@@ -1855,7 +2007,7 @@ private:
           Replace->insert(Rep);
         }
       } else {
-        llvm::outs() << "warning: the following reference is not handled: '" << name << "' [typedef var].\n";
+        llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [typedef var].\n";
       }
       return true;
     }
@@ -1870,7 +2022,7 @@ private:
         ->getNameAsString();
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
-        updateCounters(found->second);
+        updateCounters(found->second, name.str());
         if (!found->second.unsupported) {
           StringRef repName = found->second.hipName;
           TypeLoc TL = structVar->getTypeSourceInfo()->getTypeLoc();
@@ -1880,7 +2032,7 @@ private:
           Replace->insert(Rep);
         }
       } else {
-        llvm::outs() << "warning: the following reference is not handled: '" << name << "' [struct var].\n";
+        llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [struct var].\n";
       }
       return true;
     }
@@ -1894,7 +2046,7 @@ private:
         StringRef name = t->getPointeeCXXRecordDecl()->getName();
         const auto found = N.cuda2hipRename.find(name);
         if (found != N.cuda2hipRename.end()) {
-          updateCounters(found->second);
+          updateCounters(found->second, name.str());
           if (!found->second.unsupported) {
             StringRef repName = found->second.hipName;
             TypeLoc TL = structVarPtr->getTypeSourceInfo()->getTypeLoc();
@@ -1904,7 +2056,7 @@ private:
             Replace->insert(Rep);
           }
         } else {
-          llvm::outs() << "warning: the following reference is not handled: '" << name << "' [struct var ptr].\n";
+          llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [struct var ptr].\n";
         }
       }
       return true;
@@ -1920,7 +2072,7 @@ private:
       StringRef name = type->getAsCXXRecordDecl()->getName();
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
-        updateCounters(found->second);
+        updateCounters(found->second, name.str());
         if (!found->second.unsupported) {
           StringRef repName = found->second.hipName;
           TypeLoc TL = typeInfo->getTypeLoc();
@@ -1930,7 +2082,7 @@ private:
           Replace->insert(Rep);
         }
       } else {
-        llvm::outs() << "warning: the following reference is not handled: '" << name << "' [struct sizeof].\n";
+        llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [struct sizeof].\n";
       }
       return true;
     }
@@ -1938,7 +2090,8 @@ private:
   }
 
   bool cudaSharedIncompleteArrayVar(const MatchFinder::MatchResult &Result) {
-    if (const VarDecl *sharedVar = Result.Nodes.getNodeAs<VarDecl>("cudaSharedIncompleteArrayVar")) {
+    StringRef refName = "cudaSharedIncompleteArrayVar";
+    if (const VarDecl *sharedVar = Result.Nodes.getNodeAs<VarDecl>(refName)) {
       // Example: extern __shared__ uint sRadix1[];
       if (sharedVar->hasExternalFormalLinkage()) {
         QualType QT = sharedVar->getType();
@@ -1969,8 +2122,8 @@ private:
           StringRef repName = Twine("HIP_DYNAMIC_SHARED(" + typeName + ", " + varName + ")").toStringRef(tmpData);
           Replacement Rep(*SM, slStart, repLength, repName);
           Replace->insert(Rep);
-          hipCounter counter = { "", CONV_MEM, API_RUNTIME };
-          updateCounters(counter);
+          hipCounter counter = {"HIP_DYNAMIC_SHARED", CONV_MEM, API_RUNTIME};
+          updateCounters(counter, refName.str());
         }
       }
       return true;
@@ -1988,7 +2141,7 @@ private:
       }
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
-        updateCounters(found->second);
+        updateCounters(found->second, name.str());
         if (!found->second.unsupported) {
           StringRef repName = found->second.hipName;
           TypeLoc TL = paramDecl->getTypeSourceInfo()->getTypeLoc();
@@ -1998,7 +2151,7 @@ private:
           Replace->insert(Rep);
         }
       } else {
-        llvm::outs() << "warning: the following reference is not handled: '" << name << "' [param decl].\n";
+        llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [param decl].\n";
       }
       return true;
     }
@@ -2016,7 +2169,7 @@ private:
           : StringRef(QT.getAsString());
         const auto found = N.cuda2hipRename.find(name);
         if (found != N.cuda2hipRename.end()) {
-          updateCounters(found->second);
+          updateCounters(found->second, name.str());
           if (!found->second.unsupported) {
             StringRef repName = found->second.hipName;
             TypeLoc TL = paramDeclPtr->getTypeSourceInfo()->getTypeLoc();
@@ -2026,7 +2179,7 @@ private:
             Replace->insert(Rep);
           }
         } else {
-          llvm::outs() << "warning: the following reference is not handled: '" << name << "' [param decl ptr].\n";
+          llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [param decl ptr].\n";
         }
       }
       return true;
@@ -2049,7 +2202,6 @@ private:
         StringRef s = sLiteral->getString();
         SourceManager *SM = Result.SourceManager;
         processString(s, *SM, sLiteral->getLocStart());
-//        llvm::outs() << "!!!!!!: the following reference is processed as string_Literal: '" << unquoteStr(s) << "' [literal macro expansion].\n";
       }
       return true;
     }
@@ -2086,8 +2238,8 @@ public:
       SourceManager *SM = Result.SourceManager;
       Replacement Rep(*SM, SM->getLocForStartOfFile(SM->getMainFileID()), 0, repName);
       Replace->insert(Rep);
-      hipCounter counter = { "", CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME };
-      updateCounters(counter);
+      hipCounter counter = {"", CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME};
+      updateCounters(counter, "");
     }
   }
 
@@ -2102,48 +2254,12 @@ void HipifyPPCallbacks::handleEndSource() {
     StringRef repName = "#include <hip/hip_runtime.h>\n";
     Replacement Rep(*_sm, _sm->getLocForStartOfFile(_sm->getMainFileID()), 0, repName);
     Replace->insert(Rep);
-    hipCounter counter = { "", CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME };
-    updateCounters(counter);
+    hipCounter counter = {"", CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME};
+    updateCounters(counter, "");
   }
 }
 
 } // end anonymous namespace
-
-// Set up the command line options
-static cl::OptionCategory ToolTemplateCategory("CUDA to HIP source translator options");
-
-static cl::opt<std::string> OutputFilename("o",
-       cl::desc("Output filename"),
-       cl::value_desc("filename"),
-       cl::cat(ToolTemplateCategory));
-
-static cl::opt<bool> Inplace("inplace",
-       cl::desc("Modify input file inplace, replacing input with hipified "
-                "output, save backup in .prehip file"),
-       cl::value_desc("inplace"),
-       cl::cat(ToolTemplateCategory));
-
-static cl::opt<bool> NoBackup("no-backup",
-       cl::desc("Don't create a backup file for the hipified source"),
-       cl::value_desc("no-backup"),
-       cl::cat(ToolTemplateCategory));
-
-static cl::opt<bool> NoOutput("no-output",
-       cl::desc("Don't write any translated output to stdout"),
-       cl::value_desc("no-output"),
-       cl::cat(ToolTemplateCategory));
-
-static cl::opt<bool> PrintStats("print-stats",
-       cl::desc("Print translation statistics"),
-       cl::value_desc("print-stats"),
-       cl::cat(ToolTemplateCategory));
-
-static cl::opt<bool> Examine("examine",
-       cl::desc("Combines -no-output and -print-stats options"),
-       cl::value_desc("n"),
-       cl::cat(ToolTemplateCategory));
-
-static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 
 void addAllMatchers(ast_matchers::MatchFinder &Finder, Cuda2HipCallback *Callback) {
   Finder.addMatcher(callExpr(isExpansionInMainFile(),
@@ -2207,52 +2323,182 @@ void addAllMatchers(ast_matchers::MatchFinder &Finder, Cuda2HipCallback *Callbac
                             Callback);
 }
 
-int64_t printStats(std::string fileSource, HipifyPPCallbacks &PPCallbacks, Cuda2HipCallback &Callback) {
-  int64_t sum = 0;
+int64_t printStats(const std::string &csvFile, const std::string &srcFile, HipifyPPCallbacks &PPCallbacks, Cuda2HipCallback &Callback) {
+  std::ofstream csv(csvFile, std::ios::app);
+  int64_t sum = 0, sum_interm = 0;
+  std::string str;
+  const std::string hipify_info = "[HIPIFY] info: ", separator = ";";
   for (int i = 0; i < CONV_LAST; i++) {
     sum += Callback.countReps[i] + PPCallbacks.countReps[i];
   }
-  llvm::outs() << "info: converted " << sum << " CUDA->HIP refs ( ";
-  for (int i = 0; i < CONV_LAST; i++) {
-    llvm::outs() << counterNames[i] << ':' << Callback.countReps[i] + PPCallbacks.countReps[i] << ' ';
-  }
-  llvm::outs() << "), by APIs ( ";
-  for (int i = 0; i < API_LAST; i++) {
-    llvm::outs() << apiNames[i] << ':' << Callback.countApiReps[i] + PPCallbacks.countApiReps[i] << ' ';
-  }
-  llvm::outs() << ") in \'" << fileSource << "\'\n";
   int64_t sum_unsupported = 0;
   for (int i = 0; i < CONV_LAST; i++) {
     sum_unsupported += Callback.countRepsUnsupported[i] + PPCallbacks.countRepsUnsupported[i];
   }
-  if (sum_unsupported > 0) {
-    llvm::outs() << "info: unconverted " << sum_unsupported << " CUDA->HIP refs ( ";
-    for (int i = 0; i < CONV_LAST; i++) {
-      llvm::outs() << counterNames[i] << ':' << Callback.countRepsUnsupported[i] + PPCallbacks.countRepsUnsupported[i] << ' ';
-    }
-    llvm::outs() << "), by APIs ( ";
-    for (int i = 0; i < API_LAST; i++) {
-      llvm::outs() << apiNames[i] << ':' << Callback.countApiRepsUnsupported[i] + PPCallbacks.countApiRepsUnsupported[i] << ' ';
-    }
-    llvm::outs() << ") in \'" << fileSource << "\'\n";
+  if (sum > 0 || sum_unsupported > 0) {
+    str = "file \'" + srcFile + "\' statistics:\n";
+    llvm::outs() << "\n" << hipify_info << str;
+    csv << "\n" << str;
+    str = "CONVERTED refs count";
+    llvm::outs() << hipify_info << str << ": " << sum << "\n";
+    csv << "\n" << str << separator << sum << "\n";
+    str = "UNCONVERTED refs count";
+    csv << str << separator << sum_unsupported << "\n";
+    str = "Conversion %";
+    long conv = 100 - std::lround(double(sum_unsupported*100)/double(sum + sum_unsupported));
+    csv << str << separator << conv << "%\n";
   }
+  if (sum > 0) {
+    csv << "\nCUDA ref type" << separator << "Count\n";
+    for (int i = 0; i < CONV_LAST; i++) {
+      sum_interm = Callback.countReps[i] + PPCallbacks.countReps[i];
+      if (0 == sum_interm) {
+        continue;
+      }
+      llvm::outs() << "  " << counterNames[i] << ": " << sum_interm << "\n";
+      csv << counterNames[i] << separator << sum_interm << "\n";
+    }
+    llvm::outs() << hipify_info << "CONVERTED refs by API:\n";
+    csv << "\nCUDA API" << separator << "Count\n";
+    for (int i = 0; i < API_LAST; i++) {
+      llvm::outs() << "  " << apiNames[i] << ": " << Callback.countApiReps[i] + PPCallbacks.countApiReps[i] << "\n";
+      csv << apiNames[i] << separator << Callback.countApiReps[i] + PPCallbacks.countApiReps[i] << "\n";
+    }
+    for (const auto & it : PPCallbacks.cuda2hipConverted) {
+      const auto found = Callback.cuda2hipConverted.find(it.first);
+      if (found == Callback.cuda2hipConverted.end()) {
+        Callback.cuda2hipConverted.insert(std::pair<std::string, uint64_t>(it.first, 1));
+      } else {
+        found->second += it.second;
+      }
+    }
+    llvm::outs() << hipify_info << "CONVERTED refs by names:\n";
+    csv << "\nCUDA ref name" << separator << "Count\n";
+    for (const auto & it : Callback.cuda2hipConverted) {
+      llvm::outs() << "  " << it.first << ": " << it.second << "\n";
+      csv << it.first << separator << it.second << "\n";
+    }
+  }
+  if (sum_unsupported > 0) {
+    str = "UNCONVERTED refs count";
+    llvm::outs() << hipify_info << str << ": " << sum_unsupported << "\n";
+    csv << "\n" << str << separator << sum_unsupported << "\n";
+    csv << "\nUNCONVERTED CUDA ref type" << separator << "Count\n";
+    for (int i = 0; i < CONV_LAST; i++) {
+      sum_interm = Callback.countRepsUnsupported[i] + PPCallbacks.countRepsUnsupported[i];
+      if (0 == sum_interm) {
+        continue;
+      }
+      llvm::outs() << "  " << counterNames[i] << ": " << sum_interm << "\n";
+      csv << counterNames[i] << separator << sum_interm << "\n";
+    }
+    llvm::outs() << hipify_info << "UNCONVERTED refs by API:\n";
+    csv << "\nUNCONVERTED CUDA API" << separator << "Count\n";
+    for (int i = 0; i < API_LAST; i++) {
+      llvm::outs() << "  " << apiNames[i] << ": " << Callback.countApiRepsUnsupported[i] + PPCallbacks.countApiRepsUnsupported[i] << "\n";
+      csv << apiNames[i] << separator << Callback.countApiRepsUnsupported[i] + PPCallbacks.countApiRepsUnsupported[i] << "\n";
+    }
+    for (const auto & it : PPCallbacks.cuda2hipUnconverted) {
+      const auto found = Callback.cuda2hipUnconverted.find(it.first);
+      if (found == Callback.cuda2hipUnconverted.end()) {
+        Callback.cuda2hipUnconverted.insert(std::pair<std::string, uint64_t>(it.first, 1));
+      } else {
+        found->second += it.second;
+      }
+    }
+    llvm::outs() << hipify_info << "UNCONVERTED refs by names:\n";
+    csv << "\nUNCONVERTED CUDA ref name" << separator << "Count\n";
+    for (const auto & it : Callback.cuda2hipUnconverted) {
+      llvm::outs() << "  " << it.first << ": " << it.second << "\n";
+      csv << it.first << separator << it.second << "\n";
+    }
+  }
+  csv.close();
   return sum;
 }
 
-void printAllStats(int64_t totalFiles, int64_t convertedFiles) {
-  int64_t sum = 0;
+void printAllStats(const std::string &csvFile, int64_t totalFiles, int64_t convertedFiles) {
+  std::ofstream csv(csvFile, std::ios::app);
+  int64_t sum = 0, sum_interm = 0;
+  std::string str;
+  const std::string hipify_info = "[HIPIFY] info: ", separator = ";";
   for (int i = 0; i < CONV_LAST; i++) {
     sum += countRepsTotal[i];
   }
-  llvm::outs() << "info: totally converted " << sum << " CUDA->HIP refs ( ";
+  int64_t sum_unsupported = 0;
   for (int i = 0; i < CONV_LAST; i++) {
-    llvm::outs() << counterNames[i] << ':' << countRepsTotal[i] << ' ';
+    sum_unsupported += countRepsTotalUnsupported[i];
   }
-  llvm::outs() << "), by APIs ( ";
-  for (int i = 0; i < API_LAST; i++) {
-    llvm::outs() << apiNames[i] << ':' << countApiRepsTotal[i] << ' ';
+  if (sum > 0 || sum_unsupported > 0) {
+    str = "TOTAL statistics:\n";
+    llvm::outs() << "\n" << hipify_info << str;
+    csv << "\n" << str;
+    str = "CONVERTED files";
+    llvm::outs() << "  " << str << ": " << convertedFiles << "\n";
+    csv << "\n" << str << separator << convertedFiles << "\n";
+    str = "PROCESSED files";
+    llvm::outs() << "  " << str << ": " << totalFiles << "\n";
+    csv << str << separator << totalFiles << "\n";
+    str = "CONVERTED refs count";
+    llvm::outs() << hipify_info << str << ": " << sum << "\n";
+    csv << str << separator << sum << "\n";
+    str = "UNCONVERTED refs count";
+    csv << str << separator << sum_unsupported << "\n";
+    str = "Conversion %";
+    long conv = 100 - std::lround(double(sum_unsupported * 100) / double(sum + sum_unsupported));
+    csv << str << separator << conv << "%\n";
   }
-  llvm::outs() << ") in " << convertedFiles << " files of " << totalFiles << " processed files.\n";
+
+  if (sum > 0) {
+    csv << "\nCUDA ref type" << separator << "Count\n";
+    for (int i = 0; i < CONV_LAST; i++) {
+      sum_interm = countRepsTotal[i];
+      if (0 == sum_interm) {
+        continue;
+      }
+      llvm::outs() << "  " << counterNames[i] << ": " << sum_interm << "\n";
+      csv << counterNames[i] << separator << sum_interm << "\n";
+    }
+    llvm::outs() << hipify_info << "CONVERTED refs by API:\n";
+    csv << "\nCUDA API" << separator << "Count\n";
+    for (int i = 0; i < API_LAST; i++) {
+      llvm::outs() << "  " << apiNames[i] << ": " << countApiRepsTotal[i] << "\n";
+      csv << apiNames[i] << separator << countApiRepsTotal[i] << "\n";
+    }
+    llvm::outs() << hipify_info << "CONVERTED refs by names:\n";
+    csv << "\nCUDA ref name" << separator << "Count\n";
+    for (const auto & it : cuda2hipConvertedTotal) {
+      llvm::outs() << "  " << it.first << ": " << it.second << "\n";
+      csv << it.first << separator << it.second << "\n";
+    }
+  }
+  if (sum_unsupported > 0) {
+    str = "UNCONVERTED refs count";
+    llvm::outs() << hipify_info << str << ": " << sum_unsupported << "\n";
+    csv << "\n" << str << separator << sum_unsupported << "\n";
+    csv << "\nUNCONVERTED CUDA ref type" << separator << "Count\n";
+    for (int i = 0; i < CONV_LAST; i++) {
+      sum_interm = countRepsTotalUnsupported[i];
+      if (0 == sum_interm) {
+        continue;
+      }
+      llvm::outs() << "  " << counterNames[i] << ": " << sum_interm << "\n";
+      csv << counterNames[i] << separator << sum_interm << "\n";
+    }
+    llvm::outs() << hipify_info << "UNCONVERTED refs by API:\n";
+    csv << "\nUNCONVERTED CUDA API" << separator << "Count\n";
+    for (int i = 0; i < API_LAST; i++) {
+      llvm::outs() << "  " << apiNames[i] << ": " << countApiRepsTotalUnsupported[i] << "\n";
+      csv << apiNames[i] << separator << countApiRepsTotalUnsupported[i] << "\n";
+    }
+    llvm::outs() << hipify_info << "UNCONVERTED refs by names:\n";
+    csv << "\nUNCONVERTED CUDA ref name" << separator << "Count\n";
+    for (const auto & it : cuda2hipUnconvertedTotal) {
+      llvm::outs() << "  " << it.first << ": " << it.second << "\n";
+      csv << it.first << separator << it.second << "\n";
+    }
+  }
+  csv.close();
 }
 
 int main(int argc, const char **argv) {
@@ -2261,16 +2507,16 @@ int main(int argc, const char **argv) {
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
   std::string dst = OutputFilename;
   if (!dst.empty() && fileSources.size() > 1) {
-    llvm::errs() << "Conflict: -o and multiple source files are specified.\n";
+    llvm::errs() << "[HIPIFY] conflict: -o and multiple source files are specified.\n";
     return 1;
   }
   if (NoOutput) {
     if (Inplace) {
-      llvm::errs() << "Conflict: both -no-output and -inplace options are specified.\n";
+      llvm::errs() << "[HIPIFY] conflict: both -no-output and -inplace options are specified.\n";
       return 1;
     }
     if (!dst.empty()) {
-      llvm::errs() << "Conflict: both -no-output and -o options are specified.\n";
+      llvm::errs() << "[HIPIFY] conflict: both -no-output and -o options are specified.\n";
       return 1;
     }
   }
@@ -2278,7 +2524,11 @@ int main(int argc, const char **argv) {
     NoOutput = PrintStats = true;
   }
   int Result = 0;
+  std::string csv = "hipify_stats.csv";
   size_t filesTransleted = fileSources.size();
+  if (PrintStats && filesTransleted > 1) {
+    std::remove(csv.c_str());
+  }
   for (const auto & src : fileSources) {
     if (dst.empty()) {
       dst = src;
@@ -2286,15 +2536,13 @@ int main(int argc, const char **argv) {
         size_t pos = dst.rfind(".");
         if (pos != std::string::npos && pos + 1 < dst.size()) {
           dst = dst.substr(0, pos) + ".hip." + dst.substr(pos + 1, dst.size() - pos - 1);
-        }
-        else {
+        } else {
           dst += ".hip.cu";
         }
       }
-    }
-    else {
+    } else {
       if (Inplace) {
-        llvm::errs() << "Conflict: both -o and -inplace options are specified.\n";
+        llvm::errs() << "[HIPIFY] conflict: both -o and -inplace options are specified.\n";
         return 1;
       }
       dst += ".hip";
@@ -2357,15 +2605,19 @@ int main(int argc, const char **argv) {
     if (NoOutput) {
       remove(dst.c_str());
     }
-    dst.clear();
     if (PrintStats) {
-      if (0 == printStats(src, PPCallbacks, Callback)) {
+      if (fileSources.size() == 1) {
+        csv = dst + ".csv";
+        std::remove(csv.c_str());
+      }
+      if (0 == printStats(csv, src, PPCallbacks, Callback)) {
         filesTransleted--;
       }
     }
+    dst.clear();
   }
   if (PrintStats && fileSources.size() > 1) {
-    printAllStats(fileSources.size(), filesTransleted);
+    printAllStats(csv, fileSources.size(), filesTransleted);
   }
   return Result;
 }
