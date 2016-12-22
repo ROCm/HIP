@@ -52,6 +52,10 @@ THE SOFTWARE.
 #define USE_COPY_EXT_V2 1
 #endif
 
+#ifndef USE_ROCR_1_4
+#define USE_ROCR_1_4 1
+#endif
+
 //=================================================================================================
 //Global variables:
 //=================================================================================================
@@ -733,7 +737,11 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
 
     // Get Max Threads Per Multiprocessor
     uint32_t max_waves_per_cu;
+#if USE_ROCR_1_4
     err = hsa_agent_get_info(_hsaAgent,(hsa_agent_info_t) HSA_AMD_AGENT_INFO_MAX_WAVES_PER_CU, &max_waves_per_cu);
+#else
+    max_waves_per_cu = 10;
+#endif
     DeviceErrorCheck(err);
     prop-> maxThreadsPerMultiProcessor = prop->warpSize*max_waves_per_cu;
 
