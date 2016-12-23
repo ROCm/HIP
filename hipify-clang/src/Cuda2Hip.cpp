@@ -108,8 +108,7 @@ static cl::opt<std::string> OutputFilename("o",
   cl::cat(ToolTemplateCategory));
 
 static cl::opt<bool> Inplace("inplace",
-  cl::desc("Modify input file inplace, replacing input with hipified "
-  "output, save backup in .prehip file"),
+  cl::desc("Modify input file inplace, replacing input with hipified output, save backup in .prehip file"),
   cl::value_desc("inplace"),
   cl::cat(ToolTemplateCategory));
 
@@ -128,9 +127,14 @@ static cl::opt<bool> PrintStats("print-stats",
   cl::value_desc("print-stats"),
   cl::cat(ToolTemplateCategory));
 
+static cl::opt<std::string> OutputStatsFilename("o-stats",
+  cl::desc("Output filename for statistics"),
+  cl::value_desc("filename"),
+  cl::cat(ToolTemplateCategory));
+
 static cl::opt<bool> Examine("examine",
   cl::desc("Combines -no-output and -print-stats options"),
-  cl::value_desc("n"),
+  cl::value_desc("examine"),
   cl::cat(ToolTemplateCategory));
 
 static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
@@ -2238,8 +2242,8 @@ public:
       SourceManager *SM = Result.SourceManager;
       Replacement Rep(*SM, SM->getLocForStartOfFile(SM->getMainFileID()), 0, repName);
       Replace->insert(Rep);
-      hipCounter counter = {"", CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME};
-      updateCounters(counter, "");
+      hipCounter counter = { repName, CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME };
+      updateCounters(counter, repName);
     }
   }
 
@@ -2254,8 +2258,8 @@ void HipifyPPCallbacks::handleEndSource() {
     StringRef repName = "#include <hip/hip_runtime.h>\n";
     Replacement Rep(*_sm, _sm->getLocForStartOfFile(_sm->getMainFileID()), 0, repName);
     Replace->insert(Rep);
-    hipCounter counter = {"", CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME};
-    updateCounters(counter, "");
+    hipCounter counter = { repName, CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME };
+    updateCounters(counter, repName);
   }
 }
 
@@ -2323,7 +2327,9 @@ void addAllMatchers(ast_matchers::MatchFinder &Finder, Cuda2HipCallback *Callbac
                             Callback);
 }
 
-int64_t printStats(const std::string &csvFile, const std::string &srcFile, HipifyPPCallbacks &PPCallbacks, Cuda2HipCallback &Callback) {
+int64_t printStats(const std::string &csvFile, const std::string &srcFile,
+                   HipifyPPCallbacks &PPCallbacks, Cuda2HipCallback &Callback,
+                   uint64_t replacedBytes, uint64_t totalBytes) {
   std::ofstream csv(csvFile, std::ios::app);
   int64_t sum = 0, sum_interm = 0;
   std::string str;
@@ -2340,15 +2346,28 @@ int64_t printStats(const std::string &csvFile, const std::string &srcFile, Hipif
     llvm::outs() << "\n" << hipify_info << str;
     csv << "\n" << str;
     str = "CONVERTED refs count";
-    llvm::outs() << hipify_info << str << ": " << sum << "\n";
+    llvm::outs() << "  " << str << ": " << sum << "\n";
     csv << "\n" << str << separator << sum << "\n";
     str = "UNCONVERTED refs count";
+    llvm::outs() << "  " << str << ": " << sum_unsupported << "\n";
     csv << str << separator << sum_unsupported << "\n";
-    str = "Conversion %";
+    str = "CONVERSION %";
     long conv = 100 - std::lround(double(sum_unsupported*100)/double(sum + sum_unsupported));
+    llvm::outs() << "  " << str << ": " << conv << "%\n";
+    csv << str << separator << conv << "%\n";
+    str = "REPLACED bytes";
+    llvm::outs() << "  " << str << ": " << replacedBytes << "\n";
+    csv << str << separator << replacedBytes << "\n";
+    str = "TOTAL bytes";
+    llvm::outs() << "  " << str << ": " << totalBytes << "\n";
+    csv << str << separator << totalBytes << "\n";
+    str = "CODE CHANGED %";
+    conv = std::lround(double(replacedBytes * 100) / double(totalBytes));
+    llvm::outs() << "  " << str << ": " << conv << "%\n";
     csv << str << separator << conv << "%\n";
   }
   if (sum > 0) {
+    llvm::outs() << hipify_info << "CONVERTED refs by type:\n";
     csv << "\nCUDA ref type" << separator << "Count\n";
     for (int i = 0; i < CONV_LAST; i++) {
       sum_interm = Callback.countReps[i] + PPCallbacks.countReps[i];
@@ -2380,9 +2399,8 @@ int64_t printStats(const std::string &csvFile, const std::string &srcFile, Hipif
     }
   }
   if (sum_unsupported > 0) {
-    str = "UNCONVERTED refs count";
-    llvm::outs() << hipify_info << str << ": " << sum_unsupported << "\n";
-    csv << "\n" << str << separator << sum_unsupported << "\n";
+    str = "UNCONVERTED refs by type:";
+    llvm::outs() << hipify_info << str << "\n";
     csv << "\nUNCONVERTED CUDA ref type" << separator << "Count\n";
     for (int i = 0; i < CONV_LAST; i++) {
       sum_interm = Callback.countRepsUnsupported[i] + PPCallbacks.countRepsUnsupported[i];
@@ -2417,7 +2435,8 @@ int64_t printStats(const std::string &csvFile, const std::string &srcFile, Hipif
   return sum;
 }
 
-void printAllStats(const std::string &csvFile, int64_t totalFiles, int64_t convertedFiles) {
+void printAllStats(const std::string &csvFile, int64_t totalFiles, int64_t convertedFiles,
+                   uint64_t replacedBytes, uint64_t totalBytes) {
   std::ofstream csv(csvFile, std::ios::app);
   int64_t sum = 0, sum_interm = 0;
   std::string str;
@@ -2440,16 +2459,28 @@ void printAllStats(const std::string &csvFile, int64_t totalFiles, int64_t conve
     llvm::outs() << "  " << str << ": " << totalFiles << "\n";
     csv << str << separator << totalFiles << "\n";
     str = "CONVERTED refs count";
-    llvm::outs() << hipify_info << str << ": " << sum << "\n";
+    llvm::outs() << "  " << str << ": " << sum << "\n";
     csv << str << separator << sum << "\n";
     str = "UNCONVERTED refs count";
+    llvm::outs() << "  " << str << ": " << sum_unsupported << "\n";
     csv << str << separator << sum_unsupported << "\n";
-    str = "Conversion %";
+    str = "CONVERSION %";
     long conv = 100 - std::lround(double(sum_unsupported * 100) / double(sum + sum_unsupported));
+    llvm::outs() << "  " << str << ": " << conv << "%\n";
+    csv << str << separator << conv << "%\n";
+    str = "REPLACED bytes";
+    llvm::outs() << "  " << str << ": " << replacedBytes << "\n";
+    csv << str << separator << replacedBytes << "\n";
+    str = "TOTAL bytes";
+    llvm::outs() << "  " << str << ": " << totalBytes << "\n";
+    csv << str << separator << totalBytes << "\n";
+    str = "CODE CHANGED %";
+    conv = std::lround(double(replacedBytes * 100) / double(totalBytes));
+    llvm::outs() << "  " << str << ": " << conv << "%\n";
     csv << str << separator << conv << "%\n";
   }
-
   if (sum > 0) {
+    llvm::outs() << hipify_info << "CONVERTED refs by type:\n";
     csv << "\nCUDA ref type" << separator << "Count\n";
     for (int i = 0; i < CONV_LAST; i++) {
       sum_interm = countRepsTotal[i];
@@ -2473,9 +2504,8 @@ void printAllStats(const std::string &csvFile, int64_t totalFiles, int64_t conve
     }
   }
   if (sum_unsupported > 0) {
-    str = "UNCONVERTED refs count";
-    llvm::outs() << hipify_info << str << ": " << sum_unsupported << "\n";
-    csv << "\n" << str << separator << sum_unsupported << "\n";
+    str = "UNCONVERTED refs by type:";
+    llvm::outs() << hipify_info << str << "\n";
     csv << "\nUNCONVERTED CUDA ref type" << separator << "Count\n";
     for (int i = 0; i < CONV_LAST; i++) {
       sum_interm = countRepsTotalUnsupported[i];
@@ -2524,8 +2554,15 @@ int main(int argc, const char **argv) {
     NoOutput = PrintStats = true;
   }
   int Result = 0;
-  std::string csv = "hipify_stats.csv";
+  std::string csv;
+  if (!OutputStatsFilename.empty()) {
+    csv = OutputStatsFilename;
+  } else {
+    csv = "hipify_stats.csv";
+  }
   size_t filesTransleted = fileSources.size();
+  uint64_t repBytesTotal = 0;
+  uint64_t bytesTotal = 0;
   if (PrintStats && filesTransleted > 1) {
     std::remove(csv.c_str());
   }
@@ -2555,7 +2592,6 @@ int main(int argc, const char **argv) {
       source.close();
       dest.close();
     }
-
     RefactoringTool Tool(OptionsParser.getCompilations(), dst);
     ast_matchers::MatchFinder Finder;
     HipifyPPCallbacks PPCallbacks(&Tool.getReplacements());
@@ -2578,18 +2614,22 @@ int main(int argc, const char **argv) {
     LangOptions DefaultLangOptions;
     IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts = new DiagnosticOptions();
     TextDiagnosticPrinter DiagnosticPrinter(llvm::errs(), &*DiagOpts);
-    DiagnosticsEngine Diagnostics(
-      IntrusiveRefCntPtr<DiagnosticIDs>(new DiagnosticIDs()), &*DiagOpts,
+    DiagnosticsEngine Diagnostics(IntrusiveRefCntPtr<DiagnosticIDs>(new DiagnosticIDs()), &*DiagOpts,
       &DiagnosticPrinter, false);
 
-    DEBUG(dbgs() << "Replacements collected by the tool:\n");
-    for (const auto &r : Tool.getReplacements()) {
-      DEBUG(dbgs() << r.toString() << "\n");
+    uint64_t repBytes = 0;
+    uint64_t bytes = 0;
+    if (PrintStats) {
+      DEBUG(dbgs() << "Replacements collected by the tool:\n");
+      for (const auto &r : Tool.getReplacements()) {
+        DEBUG(dbgs() << r.toString() << "\n");
+        repBytes += r.getLength();
+      }
+      std::ifstream src_file(dst, std::ios::binary | std::ios::ate);
+      bytes = src_file.tellg();
     }
-
     SourceManager Sources(Diagnostics, Tool.getFiles());
     Rewriter Rewrite(Sources, DefaultLangOptions);
-
     if (!Tool.applyAllReplacements(Rewrite)) {
       DEBUG(dbgs() << "Skipped some replacements.\n");
     }
@@ -2607,17 +2647,21 @@ int main(int argc, const char **argv) {
     }
     if (PrintStats) {
       if (fileSources.size() == 1) {
-        csv = dst + ".csv";
+        if (OutputStatsFilename.empty()) {
+          csv = dst + ".csv";
+        }
         std::remove(csv.c_str());
       }
-      if (0 == printStats(csv, src, PPCallbacks, Callback)) {
+      if (0 == printStats(csv, src, PPCallbacks, Callback, repBytes, bytes)) {
         filesTransleted--;
       }
+      repBytesTotal += repBytes;
+      bytesTotal += bytes;
     }
     dst.clear();
   }
   if (PrintStats && fileSources.size() > 1) {
-    printAllStats(csv, fileSources.size(), filesTransleted);
+    printAllStats(csv, fileSources.size(), filesTransleted, repBytesTotal, bytesTotal);
   }
   return Result;
 }
