@@ -1671,8 +1671,6 @@ public:
                             const MacroDefinition &MD, SourceRange Range,
                             const MacroArgs *Args) override {
     if (_sm->isWrittenInMainFile(MacroNameTok.getLocation())) {
-      StringRef macroName = MacroNameTok.getIdentifierInfo()->getName();
-      if (N.cudaExcludes.end() == N.cudaExcludes.find(macroName)) {
         for (unsigned int i = 0; Args && i < MD.getMacroInfo()->getNumArgs(); i++) {
           std::vector<Token> toks;
           // Code below is a kind of stolen from 'MacroArgs::getPreExpArgument'
@@ -1684,16 +1682,13 @@ public:
   #else
           _pp->EnterTokenStream(start, len, false, false);
   #endif
-          int j = 0;
           do {
             toks.push_back(Token());
             Token &tk = toks.back();
             _pp->Lex(tk);
-            j++;
           } while (toks.back().isNot(tok::eof));
           _pp->RemoveTopOfLexerStack();
           // end of stolen code
-          j = 0;
           for (auto tok : toks) {
             if (tok.isAnyIdentifier()) {
               StringRef name = tok.getIdentifierInfo()->getName();
@@ -1750,10 +1745,8 @@ public:
                 }
               }
             }
-            j++;
           }
         }
-      }
     }
   }
 
