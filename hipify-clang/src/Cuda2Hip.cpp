@@ -1591,8 +1591,7 @@ public:
   HipifyPPCallbacks(Replacements *R)
     : Cuda2Hip(R), SeenEnd(false), _sm(nullptr), _pp(nullptr) {}
 
-  virtual bool handleBeginSource(CompilerInstance &CI,
-                                 StringRef Filename) override {
+  virtual bool handleBeginSource(CompilerInstance &CI, StringRef Filename) override {
     Preprocessor &PP = CI.getPreprocessor();
     SourceManager &SM = CI.getSourceManager();
     setSourceManager(&SM);
@@ -1619,7 +1618,7 @@ public:
           if (!found->second.unsupported) {
             StringRef repName = found->second.hipName;
             DEBUG(dbgs() << "Include file found: " << file_name << "\n"
-                         << "SourceLocation:"
+                         << "SourceLocation: "
                          << filename_range.getBegin().printToString(*_sm) << "\n"
                          << "Will be replaced with " << repName << "\n");
             SourceLocation sl = filename_range.getBegin();
@@ -1650,12 +1649,10 @@ public:
             if (!found->second.unsupported) {
               StringRef repName = found->second.hipName;
               SourceLocation sl = T.getLocation();
-              DEBUG(dbgs() << "Identifier " << name
-                           << " found in definition of macro "
+              DEBUG(dbgs() << "Identifier " << name << " found in definition of macro "
                            << MacroNameTok.getIdentifierInfo()->getName() << "\n"
                            << "will be replaced with: " << repName << "\n"
-                           << "SourceLocation: " << sl.printToString(*_sm)
-                           << "\n");
+                           << "SourceLocation: " << sl.printToString(*_sm) << "\n");
               Replacement Rep(*_sm, sl, name.size(), repName);
               Replace->insert(Rep);
             }
@@ -1671,82 +1668,81 @@ public:
                             const MacroDefinition &MD, SourceRange Range,
                             const MacroArgs *Args) override {
     if (_sm->isWrittenInMainFile(MacroNameTok.getLocation())) {
-        for (unsigned int i = 0; Args && i < MD.getMacroInfo()->getNumArgs(); i++) {
-          std::vector<Token> toks;
-          // Code below is a kind of stolen from 'MacroArgs::getPreExpArgument'
-          // to workaround the 'const' MacroArgs passed into this hook.
-          const Token *start = Args->getUnexpArgument(i);
-          size_t len = Args->getArgLength(start) + 1;
-  #if (LLVM_VERSION_MAJOR >= 3) && (LLVM_VERSION_MINOR >= 9)
-          _pp->EnterTokenStream(ArrayRef<Token>(start, len), false);
-  #else
-          _pp->EnterTokenStream(start, len, false, false);
-  #endif
-          do {
-            toks.push_back(Token());
-            Token &tk = toks.back();
-            _pp->Lex(tk);
-          } while (toks.back().isNot(tok::eof));
-          _pp->RemoveTopOfLexerStack();
-          // end of stolen code
-          for (auto tok : toks) {
-            if (tok.isAnyIdentifier()) {
-              StringRef name = tok.getIdentifierInfo()->getName();
+      for (unsigned int i = 0; Args && i < MD.getMacroInfo()->getNumArgs(); i++) {
+        std::vector<Token> toks;
+        // Code below is a kind of stolen from 'MacroArgs::getPreExpArgument'
+        // to workaround the 'const' MacroArgs passed into this hook.
+        const Token *start = Args->getUnexpArgument(i);
+        size_t len = Args->getArgLength(start) + 1;
+#if (LLVM_VERSION_MAJOR >= 3) && (LLVM_VERSION_MINOR >= 9)
+        _pp->EnterTokenStream(ArrayRef<Token>(start, len), false);
+#else
+        _pp->EnterTokenStream(start, len, false, false);
+#endif
+        do {
+          toks.push_back(Token());
+          Token &tk = toks.back();
+          _pp->Lex(tk);
+        } while (toks.back().isNot(tok::eof));
+        _pp->RemoveTopOfLexerStack();
+        // end of stolen code
+        for (auto tok : toks) {
+          if (tok.isAnyIdentifier()) {
+            StringRef name = tok.getIdentifierInfo()->getName();
+            const auto found = N.cuda2hipRename.find(name);
+            if (found != N.cuda2hipRename.end()) {
+              updateCounters(found->second, name.str());
+              if (!found->second.unsupported) {
+                StringRef repName = found->second.hipName;
+                DEBUG(dbgs() << "Identifier " << name
+                             << " found as an actual argument in expansion of macro "
+                             << macroName << "\n"
+                             << "will be replaced with: " << repName << "\n");
+                size_t length = name.size();
+                SourceLocation sl = tok.getLocation();
+                if (_sm->isMacroBodyExpansion(sl)) {
+                  LangOptions DefaultLangOptions;
+                  SourceLocation sl_macro = _sm->getExpansionLoc(sl);
+                  SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *_sm, DefaultLangOptions);
+                  length = _sm->getCharacterData(sl_end) - _sm->getCharacterData(sl_macro);
+                  name = StringRef(_sm->getCharacterData(sl_macro), length);
+                  sl = sl_macro;
+                }
+                Replacement Rep(*_sm, sl, length, repName);
+                Replace->insert(Rep);
+              }
+            } else {
+              // llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [macro expansion].\n";
+            }
+          } else if (tok.isLiteral()) {
+            SourceLocation sl = tok.getLocation();
+            if (_sm->isMacroBodyExpansion(sl)) {
+              LangOptions DefaultLangOptions;
+              SourceLocation sl_macro = _sm->getExpansionLoc(sl);
+              SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *_sm, DefaultLangOptions);
+              size_t length = _sm->getCharacterData(sl_end) - _sm->getCharacterData(sl_macro);
+              StringRef name = StringRef(_sm->getCharacterData(sl_macro), length);
               const auto found = N.cuda2hipRename.find(name);
               if (found != N.cuda2hipRename.end()) {
                 updateCounters(found->second, name.str());
                 if (!found->second.unsupported) {
                   StringRef repName = found->second.hipName;
-                  DEBUG(dbgs()
-                        << "Identifier " << name
-                        << " found as an actual argument in expansion of macro "
-                        << macroName << "\n"
-                        << "will be replaced with: " << repName << "\n");
-                  size_t length = name.size();
-                  SourceLocation sl = tok.getLocation();
-                  if (_sm->isMacroBodyExpansion(sl)) {
-                    LangOptions DefaultLangOptions;
-                    SourceLocation sl_macro = _sm->getExpansionLoc(sl);
-                    SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *_sm, DefaultLangOptions);
-                    length = _sm->getCharacterData(sl_end) - _sm->getCharacterData(sl_macro);
-                    name = StringRef(_sm->getCharacterData(sl_macro), length);
-                    sl = sl_macro;
-                  }
+                  sl = sl_macro;
                   Replacement Rep(*_sm, sl, length, repName);
                   Replace->insert(Rep);
                 }
               } else {
-                // llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [macro expansion].\n";
+                // llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [literal macro expansion].\n";
               }
-            } else if (tok.isLiteral()) {
-              SourceLocation sl = tok.getLocation();
-              if (_sm->isMacroBodyExpansion(sl)) {
-                LangOptions DefaultLangOptions;
-                SourceLocation sl_macro = _sm->getExpansionLoc(sl);
-                SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *_sm, DefaultLangOptions);
-                size_t length = _sm->getCharacterData(sl_end) - _sm->getCharacterData(sl_macro);
-                StringRef name = StringRef(_sm->getCharacterData(sl_macro), length);
-                const auto found = N.cuda2hipRename.find(name);
-                if (found != N.cuda2hipRename.end()) {
-                  updateCounters(found->second, name.str());
-                  if (!found->second.unsupported) {
-                    StringRef repName = found->second.hipName;
-                    sl = sl_macro;
-                    Replacement Rep(*_sm, sl, length, repName);
-                    Replace->insert(Rep);
-                  }
-                } else {
-                  // llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [literal macro expansion].\n";
-                }
-              } else {
-                if (tok.is(tok::string_literal)) {
-                  StringRef s(tok.getLiteralData(), tok.getLength());
-                  processString(unquoteStr(s), *_sm, tok.getLocation());
-                }
+            } else {
+              if (tok.is(tok::string_literal)) {
+                StringRef s(tok.getLiteralData(), tok.getLength());
+                processString(unquoteStr(s), *_sm, tok.getLocation());
               }
             }
           }
         }
+      }
     }
   }
 
@@ -1774,8 +1770,7 @@ private:
     OS << "hipLaunchParm lp";
     size_t repLength = OS.str().size();
     SourceLocation sl = kernelDecl->getNameInfo().getEndLoc();
-    SourceLocation kernelArgListStart = Lexer::findLocationAfterToken(
-      sl, tok::l_paren, *SM, DefaultLangOptions, true);
+    SourceLocation kernelArgListStart = Lexer::findLocationAfterToken(sl, tok::l_paren, *SM, DefaultLangOptions, true);
     DEBUG(dbgs() << kernelArgListStart.printToString(*SM));
     if (kernelDecl->getNumParams() > 0) {
       const ParmVarDecl *pvdFirst = kernelDecl->getParamDecl(0);
