@@ -340,3 +340,25 @@ These options cause HCC to serialize.  Useful if you have libraries or code whic
 - HSA_ENABLE_SDMA=0     : Causes host-to-device and device-to-host copies to use compute shader blit kernels rather than the dedicated DMA copy engines.  Compute shader copies have low latency (typically < 5us) and can achieve approximately 80% of the bandwidth of the DMA copy engine.  This flag is useful to isolate issues with the hardware copy engines.
 - HSA_ENABLE_INTERRUPT=0 : Causes completion signals to be detected with memory-based polling rather than interrupts.  Can be useful to diagnose interrupt storm issues in the driver.
 - HSA_DISABLE_CACHE=1  : Disables the GPU L2 data cache.
+
+### Debugging HIP Applications
+
+- The variable "tls_tidInfo" contains the API sequence number (_apiSeqNum)- a monotonically increasing count of the HIP APIs called from this thread.  This can be useful for setting conditional breakpoints.  Also, each new HIP thread is mapped to monotically increasing shortTid ID.  Both of these fields are displayed in the HIP debug info. 
+```
+(gdb) p tls_tidInfo
+$32 = {_shortTid = 1, _apiSeqNum = 803}
+```
+
+- HCC tracks all of the application memory allocations, including those from HIP and HC's "am_alloc".  These can be printed by calling the function 'hc::am_memtracker_print()'.
+An optional argument specifies a void * targetPointer - the print routine will mark the allocation which contains the specified pointer with "-->" in the printed output.
+This example shows a sample GDB session where we print the memory allocated by this process and mark a specified address by using the gdb "call" function..
+The gdb syntax also supports using the variable name (in this case 'dst'):
+```
+(gdb) p dst
+$33 = (void *) 0x5ec7e9000
+(gdb) call hc::am_memtracker_print(dst)
+TargetAddress:0x5ec7e9000
+   0x504cfc000-0x504cfc00f::  allocSeqNum:1 hostPointer:0x504cfc000 devicePointer:0x504cfc000 sizeBytes:16 isInDeviceMem:0 isAmManaged:1 appId:0 appAllocFlags:0 appPtr:(nil)
+...
+-->0x5ec7e9000-0x5f7e28fff::  allocSeqNum:488 hostPointer:(nil) devicePointer:0x5ec7e9000 sizeBytes:191102976 isInDeviceMem:1 isAmManaged:1 appId:0 appAllocFlags:0 appPtr:(nil)
+```
