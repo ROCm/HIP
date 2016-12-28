@@ -48,6 +48,9 @@ THE SOFTWARE.
 #include <fstream>
 #include <set>
 #include <cmath>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
 
 using namespace clang;
 using namespace clang::ast_matchers;
@@ -2370,7 +2373,8 @@ void addAllMatchers(ast_matchers::MatchFinder &Finder, Cuda2HipCallback *Callbac
 
 int64_t printStats(const std::string &csvFile, const std::string &srcFile,
                    HipifyPPCallbacks &PPCallbacks, Cuda2HipCallback &Callback,
-                   uint64_t replacedBytes, uint64_t totalBytes) {
+                   uint64_t replacedBytes, uint64_t totalBytes,
+                   const std::chrono::steady_clock::time_point &start) {
   std::ofstream csv(csvFile, std::ios::app);
   int64_t sum = 0, sum_interm = 0;
   std::string str;
@@ -2406,6 +2410,13 @@ int64_t printStats(const std::string &csvFile, const std::string &srcFile,
     conv = std::lround(double(replacedBytes * 100) / double(totalBytes));
     llvm::outs() << "  " << str << ": " << conv << "%\n";
     csv << str << separator << conv << "%\n";
+    typedef std::chrono::duration<double, std::milli> duration;
+    duration elapsed = std::chrono::steady_clock::now() - start;
+    str = "TIME ELAPSED s";
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(2) << elapsed.count() / 1000;
+    llvm::outs() << "  " << str << ": " << stream.str() << "\n";
+    csv << str << separator << stream.str() << "\n";
   }
   if (sum > 0) {
     llvm::outs() << hipify_info << "CONVERTED refs by type:\n";
@@ -2477,7 +2488,8 @@ int64_t printStats(const std::string &csvFile, const std::string &srcFile,
 }
 
 void printAllStats(const std::string &csvFile, int64_t totalFiles, int64_t convertedFiles,
-                   uint64_t replacedBytes, uint64_t totalBytes) {
+                   uint64_t replacedBytes, uint64_t totalBytes,
+                   const std::chrono::steady_clock::time_point &start) {
   std::ofstream csv(csvFile, std::ios::app);
   int64_t sum = 0, sum_interm = 0;
   std::string str;
@@ -2519,6 +2531,13 @@ void printAllStats(const std::string &csvFile, int64_t totalFiles, int64_t conve
     conv = std::lround(double(replacedBytes * 100) / double(totalBytes));
     llvm::outs() << "  " << str << ": " << conv << "%\n";
     csv << str << separator << conv << "%\n";
+    typedef std::chrono::duration<double, std::milli> duration;
+    duration elapsed = std::chrono::steady_clock::now() - start;
+    str = "TIME ELAPSED s";
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(2) << elapsed.count() / 1000;
+    llvm::outs() << "  " << str << ": " << stream.str() << "\n";
+    csv << str << separator << stream.str() << "\n";
   }
   if (sum > 0) {
     llvm::outs() << hipify_info << "CONVERTED refs by type:\n";
@@ -2573,6 +2592,8 @@ void printAllStats(const std::string &csvFile, int64_t totalFiles, int64_t conve
 }
 
 int main(int argc, const char **argv) {
+  auto start = std::chrono::steady_clock::now();
+  auto begin = start;
   llvm::sys::PrintStackTraceOnErrorSignal();
   CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::OneOrMore);
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
@@ -2693,16 +2714,17 @@ int main(int argc, const char **argv) {
         }
         std::remove(csv.c_str());
       }
-      if (0 == printStats(csv, src, PPCallbacks, Callback, repBytes, bytes)) {
+      if (0 == printStats(csv, src, PPCallbacks, Callback, repBytes, bytes, start)) {
         filesTransleted--;
       }
+      start = std::chrono::steady_clock::now();
       repBytesTotal += repBytes;
       bytesTotal += bytes;
     }
     dst.clear();
   }
   if (PrintStats && fileSources.size() > 1) {
-    printAllStats(csv, fileSources.size(), filesTransleted, repBytesTotal, bytesTotal);
+    printAllStats(csv, fileSources.size(), filesTransleted, repBytesTotal, bytesTotal, begin);
   }
   return Result;
 }
