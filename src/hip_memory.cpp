@@ -131,7 +131,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
                 LockedAccessor_CtxCrit_t crit(ctx->criticalData());
                 // the peerCnt always stores self so make sure the trace actually
                 peerCnt = crit->peerCnt();
-                tprintf(DB_MEM, " allocated device_mem ptr:%p size:%zu on dev:%d and allowed %d other peer(s) access\n",
+                tprintf(DB_MEM, " allocated device_mem ptr:%p size:%zu on dev:%d and allow access to %d other peer(s)\n",
                         *ptr, sizeBytes, device->_deviceId, peerCnt-1);
                 if (peerCnt > 1) {
 
@@ -841,7 +841,6 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
         if (HIP_API_BLOCKING) {
             tprintf (DB_SYNC, "%s LAUNCH_BLOCKING wait for hipMemsetAsync.\n", ToString(stream).c_str());
             cf.wait();
-            //tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING memset completed [stream:%p].\n", __func__, (void*)stream);
         }
     } else {
         e = hipErrorInvalidValue;
@@ -892,9 +891,9 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
 
 
         if (HIP_LAUNCH_BLOCKING) {
-            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING wait for memset [stream:%p].\n", __func__, (void*)stream);
+            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING wait for memset in %s.\n", __func__, ToString(stream).c_str());
             cf.wait();
-            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING memset completed [stream:%p].\n", __func__, (void*)stream);
+            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING memset completed in %s.\n", __func__, ToString(stream).c_str());
         }
     } else {
         e = hipErrorInvalidValue;

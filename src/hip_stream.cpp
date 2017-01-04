@@ -54,7 +54,7 @@ hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags)
             *stream = istream;
         }
 
-        tprintf(DB_SYNC, "hipStreamCreate, stream=%p\n", *stream);
+        tprintf(DB_SYNC, "hipStreamCreate, %s\n", ToString(*stream).c_str());
     } else {
         e = hipErrorInvalidDevice;
     }

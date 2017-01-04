@@ -243,7 +243,7 @@ ihipStream_t::ihipStream_t(ihipCtx_t *ctx, hc::accelerator_view av, unsigned int
     _id(0), // will be set by add function.
     _flags(flags),
     _ctx(ctx),
-    _criticalData(av)
+    _criticalData(this, av)
 {
     unsigned schedBits = ctx->_ctxFlags & hipDeviceScheduleMask;
 
@@ -256,7 +256,6 @@ ihipStream_t::ihipStream_t(ihipCtx_t *ctx, hc::accelerator_view av, unsigned int
     };
 
 
-    tprintf(DB_SYNC, " streamCreate: stream=%s\n", ToString(this).c_str());
 };
 
 
@@ -271,7 +270,7 @@ ihipStream_t::~ihipStream_t()
 void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty)
 {
     if (! assertQueueEmpty) {
-        tprintf (DB_SYNC, "stream %s wait for queue-empty..\n", ToString(this).c_str());
+        tprintf (DB_SYNC, "%s wait for queue-empty..\n", ToString(this).c_str());
         hc::hcWaitMode waitMode = hc::hcWaitModeActive;
 
         if (_scheduleMode == Auto) {
@@ -406,21 +405,21 @@ void ihipStream_t::lockclose_postKernelCommand(const char * kernelName, hc::acce
 
 
 
-    //=============================================================================
-    // Recompute the peercnt and the packed _peerAgents whenever a peer is added or deleted.
-    // The packed _peerAgents can efficiently be used on each memory allocation.
-    template<>
-    void ihipCtxCriticalBase_t<CtxMutex>::recomputePeerAgents()
-    {
-        _peerCnt = 0;
-        std::for_each (_peers.begin(), _peers.end(), [this](ihipCtx_t* ctx) {
-            _peerAgents[_peerCnt++] = ctx->getDevice()->_hsaAgent;
-        });
-    }
+//=============================================================================
+// Recompute the peercnt and the packed _peerAgents whenever a peer is added or deleted.
+// The packed _peerAgents can efficiently be used on each memory allocation.
+template<>
+void ihipCtxCriticalBase_t<CtxMutex>::recomputePeerAgents()
+{
+    _peerCnt = 0;
+    std::for_each (_peers.begin(), _peers.end(), [this](ihipCtx_t* ctx) {
+        _peerAgents[_peerCnt++] = ctx->getDevice()->_hsaAgent;
+    });
+}
 
 
-    template<>
-    bool ihipCtxCriticalBase_t<CtxMutex>::isPeerWatcher(const ihipCtx_t *peer)
+template<>
+bool ihipCtxCriticalBase_t<CtxMutex>::isPeerWatcher(const ihipCtx_t *peer)
 {
     auto match = std::find(_peers.begin(), _peers.end(), peer);
     return (match != std::end(_peers));
@@ -489,6 +488,7 @@ void ihipCtxCriticalBase_t<CtxMutex>::addStream(ihipStream_t *stream)
 {
     stream->_id = _streams.size();
     _streams.push_back(stream);
+    tprintf(DB_SYNC, " addStream: %s\n", ToString(stream).c_str());
 }
 //=============================================================================
 
@@ -827,11 +827,11 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
 ihipCtx_t::ihipCtx_t(ihipDevice_t *device, unsigned deviceCnt, unsigned flags) :
     _ctxFlags(flags),
     _device(device),
-    _criticalData(deviceCnt)
+    _criticalData(this, deviceCnt)
 {
     locked_reset();
 
-    tprintf(DB_SYNC, "created ctx with defaultStream=%p\n", _defaultStream);
+    tprintf(DB_SYNC, "created ctx with defaultStream=%p (%s)\n", _defaultStream, ToString(_defaultStream).c_str());
 };
 
 
@@ -861,7 +861,7 @@ void ihipCtx_t::locked_reset()
     for (auto streamI=crit->const_streams().begin(); streamI!=crit->const_streams().end(); streamI++) {
         ihipStream_t *stream = *streamI;
         (*streamI)->locked_wait();
-        tprintf(DB_SYNC, " delete stream=%p\n", stream);
+        tprintf(DB_SYNC, " delete %s\n", ToString(stream).c_str());
 
         delete stream;
     }
@@ -905,15 +905,24 @@ ihipCtx_t::stealActiveQueue(LockedAccessor_CtxCrit_t &ctxCrit, ihipStream_t *nee
         for (auto iter=ctxCrit->streams().begin(); iter != ctxCrit->streams().end(); iter++) {
             if (*iter != needyStream) {
                 auto victimCritPtr = (*iter)->_criticalData.mtry_lock();
-                if (victimCritPtr && victimCritPtr->_hasQueue && (victimCritPtr->_kernelCnt == 0)) {
+                if (victimCritPtr)   {
+                    if (victimCritPtr->_hasQueue && (victimCritPtr->_kernelCnt == 0)) {
 
+                        victimCritPtr->_hasQueue = false;
 
-                    victimCritPtr->_hasQueue = false;
+                        tprintf(DB_SYNC, " stealActiveQueue from victim:%s to needy:%s\n",
+                                ToString(*iter).c_str(), ToString(needyStream).c_str());
 
-                    tprintf(DB_SYNC, " stealActiveQueue move queue from victim:%s to needy:%s\n",
-                            ToString(*iter).c_str(), ToString(needyStream).c_str());
+                        // TODO - cleanup to remove forced setting to N
+                        hc::accelerator_view  av = victimCritPtr->_av;
+                        uint64_t *p = (uint64_t*)(&victimCritPtr->_av);
+                        *p = 0; // damage the victim av so attempt to use it will fault.
 
-                    return victimCritPtr->_av;
+                        (*iter)->_criticalData.munlock(); 
+                        return av; 
+                    }  else {
+                        (*iter)->_criticalData.munlock(); 
+                    }
                 }
             }
         }
@@ -1415,7 +1424,7 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
     } else {
         // ALl streams have to wait for legacy default stream to be empty:
         if (!(stream->_flags & hipStreamNonBlocking))  {
-            tprintf(DB_SYNC, "stream %p wait default stream\n", stream);
+            tprintf(DB_SYNC, "%s wait default stream\n", ToString(stream).c_str());
             stream->getCtx()->_defaultStream->locked_wait();
         }
 
