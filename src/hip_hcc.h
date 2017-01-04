@@ -235,8 +235,7 @@ extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
 #define DB_SYNC   1 /* 0x02 - trace synchronization pieces */
 #define DB_MEM    2 /* 0x04 - trace memory allocation / deallocation */
 #define DB_COPY   3 /* 0x08 - trace memory copy and peer commands. . */
-#define DB_SIGNAL 4 /* 0x10 - trace signal pool commands */
-#define DB_MAX_FLAG 5
+#define DB_MAX_FLAG 4
 // When adding a new debug flag, also add to the char name table below.
 //
 
@@ -251,7 +250,6 @@ static const DbName dbName [] =
     {KYEL, "sync"},
     {KCYN, "mem"},
     {KMAG, "copy"},
-    {KRED, "signal"},
 };
 
 
@@ -366,6 +364,7 @@ struct LockedBase {
     // Most uses should use the lock-accessor.
     void lock() { _mutex.lock(); }
     void unlock() { _mutex.unlock(); }
+    bool try_lock() { return _mutex.try_lock(); }
 
     MUTEX_TYPE  _mutex;
 };
@@ -402,7 +401,8 @@ class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE>
 public:
     ihipStreamCriticalBase_t(hc::accelerator_view av) :
         _kernelCnt(0),
-        _av(av)
+        _av(av),
+        _hasQueue(true)
     {
     };
 
@@ -410,11 +410,20 @@ public:
     }
 
     ihipStreamCriticalBase_t<StreamMutex>  * mlock() { LockedBase<MUTEX_TYPE>::lock(); return this;};
+    ihipStreamCriticalBase_t<StreamMutex>  * mtry_lock() { 
+        return LockedBase<MUTEX_TYPE>::try_lock() ?  this: nullptr; 
+    };
 
 public:
-    // TODO - remove _kernelCnt mechanism:
     uint32_t                    _kernelCnt;    // Count of inflight kernels in this stream.  Reset at ::wait().
+
     hc::accelerator_view        _av;
+
+    // True if the stream has an allocated queue (accelerato_view) for its use:
+    // Always true at ihipStream creation but queue may later be stolen.
+    // This acts as a valid bit for the _av.
+    bool                        _hasQueue;
+private:
 };
 
 
@@ -422,6 +431,7 @@ public:
 // for the ihipCtx_t and then for the individual streams.  The locks should not be acquired in reverse order
 // or deadlock may occur.  In some cases, it may be possible to reduce the range where the locks must be held.
 // HIP routines should avoid acquiring and releasing the same lock during the execution of a single HIP API.
+// Another option is to use try_lock in the innermost lock query.
 
 
 typedef ihipStreamCriticalBase_t<StreamMutex> ihipStreamCritical_t;
@@ -436,6 +446,7 @@ public:
     enum ScheduleMode {Auto, Spin, Yield};
     typedef uint64_t SeqNum_t ;
 
+    // TODOD -make av a reference to avoid shared_ptr overhead?
     ihipStream_t(ihipCtx_t *ctx, hc::accelerator_view av, unsigned int flags);
     ~ihipStream_t();
 
@@ -499,10 +510,13 @@ private:
 
     bool canSeeMemory(const ihipCtx_t *thisCtx, const hc::AmPointerInfo *dstInfo, const hc::AmPointerInfo *srcInfo);
 
-
-private: // Data
+public: // TODO - move private
     // Critical Data - MUST be accessed through LockedAccessor_StreamCrit_t
     ihipStreamCritical_t        _criticalData;
+
+private: // Data
+
+    std::mutex                 _hasQueueLock;
 
     ihipCtx_t  *_ctx;  // parent context that owns this stream.
 
@@ -602,6 +616,7 @@ public:
     const std::list<ihipStream_t*> &const_streams() const { return _streams; };
 
 
+
     // Peer Accessor classes:
     bool isPeerWatcher(const ihipCtx_t *peer); // returns True if peer has access to memory physically located on this device.
     bool addPeerWatcher(const ihipCtx_t *thisCtx, ihipCtx_t *peer);
@@ -651,17 +666,22 @@ public: // Functions:
     ihipCtx_t(ihipDevice_t *device, unsigned deviceCnt, unsigned flags); // note: calls constructor for _criticalData
     ~ihipCtx_t();
 
-    // Functions which read or write the critical data are named locked_.
+    // Functions which read or write the critical data are named locked_. 
+    // (might be better called "locking_"
     // ihipCtx_t does not use recursive locks so the ihip implementation must avoid calling a locked_ function from within a locked_ function.
     // External functions which call several locked_ functions will acquire and release the lock for each function.  if this occurs in
     // performance-sensitive code we may want to refactor by adding non-locked functions and creating a new locked_ member function to call them all.
-    void locked_addStream(ihipStream_t *s);
     void locked_removeStream(ihipStream_t *s);
     void locked_reset();
     void locked_waitAllStreams();
     void locked_syncDefaultStream(bool waitOnSelf);
 
-    ihipCtxCritical_t  &criticalData() { return _criticalData; }; // TODO, move private.  Fix P2P.
+    // Will allocate a queue and assign it to the needyStream:
+    hc::accelerator_view  stealActiveQueue(LockedAccessor_CtxCrit_t &ctxCrit,
+                        ihipStream_t *needyStream);
+    hc::accelerator_view createOrStealQueue(LockedAccessor_CtxCrit_t &ctxCrit);
+
+    ihipCtxCritical_t  &criticalData() { return _criticalData; }; 
 
     const ihipDevice_t *getDevice() const { return _device; };
     int                 getDeviceNum() const { return _device->_deviceId; };
