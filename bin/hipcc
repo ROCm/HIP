@@ -193,7 +193,7 @@ my $needHipHcc = ($HIP_PLATFORM eq 'hcc');      # set if we need to link hip_hcc
 my $printHipVersion = 0;    # print HIP version
 my $runCmd = 1;
 my $buildDeps = 0;
-my $linkType = 0;
+my $linkType = 1;
 my $setLinkType = 0;
 
 my @options = ();
