@@ -292,6 +292,34 @@ extern "C" {
 const hipStream_t hipStreamNull = 0x0;
 
 
+/**
+ * HIP IPC Handle Size
+ */
+#define HIP_IPC_HANDLE_SIZE 64
+class ihipIpcMemHandle_t
+{
+public:
+#if USE_IPC
+    hsa_amd_ipc_memory_t ipc_handle; ///< ipc memory handle on ROCr
+#endif
+    char reserved[HIP_IPC_HANDLE_SIZE];
+    size_t psize;
+};
+
+
+class ihipModule_t {
+public:
+  hsa_executable_t executable;
+  hsa_code_object_t object;
+  std::string fileName;
+  void *ptr;
+  size_t size;
+
+  ihipModule_t() : executable(), object(), fileName(), ptr(nullptr), size(0) {}
+};
+
+
+//---
 // Used to remove lock, for performance or stimulating bugs.
 class FakeMutex
 {
@@ -330,21 +358,21 @@ public:
         _autoUnlock(autoUnlock)
 
     {
-        tprintf(DB_SYNC, "lock critical data %s.%p\n", typeid(T).name(), _criticalData);
+        tprintf(DB_SYNC, "lock criticalData=%p for %s\n", _criticalData, ToString(_criticalData->_parent).c_str());
         _criticalData->_mutex.lock();
     };
 
     ~LockedAccessor()
     {
         if (_autoUnlock) {
-        tprintf(DB_SYNC, "auto-unlock critical data %s.%p\n",typeid(T).name(),  _criticalData);
+        tprintf(DB_SYNC, "auto-unlock criticalData=%p for %s\n", _criticalData, ToString(_criticalData->_parent).c_str());
             _criticalData->_mutex.unlock();
         }
     }
 
     void unlock()
     {
-        tprintf(DB_SYNC, "unlock critical data %s.%p\n", typeid(T).name(), _criticalData);
+        tprintf(DB_SYNC, "unlock criticalData=%p for %s\n", _criticalData, ToString(_criticalData->_parent).c_str());
        _criticalData->_mutex.unlock();
     }
 
@@ -369,40 +397,16 @@ struct LockedBase {
     MUTEX_TYPE  _mutex;
 };
 
-/**
- * HIP IPC Handle Size
- */
-#define HIP_IPC_HANDLE_SIZE 64
-class ihipIpcMemHandle_t
-{
-public:
-#if USE_IPC
-    hsa_amd_ipc_memory_t ipc_handle; ///< ipc memory handle on ROCr
-#endif
-    char reserved[HIP_IPC_HANDLE_SIZE];
-    size_t psize;
-};
-
-
-class ihipModule_t {
-public:
-  hsa_executable_t executable;
-  hsa_code_object_t object;
-  std::string fileName;
-  void *ptr;
-  size_t size;
-
-  ihipModule_t() : executable(), object(), fileName(), ptr(nullptr), size(0) {}
-};
 
 template <typename MUTEX_TYPE>
 class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE>
 {
 public:
-    ihipStreamCriticalBase_t(hc::accelerator_view av) :
+    ihipStreamCriticalBase_t(ihipStream_t *parentStream, hc::accelerator_view av) :
         _kernelCnt(0),
         _av(av),
-        _hasQueue(true)
+        _hasQueue(true),
+        _parent(parentStream)
     {
     };
 
@@ -410,11 +414,20 @@ public:
     }
 
     ihipStreamCriticalBase_t<StreamMutex>  * mlock() { LockedBase<MUTEX_TYPE>::lock(); return this;};
+
+    void munlock() { 
+        tprintf(DB_SYNC, "munlock criticalData=%p for %s\n", this, ToString(this->_parent).c_str());
+        LockedBase<MUTEX_TYPE>::unlock(); 
+    };
+
     ihipStreamCriticalBase_t<StreamMutex>  * mtry_lock() { 
-        return LockedBase<MUTEX_TYPE>::try_lock() ?  this: nullptr; 
+        bool gotLock = LockedBase<MUTEX_TYPE>::try_lock() ;
+        tprintf(DB_SYNC, "mtry_lock=%d criticalData=%p for %s\n", gotLock, this, ToString(this->_parent).c_str());
+        return gotLock ?  this: nullptr; 
     };
 
 public:
+    ihipStream_t *              _parent;
     uint32_t                    _kernelCnt;    // Count of inflight kernels in this stream.  Reset at ::wait().
 
     hc::accelerator_view        _av;
@@ -596,8 +609,9 @@ template <typename MUTEX_TYPE>
 class ihipCtxCriticalBase_t : LockedBase<MUTEX_TYPE>
 {
 public:
-    ihipCtxCriticalBase_t(unsigned deviceCnt) :
-         _peerCnt(0)
+    ihipCtxCriticalBase_t(ihipCtx_t *parentCtx, unsigned deviceCnt) :
+        _parent(parentCtx),
+        _peerCnt(0)
     {
         _peerAgents = new hsa_agent_t[deviceCnt];
     };
@@ -633,6 +647,8 @@ public:
 
     friend class LockedAccessor<ihipCtxCriticalBase_t>;
 private:
+    ihipCtx_t     *              _parent;
+
     //--- Stream Tracker:
     std::list< ihipStream_t* > _streams;   // streams associated with this device.
 
@@ -739,7 +755,7 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t);
 // Stream printf functions:
 inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s)
 {
-    os << "stream#";
+    os << "stream:";
     os << s.getDevice()->_deviceId;;
     os << '.';
     os << s._id;
