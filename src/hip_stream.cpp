@@ -45,11 +45,15 @@ hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags)
         //Note this is an execute_in_order queue, so all kernels submitted will atuomatically wait for prev to complete:
         //This matches CUDA stream behavior:
 
-        auto istream = new ihipStream_t(ctx, acc.create_view(), flags);
+        {
+            // Obtain mutex access to the device critical data, release by destructor
+            LockedAccessor_CtxCrit_t  ctxCrit(ctx->criticalData());
+            auto istream = new ihipStream_t(ctx, ctx->createOrStealQueue(ctxCrit), flags);
 
-        ctx->locked_addStream(istream);
+            ctxCrit->addStream(istream);
+            *stream = istream;
+        }
 
-        *stream = istream;
         tprintf(DB_SYNC, "hipStreamCreate, stream=%p\n", *stream);
     } else {
         e = hipErrorInvalidDevice;

@@ -69,6 +69,8 @@ std::string HIP_LAUNCH_BLOCKING_KERNELS;
 std::vector<std::string> g_hipLaunchBlockingKernels;
 int HIP_API_BLOCKING = 0;
 
+int HIP_MAX_QUEUES = 0;
+
 int HIP_PRINT_ENV = 0;
 int HIP_TRACE_API= 0;
 std::string HIP_TRACE_API_COLOR("green");
@@ -254,7 +256,7 @@ ihipStream_t::ihipStream_t(ihipCtx_t *ctx, hc::accelerator_view av, unsigned int
     };
 
 
-    tprintf(DB_SYNC, " streamCreate: stream=%p\n", this);
+    tprintf(DB_SYNC, " streamCreate: stream=%s\n", ToString(this).c_str());
 };
 
 
@@ -269,7 +271,7 @@ ihipStream_t::~ihipStream_t()
 void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty)
 {
     if (! assertQueueEmpty) {
-        tprintf (DB_SYNC, "stream %p wait for queue-empty..\n", this);
+        tprintf (DB_SYNC, "stream %s wait for queue-empty..\n", ToString(this).c_str());
         hc::hcWaitMode waitMode = hc::hcWaitModeActive;
 
         if (_scheduleMode == Auto) {
@@ -353,6 +355,7 @@ ihipCtx_t * ihipStream_t::getCtx() const
 // Lock the stream to prevent other threads from intervening.
 LockedAccessor_StreamCrit_t ihipStream_t::lockopen_preKernelCommand()
 {
+
     LockedAccessor_StreamCrit_t crit(_criticalData, false/*no unlock at destruction*/);
 
     if(crit->_kernelCnt > HIP_NUM_KERNELS_INFLIGHT){
@@ -360,6 +363,17 @@ LockedAccessor_StreamCrit_t ihipStream_t::lockopen_preKernelCommand()
        crit->_kernelCnt = 0;
     }
     crit->_kernelCnt++;
+
+    if (HIP_MAX_QUEUES && !crit->_hasQueue)  {
+        // Obtain mutex access to the device critical data, release by destructor
+        LockedAccessor_CtxCrit_t  ctxCrit(this->_ctx->criticalData());
+        crit->_av = this->_ctx->stealActiveQueue(ctxCrit, this);
+        crit->_hasQueue = true;
+    }
+
+
+
+    assert(crit->_hasQueue);
 
     return crit;
 }
@@ -391,21 +405,22 @@ void ihipStream_t::lockclose_postKernelCommand(const char * kernelName, hc::acce
 };
 
 
-//=============================================================================
-// Recompute the peercnt and the packed _peerAgents whenever a peer is added or deleted.
-// The packed _peerAgents can efficiently be used on each memory allocation.
-template<>
-void ihipCtxCriticalBase_t<CtxMutex>::recomputePeerAgents()
-{
-    _peerCnt = 0;
-    std::for_each (_peers.begin(), _peers.end(), [this](ihipCtx_t* ctx) {
-        _peerAgents[_peerCnt++] = ctx->getDevice()->_hsaAgent;
-    });
-}
+
+    //=============================================================================
+    // Recompute the peercnt and the packed _peerAgents whenever a peer is added or deleted.
+    // The packed _peerAgents can efficiently be used on each memory allocation.
+    template<>
+    void ihipCtxCriticalBase_t<CtxMutex>::recomputePeerAgents()
+    {
+        _peerCnt = 0;
+        std::for_each (_peers.begin(), _peers.end(), [this](ihipCtx_t* ctx) {
+            _peerAgents[_peerCnt++] = ctx->getDevice()->_hsaAgent;
+        });
+    }
 
 
-template<>
-bool ihipCtxCriticalBase_t<CtxMutex>::isPeerWatcher(const ihipCtx_t *peer)
+    template<>
+    bool ihipCtxCriticalBase_t<CtxMutex>::isPeerWatcher(const ihipCtx_t *peer)
 {
     auto match = std::find(_peers.begin(), _peers.end(), peer);
     return (match != std::end(_peers));
@@ -880,6 +895,44 @@ std::string ihipCtx_t::toString() const
   return ss.str();
 };
 
+
+hc::accelerator_view 
+ihipCtx_t::stealActiveQueue(LockedAccessor_CtxCrit_t &ctxCrit, ihipStream_t *needyStream )
+{
+
+    // TODO - review handling if queue can't be found.
+    while (1) {
+        for (auto iter=ctxCrit->streams().begin(); iter != ctxCrit->streams().end(); iter++) {
+            if (*iter != needyStream) {
+                auto victimCritPtr = (*iter)->_criticalData.mtry_lock();
+                if (victimCritPtr && victimCritPtr->_hasQueue && (victimCritPtr->_kernelCnt == 0)) {
+
+
+                    victimCritPtr->_hasQueue = false;
+
+                    tprintf(DB_SYNC, " stealActiveQueue move queue from victim:%s to needy:%s\n",
+                            ToString(*iter).c_str(), ToString(needyStream).c_str());
+
+                    return victimCritPtr->_av;
+                }
+            }
+        }
+    }
+}
+
+
+hc::accelerator_view
+ihipCtx_t::createOrStealQueue(LockedAccessor_CtxCrit_t &ctxCrit)
+{
+    if (HIP_MAX_QUEUES && (ctxCrit->streams().size() >= HIP_MAX_QUEUES)) {
+        // Steal a queue from an existing stream:
+        return this->stealActiveQueue (ctxCrit, nullptr);
+    } else {
+        // Create a new view
+        return getWriteableDevice()->_acc.create_view();
+    }
+}
+
 //----
 
 
@@ -921,13 +974,6 @@ void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf)
     }
 }
 
-//---
-void ihipCtx_t::locked_addStream(ihipStream_t *s)
-{
-    LockedAccessor_CtxCrit_t  crit(_criticalData);
-
-    crit->addStream(s);
-}
 
 //---
 void ihipCtx_t::locked_removeStream(ihipStream_t *s)
@@ -1217,6 +1263,7 @@ void ihipInit()
     READ_ENV_I(release, HIP_API_BLOCKING, 0, "Make HIP APIs 'host-synchronous', so they block until completed.  Impacts hipMemcpyAsync, hipMemsetAsync." );
     
 
+    READ_ENV_I(release, HIP_MAX_QUEUES, 0, "Maximum number of queues that this app will use per-device.  Additional streams will share the specified number of queues.  0=no limit.");
 
     READ_ENV_C(release, HIP_DB, 0,  "Print debug info.  Bitmask (HIP_DB=0xff) or flags separated by '+' (HIP_DB=api+sync+mem+copy)", HIP_DB_callback);
     if ((HIP_DB & (1<<DB_API))  && (HIP_TRACE_API == 0)) {
