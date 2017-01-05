@@ -183,9 +183,11 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/hip_fp16.cpp
         src/device_functions.cpp)
 
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L${HCC_HOME}/lib -lmcwamp -Wl,-Bsymbolic")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L${HCC_HOME}/lib -lmcwamp -Wl,-Bsymbolic -Wl,-rpath ${HCC_HOME}/lib")
     add_library(hip_hcc SHARED ${SOURCE_FILES_RUNTIME})
+    target_link_libraries(hip_hcc c++ c++abi hc_am)
     add_library(hip_hcc_static STATIC ${SOURCE_FILES_RUNTIME})
+    target_link_libraries(hip_hcc_static c++ c++abi hc_am)
     add_dependencies(hip_hcc_static hip_hcc)
     add_library(hip_device STATIC ${SOURCE_FILES_DEVICE})
     add_dependencies(hip_device hip_hcc)
