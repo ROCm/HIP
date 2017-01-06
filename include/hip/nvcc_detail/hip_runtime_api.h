@@ -770,11 +770,6 @@ inline static hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
     return hipCUResultTohipError(cuDeviceGetName(name,len,device));
 }
 
-inline static hipError_t hipDeviceGetPCIBusId(char* pciBusId,int len,int device)
-{
-    return hipCUDAErrorTohipError(cudaDeviceGetPCIBusId(pciBusId,len,device));
-}
-
 inline static hipError_t hipDeviceGetPCIBusId(char* pciBusId,int len,hipDevice_t device)
 {
     return hipCUResultTohipError(cuDeviceGetPCIBusId(pciBusId,len,device));

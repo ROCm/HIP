@@ -193,7 +193,7 @@ my $needHipHcc = ($HIP_PLATFORM eq 'hcc');      # set if we need to link hip_hcc
 my $printHipVersion = 0;    # print HIP version
 my $runCmd = 1;
 my $buildDeps = 0;
-my $linkType = 0;
+my $linkType = 1;
 my $setLinkType = 0;
 
 my @options = ();
@@ -339,9 +339,9 @@ if ($setStdLib eq 0 and $HIP_PLATFORM eq 'hcc')
 
 if ($needHipHcc) {
     if ($linkType eq 0) {
-        substr($HIPLDFLAGS,0,0) = " -L$HIP_PATH/lib -lhip_hcc_static -lhip_device " ;
+        substr($HIPLDFLAGS,0,0) = " $HIP_PATH/lib/libhip_hcc_static.a $HIP_PATH/lib/libhip_device.a " ;
     } else {
-        substr($HIPLDFLAGS,0,0) = " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc -lhip_device ";
+        substr($HIPLDFLAGS,0,0) = " -Wl,--rpath=$HIP_PATH/lib $HIP_PATH/lib/libhip_hcc.so $HIP_PATH/lib/libhip_device.a ";
     }
 }
 
