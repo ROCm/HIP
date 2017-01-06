@@ -78,6 +78,9 @@ if(HIP_PLATFORM STREQUAL "hcc")
     add_to_config(_buildInfo HCC_VERSION)
     string(REPLACE "-" ";" HCC_VERSION_LIST ${HCC_VERSION})
     list(GET HCC_VERSION_LIST 0 HCC_PACKAGE_VERSION)
+    string(REPLACE "." ";" HCC_VERSION_LIST ${HCC_PACKAGE_VERSION})
+    list(GET HCC_VERSION_LIST 0 HCC_VERSION_MAJOR)
+    list(GET HCC_VERSION_LIST 1 HCC_VERSION_MINOR)
 
     # Determine HSA_PATH
     if(NOT DEFINED HSA_PATH)
@@ -180,9 +183,11 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/hip_fp16.cpp
         src/device_functions.cpp)
 
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L${HCC_HOME}/lib -lmcwamp -Wl,-Bsymbolic")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L${HCC_HOME}/lib -lmcwamp -Wl,-Bsymbolic -Wl,-rpath ${HCC_HOME}/lib")
     add_library(hip_hcc SHARED ${SOURCE_FILES_RUNTIME})
+    target_link_libraries(hip_hcc c++ c++abi hc_am)
     add_library(hip_hcc_static STATIC ${SOURCE_FILES_RUNTIME})
+    target_link_libraries(hip_hcc_static c++ c++abi hc_am)
     add_dependencies(hip_hcc_static hip_hcc)
     add_library(hip_device STATIC ${SOURCE_FILES_DEVICE})
     add_dependencies(hip_device hip_hcc)
@@ -269,7 +274,7 @@ add_custom_target(pkg_hip_hcc  COMMAND ${CMAKE_COMMAND} .
     COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
     COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
     WORKING_DIRECTORY ${BUILD_DIR}
-    DEPENDS hip_hcc)
+    DEPENDS hip_hcc hip_device hip_hcc_static)
 
 # Package: hip_nvcc
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_nvcc)

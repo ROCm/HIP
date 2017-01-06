@@ -52,6 +52,10 @@ THE SOFTWARE.
 #define USE_COPY_EXT_V2 1
 #endif
 
+#ifndef USE_ROCR_1_4
+#define USE_ROCR_1_4 1
+#endif
+
 //=================================================================================================
 //Global variables:
 //=================================================================================================
@@ -123,7 +127,7 @@ std::vector<ProfTrigger> g_dbStopTriggers;
 thread_local hipError_t tls_lastHipError = hipSuccess;
 
 
-thread_local ShortTid tls_shortTid;
+thread_local TidInfo tls_tidInfo;
 
 
 
@@ -133,8 +137,8 @@ thread_local ShortTid tls_shortTid;
 //=================================================================================================
 void recordApiTrace(std::string *fullStr, const std::string &apiStr)
 {
-    auto apiSeqNum = tls_shortTid.incApiSeqNum();
-    auto tid = tls_shortTid.tid();
+    auto apiSeqNum = tls_tidInfo.apiSeqNum();
+    auto tid = tls_tidInfo.tid();
 
     if ((tid < g_dbStartTriggers.size()) && (apiSeqNum >= g_dbStartTriggers[tid].nextTrigger())) {
         printf ("info: resume profiling at %lu\n", apiSeqNum);
@@ -214,7 +218,7 @@ hipError_t ihipSynchronize(void)
 //=================================================================================================
 // ihipStream_t:
 //=================================================================================================
-ShortTid::ShortTid()  :
+TidInfo::TidInfo()  :
     _apiSeqNum(0)
 {
     _shortTid = g_lastShortTid.fetch_add(1);
@@ -733,7 +737,11 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
 
     // Get Max Threads Per Multiprocessor
     uint32_t max_waves_per_cu;
+#if USE_ROCR_1_4
     err = hsa_agent_get_info(_hsaAgent,(hsa_agent_info_t) HSA_AMD_AGENT_INFO_MAX_WAVES_PER_CU, &max_waves_per_cu);
+#else
+    max_waves_per_cu = 10;
+#endif
     DeviceErrorCheck(err);
     prop-> maxThreadsPerMultiProcessor = prop->warpSize*max_waves_per_cu;
 
@@ -1373,7 +1381,7 @@ void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, c
         std::stringstream os_pre;
         std::stringstream os;
         os_pre  << "<<hip-api tid:";
-        os  << tls_shortTid.tid() << "." << tls_shortTid.incApiSeqNum()
+        os  << tls_tidInfo.tid() << "." << tls_tidInfo.apiSeqNum()
             << " hipLaunchKernel '" << kernelName << "'"
             << " gridDim:"  << lp->grid_dim
             << " groupDim:" << lp->group_dim
