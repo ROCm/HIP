@@ -813,6 +813,8 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
     if (stream) {
         auto crit = stream->lockopen_preKernelCommand();
 
+        stream->ensureHaveQueue(crit);
+
         hc::completion_future cf ;
 
         if ((sizeBytes & 0x3) == 0) {
@@ -863,6 +865,7 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
     if (stream) {
         auto crit = stream->lockopen_preKernelCommand();
 
+        stream->ensureHaveQueue(crit);
         hc::completion_future cf ;
 
         if ((sizeBytes & 0x3) == 0) {
