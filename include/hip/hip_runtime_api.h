@@ -181,6 +181,7 @@ typedef enum hipError_t {
     hipErrorSharedObjectSymbolNotFound = 302,
     hipErrorSharedObjectInitFailed  = 303,
     hipErrorOperatingSystem         = 304,
+    hipErrorSetOnActiveProcess      = 305,
     hipErrorInvalidHandle           = 400,
     hipErrorNotFound                = 500,
     hipErrorIllegalAddress          = 700,
