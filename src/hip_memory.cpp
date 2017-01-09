@@ -105,7 +105,7 @@ hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsi
 hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 {
     HIP_INIT_API(ptr, sizeBytes);
-
+    HIP_SET_DEVICE();
     hipError_t  hip_status = hipSuccess;
     // return NULL pointer when malloc size is 0
     if (sizeBytes == 0)
@@ -161,7 +161,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
     HIP_INIT_API(ptr, sizeBytes, flags);
-
+    HIP_SET_DEVICE();
     hipError_t hip_status = hipSuccess;
 
     auto ctx = ihipGetTlsDefaultCtx();
@@ -233,7 +233,7 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags)
 hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height)
 {
     HIP_INIT_API(ptr, pitch, width, height);
-
+    HIP_SET_DEVICE();
     hipError_t  hip_status = hipSuccess;
 
     if(width == 0 || height == 0)
@@ -285,7 +285,7 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
         size_t width, size_t height, unsigned int flags)
 {
     HIP_INIT_API(array, desc, width, height, flags);
-
+    HIP_SET_DEVICE();
     hipError_t  hip_status = hipSuccess;
 
     auto ctx = ihipGetTlsDefaultCtx();

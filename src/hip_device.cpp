@@ -175,6 +175,24 @@ hipError_t hipDeviceReset(void)
     return ihipLogStatus(hipSuccess);
 }
 
+hipError_t ihipDeviceSetState(void)
+{
+    hipError_t e = hipErrorInvalidContext;
+    auto *ctx = ihipGetTlsDefaultCtx();
+
+    if (ctx) {
+        ihipDevice_t *deviceHandle = ctx->getWriteableDevice();
+        if(deviceHandle->_state == 0)
+        {
+            deviceHandle->_state = 1;
+        }
+        e = hipSuccess;
+    }
+
+    return ihipLogStatus(e);
+}
+
+
 hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
 {
     hipError_t e = hipSuccess;
@@ -289,29 +307,35 @@ hipError_t hipSetDeviceFlags( unsigned int flags)
     // TODO : does this really OR in the flags or replaces previous flags:
     // TODO : Review error handling behavior for this function, it often returns ErrorSetOnActiveProcess
     if (ctx) {
-       ctx->_ctxFlags = ctx->_ctxFlags | flags;
-       if (flags & hipDeviceScheduleMask) {
-           switch (hipDeviceScheduleMask) {
-              case hipDeviceScheduleAuto:
-              case hipDeviceScheduleSpin:
-              case hipDeviceScheduleYield:
-              case hipDeviceScheduleBlockingSync:
-                   e = hipSuccess;
-                   break;
-               default:
-                   e = hipSuccess; // TODO - should this be error?  Map to Auto?
-                   //e = hipErrorInvalidValue;
-                   break;
+       auto *deviceHandle = ctx->getDevice();
+       if(deviceHandle->_state == 0)
+       {
+           ctx->_ctxFlags = ctx->_ctxFlags | flags;
+           if (flags & hipDeviceScheduleMask) {
+               switch (hipDeviceScheduleMask) {
+                  case hipDeviceScheduleAuto:
+                  case hipDeviceScheduleSpin:
+                  case hipDeviceScheduleYield:
+                  case hipDeviceScheduleBlockingSync:
+                       e = hipSuccess;
+                       break;
+                  default:
+                       e = hipSuccess; // TODO - should this be error?  Map to Auto?
+                       //e = hipErrorInvalidValue;
+                       break;
+               }
            }
-       }
 
-       unsigned supportedFlags = hipDeviceScheduleMask | hipDeviceMapHost | hipDeviceLmemResizeToMax;
+           unsigned supportedFlags = hipDeviceScheduleMask | hipDeviceMapHost | hipDeviceLmemResizeToMax;
 
-       if (flags & (~supportedFlags)) {
-          e = hipErrorInvalidValue;
-       }
-    } else {
-       e = hipErrorInvalidDevice;
+           if (flags & (~supportedFlags)) {
+              e = hipErrorInvalidValue;
+           }
+        } else {
+              e = hipErrorSetOnActiveProcess;
+        }
+        } else {
+           e = hipErrorInvalidDevice;
     }
 
     return ihipLogStatus(e);

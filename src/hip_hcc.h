@@ -204,7 +204,8 @@ extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
 #define HIP_INIT()\
 	std::call_once(hip_initialized, ihipInit);\
     ihipCtxStackUpdate();
-
+#define HIP_SET_DEVICE()\
+    ihipDeviceSetState();
 
 // This macro should be called at the beginning of every HIP API.
 // It initialies the hip runtime (exactly once), and
@@ -566,6 +567,8 @@ public:
 
     ihipCtx_t               *_primaryCtx;
 
+    int                      _state; //1 if device is set otherwise 0
+
 private:
     hipError_t initProperties(hipDeviceProp_t* prop);
 };
@@ -703,6 +706,7 @@ extern ihipCtx_t    *ihipGetTlsDefaultCtx();
 extern void          ihipSetTlsDefaultCtx(ihipCtx_t *ctx);
 extern hipError_t    ihipSynchronize(void);
 extern void          ihipCtxStackUpdate();
+extern hipError_t    ihipDeviceSetState();
 
 extern ihipDevice_t *ihipGetDevice(int);
 ihipCtx_t * ihipGetPrimaryCtx(unsigned deviceIndex);

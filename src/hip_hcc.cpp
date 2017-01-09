@@ -482,7 +482,8 @@ void ihipCtxCriticalBase_t<CtxMutex>::addStream(ihipStream_t *stream)
 //=================================================================================================
 ihipDevice_t::ihipDevice_t(unsigned deviceId, unsigned deviceCnt, hc::accelerator &acc) :
     _deviceId(deviceId),
-    _acc(acc)
+    _acc(acc),
+    _state(0)
 {
     hsa_agent_t *agent = static_cast<hsa_agent_t*> (acc.get_hsa_agent());
     if (agent) {
@@ -865,6 +866,7 @@ void ihipCtx_t::locked_reset()
     // Reset will remove peer mapping so don't need to do this explicitly.
     // FIXME - This is clearly a non-const action!  Is this a context reset or a device reset - maybe should reference count?
     ihipDevice_t *device = getWriteableDevice();
+    device->_state = 0;
     am_memtracker_reset(device->_acc);
 
 };
@@ -1553,6 +1555,7 @@ const char *ihipErrorString(hipError_t hip_error)
         case hipErrorSharedObjectSymbolNotFound : return "hipErrorSharedObjectSymbolNotFound";
         case hipErrorSharedObjectInitFailed     : return "hipErrorSharedObjectInitFailed";
         case hipErrorOperatingSystem            : return "hipErrorOperatingSystem";
+        case hipErrorSetOnActiveProcess         : return "hipErrorSetOnActiveProcess";
         case hipErrorInvalidHandle              : return "hipErrorInvalidHandle";
         case hipErrorNotFound                   : return "hipErrorNotFound";
         case hipErrorIllegalAddress             : return "hipErrorIllegalAddress";
