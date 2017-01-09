@@ -358,21 +358,21 @@ public:
         _autoUnlock(autoUnlock)
 
     {
-        tprintf(DB_SYNC, "lock criticalData=%p for %s\n", _criticalData, ToString(_criticalData->_parent).c_str());
+        tprintf(DB_SYNC, "locking criticalData=%p for %s..\n", _criticalData, ToString(_criticalData->_parent).c_str());
         _criticalData->_mutex.lock();
     };
 
     ~LockedAccessor()
     {
         if (_autoUnlock) {
-        tprintf(DB_SYNC, "auto-unlock criticalData=%p for %s\n", _criticalData, ToString(_criticalData->_parent).c_str());
+        tprintf(DB_SYNC, "auto-unlocking criticalData=%p for %s...\n", _criticalData, ToString(_criticalData->_parent).c_str());
             _criticalData->_mutex.unlock();
         }
     }
 
     void unlock()
     {
-        tprintf(DB_SYNC, "unlock criticalData=%p for %s\n", _criticalData, ToString(_criticalData->_parent).c_str());
+        tprintf(DB_SYNC, "unlocking criticalData=%p for %s...\n", _criticalData, ToString(_criticalData->_parent).c_str());
        _criticalData->_mutex.unlock();
     }
 
@@ -416,13 +416,13 @@ public:
     ihipStreamCriticalBase_t<StreamMutex>  * mlock() { LockedBase<MUTEX_TYPE>::lock(); return this;};
 
     void munlock() { 
-        tprintf(DB_SYNC, "munlock criticalData=%p for %s\n", this, ToString(this->_parent).c_str());
+        tprintf(DB_SYNC, "munlocking criticalData=%p for %s...\n", this, ToString(this->_parent).c_str());
         LockedBase<MUTEX_TYPE>::unlock(); 
     };
 
     ihipStreamCriticalBase_t<StreamMutex>  * mtry_lock() { 
         bool gotLock = LockedBase<MUTEX_TYPE>::try_lock() ;
-        tprintf(DB_SYNC, "mtry_lock=%d criticalData=%p for %s\n", gotLock, this, ToString(this->_parent).c_str());
+        tprintf(DB_SYNC, "mtry_locking=%d criticalData=%p for %s...\n", gotLock, this, ToString(this->_parent).c_str());
         return gotLock ?  this: nullptr; 
     };
 
@@ -476,7 +476,7 @@ public:
     void                 lockclose_postKernelCommand(const char *kernelName, hc::accelerator_view *av);
 
 
-    void                 locked_wait(bool assertQueueEmpty=false);
+    void                 locked_wait();
 
     hc::accelerator_view* locked_getAv() { LockedAccessor_StreamCrit_t crit(_criticalData); return &(crit->_av); };
 
@@ -487,7 +487,7 @@ public:
     //---
 
     // Use this if we already have the stream critical data mutex:
-    void                 wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty=false);
+    void                 wait(LockedAccessor_StreamCrit_t &crit);
 
     void launchModuleKernel(hc::accelerator_view av, hsa_signal_t signal,
                             uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
@@ -502,6 +502,7 @@ public:
     const ihipDevice_t *     getDevice() const;
     ihipCtx_t *              getCtx() const;
 
+    void ensureHaveQueue(LockedAccessor_StreamCrit_t &streamCrit);
 
 public:
     //---
@@ -693,8 +694,7 @@ public: // Functions:
     void locked_syncDefaultStream(bool waitOnSelf);
 
     // Will allocate a queue and assign it to the needyStream:
-    hc::accelerator_view  stealActiveQueue(LockedAccessor_CtxCrit_t &ctxCrit,
-                        ihipStream_t *needyStream);
+    hc::accelerator_view  stealActiveQueue(LockedAccessor_CtxCrit_t &ctxCrit, ihipStream_t *needyStream);
     hc::accelerator_view createOrStealQueue(LockedAccessor_CtxCrit_t &ctxCrit);
 
     ihipCtxCritical_t  &criticalData() { return _criticalData; }; 

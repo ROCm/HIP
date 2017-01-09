@@ -48,6 +48,7 @@ hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags)
         {
             // Obtain mutex access to the device critical data, release by destructor
             LockedAccessor_CtxCrit_t  ctxCrit(ctx->criticalData());
+
             auto istream = new ihipStream_t(ctx, ctx->createOrStealQueue(ctxCrit), flags);
 
             ctxCrit->addStream(istream);
@@ -124,8 +125,14 @@ hipError_t hipStreamQuery(hipStream_t stream)
         stream =  device->_defaultStream;
     }
 
-    LockedAccessor_StreamCrit_t crit(stream->_criticalData);
-    int pendingOps = crit->_av.get_pending_async_ops();
+    int pendingOps = 0;
+
+    {
+        LockedAccessor_StreamCrit_t crit(stream->_criticalData);
+        if (crit->_hasQueue) {
+            pendingOps = crit->_av.get_pending_async_ops();
+        }
+    }
 
 
     hipError_t e = (pendingOps > 0) ? hipErrorNotReady : hipSuccess;
