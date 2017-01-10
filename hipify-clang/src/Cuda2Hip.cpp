@@ -585,6 +585,35 @@ struct cuda2hipMap {
     cuda2hipRename["cuProfilerStop"]                            = {"hipProfilerStop", CONV_OTHER, API_DRIVER};
 
     /////////////////////////////// CUDA RT API ///////////////////////////////
+    // Data types
+    // unsupported yet by HIP [CUDA 8.0.44]
+    cuda2hipRename["cudaDataType_t"]              = {"hipDataType_t", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaDataType"]                = {"hipDataType_t", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_R_16F"]                  = {"hipR16F", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_C_16F"]                  = {"hipC16F", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_R_32F"]                  = {"hipR32F", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_C_32F"]                  = {"hipC32F", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_R_64F"]                  = {"hipR64F", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_C_64F"]                  = {"hipC64F", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_R_8I"]                   = {"hipR8I", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_C_8I"]                   = {"hipC8I", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_R_8U"]                   = {"hipR8U", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_C_8U"]                   = {"hipC8U", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_R_32I"]                  = {"hipR32I", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_C_32I"]                  = {"hipC32I", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_R_32U"]                  = {"hipR32U", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_C_32U"]                  = {"hipC32U", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+
+    // Library property types
+    // IMPORTANT: no cuda prefix
+    // TO_DO: new matcher is needed
+    // unsupported yet by HIP [CUDA 8.0.44]
+    cuda2hipRename["libraryPropertyType_t"]       = {"hipLibraryPropertyType_t", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["libraryPropertyType"]         = {"hipLibraryPropertyType_t", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["MAJOR_VERSION"]               = {"hipLibraryMajorVersion", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["MINOR_VERSION"]               = {"hipLibraryMinorVersion", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["PATCH_LEVEL"]                 = {"hipLibraryPatchVersion", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+
     // Error API
     cuda2hipRename["cudaGetLastError"]               = {"hipGetLastError", CONV_ERR, API_RUNTIME};
     cuda2hipRename["cudaPeekAtLastError"]            = {"hipPeekAtLastError", CONV_ERR, API_RUNTIME};
