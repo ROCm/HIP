@@ -33,7 +33,7 @@ void createThenDestroyStreams(int iterations, int burstSize)
         }
     }
 
-    delete streams;
+    delete[] streams;
 }
 
 
