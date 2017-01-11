@@ -46,6 +46,7 @@ THE SOFTWARE.
 #define CUDA_SUCCESS hipSuccess
 
 #include <hip/hip_runtime_api.h>
+
 //#include "hip/hcc_detail/hip_hcc.h"
 //---
 // Remainder of this file only compiles with HCC
@@ -815,9 +816,6 @@ extern "C" __device__ void* __hip_hc_free(void *ptr);
 //extern "C" __device__ void* malloc(size_t size);
 //extern "C" __device__ void* free(void *ptr);
 
-extern "C" __device__ char4 __hip_hc_add8pk(char4, char4);
-extern "C" __device__ char4 __hip_hc_sub8pk(char4, char4);
-extern "C" __device__ char4 __hip_hc_mul8pk(char4, char4);
 
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
 
