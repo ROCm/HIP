@@ -1131,14 +1131,14 @@ struct longlong4 {
 } __attribute__((aligned(32)));
 
 #define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
-__device__ __host__ inline type make_##type(comp x) { \
+__device__ __host__ static inline type make_##type(comp x) { \
   type ret; \
   ret.x = x; \
   return ret; \
 }
 
 #define DECLOP_MAKE_TWO_COMPONENT(comp, type) \
-__device__ __host__ inline type make_##type(comp x, comp y) { \
+__device__ __host__ static inline type make_##type(comp x, comp y) { \
   type ret; \
   ret.x = x; \
   ret.y = y; \
@@ -1146,7 +1146,7 @@ __device__ __host__ inline type make_##type(comp x, comp y) { \
 }
 
 #define DECLOP_MAKE_THREE_COMPONENT(comp, type) \
-__device__ __host__ inline type make_##type(comp x, comp y, comp z) { \
+__device__ __host__ static inline type make_##type(comp x, comp y, comp z) { \
   type ret; \
   ret.x = x; \
   ret.y = y; \
@@ -1155,7 +1155,7 @@ __device__ __host__ inline type make_##type(comp x, comp y, comp z) { \
 }
 
 #define DECLOP_MAKE_FOUR_COMPONENT(comp, type) \
-__device__ __host__ inline type make_##type(comp x, comp y, comp z, comp w) { \
+__device__ __host__ static inline type make_##type(comp x, comp y, comp z, comp w) { \
   type ret; \
   ret.x = x; \
   ret.y = y; \
@@ -1228,39 +1228,39 @@ DECLOP_MAKE_FOUR_COMPONENT(signed long, longlong4);
 #if __cplusplus
 
 #define DECLOP_1VAR_2IN_1OUT(type, op) \
-__device__ __host__ type operator op (const type& lhs, const type& rhs) { \
+__device__ __host__ static type operator op (const type& lhs, const type& rhs) { \
   type ret; \
   ret.x = lhs.x op rhs.x; \
   return ret; \
 }
 
 #define DECLOP_1VAR_SCALE_PRODUCT(type, type1) \
-__device__ __host__ type operator * (const type& lhs, type1 rhs) { \
+__device__ __host__ static type operator * (const type& lhs, type1 rhs) { \
   type ret; \
   ret.x = lhs.x * rhs; \
   return ret; \
 } \
 \
-__device__ __host__ type operator * (type1 lhs, const type& rhs) { \
+__device__ __host__ static type operator * (type1 lhs, const type& rhs) { \
   type ret; \
   ret.x = lhs * rhs.x; \
   return ret; \
 }
 
 #define DECLOP_1VAR_ASSIGN(type, op) \
-__device__ __host__ inline type& operator op ( type& lhs, const type& rhs) { \
+__device__ __host__ static inline type& operator op ( type& lhs, const type& rhs) { \
   lhs.x op rhs.x; \
   return lhs; \
 }
 
 #define DECLOP_1VAR_PREOP(type, op) \
-__device__ __host__ inline type& operator op (type& val) { \
+__device__ __host__ static inline type& operator op (type& val) { \
   op val.x; \
   return val; \
 }
 
 #define DECLOP_1VAR_POSTOP(type, op) \
-__device__ __host__ type operator op (type& val, int i) { \
+__device__ __host__ static type operator op (type& val, int i) { \
   type ret; \
   ret.x = val.x; \
   val.x op; \
@@ -1268,19 +1268,19 @@ __device__ __host__ type operator op (type& val, int i) { \
 }
 
 #define DECLOP_1VAR_COMP(type, op) \
-__device__ __host__ inline bool operator op (type& lhs, type& rhs) { \
+__device__ __host__ static inline bool operator op (type& lhs, type& rhs) { \
   return lhs.x op rhs.x; \
 }
 
 #define DECLOP_1VAR_1IN_1OUT(type, op) \
-__device__ __host__ type operator op(type& rhs) { \
+__device__ __host__ static type operator op(type& rhs) { \
   type ret; \
   ret.x = op rhs.x; \
   return ret; \
 }
 
 #define DECLOP_1VAR_1IN_BOOLOUT(type, op) \
-__device__ __host__ inline bool operator op (type& rhs) { \
+__device__ __host__ static inline bool operator op (type& rhs) { \
   return op rhs.x; \
 }
 
@@ -1289,7 +1289,7 @@ __device__ __host__ inline bool operator op (type& rhs) { \
 */
 
 #define DECLOP_2VAR_2IN_1OUT(type, op) \
-__device__ __host__ type operator op (const type& lhs, const type& rhs) { \
+__device__ __host__ static type operator op (const type& lhs, const type& rhs) { \
   type ret; \
   ret.x = lhs.x op rhs.x; \
   ret.y = lhs.y op rhs.y; \
@@ -1297,14 +1297,14 @@ __device__ __host__ type operator op (const type& lhs, const type& rhs) { \
 }
 
 #define DECLOP_2VAR_SCALE_PRODUCT(type, type1) \
-__device__ __host__ type operator * (const type& lhs, type1 rhs) { \
+__device__ __host__ static type operator * (const type& lhs, type1 rhs) { \
   type ret; \
   ret.x = lhs.x * rhs; \
   ret.y = lhs.y * rhs; \
   return ret; \
 } \
 \
-__device__ __host__ type operator * (type1 lhs, const type& rhs) { \
+__device__ __host__ static type operator * (type1 lhs, const type& rhs) { \
   type ret; \
   ret.x = lhs * rhs.x; \
   ret.y = lhs * rhs.y; \
@@ -1312,21 +1312,21 @@ __device__ __host__ type operator * (type1 lhs, const type& rhs) { \
 }
 
 #define DECLOP_2VAR_ASSIGN(type, op) \
-__device__ __host__ inline type& operator op ( type& lhs, const type& rhs) { \
+__device__ __host__ static inline type& operator op ( type& lhs, const type& rhs) { \
   lhs.x op rhs.x; \
   lhs.y op rhs.y; \
   return lhs; \
 }
 
 #define DECLOP_2VAR_PREOP(type, op) \
-__device__ __host__ inline type& operator op (type& val) { \
+__device__ __host__ static inline type& operator op (type& val) { \
   op val.x; \
   op val.y; \
   return val; \
 }
 
 #define DECLOP_2VAR_POSTOP(type, op) \
-__device__ __host__ type operator op (type& val, int i) { \
+__device__ __host__ static type operator op (type& val, int i) { \
   type ret; \
   ret.x = val.x; \
   ret.y = val.y; \
@@ -1336,12 +1336,12 @@ __device__ __host__ type operator op (type& val, int i) { \
 }
 
 #define DECLOP_2VAR_COMP(type, op) \
-__device__ __host__ inline bool operator op (type& lhs, type& rhs) { \
+__device__ __host__ static inline bool operator op (type& lhs, type& rhs) { \
   return lhs.x op rhs.x && lhs.y op rhs.y; \
 }
 
 #define DECLOP_2VAR_1IN_1OUT(type, op) \
-__device__ __host__ type operator op(type &rhs) { \
+__device__ __host__ static type operator op(type &rhs) { \
   type ret; \
   ret.x = op rhs.x; \
   ret.y = op rhs.y; \
@@ -1349,7 +1349,7 @@ __device__ __host__ type operator op(type &rhs) { \
 }
 
 #define DECLOP_2VAR_1IN_BOOLOUT(type, op) \
-__device__ __host__ inline bool operator op (type &rhs) { \
+__device__ __host__ static inline bool operator op (type &rhs) { \
   return op rhs.x && op rhs.y; \
 }
 
@@ -1359,7 +1359,7 @@ __device__ __host__ inline bool operator op (type &rhs) { \
 */
 
 #define DECLOP_3VAR_2IN_1OUT(type, op) \
-__device__ __host__ type operator op (const type& lhs, const type& rhs) { \
+__device__ __host__ static type operator op (const type& lhs, const type& rhs) { \
   type ret; \
   ret.x = lhs.x op rhs.x; \
   ret.y = lhs.y op rhs.y; \
@@ -1368,7 +1368,7 @@ __device__ __host__ type operator op (const type& lhs, const type& rhs) { \
 }
 
 #define DECLOP_3VAR_SCALE_PRODUCT(type, type1) \
-__device__ __host__ type operator * (const type& lhs, type1 rhs) { \
+__device__ __host__ static type operator * (const type& lhs, type1 rhs) { \
   type ret; \
   ret.x = lhs.x * rhs; \
   ret.y = lhs.y * rhs; \
@@ -1376,7 +1376,7 @@ __device__ __host__ type operator * (const type& lhs, type1 rhs) { \
   return ret; \
 } \
 \
-__device__ __host__ type operator * (type1 lhs, const type& rhs) { \
+__device__ __host__ static type operator * (type1 lhs, const type& rhs) { \
   type ret; \
   ret.x = lhs * rhs.x; \
   ret.y = lhs * rhs.y; \
@@ -1385,7 +1385,7 @@ __device__ __host__ type operator * (type1 lhs, const type& rhs) { \
 }
 
 #define DECLOP_3VAR_ASSIGN(type, op) \
-__device__ __host__ inline type& operator op ( type& lhs, const type& rhs) { \
+__device__ __host__ static inline type& operator op ( type& lhs, const type& rhs) { \
   lhs.x op rhs.x; \
   lhs.y op rhs.y; \
   lhs.z op rhs.z; \
@@ -1393,7 +1393,7 @@ __device__ __host__ inline type& operator op ( type& lhs, const type& rhs) { \
 }
 
 #define DECLOP_3VAR_PREOP(type, op) \
-__device__ __host__ inline type& operator op (type& val) { \
+__device__ __host__ static inline type& operator op (type& val) { \
   op val.x; \
   op val.y; \
   op val.z; \
@@ -1401,7 +1401,7 @@ __device__ __host__ inline type& operator op (type& val) { \
 }
 
 #define DECLOP_3VAR_POSTOP(type, op) \
-__device__ __host__ type operator op (type& val, int i) { \
+__device__ __host__ static type operator op (type& val, int i) { \
   type ret; \
   ret.x = val.x; \
   ret.y = val.y; \
@@ -1413,12 +1413,12 @@ __device__ __host__ type operator op (type& val, int i) { \
 }
 
 #define DECLOP_3VAR_COMP(type, op) \
-__device__ __host__ inline bool operator op (type& lhs, type& rhs) { \
+__device__ __host__ static inline bool operator op (type& lhs, type& rhs) { \
   return lhs.x op rhs.x && lhs.y op rhs.y && lhs.z op rhs.z; \
 }
 
 #define DECLOP_3VAR_1IN_1OUT(type, op) \
-__device__ __host__ type operator op(type &rhs) { \
+__device__ __host__ static type operator op(type &rhs) { \
   type ret; \
   ret.x = op rhs.x; \
   ret.y = op rhs.y; \
@@ -1427,7 +1427,7 @@ __device__ __host__ type operator op(type &rhs) { \
 }
 
 #define DECLOP_3VAR_1IN_BOOLOUT(type, op) \
-__device__ __host__ inline bool operator op (type &rhs) { \
+__device__ __host__ static inline bool operator op (type &rhs) { \
   return op rhs.x && op rhs.y && op rhs.z; \
 }
 
@@ -1437,7 +1437,7 @@ __device__ __host__ inline bool operator op (type &rhs) { \
 */
 
 #define DECLOP_4VAR_2IN_1OUT(type, op) \
-__device__ __host__ type operator op ( const type& lhs, const type& rhs) { \
+__device__ __host__ static type operator op ( const type& lhs, const type& rhs) { \
   type ret; \
   ret.x = lhs.x op rhs.x; \
   ret.y = lhs.y op rhs.y; \
@@ -1447,7 +1447,7 @@ __device__ __host__ type operator op ( const type& lhs, const type& rhs) { \
 }
 
 #define DECLOP_4VAR_SCALE_PRODUCT(type, type1) \
-__device__ __host__ type operator * (const type& lhs, type1 rhs) { \
+__device__ __host__ static type operator * (const type& lhs, type1 rhs) { \
   type ret; \
   ret.x = lhs.x * rhs; \
   ret.y = lhs.y * rhs; \
@@ -1456,7 +1456,7 @@ __device__ __host__ type operator * (const type& lhs, type1 rhs) { \
   return ret; \
 } \
 \
-__device__ __host__ type operator * (type1 lhs, const type& rhs) { \
+__device__ __host__ static type operator * (type1 lhs, const type& rhs) { \
   type ret; \
   ret.x = lhs * rhs.x; \
   ret.y = lhs * rhs.y; \
@@ -1466,7 +1466,7 @@ __device__ __host__ type operator * (type1 lhs, const type& rhs) { \
 }
 
 #define DECLOP_4VAR_ASSIGN(type, op) \
-__device__ __host__ inline type& operator op ( type& lhs, const type& rhs) { \
+__device__ __host__ static inline type& operator op ( type& lhs, const type& rhs) { \
   lhs.x op rhs.x; \
   lhs.y op rhs.y; \
   lhs.z op rhs.z; \
@@ -1475,7 +1475,7 @@ __device__ __host__ inline type& operator op ( type& lhs, const type& rhs) { \
 }
 
 #define DECLOP_4VAR_PREOP(type, op) \
-__device__ __host__ inline type& operator op (type& val) { \
+__device__ __host__ static inline type& operator op (type& val) { \
   op val.x; \
   op val.y; \
   op val.z; \
@@ -1484,7 +1484,7 @@ __device__ __host__ inline type& operator op (type& val) { \
 }
 
 #define DECLOP_4VAR_POSTOP(type, op) \
-__device__ __host__ type operator op (type& val, int i) { \
+__device__ __host__ static type operator op (type& val, int i) { \
   type ret; \
   ret.x = val.x; \
   ret.y = val.y; \
@@ -1498,12 +1498,12 @@ __device__ __host__ type operator op (type& val, int i) { \
 }
 
 #define DECLOP_4VAR_COMP(type, op) \
-__device__ __host__ inline bool operator op (type& lhs, type& rhs) { \
+__device__ __host__ static inline bool operator op (type& lhs, type& rhs) { \
   return lhs.x op rhs.x && lhs.y op rhs.y && lhs.z op rhs.z && lhs.w op rhs.w; \
 }
 
 #define DECLOP_4VAR_1IN_1OUT(type, op) \
-__device__ __host__ type operator op(type &rhs) { \
+__device__ __host__ static type operator op(type &rhs) { \
   type ret; \
   ret.x = op rhs.x; \
   ret.y = op rhs.y; \
@@ -1513,7 +1513,7 @@ __device__ __host__ type operator op(type &rhs) { \
 }
 
 #define DECLOP_4VAR_1IN_BOOLOUT(type, op) \
-__device__ __host__ inline bool operator op (type &rhs) { \
+__device__ __host__ static inline bool operator op (type &rhs) { \
   return op rhs.x && op rhs.y && op rhs.z && op rhs.w; \
 }
 
