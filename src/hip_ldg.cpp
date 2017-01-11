@@ -20,23 +20,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <hc.hpp>
-
 #include "hip/hcc_detail/hip_ldg.h"
+#include "hip/hcc_detail/hip_vector_types.h"
 
 __device__ char                 __ldg(const char* ptr)
 {
-    return ptr[0];
+    return *ptr;
 }
 
 __device__ char2                __ldg(const char2* ptr)
 {
-    return ptr[0];
+    return *ptr;
 }
 
 __device__ char4                __ldg(const char4* ptr)
 {
-    return ptr[0];
+    return *ptr;
 }
 
 __device__ signed char          __ldg(const signed char* ptr)
@@ -169,6 +168,3 @@ __device__ double2              __ldg(const double2* ptr)
 {
     return ptr[0];
 }
-
-
-

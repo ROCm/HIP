@@ -25,8 +25,8 @@ THE SOFTWARE.
 
 #if __HCC__
 #if __hcc_workweek__ >= 16164
-#include "hip/hip_vector_types.h"
-#include "hip/hcc_detail/host_defines.h"
+#include "hip_vector_types.h"
+#include "host_defines.h"
 
 
 __device__ char                 __ldg(const char* );
@@ -75,4 +75,3 @@ __device__ double2              __ldg(const double2* );
 #endif  // __HCC__
 
 #endif  // HIP_LDG_H
-
