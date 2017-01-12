@@ -49,13 +49,6 @@ THE SOFTWARE.
 #define hNeg1    0xBC00
 #define hNeg1PK 0xBC00BC00
 
-struct holder{
-union{
-  __half a;
-  unsigned short b;
-};
-};
-
 __global__ void CheckHalf(hipLaunchParm lp, __half* In1, __half* In2, __half* In3, __half* Out){
   Out[0] = __hadd(In1[0], In2[0]);
   Out[1] = __hadd_sat(In1[1], In2[1]);
@@ -80,6 +73,17 @@ __global__ void CheckHalf2(hipLaunchParm lp, __half2* In1, __half2* In2, __half2
   Out[7] = __hsub2(In1[7], In2[7]);
   Out[8] = __hsub2_sat(In1[8], In2[8]);
   Out[9] = h2div(In1[9], In2[9]);
+}
+
+__global__ void CheckCmpHalf(hipLaunchParm lp, __half* In1, __half* In2, bool* Out) {
+  Out[0] = __heq(In1[0], In2[0]);
+  Out[1] = __hge(In1[1], In2[1]);
+  Out[2] = __hgt(In1[2], In2[2]);
+  Out[3] = __hisinf(In1[3]);
+  Out[4] = __hisnan(In1[4]);
+  Out[5] = __hle(In1[5], In2[5]);
+  Out[6] = __hlt(In1[6], In2[6]);
+  Out[7] = __hne(In1[7], In2[7]);
 }
 
 int main(){
