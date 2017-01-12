@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@ THE SOFTWARE.
 // Common code included at start of every hip file.
 // Auto enable __HIP_PLATFORM_HCC__ if compiling with HCC
 // Other compiler (GCC,ICC,etc) need to set one of these macros explicitly
-#if defined(__HCC__) 
+#if defined(__HCC__)
 #define __HIP_PLATFORM_HCC__
 #define __HIPCC__
 
@@ -37,7 +37,7 @@ THE SOFTWARE.
 #endif
 
 // Auto enable __HIP_PLATFORM_NVCC__ if compiling with NVCC
-#if defined(__NVCC__) 
+#if defined(__NVCC__)
 #define __HIP_PLATFORM_NVCC__
 # ifdef __CUDACC__
 # define __HIPCC__
