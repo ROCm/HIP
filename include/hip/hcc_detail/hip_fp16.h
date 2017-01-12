@@ -36,6 +36,17 @@ typedef struct __attribute__((aligned(4))){
   };
 } __half2;
 
+struct holder{
+  union {
+    __half h;
+    unsigned short s;
+  };
+};
+
+#define HINF 65504
+
+static struct holder hInf = {HINF};
+
 extern "C" __half __hip_hc_ir_hadd_half(__half, __half);
 extern "C" __half __hip_hc_ir_hfma_half(__half, __half, __half);
 extern "C" __half __hip_hc_ir_hmul_half(__half, __half);
@@ -150,6 +161,70 @@ __device__ static inline __half2 h2div(__half2 a, __half2 b) {
   c.p[0] = a.p[0] / b.p[0];
   c.p[1] = a.p[1] / b.p[1];
   return c;
+}
+
+/*
+Half comparision Functions
+*/
+
+__device__ static inline bool __heq(__half a, __half b) {
+  return a == b ? true : false;
+}
+
+__device__ static inline bool __hge(__half a, __half b) {
+  return a >= b ? true : false;
+}
+
+__device__ static inline bool __hgt(__half a, __half b) {
+  return a > b ? true : false;
+}
+
+__device__ static inline bool __hisinf(__half a) {
+  return a == hInf.s ? true : false;
+}
+
+__device__ static inline bool __hisnan(__half a) {
+  return a > hInf.s ? true : false;
+}
+
+__device__ static inline bool __hle(__half a, __half b) {
+  return a <= b ? true : false;
+}
+
+__device__ static inline bool __hlt(__half a, __half b) {
+  return a < b ? true : false;
+}
+
+__device__ static inline bool __hne(__half a, __half b) {
+  return a != b ? true : false;
+}
+
+/*
+Half2 Comparision Functions
+*/
+
+__device__ static inline bool __hbeq2(__half2 a, __half2 b) {
+  return (a.p[0] == b.p[0] ? true : false) && (a.p[1] == b.p[1] ? true : false);
+}
+
+__device__ static inline bool __hbge2(__half2 a, __half2 b) {
+  return (a.p[0] >= b.p[0] ? true : false) && (a.p[1] >= b.p[1] ? true : false);
+}
+
+__device__ static inline bool __hbgt2(__half2 a, __half2 b) {
+  return (a.p[0] > b.p[0] ? true : false) && (a.p[1] > b.p[1] ? true : false);
+}
+
+__device__ static inline bool __hble2(__half2 a, __half2 b) {
+  return (a.p[0] <= b.p[0] ? true : false) && (a.p[1] <= b.p[1] ? true : false);
+}
+
+__device__ static inline bool __hblt2(__half2 a, __half2 b) {
+  return (a.p[0] < b.p[0] ? true : false) && (a.p[1] < b.p[1] ? true : false);
+}
+
+__device__ static inline bool __hbne2(__half2 a, __half2 b) {
+  return (a.p[0] != b.p[0] ? true : false) && (a.p[1] != b.p[1] ? true : false);
 }
 
 #endif
