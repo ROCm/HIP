@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -415,15 +415,15 @@ public:
 
     ihipStreamCriticalBase_t<StreamMutex>  * mlock() { LockedBase<MUTEX_TYPE>::lock(); return this;};
 
-    void munlock() { 
+    void munlock() {
         tprintf(DB_SYNC, "munlocking criticalData=%p for %s...\n", this, ToString(this->_parent).c_str());
-        LockedBase<MUTEX_TYPE>::unlock(); 
+        LockedBase<MUTEX_TYPE>::unlock();
     };
 
-    ihipStreamCriticalBase_t<StreamMutex>  * mtry_lock() { 
+    ihipStreamCriticalBase_t<StreamMutex>  * mtry_lock() {
         bool gotLock = LockedBase<MUTEX_TYPE>::try_lock() ;
         tprintf(DB_SYNC, "mtry_locking=%d criticalData=%p for %s...\n", gotLock, this, ToString(this->_parent).c_str());
-        return gotLock ?  this: nullptr; 
+        return gotLock ?  this: nullptr;
     };
 
 public:
@@ -683,7 +683,7 @@ public: // Functions:
     ihipCtx_t(ihipDevice_t *device, unsigned deviceCnt, unsigned flags); // note: calls constructor for _criticalData
     ~ihipCtx_t();
 
-    // Functions which read or write the critical data are named locked_. 
+    // Functions which read or write the critical data are named locked_.
     // (might be better called "locking_"
     // ihipCtx_t does not use recursive locks so the ihip implementation must avoid calling a locked_ function from within a locked_ function.
     // External functions which call several locked_ functions will acquire and release the lock for each function.  if this occurs in
@@ -697,7 +697,7 @@ public: // Functions:
     hc::accelerator_view  stealActiveQueue(LockedAccessor_CtxCrit_t &ctxCrit, ihipStream_t *needyStream);
     hc::accelerator_view createOrStealQueue(LockedAccessor_CtxCrit_t &ctxCrit);
 
-    ihipCtxCritical_t  &criticalData() { return _criticalData; }; 
+    ihipCtxCritical_t  &criticalData() { return _criticalData; };
 
     const ihipDevice_t *getDevice() const { return _device; };
     int                 getDeviceNum() const { return _device->_deviceId; };

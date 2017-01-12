@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -279,12 +279,12 @@ inline void ihipStream_t::ensureHaveQueue(LockedAccessor_StreamCrit_t &streamCri
         // TODO
         auto needyCritPtr = this->_criticalData.mlock();
 
-        // Second test to ensure we still need to steal the queue - another thread may have 
+        // Second test to ensure we still need to steal the queue - another thread may have
         // snuck in here and already solved the issue.
         if (!needyCritPtr->_hasQueue) {
             needyCritPtr->_av = this->_ctx->stealActiveQueue(ctxCrit, this);
         }
-        
+
         streamCrit->_hasQueue = true;
     }
     assert(streamCrit->_hasQueue);
@@ -394,7 +394,7 @@ LockedAccessor_StreamCrit_t ihipStream_t::lockopen_preKernelCommand()
     }
 
     this->ensureHaveQueue(crit);
-    
+
 
 
     return crit;
@@ -944,10 +944,10 @@ ihipCtx_t::stealActiveQueue(LockedAccessor_CtxCrit_t &ctxCrit, ihipStream_t *nee
                         uint64_t *p = (uint64_t*)(&victimCritPtr->_av);
                         *p = 0; // damage the victim av so attempt to use it will fault.
 
-                        (*iter)->_criticalData.munlock(); 
+                        (*iter)->_criticalData.munlock();
                         return av;
-                    }  
-                    (*iter)->_criticalData.munlock(); 
+                    }
+                    (*iter)->_criticalData.munlock();
                 }
             }
         }
@@ -1296,7 +1296,7 @@ void ihipInit()
         tokenize(HIP_LAUNCH_BLOCKING_KERNELS, ',', &g_hipLaunchBlockingKernels);
     }
     READ_ENV_I(release, HIP_API_BLOCKING, 0, "Make HIP APIs 'host-synchronous', so they block until completed.  Impacts hipMemcpyAsync, hipMemsetAsync." );
-    
+
 
     READ_ENV_I(release, HIP_MAX_QUEUES, 0, "Maximum number of queues that this app will use per-device.  Additional streams will share the specified number of queues.  0=no limit.");
 
@@ -1320,8 +1320,8 @@ void ihipInit()
 
 
     READ_ENV_I(release, HIP_WAIT_MODE, 0, "Force synchronization mode. 1= force yield, 2=force spin, 0=defaults specified in application");
-    READ_ENV_I(release, HIP_FORCE_P2P_HOST, 0, "Force use of host/staging copy for peer-to-peer copies.1=always use copies, 2=always return false for hipDeviceCanAccessPeer"); 
-    READ_ENV_I(release, HIP_FORCE_SYNC_COPY, 0, "Force all copies (even hipMemcpyAsync) to use sync copies"); 
+    READ_ENV_I(release, HIP_FORCE_P2P_HOST, 0, "Force use of host/staging copy for peer-to-peer copies.1=always use copies, 2=always return false for hipDeviceCanAccessPeer");
+    READ_ENV_I(release, HIP_FORCE_SYNC_COPY, 0, "Force all copies (even hipMemcpyAsync) to use sync copies");
 
     // TODO - review, can we remove this?
     READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Max number of inflight kernels per stream before active synchronization is forced.");
@@ -2026,7 +2026,7 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **a
         stream = device->_defaultStream;
     }
 
-    *av = stream->locked_getAv(); // TODO - review.  
+    *av = stream->locked_getAv(); // TODO - review.
 
     hipError_t err = hipSuccess;
     return ihipLogStatus(err);

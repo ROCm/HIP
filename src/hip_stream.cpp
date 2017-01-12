@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -214,7 +214,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
 {
     HIP_INIT_API(stream, callback, userData, flags);
     hipError_t e = hipSuccess;
-    //--- explicitly synchronize stream to add callback routines 
+    //--- explicitly synchronize stream to add callback routines
     hipStreamSynchronize(stream);
     callback(stream, e, userData);
     return ihipLogStatus(e);
