@@ -61,6 +61,29 @@ define half @__hip_hc_ir_hfma_half(half %a, half %b, half %c) #1 {
   ret half %9
 }
 
+define i32 @__hip_hc_ir_hadd2_int(i32 %a, i32 %b) #1 {
+  %1 = tail call i32 asm sideeffect "v_add_f16 $0, $1, $2","=v,v,v"(i32 %a, i32 %b)
+  tail call void asm sideeffect "v_add_f16_sdwa $0, $1, $2 dst_sel:WORD_1 dst_unused:UNUSED_PRESERVE src0_sel:WORD_1 src1_sel:WORD_1","v,v,v"(i32 %1, i32 %a, i32 %b)
+  ret i32 %1
+}
 
+define i32 @__hip_hc_ir_hfma2_int(i32 %a, i32 %b, i32 %c) #1 {
+  %1 = tail call i32 asm sideeffect "v_mad_f16 $0, $1, $2, $3","=v,v,v,v"(i32 %a, i32 %b, i32 %c)
+  tail call void asm sideeffect "v_mul_f16_sdwa $0, $1, $2 dst_sel:WORD_1 dst_unused:UNUSED_PRESERVE src0_sel:WORD_1 src1_sel:WORD_1","v,v,v"(i32 %1, i32 %a, i32 %b)
+  tail call void asm sideeffect "v_add_f16_sdwa $0, $1, $2 dst_sel:WORD_1 dst_unused:UNUSED_PRESERVE src0_sel:WORD_1 src1_sel:WORD_1","v,v,v"(i32 %1, i32 %1, i32 %c)
+  ret i32 %1
+}
+
+define i32 @__hip_hc_ir_hmul2_int(i32 %a, i32 %b) #1 {
+  %1 = tail call i32 asm sideeffect "v_mul_f16 $0, $1, $2","=v,v,v"(i32 %a, i32 %b)
+  tail call void asm sideeffect "v_mul_f16_sdwa $0, $1, $2 dst_sel:WORD_1 dst_unused:UNUSED_PRESERVE src0_sel:WORD_1 src1_sel:WORD_1","v,v,v"(i32 %1, i32 %a, i32 %b)
+  ret i32 %1
+}
+
+define i32 @__hip_hc_ir_hsub2_int(i32 %a, i32 %b) #1 {
+  %1 = tail call i32 asm sideeffect "v_sub_f16 $0, $1, $2","=v,v,v"(i32 %a, i32 %b)
+  tail call void asm sideeffect "v_sub_f16_sdwa $0, $1, $2 dst_sel:WORD_1 dst_unused:UNUSED_PRESERVE src0_sel:WORD_1 src1_sel:WORD_1","v,v,v"(i32 %1, i32 %a, i32 %b)
+  ret i32 %1
+}
 
 attributes #1 = { alwaysinline nounwind }
