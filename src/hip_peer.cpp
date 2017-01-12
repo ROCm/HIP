@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,7 @@ THE SOFTWARE.
 // There are two flavors:
 //   - one where contexts are specified with hipCtx_t type.
 //   - one where contexts are specified with integer deviceIds, that are mapped to the primary context for that device.
-// The implementation contains a set of internal ihip* functions which operate on contexts.  Then the 
+// The implementation contains a set of internal ihip* functions which operate on contexts.  Then the
 // public APIs are thin wrappers which call into this internal implementations.
 // TODO - actually not yet - currently the integer deviceId flavors just call the context APIs.  need to fix.
 
@@ -46,16 +46,16 @@ hipError_t ihipDeviceCanAccessPeer (int* canAccessPeer, hipCtx_t thisCtx, hipCtx
 
         if (thisCtx == peerCtx) {
             *canAccessPeer = 0;
-            tprintf(DB_MEM, "Can't be peer to self. (this=%s, peer=%s)\n", 
-                    thisCtx->toString().c_str(), peerCtx->toString().c_str()); 
+            tprintf(DB_MEM, "Can't be peer to self. (this=%s, peer=%s)\n",
+                    thisCtx->toString().c_str(), peerCtx->toString().c_str());
         } else  if (HIP_FORCE_P2P_HOST & 0x2) {
             *canAccessPeer = false;
-            tprintf(DB_MEM, "HIP_FORCE_P2P_HOST denies peer access this=%s peer=%s  canAccessPeer=%d\n", 
-                    thisCtx->toString().c_str(), peerCtx->toString().c_str(), *canAccessPeer); 
+            tprintf(DB_MEM, "HIP_FORCE_P2P_HOST denies peer access this=%s peer=%s  canAccessPeer=%d\n",
+                    thisCtx->toString().c_str(), peerCtx->toString().c_str(), *canAccessPeer);
         } else {
             *canAccessPeer = peerCtx->getDevice()->_acc.get_is_peer(thisCtx->getDevice()->_acc);
-            tprintf(DB_MEM, "deviceCanAccessPeer this=%s peer=%s  canAccessPeer=%d\n", 
-                    thisCtx->toString().c_str(), peerCtx->toString().c_str(), *canAccessPeer); 
+            tprintf(DB_MEM, "deviceCanAccessPeer this=%s peer=%s  canAccessPeer=%d\n",
+                    thisCtx->toString().c_str(), peerCtx->toString().c_str(), *canAccessPeer);
         }
 
     } else {
@@ -99,14 +99,14 @@ hipError_t ihipDisablePeerAccess (hipCtx_t peerCtx)
             LockedAccessor_CtxCrit_t peerCrit(peerCtx->criticalData());
             bool changed = peerCrit->removePeerWatcher(peerCtx, thisCtx);
             if (changed) {
-                tprintf(DB_MEM, "device %s disable access to memory allocated on peer:%s\n", 
-                                  thisCtx->toString().c_str(), peerCtx->toString().c_str()); 
+                tprintf(DB_MEM, "device %s disable access to memory allocated on peer:%s\n",
+                                  thisCtx->toString().c_str(), peerCtx->toString().c_str());
                 // Update the peers for all memory already saved in the tracker:
                 am_memtracker_update_peers(peerCtx->getDevice()->_acc, peerCrit->peerCnt(), peerCrit->peerAgents());
             } else {
                 err = hipErrorPeerAccessNotEnabled; // never enabled P2P access.
             }
-        } 
+        }
     } else {
         err = hipErrorInvalidDevice;
     }
@@ -133,8 +133,8 @@ hipError_t ihipEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags)
             // Add thisCtx to peerCtx's access list so that new allocations on peer will be made visible to this device:
             bool isNewPeer = peerCrit->addPeerWatcher(peerCtx, thisCtx);
             if (isNewPeer) {
-                tprintf(DB_MEM, "device=%s can now see all memory allocated on peer=%s\n", 
-                                  thisCtx->toString().c_str(), peerCtx->toString().c_str()); 
+                tprintf(DB_MEM, "device=%s can now see all memory allocated on peer=%s\n",
+                                  thisCtx->toString().c_str(), peerCtx->toString().c_str());
                 am_memtracker_update_peers(peerCtx->getDevice()->_acc, peerCrit->peerCnt(), peerCrit->peerAgents());
             } else {
                 err = hipErrorPeerAccessAlreadyEnabled;

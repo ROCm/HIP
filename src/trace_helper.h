@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -55,7 +55,7 @@ inline std::string ToHexString(T v)
 
 // This is the default which works for most types:
 template <typename T>
-inline std::string ToString(T v) 
+inline std::string ToString(T v)
 {
     std::ostringstream ss;
     ss << v;
@@ -65,7 +65,7 @@ inline std::string ToString(T v)
 
 //  hipEvent_t specialization. TODO - maybe add an event ID for debug?
 template <>
-inline std::string ToString(hipEvent_t v) 
+inline std::string ToString(hipEvent_t v)
 {
     std::ostringstream ss;
     ss << v;
@@ -74,7 +74,7 @@ inline std::string ToString(hipEvent_t v)
 
 //  hipEvent_t specialization. TODO - maybe add an event ID for debug?
 template <>
-inline std::string ToString(hipFunction_t v) 
+inline std::string ToString(hipFunction_t v)
 {
     std::ostringstream ss;
     ss << "0x" << std::hex << v._object;
@@ -85,7 +85,7 @@ inline std::string ToString(hipFunction_t v)
 
 //  hipStream_t
 template <>
-inline std::string ToString(hipStream_t v) 
+inline std::string ToString(hipStream_t v)
 {
     std::ostringstream ss;
     if (v == NULL) {
@@ -99,7 +99,7 @@ inline std::string ToString(hipStream_t v)
 
 //  hipMemcpyKind specialization
 template <>
-inline std::string ToString(hipMemcpyKind v) 
+inline std::string ToString(hipMemcpyKind v)
 {
     switch(v) {
     CASE_STR(hipMemcpyHostToHost);
@@ -113,14 +113,14 @@ inline std::string ToString(hipMemcpyKind v)
 
 
 template <>
-inline std::string ToString(hipError_t v) 
+inline std::string ToString(hipError_t v)
 {
     return ihipErrorString(v);
 };
 
 
 // Catch empty arguments case
-inline std::string ToString() 
+inline std::string ToString()
 {
     return ("");
 }
@@ -129,8 +129,8 @@ inline std::string ToString()
 //---
 // C++11 variadic template - peels off first argument, converts to string, and calls itself again to peel the next arg.
 // Strings are automatically separated by comma+space.
-template <typename T, typename... Args> 
-inline std::string ToString(T first, Args... args) 
+template <typename T, typename... Args>
+inline std::string ToString(T first, Args... args)
 {
     return ToString(first) + ", " + ToString(args...) ;
 }

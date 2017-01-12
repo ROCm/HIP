@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -1087,7 +1087,7 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
         hsa_amd_ipc_memory_attach(&handle->ipc_handle, handle->psize, 1, agent, devPtr);
     if(hsa_status != HSA_STATUS_SUCCESS)
         hipStatus = hipErrorMapBufferObjectFailed;
-#else 
+#else
     hipStatus = hipErrorRuntimeOther;
 #endif
     return hipStatus;
