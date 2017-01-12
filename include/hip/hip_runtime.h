@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 //! HIP = Heterogeneous-compute Interface for Portability
 //!
-//! Define a extremely thin runtime layer that allows source code to be compiled unmodified 
+//! Define a extremely thin runtime layer that allows source code to be compiled unmodified
 //! through either AMD HCC or NVCC.   Key features tend to be in the spirit
 //! and terminology of CUDA, but with a portable path to other accelerators as well:
 //
@@ -54,11 +54,10 @@ THE SOFTWARE.
 #include <hip/hcc_detail/hip_runtime.h>
 #elif defined(__HIP_PLATFORM_NVCC__) && !defined (__HIP_PLATFORM_HCC__)
 #include <hip/nvcc_detail/hip_runtime.h>
-#else 
+#else
 #error("Must define exactly one of __HIP_PLATFORM_HCC__ or __HIP_PLATFORM_NVCC__");
-#endif 
+#endif
 
 
 #include <hip/hip_runtime_api.h>
 #include <hip/hip_vector_types.h>
-
