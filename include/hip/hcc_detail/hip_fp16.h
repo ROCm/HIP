@@ -41,6 +41,11 @@ extern "C" __half __hip_hc_ir_hfma_half(__half, __half, __half);
 extern "C" __half __hip_hc_ir_hmul_half(__half, __half);
 extern "C" __half __hip_hc_ir_hsub_half(__half, __half);
 
+extern "C" int __hip_hc_ir_hadd2_int(int, int);
+extern "C" int __hip_hc_ir_hfma2_int(int, int, int);
+extern "C" int __hip_hc_ir_hmul2_int(int, int);
+extern "C" int __hip_hc_ir_hsub2_int(int, int);
+
 __device__ static inline __half __hadd(const __half a, const __half b) {
   return __hip_hc_ir_hadd_half(a, b);
 }
@@ -79,6 +84,72 @@ __device__ static inline __half __hsub_sat(__half a, __half b) {
 
 __device__ static inline __half hdiv(__half a, __half b) {
   return a/b;
+}
+
+/*
+  Half2 Arithmetic Functions
+*/
+
+__device__ static inline __half2 __hadd2(__half2 a, __half2 b) {
+  __half2 c;
+  c.q = __hip_hc_ir_hadd2_int(a.q, b.q);
+  return c;
+}
+
+__device__ static inline __half2 __hadd2_sat(__half2 a, __half2 b) {
+  __half2 c;
+  c.q = __hip_hc_ir_hadd2_int(a.q, b.q);
+  return c;
+}
+
+__device__ static inline __half2 __hfma2(__half2 a, __half2 b, __half2 c) {
+  __half2 d;
+  d.q = __hip_hc_ir_hfma2_int(a.q, b.q, c.q);
+  return d;
+}
+
+__device__ static inline __half2 __hfma2_sat(__half2 a, __half2 b, __half2 c) {
+  __half2 d;
+  d.q = __hip_hc_ir_hfma2_int(a.q, b.q, c.q);
+  return d;
+}
+
+__device__ static inline __half2 __hmul2(__half2 a, __half2 b) {
+  __half2 c;
+  c.q = __hip_hc_ir_hmul2_int(a.q, b.q);
+  return c;
+}
+
+__device__ static inline __half2 __hmul2_sat(__half2 a, __half2 b) {
+  __half2 c;
+  c.q = __hip_hc_ir_hmul2_int(a.q, b.q);
+  return c;
+}
+
+__device__ static inline __half2 __hsub2(__half2 a, __half2 b) {
+  __half2 c;
+  c.q = __hip_hc_ir_hsub2_int(a.q, b.q);
+  return c;
+}
+
+__device__ static inline __half2 __hneg2(__half2 a) {
+  __half2 c;
+  c.p[0] = - a.p[0];
+  c.p[1] = - a.p[1];
+  return c;
+}
+
+__device__ static inline __half2 __hsub2_sat(__half2 a, __half2 b) {
+  __half2 c;
+  c.q = __hip_hc_ir_hsub2_int(a.q, b.q);
+  return c;
+}
+
+__device__ static inline __half2 h2div(__half2 a, __half2 b) {
+  __half2 c;
+  c.p[0] = a.p[0] / b.p[0];
+  c.p[1] = a.p[1] / b.p[1];
+  return c;
 }
 
 #endif
