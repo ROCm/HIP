@@ -90,12 +90,12 @@ __global__ void CheckHalf2(hipLaunchParm lp, __half2* In1, __half2* In2, __half2
   Out[9] = h2div(In1[9], In2[9]);
   Out[10] = h2ceil(In1[10]);
   Out[11] = h2cos(In1[11]);
-//  Out[12] = h2exp(In1[12]);
-//  Out[13] = h2exp10(In1[13]);
+  Out[12] = h2exp(In1[12]);
+  Out[13] = h2exp10(In1[13]);
   Out[14] = h2exp2(In1[14]);
   Out[15] = h2floor(In1[15]);
-//  Out[16] = h2log(In1[16]);
-//  Out[17] = h2log10(In1[17]);
+  Out[16] = h2log(In1[16]);
+  Out[17] = h2log10(In1[17]);
   Out[18] = h2log2(In1[18]);
   Out[19] = h2rcp(In1[19]);
 //  Out[20] = h2rint(In1[20]);
