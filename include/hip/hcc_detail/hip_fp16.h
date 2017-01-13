@@ -69,6 +69,17 @@ extern "C" __half __hip_hc_ir_hsin_half(__half) __asm("llvm.sin.f16");
 extern "C" __half __hip_hc_ir_hsqrt_half(__half) __asm("llvm.sqrt.f16");
 extern "C" __half __hip_hc_ir_htrunc_half(__half) __asm("llvm.trunc.f16");
 
+extern "C" int __hip_hc_ir_h2ceil_int(int);
+extern "C" int __hip_hc_ir_h2cos_int(int);
+extern "C" int __hip_hc_ir_h2exp2_int(int);
+extern "C" int __hip_hc_ir_h2floor_int(int);
+extern "C" int __hip_hc_ir_h2log2_int(int);
+extern "C" int __hip_hc_ir_h2rcp_int(int);
+extern "C" int __hip_hc_ir_h2rsqrt_int(int);
+extern "C" int __hip_hc_ir_h2sin_int(int);
+extern "C" int __hip_hc_ir_h2sqrt_int(int);
+extern "C" int __hip_hc_ir_h2trunc_int(int);
+
 __device__ static inline __half __hadd(const __half a, const __half b) {
   return __hip_hc_ir_hadd_half(a, b);
 }
@@ -681,6 +692,71 @@ __device__ static inline __half hsqrt(const __half a) {
 __device__ static inline __half htrunc(const __half a) {
   return __hip_hc_ir_htrunc_half(a);
 }
+
+/*
+Half2 Math Operations
+*/
+
+__device__ static inline __half2 h2ceil(const __half2 h) {
+  __half2 a;
+  a.q = __hip_hc_ir_h2ceil_int(h.q);
+  return a;
+}
+
+__device__ static inline __half2 h2cos(const __half2 h) {
+  __half2 a;
+  a.q = __hip_hc_ir_h2cos_int(h.q);
+  return a;
+}
+
+__device__ static inline __half2 h2exp2(const __half2 h) {
+  __half2 a;
+  a.q = __hip_hc_ir_h2exp2_int(h.q);
+  return a;
+}
+
+__device__ static inline __half2 h2floor(const __half2 h) {
+  __half2 a;
+  a.q = __hip_hc_ir_h2floor_int(h.q);
+  return a;
+}
+
+__device__ static inline __half2 h2log2(const __half2 h) {
+  __half2 a;
+  a.q = __hip_hc_ir_h2log2_int(h.q);
+  return a;
+}
+
+__device__ static inline __half2 h2rcp(const __half2 h) {
+  __half2 a;
+  a.q = __hip_hc_ir_h2rcp_int(h.q);
+  return a;
+}
+
+__device__ static inline __half2 h2rsqrt(const __half2 h) {
+  __half2 a;
+  a.q = __hip_hc_ir_h2rsqrt_int(h.q);
+  return a;
+}
+
+__device__ static inline __half2 h2sin(const __half2 h) {
+  __half2 a;
+  a.q = __hip_hc_ir_h2sin_int(h.q);
+  return a;
+}
+
+__device__ static inline __half2 h2sqrt(const __half2 h) {
+  __half2 a;
+  a.q = __hip_hc_ir_h2sqrt_int(h.q);
+  return a;
+}
+
+__device__ static inline __half2 h2trunc(const __half2 h) {
+  __half2 a;
+  a.q = __hip_hc_ir_h2trunc_int(h.q);
+  return a;
+}
+
 
 #endif
 
