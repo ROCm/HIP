@@ -709,6 +709,22 @@ __device__ static inline __half2 h2cos(const __half2 h) {
   return a;
 }
 
+__device__ static inline __half2 h2exp(const __half2 h) {
+  __half2 factor;
+  factor.p[0] = 1.442694;
+  factor.p[1] = 1.442694;
+  factor.q = __hip_hc_ir_h2exp2_int(__hip_hc_ir_hmul2_int(h.q, factor.q));
+  return factor;
+}
+
+__device__ static inline __half2 h2exp10(const __half2 h) {
+  __half2 factor;
+  factor.p[0] = 3.3219281;
+  factor.p[1] = 3.3219281;
+  factor.q = __hip_hc_ir_h2exp2_int(__hip_hc_ir_hmul2_int(h.q, factor.q));
+  return factor;
+}
+
 __device__ static inline __half2 h2exp2(const __half2 h) {
   __half2 a;
   a.q = __hip_hc_ir_h2exp2_int(h.q);
@@ -721,6 +737,21 @@ __device__ static inline __half2 h2floor(const __half2 h) {
   return a;
 }
 
+__device__ static inline __half2 h2log(const __half2 h) {
+  __half2 factor;
+  factor.p[0] = 0.693147;
+  factor.p[1] = 0.693147;
+  factor. q = __hip_hc_ir_hmul2_int(__hip_hc_ir_h2log2_int(h.q), factor.q);
+  return factor;
+}
+
+__device__ static inline __half2 h2log10(const __half2 h) {
+  __half2 factor;
+  factor.p[0] = 0.301029;
+  factor.p[1] = 0.301029;
+  factor.q = __hip_hc_ir_hmul2_int(__hip_hc_ir_h2log2_int(h.q),  factor.q);
+  return factor;
+}
 __device__ static inline __half2 h2log2(const __half2 h) {
   __half2 a;
   a.q = __hip_hc_ir_h2log2_int(h.q);
