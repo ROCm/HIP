@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -45,12 +45,17 @@ hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags)
         //Note this is an execute_in_order queue, so all kernels submitted will atuomatically wait for prev to complete:
         //This matches CUDA stream behavior:
 
-        auto istream = new ihipStream_t(ctx, acc.create_view(), flags);
+        {
+            // Obtain mutex access to the device critical data, release by destructor
+            LockedAccessor_CtxCrit_t  ctxCrit(ctx->criticalData());
 
-        ctx->locked_addStream(istream);
+            auto istream = new ihipStream_t(ctx, ctx->createOrStealQueue(ctxCrit), flags);
 
-        *stream = istream;
-        tprintf(DB_SYNC, "hipStreamCreate, stream=%p\n", *stream);
+            ctxCrit->addStream(istream);
+            *stream = istream;
+        }
+
+        tprintf(DB_SYNC, "hipStreamCreate, %s\n", ToString(*stream).c_str());
     } else {
         e = hipErrorInvalidDevice;
     }
@@ -120,8 +125,14 @@ hipError_t hipStreamQuery(hipStream_t stream)
         stream =  device->_defaultStream;
     }
 
-    LockedAccessor_StreamCrit_t crit(stream->_criticalData);
-    int pendingOps = crit->_av.get_pending_async_ops();
+    int pendingOps = 0;
+
+    {
+        LockedAccessor_StreamCrit_t crit(stream->_criticalData);
+        if (crit->_hasQueue) {
+            pendingOps = crit->_av.get_pending_async_ops();
+        }
+    }
 
 
     hipError_t e = (pendingOps > 0) ? hipErrorNotReady : hipSuccess;
@@ -203,7 +214,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
 {
     HIP_INIT_API(stream, callback, userData, flags);
     hipError_t e = hipSuccess;
-    //--- explicitly synchronize stream to add callback routines 
+    //--- explicitly synchronize stream to add callback routines
     hipStreamSynchronize(stream);
     callback(stream, e, userData);
     return ihipLogStatus(e);

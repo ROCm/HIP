@@ -23,10 +23,8 @@ THE SOFTWARE.
 #ifndef HIPCOMPLEX_H
 #define HIPCOMPLEX_H
 
-typedef struct{
-    float x;
-    float y;
-}hipFloatComplex;
+typedef float2 hipFloatComplex;
+typedef double2 hipDoubleComplex;
 
 __device__ static inline float hipCrealf(hipFloatComplex z){
     return z.x;
@@ -79,10 +77,6 @@ __device__ static inline float hipCabsf(hipFloatComplex z){
 }
 
 
-typedef struct{
-    double x;
-    double y;
-}hipDoubleComplex;
 
 __device__ static inline double hipCreal(hipDoubleComplex z){
     return z.x;

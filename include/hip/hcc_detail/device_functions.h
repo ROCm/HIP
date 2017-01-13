@@ -20,13 +20,18 @@ THE SOFTWARE.
 #ifndef HIP_HCC_DETAIL_DEVICE_FUNCTIONS_H
 #define HIP_HCC_DETAIL_DEVICE_FUNCTIONS_H
 
-#include "hip_runtime.h"
+#include <hip/hip_runtime.h>
+#include <hip/hip_vector_types.h>
 
 __device__ float __int_as_float (int x);
 
 __device__ double __hiloint2double (int hi, int lo);
 
-extern __HIP_DEVICE__ double  __longlong_as_double(long long int x);
-extern __HIP_DEVICE__ long long int __double_as_longlong(double x);
+__device__ char4 __hip_hc_add8pk(char4, char4);
+__device__ char4 __hip_hc_sub8pk(char4, char4);
+__device__ char4 __hip_hc_mul8pk(char4, char4);
+
+extern __device__ double  __longlong_as_double(long long int x);
+extern __device__ long long int __double_as_longlong(double x);
 
 #endif
