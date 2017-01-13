@@ -86,6 +86,16 @@ __global__ void CheckCmpHalf(hipLaunchParm lp, __half* In1, __half* In2, bool* O
   Out[7] = __hne(In1[7], In2[7]);
 }
 
+__global__ void CheckCmpHalf2(hipLaunchParm lp, __half2* In1, __half2* In2, __half2* Out) {
+  Out[0] = __heq2(In1[0], In2[0]);
+  Out[1] = __hge2(In1[1], In2[1]);
+  Out[2] = __hgt2(In1[2], In2[2]);
+  Out[4] = __hisnan2(In1[4]);
+  Out[5] = __hle2(In1[5], In2[5]);
+  Out[6] = __hlt2(In1[6], In2[6]);
+  Out[7] = __hne2(In1[7], In2[7]);
+}
+
 int main(){
 
 }
