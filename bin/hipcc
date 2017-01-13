@@ -220,7 +220,7 @@ if($HIP_PLATFORM eq "hcc"){
   }
 }
 
-if(($HIP_PLATFORM eq "hcc") and defined $ENV{HIP_EXPERIMENTAL}){
+if(($HIP_PLATFORM eq "hcc")){
     $EXPORT_LL=" ";
     $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_ir.ll\n";
 }
@@ -244,6 +244,8 @@ my $toolArgs = "";  # arguments to pass to the hcc or nvcc tool
 
 foreach $arg (@ARGV)
 {
+    $trimarg = $arg;
+    $trimarg =~ s/^\s+|\s+$//g;  # Remive whitespace
     my $swallowArg = 0;
     if ($arg eq '-c') {
         $compileOnly = 1;
@@ -254,38 +256,37 @@ foreach $arg (@ARGV)
         $needLDFLAGS = 1;
     }
 
-    if(($arg eq '-stdlib=libc++') and ($setStdLib eq 0))
+    if(($trimarg eq '-stdlib=libc++') and ($setStdLib eq 0))
     {
         $HIPCXXFLAGS .= " -stdlib=libc++";
         $setStdLib = 1;
     }
-    if(($arg eq '-stdlib=libstdc++') and ($setStdLib eq 0))
+    if(($trimarg eq '-stdlib=libstdc++') and ($setStdLib eq 0))
     {
         $HIPCXXFLAGS .= " -stdlib=libstdc++";
         $HIPCXXFLAGS .= $HCC_WA_FLAGS;
         $setStdLib = 1;
     }
-    if($arg eq '--version') {
+    if($trimarg eq '--version') {
         $printHipVersion = 1;
     }
-    if($arg eq '--short-version') {
+    if($trimarg eq '--short-version') {
         $printHipVersion = 1;
         $runCmd = 0;
     }
-    if($arg eq '-M') {
+    if($trimarg eq '-M') {
         $compileOnly = 1;
         $buildDeps = 1;
     }
-    if($arg eq '-use_fast_math') {
-        print "In fast Math";
+    if($trimarg eq '-use_fast_math') {
         $HIPCXXFLAGS .= " -DHIP_FAST_MATH ";
     }
-    if(($arg eq '-use-staticlib') and ($setLinkType eq 0))
+    if(($trimarg eq '-use-staticlib') and ($setLinkType eq 0))
     {
         $linkType = 0;
         $setLinkType = 1;
     }
-    if(($arg eq '-use-sharedlib') and ($setLinkType eq 0))
+    if(($trimarg eq '-use-sharedlib') and ($setLinkType eq 0))
     {
         $linkType = 1;
         $setLinkType = 1;

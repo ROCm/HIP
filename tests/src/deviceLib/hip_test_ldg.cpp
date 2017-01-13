@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include <stdlib.h>
 #include<iostream>
 #include "hip/hip_runtime.h"
+#include "hip/hip_vector_types.h"
 #include "test_common.h"
 
 #if (__hcc_workweek__ >= 16164) || defined (__HIP_PLATFORM_NVCC__)
@@ -389,4 +390,3 @@ int main() {
 }
 
 #endif
-

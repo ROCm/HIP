@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -105,7 +105,7 @@ hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsi
 hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 {
     HIP_INIT_API(ptr, sizeBytes);
-
+    HIP_SET_DEVICE();
     hipError_t  hip_status = hipSuccess;
     // return NULL pointer when malloc size is 0
     if (sizeBytes == 0)
@@ -131,7 +131,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
                 LockedAccessor_CtxCrit_t crit(ctx->criticalData());
                 // the peerCnt always stores self so make sure the trace actually
                 peerCnt = crit->peerCnt();
-                tprintf(DB_MEM, " allocated device_mem ptr:%p size:%zu on dev:%d and allowed %d other peer(s) access\n",
+                tprintf(DB_MEM, " allocated device_mem ptr:%p size:%zu on dev:%d and allow access to %d other peer(s)\n",
                         *ptr, sizeBytes, device->_deviceId, peerCnt-1);
                 if (peerCnt > 1) {
 
@@ -161,7 +161,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
     HIP_INIT_API(ptr, sizeBytes, flags);
-
+    HIP_SET_DEVICE();
     hipError_t hip_status = hipSuccess;
 
     auto ctx = ihipGetTlsDefaultCtx();
@@ -233,7 +233,7 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags)
 hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height)
 {
     HIP_INIT_API(ptr, pitch, width, height);
-
+    HIP_SET_DEVICE();
     hipError_t  hip_status = hipSuccess;
 
     if(width == 0 || height == 0)
@@ -285,7 +285,7 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
         size_t width, size_t height, unsigned int flags)
 {
     HIP_INIT_API(array, desc, width, height, flags);
-
+    HIP_SET_DEVICE();
     hipError_t  hip_status = hipSuccess;
 
     auto ctx = ihipGetTlsDefaultCtx();
@@ -813,6 +813,8 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
     if (stream) {
         auto crit = stream->lockopen_preKernelCommand();
 
+        stream->ensureHaveQueue(crit);
+
         hc::completion_future cf ;
 
         if ((sizeBytes & 0x3) == 0) {
@@ -841,7 +843,6 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
         if (HIP_API_BLOCKING) {
             tprintf (DB_SYNC, "%s LAUNCH_BLOCKING wait for hipMemsetAsync.\n", ToString(stream).c_str());
             cf.wait();
-            //tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING memset completed [stream:%p].\n", __func__, (void*)stream);
         }
     } else {
         e = hipErrorInvalidValue;
@@ -864,6 +865,7 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
     if (stream) {
         auto crit = stream->lockopen_preKernelCommand();
 
+        stream->ensureHaveQueue(crit);
         hc::completion_future cf ;
 
         if ((sizeBytes & 0x3) == 0) {
@@ -892,9 +894,9 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
 
 
         if (HIP_LAUNCH_BLOCKING) {
-            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING wait for memset [stream:%p].\n", __func__, (void*)stream);
+            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING wait for memset in %s.\n", __func__, ToString(stream).c_str());
             cf.wait();
-            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING memset completed [stream:%p].\n", __func__, (void*)stream);
+            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING memset completed in %s.\n", __func__, ToString(stream).c_str());
         }
     } else {
         e = hipErrorInvalidValue;
@@ -1085,7 +1087,7 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
         hsa_amd_ipc_memory_attach(&handle->ipc_handle, handle->psize, 1, agent, devPtr);
     if(hsa_status != HSA_STATUS_SUCCESS)
         hipStatus = hipErrorMapBufferObjectFailed;
-#else 
+#else
     hipStatus = hipErrorRuntimeOther;
 #endif
     return hipStatus;

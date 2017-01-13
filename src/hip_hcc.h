@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -204,7 +204,8 @@ extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
 #define HIP_INIT()\
 	std::call_once(hip_initialized, ihipInit);\
     ihipCtxStackUpdate();
-
+#define HIP_SET_DEVICE()\
+    ihipDeviceSetState();
 
 // This macro should be called at the beginning of every HIP API.
 // It initialies the hip runtime (exactly once), and
@@ -234,8 +235,7 @@ extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
 #define DB_SYNC   1 /* 0x02 - trace synchronization pieces */
 #define DB_MEM    2 /* 0x04 - trace memory allocation / deallocation */
 #define DB_COPY   3 /* 0x08 - trace memory copy and peer commands. . */
-#define DB_SIGNAL 4 /* 0x10 - trace signal pool commands */
-#define DB_MAX_FLAG 5
+#define DB_MAX_FLAG 4
 // When adding a new debug flag, also add to the char name table below.
 //
 
@@ -250,7 +250,6 @@ static const DbName dbName [] =
     {KYEL, "sync"},
     {KCYN, "mem"},
     {KMAG, "copy"},
-    {KRED, "signal"},
 };
 
 
@@ -293,6 +292,34 @@ extern "C" {
 const hipStream_t hipStreamNull = 0x0;
 
 
+/**
+ * HIP IPC Handle Size
+ */
+#define HIP_IPC_HANDLE_SIZE 64
+class ihipIpcMemHandle_t
+{
+public:
+#if USE_IPC
+    hsa_amd_ipc_memory_t ipc_handle; ///< ipc memory handle on ROCr
+#endif
+    char reserved[HIP_IPC_HANDLE_SIZE];
+    size_t psize;
+};
+
+
+class ihipModule_t {
+public:
+  hsa_executable_t executable;
+  hsa_code_object_t object;
+  std::string fileName;
+  void *ptr;
+  size_t size;
+
+  ihipModule_t() : executable(), object(), fileName(), ptr(nullptr), size(0) {}
+};
+
+
+//---
 // Used to remove lock, for performance or stimulating bugs.
 class FakeMutex
 {
@@ -331,21 +358,21 @@ public:
         _autoUnlock(autoUnlock)
 
     {
-        tprintf(DB_SYNC, "lock critical data %s.%p\n", typeid(T).name(), _criticalData);
+        tprintf(DB_SYNC, "locking criticalData=%p for %s..\n", _criticalData, ToString(_criticalData->_parent).c_str());
         _criticalData->_mutex.lock();
     };
 
     ~LockedAccessor()
     {
         if (_autoUnlock) {
-        tprintf(DB_SYNC, "auto-unlock critical data %s.%p\n",typeid(T).name(),  _criticalData);
+        tprintf(DB_SYNC, "auto-unlocking criticalData=%p for %s...\n", _criticalData, ToString(_criticalData->_parent).c_str());
             _criticalData->_mutex.unlock();
         }
     }
 
     void unlock()
     {
-        tprintf(DB_SYNC, "unlock critical data %s.%p\n", typeid(T).name(), _criticalData);
+        tprintf(DB_SYNC, "unlocking criticalData=%p for %s...\n", _criticalData, ToString(_criticalData->_parent).c_str());
        _criticalData->_mutex.unlock();
     }
 
@@ -365,43 +392,21 @@ struct LockedBase {
     // Most uses should use the lock-accessor.
     void lock() { _mutex.lock(); }
     void unlock() { _mutex.unlock(); }
+    bool try_lock() { return _mutex.try_lock(); }
 
     MUTEX_TYPE  _mutex;
 };
 
-/**
- * HIP IPC Handle Size
- */
-#define HIP_IPC_HANDLE_SIZE 64
-class ihipIpcMemHandle_t
-{
-public:
-#if USE_IPC
-    hsa_amd_ipc_memory_t ipc_handle; ///< ipc memory handle on ROCr
-#endif
-    char reserved[HIP_IPC_HANDLE_SIZE];
-    size_t psize;
-};
-
-
-class ihipModule_t {
-public:
-  hsa_executable_t executable;
-  hsa_code_object_t object;
-  std::string fileName;
-  void *ptr;
-  size_t size;
-
-  ihipModule_t() : executable(), object(), fileName(), ptr(nullptr), size(0) {}
-};
 
 template <typename MUTEX_TYPE>
 class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE>
 {
 public:
-    ihipStreamCriticalBase_t(hc::accelerator_view av) :
+    ihipStreamCriticalBase_t(ihipStream_t *parentStream, hc::accelerator_view av) :
         _kernelCnt(0),
-        _av(av)
+        _av(av),
+        _hasQueue(true),
+        _parent(parentStream)
     {
     };
 
@@ -410,10 +415,28 @@ public:
 
     ihipStreamCriticalBase_t<StreamMutex>  * mlock() { LockedBase<MUTEX_TYPE>::lock(); return this;};
 
+    void munlock() {
+        tprintf(DB_SYNC, "munlocking criticalData=%p for %s...\n", this, ToString(this->_parent).c_str());
+        LockedBase<MUTEX_TYPE>::unlock();
+    };
+
+    ihipStreamCriticalBase_t<StreamMutex>  * mtry_lock() {
+        bool gotLock = LockedBase<MUTEX_TYPE>::try_lock() ;
+        tprintf(DB_SYNC, "mtry_locking=%d criticalData=%p for %s...\n", gotLock, this, ToString(this->_parent).c_str());
+        return gotLock ?  this: nullptr;
+    };
+
 public:
-    // TODO - remove _kernelCnt mechanism:
+    ihipStream_t *              _parent;
     uint32_t                    _kernelCnt;    // Count of inflight kernels in this stream.  Reset at ::wait().
+
     hc::accelerator_view        _av;
+
+    // True if the stream has an allocated queue (accelerato_view) for its use:
+    // Always true at ihipStream creation but queue may later be stolen.
+    // This acts as a valid bit for the _av.
+    bool                        _hasQueue;
+private:
 };
 
 
@@ -421,6 +444,7 @@ public:
 // for the ihipCtx_t and then for the individual streams.  The locks should not be acquired in reverse order
 // or deadlock may occur.  In some cases, it may be possible to reduce the range where the locks must be held.
 // HIP routines should avoid acquiring and releasing the same lock during the execution of a single HIP API.
+// Another option is to use try_lock in the innermost lock query.
 
 
 typedef ihipStreamCriticalBase_t<StreamMutex> ihipStreamCritical_t;
@@ -435,6 +459,7 @@ public:
     enum ScheduleMode {Auto, Spin, Yield};
     typedef uint64_t SeqNum_t ;
 
+    // TODOD -make av a reference to avoid shared_ptr overhead?
     ihipStream_t(ihipCtx_t *ctx, hc::accelerator_view av, unsigned int flags);
     ~ihipStream_t();
 
@@ -451,7 +476,7 @@ public:
     void                 lockclose_postKernelCommand(const char *kernelName, hc::accelerator_view *av);
 
 
-    void                 locked_wait(bool assertQueueEmpty=false);
+    void                 locked_wait();
 
     hc::accelerator_view* locked_getAv() { LockedAccessor_StreamCrit_t crit(_criticalData); return &(crit->_av); };
 
@@ -462,7 +487,7 @@ public:
     //---
 
     // Use this if we already have the stream critical data mutex:
-    void                 wait(LockedAccessor_StreamCrit_t &crit, bool assertQueueEmpty=false);
+    void                 wait(LockedAccessor_StreamCrit_t &crit);
 
     void launchModuleKernel(hc::accelerator_view av, hsa_signal_t signal,
                             uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
@@ -477,6 +502,7 @@ public:
     const ihipDevice_t *     getDevice() const;
     ihipCtx_t *              getCtx() const;
 
+    void ensureHaveQueue(LockedAccessor_StreamCrit_t &streamCrit);
 
 public:
     //---
@@ -498,10 +524,13 @@ private:
 
     bool canSeeMemory(const ihipCtx_t *thisCtx, const hc::AmPointerInfo *dstInfo, const hc::AmPointerInfo *srcInfo);
 
-
-private: // Data
+public: // TODO - move private
     // Critical Data - MUST be accessed through LockedAccessor_StreamCrit_t
     ihipStreamCritical_t        _criticalData;
+
+private: // Data
+
+    std::mutex                 _hasQueueLock;
 
     ihipCtx_t  *_ctx;  // parent context that owns this stream.
 
@@ -566,6 +595,8 @@ public:
 
     ihipCtx_t               *_primaryCtx;
 
+    int                      _state; //1 if device is set otherwise 0
+
 private:
     hipError_t initProperties(hipDeviceProp_t* prop);
 };
@@ -579,8 +610,9 @@ template <typename MUTEX_TYPE>
 class ihipCtxCriticalBase_t : LockedBase<MUTEX_TYPE>
 {
 public:
-    ihipCtxCriticalBase_t(unsigned deviceCnt) :
-         _peerCnt(0)
+    ihipCtxCriticalBase_t(ihipCtx_t *parentCtx, unsigned deviceCnt) :
+        _parent(parentCtx),
+        _peerCnt(0)
     {
         _peerAgents = new hsa_agent_t[deviceCnt];
     };
@@ -599,6 +631,7 @@ public:
     const std::list<ihipStream_t*> &const_streams() const { return _streams; };
 
 
+
     // Peer Accessor classes:
     bool isPeerWatcher(const ihipCtx_t *peer); // returns True if peer has access to memory physically located on this device.
     bool addPeerWatcher(const ihipCtx_t *thisCtx, ihipCtx_t *peer);
@@ -615,6 +648,8 @@ public:
 
     friend class LockedAccessor<ihipCtxCriticalBase_t>;
 private:
+    ihipCtx_t     *              _parent;
+
     //--- Stream Tracker:
     std::list< ihipStream_t* > _streams;   // streams associated with this device.
 
@@ -649,16 +684,20 @@ public: // Functions:
     ~ihipCtx_t();
 
     // Functions which read or write the critical data are named locked_.
+    // (might be better called "locking_"
     // ihipCtx_t does not use recursive locks so the ihip implementation must avoid calling a locked_ function from within a locked_ function.
     // External functions which call several locked_ functions will acquire and release the lock for each function.  if this occurs in
     // performance-sensitive code we may want to refactor by adding non-locked functions and creating a new locked_ member function to call them all.
-    void locked_addStream(ihipStream_t *s);
     void locked_removeStream(ihipStream_t *s);
     void locked_reset();
     void locked_waitAllStreams();
     void locked_syncDefaultStream(bool waitOnSelf);
 
-    ihipCtxCritical_t  &criticalData() { return _criticalData; }; // TODO, move private.  Fix P2P.
+    // Will allocate a queue and assign it to the needyStream:
+    hc::accelerator_view  stealActiveQueue(LockedAccessor_CtxCrit_t &ctxCrit, ihipStream_t *needyStream);
+    hc::accelerator_view createOrStealQueue(LockedAccessor_CtxCrit_t &ctxCrit);
+
+    ihipCtxCritical_t  &criticalData() { return _criticalData; };
 
     const ihipDevice_t *getDevice() const { return _device; };
     int                 getDeviceNum() const { return _device->_deviceId; };
@@ -703,6 +742,7 @@ extern ihipCtx_t    *ihipGetTlsDefaultCtx();
 extern void          ihipSetTlsDefaultCtx(ihipCtx_t *ctx);
 extern hipError_t    ihipSynchronize(void);
 extern void          ihipCtxStackUpdate();
+extern hipError_t    ihipDeviceSetState();
 
 extern ihipDevice_t *ihipGetDevice(int);
 ihipCtx_t * ihipGetPrimaryCtx(unsigned deviceIndex);
@@ -715,7 +755,7 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t);
 // Stream printf functions:
 inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s)
 {
-    os << "stream#";
+    os << "stream:";
     os << s.getDevice()->_deviceId;;
     os << '.';
     os << s._id;
