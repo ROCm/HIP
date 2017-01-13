@@ -60,6 +60,21 @@ __global__ void CheckHalf(hipLaunchParm lp, __half* In1, __half* In2, __half* In
   Out[7] = __hsub(In1[7], In2[7]);
   Out[8] = __hsub_sat(In1[8], In2[8]);
   Out[9] = hdiv(In1[9], In2[9]);
+  Out[10] = hceil(In1[10]);
+  Out[11] = hcos(In1[11]);
+  Out[12] = hexp(In1[12]);
+  Out[13] = hexp10(In1[13]);
+  Out[14] = hexp2(In1[14]);
+  Out[15] = hfloor(In1[15]);
+  Out[16] = hlog(In1[16]);
+  Out[17] = hlog10(In1[17]);
+  Out[18] = hlog2(In1[18]);
+//  Out[19] = hrcp(In1[19]);
+  Out[20] = hrint(In1[20]);
+  Out[21] = hrsqrt(In1[21]);
+  Out[22] = hsin(In1[22]);
+  Out[23] = hsqrt(In1[23]);
+  Out[24] = htrunc(In1[24]);
 }
 
 __global__ void CheckHalf2(hipLaunchParm lp, __half2* In1, __half2* In2, __half2* In3, __half2* Out){

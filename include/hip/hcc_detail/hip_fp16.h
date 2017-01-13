@@ -57,6 +57,18 @@ extern "C" int __hip_hc_ir_hfma2_int(int, int, int);
 extern "C" int __hip_hc_ir_hmul2_int(int, int);
 extern "C" int __hip_hc_ir_hsub2_int(int, int);
 
+extern "C" __half __hip_hc_ir_hceil_half(__half) __asm("llvm.ceil.f16");
+extern "C" __half __hip_hc_ir_hcos_half(__half) __asm("llvm.cos.f16");
+extern "C" __half __hip_hc_ir_hexp2_half(__half) __asm("llvm.exp2.f16");
+extern "C" __half __hip_hc_ir_hfloor_half(__half) __asm("llvm.floor.f16");
+extern "C" __half __hip_hc_ir_hlog2_half(__half) __asm("llvm.log2.f16");
+extern "C" __half __hip_hc_ir_hrcp_half(__half) __asm("llvm.amdgcn.rcp.f16");
+extern "C" __half __hip_hc_ir_hrint_half(__half) __asm("llvm.rint.f16");
+extern "C" __half __hip_hc_ir_hrsqrt_half(__half) __asm("llvm.sqrt.f16");
+extern "C" __half __hip_hc_ir_hsin_half(__half) __asm("llvm.sin.f16");
+extern "C" __half __hip_hc_ir_hsqrt_half(__half) __asm("llvm.sqrt.f16");
+extern "C" __half __hip_hc_ir_htrunc_half(__half) __asm("llvm.trunc.f16");
+
 __device__ static inline __half __hadd(const __half a, const __half b) {
   return __hip_hc_ir_hadd_half(a, b);
 }
@@ -608,6 +620,66 @@ __device__ static inline __half __ushort_as_half(const unsigned short int i) {
   hipHalfHolder hH;
   hH.s = i;
   return hH.h;
+}
+
+__device__ static inline __half hceil(const __half h) {
+  return __hip_hc_ir_hceil_half(h);
+}
+
+__device__ static inline __half hcos(const __half h) {
+  return __hip_hc_ir_hcos_half(h);
+}
+
+__device__ static inline __half hexp(const __half h) {
+  return __hip_hc_ir_hexp2_half(__hip_hc_ir_hmul_half(h, 1.442694));
+}
+
+__device__ static inline __half hexp10(const __half h) {
+  return __hip_hc_ir_hexp2_half(__hip_hc_ir_hmul_half(h, 3.3219281));
+}
+
+__device__ static inline __half hexp2(const __half h) {
+  return __hip_hc_ir_hexp2_half(h);
+}
+
+__device__ static inline __half hfloor(const __half h) {
+  return __hip_hc_ir_hfloor_half(h);
+}
+
+__device__ static inline __half hlog(const __half h) {
+  return __hip_hc_ir_hmul_half(__hip_hc_ir_hlog2_half(h), 0.693147);
+}
+
+__device__ static inline __half hlog10(const __half h) {
+  return __hip_hc_ir_hmul_half(__hip_hc_ir_hlog2_half(h),  0.301029);
+}
+
+__device__ static inline __half hlog2(const __half h) {
+  return __hip_hc_ir_hlog2_half(h);
+}
+/*
+__device__ static inline __half hrcp(const __half h) {
+  return __hip_hc_ir_hrcp_half(h);
+}
+*/
+__device__ static inline __half hrint(const __half h) {
+  return __hip_hc_ir_hrint_half(h);
+}
+
+__device__ static inline __half hrsqrt(const __half h) {
+  return __hip_hc_ir_hrsqrt_half(h);
+}
+
+__device__ static inline __half hsin(const __half h) {
+  return __hip_hc_ir_hsin_half(h);
+}
+
+__device__ static inline __half hsqrt(const __half a) {
+  return __hip_hc_ir_hsqrt_half(a);
+}
+
+__device__ static inline __half htrunc(const __half a) {
+  return __hip_hc_ir_htrunc_half(a);
 }
 
 #endif
