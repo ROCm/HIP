@@ -297,8 +297,9 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         /*
           Kernel argument preparation.
         */
-        grid_launch_parm lp; // TODO - dummy arg but values are printed during debug.
-        hStream = ihipPreLaunchKernel(hStream, 0, 0, &lp, f._name);
+        grid_launch_parm lp; 
+        lp.dynamic_group_mem_bytes = f._groupSegmentSize;  // TODO - this should be part of preLaunchKernel.
+        hStream = ihipPreLaunchKernel(hStream, dim3(gridDimX, gridDimY, gridDimZ), dim3(blockDimX, blockDimY, blockDimZ), &lp, f._name);
 
 
         hsa_kernel_dispatch_packet_t aql;
