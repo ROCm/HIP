@@ -325,6 +325,10 @@ __device__ static inline __half __float2half_rd(const float a) {
   return (__half)a;
 }
 
+__device__ static inline __half __float2half_rn(const float a) {
+  return (__half)a;
+}
+
 __device__ static inline __half __float2half_ru(const float a) {
   return (__half)a;
 }

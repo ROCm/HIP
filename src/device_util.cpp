@@ -2179,16 +2179,6 @@ __device__ double __hip_fast_dsqrt_rz(double x) {
   return hc::fast_math::sqrt(x);
 }
 
-__device__ double  __longlong_as_double(long long int x)
-{
-  return static_cast<double>(x);
-}
-
-__device__ long long __double_as_longlong(double x)
-{
-  return static_cast<long long>(x);
-}
-
 __device__ void  __threadfence_system(void){
     // no-op
 }

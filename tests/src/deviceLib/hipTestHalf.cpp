@@ -128,5 +128,5 @@ __global__ void CheckCmpHalf2(hipLaunchParm lp, __half2* In1, __half2* In2, __ha
 }
 
 int main(){
-
+  passed();
 }
