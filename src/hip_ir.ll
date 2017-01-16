@@ -146,4 +146,29 @@ define i32 @__hip_hc_ir_h2trunc_int(i32 %a) #1 {
   ret i32 %1
 }
 
+define i32 @__hip_hc_ir_mul24_int(i32 %a, i32 %b) #1 {
+  %1 = tail call i32 asm sideeffect "v_mul_i32_i24 $0, $1, $2","=v,v,v"(i32 %a, i32 %b)
+  ret i32 %1
+}
+
+define i32 @__hip_hc_ir_umul24_int(i32 %a, i32 %b) #1 {
+  %1 = tail call i32 asm sideeffect "v_mul_u32_u24 $0, $1, $2","=v,v,v"(i32 %a, i32 %b)
+  ret i32 %1
+}
+
+define i32 @__hip_hc_ir_mulhi_int(i32 %a, i32 %b) #1 {
+  %1 = tail call i32 asm sideeffect "v_mul_hi_i32 $0, $1, $2","=v,v,v"(i32 %a, i32 %b)
+  ret i32 %1
+}
+
+define i32 @__hip_hc_ir_umulhi_int(i32 %a, i32 %b) #1 {
+  %1 = tail call i32 asm sideeffect "v_mul_hi_u32 $0, $1, $2","=v,v,v"(i32 %a, i32 %b)
+  ret i32 %1
+}
+
+define i32 @__hip_hc_ir_usad_int(i32 %a, i32 %b, i32 %c) #1 {
+  %1 = tail call i32 asm sideeffect "v_sad_u32 $0, $1, $2, $3","=v,v,v,v"(i32 %a, i32 %b, i32 %c)
+  ret i32 %1
+}
+
 attributes #1 = { alwaysinline nounwind }

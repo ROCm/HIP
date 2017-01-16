@@ -23,6 +23,59 @@ THE SOFTWARE.
 #include <hip/hip_runtime.h>
 #include <hip/hip_vector_types.h>
 
+extern "C" unsigned int __hip_hc_ir_umul24_int(unsigned int, unsigned int);
+extern "C" signed int __hip_hc_ir_mul24_int(signed int, signed int);
+extern "C" signed int __hip_hc_ir_mulhi_int(signed int, signed int);
+extern "C" unsigned int __hip_hc_ir_umulhi_int(unsigned int, unsigned int);
+// integer intrinsic function __poc __clz __ffs __brev
+__device__ unsigned int __brev( unsigned int x);
+__device__ unsigned long long int __brevll( unsigned long long int x);
+__device__ unsigned int __byte_perm(unsigned int x, unsigned int y, unsigned int s);
+__device__ unsigned int __clz(int x);
+__device__ unsigned int __clzll(long long int x);
+__device__ unsigned int __ffs(int x);
+__device__ unsigned int __ffsll(long long int x);
+__device__ static inline unsigned int __hadd(int x, int y)
+{
+  return (x + y) >> 1;
+}
+__device__ static inline int __mul24(int x, int y)
+{
+  return __hip_hc_ir_mul24_int(x, y);
+}
+__device__ long long int __mul64hi(long long int x, long long int y);
+__device__ int __mulhi(int x, int y)
+{
+  return __hip_hc_ir_mulhi_int(x, y);
+}
+__device__ unsigned int __popc( unsigned int x);
+__device__ unsigned int __popcll( unsigned long long int x);
+__device__ int __rhadd(int x, int y)
+{
+  return (x + y + 1) >> 1;
+}
+//__device__ unsigned int __sad(int x, int y, int z);
+/*
+Implemented signed version of sad
+*/
+__device__ unsigned int __uhadd(unsigned int x, unsigned int y)
+{
+  return (x + y) >> 1;
+}
+__device__ static inline int __umul24(unsigned int x, unsigned int y)
+{
+  return __hip_hc_ir_umul24_int(x, y);
+}
+__device__ unsigned long long int __umul64hi(unsigned long long int x, unsigned long long int y);
+__device__ unsigned int __umulhi(unsigned int x, unsigned int y);
+__device__ unsigned int __urhadd(unsigned int x, unsigned int y);
+__device__ unsigned int __usad(unsigned int x, unsigned int y, unsigned int z);
+
+// warp vote function __all __any __ballot
+__device__ int __all(  int input);
+__device__ int __any( int input);
+__device__  unsigned long long int __ballot( int input);
+
 /*
 Rounding modes are not yet supported in HIP
 */
