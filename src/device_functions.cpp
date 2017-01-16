@@ -18,6 +18,10 @@ THE SOFTWARE.
 */
 
 #include <hip/device_functions.h>
+#include <hc.hpp>
+#include <grid_launch.h>
+#include <hc_math.hpp>
+#include "device_util.h"
 
 struct holder64Bit{
   union{
@@ -357,4 +361,164 @@ __device__ float __ull2float_ru(unsigned long long int x)
 __device__ float __ull2float_rz(unsigned long long int x)
 {
   return (float)x;
+}
+
+
+
+// integer intrinsic function __poc __clz __ffs __brev
+__device__ unsigned int __popc( unsigned int input)
+{
+    return hc::__popcount_u32_b32(input);
+}
+
+__device__ unsigned int __popcll( unsigned long long int input)
+{
+    return hc::__popcount_u32_b64(input);
+}
+
+__device__ unsigned int __clz(unsigned int input)
+{
+#ifdef NVCC_COMPAT
+    return input == 0 ? 32 : hc::__firstbit_u32_u32( input);
+#else
+    return hc::__firstbit_u32_u32( input);
+#endif
+}
+
+__device__ unsigned int __clzll(unsigned long long int input)
+{
+#ifdef NVCC_COMPAT
+    return input == 0 ? 64 : hc::__firstbit_u32_u64( input);
+#else
+    return hc::__firstbit_u32_u64( input);
+#endif
+}
+
+__device__ unsigned int __clz( int input)
+{
+#ifdef NVCC_COMPAT
+    return input == 0 ? 32 : hc::__firstbit_u32_s32( input);
+#else
+    return hc::__firstbit_u32_s32( input);
+#endif
+}
+
+__device__ unsigned int __clzll( long long int input)
+{
+#ifdef NVCC_COMPAT
+    return input == 0 ? 64 : hc::__firstbit_u32_s64( input);
+#else
+    return hc::__firstbit_u32_s64( input);
+#endif
+}
+
+__device__ unsigned int __ffs(unsigned int input)
+{
+#ifdef NVCC_COMPAT
+    return hc::__lastbit_u32_u32( input)+1;
+#else
+    return hc::__lastbit_u32_u32( input);
+#endif
+}
+
+__device__ unsigned int __ffsll(unsigned long long int input)
+{
+#ifdef NVCC_COMPAT
+    return hc::__lastbit_u32_u64( input)+1;
+#else
+    return hc::__lastbit_u32_u64( input);
+#endif
+}
+
+__device__ unsigned int __ffs( int input)
+{
+#ifdef NVCC_COMPAT
+    return hc::__lastbit_u32_s32( input)+1;
+#else
+    return hc::__lastbit_u32_s32( input);
+#endif
+}
+
+__device__ unsigned int __ffsll( long long int input)
+{
+#ifdef NVCC_COMPAT
+    return hc::__lastbit_u32_s64( input)+1;
+#else
+    return hc::__lastbit_u32_s64( input);
+#endif
+}
+
+__device__ unsigned int __brev( unsigned int input)
+{
+    return hc::__bitrev_b32( input);
+}
+
+__device__ unsigned long long int __brevll( unsigned long long int input)
+{
+    return hc::__bitrev_b64( input);
+}
+
+struct ucharHolder {
+  union {
+    unsigned char c[4];
+    unsigned int ui;
+  };
+}__attribute__((aligned(4)));
+
+struct uchar2Holder {
+  union {
+    unsigned int ui[2];
+    unsigned char c[8];
+  };
+}__attribute__((aligned(8)));
+
+struct intHolder {
+  union {
+    signed int si[2];
+    signed int long sl;
+  };
+}__attribute__((aligned(8)));
+
+struct uintHolder {
+  union {
+    signed int ui[2];
+    signed int long ul;
+  };
+}__attribute__((aligned(8)));
+
+struct uchar2Holder cHoldVal;
+struct ucharHolder cHoldKey;
+struct ucharHolder cHoldOut;
+
+struct intHolder iHold1;
+struct intHolder iHold2;
+struct uintHolder uHold1;
+struct uintHolder uHold2;
+
+__device__ unsigned int __byte_perm(unsigned int x, unsigned int y, unsigned int s)
+{
+  cHoldKey.ui = s;
+  cHoldVal.ui[0] = x;
+  cHoldVal.ui[1] = y;
+  cHoldOut.c[0] = cHoldVal.c[cHoldKey.c[0]];
+  cHoldOut.c[1] = cHoldVal.c[cHoldKey.c[1]];
+  cHoldOut.c[2] = cHoldVal.c[cHoldKey.c[2]];
+  cHoldOut.c[3] = cHoldVal.c[cHoldKey.c[3]];
+  return cHoldOut.ui;
+}
+
+__device__ long long __mul64hi(long long int x, long long int y)
+{
+  iHold1.sl = x;
+  iHold2.sl = y;
+  iHold1.sl = iHold1.si[1] * iHold2.si[1];
+  return iHold1.sl;
+}
+
+__device__ unsigned long long __umul64hi(unsigned long long int x, unsigned long long int y)
+{
+  uHold1.ul = x;
+  uHold2.ul = y;
+  uHold1.ul = uHold1.ui[1] * uHold2.ui[1];
+  return uHold1.ul;
 }

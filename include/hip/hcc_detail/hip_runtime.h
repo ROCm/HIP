@@ -420,30 +420,6 @@ __device__ unsigned int atomicInc(unsigned int* address,
 __device__ unsigned int atomicDec(unsigned int* address,
                        unsigned int val);
 
-//__mul24 __umul24
-__device__  int __mul24(int arg1, int arg2);
-__device__  unsigned int __umul24(unsigned int arg1, unsigned int arg2);
-
-// integer intrinsic function __poc __clz __ffs __brev
-__device__ unsigned int __popc( unsigned int input);
-__device__ unsigned int __popcll( unsigned long long int input);
-__device__ unsigned int __clz(unsigned int input);
-__device__ unsigned int __clzll(unsigned long long int input);
-__device__ unsigned int __clz(int input);
-__device__ unsigned int __clzll(long long int input);
-__device__ unsigned int __ffs(unsigned int input);
-__device__ unsigned int __ffsll(unsigned long long int input);
-__device__ unsigned int __ffs(int input);
-__device__ unsigned int __ffsll(long long int input);
-__device__ unsigned int __brev( unsigned int input);
-__device__ unsigned long long int __brevll( unsigned long long int input);
-
-
-// warp vote function __all __any __ballot
-__device__ int __all(  int input);
-__device__ int __any( int input);
-__device__  unsigned long long int __ballot( int input);
-
 // warp shuffle functions
 #ifdef __cplusplus
 __device__ int __shfl(int input, int lane, int width=warpSize);
