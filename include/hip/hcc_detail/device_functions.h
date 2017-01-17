@@ -27,6 +27,7 @@ extern "C" unsigned int __hip_hc_ir_umul24_int(unsigned int, unsigned int);
 extern "C" signed int __hip_hc_ir_mul24_int(signed int, signed int);
 extern "C" signed int __hip_hc_ir_mulhi_int(signed int, signed int);
 extern "C" unsigned int __hip_hc_ir_umulhi_int(unsigned int, unsigned int);
+extern "C" unsigned int __hip_hc_ir_usad_int(unsigned int, unsigned int, unsigned int);
 // integer intrinsic function __poc __clz __ffs __brev
 __device__ unsigned int __brev( unsigned int x);
 __device__ unsigned long long int __brevll( unsigned long long int x);
@@ -37,7 +38,10 @@ __device__ unsigned int __ffs(int x);
 __device__ unsigned int __ffsll(long long int x);
 __device__ static inline unsigned int __hadd(int x, int y)
 {
-  return (x + y) >> 1;
+  int z = x + y;
+  int sign = z & 0x8000000;
+  int value = z & 0x7FFFFFFF;
+  return ((value) >> 1 || sign);
 }
 __device__ static inline int __mul24(int x, int y)
 {
@@ -52,7 +56,10 @@ __device__ unsigned int __popc( unsigned int x);
 __device__ unsigned int __popcll( unsigned long long int x);
 __device__ static inline int __rhadd(int x, int y)
 {
-  return (x + y + 1) >> 1;
+  int z = x + y + 1;
+  int sign = z & 0x8000000;
+  int value = z & 0x7FFFFFFF;
+  return ((value) >> 1 || sign);
 }
 //__device__ unsigned int __sad(int x, int y, int z);
 /*
@@ -67,9 +74,18 @@ __device__ static inline int __umul24(unsigned int x, unsigned int y)
   return __hip_hc_ir_umul24_int(x, y);
 }
 __device__ unsigned long long int __umul64hi(unsigned long long int x, unsigned long long int y);
-__device__ unsigned int __umulhi(unsigned int x, unsigned int y);
-__device__ unsigned int __urhadd(unsigned int x, unsigned int y);
-__device__ unsigned int __usad(unsigned int x, unsigned int y, unsigned int z);
+__device__ static inline unsigned int __umulhi(unsigned int x, unsigned int y)
+{
+  return __hip_hc_ir_umulhi_int(x, y);
+}
+__device__ static inline unsigned int __urhadd(unsigned int x, unsigned int y)
+{
+  return (x + y + 1) >> 1;
+}
+__device__ static inline unsigned int __usad(unsigned int x, unsigned int y, unsigned int z)
+{
+  return __hip_hc_ir_usad_int(x, y, z);
+}
 
 /*
 Rounding modes are not yet supported in HIP
