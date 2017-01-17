@@ -44,21 +44,21 @@ __device__ static inline int __mul24(int x, int y)
   return __hip_hc_ir_mul24_int(x, y);
 }
 __device__ long long int __mul64hi(long long int x, long long int y);
-__device__ int __mulhi(int x, int y)
+__device__ static inline int __mulhi(int x, int y)
 {
   return __hip_hc_ir_mulhi_int(x, y);
 }
 __device__ unsigned int __popc( unsigned int x);
 __device__ unsigned int __popcll( unsigned long long int x);
-__device__ int __rhadd(int x, int y)
+__device__ static inline int __rhadd(int x, int y)
 {
   return (x + y + 1) >> 1;
 }
 //__device__ unsigned int __sad(int x, int y, int z);
 /*
-Implemented signed version of sad
+Implement signed version of sad
 */
-__device__ unsigned int __uhadd(unsigned int x, unsigned int y)
+__device__ static inline unsigned int __uhadd(unsigned int x, unsigned int y)
 {
   return (x + y) >> 1;
 }
@@ -70,11 +70,6 @@ __device__ unsigned long long int __umul64hi(unsigned long long int x, unsigned 
 __device__ unsigned int __umulhi(unsigned int x, unsigned int y);
 __device__ unsigned int __urhadd(unsigned int x, unsigned int y);
 __device__ unsigned int __usad(unsigned int x, unsigned int y, unsigned int z);
-
-// warp vote function __all __any __ballot
-__device__ int __all(  int input);
-__device__ int __any( int input);
-__device__  unsigned long long int __ballot( int input);
 
 /*
 Rounding modes are not yet supported in HIP

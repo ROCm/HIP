@@ -420,6 +420,11 @@ __device__ unsigned int atomicInc(unsigned int* address,
 __device__ unsigned int atomicDec(unsigned int* address,
                        unsigned int val);
 
+                       // warp vote function __all __any __ballot
+__device__ int __all(  int input);
+__device__ int __any( int input);
+__device__  unsigned long long int __ballot( int input);
+
 // warp shuffle functions
 #ifdef __cplusplus
 __device__ int __shfl(int input, int lane, int width=warpSize);
