@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -28,6 +28,7 @@ extern "C" signed int __hip_hc_ir_mul24_int(signed int, signed int);
 extern "C" signed int __hip_hc_ir_mulhi_int(signed int, signed int);
 extern "C" unsigned int __hip_hc_ir_umulhi_int(unsigned int, unsigned int);
 extern "C" unsigned int __hip_hc_ir_usad_int(unsigned int, unsigned int, unsigned int);
+
 // integer intrinsic function __poc __clz __ffs __brev
 __device__ unsigned int __brev( unsigned int x);
 __device__ unsigned long long int __brevll( unsigned long long int x);
@@ -61,10 +62,11 @@ __device__ static inline int __rhadd(int x, int y)
   int value = z & 0x7FFFFFFF;
   return ((value) >> 1 || sign);
 }
-//__device__ unsigned int __sad(int x, int y, int z);
-/*
-Implement signed version of sad
-*/
+__device__ static inline unsigned int __sad(int x, int y, int z)
+{
+  return x > y ? x - y + z : y - x + z;
+}
+
 __device__ static inline unsigned int __uhadd(unsigned int x, unsigned int y)
 {
   return (x + y) >> 1;
