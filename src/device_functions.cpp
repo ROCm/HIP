@@ -363,7 +363,9 @@ __device__ float __ull2float_rz(unsigned long long int x)
   return (float)x;
 }
 
-
+/*
+Integer Intrinsics
+*/
 
 // integer intrinsic function __poc __clz __ffs __brev
 __device__ unsigned int __popc( unsigned int input)
@@ -486,17 +488,12 @@ struct uintHolder {
   };
 }__attribute__((aligned(8)));
 
-struct uchar2Holder cHoldVal;
-struct ucharHolder cHoldKey;
-struct ucharHolder cHoldOut;
-
-struct intHolder iHold1;
-struct intHolder iHold2;
-struct uintHolder uHold1;
-struct uintHolder uHold2;
 
 __device__ unsigned int __byte_perm(unsigned int x, unsigned int y, unsigned int s)
 {
+  struct uchar2Holder cHoldVal;
+  struct ucharHolder cHoldKey;
+  struct ucharHolder cHoldOut;
   cHoldKey.ui = s;
   cHoldVal.ui[0] = x;
   cHoldVal.ui[1] = y;
@@ -509,6 +506,8 @@ __device__ unsigned int __byte_perm(unsigned int x, unsigned int y, unsigned int
 
 __device__ long long __mul64hi(long long int x, long long int y)
 {
+  struct intHolder iHold1;
+  struct intHolder iHold2;
   iHold1.sl = x;
   iHold2.sl = y;
   iHold1.sl = iHold1.si[1] * iHold2.si[1];
@@ -517,6 +516,8 @@ __device__ long long __mul64hi(long long int x, long long int y)
 
 __device__ unsigned long long __umul64hi(unsigned long long int x, unsigned long long int y)
 {
+  struct uintHolder uHold1;
+  struct uintHolder uHold2;
   uHold1.ul = x;
   uHold2.ul = y;
   uHold1.ul = uHold1.ui[1] * uHold2.ui[1];
