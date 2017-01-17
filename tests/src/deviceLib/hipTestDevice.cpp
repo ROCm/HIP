@@ -24,8 +24,9 @@ THE SOFTWARE.
  */
 
 #include"test_common.h"
-#include "hip/hip_runtime.h"
-#include "hip/hip_runtime_api.h"
+#include <hip/hip_runtime.h>
+#include <hip/math_functions.h>
+#include <hip/hip_runtime_api.h>
 
 #define N 512
 #define SIZE N*sizeof(float)

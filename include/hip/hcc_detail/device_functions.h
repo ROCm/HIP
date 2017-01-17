@@ -23,6 +23,173 @@ THE SOFTWARE.
 #include <hip/hip_runtime.h>
 #include <hip/hip_vector_types.h>
 
+// Single Precision Fast Math
+extern __attribute__((const)) float __hip_fast_cosf(float) __asm("llvm.cos.f32");
+extern __attribute__((const)) float __hip_fast_exp2f(float) __asm("llvm.exp2.f32");
+__device__ float __hip_fast_exp10f(float);
+__device__ float __hip_fast_expf(float);
+__device__ float __hip_fast_frsqrt_rn(float);
+extern __attribute__((const)) float __hip_fast_fsqrt_rd(float) __asm("llvm.sqrt.f32");
+__device__ float __hip_fast_fsqrt_rn(float);
+__device__ float __hip_fast_fsqrt_ru(float);
+__device__ float __hip_fast_fsqrt_rz(float);
+__device__ float __hip_fast_log10f(float);
+extern __attribute__((const)) float __hip_fast_log2f(float) __asm("llvm.log2.f32");
+__device__ float __hip_fast_logf(float);
+__device__ float __hip_fast_powf(float, float);
+__device__ void __hip_fast_sincosf(float,float*,float*);
+extern __attribute__((const)) float __hip_fast_sinf(float) __asm("llvm.sin.f32");
+__device__ float __hip_fast_tanf(float);
+extern __attribute__((const)) float __hip_fast_fmaf(float,float,float) __asm("llvm.fma.f32");
+extern __attribute__((const)) float __hip_fast_frcp(float) __asm("llvm.amdgcn.rcp.f32");
+
+extern __attribute__((const)) double __hip_fast_dsqrt(double) __asm("llvm.sqrt.f64");
+extern __attribute__((const)) double __hip_fast_fma(double,double,double) __asm("llvm.fma.f64");
+extern __attribute__((const)) double __hip_fast_drcp(double) __asm("llvm.amdgcn.rcp.f64");
+
+
+// Single Precision Fast Math
+__device__ inline float __cosf(float x) {
+  return __hip_fast_cosf(x);
+}
+
+__device__ inline float __exp10f(float x) {
+  return __hip_fast_exp10f(x);
+}
+
+__device__ inline float __expf(float x) {
+  return __hip_fast_expf(x);
+}
+
+__device__ inline float __frsqrt_rn(float x) {
+  return __hip_fast_frsqrt_rn(x);
+}
+
+__device__ inline float __fsqrt_rd(float x) {
+  return __hip_fast_fsqrt_rd(x);
+}
+
+__device__ inline float __fsqrt_rn(float x) {
+  return __hip_fast_fsqrt_rn(x);
+}
+
+__device__ inline float __fsqrt_ru(float x) {
+  return __hip_fast_fsqrt_ru(x);
+}
+
+__device__ inline float __fsqrt_rz(float x) {
+  return __hip_fast_fsqrt_rz(x);
+}
+
+__device__ inline float __log10f(float x) {
+  return __hip_fast_log10f(x);
+}
+
+__device__ inline float __log2f(float x) {
+  return __hip_fast_log2f(x);
+}
+
+__device__ inline float __logf(float x) {
+  return __hip_fast_logf(x);
+}
+
+__device__ inline float __powf(float base, float exponent) {
+  return __hip_fast_powf(base, exponent);
+}
+
+__device__ inline void __sincosf(float x, float *s, float *c) {
+  return __hip_fast_sincosf(x, s, c);
+}
+
+__device__ inline float __sinf(float x) {
+  return __hip_fast_sinf(x);
+}
+
+__device__ inline float __tanf(float x) {
+  return __hip_fast_tanf(x);
+}
+
+__device__ inline float __fmaf_rd(float x, float y, float z) {
+  return __hip_fast_fmaf(x, y, z);
+}
+
+__device__ inline float __fmaf_rn(float x, float y, float z) {
+  return __hip_fast_fmaf(x, y, z);
+}
+
+__device__ inline float __fmaf_ru(float x, float y, float z) {
+  return __hip_fast_fmaf(x, y, z);
+}
+
+__device__ inline float __fmaf_rz(float x, float y, float z) {
+  return __hip_fast_fmaf(x, y, z);
+}
+
+__device__ inline float __frcp_rd(float x) {
+  return __hip_fast_frcp(x);
+}
+
+__device__ inline float __frcp_rn(float x) {
+  return __hip_fast_frcp(x);
+}
+
+__device__ inline float __frcp_ru(float x) {
+  return __hip_fast_frcp(x);
+}
+
+__device__ inline float __frcp_rz(float x) {
+  return __hip_fast_frcp(x);
+}
+
+__device__ inline double __dsqrt_rd(double x) {
+  return __hip_fast_dsqrt(x);
+}
+
+__device__ inline double __dsqrt_rn(double x) {
+  return __hip_fast_dsqrt(x);
+}
+
+__device__ inline double __dsqrt_ru(double x) {
+  return __hip_fast_dsqrt(x);
+}
+
+__device__ inline double __dsqrt_rz(double x) {
+  return __hip_fast_dsqrt(x);
+}
+
+__device__ inline double __fma_rd(double x, double y, double z) {
+  return __hip_fast_fma(x, y, z);
+}
+
+__device__ inline double __fma_rn(double x, double y, double z) {
+  return __hip_fast_fma(x, y, z);
+}
+
+__device__ inline double __fma_ru(double x, double y, double z) {
+  return __hip_fast_fma(x, y, z);
+}
+
+__device__ inline double __fma_rz(double x, double y, double z) {
+  return __hip_fast_fma(x, y, z);
+}
+
+__device__ inline double __drcp_rd(double x) {
+  return __hip_fast_drcp(x);
+}
+
+__device__ inline double __drcp_rn(double x) {
+  return __hip_fast_drcp(x);
+}
+
+__device__ inline double __drcp_ru(double x) {
+  return __hip_fast_drcp(x);
+}
+
+__device__ inline double __drcp_rz(double x) {
+  return __hip_fast_drcp(x);
+}
+
+
 extern "C" unsigned int __hip_hc_ir_umul24_int(unsigned int, unsigned int);
 extern "C" signed int __hip_hc_ir_mul24_int(signed int, signed int);
 extern "C" signed int __hip_hc_ir_mulhi_int(signed int, signed int);

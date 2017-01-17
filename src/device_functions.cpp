@@ -523,3 +523,71 @@ __device__ unsigned long long __umul64hi(unsigned long long int x, unsigned long
   uHold1.ul = uHold1.ui[1] * uHold2.ui[1];
   return uHold1.ul;
 }
+
+/*
+HIP specific device functions
+*/
+
+__device__ unsigned __hip_ds_bpermute(int index, unsigned src) {
+    return hc::__amdgcn_ds_bpermute(index, src);
+}
+
+__device__ float __hip_ds_bpermutef(int index, float src) {
+    return hc::__amdgcn_ds_bpermute(index, src);
+}
+
+__device__ unsigned __hip_ds_permute(int index, unsigned src) {
+    return hc::__amdgcn_ds_permute(index, src);
+}
+
+__device__ float __hip_ds_permutef(int index, float src) {
+    return hc::__amdgcn_ds_permute(index, src);
+}
+
+__device__ unsigned __hip_ds_swizzle(unsigned int src, int pattern) {
+    return hc::__amdgcn_ds_swizzle(src, pattern);
+}
+
+__device__ float __hip_ds_swizzlef(float src, int pattern) {
+    return hc::__amdgcn_ds_swizzle(src, pattern);
+}
+
+__device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask, bool bound_ctrl) {
+    return hc::__amdgcn_move_dpp(src, dpp_ctrl, row_mask, bank_mask, bound_ctrl);
+}
+
+#define MASK1 0x00ff00ff
+#define MASK2 0xff00ff00
+
+__device__ char4 __hip_hc_add8pk(char4 in1, char4 in2) {
+    char4 out;
+    unsigned one1 = in1.a & MASK1;
+    unsigned one2 = in2.a & MASK1;
+    out.a = (one1 + one2) & MASK1;
+    one1 = in1.a & MASK2;
+    one2 = in2.a & MASK2;
+    out.a = out.a | ((one1 + one2) & MASK2);
+    return out;
+}
+
+__device__ char4 __hip_hc_sub8pk(char4 in1, char4 in2) {
+    char4 out;
+    unsigned one1 = in1.a & MASK1;
+    unsigned one2 = in2.a & MASK1;
+    out.a = (one1 - one2) & MASK1;
+    one1 = in1.a & MASK2;
+    one2 = in2.a & MASK2;
+    out.a = out.a | ((one1 - one2) & MASK2);
+    return out;
+}
+
+__device__ char4 __hip_hc_mul8pk(char4 in1, char4 in2) {
+    char4 out;
+    unsigned one1 = in1.a & MASK1;
+    unsigned one2 = in2.a & MASK1;
+    out.a = (one1 * one2) & MASK1;
+    one1 = in1.a & MASK2;
+    one2 = in2.a & MASK2;
+    out.a = out.a | ((one1 * one2) & MASK2);
+    return out;
+}

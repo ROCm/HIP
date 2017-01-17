@@ -19,7 +19,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#include "hip/hip_runtime.h"
+#include <hip/hip_runtime.h>
+#include <hip/math_functions.h>
 #include "test_common.h"
 
 #pragma GCC diagnostic ignored "-Wall"
@@ -85,7 +86,7 @@ __host__ void double_precision_math_functions()
     nan("1");
     nearbyint(0.0);
     //nextafter(0.0);
-    //fX = 1.0; norm(1, &fX);
+    fX = 1.0; norm(1, &fX);
 #if defined(__HIP_PLATFORM_HCC__)
     norm3d(1.0, 0.0, 0.0);
     norm4d(1.0, 0.0, 0.0, 0.0);

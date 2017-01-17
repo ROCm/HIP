@@ -19,7 +19,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#include "hip/hip_runtime.h"
+#include <hip/hip_runtime.h>
+#include <hip/device_functions.h>
 #include "test_common.h"
 
 #pragma GCC diagnostic ignored "-Wall"
@@ -27,18 +28,18 @@ THE SOFTWARE.
 
 __device__ void double_precision_intrinsics()
 {
-    //__dadd_rd(0.0, 1.0);
-    //__dadd_rn(0.0, 1.0);
-    //__dadd_ru(0.0, 1.0);
-    //__dadd_rz(0.0, 1.0);
-    //__ddiv_rd(0.0, 1.0);
-    //__ddiv_rn(0.0, 1.0);
-    //__ddiv_ru(0.0, 1.0);
-    //__ddiv_rz(0.0, 1.0);
-    //__dmul_rd(1.0, 2.0);
-    //__dmul_rn(1.0, 2.0);
-    //__dmul_ru(1.0, 2.0);
-    //__dmul_rz(1.0, 2.0);
+    __dadd_rd(0.0, 1.0);
+    __dadd_rn(0.0, 1.0);
+    __dadd_ru(0.0, 1.0);
+    __dadd_rz(0.0, 1.0);
+    __ddiv_rd(0.0, 1.0);
+    __ddiv_rn(0.0, 1.0);
+    __ddiv_ru(0.0, 1.0);
+    __ddiv_rz(0.0, 1.0);
+    __dmul_rd(1.0, 2.0);
+    __dmul_rn(1.0, 2.0);
+    __dmul_ru(1.0, 2.0);
+    __dmul_rz(1.0, 2.0);
     __drcp_rd(2.0);
     __drcp_rn(2.0);
     __drcp_ru(2.0);
@@ -47,10 +48,10 @@ __device__ void double_precision_intrinsics()
     __dsqrt_rn(4.0);
     __dsqrt_ru(4.0);
     __dsqrt_rz(4.0);
-    //__dsub_rd(2.0, 1.0);
-    //__dsub_rn(2.0, 1.0);
-    //__dsub_ru(2.0, 1.0);
-    //__dsub_rz(2.0, 1.0);
+    __dsub_rd(2.0, 1.0);
+    __dsub_rn(2.0, 1.0);
+    __dsub_ru(2.0, 1.0);
+    __dsub_rz(2.0, 1.0);
     __fma_rd(1.0, 2.0, 3.0);
     __fma_rn(1.0, 2.0, 3.0);
     __fma_ru(1.0, 2.0, 3.0);
