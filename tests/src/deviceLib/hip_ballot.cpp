@@ -26,9 +26,11 @@ THE SOFTWARE.
 #include <iostream>
 
 #include "hip/hip_runtime.h"
+#include "hip/device_functions.h"
+
 #define HIP_ASSERT(x) (assert((x)==hipSuccess))
 
-__global__ void 
+__global__ void
 	gpu_ballot(hipLaunchParm lp, unsigned int* device_ballot, int Num_Warps_per_Block,int pshift)
 {
 
@@ -39,7 +41,7 @@ __global__ void
 #else
 	atomicAdd(&device_ballot[warp_num+hipBlockIdx_x*Num_Warps_per_Block],__popc(__ballot(tid - 245)));
 #endif
- 
+
 }
 
 
@@ -47,24 +49,24 @@ int main(int argc, char *argv[])
 { int warpSize, pshift;
   hipDeviceProp_t devProp;
   hipGetDeviceProperties(&devProp, 0);
-  
+
   warpSize = devProp.warpSize;
 
   int w = warpSize;
-  pshift = 0; 
+  pshift = 0;
   while (w >>= 1) ++pshift;
-  
+
   unsigned int Num_Threads_per_Block      = 512;
   unsigned int Num_Blocks_per_Grid        = 1;
   unsigned int Num_Warps_per_Block        = Num_Threads_per_Block/warpSize;
   unsigned int Num_Warps_per_Grid         = (Num_Threads_per_Block*Num_Blocks_per_Grid)/warpSize;
   unsigned int* host_ballot = (unsigned int*)malloc(Num_Warps_per_Grid*sizeof(unsigned int));
-  unsigned int* device_ballot; 
+  unsigned int* device_ballot;
   HIP_ASSERT(hipMalloc((void**)&device_ballot, Num_Warps_per_Grid*sizeof(unsigned int)));
   int divergent_count =0;
   for (int i=0; i<Num_Warps_per_Grid; i++) host_ballot[i] = 0;
 
- 
+
   HIP_ASSERT(hipMemcpy(device_ballot, host_ballot, Num_Warps_per_Grid*sizeof(unsigned int), hipMemcpyHostToDevice));
 
   hipLaunchKernel(gpu_ballot, dim3(Num_Blocks_per_Grid),dim3(Num_Threads_per_Block),0,0, device_ballot,Num_Warps_per_Block,pshift);
