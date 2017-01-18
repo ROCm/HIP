@@ -473,7 +473,7 @@ preamble = "# HIP MATH APIs Documentation \n"+\
 " /*implementation*/\n}\n" + \
 "```\n\n" + \
 "This helps python script to add the device function newly declared into markdown documentation (as it looks at functions with `;` at the end and `__device__` at the beginning)\n\n" + \
-"The next step would be to add Description to  `deviceFuncDesc`.\n" + \
+"The next step would be to add Description to  `deviceFuncDesc` dictionary in python script.\n" + \
 "From the above example, it can be writtern as,\n`deviceFuncDesc['__dotf'] = 'This functions takes 2 4 component float vector and outputs dot product across them'`\n\n"
 
 def generateSnippet(name, description, signature):
