@@ -61,6 +61,90 @@ __device__ inline float __expf(float x) {
   return __hip_fast_expf(x);
 }
 
+__device__ static inline float __fadd_rd(float x, float y) {
+  return x + y;
+}
+
+__device__ static inline float __fadd_rn(float x, float y) {
+  return x + y;
+}
+
+__device__ static inline float __fadd_ru(float x, float y) {
+  return x + y;
+}
+
+__device__ static inline float __fadd_rz(float x, float y) {
+  return x + y;
+}
+
+__device__ static inline float __fdiv_rd(float x, float y) {
+  return x / y;
+}
+
+__device__ static inline float __fdiv_rn(float x, float y) {
+  return x / y;
+}
+
+__device__ static inline float __fdiv_ru(float x, float y) {
+  return x / y;
+}
+
+__device__ static inline float __fdiv_rz(float x, float y) {
+  return x / y;
+}
+
+__device__ static inline float __fdividef(float x, float y) {
+  return x / y;
+}
+
+__device__ inline float __fmaf_rd(float x, float y, float z) {
+  return __hip_fast_fmaf(x, y, z);
+}
+
+__device__ inline float __fmaf_rn(float x, float y, float z) {
+  return __hip_fast_fmaf(x, y, z);
+}
+
+__device__ inline float __fmaf_ru(float x, float y, float z) {
+  return __hip_fast_fmaf(x, y, z);
+}
+
+__device__ inline float __fmaf_rz(float x, float y, float z) {
+  return __hip_fast_fmaf(x, y, z);
+}
+
+__device__ static inline float __fmul_rd(float x, float y) {
+  return x * y;
+}
+
+__device__ static inline float __fmul_rn(float x, float y) {
+  return x * y;
+}
+
+__device__ static inline float __fmul_ru(float x, float y) {
+  return x * y;
+}
+
+__device__ static inline float __fmul_rz(float x, float y) {
+  return x * y;
+}
+
+__device__ inline float __frcp_rd(float x) {
+  return __hip_fast_frcp(x);
+}
+
+__device__ inline float __frcp_rn(float x) {
+  return __hip_fast_frcp(x);
+}
+
+__device__ inline float __frcp_ru(float x) {
+  return __hip_fast_frcp(x);
+}
+
+__device__ inline float __frcp_rz(float x) {
+  return __hip_fast_frcp(x);
+}
+
 __device__ inline float __frsqrt_rn(float x) {
   return __hip_fast_frsqrt_rn(x);
 }
@@ -81,6 +165,23 @@ __device__ inline float __fsqrt_rz(float x) {
   return __hip_fast_fsqrt_rz(x);
 }
 
+__device__ static inline float __fsub_rd(float x, float y) {
+  return x - y;
+}
+
+__device__ static inline float __fsub_rn(float x, float y) {
+  return x - y;
+}
+
+__device__ static inline float __fsub_ru(float x, float y) {
+  return x - y;
+}
+
+__device__ static inline float __fsub_rz(float x, float y) {
+  return x - y;
+}
+
+
 __device__ inline float __log10f(float x) {
   return __hip_fast_log10f(x);
 }
@@ -97,6 +198,12 @@ __device__ inline float __powf(float base, float exponent) {
   return __hip_fast_powf(base, exponent);
 }
 
+__device__ static inline float __saturatef(float x) {
+  x = x > 1.0f ? 1.0f : x;
+  x = x < 0.0f ? 0.0f : x;
+  return x;
+}
+
 __device__ inline void __sincosf(float x, float *s, float *c) {
   return __hip_fast_sincosf(x, s, c);
 }
@@ -109,68 +216,57 @@ __device__ inline float __tanf(float x) {
   return __hip_fast_tanf(x);
 }
 
-__device__ inline float __fmaf_rd(float x, float y, float z) {
-  return __hip_fast_fmaf(x, y, z);
+
+/*
+Double Precision Intrinsics
+*/
+
+__device__ static inline double __dadd_rd(double x, double y) {
+  return x + y;
 }
 
-__device__ inline float __fmaf_rn(float x, float y, float z) {
-  return __hip_fast_fmaf(x, y, z);
+__device__ static inline double __dadd_rn(double x, double y) {
+  return x + y;
 }
 
-__device__ inline float __fmaf_ru(float x, float y, float z) {
-  return __hip_fast_fmaf(x, y, z);
+__device__ static inline double __dadd_ru(double x, double y) {
+  return x + y;
 }
 
-__device__ inline float __fmaf_rz(float x, float y, float z) {
-  return __hip_fast_fmaf(x, y, z);
+__device__ static inline double __dadd_rz(double x, double y) {
+  return x + y;
 }
 
-__device__ inline float __frcp_rd(float x) {
-  return __hip_fast_frcp(x);
+__device__ static inline double __ddiv_rd(double x, double y) {
+  return x / y;
 }
 
-__device__ inline float __frcp_rn(float x) {
-  return __hip_fast_frcp(x);
+__device__ static inline double __ddiv_rn(double x, double y) {
+  return x / y;
 }
 
-__device__ inline float __frcp_ru(float x) {
-  return __hip_fast_frcp(x);
+__device__ static inline double __ddiv_ru(double x, double y) {
+  return x / y;
 }
 
-__device__ inline float __frcp_rz(float x) {
-  return __hip_fast_frcp(x);
+__device__ static inline double __ddiv_rz(double x, double y) {
+  return x / y;
 }
 
-__device__ inline double __dsqrt_rd(double x) {
-  return __hip_fast_dsqrt(x);
+__device__ static inline double __dmul_rd(double x, double y) {
+  return x * y;
 }
 
-__device__ inline double __dsqrt_rn(double x) {
-  return __hip_fast_dsqrt(x);
+__device__ static inline double __dmul_rn(double x, double y) {
+  return x * y;
 }
 
-__device__ inline double __dsqrt_ru(double x) {
-  return __hip_fast_dsqrt(x);
+__device__ static inline double __dmul_ru(double x, double y) {
+  return x * y;
 }
 
-__device__ inline double __dsqrt_rz(double x) {
-  return __hip_fast_dsqrt(x);
-}
-
-__device__ inline double __fma_rd(double x, double y, double z) {
-  return __hip_fast_fma(x, y, z);
-}
-
-__device__ inline double __fma_rn(double x, double y, double z) {
-  return __hip_fast_fma(x, y, z);
-}
-
-__device__ inline double __fma_ru(double x, double y, double z) {
-  return __hip_fast_fma(x, y, z);
-}
-
-__device__ inline double __fma_rz(double x, double y, double z) {
-  return __hip_fast_fma(x, y, z);
+__device__ static inline double __dmul_rz(double x, double y) {
+  return x * y;
 }
 
 __device__ inline double __drcp_rd(double x) {
@@ -190,6 +286,55 @@ __device__ inline double __drcp_rz(double x) {
 }
 
 
+__device__ inline double __dsqrt_rd(double x) {
+  return __hip_fast_dsqrt(x);
+}
+
+__device__ inline double __dsqrt_rn(double x) {
+  return __hip_fast_dsqrt(x);
+}
+
+__device__ inline double __dsqrt_ru(double x) {
+  return __hip_fast_dsqrt(x);
+}
+
+__device__ inline double __dsqrt_rz(double x) {
+  return __hip_fast_dsqrt(x);
+}
+
+__device__ static inline double __dsub_rd(double x, double y) {
+  return x - y;
+}
+
+__device__ static inline double __dsub_rn(double x, double y) {
+  return x - y;
+}
+
+__device__ static inline double __dsub_ru(double x, double y) {
+  return x - y;
+}
+
+__device__ static inline double __dsub_rz(double x, double y) {
+  return x - y;
+}
+
+__device__ inline double __fma_rd(double x, double y, double z) {
+  return __hip_fast_fma(x, y, z);
+}
+
+__device__ inline double __fma_rn(double x, double y, double z) {
+  return __hip_fast_fma(x, y, z);
+}
+
+__device__ inline double __fma_ru(double x, double y, double z) {
+  return __hip_fast_fma(x, y, z);
+}
+
+__device__ inline double __fma_rz(double x, double y, double z) {
+  return __hip_fast_fma(x, y, z);
+}
+
+
 extern "C" unsigned int __hip_hc_ir_umul24_int(unsigned int, unsigned int);
 extern "C" signed int __hip_hc_ir_mul24_int(signed int, signed int);
 extern "C" signed int __hip_hc_ir_mulhi_int(signed int, signed int);
@@ -204,51 +349,42 @@ __device__ unsigned int __clz(int x);
 __device__ unsigned int __clzll(long long int x);
 __device__ unsigned int __ffs(int x);
 __device__ unsigned int __ffsll(long long int x);
-__device__ static inline unsigned int __hadd(int x, int y)
-{
+__device__ static inline unsigned int __hadd(int x, int y) {
   int z = x + y;
   int sign = z & 0x8000000;
   int value = z & 0x7FFFFFFF;
   return ((value) >> 1 || sign);
 }
-__device__ static inline int __mul24(int x, int y)
-{
+__device__ static inline int __mul24(int x, int y) {
   return __hip_hc_ir_mul24_int(x, y);
 }
 __device__ long long int __mul64hi(long long int x, long long int y);
-__device__ static inline int __mulhi(int x, int y)
-{
+__device__ static inline int __mulhi(int x, int y) {
   return __hip_hc_ir_mulhi_int(x, y);
 }
 __device__ unsigned int __popc( unsigned int x);
 __device__ unsigned int __popcll( unsigned long long int x);
-__device__ static inline int __rhadd(int x, int y)
-{
+__device__ static inline int __rhadd(int x, int y) {
   int z = x + y + 1;
   int sign = z & 0x8000000;
   int value = z & 0x7FFFFFFF;
   return ((value) >> 1 || sign);
 }
-__device__ static inline unsigned int __sad(int x, int y, int z)
-{
+__device__ static inline unsigned int __sad(int x, int y, int z) {
   return x > y ? x - y + z : y - x + z;
 }
 
-__device__ static inline unsigned int __uhadd(unsigned int x, unsigned int y)
-{
+__device__ static inline unsigned int __uhadd(unsigned int x, unsigned int y) {
   return (x + y) >> 1;
 }
-__device__ static inline int __umul24(unsigned int x, unsigned int y)
-{
+__device__ static inline int __umul24(unsigned int x, unsigned int y) {
   return __hip_hc_ir_umul24_int(x, y);
 }
 __device__ unsigned long long int __umul64hi(unsigned long long int x, unsigned long long int y);
-__device__ static inline unsigned int __umulhi(unsigned int x, unsigned int y)
-{
+__device__ static inline unsigned int __umulhi(unsigned int x, unsigned int y) {
   return __hip_hc_ir_umulhi_int(x, y);
 }
-__device__ static inline unsigned int __urhadd(unsigned int x, unsigned int y)
-{
+__device__ static inline unsigned int __urhadd(unsigned int x, unsigned int y) {
   return (x + y + 1) >> 1;
 }
 __device__ static inline unsigned int __usad(unsigned int x, unsigned int y, unsigned int z)
@@ -266,7 +402,6 @@ __device__ float __double2float_ru(double x);
 __device__ float __double2float_rz(double x);
 
 __device__ int __double2hiint(double x);
-__device__ int __double2loint(double x);
 
 __device__ int __double2int_rd(double x);
 __device__ int __double2int_rn(double x);
@@ -277,6 +412,8 @@ __device__ long long int __double2ll_rd(double x);
 __device__ long long int __double2ll_rn(double x);
 __device__ long long int __double2ll_ru(double x);
 __device__ long long int __double2ll_rz(double x);
+
+__device__ int __double2loint(double x);
 
 __device__ unsigned int __double2uint_rd(double x);
 __device__ unsigned int __double2uint_rn(double x);
