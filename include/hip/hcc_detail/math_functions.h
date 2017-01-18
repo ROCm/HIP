@@ -141,8 +141,8 @@ __device__ double copysign(double x, double y);
 __device__ double cos(double x);
 __device__ double cosh(double x);
 __device__ __host__ double cospi(double x);
-__device__ double cyl_bessel_i0(double x);
-__device__ double cyl_bessel_i1(double x);
+//__device__ double cyl_bessel_i0(double x);
+//__device__ double cyl_bessel_i1(double x);
 __device__ double erf(double x);
 __device__ double erfc(double x);
 __device__ double erfcinv(double y);
@@ -231,6 +231,8 @@ __host__ double rnorm(int dim, const double* t);
 __host__ double rnorm3d(double a, double b, double c);
 __host__ double rnorm4d(double a, double b, double c, double d);
 __host__ void sincospi(double x, double *sptr, double *cptr);
+
+// ENDPARSER
 
 #ifdef HIP_FAST_MATH
 // Single Precision Precise Math when enabled

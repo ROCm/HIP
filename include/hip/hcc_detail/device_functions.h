@@ -23,6 +23,86 @@ THE SOFTWARE.
 #include <hip/hip_runtime.h>
 #include <hip/hip_vector_types.h>
 
+
+
+
+
+// Single Precision Fast Math
+__device__  float __cosf(float x);
+__device__  float __exp10f(float x);
+__device__  float __expf(float x);
+__device__ static  float __fadd_rd(float x, float y);
+__device__ static  float __fadd_rn(float x, float y);
+__device__ static  float __fadd_ru(float x, float y);
+__device__ static  float __fadd_rz(float x, float y);
+__device__ static  float __fdiv_rd(float x, float y);
+__device__ static  float __fdiv_rn(float x, float y);
+__device__ static  float __fdiv_ru(float x, float y);
+__device__ static  float __fdiv_rz(float x, float y);
+__device__ static  float __fdividef(float x, float y);
+__device__  float __fmaf_rd(float x, float y, float z);
+__device__  float __fmaf_rn(float x, float y, float z);
+__device__  float __fmaf_ru(float x, float y, float z);
+__device__  float __fmaf_rz(float x, float y, float z);
+__device__ static  float __fmul_rd(float x, float y);
+__device__ static  float __fmul_rn(float x, float y);
+__device__ static  float __fmul_ru(float x, float y);
+__device__ static  float __fmul_rz(float x, float y);
+__device__  float __frcp_rd(float x);
+__device__  float __frcp_rn(float x);
+__device__  float __frcp_ru(float x);
+__device__  float __frcp_rz(float x);
+__device__  float __frsqrt_rn(float x);
+__device__  float __fsqrt_rd(float x);
+__device__  float __fsqrt_rn(float x);
+__device__  float __fsqrt_ru(float x);
+__device__  float __fsqrt_rz(float x);
+__device__ static  float __fsub_rd(float x, float y);
+__device__ static  float __fsub_rn(float x, float y);
+__device__ static  float __fsub_ru(float x, float y);
+__device__  float __log10f(float x);
+__device__  float __log2f(float x);
+__device__  float __logf(float x);
+__device__  float __powf(float base, float exponent);
+__device__ static  float __saturatef(float x);
+__device__  void __sincosf(float x, float *s, float *c);
+__device__  float __sinf(float x);
+__device__  float __tanf(float x);
+
+
+/*
+Double Precision Intrinsics
+*/
+
+__device__ static  double __dadd_rd(double x, double y);
+__device__ static  double __dadd_rn(double x, double y);
+__device__ static  double __dadd_ru(double x, double y);
+__device__ static  double __dadd_rz(double x, double y);
+__device__ static  double __ddiv_rd(double x, double y);
+__device__ static  double __ddiv_rn(double x, double y);
+__device__ static  double __ddiv_ru(double x, double y);
+__device__ static  double __ddiv_rz(double x, double y);
+__device__ static  double __dmul_rd(double x, double y);
+__device__ static  double __dmul_rn(double x, double y);
+__device__ static  double __dmul_ru(double x, double y);
+__device__ static  double __dmul_rz(double x, double y);
+__device__  double __drcp_rd(double x);
+__device__  double __drcp_rn(double x);
+__device__  double __drcp_ru(double x);
+__device__  double __drcp_rz(double x);
+__device__  double __dsqrt_rd(double x);
+__device__  double __dsqrt_rn(double x);
+__device__  double __dsqrt_ru(double x);
+__device__  double __dsqrt_rz(double x);
+__device__ static  double __dsub_rd(double x, double y);
+__device__ static  double __dsub_rn(double x, double y);
+__device__ static  double __dsub_ru(double x, double y);
+__device__ static  double __dsub_rz(double x, double y);
+__device__  double __fma_rd(double x, double y, double z);
+__device__  double __fma_rn(double x, double y, double z);
+__device__  double __fma_ru(double x, double y, double z);
+__device__  double __fma_rz(double x, double y, double z);
+
 // Single Precision Fast Math
 extern __attribute__((const)) float __hip_fast_cosf(float) __asm("llvm.cos.f32");
 extern __attribute__((const)) float __hip_fast_exp2f(float) __asm("llvm.exp2.f32");
@@ -349,6 +429,21 @@ __device__ unsigned int __clz(int x);
 __device__ unsigned int __clzll(long long int x);
 __device__ unsigned int __ffs(int x);
 __device__ unsigned int __ffsll(long long int x);
+__device__ static unsigned int __hadd(int x, int y);
+__device__ static int __mul24(int x, int y);
+__device__ long long int __mul64hi(long long int x, long long int y);
+__device__ static int __mulhi(int x, int y);
+__device__ unsigned int __popc(unsigned int x);
+__device__ unsigned int __popcll(unsigned long long int x);
+__device__ static int __rhadd(int x, int y);
+__device__ static unsigned int __sad(int x, int y, int z);
+__device__ static unsigned int __uhadd(unsigned int x, unsigned int y);
+__device__ static int __umul24(unsigned int x, unsigned int y);
+__device__ unsigned long long int __umul64hi(unsigned long long int x, unsigned long long int y);
+__device__ static unsigned int __umulhi(unsigned int x, unsigned int y);
+__device__ static unsigned int __urhadd(unsigned int x, unsigned int y);
+__device__ static unsigned int __usad(unsigned int x, unsigned int y, unsigned int z);
+
 __device__ static inline unsigned int __hadd(int x, int y) {
   int z = x + y;
   int sign = z & 0x8000000;
@@ -358,12 +453,9 @@ __device__ static inline unsigned int __hadd(int x, int y) {
 __device__ static inline int __mul24(int x, int y) {
   return __hip_hc_ir_mul24_int(x, y);
 }
-__device__ long long int __mul64hi(long long int x, long long int y);
 __device__ static inline int __mulhi(int x, int y) {
   return __hip_hc_ir_mulhi_int(x, y);
 }
-__device__ unsigned int __popc( unsigned int x);
-__device__ unsigned int __popcll( unsigned long long int x);
 __device__ static inline int __rhadd(int x, int y) {
   int z = x + y + 1;
   int sign = z & 0x8000000;
@@ -373,14 +465,12 @@ __device__ static inline int __rhadd(int x, int y) {
 __device__ static inline unsigned int __sad(int x, int y, int z) {
   return x > y ? x - y + z : y - x + z;
 }
-
 __device__ static inline unsigned int __uhadd(unsigned int x, unsigned int y) {
   return (x + y) >> 1;
 }
 __device__ static inline int __umul24(unsigned int x, unsigned int y) {
   return __hip_hc_ir_umul24_int(x, y);
 }
-__device__ unsigned long long int __umul64hi(unsigned long long int x, unsigned long long int y);
 __device__ static inline unsigned int __umulhi(unsigned int x, unsigned int y) {
   return __hip_hc_ir_umulhi_int(x, y);
 }
@@ -440,10 +530,10 @@ CUDA implements half as unsigned short whereas, HIP doesn't.
 
 */
 
-__device__ int float2int_rd(float x);
-__device__ int float2int_rn(float x);
-__device__ int float2int_ru(float x);
-__device__ int float2int_rz(float x);
+__device__ int __float2int_rd(float x);
+__device__ int __float2int_rn(float x);
+__device__ int __float2int_ru(float x);
+__device__ int __float2int_rz(float x);
 
 __device__ long long int __float2ll_rd(float x);
 __device__ long long int __float2ll_rn(float x);
