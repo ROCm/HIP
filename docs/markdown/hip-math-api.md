@@ -16,7 +16,7 @@ __device__ static inline float __dotf(float4 x, float4 y) {
 
 This helps python script to add the device function newly declared into markdown documentation (as it looks at functions with `;` at the end and `__device__` at the beginning)
 
-The next step would be to add Description to  `deviceFuncDesc`.
+The next step would be to add Description to  `deviceFuncDesc` dictionary in python script.
 From the above example, it can be writtern as,
 `deviceFuncDesc['__dotf'] = 'This functions takes 2 4 component float vector and outputs dot product across them'`
 
@@ -2716,6 +2716,166 @@ __device__ float __ull2float_rz(unsigned long long int x);
 **Description:**  Supported
 
 
+### __hadd
+```cpp 
+__device__ static __half __hadd(const __half a, const __half b);
+
+```
+**Description:**  Supported
+
+
+### __hadd_sat
+```cpp 
+__device__ static __half __hadd_sat(__half a, __half b);
+
+```
+**Description:**  Supported
+
+
+### __hfma
+```cpp 
+__device__ static __half __hfma(__half a, __half b, __half c);
+
+```
+**Description:**  Supported
+
+
+### __hfma_sat
+```cpp 
+__device__ static __half __hfma_sat(__half a, __half b, __half c);
+
+```
+**Description:**  Supported
+
+
+### __hmul
+```cpp 
+__device__ static __half __hmul(__half a, __half b);
+
+```
+**Description:**  Supported
+
+
+### __hmul_sat
+```cpp 
+__device__ static __half __hmul_sat(__half a, __half b);
+
+```
+**Description:**  Supported
+
+
+### __hneg
+```cpp 
+__device__ static __half __hneg(__half a);
+
+```
+**Description:**  Supported
+
+
+### __hsub
+```cpp 
+__device__ static __half __hsub(__half a, __half b);
+
+```
+**Description:**  Supported
+
+
+### __hsub_sat
+```cpp 
+__device__ static __half __hsub_sat(__half a, __half b);
+
+```
+**Description:**  Supported
+
+
+### hdiv
+```cpp 
+__device__ static __half hdiv(__half a, __half b);
+
+```
+**Description:**  Supported
+
+
+### __hadd2
+```cpp 
+__device__ static __half2 __hadd2(__half2 a, __half2 b);
+
+```
+**Description:**  Supported
+
+
+### __hadd2_sat
+```cpp 
+__device__ static __half2 __hadd2_sat(__half2 a, __half2 b);
+
+```
+**Description:**  Supported
+
+
+### __hfma2
+```cpp 
+__device__ static __half2 __hfma2(__half2 a, __half2 b, __half2 c);
+
+```
+**Description:**  Supported
+
+
+### __hfma2_sat
+```cpp 
+__device__ static __half2 __hfma2_sat(__half2 a, __half2 b, __half2 c);
+
+```
+**Description:**  Supported
+
+
+### __hmul2
+```cpp 
+__device__ static __half2 __hmul2(__half2 a, __half2 b);
+
+```
+**Description:**  Supported
+
+
+### __hmul2_sat
+```cpp 
+__device__ static __half2 __hmul2_sat(__half2 a, __half2 b);
+
+```
+**Description:**  Supported
+
+
+### __hsub2
+```cpp 
+__device__ static __half2 __hsub2(__half2 a, __half2 b);
+
+```
+**Description:**  Supported
+
+
+### __hneg2
+```cpp 
+__device__ static __half2 __hneg2(__half2 a);
+
+```
+**Description:**  Supported
+
+
+### __hsub2_sat
+```cpp 
+__device__ static __half2 __hsub2_sat(__half2 a, __half2 b);
+
+```
+**Description:**  Supported
+
+
+### h2div
+```cpp 
+__device__ static __half2 h2div(__half2 a, __half2 b);
+
+```
+**Description:**  Supported
+
+
 ### __heq
 ```cpp 
 __device__  bool __heq(__half a, __half b);
@@ -2879,6 +3039,214 @@ __device__  __half2 __hlt2(__half2 a, __half2 b);
 ### __hne2
 ```cpp 
 __device__  __half2 __hne2(__half2 a, __half2 b);
+
+```
+**Description:**  Supported
+
+
+### hceil
+```cpp 
+__device__ static __half hceil(const __half h);
+
+```
+**Description:**  Supported
+
+
+### hcos
+```cpp 
+__device__ static __half hcos(const __half h);
+
+```
+**Description:**  Supported
+
+
+### hexp
+```cpp 
+__device__ static __half hexp(const __half h);
+
+```
+**Description:**  Supported
+
+
+### hexp10
+```cpp 
+__device__ static __half hexp10(const __half h);
+
+```
+**Description:**  Supported
+
+
+### hexp2
+```cpp 
+__device__ static __half hexp2(const __half h);
+
+```
+**Description:**  Supported
+
+
+### hfloor
+```cpp 
+__device__ static __half hfloor(const __half h);
+
+```
+**Description:**  Supported
+
+
+### hlog
+```cpp 
+__device__ static __half hlog(const __half h);
+
+```
+**Description:**  Supported
+
+
+### hlog10
+```cpp 
+__device__ static __half hlog10(const __half h);
+
+```
+**Description:**  Supported
+
+
+### hlog2
+```cpp 
+__device__ static __half hlog2(const __half h);
+
+```
+**Description:**  Supported
+
+
+### hrcp
+```cpp 
+//__device__ static __half hrcp(const __half h);
+
+```
+**Description:**  **NOT Supported**
+
+
+### hrint
+```cpp 
+__device__ static __half hrint(const __half h);
+
+```
+**Description:**  Supported
+
+
+### hsin
+```cpp 
+__device__ static __half hsin(const __half h);
+
+```
+**Description:**  Supported
+
+
+### hsqrt
+```cpp 
+__device__ static __half hsqrt(const __half a);
+
+```
+**Description:**  Supported
+
+
+### htrunc
+```cpp 
+__device__ static __half htrunc(const __half a);
+
+```
+**Description:**  Supported
+
+
+### h2ceil
+```cpp 
+__device__ static __half2 h2ceil(const __half2 h);
+
+```
+**Description:**  Supported
+
+
+### h2exp
+```cpp 
+__device__ static __half2 h2exp(const __half2 h);
+
+```
+**Description:**  Supported
+
+
+### h2exp10
+```cpp 
+__device__ static __half2 h2exp10(const __half2 h);
+
+```
+**Description:**  Supported
+
+
+### h2exp2
+```cpp 
+__device__ static __half2 h2exp2(const __half2 h);
+
+```
+**Description:**  Supported
+
+
+### h2floor
+```cpp 
+__device__ static __half2 h2floor(const __half2 h);
+
+```
+**Description:**  Supported
+
+
+### h2log
+```cpp 
+__device__ static __half2 h2log(const __half2 h);
+
+```
+**Description:**  Supported
+
+
+### h2log10
+```cpp 
+__device__ static __half2 h2log10(const __half2 h);
+
+```
+**Description:**  Supported
+
+
+### h2log2
+```cpp 
+__device__ static __half2 h2log2(const __half2 h);
+
+```
+**Description:**  Supported
+
+
+### h2rcp
+```cpp 
+__device__ static __half2 h2rcp(const __half2 h);
+
+```
+**Description:**  Supported
+
+
+### h2rsqrt
+```cpp 
+__device__ static __half2 h2rsqrt(const __half2 h);
+
+```
+**Description:**  Supported
+
+
+### h2sin
+```cpp 
+__device__ static __half2 h2sin(const __half2 h);
+
+```
+**Description:**  Supported
+
+
+### h2sqrt
+```cpp 
+__device__ static __half2 h2sqrt(const __half2 h);
 
 ```
 **Description:**  Supported

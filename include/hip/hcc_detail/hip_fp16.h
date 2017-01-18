@@ -36,6 +36,181 @@ typedef struct __attribute__((aligned(4))){
   };
 } __half2;
 
+/*
+Half Arithmetic Functions
+*/
+__device__ static __half __hadd(const __half a, const __half b);
+__device__ static __half __hadd_sat(__half a, __half b);
+__device__ static __half __hfma(__half a, __half b, __half c);
+__device__ static __half __hfma_sat(__half a, __half b, __half c);
+__device__ static __half __hmul(__half a, __half b);
+__device__ static __half __hmul_sat(__half a, __half b);
+__device__ static __half __hneg(__half a);
+__device__ static __half __hsub(__half a, __half b);
+__device__ static __half __hsub_sat(__half a, __half b);
+__device__ static __half hdiv(__half a, __half b);
+
+/*
+Half2 Arithmetic Functions
+*/
+
+__device__ static __half2 __hadd2(__half2 a, __half2 b);
+__device__ static __half2 __hadd2_sat(__half2 a, __half2 b);
+__device__ static __half2 __hfma2(__half2 a, __half2 b, __half2 c);
+__device__ static __half2 __hfma2_sat(__half2 a, __half2 b, __half2 c);
+__device__ static __half2 __hmul2(__half2 a, __half2 b);
+__device__ static __half2 __hmul2_sat(__half2 a, __half2 b);
+__device__ static __half2 __hsub2(__half2 a, __half2 b);
+__device__ static __half2 __hneg2(__half2 a);
+__device__ static __half2 __hsub2_sat(__half2 a, __half2 b);
+__device__ static __half2 h2div(__half2 a, __half2 b);
+
+/*
+Half Comparision Functions
+*/
+
+__device__  bool __heq(__half a, __half b);
+__device__  bool __hge(__half a, __half b);
+__device__  bool __hgt(__half a, __half b);
+__device__  bool __hisinf(__half a);
+__device__  bool __hisnan(__half a);
+__device__  bool __hle(__half a, __half b);
+__device__  bool __hlt(__half a, __half b);
+__device__  bool __hne(__half a, __half b);
+
+/*
+Half2 Comparision Functions
+*/
+
+__device__  bool __hbeq2(__half2 a, __half2 b);
+__device__  bool __hbge2(__half2 a, __half2 b);
+__device__  bool __hbgt2(__half2 a, __half2 b);
+__device__  bool __hble2(__half2 a, __half2 b);
+__device__  bool __hblt2(__half2 a, __half2 b);
+__device__  bool __hbne2(__half2 a, __half2 b);
+__device__  __half2 __heq2(__half2 a, __half2 b);
+__device__  __half2 __hge2(__half2 a, __half2 b);
+__device__  __half2 __hgt2(__half2 a, __half2 b);
+__device__  __half2 __hisnan2(__half2 a);
+__device__  __half2 __hle2(__half2 a, __half2 b);
+__device__  __half2 __hlt2(__half2 a, __half2 b);
+__device__  __half2 __hne2(__half2 a, __half2 b);
+
+/*
+Half Math Functions
+*/
+
+__device__ static __half hceil(const __half h);
+__device__ static __half hcos(const __half h);
+__device__ static __half hexp(const __half h);
+__device__ static __half hexp10(const __half h);
+__device__ static __half hexp2(const __half h);
+__device__ static __half hfloor(const __half h);
+__device__ static __half hlog(const __half h);
+__device__ static __half hlog10(const __half h);
+__device__ static __half hlog2(const __half h);
+//__device__ static __half hrcp(const __half h);
+__device__ static __half hrint(const __half h);
+__device__ static __half hsin(const __half h);
+__device__ static __half hsqrt(const __half a);
+__device__ static __half htrunc(const __half a);
+
+/*
+Half2 Math Functions
+*/
+
+__device__ static __half2 h2ceil(const __half2 h);
+__device__ static __half2 h2exp(const __half2 h);
+__device__ static __half2 h2exp10(const __half2 h);
+__device__ static __half2 h2exp2(const __half2 h);
+__device__ static __half2 h2floor(const __half2 h);
+__device__ static __half2 h2log(const __half2 h);
+__device__ static __half2 h2log10(const __half2 h);
+__device__ static __half2 h2log2(const __half2 h);
+__device__ static __half2 h2rcp(const __half2 h);
+__device__ static __half2 h2rsqrt(const __half2 h);
+__device__ static __half2 h2sin(const __half2 h);
+__device__ static __half2 h2sqrt(const __half2 h);
+
+/*
+Half Conversion And Data Movement
+*/
+
+__device__  __half2 __float22half2_rn(const float2 a);
+__device__  __half __float2half(const float a);
+__device__  __half2 __float2half2_rn(const float a);
+__device__  __half __float2half_rd(const float a);
+__device__  __half __float2half_rn(const float a);
+__device__  __half __float2half_ru(const float a);
+__device__  __half __float2half_rz(const float a);
+__device__  __half2 __floats2half2_rn(const float a, const float b);
+__device__  float2 __half22float2(const __half2 a);
+__device__  float __half2float(const __half a);
+__device__  __half2 half2half2(const __half a);
+__device__  int __half2int_rd(__half h);
+__device__  int __half2int_rn(__half h);
+__device__  int __half2int_ru(__half h);
+__device__  int __half2int_rz(__half h);
+__device__  long long int __half2ll_rd(__half h);
+__device__  long long int __half2ll_rn(__half h);
+__device__  long long int __half2ll_ru(__half h);
+__device__  long long int __half2ll_rz(__half h);
+__device__  short __half2short_rd(__half h);
+__device__  short __half2short_rn(__half h);
+__device__  short __half2short_ru(__half h);
+__device__  short __half2short_rz(__half h);
+__device__  unsigned int __half2uint_rd(__half h);
+__device__  unsigned int __half2uint_rn(__half h);
+__device__  unsigned int __half2uint_ru(__half h);
+__device__  unsigned int __half2uint_rz(__half h);
+__device__  unsigned long long int __half2ull_rd(__half h);
+__device__  unsigned long long int __half2ull_rn(__half h);
+__device__  unsigned long long int __half2ull_ru(__half h);
+__device__  unsigned long long int __half2ull_rz(__half h);
+__device__  unsigned short int __half2ushort_rd(__half h);
+__device__  unsigned short int __half2ushort_rn(__half h);
+__device__  unsigned short int __half2ushort_ru(__half h);
+__device__  unsigned short int __half2ushort_rz(__half h);
+__device__  short int __half_as_short(const __half h);
+__device__  unsigned short int __half_as_ushort(const __half h);
+__device__  __half2 __halves2half2(const __half a, const __half b);
+__device__  float __high2float(const __half2 a);
+__device__  __half __high2half(const __half2 a);
+__device__  __half2 __high2half2(const __half2 a);
+__device__  __half2 __highs2half2(const __half2 a, const __half2 b);
+__device__  __half __int2half_rd(int i);
+__device__  __half __int2half_rn(int i);
+__device__  __half __int2half_ru(int i);
+__device__  __half __int2half_rz(int i);
+__device__  __half __ll2half_rd(long long int i);
+__device__  __half __ll2half_rn(long long int i);
+__device__  __half __ll2half_ru(long long int i);
+__device__  __half __ll2half_rz(long long int i);
+__device__  float __low2float(const __half2 a);
+
+__device__ __half __low2half(const __half2 a);
+__device__ __half2 __low2half2(const __half2 a, const __half2 b);
+__device__ __half2 __low2half2(const __half2 a);
+__device__ __half2 __lowhigh2highlow(const __half2 a);
+__device__ __half2 __lows2half2(const __half2 a, const __half2 b);
+__device__  __half __short2half_rd(short int i);
+__device__  __half __short2half_rn(short int i);
+__device__  __half __short2half_ru(short int i);
+__device__  __half __short2half_rz(short int i);
+__device__  __half __uint2half_rd(unsigned int i);
+__device__  __half __uint2half_rn(unsigned int i);
+__device__  __half __uint2half_ru(unsigned int i);
+__device__  __half __uint2half_rz(unsigned int i);
+__device__  __half __ull2half_rd(unsigned long long int i);
+__device__  __half __ull2half_rn(unsigned long long int i);
+__device__  __half __ull2half_ru(unsigned long long int i);
+__device__  __half __ull2half_rz(unsigned long long int i);
+__device__  __half __ushort2half_rd(unsigned short int i);
+__device__  __half __ushort2half_rn(unsigned short int i);
+__device__  __half __ushort2half_ru(unsigned short int i);
+__device__  __half __ushort2half_rz(unsigned short int i);
+__device__  __half __ushort_as_half(const unsigned short int i);
+
 extern "C" __half __hip_hc_ir_hadd_half(__half, __half);
 extern "C" __half __hip_hc_ir_hfma_half(__half, __half, __half);
 extern "C" __half __hip_hc_ir_hmul_half(__half, __half);
@@ -331,109 +506,7 @@ __device__ static inline __half2 h2trunc(const __half2 h) {
   return a;
 }
 
-__device__  bool __heq(__half a, __half b);
-__device__  bool __hge(__half a, __half b);
-__device__  bool __hgt(__half a, __half b);
-__device__  bool __hisinf(__half a);
-__device__  bool __hisnan(__half a);
-__device__  bool __hle(__half a, __half b);
-__device__  bool __hlt(__half a, __half b);
-__device__  bool __hne(__half a, __half b);
-/*
-Half2 Comparision Functions
-*/
 
-__device__  bool __hbeq2(__half2 a, __half2 b);
-__device__  bool __hbge2(__half2 a, __half2 b);
-__device__  bool __hbgt2(__half2 a, __half2 b);
-__device__  bool __hble2(__half2 a, __half2 b);
-__device__  bool __hblt2(__half2 a, __half2 b);
-__device__  bool __hbne2(__half2 a, __half2 b);
-__device__  __half2 __heq2(__half2 a, __half2 b);
-__device__  __half2 __hge2(__half2 a, __half2 b);
-__device__  __half2 __hgt2(__half2 a, __half2 b);
-__device__  __half2 __hisnan2(__half2 a);
-__device__  __half2 __hle2(__half2 a, __half2 b);
-__device__  __half2 __hlt2(__half2 a, __half2 b);
-__device__  __half2 __hne2(__half2 a, __half2 b);
-
-/*
-Conversion instructions
-*/
-__device__  __half2 __float22half2_rn(const float2 a);
-__device__  __half __float2half(const float a);
-__device__  __half2 __float2half2_rn(const float a);
-__device__  __half __float2half_rd(const float a);
-__device__  __half __float2half_rn(const float a);
-__device__  __half __float2half_ru(const float a);
-__device__  __half __float2half_rz(const float a);
-__device__  __half2 __floats2half2_rn(const float a, const float b);
-__device__  float2 __half22float2(const __half2 a);
-__device__  float __half2float(const __half a);
-__device__  __half2 half2half2(const __half a);
-__device__  int __half2int_rd(__half h);
-__device__  int __half2int_rn(__half h);
-__device__  int __half2int_ru(__half h);
-__device__  int __half2int_rz(__half h);
-__device__  long long int __half2ll_rd(__half h);
-__device__  long long int __half2ll_rn(__half h);
-__device__  long long int __half2ll_ru(__half h);
-__device__  long long int __half2ll_rz(__half h);
-__device__  short __half2short_rd(__half h);
-__device__  short __half2short_rn(__half h);
-__device__  short __half2short_ru(__half h);
-__device__  short __half2short_rz(__half h);
-__device__  unsigned int __half2uint_rd(__half h);
-__device__  unsigned int __half2uint_rn(__half h);
-__device__  unsigned int __half2uint_ru(__half h);
-__device__  unsigned int __half2uint_rz(__half h);
-__device__  unsigned long long int __half2ull_rd(__half h);
-__device__  unsigned long long int __half2ull_rn(__half h);
-__device__  unsigned long long int __half2ull_ru(__half h);
-__device__  unsigned long long int __half2ull_rz(__half h);
-__device__  unsigned short int __half2ushort_rd(__half h);
-__device__  unsigned short int __half2ushort_rn(__half h);
-__device__  unsigned short int __half2ushort_ru(__half h);
-__device__  unsigned short int __half2ushort_rz(__half h);
-__device__  short int __half_as_short(const __half h);
-__device__  unsigned short int __half_as_ushort(const __half h);
-__device__  __half2 __halves2half2(const __half a, const __half b);
-__device__  float __high2float(const __half2 a);
-__device__  __half __high2half(const __half2 a);
-__device__  __half2 __high2half2(const __half2 a);
-__device__  __half2 __highs2half2(const __half2 a, const __half2 b);
-__device__  __half __int2half_rd(int i);
-__device__  __half __int2half_rn(int i);
-__device__  __half __int2half_ru(int i);
-__device__  __half __int2half_rz(int i);
-__device__  __half __ll2half_rd(long long int i);
-__device__  __half __ll2half_rn(long long int i);
-__device__  __half __ll2half_ru(long long int i);
-__device__  __half __ll2half_rz(long long int i);
-__device__  float __low2float(const __half2 a);
-
-__device__ __half __low2half(const __half2 a);
-__device__ __half2 __low2half2(const __half2 a, const __half2 b);
-__device__ __half2 __low2half2(const __half2 a);
-__device__ __half2 __lowhigh2highlow(const __half2 a);
-__device__ __half2 __lows2half2(const __half2 a, const __half2 b);
-__device__  __half __short2half_rd(short int i);
-__device__  __half __short2half_rn(short int i);
-__device__  __half __short2half_ru(short int i);
-__device__  __half __short2half_rz(short int i);
-__device__  __half __uint2half_rd(unsigned int i);
-__device__  __half __uint2half_rn(unsigned int i);
-__device__  __half __uint2half_ru(unsigned int i);
-__device__  __half __uint2half_rz(unsigned int i);
-__device__  __half __ull2half_rd(unsigned long long int i);
-__device__  __half __ull2half_rn(unsigned long long int i);
-__device__  __half __ull2half_ru(unsigned long long int i);
-__device__  __half __ull2half_rz(unsigned long long int i);
-__device__  __half __ushort2half_rd(unsigned short int i);
-__device__  __half __ushort2half_rn(unsigned short int i);
-__device__  __half __ushort2half_ru(unsigned short int i);
-__device__  __half __ushort2half_rz(unsigned short int i);
-__device__  __half __ushort_as_half(const unsigned short int i);
 
 
 #endif
