@@ -186,9 +186,10 @@ __device__ float ldexpf(float x, int exp)
 {
     return hc::precise_math::ldexpf(x, exp);
 }
-__device__ float lgammaf(float x, int *sign)
+__device__ float lgammaf(float x)
 {
-    return hc::precise_math::lgammaf(x, sign);
+    int sign;
+    return hc::precise_math::lgammaf(x, &sign);
 }
 __device__ long long int llrintf(float x)
 {
@@ -566,9 +567,10 @@ __device__ double ldexp(double x, int exp)
 {
     return hc::precise_math::ldexp(x, exp);
 }
-__device__ double lgamma(double x, int *sign)
+__device__ double lgamma(double x)
 {
-    return hc::precise_math::lgamma(x, sign);
+    int sign;
+    return hc::precise_math::lgamma(x, &sign);
 }
 __device__ long long int llrint(double x)
 {
@@ -626,6 +628,14 @@ __device__ double nextafter(double x, double y)
 {
     return hc::precise_math::nextafter(x, y);
 }
+__device__ double norm(int x, const double *d)
+{
+  double val = 0;
+  for(int i=0;i<x;i++){
+    val += d[i]*d[i];
+  }
+  return hc::precise_math::sqrt(val);
+}
 __device__ double norm3d(double a, double b, double c)
 {
     double x = a*a + b*b + c*c;
@@ -640,6 +650,10 @@ __device__ double norm4d(double a, double b, double c, double d)
 __device__ double normcdf(double y)
 {
      return ((hc::precise_math::erf(y)/HIP_SQRT_2) + 1)/2;
+}
+__device__ double normcdfinv(double y)
+{
+     return HIP_SQRT_2 * __hip_erfinv(2*y-1);
 }
 __device__ double pow(double x, double y)
 {
@@ -868,16 +882,6 @@ __host__ float normf(int dim, const float *a)
     return val;
 }
 
-__host__ double norm(int dim, const double *a)
-{
-    double val = 0.0;
-    for(int i=0;i<dim;i++)
-    {
-        val = val + a[i] * a[i];
-    }
-    return val;
-}
-
 __host__ float rnormf(int dim, const float *t)
 {
     float val = 0.0f;
@@ -968,4 +972,39 @@ __host__ double norm3d(double a, double b, double c)
 __host__ double norm4d(double a, double b, double c, double d)
 {
     return std::sqrt(a*a + b*b + c*c + d*d);
+}
+
+__host__ double sinpi(double a)
+{
+  return std::sin(HIP_PI * a);
+}
+
+__host__ double cospi(double a)
+{
+  return std::cos(HIP_PI * a);
+}
+
+__host__ double isfinite(double a)
+{
+  return std::isfinite(a);
+}
+
+__host__ double norm(int dim, const double *t)
+{
+  double val = 0;
+  for(int i=0;i<dim;i++)
+  {
+    val += t[i]*t[i];
+  }
+  return std::sqrt(val);
+}
+
+__host__ double rsqrt(double x)
+{
+  return 1/std::sqrt(x);
+}
+
+__host__ int signbit(double x)
+{
+  return std::signbit(x);
 }

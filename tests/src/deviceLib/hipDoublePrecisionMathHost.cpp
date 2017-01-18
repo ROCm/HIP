@@ -72,7 +72,7 @@ __host__ void double_precision_math_functions()
     j1(0.0);
     jn(-1.0, 1.0);
     ldexp(0.0, 0);
-    lgamma(1.0);
+//    lgamma(1.0);
     llrint(0.0);
     llround(0.0);
     log(1.0);
@@ -91,8 +91,8 @@ __host__ void double_precision_math_functions()
     norm3d(1.0, 0.0, 0.0);
     norm4d(1.0, 0.0, 0.0, 0.0);
 #endif
-    normcdf(0.0);
-    normcdfinv(1.0);
+//    normcdf(0.0);
+//    normcdfinv(1.0);
     pow(1.0, 0.0);
     rcbrt(1.0);
     remainder(2.0, 1.0);

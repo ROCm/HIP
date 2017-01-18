@@ -44,8 +44,8 @@ __device__ void double_precision_math_functions()
     cos(0.0);
     cosh(0.0);
     cospi(0.0);
-    cyl_bessel_i0(0.0);
-    cyl_bessel_i1(0.0);
+//    cyl_bessel_i0(0.0);
+//    cyl_bessel_i1(0.0);
     erf(0.0);
     erfc(0.0);
     erfcinv(2.0);
@@ -62,7 +62,7 @@ __device__ void double_precision_math_functions()
     fmax(0.0, 0.0);
     fmin(0.0, 0.0);
     fmod(0.0, 1.0);
-    frexp(0.0, &iX);
+//    frexp(0.0, &iX);
     hypot(1.0, 0.0);
     ilogb(1.0);
     isfinite(0.0);
@@ -72,7 +72,7 @@ __device__ void double_precision_math_functions()
     j1(0.0);
     jn(-1.0, 1.0);
     ldexp(0.0, 0);
-    lgamma(1.0);
+//    lgamma(1.0);
     llrint(0.0);
     llround(0.0);
     log(1.0);
@@ -82,7 +82,7 @@ __device__ void double_precision_math_functions()
     logb(1.0);
     lrint(0.0);
     lround(0.0);
-    modf(0.0, &fX);
+//    modf(0.0, &fX);
     nan("1");
     nearbyint(0.0);
     nextafter(0.0, 0.0);
@@ -94,7 +94,7 @@ __device__ void double_precision_math_functions()
     pow(1.0, 0.0);
     rcbrt(1.0);
     remainder(2.0, 1.0);
-    remquo(1.0, 2.0, &iX);
+//    remquo(1.0, 2.0, &iX);
     rhypot(0.0, 1.0);
     rint(1.0);
     fX = 1.0; rnorm(1, &fX);
