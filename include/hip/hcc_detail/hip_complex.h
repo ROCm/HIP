@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,11 +20,162 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef HIPCOMPLEX_H
-#define HIPCOMPLEX_H
+#ifndef INCLUDE_HIP_HCC_DETAIL_HIP_COMPLEX_H
+#define INCLUDE_HIP_HCC_DETAIL_HIP_COMPLEX_H
 
-typedef float2 hipFloatComplex;
-typedef double2 hipDoubleComplex;
+#include "./hip_fp16.h"
+#include "./hip_vector_types.h"
+
+#if __cplusplus
+#define COMPLEX_ADD_OP_OVERLOAD(type) \
+__device__ __host__ static type operator + (const type& lhs, const type& rhs) { \
+  type ret; \
+  ret.x = lhs.x + rhs.x ; \
+  ret.y = lhs.y + rhs.y ; \
+  return ret; \
+}
+
+#define COMPLEX_SUB_OP_OVERLOAD(type) \
+__device__ __host__ static type operator - (const type& lhs, const type& rhs) { \
+  type ret; \
+  ret.x = lhs.x - rhs.x; \
+  ret.y = lhs.y - rhs.y; \
+  return ret; \
+}
+
+#define COMPLEX_MUL_OP_OVERLOAD(type) \
+__device__ __host__ static type operator * (const type& lhs, const type& rhs) { \
+  type ret; \
+  ret.x = lhs.x * rhs.x - lhs.y * rhs.y; \
+  ret.y = lhs.x * rhs.y + lhs.y * rhs.x; \
+  return ret; \
+}
+
+#define COMPLEX_DIV_OP_OVERLOAD(type) \
+__device__ __host__ static type operator / (const type& lhs, const type& rhs) { \
+  type ret; \
+  ret.x = (lhs.x * rhs.x + lhs.y * rhs.y); \
+  ret.y = (rhs.x * lhs.y - lhs.x * rhs.y); \
+  ret.x = ret.x / (rhs.x * rhs.x + rhs.y * rhs.y); \
+  ret.y = ret.y / (rhs.x * rhs.x + rhs.y * rhs.y); \
+  return ret; \
+}
+
+#define COMPLEX_ADD_PREOP_OVERLOAD(type) \
+__device__ __host__ static inline type& operator += (type& lhs, const type& rhs) { \
+  lhs.x += rhs.x; \
+  lhs.y += rhs.y; \
+  return lhs; \
+}
+
+#define COMPLEX_SUB_PREOP_OVERLOAD(type) \
+__device__ __host__ static inline type& operator -= (type& lhs, const type& rhs) { \
+  lhs.x -= rhs.x; \
+  lhs.y -= rhs.y; \
+  return lhs; \
+}
+
+#define COMPLEX_MUL_PREOP_OVERLOAD(type) \
+__device__ __host__ static inline type& operator *= (type& lhs, const type& rhs) { \
+  lhs = lhs * rhs; \
+  return lhs; \
+}
+
+#define COMPLEX_DIV_PREOP_OVERLOAD(type) \
+__device__ __host__ static inline type& operator /= (type& lhs, const type& rhs) { \
+  lhs = lhs / rhs; \
+  return lhs; \
+}
+
+#define COMPLEX_SCALAR_PRODUCT(type, type1) \
+__device__ __host__ static type operator * (const type& lhs, type1 rhs) { \
+  type ret; \
+  ret.x = lhs.x * rhs; \
+  ret.y = lhs.y * rhs; \
+  return ret; \
+}
+
+#endif
+
+struct hipFloatComplex {
+  #ifdef __cplusplus
+    public:
+    __device__ __host__ hipFloatComplex() : x(0.0f), y(0.0f) {}
+    __device__ __host__ hipFloatComplex(float x) : x(x), y(0.0f) {}
+    __device__ __host__ hipFloatComplex(float x, float y) : x(x), y(y) {}
+    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, unsigned short)
+    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, signed short)
+    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, unsigned int)
+    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, signed int)
+    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, double)
+    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, unsigned long)
+    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, signed long)
+    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, unsigned long long)
+    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, signed long long)
+  #endif
+  float x, y;
+} __attribute__((aligned(8)));
+
+struct hipDoubleComplex {
+  #ifdef __cplusplus
+    public:
+      __device__ __host__ hipDoubleComplex() : x(0.0f), y(0.0f) {}
+      __device__ __host__ hipDoubleComplex(double x) : x(x), y(0.0f) {}
+      __device__ __host__ hipDoubleComplex(double x, double y) : x(x), y(y) {}
+      MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipDoubleComplex, unsigned short)
+      MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipDoubleComplex, signed short)
+      MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipDoubleComplex, unsigned int)
+      MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipDoubleComplex, signed int)
+      MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipDoubleComplex, float)
+      MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipDoubleComplex, unsigned long)
+      MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipDoubleComplex, signed long)
+      MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipDoubleComplex, unsigned long long)
+      MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipDoubleComplex, signed long long)
+  #endif
+  double x, y;
+} __attribute__((aligned(16)));
+
+#if __cplusplus
+
+COMPLEX_ADD_OP_OVERLOAD(hipFloatComplex)
+COMPLEX_SUB_OP_OVERLOAD(hipFloatComplex)
+COMPLEX_MUL_OP_OVERLOAD(hipFloatComplex)
+COMPLEX_DIV_OP_OVERLOAD(hipFloatComplex)
+COMPLEX_ADD_PREOP_OVERLOAD(hipFloatComplex)
+COMPLEX_SUB_PREOP_OVERLOAD(hipFloatComplex)
+COMPLEX_MUL_PREOP_OVERLOAD(hipFloatComplex)
+COMPLEX_DIV_PREOP_OVERLOAD(hipFloatComplex)
+COMPLEX_SCALAR_PRODUCT(hipFloatComplex, unsigned short)
+COMPLEX_SCALAR_PRODUCT(hipFloatComplex, signed short)
+COMPLEX_SCALAR_PRODUCT(hipFloatComplex, unsigned int)
+COMPLEX_SCALAR_PRODUCT(hipFloatComplex, signed int)
+COMPLEX_SCALAR_PRODUCT(hipFloatComplex, float)
+COMPLEX_SCALAR_PRODUCT(hipFloatComplex, unsigned long)
+COMPLEX_SCALAR_PRODUCT(hipFloatComplex, signed long)
+COMPLEX_SCALAR_PRODUCT(hipFloatComplex, double)
+COMPLEX_SCALAR_PRODUCT(hipFloatComplex, signed long long)
+COMPLEX_SCALAR_PRODUCT(hipFloatComplex, unsigned long long)
+
+COMPLEX_ADD_OP_OVERLOAD(hipDoubleComplex)
+COMPLEX_SUB_OP_OVERLOAD(hipDoubleComplex)
+COMPLEX_MUL_OP_OVERLOAD(hipDoubleComplex)
+COMPLEX_DIV_OP_OVERLOAD(hipDoubleComplex)
+COMPLEX_ADD_PREOP_OVERLOAD(hipDoubleComplex)
+COMPLEX_SUB_PREOP_OVERLOAD(hipDoubleComplex)
+COMPLEX_MUL_PREOP_OVERLOAD(hipDoubleComplex)
+COMPLEX_DIV_PREOP_OVERLOAD(hipDoubleComplex)
+COMPLEX_SCALAR_PRODUCT(hipDoubleComplex, unsigned short)
+COMPLEX_SCALAR_PRODUCT(hipDoubleComplex, signed short)
+COMPLEX_SCALAR_PRODUCT(hipDoubleComplex, unsigned int)
+COMPLEX_SCALAR_PRODUCT(hipDoubleComplex, signed int)
+COMPLEX_SCALAR_PRODUCT(hipDoubleComplex, float)
+COMPLEX_SCALAR_PRODUCT(hipDoubleComplex, unsigned long)
+COMPLEX_SCALAR_PRODUCT(hipDoubleComplex, signed long)
+COMPLEX_SCALAR_PRODUCT(hipDoubleComplex, double)
+COMPLEX_SCALAR_PRODUCT(hipDoubleComplex, signed long long)
+COMPLEX_SCALAR_PRODUCT(hipDoubleComplex, unsigned long long)
+
+#endif
 
 __device__ static inline float hipCrealf(hipFloatComplex z){
     return z.x;
