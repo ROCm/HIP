@@ -196,9 +196,45 @@ add_custom_target(doc COMMAND HIP_PATH=${CMAKE_CURRENT_SOURCE_DIR} doxygen ${CMA
 #############################
 # Install steps
 #############################
+include(GNUInstallDirs)
+set( LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR} )
+set( INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_INCLUDEDIR} )
+set( CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip )
+
 # Install hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
-    install(TARGETS hip_hcc_static hip_hcc hip_device DESTINATION lib)
+    install(TARGETS hip_hcc_static hip_hcc hip_device 
+        EXPORT hip-targets 
+        DESTINATION ${LIB_INSTALL_DIR}
+    )
+
+    install( EXPORT hip-targets
+      DESTINATION
+        ${CONFIG_PACKAGE_INSTALL_DIR}
+      NAMESPACE hip::
+    )
+
+    include( CMakePackageConfigHelpers )
+
+    configure_package_config_file(
+      hip-config.cmake.in
+      ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
+      INSTALL_DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR}
+      PATH_VARS LIB_INSTALL_DIR INCLUDE_INSTALL_DIR
+    )
+
+    write_basic_package_version_file(
+      ${CMAKE_CURRENT_BINARY_DIR}/hip-config-version.cmake
+      VERSION "${HIP_VERSION}"
+      COMPATIBILITY SameMajorVersion
+    )
+
+    install( FILES
+      ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
+      ${CMAKE_CURRENT_BINARY_DIR}/hip-config-version.cmake
+      DESTINATION
+        ${CONFIG_PACKAGE_INSTALL_DIR} )
+
     install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_ir.ll DESTINATION lib)
 
     # Install .hipInfo
