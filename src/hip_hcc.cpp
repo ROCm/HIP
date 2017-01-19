@@ -338,6 +338,7 @@ void ihipStream_t::locked_wait()
 };
 
 // Causes current stream to wait for specified event to complete:
+// Note this does not require any kind of host serialization.
 void ihipStream_t::locked_waitEvent(hipEvent_t event)
 {
     LockedAccessor_StreamCrit_t crit(_criticalData);
