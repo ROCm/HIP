@@ -53,7 +53,7 @@ if(NOT DEFINED HIP_PLATFORM)
 endif()
 message(STATUS "HIP Platform: " ${HIP_PLATFORM})
 
-# If HIP_PLATFORM is hcc, we need HCC_HOME and HSA_PATH to be defined
+# If HIP_PLATFORM is hcc, we need HCC_HOME and HSA_HEADER to be defined
 if(HIP_PLATFORM STREQUAL "hcc")
     list(APPEND CMAKE_PREFIX_PATH "/opt/rocm")
     # Find hcc compiler
@@ -77,9 +77,10 @@ if(HIP_PLATFORM STREQUAL "hcc")
     list(GET HCC_VERSION_LIST 0 HCC_VERSION_MAJOR)
     list(GET HCC_VERSION_LIST 1 HCC_VERSION_MINOR)
 
-    # Determine HSA_PATH
-    find_path(HSA_PATH hsa/hsa.h
+    # Determine HSA_HEADER
+    find_path(HSA_HEADER hsa/hsa.h
         PATHS
+            ${HSA_PATH}
             ENV HSA_PATH
             /opt/rocm/hsa
     )
@@ -166,7 +167,8 @@ if(HIP_PLATFORM STREQUAL "hcc")
 
     foreach(TARGET hip_hcc hip_hcc_static hip_device)
         target_link_libraries(${TARGET} ${hcc_LIBRARIES})
-        target_include_directories(${TARGET} SYSTEM PUBLIC ${HSA_PATH})
+        target_include_directories(${TARGET} SYSTEM PUBLIC ${HSA_HEADER})
+        target_include_directories(${TARGET} SYSTEM INTERFACE $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>)
         target_compile_definitions(${TARGET} PRIVATE -DHIP_VERSION=${HIP_VERSION})
         target_compile_definitions(${TARGET} PRIVATE -DHIP_VERSION_MAJOR=${HIP_VERSION_MAJOR})
         target_compile_definitions(${TARGET} PRIVATE -DHIP_VERSION_MINOR=${HIP_VERSION_MINOR})
