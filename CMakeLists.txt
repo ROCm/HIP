@@ -55,26 +55,21 @@ message(STATUS "HIP Platform: " ${HIP_PLATFORM})
 
 # If HIP_PLATFORM is hcc, we need HCC_HOME and HSA_PATH to be defined
 if(HIP_PLATFORM STREQUAL "hcc")
-    # Determine HCC_HOME
-    if(NOT DEFINED HCC_HOME)
-        if(NOT DEFINED ENV{HCC_HOME})
-            set(HCC_HOME "/opt/rocm/hcc" CACHE PATH "Path to which HCC has been installed")
-        else()
-            set(HCC_HOME $ENV{HCC_HOME} CACHE PATH "Path to which HCC has been installed")
-        endif()
-    endif()
-    if(DEFINED ENV{HIP_DEVELOPER})
-        add_to_config(_buildInfo HCC_HOME)
-    endif()
-    if(IS_ABSOLUTE ${HCC_HOME} AND EXISTS ${HCC_HOME} AND IS_DIRECTORY ${HCC_HOME})
-        execute_process(COMMAND ${HCC_HOME}/bin/hcc --version
-            COMMAND cut -d\  -f9
-            OUTPUT_VARIABLE HCC_VERSION
-            OUTPUT_STRIP_TRAILING_WHITESPACE)
-        message(STATUS "Looking for HCC in: " ${HCC_HOME} ". Found version: " ${HCC_VERSION})
-    else()
-        message(FATAL_ERROR "Don't know where to find HCC. Please specify abolute path using -DHCC_HOME")
-    endif()
+    list(APPEND CMAKE_PREFIX_PATH "/opt/rocm")
+    # Find hcc compiler
+    find_program(HCC_COMPILER hcc
+        PATHS
+            ${HCC_HOME}/bin
+            ENV HCC_HOME
+            /opt/rocm/hcc
+    )
+    execute_process(COMMAND ${HCC_COMPILER} --version
+        COMMAND cut -d\  -f9
+        OUTPUT_VARIABLE HCC_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE)
+    message(STATUS "Found hcc version: " ${HCC_VERSION})
+    # Find hcc runtime
+    find_package(hcc)
     add_to_config(_buildInfo HCC_VERSION)
     string(REPLACE "-" ";" HCC_VERSION_LIST ${HCC_VERSION})
     list(GET HCC_VERSION_LIST 0 HCC_PACKAGE_VERSION)
@@ -83,18 +78,11 @@ if(HIP_PLATFORM STREQUAL "hcc")
     list(GET HCC_VERSION_LIST 1 HCC_VERSION_MINOR)
 
     # Determine HSA_PATH
-    if(NOT DEFINED HSA_PATH)
-        if(NOT DEFINED ENV{HSA_PATH})
-            set(HSA_PATH "/opt/rocm/hsa" CACHE PATH "Path to which HSA runtime has been installed")
-        else()
-            set(HSA_PATH $ENV{HSA_PATH} CACHE PATH "Path to which HSA runtime has been installed")
-        endif()
-    endif()
-    if(IS_ABSOLUTE ${HSA_PATH} AND EXISTS ${HSA_PATH} AND IS_DIRECTORY ${HSA_PATH})
-        message(STATUS "Looking for HSA runtime in: " ${HSA_PATH})
-    else()
-        message(FATAL_ERROR "Don't know where to find HSA runtime. Please specify absolute path using -DHSA_PATH")
-    endif()
+    find_path(HSA_PATH hsa/hsa.h
+        PATHS
+            ENV HSA_PATH
+            /opt/rocm/hsa
+    )
 endif()
 
 # Set default build type
@@ -148,23 +136,10 @@ add_subdirectory(hipify-clang)
 # Build hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
     include_directories(${PROJECT_SOURCE_DIR}/include)
-    set(HIP_HCC_BUILD_FLAGS)
-    if(COMPILE_HIP_ATP_MARKER)
-        include_directories(/opt/rocm/profiler/CXLActivityLogger/include)
-        set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DCOMPILE_HIP_ATP_MARKER=1")
-    endif()
-
-    # Add HIP_VERSION to CMAKE_<LANG>_FLAGS
-    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DHIP_VERSION_MAJOR=${HIP_VERSION_MAJOR} -DHIP_VERSION_MINOR=${HIP_VERSION_MINOR} -DHIP_VERSION_PATCH=${HIP_VERSION_PATCH}")
-
-    # Add remaining flags
-    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include -I/usr/local/include/c++/v1 -stdlib=libc++")
 
     # Set compiler and compiler flags
-    set(CMAKE_CXX_COMPILER "${HCC_HOME}/bin/hcc")
-    set(CMAKE_C_COMPILER   "${HCC_HOME}/bin/hcc")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HCC_BUILD_FLAGS}")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HIP_HCC_BUILD_FLAGS}")
+    set(CMAKE_CXX_COMPILER "${HCC_COMPILER}")
+    set(CMAKE_C_COMPILER   "${HCC_COMPILER}")
 
     set(SOURCE_FILES_RUNTIME
         src/hip_hcc.cpp
@@ -183,17 +158,23 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/hip_fp16.cpp
         src/device_functions.cpp)
 
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L${HCC_HOME}/lib -lmcwamp -Wl,-Bsymbolic -Wl,-rpath ${HCC_HOME}/lib")
     add_library(hip_hcc SHARED ${SOURCE_FILES_RUNTIME})
-    target_link_libraries(hip_hcc c++ c++abi hc_am)
     add_library(hip_hcc_static STATIC ${SOURCE_FILES_RUNTIME})
-    target_link_libraries(hip_hcc_static c++ c++abi hc_am)
     add_dependencies(hip_hcc_static hip_hcc)
     add_library(hip_device STATIC ${SOURCE_FILES_DEVICE})
     add_dependencies(hip_device hip_hcc)
 
+    foreach(TARGET hip_hcc hip_hcc_static hip_device)
+        target_link_libraries(${TARGET} ${hcc_LIBRARIES})
+        target_include_directories(${TARGET} SYSTEM PUBLIC ${HSA_PATH})
+        target_compile_definitions(${TARGET} PRIVATE -DHIP_VERSION=${HIP_VERSION})
+        target_compile_definitions(${TARGET} PRIVATE -DHIP_VERSION_MAJOR=${HIP_VERSION_MAJOR})
+        target_compile_definitions(${TARGET} PRIVATE -DHIP_VERSION_MINOR=${HIP_VERSION_MINOR})
+        target_compile_definitions(${TARGET} PRIVATE -DHIP_VERSION_PATCH=${HIP_VERSION_PATCH})
+    endforeach()
+
     # Generate hcc_version.txt
-    add_custom_target(query_hcc_version COMMAND ${HCC_HOME}/bin/hcc --version > ${PROJECT_BINARY_DIR}/hcc_version.tmp)
+    add_custom_target(query_hcc_version COMMAND ${HCC_COMPILER} --version > ${PROJECT_BINARY_DIR}/hcc_version.tmp)
     add_custom_target(check_hcc_version COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PROJECT_BINARY_DIR}/hcc_version.tmp ${PROJECT_BINARY_DIR}/hcc_version.txt DEPENDS query_hcc_version)
     set_source_files_properties(${PROJECT_BINARY_DIR}/hcc_version.txt PROPERTIES GENERATED TRUE)
     set_source_files_properties(${SOURCE_FILES_RUNTIME} ${SOURCE_FILES_DEVICE} PROPERTIES OBJECT_DEPENDS ${PROJECT_BINARY_DIR}/hcc_version.txt)
