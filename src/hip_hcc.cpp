@@ -1475,7 +1475,7 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, const hipStream_t stream)
 {
 
-    if (HIP_PROFILE_API || (COMPILE_HIP_DB && HIP_TRACE_API)) {
+    if ((HIP_TRACE_API & (1<<TRACE_CMD)) || HIP_PROFILE_API || (COMPILE_HIP_DB && HIP_TRACE_API)) {
         std::stringstream os_pre;
         std::stringstream os;
         os_pre  << "<<hip-api tid:";
