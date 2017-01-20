@@ -179,54 +179,11 @@ extern const char *API_COLOR_END;
 #endif
 
 
-extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
-
-#if COMPILE_HIP_ATP_MARKER || (COMPILE_HIP_TRACE_API & 0x1)
-#define API_TRACE(...)\
-{\
-    tls_tidInfo.incApiSeqNum();\
-    if (HIP_PROFILE_API || (COMPILE_HIP_DB && HIP_TRACE_API)) {\
-        std::string apiStr = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
-        std::string fullStr;\
-        recordApiTrace(&fullStr, apiStr);\
-        if      (HIP_PROFILE_API == 0x1) {MARKER_BEGIN(__func__, "HIP") }\
-        else if (HIP_PROFILE_API == 0x2) {MARKER_BEGIN(fullStr.c_str(), "HIP"); }\
-    }\
-}
-#else
-// Swallow API_TRACE
-#define API_TRACE(...)\
-    tls_tidInfo.incApiSeqNum();
-#endif
-
-
-// Just initialize the HIP runtime, but don't log any trace information.
-#define HIP_INIT()\
-	std::call_once(hip_initialized, ihipInit);\
-    ihipCtxStackUpdate();
-#define HIP_SET_DEVICE()\
-    ihipDeviceSetState();
-
-// This macro should be called at the beginning of every HIP API.
-// It initialies the hip runtime (exactly once), and
-// generate trace string that can be output to stderr or to ATP file.
-#define HIP_INIT_API(...) \
-    HIP_INIT()\
-    API_TRACE(__VA_ARGS__);
-
-#define ihipLogStatus(hipStatus) \
-    ({\
-        hipError_t localHipStatus = hipStatus; /*local copy so hipStatus only evaluated once*/ \
-        tls_lastHipError = localHipStatus;\
-        \
-        if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API) {\
-            fprintf(stderr, "  %ship-api tid:%d.%lu %-30s ret=%2d (%s)>>%s\n", (localHipStatus == 0) ? API_COLOR:KRED, tls_tidInfo.tid(),tls_tidInfo.apiSeqNum(),  __func__, localHipStatus, ihipErrorString(localHipStatus), API_COLOR_END);\
-        }\
-        if (HIP_PROFILE_API) { MARKER_END(); }\
-        localHipStatus;\
-    })
-
-
+//---
+//HIP Trace modes
+#define TRACE_ALL 0 // 0x1
+#define TRACE_CMD 1 // 0x2
+#define TRACE_MEM 2 // 0x4
 
 
 //---
@@ -238,12 +195,14 @@ extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
 #define DB_MAX_FLAG 4
 // When adding a new debug flag, also add to the char name table below.
 //
+//
 
 struct DbName {
     const char *_color;
     const char *_shortName;
 };
 
+// This table must be kept in-sync with the defines above.
 static const DbName dbName [] =
 {
     {KGRN, "api"}, // not used,
@@ -266,6 +225,74 @@ static const DbName dbName [] =
 /* Compile to empty code */
 #define tprintf(trace_level, ...)
 #endif
+
+
+
+
+//---
+extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
+
+#if COMPILE_HIP_ATP_MARKER || (COMPILE_HIP_TRACE_API & 0x1)
+#define API_TRACE(forceTrace, ...)\
+{\
+    tls_tidInfo.incApiSeqNum();\
+    if (forceTrace || (HIP_PROFILE_API || (COMPILE_HIP_DB && (HIP_TRACE_API & (1<<TRACE_ALL))))) {\
+        std::string apiStr = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
+        std::string fullStr;\
+        recordApiTrace(&fullStr, apiStr);\
+        if      (HIP_PROFILE_API == 0x1) {MARKER_BEGIN(__func__, "HIP") }\
+        else if (HIP_PROFILE_API == 0x2) {MARKER_BEGIN(fullStr.c_str(), "HIP"); }\
+    }\
+}
+#else
+// Swallow API_TRACE
+#define API_TRACE(IS_CMD, ...)\
+    tls_tidInfo.incApiSeqNum();
+#endif
+
+
+// Just initialize the HIP runtime, but don't log any trace information.
+#define HIP_INIT()\
+	std::call_once(hip_initialized, ihipInit);\
+    ihipCtxStackUpdate();
+#define HIP_SET_DEVICE()\
+    ihipDeviceSetState();
+
+
+
+// This macro should be called at the beginning of every HIP API.
+// It initializes the hip runtime (exactly once), and
+// generates a trace string that can be output to stderr or to ATP file.
+#define HIP_INIT_API(...) \
+    HIP_INIT()\
+    API_TRACE(0, __VA_ARGS__);
+
+
+// Like above, but will trace with DB_CMD.  
+// Replace HIP_INIT_API with this call inside important APIs that launch work on the GPU:
+// kernel launches, copy commands, memory sets, etc.
+#define HIP_INIT_CMD_API(...) \
+    HIP_INIT()\
+    API_TRACE((HIP_TRACE_API&(1<<TRACE_CMD)), __VA_ARGS__);
+
+// This macro should be called at the end of every HIP API, and only at the end of top-level hip APIS (not internal hip)
+// It has dual function: logs the last error returned for use by hipGetLastError,
+// and also prints the closing message when the debug trace is enabled.
+#define ihipLogStatus(hipStatus) \
+    ({\
+        hipError_t localHipStatus = hipStatus; /*local copy so hipStatus only evaluated once*/ \
+        tls_lastHipError = localHipStatus;\
+        \
+        if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API & (1<<TRACE_ALL)) {\
+            fprintf(stderr, "  %ship-api tid:%d.%lu %-30s ret=%2d (%s)>>%s\n", (localHipStatus == 0) ? API_COLOR:KRED, tls_tidInfo.tid(),tls_tidInfo.apiSeqNum(),  __func__, localHipStatus, ihipErrorString(localHipStatus), API_COLOR_END);\
+        }\
+        if (HIP_PROFILE_API) { MARKER_END(); }\
+        localHipStatus;\
+    })
+
+
+
+
 
 
 
