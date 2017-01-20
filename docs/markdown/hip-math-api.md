@@ -118,7 +118,7 @@ __device__ float coshf(float x);
 
 ### cospif
 ```cpp 
-__device__ __host__ float cospif(float x);
+__device__ float cospif(float x);
 
 ```
 **Description:**  Supported
@@ -230,7 +230,7 @@ __device__ float fdimf(float x, float y);
 
 ### fdividef
 ```cpp 
-__device__ __host__ float fdividef(float x, float y);
+__device__ float fdividef(float x, float y);
 
 ```
 **Description:**  Supported
@@ -302,7 +302,7 @@ __device__ float ilogbf(float x);
 
 ### isfinite
 ```cpp 
-__device__ __host__ int isfinite(float a);
+__device__ int isfinite(float a);
 
 ```
 **Description:**  Supported
@@ -574,7 +574,7 @@ __device__ float roundf(float x);
 
 ### rsqrtf
 ```cpp 
-__device__ __host__ float rsqrtf(float x);
+__device__ float rsqrtf(float x);
 
 ```
 **Description:**  Supported
@@ -598,7 +598,7 @@ __device__ float scalbnf(float x, int n);
 
 ### signbit
 ```cpp 
-__device__ __host__ unsigned signbit(float a);
+__device__ int signbit(float a);
 
 ```
 **Description:**  Supported
@@ -638,7 +638,7 @@ __device__ float sinhf(float x);
 
 ### sinpif
 ```cpp 
-__device__ __host__ float sinpif(float x);
+__device__ float sinpif(float x);
 
 ```
 **Description:**  Supported
@@ -806,7 +806,7 @@ __device__ double cosh(double x);
 
 ### cospi
 ```cpp 
-__device__ __host__ double cospi(double x);
+__device__ double cospi(double x);
 
 ```
 **Description:**  Supported
@@ -982,7 +982,7 @@ __device__ double ilogb(double x);
 
 ### isfinite
 ```cpp 
-__device__ __host__ unsigned isfinite(double x);
+__device__ int isfinite(double x);
 
 ```
 **Description:**  Supported
@@ -1270,7 +1270,7 @@ __device__ double round(double x);
 
 ### rsqrt
 ```cpp 
-__device__ __host__ double rsqrt(double x);
+__device__ double rsqrt(double x);
 
 ```
 **Description:**  Supported
@@ -1294,7 +1294,7 @@ __device__ double scalbn(double x, int n);
 
 ### signbit
 ```cpp 
-__device__ __host__ unsigned signbit(double a);
+__device__ int signbit(double a);
 
 ```
 **Description:**  Supported
@@ -1334,7 +1334,7 @@ __device__ double sinh(double x);
 
 ### sinpi
 ```cpp 
-__device__ __host__ double sinpi(double x);
+__device__ double sinpi(double x);
 
 ```
 **Description:**  Supported
