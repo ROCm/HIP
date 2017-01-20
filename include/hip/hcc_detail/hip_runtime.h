@@ -69,6 +69,8 @@ extern int HIP_TRACE_API;
 #include <hip/hcc_detail/hip_ldg.h>
 #endif
 #include <hip/hcc_detail/host_defines.h>
+#include <hip/hcc_detail/math_functions.h>
+
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
 #if defined (__KALMAR_ACCELERATOR__) && !defined (__HCC_ACCELERATOR__)
 #define __HCC_ACCELERATOR__  __KALMAR_ACCELERATOR__

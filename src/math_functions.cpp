@@ -158,7 +158,7 @@ __device__ float ilogbf(float x)
 {
     return hc::precise_math::ilogbf(x);
 }
-__device__ unsigned isfinite(float a)
+__device__ int isfinite(float a)
 {
     return hc::precise_math::isfinite(a);
 }
@@ -334,7 +334,7 @@ __device__ float scalbnf(float x, int n)
 {
     return hc::precise_math::scalbnf(x, n);
 }
-__device__ unsigned signbit(float a)
+__device__ int signbit(float a)
 {
     return hc::precise_math::signbit(a);
 }
@@ -539,7 +539,7 @@ __device__ double ilogb(double x)
 {
     return hc::precise_math::ilogb(x);
 }
-__device__ unsigned isfinite(double x)
+__device__ int isfinite(double x)
 {
     return hc::precise_math::isfinite(x);
 }
@@ -712,7 +712,7 @@ __device__ double scalbn(double x, int n)
 {
     return hc::precise_math::scalbn(x, n);
 }
-__device__ unsigned signbit(double x)
+__device__ int signbit(double x)
 {
     return hc::precise_math::signbit(x);
 }
@@ -792,7 +792,7 @@ __host__ int signbit(float x)
   return std::signbit(x);
 }
 
-__host__ int sinpif(float x)
+__host__ float sinpif(float x)
 {
   return std::sin(x*HIP_PI);
 }
@@ -984,7 +984,7 @@ __host__ double cospi(double a)
   return std::cos(HIP_PI * a);
 }
 
-__host__ double isfinite(double a)
+__host__ int isfinite(double a)
 {
   return std::isfinite(a);
 }
