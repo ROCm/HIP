@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 //#pragma once
-#ifndef HIP_RUNTIME_API_H
-#define HIP_RUNTIME_API_H
+#ifndef HIP_HCC_DETAIL_HIP_RUNTIME_API_H
+#define HIP_HCC_DETAIL_HIP_RUNTIME_API_H
 /**
  *  @file  hcc_detail/hip_runtime_api.h
  *  @brief Contains C function APIs for HIP runtime. This file does not use any HCC builtin or special language extensions (-hc mode) ; those functions in hip_runtime.h.
@@ -177,6 +177,12 @@ typedef enum hipMemcpyKind {
   ,hipMemcpyDefault = 4,      ///< Runtime will automatically determine copy-kind based on virtual addresses.
 } hipMemcpyKind;
 
+typedef struct {
+  unsigned int width;
+  unsigned int height;
+  hipChannelFormatKind f;
+  void* data; //FIXME: generalize this
+} hipArray;
 
 
 
@@ -1235,6 +1241,84 @@ hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t st
  **/
 hipError_t hipMemGetInfo  (size_t * free, size_t * total)   ;
 
+
+/**
+ *  @brief Allocate an array on the device.
+ *
+ *  @param[out]  array  Pointer to allocated array in device memory
+ *  @param[in]   desc   Requested channel format
+ *  @param[in]   width  Requested array allocation width
+ *  @param[in]   height Requested array allocation height
+ *  @param[in]   flags  Requested properties of allocated array
+ *  @return      #hipSuccess, #hipErrorMemoryAllocation
+ *
+ *  @see hipMalloc, hipMallocPitch, hipFree, hipFreeArray, hipHostMalloc, hipHostFree
+ */
+hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
+                          size_t width, size_t height = 0, unsigned int flags = 0);
+
+/**
+ *  @brief Frees an array on the device.
+ *
+ *  @param[in]  array  Pointer to array to free
+ *  @return     #hipSuccess, #hipErrorInvalidValue, #hipErrorInitializationError
+ *
+ *  @see hipMalloc, hipMallocPitch, hipFree, hipMallocArray, hipHostMalloc, hipHostFree
+ */
+hipError_t hipFreeArray(hipArray* array);
+
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dst    Destination memory address
+ *  @param[in]   dpitch Pitch of destination memory
+ *  @param[in]   src    Source memory address
+ *  @param[in]   spitch Pitch of source memory
+ *  @param[in]   width  Width of matrix transfer (columns in bytes)
+ *  @param[in]   height Height of matrix transfer (rows)
+ *  @param[in]   kind   Type of transfer
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue, #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpyToSymbol, hipMemcpyAsync
+ */
+hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind);
+
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dst    Destination memory address
+ *  @param[in]   dpitch Pitch of destination memory
+ *  @param[in]   src    Source memory address
+ *  @param[in]   spitch Pitch of source memory
+ *  @param[in]   width  Width of matrix transfer (columns in bytes)
+ *  @param[in]   height Height of matrix transfer (rows)
+ *  @param[in]   kind   Type of transfer
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue, #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol, hipMemcpyAsync
+ */
+hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
+                              size_t spitch, size_t width, size_t height, hipMemcpyKind kind);
+
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dst    Destination memory address
+ *  @param[in]   dpitch Pitch of destination memory
+ *  @param[in]   src    Source memory address
+ *  @param[in]   spitch Pitch of source memory
+ *  @param[in]   width  Width of matrix transfer (columns in bytes)
+ *  @param[in]   height Height of matrix transfer (rows)
+ *  @param[in]   kind   Type of transfer
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue, #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol, hipMemcpyAsync
+ */
+hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset,
+                            const void* src, size_t count, hipMemcpyKind kind);
+
+
+
 // doxygen end Memory
 /**
  * @}
@@ -1910,6 +1994,87 @@ hipError_t hipIpcCloseMemHandle(void *devPtr);
 #ifdef __cplusplus
 } /* extern "c" */
 #endif
+
+#ifdef __cplusplus
+/*
+ * @brief hipBindTexture Binds size bytes of the memory area pointed to by @p devPtr to the texture reference tex.
+ *
+ * @p desc describes how the memory is interpreted when fetching values from the texture. The @p offset parameter is an optional byte offset as with the low-level
+ * hipBindTexture() function. Any memory previously bound to tex is unbound.
+ *
+ *  @param[in]  offset - Offset in bytes
+ *  @param[out]  tex - texture to bind
+ *  @param[in]  devPtr - Memory area on device
+ *  @param[in]  desc - Channel format
+ *  @param[in]  size - Size of the memory area pointed to by devPtr
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
+ **/
+template <class T, int dim, enum hipTextureReadMode readMode>
+hipError_t  hipBindTexture(size_t *offset,
+                                     struct texture<T, dim, readMode> &tex,
+                                     const void *devPtr,
+                                     const struct hipChannelFormatDesc *desc,
+                                     size_t size=UINT_MAX)
+{
+    tex._dataPtr = static_cast<const T*>(devPtr);
+
+    return hipSuccess;
+}
+
+/*
+ * @brief hipBindTexture Binds size bytes of the memory area pointed to by @p devPtr to the texture reference tex.
+ *
+ * @p desc describes how the memory is interpreted when fetching values from the texture. The @p offset parameter is an optional byte offset as with the low-level
+ * hipBindTexture() function. Any memory previously bound to tex is unbound.
+ *
+ *  @param[in]  offset - Offset in bytes
+ *  @param[in]  tex - texture to bind
+ *  @param[in]  devPtr - Memory area on device
+ *  @param[in]  size - Size of the memory area pointed to by devPtr
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
+ **/
+template <class T, int dim, enum hipTextureReadMode readMode>
+hipError_t  hipBindTexture(size_t *offset,
+                                     struct texture<T, dim, readMode> &tex,
+                                     const void *devPtr,
+                                     size_t size=UINT_MAX)
+{
+    return  hipBindTexture(offset, tex, devPtr, &tex.channelDesc, size);
+}
+
+template <class T, int dim, enum hipTextureReadMode readMode>
+hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> &tex, hipArray* array) {
+  tex.width = array->width;
+  tex.height = array->height;
+  tex._dataPtr = static_cast<const T*>(array->data);
+  return hipSuccess;
+}
+
+/*
+ * @brief Unbinds the textuer bound to @p tex
+ *
+ *  @param[in]  tex - texture to unbind
+ *
+ *  @return #hipSuccess
+ **/
+template <class T, int dim, enum hipTextureReadMode readMode>
+hipError_t  hipUnbindTexture(struct texture<T, dim, readMode> &tex)
+{
+    tex._dataPtr = NULL;
+
+    return hipSuccess;
+}
+
+
+
+// doxygen end Texture
+/**
+ * @}
+ */
+
+
+#endif
+
 
 /**
  *-------------------------------------------------------------------------------------------------
