@@ -189,7 +189,7 @@ hipError_t ihipDeviceSetState(void)
         e = hipSuccess;
     }
 
-    return ihipLogStatus(e);
+    return e;
 }
 
 
@@ -261,7 +261,7 @@ hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device
     } else {
         e = hipErrorInvalidDevice;
     }
-    return ihipLogStatus(e);
+    return e;
 }
 
 hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
@@ -287,7 +287,7 @@ hipError_t ihipGetDeviceProperties(hipDeviceProp_t* props, int device)
         e = hipErrorInvalidDevice;
     }
 
-    return ihipLogStatus(e);
+    return e;
 }
 
 hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device)
