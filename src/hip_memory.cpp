@@ -164,6 +164,10 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
     HIP_SET_DEVICE();
     hipError_t hip_status = hipSuccess;
 
+    if (HIP_SYNC_HOST_ALLOC) {
+        hipDeviceSynchronize();
+    }
+
     auto ctx = ihipGetTlsDefaultCtx();
 
     if (sizeBytes == 0) {
@@ -215,6 +219,9 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
                 }
             }
         }
+    }
+    if (HIP_SYNC_HOST_ALLOC) {
+        hipDeviceSynchronize();
     }
     return ihipLogStatus(hip_status);
 }
@@ -993,6 +1000,8 @@ hipError_t hipHostFree(void* ptr)
     return ihipLogStatus(hipStatus);
 };
 
+
+// Deprecated:
 hipError_t hipFreeHost(void* ptr)
 {
     return hipHostFree(ptr);

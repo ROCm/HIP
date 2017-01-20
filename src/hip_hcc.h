@@ -62,7 +62,7 @@ extern int HIP_COHERENT_HOST_ALLOC;
 
 //---
 // Chicken bits for disabling functionality to work around potential issues:
-extern int HIP_DISABLE_HW_KERNEL_DEP;
+extern int HIP_SYNC_HOST_ALLOC;
 
 
 // Class to assign a short TID to each new thread, for HIP debugging purposes.

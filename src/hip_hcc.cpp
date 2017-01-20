@@ -92,6 +92,10 @@ int HIP_FORCE_SYNC_COPY = 0;
 
 int HIP_COHERENT_HOST_ALLOC = 0;
 
+// TODO - set to 0 once we resolve stability.
+// USE_ HIP_SYNC_HOST_ALLOC
+int HIP_SYNC_HOST_ALLOC = 1;
+
 
 
 
@@ -1270,19 +1274,8 @@ std::string HIP_VISIBLE_DEVICES_callback(void *var_ptr, const char *envVarString
 }
 
 
-//---
-//Function called one-time at initialization time to construct a table of all GPU devices.
-//HIP/CUDA uses integer "deviceIds" - these are indexes into this table.
-//AMP maintains a table of accelerators, but some are emulated - ie for debug or CPU.
-//This function creates a vector with only the GPU accelerators.
-//It is called with C++11 call_once, which provided thread-safety.
-void ihipInit()
+void HipReadEnv()
 {
-
-#if COMPILE_HIP_ATP_MARKER
-    amdtInitializeActivityLogger();
-    amdtScopedMarker("ihipInit", "HIP", NULL);
-#endif
     /*
      * Environment variables
      */
@@ -1323,6 +1316,8 @@ void ihipInit()
     READ_ENV_I(release, HIP_WAIT_MODE, 0, "Force synchronization mode. 1= force yield, 2=force spin, 0=defaults specified in application");
     READ_ENV_I(release, HIP_FORCE_P2P_HOST, 0, "Force use of host/staging copy for peer-to-peer copies.1=always use copies, 2=always return false for hipDeviceCanAccessPeer");
     READ_ENV_I(release, HIP_FORCE_SYNC_COPY, 0, "Force all copies (even hipMemcpyAsync) to use sync copies");
+
+    READ_ENV_I(release, HIP_SYNC_HOST_ALLOC, 0, "Sync before and after all host memory allocations.  May help stability");
 
     // TODO - review, can we remove this?
     READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Max number of inflight kernels per stream before active synchronization is forced.");
@@ -1375,8 +1370,26 @@ void ihipInit()
 
     parseTrigger(HIP_DB_START_API, g_dbStartTriggers);
     parseTrigger(HIP_DB_STOP_API,  g_dbStopTriggers);
+};
 
 
+
+//---
+//Function called one-time at initialization time to construct a table of all GPU devices.
+//HIP/CUDA uses integer "deviceIds" - these are indexes into this table.
+//AMP maintains a table of accelerators, but some are emulated - ie for debug or CPU.
+//This function creates a vector with only the GPU accelerators.
+//It is called with C++11 call_once, which provided thread-safety.
+void ihipInit()
+{
+
+#if COMPILE_HIP_ATP_MARKER
+    amdtInitializeActivityLogger();
+    amdtScopedMarker("ihipInit", "HIP", NULL);
+#endif
+
+
+    HipReadEnv();
 
 
     /*
