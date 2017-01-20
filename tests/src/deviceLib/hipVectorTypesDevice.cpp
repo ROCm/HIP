@@ -27,34 +27,25 @@ THE SOFTWARE.
  */
 
 #include<iostream>
-#include<assert.h>
 #include<hip/hip_vector_types.h>
 #include"test_common.h"
 #define cmpVal1(in, exp) \
   if(in.x != exp) { \
-    std::cout<<"Failed at: "<<__LINE__<<" in func: "<<__func__<<" expected output: "<<exp<<" but got: "<<in.x<<std::endl; \
-    assert(-1); \
   } \
 
 #define cmpVal2(in, exp) \
   if(in.x != exp || in.y != exp) { \
-    std::cout<<"Failed at: "<<__LINE__<<" in func: "<<__func__<<" expected output: "<<exp<<" but got: "<<in.x<<","<<in.y<<std::endl; \
-    assert(-1); \
   } \
 
 #define cmpVal3(in, exp) \
   if(in.x != exp || in.y != exp || in.z != exp) { \
-    std::cout<<"Failed at: "<<__LINE__<<" in func: "<<__func__<<" expected output: "<<exp<<" but got: "<<in.x<<","<<in.y<<","<<in.z<<std::endl; \
-    assert(-1); \
   } \
 
 #define cmpVal4(in, exp) \
   if(in.x != exp || in.y != exp || in.z != exp || in.w != exp ) { \
-    std::cout<<"Failed at: "<<__LINE__<<" in func: "<<__func__<<" expected output: "<<exp<<" but got: "<<in.x<<","<<in.y<<","<<in.z<<","<<in.w<<std::endl; \
-    assert(-1); \
   } \
 
-bool TestUChar1() {
+__device__ bool TestUChar1() {
   uchar1 f1, f2, f3;
   f1.x = 1;
   f2.x = 1;
@@ -119,7 +110,7 @@ bool TestUChar1() {
 
   f2 = ~f1;
   cmpVal1(f2, 253);
-  assert(!f1 == false);
+
   f1.x = 3;
   f1 = f1 * (unsigned char)1;
   cmpVal1(f1, 3);
@@ -163,19 +154,19 @@ bool TestUChar1() {
   f1.x = 3;
   f2.x = 4;
   f3.x = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestUChar2() {
+__device__ bool TestUChar2() {
   uchar2 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -248,7 +239,7 @@ bool TestUChar2() {
 
   f2 = ~f1;
   cmpVal2(f2, 253);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -256,19 +247,19 @@ bool TestUChar2() {
   f2.y = 4;
   f3.x = 3;
   f3.y = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestUChar3() {
+__device__ bool TestUChar3() {
   uchar3 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -349,7 +340,7 @@ bool TestUChar3() {
 
   f2 = ~f1;
   cmpVal3(f2, 253);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -360,19 +351,19 @@ bool TestUChar3() {
   f3.x = 3;
   f3.y = 3;
   f3.z = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestUChar4() {
+__device__ bool TestUChar4() {
   uchar4 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -461,7 +452,7 @@ bool TestUChar4() {
 
   f2 = ~f1;
   cmpVal4(f2, 253);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -475,19 +466,19 @@ bool TestUChar4() {
   f3.y = 3;
   f3.z = 3;
   f3.w = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestChar1() {
+__device__ bool TestChar1() {
   char1 f1, f2, f3;
   f1.x = 1;
   f2.x = 1;
@@ -552,24 +543,24 @@ bool TestChar1() {
 
   f2 = ~f1;
   cmpVal1(f2, (char)253);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f2.x = 4;
   f3.x = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestChar2() {
+__device__ bool TestChar2() {
   char2 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -642,7 +633,7 @@ bool TestChar2() {
 
   f2 = ~f1;
   cmpVal2(f2, (char)253);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -650,19 +641,19 @@ bool TestChar2() {
   f2.y = 4;
   f3.x = 3;
   f3.y = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestChar3() {
+__device__ bool TestChar3() {
   char3 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -743,7 +734,7 @@ bool TestChar3() {
 
   f2 = ~f1;
   cmpVal3(f2, (char)253);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -754,19 +745,19 @@ bool TestChar3() {
   f3.x = 3;
   f3.y = 3;
   f3.z = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestChar4() {
+__device__ bool TestChar4() {
   char4 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -855,7 +846,7 @@ bool TestChar4() {
 
   f2 = ~f1;
   cmpVal4(f2, (char)253);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -869,19 +860,19 @@ bool TestChar4() {
   f3.y = 3;
   f3.z = 3;
   f3.w = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestUShort1() {
+__device__ bool TestUShort1() {
   ushort1 f1, f2, f3;
   f1.x = 1;
   f2.x = 1;
@@ -946,24 +937,24 @@ bool TestUShort1() {
 
   f2 = ~f1;
   cmpVal1(f2, (unsigned short)65533);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f2.x = 4;
   f3.x = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestUShort2() {
+__device__ bool TestUShort2() {
   ushort2 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -1036,7 +1027,7 @@ bool TestUShort2() {
 
   f2 = ~f1;
   cmpVal2(f2, (unsigned short)65533);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -1044,19 +1035,19 @@ bool TestUShort2() {
   f2.y = 4;
   f3.x = 3;
   f3.y = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestUShort3() {
+__device__ bool TestUShort3() {
   ushort3 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -1137,7 +1128,7 @@ bool TestUShort3() {
 
   f2 = ~f1;
   cmpVal3(f2, (unsigned short)65533);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -1148,19 +1139,19 @@ bool TestUShort3() {
   f3.x = 3;
   f3.y = 3;
   f3.z = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestUShort4() {
+__device__ bool TestUShort4() {
   ushort4 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -1249,7 +1240,7 @@ bool TestUShort4() {
 
   f2 = ~f1;
   cmpVal4(f2, (unsigned short)65533);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -1263,19 +1254,19 @@ bool TestUShort4() {
   f3.y = 3;
   f3.z = 3;
   f3.w = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestShort1() {
+__device__ bool TestShort1() {
   short1 f1, f2, f3;
   f1.x = 1;
   f2.x = 1;
@@ -1340,24 +1331,24 @@ bool TestShort1() {
 
   f2 = ~f1;
   cmpVal1(f2, (signed short)65533);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f2.x = 4;
   f3.x = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestShort2() {
+__device__ bool TestShort2() {
   short2 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -1430,7 +1421,7 @@ bool TestShort2() {
 
   f2 = ~f1;
   cmpVal2(f2, (signed short)65533);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -1438,19 +1429,19 @@ bool TestShort2() {
   f2.y = 4;
   f3.x = 3;
   f3.y = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestShort3() {
+__device__ bool TestShort3() {
   short3 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -1531,7 +1522,7 @@ bool TestShort3() {
 
   f2 = ~f1;
   cmpVal3(f2, (signed short)65533);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -1542,19 +1533,19 @@ bool TestShort3() {
   f3.x = 3;
   f3.y = 3;
   f3.z = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestShort4() {
+__device__ bool TestShort4() {
   short4 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -1643,7 +1634,7 @@ bool TestShort4() {
 
   f2 = ~f1;
   cmpVal4(f2, (signed short)65533);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -1657,20 +1648,20 @@ bool TestShort4() {
   f3.y = 3;
   f3.z = 3;
   f3.w = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
 
-bool TestUInt1() {
+__device__ bool TestUInt1() {
   uint1 f1, f2, f3;
   f1.x = 1;
   f2.x = 1;
@@ -1735,24 +1726,24 @@ bool TestUInt1() {
 
   f2 = ~f1;
   cmpVal1(f2, (unsigned int)4294967293);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f2.x = 4;
   f3.x = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestUInt2() {
+__device__ bool TestUInt2() {
   uint2 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -1825,7 +1816,7 @@ bool TestUInt2() {
 
   f2 = ~f1;
   cmpVal2(f2, (unsigned int)4294967293);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -1833,19 +1824,19 @@ bool TestUInt2() {
   f2.y = 4;
   f3.x = 3;
   f3.y = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestUInt3() {
+__device__ bool TestUInt3() {
   uint3 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -1926,7 +1917,7 @@ bool TestUInt3() {
 
   f2 = ~f1;
   cmpVal3(f2, (unsigned int)4294967293);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -1937,19 +1928,19 @@ bool TestUInt3() {
   f3.x = 3;
   f3.y = 3;
   f3.z = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestUInt4() {
+__device__ bool TestUInt4() {
   uint4 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -2038,7 +2029,7 @@ bool TestUInt4() {
 
   f2 = ~f1;
   cmpVal4(f2, (unsigned int)4294967293);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -2052,19 +2043,19 @@ bool TestUInt4() {
   f3.y = 3;
   f3.z = 3;
   f3.w = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestInt1() {
+__device__ bool TestInt1() {
   int1 f1, f2, f3;
   f1.x = 1;
   f2.x = 1;
@@ -2129,24 +2120,24 @@ bool TestInt1() {
 
   f2 = ~f1;
   cmpVal1(f2, (signed int)4294967293);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f2.x = 4;
   f3.x = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestInt2() {
+__device__ bool TestInt2() {
   int2 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -2219,7 +2210,7 @@ bool TestInt2() {
 
   f2 = ~f1;
   cmpVal2(f2, (signed int)4294967293);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -2227,19 +2218,19 @@ bool TestInt2() {
   f2.y = 4;
   f3.x = 3;
   f3.y = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestInt3() {
+__device__ bool TestInt3() {
   int3 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -2320,7 +2311,7 @@ bool TestInt3() {
 
   f2 = ~f1;
   cmpVal3(f2, (signed int)4294967293);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -2331,19 +2322,19 @@ bool TestInt3() {
   f3.x = 3;
   f3.y = 3;
   f3.z = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestInt4() {
+__device__ bool TestInt4() {
   int4 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -2432,7 +2423,7 @@ bool TestInt4() {
 
   f2 = ~f1;
   cmpVal4(f2, (signed int)4294967293);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -2446,19 +2437,19 @@ bool TestInt4() {
   f3.y = 3;
   f3.z = 3;
   f3.w = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestULong1() {
+__device__ bool TestULong1() {
   ulong1 f1, f2, f3;
   f1.x = 1;
   f2.x = 1;
@@ -2523,24 +2514,24 @@ bool TestULong1() {
 
   f2 = ~f1;
   cmpVal1(f2, 18446744073709551613UL);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f2.x = 4;
   f3.x = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestULong2() {
+__device__ bool TestULong2() {
   ulong2 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -2613,7 +2604,7 @@ bool TestULong2() {
 
   f2 = ~f1;
   cmpVal2(f2, 18446744073709551613UL);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -2621,19 +2612,19 @@ bool TestULong2() {
   f2.y = 4;
   f3.x = 3;
   f3.y = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestULong3() {
+__device__ bool TestULong3() {
   ulong3 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -2714,7 +2705,7 @@ bool TestULong3() {
 
   f2 = ~f1;
   cmpVal3(f2, 18446744073709551613UL);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -2725,19 +2716,19 @@ bool TestULong3() {
   f3.x = 3;
   f3.y = 3;
   f3.z = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestULong4() {
+__device__ bool TestULong4() {
   ulong4 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -2826,7 +2817,7 @@ bool TestULong4() {
 
   f2 = ~f1;
   cmpVal4(f2, 18446744073709551613UL);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -2840,19 +2831,19 @@ bool TestULong4() {
   f3.y = 3;
   f3.z = 3;
   f3.w = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestLong1() {
+__device__ bool TestLong1() {
   long1 f1, f2, f3;
   f1.x = 1;
   f2.x = 1;
@@ -2917,24 +2908,24 @@ bool TestLong1() {
 
   f2 = ~f1;
   cmpVal1(f2, -3);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f2.x = 4;
   f3.x = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestLong2() {
+__device__ bool TestLong2() {
   long2 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -3007,7 +2998,7 @@ bool TestLong2() {
 
   f2 = ~f1;
   cmpVal2(f2, -3);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -3015,19 +3006,19 @@ bool TestLong2() {
   f2.y = 4;
   f3.x = 3;
   f3.y = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestLong3() {
+__device__ bool TestLong3() {
   long3 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -3108,7 +3099,7 @@ bool TestLong3() {
 
   f2 = ~f1;
   cmpVal3(f2, -3);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -3119,19 +3110,19 @@ bool TestLong3() {
   f3.x = 3;
   f3.y = 3;
   f3.z = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
-bool TestLong4() {
+__device__ bool TestLong4() {
   long4 f1, f2, f3;
   f1.x = 1;
   f1.y = 1;
@@ -3220,7 +3211,7 @@ bool TestLong4() {
 
   f2 = ~f1;
   cmpVal4(f2, -3);
-  assert(!f1 == false);
+  if(!f1 == false){}
 
   f1.x = 3;
   f1.y = 3;
@@ -3234,20 +3225,20 @@ bool TestLong4() {
   f3.y = 3;
   f3.z = 3;
   f3.w = 3;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
-  assert((f1 && f2) == true);
-  assert((f1 || f2) == true);
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
   return true;
 }
 
 
-bool TestFloat1() {
+__device__ bool TestFloat1() {
   float1 f1, f2, f3;
 //  float1 f4(1);
 //  cmpVal1(f4, 1.0f);
@@ -3287,17 +3278,17 @@ bool TestFloat1() {
   f1.x = 3.0f;
   f2.x = 4.0f;
   f3.x = 3.0f;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
   return true;
 }
 
-bool TestFloat2() {
+__device__ bool TestFloat2() {
   float2 f1, f2, f3;
   f1.x = 1.0f;
   f1.y = 1.0f;
@@ -3339,18 +3330,18 @@ bool TestFloat2() {
   f2.y = 4.0f;
   f3.x = 3.0f;
   f3.y = 3.0f;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
 
   return true;
 }
 
-bool TestFloat3() {
+__device__ bool TestFloat3() {
   float3 f1, f2, f3;
   f1.x = 1.0f;
   f1.y = 1.0f;
@@ -3395,19 +3386,19 @@ bool TestFloat3() {
   f3.x = 3.0f;
   f3.y = 3.0f;
   f3.z = 3.0f;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
 
   return true;
 }
 
 
-bool TestFloat4() {
+__device__ bool TestFloat4() {
   float4 f1, f2, f3;
   f1.x = 1.0f;
   f1.y = 1.0f;
@@ -3457,22 +3448,414 @@ bool TestFloat4() {
   f3.y = 3.0f;
   f3.z = 3.0f;
   f3.w = 3.0f;
-  assert((f1 == f2) == false);
-  assert((f1 != f2) == true);
-  assert((f1 < f2) == true);
-  assert((f2 > f1) == true);
-  assert((f1 >= f3) == true);
-  assert((f1 <= f3) == true);
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
 
   return true;
 }
 
-int main() {
-  assert(sizeof(float1) == 4);
-  assert(sizeof(float2) == 8);
-  assert(sizeof(float3) == 12);
-  assert(sizeof(float4) == 16);
-  assert(TestFloat1() && TestFloat2() && TestFloat3() && TestFloat4()
+__device__ bool TestULongLong1() {
+  ulonglong1 f1, f2, f3;
+  f1.x = 1;
+  f2.x = 1;
+  f3 = f1 + f2;
+  cmpVal1(f3, 2);
+  f2 = f3 - f1;
+  cmpVal1(f2, 1);
+  f1 = f2 * f3;
+  cmpVal1(f1, 2);
+  f2 = f1 / f3;
+  cmpVal1(f2, 2/2);
+  f3 = f1 % f2;
+  cmpVal1(f3, 0);
+  f1 = f3 & f2;
+  cmpVal1(f1, 0);
+  f2 = f1 ^ f3;
+  cmpVal1(f2, 0);
+  f1.x = 1;
+  f2.x = 2;
+  f3 = f1 << f2;
+  cmpVal1(f3, 4);
+  f2 = f3 >> f1;
+  cmpVal1(f2, 2);
+
+  f1.x = 2;
+  f2.x = 1;
+  f1 += f2;
+  cmpVal1(f1, 3);
+  f1 -= f2;
+  cmpVal1(f1, 2);
+  f1 *= f2;
+  cmpVal1(f1, 2);
+  f1 /= f2;
+  cmpVal1(f1, 2);
+  f1 %= f2;
+  cmpVal1(f1, 0);
+  f1 &= f2;
+  cmpVal1(f1, 0);
+  f1 |= f2;
+  cmpVal1(f1, 1);
+  f1 ^= f2;
+  cmpVal1(f1, 0);
+  f1.x = 1;
+  f1 <<= f2;
+  cmpVal1(f1, 2);
+  f1 >>= f2;
+  cmpVal1(f1, 1);
+
+  f1.x = 2;
+  f2 = f1++;
+  cmpVal1(f1, 3);
+  cmpVal1(f2, 2);
+  f2 = f1--;
+  cmpVal1(f2, 3);
+  cmpVal1(f1, 2);
+  f2 = ++f1;
+  cmpVal1(f1, 3);
+  cmpVal1(f2, 3);
+  f2 = --f1;
+  cmpVal1(f1, 2);
+  cmpVal1(f2, 2);
+
+  f2 = ~f1;
+  cmpVal1(f2, -3);
+  if(!f1 == false){}
+
+  f1.x = 3;
+  f2.x = 4;
+  f3.x = 3;
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
+
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
+  return true;
+}
+
+
+__device__ bool TestULongLong2() {
+  ulonglong2 f1, f2, f3;
+  f1.x = 1;
+  f1.y = 1;
+  f2.x = 1;
+  f2.y = 1;
+  f3 = f1 + f2;
+  cmpVal2(f3, 2);
+  f2 = f3 - f1;
+  cmpVal2(f2, 1);
+  f1 = f2 * f3;
+  cmpVal2(f1, 2);
+  f2 = f1 / f3;
+  cmpVal2(f2, 2/2);
+  f3 = f1 % f2;
+  cmpVal2(f3, 0);
+  f1 = f3 & f2;
+  cmpVal2(f1, 0);
+  f2 = f1 ^ f3;
+  cmpVal2(f2, 0);
+  f1.x = 1;
+  f1.y = 1;
+  f2.x = 2;
+  f2.y = 2;
+  f3 = f1 << f2;
+  cmpVal2(f3, 4);
+  f2 = f3 >> f1;
+  cmpVal2(f2, 2);
+
+  f1.x = 2;
+  f1.y = 2;
+  f2.x = 1;
+  f2.y = 1;
+  f1 += f2;
+  cmpVal2(f1, 3);
+  f1 -= f2;
+  cmpVal2(f1, 2);
+  f1 *= f2;
+  cmpVal2(f1, 2);
+  f1 /= f2;
+  cmpVal2(f1, 2);
+  f1 %= f2;
+  cmpVal2(f1, 0);
+  f1 &= f2;
+  cmpVal2(f1, 0);
+  f1 |= f2;
+  cmpVal2(f1, 1);
+  f1 ^= f2;
+  cmpVal2(f1, 0);
+  f1.x = 1;
+  f1.y = 1;
+  f1 <<= f2;
+  cmpVal2(f1, 2);
+  f1 >>= f2;
+  cmpVal2(f1, 1);
+
+  f1.x = 2;
+  f1.y = 2;
+  f2 = f1++;
+  cmpVal2(f1, 3);
+  cmpVal2(f2, 2);
+  f2 = f1--;
+  cmpVal2(f2, 3);
+  cmpVal2(f1, 2);
+  f2 = ++f1;
+  cmpVal2(f1, 3);
+  cmpVal2(f2, 3);
+  f2 = --f1;
+  cmpVal2(f1, 2);
+  cmpVal2(f2, 2);
+
+  f2 = ~f1;
+  cmpVal2(f2, -3);
+  if(!f1 == false){}
+
+  f1.x = 3;
+  f1.y = 3;
+  f2.x = 4;
+  f2.y = 4;
+  f3.x = 3;
+  f3.y = 3;
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
+
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
+  return true;
+}
+
+__device__ bool TestULongLong3() {
+  ulonglong3 f1, f2, f3;
+  f1.x = 1;
+  f1.y = 1;
+  f1.z = 1;
+  f2.x = 1;
+  f2.y = 1;
+  f2.z = 1;
+  f3 = f1 + f2;
+  cmpVal3(f3, 2);
+  f2 = f3 - f1;
+  cmpVal3(f2, 1);
+  f1 = f2 * f3;
+  cmpVal3(f1, 2);
+  f2 = f1 / f3;
+  cmpVal3(f2, 2/2);
+  f3 = f1 % f2;
+  cmpVal3(f3, 0);
+  f1 = f3 & f2;
+  cmpVal3(f1, 0);
+  f2 = f1 ^ f3;
+  cmpVal3(f2, 0);
+  f1.x = 1;
+  f1.y = 1;
+  f1.z = 1;
+  f2.x = 2;
+  f2.y = 2;
+  f2.z = 2;
+  f3 = f1 << f2;
+  cmpVal3(f3, 4);
+  f2 = f3 >> f1;
+  cmpVal3(f2, 2);
+
+  f1.x = 2;
+  f1.y = 2;
+  f1.z = 2;
+  f2.x = 1;
+  f2.y = 1;
+  f2.z = 1;
+  f1 += f2;
+  cmpVal3(f1, 3);
+  f1 -= f2;
+  cmpVal3(f1, 2);
+  f1 *= f2;
+  cmpVal3(f1, 2);
+  f1 /= f2;
+  cmpVal3(f1, 2);
+  f1 %= f2;
+  cmpVal3(f1, 0);
+  f1 &= f2;
+  cmpVal3(f1, 0);
+  f1 |= f2;
+  cmpVal3(f1, 1);
+  f1 ^= f2;
+  cmpVal3(f1, 0);
+  f1.x = 1;
+  f1.y = 1;
+  f1.z = 1;
+  f1 <<= f2;
+  cmpVal3(f1, 2);
+  f1 >>= f2;
+  cmpVal3(f1, 1);
+
+  f1.x = 2;
+  f1.y = 2;
+  f1.z = 2;
+  f2 = f1++;
+  cmpVal3(f1, 3);
+  cmpVal3(f2, 2);
+  f2 = f1--;
+  cmpVal3(f2, 3);
+  cmpVal3(f1, 2);
+  f2 = ++f1;
+  cmpVal3(f1, 3);
+  cmpVal3(f2, 3);
+  f2 = --f1;
+  cmpVal3(f1, 2);
+  cmpVal3(f2, 2);
+
+  f2 = ~f1;
+  cmpVal3(f2, -3);
+  if(!f1 == false){}
+
+  f1.x = 3;
+  f1.y = 3;
+  f1.z = 3;
+  f2.x = 4;
+  f2.y = 4;
+  f2.z = 4;
+  f3.x = 3;
+  f3.y = 3;
+  f3.z = 3;
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
+
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
+  return true;
+}
+
+__device__ bool TestULongLong4() {
+  ulonglong4 f1, f2, f3;
+  f1.x = 1;
+  f1.y = 1;
+  f1.z = 1;
+  f1.w = 1;
+  f2.x = 1;
+  f2.y = 1;
+  f2.z = 1;
+  f2.w = 1;
+  f3 = f1 + f2;
+  cmpVal4(f3, 2);
+  f2 = f3 - f1;
+  cmpVal4(f2, 1);
+  f1 = f2 * f3;
+  cmpVal4(f1, 2);
+  f2 = f1 / f3;
+  cmpVal4(f2, 2/2);
+  f3 = f1 % f2;
+  cmpVal4(f3, 0);
+  f1 = f3 & f2;
+  cmpVal4(f1, 0);
+  f2 = f1 ^ f3;
+  cmpVal4(f2, 0);
+  f1.x = 1;
+  f1.y = 1;
+  f1.z = 1;
+  f1.w = 1;
+  f2.x = 2;
+  f2.y = 2;
+  f2.z = 2;
+  f2.w = 2;
+  f3 = f1 << f2;
+  cmpVal4(f3, 4);
+  f2 = f3 >> f1;
+  cmpVal4(f2, 2);
+
+  f1.x = 2;
+  f1.y = 2;
+  f1.z = 2;
+  f1.w = 2;
+  f2.x = 1;
+  f2.y = 1;
+  f2.z = 1;
+  f2.w = 1;
+  f1 += f2;
+  cmpVal4(f1, 3);
+  f1 -= f2;
+  cmpVal4(f1, 2);
+  f1 *= f2;
+  cmpVal4(f1, 2);
+  f1 /= f2;
+  cmpVal4(f1, 2);
+  f1 %= f2;
+  cmpVal4(f1, 0);
+  f1 &= f2;
+  cmpVal4(f1, 0);
+  f1 |= f2;
+  cmpVal4(f1, 1);
+  f1 ^= f2;
+  cmpVal4(f1, 0);
+  f1.x = 1;
+  f1.y = 1;
+  f1.z = 1;
+  f1.w = 1;
+  f1 <<= f2;
+  cmpVal4(f1, 2);
+  f1 >>= f2;
+  cmpVal4(f1, 1);
+
+  f1.x = 2;
+  f1.y = 2;
+  f1.z = 2;
+  f1.w = 2;
+  f2 = f1++;
+  cmpVal4(f1, 3);
+  cmpVal4(f2, 2);
+  f2 = f1--;
+  cmpVal4(f2, 3);
+  cmpVal4(f1, 2);
+  f2 = ++f1;
+  cmpVal4(f1, 3);
+  cmpVal4(f2, 3);
+  f2 = --f1;
+  cmpVal4(f1, 2);
+  cmpVal4(f2, 2);
+
+  f2 = ~f1;
+  cmpVal4(f2, -3);
+  if(!f1 == false){}
+
+  f1.x = 3;
+  f1.y = 3;
+  f1.z = 3;
+  f1.w = 3;
+  f2.x = 4;
+  f2.y = 4;
+  f2.z = 4;
+  f2.w = 4;
+  f3.x = 3;
+  f3.y = 3;
+  f3.z = 3;
+  f3.w = 3;
+  if((f1 == f2) == false){}
+  if((f1 != f2) == true){}
+  if((f1 < f2) == true){}
+  if((f2 > f1) == true){}
+  if((f1 >= f3) == true){}
+  if((f1 <= f3) == true){}
+
+  if((f1 && f2) == true){}
+  if((f1 || f2) == true){}
+  return true;
+}
+
+
+__global__ void CheckVectorTypes(hipLaunchParm lp, bool *ptr){
+  if(TestFloat1() && TestFloat2() && TestFloat3() && TestFloat4()
     && TestUChar1() && TestUChar2() && TestUChar3() && TestUChar4()
     && TestChar1() && TestChar2() && TestChar3() && TestChar4()
     && TestUShort1() && TestUShort2() && TestUShort3() && TestUShort4()
@@ -3480,7 +3863,18 @@ int main() {
     && TestUInt1() && TestUInt2() && TestUInt3() && TestUInt4()
     && TestInt1() && TestInt2() && TestInt3() && TestInt4()
     && TestULong1() && TestULong2() && TestULong3() && TestULong4()
-    && TestLong1() && TestLong2() && TestLong3() && TestLong4() == true);
+    && TestLong1() && TestLong2() && TestLong3() && TestLong4()
+    && TestULongLong1() && TestULongLong2() && TestULongLong3() && TestULongLong4() == true){
+      ptr[0] = true;
+    }
+}
+
+int main() {
+  assert(sizeof(float1) == 4);
+  assert(sizeof(float2) == 8);
+  assert(sizeof(float3) == 12);
+  assert(sizeof(float4) == 16);
+  bool *ptr;
+  hipLaunchKernel(CheckVectorTypes, dim3(1,1,1), dim3(1,1,1), 0, 0, ptr);
   passed();
-  float1 f1 = make_float1(1.0f);
 }
