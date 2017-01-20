@@ -267,7 +267,7 @@ hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device
 hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
 {
     HIP_INIT_API(pi, attr, device);
-    return ihipDeviceGetAttribute(pi,attr,device);
+    return ihipLogStatus(ihipDeviceGetAttribute(pi,attr,device));
 }
 
 hipError_t ihipGetDeviceProperties(hipDeviceProp_t* props, int device)
