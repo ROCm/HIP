@@ -26,7 +26,10 @@ THE SOFTWARE.
 #include <hc.hpp>
 #include <hsa/hsa.h>
 #include "hsa/hsa_ext_amd.h"
+
+#include "hip/hip_runtime.h"
 #include "hip_util.h"
+#include "env.h"
 
 
 #if defined(__HCC__) && (__hcc_workweek__ < 16354)
@@ -34,7 +37,6 @@ THE SOFTWARE.
 #endif
 
 #define USE_IPC 0
-
 
 //---
 // Environment variables:
@@ -289,9 +291,6 @@ extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
         if (HIP_PROFILE_API) { MARKER_END(); }\
         localHipStatus;\
     })
-
-
-
 
 
 
