@@ -175,7 +175,8 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/hip_memory.cpp
         src/hip_peer.cpp
         src/hip_stream.cpp
-        src/hip_module.cpp)
+        src/hip_module.cpp
+        src/env.cpp)
 
     set(SOURCE_FILES_DEVICE
         src/device_util.cpp

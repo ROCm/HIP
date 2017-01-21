@@ -46,6 +46,7 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "hip_hcc.h"
 #include "trace_helper.h"
+#include "env.h"
 
 
 #ifndef USE_COPY_EXT_V2
@@ -1037,166 +1038,6 @@ void ihipCtx_t::locked_waitAllStreams()
 }
 
 
-
-//---
-// Read environment variables.
-void ihipReadEnv_I(int *var_ptr, const char *var_name1, const char *var_name2, const char *description)
-{
-    char * env = getenv(var_name1);
-
-    // Check second name if first not defined, used to allow HIP_ or CUDA_ env vars.
-    if ((env == NULL) && strcmp(var_name2, "0")) {
-        env = getenv(var_name2);
-    }
-
-    // Default is set when variable is initialized (at top of this file), so only override if we find
-    // an environment variable.
-    if (env) {
-        long int v = strtol(env, NULL, 0);
-        *var_ptr = (int) (v);
-    }
-    if (HIP_PRINT_ENV) {
-        printf ("%-30s = %2d : %s\n", var_name1, *var_ptr, description);
-    }
-}
-
-
-void ihipReadEnv_S(std::string *var_ptr, const char *var_name1, const char *var_name2, const char *description)
-{
-    char * env = getenv(var_name1);
-
-    // Check second name if first not defined, used to allow HIP_ or CUDA_ env vars.
-    if ((env == NULL) && strcmp(var_name2, "0")) {
-        env = getenv(var_name2);
-    }
-
-    if (env) {
-        *static_cast<std::string*>(var_ptr) = env;
-    }
-    if (HIP_PRINT_ENV) {
-        printf ("%-30s = %s : %s\n", var_name1, var_ptr->c_str(), description);
-    }
-}
-
-
-void ihipReadEnv_Callback(void *var_ptr, const char *var_name1, const char *var_name2, const char *description, std::string (*setterCallback)(void * var_ptr, const char * env))
-{
-    char * env = getenv(var_name1);
-
-    // Check second name if first not defined, used to allow HIP_ or CUDA_ env vars.
-    if ((env == NULL) && strcmp(var_name2, "0")) {
-        env = getenv(var_name2);
-    }
-
-    std::string var_string = "0";
-    if (env) {
-        var_string = setterCallback(var_ptr, env);
-    }
-    if (HIP_PRINT_ENV) {
-        printf ("%-30s = %s : %s\n", var_name1, var_string.c_str(), description);
-    }
-}
-
-
-#if defined (DEBUG)
-
-#define READ_ENV_I(_build, _ENV_VAR, _ENV_VAR2, _description) \
-    if ((_build == release) || (_build == debug) {\
-        ihipReadEnv_I(&_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description);\
-    };
-#define READ_ENV_S(_build, _ENV_VAR, _ENV_VAR2, _description) \
-    if ((_build == release) || (_build == debug) {\
-        ihipReadEnv_S(&_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description);\
-    };
-#define READ_ENV_C(_build, _ENV_VAR, _ENV_VAR2, _description, _callback) \
-    if ((_build == release) || (_build == debug) {\
-        ihipReadEnv_Callback(&_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description, _callback);\
-    };
-
-#else
-
-#define READ_ENV_I(_build, _ENV_VAR, _ENV_VAR2, _description) \
-    if (_build == release) {\
-        ihipReadEnv_I(&_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description);\
-    };
-
-#define READ_ENV_S(_build, _ENV_VAR, _ENV_VAR2, _description) \
-    if (_build == release) {\
-        ihipReadEnv_S(&_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description);\
-    };
-#define READ_ENV_C(_build, _ENV_VAR, _ENV_VAR2, _description, _callback) \
-    if (_build == release) {\
-        ihipReadEnv_Callback(&_ENV_VAR, #_ENV_VAR, #_ENV_VAR2, _description, _callback);\
-    };
-
-#endif
-
-
-static void tokenize(const std::string &s, char delim, std::vector<std::string> *tokens)
-{
-    std::stringstream ss;
-    ss.str(s);
-    std::string item;
-    while (getline(ss, item, delim)) {
-        item.erase (std::remove (item.begin(), item.end(), ' '), item.end()); // remove whitespace.
-        tokens->push_back(item);
-    }
-}
-
-static void trim(std::string *s)
-{
-    // trim whitespace from beginning and end:
-    const char *t =  "\t\n\r\f\v";
-    s->erase(0, s->find_first_not_of(t));
-    s->erase(s->find_last_not_of(t)+1);
-}
-
-static void ltrim(std::string *s)
-{
-    // trim whitespace from beginning
-    const char *t =  "\t\n\r\f\v";
-    s->erase(0, s->find_first_not_of(t));
-}
-
-
-// TODO - change last arg to pointer.
-void parseTrigger(std::string triggerString, std::vector<ProfTrigger> &profTriggers )
-{
-    std::vector<std::string> tidApiTokens;
-    tokenize(std::string(triggerString), ',', &tidApiTokens);
-    for (auto t=tidApiTokens.begin(); t != tidApiTokens.end(); t++) {
-        std::vector<std::string> oneToken;
-        //std::cout << "token=" << *t << "\n";
-        tokenize(std::string(*t), '.', &oneToken);
-        int tid = 1;
-        uint64_t apiTrigger = 0;
-        if (oneToken.size() == 1) {
-            // the case with just apiNum
-            apiTrigger = std::strtoull(oneToken[0].c_str(), nullptr, 0);
-        } else if (oneToken.size() == 2) {
-            // the case with tid.apiNum
-            tid = std::strtoul(oneToken[0].c_str(), nullptr, 0);
-            apiTrigger = std::strtoull(oneToken[1].c_str(), nullptr, 0);
-        } else {
-            throw ihipException(hipErrorRuntimeOther); // TODO -> bad env var?
-        }
-
-        if (tid > 10000) {
-            throw ihipException(hipErrorRuntimeOther); // TODO -> bad env var?
-        } else {
-            profTriggers.resize(tid+1);
-            //std::cout << "tid:" << tid << " add: " << apiTrigger << "\n";
-            profTriggers[tid].add(apiTrigger);
-        }
-    }
-
-
-    for (int tid=1; tid<profTriggers.size(); tid++) {
-        profTriggers[tid].sort();
-        profTriggers[tid].print(tid);
-    }
-}
-
 std::string HIP_DB_string(unsigned db)
 {
     std::string dbStr;
@@ -1271,6 +1112,45 @@ std::string HIP_VISIBLE_DEVICES_callback(void *var_ptr, const char *envVarString
     }
 
     return valueString;
+}
+
+
+// TODO - change last arg to pointer.
+void parseTrigger(std::string triggerString, std::vector<ProfTrigger> &profTriggers )
+{
+    std::vector<std::string> tidApiTokens;
+    tokenize(std::string(triggerString), ',', &tidApiTokens);
+    for (auto t=tidApiTokens.begin(); t != tidApiTokens.end(); t++) {
+        std::vector<std::string> oneToken;
+        //std::cout << "token=" << *t << "\n";
+        tokenize(std::string(*t), '.', &oneToken);
+        int tid = 1;
+        uint64_t apiTrigger = 0;
+        if (oneToken.size() == 1) {
+            // the case with just apiNum
+            apiTrigger = std::strtoull(oneToken[0].c_str(), nullptr, 0);
+        } else if (oneToken.size() == 2) {
+            // the case with tid.apiNum
+            tid = std::strtoul(oneToken[0].c_str(), nullptr, 0);
+            apiTrigger = std::strtoull(oneToken[1].c_str(), nullptr, 0);
+        } else {
+            throw ihipException(hipErrorRuntimeOther); // TODO -> bad env var?
+        }
+
+        if (tid > 10000) {
+            throw ihipException(hipErrorRuntimeOther); // TODO -> bad env var?
+        } else {
+            profTriggers.resize(tid+1);
+            //std::cout << "tid:" << tid << " add: " << apiTrigger << "\n";
+            profTriggers[tid].add(apiTrigger);
+        }
+    }
+
+
+    for (int tid=1; tid<profTriggers.size(); tid++) {
+        profTriggers[tid].sort();
+        profTriggers[tid].print(tid);
+    }
 }
 
 
