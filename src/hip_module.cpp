@@ -298,7 +298,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
           Kernel argument preparation.
         */
         grid_launch_parm lp; 
-        lp.dynamic_group_mem_bytes = f._groupSegmentSize;  // TODO - this should be part of preLaunchKernel.
+        lp.dynamic_group_mem_bytes = sharedMemBytes;  // TODO - this should be part of preLaunchKernel.
         hStream = ihipPreLaunchKernel(hStream, dim3(gridDimX, gridDimY, gridDimZ), dim3(blockDimX, blockDimY, blockDimZ), &lp, f._name);
 
 
