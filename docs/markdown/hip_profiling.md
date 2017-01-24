@@ -362,6 +362,12 @@ TargetAddress:0x5ec7e9000
    0x504cfc000-0x504cfc00f::  allocSeqNum:1 hostPointer:0x504cfc000 devicePointer:0x504cfc000 sizeBytes:16 isInDeviceMem:0 isAmManaged:1 appId:0 appAllocFlags:0 appPtr:(nil)
 ...
 -->0x5ec7e9000-0x5f7e28fff::  allocSeqNum:488 hostPointer:(nil) devicePointer:0x5ec7e9000 sizeBytes:191102976 isInDeviceMem:1 isAmManaged:1 appId:0 appAllocFlags:0 appPtr:(nil)
+
+```
+
+To debug an explicit address, cast the address to (void*) :
+```
+(gdb) call hc::am_memtracker_print((void*)0x508c7f000)
 ```
 - Debugging GPUVM fault.
 For example:
