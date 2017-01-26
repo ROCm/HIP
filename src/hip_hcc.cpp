@@ -86,6 +86,7 @@ int HIP_NUM_KERNELS_INFLIGHT = 128;
 int HIP_WAIT_MODE = 0;
 
 int HIP_FORCE_P2P_HOST = 0;
+int HIP_FAIL_SOC = 0;
 int HIP_DENY_PEER_ACCESS = 0;
 
 // Force async copies to actually use the synchronous copy interface.
@@ -1198,6 +1199,7 @@ void HipReadEnv()
     READ_ENV_I(release, HIP_WAIT_MODE, 0, "Force synchronization mode. 1= force yield, 2=force spin, 0=defaults specified in application");
     READ_ENV_I(release, HIP_FORCE_P2P_HOST, 0, "Force use of host/staging copy for peer-to-peer copies.1=always use copies, 2=always return false for hipDeviceCanAccessPeer");
     READ_ENV_I(release, HIP_FORCE_SYNC_COPY, 0, "Force all copies (even hipMemcpyAsync) to use sync copies");
+    READ_ENV_I(release, HIP_FAIL_SOC, 0, "Fault on Sub-Optimal-Copy, rather than use a slower but functional implementation.  Bit 0x1=Fail on async copy with unpinned memory.  Bit 0x2=Fail peer copy rather than use staging buffer copy");
 
     READ_ENV_I(release, HIP_SYNC_HOST_ALLOC, 0, "Sync before and after all host memory allocations.  May help stability");
 
@@ -1721,8 +1723,13 @@ void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind,
         }
     } else {
         *forceUnpinnedCopy = true;
-        tprintf (DB_COPY, "P2P: copy engine(dev:%d agent=0x%lx) cannot see both host and device pointers - forcing copy with unpinned engine.\n",
+        tprintf (DB_COPY, "P2P: Copy engine(dev:%d agent=0x%lx) cannot see both host and device pointers - forcing copy with unpinned engine.\n",
                     (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
+        if (HIP_FAIL_SOC & 0x2) {
+            fprintf (stderr, "HIP_FAIL_SOC:  P2P: copy engine(dev:%d agent=0x%lx) cannot see both host and device pointers - forcing copy with unpinned engine.\n",
+                    (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
+            throw ihipException(hipErrorRuntimeOther);
+        }
     }
 }
 
@@ -1855,6 +1862,22 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
             }
 
         } else {
+            if (HIP_FAIL_SOC & 0x1) {
+                fprintf (stderr, "HIP_FAIL_SOC failed, async_copy requested but could not be completed since src or dst not accesible to copy agent\n");
+                fprintf (stderr, "copyASync copyDev:%d  dst=%p (phys_dev:%d, isDevMem:%d)  src=%p(phys_dev:%d, isDevMem:%d)   sz=%zu dir=%s forceUnpinnedCopy=%d\n",
+                         copyDevice ? copyDevice->getDeviceNum():-1,
+                         dst, dstPtrInfo._appId, dstPtrInfo._isInDeviceMem,
+                         src, srcPtrInfo._appId, srcPtrInfo._isInDeviceMem,
+                         sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
+                fprintf (stderr, "  dst=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d\n",
+                         dst, dstPtrInfo._hostPointer, dstPtrInfo._devicePointer, dstPtrInfo._sizeBytes,
+                         dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem);
+                fprintf (stderr, "  src=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d\n",
+                         src, srcPtrInfo._hostPointer, srcPtrInfo._devicePointer, srcPtrInfo._sizeBytes,
+                         srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem);
+                throw ihipException(hipErrorRuntimeOther);
+            }
+            // Perform slow synchronous copy:
             LockedAccessor_StreamCrit_t crit(_criticalData);
 
             this->ensureHaveQueue(crit);
