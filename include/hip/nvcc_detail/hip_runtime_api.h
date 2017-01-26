@@ -88,7 +88,7 @@ typedef CUdeviceptr hipDeviceptr_t;
 typedef cudaChannelFormatKind hipChannelFormatKind;
 typedef cudaChannelFormatDesc hipChannelFormatDesc;
 typedef cudaTextureReadMode hipTextureReadMode;
-typedef cudaArray hipArray
+typedef cudaArray hipArray;
 
 // Flags that can be used with hipStreamCreateWithFlags
 #define hipStreamDefault            cudaStreamDefault
