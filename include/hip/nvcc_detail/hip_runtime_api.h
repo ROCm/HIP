@@ -220,7 +220,7 @@ inline static hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int fla
 }
 
 inline static hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, size_width, size_t height, unsigned int flags) {
-  return hipCUDAErrorTohipError(cudaMallocArray(array, desc, width, height, flags));
+  return hipCUDAErrorTohipError(cudaMallocArray(array, desc, size_width, height, flags));
 }
 
 inline static hipError_t hipFreeArray(hipArray* array) {
@@ -334,15 +334,15 @@ inline static hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* 
 }
 
 inline static hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind){
-  return hipCUDAErrorTohipError(cudaMemcpy2D(dst, dpitch, src, width, height, kind));
+  return hipCUDAErrorTohipError(cudaMemcpy2D(dst, dpitch, src, width, height, hipMemcpyKindToCudaMemcpyKind(Kind)));
 }
 
 inline static hipError_t hipMemcpy2DToArray(hipArray *dst, size_t wOffset, size_t hOffset, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind){
-  return hipCUDAErrorTohipError(cudaMemcpy2DToArray(dst, wOffset, hOffset, src, spitch, width, height, kind));
+  return hipCUDAErrorTohipError(cudaMemcpy2DToArray(dst, wOffset, hOffset, src, spitch, width, height, hipMemcpyKindToCudaMemcpyKind(kind)));
 }
 
 inline static hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src, size_t count, hipMemcpyKind kind) {
-  return hipCUDAErrorTohipError(cudaMemcpy2DToArray(dst, wOffset, hOffset, src, count, kind));
+  return hipCUDAErrorTohipError(cudaMemcpy2DToArray(dst, wOffset, hOffset, src, count, hipMemcpyKindToCudaMemcpyKind(kind)));
 }
 
 inline static hipError_t hipDeviceSynchronize() {
