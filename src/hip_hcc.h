@@ -66,6 +66,9 @@ extern int HIP_COHERENT_HOST_ALLOC;
 // Chicken bits for disabling functionality to work around potential issues:
 extern int HIP_SYNC_HOST_ALLOC;
 
+// TODO - remove when this is standard behavior.
+extern int HCC_OPT_FLUSH;
+
 
 // Class to assign a short TID to each new thread, for HIP debugging purposes.
 class TidInfo {
