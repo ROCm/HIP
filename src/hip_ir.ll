@@ -2,12 +2,12 @@ target datalayout = "e-p:32:32-p1:64:64-p2:64:64-p3:32:32-p4:64:64-p5:32:32-i64:
 target triple = "amdgcn--amdhsa"
 
 
-define linkonce_odr spir_func void @__threadfence() #1 {
+define void @__threadfence() #1 {
     fence syncscope(2) seq_cst
     ret void
 }
 
-define linkonce_odr spir_func void @__threadfence_block()  #1 {
+define void @__threadfence_block()  #1 {
     fence syncscope(3) seq_cst
     ret void
 }
