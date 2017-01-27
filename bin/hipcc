@@ -131,16 +131,16 @@ if ($HIP_PLATFORM eq "hcc") {
 
     # Handle ROCm target platform
     if ($ROCM_TARGET eq "fiji") {
-        $HIPLDFLAGS .= " -amdgpu-target=AMD:AMDGPU:8:0:3";
+        $HIPLDFLAGS .= " --amdgpu-target=gfx803";
     }
     if ($ROCM_TARGET eq "carrizo") {
-        $HIPLDFLAGS .= " -amdgpu-target=AMD:AMDGPU:8:0:1";
+        $HIPLDFLAGS .= " --amdgpu-target=gfx801";
     }
     if ($ROCM_TARGET eq "hawaii") {
-        $HIPLDFLAGS .= " -amdgpu-target=AMD:AMDGPU:7:0:1";
+        $HIPLDFLAGS .= " --amdgpu-target=gfx701";
     }
     if ($ROCM_TARGET eq "polaris") {
-        $HIPLDFLAGS .= " -amdgpu-target=AMD:AMDGPU:8:0:3";
+        $HIPLDFLAGS .= " --amdgpu-target=gfx803";
     }
 
     # Add trace marker library:
