@@ -19,6 +19,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
+/* HIT_START
+ * BUILD: %t %s ../test_common.cpp
+ * RUN: %t
+ * HIT_END
+ */
+
 #include <hip/hip_runtime.h>
 #include <hip/device_functions.h>
 #include "test_common.h"
@@ -61,4 +68,10 @@ __device__ void double_precision_intrinsics()
 __global__ void compileDoublePrecisionIntrinsics(hipLaunchParm lp, int ignored)
 {
     double_precision_intrinsics();
+}
+
+int main()
+{
+  hipLaunchKernel(compileDoublePrecisionIntrinsics, dim3(1,1,1), dim3(1,1,1), 0, 0, 1);
+  passed();
 }

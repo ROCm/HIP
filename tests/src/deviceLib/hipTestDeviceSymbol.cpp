@@ -17,8 +17,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD: %t %s ../test_common.cpp
+ * RUN: %t
+ * HIT_END
+ */
+
 #include<hip/hip_runtime.h>
 #include<hip/hip_runtime_api.h>
+#include"test_common.h"
 #include<iostream>
 
 #define NUM 1024
@@ -72,4 +79,5 @@ int main()
     for(unsigned i=0;i<NUM;i++) {
         assert(A[i] == B[i]);
     }
+    passed();
 }
