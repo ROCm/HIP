@@ -153,13 +153,13 @@ hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost);
 hipMemcpy(C, Cd, SIZE, hipMemcpyDeviceToHost);
 int passed = 0;
 for(int i=0;i<512;i++){
-    if(B[i] - sinpi(1.0) < 0.1){
+    if(B[i] - sin(3.14*1.0) < 0.1){
         passed = 1;
     }
 }
 passed = 0;
 for(int i=0;i<512;i++){
-    if(C[i] - cospi(1.0) < 0.1){
+    if(C[i] - cos(3.14*1.0) < 0.1){
         passed = 1;
     }
 }
