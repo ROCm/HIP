@@ -267,6 +267,11 @@ info: check result
 PASSED!
 ```
 
+HIP_TRACE_API supports multiple levels of debug information:
+   - 0x1 = print all HIP APIs
+   - 0x2 = print HIP APIs which initiate GPU kernels, copies, or memsets.  Includes hipLaunchKernel, hipMemcpy*, hipMemset*.
+   - 0x4 = print HIP APIs which allocate or free memory.  Includes hipMalloc, hipHostMalloc, hipFree, hipHostFree.
+
 
 #### Color
 Note this trace mode uses colors. "less -r" can handle raw control characters and will display the debug output in proper colors.

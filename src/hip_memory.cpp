@@ -213,7 +213,7 @@ hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsi
 
 hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 {
-    HIP_INIT_API(ptr, sizeBytes);
+    HIP_INIT_SPECIAL_API((TRACE_MEM), ptr, sizeBytes);
     HIP_SET_DEVICE();
     hipError_t  hip_status = hipSuccess;
 
@@ -244,7 +244,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
-    HIP_INIT_CMD_API(ptr, sizeBytes, flags);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), ptr, sizeBytes, flags);
     HIP_SET_DEVICE();
     hipError_t hip_status = hipSuccess;
 
@@ -308,7 +308,7 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags)
 // width in bytes
 hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height)
 {
-    HIP_INIT_CMD_API(ptr, pitch, width, height);
+    HIP_INIT_SPECIAL_API((TRACE_MEM), ptr, pitch, width, height);
     HIP_SET_DEVICE();
     hipError_t  hip_status = hipSuccess;
 
@@ -349,7 +349,7 @@ hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannel
 hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
         size_t width, size_t height, unsigned int flags)
 {
-    HIP_INIT_CMD_API(array, desc, width, height, flags);
+    HIP_INIT_SPECIAL_API((TRACE_MEM), array, desc, width, height, flags);
     HIP_SET_DEVICE();
     hipError_t  hip_status = hipSuccess;
 
@@ -490,7 +490,7 @@ hipError_t hipHostUnregister(void *hostPtr)
 
 hipError_t hipMemcpyToSymbol(const void* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind)
 {
-    HIP_INIT_CMD_API(symbolName, src, count, offset, kind);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), symbolName, src, count, offset, kind);
 
     if(symbolName == nullptr)
     {
@@ -560,7 +560,7 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count, 
 
 hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind, hipStream_t stream)
 {
-    HIP_INIT_CMD_API(symbolName, src, count, offset, kind, stream);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), symbolName, src, count, offset, kind, stream);
 
     if(symbolName == nullptr)
     {
@@ -637,7 +637,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t co
 //---
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind)
 {
-    HIP_INIT_CMD_API(dst, src, sizeBytes, kind);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes, kind);
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
@@ -659,7 +659,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 
 hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes)
 {
-    HIP_INIT_CMD_API(dst, src, sizeBytes);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes);
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
@@ -681,7 +681,7 @@ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes)
 
 hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes)
 {
-    HIP_INIT_CMD_API(dst, src, sizeBytes);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes);
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
@@ -703,7 +703,7 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes)
 
 hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes)
 {
-    HIP_INIT_CMD_API(dst, src, sizeBytes);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes);
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
@@ -725,7 +725,7 @@ hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeByte
 
 hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes)
 {
-    HIP_INIT_CMD_API(dst, src, sizeBytes);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes);
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
@@ -750,7 +750,7 @@ hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes)
 
 hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream)
 {
-    HIP_INIT_CMD_API(dst, src, sizeBytes, kind, stream);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes, kind, stream);
 
     return ihipLogStatus(hip_internal::memcpyAsync(dst, src, sizeBytes, kind, stream));
 
@@ -759,21 +759,21 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
 
 hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, void* src, size_t sizeBytes, hipStream_t stream)
 {
-    HIP_INIT_CMD_API(dst, src, sizeBytes, stream);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes, stream);
 
     return ihipLogStatus(hip_internal::memcpyAsync(dst, src, sizeBytes, hipMemcpyHostToDevice, stream));
 }
 
 hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes, hipStream_t stream)
 {
-    HIP_INIT_CMD_API(dst, src, sizeBytes, stream);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes, stream);
 
     return ihipLogStatus(hip_internal::memcpyAsync(dst, src, sizeBytes, hipMemcpyDeviceToDevice, stream));
 }
 
 hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, hipStream_t stream)
 {
-    HIP_INIT_CMD_API(dst, src, sizeBytes, stream);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes, stream);
 
     return ihipLogStatus(hip_internal::memcpyAsync(dst, src, sizeBytes, hipMemcpyDeviceToHost, stream));
 }
@@ -782,7 +782,7 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
 hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
         size_t width, size_t height, hipMemcpyKind kind) {
 
-    HIP_INIT_CMD_API(dst, dpitch, src, spitch, width, height, kind);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, dpitch, src, spitch, width, height, kind);
 
     if(width > dpitch || width > spitch)
         return ihipLogStatus(hipErrorUnknown);
@@ -826,7 +826,7 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
 hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
         size_t spitch, size_t width, size_t height, hipMemcpyKind kind) {
 
-    HIP_INIT_CMD_API(dst, wOffset, hOffset, src, spitch, width, height, kind);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, wOffset, hOffset, src, spitch, width, height, kind);
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
@@ -879,7 +879,7 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
 hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset,
         const void* src, size_t count, hipMemcpyKind kind) {
 
-    HIP_INIT_CMD_API(dst, wOffset, hOffset, src, count, kind);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, wOffset, hOffset, src, count, kind);
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
@@ -938,7 +938,7 @@ ihipMemsetKernel(hipStream_t stream,
 // TODO-sync: function is async unless target is pinned host memory - then these are fully sync.
 hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t stream )
 {
-    HIP_INIT_CMD_API(dst, value, sizeBytes, stream);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, value, sizeBytes, stream);
 
     hipError_t e = hipSuccess;
 
@@ -988,7 +988,7 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
 
 hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
 {
-    HIP_INIT_CMD_API(dst, value, sizeBytes);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, value, sizeBytes);
 
     hipError_t e = hipSuccess;
 
@@ -1148,7 +1148,7 @@ hipError_t hipMemPtrGetInfo(void *ptr, size_t *size)
 
 hipError_t hipFree(void* ptr)
 {
-    HIP_INIT_API(ptr);
+    HIP_INIT_SPECIAL_API((TRACE_MEM), ptr);
 
     hipError_t hipStatus = hipErrorInvalidDevicePointer;
 
@@ -1176,7 +1176,7 @@ hipError_t hipFree(void* ptr)
 
 hipError_t hipHostFree(void* ptr)
 {
-    HIP_INIT_API(ptr);
+    HIP_INIT_SPECIAL_API((TRACE_MEM), ptr);
 
     // Synchronize to ensure all work has finished.
     ihipGetTlsDefaultCtx()->locked_waitAllStreams(); // ignores non-blocking streams, this waits for all activity to finish.
@@ -1210,7 +1210,7 @@ hipError_t hipFreeHost(void* ptr)
 
 hipError_t hipFreeArray(hipArray* array)
 {
-    HIP_INIT_API(array);
+    HIP_INIT_SPECIAL_API((TRACE_MEM), array);
 
     hipError_t hipStatus = hipErrorInvalidDevicePointer;
 
