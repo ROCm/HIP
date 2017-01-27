@@ -111,27 +111,6 @@ __device__ float y0f(float x);
 __device__ float y1f(float x);
 __device__ float ynf(int n, float x);
 
-__host__ float cospif(float x);
-__host__ float normcdff(float y);
-__host__ float erfcinvf(float y);
-__host__ float erfcxf(float x);
-__host__ float erfinvf(float y);
-__host__ float fdividef(float x, float y);
-__host__ float norm3df(float a, float b, float c);
-__host__ float normcdfinvf(float y);
-__host__ float norm4df(float a, float b, float c, float d);
-__host__ float rcbrtf(float x);
-__host__ float rhypotf(float x, float y);
-__host__ float rnorm3df(float a, float b, float c);
-__host__ float rnormf(int dim, const float* a);
-__host__ float rnorm4df(float a, float b, float c, float d);
-__host__ void sincospif(float x, float *sptr, float *cptr);
-__host__ int isfinite(float a);
-__host__ float rsqrtf(float x);
-__host__ float sinpif(float x);
-__host__ int signbit(float a);
-
-
 __device__ double acos(double x);
 __device__ double acosh(double x);
 __device__ double asin(double x);
@@ -219,27 +198,6 @@ __device__ double trunc(double x);
 __device__ double y0(double x);
 __device__ double y1(double y);
 __device__ double yn(int n, double x);
-
-__host__ double erfcinv(double y);
-__host__ double erfcx(double x);
-__host__ double erfinv(double y);
-__host__ double fdivide(double x, double y);
-__host__ double norm(int dim, const double *t);
-__host__ double norm3d(double a, double b, double c);
-__host__ double norm4d(double a, double b, double c, double d);
-__host__ double normcdf(double y);
-__host__ double normcdfinv(double y);
-__host__ double rcbrt(double x);
-__host__ double rhypot(double x, double y);
-__host__ double rnorm(int dim, const double* t);
-__host__ double rnorm3d(double a, double b, double c);
-__host__ double rnorm4d(double a, double b, double c, double d);
-__host__ void sincospi(double x, double *sptr, double *cptr);
-__host__ double cospi(double x);
-__host__ int isfinite(double x);
-__host__ double rsqrt(double x);
-__host__ int signbit(double a);
-__host__ double sinpi(double x);
 
 // ENDPARSER
 
