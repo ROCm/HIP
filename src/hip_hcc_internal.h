@@ -188,9 +188,10 @@ extern const char *API_COLOR_END;
 
 //---
 //HIP Trace modes
-#define TRACE_ALL 0 // 0x1
-#define TRACE_CMD 1 // 0x2
-#define TRACE_MEM 2 // 0x4
+#define TRACE_ALL  0 // 0x1
+#define TRACE_KCMD 1 // 0x2, kernel command
+#define TRACE_MCMD 2 // 0x4, memory command
+#define TRACE_MEM  3 // 0x8
 
 
 //---
@@ -275,12 +276,13 @@ extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
     API_TRACE(0, __VA_ARGS__);
 
 
-// Like above, but will trace with DB_CMD.
-// Replace HIP_INIT_API with this call inside important APIs that launch work on the GPU:
+// Like above, but will trace with TRACE_CMD.  
+// Replace HIP_INIT_API with this call inside HIP APIs that launch work on the GPU:
 // kernel launches, copy commands, memory sets, etc.
-#define HIP_INIT_CMD_API(...) \
+#define HIP_INIT_SPECIAL_API(tbit, ...) \
     HIP_INIT()\
-    API_TRACE((HIP_TRACE_API&(1<<TRACE_CMD)), __VA_ARGS__);
+    API_TRACE((HIP_TRACE_API&(1<<tbit)), __VA_ARGS__);
+
 
 // This macro should be called at the end of every HIP API, and only at the end of top-level hip APIS (not internal hip)
 // It has dual function: logs the last error returned for use by hipGetLastError,
