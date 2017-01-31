@@ -55,13 +55,13 @@ message(STATUS "HIP Platform: " ${HIP_PLATFORM})
 
 # If HIP_PLATFORM is hcc, we need HCC_HOME and HSA_HEADER to be defined
 if(HIP_PLATFORM STREQUAL "hcc")
-    list(APPEND CMAKE_PREFIX_PATH "/opt/rocm")
     # Find hcc compiler
     find_program(HCC_COMPILER hcc
-        PATHS
+        HINTS
             ${HCC_HOME}/bin
-            ENV HCC_HOME
-            /opt/rocm/hcc
+            $ENV{HCC_HOME}/bin
+        PATHS
+            /opt/rocm/bin
     )
     execute_process(COMMAND ${HCC_COMPILER} --version
         COMMAND cut -d\  -f9
@@ -69,7 +69,13 @@ if(HIP_PLATFORM STREQUAL "hcc")
         OUTPUT_STRIP_TRAILING_WHITESPACE)
     message(STATUS "Found hcc version: " ${HCC_VERSION})
     # Find hcc runtime
-    find_package(hcc)
+    find_package(hcc
+        HINTS
+            ${HCC_HOME}
+            $ENV{HCC_HOME}
+        PATHS
+            /opt/rocm/
+        )
     add_to_config(_buildInfo HCC_VERSION)
     string(REPLACE "-" ";" HCC_VERSION_LIST ${HCC_VERSION})
     list(GET HCC_VERSION_LIST 0 HCC_PACKAGE_VERSION)
@@ -79,10 +85,11 @@ if(HIP_PLATFORM STREQUAL "hcc")
 
     # Determine HSA_HEADER
     find_path(HSA_HEADER hsa/hsa.h
+        HINTS
+            ${HSA_PATH}/include
+            $ENV{HSA_PATH}/include
         PATHS
-            ${HSA_PATH}
-            ENV HSA_PATH
-            /opt/rocm/hsa
+            /opt/rocm/include
     )
 endif()
 
