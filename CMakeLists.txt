@@ -199,6 +199,7 @@ add_custom_target(doc COMMAND HIP_PATH=${CMAKE_CURRENT_SOURCE_DIR} doxygen ${CMA
 include(GNUInstallDirs)
 set( LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR} )
 set( INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_INCLUDEDIR} )
+set( BIN_INSTALL_DIR ${CMAKE_INSTALL_BINDIR} )
 set( CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip )
 
 # Install hip_hcc if platform is hcc
@@ -220,7 +221,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
       hip-config.cmake.in
       ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
       INSTALL_DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR}
-      PATH_VARS LIB_INSTALL_DIR INCLUDE_INSTALL_DIR
+      PATH_VARS LIB_INSTALL_DIR INCLUDE_INSTALL_DIR BIN_INSTALL_DIR
     )
 
     write_basic_package_version_file(
