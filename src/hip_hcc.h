@@ -273,7 +273,7 @@ extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
     API_TRACE(0, __VA_ARGS__);
 
 
-// Like above, but will trace with DB_CMD.  
+// Like above, but will trace with DB_CMD.
 // Replace HIP_INIT_API with this call inside important APIs that launch work on the GPU:
 // kernel launches, copy commands, memory sets, etc.
 #define HIP_INIT_CMD_API(...) \
@@ -479,8 +479,6 @@ private:
 typedef ihipStreamCriticalBase_t<StreamMutex> ihipStreamCritical_t;
 typedef LockedAccessor<ihipStreamCritical_t> LockedAccessor_StreamCrit_t;
 
-
-
 //---
 // Internal stream structure.
 class ihipStream_t {
@@ -494,10 +492,10 @@ public:
 
     // kind is hipMemcpyKind
     void locked_copySync (void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn = true);
-
-
     void locked_copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind);
 
+    void lockedSymbolCopySync(hc::accelerator &acc, void *dst, const void* src, size_t sizeBytes, unsigned kind);
+    void lockedSymbolCopyAsync(hc::accelerator &acc, void *dst, const void* src, size_t sizeBytes, unsigned kind);
 
     //---
     // Member functions that begin with locked_ are thread-safe accessors - these acquire / release the critical mutex.

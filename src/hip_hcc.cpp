@@ -1780,6 +1780,28 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     }
 }
 
+void ihipStream_t::lockedSymbolCopySync(hc::accelerator &acc, void* dst, const void* src, size_t sizeBytes, unsigned kind)
+{
+  if(kind == hipMemcpyHostToHost){
+    acc.memcpy_symbol(dst, (void*)src, sizeBytes, Kalmar::hcMemcpyHostToHost);
+  }
+  if(kind == hipMemcpyHostToDevice){
+    acc.memcpy_symbol(dst, (void*)src, sizeBytes);
+  }
+  if(kind == hipMemcpyDeviceToDevice){
+    acc.memcpy_symbol(dst, (void*)src, sizeBytes, Kalmar::hcMemcpyDeviceToDevice);
+  }
+  if(kind == hipMemcpyDeviceToHost){
+    acc.memcpy_symbol(dst, (void*)src, sizeBytes, Kalmar::hcMemcpyDeviceToHost);
+  }
+}
+
+void ihipStream_t::lockedSymbolCopyAsync(hc::accelerator &acc, void* dst, const void* src, size_t sizeBytes, unsigned kind)
+{
+  hc::AmPointerInfo dstPtrInfo(NULL, dst, sizeBytes, acc, true, false);
+  hc::am_memtracker_add(dst, dstPtrInfo);
+  locked_getAv()->copy_async((void*)src, dst, sizeBytes);
+}
 
 void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind)
 {
@@ -1881,6 +1903,7 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
             LockedAccessor_StreamCrit_t crit(_criticalData);
 
             this->ensureHaveQueue(crit);
+            
 #if USE_COPY_EXT_V2
             crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice ? &copyDevice->getDevice()->_acc : nullptr, forceUnpinnedCopy);
 #else
