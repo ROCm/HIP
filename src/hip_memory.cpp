@@ -449,17 +449,23 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t cou
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    void *ptr = acc.get_symbol_address(symbolName);
-    tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, ptr);
+    void *dst = acc.get_symbol_address(symbolName);
+    tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, dst);
 
-    if(ptr == nullptr)
+    if(dst == nullptr)
     {
         return ihipLogStatus(hipErrorInvalidSymbol);
     }
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
-    stream->locked_copySync(ptr, src, count + offset, kind);
+    if(kind == hipMemcpyHostToDevice || kind == hipMemcpyDeviceToHost || kind == hipMemcpyDeviceToDevice || kind == hipMemcpyHostToHost)
+    {
+      stream->lockedSymbolCopySync(acc, dst, src, count + offset, kind);
+    //  acc.memcpy_symbol(dst, (void*)src, count+offset);
+    } else {
+      return ihipLogStatus(hipErrorInvalidValue);
+    }
 
     return ihipLogStatus(hipSuccess);
 }
@@ -479,17 +485,17 @@ hipError_t hipMemcpyToSymbolAsync(const char* symbolName, const void *src, size_
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    void *ptr = acc.get_symbol_address(symbolName);
-    tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, ptr);
+    void *dst = acc.get_symbol_address(symbolName);
+    tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, dst);
 
-    if(ptr == nullptr)
+    if(dst == nullptr)
     {
         return ihipLogStatus(hipErrorInvalidSymbol);
     }
 
     if (stream) {
         try {
-            stream->locked_copyAsync(ptr, src, count + offset, kind);
+          stream->lockedSymbolCopyAsync(acc, dst, src, count + offset, kind);
         }
         catch (ihipException ex) {
             e = ex._code;
