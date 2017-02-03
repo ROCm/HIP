@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -23,7 +23,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s test_common.cpp
+ * BUILD: %t %s ../../test_common.cpp
  * RUN: %t
  * HIT_END
  */
@@ -63,13 +63,12 @@ int main(){
         HIPCHECK(hipMemcpyAsync(A[i], Ad[i], _SIZE, hipMemcpyDeviceToHost, stream[i]));
     }
 
-   
-   // This first check but relies on the kernel running for so long that the D2H async memcopy has not started yet.   
-   // This will be true in an optimal asynchronous implementation.  
+
+   // This first check but relies on the kernel running for so long that the D2H async memcopy has not started yet.
+   // This will be true in an optimal asynchronous implementation.
    // Conservative implementations which synchronize the hipMemcpyAsync will fail, ie if HIP_LAUNCH_BLOCKING=true
     HIPASSERT(1<<30 != A[NUM_STREAMS-1][0]-1);
     HIPCHECK(hipDeviceSynchronize());
     HIPASSERT(1<<30 == A[NUM_STREAMS-1][0]-1);
     passed();
 }
-

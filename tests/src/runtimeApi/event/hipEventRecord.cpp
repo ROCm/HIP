@@ -20,11 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 // Test hipEventRecord serialization behavior.
-// Through manual inspection of the reported timestamps, can determine if recording a NULL event forces synchronization : 
-// set 
+// Through manual inspection of the reported timestamps, can determine if recording a NULL event forces synchronization :
+// set
 
 /* HIT_START
- * BUILD: %t %s test_common.cpp
+ * BUILD: %t %s ../../test_common.cpp
  * RUN: %t --iterations 10
  * HIT_END
  */
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     unsigned blocks = (N+threadsPerBlock-1)/threadsPerBlock;
     if (blocks > 1024)
         blocks = 1024;
-    if (blocks ==0 ) 
+    if (blocks ==0 )
         blocks = 1;
 
 	printf ("N=%zu (A+B+C= %6.1f MB total) blocks=%u threadsPerBlock=%u iterations=%d\n", N, ((double)3*N*sizeof(float))/1024/1024, blocks, threadsPerBlock, iterations);
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 		float eventMs = 1.0f;
 		HIPCHECK (hipEventElapsedTime(&eventMs, start, stop));
 		float hostMs = HipTest::elapsed_time(hostStart, hostStop);
-		
+
 		printf ("host_time (gettimeofday)          =%6.3fms\n", hostMs);
 		printf ("kernel_time (hipEventElapsedTime) =%6.3fms\n", eventMs);
 		printf ("\n");

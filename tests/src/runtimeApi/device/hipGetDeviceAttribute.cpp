@@ -22,7 +22,7 @@ THE SOFTWARE.
 // Test the device info API extensions for HIP:
 
 /* HIT_START
- * BUILD: %t %s test_common.cpp
+ * BUILD: %t %s ../../test_common.cpp
  * RUN: %t EXCLUDE_HIP_PLATFORM nvcc
  * HIT_END
  */
@@ -89,4 +89,3 @@ int main(int argc, char *argv[])
     passed();
 
 };
-

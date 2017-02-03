@@ -17,11 +17,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD: %t %s ../../test_common.cpp
+ * RUN: %t
+ * HIT_END
+ */
+
+#include "hip/hip_runtime.h"
 #include"test_common.h"
 
-__global__ void Empty(hipLaunchParm lp, int param){}
+#define len 1024*1024
+#define size len * sizeof(float)
 
 int main(){
-hipLaunchKernel(HIP_KERNEL_NAME(Empty), dim3(1), dim3(1), 0, 0, 0);
-hipDeviceSynchronize();
+    float *Ad, *A;
+    hipHostMalloc((void**)&A, size);
+    hipMalloc((void**)&Ad, size);
+    assert(hipSuccess == hipMemcpy(Ad, A, size, hipMemcpyHostToDevice));
+    assert(hipSuccess == hipMemcpy(A, Ad, size, hipMemcpyDeviceToHost));
+    passed();
 }

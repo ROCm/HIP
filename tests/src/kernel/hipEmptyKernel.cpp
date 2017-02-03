@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -18,22 +18,17 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s test_common.cpp
+ * BUILD: %t %s ../test_common.cpp
  * RUN: %t
  * HIT_END
  */
 
-#include "hip/hip_runtime.h"
 #include"test_common.h"
 
-#define len 1024*1024
-#define size len * sizeof(float)
+__global__ void Empty(hipLaunchParm lp, int param){}
 
 int main(){
-    float *Ad, *A;
-    hipHostMalloc((void**)&A, size);
-    hipMalloc((void**)&Ad, size);
-    assert(hipSuccess == hipMemcpy(Ad, A, size, hipMemcpyHostToDevice));
-    assert(hipSuccess == hipMemcpy(A, Ad, size, hipMemcpyDeviceToHost));
-    passed();
+hipLaunchKernel(HIP_KERNEL_NAME(Empty), dim3(1), dim3(1), 0, 0, 0);
+hipDeviceSynchronize();
+passed();
 }

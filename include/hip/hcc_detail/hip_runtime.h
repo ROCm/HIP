@@ -26,8 +26,8 @@ THE SOFTWARE.
  */
 
 //#pragma once
-#ifndef HIP_RUNTIME_H
-#define HIP_RUNTIME_H
+#ifndef HIP_HCC_DETAIL_RUNTIME_H
+#define HIP_HCC_DETAIL_RUNTIME_H
 
 //---
 // Top part of file can be compiled with any compiler
@@ -345,14 +345,31 @@ __device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask
 #define hipGridDim_y   (hc_get_num_groups(1))
 #define hipGridDim_z   (hc_get_num_groups(2))
 
-//extern "C" __device__ void* memcpy(void* dst, void* src, size_t size);
-//extern "C" __device__ void* memset(void* ptr, uint8_t val, size_t size);
-
+extern "C" __device__ void* __hip_hc_memcpy(void* dst, void* src, size_t size);
+extern "C" __device__ void* __hip_hc_memset(void* ptr, uint8_t val, size_t size);
 extern "C" __device__ void* __hip_hc_malloc(size_t);
 extern "C" __device__ void* __hip_hc_free(void *ptr);
 
-//extern "C" __device__ void* malloc(size_t size);
-//extern "C" __device__ void* free(void *ptr);
+static inline __device__ void* malloc(size_t size)
+{
+    return __hip_hc_malloc(size);
+}
+
+static inline __device__ void* free(void *ptr)
+{
+    return __hip_hc_free(ptr);
+}
+
+static inline __device__ void* memcpy(void* dst, void* src, size_t size)
+{
+  return __hip_hc_memcpy(dst, src, size);
+}
+
+static inline __device__ void* memset(void* ptr, uint8_t val, size_t size)
+{
+  return __hip_hc_memset(ptr, val, size);
+}
+
 
 
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
