@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -17,20 +17,28 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/*
+ * Conformance test for checking functionality of
+ * hipError_t hipGetDevice(int *device);
+ */
+
 /* HIT_START
- * BUILD: %t %s test_common.cpp
- * RUN: %t EXCLUDE_HIP_PLATFORM
+ * BUILD: %t %s ../../test_common.cpp
+ * RUN: %t
  * HIT_END
  */
 
 #include "test_common.h"
 
-int main(){
+int main()
+{
     int numDevices = 0;
+    int device;
     HIPCHECK(hipGetDeviceCount(&numDevices));
     for(int i=0;i<numDevices;i++){
         HIPCHECK(hipSetDevice(i));
+        HIPCHECK(hipGetDevice(&device));
+        HIPASSERT(device == i);
     }
-    HIPASSERT(hipErrorInvalidDevice == hipSetDevice(numDevices));
     passed();
 }

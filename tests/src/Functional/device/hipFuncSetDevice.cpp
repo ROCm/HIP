@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -18,35 +18,19 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s test_common.cpp
- * RUN: %t
+ * BUILD: %t %s ../../test_common.cpp
+ * RUN: %t EXCLUDE_HIP_PLATFORM
  * HIT_END
  */
 
 #include "test_common.h"
 
-int main()
-{
-    unsigned flag = 0;
-    HIPCHECK(hipDeviceReset());
-
-    int deviceCount = 0;
-    HIPCHECK(hipGetDeviceCount(&deviceCount));
-
-    for(int j=0;j<deviceCount;j++){
-
-        HIPCHECK(hipSetDevice(j));
-
-        for(int i=0;i<4;i++){
-            flag = 1 << i;
-            printf ("Flag=%x\n", flag);
-            HIPCHECK(hipSetDeviceFlags(flag));
-            //HIPCHECK_API(hipSetDeviceFlags(flag), hipErrorInvalidValue);
-        }
-
-        flag = 0;
-
+int main(){
+    int numDevices = 0;
+    HIPCHECK(hipGetDeviceCount(&numDevices));
+    for(int i=0;i<numDevices;i++){
+        HIPCHECK(hipSetDevice(i));
     }
-
+    HIPASSERT(hipErrorInvalidDevice == hipSetDevice(numDevices));
     passed();
 }

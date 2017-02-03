@@ -17,40 +17,44 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <stdio.h>
-#include <hip/hip_fp16.h>
-#include "hip/hip_runtime_api.h"
+/* HIT_START
+ * BUILD: %t %s ../../test_common.cpp
+ * RUN: %t
+ * HIT_END
+ */
 
-#define DSIZE 4
-#define SCF 0.5f
-#define nTPB 256
-__global__ void half_scale_kernel(hipLaunchParm lp, float *din, float *dout, int dsize){
+#include"test_common.h"
+#include<malloc.h>
 
-  int idx = hipThreadIdx_x+ hipBlockDim_x*hipBlockIdx_x;
-  if (idx < dsize){
-    __half scf = __float2half(SCF);
-    __half kin = __float2half(din[idx]);
-    __half kout;
-
-    kout = __hmul(kin, scf);
-
-//    kout = cvt_float_to_half(cvt_half_to_float(kin)*cvt_half_to_float(scf));
-
-    dout[idx] = __half2float(kout);
-    }
+__global__ void Inc(hipLaunchParm lp, float *Ad){
+int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+Ad[tx] = Ad[tx] + float(1);
 }
 
 int main(){
+	float *A, **Ad;
+	int num_devices;
+	HIPCHECK(hipGetDeviceCount(&num_devices));
+	Ad = new float*[num_devices];
+	const size_t size = N * sizeof(float);
+	A = (float*)malloc(size);
+	HIPCHECK(hipHostRegister(A, size, 0));
+	for(int i=0;i<N;i++){
+		A[i] = float(1);
+	}
+	for(int i=0;i<num_devices;i++){
+	HIPCHECK(hipSetDevice(i));
+	HIPCHECK(hipHostGetDevicePointer((void**)&Ad[i], A, 0));
+	}
 
-  float *hin, *hout, *din, *dout;
-  hin  = (float *)malloc(DSIZE*sizeof(float));
-  hout = (float *)malloc(DSIZE*sizeof(float));
-  for (int i = 0; i < DSIZE; i++) hin[i] = i;
-  hipMalloc(&din,  DSIZE*sizeof(float));
-  hipMalloc(&dout, DSIZE*sizeof(float));
-  hipMemcpy(din, hin, DSIZE*sizeof(float), hipMemcpyHostToDevice);
-  hipLaunchKernel(half_scale_kernel, dim3((DSIZE+nTPB-1)/nTPB),dim3(nTPB), 0, 0, din, dout, DSIZE);
-  hipMemcpy(hout, dout, DSIZE*sizeof(float), hipMemcpyDeviceToHost);
-  for (int i = 0; i < DSIZE; i++) printf("%f\n", hout[i]);
-  return 0;
+	for(int i=0;i<num_devices;i++){
+	HIPCHECK(hipSetDevice(i));
+	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, 0, Ad[i]);
+
+	HIPCHECK(hipDeviceSynchronize());
+
+	}
+	HIPASSERT(A[10] == 1.0f + float(num_devices));
+	HIPCHECK(hipHostUnregister(A));
+	passed();
 }

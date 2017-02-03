@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -18,43 +18,35 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s test_common.cpp
+ * BUILD: %t %s ../../test_common.cpp
  * RUN: %t
  * HIT_END
  */
 
-#include"test_common.h"
-#include<malloc.h>
+#include "test_common.h"
 
-__global__ void Inc(hipLaunchParm lp, float *Ad){
-int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
-Ad[tx] = Ad[tx] + float(1);
-}
+int main()
+{
+    unsigned flag = 0;
+    HIPCHECK(hipDeviceReset());
 
-int main(){
-	float *A, **Ad;
-	int num_devices;
-	HIPCHECK(hipGetDeviceCount(&num_devices));
-	Ad = new float*[num_devices];
-	const size_t size = N * sizeof(float);
-	A = (float*)malloc(size);
-	HIPCHECK(hipHostRegister(A, size, 0));
-	for(int i=0;i<N;i++){
-		A[i] = float(1);
-	}
-	for(int i=0;i<num_devices;i++){
-	HIPCHECK(hipSetDevice(i));
-	HIPCHECK(hipHostGetDevicePointer((void**)&Ad[i], A, 0));
-	}
+    int deviceCount = 0;
+    HIPCHECK(hipGetDeviceCount(&deviceCount));
 
-	for(int i=0;i<num_devices;i++){
-	HIPCHECK(hipSetDevice(i));
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, 0, Ad[i]);
+    for(int j=0;j<deviceCount;j++){
 
-	HIPCHECK(hipDeviceSynchronize());
+        HIPCHECK(hipSetDevice(j));
 
-	}
-	HIPASSERT(A[10] == 1.0f + float(num_devices));
-	HIPCHECK(hipHostUnregister(A));
-	passed();
+        for(int i=0;i<4;i++){
+            flag = 1 << i;
+            printf ("Flag=%x\n", flag);
+            HIPCHECK(hipSetDeviceFlags(flag));
+            //HIPCHECK_API(hipSetDeviceFlags(flag), hipErrorInvalidValue);
+        }
+
+        flag = 0;
+
+    }
+
+    passed();
 }

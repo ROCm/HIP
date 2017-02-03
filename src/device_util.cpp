@@ -99,7 +99,7 @@ __device__ void* __hip_hc_free(void *ptr)
 
 
 // loop unrolling
-__device__ void* memcpy(void* dst, void* src, size_t size)
+__device__ void* __hip_hc_memcpy(void* dst, void* src, size_t size)
 {
     uint8_t *dstPtr, *srcPtr;
     dstPtr = (uint8_t*)dst;
@@ -110,7 +110,7 @@ __device__ void* memcpy(void* dst, void* src, size_t size)
     return nullptr;
 }
 
-__device__ void* memset(void* ptr, uint8_t val, size_t size)
+__device__ void* __hip_hc_memset(void* ptr, uint8_t val, size_t size)
 {
     uint8_t *dstPtr;
     dstPtr = (uint8_t*)ptr;
@@ -118,16 +118,6 @@ __device__ void* memset(void* ptr, uint8_t val, size_t size)
         dstPtr[i] = val;
     }
     return nullptr;
-}
-
-__device__ void* malloc(size_t size)
-{
-    return __hip_hc_malloc(size);
-}
-
-__device__ void* free(void *ptr)
-{
-    return __hip_hc_free(ptr);
 }
 
 __device__ float __hip_erfinvf(float x){

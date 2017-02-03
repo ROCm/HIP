@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s test_common.cpp
+ * BUILD: %t %s ../test_common.cpp
  * RUN: %t EXCLUDE_HIP_PLATFORM nvcc
  * HIT_END
  */
@@ -45,7 +45,7 @@ __global__ void testExternSharedKernel(hipLaunchParm lp, const T* A_d, const T* 
 
     // initialize dynamic shared memory
     if (tid < groupElements) {
-        sdata[tid] = static_cast<T>(tid); 
+        sdata[tid] = static_cast<T>(tid);
     }
 
     // prefix sum inside dynamic shared memory
@@ -146,4 +146,3 @@ int main(int argc, char *argv[]) {
 
     passed();
 }
-
