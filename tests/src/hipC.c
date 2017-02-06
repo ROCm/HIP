@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s
+ * BUILD: %t %s EXCLUDE_HIP_PLATFORM all
  * RUN: %t
  * HIT_END
  */
