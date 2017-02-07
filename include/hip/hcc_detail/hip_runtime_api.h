@@ -180,7 +180,7 @@ typedef enum hipMemcpyKind {
 typedef struct {
   unsigned int width;
   unsigned int height;
-  hipChannelFormatKind f;
+  enum hipChannelFormatKind f;
   void* data; //FIXME: generalize this
 } hipArray;
 
@@ -371,7 +371,7 @@ hipError_t hipDeviceGetCacheConfig ( hipFuncCache_t *cacheConfig );
  * Note: Currently, only hipLimitMallocHeapSize is available
  *
  */
-hipError_t hipDeviceGetLimit(size_t *pValue, hipLimit_t limit);
+hipError_t hipDeviceGetLimit(size_t *pValue, enum hipLimit_t limit);
 
 
 /**
@@ -1254,9 +1254,13 @@ hipError_t hipMemGetInfo  (size_t * free, size_t * total)   ;
  *
  *  @see hipMalloc, hipMallocPitch, hipFree, hipFreeArray, hipHostMalloc, hipHostFree
  */
+#if __cplusplus
 hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
                           size_t width, size_t height = 0, unsigned int flags = 0);
-
+#else
+hipError_t hipMallocArray(hipArray** array, const struct hipChannelFormatDesc* desc,
+                          size_t width, size_t height, unsigned int flags);
+#endif
 /**
  *  @brief Frees an array on the device.
  *

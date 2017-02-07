@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include<hip/hip_runtime.h>
 #include<hip/hip_runtime_api.h>
 #include<iostream>
+#include "test_common.h"
 
 #define HIP_ASSERT(status) \
     assert(status == hipSuccess)
@@ -62,4 +63,5 @@ int main()
     {
         assert(A[i] == B[i]);
     }
+    passed();
 }

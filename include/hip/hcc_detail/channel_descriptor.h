@@ -26,12 +26,9 @@ THE SOFTWARE.
 #include<hip/hcc_detail/driver_types.h>
 #include<hip/hcc_detail/hip_vector_types.h>
 
-hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f);
+#ifdef __cplusplus
 
-template<typename T>
-static inline hipChannelFormatDesc hipCreateChannelDesc() {
-  return hipCreateChannelDesc(0, 0, 0, 0, hipChannelFormatKindNone);
-}
+hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f);
 
 static inline hipChannelFormatDesc hipCreateChannelDescHalf() {
   int e = (int)sizeof(unsigned short) * 8;
@@ -47,6 +44,11 @@ static inline hipChannelFormatDesc hipCreateChannelDescHalf2()
 {
   int e = (int)sizeof(unsigned short) * 8;
   return hipCreateChannelDesc(e, 0, 0, 0, hipChannelFormatKindFloat);
+}
+
+template<typename T>
+static inline hipChannelFormatDesc hipCreateChannelDesc() {
+  return hipCreateChannelDesc(0, 0, 0, 0, hipChannelFormatKindNone);
 }
 
 template<>
@@ -370,5 +372,11 @@ inline hipChannelFormatDesc hipCreateChannelDesc<long4>()
   int e = (int)sizeof(signed long) * 8;
   return hipCreateChannelDesc(e, e, e, e, hipChannelFormatKindSigned);
 }
+
+#else
+
+struct hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, enum hipChannelFormatKind f);
+
+#endif
 
 #endif

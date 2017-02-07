@@ -34,9 +34,9 @@ enum hipTextureFilterMode
 };
 
 struct textureReference {
-  hipTextureFilterMode filterMode;
-  bool normalized;
-  hipChannelFormatDesc channelDesc;
+  enum hipTextureFilterMode filterMode;
+  unsigned normalized;
+  struct hipChannelFormatDesc channelDesc;
 };
 
 #endif
