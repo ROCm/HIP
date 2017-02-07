@@ -31,6 +31,7 @@ THE SOFTWARE.
  */
 
 #include <limits.h>
+#include <hip/hcc_detail/driver_types.h>
 #include <hip/hcc_detail/channel_descriptor.h>
 #include <hip/hcc_detail/texture_types.h>
 //#include <hip/hcc_detail/hip_runtime.h>
