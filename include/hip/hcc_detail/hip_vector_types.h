@@ -1131,23 +1131,23 @@ struct longlong4 {
 } __attribute__((aligned(32)));
 
 #define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
-__device__ __host__ static inline type make_##type(comp x) { \
-  type ret; \
+__device__ __host__ static inline struct type make_##type(comp x) { \
+  struct type ret; \
   ret.x = x; \
   return ret; \
 }
 
 #define DECLOP_MAKE_TWO_COMPONENT(comp, type) \
-__device__ __host__ static inline type make_##type(comp x, comp y) { \
-  type ret; \
+__device__ __host__ static inline struct type make_##type(comp x, comp y) { \
+  struct type ret; \
   ret.x = x; \
   ret.y = y; \
   return ret; \
 }
 
 #define DECLOP_MAKE_THREE_COMPONENT(comp, type) \
-__device__ __host__ static inline type make_##type(comp x, comp y, comp z) { \
-  type ret; \
+__device__ __host__ static inline struct type make_##type(comp x, comp y, comp z) { \
+  struct type ret; \
   ret.x = x; \
   ret.y = y; \
   ret.z = z; \
@@ -1155,8 +1155,8 @@ __device__ __host__ static inline type make_##type(comp x, comp y, comp z) { \
 }
 
 #define DECLOP_MAKE_FOUR_COMPONENT(comp, type) \
-__device__ __host__ static inline type make_##type(comp x, comp y, comp z, comp w) { \
-  type ret; \
+__device__ __host__ static inline struct type make_##type(comp x, comp y, comp z, comp w) { \
+  struct type ret; \
   ret.x = x; \
   ret.y = y; \
   ret.z = z; \
