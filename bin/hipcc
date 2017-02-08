@@ -70,6 +70,11 @@ if ($verbose & 0x2) {
 # set if user explicitly requests -stdlib=libc++. (else we default to libstdc++ for better interop with g++):
 $setStdLib = 0;  # TODO - set to 0
 
+$target_gfx701 = 0;
+$target_gfx801 = 0;
+$target_gfx802 = 0;
+$target_gfx803 = 0;
+
 if ($HIP_PLATFORM eq "hcc") {
     $HSA_PATH=$ENV{'HSA_PATH'} // "/opt/rocm/hsa";
 
@@ -129,18 +134,25 @@ if ($HIP_PLATFORM eq "hcc") {
     }
     $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am -lhsakmt";
 
+    $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_hc.ll\n";
+
     # Handle ROCm target platform
-    if ($ROCM_TARGET eq "fiji") {
-        $HIPLDFLAGS .= " --amdgpu-target=gfx803";
-    }
-    if ($ROCM_TARGET eq "carrizo") {
-        $HIPLDFLAGS .= " --amdgpu-target=gfx801";
-    }
-    if ($ROCM_TARGET eq "hawaii") {
+    if ($target_gfx701 eq 1) {
         $HIPLDFLAGS .= " --amdgpu-target=gfx701";
     }
-    if ($ROCM_TARGET eq "polaris") {
+    if ($target_gfx801 eq 1) {
+        $HIPLDFLAGS .= " --amdgpu-target=gfx801";
+    }
+    if ($target_gfx802 eq 1) {
+        $HIPLDFLAGS .= " --amdgpu-target=gfx802";
+    }
+    if ($target_gfx803 eq 1) {
         $HIPLDFLAGS .= " --amdgpu-target=gfx803";
+        $ENV{HIP_HC_IR_GFX803}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
+    }
+    if ($target_gfx701 eq 0 and $target_gfx801 eq 0 and $target_gfx802 eq 0 and $target_gfx803 eq 0) 
+    {
+        $HIPLDFLAGS .= " --amdgpu-target=gfx701 --amdgpu-target=gfx801 --amdgpu-target=gfx802 --amdgpu-target=gfx803";
     }
 
     # Add trace marker library:
@@ -222,7 +234,8 @@ if($HIP_PLATFORM eq "hcc"){
 
 if(($HIP_PLATFORM eq "hcc")){
     $EXPORT_LL=" ";
-    $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_ir.ll\n";
+    $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_hc.ll\n";
+    $ENV{HIP_HC_IR_FILE}="";
 }
 
 if($HIP_PLATFORM eq "nvcc"){
@@ -260,6 +273,22 @@ foreach $arg (@ARGV)
     {
         $HIPCXXFLAGS .= " -stdlib=libc++";
         $setStdLib = 1;
+    }
+    if($arg eq '--amdgpu-target=gfx701')
+    {
+       $target_gfx701 = 1;
+    }
+    if($arg eq '--amdgpu-target=gfx801')
+    {
+       $target_gfx801 = 1;
+    }
+    if($arg eq '--amdgpu-target=gfx802')
+    {
+       $target_gfx802 = 1;
+    }
+    if($arg eq '--amdgpu-target=gfx803')
+    { 
+       $target_gfx803 = 1;
     }
     if(($trimarg eq '-stdlib=libstdc++') and ($setStdLib eq 0))
     {

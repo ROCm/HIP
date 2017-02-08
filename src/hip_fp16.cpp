@@ -32,6 +32,47 @@ struct hipHalfHolder{
 #define HINF 65504
 
 static struct hipHalfHolder __hInfValue = {HINF};
+
+__device__ __half __hadd(__half a, __half b) {
+  return a + b;
+}
+
+__device__ __half __hadd_sat(__half a, __half b) {
+  return a + b;
+}
+
+__device__ __half __hfma(__half a, __half b, __half c) {
+  return a * b + c;
+}
+
+__device__ __half __hfma_sat(__half a, __half b, __half c) {
+  return a * b + c;
+}
+
+__device__ __half __hmul(__half a, __half b) {
+  return a * b;
+}
+
+__device__ __half __hmul_sat(__half a, __half b) {
+  return a * b;
+}
+
+__device__ __half __hneg(__half a) {
+  return -a;
+}
+
+__device__ __half __hsub(__half a, __half b) {
+  return a - b;
+}
+
+__device__ __half __hsub_sat(__half a, __half b) {
+  return a - b;
+}
+
+__device__ __half hdiv(__half a, __half b) {
+  return a / b;
+}
+
 /*
 Half comparision Functions
 */

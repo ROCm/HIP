@@ -277,6 +277,10 @@ __device__ __attribute__((address_space(3))) void* __get_dynamicgroupbaseptr();
  *  On AMD platforms, the threadfence* routines are currently empty stubs.
  */
 
+extern __attribute__((const)) __device__ void __hip_hc_threadfence() __asm("__llvm_fence_sc_dev");
+extern __attribute__((const)) __device__ void __hip_hc_threadfence_block() __asm("__llvm_fence_sc_wg");
+
+
  /**
  * @brief threadfence_block makes writes visible to threads running in same block.
  *
@@ -287,7 +291,9 @@ __device__ __attribute__((address_space(3))) void* __get_dynamicgroupbaseptr();
  * @warning __threadfence_block is a stub and map to no-op.
  */
 // __device__ void  __threadfence_block(void);
-extern "C" __device__ void __threadfence_block(void);
+__device__ static inline void __threadfence_block(void) {
+  return __hip_hc_threadfence_block();
+}
 
  /**
   * @brief threadfence makes wirtes visible to other threads running on same GPU.
@@ -299,7 +305,9 @@ extern "C" __device__ void __threadfence_block(void);
  * @warning __threadfence is a stub and map to no-op, application should set "export HSA_DISABLE_CACHE=1" to disable both L1 and L2 caches.
  */
 // __device__ void  __threadfence(void) __attribute__((deprecated("Provided for compile-time compatibility, not yet functional")));
-extern "C" __device__ void __threadfence(void);
+__device__ static inline void __threadfence(void) {
+  return __hip_hc_threadfence();
+}
 
 /**
  * @brief threadfence_system makes writes to pinned system memory visible on host CPU.
