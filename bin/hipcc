@@ -134,28 +134,6 @@ if ($HIP_PLATFORM eq "hcc") {
     }
     $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am -lhsakmt";
 
-    $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_hc.ll\n";
-
-    # Handle ROCm target platform
-    if ($target_gfx701 eq 1) {
-        $HIPLDFLAGS .= " --amdgpu-target=gfx701";
-    }
-    if ($target_gfx801 eq 1) {
-        $HIPLDFLAGS .= " --amdgpu-target=gfx801";
-    }
-    if ($target_gfx802 eq 1) {
-        $HIPLDFLAGS .= " --amdgpu-target=gfx802";
-    }
-    if ($target_gfx803 eq 1) {
-        $HIPLDFLAGS .= " --amdgpu-target=gfx803";
-        $ENV{HIP_HC_IR_GFX803}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
-    }
-    if ($target_gfx701 eq 0 and $target_gfx801 eq 0 and $target_gfx802 eq 0 and $target_gfx803 eq 0) 
-    {
-        $HIPLDFLAGS .= " --amdgpu-target=gfx701 --amdgpu-target=gfx801 --amdgpu-target=gfx802 --amdgpu-target=gfx803";
-        $ENV{HIP_HC_IR_GFX803}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
-    }
-
     # Add trace marker library:
     # TODO - once we cleanly separate the HIP API headers from HIP library headers this logic should move to CMakebuild option - apps do not need to see the marker library.
     if ($HIP_ATP_MARKER) {
@@ -350,6 +328,32 @@ foreach $arg (@ARGV)
         #print "I: <$arg>\n";
     }
     $toolArgs .= " $arg" unless $swallowArg;
+}
+
+if($HIP_PLATFORM eq "hcc"){
+
+    $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_hc.ll\n";
+
+    # Handle ROCm target platform
+    if ($target_gfx701 eq 1) {
+        $HIPLDFLAGS .= " --amdgpu-target=gfx701";
+    }
+    if ($target_gfx801 eq 1) {
+        $HIPLDFLAGS .= " --amdgpu-target=gfx801";
+    }
+    if ($target_gfx802 eq 1) {
+        $HIPLDFLAGS .= " --amdgpu-target=gfx802";
+    }
+    if ($target_gfx803 eq 1) {
+        $HIPLDFLAGS .= " --amdgpu-target=gfx803";
+        $ENV{HIP_HC_IR_GFX803}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
+    }
+    if ($target_gfx701 eq 0 and $target_gfx801 eq 0 and $target_gfx802 eq 0 and $target_gfx803 eq 0) 
+    {
+        $HIPLDFLAGS .= " --amdgpu-target=gfx701 --amdgpu-target=gfx801 --amdgpu-target=gfx802 --amdgpu-target=gfx803";
+        $ENV{HIP_HC_IR_GFX803}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
+    }
+
 }
 
 if ($hasC and $HIP_PLATFORM eq 'nvcc') {
