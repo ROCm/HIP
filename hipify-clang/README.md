@@ -47,12 +47,14 @@ wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1404/x86_64/c
 sudo dpkg -i cuda-repo-ubuntu1404_7.5-18_amd64.deb
 sudo apt-get update && sudo apt-get install cuda-minimal-build-7-5 cuda-curand-dev-7-5
 ```
+
 To set additional options like Language Selection (only "-x cuda" is supported), Preprocessor Definition (-D), Include Path (-I), etc., options delimiter "--" should be used before them, for instance:
 
 ```shell
 ./hipify-clang -print-stats sort_kernel.cu -- -x cuda -I/srv/git/HIP/include -I/usr/local/cuda-7.5/include -DX=1
 ```
-Delimiter "--" is used to separate hipify-clang options (before the delimeter) from clang options (after the delimeter). It is strongly recomended to always specify the delimeter, even if there are no clang specific options at all, in order to avoid possible errors regarding compilation database; in such case delimeter should be the last option in hipify-clang's command line.
+
+Delimiter "--" is used to separate hipify-clang options (before the delimiter) from clang options (after the delimiter). It is strongly recommended to always specify the delimiter, even if there are no clang specific options at all, in order to avoid possible errors regarding compilation database; in such case delimeter should be the last option in hipify-clang's command line.
 
 Option "-x clang" is also worth specifying in order to convert source CUDA files with extensions other than standard extensions (*.cu, *.cuh).
 
