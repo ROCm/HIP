@@ -39,16 +39,16 @@ typedef struct __attribute__((aligned(4))){
 /*
 Half Arithmetic Functions
 */
-__device__ static __half __hadd(const __half a, const __half b);
-__device__ static __half __hadd_sat(__half a, __half b);
-__device__ static __half __hfma(__half a, __half b, __half c);
-__device__ static __half __hfma_sat(__half a, __half b, __half c);
-__device__ static __half __hmul(__half a, __half b);
-__device__ static __half __hmul_sat(__half a, __half b);
-__device__ static __half __hneg(__half a);
-__device__ static __half __hsub(__half a, __half b);
-__device__ static __half __hsub_sat(__half a, __half b);
-__device__ static __half hdiv(__half a, __half b);
+__device__ __half __hadd(const __half a, const __half b);
+__device__ __half __hadd_sat(__half a, __half b);
+__device__ __half __hfma(__half a, __half b, __half c);
+__device__ __half __hfma_sat(__half a, __half b, __half c);
+__device__ __half __hmul(__half a, __half b);
+__device__ __half __hmul_sat(__half a, __half b);
+__device__ __half __hneg(__half a);
+__device__ __half __hsub(__half a, __half b);
+__device__ __half __hsub_sat(__half a, __half b);
+__device__ __half hdiv(__half a, __half b);
 
 /*
 Half2 Arithmetic Functions
@@ -211,11 +211,6 @@ __device__  __half __ushort2half_ru(unsigned short int i);
 __device__  __half __ushort2half_rz(unsigned short int i);
 __device__  __half __ushort_as_half(const unsigned short int i);
 
-extern "C" __half __hip_hc_ir_hadd_half(__half, __half);
-extern "C" __half __hip_hc_ir_hfma_half(__half, __half, __half);
-extern "C" __half __hip_hc_ir_hmul_half(__half, __half);
-extern "C" __half __hip_hc_ir_hsub_half(__half, __half);
-
 extern "C" int __hip_hc_ir_hadd2_int(int, int);
 extern "C" int __hip_hc_ir_hfma2_int(int, int, int);
 extern "C" int __hip_hc_ir_hmul2_int(int, int);
@@ -243,46 +238,6 @@ extern "C" int __hip_hc_ir_h2rsqrt_int(int);
 extern "C" int __hip_hc_ir_h2sin_int(int);
 extern "C" int __hip_hc_ir_h2sqrt_int(int);
 extern "C" int __hip_hc_ir_h2trunc_int(int);
-
-__device__ static inline __half __hadd(const __half a, const __half b) {
-  return __hip_hc_ir_hadd_half(a, b);
-}
-
-__device__ static inline __half __hadd_sat(__half a, __half b) {
-  return __hip_hc_ir_hadd_half(a, b);
-}
-
-__device__ static inline __half __hfma(__half a, __half b, __half c) {
-  return __hip_hc_ir_hfma_half(a, b, c);
-}
-
-__device__ static inline __half __hfma_sat(__half a, __half b, __half c) {
-  return __hip_hc_ir_hfma_half(a, b, c);
-}
-
-__device__ static inline __half __hmul(__half a, __half b) {
-  return __hip_hc_ir_hmul_half(a, b);
-}
-
-__device__ static inline __half __hmul_sat(__half a, __half b) {
-  return __hip_hc_ir_hmul_half(a, b);
-}
-
-__device__ static inline __half __hneg(__half a) {
-  return -a;
-}
-
-__device__ static inline __half __hsub(__half a, __half b) {
-  return __hip_hc_ir_hsub_half(a, b);
-}
-
-__device__ static inline __half __hsub_sat(__half a, __half b) {
-  return __hip_hc_ir_hsub_half(a, b);
-}
-
-__device__ static inline __half hdiv(__half a, __half b) {
-  return a/b;
-}
 
 /*
   Half2 Arithmetic Functions
@@ -360,11 +315,11 @@ __device__ static inline __half hcos(const __half h) {
 }
 
 __device__ static inline __half hexp(const __half h) {
-  return __hip_hc_ir_hexp2_half(__hip_hc_ir_hmul_half(h, 1.442694));
+  return __hip_hc_ir_hexp2_half(__hmul(h, 1.442694));
 }
 
 __device__ static inline __half hexp10(const __half h) {
-  return __hip_hc_ir_hexp2_half(__hip_hc_ir_hmul_half(h, 3.3219281));
+  return __hip_hc_ir_hexp2_half(__hmul(h, 3.3219281));
 }
 
 __device__ static inline __half hexp2(const __half h) {
@@ -376,11 +331,11 @@ __device__ static inline __half hfloor(const __half h) {
 }
 
 __device__ static inline __half hlog(const __half h) {
-  return __hip_hc_ir_hmul_half(__hip_hc_ir_hlog2_half(h), 0.693147);
+  return __hmul(__hip_hc_ir_hlog2_half(h), 0.693147);
 }
 
 __device__ static inline __half hlog10(const __half h) {
-  return __hip_hc_ir_hmul_half(__hip_hc_ir_hlog2_half(h),  0.301029);
+  return __hmul(__hip_hc_ir_hlog2_half(h),  0.301029);
 }
 
 __device__ static inline __half hlog2(const __half h) {
