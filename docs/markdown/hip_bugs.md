@@ -31,3 +31,16 @@ If kernel paramters are actually function calls which invoke other hip apis (i.e
 
 To workaround, try:
 Move the function calls so they occur outside the hipLaunchKernel macro, store results in temps, then use the tems inside the kernel.
+
+```
+// Example pseudo code causing system hang:
+// "bottom[0]->gpu_data()" calls hipMemcpy() implicitly and using the same stream, cause deadlock condition.
+hipLaunchKernel(HIP_KERNEL_NAME(LRNComputeDiff),dim3(CAFFE_GET_BLOCKS(n_threads)), dim3(CAFFE_HIP_NUM_THREADS), 0, 0, n_threads,
+       bottom[0]->gpu_data());
+       
+// Move "gpu_data()" ouside of hipLaunchKernel to avoid hang. 
+auto bot_gpu_data = bottom[0]->gpu_data();
+hipLaunchKernel( LRNComputeDiff, dim3(CAFFE_GET_BLOCKS(n_threads)), dim3(CAFFE_HIP_NUM_THREADS), 0, 0, n_threads, 
+       bot_gpu_data);
+
+```
