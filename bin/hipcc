@@ -350,12 +350,12 @@ if($HIP_PLATFORM eq "hcc"){
     if ($target_gfx803 eq 1) {
         $HIPLDFLAGS .= " --amdgpu-target=gfx803";
         $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX803__=1 ";
-        $ENV{HIP_HC_IR_GFX803}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
+        $ENV{HCC_EXTRA_LIBRARIES_GFX803}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
     }
     if ($target_gfx701 eq 0 and $target_gfx801 eq 0 and $target_gfx802 eq 0 and $target_gfx803 eq 0)
     {
         $HIPLDFLAGS .= " --amdgpu-target=gfx701 --amdgpu-target=gfx801 --amdgpu-target=gfx802 --amdgpu-target=gfx803";
-        $ENV{HIP_HC_IR_GFX803}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
+        $ENV{HCC_EXTRA_LIBRARIES_GFX803}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
     }
 
 }
