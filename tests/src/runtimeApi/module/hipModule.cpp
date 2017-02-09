@@ -22,13 +22,15 @@ THE SOFTWARE.
 #include<iostream>
 #include<fstream>
 #include<vector>
+#include<thread>
+#include<chrono>
 
 #include "test_common.h"
 
 #define LEN 64
 #define SIZE LEN<<2
 
-#define fileName "vcpy_isa.co"
+#define fileName "vcpy_kernel.code"
 #define kernel_name "hello_world"
 
 __global__ void Cpy(hipLaunchParm lp, float *Ad, float* Bd){
@@ -59,11 +61,11 @@ int main(){
   hipStream_t stream;
   HIPCHECK(hipStreamCreate(&stream));
   void *args[2] = {&Ad, &Bd};
+  std::cout<<Function<<std::endl;
 
-
-    std::vector<void*>argBuffer(2);
-    memcpy(&argBuffer[0], &Ad, sizeof(void*));
-    memcpy(&argBuffer[1], &Bd, sizeof(void*));
+    std::vector<void*>argBuffer(5);
+    memcpy(&argBuffer[3], &Ad, sizeof(void*));
+    memcpy(&argBuffer[4], &Bd, sizeof(void*));
 
     size_t size = argBuffer.size()*sizeof(void*);
 
@@ -73,7 +75,7 @@ int main(){
       HIP_LAUNCH_PARAM_END
     };
 
-    hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, stream, NULL, (void**)&config); 
+    hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, stream, NULL, (void**)&config);
 
     HIPCHECK(hipStreamDestroy(stream));
 
@@ -82,7 +84,15 @@ int main(){
   for(uint32_t i=0;i<LEN;i++){
   std::cout<<A[i]<<" - "<<B[i]<<std::endl;
   }
+  std::vector<hipFunction_t> vec(1024*1024*64);
+  for(unsigned i=0;i<1024*1024*64;i++) {
+    hipFunction_t func;
+    hipModuleGetFunction(&func, Module, kernel_name);
+    vec[i] = func;
+  }
 
+  std::cout<<"Starting sleep"<<std::endl;
+  std::this_thread::sleep_for(std::chrono::seconds(10));
+  std::cout<<"Done sleeping"<<std::endl;
   return 0;
 }
-
