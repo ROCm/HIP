@@ -25,6 +25,8 @@ THE SOFTWARE.
 #define HALF_SIZE 64*sizeof(__half)
 #define HALF2_SIZE 64*sizeof(__half2)
 
+#if __HIP_ARCH_GFX803__ > 0
+
 __global__ void __halfMath(hipLaunchParm lp, __half *A, __half *B, __half *C) {
   int tx = hipThreadIdx_x;
   __half a = A[tx];
@@ -55,6 +57,8 @@ __global__ void __half2Math(hipLaunchParm lp, __half2 *A, __half2 *B, __half2 *C
   c = __hmul2(a, c);
   c = __hmul2_sat(b, c);
 }
+
+#endif
 
 int main(){
   __half *A, *B, *C;
