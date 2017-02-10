@@ -1698,10 +1698,19 @@ public:
   uint64_t countApiRepsUnsupported[API_LAST] = { 0 };
   std::map<std::string, uint64_t> cuda2hipConverted;
   std::map<std::string, uint64_t> cuda2hipUnconverted;
+  std::set<unsigned> LOCs;
 
 protected:
   struct cuda2hipMap N;
   Replacements *Replace;
+
+  virtual void insertReplacement(const Replacement &rep, const FullSourceLoc &fullSL) {
+    Replace->insert(rep);
+    if (PrintStats) {
+      LOCs.insert(fullSL.getExpansionLineNumber());
+      // llvm::outs() << "    [HIPIFY] expansion line num: " << fullSL.getExpansionLineNumber() << " for replacement '" << rep.getReplacementText() << "'\n";
+    }
+  }
 
   void updateCountersExt(const hipCounter &counter, const std::string &cudaName) {
     std::map<std::string, uint64_t> *map = &cuda2hipConverted;
@@ -1755,7 +1764,8 @@ protected:
         if (!counter.unsupported) {
           SourceLocation sl = start.getLocWithOffset(begin + 1);
           Replacement Rep(SM, sl, name.size(), repName);
-          Replace->insert(Rep);
+          FullSourceLoc fullSL(sl, SM);
+          insertReplacement(Rep, fullSL);
         }
       } else {
         // llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [string literal].\n";
@@ -1811,7 +1821,8 @@ public:
             const char *E = _sm->getCharacterData(sle);
             SmallString<128> tmpData;
             Replacement Rep(*_sm, sl, E - B, Twine("<" + repName + ">").toStringRef(tmpData));
-            Replace->insert(Rep);
+            FullSourceLoc fullSL(sl, *_sm);
+            insertReplacement(Rep, fullSL);
           }
         } else {
 //          llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << file_name << "' [inclusion directive].\n";
@@ -1838,7 +1849,8 @@ public:
                            << "will be replaced with: " << repName << "\n"
                            << "SourceLocation: " << sl.printToString(*_sm) << "\n");
               Replacement Rep(*_sm, sl, name.size(), repName);
-              Replace->insert(Rep);
+              FullSourceLoc fullSL(sl, *_sm);
+              insertReplacement(Rep, fullSL);
             }
           } else {
             // llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [macro].\n";
@@ -1893,7 +1905,8 @@ public:
                   sl = sl_macro;
                 }
                 Replacement Rep(*_sm, sl, length, repName);
-                Replace->insert(Rep);
+                FullSourceLoc fullSL(sl, *_sm);
+                insertReplacement(Rep, fullSL);
               }
             } else {
               // llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [macro expansion].\n";
@@ -1913,7 +1926,8 @@ public:
                   StringRef repName = found->second.hipName;
                   sl = sl_macro;
                   Replacement Rep(*_sm, sl, length, repName);
-                  Replace->insert(Rep);
+                  FullSourceLoc fullSL(sl, *_sm);
+                  insertReplacement(Rep, fullSL);
                 }
               } else {
                 // llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [literal macro expansion].\n";
@@ -1968,7 +1982,8 @@ private:
     }
     DEBUG(dbgs() << "initial paramlist: " << initialParamList << "\n" << "new paramlist: " << OS.str() << "\n");
     Replacement Rep0(*(Result.SourceManager), kernelArgListStart, repLength, OS.str());
-    Replace->insert(Rep0);
+    FullSourceLoc fullSL(sl, *(Result.SourceManager));
+    insertReplacement(Rep0, fullSL);
   }
 
   bool cudaCall(const MatchFinder::MatchResult &Result) {
@@ -2000,7 +2015,8 @@ private:
           if (bReplace) {
             updateCounters(found->second, name.str());
             Replacement Rep(*SM, sl, length, repName);
-            Replace->insert(Rep);
+            FullSourceLoc fullSL(sl, *SM);
+            insertReplacement(Rep, fullSL);
           }
         } else {
           updateCounters(found->second, name.str());
@@ -2075,8 +2091,9 @@ private:
                         launchKernel->getLocEnd(), 0, *SM, DefaultLangOptions)) -
                         SM->getCharacterData(launchKernel->getLocStart());
       Replacement Rep(*SM, launchKernel->getLocStart(), length, OS.str());
-      Replace->insert(Rep);
-      hipCounter counter = {"hipLaunchKernel", CONV_KERN, API_RUNTIME};   
+      FullSourceLoc fullSL(launchKernel->getLocStart(), *SM);
+      insertReplacement(Rep, fullSL);
+      hipCounter counter = {"hipLaunchKernel", CONV_KERN, API_RUNTIME};
       updateCounters(counter, refName.str());
       return true;
     }
@@ -2103,7 +2120,8 @@ private:
               SourceLocation sl = threadIdx->getLocStart();
               SourceManager *SM = Result.SourceManager;
               Replacement Rep(*SM, sl, name.size(), repName);
-              Replace->insert(Rep);
+              FullSourceLoc fullSL(sl, *SM);
+              insertReplacement(Rep, fullSL);
             }
           } else {
             llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [builtin].\n";
@@ -2126,7 +2144,8 @@ private:
           SourceLocation sl = enumConstantRef->getLocStart();
           SourceManager *SM = Result.SourceManager;
           Replacement Rep(*SM, sl, name.size(), repName);
-          Replace->insert(Rep);
+          FullSourceLoc fullSL(sl, *SM);
+          insertReplacement(Rep, fullSL);
         }
       } else {
         llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [enum constant ref].\n";
@@ -2153,7 +2172,8 @@ private:
           SourceLocation sl = enumConstantDecl->getLocStart();
           SourceManager *SM = Result.SourceManager;
           Replacement Rep(*SM, sl, name.size(), repName);
-          Replace->insert(Rep);
+          FullSourceLoc fullSL(sl, *SM);
+          insertReplacement(Rep, fullSL);
         }
       } else {
         llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [enum constant decl].\n";
@@ -2179,7 +2199,8 @@ private:
           SourceLocation sl = typedefVar->getLocStart();
           SourceManager *SM = Result.SourceManager;
           Replacement Rep(*SM, sl, name.size(), repName);
-          Replace->insert(Rep);
+          FullSourceLoc fullSL(sl, *SM);
+          insertReplacement(Rep, fullSL);
         }
       } else {
         llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [typedef var].\n";
@@ -2205,7 +2226,8 @@ private:
             SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
             SourceManager *SM = Result.SourceManager;
             Replacement Rep(*SM, sl, name.size(), repName);
-            Replace->insert(Rep);
+            FullSourceLoc fullSL(sl, *SM);
+            insertReplacement(Rep, fullSL);
           }
         }
         else {
@@ -2232,7 +2254,8 @@ private:
           SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
           SourceManager *SM = Result.SourceManager;
           Replacement Rep(*SM, sl, name.size(), repName);
-          Replace->insert(Rep);
+          FullSourceLoc fullSL(sl, *SM);
+          insertReplacement(Rep, fullSL);
         }
       } else {
         llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [struct var].\n";
@@ -2256,7 +2279,8 @@ private:
             SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
             SourceManager *SM = Result.SourceManager;
             Replacement Rep(*SM, sl, name.size(), repName);
-            Replace->insert(Rep);
+            FullSourceLoc fullSL(sl, *SM);
+            insertReplacement(Rep, fullSL);
           }
         } else {
           llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [struct var ptr].\n";
@@ -2282,7 +2306,8 @@ private:
           SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
           SourceManager *SM = Result.SourceManager;
           Replacement Rep(*SM, sl, name.size(), repName);
-          Replace->insert(Rep);
+          FullSourceLoc fullSL(sl, *SM);
+          insertReplacement(Rep, fullSL);
         }
       } else {
         llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [struct sizeof].\n";
@@ -2324,8 +2349,9 @@ private:
           StringRef varName = sharedVar->getNameAsString();
           StringRef repName = Twine("HIP_DYNAMIC_SHARED(" + typeName + ", " + varName + ")").toStringRef(tmpData);
           Replacement Rep(*SM, slStart, repLength, repName);
-          Replace->insert(Rep);
-          hipCounter counter = {"HIP_DYNAMIC_SHARED", CONV_MEM, API_RUNTIME};
+          FullSourceLoc fullSL(slStart, *SM);
+          insertReplacement(Rep, fullSL);
+          hipCounter counter = { "HIP_DYNAMIC_SHARED", CONV_MEM, API_RUNTIME };
           updateCounters(counter, refName.str());
         }
       }
@@ -2351,7 +2377,8 @@ private:
           SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
           SourceManager *SM = Result.SourceManager;
           Replacement Rep(*SM, sl, name.size(), repName);
-          Replace->insert(Rep);
+          FullSourceLoc fullSL(sl, *SM);
+          insertReplacement(Rep, fullSL);
         }
       } else {
         llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [param decl].\n";
@@ -2379,7 +2406,8 @@ private:
             SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
             SourceManager *SM = Result.SourceManager;
             Replacement Rep(*SM, sl, name.size(), repName);
-            Replace->insert(Rep);
+            FullSourceLoc fullSL(sl, *SM);
+            insertReplacement(Rep, fullSL);
           }
         } else {
           llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [param decl ptr].\n";
@@ -2440,8 +2468,10 @@ public:
             countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 && Replace->size() > 0) {
       StringRef repName = "#include <hip/hip_runtime.h>\n";
       SourceManager *SM = Result.SourceManager;
-      Replacement Rep(*SM, SM->getLocForStartOfFile(SM->getMainFileID()), 0, repName);
-      Replace->insert(Rep);
+      SourceLocation sl = SM->getLocForStartOfFile(SM->getMainFileID());
+      Replacement Rep(*SM, sl, 0, repName);
+      FullSourceLoc fullSL(sl, *SM);
+      insertReplacement(Rep, fullSL);
       hipCounter counter = { repName, CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME };
       updateCounters(counter, repName);
     }
@@ -2456,8 +2486,10 @@ void HipifyPPCallbacks::handleEndSource() {
   if (Match->countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 &&
              countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 && Replace->size() > 0) {
     StringRef repName = "#include <hip/hip_runtime.h>\n";
-    Replacement Rep(*_sm, _sm->getLocForStartOfFile(_sm->getMainFileID()), 0, repName);
-    Replace->insert(Rep);
+    SourceLocation sl = _sm->getLocForStartOfFile(_sm->getMainFileID());
+    Replacement Rep(*_sm, sl, 0, repName);
+    FullSourceLoc fullSL(sl, *_sm);
+    insertReplacement(Rep, fullSL);
     hipCounter counter = { repName, CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME };
     updateCounters(counter, repName);
   }
@@ -2542,7 +2574,7 @@ void addAllMatchers(ast_matchers::MatchFinder &Finder, Cuda2HipCallback *Callbac
 
 int64_t printStats(const std::string &csvFile, const std::string &srcFile,
                    HipifyPPCallbacks &PPCallbacks, Cuda2HipCallback &Callback,
-                   uint64_t replacedBytes, uint64_t totalBytes,
+                   uint64_t replacedBytes, uint64_t totalBytes, unsigned totalLines,
                    const std::chrono::steady_clock::time_point &start) {
   std::ofstream csv(csvFile, std::ios::app);
   int64_t sum = 0, sum_interm = 0;
@@ -2575,10 +2607,25 @@ int64_t printStats(const std::string &csvFile, const std::string &srcFile,
     str = "TOTAL bytes";
     llvm::outs() << "  " << str << ": " << totalBytes << "\n";
     csv << str << separator << totalBytes << "\n";
-    str = "CODE CHANGED %";
-    conv = std::lround(double(replacedBytes * 100) / double(totalBytes));
-    llvm::outs() << "  " << str << ": " << conv << "%\n";
-    csv << str << separator << conv << "%\n";
+    str = "CHANGED lines of code";
+    unsigned changedLines = Callback.LOCs.size() + PPCallbacks.LOCs.size();
+    llvm::outs() << "  " << str << ": " << changedLines << "\n";
+    csv << str << separator << changedLines << "\n";
+    str = "TOTAL lines of code";
+    llvm::outs() << "  " << str << ": " << totalLines << "\n";
+    csv << str << separator << totalLines << "\n";
+    if (totalBytes > 0) {
+      str = "CODE CHANGED (in bytes) %";
+      conv = std::lround(double(replacedBytes * 100) / double(totalBytes));
+      llvm::outs() << "  " << str << ": " << conv << "%\n";
+      csv << str << separator << conv << "%\n";
+    }
+    if (totalLines > 0) {
+      str = "CODE CHANGED (in lines) %";
+      conv = std::lround(double(changedLines * 100) / double(totalLines));
+      llvm::outs() << "  " << str << ": " << conv << "%\n";
+      csv << str << separator << conv << "%\n";
+    }
     typedef std::chrono::duration<double, std::milli> duration;
     duration elapsed = std::chrono::steady_clock::now() - start;
     str = "TIME ELAPSED s";
@@ -2657,7 +2704,7 @@ int64_t printStats(const std::string &csvFile, const std::string &srcFile,
 }
 
 void printAllStats(const std::string &csvFile, int64_t totalFiles, int64_t convertedFiles,
-                   uint64_t replacedBytes, uint64_t totalBytes,
+                   uint64_t replacedBytes, uint64_t totalBytes, unsigned changedLines, unsigned totalLines,
                    const std::chrono::steady_clock::time_point &start) {
   std::ofstream csv(csvFile, std::ios::app);
   int64_t sum = 0, sum_interm = 0;
@@ -2696,10 +2743,24 @@ void printAllStats(const std::string &csvFile, int64_t totalFiles, int64_t conve
     str = "TOTAL bytes";
     llvm::outs() << "  " << str << ": " << totalBytes << "\n";
     csv << str << separator << totalBytes << "\n";
-    str = "CODE CHANGED %";
-    conv = std::lround(double(replacedBytes * 100) / double(totalBytes));
-    llvm::outs() << "  " << str << ": " << conv << "%\n";
-    csv << str << separator << conv << "%\n";
+    str = "CHANGED lines of code";
+    llvm::outs() << "  " << str << ": " << changedLines << "\n";
+    csv << str << separator << changedLines << "\n";
+    str = "TOTAL lines of code";
+    llvm::outs() << "  " << str << ": " << totalLines << "\n";
+    csv << str << separator << totalLines << "\n";
+    if (totalBytes > 0) {
+      str = "CODE CHANGED (in bytes) %";
+      conv = std::lround(double(replacedBytes * 100) / double(totalBytes));
+      llvm::outs() << "  " << str << ": " << conv << "%\n";
+      csv << str << separator << conv << "%\n";
+    }
+    if (totalLines > 0) {
+      str = "CODE CHANGED (in lines) %";
+      conv = std::lround(double(changedLines * 100) / double(totalLines));
+      llvm::outs() << "  " << str << ": " << conv << "%\n";
+      csv << str << separator << conv << "%\n";
+    }
     typedef std::chrono::duration<double, std::milli> duration;
     duration elapsed = std::chrono::steady_clock::now() - start;
     str = "TIME ELAPSED s";
@@ -2791,10 +2852,12 @@ int main(int argc, const char **argv) {
   } else {
     csv = "hipify_stats.csv";
   }
-  size_t filesTransleted = fileSources.size();
+  size_t filesTranslated = fileSources.size();
   uint64_t repBytesTotal = 0;
   uint64_t bytesTotal = 0;
-  if (PrintStats && filesTransleted > 1) {
+  unsigned changedLinesTotal = 0;
+  unsigned linesTotal = 0;
+  if (PrintStats && filesTranslated > 1) {
     std::remove(csv.c_str());
   }
   for (const auto & src : fileSources) {
@@ -2850,6 +2913,8 @@ int main(int argc, const char **argv) {
 
     uint64_t repBytes = 0;
     uint64_t bytes = 0;
+    unsigned lines = 0;
+    SourceManager SM(Diagnostics, Tool.getFiles());
     if (PrintStats) {
       DEBUG(dbgs() << "Replacements collected by the tool:\n");
       for (const auto &r : Tool.getReplacements()) {
@@ -2857,10 +2922,12 @@ int main(int argc, const char **argv) {
         repBytes += r.getLength();
       }
       std::ifstream src_file(dst, std::ios::binary | std::ios::ate);
+      src_file.clear();
+      src_file.seekg(0);
+      lines = std::count(std::istreambuf_iterator<char>(src_file), std::istreambuf_iterator<char>(), '\n');
       bytes = src_file.tellg();
     }
-    SourceManager Sources(Diagnostics, Tool.getFiles());
-    Rewriter Rewrite(Sources, DefaultLangOptions);
+    Rewriter Rewrite(SM, DefaultLangOptions);
     if (!Tool.applyAllReplacements(Rewrite)) {
       DEBUG(dbgs() << "Skipped some replacements.\n");
     }
@@ -2883,17 +2950,19 @@ int main(int argc, const char **argv) {
         }
         std::remove(csv.c_str());
       }
-      if (0 == printStats(csv, src, PPCallbacks, Callback, repBytes, bytes, start)) {
-        filesTransleted--;
+      if (0 == printStats(csv, src, PPCallbacks, Callback, repBytes, bytes, lines, start)) {
+        filesTranslated--;
       }
       start = std::chrono::steady_clock::now();
       repBytesTotal += repBytes;
       bytesTotal += bytes;
+      changedLinesTotal += PPCallbacks.LOCs.size() + Callback.LOCs.size();
+      linesTotal += lines;
     }
     dst.clear();
   }
   if (PrintStats && fileSources.size() > 1) {
-    printAllStats(csv, fileSources.size(), filesTransleted, repBytesTotal, bytesTotal, begin);
+    printAllStats(csv, fileSources.size(), filesTranslated, repBytesTotal, bytesTotal, changedLinesTotal, linesTotal, begin);
   }
   return Result;
 }
