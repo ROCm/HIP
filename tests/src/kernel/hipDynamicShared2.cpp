@@ -36,8 +36,8 @@ __global__ void vectorAdd(hipLaunchParm lp, float *Ad, float *Bd) {
   HIP_DYNAMIC_SHARED(float, sBd);
   int tx = hipThreadIdx_x;
   for(int i=0;i<LEN/64;i++) {
-    sBd[tx] = Ad[tx + i * 64] + 1.0f;
-    Bd[tx + i * 64] = sBd[tx];
+    sBd[tx + i * 64] = Ad[tx + i * 64] + 1.0f;
+    Bd[tx + i * 64] = sBd[tx + i * 64];
   }
 }
 
@@ -56,7 +56,7 @@ int main() {
   hipLaunchKernel(vectorAdd, dim3(1,1,1), dim3(64,1,1), SIZE, 0, Ad, Bd);
   hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost);
   for(int i=0;i<LEN;i++) {
-    assert(B[i] > 1.0f);
+    assert(B[i] > 1.0f && B[i] < 3.0f);
   }
   passed();
 }
