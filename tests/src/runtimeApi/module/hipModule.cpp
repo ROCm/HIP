@@ -46,7 +46,6 @@ int main(){
   for(uint32_t i=0;i<LEN;i++){
     A[i] = i*1.0f;
     B[i] = 0.0f;
-    std::cout<<A[i] << " "<<B[i]<<std::endl;
   }
 
   HIPCHECK(hipMalloc((void**)&Ad, SIZE));
@@ -58,41 +57,41 @@ int main(){
   hipFunction_t Function;
   HIPCHECK(hipModuleLoad(&Module, fileName));
   HIPCHECK(hipModuleGetFunction(&Function, Module, kernel_name));
+  hipFunction_t f;
+  HIPCHECK(hipModuleGetFunction(&f, Module, kernel_name));
+  assert(f == Function);
   hipStream_t stream;
   HIPCHECK(hipStreamCreate(&stream));
   void *args[2] = {&Ad, &Bd};
-  std::cout<<Function<<std::endl;
 
-    std::vector<void*>argBuffer(5);
-    memcpy(&argBuffer[3], &Ad, sizeof(void*));
-    memcpy(&argBuffer[4], &Bd, sizeof(void*));
+  std::vector<void*>argBuffer(5);
+  memcpy(&argBuffer[3], &Ad, sizeof(void*));
+  memcpy(&argBuffer[4], &Bd, sizeof(void*));
 
-    size_t size = argBuffer.size()*sizeof(void*);
+  size_t size = argBuffer.size()*sizeof(void*);
 
-    void *config[] = {
+  void *config[] = {
       HIP_LAUNCH_PARAM_BUFFER_POINTER, &argBuffer[0],
       HIP_LAUNCH_PARAM_BUFFER_SIZE, &size,
       HIP_LAUNCH_PARAM_END
-    };
+  };
 
-    hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, stream, NULL, (void**)&config);
+  hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, stream, NULL, (void**)&config);
 
-    HIPCHECK(hipStreamDestroy(stream));
+  HIPCHECK(hipStreamDestroy(stream));
 
   HIPCHECK(hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost));
 
   for(uint32_t i=0;i<LEN;i++){
-  std::cout<<A[i]<<" - "<<B[i]<<std::endl;
+    assert(A[i] == B[i]);
   }
+
   std::vector<hipFunction_t> vec(1024*1024*64);
   for(unsigned i=0;i<1024*1024*64;i++) {
     hipFunction_t func;
     hipModuleGetFunction(&func, Module, kernel_name);
     vec[i] = func;
   }
-
-  std::cout<<"Starting sleep"<<std::endl;
-  std::this_thread::sleep_for(std::chrono::seconds(10));
-  std::cout<<"Done sleeping"<<std::endl;
+  passed();
   return 0;
 }
