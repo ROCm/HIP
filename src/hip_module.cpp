@@ -218,6 +218,9 @@ hipError_t hipModuleUnload(hipModule_t hmod)
 		{
 				ret = hipErrorInvalidValue;
 		}
+    for(std::list<hipFunction_t>::iterator f = hmod->funcTrack.begin(); f != hmod->funcTrack.end(); ++f) {
+      delete *f;
+    }
     delete hmod;
     return ihipLogStatus(ret);
 }
