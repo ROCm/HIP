@@ -343,7 +343,7 @@ public:
   std::string fileName;
   void *ptr;
   size_t size;
-
+  std::list<hipFunction_t> funcTrack;
   ihipModule_t() : executable(), object(), fileName(), ptr(nullptr), size(0) {}
 };
 

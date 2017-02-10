@@ -40,10 +40,8 @@ struct ihipModuleSymbol_t{
     uint64_t    _object;             // The kernel object.
     uint32_t    _groupSegmentSize;
     uint32_t    _privateSegmentSize;
-    char        _name[64];       // TODO - review for performance cost.  Name is just used for debug.
+    std::string        _name;       // TODO - review for performance cost.  Name is just used for debug.
 };
-
-std::list<hipFunction_t> hipFuncTracker;
 
 template <>
 std::string ToString(hipFunction_t v)
@@ -236,6 +234,13 @@ hipError_t ihipModuleGetSymbol(hipFunction_t *func, hipModule_t hmod, const char
         ret = hipErrorInvalidContext;
 
     }else{
+        std::string str(name);
+        for(std::list<hipFunction_t>::iterator f = hmod->funcTrack.begin(); f != hmod->funcTrack.end(); ++f) {
+          if((*f)->_name == str) {
+            *func = *f;
+          }
+          return ret;
+        }
         ihipModuleSymbol_t *sym = new ihipModuleSymbol_t;
         int deviceId = ctx->getDevice()->_deviceId;
         ihipDevice_t *currentDevice = ihipGetDevice(deviceId);
@@ -263,9 +268,9 @@ hipError_t ihipModuleGetSymbol(hipFunction_t *func, hipModule_t hmod, const char
                                     &sym->_privateSegmentSize);
         CHECK_HSA(status, hipErrorNotFound);
 
-        strncpy(sym->_name, name, sizeof(sym->_name));
+        sym->_name = name;
         *func = sym;
-        hipFuncTracker.push_back(*func);
+        hmod->funcTrack.push_back(*func);
     }
     return ihipLogStatus(ret);
 }
@@ -321,7 +326,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         */
         grid_launch_parm lp;
         lp.dynamic_group_mem_bytes = sharedMemBytes;  // TODO - this should be part of preLaunchKernel.
-        hStream = ihipPreLaunchKernel(hStream, dim3(gridDimX, gridDimY, gridDimZ), dim3(blockDimX, blockDimY, blockDimZ), &lp, f->_name);
+        hStream = ihipPreLaunchKernel(hStream, dim3(gridDimX, gridDimY, gridDimZ), dim3(blockDimX, blockDimY, blockDimZ), &lp, f->_name.c_str());
 
 
         hsa_kernel_dispatch_packet_t aql;
@@ -355,7 +360,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize, nullptr/*completion_future*/);
 
 
-        ihipPostLaunchKernel(f->_name, hStream, lp);
+        ihipPostLaunchKernel(f->_name.c_str(), hStream, lp);
     }
 
     return ihipLogStatus(ret);
