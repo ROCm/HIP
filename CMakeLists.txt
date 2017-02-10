@@ -186,6 +186,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/math_functions.cpp)
 
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L${HCC_HOME}/lib -lmcwamp -Wl,-Bsymbolic -Wl,-rpath ${HCC_HOME}/lib")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --amdgpu-target=gfx701 --amdgpu-target=gfx801 --amdgpu-target=gfx802 --amdgpu-target=gfx803")
     add_library(hip_hcc SHARED ${SOURCE_FILES_RUNTIME})
     target_link_libraries(hip_hcc c++ c++abi hc_am)
     add_library(hip_hcc_static STATIC ${SOURCE_FILES_RUNTIME})
