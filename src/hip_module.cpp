@@ -35,6 +35,25 @@ THE SOFTWARE.
 
 //TODO Use Pool APIs from HCC to get memory regions.
 
+
+struct ihipModuleSymbol_t{
+    uint64_t    _object;             // The kernel object.
+    uint32_t    _groupSegmentSize;
+    uint32_t    _privateSegmentSize;
+    char        _name[64];       // TODO - review for performance cost.  Name is just used for debug.
+};
+
+std::list<hipFunction_t> hipFuncTracker;
+
+template <>
+std::string ToString(hipFunction_t v)
+{
+    std::ostringstream ss;
+    ss << "0x" << std::hex << v->_object;
+    return ss.str();
+};
+
+
 #define CHECK_HSA(hsaStatus, hipStatus) \
 if (hsaStatus != HSA_STATUS_SUCCESS) {\
     return hipStatus;\
@@ -217,6 +236,7 @@ hipError_t ihipModuleGetSymbol(hipFunction_t *func, hipModule_t hmod, const char
         ret = hipErrorInvalidContext;
 
     }else{
+        ihipModuleSymbol_t *sym = new ihipModuleSymbol_t;
         int deviceId = ctx->getDevice()->_deviceId;
         ihipDevice_t *currentDevice = ihipGetDevice(deviceId);
         hsa_agent_t gpuAgent = (hsa_agent_t)currentDevice->_hsaAgent;
@@ -230,20 +250,22 @@ hipError_t ihipModuleGetSymbol(hipFunction_t *func, hipModule_t hmod, const char
 
         status = hsa_executable_symbol_get_info(symbol,
                                    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_OBJECT,
-                                   &func->_object);
+                                   &sym->_object);
         CHECK_HSA(status, hipErrorNotFound);
 
         status = hsa_executable_symbol_get_info(symbol,
                                     HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE,
-                                    &func->_groupSegmentSize);
+                                    &sym->_groupSegmentSize);
         CHECK_HSA(status, hipErrorNotFound);
 
         status = hsa_executable_symbol_get_info(symbol,
                                     HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_PRIVATE_SEGMENT_SIZE,
-                                    &func->_privateSegmentSize);
+                                    &sym->_privateSegmentSize);
         CHECK_HSA(status, hipErrorNotFound);
 
-        strncpy(func->_name, name, sizeof(func->_name));
+        strncpy(sym->_name, name, sizeof(sym->_name));
+        *func = sym;
+        hipFuncTracker.push_back(*func);
     }
     return ihipLogStatus(ret);
 }
@@ -297,8 +319,9 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         /*
           Kernel argument preparation.
         */
-        grid_launch_parm lp; // TODO - dummy arg but values are printed during debug.
-        hStream = ihipPreLaunchKernel(hStream, 0, 0, &lp, f._name);
+        grid_launch_parm lp;
+        lp.dynamic_group_mem_bytes = sharedMemBytes;  // TODO - this should be part of preLaunchKernel.
+        hStream = ihipPreLaunchKernel(hStream, dim3(gridDimX, gridDimY, gridDimZ), dim3(blockDimX, blockDimY, blockDimZ), &lp, f->_name);
 
 
         hsa_kernel_dispatch_packet_t aql;
@@ -314,19 +337,25 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
         aql.grid_size_x = blockDimX * gridDimX;
         aql.grid_size_y = blockDimY * gridDimY;
         aql.grid_size_z = blockDimZ * gridDimZ;
-        aql.group_segment_size = f._groupSegmentSize + sharedMemBytes;
-        aql.private_segment_size = f._privateSegmentSize;
-        aql.kernel_object = f._object;
+        aql.group_segment_size = f->_groupSegmentSize + sharedMemBytes;
+        aql.private_segment_size = f->_privateSegmentSize;
+        aql.kernel_object = f->_object;
         aql.setup = 3 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
         aql.header =   (HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE) |
-                                    (1 << HSA_PACKET_HEADER_BARRIER) |
-                                    (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
-                                    (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
+                       (1 << HSA_PACKET_HEADER_BARRIER);  // TODO - honor queue setting for execute_in_order
 
-        lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize);
+        if (HCC_OPT_FLUSH) {
+            aql.header |= (HSA_FENCE_SCOPE_AGENT << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
+                          (HSA_FENCE_SCOPE_AGENT << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
+        } else {
+            aql.header |= (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
+                          (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
+        };
+
+        lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize, nullptr/*completion_future*/);
 
 
-        ihipPostLaunchKernel(f._name, hStream, lp);
+        ihipPostLaunchKernel(f->_name, hStream, lp);
     }
 
     return ihipLogStatus(ret);
@@ -348,7 +377,7 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes,
         hipFunction_t func;
         ihipModuleGetSymbol(&func, hmod, name);
         *bytes = PrintSymbolSizes(hmod->ptr, name) + sizeof(amd_kernel_code_t);
-        *dptr = reinterpret_cast<void*>(func._object);
+        *dptr = reinterpret_cast<void*>(func->_object);
         return ihipLogStatus(ret);
     }
 }

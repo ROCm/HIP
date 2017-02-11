@@ -24,8 +24,9 @@ THE SOFTWARE.
  */
 
 #include"test_common.h"
-#include "hip/hip_runtime.h"
-#include "hip/hip_runtime_api.h"
+#include <hip/hip_runtime.h>
+#include <hip/math_functions.h>
+#include <hip/hip_runtime_api.h>
 
 #define N 512
 #define SIZE N*sizeof(float)
@@ -163,13 +164,13 @@ hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost);
 hipMemcpy(C, Cd, SIZE, hipMemcpyDeviceToHost);
 int passed = 0;
 for(int i=0;i<512;i++){
-    if(B[i] - sinpif(1.0f) < 0.1){
+    if(B[i] - sinf(3.14*1.0f) < 0.1){
         passed = 1;
     }
 }
 passed = 0;
 for(int i=0;i<512;i++){
-    if(C[i] - cospif(1.0f) < 0.1){
+    if(C[i] - cosf(3.14*1.0f) < 0.1){
         passed = 1;
     }
 }

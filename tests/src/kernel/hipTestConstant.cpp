@@ -17,9 +17,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM all
+ * RUN: %t
+ * HIT_END
+ */
+
 #include<hip/hip_runtime.h>
 #include<hip/hip_runtime_api.h>
 #include<iostream>
+#include "test_common.h"
 
 #define HIP_ASSERT(status) \
     assert(status == hipSuccess)
@@ -56,4 +63,5 @@ int main()
     {
         assert(A[i] == B[i]);
     }
+    passed();
 }

@@ -17,8 +17,15 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM all
+ * RUN: %t
+ * HIT_END
+ */
+
 #include<hip/hip_runtime.h>
 #include<hip/hip_runtime_api.h>
+#include"test_common.h"
 #include<iostream>
 
 #define NUM 1024
@@ -40,7 +47,7 @@ __global__ void Assign(hipLaunchParm lp, int* Out)
 
 int main()
 {
-    int *A, *B, *Ad;
+    int *A, *Am, *B, *Ad;
     A = new int[NUM];
     B = new int[NUM];
     for(unsigned i=0;i<NUM;i++) {
@@ -49,10 +56,14 @@ int main()
     }
 
     hipMalloc((void**)&Ad, SIZE);
+    hipHostMalloc((void**)&Am, SIZE);
+    for(unsigned i=0;i<NUM;i++) {
+        Am[i] = -1*i;
+    }
 
     hipStream_t stream;
     hipStreamCreate(&stream);
-    hipMemcpyToSymbolAsync(HIP_SYMBOL(global), A, SIZE, 0, hipMemcpyHostToDevice, stream);
+    hipMemcpyToSymbolAsync(HIP_SYMBOL(global), Am, SIZE, 0, hipMemcpyHostToDevice, stream);
     hipStreamSynchronize(stream);
     hipLaunchKernel(Assign, dim3(1,1,1), dim3(NUM,1,1), 0, 0, Ad);
     hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost);
@@ -72,4 +83,5 @@ int main()
     for(unsigned i=0;i<NUM;i++) {
         assert(A[i] == B[i]);
     }
+    passed();
 }

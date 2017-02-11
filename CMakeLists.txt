@@ -175,15 +175,18 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/hip_memory.cpp
         src/hip_peer.cpp
         src/hip_stream.cpp
-        src/hip_module.cpp)
+        src/hip_module.cpp
+        src/env.cpp)
 
     set(SOURCE_FILES_DEVICE
         src/device_util.cpp
         src/hip_ldg.cpp
         src/hip_fp16.cpp
-        src/device_functions.cpp)
+        src/device_functions.cpp
+        src/math_functions.cpp)
 
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L${HCC_HOME}/lib -lmcwamp -Wl,-Bsymbolic -Wl,-rpath ${HCC_HOME}/lib")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --amdgpu-target=gfx701 --amdgpu-target=gfx801 --amdgpu-target=gfx802 --amdgpu-target=gfx803")
     add_library(hip_hcc SHARED ${SOURCE_FILES_RUNTIME})
     target_link_libraries(hip_hcc c++ c++abi hc_am)
     add_library(hip_hcc_static STATIC ${SOURCE_FILES_RUNTIME})
@@ -216,7 +219,7 @@ add_custom_target(doc COMMAND HIP_PATH=${CMAKE_CURRENT_SOURCE_DIR} doxygen ${CMA
 # Install hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
     install(TARGETS hip_hcc_static hip_hcc hip_device DESTINATION lib)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_ir.ll DESTINATION lib)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_hc.ll ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_hc_gfx803.ll DESTINATION lib)
 
     # Install .hipInfo
     install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)
