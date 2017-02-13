@@ -97,6 +97,8 @@ if ($HIP_PLATFORM eq "hcc") {
     $HIPCC=$HCC;
     $HIPCXXFLAGS = $HCCFLAGS;
 
+    $HIPLDFLAGS = `${HCC_HOME}/bin/hcc-config --ldflags`;
+
     #### GCC system includes workaround ####
     $HCC_WA_FLAGS = " ";
     if ($HCC_VERSION_MAJOR eq 1) {
@@ -104,34 +106,23 @@ if ($HIP_PLATFORM eq "hcc") {
         my $GPP_CUR_VER = `g++ -dumpversion`;
         $GCC_CUR_VER =~ s/\R//g;
         $GPP_CUR_VER =~ s/\R//g;
-        if (${GCC_CUR_VER} eq ${GPP_CUR_VER}) {
-            $HCC_WA_FLAGS .= " -I/usr/include/x86_64-linux-gnu -I/usr/include/x86_64-linux-gnu/c++/${GCC_CUR_VER} -I/usr/include/c++/${GCC_CUR_VER} ";
+
+        my @GPP_VER_FIELDS = split('\.', $GPP_CUR_VER);
+
+        # Only include the libstdc++ headers and libraries flags explicitly if the g++ is older than version 5.
+        # That's because HCC already uses libstdc++ by default if a newer g++/libstdc++ is available
+        if (${GCC_CUR_VER} eq ${GPP_CUR_VER} and $GPP_VER_FIELDS[0] < 5) {
+            $HCC_WA_FLAGS .= " -stdlib=libstdc++  -I/usr/include/x86_64-linux-gnu -I/usr/include/x86_64-linux-gnu/c++/${GCC_CUR_VER} -I/usr/include/c++/${GCC_CUR_VER} ";
+            # Add C++ libs for GCC.
+            $HIPLDFLAGS .= " -lstdc++";
         }
     }
 
     $HIPCXXFLAGS .= " -I$HIP_PATH/include/hip/hcc_detail/cuda";
     $HIPCXXFLAGS .= " -I$HSA_PATH/include";
     $HIPCXXFLAGS .= " -Wno-deprecated-register";
-    $HIPLDFLAGS =  "-hc -L$HCC_HOME/lib -Wl,--rpath=$HCC_HOME/lib -lc++ -ldl -lpthread -Wl,--whole-archive -lmcwamp -Wl,--no-whole-archive";
 
-    # Suppress linker warnings in case HCC distribution contains OpenCL/SPIR symbols
-    $HOST_OSNAME= `cat /etc/os-release | grep "^ID\=" | cut -d= -f2 | tr -d '\n'`;
-    $HOST_OSVER= `cat /etc/os-release | grep "^VERSION_ID\=" | cut -d= -f2 | tr -d '\n'`;
-    if ($HOST_OSNAME eq "ubuntu" and $HOST_OSVER eq "\"16.04\"") {
-        # No additional flags required
-    } else {
-        $HIPLDFLAGS .= " -Wl,--defsym=_binary_kernel_spir_end=1 -Wl,--defsym=_binary_kernel_spir_start=1 -Wl,--defsym=_binary_kernel_cl_start=1 -Wl,--defsym=_binary_kernel_cl_end=1";
-    }
-    if ($HOST_OSNAME eq "fedora") {
-        $HIPCXXFLAGS .= " -I/usr/local/include/c++/v1";
-    }
-
-    # Satisfy HCC dependencies
-    if ($HOST_OSNAME eq "fedora") {
-        $HIPLDFLAGS .= " -lc++abi";
-    } else {
-        $HIPLDFLAGS .= " -lc++abi -lsupc++";
-    }
+    $HIPLDFLAGS .= " -lsupc++";
     $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am -lhsakmt";
 
     # Add trace marker library:
@@ -148,8 +139,6 @@ if ($HIP_PLATFORM eq "hcc") {
         $HIPLDFLAGS .= " -L$marker_lib_path -lCXLActivityLogger -Wl,--rpath=$marker_lib_path";
     }
 
-    # Add C++ libs for GCC.
-    $HIPLDFLAGS .= " -lstdc++";
     $HIPLDFLAGS .= " -lm";
 
     if ($verbose & 0x2) {
@@ -271,7 +260,6 @@ foreach $arg (@ARGV)
     }
     if(($trimarg eq '-stdlib=libstdc++') and ($setStdLib eq 0))
     {
-        $HIPCXXFLAGS .= " -stdlib=libstdc++";
         $HIPCXXFLAGS .= $HCC_WA_FLAGS;
         $setStdLib = 1;
     }
@@ -372,7 +360,6 @@ if ($buildDeps and $HIP_PLATFORM eq 'nvcc') {
 
 if ($setStdLib eq 0 and $HIP_PLATFORM eq 'hcc')
 {
-    $HIPCXXFLAGS .= " -stdlib=libstdc++";
     $HIPCXXFLAGS .= $HCC_WA_FLAGS;
 }
 
