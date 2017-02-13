@@ -1711,6 +1711,17 @@ protected:
       // llvm::outs() << "    [HIPIFY] expansion line num: " << fullSL.getExpansionLineNumber() << " for replacement '" << rep.getReplacementText() << "'\n";
     }
   }
+  void insertHipHeaders(Cuda2Hip *owner, const SourceManager &SM) {
+    if (owner->countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 && countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 && Replace->size() > 0) {
+      std::string repName = "#include <hip/hip_runtime.h>";
+      hipCounter counter = { repName, CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME };
+      updateCounters(counter, repName);
+      SourceLocation sl = SM.getLocForStartOfFile(SM.getMainFileID());
+      FullSourceLoc fullSL(sl, SM);
+      Replacement Rep(SM, sl, 0, repName + "\n");
+      insertReplacement(Rep, fullSL);
+    }
+  }
 
   void updateCountersExt(const hipCounter &counter, const std::string &cudaName) {
     std::map<std::string, uint64_t> *map = &cuda2hipConverted;
@@ -2464,17 +2475,7 @@ public:
       if (unresolvedTemplateName(Result)) break;
       break;
     } while (false);
-    if (PP->countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 &&
-            countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 && Replace->size() > 0) {
-      StringRef repName = "#include <hip/hip_runtime.h>\n";
-      SourceManager *SM = Result.SourceManager;
-      SourceLocation sl = SM->getLocForStartOfFile(SM->getMainFileID());
-      Replacement Rep(*SM, sl, 0, repName);
-      FullSourceLoc fullSL(sl, *SM);
-      insertReplacement(Rep, fullSL);
-      hipCounter counter = { repName, CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME };
-      updateCounters(counter, repName);
-    }
+    insertHipHeaders(PP, *Result.SourceManager);
   }
 
 private:
@@ -2483,16 +2484,7 @@ private:
 };
 
 void HipifyPPCallbacks::handleEndSource() {
-  if (Match->countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 &&
-             countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 && Replace->size() > 0) {
-    StringRef repName = "#include <hip/hip_runtime.h>\n";
-    SourceLocation sl = _sm->getLocForStartOfFile(_sm->getMainFileID());
-    Replacement Rep(*_sm, sl, 0, repName);
-    FullSourceLoc fullSL(sl, *_sm);
-    insertReplacement(Rep, fullSL);
-    hipCounter counter = { repName, CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME };
-    updateCounters(counter, repName);
-  }
+  insertHipHeaders(Match, *_sm);
 }
 
 } // end anonymous namespace
