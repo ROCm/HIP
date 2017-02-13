@@ -239,6 +239,39 @@ if(NOT ${INSTALL_SOURCE} EQUAL 0)
 endif()
 
 #############################
+# hip-config
+#############################
+set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
+set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
+
+if(HIP_PLATFORM STREQUAL "hcc")
+    install(TARGETS hip_hcc_static hip_hcc hip_device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
+    install(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
+    include(CMakePackageConfigHelpers)
+
+    configure_package_config_file(
+        hip-config.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
+        INSTALL_DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR}
+        PATH_VARS LIB_INSTALL_DIR INCLUDE_INSTALL_DIR BIN_INSTALL_DIR
+        )
+    write_basic_package_version_file(
+        ${CMAKE_CURRENT_BINARY_DIR}/hip-config-version.cmake
+        VERSION "${HIP_VERSION}"
+        COMPATIBILITY SameMajorVersion
+        )
+    install(
+        FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/hip-config-version.cmake
+        DESTINATION
+        ${CONFIG_PACKAGE_INSTALL_DIR}
+        )
+endif()
+
+#############################
 # Packaging steps
 #############################
 # Package: hip_base
