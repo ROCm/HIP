@@ -22,7 +22,7 @@ THE SOFTWARE.
 // Collection of code to make sure that various features in the hip kernel language compile.
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp HCC_OPTIONS -stdlib=libc++
+ * BUILD: %t %s ../test_common.cpp
  * RUN: %t
  * HIT_END
  */
