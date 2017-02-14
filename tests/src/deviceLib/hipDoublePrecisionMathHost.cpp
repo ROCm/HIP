@@ -73,9 +73,9 @@ __host__ void double_precision_math_functions()
     frexp(0.0, &iX);
     hypot(1.0, 0.0);
     ilogb(1.0);
-    isfinite(0.0);
-    isinf(0.0);
-    isnan(0.0);
+    std::isfinite(0.0);
+    std::isinf(0.0);
+    std::isnan(0.0);
     j0(0.0);
     j1(0.0);
     jn(-1.0, 1.0);
@@ -119,7 +119,7 @@ __host__ void double_precision_math_functions()
     //rsqrt(1.0);
     scalbln(0.0, 1);
     scalbn(0.0, 1);
-    signbit(1.0);
+    std::signbit(1.0);
     sin(0.0);
     sincos(0.0, &fX, &fY);
     //sincospi(0.0, &fX, &fY);

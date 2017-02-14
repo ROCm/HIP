@@ -76,9 +76,9 @@ __host__ void single_precision_math_functions()
     frexpf(0.0f, &iX);
     hypotf(1.0f, 0.0f);
     ilogbf(1.0f);
-    isfinite(0.0f);
-    isinf(0.0f);
-    isnan(0.0f);
+    std::isfinite(0.0f);
+    std::isinf(0.0f);
+    std::isnan(0.0f);
     j0f(0.0f);
     j1f(0.0f);
     jnf(-1.0f, 1.0f);
@@ -121,7 +121,7 @@ __host__ void single_precision_math_functions()
     ///rsqrtf(1.0f);
     scalblnf(0.0f, 1);
     scalbnf(0.0f, 1);
-    signbit(1.0f);
+    std::signbit(1.0f);
     sincosf(0.0f, &fX, &fY);
     //sincospif(0.0f, &fX, &fY);
     sinf(0.0f);
