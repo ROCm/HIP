@@ -1695,7 +1695,8 @@ StringRef unquoteStr(StringRef s) {
 
 class Cuda2Hip {
 public:
-  Cuda2Hip(Replacements *R): Replace(R) {}
+  Cuda2Hip(Replacements *R, const std::string &srcFileName) :
+    Replace(R), mainFileName(srcFileName) {}
   uint64_t countReps[CONV_LAST] = { 0 };
   uint64_t countApiReps[API_LAST] = { 0 };
   uint64_t countRepsUnsupported[CONV_LAST] = { 0 };
@@ -1704,15 +1705,28 @@ public:
   std::map<std::string, uint64_t> cuda2hipUnconverted;
   std::set<unsigned> LOCs;
 
+  enum msgTypes {
+    HIPIFY_ERROR = 0,
+    HIPIFY_WARNING
+  };
+
+  std::string getMsgType(msgTypes type) {
+    switch (type) {
+      case HIPIFY_ERROR: return "error";
+      default:
+      case HIPIFY_WARNING: return "warning";
+    }
+  }
+
 protected:
   struct cuda2hipMap N;
   Replacements *Replace;
+  std::string mainFileName;
 
   virtual void insertReplacement(const Replacement &rep, const FullSourceLoc &fullSL) {
     Replace->insert(rep);
     if (PrintStats) {
       LOCs.insert(fullSL.getExpansionLineNumber());
-      // llvm::outs() << "    [HIPIFY] expansion line num: " << fullSL.getExpansionLineNumber() << " for replacement '" << rep.getReplacementText() << "'\n";
     }
   }
   void insertHipHeaders(Cuda2Hip *owner, const SourceManager &SM) {
@@ -1725,6 +1739,11 @@ protected:
       Replacement Rep(SM, sl, 0, repName + "\n");
       insertReplacement(Rep, fullSL);
     }
+  }
+
+  void printHipifyMessage(const SourceManager &SM, const SourceLocation &sl, const std::string &message, msgTypes msgType = HIPIFY_WARNING) {
+    FullSourceLoc fullSL(sl, SM);
+    llvm::errs() << "[HIPIFY] " << getMsgType(msgType) << ": " << mainFileName << ":" << fullSL.getExpansionLineNumber() << ":" << fullSL.getExpansionColumnNumber() << ": " << message << "\n";
   }
 
   void updateCountersExt(const hipCounter &counter, const std::string &cudaName) {
@@ -1783,7 +1802,8 @@ protected:
           insertReplacement(Rep, fullSL);
         }
       } else {
-        // llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [string literal].\n";
+        // std::string msg = "the following reference is not handled: '" + name.str() + "' [string literal].";
+        // printHipifyMessage(SM, start, msg);
       }
       if (end == StringRef::npos) {
         break;
@@ -1797,8 +1817,8 @@ class Cuda2HipCallback;
 
 class HipifyPPCallbacks : public PPCallbacks, public SourceFileCallbacks, public Cuda2Hip {
 public:
-  HipifyPPCallbacks(Replacements *R)
-    : Cuda2Hip(R), SeenEnd(false), _sm(nullptr), _pp(nullptr) {}
+  HipifyPPCallbacks(Replacements *R, const std::string &mainFileName)
+    : Cuda2Hip(R, mainFileName), SeenEnd(false), _sm(nullptr), _pp(nullptr) {}
 
   virtual bool handleBeginSource(CompilerInstance &CI, StringRef Filename) override {
     Preprocessor &PP = CI.getPreprocessor();
@@ -2005,12 +2025,12 @@ private:
     if (const CallExpr *call = Result.Nodes.getNodeAs<CallExpr>("cudaCall")) {
       const FunctionDecl *funcDcl = call->getDirectCallee();
       StringRef name = funcDcl->getDeclName().getAsString();
+      SourceManager *SM = Result.SourceManager;
+      SourceLocation sl = call->getLocStart();
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
         if (!found->second.unsupported) {
-          SourceManager *SM = Result.SourceManager;
           StringRef repName = found->second.hipName;
-          SourceLocation sl = call->getLocStart();
           size_t length = name.size();
           bool bReplace = true;
           if (SM->isMacroArgExpansion(sl)) {
@@ -2037,7 +2057,8 @@ private:
           updateCounters(found->second, name.str());
         }
       } else {
-        llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [function call].\n";
+        std::string msg = "the following reference is not handled: '" + name.str() + "' [function call].";
+        printHipifyMessage(*SM, sl, msg);
       }
       return true;
     }
@@ -2121,6 +2142,8 @@ private:
         dyn_cast<OpaqueValueExpr>(threadIdx->getBase())) {
         if (const DeclRefExpr *declRef =
           dyn_cast<DeclRefExpr>(refBase->getSourceExpr())) {
+          SourceLocation sl = threadIdx->getLocStart();
+          SourceManager *SM = Result.SourceManager;
           StringRef name = declRef->getDecl()->getName();
           StringRef memberName = threadIdx->getMemberDecl()->getName();
           size_t pos = memberName.find_first_not_of("__fetch_builtin_");
@@ -2132,14 +2155,13 @@ private:
             updateCounters(found->second, name.str());
             if (!found->second.unsupported) {
               StringRef repName = found->second.hipName;
-              SourceLocation sl = threadIdx->getLocStart();
-              SourceManager *SM = Result.SourceManager;
               Replacement Rep(*SM, sl, name.size(), repName);
               FullSourceLoc fullSL(sl, *SM);
               insertReplacement(Rep, fullSL);
             }
           } else {
-            llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [builtin].\n";
+            std::string msg = "the following reference is not handled: '" + name.str() + "' [builtin].";
+            printHipifyMessage(*SM, sl, msg);
           }
         }
       }
@@ -2151,19 +2173,20 @@ private:
   bool cudaEnumConstantRef(const MatchFinder::MatchResult &Result) {
     if (const DeclRefExpr *enumConstantRef = Result.Nodes.getNodeAs<DeclRefExpr>("cudaEnumConstantRef")) {
       StringRef name = enumConstantRef->getDecl()->getNameAsString();
+      SourceLocation sl = enumConstantRef->getLocStart();
+      SourceManager *SM = Result.SourceManager;
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
         updateCounters(found->second, name.str());
         if (!found->second.unsupported) {
           StringRef repName = found->second.hipName;
-          SourceLocation sl = enumConstantRef->getLocStart();
-          SourceManager *SM = Result.SourceManager;
           Replacement Rep(*SM, sl, name.size(), repName);
           FullSourceLoc fullSL(sl, *SM);
           insertReplacement(Rep, fullSL);
         }
       } else {
-        llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [enum constant ref].\n";
+        std::string msg = "the following reference is not handled: '" + name.str() + "' [enum constant ref].";
+        printHipifyMessage(*SM, sl, msg);
       }
       return true;
     }
@@ -2179,19 +2202,20 @@ private:
         QualType QT = enumConstantDecl->getType().getUnqualifiedType();
         name = QT.getAsString();
       }
+      SourceLocation sl = enumConstantDecl->getLocStart();
+      SourceManager *SM = Result.SourceManager;
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
         updateCounters(found->second, name.str());
         if (!found->second.unsupported) {
           StringRef repName = found->second.hipName;
-          SourceLocation sl = enumConstantDecl->getLocStart();
-          SourceManager *SM = Result.SourceManager;
           Replacement Rep(*SM, sl, name.size(), repName);
           FullSourceLoc fullSL(sl, *SM);
           insertReplacement(Rep, fullSL);
         }
       } else {
-        llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [enum constant decl].\n";
+        std::string msg = "the following reference is not handled: '" + name.str() + "' [enum constant decl].";
+        printHipifyMessage(*SM, sl, msg);
       }
       return true;
     }
@@ -2206,19 +2230,20 @@ private:
       }
       QT = QT.getUnqualifiedType();
       StringRef name = QT.getAsString();
+      SourceLocation sl = typedefVar->getLocStart();
+      SourceManager *SM = Result.SourceManager;
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
         updateCounters(found->second, name.str());
         if (!found->second.unsupported) {
           StringRef repName = found->second.hipName;
-          SourceLocation sl = typedefVar->getLocStart();
-          SourceManager *SM = Result.SourceManager;
           Replacement Rep(*SM, sl, name.size(), repName);
           FullSourceLoc fullSL(sl, *SM);
           insertReplacement(Rep, fullSL);
         }
       } else {
-        llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [typedef var].\n";
+        std::string msg = "the following reference is not handled: '" + name.str() + "' [typedef var].";
+        printHipifyMessage(*SM, sl, msg);
       }
       return true;
     }
@@ -2229,6 +2254,9 @@ private:
     if (const VarDecl *typedefVarPtr = Result.Nodes.getNodeAs<VarDecl>("cudaTypedefVarPtr")) {
       const Type *t = typedefVarPtr->getType().getTypePtrOrNull();
       if (t) {
+        SourceManager *SM = Result.SourceManager;
+        TypeLoc TL = typedefVarPtr->getTypeSourceInfo()->getTypeLoc();
+        SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
         QualType QT = t->getPointeeType();
         QT = QT.getUnqualifiedType();
         StringRef name = QT.getAsString();
@@ -2237,16 +2265,14 @@ private:
           updateCounters(found->second, name.str());
           if (!found->second.unsupported) {
             StringRef repName = found->second.hipName;
-            TypeLoc TL = typedefVarPtr->getTypeSourceInfo()->getTypeLoc();
-            SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-            SourceManager *SM = Result.SourceManager;
             Replacement Rep(*SM, sl, name.size(), repName);
             FullSourceLoc fullSL(sl, *SM);
             insertReplacement(Rep, fullSL);
           }
         }
         else {
-          llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [typedef var ptr].\n";
+          std::string msg = "the following reference is not handled: '" + name.str() + "' [typedef var ptr].";
+          printHipifyMessage(*SM, sl, msg);
         }
       }
       return true;
@@ -2260,20 +2286,21 @@ private:
         ->getAsStructureType()
         ->getDecl()
         ->getNameAsString();
+      TypeLoc TL = structVar->getTypeSourceInfo()->getTypeLoc();
+      SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
+      SourceManager *SM = Result.SourceManager;
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
         updateCounters(found->second, name.str());
         if (!found->second.unsupported) {
           StringRef repName = found->second.hipName;
-          TypeLoc TL = structVar->getTypeSourceInfo()->getTypeLoc();
-          SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-          SourceManager *SM = Result.SourceManager;
           Replacement Rep(*SM, sl, name.size(), repName);
           FullSourceLoc fullSL(sl, *SM);
           insertReplacement(Rep, fullSL);
         }
       } else {
-        llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [struct var].\n";
+        std::string msg = "the following reference is not handled: '" + name.str() + "' [struct var].";
+        printHipifyMessage(*SM, sl, msg);
       }
       return true;
     }
@@ -2284,21 +2311,22 @@ private:
     if (const VarDecl *structVarPtr = Result.Nodes.getNodeAs<VarDecl>("cudaStructVarPtr")) {
       const Type *t = structVarPtr->getType().getTypePtrOrNull();
       if (t) {
+        TypeLoc TL = structVarPtr->getTypeSourceInfo()->getTypeLoc();
+        SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
+        SourceManager *SM = Result.SourceManager;
         StringRef name = t->getPointeeCXXRecordDecl()->getName();
         const auto found = N.cuda2hipRename.find(name);
         if (found != N.cuda2hipRename.end()) {
           updateCounters(found->second, name.str());
           if (!found->second.unsupported) {
             StringRef repName = found->second.hipName;
-            TypeLoc TL = structVarPtr->getTypeSourceInfo()->getTypeLoc();
-            SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-            SourceManager *SM = Result.SourceManager;
             Replacement Rep(*SM, sl, name.size(), repName);
             FullSourceLoc fullSL(sl, *SM);
             insertReplacement(Rep, fullSL);
           }
         } else {
-          llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [struct var ptr].\n";
+          std::string msg = "the following reference is not handled: '" + name.str() + "' [struct var ptr].";
+          printHipifyMessage(*SM, sl, msg);
         }
       }
       return true;
@@ -2309,6 +2337,9 @@ private:
   bool cudaStructSizeOf(const MatchFinder::MatchResult &Result) {
     if (const UnaryExprOrTypeTraitExpr *expr = Result.Nodes.getNodeAs<UnaryExprOrTypeTraitExpr>("cudaStructSizeOf")) {
       TypeSourceInfo *typeInfo = expr->getArgumentTypeInfo();
+      TypeLoc TL = typeInfo->getTypeLoc();
+      SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
+      SourceManager *SM = Result.SourceManager;
       QualType QT = typeInfo->getType().getUnqualifiedType();
       const Type *type = QT.getTypePtr();
       StringRef name = type->getAsCXXRecordDecl()->getName();
@@ -2317,15 +2348,13 @@ private:
         updateCounters(found->second, name.str());
         if (!found->second.unsupported) {
           StringRef repName = found->second.hipName;
-          TypeLoc TL = typeInfo->getTypeLoc();
-          SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-          SourceManager *SM = Result.SourceManager;
           Replacement Rep(*SM, sl, name.size(), repName);
           FullSourceLoc fullSL(sl, *SM);
           insertReplacement(Rep, fullSL);
         }
       } else {
-        llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [struct sizeof].\n";
+        std::string msg = "the following reference is not handled: '" + name.str() + "' [struct sizeof].";
+        printHipifyMessage(*SM, sl, msg);
       }
       return true;
     }
@@ -2383,20 +2412,21 @@ private:
       if (t->isStructureOrClassType()) {
         name = t->getAsCXXRecordDecl()->getName();
       }
+      TypeLoc TL = paramDecl->getTypeSourceInfo()->getTypeLoc();
+      SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
+      SourceManager *SM = Result.SourceManager;
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
         updateCounters(found->second, name.str());
         if (!found->second.unsupported) {
           StringRef repName = found->second.hipName;
-          TypeLoc TL = paramDecl->getTypeSourceInfo()->getTypeLoc();
-          SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-          SourceManager *SM = Result.SourceManager;
           Replacement Rep(*SM, sl, name.size(), repName);
           FullSourceLoc fullSL(sl, *SM);
           insertReplacement(Rep, fullSL);
         }
       } else {
-        llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [param decl].\n";
+        std::string msg = "the following reference is not handled: '" + name.str() + "' [param decl].";
+        printHipifyMessage(*SM, sl, msg);
       }
       return true;
     }
@@ -2407,6 +2437,9 @@ private:
     if (const ParmVarDecl *paramDeclPtr = Result.Nodes.getNodeAs<ParmVarDecl>("cudaParamDeclPtr")) {
       const Type *pt = paramDeclPtr->getType().getTypePtrOrNull();
       if (pt) {
+        TypeLoc TL = paramDeclPtr->getTypeSourceInfo()->getTypeLoc();
+        SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
+        SourceManager *SM = Result.SourceManager;
         QualType QT = pt->getPointeeType();
         const Type *t = QT.getTypePtr();
         StringRef name = t->isStructureOrClassType()
@@ -2417,15 +2450,13 @@ private:
           updateCounters(found->second, name.str());
           if (!found->second.unsupported) {
             StringRef repName = found->second.hipName;
-            TypeLoc TL = paramDeclPtr->getTypeSourceInfo()->getTypeLoc();
-            SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-            SourceManager *SM = Result.SourceManager;
             Replacement Rep(*SM, sl, name.size(), repName);
             FullSourceLoc fullSL(sl, *SM);
             insertReplacement(Rep, fullSL);
           }
         } else {
-          llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [param decl ptr].\n";
+          std::string msg = "the following reference is not handled: '" + name.str() + "' [param decl ptr].";
+          printHipifyMessage(*SM, sl, msg);
         }
       }
       return true;
@@ -2455,8 +2486,8 @@ private:
   }
 
 public:
-  Cuda2HipCallback(Replacements *Replace, ast_matchers::MatchFinder *parent, HipifyPPCallbacks *PPCallbacks)
-    : Cuda2Hip(Replace), owner(parent), PP(PPCallbacks) {
+  Cuda2HipCallback(Replacements *Replace, ast_matchers::MatchFinder *parent, HipifyPPCallbacks *PPCallbacks, const std::string &mainFileName)
+    : Cuda2Hip(Replace, mainFileName), owner(parent), PP(PPCallbacks) {
     PP->setMatch(this);
   }
 
@@ -2884,8 +2915,8 @@ int main(int argc, const char **argv) {
     }
     RefactoringTool Tool(OptionsParser.getCompilations(), dst);
     ast_matchers::MatchFinder Finder;
-    HipifyPPCallbacks PPCallbacks(&Tool.getReplacements());
-    Cuda2HipCallback Callback(&Tool.getReplacements(), &Finder, &PPCallbacks);
+    HipifyPPCallbacks PPCallbacks(&Tool.getReplacements(), src);
+    Cuda2HipCallback Callback(&Tool.getReplacements(), &Finder, &PPCallbacks, src);
 
     addAllMatchers(Finder, &Callback);
 
