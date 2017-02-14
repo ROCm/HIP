@@ -2494,7 +2494,7 @@ void addAllMatchers(ast_matchers::MatchFinder &Finder, Cuda2HipCallback *Callbac
                              callee(functionDecl(matchesName("cu.*"))))
                              .bind("cudaCall"),
                              Callback);
-  Finder.addMatcher(cudaKernelCallExpr().bind("cudaLaunchKernel"), Callback);
+  Finder.addMatcher(cudaKernelCallExpr(isExpansionInMainFile()).bind("cudaLaunchKernel"), Callback);
   Finder.addMatcher(memberExpr(isExpansionInMainFile(),
                                hasObjectExpression(hasType(cxxRecordDecl(
                                matchesName("__cuda_builtin_")))))
