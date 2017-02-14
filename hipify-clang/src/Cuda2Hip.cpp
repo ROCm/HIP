@@ -450,6 +450,7 @@ struct cuda2hipMap {
     cuda2hipRename["CUcontext"]                                 = {"hipCtx_t", CONV_TYPE, API_DRIVER};
     cuda2hipRename["CUmodule"]                                  = {"hipModule_t", CONV_TYPE, API_DRIVER};
     cuda2hipRename["CUstream"]                                  = {"hipStream_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUstream_st"]                               = {"hipStream_t *", CONV_TYPE, API_DRIVER};
     // Stream Flags
     cuda2hipRename["CU_STREAM_DEFAULT"]                         = {"hipStreamDefault", CONV_STREAM, API_DRIVER};
     cuda2hipRename["CU_STREAM_NON_BLOCKING"]                    = {"hipStreamNonBlocking", CONV_STREAM, API_DRIVER};
@@ -497,7 +498,7 @@ struct cuda2hipMap {
 
     // Events
     cuda2hipRename["CUevent"]                                   = {"hipEvent_t", CONV_TYPE, API_DRIVER};
-    cuda2hipRename["CUevent_st"]                                = {"hipEvent_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUevent_st"]                                = {"hipEvent_t *", CONV_TYPE, API_DRIVER};
     // Event Flags
     cuda2hipRename["CU_EVENT_DEFAULT"]                          = {"hipEventDefault", CONV_EVENT, API_DRIVER};
     cuda2hipRename["CU_EVENT_BLOCKING_SYNC"]                    = {"hipEventBlockingSync", CONV_EVENT, API_DRIVER};
