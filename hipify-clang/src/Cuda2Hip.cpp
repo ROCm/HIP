@@ -429,6 +429,7 @@ struct cuda2hipMap {
     // cuda2hipRename["CUpointer_attribute"]                    = {"hipPointerAttribute_t", CONV_TYPE, API_DRIVER};
 
     cuda2hipRename["CUfunction"]                                = {"hipFunction_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUfunc_st"]                                 = {"hipFunction_t *", CONV_TYPE, API_DRIVER};
 
     // unsupported yet by HIP
     cuda2hipRename["CUfunction_attribute_enum"]                 = {"hipFuncAttribute_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
@@ -448,7 +449,9 @@ struct cuda2hipMap {
     cuda2hipRename["CU_SHARED_MEM_CONFIG_EIGHT_BYTE_BANK_SIZE"] = {"hipSharedMemBankSizeEightByte", CONV_DEV, API_DRIVER};
 
     cuda2hipRename["CUcontext"]                                 = {"hipCtx_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUctx_st"]                                  = {"hipCtx_t *", CONV_TYPE, API_DRIVER};
     cuda2hipRename["CUmodule"]                                  = {"hipModule_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUmod_st"]                                  = {"hipModule_t *", CONV_TYPE, API_DRIVER};
     cuda2hipRename["CUstream"]                                  = {"hipStream_t", CONV_TYPE, API_DRIVER};
     cuda2hipRename["CUstream_st"]                               = {"hipStream_t *", CONV_TYPE, API_DRIVER};
     // Stream Flags
