@@ -2282,25 +2282,27 @@ private:
 
   bool cudaStructVar(const MatchFinder::MatchResult &Result) {
     if (const VarDecl *structVar = Result.Nodes.getNodeAs<VarDecl>("cudaStructVar")) {
-      StringRef name = structVar->getType()
-        ->getAsStructureType()
-        ->getDecl()
-        ->getNameAsString();
-      TypeLoc TL = structVar->getTypeSourceInfo()->getTypeLoc();
-      SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-      SourceManager *SM = Result.SourceManager;
-      const auto found = N.cuda2hipRename.find(name);
-      if (found != N.cuda2hipRename.end()) {
-        updateCounters(found->second, name.str());
-        if (!found->second.unsupported) {
-          StringRef repName = found->second.hipName;
-          Replacement Rep(*SM, sl, name.size(), repName);
-          FullSourceLoc fullSL(sl, *SM);
-          insertReplacement(Rep, fullSL);
+      QualType QT = structVar->getType();
+      // ToDo: find case-studies with types other than Struct.
+      if (QT->isStructureType()) {
+        StringRef name = QT.getTypePtr()->getAsStructureType()->getDecl()->getNameAsString();
+        TypeLoc TL = structVar->getTypeSourceInfo()->getTypeLoc();
+        SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
+        SourceManager *SM = Result.SourceManager;
+        const auto found = N.cuda2hipRename.find(name);
+        if (found != N.cuda2hipRename.end()) {
+          updateCounters(found->second, name.str());
+          if (!found->second.unsupported) {
+            StringRef repName = found->second.hipName;
+            Replacement Rep(*SM, sl, name.size(), repName);
+            FullSourceLoc fullSL(sl, *SM);
+            insertReplacement(Rep, fullSL);
+          }
         }
-      } else {
-        std::string msg = "the following reference is not handled: '" + name.str() + "' [struct var].";
-        printHipifyMessage(*SM, sl, msg);
+        else {
+          std::string msg = "the following reference is not handled: '" + name.str() + "' [struct var].";
+          printHipifyMessage(*SM, sl, msg);
+        }
       }
       return true;
     }
