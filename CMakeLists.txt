@@ -220,7 +220,7 @@ add_custom_target(doc COMMAND HIP_PATH=${CMAKE_CURRENT_SOURCE_DIR} doxygen ${CMA
 # Install steps
 #############################
 include(GNUInstallDirs)
-set( LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR} )
+set( LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib )
 set( INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_INCLUDEDIR} )
 set( BIN_INSTALL_DIR ${CMAKE_INSTALL_BINDIR} )
 set( CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip )
