@@ -53,6 +53,14 @@ if(NOT DEFINED HIP_PLATFORM)
 endif()
 message(STATUS "HIP Platform: " ${HIP_PLATFORM})
 
+macro(get_directory_base OUTPUT_VAR DIR)
+    if(CMAKE_VERSION VERSION_LESS "3.0")
+        get_filename_component(${OUTPUT_VAR} ${DIR} PATH ${ARGN})
+    else()
+        get_filename_component(${OUTPUT_VAR} ${DIR} DIRECTORY ${ARGN})
+    endif()
+endmacro()
+
 # If HIP_PLATFORM is hcc, we need HCC_HOME and HSA_HEADER to be defined
 if(HIP_PLATFORM STREQUAL "hcc")
     # Find hcc compiler
@@ -88,6 +96,9 @@ if(HIP_PLATFORM STREQUAL "hcc")
         set(HCC_VERSION_MINOR 0)
     endif()
 
+    get_directory_base(HCC_COMPILER_BIN_DIR ${HCC_COMPILER})
+    get_directory_base(HCC_HOME ${HCC_COMPILER_BIN_DIR})
+    add_to_config(_buildInfo HCC_HOME)
     # Determine HSA_HEADER
     find_path(HSA_HEADER hsa/hsa.h
         HINTS
