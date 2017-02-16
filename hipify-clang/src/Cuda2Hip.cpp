@@ -886,6 +886,7 @@ struct cuda2hipMap {
     cuda2hipRename["cudaDeviceEnablePeerAccess"]     = {"hipDeviceEnablePeerAccess", CONV_DEV, API_RUNTIME};
     cuda2hipRename["cudaMemcpyPeerAsync"]            = {"hipMemcpyPeerAsync", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMemcpyPeer"]                 = {"hipMemcpyPeer", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaIpcMemLazyEnablePeerAccess"] = {"hipIpcMemLazyEnablePeerAccess", CONV_ERR, API_RUNTIME};
 
     // Shared memory
     cuda2hipRename["cudaDeviceSetSharedMemConfig"]   = {"hipDeviceSetSharedMemConfig", CONV_DEV, API_RUNTIME};
@@ -927,6 +928,20 @@ struct cuda2hipMap {
     cuda2hipRename["cudaCreateChannelDesc"]   = {"hipCreateChannelDesc", CONV_TEX, API_RUNTIME};
     cuda2hipRename["cudaBindTexture"]         = {"hipBindTexture", CONV_TEX, API_RUNTIME};
     cuda2hipRename["cudaUnbindTexture"]       = {"hipUnbindTexture", CONV_TEX, API_RUNTIME};
+
+    // Inter-Process Communications (IPC)
+    // IPC types
+    cuda2hipRename["cudaIpcEventHandle_t"]                  = {"hipIpcEventHandle_t", CONV_TYPE, API_RUNTIME};
+    cuda2hipRename["cudaIpcEventHandle_st"]                 = {"hipIpcEventHandle_t", CONV_TYPE, API_RUNTIME};
+    cuda2hipRename["cudaIpcMemHandle_t"]                    = {"hipIpcMemHandle_t", CONV_TYPE, API_RUNTIME};
+    cuda2hipRename["cudaIpcMemHandle_st"]                   = {"hipIpcMemHandle_t", CONV_TYPE, API_RUNTIME};
+
+    // IPC functions
+    cuda2hipRename["cudaIpcCloseMemHandle"]                 = {"hipIpcCloseMemHandle", CONV_DEV, API_RUNTIME};
+    cuda2hipRename["cudaIpcGetEventHandle"]                 = {"hipIpcGetEventHandle", CONV_DEV, API_RUNTIME};
+    cuda2hipRename["cudaIpcGetMemHandle"]                   = {"hipIpcGetMemHandle", CONV_DEV, API_RUNTIME};
+    cuda2hipRename["cudaIpcOpenEventHandle"]                = {"hipIpcOpenEventHandle", CONV_DEV, API_RUNTIME};
+    cuda2hipRename["cudaIpcOpenMemHandle"]                  = {"hipIpcOpenMemHandle", CONV_DEV, API_RUNTIME};
 
     //---------------------------------------BLAS-------------------------------------//
     // Blas types
