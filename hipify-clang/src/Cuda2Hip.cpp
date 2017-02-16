@@ -916,18 +916,25 @@ struct cuda2hipMap {
 
     // Profiler
     // unsupported yet by HIP
-    cuda2hipRename["cudaProfilerInitialize"]  = {"hipProfilerInitialize", CONV_OTHER, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaProfilerInitialize"]                = {"hipProfilerInitialize", CONV_OTHER, API_RUNTIME, HIP_UNSUPPORTED};
 
-    cuda2hipRename["cudaProfilerStart"]       = {"hipProfilerStart", CONV_OTHER, API_RUNTIME};
-    cuda2hipRename["cudaProfilerStop"]        = {"hipProfilerStop", CONV_OTHER, API_RUNTIME};
-    cuda2hipRename["cudaChannelFormatDesc"]   = {"hipChannelFormatDesc", CONV_TEX, API_RUNTIME};
-    cuda2hipRename["cudaFilterModePoint"]     = {"hipFilterModePoint", CONV_TEX, API_RUNTIME};
-    cuda2hipRename["cudaReadModeElementType"] = {"hipReadModeElementType", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaProfilerStart"]                     = {"hipProfilerStart", CONV_OTHER, API_RUNTIME};
+    cuda2hipRename["cudaProfilerStop"]                      = {"hipProfilerStop", CONV_OTHER, API_RUNTIME};
+    cuda2hipRename["cudaFilterModePoint"]                   = {"hipFilterModePoint", CONV_TEX, API_RUNTIME};
 
-    // Channel descriptor
-    cuda2hipRename["cudaCreateChannelDesc"]   = {"hipCreateChannelDesc", CONV_TEX, API_RUNTIME};
-    cuda2hipRename["cudaBindTexture"]         = {"hipBindTexture", CONV_TEX, API_RUNTIME};
-    cuda2hipRename["cudaUnbindTexture"]       = {"hipUnbindTexture", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaReadModeElementType"]               = {"hipReadModeElementType", CONV_TEX, API_RUNTIME};
+
+    // Textures
+    cuda2hipRename["cudaBindTexture"]                       = {"hipBindTexture", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaUnbindTexture"]                     = {"hipUnbindTexture", CONV_TEX, API_RUNTIME};
+    // Channel
+    cuda2hipRename["cudaChannelFormatKind"]                 = {"hipChannelFormatKind", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaChannelFormatKindSigned"]           = {"hipChannelFormatKindSigned", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaChannelFormatKindUnsigned"]         = {"hipChannelFormatKindUnsigned", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaChannelFormatKindFloat"]            = {"hipChannelFormatKindFloat", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaChannelFormatKindNone"]             = {"hipChannelFormatKindNone", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaChannelFormatDesc"]                 = {"hipChannelFormatDesc", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaCreateChannelDesc"]                 = {"hipCreateChannelDesc", CONV_TEX, API_RUNTIME};
 
     // Inter-Process Communications (IPC)
     // IPC types
