@@ -614,51 +614,55 @@ struct cuda2hipMap {
     cuda2hipRename["PATCH_LEVEL"]                 = {"hipLibraryPatchVersion", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
 
     // Error API
-    cuda2hipRename["cudaGetLastError"]               = {"hipGetLastError", CONV_ERR, API_RUNTIME};
-    cuda2hipRename["cudaPeekAtLastError"]            = {"hipPeekAtLastError", CONV_ERR, API_RUNTIME};
-    cuda2hipRename["cudaGetErrorName"]               = {"hipGetErrorName", CONV_ERR, API_RUNTIME};
-    cuda2hipRename["cudaGetErrorString"]             = {"hipGetErrorString", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["cudaGetLastError"]            = {"hipGetLastError", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["cudaPeekAtLastError"]         = {"hipPeekAtLastError", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["cudaGetErrorName"]            = {"hipGetErrorName", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["cudaGetErrorString"]          = {"hipGetErrorString", CONV_ERR, API_RUNTIME};
 
     // Memcpy
-    cuda2hipRename["cudaMemcpy"]               = {"hipMemcpy", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaMemcpyToSymbol"]       = {"hipMemcpyToSymbol", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaMemset"]               = {"hipMemset", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaMemsetAsync"]          = {"hipMemsetAsync", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaMemcpyAsync"]          = {"hipMemcpyAsync", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaMemGetInfo"]           = {"hipMemGetInfo", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemcpy"]                  = {"hipMemcpy", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemcpyToSymbol"]          = {"hipMemcpyToSymbol", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemset"]                  = {"hipMemset", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemsetAsync"]             = {"hipMemsetAsync", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemcpyAsync"]             = {"hipMemcpyAsync", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemGetInfo"]              = {"hipMemGetInfo", CONV_MEM, API_RUNTIME};
     // Memcpy kind
-    cuda2hipRename["cudaMemcpyKind"]           = {"hipMemcpyKind", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaMemcpyHostToHost"]     = {"hipMemcpyHostToHost", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaMemcpyHostToDevice"]   = {"hipMemcpyHostToDevice", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaMemcpyDeviceToHost"]   = {"hipMemcpyDeviceToHost", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaMemcpyDeviceToDevice"] = {"hipMemcpyDeviceToDevice", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaMemcpyDefault"]        = {"hipMemcpyDefault", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemcpyKind"]              = {"hipMemcpyKind", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemcpyHostToHost"]        = {"hipMemcpyHostToHost", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemcpyHostToDevice"]      = {"hipMemcpyHostToDevice", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemcpyDeviceToHost"]      = {"hipMemcpyDeviceToHost", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemcpyDeviceToDevice"]    = {"hipMemcpyDeviceToDevice", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemcpyDefault"]           = {"hipMemcpyDefault", CONV_MEM, API_RUNTIME};
 
     // Memory management
-    cuda2hipRename["cudaMalloc"]         = {"hipMalloc", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaMallocHost"]     = {"hipHostMalloc", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaFree"]           = {"hipFree", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaFreeHost"]       = {"hipHostFree", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaHostRegister"]   = {"hipHostRegister", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaHostUnregister"] = {"hipHostUnregister", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMalloc"]                  = {"hipMalloc", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMallocHost"]              = {"hipHostMalloc", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMallocArray"]             = {"hipMallocArray", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaFree"]                    = {"hipFree", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaFreeHost"]                = {"hipHostFree", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaFreeArray"]               = {"hipFreeArray", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaHostRegister"]            = {"hipHostRegister", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaHostUnregister"]          = {"hipHostUnregister", CONV_MEM, API_RUNTIME};
+    // hipHostAlloc deprecated - use hipHostMalloc instead
+    cuda2hipRename["cudaHostAlloc"]               = {"hipHostMalloc", CONV_MEM, API_RUNTIME};
 
     // Memory types
-    cuda2hipRename["cudaMemoryType"]       = {"hipMemoryType", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaMemoryTypeHost"]   = {"hipMemoryTypeHost", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaMemoryTypeDevice"] = {"hipMemoryTypeDevice", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemoryType"]              = {"hipMemoryType", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemoryTypeHost"]          = {"hipMemoryTypeHost", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemoryTypeDevice"]        = {"hipMemoryTypeDevice", CONV_MEM, API_RUNTIME};
 
     // Host Malloc Flags
-    cuda2hipRename["cudaHostAllocDefault"]       = {"hipHostMallocDefault", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaHostAllocPortable"]      = {"hipHostMallocPortable", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaHostAllocMapped"]        = {"hipHostMallocMapped", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaHostAllocWriteCombined"] = {"hipHostMallocWriteCombined", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaHostAllocDefault"]        = {"hipHostMallocDefault", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaHostAllocPortable"]       = {"hipHostMallocPortable", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaHostAllocMapped"]         = {"hipHostMallocMapped", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaHostAllocWriteCombined"]  = {"hipHostMallocWriteCombined", CONV_MEM, API_RUNTIME};
 
     // Host Register Flags
-    cuda2hipRename["cudaHostGetFlags"]         = {"hipHostGetFlags", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaHostRegisterDefault"]  = {"hipHostRegisterDefault", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaHostRegisterPortable"] = {"hipHostRegisterPortable", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaHostRegisterMapped"]   = {"hipHostRegisterMapped", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaHostRegisterIoMemory"] = {"hipHostRegisterIoMemory", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaHostGetFlags"]            = {"hipHostGetFlags", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaHostRegisterDefault"]     = {"hipHostRegisterDefault", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaHostRegisterPortable"]    = {"hipHostRegisterPortable", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaHostRegisterMapped"]      = {"hipHostRegisterMapped", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaHostRegisterIoMemory"]    = {"hipHostRegisterIoMemory", CONV_MEM, API_RUNTIME};
 
     // Coordinate Indexing and Dimensions
     cuda2hipRename["threadIdx.x"] = {"hipThreadIdx_x", CONV_COORD_FUNC, API_RUNTIME};
