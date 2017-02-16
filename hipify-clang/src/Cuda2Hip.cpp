@@ -621,11 +621,17 @@ struct cuda2hipMap {
 
     // Memcpy
     cuda2hipRename["cudaMemcpy"]                  = {"hipMemcpy", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemcpyToArray"]           = {"hipMemcpyToArray", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMemcpyToSymbol"]          = {"hipMemcpyToSymbol", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemcpyToSymbolAsync"]     = {"hipMemcpyToSymbolAsync", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMemset"]                  = {"hipMemset", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMemsetAsync"]             = {"hipMemsetAsync", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMemcpyAsync"]             = {"hipMemcpyAsync", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMemGetInfo"]              = {"hipMemGetInfo", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemcpy2D"]                = {"hipMemcpy2D", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemcpy2DToArray"]         = {"hipMemcpy2DToArray", CONV_MEM, API_RUNTIME};
+
+
     // Memcpy kind
     cuda2hipRename["cudaMemcpyKind"]              = {"hipMemcpyKind", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMemcpyHostToHost"]        = {"hipMemcpyHostToHost", CONV_MEM, API_RUNTIME};
@@ -732,6 +738,7 @@ struct cuda2hipMap {
     cuda2hipRename["cudaSetDevice"]             = {"hipSetDevice", CONV_DEV, API_RUNTIME};
     cuda2hipRename["cudaGetDevice"]             = {"hipGetDevice", CONV_DEV, API_RUNTIME};
     cuda2hipRename["cudaGetDeviceCount"]        = {"hipGetDeviceCount", CONV_DEV, API_RUNTIME};
+    cuda2hipRename["cudaChooseDevice"]          = {"hipChooseDevice", CONV_DEV, API_RUNTIME};
 
     // Attributes
     cuda2hipRename["cudaDeviceAttr"]            = {"hipDeviceAttribute_t", CONV_TYPE, API_RUNTIME};
