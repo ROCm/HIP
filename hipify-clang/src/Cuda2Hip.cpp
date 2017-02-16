@@ -2344,7 +2344,11 @@ private:
       SourceManager *SM = Result.SourceManager;
       QualType QT = typeInfo->getType().getUnqualifiedType();
       const Type *type = QT.getTypePtr();
-      StringRef name = type->getAsCXXRecordDecl()->getName();
+      CXXRecordDecl *rec = type->getAsCXXRecordDecl();
+      if (!rec) {
+        return false;
+      }
+      StringRef name = rec->getName();
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
         updateCounters(found->second, name.str());
