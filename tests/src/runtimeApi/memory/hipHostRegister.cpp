@@ -39,21 +39,30 @@ int main(){
 	const size_t size = N * sizeof(float);
 	A = (float*)malloc(size);
 	HIPCHECK(hipHostRegister(A, size, 0));
+
+
 	for(int i=0;i<N;i++){
 		A[i] = float(1);
 	}
+
+    // Copy to B, this should be optimal pinned malloc copy:
+    float *B;
+    HIPCHECK(hipMalloc(&B, size));
+    HIPCHECK(hipMemcpy(B, A, size, hipMemcpyHostToDevice));
+
+
 	for(int i=0;i<num_devices;i++){
-	HIPCHECK(hipSetDevice(i));
-	HIPCHECK(hipHostGetDevicePointer((void**)&Ad[i], A, 0));
+        HIPCHECK(hipSetDevice(i));
+        HIPCHECK(hipHostGetDevicePointer((void**)&Ad[i], A, 0));
 	}
 
 	for(int i=0;i<num_devices;i++){
-	HIPCHECK(hipSetDevice(i));
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, 0, Ad[i]);
+        HIPCHECK(hipSetDevice(i));
+        hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, 0, Ad[i]);
 
-	HIPCHECK(hipDeviceSynchronize());
-
+        HIPCHECK(hipDeviceSynchronize());
 	}
+
 	HIPASSERT(A[10] == 1.0f + float(num_devices));
 	HIPCHECK(hipHostUnregister(A));
 	passed();
