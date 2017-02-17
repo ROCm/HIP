@@ -194,6 +194,7 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
                 if(sizeBytes < 1 && (*ptr == NULL)){
                     hip_status = hipErrorMemoryAllocation;
                 } else {
+                    // TODO - should OR in flags here?
                     hc::am_memtracker_update(*ptr, device->_deviceId, amHostCoherent);
                 }
                 tprintf(DB_MEM, " %s: finegrained system memory ptr=%p\n", __func__, *ptr);
@@ -403,6 +404,7 @@ hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
                     vecAcc.push_back(ihipGetDevice(i)->_acc);
                 }
                 am_status = hc::am_memory_host_lock(device->_acc, hostPtr, sizeBytes, &vecAcc[0], vecAcc.size());
+                hc::am_memtracker_update(hostPtr, device->_deviceId, flags);
 
                 tprintf(DB_MEM, " %s registered ptr=%p\n", __func__, hostPtr);
                 if(am_status == AM_SUCCESS){
