@@ -35,6 +35,14 @@ THE SOFTWARE.
 // Memory
 //
 //
+//
+//HIP uses several "app*" fields HC memory tracker to track state necessary for the HIP API.
+//_appId : DeviceID.  For device mem, this is device where the memory is physically allocated.
+//         For host or registered mem, this is the current device when the memory is allocated or registered.  This device will have a GPUVM mapping for the host mem.
+//
+//_appAllocationFlags : These are flags provided by the user when allocation is performed. They are returned to user in hipHostGetFlags and other APIs.
+// TODO - add more info here when available.
+//
 hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
 {
     HIP_INIT_API(attributes, ptr);
@@ -78,6 +86,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
     return ihipLogStatus(e);
 }
 
+
 hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsigned flags)
 {
     HIP_INIT_API(devicePointer, hostPointer, flags);
@@ -101,6 +110,7 @@ hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsi
     }
     return ihipLogStatus(e);
 }
+
 
 hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 {
@@ -227,15 +237,19 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
     return ihipLogStatus(hip_status);
 }
 
+// Deprecated function:
 hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
 {
     return hipHostMalloc(ptr, sizeBytes, 0);
 }
 
+
+// Deprecated function:
 hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
     return hipHostMalloc(ptr, sizeBytes, flags);
 };
+
 
 // width in bytes
 hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height)
@@ -374,6 +388,8 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr)
     return ihipLogStatus(hip_status);
 }
 
+
+// TODO - need to fix several issues here related to P2P access, host memory fallback.
 hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
 {
     HIP_INIT_API(hostPtr, sizeBytes, flags);
@@ -406,7 +422,7 @@ hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
                 am_status = hc::am_memory_host_lock(device->_acc, hostPtr, sizeBytes, &vecAcc[0], vecAcc.size());
                 hc::am_memtracker_update(hostPtr, device->_deviceId, flags);
 
-                tprintf(DB_MEM, " %s registered ptr=%p\n", __func__, hostPtr);
+                tprintf(DB_MEM, " %s registered ptr=%p and allowed access to %zu peers\n", __func__, hostPtr, vecAcc.size());
                 if(am_status == AM_SUCCESS){
                     hip_status = hipSuccess;
                 } else {
@@ -605,6 +621,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
     return ihipLogStatus(e);
 }
 
+
 hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes)
 {
     HIP_INIT_CMD_API(dst, src, sizeBytes);
@@ -625,6 +642,7 @@ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes)
 
     return ihipLogStatus(e);
 }
+
 
 hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes)
 {
@@ -647,6 +665,7 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes)
     return ihipLogStatus(e);
 }
 
+
 hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes)
 {
     HIP_INIT_CMD_API(dst, src, sizeBytes);
@@ -667,6 +686,7 @@ hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeByte
 
     return ihipLogStatus(e);
 }
+
 
 hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes)
 {
