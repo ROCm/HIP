@@ -6,9 +6,12 @@
 
 #include "ResultDatabase.h"
 
+enum MallocMode {MallocPinned, MallocUnpinned, MallocRegistered};
+
 // Cmdline parms:
 bool          p_verbose = false;
-bool          p_pinned  = true;
+MallocMode    p_malloc_mode  = MallocPinned;
+int           p_numa_ctl = -1;
 int           p_iterations   = 10;
 int           p_beatsperiteration=1;
 int           p_device  = 0;
@@ -21,7 +24,7 @@ bool          p_h2d   = true;
 bool          p_d2h   = true;
 bool          p_bidir = true;
 
-
+#define NO_CHECK
 
 
 #define CHECK_HIP_ERROR()                                                    \
@@ -36,6 +39,14 @@ bool          p_bidir = true;
 }
 
 
+std::string mallocModeString(int mallocMode) {
+    switch (mallocMode) {
+        case MallocPinned  : return "pinned";
+        case MallocUnpinned: return "unpinned";
+        case MallocRegistered: return "registered";
+        default: return "mallocmode-UNKNOWN";
+    };
+};
 
 // ****************************************************************************
 int sizeToBytes(int size) {
@@ -106,7 +117,7 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
 
     // Create some host memory pattern
     float *hostMem = NULL;
-    if (p_pinned)
+    if (p_malloc_mode == MallocPinned)
     {
         hipHostMalloc((void**)&hostMem, sizeof(float) * numMaxFloats);
         while (hipGetLastError() != hipSuccess)
@@ -116,20 +127,29 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
             --nSizes;
             if (nSizes < 1)
             {
-                std::cerr << "Error: Couldn't allocated any pinned buffer\n";
+                std::cerr << "Error: Couldn't allocate any pinned buffer\n";
             return;
             }
             numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
             hipHostMalloc((void**)&hostMem, sizeof(float) * numMaxFloats);
         }
     }
-    else
+    else if (p_malloc_mode == MallocUnpinned) 
     {
         if (p_alignedhost) {
             hostMem = (float*)aligned_alloc(p_alignedhost, numMaxFloats*sizeof(float));
         } else {
             hostMem = new float[numMaxFloats];
         }
+    } 
+    else if (p_malloc_mode == MallocRegistered) 
+    {
+        if (p_numa_ctl == -1) {
+            hostMem = (float*)malloc(numMaxFloats*sizeof(float));
+        }
+
+        hipHostRegister(hostMem, numMaxFloats * sizeof(float), 0);
+        CHECK_HIP_ERROR();
     }
 
     for (int i = 0; i < numMaxFloats; i++)
@@ -146,7 +166,7 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
         --nSizes;
         if (nSizes < 1)
         {
-            std::cerr << "Error: Couldn't allocated any device buffer\n";
+            std::cerr << "Error: Couldn't allocate any device buffer\n";
             return;
         }
         numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
@@ -199,8 +219,8 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
             } else {
                 sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
             }
-            resultDB.AddResult(std::string("H2D_Bandwidth") + (p_pinned ? "_Pinned" : "_Unpinned"), sizeStr, "GB/sec", speed);
-            resultDB.AddResult(std::string("H2D_Time") + (p_pinned ? "_Pinned" : "_Unpinned"), sizeStr, "ms", t);
+            resultDB.AddResult(std::string("H2D_Bandwidth") + "_" + mallocModeString(p_malloc_mode), sizeStr, "GB/sec", speed);
+            resultDB.AddResult(std::string("H2D_Time") + mallocModeString(p_malloc_mode), sizeStr, "ms", t);
 
             if (p_onesize) {
                 break;
@@ -211,6 +231,8 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
     if (p_onesize) {
         numMaxFloats = sizeToBytes(p_onesize) / sizeof(float);
     }
+
+#ifndef NO_CHECK
 
     // Check.  First reset the host memory, then copy-back result.  Then compare against original ref value.
     for (int i = 0; i < numMaxFloats; i++)
@@ -225,24 +247,36 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
             printf ("error: H2D. i=%d reference:%6.f != copyback:%6.2f\n", i, ref, hostMem[i]);
         }
     }
+#endif
 
 
     // Cleanup
     hipFree((void*)device);
     CHECK_HIP_ERROR();
-    if (p_pinned)
-    {
+    switch (p_malloc_mode) {
+    case MallocPinned:
         hipHostFree((void*)hostMem);
         CHECK_HIP_ERROR();
-    }
-    else
-    {
+        break;
+
+    case MallocUnpinned:
         if (p_alignedhost) {
             delete[] hostMem;
         } else {
             free(hostMem);
         }
+        break;
+
+    case MallocRegistered:
+        hipHostUnregister(hostMem);
+        CHECK_HIP_ERROR();
+        free(hostMem);
+        break;
+    default:
+        assert(0);
     }
+
+
     hipEventDestroy(start);
     hipEventDestroy(stop);
 }
@@ -257,38 +291,40 @@ void RunBenchmark_D2H(ResultDatabase &resultDB)
     // Create some host memory pattern
     float *hostMem1;
     float *hostMem2;
-    if (p_pinned)
+    if (p_malloc_mode == MallocPinned)
     {
         hipHostMalloc((void**)&hostMem1, sizeof(float)*numMaxFloats);
         hipError_t err1 = hipGetLastError();
         hipHostMalloc((void**)&hostMem2, sizeof(float)*numMaxFloats);
         hipError_t err2 = hipGetLastError();
-	while (err1 != hipSuccess || err2 != hipSuccess)
-	{
-	    // free the first buffer if only the second failed
-	    if (err1 == hipSuccess)
-	        hipHostFree((void*)hostMem1);
+        while (err1 != hipSuccess || err2 != hipSuccess)
+        {
+            // free the first buffer if only the second failed
+            if (err1 == hipSuccess)
+                hipHostFree((void*)hostMem1);
 
-	    // drop the size and try again
-	    if (p_verbose) std::cout << " - dropping size allocating pinned mem\n";
-	    --nSizes;
-	    if (nSizes < 1)
-	    {
-            std::cerr << "Error: Couldn't allocated any pinned buffer\n";
-		return;
-	    }
-	    numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
-            hipHostMalloc((void**)&hostMem1, sizeof(float)*numMaxFloats);
-            err1 = hipGetLastError();
-            hipHostMalloc((void**)&hostMem2, sizeof(float)*numMaxFloats);
-            err2 = hipGetLastError();
-	}
-   }
-    else
+            // drop the size and try again
+            if (p_verbose) std::cout << " - dropping size allocating pinned mem\n";
+            --nSizes;
+            if (nSizes < 1)
+            {
+                std::cerr << "Error: Couldn't allocate any pinned buffer\n";
+            return;
+            }
+            numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
+                hipHostMalloc((void**)&hostMem1, sizeof(float)*numMaxFloats);
+                err1 = hipGetLastError();
+                hipHostMalloc((void**)&hostMem2, sizeof(float)*numMaxFloats);
+                err2 = hipGetLastError();
+        }
+    }
+    else if (p_malloc_mode == MallocUnpinned) 
     {
         hostMem1 = new float[numMaxFloats];
         hostMem2 = new float[numMaxFloats];
     }
+
+
     for (int i=0; i<numMaxFloats; i++)
         hostMem1[i] = i % 77;
 
@@ -301,7 +337,7 @@ void RunBenchmark_D2H(ResultDatabase &resultDB)
         --nSizes;
         if (nSizes < 1)
         {
-            std::cerr << "Error: Couldn't allocated any device buffer\n";
+            std::cerr << "Error: Couldn't allocate any device buffer\n";
             return;
         }
         numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
@@ -358,8 +394,8 @@ void RunBenchmark_D2H(ResultDatabase &resultDB)
             } else {
                 sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
             }
-            resultDB.AddResult(std::string("D2H_Bandwidth") + (p_pinned ? "_Pinned" : "_Unpinned"), sizeStr, "GB/sec", speed);
-            resultDB.AddResult(std::string("D2H_Time") + (p_pinned ? "_Pinned" : "_Unpinned"), sizeStr, "ms", t);
+            resultDB.AddResult(std::string("D2H_Bandwidth") +"_" + mallocModeString(p_malloc_mode) , sizeStr, "GB/sec", speed);
+            resultDB.AddResult(std::string("D2H_Time") +"_" + mallocModeString(p_malloc_mode) , sizeStr, "ms", t);
             if (p_onesize) {
                 break;
             }
@@ -381,20 +417,24 @@ void RunBenchmark_D2H(ResultDatabase &resultDB)
     // Cleanup
     hipFree((void*)device);
     CHECK_HIP_ERROR();
-    if (p_pinned)
-    {
+
+    switch (p_malloc_mode) {
+    case MallocPinned:
         hipHostFree((void*)hostMem1);
         CHECK_HIP_ERROR();
         hipHostFree((void*)hostMem2);
         CHECK_HIP_ERROR();
-    }
-    else
-    {
+        break;
+    case MallocUnpinned:
         delete[] hostMem1;
         delete[] hostMem2;
-        hipEventDestroy(start);
-	    hipEventDestroy(stop);
+        break;
+    default:
+        assert(0);
     }
+
+    hipEventDestroy(start);
+    hipEventDestroy(stop);
 }
 
 
@@ -409,7 +449,7 @@ void RunBenchmark_Bidir(ResultDatabase &resultDB)
 
     // Create some host memory pattern
     float *hostMem[2] = {NULL, NULL};
-    if (p_pinned)
+    if (p_malloc_mode == MallocPinned)
     {
         while (1) 
         {
@@ -424,14 +464,14 @@ void RunBenchmark_Bidir(ResultDatabase &resultDB)
                 --nSizes;
                 if (nSizes < 1)
                 {
-                    std::cerr << "Error: Couldn't allocated any pinned buffer\n";
+                    std::cerr << "Error: Couldn't allocate any pinned buffer\n";
                 return;
                 }
                 numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
             }
         }
     }
-    else
+    else if (p_malloc_mode == MallocUnpinned) 
     {
         hostMem[0] = new float[numMaxFloats];
         hostMem[1] = new float[numMaxFloats];
@@ -459,7 +499,7 @@ void RunBenchmark_Bidir(ResultDatabase &resultDB)
             --nSizes;
             if (nSizes < 1)
             {
-                std::cerr << "Error: Couldn't allocated any device buffer\n";
+                std::cerr << "Error: Couldn't allocate any device buffer\n";
                 return;
             }
             numMaxFloats = 1024 * (sizes[nSizes-1]) / 4;
@@ -512,8 +552,8 @@ void RunBenchmark_Bidir(ResultDatabase &resultDB)
             double speed = (double(sizeToBytes(thisSize)) / (1000*1000)) / t;
             char sizeStr[256];
             sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
-            resultDB.AddResult(std::string("Bidir_Bandwidth") + (p_pinned ? "_Pinned" : "_Unpinned"), sizeStr, "GB/sec", speed);
-            resultDB.AddResult(std::string("Bidir_Time") + (p_pinned ? "_Pinned" : "_Unpinned"), sizeStr, "ms", t);
+            resultDB.AddResult(std::string("Bidir_Bandwidth") + "_" + mallocModeString(p_malloc_mode), sizeStr, "GB/sec", speed);
+            resultDB.AddResult(std::string("Bidir_Time") + "_" + mallocModeString(p_malloc_mode), sizeStr, "ms", t);
         }
     }
 
@@ -521,17 +561,20 @@ void RunBenchmark_Bidir(ResultDatabase &resultDB)
     hipFree((void*)deviceMem[0]);
     hipFree((void*)deviceMem[1]);
     CHECK_HIP_ERROR();
-    if (p_pinned)
-    {
+    switch (p_malloc_mode) {
+    case MallocPinned:
         hipHostFree((void*)hostMem[0]);
         hipHostFree((void*)hostMem[1]);
         CHECK_HIP_ERROR();
-    }
-    else
-    {
+        break;
+    case MallocUnpinned:
         delete[] hostMem[0];
         delete[] hostMem[1];
-    }
+        break;
+    default:
+        assert(0);
+    };
+
     hipEventDestroy(start);
     hipEventDestroy(stop);
     hipStreamDestroy(stream[0]);
@@ -557,7 +600,7 @@ void printConfig() {
     hipDeviceProp_t props;
     hipGetDeviceProperties(&props, p_device);
 
-    printf ("Device:%s Mem=%.1fGB #CUs=%d Freq=%.0fMhz  Pinned=%s\n", props.name, props.totalGlobalMem/1024.0/1024.0/1024.0, props.multiProcessorCount, props.clockRate/1000.0, p_pinned ? "YES" : "NO");
+    printf ("Device:%s Mem=%.1fGB #CUs=%d Freq=%.0fMhz  MallocMode=%s\n", props.name, props.totalGlobalMem/1024.0/1024.0/1024.0, props.multiProcessorCount, props.clockRate/1000.0, mallocModeString(p_malloc_mode).c_str());
 }
 
 void help() {
@@ -601,7 +644,9 @@ int parseStandardArguments(int argc, char *argv[])
                failed("Bad onesize argument"); 
             }
         } else if (!strcmp(arg, "--unpinned")) {
-            p_pinned = 0;
+            p_malloc_mode = MallocUnpinned;
+        } else if (!strcmp(arg, "--registered")) {
+            p_malloc_mode = MallocRegistered;
         } else if (!strcmp(arg, "--h2d")) {
             p_h2d   = true;
             p_d2h   = false;
