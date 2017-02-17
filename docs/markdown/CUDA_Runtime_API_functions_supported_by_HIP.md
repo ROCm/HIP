@@ -194,7 +194,7 @@
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaBindTexture`                                         | `hipBindTexture`              | Binds a memory area to a texture.                                                                                              |
+| `cudaBindTexture`                                         |                               | Binds a memory area to a texture.                                                                                              |
 | `cudaBindTexture2D`                                       |                               | Binds a 2D memory area to a texture.                                                                                           |
 | `cudaBindTextureToArray`                                  |                               | Binds an array to a texture.                                                                                                   |
 | `cudaBindTextureToMipmappedArray`                         |                               | Binds a mipmapped array to a texture.                                                                                          |
@@ -202,7 +202,7 @@
 | `cudaGetChannelDesc`                                      |                               | Get the channel descriptor of an array.                                                                                        |
 | `cudaGetTextureAlignmentOffset`                           |                               | Get the alignment offset of a texture.                                                                                         |
 | `cudaGetTextureReference`                                 |                               | Get the texture reference associated with a symbol.                                                                            |
-| `cudaUnbindTexture`                                       | `hipUnbindTexture`            | Unbinds a texture.                                                                                                             |
+| `cudaUnbindTexture`                                       |                               | Unbinds a texture.                                                                                                             |
 
 **14. Surface Reference Management**
 
@@ -241,7 +241,7 @@
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
 | `cudaBindSurfaceToArray`                                  |                               | Binds an array to a surface.                                                                                                   |
-| `cudaBindTexture`                                         |                               | Binds a memory area to a texture.                                                                                              |
+| `cudaBindTexture`                                         | `hipBindTexture`              | Binds a memory area to a texture.                                                                                              |
 | `cudaBindTexture2D`                                       |                               | Binds a 2D memory area to a texture.                                                                                           |
 | `cudaBindTextureToArray`                                  |                               | Binds an array to a texture.                                                                                                   |
 | `cudaBindTextureToMipmappedArray`                         |                               | Binds a mipmapped array to a texture.                                                                                          |
@@ -267,7 +267,7 @@
 | `cudaOccupancyMaxPotentialBlockSizeWithFlags`             |                               | Returns grid and block size that achived maximum potential occupancy for a device function with the specified flags.           |
 | `cudaSetupArgument`                                       |                               | Configure a device launch.                                                                                                     |
 | `cudaStreamAttachMemAsync`                                |                               | Attach memory to a stream asynchronously.                                                                                      |
-| `cudaUnbindTexture`                                       |                               | Unbinds a texture.                                                                                                             |
+| `cudaUnbindTexture`                                       | `hipUnbindTexture`            | Unbinds a texture.                                                                                                             |
 
 **19. Profiler Control**
 
