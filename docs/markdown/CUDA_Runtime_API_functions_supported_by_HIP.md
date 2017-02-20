@@ -1,6 +1,6 @@
 # CUDA Runtime API functions supported by HIP
 
-**1. Device Management**
+## **1. Device Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -30,7 +30,7 @@
 | `cudaSetDeviceFlags`                                      | `hipSetDeviceFlags`           | Sets flags to be used for device executions.                                                                                   |
 | `cudaSetValidDevices`                                     |                               | Set a list of devices that can be used for CUDA.                                                                               |
 
-**2. Error Handling**
+## **2. Error Handling**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -39,7 +39,7 @@
 | `cudaGetLastError`                                        | `hipGetLastError`             | Returns the last error from a runtime call.                                                                                    |
 | `cudaPeekAtLastError`                                     | `hipPeekAtLastError`          | Returns the last error from a runtime call.                                                                                    |
 
-**3. Stream Management**
+## **3. Stream Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -55,7 +55,7 @@
 | `cudaStreamSynchronize`                                   | `hipStreamSynchronize`        | Waits for stream tasks to complete.                                                                                            |
 | `cudaStreamWaitEvent`                                     | `hipStreamWaitEvent`          | Make a compute stream wait on an event.                                                                                        |
 
-**4. Event Management**
+## **4. Event Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -67,7 +67,7 @@
 | `cudaEventRecord`                                         | `hipEventRecord`              | Records an event.                                                                                                              |
 | `cudaEventSynchronize`                                    | `hipEventSynchronize`         | Waits for an event to complete.                                                                                                |
 
-**5. Execution Control**
+## **5. Execution Control**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -80,14 +80,14 @@
 | `cudaSetDoubleForDevice`                                  |                               | Converts a double argument to be executed on a device.                                                                         |
 | `cudaSetDoubleForHost`                                    |                               | Converts a double argument after execution on a device.                                                                        |
 
-**6. Occupancy**
+## **6. Occupancy**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
 | `cudaOccupancyMaxActiveBlocksPerMultiprocessor`           | `hipOccupancyMaxActiveBlocksPerMultiprocessor`| Returns occupancy for a device function.                                                                       |
 | `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |                               | Returns occupancy for a device function with the specified flags.                                                              |
 
-**7. Execution Control [deprecated since 7.0]**
+## **7. Execution Control [deprecated since 7.0]**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -95,7 +95,7 @@
 | `cudaLaunch`                                              |                               | Launches a device function.                                                                                                    |
 | `cudaSetupArgument`                                       |                               | Configure a device launch.                                                                                                     |
 
-**8. Memory Management**
+## **8. Memory Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -155,13 +155,13 @@
 | `make\_cudaPitchedPtr`                                    |                               | Returns a cudaPitchedPtr based on input parameters.                                                                            |
 | `make\_cudaPos`                                           |                               | Returns a cudaPos based on input parameters.                                                                                   |
 
-**9. Unified Addressing**
+## **9. Unified Addressing**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
 | `cudaPointerGetAttributes`                                | `hipPointerGetAttributes`     | Returns attributes about a specified pointer.                                                                                  |
 
-**10. Peer Device Memory Access**
+## **10. Peer Device Memory Access**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -169,7 +169,7 @@
 | `cudaDeviceDisablePeerAccess`                             | `hipDeviceDisablePeerAccess`  | Disables direct access to memory allocations on a peer device.                                                                 |
 | `cudaDeviceEnablePeerAccess`                              | `hipDeviceEnablePeerAccess`   | Enables direct access to memory allocations on a peer device.                                                                  |
 
-**11. OpenGL Interoperability**
+## **11. OpenGL Interoperability**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -178,7 +178,7 @@
 | `cudaGraphicsGLRegisterImage`                             |                               | Register an OpenGL texture or renderbuffer object.                                                                             |
 | `cudaWGLGetDevice`                                        |                               | Gets the CUDA device associated with hGpu.                                                                                     |
 
-**12. Graphics Interoperability**
+## **12. Graphics Interoperability**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -190,7 +190,7 @@
 | `cudaGraphicsUnmapResources`                              |                               | Unmap graphics resources.                                                                                                      |
 | `cudaGraphicsUnregisterResource`                          |                               | Unregisters a graphics resource for access by CUDA.                                                                            |
 
-**13. Texture Reference Management**
+## **13. Texture Reference Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -204,14 +204,14 @@
 | `cudaGetTextureReference`                                 |                               | Get the texture reference associated with a symbol.                                                                            |
 | `cudaUnbindTexture`                                       |                               | Unbinds a texture.                                                                                                             |
 
-**14. Surface Reference Management**
+## **14. Surface Reference Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
 | `cudaBindSurfaceToArray`                                  |                               | Binds an array to a surface.                                                                                                   |
 | `cudaGetSurfaceReference`                                 |                               | Get the surface reference associated with a symbol.                                                                            |
 
-**15. Texture Object Management**
+## **15. Texture Object Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -221,7 +221,7 @@
 | `cudaGetTextureObjectResourceViewDesc`                    |                               | Returns a texture object's resource view descriptor.                                                                           |
 | `cudaGetTextureObjectTextureDesc`                         |                               | Returns a texture object's texture descriptor.                                                                                 |
 
-**16. Surface Object Management**
+## **16. Surface Object Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -229,14 +229,15 @@
 | `cudaDestroySurfaceObject`                                |                               | Destroys a surface object.                                                                                                     |
 | `cudaGetSurfaceObjectResourceDesc`                        |                               | Returns a surface object's resource descriptor Returns the resource descriptor for the surface object specified by surfObject. |
 
-**17. Version Management**
+## **17. Version Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
 | `cudaDriverGetVersion`                                    | `hipDriverGetVersion`         | Returns the CUDA driver version.                                                                                               |
 | `cudaRuntimeGetVersion`                                   | `hipRuntimeGetVersion`        | Returns the CUDA Runtime version.                                                                                              |
 
-**18. C++ API Routines (7.0 contains, 7.5 doesn’t)**
+## **18. C++ API Routines**
+*(7.0 contains, 7.5 doesn’t)*
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -269,10 +270,107 @@
 | `cudaStreamAttachMemAsync`                                |                               | Attach memory to a stream asynchronously.                                                                                      |
 | `cudaUnbindTexture`                                       | `hipUnbindTexture`            | Unbinds a texture.                                                                                                             |
 
-**19. Profiler Control**
+## **19. Profiler Control**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
 | `cudaProfilerInitialize`                                  |                               | Initialize the CUDA profiler.                                                                                                  |
 | `cudaProfilerStart`                                       | `hipProfilerStart`            | Enable profiling.                                                                                                              |
 | `cudaProfilerStop`                                        | `hipProfilerStop`             | Disable profiling.                                                                                                             |
+
+# Data types used by CUDA Runtime API and supported by HIP
+
+## **20. Data types**
+
+| **type**     |   **CUDA**                                 |   **HIP**                     | **CUDA description**                                                                                                           |
+|--------------|--------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| struct       | `cudaChannelFormatDesc`                    | `hipChannelFormatDesc`        | CUDA Channel format descriptor.                                                                                                |
+| struct       | `cudaDeviceProp`                           | `hipDeviceProp_t`             | CUDA device properties.                                                                                                        |
+| struct       | `cudaExtent`                               |                               | CUDA extent (width, height, depth).                                                                                            |
+| struct       | `cudaFuncAttributes`                       |                               | CUDA function attributes.                                                                                                      |
+| struct       | `cudaIpcEventHandle_t`                     | `hipIpcEventHandle_t`         | CUDA IPC event handle.                                                                                                         |
+| struct       | `cudaIpcMemHandle_t`                       | `hipIpcMemHandle_t`           | CUDA IPC memory handle.                                                                                                        |
+| struct       | `cudaMemcpy3DParms`                        |                               | CUDA 3D memory copying parameters.                                                                                             |
+| struct       | `cudaMemcpy3DPeerParms`                    |                               | CUDA 3D cross-device memory copying parameters.                                                                                |
+| struct       | `cudaPitchedPtr`                           |                               | CUDA Pitched memory pointer.                                                                                                   |
+| struct       | `cudaPointerAttributes`                    | `hipPointerAttribute_t`       | CUDA pointer attributes.                                                                                                       |
+| struct       | `cudaPos`                                  |                               | CUDA 3D position.                                                                                                              |
+| struct       | `cudaResourceDesc`                         |                               | CUDA resource descriptor.                                                                                                      |
+| struct       | `cudaResourceViewDesc`                     |                               | CUDA resource view descriptor.                                                                                                 |
+| struct       | `cudaTextureDesc`                          |                               | CUDA texture descriptor.                                                                                                       |
+| struct       | `surfaceReference`                         |                               | CUDA Surface reference.                                                                                                        |
+| struct       | `textureReference`                         | `textureReference`            | CUDA texture reference.                                                                                                        |
+| enum         | `cudaChannelFormatKind`                    | `hipChannelFormatKind`        | Channel format kind.                                                                                                           |
+| enum         | `cudaComputeMode`                          |                               | CUDA device compute modes.                                                                                                     |
+| enum         | `cudaDeviceAttr`                           | `hipDeviceAttribute_t`        | CUDA device attributes.                                                                                                        |
+| enum         | `cudaError`                                | `hipError_t`                  | CUDA Error types.                                                                                                              |
+| enum         | `cudaError_t`                              | `hipError_t`                  | CUDA Error types.                                                                                                              |
+| enum         | `cudaFuncCache`                            | `hipFuncCache_t`              | CUDA function cache configurations.                                                                                            |
+| enum         | `cudaGraphicsCubeFace`                     |                               | CUDA graphics interop array indices for cube maps.                                                                             |
+| enum         | `cudaGraphicsMapFlags`                     |                               | CUDA graphics interop map flags.                                                                                               |
+| enum         | `cudaGraphicsRegisterFlags`                |                               | CUDA graphics interop register flags.                                                                                          |
+| enum         | `cudaMemcpyKind`                           | `hipMemcpyKind`               | CUDA memory copy types.                                                                                                        |
+| enum         | `cudaMemoryType`                           | `hipMemoryType`               | CUDA memory types.                                                                                                             |
+| enum         | `cudaOutputMode`                           |                               | CUDA Profiler Output modes.                                                                                                    |
+| enum         | `cudaResourceType`                         |                               | CUDA resource types.                                                                                                           |
+| enum         | `cudaResourceViewFormat`                   |                               | CUDA texture resource view formats.                                                                                            |
+| enum         | `cudaSharedMemConfig`                      | `hipSharedMemConfig`          | CUDA shared memory configuration.                                                                                              |
+| enum         | `cudaSurfaceBoundaryMode`                  |                               | CUDA Surface boundary modes.                                                                                                   |
+| enum         | `cudaSurfaceFormatMode`                    |                               | CUDA Surface format modes.                                                                                                     |
+| enum         | `cudaTextureAddressMode`                   |                               | CUDA texture address modes.                                                                                                    |
+| enum         | `cudaTextureFilterMode`                    | `hipTextureFilterMode`        | CUDA texture filter modes.                                                                                                     |
+| enum         | `cudaTextureReadMode`                      | `hipTextureReadMode`          | CUDA texture read modes.                                                                                                       |
+| struct       | `cudaArray`                                | `hipArray`                    | CUDA array [opaque].                                                                                                           |
+| typedef      | `cudaArray_t`                              | `hipArray *`                  | CUDA array pointer.                                                                                                            |
+| typedef      | `cudaArray_const_t`                        | `const hipArray *`            | CUDA array (as source copy argument).                                                                                          |
+| enum         | `cudaError`                                | `hipError_t`                  | CUDA Error types.                                                                                                              |
+| typedef      | `cudaError_t`                              | `hipError_t`                  | CUDA Error types.                                                                                                              |
+| typedef      | `cudaEvent_t`                              | `hipEvent_t`                  | CUDA event types.                                                                                                              |
+| typedef      | `cudaGraphicsResource_t`                   |                               | CUDA graphics resource types.                                                                                                  |
+| typedef      | `cudaMipmappedArray_t`                     |                               | CUDA mipmapped array.                                                                                                          |
+| typedef      | `cudaMipmappedArray_const_t`               |                               | CUDA mipmapped array (as source argument).                                                                                     |
+| enum         | `cudaOutputMode`                           |                               | CUDA output file modes.                                                                                                        |
+| typedef      | `cudaOutputMode_t`                         |                               | CUDA output file modes.                                                                                                        |
+| typedef      | `cudaStream_t`                             | `hipStream_t`                 | CUDA stream.                                                                                                                   |
+| typedef      | `cudaSurfaceObject_t`                      |                               | An opaque value that represents a CUDA Surface object.                                                                         |
+| typedef      | `cudaTextureObject_t`                      |                               | An opaque value that represents a CUDA texture object.                                                                         |
+| typedef      | `CUuuid_stcudaUUID_t`                      |                               | CUDA UUID types.                                                                                                               |
+| define       | `CUDA_IPC_HANDLE_SIZE`                     |                               | CUDA IPC Handle Size.                                                                                                          |
+| define       | `cudaArrayCubemap`                         |                               | Must be set in cudaMalloc3DArray to create a cubemap CUDA array.                                                               |
+| define       | `cudaArrayDefault`                         |                               | Default CUDA array allocation flag.                                                                                            |
+| define       | `cudaArrayLayered`                         |                               | Must be set in cudaMalloc3DArray to create a layered CUDA array.                                                               |
+| define       | `cudaArraySurfaceLoadStore`                |                               | Must be set in cudaMallocArray or cudaMalloc3DArray in order to bind surfaces to the CUDA array.                               |
+| define       | `cudaArrayTextureGather`                   |                               | Must be set in cudaMallocArray or cudaMalloc3DArray in order to perform texture gather operations on the CUDA array.           |
+| define       | `cudaDeviceBlockingSync`                   | `hipDeviceScheduleBlockingSync` | Device flag - Use blocking synchronization. Deprecated as of CUDA 4.0 and replaced with cudaDeviceScheduleBlockingSync.      |
+| define       | `cudaDeviceLmemResizeToMax`                |                               | Device flag - Keep local memory allocation after launch.                                                                       |
+| define       | `cudaDeviceMapHost`                        |                               | Device flag - Support mapped pinned allocations.                                                                               |
+| define       | `cudaDeviceMask`                           |                               | Device flags mask.                                                                                                             |
+| define       | `cudaDevicePropDontCare`                   |                               | Empty device properties.                                                                                                       |
+| define       | `cudaDeviceScheduleAuto`                   | `hipDeviceScheduleAuto`       | Device flag - Automatic scheduling.                                                                                            |
+| define       | `cudaDeviceScheduleBlockingSync`           | `hipDeviceScheduleBlockingSync` | Device flag - Use blocking synchronization.                                                                                  |
+| define       | `cudaDeviceScheduleMask`                   | `hipDeviceScheduleMask`       | Device schedule flags mask.                                                                                                    |
+| define       | `cudaDeviceScheduleSpin`                   | `hipDeviceScheduleSpin`       | Device flag - Spin default scheduling.                                                                                         |
+| define       | `cudaDeviceScheduleYield`                  | `hipDeviceScheduleYield`      | Device flag - Yield default scheduling.                                                                                        |
+| define       | `cudaEventBlockingSync`                    | `hipEventBlockingSync`        | Event uses blocking synchronization.                                                                                           |
+| define       | `cudaEventDefault`                         | `hipEventDefault`             | Default event flag.                                                                                                            |
+| define       | `cudaEventDisableTiming`                   | `hipEventDisableTiming`       | Event will not record timing data.                                                                                             |
+| define       | `cudaEventInterprocess`                    | `hipEventInterprocess`        | Event is suitable for interprocess use. cudaEventDisableTiming must be set.                                                    |
+| define       | `cudaHostAllocDefault`                     | `hipHostMallocDefault`        | Default page-locked allocation flag.                                                                                           |
+| define       | `cudaHostAllocMapped`                      | `hipHostMallocMapped`         | Map allocation into device space.                                                                                              |
+| define       | `cudaHostAllocPortable`                    | `hipHostMallocPortable`       | Pinned memory accessible by all CUDA contexts.                                                                                 |
+| define       | `cudaHostAllocWriteCombined`               | `hipHostMallocWriteCombined`  | Write-combined memory.                                                                                                         |
+| define       | `cudaHostRegisterDefault`                  | `hipHostRegisterDefault`      | Default host memory registration flag.                                                                                         |
+| define       | `cudaHostRegisterIoMemory`                 | `hipHostRegisterIoMemory`     | Memory-mapped I/O space.                                                                                                       |
+| define       | `cudaHostRegisterMapped`                   | `hipHostRegisterMapped`       | Map registered memory into device space.                                                                                       |
+| define       | `cudaHostRegisterPortable`                 | `hipHostRegisterPortable`     | Pinned memory accessible by all CUDA contexts.                                                                                 |
+| define       | `cudaIpcMemLazyEnablePeerAccess`           | `hipIpcMemLazyEnablePeerAccess` | Automatically enable peer access between remote devices as needed.                                                           |
+| define       | `cudaMemAttachGlobal`                      |                               | Memory can be accessed by any stream on any device.                                                                            |
+| define       | `cudaMemAttachHost`                        |                               | Memory cannot be accessed by any stream on any device.                                                                         |
+| define       | `cudaMemAttachSingle`                      |                               | Memory can only be accessed by a single stream on the associated device.                                                       |
+| define       | `cudaOccupancyDefault`                     |                               | Default behavior.                                                                                                              |
+| define       | `cudaOccupancyDisableCachingOverride`      |                               | Assume global caching is enabled and cannot be automatically turned off.                                                       |
+| define       | `cudaPeerAccessDefault`                    |                               | Default peer addressing enable flag.                                                                                           |
+| define       | `cudaStreamDefault`                        | `hipStreamDefault`            | Default stream flag.                                                                                                           |
+| define       | `cudaStreamLegacy`                         |                               | Default stream flag.                                                                                                           |
+| define       | `cudaStreamNonBlocking`                    | `hipStreamNonBlocking`        | Stream does not synchronize with stream 0 (the NULL stream).                                                                   |
+| define       | `cudaStreamPerThread`                      |                               | Per-thread stream handle.                                                                                                      |
