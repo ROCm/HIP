@@ -9,7 +9,7 @@
 | `cudaDeviceGetByPCIBusId`                                 | `hipDeviceGetByPCIBusId`      | Returns a handle to a compute device.                                                                                          |
 | `cudaDeviceGetCacheConfig`                                | `hipDeviceGetCacheConfig`     | Returns the preferred cache configuration for the current device.                                                              |
 | `cudaDeviceGetLimit`                                      | `hipDeviceGetLimit`           | Returns resource limits.                                                                                                       |
-| `cudaDeviceGetPCIBusId`                                   |                               | Returns a PCI Bus Id string for the device.                                                                                    |
+| `cudaDeviceGetPCIBusId`                                   | `hipDeviceGetPCIBusId`        | Returns a PCI Bus Id string for the device.                                                                                    |
 | `cudaDeviceGetSharedMemConfig`                            | `hipDeviceGetSharedMemConfig` | Returns the shared memory configuration for the current device.                                                                |
 | `cudaDeviceGetStreamPriorityRange`                        |                               | Returns numerical values that correspond to the least and greatest stream priorities.                                          |
 | `cudaDeviceReset`                                         | `hipDeviceReset`              | Destroy all allocations and reset all state on the current device in the current process.                                      |
@@ -151,9 +151,9 @@
 | `cudaMemset3D`                                            |                               | Initializes or sets device memory to a value.                                                                                  |
 | `cudaMemset3DAsync`                                       |                               | Initializes or sets device memory to a value.                                                                                  |
 | `cudaMemsetAsync`                                         | `hipMemsetAsync`              | Initializes or sets device memory to a value.                                                                                  |
-| `make\_cudaExtent`                                        |                               | Returns a cudaExtent based on input parameters.                                                                                |
-| `make\_cudaPitchedPtr`                                    |                               | Returns a cudaPitchedPtr based on input parameters.                                                                            |
-| `make\_cudaPos`                                           |                               | Returns a cudaPos based on input parameters.                                                                                   |
+| `make_cudaExtent`                                         |                               | Returns a cudaExtent based on input parameters.                                                                                |
+| `make_cudaPitchedPtr`                                     |                               | Returns a cudaPitchedPtr based on input parameters.                                                                            |
+| `make_cudaPos`                                            |                               | Returns a cudaPos based on input parameters.                                                                                   |
 
 ## **9. Unified Addressing**
 
