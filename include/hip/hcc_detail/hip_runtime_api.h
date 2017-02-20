@@ -511,12 +511,10 @@ const char *hipGetErrorString(hipError_t hipError);
  *  @{
  *
  *  The following Stream APIs are not (yet) supported in HIP:
- *  - cudaStreamAddCallback
  *  - cudaStreamAttachMemAsync
  *  - cudaStreamCreateWithPriority
  *  - cudaStreamGetPriority
- *  - cudaStreamWaitEvent
- */
+  */
 
 
 /**
