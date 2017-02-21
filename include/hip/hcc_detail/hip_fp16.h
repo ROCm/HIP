@@ -36,6 +36,9 @@ typedef struct __attribute__((aligned(4))){
   };
 } __half2;
 
+typedef __half half;
+typedef __half2 half2;
+
 /*
 Half Arithmetic Functions
 */
