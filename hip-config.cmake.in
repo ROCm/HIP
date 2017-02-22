@@ -39,13 +39,16 @@ if (NOT _CMakeFindDependencyMacro_FOUND)
   endmacro()
 endif()
 
-find_dependency(hcc)
 
 set_and_check( hip_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@" )
 set_and_check( hip_INCLUDE_DIRS "${hip_INCLUDE_DIR}" )
 set_and_check( hip_LIB_INSTALL_DIR "@PACKAGE_LIB_INSTALL_DIR@" )
 set_and_check( hip_BIN_INSTALL_DIR "@PACKAGE_BIN_INSTALL_DIR@" )
 
+set_and_check(HIP_HIPCC_EXECUTABLE "${hip_BIN_INSTALL_DIR}/hipcc")
+set_and_check(HIP_HIPCONFIG_EXECUTABLE "${hip_BIN_INSTALL_DIR}/hipconfig")
+
+find_dependency(hcc)
 include( "${CMAKE_CURRENT_LIST_DIR}/hip-targets.cmake" )
 
 set( hip_LIBRARIES hip::hip_hcc)
@@ -58,5 +61,3 @@ set(HIP_BIN_INSTALL_DIR ${hip_BIN_INSTALL_DIR})
 set(HIP_LIBRARIES ${hip_LIBRARIES})
 set(HIP_LIBRARY ${hip_LIBRARY})
 
-set_and_check(HIP_HIPCC_EXECUTABLE "${hip_BIN_INSTALL_DIR}/hipcc")
-set_and_check(HIP_HIPCONFIG_EXECUTABLE "${hip_BIN_INSTALL_DIR}/hipconfig")
