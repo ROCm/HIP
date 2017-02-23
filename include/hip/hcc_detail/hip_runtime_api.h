@@ -1159,6 +1159,8 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t siz
  */
 hipError_t hipMemcpyToSymbolAsync(const char* symbolName, const void *src, size_t sizeBytes, size_t offset, hipMemcpyKind kind, hipStream_t stream);
 
+hipError_t hipMemcpyFromSymbol(void *dst, const char* symbolName, size_t sizeBytes, size_t offset, hipMemcpyKind kind);
+
 hipError_t hipMemcpyFromSymbolAsync(void *dst, const char* symbolName, size_t sizeBytes, size_t offset, hipMemcpyKind kind, hipStream_t stream);
 
 /**

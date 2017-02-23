@@ -470,6 +470,42 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t cou
     return ihipLogStatus(hipSuccess);
 }
 
+
+hipError_t hipMemcpyFromSymbol(void* dst, const char* symbolName, size_t count, size_t offset, hipMemcpyKind kind)
+{
+    HIP_INIT_CMD_API(symbolName, dst, count, offset, kind);
+
+    if(symbolName == nullptr)
+    {
+        return ihipLogStatus(hipErrorInvalidSymbol);
+    }
+
+    auto ctx = ihipGetTlsDefaultCtx();
+
+    hc::accelerator acc = ctx->getDevice()->_acc;
+
+    void *src = acc.get_symbol_address(symbolName);
+    tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, dst);
+
+    if(dst == nullptr)
+    {
+        return ihipLogStatus(hipErrorInvalidSymbol);
+    }
+
+    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+    if(kind == hipMemcpyHostToDevice || kind == hipMemcpyDeviceToHost || kind == hipMemcpyDeviceToDevice || kind == hipMemcpyHostToHost)
+    {
+      stream->lockedSymbolCopySync(acc, dst, (void*)src, count + offset, kind);
+    }
+    else {
+      return ihipLogStatus(hipErrorInvalidValue);
+    }
+
+    return ihipLogStatus(hipSuccess);
+}
+
+
 hipError_t hipMemcpyToSymbolAsync(const char* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind, hipStream_t stream)
 {
     HIP_INIT_CMD_API(symbolName, src, count, offset, kind, stream);

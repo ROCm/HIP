@@ -89,8 +89,10 @@ int main()
     hipMemcpyToSymbol(HIP_SYMBOL(globalIn), A, SIZE, 0, hipMemcpyHostToDevice);
     hipLaunchKernel(Assign, dim3(1,1,1), dim3(NUM,1,1), 0, 0, Ad);
     hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost);
+    hipMemcpyFromSymbol(C, HIP_SYMBOL(globalOut), SIZE, 0, hipMemcpyDeviceToHost);
     for(unsigned i=0;i<NUM;i++) {
         assert(A[i] == B[i]);
+//        assert(A[i] == C[i]);
     }
 
     passed();
