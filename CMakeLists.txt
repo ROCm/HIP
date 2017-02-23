@@ -33,7 +33,7 @@ execute_process(COMMAND git show -s --format=@%ct
     OUTPUT_VARIABLE HIP_VERSION_PATCH
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-set(HIP_VERSION $HIP_VERSION_MAJOR.$HIP_VERSION_MINOR.$HIP_VERSION_PATCH)
+set(HIP_VERSION ${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}.${HIP_VERSION_PATCH})
 add_to_config(_versionInfo HIP_VERSION_MAJOR)
 add_to_config(_versionInfo HIP_VERSION_MINOR)
 add_to_config(_versionInfo HIP_VERSION_PATCH)
@@ -158,7 +158,8 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DHIP_VERSION_MAJOR=${HIP_VERSION_MAJOR} -DHIP_VERSION_MINOR=${HIP_VERSION_MINOR} -DHIP_VERSION_PATCH=${HIP_VERSION_PATCH}")
 
     # Add remaining flags
-    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include -I/usr/local/include/c++/v1 -stdlib=libc++")
+    execute_process(COMMAND ${HCC_HOME}/bin/hcc-config --cxxflags OUTPUT_VARIABLE HCC_CXX_FLAGS)
+    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC ${HCC_CXX_FLAGS} -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include")
 
     # Set compiler and compiler flags
     set(CMAKE_CXX_COMPILER "${HCC_HOME}/bin/hcc")
@@ -175,22 +176,32 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/hip_memory.cpp
         src/hip_peer.cpp
         src/hip_stream.cpp
-        src/hip_module.cpp)
+        src/hip_module.cpp
+        src/env.cpp)
 
     set(SOURCE_FILES_DEVICE
         src/device_util.cpp
         src/hip_ldg.cpp
         src/hip_fp16.cpp
-        src/device_functions.cpp)
+        src/device_functions.cpp
+        src/math_functions.cpp)
 
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L${HCC_HOME}/lib -lmcwamp -Wl,-Bsymbolic -Wl,-rpath ${HCC_HOME}/lib")
+    execute_process(COMMAND ${HCC_HOME}/bin/hcc-config --ldflags OUTPUT_VARIABLE HCC_LD_FLAGS)
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${HCC_LD_FLAGS} -Wl,-Bsymbolic")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --amdgpu-target=gfx701 --amdgpu-target=gfx801 --amdgpu-target=gfx802 --amdgpu-target=gfx803")
     add_library(hip_hcc SHARED ${SOURCE_FILES_RUNTIME})
-    target_link_libraries(hip_hcc c++ c++abi hc_am)
+    target_link_libraries(hip_hcc PRIVATE hc_am)
     add_library(hip_hcc_static STATIC ${SOURCE_FILES_RUNTIME})
-    target_link_libraries(hip_hcc_static c++ c++abi hc_am)
+    target_link_libraries(hip_hcc_static PRIVATE hc_am)
     add_dependencies(hip_hcc_static hip_hcc)
     add_library(hip_device STATIC ${SOURCE_FILES_DEVICE})
     add_dependencies(hip_device hip_hcc)
+
+    string(REPLACE " " ";" HCC_CXX_FLAGS_LIST ${HCC_CXX_FLAGS})
+    foreach(TARGET hip_hcc hip_hcc_static hip_device)
+        target_include_directories(${TARGET} SYSTEM INTERFACE $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>;${HSA_PATH}/include)
+    endforeach()
+    target_link_libraries(hip_hcc INTERFACE hcc::hccrt;hcc::hc_am)
 
     # Generate hcc_version.txt
     add_custom_target(query_hcc_version COMMAND ${HCC_HOME}/bin/hcc --version > ${PROJECT_BINARY_DIR}/hcc_version.tmp)
@@ -216,7 +227,7 @@ add_custom_target(doc COMMAND HIP_PATH=${CMAKE_CURRENT_SOURCE_DIR} doxygen ${CMA
 # Install hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
     install(TARGETS hip_hcc_static hip_hcc hip_device DESTINATION lib)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_ir.ll DESTINATION lib)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_hc.ll ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_hc_gfx803.ll DESTINATION lib)
 
     # Install .hipInfo
     install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)
@@ -233,6 +244,39 @@ if(NOT ${INSTALL_SOURCE} EQUAL 0)
     install(DIRECTORY bin DESTINATION . USE_SOURCE_PERMISSIONS)
     install(DIRECTORY include DESTINATION .)
     install(DIRECTORY cmake DESTINATION .)
+endif()
+
+#############################
+# hip-config
+#############################
+set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
+set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
+
+if(HIP_PLATFORM STREQUAL "hcc")
+    install(TARGETS hip_hcc_static hip_hcc hip_device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
+    install(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
+    include(CMakePackageConfigHelpers)
+
+    configure_package_config_file(
+        hip-config.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
+        INSTALL_DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR}
+        PATH_VARS LIB_INSTALL_DIR INCLUDE_INSTALL_DIR BIN_INSTALL_DIR
+        )
+    write_basic_package_version_file(
+        ${CMAKE_CURRENT_BINARY_DIR}/hip-config-version.cmake
+        VERSION "${HIP_VERSION}"
+        COMPATIBILITY SameMajorVersion
+        )
+    install(
+        FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/hip-config-version.cmake
+        DESTINATION
+        ${CONFIG_PACKAGE_INSTALL_DIR}
+        )
 endif()
 
 #############################

@@ -20,15 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-/* HIT_START
- * BUILD: %tHost %s hipSinglePrecisionMathHost.cpp hipDoublePrecisionMathHost.cpp ../test_common.cpp
- * BUILD: %tDevice %s hipSinglePrecisionMathDevice.cpp hipDoublePrecisionMathDevice.cpp ../test_common.cpp
- * BUILD: hipIntrinsics %s hipSinglePrecisionIntrinsics.cpp hipDoublePrecisionIntrinsics.cpp hipIntegerIntrinsics.cpp ../test_common.cpp
- * RUN: %tHost
- * RUN: %tDevice
- * RUN: hipIntrinsics
- * HIT_END
- */
 
 #include "hip/hip_runtime.h"
 #include "test_common.h"

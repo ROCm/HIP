@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,7 @@ THE SOFTWARE.
 
 
 // __device__ maps to __attribute__((hc))
-__device__ int foo(int i) 
+__device__ int foo(int i)
 {
     return i+1;
 }
@@ -96,4 +96,3 @@ int main(int argc, char *argv[])
 
     passed();
 }
-

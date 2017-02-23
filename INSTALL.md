@@ -22,14 +22,14 @@ HIP code can be developed either on AMD ROCm platform using hcc compiler, or a C
 
 ## AMD-hcc
 
-* Install the [rocm](http://gpuopen.com/getting-started-with-boltzmann-components-platforms-installation/) packages.  Rocm will install all of the necessary components, including the kernel driver, runtime software, HCC compiler, and HIP.
+* Install the [rocm](http://gpuopen.com/getting-started-with-boltzmann-components-platforms-installation/) packages.  ROCm will install all of the necessary components, including the kernel driver, runtime software, HCC compiler, and HIP.
 
 * Default paths and environment variables:
 
    * By default HIP looks for hcc in /opt/rocm/hcc (can be overridden by setting HCC_HOME environment variable)
    * By default HIP looks for HSA in /opt/rocm/hsa (can be overridden by setting HSA_PATH environment variable) 
    * By default HIP is installed into /opt/rocm/hip (can be overridden by setting HIP_PATH environment variable).
-   * Optionally, consider adding /opt/rocm/bin to your path to make it easier to use the tools.
+   * Optionally, consider adding /opt/rocm/bin to your PATH to make it easier to use the tools.
 
 
 ## NVIDIA-nvcc
@@ -96,7 +96,7 @@ The native GCN target is included with upstream LLVM, and has also been integrat
 Binary packages for the direct-to-isa package are included with the [rocm](http://gpuopen.com/getting-started-with-boltzmann-components-platforms-installation/) package. 
 Alternatively, this sections describes how to build it from source: 
 
-1. Install the rocm packages as described above.
+1. Install the ROCm packages as described above.
 2. Follow the instructions [here](https://github.com/RadeonOpenCompute/HCC-Native-GCN-ISA/wiki)
    * In the make step for HCC, we recommend setting -DCMAKE_INSTALL_PREFIX.  
    * Set HCC_HOME environment variable before compiling HIP program to point to the native compiler:

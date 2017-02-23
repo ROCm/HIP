@@ -26,8 +26,8 @@ THE SOFTWARE.
  */
 
 //#pragma once
-#ifndef HIP_RUNTIME_H
-#define HIP_RUNTIME_H
+#ifndef HIP_HCC_DETAIL_RUNTIME_H
+#define HIP_HCC_DETAIL_RUNTIME_H
 
 //---
 // Top part of file can be compiled with any compiler
@@ -69,6 +69,9 @@ extern int HIP_TRACE_API;
 #include <hip/hcc_detail/hip_ldg.h>
 #endif
 #include <hip/hcc_detail/host_defines.h>
+#include <hip/hcc_detail/math_functions.h>
+#include <hip/hcc_detail/device_functions.h>
+
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
 #if defined (__KALMAR_ACCELERATOR__) && !defined (__HCC_ACCELERATOR__)
 #define __HCC_ACCELERATOR__  __KALMAR_ACCELERATOR__
@@ -120,206 +123,6 @@ extern int HIP_TRACE_API;
 #elif defined(__STDC_VERSION__)
 #define __HCC_C__
 #endif
-
-__device__ float acosf(float x);
-__device__ float acoshf(float x);
-__device__ float asinf(float x);
-__device__ float asinhf(float x);
-__device__ float atan2f(float y, float x);
-__device__ float atanf(float x);
-__device__ float atanhf(float x);
-__device__ float cbrtf(float x);
-__device__ float ceilf(float x);
-__device__ float copysignf(float x, float y);
-__device__ float coshf(float x);
-__device__ float cyl_bessel_i0f(float x);
-__device__ float cyl_bessel_i1f(float x);
-__device__ float erfcf(float x);
-__device__  float erfcinvf(float y);
-__host__ float erfcinvf(float y);
-__device__ float erfcxf(float x);
-__host__ float erfcxf(float x);
-__device__ float erff(float x);
-__device__ float erfinvf(float y);
-__host__ float erfinvf(float y);
-__device__ float exp2f(float x);
-__device__ float expm1f(float x);
-__device__ float fabsf(float x);
-__device__ float fdimf(float x, float y);
-__device__ __host__ float fdividef(float x, float y);
-__device__ float floorf(float x);
-__device__ float fmaf(float x, float y, float z);
-__device__ float fmaxf(float x, float y);
-__device__ float fminf(float x, float y);
-__device__ float fmodf(float x, float y);
-__device__ float frexpf(float x, float y);
-__device__ float hypotf(float x, float y);
-__device__ float ilogbf(float x);
-__host__ __device__ unsigned isfinite(float a);
-__device__ unsigned isinf(float a);
-__device__ unsigned isnan(float a);
-__device__ float j0f(float x);
-__device__ float j1f(float x);
-__device__ float jnf(int n, float x);
-__device__ float ldexpf(float x, int exp);
-__device__ float lgammaf(float x);
-__device__ long long int llrintf(float x);
-__device__ long long int llroundf(float x);
-__device__ float log1pf(float x);
-__device__ float logbf(float x);
-__device__ long int lrintf(float x);
-__device__ long int lroundf(float x);
-__device__ float modff(float x, float *iptr);
-__device__ float nanf(const char* tagp);
-__device__ float nearbyintf(float x);
-__device__ float nextafterf(float x, float y);
-__device__ float norm3df(float a, float b, float c);
-__host__ float norm3df(float a, float b, float c);
-__device__ float norm4df(float a, float b, float c, float d);
-__host__ float norm4df(float a, float b, float c, float d);
-__device__ float normcdff(float y);
-__host__ float normcdff(float y);
-__device__ float normcdfinvf(float y);
-__host__ float normcdfinvf(float y);
-__device__ float normf(int dim, const float *a);
-__device__ float rcbrtf(float x);
-__host__ float rcbrtf(float x);
-__device__ float remainderf(float x, float y);
-__device__ float remquof(float x, float y, int *quo);
-__device__ float rhypotf(float x, float y);
-__host__ float rhypotf(float x, float y);
-__device__ float rintf(float x);
-__device__ float rnorm3df(float a, float b, float c);
-__host__ float rnorm3df(float a, float b, float c);
-__device__ float rnorm4df(float a, float b, float c, float d);
-__host__ float rnorm4df(float a, float b, float c, float d);
-__device__ float rnormf(int dim, const float* a);
-__host__ float rnormf(int dim, const float* a);
-__device__ float roundf(float x);
-__device__ float rsqrtf(float x);
-__device__ float scalblnf(float x, long int n);
-__device__ float scalbnf(float x, int n);
-__host__ __device__ unsigned signbit(float a);
-__device__ void sincospif(float x, float *sptr, float *cptr);
-__host__ void sincospif(float x, float *sptr, float *cptr);
-__device__ float sinhf(float x);
-__device__ float sinpif(float x);
-__device__ float sqrtf(float x);
-__device__ float tanhf(float x);
-__device__ float tgammaf(float x);
-__device__ float truncf(float x);
-__device__ float y0f(float x);
-__device__ float y1f(float x);
-__device__ float ynf(int n, float x);
-
-__host__ __device__ float cospif(float x);
-__host__ __device__ float sinpif(float x);
-__device__ float sqrtf(float x);
-__host__ __device__ float rsqrtf(float x);
-
-__device__ double acos(double x);
-__device__ double acosh(double x);
-__device__ double asin(double x);
-__device__ double asinh(double x);
-__device__ double atan(double x);
-__device__ double atan2(double y, double x);
-__device__ double atanh(double x);
-__device__ double cbrt(double x);
-__device__ double ceil(double x);
-__device__ double copysign(double x, double y);
-__device__ double cos(double x);
-__device__ double cosh(double x);
-__host__ __device__ double cospi(double x);
-__device__ double cyl_bessel_i0(double x);
-__device__ double cyl_bessel_i1(double x);
-__device__ double erf(double x);
-__device__ double erfc(double x);
-__device__ double erfcinv(double y);
-__device__ double erfcx(double x);
-__device__ double erfinv(double x);
-__device__ double exp(double x);
-__device__ double exp10(double x);
-__device__ double exp2(double x);
-__device__ double expm1(double x);
-__device__ double fabs(double x);
-__device__ double fdim(double x, double y);
-__device__ double fdivide(double x, double y);
-__device__ double floor(double x);
-__device__ double fma(double x, double y, double z);
-__device__ double fmax(double x, double y);
-__device__ double fmin(double x, double y);
-__device__ double fmod(double x, double y);
-__device__ double frexp(double x, int *nptr);
-__device__ double hypot(double x, double y);
-__device__ double ilogb(double x);
-__host__ __device__ unsigned isfinite(double x);
-__device__ unsigned isinf(double x);
-__device__ unsigned isnan(double x);
-__device__ double j0(double x);
-__device__ double j1(double x);
-__device__ double jn(int n, double x);
-__device__ double ldexp(double x, int exp);
-__device__ double lgamma(double x);
-__device__ long long llrint(double x);
-__device__ long long llround(double x);
-__device__ double log(double x);
-__device__ double log10(double x);
-__device__ double log1p(double x);
-__device__ double log2(double x);
-__device__ double logb(double x);
-__device__ long int lrint(double x);
-__device__ long int lround(double x);
-__device__ double modf(double x, double *iptr);
-__device__ double nan(const char* tagp);
-__device__ double nearbyint(double x);
-__device__ double nextafter(double x, double y);
-__device__ double norm(int dim, const double* t);
-__device__ double norm3d(double a, double b, double c);
-__host__ double norm3d(double a, double b, double c);
-__device__ double norm4d(double a, double b, double c, double d);
-__host__ double norm4d(double a, double b, double c, double d);
-__device__ double normcdf(double y);
-__host__ double normcdf(double y);
-__device__ double normcdfinv(double y);
-__host__ double normcdfinv(double y);
-__device__ double pow(double x, double y);
-__device__ double rcbrt(double x);
-__host__ double rcbrt(double x);
-__device__ double remainder(double x, double y);
-__device__ double remquo(double x, double y, int *quo);
-__device__ double rhypot(double x, double y);
-__host__ double rhypot(double x, double y);
-__device__ double rint(double x);
-__device__ double rnorm(int dim, const double* t);
-__host__ double rnorm(int dim, const double* t);
-__device__ double rnorm3d(double a, double b, double c);
-__host__ double rnorm3d(double a, double b, double c);
-__device__ double rnorm4d(double a, double b, double c, double d);
-__host__ double rnorm4d(double a, double b, double c, double d);
-__device__ double round(double x);
-__host__ __device__ double rsqrt(double x);
-__device__ double scalbln(double x, long int n);
-__device__ double scalbn(double x, int n);
-__host__ __device__ unsigned signbit(double a);
-__device__ double sin(double a);
-__device__ void sincos(double x, double *sptr, double *cptr);
-__device__ void sincospi(double x, double *sptr, double *cptr);
-__host__ void sincospi(double x, double *sptr, double *cptr);
-__device__ double sinh(double x);
-__host__ __device__ double sinpi(double x);
-__device__ double sqrt(double x);
-__device__ double tan(double x);
-__device__ double tanh(double x);
-__device__ double tgamma(double x);
-__device__ double trunc(double x);
-__device__ double y0(double x);
-__device__ double y1(double y);
-__device__ double yn(int n, double x);
-
-__host__ double erfcinv(double y);
-__host__ double erfcx(double x);
-__host__ double erfinv(double y);
-__host__ double fdivide(double x, double y);
 
 // TODO - hipify-clang - change to use the function call.
 //#define warpSize hc::__wavesize()
@@ -418,26 +221,7 @@ __device__ unsigned int atomicInc(unsigned int* address,
 __device__ unsigned int atomicDec(unsigned int* address,
                        unsigned int val);
 
-//__mul24 __umul24
-__device__  int __mul24(int arg1, int arg2);
-__device__  unsigned int __umul24(unsigned int arg1, unsigned int arg2);
-
-// integer intrinsic function __poc __clz __ffs __brev
-__device__ unsigned int __popc( unsigned int input);
-__device__ unsigned int __popcll( unsigned long long int input);
-__device__ unsigned int __clz(unsigned int input);
-__device__ unsigned int __clzll(unsigned long long int input);
-__device__ unsigned int __clz(int input);
-__device__ unsigned int __clzll(long long int input);
-__device__ unsigned int __ffs(unsigned int input);
-__device__ unsigned int __ffsll(unsigned long long int input);
-__device__ unsigned int __ffs(int input);
-__device__ unsigned int __ffsll(long long int input);
-__device__ unsigned int __brev( unsigned int input);
-__device__ unsigned long long int __brevll( unsigned long long int input);
-
-
-// warp vote function __all __any __ballot
+                       // warp vote function __all __any __ballot
 __device__ int __all(  int input);
 __device__ int __any( int input);
 __device__  unsigned long long int __ballot( int input);
@@ -468,252 +252,6 @@ __host__ __device__ int max(int arg1, int arg2);
 
 __device__ __attribute__((address_space(3))) void* __get_dynamicgroupbaseptr();
 
-//TODO - add a couple fast math operations here, the set here will grow :
-
-// Single Precision Precise Math
-__device__ float __hip_precise_cosf(float);
-__device__ float __hip_precise_exp10f(float);
-__device__ float __hip_precise_expf(float);
-__device__ float __hip_precise_frsqrt_rn(float);
-__device__ float __hip_precise_fsqrt_rd(float);
-__device__ float __hip_precise_fsqrt_rn(float);
-__device__ float __hip_precise_fsqrt_ru(float);
-__device__ float __hip_precise_fsqrt_rz(float);
-__device__ float __hip_precise_log10f(float);
-__device__ float __hip_precise_log2f(float);
-__device__ float __hip_precise_logf(float);
-__device__ float __hip_precise_powf(float, float);
-__device__ void __hip_precise_sincosf(float,float*,float*);
-__device__ float __hip_precise_sinf(float);
-__device__ float __hip_precise_tanf(float);
-
-// Double Precision Precise Math
-__device__ double __hip_precise_dsqrt_rd(double);
-__device__ double __hip_precise_dsqrt_rn(double);
-__device__ double __hip_precise_dsqrt_ru(double);
-__device__ double __hip_precise_dsqrt_rz(double);
-
-// Single Precision Fast Math
-extern __attribute__((const)) float __hip_fast_cosf(float) __asm("llvm.cos.f32");
-extern __attribute__((const)) float __hip_fast_exp2f(float) __asm("llvm.exp2.f32");
-__device__ float __hip_fast_exp10f(float);
-__device__ float __hip_fast_expf(float);
-__device__ float __hip_fast_frsqrt_rn(float);
-extern __attribute__((const)) float __hip_fast_fsqrt_rd(float) __asm("llvm.sqrt.f32");
-__device__ float __hip_fast_fsqrt_rn(float);
-__device__ float __hip_fast_fsqrt_ru(float);
-__device__ float __hip_fast_fsqrt_rz(float);
-__device__ float __hip_fast_log10f(float);
-extern __attribute__((const)) float __hip_fast_log2f(float) __asm("llvm.log2.f32");
-__device__ float __hip_fast_logf(float);
-__device__ float __hip_fast_powf(float, float);
-__device__ void __hip_fast_sincosf(float,float*,float*);
-extern __attribute__((const)) float __hip_fast_sinf(float) __asm("llvm.sin.f32");
-__device__ float __hip_fast_tanf(float);
-extern __attribute__((const)) float __hip_fast_fmaf(float,float,float) __asm("llvm.fma.f32");
-extern __attribute__((const)) float __hip_fast_frcp(float) __asm("llvm.amdgcn.rcp.f32");
-
-extern __attribute__((const)) double __hip_fast_dsqrt(double) __asm("llvm.sqrt.f64");
-extern __attribute__((const)) double __hip_fast_fma(double,double,double) __asm("llvm.fma.f64");
-extern __attribute__((const)) double __hip_fast_drcp(double) __asm("llvm.amdgcn.rcp.f64");
-
-#ifdef HIP_FAST_MATH
-// Single Precision Precise Math when enabled
-
-__device__ inline float cosf(float x) {
-  return __hip_fast_cosf(x);
-}
-
-__device__ inline float exp10f(float x) {
-  return __hip_fast_exp10f(x);
-}
-
-__device__ inline float expf(float x) {
-  return __hip_fast_expf(x);
-}
-
-__device__ inline float log10f(float x) {
-  return __hip_fast_log10f(x);
-}
-
-__device__ inline float log2f(float x) {
-  return __hip_fast_log2f(x);
-}
-
-__device__ inline float logf(float x) {
-  return __hip_fast_logf(x);
-}
-
-__device__ inline float powf(float base, float exponent) {
-  return __hip_fast_powf(base, exponent);
-}
-
-__device__ inline void sincosf(float x, float *s, float *c) {
-  return __hip_fast_sincosf(x, s, c);
-}
-
-__device__ inline float sinf(float x) {
-  return __hip_fast_sinf(x);
-}
-
-__device__ inline float tanf(float x) {
-  return __hip_fast_tanf(x);
-}
-
-#else
-
-__device__ float sinf(float);
-__device__ float cosf(float);
-__device__ float tanf(float);
-__device__ void sincosf(float, float*, float*);
-__device__ float logf(float);
-__device__ float log2f(float);
-__device__ float log10f(float);
-__device__ float expf(float);
-__device__ float exp10f(float);
-__device__ float powf(float, float);
-
-#endif
-// Single Precision Fast Math
-__device__ inline float __cosf(float x) {
-  return __hip_fast_cosf(x);
-}
-
-__device__ inline float __exp10f(float x) {
-  return __hip_fast_exp10f(x);
-}
-
-__device__ inline float __expf(float x) {
-  return __hip_fast_expf(x);
-}
-
-__device__ inline float __frsqrt_rn(float x) {
-  return __hip_fast_frsqrt_rn(x);
-}
-
-__device__ inline float __fsqrt_rd(float x) {
-  return __hip_fast_fsqrt_rd(x);
-}
-
-__device__ inline float __fsqrt_rn(float x) {
-  return __hip_fast_fsqrt_rn(x);
-}
-
-__device__ inline float __fsqrt_ru(float x) {
-  return __hip_fast_fsqrt_ru(x);
-}
-
-__device__ inline float __fsqrt_rz(float x) {
-  return __hip_fast_fsqrt_rz(x);
-}
-
-__device__ inline float __log10f(float x) {
-  return __hip_fast_log10f(x);
-}
-
-__device__ inline float __log2f(float x) {
-  return __hip_fast_log2f(x);
-}
-
-__device__ inline float __logf(float x) {
-  return __hip_fast_logf(x);
-}
-
-__device__ inline float __powf(float base, float exponent) {
-  return __hip_fast_powf(base, exponent);
-}
-
-__device__ inline void __sincosf(float x, float *s, float *c) {
-  return __hip_fast_sincosf(x, s, c);
-}
-
-__device__ inline float __sinf(float x) {
-  return __hip_fast_sinf(x);
-}
-
-__device__ inline float __tanf(float x) {
-  return __hip_fast_tanf(x);
-}
-
-__device__ inline float __fmaf_rd(float x, float y, float z) {
-  return __hip_fast_fmaf(x, y, z);
-}
-
-__device__ inline float __fmaf_rn(float x, float y, float z) {
-  return __hip_fast_fmaf(x, y, z);
-}
-
-__device__ inline float __fmaf_ru(float x, float y, float z) {
-  return __hip_fast_fmaf(x, y, z);
-}
-
-__device__ inline float __fmaf_rz(float x, float y, float z) {
-  return __hip_fast_fmaf(x, y, z);
-}
-
-__device__ inline float __frcp_rd(float x) {
-  return __hip_fast_frcp(x);
-}
-
-__device__ inline float __frcp_rn(float x) {
-  return __hip_fast_frcp(x);
-}
-
-__device__ inline float __frcp_ru(float x) {
-  return __hip_fast_frcp(x);
-}
-
-__device__ inline float __frcp_rz(float x) {
-  return __hip_fast_frcp(x);
-}
-
-__device__ inline double __dsqrt_rd(double x) {
-  return __hip_fast_dsqrt(x);
-}
-
-__device__ inline double __dsqrt_rn(double x) {
-  return __hip_fast_dsqrt(x);
-}
-
-__device__ inline double __dsqrt_ru(double x) {
-  return __hip_fast_dsqrt(x);
-}
-
-__device__ inline double __dsqrt_rz(double x) {
-  return __hip_fast_dsqrt(x);
-}
-
-__device__ inline double __fma_rd(double x, double y, double z) {
-  return __hip_fast_fma(x, y, z);
-}
-
-__device__ inline double __fma_rn(double x, double y, double z) {
-  return __hip_fast_fma(x, y, z);
-}
-
-__device__ inline double __fma_ru(double x, double y, double z) {
-  return __hip_fast_fma(x, y, z);
-}
-
-__device__ inline double __fma_rz(double x, double y, double z) {
-  return __hip_fast_fma(x, y, z);
-}
-
-__device__ inline double __drcp_rd(double x) {
-  return __hip_fast_drcp(x);
-}
-
-__device__ inline double __drcp_rn(double x) {
-  return __hip_fast_drcp(x);
-}
-
-__device__ inline double __drcp_ru(double x) {
-  return __hip_fast_drcp(x);
-}
-
-__device__ inline double __drcp_rz(double x) {
-  return __hip_fast_drcp(x);
-}
 
 /**
  * CUDA 8 device function features
@@ -739,6 +277,10 @@ __device__ inline double __drcp_rz(double x) {
  *  On AMD platforms, the threadfence* routines are currently empty stubs.
  */
 
+extern __attribute__((const)) __device__ void __hip_hc_threadfence() __asm("__llvm_fence_sc_dev");
+extern __attribute__((const)) __device__ void __hip_hc_threadfence_block() __asm("__llvm_fence_sc_wg");
+
+
  /**
  * @brief threadfence_block makes writes visible to threads running in same block.
  *
@@ -749,7 +291,9 @@ __device__ inline double __drcp_rz(double x) {
  * @warning __threadfence_block is a stub and map to no-op.
  */
 // __device__ void  __threadfence_block(void);
-extern "C" __device__ void __threadfence_block(void);
+__device__ static inline void __threadfence_block(void) {
+  return __hip_hc_threadfence_block();
+}
 
  /**
   * @brief threadfence makes wirtes visible to other threads running on same GPU.
@@ -761,7 +305,9 @@ extern "C" __device__ void __threadfence_block(void);
  * @warning __threadfence is a stub and map to no-op, application should set "export HSA_DISABLE_CACHE=1" to disable both L1 and L2 caches.
  */
 // __device__ void  __threadfence(void) __attribute__((deprecated("Provided for compile-time compatibility, not yet functional")));
-extern "C" __device__ void __threadfence(void);
+__device__ static inline void __threadfence(void) {
+  return __hip_hc_threadfence();
+}
 
 /**
  * @brief threadfence_system makes writes to pinned system memory visible on host CPU.
@@ -807,14 +353,31 @@ __device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask
 #define hipGridDim_y   (hc_get_num_groups(1))
 #define hipGridDim_z   (hc_get_num_groups(2))
 
-//extern "C" __device__ void* memcpy(void* dst, void* src, size_t size);
-//extern "C" __device__ void* memset(void* ptr, uint8_t val, size_t size);
-
+extern "C" __device__ void* __hip_hc_memcpy(void* dst, void* src, size_t size);
+extern "C" __device__ void* __hip_hc_memset(void* ptr, uint8_t val, size_t size);
 extern "C" __device__ void* __hip_hc_malloc(size_t);
 extern "C" __device__ void* __hip_hc_free(void *ptr);
 
-//extern "C" __device__ void* malloc(size_t size);
-//extern "C" __device__ void* free(void *ptr);
+static inline __device__ void* malloc(size_t size)
+{
+    return __hip_hc_malloc(size);
+}
+
+static inline __device__ void* free(void *ptr)
+{
+    return __hip_hc_free(ptr);
+}
+
+static inline __device__ void* memcpy(void* dst, void* src, size_t size)
+{
+  return __hip_hc_memcpy(dst, src, size);
+}
+
+static inline __device__ void* memset(void* ptr, uint8_t val, size_t size)
+{
+  return __hip_hc_memset(ptr, val, size);
+}
+
 
 
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)

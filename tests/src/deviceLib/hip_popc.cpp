@@ -31,8 +31,8 @@ THE SOFTWARE.
 #include <algorithm>
 #include <stdlib.h>
 #include <iostream>
-#include "hip/hip_runtime.h"
-
+#include <hip/hip_runtime.h>
+#include <hip/device_functions.h>
 
 #define HIP_ASSERT(x) (assert((x)==hipSuccess))
 
@@ -172,4 +172,3 @@ int main() {
 
   return errors;
 }
-

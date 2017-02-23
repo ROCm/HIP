@@ -126,7 +126,7 @@ Differences or limitations of HIP APIs as compared to CUDA APIs should be clearl
 
 - All HIP environment variables should begin with the keyword HIP_
     Environment variables should be long enough to describe their purpose but short enough so they can be remembered - perhaps 10-20 characters, with 3-4 parts separated by underscores.
-    To see the list of current environment variables, along with their values, set HIP_PRINT_ENV and run any hip applications on ROCM platform .
+    To see the list of current environment variables, along with their values, set HIP_PRINT_ENV and run any hip applications on ROCm platform .
     HIPCC or other tools may support additional environment variables which should follow the above convention.  
 
 

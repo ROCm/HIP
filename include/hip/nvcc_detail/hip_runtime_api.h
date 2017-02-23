@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -85,6 +85,10 @@ typedef CUdevice hipDevice_t;
 typedef CUmodule hipModule_t;
 typedef CUfunction hipFunction_t;
 typedef CUdeviceptr hipDeviceptr_t;
+typedef cudaChannelFormatKind hipChannelFormatKind;
+typedef cudaChannelFormatDesc hipChannelFormatDesc;
+typedef cudaTextureReadMode hipTextureReadMode;
+typedef cudaArray hipArray;
 
 // Flags that can be used with hipStreamCreateWithFlags
 #define hipStreamDefault            cudaStreamDefault
@@ -215,6 +219,14 @@ inline static hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int fla
 	return hipCUDAErrorTohipError(cudaHostAlloc(ptr, size, flags));
 }
 
+inline static hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, size_t width, size_t height, unsigned int flags) {
+  return hipCUDAErrorTohipError(cudaMallocArray(array, desc, width, height, flags));
+}
+
+inline static hipError_t hipFreeArray(hipArray* array) {
+  return hipCUDAErrorTohipError(cudaFreeArray(array));
+}
+
 inline static hipError_t hipHostGetDevicePointer(void** devPtr, void* hostPtr, unsigned int flags){
 	return hipCUDAErrorTohipError(cudaHostGetDevicePointer(devPtr, hostPtr, flags));
 }
@@ -319,6 +331,18 @@ inline static hipError_t hipMemcpyToSymbol(const void* symbol, const void* src, 
 
 inline static hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src, size_t sizeBytes, size_t offset, hipMemcpyKind copyType, hipStream_t stream) {
     return hipCUDAErrorTohipError(cudaMemcpyToSymbolAsync(symbol, src, sizeBytes, offset, hipMemcpyKindToCudaMemcpyKind(copyType)));
+}
+
+inline static hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind){
+  return hipCUDAErrorTohipError(cudaMemcpy2D(dst, dpitch, src, spitch, width, height, hipMemcpyKindToCudaMemcpyKind(kind)));
+}
+
+inline static hipError_t hipMemcpy2DToArray(hipArray *dst, size_t wOffset, size_t hOffset, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind){
+  return hipCUDAErrorTohipError(cudaMemcpy2DToArray(dst, wOffset, hOffset, src, spitch, width, height, hipMemcpyKindToCudaMemcpyKind(kind)));
+}
+
+inline static hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src, size_t count, hipMemcpyKind kind) {
+  return hipCUDAErrorTohipError(cudaMemcpyToArray(dst, wOffset, hOffset, src, count, hipMemcpyKindToCudaMemcpyKind(kind)));
 }
 
 inline static hipError_t hipDeviceSynchronize() {

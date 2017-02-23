@@ -48,6 +48,16 @@ sudo dpkg -i cuda-repo-ubuntu1404_7.5-18_amd64.deb
 sudo apt-get update && sudo apt-get install cuda-minimal-build-7-5 cuda-curand-dev-7-5
 ```
 
+To set additional options like Language Selection (only "-x cuda" is supported), Preprocessor Definition (-D), Include Path (-I), etc., options delimiter "--" should be used before them, for instance:
+
+```shell
+./hipify-clang -print-stats sort_kernel.cu -- -x cuda -I/srv/git/HIP/include -I/usr/local/cuda-7.5/include -DX=1
+```
+
+Delimiter "--" is used to separate hipify-clang options (before the delimiter) from clang options (after the delimiter). It is strongly recommended to always specify the delimiter, even if there are no clang specific options at all, in order to avoid possible errors regarding compilation database; in such case delimeter should be the last option in hipify-clang's command line.
+
+Option "-x clang" is also worth specifying in order to convert source CUDA files with extensions other than standard extensions (*.cu, *.cuh).
+
 #### Disclaimer
 
 The information contained herein is for informational purposes only, and is subject to change without notice. While every precaution has been taken in the preparation of this document, it may contain technical inaccuracies, omissions and typographical errors, and AMD is under no obligation to update or otherwise correct this information. Advanced Micro Devices, Inc. makes no representations or warranties with respect to the accuracy or completeness of the contents of this document, and assumes no liability of any kind, including the implied warranties of noninfringement, merchantability or fitness for particular purposes, with respect to the operation or use of AMD hardware, software or other products described herein. No license, including implied or arising by estoppel, to any intellectual property rights is granted by this document. Terms and limitations applicable to the purchase or use of AMD's products are as set forth in a signed agreement between the parties or in AMD's Standard Terms and Conditions of Sale.

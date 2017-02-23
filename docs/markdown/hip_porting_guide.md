@@ -553,7 +553,7 @@ If you pass a ".cu" file, hcc will attempt to compile it as a Cuda language file
 
 ### HIP Environment Variables
 
-On the HCC path, HIP provides a number of environment variables that control the behavior of HIP.  Some of these are useful for appliction development (for example HIP_VISIBLE_DEVICES, HIP_LAUNCH_BLOCKING),
+On the HCC path, HIP provides a number of environment variables that control the behavior of HIP.  Some of these are useful for application development (for example HIP_VISIBLE_DEVICES, HIP_LAUNCH_BLOCKING),
 some are useful for performance tuning or experimentation (for example HIP_STAGING*), and some are useful for debugging (HIP_DB).  You can see the environment variables supported by HIP as well as
 their current values and usage with the environment var "HIP_PRINT_ENV" - set this and then run any HIP application.  For example:
 
