@@ -92,11 +92,11 @@ HIP_PROFILE_API supports two levels of information.
 
 #### Adding markers to applications
 
-Markers can be used to define application-specific events that will be recorded in the ATP file and displayed in the CodeXL gui.
+Markers can be used to define application-specific events that will be recorded in the ATP file and displayed in the CodeXL GUI.
 This can be particularly useful for visualizing how the higher-level phases of application behavior relate to the lower level HIP APIs, kernel launches, and data transfers.
 For example, an instrumented machine learning framework could show the beginning and ending of each layer in the network.
 
-Markers have a specific begin and end time, and can be nested.  Nested calls are displayed hierarchically in the CodeXL gui, with each level of the hierarchy occupying a different row.
+Markers have a specific begin and end time, and can be nested.  Nested calls are displayed hierarchically in the CodeXL GUI, with each level of the hierarchy occupying a different row.
 
 The HIP APis are defined in "hip_profile.h":
 ```
@@ -131,7 +131,7 @@ The HIP marker API is only supported on ROCm platform.  The marker macros are de
 
 This [HIP sample](samples/2_Cookbook/2_Profiler/) shows the profiler marker API used in a small application.
 
-More information on the marker API can be found in the profiler header file and PDF in a ROCM installation:
+More information on the marker API can be found in the profiler header file and PDF in a ROCm installation:
 - /opt/rocm/profiler/CXLActivityLogger/include/CXLActivityLogger.h
 - /opt/rocm/profiler/CXLActivityLogger/doc/CXLActivityLogger.pdf
 
@@ -185,7 +185,7 @@ $ nvprof --profile-from-start-off ...
 This feature is under development.
 
 #### Reducing timeline trace output file size
-If the application is already recording the HIP APIs, the HSA APIs are somewhat redundant and the ATP file size can be substantially reduced by not recording these APIs.  HIP includes a text file that lists all of the HSA APis and can assist in this filtering:
+If the application is already recording the HIP APIs, the HSA APIs are somewhat redundant and the ATP file size can be substantially reduced by not recording these APIs.  HIP includes a text file that lists all of the HSA APIs and can assist in this filtering:
 
 ```
 $ rocm-profiler -F hip/bin/hsa-api-filter-cxl.txt 
@@ -273,7 +273,7 @@ None will disable use of color control codes for both the opening and closing an
 
 This flag is primarily targeted to assist HIP development team in the development of the HIP runtime, but in some situations may be useful to HIP application developers as well.
 The HIP debug information is designed to print important information during the execution of a HIP API.  HIP provides
-different color-coded levels of debug informaton:
+different color-coded levels of debug information:
   - api  : Print the beginning and end of each HIP API, including the arguments and return codes.  This is equivalent to setting HIP_TRACE_API=1.
   - sync : Print multi-thread and other synchronization debug information.
   - copy : Print which engine is doing the copy, which copy flavor is selected, information on source and destination memory.
@@ -315,7 +315,7 @@ libhsa-runtime64.so.1->hsaKmtDeregisterMemory(0x7f7776d3e010, 0x7f7776d3e010, 0x
 ```
 
 Some key information from the trace above.
-  - The trace snippet shows the execution of a hipMemcpy API, bracketed by the first and last message in the trace output.  The messages show the thread id and API sequence number (`1.17`).  ltrace output intermixes messages from all threads, so the HIP debug information can be useful to determine which threads are executing.
+  - Thy trace snippet shows the execution of a hipMemcpy API, bracketed by the first and last message in the trace output.  The messages show the thread id and API sequence number (`1.17`).  ltrace output intermixes messages from all threads, so the HIP debug information can be useful to determine which threads are executing.
   - The code flows through HIP APIs into ROCr (HSA) APIs (hsa*) and into the thunk (hsaKmt*) calls.
   - The HCC runtime is "libmcwamp_hsa.so" and the HSA/ROCr runtime is "libhsa-runtime64.so".
   - In this particular case, the memory copy is for unpinned memory, and the selected copy algorithm is to pin the host memory "in-place" before performing the copy.  The signaling APIs and calls to pin ("lock", "register") the memory are readily apparent in the trace output.
@@ -349,7 +349,8 @@ These options cause HCC to serialize.  Useful if you have libraries or code whic
 $32 = {_shortTid = 1, _apiSeqNum = 803}
 ```
 
-- HCC tracks all of the application memory allocations, including those from HIP and HC's "am_alloc".  These can be printed by calling the function 'hc::am_memtracker_print()'.
+- HCC tracks all of the application memory allocations, including those from HIP and HC's "am_alloc".
+If the HCC runtime is built with debug information (HCC_RUNTIME_DEBUG=ON when building HCC), then calling the function 'hc::am_memtracker_print()' will show all memory allocations. 
 An optional argument specifies a void * targetPointer - the print routine will mark the allocation which contains the specified pointer with "-->" in the printed output.
 This example shows a sample GDB session where we print the memory allocated by this process and mark a specified address by using the gdb "call" function..
 The gdb syntax also supports using the variable name (in this case 'dst'):
@@ -361,4 +362,68 @@ TargetAddress:0x5ec7e9000
    0x504cfc000-0x504cfc00f::  allocSeqNum:1 hostPointer:0x504cfc000 devicePointer:0x504cfc000 sizeBytes:16 isInDeviceMem:0 isAmManaged:1 appId:0 appAllocFlags:0 appPtr:(nil)
 ...
 -->0x5ec7e9000-0x5f7e28fff::  allocSeqNum:488 hostPointer:(nil) devicePointer:0x5ec7e9000 sizeBytes:191102976 isInDeviceMem:1 isAmManaged:1 appId:0 appAllocFlags:0 appPtr:(nil)
+
 ```
+
+To debug an explicit address, cast the address to (void*) :
+```
+(gdb) call hc::am_memtracker_print((void*)0x508c7f000)
+```
+- Debugging GPUVM fault.
+For example:
+```
+Memory access fault by GPU node-1 on address 0x5924000. Reason: Page not present or supervisor privilege.
+
+Program received signal SIGABRT, Aborted.
+[Switching to Thread 0x7fffdffb5700 (LWP 14893)]
+0x00007ffff2057c37 in __GI_raise (sig=sig@entry=6) at ../nptl/sysdeps/unix/sysv/linux/raise.c:56
+56      ../nptl/sysdeps/unix/sysv/linux/raise.c: No such file or directory.
+(gdb) bt
+#0  0x00007ffff2057c37 in __GI_raise (sig=sig@entry=6) at ../nptl/sysdeps/unix/sysv/linux/raise.c:56
+#1  0x00007ffff205b028 in __GI_abort () at abort.c:89
+#2  0x00007ffff6f960eb in ?? () from /opt/rocm/hsa/lib/libhsa-runtime64.so.1
+#3  0x00007ffff6f99ea5 in ?? () from /opt/rocm/hsa/lib/libhsa-runtime64.so.1
+#4  0x00007ffff6f78107 in ?? () from /opt/rocm/hsa/lib/libhsa-runtime64.so.1
+#5  0x00007ffff744f184 in start_thread (arg=0x7fffdffb5700) at pthread_create.c:312
+#6  0x00007ffff211b37d in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:111
+(gdb) info threads
+  Id   Target Id         Frame
+  4    Thread 0x7fffdd521700 (LWP 14895) "caffe" pthread_cond_wait@@GLIBC_2.3.2 () at ../nptl/sysdeps/unix/sysv/linux/x86_64/pthread_cond_wait.S:185
+  3    Thread 0x7fffddd22700 (LWP 14894) "caffe" pthread_cond_wait@@GLIBC_2.3.2 () at ../nptl/sysdeps/unix/sysv/linux/x86_64/pthread_cond_wait.S:185
+* 2    Thread 0x7fffdffb5700 (LWP 14893) "caffe" 0x00007ffff2057c37 in __GI_raise (sig=sig@entry=6) at ../nptl/sysdeps/unix/sysv/linux/raise.c:56
+  1    Thread 0x7ffff7fa6ac0 (LWP 14892) "caffe" 0x00007ffff6f934d5 in ?? () from /opt/rocm/hsa/lib/libhsa-runtime64.so.1
+(gdb) thread 1
+[Switching to thread 1 (Thread 0x7ffff7fa6ac0 (LWP 14892))]
+#0  0x00007ffff6f934d5 in ?? () from /opt/rocm/hsa/lib/libhsa-runtime64.so.1
+(gdb) bt
+#0  0x00007ffff6f934d5 in ?? () from /opt/rocm/hsa/lib/libhsa-runtime64.so.1
+#1  0x00007ffff6f929ba in ?? () from /opt/rocm/hsa/lib/libhsa-runtime64.so.1
+#2  0x00007fffe080beca in HSADispatch::waitComplete() () from /opt/rocm/hcc/lib/libmcwamp_hsa.so
+#3  0x00007fffe080415f in HSADispatch::dispatchKernelAsync(Kalmar::HSAQueue*, void const*, int, bool) () from /opt/rocm/hcc/lib/libmcwamp_hsa.so
+#4  0x00007fffe080238e in Kalmar::HSAQueue::dispatch_hsa_kernel(hsa_kernel_dispatch_packet_s const*, void const*, unsigned long, hc::completion_future*) () from /opt/rocm/hcc/lib/libmcwamp_hsa.so
+#5  0x00007ffff7bb7559 in hipModuleLaunchKernel () from /opt/rocm/hip/lib/libhip_hcc.so
+#6  0x00007ffff2e6cd2c in mlopen::HIPOCKernel::run (this=0x7fffffffb5a8, args=0x7fffffffb2a8, size=80) at /root/MIOpen/src/hipoc/hipoc_kernel.cpp:15  
+...
+```
+
+### General Debugging Tips
+- The fault will be caught by the runtime but was actually generated by an asynchronous command running on the GPU.    So, the GDB backtrace will show a path in the runtime, ie inside "GI_Raise" as shown in the example above.
+- To determine the true location of the fault, force the kernels to execute synchronously by seeing the environment variables HCC_SERIALIZE_KERNEL=3 HCC_SERIALIZE_COPY=3.  This will force HCC to wait for the kernel to finish executing before retuning.  If the fault occurs during the execution of a kernel, you can see the code which launched the kernel inside the backtrace.  A bit of guesswork is required to determine which thread is actually causing the issue - typically it will the thread which is waiting inside the libhsa-runtime64.so.
+- VM faults inside kernels can be caused byi:
+   - incorrect code (ie a for loop which extends past array boundaries), i
+   - memory issues  - kernel arguments which are invalid (null pointers, unregistered host pointers, bad pointers).
+   - synchronization issues
+   - compiler issues (incorrect code generation from the compiler)
+   - runtime issues 
+
+-- General debug tips:
+- 'gdb --args' can be used to conviently pass the executable and arguments to gdb.
+- From inside GDB, you can set environment variables "set env".  Note the command does not use an '=' sign:
+```
+(gdb) set env HIP_DB 1
+```
+Setting HIP_PRINT_ENV=1 and then running a HIP application will print the HIP environment variables, their current values, and usage info.
+Setting HCC_PRINT_ENV=1 and then running a HCC application will print the HCC environment variables, their current values, and usage info.
+
+
+

@@ -1,0 +1,9 @@
+setstream(1);
+loop(10); NullKernel; streamsync; D2H; streamsync;NullKernel; streamsync; D2H; streamsync; endloop(1);
+loop(10); NullKernel; streamsync; D2H; streamsync;NullKernel; streamsync; D2H; streamsync; endloop(1);
+loop(100); NullKernel; streamsync; D2H; streamsync;NullKernel; streamsync; D2H; streamsync; endloop(1);
+loop(100); NullKernel; streamsync; D2H; streamsync;NullKernel; streamsync; D2H; streamsync; endloop(1);
+loop(1000); NullKernel; streamsync; D2H; streamsync;NullKernel; streamsync; D2H; streamsync; endloop(1);
+loop(1000); NullKernel; streamsync; D2H; streamsync;NullKernel; streamsync; D2H; streamsync; endloop(1);
+loop(10000); NullKernel; streamsync; D2H; streamsync;NullKernel; streamsync; D2H; streamsync; endloop(1);
+loop(10000); NullKernel; streamsync; D2H; streamsync;NullKernel; streamsync; D2H; streamsync; endloop(1);

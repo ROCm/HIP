@@ -23,7 +23,7 @@ bool g_printedTiming = false;
 
 // Cmdline parms:
 int           p_device  = 0;
-const char*   p_command = "H2D; NullKernel; D2H";
+const char*   p_command = "setstream(1); H2D; NullKernel; D2H;";
 const char*   p_file = nullptr;
 unsigned      p_verbose = 0x0;
 unsigned      p_db      = 0x0;

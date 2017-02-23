@@ -5,7 +5,7 @@ install(FILES @PROJECT_BINARY_DIR@/libhip_hcc.so DESTINATION lib)
 install(FILES @PROJECT_BINARY_DIR@/libhip_hcc_static.a DESTINATION lib)
 install(FILES @PROJECT_BINARY_DIR@/libhip_device.a DESTINATION lib)
 install(FILES @PROJECT_BINARY_DIR@/.hipInfo DESTINATION lib)
-install(FILES @hip_SOURCE_DIR@/src/hip_ir.ll DESTINATION lib)
+install(FILES @hip_SOURCE_DIR@/src/hip_hc.ll @hip_SOURCE_DIR@/src/hip_hc_gfx803.ll DESTINATION lib)
 
 #############################
 # Packaging steps

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,7 @@ THE SOFTWARE.
 // Collection of code to make sure that various features in the hip kernel language compile.
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp HCC_OPTIONS -stdlib=libc++
+ * BUILD: %t %s ../test_common.cpp
  * RUN: %t
  * HIT_END
  */
@@ -42,7 +42,7 @@ __device__ int deviceVar;
 // TODO-HCC __constant__ not working yet.
 __constant__ int constantVar1;
 
-__constant__ __device__ int constantVar2; 
+__constant__ __device__ int constantVar2;
 
 // Test HOST space:
 __host__ void foo() {
@@ -53,7 +53,7 @@ __device__ __noinline__    int sum1_noinline(int a)    { return a+1;};
 __device__ __forceinline__ int sum1_forceinline(int a) { return a+1;};
 
 
-__device__ __host__ float PlusOne(float x) 
+__device__ __host__ float PlusOne(float x)
 {
     return x + 1.0;
 }

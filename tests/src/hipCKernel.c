@@ -3,6 +3,7 @@
 
 __global__ void Kernel(hipLaunchParm lp, float *Ad){
     int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+    Ad[tx] += Ad[tx-1];
 }
 
 int main(){
