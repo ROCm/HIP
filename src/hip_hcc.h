@@ -494,8 +494,8 @@ public:
     void locked_copySync (void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn = true);
     void locked_copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind);
 
-    void lockedSymbolCopySync(hc::accelerator &acc, void *dst, const void* src, size_t sizeBytes, unsigned kind);
-    void lockedSymbolCopyAsync(hc::accelerator &acc, void *dst, const void* src, size_t sizeBytes, unsigned kind);
+    void lockedSymbolCopySync(hc::accelerator &acc, void *dst, void* src, size_t sizeBytes, unsigned kind);
+    void lockedSymbolCopyAsync(hc::accelerator &acc, void *dst, void* src, size_t sizeBytes, unsigned kind);
 
     //---
     // Member functions that begin with locked_ are thread-safe accessors - these acquire / release the critical mutex.
