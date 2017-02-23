@@ -98,7 +98,9 @@ if(HIP_PLATFORM STREQUAL "hcc")
 
     get_directory_base(HCC_COMPILER_BIN_DIR ${HCC_COMPILER})
     get_directory_base(HCC_HOME ${HCC_COMPILER_BIN_DIR})
-    add_to_config(_buildInfo HCC_HOME)
+    if(DEFINED ENV{HIP_DEVELOPER})
+        add_to_config(_buildInfo HCC_HOME)
+    endif()
     # Determine HSA_HEADER
     find_path(HSA_HEADER hsa/hsa.h
         HINTS
@@ -372,10 +374,11 @@ if(POLICY CMP0037)
     cmake_policy(PUSH)
     cmake_policy(SET CMP0037 OLD)
 endif()
-add_custom_target(install_for_test COMMAND "${CMAKE_COMMAND}" --build . --target install
+add_custom_target(install_for_test COMMAND HIP_DEVELOPER=1 "${CMAKE_COMMAND}" --build . --target install
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 execute_process(COMMAND getconf _NPROCESSORS_ONLN OUTPUT_VARIABLE DASH_JAY OUTPUT_STRIP_TRAILING_WHITESPACE)
-add_custom_target(test COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} .
+add_custom_target(test 
+    COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} .
     COMMAND make -j ${DASH_JAY}
     COMMAND make test
     WORKING_DIRECTORY ${BUILD_DIR}
