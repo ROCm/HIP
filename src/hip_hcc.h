@@ -551,6 +551,8 @@ private:
 
     bool canSeeMemory(const ihipCtx_t *thisCtx, const hc::AmPointerInfo *dstInfo, const hc::AmPointerInfo *srcInfo);
 
+    void addSymbolPtrToTracker(hc::accelerator& acc, void* ptr, size_t sizeBytes);
+
 public: // TODO - move private
     // Critical Data - MUST be accessed through LockedAccessor_StreamCrit_t
     ihipStreamCritical_t        _criticalData;

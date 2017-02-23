@@ -1750,7 +1750,6 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     bool dstTracked = (hc::am_memtracker_getinfo(&dstPtrInfo, dst) == AM_SUCCESS);
     bool srcTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) == AM_SUCCESS);
 
-
     hc::hcCommandKind hcCopyDir;
     ihipCtx_t *copyDevice;
     bool forceUnpinnedCopy;
@@ -1780,6 +1779,11 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     }
 }
 
+void ihipStream_t::addSymbolPtrToTracker(hc::accelerator& acc, void* ptr, size_t sizeBytes) {
+  hc::AmPointerInfo ptrInfo(NULL, ptr, sizeBytes, acc, true, false);
+  hc::am_memtracker_add(ptr, ptrInfo);
+}
+
 void ihipStream_t::lockedSymbolCopySync(hc::accelerator &acc, void* dst, void* src, size_t sizeBytes, unsigned kind)
 {
   if(kind == hipMemcpyHostToHost){
@@ -1799,13 +1803,11 @@ void ihipStream_t::lockedSymbolCopySync(hc::accelerator &acc, void* dst, void* s
 void ihipStream_t::lockedSymbolCopyAsync(hc::accelerator &acc, void* dst, void* src, size_t sizeBytes, unsigned kind)
 {
   if(kind == hipMemcpyHostToDevice) {
-    hc::AmPointerInfo dstPtrInfo(NULL, dst, sizeBytes, acc, true, false);
-    hc::am_memtracker_add(dst, dstPtrInfo);
+    addSymbolPtrToTracker(acc, dst, sizeBytes);
     locked_getAv()->copy_async((void*)src, dst, sizeBytes);
   }
   if(kind == hipMemcpyDeviceToHost) {
-    hc::AmPointerInfo srcPtrInfo(NULL, src, sizeBytes, acc, true, false);
-    hc::am_memtracker_add(src, srcPtrInfo);
+    addSymbolPtrToTracker(acc, src, sizeBytes);
     locked_getAv()->copy_async((void*)src, dst, sizeBytes);
   }
 }
