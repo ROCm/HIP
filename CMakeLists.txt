@@ -367,22 +367,21 @@ endif()
 # Testing steps
 #############################
 # Target: test
-set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/hip_tests)
-configure_file(tests/hip_tests.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
-if(POLICY CMP0037)
-    cmake_policy(PUSH)
-    cmake_policy(SET CMP0037 OLD)
-endif()
-add_custom_target(install_for_test COMMAND "${CMAKE_COMMAND}" --build . --target install
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-execute_process(COMMAND getconf _NPROCESSORS_ONLN OUTPUT_VARIABLE DASH_JAY OUTPUT_STRIP_TRAILING_WHITESPACE)
-add_custom_target(test COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} .
-    COMMAND make -j ${DASH_JAY}
-    COMMAND make test
-    WORKING_DIRECTORY ${BUILD_DIR}
-    DEPENDS install_for_test)
-if(POLICY CMP0037)
-    cmake_policy(POP)
-endif()
+set(HIP_PATH ${CMAKE_INSTALL_PREFIX})
+set(HIP_SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/cmake" "${HIP_PATH}/cmake")
+execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/bin" "${HIP_PATH}/bin")
+set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
+include(${HIP_SRC_PATH}/tests/hit/HIT.cmake)
+
+# Add tests
+include_directories(${HIP_SRC_PATH}/tests/src)
+hit_add_directory_recursive(${HIP_SRC_PATH}/tests/src "directed_tests")
+
+# Add top-level tests to build_tests
+add_custom_target(build_tests DEPENDS directed_tests)
+
+# Add custom target: check
+add_custom_target(check COMMAND "${CMAKE_COMMAND}" --build . --target test DEPENDS build_tests)
 
 # vim: ts=4:sw=4:expandtab:smartindent
