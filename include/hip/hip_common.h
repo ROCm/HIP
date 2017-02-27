@@ -39,19 +39,16 @@ THE SOFTWARE.
 // Auto enable __HIP_PLATFORM_NVCC__ if compiling with NVCC
 #if defined(__NVCC__)
 #define __HIP_PLATFORM_NVCC__
-# ifdef __CUDACC__
-# define __HIPCC__
-# endif
+#ifdef __CUDACC__
+#define __HIPCC__
+#endif
 
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ != 0)
 #define __HIP_DEVICE_COMPILE__ 1
 #else
 #define __HIP_DEVICE_COMPILE__ 0
 #endif
-
 #endif
-
-
 
 
 #if __HIP_DEVICE_COMPILE__ == 0
