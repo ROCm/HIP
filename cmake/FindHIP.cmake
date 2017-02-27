@@ -179,6 +179,21 @@ hip_find_helper_file(run_hipcc cmake)
 ###############################################################################
 
 ###############################################################################
+# MACRO: Reset compiler flags
+###############################################################################
+macro(HIP_RESET_FLAGS)
+    unset(HIP_HIPCC_FLAGS)
+    unset(HIP_HCC_FLAGS)
+    unset(HIP_NVCC_FLAGS)
+    foreach(config ${_hip_configuration_types})
+        string(TOUPPER ${config} config_upper)
+        unset(HIP_HIPCC_FLAGS_${config_upper})
+        unset(HIP_HCC_FLAGS_${config_upper})
+        unset(HIP_NVCC_FLAGS_${config_upper})
+    endforeach()
+endmacro()
+
+###############################################################################
 # MACRO: Separate the options from the sources
 ###############################################################################
 macro(HIP_GET_SOURCES_AND_OPTIONS _sources _cmake_options _hipcc_options _hcc_options _nvcc_options)
