@@ -522,6 +522,14 @@ void ihipCtxCriticalBase_t<CtxMutex>::addStream(ihipStream_t *stream)
     _streams.push_back(stream);
     tprintf(DB_SYNC, " addStream: %s\n", ToString(stream).c_str());
 }
+
+template<>
+void ihipDeviceCriticalBase_t<DeviceMutex>::addContext(ihipCtx_t *ctx)
+{
+    _ctxs.push_back(ctx);
+    tprintf(DB_SYNC, " addContext: %s\n", ToString(ctx).c_str());
+}
+
 //=============================================================================
 
 //=================================================================================================
@@ -530,7 +538,8 @@ void ihipCtxCriticalBase_t<CtxMutex>::addStream(ihipStream_t *stream)
 ihipDevice_t::ihipDevice_t(unsigned deviceId, unsigned deviceCnt, hc::accelerator &acc) :
     _deviceId(deviceId),
     _acc(acc),
-    _state(0)
+    _state(0),
+    _criticalData(this)
 {
     hsa_agent_t *agent = static_cast<hsa_agent_t*> (acc.get_hsa_agent());
     if (agent) {
@@ -557,7 +566,49 @@ ihipDevice_t::~ihipDevice_t()
     _primaryCtx = NULL;
 }
 
+void ihipDevice_t::locked_removeContext(ihipCtx_t *c)
+{
+    LockedAccessor_DeviceCrit_t  crit(_criticalData);
 
+    crit->ctxs().remove(c);
+    tprintf(DB_SYNC, " locked_removeContext: %s\n", ToString(c).c_str());
+}
+
+
+void ihipDevice_t::locked_reset()
+{
+    // Obtain mutex access to the device critical data, release by destructor
+    LockedAccessor_DeviceCrit_t  crit(_criticalData);
+
+
+    //---
+    //Wait for pending activity to complete?  TODO - check if this is required behavior:
+    tprintf(DB_SYNC, "locked_reset waiting for activity to complete.\n");
+
+    // Reset and remove streams:
+    // Delete all created streams including the default one.
+    for (auto ctxI=crit->const_ctxs().begin(); ctxI!=crit->const_ctxs().end(); ctxI++) {
+        ihipCtx_t *ctx = *ctxI;
+        (*ctxI)->locked_reset();
+        tprintf(DB_SYNC, " ctx cleanup %s\n", ToString(ctx).c_str());
+
+        delete ctx;
+    }
+    // Clear the list.
+    crit->ctxs().clear();
+
+
+    //reset _primaryCtx
+    _primaryCtx->locked_reset();
+    tprintf(DB_SYNC, " _primaryCtx cleanup %s\n", ToString(_primaryCtx).c_str());
+    // Reset and release all memory stored in the tracker:
+    // Reset will remove peer mapping so don't need to do this explicitly.
+    // FIXME - This is clearly a non-const action!  Is this a context reset or a device reset - maybe should reference count?
+
+    _state = 0;
+    am_memtracker_reset(_acc);
+
+};
 
 #define ErrorCheck(x) error_check(x, __LINE__, __FILE__)
 
@@ -861,8 +912,14 @@ ihipCtx_t::ihipCtx_t(ihipDevice_t *device, unsigned deviceCnt, unsigned flags) :
     _device(device),
     _criticalData(this, deviceCnt)
 {
-    locked_reset();
+    //locked_reset();
+    LockedAccessor_CtxCrit_t  crit(_criticalData);
+	_defaultStream = new ihipStream_t(this, getDevice()->_acc.get_default_view(), hipStreamDefault);
+	crit->addStream(_defaultStream);
 
+
+		// Reset peer list to just me:
+    crit->resetPeerWatchers(this);
     tprintf(DB_SYNC, "created ctx with defaultStream=%p (%s)\n", _defaultStream, ToString(_defaultStream).c_str());
 };
 
@@ -905,7 +962,7 @@ void ihipCtx_t::locked_reset()
     _defaultStream = new ihipStream_t(this, getDevice()->_acc.get_default_view(), hipStreamDefault);
     crit->addStream(_defaultStream);
 
-
+#if 0
     // Reset peer list to just me:
     crit->resetPeerWatchers(this);
 
@@ -915,7 +972,7 @@ void ihipCtx_t::locked_reset()
     ihipDevice_t *device = getWriteableDevice();
     device->_state = 0;
     am_memtracker_reset(device->_acc);
-
+#endif
 };
 
 

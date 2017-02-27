@@ -58,9 +58,15 @@ hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device)
     HIP_INIT_API(ctx, flags, device); // FIXME - review if we want to init
     hipError_t e = hipSuccess;
     auto deviceHandle = ihipGetDevice(device);
-    *ctx = new ihipCtx_t(deviceHandle, g_deviceCnt, flags);
-    ihipSetTlsDefaultCtx(*ctx);
-    tls_ctxStack.push(*ctx);
+    {
+		// Obtain mutex access to the device critical data, release by destructor
+		LockedAccessor_DeviceCrit_t  deviceCrit(deviceHandle->criticalData());
+		auto ictx = new ihipCtx_t(deviceHandle, g_deviceCnt, flags);
+		*ctx = ictx;
+		ihipSetTlsDefaultCtx(*ctx);
+		tls_ctxStack.push(*ctx);
+		deviceCrit->addContext(ictx);
+    }
 
     return ihipLogStatus(e);
 }
@@ -125,6 +131,11 @@ hipError_t hipCtxDestroy(hipCtx_t ctx)
             //need to destroy the ctx associated with calling thread
             tls_ctxStack.pop();
         }
+        {
+			auto deviceHandle = ctx->getWriteableDevice();
+			deviceHandle->locked_removeContext(ctx);
+			ctx->locked_reset();
+    	}
         delete ctx; //As per CUDA docs , attempting to access ctx from those threads which has this ctx as current, will result in the error HIP_ERROR_CONTEXT_IS_DESTROYED.
     }
 

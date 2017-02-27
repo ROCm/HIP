@@ -166,11 +166,16 @@ hipError_t hipDeviceReset(void)
     // This function currently does a user-level cleanup of known resources.
     // It could benefit from KFD support to perform a more "nuclear" clean that would include any associated kernel resources and page table entries.
 
-
+#if 0
     if (ctx) {
         // Release ctx resources (streams and memory):
         ctx->locked_reset();
     }
+#endif
+	if (ctx) {
+		ihipDevice_t *deviceHandle = ctx->getWriteableDevice();
+		deviceHandle->locked_reset();
+	}
 
     return ihipLogStatus(hipSuccess);
 }
