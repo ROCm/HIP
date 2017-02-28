@@ -27,14 +27,14 @@ THE SOFTWARE.
 // Other compiler (GCC,ICC,etc) need to set one of these macros explicitly
 #if defined(__HCC__)
 #define __HIP_PLATFORM_HCC__
-#define __HIPCC__
 
 #if defined(__HCC_ACCELERATOR__) && (__HCC_ACCELERATOR__ != 0)
 #define __HIP_DEVICE_COMPILE__ 1
 #else
 #define __HIP_DEVICE_COMPILE__ 0
 #endif
-#endif
+
+#endif //__HCC__
 
 // Auto enable __HIP_PLATFORM_NVCC__ if compiling with NVCC
 #if defined(__NVCC__)
@@ -48,7 +48,8 @@ THE SOFTWARE.
 #else
 #define __HIP_DEVICE_COMPILE__ 0
 #endif
-#endif
+
+#endif //__NVCC__
 
 
 #if __HIP_DEVICE_COMPILE__ == 0
