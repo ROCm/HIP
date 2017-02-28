@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 
-#if __clang_major__ == 4
+#if __clang_major__ > 3
 
 typedef __fp16 __half;
 
