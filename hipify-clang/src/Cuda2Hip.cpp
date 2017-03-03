@@ -74,6 +74,7 @@ enum ConvTypes {
   CONV_CONTEXT,
   CONV_MODULE,
   CONV_CACHE,
+  CONV_EXEC,
   CONV_ERR,
   CONV_DEF,
   CONV_TEX,
@@ -90,11 +91,11 @@ enum ConvTypes {
 };
 
 const char *counterNames[CONV_LAST] = {
-    "driver",       "dev",    "mem",     "kern",      "coord_func",  "math_func",
-    "special_func", "stream", "event",   "occupancy", "ctx",         "module",
-    "cache",        "err",    "def",     "tex",       "gl",          "graphics",
-    "surface",      "other",  "include", "include_cuda_main_header", "type",
-    "literal",      "numeric_literal"};
+    "driver",       "dev",     "mem",   "kern",      "coord_func", "math_func",
+    "special_func", "stream",  "event", "occupancy", "ctx",        "module",
+    "cache",        "exec",    "err",   "def",       "tex",        "gl",
+    "graphics",     "surface", "other", "include",   "include_cuda_main_header",
+    "type",         "literal", "numeric_literal"};
 
 enum ApiTypes {
   API_DRIVER = 0,
@@ -209,111 +210,162 @@ struct cuda2hipMap {
     cuda2hipRename["CUDA_ERROR_NOT_FOUND"]                      = {"hipErrorNotFound", CONV_ERR, API_DRIVER};
 
     // CUDA RT API error code only
-    cuda2hipRename["cudaErrorInvalidDeviceFunction"]            = {"hipErrorInvalidDeviceFunction", CONV_ERR, API_RUNTIME};
-    cuda2hipRename["cudaErrorInvalidConfiguration"]             = {"hipErrorInvalidConfiguration", CONV_ERR, API_RUNTIME};
-    cuda2hipRename["cudaErrorPriorLaunchFailure"]               = {"hipErrorPriorLaunchFailure", CONV_ERR, API_RUNTIME};
-    cuda2hipRename["cudaErrorInvalidMemcpyDirection"]           = {"hipErrorInvalidMemcpyDirection", CONV_ERR, API_RUNTIME};
-    cuda2hipRename["cudaErrorInvalidDevicePointer"]             = {"hipErrorInvalidDevicePointer", CONV_ERR, API_RUNTIME};
-    cuda2hipRename["cudaErrorMissingConfiguration"]             = {"hipErrorMissingConfiguration", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["cudaErrorMissingConfiguration"]             = {"hipErrorMissingConfiguration", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 1
+    cuda2hipRename["cudaErrorPriorLaunchFailure"]               = {"hipErrorPriorLaunchFailure", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 5
+    cuda2hipRename["cudaErrorInvalidDeviceFunction"]            = {"hipErrorInvalidDeviceFunction", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 8
+    cuda2hipRename["cudaErrorInvalidConfiguration"]             = {"hipErrorInvalidConfiguration", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 9
+    cuda2hipRename["cudaErrorInvalidPitchValue"]                = {"hipErrorInvalidPitchValue", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 12
+    cuda2hipRename["cudaErrorInvalidSymbol"]                    = {"hipErrorInvalidSymbol", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 13
+    cuda2hipRename["cudaErrorMapBufferObjectFailed"]            = {"hipErrorMapBufferObjectFailed", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 14
+    cuda2hipRename["cudaErrorUnmapBufferObjectFailed"]          = {"hipErrorUnmapBufferObjectFailed", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 15
+    cuda2hipRename["cudaErrorInvalidHostPointer"]               = {"hipErrorInvalidHostPointer", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 16
+    cuda2hipRename["cudaErrorInvalidDevicePointer"]             = {"hipErrorInvalidDevicePointer", CONV_ERR, API_RUNTIME}; // 17
+    cuda2hipRename["cudaErrorInvalidTexture"]                   = {"hipErrorInvalidTexture", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 18
+    cuda2hipRename["cudaErrorInvalidTextureBinding"]            = {"hipErrorInvalidTextureBinding", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 19
+    cuda2hipRename["cudaErrorInvalidChannelDescriptor"]         = {"hipErrorInvalidChannelDescriptor", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 20
+    cuda2hipRename["cudaErrorInvalidMemcpyDirection"]           = {"hipErrorInvalidMemcpyDirection", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 21
+    cuda2hipRename["cudaErrorAddressOfConstant"]                = {"hipErrorAddressOfConstant", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 22
+    cuda2hipRename["cudaErrorTextureFetchFailed"]               = {"hipErrorTextureFetchFailed", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 23
+    cuda2hipRename["cudaErrorTextureNotBound"]                  = {"hipErrorTextureNotBound", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 24
+    cuda2hipRename["cudaErrorSynchronizationError"]             = {"hipErrorSynchronizationError", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 25
+    cuda2hipRename["cudaErrorInvalidFilterSetting"]             = {"hipErrorInvalidFilterSetting", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 26
+    cuda2hipRename["cudaErrorInvalidNormSetting"]               = {"hipErrorInvalidNormSetting", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 27
+    cuda2hipRename["cudaErrorMixedDeviceExecution"]             = {"hipErrorMixedDeviceExecution", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 28
+    // Deprecated as of CUDA 4.1
+    cuda2hipRename["cudaErrorNotYetImplemented"]                = {"hipErrorNotYetImplemented", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 31
+    // Deprecated as of CUDA 3.1
+    cuda2hipRename["cudaErrorMemoryValueTooLarge"]              = {"hipErrorMemoryValueTooLarge", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 32
+    cuda2hipRename["cudaErrorInsufficientDriver"]               = {"hipErrorInsufficientDriver", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 35
+    cuda2hipRename["cudaErrorSetOnActiveProcess"]               = {"hipErrorSetOnActiveProcess", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 36
+    cuda2hipRename["cudaErrorInvalidSurface"]                   = {"hipErrorInvalidSurface", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 37
+    cuda2hipRename["cudaErrorDuplicateVariableName"]            = {"hipErrorDuplicateVariableName", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 43
+    cuda2hipRename["cudaErrorDuplicateTextureName"]             = {"hipErrorDuplicateTextureName", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 44
+    cuda2hipRename["cudaErrorDuplicateSurfaceName"]             = {"hipErrorDuplicateSurfaceName", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 45
+    cuda2hipRename["cudaErrorDevicesUnavailable"]               = {"hipErrorDevicesUnavailable", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 46
+    cuda2hipRename["cudaErrorIncompatibleDriverContext"]        = {"hipErrorIncompatibleDriverContext", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 49
+    cuda2hipRename["cudaErrorDeviceAlreadyInUse"]               = {"hipErrorDeviceAlreadyInUse", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 54
+    cuda2hipRename["cudaErrorAssert"]                           = {"hipErrorAssert", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 59
+    cuda2hipRename["cudaErrorTooManyPeers"]                     = {"hipErrorTooManyPeers", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 60
+    cuda2hipRename["cudaErrorLaunchMaxDepthExceeded"]           = {"hipErrorLaunchMaxDepthExceeded", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 65
+    cuda2hipRename["cudaErrorLaunchFileScopedTex"]              = {"hipErrorLaunchFileScopedTex", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 66
+    cuda2hipRename["cudaErrorLaunchFileScopedSurf"]             = {"hipErrorLaunchFileScopedSurf", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 67
+    cuda2hipRename["cudaErrorSyncDepthExceeded"]                = {"hipErrorSyncDepthExceeded", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 68
+    cuda2hipRename["cudaErrorLaunchPendingCountExceeded"]       = {"hipErrorLaunchPendingCountExceeded", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 69
+    cuda2hipRename["cudaErrorNotPermitted"]                     = {"hipErrorNotPermitted", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 70
+    cuda2hipRename["cudaErrorNotSupported"]                     = {"hipErrorNotSupported", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 71
+    cuda2hipRename["cudaErrorHardwareStackError"]               = {"hipErrorHardwareStackError", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 72
+    cuda2hipRename["cudaErrorIllegalInstruction"]               = {"hipErrorIllegalInstruction", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 73
+    cuda2hipRename["cudaErrorMisalignedAddress"]                = {"hipErrorMisalignedAddress", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 74
+    cuda2hipRename["cudaErrorInvalidAddressSpace"]              = {"hipErrorInvalidAddressSpace", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 75
+    cuda2hipRename["cudaErrorInvalidPc"]                        = {"hipErrorInvalidPc", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 76
+    cuda2hipRename["cudaErrorStartupFailure"]                   = {"hipErrorStartupFailure", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 0x7f
+    // Deprecated as of CUDA 4.1
+    cuda2hipRename["cudaErrorApiFailureBase"]                   = {"hipErrorApiFailureBase", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 10000
 
     cuda2hipRename["CUDA_SUCCESS"]                              = {"hipSuccess", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaSuccess"]                               = {"hipSuccess", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_UNKNOWN"]                        = {"hipErrorUnknown", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorUnknown"]                          = {"hipErrorUnknown", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_NOT_INITIALIZED"]                = {"hipErrorNotInitialized", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorInitializationError"]              = {"hipErrorNotInitialized", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_DEINITIALIZED"]                  = {"hipErrorDeinitialized", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorCudartUnloading"]                  = {"hipErrorDeinitialized", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["cudaSuccess"]                               = {"hipSuccess", CONV_ERR, API_RUNTIME}; // 0
 
     cuda2hipRename["CUDA_ERROR_OUT_OF_MEMORY"]                  = {"hipErrorMemoryAllocation", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorMemoryAllocation"]                 = {"hipErrorMemoryAllocation", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["cudaErrorMemoryAllocation"]                 = {"hipErrorMemoryAllocation", CONV_ERR, API_RUNTIME}; // 2
 
-    cuda2hipRename["CUDA_ERROR_INVALID_HANDLE"]                 = {"hipErrorInvalidResourceHandle", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorInvalidResourceHandle"]            = {"hipErrorInvalidResourceHandle", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_INVALID_VALUE"]                  = {"hipErrorInvalidValue", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorInvalidValue"]                     = {"hipErrorInvalidValue", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_INVALID_DEVICE"]                 = {"hipErrorInvalidDevice", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorInvalidDevice"]                    = {"hipErrorInvalidDevice", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_NOT_INITIALIZED"]                = {"hipErrorInitializationError", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorInitializationError"]              = {"hipErrorInitializationError", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_NO_DEVICE"]                      = {"hipErrorNoDevice", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorNoDevice"]                         = {"hipErrorNoDevice", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_NOT_READY"]                      = {"hipErrorNotReady", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorNotReady"]                         = {"hipErrorNotReady", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_PEER_ACCESS_NOT_ENABLED"]        = {"hipErrorPeerAccessNotEnabled", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorPeerAccessNotEnabled"]             = {"hipErrorPeerAccessNotEnabled", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_PEER_ACCESS_ALREADY_ENABLED"]    = {"hipErrorPeerAccessAlreadyEnabled", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorPeerAccessAlreadyEnabled"]         = {"hipErrorPeerAccessAlreadyEnabled", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_PEER_ACCESS_UNSUPPORTED"]        = {"hipErrorPeerAccessUnsupported", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorPeerAccessUnsupported"]            = {"hipErrorPeerAccessUnsupported", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_INVALID_PTX"]                    = {"hipErrorInvalidKernelFile", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorInvalidPtx"]                       = {"hipErrorInvalidKernelFile", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_INVALID_GRAPHICS_CONTEXT"]       = {"hipErrorInvalidGraphicsContext", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorInvalidGraphicsContext"]           = {"hipErrorInvalidGraphicsContext", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND"] = {"hipErrorSharedObjectSymbolNotFound", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorSharedObjectSymbolNotFound"]       = {"hipErrorSharedObjectSymbolNotFound", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_SHARED_OBJECT_INIT_FAILED"]      = {"hipErrorSharedObjectInitFailed", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorSharedObjectInitFailed"]           = {"hipErrorSharedObjectInitFailed", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_OPERATING_SYSTEM"]               = {"hipErrorOperatingSystem", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorOperatingSystem"]                  = {"hipErrorOperatingSystem", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_ILLEGAL_ADDRESS"]                = {"hipErrorIllegalAddress", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorIllegalAddress"]                   = {"hipErrorIllegalAddress", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["CUDA_ERROR_NOT_INITIALIZED"]                = {"hipErrorNotInitialized", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorInitializationError"]              = {"hipErrorInitializationError", CONV_ERR, API_RUNTIME}; // 3
 
     cuda2hipRename["CUDA_ERROR_LAUNCH_FAILED"]                  = {"hipErrorLaunchFailure", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorLaunchFailure"]                    = {"hipErrorLaunchFailure", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["cudaErrorLaunchFailure"]                    = {"hipErrorLaunchFailure", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 4
 
     cuda2hipRename["CUDA_ERROR_LAUNCH_TIMEOUT"]                 = {"hipErrorLaunchTimeOut", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorLaunchTimeout"]                    = {"hipErrorLaunchTimeOut", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["cudaErrorLaunchTimeout"]                    = {"hipErrorLaunchTimeOut", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 6
 
     cuda2hipRename["CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES"]        = {"hipErrorLaunchOutOfResources", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorLaunchOutOfResources"]             = {"hipErrorLaunchOutOfResources", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["cudaErrorLaunchOutOfResources"]             = {"hipErrorLaunchOutOfResources", CONV_ERR, API_RUNTIME}; // 7
+
+    cuda2hipRename["CUDA_ERROR_INVALID_DEVICE"]                 = {"hipErrorInvalidDevice", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorInvalidDevice"]                    = {"hipErrorInvalidDevice", CONV_ERR, API_RUNTIME}; // 10
+
+    cuda2hipRename["CUDA_ERROR_INVALID_VALUE"]                  = {"hipErrorInvalidValue", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorInvalidValue"]                     = {"hipErrorInvalidValue", CONV_ERR, API_RUNTIME}; // 11
+
+    cuda2hipRename["CUDA_ERROR_DEINITIALIZED"]                  = {"hipErrorDeinitialized", CONV_ERR, API_DRIVER};
+    // TODO: double check, that this error matches to hipErrorDeinitialized
+    cuda2hipRename["cudaErrorCudartUnloading"]                  = {"hipErrorDeinitialized", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 29
+
+    cuda2hipRename["CUDA_ERROR_UNKNOWN"]                        = {"hipErrorUnknown", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorUnknown"]                          = {"hipErrorUnknown", CONV_ERR, API_RUNTIME}; // 30
+
+    cuda2hipRename["CUDA_ERROR_INVALID_HANDLE"]                 = {"hipErrorInvalidResourceHandle", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorInvalidResourceHandle"]            = {"hipErrorInvalidResourceHandle", CONV_ERR, API_RUNTIME}; // 33
+
+//    cuda2hipRename["CUDA_ERROR_NOT_INITIALIZED"]                = {"hipErrorInitializationError", CONV_ERR, API_DRIVER};
+//    cuda2hipRename["cudaErrorInitializationError"]              = {"hipErrorInitializationError", CONV_ERR, API_RUNTIME};
+
+    cuda2hipRename["CUDA_ERROR_NOT_READY"]                      = {"hipErrorNotReady", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorNotReady"]                         = {"hipErrorNotReady", CONV_ERR, API_RUNTIME}; // 34
+
+    cuda2hipRename["CUDA_ERROR_NO_DEVICE"]                      = {"hipErrorNoDevice", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorNoDevice"]                         = {"hipErrorNoDevice", CONV_ERR, API_RUNTIME}; // 38
 
     cuda2hipRename["CUDA_ERROR_ECC_UNCORRECTABLE"]              = {"hipErrorECCNotCorrectable", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorECCUncorrectable"]                 = {"hipErrorECCNotCorrectable", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["cudaErrorECCUncorrectable"]                 = {"hipErrorECCNotCorrectable", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 39
 
-    cuda2hipRename["CUDA_ERROR_HOST_MEMORY_ALREADY_REGISTERED"] = {"hipErrorHostMemoryAlreadyRegistered", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorHostMemoryAlreadyRegistered"]      = {"hipErrorHostMemoryAlreadyRegistered", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND"] = {"hipErrorSharedObjectSymbolNotFound", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorSharedObjectSymbolNotFound"]       = {"hipErrorSharedObjectSymbolNotFound", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 40
 
-    cuda2hipRename["CUDA_ERROR_HOST_MEMORY_NOT_REGISTERED"]     = {"hipErrorHostMemoryNotRegistered", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorHostMemoryNotRegistered"]          = {"hipErrorHostMemoryNotRegistered", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_NO_BINARY_FOR_GPU"]              = {"hipErrorNoBinaryForGpu", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorNoKernelImageForDevice"]           = {"hipErrorNoBinaryForGpu", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["CUDA_ERROR_SHARED_OBJECT_INIT_FAILED"]      = {"hipErrorSharedObjectInitFailed", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorSharedObjectInitFailed"]           = {"hipErrorSharedObjectInitFailed", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 41
 
     cuda2hipRename["CUDA_ERROR_UNSUPPORTED_LIMIT"]              = {"hipErrorUnsupportedLimit", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorUnsupportedLimit"]                 = {"hipErrorUnsupportedLimit", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["cudaErrorUnsupportedLimit"]                 = {"hipErrorUnsupportedLimit", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 42
 
     cuda2hipRename["CUDA_ERROR_INVALID_IMAGE"]                  = {"hipErrorInvalidImage", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorInvalidKernelImage"]               = {"hipErrorInvalidImage", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["cudaErrorInvalidKernelImage"]               = {"hipErrorInvalidImage", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 47
+
+    cuda2hipRename["CUDA_ERROR_NO_BINARY_FOR_GPU"]              = {"hipErrorNoBinaryForGpu", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorNoKernelImageForDevice"]           = {"hipErrorNoBinaryForGpu", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 48
+
+    cuda2hipRename["CUDA_ERROR_PEER_ACCESS_ALREADY_ENABLED"]    = {"hipErrorPeerAccessAlreadyEnabled", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorPeerAccessAlreadyEnabled"]         = {"hipErrorPeerAccessAlreadyEnabled", CONV_ERR, API_RUNTIME}; // 50
+
+    cuda2hipRename["CUDA_ERROR_PEER_ACCESS_NOT_ENABLED"]        = {"hipErrorPeerAccessNotEnabled", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorPeerAccessNotEnabled"]             = {"hipErrorPeerAccessNotEnabled", CONV_ERR, API_RUNTIME}; // 51
 
     cuda2hipRename["CUDA_ERROR_PROFILER_DISABLED"]              = {"hipErrorProfilerDisabled", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorProfilerDisabled"]                 = {"hipErrorProfilerDisabled", CONV_ERR, API_RUNTIME};
+    cuda2hipRename["cudaErrorProfilerDisabled"]                 = {"hipErrorProfilerDisabled", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 55
 
     cuda2hipRename["CUDA_ERROR_PROFILER_NOT_INITIALIZED"]       = {"hipErrorProfilerNotInitialized", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorProfilerNotInitialized"]           = {"hipErrorProfilerNotInitialized", CONV_ERR, API_RUNTIME};
+    // Deprecated as of CUDA 5.0
+    cuda2hipRename["cudaErrorProfilerNotInitialized"]           = {"hipErrorProfilerNotInitialized", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 56
 
     cuda2hipRename["CUDA_ERROR_PROFILER_ALREADY_STARTED"]       = {"hipErrorProfilerAlreadyStarted", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorProfilerAlreadyStarted"]           = {"hipErrorProfilerAlreadyStarted", CONV_ERR, API_RUNTIME};
+    // Deprecated as of CUDA 5.0
+    cuda2hipRename["cudaErrorProfilerAlreadyStarted"]           = {"hipErrorProfilerAlreadyStarted", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 57
 
     cuda2hipRename["CUDA_ERROR_PROFILER_ALREADY_STOPPED"]       = {"hipErrorProfilerAlreadyStopped", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorProfilerAlreadyStopped"]           = {"hipErrorProfilerAlreadyStopped", CONV_ERR, API_RUNTIME};
+    // Deprecated as of CUDA 5.0
+    cuda2hipRename["cudaErrorProfilerAlreadyStopped"]           = {"hipErrorProfilerAlreadyStopped", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 58
+
+    cuda2hipRename["CUDA_ERROR_HOST_MEMORY_ALREADY_REGISTERED"] = {"hipErrorHostMemoryAlreadyRegistered", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorHostMemoryAlreadyRegistered"]      = {"hipErrorHostMemoryAlreadyRegistered", CONV_ERR, API_RUNTIME}; // 61
+
+    cuda2hipRename["CUDA_ERROR_HOST_MEMORY_NOT_REGISTERED"]     = {"hipErrorHostMemoryNotRegistered", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorHostMemoryNotRegistered"]          = {"hipErrorHostMemoryNotRegistered", CONV_ERR, API_RUNTIME}; // 62
+
+    cuda2hipRename["CUDA_ERROR_OPERATING_SYSTEM"]               = {"hipErrorOperatingSystem", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorOperatingSystem"]                  = {"hipErrorOperatingSystem", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 63
+
+    cuda2hipRename["CUDA_ERROR_PEER_ACCESS_UNSUPPORTED"]        = {"hipErrorPeerAccessUnsupported", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorPeerAccessUnsupported"]            = {"hipErrorPeerAccessUnsupported", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 64
+
+    cuda2hipRename["CUDA_ERROR_ILLEGAL_ADDRESS"]                = {"hipErrorIllegalAddress", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorIllegalAddress"]                   = {"hipErrorIllegalAddress", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 77
+
+    cuda2hipRename["CUDA_ERROR_INVALID_PTX"]                    = {"hipErrorInvalidKernelFile", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorInvalidPtx"]                       = {"hipErrorInvalidKernelFile", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 78
+
+    cuda2hipRename["CUDA_ERROR_INVALID_GRAPHICS_CONTEXT"]       = {"hipErrorInvalidGraphicsContext", CONV_ERR, API_DRIVER};
+    cuda2hipRename["cudaErrorInvalidGraphicsContext"]           = {"hipErrorInvalidGraphicsContext", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 79
+
+
 
     ///////////////////////////// CUDA DRIVER API /////////////////////////////
     // Defines
@@ -641,6 +693,12 @@ struct cuda2hipMap {
     cuda2hipRename["cudaMipmappedArray_const_t"]  = {"const hipMipmappedArray *", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
 
     // memcpy
+    // memcpy structs
+    // unsupported yet by HIP
+    cuda2hipRename["cudaMemcpy3DParms"]           = {"hipMemcpy3DParms", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaMemcpy3DPeerParms"]       = {"hipMemcpy3DPeerParms", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
+
+      // memcpy functions
     cuda2hipRename["cudaMemcpy"]                  = {"hipMemcpy", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMemcpyToArray"]           = {"hipMemcpyToArray", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMemcpyToSymbol"]          = {"hipMemcpyToSymbol", CONV_MEM, API_RUNTIME};
@@ -717,6 +775,10 @@ struct cuda2hipMap {
     cuda2hipRename["make_cudaExtent"]             = {"make_hipExtent", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["make_cudaPitchedPtr"]         = {"make_hipPitchedPtr", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["make_cudaPos"]                = {"make_hipPos", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
+
+    cuda2hipRename["cudaExtent"]                  = {"hipExtent", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaPitchedPtr"]              = {"hipPitchedPtr", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaPos"]                     = {"hipPos", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
 
     // Host Malloc Flags
     cuda2hipRename["cudaHostAllocDefault"]        = {"hipHostMallocDefault", CONV_MEM, API_RUNTIME};
@@ -810,9 +872,9 @@ struct cuda2hipMap {
     cuda2hipRename["cudaChooseDevice"]              = {"hipChooseDevice", CONV_DEV, API_RUNTIME};
 
     // Attributes
-    cuda2hipRename["cudaDeviceAttr"]                = {"hipDeviceAttribute_t", CONV_TYPE, API_RUNTIME};
-    cuda2hipRename["cudaDeviceGetAttribute"]        = {"hipDeviceGetAttribute", CONV_DEV, API_RUNTIME};
+    cuda2hipRename["cudaDeviceGetAttribute"]                       = {"hipDeviceGetAttribute", CONV_DEV, API_RUNTIME};
 
+    cuda2hipRename["cudaDeviceAttr"]                               = {"hipDeviceAttribute_t", CONV_TYPE, API_RUNTIME};
     cuda2hipRename["cudaDevAttrMaxThreadsPerBlock"]                = {"hipDeviceAttributeMaxThreadsPerBlock", CONV_DEV, API_RUNTIME};
     cuda2hipRename["cudaDevAttrMaxBlockDimX"]                      = {"hipDeviceAttributeMaxBlockDimX", CONV_DEV, API_RUNTIME};
     cuda2hipRename["cudaDevAttrMaxBlockDimY"]                      = {"hipDeviceAttributeMaxBlockDimY", CONV_DEV, API_RUNTIME};
@@ -858,6 +920,7 @@ struct cuda2hipMap {
     cuda2hipRename["cudaDevAttrSurfaceAlignment"]                  = {"hipDeviceAttributeSurfaceAlignment", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaDevAttrEccEnabled"]                        = {"hipDeviceAttributeEccEnabled", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaDevAttrTccDriver"]                         = {"hipDeviceAttributeTccDriver", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaDevAttrAsyncEngineCount"]                  = {"hipDevAttrAsyncEngineCount", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaDevAttrUnifiedAddressing"]                 = {"hipDeviceAttributeUnifiedAddressing", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaDevAttrMaxTexture1DLayeredWidth"]          = {"hipDeviceAttributeMaxTexture1DLayeredWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaDevAttrMaxTexture1DLayeredLayers"]         = {"hipDeviceAttributeMaxTexture1DLayeredLayers", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
@@ -921,6 +984,13 @@ struct cuda2hipMap {
     cuda2hipRename["cudaDeviceGetStreamPriorityRange"] = {"hipDeviceGetStreamPriorityRange", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaSetValidDevices"]              = {"hipSetValidDevices", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
 
+    // Compute mode
+    cuda2hipRename["cudaComputeMode"]                  = {"hipComputeMode", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaComputeModeDefault"]           = {"hipComputeModeDefault", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaComputeModeExclusive"]         = {"hipComputeModeExclusive", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaComputeModeProhibited"]        = {"hipComputeModeProhibited", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaComputeModeExclusiveProcess"]  = {"hipComputeModeExclusiveProcess", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
+
     // Device Flags
     // unsupported yet by HIP
     cuda2hipRename["cudaGetDeviceFlags"]               = {"hipGetDeviceFlags", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
@@ -946,6 +1016,7 @@ struct cuda2hipMap {
     cuda2hipRename["cudaDeviceGetCacheConfig"]         = {"hipDeviceGetCacheConfig", CONV_CACHE, API_RUNTIME};
     // translate deprecated
     cuda2hipRename["cudaThreadGetCacheConfig"]         = {"hipDeviceGetCacheConfig", CONV_CACHE, API_RUNTIME};
+    cuda2hipRename["cudaFuncSetCacheConfig"]           = {"hipFuncSetCacheConfig", CONV_CACHE, API_RUNTIME};
 
     // Execution control
     // CUDA function cache configurations
@@ -954,21 +1025,21 @@ struct cuda2hipMap {
     cuda2hipRename["cudaFuncCachePreferShared"]        = {"hipFuncCachePreferShared", CONV_CACHE, API_RUNTIME};
     cuda2hipRename["cudaFuncCachePreferL1"]            = {"hipFuncCachePreferL1", CONV_CACHE, API_RUNTIME};
     cuda2hipRename["cudaFuncCachePreferEqual"]         = {"hipFuncCachePreferEqual", CONV_CACHE, API_RUNTIME};
+
     // Execution control functions
     // unsupported yet by HIP
-    cuda2hipRename["cudaFuncGetAttributes"]            = {"hipFuncGetAttributes", CONV_CACHE, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaFuncSetCacheConfig"]           = {"hipFuncSetCacheConfig", CONV_CACHE, API_RUNTIME};
-    // unsupported yet by HIP
-    cuda2hipRename["cudaFuncSetSharedMemConfig"]       = {"hipFuncSetSharedMemConfig", CONV_CACHE, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGetParameterBuffer"]           = {"hipGetParameterBuffer", CONV_CACHE, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaSetDoubleForDevice"]           = {"hipSetDoubleForDevice", CONV_CACHE, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaSetDoubleForHost"]             = {"hipSetDoubleForHost", CONV_CACHE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaFuncAttributes"]               = {"hipFuncAttributes", CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaFuncGetAttributes"]            = {"hipFuncGetAttributes", CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaFuncSetSharedMemConfig"]       = {"hipFuncSetSharedMemConfig", CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGetParameterBuffer"]           = {"hipGetParameterBuffer", CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaSetDoubleForDevice"]           = {"hipSetDoubleForDevice", CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaSetDoubleForHost"]             = {"hipSetDoubleForHost", CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED};
 
     // Execution Control [deprecated since 7.0]
     // unsupported yet by HIP
-    cuda2hipRename["cudaConfigureCall"]                = {"hipConfigureCall", CONV_CACHE, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaLaunch"]                       = {"hipLaunch", CONV_CACHE, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaSetupArgument"]                = {"hipSetupArgument", CONV_CACHE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaConfigureCall"]                = {"hipConfigureCall", CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaLaunch"]                       = {"hipLaunch", CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaSetupArgument"]                = {"hipSetupArgument", CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED};
 
     // Driver/Runtime
     cuda2hipRename["cudaDriverGetVersion"]      = {"hipDriverGetVersion", CONV_DRIVER, API_RUNTIME};
@@ -1000,6 +1071,7 @@ struct cuda2hipMap {
     cuda2hipRename["cudaDeviceGetSharedMemConfig"]   = {"hipDeviceGetSharedMemConfig", CONV_DEV, API_RUNTIME};
     // translate deprecated
     cuda2hipRename["cudaThreadGetSharedMemConfig"]   = {"hipDeviceGetSharedMemConfig", CONV_DEV, API_RUNTIME};
+
     cuda2hipRename["cudaSharedMemConfig"]            = {"hipSharedMemConfig", CONV_DEV, API_RUNTIME};
     cuda2hipRename["cudaSharedMemBankSizeDefault"]   = {"hipSharedMemBankSizeDefault", CONV_DEV, API_RUNTIME};
     cuda2hipRename["cudaSharedMemBankSizeFourByte"]  = {"hipSharedMemBankSizeFourByte", CONV_DEV, API_RUNTIME};
@@ -1010,9 +1082,7 @@ struct cuda2hipMap {
     // unsupported yet by HIP
     cuda2hipRename["cudaLimitStackSize"]                    = {"hipLimitStackSize", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaLimitPrintfFifoSize"]               = {"hipLimitPrintfFifoSize", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-
     cuda2hipRename["cudaLimitMallocHeapSize"]               = {"hipLimitMallocHeapSize", CONV_DEV, API_RUNTIME};
-
     // unsupported yet by HIP
     cuda2hipRename["cudaLimitDevRuntimeSyncDepth"]          = {"hipLimitPrintfFifoSize", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaLimitDevRuntimePendingLaunchCount"] = {"hipLimitMallocHeapSize", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
@@ -1025,19 +1095,24 @@ struct cuda2hipMap {
 
     cuda2hipRename["cudaProfilerStart"]                     = {"hipProfilerStart", CONV_OTHER, API_RUNTIME};
     cuda2hipRename["cudaProfilerStop"]                      = {"hipProfilerStop", CONV_OTHER, API_RUNTIME};
-    cuda2hipRename["cudaFilterModePoint"]                   = {"hipFilterModePoint", CONV_TEX, API_RUNTIME};
 
-    cuda2hipRename["cudaReadModeElementType"]               = {"hipReadModeElementType", CONV_TEX, API_RUNTIME};
+    // unsupported yet by HIP
+    cuda2hipRename["cudaOutputMode"]                        = {"hipOutputMode", CONV_OTHER, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaKeyValuePair"]                      = {"hipKeyValuePair", CONV_OTHER, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaCSV"]                               = {"hipCSV", CONV_OTHER, API_RUNTIME, HIP_UNSUPPORTED};
 
     // Texture Reference Management
+    // enums
     cuda2hipRename["cudaTextureReadMode"]                   = {"hipTextureReadMode", CONV_TEX, API_RUNTIME};
     cuda2hipRename["cudaReadModeElementType"]               = {"hipReadModeElementType", CONV_TEX, API_RUNTIME};
     // unsupported yet by HIP
     cuda2hipRename["cudaReadModeNormalizedFloat"]           = {"hipReadModeNormalizedFloat", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+
     cuda2hipRename["cudaTextureFilterMode"]                 = {"hipTextureFilterMode", CONV_TEX, API_RUNTIME};
     cuda2hipRename["cudaFilterModePoint"]                   = {"hipFilterModePoint", CONV_TEX, API_RUNTIME};
     // unsupported yet by HIP
     cuda2hipRename["cudaFilterModeLinear"]                  = {"hipFilterModeLinear", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+
     cuda2hipRename["cudaBindTexture"]                       = {"hipBindTexture", CONV_TEX, API_RUNTIME};
     cuda2hipRename["cudaUnbindTexture"]                     = {"hipUnbindTexture", CONV_TEX, API_RUNTIME};
     // unsupported yet by HIP
@@ -1059,44 +1134,108 @@ struct cuda2hipMap {
     cuda2hipRename["cudaGetChannelDesc"]                    = {"hipGetChannelDesc", CONV_TEX, API_RUNTIME};
 
     // Texture Object Management
+    // structs
     // unsupported yet by HIP
-    cuda2hipRename["cudaCreateTextureObject"]               = {"hipCreateTextureObject", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDestroyTextureObject"]              = {"hipDestroyTextureObject", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGetTextureObjectResourceDesc"]      = {"hipGetTextureObjectResourceDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGetTextureObjectResourceViewDesc"]  = {"hipGetTextureObjectResourceViewDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGetTextureObjectTextureDesc"]       = {"hipGetTextureObjectTextureDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResourceDesc"]                            = {"hipResourceDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResourceViewDesc"]                        = {"hipResourceViewDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaTextureDesc"]                             = {"hipTextureDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    // enums
+    // unsupported yet by HIP
+    cuda2hipRename["cudaResourceType"]                            = {"hipResourceType", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResourceTypeArray"]                       = {"hipResourceTypeArray", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResourceTypeMipmappedArray"]              = {"hipResourceTypeMipmappedArray", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResourceTypeLinear"]                      = {"hipResourceTypeLinear", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResourceTypePitch2D"]                     = {"hipResourceTypePitch2D", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+
+    cuda2hipRename["cudaResourceViewFormat"]                      = {"hipResourceViewFormat", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatNone"]                       = {"hipResViewFormatNone", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatUnsignedChar1"]              = {"hipResViewFormatUnsignedChar1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatUnsignedChar2"]              = {"hipResViewFormatUnsignedChar2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatUnsignedChar4"]              = {"hipResViewFormatUnsignedChar4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatSignedChar1"]                = {"hipResViewFormatSignedChar1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatSignedChar2"]                = {"hipResViewFormatSignedChar2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatSignedChar4"]                = {"hipResViewFormatSignedChar4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatUnsignedShort1"]             = {"hipResViewFormatUnsignedShort1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatUnsignedShort2"]             = {"hipResViewFormatUnsignedShort2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatUnsignedShort4"]             = {"hipResViewFormatUnsignedShort4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatSignedShort1"]               = {"hipResViewFormatSignedShort1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatSignedShort2"]               = {"hipResViewFormatSignedShort2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatSignedShort4"]               = {"hipResViewFormatSignedShort4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatUnsignedInt1"]               = {"hipResViewFormatUnsignedInt1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatUnsignedInt2"]               = {"hipResViewFormatUnsignedInt2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatUnsignedInt4"]               = {"hipResViewFormatUnsignedInt4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatSignedInt1"]                 = {"hipResViewFormatSignedInt1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatSignedInt2"]                 = {"hipResViewFormatSignedInt2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatSignedInt4"]                 = {"hipResViewFormatSignedInt4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatHalf1"]                      = {"hipResViewFormatHalf1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatHalf2"]                      = {"hipResViewFormatHalf2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatHalf4"]                      = {"hipResViewFormatHalf4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatFloat1"]                     = {"hipResViewFormatFloat1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatFloat2"]                     = {"hipResViewFormatFloat2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatFloat4"]                     = {"hipResViewFormatFloat4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed1"]   = {"hipResViewFormatUnsignedBlockCompressed1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed2"]   = {"hipResViewFormatUnsignedBlockCompressed2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed3"]   = {"hipResViewFormatUnsignedBlockCompressed3", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed4"]   = {"hipResViewFormatUnsignedBlockCompressed4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatSignedBlockCompressed4"]     = {"hipResViewFormatSignedBlockCompressed4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed5"]   = {"hipResViewFormatUnsignedBlockCompressed5", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatSignedBlockCompressed5"]     = {"hipResViewFormatSignedBlockCompressed5", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatSignedBlockCompressed6H"]    = {"hipResViewFormatSignedBlockCompressed6H", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed7"]   = {"hipResViewFormatUnsignedBlockCompressed7", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+
+    cuda2hipRename["cudaTextureAddressMode"]                      = {"hipTextureAddressMode", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaAddressModeWrap"]                         = {"hipAddressModeWrap", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaAddressModeClamp"]                        = {"hipAddressModeClamp", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaAddressModeMirror"]                       = {"hipAddressModeMirror", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaAddressModeBorder"]                       = {"hipAddressModeBorder", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+
+    // functions
+    cuda2hipRename["cudaCreateTextureObject"]                     = {"hipCreateTextureObject", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaDestroyTextureObject"]                    = {"hipDestroyTextureObject", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGetTextureObjectResourceDesc"]            = {"hipGetTextureObjectResourceDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGetTextureObjectResourceViewDesc"]        = {"hipGetTextureObjectResourceViewDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGetTextureObjectTextureDesc"]             = {"hipGetTextureObjectTextureDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
 
     // Surface Reference Management
     // unsupported yet by HIP
-    cuda2hipRename["cudaBindSurfaceToArray"]                = {"hipBindSurfaceToArray", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGetSurfaceReference"]               = {"hipGetSurfaceReference", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaBindSurfaceToArray"]                      = {"hipBindSurfaceToArray", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGetSurfaceReference"]                     = {"hipGetSurfaceReference", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
+
+    cuda2hipRename["cudaSurfaceBoundaryMode"]                     = {"hipSurfaceBoundaryMode", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaBoundaryModeZero"]                        = {"hipBoundaryModeZero", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaBoundaryModeClamp"]                       = {"hipBoundaryModeClamp", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaBoundaryModeTrap"]                        = {"hipBoundaryModeTrap", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
+
+    cuda2hipRename["cudaSurfaceFormatMode"]                       = {"hipSurfaceFormatMode", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaFormatModeForced"]                        = {"hipFormatModeForced", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaFormatModeAuto"]                          = {"hipFormatModeAuto", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
 
     // Surface Object Management
     // unsupported yet by HIP
-    cuda2hipRename["cudaCreateSurfaceObject"]               = {"hipCreateSurfaceObject", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDestroySurfaceObject"]              = {"hipDestroySurfaceObject", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGetSurfaceObjectResourceDesc"]      = {"hipGetSurfaceObjectResourceDesc", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaCreateSurfaceObject"]                     = {"hipCreateSurfaceObject", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaDestroySurfaceObject"]                    = {"hipDestroySurfaceObject", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGetSurfaceObjectResourceDesc"]            = {"hipGetSurfaceObjectResourceDesc", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
 
     // Inter-Process Communications (IPC)
     // IPC types
-    cuda2hipRename["cudaIpcEventHandle_t"]                  = {"hipIpcEventHandle_t", CONV_TYPE, API_RUNTIME};
-    cuda2hipRename["cudaIpcEventHandle_st"]                 = {"hipIpcEventHandle_t", CONV_TYPE, API_RUNTIME};
-    cuda2hipRename["cudaIpcMemHandle_t"]                    = {"hipIpcMemHandle_t", CONV_TYPE, API_RUNTIME};
-    cuda2hipRename["cudaIpcMemHandle_st"]                   = {"hipIpcMemHandle_t", CONV_TYPE, API_RUNTIME};
+    cuda2hipRename["cudaIpcEventHandle_t"]                        = {"hipIpcEventHandle_t", CONV_TYPE, API_RUNTIME};
+    cuda2hipRename["cudaIpcEventHandle_st"]                       = {"hipIpcEventHandle_t", CONV_TYPE, API_RUNTIME};
+    cuda2hipRename["cudaIpcMemHandle_t"]                          = {"hipIpcMemHandle_t", CONV_TYPE, API_RUNTIME};
+    cuda2hipRename["cudaIpcMemHandle_st"]                         = {"hipIpcMemHandle_t", CONV_TYPE, API_RUNTIME};
 
     // IPC functions
-    cuda2hipRename["cudaIpcCloseMemHandle"]                 = {"hipIpcCloseMemHandle", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaIpcGetEventHandle"]                 = {"hipIpcGetEventHandle", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaIpcGetMemHandle"]                   = {"hipIpcGetMemHandle", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaIpcOpenEventHandle"]                = {"hipIpcOpenEventHandle", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaIpcOpenMemHandle"]                  = {"hipIpcOpenMemHandle", CONV_DEV, API_RUNTIME};
+    cuda2hipRename["cudaIpcCloseMemHandle"]                       = {"hipIpcCloseMemHandle", CONV_DEV, API_RUNTIME};
+    cuda2hipRename["cudaIpcGetEventHandle"]                       = {"hipIpcGetEventHandle", CONV_DEV, API_RUNTIME};
+    cuda2hipRename["cudaIpcGetMemHandle"]                         = {"hipIpcGetMemHandle", CONV_DEV, API_RUNTIME};
+    cuda2hipRename["cudaIpcOpenEventHandle"]                      = {"hipIpcOpenEventHandle", CONV_DEV, API_RUNTIME};
+    cuda2hipRename["cudaIpcOpenMemHandle"]                        = {"hipIpcOpenMemHandle", CONV_DEV, API_RUNTIME};
 
     // OpenGL Interoperability
     // unsupported yet by HIP
-    cuda2hipRename["cudaGLGetDevices"]                      = {"hipGLGetDevices", CONV_GL, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGraphicsGLRegisterBuffer"]          = {"hipGraphicsGLRegisterBuffer", CONV_GL, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGraphicsGLRegisterImage"]           = {"hipGraphicsGLRegisterImage", CONV_GL, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaWGLGetDevice"]                      = {"hipWGLGetDevice", CONV_GL, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGLGetDevices"]                            = {"hipGLGetDevices", CONV_GL, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGraphicsGLRegisterBuffer"]                = {"hipGraphicsGLRegisterBuffer", CONV_GL, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGraphicsGLRegisterImage"]                 = {"hipGraphicsGLRegisterImage", CONV_GL, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaWGLGetDevice"]                            = {"hipWGLGetDevice", CONV_GL, API_RUNTIME, HIP_UNSUPPORTED};
 
     // Graphics Interoperability
     // unsupported yet by HIP
@@ -1107,6 +1246,26 @@ struct cuda2hipMap {
     cuda2hipRename["cudaGraphicsSubResourceGetMappedArray"]       = {"hipGraphicsSubResourceGetMappedArray", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaGraphicsUnmapResources"]                  = {"hipGraphicsUnmapResources", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaGraphicsUnregisterResource"]              = {"hipGraphicsUnregisterResource", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+
+    cuda2hipRename["cudaGraphicsCubeFace"]                        = {"hipGraphicsCubeFace", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGraphicsCubeFacePositiveX"]               = {"hipGraphicsCubeFacePositiveX", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGraphicsCubeFaceNegativeX"]               = {"hipGraphicsCubeFaceNegativeX", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGraphicsCubeFacePositiveY"]               = {"hipGraphicsCubeFacePositiveY", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGraphicsCubeFaceNegativeY"]               = {"hipGraphicsCubeFaceNegativeY", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGraphicsCubeFacePositiveZ"]               = {"hipGraphicsCubeFacePositiveZ", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGraphicsCubeFaceNegativeZ"]               = {"hipGraphicsCubeFaceNegativeZ", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+
+    cuda2hipRename["cudaGraphicsMapFlags"]                        = {"hipGraphicsMapFlags", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGraphicsMapFlagsNone"]                    = {"hipGraphicsMapFlagsNone", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGraphicsMapFlagsReadOnly"]                = {"hipGraphicsMapFlagsReadOnly", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGraphicsMapFlagsWriteDiscard"]            = {"hipGraphicsMapFlagsWriteDiscard", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+
+    cuda2hipRename["cudaGraphicsRegisterFlags"]                   = {"hipGraphicsRegisterFlags", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGraphicsRegisterFlagsNone"]               = {"hipGraphicsRegisterFlagsNone", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGraphicsRegisterFlagsReadOnly"]           = {"hipGraphicsRegisterFlagsReadOnly", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGraphicsRegisterFlagsWriteDiscard"]       = {"hipGraphicsRegisterFlagsWriteDiscard", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGraphicsRegisterFlagsSurfaceLoadStore"]   = {"hipGraphicsRegisterFlagsSurfaceLoadStore", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGraphicsRegisterFlagsTextureGather"]      = {"hipGraphicsRegisterFlagsTextureGather", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
 
     //---------------------------------------BLAS-------------------------------------//
     // Blas types
