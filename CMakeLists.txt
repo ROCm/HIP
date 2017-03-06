@@ -160,7 +160,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
 
     # Add remaining flags
     execute_process(COMMAND ${HCC_HOME}/bin/hcc-config --cxxflags OUTPUT_VARIABLE HCC_CXX_FLAGS)
-    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC ${HCC_CXX_FLAGS} -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include")
+    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC ${HCC_CXX_FLAGS} -I${HSA_PATH}/include")
 
     # Set compiler and compiler flags
     set(CMAKE_CXX_COMPILER "${HCC_HOME}/bin/hcc")
