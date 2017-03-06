@@ -41,7 +41,6 @@ THE SOFTWARE.
 #include <hc.hpp>
 #include <hc_am.hpp>
 #include "hsa/hsa_ext_amd.h"
-#include "libhsakmt/hsakmt.h"
 
 #include "hip/hip_runtime.h"
 #include "hip_hcc.h"
