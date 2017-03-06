@@ -99,7 +99,7 @@ __device__ void* __hip_hc_free(void *ptr)
 
 
 // loop unrolling
-__device__ void* __hip_hc_memcpy(void* dst, void* src, size_t size)
+__device__ void* __hip_hc_memcpy(void* dst, const void* src, size_t size)
 {
     uint8_t *dstPtr, *srcPtr;
     dstPtr = (uint8_t*)dst;
