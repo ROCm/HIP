@@ -758,11 +758,24 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop->isMultiGpuBoard = 0 ? gpuAgentsCount < 2 : 1;
 
     // Get agent name
-#if HIP_USE_PRODUCT_NAME
+
     err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_PRODUCT_NAME, &(prop->name));
-#else
-    err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_NAME, &(prop->name));
-#endif
+    char archName[256];
+    err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_NAME, &archName);
+    
+    if(strcmp(archName,"gfx701")==0){
+      prop->gcnArch = 701;
+    }
+    if(strcmp(archName,"gfx801")==0){
+      prop->gcnArch = 801;
+    }
+    if(strcmp(archName,"gfx802")==0){
+      prop->gcnArch = 802;
+    }
+    if(strcmp(archName,"gfx803")==0){
+      prop->gcnArch = 803;
+    }
+
     DeviceErrorCheck(err);
 
     // Get agent node
