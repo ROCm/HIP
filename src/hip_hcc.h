@@ -143,6 +143,8 @@ extern const char *API_COLOR_END;
 
 #define CTX_THREAD_SAFE 1
 
+#define DEVICE_THREAD_SAFE 1
+
 
 // Compile debug trace mode - this prints debug messages to stderr when env var HIP_DB is set.
 // May be set to 0 to remove debug if checks - possible code size and performance difference?
@@ -371,6 +373,13 @@ typedef FakeMutex StreamMutex;
 typedef std::mutex CtxMutex;
 #else
 typedef FakeMutex CtxMutex;
+#warning "Ctx thread-safe disabled"
+#endif
+
+#if DEVICE_THREAD_SAFE
+typedef std::mutex DeviceMutex;
+#else
+typedef FakeMutex DeviceMutex;
 #warning "Device thread-safe disabled"
 #endif
 
@@ -551,6 +560,8 @@ private:
 
     bool canSeeMemory(const ihipCtx_t *thisCtx, const hc::AmPointerInfo *dstInfo, const hc::AmPointerInfo *srcInfo);
 
+    void addSymbolPtrToTracker(hc::accelerator& acc, void* ptr, size_t sizeBytes);
+
 public: // TODO - move private
     // Critical Data - MUST be accessed through LockedAccessor_StreamCrit_t
     ihipStreamCritical_t        _criticalData;
@@ -593,7 +604,40 @@ struct ihipEvent_t {
 
 
 
+//=============================================================================
+//class ihipDeviceCriticalBase_t
+template <typename MUTEX_TYPE>
+class ihipDeviceCriticalBase_t : LockedBase<MUTEX_TYPE>
+{
+public:
+    ihipDeviceCriticalBase_t(ihipDevice_t *parentDevice) :
+        _parent(parentDevice)
+    {
+    };
 
+    ~ihipDeviceCriticalBase_t()  {
+
+    }
+
+    // Contexts:
+    void addContext(ihipCtx_t *ctx);
+    void removeContext(ihipCtx_t *ctx);
+    std::list<ihipCtx_t*> &ctxs() { return _ctxs; };
+    const std::list<ihipCtx_t*> &const_ctxs() const { return _ctxs; };
+	int getcount() {return _ctxCount;};
+    friend class LockedAccessor<ihipDeviceCriticalBase_t>;
+private:
+    ihipDevice_t                 *_parent;
+
+    //--- Context Tracker:
+    std::list< ihipCtx_t* > _ctxs;   // contexts associated with this device across all threads.
+
+	int	_ctxCount;
+};
+
+typedef ihipDeviceCriticalBase_t<DeviceMutex> ihipDeviceCritical_t;
+
+typedef LockedAccessor<ihipDeviceCritical_t> LockedAccessor_DeviceCrit_t;
 
 //----
 // Properties of the HIP device.
@@ -606,7 +650,9 @@ public:
 
     // Accessors:
     ihipCtx_t *getPrimaryCtx() const { return _primaryCtx; };
-
+    void locked_removeContext(ihipCtx_t *c);
+	void locked_reset();
+    ihipDeviceCritical_t  &criticalData() { return _criticalData; };
 public:
     unsigned                _deviceId; // device ID
 
@@ -626,6 +672,8 @@ public:
 
 private:
     hipError_t initProperties(hipDeviceProp_t* prop);
+private:
+	ihipDeviceCritical_t       _criticalData;
 };
 //=============================================================================
 

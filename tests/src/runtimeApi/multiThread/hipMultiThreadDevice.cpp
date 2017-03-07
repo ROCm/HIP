@@ -1,5 +1,5 @@
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * RUN_NAMED: %t hipMultiThreadDevice-serial --tests 0x1
  * RUN_NAMED: %t hipMultiThreadDevice-pyramid --tests 0x4
  * RUN_NAMED: %t hipMultiThreadDevice-nearzero --tests 0x10
