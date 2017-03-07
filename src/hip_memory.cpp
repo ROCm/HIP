@@ -1024,6 +1024,27 @@ hipError_t hipMemGetInfo  (size_t *free, size_t *total)
     return ihipLogStatus(e);
 }
 
+hipError_t hipMemPtrGetInfo(void *ptr, size_t *size)
+{
+  HIP_INIT_API(ptr, size);
+
+  hipError_t e = hipSuccess;
+
+  if(ptr != nullptr && size != nullptr){
+    hc::accelerator acc;
+    hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+    am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
+    if(status == AM_SUCCESS){
+      *size = amPointerInfo._sizeBytes;
+    }else{
+      e = hipErrorInvalidValue;
+    }
+  }else{
+    e = hipErrorInvalidValue;
+  }
+  return ihipLogStatus(e);
+}
+
 hipError_t hipFree(void* ptr)
 {
     HIP_INIT_API(ptr);
