@@ -32,7 +32,7 @@ THE SOFTWARE.
 	}\
 }
 
-/* 
+/*
  * Square each element in the array A and write to array C.
  */
 template <typename T>
@@ -58,16 +58,18 @@ int main(int argc, char *argv[])
     hipDeviceProp_t props;
     CHECK(hipGetDeviceProperties(&props, 0/*deviceID*/));
     printf ("info: running on device %s\n", props.name);
-
+    #ifdef __HIP_PLATFORM_HCC__
+      printf ("info: architecture on AMD GPU device is: %d\n",props.gcnArch);
+    #endif
     printf ("info: allocate host mem (%6.2f MB)\n", 2*Nbytes/1024.0/1024.0);
     A_h = (float*)malloc(Nbytes);
     CHECK(A_h == 0 ? hipErrorMemoryAllocation : hipSuccess );
     C_h = (float*)malloc(Nbytes);
     CHECK(C_h == 0 ? hipErrorMemoryAllocation : hipSuccess );
 	// Fill with Phi + i
-    for (size_t i=0; i<N; i++) 
+    for (size_t i=0; i<N; i++)
     {
-        A_h[i] = 1.618f + i; 
+        A_h[i] = 1.618f + i;
     }
 
     printf ("info: allocate device mem (%6.2f MB)\n", 2*Nbytes/1024.0/1024.0);
