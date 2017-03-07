@@ -250,7 +250,7 @@ __device__ float __shfl_xor(float input, int lane_mask, int width);
 __host__ __device__ int min(int arg1, int arg2);
 __host__ __device__ int max(int arg1, int arg2);
 
-__device__ __attribute__((address_space(3))) void* __get_dynamicgroupbaseptr();
+__device__ void* __get_dynamicgroupbaseptr();
 
 
 /**
@@ -418,10 +418,9 @@ do {\
 // Macro to replace extern __shared__ declarations
 // to local variable definitions
 #define HIP_DYNAMIC_SHARED(type, var) \
-    __attribute__((address_space(3))) type* var = \
-    (__attribute__((address_space(3))) type*)__get_dynamicgroupbaseptr(); \
+    type* var = (type*)__get_dynamicgroupbaseptr(); \
 
-#define HIP_DYNAMIC_SHARED_ATTRIBUTE __attribute__((address_space(3)))
+#define HIP_DYNAMIC_SHARED_ATTRIBUTE 
 
 #endif // __HCC__
 
