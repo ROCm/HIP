@@ -166,7 +166,7 @@ Both nvcc and hcc make two passes over the code: one for host code and one for d
  
 ```
 // #ifdef __CUDA_ARCH__  
-#ifdef __HIP_DEVICE_COMPILE__ 
+#ifdef __HIP_DEVICE_COMPILE__ && (__HIP_DEVICE_COMPILE__ == 1) 
 ```
  
 Unlike `__CUDA_ARCH__`, the `__HIP_DEVICE_COMPILE__` value is 0 or 1, and it doesnt represent the feature capability of the target device.  
@@ -182,7 +182,7 @@ Unlike `__CUDA_ARCH__`, the `__HIP_DEVICE_COMPILE__` value is 0 or 1, and it doe
 |`__HIPCC__`		| Defined   | Defined 		|  Undefined
 |`__HIP_ARCH_*` | 0 or 1 depending on feature support (see below) | 0 or 1 depending on feature support (see below) | 0 
 |nvcc-related defines:|
-|`__CUDACC__` 		| Undefined | Defined if compiling for Cuda device; undefined otherwise 		|  Undefined
+|`__CUDACC__` 		| Undefined | Defined if source code is compiled by nvcc; undefined otherwise 		|  Undefined
 |`__NVCC__` 		| Undefined | Defined 		|  Undefined
 |`__CUDA_ARCH__`		| Undefined | Unsigned representing compute capability (e.g., "130") if in device code; 0 if in host code  | Undefined 
 |hcc-related defines:|

@@ -68,9 +68,10 @@ if(HIP_PLATFORM STREQUAL "hcc")
     endif()
     if(IS_ABSOLUTE ${HCC_HOME} AND EXISTS ${HCC_HOME} AND IS_DIRECTORY ${HCC_HOME})
         execute_process(COMMAND ${HCC_HOME}/bin/hcc --version
-            COMMAND cut -d\  -f9
             OUTPUT_VARIABLE HCC_VERSION
             OUTPUT_STRIP_TRAILING_WHITESPACE)
+        string(REGEX REPLACE ".*based on HCC " "" HCC_VERSION ${HCC_VERSION})
+        string(REGEX REPLACE " .*" "" HCC_VERSION ${HCC_VERSION})
         message(STATUS "Looking for HCC in: " ${HCC_HOME} ". Found version: " ${HCC_VERSION})
     else()
         message(FATAL_ERROR "Don't know where to find HCC. Please specify abolute path using -DHCC_HOME")
@@ -159,7 +160,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
 
     # Add remaining flags
     execute_process(COMMAND ${HCC_HOME}/bin/hcc-config --cxxflags OUTPUT_VARIABLE HCC_CXX_FLAGS)
-    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC ${HCC_CXX_FLAGS} -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include")
+    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC ${HCC_CXX_FLAGS} -I${HSA_PATH}/include")
 
     # Set compiler and compiler flags
     set(CMAKE_CXX_COMPILER "${HCC_HOME}/bin/hcc")
@@ -367,22 +368,28 @@ endif()
 # Testing steps
 #############################
 # Target: test
-set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/hip_tests)
-configure_file(tests/hip_tests.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
-if(POLICY CMP0037)
-    cmake_policy(PUSH)
-    cmake_policy(SET CMP0037 OLD)
+set(HIP_PATH ${CMAKE_INSTALL_PREFIX})
+set(HIP_SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/cmake" "${HIP_PATH}/cmake" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
+if(${RUN_HIT} EQUAL 0)
+    execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/bin" "${HIP_PATH}/bin" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
 endif()
-add_custom_target(install_for_test COMMAND "${CMAKE_COMMAND}" --build . --target install
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-execute_process(COMMAND getconf _NPROCESSORS_ONLN OUTPUT_VARIABLE DASH_JAY OUTPUT_STRIP_TRAILING_WHITESPACE)
-add_custom_target(test COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} .
-    COMMAND make -j ${DASH_JAY}
-    COMMAND make test
-    WORKING_DIRECTORY ${BUILD_DIR}
-    DEPENDS install_for_test)
-if(POLICY CMP0037)
-    cmake_policy(POP)
+if(${RUN_HIT} EQUAL 0)
+    set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
+    include(${HIP_SRC_PATH}/tests/hit/HIT.cmake)
+
+    # Add tests
+    include_directories(${HIP_SRC_PATH}/tests/src)
+    hit_add_directory_recursive(${HIP_SRC_PATH}/tests/src "directed_tests")
+
+    # Add top-level tests to build_tests
+    add_custom_target(build_tests DEPENDS directed_tests)
+
+    # Add custom target: check
+    add_custom_target(check COMMAND "${CMAKE_COMMAND}" --build . --target test DEPENDS build_tests)
+else()
+    message(STATUS "Testing targets will not be available. To enable them please ensure that the HIP installation directory is writeable. Use -DCMAKE_INSTALL_PREFIX to specify a suitable location")
 endif()
+
 
 # vim: ts=4:sw=4:expandtab:smartindent

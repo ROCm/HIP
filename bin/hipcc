@@ -80,8 +80,11 @@ if ($HIP_PLATFORM eq "hcc") {
 
     $HCC_HOME=$ENV{'HCC_HOME'} // $hipConfig{'HCC_HOME'} // "/opt/rocm/hcc";
 
-    $HCC_VERSION=`${HCC_HOME}/bin/hcc --version | cut -d" " -f9 | tr -d "\n"`;
-    $HCC_VERSION_MAJOR=`${HCC_HOME}/bin/hcc --version | cut -d" " -f9 | cut -d"." -f1 | tr -d "\n"`;
+    $HCC_VERSION=`${HCC_HOME}/bin/hcc --version`;
+    $HCC_VERSION=~/.*based on HCC ([^ ]+).*/;
+    $HCC_VERSION=$1;
+    $HCC_VERSION_MAJOR=$HCC_VERSION;
+    $HCC_VERSION_MAJOR=~s/\..*//;
 
     $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
 
@@ -92,7 +95,7 @@ if ($HIP_PLATFORM eq "hcc") {
 
     # HCC* may be used to compile src/hip_hcc.o (and also feed the HIPCXXFLAGS below)
     $HCC = "$HCC_HOME/bin/hcc";
-    $HCCFLAGS = "-hc -I$HCC_HOME/include ";
+    $HCCFLAGS = "-hc  -D__HIPCC__ -I$HCC_HOME/include ";
 
     $HIPCC=$HCC;
     $HIPCXXFLAGS = $HCCFLAGS;

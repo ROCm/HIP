@@ -105,6 +105,25 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
     endif()
     mark_as_advanced(HIP_HIPCONFIG_EXECUTABLE)
 
+    # Find HIPCC_CMAKE_LINKER_HELPER executable
+    find_program(
+        HIP_HIPCC_CMAKE_LINKER_HELPER
+        NAMES hipcc_cmake_linker_helper
+        PATHS
+        "${HIP_ROOT_DIR}"
+        ENV ROCM_PATH
+        ENV HIP_PATH
+        /opt/rocm
+        /opt/rocm/hip
+        PATH_SUFFIXES bin
+        NO_DEFAULT_PATH
+        )
+    if(NOT HIP_HIPCC_CMAKE_LINKER_HELPER)
+        # Now search in default paths
+        find_program(HIP_HIPCC_CMAKE_LINKER_HELPER hipcc_cmake_linker_helper)
+    endif()
+    mark_as_advanced(HIP_HIPCC_CMAKE_LINKER_HELPER)
+
     if(HIP_HIPCONFIG_EXECUTABLE AND NOT HIP_VERSION)
         # Compute the version
         execute_process(
@@ -177,6 +196,21 @@ endmacro()
 hip_find_helper_file(run_make2cmake cmake)
 hip_find_helper_file(run_hipcc cmake)
 ###############################################################################
+
+###############################################################################
+# MACRO: Reset compiler flags
+###############################################################################
+macro(HIP_RESET_FLAGS)
+    unset(HIP_HIPCC_FLAGS)
+    unset(HIP_HCC_FLAGS)
+    unset(HIP_NVCC_FLAGS)
+    foreach(config ${_hip_configuration_types})
+        string(TOUPPER ${config} config_upper)
+        unset(HIP_HIPCC_FLAGS_${config_upper})
+        unset(HIP_HCC_FLAGS_${config_upper})
+        unset(HIP_NVCC_FLAGS_${config_upper})
+    endforeach()
+endmacro()
 
 ###############################################################################
 # MACRO: Separate the options from the sources
@@ -481,7 +515,10 @@ macro(HIP_ADD_EXECUTABLE hip_target)
     HIP_GET_SOURCES_AND_OPTIONS(_sources _cmake_options _hipcc_options _hcc_options _nvcc_options ${ARGN})
     HIP_PREPARE_TARGET_COMMANDS(${hip_target} OBJ _generated_files _source_files ${_sources} HIPCC_OPTIONS ${_hipcc_options} HCC_OPTIONS ${_hcc_options} NVCC_OPTIONS ${_nvcc_options})
     list(REMOVE_ITEM _sources ${_source_files})
-    set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_EXECUTABLE} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET>")
+    if("x${HCC_HOME}" STREQUAL "x")
+        set(HCC_HOME "/opt/rocm/hcc")
+    endif()
+    set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HCC_HOME} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET>")
     add_executable(${hip_target} ${_cmake_options} ${_generated_files} ${_sources})
     set_target_properties(${hip_target} PROPERTIES LINKER_LANGUAGE HIP)
 endmacro()

@@ -306,13 +306,13 @@ inline static hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst,
 inline static hipError_t hipMemcpyDtoHAsync(void* dst,
                   hipDeviceptr_t src, size_t size, hipStream_t stream)
 {
-    return hipCUResultTohipError(cuMemcpyDtoH(dst, src, size));
+    return hipCUResultTohipError(cuMemcpyDtoHAsync(dst, src, size, stream));
 }
 
 inline static hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst,
             hipDeviceptr_t src, size_t size, hipStream_t stream)
 {
-    return hipCUResultTohipError(cuMemcpyDtoD(dst, src, size));
+    return hipCUResultTohipError(cuMemcpyDtoDAsync(dst, src, size, stream));
 }
 
 inline static hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind copyKind) {
@@ -502,6 +502,8 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
         cdattr = cudaDevAttrMaxThreadsPerMultiProcessor; break;
     case hipDeviceAttributeComputeCapabilityMajor:
         cdattr = cudaDevAttrComputeCapabilityMajor; break;
+    case hipDeviceAttributeComputeCapabilityMinor:
+        cdattr = cudaDevAttrComputeCapabilityMinor; break;
     case hipDeviceAttributeConcurrentKernels:
         cdattr = cudaDevAttrConcurrentKernels; break;
     case hipDeviceAttributePciBusId:
