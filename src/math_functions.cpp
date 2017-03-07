@@ -46,7 +46,7 @@ __device__ float asinhf(float x)
 }
 __device__ float atan2f(float y, float x)
 {
-    return hc::precise_math::atan2f(x, y);
+    return hc::precise_math::atan2f(y, x);
 }
 __device__ float atanf(float x)
 {
