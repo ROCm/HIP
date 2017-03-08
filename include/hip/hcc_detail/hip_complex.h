@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 #if __cplusplus
 #define COMPLEX_ADD_OP_OVERLOAD(type) \
-__device__ __host__ static type operator + (const type& lhs, const type& rhs) { \
+__device__ __host__ static inline type operator + (const type& lhs, const type& rhs) { \
   type ret; \
   ret.x = lhs.x + rhs.x ; \
   ret.y = lhs.y + rhs.y ; \
@@ -36,7 +36,7 @@ __device__ __host__ static type operator + (const type& lhs, const type& rhs) { 
 }
 
 #define COMPLEX_SUB_OP_OVERLOAD(type) \
-__device__ __host__ static type operator - (const type& lhs, const type& rhs) { \
+__device__ __host__ static inline type operator - (const type& lhs, const type& rhs) { \
   type ret; \
   ret.x = lhs.x - rhs.x; \
   ret.y = lhs.y - rhs.y; \
@@ -44,7 +44,7 @@ __device__ __host__ static type operator - (const type& lhs, const type& rhs) { 
 }
 
 #define COMPLEX_MUL_OP_OVERLOAD(type) \
-__device__ __host__ static type operator * (const type& lhs, const type& rhs) { \
+__device__ __host__ static inline type operator * (const type& lhs, const type& rhs) { \
   type ret; \
   ret.x = lhs.x * rhs.x - lhs.y * rhs.y; \
   ret.y = lhs.x * rhs.y + lhs.y * rhs.x; \
@@ -52,7 +52,7 @@ __device__ __host__ static type operator * (const type& lhs, const type& rhs) { 
 }
 
 #define COMPLEX_DIV_OP_OVERLOAD(type) \
-__device__ __host__ static type operator / (const type& lhs, const type& rhs) { \
+__device__ __host__ static inline type operator / (const type& lhs, const type& rhs) { \
   type ret; \
   ret.x = (lhs.x * rhs.x + lhs.y * rhs.y); \
   ret.y = (rhs.x * lhs.y - lhs.x * rhs.y); \
@@ -88,7 +88,7 @@ __device__ __host__ static inline type& operator /= (type& lhs, const type& rhs)
 }
 
 #define COMPLEX_SCALAR_PRODUCT(type, type1) \
-__device__ __host__ static type operator * (const type& lhs, type1 rhs) { \
+__device__ __host__ static inline type operator * (const type& lhs, type1 rhs) { \
   type ret; \
   ret.x = lhs.x * rhs; \
   ret.y = lhs.y * rhs; \
