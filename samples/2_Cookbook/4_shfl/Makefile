@@ -22,7 +22,7 @@ CXX=$(HIPCC)
 
 
 $(EXECUTABLE): $(OBJECTS)
-	$(HIPCC)  $(OBJECTS) -o $@
+	$(HIPCC) --amdgpu-target=gfx803 $(OBJECTS) -o $@
 
 
 test: $(EXECUTABLE)
@@ -33,4 +33,3 @@ clean:
 	rm -f $(EXECUTABLE)
 	rm -f $(OBJECTS)
 	rm -f $(HIP_PATH)/src/*.o
-
