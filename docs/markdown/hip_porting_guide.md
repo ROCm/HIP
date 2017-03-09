@@ -166,7 +166,7 @@ Both nvcc and hcc make two passes over the code: one for host code and one for d
  
 ```
 // #ifdef __CUDA_ARCH__  
-#ifdef __HIP_DEVICE_COMPILE__ && (__HIP_DEVICE_COMPILE__ == 1) 
+#if defined(__HIP_DEVICE_COMPILE__) && (__HIP_DEVICE_COMPILE__ == 1)
 ```
  
 Unlike `__CUDA_ARCH__`, the `__HIP_DEVICE_COMPILE__` value is 0 or 1, and it doesnt represent the feature capability of the target device.  
