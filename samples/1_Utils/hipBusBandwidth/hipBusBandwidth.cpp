@@ -24,7 +24,7 @@ bool          p_h2d   = true;
 bool          p_d2h   = true;
 bool          p_bidir = true;
 
-#define NO_CHECK
+//#define NO_CHECK
 
 
 #define CHECK_HIP_ERROR()                                                    \
@@ -150,6 +150,10 @@ void RunBenchmark_H2D(ResultDatabase &resultDB)
 
         hipHostRegister(hostMem, numMaxFloats * sizeof(float), 0);
         CHECK_HIP_ERROR();
+    }
+    else 
+    {
+        assert(0);
     }
 
     for (int i = 0; i < numMaxFloats; i++)
@@ -323,6 +327,22 @@ void RunBenchmark_D2H(ResultDatabase &resultDB)
         hostMem1 = new float[numMaxFloats];
         hostMem2 = new float[numMaxFloats];
     }
+    else if (p_malloc_mode == MallocRegistered) 
+    {
+        if (p_numa_ctl == -1) {
+            hostMem1 = (float*)malloc(numMaxFloats*sizeof(float));
+            hostMem2 = (float*)malloc(numMaxFloats*sizeof(float));
+        }
+
+        hipHostRegister(hostMem1, numMaxFloats * sizeof(float), 0);
+        CHECK_HIP_ERROR();
+        hipHostRegister(hostMem2, numMaxFloats * sizeof(float), 0);
+        CHECK_HIP_ERROR();
+    }
+    else 
+    {
+        assert(0);
+    }
 
 
     for (int i=0; i<numMaxFloats; i++)
@@ -429,6 +449,13 @@ void RunBenchmark_D2H(ResultDatabase &resultDB)
         delete[] hostMem1;
         delete[] hostMem2;
         break;
+    case MallocRegistered:
+        hipHostUnregister(hostMem1);
+        CHECK_HIP_ERROR();
+        free(hostMem1);
+        hipHostUnregister(hostMem2);
+        free(hostMem2);
+        break;
     default:
         assert(0);
     }
@@ -476,6 +503,22 @@ void RunBenchmark_Bidir(ResultDatabase &resultDB)
         hostMem[0] = new float[numMaxFloats];
         hostMem[1] = new float[numMaxFloats];
     }
+    else if (p_malloc_mode == MallocRegistered) 
+    {
+        if (p_numa_ctl == -1) {
+            hostMem[0] = (float*)malloc(numMaxFloats*sizeof(float));
+            hostMem[1] = (float*)malloc(numMaxFloats*sizeof(float));
+        }
+        hipHostRegister(hostMem[0], numMaxFloats * sizeof(float), 0);
+        CHECK_HIP_ERROR();
+        hipHostRegister(hostMem[1], numMaxFloats * sizeof(float), 0);
+        CHECK_HIP_ERROR();
+    } 
+    else 
+    {
+        assert(0);
+    }
+
 
     for (int i = 0; i < numMaxFloats; i++)
     {
@@ -570,6 +613,13 @@ void RunBenchmark_Bidir(ResultDatabase &resultDB)
     case MallocUnpinned:
         delete[] hostMem[0];
         delete[] hostMem[1];
+        break;
+    case MallocRegistered:
+        for (int i=0; i<2; i++) {
+            hipHostUnregister(hostMem[i]);
+            CHECK_HIP_ERROR();
+            free(hostMem[i]);
+        }
         break;
     default:
         assert(0);
