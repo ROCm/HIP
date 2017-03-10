@@ -62,7 +62,12 @@ typedef struct ihipStream_t *hipStream_t;
 
 #define hipIpcMemLazyEnablePeerAccess 0
 
-typedef struct ihipIpcMemHandle_t *hipIpcMemHandle_t;
+#define HIP_IPC_HANDLE_SIZE 64
+
+typedef struct hipIpcMemHandle_st
+{
+    char reserved[HIP_IPC_HANDLE_SIZE];
+}hipIpcMemHandle_t;
 
 //TODO: IPC event handle currently unsupported
 struct ihipIpcEventHandle_t;
