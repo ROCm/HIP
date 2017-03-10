@@ -1143,7 +1143,7 @@ hipError_t hipMemGetAddressRange ( hipDeviceptr_t* pbase, size_t* psize, hipDevi
     }
     else
         hipStatus = hipErrorInvalidDevicePointer;
-    return hipStatus;
+    return ihipLogStatus(hipStatus);
 }
 
 
@@ -1162,25 +1162,25 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr){
     }
     else
         hipStatus = hipErrorInvalidResourceHandle;
-
+    ihipIpcMemHandle_t* iHandle = (ihipIpcMemHandle_t*) handle;
     // Save the size of the pointer to hipIpcMemHandle
-    (*handle)->psize = psize;
+    iHandle->psize = psize;
 
 #if USE_IPC
     // Create HSA ipc memory
     hsa_status_t hsa_status =
-        hsa_amd_ipc_memory_create(devPtr, psize, &(*handle)->ipc_handle);
+        hsa_amd_ipc_memory_create(devPtr, psize, (hsa_amd_ipc_memory_t*) &(iHandle->ipc_handle));
     if(hsa_status!= HSA_STATUS_SUCCESS)
         hipStatus = hipErrorMemoryAllocation;
 #else
     hipStatus = hipErrorRuntimeOther;
 #endif
 
-    return hipStatus;
+    return ihipLogStatus(hipStatus);
 }
 
 hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags){
-// HIP_INIT_API ( devPtr, handle.handle , flags);
+    HIP_INIT_API ( devPtr, &handle , flags);
     hipError_t hipStatus = hipSuccess;
 
 #if USE_IPC
@@ -1190,15 +1190,16 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
     if(!agent)
         return hipErrorInvalidResourceHandle;
 
+    ihipIpcMemHandle_t* iHandle = (ihipIpcMemHandle_t*) &handle;
     //Attach ipc memory
     hsa_status_t hsa_status =
-        hsa_amd_ipc_memory_attach(&handle->ipc_handle, handle->psize, 1, agent, devPtr);
+        hsa_amd_ipc_memory_attach((hsa_amd_ipc_memory_t*)&(iHandle->ipc_handle), iHandle->psize, 1, agent, devPtr);
     if(hsa_status != HSA_STATUS_SUCCESS)
         hipStatus = hipErrorMapBufferObjectFailed;
 #else
     hipStatus = hipErrorRuntimeOther;
 #endif
-    return hipStatus;
+    return ihipLogStatus(hipStatus);
 }
 
 hipError_t hipIpcCloseMemHandle(void *devPtr){
@@ -1213,7 +1214,7 @@ hipError_t hipIpcCloseMemHandle(void *devPtr){
 #else
     hipStatus = hipErrorRuntimeOther;
 #endif
-    return hipStatus;
+    return ihipLogStatus(hipStatus);
 }
 
 // hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle){
