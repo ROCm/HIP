@@ -226,7 +226,7 @@ __device__ int __all(  int input);
 __device__ int __any( int input);
 __device__  unsigned long long int __ballot( int input);
 
-#if __HIP_ARCH_GFX803__ == 1
+#if __HIP_ARCH_GFX701__ == 0
 
 // warp shuffle functions
 #ifdef __cplusplus
