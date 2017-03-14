@@ -34,8 +34,8 @@ THE SOFTWARE.
  This is the best place to put them because the device
  global variables need to be initialized at the start.
 */
-__attribute__((address_space(1))) char gpuHeap[SIZE_OF_HEAP];
-__attribute__((address_space(1))) uint32_t gpuFlags[NUM_PAGES];
+__device__ char gpuHeap[SIZE_OF_HEAP];
+__device__ uint32_t gpuFlags[NUM_PAGES];
 
 __device__ void *__hip_hc_malloc(size_t size)
 {
@@ -1083,7 +1083,7 @@ __host__ __device__ int max(int arg1, int arg2)
   return (int)(hc::precise_math::fmax((float)arg1, (float)arg2));
 }
 
-__device__ __attribute__((address_space(3))) void* __get_dynamicgroupbaseptr()
+__device__ void* __get_dynamicgroupbaseptr()
 {
   return hc::get_dynamic_group_segment_base_pointer();
 }
