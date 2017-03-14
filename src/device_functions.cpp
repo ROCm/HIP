@@ -41,8 +41,8 @@ struct holder32Bit {
   };
 } __attribute__((aligned(4)));
 
-__device__ struct holder64Bit hold64;
-__device__ struct holder32Bit hold32;
+struct holder64Bit hold64;
+struct holder32Bit hold32;
 
 __device__ float __double2float_rd(double x)
 {
