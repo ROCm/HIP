@@ -349,6 +349,10 @@ foreach my $target (split(/,/, $ENV{HCC_AMDGPU_TARGET}))
         $target_gfx900 = 1;
     }
 }
+if ($target_gfx701 eq 0 and $target_gfx801 eq 0 and $target_gfx802 eq 0 and $target_gfx803 eq 0 and $target_gfx900 eq 0)
+{
+    $target_gfx803 = 1;
+}
 
 if($HIP_PLATFORM eq "hcc"){
 
@@ -376,12 +380,6 @@ if($HIP_PLATFORM eq "hcc"){
         $HIPLDFLAGS .= " --amdgpu-target=gfx900";
         $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX900__=1 ";
     }
-    if ($target_gfx701 eq 0 and $target_gfx801 eq 0 and $target_gfx802 eq 0 and $target_gfx803 eq 0 and $target_gfx900 eq 0)
-    {
-        $HIPLDFLAGS .= " --amdgpu-target=gfx701 --amdgpu-target=gfx801 --amdgpu-target=gfx802 --amdgpu-target=gfx803 --amdgpu-target=gfx900";
-        $ENV{HCC_EXTRA_LIBRARIES_GFX803}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
-    }
-
 }
 
 if ($hasC and $HIP_PLATFORM eq 'nvcc') {
