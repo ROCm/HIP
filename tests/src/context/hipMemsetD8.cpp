@@ -45,13 +45,13 @@ int main(int argc, char *argv[])
    	hipDeviceptr_t A_d;
 	A_h = new char[Nbytes];
 
-    HIPCHECK ( hipMalloc(&A_d, Nbytes) );
+    HIPCHECK ( hipMalloc((void **) &A_d, Nbytes) );
     A_h = (char*)malloc(Nbytes);
 
 	printf ("Size=%zu  memsetval=%2x \n", Nbytes, memsetval);
     HIPCHECK ( hipMemsetD8(A_d, memsetval, Nbytes) );
 
-    HIPCHECK ( hipMemcpy(A_h, A_d, Nbytes, hipMemcpyDeviceToHost));
+    HIPCHECK ( hipMemcpy(A_h, (void *) A_d, Nbytes, hipMemcpyDeviceToHost));
 
     for (int i=0; i<N; i++) {
         if (A_h[i] != memsetval) {
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    hipFree(A_d);
+    hipFree((void *) A_d);
     free(A_h);
     passed();
 
