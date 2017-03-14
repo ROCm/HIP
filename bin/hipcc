@@ -74,6 +74,7 @@ $target_gfx701 = 0;
 $target_gfx801 = 0;
 $target_gfx802 = 0;
 $target_gfx803 = 0;
+$target_gfx900 = 0;
 
 if ($HIP_PLATFORM eq "hcc") {
     $HSA_PATH=$ENV{'HSA_PATH'} // "/opt/rocm/hsa";
@@ -261,6 +262,10 @@ foreach $arg (@ARGV)
     {
        $target_gfx803 = 1;
     }
+    if($arg eq '--amdgpu-target=gfx900')
+    {
+       $target_gfx900 = 1;
+    }
     if(($trimarg eq '-stdlib=libstdc++') and ($setStdLib eq 0))
     {
         $HIPCXXFLAGS .= $HCC_WA_FLAGS;
@@ -343,9 +348,13 @@ if($HIP_PLATFORM eq "hcc"){
         $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX803__=1 ";
         $ENV{HCC_EXTRA_LIBRARIES_GFX803}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
     }
-    if ($target_gfx701 eq 0 and $target_gfx801 eq 0 and $target_gfx802 eq 0 and $target_gfx803 eq 0)
+    if ($target_gfx900 eq 1) {
+        $HIPLDFLAGS .= " --amdgpu-target=gfx900";
+        $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX900__=1 ";
+    }
+    if ($target_gfx701 eq 0 and $target_gfx801 eq 0 and $target_gfx802 eq 0 and $target_gfx803 eq 0 and $target_gfx900 eq 0)
     {
-        $HIPLDFLAGS .= " --amdgpu-target=gfx701 --amdgpu-target=gfx801 --amdgpu-target=gfx802 --amdgpu-target=gfx803";
+        $HIPLDFLAGS .= " --amdgpu-target=gfx701 --amdgpu-target=gfx801 --amdgpu-target=gfx802 --amdgpu-target=gfx803 --amdgpu-target=gfx900";
         $ENV{HCC_EXTRA_LIBRARIES_GFX803}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
     }
 
