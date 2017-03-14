@@ -27,13 +27,6 @@ THE SOFTWARE.
 // Other compiler (GCC,ICC,etc) need to set one of these macros explicitly
 #if defined(__HCC__)
 #define __HIP_PLATFORM_HCC__
-
-#if defined(__HCC_ACCELERATOR__) && (__HCC_ACCELERATOR__ != 0)
-#define __HIP_DEVICE_COMPILE__ 1
-#else
-#define __HIP_DEVICE_COMPILE__ 0
-#endif
-
 #endif //__HCC__
 
 // Auto enable __HIP_PLATFORM_NVCC__ if compiling with NVCC
@@ -43,14 +36,12 @@ THE SOFTWARE.
 #define __HIPCC__
 #endif
 
-#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ != 0)
-#define __HIP_DEVICE_COMPILE__ 1
-#else
-#define __HIP_DEVICE_COMPILE__ 0
-#endif
-
 #endif //__NVCC__
 
+// Auto enable __HIP_DEVICE_COMPILE__ if compiled in HCC or NVCC device path
+#if (defined(__HCC_ACCELERATOR__) && __HCC_ACCELERATOR__ != 0) || (defined(__CUDA_ARCH__) && __CUDA_ARCH__ != 0)
+  #define __HIP_DEVICE_COMPILE__ 1
+#endif
 
 #if __HIP_DEVICE_COMPILE__ == 0
 // 32-bit Atomics

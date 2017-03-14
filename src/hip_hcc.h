@@ -36,7 +36,7 @@ THE SOFTWARE.
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
-#define USE_IPC 0
+#define USE_IPC 1
 
 //---
 // Environment variables:
@@ -326,15 +326,15 @@ const hipStream_t hipStreamNull = 0x0;
 /**
  * HIP IPC Handle Size
  */
-#define HIP_IPC_HANDLE_SIZE 64
+#define HIP_IPC_RESERVED_SIZE 24
 class ihipIpcMemHandle_t
 {
 public:
 #if USE_IPC
     hsa_amd_ipc_memory_t ipc_handle; ///< ipc memory handle on ROCr
 #endif
-    char reserved[HIP_IPC_HANDLE_SIZE];
     size_t psize;
+    char reserved[HIP_IPC_RESERVED_SIZE];
 };
 
 

@@ -62,7 +62,12 @@ typedef struct ihipStream_t *hipStream_t;
 
 #define hipIpcMemLazyEnablePeerAccess 0
 
-typedef struct ihipIpcMemHandle_t *hipIpcMemHandle_t;
+#define HIP_IPC_HANDLE_SIZE 64
+
+typedef struct hipIpcMemHandle_st
+{
+    char reserved[HIP_IPC_HANDLE_SIZE];
+}hipIpcMemHandle_t;
 
 //TODO: IPC event handle currently unsupported
 struct ihipIpcEventHandle_t;
@@ -853,6 +858,8 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
  *  @param[out] ptr Pointer to the allocated memory
  *  @param[in]  size Requested memory size
  *
+ *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
+ *
  *  @return #hipSuccess
  *
  *  @see hipMallocPitch, hipFree, hipMallocArray, hipFreeArray, hipMalloc3D, hipMalloc3DArray, hipHostFree, hipHostMalloc
@@ -864,6 +871,8 @@ hipError_t hipMalloc(void** ptr, size_t size) ;
  *
  *  @param[out] ptr Pointer to the allocated host pinned memory
  *  @param[in]  size Requested memory size
+ *
+ *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
  *
  *  @return #hipSuccess, #hipErrorMemoryAllocation
  *
@@ -878,6 +887,8 @@ hipError_t hipMallocHost(void** ptr, size_t size) __attribute__((deprecated("use
  *  @param[in]  size Requested memory size
  *  @param[in]  flags Type of host memory allocation
  *
+ *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
+ *
  *  @return #hipSuccess, #hipErrorMemoryAllocation
  *
  *  @see hipSetDeviceFlags, hipHostFree
@@ -890,6 +901,8 @@ hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags) ;
  *  @param[out] ptr Pointer to the allocated host pinned memory
  *  @param[in]  size Requested memory size
  *  @param[in]  flags Type of host memory allocation
+ *
+ *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
  *
  *  @return #hipSuccess, #hipErrorMemoryAllocation
  *
@@ -975,6 +988,9 @@ hipError_t hipHostUnregister(void* hostPtr) ;
  *  @param[out] pitch Pitch for allocation (in bytes)
  *  @param[in]  width Requested pitched allocation width (in bytes)
  *  @param[in]  height Requested pitched allocation height
+ *
+ *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
+ *
  *  @return Error code
  *
  *  @see hipMalloc, hipFree, hipMallocArray, hipFreeArray, hipHostFree, hipMalloc3D, hipMalloc3DArray, hipHostMalloc
@@ -1234,6 +1250,9 @@ hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t st
  * @warning On HCC, the free memory only accounts for memory allocated by this process and may be optimistic.
  **/
 hipError_t hipMemGetInfo  (size_t * free, size_t * total)   ;
+
+
+hipError_t hipMemPtrGetInfo(void *ptr, size_t *size);
 
 
 /**

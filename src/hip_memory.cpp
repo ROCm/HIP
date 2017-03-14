@@ -30,10 +30,108 @@ THE SOFTWARE.
 #include "hip/hcc_detail/hip_texture.h"
 #include <hc_am.hpp>
 
+
+
+// Internal HIP APIS:
+namespace hip_internal {
+
+hipError_t memcpyAsync (void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream)
+{
+    hipError_t e = hipSuccess;
+
+    stream = ihipSyncAndResolveStream(stream);
+
+
+    if ((dst == NULL) || (src == NULL)) {
+        e= hipErrorInvalidValue;
+    } else if (stream) {
+        try {
+            stream->locked_copyAsync(dst, src, sizeBytes, kind);
+        }
+        catch (ihipException ex) {
+            e = ex._code;
+        }
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return e;
+}
+
+// return 0 on success or -1 on error:
+int sharePtr(void *ptr, ihipCtx_t *ctx, unsigned hipFlags)
+{
+    int ret = 0;
+
+    auto device = ctx->getWriteableDevice();
+
+    hc::am_memtracker_update(ptr, device->_deviceId, hipFlags);
+    int peerCnt=0;
+    {
+        LockedAccessor_CtxCrit_t crit(ctx->criticalData());
+        // the peerCnt always stores self so make sure the trace actually
+        peerCnt = crit->peerCnt();
+        tprintf(DB_MEM, "  allow access to %d other peer(s)\n", peerCnt-1);
+        if (peerCnt > 1) {
+
+            //printf ("peer self access\n");
+
+            // TODOD - remove me:
+            for (auto iter = crit->_peers.begin(); iter!=crit->_peers.end(); iter++) {
+                tprintf (DB_MEM, "    allow access to peer: %s%s\n", (*iter)->toString().c_str(), (iter == crit->_peers.begin()) ? " (self)":"");
+            };
+
+            hsa_status_t s = hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, ptr);
+            if (s != HSA_STATUS_SUCCESS) {
+                ret = -1;
+            }
+        }
+    }
+
+    return ret;
+}
+
+
+
+
+// Allocate a new pointer with am_alloc and share with all valid peers.
+// Returns null-ptr if a memory error occurs (either allocation or sharing)
+void * allocAndSharePtr(const char *msg, size_t sizeBytes, ihipCtx_t *ctx, unsigned amFlags, unsigned hipFlags)
+{
+
+    void *ptr = nullptr;
+
+    auto device = ctx->getWriteableDevice();
+
+    ptr = hc::am_alloc(sizeBytes, device->_acc, amFlags);
+    tprintf(DB_MEM, " alloc %s ptr:%p size:%zu on dev:%d\n",
+            msg, ptr, sizeBytes, device->_deviceId);
+
+    if (ptr != nullptr) {
+        int r = sharePtr(ptr, ctx, hipFlags);
+        if (r != 0) {
+            ptr = nullptr;
+        }
+    }
+
+    return ptr;
+}
+
+
+} // end namespace hip_internal
+
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 // Memory
 //
+//
+//
+//HIP uses several "app*" fields HC memory tracker to track state necessary for the HIP API.
+//_appId : DeviceID.  For device mem, this is device where the memory is physically allocated.
+//         For host or registered mem, this is the current device when the memory is allocated or registered.  This device will have a GPUVM mapping for the host mem.
+//
+//_appAllocationFlags : These are flags provided by the user when allocation is performed. They are returned to user in hipHostGetFlags and other APIs.
+// TODO - add more info here when available.
 //
 hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
 {
@@ -78,6 +176,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
     return ihipLogStatus(e);
 }
 
+
 hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsigned flags)
 {
     HIP_INIT_API(devicePointer, hostPointer, flags);
@@ -102,6 +201,7 @@ hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsi
     return ihipLogStatus(e);
 }
 
+
 hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 {
     HIP_INIT_API(ptr, sizeBytes);
@@ -118,37 +218,8 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 
     if (ctx) {
         auto device = ctx->getWriteableDevice();
-        const unsigned am_flags = 0;
-        *ptr = hc::am_alloc(sizeBytes, device->_acc, am_flags);
+        *ptr = hip_internal::allocAndSharePtr("device_mem", sizeBytes, ctx,  0/*amFlags*/, 0/*hipFlags*/);
 
-
-        if (sizeBytes && (*ptr == NULL)) {
-            hip_status = hipErrorMemoryAllocation;
-        } else {
-            hc::am_memtracker_update(*ptr, device->_deviceId, 0);
-            int peerCnt=0;
-            {
-                LockedAccessor_CtxCrit_t crit(ctx->criticalData());
-                // the peerCnt always stores self so make sure the trace actually
-                peerCnt = crit->peerCnt();
-                tprintf(DB_MEM, " allocated device_mem ptr:%p size:%zu on dev:%d and allow access to %d other peer(s)\n",
-                        *ptr, sizeBytes, device->_deviceId, peerCnt-1);
-                if (peerCnt > 1) {
-
-                    //printf ("peer self access\n");
-
-                    // TODOD - remove me:
-                    for (auto iter = crit->_peers.begin(); iter!=crit->_peers.end(); iter++) {
-                        tprintf (DB_MEM, "   allow access to peer: %s%s\n", (*iter)->toString().c_str(), (iter == crit->_peers.begin()) ? " (self)":"");
-                    };
-
-                    hsa_status_t e = hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
-                    if (e != HSA_STATUS_SUCCESS) {
-                        hip_status = hipErrorMemoryAllocation;
-                    }
-                }
-            }
-        }
     } else {
         hip_status = hipErrorMemoryAllocation;
     }
@@ -188,53 +259,35 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
         }
         else {
             auto device = ctx->getWriteableDevice();
-            if(HIP_COHERENT_HOST_ALLOC){
-                // Force to allocate finedgrained system memory
-                *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
-                if(sizeBytes < 1 && (*ptr == NULL)){
-                    hip_status = hipErrorMemoryAllocation;
-                } else {
-                    hc::am_memtracker_update(*ptr, device->_deviceId, amHostCoherent);
-                }
-                tprintf(DB_MEM, " %s: finegrained system memory ptr=%p\n", __func__, *ptr);
-             }
-            else{
-                // TODO - am_alloc requires writeable __acc, perhaps could be refactored?
-                // TODO - hipHostMallocMapped is be ignored on ROCM - all memory is mapped to host address space as WC.
-                *ptr = hc::am_alloc(sizeBytes, device->_acc, amHostPinned);
-                if (*ptr == NULL) {
-                    hip_status = hipErrorMemoryAllocation;
-                } else {
-                    hc::am_memtracker_update(*ptr, device->_deviceId, flags);
-                    // TODO-hipHostMallocPortable should map the host memory into all contexts, regardless of peer status.
-                    int peerCnt=0;
-                    {
-                        LockedAccessor_CtxCrit_t crit(ctx->criticalData());
-                        peerCnt = crit->peerCnt();
-                        if (peerCnt > 1) {
-                            hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
-                        }
-                    }
-                    tprintf(DB_MEM, "allocated pinned_host ptr:%p size:%zu on dev:%d and allow access to %d other peer(s)\n", *ptr, sizeBytes, device->_deviceId, peerCnt-1);
-                }
-            }
+            unsigned amFlags = HIP_COHERENT_HOST_ALLOC ? amHostCoherent : amHostPinned;
+
+            *ptr = hip_internal::allocAndSharePtr(HIP_COHERENT_HOST_ALLOC ? "finegrained_host":"pinned_host", 
+                                                  sizeBytes, ctx, amFlags, flags);
+            if(sizeBytes  && (*ptr == NULL)){
+                hip_status = hipErrorMemoryAllocation;
+            } 
         }
     }
+
     if (HIP_SYNC_HOST_ALLOC) {
         hipDeviceSynchronize();
     }
     return ihipLogStatus(hip_status);
 }
 
+// Deprecated function:
 hipError_t hipMallocHost(void** ptr, size_t sizeBytes)
 {
     return hipHostMalloc(ptr, sizeBytes, 0);
 }
 
+
+// Deprecated function:
 hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
     return hipHostMalloc(ptr, sizeBytes, flags);
 };
+
 
 // width in bytes
 hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height)
@@ -257,22 +310,11 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
         auto device = ctx->getWriteableDevice();
 
         const unsigned am_flags = 0;
-        *ptr = hc::am_alloc(sizeBytes, device->_acc, am_flags);
+        *ptr = hip_internal::allocAndSharePtr("device_pitch", sizeBytes, ctx, am_flags, 0);
 
         if (sizeBytes && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
-        } else {
-            hc::am_memtracker_update(*ptr, device->_deviceId, 0);
-            {
-                LockedAccessor_CtxCrit_t crit(ctx->criticalData());
-                if (crit->peerCnt() > 1) { // peerCnt includes self so only call allow_access if other peers involved:
-                    hsa_status_t hsa_status = hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
-                    if (hsa_status != HSA_STATUS_SUCCESS) {
-                        hip_status = hipErrorMemoryAllocation;
-                    }
-                }
-            }
-        }
+        } 
     } else {
         hip_status = hipErrorMemoryAllocation;
     }
@@ -306,41 +348,31 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
     void ** ptr = &array[0]->data;
 
     if (ctx) {
-        auto device = ctx->getWriteableDevice();
         const unsigned am_flags = 0;
         const size_t size = width*height;
 
+        size_t allocSize = 0;
         switch(desc->f) {
             case hipChannelFormatKindSigned:
-                *ptr = hc::am_alloc(size*sizeof(int), device->_acc, am_flags);
+                allocSize = size * sizeof(int);
                 break;
             case hipChannelFormatKindUnsigned:
-                *ptr = hc::am_alloc(size*sizeof(unsigned int), device->_acc, am_flags);
+                allocSize = size * sizeof(unsigned int);
                 break;
             case hipChannelFormatKindFloat:
-                *ptr = hc::am_alloc(size*sizeof(float), device->_acc, am_flags);
+                allocSize = size * sizeof(float);
                 break;
             case hipChannelFormatKindNone:
-                *ptr = hc::am_alloc(size*sizeof(size_t), device->_acc, am_flags);
+                allocSize = size * sizeof(size_t);
                 break;
             default:
                 hip_status = hipErrorUnknown;
                 break;
         }
+        *ptr = hip_internal::allocAndSharePtr("device_array", allocSize, ctx, am_flags, 0);
         if (size && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
-        } else {
-            hc::am_memtracker_update(*ptr, device->_deviceId, 0);
-            {
-                LockedAccessor_CtxCrit_t crit(ctx->criticalData());
-                if (crit->peerCnt() > 1) { // peerCnt includes self so only call allow_access if other peers involved:
-                    hsa_status_t hsa_status = hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, *ptr);
-                    if (hsa_status != HSA_STATUS_SUCCESS) {
-                        hip_status = hipErrorMemoryAllocation;
-                    }
-                }
-            }
-        }
+        } 
 
     } else {
         hip_status = hipErrorMemoryAllocation;
@@ -373,6 +405,8 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr)
     return ihipLogStatus(hip_status);
 }
 
+
+// TODO - need to fix several issues here related to P2P access, host memory fallback.
 hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
 {
     HIP_INIT_API(hostPtr, sizeBytes, flags);
@@ -392,19 +426,21 @@ hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
         hip_status = hipErrorHostMemoryAlreadyRegistered;
     } else {
         auto ctx = ihipGetTlsDefaultCtx();
-        if(hostPtr == NULL){
+        if (hostPtr == NULL) {
             return ihipLogStatus(hipErrorInvalidValue);
         }
+        //TODO-test : multi-gpu access to registered host memory.
         if (ctx) {
-            auto device = ctx->getWriteableDevice();
             if(flags == hipHostRegisterDefault || flags == hipHostRegisterPortable || flags == hipHostRegisterMapped){
+                auto device = ctx->getWriteableDevice();
                 std::vector<hc::accelerator>vecAcc;
                 for(int i=0;i<g_deviceCnt;i++){
                     vecAcc.push_back(ihipGetDevice(i)->_acc);
                 }
                 am_status = hc::am_memory_host_lock(device->_acc, hostPtr, sizeBytes, &vecAcc[0], vecAcc.size());
+                hc::am_memtracker_update(hostPtr, device->_deviceId, flags);
 
-                tprintf(DB_MEM, " %s registered ptr=%p\n", __func__, hostPtr);
+                tprintf(DB_MEM, " %s registered ptr=%p and allowed access to %zu peers\n", __func__, hostPtr, vecAcc.size());
                 if(am_status == AM_SUCCESS){
                     hip_status = hipSuccess;
                 } else {
@@ -603,6 +639,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
     return ihipLogStatus(e);
 }
 
+
 hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes)
 {
     HIP_INIT_CMD_API(dst, src, sizeBytes);
@@ -623,6 +660,7 @@ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes)
 
     return ihipLogStatus(e);
 }
+
 
 hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes)
 {
@@ -645,6 +683,7 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes)
     return ihipLogStatus(e);
 }
 
+
 hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes)
 {
     HIP_INIT_CMD_API(dst, src, sizeBytes);
@@ -665,6 +704,7 @@ hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeByte
 
     return ihipLogStatus(e);
 }
+
 
 hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes)
 {
@@ -689,32 +729,6 @@ hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes)
 
 
 
-// Internal copy sync:
-namespace hip_internal {
-
-hipError_t memcpyAsync (void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream)
-{
-    hipError_t e = hipSuccess;
-
-    stream = ihipSyncAndResolveStream(stream);
-
-
-    if ((dst == NULL) || (src == NULL)) {
-        e= hipErrorInvalidValue;
-    } else if (stream) {
-        try {
-            stream->locked_copyAsync(dst, src, sizeBytes, kind);
-        }
-        catch (ihipException ex) {
-            e = ex._code;
-        }
-    } else {
-        e = hipErrorInvalidValue;
-    }
-
-    return e;
-}
-} // end namespace hip_internal
 
 
 hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind, hipStream_t stream)
@@ -990,6 +1004,7 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
     return ihipLogStatus(e);
 }
 
+
 hipError_t hipMemGetInfo  (size_t *free, size_t *total)
 {
     HIP_INIT_API(free, total);
@@ -1024,6 +1039,28 @@ hipError_t hipMemGetInfo  (size_t *free, size_t *total)
     return ihipLogStatus(e);
 }
 
+hipError_t hipMemPtrGetInfo(void *ptr, size_t *size)
+{
+  HIP_INIT_API(ptr, size);
+
+  hipError_t e = hipSuccess;
+
+  if(ptr != nullptr && size != nullptr){
+    hc::accelerator acc;
+    hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+    am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
+    if(status == AM_SUCCESS){
+      *size = amPointerInfo._sizeBytes;
+    }else{
+      e = hipErrorInvalidValue;
+    }
+  }else{
+    e = hipErrorInvalidValue;
+  }
+  return ihipLogStatus(e);
+}
+
+
 hipError_t hipFree(void* ptr)
 {
     HIP_INIT_API(ptr);
@@ -1050,6 +1087,7 @@ hipError_t hipFree(void* ptr)
 
     return ihipLogStatus(hipStatus);
 }
+
 
 hipError_t hipHostFree(void* ptr)
 {
@@ -1122,7 +1160,7 @@ hipError_t hipMemGetAddressRange ( hipDeviceptr_t* pbase, size_t* psize, hipDevi
     }
     else
         hipStatus = hipErrorInvalidDevicePointer;
-    return hipStatus;
+    return ihipLogStatus(hipStatus);
 }
 
 
@@ -1141,25 +1179,25 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr){
     }
     else
         hipStatus = hipErrorInvalidResourceHandle;
-
+    ihipIpcMemHandle_t* iHandle = (ihipIpcMemHandle_t*) handle;
     // Save the size of the pointer to hipIpcMemHandle
-    (*handle)->psize = psize;
+    iHandle->psize = psize;
 
 #if USE_IPC
     // Create HSA ipc memory
     hsa_status_t hsa_status =
-        hsa_amd_ipc_memory_create(devPtr, psize, &(*handle)->ipc_handle);
+        hsa_amd_ipc_memory_create(devPtr, psize, (hsa_amd_ipc_memory_t*) &(iHandle->ipc_handle));
     if(hsa_status!= HSA_STATUS_SUCCESS)
         hipStatus = hipErrorMemoryAllocation;
 #else
     hipStatus = hipErrorRuntimeOther;
 #endif
 
-    return hipStatus;
+    return ihipLogStatus(hipStatus);
 }
 
 hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags){
-// HIP_INIT_API ( devPtr, handle.handle , flags);
+    HIP_INIT_API ( devPtr, &handle , flags);
     hipError_t hipStatus = hipSuccess;
 
 #if USE_IPC
@@ -1169,15 +1207,16 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
     if(!agent)
         return hipErrorInvalidResourceHandle;
 
+    ihipIpcMemHandle_t* iHandle = (ihipIpcMemHandle_t*) &handle;
     //Attach ipc memory
     hsa_status_t hsa_status =
-        hsa_amd_ipc_memory_attach(&handle->ipc_handle, handle->psize, 1, agent, devPtr);
+        hsa_amd_ipc_memory_attach((hsa_amd_ipc_memory_t*)&(iHandle->ipc_handle), iHandle->psize, 1, agent, devPtr);
     if(hsa_status != HSA_STATUS_SUCCESS)
         hipStatus = hipErrorMapBufferObjectFailed;
 #else
     hipStatus = hipErrorRuntimeOther;
 #endif
-    return hipStatus;
+    return ihipLogStatus(hipStatus);
 }
 
 hipError_t hipIpcCloseMemHandle(void *devPtr){
@@ -1192,7 +1231,7 @@ hipError_t hipIpcCloseMemHandle(void *devPtr){
 #else
     hipStatus = hipErrorRuntimeOther;
 #endif
-    return hipStatus;
+    return ihipLogStatus(hipStatus);
 }
 
 // hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle){

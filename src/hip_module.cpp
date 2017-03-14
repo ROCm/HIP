@@ -218,31 +218,33 @@ hipError_t hipModuleUnload(hipModule_t hmod)
 		{
 				ret = hipErrorInvalidValue;
 		}
-    for(std::list<hipFunction_t>::iterator f = hmod->funcTrack.begin(); f != hmod->funcTrack.end(); ++f) {
+    for(auto f = hmod->funcTrack.begin(); f != hmod->funcTrack.end(); ++f) {
       delete *f;
     }
     delete hmod;
     return ihipLogStatus(ret);
 }
 
-hipError_t ihipModuleGetSymbol(hipFunction_t *func, hipModule_t hmod, const char *name){
+
+hipError_t ihipModuleGetSymbol(hipFunction_t *func, hipModule_t hmod, const char *name)
+{
     auto ctx = ihipGetTlsDefaultCtx();
     hipError_t ret = hipSuccess;
 
-    if(name == nullptr){
+    if (name == nullptr){
         return ihipLogStatus(hipErrorInvalidValue);
     }
 
-    if(ctx == nullptr){
+    if (ctx == nullptr){
         ret = hipErrorInvalidContext;
 
-    }else{
+    } else {
         std::string str(name);
-        for(std::list<hipFunction_t>::iterator f = hmod->funcTrack.begin(); f != hmod->funcTrack.end(); ++f) {
-          if((*f)->_name == str) {
-            *func = *f;
-          }
-          return ret;
+        for(auto f = hmod->funcTrack.begin(); f != hmod->funcTrack.end(); ++f) {
+            if((*f)->_name == str) {
+                *func = *f;
+                return ret;
+            }
         }
         ihipModuleSymbol_t *sym = new ihipModuleSymbol_t;
         int deviceId = ctx->getDevice()->_deviceId;
