@@ -1004,6 +1004,56 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
     return ihipLogStatus(e);
 }
 
+hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char  value, size_t sizeBytes )
+{
+    HIP_INIT_CMD_API(dst, value, sizeBytes);
+
+    hipError_t e = hipSuccess;
+
+    hipStream_t stream = hipStreamNull;
+    // TODO - call an ihip memset so HIP_TRACE is correct.
+    stream =  ihipSyncAndResolveStream(stream);
+
+    if (stream) {
+        auto crit = stream->lockopen_preKernelCommand();
+
+        stream->ensureHaveQueue(crit);
+        hc::completion_future cf ;
+
+        if ((sizeBytes & 0x3) == 0) {
+            // use a faster dword-per-workitem copy:
+            try {
+                uint32_t value32 = (value << 24) | (value << 16) | (value << 8) | (value) ;
+                ihipMemsetKernel<uint32_t> (stream, crit, static_cast<uint32_t*> (dst), value32, sizeBytes/sizeof(uint32_t), &cf);
+            }
+            catch (std::exception &ex) {
+                e = hipErrorInvalidValue;
+            }
+        } else {
+            // use a slow byte-per-workitem copy:
+            try {
+                ihipMemsetKernel<char> (stream, crit, static_cast<char*> (dst), value, sizeBytes, &cf);
+            }
+            catch (std::exception &ex) {
+                e = hipErrorInvalidValue;
+            }
+        }
+        cf.wait();
+
+        stream->lockclose_postKernelCommand("hipMemsetD8", &crit->_av);
+
+
+        if (HIP_LAUNCH_BLOCKING) {
+            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING wait for memset in %s.\n", __func__, ToString(stream).c_str());
+            cf.wait();
+            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING memset completed in %s.\n", __func__, ToString(stream).c_str());
+        }
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
 
 hipError_t hipMemGetInfo  (size_t *free, size_t *total)
 {
