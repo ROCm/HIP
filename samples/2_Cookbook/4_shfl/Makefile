@@ -3,6 +3,10 @@ ifeq (,$(HIP_PATH))
 	HIP_PATH=../../..
 endif
 
+ifeq (gfx701, $(findstring gfx701,$(HCC_AMDGPU_TARGET)))
+	$(error gfx701 is not a supported device for this sample)
+endif
+
 HIPCC=$(HIP_PATH)/bin/hipcc
 
 TARGET=hcc
@@ -22,7 +26,7 @@ CXX=$(HIPCC)
 
 
 $(EXECUTABLE): $(OBJECTS)
-	$(HIPCC) --amdgpu-target=gfx803 $(OBJECTS) -o $@
+	$(HIPCC) $(OBJECTS) -o $@
 
 
 test: $(EXECUTABLE)
