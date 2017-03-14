@@ -23,8 +23,8 @@ use File::Basename;
 # HSA_PATH  : Path to HSA dir (default /opt/rocm/hsa).  Used on AMD platforms only.
 
 if(scalar @ARGV == 0){
-print "No Arguments passed, exiting ...\n";
-exit(-1);
+    print "No Arguments passed, exiting ...\n";
+    exit(-1);
 }
 
 #---
@@ -190,18 +190,18 @@ if ($verbose & 0x4) {
 # Handle code object generation
 my $ISACMD="";
 if($HIP_PLATFORM eq "hcc"){
-  $ISACMD .= "set ROCM_PATH=$ROCM_PATH && set ROCM_TARGET=$ROCM_TARGET && $HIP_PATH/bin/hccgenco.sh ";
-  if($ARGV[0] eq "--genco"){
-    foreach $isaarg (@ARGV[1..$#ARGV]){
-      $ISACMD .= " ";
-      $ISACMD .= $isaarg;
+    $ISACMD .= "set ROCM_PATH=$ROCM_PATH && set ROCM_TARGET=$ROCM_TARGET && $HIP_PATH/bin/hccgenco.sh ";
+    if($ARGV[0] eq "--genco"){
+        foreach $isaarg (@ARGV[1..$#ARGV]){
+            $ISACMD .= " ";
+            $ISACMD .= $isaarg;
+        }
+        if ($verbose & 0x1) {
+            print "hipcc-cmd: ", $ISACMD, "\n";
+        }
+        system($ISACMD) and die();
+        exit(0);
     }
-    if ($verbose & 0x1) {
-      print "hipcc-cmd: ", $ISACMD, "\n";
-    }
-    system($ISACMD) and die();
-    exit(0);
-  }
 }
 
 if(($HIP_PLATFORM eq "hcc")){
@@ -211,18 +211,18 @@ if(($HIP_PLATFORM eq "hcc")){
 }
 
 if($HIP_PLATFORM eq "nvcc"){
-  $ISACMD .= "$HIP_PATH/bin/hipcc -ptx ";
-  if($ARGV[0] eq "--genco"){
-    foreach $isaarg (@ARGV[1..$#ARGV]){
-      $ISACMD .= " ";
-      $ISACMD .= $isaarg;
+    $ISACMD .= "$HIP_PATH/bin/hipcc -ptx ";
+    if($ARGV[0] eq "--genco"){
+        foreach $isaarg (@ARGV[1..$#ARGV]){
+            $ISACMD .= " ";
+            $ISACMD .= $isaarg;
+        }
+        if ($verbose & 0x1) {
+            print "hipcc-cmd: ", $ISACMD, "\n";
+        }
+        system($ISACMD) and die();
+        exit(0);
     }
-    if ($verbose & 0x1) {
-      print "hipcc-cmd: ", $ISACMD, "\n";
-    }
-    system($ISACMD) and die();
-    exit(0);
-  }
 }
 
 my $toolArgs = "";  # arguments to pass to the hcc or nvcc tool
@@ -248,24 +248,25 @@ foreach $arg (@ARGV)
     }
     if($arg eq '--amdgpu-target=gfx701')
     {
-       $target_gfx701 = 1;
+        $target_gfx701 = 1;
     }
     if($arg eq '--amdgpu-target=gfx801')
     {
-       $target_gfx801 = 1;
+        $target_gfx801 = 1;
     }
     if($arg eq '--amdgpu-target=gfx802')
     {
-       $target_gfx802 = 1;
+        $target_gfx802 = 1;
     }
     if($arg eq '--amdgpu-target=gfx803')
     {
-       $target_gfx803 = 1;
+        $target_gfx803 = 1;
     }
     if($arg eq '--amdgpu-target=gfx900')
     {
-       $target_gfx900 = 1;
+        $target_gfx900 = 1;
     }
+
     if(($trimarg eq '-stdlib=libstdc++') and ($setStdLib eq 0))
     {
         $HIPCXXFLAGS .= $HCC_WA_FLAGS;
@@ -324,6 +325,29 @@ foreach $arg (@ARGV)
         #print "I: <$arg>\n";
     }
     $toolArgs .= " $arg" unless $swallowArg;
+}
+foreach my $target (split(/,/, $ENV{HCC_AMDGPU_TARGET}))
+{
+    if($target eq 'gfx701')
+    {
+        $target_gfx701 = 1;
+    }
+    if($target eq 'gfx801')
+    {
+        $target_gfx801 = 1;
+    }
+    if($target eq 'gfx802')
+    {
+        $target_gfx802 = 1;
+    }
+    if($target eq 'gfx803')
+    {
+        $target_gfx803 = 1;
+    }
+    if($target eq 'gfx900')
+    {
+        $target_gfx900 = 1;
+    }
 }
 
 if($HIP_PLATFORM eq "hcc"){
@@ -416,3 +440,5 @@ if ($runCmd) {
     }
     system ("$CMD") and die ();
 }
+
+# vim: ts=4:sw=4:expandtab:smartindent
