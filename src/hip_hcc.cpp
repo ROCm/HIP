@@ -758,11 +758,24 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop->isMultiGpuBoard = 0 ? gpuAgentsCount < 2 : 1;
 
     // Get agent name
-#if HIP_USE_PRODUCT_NAME
+
     err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_PRODUCT_NAME, &(prop->name));
-#else
-    err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_NAME, &(prop->name));
-#endif
+    char archName[256];
+    err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_NAME, &archName);
+    
+    if(strcmp(archName,"gfx701")==0){
+      prop->gcnArch = 701;
+    }
+    if(strcmp(archName,"gfx801")==0){
+      prop->gcnArch = 801;
+    }
+    if(strcmp(archName,"gfx802")==0){
+      prop->gcnArch = 802;
+    }
+    if(strcmp(archName,"gfx803")==0){
+      prop->gcnArch = 803;
+    }
+
     DeviceErrorCheck(err);
 
     // Get agent node
@@ -1790,6 +1803,20 @@ void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind,
 }
 
 
+void printPointerInfo(unsigned dbFlag, const char *tag, const void *ptr, const hc::AmPointerInfo &ptrInfo)
+{
+    tprintf (dbFlag, "  %s=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d registered=%d\n",
+             tag, ptr, 
+             ptrInfo._hostPointer, ptrInfo._devicePointer, ptrInfo._sizeBytes,
+             ptrInfo._appId, ptrInfo._sizeBytes != 0, ptrInfo._isInDeviceMem, !ptrInfo._isAmManaged);
+}
+
+
+// TODO : For registered and host memory, if the portable flag is set, we need to recognize that and perform appropriate copy operation.
+// What can happen now is that Portable memory is mapped into multiple devices but Peer access is not enabled. i
+// The peer detection logic doesn't see that the memory is already mapped and so tries to use an unpinned copy algorithm.  If this is PinInPlace, then an error can occur.
+// Need to track Portable flag correctly or use new RT functionality to query the peer status for the pointer.
+//
 // TODO - remove kind parm from here or use it below?
 void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes, unsigned kind, bool resolveOn)
 {
@@ -1806,6 +1833,16 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     bool dstTracked = (hc::am_memtracker_getinfo(&dstPtrInfo, dst) == AM_SUCCESS);
     bool srcTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) == AM_SUCCESS);
 
+
+    // Some code in HCC and in printPointerInfo uses _sizeBytes==0 as an indication ptr is not valid, so check it here:
+    if (!dstTracked) {
+        assert (dstPtrInfo._sizeBytes == 0);
+    }
+    if (!srcTracked) {
+        assert (srcPtrInfo._sizeBytes == 0);
+    }
+
+
     hc::hcCommandKind hcCopyDir;
     ihipCtx_t *copyDevice;
     bool forceUnpinnedCopy;
@@ -1818,12 +1855,8 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
                  dst, dstPtrInfo._appId, dstPtrInfo._isInDeviceMem,
                  src, srcPtrInfo._appId, srcPtrInfo._isInDeviceMem,
                  sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
-        tprintf (DB_COPY, "  dst=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d\n",
-                 dst, dstPtrInfo._hostPointer, dstPtrInfo._devicePointer, dstPtrInfo._sizeBytes,
-                 dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem);
-        tprintf (DB_COPY, "  src=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d\n",
-                 src, srcPtrInfo._hostPointer, srcPtrInfo._devicePointer, srcPtrInfo._sizeBytes,
-                 srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem);
+        printPointerInfo(DB_COPY, "  dst", dst, dstPtrInfo);
+        printPointerInfo(DB_COPY, "  src", src, srcPtrInfo);
 
         this->ensureHaveQueue(crit);
 
@@ -1908,12 +1941,8 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
                  dst, dstPtrInfo._appId, dstPtrInfo._isInDeviceMem,
                  src, srcPtrInfo._appId, srcPtrInfo._isInDeviceMem,
                  sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
-        tprintf (DB_COPY, "  dst=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d\n",
-                 dst, dstPtrInfo._hostPointer, dstPtrInfo._devicePointer, dstPtrInfo._sizeBytes,
-                 dstPtrInfo._appId, dstTracked, dstPtrInfo._isInDeviceMem);
-        tprintf (DB_COPY, "  src=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d\n",
-                 src, srcPtrInfo._hostPointer, srcPtrInfo._devicePointer, srcPtrInfo._sizeBytes,
-                 srcPtrInfo._appId, srcTracked, srcPtrInfo._isInDeviceMem);
+        printPointerInfo(DB_COPY, "  dst", dst, dstPtrInfo);
+        printPointerInfo(DB_COPY, "  src", src, srcPtrInfo);
 
         // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.
         // If both pointers are not tracked, we need to fall back to a sync copy.

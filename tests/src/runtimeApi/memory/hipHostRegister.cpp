@@ -39,22 +39,67 @@ int main(){
 	const size_t size = N * sizeof(float);
 	A = (float*)malloc(size);
 	HIPCHECK(hipHostRegister(A, size, 0));
+
+
 	for(int i=0;i<N;i++){
 		A[i] = float(1);
 	}
+
+
 	for(int i=0;i<num_devices;i++){
-	HIPCHECK(hipSetDevice(i));
-	HIPCHECK(hipHostGetDevicePointer((void**)&Ad[i], A, 0));
+        HIPCHECK(hipSetDevice(i));
+        HIPCHECK(hipHostGetDevicePointer((void**)&Ad[i], A, 0));
 	}
 
+    // Reference the registered device pointer Ad from inside the kernel:
 	for(int i=0;i<num_devices;i++){
-	HIPCHECK(hipSetDevice(i));
-	hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N/512), dim3(512), 0, 0, Ad[i]);
+        HIPCHECK(hipSetDevice(i));
+        hipLaunchKernel(Inc, dim3(N/512), dim3(512), 0, 0, Ad[i]);
 
-	HIPCHECK(hipDeviceSynchronize());
-
+        HIPCHECK(hipDeviceSynchronize());
 	}
 	HIPASSERT(A[10] == 1.0f + float(num_devices));
+
+
+    { 
+        // Sensitize HIP bug if device does not match where the memory was registered.
+        HIPCHECK(hipSetDevice(0));
+
+
+
+        // Copy to B, this should be optimal pinned malloc copy:
+        // Note we are using the host pointer here:
+        float *Bh, *Bd;
+        Bh = (float*)malloc(size);
+        HIPCHECK(hipMalloc(&Bd, size));
+        HIPCHECK(hipMemset(Bd, 13.0f, size));
+
+        for(int i=0;i<N;i++){
+            A[i] = float(i);
+            Bh[i] = 0.0f;
+        }
+
+        HIPCHECK(hipMemcpy(Bd, A, size,  hipMemcpyHostToDevice));
+
+        HIPCHECK(hipMemcpy(Bh, Bd, size, hipMemcpyDeviceToHost));
+
+#if 0
+        //TODO - disable check HCC patch for registered/locked memory usin device pointers is merged.
+        for(int i=0;i<N;i++){
+            if (Bh[i] != A[i]) {
+                printf ("mismatch at Bh[%d]=%f, A[%d]=%f\n", i, Bh[i], i, A[i]);
+                failed("mismatch");
+            };
+        }
+#endif
+
+
+
+        // Make sure the copy worked
+    }
+
+
+
 	HIPCHECK(hipHostUnregister(A));
 	passed();
 }

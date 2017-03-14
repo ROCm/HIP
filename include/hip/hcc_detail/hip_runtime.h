@@ -226,6 +226,8 @@ __device__ int __all(  int input);
 __device__ int __any( int input);
 __device__  unsigned long long int __ballot( int input);
 
+#if __HIP_ARCH_GFX701__ == 0
+
 // warp shuffle functions
 #ifdef __cplusplus
 __device__ int __shfl(int input, int lane, int width=warpSize);
@@ -245,6 +247,18 @@ __device__ float __shfl(float input, int lane, int width);
 __device__ float __shfl_up(float input, unsigned int lane_delta, int width);
 __device__ float __shfl_down(float input, unsigned int lane_delta, int width);
 __device__ float __shfl_xor(float input, int lane_mask, int width);
+#endif
+
+__device__ unsigned __hip_ds_bpermute(int index, unsigned src);
+__device__ float __hip_ds_bpermutef(int index, float src);
+__device__ unsigned __hip_ds_permute(int index, unsigned src);
+__device__ float __hip_ds_permutef(int index, float src);
+
+__device__ unsigned __hip_ds_swizzle(unsigned int src, int pattern);
+__device__ float __hip_ds_swizzlef(float src, int pattern);
+
+__device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask, bool bound_ctrl);
+
 #endif
 
 __host__ __device__ int min(int arg1, int arg2);
@@ -320,16 +334,6 @@ __device__ static inline void __threadfence(void) {
  */
 //__device__ void  __threadfence_system(void) __attribute__((deprecated("Provided with workaround configuration, see hip_kernel_language.md for details")));
 __device__ void  __threadfence_system(void) ;
-
-__device__ unsigned __hip_ds_bpermute(int index, unsigned src);
-__device__ float __hip_ds_bpermutef(int index, float src);
-__device__ unsigned __hip_ds_permute(int index, unsigned src);
-__device__ float __hip_ds_permutef(int index, float src);
-
-__device__ unsigned __hip_ds_swizzle(unsigned int src, int pattern);
-__device__ float __hip_ds_swizzlef(float src, int pattern);
-
-__device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask, bool bound_ctrl);
 
 // doxygen end Fence Fence
 /**
