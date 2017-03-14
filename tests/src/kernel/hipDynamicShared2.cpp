@@ -29,7 +29,7 @@ THE SOFTWARE.
  #include "hip/hip_runtime.h"
  #include "test_common.h"
 
-#define LEN 16*1024
+#define LEN 8*1024
 #define SIZE LEN*4
 
 __global__ void vectorAdd(hipLaunchParm lp, float *Ad, float *Bd) {
