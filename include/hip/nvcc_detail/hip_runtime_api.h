@@ -397,6 +397,11 @@ inline static hipError_t hipMemsetAsync(void* devPtr,int value, size_t count, hi
     return hipCUDAErrorTohipError(cudaMemsetAsync(devPtr, value, count, stream));
 }
 
+inline static hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char  value, size_t sizeBytes )
+{
+    return hipCUResultTohipError(cuMemsetD8(dest, value, sizeBytes));
+}
+
 inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t *p_prop, int device)
 {
 	cudaDeviceProp cdprop;
