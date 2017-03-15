@@ -326,27 +326,30 @@ foreach $arg (@ARGV)
     }
     $toolArgs .= " $arg" unless $swallowArg;
 }
-foreach my $target (split(/,/, $ENV{HCC_AMDGPU_TARGET}))
+if(defined $ENV{HCC_AMDGPU_TARGET})
 {
-    if($target eq 'gfx701')
+    foreach my $target (split(/,/, $ENV{HCC_AMDGPU_TARGET}))
     {
-        $target_gfx701 = 1;
-    }
-    if($target eq 'gfx801')
-    {
-        $target_gfx801 = 1;
-    }
-    if($target eq 'gfx802')
-    {
-        $target_gfx802 = 1;
-    }
-    if($target eq 'gfx803')
-    {
-        $target_gfx803 = 1;
-    }
-    if($target eq 'gfx900')
-    {
-        $target_gfx900 = 1;
+        if($target eq 'gfx701')
+        {
+            $target_gfx701 = 1;
+        }
+        if($target eq 'gfx801')
+        {
+            $target_gfx801 = 1;
+        }
+        if($target eq 'gfx802')
+        {
+            $target_gfx802 = 1;
+        }
+        if($target eq 'gfx803')
+        {
+            $target_gfx803 = 1;
+        }
+        if($target eq 'gfx900')
+        {
+            $target_gfx900 = 1;
+        }
     }
 }
 if ($target_gfx701 eq 0 and $target_gfx801 eq 0 and $target_gfx802 eq 0 and $target_gfx803 eq 0 and $target_gfx900 eq 0)
