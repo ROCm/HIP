@@ -92,7 +92,7 @@ if ($HIP_PLATFORM eq "hcc") {
     $HIP_ATP_MARKER=$ENV{'HIP_ATP_MARKER'} // 1;
     $marker_path = "$ROCM_PATH/profiler/CXLActivityLogger";
 
-    $ROCM_TARGET=$ENV{'ROCM_TARGET'} // "fiji";
+    $ROCM_TARGET=$ENV{'ROCM_TARGET'} // "gfx803";
 
     # HCC* may be used to compile src/hip_hcc.o (and also feed the HIPCXXFLAGS below)
     $HCC = "$HCC_HOME/bin/hcc";
