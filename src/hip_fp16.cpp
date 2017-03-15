@@ -31,7 +31,7 @@ struct hipHalfHolder{
 
 #define HINF 65504
 
-__device__ static struct hipHalfHolder __hInfValue = {HINF};
+static struct hipHalfHolder __hInfValue = {HINF};
 
 __device__ __half __hadd(__half a, __half b) {
   return a + b;

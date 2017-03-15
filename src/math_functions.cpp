@@ -202,8 +202,7 @@ __device__ long long int llroundf(float x)
     int y = hc::precise_math::roundf(x);
     long long int z = y;
     return z;
-}
-__device__ float log10f(float x)
+}__device__ float log10f(float x)
 {
     return hc::precise_math::log10f(x);
 }
