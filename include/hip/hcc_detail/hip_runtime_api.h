@@ -1208,19 +1208,24 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
 #endif
 
 /**
- *  @brief Copy data from src to dst asynchronously.
+ *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dest with the constant byte value value.
  *
- * It supports memory from host to device,
- *  device to host, device to device and host to host.
- *
- *  @param[out] dst Data being copy to
- *  @param[in]  src Data being copy from
+ *  @param[out] dst Data being filled
+ *  @param[in]  constant value to be set
  *  @param[in]  sizeBytes Data size in bytes
- *  @param[in]  accelerator_view Accelerator view which the copy is being enqueued
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  */
 hipError_t hipMemset(void* dst, int  value, size_t sizeBytes );
 
+/**
+ *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dest with the constant byte value value.
+ *
+ *  @param[out] dst Data ptr to be filled
+ *  @param[in]  constant value to be set
+ *  @param[in]  sizeBytes Data size in bytes
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
+ */
+hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char  value, size_t sizeBytes );
 
 /**
  *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dev with the constant byte value value.

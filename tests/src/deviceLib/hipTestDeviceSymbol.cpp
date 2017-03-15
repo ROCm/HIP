@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s EXCLUDE_HIP_PLATFORM all
  * RUN: %t
  * HIT_END
  */
