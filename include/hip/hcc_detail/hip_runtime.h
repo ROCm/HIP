@@ -443,7 +443,7 @@ do {\
 // to local variable definitions
 #define HIP_DYNAMIC_SHARED(type, var) \
     ADDRESS_SPACE_3 type* var = \
-    ADDRESS_SPACE_3 type*)__get_dynamicgroupbaseptr(); \
+    (ADDRESS_SPACE_3 type*)__get_dynamicgroupbaseptr(); \
 
 #define HIP_DYNAMIC_SHARED_ATTRIBUTE ADDRESS_SPACE_3
 
