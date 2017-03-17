@@ -63,20 +63,20 @@ THE SOFTWARE.
 //TODO-HCC-GL - change this to typedef.
 //typedef grid_launch_parm hipLaunchParm ;
 struct EmptyLaunchParm{};
-#ifndef GENERIC_GRID_LAUNCH
+#if GENERIC_GRID_LAUNCH == 0
     #define hipLaunchParm grid_launch_parm
 #else
     #define hipLaunchParm EmptyLaunchParm
 #endif //GENERIC_GRID_LAUNCH
 
-#if defined (GRID_LAUNCH_VERSION) and (GRID_LAUNCH_VERSION >= 20) || defined GENERIC_GRID_LAUNCH
+#if defined (GRID_LAUNCH_VERSION) and (GRID_LAUNCH_VERSION >= 20) || GENERIC_GRID_LAUNCH == 1
 #else // Use field names for grid_launch 2.0 structure, if HCC supports GL 2.0.
 #error (HCC must support GRID_LAUNCH_20)
 #endif //GRID_LAUNCH_VERSION
 
 #endif //HCC 
 
-#if defined GENERIC_GRID_LAUNCH && defined __HCC__
+#if GENERIC_GRID_LAUNCH==1 && defined __HCC__
 #include "grid_launch_v2.hpp"
 #endif//GENERIC_GRID_LAUNCH
 
@@ -426,7 +426,7 @@ extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 blo
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm *lp, const char *kernelNameStr);
 extern void ihipPostLaunchKernel(const char *kernelName, hipStream_t stream, grid_launch_parm &lp);
 
-#ifndef GENERIC_GRID_LAUNCH
+#if GENERIC_GRID_LAUNCH == 0
 #warning "Original hipLaunchKernel defined"
 // Due to multiple overloaded versions of ihipPreLaunchKernel, the numBlocks3D and blockDim3D can be either size_t or dim3 types
 #define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...) \

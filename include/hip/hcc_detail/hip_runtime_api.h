@@ -27,11 +27,13 @@ THE SOFTWARE.
  *  @file  hcc_detail/hip_runtime_api.h
  *  @brief Contains C function APIs for HIP runtime. This file does not use any HCC builtin or special language extensions (-hc mode) ; those functions in hip_runtime.h.
  */
-// guard for grid_launch_v2
-#define GENERIC_GRID_LAUNCH
 #include <stdint.h>
 #include <stddef.h>
 #include <iostream>
+
+#ifndef GENERIC_GRID_LAUNCH
+#define GENERIC_GRID_LAUNCH 0
+#endif
 
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hip_runtime_api.h>

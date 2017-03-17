@@ -30,6 +30,11 @@ THE SOFTWARE.
 
 #define USE_PROMOTE_FREE_HCC 0
 
+// Add guard to Generic Grid Launch method
+#ifndef GENERIC_GRID_LAUNCH
+#define GENERIC_GRID_LAUNCH 0
+#endif
+
 #ifdef __HCC__
 /**
  * Function and kernel markers
@@ -37,12 +42,12 @@ THE SOFTWARE.
 #define __host__     __attribute__((cpu))
 #define __device__   __attribute__((hc))
 
-#warning "HOST DEFINE header included"
-#ifndef GENERIC_GRID_LAUNCH
-#warning "original global define reached"
+//#warning "HOST DEFINE header included"
+#if GENERIC_GRID_LAUNCH == 0
+//#warning "original global define reached"
 #define __global__  __attribute__((hc_grid_launch)) __attribute__((used))
 #else 
-#warning "GGL global define reached"
+//#warning "GGL global define reached"
 #define __global__ [[hc]] __attribute__((weak))
 #endif //GENERIC_GRID_LAUNCH
 

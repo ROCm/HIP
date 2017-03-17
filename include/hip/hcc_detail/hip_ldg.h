@@ -27,7 +27,6 @@ THE SOFTWARE.
 #if __hcc_workweek__ >= 16164
 #include "hip_vector_types.h"
 #include "host_defines.h"
-#warning "LDG header included"
 
 __device__ char                 __ldg(const char* );
 __device__ char2                __ldg(const char2* );
