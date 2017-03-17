@@ -1556,7 +1556,6 @@ void ihipPostLaunchKernel(const char *kernelName, hipStream_t stream, grid_launc
     MARKER_END();
 }
 
-
 //=================================================================================================
 // HIP API Implementation
 //
