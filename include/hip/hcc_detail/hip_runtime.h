@@ -47,7 +47,6 @@ THE SOFTWARE.
 
 #include <hip/hip_runtime_api.h>
 
-#define USE_PROMOTE_FREE_HCC 0
 
 #if USE_PROMOTE_FREE_HCC == 1
 #define ADDRESS_SPACE_1 

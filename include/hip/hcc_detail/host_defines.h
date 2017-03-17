@@ -28,6 +28,8 @@ THE SOFTWARE.
 #ifndef HOST_DEFINES_H
 #define HOST_DEFINES_H
 
+#define USE_PROMOTE_FREE_HCC 0
+
 #ifdef __HCC__
 /**
  * Function and kernel markers
