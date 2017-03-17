@@ -47,7 +47,11 @@ THE SOFTWARE.
  */
 // _restrict is supported by the compiler
 #define __shared__     tile_static
-#define __constant__   __attribute__((address_space(1)))
+#if USE_PROMOTE_FREE_HCC==1
+#define __constant__   __attribute__((hc))
+#else
+#define __constant__   ADDRESS_SPACE_1
+#endif
 
 #else
 // Non-HCC compiler
