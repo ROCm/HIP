@@ -37,7 +37,14 @@ THE SOFTWARE.
 #define __host__     __attribute__((cpu))
 #define __device__   __attribute__((hc))
 
+#warning "HOST DEFINE header included"
+#ifndef GENERIC_GRID_LAUNCH
+#warning "original global define reached"
 #define __global__  __attribute__((hc_grid_launch)) __attribute__((used))
+#else 
+#warning "GGL global define reached"
+#define __global__ [[hc]] __attribute__((weak))
+#endif //GENERIC_GRID_LAUNCH
 
 #define __noinline__      __attribute__((noinline))
 #define __forceinline__   __attribute__((always_inline))
