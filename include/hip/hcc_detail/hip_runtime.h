@@ -77,6 +77,17 @@ extern int HIP_TRACE_API;
 #define __HCC_ACCELERATOR__  __KALMAR_ACCELERATOR__
 #endif
 
+
+
+
+// TODO-HCC add a dummy implementation of assert, need to replace with a proper kernel exit call.
+#if __HIP_DEVICE_COMPILE__ == 1
+   #undef assert
+   #define assert(COND) { if (COND) {} }
+#endif
+
+
+
 // Feature tests:
 #if defined(__HCC_ACCELERATOR__) && (__HCC_ACCELERATOR__ != 0)
 // Device compile and not host compile:
