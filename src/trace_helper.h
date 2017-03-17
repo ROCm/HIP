@@ -70,7 +70,6 @@ inline std::string ToString(hipEvent_t v)
     ss << v;
     return ss.str();
 };
-#ifndef GENERIC_GRID_LAUNCH
 //  hipStream_t
 template <>
 inline std::string ToString(hipStream_t v)
@@ -84,7 +83,6 @@ inline std::string ToString(hipStream_t v)
 
     return ss.str();
 };
-#endif //GENERIC_GRID_LAUNCH
 
 //  hipMemcpyKind specialization
 template <>

@@ -196,7 +196,7 @@ namespace glo_tests
         template<typename... Ts>
         void operator()(Ts&&...) const {}
     };
-#warning "GGL hipLaunchKernel defined"
+//#warning "GGL hipLaunchKernel defined"
     #define hipLaunchKernel(                                                 \
         kernel_name,                                                           \
         num_blocks,                                                            \
