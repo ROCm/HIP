@@ -49,8 +49,8 @@ THE SOFTWARE.
 
 
 #if USE_PROMOTE_FREE_HCC == 1
-#define ADDRESS_SPACE_1 
-#define ADDRESS_SPACE_3 
+#define ADDRESS_SPACE_1
+#define ADDRESS_SPACE_3
 #else
 #define ADDRESS_SPACE_1 __attribute__((address_space(1)))
 #define ADDRESS_SPACE_3 __attribute__((address_space(3)))
@@ -58,7 +58,7 @@ THE SOFTWARE.
 
 //---
 // Remainder of this file only compiles with HCC
-#if defined __HCC__ 
+#if defined __HCC__
 #include <grid_launch.h>
 //TODO-HCC-GL - change this to typedef.
 //typedef grid_launch_parm hipLaunchParm ;
@@ -74,7 +74,7 @@ struct EmptyLaunchParm{};
 #error (HCC must support GRID_LAUNCH_20)
 #endif //GRID_LAUNCH_VERSION
 
-#endif //HCC 
+#endif //HCC
 
 #if GENERIC_GRID_LAUNCH==1 && defined __HCC__
 #include "grid_launch_v2.hpp"
@@ -419,7 +419,7 @@ static inline __device__ void* memset(void* ptr, int val, size_t size)
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
 #define HIP_SYMBOL(X) #X
 
-#if defined __HCC_CPP__  
+#if defined __HCC_CPP__
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp, const char *kernelNameStr);
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm *lp, const char *kernelNameStr);
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm *lp, const char *kernelNameStr);
@@ -427,7 +427,7 @@ extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t b
 extern void ihipPostLaunchKernel(const char *kernelName, hipStream_t stream, grid_launch_parm &lp);
 
 #if GENERIC_GRID_LAUNCH == 0
-#warning "Original hipLaunchKernel defined"
+//#warning "Original hipLaunchKernel defined"
 // Due to multiple overloaded versions of ihipPreLaunchKernel, the numBlocks3D and blockDim3D can be either size_t or dim3 types
 #define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...) \
 do {\
@@ -437,13 +437,13 @@ do {\
   _kernelName (lp, ##__VA_ARGS__);\
   ihipPostLaunchKernel(#_kernelName, trueStream, lp);\
 } while(0)
-#endif //GENERIC_GRID_LAUNCH 
+#endif //GENERIC_GRID_LAUNCH
 
 #elif defined (__HCC_C__)
 
 //TODO - develop C interface.
 
-#endif //__HCC_CPP__ 
+#endif //__HCC_CPP__
 
 /**
  * extern __shared__
