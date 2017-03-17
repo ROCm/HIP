@@ -66,7 +66,7 @@ __device__ float j0f(float x);
 __device__ float j1f(float x);
 __device__ float jnf(int n, float x);
 __device__ float ldexpf(float x, int exp);
-//__device__ float lgammaf(float x);
+__device__ float lgammaf(float x);
 __device__ long long int llrintf(float x);
 __device__ long long int llroundf(float x);
 __device__ float log10f(float x);
