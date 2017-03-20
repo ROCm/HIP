@@ -26,6 +26,7 @@
 - [How do I trace HIP application flow?](#how-do-i-trace-hip-application-flow)
   * [Using CodeXL markers for HIP Functions](#using-codexl-markers-for-hip-functions)
   * [Using HIP_TRACE_API](#using-hip_trace_api)
+- [How do I enable HIP Generic Grid Launch option?](#how-do-i-enable-hip-generic-grid-launch-option)
 
 <!-- tocstop -->
 
@@ -234,7 +235,6 @@ See the [HIP Profiling Guide](hip_porting_guide.md) for more information.
 Unlike CUDA, in HCC, for functions defined in the header files, the keyword of "__forceinline__" does not imply "static".
 Thus, if failed to define "static" keyword, you might see a lot of "symbol multiply defined!" errors at compilation.
 The workaround is to explicitly add the keyword of "static" before any functions that were defined as "__forceinline__".
-
 
 ### How do I enable HIP Generic Grid Launch option? 
 Generic Grid Launch(GGL) provide a second choice for kernel launch.
