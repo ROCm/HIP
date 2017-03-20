@@ -235,3 +235,18 @@ Unlike CUDA, in HCC, for functions defined in the header files, the keyword of "
 Thus, if failed to define "static" keyword, you might see a lot of "symbol multiply defined!" errors at compilation.
 The workaround is to explicitly add the keyword of "static" before any functions that were defined as "__forceinline__".
 
+
+### How do I enable HIP Generic Grid Launch option? 
+Generic Grid Launch(GGL) provide a second choice for kernel launch.
+To enable it, either change the default value of GENERIC_GRID_LAUNCH to 1 in the following to header files and rebuild HIP:
+$HIP/include/hip/hcc_detail/hip_runtime_api.h 
+$HIP/include/hip/hcc_detail/host_defines.h
+Or pass "-DGENERIC_GRID_LAUNCH=1" to hipcc at application compilation time.
+
+There are some limitation/assumptions of GGL implementation right now:
+1. GGL was only tested with Ubuntu16.04, assuming HCC and HIP only link against libstdc++ but not libc++.
+2. GGL currently requires templated kernel fucntions passed to hipLaunchKernel to be specialized. e.g.:
+
+```
+hipLaunchKernel(vector_square<float>, dim3(blocks), dim3(threadsPerBlock), 0, nullptr, C_d, A_d, N);
+```
