@@ -1,3 +1,25 @@
+/*
+Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 //
 // Created by alexv on 25/10/16.
 //
@@ -9,13 +31,9 @@
 #include "hc.hpp"
 #include "hcc_acc.h"
 
-//#include <hip/hcc.h>
-//#include <hip/hip_runtime.h>
-
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
-
 
 namespace glo_tests
 {
@@ -112,6 +130,26 @@ namespace glo_tests
             std::forward<Ts>(args)...);
     }
 
+    namespace
+    {
+        template<typename T>
+        constexpr
+        inline
+        T&& forward(std::remove_reference_t<T>& x) [[hc]]
+        {
+            return static_cast<T&&>(x);
+        }
+
+        template<FunctionalProcedure K, K* k>
+        struct Forwarder {
+            template<typename... Ts>
+            void operator()(Ts&&...args) const [[hc]]
+            {
+                k(forward<Ts>(args)...);
+            }
+        };
+    }
+
     template<FunctionalProcedure K, K* k, typename... Ts>
         requires(Domain<K> == {Ts...})
     static
@@ -124,14 +162,13 @@ namespace glo_tests
         hipStream_t stream,
         Ts&&... args)
     {
-        grid_launch(
+        grid_launch_impl(
+            New_grid_launch_tag{},
             std::move(num_blocks),
             std::move(dim_blocks),
             group_mem_bytes,
             std::move(stream),
-            [](decltype(std::decay_t<Ts>(args))... f_args) [[hc]] {
-                k(f_args...);
-            },
+            Forwarder<K, k>{},
             std::forward<Ts>(args)...);
     }
 
@@ -177,26 +214,116 @@ namespace glo_tests
             std::forward<Ts>(args)...);
     }
 
-    template<typename, typename = void> struct Wrapper;
+    namespace
+    {
+        template<typename K, typename = void> struct Wrapper;
 
-    template<FunctionalProcedure K>
-    struct Wrapper<K, std::enable_if_t<!std::is_function<K>::value>> {
-        template<typename... Ts>
-            requires(Domain<K> == {Ts...})
-        void operator()(Ts&&... args) const
-        {
-            grid_launch_impl(
-                is_new_grid_launch_t<K, Ts...>{},
-                std::forward<Ts>(args)...);
+        template<FunctionalProcedure K>
+        struct Wrapper<K, std::enable_if_t<!std::is_function<K>::value>> {
+            template<typename... Ts>
+               requires(Domain<K> == {Ts...})
+            void operator()(Ts&&... args) const
+            {
+                grid_launch(std::forward<Ts>(args)...);
+            }
+        };
+
+        template<FunctionalProcedure K>
+        struct Wrapper<K, std::enable_if_t<std::is_function<K>::value>> {
+            template<typename... Ts>
+            void operator()(Ts&&...) const {}
+        };
+    }
+
+    #define make_lambda_wrapper9(kernel_name, p0, p1, p2, p3, p4, p5, p6, p7)  \
+        [](                                                                    \
+           std::decay_t<decltype(p0)> _p0_,                                    \
+           std::decay_t<decltype(p1)> _p1_,                                    \
+           std::decay_t<decltype(p2)> _p2_,                                    \
+           std::decay_t<decltype(p3)> _p3_,                                    \
+           std::decay_t<decltype(p4)> _p4_,                                    \
+           std::decay_t<decltype(p5)> _p5_,                                    \
+           std::decay_t<decltype(p6)> _p6_,                                    \
+           std::decay_t<decltype(p7)> _p7_) [[hc]] {                           \
+            kernel_name(_p0_, _p1_, _p2_, _p3_, _p4_, _p5_, _p6_, _p7_);       \
         }
-    };
+    #define make_lambda_wrapper8(kernel_name, p0, p1, p2, p3, p4, p5, p6)      \
+        [](                                                                    \
+           std::decay_t<decltype(p0)> _p0_,                                    \
+           std::decay_t<decltype(p1)> _p1_,                                    \
+           std::decay_t<decltype(p2)> _p2_,                                    \
+           std::decay_t<decltype(p3)> _p3_,                                    \
+           std::decay_t<decltype(p4)> _p4_,                                    \
+           std::decay_t<decltype(p5)> _p5_,                                    \
+           std::decay_t<decltype(p6)> _p6_) [[hc]] {                           \
+            kernel_name(_p0_, _p1_, _p2_, _p3_, _p4_, _p5_, _p6_);             \
+        }
+    #define make_lambda_wrapper7(kernel_name, p0, p1, p2, p3, p4, p5)          \
+        [](                                                                    \
+           std::decay_t<decltype(p0)> _p0_,                                    \
+           std::decay_t<decltype(p1)> _p1_,                                    \
+           std::decay_t<decltype(p2)> _p2_,                                    \
+           std::decay_t<decltype(p3)> _p3_,                                    \
+           std::decay_t<decltype(p4)> _p4_,                                    \
+           std::decay_t<decltype(p5)> _p5_) [[hc]] {                           \
+            kernel_name(_p0_, _p1_, _p2_, _p3_, _p4_, _p5_);                   \
+        }
+    #define make_lambda_wrapper6(kernel_name, p0, p1, p2, p3, p4)              \
+        [](                                                                    \
+           std::decay_t<decltype(p0)> _p0_,                                    \
+           std::decay_t<decltype(p1)> _p1_,                                    \
+           std::decay_t<decltype(p2)> _p2_,                                    \
+           std::decay_t<decltype(p3)> _p3_,                                    \
+           std::decay_t<decltype(p4)> _p4_) [[hc]] {                           \
+            kernel_name(_p0_, _p1_, _p2_, _p3_, _p4_);                         \
+        }
+    #define make_lambda_wrapper5(kernel_name, p0, p1, p2, p3)                  \
+        [](std::decay_t<decltype(p0)> _p0_,                                    \
+           std::decay_t<decltype(p1)> _p1_,                                    \
+           std::decay_t<decltype(p2)> _p2_,                                    \
+           std::decay_t<decltype(p3)> _p3_) [[hc]] {                           \
+            kernel_name(_p0_, _p1_, _p2_, _p3_);                               \
+        }
+    #define make_lambda_wrapper4(kernel_name, p0, p1, p2)                      \
+        [](                                                                    \
+           std::decay_t<decltype(p0)> _p0_,                                    \
+           std::decay_t<decltype(p1)> _p1_,                                    \
+           std::decay_t<decltype(p2)> _p2_) [[hc]] {                           \
+            kernel_name(_p0_, _p1_, _p2_);                                     \
+        }
+    #define make_lambda_wrapper3(kernel_name, p0, p1)                          \
+        [](                                                                    \
+           std::decay_t<decltype(p0)> _p0_,                                    \
+           std::decay_t<decltype(p1)> _p1_) [[hc]] {                           \
+            kernel_name(_p0_, _p1_);                                           \
+        }
+    #define make_lambda_wrapper2(kernel_name, p0)                              \
+        [](std::decay_t<decltype(p0)> _p0_) [[hc]] {                           \
+            kernel_name(_p0_);                                                 \
+        }
+    #define make_lambda_wrapper1(kernel_name)                                  \
+        []() [[hc]] { kernel_name(lp); }
 
-    template<FunctionalProcedure K>
-    struct Wrapper<K, std::enable_if_t<std::is_function<K>::value>> {
-        template<typename... Ts>
-        void operator()(Ts&&...) const {}
-    };
-//#warning "GGL hipLaunchKernel defined"
+    #define make_lambda_wrapper(...)                                           \
+        overload_macro(make_lambda_wrapper, __VA_ARGS__)
+
+    #define hipLaunchKernelV3(                                                 \
+        kernel_name,                                                           \
+        num_blocks,                                                            \
+        dim_blocks,                                                            \
+        group_mem_bytes,                                                       \
+        stream,                                                                \
+        ...)                                                                   \
+    {                                                                          \
+        glo_tests::grid_launch(                                                \
+            num_blocks,                                                        \
+            dim_blocks,                                                        \
+            group_mem_bytes,                                                   \
+            stream,                                                            \
+            make_lambda_wrapper(kernel_name, __VA_ARGS__),                     \
+            ##__VA_ARGS__);                                                    \
+    }
+#warning "GGL hipLaunchKernel Reached"
     #define hipLaunchKernel(                                                 \
         kernel_name,                                                           \
         num_blocks,                                                            \
@@ -205,23 +332,13 @@ namespace glo_tests
         stream,                                                                \
         ...)                                                                   \
     {                                                                          \
-        using F = decltype(kernel_name);                                       \
-        if (!std::is_function<F>::value) {                                     \
-            glo_tests::Wrapper<F>{}(                                           \
-                num_blocks,                                                    \
-                dim_blocks,                                                    \
-                group_mem_bytes,                                               \
-                stream,                                                        \
-                kernel_name,                                                   \
-                ##__VA_ARGS__);                                                \
-        }                                                                      \
-        else {                                                                 \
-            glo_tests::grid_launch<F, &kernel_name>(                           \
-                num_blocks,                                                    \
-                dim_blocks,                                                    \
-                group_mem_bytes,                                               \
-                stream,                                                        \
-                ##__VA_ARGS__);                                                \
-        }                                                                      \
+        hipLaunchKernelV3(                                                     \
+            kernel_name,                                                     \
+            num_blocks,                                                        \
+            dim_blocks,                                                        \
+            group_mem_bytes,                                                   \
+            stream,                                                            \
+            hipLaunchParm{},                                                   \
+            ##__VA_ARGS__);                                                    \
     }
 }
