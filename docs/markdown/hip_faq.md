@@ -243,10 +243,4 @@ $HIP/include/hip/hcc_detail/hip_runtime_api.h
 $HIP/include/hip/hcc_detail/host_defines.h
 Or pass "-DGENERIC_GRID_LAUNCH=1" to hipcc at application compilation time.
 
-There are some limitation/assumptions of GGL implementation right now:
-1. GGL was only tested with Ubuntu16.04, assuming HCC and HIP only link against libstdc++ but not libc++.
-2. GGL currently requires templated kernel fucntions passed to hipLaunchKernel to be specialized. e.g.:
-
-```
-hipLaunchKernel(vector_square<float>, dim3(blocks), dim3(threadsPerBlock), 0, nullptr, C_d, A_d, N);
-```
+GGL was only tested with Ubuntu16.04, assuming HCC and HIP only link against libstdc++ but not libc++.
