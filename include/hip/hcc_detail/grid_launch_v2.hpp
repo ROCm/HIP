@@ -323,7 +323,6 @@ namespace glo_tests
             make_lambda_wrapper(kernel_name, __VA_ARGS__),                     \
             ##__VA_ARGS__);                                                    \
     }
-#warning "GGL hipLaunchKernel Reached"
     #define hipLaunchKernel(                                                 \
         kernel_name,                                                           \
         num_blocks,                                                            \

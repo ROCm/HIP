@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
     const unsigned threadsPerBlock = 256;
 
     printf ("info: launch 'vector_square' kernel\n");
-    hipLaunchKernel(vector_square<float>, dim3(blocks), dim3(threadsPerBlock), 0, nullptr, C_d, A_d, N);
+    hipLaunchKernel(vector_square, dim3(blocks), dim3(threadsPerBlock), 0, nullptr, C_d, A_d, N);
 
     printf ("info: copy Device2Host\n");
     CHECK ( hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
