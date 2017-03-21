@@ -19,6 +19,9 @@ else()
     add_llvm_executable(hipify-clang src/Cuda2Hip.cpp)
     find_program(LIT_COMMAND lit)
 
+    set(CMAKE_CXX_COMPILER ${LLVM_TOOLS_BINARY_DIR}/clang++)
+    set(CMAKE_C_COMPILER ${LLVM_TOOLS_BINARY_DIR}/clang)
+
     # Link against LLVM and CLANG tools libraries
     target_link_libraries(hipify-clang
         clangASTMatchers
