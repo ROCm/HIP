@@ -416,7 +416,7 @@ static inline __device__ void* memset(void* ptr, int val, size_t size)
 
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
 
-#define HIP_KERNEL_NAME(...) __VA_ARGS__
+#define HIP_KERNEL_NAME(...)  (__VA_ARGS__)
 #define HIP_SYMBOL(X) #X
 
 #if defined __HCC_CPP__
