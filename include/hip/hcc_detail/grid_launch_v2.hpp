@@ -595,7 +595,7 @@ namespace glo_tests
             ##__VA_ARGS__);                                                    \
     }
 
-    #define hipLaunchKernelV2(                                                 \
+    #define hipLaunchKernel(                                                 \
         kernel_name,                                                           \
         num_blocks,                                                            \
         dim_blocks,                                                            \
