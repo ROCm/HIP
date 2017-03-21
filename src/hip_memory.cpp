@@ -497,7 +497,7 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t cou
 
     if(kind == hipMemcpyHostToDevice || kind == hipMemcpyDeviceToHost || kind == hipMemcpyDeviceToDevice || kind == hipMemcpyHostToHost)
     {
-      stream->lockedSymbolCopySync(acc, dst, (void*)src, count + offset, kind);
+      stream->lockedSymbolCopySync(acc, dst, (void*)src, count, offset, kind);
     //  acc.memcpy_symbol(dst, (void*)src, count+offset);
     } else {
       return ihipLogStatus(hipErrorInvalidValue);
@@ -532,7 +532,7 @@ hipError_t hipMemcpyFromSymbol(void* dst, const char* symbolName, size_t count, 
 
     if(kind == hipMemcpyHostToDevice || kind == hipMemcpyDeviceToHost || kind == hipMemcpyDeviceToDevice || kind == hipMemcpyHostToHost)
     {
-      stream->lockedSymbolCopySync(acc, dst, (void*)src, count + offset, kind);
+      stream->lockedSymbolCopySync(acc, dst, (void*)src, count,  offset, kind);
     }
     else {
       return ihipLogStatus(hipErrorInvalidValue);

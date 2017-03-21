@@ -1872,19 +1872,19 @@ void ihipStream_t::addSymbolPtrToTracker(hc::accelerator& acc, void* ptr, size_t
   hc::am_memtracker_add(ptr, ptrInfo);
 }
 
-void ihipStream_t::lockedSymbolCopySync(hc::accelerator &acc, void* dst, void* src, size_t sizeBytes, unsigned kind)
+void ihipStream_t::lockedSymbolCopySync(hc::accelerator &acc, void* dst, void* src, size_t sizeBytes, size_t offset, unsigned kind)
 {
   if(kind == hipMemcpyHostToHost){
-    acc.memcpy_symbol(dst, (void*)src, sizeBytes, Kalmar::hcMemcpyHostToHost);
+    acc.memcpy_symbol(dst, (void*)src, sizeBytes, offset, Kalmar::hcMemcpyHostToHost);
   }
   if(kind == hipMemcpyHostToDevice){
-    acc.memcpy_symbol(dst, (void*)src, sizeBytes);
+    acc.memcpy_symbol(dst, (void*)src, sizeBytes, offset);
   }
   if(kind == hipMemcpyDeviceToDevice){
-    acc.memcpy_symbol(dst, (void*)src, sizeBytes, Kalmar::hcMemcpyDeviceToDevice);
+    acc.memcpy_symbol(dst, (void*)src, sizeBytes, offset, Kalmar::hcMemcpyDeviceToDevice);
   }
   if(kind == hipMemcpyDeviceToHost){
-    acc.memcpy_symbol(dst, (void*)src, sizeBytes, Kalmar::hcMemcpyDeviceToHost);
+    acc.memcpy_symbol((void*) src, (void*)dst, sizeBytes, offset, Kalmar::hcMemcpyDeviceToHost);
   }
 }
 
