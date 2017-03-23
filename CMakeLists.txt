@@ -205,7 +205,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
     foreach(TARGET hip_hcc hip_hcc_static hip_device)
         target_include_directories(${TARGET} SYSTEM INTERFACE $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>;${HSA_PATH}/include)
     endforeach()
-    target_link_libraries(hip_hcc PRIVATE hcc::hccrt;hcc::hc_am)
+    target_link_libraries(hip_hcc INTERFACE hcc::hccrt;hcc::hc_am)
 
     # Generate hcc_version.txt
     add_custom_target(query_hcc_version COMMAND ${HCC_HOME}/bin/hcc --version > ${PROJECT_BINARY_DIR}/hcc_version.tmp)
