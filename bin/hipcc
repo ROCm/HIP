@@ -129,7 +129,7 @@ if ($HIP_PLATFORM eq "hcc") {
     $HIPCXXFLAGS .= " -Wno-deprecated-register";
 
     $HIPLDFLAGS .= " -lsupc++";
-    $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am -lhsakmt `${LLVM_HOME}/bin/llvm-config --ldflags --libs`";
+    $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am -lhsakmt";# `${LLVM_HOME}/bin/llvm-config --ldflags --libs`";
 
     # Add trace marker library:
     # TODO - once we cleanly separate the HIP API headers from HIP library headers this logic should move to CMakebuild option - apps do not need to see the marker library.
