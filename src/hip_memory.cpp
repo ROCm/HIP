@@ -567,7 +567,7 @@ hipError_t hipMemcpyToSymbolAsync(const char* symbolName, const void *src, size_
 
     if (stream) {
         try {
-          stream->lockedSymbolCopyAsync(acc, dst, (void*)src, count + offset, kind);
+          stream->lockedSymbolCopyAsync(acc, dst, (void*)src, count, offset, kind);
         }
         catch (ihipException ex) {
             e = ex._code;
@@ -603,9 +603,10 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const char* symbolName, size_t co
         return ihipLogStatus(hipErrorInvalidSymbol);
     }
 
+    stream = ihipSyncAndResolveStream(stream);
     if (stream) {
         try {
-          stream->lockedSymbolCopyAsync(acc, dst, src, count + offset, kind);
+          stream->lockedSymbolCopyAsync(acc, dst, src, count, offset, kind);
         }
         catch (ihipException ex) {
             e = ex._code;
