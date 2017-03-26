@@ -670,6 +670,31 @@ inline static hipError_t  hipCtxEnablePeerAccess ( hipCtx_t peerCtx, unsigned in
     return hipCUResultTohipError(cuCtxEnablePeerAccess(peerCtx, flags));
 }
 
+inline static hipError_t hipDevicePrimaryCtxGetState ( hipDevice_t dev, unsigned int* flags, int* active )
+{
+    return hipCUResultTohipError(cuDevicePrimaryCtxGetState(dev, flags, active));
+}
+
+inline static hipError_t hipDevicePrimaryCtxRelease ( hipDevice_t dev)
+{
+    return hipCUResultTohipError(cuDevicePrimaryCtxRelease(dev));
+}
+
+inline static hipError_t hipDevicePrimaryCtxRetain ( hipCtx_t* pctx, hipDevice_t dev )
+{
+    return hipCUResultTohipError(cuDevicePrimaryCtxRetain(pctx, dev));
+}
+
+inline static hipError_t hipDevicePrimaryCtxReset ( hipDevice_t dev )
+{
+    return hipCUResultTohipError(cuDevicePrimaryCtxReset(dev));
+}
+
+inline static hipError_t hipDevicePrimaryCtxSetFlags ( hipDevice_t dev, unsigned int  flags )
+{
+    return hipCUResultTohipError(cuDevicePrimaryCtxSetFlags(dev, flags));
+}
+
 inline static hipError_t hipMemGetAddressRange ( hipDeviceptr_t* pbase, size_t* psize, hipDeviceptr_t dptr )
 {
     return hipCUResultTohipError(cuMemGetAddressRange( pbase , psize , dptr));

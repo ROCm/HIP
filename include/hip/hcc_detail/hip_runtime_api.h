@@ -1696,6 +1696,66 @@ hipError_t  hipCtxEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags);
  */
 hipError_t  hipCtxDisablePeerAccess (hipCtx_t peerCtx);
 
+/**
+ * @brief Get the state of the primary context.
+ *
+ * @param [in] Device to get primary context flags for
+ * @param [out] Pointer to store flags
+ * @param [out] Pointer to store context state; 0 = inactive, 1 = active
+ *
+ * @returns #hipSuccess
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ */
+hipError_t hipDevicePrimaryCtxGetState ( hipDevice_t dev, unsigned int* flags, int* active );
+
+/**
+ * @brief Release the primary context on the GPU.
+ *
+ * @param [in] Device which primary context is released
+ *
+ * @returns #hipSuccess
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ * @warning This function return #hipSuccess though doesn't release the primaryCtx by design on HIP/HCC path.
+ */
+hipError_t hipDevicePrimaryCtxRelease ( hipDevice_t dev);
+
+/**
+ * @brief Retain the primary context on the GPU.
+ *
+ * @param [out] Returned context handle of the new context
+ * @param [in] Device which primary context is released
+ *
+ * @returns #hipSuccess
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ */
+hipError_t hipDevicePrimaryCtxRetain ( hipCtx_t* pctx, hipDevice_t dev );
+
+/**
+ * @brief Resets the primary context on the GPU.
+ *
+ * @param [in] Device which primary context is reset
+ *
+ * @returns #hipSuccess
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ */
+hipError_t hipDevicePrimaryCtxReset ( hipDevice_t dev );
+
+/**
+ * @brief Set flags for the primary context.
+ *
+ * @param [in] Device for which the primary context flags are set
+ * @param [in] New flags for the device
+ *
+ * @returns #hipSuccess, #hipErrorContextAlreadyInUse
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ */
+hipError_t hipDevicePrimaryCtxSetFlags ( hipDevice_t dev, unsigned int  flags );
+
 // doxygen end Context Management
 /**
  * @}
