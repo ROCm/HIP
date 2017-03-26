@@ -472,7 +472,7 @@ hipError_t hipHostUnregister(void *hostPtr)
     return ihipLogStatus(hip_status);
 }
 
-hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind)
+hipError_t hipMemcpyToSymbol(const void* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind)
 {
     HIP_INIT_CMD_API(symbolName, src, count, offset, kind);
 
@@ -485,7 +485,7 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t cou
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    void *dst = acc.get_symbol_address(symbolName);
+    void *dst = acc.get_symbol_address((const char*) symbolName);
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, dst);
 
     if(dst == nullptr)
@@ -507,7 +507,7 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t cou
 }
 
 
-hipError_t hipMemcpyFromSymbol(void* dst, const char* symbolName, size_t count, size_t offset, hipMemcpyKind kind)
+hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count, size_t offset, hipMemcpyKind kind)
 {
     HIP_INIT_CMD_API(symbolName, dst, count, offset, kind);
 
@@ -520,7 +520,7 @@ hipError_t hipMemcpyFromSymbol(void* dst, const char* symbolName, size_t count, 
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    void *src = acc.get_symbol_address(symbolName);
+    void *src = acc.get_symbol_address((const char*) symbolName);
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, dst);
 
     if(dst == nullptr)
@@ -542,7 +542,7 @@ hipError_t hipMemcpyFromSymbol(void* dst, const char* symbolName, size_t count, 
 }
 
 
-hipError_t hipMemcpyToSymbolAsync(const char* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind, hipStream_t stream)
+hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind, hipStream_t stream)
 {
     HIP_INIT_CMD_API(symbolName, src, count, offset, kind, stream);
 
@@ -557,7 +557,7 @@ hipError_t hipMemcpyToSymbolAsync(const char* symbolName, const void *src, size_
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    void *dst = acc.get_symbol_address(symbolName);
+    void *dst = acc.get_symbol_address((const char*) symbolName);
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, dst);
 
     if(dst == nullptr)
@@ -580,7 +580,7 @@ hipError_t hipMemcpyToSymbolAsync(const char* symbolName, const void *src, size_
 }
 
 
-hipError_t hipMemcpyFromSymbolAsync(void* dst, const char* symbolName, size_t count, size_t offset, hipMemcpyKind kind, hipStream_t stream)
+hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t count, size_t offset, hipMemcpyKind kind, hipStream_t stream)
 {
     HIP_INIT_CMD_API(symbolName, dst, count, offset, kind, stream);
 
@@ -595,7 +595,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const char* symbolName, size_t co
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    void *src = acc.get_symbol_address(symbolName);
+    void *src = acc.get_symbol_address((const char*) symbolName);
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, src);
 
     if(src == nullptr || dst == nullptr)
