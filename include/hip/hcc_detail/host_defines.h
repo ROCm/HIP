@@ -32,7 +32,7 @@ THE SOFTWARE.
 
 // Add guard to Generic Grid Launch method
 #ifndef GENERIC_GRID_LAUNCH
-#define GENERIC_GRID_LAUNCH 0 
+#define GENERIC_GRID_LAUNCH 0
 #endif
 
 #ifdef __HCC__
@@ -46,7 +46,7 @@ THE SOFTWARE.
 #if GENERIC_GRID_LAUNCH == 0
 //#warning "original global define reached"
 #define __global__  __attribute__((hc_grid_launch)) __attribute__((used))
-#else 
+#else
 //#warning "GGL global define reached"
 #define __global__ [[hc]] __attribute__((weak))
 #endif //GENERIC_GRID_LAUNCH

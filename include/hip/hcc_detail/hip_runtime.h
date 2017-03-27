@@ -62,11 +62,15 @@ THE SOFTWARE.
 #include <grid_launch.h>
 //TODO-HCC-GL - change this to typedef.
 //typedef grid_launch_parm hipLaunchParm ;
-struct EmptyLaunchParm{};
+
 #if GENERIC_GRID_LAUNCH == 0
     #define hipLaunchParm grid_launch_parm
 #else
-    #define hipLaunchParm EmptyLaunchParm
+namespace hip_impl
+{
+    struct Empty_launch_parm{};
+}
+#define hipLaunchParm hip_impl::Empty_launch_parm
 #endif //GENERIC_GRID_LAUNCH
 
 #if defined (GRID_LAUNCH_VERSION) and (GRID_LAUNCH_VERSION >= 20) || GENERIC_GRID_LAUNCH == 1
