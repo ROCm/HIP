@@ -32,7 +32,7 @@ THE SOFTWARE.
 #include <iostream>
 
 #ifndef GENERIC_GRID_LAUNCH
-#define GENERIC_GRID_LAUNCH 0 
+#define GENERIC_GRID_LAUNCH 0
 #endif
 
 #include <hip/hcc_detail/host_defines.h>

@@ -35,7 +35,7 @@ THE SOFTWARE.
 #include <type_traits>
 #include <utility>
 
-namespace glo_tests
+namespace hip_impl
 {
     namespace
     {
@@ -54,7 +54,6 @@ namespace glo_tests
 
     template<FunctionalProcedure K, typename... Ts>
         requires(Domain<K> == {Ts...})
-    static
     inline
     void grid_launch_impl(
         New_grid_launch_tag,
@@ -79,14 +78,13 @@ namespace glo_tests
             throw std::runtime_error{"Failed to retrieve accelerator_view!"};
         }
 
-        hc::parallel_for_each(*av, d, [=](hc::tiled_index<3> idx) [[hc]] {
+        hc::parallel_for_each(*av, d, [=](const hc::tiled_index<3>& idx) [[hc]] {
             k(args...);
         });
     }
 
     template<FunctionalProcedure K, typename... Ts>
         requires(Domain<K> == {hipLaunchParm, Ts...})
-    static
     inline
     void grid_launch_impl(
         Old_grid_launch_tag,
@@ -110,7 +108,6 @@ namespace glo_tests
 
     template<FunctionalProcedure K, typename... Ts>
         requires(Domain<K> == {Ts...})
-    static
     inline
     std::enable_if_t<!std::is_function<K>::value> grid_launch(
         dim3 num_blocks,
@@ -152,7 +149,6 @@ namespace glo_tests
 
     template<FunctionalProcedure K, K* k, typename... Ts>
         requires(Domain<K> == {Ts...})
-    static
     inline
     void grid_launch(
         New_grid_launch_tag,
@@ -174,7 +170,6 @@ namespace glo_tests
 
     template<FunctionalProcedure K, K* k, typename... Ts>
         requires(Domain<K> == {Ts...})
-    static
     inline
     void grid_launch(
         Old_grid_launch_tag,
@@ -196,7 +191,6 @@ namespace glo_tests
 
     template<FunctionalProcedure K, K* k, typename... Ts>
         requires(Domain<K> == {Ts...})
-    static
     inline
     std::enable_if_t<std::is_function<K>::value> grid_launch(
         dim3 num_blocks,
@@ -214,402 +208,363 @@ namespace glo_tests
             std::forward<Ts>(args)...);
     }
 
-    namespace
-    {
-        template<typename K, typename = void> struct Wrapper;
-
-        template<FunctionalProcedure K>
-        struct Wrapper<K, std::enable_if_t<!std::is_function<K>::value>> {
-            template<typename... Ts>
-               requires(Domain<K> == {Ts...})
-            void operator()(Ts&&... args) const
-            {
-                grid_launch(std::forward<Ts>(args)...);
-            }
-        };
-
-        template<FunctionalProcedure K>
-        struct Wrapper<K, std::enable_if_t<std::is_function<K>::value>> {
-            template<typename... Ts>
-            void operator()(Ts&&...) const {}
-        };
-    }
-
-    // TODO: these are temporary, they need to be uglified and them completely
-    //       removed once we enable C++14 support and can have proper generic,
-    //       variadic lambdas.
-    #define make_lambda_wrapper21(                                             \
-        kernel_name,                                                           \
-        p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15,  \
-        p16, p17, p18, p19)                                                    \
-        [](                                                                    \
-            std::decay_t<decltype(p0)> _p0_,                                   \
-            std::decay_t<decltype(p1)> _p1_,                                   \
-            std::decay_t<decltype(p2)> _p2_,                                   \
-            std::decay_t<decltype(p3)> _p3_,                                   \
-            std::decay_t<decltype(p4)> _p4_,                                   \
-            std::decay_t<decltype(p5)> _p5_,                                   \
-            std::decay_t<decltype(p6)> _p6_,                                   \
-            std::decay_t<decltype(p7)> _p7_,                                   \
-            std::decay_t<decltype(p8)> _p8_,                                   \
-            std::decay_t<decltype(p9)> _p9_,                                   \
-            std::decay_t<decltype(p10)> _p10_,                                 \
-            std::decay_t<decltype(p11)> _p11_,                                 \
-            std::decay_t<decltype(p12)> _p12_,                                 \
-            std::decay_t<decltype(p13)> _p13_,                                 \
-            std::decay_t<decltype(p14)> _p14_,                                 \
-            std::decay_t<decltype(p15)> _p15_,                                 \
-            std::decay_t<decltype(p16)> _p16_,                                 \
-            std::decay_t<decltype(p17)> _p17_,                                 \
-            std::decay_t<decltype(p18)> _p18_,                                 \
-            std::decay_t<decltype(p19)> _p19_) [[hc]] {                        \
-            kernel_name(                                                       \
-                _p0_,  _p1_,  _p2_,  _p3_,  _p4_,  _p5_,  _p6_,  _p7_,  _p8_,  \
-                _p9_, _p10_, _p11_, _p12_, _p13_, _p14_, _p15_, _p16_, _p17_,  \
-               _p18_, _p19_);                                                  \
+    // TODO: these are temporary, they need to be completely removed once we
+    //       enable C++14 support and can have proper generic, variadic lambdas.
+    #define make_kernel_lambda_hip_21(\
+        kernel_name,\
+        p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15,\
+        p16, p17, p18, p19)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_,\
+           const std::decay_t<decltype(p2)>& _p2_,\
+           const std::decay_t<decltype(p3)>& _p3_,\
+           const std::decay_t<decltype(p4)>& _p4_,\
+           const std::decay_t<decltype(p5)>& _p5_,\
+           const std::decay_t<decltype(p6)>& _p6_,\
+           const std::decay_t<decltype(p7)>& _p7_,\
+           const std::decay_t<decltype(p8)>& _p8_,\
+           const std::decay_t<decltype(p9)>& _p9_,\
+           const std::decay_t<decltype(p10)>& _p10_,\
+           const std::decay_t<decltype(p11)>& _p11_,\
+           const std::decay_t<decltype(p12)>& _p12_,\
+           const std::decay_t<decltype(p13)>& _p13_,\
+           const std::decay_t<decltype(p14)>& _p14_,\
+           const std::decay_t<decltype(p15)>& _p15_,\
+           const std::decay_t<decltype(p16)>& _p16_,\
+           const std::decay_t<decltype(p17)>& _p17_,\
+           const std::decay_t<decltype(p18)>& _p18_,\
+           const std::decay_t<decltype(p19)>& _p19_) [[hc]] {\
+            kernel_name(\
+                _p0_,  _p1_,  _p2_,  _p3_,  _p4_,  _p5_,  _p6_,  _p7_,  _p8_,\
+                _p9_, _p10_, _p11_, _p12_, _p13_, _p14_, _p15_, _p16_, _p17_,\
+               _p18_, _p19_);\
         }
-    #define make_lambda_wrapper20(                                             \
-        kernel_name,                                                           \
-        p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15,  \
-        p16, p17, p18)                                                         \
-        [](                                                                    \
-            std::decay_t<decltype(p0)> _p0_,                                   \
-            std::decay_t<decltype(p1)> _p1_,                                   \
-            std::decay_t<decltype(p2)> _p2_,                                   \
-            std::decay_t<decltype(p3)> _p3_,                                   \
-            std::decay_t<decltype(p4)> _p4_,                                   \
-            std::decay_t<decltype(p5)> _p5_,                                   \
-            std::decay_t<decltype(p6)> _p6_,                                   \
-            std::decay_t<decltype(p7)> _p7_,                                   \
-            std::decay_t<decltype(p8)> _p8_,                                   \
-            std::decay_t<decltype(p9)> _p9_,                                   \
-            std::decay_t<decltype(p10)> _p10_,                                 \
-            std::decay_t<decltype(p11)> _p11_,                                 \
-            std::decay_t<decltype(p12)> _p12_,                                 \
-            std::decay_t<decltype(p13)> _p13_,                                 \
-            std::decay_t<decltype(p14)> _p14_,                                 \
-            std::decay_t<decltype(p15)> _p15_,                                 \
-            std::decay_t<decltype(p16)> _p16_,                                 \
-            std::decay_t<decltype(p17)> _p17_,                                 \
-            std::decay_t<decltype(p18)> _p18_) [[hc]] {                        \
-            kernel_name(                                                       \
-                _p0_,  _p1_,  _p2_,  _p3_,  _p4_,  _p5_,  _p6_,  _p7_,  _p8_,  \
-                _p9_, _p10_, _p11_, _p12_, _p13_, _p14_, _p15_, _p16_, _p17_,  \
-               _p18_);                                                         \
+    #define make_kernel_lambda_hip_20(\
+        kernel_name,\
+        p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15,\
+        p16, p17, p18)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_,\
+           const std::decay_t<decltype(p2)>& _p2_,\
+           const std::decay_t<decltype(p3)>& _p3_,\
+           const std::decay_t<decltype(p4)>& _p4_,\
+           const std::decay_t<decltype(p5)>& _p5_,\
+           const std::decay_t<decltype(p6)>& _p6_,\
+           const std::decay_t<decltype(p7)>& _p7_,\
+           const std::decay_t<decltype(p8)>& _p8_,\
+           const std::decay_t<decltype(p9)>& _p9_,\
+           const std::decay_t<decltype(p10)>& _p10_,\
+           const std::decay_t<decltype(p11)>& _p11_,\
+           const std::decay_t<decltype(p12)>& _p12_,\
+           const std::decay_t<decltype(p13)>& _p13_,\
+           const std::decay_t<decltype(p14)>& _p14_,\
+           const std::decay_t<decltype(p15)>& _p15_,\
+           const std::decay_t<decltype(p16)>& _p16_,\
+           const std::decay_t<decltype(p17)>& _p17_,\
+           const std::decay_t<decltype(p18)>& _p18_) [[hc]] {\
+            kernel_name(\
+                _p0_,  _p1_,  _p2_,  _p3_,  _p4_,  _p5_,  _p6_,  _p7_,  _p8_,\
+                _p9_, _p10_, _p11_, _p12_, _p13_, _p14_, _p15_, _p16_, _p17_,\
+               _p18_);\
         }
-    #define make_lambda_wrapper19(                                             \
-        kernel_name,                                                           \
-        p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15,  \
-        p16, p17)                                                              \
-        [](                                                                    \
-            std::decay_t<decltype(p0)> _p0_,                                   \
-            std::decay_t<decltype(p1)> _p1_,                                   \
-            std::decay_t<decltype(p2)> _p2_,                                   \
-            std::decay_t<decltype(p3)> _p3_,                                   \
-            std::decay_t<decltype(p4)> _p4_,                                   \
-            std::decay_t<decltype(p5)> _p5_,                                   \
-            std::decay_t<decltype(p6)> _p6_,                                   \
-            std::decay_t<decltype(p7)> _p7_,                                   \
-            std::decay_t<decltype(p8)> _p8_,                                   \
-            std::decay_t<decltype(p9)> _p9_,                                   \
-            std::decay_t<decltype(p10)> _p10_,                                 \
-            std::decay_t<decltype(p11)> _p11_,                                 \
-            std::decay_t<decltype(p12)> _p12_,                                 \
-            std::decay_t<decltype(p13)> _p13_,                                 \
-            std::decay_t<decltype(p14)> _p14_,                                 \
-            std::decay_t<decltype(p15)> _p15_,                                 \
-            std::decay_t<decltype(p16)> _p16_,                                 \
-            std::decay_t<decltype(p17)> _p17_) [[hc]] {                        \
-            kernel_name(                                                       \
-                _p0_,  _p1_,  _p2_,  _p3_,  _p4_,  _p5_,  _p6_,  _p7_,  _p8_,  \
-                _p9_, _p10_, _p11_, _p12_, _p13_, _p14_, _p15_, _p16_, _p17_); \
+    #define make_kernel_lambda_hip_19(\
+        kernel_name,\
+        p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15,\
+        p16, p17)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_,\
+           const std::decay_t<decltype(p2)>& _p2_,\
+           const std::decay_t<decltype(p3)>& _p3_,\
+           const std::decay_t<decltype(p4)>& _p4_,\
+           const std::decay_t<decltype(p5)>& _p5_,\
+           const std::decay_t<decltype(p6)>& _p6_,\
+           const std::decay_t<decltype(p7)>& _p7_,\
+           const std::decay_t<decltype(p8)>& _p8_,\
+           const std::decay_t<decltype(p9)>& _p9_,\
+           const std::decay_t<decltype(p10)>& _p10_,\
+           const std::decay_t<decltype(p11)>& _p11_,\
+           const std::decay_t<decltype(p12)>& _p12_,\
+           const std::decay_t<decltype(p13)>& _p13_,\
+           const std::decay_t<decltype(p14)>& _p14_,\
+           const std::decay_t<decltype(p15)>& _p15_,\
+           const std::decay_t<decltype(p16)>& _p16_,\
+           const std::decay_t<decltype(p17)>& _p17_) [[hc]] {\
+            kernel_name(\
+                _p0_,  _p1_,  _p2_,  _p3_,  _p4_,  _p5_,  _p6_,  _p7_,  _p8_,\
+                _p9_, _p10_, _p11_, _p12_, _p13_, _p14_, _p15_, _p16_, _p17_);\
         }
-    #define make_lambda_wrapper18(                                             \
-        kernel_name,                                                           \
-        p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15,  \
-        p16)                                                                   \
-        [](                                                                    \
-            std::decay_t<decltype(p0)> _p0_,                                   \
-            std::decay_t<decltype(p1)> _p1_,                                   \
-            std::decay_t<decltype(p2)> _p2_,                                   \
-            std::decay_t<decltype(p3)> _p3_,                                   \
-            std::decay_t<decltype(p4)> _p4_,                                   \
-            std::decay_t<decltype(p5)> _p5_,                                   \
-            std::decay_t<decltype(p6)> _p6_,                                   \
-            std::decay_t<decltype(p7)> _p7_,                                   \
-            std::decay_t<decltype(p8)> _p8_,                                   \
-            std::decay_t<decltype(p9)> _p9_,                                   \
-            std::decay_t<decltype(p10)> _p10_,                                 \
-            std::decay_t<decltype(p11)> _p11_,                                 \
-            std::decay_t<decltype(p12)> _p12_,                                 \
-            std::decay_t<decltype(p13)> _p13_,                                 \
-            std::decay_t<decltype(p14)> _p14_,                                 \
-            std::decay_t<decltype(p15)> _p15_,                                 \
-            std::decay_t<decltype(p16)> _p16_) [[hc]] {                        \
-            kernel_name(                                                       \
-                _p0_,  _p1_,  _p2_,  _p3_,  _p4_,  _p5_,  _p6_,  _p7_,  _p8_,  \
-                _p9_, _p10_, _p11_, _p12_, _p13_, _p14_, _p15_, _p16_);        \
+    #define make_kernel_lambda_hip_18(\
+        kernel_name,\
+        p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15,\
+        p16)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_,\
+           const std::decay_t<decltype(p2)>& _p2_,\
+           const std::decay_t<decltype(p3)>& _p3_,\
+           const std::decay_t<decltype(p4)>& _p4_,\
+           const std::decay_t<decltype(p5)>& _p5_,\
+           const std::decay_t<decltype(p6)>& _p6_,\
+           const std::decay_t<decltype(p7)>& _p7_,\
+           const std::decay_t<decltype(p8)>& _p8_,\
+           const std::decay_t<decltype(p9)>& _p9_,\
+           const std::decay_t<decltype(p10)>& _p10_,\
+           const std::decay_t<decltype(p11)>& _p11_,\
+           const std::decay_t<decltype(p12)>& _p12_,\
+           const std::decay_t<decltype(p13)>& _p13_,\
+           const std::decay_t<decltype(p14)>& _p14_,\
+           const std::decay_t<decltype(p15)>& _p15_,\
+           const std::decay_t<decltype(p16)>& _p16_) [[hc]] {\
+            kernel_name(\
+                _p0_,  _p1_,  _p2_,  _p3_,  _p4_,  _p5_,  _p6_,  _p7_,  _p8_,\
+                _p9_, _p10_, _p11_, _p12_, _p13_, _p14_, _p15_, _p16_);\
         }
-    #define make_lambda_wrapper17(                                             \
-        kernel_name,                                                           \
-        p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15)  \
-        [](                                                                    \
-            std::decay_t<decltype(p0)> _p0_,                                   \
-            std::decay_t<decltype(p1)> _p1_,                                   \
-            std::decay_t<decltype(p2)> _p2_,                                   \
-            std::decay_t<decltype(p3)> _p3_,                                   \
-            std::decay_t<decltype(p4)> _p4_,                                   \
-            std::decay_t<decltype(p5)> _p5_,                                   \
-            std::decay_t<decltype(p6)> _p6_,                                   \
-            std::decay_t<decltype(p7)> _p7_,                                   \
-            std::decay_t<decltype(p8)> _p8_,                                   \
-            std::decay_t<decltype(p9)> _p9_,                                   \
-            std::decay_t<decltype(p10)> _p10_,                                 \
-            std::decay_t<decltype(p11)> _p11_,                                 \
-            std::decay_t<decltype(p12)> _p12_,                                 \
-            std::decay_t<decltype(p13)> _p13_,                                 \
-            std::decay_t<decltype(p14)> _p14_,                                 \
-            std::decay_t<decltype(p15)> _p15_) [[hc]] {                        \
-            kernel_name(                                                       \
-                _p0_,  _p1_,  _p2_,  _p3_,  _p4_,  _p5_,  _p6_,  _p7_,  _p8_,  \
-                _p9_, _p10_, _p11_, _p12_, _p13_, _p14_, _p15_);               \
+    #define make_kernel_lambda_hip_17(\
+        kernel_name,\
+        p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_,\
+           const std::decay_t<decltype(p2)>& _p2_,\
+           const std::decay_t<decltype(p3)>& _p3_,\
+           const std::decay_t<decltype(p4)>& _p4_,\
+           const std::decay_t<decltype(p5)>& _p5_,\
+           const std::decay_t<decltype(p6)>& _p6_,\
+           const std::decay_t<decltype(p7)>& _p7_,\
+           const std::decay_t<decltype(p8)>& _p8_,\
+           const std::decay_t<decltype(p9)>& _p9_,\
+           const std::decay_t<decltype(p10)>& _p10_,\
+           const std::decay_t<decltype(p11)>& _p11_,\
+           const std::decay_t<decltype(p12)>& _p12_,\
+           const std::decay_t<decltype(p13)>& _p13_,\
+           const std::decay_t<decltype(p14)>& _p14_,\
+           const std::decay_t<decltype(p15)>& _p15_) [[hc]] {\
+            kernel_name(\
+                _p0_,  _p1_,  _p2_,  _p3_,  _p4_,  _p5_,  _p6_,  _p7_,  _p8_,\
+                _p9_, _p10_, _p11_, _p12_, _p13_, _p14_, _p15_);\
         }
-    #define make_lambda_wrapper16(                                             \
-        kernel_name,                                                           \
-        p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14)       \
-        [](                                                                    \
-            std::decay_t<decltype(p0)> _p0_,                                   \
-            std::decay_t<decltype(p1)> _p1_,                                   \
-            std::decay_t<decltype(p2)> _p2_,                                   \
-            std::decay_t<decltype(p3)> _p3_,                                   \
-            std::decay_t<decltype(p4)> _p4_,                                   \
-            std::decay_t<decltype(p5)> _p5_,                                   \
-            std::decay_t<decltype(p6)> _p6_,                                   \
-            std::decay_t<decltype(p7)> _p7_,                                   \
-            std::decay_t<decltype(p8)> _p8_,                                   \
-            std::decay_t<decltype(p9)> _p9_,                                   \
-            std::decay_t<decltype(p10)> _p10_,                                 \
-            std::decay_t<decltype(p11)> _p11_,                                 \
-            std::decay_t<decltype(p12)> _p12_,                                 \
-            std::decay_t<decltype(p13)> _p13_,                                 \
-            std::decay_t<decltype(p14)> _p14_) [[hc]] {                        \
-            kernel_name(                                                       \
-                _p0_,  _p1_,  _p2_,  _p3_,  _p4_,  _p5_,  _p6_,  _p7_,  _p8_,  \
-                _p9_, _p10_, _p11_, _p12_, _p13_, _p14_);                      \
+    #define make_kernel_lambda_hip_16(\
+        kernel_name,\
+        p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_,\
+           const std::decay_t<decltype(p2)>& _p2_,\
+           const std::decay_t<decltype(p3)>& _p3_,\
+           const std::decay_t<decltype(p4)>& _p4_,\
+           const std::decay_t<decltype(p5)>& _p5_,\
+           const std::decay_t<decltype(p6)>& _p6_,\
+           const std::decay_t<decltype(p7)>& _p7_,\
+           const std::decay_t<decltype(p8)>& _p8_,\
+           const std::decay_t<decltype(p9)>& _p9_,\
+           const std::decay_t<decltype(p10)>& _p10_,\
+           const std::decay_t<decltype(p11)>& _p11_,\
+           const std::decay_t<decltype(p12)>& _p12_,\
+           const std::decay_t<decltype(p13)>& _p13_,\
+           const std::decay_t<decltype(p14)>& _p14_) [[hc]] {\
+            kernel_name(\
+                _p0_,  _p1_,  _p2_,  _p3_,  _p4_,  _p5_,  _p6_,  _p7_,  _p8_,\
+                _p9_, _p10_, _p11_, _p12_, _p13_, _p14_);\
         }
-    #define make_lambda_wrapper15(                                             \
-        kernel_name, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13)\
-        [](                                                                    \
-            std::decay_t<decltype(p0)> _p0_,                                   \
-            std::decay_t<decltype(p1)> _p1_,                                   \
-            std::decay_t<decltype(p2)> _p2_,                                   \
-            std::decay_t<decltype(p3)> _p3_,                                   \
-            std::decay_t<decltype(p4)> _p4_,                                   \
-            std::decay_t<decltype(p5)> _p5_,                                   \
-            std::decay_t<decltype(p6)> _p6_,                                   \
-            std::decay_t<decltype(p7)> _p7_,                                   \
-            std::decay_t<decltype(p8)> _p8_,                                   \
-            std::decay_t<decltype(p9)> _p9_,                                   \
-            std::decay_t<decltype(p10)> _p10_,                                 \
-            std::decay_t<decltype(p11)> _p11_,                                 \
-            std::decay_t<decltype(p12)> _p12_,                                 \
-            std::decay_t<decltype(p13)> _p13_) [[hc]] {                        \
-            kernel_name(                                                       \
-                _p0_,  _p1_,  _p2_,  _p3_,  _p4_,  _p5_,  _p6_,  _p7_,  _p8_,  \
-                _p9_, _p10_, _p11_, _p12_, _p13_);                             \
+    #define make_kernel_lambda_hip_15(\
+        kernel_name,\
+        p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_,\
+           const std::decay_t<decltype(p2)>& _p2_,\
+           const std::decay_t<decltype(p3)>& _p3_,\
+           const std::decay_t<decltype(p4)>& _p4_,\
+           const std::decay_t<decltype(p5)>& _p5_,\
+           const std::decay_t<decltype(p6)>& _p6_,\
+           const std::decay_t<decltype(p7)>& _p7_,\
+           const std::decay_t<decltype(p8)>& _p8_,\
+           const std::decay_t<decltype(p9)>& _p9_,\
+           const std::decay_t<decltype(p10)>& _p10_,\
+           const std::decay_t<decltype(p11)>& _p11_,\
+           const std::decay_t<decltype(p12)>& _p12_,\
+           const std::decay_t<decltype(p13)>& _p13_) [[hc]] {\
+            kernel_name(\
+                _p0_,  _p1_,  _p2_,  _p3_,  _p4_,  _p5_,  _p6_,  _p7_,  _p8_,\
+                _p9_, _p10_, _p11_, _p12_, _p13_);\
         }
-    #define make_lambda_wrapper14(                                             \
-        kernel_name, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12)    \
-        [](                                                                    \
-            std::decay_t<decltype(p0)> _p0_,                                   \
-            std::decay_t<decltype(p1)> _p1_,                                   \
-            std::decay_t<decltype(p2)> _p2_,                                   \
-            std::decay_t<decltype(p3)> _p3_,                                   \
-            std::decay_t<decltype(p4)> _p4_,                                   \
-            std::decay_t<decltype(p5)> _p5_,                                   \
-            std::decay_t<decltype(p6)> _p6_,                                   \
-            std::decay_t<decltype(p7)> _p7_,                                   \
-            std::decay_t<decltype(p8)> _p8_,                                   \
-            std::decay_t<decltype(p9)> _p9_,                                   \
-            std::decay_t<decltype(p10)> _p10_,                                 \
-            std::decay_t<decltype(p11)> _p11_,                                 \
-            std::decay_t<decltype(p12)> _p12_) [[hc]] {                        \
-            kernel_name(                                                       \
-                _p0_,  _p1_,  _p2_,  _p3_,  _p4_,  _p5_,  _p6_,  _p7_,  _p8_,  \
-                _p9_, _p10_, _p11_, _p12_);                                    \
+    #define make_kernel_lambda_hip_14(\
+        kernel_name, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_,\
+           const std::decay_t<decltype(p2)>& _p2_,\
+           const std::decay_t<decltype(p3)>& _p3_,\
+           const std::decay_t<decltype(p4)>& _p4_,\
+           const std::decay_t<decltype(p5)>& _p5_,\
+           const std::decay_t<decltype(p6)>& _p6_,\
+           const std::decay_t<decltype(p7)>& _p7_,\
+           const std::decay_t<decltype(p8)>& _p8_,\
+           const std::decay_t<decltype(p9)>& _p9_,\
+           const std::decay_t<decltype(p10)>& _p10_,\
+           const std::decay_t<decltype(p11)>& _p11_,\
+           const std::decay_t<decltype(p12)>& _p12_) [[hc]] {\
+            kernel_name(\
+                _p0_,  _p1_,  _p2_,  _p3_,  _p4_,  _p5_,  _p6_,  _p7_,  _p8_,\
+                _p9_, _p10_, _p11_, _p12_);\
         }
-    #define make_lambda_wrapper13(                                             \
-        kernel_name, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11)         \
-        [](                                                                    \
-            std::decay_t<decltype(p0)> _p0_,                                   \
-            std::decay_t<decltype(p1)> _p1_,                                   \
-            std::decay_t<decltype(p2)> _p2_,                                   \
-            std::decay_t<decltype(p3)> _p3_,                                   \
-            std::decay_t<decltype(p4)> _p4_,                                   \
-            std::decay_t<decltype(p5)> _p5_,                                   \
-            std::decay_t<decltype(p6)> _p6_,                                   \
-            std::decay_t<decltype(p7)> _p7_,                                   \
-            std::decay_t<decltype(p8)> _p8_,                                   \
-            std::decay_t<decltype(p9)> _p9_,                                   \
-            std::decay_t<decltype(p10)> _p10_,                                 \
-            std::decay_t<decltype(p11)> _p11_) [[hc]] {                        \
-            kernel_name(                                                       \
-                _p0_,  _p1_,  _p2_,  _p3_,  _p4_,  _p5_,  _p6_,  _p7_,  _p8_,  \
-                _p9_, _p10_, _p11_);                                           \
+    #define make_kernel_lambda_hip_13(\
+        kernel_name, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_,\
+           const std::decay_t<decltype(p2)>& _p2_,\
+           const std::decay_t<decltype(p3)>& _p3_,\
+           const std::decay_t<decltype(p4)>& _p4_,\
+           const std::decay_t<decltype(p5)>& _p5_,\
+           const std::decay_t<decltype(p6)>& _p6_,\
+           const std::decay_t<decltype(p7)>& _p7_,\
+           const std::decay_t<decltype(p8)>& _p8_,\
+           const std::decay_t<decltype(p9)>& _p9_,\
+           const std::decay_t<decltype(p10)>& _p10_,\
+           const std::decay_t<decltype(p11)>& _p11_) [[hc]] {\
+            kernel_name(\
+                _p0_,  _p1_,  _p2_,  _p3_,  _p4_,  _p5_,  _p6_,  _p7_,  _p8_,\
+                _p9_, _p10_, _p11_);\
         }
-    #define make_lambda_wrapper12(                                             \
-        kernel_name, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10)              \
-        [](                                                                    \
-            std::decay_t<decltype(p0)> _p0_,                                   \
-            std::decay_t<decltype(p1)> _p1_,                                   \
-            std::decay_t<decltype(p2)> _p2_,                                   \
-            std::decay_t<decltype(p3)> _p3_,                                   \
-            std::decay_t<decltype(p4)> _p4_,                                   \
-            std::decay_t<decltype(p5)> _p5_,                                   \
-            std::decay_t<decltype(p6)> _p6_,                                   \
-            std::decay_t<decltype(p7)> _p7_,                                   \
-            std::decay_t<decltype(p8)> _p8_,                                   \
-            std::decay_t<decltype(p9)> _p9_,                                   \
-            std::decay_t<decltype(p10)> _p10_) [[hc]] {                        \
-            kernel_name(                                                       \
-                 _p0_, _p1_, _p2_, _p3_, _p4_, _p5_, _p6_, _p7_, _p8_, _p9_,   \
-                _p10_);                                                        \
+    #define make_kernel_lambda_hip_12(\
+        kernel_name, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_,\
+           const std::decay_t<decltype(p2)>& _p2_,\
+           const std::decay_t<decltype(p3)>& _p3_,\
+           const std::decay_t<decltype(p4)>& _p4_,\
+           const std::decay_t<decltype(p5)>& _p5_,\
+           const std::decay_t<decltype(p6)>& _p6_,\
+           const std::decay_t<decltype(p7)>& _p7_,\
+           const std::decay_t<decltype(p8)>& _p8_,\
+           const std::decay_t<decltype(p9)>& _p9_,\
+           const std::decay_t<decltype(p10)>& _p10_) [[hc]] {\
+            kernel_name(\
+                 _p0_, _p1_, _p2_, _p3_, _p4_, _p5_, _p6_, _p7_, _p8_, _p9_,\
+                _p10_);\
         }
-    #define make_lambda_wrapper11(                                             \
-        kernel_name, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9)                   \
-        [](                                                                    \
-           std::decay_t<decltype(p0)> _p0_,                                    \
-           std::decay_t<decltype(p1)> _p1_,                                    \
-           std::decay_t<decltype(p2)> _p2_,                                    \
-           std::decay_t<decltype(p3)> _p3_,                                    \
-           std::decay_t<decltype(p4)> _p4_,                                    \
-           std::decay_t<decltype(p5)> _p5_,                                    \
-           std::decay_t<decltype(p6)> _p6_,                                    \
-           std::decay_t<decltype(p7)> _p7_,                                    \
-           std::decay_t<decltype(p8)> _p8_,                                    \
-           std::decay_t<decltype(p9)> _p9_) [[hc]] {                           \
-            kernel_name(                                                       \
-                _p0_, _p1_, _p2_, _p3_, _p4_, _p5_, _p6_, _p7_, _p8_, _p9_);   \
+    #define make_kernel_lambda_hip_11(\
+        kernel_name, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_,\
+           const std::decay_t<decltype(p2)>& _p2_,\
+           const std::decay_t<decltype(p3)>& _p3_,\
+           const std::decay_t<decltype(p4)>& _p4_,\
+           const std::decay_t<decltype(p5)>& _p5_,\
+           const std::decay_t<decltype(p6)>& _p6_,\
+           const std::decay_t<decltype(p7)>& _p7_,\
+           const std::decay_t<decltype(p8)>& _p8_,\
+           const std::decay_t<decltype(p9)>& _p9_) [[hc]] {\
+            kernel_name(\
+                _p0_, _p1_, _p2_, _p3_, _p4_, _p5_, _p6_, _p7_, _p8_, _p9_);\
         }
-    #define make_lambda_wrapper10(                                             \
-        kernel_name, p0, p1, p2, p3, p4, p5, p6, p7, p8)                       \
-        [](                                                                    \
-            std::decay_t<decltype(p0)> _p0_,                                   \
-            std::decay_t<decltype(p1)> _p1_,                                   \
-            std::decay_t<decltype(p2)> _p2_,                                   \
-            std::decay_t<decltype(p3)> _p3_,                                   \
-            std::decay_t<decltype(p4)> _p4_,                                   \
-            std::decay_t<decltype(p5)> _p5_,                                   \
-            std::decay_t<decltype(p6)> _p6_,                                   \
-            std::decay_t<decltype(p7)> _p7_,                                   \
-            std::decay_t<decltype(p8)> _p8_) [[hc]] {                          \
-            kernel_name(_p0_, _p1_, _p2_, _p3_, _p4_, _p5_, _p6_, _p7_, _p8_); \
+    #define make_kernel_lambda_hip_10(\
+        kernel_name, p0, p1, p2, p3, p4, p5, p6, p7, p8)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_,\
+           const std::decay_t<decltype(p2)>& _p2_,\
+           const std::decay_t<decltype(p3)>& _p3_,\
+           const std::decay_t<decltype(p4)>& _p4_,\
+           const std::decay_t<decltype(p5)>& _p5_,\
+           const std::decay_t<decltype(p6)>& _p6_,\
+           const std::decay_t<decltype(p7)>& _p7_,\
+           const std::decay_t<decltype(p8)>& _p8_) [[hc]] {\
+            kernel_name(_p0_, _p1_, _p2_, _p3_, _p4_, _p5_, _p6_, _p7_, _p8_);\
         }
-    #define make_lambda_wrapper9(kernel_name, p0, p1, p2, p3, p4, p5, p6, p7)  \
-        [](                                                                    \
-            std::decay_t<decltype(p0)> _p0_,                                   \
-            std::decay_t<decltype(p1)> _p1_,                                   \
-            std::decay_t<decltype(p2)> _p2_,                                   \
-            std::decay_t<decltype(p3)> _p3_,                                   \
-            std::decay_t<decltype(p4)> _p4_,                                   \
-            std::decay_t<decltype(p5)> _p5_,                                   \
-            std::decay_t<decltype(p6)> _p6_,                                   \
-            std::decay_t<decltype(p7)> _p7_) [[hc]] {                          \
-            kernel_name(_p0_, _p1_, _p2_, _p3_, _p4_, _p5_, _p6_, _p7_);       \
+    #define make_kernel_lambda_hip_9(\
+        kernel_name, p0, p1, p2, p3, p4, p5, p6, p7)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_,\
+           const std::decay_t<decltype(p2)>& _p2_,\
+           const std::decay_t<decltype(p3)>& _p3_,\
+           const std::decay_t<decltype(p4)>& _p4_,\
+           const std::decay_t<decltype(p5)>& _p5_,\
+           const std::decay_t<decltype(p6)>& _p6_,\
+           const std::decay_t<decltype(p7)>& _p7_) [[hc]] {\
+            kernel_name(_p0_, _p1_, _p2_, _p3_, _p4_, _p5_, _p6_, _p7_);\
         }
-    #define make_lambda_wrapper8(kernel_name, p0, p1, p2, p3, p4, p5, p6)      \
-        [](                                                                    \
-            std::decay_t<decltype(p0)> _p0_,                                   \
-            std::decay_t<decltype(p1)> _p1_,                                   \
-            std::decay_t<decltype(p2)> _p2_,                                   \
-            std::decay_t<decltype(p3)> _p3_,                                   \
-            std::decay_t<decltype(p4)> _p4_,                                   \
-            std::decay_t<decltype(p5)> _p5_,                                   \
-            std::decay_t<decltype(p6)> _p6_) [[hc]] {                          \
-            kernel_name(_p0_, _p1_, _p2_, _p3_, _p4_, _p5_, _p6_);             \
+    #define make_kernel_lambda_hip_8(kernel_name, p0, p1, p2, p3, p4, p5, p6)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_,\
+           const std::decay_t<decltype(p2)>& _p2_,\
+           const std::decay_t<decltype(p3)>& _p3_,\
+           const std::decay_t<decltype(p4)>& _p4_,\
+           const std::decay_t<decltype(p5)>& _p5_,\
+           const std::decay_t<decltype(p6)>& _p6_) [[hc]] {\
+            kernel_name(_p0_, _p1_, _p2_, _p3_, _p4_, _p5_, _p6_);\
         }
-    #define make_lambda_wrapper7(kernel_name, p0, p1, p2, p3, p4, p5)          \
-        [](                                                                    \
-            std::decay_t<decltype(p0)> _p0_,                                   \
-            std::decay_t<decltype(p1)> _p1_,                                   \
-            std::decay_t<decltype(p2)> _p2_,                                   \
-            std::decay_t<decltype(p3)> _p3_,                                   \
-            std::decay_t<decltype(p4)> _p4_,                                   \
-            std::decay_t<decltype(p5)> _p5_) [[hc]] {                          \
-            kernel_name(_p0_, _p1_, _p2_, _p3_, _p4_, _p5_);                   \
+    #define make_kernel_lambda_hip_7(kernel_name, p0, p1, p2, p3, p4, p5)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_,\
+           const std::decay_t<decltype(p2)>& _p2_,\
+           const std::decay_t<decltype(p3)>& _p3_,\
+           const std::decay_t<decltype(p4)>& _p4_,\
+           const std::decay_t<decltype(p5)>& _p5_) [[hc]] {\
+            kernel_name(_p0_, _p1_, _p2_, _p3_, _p4_, _p5_);\
         }
-    #define make_lambda_wrapper6(kernel_name, p0, p1, p2, p3, p4)              \
-        [](                                                                    \
-            std::decay_t<decltype(p0)> _p0_,                                   \
-            std::decay_t<decltype(p1)> _p1_,                                   \
-            std::decay_t<decltype(p2)> _p2_,                                   \
-            std::decay_t<decltype(p3)> _p3_,                                   \
-            std::decay_t<decltype(p4)> _p4_) [[hc]] {                          \
-            kernel_name(_p0_, _p1_, _p2_, _p3_, _p4_);                         \
+    #define make_kernel_lambda_hip_6(kernel_name, p0, p1, p2, p3, p4)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_,\
+           const std::decay_t<decltype(p2)>& _p2_,\
+           const std::decay_t<decltype(p3)>& _p3_,\
+           const std::decay_t<decltype(p4)>& _p4_) [[hc]] {\
+            kernel_name(_p0_, _p1_, _p2_, _p3_, _p4_);\
         }
-    #define make_lambda_wrapper5(kernel_name, p0, p1, p2, p3)                  \
-        [](                                                                    \
-            std::decay_t<decltype(p0)> _p0_,                                   \
-            std::decay_t<decltype(p1)> _p1_,                                   \
-            std::decay_t<decltype(p2)> _p2_,                                   \
-            std::decay_t<decltype(p3)> _p3_) [[hc]] {                          \
-            kernel_name(_p0_, _p1_, _p2_, _p3_);                               \
+    #define make_kernel_lambda_hip_5(kernel_name, p0, p1, p2, p3)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_,\
+           const std::decay_t<decltype(p2)>& _p2_,\
+           const std::decay_t<decltype(p3)>& _p3_) [[hc]] {\
+            kernel_name(_p0_, _p1_, _p2_, _p3_);\
         }
-    #define make_lambda_wrapper4(kernel_name, p0, p1, p2)                      \
-        [](                                                                    \
-            std::decay_t<decltype(p0)> _p0_,                                   \
-            std::decay_t<decltype(p1)> _p1_,                                   \
-            std::decay_t<decltype(p2)> _p2_) [[hc]] {                          \
-            kernel_name(_p0_, _p1_, _p2_);                                     \
+    #define make_kernel_lambda_hip_4(kernel_name, p0, p1, p2)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_,\
+           const std::decay_t<decltype(p2)>& _p2_) [[hc]] {\
+            kernel_name(_p0_, _p1_, _p2_);\
         }
-    #define make_lambda_wrapper3(kernel_name, p0, p1)                          \
-        [](                                                                    \
-            std::decay_t<decltype(p0)> _p0_,                                   \
-            std::decay_t<decltype(p1)> _p1_) [[hc]] {                          \
-            kernel_name(_p0_, _p1_);                                           \
+    #define make_kernel_lambda_hip_3(kernel_name, p0, p1)\
+        [](const std::decay_t<decltype(p0)>& _p0_,\
+           const std::decay_t<decltype(p1)>& _p1_) [[hc]] {\
+            kernel_name(_p0_, _p1_);\
         }
-    #define make_lambda_wrapper2(kernel_name, p0)                              \
-        [](std::decay_t<decltype(p0)> _p0_) [[hc]] {                           \
-            kernel_name(_p0_);                                                 \
+    #define make_kernel_lambda_hip_2(kernel_name, p0)\
+        [](const std::decay_t<decltype(p0)>& _p0_) [[hc]] {\
+            kernel_name(_p0_);\
         }
-    #define make_lambda_wrapper1(kernel_name)                                  \
+    #define make_kernel_lambda_hip_1(kernel_name)\
         []() [[hc]] { kernel_name(lp); }
 
-    #define make_lambda_wrapper(...)                                           \
-        overload_macro(make_lambda_wrapper, __VA_ARGS__)
+    #define make_kernel_lambda_hip_(...)\
+        overload_macro_hip_(make_kernel_lambda_hip_, __VA_ARGS__)
 
-    #define hipLaunchKernelV3(                                                 \
-        kernel_name,                                                           \
-        num_blocks,                                                            \
-        dim_blocks,                                                            \
-        group_mem_bytes,                                                       \
-        stream,                                                                \
-        ...)                                                                   \
-    {                                                                          \
-        glo_tests::grid_launch(                                                \
-            num_blocks,                                                        \
-            dim_blocks,                                                        \
-            group_mem_bytes,                                                   \
-            stream,                                                            \
-            make_lambda_wrapper(kernel_name, __VA_ARGS__),                     \
-            ##__VA_ARGS__);                                                    \
+    #define hipLaunchKernelV3(\
+        kernel_name,\
+        num_blocks,\
+        dim_blocks,\
+        group_mem_bytes,\
+        stream,\
+        ...)\
+    {\
+        hip_impl::grid_launch(\
+            num_blocks,\
+            dim_blocks,\
+            group_mem_bytes,\
+            stream,\
+            make_kernel_lambda_hip_(kernel_name, __VA_ARGS__),\
+            ##__VA_ARGS__);\
     }
 
-    #define hipLaunchKernel(                                                 \
-        kernel_name,                                                           \
-        num_blocks,                                                            \
-        dim_blocks,                                                            \
-        group_mem_bytes,                                                       \
-        stream,                                                                \
-        ...)                                                                   \
-    {                                                                          \
-        hipLaunchKernelV3(                                                     \
-            kernel_name,                                                     \
-            num_blocks,                                                        \
-            dim_blocks,                                                        \
-            group_mem_bytes,                                                   \
-            stream,                                                            \
-            hipLaunchParm{},                                                   \
-            ##__VA_ARGS__);                                                    \
+    #define hipLaunchKernel(\
+        kernel_name,\
+        num_blocks,\
+        dim_blocks,\
+        group_mem_bytes,\
+        stream,\
+        ...)\
+    {\
+        hipLaunchKernelV3(\
+            kernel_name,\
+            num_blocks,\
+            dim_blocks,\
+            group_mem_bytes,\
+            stream,\
+            hipLaunchParm{},\
+            ##__VA_ARGS__);\
     }
 }
