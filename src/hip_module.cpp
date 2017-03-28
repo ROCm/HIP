@@ -202,7 +202,7 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
             (*module)->size = size;
             in.seekg(0, std::ios::beg);
             std::copy(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>(), ptr);
-
+/*
             Elf *e = elf_memory((char*)p, size);
             if(elf_kind(e) != ELF_K_ELF){
               return ihipLogStatus(hipErrorInvalidValue);
@@ -251,7 +251,7 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
                 }
               }
             }
-
+*/
             status = hsa_code_object_deserialize(ptr, size, NULL, &(*module)->object);
 
             if(status != HSA_STATUS_SUCCESS){
