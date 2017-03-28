@@ -103,7 +103,6 @@ if ($HIP_PLATFORM eq "hcc") {
 
     $HIPLDFLAGS = `${HCC_HOME}/bin/hcc-config --ldflags`;
 
-#    $LLVM_HOME = "/opt/rocm/llvm";
 
     #### GCC system includes workaround ####
     $HCC_WA_FLAGS = " ";
@@ -130,7 +129,7 @@ if ($HIP_PLATFORM eq "hcc") {
 
     $HIPLDFLAGS .= " -lsupc++";
     $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am -lhsakmt ";
-    $HIPLDFLAGS .= " -L$HCC_HOME/compiler/lib -lLLVMAMDGPUDesc -lLLVMAMDGPUUtils -lLLVMMC -lLLVMCore -lLLVMSupport ";
+#    $HIPLDFLAGS .= " -L$HCC_HOME/compiler/lib -lLLVMAMDGPUDesc -lLLVMAMDGPUUtils -lLLVMMC -lLLVMCore -lLLVMSupport ";
 
     # Add trace marker library:
     # TODO - once we cleanly separate the HIP API headers from HIP library headers this logic should move to CMakebuild option - apps do not need to see the marker library.
