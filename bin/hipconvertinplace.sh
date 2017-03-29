@@ -1,18 +1,24 @@
 #!/bin/bash
 
-#usage : hipconvertinplace.sh [DIRNAME] [HIPIFY_OPTIONS]
+#usage : hipconvertinplace.sh DIRNAME [hipify options] [--] [clang options]
 
-#hipify "inplace" all code files in specified directory.    
+#hipify "inplace" all code files in specified directory.
 # This can be quite handy when dealing with an existing CUDA code base since the script
 # preserves the existing directory structure.
 
-#  For each code file, this script will:
-#   - If ".prehip file does not exist, copy the original code to a new file with extension ".prehip".  Then Hipify the code file.
-#   - If ".prehip" file exists, this is used as input to hipify.
-# (this is useful for testing improvements to the hipify toolset).
-
-
 SCRIPT_DIR=`dirname $0`
 SEARCH_DIR=$1
-shift
-$SCRIPT_DIR/hipify -inplace -print-stats "$@" `$SCRIPT_DIR/findcode.sh $SEARCH_DIR`
+
+hipify_args=''
+while (( "$#" )); do
+  shift
+  if [ "$1" != "--" ]; then
+    hipify_args="$hipify_args $1"
+  else
+    shift
+    break
+  fi
+done
+clang_args="$@"
+
+$SCRIPT_DIR/hipify-clang -inplace -print-stats $hipify_args `$SCRIPT_DIR/findcode.sh $SEARCH_DIR` -- -x cuda $clang_args
