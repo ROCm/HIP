@@ -1,12 +1,22 @@
 #!/bin/bash
 
-#usage : hipexamine.sh DIRNAME [hipify.pl options]
+#usage : hipexamine2.sh DIRNAME [hipify options] [--] [clang options]
 
-# Generate HIP stats (LOC, CUDA->API conversions, missing functionality) for all the code files 
-# in the specified directory.
-
+# Generate CUDA->HIP conversion statistics for all the code files in the specified directory.
 
 SCRIPT_DIR=`dirname $0`
 SEARCH_DIR=$1
-shift
-$SCRIPT_DIR/hipify -no-output -print-stats "$@" `$SCRIPT_DIR/findcode.sh $SEARCH_DIR`
+
+hipify_args=''
+while (( "$#" )); do
+  shift
+  if [ "$1" != "--" ]; then
+    hipify_args="$hipify_args $1"
+  else
+    shift
+    break
+  fi
+done
+clang_args="$@"
+
+$SCRIPT_DIR/hipify-clang -examine $hipify_args `$SCRIPT_DIR/findcode.sh $SEARCH_DIR` -- -x cuda $clang_args
