@@ -20,9 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-//
-// Created by alexv on 25/10/16.
-//
 #pragma once
 
 namespace glo_tests // Documentation only.
