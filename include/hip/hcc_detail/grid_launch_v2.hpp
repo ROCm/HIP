@@ -693,7 +693,7 @@ namespace hip_impl
     #define make_kernel_lambda_hip_(...)\
         overload_macro_hip_(make_kernel_lambda_hip_, __VA_ARGS__)
 
-    #define hipLaunchKernelV3(\
+    #define hipLaunchKernelGGL(\
         kernel_name,\
         num_blocks,\
         dim_blocks,\
@@ -718,7 +718,7 @@ namespace hip_impl
         stream,\
         ...)\
     {\
-        hipLaunchKernelV3(\
+        hipLaunchKernelGGL(\
             kernel_name,\
             num_blocks,\
             dim_blocks,\
