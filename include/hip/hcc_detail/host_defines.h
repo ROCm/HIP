@@ -32,7 +32,7 @@ THE SOFTWARE.
 
 // Add guard to Generic Grid Launch method
 #ifndef GENERIC_GRID_LAUNCH
-#define GENERIC_GRID_LAUNCH 0
+#define GENERIC_GRID_LAUNCH 1 
 #endif
 
 #ifdef __HCC__
