@@ -33,6 +33,9 @@ THE SOFTWARE.
 #define fileName "vcpy_kernel.code"
 #define kernel_name "hello_world"
 
+#define HIP_CHECK(status) \
+if(status != hipSuccess) {std::cout<<"Got Status: "<<status<<" at Line: "<<__LINE__<<std::endl;exit(0);}
+
 int main(){
     float *A, *B;
     hipDeviceptr_t Ad, Bd;
@@ -57,8 +60,8 @@ int main(){
     hipMemcpyHtoD(Bd, B, SIZE);
     hipModule_t Module;
     hipFunction_t Function;
-    hipModuleLoad(&Module, fileName);
-    hipModuleGetFunction(&Function, Module, kernel_name);
+    HIP_CHECK(hipModuleLoad(&Module, fileName));
+    HIP_CHECK(hipModuleGetFunction(&Function, Module, kernel_name));
 
 #ifdef __HIP_PLATFORM_HCC__
 		uint32_t len = LEN;
@@ -99,7 +102,7 @@ int main(){
       HIP_LAUNCH_PARAM_END
     };
 
-    hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config);
+    HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
 
     hipMemcpyDtoH(B, Bd, SIZE);
 
