@@ -10,6 +10,9 @@ all: vcpy_kernel.code runKernel.hip.out defaultDriver.hip.out
 runKernel.hip.out: runKernel.cpp
 	$(HIPCC) $(HIPCC_FLAGS) $< -o $@
 
+launchKernelHcc.hip.out: launchKernelHcc.cpp
+	$(HIPCC) $(HIPCC_FLAGS) $< -o $@
+
 defaultDriver.hip.out: defaultDriver.cpp
 	$(HIPCC)  $(HIPCC_FLAGS) $< -o $@
 
