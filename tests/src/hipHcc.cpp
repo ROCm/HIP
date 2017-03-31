@@ -30,7 +30,7 @@ THE SOFTWARE.
 #include <stdio.h>
 #include <iostream>
 #include "hip/hip_runtime.h"
-#include "hip/hcc.h"
+#include "hip/hip_hcc.h"
 #include "test_common.h"
 
 #define CHECK(error) \
@@ -61,4 +61,3 @@ int main(int argc, char *argv[])
     passed();
 
 };
-
