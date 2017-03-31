@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,8 @@ THE SOFTWARE.
  * This file can be compiled with a standard compiler.
  */
 
-#pragma once
+#ifndef HIP_INCLUDE_HIP_HIP_RUNTIME_API_H
+#define HIP_INCLUDE_HIP_HIP_RUNTIME_API_H
 
 
 #include <string.h> // for getDeviceProp

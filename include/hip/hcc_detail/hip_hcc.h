@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,8 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef HCC_ACC_H
-#define HCC_ACC_H
+#ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_HCC_H
+#define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_HCC_H
+
 #include "hip/hip_runtime_api.h"
 
 #if __cplusplus
@@ -42,6 +43,8 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator *acc);
 hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **av);
 
 
+#endif // #ifdef __HCC__
+
 hipError_t hipHccModuleLaunchKernel(hipFunction_t f,
                                     uint32_t globalWorkSizeX,
                                     uint32_t globalWorkSizeY,
@@ -53,7 +56,7 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f,
                                     hipStream_t hStream,
                                     void **kernelParams,
                                     void **extra);
-#endif
-#endif
 
-#endif
+#endif // #if __cplusplus
+
+#endif //
