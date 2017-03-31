@@ -24,4 +24,3 @@ $(EXE): bit_extract.cpp
 
 clean:
 	rm -f *.o $(EXE)
-	
