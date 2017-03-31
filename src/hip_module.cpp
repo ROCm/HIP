@@ -403,6 +403,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
             } else {
                 return ihipLogStatus(hipErrorNotInitialized);
             }
+            
         }else{
             return ihipLogStatus(hipErrorInvalidValue);
         }
