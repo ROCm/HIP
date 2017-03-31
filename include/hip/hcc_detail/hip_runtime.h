@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,8 +26,8 @@ THE SOFTWARE.
  */
 
 //#pragma once
-#ifndef HIP_HCC_DETAIL_RUNTIME_H
-#define HIP_HCC_DETAIL_RUNTIME_H
+#ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_RUNTIME_H
+#define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_RUNTIME_H
 
 //---
 // Top part of file can be compiled with any compiler

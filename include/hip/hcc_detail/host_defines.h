@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,14 +25,14 @@ THE SOFTWARE.
  *  @brief TODO-doc
  */
 
-#ifndef HOST_DEFINES_H
-#define HOST_DEFINES_H
+#ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HOST_DEFINES_H
+#define HIP_INCLUDE_HIP_HCC_DETAIL_HOST_DEFINES_H
 
 #define USE_PROMOTE_FREE_HCC 0
 
 // Add guard to Generic Grid Launch method
 #ifndef GENERIC_GRID_LAUNCH
-#define GENERIC_GRID_LAUNCH 1 
+#define GENERIC_GRID_LAUNCH 1
 #endif
 
 #ifdef __HCC__
