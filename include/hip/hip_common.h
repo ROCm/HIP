@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
+#ifndef HIP_INCLUDE_HIP_HIP_COMMON_H
+#define HIP_INCLUDE_HIP_HIP_COMMON_H
 
 // Common code included at start of every hip file.
 // Auto enable __HIP_PLATFORM_HCC__ if compiling with HCC
@@ -72,4 +73,6 @@ THE SOFTWARE.
 #define __HIP_ARCH_HAS_SURFACE_FUNCS__              (0)
 #define __HIP_ARCH_HAS_3DGRID__                     (0)
 #define __HIP_ARCH_HAS_DYNAMIC_PARALLEL__           (0)
+#endif
+
 #endif

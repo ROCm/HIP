@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,7 @@ THE SOFTWARE.
 #include <hc_am.hpp>
 
 #include "hip/hip_runtime.h"
-#include "hip_hcc.h"
+#include "hip_hcc_internal.h"
 #include "trace_helper.h"
 
 

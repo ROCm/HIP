@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "hsa/hsa_ext_amd.h"
 
 #include "hip/hip_runtime.h"
-#include "hip_hcc.h"
+#include "hip_hcc_internal.h"
 #include "trace_helper.h"
 #include "hip/hcc_detail/hip_texture.h"
 #include <hc_am.hpp>
@@ -261,11 +261,11 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
             auto device = ctx->getWriteableDevice();
             unsigned amFlags = HIP_COHERENT_HOST_ALLOC ? amHostCoherent : amHostPinned;
 
-            *ptr = hip_internal::allocAndSharePtr(HIP_COHERENT_HOST_ALLOC ? "finegrained_host":"pinned_host", 
+            *ptr = hip_internal::allocAndSharePtr(HIP_COHERENT_HOST_ALLOC ? "finegrained_host":"pinned_host",
                                                   sizeBytes, ctx, amFlags, flags);
             if(sizeBytes  && (*ptr == NULL)){
                 hip_status = hipErrorMemoryAllocation;
-            } 
+            }
         }
     }
 
@@ -314,7 +314,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
 
         if (sizeBytes && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
-        } 
+        }
     } else {
         hip_status = hipErrorMemoryAllocation;
     }
@@ -372,7 +372,7 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
         *ptr = hip_internal::allocAndSharePtr("device_array", allocSize, ctx, am_flags, 0);
         if (size && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
-        } 
+        }
 
     } else {
         hip_status = hipErrorMemoryAllocation;
