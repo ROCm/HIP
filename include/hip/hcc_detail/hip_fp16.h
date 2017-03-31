@@ -464,9 +464,6 @@ __device__ static inline __half2 h2trunc(const __half2 h) {
   return a;
 }
 
-
-
-
 #endif
 
 #if __clang_major__ == 3

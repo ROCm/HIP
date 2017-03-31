@@ -284,3 +284,5 @@ static inline hipError_t hipHostMalloc( T** ptr, size_t size, unsigned int flags
     return hipHostMalloc((void**)ptr, size, flags);
 }
 #endif
+
+#endif
