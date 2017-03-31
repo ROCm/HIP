@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 //#pragma once
-#ifndef HIP_HCC_DETAIL_HIP_RUNTIME_API_H
-#define HIP_HCC_DETAIL_HIP_RUNTIME_API_H
+#ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_RUNTIME_API_H
+#define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_RUNTIME_API_H
 /**
  *  @file  hcc_detail/hip_runtime_api.h
  *  @brief Contains C function APIs for HIP runtime. This file does not use any HCC builtin or special language extensions (-hc mode) ; those functions in hip_runtime.h.
@@ -32,7 +32,7 @@ THE SOFTWARE.
 #include <iostream>
 
 #ifndef GENERIC_GRID_LAUNCH
-#define GENERIC_GRID_LAUNCH 1 
+#define GENERIC_GRID_LAUNCH 1
 #endif
 
 #include <hip/hcc_detail/host_defines.h>

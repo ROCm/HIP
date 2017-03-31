@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,8 +22,8 @@ THE SOFTWARE.
 
 //#pragma once
 
-#ifndef HIP_HCC_DETAIL_TEXTURE_H
-#define HIP_HCC_DETAIL_TEXTURE_H
+#ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_TEXTURE_H
+#define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_TEXTURE_H
 
 /**
  *  @file  hcc_detail/hip_texture.h

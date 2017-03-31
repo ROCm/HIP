@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,8 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef HIP_LDG_H
-#define HIP_LDG_H
+#ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_LDG_H
+#define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_LDG_H
 
 #if defined __HCC__
 #if __hcc_workweek__ >= 16164
