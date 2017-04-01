@@ -27,7 +27,6 @@
   * [Using CodeXL markers for HIP Functions](#using-codexl-markers-for-hip-functions)
   * [Using HIP_TRACE_API](#using-hip_trace_api)
 - [How do I enable HIP Generic Grid Launch option?](#how-do-i-enable-hip-generic-grid-launch-option)
-- [What is the current limitation of HIP Generic Grid Launch method?](#what-is-the-current-limitation-of-hip-generic-grid-launch-method)
 
 <!-- tocstop -->
 
@@ -243,7 +242,3 @@ To disable it and use the legancy grid launch method, please either change the d
 $HIP/include/hip/hcc_detail/hip_runtime_api.h 
 $HIP/include/hip/hcc_detail/host_defines.h
 Or pass "-DGENERIC_GRID_LAUNCH=0" to hipcc at application compilation time.
-
-### What is the current limitation of HIP Generic Grid Launch method?
-1. __global__ functions cannot be marked as static or put in an unnamed namespace i.e. they cannot be given internal linkage (this would clash with __attribute__((weak)));
-2. using the macro based dispatch mechanism i.e. hipLaunchKernel* only works for functions that take no more than 20 arguments (this limit can be increased up to 126, and is temporary until we can enable C++14 mode and use variadic generic lambdas); no such limitation applies do dispatching directly through grid_launch.
