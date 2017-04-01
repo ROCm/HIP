@@ -159,8 +159,7 @@ extern int HIP_TRACE_API;
 
 // TODO - hipify-clang - change to use the function call.
 //#define warpSize hc::__wavesize()
-extern const int warpSize;
-
+static constexpr int warpSize = 64;
 
 #define clock_t long long int
 __device__ long long int clock64();
