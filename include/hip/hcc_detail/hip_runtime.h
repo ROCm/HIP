@@ -68,7 +68,7 @@ THE SOFTWARE.
 #else
 namespace hip_impl
 {
-    struct Empty_launch_parm{};
+    struct Empty_launch_parm {};
 }
 #define hipLaunchParm hip_impl::Empty_launch_parm
 #endif //GENERIC_GRID_LAUNCH
@@ -81,7 +81,7 @@ namespace hip_impl
 #endif //HCC
 
 #if GENERIC_GRID_LAUNCH==1 && defined __HCC__
-#include "grid_launch_v2.hpp"
+#include "grid_launch_GGL.hpp"
 #endif//GENERIC_GRID_LAUNCH
 
 extern int HIP_TRACE_API;

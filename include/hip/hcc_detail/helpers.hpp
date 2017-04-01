@@ -123,7 +123,7 @@ namespace std
     #endif
 }
 
-namespace // Only for documentation, macros ignore namespaces.
+namespace hip_impl // Only for documentation, macros ignore namespaces.
 {
     #define count_macro_args_impl_hip_(\
          _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15,\

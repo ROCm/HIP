@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #pragma once
 
-namespace glo_tests // Documentation only.
+namespace hip_impl // Documentation only.
 {
     #define requires(...)
 
