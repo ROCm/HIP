@@ -27,7 +27,7 @@ THE SOFTWARE.
 
 #include "hc.hpp"
 #include "hip_hcc.h"
-
+#include "hip_runtime.h"
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -38,13 +38,39 @@ namespace hip_impl
     {
         struct New_grid_launch_tag {};
         struct Old_grid_launch_tag {};
-    }
 
-    template<FunctionalProcedure F, typename... Ts>
-    using is_new_grid_launch_t = typename std::conditional<
-        std::is_callable<F(Ts...)>{},
-        New_grid_launch_tag,
-        Old_grid_launch_tag>::type;
+        template<typename C, typename D>
+        class RAII_guard {
+            D dtor_;
+        public:
+            RAII_guard() = default;
+
+            RAII_guard(const C& ctor, D dtor) : dtor_{std::move(dtor)}
+            {
+                ctor();
+            }
+
+            RAII_guard(const RAII_guard&) = default;
+            RAII_guard(RAII_guard&&) = default;
+
+            RAII_guard& operator=(const RAII_guard&) = default;
+            RAII_guard& operator=(RAII_guard&&) = default;
+
+            ~RAII_guard() { dtor_(); }
+        };
+
+        template<typename C, typename D>
+        RAII_guard<C, D> make_RAII_guard(const C& ctor, D dtor)
+        {
+            return RAII_guard<C, D>{ctor, std::move(dtor)};
+        }
+
+        template<FunctionalProcedure F, typename... Ts>
+        using is_new_grid_launch_t = typename std::conditional<
+            std::is_callable<F(Ts...)>{},
+            New_grid_launch_tag,
+            Old_grid_launch_tag>::type;
+    }
 
     // TODO: - dispatch rank should be derived from the domain dimensions passed
     //         in, and not always assumed to be 3;
@@ -52,12 +78,12 @@ namespace hip_impl
     template<FunctionalProcedure K, typename... Ts>
         requires(Domain<K> == {Ts...})
     inline
-    void grid_launch_impl(
+    void grid_launch_hip_impl_(
         New_grid_launch_tag,
         dim3 num_blocks,
         dim3 dim_blocks,
         int group_mem_bytes,
-        hipStream_t stream,
+        const hc::accelerator_view& acc_v,
         K k,
         Ts&&... args)
     {
@@ -69,21 +95,69 @@ namespace hip_impl
             dim_blocks.y,
             dim_blocks.x,
             group_mem_bytes);
-        hc::accelerator_view* av = nullptr;
 
-        if (hipHccGetAcceleratorView(stream, &av) != HIP_SUCCESS) {
-            throw std::runtime_error{"Failed to retrieve accelerator_view!"};
+        try {
+            hc::parallel_for_each(
+                acc_v,
+                d,
+                [=](const hc::tiled_index<3>& idx) [[hc]] {
+                    k(args...);
+                });
         }
+        catch (std::exception& ex) {
+            std::cerr << "Failed in " << __FUNCTION__ << ", with exception: "
+                << ex.what() << std::endl;
+            throw;
+        }
+    }
 
-        hc::parallel_for_each(*av, d, [=](const hc::tiled_index<3>& idx) [[hc]] {
-            k(args...);
-        });
+    // TODO: these are workarounds, they should be removed.
+
+    hc::accelerator_view lock_stream_hip_(hipStream_t&, void*&);
+    void unlock_stream_hip_(
+        hipStream_t, void*, const char*, hc::accelerator_view*);
+
+    template<FunctionalProcedure K, typename... Ts>
+        requires(Domain<K> == {Ts...})
+    inline
+    void grid_launch_hip_impl_(
+        New_grid_launch_tag,
+        dim3 num_blocks,
+        dim3 dim_blocks,
+        int group_mem_bytes,
+        hipStream_t stream,
+        const char* kernel_name,
+        K k,
+        Ts&&... args)
+    {
+        void* lck_stream = nullptr;
+        auto acc_v = lock_stream_hip_(stream, lck_stream);
+        auto stream_guard = make_RAII_guard(
+            [](){ /* perhaps use a slimmed down ihipPrintKernelLaunch here */ },
+            std::bind(
+                unlock_stream_hip_, stream, lck_stream, kernel_name, &acc_v));
+
+        try {
+            grid_launch_hip_impl_(
+                New_grid_launch_tag{},
+                std::move(num_blocks),
+                std::move(dim_blocks),
+                group_mem_bytes,
+                acc_v,
+                std::move(k),
+                std::forward<Ts>(args)...);
+        }
+        catch (std::exception& ex) {
+            std::cerr << "Failed in " << __FUNCTION__ << ", with exception: "
+                << ex.what() << std::endl;
+            throw;
+        }
     }
 
     template<FunctionalProcedure K, typename... Ts>
         requires(Domain<K> == {hipLaunchParm, Ts...})
     inline
-    void grid_launch_impl(
+    void grid_launch_hip_impl_(
         Old_grid_launch_tag,
         dim3 num_blocks,
         dim3 dim_blocks,
@@ -92,7 +166,7 @@ namespace hip_impl
         K k,
         Ts&&... args)
     {
-        grid_launch_impl(
+        grid_launch_hip_impl_(
             New_grid_launch_tag{},
             std::move(num_blocks),
             std::move(dim_blocks),
@@ -104,9 +178,57 @@ namespace hip_impl
     }
 
     template<FunctionalProcedure K, typename... Ts>
+        requires(Domain<K> == {hipLaunchParm, Ts...})
+    inline
+    void grid_launch_hip_impl_(
+        Old_grid_launch_tag,
+        dim3 num_blocks,
+        dim3 dim_blocks,
+        int group_mem_bytes,
+        hipStream_t stream,
+        const char* kernel_name,
+        K k,
+        Ts&&... args)
+    {
+        grid_launch_hip_impl_(
+            New_grid_launch_tag{},
+            std::move(num_blocks),
+            std::move(dim_blocks),
+            group_mem_bytes,
+            std::move(stream),
+            kernel_name,
+            std::move(k),
+            hipLaunchParm{},
+            std::forward<Ts>(args)...);
+    }
+
+    template<FunctionalProcedure K, typename... Ts>
         requires(Domain<K> == {Ts...})
     inline
-    std::enable_if_t<!std::is_function<K>::value> grid_launch(
+    std::enable_if_t<!std::is_function<K>::value> grid_launch_hip_(
+        dim3 num_blocks,
+        dim3 dim_blocks,
+        int group_mem_bytes,
+        hipStream_t stream,
+        const char* kernel_name,
+        K k,
+        Ts&& ... args)
+    {
+        grid_launch_hip_impl_(
+            is_new_grid_launch_t<K, Ts...>{},
+            std::move(num_blocks),
+            std::move(dim_blocks),
+            group_mem_bytes,
+            std::move(stream),
+            kernel_name,
+            std::move(k),
+            std::forward<Ts>(args)...);
+    }
+
+    template<FunctionalProcedure K, typename... Ts>
+        requires(Domain<K> == {Ts...})
+    inline
+    std::enable_if_t<!std::is_function<K>::value> grid_launch_hip_(
         dim3 num_blocks,
         dim3 dim_blocks,
         int group_mem_bytes,
@@ -114,7 +236,7 @@ namespace hip_impl
         K k,
         Ts&& ... args)
     {
-        grid_launch_impl(
+        grid_launch_hip_impl_(
             is_new_grid_launch_t<K, Ts...>{},
             std::move(num_blocks),
             std::move(dim_blocks),
@@ -129,7 +251,7 @@ namespace hip_impl
         template<typename T>
         constexpr
         inline
-        T&& forward(std::remove_reference_t<T>& x) [[hc]]
+        T&& forward_(std::remove_reference_t<T>& x) [[hc]]
         {
             return static_cast<T&&>(x);
         }
@@ -139,7 +261,7 @@ namespace hip_impl
             template<typename... Ts>
             void operator()(Ts&&...args) const [[hc]]
             {
-                k(forward<Ts>(args)...);
+                k(forward_<Ts>(args)...);
             }
         };
     }
@@ -155,7 +277,7 @@ namespace hip_impl
         hipStream_t stream,
         Ts&&... args)
     {
-        grid_launch_impl(
+        grid_launch_hip_impl_(
             New_grid_launch_tag{},
             std::move(num_blocks),
             std::move(dim_blocks),
@@ -176,7 +298,7 @@ namespace hip_impl
         hipStream_t stream,
         Ts&&... args)
     {
-        grid_launch<K, k>(
+        grid_launch_hip_<K, k>(
             New_grid_launch_tag{},
             std::move(num_blocks),
             std::move(dim_blocks),
@@ -189,14 +311,14 @@ namespace hip_impl
     template<FunctionalProcedure K, K* k, typename... Ts>
         requires(Domain<K> == {Ts...})
     inline
-    std::enable_if_t<std::is_function<K>::value> grid_launch(
+    std::enable_if_t<std::is_function<K>::value> grid_launch_hip_(
         dim3 num_blocks,
         dim3 dim_blocks,
         int group_mem_bytes,
         hipStream_t stream,
         Ts&&... args)
     {
-        grid_launch<K, k>(
+        grid_launch_hip_<K, k>(
             is_new_grid_launch_t<K*, Ts...>{},
             std::move(num_blocks),
             std::move(dim_blocks),
@@ -685,7 +807,7 @@ namespace hip_impl
             kernel_name(_p0_);\
         }
     #define make_kernel_lambda_hip_1(kernel_name)\
-        []() [[hc]] { kernel_name(lp); }
+        []() [[hc]] { return kernel_name(hipLaunchParm{}); }
 
     #define make_kernel_lambda_hip_(...)\
         overload_macro_hip_(make_kernel_lambda_hip_, __VA_ARGS__)
@@ -697,15 +819,16 @@ namespace hip_impl
         group_mem_bytes,\
         stream,\
         ...)\
-    {\
-        hip_impl::grid_launch(\
+    do {\
+        hip_impl::grid_launch_hip_(\
             num_blocks,\
             dim_blocks,\
             group_mem_bytes,\
             stream,\
+            #kernel_name,\
             make_kernel_lambda_hip_(kernel_name, __VA_ARGS__),\
             ##__VA_ARGS__);\
-    }
+    } while(0)
 
     #define hipLaunchKernel(\
         kernel_name,\
