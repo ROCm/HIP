@@ -45,7 +45,7 @@ for inputfile in $INPUT_FILES; do
 done
 printf "\nint main(){}\n" >> $hipgenisa_main
 
-$HIP_PATH/bin/hipcc $hipgenisa_files -o $hipgenisa_dir/a.out
+$HIP_PATH/bin/hipcc -DGENERIC_GRID_LAUNCH=0 $hipgenisa_files -o $hipgenisa_dir/a.out
 mv dump* $hipgenisa_dir
 
 hsaco_file="dump-$ROCM_TARGET.hsaco"
