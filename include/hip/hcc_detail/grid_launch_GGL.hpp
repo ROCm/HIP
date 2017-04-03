@@ -28,6 +28,9 @@ THE SOFTWARE.
 #include "hc.hpp"
 #include "hip_hcc.h"
 #include "hip_runtime.h"
+
+#include <functional>
+#include <iostream>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
