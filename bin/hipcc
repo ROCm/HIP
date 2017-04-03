@@ -123,6 +123,14 @@ if ($HIP_PLATFORM eq "hcc") {
         }
     }
 
+    # Force -stdlib=libc++ on UB14.04
+    $HOST_OSNAME= `cat /etc/os-release | grep "^ID\=" | cut -d= -f2 | tr -d '\n'`;
+    $HOST_OSVER= `cat /etc/os-release | grep "^VERSION_ID\=" | cut -d= -f2 | tr -d '\n'`;
+    if ($HOST_OSNAME eq "ubuntu" and $HOST_OSVER eq "\"14.04\"") {
+        $HIPCXXFLAGS .= " -stdlib=libc++";
+        $setStdLib = 1;
+    }
+
     $HIPCXXFLAGS .= " -I$HIP_PATH/include/hip/hcc_detail/cuda";
     $HIPCXXFLAGS .= " -I$HSA_PATH/include";
     $HIPCXXFLAGS .= " -Wno-deprecated-register";
