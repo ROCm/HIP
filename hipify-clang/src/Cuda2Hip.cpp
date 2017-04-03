@@ -2426,9 +2426,9 @@ private:
       XStr.clear();
       if (calleeName.find(',') != StringRef::npos) {
         SmallString<128> tmpData;
-        calleeName = Twine("HIP_KERNEL_NAME(" + calleeName + ")").toStringRef(tmpData);
+        calleeName = Twine("(" + calleeName + ")").toStringRef(tmpData);
       }
-      OS << "hipLaunchKernel(" << calleeName << ",";
+      OS << "hipLaunchKernelGGL(" << calleeName << ",";
       const CallExpr *config = launchKernel->getConfig();
       DEBUG(dbgs() << "Kernel config arguments:" << "\n");
       SourceManager *SM = Result.SourceManager;
@@ -2468,7 +2468,7 @@ private:
       Replacement Rep(*SM, launchKernel->getLocStart(), length, OS.str());
       FullSourceLoc fullSL(launchKernel->getLocStart(), *SM);
       insertReplacement(Rep, fullSL);
-      hipCounter counter = {"hipLaunchKernel", CONV_KERN, API_RUNTIME};
+      hipCounter counter = {"hipLaunchKernelGGL", CONV_KERN, API_RUNTIME};
       updateCounters(counter, refName.str());
       return true;
     }
