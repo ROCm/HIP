@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -33,7 +33,8 @@ THE SOFTWARE.
 //! hip_runtime.h     : includes everything in hip_api.h, plus math builtins and kernel launch macros.
 //! hip_runtime_api.h : Defines HIP API.  This is a C header file and does not use any C++ features.
 
-#pragma once
+#ifndef HIP_INCLUDE_HIP_HIP_RUNTIME_H
+#define HIP_INCLUDE_HIP_HIP_RUNTIME_H
 
 // Some standard header files, these are included by hc.hpp and so want to make them avail on both
 // paths to provide a consistent include env and avoid "missing symbol" errors that only appears
@@ -61,3 +62,5 @@ THE SOFTWARE.
 
 #include <hip/hip_runtime_api.h>
 #include <hip/hip_vector_types.h>
+
+#endif

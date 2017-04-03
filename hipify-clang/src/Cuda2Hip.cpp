@@ -2271,7 +2271,7 @@ public:
                 StringRef repName = found->second.hipName;
                 DEBUG(dbgs() << "Identifier " << name
                              << " found as an actual argument in expansion of macro "
-                             << macroName << "\n"
+                             << MacroNameTok.getIdentifierInfo()->getName() << "\n"
                              << "will be replaced with: " << repName << "\n");
                 size_t length = name.size();
                 SourceLocation sl = tok.getLocation();

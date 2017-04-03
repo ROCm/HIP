@@ -31,9 +31,10 @@ THE SOFTWARE.
 #define NUM 1024
 #define SIZE 1024*4
 
+// TODO - collapse:
 #ifdef __HIP_PLATFORM_HCC__
-__attribute__((address_space(1))) int globalIn[NUM];
-__attribute__((address_space(1))) int globalOut[NUM];
+__device__ ADDRESS_SPACE_1 int globalIn[NUM];
+__device__ ADDRESS_SPACE_1 int globalOut[NUM];
 #endif
 
 #ifdef __HIP_PLATFORM_NVCC__
@@ -92,8 +93,29 @@ int main()
     hipMemcpyFromSymbol(C, HIP_SYMBOL(globalOut), SIZE, 0, hipMemcpyDeviceToHost);
     for(unsigned i=0;i<NUM;i++) {
         assert(A[i] == B[i]);
-//        assert(A[i] == C[i]);
+        assert(A[i] == C[i]);
     }
 
+    for(unsigned i=0;i<NUM;i++) {
+        A[i] = -3*i;
+        B[i] = 0;
+    }
+
+    hipMemcpyToSymbolAsync(HIP_SYMBOL(globalIn), A, SIZE, 0, hipMemcpyHostToDevice, stream);
+    hipStreamSynchronize(stream);
+    hipLaunchKernel(Assign, dim3(1,1,1), dim3(NUM,1,1), 0, 0, Ad);
+    hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost);
+    hipMemcpyFromSymbolAsync(C, HIP_SYMBOL(globalOut), SIZE, 0, hipMemcpyDeviceToHost, stream);
+    hipStreamSynchronize(stream);
+    for(unsigned i=0;i<NUM;i++) {
+        assert(A[i] == B[i]);
+        assert(A[i] == C[i]);
+    }
+    hipHostFree(Am);
+    hipHostFree(Cm);
+    hipFree(Ad);
+    delete[] A;
+    delete[] B;
+    delete[] C;
     passed();
 }

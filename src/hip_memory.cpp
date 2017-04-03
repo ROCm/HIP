@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "hsa/hsa_ext_amd.h"
 
 #include "hip/hip_runtime.h"
-#include "hip_hcc.h"
+#include "hip_hcc_internal.h"
 #include "trace_helper.h"
 #include "hip/hcc_detail/hip_texture.h"
 #include <hc_am.hpp>
@@ -261,11 +261,11 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
             auto device = ctx->getWriteableDevice();
             unsigned amFlags = HIP_COHERENT_HOST_ALLOC ? amHostCoherent : amHostPinned;
 
-            *ptr = hip_internal::allocAndSharePtr(HIP_COHERENT_HOST_ALLOC ? "finegrained_host":"pinned_host", 
+            *ptr = hip_internal::allocAndSharePtr(HIP_COHERENT_HOST_ALLOC ? "finegrained_host":"pinned_host",
                                                   sizeBytes, ctx, amFlags, flags);
             if(sizeBytes  && (*ptr == NULL)){
                 hip_status = hipErrorMemoryAllocation;
-            } 
+            }
         }
     }
 
@@ -314,7 +314,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
 
         if (sizeBytes && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
-        } 
+        }
     } else {
         hip_status = hipErrorMemoryAllocation;
     }
@@ -372,7 +372,7 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
         *ptr = hip_internal::allocAndSharePtr("device_array", allocSize, ctx, am_flags, 0);
         if (size && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
-        } 
+        }
 
     } else {
         hip_status = hipErrorMemoryAllocation;
@@ -472,7 +472,7 @@ hipError_t hipHostUnregister(void *hostPtr)
     return ihipLogStatus(hip_status);
 }
 
-hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind)
+hipError_t hipMemcpyToSymbol(const void* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind)
 {
     HIP_INIT_CMD_API(symbolName, src, count, offset, kind);
 
@@ -485,7 +485,7 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t cou
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    void *dst = acc.get_symbol_address(symbolName);
+    void *dst = acc.get_symbol_address((const char*) symbolName);
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, dst);
 
     if(dst == nullptr)
@@ -497,7 +497,7 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t cou
 
     if(kind == hipMemcpyHostToDevice || kind == hipMemcpyDeviceToHost || kind == hipMemcpyDeviceToDevice || kind == hipMemcpyHostToHost)
     {
-      stream->lockedSymbolCopySync(acc, dst, (void*)src, count + offset, kind);
+      stream->lockedSymbolCopySync(acc, dst, (void*)src, count, offset, kind);
     //  acc.memcpy_symbol(dst, (void*)src, count+offset);
     } else {
       return ihipLogStatus(hipErrorInvalidValue);
@@ -507,7 +507,7 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t cou
 }
 
 
-hipError_t hipMemcpyFromSymbol(void* dst, const char* symbolName, size_t count, size_t offset, hipMemcpyKind kind)
+hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count, size_t offset, hipMemcpyKind kind)
 {
     HIP_INIT_CMD_API(symbolName, dst, count, offset, kind);
 
@@ -520,7 +520,7 @@ hipError_t hipMemcpyFromSymbol(void* dst, const char* symbolName, size_t count, 
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    void *src = acc.get_symbol_address(symbolName);
+    void *src = acc.get_symbol_address((const char*) symbolName);
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, dst);
 
     if(dst == nullptr)
@@ -532,7 +532,7 @@ hipError_t hipMemcpyFromSymbol(void* dst, const char* symbolName, size_t count, 
 
     if(kind == hipMemcpyHostToDevice || kind == hipMemcpyDeviceToHost || kind == hipMemcpyDeviceToDevice || kind == hipMemcpyHostToHost)
     {
-      stream->lockedSymbolCopySync(acc, dst, (void*)src, count + offset, kind);
+      stream->lockedSymbolCopySync(acc, dst, (void*)src, count,  offset, kind);
     }
     else {
       return ihipLogStatus(hipErrorInvalidValue);
@@ -542,7 +542,7 @@ hipError_t hipMemcpyFromSymbol(void* dst, const char* symbolName, size_t count, 
 }
 
 
-hipError_t hipMemcpyToSymbolAsync(const char* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind, hipStream_t stream)
+hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind, hipStream_t stream)
 {
     HIP_INIT_CMD_API(symbolName, src, count, offset, kind, stream);
 
@@ -557,7 +557,7 @@ hipError_t hipMemcpyToSymbolAsync(const char* symbolName, const void *src, size_
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    void *dst = acc.get_symbol_address(symbolName);
+    void *dst = acc.get_symbol_address((const char*) symbolName);
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, dst);
 
     if(dst == nullptr)
@@ -567,7 +567,7 @@ hipError_t hipMemcpyToSymbolAsync(const char* symbolName, const void *src, size_
 
     if (stream) {
         try {
-          stream->lockedSymbolCopyAsync(acc, dst, (void*)src, count + offset, kind);
+          stream->lockedSymbolCopyAsync(acc, dst, (void*)src, count, offset, kind);
         }
         catch (ihipException ex) {
             e = ex._code;
@@ -580,7 +580,7 @@ hipError_t hipMemcpyToSymbolAsync(const char* symbolName, const void *src, size_
 }
 
 
-hipError_t hipMemcpyFromSymbolAsync(void* dst, const char* symbolName, size_t count, size_t offset, hipMemcpyKind kind, hipStream_t stream)
+hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t count, size_t offset, hipMemcpyKind kind, hipStream_t stream)
 {
     HIP_INIT_CMD_API(symbolName, dst, count, offset, kind, stream);
 
@@ -595,7 +595,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const char* symbolName, size_t co
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    void *src = acc.get_symbol_address(symbolName);
+    void *src = acc.get_symbol_address((const char*) symbolName);
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, src);
 
     if(src == nullptr || dst == nullptr)
@@ -603,9 +603,10 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const char* symbolName, size_t co
         return ihipLogStatus(hipErrorInvalidSymbol);
     }
 
+    stream = ihipSyncAndResolveStream(stream);
     if (stream) {
         try {
-          stream->lockedSymbolCopyAsync(acc, dst, src, count + offset, kind);
+          stream->lockedSymbolCopyAsync(acc, dst, src, count, offset, kind);
         }
         catch (ihipException ex) {
             e = ex._code;

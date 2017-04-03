@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
+#ifndef HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_API_H
+#define HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_API_H
 
 #include <cuda_runtime_api.h>
 #include <cuda.h>
@@ -331,6 +332,16 @@ inline static hipError_t hipMemcpyToSymbol(const void* symbol, const void* src, 
 
 inline static hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src, size_t sizeBytes, size_t offset, hipMemcpyKind copyType, hipStream_t stream) {
     return hipCUDAErrorTohipError(cudaMemcpyToSymbolAsync(symbol, src, sizeBytes, offset, hipMemcpyKindToCudaMemcpyKind(copyType)));
+}
+
+inline static hipError_t hipMemcpyFromSymbol(void *dst, const void* symbolName, size_t sizeBytes, size_t offset, hipMemcpyKind kind)
+{
+    return hipCUDAErrorTohipError(cudaMemcpyFromSymbol(dst, symbolName, sizeBytes, offset, hipMemcpyKindToCudaMemcpyKind(kind)));
+}
+
+inline static hipError_t hipMemcpyFromSymbolAsync(void *dst, const void* symbolName, size_t sizeBytes, size_t offset, hipMemcpyKind kind, hipStream_t stream)
+{
+    return hipCUDAErrorTohipError(cudaMemcpyFromSymbolAsync(dst, symbolName, sizeBytes, offset, hipMemcpyKindToCudaMemcpyKind(kind), stream));
 }
 
 inline static hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind){
@@ -668,6 +679,31 @@ inline static hipError_t  hipCtxDisablePeerAccess ( hipCtx_t peerCtx )
 inline static hipError_t  hipCtxEnablePeerAccess ( hipCtx_t peerCtx, unsigned int  flags )
 {
     return hipCUResultTohipError(cuCtxEnablePeerAccess(peerCtx, flags));
+}
+
+inline static hipError_t hipDevicePrimaryCtxGetState ( hipDevice_t dev, unsigned int* flags, int* active )
+{
+    return hipCUResultTohipError(cuDevicePrimaryCtxGetState(dev, flags, active));
+}
+
+inline static hipError_t hipDevicePrimaryCtxRelease ( hipDevice_t dev)
+{
+    return hipCUResultTohipError(cuDevicePrimaryCtxRelease(dev));
+}
+
+inline static hipError_t hipDevicePrimaryCtxRetain ( hipCtx_t* pctx, hipDevice_t dev )
+{
+    return hipCUResultTohipError(cuDevicePrimaryCtxRetain(pctx, dev));
+}
+
+inline static hipError_t hipDevicePrimaryCtxReset ( hipDevice_t dev )
+{
+    return hipCUResultTohipError(cuDevicePrimaryCtxReset(dev));
+}
+
+inline static hipError_t hipDevicePrimaryCtxSetFlags ( hipDevice_t dev, unsigned int  flags )
+{
+    return hipCUResultTohipError(cuDevicePrimaryCtxSetFlags(dev, flags));
 }
 
 inline static hipError_t hipMemGetAddressRange ( hipDeviceptr_t* pbase, size_t* psize, hipDeviceptr_t dptr )

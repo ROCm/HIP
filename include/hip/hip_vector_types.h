@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,8 @@ THE SOFTWARE.
 
 //! hip_vector_types.h : Defines the HIP vector types.
 
-#pragma once
+#ifndef HIP_INCLUDE_HIP_HIP_VECTOR_TYPES_H
+#define HIP_INCLUDE_HIP_HIP_VECTOR_TYPES_H
 
 #include <hip/hip_common.h>
 
@@ -35,4 +36,6 @@ THE SOFTWARE.
 #include <vector_types.h>
 #else
 #error("Must define exactly one of __HIP_PLATFORM_HCC__ or __HIP_PLATFORM_NVCC__");
+#endif
+
 #endif

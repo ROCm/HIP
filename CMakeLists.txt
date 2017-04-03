@@ -63,6 +63,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
             set(HCC_HOME $ENV{HCC_HOME} CACHE PATH "Path to which HCC has been installed")
         endif()
     endif()
+
     if(DEFINED ENV{HIP_DEVELOPER})
         add_to_config(_buildInfo HCC_HOME)
     endif()
@@ -178,6 +179,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/hip_peer.cpp
         src/hip_stream.cpp
         src/hip_module.cpp
+        src/grid_launch.cpp
         src/env.cpp)
 
     set(SOURCE_FILES_DEVICE
@@ -189,9 +191,11 @@ if(HIP_PLATFORM STREQUAL "hcc")
 
     execute_process(COMMAND ${HCC_HOME}/bin/hcc-config --ldflags OUTPUT_VARIABLE HCC_LD_FLAGS)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${HCC_LD_FLAGS} -Wl,-Bsymbolic")
+    #find_package(LLVM HINTS ${HCC_HOME}/compiler/lib/cmake)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --amdgpu-target=gfx701 --amdgpu-target=gfx801 --amdgpu-target=gfx802 --amdgpu-target=gfx803 --amdgpu-target=gfx900")
     add_library(hip_hcc SHARED ${SOURCE_FILES_RUNTIME})
     target_link_libraries(hip_hcc PRIVATE hc_am)
+    #target_link_libraries(hip_hcc PUBLIC LLVMAMDGPUUtils)
     add_library(hip_hcc_static STATIC ${SOURCE_FILES_RUNTIME})
     target_link_libraries(hip_hcc_static PRIVATE hc_am)
     add_dependencies(hip_hcc_static hip_hcc)
