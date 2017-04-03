@@ -3874,7 +3874,22 @@ int main() {
   assert(sizeof(float2) == 8);
   assert(sizeof(float3) == 12);
   assert(sizeof(float4) == 16);
-  bool *ptr;
-  hipLaunchKernel(CheckVectorTypes, dim3(1,1,1), dim3(1,1,1), 0, 0, ptr);
-  passed();
+ 
+  bool* ptr = nullptr;
+  if (hipMalloc(&ptr, sizeof(bool)) != HIP_SUCCESS) return EXIT_FAILURE;
+  std::unique_ptr<bool, decltype(hipFree)*> correct{ptr, hipFree};
+  hipLaunchKernel(
+      CheckVectorTypes, dim3(1,1,1), dim3(1,1,1), 0, 0, correct.get());
+  bool passed = false;
+  if (hipMemcpyDtoH(&passed, correct.get(), sizeof(bool)) != HIP_SUCCESS) {
+      return EXIT_FAILURE;
+  }
+ 
+  if (passed == true){
+      std::cout << "PASSED" << std::endl;
+      return 0;
+  } 
+  else 
+      return EXIT_FAILURE;
 }
+

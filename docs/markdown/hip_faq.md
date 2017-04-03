@@ -26,6 +26,7 @@
 - [How do I trace HIP application flow?](#how-do-i-trace-hip-application-flow)
   * [Using CodeXL markers for HIP Functions](#using-codexl-markers-for-hip-functions)
   * [Using HIP_TRACE_API](#using-hip_trace_api)
+- [How do I enable HIP Generic Grid Launch option?](#how-do-i-enable-hip-generic-grid-launch-option)
 
 <!-- tocstop -->
 
@@ -235,3 +236,9 @@ Unlike CUDA, in HCC, for functions defined in the header files, the keyword of "
 Thus, if failed to define "static" keyword, you might see a lot of "symbol multiply defined!" errors at compilation.
 The workaround is to explicitly add the keyword of "static" before any functions that were defined as "__forceinline__".
 
+### How do I disable HIP Generic Grid Launch option? 
+Generic Grid Launch(GGL) is currently the default method for hip kernel launch.
+To disable it and use the legancy grid launch method, please either change the default value of GENERIC_GRID_LAUNCH to 0 in the following to header files and rebuild HIP:
+$HIP/include/hip/hcc_detail/hip_runtime_api.h 
+$HIP/include/hip/hcc_detail/host_defines.h
+Or pass "-DGENERIC_GRID_LAUNCH=0" to hipcc at application compilation time.

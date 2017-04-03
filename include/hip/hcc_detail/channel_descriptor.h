@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,8 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef HIP_HCC_DETAIL_CHANNEL_DESCRIPTOR_H
-#define HIP_HCC_DETAIL_CHANNEL_DESCRIPTOR_H
+#ifndef HIP_INCLUDE_HIP_HCC_DETAIL_CHANNEL_DESCRIPTOR_H
+#define HIP_INCLUDE_HIP_HCC_DETAIL_CHANNEL_DESCRIPTOR_H
 
 #include<hip/hcc_detail/driver_types.h>
 #include<hip/hcc_detail/hip_vector_types.h>

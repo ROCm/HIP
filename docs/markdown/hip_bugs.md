@@ -4,6 +4,7 @@
 
 - [Errors related to undefined reference to `__hcLaunchKernel__***__grid_launch_parm**](#errors-related-to-undefined-reference-to-hclaunchkernel__grid_launch_parm)
 - [Application hangs after a hipLaunchKernel call](#what-if-i-see-application-hangs-after-a-hiplaunchkernel-call)
+- [What is the current limitation of HIP Generic Grid Launch method?](#what-is-the-current-limitation-of-hip-generic-grid-launch-method)
 
 <!-- tocstop -->
 
@@ -23,8 +24,6 @@ namespace {
 __global__ MyKernel …
 - Avoid calling member functions 
 
-
-### What if I see application hangs after a hipLaunchKernel call?
 If hipLaunchKernel takes parameters that request explicitly memcpy, then it will cause application hang. 
 Reason is that the hipLaunchKernel macro locks the stream.  
 If kernel paramters are actually function calls which invoke other hip apis (i.e. memcpy) to the same stream, then deadlock occurs.
@@ -44,3 +43,7 @@ hipLaunchKernel( LRNComputeDiff, dim3(CAFFE_GET_BLOCKS(n_threads)), dim3(CAFFE_H
        bot_gpu_data);
 
 ```
+
+### What is the current limitation of HIP Generic Grid Launch method?
+1. __global__ functions cannot be marked as static or put in an unnamed namespace i.e. they cannot be given internal linkage (this would clash with __attribute__((weak)));
+2. using the macro based dispatch mechanism i.e. hipLaunchKernel* only works for functions that take no more than 20 arguments (this limit can be increased up to 126, and is temporary until we can enable C++14 mode and use variadic generic lambdas); no such limitation applies do dispatching directly through grid_launch.

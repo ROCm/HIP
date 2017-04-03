@@ -20,12 +20,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+
+
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime_api.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
+
+#ifdef __HIP_PLATFORM_HCC__
 #include <hip/hip_hcc.h>
+#endif
 
 #define LEN 64
 #define SIZE LEN<<2
@@ -63,7 +68,6 @@ int main(){
     HIP_CHECK(hipModuleLoad(&Module, fileName));
     HIP_CHECK(hipModuleGetFunction(&Function, Module, kernel_name));
 
-#ifdef __HIP_PLATFORM_HCC__
 		uint32_t len = LEN;
 		uint32_t one = 1;
 
@@ -75,19 +79,6 @@ int main(){
     args._Ad = Ad;
     args._Bd = Bd;
 
-#endif
-
-#ifdef __HIP_PLATFORM_NVCC__
-    struct {
-        uint32_t _hidden[1];
-        void * _Ad;
-        void * _Bd;
-    } args;
-
-    args._hidden[0] = 0;
-    args._Ad = Ad;
-    args._Bd = Bd;
-#endif
 
 
     size_t size = sizeof(args);
@@ -98,7 +89,7 @@ int main(){
       HIP_LAUNCH_PARAM_END
     };
 
-    HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
+    HIP_CHECK(hipHccModuleLaunchKernel(Function, LEN, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
 
     hipMemcpyDtoH(B, Bd, SIZE);
 

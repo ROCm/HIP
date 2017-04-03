@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,16 +21,19 @@ THE SOFTWARE.
 */
 
 //#pragma once
-#ifndef HIP_HCC_DETAIL_HIP_RUNTIME_API_H
-#define HIP_HCC_DETAIL_HIP_RUNTIME_API_H
+#ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_RUNTIME_API_H
+#define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_RUNTIME_API_H
 /**
  *  @file  hcc_detail/hip_runtime_api.h
  *  @brief Contains C function APIs for HIP runtime. This file does not use any HCC builtin or special language extensions (-hc mode) ; those functions in hip_runtime.h.
  */
-
 #include <stdint.h>
 #include <stddef.h>
 #include <iostream>
+
+#ifndef GENERIC_GRID_LAUNCH
+#define GENERIC_GRID_LAUNCH 1
+#endif
 
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hip_runtime_api.h>
@@ -1153,7 +1156,7 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
  *
  *  @see hipMemcpy, hipMemcpy2D, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpy2DFromArray, hipMemcpyArrayToArray, hipMemcpy2DArrayToArray, hipMemcpyFromSymbol, hipMemcpyAsync, hipMemcpy2DAsync, hipMemcpyToArrayAsync, hipMemcpy2DToArrayAsync, hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync, hipMemcpyFromSymbolAsync
  */
-hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t sizeBytes, size_t offset, hipMemcpyKind kind);
+hipError_t hipMemcpyToSymbol(const void* symbolName, const void *src, size_t sizeBytes, size_t offset, hipMemcpyKind kind);
 
 
 /**
@@ -1173,11 +1176,11 @@ hipError_t hipMemcpyToSymbol(const char* symbolName, const void *src, size_t siz
  *
  *  @see hipMemcpy, hipMemcpy2D, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpy2DFromArray, hipMemcpyArrayToArray, hipMemcpy2DArrayToArray, hipMemcpyFromSymbol, hipMemcpyAsync, hipMemcpy2DAsync, hipMemcpyToArrayAsync, hipMemcpy2DToArrayAsync, hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync, hipMemcpyFromSymbolAsync
  */
-hipError_t hipMemcpyToSymbolAsync(const char* symbolName, const void *src, size_t sizeBytes, size_t offset, hipMemcpyKind kind, hipStream_t stream);
+hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void *src, size_t sizeBytes, size_t offset, hipMemcpyKind kind, hipStream_t stream);
 
-hipError_t hipMemcpyFromSymbol(void *dst, const char* symbolName, size_t sizeBytes, size_t offset, hipMemcpyKind kind);
+hipError_t hipMemcpyFromSymbol(void *dst, const void* symbolName, size_t sizeBytes, size_t offset, hipMemcpyKind kind);
 
-hipError_t hipMemcpyFromSymbolAsync(void *dst, const char* symbolName, size_t sizeBytes, size_t offset, hipMemcpyKind kind, hipStream_t stream);
+hipError_t hipMemcpyFromSymbolAsync(void *dst, const void* symbolName, size_t sizeBytes, size_t offset, hipMemcpyKind kind, hipStream_t stream);
 
 /**
  *  @brief Copy data from src to dst asynchronously.
@@ -1692,6 +1695,66 @@ hipError_t  hipCtxEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags);
  * @warning PeerToPeer support is experimental.
  */
 hipError_t  hipCtxDisablePeerAccess (hipCtx_t peerCtx);
+
+/**
+ * @brief Get the state of the primary context.
+ *
+ * @param [in] Device to get primary context flags for
+ * @param [out] Pointer to store flags
+ * @param [out] Pointer to store context state; 0 = inactive, 1 = active
+ *
+ * @returns #hipSuccess
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ */
+hipError_t hipDevicePrimaryCtxGetState ( hipDevice_t dev, unsigned int* flags, int* active );
+
+/**
+ * @brief Release the primary context on the GPU.
+ *
+ * @param [in] Device which primary context is released
+ *
+ * @returns #hipSuccess
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ * @warning This function return #hipSuccess though doesn't release the primaryCtx by design on HIP/HCC path.
+ */
+hipError_t hipDevicePrimaryCtxRelease ( hipDevice_t dev);
+
+/**
+ * @brief Retain the primary context on the GPU.
+ *
+ * @param [out] Returned context handle of the new context
+ * @param [in] Device which primary context is released
+ *
+ * @returns #hipSuccess
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ */
+hipError_t hipDevicePrimaryCtxRetain ( hipCtx_t* pctx, hipDevice_t dev );
+
+/**
+ * @brief Resets the primary context on the GPU.
+ *
+ * @param [in] Device which primary context is reset
+ *
+ * @returns #hipSuccess
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ */
+hipError_t hipDevicePrimaryCtxReset ( hipDevice_t dev );
+
+/**
+ * @brief Set flags for the primary context.
+ *
+ * @param [in] Device for which the primary context flags are set
+ * @param [in] New flags for the device
+ *
+ * @returns #hipSuccess, #hipErrorContextAlreadyInUse
+ *
+ * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
+ */
+hipError_t hipDevicePrimaryCtxSetFlags ( hipDevice_t dev, unsigned int  flags );
 
 // doxygen end Context Management
 /**

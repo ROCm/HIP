@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
+#ifndef HIP_INCLUDE_HIP_CHANNEL_DESCRIPTOR_H
+#define HIP_INCLUDE_HIP_CHANNEL_DESCRIPTOR_H
 
 // Some standard header files, these are included by hc.hpp and so want to make them avail on both
 // paths to provide a consistent include env and avoid "missing symbol" errors that only appears
@@ -33,4 +34,6 @@ THE SOFTWARE.
 #include <hip/nvcc_detail/channel_descriptor.h>
 #else
 #error("Must define exactly one of __HIP_PLATFORM_HCC__ or __HIP_PLATFORM_NVCC__");
+#endif
+
 #endif

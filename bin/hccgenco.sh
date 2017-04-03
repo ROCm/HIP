@@ -10,7 +10,7 @@ if [ $# = 0 ]; then
 fi
 
 : ${ROCM_PATH:=/opt/rocm}
-: ${ROCM_TARGET:=fiji}
+: ${ROCM_TARGET:=gfx803}
 
 INPUT_FILES=""
 OUTPUT_FILE=""
@@ -45,16 +45,17 @@ for inputfile in $INPUT_FILES; do
 done
 printf "\nint main(){}\n" >> $hipgenisa_main
 
-$HIP_PATH/bin/hipcc $hipgenisa_files -o $hipgenisa_dir/a.out
+$HIP_PATH/bin/hipcc -DGENERIC_GRID_LAUNCH=0 $hipgenisa_files -o $hipgenisa_dir/a.out
 mv dump* $hipgenisa_dir
 
+hsaco_file="dump-$ROCM_TARGET.hsaco"
 map_sym=""
-kernels=$(objdump -t $hipgenisa_dir/dump-fiji.hsaco | grep grid_launch_parm | sed 's/ \+/ /g; s/\t/ /g' | cut -d" " -f6)
+kernels=$(objdump -t $hipgenisa_dir/$hsaco_file | grep grid_launch_parm | sed 's/ \+/ /g; s/\t/ /g' | cut -d" " -f6)
 for mangled_sym in $kernels; do
   real_sym=$(c++filt $(c++filt $mangled_sym | cut -d: -f3 | sed 's/_functor//g') | cut -d\( -f1)
   map_sym="--redefine-sym $mangled_sym=$real_sym $map_sym"
 done
-objcopy -F elf64-little $map_sym $hipgenisa_dir/dump-fiji.hsaco $OUTPUT_FILE
+objcopy -F elf64-little $map_sym $hipgenisa_dir/$hsaco_file $OUTPUT_FILE
 
 rm $hipgenisa_files
 rm -r $hipgenisa_dir

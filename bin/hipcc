@@ -92,7 +92,7 @@ if ($HIP_PLATFORM eq "hcc") {
     $HIP_ATP_MARKER=$ENV{'HIP_ATP_MARKER'} // 1;
     $marker_path = "$ROCM_PATH/profiler/CXLActivityLogger";
 
-    $ROCM_TARGET=$ENV{'ROCM_TARGET'} // "fiji";
+    $ROCM_TARGET=$ENV{'ROCM_TARGET'} // "gfx803";
 
     # HCC* may be used to compile src/hip_hcc.o (and also feed the HIPCXXFLAGS below)
     $HCC = "$HCC_HOME/bin/hcc";
@@ -102,6 +102,7 @@ if ($HIP_PLATFORM eq "hcc") {
     $HIPCXXFLAGS = $HCCFLAGS;
 
     $HIPLDFLAGS = `${HCC_HOME}/bin/hcc-config --ldflags`;
+
 
     #### GCC system includes workaround ####
     $HCC_WA_FLAGS = " ";
@@ -122,12 +123,21 @@ if ($HIP_PLATFORM eq "hcc") {
         }
     }
 
+    # Force -stdlib=libc++ on UB14.04
+    $HOST_OSNAME= `cat /etc/os-release | grep "^ID\=" | cut -d= -f2 | tr -d '\n'`;
+    $HOST_OSVER= `cat /etc/os-release | grep "^VERSION_ID\=" | cut -d= -f2 | tr -d '\n'`;
+    if ($HOST_OSNAME eq "ubuntu" and $HOST_OSVER eq "\"14.04\"") {
+        $HIPCXXFLAGS .= " -stdlib=libc++";
+        $setStdLib = 1;
+    }
+
     $HIPCXXFLAGS .= " -I$HIP_PATH/include/hip/hcc_detail/cuda";
     $HIPCXXFLAGS .= " -I$HSA_PATH/include";
     $HIPCXXFLAGS .= " -Wno-deprecated-register";
 
     $HIPLDFLAGS .= " -lsupc++";
-    $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am -lhsakmt";
+    $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am -lhsakmt ";
+#    $HIPLDFLAGS .= " -L$HCC_HOME/compiler/lib -lLLVMAMDGPUDesc -lLLVMAMDGPUUtils -lLLVMMC -lLLVMCore -lLLVMSupport ";
 
     # Add trace marker library:
     # TODO - once we cleanly separate the HIP API headers from HIP library headers this logic should move to CMakebuild option - apps do not need to see the marker library.
@@ -402,9 +412,9 @@ if ($setStdLib eq 0 and $HIP_PLATFORM eq 'hcc')
 
 if ($needHipHcc) {
     if ($linkType eq 0) {
-        substr($HIPLDFLAGS,0,0) = " $HIP_PATH/lib/libhip_hcc_static.a $HIP_PATH/lib/libhip_device.a " ;
+        substr($HIPLDFLAGS,0,0) = "  $HIP_PATH/lib/libhip_hcc_static.a $HIP_PATH/lib/libhip_device.a " ;
     } else {
-        substr($HIPLDFLAGS,0,0) = " -Wl,--rpath=$HIP_PATH/lib $HIP_PATH/lib/libhip_hcc.so $HIP_PATH/lib/libhip_device.a ";
+        substr($HIPLDFLAGS,0,0) = "  -Wl,--rpath=$HIP_PATH/lib $HIP_PATH/lib/libhip_hcc.so $HIP_PATH/lib/libhip_device.a ";
     }
 }
 

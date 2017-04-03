@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,29 +22,27 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime_api.h"
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <hip/hip_hcc.h>
+#include<iostream>
+#include<fstream>
+#include<vector>
 
 #define LEN 64
 #define SIZE LEN<<2
 
-#define fileName "vcpy_kernel.code"
-#define kernel_name "hello_world"
-
-#define HIP_CHECK(status) \
-if(status != hipSuccess) {std::cout<<"Got Status: "<<status<<" at Line: "<<__LINE__<<std::endl;exit(0);}
+#define fileName "test.co"
+#define kernel_name "vadd"
 
 int main(){
-    float *A, *B;
-    hipDeviceptr_t Ad, Bd;
+    float *A, *B, *C;
+    hipDeviceptr_t Ad, Bd, Cd;
     A = new float[LEN];
     B = new float[LEN];
+    C = new float[LEN];
 
     for(uint32_t i=0;i<LEN;i++){
         A[i] = i*1.0f;
-        B[i] = 0.0f;
+        B[i] = 1.0f;
+        C[i] = 0.0f;
     }
 
     hipInit(0);
@@ -55,58 +53,28 @@ int main(){
 
     hipMalloc((void**)&Ad, SIZE);
     hipMalloc((void**)&Bd, SIZE);
+    hipMalloc((void**)&Cd, SIZE);
 
     hipMemcpyHtoD(Ad, A, SIZE);
     hipMemcpyHtoD(Bd, B, SIZE);
+    hipMemcpyHtoD(Cd, C, SIZE);
+
     hipModule_t Module;
     hipFunction_t Function;
-    HIP_CHECK(hipModuleLoad(&Module, fileName));
-    HIP_CHECK(hipModuleGetFunction(&Function, Module, kernel_name));
+    hipModuleLoad(&Module, fileName);
+    hipModuleGetFunction(&Function, Module, kernel_name);
 
-#ifdef __HIP_PLATFORM_HCC__
-		uint32_t len = LEN;
-		uint32_t one = 1;
+    int n = LEN;
+    void * args[4] = {&Ad, &Bd, &Cd, &n};
 
-    struct {
-        void * _Ad;
-        void * _Bd;
-    } args;
+    hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, args, nullptr);
 
-    args._Ad = Ad;
-    args._Bd = Bd;
-
-#endif
-
-#ifdef __HIP_PLATFORM_NVCC__
-    struct {
-        uint32_t _hidden[1];
-        void * _Ad;
-        void * _Bd;
-    } args;
-
-    args._hidden[0] = 0;
-    args._Ad = Ad;
-    args._Bd = Bd;
-#endif
-
-
-    size_t size = sizeof(args);
-
-    void *config[] = {
-      HIP_LAUNCH_PARAM_BUFFER_POINTER, &args,
-      HIP_LAUNCH_PARAM_BUFFER_SIZE, &size,
-      HIP_LAUNCH_PARAM_END
-    };
-
-    HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
-
-    hipMemcpyDtoH(B, Bd, SIZE);
-
+    hipMemcpyDtoH(C, Cd, SIZE);
     int mismatchCount = 0;
     for(uint32_t i=0;i<LEN;i++){
-        if (A[i] != B[i]) {
+        if (A[i] + B[i] != C[i]) {
             mismatchCount++;
-            std::cout<<"error: mismatch " << A[i]<<" != "<<B[i]<<std::endl;
+            std::cout<<"error: mismatch " << A[i]<<" + "<<B[i]<<" != "<<C[i]<<std::endl;
         }
     }
 

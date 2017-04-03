@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,12 +26,11 @@ THE SOFTWARE.
  */
 
 //#pragma once
-#ifndef HIP_HCC_DETAIL_RUNTIME_H
-#define HIP_HCC_DETAIL_RUNTIME_H
+#ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_RUNTIME_H
+#define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_RUNTIME_H
 
 //---
 // Top part of file can be compiled with any compiler
-
 
 //#include <cstring>
 #if __cplusplus
@@ -40,30 +39,53 @@ THE SOFTWARE.
 #include <math.h>
 #include <string.h>
 #include <stddef.h>
-#endif
+#endif//__cplusplus
+
 // Define NVCC_COMPAT for CUDA compatibility
 #define NVCC_COMPAT
 #define CUDA_SUCCESS hipSuccess
 
 #include <hip/hip_runtime_api.h>
 
-//#include "hip/hcc_detail/hip_hcc.h"
+
+#if USE_PROMOTE_FREE_HCC == 1
+#define ADDRESS_SPACE_1
+#define ADDRESS_SPACE_3
+#else
+#define ADDRESS_SPACE_1 __attribute__((address_space(1)))
+#define ADDRESS_SPACE_3 __attribute__((address_space(3)))
+#endif
+
 //---
 // Remainder of this file only compiles with HCC
-#ifdef __HCC__
+#if defined __HCC__
 #include <grid_launch.h>
+//TODO-HCC-GL - change this to typedef.
+//typedef grid_launch_parm hipLaunchParm ;
 
-#if defined (GRID_LAUNCH_VERSION) and (GRID_LAUNCH_VERSION >= 20)
-// Use field names for grid_launch 2.0 structure, if HCC supports GL 2.0.
+#if GENERIC_GRID_LAUNCH == 0
+    #define hipLaunchParm grid_launch_parm
 #else
+namespace hip_impl
+{
+    struct Empty_launch_parm {};
+}
+#define hipLaunchParm hip_impl::Empty_launch_parm
+#endif //GENERIC_GRID_LAUNCH
+
+#if defined (GRID_LAUNCH_VERSION) and (GRID_LAUNCH_VERSION >= 20) || GENERIC_GRID_LAUNCH == 1
+#else // Use field names for grid_launch 2.0 structure, if HCC supports GL 2.0.
 #error (HCC must support GRID_LAUNCH_20)
-#endif
+#endif //GRID_LAUNCH_VERSION
+
+#endif //HCC
+
+#if GENERIC_GRID_LAUNCH==1 && defined __HCC__
+#include "grid_launch_GGL.hpp"
+#endif//GENERIC_GRID_LAUNCH
 
 extern int HIP_TRACE_API;
 
-//TODO-HCC-GL - change this to typedef.
-//typedef grid_launch_parm hipLaunchParm ;
-#define hipLaunchParm grid_launch_parm
 #ifdef __cplusplus
 //#include <hip/hcc_detail/hip_texture.h>
 #include <hip/hcc_detail/hip_ldg.h>
@@ -76,6 +98,17 @@ extern int HIP_TRACE_API;
 #if defined (__KALMAR_ACCELERATOR__) && !defined (__HCC_ACCELERATOR__)
 #define __HCC_ACCELERATOR__  __KALMAR_ACCELERATOR__
 #endif
+
+
+
+
+// TODO-HCC add a dummy implementation of assert, need to replace with a proper kernel exit call.
+#if __HIP_DEVICE_COMPILE__ == 1
+   #undef assert
+   #define assert(COND) { if (COND) {} }
+#endif
+
+
 
 // Feature tests:
 #if defined(__HCC_ACCELERATOR__) && (__HCC_ACCELERATOR__ != 0)
@@ -126,8 +159,7 @@ extern int HIP_TRACE_API;
 
 // TODO - hipify-clang - change to use the function call.
 //#define warpSize hc::__wavesize()
-extern const int warpSize;
-
+static constexpr int warpSize = 64;
 
 #define clock_t long long int
 __device__ long long int clock64();
@@ -247,7 +279,7 @@ __device__ float __shfl(float input, int lane, int width);
 __device__ float __shfl_up(float input, unsigned int lane_delta, int width);
 __device__ float __shfl_down(float input, unsigned int lane_delta, int width);
 __device__ float __shfl_xor(float input, int lane_mask, int width);
-#endif
+#endif //__cplusplus
 
 __device__ unsigned __hip_ds_bpermute(int index, unsigned src);
 __device__ float __hip_ds_bpermutef(int index, float src);
@@ -259,12 +291,12 @@ __device__ float __hip_ds_swizzlef(float src, int pattern);
 
 __device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask, bool bound_ctrl);
 
-#endif
+#endif //__HIP_ARCH_GFX803__ == 1
 
 __host__ __device__ int min(int arg1, int arg2);
 __host__ __device__ int max(int arg1, int arg2);
 
-__device__ __attribute__((address_space(3))) void* __get_dynamicgroupbaseptr();
+__device__ ADDRESS_SPACE_3 void* __get_dynamicgroupbaseptr();
 
 
 /**
@@ -387,17 +419,18 @@ static inline __device__ void* memset(void* ptr, int val, size_t size)
 
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
 
-#define HIP_KERNEL_NAME(...) __VA_ARGS__
+#define HIP_KERNEL_NAME(...)  (__VA_ARGS__)
 #define HIP_SYMBOL(X) #X
 
-#ifdef __HCC_CPP__
+#if defined __HCC_CPP__
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm *lp, const char *kernelNameStr);
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm *lp, const char *kernelNameStr);
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm *lp, const char *kernelNameStr);
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm *lp, const char *kernelNameStr);
 extern void ihipPostLaunchKernel(const char *kernelName, hipStream_t stream, grid_launch_parm &lp);
 
-
+#if GENERIC_GRID_LAUNCH == 0
+//#warning "Original hipLaunchKernel defined"
 // Due to multiple overloaded versions of ihipPreLaunchKernel, the numBlocks3D and blockDim3D can be either size_t or dim3 types
 #define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...) \
 do {\
@@ -407,13 +440,13 @@ do {\
   _kernelName (lp, ##__VA_ARGS__);\
   ihipPostLaunchKernel(#_kernelName, trueStream, lp);\
 } while(0)
-
+#endif //GENERIC_GRID_LAUNCH
 
 #elif defined (__HCC_C__)
 
 //TODO - develop C interface.
 
-#endif
+#endif //__HCC_CPP__
 
 /**
  * extern __shared__
@@ -422,12 +455,11 @@ do {\
 // Macro to replace extern __shared__ declarations
 // to local variable definitions
 #define HIP_DYNAMIC_SHARED(type, var) \
-    __attribute__((address_space(3))) type* var = \
-    (__attribute__((address_space(3))) type*)__get_dynamicgroupbaseptr(); \
+    ADDRESS_SPACE_3 type* var = \
+    (ADDRESS_SPACE_3 type*)__get_dynamicgroupbaseptr(); \
 
-#define HIP_DYNAMIC_SHARED_ATTRIBUTE __attribute__((address_space(3)))
+#define HIP_DYNAMIC_SHARED_ATTRIBUTE ADDRESS_SPACE_3
 
-#endif // __HCC__
 
 
 /**
@@ -451,4 +483,4 @@ do {\
 
 
 
-#endif
+#endif//HIP_HCC_DETAIL_RUNTIME_H

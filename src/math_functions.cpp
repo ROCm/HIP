@@ -188,8 +188,12 @@ __device__ float ldexpf(float x, int exp)
 }
 __device__ float lgammaf(float x)
 {
-    int sign;
-    return hc::precise_math::lgammaf(x, &sign);
+  float val = 0.0f;
+  float y = x - 1;
+  while(y > 0){
+    val += logf(y--);
+  }
+  return val;
 }
 __device__ long long int llrintf(float x)
 {
@@ -202,7 +206,8 @@ __device__ long long int llroundf(float x)
     int y = hc::precise_math::roundf(x);
     long long int z = y;
     return z;
-}__device__ float log10f(float x)
+}
+__device__ float log10f(float x)
 {
     return hc::precise_math::log10f(x);
 }
@@ -569,8 +574,12 @@ __device__ double ldexp(double x, int exp)
 }
 __device__ double lgamma(double x)
 {
-    int sign;
-    return hc::precise_math::lgamma(x, &sign);
+  double val = 0.0;
+  double y = x - 1;
+  while(y > 0){
+    val += log(y--);
+  }
+  return val;
 }
 __device__ long long int llrint(double x)
 {

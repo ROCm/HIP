@@ -59,6 +59,8 @@ __device__ void integer_intrinsics()
     __umulhi((unsigned int)1, (unsigned int)2);
     __urhadd((unsigned int)1, (unsigned int)2);
     __usad((unsigned int)1, (unsigned int)2, 0);
+
+    assert(1);
 }
 
 __global__ void compileIntegerIntrinsics(hipLaunchParm lp, int ignored)
