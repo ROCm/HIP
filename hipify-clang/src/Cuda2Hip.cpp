@@ -2343,9 +2343,6 @@ private:
     LangOptions DefaultLangOptions;
     SmallString<40> XStr;
     raw_svector_ostream OS(XStr);
-    StringRef initialParamList;
-    OS << "hipLaunchParm lp";
-    size_t repLength = OS.str().size();
     SourceLocation sl = kernelDecl->getNameInfo().getEndLoc();
     SourceLocation kernelArgListStart = Lexer::findLocationAfterToken(sl, tok::l_paren, *SM, DefaultLangOptions, true);
     DEBUG(dbgs() << kernelArgListStart.printToString(*SM));
@@ -2355,14 +2352,12 @@ private:
       SourceLocation kernelArgListStart(pvdFirst->getLocStart());
       SourceLocation kernelArgListEnd(pvdLast->getLocEnd());
       SourceLocation stop = Lexer::getLocForEndOfToken(kernelArgListEnd, 0, *SM, DefaultLangOptions);
-      repLength += SM->getCharacterData(stop) - SM->getCharacterData(kernelArgListStart);
-      initialParamList = StringRef(SM->getCharacterData(kernelArgListStart), repLength);
-      OS << ", " << initialParamList;
+      size_t repLength = SM->getCharacterData(stop) - SM->getCharacterData(kernelArgListStart);
+      OS << StringRef(SM->getCharacterData(kernelArgListStart), repLength);
+      Replacement Rep0(*(Result.SourceManager), kernelArgListStart, repLength, OS.str());
+      FullSourceLoc fullSL(sl, *(Result.SourceManager));
+      insertReplacement(Rep0, fullSL);
     }
-    DEBUG(dbgs() << "initial paramlist: " << initialParamList << "\n" << "new paramlist: " << OS.str() << "\n");
-    Replacement Rep0(*(Result.SourceManager), kernelArgListStart, repLength, OS.str());
-    FullSourceLoc fullSL(sl, *(Result.SourceManager));
-    insertReplacement(Rep0, fullSL);
   }
 
   bool cudaCall(const MatchFinder::MatchResult &Result) {
