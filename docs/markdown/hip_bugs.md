@@ -50,6 +50,70 @@ hipLaunchKernel( LRNComputeDiff, dim3(CAFFE_GET_BLOCKS(n_threads)), dim3(CAFFE_H
 2. using the macro based dispatch mechanism i.e. hipLaunchKernel* only works for functions that take no more than 20 arguments (this limit can be increased up to 126, and is temporary until we can enable C++14 mode and use variadic generic lambdas); no such limitation applies do dispatching directly through grid_launch.
 
 
+### Errors related to `no matching constructor`
+
+The symptom is the compiler would complain about errors like `no matching constructor` for classes/structs passed as arguments into a GPU kernel. Often, this is caused by a design limitation in HCC where array-typed member variables inside a class/struct can’t be correctly passed into GPU kernels. To mitigate this issue, a custom serializer/deserializer pair is provided.
+
+For example, `Foo` in the code snippets below contains an array-typed member variable `table`, which would fail the compiler if used as a kernel argument.
+
+```
+struct Foo {
+  // table is an array, which makes foo
+  int table[3];
+};
+```
+
+An workaround is to provide a custom serializer on CPU side, and append the contents of the array as kernel arguments:
+
+```
+
+struct Foo {
+  int table[3];
+
+  // user-provided CPU serializer
+  // must append the contents of the array member as kernel arguments
+#ifdef __HCC__
+  __attribute__((annotate(“serialize”)))
+  void __cxxamp_serialize(Kalmar::Serialize &s) const {
+    for (int i = 0; i < 3; ++i)
+      s.Append(sizeof(int), &table[i]);
+  }
+#endif
+};
+```
+
+Then, provide a custom deserializer on GPU side, to help reconstruct the array within GPU kernels. Notice that the deserializer can not be a function template, and should have scalar-typed parameters of the number equals to the length of the array-typed member variable. For example:
+
+```
+struct Foo {
+  int table[3];
+
+  // user-provided GPU deserializer
+  // table has 3 int elements, so deserializer must have 3 int parameters.
+#ifdef __HCC__
+  __attribute__((annotate(“user_deserialize”)))
+  Foo(int x0, int x1, int x2) [[cpu]][[hc]] {
+    table[0] = x0;
+    table[1] = x1;
+    table[2] = x2;
+  }
+#endif
+
+#ifdef __HCC__
+  __attribute__((annotate(“serialize”)))
+  void __cxxamp_serialize(Kalmar::Serialize &s) const {
+    s.Append(sizeof(int), &table[0]);
+    s.Append(sizeof(int), &table[1]);
+    s.Append(sizeof(int), &table[2]);
+  }
+#endif
+};
+```
+
+
+Rather than create serializer functions, another workaround is to pass the member fields from the structure as simple data types.
+
+
 ### HIP is more restrictive in enforcing restrictions
 By the language specification, both for HIP and CUDA it is forbidden to call a
 `__device__` function in a `__host__` context. In practice, you may observe
