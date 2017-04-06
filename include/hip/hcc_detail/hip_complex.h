@@ -23,8 +23,7 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_COMPLEX_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_COMPLEX_H
 
-#include "./hip_fp16.h"
-#include "./hip_vector_types.h"
+#include "hip/hcc_detail/hip_vector_types.h"
 
 #if __cplusplus
 #define COMPLEX_ADD_OP_OVERLOAD(type) \

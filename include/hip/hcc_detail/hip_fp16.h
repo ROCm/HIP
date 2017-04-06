@@ -23,7 +23,7 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_FP16_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_FP16_H
 
-#include "hip/hip_runtime.h"
+#include "hip/hcc_detail/hip_vector_types.h"
 
 #if __clang_major__ > 3
 
