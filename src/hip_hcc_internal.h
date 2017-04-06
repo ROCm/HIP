@@ -584,22 +584,39 @@ private: // Data
 //----
 // Internal event structure:
 enum hipEventStatus_t {
-   hipEventStatusUnitialized = 0, // event is unutilized, must be "Created" before use.
-   hipEventStatusCreated     = 1,
-   hipEventStatusRecording   = 2, // event has been enqueued to record something.
-   hipEventStatusRecorded    = 3, // event has been recorded - timestamps are valid.
+    hipEventStatusUnitialized = 0, // event is unutilized, must be "Created" before use.
+    hipEventStatusCreated     = 1,
+    hipEventStatusRecording   = 2, // event has been enqueued to record something.
+    hipEventStatusRecorded    = 3, // event has been recorded - timestamps are valid.
 } ;
 
+// TODO - rename to ihip type of some kind
+enum ihipEventType_t {
+    hipEventTypeIndependent,
+    hipEventTypeStartCommand,
+    hipEventTypeStopCommand,
+};
 
 // internal hip event structure.
-struct ihipEvent_t {
-    hipEventStatus_t       _state;
+class ihipEvent_t {
+public:
+    ihipEvent_t(unsigned flags);
+    void attachToCompletionFuture(const hc::completion_future *cf, ihipEventType_t eventType);
+    void setTimestamp();
+    uint64_t timestamp() const { return _timestamp; } ;
+
+public:
+    hipEventStatus_t      _state;
 
     hipStream_t           _stream;  // Stream where the event is recorded, or NULL if all streams.
     unsigned              _flags;
 
     hc::completion_future _marker;
+
+private:
+    ihipEventType_t       _type;
     uint64_t              _timestamp;  // store timestamp, may be set on host or by marker.
+friend hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream);
 } ;
 
 
@@ -821,8 +838,6 @@ extern hipError_t    ihipDeviceSetState();
 
 extern ihipDevice_t *ihipGetDevice(int);
 ihipCtx_t * ihipGetPrimaryCtx(unsigned deviceIndex);
-
-extern void ihipSetTs(hipEvent_t e);
 
 
 hipStream_t ihipSyncAndResolveStream(hipStream_t);
