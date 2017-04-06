@@ -9,23 +9,23 @@
 
 <!-- tocstop -->
 
-### Errors related to undefined reference to `__hcLaunchKernel__***__grid_launch_parm**
+### Errors related to undefined reference to `__hcLaunchKernel__***__grid_launch_parm**`
 
 Some common code practices may lead to hipcc generating a error with the form :
 undefined reference to `__hcLaunchKernel__ZN15vecAddNamespace6vecAddIidEEv16grid_launch_parmPT0_S3_S3_T_
 
-To workaround, try:
-- Avoid calling hipLaunchKernel from a function with the __host__ attribute
-```
-__host__ MyFunc(…) {
-hipLaunchKernel(myKernel, …)
-```
+Suggested workarounds:
 - Avoid use of static with kernel definition:
+```c++
 static __global__ MyKernel 
-- Avoid defining kernels in anonymous namespace
+```
+
+- Avoid defining kernels in anonymous namespace :
+```c++
 namespace {
-__global__ MyKernel …
-- Avoid calling member functions 
+  __global__ MyKernel
+}
+```
 
 
 ### What is the current limitation of HIP Generic Grid Launch method?
