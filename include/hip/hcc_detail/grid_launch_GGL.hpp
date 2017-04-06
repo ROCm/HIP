@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
+#if GENERIC_GRID_LAUNCH == 1
 
 #include "concepts.hpp"
 #include "helpers.hpp"
@@ -851,3 +852,4 @@ namespace hip_impl
             ##__VA_ARGS__);\
     }
 }
+#endif //GENERIC_GRID_LAUNCH
