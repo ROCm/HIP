@@ -1270,6 +1270,15 @@ __device__ __host__ static inline type operator op (type& val, int) { \
 #define DECLOP_1VAR_COMP(type, op) \
 __device__ __host__ static inline bool operator op (type& lhs, type& rhs) { \
   return lhs.x op rhs.x; \
+} \
+__device__ __host__ static inline bool operator op (const type& lhs, type& rhs) { \
+  return lhs.x op rhs.x; \
+} \
+__device__ __host__ static inline bool operator op (type& lhs, const type& rhs) { \
+  return lhs.x op rhs.x ; \
+} \
+__device__ __host__ static inline bool operator op (const type& lhs, const type& rhs) { \
+  return lhs.x op rhs.x ; \
 }
 
 #define DECLOP_1VAR_1IN_1OUT(type, op) \
@@ -1337,6 +1346,15 @@ __device__ __host__ static inline type operator op (type& val, int) { \
 
 #define DECLOP_2VAR_COMP(type, op) \
 __device__ __host__ static inline bool operator op (type& lhs, type& rhs) { \
+  return (lhs.x op rhs.x) && (lhs.y op rhs.y); \
+} \
+__device__ __host__ static inline bool operator op (const type& lhs, type& rhs) { \
+  return (lhs.x op rhs.x) && (lhs.y op rhs.y); \
+} \
+__device__ __host__ static inline bool operator op (type& lhs, const type& rhs) { \
+  return (lhs.x op rhs.x) && (lhs.y op rhs.y); \
+} \
+__device__ __host__ static inline bool operator op (const type& lhs, const type& rhs) { \
   return (lhs.x op rhs.x) && (lhs.y op rhs.y); \
 }
 
@@ -1415,7 +1433,16 @@ __device__ __host__ static inline type operator op (type& val, int) { \
 #define DECLOP_3VAR_COMP(type, op) \
 __device__ __host__ static inline bool operator op (type& lhs, type& rhs) { \
   return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z); \
-}
+} \
+__device__ __host__ static inline bool operator op (const type& lhs, type& rhs) { \
+  return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z); \
+} \
+__device__ __host__ static inline bool operator op (type& lhs, const type& rhs) { \
+  return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z); \
+} \
+__device__ __host__ static inline bool operator op (const type& lhs, const type& rhs) { \
+  return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z); \
+} \
 
 #define DECLOP_3VAR_1IN_1OUT(type, op) \
 __device__ __host__ static inline type operator op(type &rhs) { \
@@ -1499,6 +1526,15 @@ __device__ __host__ static inline type operator op (type& val, int) { \
 
 #define DECLOP_4VAR_COMP(type, op) \
 __device__ __host__ static inline bool operator op (type& lhs, type& rhs) { \
+  return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z) && (lhs.w op rhs.w); \
+} \
+__device__ __host__ static inline bool operator op (const type& lhs, type& rhs) { \
+  return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z) && (lhs.w op rhs.w); \
+} \
+__device__ __host__ static inline bool operator op (type& lhs, const type& rhs) { \
+  return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z) && (lhs.w op rhs.w); \
+} \
+__device__ __host__ static inline bool operator op (const type& lhs, const type& rhs) { \
   return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z) && (lhs.w op rhs.w); \
 }
 
