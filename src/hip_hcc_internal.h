@@ -604,6 +604,7 @@ public:
     void attachToCompletionFuture(const hc::completion_future *cf, ihipEventType_t eventType);
     void setTimestamp();
     uint64_t timestamp() const { return _timestamp; } ;
+    ihipEventType_t type() const { return _type; };
 
 public:
     hipEventStatus_t      _state;

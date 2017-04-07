@@ -368,7 +368,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
                                   uint32_t localWorkSizeX, uint32_t localWorkSizeY, uint32_t localWorkSizeZ,
                                   size_t sharedMemBytes, hipStream_t hStream,
                                   void **kernelParams, void **extra,
-                                  hipEvent_t *startEvent, hipEvent_t *stopEvent)
+                                  hipEvent_t startEvent, hipEvent_t stopEvent)
 {
 
     auto ctx = ihipGetTlsDefaultCtx();
@@ -455,10 +455,10 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
 
 
         if (startEvent) {
-            (*startEvent)->attachToCompletionFuture(&cf, hipEventTypeStartCommand);
+            startEvent->attachToCompletionFuture(&cf, hipEventTypeStartCommand);
         }
         if (stopEvent) {
-            (*stopEvent)->attachToCompletionFuture (&cf, hipEventTypeStopCommand);
+            stopEvent->attachToCompletionFuture (&cf, hipEventTypeStopCommand);
         }
 
 
@@ -494,7 +494,7 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f,
             uint32_t localWorkSizeX, uint32_t localWorkSizeY, uint32_t localWorkSizeZ,
             size_t sharedMemBytes, hipStream_t hStream,
             void **kernelParams, void **extra,
-            hipEvent_t *startEvent, hipEvent_t *stopEvent)
+            hipEvent_t startEvent, hipEvent_t stopEvent)
 {
     HIP_INIT_API(f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ,
                  localWorkSizeX, localWorkSizeY, localWorkSizeZ,
