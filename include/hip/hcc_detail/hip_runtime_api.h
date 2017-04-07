@@ -1913,19 +1913,18 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image);
 /**
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed to kernelparams or extra
  *
- * @param [in[ f
- * @param [in] gridDimX
- * @param [in] gridDimY
- * @param [in] gridDimZ
- * @param [in] blockDimX
- * @param [in] blockDimY
- * @param [in] blockDimZ
- * @param [in] sharedMemBytes
- * @param [in] stream
- * @param [in] kernelParams
- * @param [in] extraa
+ * @param [in[ f	 Kernel to launch.
+ * @param [in] gridDimX  X grid dimension specified as multiple of blockDimX.
+ * @param [in] gridDimY  Y grid dimension specified as multiple of blockDimY.
+ * @param [in] gridDimZ  Z grid dimension specified as multiple of blockDimZ.
+ * @param [in] blockDimX X block dimensions specified in work-items
+ * @param [in] blockDimY Y grid dimension specified in work-items
+ * @param [in] blockDimZ Z grid dimension specified in work-items
+ * @param [in] sharedMemBytes Amount of dynamic shared memory to allocate for this kernel.  The kernel can access this with HIP_DYNAMIC_SHARED.
+ * @param [in] stream Stream where the kernel should be dispatched.  May be 0, in which case th default stream is used with associated synchronization rules.
+ * @param [in] kernelParams 
+ * @param [in] extra     Pointer to kernel arguments.   These are passed directly to the kernel and must be in the memory layout and alignment expected by the kernel.
  *
- * The function takes the above arguments and run the kernel in hipFunction_t f.  with launch parameters specified in gridDimX, gridDimY, gridDimZ,  blockDimX, blockDimY and blockDimmZ. The amount of shared memory is specificed and can be used with HIP_DYNAMIC_SHARED. The arguemt extra is used to pass in the arguments for the kernel.
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
  * @warning kernellParams argument is not yet implemented in HIP. Please use extra instead. Please refer to hip_porting_driver_api.md for sample usage.

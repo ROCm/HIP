@@ -32,7 +32,7 @@ THE SOFTWARE.
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
-#include "host_defines.h"
+#include "hip/hcc_detail/host_defines.h"
 
 #define MAKE_DEFAULT_CONSTRUCTOR_ONE_COMPONENT(type) \
 __device__ __host__ type() {} \

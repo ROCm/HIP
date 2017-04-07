@@ -11,7 +11,6 @@
 #include <elf.h>
 #include <hsa/hsa.h>
 #include <hc.hpp>
-#include <hip/hcc_detail/hcc_acc.h>
 #endif
 
 #include <sys/time.h>

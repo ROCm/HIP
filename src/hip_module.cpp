@@ -364,10 +364,11 @@ hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod,
 
 
 hipError_t ihipModuleLaunchKernel(hipFunction_t f,
-            uint32_t globalWorkSizeX, uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
-            uint32_t localWorkSizeX, uint32_t localWorkSizeY, uint32_t localWorkSizeZ,
-            size_t sharedMemBytes, hipStream_t hStream,
-            void **kernelParams, void **extra)
+                                  uint32_t globalWorkSizeX, uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
+                                  uint32_t localWorkSizeX, uint32_t localWorkSizeY, uint32_t localWorkSizeZ,
+                                  size_t sharedMemBytes, hipStream_t hStream,
+                                  void **kernelParams, void **extra,
+                                  hipEvent_t startEvent, hipEvent_t stopEvent)
 {
 
     auto ctx = ihipGetTlsDefaultCtx();
@@ -446,7 +447,20 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
                           (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
         };
 
-        lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize, nullptr/*completion_future*/);
+
+        hc::completion_future cf;
+
+        lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize, 
+                                  (startEvent || stopEvent) ? &cf : nullptr);
+
+
+        if (startEvent) {
+            startEvent->attachToCompletionFuture(&cf, hipEventTypeStartCommand);
+        }
+        if (stopEvent) {
+            stopEvent->attachToCompletionFuture (&cf, hipEventTypeStopCommand);
+        }
+
 
         if(kernelParams != NULL){
           free(config[1]);
@@ -470,7 +484,8 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
     return ihipLogStatus(ihipModuleLaunchKernel(f,
                 blockDimX * gridDimX, blockDimY * gridDimY, gridDimZ * blockDimZ,
                 blockDimX, blockDimY, blockDimZ,
-                sharedMemBytes, hStream, kernelParams, extra));
+                sharedMemBytes, hStream, kernelParams, extra,
+                nullptr, nullptr));
 }
 
 
@@ -478,7 +493,8 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f,
             uint32_t globalWorkSizeX, uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
             uint32_t localWorkSizeX, uint32_t localWorkSizeY, uint32_t localWorkSizeZ,
             size_t sharedMemBytes, hipStream_t hStream,
-            void **kernelParams, void **extra)
+            void **kernelParams, void **extra,
+            hipEvent_t startEvent, hipEvent_t stopEvent)
 {
     HIP_INIT_API(f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ,
                  localWorkSizeX, localWorkSizeY, localWorkSizeZ,
@@ -486,7 +502,7 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f,
                  kernelParams, extra);
     return ihipLogStatus(ihipModuleLaunchKernel(f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ,
                 localWorkSizeX, localWorkSizeY, localWorkSizeZ,
-                sharedMemBytes, hStream, kernelParams, extra));
+                sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent));
 }
 
 hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes,

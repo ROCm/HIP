@@ -1641,23 +1641,6 @@ const char *ihipErrorString(hipError_t hip_error)
 };
 
 
-void ihipSetTs(hipEvent_t e)
-{
-    ihipEvent_t *eh = e;
-    if (eh->_state == hipEventStatusRecorded) {
-        // already recorded, done:
-        return;
-    } else {
-        // TODO - use completion-future functions to obtain ticks and timestamps:
-        hsa_signal_t *sig  = static_cast<hsa_signal_t*> (eh->_marker.get_native_handle());
-        if (sig) {
-            if (hsa_signal_load_acquire(*sig) == 0) {
-                eh->_timestamp = eh->_marker.get_end_tick();
-                eh->_state = hipEventStatusRecorded;
-            }
-        }
-    }
-}
 
 
 // Returns true if copyEngineCtx can see the memory allocated on dstCtx and srcCtx.
