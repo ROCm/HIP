@@ -4,7 +4,7 @@
 
 - [What APIs and features does HIP support?](#what-apis-and-features-does-hip-support)
 - [What is not supported?](#what-is-not-supported)
-  * [Run-time features](#run-time-features)
+  * [Runtime/Driver API features](#runtimedriver-api-features)
   * [Kernel language features](#kernel-language-features)
 - [Is HIP a drop-in replacement for CUDA?](#is-hip-a-drop-in-replacement-for-cuda)
 - [What specific version of CUDA does HIP support?](#what-specific-version-of-cuda-does-hip-support)
@@ -23,10 +23,11 @@
 - [On HCC, can I link HIP code with host code compiled with another compiler such as gcc, icc, or clang ?](#on-hcc-can-i-link-hip-code-with-host-code-compiled-with-another-compiler-such-as-gcc-icc-or-clang-)
 - [HIP detected my platform (hcc vs nvcc) incorrectly - what should I do?](#hip-detected-my-platform-hcc-vs-nvcc-incorrectly---what-should-i-do)
 - [Can I install both CUDA SDK and HCC on same machine?](#can-i-install-both-cuda-sdk-and-hcc-on-same-machine)
+- [On CUDA, can I mix CUDA code with HIP code?](#on-cuda-can-i-mix-cuda-code-with-hip-code)
+- [On HCC, can I use HC functionality with HIP?](#on-hcc-can-i-use-hc-functionality-with-hip)
 - [How do I trace HIP application flow?](#how-do-i-trace-hip-application-flow)
-  * [Using CodeXL markers for HIP Functions](#using-codexl-markers-for-hip-functions)
-  * [Using HIP_TRACE_API](#using-hip_trace_api)
-- [How do I enable HIP Generic Grid Launch option?](#how-do-i-enable-hip-generic-grid-launch-option)
+- [What if HIP generates error of "symbol multiply defined!" only on AMD machine?](#what-if-hip-generates-error-of-symbol-multiply-defined-only-on-amd-machine)
+- [How do I disable HIP Generic Grid Launch option?](#how-do-i-disable-hip-generic-grid-launch-option)
 
 <!-- tocstop -->
 
