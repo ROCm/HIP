@@ -44,6 +44,7 @@
 - [Pragma Unroll](#pragma-unroll)
 - [In-Line Assembly](#in-line-assembly)
 - [C++ Support](#c-support)
+- [Kernel Compilation](#kernel-compilation)
 
 <!-- tocstop -->
 

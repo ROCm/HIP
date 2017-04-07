@@ -10,9 +10,6 @@ OPT=-O3
 CXXFLAGS =  $(OPT) --std=c++11
 
 HIP_PLATFORM=$(shell $(HIP_PATH)/bin/hipconfig --platform)
-ifeq (${HIP_PLATFORM}, hcc)
-	CXXFLAGS += " -stdlib=libc++"
-endif
 
 CODE_OBJECTS=nullkernel.hsaco
 
