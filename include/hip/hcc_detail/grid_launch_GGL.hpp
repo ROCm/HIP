@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
+#if GENERIC_GRID_LAUNCH == 1
 
 #include "concepts.hpp"
 #include "helpers.hpp"
@@ -840,14 +841,16 @@ namespace hip_impl
         group_mem_bytes,\
         stream,\
         ...)\
-    {\
-        hipLaunchKernelGGL(\
-            kernel_name,\
-            num_blocks,\
-            dim_blocks,\
-            group_mem_bytes,\
-            stream,\
-            hipLaunchParm{},\
-            ##__VA_ARGS__);\
-    }
+   do {\
+    hipLaunchKernelGGL(\
+        kernel_name,\
+        num_blocks,\
+        dim_blocks,\
+        group_mem_bytes,\
+        stream,\
+        hipLaunchParm{},\
+        ##__VA_ARGS__);\
+   } while(0)
+
 }
+#endif //GENERIC_GRID_LAUNCH

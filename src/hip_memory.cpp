@@ -1260,10 +1260,15 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
 
     ihipIpcMemHandle_t* iHandle = (ihipIpcMemHandle_t*) &handle;
     //Attach ipc memory
-    hsa_status_t hsa_status =
-        hsa_amd_ipc_memory_attach((hsa_amd_ipc_memory_t*)&(iHandle->ipc_handle), iHandle->psize, 1, agent, devPtr);
-    if(hsa_status != HSA_STATUS_SUCCESS)
-        hipStatus = hipErrorMapBufferObjectFailed;
+    auto ctx= ihipGetTlsDefaultCtx();
+    {
+        LockedAccessor_CtxCrit_t crit(ctx->criticalData());
+        // the peerCnt always stores self so make sure the trace actually
+        hsa_status_t hsa_status =
+         hsa_amd_ipc_memory_attach((hsa_amd_ipc_memory_t*)&(iHandle->ipc_handle), iHandle->psize, crit->peerCnt(), crit->peerAgents(), devPtr);
+        if(hsa_status != HSA_STATUS_SUCCESS)
+            hipStatus = hipErrorMapBufferObjectFailed;
+    }    
 #else
     hipStatus = hipErrorRuntimeOther;
 #endif
