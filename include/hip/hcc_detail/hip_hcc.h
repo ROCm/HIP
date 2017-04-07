@@ -28,6 +28,17 @@ THE SOFTWARE.
 #if __cplusplus
 #ifdef __HCC__
 #include <hc.hpp>
+
+
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup HCC-specific features
+ *  @warning These APIs provide access to special features of HCC compiler and are not available through the CUDA path.
+ *  @{
+ */
+
+
 /**
  * @brief Return hc::accelerator associated with the specified deviceId
  * @return #hipSuccess, #hipErrorInvalidDevice
@@ -45,6 +56,29 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **a
 
 #endif // #ifdef __HCC__
 
+/**
+ * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed to kernelparams or extra
+ *
+ * @param [in[ f	 Kernel to launch.
+ * @param [in] gridDimX  X grid dimension specified in work-items
+ * @param [in] gridDimY  Y grid dimension specified in work-items
+ * @param [in] gridDimZ  Z grid dimension specified in work-items
+ * @param [in] blockDimX X block dimensions specified in work-items
+ * @param [in] blockDimY Y grid dimension specified in work-items
+ * @param [in] blockDimZ Z grid dimension specified in work-items
+ * @param [in] sharedMemBytes Amount of dynamic shared memory to allocate for this kernel.  The kernel can access this with HIP_DYNAMIC_SHARED.
+ * @param [in] stream Stream where the kernel should be dispatched.  May be 0, in which case th default stream is used with associated synchronization rules.
+ * @param [in] kernelParams 
+ * @param [in] extra     Pointer to kernel arguments.   These are passed directly to the kernel and must be in the memory layout and alignment expected by the kernel.
+ * @param [in] startEvent  If non-null, specified event will be updated to track the start time of the kernel launch.  The event must be created before calling this API. 
+ * @param [in] stopEvent   If non-null, specified event will be updated to track the stop time of the kernel launch.  The event must be created before calling this API.
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ * 
+ * @warning kernellParams argument is not yet implemented in HIP. Please use extra instead. Please refer to hip_porting_driver_api.md for sample usage.
+
+ * HIP/ROCm actually updates the start event when the associated kernel completes.
+ */
 hipError_t hipHccModuleLaunchKernel(hipFunction_t f,
                                     uint32_t globalWorkSizeX,
                                     uint32_t globalWorkSizeY,
@@ -55,8 +89,15 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f,
                                     size_t sharedMemBytes,
                                     hipStream_t hStream,
                                     void **kernelParams,
-                                    void **extra);
+                                    void **extra,
+                                    hipEvent_t startEvent=nullptr,
+                                    hipEvent_t stopEvent=nullptr
+                                    );
 
+// doxygen end HCC-specific features
+/**
+ * @}
+ */
 #endif // #if __cplusplus
 
 #endif //
