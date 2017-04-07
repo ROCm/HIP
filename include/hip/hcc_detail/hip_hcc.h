@@ -70,15 +70,14 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **a
  * @param [in] stream Stream where the kernel should be dispatched.  May be 0, in which case th default stream is used with associated synchronization rules.
  * @param [in] kernelParams 
  * @param [in] extra     Pointer to kernel arguments.   These are passed directly to the kernel and must be in the memory layout and alignment expected by the kernel.
- * @param [in] startEvent  If non-null, specified event will be updated to track the start time of the kernel launch.  The event must be created before calling this API.
+ * @param [in] startEvent  If non-null, specified event will be updated to track the start time of the kernel launch.  The event must be created before calling this API. 
  * @param [in] stopEvent   If non-null, specified event will be updated to track the stop time of the kernel launch.  The event must be created before calling this API.
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
-
- * If startNanos or stopNanos is specified, this API will record and return the start and stop timestamps for the command. The timestamps are collected on the GPU device 
- * and converted into ns resolution.  Typically programs will specify both pointers.  Collecting performance timestamps may have a small overhead (approx 1us).
  * 
  * @warning kernellParams argument is not yet implemented in HIP. Please use extra instead. Please refer to hip_porting_driver_api.md for sample usage.
+
+ * HIP/ROCm actually updates the start event when the associated kernel completes.
  */
 hipError_t hipHccModuleLaunchKernel(hipFunction_t f,
                                     uint32_t globalWorkSizeX,
@@ -91,8 +90,8 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f,
                                     hipStream_t hStream,
                                     void **kernelParams,
                                     void **extra,
-                                    uint64_t *startNanos=nullptr,
-                                    uint64_t *stopNanos=nullptr
+                                    hipEvent_t startEvent=nullptr,
+                                    hipEvent_t stopEvent=nullptr
                                     );
 
 // doxygen end HCC-specific features
