@@ -48,7 +48,7 @@ THE SOFTWARE.
 #define __global__  __attribute__((hc_grid_launch)) __attribute__((used))
 #else
 //#warning "GGL global define reached"
-#define __global__ [[hc]] __attribute__((weak))
+#define __global__ __attribute__((hc, weak))
 #endif //GENERIC_GRID_LAUNCH
 
 #define __noinline__      __attribute__((noinline))

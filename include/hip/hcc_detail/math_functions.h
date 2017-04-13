@@ -51,6 +51,7 @@ __device__ float exp10f(float x);
 __device__ float exp2f(float x);
 __device__ float expf(float x);
 __device__ float expm1f(float x);
+__device__ int abs(int x);
 __device__ float fabsf(float x);
 __device__ float fdimf(float x, float y);
 __device__ float fdividef(float x, float y);
