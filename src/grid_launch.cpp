@@ -27,6 +27,9 @@ THE SOFTWARE.
 #include "hc.hpp"
 #include "trace_helper.h"
 
+#include <iostream>
+#include <sstream>
+
 namespace hip_impl
 {
     hc::accelerator_view lock_stream_hip_(
@@ -40,6 +43,39 @@ namespace hip_impl
         stream = ihipSyncAndResolveStream(stream);
         locked_stream = new L{stream->lockopen_preKernelCommand()};
         return (*static_cast<L*>(locked_stream))->_av;
+    }
+
+    void print_prelaunch_trace_(
+        const char* kernel_name,
+        dim3 num_blocks,
+        dim3 dim_blocks,
+        int group_mem_bytes,
+        hipStream_t stream)
+    {
+        if ((HIP_TRACE_API & (1 << TRACE_CMD)) ||
+            HIP_PROFILE_API ||
+            (COMPILE_HIP_DB && HIP_TRACE_API)) {
+            std::stringstream os;
+            os  << tls_tidInfo.tid() << "." << tls_tidInfo.apiSeqNum()
+                << " hipLaunchKernel '" << kernel_name << "'"
+                << " gridDim:"  << num_blocks
+                << " groupDim:" << dim_blocks
+                << " sharedMem:+" << group_mem_bytes
+                << " " << *stream;
+
+            if (HIP_PROFILE_API == 0x1) {
+                std::string shortAtpString("hipLaunchKernel:");
+                shortAtpString += kernel_name;
+                MARKER_BEGIN(shortAtpString.c_str(), "HIP");
+            } else if (HIP_PROFILE_API == 0x2) {
+                MARKER_BEGIN(os.str().c_str(), "HIP");
+            }
+
+            if (COMPILE_HIP_DB && HIP_TRACE_API) {
+                std::cerr << API_COLOR << os.str() << API_COLOR_END
+                          << std::endl;
+            }
+        }
     }
 
     void unlock_stream_hip_(
