@@ -142,7 +142,7 @@ add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 # Build steps
 #############################
 # Rebuild cmake cache updates .hipInfo and .hipVersion
-add_custom_target(update_build_and_version_info ALL COMMAND make rebuild_cache)
+add_custom_target(update_build_and_version_info COMMAND make rebuild_cache)
 
 # Build clang hipify if enabled
 add_subdirectory(hipify-clang)
