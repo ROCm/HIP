@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
+
 #if GENERIC_GRID_LAUNCH == 1
 
 #include "concepts.hpp"
@@ -71,7 +72,7 @@ namespace hip_impl
 
         template<FunctionalProcedure F, typename... Ts>
         using is_new_grid_launch_t = typename std::conditional<
-            std::is_callable<F(Ts...)>{},
+            is_callable<F(Ts...)>{},
             New_grid_launch_tag,
             Old_grid_launch_tag>::type;
     }
@@ -118,6 +119,7 @@ namespace hip_impl
     // TODO: these are workarounds, they should be removed.
 
     hc::accelerator_view lock_stream_hip_(hipStream_t&, void*&);
+    void print_prelaunch_trace_(const char*, dim3, dim3, int, hipStream_t);
     void unlock_stream_hip_(
         hipStream_t, void*, const char*, hc::accelerator_view*);
 
@@ -137,7 +139,13 @@ namespace hip_impl
         void* lck_stream = nullptr;
         auto acc_v = lock_stream_hip_(stream, lck_stream);
         auto stream_guard = make_RAII_guard(
-            [](){ /* perhaps use a slimmed down ihipPrintKernelLaunch here */ },
+            std::bind(
+                print_prelaunch_trace_,
+                kernel_name,
+                num_blocks,
+                dim_blocks,
+                group_mem_bytes,
+                stream),
             std::bind(
                 unlock_stream_hip_, stream, lck_stream, kernel_name, &acc_v));
 
@@ -841,16 +849,15 @@ namespace hip_impl
         group_mem_bytes,\
         stream,\
         ...)\
-   do {\
-    hipLaunchKernelGGL(\
-        kernel_name,\
-        num_blocks,\
-        dim_blocks,\
-        group_mem_bytes,\
-        stream,\
-        hipLaunchParm{},\
-        ##__VA_ARGS__);\
-   } while(0)
-
+    do {\
+        hipLaunchKernelGGL(\
+            kernel_name,\
+            num_blocks,\
+            dim_blocks,\
+            group_mem_bytes,\
+            stream,\
+            hipLaunchParm{},\
+            ##__VA_ARGS__);\
+    } while(0)
 }
 #endif //GENERIC_GRID_LAUNCH

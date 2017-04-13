@@ -114,6 +114,10 @@ __device__ float expm1f(float x)
 {
     return hc::precise_math::expm1f(x);
 }
+__device__ int abs(int x)
+{
+    return x >= 0 ? x : -x; // TODO - optimize with OCML
+}
 __device__ float fabsf(float x)
 {
     return hc::precise_math::fabsf(x);
