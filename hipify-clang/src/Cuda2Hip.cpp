@@ -81,6 +81,7 @@ enum ConvTypes {
   CONV_GL,
   CONV_GRAPHICS,
   CONV_SURFACE,
+  CONV_JIT,
   CONV_OTHER,
   CONV_INCLUDE,
   CONV_INCLUDE_CUDA_MAIN_H,
@@ -94,7 +95,7 @@ const char *counterNames[CONV_LAST] = {
     "driver",       "dev",     "mem",   "kern",      "coord_func", "math_func",
     "special_func", "stream",  "event", "occupancy", "ctx",        "module",
     "cache",        "exec",    "err",   "def",       "tex",        "gl",
-    "graphics",     "surface", "other", "include",   "include_cuda_main_header",
+    "graphics",     "surface", "jit",   "other",     "include",    "include_cuda_main_header",
     "type",         "literal", "numeric_literal"};
 
 enum ApiTypes {
@@ -190,24 +191,23 @@ struct cuda2hipMap {
 
     // Error codes and return types
     cuda2hipRename["CUresult"]                                  = {"hipError_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["cudaError_enum"]                            = {"hipError_t", CONV_TYPE, API_DRIVER};
     cuda2hipRename["cudaError_t"]                               = {"hipError_t", CONV_TYPE, API_RUNTIME};
     cuda2hipRename["cudaError"]                                 = {"hipError_t", CONV_TYPE, API_RUNTIME};
 
-    // CUDA Driver API error code only
-    cuda2hipRename["CUDA_ERROR_INVALID_CONTEXT"]                = {"hipErrorInvalidContext", CONV_ERR, API_DRIVER};
-    cuda2hipRename["CUDA_ERROR_CONTEXT_ALREADY_CURRENT"]        = {"hipErrorContextAlreadyCurrent", CONV_ERR, API_DRIVER};
-    cuda2hipRename["CUDA_ERROR_MAP_FAILED"]                     = {"hipErrorMapFailed", CONV_ERR, API_DRIVER};
-    cuda2hipRename["CUDA_ERROR_UNMAP_FAILED"]                   = {"hipErrorUnmapFailed", CONV_ERR, API_DRIVER};
-    cuda2hipRename["CUDA_ERROR_ARRAY_IS_MAPPED"]                = {"hipErrorArrayIsMapped", CONV_ERR, API_DRIVER};
-    cuda2hipRename["CUDA_ERROR_ALREADY_MAPPED"]                 = {"hipErrorAlreadyMapped", CONV_ERR, API_DRIVER};
-    cuda2hipRename["CUDA_ERROR_ALREADY_ACQUIRED"]               = {"hipErrorAlreadyAcquired", CONV_ERR, API_DRIVER};
-    cuda2hipRename["CUDA_ERROR_NOT_MAPPED"]                     = {"hipErrorNotMapped", CONV_ERR, API_DRIVER};
-    cuda2hipRename["CUDA_ERROR_NOT_MAPPED_AS_ARRAY"]            = {"hipErrorNotMappedAsArray", CONV_ERR, API_DRIVER};
-    cuda2hipRename["CUDA_ERROR_NOT_MAPPED_AS_POINTER"]          = {"hipErrorNotMappedAsPointer", CONV_ERR, API_DRIVER};
-    cuda2hipRename["CUDA_ERROR_CONTEXT_ALREADY_IN_USE"]         = {"hipErrorContextAlreadyInUse", CONV_ERR, API_DRIVER};
-    cuda2hipRename["CUDA_ERROR_INVALID_SOURCE"]                 = {"hipErrorInvalidSource", CONV_ERR, API_DRIVER};
-    cuda2hipRename["CUDA_ERROR_FILE_NOT_FOUND"]                 = {"hipErrorFileNotFound", CONV_ERR, API_DRIVER};
-    cuda2hipRename["CUDA_ERROR_NOT_FOUND"]                      = {"hipErrorNotFound", CONV_ERR, API_DRIVER};
+    // CUDA Driver API error codes only
+    cuda2hipRename["CUDA_ERROR_INVALID_CONTEXT"]                = {"hipErrorInvalidContext", CONV_ERR, API_DRIVER};                                 // 201
+    cuda2hipRename["CUDA_ERROR_CONTEXT_ALREADY_CURRENT"]        = {"hipErrorContextAlreadyCurrent", CONV_ERR, API_DRIVER};                          // 202
+    cuda2hipRename["CUDA_ERROR_ARRAY_IS_MAPPED"]                = {"hipErrorArrayIsMapped", CONV_ERR, API_DRIVER};                                  // 207
+    cuda2hipRename["CUDA_ERROR_ALREADY_MAPPED"]                 = {"hipErrorAlreadyMapped", CONV_ERR, API_DRIVER};                                  // 208
+    cuda2hipRename["CUDA_ERROR_ALREADY_ACQUIRED"]               = {"hipErrorAlreadyAcquired", CONV_ERR, API_DRIVER};                                // 210
+    cuda2hipRename["CUDA_ERROR_NOT_MAPPED"]                     = {"hipErrorNotMapped", CONV_ERR, API_DRIVER};                                      // 211
+    cuda2hipRename["CUDA_ERROR_NOT_MAPPED_AS_ARRAY"]            = {"hipErrorNotMappedAsArray", CONV_ERR, API_DRIVER};                               // 212
+    cuda2hipRename["CUDA_ERROR_NOT_MAPPED_AS_POINTER"]          = {"hipErrorNotMappedAsPointer", CONV_ERR, API_DRIVER};                             // 213
+    cuda2hipRename["CUDA_ERROR_CONTEXT_ALREADY_IN_USE"]         = {"hipErrorContextAlreadyInUse", CONV_ERR, API_DRIVER};                            // 216
+    cuda2hipRename["CUDA_ERROR_INVALID_SOURCE"]                 = {"hipErrorInvalidSource", CONV_ERR, API_DRIVER};                                  // 300
+    cuda2hipRename["CUDA_ERROR_FILE_NOT_FOUND"]                 = {"hipErrorFileNotFound", CONV_ERR, API_DRIVER};                                   // 301
+    cuda2hipRename["CUDA_ERROR_NOT_FOUND"]                      = {"hipErrorNotFound", CONV_ERR, API_DRIVER};                                       // 500
 
     // CUDA RT API error code only
     cuda2hipRename["cudaErrorMissingConfiguration"]             = {"hipErrorMissingConfiguration", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 1
@@ -216,8 +216,6 @@ struct cuda2hipMap {
     cuda2hipRename["cudaErrorInvalidConfiguration"]             = {"hipErrorInvalidConfiguration", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 9
     cuda2hipRename["cudaErrorInvalidPitchValue"]                = {"hipErrorInvalidPitchValue", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 12
     cuda2hipRename["cudaErrorInvalidSymbol"]                    = {"hipErrorInvalidSymbol", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 13
-    cuda2hipRename["cudaErrorMapBufferObjectFailed"]            = {"hipErrorMapBufferObjectFailed", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 14
-    cuda2hipRename["cudaErrorUnmapBufferObjectFailed"]          = {"hipErrorUnmapBufferObjectFailed", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 15
     cuda2hipRename["cudaErrorInvalidHostPointer"]               = {"hipErrorInvalidHostPointer", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 16
     cuda2hipRename["cudaErrorInvalidDevicePointer"]             = {"hipErrorInvalidDevicePointer", CONV_ERR, API_RUNTIME}; // 17
     cuda2hipRename["cudaErrorInvalidTexture"]                   = {"hipErrorInvalidTexture", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 18
@@ -262,17 +260,96 @@ struct cuda2hipMap {
     // Deprecated as of CUDA 4.1
     cuda2hipRename["cudaErrorApiFailureBase"]                   = {"hipErrorApiFailureBase", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 10000
 
-    cuda2hipRename["CUDA_SUCCESS"]                              = {"hipSuccess", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaSuccess"]                               = {"hipSuccess", CONV_ERR, API_RUNTIME}; // 0
 
-    cuda2hipRename["CUDA_ERROR_OUT_OF_MEMORY"]                  = {"hipErrorMemoryAllocation", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorMemoryAllocation"]                 = {"hipErrorMemoryAllocation", CONV_ERR, API_RUNTIME}; // 2
 
-    cuda2hipRename["CUDA_ERROR_NOT_INITIALIZED"]                = {"hipErrorNotInitialized", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorInitializationError"]              = {"hipErrorInitializationError", CONV_ERR, API_RUNTIME}; // 3
+    cuda2hipRename["CUDA_SUCCESS"]                              = {"hipSuccess", CONV_ERR, API_DRIVER};                                             // 0
+    cuda2hipRename["cudaSuccess"]                               = {"hipSuccess", CONV_ERR, API_RUNTIME};                                            // 0
 
-    cuda2hipRename["CUDA_ERROR_LAUNCH_FAILED"]                  = {"hipErrorLaunchFailure", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorLaunchFailure"]                    = {"hipErrorLaunchFailure", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 4
+    cuda2hipRename["CUDA_ERROR_INVALID_VALUE"]                  = {"hipErrorInvalidValue", CONV_ERR, API_DRIVER};                                   // 1
+    cuda2hipRename["cudaErrorInvalidValue"]                     = {"hipErrorInvalidValue", CONV_ERR, API_RUNTIME};                                  // 11
+
+    cuda2hipRename["CUDA_ERROR_OUT_OF_MEMORY"]                  = {"hipErrorMemoryAllocation", CONV_ERR, API_DRIVER};                               // 2
+    cuda2hipRename["cudaErrorMemoryAllocation"]                 = {"hipErrorMemoryAllocation", CONV_ERR, API_RUNTIME};                              // 2
+
+    cuda2hipRename["CUDA_ERROR_NOT_INITIALIZED"]                = {"hipErrorNotInitialized", CONV_ERR, API_DRIVER};                                 // 3
+    cuda2hipRename["cudaErrorInitializationError"]              = {"hipErrorInitializationError", CONV_ERR, API_RUNTIME};                           // 3
+
+    cuda2hipRename["CUDA_ERROR_DEINITIALIZED"]                  = {"hipErrorDeinitialized", CONV_ERR, API_DRIVER};                                  // 4
+    // TODO: double check, that these errors match
+    cuda2hipRename["cudaErrorCudartUnloading"]                  = {"hipErrorDeinitialized", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};                // 29
+
+    cuda2hipRename["CUDA_ERROR_PROFILER_DISABLED"]              = {"hipErrorProfilerDisabled", CONV_ERR, API_DRIVER};                               // 5
+    cuda2hipRename["cudaErrorProfilerDisabled"]                 = {"hipErrorProfilerDisabled", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};             // 55
+
+    cuda2hipRename["CUDA_ERROR_PROFILER_NOT_INITIALIZED"]       = {"hipErrorProfilerNotInitialized", CONV_ERR, API_DRIVER};                         // 6
+    // Deprecated as of CUDA 5.0
+    cuda2hipRename["cudaErrorProfilerNotInitialized"]           = {"hipErrorProfilerNotInitialized", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};       // 56
+
+    cuda2hipRename["CUDA_ERROR_PROFILER_ALREADY_STARTED"]       = {"hipErrorProfilerAlreadyStarted", CONV_ERR, API_DRIVER};                         // 7
+    // Deprecated as of CUDA 5.0
+    cuda2hipRename["cudaErrorProfilerAlreadyStarted"]           = {"hipErrorProfilerAlreadyStarted", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};       // 57
+
+    cuda2hipRename["CUDA_ERROR_PROFILER_ALREADY_STOPPED"]       = {"hipErrorProfilerAlreadyStopped", CONV_ERR, API_DRIVER};                         // 8
+    // Deprecated as of CUDA 5.0
+    cuda2hipRename["cudaErrorProfilerAlreadyStopped"]           = {"hipErrorProfilerAlreadyStopped", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};       // 58
+
+    cuda2hipRename["CUDA_ERROR_NO_DEVICE"]                      = {"hipErrorNoDevice", CONV_ERR, API_DRIVER};                                       // 100
+    cuda2hipRename["cudaErrorNoDevice"]                         = {"hipErrorNoDevice", CONV_ERR, API_RUNTIME};                                      // 38
+
+    cuda2hipRename["CUDA_ERROR_INVALID_DEVICE"]                 = {"hipErrorInvalidDevice", CONV_ERR, API_DRIVER};                                  // 101
+    cuda2hipRename["cudaErrorInvalidDevice"]                    = {"hipErrorInvalidDevice", CONV_ERR, API_RUNTIME};                                 // 10
+
+    cuda2hipRename["CUDA_ERROR_INVALID_IMAGE"]                  = {"hipErrorInvalidImage", CONV_ERR, API_DRIVER};                                   // 200
+    cuda2hipRename["cudaErrorInvalidKernelImage"]               = {"hipErrorInvalidImage", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};                 // 47
+
+    cuda2hipRename["CUDA_ERROR_MAP_FAILED"]                     = {"hipErrorMapFailed", CONV_ERR, API_DRIVER};                                      // 205
+    // TODO: double check, that these errors match
+    cuda2hipRename["cudaErrorMapBufferObjectFailed"]            = {"hipErrorMapFailed", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};                    // 14
+
+    cuda2hipRename["CUDA_ERROR_UNMAP_FAILED"]                   = {"hipErrorUnmapFailed", CONV_ERR, API_DRIVER};                                    // 206
+    // TODO: double check, that these errors match
+    cuda2hipRename["cudaErrorUnmapBufferObjectFailed"]          = {"hipErrorUnmapFailed", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};                  // 15
+
+    cuda2hipRename["CUDA_ERROR_NO_BINARY_FOR_GPU"]              = {"hipErrorNoBinaryForGpu", CONV_ERR, API_DRIVER};                                 // 209
+    cuda2hipRename["cudaErrorNoKernelImageForDevice"]           = {"hipErrorNoBinaryForGpu", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};               // 48
+
+    cuda2hipRename["CUDA_ERROR_ECC_UNCORRECTABLE"]              = {"hipErrorECCNotCorrectable", CONV_ERR, API_DRIVER};                              // 214
+    cuda2hipRename["cudaErrorECCUncorrectable"]                 = {"hipErrorECCNotCorrectable", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};            // 39
+
+    cuda2hipRename["CUDA_ERROR_UNSUPPORTED_LIMIT"]              = {"hipErrorUnsupportedLimit", CONV_ERR, API_DRIVER};                               // 215
+    cuda2hipRename["cudaErrorUnsupportedLimit"]                 = {"hipErrorUnsupportedLimit", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};             // 42
+
+    cuda2hipRename["CUDA_ERROR_PEER_ACCESS_UNSUPPORTED"]        = {"hipErrorPeerAccessUnsupported", CONV_ERR, API_DRIVER};                          // 217
+    cuda2hipRename["cudaErrorPeerAccessUnsupported"]            = {"hipErrorPeerAccessUnsupported", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};        // 64
+
+    cuda2hipRename["CUDA_ERROR_INVALID_PTX"]                    = {"hipErrorInvalidKernelFile", CONV_ERR, API_DRIVER};                              // 218
+    cuda2hipRename["cudaErrorInvalidPtx"]                       = {"hipErrorInvalidKernelFile", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};            // 78
+
+    cuda2hipRename["CUDA_ERROR_INVALID_GRAPHICS_CONTEXT"]       = {"hipErrorInvalidGraphicsContext", CONV_ERR, API_DRIVER};                         // 219
+    cuda2hipRename["cudaErrorInvalidGraphicsContext"]           = {"hipErrorInvalidGraphicsContext", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};       // 79
+
+    cuda2hipRename["CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND"] = {"hipErrorSharedObjectSymbolNotFound", CONV_ERR, API_DRIVER};                     // 302
+    cuda2hipRename["cudaErrorSharedObjectSymbolNotFound"]       = {"hipErrorSharedObjectSymbolNotFound", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};   // 40
+
+    cuda2hipRename["CUDA_ERROR_SHARED_OBJECT_INIT_FAILED"]      = {"hipErrorSharedObjectInitFailed", CONV_ERR, API_DRIVER};                         // 303
+    cuda2hipRename["cudaErrorSharedObjectInitFailed"]           = {"hipErrorSharedObjectInitFailed", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};       // 41
+
+    cuda2hipRename["CUDA_ERROR_OPERATING_SYSTEM"]               = {"hipErrorOperatingSystem", CONV_ERR, API_DRIVER};                                // 304
+    cuda2hipRename["cudaErrorOperatingSystem"]                  = {"hipErrorOperatingSystem", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};              // 63
+
+    cuda2hipRename["CUDA_ERROR_INVALID_HANDLE"]                 = {"hipErrorInvalidResourceHandle", CONV_ERR, API_DRIVER};                          // 400
+    cuda2hipRename["cudaErrorInvalidResourceHandle"]            = {"hipErrorInvalidResourceHandle", CONV_ERR, API_RUNTIME};                         // 33
+
+    cuda2hipRename["CUDA_ERROR_NOT_READY"]                      = {"hipErrorNotReady", CONV_ERR, API_DRIVER};                                       // 600
+    cuda2hipRename["cudaErrorNotReady"]                         = {"hipErrorNotReady", CONV_ERR, API_RUNTIME};                                      // 34
+
+    cuda2hipRename["CUDA_ERROR_ILLEGAL_ADDRESS"]                = {"hipErrorIllegalAddress", CONV_ERR, API_DRIVER};                                 // 700
+    cuda2hipRename["cudaErrorIllegalAddress"]                   = {"hipErrorIllegalAddress", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};               // 77
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    cuda2hipRename["CUDA_ERROR_LAUNCH_FAILED"]                  = {"hipErrorLaunchFailure", CONV_ERR, API_DRIVER};                                  // 719
+    cuda2hipRename["cudaErrorLaunchFailure"]                    = {"hipErrorLaunchFailure", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED};                // 4
 
     cuda2hipRename["CUDA_ERROR_LAUNCH_TIMEOUT"]                 = {"hipErrorLaunchTimeOut", CONV_ERR, API_DRIVER};
     cuda2hipRename["cudaErrorLaunchTimeout"]                    = {"hipErrorLaunchTimeOut", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 6
@@ -280,48 +357,11 @@ struct cuda2hipMap {
     cuda2hipRename["CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES"]        = {"hipErrorLaunchOutOfResources", CONV_ERR, API_DRIVER};
     cuda2hipRename["cudaErrorLaunchOutOfResources"]             = {"hipErrorLaunchOutOfResources", CONV_ERR, API_RUNTIME}; // 7
 
-    cuda2hipRename["CUDA_ERROR_INVALID_DEVICE"]                 = {"hipErrorInvalidDevice", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorInvalidDevice"]                    = {"hipErrorInvalidDevice", CONV_ERR, API_RUNTIME}; // 10
-
-    cuda2hipRename["CUDA_ERROR_INVALID_VALUE"]                  = {"hipErrorInvalidValue", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorInvalidValue"]                     = {"hipErrorInvalidValue", CONV_ERR, API_RUNTIME}; // 11
-
-    cuda2hipRename["CUDA_ERROR_DEINITIALIZED"]                  = {"hipErrorDeinitialized", CONV_ERR, API_DRIVER};
-    // TODO: double check, that this error matches to hipErrorDeinitialized
-    cuda2hipRename["cudaErrorCudartUnloading"]                  = {"hipErrorDeinitialized", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 29
-
     cuda2hipRename["CUDA_ERROR_UNKNOWN"]                        = {"hipErrorUnknown", CONV_ERR, API_DRIVER};
     cuda2hipRename["cudaErrorUnknown"]                          = {"hipErrorUnknown", CONV_ERR, API_RUNTIME}; // 30
 
-    cuda2hipRename["CUDA_ERROR_INVALID_HANDLE"]                 = {"hipErrorInvalidResourceHandle", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorInvalidResourceHandle"]            = {"hipErrorInvalidResourceHandle", CONV_ERR, API_RUNTIME}; // 33
-
 //    cuda2hipRename["CUDA_ERROR_NOT_INITIALIZED"]                = {"hipErrorInitializationError", CONV_ERR, API_DRIVER};
 //    cuda2hipRename["cudaErrorInitializationError"]              = {"hipErrorInitializationError", CONV_ERR, API_RUNTIME};
-
-    cuda2hipRename["CUDA_ERROR_NOT_READY"]                      = {"hipErrorNotReady", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorNotReady"]                         = {"hipErrorNotReady", CONV_ERR, API_RUNTIME}; // 34
-
-    cuda2hipRename["CUDA_ERROR_NO_DEVICE"]                      = {"hipErrorNoDevice", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorNoDevice"]                         = {"hipErrorNoDevice", CONV_ERR, API_RUNTIME}; // 38
-
-    cuda2hipRename["CUDA_ERROR_ECC_UNCORRECTABLE"]              = {"hipErrorECCNotCorrectable", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorECCUncorrectable"]                 = {"hipErrorECCNotCorrectable", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 39
-
-    cuda2hipRename["CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND"] = {"hipErrorSharedObjectSymbolNotFound", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorSharedObjectSymbolNotFound"]       = {"hipErrorSharedObjectSymbolNotFound", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 40
-
-    cuda2hipRename["CUDA_ERROR_SHARED_OBJECT_INIT_FAILED"]      = {"hipErrorSharedObjectInitFailed", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorSharedObjectInitFailed"]           = {"hipErrorSharedObjectInitFailed", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 41
-
-    cuda2hipRename["CUDA_ERROR_UNSUPPORTED_LIMIT"]              = {"hipErrorUnsupportedLimit", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorUnsupportedLimit"]                 = {"hipErrorUnsupportedLimit", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 42
-
-    cuda2hipRename["CUDA_ERROR_INVALID_IMAGE"]                  = {"hipErrorInvalidImage", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorInvalidKernelImage"]               = {"hipErrorInvalidImage", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 47
-
-    cuda2hipRename["CUDA_ERROR_NO_BINARY_FOR_GPU"]              = {"hipErrorNoBinaryForGpu", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorNoKernelImageForDevice"]           = {"hipErrorNoBinaryForGpu", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 48
 
     cuda2hipRename["CUDA_ERROR_PEER_ACCESS_ALREADY_ENABLED"]    = {"hipErrorPeerAccessAlreadyEnabled", CONV_ERR, API_DRIVER};
     cuda2hipRename["cudaErrorPeerAccessAlreadyEnabled"]         = {"hipErrorPeerAccessAlreadyEnabled", CONV_ERR, API_RUNTIME}; // 50
@@ -329,45 +369,69 @@ struct cuda2hipMap {
     cuda2hipRename["CUDA_ERROR_PEER_ACCESS_NOT_ENABLED"]        = {"hipErrorPeerAccessNotEnabled", CONV_ERR, API_DRIVER};
     cuda2hipRename["cudaErrorPeerAccessNotEnabled"]             = {"hipErrorPeerAccessNotEnabled", CONV_ERR, API_RUNTIME}; // 51
 
-    cuda2hipRename["CUDA_ERROR_PROFILER_DISABLED"]              = {"hipErrorProfilerDisabled", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorProfilerDisabled"]                 = {"hipErrorProfilerDisabled", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 55
-
-    cuda2hipRename["CUDA_ERROR_PROFILER_NOT_INITIALIZED"]       = {"hipErrorProfilerNotInitialized", CONV_ERR, API_DRIVER};
-    // Deprecated as of CUDA 5.0
-    cuda2hipRename["cudaErrorProfilerNotInitialized"]           = {"hipErrorProfilerNotInitialized", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 56
-
-    cuda2hipRename["CUDA_ERROR_PROFILER_ALREADY_STARTED"]       = {"hipErrorProfilerAlreadyStarted", CONV_ERR, API_DRIVER};
-    // Deprecated as of CUDA 5.0
-    cuda2hipRename["cudaErrorProfilerAlreadyStarted"]           = {"hipErrorProfilerAlreadyStarted", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 57
-
-    cuda2hipRename["CUDA_ERROR_PROFILER_ALREADY_STOPPED"]       = {"hipErrorProfilerAlreadyStopped", CONV_ERR, API_DRIVER};
-    // Deprecated as of CUDA 5.0
-    cuda2hipRename["cudaErrorProfilerAlreadyStopped"]           = {"hipErrorProfilerAlreadyStopped", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 58
-
     cuda2hipRename["CUDA_ERROR_HOST_MEMORY_ALREADY_REGISTERED"] = {"hipErrorHostMemoryAlreadyRegistered", CONV_ERR, API_DRIVER};
     cuda2hipRename["cudaErrorHostMemoryAlreadyRegistered"]      = {"hipErrorHostMemoryAlreadyRegistered", CONV_ERR, API_RUNTIME}; // 61
 
     cuda2hipRename["CUDA_ERROR_HOST_MEMORY_NOT_REGISTERED"]     = {"hipErrorHostMemoryNotRegistered", CONV_ERR, API_DRIVER};
     cuda2hipRename["cudaErrorHostMemoryNotRegistered"]          = {"hipErrorHostMemoryNotRegistered", CONV_ERR, API_RUNTIME}; // 62
 
-    cuda2hipRename["CUDA_ERROR_OPERATING_SYSTEM"]               = {"hipErrorOperatingSystem", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorOperatingSystem"]                  = {"hipErrorOperatingSystem", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 63
-
-    cuda2hipRename["CUDA_ERROR_PEER_ACCESS_UNSUPPORTED"]        = {"hipErrorPeerAccessUnsupported", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorPeerAccessUnsupported"]            = {"hipErrorPeerAccessUnsupported", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 64
-
-    cuda2hipRename["CUDA_ERROR_ILLEGAL_ADDRESS"]                = {"hipErrorIllegalAddress", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorIllegalAddress"]                   = {"hipErrorIllegalAddress", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 77
-
-    cuda2hipRename["CUDA_ERROR_INVALID_PTX"]                    = {"hipErrorInvalidKernelFile", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorInvalidPtx"]                       = {"hipErrorInvalidKernelFile", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 78
-
-    cuda2hipRename["CUDA_ERROR_INVALID_GRAPHICS_CONTEXT"]       = {"hipErrorInvalidGraphicsContext", CONV_ERR, API_DRIVER};
-    cuda2hipRename["cudaErrorInvalidGraphicsContext"]           = {"hipErrorInvalidGraphicsContext", CONV_ERR, API_RUNTIME, HIP_UNSUPPORTED}; // 79
-
-
-
     ///////////////////////////// CUDA DRIVER API /////////////////////////////
+    // enums
+    cuda2hipRename["CUDA_ARRAY3D_DESCRIPTOR"]                                     = {"HIP_ARRAY3D_DESCRIPTOR", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_ARRAY_DESCRIPTOR"]                                       = {"HIP_ARRAY_DESCRIPTOR", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_MEMCPY2D"]                                               = {"HIP_MEMCPY2D", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_MEMCPY3D"]                                               = {"HIP_MEMCPY3D", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_MEMCPY3D_PEER"]                                          = {"HIP_MEMCPY3D_PEER", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_POINTER_ATTRIBUTE_P2P_TOKENS"]                           = {"HIP_POINTER_ATTRIBUTE_P2P_TOKENS", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_RESOURCE_DESC"]                                          = {"HIP_RESOURCE_DESC", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CUDA_RESOURCE_VIEW_DESC"]                                     = {"HIP_RESOURCE_VIEW_DESC", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+
+    cuda2hipRename["CUipcEventHandle"]                                            = {"hipIpcEventHandle", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CUipcMemHandle"]                                              = {"hipIpcMemHandle", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+
+
+
+    cuda2hipRename["CUaddress_mode"]                                              = {"hipAddress_mode", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_TR_ADDRESS_MODE_WRAP"]                                     = {"HIP_TR_ADDRESS_MODE_WRAP", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0
+    cuda2hipRename["CU_TR_ADDRESS_MODE_CLAMP"]                                    = {"HIP_TR_ADDRESS_MODE_CLAMP", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 1
+    cuda2hipRename["CU_TR_ADDRESS_MODE_MIRROR"]                                   = {"HIP_TR_ADDRESS_MODE_MIRROR", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 2
+    cuda2hipRename["CU_TR_ADDRESS_MODE_BORDER"]                                   = {"HIP_TR_ADDRESS_MODE_BORDER", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 3
+
+    cuda2hipRename["CUarray_cubemap_face"]                                        = {"hipArray_cubemap_face", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_CUBEMAP_FACE_POSITIVE_X"]                                  = {"HIP_CUBEMAP_FACE_POSITIVE_X", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x00
+    cuda2hipRename["CU_CUBEMAP_FACE_NEGATIVE_X"]                                  = {"HIP_CUBEMAP_FACE_NEGATIVE_X", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x01
+    cuda2hipRename["CU_CUBEMAP_FACE_POSITIVE_Y"]                                  = {"HIP_CUBEMAP_FACE_POSITIVE_Y", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x02
+    cuda2hipRename["CU_CUBEMAP_FACE_NEGATIVE_Y"]                                  = {"HIP_CUBEMAP_FACE_NEGATIVE_Y", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x03
+    cuda2hipRename["CU_CUBEMAP_FACE_POSITIVE_Z"]                                  = {"HIP_CUBEMAP_FACE_POSITIVE_Z", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x04
+    cuda2hipRename["CU_CUBEMAP_FACE_NEGATIVE_Z"]                                  = {"HIP_CUBEMAP_FACE_NEGATIVE_Z", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x05
+
+    cuda2hipRename["CUarray_format"]                                              = {"hipArray_format", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_AD_FORMAT_UNSIGNED_INT8"]                                  = {"HIP_AD_FORMAT_UNSIGNED_INT8", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x01
+    cuda2hipRename["CU_AD_FORMAT_UNSIGNED_INT16"]                                 = {"HIP_AD_FORMAT_UNSIGNED_INT16", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x02
+    cuda2hipRename["CU_AD_FORMAT_UNSIGNED_INT32"]                                 = {"HIP_AD_FORMAT_UNSIGNED_INT32", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x03
+    cuda2hipRename["CU_AD_FORMAT_SIGNED_INT8"]                                    = {"HIP_AD_FORMAT_SIGNED_INT8", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x08
+    cuda2hipRename["CU_AD_FORMAT_SIGNED_INT16"]                                   = {"HIP_AD_FORMAT_SIGNED_INT16", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x09
+    cuda2hipRename["CU_AD_FORMAT_SIGNED_INT32"]                                   = {"HIP_AD_FORMAT_SIGNED_INT32", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x0a
+    cuda2hipRename["CU_AD_FORMAT_HALF"]                                           = {"HIP_AD_FORMAT_HALF", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x10
+    cuda2hipRename["CU_AD_FORMAT_FLOAT"]                                          = {"HIP_AD_FORMAT_FLOAT", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x20
+    // Compute mode
+    cuda2hipRename["CUcomputemode"]                                               = {"hipComputemode", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // API_RUNTIME ANALOGUE (cudaComputeMode)
+    cuda2hipRename["CU_COMPUTEMODE_DEFAULT"]                                      = {"hipComputeModeDefault", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED}; // 0
+    cuda2hipRename["CU_COMPUTEMODE_EXCLUSIVE"]                                    = {"hipComputeModeExclusive", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED}; // 1
+    cuda2hipRename["CU_COMPUTEMODE_PROHIBITED"]                                   = {"hipComputeModeProhibited", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED}; // 2
+    cuda2hipRename["CU_COMPUTEMODE_EXCLUSIVE_PROCESS"]                            = {"hipComputeModeExclusiveProcess", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED}; // 3
+    // Context flags
+    cuda2hipRename["CUctx_flags"]                                                  = {"hipCctx_flags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_CTX_SCHED_AUTO"]                                            = {"HIP_CTX_SCHED_AUTO", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x00
+    cuda2hipRename["CU_CTX_SCHED_SPIN"]                                            = {"HIP_CTX_SCHED_SPIN", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x01
+    cuda2hipRename["CU_CTX_SCHED_YIELD"]                                           = {"HIP_CTX_SCHED_YIELD", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x02
+    cuda2hipRename["CU_CTX_SCHED_BLOCKING_SYNC"]                                   = {"HIP_CTX_SCHED_BLOCKING_SYNC", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x04
+    cuda2hipRename["CU_CTX_BLOCKING_SYNC"]                                         = {"HIP_CTX_BLOCKING_SYNC", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x04
+    cuda2hipRename["CU_CTX_SCHED_MASK"]                                            = {"HIP_CTX_SCHED_MASK", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x07
+    cuda2hipRename["CU_CTX_MAP_HOST"]                                              = {"HIP_CTX_MAP_HOST", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x08
+    cuda2hipRename["CU_CTX_LMEM_RESIZE_TO_MAX"]                                    = {"HIP_CTX_LMEM_RESIZE_TO_MAX", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x10
+    cuda2hipRename["CU_CTX_FLAGS_MASK"]                                            = {"HIP_CTX_FLAGS_MASK", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x1f
+
     // Defines
     cuda2hipRename["CU_LAUNCH_PARAM_BUFFER_POINTER"]                              = {"HIP_LAUNCH_PARAM_BUFFER_POINTER", CONV_DEV, API_DRIVER};
     cuda2hipRename["CU_LAUNCH_PARAM_BUFFER_SIZE"]                                 = {"HIP_LAUNCH_PARAM_BUFFER_SIZE", CONV_DEV, API_DRIVER};
@@ -375,104 +439,108 @@ struct cuda2hipMap {
 
     // Types
     // NOTE: CUdevice might be changed to typedef int in the future.
-    cuda2hipRename["CUdevice"]                                  = {"hipDevice_t", CONV_TYPE, API_DRIVER};
-    cuda2hipRename["CUdevice_attribute_enum"]                   = {"hipDeviceAttribute_t", CONV_TYPE, API_DRIVER};
-    cuda2hipRename["CUdevice_attribute"]                        = {"hipDeviceAttribute_t", CONV_TYPE, API_DRIVER};
-
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK"]                   = {"hipDeviceAttributeMaxThreadsPerBlock", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_X"]                         = {"hipDeviceAttributeMaxBlockDimX", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Y"]                         = {"hipDeviceAttributeMaxBlockDimY", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Z"]                         = {"hipDeviceAttributeMaxBlockDimZ", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X"]                          = {"hipDeviceAttributeMaxGridDimX", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Y"]                          = {"hipDeviceAttributeMaxGridDimY", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Z"]                          = {"hipDeviceAttributeMaxGridDimZ", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK"]             = {"hipDeviceAttributeMaxSharedMemoryPerBlock", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_SHARED_MEMORY_PER_BLOCK"]                 = {"hipDeviceAttributeMaxSharedMemoryPerBlock", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY"]                   = {"hipDeviceAttributeTotalConstantMemory", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_WARP_SIZE"]                               = {"hipDeviceAttributeWarpSize", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK"]                 = {"hipDeviceAttributeMaxRegistersPerBlock", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_REGISTERS_PER_BLOCK"]                     = {"hipDeviceAttributeMaxRegistersPerBlock", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_CLOCK_RATE"]                              = {"hipDeviceAttributeClockRate", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MEMORY_CLOCK_RATE"]                       = {"hipDeviceAttributeMemoryClockRate", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_GLOBAL_MEMORY_BUS_WIDTH"]                 = {"hipDeviceAttributeMemoryBusWidth", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_COMPUTE_MODE"]                            = {"hipDeviceAttributeComputeMode", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_L2_CACHE_SIZE"]                           = {"hipDeviceAttributeL2CacheSize", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_MULTIPROCESSOR"]          = {"hipDeviceAttributeMaxThreadsPerMultiProcessor", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR"]                = {"hipDeviceAttributeComputeCapabilityMajor", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR"]                = {"hipDeviceAttributeComputeCapabilityMinor", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_CONCURRENT_KERNELS"]                      = {"hipDeviceAttributeConcurrentKernels", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_PCI_BUS_ID"]                              = {"hipDeviceAttributePciBusId", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_PCI_DEVICE_ID"]                           = {"hipDeviceAttributePciDeviceId", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_MULTIPROCESSOR"]    = {"hipDeviceAttributeMaxSharedMemoryPerMultiprocessor", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD"]                         = {"hipDeviceAttributeIsMultiGpuBoard", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CUdevice"]                                                    = {"hipDevice_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUdevice_attribute_enum"]                                     = {"hipDeviceAttribute_t", CONV_TYPE, API_DRIVER}; // API_Runtime ANALOGUE (cudaDeviceAttr)
+    cuda2hipRename["CUdevice_attribute"]                                          = {"hipDeviceAttribute_t", CONV_TYPE, API_DRIVER}; // API_Runtime ANALOGUE (cudaDeviceAttr)
     // unsupported yet by HIP
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_PITCH"]                               = {"hipDeviceAttributeMaxPitch", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT"]                       = {"hipDeviceAttributeTextureAlignment", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_ASYNC_ENGINE_COUNT"]                      = {"hipDeviceAttributeAsyncEngineCount", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK"]                   = {"hipDeviceAttributeMaxThreadsPerBlock", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};             //  1 // API_Runtime ANALOGUE (cudaDevAttrMaxThreadsPerBlock = 1)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_X"]                         = {"hipDeviceAttributeMaxBlockDimX", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                   //  2 // API_Runtime ANALOGUE (cudaDevAttrMaxBlockDimX = 2)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Y"]                         = {"hipDeviceAttributeMaxBlockDimY", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                   //  3 // API_Runtime ANALOGUE (cudaDevAttrMaxBlockDimY = 3)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Z"]                         = {"hipDeviceAttributeMaxBlockDimZ", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                   //  4 // API_Runtime ANALOGUE (cudaDevAttrMaxBlockDimZ = 4)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X"]                          = {"hipDeviceAttributeMaxGridDimX", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                    //  5 // API_Runtime ANALOGUE (cudaDevAttrMaxGridDimX =5)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Y"]                          = {"hipDeviceAttributeMaxGridDimY", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                    //  6 // API_Runtime ANALOGUE (cudaDevAttrMaxGridDimY = 6)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Z"]                          = {"hipDeviceAttributeMaxGridDimZ", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                    //  7 // API_Runtime ANALOGUE (cudaDevAttrMaxGridDimZ - 7)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK"]             = {"hipDeviceAttributeMaxSharedMemoryPerBlock", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};        //  8 // API_Runtime ANALOGUE (cudaDevAttrMaxSharedMemoryPerBlock = 8)
+    // Deprecated, use CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_SHARED_MEMORY_PER_BLOCK"]                 = {"hipDeviceAttributeMaxSharedMemoryPerBlock", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};        //  8
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY"]                   = {"hipDeviceAttributeTotalConstantMemory", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};            //  9 // API_Runtime ANALOGUE (cudaDevAttrTotalConstantMemory = 9)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_WARP_SIZE"]                               = {"hipDeviceAttributeWarpSize", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                       // 10 // API_Runtime ANALOGUE (cudaDevAttrWarpSize = 10)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_PITCH"]                               = {"hipDeviceAttributeMaxPitch", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                       // 11 // API_Runtime ANALOGUE (cudaDevAttrMaxPitch = 11)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK"]                 = {"hipDeviceAttributeMaxRegistersPerBlock", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};           // 12 // API_Runtime ANALOGUE (cudaDevAttrMaxRegistersPerBlock = 12)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_REGISTERS_PER_BLOCK"]                     = {"hipDeviceAttributeMaxRegistersPerBlock", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};           // 12
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_CLOCK_RATE"]                              = {"hipDeviceAttributeClockRate", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                      // 13 // API_Runtime ANALOGUE (cudaDevAttrMaxRegistersPerBlock = 13)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT"]                       = {"hipDeviceAttributeTextureAlignment", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};               // 14 // API_Runtime ANALOGUE (cudaDevAttrTextureAlignment = 14)
     // Deprecated. Use instead CU_DEVICE_ATTRIBUTE_ASYNC_ENGINE_COUNT
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_GPU_OVERLAP"]                             = {"hipDeviceAttributeAsyncEngineCount", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT"]                    = {"hipDeviceAttributeMultiprocessorCount", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_KERNEL_EXEC_TIMEOUT"]                     = {"hipDeviceAttributeKernelExecTimeout", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_INTEGRATED"]                              = {"hipDeviceAttributeIntegrated", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_CAN_MAP_HOST_MEMORY"]                     = {"hipDeviceAttributeCanMapHostMemory", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_WIDTH"]                 = {"hipDeviceAttributeMaxTexture1DWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_WIDTH"]                 = {"hipDeviceAttributeMaxTexture2DWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_HEIGHT"]                = {"hipDeviceAttributeMaxTexture2DHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_WIDTH"]                 = {"hipDeviceAttributeMaxTexture3DWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_HEIGHT"]                = {"hipDeviceAttributeMaxTexture3DHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_DEPTH"]                 = {"hipDeviceAttributeMaxTexture3DDepth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_WIDTH"]         = {"hipDeviceAttributeMaxTexture2DLayeredWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_HEIGHT"]        = {"hipDeviceAttributeMaxTexture2DLayeredHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_LAYERS"]        = {"hipDeviceAttributeMaxTexture2DLayeredLayers", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_ARRAY_WIDTH"]           = {"hipDeviceAttributeMaxTexture2DLayeredWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_ARRAY_HEIGHT"]          = {"hipDeviceAttributeMaxTexture2DLayeredHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_ARRAY_NUMSLICES"]       = {"hipDeviceAttributeMaxTexture2DLayeredLayers", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_SURFACE_ALIGNMENT"]                       = {"hipDeviceAttributeSurfaceAlignment", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_ECC_ENABLED"]                             = {"hipDeviceAttributeEccEnabled", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_TCC_DRIVER"]                              = {"hipDeviceAttributeTccDriver", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_UNIFIED_ADDRESSING"]                      = {"hipDeviceAttributeUnifiedAddressing", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LAYERED_WIDTH"]         = {"hipDeviceAttributeMaxTexture1DLayeredWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LAYERED_LAYERS"]        = {"hipDeviceAttributeMaxTexture1DLayeredLayers", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_GATHER_WIDTH"]          = {"hipDeviceAttributeMaxTexture2DGatherWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_GATHER_HEIGHT"]         = {"hipDeviceAttributeMaxTexture2DGatherHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_WIDTH_ALTERNATE"]       = {"hipDeviceAttributeMaxTexture3DWidthAlternate", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_HEIGHT_ALTERNATE"]      = {"hipDeviceAttributeMaxTexture3DHeightAlternate", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_DEPTH_ALTERNATE"]       = {"hipDeviceAttributeMaxTexture3DDepthAlternate", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_PCI_DOMAIN_ID"]                           = {"hipDeviceAttributePciDomainId", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_TEXTURE_PITCH_ALIGNMENT"]                 = {"hipDeviceAttributeTexturePitchAlignment", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURECUBEMAP_WIDTH"]            = {"hipDeviceAttributeMaxTextureCubemapWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURECUBEMAP_LAYERED_WIDTH"]    = {"hipDeviceAttributeMaxTextureCubemapLayeredWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURECUBEMAP_LAYERED_LAYERS"]   = {"hipDeviceAttributeMaxTextureCubemapLayeredLayers", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_WIDTH"]                 = {"hipDeviceAttributeMaxSurface1DWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_WIDTH"]                 = {"hipDeviceAttributeMaxSurface2DWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_HEIGHT"]                = {"hipDeviceAttributeMaxSurface2DHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE3D_WIDTH"]                 = {"hipDeviceAttributeMaxSurface3DWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE3D_HEIGHT"]                = {"hipDeviceAttributeMaxSurface3DHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE3D_DEPTH"]                 = {"hipDeviceAttributeMaxSurface3DDepth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_LAYERED_WIDTH"]         = {"hipDeviceAttributeMaxSurface1DLayeredWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_LAYERED_LAYERS"]        = {"hipDeviceAttributeMaxSurface1DLayeredLayers", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_LAYERED_WIDTH"]         = {"hipDeviceAttributeMaxSurface2DLayeredWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_LAYERED_HEIGHT"]        = {"hipDeviceAttributeMaxSurface2DLayeredHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_LAYERED_LAYERS"]        = {"hipDeviceAttributeMaxSurface2DLayeredLayers", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_WIDTH"]            = {"hipDeviceAttributeMaxSurfaceCubemapWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_LAYERED_WIDTH"]    = {"hipDeviceAttributeMaxSurfaceCubemapLayeredWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_LAYERED_LAYERS"]   = {"hipDeviceAttributeMaxSurfaceCubemapLayeredLayers", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LINEAR_WIDTH"]          = {"hipDeviceAttributeMaxTexture1DLinearWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LINEAR_WIDTH"]          = {"hipDeviceAttributeMaxTexture2DLinearWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LINEAR_HEIGHT"]         = {"hipDeviceAttributeMaxTexture2DLinearHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LINEAR_PITCH"]          = {"hipDeviceAttributeMaxTexture2DLinearPitch", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_MIPMAPPED_WIDTH"]       = {"hipDeviceAttributeMaxTexture2DMipmappedWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_MIPMAPPED_HEIGHT"]      = {"hipDeviceAttributeMaxTexture2DMipmappedHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_MIPMAPPED_WIDTH"]       = {"hipDeviceAttributeMaxTexture1DMipmappedWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_STREAM_PRIORITIES_SUPPORTED"]             = {"hipDeviceAttributeStreamPrioritiesSupported", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_GLOBAL_L1_CACHE_SUPPORTED"]               = {"hipDeviceAttributeGlobalL1CacheSupported", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_LOCAL_L1_CACHE_SUPPORTED"]                = {"hipDeviceAttributeLocalL1CacheSupported", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_MULTIPROCESSOR"]        = {"hipDeviceAttributeMaxRegistersPerMultiprocessor", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MANAGED_MEMORY"]                          = {"hipDeviceAttributeManagedMemory", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD_GROUP_ID"]                = {"hipDeviceAttributeMultiGpuBoardGroupId", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX"]                                     = {"hipDeviceAttributeMax", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_GPU_OVERLAP"]                             = {"hipDeviceAttributeAsyncEngineCount", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};               // 15 // API_Runtime ANALOGUE (cudaDevAttrGpuOverlap = 15)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT"]                    = {"hipDeviceAttributeMultiprocessorCount", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};            // 16 // API_Runtime ANALOGUE (cudaDevAttrMultiProcessorCount = 16)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_KERNEL_EXEC_TIMEOUT"]                     = {"hipDeviceAttributeKernelExecTimeout", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};              // 17 // API_Runtime ANALOGUE (cudaDevAttrKernelExecTimeout = 17)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_INTEGRATED"]                              = {"hipDeviceAttributeIntegrated", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                     // 18 // API_Runtime ANALOGUE (cudaDevAttrIntegrated = 18)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_CAN_MAP_HOST_MEMORY"]                     = {"hipDeviceAttributeCanMapHostMemory", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};               // 19 // API_Runtime ANALOGUE (cudaDevAttrCanMapHostMemory = 19)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_COMPUTE_MODE"]                            = {"hipDeviceAttributeComputeMode", CONV_DEV, API_DRIVER};                                     // 20 // API_Runtime ANALOGUE (cudaDevAttrComputeMode = 20)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_WIDTH"]                 = {"hipDeviceAttributeMaxTexture1DWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};              // 21 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture1DWidth = 21)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_WIDTH"]                 = {"hipDeviceAttributeMaxTexture2DWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};              // 22 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture2DWidth = 22)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_HEIGHT"]                = {"hipDeviceAttributeMaxTexture2DHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};             // 23 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture2DHeight = 23)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_WIDTH"]                 = {"hipDeviceAttributeMaxTexture3DWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};              // 24 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture3DWidth = 24)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_HEIGHT"]                = {"hipDeviceAttributeMaxTexture3DHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};             // 25 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture3DHeight = 25)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_DEPTH"]                 = {"hipDeviceAttributeMaxTexture3DDepth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};              // 26 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture3DDepth = 26)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_WIDTH"]         = {"hipDeviceAttributeMaxTexture2DLayeredWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};       // 27 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture2DLayeredWidth = 27)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_HEIGHT"]        = {"hipDeviceAttributeMaxTexture2DLayeredHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};      // 28 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture2DLayeredHeight = 28)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_LAYERS"]        = {"hipDeviceAttributeMaxTexture2DLayeredLayers", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};      // 29 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture2DLayeredLayers = 29)
+    // Deprecated, use CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_WIDTH
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_ARRAY_WIDTH"]           = {"hipDeviceAttributeMaxTexture2DLayeredWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};       // 27 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture2DLayeredWidth = 27)
+    // Deprecated, use CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_HEIGHT
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_ARRAY_HEIGHT"]          = {"hipDeviceAttributeMaxTexture2DLayeredHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};      // 28 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture2DLayeredHeight = 28)
+    // Deprecated, use CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_LAYERS
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_ARRAY_NUMSLICES"]       = {"hipDeviceAttributeMaxTexture2DLayeredLayers", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};      // 29 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture2DLayeredLayers = 29)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_SURFACE_ALIGNMENT"]                       = {"hipDeviceAttributeSurfaceAlignment", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};               // 30 // API_Runtime ANALOGUE (cudaDevAttrSurfaceAlignment = 30)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_CONCURRENT_KERNELS"]                      = {"hipDeviceAttributeConcurrentKernels", CONV_DEV, API_DRIVER};                               // 31 // API_Runtime ANALOGUE (cudaDevAttrConcurrentKernels = 31)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_ECC_ENABLED"]                             = {"hipDeviceAttributeEccEnabled", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                     // 32 // API_Runtime ANALOGUE (cudaDevAttrEccEnabled = 32)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_PCI_BUS_ID"]                              = {"hipDeviceAttributePciBusId", CONV_DEV, API_DRIVER};                                        // 33 // API_Runtime ANALOGUE (cudaDevAttrPciBusId = 33)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_PCI_DEVICE_ID"]                           = {"hipDeviceAttributePciDeviceId", CONV_DEV, API_DRIVER};                                     // 34 // API_Runtime ANALOGUE (cudaDevAttrPciDeviceId = 34)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_TCC_DRIVER"]                              = {"hipDeviceAttributeTccDriver", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                      // 35 // API_Runtime ANALOGUE (cudaDevAttrTccDriver = 35)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MEMORY_CLOCK_RATE"]                       = {"hipDeviceAttributeMemoryClockRate", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                // 36 // API_Runtime ANALOGUE (cudaDevAttrMemoryClockRate = 36)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_GLOBAL_MEMORY_BUS_WIDTH"]                 = {"hipDeviceAttributeMemoryBusWidth", CONV_DEV, API_DRIVER};                                  // 37 // API_Runtime ANALOGUE (cudaDevAttrGlobalMemoryBusWidth = 37)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_L2_CACHE_SIZE"]                           = {"hipDeviceAttributeL2CacheSize", CONV_DEV, API_DRIVER};                                     // 38 // API_Runtime ANALOGUE (cudaDevAttrL2CacheSize = 38)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_MULTIPROCESSOR"]          = {"hipDeviceAttributeMaxThreadsPerMultiProcessor", CONV_DEV, API_DRIVER};                     // 39 // API_Runtime ANALOGUE (cudaDevAttrMaxThreadsPerMultiProcessor = 39)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_ASYNC_ENGINE_COUNT"]                      = {"hipDeviceAttributeAsyncEngineCount", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};               // 40 // API_Runtime ANALOGUE (cudaDevAttrAsyncEngineCount = 40)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_UNIFIED_ADDRESSING"]                      = {"hipDeviceAttributeUnifiedAddressing", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};              // 41 // API_Runtime ANALOGUE (cudaDevAttrUnifiedAddressing = 41)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LAYERED_WIDTH"]         = {"hipDeviceAttributeMaxTexture1DLayeredWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};       // 42 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture1DLayeredWidth = 42)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LAYERED_LAYERS"]        = {"hipDeviceAttributeMaxTexture1DLayeredLayers", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};      // 43 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture1DLayeredLayers = 43)
     // deprecated, do not use
-    // cuda2hipRename["CU_DEVICE_ATTRIBUTE_CAN_TEX2D_GATHER"]                     = {"hipDeviceAttributeCanTex2DGather", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_CAN_TEX2D_GATHER"]                        = {"hipDeviceAttributeCanTex2DGather", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                 // 44 // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_GATHER_WIDTH"]          = {"hipDeviceAttributeMaxTexture2DGatherWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};        // 45 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture2DGatherWidth = 45)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_GATHER_HEIGHT"]         = {"hipDeviceAttributeMaxTexture2DGatherHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};       // 46 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture2DGatherHeight = 46)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_WIDTH_ALTERNATE"]       = {"hipDeviceAttributeMaxTexture3DWidthAlternate", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};     // 47 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture3DWidthAlt = 47)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_HEIGHT_ALTERNATE"]      = {"hipDeviceAttributeMaxTexture3DHeightAlternate", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};    // 48 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture3DHeightAlt = 48)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_DEPTH_ALTERNATE"]       = {"hipDeviceAttributeMaxTexture3DDepthAlternate", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};     // 49 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture3DDepthAlt = 49)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_PCI_DOMAIN_ID"]                           = {"hipDeviceAttributePciDomainId", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                    // 50 // API_Runtime ANALOGUE (cudaDevAttrPciDomainId = 50)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_TEXTURE_PITCH_ALIGNMENT"]                 = {"hipDeviceAttributeTexturePitchAlignment", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};          // 51 // API_Runtime ANALOGUE (cudaDevAttrTexturePitchAlignment = 51)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURECUBEMAP_WIDTH"]            = {"hipDeviceAttributeMaxTextureCubemapWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};         // 52 // API_Runtime ANALOGUE (cudaDevAttrMaxTextureCubemapWidth = 52)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURECUBEMAP_LAYERED_WIDTH"]    = {"hipDeviceAttributeMaxTextureCubemapLayeredWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};  // 53 // API_Runtime ANALOGUE (cudaDevAttrMaxTextureCubemapLayeredWidth = 53)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURECUBEMAP_LAYERED_LAYERS"]   = {"hipDeviceAttributeMaxTextureCubemapLayeredLayers", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED}; // 54 // API_Runtime ANALOGUE (cudaDevAttrMaxTextureCubemapLayeredLayers = 54)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_WIDTH"]                 = {"hipDeviceAttributeMaxSurface1DWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};              // 55 // API_Runtime ANALOGUE (cudaDevAttrMaxSurface1DWidth = 55)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_WIDTH"]                 = {"hipDeviceAttributeMaxSurface2DWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};              // 56 // API_Runtime ANALOGUE (cudaDevAttrMaxSurface2DWidth = 56)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_HEIGHT"]                = {"hipDeviceAttributeMaxSurface2DHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};             // 57 // API_Runtime ANALOGUE (cudaDevAttrMaxSurface2DHeight = 57)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE3D_WIDTH"]                 = {"hipDeviceAttributeMaxSurface3DWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};              // 58 // API_Runtime ANALOGUE (cudaDevAttrMaxSurface3DWidth = 58)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE3D_HEIGHT"]                = {"hipDeviceAttributeMaxSurface3DHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};             // 59 // API_Runtime ANALOGUE (cudaDevAttrMaxSurface3DHeight = 59)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE3D_DEPTH"]                 = {"hipDeviceAttributeMaxSurface3DDepth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};              // 60 // API_Runtime ANALOGUE (cudaDevAttrMaxSurface3DDepth = 60)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_LAYERED_WIDTH"]         = {"hipDeviceAttributeMaxSurface1DLayeredWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};       // 61 // API_Runtime ANALOGUE (cudaDevAttrMaxSurface1DLayeredWidth = 61)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_LAYERED_LAYERS"]        = {"hipDeviceAttributeMaxSurface1DLayeredLayers", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};      // 62 // API_Runtime ANALOGUE (cudaDevAttrMaxSurface1DLayeredLayers = 62)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_LAYERED_WIDTH"]         = {"hipDeviceAttributeMaxSurface2DLayeredWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};       // 63 // API_Runtime ANALOGUE (cudaDevAttrMaxSurface2DLayeredWidth = 63)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_LAYERED_HEIGHT"]        = {"hipDeviceAttributeMaxSurface2DLayeredHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};      // 64 // API_Runtime ANALOGUE (cudaDevAttrMaxSurface2DLayeredHeight = 64)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_LAYERED_LAYERS"]        = {"hipDeviceAttributeMaxSurface2DLayeredLayers", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};      // 65 // API_Runtime ANALOGUE (cudaDevAttrMaxSurface2DLayeredLayers = 65)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_WIDTH"]            = {"hipDeviceAttributeMaxSurfaceCubemapWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};         // 66 // API_Runtime ANALOGUE (cudaDevAttrMaxSurfaceCubemapWidth = 66)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_LAYERED_WIDTH"]    = {"hipDeviceAttributeMaxSurfaceCubemapLayeredWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};  // 67 // API_Runtime ANALOGUE (cudaDevAttrMaxSurfaceCubemapLayeredWidth = 67)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_LAYERED_LAYERS"]   = {"hipDeviceAttributeMaxSurfaceCubemapLayeredLayers", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED}; // 68 // API_Runtime ANALOGUE (cudaDevAttrMaxSurfaceCubemapLayeredLayers = 68)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LINEAR_WIDTH"]          = {"hipDeviceAttributeMaxTexture1DLinearWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};        // 69 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture1DLinearWidth = 69)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LINEAR_WIDTH"]          = {"hipDeviceAttributeMaxTexture2DLinearWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};        // 70 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture2DLinearWidth = 70)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LINEAR_HEIGHT"]         = {"hipDeviceAttributeMaxTexture2DLinearHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};       // 71 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture2DLinearHeight = 71)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LINEAR_PITCH"]          = {"hipDeviceAttributeMaxTexture2DLinearPitch", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};        // 72 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture2DLinearPitch = 72)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_MIPMAPPED_WIDTH"]       = {"hipDeviceAttributeMaxTexture2DMipmappedWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};     // 73 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture2DMipmappedWidth = 73)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_MIPMAPPED_HEIGHT"]      = {"hipDeviceAttributeMaxTexture2DMipmappedHeight", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};    // 74 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture2DMipmappedHeight = 74)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR"]                = {"hipDeviceAttributeComputeCapabilityMajor", CONV_DEV, API_DRIVER};                          // 75 // API_Runtime ANALOGUE (cudaDevAttrComputeCapabilityMajor = 75)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR"]                = {"hipDeviceAttributeComputeCapabilityMinor", CONV_DEV, API_DRIVER};                          // 76 // API_Runtime ANALOGUE (cudaDevAttrComputeCapabilityMinor = 76)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_MIPMAPPED_WIDTH"]       = {"hipDeviceAttributeMaxTexture1DMipmappedWidth", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};     // 77 // API_Runtime ANALOGUE (cudaDevAttrMaxTexture1DMipmappedWidth = 77)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_STREAM_PRIORITIES_SUPPORTED"]             = {"hipDeviceAttributeStreamPrioritiesSupported", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};      // 78 // API_Runtime ANALOGUE (cudaDevAttrStreamPrioritiesSupported = 78)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_GLOBAL_L1_CACHE_SUPPORTED"]               = {"hipDeviceAttributeGlobalL1CacheSupported", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};         // 79 // API_Runtime ANALOGUE (cudaDevAttrGlobalL1CacheSupported = 79)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_LOCAL_L1_CACHE_SUPPORTED"]                = {"hipDeviceAttributeLocalL1CacheSupported", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};          // 80 // API_Runtime ANALOGUE (cudaDevAttrLocalL1CacheSupported = 80)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_MULTIPROCESSOR"]    = {"hipDeviceAttributeMaxSharedMemoryPerMultiprocessor", CONV_DEV, API_DRIVER};                // 81 // API_Runtime ANALOGUE (cudaDevAttrMaxSharedMemoryPerMultiprocessor = 81)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_MULTIPROCESSOR"]        = {"hipDeviceAttributeMaxRegistersPerMultiprocessor", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};  // 82 // API_Runtime ANALOGUE (cudaDevAttrMaxRegistersPerMultiprocessor = 82)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MANAGED_MEMORY"]                          = {"hipDeviceAttributeManagedMemory", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                  // 83 // API_Runtime ANALOGUE (cudaDevAttrManagedMemory = 83)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD"]                         = {"hipDeviceAttributeIsMultiGpuBoard", CONV_DEV, API_DRIVER};                                 // 84 // API_Runtime ANALOGUE (cudaDevAttrIsMultiGpuBoard = 84)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD_GROUP_ID"]                = {"hipDeviceAttributeMultiGpuBoardGroupId", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};           // 85 // API_Runtime ANALOGUE (cudaDevAttrMultiGpuBoardGroupID = 85)
+    cuda2hipRename["CU_DEVICE_ATTRIBUTE_MAX"]                                     = {"hipDeviceAttributeMax", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                            // 86 // API_Runtime ANALOGUE (no)
+
     // unsupported yet by HIP [CUDA 8.0.44]
     cuda2hipRename["CU_DEVICE_ATTRIBUTE_HOST_NATIVE_ATOMIC_SUPPORTED"]            = {"hipDeviceAttributeHostNativeAtomicSupported", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["CU_DEVICE_ATTRIBUTE_SINGLE_TO_DOUBLE_PRECISION_PERF_RATIO"]   = {"hipDeviceAttributeSingleToDoublePrecisionPerfRatio", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
@@ -481,52 +549,232 @@ struct cuda2hipMap {
     cuda2hipRename["CU_DEVICE_ATTRIBUTE_COMPUTE_PREEMPTION_SUPPORTED"]            = {"hipDeviceAttributeComputePreemptionSupported", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["CU_DEVICE_ATTRIBUTE_CAN_USE_HOST_POINTER_FOR_REGISTERED_MEM"] = {"hipDeviceAttributeCanUseHostPointerForRegisteredMem", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};
 
-    cuda2hipRename["CUdevprop_st"]                              = {"hipDeviceProp_t", CONV_TYPE, API_DRIVER};
-    cuda2hipRename["CUdevprop"]                                 = {"hipDeviceProp_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUdevprop_st"]                                                = {"hipDeviceProp_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUdevprop"]                                                   = {"hipDeviceProp_t", CONV_TYPE, API_DRIVER};
 
     // TODO: Analogues enum is needed in HIP. Couldn't map enum to struct hipPointerAttribute_t.
     // TODO: Do for Pointer Attributes the same as for Device Attributes.
-    // cuda2hipRename["CUpointer_attribute_enum"]               = {"hipPointerAttribute_t", CONV_TYPE, API_DRIVER};
-    // cuda2hipRename["CUpointer_attribute"]                    = {"hipPointerAttribute_t", CONV_TYPE, API_DRIVER};
+    // cuda2hipRename["CUpointer_attribute_enum"]                                 = {"hipPointerAttribute", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                                   // API_Runtime ANALOGUE (no)
+    // cuda2hipRename["CUpointer_attribute"]                                      = {"hipPointerAttribute", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                                   // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CU_POINTER_ATTRIBUTE_CONTEXT"]                                = {"hipPointerAttributeContext", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                        // 1 // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CU_POINTER_ATTRIBUTE_MEMORY_TYPE"]                            = {"hipPointerAttributeMemoryType", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                     // 2 // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CU_POINTER_ATTRIBUTE_DEVICE_POINTER"]                         = {"hipPointerAttributeDevicePointer", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                  // 3 // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CU_POINTER_ATTRIBUTE_HOST_POINTER"]                           = {"hipPointerAttributeHostPointer", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                    // 4 // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CU_POINTER_ATTRIBUTE_P2P_TOKENS"]                             = {"hipPointerAttributeP2pTokens", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                      // 5 // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CU_POINTER_ATTRIBUTE_SYNC_MEMOPS"]                            = {"hipPointerAttributeSyncMemops", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                     // 6 // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CU_POINTER_ATTRIBUTE_BUFFER_ID"]                              = {"hipPointerAttributeBufferId", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                       // 7 // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CU_POINTER_ATTRIBUTE_IS_MANAGED"]                             = {"hipPointerAttributeIsManaged", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                      // 8 // API_Runtime ANALOGUE (no)
+
 
     // pointer to CUfunc_st
-    cuda2hipRename["CUfunction"]                                = {"hipFunction_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUfunction"]                                                  = {"hipFunction_t", CONV_TYPE, API_DRIVER};
     // TODO: in HIP ihipModuleSymbol_t should be declared in hip_runtime_api.h, not in hcc_detail/hip_runtime_api.h, as it's analogue CUfunc_st is declared also in cuda.h
     // ToDO: examples are needed with CUfunc_st
-    // cuda2hipRename["CUfunc_st"]                                 = {"ihipModuleSymbol_t", CONV_TYPE, API_DRIVER};
+    // cuda2hipRename["CUfunc_st"]                                                = {"ihipModuleSymbol_t", CONV_TYPE, API_DRIVER};
 
     // unsupported yet by HIP
-    cuda2hipRename["CUfunction_attribute_enum"]                 = {"hipFuncAttribute_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CUfunction_attribute"]                      = {"hipFuncAttribute_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CUfunction_attribute"]                         = {"hipFuncAttribute_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CUfunction_attribute_enum"]                    = {"hipFuncAttribute_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK"]      = {"hipFuncAttributeMaxThreadsPerBlocks", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES"]          = {"hipFuncAttributeSharedSizeBytes", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_FUNC_ATTRIBUTE_CONST_SIZE_BYTES"]           = {"hipFuncAttributeConstSizeBytes", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_FUNC_ATTRIBUTE_LOCAL_SIZE_BYTES"]           = {"hipFuncAttributeLocalSizeBytes", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_FUNC_ATTRIBUTE_NUM_REGS"]                   = {"hipFuncAttributeNumRegs", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_FUNC_ATTRIBUTE_PTX_VERSION"]                = {"hipFuncAttributePtxVersion", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_FUNC_ATTRIBUTE_BINARY_VERSION"]             = {"hipFuncAttributeBinaryVersion", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_FUNC_ATTRIBUTE_CACHE_MODE_CA"]              = {"hipFuncAttributeCacheModeCA", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_FUNC_ATTRIBUTE_MAX"]                        = {"hipFuncAttributeMax", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};
 
-    cuda2hipRename["CUfunc_cache_enum"]                         = {"hipFuncCache", CONV_TYPE, API_DRIVER};
-    cuda2hipRename["CUfunc_cache"]                              = {"hipFuncCache", CONV_TYPE, API_DRIVER};
-    cuda2hipRename["CU_FUNC_CACHE_PREFER_NONE"]                 = {"hipFuncCachePreferNone", CONV_CACHE, API_DRIVER};
-    cuda2hipRename["CU_FUNC_CACHE_PREFER_SHARED"]               = {"hipFuncCachePreferShared", CONV_CACHE, API_DRIVER};
-    cuda2hipRename["CU_FUNC_CACHE_PREFER_L1"]                   = {"hipFuncCachePreferL1", CONV_CACHE, API_DRIVER};
-    cuda2hipRename["CU_FUNC_CACHE_PREFER_EQUAL"]                = {"hipFuncCachePreferEqual", CONV_CACHE, API_DRIVER};
+    // enum CUgraphicsMapResourceFlags/CUgraphicsMapResourceFlags_enum
+    cuda2hipRename["CUgraphicsMapResourceFlags"]                   = {"hipGraphicsMapFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                              // API_Runtime ANALOGUE (cudaGraphicsMapFlags)
+    cuda2hipRename["CUgraphicsMapResourceFlags_enum"]              = {"hipGraphicsMapFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                              // API_Runtime ANALOGUE (cudaGraphicsMapFlags)
+    cuda2hipRename["CU_GRAPHICS_MAP_RESOURCE_FLAGS_NONE"]          = {"hipGraphicsMapFlagsNone", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                  // 0x00 // API_Runtime ANALOGUE (cudaGraphicsMapFlagsNone = 0)
+    cuda2hipRename["CU_GRAPHICS_MAP_RESOURCE_FLAGS_READ_ONLY"]     = {"hipGraphicsMapFlagsReadOnly", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};              // 0x01 // API_Runtime ANALOGUE (cudaGraphicsMapFlagsReadOnly = 1)
+    cuda2hipRename["CU_GRAPHICS_MAP_RESOURCE_FLAGS_WRITE_DISCARD"] = {"hipGraphicsMapFlagsWriteDiscard", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};          // 0x02 // API_Runtime ANALOGUE (cudaGraphicsMapFlagsWriteDiscard = 2)
 
-    cuda2hipRename["CUsharedconfig_enum"]                       = {"hipSharedMemConfig", CONV_TYPE, API_DRIVER};
-    cuda2hipRename["CUsharedconfig"]                            = {"hipSharedMemConfig", CONV_TYPE, API_DRIVER};
-    cuda2hipRename["CU_SHARED_MEM_CONFIG_DEFAULT_BANK_SIZE"]    = {"hipSharedMemBankSizeDefault", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_SHARED_MEM_CONFIG_FOUR_BYTE_BANK_SIZE"]  = {"hipSharedMemBankSizeFourByte", CONV_DEV, API_DRIVER};
-    cuda2hipRename["CU_SHARED_MEM_CONFIG_EIGHT_BYTE_BANK_SIZE"] = {"hipSharedMemBankSizeEightByte", CONV_DEV, API_DRIVER};
+    // enum CUgraphicsRegisterFlags/CUgraphicsRegisterFlags_enum
+    cuda2hipRename["CUgraphicsRegisterFlags"]                      = {"hipGraphicsRegisterFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                         // API_Runtime ANALOGUE (cudaGraphicsRegisterFlags)
+    cuda2hipRename["CUgraphicsRegisterFlags_enum"]                 = {"hipGraphicsRegisterFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                         // API_Runtime ANALOGUE (cudaGraphicsRegisterFlags)
+    cuda2hipRename["CU_GRAPHICS_MAP_RESOURCE_FLAGS_NONE"]          = {"hipGraphicsRegisterFlagsNone", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};             // 0x00 // API_Runtime ANALOGUE (cudaGraphicsRegisterFlagsNone = 0)
+    cuda2hipRename["CU_GRAPHICS_MAP_RESOURCE_FLAGS_READ_ONLY"]     = {"hipGraphicsRegisterFlagsReadOnly", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};         // 0x01 // API_Runtime ANALOGUE (cudaGraphicsRegisterFlagsReadOnly = 1)
+    cuda2hipRename["CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD"]     = {"hipGraphicsRegisterFlagsWriteDiscard", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};     // 0x02 // API_Runtime ANALOGUE (cudaGraphicsRegisterFlagsWriteDiscard = 2)
+    cuda2hipRename["CU_GRAPHICS_REGISTER_FLAGS_SURFACE_LDST"]      = {"hipGraphicsRegisterFlagsSurfaceLoadStore", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}; // 0x04 // API_Runtime ANALOGUE (cudaGraphicsRegisterFlagsSurfaceLoadStore = 4)
+    cuda2hipRename["CU_GRAPHICS_REGISTER_FLAGS_TEXTURE_GATHER"]    = {"hipGraphicsRegisterFlagsTextureGather", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};    // 0x08 // API_Runtime ANALOGUE (cudaGraphicsRegisterFlagsTextureGather = 8)
 
-    cuda2hipRename["CUcontext"]                                 = {"hipCtx_t", CONV_TYPE, API_DRIVER};
+    // enum CUoccupancy_flags/CUoccupancy_flags_enum
+    cuda2hipRename["CUoccupancy_flags"]                            = {"hipOccupancyFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                                // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CUoccupancy_flags_enum"]                       = {"hipOccupancyFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                                // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CU_OCCUPANCY_DEFAULT"]                         = {"hipOccupancyDefault", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                      // 0x00 // API_Runtime ANALOGUE (cudaOccupancyDefault = 0x0)
+    cuda2hipRename["CU_OCCUPANCY_DISABLE_CACHING_OVERRIDE"]        = {"hipOccupancyDisableCachingOverride", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};       // 0x01 // API_Runtime ANALOGUE (cudaOccupancyDisableCachingOverride = 0x1)
+
+
+
+    cuda2hipRename["CUfunc_cache_enum"]                            = {"hipFuncCache", CONV_TYPE, API_DRIVER};                                                      // API_Runtime ANALOGUE (cudaFuncCache)
+    cuda2hipRename["CUfunc_cache"]                                 = {"hipFuncCache", CONV_TYPE, API_DRIVER};                                                      // API_Runtime ANALOGUE (cudaFuncCache)
+    cuda2hipRename["CU_FUNC_CACHE_PREFER_NONE"]                    = {"hipFuncCachePreferNone", CONV_CACHE, API_DRIVER};                                   // 0x00 // API_Runtime ANALOGUE (cudaFilterModePoint = 0)
+    cuda2hipRename["CU_FUNC_CACHE_PREFER_SHARED"]                  = {"hipFuncCachePreferShared", CONV_CACHE, API_DRIVER};                                 // 0x01 // API_Runtime ANALOGUE (cudaFuncCachePreferShared = 1)
+    cuda2hipRename["CU_FUNC_CACHE_PREFER_L1"]                      = {"hipFuncCachePreferL1", CONV_CACHE, API_DRIVER};                                     // 0x02 // API_Runtime ANALOGUE (cudaFuncCachePreferL1 = 2)
+    cuda2hipRename["CU_FUNC_CACHE_PREFER_EQUAL"]                   = {"hipFuncCachePreferEqual", CONV_CACHE, API_DRIVER};                                  // 0x03 // API_Runtime ANALOGUE (cudaFuncCachePreferEqual = 3)
+
+    // enum CUipcMem_flags/CUipcMem_flags_enum
+    cuda2hipRename["CUipcMem_flags"]                               = {"hipIpcMemFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                                   // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CUipcMem_flags_enum"]                          = {"hipIpcMemFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                                   // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CU_IPC_MEM_LAZY_ENABLE_PEER_ACCESS"]           = {"hipIpcMemLazyEnablePeerAccess", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};             // 0x1 // API_Runtime ANALOGUE (cudaIpcMemLazyEnablePeerAccess = 0x01)
+
+    // enum CUipcMem_flags/CUipcMem_flags_enum
+    cuda2hipRename["CUipcMem_flags"]                               = {"hipIpcMemFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                                   // API_Runtime ANALOGUE (no)
+
+    // JIT
+    // enum CUjit_cacheMode/CUjit_cacheMode_enum
+    cuda2hipRename["CUjit_cacheMode"]                              = {"hipJitCacheMode", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};                                  // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CUjit_cacheMode_enum"]                         = {"hipJitCacheMode", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_CACHE_OPTION_NONE"]                     = {"hipJitCacheModeOptionNone", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_CACHE_OPTION_CG"]                       = {"hipJitCacheModeOptionCG", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_CACHE_OPTION_CA"]                       = {"hipJitCacheModeOptionCA", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    // enum CUjit_fallback/CUjit_fallback_enum
+    cuda2hipRename["CUjit_fallback"]                               = {"hipJitFallback", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};                                  // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CUjit_fallback_enum"]                          = {"hipJitFallback", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_PREFER_PTX"]                                = {"hipJitFallbackPreferPtx", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_PREFER_BINARY"]                             = {"hipJitFallbackPreferBinary", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    // enum CUjit_option/CUjit_option_enum
+    cuda2hipRename["CUjit_option"]                                 = {"hipJitOption", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};  // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CUjit_option_enum"]                            = {"hipJitOption", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_MAX_REGISTERS"]                         = {"hipJitOptionMaxRegisters", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_THREADS_PER_BLOCK"]                     = {"hipJitOptionThreadsPerBlock", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_WALL_TIME"]                             = {"hipJitOptionWallTime", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_INFO_LOG_BUFFER"]                       = {"hipJitOptionInfoLogBuffer", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES"]            = {"hipJitOptionInfoLogBufferSizeBytes", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_ERROR_LOG_BUFFER"]                      = {"hipJitOptionErrorLogBuffer", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES"]           = {"hipJitOptionErrorLogBufferSizeBytes", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_OPTIMIZATION_LEVEL"]                    = {"hipJitOptionOptimizationLevel", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_TARGET_FROM_CUCONTEXT"]                 = {"hipJitOptionTargetFromContext", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_TARGET"]                                = {"hipJitOptionTarget", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_FALLBACK_STRATEGY"]                     = {"hipJitOptionFallbackStrategy", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_GENERATE_DEBUG_INFO"]                   = {"hipJitOptionGenerateDebugInfo", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_LOG_VERBOSE"]                           = {"hipJitOptionLogVerbose", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_GENERATE_LINE_INFO"]                    = {"hipJitOptionLogVerbose", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_CACHE_MODE"]                            = {"hipJitOptionCacheMode", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_NUM_OPTIONS"]                           = {"hipJitOptionNumOptions", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    // enum CUjit_target/CUjit_target_enum
+    cuda2hipRename["CUjit_target"]                                 = {"hipJitTarget", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};  // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CUjit_target_enum"]                            = {"hipJitTarget", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_TARGET_COMPUTE_10"]                         = {"hipJitTargetCompute10", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_TARGET_COMPUTE_11"]                         = {"hipJitTargetCompute11", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_TARGET_COMPUTE_12"]                         = {"hipJitTargetCompute12", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_TARGET_COMPUTE_13"]                         = {"hipJitTargetCompute13", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_TARGET_COMPUTE_20"]                         = {"hipJitTargetCompute20", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_TARGET_COMPUTE_21"]                         = {"hipJitTargetCompute21", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_TARGET_COMPUTE_30"]                         = {"hipJitTargetCompute30", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_TARGET_COMPUTE_32"]                         = {"hipJitTargetCompute32", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_TARGET_COMPUTE_35"]                         = {"hipJitTargetCompute35", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_TARGET_COMPUTE_37"]                         = {"hipJitTargetCompute37", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_TARGET_COMPUTE_50"]                         = {"hipJitTargetCompute50", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_TARGET_COMPUTE_52"]                         = {"hipJitTargetCompute52", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    // enum CUjitInputType/CUjitInputType_enum
+    cuda2hipRename["CUjitInputType"]                               = {"hipJitInputType", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};  // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CUjitInputType_enum"]                          = {"hipJitInputType", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_INPUT_CUBIN"]                           = {"hipJitInputTypeBin", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_INPUT_PTX"]                             = {"hipJitInputTypePtx", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_INPUT_FATBINARY"]                       = {"hipJitInputTypeFatBinary", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_INPUT_OBJECT"]                          = {"hipJitInputTypeObject", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_INPUT_LIBRARY"]                         = {"hipJitInputTypeLibrary", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_NUM_INPUT_TYPES"]                       = {"hipJitInputTypeNumInputTypes", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+
+    // Limits
+    cuda2hipRename["CUlimit"]                                      = {"hipLimit_t", CONV_TYPE, API_DRIVER};                                                          // API_Runtime ANALOGUE (cudaLimit)
+    cuda2hipRename["CUlimit_enum"]                                 = {"hipLimit_t", CONV_TYPE, API_DRIVER};                                                          // API_Runtime ANALOGUE (cudaLimit)
+    cuda2hipRename["CU_LIMIT_STACK_SIZE"]                          = {"hipLimitStackSize", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                          // 0x00 // API_Runtime ANALOGUE (cudaLimitStackSize = 0x00)
+    cuda2hipRename["CU_LIMIT_PRINTF_FIFO_SIZE"]                    = {"hipLimitPrintfFifoSize", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                     // 0x01 // API_Runtime ANALOGUE (cudaLimitPrintfFifoSize = 0x01)
+    cuda2hipRename["CU_LIMIT_MALLOC_HEAP_SIZE"]                    = {"hipLimitMallocHeapSize", CONV_TYPE, API_DRIVER};                                      // 0x02 // API_Runtime ANALOGUE (cudaLimitMallocHeapSize = 0x02)
+    cuda2hipRename["CU_LIMIT_DEV_RUNTIME_SYNC_DEPTH"]              = {"hipLimitDevRuntimeSyncDepth", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                // 0x03 // API_Runtime ANALOGUE (cudaLimitDevRuntimeSyncDepth = 0x03)
+    cuda2hipRename["CU_LIMIT_DEV_RUNTIME_PENDING_LAUNCH_COUNT"]    = {"hipLimitDevRuntimePendingLaunchCount", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};       // 0x04 // API_Runtime ANALOGUE (cudaLimitDevRuntimePendingLaunchCount = 0x04)
+    cuda2hipRename["CU_LIMIT_STACK_SIZE"]                          = {"hipLimitStackSize", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                                  // API_Runtime ANALOGUE (no)
+
+    // enum CUmemAttach_flags/CUmemAttach_flags_enum
+    cuda2hipRename["CUmemAttach_flags"]                            = {"hipMemAttachFlags_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                                // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CUmemAttach_flags_enum"]                       = {"hipMemAttachFlags_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                                // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CU_MEM_ATTACH_GLOBAL"]                         = {"hipMemAttachGlobal", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                          // 0x1 // API_Runtime ANALOGUE (#define cudaMemAttachGlobal 0x01)
+    cuda2hipRename["CU_MEM_ATTACH_HOST"]                           = {"hipMemAttachHost", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                            // 0x2 // API_Runtime ANALOGUE (#define cudaMemAttachHost 0x02)
+    cuda2hipRename["CU_MEM_ATTACH_SINGLE"]                         = {"hipMemAttachSingle", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                          // 0x4 // API_Runtime ANALOGUE (#define cudaMemAttachSingle 0x04)
+
+    // enum CUmemorytype/CUmemorytype_enum
+    cuda2hipRename["CUmemorytype"]                                 = {"hipMemType_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                                       // API_Runtime ANALOGUE (no - cudaMemoryType is not an analogue)
+    cuda2hipRename["CUmemorytype_enum"]                            = {"hipMemType_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                                       // API_Runtime ANALOGUE (no - cudaMemoryType is not an analogue)
+    cuda2hipRename["CU_MEMORYTYPE_HOST"]                           = {"hipMemTypeHost", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                             // 0x01 // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CU_MEMORYTYPE_DEVICE"]                         = {"hipMemTypeDevice", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                           // 0x02 // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CU_MEMORYTYPE_ARRAY"]                          = {"hipMemTypeArray", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                            // 0x03 // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CU_MEMORYTYPE_UNIFIED"]                        = {"hipMemTypeUnified", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED};                          // 0x04 // API_Runtime ANALOGUE (no)
+
+    // enum CUresourcetype
+    cuda2hipRename["CUresourcetype"]                               = {"hipResourceType", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                                     // API_Runtime ANALOGUE (cudaResourceType)
+    cuda2hipRename["CUresourcetype_enum"]                          = {"hipResourceType", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                                     // API_Runtime ANALOGUE (cudaResourceType)
+    cuda2hipRename["CU_RESOURCE_TYPE_ARRAY"]                       = {"hipResourceTypeArray", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                        // 0x00 // API_Runtime ANALOGUE (cudaResourceTypeArray = 0x00)
+    cuda2hipRename["CU_RESOURCE_TYPE_MIPMAPPED_ARRAY"]             = {"hipResourceTypeMipmappedArray", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};               // 0x01 // API_Runtime ANALOGUE (cudaResourceTypeMipmappedArray = 0x01)
+    cuda2hipRename["CU_RESOURCE_TYPE_LINEAR"]                      = {"hipResourceTypeLinear", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                       // 0x02 // API_Runtime ANALOGUE (cudaResourceTypeLinear = 0x02)
+    cuda2hipRename["CU_RESOURCE_TYPE_PITCH2D"]                     = {"hipResourceTypePitch2D", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                      // 0x03 // API_Runtime ANALOGUE (cudaResourceTypePitch2D = 0x03)
+
+    // enum CUresourceViewFormat/CUresourceViewFormat_enum
+    cuda2hipRename["CUresourceViewFormat"]                         = {"hipResourceViewFormat", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                               // API_Runtime ANALOGUE (cudaResourceViewFormat)
+    cuda2hipRename["CUresourceViewFormat_enum"]                    = {"hipResourceViewFormat", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                               // API_Runtime ANALOGUE (cudaResourceViewFormat)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_NONE"]                      = {"hipResViewFormatNone", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                        // 0x00 // API_Runtime ANALOGUE (cudaResViewFormatNone = 0x00)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_UINT_1X8"]                  = {"hipResViewFormatUnsignedChar1", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};               // 0x01 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedChar1 = 0x01)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_UINT_2X8"]                  = {"hipResViewFormatUnsignedChar2", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};               // 0x02 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedChar2 = 0x02)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_UINT_4X8"]                  = {"hipResViewFormatUnsignedChar4", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};               // 0x03 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedChar4 = 0x03)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_SINT_1X8"]                  = {"hipResViewFormatSignedChar1", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                 // 0x04 // API_Runtime ANALOGUE (cudaResViewFormatSignedChar1 = 0x04)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_SINT_2X8"]                  = {"hipResViewFormatSignedChar2", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                 // 0x05 // API_Runtime ANALOGUE (cudaResViewFormatSignedChar2 = 0x05)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_SINT_4X8"]                  = {"hipResViewFormatSignedChar4", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                 // 0x06 // API_Runtime ANALOGUE (cudaResViewFormatSignedChar4 = 0x06)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_UINT_1X16"]                 = {"hipResViewFormatUnsignedShort1", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};              // 0x07 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedShort1 = 0x07)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_UINT_2X16"]                 = {"hipResViewFormatUnsignedShort2", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};              // 0x08 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedShort2 = 0x08)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_UINT_4X16"]                 = {"hipResViewFormatUnsignedShort4", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};              // 0x09 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedShort4 = 0x09)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_SINT_1X16"]                 = {"hipResViewFormatSignedShort1", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                // 0x0a // API_Runtime ANALOGUE (cudaResViewFormatSignedShort1 = 0x0a)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_SINT_2X16"]                 = {"hipResViewFormatSignedShort2", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                // 0x0b // API_Runtime ANALOGUE (cudaResViewFormatSignedShort2 = 0x0b)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_SINT_4X16"]                 = {"hipResViewFormatSignedShort4", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                // 0x0c // API_Runtime ANALOGUE (cudaResViewFormatSignedShort4 = 0x0c)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_UINT_1X32"]                 = {"hipResViewFormatUnsignedInt1", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                // 0x0d // API_Runtime ANALOGUE (cudaResViewFormatUnsignedInt1 = 0x0d)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_UINT_2X32"]                 = {"hipResViewFormatUnsignedInt2", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                // 0x0e // API_Runtime ANALOGUE (cudaResViewFormatUnsignedInt2 = 0x0e)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_UINT_4X32"]                 = {"hipResViewFormatUnsignedInt4", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                // 0x0f // API_Runtime ANALOGUE (cudaResViewFormatUnsignedInt4 = 0x0f)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_SINT_1X32"]                 = {"hipResViewFormatSignedInt1", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                  // 0x10 // API_Runtime ANALOGUE (cudaResViewFormatSignedInt1 = 0x10)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_SINT_2X32"]                 = {"hipResViewFormatSignedInt2", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                  // 0x11 // API_Runtime ANALOGUE (cudaResViewFormatSignedInt2 = 0x11)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_SINT_4X32"]                 = {"hipResViewFormatSignedInt4", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                  // 0x12 // API_Runtime ANALOGUE (cudaResViewFormatSignedInt4 = 0x12)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_FLOAT_1X16"]                = {"hipResViewFormatHalf1", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                       // 0x13 // API_Runtime ANALOGUE (cudaResViewFormatHalf1 = 0x13)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_FLOAT_2X16"]                = {"hipResViewFormatHalf2", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                       // 0x14 // API_Runtime ANALOGUE (cudaResViewFormatHalf2 = 0x14)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_FLOAT_4X16"]                = {"hipResViewFormatHalf4", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                       // 0x15 // API_Runtime ANALOGUE (cudaResViewFormatHalf4 = 0x15)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_FLOAT_1X32"]                = {"hipResViewFormatFloat1", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                      // 0x16 // API_Runtime ANALOGUE (cudaResViewFormatFloat1 = 0x16)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_FLOAT_2X32"]                = {"hipResViewFormatFloat2", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                      // 0x17 // API_Runtime ANALOGUE (cudaResViewFormatFloat2 = 0x17)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_FLOAT_4X32"]                = {"hipResViewFormatFloat4", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};                      // 0x18 // API_Runtime ANALOGUE (cudaResViewFormatFloat4 = 0x18)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_UNSIGNED_BC1"]              = {"hipResViewFormatUnsignedBlockCompressed1", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};    // 0x19 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed1 = 0x19)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_UNSIGNED_BC2"]              = {"hipResViewFormatUnsignedBlockCompressed2", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};    // 0x1a // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed2 = 0x1a)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_UNSIGNED_BC3"]              = {"hipResViewFormatUnsignedBlockCompressed3", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};    // 0x1b // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed3 = 0x1b)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_UNSIGNED_BC4"]              = {"hipResViewFormatUnsignedBlockCompressed4", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};    // 0x1c // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed4 = 0x1c)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_SIGNED_BC4"]                = {"hipResViewFormatSignedBlockCompressed4", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};      // 0x1d // API_Runtime ANALOGUE (cudaResViewFormatSignedBlockCompressed4 = 0x1d)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_UNSIGNED_BC5"]              = {"hipResViewFormatUnsignedBlockCompressed5", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};    // 0x1e // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed5 = 0x1e)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_SIGNED_BC5"]                = {"hipResViewFormatSignedBlockCompressed5", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};      // 0x1f // API_Runtime ANALOGUE (cudaResViewFormatSignedBlockCompressed5 = 0x1f)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_UNSIGNED_BC6H"]             = {"hipResViewFormatUnsignedBlockCompressed6H", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};   // 0x20 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed6H = 0x20)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_SIGNED_BC6H"]               = {"hipResViewFormatSignedBlockCompressed6H", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};     // 0x21 // API_Runtime ANALOGUE (cudaResViewFormatSignedBlockCompressed6H = 0x21)
+    cuda2hipRename["CU_RES_VIEW_FORMAT_UNSIGNED_BC7"]              = {"hipResViewFormatUnsignedBlockCompressed7", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};    // 0x22 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed7 = 0x22)
+
+
+
+    cuda2hipRename["CUsharedconfig_enum"]                          = {"hipSharedMemConfig", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUsharedconfig"]                               = {"hipSharedMemConfig", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CU_SHARED_MEM_CONFIG_DEFAULT_BANK_SIZE"]       = {"hipSharedMemBankSizeDefault", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_SHARED_MEM_CONFIG_FOUR_BYTE_BANK_SIZE"]     = {"hipSharedMemBankSizeFourByte", CONV_DEV, API_DRIVER};
+    cuda2hipRename["CU_SHARED_MEM_CONFIG_EIGHT_BYTE_BANK_SIZE"]    = {"hipSharedMemBankSizeEightByte", CONV_DEV, API_DRIVER};
+
+    cuda2hipRename["CUcontext"]                                    = {"hipCtx_t", CONV_TYPE, API_DRIVER};
     // TODO:
     // cuda2hipRename["CUctx_st"]                                  = {"XXXX", CONV_TYPE, API_DRIVER};
-    cuda2hipRename["CUmodule"]                                  = {"hipModule_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUmodule"]                                     = {"hipModule_t", CONV_TYPE, API_DRIVER};
     // TODO:
     // cuda2hipRename["CUmod_st"]                                  = {"XXXX", CONV_TYPE, API_DRIVER};
-    cuda2hipRename["CUstream"]                                  = {"hipStream_t", CONV_TYPE, API_DRIVER};
+    cuda2hipRename["CUstream"]                                     = {"hipStream_t", CONV_TYPE, API_DRIVER};
     // TODO:
     // cuda2hipRename["CUstream_st"]                               = {"XXXX", CONV_TYPE, API_DRIVER};
     // Stream Flags
-    cuda2hipRename["CU_STREAM_DEFAULT"]                         = {"hipStreamDefault", CONV_STREAM, API_DRIVER};
-    cuda2hipRename["CU_STREAM_NON_BLOCKING"]                    = {"hipStreamNonBlocking", CONV_STREAM, API_DRIVER};
+    cuda2hipRename["CU_STREAM_DEFAULT"]                            = {"hipStreamDefault", CONV_STREAM, API_DRIVER};
+    cuda2hipRename["CU_STREAM_NON_BLOCKING"]                       = {"hipStreamNonBlocking", CONV_STREAM, API_DRIVER};
 
     // Init
-    cuda2hipRename["cuInit"]                                    = {"hipInit", CONV_DRIVER, API_DRIVER};
+    cuda2hipRename["cuInit"]                                       = {"hipInit", CONV_DRIVER, API_DRIVER};
 
     // Driver
     cuda2hipRename["cuDriverGetVersion"]                        = {"hipDriverGetVersion", CONV_DRIVER, API_DRIVER};
@@ -568,14 +816,17 @@ struct cuda2hipMap {
     // Events
     // pointer to CUevent_st
     cuda2hipRename["CUevent"]                                   = {"hipEvent_t", CONV_TYPE, API_DRIVER};
-    // ToDO:
-    // cuda2hipRename["CUevent_st"]                                = {"XXXX", CONV_TYPE, API_DRIVER};
+    // ToDo:
+    // cuda2hipRename["CUevent_st"]                             = {"XXXX", CONV_TYPE, API_DRIVER};
     // Event Flags
+    cuda2hipRename["CUevent_flags"]                             = {"hipEventFlags", CONV_EVENT, API_DRIVER, HIP_UNSUPPORTED};
+    // ToDo:
+    // cuda2hipRename["CUevent_flags_enum"]                     = {"hipEventFlags", CONV_EVENT, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["CU_EVENT_DEFAULT"]                          = {"hipEventDefault", CONV_EVENT, API_DRIVER};
     cuda2hipRename["CU_EVENT_BLOCKING_SYNC"]                    = {"hipEventBlockingSync", CONV_EVENT, API_DRIVER};
     cuda2hipRename["CU_EVENT_DISABLE_TIMING"]                   = {"hipEventDisableTiming", CONV_EVENT, API_DRIVER};
     cuda2hipRename["CU_EVENT_INTERPROCESS"]                     = {"hipEventInterprocess", CONV_EVENT, API_DRIVER};
-
+    // Event functions
     cuda2hipRename["cuEventCreate"]                             = {"hipEventCreate", CONV_EVENT, API_DRIVER};
     cuda2hipRename["cuEventDestroy_v2"]                         = {"hipEventDestroy", CONV_EVENT, API_DRIVER};
     cuda2hipRename["cuEventElapsedTime"]                        = {"hipEventElapsedTime", CONV_EVENT, API_DRIVER};
@@ -627,7 +878,7 @@ struct cuda2hipMap {
     cuda2hipRename["cuMemsetD16_v2"]                            = {"hipMemsetD16", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuMemsetD16Async"]                          = {"hipMemsetD16Async", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuMemsetD2D16_v2"]                          = {"hipMemsetD2D16", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
-     cuda2hipRename["cuMemsetD2D16Async"]                       = {"hipMemsetD2D16Async", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cuMemsetD2D16Async"]                        = {"hipMemsetD2D16Async", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
 
     cuda2hipRename["cuMemsetD32_v2"]                            = {"hipMemset", CONV_MEM, API_DRIVER};
     cuda2hipRename["cuMemsetD32Async"]                          = {"hipMemsetAsync", CONV_MEM, API_DRIVER};
@@ -638,6 +889,14 @@ struct cuda2hipMap {
     cuda2hipRename["cuMemGetInfo_v2"]                           = {"hipMemGetInfo", CONV_MEM, API_DRIVER};
     cuda2hipRename["cuMemHostRegister_v2"]                      = {"hipHostRegister", CONV_MEM, API_DRIVER};
     cuda2hipRename["cuMemHostUnregister"]                       = {"hipHostUnregister", CONV_MEM, API_DRIVER};
+
+    // Texture Reference Mngmnt
+    // Texture reference filtering modes
+    cuda2hipRename["CUfilter_mode"]                             = {"hipTextureFilterMode", CONV_TEX, API_DRIVER};                         // API_Runtime ANALOGUE (cudaTextureFilterMode)
+    // ToDo:
+    // cuda2hipRename["CUfilter_mode"]                          = {"CUfilter_mode_enum", CONV_TEX, API_DRIVER};                           // API_Runtime ANALOGUE (cudaTextureFilterMode)
+    cuda2hipRename["CU_TR_FILTER_MODE_POINT"]                   = {"hipFilterModePoint", CONV_TEX, API_DRIVER};                      // 0 // API_Runtime ANALOGUE (cudaFilterModePoint = 0)
+    cuda2hipRename["CU_TR_FILTER_MODE_LINEAR"]                  = {"hipFilterModeLinear", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};    // 1 // API_Runtime ANALOGUE (cudaFilterModeLinear = 1)
 
     // Profiler
     // unsupported yet by HIP
@@ -675,6 +934,14 @@ struct cuda2hipMap {
     cuda2hipRename["MAJOR_VERSION"]               = {"hipLibraryMajorVersion", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["MINOR_VERSION"]               = {"hipLibraryMinorVersion", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["PATCH_LEVEL"]                 = {"hipLibraryPatchVersion", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};
+
+    // defines
+    cuda2hipRename["cudaMemAttachGlobal"]                        = {"hipMemAttachGlobal", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};                       // 0x01 // API_Driver ANALOGUE (CU_MEM_ATTACH_GLOBAL = 0x1)
+    cuda2hipRename["cudaMemAttachHost"]                          = {"hipMemAttachHost", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};                         // 0x02 // API_Driver ANALOGUE (CU_MEM_ATTACH_HOST = 0x2)
+    cuda2hipRename["cudaMemAttachSingle"]                        = {"hipMemAttachSingle", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};                       // 0x04 // API_Driver ANALOGUE (CU_MEM_ATTACH_SINGLE = 0x4)
+
+    cuda2hipRename["cudaOccupancyDefault"]                       = {"hipOccupancyDefault", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};                      // 0x00 // API_Driver ANALOGUE (CU_OCCUPANCY_DEFAULT = 0x0)
+    cuda2hipRename["cudaOccupancyDisableCachingOverride"]        = {"hipOccupancyDisableCachingOverride", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};       // 0x01 // API_Driver ANALOGUE (CU_OCCUPANCY_DISABLE_CACHING_OVERRIDE = 0x1)
 
     // Error API
     cuda2hipRename["cudaGetLastError"]            = {"hipGetLastError", CONV_ERR, API_RUNTIME};
@@ -766,7 +1033,7 @@ struct cuda2hipMap {
     cuda2hipRename["cudaHostAlloc"]               = {"hipHostMalloc", CONV_MEM, API_RUNTIME};
 
     // Memory types
-    cuda2hipRename["cudaMemoryType"]              = {"hipMemoryType", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemoryType"]              = {"hipMemoryType", CONV_MEM, API_RUNTIME};                         // API_Driver ANALOGUE (no -  CUmemorytype is not an analogue)
     cuda2hipRename["cudaMemoryTypeHost"]          = {"hipMemoryTypeHost", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMemoryTypeDevice"]        = {"hipMemoryTypeDevice", CONV_MEM, API_RUNTIME};
 
@@ -838,7 +1105,6 @@ struct cuda2hipMap {
     cuda2hipRename["cudaEventBlockingSync"]         = {"hipEventBlockingSync", CONV_EVENT, API_RUNTIME};
     cuda2hipRename["cudaEventDisableTiming"]        = {"hipEventDisableTiming", CONV_EVENT, API_RUNTIME};
     cuda2hipRename["cudaEventInterprocess"]         = {"hipEventInterprocess", CONV_EVENT, API_RUNTIME};
-
     // Streams
     cuda2hipRename["cudaStream_t"]                  = {"hipStream_t", CONV_TYPE, API_RUNTIME};
     cuda2hipRename["cudaStreamCreate"]              = {"hipStreamCreate", CONV_STREAM, API_RUNTIME};
@@ -874,93 +1140,94 @@ struct cuda2hipMap {
     // Attributes
     cuda2hipRename["cudaDeviceGetAttribute"]                       = {"hipDeviceGetAttribute", CONV_DEV, API_RUNTIME};
 
-    cuda2hipRename["cudaDeviceAttr"]                               = {"hipDeviceAttribute_t", CONV_TYPE, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrMaxThreadsPerBlock"]                = {"hipDeviceAttributeMaxThreadsPerBlock", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrMaxBlockDimX"]                      = {"hipDeviceAttributeMaxBlockDimX", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrMaxBlockDimY"]                      = {"hipDeviceAttributeMaxBlockDimY", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrMaxBlockDimZ"]                      = {"hipDeviceAttributeMaxBlockDimZ", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrMaxGridDimX"]                       = {"hipDeviceAttributeMaxGridDimX", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrMaxGridDimY"]                       = {"hipDeviceAttributeMaxGridDimY", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrMaxGridDimZ"]                       = {"hipDeviceAttributeMaxGridDimZ", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrMaxSharedMemoryPerBlock"]           = {"hipDeviceAttributeMaxSharedMemoryPerBlock", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrTotalConstantMemory"]               = {"hipDeviceAttributeTotalConstantMemory", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrWarpSize"]                          = {"hipDeviceAttributeWarpSize", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrMaxRegistersPerBlock"]              = {"hipDeviceAttributeMaxRegistersPerBlock", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrClockRate"]                         = {"hipDeviceAttributeClockRate", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrMemoryClockRate"]                   = {"hipDeviceAttributeMemoryClockRate", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrGlobalMemoryBusWidth"]              = {"hipDeviceAttributeMemoryBusWidth", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrMultiProcessorCount"]               = {"hipDeviceAttributeMultiprocessorCount", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrComputeMode"]                       = {"hipDeviceAttributeComputeMode", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrL2CacheSize"]                       = {"hipDeviceAttributeL2CacheSize", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrMaxThreadsPerMultiProcessor"]       = {"hipDeviceAttributeMaxThreadsPerMultiProcessor", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrComputeCapabilityMajor"]            = {"hipDeviceAttributeComputeCapabilityMajor", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrComputeCapabilityMinor"]            = {"hipDeviceAttributeComputeCapabilityMinor", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrConcurrentKernels"]                 = {"hipDeviceAttributeConcurrentKernels", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrPciBusId"]                          = {"hipDeviceAttributePciBusId", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrPciDeviceId"]                       = {"hipDeviceAttributePciDeviceId", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrMaxSharedMemoryPerMultiprocessor"]  = {"hipDeviceAttributeMaxSharedMemoryPerMultiprocessor", CONV_DEV, API_RUNTIME};
-    cuda2hipRename["cudaDevAttrIsMultiGpuBoard"]                   = {"hipDeviceAttributeIsMultiGpuBoard", CONV_DEV, API_RUNTIME};
-    // unsupported yet by HIP
-    cuda2hipRename["cudaDevAttrMaxPitch"]                          = {"hipDeviceAttributeMaxPitch", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrTextureAlignment"]                  = {"hipDeviceAttributeTextureAlignment", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaDeviceAttr"]                               = {"hipDeviceAttribute_t", CONV_TYPE, API_RUNTIME};                                                // API_DRIVER ANALOGUE (CUdevice_attribute)
+    cuda2hipRename["cudaDevAttrMaxThreadsPerBlock"]                = {"hipDeviceAttributeMaxThreadsPerBlock", CONV_DEV, API_RUNTIME};                                 //  1 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK = 1)
+    cuda2hipRename["cudaDevAttrMaxBlockDimX"]                      = {"hipDeviceAttributeMaxBlockDimX", CONV_DEV, API_RUNTIME};                                       //  2 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_X = 2)
+    cuda2hipRename["cudaDevAttrMaxBlockDimY"]                      = {"hipDeviceAttributeMaxBlockDimY", CONV_DEV, API_RUNTIME};                                       //  3 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Y = 3)
+    cuda2hipRename["cudaDevAttrMaxBlockDimZ"]                      = {"hipDeviceAttributeMaxBlockDimZ", CONV_DEV, API_RUNTIME};                                       //  4 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Z = 4)
+    cuda2hipRename["cudaDevAttrMaxGridDimX"]                       = {"hipDeviceAttributeMaxGridDimX", CONV_DEV, API_RUNTIME};                                        //  5 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X = 5)
+    cuda2hipRename["cudaDevAttrMaxGridDimY"]                       = {"hipDeviceAttributeMaxGridDimY", CONV_DEV, API_RUNTIME};                                        //  6 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X = 6)
+    cuda2hipRename["cudaDevAttrMaxGridDimZ"]                       = {"hipDeviceAttributeMaxGridDimZ", CONV_DEV, API_RUNTIME};                                        //  7 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X = 7)
+    cuda2hipRename["cudaDevAttrMaxSharedMemoryPerBlock"]           = {"hipDeviceAttributeMaxSharedMemoryPerBlock", CONV_DEV, API_RUNTIME};                            //  8 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK = 8)
+    cuda2hipRename["cudaDevAttrTotalConstantMemory"]               = {"hipDeviceAttributeTotalConstantMemory", CONV_DEV, API_RUNTIME};                                //  9 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY =9)
+    cuda2hipRename["cudaDevAttrWarpSize"]                          = {"hipDeviceAttributeWarpSize", CONV_DEV, API_RUNTIME};                                           // 10 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_WARP_SIZE = 10)
+    cuda2hipRename["cudaDevAttrMaxPitch"]                          = {"hipDeviceAttributeMaxPitch", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                          // 11 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAX_PITCH = 11)
+    cuda2hipRename["cudaDevAttrMaxRegistersPerBlock"]              = {"hipDeviceAttributeMaxRegistersPerBlock", CONV_DEV, API_RUNTIME};                               // 12 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK = 12)
+    cuda2hipRename["cudaDevAttrClockRate"]                         = {"hipDeviceAttributeClockRate", CONV_DEV, API_RUNTIME};                                          // 13 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_CLOCK_RATE = 13)
+    cuda2hipRename["cudaDevAttrTextureAlignment"]                  = {"hipDeviceAttributeTextureAlignment", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                  // 14 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT = 14)
     // Is not deprecated as CUDA Driver's API analogue CU_DEVICE_ATTRIBUTE_GPU_OVERLAP
-    cuda2hipRename["cudaDevAttrGpuOverlap"]                        = {"hipDeviceAttributeGpuOverlap", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrKernelExecTimeout"]                 = {"hipDeviceAttributeKernelExecTimeout", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrIntegrated"]                        = {"hipDeviceAttributeIntegrated", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrCanMapHostMemory"]                  = {"hipDeviceAttributeCanMapHostMemory", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture1DWidth"]                 = {"hipDeviceAttributeMaxTexture1DWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture2DWidth"]                 = {"hipDeviceAttributeMaxTexture2DWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture2DHeight"]                = {"hipDeviceAttributeMaxTexture2DHeight", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture3DWidth"]                 = {"hipDeviceAttributeMaxTexture3DWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture3DHeight"]                = {"hipDeviceAttributeMaxTexture3DHeight", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture3DDepth"]                 = {"hipDeviceAttributeMaxTexture3DDepth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture2DLayeredWidth"]          = {"hipDeviceAttributeMaxTexture2DLayeredWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture2DLayeredHeight"]         = {"hipDeviceAttributeMaxTexture2DLayeredHeight", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture2DLayeredLayers"]         = {"hipDeviceAttributeMaxTexture2DLayeredLayers", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrSurfaceAlignment"]                  = {"hipDeviceAttributeSurfaceAlignment", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrEccEnabled"]                        = {"hipDeviceAttributeEccEnabled", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrTccDriver"]                         = {"hipDeviceAttributeTccDriver", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrAsyncEngineCount"]                  = {"hipDevAttrAsyncEngineCount", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrUnifiedAddressing"]                 = {"hipDeviceAttributeUnifiedAddressing", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture1DLayeredWidth"]          = {"hipDeviceAttributeMaxTexture1DLayeredWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture1DLayeredLayers"]         = {"hipDeviceAttributeMaxTexture1DLayeredLayers", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture2DGatherWidth"]           = {"hipDeviceAttributeMaxTexture2DGatherWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture2DGatherHeight"]          = {"hipDeviceAttributeMaxTexture2DGatherHeight", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture3DWidthAlt"]              = {"hipDeviceAttributeMaxTexture3DWidthAlternate", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture3DHeightAlt"]             = {"hipDeviceAttributeMaxTexture3DHeightAlternate", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture3DDepthAlt"]              = {"hipDeviceAttributeMaxTexture3DDepthAlternate", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrPciDomainId"]                       = {"hipDeviceAttributePciDomainId", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrTexturePitchAlignment"]             = {"hipDeviceAttributeTexturePitchAlignment", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTextureCubemapWidth"]            = {"hipDeviceAttributeMaxTextureCubemapWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTextureCubemapLayeredWidth"]     = {"hipDeviceAttributeMaxTextureCubemapLayeredWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTextureCubemapLayeredLayers"]    = {"hipDeviceAttributeMaxTextureCubemapLayeredLayers", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxSurface1DWidth"]                 = {"hipDeviceAttributeMaxSurface1DWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxSurface2DWidth"]                 = {"hipDeviceAttributeMaxSurface2DWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxSurface2DHeight"]                = {"hipDeviceAttributeMaxSurface2DHeight", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxSurface3DWidth"]                 = {"hipDeviceAttributeMaxSurface3DWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxSurface3DHeight"]                = {"hipDeviceAttributeMaxSurface3DHeight", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxSurface3DDepth"]                 = {"hipDeviceAttributeMaxSurface3DDepth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxSurface1DLayeredWidth"]          = {"hipDeviceAttributeMaxSurface1DLayeredWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxSurface1DLayeredLayers"]         = {"hipDeviceAttributeMaxSurface1DLayeredLayers", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxSurface2DLayeredWidth"]          = {"hipDeviceAttributeMaxSurface2DLayeredWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxSurface2DLayeredHeight"]         = {"hipDeviceAttributeMaxSurface2DLayeredHeight", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxSurface2DLayeredLayers"]         = {"hipDeviceAttributeMaxSurface2DLayeredLayers", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxSurfaceCubemapWidth"]            = {"hipDeviceAttributeMaxSurfaceCubemapWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxSurfaceCubemapLayeredWidth"]     = {"hipDeviceAttributeMaxSurfaceCubemapLayeredWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxSurfaceCubemapLayeredLayers"]    = {"hipDeviceAttributeMaxSurfaceCubemapLayeredLayers", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture1DLinearWidth"]           = {"hipDeviceAttributeMaxTexture1DLinearWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture2DLinearWidth"]           = {"hipDeviceAttributeMaxTexture2DLinearWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture2DLinearHeight"]          = {"hipDeviceAttributeMaxTexture2DLinearHeight", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture2DLinearPitch"]           = {"hipDeviceAttributeMaxTexture2DLinearPitch", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture2DMipmappedWidth"]        = {"hipDeviceAttributeMaxTexture2DMipmappedWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture2DMipmappedHeight"]       = {"hipDeviceAttributeMaxTexture2DMipmappedHeight", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxTexture1DMipmappedWidth"]        = {"hipDeviceAttributeMaxTexture1DMipmappedWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrStreamPrioritiesSupported"]         = {"hipDeviceAttributeStreamPrioritiesSupported", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrGlobalL1CacheSupported"]            = {"hipDeviceAttributeGlobalL1CacheSupported", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrLocalL1CacheSupported"]             = {"hipDeviceAttributeLocalL1CacheSupported", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMaxRegistersPerMultiprocessor"]     = {"hipDeviceAttributeMaxRegistersPerMultiprocessor", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrManagedMemory"]                     = {"hipDeviceAttributeManagedMemory", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDevAttrMultiGpuBoardGroupID"]              = {"hipDeviceAttributeMultiGpuBoardGroupID", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaDevAttrGpuOverlap"]                        = {"hipDeviceAttributeGpuOverlap", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                        // 15 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_GPU_OVERLAP = 15)
+    cuda2hipRename["cudaDevAttrMultiProcessorCount"]               = {"hipDeviceAttributeMultiprocessorCount", CONV_DEV, API_RUNTIME};                                // 16 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT = 16)
+    cuda2hipRename["cudaDevAttrKernelExecTimeout"]                 = {"hipDeviceAttributeKernelExecTimeout", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                 // 17 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_KERNEL_EXEC_TIMEOUT = 17)
+    cuda2hipRename["cudaDevAttrIntegrated"]                        = {"hipDeviceAttributeIntegrated", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                        // 18 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_INTEGRATED = 18)
+    cuda2hipRename["cudaDevAttrCanMapHostMemory"]                  = {"hipDeviceAttributeCanMapHostMemory", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                  // 19 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_CAN_MAP_HOST_MEMORY = 19)
+    cuda2hipRename["cudaDevAttrComputeMode"]                       = {"hipDeviceAttributeComputeMode", CONV_DEV, API_RUNTIME};                                        // 20 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_COMPUTE_MODE = 20)
+    cuda2hipRename["cudaDevAttrMaxTexture1DWidth"]                 = {"hipDeviceAttributeMaxTexture1DWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                 // 21 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_WIDTH = 21)
+    cuda2hipRename["cudaDevAttrMaxTexture2DWidth"]                 = {"hipDeviceAttributeMaxTexture2DWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                 // 22 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_WIDTH = 22)
+    cuda2hipRename["cudaDevAttrMaxTexture2DHeight"]                = {"hipDeviceAttributeMaxTexture2DHeight", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                // 23 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_HEIGHT = 23)
+    cuda2hipRename["cudaDevAttrMaxTexture3DWidth"]                 = {"hipDeviceAttributeMaxTexture3DWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                 // 24 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_WIDTH = 24)
+    cuda2hipRename["cudaDevAttrMaxTexture3DHeight"]                = {"hipDeviceAttributeMaxTexture3DHeight", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                // 25 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_HEIGHT = 25)
+    cuda2hipRename["cudaDevAttrMaxTexture3DDepth"]                 = {"hipDeviceAttributeMaxTexture3DDepth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                 // 26 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_DEPTH = 26)
+    cuda2hipRename["cudaDevAttrMaxTexture2DLayeredWidth"]          = {"hipDeviceAttributeMaxTexture2DLayeredWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};          // 27 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_WIDTH = 27)
+    cuda2hipRename["cudaDevAttrMaxTexture2DLayeredHeight"]         = {"hipDeviceAttributeMaxTexture2DLayeredHeight", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};         // 28 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_HEIGHT = 28)
+    cuda2hipRename["cudaDevAttrMaxTexture2DLayeredLayers"]         = {"hipDeviceAttributeMaxTexture2DLayeredLayers", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};         // 29 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_LAYERS = 29)
+    cuda2hipRename["cudaDevAttrSurfaceAlignment"]                  = {"hipDeviceAttributeSurfaceAlignment", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                  // 30 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_SURFACE_ALIGNMENT = 30)
+    cuda2hipRename["cudaDevAttrConcurrentKernels"]                 = {"hipDeviceAttributeConcurrentKernels", CONV_DEV, API_RUNTIME};                                  // 31 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_CONCURRENT_KERNELS = 31)
+    cuda2hipRename["cudaDevAttrEccEnabled"]                        = {"hipDeviceAttributeEccEnabled", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                        // 32 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_ECC_ENABLED = 32)
+    cuda2hipRename["cudaDevAttrPciBusId"]                          = {"hipDeviceAttributePciBusId", CONV_DEV, API_RUNTIME};                                           // 33 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_PCI_BUS_ID = 33)
+    cuda2hipRename["cudaDevAttrPciDeviceId"]                       = {"hipDeviceAttributePciDeviceId", CONV_DEV, API_RUNTIME};                                        // 34 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_PCI_DEVICE_ID = 34)
+    cuda2hipRename["cudaDevAttrTccDriver"]                         = {"hipDeviceAttributeTccDriver", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                         // 35 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_TCC_DRIVER = 35)
+    cuda2hipRename["cudaDevAttrMemoryClockRate"]                   = {"hipDeviceAttributeMemoryClockRate", CONV_DEV, API_RUNTIME};                                    // 36 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MEMORY_CLOCK_RATE = 36)
+    cuda2hipRename["cudaDevAttrGlobalMemoryBusWidth"]              = {"hipDeviceAttributeMemoryBusWidth", CONV_DEV, API_RUNTIME};                                     // 37 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_GLOBAL_MEMORY_BUS_WIDTH = 37)
+    cuda2hipRename["cudaDevAttrL2CacheSize"]                       = {"hipDeviceAttributeL2CacheSize", CONV_DEV, API_RUNTIME};                                        // 38 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_L2_CACHE_SIZE = 38)
+    cuda2hipRename["cudaDevAttrMaxThreadsPerMultiProcessor"]       = {"hipDeviceAttributeMaxThreadsPerMultiProcessor", CONV_DEV, API_RUNTIME};                        // 39 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_MULTIPROCESSOR = 39)
+    cuda2hipRename["cudaDevAttrAsyncEngineCount"]                  = {"hipDeviceAttributeAsyncEngineCount", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                  // 40 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_ASYNC_ENGINE_COUNT = 40)
+    cuda2hipRename["cudaDevAttrUnifiedAddressing"]                 = {"hipDeviceAttributeUnifiedAddressing", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                 // 41 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_UNIFIED_ADDRESSING = 41)
+    cuda2hipRename["cudaDevAttrMaxTexture1DLayeredWidth"]          = {"hipDeviceAttributeMaxTexture1DLayeredWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};          // 42 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LAYERED_WIDTH = 42)
+    cuda2hipRename["cudaDevAttrMaxTexture1DLayeredLayers"]         = {"hipDeviceAttributeMaxTexture1DLayeredLayers", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};         // 43 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LAYERED_LAYERS = 43)
+    // 44 - no
+    cuda2hipRename["cudaDevAttrMaxTexture2DGatherWidth"]           = {"hipDeviceAttributeMaxTexture2DGatherWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};           // 45 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_GATHER_WIDTH = 45)
+    cuda2hipRename["cudaDevAttrMaxTexture2DGatherHeight"]          = {"hipDeviceAttributeMaxTexture2DGatherHeight", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};          // 46 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_GATHER_HEIGHT = 46)
+    cuda2hipRename["cudaDevAttrMaxTexture3DWidthAlt"]              = {"hipDeviceAttributeMaxTexture3DWidthAlternate", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};        // 47 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_WIDTH_ALTERNATE = 47)
+    cuda2hipRename["cudaDevAttrMaxTexture3DHeightAlt"]             = {"hipDeviceAttributeMaxTexture3DHeightAlternate", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};       // 48 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_HEIGHT_ALTERNATE = 48)
+    cuda2hipRename["cudaDevAttrMaxTexture3DDepthAlt"]              = {"hipDeviceAttributeMaxTexture3DDepthAlternate", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};        // 49 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_DEPTH_ALTERNATE = 49)
+    cuda2hipRename["cudaDevAttrPciDomainId"]                       = {"hipDeviceAttributePciDomainId", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                       // 50 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_PCI_DOMAIN_ID = 50)
+    cuda2hipRename["cudaDevAttrTexturePitchAlignment"]             = {"hipDeviceAttributeTexturePitchAlignment", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};             // 51 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_TEXTURE_PITCH_ALIGNMENT = 51)
+    cuda2hipRename["cudaDevAttrMaxTextureCubemapWidth"]            = {"hipDeviceAttributeMaxTextureCubemapWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};            // 52 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURECUBEMAP_WIDTH = 52)
+    cuda2hipRename["cudaDevAttrMaxTextureCubemapLayeredWidth"]     = {"hipDeviceAttributeMaxTextureCubemapLayeredWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};     // 53 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURECUBEMAP_LAYERED_WIDTH = 53)
+    cuda2hipRename["cudaDevAttrMaxTextureCubemapLayeredLayers"]    = {"hipDeviceAttributeMaxTextureCubemapLayeredLayers", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};    // 54 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURECUBEMAP_LAYERED_LAYERS = 54)
+    cuda2hipRename["cudaDevAttrMaxSurface1DWidth"]                 = {"hipDeviceAttributeMaxSurface1DWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                 // 55 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_WIDTH = 55)
+    cuda2hipRename["cudaDevAttrMaxSurface2DWidth"]                 = {"hipDeviceAttributeMaxSurface2DWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                 // 56 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_WIDTH = 56)
+    cuda2hipRename["cudaDevAttrMaxSurface2DHeight"]                = {"hipDeviceAttributeMaxSurface2DHeight", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                // 57 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_HEIGHT = 57)
+    cuda2hipRename["cudaDevAttrMaxSurface3DWidth"]                 = {"hipDeviceAttributeMaxSurface3DWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                 // 58 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE3D_WIDTH = 58)
+    cuda2hipRename["cudaDevAttrMaxSurface3DHeight"]                = {"hipDeviceAttributeMaxSurface3DHeight", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                // 59 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE3D_HEIGHT = 59)
+    cuda2hipRename["cudaDevAttrMaxSurface3DDepth"]                 = {"hipDeviceAttributeMaxSurface3DDepth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                 // 60 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE3D_DEPTH = 60)
+    cuda2hipRename["cudaDevAttrMaxSurface1DLayeredWidth"]          = {"hipDeviceAttributeMaxSurface1DLayeredWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};          // 61 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_LAYERED_WIDTH = 61)
+    cuda2hipRename["cudaDevAttrMaxSurface1DLayeredLayers"]         = {"hipDeviceAttributeMaxSurface1DLayeredLayers", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};         // 62 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_LAYERED_LAYERS = 62)
+    cuda2hipRename["cudaDevAttrMaxSurface2DLayeredWidth"]          = {"hipDeviceAttributeMaxSurface2DLayeredWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};          // 63 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_LAYERED_WIDTH = 63)
+    cuda2hipRename["cudaDevAttrMaxSurface2DLayeredHeight"]         = {"hipDeviceAttributeMaxSurface2DLayeredHeight", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};         // 64 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_LAYERED_HEIGHT = 64)
+    cuda2hipRename["cudaDevAttrMaxSurface2DLayeredLayers"]         = {"hipDeviceAttributeMaxSurface2DLayeredLayers", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};         // 65 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_LAYERED_LAYERS = 65)
+    cuda2hipRename["cudaDevAttrMaxSurfaceCubemapWidth"]            = {"hipDeviceAttributeMaxSurfaceCubemapWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};            // 66 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_WIDTH = 66)
+    cuda2hipRename["cudaDevAttrMaxSurfaceCubemapLayeredWidth"]     = {"hipDeviceAttributeMaxSurfaceCubemapLayeredWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};     // 67 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_LAYERED_WIDTH = 67)
+    cuda2hipRename["cudaDevAttrMaxSurfaceCubemapLayeredLayers"]    = {"hipDeviceAttributeMaxSurfaceCubemapLayeredLayers", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};    // 68 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_LAYERED_LAYERS = 68)
+    cuda2hipRename["cudaDevAttrMaxTexture1DLinearWidth"]           = {"hipDeviceAttributeMaxTexture1DLinearWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};           // 69 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LINEAR_WIDTH = 69)
+    cuda2hipRename["cudaDevAttrMaxTexture2DLinearWidth"]           = {"hipDeviceAttributeMaxTexture2DLinearWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};           // 70 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LINEAR_WIDTH = 70)
+    cuda2hipRename["cudaDevAttrMaxTexture2DLinearHeight"]          = {"hipDeviceAttributeMaxTexture2DLinearHeight", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};          // 71 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LINEAR_HEIGHT = 71)
+    cuda2hipRename["cudaDevAttrMaxTexture2DLinearPitch"]           = {"hipDeviceAttributeMaxTexture2DLinearPitch", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};           // 72 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LINEAR_PITCH = 72)
+    cuda2hipRename["cudaDevAttrMaxTexture2DMipmappedWidth"]        = {"hipDeviceAttributeMaxTexture2DMipmappedWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};        // 73 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_MIPMAPPED_WIDTH = 73)
+    cuda2hipRename["cudaDevAttrMaxTexture2DMipmappedHeight"]       = {"hipDeviceAttributeMaxTexture2DMipmappedHeight", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};       // 74 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_MIPMAPPED_HEIGHT = 74)
+    cuda2hipRename["cudaDevAttrComputeCapabilityMajor"]            = {"hipDeviceAttributeComputeCapabilityMajor", CONV_DEV, API_RUNTIME};                             // 75 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR = 75)
+    cuda2hipRename["cudaDevAttrComputeCapabilityMinor"]            = {"hipDeviceAttributeComputeCapabilityMinor", CONV_DEV, API_RUNTIME};                             // 76 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR = 76)
+    cuda2hipRename["cudaDevAttrMaxTexture1DMipmappedWidth"]        = {"hipDeviceAttributeMaxTexture1DMipmappedWidth", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};        // 77 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_MIPMAPPED_WIDTH = 77)
+    cuda2hipRename["cudaDevAttrStreamPrioritiesSupported"]         = {"hipDeviceAttributeStreamPrioritiesSupported", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};         // 78 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_STREAM_PRIORITIES_SUPPORTED = 78)
+    cuda2hipRename["cudaDevAttrGlobalL1CacheSupported"]            = {"hipDeviceAttributeGlobalL1CacheSupported", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};            // 79 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_GLOBAL_L1_CACHE_SUPPORTED = 79)
+    cuda2hipRename["cudaDevAttrLocalL1CacheSupported"]             = {"hipDeviceAttributeLocalL1CacheSupported", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};             // 80 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_LOCAL_L1_CACHE_SUPPORTED = 80)
+    cuda2hipRename["cudaDevAttrMaxSharedMemoryPerMultiprocessor"]  = {"hipDeviceAttributeMaxSharedMemoryPerMultiprocessor", CONV_DEV, API_RUNTIME};                   // 81 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_MULTIPROCESSOR = 81)
+    cuda2hipRename["cudaDevAttrMaxRegistersPerMultiprocessor"]     = {"hipDeviceAttributeMaxRegistersPerMultiprocessor", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};     // 82 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_MULTIPROCESSOR = 82)
+    cuda2hipRename["cudaDevAttrManagedMemory"]                     = {"hipDeviceAttributeManagedMemory", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                     // 83 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MANAGED_MEMORY = 83)
+    cuda2hipRename["cudaDevAttrIsMultiGpuBoard"]                   = {"hipDeviceAttributeIsMultiGpuBoard", CONV_DEV, API_RUNTIME};                                    // 84 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD = 84)
+    cuda2hipRename["cudaDevAttrMultiGpuBoardGroupID"]              = {"hipDeviceAttributeMultiGpuBoardGroupID", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};              // 85 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD_GROUP_ID = 85)
+
     // unsupported yet by HIP [CUDA 8.0.44]
     cuda2hipRename["cudaDevAttrHostNativeAtomicSupported"]         = {"hipDeviceAttributeHostNativeAtomicSupported", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaDevAttrSingleToDoublePrecisionPerfRatio"]  = {"hipDeviceAttributeSingleToDoublePrecisionPerfRatio", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
@@ -970,10 +1237,11 @@ struct cuda2hipMap {
     cuda2hipRename["cudaDevAttrCanUseHostPointerForRegisteredMem"] = {"hipDeviceAttributeCanUseHostPointerForRegisteredMem", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
 
     // Pointer Attributes
-    cuda2hipRename["cudaPointerAttributes"]      = {"hipPointerAttribute_t", CONV_TYPE, API_RUNTIME};
-    cuda2hipRename["cudaPointerGetAttributes"]   = {"hipPointerGetAttributes", CONV_MEM, API_RUNTIME};
+    // struct cudaPointerAttributes
+    cuda2hipRename["cudaPointerAttributes"]                        = {"hipPointerAttribute_t", CONV_TYPE, API_RUNTIME};
+    cuda2hipRename["cudaPointerGetAttributes"]                     = {"hipPointerGetAttributes", CONV_MEM, API_RUNTIME};
 
-    cuda2hipRename["cudaHostGetDevicePointer"]   = {"hipHostGetDevicePointer", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaHostGetDevicePointer"]                     = {"hipHostGetDevicePointer", CONV_MEM, API_RUNTIME};
 
     // Device
     cuda2hipRename["cudaDeviceProp"]                   = {"hipDeviceProp_t", CONV_TYPE, API_RUNTIME};
@@ -985,11 +1253,11 @@ struct cuda2hipMap {
     cuda2hipRename["cudaSetValidDevices"]              = {"hipSetValidDevices", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
 
     // Compute mode
-    cuda2hipRename["cudaComputeMode"]                  = {"hipComputeMode", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaComputeModeDefault"]           = {"hipComputeModeDefault", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaComputeModeExclusive"]         = {"hipComputeModeExclusive", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaComputeModeProhibited"]        = {"hipComputeModeProhibited", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaComputeModeExclusiveProcess"]  = {"hipComputeModeExclusiveProcess", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaComputeMode"]                  = {"hipComputeMode", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                      // API_DRIVER ANALOGUE (CUcomputemode)
+    cuda2hipRename["cudaComputeModeDefault"]           = {"hipComputeModeDefault", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};          // 0
+    cuda2hipRename["cudaComputeModeExclusive"]         = {"hipComputeModeExclusive", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};        // 1
+    cuda2hipRename["cudaComputeModeProhibited"]        = {"hipComputeModeProhibited", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};       // 2
+    cuda2hipRename["cudaComputeModeExclusiveProcess"]  = {"hipComputeModeExclusiveProcess", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED}; // 3
 
     // Device Flags
     // unsupported yet by HIP
@@ -1020,11 +1288,11 @@ struct cuda2hipMap {
 
     // Execution control
     // CUDA function cache configurations
-    cuda2hipRename["cudaFuncCache"]                    = {"hipFuncCache_t", CONV_CACHE, API_RUNTIME};
-    cuda2hipRename["cudaFuncCachePreferNone"]          = {"hipFuncCachePreferNone", CONV_CACHE, API_RUNTIME};
-    cuda2hipRename["cudaFuncCachePreferShared"]        = {"hipFuncCachePreferShared", CONV_CACHE, API_RUNTIME};
-    cuda2hipRename["cudaFuncCachePreferL1"]            = {"hipFuncCachePreferL1", CONV_CACHE, API_RUNTIME};
-    cuda2hipRename["cudaFuncCachePreferEqual"]         = {"hipFuncCachePreferEqual", CONV_CACHE, API_RUNTIME};
+    cuda2hipRename["cudaFuncCache"]                    = {"hipFuncCache_t", CONV_CACHE, API_RUNTIME};                                // API_Driver ANALOGUE (CUfunc_cache)
+    cuda2hipRename["cudaFuncCachePreferNone"]          = {"hipFuncCachePreferNone", CONV_CACHE, API_RUNTIME};                   // 0 // API_Driver ANALOGUE (CU_FUNC_CACHE_PREFER_NONE = 0x00)
+    cuda2hipRename["cudaFuncCachePreferShared"]        = {"hipFuncCachePreferShared", CONV_CACHE, API_RUNTIME};                 // 1 // API_Driver ANALOGUE (CU_FUNC_CACHE_PREFER_SHARED = 0x01)
+    cuda2hipRename["cudaFuncCachePreferL1"]            = {"hipFuncCachePreferL1", CONV_CACHE, API_RUNTIME};                     // 2 // API_Driver ANALOGUE (CU_FUNC_CACHE_PREFER_L1 = 0x02)
+    cuda2hipRename["cudaFuncCachePreferEqual"]         = {"hipFuncCachePreferEqual", CONV_CACHE, API_RUNTIME};                  // 3 // API_Driver ANALOGUE (CU_FUNC_CACHE_PREFER_EQUAL = 0x03)
 
     // Execution control functions
     // unsupported yet by HIP
@@ -1062,7 +1330,9 @@ struct cuda2hipMap {
     cuda2hipRename["cudaDeviceEnablePeerAccess"]     = {"hipDeviceEnablePeerAccess", CONV_DEV, API_RUNTIME};
     cuda2hipRename["cudaMemcpyPeerAsync"]            = {"hipMemcpyPeerAsync", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMemcpyPeer"]                 = {"hipMemcpyPeer", CONV_MEM, API_RUNTIME};
-    cuda2hipRename["cudaIpcMemLazyEnablePeerAccess"] = {"hipIpcMemLazyEnablePeerAccess", CONV_ERR, API_RUNTIME};
+
+    // #define cudaIpcMemLazyEnablePeerAccess 0x01
+    cuda2hipRename["cudaIpcMemLazyEnablePeerAccess"] = {"hipIpcMemLazyEnablePeerAccess", CONV_TYPE, API_RUNTIME};              // 0x01 // API_Driver ANALOGUE (CU_IPC_MEM_LAZY_ENABLE_PEER_ACCESS = 0x1)
 
     // Shared memory
     cuda2hipRename["cudaDeviceSetSharedMemConfig"]   = {"hipDeviceSetSharedMemConfig", CONV_DEV, API_RUNTIME};
@@ -1078,14 +1348,12 @@ struct cuda2hipMap {
     cuda2hipRename["cudaSharedMemBankSizeEightByte"] = {"hipSharedMemBankSizeEightByte", CONV_DEV, API_RUNTIME};
 
     // Limits
-    cuda2hipRename["cudaLimit"]                             = {"hipLimit_t", CONV_DEV, API_RUNTIME};
-    // unsupported yet by HIP
-    cuda2hipRename["cudaLimitStackSize"]                    = {"hipLimitStackSize", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaLimitPrintfFifoSize"]               = {"hipLimitPrintfFifoSize", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaLimitMallocHeapSize"]               = {"hipLimitMallocHeapSize", CONV_DEV, API_RUNTIME};
-    // unsupported yet by HIP
-    cuda2hipRename["cudaLimitDevRuntimeSyncDepth"]          = {"hipLimitPrintfFifoSize", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaLimitDevRuntimePendingLaunchCount"] = {"hipLimitMallocHeapSize", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaLimit"]                             = {"hipLimit_t", CONV_TYPE, API_RUNTIME};                                                    // API_Driver ANALOGUE (CUlimit)
+    cuda2hipRename["cudaLimitStackSize"]                    = {"hipLimitStackSize", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};                    // 0x00 // API_Driver ANALOGUE (CU_LIMIT_STACK_SIZE = 0x00)
+    cuda2hipRename["cudaLimitPrintfFifoSize"]               = {"hipLimitPrintfFifoSize", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};               // 0x01 // API_Driver ANALOGUE (CU_LIMIT_PRINTF_FIFO_SIZE = 0x01)
+    cuda2hipRename["cudaLimitMallocHeapSize"]               = {"hipLimitMallocHeapSize", CONV_TYPE, API_RUNTIME};                                // 0x02 // API_Driver ANALOGUE (CU_LIMIT_MALLOC_HEAP_SIZE = 0x02)
+    cuda2hipRename["cudaLimitDevRuntimeSyncDepth"]          = {"hipLimitDevRuntimeSyncDepth", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};          // 0x03 // API_Driver ANALOGUE (CU_LIMIT_DEV_RUNTIME_SYNC_DEPTH = 0x03)
+    cuda2hipRename["cudaLimitDevRuntimePendingLaunchCount"] = {"hipLimitDevRuntimePendingLaunchCount", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}; // 0x04 // API_Driver ANALOGUE (CU_LIMIT_DEV_RUNTIME_PENDING_LAUNCH_COUNT = 0x04)
 
     cuda2hipRename["cudaDeviceGetLimit"]                    = {"hipDeviceGetLimit", CONV_DEV, API_RUNTIME};
 
@@ -1108,10 +1376,9 @@ struct cuda2hipMap {
     // unsupported yet by HIP
     cuda2hipRename["cudaReadModeNormalizedFloat"]           = {"hipReadModeNormalizedFloat", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
 
-    cuda2hipRename["cudaTextureFilterMode"]                 = {"hipTextureFilterMode", CONV_TEX, API_RUNTIME};
-    cuda2hipRename["cudaFilterModePoint"]                   = {"hipFilterModePoint", CONV_TEX, API_RUNTIME};
-    // unsupported yet by HIP
-    cuda2hipRename["cudaFilterModeLinear"]                  = {"hipFilterModeLinear", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaTextureFilterMode"]                 = {"hipTextureFilterMode", CONV_TEX, API_RUNTIME};                              // API_DRIVER ANALOGUE (CUfilter_mode)
+    cuda2hipRename["cudaFilterModePoint"]                   = {"hipFilterModePoint", CONV_TEX, API_RUNTIME};                           // 0 // API_DRIVER ANALOGUE (CU_TR_FILTER_MODE_POINT = 0)
+    cuda2hipRename["cudaFilterModeLinear"]                  = {"hipFilterModeLinear", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};         // 1 // API_DRIVER ANALOGUE (CU_TR_FILTER_MODE_POINT = 1)
 
     cuda2hipRename["cudaBindTexture"]                       = {"hipBindTexture", CONV_TEX, API_RUNTIME};
     cuda2hipRename["cudaUnbindTexture"]                     = {"hipUnbindTexture", CONV_TEX, API_RUNTIME};
@@ -1131,7 +1398,7 @@ struct cuda2hipMap {
     cuda2hipRename["cudaChannelFormatDesc"]                 = {"hipChannelFormatDesc", CONV_TEX, API_RUNTIME};
     cuda2hipRename["cudaCreateChannelDesc"]                 = {"hipCreateChannelDesc", CONV_TEX, API_RUNTIME};
     // unsupported yet by HIP
-    cuda2hipRename["cudaGetChannelDesc"]                    = {"hipGetChannelDesc", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaGetChannelDesc"]                    = {"hipGetChannelDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
 
     // Texture Object Management
     // structs
@@ -1139,49 +1406,52 @@ struct cuda2hipMap {
     cuda2hipRename["cudaResourceDesc"]                            = {"hipResourceDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaResourceViewDesc"]                        = {"hipResourceViewDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaTextureDesc"]                             = {"hipTextureDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    // enums
-    // unsupported yet by HIP
-    cuda2hipRename["cudaResourceType"]                            = {"hipResourceType", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResourceTypeArray"]                       = {"hipResourceTypeArray", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResourceTypeMipmappedArray"]              = {"hipResourceTypeMipmappedArray", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResourceTypeLinear"]                      = {"hipResourceTypeLinear", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResourceTypePitch2D"]                     = {"hipResourceTypePitch2D", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
 
-    cuda2hipRename["cudaResourceViewFormat"]                      = {"hipResourceViewFormat", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatNone"]                       = {"hipResViewFormatNone", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatUnsignedChar1"]              = {"hipResViewFormatUnsignedChar1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatUnsignedChar2"]              = {"hipResViewFormatUnsignedChar2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatUnsignedChar4"]              = {"hipResViewFormatUnsignedChar4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatSignedChar1"]                = {"hipResViewFormatSignedChar1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatSignedChar2"]                = {"hipResViewFormatSignedChar2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatSignedChar4"]                = {"hipResViewFormatSignedChar4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatUnsignedShort1"]             = {"hipResViewFormatUnsignedShort1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatUnsignedShort2"]             = {"hipResViewFormatUnsignedShort2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatUnsignedShort4"]             = {"hipResViewFormatUnsignedShort4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatSignedShort1"]               = {"hipResViewFormatSignedShort1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatSignedShort2"]               = {"hipResViewFormatSignedShort2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatSignedShort4"]               = {"hipResViewFormatSignedShort4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatUnsignedInt1"]               = {"hipResViewFormatUnsignedInt1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatUnsignedInt2"]               = {"hipResViewFormatUnsignedInt2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatUnsignedInt4"]               = {"hipResViewFormatUnsignedInt4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatSignedInt1"]                 = {"hipResViewFormatSignedInt1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatSignedInt2"]                 = {"hipResViewFormatSignedInt2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatSignedInt4"]                 = {"hipResViewFormatSignedInt4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatHalf1"]                      = {"hipResViewFormatHalf1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatHalf2"]                      = {"hipResViewFormatHalf2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatHalf4"]                      = {"hipResViewFormatHalf4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatFloat1"]                     = {"hipResViewFormatFloat1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatFloat2"]                     = {"hipResViewFormatFloat2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatFloat4"]                     = {"hipResViewFormatFloat4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed1"]   = {"hipResViewFormatUnsignedBlockCompressed1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed2"]   = {"hipResViewFormatUnsignedBlockCompressed2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed3"]   = {"hipResViewFormatUnsignedBlockCompressed3", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed4"]   = {"hipResViewFormatUnsignedBlockCompressed4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatSignedBlockCompressed4"]     = {"hipResViewFormatSignedBlockCompressed4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed5"]   = {"hipResViewFormatUnsignedBlockCompressed5", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatSignedBlockCompressed5"]     = {"hipResViewFormatSignedBlockCompressed5", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatSignedBlockCompressed6H"]    = {"hipResViewFormatSignedBlockCompressed6H", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed7"]   = {"hipResViewFormatUnsignedBlockCompressed7", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    // enums
+    // enum cudaResourceType
+    cuda2hipRename["cudaResourceType"]                            = {"hipResourceType", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                               // API_Driver ANALOGUE (CUresourcetype)
+    cuda2hipRename["cudaResourceTypeArray"]                       = {"hipResourceTypeArray", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                  // 0x00 // API_Driver ANALOGUE (CU_RESOURCE_TYPE_ARRAY = 0x00)
+    cuda2hipRename["cudaResourceTypeMipmappedArray"]              = {"hipResourceTypeMipmappedArray", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};         // 0x01 // API_Driver ANALOGUE (CU_RESOURCE_TYPE_MIPMAPPED_ARRAY = 0x01)
+    cuda2hipRename["cudaResourceTypeLinear"]                      = {"hipResourceTypeLinear", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                 // 0x02 // API_Driver ANALOGUE (CU_RESOURCE_TYPE_LINEAR = 0x02)
+    cuda2hipRename["cudaResourceTypePitch2D"]                     = {"hipResourceTypePitch2D", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                // 0x03 // API_Driver ANALOGUE (CU_RESOURCE_TYPE_PITCH2D = 0x03)
+
+
+    cuda2hipRename["cudaResourceViewFormat"]                      = {"hipResourceViewFormat", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                              // API_Driver ANALOGUE (CUresourceViewFormat)
+    cuda2hipRename["cudaResViewFormatNone"]                       = {"hipResViewFormatNone", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                       // 0x00 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_NONE = 0x00)
+    cuda2hipRename["cudaResViewFormatUnsignedChar1"]              = {"hipResViewFormatUnsignedChar1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};              // 0x01 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_1X8 = 0x01)
+    cuda2hipRename["cudaResViewFormatUnsignedChar2"]              = {"hipResViewFormatUnsignedChar2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};              // 0x02 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_2X8 = 0x02)
+    cuda2hipRename["cudaResViewFormatUnsignedChar4"]              = {"hipResViewFormatUnsignedChar4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};              // 0x03 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_4X8 = 0x03)
+    cuda2hipRename["cudaResViewFormatSignedChar1"]                = {"hipResViewFormatSignedChar1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                // 0x04 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_1X8 = 0x04)
+    cuda2hipRename["cudaResViewFormatSignedChar2"]                = {"hipResViewFormatSignedChar2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                // 0x05 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_2X8 = 0x05)
+    cuda2hipRename["cudaResViewFormatSignedChar4"]                = {"hipResViewFormatSignedChar4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                // 0x06 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_4X8 = 0x06)
+    cuda2hipRename["cudaResViewFormatUnsignedShort1"]             = {"hipResViewFormatUnsignedShort1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};             // 0x07 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_1X16 = 0x07)
+    cuda2hipRename["cudaResViewFormatUnsignedShort2"]             = {"hipResViewFormatUnsignedShort2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};             // 0x08 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_2X16 = 0x08)
+    cuda2hipRename["cudaResViewFormatUnsignedShort4"]             = {"hipResViewFormatUnsignedShort4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};             // 0x09 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_4X16 = 0x09)
+    cuda2hipRename["cudaResViewFormatSignedShort1"]               = {"hipResViewFormatSignedShort1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};               // 0x0a // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_1X16 = 0x0a)
+    cuda2hipRename["cudaResViewFormatSignedShort2"]               = {"hipResViewFormatSignedShort2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};               // 0x0b // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_2X16 = 0x0b)
+    cuda2hipRename["cudaResViewFormatSignedShort4"]               = {"hipResViewFormatSignedShort4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};               // 0x0c // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_4X16 = 0x0c)
+    cuda2hipRename["cudaResViewFormatUnsignedInt1"]               = {"hipResViewFormatUnsignedInt1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};               // 0x0d // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_1X32 = 0x0d)
+    cuda2hipRename["cudaResViewFormatUnsignedInt2"]               = {"hipResViewFormatUnsignedInt2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};               // 0x0e // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_2X32 = 0x0e)
+    cuda2hipRename["cudaResViewFormatUnsignedInt4"]               = {"hipResViewFormatUnsignedInt4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};               // 0x0f // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_4X32 = 0x0f)
+    cuda2hipRename["cudaResViewFormatSignedInt1"]                 = {"hipResViewFormatSignedInt1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                 // 0x10 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_1X32 = 0x10)
+    cuda2hipRename["cudaResViewFormatSignedInt2"]                 = {"hipResViewFormatSignedInt2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                 // 0x11 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_2X32 = 0x11)
+    cuda2hipRename["cudaResViewFormatSignedInt4"]                 = {"hipResViewFormatSignedInt4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                 // 0x12 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_4X32 = 0x12)
+    cuda2hipRename["cudaResViewFormatHalf1"]                      = {"hipResViewFormatHalf1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                      // 0x13 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_FLOAT_1X16 = 0x13)
+    cuda2hipRename["cudaResViewFormatHalf2"]                      = {"hipResViewFormatHalf2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                      // 0x14 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_FLOAT_2X16 = 0x14)
+    cuda2hipRename["cudaResViewFormatHalf4"]                      = {"hipResViewFormatHalf4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                      // 0x15 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_FLOAT_4X16 = 0x15)
+    cuda2hipRename["cudaResViewFormatFloat1"]                     = {"hipResViewFormatFloat1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                     // 0x16 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_FLOAT_1X32 = 0x16)
+    cuda2hipRename["cudaResViewFormatFloat2"]                     = {"hipResViewFormatFloat2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                     // 0x17 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_FLOAT_2X32 = 0x17)
+    cuda2hipRename["cudaResViewFormatFloat4"]                     = {"hipResViewFormatFloat4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                     // 0x18 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_FLOAT_4X32 = 0x18)
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed1"]   = {"hipResViewFormatUnsignedBlockCompressed1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};   // 0x19 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC1 = 0x19)
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed2"]   = {"hipResViewFormatUnsignedBlockCompressed2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};   // 0x1a // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC2 = 0x1a)
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed3"]   = {"hipResViewFormatUnsignedBlockCompressed3", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};   // 0x1b // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC3 = 0x1b)
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed4"]   = {"hipResViewFormatUnsignedBlockCompressed4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};   // 0x1c // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC4 = 0x1c)
+    cuda2hipRename["cudaResViewFormatSignedBlockCompressed4"]     = {"hipResViewFormatSignedBlockCompressed4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};     // 0x1d // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SIGNED_BC4 = 0x1d)
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed5"]   = {"hipResViewFormatUnsignedBlockCompressed5", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};   // 0x1e // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC5 = 0x1e)
+    cuda2hipRename["cudaResViewFormatSignedBlockCompressed5"]     = {"hipResViewFormatSignedBlockCompressed5", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};     // 0x1f // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SIGNED_BC5 = 0x1f)
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed6H"]  = {"hipResViewFormatUnsignedBlockCompressed6H", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};   // 0x20 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC6H = 0x20)
+    cuda2hipRename["cudaResViewFormatSignedBlockCompressed6H"]    = {"hipResViewFormatSignedBlockCompressed6H", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};    // 0x21 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SIGNED_BC6H = 0x21)
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed7"]   = {"hipResViewFormatUnsignedBlockCompressed7", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};   // 0x22 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC7 = 0x22)
 
     cuda2hipRename["cudaTextureAddressMode"]                      = {"hipTextureAddressMode", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaAddressModeWrap"]                         = {"hipAddressModeWrap", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
@@ -1255,17 +1525,19 @@ struct cuda2hipMap {
     cuda2hipRename["cudaGraphicsCubeFacePositiveZ"]               = {"hipGraphicsCubeFacePositiveZ", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaGraphicsCubeFaceNegativeZ"]               = {"hipGraphicsCubeFaceNegativeZ", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
 
-    cuda2hipRename["cudaGraphicsMapFlags"]                        = {"hipGraphicsMapFlags", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGraphicsMapFlagsNone"]                    = {"hipGraphicsMapFlagsNone", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGraphicsMapFlagsReadOnly"]                = {"hipGraphicsMapFlagsReadOnly", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGraphicsMapFlagsWriteDiscard"]            = {"hipGraphicsMapFlagsWriteDiscard", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+    // enum cudaGraphicsMapFlags
+    cuda2hipRename["cudaGraphicsMapFlags"]                        = {"hipGraphicsMapFlags", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};                           // API_Driver ANALOGUE (CUgraphicsMapResourceFlags)
+    cuda2hipRename["cudaGraphicsMapFlagsNone"]                    = {"hipGraphicsMapFlagsNone", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};                  // 0 // API_Driver ANALOGUE (CU_GRAPHICS_MAP_RESOURCE_FLAGS_NONE = 0x00)
+    cuda2hipRename["cudaGraphicsMapFlagsReadOnly"]                = {"hipGraphicsMapFlagsReadOnly", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};              // 1 // API_Driver ANALOGUE (CU_GRAPHICS_MAP_RESOURCE_FLAGS_READ_ONLY = 0x01)
+    cuda2hipRename["cudaGraphicsMapFlagsWriteDiscard"]            = {"hipGraphicsMapFlagsWriteDiscard", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};          // 2 // API_Driver ANALOGUE (CU_GRAPHICS_MAP_RESOURCE_FLAGS_WRITE_DISCARD = 0x02)
 
-    cuda2hipRename["cudaGraphicsRegisterFlags"]                   = {"hipGraphicsRegisterFlags", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGraphicsRegisterFlagsNone"]               = {"hipGraphicsRegisterFlagsNone", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGraphicsRegisterFlagsReadOnly"]           = {"hipGraphicsRegisterFlagsReadOnly", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGraphicsRegisterFlagsWriteDiscard"]       = {"hipGraphicsRegisterFlagsWriteDiscard", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGraphicsRegisterFlagsSurfaceLoadStore"]   = {"hipGraphicsRegisterFlagsSurfaceLoadStore", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGraphicsRegisterFlagsTextureGather"]      = {"hipGraphicsRegisterFlagsTextureGather", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};
+    // enum cudaGraphicsRegisterFlags
+    cuda2hipRename["cudaGraphicsRegisterFlags"]                   = {"hipGraphicsRegisterFlags", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};                      // API_Driver ANALOGUE (CUgraphicsRegisterFlags)
+    cuda2hipRename["cudaGraphicsRegisterFlagsNone"]               = {"hipGraphicsRegisterFlagsNone", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};             // 0 // API_Driver ANALOGUE (CU_GRAPHICS_MAP_RESOURCE_FLAGS_NONE = 0x00)
+    cuda2hipRename["cudaGraphicsRegisterFlagsReadOnly"]           = {"hipGraphicsRegisterFlagsReadOnly", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};         // 1 // API_Driver ANALOGUE (CU_GRAPHICS_MAP_RESOURCE_FLAGS_READ_ONLY = 0x01)
+    cuda2hipRename["cudaGraphicsRegisterFlagsWriteDiscard"]       = {"hipGraphicsRegisterFlagsWriteDiscard", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};     // 2 // API_Driver ANALOGUE (CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD = 0x02)
+    cuda2hipRename["cudaGraphicsRegisterFlagsSurfaceLoadStore"]   = {"hipGraphicsRegisterFlagsSurfaceLoadStore", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}; // 4 // API_Driver ANALOGUE (CU_GRAPHICS_REGISTER_FLAGS_SURFACE_LDST = 0x04)
+    cuda2hipRename["cudaGraphicsRegisterFlagsTextureGather"]      = {"hipGraphicsRegisterFlagsTextureGather", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED};    // 8 // API_Driver ANALOGUE (CU_GRAPHICS_REGISTER_FLAGS_TEXTURE_GATHER = 0x08)
 
     //---------------------------------------BLAS-------------------------------------//
     // Blas types
