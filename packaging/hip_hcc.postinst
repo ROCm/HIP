@@ -8,17 +8,22 @@ popd () {
 }
 
 ROCMDIR=/opt/rocm
-HIPDIR=$ROCMDIR/hip
-
-# Soft-link to libraries
-HIPLIBFILES=$HIPDIR/lib/*
 ROCMLIBDIR=$ROCMDIR/lib
+HIPDIR=$ROCMDIR/hip
+HIPLIBDIR=$ROCMDIR/hip/lib
+
+# Soft-link to library files
+HIPLIBFILES=$(ls -aF $HIPLIBDIR | grep -v [-/$])
 mkdir -p $ROCMLIBDIR
+mkdir -p $ROCMLIBDIR/cmake
 pushd $ROCMLIBDIR
 for f in $HIPLIBFILES
 do
     ln -s $f $(basename $f)
 done
-    ln -s $HIPDIR/lib/.hipInfo .hipInfo
+# Make the hip cmake directory link.
+pushd cmake
+ln -s $HIPLIBDIR/cmake/hip hip
+popd
 popd
 
