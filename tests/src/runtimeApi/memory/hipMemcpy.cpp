@@ -24,6 +24,7 @@ THE SOFTWARE.
  * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * RUN_NAMED: %t hipMemcpy-modes --tests 0x1
  * RUN_NAMED: %t hipMemcpy-size --tests 0x6
+ * RUN_NAMED: %t hipMemcpy-offsets --tests 0x10
  * RUN_NAMED: %t hipMemcpy-multithreaded --tests 0x8
  * HIT_END
  */
@@ -45,27 +46,42 @@ class DeviceMemory
 public:
     DeviceMemory(size_t numElements);
     ~DeviceMemory();
-public:
-    T * A_d;
-    T*  B_d;
-    T*  C_d;
-    T*  C_dd;
+
+    T *A_d() const { return _A_d + _offset; };
+    T *B_d() const { return _B_d + _offset; };
+    T *C_d() const { return _C_d + _offset; };
+    T *C_dd() const { return _C_dd + _offset; };
+
+    size_t maxNumElements() const { return _maxNumElements; };
+
+
+    void offset(int offset) { _offset = offset; };
+    int offset() const { return _offset; };
+    
+private:
+    T * _A_d;
+    T*  _B_d;
+    T*  _C_d;
+    T*  _C_dd;
+
 
     size_t _maxNumElements;
+    int _offset;
 };
 
 template<typename T>
 DeviceMemory<T>::DeviceMemory(size_t numElements)
-    : _maxNumElements(numElements)
+    : _maxNumElements(numElements), 
+      _offset(0)
 {
     T ** np = nullptr;
-    HipTest::initArrays (&A_d, &B_d, &C_d, np, np, np, numElements, 0);
+    HipTest::initArrays (&_A_d, &_B_d, &_C_d, np, np, np, numElements, 0);
 
 
     size_t sizeElements = numElements * sizeof(T);
 
 
-    HIPCHECK ( hipMalloc(&C_dd, sizeElements) );
+    HIPCHECK ( hipMalloc(&_C_dd, sizeElements) );
 }
 
 
@@ -73,11 +89,11 @@ template<typename T>
 DeviceMemory<T>::~DeviceMemory ()
 {
     T * np = nullptr;
-    HipTest::freeArrays (A_d, B_d, C_d, np, np, np, 0);
+    HipTest::freeArrays (_A_d, _B_d, _C_d, np, np, np, 0);
 
-    HIPCHECK (hipFree(C_dd));
+    HIPCHECK (hipFree(_C_dd));
     
-    C_dd = NULL;
+    _C_dd = NULL;
 };
 
 
@@ -90,6 +106,8 @@ public:
     HostMemory(size_t numElements, bool usePinnedHost);
     void reset(size_t numElements, bool full=false) ;
     ~HostMemory();
+
+    size_t maxNumElements() const { return _maxNumElements; };
 public:
     // Host arrays
     T * A_h;
@@ -176,21 +194,22 @@ HostMemory<T>::~HostMemory ()
 // IN: useMemkindDefault : If true, use memkinddefault (runtime figures out direction).  if false, use explicit memcpy direction.
 //
 template <typename T>
-void memcpytest2(DeviceMemory<T> *dmem, HostMemory<T> *hmem, size_t numElements, bool usePinnedHost, bool useHostToHost, bool useDeviceToDevice, bool useMemkindDefault)
+void memcpytest2(DeviceMemory<T> *dmem, HostMemory<T> *hmem, size_t numElements, bool useHostToHost, bool useDeviceToDevice, bool useMemkindDefault)
 {
     size_t sizeElements = numElements * sizeof(T);
-    printf ("test: %s<%s> size=%lu (%6.2fMB) usePinnedHost:%d, useHostToHost:%d, useDeviceToDevice:%d, useMemkindDefault:%d\n", 
+    printf ("test: %s<%s> size=%lu (%6.2fMB) usePinnedHost:%d, useHostToHost:%d, useDeviceToDevice:%d, useMemkindDefault:%d, offsets:%+d\n", 
             __func__, 
             TYPENAME(T),
             sizeElements, sizeElements/1024.0/1024.0,
-            hmem->_usePinnedHost, useHostToHost, useDeviceToDevice, useMemkindDefault);
+            hmem->_usePinnedHost, useHostToHost, useDeviceToDevice, useMemkindDefault,
+            dmem->offset());
 
 
     hmem->reset(numElements);
     unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, numElements);
 
-    assert (numElements <= dmem->_maxNumElements);
-    assert (numElements <= hmem->_maxNumElements);
+    assert (numElements <= dmem->maxNumElements());
+    assert (numElements <= hmem->maxNumElements());
 
 
 
@@ -200,25 +219,25 @@ void memcpytest2(DeviceMemory<T> *dmem, HostMemory<T> *hmem, size_t numElements,
         HIPCHECK ( hipMemcpy(hmem->B_hh, hmem->B_h, sizeElements, useMemkindDefault? hipMemcpyDefault : hipMemcpyHostToHost));
 
 
-        HIPCHECK ( hipMemcpy(dmem->A_d, hmem->A_hh, sizeElements, useMemkindDefault ? hipMemcpyDefault : hipMemcpyHostToDevice));
-        HIPCHECK ( hipMemcpy(dmem->B_d, hmem->B_hh, sizeElements, useMemkindDefault ? hipMemcpyDefault : hipMemcpyHostToDevice));
+        HIPCHECK ( hipMemcpy(dmem->A_d(), hmem->A_hh, sizeElements, useMemkindDefault ? hipMemcpyDefault : hipMemcpyHostToDevice));
+        HIPCHECK ( hipMemcpy(dmem->B_d(), hmem->B_hh, sizeElements, useMemkindDefault ? hipMemcpyDefault : hipMemcpyHostToDevice));
     } else {
-        HIPCHECK ( hipMemcpy(dmem->A_d, hmem->A_h, sizeElements, useMemkindDefault ? hipMemcpyDefault : hipMemcpyHostToDevice));
-        HIPCHECK ( hipMemcpy(dmem->B_d, hmem->B_h, sizeElements, useMemkindDefault ? hipMemcpyDefault : hipMemcpyHostToDevice));
+        HIPCHECK ( hipMemcpy(dmem->A_d(), hmem->A_h, sizeElements, useMemkindDefault ? hipMemcpyDefault : hipMemcpyHostToDevice));
+        HIPCHECK ( hipMemcpy(dmem->B_d(), hmem->B_h, sizeElements, useMemkindDefault ? hipMemcpyDefault : hipMemcpyHostToDevice));
     }
 
-    hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0, dmem->A_d, dmem->B_d, dmem->C_d, numElements);
+    hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0, dmem->A_d(), dmem->B_d(), dmem->C_d(), numElements);
 
     if (useDeviceToDevice) {
         // Do an extra device-to-device copy here to mix things up:
-        HIPCHECK ( hipMemcpy(dmem->C_dd, dmem->C_d,  sizeElements, useMemkindDefault? hipMemcpyDefault : hipMemcpyDeviceToDevice));
+        HIPCHECK ( hipMemcpy(dmem->C_dd(), dmem->C_d(),  sizeElements, useMemkindDefault? hipMemcpyDefault : hipMemcpyDeviceToDevice));
 
-        //Destroy the original dmem->C_d:
-        HIPCHECK ( hipMemset(dmem->C_d, 0x5A, sizeElements));
+        //Destroy the original dmem->C_d():
+        HIPCHECK ( hipMemset(dmem->C_d(), 0x5A, sizeElements));
 
-        HIPCHECK ( hipMemcpy(hmem->C_h, dmem->C_dd, sizeElements, useMemkindDefault? hipMemcpyDefault:hipMemcpyDeviceToHost));
+        HIPCHECK ( hipMemcpy(hmem->C_h, dmem->C_dd(), sizeElements, useMemkindDefault? hipMemcpyDefault:hipMemcpyDeviceToHost));
     } else {
-        HIPCHECK ( hipMemcpy(hmem->C_h, dmem->C_d, sizeElements, useMemkindDefault? hipMemcpyDefault:hipMemcpyDeviceToHost));
+        HIPCHECK ( hipMemcpy(hmem->C_h, dmem->C_d(), sizeElements, useMemkindDefault? hipMemcpyDefault:hipMemcpyDeviceToHost));
     }
 
     HIPCHECK ( hipDeviceSynchronize() );
@@ -245,7 +264,7 @@ void memcpytest2_for_type(size_t numElements)
         for (int useHostToHost =0; useHostToHost<=1; useHostToHost++) {  // TODO
             for (int useDeviceToDevice =0; useDeviceToDevice<=1; useDeviceToDevice++) {
                 for (int useMemkindDefault =0; useMemkindDefault<=1; useMemkindDefault++) {
-                    memcpytest2<T>(&memD, usePinnedHost ? &memP : &memU, numElements, usePinnedHost, useHostToHost, useDeviceToDevice, useMemkindDefault);
+                    memcpytest2<T>(&memD, usePinnedHost ? &memP : &memU, numElements, useHostToHost, useDeviceToDevice, useMemkindDefault);
                 }
             }
         }
@@ -256,7 +275,7 @@ void memcpytest2_for_type(size_t numElements)
 //---
 //Try many different sizes to memory copy.
 template<typename T>
-void memcpytest2_sizes(size_t maxElem=0, size_t offset=0)
+void memcpytest2_sizes(size_t maxElem=0)
 {
     printSep();
     printf ("test: %s<%s>\n", __func__,  TYPENAME(T));
@@ -268,19 +287,59 @@ void memcpytest2_sizes(size_t maxElem=0, size_t offset=0)
     HIPCHECK(hipMemGetInfo(&free, &total));
 
     if (maxElem == 0) {
-        maxElem = free/sizeof(T)/20;
+        maxElem = free/sizeof(T)/5;
     }
 
-    printf ("  device#%d: hipMemGetInfo: free=%zu (%4.2fMB) total=%zu (%4.2fMB)    maxSize=%6.1fMB offset=%lu\n", 
-            deviceId, free, (float)(free/1024.0/1024.0), total, (float)(total/1024.0/1024.0), maxElem*sizeof(T)/1024.0/1024.0, offset);
+    printf ("  device#%d: hipMemGetInfo: free=%zu (%4.2fMB) total=%zu (%4.2fMB)    maxSize=%6.1fMB\n", 
+            deviceId, free, (float)(free/1024.0/1024.0), total, (float)(total/1024.0/1024.0), maxElem*sizeof(T)/1024.0/1024.0);
     HIPCHECK ( hipDeviceReset() );
     DeviceMemory<T> memD(maxElem); 
     HostMemory<T> memU(maxElem, 0/*usePinnedHost*/); 
     HostMemory<T> memP(maxElem, 1/*usePinnedHost*/);
 
-    for (size_t elem=64; elem+offset<=maxElem; elem*=2) {
-        memcpytest2<T>(&memD, &memU, elem+offset, 0, 1, 1, 0);  // unpinned host
-        memcpytest2<T>(&memD, &memP, elem+offset, 1, 1, 1, 0);  // pinned host
+    for (size_t elem=1; elem<=maxElem; elem*=2) {
+        memcpytest2<T>(&memD, &memU, elem, 1, 1, 0);  // unpinned host
+        memcpytest2<T>(&memD, &memP, elem, 1, 1, 0);  // pinned host
+    }
+}
+
+
+//---
+//Try many different sizes to memory copy.
+template<typename T>
+void memcpytest2_offsets(size_t maxElem)
+{
+    printSep();
+    printf ("test: %s<%s>\n", __func__,  TYPENAME(T));
+
+    int deviceId;
+    HIPCHECK(hipGetDevice(&deviceId));
+
+    size_t free, total;
+    HIPCHECK(hipMemGetInfo(&free, &total));
+
+
+    printf ("  device#%d: hipMemGetInfo: free=%zu (%4.2fMB) total=%zu (%4.2fMB)    maxSize=%6.1fMB\n", 
+            deviceId, free, (float)(free/1024.0/1024.0), total, (float)(total/1024.0/1024.0), maxElem*sizeof(T)/1024.0/1024.0);
+    HIPCHECK ( hipDeviceReset() );
+    DeviceMemory<T> memD(maxElem); 
+    HostMemory<T> memU(maxElem, 0/*usePinnedHost*/); 
+    HostMemory<T> memP(maxElem, 1/*usePinnedHost*/);
+
+    size_t elem = maxElem / 2;
+
+    for (int offset=0; offset < 512; offset++) {
+        assert (elem + offset < maxElem);
+        memD.offset(offset);
+        memcpytest2<T>(&memD, &memU, elem, 1, 1, 0);  // unpinned host
+        memcpytest2<T>(&memD, &memP, elem, 1, 1, 0);  // pinned host
+    }
+
+    for (int offset=512; offset < maxElem; offset*=2) {
+        assert (elem + offset < maxElem);
+        memD.offset(offset);
+        memcpytest2<T>(&memD, &memU, elem, 1, 1, 0);  // unpinned host
+        memcpytest2<T>(&memD, &memP, elem, 1, 1, 0);  // pinned host
     }
 }
 
@@ -296,13 +355,13 @@ void multiThread_1(bool serialize, bool usePinnedHost)
     HostMemory<T> mem1(N, usePinnedHost); 
     HostMemory<T> mem2(N, usePinnedHost); 
 
-    std::thread t1 (memcpytest2<T>, &memD, &mem1, N, usePinnedHost,0,0,0);
+    std::thread t1 (memcpytest2<T>, &memD, &mem1, N, 0,0,0);
     if (serialize) {
         t1.join();
     }
 
     
-    std::thread t2 (memcpytest2<T>,&memD,  &mem2, N, usePinnedHost,0,0,0);
+    std::thread t2 (memcpytest2<T>,&memD,  &mem2, N, 0,0,0);
     if (serialize) {
         t2.join();
     }
@@ -343,17 +402,17 @@ int main(int argc, char *argv[])
         HostMemory<float> memU(maxElem, 0/*usePinnedHost*/); 
         HostMemory<float> memP(maxElem, 0/*usePinnedHost*/); 
         // These all pass:
-        memcpytest2<float>(&memD, &memP, 15*1024*1024, 1, 0, 0, 0);  
-        memcpytest2<float>(&memD, &memP, 16*1024*1024, 1, 0, 0, 0);  
-        memcpytest2<float>(&memD, &memP, 16*1024*1024+16*1024,  1, 0, 0, 0);  
+        memcpytest2<float>(&memD, &memP, 15*1024*1024, 0, 0, 0);  
+        memcpytest2<float>(&memD, &memP, 16*1024*1024, 0, 0, 0);  
+        memcpytest2<float>(&memD, &memP, 16*1024*1024+16*1024,  0, 0, 0);  
 
         // Just over 64MB:
-        memcpytest2<float>(&memD, &memP, 16*1024*1024+512*1024,  1, 0, 0, 0);  
-        memcpytest2<float>(&memD, &memP, 17*1024*1024+1024,  1, 0, 0, 0);  
-        memcpytest2<float>(&memD, &memP, 32*1024*1024, 1, 0, 0, 0);  
-        memcpytest2<float>(&memD, &memU, 32*1024*1024, 0, 0, 0, 0);  
-        memcpytest2<float>(&memD, &memP, 32*1024*1024, 1, 1, 1, 0);  
-        memcpytest2<float>(&memD, &memP, 32*1024*1024, 1, 1, 1, 0);  
+        memcpytest2<float>(&memD, &memP, 16*1024*1024+512*1024,  0, 0, 0);  
+        memcpytest2<float>(&memD, &memP, 17*1024*1024+1024,  0, 0, 0);  
+        memcpytest2<float>(&memD, &memP, 32*1024*1024, 0, 0, 0);  
+        memcpytest2<float>(&memD, &memU, 32*1024*1024, 0, 0, 0);  
+        memcpytest2<float>(&memD, &memP, 32*1024*1024, 1, 1, 0);  
+        memcpytest2<float>(&memD, &memP, 32*1024*1024, 1, 1, 0);  
 
 
     }
@@ -361,16 +420,19 @@ int main(int argc, char *argv[])
 
 
     if (p_tests & 0x4) {
-        printf ("\n\n=== tests&4 (test sizes and offsets)\n");
+        printf ("\n\n=== tests&4 (test sizes)\n");
         HIPCHECK ( hipDeviceReset() );
+        memcpytest2_sizes<float>(0);
         printSep();
-        memcpytest2_sizes<float>(0,0);
-        printSep();
-        memcpytest2_sizes<float>(0,64);
-        printSep();
-        memcpytest2_sizes<float>(1024*1024, 13);
-        printSep();
-        memcpytest2_sizes<float>(1024*1024, 50);
+    }
+
+
+    if (p_tests & 0x10) {
+        printf ("\n\n=== tests&4 (test offsets)\n");
+        HIPCHECK ( hipDeviceReset() );
+        memcpytest2_offsets<char>(256*1024*1024);
+        memcpytest2_offsets<float>(256*1024*1024);
+        memcpytest2_offsets<double>(256*1024*1024);
     }
 
     if (p_tests & 0x8) {
