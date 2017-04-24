@@ -853,7 +853,7 @@ hipError_t hipEventQuery(hipEvent_t event) ;
  *
  *  @see hipGetDeviceCount, hipGetDevice, hipSetDevice, hipChooseDevice
  */
-hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr);
+hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, const void* ptr);
 
 /**
  *  @brief Allocate memory on the default accelerator
@@ -1922,7 +1922,7 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image);
  * @param [in] blockDimZ Z grid dimension specified in work-items
  * @param [in] sharedMemBytes Amount of dynamic shared memory to allocate for this kernel.  The kernel can access this with HIP_DYNAMIC_SHARED.
  * @param [in] stream Stream where the kernel should be dispatched.  May be 0, in which case th default stream is used with associated synchronization rules.
- * @param [in] kernelParams 
+ * @param [in] kernelParams
  * @param [in] extra     Pointer to kernel arguments.   These are passed directly to the kernel and must be in the memory layout and alignment expected by the kernel.
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
