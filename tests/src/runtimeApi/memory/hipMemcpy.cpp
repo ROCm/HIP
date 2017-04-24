@@ -24,7 +24,7 @@ THE SOFTWARE.
  * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * RUN_NAMED: %t hipMemcpy-modes --tests 0x1
  * RUN_NAMED: %t hipMemcpy-size --tests 0x6
- * RUN_NAMED: %t hipMemcpy-offsets --tests 0x10
+ * RUN_NAMED: %t hipMemcpy-dev_offsets --tests 0x10
  * RUN_NAMED: %t hipMemcpy-multithreaded --tests 0x8
  * HIT_END
  */
@@ -335,7 +335,7 @@ void memcpytest2_offsets(size_t maxElem)
         memcpytest2<T>(&memD, &memP, elem, 1, 1, 0);  // pinned host
     }
 
-    for (int offset=512; offset < maxElem; offset*=2) {
+    for (int offset=512; offset < elem; offset*=2) {
         assert (elem + offset < maxElem);
         memD.offset(offset);
         memcpytest2<T>(&memD, &memU, elem, 1, 1, 0);  // unpinned host
@@ -427,13 +427,6 @@ int main(int argc, char *argv[])
     }
 
 
-    if (p_tests & 0x10) {
-        printf ("\n\n=== tests&4 (test offsets)\n");
-        HIPCHECK ( hipDeviceReset() );
-        memcpytest2_offsets<char>(256*1024*1024);
-        memcpytest2_offsets<float>(256*1024*1024);
-        memcpytest2_offsets<double>(256*1024*1024);
-    }
 
     if (p_tests & 0x8) {
         printf ("\n\n=== tests&8\n");
@@ -453,6 +446,16 @@ int main(int argc, char *argv[])
         // Remove serialization, and use unpinned.
         multiThread_1<float>(false, false); // TODO
         printf ("===\n\n\n");
+    }
+
+
+    if (p_tests & 0x10) {
+        printf ("\n\n=== tests&0x10 (test device offsets)\n");
+        HIPCHECK ( hipDeviceReset() );
+        size_t maxSize = 256*1024;
+        memcpytest2_offsets<char>  (maxSize);
+        memcpytest2_offsets<float> (maxSize);
+        memcpytest2_offsets<double>(maxSize);
     }
 
 
