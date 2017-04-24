@@ -133,7 +133,7 @@ void * allocAndSharePtr(const char *msg, size_t sizeBytes, ihipCtx_t *ctx, unsig
 //_appAllocationFlags : These are flags provided by the user when allocation is performed. They are returned to user in hipHostGetFlags and other APIs.
 // TODO - add more info here when available.
 //
-hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, void* ptr)
+hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, const void* ptr)
 {
     HIP_INIT_API(attributes, ptr);
 
@@ -1268,7 +1268,7 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
          hsa_amd_ipc_memory_attach((hsa_amd_ipc_memory_t*)&(iHandle->ipc_handle), iHandle->psize, crit->peerCnt(), crit->peerAgents(), devPtr);
         if(hsa_status != HSA_STATUS_SUCCESS)
             hipStatus = hipErrorMapBufferObjectFailed;
-    }    
+    }
 #else
     hipStatus = hipErrorRuntimeOther;
 #endif
