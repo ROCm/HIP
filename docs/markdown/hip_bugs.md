@@ -11,7 +11,13 @@
 ### Errors related to undefined reference to `__hcLaunchKernel__***__grid_launch_parm**`
 
 Some common code practices may lead to hipcc generating a error with the form :
+```
 undefined reference to `__hcLaunchKernel__ZN15vecAddNamespace6vecAddIidEEv16grid_launch_parmPT0_S3_S3_T_
+```
+Or:
+```
+error: weak declaration cannot have internal linkage
+```
 
 Suggested workarounds:
 - Avoid use of static with kernel definition:
@@ -24,6 +30,19 @@ static __global__ MyKernel
 namespace {
   __global__ MyKernel
 }
+```
+
+### Can't find kernels inside dynamic linked library
+
+HCC requires use of the "-Bdynamic" flag when creating a dynamic library which contains kernels.  The dynamic flag causes the symbols to be created with a signature which allows HCC to discover and load the kernels in the dynamic library.   This flag is often not set by default and must be added to the link step of the library.  If not done, HCC will be unable to find the kernels defined in the library, and will emit a message such as:
+
+```
+HSADevice::CreateKernel(): Unable to create kernel"
+```
+
+To correct, add the following flag to hcc or hipcc:
+```
+$ hipcc -Wl,-Bsymbolic ...
 ```
 
 
