@@ -1765,20 +1765,24 @@ void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind,
 
         if (HIP_FORCE_P2P_HOST & 0x1) {
             *forceUnpinnedCopy = true;
-            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d agent=0x%lx) can see src and dst but HIP_FORCE_P2P_HOST=0, forcing copy through staging buffers.\n",
-                    (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
+            tprintf (DB_COPY, "Copy engine (dev:%d agent=0x%lx) can see src and dst but HIP_FORCE_P2P_HOST=0, forcing copy through staging buffers.\n",
+                    *copyDevice ? (*copyDevice)->getDeviceNum() : -1, 
+                    *copyDevice ? (*copyDevice)->getDevice()->_hsaAgent.handle : 0x0);
 
         } else {
-            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d agent=0x%lx) can see src and dst.\n",
-                    (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
+            tprintf (DB_COPY, "Copy engine (dev:%d agent=0x%lx) can see src and dst.\n",
+                    *copyDevice ? (*copyDevice)->getDeviceNum() : -1, 
+                    *copyDevice ? (*copyDevice)->getDevice()->_hsaAgent.handle : 0x0);
         }
     } else {
         *forceUnpinnedCopy = true;
         tprintf (DB_COPY, "P2P: Copy engine(dev:%d agent=0x%lx) cannot see both host and device pointers - forcing copy with unpinned engine.\n",
-                    (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
+                    *copyDevice ? (*copyDevice)->getDeviceNum() : -1, 
+                    *copyDevice ? (*copyDevice)->getDevice()->_hsaAgent.handle : 0x0);
         if (HIP_FAIL_SOC & 0x2) {
             fprintf (stderr, "HIP_FAIL_SOC:  P2P: copy engine(dev:%d agent=0x%lx) cannot see both host and device pointers - forcing copy with unpinned engine.\n",
-                    (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
+                    *copyDevice ? (*copyDevice)->getDeviceNum() : -1, 
+                    *copyDevice ? (*copyDevice)->getDevice()->_hsaAgent.handle : 0x0);
             throw ihipException(hipErrorRuntimeOther);
         }
     }
