@@ -207,22 +207,26 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
     HIP_INIT_API(ptr, sizeBytes);
     HIP_SET_DEVICE();
     hipError_t  hip_status = hipSuccess;
+
+    auto ctx = ihipGetTlsDefaultCtx();
     // return NULL pointer when malloc size is 0
     if (sizeBytes == 0)
     {
         *ptr = NULL;
-        return ihipLogStatus(hipSuccess);
-    }
+        hip_status = hipSuccess;
 
-    auto ctx = ihipGetTlsDefaultCtx();
+    } else if ((ctx==nullptr) || (ptr == nullptr)) {
+        hip_status = hipErrorInvalidValue;
 
-    if (ctx) {
+    } else {
         auto device = ctx->getWriteableDevice();
         *ptr = hip_internal::allocAndSharePtr("device_mem", sizeBytes, ctx,  0/*amFlags*/, 0/*hipFlags*/);
 
-    } else {
-        hip_status = hipErrorMemoryAllocation;
-    }
+        if(sizeBytes  && (*ptr == NULL)){
+            hip_status = hipErrorMemoryAllocation;
+        }
+
+    } 
 
 
     return ihipLogStatus(hip_status);
