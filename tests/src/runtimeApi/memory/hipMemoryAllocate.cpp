@@ -56,5 +56,15 @@ int main(){
 
     HIPCHECK_API(hipFree(NULL) , hipSuccess);
     HIPCHECK_API(hipHostFree(NULL) , hipSuccess);
+
+    {
+        // Some negative testing - request a too-big allocation and verify it fails:
+        // Someday when we support virtual memory may need to refactor these:
+        size_t tooBig = 128LL*1024*1024*1024*1024;  // 128 TB;
+        void *p;
+        HIPCHECK_API ( hipMalloc(&p, tooBig),  hipErrorMemoryAllocation );
+        HIPCHECK_API ( hipHostMalloc(&p, tooBig),  hipErrorMemoryAllocation );
+    }
+
     passed();
 }
