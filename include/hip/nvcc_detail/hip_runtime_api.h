@@ -948,4 +948,6 @@ inline static hipChannelFormatDesc hipCreateChannelDesc()
 {
 		return cudaCreateChannelDesc<T>();
 }
-#endif
+#endif //__CUDACC__
+
+#endif //HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_API_H
