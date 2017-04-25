@@ -21,10 +21,11 @@ THE SOFTWARE.
  * BUILD: %t %s ../../test_common.cpp
  * RUN: %t --tests 0x1
  * RUN: %t --tests 0x2
+ * RUN: %t --tests 0x4
  * HIT_END
  */
 
-// TODO - bug if run both back-to-back
+// TODO - bug if run both back-to-back, once fixed should just need one command line
 
 #include"test_common.h"
 #include<malloc.h>
@@ -36,14 +37,16 @@ __global__ void Inc(hipLaunchParm lp, float *Ad){
 
 
 template<typename T>
-void doMemCopy(size_t numElements, int offset, T *A, T *Bh, T *Bd) 
+void doMemCopy(size_t numElements, int offset, T *A, T *Bh, T *Bd, bool internalRegister) 
 {
     A = A + offset;
     numElements -= offset;
 
     size_t sizeBytes = numElements * sizeof(T);
 
-	HIPCHECK(hipHostRegister(A, sizeBytes, 0));
+    if (internalRegister) {
+        HIPCHECK(hipHostRegister(A, sizeBytes, 0));
+    }
 
 
     // Reset
@@ -67,7 +70,9 @@ void doMemCopy(size_t numElements, int offset, T *A, T *Bh, T *Bd)
         };
     }
 
-    HIPCHECK(hipHostUnregister(A));
+    if (internalRegister) {
+        HIPCHECK(hipHostUnregister(A));
+    }
 
 }
 
@@ -112,7 +117,7 @@ int main(int argc, char *argv[])
     }
 
 
-    if (p_tests & 0x2) { 
+    if (p_tests & 0x6) { 
         // Sensitize HIP bug if device does not match where the memory was registered.
         HIPCHECK(hipSetDevice(0));
 
@@ -125,11 +130,22 @@ int main(int argc, char *argv[])
         Bh = (float*)malloc(size);
         HIPCHECK(hipMalloc(&Bd, size));
 
-        // TODO - change to 256:
+        // TODO - set to 128
 #define OFFSETS_TO_TRY 1 
         assert (N>OFFSETS_TO_TRY);
-        for (size_t i=0; i<OFFSETS_TO_TRY; i++) {
-            doMemCopy(N, i, A, Bh, Bd);
+
+        if (p_tests & 0x2) {
+            for (size_t i=0; i<OFFSETS_TO_TRY; i++) {
+                doMemCopy(N, i, A, Bh, Bd, true/*internalRegister*/);
+            }
+        }
+
+        if (p_tests & 0x4) {
+            HIPCHECK(hipHostRegister(A, size, 0));
+            for (size_t i=0; i<OFFSETS_TO_TRY; i++) {
+                doMemCopy(N, i, A, Bh, Bd, false/*internalRegister*/);
+            }
+            HIPCHECK(hipHostUnregister(A));
         }
 
 
