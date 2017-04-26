@@ -897,6 +897,10 @@ inline static hipError_t hipModuleLaunchKernel(hipFunction_t f,
 }
 
 
+inline static hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t cacheConfig)
+{
+    return hipCUDAErrorTohipError(cudaFuncSetCacheConfig(func, cacheConfig));
+}
 
 #ifdef __cplusplus
 }
