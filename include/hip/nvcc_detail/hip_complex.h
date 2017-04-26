@@ -64,7 +64,7 @@ __device__ __host__ static inline hipFloatComplex hipCdivf(hipFloatComplex p, hi
 }
 
 __device__ __host__ static inline float hipCabsf(hipFloatComplex z){
-    return cuCabsf(p, q);
+    return cuCabsf(z);
 }
 
 typedef cuDoubleComplex hipDoubleComplex;
@@ -85,7 +85,7 @@ __device__ __host__ static inline hipDoubleComplex hipConj(hipDoubleComplex z){
     return cuConj(z);
 }
 
-__device__ __host__ static inline hipDoubleComplex hipCsqabs(hipDoubleComplex z){
+__device__ __host__ static inline double hipCsqabs(hipDoubleComplex z){
     return cuCabs(z) * cuCabs(z);
 }
 
@@ -123,7 +123,7 @@ __device__ __host__ static inline hipComplex hipCfmaf(hipComplex p, hipComplex q
     return cuCfmaf(p, q, r);
 }
 
-__device__ __host__ static inline hipDoubleComplex hipCfma(hipComplex p, hipComplex q, hipComplex r){
+__device__ __host__ static inline hipDoubleComplex hipCfma(hipDoubleComplex p, hipDoubleComplex q, hipDoubleComplex r){
     return cuCfma(p, q, r);
 }
 
