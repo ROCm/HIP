@@ -1765,20 +1765,24 @@ void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind,
 
         if (HIP_FORCE_P2P_HOST & 0x1) {
             *forceUnpinnedCopy = true;
-            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d agent=0x%lx) can see src and dst but HIP_FORCE_P2P_HOST=0, forcing copy through staging buffers.\n",
-                    (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
+            tprintf (DB_COPY, "Copy engine (dev:%d agent=0x%lx) can see src and dst but HIP_FORCE_P2P_HOST=0, forcing copy through staging buffers.\n",
+                    *copyDevice ? (*copyDevice)->getDeviceNum() : -1, 
+                    *copyDevice ? (*copyDevice)->getDevice()->_hsaAgent.handle : 0x0);
 
         } else {
-            tprintf (DB_COPY, "P2P.  Copy engine (dev:%d agent=0x%lx) can see src and dst.\n",
-                    (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
+            tprintf (DB_COPY, "Copy engine (dev:%d agent=0x%lx) can see src and dst.\n",
+                    *copyDevice ? (*copyDevice)->getDeviceNum() : -1, 
+                    *copyDevice ? (*copyDevice)->getDevice()->_hsaAgent.handle : 0x0);
         }
     } else {
         *forceUnpinnedCopy = true;
         tprintf (DB_COPY, "P2P: Copy engine(dev:%d agent=0x%lx) cannot see both host and device pointers - forcing copy with unpinned engine.\n",
-                    (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
+                    *copyDevice ? (*copyDevice)->getDeviceNum() : -1, 
+                    *copyDevice ? (*copyDevice)->getDevice()->_hsaAgent.handle : 0x0);
         if (HIP_FAIL_SOC & 0x2) {
             fprintf (stderr, "HIP_FAIL_SOC:  P2P: copy engine(dev:%d agent=0x%lx) cannot see both host and device pointers - forcing copy with unpinned engine.\n",
-                    (*copyDevice)->getDeviceNum(), (*copyDevice)->getDevice()->_hsaAgent.handle);
+                    *copyDevice ? (*copyDevice)->getDeviceNum() : -1, 
+                    *copyDevice ? (*copyDevice)->getDevice()->_hsaAgent.handle : 0x0);
             throw ihipException(hipErrorRuntimeOther);
         }
     }
@@ -1792,6 +1796,62 @@ void printPointerInfo(unsigned dbFlag, const char *tag, const void *ptr, const h
              ptrInfo._hostPointer, ptrInfo._devicePointer, ptrInfo._sizeBytes,
              ptrInfo._appId, ptrInfo._sizeBytes != 0, ptrInfo._isInDeviceMem, !ptrInfo._isAmManaged);
 }
+
+
+// the pointer-info as returned by HC refers to the allocation
+// This routine modifies the pointer-info so it appears to refer to the specific ptr and sizeBytes. 
+// TODO -remove this when HCC uses HSA pointer info functions directly.
+void tailorPtrInfo(hc::AmPointerInfo *ptrInfo, const void * ptr, size_t sizeBytes)
+{
+    const char *ptrc = static_cast<const char *> (ptr);
+    if (ptrInfo->_sizeBytes == 0) {
+        // invalid ptrInfo, don't modify
+        return;
+    } else if (ptrInfo->_isInDeviceMem) {
+        assert (ptrInfo->_devicePointer != nullptr);
+        std::ptrdiff_t diff = ptrc - static_cast<const char*> (ptrInfo->_devicePointer);
+
+        //TODO : assert-> runtime assert that only appears in debug mode
+        assert (diff >= 0);
+        assert (diff <= ptrInfo->_sizeBytes);
+
+        ptrInfo->_devicePointer = const_cast<void*> (ptr);
+
+        if (ptrInfo->_hostPointer != nullptr) {
+            ptrInfo->_hostPointer = static_cast<char*>(ptrInfo->_hostPointer) + diff;
+        }
+
+    } else {
+
+        assert (ptrInfo->_hostPointer != nullptr);
+        std::ptrdiff_t diff = ptrc - static_cast<const char*> (ptrInfo->_hostPointer);
+
+        //TODO : assert-> runtime assert that only appears in debug mode
+        assert (diff >= 0);
+        assert (diff <= ptrInfo->_sizeBytes);
+
+        ptrInfo->_hostPointer = const_cast<void*>(ptr);
+
+        if (ptrInfo->_devicePointer != nullptr) {
+            ptrInfo->_devicePointer = static_cast<char*>(ptrInfo->_devicePointer) + diff;
+        }
+    }
+
+    assert (sizeBytes <= ptrInfo->_sizeBytes);
+    ptrInfo->_sizeBytes = sizeBytes;
+};
+
+
+bool getTailoredPtrInfo(hc::AmPointerInfo *ptrInfo, const void * ptr, size_t sizeBytes)
+{
+    bool tracked = (hc::am_memtracker_getinfo(ptrInfo, ptr) == AM_SUCCESS);
+
+    if (tracked)  {
+        tailorPtrInfo(ptrInfo, ptr, sizeBytes);
+    }
+
+    return tracked;
+};
 
 
 // TODO : For registered and host memory, if the portable flag is set, we need to recognize that and perform appropriate copy operation.
@@ -1812,8 +1872,8 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     hc::accelerator acc;
     hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
     hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
-    bool dstTracked = (hc::am_memtracker_getinfo(&dstPtrInfo, dst) == AM_SUCCESS);
-    bool srcTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) == AM_SUCCESS);
+    bool dstTracked = getTailoredPtrInfo(&dstPtrInfo, dst, sizeBytes);
+    bool srcTracked = getTailoredPtrInfo(&srcPtrInfo, src, sizeBytes);
 
 
     // Some code in HCC and in printPointerInfo uses _sizeBytes==0 as an indication ptr is not valid, so check it here:
@@ -1873,6 +1933,7 @@ void ihipStream_t::lockedSymbolCopySync(hc::accelerator &acc, void* dst, void* s
 
 void ihipStream_t::lockedSymbolCopyAsync(hc::accelerator &acc, void* dst, void* src, size_t sizeBytes, size_t offset, unsigned kind)
 {
+    // TODO - review - this looks broken , should not be adding pointers to tracker dynamically:
   if(kind == hipMemcpyHostToDevice) {
     hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
     bool srcTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) == AM_SUCCESS);
@@ -1898,6 +1959,7 @@ void ihipStream_t::lockedSymbolCopyAsync(hc::accelerator &acc, void* dst, void* 
     }
   }
 }
+
 
 void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind)
 {
@@ -1926,8 +1988,8 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
         hc::accelerator acc;
         hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
         hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
-        bool dstTracked = (hc::am_memtracker_getinfo(&dstPtrInfo, dst) == AM_SUCCESS);
-        bool srcTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) == AM_SUCCESS);
+        bool dstTracked = getTailoredPtrInfo(&dstPtrInfo, dst, sizeBytes);
+        bool srcTracked = getTailoredPtrInfo(&srcPtrInfo, src, sizeBytes);
 
 
         hc::hcCommandKind hcCopyDir;
