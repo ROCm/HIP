@@ -1163,18 +1163,18 @@ __device__ double __hip_precise_dsqrt_rz(double x) {
   return hc::precise_math::sqrt(x);
 }
 
-#define LOG_BASE2_E_DIV_2 0.4426950408894701
-#define LOG_BASE2_5 2.321928094887362
+#define LOG_BASE2_E 1.4426950408889634
+#define LOG_BASE2_10 3.32192809488736
 #define ONE_DIV_LOG_BASE2_E 0.69314718056
 #define ONE_DIV_LOG_BASE2_10 0.30102999566
 
 // Fast Math Intrinsics
 __device__ float __hip_fast_exp10f(float x) {
-  return __hip_fast_exp2f(x*LOG_BASE2_E_DIV_2);
+  return __hip_fast_exp2f(x*LOG_BASE2_E);
 }
 
 __device__ float __hip_fast_expf(float x) {
-  return __hip_fast_expf(x*LOG_BASE2_5);
+  return __hip_fast_exp2f(x*LOG_BASE2_10);
 }
 
 __device__ float __hip_fast_frsqrt_rn(float x) {
