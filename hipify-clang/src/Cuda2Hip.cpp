@@ -2812,8 +2812,19 @@ private:
       if ((name_unqualified.find(' ') == StringRef::npos && name.find(' ') == StringRef::npos) || name.empty()) {
         name = name_unqualified;
       }
-      SourceLocation sl = enumConstantDecl->getLocStart();
+      // Workaround for enum VarDecl as param decl, declared with enum type specifier
+      // Example: void func(enum cudaMemcpyKind kind);
+      //-------------------------------------------------
       SourceManager *SM = Result.SourceManager;
+      SourceLocation sl(enumConstantDecl->getLocStart());
+      SourceLocation end(enumConstantDecl->getLocEnd());
+      size_t repLength = SM->getCharacterData(end) - SM->getCharacterData(sl);
+      StringRef sfull = StringRef(SM->getCharacterData(sl), repLength);
+      size_t offset = sfull.find(name);
+      if (offset > 0) {
+        sl = sl.getLocWithOffset(offset);
+      }
+      //-------------------------------------------------
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
         updateCounters(found->second, name.str());
