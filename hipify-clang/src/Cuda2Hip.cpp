@@ -2804,10 +2804,10 @@ private:
     return false;
   }
 
-  bool cudaEnumConstantDecl(const MatchFinder::MatchResult &Result) {
-    if (const VarDecl *enumConstantDecl = Result.Nodes.getNodeAs<VarDecl>("cudaEnumConstantDecl")) {
-      StringRef name = enumConstantDecl->getType()->getAsTagDecl()->getNameAsString();
-      QualType QT = enumConstantDecl->getType().getUnqualifiedType();
+  bool cudaEnumDecl(const MatchFinder::MatchResult &Result) {
+    if (const VarDecl *enumDecl = Result.Nodes.getNodeAs<VarDecl>("cudaEnumDecl")) {
+      StringRef name = enumDecl->getType()->getAsTagDecl()->getNameAsString();
+      QualType QT = enumDecl->getType().getUnqualifiedType();
       StringRef name_unqualified = QT.getAsString();
       if ((name_unqualified.find(' ') == StringRef::npos && name.find(' ') == StringRef::npos) || name.empty()) {
         name = name_unqualified;
@@ -2816,8 +2816,8 @@ private:
       // Example: void func(enum cudaMemcpyKind kind);
       //-------------------------------------------------
       SourceManager *SM = Result.SourceManager;
-      SourceLocation sl(enumConstantDecl->getLocStart());
-      SourceLocation end(enumConstantDecl->getLocEnd());
+      SourceLocation sl(enumDecl->getLocStart());
+      SourceLocation end(enumDecl->getLocEnd());
       size_t repLength = SM->getCharacterData(end) - SM->getCharacterData(sl);
       StringRef sfull = StringRef(SM->getCharacterData(sl), repLength);
       size_t offset = sfull.find(name);
@@ -3123,7 +3123,7 @@ public:
       if (cudaCall(Result)) break;
       if (cudaBuiltin(Result)) break;
       if (cudaEnumConstantRef(Result)) break;
-      if (cudaEnumConstantDecl(Result)) break;
+      if (cudaEnumDecl(Result)) break;
       if (cudaTypedefVar(Result)) break;
       if (cudaTypedefVarPtr(Result)) break;
       if (cudaStructVar(Result)) break;
@@ -3169,7 +3169,7 @@ void addAllMatchers(ast_matchers::MatchFinder &Finder, Cuda2HipCallback *Callbac
                                 Callback);
   Finder.addMatcher(varDecl(isExpansionInMainFile(),
                             hasType(enumDecl()))
-                            .bind("cudaEnumConstantDecl"),
+                            .bind("cudaEnumDecl"),
                             Callback);
   Finder.addMatcher(varDecl(isExpansionInMainFile(),
                             hasType(typedefDecl(matchesName("cu.*|CU.*"))))
