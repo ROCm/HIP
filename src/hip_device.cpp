@@ -112,7 +112,7 @@ hipError_t hipDeviceGetLimit (size_t *pValue, hipLimit_t limit)
     }
 }
 
-hipError_t hipFuncSetCacheConfig (hipFuncCache_t cacheConfig)
+hipError_t hipFuncSetCacheConfig (const void* func, hipFuncCache_t cacheConfig)
 {
     HIP_INIT_API(cacheConfig);
 
