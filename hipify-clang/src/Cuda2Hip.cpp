@@ -191,7 +191,7 @@ struct cuda2hipMap {
 
     // Error codes and return types
     cuda2hipRename["CUresult"]                                  = {"hipError_t", CONV_TYPE, API_DRIVER};
-    cuda2hipRename["cudaError_enum"]                            = {"hipError_t", CONV_TYPE, API_DRIVER};
+//  cuda2hipRename["cudaError_enum"]                            = {"hipError_t", CONV_TYPE, API_DRIVER};
     cuda2hipRename["cudaError_t"]                               = {"hipError_t", CONV_TYPE, API_RUNTIME};
     cuda2hipRename["cudaError"]                                 = {"hipError_t", CONV_TYPE, API_RUNTIME};
 
@@ -2806,12 +2806,11 @@ private:
 
   bool cudaEnumConstantDecl(const MatchFinder::MatchResult &Result) {
     if (const VarDecl *enumConstantDecl = Result.Nodes.getNodeAs<VarDecl>("cudaEnumConstantDecl")) {
-      StringRef name =
-        enumConstantDecl->getType()->getAsTagDecl()->getNameAsString();
-      // anonymous typedef enum
-      if (name.empty()) {
-        QualType QT = enumConstantDecl->getType().getUnqualifiedType();
-        name = QT.getAsString();
+      StringRef name = enumConstantDecl->getType()->getAsTagDecl()->getNameAsString();
+      QualType QT = enumConstantDecl->getType().getUnqualifiedType();
+      StringRef name_unqualified = QT.getAsString();
+      if ((name_unqualified.find(' ') == StringRef::npos && name.find(' ') == StringRef::npos) || name.empty()) {
+        name = name_unqualified;
       }
       SourceLocation sl = enumConstantDecl->getLocStart();
       SourceManager *SM = Result.SourceManager;
