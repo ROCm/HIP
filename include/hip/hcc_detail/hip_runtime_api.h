@@ -385,7 +385,7 @@ hipError_t hipDeviceGetLimit(size_t *pValue, enum hipLimit_t limit);
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
-hipError_t hipFuncSetCacheConfig ( hipFuncCache_t config );
+hipError_t hipFuncSetCacheConfig (const void* func, hipFuncCache_t config );
 
 /**
  * @brief Returns bank width of shared memory for current device
