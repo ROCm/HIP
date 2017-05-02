@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include <stack>
 
 #include "hip/hip_runtime.h"
-#include "hip_hcc.h"
+#include "hip_hcc_internal.h"
 #include "trace_helper.h"
 
 // Stack of contexts
@@ -57,10 +57,16 @@ hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device)
 {
     HIP_INIT_API(ctx, flags, device); // FIXME - review if we want to init
     hipError_t e = hipSuccess;
-
-    *ctx = new ihipCtx_t(device, g_deviceCnt, flags);
-    ihipSetTlsDefaultCtx(*ctx);
-    tls_ctxStack.push(*ctx);
+    auto deviceHandle = ihipGetDevice(device);
+    {
+		// Obtain mutex access to the device critical data, release by destructor
+		LockedAccessor_DeviceCrit_t  deviceCrit(deviceHandle->criticalData());
+		auto ictx = new ihipCtx_t(deviceHandle, g_deviceCnt, flags);
+		*ctx = ictx;
+		ihipSetTlsDefaultCtx(*ctx);
+		tls_ctxStack.push(*ctx);
+		deviceCrit->addContext(ictx);
+    }
 
     return ihipLogStatus(e);
 }
@@ -69,11 +75,13 @@ hipError_t hipDeviceGet(hipDevice_t *device, int deviceId)
 {
     HIP_INIT_API(device, deviceId); // FIXME - review if we want to init
 
-    *device = ihipGetDevice(deviceId);
+    auto deviceHandle = ihipGetDevice(deviceId);
 
     hipError_t e = hipSuccess;
-    if (*device == NULL) {
+    if (deviceHandle == NULL) {
         e = hipErrorInvalidDevice;
+    } else {
+        *device = deviceId;
     }
 
     return ihipLogStatus(e);
@@ -123,6 +131,11 @@ hipError_t hipCtxDestroy(hipCtx_t ctx)
             //need to destroy the ctx associated with calling thread
             tls_ctxStack.pop();
         }
+        {
+			auto deviceHandle = ctx->getWriteableDevice();
+			deviceHandle->locked_removeContext(ctx);
+			ctx->locked_reset();
+    	}
         delete ctx; //As per CUDA docs , attempting to access ctx from those threads which has this ctx as current, will result in the error HIP_ERROR_CONTEXT_IS_DESTROYED.
     }
 
@@ -199,9 +212,11 @@ hipError_t hipCtxGetDevice(hipDevice_t *device)
 
     if(ctx == nullptr) {
         e = hipErrorInvalidContext;
+        // TODO *device = nullptr;
     }
     else {
-        *device = (ihipDevice_t*)ctx->getDevice();
+        auto deviceHandle = ctx->getDevice();
+        *device = deviceHandle->_deviceId;
     }
     return ihipLogStatus(e);
 }
@@ -266,5 +281,81 @@ hipError_t hipCtxGetFlags ( unsigned int* flags )
     ihipCtx_t* tempCtx;
     tempCtx = ihipGetTlsDefaultCtx();
     *flags = tempCtx->_ctxFlags;
+    return ihipLogStatus(e);
+}
+
+hipError_t hipDevicePrimaryCtxGetState ( hipDevice_t dev, unsigned int* flags, int* active )
+{
+    HIP_INIT_API(dev, flags, active);
+    hipError_t e = hipSuccess;
+    auto deviceHandle = ihipGetDevice(dev);
+
+    if (deviceHandle == NULL) {
+        e = hipErrorInvalidDevice;
+    }
+
+    ihipCtx_t* tempCtx;
+    tempCtx = ihipGetTlsDefaultCtx();
+    ihipCtx_t* primaryCtx = deviceHandle->_primaryCtx;
+    if(tempCtx == primaryCtx) {
+        *active = 1;
+        *flags = tempCtx->_ctxFlags;
+   } else {
+       *active = 0;
+       *flags = primaryCtx->_ctxFlags;
+   }
+   return ihipLogStatus(e);
+}
+
+hipError_t hipDevicePrimaryCtxRelease ( hipDevice_t dev)
+{
+    HIP_INIT_API(dev);
+    hipError_t e = hipSuccess;
+    auto deviceHandle = ihipGetDevice(dev);
+
+    if (deviceHandle == NULL) {
+        e = hipErrorInvalidDevice;
+    }
+    return ihipLogStatus(e);
+}
+
+hipError_t hipDevicePrimaryCtxRetain ( hipCtx_t* pctx, hipDevice_t dev )
+{
+    HIP_INIT_API(pctx, dev);
+    hipError_t e = hipSuccess;
+    auto deviceHandle = ihipGetDevice(dev);
+
+    if (deviceHandle == NULL) {
+        e = hipErrorInvalidDevice;
+    }
+    *pctx = deviceHandle->_primaryCtx;
+    return ihipLogStatus(e);
+}
+
+hipError_t hipDevicePrimaryCtxReset ( hipDevice_t dev )
+{
+    HIP_INIT_API(dev);
+    hipError_t e = hipSuccess;
+    auto deviceHandle = ihipGetDevice(dev);
+
+    if (deviceHandle == NULL) {
+        e = hipErrorInvalidDevice;
+    }
+    ihipCtx_t* primaryCtx = deviceHandle->_primaryCtx;
+    primaryCtx->locked_reset();
+    return ihipLogStatus(e);
+}
+
+hipError_t hipDevicePrimaryCtxSetFlags ( hipDevice_t dev, unsigned int  flags )
+{
+    HIP_INIT_API(dev, flags);
+    hipError_t e = hipSuccess;
+    auto deviceHandle = ihipGetDevice(dev);
+
+    if (deviceHandle == NULL) {
+        e = hipErrorInvalidDevice;
+    } else {
+        e = hipErrorContextAlreadyInUse;
+    }
     return ihipLogStatus(e);
 }

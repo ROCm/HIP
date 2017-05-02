@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
+#ifndef HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_API_H
+#define HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_API_H
 
 #include <cuda_runtime_api.h>
 #include <cuda.h>
@@ -85,6 +86,10 @@ typedef CUdevice hipDevice_t;
 typedef CUmodule hipModule_t;
 typedef CUfunction hipFunction_t;
 typedef CUdeviceptr hipDeviceptr_t;
+typedef cudaChannelFormatKind hipChannelFormatKind;
+typedef cudaChannelFormatDesc hipChannelFormatDesc;
+typedef cudaTextureReadMode hipTextureReadMode;
+typedef cudaArray hipArray;
 
 // Flags that can be used with hipStreamCreateWithFlags
 #define hipStreamDefault            cudaStreamDefault
@@ -215,6 +220,14 @@ inline static hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int fla
 	return hipCUDAErrorTohipError(cudaHostAlloc(ptr, size, flags));
 }
 
+inline static hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, size_t width, size_t height, unsigned int flags) {
+  return hipCUDAErrorTohipError(cudaMallocArray(array, desc, width, height, flags));
+}
+
+inline static hipError_t hipFreeArray(hipArray* array) {
+  return hipCUDAErrorTohipError(cudaFreeArray(array));
+}
+
 inline static hipError_t hipHostGetDevicePointer(void** devPtr, void* hostPtr, unsigned int flags){
 	return hipCUDAErrorTohipError(cudaHostGetDevicePointer(devPtr, hostPtr, flags));
 }
@@ -294,13 +307,13 @@ inline static hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst,
 inline static hipError_t hipMemcpyDtoHAsync(void* dst,
                   hipDeviceptr_t src, size_t size, hipStream_t stream)
 {
-    return hipCUResultTohipError(cuMemcpyDtoH(dst, src, size));
+    return hipCUResultTohipError(cuMemcpyDtoHAsync(dst, src, size, stream));
 }
 
 inline static hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst,
             hipDeviceptr_t src, size_t size, hipStream_t stream)
 {
-    return hipCUResultTohipError(cuMemcpyDtoD(dst, src, size));
+    return hipCUResultTohipError(cuMemcpyDtoDAsync(dst, src, size, stream));
 }
 
 inline static hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind copyKind) {
@@ -319,6 +332,28 @@ inline static hipError_t hipMemcpyToSymbol(const void* symbol, const void* src, 
 
 inline static hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src, size_t sizeBytes, size_t offset, hipMemcpyKind copyType, hipStream_t stream) {
     return hipCUDAErrorTohipError(cudaMemcpyToSymbolAsync(symbol, src, sizeBytes, offset, hipMemcpyKindToCudaMemcpyKind(copyType)));
+}
+
+inline static hipError_t hipMemcpyFromSymbol(void *dst, const void* symbolName, size_t sizeBytes, size_t offset, hipMemcpyKind kind)
+{
+    return hipCUDAErrorTohipError(cudaMemcpyFromSymbol(dst, symbolName, sizeBytes, offset, hipMemcpyKindToCudaMemcpyKind(kind)));
+}
+
+inline static hipError_t hipMemcpyFromSymbolAsync(void *dst, const void* symbolName, size_t sizeBytes, size_t offset, hipMemcpyKind kind, hipStream_t stream)
+{
+    return hipCUDAErrorTohipError(cudaMemcpyFromSymbolAsync(dst, symbolName, sizeBytes, offset, hipMemcpyKindToCudaMemcpyKind(kind), stream));
+}
+
+inline static hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind){
+  return hipCUDAErrorTohipError(cudaMemcpy2D(dst, dpitch, src, spitch, width, height, hipMemcpyKindToCudaMemcpyKind(kind)));
+}
+
+inline static hipError_t hipMemcpy2DToArray(hipArray *dst, size_t wOffset, size_t hOffset, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind){
+  return hipCUDAErrorTohipError(cudaMemcpy2DToArray(dst, wOffset, hOffset, src, spitch, width, height, hipMemcpyKindToCudaMemcpyKind(kind)));
+}
+
+inline static hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src, size_t count, hipMemcpyKind kind) {
+  return hipCUDAErrorTohipError(cudaMemcpyToArray(dst, wOffset, hOffset, src, count, hipMemcpyKindToCudaMemcpyKind(kind)));
 }
 
 inline static hipError_t hipDeviceSynchronize() {
@@ -371,6 +406,11 @@ inline static hipError_t hipMemset(void* devPtr,int value, size_t count) {
 
 inline static hipError_t hipMemsetAsync(void* devPtr,int value, size_t count, hipStream_t stream = 0) {
     return hipCUDAErrorTohipError(cudaMemsetAsync(devPtr, value, count, stream));
+}
+
+inline static hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char  value, size_t sizeBytes )
+{
+    return hipCUResultTohipError(cuMemsetD8(dest, value, sizeBytes));
 }
 
 inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t *p_prop, int device)
@@ -478,6 +518,8 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
         cdattr = cudaDevAttrMaxThreadsPerMultiProcessor; break;
     case hipDeviceAttributeComputeCapabilityMajor:
         cdattr = cudaDevAttrComputeCapabilityMajor; break;
+    case hipDeviceAttributeComputeCapabilityMinor:
+        cdattr = cudaDevAttrComputeCapabilityMinor; break;
     case hipDeviceAttributeConcurrentKernels:
         cdattr = cudaDevAttrConcurrentKernels; break;
     case hipDeviceAttributePciBusId:
@@ -639,6 +681,31 @@ inline static hipError_t  hipCtxEnablePeerAccess ( hipCtx_t peerCtx, unsigned in
     return hipCUResultTohipError(cuCtxEnablePeerAccess(peerCtx, flags));
 }
 
+inline static hipError_t hipDevicePrimaryCtxGetState ( hipDevice_t dev, unsigned int* flags, int* active )
+{
+    return hipCUResultTohipError(cuDevicePrimaryCtxGetState(dev, flags, active));
+}
+
+inline static hipError_t hipDevicePrimaryCtxRelease ( hipDevice_t dev)
+{
+    return hipCUResultTohipError(cuDevicePrimaryCtxRelease(dev));
+}
+
+inline static hipError_t hipDevicePrimaryCtxRetain ( hipCtx_t* pctx, hipDevice_t dev )
+{
+    return hipCUResultTohipError(cuDevicePrimaryCtxRetain(pctx, dev));
+}
+
+inline static hipError_t hipDevicePrimaryCtxReset ( hipDevice_t dev )
+{
+    return hipCUResultTohipError(cuDevicePrimaryCtxReset(dev));
+}
+
+inline static hipError_t hipDevicePrimaryCtxSetFlags ( hipDevice_t dev, unsigned int  flags )
+{
+    return hipCUResultTohipError(cuDevicePrimaryCtxSetFlags(dev, flags));
+}
+
 inline static hipError_t hipMemGetAddressRange ( hipDeviceptr_t* pbase, size_t* psize, hipDeviceptr_t dptr )
 {
     return hipCUResultTohipError(cuMemGetAddressRange( pbase , psize , dptr));
@@ -770,11 +837,6 @@ inline static hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
     return hipCUResultTohipError(cuDeviceGetName(name,len,device));
 }
 
-inline static hipError_t hipDeviceGetPCIBusId(char* pciBusId,int len,int device)
-{
-    return hipCUDAErrorTohipError(cudaDeviceGetPCIBusId(pciBusId,len,device));
-}
-
 inline static hipError_t hipDeviceGetPCIBusId(char* pciBusId,int len,hipDevice_t device)
 {
     return hipCUResultTohipError(cuDeviceGetPCIBusId(pciBusId,len,device));
@@ -886,4 +948,6 @@ inline static hipChannelFormatDesc hipCreateChannelDesc()
 {
 		return cudaCreateChannelDesc<T>();
 }
-#endif
+#endif //__CUDACC__
+
+#endif //HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_API_H

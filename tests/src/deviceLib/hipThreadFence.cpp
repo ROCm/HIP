@@ -17,9 +17,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD: %t %s ../test_common.cpp
+ * RUN: %t
+ * HIT_END
+ */
+
 #include<iostream>
 #include<hip/hip_runtime_api.h>
 #include<hip/hip_runtime.h>
+#include"test_common.h"
 
 #define NUM 1024
 #define SIZE NUM*sizeof(float)
@@ -65,5 +72,5 @@ int main(){
     hipLaunchKernel(vAdd, dim3(32,1,1), dim3(32,1,1), 0, 0, In1d, In2d, In3d, In4d, Outd);
     hipMemcpy(Out, Outd, SIZE, hipMemcpyDeviceToHost);
     assert(Out[10] == 2*In1[10] + 2*In2[10] + In3[10]);
-
+    passed();
 }

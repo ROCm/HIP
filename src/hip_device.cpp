@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #include "hip/hip_runtime.h"
-#include "hip_hcc.h"
+#include "hip_hcc_internal.h"
 #include "trace_helper.h"
 #include "device_util.h"
 
@@ -166,14 +166,37 @@ hipError_t hipDeviceReset(void)
     // This function currently does a user-level cleanup of known resources.
     // It could benefit from KFD support to perform a more "nuclear" clean that would include any associated kernel resources and page table entries.
 
-
+#if 0
     if (ctx) {
         // Release ctx resources (streams and memory):
         ctx->locked_reset();
     }
+#endif
+	if (ctx) {
+		ihipDevice_t *deviceHandle = ctx->getWriteableDevice();
+		deviceHandle->locked_reset();
+	}
 
     return ihipLogStatus(hipSuccess);
 }
+
+hipError_t ihipDeviceSetState(void)
+{
+    hipError_t e = hipErrorInvalidContext;
+    auto *ctx = ihipGetTlsDefaultCtx();
+
+    if (ctx) {
+        ihipDevice_t *deviceHandle = ctx->getWriteableDevice();
+        if(deviceHandle->_state == 0)
+        {
+            deviceHandle->_state = 1;
+        }
+        e = hipSuccess;
+    }
+
+    return e;
+}
+
 
 hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
 {
@@ -243,13 +266,13 @@ hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device
     } else {
         e = hipErrorInvalidDevice;
     }
-    return ihipLogStatus(e);
+    return e;
 }
 
 hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
 {
     HIP_INIT_API(pi, attr, device);
-    return ihipDeviceGetAttribute(pi,attr,device);
+    return ihipLogStatus(ihipDeviceGetAttribute(pi,attr,device));
 }
 
 hipError_t ihipGetDeviceProperties(hipDeviceProp_t* props, int device)
@@ -269,7 +292,7 @@ hipError_t ihipGetDeviceProperties(hipDeviceProp_t* props, int device)
         e = hipErrorInvalidDevice;
     }
 
-    return ihipLogStatus(e);
+    return e;
 }
 
 hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device)
@@ -289,29 +312,35 @@ hipError_t hipSetDeviceFlags( unsigned int flags)
     // TODO : does this really OR in the flags or replaces previous flags:
     // TODO : Review error handling behavior for this function, it often returns ErrorSetOnActiveProcess
     if (ctx) {
-       ctx->_ctxFlags = ctx->_ctxFlags | flags;
-       if (flags & hipDeviceScheduleMask) {
-           switch (hipDeviceScheduleMask) {
-              case hipDeviceScheduleAuto:
-              case hipDeviceScheduleSpin:
-              case hipDeviceScheduleYield:
-              case hipDeviceScheduleBlockingSync:
-                   e = hipSuccess;
-                   break;
-               default:
-                   e = hipSuccess; // TODO - should this be error?  Map to Auto?
-                   //e = hipErrorInvalidValue;
-                   break;
+       auto *deviceHandle = ctx->getDevice();
+       if(deviceHandle->_state == 0)
+       {
+           ctx->_ctxFlags = ctx->_ctxFlags | flags;
+           if (flags & hipDeviceScheduleMask) {
+               switch (hipDeviceScheduleMask) {
+                  case hipDeviceScheduleAuto:
+                  case hipDeviceScheduleSpin:
+                  case hipDeviceScheduleYield:
+                  case hipDeviceScheduleBlockingSync:
+                       e = hipSuccess;
+                       break;
+                  default:
+                       e = hipSuccess; // TODO - should this be error?  Map to Auto?
+                       //e = hipErrorInvalidValue;
+                       break;
+               }
            }
-       }
 
-       unsigned supportedFlags = hipDeviceScheduleMask | hipDeviceMapHost | hipDeviceLmemResizeToMax;
+           unsigned supportedFlags = hipDeviceScheduleMask | hipDeviceMapHost | hipDeviceLmemResizeToMax;
 
-       if (flags & (~supportedFlags)) {
-          e = hipErrorInvalidValue;
-       }
-    } else {
-       e = hipErrorInvalidDevice;
+           if (flags & (~supportedFlags)) {
+              e = hipErrorInvalidValue;
+           }
+        } else {
+              e = hipErrorSetOnActiveProcess;
+        }
+        } else {
+           e = hipErrorInvalidDevice;
     }
 
     return ihipLogStatus(e);
@@ -321,9 +350,8 @@ hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device
 {
     HIP_INIT_API(major,minor, device);
     hipError_t e = hipSuccess;
-    int deviceId= device->_deviceId;
-    e = ihipDeviceGetAttribute(major, hipDeviceAttributeComputeCapabilityMajor, deviceId);
-    e = ihipDeviceGetAttribute(minor, hipDeviceAttributeComputeCapabilityMinor, deviceId);
+    e = ihipDeviceGetAttribute(major, hipDeviceAttributeComputeCapabilityMajor, device);
+    e = ihipDeviceGetAttribute(minor, hipDeviceAttributeComputeCapabilityMinor, device);
     return ihipLogStatus(e);
 }
 
@@ -331,27 +359,12 @@ hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
 {
     HIP_INIT_API(name,len, device);
     hipError_t e = hipSuccess;
-    int nameLen = strlen(device->_props.name);
+    auto deviceHandle = ihipGetDevice(device);
+    int nameLen = strlen(deviceHandle->_props.name);
     if(nameLen <= len)
-        memcpy(name,device->_props.name,nameLen);
+        memcpy(name,deviceHandle->_props.name,nameLen);
     return ihipLogStatus(e);
 }
-
-#ifdef __cplusplus
-hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,hipDevice_t device)
-{
-    HIP_INIT_API(pciBusId, len, device);
-    hipError_t e = hipSuccess;
-    int deviceId= device->_deviceId;
-    int tempPciBusId = 0;
-    e = ihipDeviceGetAttribute( &tempPciBusId, hipDeviceAttributePciBusId, deviceId);
-    if( e == hipSuccess) {
-        std::string tempPciStr = std::to_string(tempPciBusId);
-        memcpy( pciBusId , tempPciStr.c_str() , tempPciStr.length() );
-    }
-    return ihipLogStatus(e);
-}
-#endif
 
 hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len, int device)
 {
@@ -365,11 +378,13 @@ hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len, int device)
     }
     return ihipLogStatus(e);
 }
+
 hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device)
 {
     HIP_INIT_API(bytes, device);
     hipError_t e = hipSuccess;
-    *bytes= device->_props.totalGlobalMem;
+    auto deviceHandle = ihipGetDevice(device);
+    *bytes= deviceHandle->_props.totalGlobalMem;
     return ihipLogStatus(e);
 }
 
@@ -469,4 +484,3 @@ hipError_t hipChooseDevice( int* device, const hipDeviceProp_t* prop )
     }
     return ihipLogStatus(e);
 }
-

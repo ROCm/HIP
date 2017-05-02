@@ -1,12 +1,19 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(hip_doc)
 
-add_custom_target(build_doxygen ALL
+find_program(DOXYGEN_EXE doxygen)
+if(DOXYGEN_EXE)
+    add_custom_target(build_doxygen ALL
                   COMMAND HIP_PATH=@hip_SOURCE_DIR@ doxygen @hip_SOURCE_DIR@/docs/doxygen-input/doxy.cfg)
-add_custom_target(convert_md_to_html ALL
+    install(DIRECTORY RuntimeAPI/html DESTINATION docs/docs/RuntimeAPI)
+endif()
+
+find_program(GRIP_EXE grip)
+if(GRIP_EXE)
+    add_custom_target(convert_md_to_html ALL
                   COMMAND @hip_SOURCE_DIR@/packaging/convert_md_to_html.sh @hip_SOURCE_DIR@ ${PROJECT_BINARY_DIR}/md2html)
-install(DIRECTORY RuntimeAPI/html DESTINATION docs/docs/RuntimeAPI)
-install(DIRECTORY md2html/ DESTINATION docs)
+    install(DIRECTORY md2html/ DESTINATION docs)
+endif()
 
 #############################
 # Packaging steps
@@ -29,5 +36,6 @@ set(CPACK_BINARY_RPM "ON")
 set(CPACK_RPM_PACKAGE_ARCHITECTURE "x86_64")
 set(CPACK_RPM_PACKAGE_AUTOREQPROV " no")
 set(CPACK_RPM_PACKAGE_REQUIRES "hip_base = ${CPACK_PACKAGE_VERSION}")
+set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/opt")
 set(CPACK_SOURCE_GENERATOR "TGZ")
 include(CPack)

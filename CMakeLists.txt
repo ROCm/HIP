@@ -33,7 +33,7 @@ execute_process(COMMAND git show -s --format=@%ct
     OUTPUT_VARIABLE HIP_VERSION_PATCH
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-set(HIP_VERSION $HIP_VERSION_MAJOR.$HIP_VERSION_MINOR.$HIP_VERSION_PATCH)
+set(HIP_VERSION ${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}.${HIP_VERSION_PATCH})
 add_to_config(_versionInfo HIP_VERSION_MAJOR)
 add_to_config(_versionInfo HIP_VERSION_MINOR)
 add_to_config(_versionInfo HIP_VERSION_PATCH)
@@ -63,14 +63,16 @@ if(HIP_PLATFORM STREQUAL "hcc")
             set(HCC_HOME $ENV{HCC_HOME} CACHE PATH "Path to which HCC has been installed")
         endif()
     endif()
+
     if(DEFINED ENV{HIP_DEVELOPER})
         add_to_config(_buildInfo HCC_HOME)
     endif()
     if(IS_ABSOLUTE ${HCC_HOME} AND EXISTS ${HCC_HOME} AND IS_DIRECTORY ${HCC_HOME})
         execute_process(COMMAND ${HCC_HOME}/bin/hcc --version
-            COMMAND cut -d\  -f9
             OUTPUT_VARIABLE HCC_VERSION
             OUTPUT_STRIP_TRAILING_WHITESPACE)
+        string(REGEX REPLACE ".*based on HCC " "" HCC_VERSION ${HCC_VERSION})
+        string(REGEX REPLACE " .*" "" HCC_VERSION ${HCC_VERSION})
         message(STATUS "Looking for HCC in: " ${HCC_HOME} ". Found version: " ${HCC_VERSION})
     else()
         message(FATAL_ERROR "Don't know where to find HCC. Please specify abolute path using -DHCC_HOME")
@@ -78,6 +80,9 @@ if(HIP_PLATFORM STREQUAL "hcc")
     add_to_config(_buildInfo HCC_VERSION)
     string(REPLACE "-" ";" HCC_VERSION_LIST ${HCC_VERSION})
     list(GET HCC_VERSION_LIST 0 HCC_PACKAGE_VERSION)
+    string(REPLACE "." ";" HCC_VERSION_LIST ${HCC_PACKAGE_VERSION})
+    list(GET HCC_VERSION_LIST 0 HCC_VERSION_MAJOR)
+    list(GET HCC_VERSION_LIST 1 HCC_VERSION_MINOR)
 
     # Determine HSA_PATH
     if(NOT DEFINED HSA_PATH)
@@ -137,7 +142,7 @@ add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 # Build steps
 #############################
 # Rebuild cmake cache updates .hipInfo and .hipVersion
-add_custom_target(update_build_and_version_info ALL COMMAND make rebuild_cache)
+add_custom_target(update_build_and_version_info COMMAND make rebuild_cache)
 
 # Build clang hipify if enabled
 add_subdirectory(hipify-clang)
@@ -155,7 +160,8 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DHIP_VERSION_MAJOR=${HIP_VERSION_MAJOR} -DHIP_VERSION_MINOR=${HIP_VERSION_MINOR} -DHIP_VERSION_PATCH=${HIP_VERSION_PATCH}")
 
     # Add remaining flags
-    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC -hc -I${HCC_HOME}/include -I${HSA_PATH}/include -I/opt/rocm/libhsakmt/include -I/usr/local/include/c++/v1 -stdlib=libc++")
+    execute_process(COMMAND ${HCC_HOME}/bin/hcc-config --cxxflags OUTPUT_VARIABLE HCC_CXX_FLAGS)
+    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC ${HCC_CXX_FLAGS} -I${HSA_PATH}/include")
 
     # Set compiler and compiler flags
     set(CMAKE_CXX_COMPILER "${HCC_HOME}/bin/hcc")
@@ -172,19 +178,35 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/hip_memory.cpp
         src/hip_peer.cpp
         src/hip_stream.cpp
-        src/hip_module.cpp)
+        src/hip_module.cpp
+        src/grid_launch.cpp
+        src/env.cpp)
 
     set(SOURCE_FILES_DEVICE
         src/device_util.cpp
         src/hip_ldg.cpp
-        src/hip_fp16.cpp)
+        src/hip_fp16.cpp
+        src/device_functions.cpp
+        src/math_functions.cpp)
 
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L${HCC_HOME}/lib -lmcwamp -Wl,-Bsymbolic")
+    execute_process(COMMAND ${HCC_HOME}/bin/hcc-config --ldflags OUTPUT_VARIABLE HCC_LD_FLAGS)
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${HCC_LD_FLAGS} -Wl,-Bsymbolic")
+    #find_package(LLVM HINTS ${HCC_HOME}/compiler/lib/cmake)
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --amdgpu-target=gfx701 --amdgpu-target=gfx801 --amdgpu-target=gfx802 --amdgpu-target=gfx803 --amdgpu-target=gfx900")
     add_library(hip_hcc SHARED ${SOURCE_FILES_RUNTIME})
+    target_link_libraries(hip_hcc PRIVATE hc_am)
+    #target_link_libraries(hip_hcc PUBLIC LLVMAMDGPUUtils)
     add_library(hip_hcc_static STATIC ${SOURCE_FILES_RUNTIME})
+    target_link_libraries(hip_hcc_static PRIVATE hc_am)
     add_dependencies(hip_hcc_static hip_hcc)
     add_library(hip_device STATIC ${SOURCE_FILES_DEVICE})
     add_dependencies(hip_device hip_hcc)
+
+    string(REPLACE " " ";" HCC_CXX_FLAGS_LIST ${HCC_CXX_FLAGS})
+    foreach(TARGET hip_hcc hip_hcc_static hip_device)
+        target_include_directories(${TARGET} SYSTEM INTERFACE $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>;${HSA_PATH}/include)
+    endforeach()
+    target_link_libraries(hip_hcc INTERFACE hcc::hccrt;hcc::hc_am)
 
     # Generate hcc_version.txt
     add_custom_target(query_hcc_version COMMAND ${HCC_HOME}/bin/hcc --version > ${PROJECT_BINARY_DIR}/hcc_version.tmp)
@@ -210,7 +232,7 @@ add_custom_target(doc COMMAND HIP_PATH=${CMAKE_CURRENT_SOURCE_DIR} doxygen ${CMA
 # Install hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
     install(TARGETS hip_hcc_static hip_hcc hip_device DESTINATION lib)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_ir.ll DESTINATION lib)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_hc.ll ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_hc_gfx803.ll DESTINATION lib)
 
     # Install .hipInfo
     install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)
@@ -227,6 +249,39 @@ if(NOT ${INSTALL_SOURCE} EQUAL 0)
     install(DIRECTORY bin DESTINATION . USE_SOURCE_PERMISSIONS)
     install(DIRECTORY include DESTINATION .)
     install(DIRECTORY cmake DESTINATION .)
+endif()
+
+#############################
+# hip-config
+#############################
+set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
+set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
+
+if(HIP_PLATFORM STREQUAL "hcc")
+    install(TARGETS hip_hcc_static hip_hcc hip_device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
+    install(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
+    include(CMakePackageConfigHelpers)
+
+    configure_package_config_file(
+        hip-config.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
+        INSTALL_DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR}
+        PATH_VARS LIB_INSTALL_DIR INCLUDE_INSTALL_DIR BIN_INSTALL_DIR
+        )
+    write_basic_package_version_file(
+        ${CMAKE_CURRENT_BINARY_DIR}/hip-config-version.cmake
+        VERSION "${HIP_VERSION}"
+        COMPATIBILITY SameMajorVersion
+        )
+    install(
+        FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/hip-config-version.cmake
+        DESTINATION
+        ${CONFIG_PACKAGE_INSTALL_DIR}
+        )
 endif()
 
 #############################
@@ -268,7 +323,7 @@ add_custom_target(pkg_hip_hcc  COMMAND ${CMAKE_COMMAND} .
     COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
     COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
     WORKING_DIRECTORY ${BUILD_DIR}
-    DEPENDS hip_hcc)
+    DEPENDS hip_hcc hip_device hip_hcc_static)
 
 # Package: hip_nvcc
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_nvcc)
@@ -317,22 +372,28 @@ endif()
 # Testing steps
 #############################
 # Target: test
-set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/hip_tests)
-configure_file(tests/hip_tests.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
-if(POLICY CMP0037)
-    cmake_policy(PUSH)
-    cmake_policy(SET CMP0037 OLD)
+set(HIP_ROOT_DIR ${CMAKE_INSTALL_PREFIX})
+set(HIP_SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/cmake" "${HIP_ROOT_DIR}/cmake" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
+if(${RUN_HIT} EQUAL 0)
+    execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/bin" "${HIP_ROOT_DIR}/bin" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
 endif()
-add_custom_target(install_for_test COMMAND "${CMAKE_COMMAND}" --build . --target install
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-execute_process(COMMAND getconf _NPROCESSORS_ONLN OUTPUT_VARIABLE DASH_JAY OUTPUT_STRIP_TRAILING_WHITESPACE)
-add_custom_target(test COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} .
-    COMMAND make -j ${DASH_JAY}
-    COMMAND make test
-    WORKING_DIRECTORY ${BUILD_DIR}
-    DEPENDS install_for_test)
-if(POLICY CMP0037)
-    cmake_policy(POP)
+if(${RUN_HIT} EQUAL 0)
+    set(CMAKE_MODULE_PATH "${HIP_ROOT_DIR}/cmake" ${CMAKE_MODULE_PATH})
+    include(${HIP_SRC_PATH}/tests/hit/HIT.cmake)
+
+    # Add tests
+    include_directories(${HIP_SRC_PATH}/tests/src)
+    hit_add_directory_recursive(${HIP_SRC_PATH}/tests/src "directed_tests")
+
+    # Add top-level tests to build_tests
+    add_custom_target(build_tests DEPENDS directed_tests)
+
+    # Add custom target: check
+    add_custom_target(check COMMAND "${CMAKE_COMMAND}" --build . --target test DEPENDS build_tests)
+else()
+    message(STATUS "Testing targets will not be available. To enable them please ensure that the HIP installation directory is writeable. Use -DCMAKE_INSTALL_PREFIX to specify a suitable location")
 endif()
+
 
 # vim: ts=4:sw=4:expandtab:smartindent

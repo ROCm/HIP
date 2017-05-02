@@ -23,8 +23,8 @@ use File::Basename;
 # HSA_PATH  : Path to HSA dir (default /opt/rocm/hsa).  Used on AMD platforms only.
 
 if(scalar @ARGV == 0){
-print "No Arguments passed, exiting ...\n";
-exit(-1);
+    print "No Arguments passed, exiting ...\n";
+    exit(-1);
 }
 
 #---
@@ -70,27 +70,39 @@ if ($verbose & 0x2) {
 # set if user explicitly requests -stdlib=libc++. (else we default to libstdc++ for better interop with g++):
 $setStdLib = 0;  # TODO - set to 0
 
+$target_gfx701 = 0;
+$target_gfx801 = 0;
+$target_gfx802 = 0;
+$target_gfx803 = 0;
+$target_gfx900 = 0;
+
 if ($HIP_PLATFORM eq "hcc") {
     $HSA_PATH=$ENV{'HSA_PATH'} // "/opt/rocm/hsa";
 
     $HCC_HOME=$ENV{'HCC_HOME'} // $hipConfig{'HCC_HOME'} // "/opt/rocm/hcc";
 
-    $HCC_VERSION=`${HCC_HOME}/bin/hcc --version | cut -d" " -f9 | tr -d "\n"`;
-    $HCC_VERSION_MAJOR=`${HCC_HOME}/bin/hcc --version | cut -d" " -f9 | cut -d"." -f1 | tr -d "\n"`;
+    $HCC_VERSION=`${HCC_HOME}/bin/hcc --version`;
+    $HCC_VERSION=~/.*based on HCC ([^ ]+).*/;
+    $HCC_VERSION=$1;
+    $HCC_VERSION_MAJOR=$HCC_VERSION;
+    $HCC_VERSION_MAJOR=~s/\..*//;
 
     $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
 
     $HIP_ATP_MARKER=$ENV{'HIP_ATP_MARKER'} // 1;
     $marker_path = "$ROCM_PATH/profiler/CXLActivityLogger";
 
-    $ROCM_TARGET=$ENV{'ROCM_TARGET'} // "fiji";
+    $ROCM_TARGET=$ENV{'ROCM_TARGET'} // "gfx803";
 
     # HCC* may be used to compile src/hip_hcc.o (and also feed the HIPCXXFLAGS below)
     $HCC = "$HCC_HOME/bin/hcc";
-    $HCCFLAGS = "-hc -I$HCC_HOME/include ";
+    $HCCFLAGS = "-hc  -D__HIPCC__ -I$HCC_HOME/include ";
 
     $HIPCC=$HCC;
     $HIPCXXFLAGS = $HCCFLAGS;
+
+    $HIPLDFLAGS = `${HCC_HOME}/bin/hcc-config --ldflags`;
+
 
     #### GCC system includes workaround ####
     $HCC_WA_FLAGS = " ";
@@ -99,49 +111,33 @@ if ($HIP_PLATFORM eq "hcc") {
         my $GPP_CUR_VER = `g++ -dumpversion`;
         $GCC_CUR_VER =~ s/\R//g;
         $GPP_CUR_VER =~ s/\R//g;
-        if (${GCC_CUR_VER} eq ${GPP_CUR_VER}) {
-            $HCC_WA_FLAGS .= " -I/usr/include/x86_64-linux-gnu -I/usr/include/x86_64-linux-gnu/c++/${GCC_CUR_VER} -I/usr/include/c++/${GCC_CUR_VER} ";
+
+        my @GPP_VER_FIELDS = split('\.', $GPP_CUR_VER);
+
+        # Only include the libstdc++ headers and libraries flags explicitly if the g++ is older than version 5.
+        # That's because HCC already uses libstdc++ by default if a newer g++/libstdc++ is available
+        if (${GCC_CUR_VER} eq ${GPP_CUR_VER} and $GPP_VER_FIELDS[0] < 5) {
+            $HCC_WA_FLAGS .= " -stdlib=libstdc++  -I/usr/include/x86_64-linux-gnu -I/usr/include/x86_64-linux-gnu/c++/${GCC_CUR_VER} -I/usr/include/c++/${GCC_CUR_VER} ";
+            # Add C++ libs for GCC.
+            $HIPLDFLAGS .= " -lstdc++";
         }
+    }
+
+    # Force -stdlib=libc++ on UB14.04
+    $HOST_OSNAME= `cat /etc/os-release | grep "^ID\=" | cut -d= -f2 | tr -d '\n'`;
+    $HOST_OSVER= `cat /etc/os-release | grep "^VERSION_ID\=" | cut -d= -f2 | tr -d '\n'`;
+    if ($HOST_OSNAME eq "ubuntu" and $HOST_OSVER eq "\"14.04\"") {
+        $HIPCXXFLAGS .= " -stdlib=libc++";
+        $setStdLib = 1;
     }
 
     $HIPCXXFLAGS .= " -I$HIP_PATH/include/hip/hcc_detail/cuda";
     $HIPCXXFLAGS .= " -I$HSA_PATH/include";
     $HIPCXXFLAGS .= " -Wno-deprecated-register";
-    $HIPLDFLAGS =  "-hc -L$HCC_HOME/lib -Wl,--rpath=$HCC_HOME/lib -lc++ -ldl -lpthread -Wl,--whole-archive -lmcwamp -Wl,--no-whole-archive";
 
-    # Suppress linker warnings in case HCC distribution contains OpenCL/SPIR symbols
-    $HOST_OSNAME= `cat /etc/os-release | grep "^ID\=" | cut -d= -f2 | tr -d '\n'`;
-    $HOST_OSVER= `cat /etc/os-release | grep "^VERSION_ID\=" | cut -d= -f2 | tr -d '\n'`;
-    if ($HOST_OSNAME eq "ubuntu" and $HOST_OSVER eq "\"16.04\"") {
-        # No additional flags required
-    } else {
-        $HIPLDFLAGS .= " -Wl,--defsym=_binary_kernel_spir_end=1 -Wl,--defsym=_binary_kernel_spir_start=1 -Wl,--defsym=_binary_kernel_cl_start=1 -Wl,--defsym=_binary_kernel_cl_end=1";
-    }
-    if ($HOST_OSNAME eq "fedora") {
-        $HIPCXXFLAGS .= " -I/usr/local/include/c++/v1";
-    }
-
-    # Satisfy HCC dependencies
-    if ($HOST_OSNAME eq "fedora") {
-        $HIPLDFLAGS .= " -lc++abi";
-    } else {
-        $HIPLDFLAGS .= " -lc++abi -lsupc++";
-    }
-    $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am -lhsakmt";
-
-    # Handle ROCm target platform
-    if ($ROCM_TARGET eq "fiji") {
-        $HIPLDFLAGS .= " -amdgpu-target=AMD:AMDGPU:8:0:3";
-    }
-    if ($ROCM_TARGET eq "carrizo") {
-        $HIPLDFLAGS .= " -amdgpu-target=AMD:AMDGPU:8:0:1";
-    }
-    if ($ROCM_TARGET eq "hawaii") {
-        $HIPLDFLAGS .= " -amdgpu-target=AMD:AMDGPU:7:0:1";
-    }
-    if ($ROCM_TARGET eq "polaris") {
-        $HIPLDFLAGS .= " -amdgpu-target=AMD:AMDGPU:8:0:3";
-    }
+    $HIPLDFLAGS .= " -lsupc++";
+    $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am -lhsakmt ";
+#    $HIPLDFLAGS .= " -L$HCC_HOME/compiler/lib -lLLVMAMDGPUDesc -lLLVMAMDGPUUtils -lLLVMMC -lLLVMCore -lLLVMSupport ";
 
     # Add trace marker library:
     # TODO - once we cleanly separate the HIP API headers from HIP library headers this logic should move to CMakebuild option - apps do not need to see the marker library.
@@ -157,8 +153,6 @@ if ($HIP_PLATFORM eq "hcc") {
         $HIPLDFLAGS .= " -L$marker_lib_path -lCXLActivityLogger -Wl,--rpath=$marker_lib_path";
     }
 
-    # Add C++ libs for GCC.
-    $HIPLDFLAGS .= " -lstdc++";
     $HIPLDFLAGS .= " -lm";
 
     if ($verbose & 0x2) {
@@ -193,7 +187,7 @@ my $needHipHcc = ($HIP_PLATFORM eq 'hcc');      # set if we need to link hip_hcc
 my $printHipVersion = 0;    # print HIP version
 my $runCmd = 1;
 my $buildDeps = 0;
-my $linkType = 0;
+my $linkType = 1;
 my $setLinkType = 0;
 
 my @options = ();
@@ -206,44 +200,47 @@ if ($verbose & 0x4) {
 # Handle code object generation
 my $ISACMD="";
 if($HIP_PLATFORM eq "hcc"){
-  $ISACMD .= "set ROCM_PATH=$ROCM_PATH && set ROCM_TARGET=$ROCM_TARGET && $HIP_PATH/bin/hccgenco.sh ";
-  if($ARGV[0] eq "--genco"){
-    foreach $isaarg (@ARGV[1..$#ARGV]){
-      $ISACMD .= " ";
-      $ISACMD .= $isaarg;
+    $ISACMD .= "set ROCM_PATH=$ROCM_PATH && set ROCM_TARGET=$ROCM_TARGET && $HIP_PATH/bin/hccgenco.sh ";
+    if($ARGV[0] eq "--genco"){
+        foreach $isaarg (@ARGV[1..$#ARGV]){
+            $ISACMD .= " ";
+            $ISACMD .= $isaarg;
+        }
+        if ($verbose & 0x1) {
+            print "hipcc-cmd: ", $ISACMD, "\n";
+        }
+        system($ISACMD) and die();
+        exit(0);
     }
-    if ($verbose & 0x1) {
-      print "hipcc-cmd: ", $ISACMD, "\n";
-    }
-    system($ISACMD) and die();
-    exit(0);
-  }
 }
 
-if(($HIP_PLATFORM eq "hcc") and defined $ENV{HIP_EXPERIMENTAL}){
+if(($HIP_PLATFORM eq "hcc")){
     $EXPORT_LL=" ";
-    $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_ir.ll\n";
+    $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_hc.ll\n";
+    $ENV{HIP_HC_IR_FILE}="";
 }
 
 if($HIP_PLATFORM eq "nvcc"){
-  $ISACMD .= "$HIP_PATH/bin/hipcc -ptx ";
-  if($ARGV[0] eq "--genco"){
-    foreach $isaarg (@ARGV[1..$#ARGV]){
-      $ISACMD .= " ";
-      $ISACMD .= $isaarg;
+    $ISACMD .= "$HIP_PATH/bin/hipcc -ptx ";
+    if($ARGV[0] eq "--genco"){
+        foreach $isaarg (@ARGV[1..$#ARGV]){
+            $ISACMD .= " ";
+            $ISACMD .= $isaarg;
+        }
+        if ($verbose & 0x1) {
+            print "hipcc-cmd: ", $ISACMD, "\n";
+        }
+        system($ISACMD) and die();
+        exit(0);
     }
-    if ($verbose & 0x1) {
-      print "hipcc-cmd: ", $ISACMD, "\n";
-    }
-    system($ISACMD) and die();
-    exit(0);
-  }
 }
 
 my $toolArgs = "";  # arguments to pass to the hcc or nvcc tool
 
 foreach $arg (@ARGV)
 {
+    $trimarg = $arg;
+    $trimarg =~ s/^\s+|\s+$//g;  # Remive whitespace
     my $swallowArg = 0;
     if ($arg eq '-c') {
         $compileOnly = 1;
@@ -254,38 +251,57 @@ foreach $arg (@ARGV)
         $needLDFLAGS = 1;
     }
 
-    if(($arg eq '-stdlib=libc++') and ($setStdLib eq 0))
+    if(($trimarg eq '-stdlib=libc++') and ($setStdLib eq 0))
     {
         $HIPCXXFLAGS .= " -stdlib=libc++";
         $setStdLib = 1;
     }
-    if(($arg eq '-stdlib=libstdc++') and ($setStdLib eq 0))
+    if($arg eq '--amdgpu-target=gfx701')
     {
-        $HIPCXXFLAGS .= " -stdlib=libstdc++";
+        $target_gfx701 = 1;
+    }
+    if($arg eq '--amdgpu-target=gfx801')
+    {
+        $target_gfx801 = 1;
+    }
+    if($arg eq '--amdgpu-target=gfx802')
+    {
+        $target_gfx802 = 1;
+    }
+    if($arg eq '--amdgpu-target=gfx803')
+    {
+        $target_gfx803 = 1;
+    }
+    if($arg eq '--amdgpu-target=gfx900')
+    {
+        $target_gfx900 = 1;
+    }
+
+    if(($trimarg eq '-stdlib=libstdc++') and ($setStdLib eq 0))
+    {
         $HIPCXXFLAGS .= $HCC_WA_FLAGS;
         $setStdLib = 1;
     }
-    if($arg eq '--version') {
+    if($trimarg eq '--version') {
         $printHipVersion = 1;
     }
-    if($arg eq '--short-version') {
+    if($trimarg eq '--short-version') {
         $printHipVersion = 1;
         $runCmd = 0;
     }
-    if($arg eq '-M') {
+    if($trimarg eq '-M') {
         $compileOnly = 1;
         $buildDeps = 1;
     }
-    if($arg eq '-use_fast_math') {
-        print "In fast Math";
+    if($trimarg eq '-use_fast_math') {
         $HIPCXXFLAGS .= " -DHIP_FAST_MATH ";
     }
-    if(($arg eq '-use-staticlib') and ($setLinkType eq 0))
+    if(($trimarg eq '-use-staticlib') and ($setLinkType eq 0))
     {
         $linkType = 0;
         $setLinkType = 1;
     }
-    if(($arg eq '-use-sharedlib') and ($setLinkType eq 0))
+    if(($trimarg eq '-use-sharedlib') and ($setLinkType eq 0))
     {
         $linkType = 1;
         $setLinkType = 1;
@@ -320,6 +336,64 @@ foreach $arg (@ARGV)
     }
     $toolArgs .= " $arg" unless $swallowArg;
 }
+if(defined $ENV{HCC_AMDGPU_TARGET})
+{
+    foreach my $target (split(/,/, $ENV{HCC_AMDGPU_TARGET}))
+    {
+        if($target eq 'gfx701')
+        {
+            $target_gfx701 = 1;
+        }
+        if($target eq 'gfx801')
+        {
+            $target_gfx801 = 1;
+        }
+        if($target eq 'gfx802')
+        {
+            $target_gfx802 = 1;
+        }
+        if($target eq 'gfx803')
+        {
+            $target_gfx803 = 1;
+        }
+        if($target eq 'gfx900')
+        {
+            $target_gfx900 = 1;
+        }
+    }
+}
+if ($target_gfx701 eq 0 and $target_gfx801 eq 0 and $target_gfx802 eq 0 and $target_gfx803 eq 0 and $target_gfx900 eq 0)
+{
+    $target_gfx803 = 1;
+}
+
+if($HIP_PLATFORM eq "hcc"){
+
+    $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_hc.ll\n";
+
+    # Handle ROCm target platform
+    if ($target_gfx701 eq 1) {
+        $HIPLDFLAGS .= " --amdgpu-target=gfx701";
+        $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX701__=1 ";
+    }
+    if ($target_gfx801 eq 1) {
+        $HIPLDFLAGS .= " --amdgpu-target=gfx801";
+        $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX801__=1 ";
+    }
+    if ($target_gfx802 eq 1) {
+        $HIPLDFLAGS .= " --amdgpu-target=gfx802";
+        $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX802__=1 ";
+    }
+    if ($target_gfx803 eq 1) {
+        $HIPLDFLAGS .= " --amdgpu-target=gfx803";
+        $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX803__=1 ";
+        $ENV{HCC_EXTRA_LIBRARIES_GFX803}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
+    }
+    if ($target_gfx900 eq 1) {
+        $HIPLDFLAGS .= " --amdgpu-target=gfx900";
+        $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX900__=1 ";
+    }
+}
 
 if ($hasC and $HIP_PLATFORM eq 'nvcc') {
     $HIPCXXFLAGS .= " -x cu";
@@ -333,15 +407,14 @@ if ($buildDeps and $HIP_PLATFORM eq 'nvcc') {
 
 if ($setStdLib eq 0 and $HIP_PLATFORM eq 'hcc')
 {
-    $HIPCXXFLAGS .= " -stdlib=libstdc++";
     $HIPCXXFLAGS .= $HCC_WA_FLAGS;
 }
 
 if ($needHipHcc) {
     if ($linkType eq 0) {
-        substr($HIPLDFLAGS,0,0) = " -L$HIP_PATH/lib -lhip_hcc_static -lhip_device " ;
+        substr($HIPLDFLAGS,0,0) = "  $HIP_PATH/lib/libhip_hcc_static.a $HIP_PATH/lib/libhip_device.a " ;
     } else {
-        substr($HIPLDFLAGS,0,0) = " -L$HIP_PATH/lib -Wl,--rpath=$HIP_PATH/lib -lhip_hcc -lhip_device ";
+        substr($HIPLDFLAGS,0,0) = "  -Wl,--rpath=$HIP_PATH/lib $HIP_PATH/lib/libhip_hcc.so $HIP_PATH/lib/libhip_device.a ";
     }
 }
 
@@ -373,7 +446,10 @@ if ($printHipVersion) {
 }
 if ($runCmd) {
     if ($HIP_PLATFORM eq "hcc" and exists($hipConfig{'HCC_VERSION'}) and $HCC_VERSION ne $hipConfig{'HCC_VERSION'}) {
-        print ("HIP ($HIP_PATH) was built using hcc $hipConfig{'HCC_VERSION'}, but you are using $HCC_HOME/hcc with version $HCC_VERSION from hipcc. Please rebuild HIP including cmake or update HCC_HOME variable.\n") && die ();
+        print ("HIP ($HIP_PATH) was built using hcc $hipConfig{'HCC_VERSION'}, but you are using $HCC_HOME/hcc with version $HCC_VERSION from hipcc. Please rebuild HIP including cmake or update HCC_HOME variable.\n") ;
+        die unless $ENV{'HIP_IGNORE_HCC_VERSION'};
     }
     system ("$CMD") and die ();
 }
+
+# vim: ts=4:sw=4:expandtab:smartindent

@@ -3,7 +3,7 @@
 We have attempted to document known bugs and limitations - in particular the [HIP Kernel Language](docs/markdown/hip_kernel_language.md) document uses the phrase "Under Development", and the [HIP Runtime API bug list](http://gpuopen-professionalcompute-tools.github.io/HIP/bug.html) lists known bugs. 
 
 Upcoming:
-- Stability: Enforce perioidic host synchronization to reclaim resources if the application has launched a large
+- Stability: Enforce periodic host synchronization to reclaim resources if the application has launched a large
   number of commands (>1K) without synchronizing.  
 - Register keyword now silently ignored on HCC (previously would emit warning).
 - Doc updates: Add some more frequently asked questions to FAQ, fix TOC in some files, review.
@@ -12,6 +12,52 @@ Upcoming:
 ===================================================================================================
 
 ## Revision History:
+
+===================================================================================================
+Release: 1.0.17102
+Date: 2017.03.07
+- Lots of improvements to hipify-clang.
+- Added HIP package config for cmake.
+- Several bug fixes and documentation updates.
+
+
+===================================================================================================
+Release: 1.0.17066
+Date: 2017.02.11
+- Improved support for math device functions.
+- Added several half math device functions.
+- Enabled support for CUDA 8.0 in hipify-clang.
+- Lots of bug fixes and documentation updates.
+
+
+===================================================================================================
+Release: 1.0.17015
+Date: 2017.01.06
+- Several improvements to the hipify-clang infrastructure.
+- Refactored module and function APIs.
+- HIP now defaults to linking against the shared runtime library.
+- Documentation updates.
+
+
+===================================================================================================
+Release: 1.0.16502
+Date: 2016.12.13
+- Added several fast math and packaged math instrincs
+- Improved debug and profiler documentation
+- Support for building and linking to HIP shared library
+- Several improvements to hipify-clang
+- Several bug fixes
+
+
+===================================================================================================
+Release: 1.0.16461
+Date: 2016.11.14
+- Significant changes to the HIP Profiling APIs. Refer to the documentation for details
+- Improvements to P2P support
+- New API: hipDeviceGetByPCIBusId
+- Several bug fixes in NV path
+- hipModuleLaunch now works for multi-dim kernels
+
 
 ===================================================================================================
 Release:1.0
@@ -73,7 +119,7 @@ Date: 2016.04.25
     - Create static library and link.
     - Set HIP_PATH to install.
 - Make hipDevice and hipStream thread-safe.
-    - Prefered hipStream usage is still to create new streams for each new thread, but it works even if you don;t.
+    - Preferred hipStream usage is still to create new streams for each new thread, but it works even if you don;t.
 - Improve automated platform detection: If AMD GPU is installed and detected by driver, default HIP_PLATFORM to hcc.
 - HIP_TRACE_API now prints arguments to the HIP function (in addition to name of function).
 - Deprecate hipDeviceGetProp (Replace with hipGetDeviceProp)

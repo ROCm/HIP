@@ -11,10 +11,6 @@ HIPCC=$(HIP_PATH)/bin/hipcc
 ifeq (${HIP_PLATFORM}, nvcc)
 	HIPCC_FLAGS = -gencode=arch=compute_20,code=sm_20 
 endif
-ifeq (${HIP_PLATFORM}, hcc)
-	HIPCC_FLAGS = -stdlib=libc++
-endif
-
 
 EXE=bit_extract
 
@@ -24,4 +20,3 @@ $(EXE): bit_extract.cpp
 
 clean:
 	rm -f *.o $(EXE)
-	

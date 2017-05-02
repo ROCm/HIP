@@ -44,6 +44,7 @@
 - [Pragma Unroll](#pragma-unroll)
 - [In-Line Assembly](#in-line-assembly)
 - [C++ Support](#c-support)
+- [Kernel Compilation](#kernel-compilation)
 
 <!-- tocstop -->
 
@@ -105,7 +106,7 @@ HIP parses the `__noinline__` and `__forceinline__` keywords and converts them t
 
 
 ```
-// Example psuedocode introducing hipLaunchKernel:
+// Example pseudo code introducing hipLaunchKernel:
 __global__ MyKernel(hipLaunchParm lp, float *A, float *B, float *C, size_t N)
 {
 ...
@@ -680,7 +681,7 @@ The user can specify the target for which the binary can be generated. HIP/HCC d
 The file format for binary is `.co` which means Code Object. The following command builds the code object using `hipcc`.
 
 `hipcc --genco --target-isa=[TARGET GPU] [INPUT FILE] -o [OUTPUT FILE]`
-```[TARGET GPU] = fiji/hawaii
+```[TARGET GPU] = gfx803/gfx701
 [INPUT FILE] = Name of the file containing kernels
 [OUTPUT FILE] = Name of the generated code object file```
 

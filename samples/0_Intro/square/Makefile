@@ -15,5 +15,6 @@ square.hip.out: square.hipref.cpp
 
 
 
+
 clean:
 	rm -f *.o *.out	

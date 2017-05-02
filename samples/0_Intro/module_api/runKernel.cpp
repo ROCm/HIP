@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,15 +22,19 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime_api.h"
-#include<iostream>
-#include<fstream>
-#include<vector>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <hip/hip_hcc.h>
 
 #define LEN 64
 #define SIZE LEN<<2
 
 #define fileName "vcpy_kernel.code"
 #define kernel_name "hello_world"
+
+#define HIP_CHECK(status) \
+if(status != hipSuccess) {std::cout<<"Got Status: "<<status<<" at Line: "<<__LINE__<<std::endl;exit(0);}
 
 int main(){
     float *A, *B;
@@ -43,10 +47,10 @@ int main(){
         B[i] = 0.0f;
     }
 
-  	hipInit(0);
-	hipDevice_t device;
-	hipCtx_t context;
-	hipDeviceGet(&device, 0);
+    hipInit(0);
+    hipDevice_t device;
+    hipCtx_t context;
+    hipDeviceGet(&device, 0);
     hipCtxCreate(&context, 0, device);
 
     hipMalloc((void**)&Ad, SIZE);
@@ -56,22 +60,18 @@ int main(){
     hipMemcpyHtoD(Bd, B, SIZE);
     hipModule_t Module;
     hipFunction_t Function;
-    hipModuleLoad(&Module, fileName);
-    hipModuleGetFunction(&Function, Module, kernel_name);
+    HIP_CHECK(hipModuleLoad(&Module, fileName));
+    HIP_CHECK(hipModuleGetFunction(&Function, Module, kernel_name));
 
 #ifdef __HIP_PLATFORM_HCC__
 		uint32_t len = LEN;
 		uint32_t one = 1;
 
     struct {
-        uint32_t _hidden[6];
         void * _Ad;
         void * _Bd;
     } args;
 
-    for (int i=0; i<6; i++) {
-        args._hidden[i] = 0;
-    }
     args._Ad = Ad;
     args._Bd = Bd;
 
@@ -98,9 +98,10 @@ int main(){
       HIP_LAUNCH_PARAM_END
     };
 
-    hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config); 
+    HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
 
     hipMemcpyDtoH(B, Bd, SIZE);
+
     int mismatchCount = 0;
     for(uint32_t i=0;i<LEN;i++){
         if (A[i] != B[i]) {

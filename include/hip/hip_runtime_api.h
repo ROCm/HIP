@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,8 @@ THE SOFTWARE.
  * This file can be compiled with a standard compiler.
  */
 
-#pragma once
+#ifndef HIP_INCLUDE_HIP_HIP_RUNTIME_API_H
+#define HIP_INCLUDE_HIP_HIP_RUNTIME_API_H
 
 
 #include <string.h> // for getDeviceProp
@@ -106,6 +107,7 @@ typedef struct hipDeviceProp_t {
     size_t maxSharedMemoryPerMultiProcessor;    ///< Maximum Shared Memory Per Multiprocessor.
     int isMultiGpuBoard;                        ///< 1 if device is on a multi-GPU board, 0 if not.
     int canMapHostMemory;                       ///< Check whether HIP can map host memory
+    int gcnArch;                                ///< AMD GCN Arch Value. Eg: 803, 701
  } hipDeviceProp_t;
 
 
@@ -181,6 +183,7 @@ typedef enum hipError_t {
     hipErrorSharedObjectSymbolNotFound = 302,
     hipErrorSharedObjectInitFailed  = 303,
     hipErrorOperatingSystem         = 304,
+    hipErrorSetOnActiveProcess      = 305,
     hipErrorInvalidHandle           = 400,
     hipErrorNotFound                = 500,
     hipErrorIllegalAddress          = 700,
@@ -280,4 +283,6 @@ static inline hipError_t hipHostMalloc( T** ptr, size_t size, unsigned int flags
 {
     return hipHostMalloc((void**)ptr, size, flags);
 }
+#endif
+
 #endif

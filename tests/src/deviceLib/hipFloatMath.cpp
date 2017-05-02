@@ -27,6 +27,7 @@ THE SOFTWARE.
  */
 
 #include "test_common.h"
+#include <hip/device_functions.h>
 
 #define LEN 512
 #define SIZE LEN<<2

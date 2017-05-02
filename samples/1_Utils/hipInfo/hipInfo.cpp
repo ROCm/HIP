@@ -63,6 +63,14 @@ double bytesToGB(size_t s)
     return (double)s / (1024.0*1024.0*1024.0);
 }
 
+#define printLimit(w1, limit, units) \
+{\
+    size_t val;\
+    cudaDeviceGetLimit(&val, limit);\
+    std::cout << setw(w1) << #limit": " << val << " " << units << std::endl;\
+}
+
+
 void printDeviceProp (int deviceId)
 {
     using namespace std;
@@ -142,6 +150,17 @@ void printDeviceProp (int deviceId)
         }
     }
     cout << endl;
+
+
+#ifdef __HIP_PLATFORM_NVCC__
+    // Limits:
+    cout << endl;
+    printLimit(w1, cudaLimitStackSize, "bytes/thread");
+    printLimit(w1, cudaLimitPrintfFifoSize, "bytes/device");
+    printLimit(w1, cudaLimitMallocHeapSize, "bytes/device");
+    printLimit(w1, cudaLimitDevRuntimeSyncDepth, "grids");
+    printLimit(w1, cudaLimitDevRuntimePendingLaunchCount, "launches");
+#endif
 
 
 
