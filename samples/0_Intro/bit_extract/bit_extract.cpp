@@ -37,7 +37,7 @@ THE SOFTWARE.
     }\
 }
 
-void __global__
+__global__ void
 bit_extract_kernel(hipLaunchParm lp, uint32_t *C_d, const uint32_t *A_d, size_t N)
 {
     size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
@@ -45,7 +45,7 @@ bit_extract_kernel(hipLaunchParm lp, uint32_t *C_d, const uint32_t *A_d, size_t 
 
     for (size_t i=offset; i<N; i+=stride) {
 #ifdef __HIP_PLATFORM_HCC__
-        C_d[i] = hc::__bitextract_u32(A_d[i], 8, 4); 
+        C_d[i] = hc::__bitextract_u32(A_d[i], 8, 4);
 #else /* defined __HIP_PLATFORM_NVCC__ or other path */
         C_d[i] = ((A_d[i] & 0xf00)  >> 8);
 #endif
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     C_h = (uint32_t*)malloc(Nbytes);
     CHECK(C_h == 0 ? hipErrorMemoryAllocation : hipSuccess );
 
-    for (size_t i=0; i<N; i++) 
+    for (size_t i=0; i<N; i++)
     {
         A_h[i] = i;
     }

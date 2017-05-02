@@ -26,6 +26,7 @@ set(HIP_HIPCONFIG_EXECUTABLE "@HIP_HIPCONFIG_EXECUTABLE@") #path
 set(HIP_HOST_COMPILER "@HIP_HOST_COMPILER@") # path
 set(CMAKE_COMMAND "@CMAKE_COMMAND@") # path
 set(HIP_run_make2cmake "@HIP_run_make2cmake@") # path
+set(HCC_HOME "@HCC_HOME@") #path
 
 @HIP_HOST_FLAGS@
 @_HIP_HIPCC_FLAGS@
@@ -42,6 +43,9 @@ execute_process(COMMAND ${HIP_HIPCONFIG_EXECUTABLE} --platform OUTPUT_VARIABLE H
 if(NOT host_flag)
     set(__CC ${HIP_HIPCC_EXECUTABLE})
     if(HIP_PLATFORM STREQUAL "hcc")
+        if(NOT "x${HCC_HOME}" STREQUAL "x")
+            set(ENV{HCC_HOME} ${HCC_HOME})
+        endif()
         set(__CC_FLAGS ${HIP_HIPCC_FLAGS} ${HIP_HCC_FLAGS} ${HIP_HIPCC_FLAGS_${build_configuration}} ${HIP_HCC_FLAGS_${build_configuration}})
     else()
         set(__CC_FLAGS ${HIP_HIPCC_FLAGS} ${HIP_NVCC_FLAGS} ${HIP_HIPCC_FLAGS_${build_configuration}} ${HIP_NVCC_FLAGS_${build_configuration}})

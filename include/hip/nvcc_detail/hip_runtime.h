@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
+#ifndef HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_H
+#define HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_H
 
 #include <cuda_runtime.h>
 
@@ -35,6 +36,10 @@ do {\
 kernelName<<<numblocks,numthreads,memperblock,streamId>>>(0, ##__VA_ARGS__);\
 } while(0)
 
+#define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...) \
+do {\
+kernelName<<<numblocks,numthreads,memperblock,streamId>>>(__VA_ARGS__);\
+} while(0)
 
 #define hipReadModeElementType cudaReadModeElementType
 
@@ -103,5 +108,7 @@ kernelName<<<numblocks,numthreads,memperblock,streamId>>>(0, ##__VA_ARGS__);\
     extern __shared__ type var[]; \
 
 #define HIP_DYNAMIC_SHARED_ATTRIBUTE
+
+#endif
 
 #endif

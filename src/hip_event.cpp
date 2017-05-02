@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,13 +21,61 @@ THE SOFTWARE.
 */
 
 #include "hip/hip_runtime.h"
-#include "hip_hcc.h"
+#include "hip_hcc_internal.h"
 #include "trace_helper.h"
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 // Events
 //---
+
+
+ihipEvent_t::ihipEvent_t(unsigned flags)
+{
+    _state  = hipEventStatusCreated;
+    _stream = NULL;
+    _flags  = flags;
+    _timestamp  = 0;
+    _type   = hipEventTypeIndependent;
+};
+
+
+
+// Attach to an existing completion future:
+void ihipEvent_t::attachToCompletionFuture(const hc::completion_future *cf, ihipEventType_t eventType)
+{
+    _state  = hipEventStatusRecording;
+    _marker = *cf;
+    _type   = eventType;
+}
+
+
+
+void ihipEvent_t::setTimestamp()
+{
+    if (_state == hipEventStatusRecorded) {
+        // already recorded, done:
+        return;
+    } else {
+        // TODO - use completion-future functions to obtain ticks and timestamps:
+        hsa_signal_t *sig  = static_cast<hsa_signal_t*> (_marker.get_native_handle());
+        if (sig) {
+            if (hsa_signal_load_acquire(*sig) == 0) {
+
+                if ((_type == hipEventTypeIndependent) || (_type == hipEventTypeStopCommand)) {
+                    _timestamp =  _marker.get_end_tick();
+                } else if (_type == hipEventTypeStartCommand) {
+                    _timestamp =  _marker.get_begin_tick();
+                } else {
+                    assert(0); // TODO - move to debug assert
+                    _timestamp =  0;
+                }
+
+                _state = hipEventStatusRecorded;
+            }
+        }
+    }
+}
 
 
 hipError_t ihipEventCreate(hipEvent_t* event, unsigned flags)
@@ -37,13 +85,9 @@ hipError_t ihipEventCreate(hipEvent_t* event, unsigned flags)
     // TODO-IPC - support hipEventInterprocess.
     unsigned supportedFlags = hipEventDefault | hipEventBlockingSync | hipEventDisableTiming;
     if ((flags & ~supportedFlags) == 0) {
-        ihipEvent_t *eh = new ihipEvent_t();
+        ihipEvent_t *eh = new ihipEvent_t(flags);
 
-        eh->_state  = hipEventStatusCreated;
-        eh->_stream = NULL;
-        eh->_flags  = flags;
-        eh->_timestamp  = 0;
-        *event = eh; 
+        *event = eh;
     } else {
         e = hipErrorInvalidValue;
     }
@@ -141,8 +185,8 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop)
     ihipEvent_t *start_eh = start;
     ihipEvent_t *stop_eh = stop;
 
-    ihipSetTs(start);
-    ihipSetTs(stop);
+    start->setTimestamp();
+    stop->setTimestamp();
 
     hipError_t status = hipSuccess;
     *ms = 0.0f;
@@ -151,7 +195,7 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop)
         if ((start_eh->_state == hipEventStatusRecorded) && (stop_eh->_state == hipEventStatusRecorded)) {
             // Common case, we have good information for both events.
 
-            int64_t tickDiff = (stop_eh->_timestamp - start_eh->_timestamp);
+            int64_t tickDiff = (stop_eh->timestamp() - start_eh->timestamp());
 
             uint64_t freqHz;
             hsa_system_get_info(HSA_SYSTEM_INFO_TIMESTAMP_FREQUENCY, &freqHz);
@@ -186,5 +230,3 @@ hipError_t hipEventQuery(hipEvent_t event)
         return ihipLogStatus(hipSuccess);
     }
 }
-
-

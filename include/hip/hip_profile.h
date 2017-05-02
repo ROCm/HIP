@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
+#ifndef HIP_INCLUDE_HIP_HIP_PROFILE_H
+#define HIP_INCLUDE_HIP_HIP_PROFILE_H
 
 #if not defined (ENABLE_HIP_PROFILE)
 #define ENABLE_HIP_PROFILE 1
@@ -32,7 +33,9 @@ THE SOFTWARE.
 #define HIP_BEGIN_MARKER(markerName, group) amdtBeginMarker(markerName, group, nullptr);
 #define HIP_END_MARKER() amdtEndMarker();
 #else
-#define HIP_SCOPED_MARKER(markerName, group) 
+#define HIP_SCOPED_MARKER(markerName, group)
 #define HIP_BEGIN_MARKER(markerName, group)
-#define HIP_END_MARKER() 
+#define HIP_END_MARKER()
+#endif
+
 #endif

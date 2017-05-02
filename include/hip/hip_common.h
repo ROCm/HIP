@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,39 +20,29 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
+#ifndef HIP_INCLUDE_HIP_HIP_COMMON_H
+#define HIP_INCLUDE_HIP_HIP_COMMON_H
 
 // Common code included at start of every hip file.
 // Auto enable __HIP_PLATFORM_HCC__ if compiling with HCC
 // Other compiler (GCC,ICC,etc) need to set one of these macros explicitly
-#if defined(__HCC__) 
+#if defined(__HCC__)
 #define __HIP_PLATFORM_HCC__
-#define __HIPCC__
-
-#if defined(__HCC_ACCELERATOR__) && (__HCC_ACCELERATOR__ != 0)
-#define __HIP_DEVICE_COMPILE__ 1
-#else
-#define __HIP_DEVICE_COMPILE__ 0
-#endif
-#endif
+#endif //__HCC__
 
 // Auto enable __HIP_PLATFORM_NVCC__ if compiling with NVCC
-#if defined(__NVCC__) 
+#if defined(__NVCC__)
 #define __HIP_PLATFORM_NVCC__
-# ifdef __CUDACC__
-# define __HIPCC__
-# endif
-
-#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ != 0)
-#define __HIP_DEVICE_COMPILE__ 1
-#else
-#define __HIP_DEVICE_COMPILE__ 0
+#ifdef __CUDACC__
+#define __HIPCC__
 #endif
 
+#endif //__NVCC__
+
+// Auto enable __HIP_DEVICE_COMPILE__ if compiled in HCC or NVCC device path
+#if (defined(__HCC_ACCELERATOR__) && __HCC_ACCELERATOR__ != 0) || (defined(__CUDA_ARCH__) && __CUDA_ARCH__ != 0)
+  #define __HIP_DEVICE_COMPILE__ 1
 #endif
-
-
-
 
 #if __HIP_DEVICE_COMPILE__ == 0
 // 32-bit Atomics
@@ -83,4 +73,6 @@ THE SOFTWARE.
 #define __HIP_ARCH_HAS_SURFACE_FUNCS__              (0)
 #define __HIP_ARCH_HAS_3DGRID__                     (0)
 #define __HIP_ARCH_HAS_DYNAMIC_PARALLEL__           (0)
+#endif
+
 #endif

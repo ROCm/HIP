@@ -1,5 +1,5 @@
 # HIP Porting Guide 
-In addition to providing a portable C++ programmming environement for GPUs, HIP is designed to ease
+In addition to providing a portable C++ programming environment for GPUs, HIP is designed to ease
 the porting of existing CUDA code into the HIP environment.  This section describes the available tools 
 and provides practical suggestions on how to port CUDA code and work through common issues. 
 
@@ -21,6 +21,7 @@ and provides practical suggestions on how to port CUDA code and work through com
   * [Device-Architecture Properties](#device-architecture-properties)
   * [Table of Architecture Properties](#table-of-architecture-properties)
 - [Finding HIP](#finding-hip)
+- [hipLaunchKernel](#hiplaunchkernel)
 - [Compiler Options](#compiler-options)
 - [Linking Issues](#linking-issues)
   * [Linking With hipcc](#linking-with-hipcc)
@@ -31,9 +32,11 @@ and provides practical suggestions on how to port CUDA code and work through com
   * [Using a Standard C++ Compiler](#using-a-standard-c-compiler)
     + [cuda.h](#cudah)
   * [Choosing HIP File Extensions](#choosing-hip-file-extensions)
-  * [Workarounds](#workarounds)
-    + [warpSize](#warpsize)
-    + [Textures and Cache Control](#textures-and-cache-control)
+- [Workarounds](#workarounds)
+  * [warpSize](#warpsize)
+- [memcpyToSymbol](#memcpytosymbol)
+- [threadfence_system](#threadfence_system)
+  * [Textures and Cache Control](#textures-and-cache-control)
 - [More Tips](#more-tips)
   * [HIPTRACE Mode](#hiptrace-mode)
   * [Environment Variables](#environment-variables)
@@ -166,10 +169,10 @@ Both nvcc and hcc make two passes over the code: one for host code and one for d
  
 ```
 // #ifdef __CUDA_ARCH__  
-#ifdef __HIP_DEVICE_COMPILE__ 
+#if __HIP_DEVICE_COMPILE__
 ```
  
-Unlike `__CUDA_ARCH__`, the `__HIP_DEVICE_COMPILE__` value is 0 or 1, and it doesnt represent the feature capability of the target device.  
+Unlike `__CUDA_ARCH__`, the `__HIP_DEVICE_COMPILE__` value is 1 or undefined, and it doesnt represent the feature capability of the target device.  
 
 
 ### Compiler Defines: Summary
@@ -178,11 +181,11 @@ Unlike `__CUDA_ARCH__`, the `__HIP_DEVICE_COMPILE__` value is 0 or 1, and it doe
 |HIP-related defines:|
 |`__HIP_PLATFORM_HCC___`| Defined | Undefined |  Defined if targeting hcc platform; undefined otherwise |
 |`__HIP_PLATFORM_NVCC___`| Undefined | Defined |  Defined if targeting nvcc platform; undefined otherwise |
-|`__HIP_DEVICE_COMPILE__`     | 1 if compiling for device; 0 if compiling for host  |1 if compiling for device; 0 if compiling for host  | Undefined 
+|`__HIP_DEVICE_COMPILE__`     | 1 if compiling for device; undefined if compiling for host  |1 if compiling for device; undefined if compiling for host  | Undefined 
 |`__HIPCC__`		| Defined   | Defined 		|  Undefined
 |`__HIP_ARCH_*` | 0 or 1 depending on feature support (see below) | 0 or 1 depending on feature support (see below) | 0 
 |nvcc-related defines:|
-|`__CUDACC__` 		| Undefined | Defined if compiling for Cuda device; undefined otherwise 		|  Undefined
+|`__CUDACC__` 		| Undefined | Defined if source code is compiled by nvcc; undefined otherwise 		|  Undefined
 |`__NVCC__` 		| Undefined | Defined 		|  Undefined
 |`__CUDA_ARCH__`		| Undefined | Unsigned representing compute capability (e.g., "130") if in device code; 0 if in host code  | Undefined 
 |hcc-related defines:|
@@ -553,7 +556,7 @@ If you pass a ".cu" file, hcc will attempt to compile it as a Cuda language file
 
 ### HIP Environment Variables
 
-On the HCC path, HIP provides a number of environment variables that control the behavior of HIP.  Some of these are useful for appliction development (for example HIP_VISIBLE_DEVICES, HIP_LAUNCH_BLOCKING),
+On the HCC path, HIP provides a number of environment variables that control the behavior of HIP.  Some of these are useful for application development (for example HIP_VISIBLE_DEVICES, HIP_LAUNCH_BLOCKING),
 some are useful for performance tuning or experimentation (for example HIP_STAGING*), and some are useful for debugging (HIP_DB).  You can see the environment variables supported by HIP as well as
 their current values and usage with the environment var "HIP_PRINT_ENV" - set this and then run any HIP application.  For example:
 

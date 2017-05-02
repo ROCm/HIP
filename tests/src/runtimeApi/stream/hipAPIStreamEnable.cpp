@@ -26,6 +26,7 @@ THE SOFTWARE.
 
 #include<iostream>
 #include"test_common.h"
+#include"hip/math_functions.h"
 
 const int NN = 1 << 21;
 
@@ -33,7 +34,7 @@ __global__ void kernel(hipLaunchParm lp, float *x, float *y, int n){
 	int tid = hipThreadIdx_x;
 	if(tid < 1){
 		for(int i=0;i<n;i++){
-			x[i] = sqrt(pow(3.14159,i));
+			x[i] = sqrt(powf(3.14159,i));
 		}
 		y[tid] = y[tid] + 1.0f;
 	}

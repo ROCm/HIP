@@ -29,7 +29,8 @@ THE SOFTWARE.
 #include <stdio.h>
 #include <iostream>
 
-#include "hip/hip_runtime.h"
+#include <hip/hip_runtime.h>
+#include <hip/device_functions.h>
 #define HIP_ASSERT(x) (assert((x)==hipSuccess))
 
 __global__ void
