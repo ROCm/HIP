@@ -1318,6 +1318,27 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
  *  @param[in]   width  Width of matrix transfer (columns in bytes)
  *  @param[in]   height Height of matrix transfer (rows)
  *  @param[in]   kind   Type of transfer
+ *  @param[in]   stream Stream to use
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue, #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpyToSymbol, hipMemcpyAsync
+ */
+#if __cplusplus
+hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind, hipStream_t stream = 0);
+#else
+hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind, hipStream_t stream);
+#endif
+
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dst    Destination memory address
+ *  @param[in]   dpitch Pitch of destination memory
+ *  @param[in]   src    Source memory address
+ *  @param[in]   spitch Pitch of source memory
+ *  @param[in]   width  Width of matrix transfer (columns in bytes)
+ *  @param[in]   height Height of matrix transfer (rows)
+ *  @param[in]   kind   Type of transfer
  *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue, #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol, hipMemcpyAsync
