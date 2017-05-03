@@ -793,6 +793,24 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
     return ihipLogStatus(e);
 }
 
+hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
+        size_t width, size_t height, hipMemcpyKind kind, hipStream_t stream) {
+    HIP_INIT_CMD_API(dst, dpitch, src, spitch, width, height, kind, stream);
+    if(width > dpitch || width > spitch)
+        return ihipLogStatus(hipErrorUnknown);
+    hipError_t e = hipSuccess;
+    try {
+        for(int i = 0; i < height; ++i) {
+            e = hip_internal::memcpyAsync((unsigned char*)dst + i*dpitch, (unsigned char*)src + i*spitch, width, kind,stream);
+        }
+    }
+    catch (ihipException ex) {
+        e = ex._code;
+    }
+
+    return ihipLogStatus(e);
+}
+
 hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
         size_t spitch, size_t width, size_t height, hipMemcpyKind kind) {
 
