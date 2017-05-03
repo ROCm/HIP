@@ -1601,7 +1601,7 @@ struct cuda2hipMap {
     // Blas types
     cuda2hipRename["cublasHandle_t"]                 = {"hipblasHandle_t", CONV_TYPE, API_BLAS};
     // TODO: dereferencing: typedef struct cublasContext *cublasHandle_t;
-    cuda2hipRename["cublasContext"]                  = {"hipblasHandle_t", CONV_TYPE, API_BLAS};
+    // cuda2hipRename["cublasContext"]                  = {"hipblasHandle_t", CONV_TYPE, API_BLAS};
     // Blas management functions
     // unsupported yet by hipblas/hcblas
     cuda2hipRename["cublasInit"]                     = {"hipblasInit", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
@@ -1709,10 +1709,9 @@ struct cuda2hipMap {
 
     // AXPY
     cuda2hipRename["cublasSaxpy"]                    = {"hipblasSaxpy", CONV_MATH_FUNC, API_BLAS};
-    // there is no such a function in CUDA
     cuda2hipRename["cublasSaxpyBatched"]             = {"hipblasSaxpyBatched", CONV_MATH_FUNC, API_BLAS};
     // unsupported yet by hipblas/hcblas
-    cuda2hipRename["cublasDaxpy"]                    = {"hipblasDaxpy", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDaxpy"]                    = {"hipblasDaxpy", CONV_MATH_FUNC, API_BLAS};
     cuda2hipRename["cublasCaxpy"]                    = {"hipblasCaxpy", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
     cuda2hipRename["cublasZaxpy"]                    = {"hipblasZaxpy", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
@@ -1789,8 +1788,8 @@ struct cuda2hipMap {
     cuda2hipRename["cublasSgemv"]                    = {"hipblasSgemv", CONV_MATH_FUNC, API_BLAS};
     // there is no such a function in CUDA
     cuda2hipRename["cublasSgemvBatched"]             = {"hipblasSgemvBatched", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasDgemv"]                    = {"hipblasDgemv", CONV_MATH_FUNC, API_BLAS};
     // unsupported yet by hipblas/hcblas
-    cuda2hipRename["cublasDgemv"]                    = {"hipblasDgemv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
     cuda2hipRename["cublasCgemv"]                    = {"hipblasCgemv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
     cuda2hipRename["cublasZgemv"]                    = {"hipblasZgemv", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
@@ -1868,8 +1867,8 @@ struct cuda2hipMap {
 
     // GER
     cuda2hipRename["cublasSger"]                     = {"hipblasSger", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasDger"]                     = {"hipblasDger", CONV_MATH_FUNC, API_BLAS};
     // unsupported yet by hipblas/hcblas
-    cuda2hipRename["cublasDger"]                     = {"hipblasDger", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
     cuda2hipRename["cublasCgeru"]                    = {"hipblasCgeru", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
     cuda2hipRename["cublasCgerc"]                    = {"hipblasCgerc", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
     cuda2hipRename["cublasZgeru"]                    = {"hipblasZgeru", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
@@ -1906,8 +1905,7 @@ struct cuda2hipMap {
     // Blas3 (v1) Routines
     // GEMM
     cuda2hipRename["cublasSgemm"]                    = {"hipblasSgemm", CONV_MATH_FUNC, API_BLAS};
-    // unsupported yet by hipblas/hcblas
-    cuda2hipRename["cublasDgemm"]                    = {"hipblasDgemm", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDgemm"]                    = {"hipblasDgemm", CONV_MATH_FUNC, API_BLAS};
 
     cuda2hipRename["cublasCgemm"]                    = {"hipblasCgemm", CONV_MATH_FUNC, API_BLAS};
     // unsupported yet by hipblas/hcblas
@@ -1915,8 +1913,7 @@ struct cuda2hipMap {
 
     // BATCH GEMM
     cuda2hipRename["cublasSgemmBatched"]             = {"hipblasSgemmBatched", CONV_MATH_FUNC, API_BLAS};
-    // unsupported yet by hipblas/hcblas
-    cuda2hipRename["cublasDgemmBatched"]             = {"hipblasDgemmBatched", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDgemmBatched"]             = {"hipblasDgemmBatched", CONV_MATH_FUNC, API_BLAS};
 
     cuda2hipRename["cublasCgemmBatched"]             = {"hipblasCgemmBatched", CONV_MATH_FUNC, API_BLAS};
     // unsupported yet by hipblas/hcblas
@@ -2074,10 +2071,9 @@ struct cuda2hipMap {
     cuda2hipRename["cublasCreate_v2"]                = {"hipblasCreate", CONV_MATH_FUNC, API_BLAS};
     cuda2hipRename["cublasDestroy_v2"]               = {"hipblasDestroy", CONV_MATH_FUNC, API_BLAS};
 
-    // unsupported yet by hipblas/hcblas
     cuda2hipRename["cublasGetVersion_v2"]            = {"hipblasGetVersion", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
-    cuda2hipRename["cublasSetStream_v2"]             = {"hipblasSetStream", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
-    cuda2hipRename["cublasGetStream_v2"]             = {"hipblasGetStream", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasSetStream_v2"]             = {"hipblasSetStream", CONV_MATH_FUNC, API_BLAS};
+    cuda2hipRename["cublasGetStream_v2"]             = {"hipblasGetStream", CONV_MATH_FUNC, API_BLAS};
     cuda2hipRename["cublasGetPointerMode_v2"]        = {"hipblasGetPointerMode", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
     cuda2hipRename["cublasSetPointerMode_v2"]        = {"hipblasSetPointerMode", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
@@ -2294,7 +2290,7 @@ struct cuda2hipMap {
     // AXPY
     cuda2hipRename["cublasSaxpy_v2"]                 = {"hipblasSaxpy", CONV_MATH_FUNC, API_BLAS};
     // unsupported yet by hipblas/hcblas
-    cuda2hipRename["cublasDaxpy_v2"]                 = {"hipblasDaxpy", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
+    cuda2hipRename["cublasDaxpy_v2"]                 = {"hipblasDaxpy", CONV_MATH_FUNC, API_BLAS};
     cuda2hipRename["cublasCaxpy_v2"]                 = {"hipblasCaxpy", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
     cuda2hipRename["cublasZaxpy_v2"]                 = {"hipblasZaxpy", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED};
 
