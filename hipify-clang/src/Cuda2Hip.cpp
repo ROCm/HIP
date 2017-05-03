@@ -1030,10 +1030,10 @@ struct cuda2hipMap {
     cuda2hipRename["cudaMemcpyToSymbolAsync"]     = {"hipMemcpyToSymbolAsync", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMemcpyAsync"]             = {"hipMemcpyAsync", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMemcpy2D"]                = {"hipMemcpy2D", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemcpy2DAsync"]           = {"hipMemcpy2DAsync", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMemcpy2DToArray"]         = {"hipMemcpy2DToArray", CONV_MEM, API_RUNTIME};
     // unsupported yet by HIP
     cuda2hipRename["cudaMemcpy2DArrayToArray"]    = {"hipMemcpy2DArrayToArray", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaMemcpy2DAsync"]           = {"hipMemcpy2DAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaMemcpy2DFromArray"]       = {"hipMemcpy2DFromArray", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaMemcpy2DFromArrayAsync"]  = {"hipMemcpy2DFromArrayAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaMemcpy2DToArrayAsync"]    = {"hipMemcpy2DToArrayAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
@@ -1043,7 +1043,8 @@ struct cuda2hipMap {
     cuda2hipRename["cudaMemcpy3DPeerAsync"]       = {"hipMemcpy3DPeerAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaMemcpyArrayToArray"]      = {"hipMemcpyArrayToArray", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaMemcpyFromArrayAsync"]    = {"hipMemcpyFromArrayAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaMemcpyFromSymbolAsync"]   = {"hipMemcpyFromSymbolAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaMemcpyFromSymbol"]        = {"hipMemcpyFromSymbol", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemcpyFromSymbolAsync"]   = {"hipMemcpyFromSymbolAsync", CONV_MEM, API_RUNTIME};
 
     // memcpy kind
     cuda2hipRename["cudaMemcpyKind"]              = {"hipMemcpyKind", CONV_MEM, API_RUNTIME};
