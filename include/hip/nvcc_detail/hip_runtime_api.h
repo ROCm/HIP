@@ -345,7 +345,11 @@ inline static hipError_t hipMemcpyFromSymbolAsync(void *dst, const void* symbolN
 }
 
 inline static hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind){
-  return hipCUDAErrorTohipError(cudaMemcpy2D(dst, dpitch, src, spitch, width, height, hipMemcpyKindToCudaMemcpyKind(kind)));
+    return hipCUDAErrorTohipError(cudaMemcpy2D(dst, dpitch, src, spitch, width, height, hipMemcpyKindToCudaMemcpyKind(kind)));
+}
+
+inline static hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind, hipStream_t stream) {
+    return hipCUDAErrorTohipError(cudaMemcpy2DAsync(dst, dpitch, src, spitch, width, height, hipMemcpyKindToCudaMemcpyKind(kind),stream));
 }
 
 inline static hipError_t hipMemcpy2DToArray(hipArray *dst, size_t wOffset, size_t hOffset, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind){
