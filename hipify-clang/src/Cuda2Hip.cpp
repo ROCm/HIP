@@ -3533,7 +3533,11 @@ void printAllStats(const std::string &csvFile, int64_t totalFiles, int64_t conve
 int main(int argc, const char **argv) {
   auto start = std::chrono::steady_clock::now();
   auto begin = start;
+#if (LLVM_VERSION_MAJOR >= 3) && (LLVM_VERSION_MINOR >= 9)
+  llvm::sys::PrintStackTraceOnErrorSignal(StringRef());
+#else
   llvm::sys::PrintStackTraceOnErrorSignal();
+#endif
   CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::OneOrMore);
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
   std::string dst = OutputFilename;
