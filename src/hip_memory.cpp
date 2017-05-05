@@ -104,8 +104,8 @@ void * allocAndSharePtr(const char *msg, size_t sizeBytes, ihipCtx_t *ctx, unsig
     auto device = ctx->getWriteableDevice();
 
     ptr = hc::am_alloc(sizeBytes, device->_acc, amFlags);
-    tprintf(DB_MEM, " alloc %s ptr:%p size:%zu on dev:%d\n",
-            msg, ptr, sizeBytes, device->_deviceId);
+    tprintf(DB_MEM, " alloc %s ptr:%p-%p size:%zu on dev:%d\n",
+            msg, ptr, static_cast<char*>(ptr)+sizeBytes, sizeBytes, device->_deviceId);
 
     if (ptr != nullptr) {
         int r = sharePtr(ptr, ctx, hipFlags);

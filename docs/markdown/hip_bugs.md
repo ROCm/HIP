@@ -45,6 +45,8 @@ To correct, add the following flag to hcc or hipcc:
 $ hipcc -Wl,-Bsymbolic ...
 ```
 
+Ensure there is no space in the "Wl,-Bsymbolic" option.
+
 
 ### What is the current limitation of HIP Generic Grid Launch method?
 1. __global__ functions cannot be marked as static or put in an unnamed namespace i.e. they cannot be given internal linkage (this would clash with __attribute__((weak)));
