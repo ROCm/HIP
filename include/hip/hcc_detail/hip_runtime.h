@@ -41,6 +41,8 @@ THE SOFTWARE.
 #include <stddef.h>
 #endif//__cplusplus
 
+#if __HCC__
+
 // Define NVCC_COMPAT for CUDA compatibility
 #define NVCC_COMPAT
 #define CUDA_SUCCESS hipSuccess
@@ -481,6 +483,6 @@ do {\
  */
 
 
-
+#endif
 
 #endif//HIP_HCC_DETAIL_RUNTIME_H
