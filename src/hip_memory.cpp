@@ -59,31 +59,40 @@ hipError_t memcpyAsync (void* dst, const void* src, size_t sizeBytes, hipMemcpyK
 }
 
 // return 0 on success or -1 on error:
-int sharePtr(void *ptr, ihipCtx_t *ctx, unsigned hipFlags)
+int sharePtr(void *ptr, ihipCtx_t *ctx, bool shareWithAll, unsigned hipFlags)
 {
     int ret = 0;
 
     auto device = ctx->getWriteableDevice();
 
     hc::am_memtracker_update(ptr, device->_deviceId, hipFlags);
-    int peerCnt=0;
-    {
-        LockedAccessor_CtxCrit_t crit(ctx->criticalData());
-        // the peerCnt always stores self so make sure the trace actually
-        peerCnt = crit->peerCnt();
-        tprintf(DB_MEM, "  allow access to %d other peer(s)\n", peerCnt-1);
-        if (peerCnt > 1) {
 
-            //printf ("peer self access\n");
+    if (shareWithAll) {
+        hsa_status_t s = hsa_amd_agents_allow_access(g_deviceCnt+1, g_allAgents, NULL, ptr);
+        tprintf (DB_MEM, "    allow access to CPU + all %d GPUs (shareWithAll)\n", g_deviceCnt); 
+        if (s != HSA_STATUS_SUCCESS) {
+            ret = -1;
+        }
+    } else {
+        int peerCnt=0;
+        {
+            LockedAccessor_CtxCrit_t crit(ctx->criticalData());
+            // the peerCnt always stores self so make sure the trace actually
+            peerCnt = crit->peerCnt();
+            tprintf(DB_MEM, "  allow access to %d other peer(s)\n", peerCnt-1);
+            if (peerCnt > 1) {
 
-            // TODOD - remove me:
-            for (auto iter = crit->_peers.begin(); iter!=crit->_peers.end(); iter++) {
-                tprintf (DB_MEM, "    allow access to peer: %s%s\n", (*iter)->toString().c_str(), (iter == crit->_peers.begin()) ? " (self)":"");
-            };
+                //printf ("peer self access\n");
 
-            hsa_status_t s = hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, ptr);
-            if (s != HSA_STATUS_SUCCESS) {
-                ret = -1;
+                // TODOD - remove me:
+                for (auto iter = crit->_peers.begin(); iter!=crit->_peers.end(); iter++) {
+                    tprintf (DB_MEM, "    allow access to peer: %s%s\n", (*iter)->toString().c_str(), (iter == crit->_peers.begin()) ? " (self)":"");
+                };
+
+                hsa_status_t s = hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, ptr);
+                if (s != HSA_STATUS_SUCCESS) {
+                    ret = -1;
+                }
             }
         }
     }
@@ -96,7 +105,7 @@ int sharePtr(void *ptr, ihipCtx_t *ctx, unsigned hipFlags)
 
 // Allocate a new pointer with am_alloc and share with all valid peers.
 // Returns null-ptr if a memory error occurs (either allocation or sharing)
-void * allocAndSharePtr(const char *msg, size_t sizeBytes, ihipCtx_t *ctx, unsigned amFlags, unsigned hipFlags)
+void * allocAndSharePtr(const char *msg, size_t sizeBytes, ihipCtx_t *ctx, bool shareWithAll, unsigned amFlags, unsigned hipFlags)
 {
 
     void *ptr = nullptr;
@@ -108,7 +117,7 @@ void * allocAndSharePtr(const char *msg, size_t sizeBytes, ihipCtx_t *ctx, unsig
             msg, ptr, static_cast<char*>(ptr)+sizeBytes, sizeBytes, device->_deviceId);
 
     if (ptr != nullptr) {
-        int r = sharePtr(ptr, ctx, hipFlags);
+        int r = sharePtr(ptr, ctx, shareWithAll, hipFlags);
         if (r != 0) {
             ptr = nullptr;
         }
@@ -220,7 +229,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 
     } else {
         auto device = ctx->getWriteableDevice();
-        *ptr = hip_internal::allocAndSharePtr("device_mem", sizeBytes, ctx,  0/*amFlags*/, 0/*hipFlags*/);
+        *ptr = hip_internal::allocAndSharePtr("device_mem", sizeBytes, ctx,  false/*shareWithAll*/, 0/*amFlags*/, 0/*hipFlags*/);
 
         if(sizeBytes  && (*ptr == NULL)){
             hip_status = hipErrorMemoryAllocation;
@@ -253,7 +262,8 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
     } else {
         unsigned trueFlags = flags;
         if (flags == hipHostMallocDefault) {
-            trueFlags = hipHostMallocMapped | hipHostMallocWriteCombined;
+            // HCC/ROCM provide a modern system with unified memory and should set both of these flags by default:
+            trueFlags = hipHostMallocMapped | hipHostMallocPortable;
         }
 
         const unsigned supportedFlags = hipHostMallocPortable | hipHostMallocMapped | hipHostMallocWriteCombined;
@@ -265,8 +275,10 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
             auto device = ctx->getWriteableDevice();
             unsigned amFlags = HIP_COHERENT_HOST_ALLOC ? amHostCoherent : amHostPinned;
 
+
             *ptr = hip_internal::allocAndSharePtr(HIP_COHERENT_HOST_ALLOC ? "finegrained_host":"pinned_host",
-                                                  sizeBytes, ctx, amFlags, flags);
+                                                  sizeBytes, ctx, (trueFlags & hipHostMallocPortable) /*shareWithAll*/, amFlags, flags);
+
             if(sizeBytes  && (*ptr == NULL)){
                 hip_status = hipErrorMemoryAllocation;
             }
@@ -314,7 +326,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
         auto device = ctx->getWriteableDevice();
 
         const unsigned am_flags = 0;
-        *ptr = hip_internal::allocAndSharePtr("device_pitch", sizeBytes, ctx, am_flags, 0);
+        *ptr = hip_internal::allocAndSharePtr("device_pitch", sizeBytes, ctx, false/*shareWithAll*/, am_flags, 0);
 
         if (sizeBytes && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
@@ -373,7 +385,7 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
                 hip_status = hipErrorUnknown;
                 break;
         }
-        *ptr = hip_internal::allocAndSharePtr("device_array", allocSize, ctx, am_flags, 0);
+        *ptr = hip_internal::allocAndSharePtr("device_array", allocSize, ctx, false/*shareWithAll*/, am_flags, 0);
         if (size && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
         }
