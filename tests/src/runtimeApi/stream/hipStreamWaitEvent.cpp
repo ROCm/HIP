@@ -395,7 +395,7 @@ int main(int argc, char *argv[])
 
     int numDevices;
     HIPCHECK(hipGetDeviceCount(&numDevices));
-    numDevices =2; // TODO - remove me.
+    numDevices = min(2, numDevices); // multi-GPU to 2 device.
 
     for (int d=0; d<numDevices/*TODO*/; d++) {
         for (int i=0; i<p_streams; i++) {
