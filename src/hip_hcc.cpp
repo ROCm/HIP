@@ -118,6 +118,7 @@ bool g_visible_device = false;
 unsigned g_deviceCnt;
 std::vector<int> g_hip_visible_devices;
 hsa_agent_t g_cpu_agent;
+hsa_agent_t *g_allAgents; // CPU agents + all the visible GPU agents.
 unsigned g_numLogicalThreads;
 
 std::atomic<int> g_lastShortTid(1);
@@ -1389,6 +1390,14 @@ void ihipInit()
             g_deviceCnt++;
         }
     }
+
+    g_allAgents = static_cast<hsa_agent_t*> (malloc((g_deviceCnt+1) * sizeof(hsa_agent_t)));
+    g_allAgents[0] = g_cpu_agent;
+    for (int i=0; i<g_deviceCnt; i++) {
+        g_allAgents[i+1] = g_deviceArray[i]->_hsaAgent;
+    }
+
+
     g_numLogicalThreads = std::thread::hardware_concurrency();
 
     // If HIP_VISIBLE_DEVICES is not set, make sure all devices are initialized

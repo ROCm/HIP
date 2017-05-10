@@ -99,7 +99,7 @@ inline int zrand(int max)
 
 
 //=================================================================================================
-// Functins to run tests
+// Functions to run tests
 //=================================================================================================
 //--
 //Run through a couple simple cases to test lookups and host pointer arithmetic:

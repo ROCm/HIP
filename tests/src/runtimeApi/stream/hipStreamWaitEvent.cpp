@@ -35,42 +35,6 @@ unsigned p_count = 100;
 
 
 
-template <typename T>
-__global__ void
-addCount( const T *A_d,
-        T *C_d,
-        size_t NELEM,
-        int count)
-{
-    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    size_t stride = hipBlockDim_x * hipGridDim_x ;
-
-    // Deliberately do this in an inefficient way to increase kernel runtime
-    for (int i=0; i<count; i++) {
-        for (size_t i=offset; i<NELEM; i+=stride) {
-            C_d[i] = A_d[i] + (T)count;
-        }
-    }
-}
-
-
-template <typename T>
-__global__ void
-addCountReverse( const T *A_d,
-        T *C_d,
-        int64_t NELEM,
-        int count)
-{
-    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    size_t stride = hipBlockDim_x * hipGridDim_x ;
-
-    // Deliberately do this in an inefficient way to increase kernel runtime
-    for (int i=0; i<count; i++) {
-        for (int64_t i=NELEM-stride+offset; i>=0; i-=stride) {
-            C_d[i] = A_d[i] + (T)count;
-        }
-    }
-}
 
 
 //------
@@ -171,9 +135,9 @@ void Streamer<T>::runAsyncAfter(Streamer<T> *depStreamer, bool waitSameStream)
 
     unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, _numElements);
     if (_reverse) {
-        hipLaunchKernelGGL(addCountReverse , dim3(blocks), dim3(threadsPerBlock), 0, _stream,    _A_d, _C_d, _numElements, p_count);
+        hipLaunchKernelGGL(HipTest::addCountReverse , dim3(blocks), dim3(threadsPerBlock), 0, _stream,    _A_d, _C_d, _numElements, p_count);
     } else {
-        hipLaunchKernelGGL(addCount,         dim3(blocks), dim3(threadsPerBlock), 0, _stream,    _A_d, _C_d, _numElements, p_count);
+        hipLaunchKernelGGL(HipTest::addCount,         dim3(blocks), dim3(threadsPerBlock), 0, _stream,    _A_d, _C_d, _numElements, p_count);
     }
     HIPCHECK(hipEventRecord(_event, _stream));
 

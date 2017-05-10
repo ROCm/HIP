@@ -826,6 +826,7 @@ private:  // Critical data, protected with locked access:
 extern std::once_flag hip_initialized;
 extern unsigned g_deviceCnt;
 extern hsa_agent_t g_cpu_agent ;   // the CPU agent.
+extern hsa_agent_t *g_allAgents; // CPU agents + all the visible GPU agents.
 
 //=================================================================================================
 // Extern functions:
