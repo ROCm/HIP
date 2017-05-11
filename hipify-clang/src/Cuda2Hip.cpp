@@ -2690,7 +2690,7 @@ private:
   bool cudaCall(const MatchFinder::MatchResult &Result) {
     if (const CallExpr *call = Result.Nodes.getNodeAs<CallExpr>("cudaCall")) {
       const FunctionDecl *funcDcl = call->getDirectCallee();
-      StringRef name = funcDcl->getDeclName().getAsString();
+      std::string name = funcDcl->getDeclName().getAsString();
       SourceManager *SM = Result.SourceManager;
       SourceLocation sl = call->getLocStart();
       const auto found = N.cuda2hipRename.find(name);
@@ -2714,16 +2714,16 @@ private:
             }
           }
           if (bReplace) {
-            updateCounters(found->second, name.str());
+            updateCounters(found->second, name);
             Replacement Rep(*SM, sl, length, repName);
             FullSourceLoc fullSL(sl, *SM);
             insertReplacement(Rep, fullSL);
           }
         } else {
-          updateCounters(found->second, name.str());
+          updateCounters(found->second, name);
         }
       } else {
-        std::string msg = "the following reference is not handled: '" + name.str() + "' [function call].";
+        std::string msg = "the following reference is not handled: '" + name + "' [function call].";
         printHipifyMessage(*SM, sl, msg);
       }
       return true;
@@ -2838,7 +2838,7 @@ private:
 
   bool cudaEnumConstantRef(const MatchFinder::MatchResult &Result) {
     if (const DeclRefExpr *enumConstantRef = Result.Nodes.getNodeAs<DeclRefExpr>("cudaEnumConstantRef")) {
-      StringRef name = enumConstantRef->getDecl()->getNameAsString();
+      StringRef name = enumConstantRef->getDecl()->getName();
       SourceLocation sl = enumConstantRef->getLocStart();
       SourceManager *SM = Result.SourceManager;
       const auto found = N.cuda2hipRename.find(name);
@@ -2861,10 +2861,10 @@ private:
 
   bool cudaEnumDecl(const MatchFinder::MatchResult &Result) {
     if (const VarDecl *enumDecl = Result.Nodes.getNodeAs<VarDecl>("cudaEnumDecl")) {
-      StringRef name = enumDecl->getType()->getAsTagDecl()->getNameAsString();
+      std::string name = enumDecl->getType()->getAsTagDecl()->getNameAsString();
       QualType QT = enumDecl->getType().getUnqualifiedType();
-      StringRef name_unqualified = QT.getAsString();
-      if ((name_unqualified.find(' ') == StringRef::npos && name.find(' ') == StringRef::npos) || name.empty()) {
+      std::string name_unqualified = QT.getAsString();
+      if ((name_unqualified.find(' ') == std::string::npos && name.find(' ') == std::string::npos) || name.empty()) {
         name = name_unqualified;
       }
       // Workaround for enum VarDecl as param decl, declared with enum type specifier
@@ -2882,7 +2882,7 @@ private:
       //-------------------------------------------------
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
-        updateCounters(found->second, name.str());
+        updateCounters(found->second, name);
         if (!found->second.unsupported) {
           StringRef repName = found->second.hipName;
           Replacement Rep(*SM, sl, name.size(), repName);
@@ -2890,7 +2890,7 @@ private:
           insertReplacement(Rep, fullSL);
         }
       } else {
-        std::string msg = "the following reference is not handled: '" + name.str() + "' [enum constant decl].";
+        std::string msg = "the following reference is not handled: '" + name + "' [enum constant decl].";
         printHipifyMessage(*SM, sl, msg);
       }
       return true;
@@ -2905,12 +2905,12 @@ private:
         QT = QT.getTypePtr()->getAsArrayTypeUnsafe()->getElementType();
       }
       QT = QT.getUnqualifiedType();
-      StringRef name = QT.getAsString();
+      std::string name = QT.getAsString();
       SourceLocation sl = typedefVar->getLocStart();
       SourceManager *SM = Result.SourceManager;
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
-        updateCounters(found->second, name.str());
+        updateCounters(found->second, name);
         if (!found->second.unsupported) {
           StringRef repName = found->second.hipName;
           Replacement Rep(*SM, sl, name.size(), repName);
@@ -2918,7 +2918,7 @@ private:
           insertReplacement(Rep, fullSL);
         }
       } else {
-        std::string msg = "the following reference is not handled: '" + name.str() + "' [typedef var].";
+        std::string msg = "the following reference is not handled: '" + name + "' [typedef var].";
         printHipifyMessage(*SM, sl, msg);
       }
       return true;
@@ -2935,10 +2935,10 @@ private:
         SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
         QualType QT = t->getPointeeType();
         QT = QT.getUnqualifiedType();
-        StringRef name = QT.getAsString();
+        std::string name = QT.getAsString();
         const auto found = N.cuda2hipRename.find(name);
         if (found != N.cuda2hipRename.end()) {
-          updateCounters(found->second, name.str());
+          updateCounters(found->second, name);
           if (!found->second.unsupported) {
             StringRef repName = found->second.hipName;
             Replacement Rep(*SM, sl, name.size(), repName);
@@ -2947,7 +2947,7 @@ private:
           }
         }
         else {
-          std::string msg = "the following reference is not handled: '" + name.str() + "' [typedef var ptr].";
+          std::string msg = "the following reference is not handled: '" + name + "' [typedef var ptr].";
           printHipifyMessage(*SM, sl, msg);
         }
       }
@@ -2961,13 +2961,13 @@ private:
       QualType QT = structVar->getType();
       // ToDo: find case-studies with types other than Struct.
       if (QT->isStructureType()) {
-        StringRef name = QT.getTypePtr()->getAsStructureType()->getDecl()->getNameAsString();
+        std::string name = QT.getTypePtr()->getAsStructureType()->getDecl()->getNameAsString();
         TypeLoc TL = structVar->getTypeSourceInfo()->getTypeLoc();
         SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
         SourceManager *SM = Result.SourceManager;
         const auto found = N.cuda2hipRename.find(name);
         if (found != N.cuda2hipRename.end()) {
-          updateCounters(found->second, name.str());
+          updateCounters(found->second, name);
           if (!found->second.unsupported) {
             StringRef repName = found->second.hipName;
             Replacement Rep(*SM, sl, name.size(), repName);
@@ -2976,7 +2976,7 @@ private:
           }
         }
         else {
-          std::string msg = "the following reference is not handled: '" + name.str() + "' [struct var].";
+          std::string msg = "the following reference is not handled: '" + name + "' [struct var].";
           printHipifyMessage(*SM, sl, msg);
         }
       }
@@ -3049,7 +3049,7 @@ private:
       // Example: extern __shared__ uint sRadix1[];
       if (sharedVar->hasExternalFormalLinkage()) {
         QualType QT = sharedVar->getType();
-        StringRef typeName;
+        std::string typeName;
         if (QT->isIncompleteArrayType()) {
           const ArrayType *AT = QT.getTypePtr()->getAsArrayTypeUnsafe();
           QT = AT->getElementType();
@@ -3071,9 +3071,8 @@ private:
           SourceLocation slEnd = sharedVar->getLocEnd();
           SourceManager *SM = Result.SourceManager;
           size_t repLength = SM->getCharacterData(slEnd) - SM->getCharacterData(slStart) + 1;
-          SmallString<128> tmpData;
-          StringRef varName = sharedVar->getNameAsString();
-          StringRef repName = Twine("HIP_DYNAMIC_SHARED(" + typeName + ", " + varName + ")").toStringRef(tmpData);
+          std::string varName = sharedVar->getNameAsString();
+          std::string repName = "HIP_DYNAMIC_SHARED(" + typeName + ", " + varName + ")";
           Replacement Rep(*SM, slStart, repLength, repName);
           FullSourceLoc fullSL(slStart, *SM);
           insertReplacement(Rep, fullSL);
@@ -3089,7 +3088,7 @@ private:
   bool cudaParamDecl(const MatchFinder::MatchResult &Result) {
     if (const ParmVarDecl *paramDecl = Result.Nodes.getNodeAs<ParmVarDecl>("cudaParamDecl")) {
       QualType QT = paramDecl->getOriginalType().getUnqualifiedType();
-      StringRef name = QT.getAsString();
+      std::string name = QT.getAsString();
       const Type *t = QT.getTypePtr();
       if (t->isStructureOrClassType()) {
         name = t->getAsCXXRecordDecl()->getName();
@@ -3099,7 +3098,7 @@ private:
       SourceManager *SM = Result.SourceManager;
       const auto found = N.cuda2hipRename.find(name);
       if (found != N.cuda2hipRename.end()) {
-        updateCounters(found->second, name.str());
+        updateCounters(found->second, name);
         if (!found->second.unsupported) {
           StringRef repName = found->second.hipName;
           Replacement Rep(*SM, sl, name.size(), repName);
@@ -3107,7 +3106,7 @@ private:
           insertReplacement(Rep, fullSL);
         }
       } else {
-        std::string msg = "the following reference is not handled: '" + name.str() + "' [param decl].";
+        std::string msg = "the following reference is not handled: '" + name + "' [param decl].";
         printHipifyMessage(*SM, sl, msg);
       }
       return true;
