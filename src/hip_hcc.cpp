@@ -48,14 +48,6 @@ THE SOFTWARE.
 #include "env.h"
 
 
-#ifndef USE_COPY_EXT_V2
-#define USE_COPY_EXT_V2 1
-#endif
-
-#ifndef USE_ROCR_1_4
-#define USE_ROCR_1_4 1
-#endif
-
 // needs HCC change for hc::no_scope
 #define USE_NO_SCOPE 0
 
@@ -105,10 +97,6 @@ int HCC_OPT_FLUSH = 0;
 
 
 
-
-
-#define HIP_USE_PRODUCT_NAME 1
-//#define DISABLE_COPY_EXT 1
 
 
 std::once_flag hip_initialized;
@@ -857,11 +845,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
 
     // Get Max Threads Per Multiprocessor
     uint32_t max_waves_per_cu;
-#if USE_ROCR_1_4
     err = hsa_agent_get_info(_hsaAgent,(hsa_agent_info_t) HSA_AMD_AGENT_INFO_MAX_WAVES_PER_CU, &max_waves_per_cu);
-#else
-    max_waves_per_cu = 10;
-#endif
     DeviceErrorCheck(err);
     prop-> maxThreadsPerMultiProcessor = prop->warpSize*max_waves_per_cu;
 
@@ -1919,11 +1903,7 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
 
         this->ensureHaveQueue(crit);
 
-#if USE_COPY_EXT_V2
         crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice ? &copyDevice->getDevice()->_acc : nullptr, forceUnpinnedCopy);
-#else
-        crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceUnpinnedCopy);
-#endif
     }
 }
 
@@ -2031,18 +2011,10 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
                 this->ensureHaveQueue(crit);
 
                 if (HIP_FORCE_SYNC_COPY) {
-#if USE_COPY_EXT_V2
                     crit->_av.copy_ext      (src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, &copyDevice->getDevice()->_acc, forceUnpinnedCopy);
-#else
-                    crit->_av.copy_ext      (src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceUnpinnedCopy);
-#endif
 
                 } else {
-#if USE_COPY_EXT_V2
                     crit->_av.copy_async_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, &copyDevice->getDevice()->_acc);
-#else
-                    crit->_av.copy_async(src, dst, sizeBytes);
-#endif
                 }
             } catch (Kalmar::runtime_exception) {
                 throw ihipException(hipErrorRuntimeOther);
@@ -2075,11 +2047,7 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
 
             this->ensureHaveQueue(crit);
 
-#if USE_COPY_EXT_V2
             crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice ? &copyDevice->getDevice()->_acc : nullptr, forceUnpinnedCopy);
-#else
-            crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceUnpinnedCopy);
-#endif
         }
     }
 }
