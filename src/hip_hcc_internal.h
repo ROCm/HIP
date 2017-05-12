@@ -66,6 +66,8 @@ extern int HIP_COHERENT_HOST_ALLOC;
 // Chicken bits for disabling functionality to work around potential issues:
 extern int HIP_SYNC_HOST_ALLOC;
 
+extern int HIP_SYNC_NULL_STREAM;
+
 // TODO - remove when this is standard behavior.
 extern int HCC_OPT_FLUSH;
 
@@ -187,11 +189,11 @@ extern const char *API_COLOR_END;
 
 
 //---
-//HIP Trace modes
+//HIP Trace modes - use with HIP_TRACE_API=...
 #define TRACE_ALL  0 // 0x1
 #define TRACE_KCMD 1 // 0x2, kernel command
 #define TRACE_MCMD 2 // 0x4, memory command
-#define TRACE_MEM  3 // 0x8
+#define TRACE_MEM  3 // 0x8, memory allocation or deallocation.
 
 
 //---
@@ -276,7 +278,7 @@ extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
     API_TRACE(0, __VA_ARGS__);
 
 
-// Like above, but will trace with TRACE_CMD.  
+// Like above, but will trace with a specified "special" bit.
 // Replace HIP_INIT_API with this call inside HIP APIs that launch work on the GPU:
 // kernel launches, copy commands, memory sets, etc.
 #define HIP_INIT_SPECIAL_API(tbit, ...) \
@@ -521,8 +523,10 @@ public:
     void                 locked_waitEvent(hipEvent_t event);
     void                 locked_recordEvent(hipEvent_t event);
 
+    ihipStreamCritical_t  &criticalData() { return _criticalData; };
 
     //---
+    hc::hcWaitMode waitMode() const;
 
     // Use this if we already have the stream critical data mutex:
     void                 wait(LockedAccessor_StreamCrit_t &crit);
@@ -786,7 +790,7 @@ public: // Functions:
     void locked_removeStream(ihipStream_t *s);
     void locked_reset();
     void locked_waitAllStreams();
-    void locked_syncDefaultStream(bool waitOnSelf);
+    void locked_syncDefaultStream(bool waitOnSelf, bool syncHost);
 
     // Will allocate a queue and assign it to the needyStream:
     hc::accelerator_view  stealActiveQueue(LockedAccessor_CtxCrit_t &ctxCrit, ihipStream_t *needyStream);

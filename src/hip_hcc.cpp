@@ -92,6 +92,9 @@ int HIP_COHERENT_HOST_ALLOC = 0;
 // USE_ HIP_SYNC_HOST_ALLOC
 int HIP_SYNC_HOST_ALLOC = 1;
 
+// Sync on host between 
+int HIP_SYNC_NULL_STREAM = 1;
+
 int HCC_OPT_FLUSH = 0;
 
 
@@ -289,6 +292,32 @@ inline void ihipStream_t::ensureHaveQueue(LockedAccessor_StreamCrit_t &streamCri
     assert(streamCrit->_hasQueue);
 }
 
+hc::hcWaitMode ihipStream_t::waitMode() const
+{
+    hc::hcWaitMode waitMode = hc::hcWaitModeActive;
+
+    if (_scheduleMode == Auto) {
+        if (g_deviceCnt > g_numLogicalThreads) {
+            waitMode = hc::hcWaitModeActive;
+        } else {
+            waitMode = hc::hcWaitModeBlocked;
+        }
+    } else if (_scheduleMode == Spin) {
+        waitMode = hc::hcWaitModeActive;
+    } else if (_scheduleMode == Yield) {
+        waitMode = hc::hcWaitModeBlocked;
+    } else {
+        assert(0); // bad wait mode.
+    }
+
+    if (HIP_WAIT_MODE == 1) {
+        waitMode = hc::hcWaitModeBlocked;
+    } else if (HIP_WAIT_MODE == 2) {
+        waitMode = hc::hcWaitModeActive;
+    }
+
+    return waitMode;
+}
 
 //Wait for all kernel and data copy commands in this stream to complete.
 //This signature should be used in routines that already have locked the stream mutex
@@ -296,29 +325,8 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit)
 {
     if (crit->_hasQueue) {
         tprintf (DB_SYNC, "%s wait for queue-empty..\n", ToString(this).c_str());
-        hc::hcWaitMode waitMode = hc::hcWaitModeActive;
 
-        if (_scheduleMode == Auto) {
-            if (g_deviceCnt > g_numLogicalThreads) {
-                waitMode = hc::hcWaitModeActive;
-            } else {
-                waitMode = hc::hcWaitModeBlocked;
-            }
-        } else if (_scheduleMode == Spin) {
-            waitMode = hc::hcWaitModeActive;
-        } else if (_scheduleMode == Yield) {
-            waitMode = hc::hcWaitModeBlocked;
-        } else {
-            assert(0); // bad wait mode.
-        }
-
-        if (HIP_WAIT_MODE == 1) {
-            waitMode = hc::hcWaitModeBlocked;
-        } else if (HIP_WAIT_MODE == 2) {
-            waitMode = hc::hcWaitModeActive;
-        }
-
-        crit->_av.wait(waitMode);
+        crit->_av.wait(waitMode());
     } else {
         tprintf (DB_SYNC, "%s wait for queue empty (done since stream has no physical queue).\n", ToString(this).c_str());
     }
@@ -337,7 +345,7 @@ void ihipStream_t::locked_wait()
 };
 
 // Causes current stream to wait for specified event to complete:
-// Note this does not require any kind of host serialization.
+// Note this does not provide any kind of host serialization.
 void ihipStream_t::locked_waitEvent(hipEvent_t event)
 {
     LockedAccessor_StreamCrit_t crit(_criticalData);
@@ -1061,26 +1069,57 @@ ihipCtx_t::createOrStealQueue(LockedAccessor_CtxCrit_t &ctxCrit)
 // Implement "default" stream syncronization
 //   This waits for all other streams to drain before continuing.
 //   If waitOnSelf is set, this additionally waits for the default stream to empty.
-void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf)
+//   In new HIP_SYNC_NULL_STREAM=0 mode, this enqueues a marker which causes the default stream to wait for other
+//   activity, but doesn't actually block the host.  If host blocking is desired, the caller should set syncHost.
+//   Note HIP_SYNC_NULL_STREAM=1 path always sync to Host. 
+void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf, bool syncHost)
 {
     LockedAccessor_CtxCrit_t  crit(_criticalData);
 
-    tprintf(DB_SYNC, "syncDefaultStream\n");
+    tprintf(DB_SYNC, "syncDefaultStream \n");
+
+    // Vector of ops sent to each stream that will complete before ops sent to null stream:
+    std::vector<hc::completion_future> depOps;
 
     for (auto streamI=crit->const_streams().begin(); streamI!=crit->const_streams().end(); streamI++) {
         ihipStream_t *stream = *streamI;
 
-        // Don't wait for streams that have "opted-out" of syncing with NULL stream.
-        // And - don't wait for the NULL stream
-        if (!(stream->_flags & hipStreamNonBlocking)) {
+        if (HIP_SYNC_NULL_STREAM) {
 
-            if (waitOnSelf || (stream != _defaultStream)) {
-                // TODO-hcc - use blocking or active wait here?
-                // TODO-sync - cudaDeviceBlockingSync
-                stream->locked_wait();
+            // Don't wait for streams that have "opted-out" of syncing with NULL stream.
+            // And - don't wait for the NULL stream
+            if (!(stream->_flags & hipStreamNonBlocking)) {
+
+                if (waitOnSelf || (stream != _defaultStream)) {
+                    stream->locked_wait();
+                }
+            }
+        } else {
+            if (!(stream->_flags & hipStreamNonBlocking) && (stream != _defaultStream)) {
+                LockedAccessor_StreamCrit_t streamCrit(stream->_criticalData);
+
+                // The last marker will provide appropriate visibility:
+                if (!streamCrit->_av.get_is_empty()) {
+                    depOps.push_back(streamCrit->_av.create_marker(hc::accelerator_scope));
+                }
             }
         }
     }
+
+
+    
+    // Enqueue a barrier to wait on all the barriers we sent above:
+    if (!HIP_SYNC_NULL_STREAM && !depOps.empty()) {
+        LockedAccessor_StreamCrit_t defaultStreamCrit(_defaultStream->_criticalData);
+        tprintf(DB_SYNC, "  null-stream wait on %zu non-empty streams\n", depOps.size());
+        hc::completion_future defaultCf = defaultStreamCrit->_av.create_blocking_marker(depOps.begin(), depOps.end(), hc::accelerator_scope);
+        if (syncHost) {
+            defaultCf.wait(); // TODO - account for active or blocking here.
+        }
+    }
+
+    tprintf(DB_SYNC, "  syncDefaultStream depOps=%zu\n", depOps.size());
+
 }
 
 
@@ -1267,6 +1306,7 @@ void HipReadEnv()
     READ_ENV_I(release, HIP_FAIL_SOC, 0, "Fault on Sub-Optimal-Copy, rather than use a slower but functional implementation.  Bit 0x1=Fail on async copy with unpinned memory.  Bit 0x2=Fail peer copy rather than use staging buffer copy");
 
     READ_ENV_I(release, HIP_SYNC_HOST_ALLOC, 0, "Sync before and after all host memory allocations.  May help stability");
+    READ_ENV_I(release, HIP_SYNC_NULL_STREAM, 0, "Synchronize on host for null stream submissions");
 
     // TODO - review, can we remove this?
     READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Max number of inflight kernels per stream before active synchronization is forced.");
@@ -1274,7 +1314,7 @@ void HipReadEnv()
     READ_ENV_I(release, HIP_COHERENT_HOST_ALLOC, 0, "If set, all host memory will be allocated as fine-grained system memory.  This allows threadfence_system to work but prevents host memory from being cached on GPU which may have performance impact.");
 
 
-    READ_ENV_I(release, HCC_OPT_FLUSH, 0, "Note this flag also impact HCC.  When set, use agent-scope flush rather than system-scope flush when possible.");
+    READ_ENV_I(release, HCC_OPT_FLUSH, 0, "Note this flag also impacts HCC.  When set, use agent-scope flush rather than system-scope flush when possible.");
 
     // Some flags have both compile-time and runtime flags - generate a warning if user enables the runtime flag but the compile-time flag is disabled.
     if (HIP_DB && !COMPILE_HIP_DB) {
@@ -1415,17 +1455,44 @@ void ihipInit()
 hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 {
     if (stream == hipStreamNull ) {
-        ihipCtx_t *device = ihipGetTlsDefaultCtx();
+        ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
+        tprintf(DB_SYNC, "ihipSyncAndResolveStream %s wait on default stream\n", ToString(stream).c_str());
 
 #ifndef HIP_API_PER_THREAD_DEFAULT_STREAM
-        device->locked_syncDefaultStream(false);
+        ctx->locked_syncDefaultStream(false, false);
 #endif
-        return device->_defaultStream;
+        return ctx->_defaultStream;
     } else {
-        // ALl streams have to wait for legacy default stream to be empty:
+        // All streams have to wait for legacy default stream to be empty:
         if (!(stream->_flags & hipStreamNonBlocking))  {
-            tprintf(DB_SYNC, "%s wait default stream\n", ToString(stream).c_str());
-            stream->getCtx()->_defaultStream->locked_wait();
+            if (HIP_SYNC_NULL_STREAM) {
+                tprintf(DB_SYNC, "ihipSyncAndResolveStream %s wait on default stream\n", ToString(stream).c_str());
+                stream->getCtx()->_defaultStream->locked_wait();
+            } else {
+                ihipStream_t *defaultStream = stream->getCtx()->_defaultStream;
+
+                tprintf(DB_SYNC, "%s marker wait default stream\n", ToString(stream).c_str());
+
+                bool needMarker = false;
+                hc::completion_future dcf;
+                {
+                    LockedAccessor_StreamCrit_t defaultStreamCrit(defaultStream->criticalData());
+                    // TODO - could call create_blocking_marker(queue)
+                    if (!defaultStreamCrit->_av.get_is_empty()) {
+                        needMarker = true;
+
+                        // TODO - add "none_scope".
+                        dcf = defaultStreamCrit->_av.create_marker(hc::accelerator_scope);
+                    }
+                }
+
+                if (needMarker) { 
+                    // ensure any commands sent to this stream wait on the NULL stream before continuing
+                    LockedAccessor_StreamCrit_t thisStreamCrit(stream->criticalData());
+                    // TODO - could be "noret" version of create_blocking_marker
+                    thisStreamCrit->_av.create_blocking_marker(dcf);
+                }
+            }
         }
 
         return stream;

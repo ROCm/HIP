@@ -525,7 +525,7 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void *src, size_t cou
 
 hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count, size_t offset, hipMemcpyKind kind)
 {
-    HIP_INIT_CMD_API(symbolName, dst, count, offset, kind);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), symbolName, dst, count, offset, kind);
 
     if(symbolName == nullptr)
     {
@@ -598,7 +598,7 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void *src, size_
 
 hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t count, size_t offset, hipMemcpyKind kind, hipStream_t stream)
 {
-    HIP_INIT_CMD_API(symbolName, dst, count, offset, kind, stream);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), symbolName, dst, count, offset, kind, stream);
 
     if(symbolName == nullptr)
     {
@@ -807,7 +807,7 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
 
 hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
         size_t width, size_t height, hipMemcpyKind kind, hipStream_t stream) {
-    HIP_INIT_CMD_API(dst, dpitch, src, spitch, width, height, kind, stream);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, dpitch, src, spitch, width, height, kind, stream);
     if(width > dpitch || width > spitch)
         return ihipLogStatus(hipErrorUnknown);
     hipError_t e = hipSuccess;
@@ -1041,7 +1041,7 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes )
 
 hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char  value, size_t sizeBytes )
 {
-    HIP_INIT_CMD_API(dst, value, sizeBytes);
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, value, sizeBytes);
 
     hipError_t e = hipSuccess;
 

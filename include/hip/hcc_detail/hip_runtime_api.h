@@ -602,9 +602,12 @@ hipError_t hipStreamQuery(hipStream_t stream);
  *
  * @return #hipSuccess, #hipErrorInvalidResourceHandle
  *
- * If the null stream is specified, this command blocks until all
+ * This command is host-synchronous : the host will block until the specified stream is empty.
+ *
+ * This command follows standard null-stream semantics.  Specifically, specifying the null stream will cause the 
+ * command to wait for other streams on the same device to complete all pending operations.
+ *
  * This command honors the hipDeviceLaunchBlocking flag, which controls whether the wait is active or blocking.
- * This command is host-synchronous : the host will block until the stream is empty.
  *
  * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamWaitEvent, hipStreamDestroy
  *
