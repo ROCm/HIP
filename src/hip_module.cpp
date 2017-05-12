@@ -352,14 +352,14 @@ hipError_t ihipModuleGetSymbol(hipFunction_t *func, hipModule_t hmod, const char
         *func = sym;
         hmod->funcTrack.push_back(*func);
     }
-    return ihipLogStatus(ret);
+    return ret;
 }
 
 
 hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod,
                                 const char *name){
     HIP_INIT_API(hfunc, hmod, name);
-    return ihipModuleGetSymbol(hfunc, hmod, name);
+    return ihipLogStatus(ihipModuleGetSymbol(hfunc, hmod, name));
 }
 
 

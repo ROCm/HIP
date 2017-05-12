@@ -52,7 +52,7 @@ namespace hip_impl
         int group_mem_bytes,
         hipStream_t stream)
     {
-        if ((HIP_TRACE_API & (1 << TRACE_CMD)) ||
+        if ((HIP_TRACE_API & (1 << TRACE_KCMD)) ||
             HIP_PROFILE_API ||
             (COMPILE_HIP_DB && HIP_TRACE_API)) {
             std::stringstream os;

@@ -150,7 +150,7 @@ hipError_t hipStreamSynchronize(hipStream_t stream)
 
     if (stream == NULL) {
         ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
-        ctx->locked_syncDefaultStream(true/*waitOnSelf*/);
+        ctx->locked_syncDefaultStream(true/*waitOnSelf*/, true/*syncToHost*/);
     } else {
         stream->locked_wait();
         e = hipSuccess;
@@ -174,7 +174,7 @@ hipError_t hipStreamDestroy(hipStream_t stream)
     //--- Drain the stream:
     if (stream == NULL) {
         ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
-        ctx->locked_syncDefaultStream(true/*waitOnSelf*/);
+        ctx->locked_syncDefaultStream(true/*waitOnSelf*/, true /*syncToHost*/);
     } else {
         stream->locked_wait();
         e = hipSuccess;
