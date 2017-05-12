@@ -106,6 +106,7 @@ enum hipLimit_t
 #define hipEventBlockingSync        0x1  ///< Waiting will yield CPU.  Power-friendly and usage-friendly but may increase latency.
 #define hipEventDisableTiming       0x2  ///< Disable event's capability to record timing information.  May improve performance.
 #define hipEventInterprocess        0x4  ///< Event can support IPC.  @warning - not supported in HIP.
+#define hipEventDisableSystemRelease 0x80000000  /// < Disable the system-scope release that event normally performs when it records.  This flag is useful to obtain more precise timings of commands between events.  The flag is a no-op on CUDA platforms.
 
 
 //! Flags that can be used with hipHostMalloc
