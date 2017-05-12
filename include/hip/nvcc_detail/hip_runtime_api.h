@@ -58,6 +58,8 @@ hipMemcpyHostToHost
 #define hipEventBlockingSync        cudaEventBlockingSync
 #define hipEventDisableTiming       cudaEventDisableTiming
 #define hipEventInterprocess        cudaEventInterprocess
+#define hipEventDisableSystemRelease cudaEventDefault  /* no-op on CUDA platform */
+
 
 #define hipHostMallocDefault cudaHostAllocDefault
 #define hipHostMallocPortable cudaHostAllocPortable
