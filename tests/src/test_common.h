@@ -184,6 +184,7 @@ addCountReverse( const T *A_d,
 }
 
 
+template <typename T>
 void setDefaultData(size_t numElements, T *A_h, T* B_h, T *C_h)
 {
     // Initialize the host data:

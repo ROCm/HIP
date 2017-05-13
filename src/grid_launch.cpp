@@ -54,7 +54,7 @@ namespace hip_impl
     {
         if ((HIP_TRACE_API & (1 << TRACE_KCMD)) ||
             HIP_PROFILE_API ||
-            (COMPILE_HIP_DB && HIP_TRACE_API)) {
+            (COMPILE_HIP_DB && (HIP_TRACE_API & (1<<TRACE_ALL)))) {
             std::stringstream os;
             os  << tls_tidInfo.tid() << "." << tls_tidInfo.apiSeqNum()
                 << " hipLaunchKernel '" << kernel_name << "'"
