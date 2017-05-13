@@ -772,6 +772,9 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     if(strcmp(archName,"gfx803")==0){
       prop->gcnArch = 803;
     }
+    if(strcmp(archName,"gfx900")==0){
+      prop->gcnArch = 900;
+    }
 
     DeviceErrorCheck(err);
 
