@@ -858,6 +858,13 @@ struct cuda2hipMap {
     cuda2hipRename["cuCtxSetLimit"]                             = {"hipCtxSetLimit", CONV_CONTEXT, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuCtxGetLimit"]                             = {"hipCtxGetLimit", CONV_CONTEXT, API_DRIVER, HIP_UNSUPPORTED};
 
+    // Primary Context Management
+    cuda2hipRename["cuDevicePrimaryCtxGetState"]                = {"hipDevicePrimaryCtxGetState", CONV_CONTEXT, API_DRIVER};
+    cuda2hipRename["cuDevicePrimaryCtxRelease"]                 = {"hipDevicePrimaryCtxRelease", CONV_CONTEXT, API_DRIVER};
+    cuda2hipRename["cuDevicePrimaryCtxRetain"]                  = {"hipDevicePrimaryCtxRetain", CONV_CONTEXT, API_DRIVER};
+    cuda2hipRename["cuDevicePrimaryCtxReset"]                   = {"hipDevicePrimaryCtxReset", CONV_CONTEXT, API_DRIVER};
+    cuda2hipRename["cuDevicePrimaryCtxSetFlags"]                = {"hipDevicePrimaryCtxSetFlags", CONV_CONTEXT, API_DRIVER};
+
     // Device
     cuda2hipRename["cuDeviceGet"]                               = {"hipGetDevice", CONV_DEV, API_DRIVER};
     cuda2hipRename["cuDeviceGetName"]                           = {"hipDeviceGetName", CONV_DEV, API_DRIVER};
