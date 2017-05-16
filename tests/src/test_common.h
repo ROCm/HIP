@@ -148,6 +148,23 @@ vectorADD(hipLaunchParm lp,
 
 template <typename T>
 __global__ void
+vectorADDReverse(hipLaunchParm lp,
+            const T *A_d,
+            const T *B_d,
+            T *C_d,
+            size_t NELEM)
+{
+    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    size_t stride = hipBlockDim_x * hipGridDim_x ;
+
+    for (int64_t i=NELEM-stride+offset; i>=0; i-=stride) {
+        C_d[i] = A_d[i] + B_d[i];
+	}
+}
+
+
+template <typename T>
+__global__ void
 addCount( const T *A_d,
         T *C_d,
         size_t NELEM,
@@ -343,7 +360,7 @@ inline void initHIPArrays(hipArray **A_d, hipArray **B_d, hipArray **C_d,
 // Assumes C_h contains vector add of A_h + B_h
 // Calls the test "failed" macro if a mismatch is detected.
 template <typename T>
-void checkVectorADD(T* A_h, T* B_h, T* result_H, size_t N, bool expectMatch=true)
+size_t checkVectorADD(T* A_h, T* B_h, T* result_H, size_t N, bool expectMatch=true, bool reportMismatch=true)
 {
     size_t  mismatchCount = 0;
     size_t  firstMismatch = 0;
@@ -364,15 +381,19 @@ void checkVectorADD(T* A_h, T* B_h, T* result_H, size_t N, bool expectMatch=true
         }
     }
 
-    if (expectMatch) {
-        if (mismatchCount) {
-            failed("%zu mismatches ; first at index:%zu\n", mismatchCount, firstMismatch);
+	if (reportMismatch) {
+        if (expectMatch) {
+            if (mismatchCount) {
+                failed("%zu mismatches ; first at index:%zu\n", mismatchCount, firstMismatch);
+            }
+        } else {
+            if (mismatchCount == 0) {
+                failed("expected mismatches but did not detect any!");
+            }
         }
-    } else {
-        if (mismatchCount == 0) {
-            failed("expected mismatches but did not detect any!");
-        }
-    }
+	}
+
+	return mismatchCount;
 
 }
 
