@@ -1088,7 +1088,7 @@ struct cuda2hipMap {
     cuda2hipRename["cudaMalloc3DArray"]           = {"hipMalloc3DArray", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaMallocManaged"]           = {"hipMallocManaged", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaMallocMipmappedArray"]    = {"hipMallocMipmappedArray", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaMallocPitch"]             = {"hipMallocPitch", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaMallocPitch"]             = {"hipMallocPitch", CONV_MEM, API_RUNTIME};
 
     cuda2hipRename["cudaFree"]                    = {"hipFree", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaFreeHost"]                = {"hipHostFree", CONV_MEM, API_RUNTIME};
