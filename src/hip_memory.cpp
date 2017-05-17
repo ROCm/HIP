@@ -202,7 +202,8 @@ hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsi
         hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
         am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, hostPointer);
         if (status == AM_SUCCESS) {
-            *devicePointer = amPointerInfo._devicePointer;
+            *devicePointer = static_cast<char*>(amPointerInfo._devicePointer) + (static_cast<char*>(hostPointer) - static_cast<char*>(amPointerInfo._hostPointer)) ;
+            tprintf(DB_MEM, " host_ptr=%p returned device_pointer=%p\n", hostPointer, *devicePointer);
         } else {
             e = hipErrorMemoryAllocation;
         }
