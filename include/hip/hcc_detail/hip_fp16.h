@@ -25,8 +25,9 @@ THE SOFTWARE.
 
 #include "hip/hcc_detail/hip_vector_types.h"
 
-typedef __half half;
-typedef __half2 half2;
+typedef __fp16 __half;
+typedef __fp16 __half1 __attribute__((ext_vector_type(1)));
+typedef __fp16 __half2 __attribute__((ext_vector_type(2)));
 
 /*
 Half Arithmetic Functions
