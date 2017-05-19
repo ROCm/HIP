@@ -1915,14 +1915,13 @@ hipError_t hipModuleGetFunction(hipFunction_t *function, hipModule_t module, con
  * @brief returns device memory pointer and size of the kernel present in the module with symbol @p name
  *
  * @param [out] dptr
- * @param [out[ bytes
+ * @param [out] bytes
  * @param [in] hmod
  * @param [in] name
  *
  * @returns hipSuccess, hipErrorInvalidValue, hipErrorNotInitialized
  */
 hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes, hipModule_t hmod, const char *name);
-
 
 /**
  * @brief builds module from code object which resides in host memory. Image is pointer to that location.
@@ -1934,11 +1933,23 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes, hipModule_t h
  */
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image);
 
+/**
+* @brief builds module from code object which resides in host memory. Image is pointer to that location. Options are not used. hipModuleLoadData is called.
+*
+* @param [in] image
+* @param [out] module
+* @param [in] number of options
+* @param [in] options for JIT
+* @param [in] option values for JIT
+*
+* @returns hipSuccess, hipErrorNotInitialized, hipErrorOutOfMemory, hipErrorNotInitialized
+*/
+hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image, unsigned int numOptions, hipJitOption *options, void **optionValues);
 
 /**
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed to kernelparams or extra
  *
- * @param [in[ f	 Kernel to launch.
+ * @param [in] f         Kernel to launch.
  * @param [in] gridDimX  X grid dimension specified as multiple of blockDimX.
  * @param [in] gridDimY  Y grid dimension specified as multiple of blockDimY.
  * @param [in] gridDimZ  Z grid dimension specified as multiple of blockDimZ.
@@ -1946,7 +1957,7 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image);
  * @param [in] blockDimY Y grid dimension specified in work-items
  * @param [in] blockDimZ Z grid dimension specified in work-items
  * @param [in] sharedMemBytes Amount of dynamic shared memory to allocate for this kernel.  The kernel can access this with HIP_DYNAMIC_SHARED.
- * @param [in] stream Stream where the kernel should be dispatched.  May be 0, in which case th default stream is used with associated synchronization rules.
+ * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case th default stream is used with associated synchronization rules.
  * @param [in] kernelParams
  * @param [in] extra     Pointer to kernel arguments.   These are passed directly to the kernel and must be in the memory layout and alignment expected by the kernel.
  *

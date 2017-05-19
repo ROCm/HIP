@@ -250,6 +250,30 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeIsMultiGpuBoard,                      ///< Multiple GPU devices.
 } hipDeviceAttribute_t;
 
+/*
+* @brief hipJitOption
+* @enum
+* @ingroup Enumerations
+*/
+typedef enum hipJitOption {
+  hipJitOptionMaxRegisters = 0,
+  hipJitOptionThreadsPerBlock,
+  hipJitOptionWallTime,
+  hipJitOptionInfoLogBuffer,
+  hipJitOptionInfoLogBufferSizeBytes,
+  hipJitOptionErrorLogBuffer,
+  hipJitOptionErrorLogBufferSizeBytes,
+  hipJitOptionOptimizationLevel,
+  hipJitOptionTargetFromContext,
+  hipJitOptionTarget,
+  hipJitOptionFallbackStrategy,
+  hipJitOptionGenerateDebugInfo,
+  hipJitOptionLogVerbose,
+  hipJitOptionGenerateLineInfo,
+  hipJitOptionCacheMode,
+  hipJitOptionNumOptions
+} hipJitOption;
+
 /**
  *     @}
  */

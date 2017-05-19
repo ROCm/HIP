@@ -98,48 +98,57 @@ HIP/HCC will push primary context to context stack when it is empty. This can ha
 #### Interoperation between HIP and CUDA Driver
 CUDA applications may want to mix CUDA driver code with HIP code (see example below). This table shows the type equivalence to enable this interaction.
 
-|**HIP Type** |**CU Driver Type**|**CUDA Runtime Type**|
-| ----        | ----             | ----                |
-| hipModule   |  CUmodule        |                     |
-| hipFunction |  CUfunction      |                     |
-| hipCtx_t    |  CUcontext       |                     |
-| hipDevice_t |  CUdevice        |                     |
-| hipStream_t |  CUstream        | cudaStream_t        |
-| hipEvent_t  |  CUevent         | cudaEvent_t         |
-| hipArray    |  CUarray         | cudaArray           |
+|**HIP Type**   |**CU Driver Type**|**CUDA Runtime Type**|
+| ----          | ----             | ----                |
+| hipModule_t   |  CUmodule        |                     |
+| hipFunction_t |  CUfunction      |                     |
+| hipCtx_t      |  CUcontext       |                     |
+| hipDevice_t   |  CUdevice        |                     |
+| hipStream_t   |  CUstream        | cudaStream_t        |
+| hipEvent_t    |  CUevent         | cudaEvent_t         |
+| hipArray      |  CUarray         | cudaArray           |
 
-#### Compilation Flags
-The hipModule interface does not support the `cuModuleLoadDataEx` function, which is used to control PTX compilation options.
-HCC does not use PTX and does not support the same compilation options.
-In fact, HCC code objects always contain fully compiled ISA and do not require additional compilation as part of the load step.
-Code which requires this functionally should use platform-specific coding, calling `cuModuleLoadDataEx` on the NVCC path and `hipModuleLoadData` on the hcc path.
-For example:
-
+#### Compilation Options
+The `hipModule_t` interface does not support `cuModuleLoadDataEx` function, which is used to control PTX compilation options.
+HCC does not use PTX and does not support these compilation options.
+In fact, HCC code objects always contain fully compiled ISA and do not require additional compilation as a part of the load step.
+The corresponding HIP function `hipModuleLoadDataEx` behaves as `hipModuleLoadData` on HCC path (compilation options are not used) and as `cuModuleLoadDataEx` on NVCC path.
+For example (CUDA):
 ```
-hipModule module;
-void *imagePtr = ... ;  // Somehow populate data pointer with code object
+CUmodule module;
+void *imagePtr = ...;  // Somehow populate data pointer with code object
 
-#ifdef __HIP_PLATFORM_NVCC__
-// Use CUDA driver API but write to hipModule since they are same type:
 const int numOptions = 1;
 CUJit_option options[numOptions];
 void * optionValues[numOptions];
 
 options[0] = CU_JIT_MAX_REGISTERS;
-unsigned maxRegs=15;
-optionValues[0] = (void*) (&maxRegs);
+unsigned maxRegs = 15;
+optionValues[0] = (void*)(&maxRegs);
 
 cuModuleLoadDataEx(module, imagePtr, numOptions, options, optionValues);
 
-#else // __HIP_PLATFORM_HCC__
+CUfunction k;
+cuModuleGetFunction(&k, module, "myKernel");
+```
+HIP:
+```
+hipModule_t module;
+void *imagePtr = ...;  // Somehow populate data pointer with code object
 
-// HCC path does not support or require JIT options, so just load the module.
-hipModuleLoadData(&module, imagePtr);
+const int numOptions = 1;
+hipJitOption options[numOptions];
+void * optionValues[numOptions];
 
-#endif
+options[0] = hipJitOptionMaxRegisters;
+unsigned maxRegs = 15;
+optionValues[0] = (void*)(&maxRegs);
 
-// Back to unified code - both paths above loaded the "module" variable.
-hipFunction k;
+// hipModuleLoadData(module, imagePtr) will be called on HCC path, JIT options will not be used, and
+// cupModuleLoadDataEx(module, imagePtr, numOptions, options, optionValues) will be called on NVCC path
+hipModuleLoadDataEx(module, imagePtr, numOptions, options, optionValues);
+
+hipFunction_t k;
 hipModuleGetFunction(&k, module, "myKernel");
 ```
 
