@@ -525,7 +525,6 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes,
     }
 }
 
-
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
 {
     HIP_INIT_API(module, image);
@@ -574,4 +573,9 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
         CHECKLOG_HSA(status, hipErrorNotInitialized);
     }
     return ihipLogStatus(ret);
+}
+
+hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image, unsigned int numOptions, hipJitOption *options, void **optionValues)
+{
+    return hipModuleLoadData(module, image);
 }

@@ -678,24 +678,24 @@ struct cuda2hipMap {
     cuda2hipRename["CU_PREFER_PTX"]                                = {"hipJitFallbackPreferPtx", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["CU_PREFER_BINARY"]                             = {"hipJitFallbackPreferBinary", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
     // enum CUjit_option/CUjit_option_enum
-    cuda2hipRename["CUjit_option"]                                 = {"hipJitOption", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};  // API_Runtime ANALOGUE (no)
-    cuda2hipRename["CUjit_option_enum"]                            = {"hipJitOption", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_JIT_MAX_REGISTERS"]                         = {"hipJitOptionMaxRegisters", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_JIT_THREADS_PER_BLOCK"]                     = {"hipJitOptionThreadsPerBlock", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_JIT_WALL_TIME"]                             = {"hipJitOptionWallTime", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_JIT_INFO_LOG_BUFFER"]                       = {"hipJitOptionInfoLogBuffer", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES"]            = {"hipJitOptionInfoLogBufferSizeBytes", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_JIT_ERROR_LOG_BUFFER"]                      = {"hipJitOptionErrorLogBuffer", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES"]           = {"hipJitOptionErrorLogBufferSizeBytes", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_JIT_OPTIMIZATION_LEVEL"]                    = {"hipJitOptionOptimizationLevel", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_JIT_TARGET_FROM_CUCONTEXT"]                 = {"hipJitOptionTargetFromContext", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_JIT_TARGET"]                                = {"hipJitOptionTarget", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_JIT_FALLBACK_STRATEGY"]                     = {"hipJitOptionFallbackStrategy", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_JIT_GENERATE_DEBUG_INFO"]                   = {"hipJitOptionGenerateDebugInfo", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_JIT_LOG_VERBOSE"]                           = {"hipJitOptionLogVerbose", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_JIT_GENERATE_LINE_INFO"]                    = {"hipJitOptionLogVerbose", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_JIT_CACHE_MODE"]                            = {"hipJitOptionCacheMode", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_JIT_NUM_OPTIONS"]                           = {"hipJitOptionNumOptions", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CUjit_option"]                                 = {"hipJitOption", CONV_JIT, API_DRIVER};  // API_Runtime ANALOGUE (no)
+    cuda2hipRename["CUjit_option_enum"]                            = {"hipJitOption", CONV_JIT, API_DRIVER};
+    cuda2hipRename["CU_JIT_MAX_REGISTERS"]                         = {"hipJitOptionMaxRegisters", CONV_JIT, API_DRIVER};
+    cuda2hipRename["CU_JIT_THREADS_PER_BLOCK"]                     = {"hipJitOptionThreadsPerBlock", CONV_JIT, API_DRIVER};
+    cuda2hipRename["CU_JIT_WALL_TIME"]                             = {"hipJitOptionWallTime", CONV_JIT, API_DRIVER};
+    cuda2hipRename["CU_JIT_INFO_LOG_BUFFER"]                       = {"hipJitOptionInfoLogBuffer", CONV_JIT, API_DRIVER};
+    cuda2hipRename["CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES"]            = {"hipJitOptionInfoLogBufferSizeBytes", CONV_JIT, API_DRIVER};
+    cuda2hipRename["CU_JIT_ERROR_LOG_BUFFER"]                      = {"hipJitOptionErrorLogBuffer", CONV_JIT, API_DRIVER};
+    cuda2hipRename["CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES"]           = {"hipJitOptionErrorLogBufferSizeBytes", CONV_JIT, API_DRIVER};
+    cuda2hipRename["CU_JIT_OPTIMIZATION_LEVEL"]                    = {"hipJitOptionOptimizationLevel", CONV_JIT, API_DRIVER};
+    cuda2hipRename["CU_JIT_TARGET_FROM_CUCONTEXT"]                 = {"hipJitOptionTargetFromContext", CONV_JIT, API_DRIVER};
+    cuda2hipRename["CU_JIT_TARGET"]                                = {"hipJitOptionTarget", CONV_JIT, API_DRIVER};
+    cuda2hipRename["CU_JIT_FALLBACK_STRATEGY"]                     = {"hipJitOptionFallbackStrategy", CONV_JIT, API_DRIVER};
+    cuda2hipRename["CU_JIT_GENERATE_DEBUG_INFO"]                   = {"hipJitOptionGenerateDebugInfo", CONV_JIT, API_DRIVER};
+    cuda2hipRename["CU_JIT_LOG_VERBOSE"]                           = {"hipJitOptionLogVerbose", CONV_JIT, API_DRIVER};
+    cuda2hipRename["CU_JIT_GENERATE_LINE_INFO"]                    = {"hipJitOptionGenerateLineInfo", CONV_JIT, API_DRIVER};
+    cuda2hipRename["CU_JIT_CACHE_MODE"]                            = {"hipJitOptionCacheMode", CONV_JIT, API_DRIVER};
+    cuda2hipRename["CU_JIT_NUM_OPTIONS"]                           = {"hipJitOptionNumOptions", CONV_JIT, API_DRIVER};
     // enum CUjit_target/CUjit_target_enum
     cuda2hipRename["CUjit_target"]                                 = {"hipJitTarget", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};  // API_Runtime ANALOGUE (no)
     cuda2hipRename["CUjit_target_enum"]                            = {"hipJitTarget", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
@@ -905,7 +905,7 @@ struct cuda2hipMap {
     cuda2hipRename["cuModuleLoad"]                              = {"hipModuleLoad", CONV_MODULE, API_DRIVER};
     cuda2hipRename["cuModuleLoadData"]                          = {"hipModuleLoadData", CONV_MODULE, API_DRIVER};
     // unsupported yet by HIP
-    cuda2hipRename["cuModuleLoadDataEx"]                        = {"hipModuleLoadDataEx", CONV_MODULE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cuModuleLoadDataEx"]                        = {"hipModuleLoadDataEx", CONV_MODULE, API_DRIVER};
     cuda2hipRename["cuModuleLoadFatBinary"]                     = {"hipModuleLoadFatBinary", CONV_MODULE, API_DRIVER, HIP_UNSUPPORTED};
 
     cuda2hipRename["cuModuleUnload"]                            = {"hipModuleUnload", CONV_MODULE, API_DRIVER};
