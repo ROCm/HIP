@@ -3095,6 +3095,35 @@ private:
     return false;
   }
 
+  bool cudaNewOperatorDecl(const MatchFinder::MatchResult &Result) {
+    if (const auto *newOperator = Result.Nodes.getNodeAs<CXXNewExpr>("cudaNewOperatorDecl")) {
+      const Type *t = newOperator->getType().getTypePtrOrNull();
+      if (t) {
+        SourceManager *SM = Result.SourceManager;
+        TypeLoc TL = newOperator->getAllocatedTypeSourceInfo()->getTypeLoc();
+        SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
+        QualType QT = t->getPointeeType();
+        std::string name = QT.getAsString();
+        const auto found = N.cuda2hipRename.find(name);
+        if (found != N.cuda2hipRename.end()) {
+          updateCounters(found->second, name);
+          if (!found->second.unsupported) {
+            StringRef repName = found->second.hipName;
+            Replacement Rep(*SM, sl, name.size(), repName);
+            FullSourceLoc fullSL(sl, *SM);
+            insertReplacement(Rep, fullSL);
+          }
+        }
+        else {
+          std::string msg = "the following reference is not handled: '" + name + "' [new operator].";
+          printHipifyMessage(*SM, sl, msg);
+        }
+      }
+    }
+    return false;
+  }
+
+
   bool cudaSharedIncompleteArrayVar(const MatchFinder::MatchResult &Result) {
     StringRef refName = "cudaSharedIncompleteArrayVar";
     if (const VarDecl *sharedVar = Result.Nodes.getNodeAs<VarDecl>(refName)) {
@@ -3239,6 +3268,7 @@ public:
       if (cudaParamDecl(Result)) break;
       if (cudaParamDeclPtr(Result)) break;
       if (cudaLaunchKernel(Result)) break;
+      if (cudaNewOperatorDecl(Result)) break;
       if (cudaSharedIncompleteArrayVar(Result)) break;
       if (stringLiteral(Result)) break;
       if (unresolvedTemplateName(Result)) break;
@@ -3336,6 +3366,13 @@ void addAllMatchers(ast_matchers::MatchFinder &Finder, Cuda2HipCallback *Callbac
                             hasType(incompleteArrayType())))
                            .bind("cudaSharedIncompleteArrayVar"),
                             Callback);
+  // Example:
+  // CUjit_option *jitOptions = new CUjit_option[jitNumOptions];
+  // hipJitOption *jitOptions = new hipJitOption[jitNumOptions];
+  Finder.addMatcher(cxxNewExpr(isExpansionInMainFile(),
+                               hasType(pointsTo(namedDecl(matchesName("cu.*|CU.*")))))
+                              .bind("cudaNewOperatorDecl"),
+                               Callback);
 }
 
 int64_t printStats(const std::string &csvFile, const std::string &srcFile,
