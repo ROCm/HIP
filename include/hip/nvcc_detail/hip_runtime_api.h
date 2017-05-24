@@ -65,6 +65,8 @@ hipMemcpyHostToHost
 #define hipHostMallocPortable      cudaHostAllocPortable
 #define hipHostMallocMapped        cudaHostAllocMapped
 #define hipHostMallocWriteCombined cudaHostAllocWriteCombined
+#define hipHostMallocCoherent      0x0 
+#define hipHostMallocNonCoherent   0x0
 
 #define hipHostRegisterPortable cudaHostRegisterPortable
 #define hipHostRegisterMapped   cudaHostRegisterMapped

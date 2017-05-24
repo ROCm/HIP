@@ -111,15 +111,19 @@ enum hipLimit_t
 
 //! Flags that can be used with hipHostMalloc
 #define hipHostMallocDefault        0x0
-#define hipHostMallocPortable       0x1
-#define hipHostMallocMapped         0x2
+#define hipHostMallocPortable       0x1  ///< Memory is considered allocated by all contexts.
+#define hipHostMallocMapped         0x2  ///< Map the allocation into the address space for the current device.  The device pointer can be obtained with #hipHostGetDevicePointer.
 #define hipHostMallocWriteCombined  0x4
+#define hipHostMallocCoherent       0x40000000 ///< Allocate coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific allocation.
+#define hipHostMallocNonCoherent    0x80000000 ///< Allocate non-coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific allocation.
+
 
 //! Flags that can be used with hipHostRegister
 #define hipHostRegisterDefault      0x0  ///< Memory is Mapped and Portable
-#define hipHostRegisterPortable     0x1  ///< Memory is considered registered by all contexts.  HIP only supports one context so this is always assumed true.
+#define hipHostRegisterPortable     0x1  ///< Memory is considered registered by all contexts.
 #define hipHostRegisterMapped       0x2  ///< Map the allocation into the address space for the current device.  The device pointer can be obtained with #hipHostGetDevicePointer.
 #define hipHostRegisterIoMemory     0x4  ///< Not supported.
+
 
 
 #define hipDeviceScheduleAuto       0x0  ///< Automatically select between Spin and Yield
