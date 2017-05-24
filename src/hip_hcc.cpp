@@ -352,7 +352,7 @@ void ihipStream_t::locked_waitEvent(hipEvent_t event)
 
     this->ensureHaveQueue(crit);
 
-    crit->_av.create_blocking_marker(event->_marker);
+    crit->_av.create_blocking_marker(event->_marker, hc::accelerator_scope);
 }
 
 // Create a marker in this stream.
@@ -1490,7 +1490,7 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
                     // ensure any commands sent to this stream wait on the NULL stream before continuing
                     LockedAccessor_StreamCrit_t thisStreamCrit(stream->criticalData());
                     // TODO - could be "noret" version of create_blocking_marker
-                    thisStreamCrit->_av.create_blocking_marker(dcf);
+                    thisStreamCrit->_av.create_blocking_marker(dcf, hc::accelerator_scope);
                 }
             }
         }

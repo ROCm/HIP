@@ -942,10 +942,10 @@ __host__ float normcdfinvf(float x)
     return std::sqrt(2) * erfinvf(2*x-1);
 }
 
-__host__ double normcdfinv(double x)
-{
-    return std::sqrt(2) * erfinv(2*x-1);
-}
+//__host__ double normcdfinv(double x)
+//{
+//    return std::sqrt(2) * erfinv(2*x-1);
+//}
 
 __host__ float nextafterf(float x, float y)
 {
