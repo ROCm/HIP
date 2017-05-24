@@ -41,8 +41,14 @@ unsigned p_count = 100;
 // Structure for one stream;
 template <typename T>
 class Streamer {
+
+#define COMMAND_ADD_FORWARD 0
+#define COMMAND_ADD_REVERSE 1
+#define COMMAND_COPY        2
+
+
 public:
-    Streamer(int deviceId, T *input, size_t numElements, bool reverse);
+    Streamer(int deviceId, T *input, size_t numElements, int commandType);
     ~Streamer();
     void runAsyncAfter(Streamer<T> *depStreamer, bool waitSameStream=false);
     void runAsyncWaitSameStream();
@@ -57,7 +63,11 @@ public:
     size_t mismatchCount() const { return _mismatchCount; };
     T *C_d() { return _C_d; };
 
+    // How much does this streamer add to A[i] after running runAsyncAfter
+    int expectedAdd() const { return (_commandType == COMMAND_COPY) ? 0 : p_count; };
 
+
+    int         _commandType;  // 0=addReverse, 1=addFwd, 2=move
 private:
 
     T *_C_h;
@@ -71,21 +81,22 @@ private:
 
     int         _deviceId;
     size_t      _numElements;
-    bool        _reverse;
 
     size_t      _mismatchCount;
 };
 
 
 template <typename T>
-Streamer<T>::Streamer(int deviceId, T * A_d, size_t numElements, bool reverse) :
+Streamer<T>::Streamer(int deviceId, T * A_d, size_t numElements, int commandType) :
     _preA_d(NULL), 
     _A_d(A_d),
     _deviceId(deviceId),
     _numElements(numElements),
-    _reverse(reverse)
+    _commandType(commandType)
 {
     size_t sizeElements = numElements * sizeof(int);
+
+    //if (commandType == 0) _commandType = 1; // TODO - remove me
 
     HIPCHECK(hipSetDevice(_deviceId));
 
@@ -116,6 +127,23 @@ Streamer<T>::Streamer(int deviceId, T * A_d, size_t numElements, bool reverse) :
 
 
 template <typename T>
+Streamer<T>::~Streamer()
+{
+    HIPCHECK(hipSetDevice(_deviceId));
+
+    printf ("info: ~Streamer\n");
+    if (_preA_d) {
+        HIPCHECK(hipFree(_preA_d));
+    }
+    HIPCHECK(hipFree(_C_d));
+    HIPCHECK(hipHostFree(_C_h));
+
+    HIPCHECK(hipStreamDestroy(_stream));
+    HIPCHECK(hipEventDestroy(_event));
+}
+
+
+template <typename T>
 void Streamer<T>::runAsyncAfter(Streamer<T> *depStreamer, bool waitSameStream)
 {
     HIPCHECK(hipSetDevice(_deviceId));
@@ -134,10 +162,14 @@ void Streamer<T>::runAsyncAfter(Streamer<T> *depStreamer, bool waitSameStream)
 
 
     unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, _numElements);
-    if (_reverse) {
+    if (_commandType == COMMAND_ADD_REVERSE) {
         hipLaunchKernelGGL(HipTest::addCountReverse , dim3(blocks), dim3(threadsPerBlock), 0, _stream,    _A_d, _C_d, _numElements, p_count);
-    } else {
+    } else if (_commandType == COMMAND_ADD_FORWARD) {
         hipLaunchKernelGGL(HipTest::addCount,         dim3(blocks), dim3(threadsPerBlock), 0, _stream,    _A_d, _C_d, _numElements, p_count);
+    } else if (_commandType == COMMAND_COPY) {
+        HIPCHECK(hipMemcpyAsync(_C_d, _A_d, _numElements * sizeof(T), hipMemcpyDeviceToDevice, _stream));
+    } else {
+        assert(0); // bad command type
     }
     HIPCHECK(hipEventRecord(_event, _stream));
 
@@ -263,9 +295,13 @@ void checkAll(int initValue, std::vector<IntStreamer *> &streamers, std::vector<
     }
 
 
+    int expected = 0;
     // Check in forward order so we can find first mismatch:
     for (int i=0; i<streamers.size(); i++) {
-        mismatchCount += streamers[i]->check(i+1, initValue, (i+1)*p_count, expectPass);
+
+        expected += streamers[i]->expectedAdd();
+        
+        mismatchCount += streamers[i]->check(i+1, initValue, expected, expectPass);
 
     }
     if (!expectPass && (mismatchCount==0)) {
@@ -305,7 +341,7 @@ void sync_allDevices(int numDevices)
 
 void sync_queryAllUntilComplete(std::vector<IntStreamer *> streamers) 
 {
-    for (int i=0; i<streamers.size(); i++) {
+    for (int i=streamers.size()-1; i>=0; i--) {
         streamers[i]->queryUntilComplete();
     };
 }
@@ -334,8 +370,6 @@ int main(int argc, char *argv[])
 
 
 
-    std::vector<IntStreamer *> streamers;
-    std::vector<IntStreamer *> streamersDev0; // streamers for first device.
 
     size_t numElements = N;
     size_t sizeElements = numElements * sizeof(int);
@@ -361,15 +395,23 @@ int main(int argc, char *argv[])
     HIPCHECK(hipGetDeviceCount(&numDevices));
     numDevices = min(2, numDevices); // multi-GPU to 2 device.
 
+    std::vector<IntStreamer *> streamers;
+    std::vector<IntStreamer *> streamersDev0; // streamers for first device.
+
     for (int d=0; d<numDevices/*TODO*/; d++) {
         for (int i=0; i<p_streams; i++) {
-            IntStreamer * s = new IntStreamer(d, i ? streamers.back()->C_d() : initArray_d, numElements, i&1 /*reverse?*/);
+            int command = (i%2) ? COMMAND_ADD_FORWARD : COMMAND_ADD_REVERSE;
+            IntStreamer * s = new IntStreamer(d, i ? streamers.back()->C_d() : initArray_d, numElements, command);
             streamers.push_back(s);
             if (d==0) {
                 streamersDev0.push_back(s);
             }
         }
     }
+
+
+
+
 
     // A sideband stream channel that is independent from above.
     // Used to check to ensure the WaitEvent or other synchronization is working correctly since by default sideStream is 
@@ -383,7 +425,10 @@ int main(int argc, char *argv[])
 
 
     // Tests on first GPU:
+    //
+    // This test has no synchronization - make sure it mismatches so we can ensure the other tests properyl prevent the mismatch:
     RUN_SYNC_TEST(0x01, streamersDev0, sync_none(), false);
+
     RUN_SYNC_TEST(0x02, streamersDev0, sync_allDevices(numDevices),  true);
     RUN_SYNC_TEST(0x04, streamersDev0, sync_queryAllUntilComplete(streamersDev0),  true);
     RUN_SYNC_TEST(0x08, streamersDev0, sync_streamWaitEvent(streamersDev0.back()->event(), 0, sideStreams[0], false),  true);
@@ -416,6 +461,20 @@ int main(int argc, char *argv[])
 
         sync_streamWaitEvent(streamersDev0.back()->event(), 0, sideStreams[0], false);
         checkAll (initValue, streamersDev0, sideStreams);
+    }
+
+
+    // Change Adds to copies to stimulate different case with event followign copy:
+    for (auto &s : streamers) {
+        if (s->_commandType == COMMAND_ADD_FORWARD)
+            s->_commandType = COMMAND_COPY;
+    }
+
+
+    {
+        printf ("test: alternating memcpy/count-reverse followed by event\n");
+        RUN_SYNC_TEST(0x4000, streamersDev0, sync_queryAllUntilComplete(streamersDev0),  true);
+        RUN_SYNC_TEST(0x8000, streamersDev0, sync_streamWaitEvent(streamersDev0.back()->event(), 0, sideStreams[0], false),  true);
     }
 
 
