@@ -245,7 +245,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), ptr, sizeBytes, flags);
+    HIP_INIT_SPECIAL_API((TRACE_MEM), ptr, sizeBytes, flags);
     HIP_SET_DEVICE();
     hipError_t hip_status = hipSuccess;
 
