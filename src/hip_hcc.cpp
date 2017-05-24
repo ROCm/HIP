@@ -64,7 +64,6 @@ std::string HIP_LAUNCH_BLOCKING_KERNELS;
 std::vector<std::string> g_hipLaunchBlockingKernels;
 int HIP_API_BLOCKING = 0;
 
-int HIP_MAX_QUEUES = 0;
 
 int HIP_PRINT_ENV = 0;
 int HIP_TRACE_API= 0;
@@ -267,31 +266,6 @@ ihipStream_t::~ihipStream_t()
 }
 
 
-inline void ihipStream_t::ensureHaveQueue(LockedAccessor_StreamCrit_t &streamCrit)
-{
-    if (HIP_MAX_QUEUES && !streamCrit->_hasQueue)  {
-
-        // To avoid deadlock, we have to release the stream lock before acquiring context lock.
-        // Else we can get hung if another thread has the context lock is trying to get lock for this stream.
-        // We lock it again below.
-        streamCrit->munlock();
-
-        // Obtain mutex access to the device critical data, release by destructor
-        LockedAccessor_CtxCrit_t  ctxCrit(this->_ctx->criticalData());
-        // TODO
-        auto needyCritPtr = this->_criticalData.mlock();
-
-        // Second test to ensure we still need to steal the queue - another thread may have
-        // snuck in here and already solved the issue.
-        if (!needyCritPtr->_hasQueue) {
-            needyCritPtr->_av = this->_ctx->stealActiveQueue(ctxCrit, this);
-        }
-
-        streamCrit->_hasQueue = true;
-    }
-    assert(streamCrit->_hasQueue);
-}
-
 hc::hcWaitMode ihipStream_t::waitMode() const
 {
     hc::hcWaitMode waitMode = hc::hcWaitModeActive;
@@ -323,13 +297,9 @@ hc::hcWaitMode ihipStream_t::waitMode() const
 //This signature should be used in routines that already have locked the stream mutex
 void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit)
 {
-    if (crit->_hasQueue) {
-        tprintf (DB_SYNC, "%s wait for queue-empty..\n", ToString(this).c_str());
+    tprintf (DB_SYNC, "%s wait for queue-empty..\n", ToString(this).c_str());
 
-        crit->_av.wait(waitMode());
-    } else {
-        tprintf (DB_SYNC, "%s wait for queue empty (done since stream has no physical queue).\n", ToString(this).c_str());
-    }
+    crit->_av.wait(waitMode());
 
     crit->_kernelCnt = 0;
 }
@@ -350,7 +320,6 @@ void ihipStream_t::locked_waitEvent(hipEvent_t event)
 {
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
-    this->ensureHaveQueue(crit);
 
     crit->_av.create_blocking_marker(event->_marker, hc::accelerator_scope);
 }
@@ -362,7 +331,6 @@ void ihipStream_t::locked_recordEvent(hipEvent_t event)
     // Lock the stream to prevent simultaneous access
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
-    this->ensureHaveQueue(crit);
 #if USE_NO_SCOPE
     printf ("create_marker, flags = %x\n", event->_flags);
     event->_marker = crit->_av.create_marker((event->_flags & hipEventDisableSystemRelease) ? hc::no_scope : hc::system_scope);
@@ -406,7 +374,6 @@ LockedAccessor_StreamCrit_t ihipStream_t::lockopen_preKernelCommand()
        crit->_kernelCnt = 0;
     }
 
-    this->ensureHaveQueue(crit);
 
 
 
@@ -1001,55 +968,6 @@ std::string ihipCtx_t::toString() const
 };
 
 
-hc::accelerator_view
-ihipCtx_t::stealActiveQueue(LockedAccessor_CtxCrit_t &ctxCrit, ihipStream_t *needyStream)
-{
-
-    // TODO - review handling if queue can't be found.
-    while (1) {
-
-        for (auto iter=ctxCrit->streams().begin(); iter != ctxCrit->streams().end(); iter++) {
-            if (*iter != needyStream) {
-                auto victimCritPtr = (*iter)->_criticalData.mtry_lock();
-                if (victimCritPtr)   {
-                    // try-lock succeeded:
-                    if (victimCritPtr->_hasQueue && (victimCritPtr->_kernelCnt == 0)) {
-
-                        victimCritPtr->_hasQueue = false;
-
-                        tprintf(DB_SYNC, " stealActiveQueue from victim:%s to needy:%s\n",
-                                ToString(*iter).c_str(), ToString(needyStream).c_str());
-
-                        hc::accelerator_view av = victimCritPtr->_av;
-
-                        // TODO - cleanup to remove forced setting to N
-                        uint64_t *p = (uint64_t*)(&victimCritPtr->_av);
-                        *p = 0; // damage the victim av so attempt to use it will fault.
-
-                        (*iter)->_criticalData.munlock();
-                        return av;
-                    }
-                    (*iter)->_criticalData.munlock();
-                }
-            }
-        }
-    }
-}
-
-
-hc::accelerator_view
-ihipCtx_t::createOrStealQueue(LockedAccessor_CtxCrit_t &ctxCrit)
-{
-    if (HIP_MAX_QUEUES && (ctxCrit->streams().size() >= HIP_MAX_QUEUES)) {
-        // Steal a queue from an existing stream:
-        hc::accelerator_view av = this->stealActiveQueue (ctxCrit, nullptr);
-        return av;
-    } else {
-        // Create a new view
-        return getWriteableDevice()->_acc.create_view();
-    }
-}
-
 //----
 
 
@@ -1279,7 +1197,6 @@ void HipReadEnv()
     READ_ENV_I(release, HIP_API_BLOCKING, 0, "Make HIP APIs 'host-synchronous', so they block until completed.  Impacts hipMemcpyAsync, hipMemsetAsync." );
 
 
-    READ_ENV_I(release, HIP_MAX_QUEUES, 0, "Maximum number of queues that this app will use per-device.  Additional streams will share the specified number of queues.  0=no limit.");
 
     READ_ENV_C(release, HIP_DB, 0,  "Print debug info.  Bitmask (HIP_DB=0xff) or flags separated by '+' (HIP_DB=api+sync+mem+copy)", HIP_DB_callback);
     if ((HIP_DB & (1<<DB_API))  && (HIP_TRACE_API == 0)) {
@@ -1971,7 +1888,6 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
         printPointerInfo(DB_COPY, "  dst", dst, dstPtrInfo);
         printPointerInfo(DB_COPY, "  src", src, srcPtrInfo);
 
-        this->ensureHaveQueue(crit);
 
         crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice ? &copyDevice->getDevice()->_acc : nullptr, forceUnpinnedCopy);
     }
@@ -2078,7 +1994,6 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
 
             // Perform fast asynchronous copy - we know copyDevice != NULL based on check above
             try {
-                this->ensureHaveQueue(crit);
 
                 if (HIP_FORCE_SYNC_COPY) {
                     crit->_av.copy_ext      (src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, &copyDevice->getDevice()->_acc, forceUnpinnedCopy);
@@ -2115,7 +2030,6 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
             // Perform slow synchronous copy:
             LockedAccessor_StreamCrit_t crit(_criticalData);
 
-            this->ensureHaveQueue(crit);
 
             crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice ? &copyDevice->getDevice()->_acc : nullptr, forceUnpinnedCopy);
         }
@@ -2170,7 +2084,6 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator *acc)
 
 
 //---
-// Warning - with HIP_MAX_QUEUES!=0 there is no mechanism to prevent accelerator_view from being re-assigned...
 hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **av)
 {
     HIP_INIT_API(stream, av);

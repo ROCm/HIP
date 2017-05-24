@@ -447,7 +447,6 @@ public:
     ihipStreamCriticalBase_t(ihipStream_t *parentStream, hc::accelerator_view av) :
         _kernelCnt(0),
         _av(av),
-        _hasQueue(true),
         _parent(parentStream)
     {
     };
@@ -473,11 +472,6 @@ public:
     uint32_t                    _kernelCnt;    // Count of inflight kernels in this stream.  Reset at ::wait().
 
     hc::accelerator_view        _av;
-
-    // True if the stream has an allocated queue (accelerato_view) for its use:
-    // Always true at ihipStream creation but queue may later be stolen.
-    // This acts as a valid bit for the _av.
-    bool                        _hasQueue;
 private:
 };
 
@@ -543,8 +537,6 @@ public:
     // These functions access fields set at initialization time and are non-racy (so do not acquire mutex)
     const ihipDevice_t *     getDevice() const;
     ihipCtx_t *              getCtx() const;
-
-    void ensureHaveQueue(LockedAccessor_StreamCrit_t &streamCrit);
 
 public:
     //---
@@ -791,10 +783,6 @@ public: // Functions:
     void locked_reset();
     void locked_waitAllStreams();
     void locked_syncDefaultStream(bool waitOnSelf, bool syncHost);
-
-    // Will allocate a queue and assign it to the needyStream:
-    hc::accelerator_view  stealActiveQueue(LockedAccessor_CtxCrit_t &ctxCrit, ihipStream_t *needyStream);
-    hc::accelerator_view createOrStealQueue(LockedAccessor_CtxCrit_t &ctxCrit);
 
     ihipCtxCritical_t  &criticalData() { return _criticalData; };
 
