@@ -185,6 +185,8 @@ syn keyword hipFlags hipHostMallocDefault
 syn keyword hipFlags hipHostMallocPortable
 syn keyword hipFlags hipHostMallocMapped
 syn keyword hipFlags hipHostMallocWriteCombined
+syn keyword hipFlags hipHostMallocCoherent
+syn keyword hipFlags hipHostMallocNonCoherent
 
 syn keyword hipFlags hipHostRegisterDefault
 syn keyword hipFlags hipHostRegisterPortable

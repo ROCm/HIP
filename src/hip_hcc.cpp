@@ -74,7 +74,7 @@ int HIP_PROFILE_API= 0;
 std::string HIP_DB_START_API;
 std::string HIP_DB_STOP_API;
 int HIP_DB= 0;
-int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
+int HIP_VISIBLE_DEVICES = 0; 
 int HIP_NUM_KERNELS_INFLIGHT = 128;
 int HIP_WAIT_MODE = 0;
 

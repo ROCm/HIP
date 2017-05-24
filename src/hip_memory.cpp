@@ -267,17 +267,36 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
             trueFlags = hipHostMallocMapped | hipHostMallocPortable;
         }
 
-        const unsigned supportedFlags = hipHostMallocPortable | hipHostMallocMapped | hipHostMallocWriteCombined;
 
-        if (flags & ~supportedFlags) {
+        const unsigned supportedFlags = hipHostMallocPortable 
+                                      | hipHostMallocMapped 
+                                      | hipHostMallocWriteCombined 
+                                      | hipHostMallocCoherent 
+                                      | hipHostMallocNonCoherent;
+
+
+        const unsigned coherencyFlags = hipHostMallocCoherent | hipHostMallocNonCoherent;
+
+        if ((flags & ~supportedFlags) ||
+            ((flags & coherencyFlags) == coherencyFlags)) {
+            *ptr = nullptr;
+             // can't specify unsupported flags, can't specify both Coherent + NonCoherent
             hip_status = hipErrorInvalidValue;
-        }
-        else {
+        } else {
             auto device = ctx->getWriteableDevice();
-            unsigned amFlags = HIP_COHERENT_HOST_ALLOC ? amHostCoherent : amHostPinned;
+            
+            unsigned amFlags = 0;
+            if (flags & hipHostMallocCoherent) {
+                amFlags = amHostCoherent;
+            } else if (flags & hipHostMallocNonCoherent) {
+                amFlags = amHostPinned;
+            } else {
+                // depends on env variables:
+                amFlags = HIP_COHERENT_HOST_ALLOC ? amHostCoherent : amHostPinned;
+            }
 
 
-            *ptr = hip_internal::allocAndSharePtr(HIP_COHERENT_HOST_ALLOC ? "finegrained_host":"pinned_host",
+            *ptr = hip_internal::allocAndSharePtr((amFlags & amHostCoherent) ? "finegrained_host":"pinned_host",
                                                   sizeBytes, ctx, (trueFlags & hipHostMallocPortable) /*shareWithAll*/, amFlags, flags);
 
             if(sizeBytes  && (*ptr == NULL)){

@@ -31,14 +31,19 @@
 #define LEN 1024*1024
 #define SIZE LEN*sizeof(float)
 
-__global__ void Add(hipLaunchParm lp, float *Ad, float *Bd, float *Cd){
+__global__ void Add(float *Ad, float *Bd, float *Cd){
     int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
     Cd[tx] = Ad[tx] + Bd[tx];
 }
 
+
+__global__ void Set(int *Ad, int val){
+    int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+    Ad[tx] = val;
+}
+
 int main(){
-    float *A, *B, *C;
-    float *Ad, *Bd, *Cd;
+
 
     hipDeviceProp_t prop;
     int device;
@@ -49,26 +54,72 @@ int main(){
         failed("Does support HostPinned Memory");
     }
 
-    HIPCHECK(hipHostMalloc((void**)&A, SIZE, hipHostMallocWriteCombined | hipHostMallocMapped));
-    HIPCHECK(hipHostMalloc((void**)&B, SIZE, hipHostMallocDefault));
-    HIPCHECK(hipHostMalloc((void**)&C, SIZE, hipHostMallocMapped));
 
-    HIPCHECK(hipHostGetDevicePointer((void**)&Ad, A, 0));
-    HIPCHECK(hipHostGetDevicePointer((void**)&Cd, C, 0));
+    {
+        float *A, *B, *C;
+        float *Ad, *Bd, *Cd;
+        HIPCHECK(hipHostMalloc((void**)&A, SIZE, hipHostMallocWriteCombined | hipHostMallocMapped));
+        HIPCHECK(hipHostMalloc((void**)&B, SIZE, hipHostMallocDefault));
+        HIPCHECK(hipHostMalloc((void**)&C, SIZE, hipHostMallocMapped));
 
-    for(int i=0;i<LEN;i++){
-        A[i] = 1.0f;
-        B[i] = 2.0f;
+        HIPCHECK(hipHostGetDevicePointer((void**)&Ad, A, 0));
+        HIPCHECK(hipHostGetDevicePointer((void**)&Cd, C, 0));
+
+        for(int i=0;i<LEN;i++){
+            A[i] = 1.0f;
+            B[i] = 2.0f;
+        }
+
+        HIPCHECK(hipMalloc((void**)&Bd, SIZE));
+        HIPCHECK(hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice));
+
+        dim3 dimGrid(LEN/512,1,1);
+        dim3 dimBlock(512,1,1);
+
+        hipLaunchKernelGGL(Add, dimGrid, dimBlock, 0, 0, Ad, Bd, Cd);
+
+        HIPCHECK(hipDeviceSynchronize());
+
+        HIPCHECK(hipHostFree(A));
+        HIPCHECK(hipHostFree(B));
+        HIPCHECK(hipHostFree(C));
     }
 
-    HIPCHECK(hipMalloc((void**)&Bd, SIZE));
-    HIPCHECK(hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice));
+    {
+        int *A, *B;
+        int numElements = 1024*16;
+        size_t sizeBytes = numElements * sizeof (int);
+#ifdef __HIP_PLATFORM_HCC__
+        HIPCHECK_API(hipHostMalloc((void**)&A, sizeBytes, hipHostMallocCoherent|hipHostMallocNonCoherent), hipErrorInvalidValue);
 
-    dim3 dimGrid(LEN/512,1,1);
-    dim3 dimBlock(512,1,1);
+        assert (A == 0);
+#endif
 
-    hipLaunchKernel(HIP_KERNEL_NAME(Add), dimGrid, dimBlock, 0, 0, Ad, Bd, Cd);
+        HIPCHECK(hipHostMalloc((void**)&A, sizeBytes, hipHostMallocCoherent));
+        hipStream_t s;
+        hipEvent_t e;
 
+        // Init:
+        HIPCHECK(hipStreamCreate(&s));
+        HIPCHECK(hipEventCreateWithFlags(&e, 0));
+        dim3 dimBlock(64,1,1);
+        dim3 dimGrid(numElements/dimBlock.x,1,1);
+
+        // Init array to know state:
+        hipLaunchKernelGGL(Set, dimGrid, dimBlock, 0, 0x0, A, -42);
+        HIPCHECK(hipDeviceSynchronize());
+
+        hipLaunchKernelGGL(Set, dimGrid, dimBlock, 0, s, A, 13);
+        HIPCHECK(hipEventRecord(e, s));
+
+        // Host waits for event :
+        HIPCHECK(hipEventSynchronize(e));
+
+        // check result?
+
+        HIPCHECK(hipHostMalloc((void**)&B, sizeBytes, hipHostMallocNonCoherent));
+    }
+        
     passed();
 
 }
