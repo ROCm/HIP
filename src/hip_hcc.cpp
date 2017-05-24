@@ -75,7 +75,6 @@ std::string HIP_DB_START_API;
 std::string HIP_DB_STOP_API;
 int HIP_DB= 0;
 int HIP_VISIBLE_DEVICES = 0; 
-int HIP_NUM_KERNELS_INFLIGHT = 128;
 int HIP_WAIT_MODE = 0;
 
 int HIP_FORCE_P2P_HOST = 0;
@@ -368,13 +367,6 @@ LockedAccessor_StreamCrit_t ihipStream_t::lockopen_preKernelCommand()
 {
 
     LockedAccessor_StreamCrit_t crit(_criticalData, false/*no unlock at destruction*/);
-
-    if(crit->_kernelCnt > HIP_NUM_KERNELS_INFLIGHT){
-       this->wait(crit);
-       crit->_kernelCnt = 0;
-    }
-
-
 
 
     return crit;
@@ -1225,8 +1217,6 @@ void HipReadEnv()
     READ_ENV_I(release, HIP_SYNC_HOST_ALLOC, 0, "Sync before and after all host memory allocations.  May help stability");
     READ_ENV_I(release, HIP_SYNC_NULL_STREAM, 0, "Synchronize on host for null stream submissions");
 
-    // TODO - review, can we remove this?
-    READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Max number of inflight kernels per stream before active synchronization is forced.");
 
     READ_ENV_I(release, HIP_COHERENT_HOST_ALLOC, 0, "If set, all host memory will be allocated as fine-grained system memory.  This allows threadfence_system to work but prevents host memory from being cached on GPU which may have performance impact.");
 
