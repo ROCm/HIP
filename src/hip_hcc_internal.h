@@ -538,10 +538,12 @@ public:
     const ihipDevice_t *     getDevice() const;
     ihipCtx_t *              getCtx() const;
 
+    bool isDefaultStream() const { return _id == 0; };
+
 public:
     //---
     //Public member vars - these are set at initialization and never change:
-    SeqNum_t                    _id;   // monotonic sequence ID
+    SeqNum_t                    _id;   // monotonic sequence ID.  0 is the default stream.
     unsigned                    _flags;
 
 
@@ -559,6 +561,7 @@ private:
     bool canSeeMemory(const ihipCtx_t *thisCtx, const hc::AmPointerInfo *dstInfo, const hc::AmPointerInfo *srcInfo);
 
     void addSymbolPtrToTracker(hc::accelerator& acc, void* ptr, size_t sizeBytes);
+
 
 public: // TODO - move private
     // Critical Data - MUST be accessed through LockedAccessor_StreamCrit_t

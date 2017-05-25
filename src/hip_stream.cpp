@@ -146,7 +146,7 @@ hipError_t hipStreamSynchronize(hipStream_t stream)
 
     hipError_t e = hipSuccess;
 
-    if (stream == NULL) {
+    if (stream == hipStreamNull) {
         ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
         ctx->locked_syncDefaultStream(true/*waitOnSelf*/, true/*syncToHost*/);
     } else {
@@ -198,7 +198,7 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags)
 
     if (flags == NULL) {
         return ihipLogStatus(hipErrorInvalidValue);
-    } else if (stream == NULL) {
+    } else if (stream == hipStreamNull) {
         return ihipLogStatus(hipErrorInvalidResourceHandle);
     } else {
         *flags = stream->_flags;
