@@ -53,14 +53,19 @@ void ihipEvent_t::attachToCompletionFuture(const hc::completion_future *cf, ihip
 
 void ihipEvent_t::setTimestamp()
 {
+    bool isReady0 = _marker.is_ready();
+    bool isReady1;
+    int val = 0;
     if (_state == hipEventStatusRecorded) {
         // already recorded, done:
         return;
     } else {
         // TODO - use completion-future functions to obtain ticks and timestamps:
         hsa_signal_t *sig  = static_cast<hsa_signal_t*> (_marker.get_native_handle());
+        isReady1 = _marker.is_ready();
         if (sig) {
-            if (hsa_signal_load_acquire(*sig) == 0) {
+            val = hsa_signal_load_acquire(*sig);
+            if (val == 0) {
 
                 if ((_type == hipEventTypeIndependent) || (_type == hipEventTypeStopCommand)) {
                     _timestamp =  _marker.get_end_tick();
@@ -74,6 +79,10 @@ void ihipEvent_t::setTimestamp()
                 _state = hipEventStatusRecorded;
             }
         }
+    }
+
+    if (_state != hipEventStatusRecorded) {
+        printf (" not ready isReady0=%d val=%d isReady1=%d\n", isReady0, val, isReady1);
     }
 }
 
@@ -118,11 +127,11 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
 
         event->_stream = stream;
 
-        if (HIP_SYNC_NULL_STREAM && stream == NULL) {
+        if (HIP_SYNC_NULL_STREAM && stream->isDefaultStream()) {
 
             // TODO-HIP_SYNC_NULL_STREAM : can remove this code when HIP_SYNC_NULL_STREAM = 0
             
-            // If stream == NULL, wait on all queues.
+            // If default stream , then wait on all queues.
             ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
             ctx->locked_syncDefaultStream(true, true);
 
@@ -167,13 +176,15 @@ hipError_t hipEventSynchronize(hipEvent_t event)
         } else if (event->_state == hipEventStatusCreated ) {
             // Created but not actually recorded on any device:
             return ihipLogStatus(hipSuccess);
-        } else if (HIP_SYNC_NULL_STREAM && (event->_stream == NULL)) {
+        } else if (HIP_SYNC_NULL_STREAM && (event->_stream->isDefaultStream() )) {
             auto *ctx = ihipGetTlsDefaultCtx();
             // TODO-HIP_SYNC_NULL_STREAM - can remove this code
             ctx->locked_syncDefaultStream(true, true);
             return ihipLogStatus(hipSuccess);
         } else {
             event->_marker.wait((event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked : hc::hcWaitModeActive);
+
+            assert (event->_marker.is_ready());
 
             return ihipLogStatus(hipSuccess);
         }
