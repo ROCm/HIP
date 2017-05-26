@@ -1215,20 +1215,23 @@ __device__ float __hip_fast_tanf(float x) {
 }
 
 // Double Precision Math
+// FIXME - HCC doesn't have a fast_math version double FP sqrt
+// Another issue is that these intrinsics call for a specific rounding mode;
+// however, their implementation all map to the same sqrt builtin
 __device__ double __hip_fast_dsqrt_rd(double x) {
-  return hc::fast_math::sqrt(x);
+  return hc::precise_math::sqrt(x);
 }
 
 __device__ double __hip_fast_dsqrt_rn(double x) {
-  return hc::fast_math::sqrt(x);
+  return hc::precise_math::sqrt(x);
 }
 
 __device__ double __hip_fast_dsqrt_ru(double x) {
-  return hc::fast_math::sqrt(x);
+  return hc::precise_math::sqrt(x);
 }
 
 __device__ double __hip_fast_dsqrt_rz(double x) {
-  return hc::fast_math::sqrt(x);
+  return hc::precise_math::sqrt(x);
 }
 
 __device__ void  __threadfence_system(void){
