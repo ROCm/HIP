@@ -49,7 +49,7 @@ THE SOFTWARE.
 
 
 // needs HCC change for hc::no_scope
-#define USE_NO_SCOPE 0
+#define USE_NO_SCOPE 1
 
 //=================================================================================================
 //Global variables:
@@ -331,10 +331,10 @@ void ihipStream_t::locked_recordEvent(hipEvent_t event)
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
 #if USE_NO_SCOPE
-    printf ("create_marker, flags = %x\n", event->_flags);
+    //printf ("create_marker, flags = %x\n", event->_flags);
     event->_marker = crit->_av.create_marker((event->_flags & hipEventDisableSystemRelease) ? hc::no_scope : hc::system_scope);
 #else
-    event->_marker = crit->_av.create_marker();
+    event->_marker = crit->_av.create_marker((event->_flags & hipEventDisableSystemRelease) ? hc::accelerator_scope : hc::system_scope);
 #endif
 };
 
