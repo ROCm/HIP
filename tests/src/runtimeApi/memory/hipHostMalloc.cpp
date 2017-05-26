@@ -42,6 +42,63 @@ __global__ void Set(int *Ad, int val){
     Ad[tx] = val;
 }
 
+
+#define SYNC_EVENT 0
+#define SYNC_STREAM 1
+#define SYNC_DEVICE 2
+
+std::vector<std::string> syncMsg = {"event", "stream", "device"};
+
+void CheckHostPointer(int numElements, int *ptr, int syncMethod, std::string msg)
+{
+    std::cerr << "test: CheckHostPointer " << msg 
+              << " ptr=" << ptr 
+              << " syncMethod=" << syncMsg[syncMethod] << "\n";
+
+    hipStream_t s;
+    hipEvent_t e;
+
+    // Init:
+    HIPCHECK(hipStreamCreate(&s));
+    HIPCHECK(hipEventCreateWithFlags(&e, hipEventDisableSystemRelease));
+    dim3 dimBlock(64,1,1);
+    dim3 dimGrid(numElements/dimBlock.x,1,1);
+
+    const int expected = 13;
+
+    // Init array to know state:
+    hipLaunchKernelGGL(Set, dimGrid, dimBlock, 0, 0x0, ptr, -42);
+    HIPCHECK(hipDeviceSynchronize());
+
+    hipLaunchKernelGGL(Set, dimGrid, dimBlock, 0, s, ptr, expected);
+    HIPCHECK(hipEventRecord(e, s));
+
+    // Host waits for event :
+    switch (syncMethod) {
+        case SYNC_EVENT:
+            HIPCHECK(hipEventSynchronize(e));
+            break;
+        case SYNC_STREAM:
+            HIPCHECK(hipStreamSynchronize(s));
+            break;
+        case SYNC_DEVICE:
+            HIPCHECK(hipDeviceSynchronize());
+            break;
+        default:
+            assert(0);
+    };
+            
+    for (int i=0; i<numElements; i++) {
+        if (ptr[i] != expected) {
+            printf ("mismatch at %d: %d != %d\n", i, ptr[i], expected);
+            assert(ptr[i] == expected);
+        }
+    }
+
+    HIPCHECK(hipStreamDestroy(s));
+    HIPCHECK(hipEventDestroy(e));
+};
+
 int main(){
 
 
@@ -86,38 +143,41 @@ int main(){
     }
 
     {
-        int *A, *B;
         int numElements = 1024*16;
         size_t sizeBytes = numElements * sizeof (int);
-#ifdef __HIP_PLATFORM_HCC__
-        HIPCHECK_API(hipHostMalloc((void**)&A, sizeBytes, hipHostMallocCoherent|hipHostMallocNonCoherent), hipErrorInvalidValue);
 
-        assert (A == 0);
+#ifdef __HIP_PLATFORM_HCC__
+        { 
+            // Stimulate error condition:
+            int *A = &numElements;
+            HIPCHECK_API(hipHostMalloc((void**)&A, sizeBytes, hipHostMallocCoherent|hipHostMallocNonCoherent), hipErrorInvalidValue);
+
+            assert (A == 0);
+        }
 #endif
 
-        HIPCHECK(hipHostMalloc((void**)&A, sizeBytes, hipHostMallocCoherent));
-        hipStream_t s;
-        hipEvent_t e;
 
-        // Init:
-        HIPCHECK(hipStreamCreate(&s));
-        HIPCHECK(hipEventCreateWithFlags(&e, 0));
-        dim3 dimBlock(64,1,1);
-        dim3 dimGrid(numElements/dimBlock.x,1,1);
+        {
+            int *A = nullptr;
+            HIPCHECK(hipHostMalloc((void**)&A, sizeBytes, hipHostMallocNonCoherent));
+            const char *ptrType = "non-coherent"; // TODO
+            //CheckHostPointer(numElements, A, SYNC_DEVICE,   ptrType);
+            //CheckHostPointer(numElements, A, SYNC_STREAM,  ptrType);
+            CheckHostPointer(numElements, A, SYNC_EVENT,   ptrType);
+        }
 
-        // Init array to know state:
-        hipLaunchKernelGGL(Set, dimGrid, dimBlock, 0, 0x0, A, -42);
-        HIPCHECK(hipDeviceSynchronize());
+        if (0) { // TODO, remove me
+            int *A = nullptr;
+            HIPCHECK(hipHostMalloc((void**)&A, sizeBytes, hipHostMallocCoherent));
+            const char *ptrType = "coherent";
+            CheckHostPointer(numElements, A, SYNC_DEVICE,   ptrType);
+            CheckHostPointer(numElements, A, SYNC_STREAM,  ptrType);
+            CheckHostPointer(numElements, A, SYNC_EVENT,   ptrType);
+        }
 
-        hipLaunchKernelGGL(Set, dimGrid, dimBlock, 0, s, A, 13);
-        HIPCHECK(hipEventRecord(e, s));
 
-        // Host waits for event :
-        HIPCHECK(hipEventSynchronize(e));
 
-        // check result?
 
-        HIPCHECK(hipHostMalloc((void**)&B, sizeBytes, hipHostMallocNonCoherent));
     }
         
     passed();

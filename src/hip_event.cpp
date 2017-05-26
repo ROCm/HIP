@@ -82,7 +82,7 @@ void ihipEvent_t::setTimestamp()
     }
 
     if (_state != hipEventStatusRecorded) {
-        printf (" not ready isReady0=%d val=%d isReady1=%d\n", isReady0, val, isReady1);
+        //printf (" not ready isReady0=%d val=%d isReady1=%d\n", isReady0, val, isReady1);
     }
 }
 
@@ -92,7 +92,10 @@ hipError_t ihipEventCreate(hipEvent_t* event, unsigned flags)
     hipError_t e = hipSuccess;
 
     // TODO-IPC - support hipEventInterprocess.
-    unsigned supportedFlags = hipEventDefault | hipEventBlockingSync | hipEventDisableTiming;
+    unsigned supportedFlags =   hipEventDefault 
+                              | hipEventBlockingSync 
+                              | hipEventDisableTiming 
+                              | hipEventDisableSystemRelease;
     if ((flags & ~supportedFlags) == 0) {
         ihipEvent_t *eh = new ihipEvent_t(flags);
 
@@ -197,20 +200,18 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop)
 {
     HIP_INIT_API(ms, start, stop);
 
-    ihipEvent_t *start_eh = start;
-    ihipEvent_t *stop_eh = stop;
-
     start->setTimestamp();
     stop->setTimestamp();
 
     hipError_t status = hipSuccess;
     *ms = 0.0f;
 
-    if (start_eh && stop_eh) {
-        if ((start_eh->_state == hipEventStatusRecorded) && (stop_eh->_state == hipEventStatusRecorded)) {
+    if (start && stop) {
+        // refresh status:
+        if ((start->_state == hipEventStatusRecorded) && (stop->_state == hipEventStatusRecorded)) {
             // Common case, we have good information for both events.
 
-            int64_t tickDiff = (stop_eh->timestamp() - start_eh->timestamp());
+            int64_t tickDiff = (stop->timestamp() - start->timestamp());
 
             uint64_t freqHz;
             hsa_system_get_info(HSA_SYSTEM_INFO_TIMESTAMP_FREQUENCY, &freqHz);
@@ -223,13 +224,16 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop)
             }
 
 
-        } else if ((start_eh->_state == hipEventStatusRecording) ||
-                   (stop_eh->_state  == hipEventStatusRecording)) {
+        } else if ((start->_state == hipEventStatusRecording) ||
+                   (stop->_state  == hipEventStatusRecording)) {
+
             status = hipErrorNotReady;
-        } else if ((start_eh->_state == hipEventStatusUnitialized) ||
-                   (stop_eh->_state  == hipEventStatusUnitialized)) {
+        } else if ((start->_state == hipEventStatusUnitialized) ||
+                   (stop->_state  == hipEventStatusUnitialized)) {
             status = hipErrorInvalidResourceHandle;
         }
+    } else {
+        status = hipErrorInvalidResourceHandle;
     }
 
     return ihipLogStatus(status);
