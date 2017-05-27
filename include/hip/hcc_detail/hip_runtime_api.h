@@ -136,6 +136,31 @@ enum hipLimit_t
 #define hipDeviceLmemResizeToMax    0x16
 
 
+/*
+* @brief hipJitOption
+* @enum
+* @ingroup Enumerations
+*/
+typedef enum hipJitOption {
+  hipJitOptionMaxRegisters = 0,
+  hipJitOptionThreadsPerBlock,
+  hipJitOptionWallTime,
+  hipJitOptionInfoLogBuffer,
+  hipJitOptionInfoLogBufferSizeBytes,
+  hipJitOptionErrorLogBuffer,
+  hipJitOptionErrorLogBufferSizeBytes,
+  hipJitOptionOptimizationLevel,
+  hipJitOptionTargetFromContext,
+  hipJitOptionTarget,
+  hipJitOptionFallbackStrategy,
+  hipJitOptionGenerateDebugInfo,
+  hipJitOptionLogVerbose,
+  hipJitOptionGenerateLineInfo,
+  hipJitOptionCacheMode,
+  hipJitOptionNumOptions
+} hipJitOption;
+
+
 /**
  * @warning On AMD devices and recent Nvidia devices, these hints and controls are ignored.
  */

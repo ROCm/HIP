@@ -249,7 +249,7 @@ void initArraysForHost(T **A_h, T **B_h, T **C_h,
         }
     }
 
-    setDefaultData(N, A_h ? *A_h : nullptr, B_h ? *B_h : nullptr, C_h ? *C_h : nullptr);
+    setDefaultData(N, A_h ? *A_h : NULL, B_h ? *B_h : NULL, C_h ? *C_h : NULL);
 }
 
 
