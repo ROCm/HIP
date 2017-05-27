@@ -93,7 +93,10 @@ int HIP_SYNC_HOST_ALLOC = 1;
 // Sync on host between 
 int HIP_SYNC_NULL_STREAM = 1;
 
+// HIP needs to change some behavior based on HCC_OPT_FLUSH :
 int HCC_OPT_FLUSH = 0;
+
+int HIP_EVENT_SYS_RELEASE=0;
 
 
 
@@ -330,12 +333,18 @@ void ihipStream_t::locked_recordEvent(hipEvent_t event)
     // Lock the stream to prevent simultaneous access
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
-#if USE_NO_SCOPE
-    //printf ("create_marker, flags = %x\n", event->_flags);
-    event->_marker = crit->_av.create_marker((event->_flags & hipEventDisableSystemRelease) ? hc::no_scope : hc::system_scope);
-#else
-    event->_marker = crit->_av.create_marker((event->_flags & hipEventDisableSystemRelease) ? hc::accelerator_scope : hc::system_scope);
-#endif
+    auto scopeFlag = hc::accelerator_scope;
+    // The env var HIP_EVENT_SYS_RELEASE sets the default,
+    // The explicit flags override the env var (if specified)
+    if (event->_flags & hipEventReleaseToSystem) {
+        scopeFlag = hc::system_scope;
+    } else if (event->_flags & hipEventReleaseToDevice) {
+        scopeFlag = hc::accelerator_scope;
+    } else {
+        scopeFlag = HIP_EVENT_SYS_RELEASE ? hc::system_scope : hc::accelerator_scope;
+    }
+
+    event->_marker = crit->_av.create_marker(scopeFlag);
 };
 
 //=============================================================================
@@ -1221,7 +1230,8 @@ void HipReadEnv()
     READ_ENV_I(release, HIP_COHERENT_HOST_ALLOC, 0, "If set, all host memory will be allocated as fine-grained system memory.  This allows threadfence_system to work but prevents host memory from being cached on GPU which may have performance impact.");
 
 
-    READ_ENV_I(release, HCC_OPT_FLUSH, 0, "Note this flag also impacts HCC.  When set, use agent-scope flush rather than system-scope flush when possible.");
+    READ_ENV_I(release, HCC_OPT_FLUSH, 0, "When set, use agent-scope fence operations rather than system-scope fence operationsflush when possible. This flag controls both HIP and HCC behavior.");
+    READ_ENV_I(release, HIP_EVENT_SYS_RELEASE, 0, "If set, event are created with hipEventReleaseToSystem by default.  If 0, events are created with hipEventReleaseToDevice by default.  The defaults can be overridden by specifying hipEventReleaseToSystem or hipEventReleaseToDevice flag when creating the event.");
 
     // Some flags have both compile-time and runtime flags - generate a warning if user enables the runtime flag but the compile-time flag is disabled.
     if (HIP_DB && !COMPILE_HIP_DB) {

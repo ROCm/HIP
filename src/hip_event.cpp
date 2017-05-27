@@ -95,8 +95,15 @@ hipError_t ihipEventCreate(hipEvent_t* event, unsigned flags)
     unsigned supportedFlags =   hipEventDefault 
                               | hipEventBlockingSync 
                               | hipEventDisableTiming 
-                              | hipEventDisableSystemRelease;
-    if ((flags & ~supportedFlags) == 0) {
+                              | hipEventReleaseToDevice 
+                              | hipEventReleaseToSystem 
+                              ;
+    const unsigned releaseFlags = (hipEventReleaseToDevice | hipEventReleaseToSystem);
+
+    const bool illegalFlags = (flags & ~supportedFlags) ||            // can't set any unsupported flags.
+                              (flags & releaseFlags) == releaseFlags; // can't set both 
+
+    if (!illegalFlags) {
         ihipEvent_t *eh = new ihipEvent_t(flags);
 
         *event = eh;

@@ -49,9 +49,12 @@ __global__ void Set(int *Ad, int val){
 
 std::vector<std::string> syncMsg = {"event", "stream", "device"};
 
-void CheckHostPointer(int numElements, int *ptr, int syncMethod, std::string msg)
+void CheckHostPointer(int numElements, int *ptr, unsigned eventFlags, int syncMethod, std::string msg)
 {
     std::cerr << "test: CheckHostPointer " << msg 
+              << " eventFlags = " << std::hex << eventFlags 
+              << ((eventFlags & hipEventReleaseToDevice) ?  " hipEventReleaseToDevice" : "")  
+              << ((eventFlags & hipEventReleaseToSystem) ? " hipEventReleaseToSystem" : "") 
               << " ptr=" << ptr 
               << " syncMethod=" << syncMsg[syncMethod] << "\n";
 
@@ -60,7 +63,7 @@ void CheckHostPointer(int numElements, int *ptr, int syncMethod, std::string msg
 
     // Init:
     HIPCHECK(hipStreamCreate(&s));
-    HIPCHECK(hipEventCreateWithFlags(&e, hipEventDisableSystemRelease));
+    HIPCHECK(hipEventCreateWithFlags(&e, eventFlags))
     dim3 dimBlock(64,1,1);
     dim3 dimGrid(numElements/dimBlock.x,1,1);
 
@@ -161,18 +164,24 @@ int main(){
             int *A = nullptr;
             HIPCHECK(hipHostMalloc((void**)&A, sizeBytes, hipHostMallocNonCoherent));
             const char *ptrType = "non-coherent"; // TODO
-            //CheckHostPointer(numElements, A, SYNC_DEVICE,   ptrType);
-            //CheckHostPointer(numElements, A, SYNC_STREAM,  ptrType);
-            CheckHostPointer(numElements, A, SYNC_EVENT,   ptrType);
+            CheckHostPointer(numElements, A, hipEventReleaseToSystem, SYNC_DEVICE,   ptrType);
+            CheckHostPointer(numElements, A, hipEventReleaseToSystem, SYNC_STREAM,  ptrType);
+            CheckHostPointer(numElements, A, hipEventReleaseToSystem, SYNC_EVENT,   ptrType);
+
+            // agent-scope releases don't provide host visibility, don't use them here:
         }
 
-        if (0) { // TODO, remove me
+        if (1) { 
             int *A = nullptr;
             HIPCHECK(hipHostMalloc((void**)&A, sizeBytes, hipHostMallocCoherent));
             const char *ptrType = "coherent";
-            CheckHostPointer(numElements, A, SYNC_DEVICE,   ptrType);
-            CheckHostPointer(numElements, A, SYNC_STREAM,  ptrType);
-            CheckHostPointer(numElements, A, SYNC_EVENT,   ptrType);
+            CheckHostPointer(numElements, A, hipEventReleaseToDevice, SYNC_DEVICE,   ptrType);
+            CheckHostPointer(numElements, A, hipEventReleaseToDevice, SYNC_STREAM,  ptrType);
+            CheckHostPointer(numElements, A, hipEventReleaseToDevice, SYNC_EVENT,   ptrType);
+
+            CheckHostPointer(numElements, A, hipEventReleaseToSystem, SYNC_DEVICE,   ptrType);
+            CheckHostPointer(numElements, A, hipEventReleaseToSystem, SYNC_STREAM,  ptrType);
+            CheckHostPointer(numElements, A, hipEventReleaseToSystem, SYNC_EVENT,   ptrType);
         }
 
 
