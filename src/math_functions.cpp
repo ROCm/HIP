@@ -937,10 +937,10 @@ __host__ void sincospi(double x, double *sptr, double *cptr)
     *cptr = std::cos(HIP_PI*x);
 }
 
-__host__ float normcdfinvf(float x)
-{
-    return std::sqrt(2) * erfinvf(2*x-1);
-}
+//__host__ float normcdfinvf(float x)
+//{
+//    return std::sqrt(2) * erfinvf(2*x-1);
+//}
 
 //__host__ double normcdfinv(double x)
 //{
