@@ -205,6 +205,7 @@ struct cuda2hipMap {
     cuda2hipRename["CUDA_ERROR_NOT_MAPPED_AS_ARRAY"]            = {"hipErrorNotMappedAsArray", CONV_ERR, API_DRIVER};                               // 212
     cuda2hipRename["CUDA_ERROR_NOT_MAPPED_AS_POINTER"]          = {"hipErrorNotMappedAsPointer", CONV_ERR, API_DRIVER};                             // 213
     cuda2hipRename["CUDA_ERROR_CONTEXT_ALREADY_IN_USE"]         = {"hipErrorContextAlreadyInUse", CONV_ERR, API_DRIVER};                            // 216
+    cuda2hipRename["CUDA_ERROR_NVLINK_UNCORRECTABLE"]           = {"hipErrorNvlinkUncorrectable", CONV_ERR, API_DRIVER};                            // 220 [CUDA 8.0.44]
     cuda2hipRename["CUDA_ERROR_INVALID_SOURCE"]                 = {"hipErrorInvalidSource", CONV_ERR, API_DRIVER};                                  // 300
     cuda2hipRename["CUDA_ERROR_FILE_NOT_FOUND"]                 = {"hipErrorFileNotFound", CONV_ERR, API_DRIVER};                                   // 301
     cuda2hipRename["CUDA_ERROR_NOT_FOUND"]                      = {"hipErrorNotFound", CONV_ERR, API_DRIVER};                                       // 500
@@ -695,6 +696,10 @@ struct cuda2hipMap {
     cuda2hipRename["CU_JIT_LOG_VERBOSE"]                           = {"hipJitOptionLogVerbose", CONV_JIT, API_DRIVER};
     cuda2hipRename["CU_JIT_GENERATE_LINE_INFO"]                    = {"hipJitOptionGenerateLineInfo", CONV_JIT, API_DRIVER};
     cuda2hipRename["CU_JIT_CACHE_MODE"]                            = {"hipJitOptionCacheMode", CONV_JIT, API_DRIVER};
+    // unsupported yet by HIP [CUDA 8.0.44]
+    cuda2hipRename["CU_JIT_NEW_SM3X_OPT"]                          = {"hipJitOptionSm3xOpt", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_FAST_COMPILE"]                          = {"hipJitOptionFastCompile", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+
     cuda2hipRename["CU_JIT_NUM_OPTIONS"]                           = {"hipJitOptionNumOptions", CONV_JIT, API_DRIVER};
     // enum CUjit_target/CUjit_target_enum
     cuda2hipRename["CUjit_target"]                                 = {"hipJitTarget", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};  // API_Runtime ANALOGUE (no)
@@ -711,6 +716,11 @@ struct cuda2hipMap {
     cuda2hipRename["CU_TARGET_COMPUTE_37"]                         = {"hipJitTargetCompute37", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["CU_TARGET_COMPUTE_50"]                         = {"hipJitTargetCompute50", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["CU_TARGET_COMPUTE_52"]                         = {"hipJitTargetCompute52", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    // unsupported yet by HIP [CUDA 8.0.44]
+    cuda2hipRename["CU_TARGET_COMPUTE_53"]                         = {"hipJitTargetCompute53", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_TARGET_COMPUTE_60"]                         = {"hipJitTargetCompute60", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_TARGET_COMPUTE_61"]                         = {"hipJitTargetCompute61", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_TARGET_COMPUTE_62"]                         = {"hipJitTargetCompute62", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
     // enum CUjitInputType/CUjitInputType_enum
     cuda2hipRename["CUjitInputType"]                               = {"hipJitInputType", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};  // API_Runtime ANALOGUE (no)
     cuda2hipRename["CUjitInputType_enum"]                          = {"hipJitInputType", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
@@ -830,6 +840,26 @@ struct cuda2hipMap {
     // cuda2hipRename["CUstream_flags_enum"]                       = {"hipStreamFlags", CONV_STREAM, API_DRIVER};
     cuda2hipRename["CU_STREAM_DEFAULT"]                            = {"hipStreamDefault", CONV_STREAM, API_DRIVER};
     cuda2hipRename["CU_STREAM_NON_BLOCKING"]                       = {"hipStreamNonBlocking", CONV_STREAM, API_DRIVER};
+
+    // unsupported yet by HIP [CUDA 8.0.44]
+    // Flags for ::cuStreamWaitValue32
+    cuda2hipRename["CUstreamWaitValue_flags"]                      = {"hipStreamWaitValueFlags", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+    // cuda2hipRename["CUstreamWaitValue_flags_enum"]              = {"hipStreamWaitValueFlags", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_STREAM_WAIT_VALUE_GEQ"]                     = {"hipStreamWaitValueGeq", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};                // 0x0
+    cuda2hipRename["CU_STREAM_WAIT_VALUE_EQ"]                      = {"hipStreamWaitValueEq", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};                 // 0x1
+    cuda2hipRename["CU_STREAM_WAIT_VALUE_AND"]                     = {"hipStreamWaitValueAnd", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};                // 0x2
+    cuda2hipRename["CU_STREAM_WAIT_VALUE_FLUSH"]                   = {"hipStreamWaitValueFlush", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};              // 1<<30
+    // Flags for ::cuStreamWriteValue32
+    cuda2hipRename["CUstreamWriteValue_flags"]                     = {"hipStreamWriteValueFlags", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+    // cuda2hipRename["CUstreamWriteValue_flags"]                  = {"hipStreamWriteValueFlags", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_STREAM_WRITE_VALUE_DEFAULT"]                = {"hipStreamWriteValueDefault", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};           // 0x0
+    cuda2hipRename["CU_STREAM_WRITE_VALUE_NO_MEMORY_BARRIER"]      = {"hipStreamWriteValueNoMemoryBarrier", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};   // 0x1
+    // Flags for ::cuStreamBatchMemOp
+    cuda2hipRename["CUstreamBatchMemOpType"]                       = {"hipStreamBatchMemOpType", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+    // cuda2hipRename["CUstreamBatchMemOpType_enum"]               = {"hipStreamBatchMemOpType", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_STREAM_MEM_OP_WAIT_VALUE_32"]               = {"hipStreamBatchMemOpWaitValue32", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};       // 1
+    cuda2hipRename["CU_STREAM_MEM_OP_WRITE_VALUE_32"]              = {"hipStreamBatchMemOpWriteValue32", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};      // 2
+    cuda2hipRename["CU_STREAM_MEM_OP_FLUSH_REMOTE_WRITES"]         = {"hipStreamBatchMemOpFlushRemoteWrites", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}; // 3
 
     // Init
     cuda2hipRename["cuInit"]                                       = {"hipInit", CONV_DRIVER, API_DRIVER};
