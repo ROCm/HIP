@@ -718,8 +718,8 @@ struct cuda2hipMap {
     cuda2hipRename["CU_JIT_GENERATE_LINE_INFO"]                    = {"hipJitOptionGenerateLineInfo", CONV_JIT, API_DRIVER};
     cuda2hipRename["CU_JIT_CACHE_MODE"]                            = {"hipJitOptionCacheMode", CONV_JIT, API_DRIVER};
     // unsupported yet by HIP [CUDA 8.0.44]
-    cuda2hipRename["CU_JIT_NEW_SM3X_OPT"]                          = {"hipJitOptionSm3xOpt", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["CU_JIT_FAST_COMPILE"]                          = {"hipJitOptionFastCompile", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["CU_JIT_NEW_SM3X_OPT"]                          = {"hipJitOptionSm3xOpt", CONV_JIT, API_DRIVER};
+    cuda2hipRename["CU_JIT_FAST_COMPILE"]                          = {"hipJitOptionFastCompile", CONV_JIT, API_DRIVER};
 
     cuda2hipRename["CU_JIT_NUM_OPTIONS"]                           = {"hipJitOptionNumOptions", CONV_JIT, API_DRIVER};
     // enum CUjit_target/CUjit_target_enum

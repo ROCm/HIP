@@ -94,6 +94,8 @@ hipMemcpyHostToHost
 #define hipJitOptionLogVerbose              CU_JIT_LOG_VERBOSE
 #define hipJitOptionGenerateLineInfo        CU_JIT_GENERATE_LINE_INFO
 #define hipJitOptionCacheMode               CU_JIT_CACHE_MODE
+#define hipJitOptionSm3xOpt                 CU_JIT_NEW_SM3X_OPT
+#define hipJitOptionFastCompile             CU_JIT_FAST_COMPILE
 #define hipJitOptionNumOptions              CU_JIT_NUM_OPTIONS
 
 typedef cudaEvent_t hipEvent_t;
