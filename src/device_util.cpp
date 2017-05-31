@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include "device_util.h"
 #include "hip/hcc_detail/device_functions.h"
 #include "hip/hip_runtime.h"
+#include <atomic>
 
 //=================================================================================================
 /*
@@ -923,24 +924,45 @@ __device__  unsigned long long int atomicMax(unsigned long long int* address,
 }
 
 //atomicCAS()
+template<typename T>
+__device__ T atomicCAS_impl(T* address, T compare, T val)
+{
+  // the implementation assumes the atomic is lock-free and 
+  // has the same size as the non-atmoic equivalent type
+  static_assert(sizeof(T) == sizeof(std::atomic<T>)
+                , "size mismatch between atomic and non-atomic types");
+
+  union {
+    T*              address;
+    std::atomic<T>* atomic_address;
+  } u;
+  u.address = address;
+
+  T expected = compare;
+
+  // hcc should generate a system scope atomic CAS 
+  std::atomic_compare_exchange_weak_explicit(u.atomic_address
+                                            , &expected, val
+                                            , std::memory_order_acq_rel
+                                            , std::memory_order_relaxed);
+  return expected;
+}
+
 __device__  int atomicCAS(int* address, int compare, int val)
 {
-	hc::atomic_compare_exchange(address,&compare,val);
-	return *address;
+  return atomicCAS_impl(address, compare, val);
 }
 __device__  unsigned int atomicCAS(unsigned int* address,
                        unsigned int compare,
                        unsigned int val)
 {
-	hc::atomic_compare_exchange(address,&compare,val);
-	return *address;
+  return atomicCAS_impl(address, compare, val);
 }
 __device__  unsigned long long int atomicCAS(unsigned long long int* address,
                                  unsigned long long int compare,
                                  unsigned long long int val)
 {
-	hc::atomic_compare_exchange((uint64_t*)address,(uint64_t*)&compare,(uint64_t)val);
-	return *address;
+  return atomicCAS_impl(address, compare, val);
 }
 
 //atomicAnd()
