@@ -538,6 +538,7 @@ public:
     const ihipDevice_t *     getDevice() const;
     ihipCtx_t *              getCtx() const;
 
+    // Before calling this function, stream must be resolved from "0" to the actual stream:
     bool isDefaultStream() const { return _id == 0; };
 
 public:
@@ -602,7 +603,7 @@ enum ihipEventType_t {
 class ihipEvent_t {
 public:
     ihipEvent_t(unsigned flags);
-    void attachToCompletionFuture(const hc::completion_future *cf, ihipEventType_t eventType);
+    void attachToCompletionFuture(const hc::completion_future *cf, hipStream_t stream, ihipEventType_t eventType);
     void setTimestamp();
     uint64_t timestamp() const { return _timestamp; } ;
     ihipEventType_t type() const { return _type; };
