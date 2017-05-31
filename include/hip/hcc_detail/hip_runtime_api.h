@@ -158,6 +158,8 @@ typedef enum hipJitOption {
   hipJitOptionLogVerbose,
   hipJitOptionGenerateLineInfo,
   hipJitOptionCacheMode,
+  hipJitOptionSm3xOpt,
+  hipJitOptionFastCompile,
   hipJitOptionNumOptions
 } hipJitOption;
 
