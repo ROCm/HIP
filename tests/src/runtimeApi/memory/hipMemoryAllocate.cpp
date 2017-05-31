@@ -36,7 +36,6 @@ void multiGpuHostAlloc(int allocDevice)
 
     int numDevices;
     HIPCHECK(hipGetDeviceCount(&numDevices));
-    assert(numDevices > 1);
 
     printf ("info: trying multiGpuHostAlloc with allocDevice=%d numDevices=%d\n", allocDevice, numDevices);
 
@@ -121,10 +120,12 @@ int main(int argc, char *argv[])
     {
         int numDevices;
         HIPCHECK(hipGetDeviceCount(&numDevices));
-        assert(numDevices > 1);
 
         multiGpuHostAlloc(0);
-        multiGpuHostAlloc(1);
+        if (numDevices > 1)
+        {
+            multiGpuHostAlloc(1);
+        }
     }
 
     passed();
