@@ -42,11 +42,13 @@ ihipEvent_t::ihipEvent_t(unsigned flags)
 
 
 // Attach to an existing completion future:
-void ihipEvent_t::attachToCompletionFuture(const hc::completion_future *cf, ihipEventType_t eventType)
+void ihipEvent_t::attachToCompletionFuture(const hc::completion_future *cf, 
+                                           hipStream_t stream, ihipEventType_t eventType)
 {
     _state  = hipEventStatusRecording;
     _marker = *cf;
     _type   = eventType;
+    _stream = stream;
 }
 
 

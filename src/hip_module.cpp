@@ -455,10 +455,10 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
 
 
         if (startEvent) {
-            startEvent->attachToCompletionFuture(&cf, hipEventTypeStartCommand);
+            startEvent->attachToCompletionFuture(&cf, hStream, hipEventTypeStartCommand);
         }
         if (stopEvent) {
-            stopEvent->attachToCompletionFuture (&cf, hipEventTypeStopCommand);
+            stopEvent->attachToCompletionFuture (&cf, hStream, hipEventTypeStopCommand);
         }
 
 
