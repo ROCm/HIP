@@ -99,7 +99,7 @@ __device__ void double_precision_math_functions()
     normcdf(0.0);
     normcdfinv(1.0);
     pow(1.0, 0.0);
-    rcbrt(1.0);
+    //rcbrt(1.0);
     remainder(2.0, 1.0);
 //    remquo(1.0, 2.0, &iX);
     rhypot(0.0, 1.0);
@@ -109,8 +109,8 @@ __device__ void double_precision_math_functions()
     rnorm4d(0.0, 0.0, 0.0, 1.0);
     round(0.0);
     rsqrt(1.0);
-    scalbln(0.0, 1);
-    scalbn(0.0, 1);
+    //scalbln(0.0, 1);
+    //scalbn(0.0, 1);
     signbit(1.0);
     sin(0.0);
     sincos(0.0, &fX, &fY);
