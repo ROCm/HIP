@@ -937,6 +937,8 @@ struct cuda2hipMap {
     cuda2hipRename["CU_DEVICE_P2P_ATTRIBUTE_ACCESS_SUPPORTED"]         = {"hipDeviceP2PAttributeAccessSupported", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};       // 0x02 // API_Runtime ANALOGUE (cudaDevP2PAttrAccessSupported = 0x02)
     cuda2hipRename["CU_DEVICE_P2P_ATTRIBUTE_NATIVE_ATOMIC_SUPPORTED"]  = {"hipDeviceP2PAttributeNativeAtomicSupported", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED}; // 0x03 // API_Runtime ANALOGUE (cudaDevP2PAttrNativeAtomicSupported = 0x03)
 
+    cuda2hipRename["cuDeviceGetP2PAttribute"]                          = {"hipDeviceGetP2PAttribute", CONV_DEV, API_DRIVER, HIP_UNSUPPORTED};                           // API_Runtime ANALOGUE (cudaDeviceGetP2PAttribute)
+
     // Events
     // pointer to CUevent_st
     cuda2hipRename["CUevent"]                                   = {"hipEvent_t", CONV_TYPE, API_DRIVER};
@@ -973,6 +975,9 @@ struct cuda2hipMap {
     // Streams
     // unsupported yet by HIP
     cuda2hipRename["cuStreamAddCallback"]                       = {"hipStreamAddCallback", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cuStreamWaitValue32"]                       = {"hipStreamWaitValue32", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}; // [CUDA 8.0.44] // no API_Runtime ANALOGUE
+    cuda2hipRename["cuStreamWriteValue32"]                      = {"hipStreamWriteValue32", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}; // [CUDA 8.0.44] // no API_Runtime ANALOGUE
+    cuda2hipRename["cuStreamBatchMemOp"]                        = {"hipStreamBatchMemOp", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}; // [CUDA 8.0.44] // no API_Runtime ANALOGUE
 
     cuda2hipRename["cuStreamCreate"]                            = {"hipStreamCreate", CONV_STREAM, API_DRIVER};
     cuda2hipRename["cuStreamDestroy_v2"]                        = {"hipStreamDestroy", CONV_STREAM, API_DRIVER};
@@ -1014,6 +1019,11 @@ struct cuda2hipMap {
     cuda2hipRename["cuMemHostRegister_v2"]                      = {"hipHostRegister", CONV_MEM, API_DRIVER};
     cuda2hipRename["cuMemHostUnregister"]                       = {"hipHostUnregister", CONV_MEM, API_DRIVER};
 
+    cuda2hipRename["cuMemPrefetchAsync"]                        = {"hipMemPrefetchAsync___", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};   // [CUDA 8.0.44] // no API_Runtime ANALOGUE (cudaMemPrefetchAsync has different signature)
+    cuda2hipRename["cuMemAdvise"]                               = {"hipMemAdvise", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};             // [CUDA 8.0.44] // API_Runtime ANALOGUE (cudaMemAdvise)
+    cuda2hipRename["cuMemRangeGetAttribute"]                    = {"hipMemRangeGetAttribute", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};  // [CUDA 8.0.44] // API_Runtime ANALOGUE (cudaMemRangeGetAttribute)
+    cuda2hipRename["cuMemRangeGetAttributes"]                   = {"hipMemRangeGetAttributes", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}; // [CUDA 8.0.44] // API_Runtime ANALOGUE (cudaMemRangeGetAttributes)
+
     // Texture Reference Mngmnt
     // Texture reference filtering modes
     cuda2hipRename["CUfilter_mode"]                             = {"hipTextureFilterMode", CONV_TEX, API_DRIVER};                         // API_Runtime ANALOGUE (cudaTextureFilterMode)
@@ -1021,6 +1031,9 @@ struct cuda2hipMap {
     // cuda2hipRename["CUfilter_mode"]                          = {"CUfilter_mode_enum", CONV_TEX, API_DRIVER};                           // API_Runtime ANALOGUE (cudaTextureFilterMode)
     cuda2hipRename["CU_TR_FILTER_MODE_POINT"]                   = {"hipFilterModePoint", CONV_TEX, API_DRIVER};                      // 0 // API_Runtime ANALOGUE (cudaFilterModePoint = 0)
     cuda2hipRename["CU_TR_FILTER_MODE_LINEAR"]                  = {"hipFilterModeLinear", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED};    // 1 // API_Runtime ANALOGUE (cudaFilterModeLinear = 1)
+
+    cuda2hipRename["cuTexRefSetBorderColor"]                    = {"hipTexRefSetBorderColor", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED}; // [CUDA 8.0.44] // no API_Runtime ANALOGUE
+    cuda2hipRename["cuTexRefGetBorderColor"]                    = {"hipTexRefGetBorderColor", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED}; // [CUDA 8.0.44] // no API_Runtime ANALOGUE
 
     // Profiler
     // unsupported yet by HIP
@@ -1111,6 +1124,25 @@ struct cuda2hipMap {
     cuda2hipRename["cudaMemcpyFromArrayAsync"]    = {"hipMemcpyFromArrayAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaMemcpyFromSymbol"]        = {"hipMemcpyFromSymbol", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMemcpyFromSymbolAsync"]   = {"hipMemcpyFromSymbolAsync", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemAdvise"]               = {"hipMemAdvise", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}; // [CUDA 8.0.44]
+    cuda2hipRename["cudaMemRangeGetAttribute"]    = {"hipMemRangeGetAttribute", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}; // [CUDA 8.0.44]
+    cuda2hipRename["cudaMemRangeGetAttributes"]   = {"hipMemRangeGetAttributes", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}; // [CUDA 8.0.44]
+
+    // unsupported yet by HIP [CUDA 8.0.44]
+    // Memory advise values
+    cuda2hipRename["cudaMemoryAdvise"]                                            = {"hipMemAdvise", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};                                  // API_Driver ANALOGUE (CUmem_advise)
+    cuda2hipRename["cudaMemAdviseSetReadMostly"]                                  = {"hipMemAdviseSetReadMostly", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};                // 1 // API_Driver ANALOGUE (CU_MEM_ADVISE_SET_READ_MOSTLY = 1)
+    cuda2hipRename["cudaMemAdviseUnsetReadMostly"]                                = {"hipMemAdviseUnsetReadMostly", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};              // 2 // API_Driver ANALOGUE (CU_MEM_ADVISE_UNSET_READ_MOSTLY = 2)
+    cuda2hipRename["cudaMemAdviseSetPreferredLocation"]                           = {"hipMemAdviseSetPreferredLocation", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};         // 3 // API_Driver ANALOGUE (CU_MEM_ADVISE_SET_PREFERRED_LOCATION = 3)
+    cuda2hipRename["cudaMemAdviseUnsetPreferredLocation"]                         = {"hipMemAdviseUnsetPreferredLocation", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};       // 4 // API_Driver ANALOGUE (CU_MEM_ADVISE_UNSET_PREFERRED_LOCATION = 4)
+    cuda2hipRename["cudaMemAdviseSetAccessedBy"]                                  = {"hipMemAdviseSetAccessedBy", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};                // 5 // API_Driver ANALOGUE (CU_MEM_ADVISE_SET_ACCESSED_BY = 5)
+    cuda2hipRename["cudaMemAdviseUnsetAccessedBy"]                                = {"hipMemAdviseUnsetAccessedBy", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};              // 6 // API_Driver ANALOGUE (CU_MEM_ADVISE_UNSET_ACCESSED_BY = 6)
+    // CUmem_range_attribute
+    cuda2hipRename["cudaMemRangeAttribute"]                                       = {"hipMemRangeAttribute", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};                          // API_Driver ANALOGUE (CUmem_range_attribute)
+    cuda2hipRename["cudaMemRangeAttributeReadMostly"]                             = {"hipMemRangeAttributeReadMostly", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};           // 1 // API_Driver ANALOGUE (CU_MEM_RANGE_ATTRIBUTE_READ_MOSTLY = 1)
+    cuda2hipRename["cudaMemRangeAttributePreferredLocation"]                      = {"hipMemRangeAttributePreferredLocation", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};    // 2 // API_Driver ANALOGUE (CU_MEM_RANGE_ATTRIBUTE_PREFERRED_LOCATION = 2)
+    cuda2hipRename["cudaMemRangeAttributeAccessedBy"]                             = {"hipMemRangeAttributeAccessedBy", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};           // 3 // API_Driver ANALOGUE (CU_MEM_RANGE_ATTRIBUTE_ACCESSED_BY = 3)
+    cuda2hipRename["cudaMemRangeAttributeLastPrefetchLocation"]                   = {"hipMemRangeAttributeLastPrefetchLocation", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}; // 4 // API_Driver ANALOGUE (CU_MEM_RANGE_ATTRIBUTE_LAST_PREFETCH_LOCATION = 4)
 
     // memcpy kind
     cuda2hipRename["cudaMemcpyKind"]              = {"hipMemcpyKind", CONV_MEM, API_RUNTIME};
@@ -1137,6 +1169,7 @@ struct cuda2hipMap {
     cuda2hipRename["cudaGetMipmappedArrayLevel"]  = {"hipGetMipmappedArrayLevel", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaGetSymbolAddress"]        = {"hipGetSymbolAddress", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaGetSymbolSize"]           = {"hipGetSymbolSize", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaMemPrefetchAsync"]        = {"hipMemPrefetchAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}; // [CUDA 8.0.44] // API_Driver ANALOGUE (cuMemPrefetchAsync)
 
     // malloc
     cuda2hipRename["cudaMalloc"]                  = {"hipMalloc", CONV_MEM, API_RUNTIME};
@@ -1379,10 +1412,12 @@ struct cuda2hipMap {
 
     // unsupported yet by HIP [CUDA 8.0.44]
     // P2P Attributes
-    cuda2hipRename["cudaDeviceP2PAttr"]                    = {"hipDeviceP2PAttribute", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                              // API_Runtime ANALOGUE (CUdevice_P2PAttribute)
-    cuda2hipRename["cudaDevP2PAttrPerformanceRank"]        = {"hipDeviceP2PAttributePerformanceRank", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};       // 0x01 // API_Runtime ANALOGUE (CU_DEVICE_P2P_ATTRIBUTE_PERFORMANCE_RANK = 0x01)
-    cuda2hipRename["cudaDevP2PAttrAccessSupported"]        = {"hipDeviceP2PAttributeAccessSupported", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};       // 0x02 // API_Runtime ANALOGUE (CU_DEVICE_P2P_ATTRIBUTE_ACCESS_SUPPORTED = 0x02)
-    cuda2hipRename["cudaDevP2PAttrNativeAtomicSupported"]  = {"hipDeviceP2PAttributeNativeAtomicSupported", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED}; // 0x03 // API_Runtime ANALOGUE (CU_DEVICE_P2P_ATTRIBUTE_NATIVE_ATOMIC_SUPPORTED = 0x03)
+    cuda2hipRename["cudaDeviceP2PAttr"]                    = {"hipDeviceP2PAttribute", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                              // API_DRIVER ANALOGUE (CUdevice_P2PAttribute)
+    cuda2hipRename["cudaDevP2PAttrPerformanceRank"]        = {"hipDeviceP2PAttributePerformanceRank", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};       // 0x01 // API_DRIVER ANALOGUE (CU_DEVICE_P2P_ATTRIBUTE_PERFORMANCE_RANK = 0x01)
+    cuda2hipRename["cudaDevP2PAttrAccessSupported"]        = {"hipDeviceP2PAttributeAccessSupported", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};       // 0x02 // API_DRIVER ANALOGUE (CU_DEVICE_P2P_ATTRIBUTE_ACCESS_SUPPORTED = 0x02)
+    cuda2hipRename["cudaDevP2PAttrNativeAtomicSupported"]  = {"hipDeviceP2PAttributeNativeAtomicSupported", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED}; // 0x03 // API_DRIVER ANALOGUE (CU_DEVICE_P2P_ATTRIBUTE_NATIVE_ATOMIC_SUPPORTED = 0x03)
+    // [CUDA 8.0.44]
+    cuda2hipRename["cudaDeviceGetP2PAttribute"]            = {"hipDeviceGetP2PAttribute", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                              // API_DRIVER ANALOGUE (cuDeviceGetP2PAttribute)
 
     // Compute mode
     cuda2hipRename["cudaComputeMode"]                  = {"hipComputeMode", CONV_DEV, API_RUNTIME, HIP_UNSUPPORTED};                      // API_DRIVER ANALOGUE (CUcomputemode)
@@ -1590,22 +1625,6 @@ struct cuda2hipMap {
     cuda2hipRename["cudaAddressModeClamp"]                        = {"hipAddressModeClamp", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaAddressModeMirror"]                       = {"hipAddressModeMirror", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaAddressModeBorder"]                       = {"hipAddressModeBorder", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-
-    // unsupported yet by HIP [CUDA 8.0.44]
-    // Memory advise values
-    cuda2hipRename["cudaMemoryAdvise"]                                            = {"hipMemAdvise", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};                                  // API_Driver ANALOGUE (CUmem_advise)
-    cuda2hipRename["cudaMemAdviseSetReadMostly"]                                  = {"hipMemAdviseSetReadMostly", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};                // 1 // API_Driver ANALOGUE (CU_MEM_ADVISE_SET_READ_MOSTLY = 1)
-    cuda2hipRename["cudaMemAdviseUnsetReadMostly"]                                = {"hipMemAdviseUnsetReadMostly", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};              // 2 // API_Driver ANALOGUE (CU_MEM_ADVISE_UNSET_READ_MOSTLY = 2)
-    cuda2hipRename["cudaMemAdviseSetPreferredLocation"]                           = {"hipMemAdviseSetPreferredLocation", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};         // 3 // API_Driver ANALOGUE (CU_MEM_ADVISE_SET_PREFERRED_LOCATION = 3)
-    cuda2hipRename["cudaMemAdviseUnsetPreferredLocation"]                         = {"hipMemAdviseUnsetPreferredLocation", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};       // 4 // API_Driver ANALOGUE (CU_MEM_ADVISE_UNSET_PREFERRED_LOCATION = 4)
-    cuda2hipRename["cudaMemAdviseSetAccessedBy"]                                  = {"hipMemAdviseSetAccessedBy", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};                // 5 // API_Driver ANALOGUE (CU_MEM_ADVISE_SET_ACCESSED_BY = 5)
-    cuda2hipRename["cudaMemAdviseUnsetAccessedBy"]                                = {"hipMemAdviseUnsetAccessedBy", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};              // 6 // API_Driver ANALOGUE (CU_MEM_ADVISE_UNSET_ACCESSED_BY = 6)
-    // CUmem_range_attribute
-    cuda2hipRename["cudaMemRangeAttribute"]                                       = {"hipMemRangeAttribute", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};                          // API_Driver ANALOGUE (CUmem_range_attribute)
-    cuda2hipRename["cudaMemRangeAttributeReadMostly"]                             = {"hipMemRangeAttributeReadMostly", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};           // 1 // API_Driver ANALOGUE (CU_MEM_RANGE_ATTRIBUTE_READ_MOSTLY = 1)
-    cuda2hipRename["cudaMemRangeAttributePreferredLocation"]                      = {"hipMemRangeAttributePreferredLocation", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};    // 2 // API_Driver ANALOGUE (CU_MEM_RANGE_ATTRIBUTE_PREFERRED_LOCATION = 2)
-    cuda2hipRename["cudaMemRangeAttributeAccessedBy"]                             = {"hipMemRangeAttributeAccessedBy", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};           // 3 // API_Driver ANALOGUE (CU_MEM_RANGE_ATTRIBUTE_ACCESSED_BY = 3)
-    cuda2hipRename["cudaMemRangeAttributeLastPrefetchLocation"]                   = {"hipMemRangeAttributeLastPrefetchLocation", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}; // 4 // API_Driver ANALOGUE (CU_MEM_RANGE_ATTRIBUTE_LAST_PREFETCH_LOCATION = 4)
 
     // functions
     cuda2hipRename["cudaCreateTextureObject"]                     = {"hipCreateTextureObject", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
