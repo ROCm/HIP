@@ -28,6 +28,7 @@ THE SOFTWARE.
 typedef __fp16 __half;
 typedef __fp16 __half1 __attribute__((ext_vector_type(1)));
 typedef __fp16 __half2 __attribute__((ext_vector_type(2)));
+typedef __fp16 half;
 
 /*
 Half Arithmetic Functions
