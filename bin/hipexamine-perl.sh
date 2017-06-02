@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#usage : hipexamine.sh DIRNAME [hipify-perl options]
+#usage : hipexamine-perl.sh DIRNAME [hipify-perl options]
 
 # Generate HIP stats (LOC, CUDA->API conversions, missing functionality) for all the code files
 # in the specified directory.
