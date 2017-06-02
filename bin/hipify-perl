@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 ##
-#usage hipify [OPTIONS] INPUT_FILE
+#usage hipify-perl [OPTIONS] INPUT_FILE
 use Getopt::Long;
 
 my $warn_whitelist ="";
@@ -201,7 +201,7 @@ while (@ARGV) {
     my %ft;
     clearStats(\%ft, \@statNames);
     my $countIncludes = 0;
-    my $countKeywords = 0; # keywords like __global__, __shared__ - not converted by hipify but counted here.
+    my $countKeywords = 0; # keywords like __global__, __shared__ - not converted by hipify-perl, but counted here.
     my $warnings = 0;
     my $warningsCublas = 0;
     my $warningsCurand = 0;
