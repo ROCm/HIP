@@ -84,6 +84,8 @@ int HIP_DENY_PEER_ACCESS = 0;
 // Force async copies to actually use the synchronous copy interface.
 int HIP_FORCE_SYNC_COPY = 0;
 
+// TODO - set these to 0 and 1
+int HIP_EVENT_SYS_RELEASE=1;
 int HIP_COHERENT_HOST_ALLOC = 0;
 
 // TODO - set to 0 once we resolve stability.
@@ -94,9 +96,9 @@ int HIP_SYNC_HOST_ALLOC = 1;
 int HIP_SYNC_NULL_STREAM = 1;
 
 // HIP needs to change some behavior based on HCC_OPT_FLUSH :
+// TODO - set this to 1
 int HCC_OPT_FLUSH = 0;
 
-int HIP_EVENT_SYS_RELEASE=0;
 
 
 

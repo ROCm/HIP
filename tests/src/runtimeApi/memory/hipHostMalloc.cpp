@@ -52,6 +52,8 @@ std::vector<std::string> syncMsg = {"event", "stream", "device"};
 void CheckHostPointer(int numElements, int *ptr, unsigned eventFlags, int syncMethod, std::string msg)
 {
     std::cerr << "test: CheckHostPointer " << msg 
+              //<< " HIP_COHERENT_HOST_ALLOC=" << HIP_COHERENT_HOST_ALLOC
+              //<< " HIP_EVENT_SYS_RELEASE=" <<   HIP_EVENT_SYS_RELEASE
               << " eventFlags = " << std::hex << eventFlags 
               << ((eventFlags & hipEventReleaseToDevice) ?  " hipEventReleaseToDevice" : "")  
               << ((eventFlags & hipEventReleaseToSystem) ? " hipEventReleaseToSystem" : "") 
@@ -182,6 +184,21 @@ int main(){
             CheckHostPointer(numElements, A, hipEventReleaseToSystem, SYNC_DEVICE,   ptrType);
             CheckHostPointer(numElements, A, hipEventReleaseToSystem, SYNC_STREAM,  ptrType);
             CheckHostPointer(numElements, A, hipEventReleaseToSystem, SYNC_EVENT,   ptrType);
+        }
+
+
+        // Check defaults:
+        if (1) { 
+            int *A = nullptr;
+            HIPCHECK(hipHostMalloc((void**)&A, sizeBytes));
+            const char *ptrType = "default";
+            CheckHostPointer(numElements, A, 0, SYNC_DEVICE,   ptrType);
+            CheckHostPointer(numElements, A, 0, SYNC_STREAM,  ptrType);
+            CheckHostPointer(numElements, A, 0, SYNC_EVENT,   ptrType);
+            
+            CheckHostPointer(numElements, A, 0, SYNC_DEVICE,   ptrType);
+            CheckHostPointer(numElements, A, 0, SYNC_STREAM,  ptrType);
+            CheckHostPointer(numElements, A, 0, SYNC_EVENT,   ptrType);
         }
 
 
