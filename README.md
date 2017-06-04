@@ -132,7 +132,7 @@ The README with the procedures and tips the team used during this porting effort
     
 * **bin**: Tools and scripts to help with hip porting
     * **hipify** : Tool to convert CUDA code to portable CPP.  Converts CUDA APIs and kernel builtins.  
-    * **hipcc** : Compiler driver that can be used to replace nvcc in existing CUDA code.  hipcc ill call nvcc or hcc depending on platform, and include appropriate platform-specific headers and libraries.
+    * **hipcc** : Compiler driver that can be used to replace nvcc in existing CUDA code. hipcc will call nvcc or hcc depending on platform, and include appropriate platform-specific headers and libraries.
     * **hipconfig** : Print HIP configuration (HIP_PATH, HIP_PLATFORM, CXX config flags, etc)
     * **hipexamine.sh** : Script to scan directory, find all code, and report statistics on how much can be ported with HIP (and identify likely features not yet supported)
 
