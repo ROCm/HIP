@@ -21,11 +21,12 @@
    */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * RUN: %t
  * HIT_END
  */
 
+#include <vector>
 #include"test_common.h"
 
 #define LEN 1024*1024

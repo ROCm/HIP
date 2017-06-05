@@ -202,6 +202,20 @@ addCountReverse( const T *A_d,
 
 
 template <typename T>
+__global__ void
+memsetReverse( T *C_d,  T val,
+        int64_t NELEM)
+{
+    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    size_t stride = hipBlockDim_x * hipGridDim_x ;
+
+    for (int64_t i=NELEM-stride+offset; i>=0; i-=stride) {
+        C_d[i] = val;
+    }
+}
+
+
+template <typename T>
 void setDefaultData(size_t numElements, T *A_h, T* B_h, T *C_h)
 {
     // Initialize the host data:
