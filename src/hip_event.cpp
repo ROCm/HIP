@@ -53,15 +53,12 @@ void ihipEvent_t::attachToCompletionFuture(const hc::completion_future *cf,
 
 
 
-void ihipEvent_t::setTimestamp()
+void ihipEvent_t::refereshEventStatus()
 {
     bool isReady0 = _marker.is_ready();
     bool isReady1;
     int val = 0;
-    if (_state == hipEventStatusRecorded) {
-        // already recorded, done:
-        return;
-    } else {
+    if (_state == hipEventStatusRecording) {
         // TODO - use completion-future functions to obtain ticks and timestamps:
         hsa_signal_t *sig  = static_cast<hsa_signal_t*> (_marker.get_native_handle());
         isReady1 = _marker.is_ready();
@@ -78,12 +75,12 @@ void ihipEvent_t::setTimestamp()
                     _timestamp =  0;
                 }
 
-                _state = hipEventStatusRecorded;
+                _state = hipEventStatusComplete;
             }
         }
     }
 
-    if (_state != hipEventStatusRecorded) {
+    if (_state != hipEventStatusComplete) {
         //printf (" not ready isReady0=%d val=%d isReady1=%d\n", isReady0, val, isReady1);
     }
 }
@@ -103,12 +100,10 @@ hipError_t ihipEventCreate(hipEvent_t* event, unsigned flags)
     const unsigned releaseFlags = (hipEventReleaseToDevice | hipEventReleaseToSystem);
 
     const bool illegalFlags = (flags & ~supportedFlags) ||            // can't set any unsupported flags.
-                              (flags & releaseFlags) == releaseFlags; // can't set both 
+                              (flags & releaseFlags) == releaseFlags; // can't set both release flags
 
     if (!illegalFlags) {
-        ihipEvent_t *eh = new ihipEvent_t(flags);
-
-        *event = eh;
+        *event = new ihipEvent_t(flags);
     } else {
         e = hipErrorInvalidValue;
     }
@@ -148,7 +143,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
             ctx->locked_syncDefaultStream(true, true);
 
             event->_timestamp = hc::get_system_ticks();
-            event->_state = hipEventStatusRecorded;
+            event->_state = hipEventStatusComplete;
             return ihipLogStatus(hipSuccess);
         } else {
             event->_state  = hipEventStatusRecording;
@@ -209,41 +204,50 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop)
 {
     HIP_INIT_API(ms, start, stop);
 
-    start->setTimestamp();
-    stop->setTimestamp();
-
     hipError_t status = hipSuccess;
+
     *ms = 0.0f;
 
-    if (start && stop) {
-        // refresh status:
-        if ((start->_state == hipEventStatusRecorded) && (stop->_state == hipEventStatusRecorded)) {
-            // Common case, we have good information for both events.
+    if ((start == nullptr) ||
+        (start->_flags & hipEventDisableTiming) ||
+        (start->_state == hipEventStatusUnitialized) || (start->_state == hipEventStatusCreated) ||
+        (stop == nullptr) ||
+        (stop->_flags & hipEventDisableTiming) ||
+        ( stop->_state == hipEventStatusUnitialized) || ( stop->_state == hipEventStatusCreated)) {
 
-            int64_t tickDiff = (stop->timestamp() - start->timestamp());
+        // Both events must be at least recorded else return hipErrorInvalidResourceHandle
 
-            uint64_t freqHz;
-            hsa_system_get_info(HSA_SYSTEM_INFO_TIMESTAMP_FREQUENCY, &freqHz);
-            if (freqHz) {
-                *ms = ((double)(tickDiff) /  (double)(freqHz)) * 1000.0f;
-                status = hipSuccess;
-            } else {
-                * ms = 0.0f;
-                status = hipErrorInvalidValue;
-            }
+        status = hipErrorInvalidResourceHandle;
+
+    } else {
+        // Refresh status, if still recording...
+        start->refereshEventStatus();
+        stop->refereshEventStatus();
+
+        if ((start->_state == hipEventStatusComplete) && (stop->_state == hipEventStatusComplete)) {
+        // Common case, we have good information for both events.
+
+        int64_t tickDiff = (stop->timestamp() - start->timestamp());
+
+        uint64_t freqHz;
+        hsa_system_get_info(HSA_SYSTEM_INFO_TIMESTAMP_FREQUENCY, &freqHz);
+        if (freqHz) {
+            *ms = ((double)(tickDiff) /  (double)(freqHz)) * 1000.0f;
+            status = hipSuccess;
+        } else {
+            * ms = 0.0f;
+            status = hipErrorInvalidValue;
+        }
 
 
         } else if ((start->_state == hipEventStatusRecording) ||
                    (stop->_state  == hipEventStatusRecording)) {
 
             status = hipErrorNotReady;
-        } else if ((start->_state == hipEventStatusUnitialized) ||
-                   (stop->_state  == hipEventStatusUnitialized)) {
-            status = hipErrorInvalidResourceHandle;
+        } else {
+                assert(0);
         }
-    } else {
-        status = hipErrorInvalidResourceHandle;
-    }
+    } 
 
     return ihipLogStatus(status);
 }
