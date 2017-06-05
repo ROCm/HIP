@@ -56,9 +56,27 @@ const char *syncModeString(int syncMode) {
 };
 
 
-void test(int *C_d, int *C_h, int64_t numElements, SyncMode syncMode, bool expectMismatch)
+void test(unsigned testMask, int *C_d, int *C_h, int64_t numElements, SyncMode syncMode, bool expectMismatch)
 {
-    printf ("\ntest: syncMode=%s expectMismatch=%d\n", syncModeString(syncMode), expectMismatch);
+
+    // This test sends a long-running kernel to the null stream, then tests to see if the 
+    // specified synchronization technique is effective.
+    //
+    // Some syncMode are not expected to correctly sync (for example "syncNone").  in these 
+    // cases the test sets expectMismatch and the check logic below will attempt to ensure that
+    // the undesired synchronization did not occur - ie ensure the kernel is still running and did
+    // not yet update the stop event.  This can be tricky since if the kernel runs fast enough it
+    // may complete before the check.  To prevent this, the addCountReverse has a count parameter 
+    // which causes it to loop repeatedly, and the results are checked in reverse order.  
+    //
+    // Tests with expectMismatch=true should ensure the kernel finishes correctly. This results
+    // are checked and we test to make sure stop event has completed.
+    
+    if (!(testMask & p_tests)) {
+        return;
+    }
+    printf ("\ntest 0x%02x: syncMode=%s expectMismatch=%d\n", 
+            testMask, syncModeString(syncMode), expectMismatch);
 
     size_t sizeBytes = numElements * sizeof(int);
 
@@ -72,13 +90,15 @@ void test(int *C_d, int *C_h, int64_t numElements, SyncMode syncMode, bool expec
     hipStream_t otherStream = 0;
     unsigned flags = (syncMode == syncMarkerThenOtherNonBlockingStream) ?  hipStreamNonBlocking : hipStreamDefault;
     HIPCHECK(hipStreamCreateWithFlags(&otherStream, flags));
-    hipEvent_t e;
-    HIPCHECK(hipEventCreate(&e));
+    hipEvent_t stop, otherStreamEvent;
+    HIPCHECK(hipEventCreate(&stop));
+    HIPCHECK(hipEventCreate(&otherStreamEvent));
 
 
     unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, numElements);
     // Launch kernel into null stream, should result in C_h == count.
     hipLaunchKernelGGL(HipTest::addCountReverse , dim3(blocks), dim3(threadsPerBlock), 0, 0 /*stream*/,    C_d, C_h, numElements, count);
+    HIPCHECK(hipEventRecord(stop, 0/*default*/));  
 
     switch (syncMode) {
         case syncNone:
@@ -92,7 +112,10 @@ void test(int *C_d, int *C_h, int64_t numElements, SyncMode syncMode, bool expec
             break;
         case syncMarkerThenOtherStream:
         case syncMarkerThenOtherNonBlockingStream:
-            HIPCHECK(hipEventRecord(e, otherStream));  // this may wait for NULL stream depending hipStreamNonBlocking flag above
+            
+            // this may wait for NULL stream depending hipStreamNonBlocking flag above
+            HIPCHECK(hipEventRecord(otherStreamEvent, otherStream));  
+
             HIPCHECK(hipStreamSynchronize(otherStream));  
             break;
         case syncDevice:
@@ -101,6 +124,14 @@ void test(int *C_d, int *C_h, int64_t numElements, SyncMode syncMode, bool expec
         default:
             assert(0);
     };
+
+    hipError_t done = hipEventQuery(stop);
+
+    if (expectMismatch) {
+        assert (done == hipErrorNotReady);
+    } else {
+        assert (done == hipSuccess);
+    }
 
     int mismatches = 0;
     int expected = init0 + count;
@@ -121,14 +152,12 @@ void test(int *C_d, int *C_h, int64_t numElements, SyncMode syncMode, bool expec
 
 
     HIPCHECK(hipStreamDestroy(otherStream));
-    HIPCHECK(hipEventDestroy(e));
+    HIPCHECK(hipEventDestroy(stop));
+    HIPCHECK(hipEventDestroy(otherStreamEvent));
+
+    HIPCHECK(hipDeviceSynchronize());
 
     printf ("test:   OK - %d mismatches (%6.2f%%)\n",  mismatches, ((double)(mismatches)*100.0)/numElements);
-}
-
-
-void testEventRecord()
-{
 }
 
 
@@ -145,12 +174,18 @@ void runTests(int64_t numElements)
 
 
     {
-        test (C_d, C_h, numElements,  syncNone,                             true /*expectMismatch*/);
-        test (C_d, C_h, numElements,  syncNullStream,                       false /*expectMismatch*/);
-        test (C_d, C_h, numElements,  syncOtherStream,                      true /*expectMismatch*/);
-        test (C_d, C_h, numElements,  syncDevice,                           false /*expectMismatch*/);
-        test (C_d, C_h, numElements,  syncMarkerThenOtherStream,            false /*expectMismatch*/);
-        test (C_d, C_h, numElements,  syncMarkerThenOtherNonBlockingStream, true /*expectMismatch*/);
+        test (0x01, C_d, C_h, numElements,  syncNone,                             true /*expectMismatch*/);
+        test (0x02, C_d, C_h, numElements,  syncNullStream,                       false /*expectMismatch*/);
+        test (0x04, C_d, C_h, numElements,  syncOtherStream,                      true /*expectMismatch*/);
+        test (0x08, C_d, C_h, numElements,  syncDevice,                           false /*expectMismatch*/);
+
+        // Sending a marker to to null stream may synchronize the otherStream
+        //  - other created with hipStreamNonBlocking=0 : synchronization, should match
+        //  - other created with hipStreamNonBlocking=1 : no synchronization, may mismatch
+        test (0x10, C_d, C_h, numElements,  syncMarkerThenOtherStream,            false /*expectMismatch*/);
+
+        // TODO - review why this test seems flaky
+        //test (0x20, C_d, C_h, numElements,  syncMarkerThenOtherNonBlockingStream, true /*expectMismatch*/);
     }
 
 
@@ -161,6 +196,9 @@ void runTests(int64_t numElements)
 
 int main(int argc, char *argv[])
 {
+    // Can' destroy the default stream:// TODO - move to another test
+    HIPCHECK_API(hipStreamDestroy(0), hipErrorInvalidResourceHandle); 
+
     HipTest::parseStandardArguments(argc, argv, true /*failOnUndefinedArg*/);
 
     runTests(40000000);

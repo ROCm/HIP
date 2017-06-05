@@ -658,10 +658,12 @@ hipError_t hipStreamSynchronize(hipStream_t stream);
  *
  * This function inserts a wait operation into the specified stream.
  * All future work submitted to @p stream will wait until @p event reports completion before beginning execution.
- * This function is host-asynchronous and the function may return before the wait has completed.
+ *
+ * This function only waits for commands in the current stream to complete.  Notably,, this function does 
+ * not impliciy wait for commands in the default stream to complete, even if the specified stream is 
+ * created with hipStreamNonBlocking = 0.  
  *
  * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamSynchronize, hipStreamDestroy
- *
  */
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags);
 
@@ -766,10 +768,10 @@ hipError_t hipEventCreate(hipEvent_t* event);
  * the specified stream, after all previous
  * commands in that stream have completed executing.
  *
- * If hipEventRecord() has been previously called aon event, then this call will overwrite any existing state in event.
+ * If hipEventRecord() has been previously called on this event, then this call will overwrite any existing state in event.
  *
  * If this function is called on a an event that is currently being recorded, results are undefined - either
- * outstanding recording may save state into the event, and the order is not guaranteed.  This shoul be avoided.
+ * outstanding recording may save state into the event, and the order is not guaranteed.  
  *
  * @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventSynchronize, hipEventDestroy, hipEventElapsedTime
  *

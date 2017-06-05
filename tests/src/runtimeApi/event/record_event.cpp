@@ -28,8 +28,8 @@ THE SOFTWARE.
 
 enum SyncMode {
     syncNone,
-    syncNullStream,
-    syncOtherStream,
+    syncStream,
+    syncStopEvent,
 };
 
 
@@ -37,19 +37,23 @@ const char *syncModeString(int syncMode) {
     switch (syncMode) {
         case syncNone:
             return "syncNone";
-        case syncNullStream:
-            return "syncNullStream";
-        case syncOtherStream:
-            return "syncOtherStream";
+        case syncStream:
+            return "syncStream";
+        case syncStopEvent:
+            return "syncStopEvent";
         default:
             return "unknown";
     };
 };
 
 
-void test(int *C_d, int *C_h, int64_t numElements, SyncMode syncMode)
+void test(unsigned testMask, int *C_d, int *C_h, int64_t numElements, hipStream_t stream, int waitStart, SyncMode syncMode)
 {
-    printf ("\ntest: syncMode=%s\n", syncModeString(syncMode));
+    if (!(testMask & p_tests)) {
+        return;
+    }
+    printf ("\ntest 0x%3x: stream=%p waitStart=%d syncMode=%s\n", 
+            testMask, stream, waitStart, syncModeString(syncMode));
 
     size_t sizeBytes = numElements * sizeof(int);
 
@@ -60,54 +64,94 @@ void test(int *C_d, int *C_h, int64_t numElements, SyncMode syncMode)
         C_h[i] = -1; // initialize
     }
 
-    hipStream_t stream = 0;
+    hipEvent_t neverCreated=0, neverRecorded, timingDisabled;
+    HIPCHECK(hipEventCreate(&neverRecorded));
+    HIPCHECK(hipEventCreateWithFlags(&timingDisabled, hipEventDisableTiming));
 
-    unsigned flags=0;
-    if (syncMode == syncOtherStream) {
-        HIPCHECK(hipStreamCreateWithFlags(&stream, flags));
-    }
-
-    hipEvent_t neverCreated=0;
-    hipEvent_t start, stop, neverRecorded;
+    hipEvent_t start, stop;
     HIPCHECK(hipEventCreate(&start));
     HIPCHECK(hipEventCreate(&stop));
-    HIPCHECK(hipEventCreate(&neverRecorded));
 
     unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, numElements);
 
+    HIPCHECK(hipEventRecord(timingDisabled, stream));
     // sandwhich a kernel:
     HIPCHECK(hipEventRecord(start, stream));
     hipLaunchKernelGGL(HipTest::addCountReverse , dim3(blocks), dim3(threadsPerBlock), 0, stream,    C_d, C_h, numElements, count);
     HIPCHECK(hipEventRecord(stop, stream));
 
-    HIPCHECK(hipStreamSynchronize(stream));  // wait for recording to finish...
+
+    if (waitStart) {
+        HIPCHECK(hipEventSynchronize(start));
+    }
+
+   
+    hipError_t expectedStopError = hipSuccess; 
+
+    // How to wait for the events to finish:
+    switch (syncMode) {
+        case syncNone:
+            expectedStopError = hipErrorNotReady;
+            break;
+        case syncStream:
+            HIPCHECK(hipStreamSynchronize(stream));  // wait for recording to finish...
+            break;
+        case syncStopEvent:
+            HIPCHECK(hipEventSynchronize(stop)); 
+            break;
+        default:
+            assert(0);
+    };
+            
 
     float t;
-    HIPCHECK_API(hipEventElapsedTime(&t, neverCreated, stop), hipErrorInvalidResourceHandle);
-    HIPCHECK_API(hipEventElapsedTime(&t, start, neverCreated),  hipErrorInvalidResourceHandle);
 
-    HIPCHECK_API(hipEventElapsedTime(&t, neverRecorded, stop), hipErrorInvalidResourceHandle);
-    HIPCHECK_API(hipEventElapsedTime(&t, start, neverRecorded),  hipErrorInvalidResourceHandle);
-
-    HIPCHECK(hipEventElapsedTime(&t, start, stop));
-    assert (t>0.0f);
-    printf ("time=%6.2f\n", t);
-
-    HIPCHECK(hipEventElapsedTime(&t, stop, start));
-    assert (t<0.0f);
-    printf ("negtime=%6.2f\n", t);
-
-    HIPCHECK(hipEventElapsedTime(&t, start, start));
-    assert (t==0.0f);
-    HIPCHECK(hipEventElapsedTime(&t, stop, stop));
-    assert (t==0.0f);
-
-
-    if (stream) {
-        HIPCHECK(hipStreamDestroy(stream));
+    hipError_t e = hipEventElapsedTime(&t, start, start);
+    if ((e != hipSuccess) && (e != hipErrorNotReady))  {
+        failed ("start event not in expected state, was %d=%s\n", e, hipGetErrorName(e));
     }
+
+    if (e == hipSuccess) 
+        assert (t==0.0f);
+        
+
+    // stop usually ready unless we skipped the synchronization (syncNone)
+    HIPCHECK_API(hipEventElapsedTime(&t, stop, stop), expectedStopError);
+    if (e == hipSuccess) 
+        assert (t==0.0f);
+
+
+    e = hipEventElapsedTime(&t, start, stop);
+    HIPCHECK_API(e, expectedStopError);
+    if (expectedStopError == hipSuccess) 
+        assert (t>0.0f);
+    printf ("time=%6.2f error=%s\n", t, hipGetErrorName(e));
+
+    e = hipEventElapsedTime(&t, stop, start);
+    HIPCHECK_API(e, expectedStopError);
+    if (expectedStopError == hipSuccess) 
+        assert (t<0.0f);
+    printf ("negtime=%6.2f error=%s\n", t, hipGetErrorName(e));
+
+
+
+    {
+        // Check some error conditions for incomplete events:
+        HIPCHECK_API(hipEventElapsedTime(&t, timingDisabled, stop), hipErrorInvalidResourceHandle);
+        HIPCHECK_API(hipEventElapsedTime(&t, start, timingDisabled), hipErrorInvalidResourceHandle);
+
+        HIPCHECK_API(hipEventElapsedTime(&t, neverCreated, stop), hipErrorInvalidResourceHandle);
+        HIPCHECK_API(hipEventElapsedTime(&t, start, neverCreated),  hipErrorInvalidResourceHandle);
+
+        HIPCHECK_API(hipEventElapsedTime(&t, neverRecorded, stop), hipErrorInvalidResourceHandle);
+        HIPCHECK_API(hipEventElapsedTime(&t, start, neverRecorded),  hipErrorInvalidResourceHandle);
+    }
+
     HIPCHECK(hipEventDestroy(start));
     HIPCHECK(hipEventDestroy(stop));
+
+    // Clear out everything:
+    HIPCHECK(hipDeviceSynchronize());
 
     printf ("test:   OK  \n");
 }
@@ -125,15 +169,22 @@ void runTests(int64_t numElements)
     HIPCHECK(hipMalloc(&C_d, sizeBytes));
     HIPCHECK(hipHostMalloc(&C_h, sizeBytes));
 
+    hipStream_t stream;
+    HIPCHECK(hipStreamCreateWithFlags(&stream, 0x0));
 
-    {
-        test (C_d, C_h, numElements,  syncNone);
-        test (C_d, C_h, numElements,  syncNullStream);
-        test (C_d, C_h, numElements,  syncOtherStream);
-        //test (C_d, C_h, numElements,  syncDevice);
+    //for (int waitStart=0; waitStart<2; waitStart++) {
+    for (int waitStart=1; waitStart>=0; waitStart--) {
+        unsigned W = waitStart ? 0x1000:0;
+        test (W | 0x01, C_d, C_h, numElements,  0     , waitStart, syncNone);
+        test (W | 0x02, C_d, C_h, numElements,  stream, waitStart, syncNone);
+        test (W | 0x04, C_d, C_h, numElements,  0     , waitStart, syncStream);
+        test (W | 0x08, C_d, C_h, numElements,  stream, waitStart, syncStream);
+        test (W | 0x10, C_d, C_h, numElements,  0,      waitStart, syncStopEvent);
+        test (W | 0x20, C_d, C_h, numElements,  stream, waitStart, syncStopEvent);
     }
 
 
+    HIPCHECK(hipStreamDestroy(stream));
     HIPCHECK(hipFree(C_d));
     HIPCHECK(hipHostFree(C_h));
 }
@@ -143,7 +194,7 @@ int main(int argc, char *argv[])
 {
     HipTest::parseStandardArguments(argc, argv, true /*failOnUndefinedArg*/);
 
-    runTests(4000000);
+    runTests(80000000);
 
     passed();
 }

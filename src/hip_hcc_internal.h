@@ -586,10 +586,10 @@ private: // Data
 //----
 // Internal event structure:
 enum hipEventStatus_t {
-    hipEventStatusUnitialized = 0, // event is unutilized, must be "Created" before use.
-    hipEventStatusCreated     = 1,
-    hipEventStatusRecording   = 2, // event has been enqueued to record something.
-    hipEventStatusRecorded    = 3, // event has been recorded - timestamps are valid.
+    hipEventStatusUnitialized = 0, // event is uninitialized, must be "Created" before use.
+    hipEventStatusCreated     = 1, // event created, but not yet Recorded
+    hipEventStatusRecording   = 2, // event has been recorded into a stream but not completed yet.
+    hipEventStatusComplete    = 3, // event has been recorded - timestamps are valid.
 } ;
 
 // TODO - rename to ihip type of some kind
@@ -604,7 +604,7 @@ class ihipEvent_t {
 public:
     ihipEvent_t(unsigned flags);
     void attachToCompletionFuture(const hc::completion_future *cf, hipStream_t stream, ihipEventType_t eventType);
-    void setTimestamp();
+    void refereshEventStatus();
     uint64_t timestamp() const { return _timestamp; } ;
     ihipEventType_t type() const { return _type; };
 
