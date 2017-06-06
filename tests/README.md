@@ -59,5 +59,9 @@ Find the test and commandline that fail:
 grep -IR hipMemcpy-modes -IR ../tests/
 ../tests/src/runtimeApi/memory/hipMemcpy.cpp: * RUN_NAMED: %t hipMemcpy-modes --tests 0x1
 
+# Guidelines for adding new tests
 
+- Prefer to enhance an existing test as opposed to writing a new one. Tests have overhead to start and many small tests spend precious test time on startup and initialization issues.
+- Make the test run standalone without requirement for command-line arguments.  THis makes it easier to debug since the name of the test is shown in the test report and if you know the name of the test you can the run the test.
+- For long-running tests or tests with multiple phases, consider using the --tests option as an optional mechanism to allow debuggers to start with the failing subset of the test.
 

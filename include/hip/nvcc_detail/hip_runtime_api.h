@@ -54,24 +54,49 @@ hipMemcpyHostToHost
 #define hipFilterModePoint cudaFilterModePoint
 
 //! Flags that can be used with hipEventCreateWithFlags:
-#define hipEventDefault             cudaEventDefault
-#define hipEventBlockingSync        cudaEventBlockingSync
-#define hipEventDisableTiming       cudaEventDisableTiming
-#define hipEventInterprocess        cudaEventInterprocess
+#define hipEventDefault              cudaEventDefault
+#define hipEventBlockingSync         cudaEventBlockingSync
+#define hipEventDisableTiming        cudaEventDisableTiming
+#define hipEventInterprocess         cudaEventInterprocess
+#define hipEventReleaseToDevice      0  /* no-op on CUDA platform */
+#define hipEventReleaseToSystem      0  /* no-op on CUDA platform */
 
-#define hipHostMallocDefault cudaHostAllocDefault
-#define hipHostMallocPortable cudaHostAllocPortable
-#define hipHostMallocMapped cudaHostAllocMapped
+
+#define hipHostMallocDefault       cudaHostAllocDefault
+#define hipHostMallocPortable      cudaHostAllocPortable
+#define hipHostMallocMapped        cudaHostAllocMapped
 #define hipHostMallocWriteCombined cudaHostAllocWriteCombined
+#define hipHostMallocCoherent      0x0 
+#define hipHostMallocNonCoherent   0x0
 
 #define hipHostRegisterPortable cudaHostRegisterPortable
-#define hipHostRegisterMapped cudaHostRegisterMapped
+#define hipHostRegisterMapped   cudaHostRegisterMapped
 
 #define HIP_LAUNCH_PARAM_BUFFER_POINTER CU_LAUNCH_PARAM_BUFFER_POINTER
-#define HIP_LAUNCH_PARAM_BUFFER_SIZE     CU_LAUNCH_PARAM_BUFFER_SIZE
+#define HIP_LAUNCH_PARAM_BUFFER_SIZE    CU_LAUNCH_PARAM_BUFFER_SIZE
 #define HIP_LAUNCH_PARAM_END            CU_LAUNCH_PARAM_END
 #define hipLimitMallocHeapSize          cudaLimitMallocHeapSize
-#define hipIpcMemLazyEnablePeerAccess          cudaIpcMemLazyEnablePeerAccess
+#define hipIpcMemLazyEnablePeerAccess   cudaIpcMemLazyEnablePeerAccess
+
+// enum CUjit_option redefines
+#define hipJitOptionMaxRegisters            CU_JIT_MAX_REGISTERS
+#define hipJitOptionThreadsPerBlock         CU_JIT_THREADS_PER_BLOCK
+#define hipJitOptionWallTime                CU_JIT_WALL_TIME
+#define hipJitOptionInfoLogBuffer           CU_JIT_INFO_LOG_BUFFER
+#define hipJitOptionInfoLogBufferSizeBytes  CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES
+#define hipJitOptionErrorLogBuffer          CU_JIT_ERROR_LOG_BUFFER
+#define hipJitOptionErrorLogBufferSizeBytes CU_JIT_ERROR_LOG_BUFFER_SIZE_BYTES
+#define hipJitOptionOptimizationLevel       CU_JIT_OPTIMIZATION_LEVEL
+#define hipJitOptionTargetFromContext       CU_JIT_TARGET_FROM_CUCONTEXT
+#define hipJitOptionTarget                  CU_JIT_TARGET
+#define hipJitOptionFallbackStrategy        CU_JIT_FALLBACK_STRATEGY
+#define hipJitOptionGenerateDebugInfo       CU_JIT_GENERATE_DEBUG_INFO
+#define hipJitOptionLogVerbose              CU_JIT_LOG_VERBOSE
+#define hipJitOptionGenerateLineInfo        CU_JIT_GENERATE_LINE_INFO
+#define hipJitOptionCacheMode               CU_JIT_CACHE_MODE
+#define hipJitOptionSm3xOpt                 CU_JIT_NEW_SM3X_OPT
+#define hipJitOptionFastCompile             CU_JIT_FAST_COMPILE
+#define hipJitOptionNumOptions              CU_JIT_NUM_OPTIONS
 
 typedef cudaEvent_t hipEvent_t;
 typedef cudaStream_t hipStream_t;
@@ -82,6 +107,7 @@ typedef cudaFuncCache hipFuncCache_t;
 typedef CUcontext hipCtx_t;
 typedef CUsharedconfig hipSharedMemConfig;
 typedef CUfunc_cache hipFuncCache;
+typedef CUjit_option hipJitOption;
 typedef CUdevice hipDevice_t;
 typedef CUmodule hipModule_t;
 typedef CUfunction hipFunction_t;
@@ -200,6 +226,10 @@ inline static hipError_t hipPeekAtLastError() {
 
 inline static hipError_t hipMalloc(void** ptr, size_t size) {
     return hipCUDAErrorTohipError(cudaMalloc(ptr, size));
+}
+
+inline static hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height) {
+    return hipCUDAErrorTohipError(cudaMallocPitch(ptr, pitch, width, height));
 }
 
 inline static hipError_t hipFree(void* ptr) {
@@ -345,7 +375,11 @@ inline static hipError_t hipMemcpyFromSymbolAsync(void *dst, const void* symbolN
 }
 
 inline static hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind){
-  return hipCUDAErrorTohipError(cudaMemcpy2D(dst, dpitch, src, spitch, width, height, hipMemcpyKindToCudaMemcpyKind(kind)));
+    return hipCUDAErrorTohipError(cudaMemcpy2D(dst, dpitch, src, spitch, width, height, hipMemcpyKindToCudaMemcpyKind(kind)));
+}
+
+inline static hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind, hipStream_t stream) {
+    return hipCUDAErrorTohipError(cudaMemcpy2DAsync(dst, dpitch, src, spitch, width, height, hipMemcpyKindToCudaMemcpyKind(kind),stream));
 }
 
 inline static hipError_t hipMemcpy2DToArray(hipArray *dst, size_t wOffset, size_t hOffset, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind){
@@ -884,6 +918,11 @@ inline static hipError_t hipModuleLoadData(hipModule_t *module, const void *imag
     return hipCUResultTohipError(cuModuleLoadData(module, image));
 }
 
+inline static hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image, unsigned int numOptions, hipJitOption *options, void **optionValues)
+{
+  return hipCUResultTohipError(cuModuleLoadDataEx(module, image, numOptions, options, optionValues));
+}
+
 inline static hipError_t hipModuleLaunchKernel(hipFunction_t f,
       unsigned int gridDimX, unsigned int gridDimY, unsigned int gridDimZ,
       unsigned int blockDimX, unsigned int blockDimY, unsigned int blockDimZ,
@@ -897,6 +936,10 @@ inline static hipError_t hipModuleLaunchKernel(hipFunction_t f,
 }
 
 
+inline static hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t cacheConfig)
+{
+    return hipCUDAErrorTohipError(cudaFuncSetCacheConfig(func, cacheConfig));
+}
 
 #ifdef __cplusplus
 }

@@ -48,13 +48,8 @@ THE SOFTWARE.
 #include "env.h"
 
 
-#ifndef USE_COPY_EXT_V2
-#define USE_COPY_EXT_V2 1
-#endif
-
-#ifndef USE_ROCR_1_4
-#define USE_ROCR_1_4 1
-#endif
+// needs HCC change for hc::no_scope
+#define USE_NO_SCOPE 1
 
 //=================================================================================================
 //Global variables:
@@ -69,7 +64,6 @@ std::string HIP_LAUNCH_BLOCKING_KERNELS;
 std::vector<std::string> g_hipLaunchBlockingKernels;
 int HIP_API_BLOCKING = 0;
 
-int HIP_MAX_QUEUES = 0;
 
 int HIP_PRINT_ENV = 0;
 int HIP_TRACE_API= 0;
@@ -80,8 +74,7 @@ int HIP_PROFILE_API= 0;
 std::string HIP_DB_START_API;
 std::string HIP_DB_STOP_API;
 int HIP_DB= 0;
-int HIP_VISIBLE_DEVICES = 0; /* Contains a comma-separated sequence of GPU identifiers */
-int HIP_NUM_KERNELS_INFLIGHT = 128;
+int HIP_VISIBLE_DEVICES = 0; 
 int HIP_WAIT_MODE = 0;
 
 int HIP_FORCE_P2P_HOST = 0;
@@ -91,21 +84,26 @@ int HIP_DENY_PEER_ACCESS = 0;
 // Force async copies to actually use the synchronous copy interface.
 int HIP_FORCE_SYNC_COPY = 0;
 
+// TODO - set these to 0 and 1
+int HIP_EVENT_SYS_RELEASE=1;
 int HIP_COHERENT_HOST_ALLOC = 0;
 
 // TODO - set to 0 once we resolve stability.
 // USE_ HIP_SYNC_HOST_ALLOC
 int HIP_SYNC_HOST_ALLOC = 1;
 
+// Chicken bit to sync on host to implement null stream.
+// If 0, null stream synchronization is performed on the GPU
+int HIP_SYNC_NULL_STREAM = 0;
+
+// HIP needs to change some behavior based on HCC_OPT_FLUSH :
+// TODO - set this to 1
 int HCC_OPT_FLUSH = 0;
 
 
 
 
 
-
-#define HIP_USE_PRODUCT_NAME 1
-//#define DISABLE_COPY_EXT 1
 
 
 std::once_flag hip_initialized;
@@ -118,6 +116,7 @@ bool g_visible_device = false;
 unsigned g_deviceCnt;
 std::vector<int> g_hip_visible_devices;
 hsa_agent_t g_cpu_agent;
+hsa_agent_t *g_allAgents; // CPU agents + all the visible GPU agents.
 unsigned g_numLogicalThreads;
 
 std::atomic<int> g_lastShortTid(1);
@@ -272,64 +271,40 @@ ihipStream_t::~ihipStream_t()
 }
 
 
-inline void ihipStream_t::ensureHaveQueue(LockedAccessor_StreamCrit_t &streamCrit)
+hc::hcWaitMode ihipStream_t::waitMode() const
 {
-    if (HIP_MAX_QUEUES && !streamCrit->_hasQueue)  {
+    hc::hcWaitMode waitMode = hc::hcWaitModeActive;
 
-        // To avoid deadlock, we have to release the stream lock before acquiring context lock.
-        // Else we can get hung if another thread has the context lock is trying to get lock for this stream.
-        // We lock it again below.
-        streamCrit->munlock();
-
-        // Obtain mutex access to the device critical data, release by destructor
-        LockedAccessor_CtxCrit_t  ctxCrit(this->_ctx->criticalData());
-        // TODO
-        auto needyCritPtr = this->_criticalData.mlock();
-
-        // Second test to ensure we still need to steal the queue - another thread may have
-        // snuck in here and already solved the issue.
-        if (!needyCritPtr->_hasQueue) {
-            needyCritPtr->_av = this->_ctx->stealActiveQueue(ctxCrit, this);
+    if (_scheduleMode == Auto) {
+        if (g_deviceCnt > g_numLogicalThreads) {
+            waitMode = hc::hcWaitModeActive;
+        } else {
+            waitMode = hc::hcWaitModeBlocked;
         }
-
-        streamCrit->_hasQueue = true;
+    } else if (_scheduleMode == Spin) {
+        waitMode = hc::hcWaitModeActive;
+    } else if (_scheduleMode == Yield) {
+        waitMode = hc::hcWaitModeBlocked;
+    } else {
+        assert(0); // bad wait mode.
     }
-    assert(streamCrit->_hasQueue);
-}
 
+    if (HIP_WAIT_MODE == 1) {
+        waitMode = hc::hcWaitModeBlocked;
+    } else if (HIP_WAIT_MODE == 2) {
+        waitMode = hc::hcWaitModeActive;
+    }
+
+    return waitMode;
+}
 
 //Wait for all kernel and data copy commands in this stream to complete.
 //This signature should be used in routines that already have locked the stream mutex
 void ihipStream_t::wait(LockedAccessor_StreamCrit_t &crit)
 {
-    if (crit->_hasQueue) {
-        tprintf (DB_SYNC, "%s wait for queue-empty..\n", ToString(this).c_str());
-        hc::hcWaitMode waitMode = hc::hcWaitModeActive;
+    tprintf (DB_SYNC, "%s wait for queue-empty..\n", ToString(this).c_str());
 
-        if (_scheduleMode == Auto) {
-            if (g_deviceCnt > g_numLogicalThreads) {
-                waitMode = hc::hcWaitModeActive;
-            } else {
-                waitMode = hc::hcWaitModeBlocked;
-            }
-        } else if (_scheduleMode == Spin) {
-            waitMode = hc::hcWaitModeActive;
-        } else if (_scheduleMode == Yield) {
-            waitMode = hc::hcWaitModeBlocked;
-        } else {
-            assert(0); // bad wait mode.
-        }
-
-        if (HIP_WAIT_MODE == 1) {
-            waitMode = hc::hcWaitModeBlocked;
-        } else if (HIP_WAIT_MODE == 2) {
-            waitMode = hc::hcWaitModeActive;
-        }
-
-        crit->_av.wait(waitMode);
-    } else {
-        tprintf (DB_SYNC, "%s wait for queue empty (done since stream has no physical queue).\n", ToString(this).c_str());
-    }
+    crit->_av.wait(waitMode());
 
     crit->_kernelCnt = 0;
 }
@@ -345,14 +320,13 @@ void ihipStream_t::locked_wait()
 };
 
 // Causes current stream to wait for specified event to complete:
-// Note this does not require any kind of host serialization.
+// Note this does not provide any kind of host serialization.
 void ihipStream_t::locked_waitEvent(hipEvent_t event)
 {
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
-    this->ensureHaveQueue(crit);
 
-    crit->_av.create_blocking_marker(event->_marker);
+    crit->_av.create_blocking_marker(event->_marker, hc::accelerator_scope);
 }
 
 // Create a marker in this stream.
@@ -362,9 +336,19 @@ void ihipStream_t::locked_recordEvent(hipEvent_t event)
     // Lock the stream to prevent simultaneous access
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
-    this->ensureHaveQueue(crit);
-    event->_marker = crit->_av.create_marker();
-}
+    auto scopeFlag = hc::accelerator_scope;
+    // The env var HIP_EVENT_SYS_RELEASE sets the default,
+    // The explicit flags override the env var (if specified)
+    if (event->_flags & hipEventReleaseToSystem) {
+        scopeFlag = hc::system_scope;
+    } else if (event->_flags & hipEventReleaseToDevice) {
+        scopeFlag = hc::accelerator_scope;
+    } else {
+        scopeFlag = HIP_EVENT_SYS_RELEASE ? hc::system_scope : hc::accelerator_scope;
+    }
+
+    event->_marker = crit->_av.create_marker(scopeFlag);
+};
 
 //=============================================================================
 
@@ -395,14 +379,6 @@ LockedAccessor_StreamCrit_t ihipStream_t::lockopen_preKernelCommand()
 {
 
     LockedAccessor_StreamCrit_t crit(_criticalData, false/*no unlock at destruction*/);
-
-    if(crit->_kernelCnt > HIP_NUM_KERNELS_INFLIGHT){
-       this->wait(crit);
-       crit->_kernelCnt = 0;
-    }
-
-    this->ensureHaveQueue(crit);
-
 
 
     return crit;
@@ -775,6 +751,9 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     if(strcmp(archName,"gfx803")==0){
       prop->gcnArch = 803;
     }
+    if(strcmp(archName,"gfx900")==0){
+      prop->gcnArch = 900;
+    }
 
     DeviceErrorCheck(err);
 
@@ -848,11 +827,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
 
     // Get Max Threads Per Multiprocessor
     uint32_t max_waves_per_cu;
-#if USE_ROCR_1_4
     err = hsa_agent_get_info(_hsaAgent,(hsa_agent_info_t) HSA_AMD_AGENT_INFO_MAX_WAVES_PER_CU, &max_waves_per_cu);
-#else
-    max_waves_per_cu = 10;
-#endif
     DeviceErrorCheck(err);
     prop-> maxThreadsPerMultiProcessor = prop->warpSize*max_waves_per_cu;
 
@@ -997,55 +972,6 @@ std::string ihipCtx_t::toString() const
 };
 
 
-hc::accelerator_view
-ihipCtx_t::stealActiveQueue(LockedAccessor_CtxCrit_t &ctxCrit, ihipStream_t *needyStream)
-{
-
-    // TODO - review handling if queue can't be found.
-    while (1) {
-
-        for (auto iter=ctxCrit->streams().begin(); iter != ctxCrit->streams().end(); iter++) {
-            if (*iter != needyStream) {
-                auto victimCritPtr = (*iter)->_criticalData.mtry_lock();
-                if (victimCritPtr)   {
-                    // try-lock succeeded:
-                    if (victimCritPtr->_hasQueue && (victimCritPtr->_kernelCnt == 0)) {
-
-                        victimCritPtr->_hasQueue = false;
-
-                        tprintf(DB_SYNC, " stealActiveQueue from victim:%s to needy:%s\n",
-                                ToString(*iter).c_str(), ToString(needyStream).c_str());
-
-                        hc::accelerator_view av = victimCritPtr->_av;
-
-                        // TODO - cleanup to remove forced setting to N
-                        uint64_t *p = (uint64_t*)(&victimCritPtr->_av);
-                        *p = 0; // damage the victim av so attempt to use it will fault.
-
-                        (*iter)->_criticalData.munlock();
-                        return av;
-                    }
-                    (*iter)->_criticalData.munlock();
-                }
-            }
-        }
-    }
-}
-
-
-hc::accelerator_view
-ihipCtx_t::createOrStealQueue(LockedAccessor_CtxCrit_t &ctxCrit)
-{
-    if (HIP_MAX_QUEUES && (ctxCrit->streams().size() >= HIP_MAX_QUEUES)) {
-        // Steal a queue from an existing stream:
-        hc::accelerator_view av = this->stealActiveQueue (ctxCrit, nullptr);
-        return av;
-    } else {
-        // Create a new view
-        return getWriteableDevice()->_acc.create_view();
-    }
-}
-
 //----
 
 
@@ -1062,29 +988,68 @@ ihipCtx_t::createOrStealQueue(LockedAccessor_CtxCrit_t &ctxCrit)
 
 
 
-// Implement "default" stream syncronization
-//   This waits for all other streams to drain before continuing.
+//   This called for submissions that are sent to the null/default stream.  This routine ensures
+//   that this new command waits for activity in the other streams to complete before proceeding.
+//
+//   HIP_SYNC_NULL_STREAM=0 does all dependency resolutiokn on the GPU
+//   HIP_SYNC_NULL_STREAM=1 s legacy non-optimal mode which conservatively waits on host.
+//
 //   If waitOnSelf is set, this additionally waits for the default stream to empty.
-void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf)
+//   In new HIP_SYNC_NULL_STREAM=0 mode, this enqueues a marker which causes the default stream to wait for other
+//   activity, but doesn't actually block the host.  If host blocking is desired, the caller should set syncHost.
+//
+//   syncToHost causes host to wait for the stream to finish.
+//   Note HIP_SYNC_NULL_STREAM=1 path always sync to Host. 
+void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf, bool syncHost)
 {
     LockedAccessor_CtxCrit_t  crit(_criticalData);
 
-    tprintf(DB_SYNC, "syncDefaultStream\n");
+    tprintf(DB_SYNC, "syncDefaultStream \n");
+
+    // Vector of ops sent to each stream that will complete before ops sent to null stream:
+    std::vector<hc::completion_future> depOps;
 
     for (auto streamI=crit->const_streams().begin(); streamI!=crit->const_streams().end(); streamI++) {
         ihipStream_t *stream = *streamI;
 
         // Don't wait for streams that have "opted-out" of syncing with NULL stream.
-        // And - don't wait for the NULL stream
-        if (!(stream->_flags & hipStreamNonBlocking)) {
+        // And - don't wait for the NULL stream, unless waitOnSelf specified.
+        bool waitThisStream = (!(stream->_flags & hipStreamNonBlocking)) && 
+                              (waitOnSelf || (stream != _defaultStream));
 
-            if (waitOnSelf || (stream != _defaultStream)) {
-                // TODO-hcc - use blocking or active wait here?
-                // TODO-sync - cudaDeviceBlockingSync
+        if (HIP_SYNC_NULL_STREAM) {
+
+            if (waitThisStream) {
                 stream->locked_wait();
+            }
+        } else {
+            if (waitThisStream) {
+                LockedAccessor_StreamCrit_t streamCrit(stream->_criticalData);
+
+                // The last marker will provide appropriate visibility:
+                if (!streamCrit->_av.get_is_empty()) {
+                    depOps.push_back(streamCrit->_av.create_marker(hc::accelerator_scope));
+                    tprintf(DB_SYNC, "  push marker to wait for stream=%s\n", ToString(stream).c_str());
+                } else {
+                    tprintf(DB_SYNC, "  skipped stream=%s since it is empty\n", ToString(stream).c_str());
+                }
             }
         }
     }
+
+    
+    // Enqueue a barrier to wait on all the barriers we sent above:
+    if (!HIP_SYNC_NULL_STREAM && !depOps.empty()) {
+        LockedAccessor_StreamCrit_t defaultStreamCrit(_defaultStream->_criticalData);
+        tprintf(DB_SYNC, "  null-stream wait on %zu non-empty streams. sync_host=%d\n", depOps.size(), syncHost);
+        hc::completion_future defaultCf = defaultStreamCrit->_av.create_blocking_marker(depOps.begin(), depOps.end(), hc::accelerator_scope);
+        if (syncHost) {
+            defaultCf.wait(); // TODO - account for active or blocking here.
+        }
+    }
+
+    tprintf(DB_SYNC, "  syncDefaultStream depOps=%zu\n", depOps.size());
+
 }
 
 
@@ -1244,7 +1209,6 @@ void HipReadEnv()
     READ_ENV_I(release, HIP_API_BLOCKING, 0, "Make HIP APIs 'host-synchronous', so they block until completed.  Impacts hipMemcpyAsync, hipMemsetAsync." );
 
 
-    READ_ENV_I(release, HIP_MAX_QUEUES, 0, "Maximum number of queues that this app will use per-device.  Additional streams will share the specified number of queues.  0=no limit.");
 
     READ_ENV_C(release, HIP_DB, 0,  "Print debug info.  Bitmask (HIP_DB=0xff) or flags separated by '+' (HIP_DB=api+sync+mem+copy)", HIP_DB_callback);
     if ((HIP_DB & (1<<DB_API))  && (HIP_TRACE_API == 0)) {
@@ -1271,14 +1235,14 @@ void HipReadEnv()
     READ_ENV_I(release, HIP_FAIL_SOC, 0, "Fault on Sub-Optimal-Copy, rather than use a slower but functional implementation.  Bit 0x1=Fail on async copy with unpinned memory.  Bit 0x2=Fail peer copy rather than use staging buffer copy");
 
     READ_ENV_I(release, HIP_SYNC_HOST_ALLOC, 0, "Sync before and after all host memory allocations.  May help stability");
+    READ_ENV_I(release, HIP_SYNC_NULL_STREAM, 0, "Synchronize on host for null stream submissions");
 
-    // TODO - review, can we remove this?
-    READ_ENV_I(release, HIP_NUM_KERNELS_INFLIGHT, 128, "Max number of inflight kernels per stream before active synchronization is forced.");
 
     READ_ENV_I(release, HIP_COHERENT_HOST_ALLOC, 0, "If set, all host memory will be allocated as fine-grained system memory.  This allows threadfence_system to work but prevents host memory from being cached on GPU which may have performance impact.");
 
 
-    READ_ENV_I(release, HCC_OPT_FLUSH, 0, "Note this flag also impact HCC.  When set, use agent-scope flush rather than system-scope flush when possible.");
+    READ_ENV_I(release, HCC_OPT_FLUSH, 0, "When set, use agent-scope fence operations rather than system-scope fence operationsflush when possible. This flag controls both HIP and HCC behavior.");
+    READ_ENV_I(release, HIP_EVENT_SYS_RELEASE, 0, "If set, event are created with hipEventReleaseToSystem by default.  If 0, events are created with hipEventReleaseToDevice by default.  The defaults can be overridden by specifying hipEventReleaseToSystem or hipEventReleaseToDevice flag when creating the event.");
 
     // Some flags have both compile-time and runtime flags - generate a warning if user enables the runtime flag but the compile-time flag is disabled.
     if (HIP_DB && !COMPILE_HIP_DB) {
@@ -1389,6 +1353,14 @@ void ihipInit()
             g_deviceCnt++;
         }
     }
+
+    g_allAgents = static_cast<hsa_agent_t*> (malloc((g_deviceCnt+1) * sizeof(hsa_agent_t)));
+    g_allAgents[0] = g_cpu_agent;
+    for (int i=0; i<g_deviceCnt; i++) {
+        g_allAgents[i+1] = g_deviceArray[i]->_hsaAgent;
+    }
+
+
     g_numLogicalThreads = std::thread::hardware_concurrency();
 
     // If HIP_VISIBLE_DEVICES is not set, make sure all devices are initialized
@@ -1411,17 +1383,49 @@ void ihipInit()
 hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 {
     if (stream == hipStreamNull ) {
-        ihipCtx_t *device = ihipGetTlsDefaultCtx();
+        // Submitting to NULL stream, call locked_syncDefaultStream to wait for all other streams:
+        ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
+        tprintf(DB_SYNC, "ihipSyncAndResolveStream %s wait on default stream\n", ToString(stream).c_str());
 
 #ifndef HIP_API_PER_THREAD_DEFAULT_STREAM
-        device->locked_syncDefaultStream(false);
+        ctx->locked_syncDefaultStream(false, false);
 #endif
-        return device->_defaultStream;
+        return ctx->_defaultStream;
     } else {
-        // ALl streams have to wait for legacy default stream to be empty:
+        // Submitting to a "normal" stream, just wait for null stream:
         if (!(stream->_flags & hipStreamNonBlocking))  {
-            tprintf(DB_SYNC, "%s wait default stream\n", ToString(stream).c_str());
-            stream->getCtx()->_defaultStream->locked_wait();
+            if (HIP_SYNC_NULL_STREAM) {
+                tprintf(DB_SYNC, "ihipSyncAndResolveStream %s host-wait on default stream\n", ToString(stream).c_str());
+                stream->getCtx()->_defaultStream->locked_wait();
+            } else {
+                ihipStream_t *defaultStream = stream->getCtx()->_defaultStream;
+
+
+                bool needGatherMarker = false; // used to gather together other markers.
+                hc::completion_future dcf;
+                {
+                    LockedAccessor_StreamCrit_t defaultStreamCrit(defaultStream->criticalData());
+                    // TODO - could call create_blocking_marker(queue) or uses existing marker.
+                    if (!defaultStreamCrit->_av.get_is_empty()) {
+                        needGatherMarker = true;
+
+                        tprintf(DB_SYNC, "  %s adding marker to default %s for dependency\n", 
+                                ToString(stream).c_str(), ToString(defaultStream).c_str());
+                        dcf = defaultStreamCrit->_av.create_marker(hc::accelerator_scope);
+                    } else {
+                        tprintf(DB_SYNC, "  %s skipping marker since default stream is empty\n", ToString(stream).c_str());
+                    }
+                }
+
+                if (needGatherMarker) {
+                    // ensure any commands sent to this stream wait on the NULL stream before continuing
+                    LockedAccessor_StreamCrit_t thisStreamCrit(stream->criticalData());
+                    // TODO - could be "noret" version of create_blocking_marker
+                    thisStreamCrit->_av.create_blocking_marker(dcf, hc::accelerator_scope);
+                    tprintf(DB_SYNC, "  %s adding marker to wait for freshly recorded default-stream marker \n", 
+                            ToString(stream).c_str());
+                }
+            }
         }
 
         return stream;
@@ -1431,7 +1435,7 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream)
 void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, const hipStream_t stream)
 {
 
-    if ((HIP_TRACE_API & (1<<TRACE_CMD)) || HIP_PROFILE_API || (COMPILE_HIP_DB && HIP_TRACE_API)) {
+    if ((HIP_TRACE_API & (1<<TRACE_KCMD)) || HIP_PROFILE_API || (COMPILE_HIP_DB & HIP_TRACE_API)) {
         std::stringstream os_pre;
         std::stringstream os;
         os_pre  << "<<hip-api tid:";
@@ -1900,13 +1904,8 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
         printPointerInfo(DB_COPY, "  dst", dst, dstPtrInfo);
         printPointerInfo(DB_COPY, "  src", src, srcPtrInfo);
 
-        this->ensureHaveQueue(crit);
 
-#if USE_COPY_EXT_V2
         crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice ? &copyDevice->getDevice()->_acc : nullptr, forceUnpinnedCopy);
-#else
-        crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceUnpinnedCopy);
-#endif
     }
 }
 
@@ -2011,21 +2010,12 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
 
             // Perform fast asynchronous copy - we know copyDevice != NULL based on check above
             try {
-                this->ensureHaveQueue(crit);
 
                 if (HIP_FORCE_SYNC_COPY) {
-#if USE_COPY_EXT_V2
                     crit->_av.copy_ext      (src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, &copyDevice->getDevice()->_acc, forceUnpinnedCopy);
-#else
-                    crit->_av.copy_ext      (src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceUnpinnedCopy);
-#endif
 
                 } else {
-#if USE_COPY_EXT_V2
                     crit->_av.copy_async_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, &copyDevice->getDevice()->_acc);
-#else
-                    crit->_av.copy_async(src, dst, sizeBytes);
-#endif
                 }
             } catch (Kalmar::runtime_exception) {
                 throw ihipException(hipErrorRuntimeOther);
@@ -2056,13 +2046,8 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
             // Perform slow synchronous copy:
             LockedAccessor_StreamCrit_t crit(_criticalData);
 
-            this->ensureHaveQueue(crit);
 
-#if USE_COPY_EXT_V2
             crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, copyDevice ? &copyDevice->getDevice()->_acc : nullptr, forceUnpinnedCopy);
-#else
-            crit->_av.copy_ext(src, dst, sizeBytes, hcCopyDir, srcPtrInfo, dstPtrInfo, forceUnpinnedCopy);
-#endif
         }
     }
 }
@@ -2115,7 +2100,6 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator *acc)
 
 
 //---
-// Warning - with HIP_MAX_QUEUES!=0 there is no mechanism to prevent accelerator_view from being re-assigned...
 hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **av)
 {
     HIP_INIT_API(stream, av);
