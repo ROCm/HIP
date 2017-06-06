@@ -112,7 +112,7 @@ hipError_t hipDeviceGetLimit (size_t *pValue, hipLimit_t limit)
     }
 }
 
-hipError_t hipFuncSetCacheConfig (hipFuncCache_t cacheConfig)
+hipError_t hipFuncSetCacheConfig (const void* func, hipFuncCache_t cacheConfig)
 {
     HIP_INIT_API(cacheConfig);
 
@@ -298,7 +298,7 @@ hipError_t ihipGetDeviceProperties(hipDeviceProp_t* props, int device)
 hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device)
 {
     HIP_INIT_API(props, device);
-    return ihipGetDeviceProperties(props, device);
+    return ihipLogStatus(ihipGetDeviceProperties(props, device));
 }
 
 hipError_t hipSetDeviceFlags( unsigned int flags)

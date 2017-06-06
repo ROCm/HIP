@@ -41,6 +41,8 @@ THE SOFTWARE.
 #include <stddef.h>
 #endif//__cplusplus
 
+#if __HCC__
+
 // Define NVCC_COMPAT for CUDA compatibility
 #define NVCC_COMPAT
 #define CUDA_SUCCESS hipSuccess
@@ -147,8 +149,15 @@ extern int HIP_TRACE_API;
 #endif /* Device feature flags */
 
 
-//TODO-HCC  this is currently ignored by HCC target of HIP
-#define __launch_bounds__(requiredMaxThreadsPerBlock, minBlocksPerMultiprocessor)
+#define launch_bounds_impl0(requiredMaxThreadsPerBlock)\
+    __attribute__((amdgpu_flat_work_group_size(1, requiredMaxThreadsPerBlock)))
+#define launch_bounds_impl1(\
+    requiredMaxThreadsPerBlock, minBlocksPerMultiprocessor)\
+    __attribute__((amdgpu_flat_work_group_size(1, requiredMaxThreadsPerBlock),\
+        amdgpu_waves_per_eu(minBlocksPerMultiprocessor)))
+#define select_impl_(_1, _2, impl_, ...) impl_
+#define __launch_bounds__(...) select_impl_(\
+    __VA_ARGS__, launch_bounds_impl1, launch_bounds_impl0)(__VA_ARGS__)
 
 // Detect if we are compiling C++ mode or C mode
 #if defined(__cplusplus)
@@ -481,6 +490,6 @@ do {\
  */
 
 
-
+#endif
 
 #endif//HIP_HCC_DETAIL_RUNTIME_H

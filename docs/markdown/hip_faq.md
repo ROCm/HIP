@@ -53,7 +53,7 @@ At a high-level, the following features are not supported:
 - Dynamic parallelism (CUDA 5.0)
 - Managed memory (CUDA 6.5)
 - Graphics interoperability with OpenGL or Direct3D
-- CUDA Driver API (Under Development)
+- CUDA Driver API
 - CUDA IPC Functions (Under Development)
 - CUDA array, mipmappedArray and pitched memory
 - MemcpyToSymbol functions
@@ -102,7 +102,7 @@ However, we can provide a rough summary of the features included in each CUDA SD
     - Per-thread-streams (under development)
     - C++11 (HCC supports all of C++11, all of C++14 and some C++17 features)
 - CUDA 7.5
-    - float16 (under development)
+    - float16
 - CUDA 8.0
     - TBD.
 

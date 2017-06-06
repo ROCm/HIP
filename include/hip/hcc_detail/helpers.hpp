@@ -102,9 +102,6 @@ namespace hip_impl
         // Not callable.
         template<FunctionalProcedure F>
         struct is_callable_impl<F, 5u> : std::false_type {};
-
-        template<typename Call>
-        struct is_callable : is_callable_impl<Call> {};
     #else
         template<typename, typename = void>
         struct is_callable_impl : std::false_type {};
@@ -114,6 +111,8 @@ namespace hip_impl
             F(Ts...),
             void_t_<std::result_of_t<F(Ts...)>>> : std::true_type {};
     #endif
+        template<typename Call>
+        struct is_callable : is_callable_impl<Call> {};
 
     #define count_macro_args_impl_hip_(\
          _0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15,\

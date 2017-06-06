@@ -250,6 +250,7 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeIsMultiGpuBoard,                      ///< Multiple GPU devices.
 } hipDeviceAttribute_t;
 
+
 /**
  *     @}
  */
