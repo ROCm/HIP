@@ -243,6 +243,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 }
 
 
+
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
     HIP_INIT_SPECIAL_API((TRACE_MEM), ptr, sizeBytes, flags);
@@ -289,10 +290,10 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
             if (flags & hipHostMallocCoherent) {
                 amFlags = amHostCoherent;
             } else if (flags & hipHostMallocNonCoherent) {
-                amFlags = amHostPinned;
+                amFlags = amHostNonCoherent;
             } else {
                 // depends on env variables:
-                amFlags = HIP_COHERENT_HOST_ALLOC ? amHostCoherent : amHostPinned;
+                amFlags = HIP_COHERENT_HOST_ALLOC ? amHostCoherent : amHostNonCoherent;
             }
 
 
