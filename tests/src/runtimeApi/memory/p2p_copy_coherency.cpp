@@ -156,7 +156,13 @@ int main(int argc, char *argv[])
     int dev0 = 0;
     int dev1 = 1;
 
-    // TODO - only works on multi-GPU system:
+    int numDevices;
+    HIPCHECK(hipGetDeviceCount(&numDevices));
+    if (numDevices == 1) {
+        printf("warning : test requires atleast two gpus\n");
+        passed();
+    }
+
     if (enablePeers(dev0,dev1) == -1) {
         printf ("warning : could not find peer gpus\n");
         return -1;
