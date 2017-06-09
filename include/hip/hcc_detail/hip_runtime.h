@@ -305,7 +305,7 @@ __device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask
 __host__ __device__ int min(int arg1, int arg2);
 __host__ __device__ int max(int arg1, int arg2);
 
-__device__ ADDRESS_SPACE_3 void* __get_dynamicgroupbaseptr();
+__device__ void* __get_dynamicgroupbaseptr();
 
 
 /**
@@ -464,10 +464,10 @@ do {\
 // Macro to replace extern __shared__ declarations
 // to local variable definitions
 #define HIP_DYNAMIC_SHARED(type, var) \
-    ADDRESS_SPACE_3 type* var = \
-    (ADDRESS_SPACE_3 type*)__get_dynamicgroupbaseptr(); \
+    type* var = \
+    (type*)__get_dynamicgroupbaseptr(); \
 
-#define HIP_DYNAMIC_SHARED_ATTRIBUTE ADDRESS_SPACE_3
+#define HIP_DYNAMIC_SHARED_ATTRIBUTE 
 
 
 
