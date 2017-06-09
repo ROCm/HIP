@@ -24,7 +24,7 @@ THE SOFTWARE.
 #define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_FP16_H
 
 #include "hip/hcc_detail/hip_vector_types.h"
-
+#if ( __clang_major__ > 3)
 typedef __fp16 __half;
 typedef __fp16 __half1 __attribute__((ext_vector_type(1)));
 typedef __fp16 __half2 __attribute__((ext_vector_type(2)));
@@ -454,6 +454,6 @@ __device__ static inline __half2 h2trunc(const __half2 h) {
   a.xy = __hip_hc_ir_h2trunc_int(h.xy);
   return a;
 }
-
+#endif //clang_major > 3
 
 #endif
