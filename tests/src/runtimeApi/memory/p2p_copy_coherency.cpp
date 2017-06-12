@@ -33,9 +33,13 @@ THE SOFTWARE.
 
 #ifdef __HIP_PLATFORM_HCC__
 #include <hc_am.hpp>
+#define USE_HCC_MEMTRACKER 0
 #endif
 
 #define USE_HSA_COPY 1
+
+int elementSizes[] = {16, 1024,524288};
+int nSizes  = sizeof(elementSizes) / sizeof(int);
 
 int enablePeers(int dev0, int dev1)
 {
@@ -54,16 +58,25 @@ int enablePeers(int dev0, int dev1)
     return 0;
 };
 
-
 __global__ void
-memsetIntKernel(int * ptr, int val, size_t numElements)
+memsetIntKernel(/*hipLaunchParm lp,*/ int * ptr, const int val, size_t numElements)
 {
     int gid = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    if (gid < numElements) {
-        ptr[gid] = val;
+    int stride = hipBlockDim_x * hipGridDim_x ;
+    for (size_t i= gid; i< numElements; i+=stride){
+       ptr[i] = val;
     }
 };
 
+__global__ void
+memcpyIntKernel(/*hipLaunchParm lp, */const int * src, int* dst, size_t numElements)
+{
+    int gid = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    int stride = hipBlockDim_x * hipGridDim_x ;
+    for (size_t i= gid; i< numElements; i+=stride){
+       dst[i] = src[i];
+    }
+};
 
 void checkReverse(const int *ptr, int numElements, int expected) {
     for (int i=numElements-1; i>=0; i--) {
@@ -76,52 +89,66 @@ void checkReverse(const int *ptr, int numElements, int expected) {
     printf ("test:   OK\n");
 }
 
-
-void runTest(bool stepAIsCopy, hipStream_t gpu0Stream, hipStream_t gpu1Stream, int numElements,
-             int * dataGpu0, int *dataGpu1, int *dataHost, int expected)
+void runTest(bool stepAIsCopy, bool hostSync, hipStream_t gpu0Stream, hipStream_t gpu1Stream, int numElements,
+             int * dataGpu0_0, int * dataGpu0_1, int *dataGpu1, int *dataHost, int expected)
 {
     hipEvent_t e;
-    HIPCHECK(hipEventCreateWithFlags(&e,0));
-
-    printf ("test: runTest with %s\n", stepAIsCopy ? "copy" : "kernel");
+    if(!hostSync) {
+        HIPCHECK(hipEventCreateWithFlags(&e,0));
+    }
     const size_t sizeElements = numElements * sizeof(int);
+    printf ("test: runTest with %zu bytes %s with hostSync %s\n", sizeElements, stepAIsCopy ? "copy" : "kernel", hostSync ? "enabled" : "disabled");
 
     hipStream_t stepAStream = gpu0Stream;
 
     if (stepAIsCopy) {
 #ifdef USE_HSA_COPY
-        HIPCHECK(hipMemcpyAsync(dataGpu1, dataGpu0, sizeElements, hipMemcpyDeviceToDevice, stepAStream));
+        HIPCHECK(hipMemcpyAsync(dataGpu1, dataGpu0_0, sizeElements, hipMemcpyDeviceToDevice, stepAStream));
 #endif
     } else {
-        assert(0); // not yet supported.
+        //assert(0); // not yet supported.
+        unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, numElements);
+        hipLaunchKernelGGL(memcpyIntKernel, dim3(blocks), dim3(threadsPerBlock), 0, gpu0Stream,
+                       dataGpu0_0, dataGpu1, numElements);
     }
 
-    HIPCHECK(hipEventRecord(e, stepAStream));
-    HIPCHECK(hipStreamWaitEvent(gpu1Stream, e, 0));
+    if(!hostSync) {
+        HIPCHECK(hipEventRecord(e, stepAStream));
+        HIPCHECK(hipStreamWaitEvent(gpu1Stream, e, 0));
+    } else {
+        HIPCHECK(hipStreamSynchronize(stepAStream));
+    }
 
-    HIPCHECK(hipMemcpyAsync(dataHost, dataGpu1, sizeElements, hipMemcpyDeviceToHost, gpu1Stream));
+    HIPCHECK(hipMemcpyAsync(dataGpu0_1, dataGpu1, sizeElements, hipMemcpyDeviceToDevice, gpu1Stream));
 
-    HIPCHECK(hipStreamSynchronize(gpu1Stream));
+    if(!hostSync) {
+        HIPCHECK(hipEventRecord(e, gpu1Stream));
+    } else {
+        HIPCHECK(hipStreamSynchronize(gpu1Stream));
+    }
+
+    HIPCHECK(hipMemcpyAsync(dataHost, dataGpu0_1, sizeElements, hipMemcpyDeviceToHost, gpu0Stream));
+    HIPCHECK(hipStreamSynchronize(gpu0Stream));
 
     checkReverse(dataHost, numElements, expected);
 }
 
-
-void testMultiGpu0(int dev0, int dev1, int numElements)
+void testMultiGpu(int dev0, int dev1, int numElements, bool hostSync, bool useMemcpy)
 {
     const size_t sizeElements = numElements * sizeof(int);
 
-    int * dataGpu0, *dataGpu1, *dataHost;
+    int * dataGpu0_0, * dataGpu0_1, *dataGpu1, *dataHost;
     hipStream_t gpu0Stream, gpu1Stream;
     const int expected = 42;
     unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, numElements);
 
     HIPCHECK(hipSetDevice(dev0));
 
-    HIPCHECK(hipMalloc(&dataGpu0, sizeElements));
+    HIPCHECK(hipMalloc(&dataGpu0_0, sizeElements));
+    HIPCHECK(hipMalloc(&dataGpu0_1, sizeElements));
     HIPCHECK(hipStreamCreate(&gpu0Stream));
     hipLaunchKernelGGL(memsetIntKernel, dim3(blocks), dim3(threadsPerBlock), 0, gpu0Stream,
-                       dataGpu0, expected, numElements);
+                       dataGpu0_0, expected, numElements);
     HIPCHECK(hipDeviceSynchronize());
 
 
@@ -135,17 +162,18 @@ void testMultiGpu0(int dev0, int dev1, int numElements)
     HIPCHECK(hipHostMalloc(&dataHost, sizeElements));
     memset(dataHost, 13, sizeElements);
 
-#ifdef __HIP_PLATFORM_HCC__
+#if USE_HCC_MEMTRACKER
     hc::am_memtracker_print(0x0);
 #endif
-    
+
     printf ("  test: init complete\n");
+    runTest(useMemcpy , hostSync, gpu0Stream, gpu1Stream, numElements, dataGpu0_0,dataGpu0_1, dataGpu1, dataHost, expected);
 
-    runTest(true/*stepAIsCopy*/, gpu0Stream, gpu1Stream, numElements, dataGpu0, dataGpu1, dataHost, expected);
-
+    HIPCHECK(hipFree(dataGpu0_0));
+    HIPCHECK(hipFree(dataGpu0_1));
+    HIPCHECK(hipFree(dataGpu1));
+    HIPCHECK(hipHostFree(dataHost));
 };
-
-
 
 int main(int argc, char *argv[])
 {
@@ -168,8 +196,12 @@ int main(int argc, char *argv[])
         return -1;
     };
 
-    //testMultiGpu0(dev0, dev1, numElements);
-
+    for(int index = 1;index < nSizes;index++) {
+        testMultiGpu(dev0, dev1, elementSizes[index] , false /* GPU Synchronization*/, true);
+        testMultiGpu(dev0, dev1, elementSizes[index] , true /*Host Synchronization*/, true);
+        testMultiGpu(dev0, dev1, elementSizes[index] , true /*Host Synchronization*/, false);
+        testMultiGpu(dev0, dev1, elementSizes[index] , false /*Host Synchronization*/, false);
+    }
 
 
     passed();
