@@ -14,6 +14,15 @@ Upcoming:
 ## Revision History:
 
 ===================================================================================================
+- new APIs: hipMemcpy2DAsync, hipMallocPitch, hipHostMallocCoherent, hipHostMallocNonCoherent
+- added support for building hipify-clang using clang 3.9
+- hipify-clang updates for CUDA 8.0 runtime+driver support
+- renamed hipify to hipify-perl
+- initial implementation of hipify-cmakefile
+- several documentation updates & bug fixes
+
+
+===================================================================================================
 Release: 1.0.17102
 Date: 2017.03.07
 - Lots of improvements to hipify-clang.

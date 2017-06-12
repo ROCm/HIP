@@ -1101,11 +1101,13 @@ __host__ __device__ int max(int arg1, int arg2)
   return (int)(hc::precise_math::fmax((float)arg1, (float)arg2));
 }
 
-__device__ ADDRESS_SPACE_3 void* __get_dynamicgroupbaseptr()
-{
+__device__ void* __get_dynamicgroupbaseptr() {
   return hc::get_dynamic_group_segment_base_pointer();
 }
 
+__host__ void* __get_dynamicgroupbaseptr() { 
+  return nullptr; 
+}
 
 // Precise Math Functions
 __device__ float __hip_precise_cosf(float x) {
