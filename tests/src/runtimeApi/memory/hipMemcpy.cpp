@@ -304,7 +304,7 @@ void memcpytest2_sizes(size_t maxElem=0)
     HIPCHECK(hipMemGetInfo(&free, &total));
 
     if (maxElem == 0) {
-        maxElem = free/sizeof(T)/5;
+        maxElem = free/sizeof(T)/8;
     }
 
     printf ("  device#%d: hipMemGetInfo: free=%zu (%4.2fMB) total=%zu (%4.2fMB)    maxSize=%6.1fMB\n", 
