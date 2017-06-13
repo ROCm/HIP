@@ -386,65 +386,168 @@
 | define       |`CUDA_ARRAY3D_TEXTURE_GATHER`                                  |                                                            | This flag must be set in order to perform texture gather operations on a CUDA array.                                           |
 | define       |`CUDA_VERSION`                                                 |                                                            | CUDA API version number.                                                                                                       |
 
-
 ## **2. Error Handling**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuGetErrorName`                                          |                               | Gets the string representation of an error code enum name.                                                                     |
+| `cuGetErrorString`                                        |                               | Gets the string description of an error code.                                                                                  |
 
 ## **3. Initialization**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuInit`                                                  | `hipInit`                     | Initialize the CUDA driver API.                                                                                                |
 
 ## **4. Version Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuDriverGetVersion`                                      | `hipDriverGetVersion`         | Returns the CUDA driver version.                                                                                               |
 
 ## **5. Device Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `cuDriverGetVersion`                                      | `hipGetDevice`                | Returns a handle to a compute device.                                                                                          |
+| `cuDeviceGetAttribute`                                    | `hipDeviceGetAttribute`       | Returns information about the device.                                                                                          |
+| `cuDeviceGetCount`                                        | `hipGetDeviceCount`           | Returns the number of compute-capable devices.                                                                                 |
+| `cuDeviceGetName`                                         | `hipDeviceGetName`            | Returns an identifer string for the device.                                                                                    |
+| `cuDeviceTotalMem`                                        | `hipDeviceTotalMem`           | Returns the total amount of memory on the device.                                                                              |
 
 ## **6. Device Management [DEPRECATED]**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuDeviceComputeCapability`                               | `hipDeviceComputeCapability`  | Returns the compute capability of the device.                                                                                  |
+| `cuDeviceGetProperties`                                   | `hipGetDeviceProperties`      | Returns properties for a selected device.                                                                                      |
 
 ## **7. Primary Context Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuDevicePrimaryCtxGetState`                              | `hipDevicePrimaryCtxGetState` | Get the state of the primary context.                                                                                          |
+| `cuDevicePrimaryCtxRelease`                               | `hipDevicePrimaryCtxRelease`  | Release the primary context on the GPU.                                                                                        |
+| `cuDevicePrimaryCtxReset`                                 | `hipDevicePrimaryCtxReset`    | Destroy all allocations and reset all state on the primary context.                                                            |
+| `cuDevicePrimaryCtxRetain`                                | `hipDevicePrimaryCtxRetain`   | Retain the primary context on the GPU.                                                                                         |
+| `cuDevicePrimaryCtxSetFlags`                              | `hipDevicePrimaryCtxSetFlags` | Set flags for the primary context.                                                                                             |
 
 ## **8. Context Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuCtxCreate`                                             | `hipCtxCreate`                | Create a CUDA context.                                                                                                         |
+| `cuCtxDestroy`                                            | `hipCtxDestroy`               | Destroy a CUDA context.                                                                                                        |
+| `cuCtxGetApiVersion`                                      | `hipCtxGetApiVersion`         | Gets the context's API version.                                                                                                |
+| `cuCtxGetCacheConfig`                                     | `hipCtxGetCacheConfig`        | Returns the preferred cache configuration for the current context.                                                             |
+| `cuCtxGetCurrent`                                         | `hipCtxGetCurrent`            | Returns the CUDA context bound to the calling CPU thread.                                                                      |
+| `cuCtxGetDevice`                                          | `hipCtxGetDevice`             | Returns the device ID for the current context.                                                                                 |
+| `cuCtxGetFlags`                                           | `hipCtxGetFlags`              | Returns the flags for the current context.                                                                                     |
+| `cuCtxGetLimit`                                           |                               | Returns resource limits.                                                                                                       |
+| `cuCtxGetSharedMemConfig`                                 | `hipCtxGetSharedMemConfig`    | Returns the current shared memory configuration for the current context.                                                       |
+| `cuCtxGetStreamPriorityRange`                             |                               | Returns numerical values that correspond to the least and greatest stream priorities.                                          |
+| `cuCtxPopCurrent`                                         | `hipCtxPopCurrent`            | Pops the current CUDA context from the current CPU thread.                                                                     |
+| `cuCtxPushCurrent`                                        | `hipCtxPushCurrent`           | Pushes a context on the current CPU thread.                                                                                    |
+| `cuCtxSetCacheConfig`                                     | `hipCtxSetCacheConfig`        | Sets the preferred cache configuration for the current context.                                                                |
+| `cuCtxSetCurrent`                                         | `hipCtxSetCurrent`            | Binds the specified CUDA context to the calling CPU thread.                                                                    |
+| `cuCtxSetLimit`                                           |                               | Set resource limits.                                                                                                           |
+| `cuCtxSetSharedMemConfig`                                 | `hipCtxSetSharedMemConfig`    | Sets the shared memory configuration for the current context.                                                                  |
+| `cuCtxSynchronize`                                        | `hipCtxSynchronize`           | Block for a context's tasks to complete.                                                                                       |
 
 ## **9. Context Management [DEPRECATED]**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuCtxAttach`                                             |                               | Increment a context's usage-count.                                                                                             |
+| `cuCtxDetach`                                             |                               | Decrement a context's usage-count.                                                                                             |
 
 ## **10. Module Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuLinkAddData`                                           |                               | Add an input to a pending linker invocation.                                                                                   |
+| `cuLinkAddFile`                                           |                               | Add a file input to a pending linker invocation.                                                                               |
+| `cuLinkComplete`                                          |                               | Complete a pending linker invocation.                                                                                          |
+| `cuLinkCreate`                                            |                               | Creates a pending JIT linker invocation.                                                                                       |
+| `cuLinkDestroy`                                           |                               | Destroys state for a JIT linker invocation.                                                                                    |
+| `cuModuleGetFunction`                                     | `hipModuleGetFunction`        | Returns a function handle.                                                                                                     |
+| `cuModuleGetGlobal`                                       | `hipModuleGetGlobal`          | Returns a global pointer from a module.                                                                                        |
+| `cuModuleGetSurfRef`                                      |                               | Returns a handle to a surface reference.                                                                                       |
+| `cuModuleGetTexRef`                                       |                               | Returns a handle to a texture reference.                                                                                       |
+| `cuModuleLoad`                                            | `hipModuleLoad`               | Loads a compute module.                                                                                                        |
+| `cuModuleLoadData`                                        | `hipModuleLoadData`           | Load a module's data.                                                                                                          |
+| `cuModuleLoadDataEx`                                      | `hipModuleLoadDataEx`         | Load a module's data with options.                                                                                             |
+| `cuModuleLoadFatBinary`                                   |                               | Load a module's data.                                                                                                          |
+| `cuModuleUnload`                                          | `hipModuleUnload`             | Unloads a module.                                                                                                              |
 
 ## **11. Memory Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuArray3DCreate`                                         |                               | Creates a 3D CUDA array.                                                                                                       |
+| `cuArray3DGetDescriptor`                                  |                               | Get a 3D CUDA array descriptor.                                                                                                |
+| `cuArrayCreate`                                           |                               | Creates a 1D or 2D CUDA array.                                                                                                 |
+| `cuArrayDestroy`                                          |                               | Destroys a CUDA array.                                                                                                         |
+| `cuArrayGetDescriptor`                                    |                               | Get a 1D or 2D CUDA array descriptor.                                                                                          |
+| `cuDeviceGetByPCIBusId`                                   | `hipDeviceGetByPCIBusId`      | Returns a handle to a compute device.                                                                                          |
+| `cuDeviceGetPCIBusId`                                     | `hipDeviceGetPCIBusId`        | Returns a PCI Bus Id string for the device.                                                                                    |
+| `cuIpcCloseMemHandle`                                     |                               | Close memory mapped with cuIpcOpenMemHandle.                                                                                   |
+| `cuIpcGetEventHandle`                                     |                               | Gets an interprocess handle for a previously allocated event.                                                                  |
+| `cuIpcGetMemHandle`                                       |                               | Gets an interprocess memory handle for an existing device memory allocation.                                                   |
+| `cuIpcOpenEventHandle`                                    |                               | Opens an interprocess event handle for use in the current process.                                                             |
+| `cuIpcOpenMemHandle`                                      |                               | Opens an interprocess memory handle exported from another process and returns a device pointer usable in the local process.    |
+| `cuMemAlloc`                                              | `hipMalloc`                   | Allocates device memory.                                                                                                       |
+| `cuMemAllocHost`                                          |                               | Allocates page-locked host memory.                                                                                             |
+| `cuMemAllocManaged`                                       |                               | Allocates memory that will be automatically managed by the Unified Memory system.                                              |
+| `cuMemAllocPitch`                                         |                               | Allocates pitched device memory.                                                                                               |
+| `cuMemcpy`                                                |                               | Copies memory.                                                                                                                 |
+| `cuMemcpy2D`                                              |                               | Copies memory for 2D arrays.                                                                                                   |
+| `cuMemcpy2DAsync`                                         |                               | Copies memory for 2D arrays.                                                                                                   |
+| `cuMemcpy2DUnaligned`                                     |                               | Copies memory for 2D arrays.                                                                                                   |
+| `cuMemcpy3D`                                              |                               | Copies memory for 3D arrays.                                                                                                   |
+| `cuMemcpy3DAsync`                                         |                               | Copies memory for 3D arrays.                                                                                                   |
+| `cuMemcpy3DPeer`                                          |                               | Copies memory between contexts.                                                                                                |
+| `cuMemcpy3DPeerAsync`                                     |                               | Copies memory between contexts asynchronously.                                                                                 |
+| `cuMemcpyAsync`                                           |                               | Copies memory asynchronously.                                                                                                  |
+| `cuMemcpyAtoA`                                            |                               | Copies memory from Array to Array.                                                                                             |
+| `cuMemcpyAtoD`                                            |                               | Copies memory from Array to Device.                                                                                            |
+| `cuMemcpyAtoH`                                            |                               | Copies memory from Array to Host.                                                                                              |
+| `cuMemcpyAtoHAsync`                                       |                               | Copies memory from Array to Host.                                                                                              |
+| `cuMemcpyDtoA`                                            |                               | Copies memory from Device to Array.                                                                                            |
+| `cuMemcpyDtoD`                                            | `hipMemcpyDtoD`               | Copies memory from Device to Device.                                                                                           |
+| `cuMemcpyDtoDAsync`                                       | `hipMemcpyDtoDAsync`          | Copies memory from Device to Device.                                                                                           |
+| `cuMemcpyDtoH`                                            | `hipMemcpyDtoH`               | Copies memory from Device to Host.                                                                                             |
+| `cuMemcpyDtoHAsync`                                       | `hipMemcpyDtoHAsync`          | Copies memory from Device to Host.                                                                                             |
+| `cuMemcpyHtoA`                                            |                               | Copies memory from Host to Array.                                                                                              |
+| `cuMemcpyHtoAAsync`                                       |                               | Copies memory from Host to Array.                                                                                              |
+| `cuMemcpyHtoD`                                            | `hipMemcpyHtoD`               | Copies memory from Host to Device.                                                                                             |
+| `cuMemcpyHtoDAsync`                                       | `hipMemcpyHtoDAsync`          | Copies memory from Host to Device.                                                                                             |
+| `cuMemcpyPeer`                                            |                               | Copies device memory between two contexts.                                                                                     |
+| `cuMemcpyPeerAsync`                                       |                               | Copies device memory between two contexts asynchronously.                                                                      |
+| `cuMemFree`                                               | `hipFree`                     | Frees device memory.                                                                                                           |
+| `cuMemFreeHost`                                           | `hipFreeHost`                 | Frees page-locked host memory.                                                                                                 |
+| `cuMemGetAddressRange`                                    |                               | Get information on memory allocations.                                                                                         |
+| `cuMemGetInfo`                                            | `hipMemGetInfo`               | Gets free and total memory.                                                                                                    |
+| `cuMemHostAlloc`                                          | `hipHostMalloc`               | Allocates page-locked host memory.                                                                                             |
+| `cuMemHostGetDevicePointer`                               |                               | Passes back device pointer of mapped pinned memory.                                                                            |
+| `cuMemHostGetFlags`                                       |                               | Passes back flags that were used for a pinned allocation.                                                                      |
+| `cuMemHostRegister`                                       | `hipHostRegister`             | Registers an existing host memory range for use by CUDA.                                                                       |
+| `cuMemHostUnregister`                                     | `hipHostUnregister`           | Unregisters a memory range that was registered with cuMemHostRegister.                                                         |
+| `cuMemsetD16`                                             |                               | Initializes device memory.                                                                                                     |
+| `cuMemsetD16Async`                                        |                               | Sets device memory.                                                                                                            |
+| `cuMemsetD2D16`                                           |                               | Initializes device memory.                                                                                                     |
+| `cuMemsetD2D16Async`                                      |                               | Sets device memory.                                                                                                            |
+| `cuMemsetD2D32`                                           |                               | Initializes device memory.                                                                                                     |
+| `cuMemsetD2D32Async`                                      |                               | Sets device memory.                                                                                                            |
+| `cuMemsetD2D8`                                            |                               | Initializes device memory.                                                                                                     |
+| `cuMemsetD2D8Async`                                       |                               | Sets device memory.                                                                                                            |
+| `cuMemsetD32`                                             | `hipMemset`                   | Initializes device memory.                                                                                                     |
+| `cuMemsetD32Async`                                        | `hipMemsetAsync`              | Sets device memory.                                                                                                            |
+| `cuMemsetD2D8`                                            |                               | Initializes device memory.                                                                                                     |
+| `cuMemsetD2D8Async`                                       |                               | Sets device memory.                                                                                                            |
+| `cuMipmappedArrayCreate`                                  |                               | Creates a CUDA mipmapped array.                                                                                                |
+| `cuMipmappedArrayDestroy`                                 |                               | Destroys a CUDA mipmapped array.                                                                                               |
+| `cuMipmappedArrayGetLevel`                                |                               | Gets a mipmap level of a CUDA mipmapped array.                                                                                 |
 
 ## **12. Unified Addressing**
 
