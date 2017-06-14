@@ -990,17 +990,19 @@ struct cuda2hipMap {
     cuda2hipRename["cuLaunchKernel"]                            = {"hipModuleLaunchKernel", CONV_MODULE, API_DRIVER};
 
     // Streams
-    // unsupported yet by HIP
     cuda2hipRename["cuStreamAddCallback"]                       = {"hipStreamAddCallback", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["cuStreamWaitValue32"]                       = {"hipStreamWaitValue32", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}; // [CUDA 8.0.44] // no API_Runtime ANALOGUE
-    cuda2hipRename["cuStreamWriteValue32"]                      = {"hipStreamWriteValue32", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}; // [CUDA 8.0.44] // no API_Runtime ANALOGUE
-    cuda2hipRename["cuStreamBatchMemOp"]                        = {"hipStreamBatchMemOp", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}; // [CUDA 8.0.44] // no API_Runtime ANALOGUE
-
-    cuda2hipRename["cuStreamCreate"]                            = {"hipStreamCreate", CONV_STREAM, API_DRIVER};
+    cuda2hipRename["cuStreamAttachMemAsync"]                    = {"hipStreamAttachMemAsync", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cuStreamCreate"]                            = {"hipStreamCreate__", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};      // Not equal to cudaStreamCreate due to different signatures
+    cuda2hipRename["cuStreamCreateWithPriority"]                = {"hipStreamCreateWithPriority", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuStreamDestroy_v2"]                        = {"hipStreamDestroy", CONV_STREAM, API_DRIVER};
+    cuda2hipRename["cuStreamGetFlags"]                          = {"hipStreamGetFlags", CONV_STREAM, API_DRIVER};
+    cuda2hipRename["cuStreamGetPriority"]                       = {"hipStreamGetPriority", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuStreamQuery"]                             = {"hipStreamQuery", CONV_STREAM, API_DRIVER};
     cuda2hipRename["cuStreamSynchronize"]                       = {"hipStreamSynchronize", CONV_STREAM, API_DRIVER};
     cuda2hipRename["cuStreamWaitEvent"]                         = {"hipStreamWaitEvent", CONV_STREAM, API_DRIVER};
+    cuda2hipRename["cuStreamWaitValue32"]                       = {"hipStreamWaitValue32", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};   // [CUDA 8.0.44] // no API_Runtime ANALOGUE
+    cuda2hipRename["cuStreamWriteValue32"]                      = {"hipStreamWriteValue32", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};  // [CUDA 8.0.44] // no API_Runtime ANALOGUE
+    cuda2hipRename["cuStreamBatchMemOp"]                        = {"hipStreamBatchMemOp", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};    // [CUDA 8.0.44] // no API_Runtime ANALOGUE
 
     // Memory management
     cuda2hipRename["cuArray3DCreate"]                           = {"hipArray3DCreate", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};
@@ -1016,16 +1018,16 @@ struct cuda2hipMap {
     cuda2hipRename["cuMemAlloc_v2"]                             = {"hipMalloc", CONV_MEM, API_DRIVER};
     cuda2hipRename["cuMemAllocHost"]                            = {"hipMemAllocHost", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuMemAllocManaged"]                         = {"hipMemAllocManaged", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["cuMemAllocPitch"]                           = {"hipMemAllocPitch__", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};      // Not equal to cudaMemAllocPitch due to different signatures
-    cuda2hipRename["cuMemcpy"]                                  = {"hipMemcpy__", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};             // Not equal to cudaMemcpy due to different signatures
-    cuda2hipRename["cuMemcpy2D"]                                = {"hipMemcpy2D__", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};           // Not equal to cudaMemcpy2D due to different signatures
-    cuda2hipRename["cuMemcpy2DAsync"]                           = {"hipMemcpy2DAsync__", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};      // Not equal to cudaMemcpy2DAsync due to different signatures
+    cuda2hipRename["cuMemAllocPitch"]                           = {"hipMemAllocPitch__", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};        // Not equal to cudaMemAllocPitch due to different signatures
+    cuda2hipRename["cuMemcpy"]                                  = {"hipMemcpy__", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};               // Not equal to cudaMemcpy due to different signatures
+    cuda2hipRename["cuMemcpy2D"]                                = {"hipMemcpy2D__", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};             // Not equal to cudaMemcpy2D due to different signatures
+    cuda2hipRename["cuMemcpy2DAsync"]                           = {"hipMemcpy2DAsync__", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};        // Not equal to cudaMemcpy2DAsync due to different signatures
     cuda2hipRename["cuMemcpy2DUnaligned"]                       = {"hipMemcpy2DUnaligned", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["cuMemcpy3D"]                                = {"hipMemcpy3D__", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};           // Not equal to cudaMemcpy3D due to different signatures
-    cuda2hipRename["cuMemcpy3DAsync"]                           = {"hipMemcpy3DAsync__", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};     // Not equal to cudaMemcpy3DAsync due to different signatures
-    cuda2hipRename["cuMemcpy3DPeer"]                            = {"hipMemcpy3DPeer__", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};      // Not equal to cudaMemcpy3DPeer due to different signatures
-    cuda2hipRename["cuMemcpy3DPeerAsync"]                       = {"hipMemcpy3DPeerAsync__", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}; // Not equal to cudaMemcpy3DPeerAsync due to different signatures
-    cuda2hipRename["cuMemcpyAsync"]                             = {"hipMemcpyAsync__", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};       // Not equal to cudaMemcpyAsync due to different signatures
+    cuda2hipRename["cuMemcpy3D"]                                = {"hipMemcpy3D__", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};             // Not equal to cudaMemcpy3D due to different signatures
+    cuda2hipRename["cuMemcpy3DAsync"]                           = {"hipMemcpy3DAsync__", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};       // Not equal to cudaMemcpy3DAsync due to different signatures
+    cuda2hipRename["cuMemcpy3DPeer"]                            = {"hipMemcpy3DPeer__", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};        // Not equal to cudaMemcpy3DPeer due to different signatures
+    cuda2hipRename["cuMemcpy3DPeerAsync"]                       = {"hipMemcpy3DPeerAsync__", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};   // Not equal to cudaMemcpy3DPeerAsync due to different signatures
+    cuda2hipRename["cuMemcpyAsync"]                             = {"hipMemcpyAsync__", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};         // Not equal to cudaMemcpyAsync due to different signatures
     cuda2hipRename["cuMemcpyAtoA"]                              = {"hipMemcpyAtoA", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuMemcpyAtoD"]                              = {"hipMemcpyAtoD", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuMemcpyAtoH"]                              = {"hipMemcpyAtoH", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};
@@ -1039,17 +1041,17 @@ struct cuda2hipMap {
     cuda2hipRename["cuMemcpyHtoAAsync"]                         = {"hipMemcpyHtoAAsync", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuMemcpyHtoD_v2"]                           = {"hipMemcpyHtoD", CONV_MEM, API_DRIVER};
     cuda2hipRename["cuMemcpyHtoDAsync_v2"]                      = {"hipMemcpyHtoDAsync", CONV_MEM, API_DRIVER};
-    cuda2hipRename["cuMemcpyPeerAsync"]                         = {"hipMemcpyPeerAsync__", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};    // Not equal to cudaMemcpyPeerAsync due to different signatures
-    cuda2hipRename["cuMemcpyPeer"]                              = {"hipMemcpyPeer__", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};         // Not equal to cudaMemcpyPeer due to different signatures
+    cuda2hipRename["cuMemcpyPeerAsync"]                         = {"hipMemcpyPeerAsync__", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};      // Not equal to cudaMemcpyPeerAsync due to different signatures
+    cuda2hipRename["cuMemcpyPeer"]                              = {"hipMemcpyPeer__", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};           // Not equal to cudaMemcpyPeer due to different signatures
     cuda2hipRename["cuMemFree_v2"]                              = {"hipFree", CONV_MEM, API_DRIVER};
     cuda2hipRename["cuMemFreeHost"]                             = {"hipHostFree", CONV_MEM, API_DRIVER};
     cuda2hipRename["cuMemGetAddressRange"]                      = {"hipMemGetAddressRange", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuMemGetInfo_v2"]                           = {"hipMemGetInfo", CONV_MEM, API_DRIVER};
-    cuda2hipRename["cuMemHostAlloc"]                            = {"hipHostMalloc", CONV_MEM, API_DRIVER};                            // API_Runtime ANALOGUE (cudaHostAlloc)
+    cuda2hipRename["cuMemHostAlloc"]                            = {"hipHostMalloc", CONV_MEM, API_DRIVER};                              // API_Runtime ANALOGUE (cudaHostAlloc)
     cuda2hipRename["cuMemHostGetDevicePointer"]                 = {"hipMemHostGetDevicePointer", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuMemHostGetFlags"]                         = {"hipMemHostGetFlags", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["cuMemHostRegister_v2"]                      = {"hipHostRegister", CONV_MEM, API_DRIVER};                          // API_Runtime ANALOGUE (cudaHostAlloc)
-    cuda2hipRename["cuMemHostUnregister"]                       = {"hipHostUnregister", CONV_MEM, API_DRIVER};                        // API_Runtime ANALOGUE (cudaHostUnregister)
+    cuda2hipRename["cuMemHostRegister_v2"]                      = {"hipHostRegister", CONV_MEM, API_DRIVER};                            // API_Runtime ANALOGUE (cudaHostAlloc)
+    cuda2hipRename["cuMemHostUnregister"]                       = {"hipHostUnregister", CONV_MEM, API_DRIVER};                          // API_Runtime ANALOGUE (cudaHostUnregister)
     cuda2hipRename["cuMemsetD16_v2"]                            = {"hipMemsetD16", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuMemsetD16Async"]                          = {"hipMemsetD16Async", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuMemsetD2D16_v2"]                          = {"hipMemsetD2D16", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
@@ -1058,18 +1060,22 @@ struct cuda2hipMap {
     cuda2hipRename["cuMemsetD2D32Async"]                        = {"hipMemsetD2D32Async", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuMemsetD2D8_v2"]                           = {"hipMemsetD2D8", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuMemsetD2D8Async"]                         = {"hipMemsetD2D8Async", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
-    cuda2hipRename["cuMemsetD32_v2"]                            = {"hipMemset", CONV_MEM, API_DRIVER};                                // API_Runtime ANALOGUE (cudaMemset)
-    cuda2hipRename["cuMemsetD32Async"]                          = {"hipMemsetAsync", CONV_MEM, API_DRIVER};                           // API_Runtime ANALOGUE (cudaMemsetAsync)
+    cuda2hipRename["cuMemsetD32_v2"]                            = {"hipMemset", CONV_MEM, API_DRIVER};                                  // API_Runtime ANALOGUE (cudaMemset)
+    cuda2hipRename["cuMemsetD32Async"]                          = {"hipMemsetAsync", CONV_MEM, API_DRIVER};                             // API_Runtime ANALOGUE (cudaMemsetAsync)
     cuda2hipRename["cuMemsetD8_v2"]                             = {"hipMemsetD8", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuMemsetD8Async"]                           = {"hipMemsetD8Async", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuMipmappedArrayCreate"]                    = {"hipMipmappedArrayCreate", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuMipmappedArrayDestroy"]                   = {"hipMipmappedArrayDestroy", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuMipmappedArrayGetLevel"]                  = {"hipMipmappedArrayGetLevel", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
-    // unsupported yet by HIP [CUDA 8.0.44]
-    cuda2hipRename["cuMemPrefetchAsync"]                        = {"hipMemPrefetchAsync___", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};   // [CUDA 8.0.44] // no API_Runtime ANALOGUE (cudaMemPrefetchAsync has different signature)
+
+    // Unified Addressing
+    cuda2hipRename["cuMemPrefetchAsync"]                        = {"hipMemPrefetchAsync__", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};    // [CUDA 8.0.44] // no API_Runtime ANALOGUE (cudaMemPrefetchAsync has different signature)
     cuda2hipRename["cuMemAdvise"]                               = {"hipMemAdvise", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};             // [CUDA 8.0.44] // API_Runtime ANALOGUE (cudaMemAdvise)
     cuda2hipRename["cuMemRangeGetAttribute"]                    = {"hipMemRangeGetAttribute", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};  // [CUDA 8.0.44] // API_Runtime ANALOGUE (cudaMemRangeGetAttribute)
     cuda2hipRename["cuMemRangeGetAttributes"]                   = {"hipMemRangeGetAttributes", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}; // [CUDA 8.0.44] // API_Runtime ANALOGUE (cudaMemRangeGetAttributes)
+    cuda2hipRename["cuPointerGetAttribute"]                     = {"hipPointerGetAttribute", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cuPointerGetAttributes"]                    = {"hipPointerGetAttributes", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cuPointerSetAttribute"]                     = {"hipPointerSetAttribute", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
 
     // Texture Reference Mngmnt
     // Texture reference filtering modes
