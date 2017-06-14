@@ -415,72 +415,78 @@ hipError_t hipChooseDevice( int* device, const hipDeviceProp_t* prop )
     int inPropCount = 0;
     int matchedPropCount = 0;
     hipError_t e = hipSuccess;
-    ihipGetDeviceCount( &deviceCount );
-    *device = 0;
-    for (int i = 0; i < deviceCount; i++) {
-        ihipGetDeviceProperties( &tempProp, i );
-        if(prop->major != 0) {
-            inPropCount++;
-            if(tempProp.major >= prop->major) {
-                matchedPropCount++;
-            }
-            if(prop->minor != 0) {
+    if((device == NULL) || (prop == NULL)) {
+        e = hipErrorInvalidValue;
+    }
+    if(e == hipSuccess) {
+        ihipGetDeviceCount( &deviceCount );
+        *device = 0;
+        for (int i = 0; i < deviceCount; i++) {
+            ihipGetDeviceProperties( &tempProp, i );
+            if(prop->major != 0) {
                 inPropCount++;
-                 if(tempProp.minor >= prop->minor) {
-                     matchedPropCount++;
-                 }
+                if(tempProp.major >= prop->major) {
+                    matchedPropCount++;
+                }
+                if(prop->minor != 0) {
+                    inPropCount++;
+                    if(tempProp.minor >= prop->minor) {
+                        matchedPropCount++;
+                    }
+                }
             }
-        }
-        if(prop->totalGlobalMem != 0) {
-            inPropCount++;
-            if(tempProp.totalGlobalMem >= prop->totalGlobalMem) {
-                matchedPropCount++;
+            if(prop->totalGlobalMem != 0) {
+                inPropCount++;
+                if(tempProp.totalGlobalMem >= prop->totalGlobalMem) {
+                    matchedPropCount++;
+                }
             }
-        }
-        if(prop->sharedMemPerBlock != 0) {
-            inPropCount++;
-            if(tempProp.sharedMemPerBlock >= prop->sharedMemPerBlock) {
-                matchedPropCount++;
+            if(prop->sharedMemPerBlock != 0) {
+                inPropCount++;
+                if(tempProp.sharedMemPerBlock >= prop->sharedMemPerBlock) {
+                    matchedPropCount++;
+                }
             }
-        }
-        if(prop->maxThreadsPerBlock != 0) {
-            inPropCount++;
-            if(tempProp.maxThreadsPerBlock >= prop->maxThreadsPerBlock ) {
-                matchedPropCount++;
+            if(prop->maxThreadsPerBlock != 0) {
+                inPropCount++;
+                if(tempProp.maxThreadsPerBlock >= prop->maxThreadsPerBlock ) {
+                    matchedPropCount++;
+                }
             }
-        }
-        if(prop->totalConstMem != 0) {
-            inPropCount++;
-            if(tempProp.totalConstMem >= prop->totalConstMem ) {
-                matchedPropCount++;
+            if(prop->totalConstMem != 0) {
+                inPropCount++;
+                if(tempProp.totalConstMem >= prop->totalConstMem ) {
+                    matchedPropCount++;
+                }
             }
-        }
-        if(prop->multiProcessorCount != 0) {
-            inPropCount++;
-            if(tempProp.multiProcessorCount >= prop->multiProcessorCount ) {
-                matchedPropCount++;
+            if(prop->multiProcessorCount != 0) {
+                inPropCount++;
+                if(tempProp.multiProcessorCount >= prop->multiProcessorCount ) {
+                    matchedPropCount++;
+                }
             }
-        }
-        if(prop->maxThreadsPerMultiProcessor != 0) {
-            inPropCount++;
-            if(tempProp.maxThreadsPerMultiProcessor >= prop->maxThreadsPerMultiProcessor ) {
-                matchedPropCount++;
+            if(prop->maxThreadsPerMultiProcessor != 0) {
+                inPropCount++;
+                if(tempProp.maxThreadsPerMultiProcessor >= prop->maxThreadsPerMultiProcessor ) {
+                    matchedPropCount++;
+                }
             }
-        }
-        if(prop->memoryClockRate != 0) {
-            inPropCount++;
-            if(tempProp.memoryClockRate >= prop->memoryClockRate ) {
-                matchedPropCount++;
+            if(prop->memoryClockRate != 0) {
+                inPropCount++;
+                if(tempProp.memoryClockRate >= prop->memoryClockRate ) {
+                    matchedPropCount++;
+                }
             }
-        }
-        if(inPropCount == matchedPropCount) {
-            *device = i;
-        }
+            if(inPropCount == matchedPropCount) {
+                *device = i;
+            }
 #if 0
         else{
             e= hipErrorInvalidValue;
         }
 #endif
+        }
     }
     return ihipLogStatus(e);
 }
+
