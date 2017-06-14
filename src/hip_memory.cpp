@@ -1275,70 +1275,78 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr){
     // Get the size of allocated pointer
     size_t psize;
     hc::accelerator acc;
-    hc::AmPointerInfo amPointerInfo( NULL , NULL , 0 , acc , 0 , 0 );
-    am_status_t status = hc::am_memtracker_getinfo( &amPointerInfo , devPtr );
-    if (status == AM_SUCCESS) {
-        psize = (size_t)amPointerInfo._sizeBytes;
-    }
-    else
+    if((handle == NULL) || (devPtr == NULL)) {
         hipStatus = hipErrorInvalidResourceHandle;
-    ihipIpcMemHandle_t* iHandle = (ihipIpcMemHandle_t*) handle;
-    // Save the size of the pointer to hipIpcMemHandle
-    iHandle->psize = psize;
+    } else {
+        hc::AmPointerInfo amPointerInfo( NULL , NULL , 0 , acc , 0 , 0 );
+        am_status_t status = hc::am_memtracker_getinfo( &amPointerInfo , devPtr );
+        if (status == AM_SUCCESS) {
+            psize = (size_t)amPointerInfo._sizeBytes;
+        } else
+            hipStatus = hipErrorInvalidResourceHandle;
+        ihipIpcMemHandle_t* iHandle = (ihipIpcMemHandle_t*) handle;
+        // Save the size of the pointer to hipIpcMemHandle
+        iHandle->psize = psize;
 
 #if USE_IPC
-    // Create HSA ipc memory
-    hsa_status_t hsa_status =
-        hsa_amd_ipc_memory_create(devPtr, psize, (hsa_amd_ipc_memory_t*) &(iHandle->ipc_handle));
-    if(hsa_status!= HSA_STATUS_SUCCESS)
-        hipStatus = hipErrorMemoryAllocation;
+        // Create HSA ipc memory
+        hsa_status_t hsa_status =
+            hsa_amd_ipc_memory_create(devPtr, psize, (hsa_amd_ipc_memory_t*) &(iHandle->ipc_handle));
+        if(hsa_status!= HSA_STATUS_SUCCESS)
+            hipStatus = hipErrorMemoryAllocation;
 #else
-    hipStatus = hipErrorRuntimeOther;
+        hipStatus = hipErrorRuntimeOther;
 #endif
-
+    }
     return ihipLogStatus(hipStatus);
 }
 
 hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags){
     HIP_INIT_API ( devPtr, &handle , flags);
     hipError_t hipStatus = hipSuccess;
-
+    if(devPtr == NULL) {
+        hipStatus = hipErrorInvalidValue;
+    } else {
 #if USE_IPC
-    // Get the current device agent.
-    hc::accelerator acc;
-    hsa_agent_t *agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
-    if(!agent)
-        return hipErrorInvalidResourceHandle;
+        // Get the current device agent.
+        hc::accelerator acc;
+        hsa_agent_t *agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
+        if(!agent)
+            return hipErrorInvalidResourceHandle;
 
-    ihipIpcMemHandle_t* iHandle = (ihipIpcMemHandle_t*) &handle;
-    //Attach ipc memory
-    auto ctx= ihipGetTlsDefaultCtx();
-    {
-        LockedAccessor_CtxCrit_t crit(ctx->criticalData());
-        // the peerCnt always stores self so make sure the trace actually
-        hsa_status_t hsa_status =
-         hsa_amd_ipc_memory_attach((hsa_amd_ipc_memory_t*)&(iHandle->ipc_handle), iHandle->psize, crit->peerCnt(), crit->peerAgents(), devPtr);
-        if(hsa_status != HSA_STATUS_SUCCESS)
-            hipStatus = hipErrorMapBufferObjectFailed;
-    }
+        ihipIpcMemHandle_t* iHandle = (ihipIpcMemHandle_t*) &handle;
+        //Attach ipc memory
+        auto ctx= ihipGetTlsDefaultCtx();
+        {
+            LockedAccessor_CtxCrit_t crit(ctx->criticalData());
+            // the peerCnt always stores self so make sure the trace actually
+            hsa_status_t hsa_status =
+            hsa_amd_ipc_memory_attach((hsa_amd_ipc_memory_t*)&(iHandle->ipc_handle), iHandle->psize, crit->peerCnt(), crit->peerAgents(), devPtr);
+            if(hsa_status != HSA_STATUS_SUCCESS)
+                hipStatus = hipErrorMapBufferObjectFailed;
+        }
 #else
-    hipStatus = hipErrorRuntimeOther;
+        hipStatus = hipErrorRuntimeOther;
 #endif
+    }
     return ihipLogStatus(hipStatus);
 }
 
 hipError_t hipIpcCloseMemHandle(void *devPtr){
     HIP_INIT_API ( devPtr );
     hipError_t hipStatus = hipSuccess;
-
+    if(devPtr == NULL) {
+        hipStatus = hipErrorInvalidValue;
+    } else {
 #if USE_IPC
-    hsa_status_t hsa_status =
-        hsa_amd_ipc_memory_detach(devPtr);
-    if(hsa_status != HSA_STATUS_SUCCESS)
-        return hipErrorInvalidResourceHandle;
+        hsa_status_t hsa_status =
+            hsa_amd_ipc_memory_detach(devPtr);
+        if(hsa_status != HSA_STATUS_SUCCESS)
+            return hipErrorInvalidResourceHandle;
 #else
-    hipStatus = hipErrorRuntimeOther;
+        hipStatus = hipErrorRuntimeOther;
 #endif
+    }
     return ihipLogStatus(hipStatus);
 }
 
