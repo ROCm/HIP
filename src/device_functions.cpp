@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -149,19 +149,19 @@ __device__ long long int __double_as_longlong(double x)
   return hold64.sli;
 }
 
-__device__ int float2int_rd(float x)
+__device__ int __float2int_rd(float x)
 {
   return (int)x;
 }
-__device__ int float2int_rn(float x)
+__device__ int __float2int_rn(float x)
 {
   return (int)x;
 }
-__device__ int float2int_ru(float x)
+__device__ int __float2int_ru(float x)
 {
   return (int)x;
 }
-__device__ int float2int_rz(float x)
+__device__ int __float2int_rz(float x)
 {
   return (int)x;
 }
