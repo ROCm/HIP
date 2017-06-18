@@ -839,6 +839,11 @@ __device__ float __hip_ynf(int n, float x)
 __device__ long long int clock64() { return (long long int)hc::__cycle_u64(); };
 __device__ clock_t clock() { return (clock_t)hc::__cycle_u64(); };
 
+//abort
+__device__ void abort()
+{
+    return hc::abort();
+}
 
 //atomicAdd()
 __device__  int atomicAdd(int* address, int val)
