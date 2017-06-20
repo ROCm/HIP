@@ -32,4 +32,4 @@ test: $(EXECUTABLE)
 clean:
 	rm -f $(EXECUTABLE)
 	rm -f $(OBJECTS)
-	rm -f $(HIP_PATH)/src/*.o
+
