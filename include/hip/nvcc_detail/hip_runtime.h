@@ -109,6 +109,10 @@ kernelName<<<numblocks,numthreads,memperblock,streamId>>>(__VA_ARGS__);\
 
 #define HIP_DYNAMIC_SHARED_ATTRIBUTE
 
+#ifdef __HIP_DEVICE_COMPILE__
+#define abort() {asm("trap;");}
+#endif
+
 #endif
 
 #endif
