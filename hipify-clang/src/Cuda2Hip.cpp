@@ -987,6 +987,10 @@ struct cuda2hipMap {
     cuda2hipRename["cuEventRecord"]                             = {"hipEventRecord", CONV_EVENT, API_DRIVER};
     cuda2hipRename["cuEventSynchronize"]                        = {"hipEventSynchronize", CONV_EVENT, API_DRIVER};
 
+    // Execution Control
+    cuda2hipRename["cuFuncGetAttribute"]                        = {"hipFuncGetAttribute", CONV_MODULE, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cuFuncSetCacheConfig"]                      = {"hipFuncSetCacheConfig", CONV_MODULE, API_DRIVER};
+    cuda2hipRename["cuFuncSetSharedMemConfig"]                  = {"hipFuncSetSharedMemConfig", CONV_MODULE, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuLaunchKernel"]                            = {"hipModuleLaunchKernel", CONV_MODULE, API_DRIVER};
 
     // Streams
