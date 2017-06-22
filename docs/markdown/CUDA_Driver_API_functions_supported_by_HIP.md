@@ -583,12 +583,21 @@
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuEventCreate`                                           | `hipEventCreate`              | Creates an event.                                                                                                              |
+| `cuEventDestroy`                                          | `hipEventDestroy`             | Destroys an event.                                                                                                             |
+| `cuEventElapsedTime`                                      | `hipEventElapsedTime`         | Computes the elapsed time between two events.                                                                                  |
+| `cuEventQuery`                                            | `hipEventQuery`               | Queries an event's status.                                                                                                     |
+| `cuEventRecord`                                           | `hipEventRecord`              | Records an event.                                                                                                              |
+| `cuEventSynchronize`                                      | `hipEventSynchronize`         | Waits for an event to complete.                                                                                                |
 
 ## **15. Execution Control**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `cuFuncGetAttribute`                                      |                               | Returns information about a function.                                                                                          |
+| `cuFuncSetCacheConfig`                                    | `hipFuncSetCacheConfig`       | Sets the preferred cache configuration for a device function.                                                                  |
+| `cuFuncSetSharedMemConfig`                                |                               | Sets the shared memory configuration for a device function.                                                                    |
+| `cuLaunchKernel`                                          | `hipModuleLaunchKernel`       | Launches a CUDA function.                                                                                                      |
 
 
 ## **16. Execution Control [DEPRECATED]**
