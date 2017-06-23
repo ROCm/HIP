@@ -32,7 +32,6 @@ THE SOFTWARE.
 
 #endif
 
-#define USE_AV_COPY (__hcc_workweek__ >= 16351) 
 
 size_t Nbytes = 0;
 
@@ -410,21 +409,13 @@ void thread_noise_generator(int iters, size_t numBuffers, Dir addDir, Dir remove
 
         if (addDir == Up) {
             for (char *p = basePtr; p<basePtr + maxSize; p+=bufferSize) {
-#if USE_AV_COPY
                 hc::AmPointerInfo info(p, p, bufferSize, acc, false, false);
                 hc::am_memtracker_add(p, info);
-#else
-                hc::am_memtracker_add(p, bufferSize, acc, false);
-#endif
             }
         } else if (addDir == Down) {
             for (char *p = basePtr+maxSize-bufferSize; p>=0; p-=bufferSize) {
-#if USE_AV_COPY
                 hc::AmPointerInfo info(p, p, bufferSize, acc, false, false);
                 hc::am_memtracker_add(p, info);
-#else
-                hc::am_memtracker_add(p, bufferSize, acc, false);
-#endif
             }
         }
 
