@@ -61,7 +61,7 @@ extern int HIP_FORCE_P2P_HOST;
 
 extern int HIP_COHERENT_HOST_ALLOC;
 
-
+extern int HIP_HIDDEN_FREE_MEM;
 //---
 // Chicken bits for disabling functionality to work around potential issues:
 extern int HIP_SYNC_HOST_ALLOC;
