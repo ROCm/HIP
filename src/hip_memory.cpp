@@ -1130,6 +1130,10 @@ hipError_t hipMemGetInfo  (size_t *free, size_t *total)
             hc::am_memtracker_sizeinfo(device->_acc, &deviceMemSize, &hostMemSize, &userMemSize);
 
             *free =  device->_props.totalGlobalMem - deviceMemSize;
+
+           // Deduct the amount of memory from the free memory reported from the system
+           if(HIP_HIDDEN_FREE_MEM)
+               *free -= (size_t)HIP_HIDDEN_FREE_MEM*1024*1024;
         }
         else {
              e = hipErrorInvalidValue;
