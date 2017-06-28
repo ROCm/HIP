@@ -5,7 +5,7 @@
 - [Using hipify-clang](#using-hipify-clang)
   * [Build and install](#build-and-install)
   * [Running and using hipify-clang](#running-and-using-hipify-clang)
-    + [Disclaimer](#disclaimer)
+- [Disclaimer](#disclaimer)
 
 <!-- tocstop -->
 
