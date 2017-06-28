@@ -23,11 +23,6 @@ This document starts with some of the general capabilities of CodeXL and then de
 - [Tracing and Debug](#tracing-and-debug)
   * [Tracing HIP APIs](#tracing-hip-apis)
     + [Color](#color)
-  * [Using HIP_DB](#using-hip_db)
-  * [Using ltrace](#using-ltrace)
-  * [Chicken bits](#chicken-bits)
-  * [Debugging HIP Applications](#debugging-hip-applications)
-  * [General Debugging Tips](#general-debugging-tips)
 
 <!-- tocstop -->
 

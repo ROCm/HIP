@@ -1,7 +1,9 @@
-# HIP Bugs 
+# HIP Bugs
+
 <!-- toc -->
 
 - [Errors related to undefined reference to `__hcLaunchKernel__***__grid_launch_parm**`](#errors-related-to-undefined-reference-to-__hclaunchkernel____grid_launch_parm)
+- [Can't find kernels inside dynamic linked library](#cant-find-kernels-inside-dynamic-linked-library)
 - [What is the current limitation of HIP Generic Grid Launch method?](#what-is-the-current-limitation-of-hip-generic-grid-launch-method)
 - [Errors related to `no matching constructor`](#errors-related-to-no-matching-constructor)
 - [HIP is more restrictive in enforcing restrictions](#hip-is-more-restrictive-in-enforcing-restrictions)

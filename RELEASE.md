@@ -8,12 +8,15 @@ We have attempted to document known bugs and limitations - in particular the [HI
 ## Revision History:
 
 ===================================================================================================
+Release: 1.2
+Date: 2017.06.29
 - new APIs: hipMemcpy2DAsync, hipMallocPitch, hipHostMallocCoherent, hipHostMallocNonCoherent
 - added support for building hipify-clang using clang 3.9
 - hipify-clang updates for CUDA 8.0 runtime+driver support
 - renamed hipify to hipify-perl
 - initial implementation of hipify-cmakefile
 - several documentation updates & bug fixes
+- support for abort() function in device code
 
 
 ===================================================================================================
