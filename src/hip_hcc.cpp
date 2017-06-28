@@ -799,7 +799,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     DeviceErrorCheck(err);
 
     // BDFID is 16bit uint: [8bit - BusID | 5bit - Device ID | 3bit - Function/DomainID]
-    // prop->pciDomainID =  bdf_id & 0x7;
+    prop->pciDomainID =  bdf_id & 0x7;
     prop->pciDeviceID =  (bdf_id>>3) & 0x1F;
     prop->pciBusID =  (bdf_id>>8) & 0xFF;
 
