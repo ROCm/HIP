@@ -174,6 +174,9 @@ static constexpr int warpSize = 64;
 __device__ long long int clock64();
 __device__ clock_t clock();
 
+//abort
+__device__ void abort();
+
 //atomicAdd()
 __device__ int atomicAdd(int* address, int val);
 __device__ unsigned int atomicAdd(unsigned int* address,

@@ -70,7 +70,6 @@ See the [API Support Table](CUDA_Runtime_API_functions_supported_by_HIP.md) for 
   - printf
   - assert
   - `__restrict__`
-  - `__launch_bounds__`
   - `__threadfence*_`, `__syncthreads*`
   - Unbounded loop unroll
 

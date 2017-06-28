@@ -70,7 +70,7 @@ To set additional options like Language Selection (only "-x cuda" is supported),
 
 Delimiter "--" is used to separate hipify-clang options (before the delimiter) from clang options (after the delimiter). It is strongly recommended to always specify the delimiter, even if there are no clang specific options at all, in order to avoid possible errors regarding compilation database; in such case delimeter should be the last option in hipify-clang's command line.
 
-Option "-x clang" is also worth specifying in order to convert source CUDA files with extensions other than standard extensions (*.cu, *.cuh).
+Option "-x cuda" is also worth specifying in order to convert source CUDA files with extensions other than standard extensions (*.cu, *.cuh).
 
 ## Disclaimer
 

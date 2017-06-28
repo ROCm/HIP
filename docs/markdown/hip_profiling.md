@@ -268,9 +268,12 @@ PASSED!
 ```
 
 HIP_TRACE_API supports multiple levels of debug information:
-   - 0x1 = print all HIP APIs
-   - 0x2 = print HIP APIs which initiate GPU kernels, copies, or memsets.  Includes hipLaunchKernel, hipMemcpy*, hipMemset*.
-   - 0x4 = print HIP APIs which allocate or free memory.  Includes hipMalloc, hipHostMalloc, hipFree, hipHostFree.
+   - 0x1 = print all HIP APIs.  This is the most verbose setting; the flags below allow selecting a subset.
+   - 0x2 = print HIP APIs which initiate GPU kernel commands.  Includes hipLaunchKernel, hipLaunchModuleKernel
+   - 0x4 = print HIP APIs which initiate GPU memory commands.  Includes hipMemcpy*, hipMemset*.
+   - 0x8 = print HIP APIs which allocate or free memory.  Includes hipMalloc, hipHostMalloc, hipFree, hipHostFree.
+
+These can be combined.  For example, HIP_TRACE_API=6 shows a concise view of the HIP commands (both kernel and memory) that are sent to the GPU.
 
 
 #### Color

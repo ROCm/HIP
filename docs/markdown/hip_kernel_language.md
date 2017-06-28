@@ -610,30 +610,59 @@ Device-side dynamic global memory allocation is under development.  HIP now incl
 implementation of malloc and free that can be called from device functions.
 
 ## `__launch_bounds__`
-GPU multiprocessors have a fixed pool of resources (primarily registers and shared memory) that are shared among the active warps. Using more resources can increase the kernel’s IPC, but it reduces the resources available for other warps and limits the number of warps that can run simultaneously. Thus, GPUs exhibit a complex relationship between resource usage and performance. `__launch_bounds__` allows the application to provide usage hints that influence the resources (primarily registers) employed by the generated code. It’s a function attribute that must be attached to a `__global__` function:
+
+
+GPU multiprocessors have a fixed pool of resources (primarily registers and shared memory) which are shared by the actively running warps. Using more resources can increase IPC of the kernel but reduces the resources available for other warps and limits the number of warps that can be simulaneously running. Thus GPUs have a complex relationship between resource usage and performance.  
+
+__hip_launch_bounds__ allows the application to provide usage hints that influence the resources (primarily registers) used by the generated code.
+__hip_launch_bounds__ is a function attribute that must be attached to a __global__ function:
 
 ```
-__global__ void
-`__launch_bounds__`(requiredMaxThreadsPerBlock, minBlocksPerMultiprocessor)  
+__global__ void `__launch_bounds__`(MAX_THREADS_PER_BLOCK, MIN_WARPS_PER_EU) MyKernel(...) ...
 MyKernel(hipGridLaunch lp, ...) 
 ...
 ```
 
-`__launch_bounds__` supports two parameters:
+__launch_bounds__ supports two parameters:
+- MAX_THREADS_PER_BLOCK - The programmers guarantees that kernel will be launched with threads less than MAX_THREADS_PER_BLOCK. (On NVCC this maps to the .maxntid PTX directive). If no launch_bounds is specified, MAX_THREADS_PER_BLOCK is the maximum block size supported by the device (typically 1024 or larger). Specifying MAX_THREADS_PER_BLOCK less than the maximum effectively allows the compiler to use more resources than a default unconstrained compilation that supports all possible block sizes at launch time.
+The threads-per-block is the product of (hipBlockDim_x * hipBlockDim_y * hipBlockDim_z).
+- MIN_WARPS_PER_EU - directs the compiler to minimize resource usage so that the requested number of warps can be simultaneously active on a multi-processor. Since active warps compete for the same fixed pool of resources, the compiler must reduce resources required by each warp(primarily registers). MIN_WARPS_PER_EU is optional and defaults to 1 if not specified. Specifying a MIN_WARPS_PER_EU greater than the default 1 effectively constrains the compiler's resource usage.
 
-- **requiredMaxThreadsPerBlock**---the programmer guarantees that the kernel will launch with threadsPerBlock less than requiredMaxThreadsPerBlock. (In nvcc, this parameter maps to the _.maxntid_ PTX directive; in hcc, it maps to the HSAIL _requiredworkgroupsize_ directive.) If launch_bounds is unspecified, requiredMaxThreadsPerBlock is the maximum block size that the device supports (typically 1,024 or larger). Specifying requiredMaxThreadsPerBlock less than the maximum effectively allows the compiler to use more resources than a default unconstrained compilation supporting all possible block sizes at launch time. The threadsPerBlock value is the product hipBlockDim_x * hipBlockDim_y * hipBlockDim_z.
-- **minBlocksPerMultiprocessor**---directs the compiler to minimize resource usage so that the requested number of blocks can be simultaneously active on a multiprocessor. Because active blocks compete for the same fixed resource pool, the compiler must reduce the resource requirements of each block (primarily registers). minBlocksPerMultiprocessor is optional and defaults to 1 if unspecified. Selecting a minBlocksPerMultiprocessor value greater than 1 effectively constrains the compiler's resource usage. 
+### Compiler Impact
+The compiler uses these parameters as follows:
+- The compiler uses the hints only to manage register usage, and does not automatically reduce shared memory or other resources.
+- Compilation fails if compiler cannot generate a kernel which meets the requirements of the specified launch bounds.
+- From MAX_THREADS_PER_BLOCK, the compiler derives the maximum number of warps/block that can be used at launch time.
+Values of MAX_THREADS_PER_BLOCK less than the default allows the compiler to use a larger pool of registers : each warp uses registers, and this hint constains the launch to a warps/block size which is less than maximum.
+- From MIN_WARPS_PER_EU, the compiler derives a maximum number of registers that can be used by the kernel (to meet the required #simultaneous active blocks).
+If MIN_WARPS_PER_EU is 1, then the kernel can use all registers supported by the multiprocessor.
+- The compiler ensures that the registers used in the kernel is less than both allowed maximums, typically by spilling registers (to shared or global memory), or by using more instructions.
+- The compiler may use hueristics to increase register usage, or may simply be able to avoid spilling. The MAX_THREADS_PER_BLOCK is particularly useful in this cases, since it allows the compiler to use more registers and avoid situations where the compiler constrains the register usage (potentially spilling) to meet the requirements of a large block size that is never used at launch time.
 
-The compiler uses these two parameters as follows:
-- It employs the hints only to manage register usage and does not automatically reduce shared memory or other resources.
-- Compilation fails if the compiler cannot generate a kernel that meets the requirements of the specified launch bounds.
-- From requiredMaxThreadsPerBlock, the compiler derives the maximum number of warps per block that are usable at launch time. Values less than the default allow the compiler to use a larger register pool: each warp uses registers, and this hint constrains the launch to a warps-per-block size less than maximum. 
-- From minBlocksPerMultiprocessor, the compiler derives a maximum number of registers that the kernel can use (to meet the required number of simultaneously active blocks). If the value is 1, the kernel can use all registers supported by the multiprocessor.  
 
-The compiler ensures that the kernel uses fewer registers than both allowed maxima specify, typically by spilling to shared memory or using more instructions. It may use heuristics to increase register usage or may simply be able to avoid spilling. The requiredMaxThreadsPerBlock parameter is particularly useful in this case, since it allows the compiler to use more registers---avoiding situations where the compiler constrains the register usage (potentially spilling) to meet the requirements of a large block size never sees use at launch time.  
+### CU and EU Definitions
+A compute unit (CU) is responsible for executing the waves of a work-group. It is composed of one or more execution units (EU) which are responsible for executing waves. An EU can have enough resources to maintain the state of more than one executing wave. This allows an EU to hide latency by switching between waves in a similar way to symmetric multithreading on a CPU. In order to allow the state for multiple waves to fit on an EU, the resources used by a single wave have to be limited. Limiting such resources can allow greater latency hiding, but can result in having to spill some register state to memory. This attribute allows an advanced developer to tune the number of waves that are capable of fitting within the resources of an EU. It can be used to ensure at least a certain number will fit to help hide latency, and can also be used to ensure no more than a certain number will fit to limit cache thrashing.
+ 
+### Porting from CUDA __launch_bounds
+CUDA defines a __launch_bounds which is also designed to control occupancy:
+```
+__launch_bounds(MAX_THREADS_PER_BLOCK, MIN_BLOCKS_PER_MULTIPROCESSOR)
+```
 
-HIP/hcc will parse the `launch_bounds` attribute but silently ignores the performance hint. Full support is under development.
+- The second parameter __launch_bounds parameters must be converted to the format used __hip_launch_bounds, which uses warps and execution-units rather than blocks and multi-processors  ( This conversion is performed automatically by the clang hipify tools.)
+```
+MIN_WARPS_PER_EXECUTION_UNIT = (MIN_BLOCKS_PER_MULTIPROCESSOR * MAX_THREADS_PER_BLOCK) / 32
+```
 
+The key differences in the interface are:
+- Warps (rather than blocks):
+The developer is trying to tell the compiler to control resource utilization to guarantee some amount of active Warps/EU for latency hiding.  Specifying active warps in terms of blocks appears to hide the micro-architectural details of the warp size, but makes the interface more confusing since the developer ultimately needs to compute the number of warps to obtain the desired level of control. 
+- Execution Units  (rather than multiProcessor):
+The use of execution units rather than multiprocessors provides support for architectures with multiple execution units/multi-processor. For example, the AMD GCN architecture has 4 execution units per multiProcessor.  The hipDeviceProps has a field executionUnitsPerMultiprocessor.
+Platform-specific coding techniques such as #ifdef can be used to specify different launch_bounds for NVCC and HCC platforms, if desired. 
+
+
+### maxregcount
 Unlike nvcc, hcc does not support the "--maxregcount" option.  Instead, users are encouraged to use the hip_launch_bounds directive since the parameters are more intuitive and portable than
 micro-architecture details like registers, and also the directive allows per-kernel control rather than an entire file.  hip_launch_bounds works on both hcc and nvcc targets.
 

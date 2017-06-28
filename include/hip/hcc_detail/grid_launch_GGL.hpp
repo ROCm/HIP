@@ -245,6 +245,128 @@ namespace hip_impl
         HIP_kernel_functor_name_begin ## _ ## k ## _ ## \
         HIP_kernel_functor_name_end ## _ ## n
 
+    #define make_kernel_functor_hip_30(\
+        function_name, kernel_name, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9,\
+        p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23,\
+        p24, p25, p26, p27)\
+        struct make_kernel_name_hip(function_name, 28) {\
+            std::decay_t<decltype(p0)> _p0_;\
+            std::decay_t<decltype(p1)> _p1_;\
+            std::decay_t<decltype(p2)> _p2_;\
+            std::decay_t<decltype(p3)> _p3_;\
+            std::decay_t<decltype(p4)> _p4_;\
+            std::decay_t<decltype(p5)> _p5_;\
+            std::decay_t<decltype(p6)> _p6_;\
+            std::decay_t<decltype(p7)> _p7_;\
+            std::decay_t<decltype(p8)> _p8_;\
+            std::decay_t<decltype(p9)> _p9_;\
+            std::decay_t<decltype(p10)> _p10_;\
+            std::decay_t<decltype(p11)> _p11_;\
+            std::decay_t<decltype(p12)> _p12_;\
+            std::decay_t<decltype(p13)> _p13_;\
+            std::decay_t<decltype(p14)> _p14_;\
+            std::decay_t<decltype(p15)> _p15_;\
+            std::decay_t<decltype(p16)> _p16_;\
+            std::decay_t<decltype(p17)> _p17_;\
+            std::decay_t<decltype(p18)> _p18_;\
+            std::decay_t<decltype(p19)> _p19_;\
+            std::decay_t<decltype(p20)> _p20_;\
+            std::decay_t<decltype(p21)> _p21_;\
+            std::decay_t<decltype(p22)> _p22_;\
+            std::decay_t<decltype(p23)> _p23_;\
+            std::decay_t<decltype(p24)> _p24_;\
+            std::decay_t<decltype(p25)> _p25_;\
+            std::decay_t<decltype(p26)> _p26_;\
+            std::decay_t<decltype(p27)> _p27_;\
+            void operator()(const hc::tiled_index<3>&) const [[hc]]\
+            {\
+                kernel_name(\
+                    _p0_, _p1_, _p2_, _p3_, _p4_, _p5_, _p6_, _p7_, _p8_, _p9_,\
+                    _p10_, _p11_, _p12_, _p13_, _p14_, _p15_, _p16_, _p17_,\
+                    _p18_, _p19_, _p20_, _p21_, _p22_, _p23_, _p24_, _p25_,\
+                    _p26_, _p27_);\
+            }\
+        }
+    #define make_kernel_functor_hip_29(\
+        function_name, kernel_name, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9,\
+        p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23,\
+        p24, p25, p26)\
+        struct make_kernel_name_hip(function_name, 27) {\
+            std::decay_t<decltype(p0)> _p0_;\
+            std::decay_t<decltype(p1)> _p1_;\
+            std::decay_t<decltype(p2)> _p2_;\
+            std::decay_t<decltype(p3)> _p3_;\
+            std::decay_t<decltype(p4)> _p4_;\
+            std::decay_t<decltype(p5)> _p5_;\
+            std::decay_t<decltype(p6)> _p6_;\
+            std::decay_t<decltype(p7)> _p7_;\
+            std::decay_t<decltype(p8)> _p8_;\
+            std::decay_t<decltype(p9)> _p9_;\
+            std::decay_t<decltype(p10)> _p10_;\
+            std::decay_t<decltype(p11)> _p11_;\
+            std::decay_t<decltype(p12)> _p12_;\
+            std::decay_t<decltype(p13)> _p13_;\
+            std::decay_t<decltype(p14)> _p14_;\
+            std::decay_t<decltype(p15)> _p15_;\
+            std::decay_t<decltype(p16)> _p16_;\
+            std::decay_t<decltype(p17)> _p17_;\
+            std::decay_t<decltype(p18)> _p18_;\
+            std::decay_t<decltype(p19)> _p19_;\
+            std::decay_t<decltype(p20)> _p20_;\
+            std::decay_t<decltype(p21)> _p21_;\
+            std::decay_t<decltype(p22)> _p22_;\
+            std::decay_t<decltype(p23)> _p23_;\
+            std::decay_t<decltype(p24)> _p24_;\
+            std::decay_t<decltype(p25)> _p25_;\
+            std::decay_t<decltype(p26)> _p26_;\
+            void operator()(const hc::tiled_index<3>&) const [[hc]]\
+            {\
+                kernel_name(\
+                    _p0_, _p1_, _p2_, _p3_, _p4_, _p5_, _p6_, _p7_, _p8_, _p9_,\
+                    _p10_, _p11_, _p12_, _p13_, _p14_, _p15_, _p16_, _p17_,\
+                    _p18_, _p19_, _p20_, _p21_, _p22_, _p23_, _p24_, _p25_,\
+                    _p26_);\
+            }\
+        }
+    #define make_kernel_functor_hip_28(\
+        function_name, kernel_name, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9,\
+        p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23,\
+        p24, p25)\
+        struct make_kernel_name_hip(function_name, 26) {\
+            std::decay_t<decltype(p0)> _p0_;\
+            std::decay_t<decltype(p1)> _p1_;\
+            std::decay_t<decltype(p2)> _p2_;\
+            std::decay_t<decltype(p3)> _p3_;\
+            std::decay_t<decltype(p4)> _p4_;\
+            std::decay_t<decltype(p5)> _p5_;\
+            std::decay_t<decltype(p6)> _p6_;\
+            std::decay_t<decltype(p7)> _p7_;\
+            std::decay_t<decltype(p8)> _p8_;\
+            std::decay_t<decltype(p9)> _p9_;\
+            std::decay_t<decltype(p10)> _p10_;\
+            std::decay_t<decltype(p11)> _p11_;\
+            std::decay_t<decltype(p12)> _p12_;\
+            std::decay_t<decltype(p13)> _p13_;\
+            std::decay_t<decltype(p14)> _p14_;\
+            std::decay_t<decltype(p15)> _p15_;\
+            std::decay_t<decltype(p16)> _p16_;\
+            std::decay_t<decltype(p17)> _p17_;\
+            std::decay_t<decltype(p18)> _p18_;\
+            std::decay_t<decltype(p19)> _p19_;\
+            std::decay_t<decltype(p20)> _p20_;\
+            std::decay_t<decltype(p21)> _p21_;\
+            std::decay_t<decltype(p22)> _p22_;\
+            std::decay_t<decltype(p23)> _p23_;\
+            std::decay_t<decltype(p24)> _p24_;\
+            std::decay_t<decltype(p25)> _p25_;\
+            void operator()(const hc::tiled_index<3>&) const [[hc]]\
+            {\
+                kernel_name(\
+                    _p0_, _p1_, _p2_, _p3_, _p4_, _p5_, _p6_, _p7_, _p8_, _p9_,\
+                    _p10_, _p11_, _p12_, _p13_, _p14_, _p15_, _p16_, _p17_,\
+                    _p18_, _p19_, _p20_, _p21_, _p22_, _p23_, _p24_, _p25_);\
+            }\
+        }
     #define make_kernel_functor_hip_27(\
         function_name, kernel_name, p0, p1, p2, p3, p4, p5, p6, p7, p8, p9,\
         p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, p21, p22, p23,\

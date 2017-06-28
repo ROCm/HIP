@@ -451,7 +451,13 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
         hc::completion_future cf;
 
         lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize, 
-                                  (startEvent || stopEvent) ? &cf : nullptr);
+                                  (startEvent || stopEvent) ? &cf : nullptr
+#define USE_NAMED_KERNEL 0
+#if USE_NAMED_KERNEL
+                                  , f->_name.c_str()
+#endif
+                                  );
+
 
 
         if (startEvent) {

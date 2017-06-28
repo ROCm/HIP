@@ -369,12 +369,24 @@ hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
 hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len, int device)
 {
     HIP_INIT_API(pciBusId, len, device);
-    hipError_t e = hipSuccess;
-    int tempPciBusId = 0;
-    e = ihipDeviceGetAttribute( &tempPciBusId, hipDeviceAttributePciBusId, device);
-    if( e == hipSuccess) {
-        std::string tempPciStr = std::to_string(tempPciBusId);
-        memcpy( pciBusId , tempPciStr.c_str() , tempPciStr.length() );
+    hipError_t e = hipErrorInvalidValue;
+    int deviceCount = 0;
+    ihipGetDeviceCount( &deviceCount );
+    if((device > deviceCount) || (device < 0)) {
+        e = hipErrorInvalidDevice;
+    } else {
+        if((pciBusId != nullptr) && (len > 0)) {
+            int tempPciBusId = 0;
+            e = ihipDeviceGetAttribute( &tempPciBusId, hipDeviceAttributePciBusId, device);
+            if( e == hipSuccess) {
+                std::string tempPciStr = std::to_string(tempPciBusId);
+                if( len < tempPciStr.length()){
+                    e = hipErrorInvalidValue;
+                } else { 
+                    memcpy( pciBusId , tempPciStr.c_str() , tempPciStr.length() );
+                }
+            }
+        }
     }
     return ihipLogStatus(e);
 }

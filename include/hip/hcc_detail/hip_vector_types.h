@@ -36,25 +36,21 @@ THE SOFTWARE.
 
 #define MAKE_DEFAULT_CONSTRUCTOR_ONE_COMPONENT(type) \
 __device__ __host__ type() {} \
-__device__ __host__ type(type& val) : x(val.x) { } \
 __device__ __host__ type(const type& val) : x(val.x) { } \
 __device__ __host__ ~type() {} 
 
 #define MAKE_DEFAULT_CONSTRUCTOR_TWO_COMPONENT(type) \
 __device__ __host__ type() {} \
-__device__ __host__ type(type& val) : x(val.x), y(val.y) { } \
 __device__ __host__ type(const type& val) : x(val.x), y(val.y) { } \
 __device__ __host__ ~type() {}
 
 #define MAKE_DEFAULT_CONSTRUCTOR_THREE_COMPONENT(type) \
 __device__ __host__ type() {} \
-__device__ __host__ type(type& val) : x(val.x), y(val.y), z(val.z) { } \
 __device__ __host__ type(const type& val) : x(val.x), y(val.y), z(val.z) { } \
 __device__ __host__ ~type() {} 
 
 #define MAKE_DEFAULT_CONSTRUCTOR_FOUR_COMPONENT(type) \
 __device__ __host__ type() {} \
-__device__ __host__ type(type& val) : x(val.x), y(val.y), z(val.z), w(val.w) { } \
 __device__ __host__ type(const type& val) : x(val.x), y(val.y), z(val.z), w(val.w) { } \
 __device__ __host__ ~type() {}
 
