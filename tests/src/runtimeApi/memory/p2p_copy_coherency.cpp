@@ -36,7 +36,6 @@ THE SOFTWARE.
 #define USE_HCC_MEMTRACKER 0
 #endif
 
-#define USE_HSA_COPY 1
 
 int elementSizes[] = {16, 1024,524288};
 int nSizes  = sizeof(elementSizes) / sizeof(int);
@@ -102,11 +101,8 @@ void runTest(bool stepAIsCopy, bool hostSync, hipStream_t gpu0Stream, hipStream_
     hipStream_t stepAStream = gpu0Stream;
 
     if (stepAIsCopy) {
-#ifdef USE_HSA_COPY
         HIPCHECK(hipMemcpyAsync(dataGpu1, dataGpu0_0, sizeElements, hipMemcpyDeviceToDevice, stepAStream));
-#endif
     } else {
-        //assert(0); // not yet supported.
         unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, numElements);
         hipLaunchKernelGGL(memcpyIntKernel, dim3(blocks), dim3(threadsPerBlock), 0, gpu0Stream,
                        dataGpu0_0, dataGpu1, numElements);

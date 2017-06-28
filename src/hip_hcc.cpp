@@ -48,9 +48,6 @@ THE SOFTWARE.
 #include "env.h"
 
 
-// needs HCC change for hc::no_scope
-#define USE_NO_SCOPE 1
-
 //=================================================================================================
 //Global variables:
 //=================================================================================================
@@ -81,6 +78,7 @@ int HIP_FORCE_P2P_HOST = 0;
 int HIP_FAIL_SOC = 0;
 int HIP_DENY_PEER_ACCESS = 0;
 
+int HIP_HIDDEN_FREE_MEM = 256;
 // Force async copies to actually use the synchronous copy interface.
 int HIP_FORCE_SYNC_COPY = 0;
 
@@ -1207,8 +1205,8 @@ void HipReadEnv()
         tokenize(HIP_LAUNCH_BLOCKING_KERNELS, ',', &g_hipLaunchBlockingKernels);
     }
     READ_ENV_I(release, HIP_API_BLOCKING, 0, "Make HIP APIs 'host-synchronous', so they block until completed.  Impacts hipMemcpyAsync, hipMemsetAsync." );
-
-
+    
+    READ_ENV_I(release, HIP_HIDDEN_FREE_MEM, 0, "Amount of memory to hide from the free memory reported by hipMemGetInfo, specified in MB. Impacts hipMemGetInfo." );
 
     READ_ENV_C(release, HIP_DB, 0,  "Print debug info.  Bitmask (HIP_DB=0xff) or flags separated by '+' (HIP_DB=api+sync+mem+copy)", HIP_DB_callback);
     if ((HIP_DB & (1<<DB_API))  && (HIP_TRACE_API == 0)) {

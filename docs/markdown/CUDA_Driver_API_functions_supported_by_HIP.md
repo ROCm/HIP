@@ -553,24 +553,51 @@
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuMemAdvise`                                             |                               | Advise about the usage of a given memory range.                                                                                |
+| `cuMemPrefetchAsync`                                      |                               | Prefetches memory to the specified destination device.                                                                         |
+| `cuMemRangeGetAttribute`                                  |                               | Query an attribute of a given memory range.                                                                                    |
+| `cuMemRangeGetAttributes`                                 |                               | Query attributes of a given memory range.                                                                                      |
+| `cuPointerGetAttribute`                                   |                               | Returns information about a pointer.                                                                                           |
+| `cuPointerGetAttributes`                                  |                               | Returns information about a pointer.                                                                                           |
+| `cuPointerSetAttribute`                                   |                               | Set attributes on a previously allocated memory region.                                                                        |
 
 ## **13. Stream Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuStreamAddCallback`                                     |                               | Add a callback to a compute stream.                                                                                            |
+| `cuStreamAttachMemAsync`                                  |                               | Attach memory to a stream asynchronously.                                                                                      |
+| `cuStreamCreate`                                          |                               | Create a stream.                                                                                                               |
+| `cuStreamCreateWithPriority`                              |                               | Create a stream with the given priority.                                                                                       |
+| `cuStreamDestroy`                                         | `hipStreamDestroy`            | Destroys a stream.                                                                                                             |
+| `cuStreamGetFlags`                                        | `hipStreamGetFlags`           | Query the flags of a given stream.                                                                                             |
+| `cuStreamGetPriority`                                     | `hipStreamGetPriority`        | Query the priority of a given stream.                                                                                          |
+| `cuStreamQuery`                                           | `hipStreamQuery`              | Determine status of a compute stream.                                                                                          |
+| `cuStreamSynchronize`                                     | `hipStreamSynchronize`        | Wait until a stream's tasks are completed.                                                                                     |
+| `cuStreamWaitEvent`                                       | `hipStreamWaitEvent`          | Make a compute stream wait on an event.                                                                                        |
+| `cuStreamBatchMemOp`                                      |                               | Batch operations to synchronize the stream via memory operations.                                                              |
+| `cuStreamWaitValue32`                                     |                               | Wait on a memory location.                                                                                                     |
+| `cuStreamWriteValue32`                                    |                               | Write a value to memory.                                                                                                       |
 
 ## **14. Event Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuEventCreate`                                           | `hipEventCreate`              | Creates an event.                                                                                                              |
+| `cuEventDestroy`                                          | `hipEventDestroy`             | Destroys an event.                                                                                                             |
+| `cuEventElapsedTime`                                      | `hipEventElapsedTime`         | Computes the elapsed time between two events.                                                                                  |
+| `cuEventQuery`                                            | `hipEventQuery`               | Queries an event's status.                                                                                                     |
+| `cuEventRecord`                                           | `hipEventRecord`              | Records an event.                                                                                                              |
+| `cuEventSynchronize`                                      | `hipEventSynchronize`         | Waits for an event to complete.                                                                                                |
 
 ## **15. Execution Control**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `cuFuncGetAttribute`                                      |                               | Returns information about a function.                                                                                          |
+| `cuFuncSetCacheConfig`                                    | `hipFuncSetCacheConfig`       | Sets the preferred cache configuration for a device function.                                                                  |
+| `cuFuncSetSharedMemConfig`                                |                               | Sets the shared memory configuration for a device function.                                                                    |
+| `cuLaunchKernel`                                          | `hipModuleLaunchKernel`       | Launches a CUDA function.                                                                                                      |
 
 
 ## **16. Execution Control [DEPRECATED]**
