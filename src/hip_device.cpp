@@ -376,15 +376,10 @@ hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len, int device)
         e = hipErrorInvalidDevice;
     } else {
         if((pciBusId != nullptr) && (len > 0)) {
-            int tempPciBusId = 0;
-            e = ihipDeviceGetAttribute( &tempPciBusId, hipDeviceAttributePciBusId, device);
-            if( e == hipSuccess) {
-                std::string tempPciStr = std::to_string(tempPciBusId);
-                if( len < tempPciStr.length()){
-                    e = hipErrorInvalidValue;
-                } else { 
-                    memcpy( pciBusId , tempPciStr.c_str() , tempPciStr.length() );
-                }
+            auto deviceHandle = ihipGetDevice(device);
+            int retVal = snprintf(pciBusId,len, "%04x:%02x:%02x.0",deviceHandle->_props.pciDomainID,deviceHandle->_props.pciBusID,deviceHandle->_props.pciDeviceID);
+            if( retVal > 0  && retVal < len) {
+                e = hipSuccess;
             }
         }
     }
