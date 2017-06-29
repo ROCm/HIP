@@ -737,21 +737,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     char archName[256];
     err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_NAME, &archName);
 
-    if(strcmp(archName,"gfx701")==0){
-      prop->gcnArch = 701;
-    }
-    if(strcmp(archName,"gfx801")==0){
-      prop->gcnArch = 801;
-    }
-    if(strcmp(archName,"gfx802")==0){
-      prop->gcnArch = 802;
-    }
-    if(strcmp(archName,"gfx803")==0){
-      prop->gcnArch = 803;
-    }
-    if(strcmp(archName,"gfx900")==0){
-      prop->gcnArch = 900;
-    }
+    prop->gcnArch = atoi(archName+3);
 
     DeviceErrorCheck(err);
 
