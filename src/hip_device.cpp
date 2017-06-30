@@ -399,17 +399,25 @@ hipError_t hipDeviceGetByPCIBusId (int*  device, const int* pciBusId )
 {
     HIP_INIT_API(device,pciBusId);
     hipDeviceProp_t  tempProp;
-    int deviceCount;
+    int deviceCount = 0 ;
     hipError_t e = hipErrorInvalidValue;
-    ihipGetDeviceCount( &deviceCount );
-    *device = 0;
-    for (int i = 0; i< deviceCount; i++) {
-        ihipGetDeviceProperties( &tempProp, i );
-        if(tempProp.pciBusID == *pciBusId) {
-            *device =i;
-            e = hipSuccess;
-            break;
-        }
+    if((device != nullptr) && (pciBusId != nullptr)) {
+        int pciBusID = -1;
+        int pciDeviceID = -1;
+        int pciDomainID = -1;
+        int len = 0;
+        len = sscanf (pciBusId,"%04x:%02x:%02x",&pciDomainID,&pciBusID,&pciDeviceID);
+        if(len == 3) {
+           ihipGetDeviceCount( &deviceCount );
+           for (int i = 0; i< deviceCount; i++) {
+               ihipGetDeviceProperties( &tempProp, i );
+               if(tempProp.pciBusID == pciBusID) {
+                   *device = i;
+                   e = hipSuccess;
+                   break;
+               }
+           }
+       }
     }
     return ihipLogStatus(e);
 }
