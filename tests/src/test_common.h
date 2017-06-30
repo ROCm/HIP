@@ -147,6 +147,90 @@ vectorADD(hipLaunchParm lp,
 
 
 template <typename T>
+__global__ void
+vectorADDReverse(hipLaunchParm lp,
+            const T *A_d,
+            const T *B_d,
+            T *C_d,
+            size_t NELEM)
+{
+    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    size_t stride = hipBlockDim_x * hipGridDim_x ;
+
+    for (int64_t i=NELEM-stride+offset; i>=0; i-=stride) {
+        C_d[i] = A_d[i] + B_d[i];
+	}
+}
+
+
+template <typename T>
+__global__ void
+addCount( const T *A_d,
+        T *C_d,
+        size_t NELEM,
+        int count)
+{
+    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    size_t stride = hipBlockDim_x * hipGridDim_x ;
+
+    // Deliberately do this in an inefficient way to increase kernel runtime
+    for (int i=0; i<count; i++) {
+        for (size_t i=offset; i<NELEM; i+=stride) {
+            C_d[i] = A_d[i] + (T)count;
+        }
+    }
+}
+
+
+template <typename T>
+__global__ void
+addCountReverse( const T *A_d,
+        T *C_d,
+        int64_t NELEM,
+        int count)
+{
+    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    size_t stride = hipBlockDim_x * hipGridDim_x ;
+
+    // Deliberately do this in an inefficient way to increase kernel runtime
+    for (int i=0; i<count; i++) {
+        for (int64_t i=NELEM-stride+offset; i>=0; i-=stride) {
+            C_d[i] = A_d[i] + (T)count;
+        }
+    }
+}
+
+
+template <typename T>
+__global__ void
+memsetReverse( T *C_d,  T val,
+        int64_t NELEM)
+{
+    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    size_t stride = hipBlockDim_x * hipGridDim_x ;
+
+    for (int64_t i=NELEM-stride+offset; i>=0; i-=stride) {
+        C_d[i] = val;
+    }
+}
+
+
+template <typename T>
+void setDefaultData(size_t numElements, T *A_h, T* B_h, T *C_h)
+{
+    // Initialize the host data:
+    for (size_t i=0; i<numElements; i++) {
+        if (A_h) 
+            (A_h)[i] = 3.146f + i; // Pi
+        if (B_h) 
+            (B_h)[i] = 1.618f + i; // Phi
+        if (C_h) 
+            (C_h)[i] = 0.0f + i;  
+    }
+}
+
+
+template <typename T>
 void initArraysForHost(T **A_h, T **B_h, T **C_h,
                 size_t N, bool usePinnedHost=false)
 {
@@ -179,14 +263,9 @@ void initArraysForHost(T **A_h, T **B_h, T **C_h,
         }
     }
 
-    // Initialize the host data:
-    for (size_t i=0; i<N; i++) {
-        if (A_h) 
-            (*A_h)[i] = 3.146f + i; // Pi
-        if (B_h) 
-            (*B_h)[i] = 1.618f + i; // Phi
-    }
+    setDefaultData(N, A_h ? *A_h : NULL, B_h ? *B_h : NULL, C_h ? *C_h : NULL);
 }
+
 
 template <typename T>
 void initArrays(T **A_d, T **B_d, T **C_d,
@@ -295,7 +374,7 @@ inline void initHIPArrays(hipArray **A_d, hipArray **B_d, hipArray **C_d,
 // Assumes C_h contains vector add of A_h + B_h
 // Calls the test "failed" macro if a mismatch is detected.
 template <typename T>
-void checkVectorADD(T* A_h, T* B_h, T* result_H, size_t N, bool expectMatch=true)
+size_t checkVectorADD(T* A_h, T* B_h, T* result_H, size_t N, bool expectMatch=true, bool reportMismatch=true)
 {
     size_t  mismatchCount = 0;
     size_t  firstMismatch = 0;
@@ -316,9 +395,50 @@ void checkVectorADD(T* A_h, T* B_h, T* result_H, size_t N, bool expectMatch=true
         }
     }
 
+	if (reportMismatch) {
+        if (expectMatch) {
+            if (mismatchCount) {
+                failed("%zu mismatches ; first at index:%zu\n", mismatchCount, firstMismatch);
+            }
+        } else {
+            if (mismatchCount == 0) {
+                failed("expected mismatches but did not detect any!");
+            }
+        }
+	}
+
+	return mismatchCount;
+
+}
+
+
+// Assumes C_h contains vector add of A_h + B_h
+// Calls the test "failed" macro if a mismatch is detected.
+template <typename T>
+void checkTest(T* expected_H, T* result_H, size_t N, bool expectMatch=true)
+{
+    size_t  mismatchCount = 0;
+    size_t  firstMismatch = 0;
+    size_t  mismatchesToPrint = 10;
+    for (size_t i=0; i<N; i++) {
+        if (result_H[i] != expected_H[i]) {
+            if (mismatchCount == 0) {
+                firstMismatch = i;
+            }
+            mismatchCount++;
+            if ((mismatchCount <= mismatchesToPrint) && expectMatch) {
+                std::cout << std::fixed << std::setprecision(32);
+                std::cout << "At " << i << std::endl;
+                std::cout << "  Computed:" << result_H[i]  << std::endl;
+                std::cout << "  Expected:" << expected_H[i] << std::endl;
+            }
+        }
+    }
+
     if (expectMatch) {
         if (mismatchCount) {
-            failed("%zu mismatches ; first at index:%zu\n", mismatchCount, firstMismatch);
+            fprintf(stderr, "%zu mismatches ; first at index:%zu\n", mismatchCount, firstMismatch);
+            //failed("%zu mismatches ; first at index:%zu\n", mismatchCount, firstMismatch);
         }
     } else {
         if (mismatchCount == 0) {

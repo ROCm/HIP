@@ -24,20 +24,11 @@ THE SOFTWARE.
 #define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_FP16_H
 
 #include "hip/hcc_detail/hip_vector_types.h"
-
-#if __clang_major__ > 3
-
+#if ( __clang_major__ > 3)
 typedef __fp16 __half;
-
-typedef struct __attribute__((aligned(4))){
-  union {
-    __half p[2];
-    unsigned int q;
-  };
-} __half2;
-
-typedef __half half;
-typedef __half2 half2;
+typedef __fp16 __half1 __attribute__((ext_vector_type(1)));
+typedef __fp16 __half2 __attribute__((ext_vector_type(2)));
+typedef __fp16 half;
 
 /*
 Half Arithmetic Functions
@@ -214,10 +205,10 @@ __device__  __half __ushort2half_ru(unsigned short int i);
 __device__  __half __ushort2half_rz(unsigned short int i);
 __device__  __half __ushort_as_half(const unsigned short int i);
 
-extern "C" int __hip_hc_ir_hadd2_int(int, int);
-extern "C" int __hip_hc_ir_hfma2_int(int, int, int);
-extern "C" int __hip_hc_ir_hmul2_int(int, int);
-extern "C" int __hip_hc_ir_hsub2_int(int, int);
+extern "C" __half2 __hip_hc_ir_hadd2_int(__half2, __half2);
+extern "C" __half2 __hip_hc_ir_hfma2_int(__half2, __half2, __half2);
+extern "C" __half2 __hip_hc_ir_hmul2_int(__half2, __half2);
+extern "C" __half2 __hip_hc_ir_hsub2_int(__half2, __half2);
 
 extern "C" __half __hip_hc_ir_hceil_half(__half) __asm("llvm.ceil.f16");
 extern "C" __half __hip_hc_ir_hcos_half(__half) __asm("llvm.cos.f16");
@@ -231,16 +222,16 @@ extern "C" __half __hip_hc_ir_hsin_half(__half) __asm("llvm.sin.f16");
 extern "C" __half __hip_hc_ir_hsqrt_half(__half) __asm("llvm.sqrt.f16");
 extern "C" __half __hip_hc_ir_htrunc_half(__half) __asm("llvm.trunc.f16");
 
-extern "C" int __hip_hc_ir_h2ceil_int(int);
-extern "C" int __hip_hc_ir_h2cos_int(int);
-extern "C" int __hip_hc_ir_h2exp2_int(int);
-extern "C" int __hip_hc_ir_h2floor_int(int);
-extern "C" int __hip_hc_ir_h2log2_int(int);
-extern "C" int __hip_hc_ir_h2rcp_int(int);
-extern "C" int __hip_hc_ir_h2rsqrt_int(int);
-extern "C" int __hip_hc_ir_h2sin_int(int);
-extern "C" int __hip_hc_ir_h2sqrt_int(int);
-extern "C" int __hip_hc_ir_h2trunc_int(int);
+extern "C" __half2 __hip_hc_ir_h2ceil_int(__half2);
+extern "C" __half2 __hip_hc_ir_h2cos_int(__half2);
+extern "C" __half2 __hip_hc_ir_h2exp2_int(__half2);
+extern "C" __half2 __hip_hc_ir_h2floor_int(__half2);
+extern "C" __half2 __hip_hc_ir_h2log2_int(__half2);
+extern "C" __half2 __hip_hc_ir_h2rcp_int(__half2);
+extern "C" __half2 __hip_hc_ir_h2rsqrt_int(__half2);
+extern "C" __half2 __hip_hc_ir_h2sin_int(__half2);
+extern "C" __half2 __hip_hc_ir_h2sqrt_int(__half2);
+extern "C" __half2 __hip_hc_ir_h2trunc_int(__half2);
 
 /*
   Half2 Arithmetic Functions
@@ -248,63 +239,63 @@ extern "C" int __hip_hc_ir_h2trunc_int(int);
 
 __device__ static inline __half2 __hadd2(__half2 a, __half2 b) {
   __half2 c;
-  c.q = __hip_hc_ir_hadd2_int(a.q, b.q);
+  c.xy = __hip_hc_ir_hadd2_int(a.xy, b.xy);
   return c;
 }
 
 __device__ static inline __half2 __hadd2_sat(__half2 a, __half2 b) {
   __half2 c;
-  c.q = __hip_hc_ir_hadd2_int(a.q, b.q);
+  c.xy = __hip_hc_ir_hadd2_int(a.xy, b.xy);
   return c;
 }
 
 __device__ static inline __half2 __hfma2(__half2 a, __half2 b, __half2 c) {
   __half2 d;
-  d.q = __hip_hc_ir_hfma2_int(a.q, b.q, c.q);
+  d.xy = __hip_hc_ir_hfma2_int(a.xy, b.xy, c.xy);
   return d;
 }
 
 __device__ static inline __half2 __hfma2_sat(__half2 a, __half2 b, __half2 c) {
   __half2 d;
-  d.q = __hip_hc_ir_hfma2_int(a.q, b.q, c.q);
+  d.xy = __hip_hc_ir_hfma2_int(a.xy, b.xy, c.xy);
   return d;
 }
 
 __device__ static inline __half2 __hmul2(__half2 a, __half2 b) {
   __half2 c;
-  c.q = __hip_hc_ir_hmul2_int(a.q, b.q);
+  c.xy = __hip_hc_ir_hmul2_int(a.xy, b.xy);
   return c;
 }
 
 __device__ static inline __half2 __hmul2_sat(__half2 a, __half2 b) {
   __half2 c;
-  c.q = __hip_hc_ir_hmul2_int(a.q, b.q);
+  c.xy = __hip_hc_ir_hmul2_int(a.xy, b.xy);
   return c;
 }
 
 __device__ static inline __half2 __hsub2(__half2 a, __half2 b) {
   __half2 c;
-  c.q = __hip_hc_ir_hsub2_int(a.q, b.q);
+  c.xy = __hip_hc_ir_hsub2_int(a.xy, b.xy);
   return c;
 }
 
 __device__ static inline __half2 __hneg2(__half2 a) {
   __half2 c;
-  c.p[0] = - a.p[0];
-  c.p[1] = - a.p[1];
+  c.x = - a.x;
+  c.y = - a.y;
   return c;
 }
 
 __device__ static inline __half2 __hsub2_sat(__half2 a, __half2 b) {
   __half2 c;
-  c.q = __hip_hc_ir_hsub2_int(a.q, b.q);
+  c.xy = __hip_hc_ir_hsub2_int(a.xy, b.xy);
   return c;
 }
 
 __device__ static inline __half2 h2div(__half2 a, __half2 b) {
   __half2 c;
-  c.p[0] = a.p[0] / b.p[0];
-  c.p[1] = a.p[1] / b.p[1];
+  c.x = a.x / b.x;
+  c.y = a.y / b.y;
   return c;
 }
 
@@ -375,112 +366,94 @@ Half2 Math Operations
 
 __device__ static inline __half2 h2ceil(const __half2 h) {
   __half2 a;
-  a.q = __hip_hc_ir_h2ceil_int(h.q);
+  a.xy = __hip_hc_ir_h2ceil_int(h.xy);
   return a;
 }
 
 __device__ static inline __half2 h2cos(const __half2 h) {
   __half2 a;
-  a.q = __hip_hc_ir_h2cos_int(h.q);
+  a.xy = __hip_hc_ir_h2cos_int(h.xy);
   return a;
 }
 
 __device__ static inline __half2 h2exp(const __half2 h) {
   __half2 factor;
-  factor.p[0] = 1.442694;
-  factor.p[1] = 1.442694;
-  factor.q = __hip_hc_ir_h2exp2_int(__hip_hc_ir_hmul2_int(h.q, factor.q));
+  factor.x = 1.442694;
+  factor.y = 1.442694;
+  factor.xy = __hip_hc_ir_h2exp2_int(__hip_hc_ir_hmul2_int(h.xy, factor.xy));
   return factor;
 }
 
 __device__ static inline __half2 h2exp10(const __half2 h) {
   __half2 factor;
-  factor.p[0] = 3.3219281;
-  factor.p[1] = 3.3219281;
-  factor.q = __hip_hc_ir_h2exp2_int(__hip_hc_ir_hmul2_int(h.q, factor.q));
+  factor.x = 3.3219281;
+  factor.y = 3.3219281;
+  factor.xy = __hip_hc_ir_h2exp2_int(__hip_hc_ir_hmul2_int(h.xy, factor.xy));
   return factor;
 }
 
 __device__ static inline __half2 h2exp2(const __half2 h) {
   __half2 a;
-  a.q = __hip_hc_ir_h2exp2_int(h.q);
+  a.xy = __hip_hc_ir_h2exp2_int(h.xy);
   return a;
 }
 
 __device__ static inline __half2 h2floor(const __half2 h) {
   __half2 a;
-  a.q = __hip_hc_ir_h2floor_int(h.q);
+  a.xy = __hip_hc_ir_h2floor_int(h.xy);
   return a;
 }
 
 __device__ static inline __half2 h2log(const __half2 h) {
   __half2 factor;
-  factor.p[0] = 0.693147;
-  factor.p[1] = 0.693147;
-  factor. q = __hip_hc_ir_hmul2_int(__hip_hc_ir_h2log2_int(h.q), factor.q);
+  factor.x = 0.693147;
+  factor.y = 0.693147;
+  factor.xy = __hip_hc_ir_hmul2_int(__hip_hc_ir_h2log2_int(h.xy), factor.xy);
   return factor;
 }
 
 __device__ static inline __half2 h2log10(const __half2 h) {
   __half2 factor;
-  factor.p[0] = 0.301029;
-  factor.p[1] = 0.301029;
-  factor.q = __hip_hc_ir_hmul2_int(__hip_hc_ir_h2log2_int(h.q),  factor.q);
+  factor.x = 0.301029;
+  factor.y = 0.301029;
+  factor.xy = __hip_hc_ir_hmul2_int(__hip_hc_ir_h2log2_int(h.xy),  factor.xy);
   return factor;
 }
 __device__ static inline __half2 h2log2(const __half2 h) {
   __half2 a;
-  a.q = __hip_hc_ir_h2log2_int(h.q);
+  a.xy = __hip_hc_ir_h2log2_int(h.xy);
   return a;
 }
 
 __device__ static inline __half2 h2rcp(const __half2 h) {
   __half2 a;
-  a.q = __hip_hc_ir_h2rcp_int(h.q);
+  a.xy = __hip_hc_ir_h2rcp_int(h.xy);
   return a;
 }
 
 __device__ static inline __half2 h2rsqrt(const __half2 h) {
   __half2 a;
-  a.q = __hip_hc_ir_h2rsqrt_int(h.q);
+  a.xy = __hip_hc_ir_h2rsqrt_int(h.xy);
   return a;
 }
 
 __device__ static inline __half2 h2sin(const __half2 h) {
   __half2 a;
-  a.q = __hip_hc_ir_h2sin_int(h.q);
+  a.xy = __hip_hc_ir_h2sin_int(h.xy);
   return a;
 }
 
 __device__ static inline __half2 h2sqrt(const __half2 h) {
   __half2 a;
-  a.q = __hip_hc_ir_h2sqrt_int(h.q);
+  a.xy = __hip_hc_ir_h2sqrt_int(h.xy);
   return a;
 }
 
 __device__ static inline __half2 h2trunc(const __half2 h) {
   __half2 a;
-  a.q = __hip_hc_ir_h2trunc_int(h.q);
+  a.xy = __hip_hc_ir_h2trunc_int(h.xy);
   return a;
 }
-
-#endif
-
-#if __clang_major__ == 3
-
-typedef struct {
-  unsigned x: 16;
-} __half;
-
-typedef struct __attribute__((aligned(4))){
-  union {
-    __half p[2];
-    unsigned int q;
-  };
-} __half2;
-
-
-#endif
-
+#endif //clang_major > 3
 
 #endif

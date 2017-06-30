@@ -2,16 +2,22 @@
 
 We have attempted to document known bugs and limitations - in particular the [HIP Kernel Language](docs/markdown/hip_kernel_language.md) document uses the phrase "Under Development", and the [HIP Runtime API bug list](http://gpuopen-professionalcompute-tools.github.io/HIP/bug.html) lists known bugs. 
 
-Upcoming:
-- Stability: Enforce periodic host synchronization to reclaim resources if the application has launched a large
-  number of commands (>1K) without synchronizing.  
-- Register keyword now silently ignored on HCC (previously would emit warning).
-- Doc updates: Add some more frequently asked questions to FAQ, fix TOC in some files, review.
-- Cookbook.
 
 ===================================================================================================
 
 ## Revision History:
+
+===================================================================================================
+Release: 1.2
+Date: 2017.06.29
+- new APIs: hipMemcpy2DAsync, hipMallocPitch, hipHostMallocCoherent, hipHostMallocNonCoherent
+- added support for building hipify-clang using clang 3.9
+- hipify-clang updates for CUDA 8.0 runtime+driver support
+- renamed hipify to hipify-perl
+- initial implementation of hipify-cmakefile
+- several documentation updates & bug fixes
+- support for abort() function in device code
+
 
 ===================================================================================================
 Release: 1.0.17102

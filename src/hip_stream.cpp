@@ -49,7 +49,7 @@ hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags)
             // Obtain mutex access to the device critical data, release by destructor
             LockedAccessor_CtxCrit_t  ctxCrit(ctx->criticalData());
 
-            auto istream = new ihipStream_t(ctx, ctx->createOrStealQueue(ctxCrit), flags);
+            auto istream = new ihipStream_t(ctx, acc.create_view(), flags);
 
             ctxCrit->addStream(istream);
             *stream = istream;
@@ -93,20 +93,17 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
 
     } else if (event->_state != hipEventStatusUnitialized) {
 
-        bool fastWait = false;
-
         if (stream != hipStreamNull) {
+
+            // This will user create_blocking_marker to wait on the specified queue.
             stream->locked_waitEvent(event);
 
-            fastWait = true; // don't use the slow host-side synchronization.
-        }
-
-        if (!fastWait) {
+        } else {
             // TODO-hcc Convert to use create_blocking_marker(...) functionality.
             // Currently we have a super-conservative version of this - block on host, and drain the queue.
             // This should create a barrier packet in the target queue.
+            // TODO-HIP_SYNC_NULL_STREAM
             stream->locked_wait();
-            e = hipSuccess;
         }
     } // else event not recorded, return immediately and don't create marker.
 
@@ -129,9 +126,7 @@ hipError_t hipStreamQuery(hipStream_t stream)
 
     {
         LockedAccessor_StreamCrit_t crit(stream->_criticalData);
-        if (crit->_hasQueue) {
-            pendingOps = crit->_av.get_pending_async_ops();
-        }
+        pendingOps = crit->_av.get_pending_async_ops();
     }
 
 
@@ -148,10 +143,11 @@ hipError_t hipStreamSynchronize(hipStream_t stream)
 
     hipError_t e = hipSuccess;
 
-    if (stream == NULL) {
+    if (stream == hipStreamNull) {
         ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
-        ctx->locked_syncDefaultStream(true/*waitOnSelf*/);
+        ctx->locked_syncDefaultStream(true/*waitOnSelf*/, true/*syncToHost*/);
     } else {
+		// note this does not synchornize with the NULL stream:
         stream->locked_wait();
         e = hipSuccess;
     }
@@ -173,20 +169,18 @@ hipError_t hipStreamDestroy(hipStream_t stream)
 
     //--- Drain the stream:
     if (stream == NULL) {
-        ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
-        ctx->locked_syncDefaultStream(true/*waitOnSelf*/);
+        e = hipErrorInvalidResourceHandle; // TODO - review - what happens if try to destroy null stream
     } else {
         stream->locked_wait();
-        e = hipSuccess;
-    }
 
-    ihipCtx_t *ctx = stream->getCtx();
+        ihipCtx_t *ctx = stream->getCtx();
 
-    if (ctx) {
-        ctx->locked_removeStream(stream);
-        delete stream;
-    } else {
-        e = hipErrorInvalidResourceHandle;
+        if (ctx) {
+            ctx->locked_removeStream(stream);
+            delete stream;
+        } else {
+            e = hipErrorInvalidResourceHandle;
+        }
     }
 
     return ihipLogStatus(e);
@@ -200,7 +194,7 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags)
 
     if (flags == NULL) {
         return ihipLogStatus(hipErrorInvalidValue);
-    } else if (stream == NULL) {
+    } else if (stream == hipStreamNull) {
         return ihipLogStatus(hipErrorInvalidResourceHandle);
     } else {
         *flags = stream->_flags;

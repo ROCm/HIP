@@ -36,39 +36,38 @@ THE SOFTWARE.
 
 #define MAKE_DEFAULT_CONSTRUCTOR_ONE_COMPONENT(type) \
 __device__ __host__ type() {} \
-__device__ __host__ type(type& val) : x(val.x) { } \
-__device__ __host__ type(const type& val) : x(val.x) { }
+__device__ __host__ type(const type& val) : x(val.x) { } \
+__device__ __host__ ~type() {} 
 
 #define MAKE_DEFAULT_CONSTRUCTOR_TWO_COMPONENT(type) \
 __device__ __host__ type() {} \
-__device__ __host__ type(type& val) : x(val.x), y(val.y) { } \
-__device__ __host__ type(const type& val) : x(val.x), y(val.y) { }
+__device__ __host__ type(const type& val) : x(val.x), y(val.y) { } \
+__device__ __host__ ~type() {}
 
 #define MAKE_DEFAULT_CONSTRUCTOR_THREE_COMPONENT(type) \
 __device__ __host__ type() {} \
-__device__ __host__ type(type& val) : x(val.x), y(val.y), z(val.z) { } \
-__device__ __host__ type(const type& val) : x(val.x), y(val.y), z(val.z) { }
+__device__ __host__ type(const type& val) : x(val.x), y(val.y), z(val.z) { } \
+__device__ __host__ ~type() {} 
 
 #define MAKE_DEFAULT_CONSTRUCTOR_FOUR_COMPONENT(type) \
 __device__ __host__ type() {} \
-__device__ __host__ type(type& val) : x(val.x), y(val.y), z(val.z), w(val.w) { } \
-__device__ __host__ type(const type& val) : x(val.x), y(val.y), z(val.z), w(val.w) { }
-
+__device__ __host__ type(const type& val) : x(val.x), y(val.y), z(val.z), w(val.w) { } \
+__device__ __host__ ~type() {}
 
 #define MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(type, type1) \
 __device__ __host__ type(type1 val) : x(val) {} \
 
 #define MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(type, type1) \
 __device__ __host__ type(type1 val) : x(val), y(val) {} \
-__device__ __host__ type(type1 val1, type1 val2) : x(val1), y(val2) {}
+__device__ __host__ type(type1 val1, type1 val2) : x(val1), y(val2) {} \
 
 #define MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(type, type1) \
 __device__ __host__ type(type1 val) : x(val), y(val), z(val) {} \
-__device__ __host__ type(type1 val1, type1 val2, type1 val3) : x(val1), y(val2), z(val3) {}
+__device__ __host__ type(type1 val1, type1 val2, type1 val3) : x(val1), y(val2), z(val3) {} \
 
 #define MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(type, type1) \
 __device__ __host__ type(type1 val) : x(val), y(val), z(val), w(val) {} \
-__device__ __host__ type(type1 val1, type1 val2, type1 val3, type1 val4) : x(val1), y(val2), z(val3), w(val4) {}
+__device__ __host__ type(type1 val1, type1 val2, type1 val3, type1 val4) : x(val1), y(val2), z(val3), w(val4) {} \
 
 struct uchar1 {
   #ifdef __cplusplus
@@ -4114,5 +4113,6 @@ DECLOP_4VAR_SCALE_PRODUCT(longlong4, signed long long)
 
 
 #endif
+
 
 #endif

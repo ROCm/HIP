@@ -4,7 +4,7 @@
 #include "../test_common.h"
 
 
-#define LEN 1030
+#define LEN 1024
 #define SIZE LEN << 2
 
 /* HIT_START
@@ -17,13 +17,13 @@
 __global__ void cpy(hipLaunchParm lp, uint32_t *Out, uint32_t *In)
 {
     int tx = hipThreadIdx_x;
-    memcpy(Out + tx, In + tx, SIZE/LEN);
+    memcpy(Out + tx, In + tx, sizeof(uint32_t));
 }
 
 __global__ void set(hipLaunchParm lp, uint32_t *ptr, uint8_t val, size_t size)
 {
     int tx = hipThreadIdx_x;
-    memset(ptr + tx, val, size);
+    memset(ptr + tx, val, (sizeof(uint32_t)*(size/LEN)));
 }
 
 int main()
