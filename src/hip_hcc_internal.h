@@ -61,10 +61,12 @@ extern int HIP_FORCE_P2P_HOST;
 
 extern int HIP_COHERENT_HOST_ALLOC;
 
-
+extern int HIP_HIDDEN_FREE_MEM;
 //---
 // Chicken bits for disabling functionality to work around potential issues:
 extern int HIP_SYNC_HOST_ALLOC;
+
+extern int HIP_SYNC_NULL_STREAM;
 
 // TODO - remove when this is standard behavior.
 extern int HCC_OPT_FLUSH;
@@ -187,10 +189,11 @@ extern const char *API_COLOR_END;
 
 
 //---
-//HIP Trace modes
-#define TRACE_ALL 0 // 0x1
-#define TRACE_CMD 1 // 0x2
-#define TRACE_MEM 2 // 0x4
+//HIP Trace modes - use with HIP_TRACE_API=...
+#define TRACE_ALL  0 // 0x1
+#define TRACE_KCMD 1 // 0x2, kernel command
+#define TRACE_MCMD 2 // 0x4, memory command
+#define TRACE_MEM  3 // 0x8, memory allocation or deallocation.
 
 
 //---
@@ -275,12 +278,13 @@ extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
     API_TRACE(0, __VA_ARGS__);
 
 
-// Like above, but will trace with DB_CMD.
-// Replace HIP_INIT_API with this call inside important APIs that launch work on the GPU:
+// Like above, but will trace with a specified "special" bit.
+// Replace HIP_INIT_API with this call inside HIP APIs that launch work on the GPU:
 // kernel launches, copy commands, memory sets, etc.
-#define HIP_INIT_CMD_API(...) \
+#define HIP_INIT_SPECIAL_API(tbit, ...) \
     HIP_INIT()\
-    API_TRACE((HIP_TRACE_API&(1<<TRACE_CMD)), __VA_ARGS__);
+    API_TRACE((HIP_TRACE_API&(1<<tbit)), __VA_ARGS__);
+
 
 // This macro should be called at the end of every HIP API, and only at the end of top-level hip APIS (not internal hip)
 // It has dual function: logs the last error returned for use by hipGetLastError,
@@ -443,7 +447,6 @@ public:
     ihipStreamCriticalBase_t(ihipStream_t *parentStream, hc::accelerator_view av) :
         _kernelCnt(0),
         _av(av),
-        _hasQueue(true),
         _parent(parentStream)
     {
     };
@@ -469,11 +472,6 @@ public:
     uint32_t                    _kernelCnt;    // Count of inflight kernels in this stream.  Reset at ::wait().
 
     hc::accelerator_view        _av;
-
-    // True if the stream has an allocated queue (accelerato_view) for its use:
-    // Always true at ihipStream creation but queue may later be stolen.
-    // This acts as a valid bit for the _av.
-    bool                        _hasQueue;
 private:
 };
 
@@ -519,8 +517,10 @@ public:
     void                 locked_waitEvent(hipEvent_t event);
     void                 locked_recordEvent(hipEvent_t event);
 
+    ihipStreamCritical_t  &criticalData() { return _criticalData; };
 
     //---
+    hc::hcWaitMode waitMode() const;
 
     // Use this if we already have the stream critical data mutex:
     void                 wait(LockedAccessor_StreamCrit_t &crit);
@@ -538,12 +538,13 @@ public:
     const ihipDevice_t *     getDevice() const;
     ihipCtx_t *              getCtx() const;
 
-    void ensureHaveQueue(LockedAccessor_StreamCrit_t &streamCrit);
+    // Before calling this function, stream must be resolved from "0" to the actual stream:
+    bool isDefaultStream() const { return _id == 0; };
 
 public:
     //---
     //Public member vars - these are set at initialization and never change:
-    SeqNum_t                    _id;   // monotonic sequence ID
+    SeqNum_t                    _id;   // monotonic sequence ID.  0 is the default stream.
     unsigned                    _flags;
 
 
@@ -561,6 +562,7 @@ private:
     bool canSeeMemory(const ihipCtx_t *thisCtx, const hc::AmPointerInfo *dstInfo, const hc::AmPointerInfo *srcInfo);
 
     void addSymbolPtrToTracker(hc::accelerator& acc, void* ptr, size_t sizeBytes);
+
 
 public: // TODO - move private
     // Critical Data - MUST be accessed through LockedAccessor_StreamCrit_t
@@ -584,10 +586,10 @@ private: // Data
 //----
 // Internal event structure:
 enum hipEventStatus_t {
-    hipEventStatusUnitialized = 0, // event is unutilized, must be "Created" before use.
-    hipEventStatusCreated     = 1,
-    hipEventStatusRecording   = 2, // event has been enqueued to record something.
-    hipEventStatusRecorded    = 3, // event has been recorded - timestamps are valid.
+    hipEventStatusUnitialized = 0, // event is uninitialized, must be "Created" before use.
+    hipEventStatusCreated     = 1, // event created, but not yet Recorded
+    hipEventStatusRecording   = 2, // event has been recorded into a stream but not completed yet.
+    hipEventStatusComplete    = 3, // event has been recorded - timestamps are valid.
 } ;
 
 // TODO - rename to ihip type of some kind
@@ -601,8 +603,8 @@ enum ihipEventType_t {
 class ihipEvent_t {
 public:
     ihipEvent_t(unsigned flags);
-    void attachToCompletionFuture(const hc::completion_future *cf, ihipEventType_t eventType);
-    void setTimestamp();
+    void attachToCompletionFuture(const hc::completion_future *cf, hipStream_t stream, ihipEventType_t eventType);
+    void refereshEventStatus();
     uint64_t timestamp() const { return _timestamp; } ;
     ihipEventType_t type() const { return _type; };
 
@@ -784,11 +786,7 @@ public: // Functions:
     void locked_removeStream(ihipStream_t *s);
     void locked_reset();
     void locked_waitAllStreams();
-    void locked_syncDefaultStream(bool waitOnSelf);
-
-    // Will allocate a queue and assign it to the needyStream:
-    hc::accelerator_view  stealActiveQueue(LockedAccessor_CtxCrit_t &ctxCrit, ihipStream_t *needyStream);
-    hc::accelerator_view createOrStealQueue(LockedAccessor_CtxCrit_t &ctxCrit);
+    void locked_syncDefaultStream(bool waitOnSelf, bool syncHost);
 
     ihipCtxCritical_t  &criticalData() { return _criticalData; };
 
@@ -826,6 +824,7 @@ private:  // Critical data, protected with locked access:
 extern std::once_flag hip_initialized;
 extern unsigned g_deviceCnt;
 extern hsa_agent_t g_cpu_agent ;   // the CPU agent.
+extern hsa_agent_t *g_allAgents; // CPU agents + all the visible GPU agents.
 
 //=================================================================================================
 // Extern functions:

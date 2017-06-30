@@ -106,19 +106,25 @@ enum hipLimit_t
 #define hipEventBlockingSync        0x1  ///< Waiting will yield CPU.  Power-friendly and usage-friendly but may increase latency.
 #define hipEventDisableTiming       0x2  ///< Disable event's capability to record timing information.  May improve performance.
 #define hipEventInterprocess        0x4  ///< Event can support IPC.  @warning - not supported in HIP.
+#define hipEventReleaseToDevice     0x40000000  /// < Use a device-scope release when recording this event.  This flag is useful to obtain more precise timings of commands between events.  The flag is a no-op on CUDA platforms.
+#define hipEventReleaseToSystem     0x80000000  /// < Use a system-scope release that when recording this event.  This flag is useful to make non-coherent host memory visible to the host.  The flag is a no-op on CUDA platforms.
 
 
 //! Flags that can be used with hipHostMalloc
 #define hipHostMallocDefault        0x0
-#define hipHostMallocPortable       0x1
-#define hipHostMallocMapped         0x2
+#define hipHostMallocPortable       0x1  ///< Memory is considered allocated by all contexts.
+#define hipHostMallocMapped         0x2  ///< Map the allocation into the address space for the current device.  The device pointer can be obtained with #hipHostGetDevicePointer.
 #define hipHostMallocWriteCombined  0x4
+#define hipHostMallocCoherent       0x40000000 ///< Allocate coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific allocation.
+#define hipHostMallocNonCoherent    0x80000000 ///< Allocate non-coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific allocation.
+
 
 //! Flags that can be used with hipHostRegister
 #define hipHostRegisterDefault      0x0  ///< Memory is Mapped and Portable
-#define hipHostRegisterPortable     0x1  ///< Memory is considered registered by all contexts.  HIP only supports one context so this is always assumed true.
+#define hipHostRegisterPortable     0x1  ///< Memory is considered registered by all contexts.
 #define hipHostRegisterMapped       0x2  ///< Map the allocation into the address space for the current device.  The device pointer can be obtained with #hipHostGetDevicePointer.
 #define hipHostRegisterIoMemory     0x4  ///< Not supported.
+
 
 
 #define hipDeviceScheduleAuto       0x0  ///< Automatically select between Spin and Yield
@@ -129,6 +135,33 @@ enum hipLimit_t
 
 #define hipDeviceMapHost            0x8
 #define hipDeviceLmemResizeToMax    0x16
+
+
+/*
+* @brief hipJitOption
+* @enum
+* @ingroup Enumerations
+*/
+typedef enum hipJitOption {
+  hipJitOptionMaxRegisters = 0,
+  hipJitOptionThreadsPerBlock,
+  hipJitOptionWallTime,
+  hipJitOptionInfoLogBuffer,
+  hipJitOptionInfoLogBufferSizeBytes,
+  hipJitOptionErrorLogBuffer,
+  hipJitOptionErrorLogBufferSizeBytes,
+  hipJitOptionOptimizationLevel,
+  hipJitOptionTargetFromContext,
+  hipJitOptionTarget,
+  hipJitOptionFallbackStrategy,
+  hipJitOptionGenerateDebugInfo,
+  hipJitOptionLogVerbose,
+  hipJitOptionGenerateLineInfo,
+  hipJitOptionCacheMode,
+  hipJitOptionSm3xOpt,
+  hipJitOptionFastCompile,
+  hipJitOptionNumOptions
+} hipJitOption;
 
 
 /**
@@ -385,7 +418,7 @@ hipError_t hipDeviceGetLimit(size_t *pValue, enum hipLimit_t limit);
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
-hipError_t hipFuncSetCacheConfig ( hipFuncCache_t config );
+hipError_t hipFuncSetCacheConfig (const void* func, hipFuncCache_t config );
 
 /**
  * @brief Returns bank width of shared memory for current device
@@ -601,9 +634,12 @@ hipError_t hipStreamQuery(hipStream_t stream);
  *
  * @return #hipSuccess, #hipErrorInvalidResourceHandle
  *
- * If the null stream is specified, this command blocks until all
+ * This command is host-synchronous : the host will block until the specified stream is empty.
+ *
+ * This command follows standard null-stream semantics.  Specifically, specifying the null stream will cause the 
+ * command to wait for other streams on the same device to complete all pending operations.
+ *
  * This command honors the hipDeviceLaunchBlocking flag, which controls whether the wait is active or blocking.
- * This command is host-synchronous : the host will block until the stream is empty.
  *
  * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamWaitEvent, hipStreamDestroy
  *
@@ -622,10 +658,12 @@ hipError_t hipStreamSynchronize(hipStream_t stream);
  *
  * This function inserts a wait operation into the specified stream.
  * All future work submitted to @p stream will wait until @p event reports completion before beginning execution.
- * This function is host-asynchronous and the function may return before the wait has completed.
+ *
+ * This function only waits for commands in the current stream to complete.  Notably,, this function does 
+ * not impliciy wait for commands in the default stream to complete, even if the specified stream is 
+ * created with hipStreamNonBlocking = 0.  
  *
  * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamSynchronize, hipStreamDestroy
- *
  */
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags);
 
@@ -730,10 +768,10 @@ hipError_t hipEventCreate(hipEvent_t* event);
  * the specified stream, after all previous
  * commands in that stream have completed executing.
  *
- * If hipEventRecord() has been previously called aon event, then this call will overwrite any existing state in event.
+ * If hipEventRecord() has been previously called on this event, then this call will overwrite any existing state in event.
  *
  * If this function is called on a an event that is currently being recorded, results are undefined - either
- * outstanding recording may save state into the event, and the order is not guaranteed.  This shoul be avoided.
+ * outstanding recording may save state into the event, and the order is not guaranteed.  
  *
  * @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventSynchronize, hipEventDestroy, hipEventElapsedTime
  *
@@ -1156,7 +1194,7 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
  *
  *  @see hipMemcpy, hipMemcpy2D, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpy2DFromArray, hipMemcpyArrayToArray, hipMemcpy2DArrayToArray, hipMemcpyFromSymbol, hipMemcpyAsync, hipMemcpy2DAsync, hipMemcpyToArrayAsync, hipMemcpy2DToArrayAsync, hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync, hipMemcpyFromSymbolAsync
  */
-hipError_t hipMemcpyToSymbol(const void* symbolName, const void *src, size_t sizeBytes, size_t offset, hipMemcpyKind kind);
+hipError_t hipMemcpyToSymbol(const void* symbolName, const void *src, size_t sizeBytes, size_t offset = 0, hipMemcpyKind kind = hipMemcpyHostToDevice);
 
 
 /**
@@ -1176,11 +1214,11 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void *src, size_t siz
  *
  *  @see hipMemcpy, hipMemcpy2D, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpy2DFromArray, hipMemcpyArrayToArray, hipMemcpy2DArrayToArray, hipMemcpyFromSymbol, hipMemcpyAsync, hipMemcpy2DAsync, hipMemcpyToArrayAsync, hipMemcpy2DToArrayAsync, hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync, hipMemcpyFromSymbolAsync
  */
-hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void *src, size_t sizeBytes, size_t offset, hipMemcpyKind kind, hipStream_t stream);
+hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void *src, size_t sizeBytes, size_t offset, hipMemcpyKind kind, hipStream_t stream = 0);
 
-hipError_t hipMemcpyFromSymbol(void *dst, const void* symbolName, size_t sizeBytes, size_t offset, hipMemcpyKind kind);
+hipError_t hipMemcpyFromSymbol(void *dst, const void* symbolName, size_t sizeBytes, size_t offset = 0, hipMemcpyKind kind = hipMemcpyDeviceToHost);
 
-hipError_t hipMemcpyFromSymbolAsync(void *dst, const void* symbolName, size_t sizeBytes, size_t offset, hipMemcpyKind kind, hipStream_t stream);
+hipError_t hipMemcpyFromSymbolAsync(void *dst, const void* symbolName, size_t sizeBytes, size_t offset, hipMemcpyKind kind, hipStream_t stream = 0);
 
 /**
  *  @brief Copy data from src to dst asynchronously.
@@ -1307,6 +1345,27 @@ hipError_t hipFreeArray(hipArray* array);
  *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpyToSymbol, hipMemcpyAsync
  */
 hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind);
+
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dst    Destination memory address
+ *  @param[in]   dpitch Pitch of destination memory
+ *  @param[in]   src    Source memory address
+ *  @param[in]   spitch Pitch of source memory
+ *  @param[in]   width  Width of matrix transfer (columns in bytes)
+ *  @param[in]   height Height of matrix transfer (rows)
+ *  @param[in]   kind   Type of transfer
+ *  @param[in]   stream Stream to use
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue, #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpyToSymbol, hipMemcpyAsync
+ */
+#if __cplusplus
+hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind, hipStream_t stream = 0);
+#else
+hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind, hipStream_t stream);
+#endif
 
 /**
  *  @brief Copies data between host and device.
@@ -1890,14 +1949,13 @@ hipError_t hipModuleGetFunction(hipFunction_t *function, hipModule_t module, con
  * @brief returns device memory pointer and size of the kernel present in the module with symbol @p name
  *
  * @param [out] dptr
- * @param [out[ bytes
+ * @param [out] bytes
  * @param [in] hmod
  * @param [in] name
  *
  * @returns hipSuccess, hipErrorInvalidValue, hipErrorNotInitialized
  */
 hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes, hipModule_t hmod, const char *name);
-
 
 /**
  * @brief builds module from code object which resides in host memory. Image is pointer to that location.
@@ -1909,11 +1967,23 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes, hipModule_t h
  */
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image);
 
+/**
+* @brief builds module from code object which resides in host memory. Image is pointer to that location. Options are not used. hipModuleLoadData is called.
+*
+* @param [in] image
+* @param [out] module
+* @param [in] number of options
+* @param [in] options for JIT
+* @param [in] option values for JIT
+*
+* @returns hipSuccess, hipErrorNotInitialized, hipErrorOutOfMemory, hipErrorNotInitialized
+*/
+hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image, unsigned int numOptions, hipJitOption *options, void **optionValues);
 
 /**
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed to kernelparams or extra
  *
- * @param [in[ f	 Kernel to launch.
+ * @param [in] f         Kernel to launch.
  * @param [in] gridDimX  X grid dimension specified as multiple of blockDimX.
  * @param [in] gridDimY  Y grid dimension specified as multiple of blockDimY.
  * @param [in] gridDimZ  Z grid dimension specified as multiple of blockDimZ.
@@ -1921,7 +1991,7 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image);
  * @param [in] blockDimY Y grid dimension specified in work-items
  * @param [in] blockDimZ Z grid dimension specified in work-items
  * @param [in] sharedMemBytes Amount of dynamic shared memory to allocate for this kernel.  The kernel can access this with HIP_DYNAMIC_SHARED.
- * @param [in] stream Stream where the kernel should be dispatched.  May be 0, in which case th default stream is used with associated synchronization rules.
+ * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case th default stream is used with associated synchronization rules.
  * @param [in] kernelParams
  * @param [in] extra     Pointer to kernel arguments.   These are passed directly to the kernel and must be in the memory layout and alignment expected by the kernel.
  *

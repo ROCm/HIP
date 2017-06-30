@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include "device_util.h"
 #include "hip/hcc_detail/device_functions.h"
 #include "hip/hip_runtime.h"
+#include <atomic>
 
 //=================================================================================================
 /*
@@ -838,6 +839,11 @@ __device__ float __hip_ynf(int n, float x)
 __device__ long long int clock64() { return (long long int)hc::__cycle_u64(); };
 __device__ clock_t clock() { return (clock_t)hc::__cycle_u64(); };
 
+//abort
+__device__ void abort()
+{
+    return hc::abort();
+}
 
 //atomicAdd()
 __device__  int atomicAdd(int* address, int val)
@@ -923,24 +929,45 @@ __device__  unsigned long long int atomicMax(unsigned long long int* address,
 }
 
 //atomicCAS()
+template<typename T>
+__device__ T atomicCAS_impl(T* address, T compare, T val)
+{
+  // the implementation assumes the atomic is lock-free and 
+  // has the same size as the non-atmoic equivalent type
+  static_assert(sizeof(T) == sizeof(std::atomic<T>)
+                , "size mismatch between atomic and non-atomic types");
+
+  union {
+    T*              address;
+    std::atomic<T>* atomic_address;
+  } u;
+  u.address = address;
+
+  T expected = compare;
+
+  // hcc should generate a system scope atomic CAS 
+  std::atomic_compare_exchange_weak_explicit(u.atomic_address
+                                            , &expected, val
+                                            , std::memory_order_acq_rel
+                                            , std::memory_order_relaxed);
+  return expected;
+}
+
 __device__  int atomicCAS(int* address, int compare, int val)
 {
-	hc::atomic_compare_exchange(address,&compare,val);
-	return *address;
+  return atomicCAS_impl(address, compare, val);
 }
 __device__  unsigned int atomicCAS(unsigned int* address,
                        unsigned int compare,
                        unsigned int val)
 {
-	hc::atomic_compare_exchange(address,&compare,val);
-	return *address;
+  return atomicCAS_impl(address, compare, val);
 }
 __device__  unsigned long long int atomicCAS(unsigned long long int* address,
                                  unsigned long long int compare,
                                  unsigned long long int val)
 {
-	hc::atomic_compare_exchange((uint64_t*)address,(uint64_t*)&compare,(uint64_t)val);
-	return *address;
+  return atomicCAS_impl(address, compare, val);
 }
 
 //atomicAnd()
@@ -1079,11 +1106,13 @@ __host__ __device__ int max(int arg1, int arg2)
   return (int)(hc::precise_math::fmax((float)arg1, (float)arg2));
 }
 
-__device__ ADDRESS_SPACE_3 void* __get_dynamicgroupbaseptr()
-{
+__device__ void* __get_dynamicgroupbaseptr() {
   return hc::get_dynamic_group_segment_base_pointer();
 }
 
+__host__ void* __get_dynamicgroupbaseptr() { 
+  return nullptr; 
+}
 
 // Precise Math Functions
 __device__ float __hip_precise_cosf(float x) {
@@ -1163,18 +1192,18 @@ __device__ double __hip_precise_dsqrt_rz(double x) {
   return hc::precise_math::sqrt(x);
 }
 
-#define LOG_BASE2_E_DIV_2 0.4426950408894701
-#define LOG_BASE2_5 2.321928094887362
+#define LOG_BASE2_E 1.4426950408889634
+#define LOG_BASE2_10 3.32192809488736
 #define ONE_DIV_LOG_BASE2_E 0.69314718056
 #define ONE_DIV_LOG_BASE2_10 0.30102999566
 
 // Fast Math Intrinsics
 __device__ float __hip_fast_exp10f(float x) {
-  return __hip_fast_exp2f(x*LOG_BASE2_E_DIV_2);
+  return __hip_fast_exp2f(x*LOG_BASE2_E);
 }
 
 __device__ float __hip_fast_expf(float x) {
-  return __hip_fast_expf(x*LOG_BASE2_5);
+  return __hip_fast_exp2f(x*LOG_BASE2_10);
 }
 
 __device__ float __hip_fast_frsqrt_rn(float x) {
@@ -1215,20 +1244,23 @@ __device__ float __hip_fast_tanf(float x) {
 }
 
 // Double Precision Math
+// FIXME - HCC doesn't have a fast_math version double FP sqrt
+// Another issue is that these intrinsics call for a specific rounding mode;
+// however, their implementation all map to the same sqrt builtin
 __device__ double __hip_fast_dsqrt_rd(double x) {
-  return hc::fast_math::sqrt(x);
+  return hc::precise_math::sqrt(x);
 }
 
 __device__ double __hip_fast_dsqrt_rn(double x) {
-  return hc::fast_math::sqrt(x);
+  return hc::precise_math::sqrt(x);
 }
 
 __device__ double __hip_fast_dsqrt_ru(double x) {
-  return hc::fast_math::sqrt(x);
+  return hc::precise_math::sqrt(x);
 }
 
 __device__ double __hip_fast_dsqrt_rz(double x) {
-  return hc::fast_math::sqrt(x);
+  return hc::precise_math::sqrt(x);
 }
 
 __device__ void  __threadfence_system(void){

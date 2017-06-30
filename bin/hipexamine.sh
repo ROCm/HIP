@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#usage : hipexamine2.sh DIRNAME [hipify options] [--] [clang options]
+#usage : hipexamine.sh DIRNAME [hipify options] [--] [clang options]
 
 # Generate CUDA->HIP conversion statistics for all the code files in the specified directory.
 

@@ -830,16 +830,6 @@ __host__ double erfcinv(double y)
     return __hip_host_erfcinv(y);
 }
 
-__host__ float erfinvf(float x)
-{
-    return __hip_host_erfinvf(x);
-}
-
-__host__ double erfinv(double x)
-{
-    return __hip_host_erfinv(x);
-}
-
 __host__ double fdivide(double x, double y)
 {
     return x/y;
@@ -947,15 +937,15 @@ __host__ void sincospi(double x, double *sptr, double *cptr)
     *cptr = std::cos(HIP_PI*x);
 }
 
-__host__ float normcdfinvf(float x)
-{
-    return std::sqrt(2) * erfinv(2*x-1);
-}
+//__host__ float normcdfinvf(float x)
+//{
+//    return std::sqrt(2) * erfinvf(2*x-1);
+//}
 
-__host__ double normcdfinv(double x)
-{
-    return std::sqrt(2) * erfinv(2*x-1);
-}
+//__host__ double normcdfinv(double x)
+//{
+//    return std::sqrt(2) * erfinv(2*x-1);
+//}
 
 __host__ float nextafterf(float x, float y)
 {
