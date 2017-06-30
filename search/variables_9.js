@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['regsperblock',['regsPerBlock',['../structhipDeviceProp__t.html#a73c1c21648a901799ff6bef83c11135b',1,'hipDeviceProp_t']]]
+  ['name',['name',['../structhipDeviceProp__t.html#a5b44bf8fa46faefcde989942b1d11a5e',1,'hipDeviceProp_t']]]
 ];

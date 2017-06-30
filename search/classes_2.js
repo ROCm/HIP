@@ -1,7 +1,8 @@
 var searchData=
 [
-  ['dbname',['DbName',['../structDbName.html',1,'']]],
-  ['dim3',['dim3',['../structdim3.html',1,'']]],
-  ['double1',['double1',['../structdouble1.html',1,'']]],
-  ['double3',['double3',['../structdouble3.html',1,'']]]
+  ['fakemutex',['FakeMutex',['../classFakeMutex.html',1,'']]],
+  ['float1',['float1',['../structfloat1.html',1,'']]],
+  ['float2',['float2',['../structfloat2.html',1,'']]],
+  ['float3',['float3',['../structfloat3.html',1,'']]],
+  ['float4',['float4',['../structfloat4.html',1,'']]]
 ];

@@ -1,16 +1,16 @@
 var searchData=
 [
-  ['ihipctx_5ft',['ihipCtx_t',['../classihipCtx__t.html',1,'']]],
-  ['ihipctxcriticalbase_5ft',['ihipCtxCriticalBase_t',['../classihipCtxCriticalBase__t.html',1,'']]],
-  ['ihipctxcriticalbase_5ft_3c_20ctxmutex_20_3e',['ihipCtxCriticalBase_t&lt; CtxMutex &gt;',['../classihipCtxCriticalBase__t.html',1,'']]],
-  ['ihipdevice_5ft',['ihipDevice_t',['../classihipDevice__t.html',1,'']]],
-  ['ihipevent_5ft',['ihipEvent_t',['../structihipEvent__t.html',1,'']]],
-  ['ihipexception',['ihipException',['../classihipException.html',1,'']]],
-  ['ihipfunction_5ft',['ihipFunction_t',['../classihipFunction__t.html',1,'']]],
-  ['ihipipcmemhandle_5ft',['ihipIpcMemHandle_t',['../classihipIpcMemHandle__t.html',1,'']]],
-  ['ihipmodule_5ft',['ihipModule_t',['../classihipModule__t.html',1,'']]],
-  ['ihipstream_5ft',['ihipStream_t',['../classihipStream__t.html',1,'']]],
-  ['ihipstreamcriticalbase_5ft',['ihipStreamCriticalBase_t',['../classihipStreamCriticalBase__t.html',1,'']]],
-  ['ihipstreamcriticalbase_5ft_3c_20streammutex_20_3e',['ihipStreamCriticalBase_t&lt; StreamMutex &gt;',['../classihipStreamCriticalBase__t.html',1,'']]],
-  ['int3',['int3',['../structint3.html',1,'']]]
+  ['lockedaccessor',['LockedAccessor',['../classLockedAccessor.html',1,'']]],
+  ['lockedbase',['LockedBase',['../structLockedBase.html',1,'']]],
+  ['lockedbase_3c_20ctxmutex_20_3e',['LockedBase&lt; CtxMutex &gt;',['../structLockedBase.html',1,'']]],
+  ['lockedbase_3c_20devicemutex_20_3e',['LockedBase&lt; DeviceMutex &gt;',['../structLockedBase.html',1,'']]],
+  ['lockedbase_3c_20streammutex_20_3e',['LockedBase&lt; StreamMutex &gt;',['../structLockedBase.html',1,'']]],
+  ['long1',['long1',['../structlong1.html',1,'']]],
+  ['long2',['long2',['../structlong2.html',1,'']]],
+  ['long3',['long3',['../structlong3.html',1,'']]],
+  ['long4',['long4',['../structlong4.html',1,'']]],
+  ['longlong1',['longlong1',['../structlonglong1.html',1,'']]],
+  ['longlong2',['longlong2',['../structlonglong2.html',1,'']]],
+  ['longlong3',['longlong3',['../structlonglong3.html',1,'']]],
+  ['longlong4',['longlong4',['../structlonglong4.html',1,'']]]
 ];

@@ -1,5 +1,15 @@
 var searchData=
 [
-  ['pcibusid',['pciBusID',['../structhipDeviceProp__t.html#a1350f64d49b717ed3a06458f7549ccb0',1,'hipDeviceProp_t']]],
-  ['pcideviceid',['pciDeviceID',['../structhipDeviceProp__t.html#ae6aa845dc2d540f85098ea30be35f4eb',1,'hipDeviceProp_t']]]
+  ['major',['major',['../structhipDeviceProp__t.html#aec9e4173c2e34cc232300c415dbd5e4f',1,'hipDeviceProp_t']]],
+  ['maxflatworkgroupsize',['MaxFlatWorkGroupSize',['../structAMDGPU_1_1RuntimeMD_1_1IsaInfo_1_1Metadata.html#a51cf177686a8dfb9d9956c9d0a72174c',1,'AMDGPU::RuntimeMD::IsaInfo::Metadata']]],
+  ['maxgridsize',['maxGridSize',['../structhipDeviceProp__t.html#ae529c23929f592120081fed31d877a55',1,'hipDeviceProp_t']]],
+  ['maxsharedmemorypermultiprocessor',['maxSharedMemoryPerMultiProcessor',['../structhipDeviceProp__t.html#aa1a32a7f387f6da845db7b228711fce8',1,'hipDeviceProp_t']]],
+  ['maxthreadsdim',['maxThreadsDim',['../structhipDeviceProp__t.html#a8ebba6fc12f80c9a9cf9b9193f0da465',1,'hipDeviceProp_t']]],
+  ['maxthreadsperblock',['maxThreadsPerBlock',['../structhipDeviceProp__t.html#af971cf1ca3ec1f68ad09036c0cc672e0',1,'hipDeviceProp_t']]],
+  ['maxthreadspermultiprocessor',['maxThreadsPerMultiProcessor',['../structhipDeviceProp__t.html#a23a39f4fd795addb3b125e9c3f6295ea',1,'hipDeviceProp_t']]],
+  ['maxwavespereu',['MaxWavesPerEU',['../structAMDGPU_1_1RuntimeMD_1_1IsaInfo_1_1Metadata.html#a2c11a5c3cbaf5fd7450720216fb6d47b',1,'AMDGPU::RuntimeMD::IsaInfo::Metadata']]],
+  ['memorybuswidth',['memoryBusWidth',['../structhipDeviceProp__t.html#a1d710ce8bd34daf66f892a66a2273132',1,'hipDeviceProp_t']]],
+  ['memoryclockrate',['memoryClockRate',['../structhipDeviceProp__t.html#a6db0ab8e7e8cc13c84d7bb7f70226d5e',1,'hipDeviceProp_t']]],
+  ['minor',['minor',['../structhipDeviceProp__t.html#abb51208e2509a7a1d107f0da69108938',1,'hipDeviceProp_t']]],
+  ['multiprocessorcount',['multiProcessorCount',['../structhipDeviceProp__t.html#add8d9d2ad52aece9fd1dbe25c18d9d57',1,'hipDeviceProp_t']]]
 ];

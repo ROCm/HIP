@@ -1,9 +1,26 @@
 var searchData=
 [
+  ['uchar1',['uchar1',['../structuchar1.html',1,'']]],
+  ['uchar2',['uchar2',['../structuchar2.html',1,'']]],
+  ['uchar2holder',['uchar2Holder',['../structuchar2Holder.html',1,'']]],
   ['uchar3',['uchar3',['../structuchar3.html',1,'']]],
   ['uchar4',['uchar4',['../structuchar4.html',1,'']]],
+  ['ucharholder',['ucharHolder',['../structucharHolder.html',1,'']]],
+  ['uint1',['uint1',['../structuint1.html',1,'']]],
+  ['uint2',['uint2',['../structuint2.html',1,'']]],
   ['uint3',['uint3',['../structuint3.html',1,'']]],
+  ['uint4',['uint4',['../structuint4.html',1,'']]],
+  ['uintholder',['uintHolder',['../structuintHolder.html',1,'']]],
+  ['ulong1',['ulong1',['../structulong1.html',1,'']]],
+  ['ulong2',['ulong2',['../structulong2.html',1,'']]],
   ['ulong3',['ulong3',['../structulong3.html',1,'']]],
+  ['ulong4',['ulong4',['../structulong4.html',1,'']]],
+  ['ulonglong1',['ulonglong1',['../structulonglong1.html',1,'']]],
+  ['ulonglong2',['ulonglong2',['../structulonglong2.html',1,'']]],
   ['ulonglong3',['ulonglong3',['../structulonglong3.html',1,'']]],
-  ['ushort3',['ushort3',['../structushort3.html',1,'']]]
+  ['ulonglong4',['ulonglong4',['../structulonglong4.html',1,'']]],
+  ['ushort1',['ushort1',['../structushort1.html',1,'']]],
+  ['ushort2',['ushort2',['../structushort2.html',1,'']]],
+  ['ushort3',['ushort3',['../structushort3.html',1,'']]],
+  ['ushort4',['ushort4',['../structushort4.html',1,'']]]
 ];

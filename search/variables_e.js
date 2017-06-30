@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['y',['y',['../structdim3.html#a83e60e072f7e8bdfde6ac05053cbb370',1,'dim3']]]
+  ['vgprallocgranule',['VGPRAllocGranule',['../structAMDGPU_1_1RuntimeMD_1_1IsaInfo_1_1Metadata.html#a719d60a14c4f8d786b3ba768fc921ea7',1,'AMDGPU::RuntimeMD::IsaInfo::Metadata']]]
 ];

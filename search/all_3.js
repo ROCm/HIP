@@ -1,6 +1,8 @@
 var searchData=
 [
   ['canmaphostmemory',['canMapHostMemory',['../structhipDeviceProp__t.html#ac2143f5448607d1a02a9e8783fcf06a1',1,'hipDeviceProp_t']]],
+  ['char1',['char1',['../structchar1.html',1,'']]],
+  ['char2',['char2',['../structchar2.html',1,'']]],
   ['char3',['char3',['../structchar3.html',1,'']]],
   ['char4',['char4',['../structchar4.html',1,'']]],
   ['clockinstructionrate',['clockInstructionRate',['../structhipDeviceProp__t.html#a6fbf3b08a1a08ae700f1a06265f6666b',1,'hipDeviceProp_t']]],
