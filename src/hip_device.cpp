@@ -395,7 +395,7 @@ hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device)
     return ihipLogStatus(e);
 }
 
-hipError_t hipDeviceGetByPCIBusId (int*  device, const int* pciBusId )
+hipError_t hipDeviceGetByPCIBusId (int*  device, const char* pciBusId )
 {
     HIP_INIT_API(device,pciBusId);
     hipDeviceProp_t  tempProp;
