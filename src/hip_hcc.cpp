@@ -92,7 +92,7 @@ int HIP_SYNC_HOST_ALLOC = 1;
 
 // Chicken bit to sync on host to implement null stream.
 // If 0, null stream synchronization is performed on the GPU
-int HIP_SYNC_NULL_STREAM = 0;
+int HIP_SYNC_NULL_STREAM = 1;
 
 // HIP needs to change some behavior based on HCC_OPT_FLUSH :
 // TODO - set this to 1
