@@ -179,6 +179,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/hip_peer.cpp
         src/hip_stream.cpp
         src/hip_module.cpp
+        src/hip_db.cpp
         src/grid_launch.cpp
         src/env.cpp)
 
