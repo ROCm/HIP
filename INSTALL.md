@@ -51,14 +51,14 @@ Run hipconfig (instructions below assume default installation path) :
 /opt/rocm/bin/hipconfig --full
 ```
 
-Compile and run the [square sample](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/tree/master/samples/0_Intro/square). 
+Compile and run the [square sample](https://github.com/ROCm-Developer-Tools/HIP/tree/master/samples/0_Intro/square). 
 
 
 # Building HIP from source
 HIP source code is available and the project can be built from source on the HCC platform. 
 
 1. Follow the above steps to install and validate the binary packages.
-2. Download HIP source code (from the [GitHub repot](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP).)
+2. Download HIP source code (from the [GitHub repot](https://github.com/ROCm-Developer-Tools/HIP).)
 3. Build and install HIP (This is the simple version assuming default paths ; see below for additional options.)
 ```
 cd HIP
