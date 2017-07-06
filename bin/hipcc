@@ -47,7 +47,7 @@ sub parse_config_file {
 }
 
 $verbose = $ENV{'HIPCC_VERBOSE'} // 0;
-# Verbose: 0x1=commands, 0x2=paths, 0x4=hippc args
+# Verbose: 0x1=commands, 0x2=paths, 0x4=hipcc args
 
 $HIP_PATH=$ENV{'HIP_PATH'} // dirname (dirname $0); # use parent directory of hipcc
 

@@ -15,7 +15,7 @@ For more information:
 [User Guide for AMDGPU Back-end](llvm.org/docs/AMDGPUUsage.html)
 
 ## Requirement:
-For hardware requirement and software installation [Installation](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/INSTALL.md) 
+For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/INSTALL.md) 
 
 ## prerequiste knowledge:
 
@@ -37,11 +37,11 @@ Use hipcc to build the application, which is using hcc on AMD and nvcc on nvidia
 
 
 ## More Info:
-- [HIP FAQ](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/docs/markdown/hip_faq.md)
-- [HIP Kernel Language](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/docs/markdown/hip_kernel_language.md)
-- [HIP Runtime API (Doxygen)](http://gpuopen-professionalcompute-tools.github.io/HIP)
-- [HIP Porting Guide](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/docs/markdown/hip_porting_guide.md)
-- [HIP Terminology](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenL)
-- [clang-hipify](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/clang-hipify/README.md)
-- [Developer/CONTRIBUTING Info](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/CONTRIBUTING.md)
-- [Release Notes](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/RELEASE.md)
+- [HIP FAQ](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_faq.md)
+- [HIP Kernel Language](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_kernel_language.md)
+- [HIP Runtime API (Doxygen)](http://rocm-developer-tools.github.io/HIP)
+- [HIP Porting Guide](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_porting_guide.md)
+- [HIP Terminology](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenL)
+- [clang-hipify](https://github.com/ROCm-Developer-Tools/HIP/clang-hipify/README.md)
+- [Developer/CONTRIBUTING Info](https://github.com/ROCm-Developer-Tools/HIP/CONTRIBUTING.md)
+- [Release Notes](https://github.com/ROCm-Developer-Tools/HIP/RELEASE.md)

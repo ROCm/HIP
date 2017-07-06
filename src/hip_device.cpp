@@ -376,15 +376,10 @@ hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len, int device)
         e = hipErrorInvalidDevice;
     } else {
         if((pciBusId != nullptr) && (len > 0)) {
-            int tempPciBusId = 0;
-            e = ihipDeviceGetAttribute( &tempPciBusId, hipDeviceAttributePciBusId, device);
-            if( e == hipSuccess) {
-                std::string tempPciStr = std::to_string(tempPciBusId);
-                if( len < tempPciStr.length()){
-                    e = hipErrorInvalidValue;
-                } else { 
-                    memcpy( pciBusId , tempPciStr.c_str() , tempPciStr.length() );
-                }
+            auto deviceHandle = ihipGetDevice(device);
+            int retVal = snprintf(pciBusId,len, "%04x:%02x:%02x.0",deviceHandle->_props.pciDomainID,deviceHandle->_props.pciBusID,deviceHandle->_props.pciDeviceID);
+            if( retVal > 0  && retVal < len) {
+                e = hipSuccess;
             }
         }
     }
@@ -400,21 +395,29 @@ hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device)
     return ihipLogStatus(e);
 }
 
-hipError_t hipDeviceGetByPCIBusId (int*  device, const int* pciBusId )
+hipError_t hipDeviceGetByPCIBusId (int*  device, const char* pciBusId )
 {
     HIP_INIT_API(device,pciBusId);
     hipDeviceProp_t  tempProp;
-    int deviceCount;
+    int deviceCount = 0 ;
     hipError_t e = hipErrorInvalidValue;
-    ihipGetDeviceCount( &deviceCount );
-    *device = 0;
-    for (int i = 0; i< deviceCount; i++) {
-        ihipGetDeviceProperties( &tempProp, i );
-        if(tempProp.pciBusID == *pciBusId) {
-            *device =i;
-            e = hipSuccess;
-            break;
-        }
+    if((device != nullptr) && (pciBusId != nullptr)) {
+        int pciBusID = -1;
+        int pciDeviceID = -1;
+        int pciDomainID = -1;
+        int len = 0;
+        len = sscanf (pciBusId,"%04x:%02x:%02x",&pciDomainID,&pciBusID,&pciDeviceID);
+        if(len == 3) {
+           ihipGetDeviceCount( &deviceCount );
+           for (int i = 0; i< deviceCount; i++) {
+               ihipGetDeviceProperties( &tempProp, i );
+               if(tempProp.pciBusID == pciBusID) {
+                   *device = i;
+                   e = hipSuccess;
+                   break;
+               }
+           }
+       }
     }
     return ihipLogStatus(e);
 }

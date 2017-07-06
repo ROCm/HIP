@@ -873,12 +873,12 @@ inline static hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
 
 inline static hipError_t hipDeviceGetPCIBusId(char* pciBusId,int len,hipDevice_t device)
 {
-    return hipCUResultTohipError(cuDeviceGetPCIBusId(pciBusId,len,device));
+    return hipCUDAErrorTohipError(cudaDeviceGetPCIBusId(pciBusId,len,device));
 }
 
-inline static hipError_t hipDeviceGetByPCIBusId(int* device, const int *pciBusId)
+inline static hipError_t hipDeviceGetByPCIBusId(int* device, const char *pciBusId)
 {
-    return hipCUDAErrorTohipError(cudaDeviceGetByPCIBusId(device,(char*)pciBusId));
+    return hipCUDAErrorTohipError(cudaDeviceGetByPCIBusId(device, pciBusId));
 }
 
 inline static hipError_t hipDeviceGetLimit(size_t *pValue, hipLimit_t limit)
