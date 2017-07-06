@@ -23,8 +23,83 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HIP_HCC_H
 #define HIP_INCLUDE_HIP_HIP_HCC_H
 
-#if defined(__HIP_PLATFORM_HCC__) && !defined (__HIP_PLATFORM_NVCC__)
-#include "hip/hcc_detail/hip_hcc.h"
-#endif
+#ifdef __HCC__
 
-#endif
+#include "hip/hip_runtime_api.h"
+
+// Forward declarations:
+namespace hc {
+    class accelerator;
+    class accelerator_view;
+};
+
+
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup HCC-specific features
+ *  @warning These APIs provide access to special features of HCC compiler and are not available through the CUDA path.
+ *  @{
+ */
+
+
+/**
+ * @brief Return hc::accelerator associated with the specified deviceId
+ * @return #hipSuccess, #hipErrorInvalidDevice
+ */
+hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator *acc);
+
+/**
+ * @brief Return hc::accelerator_view associated with the specified stream
+ *
+ * If stream is 0, the accelerator_view for the default stream is returned.
+ * @return #hipSuccess
+ */
+hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view **av);
+
+
+
+/**
+ * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed to kernelparams or extra
+ *
+ * @param [in[ f	 Kernel to launch.
+ * @param [in] gridDimX  X grid dimension specified in work-items
+ * @param [in] gridDimY  Y grid dimension specified in work-items
+ * @param [in] gridDimZ  Z grid dimension specified in work-items
+ * @param [in] blockDimX X block dimensions specified in work-items
+ * @param [in] blockDimY Y grid dimension specified in work-items
+ * @param [in] blockDimZ Z grid dimension specified in work-items
+ * @param [in] sharedMemBytes Amount of dynamic shared memory to allocate for this kernel.  The kernel can access this with HIP_DYNAMIC_SHARED.
+ * @param [in] stream Stream where the kernel should be dispatched.  May be 0, in which case th default stream is used with associated synchronization rules.
+ * @param [in] kernelParams 
+ * @param [in] extra     Pointer to kernel arguments.   These are passed directly to the kernel and must be in the memory layout and alignment expected by the kernel.
+ * @param [in] startEvent  If non-null, specified event will be updated to track the start time of the kernel launch.  The event must be created before calling this API. 
+ * @param [in] stopEvent   If non-null, specified event will be updated to track the stop time of the kernel launch.  The event must be created before calling this API.
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ * 
+ * @warning kernellParams argument is not yet implemented in HIP. Please use extra instead. Please refer to hip_porting_driver_api.md for sample usage.
+
+ * HIP/ROCm actually updates the start event when the associated kernel completes.
+ */
+hipError_t hipHccModuleLaunchKernel(hipFunction_t f,
+                                    uint32_t globalWorkSizeX,
+                                    uint32_t globalWorkSizeY,
+                                    uint32_t globalWorkSizeZ,
+                                    uint32_t localWorkSizeX,
+                                    uint32_t localWorkSizeY,
+                                    uint32_t localWorkSizeZ,
+                                    size_t sharedMemBytes,
+                                    hipStream_t hStream,
+                                    void **kernelParams,
+                                    void **extra,
+                                    hipEvent_t startEvent=nullptr,
+                                    hipEvent_t stopEvent=nullptr
+                                    );
+
+// doxygen end HCC-specific features
+/**
+ * @}
+ */
+#endif // #ifdef __HCC__
+#endif // #ifdef HIP_INCLUDE_HIP_HIP_HCC_H

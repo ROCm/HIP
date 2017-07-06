@@ -1867,7 +1867,7 @@ hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,int device);
  *
  * @returns #hipSuccess, #hipErrorInavlidDevice, #hipErrorInvalidValue
  */
-hipError_t hipDeviceGetByPCIBusId ( int*  device,const int* pciBusId );
+hipError_t hipDeviceGetByPCIBusId ( int*  device,const char* pciBusId );
 
 
 /**

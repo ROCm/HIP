@@ -15,7 +15,7 @@ Let's talk about Warp first. The kernel code is executed in groups of fixed numb
 `  float __shfl_xor  (float var, int laneMask, int width=warpSize);             `
 
 ## Requirement:
-For hardware requirement and software installation [Installation](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/INSTALL.md) 
+For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/INSTALL.md) 
 
 ## prerequiste knowledge:
 
@@ -41,11 +41,11 @@ Use hipcc to build the application, which is using hcc on AMD and nvcc on nvidia
 please make sure you have a 3.0 or higher compute capable device in order to use warp shfl operations and add `-gencode arch=compute=30, code=sm_30` nvcc flag in the Makefile while using this application.
 
 ## More Info:
-- [HIP FAQ](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/docs/markdown/hip_faq.md)
-- [HIP Kernel Language](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/docs/markdown/hip_kernel_language.md)
-- [HIP Runtime API (Doxygen)](http://gpuopen-professionalcompute-tools.github.io/HIP)
-- [HIP Porting Guide](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/docs/markdown/hip_porting_guide.md)
-- [HIP Terminology](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenL)
-- [clang-hipify](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/clang-hipify/README.md)
-- [Developer/CONTRIBUTING Info](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/CONTRIBUTING.md)
-- [Release Notes](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/RELEASE.md)
+- [HIP FAQ](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_faq.md)
+- [HIP Kernel Language](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_kernel_language.md)
+- [HIP Runtime API (Doxygen)](http://rocm-developer-tools.github.io/HIP)
+- [HIP Porting Guide](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_porting_guide.md)
+- [HIP Terminology](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenL)
+- [clang-hipify](https://github.com/ROCm-Developer-Tools/HIP/clang-hipify/README.md)
+- [Developer/CONTRIBUTING Info](https://github.com/ROCm-Developer-Tools/HIP/CONTRIBUTING.md)
+- [Release Notes](https://github.com/ROCm-Developer-Tools/HIP/RELEASE.md)
