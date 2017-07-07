@@ -50,14 +50,6 @@ THE SOFTWARE.
 #include <hip/hip_runtime_api.h>
 
 
-#if USE_PROMOTE_FREE_HCC == 1
-#define ADDRESS_SPACE_1
-#define ADDRESS_SPACE_3
-#else
-#define ADDRESS_SPACE_1 __attribute__((address_space(1)))
-#define ADDRESS_SPACE_3 __attribute__((address_space(3)))
-#endif
-
 //---
 // Remainder of this file only compiles with HCC
 #if defined __HCC__
