@@ -1,5 +1,5 @@
 
-#include "hcc/hc_am.hpp"
+#include <hc_am.hpp>
 
 
 
