@@ -96,7 +96,7 @@ int HIP_SYNC_NULL_STREAM = 1;
 
 // HIP needs to change some behavior based on HCC_OPT_FLUSH :
 // TODO - set this to 1
-int HCC_OPT_FLUSH = 1;
+int HCC_OPT_FLUSH = 0;
 
 
 
