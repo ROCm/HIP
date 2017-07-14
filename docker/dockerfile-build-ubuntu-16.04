@@ -18,7 +18,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# docker pipeline runs containers with uid 1000
+# docker pipeline runs containers with particular uid
 # create a jenkins user with this specific uid so it can use sudo priviledges
 # Grant any member of sudo group password-less sudo privileges
 RUN useradd --create-home -u ${user_uid} -G sudo --shell /bin/bash jenkins && \
