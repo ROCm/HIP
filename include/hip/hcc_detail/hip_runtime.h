@@ -81,12 +81,12 @@ namespace hip_impl
 extern int HIP_TRACE_API;
 
 #ifdef __cplusplus
-//#include <hip/hcc_detail/hip_texture.h>
 #include <hip/hcc_detail/hip_ldg.h>
 #endif
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hcc_detail/math_functions.h>
 #include <hip/hcc_detail/device_functions.h>
+#include <hip/hcc_detail/texture_functions.h>
 
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
 #if defined (__KALMAR_ACCELERATOR__) && !defined (__HCC_ACCELERATOR__)

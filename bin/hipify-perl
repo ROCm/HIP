@@ -283,6 +283,7 @@ while (@ARGV) {
 
         $ft{'mem'} += s/\bcudaMemcpy2D\b/hipMemcpy2D/g;
         $ft{'mem'} += s/\bcudaMemcpy2DToArray\b/hipMemcpy2DToArray/g;
+        $ft{'mem'} += s/\bcudaMemcpyToArray\b/hipMemcpyToArray/g;
 
         #--------
         # Memory management:
@@ -302,6 +303,7 @@ while (@ARGV) {
         $ft{'mem'} += s/\bcudaHostGetDevicePointer\b/hipHostGetDevicePointer/g;
 
         $ft{'mem'} += s/\bcudaMallocArray\b/hipMallocArray/g;
+        $ft{'mem'} += s/\bcudaFreeArray\b/hipFreeArray/g;
         $ft{'mem'} += s/\bcudaMallocPitch\b/hipMallocPitch/g;
 
 
@@ -511,11 +513,14 @@ while (@ARGV) {
             $ft{'tex'} += s/\bcudaFilterModePoint\b/hipFilterModePoint/g;
             $ft{'tex'} += s/\bcudaReadModeElementType\b/hipReadModeElementType/g;
 
-            $ft{'tex'} += s/\bcudaArray\b/hipArrary/g;
+            $ft{'tex'} += s/\bcudaArray\b/hipArray/g;
             $ft{'tex'} += s/\bcudaCreateChannelDesc\b/hipCreateChannelDesc/g;
             $ft{'tex'} += s/\bcudaBindTexture\b/hipBindTexture/g;
             $ft{'tex'} += s/\bcudaBindTextureToArray\b/hipBindTextureToArray/g;
             $ft{'tex'} += s/\bcudaUnbindTexture\b/hipUnbindTexture/g;
+            $ft{'tex'} += s/\bcudaChannelFormatKindFloat\b/hipChannelFormatKindFloat/g;
+            $ft{'tex'} += s/\bcudaAddressMode/hipAddressMode/g;
+            $ft{'tex'} += s/\bcudaFilterMode/hipFilterMode/g;
         }
 
 
