@@ -15,7 +15,9 @@ endif
 HIPCC=$(HIP_PATH)/bin/hipcc
 HIP_PLATFORM=$(shell $(HIP_PATH)/bin/hipconfig --platform)
 
-ifneq (${HIP_PLATFORM}, hcc)
+ifeq (${HIP_PLATFORM}, hcc)
+	TARGET_FLAGS = --amdgpu-target=gfx701 --amdgpu-target=gfx801 --amdgpu-target=gfx803 --amdgpu-target=gfx900
+else
 $(error hcc_dialects requires hcc compiler and only runs on hcc platform)
 endif
 
@@ -38,21 +40,21 @@ run: $(TARGETS)
 vadd_hc_arrayview.o: vadd_hc_arrayview.cpp
 	$(HCC) $(HCC_CFLAGS) -c $< -o $@
 vadd_hc_arrayview: vadd_hc_arrayview.o
-	$(HCC) $(HCC_LDFLAGS) $< -o $@
+	$(HCC) $(HCC_LDFLAGS) $(TARGET_FLAGS) $< -o $@
 
 
 # HCC version, using explicit arrays:
 vadd_hc_array.o: vadd_hc_array.cpp
 	$(HCC) $(HCC_CFLAGS) -c $< -o $@
 vadd_hc_array: vadd_hc_array.o
-	$(HCC) $(HCC_LDFLAGS) $< -o $@
+	$(HCC) $(HCC_LDFLAGS) $(TARGET_FLAGS) $< -o $@
 
 
 # HCC version, using AM (accelerator memory) pointer
 vadd_hc_am.o: vadd_hc_am.cpp
 	$(HCC) $(HCC_CFLAGS) -c $< -o $@
 vadd_hc_am: vadd_hc_am.o
-	$(HCC) $(HCC_LDFLAGS) -lhc_am $< -o $@
+	$(HCC) $(HCC_LDFLAGS) $(TARGET_FLAGS) -lhc_am $< -o $@
 
 
 
@@ -60,11 +62,11 @@ vadd_hc_am: vadd_hc_am.o
 vadd_hip.o: vadd_hip.cpp
 	$(HIPCC) -c $< -o $@
 vadd_hip: vadd_hip.o
-	$(HIPCC) $< -o $@
+	$(HIPCC) $(TARGET_FLAGS) $< -o $@
 
 
 # AMP version:
 vadd_amp_arrayview.o: vadd_amp_arrayview.cpp
 	$(HCC) $(CPPAMP_CFLAGS) -c $< -o $@
 vadd_amp_arrayview: vadd_amp_arrayview.o
-	$(HCC) $(CPPAMP_LDFLAGS) $< -o $@
+	$(HCC) $(CPPAMP_LDFLAGS) $(TARGET_FLAGS) $< -o $@

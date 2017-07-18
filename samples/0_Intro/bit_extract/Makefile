@@ -8,7 +8,9 @@ HIP_PLATFORM=$(shell $(HIP_PATH)/bin/hipconfig --platform)
 HIPCC=$(HIP_PATH)/bin/hipcc
 
 # Show how to use PLATFORM to specify different options for each compiler:
-ifeq (${HIP_PLATFORM}, nvcc)
+ifeq (${HIP_PLATFORM}, hcc)
+	HIPCC_FLAGS = --amdgpu-target=gfx701 --amdgpu-target=gfx801 --amdgpu-target=gfx803 --amdgpu-target=gfx900
+else ifeq (${HIP_PLATFORM}, nvcc)
 	HIPCC_FLAGS = -gencode=arch=compute_20,code=sm_20 
 endif
 

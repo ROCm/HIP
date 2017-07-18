@@ -9,7 +9,11 @@ endif
 
 HIPCC=$(HIP_PATH)/bin/hipcc
 
-TARGET=hcc
+HIP_PLATFORM=$(shell $(HIP_PATH)/bin/hipconfig --platform)
+
+ifeq (${HIP_PLATFORM}, hcc)
+	HIPCC_FLAGS = --amdgpu-target=gfx801 --amdgpu-target=gfx803 --amdgpu-target=gfx900
+endif
 
 SOURCES = unroll.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
@@ -26,7 +30,7 @@ CXX=$(HIPCC)
 
 
 $(EXECUTABLE): $(OBJECTS)
-	$(HIPCC) $(OBJECTS) -o $@
+	$(HIPCC) $(HIPCC_FLAGS) $(OBJECTS) -o $@
 
 
 test: $(EXECUTABLE)
@@ -36,4 +40,4 @@ test: $(EXECUTABLE)
 clean:
 	rm -f $(EXECUTABLE)
 	rm -f $(OBJECTS)
-	rm -f $(HIP_PATH)/src/*.o
+
