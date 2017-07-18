@@ -164,13 +164,16 @@ hipError_t hipEventDestroy(hipEvent_t event)
 {
     HIP_INIT_API(event);
 
-    event->_state  = hipEventStatusUnitialized;
+    if (event) {
+        event->_state  = hipEventStatusUnitialized;
 
-    delete event;
-    event = NULL;
+        delete event;
+        event = NULL;
 
-    // TODO - examine return additional error codes
-    return ihipLogStatus(hipSuccess);
+        return ihipLogStatus(hipSuccess);
+    } else {
+        return ihipLogStatus(hipErrorInvalidResourceHandle);
+    }
 }
 
 hipError_t hipEventSynchronize(hipEvent_t event)
