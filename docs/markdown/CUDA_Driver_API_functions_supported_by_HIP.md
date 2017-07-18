@@ -346,6 +346,40 @@
 | enum         |***`CUstream_flags`***                                         |***`hipStreamFlags`***                                      | Stream creation flags                                                                                                          |
 |          0x0 |*`CU_STREAM_DEFAULT`*                                          |*`hipStreamDefault`*                                        | Default stream flag                                                                                                            |
 |          0x1 |*`CU_STREAM_NON_BLOCKING`*                                     |*`hipStreamNonBlocking`*                                    | Stream does not synchronize with stream 0 (the NULL stream)                                                                    |
+| enum         |***`CUGLDeviceList`***                                         |                                                            | CUDA devices corresponding to an OpenGL device                                                                                 |
+|         0x01 |*`CU_GL_DEVICE_LIST_ALL`*                                      |                                                            | The CUDA devices for all GPUs used by the current OpenGL context                                                               |
+|         0x02 |*`CU_GL_DEVICE_LIST_CURRENT_FRAME`*                            |                                                            | The CUDA devices for the GPUs used by the current OpenGL context in its currently rendering frame                              |
+|         0x03 |*`CU_GL_DEVICE_LIST_NEXT_FRAME`*                               |                                                            | The CUDA devices for the GPUs to be used by the current OpenGL context in the next frame                                       |
+| enum         |***`CUGLmap_flags`***                                          |                                                            | CUDA GL Map Flags                                                                                                              |
+|         0x00 |*`CU_GL_MAP_RESOURCE_FLAGS_NONE`*                              |                                                            | Default; Assume resource can be read/written                                                                                   |
+|         0x01 |*`CU_GL_MAP_RESOURCE_FLAGS_READ_ONLY`*                         |                                                            | CUDA kernels will not write to this resource                                                                                   |
+|         0x02 |*`CU_GL_MAP_RESOURCE_FLAGS_WRITE_DISCARD`*                     |                                                            | CUDA kernels will only write to and will not read from this resource                                                           |
+| enum         |***`CUd3d9DeviceList`***                                       |                                                            | CUDA devices corresponding to a D3D9 device                                                                                    |
+|         0x01 |*`CU_D3D9_DEVICE_LIST_ALL`*                                    |                                                            | The CUDA devices for all GPUs used by a D3D9 device                                                                            |
+|         0x02 |*`CU_D3D9_DEVICE_LIST_CURRENT_FRAME`*                          |                                                            | The CUDA devices for the GPUs used by a D3D9 device in its currently rendering frame                                           |
+|         0x03 |*`CU_D3D9_DEVICE_LIST_NEXT_FRAME`*                             |                                                            | The CUDA devices for the GPUs to be used by a D3D9 device in the next frame                                                    |
+| enum         |***`CUd3d9map_flags`***                                        |                                                            | Flags to map or unmap a resource                                                                                               |
+|         0x00 |*`CU_D3D9_MAPRESOURCE_FLAGS_NONE`*                             |                                                            | Default; Assume resource can be read/written                                                                                   |
+|         0x01 |*`CU_D3D9_MAPRESOURCE_FLAGS_READONLY`*                         |                                                            | CUDA kernels will not write to this resource                                                                                   |
+|         0x02 |*`CU_D3D9_MAPRESOURCE_FLAGS_WRITEDISCARD`*                     |                                                            | CUDA kernels will only write to and will not read from this resource                                                           |
+| enum         |***`CUd3d9register_flags`***                                   |                                                            | CUDA D3D9 Register Flags                                                                                                       |
+|         0x00 |*`CU_D3D9_REGISTER_FLAGS_NONE`*                                |                                                            | Default; Resource can be accessed througa void*                                                                                |
+|         0x01 |*`CU_D3D9_REGISTER_FLAGS_ARRAY`*                               |                                                            | Resource can be accessed through a CUarray*                                                                                    |
+| enum         |***`CUd3d10DeviceList`***                                      |                                                            | CUDA devices corresponding to a D3D10 device                                                                                   |
+|         0x01 |*`CU_D3D10_DEVICE_LIST_ALL`*                                   |                                                            | The CUDA devices for all GPUs used by a D3D10 device                                                                           |
+|         0x02 |*`CU_D3D10_DEVICE_LIST_CURRENT_FRAME`*                         |                                                            | The CUDA devices for the GPUs used by a D3D10 device in its currently rendering frame                                          |
+|         0x03 |*`CU_D3D10_DEVICE_LIST_NEXT_FRAME`*                            |                                                            | The CUDA devices for the GPUs to be used by a D3D10 device in the next frame                                                   |
+| enum         |***`CUd3d10map_flags`***                                       |                                                            | Flags to map or unmap a resource                                                                                               |
+|         0x00 |*`CU_D3D10_MAPRESOURCE_FLAGS_NONE`*                            |                                                            | Default; Assume resource can be read/written                                                                                   |
+|         0x01 |*`CU_D3D10_MAPRESOURCE_FLAGS_READONLY`*                        |                                                            | CUDA kernels will not write to this resource                                                                                   |
+|         0x02 |*`CU_D3D10_MAPRESOURCE_FLAGS_WRITEDISCARD`*                    |                                                            | CUDA kernels will only write to and will not read from this resource                                                           |
+| enum         |***`CUd3d10register_flags`***                                  |                                                            | CUDA D3D10 Register Flags                                                                                                      |
+|         0x00 |*`CU_D3D10_REGISTER_FLAGS_NONE`*                               |                                                            | Default; Resource can be accessed througa void*                                                                                |
+|         0x01 |*`CU_D3D10_REGISTER_FLAGS_ARRAY`*                              |                                                            | Resource can be accessed through a CUarray*                                                                                    |
+| enum         |***`CUd3d11DeviceList`***                                      |                                                            | CUDA devices corresponding to a D3D11 device                                                                                   |
+|         0x01 |*`CU_D3D11_DEVICE_LIST_ALL`*                                   |                                                            | The CUDA devices for all GPUs used by a D3D11 device                                                                           |
+|         0x02 |*`CU_D3D11_DEVICE_LIST_CURRENT_FRAME`*                         |                                                            | The CUDA devices for the GPUs used by a D3D11 device in its currently rendering frame                                          |
+|         0x03 |*`CU_D3D11_DEVICE_LIST_NEXT_FRAME`*                            |                                                            | The CUDA devices for the GPUs to be used by a D3D11 device in the next frame                                                   |
 | typedef      | `CUarray`                                                     | `hipArray *`                                               | CUDA array                                                                                                                     |
 | struct       | `CUarray_st`                                                  | `hipArray`                                                 | CUDA array                                                                                                                     |
 | typedef      | `CUcontext`                                                   | `hipCtx_t`                                                 | CUDA context                                                                                                                   |
@@ -599,93 +633,228 @@
 | `cuFuncSetSharedMemConfig`                                |                               | Sets the shared memory configuration for a device function.                                                                    |
 | `cuLaunchKernel`                                          | `hipModuleLaunchKernel`       | Launches a CUDA function.                                                                                                      |
 
-
 ## **16. Execution Control [DEPRECATED]**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuFuncSetBlockShape`                                     |                               | Sets the block-dimensions for the function.                                                                                    |
+| `cuFuncSetSharedSize`                                     |                               | Sets the dynamic shared-memory size for the function.                                                                          |
+| `cuLaunch`                                                |                               | Launches a CUDA function.                                                                                                      |
+| `cuLaunchGrid`                                            |                               | Launches a CUDA function.                                                                                                      |
+| `cuLaunchGridAsync`                                       |                               | Launches a CUDA function.                                                                                                      |
+| `cuParamSetf`                                             |                               | Adds a floating-point parameter to the function's argument list.                                                               |
+| `cuParamSeti`                                             |                               | Adds an integer parameter to the function's argument list.                                                                     |
+| `cuParamSetTexRef`                                        |                               | Adds a texture-reference to the function's argument list.                                                                      |
+| `cuParamSetv`                                             |                               | Adds arbitrary data to the function's argument list.                                                                           |
 
 ## **17. Occupancy**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+|   **CUDA**                                                |   **HIP**                                               | **CUDA description**                                                                                 |
+|-----------------------------------------------------------|---------------------------------------------------------|------------------------------------------------------------------------------------------------------|
+| `cuOccupancyMaxActiveBlocksPerMultiprocessor`             | `hipOccupancyMaxActiveBlocksPerMultiprocessor`          | Returns occupancy of a function.                                                                     |
+| `cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`    |                                                         | Returns occupancy of a function.                                                                     |
+| `cuOccupancyMaxPotentialBlockSize`                        | `hipOccupancyMaxPotentialBlockSize`                     | Suggest a launch configuration with reasonable occupancy.                                            |
+| `cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`    |                                                         | Suggest a launch configuration with reasonable occupancy.                                            |
 
 ## **18. Texture Reference Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuTexRefGetAddress`                                      |                               | Gets the address associated with a texture reference.                                                                          |
+| `cuTexRefGetAddressMode`                                  |                               | Gets the addressing mode used by a texture reference.                                                                          |
+| `cuTexRefGetArray`                                        |                               | Gets the array bound to a texture reference.                                                                                   |
+| `cuTexRefGetBorderColor`                                  |                               | Gets the border color used by a texture reference.                                                                             |
+| `cuTexRefGetFilterMode`                                   |                               | Gets the filter-mode used by a texture reference.                                                                              |
+| `cuTexRefGetFlags`                                        |                               | Gets the flags used by a texture reference.                                                                                    |
+| `cuTexRefGetFormat`                                       |                               | Gets the format used by a texture reference.                                                                                   |
+| `cuTexRefGetMaxAnisotropy`                                |                               | Gets the maximum anisotropy for a texture reference.                                                                           |
+| `cuTexRefGetMipmapFilterMode`                             |                               | Gets the mipmap filtering mode for a texture reference.                                                                        |
+| `cuTexRefGetMipmapLevelBias`                              |                               | Gets the mipmap level bias for a texture reference.                                                                            |
+| `cuTexRefGetMipmapLevelClamp`                             |                               | Gets the min/max mipmap level clamps for a texture reference.                                                                  |
+| `cuTexRefGetMipmappedArray`                               |                               | Gets the mipmapped array bound to a texture reference.                                                                         |
+| `cuTexRefSetAddress`                                      |                               | Binds an address as a texture reference.                                                                                       |
+| `cuTexRefSetAddress2D`                                    |                               | Binds an address as a 2D texture reference.                                                                                    |
+| `cuTexRefSetAddressMode`                                  |                               | Sets the addressing mode for a texture reference.                                                                              |
+| `cuTexRefSetArray`                                        |                               | Binds an array as a texture reference.                                                                                         |
+| `cuTexRefSetBorderColor`                                  |                               | Sets the border color for a texture reference.                                                                                 |
+| `cuTexRefSetFilterMode`                                   |                               | Sets the filtering mode for a texture reference.                                                                               |
+| `cuTexRefSetFlags`                                        |                               | Sets the flags for a texture reference.                                                                                        |
+| `cuTexRefSetFormat`                                       |                               | Sets the format for a texture reference.                                                                                       |
+| `cuTexRefSetMaxAnisotropy`                                |                               | Sets the maximum anisotropy for a texture reference.                                                                           |
+| `cuTexRefSetMipmapFilterMode`                             |                               | Sets the mipmap filtering mode for a texture reference.                                                                        |
+| `cuTexRefSetMipmapLevelBias`                              |                               | Sets the mipmap level bias for a texture reference.                                                                            |
+| `cuTexRefSetMipmapLevelClamp`                             |                               | Sets the mipmap min/max mipmap level clamps for a texture reference.                                                           |
+| `cuTexRefSetMipmappedArray`                               |                               | Binds a mipmapped array to a texture reference.                                                                                |
 
 ## **19. Texture Reference Management [DEPRECATED]**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuTexRefCreate`                                          |                               | Creates a texture reference.                                                                                                   |
+| `cuTexRefDestroy`                                         |                               | Destroys a texture reference.                                                                                                  |
 
 ## **20. Surface Reference Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuSurfRefGetArray`                                       |                               | Passes back the CUDA array bound to a surface reference.                                                                       |
+| `cuSurfRefSetArray`                                       |                               | Sets the CUDA array for a surface reference.                                                                                   |
 
 ## **21. Texture Object Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuTexObjectCreate`                                       |                               | Creates a texture object.                                                                                                      |
+| `cuTexObjectDestroy`                                      |                               | Destroys a texture object.                                                                                                     |
+| `cuTexObjectGetResourceDesc`                              |                               | Returns a texture object's resource descriptor.                                                                                |
+| `cuTexObjectGetResourceViewDesc`                          |                               | Returns a texture object's resource view descriptor.                                                                           |
+| `cuTexObjectGetTextureDesc`                               |                               | Returns a texture object's texture descriptor.                                                                                 |
 
 ## **22. Surface Object Management**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuSurfObjectCreate`                                      |                               | Creates a surface object.                                                                                                      |
+| `cuSurfObjectDestroy`                                     |                               | Destroys a surface object.                                                                                                     |
+| `cuSurfObjectGetResourceDesc`                             |                               | Returns a surface object's resource descriptor.                                                                                |
 
 ## **23. Peer Context Memory Access**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuCtxEnablePeerAccess`                                   | `hipCtxEnablePeerAccess`      | Enables direct access to memory allocations in a peer context.                                                                 |
+| `cuCtxDisablePeerAccess`                                  | `hipCtxDisablePeerAccess`     | Disables direct access to memory allocations in a peer context and unregisters any registered allocations.                     |
+| `cuDeviceCanAccessPeer`                                   | `hipDeviceCanAccessPeer`      | Queries if a device may directly access a peer device's memory.                                                                |
+| `cuDeviceGetP2PAttribute`                                 |                               | Queries attributes of the link between two devices.                                                                            |
 
 ## **24. Graphics Interoperability**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuGraphicsMapResources`                                  |                               | Map graphics resources for access by CUDA.                                                                                     |
+| `cuGraphicsResourceGetMappedMipmappedArray`               |                               | Get a mipmapped array through which to access a mapped graphics resource.                                                      |
+| `cuGraphicsResourceGetMappedPointer`                      |                               | Get a device pointer through which to access a mapped graphics resource.                                                       |
+| `cuGraphicsResourceSetMapFlags`                           |                               | Set usage flags for mapping a graphics resource.                                                                               |
+| `cuGraphicsSubResourceGetMappedArray`                     |                               | Get an array through which to access a subresource of a mapped graphics resource.                                              |
+| `cuGraphicsUnmapResources`                                |                               | Unmap graphics resources.                                                                                                      |
+| `cuGraphicsUnregisterResource`                            |                               | Unregisters a graphics resource for access by CUDA.                                                                            |
 
 ## **25. Profiler Control**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+| `cuProfilerInitialize`                                    |                               | Initialize the profiling.                                                                                                      |
+| `cuProfilerStart`                                         | `hipProfilerStart`            | Enable profiling.                                                                                                              |
+| `cuProfilerStop`                                          | `hipProfilerStop`             | Disable profiling.                                                                                                             |
 
 ## **26. OpenGL Interoperability**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `cuGLGetDevices`                                          |                               | Gets the CUDA devices associated with the current OpenGL context.                                                              |
+| `cuGraphicsGLRegisterBuffer`                              |                               | Registers an OpenGL buffer object.                                                                                             |
+| `cuGraphicsGLRegisterImage`                               |                               | Register an OpenGL texture or renderbuffer object.                                                                             |
+| `cuWGLGetDevice`                                          |                               | Gets the CUDA device associated with hGpu.                                                                                     |
 
+## **26.1. OpenGL Interoperability [DEPRECATED]**
+|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
+|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `cuGLCtxCreate`                                           |                               | Create a CUDA context for interoperability with OpenGL.                                                                        |
+| `cuGLInit`                                                |                               | Initializes OpenGL interoperability.                                                                                           |
+| `cuGLMapBufferObject`                                     |                               | Maps an OpenGL buffer object.                                                                                                  |
+| `cuGLMapBufferObjectAsync`                                |                               | Maps an OpenGL buffer object.                                                                                                  |
+| `cuGLRegisterBufferObject`                                |                               | Registers an OpenGL buffer object.                                                                                             |
+| `cuGLSetBufferObjectMapFlags`                             |                               | Set the map flags for an OpenGL buffer object.                                                                                 |
+| `cuGLUnmapBufferObject`                                   |                               | Unmaps an OpenGL buffer object.                                                                                                |
+| `cuGLUnmapBufferObjectAsync`                              |                               | Unmaps an OpenGL buffer object.                                                                                                |
+| `cuGLUnregisterBufferObject`                              |                               | Unregister an OpenGL buffer object.                                                                                            |
 
 ## **27. Direct3D 9 Interoperability**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `cuD3D9CtxCreate`                                         |                               | Create a CUDA context for interoperability with Direct3D 9.                                                                    |
+| `cuD3D9CtxCreateOnDevice`                                 |                               | Create a CUDA context for interoperability with Direct3D 9.                                                                    |
+| `cuD3D9GetDevice`                                         |                               | Gets the CUDA device corresponding to a display adapter.                                                                       |
+| `cuD3D9GetDevices`                                        |                               | Gets the CUDA devices corresponding to a Direct3D 9 device.                                                                    |
+| `cuD3D9GetDirect3DDevice`                                 |                               | Get the Direct3D 9 device against which the current CUDA context was created.                                                  |
+| `cuGraphicsD3D9RegisterResource`                          |                               | Register a Direct3D 9 resource for access by CUDA.                                                                             |
 
+## **27.1. Direct3D 9 Interoperability [DEPRECATED]**
+|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
+|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `cuD3D9MapResources`                                      |                               | Map Direct3D resources for access by CUDA.                                                                                     |
+| `cuD3D9RegisterResource`                                  |                               | Register a Direct3D resource for access by CUDA.                                                                               |
+| `cuD3D9ResourceGetMappedArray`                            |                               | Get an array through which to access a subresource of a Direct3D resource which has been mapped for access by CUDA.            |
+| `cuD3D9ResourceGetMappedPitch`                            |                               | Get the pitch of a subresource of a Direct3D resource which has been mapped for access by CUDA.                                |
+| `cuD3D9ResourceGetMappedPointer`                          |                               | Get the pointer through which to access a subresource of a Direct3D resource which has been mapped for access by CUDA.         |
+| `cuD3D9ResourceGetMappedSize`                             |                               | Get the size of a subresource of a Direct3D resource which has been mapped for access by CUDA.                                 |
+| `cuD3D9ResourceGetSurfaceDimensions`                      |                               | Get the dimensions of a registered surface.                                                                                    |
+| `cuD3D9ResourceSetMapFlags`                               |                               | Set usage flags for mapping a Direct3D resource.                                                                               |
+| `cuD3D9UnmapResources`                                    |                               | Unmaps Direct3D resources.                                                                                                     |
+| `cuD3D9UnregisterResource`                                |                               | Unregister a Direct3D resource.                                                                                                |
 
 ## **28. Direct3D 10 Interoperability**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `cuD3D10GetDevice`                                        |                               | Gets the CUDA device corresponding to a display adapter.                                                                       |
+| `cuD3D10GetDevices`                                       |                               | Gets the CUDA devices corresponding to a Direct3D 10 device.                                                                   |
+| `cuGraphicsD3D10RegisterResource`                         |                               | Register a Direct3D 10 resource for access by CUDA.                                                                            |
 
+## **28.1. Direct3D 10 Interoperability [DEPRECATED]**
+|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
+|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `cuD3D10CtxCreate`                                        |                               | Create a CUDA context for interoperability with Direct3D 10.                                                                   |
+| `cuD3D10CtxCreateOnDevice`                                |                               | Create a CUDA context for interoperability with Direct3D 10.                                                                   |
+| `cuD3D10GetDirect3DDevice`                                |                               | Get the Direct3D 10 device against which the current CUDA context was created.                                                 |
+| `cuD3D10MapResources`                                     |                               | Map Direct3D resources for access by CUDA.                                                                                     |
+| `cuD3D10RegisterResource`                                 |                               | Register a Direct3D resource for access by CUDA.                                                                               |
+| `cuD3D10ResourceGetMappedArray`                           |                               | Get an array through which to access a subresource of a Direct3D resource which has been mapped for access by CUDA.            |
+| `cuD3D10ResourceGetMappedPitch`                           |                               | Get the pitch of a subresource of a Direct3D resource which has been mapped for access by CUDA.                                |
+| `cuD3D10ResourceGetMappedPointer`                         |                               | Get the pointer through which to access a subresource of a Direct3D resource which has been mapped for access by CUDA.         |
+| `cuD3D10ResourceGetMappedSize`                            |                               | Get the size of a subresource of a Direct3D resource which has been mapped for access by CUDA.                                 |
+| `cuD3D10ResourceGetSurfaceDimensions`                     |                               | Get the dimensions of a registered surface.                                                                                    |
+| `cuD3D10ResourceSetMapFlags`                              |                               | Set usage flags for mapping a Direct3D resource.                                                                               |
+| `cuD3D10UnmapResources`                                   |                               | Unmaps Direct3D resources.                                                                                                     |
+| `cuD3D10UnregisterResource`                               |                               | Unregister a Direct3D resource.                                                                                                |
 
 ## **29. Direct3D 11 Interoperability**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `cuD3D11GetDevice`                                        |                               | Gets the CUDA device corresponding to a display adapter.                                                                       |
+| `cuD3D11GetDevices`                                       |                               | Gets the CUDA devices corresponding to a Direct3D 11 device.                                                                   |
+| `cuGraphicsD3D11RegisterResource`                         |                               | Register a Direct3D 11 resource for access by CUDA.                                                                            |
 
+## **29.1. Direct3D 11 Interoperability [DEPRECATED]**
+|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
+|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `cuD3D11CtxCreate`                                        |                               | Create a CUDA context for interoperability with Direct3D 11.                                                                   |
+| `cuD3D11CtxCreateOnDevice`                                |                               | Create a CUDA context for interoperability with Direct3D 11.                                                                   |
+| `cuD3D11GetDirect3DDevice`                                |                               | Get the Direct3D 11 device against which the current CUDA context was created.                                                 |
 
 ## **30. VDPAU Interoperability**
 
 |   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
 |-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `cuGraphicsVDPAURegisterOutputSurface`                    |                               | Registers a VDPAU VdpOutputSurface object.                                                                                     |
+| `cuGraphicsVDPAURegisterVideoSurface`                     |                               | Registers a VDPAU VdpVideoSurface object.                                                                                      |
+| `cuVDPAUCtxCreate`                                        |                               | Create a CUDA context for interoperability with VDPAU.                                                                         |
+| `cuVDPAUGetDevice`                                        |                               | Gets the CUDA device associated with a VDPAU device.                                                                           |
 
+## **31. EGL Interoperability**
+
+|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
+|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `cuEGLStreamConsumerAcquireFrame`                         |                               | Acquire an image frame from the EGLStream with CUDA as a consumer.                                                             |
+| `cuEGLStreamConsumerConnect`                              |                               | Connect CUDA to EGLStream as a consumer.                                                                                       |
+| `cuEGLStreamConsumerConnectWithFlags`                     |                               | Connect CUDA to EGLStream as a consumer with given flags.                                                                      |
+| `cuEGLStreamConsumerDisconnect`                           |                               | Disconnect CUDA as a consumer to EGLStream.                                                                                    |
+| `cuEGLStreamConsumerReleaseFrame`                         |                               | Releases the last frame acquired from the EGLStream.                                                                           |
+| `cuEGLStreamProducerConnect`                              |                               | Connect CUDA to EGLStream as a producer.                                                                                       |
+| `cuEGLStreamProducerDisconnect`                           |                               | Disconnect CUDA as a producer to EGLStream .                                                                                   |
+| `cuEGLStreamProducerPresentFrame`                         |                               | Present a CUDA eglFrame to the EGLStream with CUDA as a producer.                                                              |
+| `cuEGLStreamProducerReturnFrame`                          |                               | Return the CUDA eglFrame to the EGLStream released by the consumer.                                                            |
+| `cuGraphicsEGLRegisterImage`                              |                               | Registers an EGL image.                                                                                                        |
+| `cuGraphicsResourceGetMappedEglFrame`                     |                               | Get an eglFrame through which to access a registered EGL graphics resource.                                                    |
