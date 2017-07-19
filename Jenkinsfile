@@ -76,10 +76,10 @@ def docker_build_image( String platform, String source_hip_rel, String from_imag
 
       // Docker 17.05 introduced the ability to use ARG values in FROM statements
       // Docker inspect failing on FROM statements with ARG https://issues.jenkins-ci.org/browse/JENKINS-44836
-      //build_image = docker.build( "${project}/${build_image_name}:latest", "--pull -f docker/${dockerfile_name} --build-arg REPO_RADEON=10.255.8.5 --build-arg user_uid=${user_uid} --build-arg base_image=${from_image} ." )
+      //build_image = docker.build( "${project}/${build_image_name}:latest", "--pull -f docker/${dockerfile_name} --build-arg user_uid=${user_uid} --build-arg base_image=${from_image} ." )
 
-      // JENKINS-44836 workaround
-      sh "docker build -t ${project}/${build_image_name}:latest --pull -f docker/${dockerfile_name} --build-arg REPO_RADEON=10.255.8.5 --build-arg user_uid=${user_uid} --build-arg base_image=${from_image} ."
+      // JENKINS-44836 workaround by using a bash script instead of docker.build()
+      sh "docker build -t ${project}/${build_image_name}:latest --pull -f docker/${dockerfile_name} --build-arg user_uid=${user_uid} --build-arg base_image=${from_image} ."
       build_image = docker.image( "${project}/${build_image_name}:latest" )
     }
   }
@@ -173,7 +173,8 @@ def docker_upload_artifactory( String hcc_ver, String from_image, String source_
     // Docker inspect failing on FROM statements with ARG https://issues.jenkins-ci.org/browse/JENKINS-44836
     // hip_install_image = docker.build( "${artifactory_org}/${image_name}:${env.BUILD_NUMBER}", "--pull -f ${build_dir_rel}/dockerfile-hip-ubuntu-16.04 --build-arg base_image=${from_image} ${build_dir_rel}" )
 
-    // JENKINS-44836 workaround
+    // The --build-arg REPO_RADEON= is a temporary fix to get around a DNS issue with our build machines
+    // JENKINS-44836 workaround by using a bash script instead of docker.build()
     sh "docker build -t ${artifactory_org}/${image_name}:${env.BUILD_NUMBER} --pull -f ${build_dir_rel}/dockerfile-hip-ubuntu-16.04 --build-arg base_image=${from_image} ${build_dir_rel}"
     hip_install_image = docker.image( "${artifactory_org}/${image_name}:${env.BUILD_NUMBER}" )
 
