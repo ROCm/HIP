@@ -69,7 +69,7 @@ __device__ void double_precision_math_functions()
     fmax(0.0, 0.0);
     fmin(0.0, 0.0);
     fmod(0.0, 1.0);
-//    frexp(0.0, &iX);
+    frexp(0.0, &iX);
     hypot(1.0, 0.0);
     ilogb(1.0);
     isfinite(0.0);
