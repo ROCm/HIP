@@ -70,7 +70,7 @@ __device__ void single_precision_math_functions()
     fmaxf(0.0f, 0.0f);
     fminf(0.0f, 0.0f);
     fmodf(0.0f, 1.0f);
-    //frexpf(0.0f, &iX);
+    frexpf(0.0f, &iX);
     hypotf(1.0f, 0.0f);
     ilogbf(1.0f);
     isfinite(0.0f);
