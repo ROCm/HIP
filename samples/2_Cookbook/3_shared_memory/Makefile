@@ -4,8 +4,11 @@ ifeq (,$(HIP_PATH))
 endif
 
 HIPCC=$(HIP_PATH)/bin/hipcc
+HIP_PLATFORM=$(shell $(HIP_PATH)/bin/hipconfig --platform)
 
-TARGET=hcc
+ifeq (${HIP_PLATFORM}, hcc)
+	HIPCC_FLAGS = --amdgpu-target=gfx701 --amdgpu-target=gfx801 --amdgpu-target=gfx803 --amdgpu-target=gfx900
+endif
 
 SOURCES = sharedMemory.cpp
 OBJECTS = $(SOURCES:.cpp=.o)
@@ -22,7 +25,7 @@ CXX=$(HIPCC)
 
 
 $(EXECUTABLE): $(OBJECTS)
-	$(HIPCC) $(OBJECTS) -o $@
+	$(HIPCC)  $(HIPCC_FLAGS) $(OBJECTS) -o $@
 
 
 test: $(EXECUTABLE)
@@ -32,5 +35,4 @@ test: $(EXECUTABLE)
 clean:
 	rm -f $(EXECUTABLE)
 	rm -f $(OBJECTS)
-	rm -f $(HIP_PATH)/src/*.o
 
