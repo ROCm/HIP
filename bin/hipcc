@@ -103,6 +103,28 @@ if ($HIP_PLATFORM eq "hcc") {
 
     $HIPLDFLAGS = `${HCC_HOME}/bin/hcc-config --ldflags`;
 
+    $ROCM_AGENT_ENUM = "${ROCM_PATH}/bin/rocm_agent_enumerator";
+
+    my $myAgents = `${ROCM_AGENT_ENUM} -t GPU`;
+    my @agentsLine = split('\n', $myAgents);
+
+    foreach my $val (@agentsLine) {
+        if($val eq "gfx701") {
+            $target_gfx701 = 1;
+        }
+        if($val eq "gfx801") {
+            $target_gfx801 = 1;
+        }
+        if($val eq "gfx802") {
+            $target_gfx802 = 1;
+        }
+        if($val eq "gfx803") {
+            $target_gfx803 = 1;
+        }
+        if($val eq "gfx900") {
+            $target_gfx900 = 1;
+        }
+    }
 
     #### GCC system includes workaround ####
     $HCC_WA_FLAGS = " ";
