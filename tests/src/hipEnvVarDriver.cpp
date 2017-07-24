@@ -28,16 +28,21 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE. */
 #include <assert.h>
 #include <string>
 #include "hip/hip_runtime.h"
+#include <chrono>
+#include <thread>
 using namespace std;
 
 int getDeviceNumber(){
-   FILE *in;
-   char buff[512];
-   string str;
-   if(!(in = popen("./hipEnvVar -c", "r"))){
-        return 1;
+    FILE *in;
+    char buff[512];
+    string str;
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    if(!(in = popen("./directed_tests/hipEnvVar -c", "r"))){
+         return 1;
+     }
+    while(fgets(buff, sizeof(buff), in)!=NULL){
+         cout << buff;
     }
-    fgets(buff, sizeof(buff), in);
     pclose(in);
     return atoi(buff);
 }
@@ -46,12 +51,15 @@ int getDeviceNumber(){
 int getDevicePCIBusNumRemote(int deviceID){
     FILE *in;
     char buff[512];
-    string str = "./hipEnvVar -d ";
+    string str = "./directed_tests/hipEnvVar -d ";
     str += std::to_string(deviceID);
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
     if(!(in = popen(str.c_str(), "r"))){
         return 1;
     }
-    fgets(buff, sizeof(buff), in);
+    while(fgets(buff, sizeof(buff), in)!=NULL){
+        cout << buff;
+    }
     pclose(in);
     return atoi(buff);
 }
