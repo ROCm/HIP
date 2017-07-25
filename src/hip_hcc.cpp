@@ -95,8 +95,12 @@ int HIP_SYNC_HOST_ALLOC = 1;
 int HIP_SYNC_NULL_STREAM = 1;
 
 // HIP needs to change some behavior based on HCC_OPT_FLUSH :
-// TODO - set this to 1
+#if (__hcc_workweek__ >= 17296)
+int HCC_OPT_FLUSH = 1;
+#else
+#warning "HIP disabled HCC_OPT_FLUSH since HCC version does not yet support"
 int HCC_OPT_FLUSH = 0;
+#endif
 
 
 
