@@ -25,15 +25,27 @@ THE SOFTWARE.
 #include<time.h>
 #include"ResultDatabase.h"
 
-#define check(msg, status) \
-if(status != hipSuccess){ \
-	printf("%s failed.\n",#msg); \
-	exit(1); \
+#define PRINT_PROGRESS 0
+
+#define check(cmd) \
+{\
+  hipError_t status = cmd;\
+  if(status != hipSuccess){ \
+    printf("error: '%s'(%d) from %s at %s:%d\n", \
+          hipGetErrorString(status), status, #cmd,\
+          __FILE__, __LINE__); \
+	abort(); \
+  }\
 }
 
 #define LEN 1024*1024
-#define SIZE LEN * sizeof(float)
-#define ITER 10120
+
+#define NUM_GROUPS 1
+#define GROUP_SIZE 64
+#define TEST_ITERS 20          
+#define DISPATCHES_PER_TEST 100
+
+const unsigned p_tests = 0xfffffff;
 
 
 // HCC optimizes away fully NULL kernel calls, so run one that is nearly null:
@@ -44,115 +56,112 @@ __global__ void NearlyNull(hipLaunchParm lp, float* Ad){
 }
 
 
+ResultDatabase resultDB;
+
+
+void stopTest(hipEvent_t start, hipEvent_t stop, const char *msg, int iters)
+{
+	float mS = 0;
+    check(hipEventRecord(stop));
+    check(hipDeviceSynchronize());
+    check(hipEventElapsedTime(&mS, start, stop));
+    resultDB.AddResult(std::string(msg), "", "uS", mS*1000/iters); 
+    if (PRINT_PROGRESS & 0x1 ) {
+        std::cout<< msg <<"\t\t"<<mS*1000/iters<<" uS"<<std::endl;
+    }
+    if (PRINT_PROGRESS & 0x2 ) {
+        resultDB.DumpSummary(std::cout);
+    }
+}
+
+
 int main(){
 
 	hipError_t err;
-    float *A;
-	float *Ad = NULL;
+	float *Ad;
+    check(hipMalloc(&Ad, 4));
 
-	A = new float[LEN];
-
-	for(int i=0;i<LEN;i++){
-		A[i] = 1.0f;
-	}
 
 	hipStream_t stream;
-	err = hipStreamCreate(&stream);
-	check("Creating stream",err);
-
-	//err = hipMalloc(&Ad, SIZE);
-	//check("Allocating Ad memory on device", err);
-	//err = hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
-	//check("Doing memory copy from A to Ad", err);
-
-	float mS = 0;
-	hipEvent_t start, stop;
-	hipEventCreate(&start);
-	hipEventCreate(&stop);
-
-	ResultDatabase resultDB[8];
+	check(hipStreamCreate(&stream));
 
 
-	hipEventRecord(start);
-	hipLaunchKernel(NearlyNull, dim3(LEN/512), dim3(512), 0, 0, Ad);
-	hipEventRecord(stop);
-	hipEventElapsedTime(&mS, start, stop);
-	resultDB[0].AddResult(std::string("First Kernel Launch"), "", "uS", mS*1000); 
-//	std::cout<<"First Kernel Launch: \t\t"<<mS*1000<<" uS"<<std::endl;
-	resultDB[0].DumpSummary(std::cout);
-	hipEventRecord(start);
-	hipLaunchKernel(NearlyNull, dim3(LEN/512), dim3(512), 0, 0, Ad);
-	hipEventRecord(stop);
-	hipEventElapsedTime(&mS, start, stop);
-	resultDB[1].AddResult(std::string("Second Kernel Launch"), "", "uS", mS*1000); 
-//	std::cout<<"Second Kernel Launch: \t\t"<<mS*1000<<" uS"<<std::endl;
-	resultDB[1].DumpSummary(std::cout);
-	hipEventRecord(start);
-	for(int i=0;i<ITER;i++){
-		hipLaunchKernel(NearlyNull, dim3(LEN/512), dim3(512), 0, 0, Ad);
-	}
-	hipDeviceSynchronize();
-	hipEventRecord(stop);
-	hipEventElapsedTime(&mS, start, stop);
-	resultDB[2].AddResult(std::string("NULL Stream Sync dispatch wait"), "", "uS", mS*1000/ITER); 
-	resultDB[2].DumpSummary(std::cout);
-//	std::cout<<"NULL Stream Sync dispatch wait: \t"<<mS*1000/ITER<<" uS"<<std::endl;
-	hipDeviceSynchronize();
+	hipEvent_t start, sync, stop;
+	check(hipEventCreate(&start));
+	check(hipEventCreateWithFlags(&sync, hipEventBlockingSync));
+	check(hipEventCreate(&stop));
 
-	hipEventRecord(start);
-	for(int i=0;i<ITER;i++){
-		hipLaunchKernel(NearlyNull, dim3(LEN/512), dim3(512), 0, 0, Ad);
-	}
-	hipEventRecord(stop);
-	hipDeviceSynchronize();
-	hipEventElapsedTime(&mS, start, stop);
-	resultDB[3].AddResult(std::string("NULL Stream Async dispatch wait"), "", "uS", mS*1000/ITER); 
-	resultDB[3].DumpSummary(std::cout);
-//	std::cout<<"NULL Stream Async dispatch wait: \t"<<mS*1000/ITER<<" uS"<<std::endl;
-	hipDeviceSynchronize();
 
-	hipEventRecord(start);
-	for(int i=0;i<ITER;i++){
-		hipLaunchKernel(NearlyNull, dim3(LEN/512), dim3(512), 0, stream, Ad);
-		hipDeviceSynchronize();
-	}
-	hipEventRecord(stop);
-	hipEventElapsedTime(&mS, start, stop);
-	resultDB[4].AddResult(std::string("Stream Sync dispatch wait"), "", "uS", mS*1000/ITER); 
-	resultDB[4].DumpSummary(std::cout);
-//	std::cout<<"Stream Sync dispatch wait: \t\t"<<mS*1000/ITER<<" uS"<<std::endl;
-	hipDeviceSynchronize();
-	hipEventRecord(start);
-	for(int i=0;i<ITER;i++){
-		hipLaunchKernel(NearlyNull, dim3(LEN/512), dim3(512), 0, stream, Ad);
-	}
-	hipDeviceSynchronize();
-	hipEventRecord(stop);
-	hipEventElapsedTime(&mS, start, stop);
-	resultDB[5].AddResult(std::string("Stream Async dispatch wait"), "", "uS", mS*1000/ITER); 
-//	std::cout<<"Stream Async dispatch wait: \t\t"<<mS*1000/ITER<<" uS"<<std::endl;
-	resultDB[5].DumpSummary(std::cout);
-	hipDeviceSynchronize();
 
-	hipEventRecord(start);
-	for(int i=0;i<ITER;i++){
-		hipLaunchKernel(NearlyNull, dim3(LEN/512), dim3(512), 0, 0, Ad);
-	}
-	hipEventRecord(stop);
-	hipEventElapsedTime(&mS, start, stop);
-	resultDB[6].AddResult(std::string("NULL Stream No Wait"), "", "uS", mS*1000/ITER); 
-	resultDB[6].DumpSummary(std::cout);
-//	std::cout<<"NULL Stream Dispatch No Wait: \t\t"<<mS*1000/ITER<<" uS"<<std::endl;
-	hipDeviceSynchronize();
+    hipStream_t stream0 = 0;
 
-	hipEventRecord(start);
-	for(int i=0;i<ITER;i++){
-		hipLaunchKernel(NearlyNull, dim3(LEN/512), dim3(512), 0, stream, Ad);
-	}
-	hipEventRecord(stop);
-	hipEventElapsedTime(&mS, start, stop);
-	resultDB[7].AddResult(std::string("Stream Dispatch No Wait"), "", "uS", mS*1000/ITER); 
-	resultDB[7].DumpSummary(std::cout);
-//	std::cout<<"Stream Dispatch No Wait: \t\t"<<mS*1000/ITER<<" uS"<<std::endl;
-	hipDeviceSynchronize();
+
+    if (p_tests & 0x1) {
+        hipEventRecord(start);
+        hipLaunchKernel(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
+        stopTest(start, stop, "FirstKernelLaunch", 1);
+    }
+
+
+
+    if (p_tests & 0x2) {
+        hipEventRecord(start);
+        hipLaunchKernel(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
+        stopTest(start, stop, "SecondKernelLaunch", 1);
+    }
+
+
+    if (p_tests & 0x4) {
+        for (int t=0; t<TEST_ITERS; t++)  {
+            hipEventRecord(start);
+            for(int i=0;i<DISPATCHES_PER_TEST;i++){
+                hipLaunchKernel(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
+                hipEventRecord(sync);
+                hipEventSynchronize(sync);
+            }
+            stopTest(start, stop, "NullStreamASyncDispatchWait", DISPATCHES_PER_TEST);
+        }
+    }
+
+
+    if (p_tests & 0x10) {
+        for (int t=0; t<TEST_ITERS; t++)  {
+            hipEventRecord(start);
+            for(int i=0;i<DISPATCHES_PER_TEST;i++){
+                hipLaunchKernel(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream, Ad);
+                hipEventRecord(sync);
+                hipEventSynchronize(sync);
+            }
+            stopTest(start, stop, "StreamASyncDispatchWait", DISPATCHES_PER_TEST);
+        }
+    }
+
+#if 1
+
+    if (p_tests & 0x40) {
+        for (int t=0; t<TEST_ITERS; t++)  {
+            hipEventRecord(start);
+            for(int i=0;i<DISPATCHES_PER_TEST;i++){
+                hipLaunchKernel(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
+            }
+            stopTest(start, stop, "NullStreamASyncDispatchNoWait", DISPATCHES_PER_TEST);
+        }
+    }
+
+    if (p_tests & 0x80) {
+        for (int t=0; t<TEST_ITERS; t++)  {
+            hipEventRecord(start);
+            for(int i=0;i<DISPATCHES_PER_TEST;i++){
+                hipLaunchKernel(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream, Ad);
+            }
+            stopTest(start, stop, "StreamASyncDispatchNoWait", DISPATCHES_PER_TEST);
+        }
+    }
+#endif
+    resultDB.DumpSummary(std::cout);
+
+
+	check(hipEventDestroy(start));
+	check(hipEventDestroy(sync));
+	check(hipEventDestroy(stop));
 }
