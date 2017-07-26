@@ -83,8 +83,8 @@ int HIP_HIDDEN_FREE_MEM = 256;
 int HIP_FORCE_SYNC_COPY = 0;
 
 // TODO - set these to 0 and 1
-int HIP_EVENT_SYS_RELEASE=1;
-int HIP_COHERENT_HOST_ALLOC = 0;
+int HIP_EVENT_SYS_RELEASE=0;
+int HIP_HOST_COHERENT = 1;
 
 // TODO - set to 0 once we resolve stability.
 // USE_ HIP_SYNC_HOST_ALLOC
@@ -1226,7 +1226,7 @@ void HipReadEnv()
     READ_ENV_I(release, HIP_SYNC_NULL_STREAM, 0, "Synchronize on host for null stream submissions");
 
 
-    READ_ENV_I(release, HIP_COHERENT_HOST_ALLOC, 0, "If set, all host memory will be allocated as fine-grained system memory.  This allows threadfence_system to work but prevents host memory from being cached on GPU which may have performance impact.");
+    READ_ENV_I(release, HIP_HOST_COHERENT, 0, "If set, all host memory will be allocated as fine-grained system memory.  This allows threadfence_system to work but prevents host memory from being cached on GPU which may have performance impact.");
 
 
     READ_ENV_I(release, HCC_OPT_FLUSH, 0, "When set, use agent-scope fence operations rather than system-scope fence operationsflush when possible. This flag controls both HIP and HCC behavior.");
