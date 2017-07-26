@@ -741,6 +741,7 @@
 |         0x01 |*`cudaCSV`*                                    |                                                      |
 | typedef      | `cudaOutputMode_t`                            |                                                      |
 | typedef      | `cudaStream_t`                                | `hipStream_t`                                        |
+| typedef      | `cudaStreamCallback_t`                        | `hipStreamCallback_t`                                |
 | typedef      | `cudaSurfaceObject_t`                         |                                                      |
 | typedef      | `cudaTextureObject_t`                         |                                                      |
 | typedef      | `CUuuid_stcudaUUID_t`                         |                                                      |
