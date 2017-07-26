@@ -2,636 +2,783 @@
 
 ## **1. Device Management**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaChooseDevice`                                        | `hipChooseDevice`             | Select compute-device which best matches criteria.                                                                             |
-| `cudaDeviceGetAttribute`                                  | `hipDeviceGetAttribute`       | Returns information about the device.                                                                                          |
-| `cudaDeviceGetByPCIBusId`                                 | `hipDeviceGetByPCIBusId`      | Returns a handle to a compute device.                                                                                          |
-| `cudaDeviceGetCacheConfig`                                | `hipDeviceGetCacheConfig`     | Returns the preferred cache configuration for the current device.                                                              |
-| `cudaDeviceGetLimit`                                      | `hipDeviceGetLimit`           | Returns resource limits.                                                                                                       |
-| `cudaDeviceGetPCIBusId`                                   | `hipDeviceGetPCIBusId`        | Returns a PCI Bus Id string for the device.                                                                                    |
-| `cudaDeviceGetSharedMemConfig`                            | `hipDeviceGetSharedMemConfig` | Returns the shared memory configuration for the current device.                                                                |
-| `cudaDeviceGetStreamPriorityRange`                        |                               | Returns numerical values that correspond to the least and greatest stream priorities.                                          |
-| `cudaDeviceReset`                                         | `hipDeviceReset`              | Destroy all allocations and reset all state on the current device in the current process.                                      |
-| `cudaDeviceSetCacheConfig`                                | `hipDeviceSetCacheConfig`     | Sets the preferred cache configuration for the current device.                                                                 |
-| `cudaDeviceSetLimit`                                      | `hipDeviceSetLimit`           | Set resource limits.                                                                                                           |
-| `cudaDeviceSetSharedMemConfig`                            | `hipDeviceSetSharedMemConfig` | Sets the shared memory configuration for the current device.                                                                   |
-| `cudaDeviceSynchronize`                                   | `hipDeviceSynchronize`        | Wait for compute device to finish.                                                                                             |
-| `cudaGetDevice`                                           | `hipGetDevice`                | Returns which device is currently being used.                                                                                  |
-| `cudaGetDeviceCount`                                      | `hipGetDeviceCount`           | Returns the number of compute-capable devices.                                                                                 |
-| `cudaGetDeviceFlags`                                      |                               | Gets the flags for the current device.                                                                                         |
-| `cudaGetDeviceProperties`                                 | `hipGetDeviceProperties`      | Returns information about the compute-device.                                                                                  |
-| `cudaIpcCloseMemHandle`                                   | `hipIpcCloseMemHandle`        | Close memory mapped with cudaIpcOpenMemHandle.                                                                                 |
-| `cudaIpcGetEventHandle`                                   | `hipIpcGetEventHandle`        | Gets an interprocess handle for a previously allocated event.                                                                  |
-| `cudaIpcGetMemHandle`                                     | `hipIpcGetMemHandle`          | Gets an interprocess memory handle for an existing device memory allocation.                                                   |
-| `cudaIpcOpenEventHandle`                                  | `hipIpcOpenEventHandle`       | Opens an interprocess event handle for use in the current process.                                                             |
-| `cudaIpcOpenMemHandle`                                    | `hipIpcOpenMemHandle`         | Opens an interprocess memory handle exported from another process and returns a device pointer usable in the local process.    |
-| `cudaSetDevice`                                           | `hipSetDevice`                | Set device to be used for GPU executions.                                                                                      |
-| `cudaSetDeviceFlags`                                      | `hipSetDeviceFlags`           | Sets flags to be used for device executions.                                                                                   |
-| `cudaSetValidDevices`                                     |                               | Set a list of devices that can be used for CUDA.                                                                               |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaChooseDevice`                                        | `hipChooseDevice`             |
+| `cudaDeviceGetAttribute`                                  | `hipDeviceGetAttribute`       |
+| `cudaDeviceGetByPCIBusId`                                 | `hipDeviceGetByPCIBusId`      |
+| `cudaDeviceGetCacheConfig`                                | `hipDeviceGetCacheConfig`     |
+| `cudaDeviceGetLimit`                                      | `hipDeviceGetLimit`           |
+| `cudaDeviceGetPCIBusId`                                   | `hipDeviceGetPCIBusId`        |
+| `cudaDeviceGetSharedMemConfig`                            | `hipDeviceGetSharedMemConfig` |
+| `cudaDeviceGetStreamPriorityRange`                        |                               |
+| `cudaDeviceReset`                                         | `hipDeviceReset`              |
+| `cudaDeviceSetCacheConfig`                                | `hipDeviceSetCacheConfig`     |
+| `cudaDeviceSetLimit`                                      | `hipDeviceSetLimit`           |
+| `cudaDeviceSetSharedMemConfig`                            | `hipDeviceSetSharedMemConfig` |
+| `cudaDeviceSynchronize`                                   | `hipDeviceSynchronize`        |
+| `cudaGetDevice`                                           | `hipGetDevice`                |
+| `cudaGetDeviceCount`                                      | `hipGetDeviceCount`           |
+| `cudaGetDeviceFlags`                                      |                               |
+| `cudaGetDeviceProperties`                                 | `hipGetDeviceProperties`      |
+| `cudaIpcCloseMemHandle`                                   | `hipIpcCloseMemHandle`        |
+| `cudaIpcGetEventHandle`                                   | `hipIpcGetEventHandle`        |
+| `cudaIpcGetMemHandle`                                     | `hipIpcGetMemHandle`          |
+| `cudaIpcOpenEventHandle`                                  | `hipIpcOpenEventHandle`       |
+| `cudaIpcOpenMemHandle`                                    | `hipIpcOpenMemHandle`         |
+| `cudaSetDevice`                                           | `hipSetDevice`                |
+| `cudaSetDeviceFlags`                                      | `hipSetDeviceFlags`           |
+| `cudaSetValidDevices`                                     |                               |
 
-## **2. Error Handling**
+## **2. Thread Management [DEPRECATED]**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaGetErrorName`                                        | `hipGetErrorName`             | Returns the string representation of an error code enum name.                                                                  |
-| `cudaGetErrorString`                                      | `hipGetErrorString`           | Returns the description string for an error code.                                                                              |
-| `cudaGetLastError`                                        | `hipGetLastError`             | Returns the last error from a runtime call.                                                                                    |
-| `cudaPeekAtLastError`                                     | `hipPeekAtLastError`          | Returns the last error from a runtime call.                                                                                    |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaThreadExit`                                          | `hipDeviceReset`              |
+| `cudaThreadGetCacheConfig`                                | `hipDeviceGetCacheConfig`     |
+| `cudaThreadGetLimit`                                      |                               |
+| `cudaThreadSetCacheConfig`                                | `hipDeviceSetCacheConfig`     |
+| `cudaThreadSetLimit`                                      |                               |
+| `cudaThreadSynchronize`                                   | `hipDeviceSynchronize`        |
 
-## **3. Stream Management**
+## **3. Error Handling**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaStreamAddCallback`                                   | `hipStreamAddCallback`        | Add a callback to a compute stream.                                                                                            |
-| `cudaStreamAttachMemAsync`                                |                               | Attach managed memory to a stream asynchronously.                                                                              |
-| `cudaStreamCreate`                                        | `hipStreamCreate`             | Create an asynchronous stream.                                                                                                 |
-| `cudaStreamCreateWithFlags`                               | `hipStreamCreateWithFlags`    | Create an asynchronous stream.                                                                                                 |
-| `cudaStreamCreateWithPriority`                            |                               | Create an asynchronous stream with the specified priority.                                                                     |
-| `cudaStreamDestroy`                                       | `hipStreamDestroy`            | Destroys and cleans up an asynchronous stream.                                                                                 |
-| `cudaStreamGetFlags`                                      | `hipStreamGetFlags`           | Query the flags of a stream.                                                                                                   |
-| `cudaStreamGetPriority`                                   |                               | Query the priority of a stream.                                                                                                |
-| `cudaStreamQuery`                                         | `hipStreamQuery`              | Queries an asynchronous stream for completion status.                                                                          |
-| `cudaStreamSynchronize`                                   | `hipStreamSynchronize`        | Waits for stream tasks to complete.                                                                                            |
-| `cudaStreamWaitEvent`                                     | `hipStreamWaitEvent`          | Make a compute stream wait on an event.                                                                                        |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaGetErrorName`                                        | `hipGetErrorName`             |
+| `cudaGetErrorString`                                      | `hipGetErrorString`           |
+| `cudaGetLastError`                                        | `hipGetLastError`             |
+| `cudaPeekAtLastError`                                     | `hipPeekAtLastError`          |
 
-## **4. Event Management**
+## **4. Stream Management**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaEventCreate`                                         | `hipEventCreate`              | Creates an event object.                                                                                                       |
-| `cudaEventCreateWithFlags`                                | `hipEventCreateWithFlags`     | Creates an event object with the specified flags.                                                                              |
-| `cudaEventDestroy`                                        | `hipEventDestroy`             | Destroys an event object.                                                                                                      |
-| `cudaEventElapsedTime`                                    | `hipEventElapsedTime`         | Computes the elapsed time between events.                                                                                      |
-| `cudaEventQuery`                                          | `hipEventQuery`               | Queries an event's status.                                                                                                     |
-| `cudaEventRecord`                                         | `hipEventRecord`              | Records an event.                                                                                                              |
-| `cudaEventSynchronize`                                    | `hipEventSynchronize`         | Waits for an event to complete.                                                                                                |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaStreamAddCallback`                                   | `hipStreamAddCallback`        |
+| `cudaStreamAttachMemAsync`                                |                               |
+| `cudaStreamCreate`                                        | `hipStreamCreate`             |
+| `cudaStreamCreateWithFlags`                               | `hipStreamCreateWithFlags`    |
+| `cudaStreamCreateWithPriority`                            |                               |
+| `cudaStreamDestroy`                                       | `hipStreamDestroy`            |
+| `cudaStreamGetFlags`                                      | `hipStreamGetFlags`           |
+| `cudaStreamGetPriority`                                   |                               |
+| `cudaStreamQuery`                                         | `hipStreamQuery`              |
+| `cudaStreamSynchronize`                                   | `hipStreamSynchronize`        |
+| `cudaStreamWaitEvent`                                     | `hipStreamWaitEvent`          |
 
-## **5. Execution Control**
+## **5. Event Management**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaFuncGetAttributes`                                   |                               | Find out attributes for a given function.                                                                                      |
-| `cudaFuncSetCacheConfig`                                  | `hipFuncSetCacheConfig`       | Sets the preferred cache configuration for a device function.                                                                  |
-| `cudaFuncSetSharedMemConfig`                              |                               | Sets the shared memory configuration for a device function.                                                                    |
-| `cudaGetParameterBuffer`                                  |                               | Obtains a parameter buffer.                                                                                                    |
-| `cudaGetParameterBufferV2`                                |                               | Launches a specified kernel.                                                                                                   |
-| `cudaLaunchKernel`                                        | `hipLaunchKernel`             | Launches a device function.                                                                                                    |
-| `cudaSetDoubleForDevice`                                  |                               | Converts a double argument to be executed on a device.                                                                         |
-| `cudaSetDoubleForHost`                                    |                               | Converts a double argument after execution on a device.                                                                        |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaEventCreate`                                         | `hipEventCreate`              |
+| `cudaEventCreateWithFlags`                                | `hipEventCreateWithFlags`     |
+| `cudaEventDestroy`                                        | `hipEventDestroy`             |
+| `cudaEventElapsedTime`                                    | `hipEventElapsedTime`         |
+| `cudaEventQuery`                                          | `hipEventQuery`               |
+| `cudaEventRecord`                                         | `hipEventRecord`              |
+| `cudaEventSynchronize`                                    | `hipEventSynchronize`         |
 
-## **6. Occupancy**
+## **6. Execution Control**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaOccupancyMaxActiveBlocksPerMultiprocessor`           | `hipOccupancyMaxActiveBlocksPerMultiprocessor`| Returns occupancy for a device function.                                                                       |
-| `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |                               | Returns occupancy for a device function with the specified flags.                                                              |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaFuncGetAttributes`                                   |                               |
+| `cudaFuncSetCacheConfig`                                  | `hipFuncSetCacheConfig`       |
+| `cudaFuncSetSharedMemConfig`                              |                               |
+| `cudaGetParameterBuffer`                                  |                               |
+| `cudaGetParameterBufferV2`                                |                               |
+| `cudaLaunchKernel`                                        | `hipLaunchKernel`             |
+| `cudaSetDoubleForDevice`                                  |                               |
+| `cudaSetDoubleForHost`                                    |                               |
 
-## **7. Execution Control [deprecated since 7.0]**
+## **7. Occupancy**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaConfigureCall`                                       |                               | Configure a device-launch.                                                                                                     |
-| `cudaLaunch`                                              |                               | Launches a device function.                                                                                                    |
-| `cudaSetupArgument`                                       |                               | Configure a device launch.                                                                                                     |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaOccupancyMaxActiveBlocksPerMultiprocessor`           | `hipOccupancyMaxActiveBlocksPerMultiprocessor`|
+| `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |                               |
 
-## **8. Memory Management**
+## **8. Execution Control [deprecated since 7.0]**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaArrayGetInfo`                                        |                               | Gets info about the specified cudaArray.                                                                                       |
-| `cudaFree`                                                | `hipFree`                     | Frees memory on the device.                                                                                                    |
-| `cudaFreeArray`                                           | `hipFreeArray`                | Frees an array on the device.                                                                                                  |
-| `cudaFreeHost`                                            | `hipHostFree`                 | Frees page-locked memory.                                                                                                      |
-| `cudaFreeMipmappedArray`                                  |                               | Frees a mipmapped array on the device.                                                                                         |
-| `cudaGetMipmappedArrayLevel`                              |                               | Gets a mipmap level of a CUDA mipmapped array.                                                                                 |
-| `cudaGetSymbolAddress`                                    |                               | Finds the address associated with a CUDA symbol.                                                                               |
-| `cudaGetSymbolSize`                                       |                               | Finds the size of the object associated with a CUDA symbol.                                                                    |
-| `cudaHostAlloc`                                           | `hipHostMalloc`               | Allocates page-locked memory on the host.                                                                                      |
-| `cudaHostGetDevicePointer`                                | `hipHostGetDevicePointer`     | Passes back device pointer of mapped host memory allocated by cudaHostAlloc or registered by cudaHostRegister.                 |
-| `cudaHostGetFlags`                                        | `hipHostGetFlags`             | Passes back flags used to allocate pinned host memory allocated by cudaHostAlloc.                                              |
-| `cudaHostRegister`                                        | `hipHostRegister`             | Registers an existing host memory range for use by CUDA.                                                                       |
-| `cudaHostUnregister`                                      | `hipHostUnregister`           | Unregisters a memory range that was registered with cudaHostRegister.                                                          |
-| `cudaMalloc`                                              | `hipMalloc`                   | Allocate memory on the device.                                                                                                 |
-| `cudaMalloc3D`                                            |                               | Allocates logical 1D, 2D, or 3D memory objects on the device.                                                                  |
-| `cudaMalloc3DArray`                                       |                               | Allocate an array on the device.                                                                                               |
-| `cudaMallocArray`                                         | `hipMallocArray`              | Allocate an array on the device.                                                                                               |
-| `cudaMallocHost`                                          | `hipHostMalloc`               | Allocates page-locked memory on the host.                                                                                      |
-| `cudaMallocManaged`                                       |                               | Allocates memory that will be automatically managed by the Unified Memory system.                                              |
-| `cudaMallocMipmappedArray`                                |                               | Allocate a mipmapped array on the device.                                                                                      |
-| `cudaMallocPitch`                                         |                               | Allocates pitched memory on the device.                                                                                        |
-| `cudaMemGetInfo`                                          | `hipMemGetInfo`               | Gets free and total device memory.                                                                                             |
-| `cudaMemcpy`                                              | `hipMemcpy`                   | Copies data between host and device.                                                                                           |
-| `cudaMemcpy2D`                                            | `hipMemcpy2D`                 | Copies data between host and device.                                                                                           |
-| `cudaMemcpy2DArrayToArray`                                |                               | Copies data between host and device.                                                                                           |
-| `cudaMemcpy2DAsync`                                       |                               | Copies data between host and device.                                                                                           |
-| `cudaMemcpy2DFromArray`                                   |                               | Copies data between host and device.                                                                                           |
-| `cudaMemcpy2DFromArrayAsync`                              |                               | Copies data between host and device.                                                                                           |
-| `cudaMemcpy2DToArray`                                     | `hipMemcpy2DToArray`          | Copies data between host and device.                                                                                           |
-| `cudaMemcpy2DToArrayAsync`                                |                               | Copies data between host and device.                                                                                           |
-| `cudaMemcpy3D`                                            |                               | Copies data between 3D objects.                                                                                                |
-| `cudaMemcpy3DAsync`                                       |                               | Copies data between 3D objects.                                                                                                |
-| `cudaMemcpy3DPeer`                                        |                               | Copies memory between devices.                                                                                                 |
-| `cudaMemcpy3DPeerAsync`                                   |                               | Copies memory between devices asynchronously.                                                                                  |
-| `cudaMemcpyArrayToArray`                                  |                               | Copies data between host and device.                                                                                           |
-| `cudaMemcpyAsync`                                         | `hipMemcpyAsync`              | Copies data between host and device.                                                                                           |
-| `cudaMemcpyFromArray`                                     | `MemcpyFromArray`             | Copies data between host and device.                                                                                           |
-| `cudaMemcpyFromArrayAsync`                                |                               | Copies data between host and device.                                                                                           |
-| `cudaMemcpyFromSymbol`                                    | `hipMemcpyFromSymbol`         | Copies data from the given symbol on the device.                                                                               |
-| `cudaMemcpyFromSymbolAsync`                               |                               | Copies data from the given symbol on the device.                                                                               |
-| `cudaMemcpyPeer`                                          | `hipMemcpyPeer`               | Copies memory between two devices.                                                                                             |
-| `cudaMemcpyPeerAsync`                                     | `hipMemcpyPeerAsync`          | Copies memory between two devices asynchronously.                                                                              |
-| `cudaMemcpyToArray`                                       | `hipMemcpyToArray`            | Copies data between host and device.                                                                                           |
-| `cudaMemcpyToArrayAsync`                                  |                               | Copies data between host and device.                                                                                           |
-| `cudaMemcpyToSymbol`                                      | `hipMemcpyToSymbol`           | Copies data to the given symbol on the device.                                                                                 |
-| `cudaMemcpyToSymbolAsync`                                 | `hipMemcpyToSymbolAsync`      | Copies data to the given symbol on the device.                                                                                 |
-| `cudaMemset`                                              | `hipMemset`                   | Initializes or sets device memory to a value.                                                                                  |
-| `cudaMemset2D`                                            |                               | Initializes or sets device memory to a value.                                                                                  |
-| `cudaMemset2DAsync`                                       |                               | Initializes or sets device memory to a value.                                                                                  |
-| `cudaMemset3D`                                            |                               | Initializes or sets device memory to a value.                                                                                  |
-| `cudaMemset3DAsync`                                       |                               | Initializes or sets device memory to a value.                                                                                  |
-| `cudaMemsetAsync`                                         | `hipMemsetAsync`              | Initializes or sets device memory to a value.                                                                                  |
-| `make_cudaExtent`                                         |                               | Returns a cudaExtent based on input parameters.                                                                                |
-| `make_cudaPitchedPtr`                                     |                               | Returns a cudaPitchedPtr based on input parameters.                                                                            |
-| `make_cudaPos`                                            |                               | Returns a cudaPos based on input parameters.                                                                                   |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaConfigureCall`                                       |                               |
+| `cudaLaunch`                                              |                               |
+| `cudaSetupArgument`                                       |                               |
 
-## **9. Unified Addressing**
+## **9. Memory Management**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaPointerGetAttributes`                                | `hipPointerGetAttributes`     | Returns attributes about a specified pointer.                                                                                  |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaArrayGetInfo`                                        |                               |
+| `cudaFree`                                                | `hipFree`                     |
+| `cudaFreeArray`                                           | `hipFreeArray`                |
+| `cudaFreeHost`                                            | `hipHostFree`                 |
+| `cudaFreeMipmappedArray`                                  |                               |
+| `cudaGetMipmappedArrayLevel`                              |                               |
+| `cudaGetSymbolAddress`                                    |                               |
+| `cudaGetSymbolSize`                                       |                               |
+| `cudaHostAlloc`                                           | `hipHostMalloc`               |
+| `cudaHostGetDevicePointer`                                | `hipHostGetDevicePointer`     |
+| `cudaHostGetFlags`                                        | `hipHostGetFlags`             |
+| `cudaHostRegister`                                        | `hipHostRegister`             |
+| `cudaHostUnregister`                                      | `hipHostUnregister`           |
+| `cudaMalloc`                                              | `hipMalloc`                   |
+| `cudaMalloc3D`                                            |                               |
+| `cudaMalloc3DArray`                                       |                               |
+| `cudaMallocArray`                                         | `hipMallocArray`              |
+| `cudaMallocHost`                                          | `hipHostMalloc`               |
+| `cudaMallocManaged`                                       |                               |
+| `cudaMallocMipmappedArray`                                |                               |
+| `cudaMallocPitch`                                         |                               |
+| `cudaMemGetInfo`                                          | `hipMemGetInfo`               |
+| `cudaMemcpy`                                              | `hipMemcpy`                   |
+| `cudaMemcpy2D`                                            | `hipMemcpy2D`                 |
+| `cudaMemcpy2DArrayToArray`                                |                               |
+| `cudaMemcpy2DAsync`                                       |                               |
+| `cudaMemcpy2DFromArray`                                   |                               |
+| `cudaMemcpy2DFromArrayAsync`                              |                               |
+| `cudaMemcpy2DToArray`                                     | `hipMemcpy2DToArray`          |
+| `cudaMemcpy2DToArrayAsync`                                |                               |
+| `cudaMemcpy3D`                                            |                               |
+| `cudaMemcpy3DAsync`                                       |                               |
+| `cudaMemcpy3DPeer`                                        |                               |
+| `cudaMemcpy3DPeerAsync`                                   |                               |
+| `cudaMemcpyArrayToArray`                                  |                               |
+| `cudaMemcpyAsync`                                         | `hipMemcpyAsync`              |
+| `cudaMemcpyFromArray`                                     | `MemcpyFromArray`             |
+| `cudaMemcpyFromArrayAsync`                                |                               |
+| `cudaMemcpyFromSymbol`                                    | `hipMemcpyFromSymbol`         |
+| `cudaMemcpyFromSymbolAsync`                               |                               |
+| `cudaMemcpyPeer`                                          | `hipMemcpyPeer`               |
+| `cudaMemcpyPeerAsync`                                     | `hipMemcpyPeerAsync`          |
+| `cudaMemcpyToArray`                                       | `hipMemcpyToArray`            |
+| `cudaMemcpyToArrayAsync`                                  |                               |
+| `cudaMemcpyToSymbol`                                      | `hipMemcpyToSymbol`           |
+| `cudaMemcpyToSymbolAsync`                                 | `hipMemcpyToSymbolAsync`      |
+| `cudaMemset`                                              | `hipMemset`                   |
+| `cudaMemset2D`                                            |                               |
+| `cudaMemset2DAsync`                                       |                               |
+| `cudaMemset3D`                                            |                               |
+| `cudaMemset3DAsync`                                       |                               |
+| `cudaMemsetAsync`                                         | `hipMemsetAsync`              |
+| `make_cudaExtent`                                         |                               |
+| `make_cudaPitchedPtr`                                     |                               |
+| `make_cudaPos`                                            |                               |
 
-## **10. Peer Device Memory Access**
+## **10. Unified Addressing**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaDeviceCanAccessPeer`                                 | `hipDeviceCanAccessPeer`      | Queries if a device may directly access a peer device's memory.                                                                |
-| `cudaDeviceDisablePeerAccess`                             | `hipDeviceDisablePeerAccess`  | Disables direct access to memory allocations on a peer device.                                                                 |
-| `cudaDeviceEnablePeerAccess`                              | `hipDeviceEnablePeerAccess`   | Enables direct access to memory allocations on a peer device.                                                                  |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaPointerGetAttributes`                                | `hipPointerGetAttributes`     |
 
-## **11. OpenGL Interoperability**
+## **11. Peer Device Memory Access**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaGLGetDevices`                                        |                               | Gets the CUDA devices associated with the current OpenGL context.                                                              |
-| `cudaGraphicsGLRegisterBuffer`                            |                               | Registers an OpenGL buffer object.                                                                                             |
-| `cudaGraphicsGLRegisterImage`                             |                               | Register an OpenGL texture or renderbuffer object.                                                                             |
-| `cudaWGLGetDevice`                                        |                               | Gets the CUDA device associated with hGpu.                                                                                     |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaDeviceCanAccessPeer`                                 | `hipDeviceCanAccessPeer`      |
+| `cudaDeviceDisablePeerAccess`                             | `hipDeviceDisablePeerAccess`  |
+| `cudaDeviceEnablePeerAccess`                              | `hipDeviceEnablePeerAccess`   |
 
-## **12. Graphics Interoperability**
+## **12. OpenGL Interoperability**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaGraphicsMapResources`                                |                               | Map graphics resources for access by CUDA.                                                                                     |
-| `cudaGraphicsResourceGetMappedMipmappedArray`             |                               | Get a mipmapped array through which to access a mapped graphics resource.                                                      |
-| `cudaGraphicsResourceGetMappedPointer`                    |                               | Get a device pointer through which to access a mapped graphics resource.                                                       |
-| `cudaGraphicsResourceSetMapFlags`                         |                               | Set usage flags for mapping a graphics resource.                                                                               |
-| `cudaGraphicsSubResourceGetMappedArray`                   |                               | Get an array through which to access a subresource of a mapped graphics resource.                                              |
-| `cudaGraphicsUnmapResources`                              |                               | Unmap graphics resources.                                                                                                      |
-| `cudaGraphicsUnregisterResource`                          |                               | Unregisters a graphics resource for access by CUDA.                                                                            |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaGLGetDevices`                                        |                               |
+| `cudaGraphicsGLRegisterBuffer`                            |                               |
+| `cudaGraphicsGLRegisterImage`                             |                               |
+| `cudaWGLGetDevice`                                        |                               |
 
-## **13. Texture Reference Management**
+## **13. OpenGL Interoperability [DEPRECATED]**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaBindTexture`                                         |                               | Binds a memory area to a texture.                                                                                              |
-| `cudaBindTexture2D`                                       |                               | Binds a 2D memory area to a texture.                                                                                           |
-| `cudaBindTextureToArray`                                  |                               | Binds an array to a texture.                                                                                                   |
-| `cudaBindTextureToMipmappedArray`                         |                               | Binds a mipmapped array to a texture.                                                                                          |
-| `cudaCreateChannelDesc`                                   |                               | Returns a channel descriptor using the specified format.                                                                       |
-| `cudaGetChannelDesc`                                      |                               | Get the channel descriptor of an array.                                                                                        |
-| `cudaGetTextureAlignmentOffset`                           |                               | Get the alignment offset of a texture.                                                                                         |
-| `cudaGetTextureReference`                                 |                               | Get the texture reference associated with a symbol.                                                                            |
-| `cudaUnbindTexture`                                       |                               | Unbinds a texture.                                                                                                             |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaGLMapBufferObject`                                   |                               |
+| `cudaGLMapBufferObjectAsync`                              |                               |
+| `cudaGLRegisterBufferObject`                              |                               |
+| `cudaGLSetBufferObjectMapFlags`                           |                               |
+| `cudaGLSetGLDevice`                                       |                               |
+| `cudaGLUnmapBufferObject`                                 |                               |
+| `cudaGLUnmapBufferObjectAsync`                            |                               |
+| `cudaGLUnregisterBufferObject`                            |                               |
 
-## **14. Surface Reference Management**
+## **14. Direct3D 9 Interoperability**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaBindSurfaceToArray`                                  |                               | Binds an array to a surface.                                                                                                   |
-| `cudaGetSurfaceReference`                                 |                               | Get the surface reference associated with a symbol.                                                                            |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaD3D9GetDevice`                                       |                               |
+| `cudaD3D9GetDevices`                                      |                               |
+| `cudaD3D9GetDirect3DDevice`                               |                               |
+| `cudaD3D9SetDirect3DDevice`                               |                               |
+| `cudaGraphicsD3D9RegisterResource`                        |                               |
 
-## **15. Texture Object Management**
+## **15. Direct3D 9 Interoperability [DEPRECATED]**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaCreateTextureObject`                                 |                               | Creates a texture object.                                                                                                      |
-| `cudaDestroyTextureObject`                                |                               | Destroys a texture object.                                                                                                     |
-| `cudaGetTextureObjectResourceDesc`                        |                               | Returns a texture object's resource descriptor.                                                                                |
-| `cudaGetTextureObjectResourceViewDesc`                    |                               | Returns a texture object's resource view descriptor.                                                                           |
-| `cudaGetTextureObjectTextureDesc`                         |                               | Returns a texture object's texture descriptor.                                                                                 |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaD3D9MapResources`                                    |                               |
+| `cudaD3D9RegisterResource`                                |                               |
+| `cudaD3D9ResourceGetMappedArray`                          |                               |
+| `cudaD3D9ResourceGetMappedPitch`                          |                               |
+| `cudaD3D9ResourceGetMappedPointer`                        |                               |
+| `cudaD3D9ResourceGetMappedSize`                           |                               |
+| `cudaD3D9ResourceGetSurfaceDimensions`                    |                               |
+| `cudaD3D9ResourceSetMapFlags`                             |                               |
+| `cudaD3D9UnmapResources`                                  |                               |
+| `cudaD3D9UnregisterResource`                              |                               |
 
-## **16. Surface Object Management**
+## **16. Direct3D 10 Interoperability**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaCreateSurfaceObject`                                 |                               | Creates a surface object.                                                                                                      |
-| `cudaDestroySurfaceObject`                                |                               | Destroys a surface object.                                                                                                     |
-| `cudaGetSurfaceObjectResourceDesc`                        |                               | Returns a surface object's resource descriptor Returns the resource descriptor for the surface object specified by surfObject. |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaD3D10GetDevice`                                      |                               |
+| `cudaD3D10GetDevices`                                     |                               |
+| `cudaGraphicsD3D10RegisterResource`                       |                               |
 
-## **17. Version Management**
+## **17. Direct3D 10 Interoperability [DEPRECATED]**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaDriverGetVersion`                                    | `hipDriverGetVersion`         | Returns the CUDA driver version.                                                                                               |
-| `cudaRuntimeGetVersion`                                   | `hipRuntimeGetVersion`        | Returns the CUDA Runtime version.                                                                                              |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaD3D10GetDirect3DDevice`                              |                               |
+| `cudaD3D10MapResources`                                   |                               |
+| `cudaD3D10RegisterResource`                               |                               |
+| `cudaD3D10ResourceGetMappedArray`                         |                               |
+| `cudaD3D10ResourceGetMappedPitch`                         |                               |
+| `cudaD3D10ResourceGetMappedPointer`                       |                               |
+| `cudaD3D10ResourceGetMappedSize`                          |                               |
+| `cudaD3D10ResourceGetSurfaceDimensions`                   |                               |
+| `cudaD3D10ResourceSetMapFlags`                            |                               |
+| `cudaD3D10SetDirect3DDevice`                              |                               |
+| `cudaD3D10UnmapResources`                                 |                               |
+| `cudaD3D10UnregisterResource`                             |                               |
 
-## **18. C++ API Routines**
+## **18. Direct3D 11 Interoperability**
+
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaD3D11GetDevice`                                      |                               |
+| `cudaD3D11GetDevices`                                     |                               |
+| `cudaGraphicsD3D11RegisterResource`                       |                               |
+
+## **19. Direct3D 11 Interoperability [DEPRECATED]**
+
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaD3D11GetDirect3DDevice`                              |                               |
+| `cudaD3D11SetDirect3DDevice`                              |                               |
+
+## **20. VDPAU Interoperability**
+
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaGraphicsVDPAURegisterOutputSurface`                  |                               |
+| `cudaGraphicsVDPAURegisterVideoSurface`                   |                               |
+| `cudaVDPAUGetDevice`                                      |                               |
+| `cudaVDPAUSetVDPAUDevice`                                 |                               |
+
+## **21. EGL Interoperability**
+
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaEGLStreamConsumerAcquireFrame`                       |                               |
+| `cudaEGLStreamConsumerConnect`                            |                               |
+| `cudaEGLStreamConsumerConnectWithFlags`                   |                               |
+| `cudaEGLStreamConsumerReleaseFrame`                       |                               |
+| `cudaEGLStreamProducerConnect`                            |                               |
+| `cudaEGLStreamProducerDisconnect`                         |                               |
+| `cudaEGLStreamProducerPresentFrame`                       |                               |
+| `cudaEGLStreamProducerReturnFrame`                        |                               |
+| `cudaGraphicsEGLRegisterImage`                            |                               |
+| `cudaGraphicsResourceGetMappedEglFrame`                   |                               |
+
+## **22. Graphics Interoperability**
+
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaGraphicsMapResources`                                |                               |
+| `cudaGraphicsResourceGetMappedMipmappedArray`             |                               |
+| `cudaGraphicsResourceGetMappedPointer`                    |                               |
+| `cudaGraphicsResourceSetMapFlags`                         |                               |
+| `cudaGraphicsSubResourceGetMappedArray`                   |                               |
+| `cudaGraphicsUnmapResources`                              |                               |
+| `cudaGraphicsUnregisterResource`                          |                               |
+
+## **23. Texture Reference Management**
+
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaBindTexture`                                         |                               |
+| `cudaBindTexture2D`                                       |                               |
+| `cudaBindTextureToArray`                                  |                               |
+| `cudaBindTextureToMipmappedArray`                         |                               |
+| `cudaCreateChannelDesc`                                   |                               |
+| `cudaGetChannelDesc`                                      |                               |
+| `cudaGetTextureAlignmentOffset`                           |                               |
+| `cudaGetTextureReference`                                 |                               |
+| `cudaUnbindTexture`                                       |                               |
+
+## **24. Surface Reference Management**
+
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaBindSurfaceToArray`                                  |                               |
+| `cudaGetSurfaceReference`                                 |                               |
+
+## **25. Texture Object Management**
+
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaCreateTextureObject`                                 |                               |
+| `cudaDestroyTextureObject`                                |                               |
+| `cudaGetTextureObjectResourceDesc`                        |                               |
+| `cudaGetTextureObjectResourceViewDesc`                    |                               |
+| `cudaGetTextureObjectTextureDesc`                         |                               |
+
+## **26. Surface Object Management**
+
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaCreateSurfaceObject`                                 |                               |
+| `cudaDestroySurfaceObject`                                |                               |
+| `cudaGetSurfaceObjectResourceDesc`                        |                               |
+
+## **27. Version Management**
+
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaDriverGetVersion`                                    | `hipDriverGetVersion`         |
+| `cudaRuntimeGetVersion`                                   | `hipRuntimeGetVersion`        |
+
+## **28. C++ API Routines**
 *(7.0 contains, 7.5 doesn’t)*
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaBindSurfaceToArray`                                  |                               | Binds an array to a surface.                                                                                                   |
-| `cudaBindTexture`                                         | `hipBindTexture`              | Binds a memory area to a texture.                                                                                              |
-| `cudaBindTexture2D`                                       |                               | Binds a 2D memory area to a texture.                                                                                           |
-| `cudaBindTextureToArray`                                  |                               | Binds an array to a texture.                                                                                                   |
-| `cudaBindTextureToMipmappedArray`                         |                               | Binds a mipmapped array to a texture.                                                                                          |
-| `cudaCreateChannelDesc`                                   | `hipCreateChannelDesc`        | Returns a channel descriptor using the specified format.                                                                       |
-| `cudaFuncGetAttributes`                                   |                               | Find out attributes for a given function.                                                                                      |
-| `cudaFuncSetCacheConfig`                                  |                               | Sets the preferred cache configuration for a device function.                                                                  |
-| `cudaGetSymbolAddress`                                    |                               | Finds the address associated with a CUDA symbol                                                                                |
-| `cudaGetSymbolSize`                                       |                               | Finds the size of the object associated with a CUDA symbol.                                                                    |
-| `cudaGetTextureAlignmentOffset`                           |                               | Get the alignment offset of a texture.                                                                                         |
-| `cudaLaunch`                                              |                               | Launches a device function.                                                                                                    |
-| `cudaLaunchKernel`                                        |                               | Launches a device function.                                                                                                    |
-| `cudaMallocHost`                                          |                               | Allocates page-locked memory on the host                                                                                       |
-| `cudaMallocManaged`                                       |                               | Allocates memory that will be automatically managed by the Unified Memory system.                                              |
-| `cudaMemcpyFromSymbol`                                    |                               | Copies data from the given symbol on the device.                                                                               |
-| `cudaMemcpyFromSymbolAsync`                               |                               | Copies data from the given symbol on the device.                                                                               |
-| `cudaMemcpyToSymbol`                                      |                               | Copies data to the given symbol on the device.                                                                                 |
-| `cudaMemcpyToSymbolAsync`                                 |                               | Async copies data to the given symbol on the device.                                                                           |
-| `cudaOccupancyMaxActiveBlocksPerMultiprocessor`           | `hipOccupancyMaxActiveBlocksPerMultiprocessor` | Returns occupancy for a device function.                                                                      |
-| `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |                               | Returns occupancy for a device function with the specified flags.                                                              |
-| `cudaOccupancyMaxPotentialBlockSize`                      | `hipOccupancyMaxPotentialBlockSize` | Returns grid and block size that achieves maximum potential occupancy for a device function.                             |
-| `cudaOccupancyMaxPotentialBlockSizeVariableSMem`          |                               | Returns grid and block size that achieves maximum potential occupancy for a device function.                                   |
-| `cudaOccupancyMaxPotentialBlockSizeVariableSMemWithFlags` |                               | Returns grid and block size that achieves maximum potential occupancy for a device function.                                   |
-| `cudaOccupancyMaxPotentialBlockSizeWithFlags`             |                               | Returns grid and block size that achived maximum potential occupancy for a device function with the specified flags.           |
-| `cudaSetupArgument`                                       |                               | Configure a device launch.                                                                                                     |
-| `cudaStreamAttachMemAsync`                                |                               | Attach memory to a stream asynchronously.                                                                                      |
-| `cudaUnbindTexture`                                       | `hipUnbindTexture`            | Unbinds a texture.                                                                                                             |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaBindSurfaceToArray`                                  |                               |
+| `cudaBindTexture`                                         | `hipBindTexture`              |
+| `cudaBindTexture2D`                                       |                               |
+| `cudaBindTextureToArray`                                  |                               |
+| `cudaBindTextureToMipmappedArray`                         |                               |
+| `cudaCreateChannelDesc`                                   | `hipCreateChannelDesc`        |
+| `cudaFuncGetAttributes`                                   |                               |
+| `cudaFuncSetCacheConfig`                                  |                               |
+| `cudaGetSymbolAddress`                                    |                               |
+| `cudaGetSymbolSize`                                       |                               |
+| `cudaGetTextureAlignmentOffset`                           |                               |
+| `cudaLaunch`                                              |                               |
+| `cudaLaunchKernel`                                        |                               |
+| `cudaMallocHost`                                          |                               |
+| `cudaMallocManaged`                                       |                               |
+| `cudaMemcpyFromSymbol`                                    |                               |
+| `cudaMemcpyFromSymbolAsync`                               |                               |
+| `cudaMemcpyToSymbol`                                      |                               |
+| `cudaMemcpyToSymbolAsync`                                 |                               |
+| `cudaOccupancyMaxActiveBlocksPerMultiprocessor`           | `hipOccupancyMaxActiveBlocksPerMultiprocessor` |
+| `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |                               |
+| `cudaOccupancyMaxPotentialBlockSize`                      | `hipOccupancyMaxPotentialBlockSize` |
+| `cudaOccupancyMaxPotentialBlockSizeVariableSMem`          |                               |
+| `cudaOccupancyMaxPotentialBlockSizeVariableSMemWithFlags` |                               |
+| `cudaOccupancyMaxPotentialBlockSizeWithFlags`             |                               |
+| `cudaSetupArgument`                                       |                               |
+| `cudaStreamAttachMemAsync`                                |                               |
+| `cudaUnbindTexture`                                       | `hipUnbindTexture`            |
 
-## **19. Profiler Control**
+## **30. Profiler Control**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cudaProfilerInitialize`                                  |                               | Initialize the CUDA profiler.                                                                                                  |
-| `cudaProfilerStart`                                       | `hipProfilerStart`            | Enable profiling.                                                                                                              |
-| `cudaProfilerStop`                                        | `hipProfilerStop`             | Disable profiling.                                                                                                             |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cudaProfilerInitialize`                                  |                               |
+| `cudaProfilerStart`                                       | `hipProfilerStart`            |
+| `cudaProfilerStop`                                        | `hipProfilerStop`             |
 
 # Data types used by CUDA Runtime API and supported by HIP
 
-## **20. Data types**
+## **31. Data types**
 
-| **type**     |   **CUDA**                                    |   **HIP**                                            | **CUDA description**                                                                                                           |
-|-------------:|-----------------------------------------------|------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| struct       | `cudaChannelFormatDesc`                       | `hipChannelFormatDesc`                               | CUDA Channel format descriptor.                                                                                                |
-| struct       | `cudaDeviceProp`                              | `hipDeviceProp_t`                                    | CUDA device properties.                                                                                                        |
-| struct       | `cudaExtent`                                  |                                                      | CUDA extent (width, height, depth).                                                                                            |
-| struct       | `cudaFuncAttributes`                          |                                                      | CUDA function attributes.                                                                                                      |
-| struct       | `cudaIpcEventHandle_t`                        | `hipIpcEventHandle_t`                                | CUDA IPC event handle.                                                                                                         |
-| struct       | `cudaIpcMemHandle_t`                          | `hipIpcMemHandle_t`                                  | CUDA IPC memory handle.                                                                                                        |
-| struct       | `cudaMemcpy3DParms`                           |                                                      | CUDA 3D memory copying parameters.                                                                                             |
-| struct       | `cudaMemcpy3DPeerParms`                       |                                                      | CUDA 3D cross-device memory copying parameters.                                                                                |
-| struct       | `cudaPitchedPtr`                              |                                                      | CUDA Pitched memory pointer.                                                                                                   |
-| struct       | `cudaPointerAttributes`                       | `hipPointerAttribute_t`                              | CUDA pointer attributes.                                                                                                       |
-| struct       | `cudaPos`                                     |                                                      | CUDA 3D position.                                                                                                              |
-| struct       | `cudaResourceDesc`                            |                                                      | CUDA resource descriptor.                                                                                                      |
-| struct       | `cudaResourceViewDesc`                        |                                                      | CUDA resource view descriptor.                                                                                                 |
-| struct       | `cudaTextureDesc`                             |                                                      | CUDA texture descriptor.                                                                                                       |
-| struct       | `surfaceReference`                            |                                                      | CUDA Surface reference.                                                                                                        |
-| struct       | `textureReference`                            | `textureReference`                                   | CUDA texture reference.                                                                                                        |
-| enum         |***`cudaChannelFormatKind`***                  |***`hipChannelFormatKind`***                          | Channel format kind.                                                                                                           |
-|            0 |*`cudaChannelFormatKindSigned`*                |*`hipChannelFormatKindSigned`*                        | Signed channel format.                                                                                                         |
-|            1 |*`cudaChannelFormatKindUnsigned`*              |*`hipChannelFormatKindUnsigned`*                      | Unsigned channel format.                                                                                                       |
-|            2 |*`cudaChannelFormatKindFloat`*                 |*`hipChannelFormatKindFloat`*                         | Float channel format.                                                                                                          |
-|            3 |*`cudaChannelFormatKindNone`*                  |*`hipChannelFormatKindNone`*                          | No channel format.                                                                                                             |
-| enum         |***`cudaComputeMode`***                        |                                                      | CUDA device compute modes.                                                                                                     |
-|            0 |*`cudaComputeModeDefault`*                     |                                                      | Default compute mode (Multiple threads can use ::cudaSetDevice() with this device).                                            |
-|            1 |*`cudaComputeModeExclusive`*                   |                                                      | Compute-exclusive-thread mode (Only one thread in one process will be able to use ::cudaSetDevice() with this device).         |
-|            2 |*`cudaComputeModeProhibited`*                  |                                                      | Compute-prohibited mode (No threads can use ::cudaSetDevice() with this device).                                               |
-|            3 |*`cudaComputeModeExclusiveProcess`*            |                                                      | Compute-exclusive-process mode (Many threads in one process will be able to use ::cudaSetDevice() with this device).           |
-| enum         |***`cudaDeviceAttr`***                         |***`hipDeviceAttribute_t`***                          | CUDA device attributes.                                                                                                        |
-|            1 |*`cudaDevAttrMaxThreadsPerBlock`*              |*`hipDeviceAttributeMaxThreadsPerBlock`*              | Maximum number of threads per block.                                                                                           |
-|            2 |*`cudaDevAttrMaxBlockDimX`*                    |*`hipDeviceAttributeMaxBlockDimX`*                    | Maximum block dimension X.                                                                                                     |
-|            3 |*`cudaDevAttrMaxBlockDimY`*                    |*`hipDeviceAttributeMaxBlockDimY`*                    | Maximum block dimension Y.                                                                                                     |
-|            4 |*`cudaDevAttrMaxBlockDimZ`*                    |*`hipDeviceAttributeMaxBlockDimZ`*                    | Maximum block dimension Y.                                                                                                     |
-|            5 |*`cudaDevAttrMaxGridDimX`*                     |*`hipDeviceAttributeMaxGridDimX`*                     | Maximum grid dimension X.                                                                                                      |
-|            6 |*`cudaDevAttrMaxGridDimY`*                     |*`hipDeviceAttributeMaxGridDimY`*                     | Maximum grid dimension Y.                                                                                                      |
-|            7 |*`cudaDevAttrMaxGridDimZ`*                     |*`hipDeviceAttributeMaxGridDimZ`*                     | Maximum grid dimension Y.                                                                                                      |
-|            8 |*`cudaDevAttrMaxSharedMemoryPerBlock`*         |*`hipDeviceAttributeMaxSharedMemoryPerBlock`*         | Maximum shared memory available per block in bytes.                                                                            |
-|            9 |*`cudaDevAttrTotalConstantMemory`*             |*`hipDeviceAttributeTotalConstantMemory`*             | Memory available on device for \__constant__ variables in a CUDA C kernel in bytes.                                            |
-|           10 |*`cudaDevAttrWarpSize`*                        |*`hipDeviceAttributeWarpSize`*                        | Warp size in threads.                                                                                                          |
-|           11 |*`cudaDevAttrMaxPitch`*                        |                                                      | Maximum pitch in bytes allowed by memory copies.                                                                               |
-|           12 |*`cudaDevAttrMaxRegistersPerBlock`*            |*`hipDeviceAttributeMaxRegistersPerBlock`*            | Maximum number of 32-bit registers available per block.                                                                        |
-|           13 |*`cudaDevAttrClockRate`*                       |*`hipDeviceAttributeClockRate`*                       | Peak clock frequency in kilohertz.                                                                                             |
-|           14 |*`cudaDevAttrTextureAlignment`*                |                                                      | Alignment requirement for textures.                                                                                            |
-|           15 |*`cudaDevAttrGpuOverlap`*                      |                                                      | Device can possibly copy memory and execute a kernel concurrently.                                                             |
-|           16 |*`cudaDevAttrMultiProcessorCount`*             |*`hipDeviceAttributeMultiprocessorCount`*             | Number of multiprocessors on device.                                                                                           |
-|           17 |*`cudaDevAttrKernelExecTimeout`*               |                                                      | Specifies whether there is a run time limit on kernels.                                                                        |
-|           18 |*`cudaDevAttrIntegrated`*                      |                                                      | Device is integrated with host memory.                                                                                         |
-|           19 |*`cudaDevAttrCanMapHostMemory`*                |                                                      | Device can map host memory into CUDA address space.                                                                            |
-|           20 |*`cudaDevAttrComputeMode`*                     |*`hipDeviceAttributeComputeMode`*                     | Compute mode (See cudaComputeMode for details).                                                                                |
-|           21 |*`cudaDevAttrMaxTexture1DWidth`*               |                                                      | Maximum 1D texture width.                                                                                                      |
-|           22 |*`cudaDevAttrMaxTexture2DWidth`*               |                                                      | Maximum 2D texture width.                                                                                                      |
-|           23 |*`cudaDevAttrMaxTexture2DHeight`*              |                                                      | Maximum 2D texture height.                                                                                                     |
-|           24 |*`cudaDevAttrMaxTexture3DWidth`*               |                                                      | Maximum 3D texture width.                                                                                                      |
-|           25 |*`cudaDevAttrMaxTexture3DHeight`*              |                                                      | Maximum 3D texture height.                                                                                                     |
-|           26 |*`cudaDevAttrMaxTexture3DDepth`*               |                                                      | Maximum 3D texture depth.                                                                                                      |
-|           27 |*`cudaDevAttrMaxTexture2DLayeredWidth`*        |                                                      | Maximum 2D layered texture width.                                                                                              |
-|           28 |*`cudaDevAttrMaxTexture2DLayeredHeight`*       |                                                      | Maximum 2D layered texture height.                                                                                             |
-|           29 |*`cudaDevAttrMaxTexture2DLayeredLayers`*       |                                                      | Maximum layers in a 2D layered texture.                                                                                        |
-|           30 |*`cudaDevAttrSurfaceAlignment`*                |                                                      | Alignment requirement for surfaces.                                                                                            |
-|           31 |*`cudaDevAttrConcurrentKernels`*               |*`hipDeviceAttributeConcurrentKernels`*               | Device can possibly execute multiple kernels concurrently.                                                                     |
-|           32 |*`cudaDevAttrEccEnabled`*                      |                                                      | Device has ECC support enabled.                                                                                                |
-|           33 |*`cudaDevAttrPciBusId`*                        |*`hipDeviceAttributePciBusId`*                        | PCI bus ID of the device.                                                                                                      |
-|           34 |*`cudaDevAttrPciDeviceId`*                     |*`hipDeviceAttributePciDeviceId`*                     | PCI device ID of the device.                                                                                                   |
-|           35 |*`cudaDevAttrTccDriver`*                       |                                                      | Device is using TCC driver model.                                                                                              |
-|           36 |*`cudaDevAttrMemoryClockRate`*                 |*`hipDeviceAttributeMemoryClockRate`*                 | Peak memory clock frequency in kilohertz.                                                                                      |
-|           37 |*`cudaDevAttrGlobalMemoryBusWidth`*            |*`hipDeviceAttributeMemoryBusWidth`*                  | Global memory bus width in bits.                                                                                               |
-|           38 |*`cudaDevAttrL2CacheSize`*                     |*`hipDeviceAttributeL2CacheSize`*                     | Size of L2 cache in bytes.                                                                                                     |
-|           39 |*`cudaDevAttrMaxThreadsPerMultiProcessor`*     |*`hipDeviceAttributeMaxThreadsPerMultiProcessor`*     | Maximum resident threads per multiprocessor.                                                                                   |
-|           40 |*`cudaDevAttrAsyncEngineCount`*                |                                                      | Number of asynchronous engines.                                                                                                |
-|           41 |*`cudaDevAttrUnifiedAddressing`*               |                                                      | Device shares a unified address space with the host.                                                                           |
-|           42 |*`cudaDevAttrMaxTexture1DLayeredWidth`*        |                                                      | Maximum 1D layered texture width.                                                                                              |
-|           43 |*`cudaDevAttrMaxTexture1DLayeredLayers`*       |                                                      | Maximum layers in a 1D layered texture.                                                                                        |
-|           44 |                                               |                                                      | *reserved*                                                                                                                     |
-|           45 |*`cudaDevAttrMaxTexture2DGatherWidth`*         |                                                      | Maximum 2D texture width if cudaArrayTextureGather is set.                                                                     |
-|           46 |*`cudaDevAttrMaxTexture2DGatherHeight`*        |                                                      | Maximum 2D texture height if cudaArrayTextureGather is set.                                                                    |
-|           47 |*`cudaDevAttrMaxTexture3DWidthAlt`*            |                                                      | Alternate maximum 3D texture width.                                                                                            |
-|           48 |*`cudaDevAttrMaxTexture3DHeightAlt`*           |                                                      | Alternate maximum 3D texture height.                                                                                           |
-|           49 |*`cudaDevAttrMaxTexture3DDepthAlt`*            |                                                      | Alternate maximum 3D texture depth.                                                                                            |
-|           50 |*`cudaDevAttrPciDomainId`*                     |                                                      | PCI domain ID of the device.                                                                                                   |
-|           51 |*`cudaDevAttrTexturePitchAlignment`*           |                                                      | Pitch alignment requirement for textures.                                                                                      |
-|           52 |*`cudaDevAttrMaxTextureCubemapWidth`*          |                                                      | Maximum cubemap texture width/height.                                                                                          |
-|           53 |*`cudaDevAttrMaxTextureCubemapLayeredWidth`*   |                                                      | Maximum cubemap layered texture width/height.                                                                                  |
-|           54 |*`cudaDevAttrMaxTextureCubemapLayeredLayers`*  |                                                      | Maximum layers in a cubemap layered texture.                                                                                   |
-|           55 |*`cudaDevAttrMaxSurface1DWidth`*               |                                                      | Maximum 1D surface width.                                                                                                      |
-|           56 |*`cudaDevAttrMaxSurface2DWidth`*               |                                                      | Maximum 2D surface width.                                                                                                      |
-|           57 |*`cudaDevAttrMaxSurface2DHeight`*              |                                                      | Maximum 2D surface height.                                                                                                     |
-|           58 |*`cudaDevAttrMaxSurface3DWidth`*               |                                                      | Maximum 3D surface width.                                                                                                      |
-|           59 |*`cudaDevAttrMaxSurface3DHeight`*              |                                                      | Maximum 3D surface height.                                                                                                     |
-|           60 |*`cudaDevAttrMaxSurface3DDepth`*               |                                                      | Maximum 3D surface depth.                                                                                                      |
-|           61 |*`cudaDevAttrMaxSurface1DLayeredWidth`*        |                                                      | Maximum 1D layered surface width.                                                                                              |
-|           62 |*`cudaDevAttrMaxSurface1DLayeredLayers`*       |                                                      | Maximum layers in a 1D layered surface.                                                                                        |
-|           63 |*`cudaDevAttrMaxSurface2DLayeredWidth`*        |                                                      | Maximum 2D layered surface width.                                                                                              |
-|           64 |*`cudaDevAttrMaxSurface2DLayeredHeight`*       |                                                      | Maximum 2D layered surface height.                                                                                             |
-|           65 |*`cudaDevAttrMaxSurface2DLayeredLayers`*       |                                                      | Maximum layers in a 2D layered surface.                                                                                        |
-|           66 |*`cudaDevAttrMaxSurfaceCubemapWidth`*          |                                                      | Maximum cubemap surface width.                                                                                                 |
-|           67 |*`cudaDevAttrMaxSurfaceCubemapLayeredWidth`*   |                                                      | Maximum cubemap layered surface width.                                                                                         |
-|           68 |*`cudaDevAttrMaxSurfaceCubemapLayeredLayers`*  |                                                      | Maximum layers in a cubemap layered surface.                                                                                   |
-|           69 |*`cudaDevAttrMaxTexture1DLinearWidth`*         |                                                      | Maximum 1D linear texture width.                                                                                               |
-|           70 |*`cudaDevAttrMaxTexture2DLinearWidth`*         |                                                      | Maximum 2D linear texture width.                                                                                               |
-|           71 |*`cudaDevAttrMaxTexture2DLinearHeight`*        |                                                      | Maximum 2D linear texture height.                                                                                              |
-|           72 |*`cudaDevAttrMaxTexture2DLinearPitch`*         |                                                      | Maximum 2D linear texture pitch in bytes.                                                                                      |
-|           73 |*`cudaDevAttrMaxTexture2DMipmappedWidth`*      |                                                      | Maximum mipmapped 2D texture width.                                                                                            |
-|           74 |*`cudaDevAttrMaxTexture2DMipmappedHeight`*     |                                                      | Maximum mipmapped 2D texture height.                                                                                           |
-|           75 |*`cudaDevAttrComputeCapabilityMajor`*          |*`hipDeviceAttributeComputeCapabilityMajor`*          | Major compute capability version number.                                                                                       |
-|           76 |*`cudaDevAttrComputeCapabilityMinor`*          |*`hipDeviceAttributeComputeCapabilityMinor`*          | Minor compute capability version number.                                                                                       |
-|           77 |*`cudaDevAttrMaxTexture1DMipmappedWidth`*      |                                                      | Maximum mipmapped 1D texture width.                                                                                            |
-|           78 |*`cudaDevAttrStreamPrioritiesSupported`*       |                                                      | Device supports stream priorities.                                                                                             |
-|           79 |*`cudaDevAttrGlobalL1CacheSupported`*          |                                                      | Device supports caching globals in L1.                                                                                         |
-|           80 |*`cudaDevAttrLocalL1CacheSupported`*           |                                                      | Device supports caching locals in L1.                                                                                          |
-|           81 |*`cudaDevAttrMaxSharedMemoryPerMultiprocessor`*|*`hipDeviceAttributeMaxSharedMemoryPerMultiprocessor`*| Maximum shared memory available per multiprocessor in bytes.                                                                   |
-|           82 |*`cudaDevAttrMaxRegistersPerMultiprocessor`*   |                                                      | Maximum number of 32-bit registers available per multiprocessor.                                                               |
-|           83 |*`cudaDevAttrManagedMemory`*                   |                                                      | Device can allocate managed memory on this system.                                                                             |
-|           84 |*`cudaDevAttrIsMultiGpuBoard`*                 |*`hipDeviceAttributeIsMultiGpuBoard`*                 | Device is on a multi-GPU board.                                                                                                |
-|           85 |*`cudaDevAttrMultiGpuBoardGroupID`*            |                                                      | Unique identifier for a group of devices on the same multi-GPU board.                                                          |
-| enum         |***`cudaError`***                              |***`hipError_t`***                                    | CUDA Error types.                                                                                                              |
-| enum         |***`cudaError_t`***                            |***`hipError_t`***                                    | CUDA Error types.                                                                                                              |
-|            0 |*`cudaSuccess`*                                |*`hipSuccess`*                                        | The API call returned with no errors. In the case of query calls, this can also mean that the operation being queried is complete.|
-|            1 |*`cudaErrorMissingConfiguration`*              |                                                      | The device function being invoked (usually via cudaLaunchKernel()) was not previously configured via the cudaConfigureCall() function.|
-|            2 |*`cudaErrorMemoryAllocation`*                  |*`hipErrorMemoryAllocation`*                          | The API call failed because it was unable to allocate enough memory to perform the requested operation.                        |
-|            3 |*`cudaErrorInitializationError`*               |*`hipErrorInitializationError`*                       | The API call failed because the CUDA driver and runtime could not be initialized.                                              |
-|            4 |*`cudaErrorLaunchFailure`*                     |                                                      | An exception occurred on the device while executing a kernel. Common causes include dereferencing an invalid device pointer and accessing out of bounds shared memory. The device cannot be used until cudaThreadExit() is called. All existing device memory allocations are invalid and must be reconstructed if the program is to continue using CUDA. |
-|            5 |*`cudaErrorPriorLaunchFailure`*                |                                                      | This indicated that a previous kernel launch failed. This was previously used for device emulation of kernel launches. Deprecated This error return is deprecated as of CUDA 3.1. Device emulation mode was removed with the CUDA 3.1 release.|
-|            6 |*`cudaErrorLaunchTimeout`*                     |                                                      | This indicates that the device kernel took too long to execute. This can only occur if timeouts are enabled - see the device property kernelExecTimeoutEnabled for more information. The device cannot be used until cudaThreadExit() is called. All existing device memory allocations are invalid and must be reconstructed if the program is to continue using CUDA.|
-|            7 |*`cudaErrorLaunchOutOfResources`*              |*`hipErrorLaunchOutOfResources`*                      | This indicates that a launch did not occur because it did not have appropriate resources. Although this error is similar to cudaErrorInvalidConfiguration, this error usually indicates that the user has attempted to pass too many arguments to the device kernel, or the kernel launch specifies too many threads for the kernel's register count.|
-|            8 |*`cudaErrorInvalidDeviceFunction`*             |                                                      | The requested device function does not exist or is not compiled for the proper device architecture.                            |
-|            9 |*`cudaErrorInvalidConfiguration`*              |                                                      | This indicates that a kernel launch is requesting resources that can never be satisfied by the current device. Requesting more shared memory per block than the device supports will trigger this error, as will requesting too many threads or blocks. See cudaDeviceProp for more device limitations.|
-|           10 |*`cudaErrorInvalidDevice`*                     |*`hipErrorInvalidDevice`*                             | This indicates that the device ordinal supplied by the user does not correspond to a valid CUDA device.                        |
-|           11 |*`cudaErrorInvalidValue`*                      |*`hipErrorInvalidValue`*                              | This indicates that one or more of the parameters passed to the API call is not within an acceptable range of values.          |
-|           12 |*`cudaErrorInvalidPitchValue`*                 |                                                      | This indicates that one or more of the pitch-related parameters passed to the API call is not within the acceptable range for pitch.|
-|           13 |*`cudaErrorInvalidSymbol`*                     |                                                      | This indicates that the symbol name/identifier passed to the API call is not a valid name or identifier.                       |
-|           14 |*`cudaErrorMapBufferObjectFailed`*             |                                                      | This indicates that the buffer object could not be mapped.                                                                     |
-|           15 |*`cudaErrorUnmapBufferObjectFailed`*           |                                                      | This indicates that the buffer object could not be unmapped.                                                                   |
-|           16 |*`cudaErrorInvalidHostPointer`*                |                                                      | This indicates that at least one host pointer passed to the API call is not a valid host pointer.                              |
-|           17 |*`cudaErrorInvalidDevicePointer`*              |*`hipErrorInvalidDevicePointer`*                      | This indicates that at least one host pointer passed to the API call is not a valid host pointer.                              |
-|           18 |*`cudaErrorInvalidTexture`*                    |                                                      | This indicates that the texture passed to the API call is not a valid texture.                                                 |
-|           19 |*`cudaErrorInvalidTextureBinding`*             |                                                      | This indicates that the texture binding is not valid. This occurs if you call cudaGetTextureAlignmentOffset() with an unbound texture.|
-|           20 |*`cudaErrorInvalidChannelDescriptor`*          |                                                      | This indicates that the channel descriptor passed to the API call is not valid. This occurs if the format is not one of the formats specified by cudaChannelFormatKind, or if one of the dimensions is invalid.|
-|           21 |*`cudaErrorInvalidMemcpyDirection`*            |                                                      | This indicates that the direction of the memcpy passed to the API call is not one of the types specified by cudaMemcpyKind.    |
-|           22 |*`cudaErrorAddressOfConstant`*                 |                                                      | This indicated that the user has taken the address of a constant variable, which was forbidden up until the CUDA 3.1 release. Deprecated This error return is deprecated as of CUDA 3.1. Variables in constant memory may now have their address taken by the runtime via cudaGetSymbolAddress().|
-|           23 |*`cudaErrorTextureFetchFailed`*                |                                                      | This indicated that a texture fetch was not able to be performed. This was previously used for device emulation of texture operations. Deprecated This error return is deprecated as of CUDA 3.1. Device emulation mode was removed with the CUDA 3.1 release.|
-|           24 |*`cudaErrorTextureNotBound`*                   |                                                      | This indicated that a texture was not bound for access. This was previously used for device emulation of texture operations. Deprecated This error return is deprecated as of CUDA 3.1. Device emulation mode was removed with the CUDA 3.1 release.|
-|           25 |*`cudaErrorSynchronizationError`*              |                                                      | This indicated that a synchronization operation had failed. This was previously used for some device emulation functions. Deprecated This error return is deprecated as of CUDA 3.1. Device emulation mode was removed with the CUDA 3.1 release.|
-|           26 |*`cudaErrorInvalidFilterSetting`*              |                                                      | This indicates that a non-float texture was being accessed with linear filtering. This is not supported by CUDA.               |
-|           27 |*`cudaErrorInvalidNormSetting`*                |                                                      | This indicates that an attempt was made to read a non-float texture as a normalized float. This is not supported by CUDA.      |
-|           28 |*`cudaErrorMixedDeviceExecution`*              |                                                      | Mixing of device and device emulation code was not allowed. Deprecated This error return is deprecated as of CUDA 3.1. Device emulation mode was removed with the CUDA 3.1 release.|
-|           29 |*`cudaErrorCudartUnloading`*                   |                                                      | This indicates that a CUDA Runtime API call cannot be executed because it is being called during process shut down, at a point in time after CUDA driver has been unloaded.|
-|           30 |*`cudaErrorUnknown`*                           |*`hipErrorUnknown`*                                   | This indicates that an unknown internal error has occurred.                                                                    |
-|           31 |*`cudaErrorNotYetImplemented`*                 |                                                      | This indicates that the API call is not yet implemented. Production releases of CUDA will never return this error. Deprecated This error return is deprecated as of CUDA 4.1.|
-|           32 |*`cudaErrorMemoryValueTooLarge`*               |                                                      | This indicated that an emulated device pointer exceeded the 32-bit address range. Deprecated This error return is deprecated as of CUDA 3.1. Device emulation mode was removed with the CUDA 3.1 release.|
-|           33 |*`cudaErrorInvalidResourceHandle`*             |*`hipErrorInvalidResourceHandle`*                     | This indicates that a resource handle passed to the API call was not valid. Resource handles are opaque types like cudaStream_t and cudaEvent_t.|
-|           34 |*`cudaErrorNotReady`*                          |*`hipErrorNotReady`*                                  | This indicates that asynchronous operations issued previously have not completed yet. This result is not actually an error, but must be indicated differently than cudaSuccess (which indicates completion). Calls that may return this value include cudaEventQuery() and cudaStreamQuery().|
-|           35 |*`cudaErrorInsufficientDriver`*                |                                                      | This indicates that the installed NVIDIA CUDA driver is older than the CUDA runtime library. This is not a supported configuration. Users should install an updated NVIDIA display driver to allow the application to run.|
-|           36 |*`cudaErrorSetOnActiveProcess`*                |                                                      | This indicates that the user has called cudaSetValidDevices(), cudaSetDeviceFlags(), cudaD3D9SetDirect3DDevice(), cudaD3D10SetDirect3DDevice, cudaD3D11SetDirect3DDevice(), or cudaVDPAUSetVDPAUDevice() after initializing the CUDA runtime by calling non-device management operations (allocating memory and launching kernels are examples of non-device management operations). This error can also be returned if using runtime/driver interoperability and there is an existing CUcontext active on the host thread.|
-|           37 |*`cudaErrorInvalidSurface`*                    |                                                      | This indicates that the surface passed to the API call is not a valid surface.                                                 |
-|           38 |*`cudaErrorNoDevice`*                          |*`hipErrorNoDevice`*                                  | This indicates that no CUDA-capable devices were detected by the installed CUDA driver.                                        |
-|           39 |*`cudaErrorECCUncorrectable`*                  |                                                      | This indicates that an uncorrectable ECC error was detected during execution.                                                  |
-|           40 |*`cudaErrorSharedObjectSymbolNotFound`*        |                                                      | This indicates that a link to a shared object failed to resolve.                                                               |
-|           41 |*`cudaErrorSharedObjectInitFailed`*            |                                                      | This indicates that initialization of a shared object failed.                                                                  |
-|           42 |*`cudaErrorUnsupportedLimit`*                  |*`hipErrorUnsupportedLimit`*                          | This indicates that the cudaLimit passed to the API call is not supported by the active device.                                |
-|           43 |*`cudaErrorDuplicateVariableName`*             |                                                      | This indicates that multiple global or constant variables (across separate CUDA source files in the application) share the same string name.|
-|           44 |*`cudaErrorDuplicateTextureName`*              |                                                      | This indicates that multiple textures (across separate CUDA source files in the application) share the same string name.       |
-|           45 |*`cudaErrorDuplicateSurfaceName`*              |                                                      | This indicates that multiple surfaces (across separate CUDA source files in the application) share the same string name.       |
-|           46 |*`cudaErrorDevicesUnavailable`*                |                                                      | This indicates that all CUDA devices are busy or unavailable at the current time. Devices are often busy/unavailable due to use of cudaComputeModeExclusive, cudaComputeModeProhibited or when long running CUDA kernels have filled up the GPU and are blocking new work from starting. They can also be unavailable due to memory constraints on a device that already has active CUDA work being performed.|
-|           47 |*`cudaErrorInvalidKernelImage`*                |                                                      | This indicates that the device kernel image is invalid.                                                                        |
-|           48 |*`cudaErrorNoKernelImageForDevice`*            |                                                      | This indicates that there is no kernel image available that is suitable for the device. This can occur when a user specifies code generation options for a particular CUDA source file that do not include the corresponding device configuration.|
-|           49 |*`cudaErrorIncompatibleDriverContext`*         |                                                      | This indicates that the current context is not compatible with this the CUDA Runtime. This can only occur if you are using CUDA Runtime/Driver interoperability and have created an existing Driver context using the driver API. The Driver context may be incompatible either because the Driver context was created using an older version of the API, because the Runtime API call expects a primary driver context and the Driver context is not primary, or because the Driver context has been destroyed. Please see Interactions with the CUDA Driver API" for more information.|
-|           50 |*`cudaErrorPeerAccessAlreadyEnabled`*          |*`hipErrorPeerAccessAlreadyEnabled`*                  | This error indicates that a call to cudaDeviceEnablePeerAccess() is trying to re-enable peer addressing on from a context which has already had peer addressing enabled.|
-|           51 |*`cudaErrorPeerAccessNotEnabled`*              |*`hipErrorPeerAccessNotEnabled`*                      | This error indicates that a call to cudaDeviceEnablePeerAccess() is trying to re-enable peer addressing on from a context which has already had peer addressing enabled.|
-|           52 |                                               |                                                      | *reserved*                                                                                                                     |
-|           53 |                                               |                                                      | *reserved*                                                                                                                     |
-|           54 |*`cudaErrorDeviceAlreadyInUse`*                |                                                      | This indicates that a call tried to access an exclusive-thread device that is already in use by a different thread.            |
-|           55 |*`cudaErrorProfilerDisabled`*                  |                                                      | This indicates profiler is not initialized for this run. This can happen when the application is running with external profiling tools like visual profiler.|
-|           56 |*`cudaErrorProfilerNotInitialized`*            |                                                      | Deprecated This error return is deprecated as of CUDA 5.0. It is no longer an error to attempt to enable/disable the profiling via cudaProfilerStart or cudaProfilerStop without initialization.|
-|           57 |*`cudaErrorProfilerAlreadyStarted`*            |                                                      | Deprecated This error return is deprecated as of CUDA 5.0. It is no longer an error to call cudaProfilerStart() when profiling is already enabled.|
-|           58 |*`cudaErrorProfilerAlreadyStopped`*            |                                                      | Deprecated This error return is deprecated as of CUDA 5.0. It is no longer an error to call cudaProfilerStop() when profiling is already disabled.|
-|           59 |*`cudaErrorAssert`*                            |                                                      | An assert triggered in device code during kernel execution. The device cannot be used again until cudaThreadExit() is called. All existing allocations are invalid and must be reconstructed if the program is to continue using CUDA.|
-|           60 |*`cudaErrorTooManyPeers`*                      |                                                      | This error indicates that the hardware resources required to enable peer access have been exhausted for one or more of the devices passed to cudaEnablePeerAccess().|
-|           61 |*`cudaErrorHostMemoryAlreadyRegistered`*       | *`hipErrorHostMemoryAlreadyRegistered`*              | This error indicates that the memory range passed to cudaHostRegister() has already been registered.                           |
-|           62 |*`cudaErrorHostMemoryNotRegistered`*           | *`hipErrorHostMemoryNotRegistered`*                  | This error indicates that the pointer passed to cudaHostUnregister() does not correspond to any currently registered memory region.|
-|           63 |*`cudaErrorOperatingSystem`*                   |                                                      | This error indicates that an OS call failed.                                                                                   |
-|           64 |*`cudaErrorPeerAccessUnsupported`*             |                                                      | This error indicates that P2P access is not supported across the given devices.                                                |
-|           65 |*`cudaErrorLaunchMaxDepthExceeded`*            |                                                      | This error indicates that a device runtime grid launch did not occur because the depth of the child grid would exceed the maximum supported number of nested grid launches.|
-|           66 |*`cudaErrorLaunchFileScopedTex`*               |                                                      | This error indicates that a grid launch did not occur because the kernel uses filescoped textures which are unsupported by the device runtime. Kernels launched via the device runtime only support textures created with the Texture Object API's.|
-|           67 |*`cudaErrorLaunchFileScopedSurf`*              |                                                      | This error indicates that a grid launch did not occur because the kernel uses filescoped surfaces which are unsupported by the device runtime. Kernels launched via the device runtime only support surfaces created with the Surface Object API's.|
-|           68 |*`cudaErrorSyncDepthExceeded`*                 |                                                      | This error indicates that a call to cudaDeviceSynchronize made from the device runtime failed because the call was made at grid depth greater than than either the default (2 levels of grids) or user specified device limit cudaLimitDevRuntimeSyncDepth. To be able to synchronize on launched grids at a greater depth successfully, the maximum nested depth at which cudaDeviceSynchronize will be called must be specified with the cudaLimitDevRuntimeSyncDepth limit to the cudaDeviceSetLimit api before the host-side launch of a kernel using the device runtime. Keep in mind that additional levels of sync depth require the runtime to reserve large amounts of device memory that cannot be used for user allocations.|
-|           69 |*`cudaErrorLaunchPendingCountExceeded`*        |                                                      | This error indicates that a device runtime grid launch failed because the launch would exceed the limit cudaLimitDevRuntimePendingLaunchCount. For this launch to proceed successfully, cudaDeviceSetLimit must be called to set the cudaLimitDevRuntimePendingLaunchCount to be higher than the upper bound of outstanding launches that can be issued to the device runtime. Keep in mind that raising the limit of pending device runtime launches will require the runtime to reserve device memory that cannot be used for user allocations.|
-|           70 |*`cudaErrorNotPermitted`*                      |                                                      | This error indicates the attempted operation is not permitted.                                                                 |
-|           71 |*`cudaErrorNotSupported`*                      |                                                      | This error indicates the attempted operation is not supported on the current system or device.                                 |
-|           72 |*`cudaErrorHardwareStackError`*                |                                                      | Device encountered an error in the call stack during kernel execution, possibly due to stack corruption or exceeding the stack size limit. The context cannot be used, so it must be destroyed (and a new one should be created). All existing device memory allocations from this context are invalid and must be reconstructed if the program is to continue using CUDA.|
-|           73 |*`cudaErrorIllegalInstruction`*                |                                                      | The device encountered an illegal instruction during kernel execution The context cannot be used, so it must be destroyed (and a new one should be created). All existing device memory allocations from this context are invalid and must be reconstructed if the program is to continue using CUDA.|
-|           74 |*`cudaErrorMisalignedAddress`*                 |                                                      | The device encountered a load or store instruction on a memory address which is not aligned. The context cannot be used, so it must be destroyed (and a new one should be created). All existing device memory allocations from this context are invalid and must be reconstructed if the program is to continue using CUDA.|
-|           75 |*`cudaErrorInvalidAddressSpace`*               |                                                      | While executing a kernel, the device encountered an instruction which can only operate on memory locations in certain address spaces (global, shared, or local), but was supplied a memory address not belonging to an allowed address space. The context cannot be used, so it must be destroyed (and a new one should be created). All existing device memory allocations from this context are invalid and must be reconstructed if the program is to continue using CUDA.|
-|           76 |*`cudaErrorInvalidPc`*                         |                                                      | The device encountered an invalid program counter. The context cannot be used, so it must be destroyed (and a new one should be created). All existing device memory allocations from this context are invalid and must be reconstructed if the program is to continue using CUDA.|
-|           77 |*`cudaErrorIllegalAddress`*                    |                                                      | The device encountered a load or store instruction on an invalid memory address. The context cannot be used, so it must be destroyed (and a new one should be created). All existing device memory allocations from this context are invalid and must be reconstructed if the program is to continue using CUDA.|
-|           78 |*`cudaErrorInvalidPtx`*                        |                                                      | A PTX compilation failed. The runtime may fall back to compiling PTX if an application does not contain a suitable binary for the current device.|
-|           79 |*`cudaErrorInvalidGraphicsContext`*            |                                                      | This indicates an error with the OpenGL or DirectX context.                                                                    |
-|         0x7f |*`cudaErrorStartupFailure`*                    |                                                      | This indicates an internal startup failure in the CUDA runtime.                                                                |
-|         1000 |*`cudaErrorApiFailureBase`*                    |                                                      | Any unhandled CUDA driver error is added to this value and returned via the runtime. Production releases of CUDA should not return such errors. Deprecated This error return is deprecated as of CUDA 4.1.|
-| enum         |***`cudaFuncCache`***                          |***`hipFuncCache_t`***                                | CUDA function cache configurations.                                                                                            |
-|            0 |*`cudaFuncCachePreferNone`*                    |*`hipFuncCachePreferNone`*                            | Default function cache configuration, no preference.                                                                           |
-|            1 |*`cudaFuncCachePreferShared`*                  |*`hipFuncCachePreferShared`*                          | Prefer larger shared memory and smaller L1 cache.                                                                              |
-|            2 |*`cudaFuncCachePreferL1`*                      |*`hipFuncCachePreferL1`*                              | Prefer larger L1 cache and smaller shared memory.                                                                              |
-|            3 |*`cudaFuncCachePreferEqual`*                   |*`hipFuncCachePreferEqual`*                           | Prefer equal size L1 cache and shared memory.                                                                                  |
-| enum         |***`cudaGraphicsCubeFace`***                   |                                                      | CUDA graphics interop array indices for cube maps.                                                                             |
-|         0x00 |*`cudaGraphicsCubeFacePositiveX`*              |                                                      | Positive X face of cubemap.                                                                                                    |
-|         0x01 |*`cudaGraphicsCubeFaceNegativeX`*              |                                                      | Negative X face of cubemap.                                                                                                    |
-|         0x02 |*`cudaGraphicsCubeFacePositiveY`*              |                                                      | Positive Y face of cubemap.                                                                                                    |
-|         0x03 |*`cudaGraphicsCubeFaceNegativeY`*              |                                                      | Negative Y face of cubemap.                                                                                                    |
-|         0x04 |*`cudaGraphicsCubeFacePositiveZ`*              |                                                      | Positive Z face of cubemap.                                                                                                    |
-|         0x05 |*`cudaGraphicsCubeFaceNegativeZ`*              |                                                      | Negative Z face of cubemap.                                                                                                    |
-| enum         |***`cudaGraphicsMapFlags`***                   |                                                      | CUDA graphics interop map flags.                                                                                               |
-|            0 |*`cudaGraphicsMapFlagsNone`*                   |                                                      | Default; Assume resource can be read/written.                                                                                  |
-|            1 |*`cudaGraphicsMapFlagsReadOnly`*               |                                                      | CUDA will not write to this resource.                                                                                          |
-|            2 |*`cudaGraphicsMapFlagsWriteDiscard`*           |                                                      | CUDA will only write to and will not read from this resource.                                                                  |
-| enum         |***`cudaGraphicsRegisterFlags`***              |                                                      | CUDA graphics interop register flags.                                                                                          |
-|            0 |*`cudaGraphicsRegisterFlagsNone`*              |                                                      | Default.                                                                                                                       |
-|            1 |*`cudaGraphicsRegisterFlagsReadOnly`*          |                                                      | CUDA will not write to this resource.                                                                                          |
-|            2 |*`cudaGraphicsRegisterFlagsWriteDiscard`*      |                                                      | CUDA will only write to and will not read from this resource.                                                                  |
-|            4 |*`cudaGraphicsRegisterFlagsSurfaceLoadStore`*  |                                                      | CUDA will bind this resource to a surface reference.                                                                           |
-|            8 |*`cudaGraphicsRegisterFlagsTextureGather`*     |                                                      | CUDA will perform texture gather operations on this resource.                                                                  |
-| enum         |***`cudaLimit`***                              |***`hipLimit_t`***                                    | CUDA Limits.                                                                                                                   |
-|         0x00 |*`cudaLimitStackSize`*                         |                                                      | GPU thread stack size.                                                                                                         |
-|         0x01 |*`cudaLimitPrintfFifoSize`*                    |                                                      | GPU printf/fprintf FIFO size.                                                                                                  |
-|         0x02 |*`cudaLimitMallocHeapSize`*                    |*`hipLimitMallocHeapSize`*                            | GPU malloc heap size.                                                                                                          |
-|         0x03 |*`cudaLimitDevRuntimeSyncDepth`*               |                                                      | GPU device runtime synchronize depth.                                                                                          |
-|         0x04 |*`cudaLimitDevRuntimePendingLaunchCount`*      |                                                      | GPU device runtime pending launch count.                                                                                       |
-| enum         |***`cudaMemcpyKind`***                         |***`hipMemcpyKind`***                                 | CUDA memory copy types.                                                                                                        |
-|            0 |*`cudaMemcpyHostToHost`*                       |*`hipMemcpyHostToHost`*                               | Host -> Host.                                                                                                                  |
-|            1 |*`cudaMemcpyHostToDevice`*                     |*`hipMemcpyHostToDevice`*                             | Host -> Device.                                                                                                                |
-|            2 |*`cudaMemcpyDeviceToHost`*                     |*`hipMemcpyDeviceToHost`*                             | Device -> Host.                                                                                                                |
-|            3 |*`cudaMemcpyDeviceToDevice`*                   |*`hipMemcpyDeviceToDevice`*                           | Device -> Device.                                                                                                              |
-|            4 |*`cudaMemcpyDefault`*                          |*`hipMemcpyDefault`*                                  | Default based unified virtual address space.                                                                                   |
-| enum         |***`cudaMemoryType`***                         |***`hipMemoryType`***                                 | CUDA memory types.                                                                                                             |
-|            1 |*`cudaMemoryTypeHost`*                         |*`hipMemoryTypeHost`*                                 | Host memory.                                                                                                                   |
-|            2 |*`cudaMemoryTypeDevice`*                       |*`hipMemoryTypeDevice`*                               | Device memory.                                                                                                                 |
-| enum         |***`cudaResourceType`***                       |                                                      | CUDA resource types.                                                                                                           |
-|            0 |*`cudaResourceTypeArray`*                      |                                                      | Array resource.                                                                                                                |
-|            1 |*`cudaResourceTypeMipmappedArray`*             |                                                      | Mipmapped array resource.                                                                                                      |
-|            2 |*`cudaResourceTypeLinear`*                     |                                                      | Linear resource.                                                                                                               |
-|            3 |*`cudaResourceTypePitch2D`*                    |                                                      | Pitch 2D resource.                                                                                                             |
-| enum         |***`cudaResourceViewFormat`***                 |                                                      | CUDA texture resource view formats.                                                                                            |
-|         0x00 |*`cudaResViewFormatNone`*                      |                                                      | No resource view format (use underlying resource format).                                                                      |
-|         0x01 |*`cudaResViewFormatUnsignedChar1`*             |                                                      | 1 channel unsigned 8-bit integers.                                                                                             |
-|         0x02 |*`cudaResViewFormatUnsignedChar2`*             |                                                      | 2 channel unsigned 8-bit integers.                                                                                             |
-|         0x03 |*`cudaResViewFormatUnsignedChar4`*             |                                                      | 4 channel unsigned 8-bit integers.                                                                                             |
-|         0x04 |*`cudaResViewFormatSignedChar1`*               |                                                      | 1 channel signed 8-bit integers.                                                                                               |
-|         0x05 |*`cudaResViewFormatSignedChar2`*               |                                                      | 2 channel signed 8-bit integers.                                                                                               |
-|         0x06 |*`cudaResViewFormatSignedChar4`*               |                                                      | 4 channel signed 8-bit integers.                                                                                               |
-|         0x07 |*`cudaResViewFormatUnsignedShort1`*            |                                                      | 1 channel unsigned 16-bit integers.                                                                                            |
-|         0x08 |*`cudaResViewFormatUnsignedShort2`*            |                                                      | 2 channel unsigned 16-bit integers.                                                                                            |
-|         0x09 |*`cudaResViewFormatUnsignedShort4`*            |                                                      | 4 channel unsigned 16-bit integers.                                                                                            |
-|         0x0a |*`cudaResViewFormatSignedShort1`*              |                                                      | 1 channel signed 16-bit integers.                                                                                              |
-|         0x0b |*`cudaResViewFormatSignedShort2`*              |                                                      | 2 channel signed 16-bit integers.                                                                                              |
-|         0x0c |*`cudaResViewFormatSignedShort4`*              |                                                      | 4 channel signed 16-bit integers.                                                                                              |
-|         0x0d |*`cudaResViewFormatUnsignedInt1`*              |                                                      | 1 channel unsigned 32-bit integers.                                                                                            |
-|         0x0e |*`cudaResViewFormatUnsignedInt2`*              |                                                      | 2 channel unsigned 32-bit integers.                                                                                            |
-|         0x0f |*`cudaResViewFormatUnsignedInt4`*              |                                                      | 4 channel unsigned 32-bit integers.                                                                                            |
-|         0x10 |*`cudaResViewFormatSignedInt1`*                |                                                      | 1 channel signed 32-bit integers.                                                                                              |
-|         0x11 |*`cudaResViewFormatSignedInt2`*                |                                                      | 2 channel signed 32-bit integers.                                                                                              |
-|         0x12 |*`cudaResViewFormatSignedInt4`*                |                                                      | 4 channel signed 32-bit integers.                                                                                              |
-|         0x13 |*`cudaResViewFormatHalf1`*                     |                                                      | 1 channel 16-bit floating point.                                                                                               |
-|         0x14 |*`cudaResViewFormatHalf2`*                     |                                                      | 2 channel 16-bit floating point.                                                                                               |
-|         0x15 |*`cudaResViewFormatHalf4`*                     |                                                      | 4 channel 16-bit floating point.                                                                                               |
-|         0x16 |*`cudaResViewFormatFloat1`*                    |                                                      | 1 channel 32-bit floating point.                                                                                               |
-|         0x17 |*`cudaResViewFormatFloat2`*                    |                                                      | 2 channel 32-bit floating point.                                                                                               |
-|         0x18 |*`cudaResViewFormatFloat4`*                    |                                                      | 4 channel 32-bit floating point.                                                                                               |
-|         0x19 |*`cudaResViewFormatUnsignedBlockCompressed1`*  |                                                      | Block compressed 1.                                                                                                            |
-|         0x1a |*`cudaResViewFormatUnsignedBlockCompressed2`*  |                                                      | Block compressed 2.                                                                                                            |
-|         0x1b |*`cudaResViewFormatUnsignedBlockCompressed3`*  |                                                      | Block compressed 3.                                                                                                            |
-|         0x1c |*`cudaResViewFormatUnsignedBlockCompressed4`*  |                                                      | Block compressed 4 unsigned.                                                                                                   |
-|         0x1d |*`cudaResViewFormatSignedBlockCompressed4`*    |                                                      | Block compressed 4 signed.                                                                                                     |
-|         0x1e |*`cudaResViewFormatUnsignedBlockCompressed5`*  |                                                      | Block compressed 5 unsigned.                                                                                                   |
-|         0x1f |*`cudaResViewFormatSignedBlockCompressed5`*    |                                                      | Block compressed 5 signed.                                                                                                     |
-|         0x20 |*`cudaResViewFormatUnsignedBlockCompressed6H`* |                                                      | Block compressed 6 unsigned half-float.                                                                                        |
-|         0x21 |*`cudaResViewFormatSignedBlockCompressed6H`*   |                                                      | Block compressed 6 signed half-float.                                                                                          |
-|         0x22 |*`cudaResViewFormatUnsignedBlockCompressed7`*  |                                                      | Block compressed 7.                                                                                                            |
-| enum         |***`cudaSharedMemConfig`***                    |***`hipSharedMemConfig`***                            | CUDA shared memory configuration.                                                                                              |
-|            0 |*`cudaSharedMemBankSizeDefault`*               |*`hipSharedMemBankSizeDefault`*                       |                                                                                                                                |
-|            1 |*`cudaSharedMemBankSizeFourByte`*              |*`hipSharedMemBankSizeFourByte`*                      |                                                                                                                                |
-|            2 |*`cudaSharedMemBankSizeEightByte`*             |*`hipSharedMemBankSizeEightByte`*                     |                                                                                                                                |
-| enum         |***`cudaSurfaceBoundaryMode`***                |                                                      | CUDA Surface boundary modes.                                                                                                   |
-|            0 |*`cudaBoundaryModeZero`*                       |                                                      | Zero boundary mode.                                                                                                            |
-|            1 |*`cudaBoundaryModeClamp`*                      |                                                      | Clamp boundary mode.                                                                                                           |
-|            2 |*`cudaBoundaryModeTrap`*                       |                                                      | Trap boundary mode.                                                                                                            |
-| enum         |***`cudaSurfaceFormatMode`***                  |                                                      | CUDA Surface format modes.                                                                                                     |
-|            0 |*`cudaFormatModeForced`*                       |                                                      | Forced format mode.                                                                                                            |
-|            1 |*`cudaFormatModeAuto`*                         |                                                      | Auto format mode.                                                                                                              |
-| enum         |***`cudaTextureAddressMode`***                 |                                                      | CUDA texture address modes.                                                                                                    |
-|            0 |*`cudaAddressModeWrap`*                        |                                                      | Wrapping address mode.                                                                                                         |
-|            1 |*`cudaAddressModeClamp`*                       |                                                      | Clamp to edge address mode.                                                                                                    |
-|            2 |*`cudaAddressModeMirror`*                      |                                                      | Mirror address mode.                                                                                                           |
-|            3 |*`cudaAddressModeBorder`*                      |                                                      | Border address mode.                                                                                                           |
-| enum         |***`cudaTextureFilterMode`***                  |***`hipTextureFilterMode`***                          | Point filter mode.                                                                                                             |
-|            0 |*`cudaFilterModePoint`*                        |*`hipFilterModePoint`*                                | Linear filter mode.                                                                                                            |
-|            1 |*`cudaFilterModeLinear`*                       |                                                      | Clamp to edge address mode.                                                                                                    |
-| enum         |***`cudaTextureReadMode`***                    |***`hipTextureReadMode`***                            | CUDA texture read modes.                                                                                                       |
-|            0 |*`cudaReadModeElementType`*                    |*`hipReadModeElementType`*                            | Read texture as specified element type.                                                                                        |
-|            1 |*`cudaReadModeNormalizedFloat`*                |                                                      | Read texture as normalized float.                                                                                              |
-| struct       | `cudaArray`                                   | `hipArray`                                           | CUDA array [opaque].                                                                                                           |
-| typedef      | `cudaArray_t`                                 | `hipArray *`                                         | CUDA array pointer.                                                                                                            |
-| typedef      | `cudaArray_const_t`                           | `const hipArray *`                                   | CUDA array (as source copy argument).                                                                                          |
-| enum         | `cudaError`                                   | `hipError_t`                                         | CUDA Error types.                                                                                                              |
-| typedef      | `cudaError_t`                                 | `hipError_t`                                         | CUDA Error types.                                                                                                              |
-| typedef      | `cudaEvent_t`                                 | `hipEvent_t`                                         | CUDA event types.                                                                                                              |
-| typedef      | `cudaGraphicsResource_t`                      |                                                      | CUDA graphics resource types.                                                                                                  |
-| typedef      | `cudaMipmappedArray_t`                        |                                                      | CUDA mipmapped array.                                                                                                          |
-| typedef      | `cudaMipmappedArray_const_t`                  |                                                      | CUDA mipmapped array (as source argument).                                                                                     |
-| enum         |***`cudaOutputMode`***                         |                                                      | CUDA Profiler Output modes.                                                                                                    |
-|         0x00 |*`cudaKeyValuePair`*                           |                                                      | Output mode Key-Value pair format.                                                                                             |
-|         0x01 |*`cudaCSV`*                                    |                                                      | Output mode Comma separated values format.                                                                                     |
-| typedef      | `cudaOutputMode_t`                            |                                                      | CUDA output file modes.                                                                                                        |
-| typedef      | `cudaStream_t`                                | `hipStream_t`                                        | CUDA stream.                                                                                                                   |
-| typedef      | `cudaSurfaceObject_t`                         |                                                      | An opaque value that represents a CUDA Surface object.                                                                         |
-| typedef      | `cudaTextureObject_t`                         |                                                      | An opaque value that represents a CUDA texture object.                                                                         |
-| typedef      | `CUuuid_stcudaUUID_t`                         |                                                      | CUDA UUID types.                                                                                                               |
-| define       | `CUDA_IPC_HANDLE_SIZE`                        |                                                      | CUDA IPC Handle Size.                                                                                                          |
-| define       | `cudaArrayCubemap`                            |                                                      | Must be set in cudaMalloc3DArray to create a cubemap CUDA array.                                                               |
-| define       | `cudaArrayDefault`                            |                                                      | Default CUDA array allocation flag.                                                                                            |
-| define       | `cudaArrayLayered`                            |                                                      | Must be set in cudaMalloc3DArray to create a layered CUDA array.                                                               |
-| define       | `cudaArraySurfaceLoadStore`                   |                                                      | Must be set in cudaMallocArray or cudaMalloc3DArray in order to bind surfaces to the CUDA array.                               |
-| define       | `cudaArrayTextureGather`                      |                                                      | Must be set in cudaMallocArray or cudaMalloc3DArray in order to perform texture gather operations on the CUDA array.           |
-| define       | `cudaDeviceBlockingSync`                      | `hipDeviceScheduleBlockingSync`                      | Device flag - Use blocking synchronization. Deprecated as of CUDA 4.0 and replaced with cudaDeviceScheduleBlockingSync.        |
-| define       | `cudaDeviceLmemResizeToMax`                   |                                                      | Device flag - Keep local memory allocation after launch.                                                                       |
-| define       | `cudaDeviceMapHost`                           |                                                      | Device flag - Support mapped pinned allocations.                                                                               |
-| define       | `cudaDeviceMask`                              |                                                      | Device flags mask.                                                                                                             |
-| define       | `cudaDevicePropDontCare`                      |                                                      | Empty device properties.                                                                                                       |
-| define       | `cudaDeviceScheduleAuto`                      | `hipDeviceScheduleAuto`                              | Device flag - Automatic scheduling.                                                                                            |
-| define       | `cudaDeviceScheduleBlockingSync`              | `hipDeviceScheduleBlockingSync`                      | Device flag - Use blocking synchronization.                                                                                    |
-| define       | `cudaDeviceScheduleMask`                      | `hipDeviceScheduleMask`                              | Device schedule flags mask.                                                                                                    |
-| define       | `cudaDeviceScheduleSpin`                      | `hipDeviceScheduleSpin`                              | Device flag - Spin default scheduling.                                                                                         |
-| define       | `cudaDeviceScheduleYield`                     | `hipDeviceScheduleYield`                             | Device flag - Yield default scheduling.                                                                                        |
-| define       | `cudaEventDefault`                            | `hipEventDefault`                                    | Default event flag.                                                                                                            |
-| define       | `cudaEventDisableTiming`                      | `hipEventDisableTiming`                              | Event will not record timing data.                                                                                             |
-| define       | `cudaEventInterprocess`                       | `hipEventInterprocess`                               | Event is suitable for interprocess use. cudaEventDisableTiming must be set.                                                    |
-| define       | `cudaHostAllocDefault`                        | `hipHostMallocDefault`                               | Default page-locked allocation flag.                                                                                           |
-| define       | `cudaHostAllocMapped`                         | `hipHostMallocMapped`                                | Map allocation into device space.                                                                                              |
-| define       | `cudaHostAllocPortable`                       | `hipHostMallocPortable`                              | Pinned memory accessible by all CUDA contexts.                                                                                 |
-| define       | `cudaHostAllocWriteCombined`                  | `hipHostMallocWriteCombined`                         | Write-combined memory.                                                                                                         |
-| define       | `cudaHostRegisterDefault`                     | `hipHostRegisterDefault`                             | Default host memory registration flag.                                                                                         |
-| define       | `cudaHostRegisterIoMemory`                    | `hipHostRegisterIoMemory`                            | Memory-mapped I/O space.                                                                                                       |
-| define       | `cudaHostRegisterMapped`                      | `hipHostRegisterMapped`                              | Map registered memory into device space.                                                                                       |
-| define       | `cudaHostRegisterPortable`                    | `hipHostRegisterPortable`                            | Pinned memory accessible by all CUDA contexts.                                                                                 |
-| define       | `cudaIpcMemLazyEnablePeerAccess`              | `hipIpcMemLazyEnablePeerAccess`                      | Automatically enable peer access between remote devices as needed.                                                             |
-| define       | `cudaMemAttachGlobal`                         |                                                      | Memory can be accessed by any stream on any device.                                                                            |
-| define       | `cudaMemAttachHost`                           |                                                      | Memory cannot be accessed by any stream on any device.                                                                         |
-| define       | `cudaMemAttachSingle`                         |                                                      | Memory can only be accessed by a single stream on the associated device.                                                       |
-| define       | `cudaOccupancyDefault`                        |                                                      | Default behavior.                                                                                                              |
-| define       | `cudaOccupancyDisableCachingOverride`         |                                                      | Assume global caching is enabled and cannot be automatically turned off.                                                       |
-| define       | `cudaPeerAccessDefault`                       |                                                      | Default peer addressing enable flag.                                                                                           |
-| define       | `cudaStreamDefault`                           | `hipStreamDefault`                                   | Default stream flag.                                                                                                           |
-| define       | `cudaStreamLegacy`                            |                                                      | Default stream flag.                                                                                                           |
-| define       | `cudaStreamNonBlocking`                       | `hipStreamNonBlocking`                               | Stream does not synchronize with stream 0 (the NULL stream).                                                                   |
-| define       | `cudaStreamPerThread`                         |                                                      | Per-thread stream handle.                                                                                                      |
+| **type**     |   **CUDA**                                    |   **HIP**                                            |
+|-------------:|-----------------------------------------------|------------------------------------------------------|
+| struct       | `cudaChannelFormatDesc`                       | `hipChannelFormatDesc`                               |
+| struct       | `cudaDeviceProp`                              | `hipDeviceProp_t`                                    |
+| struct       | `cudaExtent`                                  |                                                      |
+| struct       | `cudaFuncAttributes`                          |                                                      |
+| struct       | `cudaIpcEventHandle_t`                        | `hipIpcEventHandle_t`                                |
+| struct       | `cudaIpcMemHandle_t`                          | `hipIpcMemHandle_t`                                  |
+| struct       | `cudaMemcpy3DParms`                           |                                                      |
+| struct       | `cudaMemcpy3DPeerParms`                       |                                                      |
+| struct       | `cudaPitchedPtr`                              |                                                      |
+| struct       | `cudaPointerAttributes`                       | `hipPointerAttribute_t`                              |
+| struct       | `cudaPos`                                     |                                                      |
+| struct       | `cudaResourceDesc`                            |                                                      |
+| struct       | `cudaResourceViewDesc`                        |                                                      |
+| struct       | `cudaTextureDesc`                             |                                                      |
+| struct       | `surfaceReference`                            |                                                      |
+| struct       | `textureReference`                            | `textureReference`                                   |
+| enum         |***`cudaChannelFormatKind`***                  |***`hipChannelFormatKind`***                          |
+|            0 |*`cudaChannelFormatKindSigned`*                |*`hipChannelFormatKindSigned`*                        |
+|            1 |*`cudaChannelFormatKindUnsigned`*              |*`hipChannelFormatKindUnsigned`*                      |
+|            2 |*`cudaChannelFormatKindFloat`*                 |*`hipChannelFormatKindFloat`*                         |
+|            3 |*`cudaChannelFormatKindNone`*                  |*`hipChannelFormatKindNone`*                          |
+| enum         |***`cudaComputeMode`***                        |                                                      |
+|            0 |*`cudaComputeModeDefault`*                     |                                                      |
+|            1 |*`cudaComputeModeExclusive`*                   |                                                      |
+|            2 |*`cudaComputeModeProhibited`*                  |                                                      |
+|            3 |*`cudaComputeModeExclusiveProcess`*            |                                                      |
+| enum         |***`cudaDeviceAttr`***                         |***`hipDeviceAttribute_t`***                          |
+|            1 |*`cudaDevAttrMaxThreadsPerBlock`*              |*`hipDeviceAttributeMaxThreadsPerBlock`*              |
+|            2 |*`cudaDevAttrMaxBlockDimX`*                    |*`hipDeviceAttributeMaxBlockDimX`*                    |
+|            3 |*`cudaDevAttrMaxBlockDimY`*                    |*`hipDeviceAttributeMaxBlockDimY`*                    |
+|            4 |*`cudaDevAttrMaxBlockDimZ`*                    |*`hipDeviceAttributeMaxBlockDimZ`*                    |
+|            5 |*`cudaDevAttrMaxGridDimX`*                     |*`hipDeviceAttributeMaxGridDimX`*                     |
+|            6 |*`cudaDevAttrMaxGridDimY`*                     |*`hipDeviceAttributeMaxGridDimY`*                     |
+|            7 |*`cudaDevAttrMaxGridDimZ`*                     |*`hipDeviceAttributeMaxGridDimZ`*                     |
+|            8 |*`cudaDevAttrMaxSharedMemoryPerBlock`*         |*`hipDeviceAttributeMaxSharedMemoryPerBlock`*         |
+|            9 |*`cudaDevAttrTotalConstantMemory`*             |*`hipDeviceAttributeTotalConstantMemory`*             |
+|           10 |*`cudaDevAttrWarpSize`*                        |*`hipDeviceAttributeWarpSize`*                        |
+|           11 |*`cudaDevAttrMaxPitch`*                        |                                                      |
+|           12 |*`cudaDevAttrMaxRegistersPerBlock`*            |*`hipDeviceAttributeMaxRegistersPerBlock`*            |
+|           13 |*`cudaDevAttrClockRate`*                       |*`hipDeviceAttributeClockRate`*                       |
+|           14 |*`cudaDevAttrTextureAlignment`*                |                                                      |
+|           15 |*`cudaDevAttrGpuOverlap`*                      |                                                      |
+|           16 |*`cudaDevAttrMultiProcessorCount`*             |*`hipDeviceAttributeMultiprocessorCount`*             |
+|           17 |*`cudaDevAttrKernelExecTimeout`*               |                                                      |
+|           18 |*`cudaDevAttrIntegrated`*                      |                                                      |
+|           19 |*`cudaDevAttrCanMapHostMemory`*                |                                                      |
+|           20 |*`cudaDevAttrComputeMode`*                     |*`hipDeviceAttributeComputeMode`*                     |
+|           21 |*`cudaDevAttrMaxTexture1DWidth`*               |                                                      |
+|           22 |*`cudaDevAttrMaxTexture2DWidth`*               |                                                      |
+|           23 |*`cudaDevAttrMaxTexture2DHeight`*              |                                                      |
+|           24 |*`cudaDevAttrMaxTexture3DWidth`*               |                                                      |
+|           25 |*`cudaDevAttrMaxTexture3DHeight`*              |                                                      |
+|           26 |*`cudaDevAttrMaxTexture3DDepth`*               |                                                      |
+|           27 |*`cudaDevAttrMaxTexture2DLayeredWidth`*        |                                                      |
+|           28 |*`cudaDevAttrMaxTexture2DLayeredHeight`*       |                                                      |
+|           29 |*`cudaDevAttrMaxTexture2DLayeredLayers`*       |                                                      |
+|           30 |*`cudaDevAttrSurfaceAlignment`*                |                                                      |
+|           31 |*`cudaDevAttrConcurrentKernels`*               |*`hipDeviceAttributeConcurrentKernels`*               |
+|           32 |*`cudaDevAttrEccEnabled`*                      |                                                      |
+|           33 |*`cudaDevAttrPciBusId`*                        |*`hipDeviceAttributePciBusId`*                        |
+|           34 |*`cudaDevAttrPciDeviceId`*                     |*`hipDeviceAttributePciDeviceId`*                     |
+|           35 |*`cudaDevAttrTccDriver`*                       |                                                      |
+|           36 |*`cudaDevAttrMemoryClockRate`*                 |*`hipDeviceAttributeMemoryClockRate`*                 |
+|           37 |*`cudaDevAttrGlobalMemoryBusWidth`*            |*`hipDeviceAttributeMemoryBusWidth`*                  |
+|           38 |*`cudaDevAttrL2CacheSize`*                     |*`hipDeviceAttributeL2CacheSize`*                     |
+|           39 |*`cudaDevAttrMaxThreadsPerMultiProcessor`*     |*`hipDeviceAttributeMaxThreadsPerMultiProcessor`*     |
+|           40 |*`cudaDevAttrAsyncEngineCount`*                |                                                      |
+|           41 |*`cudaDevAttrUnifiedAddressing`*               |                                                      |
+|           42 |*`cudaDevAttrMaxTexture1DLayeredWidth`*        |                                                      |
+|           43 |*`cudaDevAttrMaxTexture1DLayeredLayers`*       |                                                      |
+|           44 |                                               |                                                      |
+|           45 |*`cudaDevAttrMaxTexture2DGatherWidth`*         |                                                      |
+|           46 |*`cudaDevAttrMaxTexture2DGatherHeight`*        |                                                      |
+|           47 |*`cudaDevAttrMaxTexture3DWidthAlt`*            |                                                      |
+|           48 |*`cudaDevAttrMaxTexture3DHeightAlt`*           |                                                      |
+|           49 |*`cudaDevAttrMaxTexture3DDepthAlt`*            |                                                      |
+|           50 |*`cudaDevAttrPciDomainId`*                     |                                                      |
+|           51 |*`cudaDevAttrTexturePitchAlignment`*           |                                                      |
+|           52 |*`cudaDevAttrMaxTextureCubemapWidth`*          |                                                      |
+|           53 |*`cudaDevAttrMaxTextureCubemapLayeredWidth`*   |                                                      |
+|           54 |*`cudaDevAttrMaxTextureCubemapLayeredLayers`*  |                                                      |
+|           55 |*`cudaDevAttrMaxSurface1DWidth`*               |                                                      |
+|           56 |*`cudaDevAttrMaxSurface2DWidth`*               |                                                      |
+|           57 |*`cudaDevAttrMaxSurface2DHeight`*              |                                                      |
+|           58 |*`cudaDevAttrMaxSurface3DWidth`*               |                                                      |
+|           59 |*`cudaDevAttrMaxSurface3DHeight`*              |                                                      |
+|           60 |*`cudaDevAttrMaxSurface3DDepth`*               |                                                      |
+|           61 |*`cudaDevAttrMaxSurface1DLayeredWidth`*        |                                                      |
+|           62 |*`cudaDevAttrMaxSurface1DLayeredLayers`*       |                                                      |
+|           63 |*`cudaDevAttrMaxSurface2DLayeredWidth`*        |                                                      |
+|           64 |*`cudaDevAttrMaxSurface2DLayeredHeight`*       |                                                      |
+|           65 |*`cudaDevAttrMaxSurface2DLayeredLayers`*       |                                                      |
+|           66 |*`cudaDevAttrMaxSurfaceCubemapWidth`*          |                                                      |
+|           67 |*`cudaDevAttrMaxSurfaceCubemapLayeredWidth`*   |                                                      |
+|           68 |*`cudaDevAttrMaxSurfaceCubemapLayeredLayers`*  |                                                      |
+|           69 |*`cudaDevAttrMaxTexture1DLinearWidth`*         |                                                      |
+|           70 |*`cudaDevAttrMaxTexture2DLinearWidth`*         |                                                      |
+|           71 |*`cudaDevAttrMaxTexture2DLinearHeight`*        |                                                      |
+|           72 |*`cudaDevAttrMaxTexture2DLinearPitch`*         |                                                      |
+|           73 |*`cudaDevAttrMaxTexture2DMipmappedWidth`*      |                                                      |
+|           74 |*`cudaDevAttrMaxTexture2DMipmappedHeight`*     |                                                      |
+|           75 |*`cudaDevAttrComputeCapabilityMajor`*          |*`hipDeviceAttributeComputeCapabilityMajor`*          |
+|           76 |*`cudaDevAttrComputeCapabilityMinor`*          |*`hipDeviceAttributeComputeCapabilityMinor`*          |
+|           77 |*`cudaDevAttrMaxTexture1DMipmappedWidth`*      |                                                      |
+|           78 |*`cudaDevAttrStreamPrioritiesSupported`*       |                                                      |
+|           79 |*`cudaDevAttrGlobalL1CacheSupported`*          |                                                      |
+|           80 |*`cudaDevAttrLocalL1CacheSupported`*           |                                                      |
+|           81 |*`cudaDevAttrMaxSharedMemoryPerMultiprocessor`*|*`hipDeviceAttributeMaxSharedMemoryPerMultiprocessor`*|
+|           82 |*`cudaDevAttrMaxRegistersPerMultiprocessor`*   |                                                      |
+|           83 |*`cudaDevAttrManagedMemory`*                   |                                                      |
+|           84 |*`cudaDevAttrIsMultiGpuBoard`*                 |*`hipDeviceAttributeIsMultiGpuBoard`*                 |
+|           85 |*`cudaDevAttrMultiGpuBoardGroupID`*            |                                                      |
+| enum         |***`cudaError`***                              |***`hipError_t`***                                    |
+| enum         |***`cudaError_t`***                            |***`hipError_t`***                                    |
+|            0 |*`cudaSuccess`*                                |*`hipSuccess`*                                        |
+|            1 |*`cudaErrorMissingConfiguration`*              |                                                      |
+|            2 |*`cudaErrorMemoryAllocation`*                  |*`hipErrorMemoryAllocation`*                          |
+|            3 |*`cudaErrorInitializationError`*               |*`hipErrorInitializationError`*                       |
+|            4 |*`cudaErrorLaunchFailure`*                     |                                                      |
+|            5 |*`cudaErrorPriorLaunchFailure`*                |                                                      |
+|            6 |*`cudaErrorLaunchTimeout`*                     |                                                      |
+|            7 |*`cudaErrorLaunchOutOfResources`*              |*`hipErrorLaunchOutOfResources`*                      |
+|            8 |*`cudaErrorInvalidDeviceFunction`*             |                                                      |
+|            9 |*`cudaErrorInvalidConfiguration`*              |                                                      |
+|           10 |*`cudaErrorInvalidDevice`*                     |*`hipErrorInvalidDevice`*                             |
+|           11 |*`cudaErrorInvalidValue`*                      |*`hipErrorInvalidValue`*                              |
+|           12 |*`cudaErrorInvalidPitchValue`*                 |                                                      |
+|           13 |*`cudaErrorInvalidSymbol`*                     |                                                      |
+|           14 |*`cudaErrorMapBufferObjectFailed`*             |                                                      |
+|           15 |*`cudaErrorUnmapBufferObjectFailed`*           |                                                      |
+|           16 |*`cudaErrorInvalidHostPointer`*                |                                                      |
+|           17 |*`cudaErrorInvalidDevicePointer`*              |*`hipErrorInvalidDevicePointer`*                      |
+|           18 |*`cudaErrorInvalidTexture`*                    |                                                      |
+|           19 |*`cudaErrorInvalidTextureBinding`*             |                                                      |
+|           20 |*`cudaErrorInvalidChannelDescriptor`*          |                                                      |
+|           21 |*`cudaErrorInvalidMemcpyDirection`*            |                                                      |
+|           22 |*`cudaErrorAddressOfConstant`*                 |                                                      |
+|           23 |*`cudaErrorTextureFetchFailed`*                |                                                      |
+|           24 |*`cudaErrorTextureNotBound`*                   |                                                      |
+|           25 |*`cudaErrorSynchronizationError`*              |                                                      |
+|           26 |*`cudaErrorInvalidFilterSetting`*              |                                                      |
+|           27 |*`cudaErrorInvalidNormSetting`*                |                                                      |
+|           28 |*`cudaErrorMixedDeviceExecution`*              |                                                      |
+|           29 |*`cudaErrorCudartUnloading`*                   |                                                      |
+|           30 |*`cudaErrorUnknown`*                           |*`hipErrorUnknown`*                                   |
+|           31 |*`cudaErrorNotYetImplemented`*                 |                                                      |
+|           32 |*`cudaErrorMemoryValueTooLarge`*               |                                                      |
+|           33 |*`cudaErrorInvalidResourceHandle`*             |*`hipErrorInvalidResourceHandle`*                     |
+|           34 |*`cudaErrorNotReady`*                          |*`hipErrorNotReady`*                                  |
+|           35 |*`cudaErrorInsufficientDriver`*                |                                                      |
+|           36 |*`cudaErrorSetOnActiveProcess`*                |                                                      |
+|           37 |*`cudaErrorInvalidSurface`*                    |                                                      |
+|           38 |*`cudaErrorNoDevice`*                          |*`hipErrorNoDevice`*                                  |
+|           39 |*`cudaErrorECCUncorrectable`*                  |                                                      |
+|           40 |*`cudaErrorSharedObjectSymbolNotFound`*        |                                                      |
+|           41 |*`cudaErrorSharedObjectInitFailed`*            |                                                      |
+|           42 |*`cudaErrorUnsupportedLimit`*                  |*`hipErrorUnsupportedLimit`*                          |
+|           43 |*`cudaErrorDuplicateVariableName`*             |                                                      |
+|           44 |*`cudaErrorDuplicateTextureName`*              |                                                      |
+|           45 |*`cudaErrorDuplicateSurfaceName`*              |                                                      |
+|           46 |*`cudaErrorDevicesUnavailable`*                |                                                      |
+|           47 |*`cudaErrorInvalidKernelImage`*                |                                                      |
+|           48 |*`cudaErrorNoKernelImageForDevice`*            |                                                      |
+|           49 |*`cudaErrorIncompatibleDriverContext`*         |                                                      |
+|           50 |*`cudaErrorPeerAccessAlreadyEnabled`*          |*`hipErrorPeerAccessAlreadyEnabled`*                  |
+|           51 |*`cudaErrorPeerAccessNotEnabled`*              |*`hipErrorPeerAccessNotEnabled`*                      |
+|           52 |                                               |                                                      |
+|           53 |                                               |                                                      |
+|           54 |*`cudaErrorDeviceAlreadyInUse`*                |                                                      |
+|           55 |*`cudaErrorProfilerDisabled`*                  |                                                      |
+|           56 |*`cudaErrorProfilerNotInitialized`*            |                                                      |
+|           57 |*`cudaErrorProfilerAlreadyStarted`*            |                                                      |
+|           58 |*`cudaErrorProfilerAlreadyStopped`*            |                                                      |
+|           59 |*`cudaErrorAssert`*                            |                                                      |
+|           60 |*`cudaErrorTooManyPeers`*                      |                                                      |
+|           61 |*`cudaErrorHostMemoryAlreadyRegistered`*       | *`hipErrorHostMemoryAlreadyRegistered`*              |
+|           62 |*`cudaErrorHostMemoryNotRegistered`*           | *`hipErrorHostMemoryNotRegistered`*                  |
+|           63 |*`cudaErrorOperatingSystem`*                   |                                                      |
+|           64 |*`cudaErrorPeerAccessUnsupported`*             |                                                      |
+|           65 |*`cudaErrorLaunchMaxDepthExceeded`*            |                                                      |
+|           66 |*`cudaErrorLaunchFileScopedTex`*               |                                                      |
+|           67 |*`cudaErrorLaunchFileScopedSurf`*              |                                                      |
+|           68 |*`cudaErrorSyncDepthExceeded`*                 |                                                      |
+|           69 |*`cudaErrorLaunchPendingCountExceeded`*        |                                                      |
+|           70 |*`cudaErrorNotPermitted`*                      |                                                      |
+|           71 |*`cudaErrorNotSupported`*                      |                                                      |
+|           72 |*`cudaErrorHardwareStackError`*                |                                                      |
+|           73 |*`cudaErrorIllegalInstruction`*                |                                                      |
+|           74 |*`cudaErrorMisalignedAddress`*                 |                                                      |
+|           75 |*`cudaErrorInvalidAddressSpace`*               |                                                      |
+|           76 |*`cudaErrorInvalidPc`*                         |                                                      |
+|           77 |*`cudaErrorIllegalAddress`*                    |                                                      |
+|           78 |*`cudaErrorInvalidPtx`*                        |                                                      |
+|           79 |*`cudaErrorInvalidGraphicsContext`*            |                                                      |
+|         0x7f |*`cudaErrorStartupFailure`*                    |                                                      |
+|         1000 |*`cudaErrorApiFailureBase`*                    |                                                      |
+| enum         |***`cudaFuncCache`***                          |***`hipFuncCache_t`***                                |
+|            0 |*`cudaFuncCachePreferNone`*                    |*`hipFuncCachePreferNone`*                            |
+|            1 |*`cudaFuncCachePreferShared`*                  |*`hipFuncCachePreferShared`*                          |
+|            2 |*`cudaFuncCachePreferL1`*                      |*`hipFuncCachePreferL1`*                              |
+|            3 |*`cudaFuncCachePreferEqual`*                   |*`hipFuncCachePreferEqual`*                           |
+| enum         |***`cudaGraphicsCubeFace`***                   |                                                      |
+|         0x00 |*`cudaGraphicsCubeFacePositiveX`*              |                                                      |
+|         0x01 |*`cudaGraphicsCubeFaceNegativeX`*              |                                                      |
+|         0x02 |*`cudaGraphicsCubeFacePositiveY`*              |                                                      |
+|         0x03 |*`cudaGraphicsCubeFaceNegativeY`*              |                                                      |
+|         0x04 |*`cudaGraphicsCubeFacePositiveZ`*              |                                                      |
+|         0x05 |*`cudaGraphicsCubeFaceNegativeZ`*              |                                                      |
+| enum         |***`cudaGraphicsMapFlags`***                   |                                                      |
+|            0 |*`cudaGraphicsMapFlagsNone`*                   |                                                      |
+|            1 |*`cudaGraphicsMapFlagsReadOnly`*               |                                                      |
+|            2 |*`cudaGraphicsMapFlagsWriteDiscard`*           |                                                      |
+| enum         |***`cudaGraphicsRegisterFlags`***              |                                                      |
+|            0 |*`cudaGraphicsRegisterFlagsNone`*              |                                                      |
+|            1 |*`cudaGraphicsRegisterFlagsReadOnly`*          |                                                      |
+|            2 |*`cudaGraphicsRegisterFlagsWriteDiscard`*      |                                                      |
+|            4 |*`cudaGraphicsRegisterFlagsSurfaceLoadStore`*  |                                                      |
+|            8 |*`cudaGraphicsRegisterFlagsTextureGather`*     |                                                      |
+| enum         |***`cudaLimit`***                              |***`hipLimit_t`***                                    |
+|         0x00 |*`cudaLimitStackSize`*                         |                                                      |
+|         0x01 |*`cudaLimitPrintfFifoSize`*                    |                                                      |
+|         0x02 |*`cudaLimitMallocHeapSize`*                    |*`hipLimitMallocHeapSize`*                            |
+|         0x03 |*`cudaLimitDevRuntimeSyncDepth`*               |                                                      |
+|         0x04 |*`cudaLimitDevRuntimePendingLaunchCount`*      |                                                      |
+| enum         |***`cudaMemcpyKind`***                         |***`hipMemcpyKind`***                                 |
+|            0 |*`cudaMemcpyHostToHost`*                       |*`hipMemcpyHostToHost`*                               |
+|            1 |*`cudaMemcpyHostToDevice`*                     |*`hipMemcpyHostToDevice`*                             |
+|            2 |*`cudaMemcpyDeviceToHost`*                     |*`hipMemcpyDeviceToHost`*                             |
+|            3 |*`cudaMemcpyDeviceToDevice`*                   |*`hipMemcpyDeviceToDevice`*                           |
+|            4 |*`cudaMemcpyDefault`*                          |*`hipMemcpyDefault`*                                  |
+| enum         |***`cudaMemoryType`***                         |***`hipMemoryType`***                                 |
+|            1 |*`cudaMemoryTypeHost`*                         |*`hipMemoryTypeHost`*                                 |
+|            2 |*`cudaMemoryTypeDevice`*                       |*`hipMemoryTypeDevice`*                               |
+| enum         |***`cudaResourceType`***                       |                                                      |
+|            0 |*`cudaResourceTypeArray`*                      |                                                      |
+|            1 |*`cudaResourceTypeMipmappedArray`*             |                                                      |
+|            2 |*`cudaResourceTypeLinear`*                     |                                                      |
+|            3 |*`cudaResourceTypePitch2D`*                    |                                                      |
+| enum         |***`cudaResourceViewFormat`***                 |                                                      |
+|         0x00 |*`cudaResViewFormatNone`*                      |                                                      |
+|         0x01 |*`cudaResViewFormatUnsignedChar1`*             |                                                      |
+|         0x02 |*`cudaResViewFormatUnsignedChar2`*             |                                                      |
+|         0x03 |*`cudaResViewFormatUnsignedChar4`*             |                                                      |
+|         0x04 |*`cudaResViewFormatSignedChar1`*               |                                                      |
+|         0x05 |*`cudaResViewFormatSignedChar2`*               |                                                      |
+|         0x06 |*`cudaResViewFormatSignedChar4`*               |                                                      |
+|         0x07 |*`cudaResViewFormatUnsignedShort1`*            |                                                      |
+|         0x08 |*`cudaResViewFormatUnsignedShort2`*            |                                                      |
+|         0x09 |*`cudaResViewFormatUnsignedShort4`*            |                                                      |
+|         0x0a |*`cudaResViewFormatSignedShort1`*              |                                                      |
+|         0x0b |*`cudaResViewFormatSignedShort2`*              |                                                      |
+|         0x0c |*`cudaResViewFormatSignedShort4`*              |                                                      |
+|         0x0d |*`cudaResViewFormatUnsignedInt1`*              |                                                      |
+|         0x0e |*`cudaResViewFormatUnsignedInt2`*              |                                                      |
+|         0x0f |*`cudaResViewFormatUnsignedInt4`*              |                                                      |
+|         0x10 |*`cudaResViewFormatSignedInt1`*                |                                                      |
+|         0x11 |*`cudaResViewFormatSignedInt2`*                |                                                      |
+|         0x12 |*`cudaResViewFormatSignedInt4`*                |                                                      |
+|         0x13 |*`cudaResViewFormatHalf1`*                     |                                                      |
+|         0x14 |*`cudaResViewFormatHalf2`*                     |                                                      |
+|         0x15 |*`cudaResViewFormatHalf4`*                     |                                                      |
+|         0x16 |*`cudaResViewFormatFloat1`*                    |                                                      |
+|         0x17 |*`cudaResViewFormatFloat2`*                    |                                                      |
+|         0x18 |*`cudaResViewFormatFloat4`*                    |                                                      |
+|         0x19 |*`cudaResViewFormatUnsignedBlockCompressed1`*  |                                                      |
+|         0x1a |*`cudaResViewFormatUnsignedBlockCompressed2`*  |                                                      |
+|         0x1b |*`cudaResViewFormatUnsignedBlockCompressed3`*  |                                                      |
+|         0x1c |*`cudaResViewFormatUnsignedBlockCompressed4`*  |                                                      |
+|         0x1d |*`cudaResViewFormatSignedBlockCompressed4`*    |                                                      |
+|         0x1e |*`cudaResViewFormatUnsignedBlockCompressed5`*  |                                                      |
+|         0x1f |*`cudaResViewFormatSignedBlockCompressed5`*    |                                                      |
+|         0x20 |*`cudaResViewFormatUnsignedBlockCompressed6H`* |                                                      |
+|         0x21 |*`cudaResViewFormatSignedBlockCompressed6H`*   |                                                      |
+|         0x22 |*`cudaResViewFormatUnsignedBlockCompressed7`*  |                                                      |
+| enum         |***`cudaSharedMemConfig`***                    |***`hipSharedMemConfig`***                            |
+|            0 |*`cudaSharedMemBankSizeDefault`*               |*`hipSharedMemBankSizeDefault`*                       |
+|            1 |*`cudaSharedMemBankSizeFourByte`*              |*`hipSharedMemBankSizeFourByte`*                      |
+|            2 |*`cudaSharedMemBankSizeEightByte`*             |*`hipSharedMemBankSizeEightByte`*                     |
+| enum         |***`cudaSurfaceBoundaryMode`***                |                                                      |
+|            0 |*`cudaBoundaryModeZero`*                       |                                                      |
+|            1 |*`cudaBoundaryModeClamp`*                      |                                                      |
+|            2 |*`cudaBoundaryModeTrap`*                       |                                                      |
+| enum         |***`cudaSurfaceFormatMode`***                  |                                                      |
+|            0 |*`cudaFormatModeForced`*                       |                                                      |
+|            1 |*`cudaFormatModeAuto`*                         |                                                      |
+| enum         |***`cudaTextureAddressMode`***                 |                                                      |
+|            0 |*`cudaAddressModeWrap`*                        |                                                      |
+|            1 |*`cudaAddressModeClamp`*                       |                                                      |
+|            2 |*`cudaAddressModeMirror`*                      |                                                      |
+|            3 |*`cudaAddressModeBorder`*                      |                                                      |
+| enum         |***`cudaTextureFilterMode`***                  |***`hipTextureFilterMode`***                          |
+|            0 |*`cudaFilterModePoint`*                        |*`hipFilterModePoint`*                                |
+|            1 |*`cudaFilterModeLinear`*                       |                                                      |
+| enum         |***`cudaTextureReadMode`***                    |***`hipTextureReadMode`***                            |
+|            0 |*`cudaReadModeElementType`*                    |*`hipReadModeElementType`*                            |
+|            1 |*`cudaReadModeNormalizedFloat`*                |                                                      |
+| enum         |***`cudaGLDeviceList`***                       |                                                      |
+|         0x01 |*`cudaGLDeviceListAll`*                        |                                                      |
+|         0x02 |*`cudaGLDeviceListCurrentFrame`*               |                                                      |
+|         0x03 |*`cudaGLDeviceListNextFrame`*                  |                                                      |
+| enum         |***`cudaGLMapFlags`***                         |                                                      |
+|         0x00 |*`cudaGLMapFlagsNone`*                         |                                                      |
+|         0x01 |*`cudaGLMapFlagsReadOnly`*                     |                                                      |
+|         0x02 |*`cudaGLMapFlagsWriteDiscard`*                 |                                                      |
+| enum         |***`cudaD3D9DeviceList`***                     |                                                      |
+|            1 |*`cudaD3D9DeviceListAll`*                      |                                                      |
+|            2 |*`cudaD3D9DeviceListCurrentFrame`*             |                                                      |
+|            3 |*`cudaD3D9DeviceListNextFrame`*                |                                                      |
+| enum         |***`cudaD3D9MapFlags`***                       |                                                      |
+|            0 |*`cudaD3D9MapFlagsNone`*                       |                                                      |
+|            1 |*`cudaD3D9MapFlagsReadOnly`*                   |                                                      |
+|            2 |*`cudaD3D9MapFlagsWriteDiscard`*               |                                                      |
+| enum         |***`cudaD3D9RegisterFlags`***                  |                                                      |
+|            0 |*`cudaD3D9RegisterFlagsNone`*                  |                                                      |
+|            1 |*`cudaD3D9RegisterFlagsArray`*                 |                                                      |
+| enum         |***`cudaD3D10DeviceList`***                    |                                                      |
+|            1 |*`cudaD3D10DeviceListAll`*                     |                                                      |
+|            2 |*`cudaD3D10DeviceListCurrentFrame`*            |                                                      |
+|            3 |*`cudaD3D10DeviceListNextFrame`*               |                                                      |
+| enum         |***`cudaD3D10MapFlags`***                      |                                                      |
+|            0 |*`cudaD3D10MapFlagsNone`*                      |                                                      |
+|            1 |*`cudaD3D10MapFlagsReadOnly`*                  |                                                      |
+|            2 |*`cudaD3D10MapFlagsWriteDiscard`*              |                                                      |
+| enum         |***`cudaD3D10RegisterFlags`***                 |                                                      |
+|            0 |*`cudaD3D10RegisterFlagsNone`*                 |                                                      |
+|            1 |*`cudaD3D10RegisterFlagsArray`*                |                                                      |
+| enum         |***`cudaD3D11DeviceList`***                    |                                                      |
+|            1 |*`cudaD3D11DeviceListAll`*                     |                                                      |
+|            2 |*`cudaD3D11DeviceListCurrentFrame`*            |                                                      |
+|            3 |*`cudaD3D11DeviceListNextFrame`*               |                                                      |
+| struct       | `cudaArray`                                   | `hipArray`                                           |
+| typedef      | `cudaArray_t`                                 | `hipArray *`                                         |
+| typedef      | `cudaArray_const_t`                           | `const hipArray *`                                   |
+| enum         | `cudaError`                                   | `hipError_t`                                         |
+| typedef      | `cudaError_t`                                 | `hipError_t`                                         |
+| typedef      | `cudaEvent_t`                                 | `hipEvent_t`                                         |
+| typedef      | `cudaGraphicsResource_t`                      |                                                      |
+| typedef      | `cudaMipmappedArray_t`                        |                                                      |
+| typedef      | `cudaMipmappedArray_const_t`                  |                                                      |
+| enum         |***`cudaOutputMode`***                         |                                                      |
+|         0x00 |*`cudaKeyValuePair`*                           |                                                      |
+|         0x01 |*`cudaCSV`*                                    |                                                      |
+| typedef      | `cudaOutputMode_t`                            |                                                      |
+| typedef      | `cudaStream_t`                                | `hipStream_t`                                        |
+| typedef      | `cudaSurfaceObject_t`                         |                                                      |
+| typedef      | `cudaTextureObject_t`                         |                                                      |
+| typedef      | `CUuuid_stcudaUUID_t`                         |                                                      |
+| define       | `CUDA_IPC_HANDLE_SIZE`                        |                                                      |
+| define       | `cudaArrayCubemap`                            |                                                      |
+| define       | `cudaArrayDefault`                            |                                                      |
+| define       | `cudaArrayLayered`                            |                                                      |
+| define       | `cudaArraySurfaceLoadStore`                   |                                                      |
+| define       | `cudaArrayTextureGather`                      |                                                      |
+| define       | `cudaDeviceBlockingSync`                      | `hipDeviceScheduleBlockingSync`                      |
+| define       | `cudaDeviceLmemResizeToMax`                   |                                                      |
+| define       | `cudaDeviceMapHost`                           |                                                      |
+| define       | `cudaDeviceMask`                              |                                                      |
+| define       | `cudaDevicePropDontCare`                      |                                                      |
+| define       | `cudaDeviceScheduleAuto`                      | `hipDeviceScheduleAuto`                              |
+| define       | `cudaDeviceScheduleBlockingSync`              | `hipDeviceScheduleBlockingSync`                      |
+| define       | `cudaDeviceScheduleMask`                      | `hipDeviceScheduleMask`                              |
+| define       | `cudaDeviceScheduleSpin`                      | `hipDeviceScheduleSpin`                              |
+| define       | `cudaDeviceScheduleYield`                     | `hipDeviceScheduleYield`                             |
+| define       | `cudaEventDefault`                            | `hipEventDefault`                                    |
+| define       | `cudaEventDisableTiming`                      | `hipEventDisableTiming`                              |
+| define       | `cudaEventInterprocess`                       | `hipEventInterprocess`                               |
+| define       | `cudaHostAllocDefault`                        | `hipHostMallocDefault`                               |
+| define       | `cudaHostAllocMapped`                         | `hipHostMallocMapped`                                |
+| define       | `cudaHostAllocPortable`                       | `hipHostMallocPortable`                              |
+| define       | `cudaHostAllocWriteCombined`                  | `hipHostMallocWriteCombined`                         |
+| define       | `cudaHostRegisterDefault`                     | `hipHostRegisterDefault`                             |
+| define       | `cudaHostRegisterIoMemory`                    | `hipHostRegisterIoMemory`                            |
+| define       | `cudaHostRegisterMapped`                      | `hipHostRegisterMapped`                              |
+| define       | `cudaHostRegisterPortable`                    | `hipHostRegisterPortable`                            |
+| define       | `cudaIpcMemLazyEnablePeerAccess`              | `hipIpcMemLazyEnablePeerAccess`                      |
+| define       | `cudaMemAttachGlobal`                         |                                                      |
+| define       | `cudaMemAttachHost`                           |                                                      |
+| define       | `cudaMemAttachSingle`                         |                                                      |
+| define       | `cudaOccupancyDefault`                        |                                                      |
+| define       | `cudaOccupancyDisableCachingOverride`         |                                                      |
+| define       | `cudaPeerAccessDefault`                       |                                                      |
+| define       | `cudaStreamDefault`                           | `hipStreamDefault`                                   |
+| define       | `cudaStreamLegacy`                            |                                                      |
+| define       | `cudaStreamNonBlocking`                       | `hipStreamNonBlocking`                               |
+| define       | `cudaStreamPerThread`                         |                                                      |

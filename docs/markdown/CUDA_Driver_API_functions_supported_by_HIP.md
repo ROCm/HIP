@@ -2,690 +2,859 @@
 
 ## **1. Data types used by CUDA driver**
 
-| **type**     |   **CUDA**                                                    |   **HIP**                                                  | **CUDA description**                                                                                                           |
-|-------------:|---------------------------------------------------------------|------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| struct       | `CUDA_ARRAY3D_DESCRIPTOR`                                     |                                                            |                                                                                                                                |
-| struct       | `CUDA_ARRAY_DESCRIPTOR`                                       |                                                            |                                                                                                                                |
-| struct       | `CUDA_MEMCPY2D`                                               |                                                            |                                                                                                                                |
-| struct       | `CUDA_MEMCPY3D`                                               |                                                            |                                                                                                                                |
-| struct       | `CUDA_MEMCPY3D_PEER`                                          |                                                            |                                                                                                                                |
-| struct       | `CUDA_POINTER_ATTRIBUTE_P2P_TOKENS`                           |                                                            |                                                                                                                                |
-| struct       | `CUDA_RESOURCE_DESC`                                          |                                                            |                                                                                                                                |
-| struct       | `CUDA_RESOURCE_VIEW_DESC`                                     |                                                            |                                                                                                                                |
-| struct       | `CUdevprop`                                                   | `hipDeviceProp_t`                                          |                                                                                                                                |
-| struct       | `CUipcEventHandle`                                            |                                                            |                                                                                                                                |
-| struct       | `CUipcMemHandle`                                              |                                                            |                                                                                                                                |
-| enum         |***`CUaddress_mode`***                                         |                                                            | Texture reference addressing modes                                                                                             |
-|            0 |*`CU_TR_ADDRESS_MODE_WRAP`*                                    |                                                            | Wrapping address mode                                                                                                          |
-|            1 |*`CU_TR_ADDRESS_MODE_CLAMP`*                                   |                                                            | Clamp to edge address mode                                                                                                     |
-|            2 |*`CU_TR_ADDRESS_MODE_MIRROR`*                                  |                                                            | Mirror address mode                                                                                                            |
-|            3 |*`CU_TR_ADDRESS_MODE_BORDER`*                                  |                                                            | Border address mode                                                                                                            |
-| enum         |***`CUarray_cubemap_face`***                                   |                                                            | Array indices for cube faces                                                                                                   |
-|         0x00 |*`CU_CUBEMAP_FACE_POSITIVE_X`*                                 |                                                            | Positive X face of cubemap                                                                                                     |
-|         0x01 |*`CU_CUBEMAP_FACE_NEGATIVE_X`*                                 |                                                            | Negative X face of cubemap                                                                                                     |
-|         0x02 |*`CU_CUBEMAP_FACE_POSITIVE_Y`*                                 |                                                            | Positive Y face of cubemap                                                                                                     |
-|         0x03 |*`CU_CUBEMAP_FACE_NEGATIVE_Y`*                                 |                                                            | Negative Y face of cubemap                                                                                                     |
-|         0x04 |*`CU_CUBEMAP_FACE_POSITIVE_Z`*                                 |                                                            | Positive Z face of cubemap                                                                                                     |
-|         0x05 |*`CU_CUBEMAP_FACE_NEGATIVE_Z`*                                 |                                                            | Negative Z face of cubemap                                                                                                     |
-| enum         |***`CUarray_format`***                                         |                                                            | Array formats                                                                                                                  |
-|         0x01 |*`CU_AD_FORMAT_UNSIGNED_INT8`*                                 |                                                            | Unsigned 8-bit integers                                                                                                        |
-|         0x02 |*`CU_AD_FORMAT_UNSIGNED_INT16`*                                |                                                            | Unsigned 16-bit integers                                                                                                       |
-|         0x03 |*`CU_AD_FORMAT_UNSIGNED_INT32`*                                |                                                            | Unsigned 32-bit integers                                                                                                       |
-|         0x08 |*`CU_AD_FORMAT_SIGNED_INT8`*                                   |                                                            | Signed 8-bit integers                                                                                                          |
-|         0x09 |*`CU_AD_FORMAT_SIGNED_INT16`*                                  |                                                            | Signed 16-bit integers                                                                                                         |
-|         0x0a |*`CU_AD_FORMAT_SIGNED_INT32`*                                  |                                                            | Signed 32-bit integers                                                                                                         |
-|         0x10 |*`CU_AD_FORMAT_HALF`*                                          |                                                            | 16-bit floating point                                                                                                          |
-|         0x20 |*`CU_AD_FORMAT_FLOAT`*                                         |                                                            | 32-bit floating point                                                                                                          |
-| enum         |***`CUctx_flags`***                                            |                                                            | Context creation flags                                                                                                         |
-|         0x00 |*`CU_CTX_SCHED_AUTO`*                                          |                                                            | Automatic scheduling                                                                                                           |
-|         0x01 |*`CU_CTX_SCHED_SPIN`*                                          |                                                            | Set spin as default scheduling                                                                                                 |
-|         0x02 |*`CU_CTX_SCHED_YIELD`*                                         |                                                            | Set yield as default scheduling                                                                                                |
-|         0x04 |*`CU_CTX_SCHED_BLOCKING_SYNC`*                                 |                                                            | Set blocking synchronization as default scheduling                                                                             |
-|         0x04 |*`CU_CTX_BLOCKING_SYNC`*                                       |                                                            | Set blocking synchronization as default scheduling Deprecated. This flag was deprecated as of CUDA 4.0 and was replaced with CU_CTX_SCHED_BLOCKING_SYNC.|
-|         0x07 |*`CU_CTX_SCHED_MASK`*                                          |                                                            |                                                                                                                                |
-|         0x08 |*`CU_CTX_MAP_HOST`*                                            |                                                            | Support mapped pinned allocations                                                                                              |
-|         0x10 |*`CU_CTX_LMEM_RESIZE_TO_MAX`*                                  |                                                            | Keep local memory allocation after launch                                                                                      |
-|         0x1f |*`CU_CTX_FLAGS_MASK`*                                          |                                                            |                                                                                                                                |
-| enum         |***`CUdevice_attribute`***                                     |                                                            | Device properties                                                                                                              |
-|            1 |*`CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK`*                  |*`hipDeviceAttributeMaxThreadsPerBlock`*                    | Maximum number of threads per block                                                                                            |
-|            2 |*`CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_X`*                        |*`hipDeviceAttributeMaxBlockDimX`*                          | Maximum block dimension X                                                                                                      |
-|            3 |*`CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Y`*                        |*`hipDeviceAttributeMaxBlockDimY`*                          | Maximum block dimension Y                                                                                                      |
-|            4 |*`CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Z`*                        |*`hipDeviceAttributeMaxBlockDimZ`*                          | Maximum block dimension Z                                                                                                      |
-|            5 |*`CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X`*                         |*`hipDeviceAttributeMaxGridDimX`*                           | Maximum grid dimension X                                                                                                       |
-|            6 |*`CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Y`*                         |*`hipDeviceAttributeMaxGridDimY`*                           | Maximum grid dimension Y                                                                                                       |
-|            7 |*`CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Z`*                         |*`hipDeviceAttributeMaxGridDimZ`*                           | Maximum grid dimension Y                                                                                                       |
-|            8 |*`CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK`*            |*`hipDeviceAttributeMaxSharedMemoryPerBlock`*               | Maximum shared memory available per block in bytes                                                                             |
-|            8 |*`CU_DEVICE_ATTRIBUTE_SHARED_MEMORY_PER_BLOCK`*                |*`hipDeviceAttributeMaxSharedMemoryPerBlock`*               | Deprecated, use CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK                                                                |
-|            9 |*`CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY`*                  |*`hipDeviceAttributeTotalConstantMemory`*                   | Memory available on device for __constant__ variables in a CUDA C kernel in bytes                                              |
-|           10 |*`CU_DEVICE_ATTRIBUTE_WARP_SIZE`*                              |*`hipDeviceAttributeWarpSize`*                              | Warp size in threads                                                                                                           |
-|           11 |*`CU_DEVICE_ATTRIBUTE_MAX_PITCH`*                              |                                                            | Maximum pitch in bytes allowed by memory copies                                                                                |
-|           12 |*`CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK`*                |*`hipDeviceAttributeMaxRegistersPerBlock`*                  | Maximum number of 32-bit registers available per block                                                                         |
-|           12 |*`CU_DEVICE_ATTRIBUTE_REGISTERS_PER_BLOCK`*                    |*`hipDeviceAttributeMaxRegistersPerBlock`*                  | Deprecated, use CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK                                                                    |
-|           13 |*`CU_DEVICE_ATTRIBUTE_CLOCK_RATE`*                             |*`hipDeviceAttributeClockRate`*                             | Typical clock frequency in kilohertz                                                                                           |
-|           14 |*`CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT`*                      |                                                            | Alignment requirement for textures                                                                                             |
-|           15 |*`CU_DEVICE_ATTRIBUTE_GPU_OVERLAP`*                            |                                                            | Device can possibly copy memory and execute a kernel concurrently. Deprecated. Use instead CU_DEVICE_ATTRIBUTE_ASYNC_ENGINE_COUNT|
-|           16 |*`CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT`*                   |*`hipDeviceAttributeMultiprocessorCount`*                   | Number of multiprocessors on device                                                                                            |
-|           17 |*`CU_DEVICE_ATTRIBUTE_KERNEL_EXEC_TIMEOUT`*                    |                                                            | Specifies whether there is a run time limit on kernels                                                                         |
-|           18 |*`CU_DEVICE_ATTRIBUTE_INTEGRATED`*                             |                                                            | Device is integrated with host memory                                                                                          |
-|           19 |*`CU_DEVICE_ATTRIBUTE_CAN_MAP_HOST_MEMORY`*                    |                                                            | Device can map host memory into CUDA address space                                                                             |
-|           20 |*`CU_DEVICE_ATTRIBUTE_COMPUTE_MODE`*                           |*`hipDeviceAttributeComputeMode`*                           | Compute mode (See CUcomputemode for details)                                                                                   |
-|           21 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_WIDTH`*                |                                                            | Maximum 1D texture width                                                                                                       |
-|           22 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_WIDTH`*                |                                                            | Maximum 2D texture width                                                                                                       |
-|           23 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_HEIGHT`*               |                                                            | Maximum 2D texture height                                                                                                      |
-|           24 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_WIDTH`*                |                                                            | Maximum 3D texture width                                                                                                       |
-|           25 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_HEIGHT`*               |                                                            | Maximum 3D texture height                                                                                                      |
-|           26 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_DEPTH`*                |                                                            | Maximum 3D texture depth                                                                                                       |
-|           27 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_WIDTH`*        |                                                            | Maximum 2D layered texture width                                                                                               |
-|           28 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_HEIGHT`*       |                                                            | Maximum 2D layered texture height                                                                                              |
-|           29 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_LAYERS`*       |                                                            | Maximum layers in a 2D layered texture                                                                                         |
-|           27 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_ARRAY_WIDTH`*          |                                                            | Deprecated, use CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_WIDTH                                                            |
-|           28 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_ARRAY_HEIGHT`*         |                                                            | Deprecated, use CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_HEIGHT                                                           |
-|           29 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_ARRAY_NUMSLICES`*      |                                                            | Deprecated, use CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_LAYERS                                                           |
-|           30 |*`CU_DEVICE_ATTRIBUTE_SURFACE_ALIGNMENT`*                      |                                                            | Alignment requirement for surfaces                                                                                             |
-|           31 |*`CU_DEVICE_ATTRIBUTE_CONCURRENT_KERNELS`*                     |*`hipDeviceAttributeConcurrentKernels`*                     | Device can possibly execute multiple kernels concurrently                                                                      |
-|           32 |*`CU_DEVICE_ATTRIBUTE_ECC_ENABLED`*                            |                                                            | Device has ECC support enabled                                                                                                 |
-|           33 |*`CU_DEVICE_ATTRIBUTE_PCI_BUS_ID`*                             |*`hipDeviceAttributePciBusId`*                              | PCI bus ID of the device                                                                                                       |
-|           34 |*`CU_DEVICE_ATTRIBUTE_PCI_DEVICE_ID`*                          |*`hipDeviceAttributePciDeviceId`*                           | PCI device ID of the device                                                                                                    |
-|           35 |*`CU_DEVICE_ATTRIBUTE_TCC_DRIVER`*                             |                                                            | Device is using TCC driver model                                                                                               |
-|           36 |*`CU_DEVICE_ATTRIBUTE_MEMORY_CLOCK_RATE`*                      |*`hipDeviceAttributeMemoryClockRate`*                       | Peak memory clock frequency in kilohertz                                                                                       |
-|           37 |*`CU_DEVICE_ATTRIBUTE_GLOBAL_MEMORY_BUS_WIDTH`*                |*`hipDeviceAttributeMemoryBusWidth`*                        | Global memory bus width in bits                                                                                                |
-|           38 |*`CU_DEVICE_ATTRIBUTE_L2_CACHE_SIZE`*                          |*`hipDeviceAttributeL2CacheSize`*                           | Size of L2 cache in bytes                                                                                                      |
-|           39 |*`CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_MULTIPROCESSOR`*         |*`hipDeviceAttributeMaxThreadsPerMultiProcessor`*           | Maximum resident threads per multiprocessor                                                                                    |
-|           40 |*`CU_DEVICE_ATTRIBUTE_ASYNC_ENGINE_COUNT`*                     |                                                            | Number of asynchronous engines                                                                                                 |
-|           41 |*`CU_DEVICE_ATTRIBUTE_UNIFIED_ADDRESSING`*                     |                                                            | Device shares a unified address space with the host                                                                            |
-|           42 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LAYERED_WIDTH`*        |                                                            | Maximum 1D layered texture width                                                                                               |
-|           43 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LAYERED_LAYERS`*       |                                                            | Maximum layers in a 1D layered texture                                                                                         |
-|           44 |*`CU_DEVICE_ATTRIBUTE_CAN_TEX2D_GATHER`*                       |                                                            | Deprecated, do not use                                                                                                         |
-|           45 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_GATHER_WIDTH`*         |                                                            | Maximum 2D texture width if CUDA_ARRAY3D_TEXTURE_GATHER is set                                                                 |
-|           46 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_GATHER_HEIGHT`*        |                                                            | Maximum 2D texture height if CUDA_ARRAY3D_TEXTURE_GATHER is set                                                                |
-|           47 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_WIDTH_ALTERNATE`*      |                                                            | Alternate maximum 3D texture width                                                                                             |
-|           48 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_HEIGHT_ALTERNATE`*     |                                                            | Alternate maximum 3D texture height                                                                                            |
-|           49 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_DEPTH_ALTERNATE`*      |                                                            | Alternate maximum 3D texture depth                                                                                             |
-|           50 |*`CU_DEVICE_ATTRIBUTE_PCI_DOMAIN_ID`*                          |                                                            | PCI domain ID of the device                                                                                                    |
-|           51 |*`CU_DEVICE_ATTRIBUTE_TEXTURE_PITCH_ALIGNMENT`*                |                                                            | Pitch alignment requirement for textures                                                                                       |
-|           52 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURECUBEMAP_WIDTH`*           |                                                            | Maximum cubemap texture width/height                                                                                           |
-|           53 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURECUBEMAP_LAYERED_WIDTH`*   |                                                            | Maximum cubemap layered texture width/height                                                                                   |
-|           54 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURECUBEMAP_LAYERED_LAYERS`*  |                                                            | Maximum layers in a cubemap layered texture                                                                                    |
-|           55 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_WIDTH`*                |                                                            | Maximum 1D surface width                                                                                                       |
-|           56 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_WIDTH`*                |                                                            | Maximum 2D surface width                                                                                                       |
-|           57 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_HEIGHT`*               |                                                            | Maximum 2D surface height                                                                                                      |
-|           58 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE3D_WIDTH`*                |                                                            | Maximum 3D surface width                                                                                                       |
-|           59 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE3D_HEIGHT`*               |                                                            | Maximum 3D surface height                                                                                                      |
-|           60 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE3D_DEPTH`*                |                                                            | Maximum 3D surface depth                                                                                                       |
-|           61 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_LAYERED_WIDTH`*        |                                                            | Maximum 1D layered surface width                                                                                               |
-|           62 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_LAYERED_LAYERS`*       |                                                            | Maximum layers in a 1D layered surface                                                                                         |
-|           63 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_LAYERED_WIDTH`*        |                                                            | Maximum 2D layered surface width                                                                                               |
-|           64 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_LAYERED_HEIGHT`*       |                                                            | Maximum 2D layered surface height                                                                                              |
-|           65 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_LAYERED_LAYERS`*       |                                                            | Maximum layers in a 2D layered surface                                                                                         |
-|           66 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_WIDTH`*           |                                                            | Maximum cubemap surface width                                                                                                  |
-|           67 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_LAYERED_WIDTH`*   |                                                            | Maximum cubemap layered surface width                                                                                          |
-|           68 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_LAYERED_LAYERS`*  |                                                            | Maximum layers in a cubemap layered surface                                                                                    |
-|           69 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LINEAR_WIDTH`*         |                                                            | Maximum 1D linear texture width                                                                                                |
-|           70 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LINEAR_WIDTH`*         |                                                            | Maximum 2D linear texture width                                                                                                |
-|           71 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LINEAR_HEIGHT`*        |                                                            | Maximum 2D linear texture height                                                                                               |
-|           72 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LINEAR_PITCH`*         |                                                            | Maximum 2D linear texture pitch in bytes                                                                                       |
-|           73 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_MIPMAPPED_WIDTH`*      |                                                            | Maximum mipmapped 2D texture width                                                                                             |
-|           74 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_MIPMAPPED_HEIGHT`*     |                                                            | Maximum mipmapped 2D texture height                                                                                            |
-|           75 |*`CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR`*               |*`hipDeviceAttributeComputeCapabilityMajor`*                | Major compute capability version number                                                                                        |
-|           76 |*`CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR`*               |*`hipDeviceAttributeComputeCapabilityMinor`*                | Minor compute capability version number                                                                                        |
-|           77 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_MIPMAPPED_WIDTH`*      |                                                            | Maximum mipmapped 1D texture width                                                                                             |
-|           78 |*`CU_DEVICE_ATTRIBUTE_STREAM_PRIORITIES_SUPPORTED`*            |                                                            | Device supports stream priorities                                                                                              |
-|           79 |*`CU_DEVICE_ATTRIBUTE_GLOBAL_L1_CACHE_SUPPORTED`*              |                                                            | Device supports caching globals in L1                                                                                          |
-|           80 |*`CU_DEVICE_ATTRIBUTE_LOCAL_L1_CACHE_SUPPORTED`*               |                                                            | Device supports caching locals in L1                                                                                           |
-|           81 |*`CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_MULTIPROCESSOR`*   |*`hipDeviceAttributeMaxSharedMemoryPerMultiprocessor`*      | Maximum shared memory available per multiprocessor in bytes                                                                    |
-|           82 |*`CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_MULTIPROCESSOR`*       |                                                            | Maximum number of 32-bit registers available per multiprocessor                                                                |
-|           83 |*`CU_DEVICE_ATTRIBUTE_MANAGED_MEMORY`*                         |*`hipDeviceAttributeManagedMemory`*                         | Device can allocate managed memory on this system                                                                              |
-|           84 |*`CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD`*                        |                                                            | Device is on a multi-GPU board                                                                                                 |
-|           85 |*`CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD_GROUP_ID`*               |                                                            | Unique id for a group of devices on the same multi-GPU board                                                                   |
-|           86 |*`CU_DEVICE_ATTRIBUTE_MAX`*                                    |                                                            |                                                                                                                                |
-| enum         |***`CUevent_flags`***                                          |                                                            | Event creation flags                                                                                                           |
-|         0x00 |*`CU_EVENT_DEFAULT`*                                           |*`hipEventDefault`*                                         | Default event flag                                                                                                             |
-|         0x01 |*`CU_EVENT_BLOCKING_SYNC`*                                     |*`hipEventBlockingSync`*                                    | Event uses blocking synchronization                                                                                            |
-|         0x02 |*`CU_EVENT_DISABLE_TIMING`*                                    |*`hipEventDisableTiming`*                                   | Event will not record timing data                                                                                              |
-|         0x04 |*`CU_EVENT_INTERPROCESS`*                                      |*`hipEventInterprocess`*                                    | Event is suitable for interprocess use. CU_EVENT_DISABLE_TIMING must be set                                                    |
-| enum         |***`CUfilter_mode`***                                          |***`hipTextureFilterMode`***                                | Texture reference filtering modes                                                                                              |
-|            0 |*`CU_TR_FILTER_MODE_POINT`*                                    |*`hipFilterModePoint`*                                      | Point filter mode                                                                                                              |
-|            1 |*`CU_TR_FILTER_MODE_LINEAR`*                                   |*`hipFilterModeLinear`*                                     | Linear filter mode                                                                                                             |
-| enum         |***`CUfunc_cache`***                                           |***`hipFuncCache`***                                        | Function cache configurations                                                                                                  |
-|         0x00 |*`CU_FUNC_CACHE_PREFER_NONE`*                                  |*`hipFuncCachePreferNone`*                                  | no preference for shared memory or L1 (default)                                                                                |
-|         0x01 |*`CU_FUNC_CACHE_PREFER_SHARED`*                                |*`hipFuncCachePreferShared`*                                | prefer larger shared memory and smaller L1 cache                                                                               |
-|         0x02 |*`CU_FUNC_CACHE_PREFER_L1`*                                    |*`hipFuncCachePreferL1`*                                    | prefer larger L1 cache and smaller shared memory                                                                               |
-|         0x03 |*`CU_FUNC_CACHE_PREFER_EQUAL`*                                 |*`hipFuncCachePreferEqual`*                                 | prefer equal sized L1 cache and shared memory                                                                                  |
-| enum         |***`CUfunction_attribute`***                                   |                                                            | Function properties                                                                                                            |
-|            0 |*`CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK`*                    |                                                            | The maximum number of threads per block, beyond which a launch of the function would fail. This number depends on both the function and the device on which the function is currently loaded. |
-|            1 |*`CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES`*                        |                                                            | The size in bytes of statically-allocated shared memory required by this function. This does not include dynamically-allocated shared memory requested by the user at runtime. |
-|            2 |*`CU_FUNC_ATTRIBUTE_CONST_SIZE_BYTES`*                         |                                                            | The size in bytes of user-allocated constant memory required by this function.                                                 |
-|            3 |*`CU_FUNC_ATTRIBUTE_LOCAL_SIZE_BYTES`*                         |                                                            | The size in bytes of local memory used by each thread of this function.                                                        |
-|            4 |*`CU_FUNC_ATTRIBUTE_NUM_REGS`*                                 |                                                            | The number of registers used by each thread of this function.                                                                  |
-|            5 |*`CU_FUNC_ATTRIBUTE_PTX_VERSION`*                              |                                                            | The PTX virtual architecture version for which the function was compiled. This value is the major PTX version * 10 + the minor PTX version, so a PTX version 1.3 function would return the value 13. Note that this may return the undefined value of 0 for cubins compiled prior to CUDA 3.0. |
-|            6 |*`CU_FUNC_ATTRIBUTE_BINARY_VERSION`*                           |                                                            | The binary architecture version for which the function was compiled. This value is the major binary version * 10 + the minor binary version, so a binary version 1.3 function would return the value 13. Note that this will return a value of 10 for legacy cubins that do not have a properly-encoded binary architecture version. |
-|            7 |*`CU_FUNC_ATTRIBUTE_CACHE_MODE_CA`*                            |                                                            | The attribute to indicate whether the function has been compiled with user specified option "-Xptxas --dlcm=ca" set.           |
-|            8 |*`CU_FUNC_ATTRIBUTE_MAX`*                                      |                                                            |                                                                                                                                |
-| enum         |***`CUgraphicsMapResourceFlags`***                             |                                                            | Flags for mapping and unmapping interop resources                                                                              |
-|         0x00 |*`CU_GRAPHICS_MAP_RESOURCE_FLAGS_NONE`*                        |                                                            |                                                                                                                                |
-|         0x01 |*`CU_GRAPHICS_MAP_RESOURCE_FLAGS_READ_ONLY`*                   |                                                            |                                                                                                                                |
-|         0x02 |*`CU_GRAPHICS_MAP_RESOURCE_FLAGS_WRITE_DISCARD`*               |                                                            |                                                                                                                                |
-| enum         |***`CUgraphicsRegisterFlags`***                                |                                                            | Flags to register a graphics resource                                                                                          |
-|         0x00 |*`CU_GRAPHICS_REGISTER_FLAGS_NONE`*                            |                                                            |                                                                                                                                |
-|         0x01 |*`CU_GRAPHICS_REGISTER_FLAGS_READ_ONLY`*                       |                                                            |                                                                                                                                |
-|         0x02 |*`CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD`*                   |                                                            |                                                                                                                                |
-|         0x04 |*`CU_GRAPHICS_REGISTER_FLAGS_SURFACE_LDST`*                    |                                                            |                                                                                                                                |
-|         0x08 |*`CU_GRAPHICS_REGISTER_FLAGS_TEXTURE_GATHER`*                  |                                                            |                                                                                                                                |
-| enum         |***`CUipcMem_flags`***                                         |                                                            | CUDA Ipc Mem Flags                                                                                                             |
-|          0x1 |*`CU_IPC_MEM_LAZY_ENABLE_PEER_ACCESS`*                         |*`hipIpcMemLazyEnablePeerAccess`*                           | Automatically enable peer access between remote devices as needed                                                              |
-| enum         |***`CUjit_cacheMode`***                                        |                                                            | Caching modes for dlcm                                                                                                         |
-|            0 |*`CU_JIT_CACHE_OPTION_NONE`*                                   |                                                            | Compile with no -dlcm flag specified                                                                                           |
-|              |*`CU_JIT_CACHE_OPTION_CG`*                                     |                                                            | Compile with L1 cache disabled                                                                                                 |
-|              |*`CU_JIT_CACHE_OPTION_CA`*                                     |                                                            | Compile with L1 cache enabled                                                                                                  |
-| enum         |***`CUjit_fallback`***                                         |                                                            | Cubin matching fallback strategies                                                                                             |
-|            0 |*`CU_PREFER_PTX`*                                              |                                                            | Prefer to compile ptx if exact binary match not found                                                                          |
-|              |*`CU_PREFER_BINARY`*                                           |                                                            | Prefer to fall back to compatible binary code if exact match not found                                                         |
-| enum         |***`CUjit_option`***                                           |                                                            | Online compiler and linker options                                                                                             |
-|            0 |*`CU_JIT_MAX_REGISTERS`*                                       |                                                            | Max number of registers that a thread may use. Option type: unsigned int Applies to: compiler only.                            |
-|              |*`CU_JIT_THREADS_PER_BLOCK`*                                   |                                                            | IN: Specifies minimum number of threads per block to target compilation for OUT: Returns the number of threads the compiler actually targeted. This restricts the resource utilization fo the compiler (e.g. max registers) such that a block with the given number of threads should be able to launch based on register limitations. Note, this option does not currently take into account any other resource limitations, such as shared memory utilization. Cannot be combined with CU_JIT_TARGET. Option type: unsigned int Applies to: compiler only. |
-|              |*`CU_JIT_WALL_TIME`*                                           |                                                            | Overwrites the option value with the total wall clock time, in milliseconds, spent in the compiler and linker Option type: float Applies to: compiler and linker. |
-|              |*`CU_JIT_INFO_LOG_BUFFER`*                                     |                                                            | Pointer to a buffer in which to print any log messages that are informational in nature (the buffer size is specified via option CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES) Option type: char * Applies to: compiler and linker. |
-|              |*`CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES`*                          |                                                            | IN: Log buffer size in bytes. Log messages will be capped at this size (including null terminator) OUT: Amount of log buffer filled with messages Option type: unsigned int Applies to: compiler and linker. |
-|              |*`CU_JIT_OPTIMIZATION_LEVEL`*                                  |                                                            | Level of optimizations to apply to generated code (0 - 4), with 4 being the default and highest level of optimizations. Option type: unsigned int Applies to: compiler only. |
-|              |*`CU_JIT_TARGET_FROM_CUCONTEXT`*                               |                                                            | No option value required. Determines the target based on the current attached context (default) Option type: No option value needed Applies to: compiler and linker. |
-|              |*`CU_JIT_TARGET`*                                              |                                                            | Target is chosen based on supplied CUjit_target. Cannot be combined with CU_JIT_THREADS_PER_BLOCK. Option type: unsigned int for enumerated type CUjit_target Applies to: compiler and linker. |
-|              |*`CU_JIT_FALLBACK_STRATEGY`*                                   |                                                            | Specifies choice of fallback strategy if matching cubin is not found. Choice is based on supplied CUjit_fallback. This option cannot be used with cuLink* APIs as the linker requires exact matches. Option type: unsigned int for enumerated type CUjit_fallback Applies to: compiler only. |
-|              |*`CU_JIT_GENERATE_DEBUG_INFO`*                                 |                                                            | Specifies whether to create debug information in output (-g) (0: false, default) Option type: int Applies to: compiler and linker. |
-|              |*`CU_JIT_LOG_VERBOSE`*                                         |                                                            | Generate verbose log messages (0: false, default) Option type: int Applies to: compiler and linker.                            |
-|              |*`CU_JIT_GENERATE_LINE_INFO`*                                  |                                                            | Generate line number information (-lineinfo) (0: false, default) Option type: int Applies to: compiler only.                   |
-|              |*`CU_JIT_CACHE_MODE`*                                          |                                                            | Specifies whether to enable caching explicitly (-dlcm) Choice is based on supplied CUjit_cacheMode_enum. Option type: unsigned int for enumerated type CUjit_cacheMode_enum Applies to: compiler only. |
-|              |*`CU_JIT_NUM_OPTIONS`*                                         |                                                            |                                                                                                                                |
-| enum         |***`CUjit_target`***                                           |                                                            | Online compilation targets                                                                                                     |
-|           10 |*`CU_TARGET_COMPUTE_10`*                                       |                                                            | Compute device class 1.0.                                                                                                      |
-|           11 |*`CU_TARGET_COMPUTE_11`*                                       |                                                            | Compute device class 1.1.                                                                                                      |
-|           12 |*`CU_TARGET_COMPUTE_12`*                                       |                                                            | Compute device class 1.2.                                                                                                      |
-|           13 |*`CU_TARGET_COMPUTE_13`*                                       |                                                            | Compute device class 1.3.                                                                                                      |
-|           20 |*`CU_TARGET_COMPUTE_20`*                                       |                                                            | Compute device class 2.0.                                                                                                      |
-|           21 |*`CU_TARGET_COMPUTE_21`*                                       |                                                            | Compute device class 2.1.                                                                                                      |
-|           30 |*`CU_TARGET_COMPUTE_30`*                                       |                                                            | Compute device class 3.0.                                                                                                      |
-|           32 |*`CU_TARGET_COMPUTE_32`*                                       |                                                            | Compute device class 3.2.                                                                                                      |
-|           35 |*`CU_TARGET_COMPUTE_35`*                                       |                                                            | Compute device class 3.5.                                                                                                      |
-|           37 |*`CU_TARGET_COMPUTE_37`*                                       |                                                            | Compute device class 3.7.                                                                                                      |
-|           50 |*`CU_TARGET_COMPUTE_50`*                                       |                                                            | Compute device class 5.0.                                                                                                      |
-|           52 |*`CU_TARGET_COMPUTE_52`*                                       |                                                            | Compute device class 5.2.                                                                                                      |
-| enum         |***`CUjitInputType`***                                         |                                                            | Device code formats                                                                                                            |
-|            0 |*`CU_JIT_INPUT_CUBIN`*                                         |                                                            | Compiled device-class-specific device code Applicable options: none.                                                           |
-|              |*`CU_JIT_INPUT_PTX`*                                           |                                                            | PTX source code Applicable options: PTX compiler options.                                                                      |
-|              |*`CU_JIT_INPUT_FATBINARY`*                                     |                                                            | Bundle of multiple cubins and/or PTX of some device code Applicable options: PTX compiler options, CU_JIT_FALLBACK_STRATEGY.   |
-|              |*`CU_JIT_INPUT_OBJECT`*                                        |                                                            | Host object with embedded device code Applicable options: PTX compiler options, CU_JIT_FALLBACK_STRATEGY.                      |
-|              |*`CU_JIT_INPUT_LIBRARY`*                                       |                                                            | Archive of host objects with embedded device code Applicable options: PTX compiler options, CU_JIT_FALLBACK_STRATEGY.          |
-|              |*`CU_JIT_NUM_INPUT_TYPES`*                                     |                                                            |                                                                                                                                |
-| enum         |***`CUlimit`***                                                |***`hipLimit_t`***                                          | Limits                                                                                                                         |
-|         0x00 |*`CU_LIMIT_STACK_SIZE`*                                        |                                                            | GPU thread stack size.                                                                                                         |
-|         0x01 |*`CU_LIMIT_PRINTF_FIFO_SIZE`*                                  |                                                            | GPU printf FIFO size.                                                                                                          |
-|         0x02 |*`CU_LIMIT_MALLOC_HEAP_SIZE`*                                  |*`hipLimitMallocHeapSize`*                                  | GPU malloc heap size.                                                                                                          |
-|         0x03 |*`CU_LIMIT_DEV_RUNTIME_SYNC_DEPTH`*                            |                                                            | GPU device runtime launch synchronize depth.                                                                                   |
-|         0x04 |*`CU_LIMIT_DEV_RUNTIME_PENDING_LAUNCH_COUNT`*                  |                                                            | GPU device runtime pending launch count.                                                                                       |
-|              |*`CU_LIMIT_MAX`*                                               |                                                            |                                                                                                                                |
-| enum         |***`CUmemAttach_flags`***                                      |                                                            | CUDA Mem Attach Flags                                                                                                          |
-|          0x1 |*`CU_MEM_ATTACH_GLOBAL`*                                       |                                                            | Memory can be accessed by any stream on any device.                                                                            |
-|          0x2 |*`CU_MEM_ATTACH_HOST`*                                         |                                                            | Memory cannot be accessed by any stream on any device.                                                                         |
-|          0x4 |*`CU_MEM_ATTACH_SINGLE`*                                       |                                                            | Memory can only be accessed by a single stream on the associated device.                                                       |
-| enum         |***`CUmemorytype`***                                           |                                                            | Memory types                                                                                                                   |
-|         0x01 |*`CU_MEMORYTYPE_HOST`*                                         |                                                            | Host memory                                                                                                                    |
-|         0x02 |*`CU_MEMORYTYPE_DEVICE`*                                       |                                                            | Device memory                                                                                                                  |
-|         0x03 |*`CU_MEMORYTYPE_ARRAY`*                                        |                                                            | Array memory                                                                                                                   |
-|         0x04 |*`CU_MEMORYTYPE_UNIFIED`*                                      |                                                            | Unified device or host memory                                                                                                  |
-| enum         |***`CUoccupancy_flags`***                                      |                                                            | Occupancy calculator flag                                                                                                      |
-|         0x00 |*`CU_OCCUPANCY_DEFAULT`*                                       |                                                            | Default behavior                                                                                                               |
-|         0x01 |*`CU_OCCUPANCY_DISABLE_CACHING_OVERRIDE`*                      |                                                            | Assume global caching is enabled and cannot be automatically turned off                                                        |
-| enum         |***`CUpointer_attribute`***                                    |                                                            | Pointer information                                                                                                            |
-|            1 |*`CU_POINTER_ATTRIBUTE_CONTEXT`*                               |                                                            | The CUcontext on which a pointer was allocated or registered                                                                   |
-|            2 |*`CU_POINTER_ATTRIBUTE_MEMORY_TYPE`*                           |                                                            | The CUmemorytype describing the physical location of a pointer                                                                 |
-|            3 |*`CU_POINTER_ATTRIBUTE_DEVICE_POINTER`*                        |                                                            | The address at which a pointer's memory may be accessed on the device                                                          |
-|            4 |*`CU_POINTER_ATTRIBUTE_HOST_POINTER`*                          |                                                            | The address at which a pointer's memory may be accessed on the host                                                            |
-|            5 |*`CU_POINTER_ATTRIBUTE_P2P_TOKENS`*                            |                                                            | A pair of tokens for use with the nv-p2p.h Linux kernel interface                                                              |
-|            6 |*`CU_POINTER_ATTRIBUTE_SYNC_MEMOPS`*                           |                                                            | Synchronize every synchronous memory operation initiated on this region                                                        |
-|            7 |*`CU_POINTER_ATTRIBUTE_BUFFER_ID`*                             |                                                            | A process-wide unique ID for an allocated memory region                                                                        |
-|            8 |*`CU_POINTER_ATTRIBUTE_IS_MANAGED`*                            |                                                            | Indicates if the pointer points to managed memory                                                                              |
-| enum         |***`CUmemorytype`***                                           |                                                            | Resource types                                                                                                                 |
-|         0x00 |*`CU_RESOURCE_TYPE_ARRAY`*                                     |                                                            | Array resoure                                                                                                                  |
-|         0x01 |*`CU_RESOURCE_TYPE_MIPMAPPED_ARRAY`*                           |                                                            | Mipmapped array resource                                                                                                       |
-|         0x02 |*`CU_RESOURCE_TYPE_LINEAR`*                                    |                                                            | Linear resource                                                                                                                |
-|         0x03 |*`CU_RESOURCE_TYPE_PITCH2D`*                                   |                                                            | Pitch 2D resource                                                                                                              |
-| enum         |***`CUresourceViewFormat`***                                   |                                                            | Resource view format                                                                                                           |
-|         0x00 |*`CU_RES_VIEW_FORMAT_NONE`*                                    |                                                            | No resource view format (use underlying resource format)                                                                       |
-|         0x01 |*`CU_RES_VIEW_FORMAT_UINT_1X8`*                                |                                                            | 1 channel unsigned 8-bit integers                                                                                              |
-|         0x02 |*`CU_RES_VIEW_FORMAT_UINT_2X8`*                                |                                                            | 2 channel unsigned 8-bit integers                                                                                              |
-|         0x03 |*`CU_RES_VIEW_FORMAT_UINT_4X8`*                                |                                                            | 4 channel unsigned 8-bit integers                                                                                              |
-|         0x04 |*`CU_RES_VIEW_FORMAT_SINT_1X8`*                                |                                                            | 1 channel signed 8-bit integers                                                                                                |
-|         0x05 |*`CU_RES_VIEW_FORMAT_SINT_2X8`*                                |                                                            | 2 channel signed 8-bit integers                                                                                                |
-|         0x06 |*`CU_RES_VIEW_FORMAT_SINT_4X8`*                                |                                                            | 4 channel signed 8-bit integers                                                                                                |
-|         0x07 |*`CU_RES_VIEW_FORMAT_UINT_1X16`*                               |                                                            | 1 channel unsigned 16-bit integers                                                                                             |
-|         0x08 |*`CU_RES_VIEW_FORMAT_UINT_2X16`*                               |                                                            | 2 channel unsigned 16-bit integers                                                                                             |
-|         0x09 |*`CU_RES_VIEW_FORMAT_UINT_4X16`*                               |                                                            | 4 channel unsigned 16-bit integers                                                                                             |
-|         0x0a |*`CU_RES_VIEW_FORMAT_SINT_1X16`*                               |                                                            | 1 channel signed 16-bit integers                                                                                               |
-|         0x0b |*`CU_RES_VIEW_FORMAT_SINT_2X16`*                               |                                                            | 2 channel signed 16-bit integers                                                                                               |
-|         0x0c |*`CU_RES_VIEW_FORMAT_SINT_4X16`*                               |                                                            | 4 channel signed 16-bit integers                                                                                               |
-|         0x0d |*`CU_RES_VIEW_FORMAT_UINT_1X32`*                               |                                                            | 1 channel unsigned 32-bit integers                                                                                             |
-|         0x0e |*`CU_RES_VIEW_FORMAT_UINT_2X32`*                               |                                                            | 2 channel unsigned 32-bit integers                                                                                             |
-|         0x0f |*`CU_RES_VIEW_FORMAT_UINT_4X32`*                               |                                                            | 4 channel unsigned 32-bit integers                                                                                             |
-|         0x10 |*`CU_RES_VIEW_FORMAT_SINT_1X32`*                               |                                                            | 1 channel signed 32-bit integers                                                                                               |
-|         0x11 |*`CU_RES_VIEW_FORMAT_SINT_2X32`*                               |                                                            | 2 channel signed 32-bit integers                                                                                               |
-|         0x12 |*`CU_RES_VIEW_FORMAT_SINT_4X32`*                               |                                                            | 4 channel signed 32-bit integers                                                                                               |
-|         0x13 |*`CU_RES_VIEW_FORMAT_FLOAT_1X16`*                              |                                                            | 1 channel 16-bit floating point                                                                                                |
-|         0x14 |*`CU_RES_VIEW_FORMAT_FLOAT_2X16`*                              |                                                            | 2 channel 16-bit floating point                                                                                                |
-|         0x15 |*`CU_RES_VIEW_FORMAT_FLOAT_4X16`*                              |                                                            | 4 channel 16-bit floating point                                                                                                |
-|         0x16 |*`CU_RES_VIEW_FORMAT_FLOAT_1X32`*                              |                                                            | 1 channel 32-bit floating point                                                                                                |
-|         0x17 |*`CU_RES_VIEW_FORMAT_FLOAT_2X32`*                              |                                                            | 2 channel 32-bit floating point                                                                                                |
-|         0x18 |*`CU_RES_VIEW_FORMAT_FLOAT_4X32`*                              |                                                            | 4 channel 32-bit floating point                                                                                                |
-|         0x19 |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC1`*                            |                                                            | Block compressed 1                                                                                                             |
-|         0x1a |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC3`*                            |                                                            | Block compressed 2                                                                                                             |
-|         0x1b |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC3`*                            |                                                            | Block compressed 3                                                                                                             |
-|         0x1c |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC4`*                            |                                                            | Block compressed 4 unsigned                                                                                                    |
-|         0x1d |*`CU_RES_VIEW_FORMAT_SIGNED_BC4`*                              |                                                            | Block compressed 4 signed                                                                                                      |
-|         0x1e |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC5`*                            |                                                            | Block compressed 5 unsigned                                                                                                    |
-|         0x1f |*`CU_RES_VIEW_FORMAT_SIGNED_BC5`*                              |                                                            | Block compressed 5 signed                                                                                                      |
-|         0x20 |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC6H`*                           |                                                            | Block compressed 6 unsigned half-float                                                                                         |
-|         0x21 |*`CU_RES_VIEW_FORMAT_SIGNED_BC6H`*                             |                                                            | Block compressed 6 signed half-float                                                                                           |
-|         0x22 |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC7`*                            |                                                            | Block compressed 7                                                                                                             |
-| enum         |***`CUresult`***                                               |***`hipError_t`***                                          | Error codes                                                                                                                    |
-|            0 |*`CUDA_SUCCESS`*                                               |*`hipSuccess`*                                              | The API call returned with no errors. In the case of query calls, this can also mean that the operation being queried is complete (see cuEventQuery() and cuStreamQuery()). |
-|            1 |*`CUDA_ERROR_INVALID_VALUE`*                                   |*`hipErrorInvalidValue`*                                    | This indicates that one or more of the parameters passed to the API call is not within an acceptable range of values.          |
-|            2 |*`CUDA_ERROR_OUT_OF_MEMORY`*                                   |*`hipErrorMemoryAllocation`*                                | The API call failed because it was unable to allocate enough memory to perform the requested operation.                        |
-|            3 |*`CUDA_ERROR_NOT_INITIALIZED`*                                 |*`hipErrorNotInitialized`*                                  | This indicates that the CUDA driver has not been initialized with cuInit() or that initialization has failed.                  |
-|            4 |*`CUDA_ERROR_DEINITIALIZED`*                                   |*`hipErrorDeinitialized`*                                   | This indicates that the CUDA driver is in the process of shutting down.                                                        |
-|            5 |*`CUDA_ERROR_PROFILER_DISABLED`*                               |*`hipErrorProfilerDisabled`*                                | This indicates profiler is not initialized for this run. This can happen when the application is running with external profiling tools like visual profiler. |
-|            6 |*`CUDA_ERROR_PROFILER_NOT_INITIALIZED`*                        |*`hipErrorProfilerNotInitialized`*                          | Deprecated This error return is deprecated as of CUDA 5.0. It is no longer an error to attempt to enable/disable the profiling via cuProfilerStart or cuProfilerStop without initialization. |
-|            7 |*`CUDA_ERROR_PROFILER_ALREADY_STARTED`*                        |*`hipErrorProfilerAlreadyStarted`*                          | Deprecated This error return is deprecated as of CUDA 5.0. It is no longer an error to call cuProfilerStart() when profiling is already enabled. |
-|            8 |*`CUDA_ERROR_PROFILER_ALREADY_STOPPED`*                        |*`hipErrorProfilerAlreadyStopped`*                          | Deprecated This error return is deprecated as of CUDA 5.0. It is no longer an error to call cuProfilerStop() when profiling is already disabled. |
-|          100 |*`CUDA_ERROR_NO_DEVICE`*                                       |*`hipErrorNoDevice`*                                        | This indicates that no CUDA-capable devices were detected by the installed CUDA driver.                                        |
-|          101 |*`CUDA_ERROR_INVALID_DEVICE`*                                  |*`hipErrorInvalidDevice`*                                   | This indicates that the device ordinal supplied by the user does not correspond to a valid CUDA device.                        |
-|          200 |*`CUDA_ERROR_INVALID_IMAGE`*                                   |*`hipErrorInvalidImage`*                                    | This indicates that the device kernel image is invalid. This can also indicate an invalid CUDA module.                         |
-|          201 |*`CUDA_ERROR_INVALID_CONTEXT`*                                 |*`hipErrorInvalidContext`*                                  | This most frequently indicates that there is no context bound to the current thread. This can also be returned if the context passed to an API call is not a valid handle (such as a context that has had cuCtxDestroy() invoked on it). This can also be returned if a user mixes different API versions (i.e. 3010 context with 3020 API calls). See cuCtxGetApiVersion() for more details. |
-|          202 |*`CUDA_ERROR_CONTEXT_ALREADY_CURRENT`*                         |*`hipErrorContextAlreadyCurrent`*                           | This indicated that the context being supplied as a parameter to the API call was already the active context. Deprecated This error return is deprecated as of CUDA 3.2. It is no longer an error to attempt to push the active context via cuCtxPushCurrent(). |
-|          205 |*`CUDA_ERROR_MAP_FAILED`*                                      |*`hipErrorMapFailed`*                                       | This indicates that a map or register operation has failed.                                                                    |
-|          206 |*`CUDA_ERROR_UNMAP_FAILED`*                                    |*`hipErrorUnmapFailed`*                                     | This indicates that an unmap or unregister operation has failed.                                                               |
-|          207 |*`CUDA_ERROR_ARRAY_IS_MAPPED`*                                 |*`hipErrorArrayIsMapped`*                                   | This indicates that the specified array is currently mapped and thus cannot be destroyed.                                      |
-|          208 |*`CUDA_ERROR_ALREADY_MAPPED`*                                  |*`hipErrorAlreadyMapped`*                                   | This indicates that the resource is already mapped.                                                                            |
-|          209 |*`CUDA_ERROR_NO_BINARY_FOR_GPU`*                               |*`hipErrorNoBinaryForGpu*                                   | This indicates that there is no kernel image available that is suitable for the device. This can occur when a user specifies code generation options for a particular CUDA source file that do not include the corresponding device configuration. |
-|          210 |*`CUDA_ERROR_ALREADY_ACQUIRED`*                                |*`hipErrorAlreadyAcquired*                                  | This indicates that a resource has already been acquired.                                                                      |
-|          211 |*`CUDA_ERROR_NOT_MAPPED`*                                      |*`hipErrorNotMapped`*                                       | This indicates that a resource is not mapped.                                                                                  |
-|          212 |*`CUDA_ERROR_NOT_MAPPED_AS_ARRAY`*                             |*`hipErrorNotMappedAsArray`*                                | This indicates that a mapped resource is not available for access as an array.                                                 |
-|          213 |*`CUDA_ERROR_NOT_MAPPED_AS_POINTER`*                           |*`hipErrorNotMappedAsPointer`*                              | This indicates that a mapped resource is not available for access as a pointer.                                                |
-|          214 |*`CUDA_ERROR_ECC_UNCORRECTABLE`*                               |*`hipErrorECCNotCorrectable`*                               | This indicates that an uncorrectable ECC error was detected during execution.                                                  |
-|          215 |*`CUDA_ERROR_UNSUPPORTED_LIMIT`*                               |*`hipErrorUnsupportedLimit`*                                | This indicates that the CUlimit passed to the API call is not supported by the active device.                                  |
-|          216 |*`CUDA_ERROR_CONTEXT_ALREADY_IN_USE`*                          |*`hipErrorContextAlreadyInUse`*                             | This indicates that the CUcontext passed to the API call can only be bound to a single CPU thread at a time but is already bound to a CPU thread. |
-|          217 |*`CUDA_ERROR_PEER_ACCESS_UNSUPPORTED`*                         |*`hipErrorPeerAccessUnsupported`*                           | This indicates that peer access is not supported across the given devices.                                                     |
-|          218 |*`CUDA_ERROR_INVALID_PTX`*                                     |*`hipErrorInvalidKernelFile`*                               | This indicates that a PTX JIT compilation failed.                                                                              |
-|          219 |*`CUDA_ERROR_INVALID_GRAPHICS_CONTEXT`*                        |*`hipErrorInvalidGraphicsContext`*                          | This indicates an error with OpenGL or DirectX context.                                                                        |
-|          300 |*`CUDA_ERROR_INVALID_SOURCE`*                                  |*`hipErrorInvalidSource`*                                   | This indicates that the device kernel source is invalid.                                                                       |
-|          301 |*`CUDA_ERROR_FILE_NOT_FOUND`*                                  |*`hipErrorFileNotFound`*                                    | This indicates that the file specified was not found.                                                                          |
-|          302 |*`CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND`*                  |*`hipErrorSharedObjectSymbolNotFound`*                      | This indicates that a link to a shared object failed to resolve.                                                               |
-|          303 |*`CUDA_ERROR_SHARED_OBJECT_INIT_FAILED`*                       |*`hipErrorSharedObjectInitFailed`*                          | This indicates that initialization of a shared object failed.                                                                  |
-|          304 |*`CUDA_ERROR_OPERATING_SYSTEM`*                                |*`hipErrorOperatingSystem`*                                 | This indicates that an OS call failed.                                                                                         |
-|          400 |*`CUDA_ERROR_INVALID_HANDLE`*                                  |*`hipErrorInvalidResourceHandle`*                           | This indicates that a resource handle passed to the API call was not valid. Resource handles are opaque types like CUstream and CUevent. |
-|          500 |*`CUDA_ERROR_NOT_FOUND`*                                       |*`hipErrorNotFound`*                                        | This indicates that a named symbol was not found. Examples of symbols are global/constant variable names, texture names, and surface names. |
-|          600 |*`CUDA_ERROR_NOT_READY`*                                       |*`hipErrorNotReady`*                                        | This indicates that asynchronous operations issued previously have not completed yet. This result is not actually an error, but must be indicated differently than CUDA_SUCCESS (which indicates completion). Calls that may return this value include cuEventQuery() and cuStreamQuery(). |
-|          700 |*`CUDA_ERROR_ILLEGAL_ADDRESS`*                                 |*`hipErrorIllegalAddress`*                                  | While executing a kernel, the device encountered a load or store instruction on an invalid memory address. The context cannot be used, so it must be destroyed (and a new one should be created). All existing device memory allocations from this context are invalid and must be reconstructed if the program is to continue using CUDA. |
-|          701 |*`CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES`*                         |*`hipErrorLaunchOutOfResources`*                            | This indicates that a launch did not occur because it did not have appropriate resources. This error usually indicates that the user has attempted to pass too many arguments to the device kernel, or the kernel launch specifies too many threads for the kernel's register count. Passing arguments of the wrong size (i.e. a 64-bit pointer when a 32-bit int is expected) is equivalent to passing too many arguments and can also result in this error. |
-|          702 |*`CUDA_ERROR_LAUNCH_TIMEOUT`*                                  |*`hipErrorLaunchTimeOut`*                                   | This indicates that the device kernel took too long to execute. This can only occur if timeouts are enabled - see the device attribute CU_DEVICE_ATTRIBUTE_KERNEL_EXEC_TIMEOUT for more information. The context cannot be used (and must be destroyed similar to CUDA_ERROR_LAUNCH_FAILED). All existing device memory allocations from this context are invalid and must be reconstructed if the program is to continue using CUDA. |
-|          703 |*`CUDA_ERROR_LAUNCH_INCOMPATIBLE_TEXTURING`*                   |                                                            | This error indicates a kernel launch that uses an incompatible texturing mode.                                                 |
-|          704 |*`CUDA_ERROR_PEER_ACCESS_ALREADY_ENABLED`*                     |*`hipErrorPeerAccessAlreadyEnabled`*                        | This error indicates that a call to cuCtxEnablePeerAccess() is trying to re-enable peer access to a context which has already had peer access to it enabled. |
-|          705 |*`CUDA_ERROR_PEER_ACCESS_NOT_ENABLED`*                         |*`hipErrorPeerAccessNotEnabled`*                            | This error indicates that cuCtxDisablePeerAccess() is trying to disable peer access which has not been enabled yet via cuCtxEnablePeerAccess(). |
-|          708 |*`CUDA_ERROR_PRIMARY_CONTEXT_ACTIVE`*                          |                                                            | This error indicates that cuCtxDisablePeerAccess() is trying to disable peer access which has not been enabled yet via cuCtxEnablePeerAccess(). |
-|          709 |*`CUDA_ERROR_CONTEXT_IS_DESTROYED`*                            |                                                            | This error indicates that the context current to the calling thread has been destroyed using cuCtxDestroy, or is a primary context which has not yet been initialized. |
-|          710 |*`CUDA_ERROR_ASSERT`*                                          |                                                            | A device-side assert triggered during kernel execution. The context cannot be used anymore, and must be destroyed. All existing device memory allocations from this context are invalid and must be reconstructed if the program is to continue using CUDA. |
-|          711 |*`CUDA_ERROR_TOO_MANY_PEERS`*                                  |                                                            | This error indicates that the hardware resources required to enable peer access have been exhausted for one or more of the devices passed to cuCtxEnablePeerAccess(). |
-|          712 |*`CUDA_ERROR_HOST_MEMORY_ALREADY_REGISTERED`*                  |*`hipErrorHostMemoryAlreadyRegistered`*                     | This error indicates that the memory range passed to cuMemHostRegister() has already been registered.                          |
-|          713 |*`CUDA_ERROR_HOST_MEMORY_NOT_REGISTERED`*                      |*`hipErrorHostMemoryNotRegistered`*                         | This error indicates that the pointer passed to cuMemHostUnregister() does not correspond to any currently registered memory region. |
-|          714 |*`CUDA_ERROR_HARDWARE_STACK_ERROR`*                            |                                                            | While executing a kernel, the device encountered a stack error. This can be due to stack corruption or exceeding the stack size limit. The context cannot be used, so it must be destroyed (and a new one should be created). All existing device memory allocations from this context are invalid and must be reconstructed if the program is to continue using CUDA. |
-|          715 |*`CUDA_ERROR_ILLEGAL_INSTRUCTION`*                             |                                                            | While executing a kernel, the device encountered an illegal instruction. The context cannot be used, so it must be destroyed (and a new one should be created). All existing device memory allocations from this context are invalid and must be reconstructed if the program is to continue using CUDA. |
-|          716 |*`CUDA_ERROR_MISALIGNED_ADDRESS`*                              |                                                            | While executing a kernel, the device encountered a load or store instruction on a memory address which is not aligned. The context cannot be used, so it must be destroyed (and a new one should be created). All existing device memory allocations from this context are invalid and must be reconstructed if the program is to continue using CUDA. |
-|          717 |*`CUDA_ERROR_INVALID_ADDRESS_SPACE`*                           |                                                            | While executing a kernel, the device encountered an instruction which can only operate on memory locations in certain address spaces (global, shared, or local), but was supplied a memory address not belonging to an allowed address space. The context cannot be used, so it must be destroyed (and a new one should be created). All existing device memory allocations from this context are invalid and must be reconstructed if the program is to continue using CUDA. |
-|          718 |*`CUDA_ERROR_INVALID_PC`*                                      |                                                            | While executing a kernel, the device program counter wrapped its address space. The context cannot be used, so it must be destroyed (and a new one should be created). All existing device memory allocations from this context are invalid and must be reconstructed if the program is to continue using CUDA. |
-|          719 |*`CUDA_ERROR_LAUNCH_FAILED`*                                   |                                                            | An exception occurred on the device while executing a kernel. Common causes include dereferencing an invalid device pointer and accessing out of bounds shared memory. The context cannot be used, so it must be destroyed (and a new one should be created). All existing device memory allocations from this context are invalid and must be reconstructed if the program is to continue using CUDA. |
-|          800 |*`CUDA_ERROR_NOT_PERMITTED`*                                   |                                                            | This error indicates that the attempted operation is not permitted.                                                            |
-|          801 |*`CUDA_ERROR_NOT_SUPPORTED`*                                   |                                                            | This error indicates that the attempted operation is not supported on the current system or device.                            |
-|          999 |*`CUDA_ERROR_UNKNOWN`*                                         |                                                            | This indicates that an unknown internal error has occurred.                                                                    |
-| enum         |***`CUstream_flags`***                                         |***`hipStreamFlags`***                                      | Stream creation flags                                                                                                          |
-|          0x0 |*`CU_STREAM_DEFAULT`*                                          |*`hipStreamDefault`*                                        | Default stream flag                                                                                                            |
-|          0x1 |*`CU_STREAM_NON_BLOCKING`*                                     |*`hipStreamNonBlocking`*                                    | Stream does not synchronize with stream 0 (the NULL stream)                                                                    |
-| typedef      | `CUarray`                                                     | `hipArray *`                                               | CUDA array                                                                                                                     |
-| struct       | `CUarray_st`                                                  | `hipArray`                                                 | CUDA array                                                                                                                     |
-| typedef      | `CUcontext`                                                   | `hipCtx_t`                                                 | CUDA context                                                                                                                   |
-| typedef      | `CUdevice`                                                    | `hipDevice_t`                                              | CUDA device                                                                                                                    |
-| typedef      | `CUdeviceptr`                                                 | `hipDeviceptr_t`                                           | CUDA device pointer CUdeviceptr is defined as an unsigned integer type whose size matches the size of a pointer on the target platform. |
-| typedef      | `CUevent`                                                     | `hipEvent_t`                                               | CUDA event                                                                                                                     |
-| typedef      | `CUfunction`                                                  | `hipFunction_t`                                            | CUDA function                                                                                                                  |
-| typedef      | `CUgraphicsResource`                                          |                                                            | CUDA graphics interop resource                                                                                                 |
-| typedef      | `CUmipmappedArray`                                            |                                                            | CUDA mipmapped array                                                                                                           |
-| typedef      | `CUmodule`                                                    | `hipModule_t`                                              | CUDA module                                                                                                                    |
-| typedef      | `CUstream`                                                    | `hipStream_t`                                              | CUDA module                                                                                                                    |
-| typedef      | `CUstreamCallback`                                            | `hipStreamCallback_t`                                      | CUDA stream callback                                                                                                           |
-| typedef      | `CUsurfObject`                                                |                                                            | An opaque value that represents a CUDA surface object                                                                          |
-| typedef      | `CUsurfref`                                                   |                                                            | CUDA surface reference                                                                                                         |
-| typedef      | `CUtexObject`                                                 |                                                            | An opaque value that represents a CUDA texture object                                                                          |
-| typedef      | `CUtexref`                                                    |                                                            | CUDA texture reference                                                                                                         |
-| define       |`CU_IPC_HANDLE_SIZE`                                           |                                                            | CUDA IPC handle size.                                                                                                          |
-| define       |`CU_LAUNCH_PARAM_BUFFER_POINTER`                               | `HIP_LAUNCH_PARAM_BUFFER_POINTER`                          | Indicator that the next value in the extra parameter to cuLaunchKernel will be a pointer to a buffer containing all kernel parameters used for launching kernel f. This buffer needs to honor all alignment/padding requirements of the individual parameters. If CU_LAUNCH_PARAM_BUFFER_SIZE is not also specified in the extra array, then CU_LAUNCH_PARAM_BUFFER_POINTER will have no effect. |
-| define       |`CU_LAUNCH_PARAM_BUFFER_SIZE`                                  | `HIP_LAUNCH_PARAM_BUFFER_SIZE`                             | Indicator that the next value in the extra parameter to cuLaunchKernel will be a pointer to a size_t which contains the size of the buffer specified with CU_LAUNCH_PARAM_BUFFER_POINTER. It is required that CU_LAUNCH_PARAM_BUFFER_POINTER also be specified in the extra array if the value associated with CU_LAUNCH_PARAM_BUFFER_SIZE is not zero. |
-| define       |`CU_LAUNCH_PARAM_END`                                          | `HIP_LAUNCH_PARAM_END`                                     | End of array terminator for the extra parameter to cuLaunchKernel.                                                             |
-| define       |`CU_MEMHOSTALLOC_DEVICEMAP`                                    |                                                            | If set, host memory is mapped into CUDA address space and cuMemHostGetDevicePointer() may be called on the host pointer. Flag for cuMemHostAlloc(). |
-| define       |`CU_MEMHOSTALLOC_PORTABLE`                                     |                                                            | If set, host memory is portable between CUDA contexts. Flag for cuMemHostAlloc().                                              |
-| define       |`CU_MEMHOSTALLOC_WRITECOMBINED`                                |                                                            | If set, host memory is allocated as write-combined - fast to write, faster to DMA, slow to read except via SSE4 streaming load instruction (MOVNTDQA). Flag for cuMemHostAlloc(). |
-| define       |`CU_MEMHOSTREGISTER_DEVICEMAP`                                 |                                                            | If set, host memory is mapped into CUDA address space and cuMemHostGetDevicePointer() may be called on the host pointer. Flag for cuMemHostRegister(). |
-| define       |`CU_MEMHOSTREGISTER_IOMEMORY`                                  |                                                            | If set, the passed memory pointer is treated as pointing to some memory-mapped I/O space, e.g. belonging to a third-party PCIe device. On Windows the flag is a no-op. On Linux that memory is marked as non cache-coherent for the GPU and is expected to be physically contiguous. It may return CUDA_ERROR_NOT_PERMITTED if run as an unprivileged user, CUDA_ERROR_NOT_SUPPORTED on older Linux kernel versions. On all other platforms, it is not supported and CUDA_ERROR_NOT_SUPPORTED is returned. Flag for cuMemHostRegister(). |
-| define       |`CU_MEMHOSTREGISTER_PORTABLE`                                  |                                                            | If set, host memory is portable between CUDA contexts. Flag for cuMemHostRegister().                                           |
-| define       |`CU_PARAM_TR_DEFAULT`                                          |                                                            | For texture references loaded into the module, use default texunit from texture reference.                                     |
-| define       |`CU_STREAM_LEGACY`                                             |                                                            | Legacy stream handle. Stream handle that can be passed as a CUstream to use an implicit stream with legacy synchronization behavior. See details of the synchronization behavior. |
-| define       |`CU_STREAM_PER_THREAD`                                         |                                                            | Per-thread stream handle. Stream handle that can be passed as a CUstream to use an implicit stream with perthread synchronization behavior. See details of the synchronization behavior. |
-| define       |`CU_TRSA_OVERRIDE_FORMAT`                                      |                                                            | Override the texref format with a format inferred from the array. Flag for cuTexRefSetArray().                                 |
-| define       |`CU_TRSF_NORMALIZED_COORDINATES`                               |                                                            | Use normalized texture coordinates in the range [0,1) instead of [0,dim). Flag for cuTexRefSetFlags().                         |
-| define       |`CU_TRSF_SRGB`                                                 |                                                            | Perform sRGB->linear conversion during texture read. Flag for cuTexRefSetFlags().                                              |
-| define       |`CUDA_ARRAY3D_2DARRAY`                                         |                                                            | Deprecated, use CUDA_ARRAY3D_LAYERED.                                                                                          |
-| define       |`CUDA_ARRAY3D_CUBEMAP`                                         |                                                            | If set, the CUDA array is a collection of six 2D arrays, representing faces of a cube. The width of such a CUDA array must be equal to its height, and Depth must be six. If CUDA_ARRAY3D_LAYERED flag is also set, then the CUDA array is a collection of cubemaps and Depth must be a multiple of six. |
-| define       |`CUDA_ARRAY3D_DEPTH_TEXTURE`                                   |                                                            | This flag if set indicates that the CUDA array is a DEPTH_TEXTURE.                                                             |
-| define       |`CUDA_ARRAY3D_LAYERED`                                         |                                                            | If set, the CUDA array is a collection of layers, where each layer is either a 1D or a 2D array and the Depth member of CUDA_ARRAY3D_DESCRIPTOR specifies the number of layers, not the depth of a 3D array. |
-| define       |`CUDA_ARRAY3D_SURFACE_LDST`                                    |                                                            | This flag must be set in order to bind a surface reference to the CUDA array.                                                  |
-| define       |`CUDA_ARRAY3D_TEXTURE_GATHER`                                  |                                                            | This flag must be set in order to perform texture gather operations on a CUDA array.                                           |
-| define       |`CUDA_VERSION`                                                 |                                                            | CUDA API version number.                                                                                                       |
+| **type**     |   **CUDA**                                                    |   **HIP**                                                  |
+|-------------:|---------------------------------------------------------------|------------------------------------------------------------|
+| struct       | `CUDA_ARRAY3D_DESCRIPTOR`                                     |                                                            |
+| struct       | `CUDA_ARRAY_DESCRIPTOR`                                       |                                                            |
+| struct       | `CUDA_MEMCPY2D`                                               |                                                            |
+| struct       | `CUDA_MEMCPY3D`                                               |                                                            |
+| struct       | `CUDA_MEMCPY3D_PEER`                                          |                                                            |
+| struct       | `CUDA_POINTER_ATTRIBUTE_P2P_TOKENS`                           |                                                            |
+| struct       | `CUDA_RESOURCE_DESC`                                          |                                                            |
+| struct       | `CUDA_RESOURCE_VIEW_DESC`                                     |                                                            |
+| struct       | `CUdevprop`                                                   | `hipDeviceProp_t`                                          |
+| struct       | `CUipcEventHandle`                                            |                                                            |
+| struct       | `CUipcMemHandle`                                              |                                                            |
+| enum         |***`CUaddress_mode`***                                         |                                                            |
+|            0 |*`CU_TR_ADDRESS_MODE_WRAP`*                                    |                                                            |
+|            1 |*`CU_TR_ADDRESS_MODE_CLAMP`*                                   |                                                            |
+|            2 |*`CU_TR_ADDRESS_MODE_MIRROR`*                                  |                                                            |
+|            3 |*`CU_TR_ADDRESS_MODE_BORDER`*                                  |                                                            |
+| enum         |***`CUarray_cubemap_face`***                                   |                                                            |
+|         0x00 |*`CU_CUBEMAP_FACE_POSITIVE_X`*                                 |                                                            |
+|         0x01 |*`CU_CUBEMAP_FACE_NEGATIVE_X`*                                 |                                                            |
+|         0x02 |*`CU_CUBEMAP_FACE_POSITIVE_Y`*                                 |                                                            |
+|         0x03 |*`CU_CUBEMAP_FACE_NEGATIVE_Y`*                                 |                                                            |
+|         0x04 |*`CU_CUBEMAP_FACE_POSITIVE_Z`*                                 |                                                            |
+|         0x05 |*`CU_CUBEMAP_FACE_NEGATIVE_Z`*                                 |                                                            |
+| enum         |***`CUarray_format`***                                         |                                                            |
+|         0x01 |*`CU_AD_FORMAT_UNSIGNED_INT8`*                                 |                                                            |
+|         0x02 |*`CU_AD_FORMAT_UNSIGNED_INT16`*                                |                                                            |
+|         0x03 |*`CU_AD_FORMAT_UNSIGNED_INT32`*                                |                                                            |
+|         0x08 |*`CU_AD_FORMAT_SIGNED_INT8`*                                   |                                                            |
+|         0x09 |*`CU_AD_FORMAT_SIGNED_INT16`*                                  |                                                            |
+|         0x0a |*`CU_AD_FORMAT_SIGNED_INT32`*                                  |                                                            |
+|         0x10 |*`CU_AD_FORMAT_HALF`*                                          |                                                            |
+|         0x20 |*`CU_AD_FORMAT_FLOAT`*                                         |                                                            |
+| enum         |***`CUctx_flags`***                                            |                                                            |
+|         0x00 |*`CU_CTX_SCHED_AUTO`*                                          |                                                            |
+|         0x01 |*`CU_CTX_SCHED_SPIN`*                                          |                                                            |
+|         0x02 |*`CU_CTX_SCHED_YIELD`*                                         |                                                            |
+|         0x04 |*`CU_CTX_SCHED_BLOCKING_SYNC`*                                 |                                                            |
+|         0x04 |*`CU_CTX_BLOCKING_SYNC`*                                       |                                                            |
+|         0x07 |*`CU_CTX_SCHED_MASK`*                                          |                                                            |
+|         0x08 |*`CU_CTX_MAP_HOST`*                                            |                                                            |
+|         0x10 |*`CU_CTX_LMEM_RESIZE_TO_MAX`*                                  |                                                            |
+|         0x1f |*`CU_CTX_FLAGS_MASK`*                                          |                                                            |
+| enum         |***`CUdevice_attribute`***                                     |                                                            |
+|            1 |*`CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK`*                  |*`hipDeviceAttributeMaxThreadsPerBlock`*                    |
+|            2 |*`CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_X`*                        |*`hipDeviceAttributeMaxBlockDimX`*                          |
+|            3 |*`CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Y`*                        |*`hipDeviceAttributeMaxBlockDimY`*                          |
+|            4 |*`CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Z`*                        |*`hipDeviceAttributeMaxBlockDimZ`*                          |
+|            5 |*`CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X`*                         |*`hipDeviceAttributeMaxGridDimX`*                           |
+|            6 |*`CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Y`*                         |*`hipDeviceAttributeMaxGridDimY`*                           |
+|            7 |*`CU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Z`*                         |*`hipDeviceAttributeMaxGridDimZ`*                           |
+|            8 |*`CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK`*            |*`hipDeviceAttributeMaxSharedMemoryPerBlock`*               |
+|            8 |*`CU_DEVICE_ATTRIBUTE_SHARED_MEMORY_PER_BLOCK`*                |*`hipDeviceAttributeMaxSharedMemoryPerBlock`*               |
+|            9 |*`CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY`*                  |*`hipDeviceAttributeTotalConstantMemory`*                   |
+|           10 |*`CU_DEVICE_ATTRIBUTE_WARP_SIZE`*                              |*`hipDeviceAttributeWarpSize`*                              |
+|           11 |*`CU_DEVICE_ATTRIBUTE_MAX_PITCH`*                              |                                                            |
+|           12 |*`CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK`*                |*`hipDeviceAttributeMaxRegistersPerBlock`*                  |
+|           12 |*`CU_DEVICE_ATTRIBUTE_REGISTERS_PER_BLOCK`*                    |*`hipDeviceAttributeMaxRegistersPerBlock`*                  |
+|           13 |*`CU_DEVICE_ATTRIBUTE_CLOCK_RATE`*                             |*`hipDeviceAttributeClockRate`*                             |
+|           14 |*`CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT`*                      |                                                            |
+|           15 |*`CU_DEVICE_ATTRIBUTE_GPU_OVERLAP`*                            |                                                            |
+|           16 |*`CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT`*                   |*`hipDeviceAttributeMultiprocessorCount`*                   |
+|           17 |*`CU_DEVICE_ATTRIBUTE_KERNEL_EXEC_TIMEOUT`*                    |                                                            |
+|           18 |*`CU_DEVICE_ATTRIBUTE_INTEGRATED`*                             |                                                            |
+|           19 |*`CU_DEVICE_ATTRIBUTE_CAN_MAP_HOST_MEMORY`*                    |                                                            |
+|           20 |*`CU_DEVICE_ATTRIBUTE_COMPUTE_MODE`*                           |*`hipDeviceAttributeComputeMode`*                           |
+|           21 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_WIDTH`*                |                                                            |
+|           22 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_WIDTH`*                |                                                            |
+|           23 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_HEIGHT`*               |                                                            |
+|           24 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_WIDTH`*                |                                                            |
+|           25 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_HEIGHT`*               |                                                            |
+|           26 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_DEPTH`*                |                                                            |
+|           27 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_WIDTH`*        |                                                            |
+|           28 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_HEIGHT`*       |                                                            |
+|           29 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_LAYERS`*       |                                                            |
+|           27 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_ARRAY_WIDTH`*          |                                                            |
+|           28 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_ARRAY_HEIGHT`*         |                                                            |
+|           29 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_ARRAY_NUMSLICES`*      |                                                            |
+|           30 |*`CU_DEVICE_ATTRIBUTE_SURFACE_ALIGNMENT`*                      |                                                            |
+|           31 |*`CU_DEVICE_ATTRIBUTE_CONCURRENT_KERNELS`*                     |*`hipDeviceAttributeConcurrentKernels`*                     |
+|           32 |*`CU_DEVICE_ATTRIBUTE_ECC_ENABLED`*                            |                                                            |
+|           33 |*`CU_DEVICE_ATTRIBUTE_PCI_BUS_ID`*                             |*`hipDeviceAttributePciBusId`*                              |
+|           34 |*`CU_DEVICE_ATTRIBUTE_PCI_DEVICE_ID`*                          |*`hipDeviceAttributePciDeviceId`*                           |
+|           35 |*`CU_DEVICE_ATTRIBUTE_TCC_DRIVER`*                             |                                                            |
+|           36 |*`CU_DEVICE_ATTRIBUTE_MEMORY_CLOCK_RATE`*                      |*`hipDeviceAttributeMemoryClockRate`*                       |
+|           37 |*`CU_DEVICE_ATTRIBUTE_GLOBAL_MEMORY_BUS_WIDTH`*                |*`hipDeviceAttributeMemoryBusWidth`*                        |
+|           38 |*`CU_DEVICE_ATTRIBUTE_L2_CACHE_SIZE`*                          |*`hipDeviceAttributeL2CacheSize`*                           |
+|           39 |*`CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_MULTIPROCESSOR`*         |*`hipDeviceAttributeMaxThreadsPerMultiProcessor`*           |
+|           40 |*`CU_DEVICE_ATTRIBUTE_ASYNC_ENGINE_COUNT`*                     |                                                            |
+|           41 |*`CU_DEVICE_ATTRIBUTE_UNIFIED_ADDRESSING`*                     |                                                            |
+|           42 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LAYERED_WIDTH`*        |                                                            |
+|           43 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LAYERED_LAYERS`*       |                                                            |
+|           44 |*`CU_DEVICE_ATTRIBUTE_CAN_TEX2D_GATHER`*                       |                                                            |
+|           45 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_GATHER_WIDTH`*         |                                                            |
+|           46 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_GATHER_HEIGHT`*        |                                                            |
+|           47 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_WIDTH_ALTERNATE`*      |                                                            |
+|           48 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_HEIGHT_ALTERNATE`*     |                                                            |
+|           49 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_DEPTH_ALTERNATE`*      |                                                            |
+|           50 |*`CU_DEVICE_ATTRIBUTE_PCI_DOMAIN_ID`*                          |                                                            |
+|           51 |*`CU_DEVICE_ATTRIBUTE_TEXTURE_PITCH_ALIGNMENT`*                |                                                            |
+|           52 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURECUBEMAP_WIDTH`*           |                                                            |
+|           53 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURECUBEMAP_LAYERED_WIDTH`*   |                                                            |
+|           54 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURECUBEMAP_LAYERED_LAYERS`*  |                                                            |
+|           55 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_WIDTH`*                |                                                            |
+|           56 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_WIDTH`*                |                                                            |
+|           57 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_HEIGHT`*               |                                                            |
+|           58 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE3D_WIDTH`*                |                                                            |
+|           59 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE3D_HEIGHT`*               |                                                            |
+|           60 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE3D_DEPTH`*                |                                                            |
+|           61 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_LAYERED_WIDTH`*        |                                                            |
+|           62 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_LAYERED_LAYERS`*       |                                                            |
+|           63 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_LAYERED_WIDTH`*        |                                                            |
+|           64 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_LAYERED_HEIGHT`*       |                                                            |
+|           65 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE2D_LAYERED_LAYERS`*       |                                                            |
+|           66 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_WIDTH`*           |                                                            |
+|           67 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_LAYERED_WIDTH`*   |                                                            |
+|           68 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACECUBEMAP_LAYERED_LAYERS`*  |                                                            |
+|           69 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_LINEAR_WIDTH`*         |                                                            |
+|           70 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LINEAR_WIDTH`*         |                                                            |
+|           71 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LINEAR_HEIGHT`*        |                                                            |
+|           72 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LINEAR_PITCH`*         |                                                            |
+|           73 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_MIPMAPPED_WIDTH`*      |                                                            |
+|           74 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_MIPMAPPED_HEIGHT`*     |                                                            |
+|           75 |*`CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR`*               |*`hipDeviceAttributeComputeCapabilityMajor`*                |
+|           76 |*`CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR`*               |*`hipDeviceAttributeComputeCapabilityMinor`*                |
+|           77 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_MIPMAPPED_WIDTH`*      |                                                            |
+|           78 |*`CU_DEVICE_ATTRIBUTE_STREAM_PRIORITIES_SUPPORTED`*            |                                                            |
+|           79 |*`CU_DEVICE_ATTRIBUTE_GLOBAL_L1_CACHE_SUPPORTED`*              |                                                            |
+|           80 |*`CU_DEVICE_ATTRIBUTE_LOCAL_L1_CACHE_SUPPORTED`*               |                                                            |
+|           81 |*`CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_MULTIPROCESSOR`*   |*`hipDeviceAttributeMaxSharedMemoryPerMultiprocessor`*      |
+|           82 |*`CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_MULTIPROCESSOR`*       |                                                            |
+|           83 |*`CU_DEVICE_ATTRIBUTE_MANAGED_MEMORY`*                         |*`hipDeviceAttributeManagedMemory`*                         |
+|           84 |*`CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD`*                        |                                                            |
+|           85 |*`CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD_GROUP_ID`*               |                                                            |
+|           86 |*`CU_DEVICE_ATTRIBUTE_MAX`*                                    |                                                            |
+| enum         |***`CUevent_flags`***                                          |                                                            |
+|         0x00 |*`CU_EVENT_DEFAULT`*                                           |*`hipEventDefault`*                                         |
+|         0x01 |*`CU_EVENT_BLOCKING_SYNC`*                                     |*`hipEventBlockingSync`*                                    |
+|         0x02 |*`CU_EVENT_DISABLE_TIMING`*                                    |*`hipEventDisableTiming`*                                   |
+|         0x04 |*`CU_EVENT_INTERPROCESS`*                                      |*`hipEventInterprocess`*                                    |
+| enum         |***`CUfilter_mode`***                                          |***`hipTextureFilterMode`***                                |
+|            0 |*`CU_TR_FILTER_MODE_POINT`*                                    |*`hipFilterModePoint`*                                      |
+|            1 |*`CU_TR_FILTER_MODE_LINEAR`*                                   |*`hipFilterModeLinear`*                                     |
+| enum         |***`CUfunc_cache`***                                           |***`hipFuncCache`***                                        |
+|         0x00 |*`CU_FUNC_CACHE_PREFER_NONE`*                                  |*`hipFuncCachePreferNone`*                                  |
+|         0x01 |*`CU_FUNC_CACHE_PREFER_SHARED`*                                |*`hipFuncCachePreferShared`*                                |
+|         0x02 |*`CU_FUNC_CACHE_PREFER_L1`*                                    |*`hipFuncCachePreferL1`*                                    |
+|         0x03 |*`CU_FUNC_CACHE_PREFER_EQUAL`*                                 |*`hipFuncCachePreferEqual`*                                 |
+| enum         |***`CUfunction_attribute`***                                   |                                                            |
+|            0 |*`CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK`*                    |                                                            |
+|            1 |*`CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES`*                        |                                                            |
+|            2 |*`CU_FUNC_ATTRIBUTE_CONST_SIZE_BYTES`*                         |                                                            |
+|            3 |*`CU_FUNC_ATTRIBUTE_LOCAL_SIZE_BYTES`*                         |                                                            |
+|            4 |*`CU_FUNC_ATTRIBUTE_NUM_REGS`*                                 |                                                            |
+|            5 |*`CU_FUNC_ATTRIBUTE_PTX_VERSION`*                              |                                                            |
+|            6 |*`CU_FUNC_ATTRIBUTE_BINARY_VERSION`*                           |                                                            |
+|            7 |*`CU_FUNC_ATTRIBUTE_CACHE_MODE_CA`*                            |                                                            |
+|            8 |*`CU_FUNC_ATTRIBUTE_MAX`*                                      |                                                            |
+| enum         |***`CUgraphicsMapResourceFlags`***                             |                                                            |
+|         0x00 |*`CU_GRAPHICS_MAP_RESOURCE_FLAGS_NONE`*                        |                                                            |
+|         0x01 |*`CU_GRAPHICS_MAP_RESOURCE_FLAGS_READ_ONLY`*                   |                                                            |
+|         0x02 |*`CU_GRAPHICS_MAP_RESOURCE_FLAGS_WRITE_DISCARD`*               |                                                            |
+| enum         |***`CUgraphicsRegisterFlags`***                                |                                                            |
+|         0x00 |*`CU_GRAPHICS_REGISTER_FLAGS_NONE`*                            |                                                            |
+|         0x01 |*`CU_GRAPHICS_REGISTER_FLAGS_READ_ONLY`*                       |                                                            |
+|         0x02 |*`CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD`*                   |                                                            |
+|         0x04 |*`CU_GRAPHICS_REGISTER_FLAGS_SURFACE_LDST`*                    |                                                            |
+|         0x08 |*`CU_GRAPHICS_REGISTER_FLAGS_TEXTURE_GATHER`*                  |                                                            |
+| enum         |***`CUipcMem_flags`***                                         |                                                            |
+|          0x1 |*`CU_IPC_MEM_LAZY_ENABLE_PEER_ACCESS`*                         |*`hipIpcMemLazyEnablePeerAccess`*                           |
+| enum         |***`CUjit_cacheMode`***                                        |                                                            |
+|            0 |*`CU_JIT_CACHE_OPTION_NONE`*                                   |                                                            |
+|              |*`CU_JIT_CACHE_OPTION_CG`*                                     |                                                            |
+|              |*`CU_JIT_CACHE_OPTION_CA`*                                     |                                                            |
+| enum         |***`CUjit_fallback`***                                         |                                                            |
+|            0 |*`CU_PREFER_PTX`*                                              |                                                            |
+|              |*`CU_PREFER_BINARY`*                                           |                                                            |
+| enum         |***`CUjit_option`***                                           |                                                            |
+|            0 |*`CU_JIT_MAX_REGISTERS`*                                       |                                                            |
+|              |*`CU_JIT_THREADS_PER_BLOCK`*                                   |                                                            |
+|              |*`CU_JIT_WALL_TIME`*                                           |                                                            |
+|              |*`CU_JIT_INFO_LOG_BUFFER`*                                     |                                                            |
+|              |*`CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES`*                          |                                                            |
+|              |*`CU_JIT_OPTIMIZATION_LEVEL`*                                  |                                                            |
+|              |*`CU_JIT_TARGET_FROM_CUCONTEXT`*                               |                                                            |
+|              |*`CU_JIT_TARGET`*                                              |                                                            |
+|              |*`CU_JIT_FALLBACK_STRATEGY`*                                   |                                                            |
+|              |*`CU_JIT_GENERATE_DEBUG_INFO`*                                 |                                                            |
+|              |*`CU_JIT_LOG_VERBOSE`*                                         |                                                            |
+|              |*`CU_JIT_GENERATE_LINE_INFO`*                                  |                                                            |
+|              |*`CU_JIT_CACHE_MODE`*                                          |                                                            |
+|              |*`CU_JIT_NUM_OPTIONS`*                                         |                                                            |
+| enum         |***`CUjit_target`***                                           |                                                            |
+|           10 |*`CU_TARGET_COMPUTE_10`*                                       |                                                            |
+|           11 |*`CU_TARGET_COMPUTE_11`*                                       |                                                            |
+|           12 |*`CU_TARGET_COMPUTE_12`*                                       |                                                            |
+|           13 |*`CU_TARGET_COMPUTE_13`*                                       |                                                            |
+|           20 |*`CU_TARGET_COMPUTE_20`*                                       |                                                            |
+|           21 |*`CU_TARGET_COMPUTE_21`*                                       |                                                            |
+|           30 |*`CU_TARGET_COMPUTE_30`*                                       |                                                            |
+|           32 |*`CU_TARGET_COMPUTE_32`*                                       |                                                            |
+|           35 |*`CU_TARGET_COMPUTE_35`*                                       |                                                            |
+|           37 |*`CU_TARGET_COMPUTE_37`*                                       |                                                            |
+|           50 |*`CU_TARGET_COMPUTE_50`*                                       |                                                            |
+|           52 |*`CU_TARGET_COMPUTE_52`*                                       |                                                            |
+| enum         |***`CUjitInputType`***                                         |                                                            |
+|            0 |*`CU_JIT_INPUT_CUBIN`*                                         |                                                            |
+|              |*`CU_JIT_INPUT_PTX`*                                           |                                                            |
+|              |*`CU_JIT_INPUT_FATBINARY`*                                     |                                                            |
+|              |*`CU_JIT_INPUT_OBJECT`*                                        |                                                            |
+|              |*`CU_JIT_INPUT_LIBRARY`*                                       |                                                            |
+|              |*`CU_JIT_NUM_INPUT_TYPES`*                                     |                                                            |
+| enum         |***`CUlimit`***                                                |***`hipLimit_t`***                                          |
+|         0x00 |*`CU_LIMIT_STACK_SIZE`*                                        |                                                            |
+|         0x01 |*`CU_LIMIT_PRINTF_FIFO_SIZE`*                                  |                                                            |
+|         0x02 |*`CU_LIMIT_MALLOC_HEAP_SIZE`*                                  |*`hipLimitMallocHeapSize`*                                  |
+|         0x03 |*`CU_LIMIT_DEV_RUNTIME_SYNC_DEPTH`*                            |                                                            |
+|         0x04 |*`CU_LIMIT_DEV_RUNTIME_PENDING_LAUNCH_COUNT`*                  |                                                            |
+|              |*`CU_LIMIT_MAX`*                                               |                                                            |
+| enum         |***`CUmemAttach_flags`***                                      |                                                            |
+|          0x1 |*`CU_MEM_ATTACH_GLOBAL`*                                       |                                                            |
+|          0x2 |*`CU_MEM_ATTACH_HOST`*                                         |                                                            |
+|          0x4 |*`CU_MEM_ATTACH_SINGLE`*                                       |                                                            |
+| enum         |***`CUmemorytype`***                                           |                                                            |
+|         0x01 |*`CU_MEMORYTYPE_HOST`*                                         |                                                            |
+|         0x02 |*`CU_MEMORYTYPE_DEVICE`*                                       |                                                            |
+|         0x03 |*`CU_MEMORYTYPE_ARRAY`*                                        |                                                            |
+|         0x04 |*`CU_MEMORYTYPE_UNIFIED`*                                      |                                                            |
+| enum         |***`CUoccupancy_flags`***                                      |                                                            |
+|         0x00 |*`CU_OCCUPANCY_DEFAULT`*                                       |                                                            |
+|         0x01 |*`CU_OCCUPANCY_DISABLE_CACHING_OVERRIDE`*                      |                                                            |
+| enum         |***`CUpointer_attribute`***                                    |                                                            |
+|            1 |*`CU_POINTER_ATTRIBUTE_CONTEXT`*                               |                                                            |
+|            2 |*`CU_POINTER_ATTRIBUTE_MEMORY_TYPE`*                           |                                                            |
+|            3 |*`CU_POINTER_ATTRIBUTE_DEVICE_POINTER`*                        |                                                            |
+|            4 |*`CU_POINTER_ATTRIBUTE_HOST_POINTER`*                          |                                                            |
+|            5 |*`CU_POINTER_ATTRIBUTE_P2P_TOKENS`*                            |                                                            |
+|            6 |*`CU_POINTER_ATTRIBUTE_SYNC_MEMOPS`*                           |                                                            |
+|            7 |*`CU_POINTER_ATTRIBUTE_BUFFER_ID`*                             |                                                            |
+|            8 |*`CU_POINTER_ATTRIBUTE_IS_MANAGED`*                            |                                                            |
+| enum         |***`CUmemorytype`***                                           |                                                            |
+|         0x00 |*`CU_RESOURCE_TYPE_ARRAY`*                                     |                                                            |
+|         0x01 |*`CU_RESOURCE_TYPE_MIPMAPPED_ARRAY`*                           |                                                            |
+|         0x02 |*`CU_RESOURCE_TYPE_LINEAR`*                                    |                                                            |
+|         0x03 |*`CU_RESOURCE_TYPE_PITCH2D`*                                   |                                                            |
+| enum         |***`CUresourceViewFormat`***                                   |                                                            |
+|         0x00 |*`CU_RES_VIEW_FORMAT_NONE`*                                    |                                                            |
+|         0x01 |*`CU_RES_VIEW_FORMAT_UINT_1X8`*                                |                                                            |
+|         0x02 |*`CU_RES_VIEW_FORMAT_UINT_2X8`*                                |                                                            |
+|         0x03 |*`CU_RES_VIEW_FORMAT_UINT_4X8`*                                |                                                            |
+|         0x04 |*`CU_RES_VIEW_FORMAT_SINT_1X8`*                                |                                                            |
+|         0x05 |*`CU_RES_VIEW_FORMAT_SINT_2X8`*                                |                                                            |
+|         0x06 |*`CU_RES_VIEW_FORMAT_SINT_4X8`*                                |                                                            |
+|         0x07 |*`CU_RES_VIEW_FORMAT_UINT_1X16`*                               |                                                            |
+|         0x08 |*`CU_RES_VIEW_FORMAT_UINT_2X16`*                               |                                                            |
+|         0x09 |*`CU_RES_VIEW_FORMAT_UINT_4X16`*                               |                                                            |
+|         0x0a |*`CU_RES_VIEW_FORMAT_SINT_1X16`*                               |                                                            |
+|         0x0b |*`CU_RES_VIEW_FORMAT_SINT_2X16`*                               |                                                            |
+|         0x0c |*`CU_RES_VIEW_FORMAT_SINT_4X16`*                               |                                                            |
+|         0x0d |*`CU_RES_VIEW_FORMAT_UINT_1X32`*                               |                                                            |
+|         0x0e |*`CU_RES_VIEW_FORMAT_UINT_2X32`*                               |                                                            |
+|         0x0f |*`CU_RES_VIEW_FORMAT_UINT_4X32`*                               |                                                            |
+|         0x10 |*`CU_RES_VIEW_FORMAT_SINT_1X32`*                               |                                                            |
+|         0x11 |*`CU_RES_VIEW_FORMAT_SINT_2X32`*                               |                                                            |
+|         0x12 |*`CU_RES_VIEW_FORMAT_SINT_4X32`*                               |                                                            |
+|         0x13 |*`CU_RES_VIEW_FORMAT_FLOAT_1X16`*                              |                                                            |
+|         0x14 |*`CU_RES_VIEW_FORMAT_FLOAT_2X16`*                              |                                                            |
+|         0x15 |*`CU_RES_VIEW_FORMAT_FLOAT_4X16`*                              |                                                            |
+|         0x16 |*`CU_RES_VIEW_FORMAT_FLOAT_1X32`*                              |                                                            |
+|         0x17 |*`CU_RES_VIEW_FORMAT_FLOAT_2X32`*                              |                                                            |
+|         0x18 |*`CU_RES_VIEW_FORMAT_FLOAT_4X32`*                              |                                                            |
+|         0x19 |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC1`*                            |                                                            |
+|         0x1a |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC3`*                            |                                                            |
+|         0x1b |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC3`*                            |                                                            |
+|         0x1c |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC4`*                            |                                                            |
+|         0x1d |*`CU_RES_VIEW_FORMAT_SIGNED_BC4`*                              |                                                            |
+|         0x1e |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC5`*                            |                                                            |
+|         0x1f |*`CU_RES_VIEW_FORMAT_SIGNED_BC5`*                              |                                                            |
+|         0x20 |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC6H`*                           |                                                            |
+|         0x21 |*`CU_RES_VIEW_FORMAT_SIGNED_BC6H`*                             |                                                            |
+|         0x22 |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC7`*                            |                                                            |
+| enum         |***`CUresult`***                                               |***`hipError_t`***                                          |
+|            0 |*`CUDA_SUCCESS`*                                               |*`hipSuccess`*                                              |
+|            1 |*`CUDA_ERROR_INVALID_VALUE`*                                   |*`hipErrorInvalidValue`*                                    |
+|            2 |*`CUDA_ERROR_OUT_OF_MEMORY`*                                   |*`hipErrorMemoryAllocation`*                                |
+|            3 |*`CUDA_ERROR_NOT_INITIALIZED`*                                 |*`hipErrorNotInitialized`*                                  |
+|            4 |*`CUDA_ERROR_DEINITIALIZED`*                                   |*`hipErrorDeinitialized`*                                   |
+|            5 |*`CUDA_ERROR_PROFILER_DISABLED`*                               |*`hipErrorProfilerDisabled`*                                |
+|            6 |*`CUDA_ERROR_PROFILER_NOT_INITIALIZED`*                        |*`hipErrorProfilerNotInitialized`*                          |
+|            7 |*`CUDA_ERROR_PROFILER_ALREADY_STARTED`*                        |*`hipErrorProfilerAlreadyStarted`*                          |
+|            8 |*`CUDA_ERROR_PROFILER_ALREADY_STOPPED`*                        |*`hipErrorProfilerAlreadyStopped`*                          |
+|          100 |*`CUDA_ERROR_NO_DEVICE`*                                       |*`hipErrorNoDevice`*                                        |
+|          101 |*`CUDA_ERROR_INVALID_DEVICE`*                                  |*`hipErrorInvalidDevice`*                                   |
+|          200 |*`CUDA_ERROR_INVALID_IMAGE`*                                   |*`hipErrorInvalidImage`*                                    |
+|          201 |*`CUDA_ERROR_INVALID_CONTEXT`*                                 |*`hipErrorInvalidContext`*                                  |
+|          202 |*`CUDA_ERROR_CONTEXT_ALREADY_CURRENT`*                         |*`hipErrorContextAlreadyCurrent`*                           |
+|          205 |*`CUDA_ERROR_MAP_FAILED`*                                      |*`hipErrorMapFailed`*                                       |
+|          206 |*`CUDA_ERROR_UNMAP_FAILED`*                                    |*`hipErrorUnmapFailed`*                                     |
+|          207 |*`CUDA_ERROR_ARRAY_IS_MAPPED`*                                 |*`hipErrorArrayIsMapped`*                                   |
+|          208 |*`CUDA_ERROR_ALREADY_MAPPED`*                                  |*`hipErrorAlreadyMapped`*                                   |
+|          209 |*`CUDA_ERROR_NO_BINARY_FOR_GPU`*                               |*`hipErrorNoBinaryForGpu*                                   |
+|          210 |*`CUDA_ERROR_ALREADY_ACQUIRED`*                                |*`hipErrorAlreadyAcquired*                                  |
+|          211 |*`CUDA_ERROR_NOT_MAPPED`*                                      |*`hipErrorNotMapped`*                                       |
+|          212 |*`CUDA_ERROR_NOT_MAPPED_AS_ARRAY`*                             |*`hipErrorNotMappedAsArray`*                                |
+|          213 |*`CUDA_ERROR_NOT_MAPPED_AS_POINTER`*                           |*`hipErrorNotMappedAsPointer`*                              |
+|          214 |*`CUDA_ERROR_ECC_UNCORRECTABLE`*                               |*`hipErrorECCNotCorrectable`*                               |
+|          215 |*`CUDA_ERROR_UNSUPPORTED_LIMIT`*                               |*`hipErrorUnsupportedLimit`*                                |
+|          216 |*`CUDA_ERROR_CONTEXT_ALREADY_IN_USE`*                          |*`hipErrorContextAlreadyInUse`*                             |
+|          217 |*`CUDA_ERROR_PEER_ACCESS_UNSUPPORTED`*                         |*`hipErrorPeerAccessUnsupported`*                           |
+|          218 |*`CUDA_ERROR_INVALID_PTX`*                                     |*`hipErrorInvalidKernelFile`*                               |
+|          219 |*`CUDA_ERROR_INVALID_GRAPHICS_CONTEXT`*                        |*`hipErrorInvalidGraphicsContext`*                          |
+|          300 |*`CUDA_ERROR_INVALID_SOURCE`*                                  |*`hipErrorInvalidSource`*                                   |
+|          301 |*`CUDA_ERROR_FILE_NOT_FOUND`*                                  |*`hipErrorFileNotFound`*                                    |
+|          302 |*`CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND`*                  |*`hipErrorSharedObjectSymbolNotFound`*                      |
+|          303 |*`CUDA_ERROR_SHARED_OBJECT_INIT_FAILED`*                       |*`hipErrorSharedObjectInitFailed`*                          |
+|          304 |*`CUDA_ERROR_OPERATING_SYSTEM`*                                |*`hipErrorOperatingSystem`*                                 |
+|          400 |*`CUDA_ERROR_INVALID_HANDLE`*                                  |*`hipErrorInvalidResourceHandle`*                           |
+|          500 |*`CUDA_ERROR_NOT_FOUND`*                                       |*`hipErrorNotFound`*                                        |
+|          600 |*`CUDA_ERROR_NOT_READY`*                                       |*`hipErrorNotReady`*                                        |
+|          700 |*`CUDA_ERROR_ILLEGAL_ADDRESS`*                                 |*`hipErrorIllegalAddress`*                                  |
+|          701 |*`CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES`*                         |*`hipErrorLaunchOutOfResources`*                            |
+|          702 |*`CUDA_ERROR_LAUNCH_TIMEOUT`*                                  |*`hipErrorLaunchTimeOut`*                                   |
+|          703 |*`CUDA_ERROR_LAUNCH_INCOMPATIBLE_TEXTURING`*                   |                                                            |
+|          704 |*`CUDA_ERROR_PEER_ACCESS_ALREADY_ENABLED`*                     |*`hipErrorPeerAccessAlreadyEnabled`*                        |
+|          705 |*`CUDA_ERROR_PEER_ACCESS_NOT_ENABLED`*                         |*`hipErrorPeerAccessNotEnabled`*                            |
+|          708 |*`CUDA_ERROR_PRIMARY_CONTEXT_ACTIVE`*                          |                                                            |
+|          709 |*`CUDA_ERROR_CONTEXT_IS_DESTROYED`*                            |                                                            |
+|          710 |*`CUDA_ERROR_ASSERT`*                                          |                                                            |
+|          711 |*`CUDA_ERROR_TOO_MANY_PEERS`*                                  |                                                            |
+|          712 |*`CUDA_ERROR_HOST_MEMORY_ALREADY_REGISTERED`*                  |*`hipErrorHostMemoryAlreadyRegistered`*                     |
+|          713 |*`CUDA_ERROR_HOST_MEMORY_NOT_REGISTERED`*                      |*`hipErrorHostMemoryNotRegistered`*                         |
+|          714 |*`CUDA_ERROR_HARDWARE_STACK_ERROR`*                            |                                                            |
+|          715 |*`CUDA_ERROR_ILLEGAL_INSTRUCTION`*                             |                                                            |
+|          716 |*`CUDA_ERROR_MISALIGNED_ADDRESS`*                              |                                                            |
+|          717 |*`CUDA_ERROR_INVALID_ADDRESS_SPACE`*                           |                                                            |
+|          718 |*`CUDA_ERROR_INVALID_PC`*                                      |                                                            |
+|          719 |*`CUDA_ERROR_LAUNCH_FAILED`*                                   |                                                            |
+|          800 |*`CUDA_ERROR_NOT_PERMITTED`*                                   |                                                            |
+|          801 |*`CUDA_ERROR_NOT_SUPPORTED`*                                   |                                                            |
+|          999 |*`CUDA_ERROR_UNKNOWN`*                                         |                                                            |
+| enum         |***`CUstream_flags`***                                         |***`hipStreamFlags`***                                      |
+|          0x0 |*`CU_STREAM_DEFAULT`*                                          |*`hipStreamDefault`*                                        |
+|          0x1 |*`CU_STREAM_NON_BLOCKING`*                                     |*`hipStreamNonBlocking`*                                    |
+| enum         |***`CUGLDeviceList`***                                         |                                                            |
+|         0x01 |*`CU_GL_DEVICE_LIST_ALL`*                                      |                                                            |
+|         0x02 |*`CU_GL_DEVICE_LIST_CURRENT_FRAME`*                            |                                                            |
+|         0x03 |*`CU_GL_DEVICE_LIST_NEXT_FRAME`*                               |                                                            |
+| enum         |***`CUGLmap_flags`***                                          |                                                            |
+|         0x00 |*`CU_GL_MAP_RESOURCE_FLAGS_NONE`*                              |                                                            |
+|         0x01 |*`CU_GL_MAP_RESOURCE_FLAGS_READ_ONLY`*                         |                                                            |
+|         0x02 |*`CU_GL_MAP_RESOURCE_FLAGS_WRITE_DISCARD`*                     |                                                            |
+| enum         |***`CUd3d9DeviceList`***                                       |                                                            |
+|         0x01 |*`CU_D3D9_DEVICE_LIST_ALL`*                                    |                                                            |
+|         0x02 |*`CU_D3D9_DEVICE_LIST_CURRENT_FRAME`*                          |                                                            |
+|         0x03 |*`CU_D3D9_DEVICE_LIST_NEXT_FRAME`*                             |                                                            |
+| enum         |***`CUd3d9map_flags`***                                        |                                                            |
+|         0x00 |*`CU_D3D9_MAPRESOURCE_FLAGS_NONE`*                             |                                                            |
+|         0x01 |*`CU_D3D9_MAPRESOURCE_FLAGS_READONLY`*                         |                                                            |
+|         0x02 |*`CU_D3D9_MAPRESOURCE_FLAGS_WRITEDISCARD`*                     |                                                            |
+| enum         |***`CUd3d9register_flags`***                                   |                                                            |
+|         0x00 |*`CU_D3D9_REGISTER_FLAGS_NONE`*                                |                                                            |
+|         0x01 |*`CU_D3D9_REGISTER_FLAGS_ARRAY`*                               |                                                            |
+| enum         |***`CUd3d10DeviceList`***                                      |                                                            |
+|         0x01 |*`CU_D3D10_DEVICE_LIST_ALL`*                                   |                                                            |
+|         0x02 |*`CU_D3D10_DEVICE_LIST_CURRENT_FRAME`*                         |                                                            |
+|         0x03 |*`CU_D3D10_DEVICE_LIST_NEXT_FRAME`*                            |                                                            |
+| enum         |***`CUd3d10map_flags`***                                       |                                                            |
+|         0x00 |*`CU_D3D10_MAPRESOURCE_FLAGS_NONE`*                            |                                                            |
+|         0x01 |*`CU_D3D10_MAPRESOURCE_FLAGS_READONLY`*                        |                                                            |
+|         0x02 |*`CU_D3D10_MAPRESOURCE_FLAGS_WRITEDISCARD`*                    |                                                            |
+| enum         |***`CUd3d10register_flags`***                                  |                                                            |
+|         0x00 |*`CU_D3D10_REGISTER_FLAGS_NONE`*                               |                                                            |
+|         0x01 |*`CU_D3D10_REGISTER_FLAGS_ARRAY`*                              |                                                            |
+| enum         |***`CUd3d11DeviceList`***                                      |                                                            |
+|         0x01 |*`CU_D3D11_DEVICE_LIST_ALL`*                                   |                                                            |
+|         0x02 |*`CU_D3D11_DEVICE_LIST_CURRENT_FRAME`*                         |                                                            |
+|         0x03 |*`CU_D3D11_DEVICE_LIST_NEXT_FRAME`*                            |                                                            |
+| typedef      | `CUarray`                                                     | `hipArray *`                                               |
+| struct       | `CUarray_st`                                                  | `hipArray`                                                 |
+| typedef      | `CUcontext`                                                   | `hipCtx_t`                                                 |
+| typedef      | `CUdevice`                                                    | `hipDevice_t`                                              |
+| typedef      | `CUdeviceptr`                                                 | `hipDeviceptr_t`                                           |
+| typedef      | `CUevent`                                                     | `hipEvent_t`                                               |
+| typedef      | `CUfunction`                                                  | `hipFunction_t`                                            |
+| typedef      | `CUgraphicsResource`                                          |                                                            |
+| typedef      | `CUmipmappedArray`                                            |                                                            |
+| typedef      | `CUmodule`                                                    | `hipModule_t`                                              |
+| typedef      | `CUstream`                                                    | `hipStream_t`                                              |
+| typedef      | `CUstreamCallback`                                            | `hipStreamCallback_t`                                      |
+| typedef      | `CUsurfObject`                                                |                                                            |
+| typedef      | `CUsurfref`                                                   |                                                            |
+| typedef      | `CUtexObject`                                                 |                                                            |
+| typedef      | `CUtexref`                                                    |                                                            |
+| define       |`CU_IPC_HANDLE_SIZE`                                           |                                                            |
+| define       |`CU_LAUNCH_PARAM_BUFFER_POINTER`                               | `HIP_LAUNCH_PARAM_BUFFER_POINTER`                          |
+| define       |`CU_LAUNCH_PARAM_BUFFER_SIZE`                                  | `HIP_LAUNCH_PARAM_BUFFER_SIZE`                             |
+| define       |`CU_LAUNCH_PARAM_END`                                          | `HIP_LAUNCH_PARAM_END`                                     |
+| define       |`CU_MEMHOSTALLOC_DEVICEMAP`                                    |                                                            |
+| define       |`CU_MEMHOSTALLOC_PORTABLE`                                     |                                                            |
+| define       |`CU_MEMHOSTALLOC_WRITECOMBINED`                                |                                                            |
+| define       |`CU_MEMHOSTREGISTER_DEVICEMAP`                                 |                                                            |
+| define       |`CU_MEMHOSTREGISTER_IOMEMORY`                                  |                                                            |
+| define       |`CU_MEMHOSTREGISTER_PORTABLE`                                  |                                                            |
+| define       |`CU_PARAM_TR_DEFAULT`                                          |                                                            |
+| define       |`CU_STREAM_LEGACY`                                             |                                                            |
+| define       |`CU_STREAM_PER_THREAD`                                         |                                                            |
+| define       |`CU_TRSA_OVERRIDE_FORMAT`                                      |                                                            |
+| define       |`CU_TRSF_NORMALIZED_COORDINATES`                               |                                                            |
+| define       |`CU_TRSF_SRGB`                                                 |                                                            |
+| define       |`CUDA_ARRAY3D_2DARRAY`                                         |                                                            |
+| define       |`CUDA_ARRAY3D_CUBEMAP`                                         |                                                            |
+| define       |`CUDA_ARRAY3D_DEPTH_TEXTURE`                                   |                                                            |
+| define       |`CUDA_ARRAY3D_LAYERED`                                         |                                                            |
+| define       |`CUDA_ARRAY3D_SURFACE_LDST`                                    |                                                            |
+| define       |`CUDA_ARRAY3D_TEXTURE_GATHER`                                  |                                                            |
+| define       |`CUDA_VERSION`                                                 |                                                            |
 
 ## **2. Error Handling**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cuGetErrorName`                                          |                               | Gets the string representation of an error code enum name.                                                                     |
-| `cuGetErrorString`                                        |                               | Gets the string description of an error code.                                                                                  |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuGetErrorName`                                          |                               |
+| `cuGetErrorString`                                        |                               |
 
 ## **3. Initialization**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cuInit`                                                  | `hipInit`                     | Initialize the CUDA driver API.                                                                                                |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuInit`                                                  | `hipInit`                     |
 
 ## **4. Version Management**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cuDriverGetVersion`                                      | `hipDriverGetVersion`         | Returns the CUDA driver version.                                                                                               |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuDriverGetVersion`                                      | `hipDriverGetVersion`         |
 
 ## **5. Device Management**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cuDriverGetVersion`                                      | `hipGetDevice`                | Returns a handle to a compute device.                                                                                          |
-| `cuDeviceGetAttribute`                                    | `hipDeviceGetAttribute`       | Returns information about the device.                                                                                          |
-| `cuDeviceGetCount`                                        | `hipGetDeviceCount`           | Returns the number of compute-capable devices.                                                                                 |
-| `cuDeviceGetName`                                         | `hipDeviceGetName`            | Returns an identifer string for the device.                                                                                    |
-| `cuDeviceTotalMem`                                        | `hipDeviceTotalMem`           | Returns the total amount of memory on the device.                                                                              |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuDriverGetVersion`                                      | `hipGetDevice`                |
+| `cuDeviceGetAttribute`                                    | `hipDeviceGetAttribute`       |
+| `cuDeviceGetCount`                                        | `hipGetDeviceCount`           |
+| `cuDeviceGetName`                                         | `hipDeviceGetName`            |
+| `cuDeviceTotalMem`                                        | `hipDeviceTotalMem`           |
 
 ## **6. Device Management [DEPRECATED]**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cuDeviceComputeCapability`                               | `hipDeviceComputeCapability`  | Returns the compute capability of the device.                                                                                  |
-| `cuDeviceGetProperties`                                   | `hipGetDeviceProperties`      | Returns properties for a selected device.                                                                                      |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuDeviceComputeCapability`                               | `hipDeviceComputeCapability`  |
+| `cuDeviceGetProperties`                                   | `hipGetDeviceProperties`      |
 
 ## **7. Primary Context Management**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cuDevicePrimaryCtxGetState`                              | `hipDevicePrimaryCtxGetState` | Get the state of the primary context.                                                                                          |
-| `cuDevicePrimaryCtxRelease`                               | `hipDevicePrimaryCtxRelease`  | Release the primary context on the GPU.                                                                                        |
-| `cuDevicePrimaryCtxReset`                                 | `hipDevicePrimaryCtxReset`    | Destroy all allocations and reset all state on the primary context.                                                            |
-| `cuDevicePrimaryCtxRetain`                                | `hipDevicePrimaryCtxRetain`   | Retain the primary context on the GPU.                                                                                         |
-| `cuDevicePrimaryCtxSetFlags`                              | `hipDevicePrimaryCtxSetFlags` | Set flags for the primary context.                                                                                             |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuDevicePrimaryCtxGetState`                              | `hipDevicePrimaryCtxGetState` |
+| `cuDevicePrimaryCtxRelease`                               | `hipDevicePrimaryCtxRelease`  |
+| `cuDevicePrimaryCtxReset`                                 | `hipDevicePrimaryCtxReset`    |
+| `cuDevicePrimaryCtxRetain`                                | `hipDevicePrimaryCtxRetain`   |
+| `cuDevicePrimaryCtxSetFlags`                              | `hipDevicePrimaryCtxSetFlags` |
 
 ## **8. Context Management**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cuCtxCreate`                                             | `hipCtxCreate`                | Create a CUDA context.                                                                                                         |
-| `cuCtxDestroy`                                            | `hipCtxDestroy`               | Destroy a CUDA context.                                                                                                        |
-| `cuCtxGetApiVersion`                                      | `hipCtxGetApiVersion`         | Gets the context's API version.                                                                                                |
-| `cuCtxGetCacheConfig`                                     | `hipCtxGetCacheConfig`        | Returns the preferred cache configuration for the current context.                                                             |
-| `cuCtxGetCurrent`                                         | `hipCtxGetCurrent`            | Returns the CUDA context bound to the calling CPU thread.                                                                      |
-| `cuCtxGetDevice`                                          | `hipCtxGetDevice`             | Returns the device ID for the current context.                                                                                 |
-| `cuCtxGetFlags`                                           | `hipCtxGetFlags`              | Returns the flags for the current context.                                                                                     |
-| `cuCtxGetLimit`                                           |                               | Returns resource limits.                                                                                                       |
-| `cuCtxGetSharedMemConfig`                                 | `hipCtxGetSharedMemConfig`    | Returns the current shared memory configuration for the current context.                                                       |
-| `cuCtxGetStreamPriorityRange`                             |                               | Returns numerical values that correspond to the least and greatest stream priorities.                                          |
-| `cuCtxPopCurrent`                                         | `hipCtxPopCurrent`            | Pops the current CUDA context from the current CPU thread.                                                                     |
-| `cuCtxPushCurrent`                                        | `hipCtxPushCurrent`           | Pushes a context on the current CPU thread.                                                                                    |
-| `cuCtxSetCacheConfig`                                     | `hipCtxSetCacheConfig`        | Sets the preferred cache configuration for the current context.                                                                |
-| `cuCtxSetCurrent`                                         | `hipCtxSetCurrent`            | Binds the specified CUDA context to the calling CPU thread.                                                                    |
-| `cuCtxSetLimit`                                           |                               | Set resource limits.                                                                                                           |
-| `cuCtxSetSharedMemConfig`                                 | `hipCtxSetSharedMemConfig`    | Sets the shared memory configuration for the current context.                                                                  |
-| `cuCtxSynchronize`                                        | `hipCtxSynchronize`           | Block for a context's tasks to complete.                                                                                       |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuCtxCreate`                                             | `hipCtxCreate`                |
+| `cuCtxDestroy`                                            | `hipCtxDestroy`               |
+| `cuCtxGetApiVersion`                                      | `hipCtxGetApiVersion`         |
+| `cuCtxGetCacheConfig`                                     | `hipCtxGetCacheConfig`        |
+| `cuCtxGetCurrent`                                         | `hipCtxGetCurrent`            |
+| `cuCtxGetDevice`                                          | `hipCtxGetDevice`             |
+| `cuCtxGetFlags`                                           | `hipCtxGetFlags`              |
+| `cuCtxGetLimit`                                           |                               |
+| `cuCtxGetSharedMemConfig`                                 | `hipCtxGetSharedMemConfig`    |
+| `cuCtxGetStreamPriorityRange`                             |                               |
+| `cuCtxPopCurrent`                                         | `hipCtxPopCurrent`            |
+| `cuCtxPushCurrent`                                        | `hipCtxPushCurrent`           |
+| `cuCtxSetCacheConfig`                                     | `hipCtxSetCacheConfig`        |
+| `cuCtxSetCurrent`                                         | `hipCtxSetCurrent`            |
+| `cuCtxSetLimit`                                           |                               |
+| `cuCtxSetSharedMemConfig`                                 | `hipCtxSetSharedMemConfig`    |
+| `cuCtxSynchronize`                                        | `hipCtxSynchronize`           |
 
 ## **9. Context Management [DEPRECATED]**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cuCtxAttach`                                             |                               | Increment a context's usage-count.                                                                                             |
-| `cuCtxDetach`                                             |                               | Decrement a context's usage-count.                                                                                             |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuCtxAttach`                                             |                               |
+| `cuCtxDetach`                                             |                               |
 
 ## **10. Module Management**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cuLinkAddData`                                           |                               | Add an input to a pending linker invocation.                                                                                   |
-| `cuLinkAddFile`                                           |                               | Add a file input to a pending linker invocation.                                                                               |
-| `cuLinkComplete`                                          |                               | Complete a pending linker invocation.                                                                                          |
-| `cuLinkCreate`                                            |                               | Creates a pending JIT linker invocation.                                                                                       |
-| `cuLinkDestroy`                                           |                               | Destroys state for a JIT linker invocation.                                                                                    |
-| `cuModuleGetFunction`                                     | `hipModuleGetFunction`        | Returns a function handle.                                                                                                     |
-| `cuModuleGetGlobal`                                       | `hipModuleGetGlobal`          | Returns a global pointer from a module.                                                                                        |
-| `cuModuleGetSurfRef`                                      |                               | Returns a handle to a surface reference.                                                                                       |
-| `cuModuleGetTexRef`                                       |                               | Returns a handle to a texture reference.                                                                                       |
-| `cuModuleLoad`                                            | `hipModuleLoad`               | Loads a compute module.                                                                                                        |
-| `cuModuleLoadData`                                        | `hipModuleLoadData`           | Load a module's data.                                                                                                          |
-| `cuModuleLoadDataEx`                                      | `hipModuleLoadDataEx`         | Load a module's data with options.                                                                                             |
-| `cuModuleLoadFatBinary`                                   |                               | Load a module's data.                                                                                                          |
-| `cuModuleUnload`                                          | `hipModuleUnload`             | Unloads a module.                                                                                                              |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuLinkAddData`                                           |                               |
+| `cuLinkAddFile`                                           |                               |
+| `cuLinkComplete`                                          |                               |
+| `cuLinkCreate`                                            |                               |
+| `cuLinkDestroy`                                           |                               |
+| `cuModuleGetFunction`                                     | `hipModuleGetFunction`        |
+| `cuModuleGetGlobal`                                       | `hipModuleGetGlobal`          |
+| `cuModuleGetSurfRef`                                      |                               |
+| `cuModuleGetTexRef`                                       |                               |
+| `cuModuleLoad`                                            | `hipModuleLoad`               |
+| `cuModuleLoadData`                                        | `hipModuleLoadData`           |
+| `cuModuleLoadDataEx`                                      | `hipModuleLoadDataEx`         |
+| `cuModuleLoadFatBinary`                                   |                               |
+| `cuModuleUnload`                                          | `hipModuleUnload`             |
 
 ## **11. Memory Management**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cuArray3DCreate`                                         |                               | Creates a 3D CUDA array.                                                                                                       |
-| `cuArray3DGetDescriptor`                                  |                               | Get a 3D CUDA array descriptor.                                                                                                |
-| `cuArrayCreate`                                           |                               | Creates a 1D or 2D CUDA array.                                                                                                 |
-| `cuArrayDestroy`                                          |                               | Destroys a CUDA array.                                                                                                         |
-| `cuArrayGetDescriptor`                                    |                               | Get a 1D or 2D CUDA array descriptor.                                                                                          |
-| `cuDeviceGetByPCIBusId`                                   | `hipDeviceGetByPCIBusId`      | Returns a handle to a compute device.                                                                                          |
-| `cuDeviceGetPCIBusId`                                     | `hipDeviceGetPCIBusId`        | Returns a PCI Bus Id string for the device.                                                                                    |
-| `cuIpcCloseMemHandle`                                     |                               | Close memory mapped with cuIpcOpenMemHandle.                                                                                   |
-| `cuIpcGetEventHandle`                                     |                               | Gets an interprocess handle for a previously allocated event.                                                                  |
-| `cuIpcGetMemHandle`                                       |                               | Gets an interprocess memory handle for an existing device memory allocation.                                                   |
-| `cuIpcOpenEventHandle`                                    |                               | Opens an interprocess event handle for use in the current process.                                                             |
-| `cuIpcOpenMemHandle`                                      |                               | Opens an interprocess memory handle exported from another process and returns a device pointer usable in the local process.    |
-| `cuMemAlloc`                                              | `hipMalloc`                   | Allocates device memory.                                                                                                       |
-| `cuMemAllocHost`                                          |                               | Allocates page-locked host memory.                                                                                             |
-| `cuMemAllocManaged`                                       |                               | Allocates memory that will be automatically managed by the Unified Memory system.                                              |
-| `cuMemAllocPitch`                                         |                               | Allocates pitched device memory.                                                                                               |
-| `cuMemcpy`                                                |                               | Copies memory.                                                                                                                 |
-| `cuMemcpy2D`                                              |                               | Copies memory for 2D arrays.                                                                                                   |
-| `cuMemcpy2DAsync`                                         |                               | Copies memory for 2D arrays.                                                                                                   |
-| `cuMemcpy2DUnaligned`                                     |                               | Copies memory for 2D arrays.                                                                                                   |
-| `cuMemcpy3D`                                              |                               | Copies memory for 3D arrays.                                                                                                   |
-| `cuMemcpy3DAsync`                                         |                               | Copies memory for 3D arrays.                                                                                                   |
-| `cuMemcpy3DPeer`                                          |                               | Copies memory between contexts.                                                                                                |
-| `cuMemcpy3DPeerAsync`                                     |                               | Copies memory between contexts asynchronously.                                                                                 |
-| `cuMemcpyAsync`                                           |                               | Copies memory asynchronously.                                                                                                  |
-| `cuMemcpyAtoA`                                            |                               | Copies memory from Array to Array.                                                                                             |
-| `cuMemcpyAtoD`                                            |                               | Copies memory from Array to Device.                                                                                            |
-| `cuMemcpyAtoH`                                            |                               | Copies memory from Array to Host.                                                                                              |
-| `cuMemcpyAtoHAsync`                                       |                               | Copies memory from Array to Host.                                                                                              |
-| `cuMemcpyDtoA`                                            |                               | Copies memory from Device to Array.                                                                                            |
-| `cuMemcpyDtoD`                                            | `hipMemcpyDtoD`               | Copies memory from Device to Device.                                                                                           |
-| `cuMemcpyDtoDAsync`                                       | `hipMemcpyDtoDAsync`          | Copies memory from Device to Device.                                                                                           |
-| `cuMemcpyDtoH`                                            | `hipMemcpyDtoH`               | Copies memory from Device to Host.                                                                                             |
-| `cuMemcpyDtoHAsync`                                       | `hipMemcpyDtoHAsync`          | Copies memory from Device to Host.                                                                                             |
-| `cuMemcpyHtoA`                                            |                               | Copies memory from Host to Array.                                                                                              |
-| `cuMemcpyHtoAAsync`                                       |                               | Copies memory from Host to Array.                                                                                              |
-| `cuMemcpyHtoD`                                            | `hipMemcpyHtoD`               | Copies memory from Host to Device.                                                                                             |
-| `cuMemcpyHtoDAsync`                                       | `hipMemcpyHtoDAsync`          | Copies memory from Host to Device.                                                                                             |
-| `cuMemcpyPeer`                                            |                               | Copies device memory between two contexts.                                                                                     |
-| `cuMemcpyPeerAsync`                                       |                               | Copies device memory between two contexts asynchronously.                                                                      |
-| `cuMemFree`                                               | `hipFree`                     | Frees device memory.                                                                                                           |
-| `cuMemFreeHost`                                           | `hipFreeHost`                 | Frees page-locked host memory.                                                                                                 |
-| `cuMemGetAddressRange`                                    |                               | Get information on memory allocations.                                                                                         |
-| `cuMemGetInfo`                                            | `hipMemGetInfo`               | Gets free and total memory.                                                                                                    |
-| `cuMemHostAlloc`                                          | `hipHostMalloc`               | Allocates page-locked host memory.                                                                                             |
-| `cuMemHostGetDevicePointer`                               |                               | Passes back device pointer of mapped pinned memory.                                                                            |
-| `cuMemHostGetFlags`                                       |                               | Passes back flags that were used for a pinned allocation.                                                                      |
-| `cuMemHostRegister`                                       | `hipHostRegister`             | Registers an existing host memory range for use by CUDA.                                                                       |
-| `cuMemHostUnregister`                                     | `hipHostUnregister`           | Unregisters a memory range that was registered with cuMemHostRegister.                                                         |
-| `cuMemsetD16`                                             |                               | Initializes device memory.                                                                                                     |
-| `cuMemsetD16Async`                                        |                               | Sets device memory.                                                                                                            |
-| `cuMemsetD2D16`                                           |                               | Initializes device memory.                                                                                                     |
-| `cuMemsetD2D16Async`                                      |                               | Sets device memory.                                                                                                            |
-| `cuMemsetD2D32`                                           |                               | Initializes device memory.                                                                                                     |
-| `cuMemsetD2D32Async`                                      |                               | Sets device memory.                                                                                                            |
-| `cuMemsetD2D8`                                            |                               | Initializes device memory.                                                                                                     |
-| `cuMemsetD2D8Async`                                       |                               | Sets device memory.                                                                                                            |
-| `cuMemsetD32`                                             | `hipMemset`                   | Initializes device memory.                                                                                                     |
-| `cuMemsetD32Async`                                        | `hipMemsetAsync`              | Sets device memory.                                                                                                            |
-| `cuMemsetD2D8`                                            |                               | Initializes device memory.                                                                                                     |
-| `cuMemsetD2D8Async`                                       |                               | Sets device memory.                                                                                                            |
-| `cuMipmappedArrayCreate`                                  |                               | Creates a CUDA mipmapped array.                                                                                                |
-| `cuMipmappedArrayDestroy`                                 |                               | Destroys a CUDA mipmapped array.                                                                                               |
-| `cuMipmappedArrayGetLevel`                                |                               | Gets a mipmap level of a CUDA mipmapped array.                                                                                 |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuArray3DCreate`                                         |                               |
+| `cuArray3DGetDescriptor`                                  |                               |
+| `cuArrayCreate`                                           |                               |
+| `cuArrayDestroy`                                          |                               |
+| `cuArrayGetDescriptor`                                    |                               |
+| `cuDeviceGetByPCIBusId`                                   | `hipDeviceGetByPCIBusId`      |
+| `cuDeviceGetPCIBusId`                                     | `hipDeviceGetPCIBusId`        |
+| `cuIpcCloseMemHandle`                                     |                               |
+| `cuIpcGetEventHandle`                                     |                               |
+| `cuIpcGetMemHandle`                                       |                               |
+| `cuIpcOpenEventHandle`                                    |                               |
+| `cuIpcOpenMemHandle`                                      |                               |
+| `cuMemAlloc`                                              | `hipMalloc`                   |
+| `cuMemAllocHost`                                          |                               |
+| `cuMemAllocManaged`                                       |                               |
+| `cuMemAllocPitch`                                         |                               |
+| `cuMemcpy`                                                |                               |
+| `cuMemcpy2D`                                              |                               |
+| `cuMemcpy2DAsync`                                         |                               |
+| `cuMemcpy2DUnaligned`                                     |                               |
+| `cuMemcpy3D`                                              |                               |
+| `cuMemcpy3DAsync`                                         |                               |
+| `cuMemcpy3DPeer`                                          |                               |
+| `cuMemcpy3DPeerAsync`                                     |                               |
+| `cuMemcpyAsync`                                           |                               |
+| `cuMemcpyAtoA`                                            |                               |
+| `cuMemcpyAtoD`                                            |                               |
+| `cuMemcpyAtoH`                                            |                               |
+| `cuMemcpyAtoHAsync`                                       |                               |
+| `cuMemcpyDtoA`                                            |                               |
+| `cuMemcpyDtoD`                                            | `hipMemcpyDtoD`               |
+| `cuMemcpyDtoDAsync`                                       | `hipMemcpyDtoDAsync`          |
+| `cuMemcpyDtoH`                                            | `hipMemcpyDtoH`               |
+| `cuMemcpyDtoHAsync`                                       | `hipMemcpyDtoHAsync`          |
+| `cuMemcpyHtoA`                                            |                               |
+| `cuMemcpyHtoAAsync`                                       |                               |
+| `cuMemcpyHtoD`                                            | `hipMemcpyHtoD`               |
+| `cuMemcpyHtoDAsync`                                       | `hipMemcpyHtoDAsync`          |
+| `cuMemcpyPeer`                                            |                               |
+| `cuMemcpyPeerAsync`                                       |                               |
+| `cuMemFree`                                               | `hipFree`                     |
+| `cuMemFreeHost`                                           | `hipFreeHost`                 |
+| `cuMemGetAddressRange`                                    |                               |
+| `cuMemGetInfo`                                            | `hipMemGetInfo`               |
+| `cuMemHostAlloc`                                          | `hipHostMalloc`               |
+| `cuMemHostGetDevicePointer`                               |                               |
+| `cuMemHostGetFlags`                                       |                               |
+| `cuMemHostRegister`                                       | `hipHostRegister`             |
+| `cuMemHostUnregister`                                     | `hipHostUnregister`           |
+| `cuMemsetD16`                                             |                               |
+| `cuMemsetD16Async`                                        |                               |
+| `cuMemsetD2D16`                                           |                               |
+| `cuMemsetD2D16Async`                                      |                               |
+| `cuMemsetD2D32`                                           |                               |
+| `cuMemsetD2D32Async`                                      |                               |
+| `cuMemsetD2D8`                                            |                               |
+| `cuMemsetD2D8Async`                                       |                               |
+| `cuMemsetD32`                                             | `hipMemset`                   |
+| `cuMemsetD32Async`                                        | `hipMemsetAsync`              |
+| `cuMemsetD2D8`                                            |                               |
+| `cuMemsetD2D8Async`                                       |                               |
+| `cuMipmappedArrayCreate`                                  |                               |
+| `cuMipmappedArrayDestroy`                                 |                               |
+| `cuMipmappedArrayGetLevel`                                |                               |
 
 ## **12. Unified Addressing**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cuMemAdvise`                                             |                               | Advise about the usage of a given memory range.                                                                                |
-| `cuMemPrefetchAsync`                                      |                               | Prefetches memory to the specified destination device.                                                                         |
-| `cuMemRangeGetAttribute`                                  |                               | Query an attribute of a given memory range.                                                                                    |
-| `cuMemRangeGetAttributes`                                 |                               | Query attributes of a given memory range.                                                                                      |
-| `cuPointerGetAttribute`                                   |                               | Returns information about a pointer.                                                                                           |
-| `cuPointerGetAttributes`                                  |                               | Returns information about a pointer.                                                                                           |
-| `cuPointerSetAttribute`                                   |                               | Set attributes on a previously allocated memory region.                                                                        |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuMemAdvise`                                             |                               |
+| `cuMemPrefetchAsync`                                      |                               |
+| `cuMemRangeGetAttribute`                                  |                               |
+| `cuMemRangeGetAttributes`                                 |                               |
+| `cuPointerGetAttribute`                                   |                               |
+| `cuPointerGetAttributes`                                  |                               |
+| `cuPointerSetAttribute`                                   |                               |
 
 ## **13. Stream Management**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cuStreamAddCallback`                                     |                               | Add a callback to a compute stream.                                                                                            |
-| `cuStreamAttachMemAsync`                                  |                               | Attach memory to a stream asynchronously.                                                                                      |
-| `cuStreamCreate`                                          |                               | Create a stream.                                                                                                               |
-| `cuStreamCreateWithPriority`                              |                               | Create a stream with the given priority.                                                                                       |
-| `cuStreamDestroy`                                         | `hipStreamDestroy`            | Destroys a stream.                                                                                                             |
-| `cuStreamGetFlags`                                        | `hipStreamGetFlags`           | Query the flags of a given stream.                                                                                             |
-| `cuStreamGetPriority`                                     | `hipStreamGetPriority`        | Query the priority of a given stream.                                                                                          |
-| `cuStreamQuery`                                           | `hipStreamQuery`              | Determine status of a compute stream.                                                                                          |
-| `cuStreamSynchronize`                                     | `hipStreamSynchronize`        | Wait until a stream's tasks are completed.                                                                                     |
-| `cuStreamWaitEvent`                                       | `hipStreamWaitEvent`          | Make a compute stream wait on an event.                                                                                        |
-| `cuStreamBatchMemOp`                                      |                               | Batch operations to synchronize the stream via memory operations.                                                              |
-| `cuStreamWaitValue32`                                     |                               | Wait on a memory location.                                                                                                     |
-| `cuStreamWriteValue32`                                    |                               | Write a value to memory.                                                                                                       |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuStreamAddCallback`                                     |                               |
+| `cuStreamAttachMemAsync`                                  |                               |
+| `cuStreamCreate`                                          |                               |
+| `cuStreamCreateWithPriority`                              |                               |
+| `cuStreamDestroy`                                         | `hipStreamDestroy`            |
+| `cuStreamGetFlags`                                        | `hipStreamGetFlags`           |
+| `cuStreamGetPriority`                                     | `hipStreamGetPriority`        |
+| `cuStreamQuery`                                           | `hipStreamQuery`              |
+| `cuStreamSynchronize`                                     | `hipStreamSynchronize`        |
+| `cuStreamWaitEvent`                                       | `hipStreamWaitEvent`          |
+| `cuStreamBatchMemOp`                                      |                               |
+| `cuStreamWaitValue32`                                     |                               |
+| `cuStreamWriteValue32`                                    |                               |
 
 ## **14. Event Management**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cuEventCreate`                                           | `hipEventCreate`              | Creates an event.                                                                                                              |
-| `cuEventDestroy`                                          | `hipEventDestroy`             | Destroys an event.                                                                                                             |
-| `cuEventElapsedTime`                                      | `hipEventElapsedTime`         | Computes the elapsed time between two events.                                                                                  |
-| `cuEventQuery`                                            | `hipEventQuery`               | Queries an event's status.                                                                                                     |
-| `cuEventRecord`                                           | `hipEventRecord`              | Records an event.                                                                                                              |
-| `cuEventSynchronize`                                      | `hipEventSynchronize`         | Waits for an event to complete.                                                                                                |
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuEventCreate`                                           | `hipEventCreate`              |
+| `cuEventDestroy`                                          | `hipEventDestroy`             |
+| `cuEventElapsedTime`                                      | `hipEventElapsedTime`         |
+| `cuEventQuery`                                            | `hipEventQuery`               |
+| `cuEventRecord`                                           | `hipEventRecord`              |
+| `cuEventSynchronize`                                      | `hipEventSynchronize`         |
 
 ## **15. Execution Control**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `cuFuncGetAttribute`                                      |                               | Returns information about a function.                                                                                          |
-| `cuFuncSetCacheConfig`                                    | `hipFuncSetCacheConfig`       | Sets the preferred cache configuration for a device function.                                                                  |
-| `cuFuncSetSharedMemConfig`                                |                               | Sets the shared memory configuration for a device function.                                                                    |
-| `cuLaunchKernel`                                          | `hipModuleLaunchKernel`       | Launches a CUDA function.                                                                                                      |
-
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuFuncGetAttribute`                                      |                               |
+| `cuFuncSetCacheConfig`                                    | `hipFuncSetCacheConfig`       |
+| `cuFuncSetSharedMemConfig`                                |                               |
+| `cuLaunchKernel`                                          | `hipModuleLaunchKernel`       |
 
 ## **16. Execution Control [DEPRECATED]**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuFuncSetBlockShape`                                     |                               |
+| `cuFuncSetSharedSize`                                     |                               |
+| `cuLaunch`                                                |                               |
+| `cuLaunchGrid`                                            |                               |
+| `cuLaunchGridAsync`                                       |                               |
+| `cuParamSetf`                                             |                               |
+| `cuParamSeti`                                             |                               |
+| `cuParamSetTexRef`                                        |                               |
+| `cuParamSetv`                                             |                               |
 
 ## **17. Occupancy**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+|   **CUDA**                                                |   **HIP**                                               |
+|-----------------------------------------------------------|---------------------------------------------------------|
+| `cuOccupancyMaxActiveBlocksPerMultiprocessor`             | `hipOccupancyMaxActiveBlocksPerMultiprocessor`          |
+| `cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`    |                                                         |
+| `cuOccupancyMaxPotentialBlockSize`                        | `hipOccupancyMaxPotentialBlockSize`                     |
+| `cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`    |                                                         |
 
 ## **18. Texture Reference Management**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuTexRefGetAddress`                                      |                               |
+| `cuTexRefGetAddressMode`                                  |                               |
+| `cuTexRefGetArray`                                        |                               |
+| `cuTexRefGetBorderColor`                                  |                               |
+| `cuTexRefGetFilterMode`                                   |                               |
+| `cuTexRefGetFlags`                                        |                               |
+| `cuTexRefGetFormat`                                       |                               |
+| `cuTexRefGetMaxAnisotropy`                                |                               |
+| `cuTexRefGetMipmapFilterMode`                             |                               |
+| `cuTexRefGetMipmapLevelBias`                              |                               |
+| `cuTexRefGetMipmapLevelClamp`                             |                               |
+| `cuTexRefGetMipmappedArray`                               |                               |
+| `cuTexRefSetAddress`                                      |                               |
+| `cuTexRefSetAddress2D`                                    |                               |
+| `cuTexRefSetAddressMode`                                  |                               |
+| `cuTexRefSetArray`                                        |                               |
+| `cuTexRefSetBorderColor`                                  |                               |
+| `cuTexRefSetFilterMode`                                   |                               |
+| `cuTexRefSetFlags`                                        |                               |
+| `cuTexRefSetFormat`                                       |                               |
+| `cuTexRefSetMaxAnisotropy`                                |                               |
+| `cuTexRefSetMipmapFilterMode`                             |                               |
+| `cuTexRefSetMipmapLevelBias`                              |                               |
+| `cuTexRefSetMipmapLevelClamp`                             |                               |
+| `cuTexRefSetMipmappedArray`                               |                               |
 
 ## **19. Texture Reference Management [DEPRECATED]**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuTexRefCreate`                                          |                               |
+| `cuTexRefDestroy`                                         |                               |
 
 ## **20. Surface Reference Management**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuSurfRefGetArray`                                       |                               |
+| `cuSurfRefSetArray`                                       |                               |
 
 ## **21. Texture Object Management**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuTexObjectCreate`                                       |                               |
+| `cuTexObjectDestroy`                                      |                               |
+| `cuTexObjectGetResourceDesc`                              |                               |
+| `cuTexObjectGetResourceViewDesc`                          |                               |
+| `cuTexObjectGetTextureDesc`                               |                               |
 
 ## **22. Surface Object Management**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuSurfObjectCreate`                                      |                               |
+| `cuSurfObjectDestroy`                                     |                               |
+| `cuSurfObjectGetResourceDesc`                             |                               |
 
 ## **23. Peer Context Memory Access**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuCtxEnablePeerAccess`                                   | `hipCtxEnablePeerAccess`      |
+| `cuCtxDisablePeerAccess`                                  | `hipCtxDisablePeerAccess`     |
+| `cuDeviceCanAccessPeer`                                   | `hipDeviceCanAccessPeer`      |
+| `cuDeviceGetP2PAttribute`                                 |                               |
 
 ## **24. Graphics Interoperability**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuGraphicsMapResources`                                  |                               |
+| `cuGraphicsResourceGetMappedMipmappedArray`               |                               |
+| `cuGraphicsResourceGetMappedPointer`                      |                               |
+| `cuGraphicsResourceSetMapFlags`                           |                               |
+| `cuGraphicsSubResourceGetMappedArray`                     |                               |
+| `cuGraphicsUnmapResources`                                |                               |
+| `cuGraphicsUnregisterResource`                            |                               |
 
 ## **25. Profiler Control**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuProfilerInitialize`                                    |                               |
+| `cuProfilerStart`                                         | `hipProfilerStart`            |
+| `cuProfilerStop`                                          | `hipProfilerStop`             |
 
 ## **26. OpenGL Interoperability**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuGLGetDevices`                                          |                               |
+| `cuGraphicsGLRegisterBuffer`                              |                               |
+| `cuGraphicsGLRegisterImage`                               |                               |
+| `cuWGLGetDevice`                                          |                               |
 
+## **26.1. OpenGL Interoperability [DEPRECATED]**
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuGLCtxCreate`                                           |                               |
+| `cuGLInit`                                                |                               |
+| `cuGLMapBufferObject`                                     |                               |
+| `cuGLMapBufferObjectAsync`                                |                               |
+| `cuGLRegisterBufferObject`                                |                               |
+| `cuGLSetBufferObjectMapFlags`                             |                               |
+| `cuGLUnmapBufferObject`                                   |                               |
+| `cuGLUnmapBufferObjectAsync`                              |                               |
+| `cuGLUnregisterBufferObject`                              |                               |
 
 ## **27. Direct3D 9 Interoperability**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuD3D9CtxCreate`                                         |                               |
+| `cuD3D9CtxCreateOnDevice`                                 |                               |
+| `cuD3D9GetDevice`                                         |                               |
+| `cuD3D9GetDevices`                                        |                               |
+| `cuD3D9GetDirect3DDevice`                                 |                               |
+| `cuGraphicsD3D9RegisterResource`                          |                               |
 
+## **27.1. Direct3D 9 Interoperability [DEPRECATED]**
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuD3D9MapResources`                                      |                               |
+| `cuD3D9RegisterResource`                                  |                               |
+| `cuD3D9ResourceGetMappedArray`                            |                               |
+| `cuD3D9ResourceGetMappedPitch`                            |                               |
+| `cuD3D9ResourceGetMappedPointer`                          |                               |
+| `cuD3D9ResourceGetMappedSize`                             |                               |
+| `cuD3D9ResourceGetSurfaceDimensions`                      |                               |
+| `cuD3D9ResourceSetMapFlags`                               |                               |
+| `cuD3D9UnmapResources`                                    |                               |
+| `cuD3D9UnregisterResource`                                |                               |
 
 ## **28. Direct3D 10 Interoperability**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuD3D10GetDevice`                                        |                               |
+| `cuD3D10GetDevices`                                       |                               |
+| `cuGraphicsD3D10RegisterResource`                         |                               |
 
+## **28.1. Direct3D 10 Interoperability [DEPRECATED]**
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuD3D10CtxCreate`                                        |                               |
+| `cuD3D10CtxCreateOnDevice`                                |                               |
+| `cuD3D10GetDirect3DDevice`                                |                               |
+| `cuD3D10MapResources`                                     |                               |
+| `cuD3D10RegisterResource`                                 |                               |
+| `cuD3D10ResourceGetMappedArray`                           |                               |
+| `cuD3D10ResourceGetMappedPitch`                           |                               |
+| `cuD3D10ResourceGetMappedPointer`                         |                               |
+| `cuD3D10ResourceGetMappedSize`                            |                               |
+| `cuD3D10ResourceGetSurfaceDimensions`                     |                               |
+| `cuD3D10ResourceSetMapFlags`                              |                               |
+| `cuD3D10UnmapResources`                                   |                               |
+| `cuD3D10UnregisterResource`                               |                               |
 
 ## **29. Direct3D 11 Interoperability**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuD3D11GetDevice`                                        |                               |
+| `cuD3D11GetDevices`                                       |                               |
+| `cuGraphicsD3D11RegisterResource`                         |                               |
 
+## **29.1. Direct3D 11 Interoperability [DEPRECATED]**
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuD3D11CtxCreate`                                        |                               |
+| `cuD3D11CtxCreateOnDevice`                                |                               |
+| `cuD3D11GetDirect3DDevice`                                |                               |
 
 ## **30. VDPAU Interoperability**
 
-|   **CUDA**                                                |   **HIP**                     | **CUDA description**                                                                                                           |
-|-----------------------------------------------------------|-------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuGraphicsVDPAURegisterOutputSurface`                    |                               |
+| `cuGraphicsVDPAURegisterVideoSurface`                     |                               |
+| `cuVDPAUCtxCreate`                                        |                               |
+| `cuVDPAUGetDevice`                                        |                               |
 
+## **31. EGL Interoperability**
+
+|   **CUDA**                                                |   **HIP**                     |
+|-----------------------------------------------------------|-------------------------------|
+| `cuEGLStreamConsumerAcquireFrame`                         |                               |
+| `cuEGLStreamConsumerConnect`                              |                               |
+| `cuEGLStreamConsumerConnectWithFlags`                     |                               |
+| `cuEGLStreamConsumerDisconnect`                           |                               |
+| `cuEGLStreamConsumerReleaseFrame`                         |                               |
+| `cuEGLStreamProducerConnect`                              |                               |
+| `cuEGLStreamProducerDisconnect`                           |                               |
+| `cuEGLStreamProducerPresentFrame`                         |                               |
+| `cuEGLStreamProducerReturnFrame`                          |                               |
+| `cuGraphicsEGLRegisterImage`                              |                               |
+| `cuGraphicsResourceGetMappedEglFrame`                     |                               |
