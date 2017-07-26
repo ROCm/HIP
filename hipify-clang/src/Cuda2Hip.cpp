@@ -1019,7 +1019,7 @@ struct cuda2hipMap {
     cuda2hipRename["cuOccupancyMaxPotentialBlockSizeWithFlags"]            = {"hipOccupancyMaxPotentialBlockSizeWithFlags", CONV_OCCUPANCY, API_DRIVER, HIP_UNSUPPORTED};            // API_Runtime ANALOGUE (cudaOccupancyMaxPotentialBlockSizeWithFlags)
 
     // Streams
-    cuda2hipRename["cuStreamAddCallback"]                       = {"hipStreamAddCallback", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
+    cuda2hipRename["cuStreamAddCallback"]                       = {"hipStreamAddCallback", CONV_STREAM, API_DRIVER};
     cuda2hipRename["cuStreamAttachMemAsync"]                    = {"hipStreamAttachMemAsync", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
     cuda2hipRename["cuStreamCreate"]                            = {"hipStreamCreate__", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};      // Not equal to cudaStreamCreate due to different signatures
     cuda2hipRename["cuStreamCreateWithPriority"]                = {"hipStreamCreateWithPriority", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED};
@@ -1361,6 +1361,8 @@ struct cuda2hipMap {
 
     cuda2hipRename["cudaOccupancyDefault"]                       = {"hipOccupancyDefault", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};                      // 0x00 // API_Driver ANALOGUE (CU_OCCUPANCY_DEFAULT = 0x0)
     cuda2hipRename["cudaOccupancyDisableCachingOverride"]        = {"hipOccupancyDisableCachingOverride", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED};       // 0x01 // API_Driver ANALOGUE (CU_OCCUPANCY_DISABLE_CACHING_OVERRIDE = 0x1)
+
+    cuda2hipRename["cudaStreamCallback_t"]                       = {"hipStreamCallback_t", CONV_TYPE, API_RUNTIME};
 
     // Error API
     cuda2hipRename["cudaGetLastError"]            = {"hipGetLastError", CONV_ERROR, API_RUNTIME};

@@ -599,7 +599,7 @@
 
 |   **CUDA**                                                |   **HIP**                     |
 |-----------------------------------------------------------|-------------------------------|
-| `cuStreamAddCallback`                                     |                               |
+| `cuStreamAddCallback`                                     | `hipStreamAddCallback`        |
 | `cuStreamAttachMemAsync`                                  |                               |
 | `cuStreamCreate`                                          |                               |
 | `cuStreamCreateWithPriority`                              |                               |
