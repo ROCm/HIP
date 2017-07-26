@@ -180,6 +180,7 @@ hipError_t hipDeviceReset(void)
     return ihipLogStatus(hipSuccess);
 }
 
+
 hipError_t ihipDeviceSetState(void)
 {
     hipError_t e = hipErrorInvalidContext;
