@@ -313,8 +313,8 @@
 | `cudaBindTextureToMipmappedArray`                         |                               |
 | `cudaCreateChannelDesc`                                   |                               |
 | `cudaGetChannelDesc`                                      |                               |
-| `cudaGetTextureAlignmentOffset`                           | `hipGetTextureAlignmentOffset`|
-| `cudaGetTextureReference`                                 | `hipGetTextureReference`      |
+| `cudaGetTextureAlignmentOffset`                           |                               |
+| `cudaGetTextureReference`                                 |                               |
 | `cudaUnbindTexture`                                       |                               |
 
 ## **24. Surface Reference Management**
