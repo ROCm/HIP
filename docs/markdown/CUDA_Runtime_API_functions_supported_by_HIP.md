@@ -310,7 +310,7 @@
 | `cudaBindTexture`                                         |                               |
 | `cudaBindTexture2D`                                       | `hipBindTexture2D`            |
 | `cudaBindTextureToArray`                                  | `hipBindTextureToArray`       |
-| `cudaBindTextureToMipmappedArray`                         | `hipBindTextureToMipmappedArray` |
+| `cudaBindTextureToMipmappedArray`                         |                               |
 | `cudaCreateChannelDesc`                                   |                               |
 | `cudaGetChannelDesc`                                      |                               |
 | `cudaGetTextureAlignmentOffset`                           | `hipGetTextureAlignmentOffset`|
