@@ -1373,17 +1373,15 @@ struct cuda2hipMap {
     // Arrays
     cuda2hipRename["cudaArray"]                   = {"hipArray", CONV_MEM, API_RUNTIME};
     // typedef struct cudaArray *cudaArray_t;
-    cuda2hipRename["cudaArray_t"]                 = {"hipArray *", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaArray_t"]                 = {"hipArray_t", CONV_MEM, API_RUNTIME};
     // typedef const struct cudaArray *cudaArray_const_t;
-    cuda2hipRename["cudaArray_const_t"]           = {"const hipArray *", CONV_MEM, API_RUNTIME};
-    // unsupported yet by HIP
-    cuda2hipRename["cudaMipmappedArray_t"]        = {"hipMipmappedArray *", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaMipmappedArray_const_t"]  = {"const hipMipmappedArray *", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaArray_const_t"]           = {"hipArray_const_t", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMipmappedArray_t"]        = {"hipMipmappedArray_t", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMipmappedArray_const_t"]  = {"hipMipmappedArray_const_t", CONV_MEM, API_RUNTIME};
 
     // memcpy
     // memcpy structs
-    // unsupported yet by HIP
-    cuda2hipRename["cudaMemcpy3DParms"]           = {"hipMemcpy3DParms", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaMemcpy3DParms"]           = {"hipMemcpy3DParms", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMemcpy3DPeerParms"]       = {"hipMemcpy3DPeerParms", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
 
       // memcpy functions
@@ -1400,7 +1398,7 @@ struct cuda2hipMap {
     cuda2hipRename["cudaMemcpy2DFromArray"]       = {"hipMemcpy2DFromArray", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaMemcpy2DFromArrayAsync"]  = {"hipMemcpy2DFromArrayAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaMemcpy2DToArrayAsync"]    = {"hipMemcpy2DToArrayAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaMemcpy3D"]                = {"hipMemcpy3D", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaMemcpy3D"]                = {"hipMemcpy3D", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMemcpy3DAsync"]           = {"hipMemcpy3DAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaMemcpy3DPeer"]            = {"hipMemcpy3DPeer", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaMemcpy3DPeerAsync"]       = {"hipMemcpy3DPeerAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
@@ -1439,8 +1437,8 @@ struct cuda2hipMap {
     // memset
     cuda2hipRename["cudaMemset"]                  = {"hipMemset", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMemsetAsync"]             = {"hipMemsetAsync", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaMemset2D"]                = {"hipMemset2D", CONV_MEM, API_RUNTIME};
     // unsupported yet by HIP
-    cuda2hipRename["cudaMemset2D"]                = {"hipMemset2D", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaMemset2DAsync"]           = {"hipMemset2DAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaMemset3D"]                = {"hipMemset3D", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaMemset3DAsync"]           = {"hipMemset3DAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
@@ -1459,9 +1457,8 @@ struct cuda2hipMap {
     cuda2hipRename["cudaMalloc"]                  = {"hipMalloc", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMallocHost"]              = {"hipHostMalloc", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMallocArray"]             = {"hipMallocArray", CONV_MEM, API_RUNTIME};
-    // unsupported yet by HIP
     cuda2hipRename["cudaMalloc3D"]                = {"hipMalloc3D", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaMalloc3DArray"]           = {"hipMalloc3DArray", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaMalloc3DArray"]           = {"hipMalloc3DArray", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMallocManaged"]           = {"hipMallocManaged", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaMallocMipmappedArray"]    = {"hipMallocMipmappedArray", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
     cuda2hipRename["cudaMallocPitch"]             = {"hipMallocPitch", CONV_MEM, API_RUNTIME};
@@ -1480,14 +1477,13 @@ struct cuda2hipMap {
     cuda2hipRename["cudaMemoryTypeDevice"]        = {"hipMemoryTypeDevice", CONV_MEM, API_RUNTIME};
 
     // make memory functions
-    // unsupported yet by HIP
-    cuda2hipRename["make_cudaExtent"]             = {"make_hipExtent", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["make_cudaPitchedPtr"]         = {"make_hipPitchedPtr", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["make_cudaPos"]                = {"make_hipPos", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["make_cudaExtent"]             = {"make_hipExtent", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["make_cudaPitchedPtr"]         = {"make_hipPitchedPtr", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["make_cudaPos"]                = {"make_hipPos", CONV_MEM, API_RUNTIME};
 
-    cuda2hipRename["cudaExtent"]                  = {"hipExtent", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaPitchedPtr"]              = {"hipPitchedPtr", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaPos"]                     = {"hipPos", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaExtent"]                  = {"hipExtent", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaPitchedPtr"]              = {"hipPitchedPtr", CONV_MEM, API_RUNTIME};
+    cuda2hipRename["cudaPos"]                     = {"hipPos", CONV_MEM, API_RUNTIME};
 
     // Host Malloc Flags
     cuda2hipRename["cudaHostAllocDefault"]        = {"hipHostMallocDefault", CONV_MEM, API_RUNTIME};
@@ -1818,21 +1814,19 @@ struct cuda2hipMap {
     // enums
     cuda2hipRename["cudaTextureReadMode"]                   = {"hipTextureReadMode", CONV_TEX, API_RUNTIME};
     cuda2hipRename["cudaReadModeElementType"]               = {"hipReadModeElementType", CONV_TEX, API_RUNTIME};
-    // unsupported yet by HIP
-    cuda2hipRename["cudaReadModeNormalizedFloat"]           = {"hipReadModeNormalizedFloat", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaReadModeNormalizedFloat"]           = {"hipReadModeNormalizedFloat", CONV_TEX, API_RUNTIME};
 
     cuda2hipRename["cudaTextureFilterMode"]                 = {"hipTextureFilterMode", CONV_TEX, API_RUNTIME};                              // API_DRIVER ANALOGUE (CUfilter_mode)
     cuda2hipRename["cudaFilterModePoint"]                   = {"hipFilterModePoint", CONV_TEX, API_RUNTIME};                           // 0 // API_DRIVER ANALOGUE (CU_TR_FILTER_MODE_POINT = 0)
-    cuda2hipRename["cudaFilterModeLinear"]                  = {"hipFilterModeLinear", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};         // 1 // API_DRIVER ANALOGUE (CU_TR_FILTER_MODE_POINT = 1)
+    cuda2hipRename["cudaFilterModeLinear"]                  = {"hipFilterModeLinear", CONV_TEX, API_RUNTIME};                          // 1 // API_DRIVER ANALOGUE (CU_TR_FILTER_MODE_POINT = 1)
 
     cuda2hipRename["cudaBindTexture"]                       = {"hipBindTexture", CONV_TEX, API_RUNTIME};
     cuda2hipRename["cudaUnbindTexture"]                     = {"hipUnbindTexture", CONV_TEX, API_RUNTIME};
-    // unsupported yet by HIP
-    cuda2hipRename["cudaBindTexture2D"]                     = {"hipBindTexture2D", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaBindTextureToArray"]                = {"hipBindTextureToArray", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaBindTextureToMipmappedArray"]       = {"hipBindTextureToMipmappedArray", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGetTextureAlignmentOffset"]         = {"hipGetTextureAlignmentOffset", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGetTextureReference"]               = {"hipGetTextureReference", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaBindTexture2D"]                     = {"hipBindTexture2D", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaBindTextureToArray"]                = {"hipBindTextureToArray", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaBindTextureToMipmappedArray"]       = {"hipBindTextureToMipmappedArray", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaGetTextureAlignmentOffset"]         = {"hipGetTextureAlignmentOffset", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaGetTextureReference"]               = {"hipGetTextureReference", CONV_TEX, API_RUNTIME};
 
     // Channel
     cuda2hipRename["cudaChannelFormatKind"]                 = {"hipChannelFormatKind", CONV_TEX, API_RUNTIME};
@@ -1841,77 +1835,80 @@ struct cuda2hipMap {
     cuda2hipRename["cudaChannelFormatKindFloat"]            = {"hipChannelFormatKindFloat", CONV_TEX, API_RUNTIME};
     cuda2hipRename["cudaChannelFormatKindNone"]             = {"hipChannelFormatKindNone", CONV_TEX, API_RUNTIME};
     cuda2hipRename["cudaChannelFormatDesc"]                 = {"hipChannelFormatDesc", CONV_TEX, API_RUNTIME};
+
     cuda2hipRename["cudaCreateChannelDesc"]                 = {"hipCreateChannelDesc", CONV_TEX, API_RUNTIME};
-    // unsupported yet by HIP
-    cuda2hipRename["cudaGetChannelDesc"]                    = {"hipGetChannelDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGetChannelDesc"]                    = {"hipGetChannelDesc", CONV_TEX, API_RUNTIME};
 
     // Texture Object Management
     // structs
-    // unsupported yet by HIP
-    cuda2hipRename["cudaResourceDesc"]                            = {"hipResourceDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaResourceViewDesc"]                        = {"hipResourceViewDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaTextureDesc"]                             = {"hipTextureDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaResourceDesc"]                            = {"hipResourceDesc", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaResourceViewDesc"]                        = {"hipResourceViewDesc", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaTextureDesc"]                             = {"hipTextureDesc", CONV_TEX, API_RUNTIME};
     cuda2hipRename["surfaceReference"]                            = {"hipSurfaceReference", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["textureReference"]                            = {"hipTextureReference", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    // Leaved unchanged
+    // cuda2hipRename["textureReference"]                         = {"textureReference", CONV_TEX, API_RUNTIME};
+
+    // typedefs
+    cuda2hipRename["cudaTextureObject_t"]                         = {"hipTextureObject_t", CONV_TEX, API_RUNTIME};
 
     // enums
     // enum cudaResourceType
-    cuda2hipRename["cudaResourceType"]                            = {"hipResourceType", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                               // API_Driver ANALOGUE (CUresourcetype)
-    cuda2hipRename["cudaResourceTypeArray"]                       = {"hipResourceTypeArray", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                  // 0x00 // API_Driver ANALOGUE (CU_RESOURCE_TYPE_ARRAY = 0x00)
-    cuda2hipRename["cudaResourceTypeMipmappedArray"]              = {"hipResourceTypeMipmappedArray", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};         // 0x01 // API_Driver ANALOGUE (CU_RESOURCE_TYPE_MIPMAPPED_ARRAY = 0x01)
-    cuda2hipRename["cudaResourceTypeLinear"]                      = {"hipResourceTypeLinear", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                 // 0x02 // API_Driver ANALOGUE (CU_RESOURCE_TYPE_LINEAR = 0x02)
-    cuda2hipRename["cudaResourceTypePitch2D"]                     = {"hipResourceTypePitch2D", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                // 0x03 // API_Driver ANALOGUE (CU_RESOURCE_TYPE_PITCH2D = 0x03)
+    cuda2hipRename["cudaResourceType"]                            = {"hipResourceType", CONV_TEX, API_RUNTIME};                                    // API_Driver ANALOGUE (CUresourcetype)
+    cuda2hipRename["cudaResourceTypeArray"]                       = {"hipResourceTypeArray", CONV_TEX, API_RUNTIME};                       // 0x00 // API_Driver ANALOGUE (CU_RESOURCE_TYPE_ARRAY = 0x00)
+    cuda2hipRename["cudaResourceTypeMipmappedArray"]              = {"hipResourceTypeMipmappedArray", CONV_TEX, API_RUNTIME};              // 0x01 // API_Driver ANALOGUE (CU_RESOURCE_TYPE_MIPMAPPED_ARRAY = 0x01)
+    cuda2hipRename["cudaResourceTypeLinear"]                      = {"hipResourceTypeLinear", CONV_TEX, API_RUNTIME};                      // 0x02 // API_Driver ANALOGUE (CU_RESOURCE_TYPE_LINEAR = 0x02)
+    cuda2hipRename["cudaResourceTypePitch2D"]                     = {"hipResourceTypePitch2D", CONV_TEX, API_RUNTIME};                     // 0x03 // API_Driver ANALOGUE (CU_RESOURCE_TYPE_PITCH2D = 0x03)
 
     // enum cudaResourceViewFormat
-    cuda2hipRename["cudaResourceViewFormat"]                      = {"hipResourceViewFormat", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                              // API_Driver ANALOGUE (CUresourceViewFormat)
-    cuda2hipRename["cudaResViewFormatNone"]                       = {"hipResViewFormatNone", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                       // 0x00 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_NONE = 0x00)
-    cuda2hipRename["cudaResViewFormatUnsignedChar1"]              = {"hipResViewFormatUnsignedChar1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};              // 0x01 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_1X8 = 0x01)
-    cuda2hipRename["cudaResViewFormatUnsignedChar2"]              = {"hipResViewFormatUnsignedChar2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};              // 0x02 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_2X8 = 0x02)
-    cuda2hipRename["cudaResViewFormatUnsignedChar4"]              = {"hipResViewFormatUnsignedChar4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};              // 0x03 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_4X8 = 0x03)
-    cuda2hipRename["cudaResViewFormatSignedChar1"]                = {"hipResViewFormatSignedChar1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                // 0x04 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_1X8 = 0x04)
-    cuda2hipRename["cudaResViewFormatSignedChar2"]                = {"hipResViewFormatSignedChar2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                // 0x05 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_2X8 = 0x05)
-    cuda2hipRename["cudaResViewFormatSignedChar4"]                = {"hipResViewFormatSignedChar4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                // 0x06 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_4X8 = 0x06)
-    cuda2hipRename["cudaResViewFormatUnsignedShort1"]             = {"hipResViewFormatUnsignedShort1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};             // 0x07 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_1X16 = 0x07)
-    cuda2hipRename["cudaResViewFormatUnsignedShort2"]             = {"hipResViewFormatUnsignedShort2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};             // 0x08 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_2X16 = 0x08)
-    cuda2hipRename["cudaResViewFormatUnsignedShort4"]             = {"hipResViewFormatUnsignedShort4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};             // 0x09 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_4X16 = 0x09)
-    cuda2hipRename["cudaResViewFormatSignedShort1"]               = {"hipResViewFormatSignedShort1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};               // 0x0a // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_1X16 = 0x0a)
-    cuda2hipRename["cudaResViewFormatSignedShort2"]               = {"hipResViewFormatSignedShort2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};               // 0x0b // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_2X16 = 0x0b)
-    cuda2hipRename["cudaResViewFormatSignedShort4"]               = {"hipResViewFormatSignedShort4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};               // 0x0c // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_4X16 = 0x0c)
-    cuda2hipRename["cudaResViewFormatUnsignedInt1"]               = {"hipResViewFormatUnsignedInt1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};               // 0x0d // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_1X32 = 0x0d)
-    cuda2hipRename["cudaResViewFormatUnsignedInt2"]               = {"hipResViewFormatUnsignedInt2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};               // 0x0e // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_2X32 = 0x0e)
-    cuda2hipRename["cudaResViewFormatUnsignedInt4"]               = {"hipResViewFormatUnsignedInt4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};               // 0x0f // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_4X32 = 0x0f)
-    cuda2hipRename["cudaResViewFormatSignedInt1"]                 = {"hipResViewFormatSignedInt1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                 // 0x10 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_1X32 = 0x10)
-    cuda2hipRename["cudaResViewFormatSignedInt2"]                 = {"hipResViewFormatSignedInt2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                 // 0x11 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_2X32 = 0x11)
-    cuda2hipRename["cudaResViewFormatSignedInt4"]                 = {"hipResViewFormatSignedInt4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                 // 0x12 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_4X32 = 0x12)
-    cuda2hipRename["cudaResViewFormatHalf1"]                      = {"hipResViewFormatHalf1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                      // 0x13 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_FLOAT_1X16 = 0x13)
-    cuda2hipRename["cudaResViewFormatHalf2"]                      = {"hipResViewFormatHalf2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                      // 0x14 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_FLOAT_2X16 = 0x14)
-    cuda2hipRename["cudaResViewFormatHalf4"]                      = {"hipResViewFormatHalf4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                      // 0x15 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_FLOAT_4X16 = 0x15)
-    cuda2hipRename["cudaResViewFormatFloat1"]                     = {"hipResViewFormatFloat1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                     // 0x16 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_FLOAT_1X32 = 0x16)
-    cuda2hipRename["cudaResViewFormatFloat2"]                     = {"hipResViewFormatFloat2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                     // 0x17 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_FLOAT_2X32 = 0x17)
-    cuda2hipRename["cudaResViewFormatFloat4"]                     = {"hipResViewFormatFloat4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};                     // 0x18 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_FLOAT_4X32 = 0x18)
-    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed1"]   = {"hipResViewFormatUnsignedBlockCompressed1", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};   // 0x19 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC1 = 0x19)
-    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed2"]   = {"hipResViewFormatUnsignedBlockCompressed2", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};   // 0x1a // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC2 = 0x1a)
-    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed3"]   = {"hipResViewFormatUnsignedBlockCompressed3", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};   // 0x1b // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC3 = 0x1b)
-    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed4"]   = {"hipResViewFormatUnsignedBlockCompressed4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};   // 0x1c // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC4 = 0x1c)
-    cuda2hipRename["cudaResViewFormatSignedBlockCompressed4"]     = {"hipResViewFormatSignedBlockCompressed4", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};     // 0x1d // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SIGNED_BC4 = 0x1d)
-    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed5"]   = {"hipResViewFormatUnsignedBlockCompressed5", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};   // 0x1e // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC5 = 0x1e)
-    cuda2hipRename["cudaResViewFormatSignedBlockCompressed5"]     = {"hipResViewFormatSignedBlockCompressed5", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};     // 0x1f // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SIGNED_BC5 = 0x1f)
-    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed6H"]  = {"hipResViewFormatUnsignedBlockCompressed6H", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};  // 0x20 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC6H = 0x20)
-    cuda2hipRename["cudaResViewFormatSignedBlockCompressed6H"]    = {"hipResViewFormatSignedBlockCompressed6H", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};    // 0x21 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SIGNED_BC6H = 0x21)
-    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed7"]   = {"hipResViewFormatUnsignedBlockCompressed7", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};   // 0x22 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC7 = 0x22)
+    cuda2hipRename["cudaResourceViewFormat"]                      = {"hipResourceViewFormat", CONV_TEX, API_RUNTIME};                              // API_Driver ANALOGUE (CUresourceViewFormat)
+    cuda2hipRename["cudaResViewFormatNone"]                       = {"hipResViewFormatNone", CONV_TEX, API_RUNTIME};                       // 0x00 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_NONE = 0x00)
+    cuda2hipRename["cudaResViewFormatUnsignedChar1"]              = {"hipResViewFormatUnsignedChar1", CONV_TEX, API_RUNTIME};              // 0x01 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_1X8 = 0x01)
+    cuda2hipRename["cudaResViewFormatUnsignedChar2"]              = {"hipResViewFormatUnsignedChar2", CONV_TEX, API_RUNTIME};              // 0x02 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_2X8 = 0x02)
+    cuda2hipRename["cudaResViewFormatUnsignedChar4"]              = {"hipResViewFormatUnsignedChar4", CONV_TEX, API_RUNTIME};              // 0x03 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_4X8 = 0x03)
+    cuda2hipRename["cudaResViewFormatSignedChar1"]                = {"hipResViewFormatSignedChar1", CONV_TEX, API_RUNTIME};                // 0x04 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_1X8 = 0x04)
+    cuda2hipRename["cudaResViewFormatSignedChar2"]                = {"hipResViewFormatSignedChar2", CONV_TEX, API_RUNTIME};                // 0x05 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_2X8 = 0x05)
+    cuda2hipRename["cudaResViewFormatSignedChar4"]                = {"hipResViewFormatSignedChar4", CONV_TEX, API_RUNTIME};                // 0x06 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_4X8 = 0x06)
+    cuda2hipRename["cudaResViewFormatUnsignedShort1"]             = {"hipResViewFormatUnsignedShort1", CONV_TEX, API_RUNTIME};             // 0x07 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_1X16 = 0x07)
+    cuda2hipRename["cudaResViewFormatUnsignedShort2"]             = {"hipResViewFormatUnsignedShort2", CONV_TEX, API_RUNTIME};             // 0x08 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_2X16 = 0x08)
+    cuda2hipRename["cudaResViewFormatUnsignedShort4"]             = {"hipResViewFormatUnsignedShort4", CONV_TEX, API_RUNTIME};             // 0x09 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_4X16 = 0x09)
+    cuda2hipRename["cudaResViewFormatSignedShort1"]               = {"hipResViewFormatSignedShort1", CONV_TEX, API_RUNTIME};               // 0x0a // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_1X16 = 0x0a)
+    cuda2hipRename["cudaResViewFormatSignedShort2"]               = {"hipResViewFormatSignedShort2", CONV_TEX, API_RUNTIME};               // 0x0b // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_2X16 = 0x0b)
+    cuda2hipRename["cudaResViewFormatSignedShort4"]               = {"hipResViewFormatSignedShort4", CONV_TEX, API_RUNTIME};               // 0x0c // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_4X16 = 0x0c)
+    cuda2hipRename["cudaResViewFormatUnsignedInt1"]               = {"hipResViewFormatUnsignedInt1", CONV_TEX, API_RUNTIME};               // 0x0d // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_1X32 = 0x0d)
+    cuda2hipRename["cudaResViewFormatUnsignedInt2"]               = {"hipResViewFormatUnsignedInt2", CONV_TEX, API_RUNTIME};               // 0x0e // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_2X32 = 0x0e)
+    cuda2hipRename["cudaResViewFormatUnsignedInt4"]               = {"hipResViewFormatUnsignedInt4", CONV_TEX, API_RUNTIME};               // 0x0f // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_4X32 = 0x0f)
+    cuda2hipRename["cudaResViewFormatSignedInt1"]                 = {"hipResViewFormatSignedInt1", CONV_TEX, API_RUNTIME};                 // 0x10 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_1X32 = 0x10)
+    cuda2hipRename["cudaResViewFormatSignedInt2"]                 = {"hipResViewFormatSignedInt2", CONV_TEX, API_RUNTIME};                 // 0x11 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_2X32 = 0x11)
+    cuda2hipRename["cudaResViewFormatSignedInt4"]                 = {"hipResViewFormatSignedInt4", CONV_TEX, API_RUNTIME};                 // 0x12 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SINT_4X32 = 0x12)
+    cuda2hipRename["cudaResViewFormatHalf1"]                      = {"hipResViewFormatHalf1", CONV_TEX, API_RUNTIME};                      // 0x13 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_FLOAT_1X16 = 0x13)
+    cuda2hipRename["cudaResViewFormatHalf2"]                      = {"hipResViewFormatHalf2", CONV_TEX, API_RUNTIME};                      // 0x14 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_FLOAT_2X16 = 0x14)
+    cuda2hipRename["cudaResViewFormatHalf4"]                      = {"hipResViewFormatHalf4", CONV_TEX, API_RUNTIME};                      // 0x15 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_FLOAT_4X16 = 0x15)
+    cuda2hipRename["cudaResViewFormatFloat1"]                     = {"hipResViewFormatFloat1", CONV_TEX, API_RUNTIME};                     // 0x16 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_FLOAT_1X32 = 0x16)
+    cuda2hipRename["cudaResViewFormatFloat2"]                     = {"hipResViewFormatFloat2", CONV_TEX, API_RUNTIME};                     // 0x17 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_FLOAT_2X32 = 0x17)
+    cuda2hipRename["cudaResViewFormatFloat4"]                     = {"hipResViewFormatFloat4", CONV_TEX, API_RUNTIME};                     // 0x18 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_FLOAT_4X32 = 0x18)
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed1"]   = {"hipResViewFormatUnsignedBlockCompressed1", CONV_TEX, API_RUNTIME};   // 0x19 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC1 = 0x19)
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed2"]   = {"hipResViewFormatUnsignedBlockCompressed2", CONV_TEX, API_RUNTIME};   // 0x1a // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC2 = 0x1a)
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed3"]   = {"hipResViewFormatUnsignedBlockCompressed3", CONV_TEX, API_RUNTIME};   // 0x1b // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC3 = 0x1b)
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed4"]   = {"hipResViewFormatUnsignedBlockCompressed4", CONV_TEX, API_RUNTIME};   // 0x1c // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC4 = 0x1c)
+    cuda2hipRename["cudaResViewFormatSignedBlockCompressed4"]     = {"hipResViewFormatSignedBlockCompressed4", CONV_TEX, API_RUNTIME};     // 0x1d // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SIGNED_BC4 = 0x1d)
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed5"]   = {"hipResViewFormatUnsignedBlockCompressed5", CONV_TEX, API_RUNTIME};   // 0x1e // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC5 = 0x1e)
+    cuda2hipRename["cudaResViewFormatSignedBlockCompressed5"]     = {"hipResViewFormatSignedBlockCompressed5", CONV_TEX, API_RUNTIME};     // 0x1f // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SIGNED_BC5 = 0x1f)
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed6H"]  = {"hipResViewFormatUnsignedBlockCompressed6H", CONV_TEX, API_RUNTIME};  // 0x20 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC6H = 0x20)
+    cuda2hipRename["cudaResViewFormatSignedBlockCompressed6H"]    = {"hipResViewFormatSignedBlockCompressed6H", CONV_TEX, API_RUNTIME};    // 0x21 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SIGNED_BC6H = 0x21)
+    cuda2hipRename["cudaResViewFormatUnsignedBlockCompressed7"]   = {"hipResViewFormatUnsignedBlockCompressed7", CONV_TEX, API_RUNTIME};   // 0x22 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC7 = 0x22)
 
-    cuda2hipRename["cudaTextureAddressMode"]                      = {"hipTextureAddressMode", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaAddressModeWrap"]                         = {"hipAddressModeWrap", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaAddressModeClamp"]                        = {"hipAddressModeClamp", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaAddressModeMirror"]                       = {"hipAddressModeMirror", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaAddressModeBorder"]                       = {"hipAddressModeBorder", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaTextureAddressMode"]                      = {"hipTextureAddressMode", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaAddressModeWrap"]                         = {"hipAddressModeWrap", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaAddressModeClamp"]                        = {"hipAddressModeClamp", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaAddressModeMirror"]                       = {"hipAddressModeMirror", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaAddressModeBorder"]                       = {"hipAddressModeBorder", CONV_TEX, API_RUNTIME};
 
     // functions
-    cuda2hipRename["cudaCreateTextureObject"]                     = {"hipCreateTextureObject", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaDestroyTextureObject"]                    = {"hipDestroyTextureObject", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGetTextureObjectResourceDesc"]            = {"hipGetTextureObjectResourceDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGetTextureObjectResourceViewDesc"]        = {"hipGetTextureObjectResourceViewDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGetTextureObjectTextureDesc"]             = {"hipGetTextureObjectTextureDesc", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaCreateTextureObject"]                     = {"hipCreateTextureObject", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaDestroyTextureObject"]                    = {"hipDestroyTextureObject", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaGetTextureObjectResourceDesc"]            = {"hipGetTextureObjectResourceDesc", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaGetTextureObjectResourceViewDesc"]        = {"hipGetTextureObjectResourceViewDesc", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaGetTextureObjectTextureDesc"]             = {"hipGetTextureObjectTextureDesc", CONV_TEX, API_RUNTIME};
 
     // Surface Reference Management
     // unsupported yet by HIP
