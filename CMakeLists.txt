@@ -141,9 +141,6 @@ add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 #############################
 # Build steps
 #############################
-# Rebuild cmake cache updates .hipInfo and .hipVersion
-add_custom_target(update_build_and_version_info COMMAND make rebuild_cache)
-
 # Build clang hipify if enabled
 add_subdirectory(hipify-clang)
 
@@ -211,13 +208,6 @@ if(HIP_PLATFORM STREQUAL "hcc")
         target_include_directories(${TARGET} SYSTEM INTERFACE $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>;${HSA_PATH}/include)
     endforeach()
     target_link_libraries(hip_hcc INTERFACE hcc::hccrt;hcc::hc_am)
-
-    # Generate hcc_version.txt
-    add_custom_target(query_hcc_version COMMAND ${HCC_HOME}/bin/hcc --version > ${PROJECT_BINARY_DIR}/hcc_version.tmp)
-    add_custom_target(check_hcc_version COMMAND ${CMAKE_COMMAND} -E copy_if_different ${PROJECT_BINARY_DIR}/hcc_version.tmp ${PROJECT_BINARY_DIR}/hcc_version.txt DEPENDS query_hcc_version)
-    set_source_files_properties(${PROJECT_BINARY_DIR}/hcc_version.txt PROPERTIES GENERATED TRUE)
-    set_source_files_properties(${SOURCE_FILES_RUNTIME} ${SOURCE_FILES_DEVICE} PROPERTIES OBJECT_DEPENDS ${PROJECT_BINARY_DIR}/hcc_version.txt)
-    add_dependencies(hip_hcc check_hcc_version update_build_and_version_info)
 
     # Generate .hipInfo
     file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
