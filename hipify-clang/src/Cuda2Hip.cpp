@@ -1824,9 +1824,9 @@ struct cuda2hipMap {
     cuda2hipRename["cudaUnbindTexture"]                     = {"hipUnbindTexture", CONV_TEX, API_RUNTIME};
     cuda2hipRename["cudaBindTexture2D"]                     = {"hipBindTexture2D", CONV_TEX, API_RUNTIME};
     cuda2hipRename["cudaBindTextureToArray"]                = {"hipBindTextureToArray", CONV_TEX, API_RUNTIME};
-    cuda2hipRename["cudaBindTextureToMipmappedArray"]       = {"hipBindTextureToMipmappedArray", CONV_TEX, API_RUNTIME};
-    cuda2hipRename["cudaGetTextureAlignmentOffset"]         = {"hipGetTextureAlignmentOffset", CONV_TEX, API_RUNTIME};
-    cuda2hipRename["cudaGetTextureReference"]               = {"hipGetTextureReference", CONV_TEX, API_RUNTIME};
+    cuda2hipRename["cudaBindTextureToMipmappedArray"]       = {"hipBindTextureToMipmappedArray", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGetTextureAlignmentOffset"]         = {"hipGetTextureAlignmentOffset", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaGetTextureReference"]               = {"hipGetTextureReference", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
 
     // Channel
     cuda2hipRename["cudaChannelFormatKind"]                 = {"hipChannelFormatKind", CONV_TEX, API_RUNTIME};
