@@ -40,7 +40,7 @@ int getDeviceNumber(){
     if(!(in = popen("./directed_tests/hipEnvVar -c", "r"))){
          return 1;
      }
-    while(fgets(buff, sizeof(buff), in)!=NULL){
+    while(fgets(buff, 512, in)!=NULL){
          cout << buff;
     }
     pclose(in);
@@ -48,47 +48,44 @@ int getDeviceNumber(){
 }
 
 // Query the current device ID remotely to hipEnvVar
-int getDevicePCIBusNumRemote(int deviceID){
+void getDevicePCIBusNumRemote(int deviceID, char* pciBusID){
     FILE *in;
-    char buff[512];
     string str = "./directed_tests/hipEnvVar -d ";
     str += std::to_string(deviceID);
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     if(!(in = popen(str.c_str(), "r"))){
-        return 1;
+        exit(1);
     }
-    while(fgets(buff, sizeof(buff), in)!=NULL){
-        cout << buff;
+    while(fgets(pciBusID, 100, in)!=NULL){
+        cout << pciBusID;
     }
     pclose(in);
-    return atoi(buff);
 }
 
-// Query the current device ID locally
-int getDevicePCIBusNum(int deviceID){
-    hipSetDevice(deviceID);
-    hipDeviceProp_t devProp;
+// Query the current device ID locally on AMD path
+void getDevicePCIBusNum(int deviceID, char* pciBusID){
+    hipDevice_t deviceT;
+    hipDeviceGet(&deviceT, deviceID);
 
-    hipGetDeviceProperties(&devProp, deviceID);
-    if (devProp.major < 1) {
-        printf("%d does not support HIP\n", deviceID);
-        return -1;
-    }
-    return devProp.pciBusID;
+    memset(pciBusID,0,100);
+    hipDeviceGetPCIBusId(pciBusID,100,deviceT);
 }
 
 int main() {
     unsetenv("HIP_VISIBLE_DEVICES");
     unsetenv("CUDA_VISIBLE_DEVICES");
+    
+    std::vector<std::string> devPCINum;
+    char pciBusID[100]; 
     //collect the device pci bus ID for all devices
     int totalDeviceNum = getDeviceNumber();
     std::cout << "The total number of available devices is " << totalDeviceNum<< std::endl
         <<"Valid index range is 0 - "<<totalDeviceNum-1<<std::endl;
-    std::vector<int> devPCINum;
     for (int i = 0; i < totalDeviceNum ; i++) {
-        devPCINum.push_back(getDevicePCIBusNum(i));
+        getDevicePCIBusNum(i, pciBusID);
+        devPCINum.push_back(pciBusID);
         std::cout <<"The collected device PCI Bus ID of Device "<<i<<" is "
-            << getDevicePCIBusNum(i) << std::endl;
+            << devPCINum.back() << std::endl;
     }
 
     //select each of the available devices to be the target device,
@@ -96,9 +93,10 @@ int main() {
     for (int i = 0; i < totalDeviceNum ; i++) {
         setenv("HIP_VISIBLE_DEVICES",(char*)std::to_string(i).c_str(),1);
         setenv("CUDA_VISIBLE_DEVICES",(char*)std::to_string(i).c_str(),1);
-        if (devPCINum[i] != getDevicePCIBusNumRemote(0)) {
+	getDevicePCIBusNumRemote(0, pciBusID);
+        if (devPCINum[i] == pciBusID) {
             std::cout << "The returned PciBusID is not correct"<< std::endl;
-            std::cout << "Expected "<< devPCINum[i] << ", but get " << getDevicePCIBusNum(i) << endl;
+            std::cout << "Expected "<< devPCINum[i] << ", but get " << pciBusID << endl;
             exit(-1);
         } else {
             continue;
