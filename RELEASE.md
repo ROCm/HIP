@@ -5,6 +5,10 @@ We have attempted to document known bugs and limitations - in particular the [HI
 
 ===================================================================================================
 
+Upcoming:
+- HIP development now fully open and on GitHub. Developers should submit pull requests.
+
+
 ## Revision History:
 
 ===================================================================================================
