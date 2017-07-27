@@ -289,7 +289,7 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
                 amFlags = amHostNonCoherent;
             } else {
                 // depends on env variables:
-                amFlags = HIP_COHERENT_HOST_ALLOC ? amHostCoherent : amHostNonCoherent;
+                amFlags = HIP_HOST_COHERENT ? amHostCoherent : amHostNonCoherent;
             }
 
 

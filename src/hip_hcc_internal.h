@@ -59,7 +59,7 @@ extern int HIP_STREAM_SIGNALS;  /* number of signals to allocate at stream creat
 extern int HIP_VISIBLE_DEVICES; /* Contains a comma-separated sequence of GPU identifiers */
 extern int HIP_FORCE_P2P_HOST;
 
-extern int HIP_COHERENT_HOST_ALLOC;
+extern int HIP_HOST_COHERENT;
 
 extern int HIP_HIDDEN_FREE_MEM;
 //---
