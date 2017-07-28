@@ -86,13 +86,18 @@ int HIP_FORCE_SYNC_COPY = 0;
 int HIP_EVENT_SYS_RELEASE=0;
 int HIP_HOST_COHERENT = 1;
 
-// TODO - set to 0 once we resolve stability.
-// USE_ HIP_SYNC_HOST_ALLOC
 int HIP_SYNC_HOST_ALLOC = 1;
 
+
+#if (__hcc_workweek__ >= 17300)
+// Make sure we have required bug fix in HCC
+// Perform resolution on the GPU:
 // Chicken bit to sync on host to implement null stream.
 // If 0, null stream synchronization is performed on the GPU
+int HIP_SYNC_NULL_STREAM = 0;
+#else
 int HIP_SYNC_NULL_STREAM = 1;
+#endif
 
 // HIP needs to change some behavior based on HCC_OPT_FLUSH :
 #if (__hcc_workweek__ >= 17296)
