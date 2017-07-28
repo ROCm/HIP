@@ -125,7 +125,7 @@
 | `cudaHostUnregister`                                      | `hipHostUnregister`           |
 | `cudaMalloc`                                              | `hipMalloc`                   |
 | `cudaMalloc3D`                                            |                               |
-| `cudaMalloc3DArray`                                       |                               |
+| `cudaMalloc3DArray`                                       | `hipMalloc2DArray`            |
 | `cudaMallocArray`                                         | `hipMallocArray`              |
 | `cudaMallocHost`                                          | `hipHostMalloc`               |
 | `cudaMallocManaged`                                       |                               |
@@ -140,7 +140,7 @@
 | `cudaMemcpy2DFromArrayAsync`                              |                               |
 | `cudaMemcpy2DToArray`                                     | `hipMemcpy2DToArray`          |
 | `cudaMemcpy2DToArrayAsync`                                |                               |
-| `cudaMemcpy3D`                                            |                               |
+| `cudaMemcpy3D`                                            | `hipMemcpy3D`                 |
 | `cudaMemcpy3DAsync`                                       |                               |
 | `cudaMemcpy3DPeer`                                        |                               |
 | `cudaMemcpy3DPeerAsync`                                   |                               |
@@ -157,14 +157,14 @@
 | `cudaMemcpyToSymbol`                                      | `hipMemcpyToSymbol`           |
 | `cudaMemcpyToSymbolAsync`                                 | `hipMemcpyToSymbolAsync`      |
 | `cudaMemset`                                              | `hipMemset`                   |
-| `cudaMemset2D`                                            |                               |
+| `cudaMemset2D`                                            | `hipMemset2D`                 |
 | `cudaMemset2DAsync`                                       |                               |
 | `cudaMemset3D`                                            |                               |
 | `cudaMemset3DAsync`                                       |                               |
 | `cudaMemsetAsync`                                         | `hipMemsetAsync`              |
-| `make_cudaExtent`                                         |                               |
-| `make_cudaPitchedPtr`                                     |                               |
-| `make_cudaPos`                                            |                               |
+| `make_cudaExtent`                                         | `make_hipExtent`              |
+| `make_cudaPitchedPtr`                                     | `make_hipPitchedPtr`          |
+| `make_cudaPos`                                            | `make_hipPos`                 |
 
 ## **10. Unified Addressing**
 
@@ -308,8 +308,8 @@
 |   **CUDA**                                                |   **HIP**                     |
 |-----------------------------------------------------------|-------------------------------|
 | `cudaBindTexture`                                         |                               |
-| `cudaBindTexture2D`                                       |                               |
-| `cudaBindTextureToArray`                                  |                               |
+| `cudaBindTexture2D`                                       | `hipBindTexture2D`            |
+| `cudaBindTextureToArray`                                  | `hipBindTextureToArray`       |
 | `cudaBindTextureToMipmappedArray`                         |                               |
 | `cudaCreateChannelDesc`                                   |                               |
 | `cudaGetChannelDesc`                                      |                               |
@@ -328,11 +328,11 @@
 
 |   **CUDA**                                                |   **HIP**                     |
 |-----------------------------------------------------------|-------------------------------|
-| `cudaCreateTextureObject`                                 |                               |
-| `cudaDestroyTextureObject`                                |                               |
-| `cudaGetTextureObjectResourceDesc`                        |                               |
-| `cudaGetTextureObjectResourceViewDesc`                    |                               |
-| `cudaGetTextureObjectTextureDesc`                         |                               |
+| `cudaCreateTextureObject`                                 |`hipCreateTextureObject`       |
+| `cudaDestroyTextureObject`                                |`hipDestroyTextureObject`      |
+| `cudaGetTextureObjectResourceDesc`                        |`hipGetTextureObjectResourceDesc` |
+| `cudaGetTextureObjectResourceViewDesc`                    |`hipGetTextureObjectResourceViewDesc` |
+| `cudaGetTextureObjectTextureDesc`                         |`hipGetTextureObjectTextureDesc` |
 
 ## **26. Surface Object Management**
 
@@ -399,18 +399,18 @@
 |-------------:|-----------------------------------------------|------------------------------------------------------|
 | struct       | `cudaChannelFormatDesc`                       | `hipChannelFormatDesc`                               |
 | struct       | `cudaDeviceProp`                              | `hipDeviceProp_t`                                    |
-| struct       | `cudaExtent`                                  |                                                      |
+| struct       | `cudaExtent`                                  | `hipExtent`                                          |
 | struct       | `cudaFuncAttributes`                          |                                                      |
 | struct       | `cudaIpcEventHandle_t`                        | `hipIpcEventHandle_t`                                |
 | struct       | `cudaIpcMemHandle_t`                          | `hipIpcMemHandle_t`                                  |
-| struct       | `cudaMemcpy3DParms`                           |                                                      |
+| struct       | `cudaMemcpy3DParms`                           | `hipMemcpy3DParms`                                   |
 | struct       | `cudaMemcpy3DPeerParms`                       |                                                      |
-| struct       | `cudaPitchedPtr`                              |                                                      |
+| struct       | `cudaPitchedPtr`                              | `hipPitchedPtr`                                      |
 | struct       | `cudaPointerAttributes`                       | `hipPointerAttribute_t`                              |
-| struct       | `cudaPos`                                     |                                                      |
-| struct       | `cudaResourceDesc`                            |                                                      |
-| struct       | `cudaResourceViewDesc`                        |                                                      |
-| struct       | `cudaTextureDesc`                             |                                                      |
+| struct       | `cudaPos`                                     | `hipPos`                                             |
+| struct       | `cudaResourceDesc`                            | `hipResourceDesc`                                    |
+| struct       | `cudaResourceViewDesc`                        | `hipResourceViewDesc`                                |
+| struct       | `cudaTextureDesc`                             | `hipTextureDesc`                                     |
 | struct       | `surfaceReference`                            |                                                      |
 | struct       | `textureReference`                            | `textureReference`                                   |
 | enum         |***`cudaChannelFormatKind`***                  |***`hipChannelFormatKind`***                          |
@@ -630,47 +630,47 @@
 | enum         |***`cudaMemoryType`***                         |***`hipMemoryType`***                                 |
 |            1 |*`cudaMemoryTypeHost`*                         |*`hipMemoryTypeHost`*                                 |
 |            2 |*`cudaMemoryTypeDevice`*                       |*`hipMemoryTypeDevice`*                               |
-| enum         |***`cudaResourceType`***                       |                                                      |
-|            0 |*`cudaResourceTypeArray`*                      |                                                      |
-|            1 |*`cudaResourceTypeMipmappedArray`*             |                                                      |
-|            2 |*`cudaResourceTypeLinear`*                     |                                                      |
-|            3 |*`cudaResourceTypePitch2D`*                    |                                                      |
-| enum         |***`cudaResourceViewFormat`***                 |                                                      |
-|         0x00 |*`cudaResViewFormatNone`*                      |                                                      |
-|         0x01 |*`cudaResViewFormatUnsignedChar1`*             |                                                      |
-|         0x02 |*`cudaResViewFormatUnsignedChar2`*             |                                                      |
-|         0x03 |*`cudaResViewFormatUnsignedChar4`*             |                                                      |
-|         0x04 |*`cudaResViewFormatSignedChar1`*               |                                                      |
-|         0x05 |*`cudaResViewFormatSignedChar2`*               |                                                      |
-|         0x06 |*`cudaResViewFormatSignedChar4`*               |                                                      |
-|         0x07 |*`cudaResViewFormatUnsignedShort1`*            |                                                      |
-|         0x08 |*`cudaResViewFormatUnsignedShort2`*            |                                                      |
-|         0x09 |*`cudaResViewFormatUnsignedShort4`*            |                                                      |
-|         0x0a |*`cudaResViewFormatSignedShort1`*              |                                                      |
-|         0x0b |*`cudaResViewFormatSignedShort2`*              |                                                      |
-|         0x0c |*`cudaResViewFormatSignedShort4`*              |                                                      |
-|         0x0d |*`cudaResViewFormatUnsignedInt1`*              |                                                      |
-|         0x0e |*`cudaResViewFormatUnsignedInt2`*              |                                                      |
-|         0x0f |*`cudaResViewFormatUnsignedInt4`*              |                                                      |
-|         0x10 |*`cudaResViewFormatSignedInt1`*                |                                                      |
-|         0x11 |*`cudaResViewFormatSignedInt2`*                |                                                      |
-|         0x12 |*`cudaResViewFormatSignedInt4`*                |                                                      |
-|         0x13 |*`cudaResViewFormatHalf1`*                     |                                                      |
-|         0x14 |*`cudaResViewFormatHalf2`*                     |                                                      |
-|         0x15 |*`cudaResViewFormatHalf4`*                     |                                                      |
-|         0x16 |*`cudaResViewFormatFloat1`*                    |                                                      |
-|         0x17 |*`cudaResViewFormatFloat2`*                    |                                                      |
-|         0x18 |*`cudaResViewFormatFloat4`*                    |                                                      |
-|         0x19 |*`cudaResViewFormatUnsignedBlockCompressed1`*  |                                                      |
-|         0x1a |*`cudaResViewFormatUnsignedBlockCompressed2`*  |                                                      |
-|         0x1b |*`cudaResViewFormatUnsignedBlockCompressed3`*  |                                                      |
-|         0x1c |*`cudaResViewFormatUnsignedBlockCompressed4`*  |                                                      |
-|         0x1d |*`cudaResViewFormatSignedBlockCompressed4`*    |                                                      |
-|         0x1e |*`cudaResViewFormatUnsignedBlockCompressed5`*  |                                                      |
-|         0x1f |*`cudaResViewFormatSignedBlockCompressed5`*    |                                                      |
-|         0x20 |*`cudaResViewFormatUnsignedBlockCompressed6H`* |                                                      |
-|         0x21 |*`cudaResViewFormatSignedBlockCompressed6H`*   |                                                      |
-|         0x22 |*`cudaResViewFormatUnsignedBlockCompressed7`*  |                                                      |
+| enum         |***`cudaResourceType`***                       |***`hipResourceType`***                               |
+|            0 |*`cudaResourceTypeArray`*                      |*`hipResourceTypeArray`*                              |
+|            1 |*`cudaResourceTypeMipmappedArray`*             |*`hipResourceTypeMipmappedArray`*                     |
+|            2 |*`cudaResourceTypeLinear`*                     |*`hipResourceTypeLinear`*                             |
+|            3 |*`cudaResourceTypePitch2D`*                    |*`hipResourceTypePitch2D`*                            |
+| enum         |***`cudaResourceViewFormat`***                 |***`hipResourceViewFormat`***                         |
+|         0x00 |*`cudaResViewFormatNone`*                      |*`hipResViewFormatNone`*                              |
+|         0x01 |*`cudaResViewFormatUnsignedChar1`*             |*`hipResViewFormatUnsignedChar1`*                     |
+|         0x02 |*`cudaResViewFormatUnsignedChar2`*             |*`hipResViewFormatUnsignedChar2`*                     |
+|         0x03 |*`cudaResViewFormatUnsignedChar4`*             |*`hipResViewFormatUnsignedChar4`*                     |
+|         0x04 |*`cudaResViewFormatSignedChar1`*               |*`hipResViewFormatSignedChar1`*                       |
+|         0x05 |*`cudaResViewFormatSignedChar2`*               |*`hipResViewFormatSignedChar2`*                       |
+|         0x06 |*`cudaResViewFormatSignedChar4`*               |*`hipResViewFormatSignedChar4`*                       |
+|         0x07 |*`cudaResViewFormatUnsignedShort1`*            |*`hipResViewFormatUnsignedShort1`*                    |
+|         0x08 |*`cudaResViewFormatUnsignedShort2`*            |*`hipResViewFormatUnsignedShort2`*                    |
+|         0x09 |*`cudaResViewFormatUnsignedShort4`*            |*`hipResViewFormatUnsignedShort4`*                    |
+|         0x0a |*`cudaResViewFormatSignedShort1`*              |*`hipResViewFormatSignedShort1`*                      |
+|         0x0b |*`cudaResViewFormatSignedShort2`*              |*`hipResViewFormatSignedShort2`*                      |
+|         0x0c |*`cudaResViewFormatSignedShort4`*              |*`hipResViewFormatSignedShort4`*                      |
+|         0x0d |*`cudaResViewFormatUnsignedInt1`*              |*`hipResViewFormatUnsignedInt1`*                      |
+|         0x0e |*`cudaResViewFormatUnsignedInt2`*              |*`hipResViewFormatUnsignedInt2`*                      |
+|         0x0f |*`cudaResViewFormatUnsignedInt4`*              |*`hipResViewFormatUnsignedInt4`*                      |
+|         0x10 |*`cudaResViewFormatSignedInt1`*                |*`hipResViewFormatSignedInt1`*                        |
+|         0x11 |*`cudaResViewFormatSignedInt2`*                |*`hipResViewFormatSignedInt2`*                        |
+|         0x12 |*`cudaResViewFormatSignedInt4`*                |*`hipResViewFormatSignedInt4`*                        |
+|         0x13 |*`cudaResViewFormatHalf1`*                     |*`hipResViewFormatHalf1`*                             |
+|         0x14 |*`cudaResViewFormatHalf2`*                     |*`hipResViewFormatHalf2`*                             |
+|         0x15 |*`cudaResViewFormatHalf4`*                     |*`hipResViewFormatHalf4`*                             |
+|         0x16 |*`cudaResViewFormatFloat1`*                    |*`hipResViewFormatFloat1`*                            |
+|         0x17 |*`cudaResViewFormatFloat2`*                    |*`hipResViewFormatFloat2`*                            |
+|         0x18 |*`cudaResViewFormatFloat4`*                    |*`hipResViewFormatFloat4`*                            |
+|         0x19 |*`cudaResViewFormatUnsignedBlockCompressed1`*  |*`hipResViewFormatUnsignedBlockCompressed1`*          |
+|         0x1a |*`cudaResViewFormatUnsignedBlockCompressed2`*  |*`hipResViewFormatUnsignedBlockCompressed2`*          |
+|         0x1b |*`cudaResViewFormatUnsignedBlockCompressed3`*  |*`hipResViewFormatUnsignedBlockCompressed3`*          |
+|         0x1c |*`cudaResViewFormatUnsignedBlockCompressed4`*  |*`hipResViewFormatUnsignedBlockCompressed4`*          |
+|         0x1d |*`cudaResViewFormatSignedBlockCompressed4`*    |*`hipResViewFormatSignedBlockCompressed4`*            |
+|         0x1e |*`cudaResViewFormatUnsignedBlockCompressed5`*  |*`hipResViewFormatUnsignedBlockCompressed5`*          |
+|         0x1f |*`cudaResViewFormatSignedBlockCompressed5`*    |*`hipResViewFormatSignedBlockCompressed5`*            |
+|         0x20 |*`cudaResViewFormatUnsignedBlockCompressed6H`* |*`hipResViewFormatUnsignedBlockCompressed6H`*         |
+|         0x21 |*`cudaResViewFormatSignedBlockCompressed6H`*   |*`hipResViewFormatSignedBlockCompressed6H`*           |
+|         0x22 |*`cudaResViewFormatUnsignedBlockCompressed7`*  |*`hipResViewFormatUnsignedBlockCompressed7`*          |
 | enum         |***`cudaSharedMemConfig`***                    |***`hipSharedMemConfig`***                            |
 |            0 |*`cudaSharedMemBankSizeDefault`*               |*`hipSharedMemBankSizeDefault`*                       |
 |            1 |*`cudaSharedMemBankSizeFourByte`*              |*`hipSharedMemBankSizeFourByte`*                      |
@@ -682,17 +682,17 @@
 | enum         |***`cudaSurfaceFormatMode`***                  |                                                      |
 |            0 |*`cudaFormatModeForced`*                       |                                                      |
 |            1 |*`cudaFormatModeAuto`*                         |                                                      |
-| enum         |***`cudaTextureAddressMode`***                 |                                                      |
-|            0 |*`cudaAddressModeWrap`*                        |                                                      |
-|            1 |*`cudaAddressModeClamp`*                       |                                                      |
-|            2 |*`cudaAddressModeMirror`*                      |                                                      |
-|            3 |*`cudaAddressModeBorder`*                      |                                                      |
+| enum         |***`cudaTextureAddressMode`***                 |***`hipTextureAddressMode`***                         |
+|            0 |*`cudaAddressModeWrap`*                        |*`hipAddressModeWrap`*                                |
+|            1 |*`cudaAddressModeClamp`*                       |*`hipAddressModeClamp`*                               |
+|            2 |*`cudaAddressModeMirror`*                      |*`hipAddressModeMirror`*                              |
+|            3 |*`cudaAddressModeBorder`*                      |*`hipAddressModeBorder`*                              |
 | enum         |***`cudaTextureFilterMode`***                  |***`hipTextureFilterMode`***                          |
 |            0 |*`cudaFilterModePoint`*                        |*`hipFilterModePoint`*                                |
-|            1 |*`cudaFilterModeLinear`*                       |                                                      |
+|            1 |*`cudaFilterModeLinear`*                       |*`hipFilterModeLinear`*                               |
 | enum         |***`cudaTextureReadMode`***                    |***`hipTextureReadMode`***                            |
 |            0 |*`cudaReadModeElementType`*                    |*`hipReadModeElementType`*                            |
-|            1 |*`cudaReadModeNormalizedFloat`*                |                                                      |
+|            1 |*`cudaReadModeNormalizedFloat`*                |*`hipReadModeNormalizedFloat`*                        |
 | enum         |***`cudaGLDeviceList`***                       |                                                      |
 |         0x01 |*`cudaGLDeviceListAll`*                        |                                                      |
 |         0x02 |*`cudaGLDeviceListCurrentFrame`*               |                                                      |
@@ -728,14 +728,14 @@
 |            2 |*`cudaD3D11DeviceListCurrentFrame`*            |                                                      |
 |            3 |*`cudaD3D11DeviceListNextFrame`*               |                                                      |
 | struct       | `cudaArray`                                   | `hipArray`                                           |
-| typedef      | `cudaArray_t`                                 | `hipArray *`                                         |
-| typedef      | `cudaArray_const_t`                           | `const hipArray *`                                   |
+| typedef      | `cudaArray_t`                                 | `hipArray_t`                                         |
+| typedef      | `cudaArray_const_t`                           | `hipArray_const_t`                                   |
 | enum         | `cudaError`                                   | `hipError_t`                                         |
 | typedef      | `cudaError_t`                                 | `hipError_t`                                         |
 | typedef      | `cudaEvent_t`                                 | `hipEvent_t`                                         |
 | typedef      | `cudaGraphicsResource_t`                      |                                                      |
-| typedef      | `cudaMipmappedArray_t`                        |                                                      |
-| typedef      | `cudaMipmappedArray_const_t`                  |                                                      |
+| typedef      | `cudaMipmappedArray_t`                        | `hipMipmappedArray_t`                                |
+| typedef      | `cudaMipmappedArray_const_t`                  | `hipMipmappedArray_const_t`                          |
 | enum         |***`cudaOutputMode`***                         |                                                      |
 |         0x00 |*`cudaKeyValuePair`*                           |                                                      |
 |         0x01 |*`cudaCSV`*                                    |                                                      |
