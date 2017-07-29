@@ -1424,9 +1424,7 @@ void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, c
 {
 
     if ((HIP_TRACE_API & (1<<TRACE_KCMD)) || HIP_PROFILE_API || (COMPILE_HIP_DB & HIP_TRACE_API)) {
-        std::stringstream os_pre;
         std::stringstream os;
-        os_pre  << "<<hip-api tid:";
         os  << tls_tidInfo.tid() << "." << tls_tidInfo.apiSeqNum()
             << " hipLaunchKernel '" << kernelName << "'"
             << " gridDim:"  << lp->grid_dim
@@ -1434,16 +1432,17 @@ void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, c
             << " sharedMem:+" << lp->dynamic_group_mem_bytes
             << " " << *stream;
 
+        if (COMPILE_HIP_DB && HIP_TRACE_API) {
+            std::string fullStr;
+            recordApiTrace(&fullStr, os.str());
+        }
+
         if (HIP_PROFILE_API == 0x1) {
             std::string shortAtpString("hipLaunchKernel:");
             shortAtpString += kernelName;
             MARKER_BEGIN(shortAtpString.c_str(), "HIP");
         } else if (HIP_PROFILE_API == 0x2) {
             MARKER_BEGIN(os.str().c_str(), "HIP");
-        }
-
-        if (COMPILE_HIP_DB && HIP_TRACE_API) {
-            std::cerr << API_COLOR << os.str() << API_COLOR_END << std::endl;
         }
     }
 }

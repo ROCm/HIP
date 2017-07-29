@@ -358,7 +358,8 @@ hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device
 
 hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
 {
-    HIP_INIT_API(name,len, device);
+    // Cast to void* here to avoid printing garbage in debug modes.
+    HIP_INIT_API((void*)name,len, device);
     hipError_t e = hipSuccess;
     auto deviceHandle = ihipGetDevice(device);
     int nameLen = strlen(deviceHandle->_props.name);
@@ -369,7 +370,8 @@ hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
 
 hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len, int device)
 {
-    HIP_INIT_API(pciBusId, len, device);
+    // Cast to void* here to avoid printing garbage in debug modes.
+    HIP_INIT_API((void*)pciBusId, len, device);
     hipError_t e = hipErrorInvalidValue;
     int deviceCount = 0;
     ihipGetDeviceCount( &deviceCount );
