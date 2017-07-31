@@ -72,8 +72,8 @@ namespace hip_impl
             }
 
             if (COMPILE_HIP_DB && HIP_TRACE_API) {
-                std::cerr << API_COLOR << os.str() << API_COLOR_END
-                          << std::endl;
+                std::string fullStr;
+                recordApiTrace(&fullStr, os.str());
             }
         }
     }
