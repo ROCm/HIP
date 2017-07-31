@@ -879,7 +879,7 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
     return ihipLogStatus(e);
 }
 
-hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
+hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch,
         size_t width, size_t height, hipMemcpyKind kind, hipStream_t stream) {
     HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, dpitch, src, spitch, width, height, kind, stream);
     if(width > dpitch || width > spitch)
