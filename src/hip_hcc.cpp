@@ -1866,8 +1866,8 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     }
 
     hc::accelerator acc;
-    hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
-    hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
+    hc::AmPointerInfo dstPtrInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+    hc::AmPointerInfo srcPtrInfo(NULL, NULL, NULL, 0, acc, 0, 0);
     bool dstTracked = getTailoredPtrInfo(&dstPtrInfo, dst, sizeBytes);
     bool srcTracked = getTailoredPtrInfo(&srcPtrInfo, src, sizeBytes);
 
@@ -1902,7 +1902,7 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
 }
 
 void ihipStream_t::addSymbolPtrToTracker(hc::accelerator& acc, void* ptr, size_t sizeBytes) {
-  hc::AmPointerInfo ptrInfo(NULL, ptr, sizeBytes, acc, true, false);
+  hc::AmPointerInfo ptrInfo(NULL, ptr, ptr, sizeBytes, acc, true, false);
   hc::am_memtracker_add(ptr, ptrInfo);
 }
 
@@ -1926,7 +1926,7 @@ void ihipStream_t::lockedSymbolCopyAsync(hc::accelerator &acc, void* dst, void* 
 {
     // TODO - review - this looks broken , should not be adding pointers to tracker dynamically:
   if(kind == hipMemcpyHostToDevice) {
-    hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
+    hc::AmPointerInfo srcPtrInfo(NULL, NULL, NULL, 0, acc, 0, 0);
     bool srcTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) == AM_SUCCESS);
     if(srcTracked) {
         addSymbolPtrToTracker(acc, dst, sizeBytes);
@@ -1938,7 +1938,7 @@ void ihipStream_t::lockedSymbolCopyAsync(hc::accelerator &acc, void* dst, void* 
     }
   }
   if(kind == hipMemcpyDeviceToHost) {
-    hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
+    hc::AmPointerInfo dstPtrInfo(NULL, NULL, NULL, 0, acc, 0, 0);
     bool dstTracked = (hc::am_memtracker_getinfo(&dstPtrInfo, dst) == AM_SUCCESS);
     if(dstTracked) {
         addSymbolPtrToTracker(acc, src, sizeBytes);
@@ -1977,8 +1977,8 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
     } else {
 
         hc::accelerator acc;
-        hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
-        hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
+        hc::AmPointerInfo dstPtrInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+        hc::AmPointerInfo srcPtrInfo(NULL, NULL, NULL, 0, acc, 0, 0);
         bool dstTracked = getTailoredPtrInfo(&dstPtrInfo, dst, sizeBytes);
         bool srcTracked = getTailoredPtrInfo(&srcPtrInfo, src, sizeBytes);
 
