@@ -452,7 +452,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
 
         lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize, 
                                   (startEvent || stopEvent) ? &cf : nullptr
-#if (__hcc_workweek__ >= 17300)
+#if (__hcc_workweek__ > 17312)
                                   , f->_name.c_str()
 #endif
                                   );
