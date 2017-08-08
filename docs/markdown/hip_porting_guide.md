@@ -405,7 +405,7 @@ Code should not assume a warp size of 32 or 64.  See [Warp Cross-Lane Functions]
 
 ## memcpyToSymbol
 
-HIP support for hipMemCpyToSymbol is complete.  This feature allows a kernel
+HIP support for hipMemcpyToSymbol is complete.  This feature allows a kernel
 to define a device-side data symbol which can be accessed on the host side.  The symbol
 can be in __constant or device space.
 
