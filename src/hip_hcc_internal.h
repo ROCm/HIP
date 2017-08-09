@@ -114,6 +114,7 @@ private:
 //Extern tls
 extern thread_local hipError_t tls_lastHipError;
 extern thread_local TidInfo tls_tidInfo;
+extern thread_local bool tls_getPrimaryCtx;
 
 extern std::vector<ProfTrigger> g_dbStartTriggers;
 extern std::vector<ProfTrigger> g_dbStopTriggers;
