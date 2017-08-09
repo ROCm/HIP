@@ -56,7 +56,6 @@ At a high-level, the following features are not supported:
 - CUDA Driver API
 - CUDA IPC Functions (Under Development)
 - CUDA array, mipmappedArray and pitched memory
-- MemcpyToSymbol functions
 - Queue priority controls
 
 See the [API Support Table](CUDA_Runtime_API_functions_supported_by_HIP.md) for more detailed information.
