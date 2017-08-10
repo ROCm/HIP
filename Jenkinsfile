@@ -140,7 +140,6 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
 
         // No matter the base platform, all packages have the same name
         // Only upload 1 set of packages, so we don't have a race condition uploading packages
-        // Using hcc-ctu since that is what most people want
         if( platform.toLowerCase( ).startsWith( 'hcc-ctu' ) )
         {
           archiveArtifacts artifacts: "${build_dir_rel}/*.deb", fingerprint: true
@@ -174,8 +173,8 @@ def docker_upload_artifactory( String hcc_ver, String from_image, String source_
     // hip_install_image = docker.build( "${artifactory_org}/${image_name}:${env.BUILD_NUMBER}", "--pull -f ${build_dir_rel}/dockerfile-hip-ubuntu-16.04 --build-arg base_image=${from_image} ${build_dir_rel}" )
 
     // JENKINS-44836 workaround by using a bash script instead of docker.build()
-    sh "docker build -t ${artifactory_org}/${image_name}:${env.BUILD_NUMBER} --pull -f ${build_dir_rel}/dockerfile-hip-ubuntu-16.04 --build-arg base_image=${from_image} ${build_dir_rel}"
-    hip_install_image = docker.image( "${artifactory_org}/${image_name}:${env.BUILD_NUMBER}" )
+    sh "docker build -t ${artifactory_org}/${image_name} --pull -f ${build_dir_rel}/dockerfile-hip-ubuntu-16.04 --build-arg base_image=${from_image} ${build_dir_rel}"
+    hip_install_image = docker.image( "${artifactory_org}/${image_name}" )
 
     // The connection to artifactory can fail sometimes, but this should not be treated as a build fail
     try
@@ -204,31 +203,43 @@ def docker_upload_artifactory( String hcc_ver, String from_image, String source_
 }
 
 ////////////////////////////////////////////////////////////////////////
-// This builds a fresh docker image FROM a clean base image, with no build dependencies included
-// Uploads the new docker image to internal artifactory
+// Uploads the new docker image to the public docker-hub
 def docker_upload_dockerhub( def hip_install_image, String hcc_ver )
 {
   String image_name = "hip-${hcc_ver}-ubuntu-16.04"
+  String artifactory_org = env.JOB_NAME.toLowerCase( )
 
   stage( 'docker-hub' )
   {
-    docker_hub_image = docker.tag( "rocm/${image_name}:${env.BUILD_NUMBER}" )
-
     // Do not treat failures to push to docker-hub as a build fail
     try
     {
       // Only push changes to the master branch to docker-hub
       if( env.BRANCH_NAME.toLowerCase( ).startsWith( 'docker' ) )
       {
-        docker.withRegistry('https://hub.docker.com', 'docker-hub-cred' )
+        println "inside startswith"
+
+        sh  """#!/usr/bin/env bash
+            set -x
+            echo inside sh
+            docker tag ${artifactory_org}/${image_name} rocm/${image_name}
+          """
+        println "after sh"
+
+        hip_install_image = docker.image( "rocm/${image_name}" )
+        println "after docker.image"
+
+        docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-cred' )
         {
-          docker_hub_image.push( "${env.BUILD_NUMBER}" )
-          docker_hub_image.push( 'latest' )
+          println "docker.withRegistry"
+          hip_install_image.push( "${env.BUILD_NUMBER}" )
+          hip_install_image.push( 'latest' )
         }
       }
     }
     catch( err )
     {
+      println "err: " + err.toString()
       currentBuild.result = 'SUCCESS'
     }
 
@@ -253,43 +264,43 @@ def docker_clean_images( String hcc_ver )
 // Following this line is the start of MAIN of this Jenkinsfile
 String build_config = 'Release'
 
-parallel hcc_ctu:
-{
-  node('docker && rocm && gfx803')
-  {
-    String hcc_ver = 'hcc-ctu'
-    String from_image = 'compute-artifactory:5001/radeonopencompute/hcc/clang_tot_upgrade/hcc-lc-ubuntu-16.04:latest'
-    String inside_args = '--device=/dev/kfd'
+// parallel hcc_ctu:
+// {
+//   node('docker && rocm && gfx803')
+//   {
+//     String hcc_ver = 'hcc-ctu'
+//     String from_image = 'compute-artifactory:5001/radeonopencompute/hcc/clang_tot_upgrade/hcc-lc-ubuntu-16.04:latest'
+//     String inside_args = '--device=/dev/kfd'
 
-    // Checkout source code, dependencies and version files
-    String source_hip_rel = checkout_and_version( hcc_ver )
+//     // Checkout source code, dependencies and version files
+//     String source_hip_rel = checkout_and_version( hcc_ver )
 
-    // Create/reuse a docker image that represents the hip build environment
-    def hip_build_image = docker_build_image( hcc_ver, source_hip_rel, from_image )
+//     // Create/reuse a docker image that represents the hip build environment
+//     def hip_build_image = docker_build_image( hcc_ver, source_hip_rel, from_image )
 
-    // Print system information for the log
-    hip_build_image.inside( inside_args )
-    {
-      sh  """#!/usr/bin/env bash
-          set -x
-          /opt/rocm/bin/rocm_agent_enumerator -t ALL
-          /opt/rocm/bin/hcc --version
-        """
-    }
+//     // Print system information for the log
+//     hip_build_image.inside( inside_args )
+//     {
+//       sh  """#!/usr/bin/env bash
+//           set -x
+//           /opt/rocm/bin/rocm_agent_enumerator -t ALL
+//           /opt/rocm/bin/hcc --version
+//         """
+//     }
 
-    // Conctruct a binary directory path based on build config
-    String build_hip_rel = build_directory_rel( build_config );
+//     // Conctruct a binary directory path based on build config
+//     String build_hip_rel = build_directory_rel( build_config );
 
-    // Build hip inside of the build environment
-    docker_build_inside_image( hip_build_image, inside_args, hcc_ver, '', build_config, source_hip_rel, build_hip_rel )
+//     // Build hip inside of the build environment
+//     docker_build_inside_image( hip_build_image, inside_args, hcc_ver, '', build_config, source_hip_rel, build_hip_rel )
 
-    // After a successful build, upload a docker image of the results
-    hip_install_image = docker_upload_artifactory( hcc_ver, from_image, source_hip_rel, build_hip_rel )
-    docker_upload_dockerhub( hip_install_image, hcc_ver )
-  }
-},
-hcc_1_6:
-{
+//     // After a successful build, upload a docker image of the results
+//     hip_install_image = docker_upload_artifactory( hcc_ver, from_image, source_hip_rel, build_hip_rel )
+//     docker_upload_dockerhub( hip_install_image, hcc_ver )
+//   }
+// },
+// hcc_1_6:
+// {
   node('docker && rocm && gfx803')
   {
     String hcc_ver = 'hcc-1.6'
@@ -319,45 +330,47 @@ hcc_1_6:
     docker_build_inside_image( hip_build_image, inside_args, hcc_ver, '', build_config, source_hip_rel, build_hip_rel )
 
     // After a successful build, upload a docker image of the results
-    docker_upload_artifactory( hcc_ver, from_image, source_hip_rel, build_hip_rel )
+    hip_install_image = docker_upload_artifactory( hcc_ver, from_image, source_hip_rel, build_hip_rel )
+    docker_upload_dockerhub( hip_install_image, hcc_ver )
+    docker_clean_images( hcc_ver )
   }
-},
-nvcc:
-{
-  node('docker && cuda')
-  {
-    ////////////////////////////////////////////////////////////////////////
-    // Block of string constants customizing behavior for cuda
-    String nvcc_ver = 'nvcc-8.0'
-    String from_image = 'nvidia/cuda:8.0-devel'
+// },
+// nvcc:
+// {
+//   node('docker && cuda')
+//   {
+//     ////////////////////////////////////////////////////////////////////////
+//     // Block of string constants customizing behavior for cuda
+//     String nvcc_ver = 'nvcc-8.0'
+//     String from_image = 'nvidia/cuda:8.0-devel'
 
     // This unfortunately hardcodes the driver version nvidia_driver_375.74 in the volume mount.  Research if a way
     // exists to get volume driver to customize the volume names to leave out driver version
     String inside_args = '''--device=/dev/nvidiactl --device=/dev/nvidia0 --device=/dev/nvidia-uvm --device=/dev/nvidia-uvm-tools
         --volume-driver=nvidia-docker --volume=nvidia_driver_375.74:/usr/local/nvidia:ro''';
 
-    // Checkout source code, dependencies and version files
-    String source_hip_rel = checkout_and_version( nvcc_ver )
+//     // Checkout source code, dependencies and version files
+//     String source_hip_rel = checkout_and_version( nvcc_ver )
 
-    // We pull public nvidia images
-    def hip_build_image = docker_build_image( nvcc_ver, source_hip_rel, from_image )
+//     // We pull public nvidia images
+//     def hip_build_image = docker_build_image( nvcc_ver, source_hip_rel, from_image )
 
-    // Print system information for the log
-    hip_build_image.inside( inside_args )
-    {
-      sh  """#!/usr/bin/env bash
-          set -x
-          nvidia-smi
-          nvcc --version
-        """
-    }
+//     // Print system information for the log
+//     hip_build_image.inside( inside_args )
+//     {
+//       sh  """#!/usr/bin/env bash
+//           set -x
+//           nvidia-smi
+//           nvcc --version
+//         """
+//     }
 
-    // Conctruct a binary directory path based on build config
-    String build_hip_rel = build_directory_rel( build_config );
+//     // Conctruct a binary directory path based on build config
+//     String build_hip_rel = build_directory_rel( build_config );
 
-    // Build hip inside of the build environment
-    docker_build_inside_image( hip_build_image, inside_args, nvcc_ver, "-DHIP_NVCC_FLAGS=--Wno-deprecated-gpu-targets", build_config, source_hip_rel, build_hip_rel )
+//     // Build hip inside of the build environment
+//     docker_build_inside_image( hip_build_image, inside_args, nvcc_ver, "-DHIP_NVCC_FLAGS=--Wno-deprecated-gpu-targets", build_config, source_hip_rel, build_hip_rel )
 
-    // Not pushing an Nvidia based HiP to artifactory at this time
-  }
-}
+//     // Not pushing an Nvidia based HiP to artifactory at this time
+//   }
+// }
