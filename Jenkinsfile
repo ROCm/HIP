@@ -156,7 +156,7 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
 ////////////////////////////////////////////////////////////////////////
 // This builds a fresh docker image FROM a clean base image, with no build dependencies included
 // Uploads the new docker image to internal artifactory
-def docker_upload_install_image( String hcc_ver, String from_image, String source_hip_rel, String build_dir_rel )
+def docker_upload_artifactory( String hcc_ver, String from_image, String source_hip_rel, String build_dir_rel )
 {
   def hip_install_image = null
   String image_name = "hip-${hcc_ver}-ubuntu-16.04"
@@ -173,7 +173,6 @@ def docker_upload_install_image( String hcc_ver, String from_image, String sourc
     // Docker inspect failing on FROM statements with ARG https://issues.jenkins-ci.org/browse/JENKINS-44836
     // hip_install_image = docker.build( "${artifactory_org}/${image_name}:${env.BUILD_NUMBER}", "--pull -f ${build_dir_rel}/dockerfile-hip-ubuntu-16.04 --build-arg base_image=${from_image} ${build_dir_rel}" )
 
-    // The --build-arg REPO_RADEON= is a temporary fix to get around a DNS issue with our build machines
     // JENKINS-44836 workaround by using a bash script instead of docker.build()
     sh "docker build -t ${artifactory_org}/${image_name}:${env.BUILD_NUMBER} --pull -f ${build_dir_rel}/dockerfile-hip-ubuntu-16.04 --build-arg base_image=${from_image} ${build_dir_rel}"
     hip_install_image = docker.image( "${artifactory_org}/${image_name}:${env.BUILD_NUMBER}" )
@@ -199,6 +198,21 @@ def docker_upload_install_image( String hcc_ver, String from_image, String sourc
     {
       currentBuild.result = 'SUCCESS'
     }
+  }
+
+  return hip_install_image
+}
+
+////////////////////////////////////////////////////////////////////////
+// This builds a fresh docker image FROM a clean base image, with no build dependencies included
+// Uploads the new docker image to internal artifactory
+def docker_upload_dockerhub( def hip_install_image, String hcc_ver )
+{
+  String image_name = "hip-${hcc_ver}-ubuntu-16.04"
+
+  stage( 'docker-hub' )
+  {
+    docker_hub_image = docker.tag( "rocm/${image_name}:${env.BUILD_NUMBER}" )
 
     // Do not treat failures to push to docker-hub as a build fail
     try
@@ -208,8 +222,8 @@ def docker_upload_install_image( String hcc_ver, String from_image, String sourc
       {
         docker.withRegistry('https://hub.docker.com', 'docker-hub-cred' )
         {
-          hip_install_image.push( "${env.BUILD_NUMBER}" )
-          hip_install_image.push( 'latest' )
+          docker_hub_image.push( "${env.BUILD_NUMBER}" )
+          docker_hub_image.push( 'latest' )
         }
       }
     }
@@ -218,10 +232,20 @@ def docker_upload_install_image( String hcc_ver, String from_image, String sourc
       currentBuild.result = 'SUCCESS'
     }
 
-    // Lots of images with tags are created above; no apparent way to delete images:tags with docker global variable
-    // run bash script to clean images:tags after successful pushing
-    sh "docker images | grep \"${artifactory_org}/${image_name}\" | awk '{print \$1 \":\" \$2}' | xargs docker rmi"
   }
+}
+
+// Lots of images with tags are created above; no apparent way to delete images:tags with docker global variable
+def docker_clean_images( String hcc_ver )
+{
+  String image_name = "hip-${hcc_ver}-ubuntu-16.04"
+  String artifactory_org = env.JOB_NAME.toLowerCase( )
+
+  // run bash script to clean images:tags after successful pushing
+  sh "docker images | grep \"${artifactory_org}/${image_name}\" | awk '{print \$1 \":\" \$2}' | xargs docker rmi"
+
+  // run bash script to clean images:tags after successful pushing
+  sh "docker images | grep \"rocm/${image_name}\" | awk '{print \$1 \":\" \$2}' | xargs docker rmi"
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -260,7 +284,8 @@ parallel hcc_ctu:
     docker_build_inside_image( hip_build_image, inside_args, hcc_ver, '', build_config, source_hip_rel, build_hip_rel )
 
     // After a successful build, upload a docker image of the results
-    docker_upload_install_image( hcc_ver, from_image, source_hip_rel, build_hip_rel )
+    hip_install_image = docker_upload_artifactory( hcc_ver, from_image, source_hip_rel, build_hip_rel )
+    docker_upload_dockerhub( hip_install_image, hcc_ver )
   }
 },
 hcc_1_6:
@@ -294,7 +319,7 @@ hcc_1_6:
     docker_build_inside_image( hip_build_image, inside_args, hcc_ver, '', build_config, source_hip_rel, build_hip_rel )
 
     // After a successful build, upload a docker image of the results
-    docker_upload_install_image( hcc_ver, from_image, source_hip_rel, build_hip_rel )
+    docker_upload_artifactory( hcc_ver, from_image, source_hip_rel, build_hip_rel )
   }
 },
 nvcc:
