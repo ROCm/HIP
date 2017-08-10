@@ -1264,7 +1264,7 @@ __device__ double __hip_fast_dsqrt_rz(double x) {
 }
 
 __device__ void  __threadfence_system(void){
-    // no-op
+  std::atomic_thread_fence(std::memory_order_seq_cst);
 }
 
 double __hip_host_j0(double x)

@@ -130,7 +130,7 @@ extern int HIP_TRACE_API;
 #define __HIP_ARCH_HAS_WARP_FUNNEL_SHIFT__          (0)
 
 //sync
-#define __HIP_ARCH_HAS_THREAD_FENCE_SYSTEM__        (0)
+#define __HIP_ARCH_HAS_THREAD_FENCE_SYSTEM__        (1)
 #define __HIP_ARCH_HAS_SYNC_THREAD_EXT__            (0)
 
 // misc
