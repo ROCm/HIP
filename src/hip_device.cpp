@@ -146,6 +146,7 @@ hipError_t hipSetDevice(int deviceId)
         return ihipLogStatus(hipErrorInvalidDevice);
     } else {
         ihipSetTlsDefaultCtx(ihipGetPrimaryCtx(deviceId));
+        tls_getPrimaryCtx = true;
         return ihipLogStatus(hipSuccess);
     }
 }
