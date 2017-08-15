@@ -161,6 +161,7 @@ typedef enum hipError_t {
     hipErrorProfilerNotInitialized  = 6,
     hipErrorProfilerAlreadyStarted  = 7,
     hipErrorProfilerAlreadyStopped  = 8,
+    hipErrorInsufficientDriver      = 35,
     hipErrorInvalidImage            = 200,
     hipErrorInvalidContext          = 201,  ///< Produced when input context is invalid.
     hipErrorContextAlreadyCurrent   = 202,
