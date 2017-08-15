@@ -101,14 +101,21 @@ int sharePtr(void *ptr, ihipCtx_t *ctx, bool shareWithAll, unsigned hipFlags)
 
 // Allocate a new pointer with am_alloc and share with all valid peers.
 // Returns null-ptr if a memory error occurs (either allocation or sharing)
-void * allocAndSharePtr(const char *msg, size_t sizeBytes, ihipCtx_t *ctx, bool shareWithAll, unsigned amFlags, unsigned hipFlags)
+void * allocAndSharePtr(const char *msg, size_t sizeBytes, ihipCtx_t *ctx, bool shareWithAll, unsigned amFlags, unsigned hipFlags, size_t alignment)
 {
 
     void *ptr = nullptr;
 
     auto device = ctx->getWriteableDevice();
 
-    ptr = hc::am_alloc(sizeBytes, device->_acc, amFlags);
+#if (__hcc_workweek__ >= 17332)
+    if (alignment != 0) {
+        ptr = hc::am_aligned_alloc(sizeBytes, device->_acc, amFlags, alignment);
+    } else
+#endif
+    {
+        ptr = hc::am_alloc(sizeBytes, device->_acc, amFlags);
+    }
     tprintf(DB_MEM, " alloc %s ptr:%p-%p size:%zu on dev:%d\n",
             msg, ptr, static_cast<char*>(ptr)+sizeBytes, sizeBytes, device->_deviceId);
 
@@ -145,7 +152,11 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, const void
     hipError_t e = hipSuccess;
 
     hc::accelerator acc;
+#if (__hcc_workweek__ >= 17332)
+    hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+#else
     hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+#endif
     am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
     if (status == AM_SUCCESS) {
 
@@ -195,7 +206,11 @@ hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsi
         e = hipErrorInvalidValue;
     } else {
         hc::accelerator acc;
+#if (__hcc_workweek__ >= 17332)
+        hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+#else
         hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+#endif
         am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, hostPointer);
         if (status == AM_SUCCESS) {
             *devicePointer = static_cast<char*>(amPointerInfo._devicePointer) + (static_cast<char*>(hostPointer) - static_cast<char*>(amPointerInfo._hostPointer)) ;
@@ -226,7 +241,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 
     } else {
         auto device = ctx->getWriteableDevice();
-        *ptr = hip_internal::allocAndSharePtr("device_mem", sizeBytes, ctx,  false/*shareWithAll*/, 0/*amFlags*/, 0/*hipFlags*/);
+        *ptr = hip_internal::allocAndSharePtr("device_mem", sizeBytes, ctx,  false/*shareWithAll*/, 0/*amFlags*/, 0/*hipFlags*/, 0);
 
         if(sizeBytes  && (*ptr == NULL)){
             hip_status = hipErrorMemoryAllocation;
@@ -294,7 +309,7 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 
 
             *ptr = hip_internal::allocAndSharePtr((amFlags & amHostCoherent) ? "finegrained_host":"pinned_host",
-                                                  sizeBytes, ctx, (trueFlags & hipHostMallocPortable) /*shareWithAll*/, amFlags, flags);
+                                                  sizeBytes, ctx, (trueFlags & hipHostMallocPortable) /*shareWithAll*/, amFlags, flags, 0);
 
             if(sizeBytes  && (*ptr == NULL)){
                 hip_status = hipErrorMemoryAllocation;
@@ -340,10 +355,29 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
 
     //err = hipMalloc(ptr, (*pitch)*height);
     if (ctx) {
-        auto device = ctx->getWriteableDevice();
+        hc::accelerator acc = ctx->getDevice()->_acc;
+        hsa_agent_t* agent =static_cast<hsa_agent_t*>(acc.get_hsa_agent());
+
+        size_t allocGranularity = 0;
+        hsa_amd_memory_pool_t *allocRegion = static_cast<hsa_amd_memory_pool_t*>(acc.get_hsa_am_region());
+        hsa_amd_memory_pool_get_info(*allocRegion, HSA_AMD_MEMORY_POOL_INFO_RUNTIME_ALLOC_GRANULE, &allocGranularity);
+
+        hsa_ext_image_descriptor_t imageDescriptor;
+        imageDescriptor.width = *pitch;
+        imageDescriptor.height = height;
+        imageDescriptor.depth = 0;
+        imageDescriptor.array_size = 0;
+        imageDescriptor.geometry = HSA_EXT_IMAGE_GEOMETRY_2D;
+        imageDescriptor.format.channel_order = HSA_EXT_IMAGE_CHANNEL_ORDER_R;
+        imageDescriptor.format.channel_type = HSA_EXT_IMAGE_CHANNEL_TYPE_UNSIGNED_INT32;
+
+        hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
+        hsa_ext_image_data_info_t imageInfo;
+        hsa_status_t status = hsa_ext_image_data_get_info(*agent, &imageDescriptor, permission, &imageInfo);
+        size_t alignment = imageInfo.alignment <= allocGranularity ? 0 : imageInfo.alignment;
 
         const unsigned am_flags = 0;
-        *ptr = hip_internal::allocAndSharePtr("device_pitch", sizeBytes, ctx, false/*shareWithAll*/, am_flags, 0);
+        *ptr = hip_internal::allocAndSharePtr("device_pitch", sizeBytes, ctx, false/*shareWithAll*/, am_flags, 0, alignment);
 
         if (sizeBytes && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
@@ -362,6 +396,11 @@ hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannel
     cd.f = f;
     return cd;
 }
+
+extern void getChannelOrderAndType(const hipChannelFormatDesc& desc,
+                            enum hipTextureReadMode readMode,
+                            hsa_ext_image_channel_order_t& channelOrder,
+                            hsa_ext_image_channel_type_t& channelType);
 
 hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
         size_t width, size_t height, unsigned int flags)
@@ -403,7 +442,43 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
                 hip_status = hipErrorUnknown;
                 break;
         }
-        *ptr = hip_internal::allocAndSharePtr("device_array", allocSize, ctx, false/*shareWithAll*/, am_flags, 0);
+        hc::accelerator acc = ctx->getDevice()->_acc;
+        hsa_agent_t* agent =static_cast<hsa_agent_t*>(acc.get_hsa_agent());
+
+        size_t allocGranularity = 0;
+        hsa_amd_memory_pool_t *allocRegion = static_cast<hsa_amd_memory_pool_t*>(acc.get_hsa_am_region());
+        hsa_amd_memory_pool_get_info(*allocRegion, HSA_AMD_MEMORY_POOL_INFO_RUNTIME_ALLOC_GRANULE, &allocGranularity);
+
+        hsa_ext_image_descriptor_t imageDescriptor;
+
+        imageDescriptor.width = width;
+        imageDescriptor.height = height;
+        imageDescriptor.depth = 0;
+        imageDescriptor.array_size = 0;
+        switch (flags) {
+        case hipArrayLayered:
+        case hipArrayCubemap:
+        case hipArraySurfaceLoadStore:
+        case hipArrayTextureGather:
+            assert(0);
+            break;
+        case hipArrayDefault:
+        default:
+            imageDescriptor.geometry = HSA_EXT_IMAGE_GEOMETRY_2D;
+            break;
+        }
+        hsa_ext_image_channel_order_t channelOrder;
+        hsa_ext_image_channel_type_t channelType;
+        getChannelOrderAndType(*desc, hipReadModeElementType, channelOrder, channelType);
+        imageDescriptor.format.channel_order = channelOrder;
+        imageDescriptor.format.channel_type = channelType;
+
+        hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
+        hsa_ext_image_data_info_t imageInfo;
+        hsa_status_t status = hsa_ext_image_data_get_info(*agent, &imageDescriptor, permission, &imageInfo);
+        size_t alignment = imageInfo.alignment <= allocGranularity ? 0 : imageInfo.alignment;
+
+        *ptr = hip_internal::allocAndSharePtr("device_array", allocSize, ctx, false/*shareWithAll*/, am_flags, 0, alignment);
         if (size && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
         }
@@ -457,7 +532,47 @@ hipError_t hipMalloc3DArray(hipArray_t *array,
                 hip_status = hipErrorUnknown;
                 break;
         }
-        *ptr = hip_internal::allocAndSharePtr("device_array", allocSize, ctx, false, am_flags, 0);
+
+        hc::accelerator acc = ctx->getDevice()->_acc;
+        hsa_agent_t* agent =static_cast<hsa_agent_t*>(acc.get_hsa_agent());
+
+        size_t allocGranularity = 0;
+        hsa_amd_memory_pool_t *allocRegion = static_cast<hsa_amd_memory_pool_t*>(acc.get_hsa_am_region());
+        hsa_amd_memory_pool_get_info(*allocRegion, HSA_AMD_MEMORY_POOL_INFO_RUNTIME_ALLOC_GRANULE, &allocGranularity);
+
+        hsa_ext_image_descriptor_t imageDescriptor;
+        imageDescriptor.width = extent.width;
+        imageDescriptor.height = extent.height;
+        imageDescriptor.depth = 0;
+        imageDescriptor.array_size = 0;
+        switch (flags) {
+        case hipArrayLayered:
+            imageDescriptor.geometry = HSA_EXT_IMAGE_GEOMETRY_2DA;
+            imageDescriptor.array_size = extent.depth;
+            break;
+        case hipArraySurfaceLoadStore:
+        case hipArrayTextureGather:
+        case hipArrayDefault:
+            assert(0);
+            break;
+        case hipArrayCubemap:
+        default:
+            imageDescriptor.geometry = HSA_EXT_IMAGE_GEOMETRY_3D;
+            imageDescriptor.depth = extent.depth;
+            break;
+        }
+        hsa_ext_image_channel_order_t channelOrder;
+        hsa_ext_image_channel_type_t channelType;
+        getChannelOrderAndType(*desc, hipReadModeElementType, channelOrder, channelType);
+        imageDescriptor.format.channel_order = channelOrder;
+        imageDescriptor.format.channel_type = channelType;
+
+        hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
+        hsa_ext_image_data_info_t imageInfo;
+        hsa_status_t status = hsa_ext_image_data_get_info(*agent, &imageDescriptor, permission, &imageInfo);
+        size_t alignment = imageInfo.alignment <= allocGranularity ? 0 : imageInfo.alignment;
+ 
+        *ptr = hip_internal::allocAndSharePtr("device_array", allocSize, ctx, false, am_flags, 0, alignment);
 
         if (size && (*ptr == NULL)) {
             hip_status = hipErrorMemoryAllocation;
@@ -467,7 +582,6 @@ hipError_t hipMalloc3DArray(hipArray_t *array,
         hip_status = hipErrorMemoryAllocation;
     }
 
-    //return ihipLogStatus(hip_status);
     return hip_status;
 }
 
@@ -478,7 +592,11 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr)
     hipError_t hip_status = hipSuccess;
 
     hc::accelerator acc;
+#if (__hcc_workweek__ >= 17332)
+    hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+#else
     hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+#endif
     am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, hostPtr);
     if(status == AM_SUCCESS){
         *flagsPtr = amPointerInfo._appAllocationFlags;
@@ -509,7 +627,11 @@ hipError_t hipHostRegister(void *hostPtr, size_t sizeBytes, unsigned int flags)
     }
 
     hc::accelerator acc;
+#if (__hcc_workweek__ >= 17332)
+    hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+#else
     hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+#endif
     am_status_t am_status = hc::am_memtracker_getinfo(&amPointerInfo, hostPtr);
 
     if(am_status == AM_SUCCESS){
@@ -1309,7 +1431,11 @@ hipError_t hipMemPtrGetInfo(void *ptr, size_t *size)
 
   if(ptr != nullptr && size != nullptr){
     hc::accelerator acc;
+#if (__hcc_workweek__ >= 17332)
+    hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+#else
     hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+#endif
     am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
     if(status == AM_SUCCESS){
       *size = amPointerInfo._sizeBytes;
@@ -1334,7 +1460,11 @@ hipError_t hipFree(void* ptr)
 
     if (ptr) {
         hc::accelerator acc;
+#if (__hcc_workweek__ >= 17332)
+        hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+#else
         hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+#endif
         am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
         if(status == AM_SUCCESS){
             if(amPointerInfo._hostPointer == NULL){
@@ -1362,7 +1492,11 @@ hipError_t hipHostFree(void* ptr)
     hipError_t hipStatus = hipErrorInvalidValue;
     if (ptr) {
         hc::accelerator acc;
+#if (__hcc_workweek__ >= 17332)
+        hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+#else
         hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+#endif
         am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
         if(status == AM_SUCCESS){
             if(amPointerInfo._hostPointer == ptr){
@@ -1396,7 +1530,11 @@ hipError_t hipFreeArray(hipArray* array)
 
     if(array->data) {
         hc::accelerator acc;
+#if (__hcc_workweek__ >= 17332)
+        hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+#else
         hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+#endif
         am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, array->data);
         if(status == AM_SUCCESS){
             if(amPointerInfo._hostPointer == NULL){
@@ -1414,7 +1552,11 @@ hipError_t hipMemGetAddressRange ( hipDeviceptr_t* pbase, size_t* psize, hipDevi
     HIP_INIT_API ( pbase , psize , dptr );
     hipError_t hipStatus = hipSuccess;
     hc::accelerator acc;
-    hc::AmPointerInfo amPointerInfo( NULL , NULL , 0 , acc , 0 , 0 );
+#if (__hcc_workweek__ >= 17332)
+    hc::AmPointerInfo amPointerInfo( NULL , NULL , NULL, 0 , acc , 0 , 0 );
+#else
+    hc::AmPointerInfo amPointerInfo( NULL , NULL, 0 , acc , 0 , 0 );
+#endif
     am_status_t status = hc::am_memtracker_getinfo( &amPointerInfo , dptr );
     if (status == AM_SUCCESS) {
         *pbase = amPointerInfo._devicePointer;
@@ -1437,7 +1579,11 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr){
     if((handle == NULL) || (devPtr == NULL)) {
         hipStatus = hipErrorInvalidResourceHandle;
     } else {
+#if (__hcc_workweek__ >= 17332)
+        hc::AmPointerInfo amPointerInfo( NULL , NULL , NULL, 0 , acc , 0 , 0 );
+#else
         hc::AmPointerInfo amPointerInfo( NULL , NULL , 0 , acc , 0 , 0 );
+#endif
         am_status_t status = hc::am_memtracker_getinfo( &amPointerInfo , devPtr );
         if (status == AM_SUCCESS) {
             psize = (size_t)amPointerInfo._sizeBytes;
