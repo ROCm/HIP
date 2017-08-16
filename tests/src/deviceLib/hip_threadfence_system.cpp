@@ -21,11 +21,13 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS -std=c++11
  * RUN: %t
  * HIT_END
  */
 
+#include <vector>
+#include <atomic>
 #include <thread>
 #include <cassert>
 #include <cstdio>
@@ -33,15 +35,14 @@ THE SOFTWARE.
 #include "hip/device_functions.h"
 #include "test_common.h"
 
-
 #define HIP_ASSERT(x) (assert((x)==hipSuccess))
 
-__host__ void fence_system() {
-  std::atomic_thread_fence(std::memory_order_seq_cst);
-}
-
-__device__ void fence_system() {
+__host__ __device__ void fence_system() {
+#ifdef __HIP_DEVICE_COMPILE__
   __threadfence_system();
+#else
+  std::atomic_thread_fence(std::memory_order_seq_cst);
+#endif
 }
 
 __host__ __device__ void round_robin(const int id, const int num_dev, const int num_iter, volatile int* data, volatile int* flag) {
