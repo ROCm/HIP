@@ -140,8 +140,8 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
 
         // No matter the base platform, all packages have the same name
         // Only upload 1 set of packages, so we don't have a race condition uploading packages
-        // I arbitrarily pick hcc-1.6 as the most stable
-        if( platform.toLowerCase( ).startsWith( 'hcc-1.6' ) )
+        // Using hcc-ctu since that is what most people want
+        if( platform.toLowerCase( ).startsWith( 'hcc-ctu' ) )
         {
           archiveArtifacts artifacts: "${build_dir_rel}/*.deb", fingerprint: true
           archiveArtifacts artifacts: "${build_dir_rel}/*.rpm", fingerprint: true
