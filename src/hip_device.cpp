@@ -153,7 +153,7 @@ hipError_t hipSetDevice(int deviceId)
 
 hipError_t hipDeviceSynchronize(void)
 {
-    HIP_INIT_API();
+    HIP_INIT_SPECIAL_API(TRACE_SYNC);
     return ihipLogStatus(ihipSynchronize());
 }
 

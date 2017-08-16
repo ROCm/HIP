@@ -191,10 +191,12 @@ extern const char *API_COLOR_END;
 
 //---
 //HIP Trace modes - use with HIP_TRACE_API=...
-#define TRACE_ALL  0 // 0x1
-#define TRACE_KCMD 1 // 0x2, kernel command
-#define TRACE_MCMD 2 // 0x4, memory command
-#define TRACE_MEM  3 // 0x8, memory allocation or deallocation.
+#define TRACE_ALL   0  // 0x01
+#define TRACE_KCMD  1  // 0x02, kernel command
+#define TRACE_MCMD  2  // 0x04, memory command
+#define TRACE_MEM   3  // 0x08, memory allocation or deallocation.
+#define TRACE_SYNC  4  // 0x10, synchronization (host or hipStreamWaitEvent)
+#define TRACE_QUERY 5  // 0x20, hipEventRecord, hipEventQuery, hipStreamQuery
 
 
 //---
