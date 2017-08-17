@@ -5,11 +5,20 @@ We have attempted to document known bugs and limitations - in particular the [HI
 
 ===================================================================================================
 
-Upcoming:
-- HIP development now fully open and on GitHub. Developers should submit pull requests.
-
 
 ## Revision History:
+
+===================================================================================================
+Release: 1.3
+Date: 2017.08.16
+- hipcc now auto-detects amdgcn arch. No need to specify the arch when building for same system.
+- HIP texture support
+- Implemented __threadfence_support
+- Improvements in HIP context management logic
+- Bug fixes in several APIs including hipDeviceGetPCIBusId, hipEventDestroy, hipMemcpy2DAsync
+- Updates to hipify-clang and documentation
+- HIP development now fully open and on GitHub. Developers should submit pull requests.
+
 
 ===================================================================================================
 Release: 1.2
