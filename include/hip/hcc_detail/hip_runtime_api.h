@@ -37,7 +37,8 @@ THE SOFTWARE.
 
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hip_runtime_api.h>
-#include <hip/hip_texture.h>
+#include <hip/hcc_detail/driver_types.h>
+#include <hip/hcc_detail/hip_texture_types.h>
 
 #if defined (__HCC__) &&  (__hcc_workweek__ < 16155)
 #error("This version of HIP requires a newer version of HCC.");
@@ -106,19 +107,25 @@ enum hipLimit_t
 #define hipEventBlockingSync        0x1  ///< Waiting will yield CPU.  Power-friendly and usage-friendly but may increase latency.
 #define hipEventDisableTiming       0x2  ///< Disable event's capability to record timing information.  May improve performance.
 #define hipEventInterprocess        0x4  ///< Event can support IPC.  @warning - not supported in HIP.
+#define hipEventReleaseToDevice     0x40000000  /// < Use a device-scope release when recording this event.  This flag is useful to obtain more precise timings of commands between events.  The flag is a no-op on CUDA platforms.
+#define hipEventReleaseToSystem     0x80000000  /// < Use a system-scope release that when recording this event.  This flag is useful to make non-coherent host memory visible to the host.  The flag is a no-op on CUDA platforms.
 
 
 //! Flags that can be used with hipHostMalloc
 #define hipHostMallocDefault        0x0
-#define hipHostMallocPortable       0x1
-#define hipHostMallocMapped         0x2
+#define hipHostMallocPortable       0x1  ///< Memory is considered allocated by all contexts.
+#define hipHostMallocMapped         0x2  ///< Map the allocation into the address space for the current device.  The device pointer can be obtained with #hipHostGetDevicePointer.
 #define hipHostMallocWriteCombined  0x4
+#define hipHostMallocCoherent       0x40000000 ///< Allocate coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific allocation.
+#define hipHostMallocNonCoherent    0x80000000 ///< Allocate non-coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific allocation.
+
 
 //! Flags that can be used with hipHostRegister
 #define hipHostRegisterDefault      0x0  ///< Memory is Mapped and Portable
-#define hipHostRegisterPortable     0x1  ///< Memory is considered registered by all contexts.  HIP only supports one context so this is always assumed true.
+#define hipHostRegisterPortable     0x1  ///< Memory is considered registered by all contexts.
 #define hipHostRegisterMapped       0x2  ///< Map the allocation into the address space for the current device.  The device pointer can be obtained with #hipHostGetDevicePointer.
 #define hipHostRegisterIoMemory     0x4  ///< Not supported.
+
 
 
 #define hipDeviceScheduleAuto       0x0  ///< Automatically select between Spin and Yield
@@ -129,6 +136,38 @@ enum hipLimit_t
 
 #define hipDeviceMapHost            0x8
 #define hipDeviceLmemResizeToMax    0x16
+
+#define hipArrayDefault             0x00  ///< Default HIP array allocation flag
+#define hipArrayLayered             0x01
+#define hipArraySurfaceLoadStore    0x02
+#define hipArrayCubemap             0x04
+#define hipArrayTextureGather       0x08
+
+/*
+* @brief hipJitOption
+* @enum
+* @ingroup Enumerations
+*/
+typedef enum hipJitOption {
+  hipJitOptionMaxRegisters = 0,
+  hipJitOptionThreadsPerBlock,
+  hipJitOptionWallTime,
+  hipJitOptionInfoLogBuffer,
+  hipJitOptionInfoLogBufferSizeBytes,
+  hipJitOptionErrorLogBuffer,
+  hipJitOptionErrorLogBufferSizeBytes,
+  hipJitOptionOptimizationLevel,
+  hipJitOptionTargetFromContext,
+  hipJitOptionTarget,
+  hipJitOptionFallbackStrategy,
+  hipJitOptionGenerateDebugInfo,
+  hipJitOptionLogVerbose,
+  hipJitOptionGenerateLineInfo,
+  hipJitOptionCacheMode,
+  hipJitOptionSm3xOpt,
+  hipJitOptionFastCompile,
+  hipJitOptionNumOptions
+} hipJitOption;
 
 
 /**
@@ -165,27 +204,6 @@ typedef struct dim3 {
   dim3(uint32_t _x=1, uint32_t _y=1, uint32_t _z=1) : x(_x), y(_y), z(_z) {};
 #endif
 } dim3;
-
-
-/**
- * Memory copy types
- *
- */
-typedef enum hipMemcpyKind {
-   hipMemcpyHostToHost = 0    ///< Host-to-Host Copy
-  ,hipMemcpyHostToDevice = 1  ///< Host-to-Device Copy
-  ,hipMemcpyDeviceToHost = 2  ///< Device-to-Host Copy
-  ,hipMemcpyDeviceToDevice =3 ///< Device-to-Device Copy
-  ,hipMemcpyDefault = 4,      ///< Runtime will automatically determine copy-kind based on virtual addresses.
-} hipMemcpyKind;
-
-typedef struct {
-  unsigned int width;
-  unsigned int height;
-  enum hipChannelFormatKind f;
-  void* data; //FIXME: generalize this
-} hipArray;
-
 
 
 // Doxygen end group GlobalDefs
@@ -385,7 +403,7 @@ hipError_t hipDeviceGetLimit(size_t *pValue, enum hipLimit_t limit);
  * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
-hipError_t hipFuncSetCacheConfig ( hipFuncCache_t config );
+hipError_t hipFuncSetCacheConfig (const void* func, hipFuncCache_t config );
 
 /**
  * @brief Returns bank width of shared memory for current device
@@ -601,9 +619,12 @@ hipError_t hipStreamQuery(hipStream_t stream);
  *
  * @return #hipSuccess, #hipErrorInvalidResourceHandle
  *
- * If the null stream is specified, this command blocks until all
+ * This command is host-synchronous : the host will block until the specified stream is empty.
+ *
+ * This command follows standard null-stream semantics.  Specifically, specifying the null stream will cause the 
+ * command to wait for other streams on the same device to complete all pending operations.
+ *
  * This command honors the hipDeviceLaunchBlocking flag, which controls whether the wait is active or blocking.
- * This command is host-synchronous : the host will block until the stream is empty.
  *
  * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamWaitEvent, hipStreamDestroy
  *
@@ -622,10 +643,12 @@ hipError_t hipStreamSynchronize(hipStream_t stream);
  *
  * This function inserts a wait operation into the specified stream.
  * All future work submitted to @p stream will wait until @p event reports completion before beginning execution.
- * This function is host-asynchronous and the function may return before the wait has completed.
+ *
+ * This function only waits for commands in the current stream to complete.  Notably,, this function does 
+ * not impliciy wait for commands in the default stream to complete, even if the specified stream is 
+ * created with hipStreamNonBlocking = 0.  
  *
  * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamSynchronize, hipStreamDestroy
- *
  */
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags);
 
@@ -730,10 +753,10 @@ hipError_t hipEventCreate(hipEvent_t* event);
  * the specified stream, after all previous
  * commands in that stream have completed executing.
  *
- * If hipEventRecord() has been previously called aon event, then this call will overwrite any existing state in event.
+ * If hipEventRecord() has been previously called on this event, then this call will overwrite any existing state in event.
  *
  * If this function is called on a an event that is currently being recorded, results are undefined - either
- * outstanding recording may save state into the event, and the order is not guaranteed.  This shoul be avoided.
+ * outstanding recording may save state into the event, and the order is not guaranteed.  
  *
  * @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventSynchronize, hipEventDestroy, hipEventElapsedTime
  *
@@ -1156,7 +1179,7 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
  *
  *  @see hipMemcpy, hipMemcpy2D, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpy2DFromArray, hipMemcpyArrayToArray, hipMemcpy2DArrayToArray, hipMemcpyFromSymbol, hipMemcpyAsync, hipMemcpy2DAsync, hipMemcpyToArrayAsync, hipMemcpy2DToArrayAsync, hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync, hipMemcpyFromSymbolAsync
  */
-hipError_t hipMemcpyToSymbol(const void* symbolName, const void *src, size_t sizeBytes, size_t offset, hipMemcpyKind kind);
+hipError_t hipMemcpyToSymbol(const void* symbolName, const void *src, size_t sizeBytes, size_t offset = 0, hipMemcpyKind kind = hipMemcpyHostToDevice);
 
 
 /**
@@ -1176,11 +1199,11 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void *src, size_t siz
  *
  *  @see hipMemcpy, hipMemcpy2D, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpy2DFromArray, hipMemcpyArrayToArray, hipMemcpy2DArrayToArray, hipMemcpyFromSymbol, hipMemcpyAsync, hipMemcpy2DAsync, hipMemcpyToArrayAsync, hipMemcpy2DToArrayAsync, hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync, hipMemcpyFromSymbolAsync
  */
-hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void *src, size_t sizeBytes, size_t offset, hipMemcpyKind kind, hipStream_t stream);
+hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void *src, size_t sizeBytes, size_t offset, hipMemcpyKind kind, hipStream_t stream = 0);
 
-hipError_t hipMemcpyFromSymbol(void *dst, const void* symbolName, size_t sizeBytes, size_t offset, hipMemcpyKind kind);
+hipError_t hipMemcpyFromSymbol(void *dst, const void* symbolName, size_t sizeBytes, size_t offset = 0, hipMemcpyKind kind = hipMemcpyDeviceToHost);
 
-hipError_t hipMemcpyFromSymbolAsync(void *dst, const void* symbolName, size_t sizeBytes, size_t offset, hipMemcpyKind kind, hipStream_t stream);
+hipError_t hipMemcpyFromSymbolAsync(void *dst, const void* symbolName, size_t sizeBytes, size_t offset, hipMemcpyKind kind, hipStream_t stream = 0);
 
 /**
  *  @brief Copy data from src to dst asynchronously.
@@ -1250,6 +1273,19 @@ hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t st
 #endif
 
 /**
+ *  @brief Fills the memory area pointed to by dst with the constant value.
+ *
+ *  @param[out] dst Pointer to device memory
+ *  @param[in]  pitch - data size in bytes
+ *  @param[in]  value - constant value to be set
+ *  @param[in]  width
+ *  @param[in]  height
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
+ */
+
+hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height);
+
+/**
  * @brief Query memory info.
  * Return snapshot of free memory, and total allocatable memory on the device.
  *
@@ -1277,7 +1313,7 @@ hipError_t hipMemPtrGetInfo(void *ptr, size_t *size);
  */
 #if __cplusplus
 hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
-                          size_t width, size_t height = 0, unsigned int flags = 0);
+                          size_t width, size_t height = 0, unsigned int flags = hipArrayDefault);
 #else
 hipError_t hipMallocArray(hipArray** array, const struct hipChannelFormatDesc* desc,
                           size_t width, size_t height, unsigned int flags);
@@ -1293,6 +1329,22 @@ hipError_t hipMallocArray(hipArray** array, const struct hipChannelFormatDesc* d
 hipError_t hipFreeArray(hipArray* array);
 
 /**
+ *  @brief Allocate an array on the device.
+ *
+ *  @param[out]  array  Pointer to allocated array in device memory
+ *  @param[in]   desc   Requested channel format
+ *  @param[in]   extent Requested array allocation width, height and depth
+ *  @param[in]   flags  Requested properties of allocated array
+ *  @return      #hipSuccess, #hipErrorMemoryAllocation
+ *
+ *  @see hipMalloc, hipMallocPitch, hipFree, hipFreeArray, hipHostMalloc, hipHostFree
+ */
+
+hipError_t hipMalloc3DArray(hipArray_t *array,
+                            const struct hipChannelFormatDesc* desc,
+                            struct hipExtent extent,
+                            unsigned int flags);
+/**
  *  @brief Copies data between host and device.
  *
  *  @param[in]   dst    Destination memory address
@@ -1307,6 +1359,27 @@ hipError_t hipFreeArray(hipArray* array);
  *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpyToSymbol, hipMemcpyAsync
  */
 hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind);
+
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dst    Destination memory address
+ *  @param[in]   dpitch Pitch of destination memory
+ *  @param[in]   src    Source memory address
+ *  @param[in]   spitch Pitch of source memory
+ *  @param[in]   width  Width of matrix transfer (columns in bytes)
+ *  @param[in]   height Height of matrix transfer (rows)
+ *  @param[in]   kind   Type of transfer
+ *  @param[in]   stream Stream to use
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue, #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpyToSymbol, hipMemcpyAsync
+ */
+#if __cplusplus
+hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind, hipStream_t stream = 0);
+#else
+hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind, hipStream_t stream);
+#endif
 
 /**
  *  @brief Copies data between host and device.
@@ -1343,6 +1416,7 @@ hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset,
                             const void* src, size_t count, hipMemcpyKind kind);
 
 
+hipError_t hipMemcpy3D(const struct hipMemcpy3DParms *p);
 
 // doxygen end Memory
 /**
@@ -1808,7 +1882,7 @@ hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,int device);
  *
  * @returns #hipSuccess, #hipErrorInavlidDevice, #hipErrorInvalidValue
  */
-hipError_t hipDeviceGetByPCIBusId ( int*  device,const int* pciBusId );
+hipError_t hipDeviceGetByPCIBusId ( int*  device,const char* pciBusId );
 
 
 /**
@@ -1890,14 +1964,13 @@ hipError_t hipModuleGetFunction(hipFunction_t *function, hipModule_t module, con
  * @brief returns device memory pointer and size of the kernel present in the module with symbol @p name
  *
  * @param [out] dptr
- * @param [out[ bytes
+ * @param [out] bytes
  * @param [in] hmod
  * @param [in] name
  *
  * @returns hipSuccess, hipErrorInvalidValue, hipErrorNotInitialized
  */
 hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes, hipModule_t hmod, const char *name);
-
 
 /**
  * @brief builds module from code object which resides in host memory. Image is pointer to that location.
@@ -1909,11 +1982,23 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes, hipModule_t h
  */
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image);
 
+/**
+* @brief builds module from code object which resides in host memory. Image is pointer to that location. Options are not used. hipModuleLoadData is called.
+*
+* @param [in] image
+* @param [out] module
+* @param [in] number of options
+* @param [in] options for JIT
+* @param [in] option values for JIT
+*
+* @returns hipSuccess, hipErrorNotInitialized, hipErrorOutOfMemory, hipErrorNotInitialized
+*/
+hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image, unsigned int numOptions, hipJitOption *options, void **optionValues);
 
 /**
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed to kernelparams or extra
  *
- * @param [in[ f	 Kernel to launch.
+ * @param [in] f         Kernel to launch.
  * @param [in] gridDimX  X grid dimension specified as multiple of blockDimX.
  * @param [in] gridDimY  Y grid dimension specified as multiple of blockDimY.
  * @param [in] gridDimZ  Z grid dimension specified as multiple of blockDimZ.
@@ -1921,7 +2006,7 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image);
  * @param [in] blockDimY Y grid dimension specified in work-items
  * @param [in] blockDimZ Z grid dimension specified in work-items
  * @param [in] sharedMemBytes Amount of dynamic shared memory to allocate for this kernel.  The kernel can access this with HIP_DYNAMIC_SHARED.
- * @param [in] stream Stream where the kernel should be dispatched.  May be 0, in which case th default stream is used with associated synchronization rules.
+ * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case th default stream is used with associated synchronization rules.
  * @param [in] kernelParams
  * @param [in] extra     Pointer to kernel arguments.   These are passed directly to the kernel and must be in the memory layout and alignment expected by the kernel.
  *
@@ -2080,6 +2165,24 @@ hipError_t hipIpcCloseMemHandle(void *devPtr);
 #endif
 
 #ifdef __cplusplus
+
+hipError_t hipBindTexture(size_t* offset,
+                          textureReference* tex,
+                          const void* devPtr,
+                          const hipChannelFormatDesc* desc,
+                          size_t size = UINT_MAX);
+
+hipError_t ihipBindTextureImpl(int dim,
+                               enum hipTextureReadMode readMode,
+                               size_t *offset,
+                               const void *devPtr,
+                               const struct hipChannelFormatDesc& desc,
+                               size_t size,
+                               enum hipTextureAddressMode addressMode,
+                               enum hipTextureFilterMode filterMode,
+                               int normalizedCoords,
+                               hipTextureObject_t& textureObject);
+
 /*
  * @brief hipBindTexture Binds size bytes of the memory area pointed to by @p devPtr to the texture reference tex.
  *
@@ -2094,15 +2197,15 @@ hipError_t hipIpcCloseMemHandle(void *devPtr);
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
  **/
 template <class T, int dim, enum hipTextureReadMode readMode>
-hipError_t  hipBindTexture(size_t *offset,
-                                     struct texture<T, dim, readMode> &tex,
-                                     const void *devPtr,
-                                     const struct hipChannelFormatDesc *desc,
-                                     size_t size=UINT_MAX)
+hipError_t hipBindTexture(size_t *offset,
+                          struct texture<T, dim, readMode>& tex,
+                          const void *devPtr,
+                          const struct hipChannelFormatDesc& desc,
+                          size_t size = UINT_MAX)
 {
-    tex._dataPtr = static_cast<const T*>(devPtr);
-
-    return hipSuccess;
+    return ihipBindTextureImpl(dim, readMode, offset, devPtr, desc, size,
+                               tex.addressMode[0], tex.filterMode, tex.normalized,
+                               tex.textureObject);
 }
 
 /*
@@ -2118,20 +2221,115 @@ hipError_t  hipBindTexture(size_t *offset,
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
  **/
 template <class T, int dim, enum hipTextureReadMode readMode>
-hipError_t  hipBindTexture(size_t *offset,
-                                     struct texture<T, dim, readMode> &tex,
-                                     const void *devPtr,
-                                     size_t size=UINT_MAX)
+hipError_t hipBindTexture(size_t *offset,
+                          struct texture<T, dim, readMode>& tex,
+                          const void *devPtr,
+                          size_t size = UINT_MAX)
 {
-    return  hipBindTexture(offset, tex, devPtr, &tex.channelDesc, size);
+    return ihipBindTextureImpl(dim, readMode, offset, devPtr, tex.channelDesc, size,
+                               tex.addressMode[0], tex.filterMode, tex.normalized,
+                               tex.textureObject);
+}
+
+// C API
+hipError_t hipBindTexture2D(size_t* offset,
+                            textureReference* tex,
+                            const void* devPtr,
+                            const hipChannelFormatDesc* desc,
+                            size_t width,
+                            size_t height,
+                            size_t pitch);
+
+hipError_t ihipBindTexture2DImpl(int dim,
+                                 enum hipTextureReadMode readMode,
+                                 size_t *offset,
+                                 const void *devPtr,
+                                 const struct hipChannelFormatDesc& desc,
+                                 size_t width,
+                                 size_t height,
+                                 enum hipTextureAddressMode addressMode,
+                                 enum hipTextureFilterMode filterMode,
+                                 int normalizedCoords,
+                                 hipTextureObject_t& textureObject);
+
+template <class T, int dim, enum hipTextureReadMode readMode>
+hipError_t hipBindTexture2D(size_t *offset,
+                            struct texture<T, dim, readMode>& tex,
+                            const void *devPtr,
+                            size_t width,
+                            size_t height,
+                            size_t pitch)
+{
+    return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, tex.channelDesc, width, height,
+                                 tex.addressMode[0], tex.filterMode, tex.normalized,
+                                 tex.textureObject);
 }
 
 template <class T, int dim, enum hipTextureReadMode readMode>
-hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> &tex, hipArray* array) {
-  tex.width = array->width;
-  tex.height = array->height;
-  tex._dataPtr = static_cast<const T*>(array->data);
-  return hipSuccess;
+hipError_t hipBindTexture2D(size_t *offset,
+                            struct texture<T, dim, readMode>& tex,
+                            const void *devPtr,
+                            const struct hipChannelFormatDesc &desc,
+                            size_t width,
+                            size_t height,
+                            size_t pitch)
+{
+    return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, desc, width, height,
+                                 tex.addressMode[0], tex.filterMode, tex.normalized,
+                                 tex.textureObject);
+}
+
+//C API
+hipError_t hipBindTextureToArray(textureReference* tex,
+                                 hipArray_const_t array,
+                                 const hipChannelFormatDesc* desc);
+
+hipError_t ihipBindTextureToArrayImpl(int dim,
+                                      enum hipTextureReadMode readMode,
+                                      hipArray_const_t array,
+                                      const struct hipChannelFormatDesc& desc,
+                                      enum hipTextureAddressMode addressMode,
+                                      enum hipTextureFilterMode filterMode,
+                                      int normalizedCoords,
+                                      hipTextureObject_t& textureObject);
+
+template <class T, int dim, enum hipTextureReadMode readMode>
+hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex,
+                                 hipArray_const_t array)
+{
+    return ihipBindTextureToArrayImpl(dim, readMode, array, tex.channelDesc,
+                                      tex.addressMode[0], tex.filterMode, tex.normalized,
+                                      tex.textureObject);
+}
+
+template <class T, int dim, enum hipTextureReadMode readMode>
+hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex,
+                                 hipArray_const_t array,
+                                 const struct hipChannelFormatDesc& desc)
+{
+    return ihipBindTextureToArrayImpl(dim, readMode, array, desc,
+                                      tex.addressMode[0], tex.filterMode, tex.normalized,
+                                      tex.textureObject);
+}
+
+//C API
+hipError_t hipBindTextureToMipmappedArray(const textureReference* tex,
+                                          hipMipmappedArray_const_t mipmappedArray,
+                                          const hipChannelFormatDesc* desc);
+
+template <class T, int dim, enum hipTextureReadMode readMode>
+hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
+                                          hipMipmappedArray_const_t mipmappedArray)
+{
+    return hipSuccess;
+}
+
+template <class T, int dim, enum hipTextureReadMode readMode>
+hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
+                                          hipMipmappedArray_const_t mipmappedArray,
+                                          const hipChannelFormatDesc& desc)
+{
+    return hipSuccess;
 }
 
 /*
@@ -2141,15 +2339,30 @@ hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> &tex, hipArray
  *
  *  @return #hipSuccess
  **/
-template <class T, int dim, enum hipTextureReadMode readMode>
-hipError_t  hipUnbindTexture(struct texture<T, dim, readMode> &tex)
-{
-    tex._dataPtr = NULL;
+hipError_t hipUnbindTexture(const textureReference* tex);
 
-    return hipSuccess;
+extern hipError_t ihipUnbindTextureImpl(const hipTextureObject_t& textureObject);
+
+template <class T, int dim, enum hipTextureReadMode readMode>
+hipError_t hipUnbindTexture(struct texture<T, dim, readMode> &tex)
+{
+    return ihipUnbindTextureImpl(tex.textureObject);
 }
 
+hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array);
+hipError_t hipGetTextureAlignmentOffset (size_t* offset, const textureReference* texref);
+hipError_t hipGetTextureReference(const textureReference** texref, const void* symbol);
 
+hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject,
+                                  const hipResourceDesc* pResDesc,
+                                  const hipTextureDesc* pTexDesc,
+                                  const hipResourceViewDesc* pResViewDesc);
+
+hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject);
+
+hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDesc, hipTextureObject_t textureObject);
+hipError_t hipGetTextureObjectResourceViewDesc(hipResourceViewDesc* pResViewDesc, hipTextureObject_t textureObject);
+hipError_t hipGetTextureObjectTextureDesc(hipTextureDesc* pTexDesc, hipTextureObject_t textureObject);
 
 // doxygen end Texture
 /**

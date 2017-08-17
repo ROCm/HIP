@@ -352,14 +352,14 @@ hipError_t ihipModuleGetSymbol(hipFunction_t *func, hipModule_t hmod, const char
         *func = sym;
         hmod->funcTrack.push_back(*func);
     }
-    return ihipLogStatus(ret);
+    return ret;
 }
 
 
 hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod,
                                 const char *name){
     HIP_INIT_API(hfunc, hmod, name);
-    return ihipModuleGetSymbol(hfunc, hmod, name);
+    return ihipLogStatus(ihipModuleGetSymbol(hfunc, hmod, name));
 }
 
 
@@ -451,14 +451,19 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
         hc::completion_future cf;
 
         lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize, 
-                                  (startEvent || stopEvent) ? &cf : nullptr);
+                                  (startEvent || stopEvent) ? &cf : nullptr
+#if (__hcc_workweek__ > 17312)
+                                  , f->_name.c_str()
+#endif
+                                  );
+
 
 
         if (startEvent) {
-            startEvent->attachToCompletionFuture(&cf, hipEventTypeStartCommand);
+            startEvent->attachToCompletionFuture(&cf, hStream, hipEventTypeStartCommand);
         }
         if (stopEvent) {
-            stopEvent->attachToCompletionFuture (&cf, hipEventTypeStopCommand);
+            stopEvent->attachToCompletionFuture (&cf, hStream, hipEventTypeStopCommand);
         }
 
 
@@ -525,7 +530,6 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes,
     }
 }
 
-
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
 {
     HIP_INIT_API(module, image);
@@ -574,4 +578,9 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
         CHECKLOG_HSA(status, hipErrorNotInitialized);
     }
     return ihipLogStatus(ret);
+}
+
+hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image, unsigned int numOptions, hipJitOption *options, void **optionValues)
+{
+    return hipModuleLoadData(module, image);
 }

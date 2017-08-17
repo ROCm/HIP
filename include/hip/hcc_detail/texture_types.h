@@ -26,20 +26,91 @@ THE SOFTWARE.
 
 #include<hip/hcc_detail/driver_types.h>
 
-enum hipTextureReadMode
+#define hipTextureType1D              0x01
+#define hipTextureType2D              0x02
+#define hipTextureType3D              0x03
+#define hipTextureTypeCubemap         0x0C
+#define hipTextureType1DLayered       0xF1
+#define hipTextureType2DLayered       0xF2
+#define hipTextureTypeCubemapLayered  0xFC
+
+/**
+ * Should be same as HSA_IMAGE_OBJECT_SIZE_DWORD/HSA_SAMPLER_OBJECT_SIZE_DWORD
+ */
+#define HIP_IMAGE_OBJECT_SIZE_DWORD 12
+#define HIP_SAMPLER_OBJECT_SIZE_DWORD 8
+#define HIP_SAMPLER_OBJECT_OFFSET_DWORD HIP_IMAGE_OBJECT_SIZE_DWORD
+#define HIP_TEXTURE_OBJECT_SIZE_DWORD (HIP_IMAGE_OBJECT_SIZE_DWORD + HIP_SAMPLER_OBJECT_SIZE_DWORD)
+
+/**
+ * An opaque value that represents a hip texture object
+ */
+typedef unsigned long long hipTextureObject_t;
+
+/**
+ * hip texture address modes
+ */
+enum hipTextureAddressMode
 {
-  hipReadModeElementType = 0
+    hipAddressModeWrap   = 0,
+    hipAddressModeClamp  = 1,
+    hipAddressModeMirror = 2,
+    hipAddressModeBorder = 3
 };
 
+/**
+ * hip texture filter modes
+ */
 enum hipTextureFilterMode
 {
-  hipFilterModePoint = 0
+    hipFilterModePoint  = 0,
+    hipFilterModeLinear = 1
 };
 
-struct textureReference {
-  enum hipTextureFilterMode filterMode;
-  unsigned normalized;
-  struct hipChannelFormatDesc channelDesc;
+/**
+ * hip texture read modes
+ */
+enum hipTextureReadMode
+{
+    hipReadModeElementType     = 0,
+    hipReadModeNormalizedFloat = 1
+};
+
+/**
+ * hip texture reference
+ */
+struct textureReference
+{
+    int                         normalized;
+    enum hipTextureFilterMode   filterMode;
+    enum hipTextureAddressMode  addressMode[3]; //Texture address mode for up to 3 dimensions
+    struct hipChannelFormatDesc channelDesc;
+    int                         sRGB;           // Perform sRGB->linear conversion during texture read
+    unsigned int                maxAnisotropy;  // Limit to the anisotropy ratio
+    enum hipTextureFilterMode   mipmapFilterMode;
+    float                       mipmapLevelBias;
+    float                       minMipmapLevelClamp;
+    float                       maxMipmapLevelClamp;
+
+    hipTextureObject_t          textureObject;
+};
+
+/**
+ * hip texture descriptor
+ */
+struct hipTextureDesc
+{
+    enum hipTextureAddressMode  addressMode[3]; //Texture address mode for up to 3 dimensions
+    enum hipTextureFilterMode   filterMode;
+    enum hipTextureReadMode     readMode;
+    int                         sRGB;           // Perform sRGB->linear conversion during texture read
+    float                       borderColor[4];
+    int                         normalizedCoords;
+    unsigned int                maxAnisotropy;
+    enum hipTextureFilterMode   mipmapFilterMode;
+    float                       mipmapLevelBias;
+    float                       minMipmapLevelClamp;
+    float                       maxMipmapLevelClamp;
 };
 
 #endif

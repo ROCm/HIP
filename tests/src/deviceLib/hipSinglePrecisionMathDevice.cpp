@@ -70,7 +70,7 @@ __device__ void single_precision_math_functions()
     fmaxf(0.0f, 0.0f);
     fminf(0.0f, 0.0f);
     fmodf(0.0f, 1.0f);
-    //frexpf(0.0f, &iX);
+    frexpf(0.0f, &iX);
     hypotf(1.0f, 0.0f);
     ilogbf(1.0f);
     isfinite(0.0f);
@@ -100,7 +100,7 @@ __device__ void single_precision_math_functions()
     normcdfinvf(1.0f);
     fX = 1.0f; normf(1, &fX);
     powf(1.0f, 0.0f);
-    rcbrtf(1.0f);
+    //rcbrtf(1.0f);
     remainderf(2.0f, 1.0f);
     //remquof(1.0f, 2.0f, &iX);
     rhypotf(0.0f, 1.0f);
@@ -110,8 +110,8 @@ __device__ void single_precision_math_functions()
     fX = 1.0f; rnormf(1, &fX);
     roundf(0.0f);
     rsqrtf(1.0f);
-    scalblnf(0.0f, 1);
-    scalbnf(0.0f, 1);
+    //scalblnf(0.0f, 1);
+    //scalbnf(0.0f, 1);
     signbit(1.0f);
     sincosf(0.0f, &fX, &fY);
     sincospif(0.0f, &fX, &fY);

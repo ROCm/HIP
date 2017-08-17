@@ -29,9 +29,12 @@ HIP releases are typically of two types. The tag naming convention is different 
 - [Installation](INSTALL.md) 
 - [HIP FAQ](docs/markdown/hip_faq.md)
 - [HIP Kernel Language](docs/markdown/hip_kernel_language.md)
-- [HIP Runtime API (Doxygen)](http://gpuopen-professionalcompute-tools.github.io/HIP)
+- [HIP Runtime API (Doxygen)](http://rocm-developer-tools.github.io/HIP)
 - [HIP Porting Guide](docs/markdown/hip_porting_guide.md)
 - [HIP Porting Driver Guide](docs/markdown/hip_porting_driver_api.md)
+- [HIP Programming Guide](docs/markdown/hip_programming_guide.md)
+- [HIP Profiling ](docs/markdown/hip_profiling.md)
+- [HIP Debugging](docs/markdown/hip_debugging.md)
 - [HIP Terminology](docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenL)
 - [hipify-clang](hipify-clang/README.md)
 - [Developer/CONTRIBUTING Info](CONTRIBUTING.md)
@@ -120,8 +123,8 @@ make
 
  
 ## More Examples
-The GitHub repository [HIP-Examples](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP-Examples.git) contains a hipified version of the popular Rodinia benchmark suite.
-The README with the procedures and tips the team used during this porting effort is here: [Rodinia Porting Guide](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP-Examples/blob/master/rodinia_3.0/hip/README.hip_porting)
+The GitHub repository [HIP-Examples](https://github.com/ROCm-Developer-Tools/HIP-Examples.git) contains a hipified version of the popular Rodinia benchmark suite.
+The README with the procedures and tips the team used during this porting effort is here: [Rodinia Porting Guide](https://github.com/ROCm-Developer-Tools/HIP-Examples/blob/master/rodinia_3.0/hip/README.hip_porting)
 
 ## Tour of the HIP Directories
 * **include**: 
@@ -132,13 +135,13 @@ The README with the procedures and tips the team used during this porting effort
     
 * **bin**: Tools and scripts to help with hip porting
     * **hipify** : Tool to convert CUDA code to portable CPP.  Converts CUDA APIs and kernel builtins.  
-    * **hipcc** : Compiler driver that can be used to replace nvcc in existing CUDA code.  hipcc ill call nvcc or hcc depending on platform, and include appropriate platform-specific headers and libraries.
+    * **hipcc** : Compiler driver that can be used to replace nvcc in existing CUDA code. hipcc will call nvcc or hcc depending on platform, and include appropriate platform-specific headers and libraries.
     * **hipconfig** : Print HIP configuration (HIP_PATH, HIP_PLATFORM, CXX config flags, etc)
     * **hipexamine.sh** : Script to scan directory, find all code, and report statistics on how much can be ported with HIP (and identify likely features not yet supported)
 
 * **doc**: Documentation - markdown and doxygen info
 
 ## Reporting an issue
-Use the [GitHub issue tracker] (https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/issues).
+Use the [GitHub issue tracker](https://github.com/ROCm-Developer-Tools/HIP/issues).
 If reporting a bug, include the output of "hipconfig --full" and samples/1_hipInfo/hipInfo (if possible).
 

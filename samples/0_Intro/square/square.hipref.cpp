@@ -54,9 +54,10 @@ int main(int argc, char *argv[])
     float *A_h, *C_h;
     size_t N = 1000000;
     size_t Nbytes = N * sizeof(float);
-
+    static int device = 0;
+    CHECK(hipSetDevice(device));
     hipDeviceProp_t props;
-    CHECK(hipGetDeviceProperties(&props, 0/*deviceID*/));
+    CHECK(hipGetDeviceProperties(&props, device/*deviceID*/));
     printf ("info: running on device %s\n", props.name);
     #ifdef __HIP_PLATFORM_HCC__
       printf ("info: architecture on AMD GPU device is: %d\n",props.gcnArch);

@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s EXCLUDE_HIP_PLATFORM all
+ * BUILD: %t %s
  * RUN: %t
  * HIT_END
  */
@@ -31,16 +31,8 @@ THE SOFTWARE.
 #define NUM 1024
 #define SIZE 1024*4
 
-// TODO - collapse:
-#ifdef __HIP_PLATFORM_HCC__
-__device__ ADDRESS_SPACE_1 int globalIn[NUM];
-__device__ ADDRESS_SPACE_1 int globalOut[NUM];
-#endif
-
-#ifdef __HIP_PLATFORM_NVCC__
 __device__ int globalIn[NUM];
 __device__ int globalOut[NUM];
-#endif
 
 __global__ void Assign(hipLaunchParm lp, int* Out)
 {
@@ -55,7 +47,7 @@ int main()
     A = new int[NUM];
     B = new int[NUM];
     C = new int[NUM];
-    for(unsigned i=0;i<NUM;i++) {
+    for(int i=0;i<NUM;i++) {
         A[i] = -1*i;
         B[i] = 0;
         C[i] = 0;
@@ -64,7 +56,7 @@ int main()
     hipMalloc((void**)&Ad, SIZE);
     hipHostMalloc((void**)&Am, SIZE);
     hipHostMalloc((void**)&Cm, SIZE);
-    for(unsigned i=0;i<NUM;i++) {
+    for(int i=0;i<NUM;i++) {
         Am[i] = -1*i;
         Cm[i] = 0;
     }
@@ -77,12 +69,12 @@ int main()
     hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost);
     hipMemcpyFromSymbolAsync(Cm, HIP_SYMBOL(globalOut), SIZE, 0, hipMemcpyDeviceToHost, stream);
     hipStreamSynchronize(stream);
-    for(unsigned i=0;i<NUM;i++) {
+    for(int i=0;i<NUM;i++) {
         assert(Am[i] == B[i]);
         assert(Am[i] == Cm[i]);
     }
 
-    for(unsigned i=0;i<NUM;i++) {
+    for(int i=0;i<NUM;i++) {
         A[i] = -2*i;
         B[i] = 0;
     }
@@ -91,12 +83,12 @@ int main()
     hipLaunchKernel(Assign, dim3(1,1,1), dim3(NUM,1,1), 0, 0, Ad);
     hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost);
     hipMemcpyFromSymbol(C, HIP_SYMBOL(globalOut), SIZE, 0, hipMemcpyDeviceToHost);
-    for(unsigned i=0;i<NUM;i++) {
+    for(int i=0;i<NUM;i++) {
         assert(A[i] == B[i]);
         assert(A[i] == C[i]);
     }
 
-    for(unsigned i=0;i<NUM;i++) {
+    for(int i=0;i<NUM;i++) {
         A[i] = -3*i;
         B[i] = 0;
     }
@@ -107,7 +99,7 @@ int main()
     hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost);
     hipMemcpyFromSymbolAsync(C, HIP_SYMBOL(globalOut), SIZE, 0, hipMemcpyDeviceToHost, stream);
     hipStreamSynchronize(stream);
-    for(unsigned i=0;i<NUM;i++) {
+    for(int i=0;i<NUM;i++) {
         assert(A[i] == B[i]);
         assert(A[i] == C[i]);
     }

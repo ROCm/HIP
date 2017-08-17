@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include "device_util.h"
 #include "hip/hcc_detail/device_functions.h"
 #include "hip/hip_runtime.h"
+#include <atomic>
 
 //=================================================================================================
 /*
@@ -34,8 +35,8 @@ THE SOFTWARE.
  This is the best place to put them because the device
  global variables need to be initialized at the start.
 */
-__device__ ADDRESS_SPACE_1 char gpuHeap[SIZE_OF_HEAP];
-__device__ ADDRESS_SPACE_1 uint32_t gpuFlags[NUM_PAGES];
+__device__ char gpuHeap[SIZE_OF_HEAP];
+__device__ uint32_t gpuFlags[NUM_PAGES];
 
 __device__ void *__hip_hc_malloc(size_t size)
 {
@@ -838,6 +839,11 @@ __device__ float __hip_ynf(int n, float x)
 __device__ long long int clock64() { return (long long int)hc::__cycle_u64(); };
 __device__ clock_t clock() { return (clock_t)hc::__cycle_u64(); };
 
+//abort
+__device__ void abort()
+{
+    return hc::abort();
+}
 
 //atomicAdd()
 __device__  int atomicAdd(int* address, int val)
@@ -923,24 +929,45 @@ __device__  unsigned long long int atomicMax(unsigned long long int* address,
 }
 
 //atomicCAS()
+template<typename T>
+__device__ T atomicCAS_impl(T* address, T compare, T val)
+{
+  // the implementation assumes the atomic is lock-free and 
+  // has the same size as the non-atmoic equivalent type
+  static_assert(sizeof(T) == sizeof(std::atomic<T>)
+                , "size mismatch between atomic and non-atomic types");
+
+  union {
+    T*              address;
+    std::atomic<T>* atomic_address;
+  } u;
+  u.address = address;
+
+  T expected = compare;
+
+  // hcc should generate a system scope atomic CAS 
+  std::atomic_compare_exchange_weak_explicit(u.atomic_address
+                                            , &expected, val
+                                            , std::memory_order_acq_rel
+                                            , std::memory_order_relaxed);
+  return expected;
+}
+
 __device__  int atomicCAS(int* address, int compare, int val)
 {
-	hc::atomic_compare_exchange(address,&compare,val);
-	return *address;
+  return atomicCAS_impl(address, compare, val);
 }
 __device__  unsigned int atomicCAS(unsigned int* address,
                        unsigned int compare,
                        unsigned int val)
 {
-	hc::atomic_compare_exchange(address,&compare,val);
-	return *address;
+  return atomicCAS_impl(address, compare, val);
 }
 __device__  unsigned long long int atomicCAS(unsigned long long int* address,
                                  unsigned long long int compare,
                                  unsigned long long int val)
 {
-	hc::atomic_compare_exchange((uint64_t*)address,(uint64_t*)&compare,(uint64_t)val);
-	return *address;
+  return atomicCAS_impl(address, compare, val);
 }
 
 //atomicAnd()
@@ -1079,11 +1106,13 @@ __host__ __device__ int max(int arg1, int arg2)
   return (int)(hc::precise_math::fmax((float)arg1, (float)arg2));
 }
 
-__device__ ADDRESS_SPACE_3 void* __get_dynamicgroupbaseptr()
-{
+__device__ void* __get_dynamicgroupbaseptr() {
   return hc::get_dynamic_group_segment_base_pointer();
 }
 
+__host__ void* __get_dynamicgroupbaseptr() { 
+  return nullptr; 
+}
 
 // Precise Math Functions
 __device__ float __hip_precise_cosf(float x) {
@@ -1163,18 +1192,18 @@ __device__ double __hip_precise_dsqrt_rz(double x) {
   return hc::precise_math::sqrt(x);
 }
 
-#define LOG_BASE2_E_DIV_2 0.4426950408894701
-#define LOG_BASE2_5 2.321928094887362
+#define LOG_BASE2_E 1.4426950408889634
+#define LOG_BASE2_10 3.32192809488736
 #define ONE_DIV_LOG_BASE2_E 0.69314718056
 #define ONE_DIV_LOG_BASE2_10 0.30102999566
 
 // Fast Math Intrinsics
 __device__ float __hip_fast_exp10f(float x) {
-  return __hip_fast_exp2f(x*LOG_BASE2_E_DIV_2);
+  return __hip_fast_exp2f(x*LOG_BASE2_E);
 }
 
 __device__ float __hip_fast_expf(float x) {
-  return __hip_fast_expf(x*LOG_BASE2_5);
+  return __hip_fast_exp2f(x*LOG_BASE2_10);
 }
 
 __device__ float __hip_fast_frsqrt_rn(float x) {
@@ -1215,126 +1244,27 @@ __device__ float __hip_fast_tanf(float x) {
 }
 
 // Double Precision Math
+// FIXME - HCC doesn't have a fast_math version double FP sqrt
+// Another issue is that these intrinsics call for a specific rounding mode;
+// however, their implementation all map to the same sqrt builtin
 __device__ double __hip_fast_dsqrt_rd(double x) {
-  return hc::fast_math::sqrt(x);
+  return hc::precise_math::sqrt(x);
 }
 
 __device__ double __hip_fast_dsqrt_rn(double x) {
-  return hc::fast_math::sqrt(x);
+  return hc::precise_math::sqrt(x);
 }
 
 __device__ double __hip_fast_dsqrt_ru(double x) {
-  return hc::fast_math::sqrt(x);
+  return hc::precise_math::sqrt(x);
 }
 
 __device__ double __hip_fast_dsqrt_rz(double x) {
-  return hc::fast_math::sqrt(x);
+  return hc::precise_math::sqrt(x);
 }
 
 __device__ void  __threadfence_system(void){
-    // no-op
-}
-
-float __hip_host_erfinvf(float x)
-{
-    float ret;
-    int  sign;
-    if (x < -1 || x > 1){
-        return NAN;
-    }
-    if (x == 0){
-        return 0;
-    }
-    if (x > 0){
-        sign = 1;
-    } else {
-        sign = -1;
-        x = -x;
-    }
-    if (x <= 0.7) {
-        float x1 = x * x;
-        float x2 = std::fma(__hip_erfinva3, x1, __hip_erfinva2);
-        float x3 = std::fma(x2, x1, __hip_erfinva1);
-        float x4 = x * std::fma(x3, x1, __hip_erfinva0);
-
-        float r1 = std::fma(__hip_erfinvb4, x1, __hip_erfinvb3);
-        float r2 = std::fma(r1, x1, __hip_erfinvb2);
-        float r3 = std::fma(r2, x1, __hip_erfinvb1);
-        ret = x4 / std::fma(r3, x1, __hip_erfinvb0);
-    } else {
-        float x1 = std::sqrt(-std::log((1 - x) / 2));
-        float x2 = std::fma(__hip_erfinvc3, x1, __hip_erfinvc2);
-        float x3 = std::fma(x2, x1, __hip_erfinvc1);
-        float x4 = std::fma(x3, x1, __hip_erfinvc0);
-
-        float r1 = std::fma(__hip_erfinvd2, x1, __hip_erfinvd1);
-        ret = x4 / std::fma(r1, x1, __hip_erfinvd0);
-    }
-
-    ret = ret * sign;
-    x = x * sign;
-
-    ret -= (std::erf(ret) - x) / (2 / std::sqrt(HIP_PI) * std::exp(-ret * ret));
-    ret -= (std::erf(ret) - x) / (2 / std::sqrt(HIP_PI) * std::exp(-ret * ret));
-
-    return ret;
-
-}
-
-double __hip_host_erfinv(double x)
-{
-    double ret;
-    int  sign;
-    if (x < -1 || x > 1){
-        return NAN;
-    }
-    if (x == 0){
-        return 0;
-    }
-    if (x > 0){
-        sign = 1;
-    } else {
-        sign = -1;
-        x = -x;
-    }
-    if (x <= 0.7) {
-        double x1 = x * x;
-        double x2 = std::fma(__hip_erfinva3, x1, __hip_erfinva2);
-        double x3 = std::fma(x2, x1, __hip_erfinva1);
-        double x4 = x * std::fma(x3, x1, __hip_erfinva0);
-
-        double r1 = std::fma(__hip_erfinvb4, x1, __hip_erfinvb3);
-        double r2 = std::fma(r1, x1, __hip_erfinvb2);
-        double r3 = std::fma(r2, x1, __hip_erfinvb1);
-        ret = x4 / std::fma(r3, x1, __hip_erfinvb0);
-    } else {
-        double x1 = std::sqrt(-std::log((1 - x) / 2));
-        double x2 = std::fma(__hip_erfinvc3, x1, __hip_erfinvc2);
-        double x3 = std::fma(x2, x1, __hip_erfinvc1);
-        double x4 = std::fma(x3, x1, __hip_erfinvc0);
-
-        double r1 = std::fma(__hip_erfinvd2, x1, __hip_erfinvd1);
-        ret = x4 / std::fma(r1, x1, __hip_erfinvd0);
-    }
-
-    ret = ret * sign;
-    x = x * sign;
-
-    ret -= (std::erf(ret) - x) / (2 / std::sqrt(HIP_PI) * std::exp(-ret * ret));
-    ret -= (std::erf(ret) - x) / (2 / std::sqrt(HIP_PI) * std::exp(-ret * ret));
-
-    return ret;
-
-}
-
-float __hip_host_erfcinvf(float y)
-{
-    return __hip_host_erfinvf(1 - y);
-}
-
-double __hip_host_erfcinv(double y)
-{
-    return __hip_host_erfinv(1 - y);
+  std::atomic_thread_fence(std::memory_order_seq_cst);
 }
 
 double __hip_host_j0(double x)

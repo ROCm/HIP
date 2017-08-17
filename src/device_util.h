@@ -128,12 +128,6 @@ __device__ double __hip_fast_dsqrt_ru(double x);
 __device__ double __hip_fast_dsqrt_rz(double x);
 __device__ void  __threadfence_system(void);
 
-float __hip_host_erfinvf(float x);
-double __hip_host_erfinv(double x);
-
-float __hip_host_erfcinvf(float y);
-double __hip_host_erfcinv(double y);
-
 float __hip_host_j0f(float x);
 double __hip_host_j0(double x);
 

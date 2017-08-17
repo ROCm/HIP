@@ -1,0 +1,26 @@
+# Parameters related to building hip
+ARG base_image
+
+FROM ${base_image}
+MAINTAINER Kent Knox <kent.knox@amd>
+
+ARG user_uid
+
+# Install Packages
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    sudo \
+    build-essential \
+    cmake \
+    git \
+    libelf-dev \
+    rpm \
+    && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# docker pipeline runs containers with particular uid
+# create a jenkins user with this specific uid so it can use sudo priviledges
+# Grant any member of sudo group password-less sudo privileges
+RUN useradd --create-home -u ${user_uid} -G sudo --shell /bin/bash jenkins && \
+    mkdir -p /etc/sudoers.d/ && \
+    echo '%sudo   ALL=(ALL) NOPASSWD:ALL' | tee /etc/sudoers.d/sudo-nopasswd

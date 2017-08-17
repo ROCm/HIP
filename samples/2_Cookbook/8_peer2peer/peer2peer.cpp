@@ -55,12 +55,8 @@ void checkPeer2PeerSupport()
 {
     int gpuCount;
     int canAccessPeer;
-    int p2pCapableDeviceCount=0;
 
     HIPCHECK(hipGetDeviceCount(&gpuCount));
-
-    if (gpuCount < 2)
-        printf("Peer2Peer application requires atleast 2 gpu devices");
 
     for (int currentGpu=0; currentGpu<gpuCount; currentGpu++)
     {
@@ -160,6 +156,12 @@ int main(){
     int currentGpu, peerGpu;
 
     HIPCHECK(hipGetDeviceCount(&gpuCount));
+
+    if (gpuCount < 2)
+    {
+        printf("Peer2Peer application requires atleast 2 gpu devices");
+        return 0;
+    }
 
     currentGpu = 0;
     peerGpu = (currentGpu + 1);

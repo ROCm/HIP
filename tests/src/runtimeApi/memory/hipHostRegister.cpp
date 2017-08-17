@@ -19,9 +19,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp
- * RUN: %t --tests 0x1
- * RUN: %t --tests 0x2
- * RUN: %t --tests 0x4
+ * RUN: %t
  * HIT_END
  */
 
@@ -131,7 +129,7 @@ int main(int argc, char *argv[])
         HIPCHECK(hipMalloc(&Bd, size));
 
         // TODO - set to 128
-#define OFFSETS_TO_TRY 1 
+#define OFFSETS_TO_TRY 128 
         assert (N>OFFSETS_TO_TRY);
 
         if (p_tests & 0x2) {

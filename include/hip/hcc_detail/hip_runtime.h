@@ -41,20 +41,14 @@ THE SOFTWARE.
 #include <stddef.h>
 #endif//__cplusplus
 
+#if __HCC__
+
 // Define NVCC_COMPAT for CUDA compatibility
 #define NVCC_COMPAT
 #define CUDA_SUCCESS hipSuccess
 
 #include <hip/hip_runtime_api.h>
 
-
-#if USE_PROMOTE_FREE_HCC == 1
-#define ADDRESS_SPACE_1
-#define ADDRESS_SPACE_3
-#else
-#define ADDRESS_SPACE_1 __attribute__((address_space(1)))
-#define ADDRESS_SPACE_3 __attribute__((address_space(3)))
-#endif
 
 //---
 // Remainder of this file only compiles with HCC
@@ -87,12 +81,12 @@ namespace hip_impl
 extern int HIP_TRACE_API;
 
 #ifdef __cplusplus
-//#include <hip/hcc_detail/hip_texture.h>
 #include <hip/hcc_detail/hip_ldg.h>
 #endif
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hcc_detail/math_functions.h>
 #include <hip/hcc_detail/device_functions.h>
+#include <hip/hcc_detail/texture_functions.h>
 
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
 #if defined (__KALMAR_ACCELERATOR__) && !defined (__HCC_ACCELERATOR__)
@@ -136,7 +130,7 @@ extern int HIP_TRACE_API;
 #define __HIP_ARCH_HAS_WARP_FUNNEL_SHIFT__          (0)
 
 //sync
-#define __HIP_ARCH_HAS_THREAD_FENCE_SYSTEM__        (0)
+#define __HIP_ARCH_HAS_THREAD_FENCE_SYSTEM__        (1)
 #define __HIP_ARCH_HAS_SYNC_THREAD_EXT__            (0)
 
 // misc
@@ -147,8 +141,15 @@ extern int HIP_TRACE_API;
 #endif /* Device feature flags */
 
 
-//TODO-HCC  this is currently ignored by HCC target of HIP
-#define __launch_bounds__(requiredMaxThreadsPerBlock, minBlocksPerMultiprocessor)
+#define launch_bounds_impl0(requiredMaxThreadsPerBlock)\
+    __attribute__((amdgpu_flat_work_group_size(1, requiredMaxThreadsPerBlock)))
+#define launch_bounds_impl1(\
+    requiredMaxThreadsPerBlock, minBlocksPerMultiprocessor)\
+    __attribute__((amdgpu_flat_work_group_size(1, requiredMaxThreadsPerBlock),\
+        amdgpu_waves_per_eu(minBlocksPerMultiprocessor)))
+#define select_impl_(_1, _2, impl_, ...) impl_
+#define __launch_bounds__(...) select_impl_(\
+    __VA_ARGS__, launch_bounds_impl1, launch_bounds_impl0)(__VA_ARGS__)
 
 // Detect if we are compiling C++ mode or C mode
 #if defined(__cplusplus)
@@ -164,6 +165,9 @@ static constexpr int warpSize = 64;
 #define clock_t long long int
 __device__ long long int clock64();
 __device__ clock_t clock();
+
+//abort
+__device__ void abort();
 
 //atomicAdd()
 __device__ int atomicAdd(int* address, int val);
@@ -296,7 +300,7 @@ __device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask
 __host__ __device__ int min(int arg1, int arg2);
 __host__ __device__ int max(int arg1, int arg2);
 
-__device__ ADDRESS_SPACE_3 void* __get_dynamicgroupbaseptr();
+__device__ void* __get_dynamicgroupbaseptr();
 
 
 /**
@@ -455,10 +459,10 @@ do {\
 // Macro to replace extern __shared__ declarations
 // to local variable definitions
 #define HIP_DYNAMIC_SHARED(type, var) \
-    ADDRESS_SPACE_3 type* var = \
-    (ADDRESS_SPACE_3 type*)__get_dynamicgroupbaseptr(); \
+    type* var = \
+    (type*)__get_dynamicgroupbaseptr(); \
 
-#define HIP_DYNAMIC_SHARED_ATTRIBUTE ADDRESS_SPACE_3
+#define HIP_DYNAMIC_SHARED_ATTRIBUTE 
 
 
 
@@ -481,6 +485,6 @@ do {\
  */
 
 
-
+#endif
 
 #endif//HIP_HCC_DETAIL_RUNTIME_H

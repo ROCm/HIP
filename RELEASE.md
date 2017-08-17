@@ -1,17 +1,36 @@
 # Release notes
 
-We have attempted to document known bugs and limitations - in particular the [HIP Kernel Language](docs/markdown/hip_kernel_language.md) document uses the phrase "Under Development", and the [HIP Runtime API bug list](http://gpuopen-professionalcompute-tools.github.io/HIP/bug.html) lists known bugs. 
+We have attempted to document known bugs and limitations - in particular the [HIP Kernel Language](docs/markdown/hip_kernel_language.md) document uses the phrase "Under Development", and the [HIP Runtime API bug list](http://rocm-developer-tools.github.io/HIP/bug.html) lists known bugs. 
 
-Upcoming:
-- Stability: Enforce periodic host synchronization to reclaim resources if the application has launched a large
-  number of commands (>1K) without synchronizing.  
-- Register keyword now silently ignored on HCC (previously would emit warning).
-- Doc updates: Add some more frequently asked questions to FAQ, fix TOC in some files, review.
-- Cookbook.
 
 ===================================================================================================
 
+
 ## Revision History:
+
+===================================================================================================
+Release: 1.3
+Date: 2017.08.16
+- hipcc now auto-detects amdgcn arch. No need to specify the arch when building for same system.
+- HIP texture support
+- Implemented __threadfence_support
+- Improvements in HIP context management logic
+- Bug fixes in several APIs including hipDeviceGetPCIBusId, hipEventDestroy, hipMemcpy2DAsync
+- Updates to hipify-clang and documentation
+- HIP development now fully open and on GitHub. Developers should submit pull requests.
+
+
+===================================================================================================
+Release: 1.2
+Date: 2017.06.29
+- new APIs: hipMemcpy2DAsync, hipMallocPitch, hipHostMallocCoherent, hipHostMallocNonCoherent
+- added support for building hipify-clang using clang 3.9
+- hipify-clang updates for CUDA 8.0 runtime+driver support
+- renamed hipify to hipify-perl
+- initial implementation of hipify-cmakefile
+- several documentation updates & bug fixes
+- support for abort() function in device code
+
 
 ===================================================================================================
 Release: 1.0.17102
@@ -107,7 +126,7 @@ Date: 2016.06.06
 - Add cross-linking support between G++ and HCC, in particular for interfaces that use
   standard C++ libraries (ie std::vectors, std::strings).  HIPCC now uses libstdc++ by default on the HCC
   compilation path.
-- More samples including gpu-burn, SHOC, nbody, rtm.  See [HIP-Examples](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP-Examples)
+- More samples including gpu-burn, SHOC, nbody, rtm.  See [HIP-Examples](https://github.com/ROCm-Developer-Tools/HIP-Examples)
 
 
 ===================================================================================================
