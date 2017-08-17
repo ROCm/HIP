@@ -84,7 +84,7 @@ hipError_t hipStreamCreate(hipStream_t *stream)
 
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags)
 {
-    HIP_INIT_API(stream, event, flags);
+    HIP_INIT_SPECIAL_API(TRACE_SYNC, stream, event, flags);
 
     hipError_t e = hipSuccess;
 
@@ -114,7 +114,7 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
 //---
 hipError_t hipStreamQuery(hipStream_t stream)
 {
-    HIP_INIT_API(stream);
+    HIP_INIT_SPECIAL_API(TRACE_QUERY, stream);
 
     // Use default stream if 0 specified:
     if (stream == hipStreamNull) {
@@ -140,6 +140,7 @@ hipError_t hipStreamQuery(hipStream_t stream)
 hipError_t hipStreamSynchronize(hipStream_t stream)
 {
     HIP_INIT_API(stream);
+    HIP_INIT_SPECIAL_API(TRACE_SYNC, stream);
 
     hipError_t e = hipSuccess;
 

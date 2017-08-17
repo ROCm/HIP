@@ -127,7 +127,7 @@ hipError_t hipEventCreate(hipEvent_t* event)
 
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
 {
-    HIP_INIT_API(event, stream);
+    HIP_INIT_SPECIAL_API(TRACE_QUERY, event, stream);
 
     if (event && event->_state != hipEventStatusUnitialized)   {
         stream = ihipSyncAndResolveStream(stream);
@@ -178,7 +178,7 @@ hipError_t hipEventDestroy(hipEvent_t event)
 
 hipError_t hipEventSynchronize(hipEvent_t event)
 {
-    HIP_INIT_API(event);
+    HIP_INIT_SPECIAL_API(TRACE_SYNC, event);
 
     if (event) {
         if (event->_state == hipEventStatusUnitialized) {
@@ -257,7 +257,7 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop)
 
 hipError_t hipEventQuery(hipEvent_t event)
 {
-    HIP_INIT_API(event);
+    HIP_INIT_SPECIAL_API(TRACE_QUERY, event);
 
     if ((event->_state == hipEventStatusRecording) && (!event->_marker.is_ready())) {
         return ihipLogStatus(hipErrorNotReady);
