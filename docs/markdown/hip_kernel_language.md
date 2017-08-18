@@ -690,7 +690,7 @@ for (int i=0; i<16; i++) ...
 ```
 
 
-Unbounded loop unroll is under development on HCC compiler.
+Unbounded loop unroll is supported. For example:
 ```
 #pragma unroll /* hint to compiler to completely unroll next loop. */
 for (int i=0; i<16; i++) ...
@@ -699,8 +699,10 @@ for (int i=0; i<16; i++) ...
 
 ## In-Line Assembly
 
-In-line assembly, including in-line PTX, in-line HSAIL and in-line GCN ISA, is not supported. Users who need these features should employ conditional compilation to provide different functionally equivalent implementations on each target platform.
+GCN ISA In-line assembly, is supported. We insert the GCN isa into the kernel using asm() Assembler statement.
+`asm volatile ("v_mac_f32_e32 %0, %2, %3" : "=v" (out[i]) : "0"(out[i]), "v" (a), "v" (in[i]));`
 
+- [AMD GCN3 ISA architecture manual](http://gpuopen.com/compute-product/amd-gcn3-isa-architecture-manual/)
 
 ## C++ Support
 The following C++ features are not supported:
