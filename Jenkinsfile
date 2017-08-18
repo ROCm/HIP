@@ -7,7 +7,7 @@ properties([buildDiscarder(logRotator(
     daysToKeepStr: '',
     numToKeepStr: '10')),
     disableConcurrentBuilds(),
-    // parameters([string(name: 'sample_string', defaultValue: '', description: 'description of a sample string')]),
+    parameters([booleanParam( name: 'push_image_to_docker_hub', defaultValue: false, description: 'Push hip & hcc image to rocm docker-hub' )]),
     [$class: 'CopyArtifactPermissionProperty', projectNames: '*']
    ])
 
@@ -49,6 +49,21 @@ String build_directory_rel( String build_config )
   else
   {
     return "build/debug"
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
+// Lots of images are created above; no apparent way to delete images:tags with docker global variable
+def docker_clean_images( String org, String image_name )
+{
+  // Check if any images exist first grepping for image names
+  int docker_images = sh( script: "docker images | grep \"${org}/${image_name}\"", returnStatus: true )
+
+  // The script returns a 0 for success (images were found )
+  if( docker_images == 0 )
+  {
+    // run bash script to clean images:tags after successful pushing
+    sh "docker images | grep \"${org}/${image_name}\" | awk '{print \$1 \":\" \$2}' | xargs docker rmi"
   }
 }
 
@@ -226,48 +241,31 @@ String docker_upload_artifactory( String hcc_ver, String artifactory_org, String
 
 ////////////////////////////////////////////////////////////////////////
 // Uploads the new docker image to the public docker-hub
-def docker_upload_dockerhub( String artifactory_org, String image_name )
+def docker_upload_dockerhub( String local_org, String image_name, String remote_org )
 {
   stage( 'docker-hub' )
   {
     // Do not treat failures to push to docker-hub as a build fail
     try
     {
-      // Only push changes to the master branch to docker-hub
-      if( env.BRANCH_NAME.toLowerCase( ).startsWith( 'docker' ) )
+      sh  """#!/usr/bin/env bash
+          set -x
+          echo inside sh
+          docker tag ${local_org}/${image_name} ${remote_org}/${image_name}
+        """
+
+      docker_hub_image = docker.image( "${remote_org}/${image_name}" )
+
+      docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-cred' )
       {
-        sh  """#!/usr/bin/env bash
-            set -x
-            echo inside sh
-            docker tag ${artifactory_org}/${image_name} rocm/${image_name}
-          """
-
-        docker_hub_image = docker.image( "rocm/${image_name}" )
-
-        // docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-cred' )
-        // {
-        //   docker_hub_image.push( "${env.BUILD_NUMBER}" )
-        //   docker_hub_image.push( 'latest' )
-        // }
+        docker_hub_image.push( "${env.BUILD_NUMBER}" )
+        docker_hub_image.push( 'latest' )
       }
     }
     catch( err )
     {
       currentBuild.result = 'SUCCESS'
     }
-  }
-}
-
-// Lots of images with tags are created above; no apparent way to delete images:tags with docker global variable
-def docker_clean_images( String org, String image_name )
-{
-  // Check if any images exist first, the script returns a 0 for success, indicating grep found images
-  def docker_images = sh( script: "docker images | grep \"${org}/${image_name}\"", returnStatus: true )
-
-  if( docker_images == 0 )
-  {
-    // run bash script to clean images:tags after successful pushing
-    sh "docker images | grep \"${org}/${image_name}\" | awk '{print \$1 \":\" \$2}' | xargs docker rmi"
   }
 }
 
@@ -339,6 +337,7 @@ String job_name = env.JOB_NAME.toLowerCase( )
 // Integration testing is a special path which implies testing of an upsteam build of hcc,
 // but does not need testing across older builds of hcc or cuda.  This is more of a compiler
 // hcc unit test
+//  params.hcc_integration_test is set in HCC build
 if( params.hcc_integration_test )
 {
   println "HCC integration testing"
@@ -354,7 +353,7 @@ if( params.hcc_integration_test )
 // The following launches 3 builds in parallel: hcc-ctu, hcc-1.6 and cuda
 parallel hcc_ctu:
 {
-  node('docker && rocm && gfx803')
+  node('docker && rocm')
   {
     String hcc_ver = 'hcc-ctu'
     String from_image = 'compute-artifactory:5001/radeonopencompute/hcc/clang_tot_upgrade/hcc-lc-ubuntu-16.04:latest'
@@ -383,15 +382,19 @@ parallel hcc_ctu:
     docker_build_inside_image( hip_build_image, inside_args, hcc_ver, '', build_config, source_hip_rel, build_hip_rel )
 
     // After a successful build, upload a docker image of the results
-    hip_install_image = docker_upload_artifactory( hcc_ver, job_name, from_image, source_hip_rel, build_hip_rel )
-    docker_upload_dockerhub( job_name, hip_image_name )
+    String hip_image_name = docker_upload_artifactory( hcc_ver, job_name, from_image, source_hip_rel, build_hip_rel )
+
+    if( params.push_image_to_docker_hub )
+    {
+      docker_upload_dockerhub( job_name, hip_image_name, 'rocm' )
+      docker_clean_images( 'rocm', hip_image_name )
+    }
     docker_clean_images( job_name, hip_image_name )
-    docker_clean_images( 'rocm', hip_image_name )
   }
 },
 hcc_1_6:
 {
-  node('docker && rocm && gfx803')
+  node('docker && rocm')
   {
     String hcc_ver = 'hcc-1.6'
     String from_image = 'compute-artifactory:5001/radeonopencompute/hcc/roc-1.6.x/hcc-lc-ubuntu-16.04:latest'
@@ -419,9 +422,9 @@ hcc_1_6:
     // Build hip inside of the build environment
     docker_build_inside_image( hip_build_image, inside_args, hcc_ver, '', build_config, source_hip_rel, build_hip_rel )
 
-    // Not pushing hip-hcc-1.6 builds at this time
-    hip_image_name = docker_upload_artifactory( hcc_ver, job_name, from_image, source_hip_rel, build_hip_rel )
-    docker_clean_images( job_name, hip_image_name )
+    // Not pushing hip-hcc-1.6 builds at this time; saves a minute and nobody needs?
+    // String hip_image_name = docker_upload_artifactory( hcc_ver, job_name, from_image, source_hip_rel, build_hip_rel )
+    // docker_clean_images( job_name, hip_image_name )
   }
 },
 nvcc:
@@ -459,7 +462,5 @@ nvcc:
 
     // Build hip inside of the build environment
     docker_build_inside_image( hip_build_image, inside_args, nvcc_ver, "-DHIP_NVCC_FLAGS=--Wno-deprecated-gpu-targets", build_config, source_hip_rel, build_hip_rel )
-
-    // Not pushing an Nvidia based HiP to artifactory at this time
   }
 }
