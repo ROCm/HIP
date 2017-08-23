@@ -7,16 +7,23 @@
 
 using namespace std;
 
+#define SORT_BY_NAME 0
+#define SORT_RETAIN_ATTS_ORDER 1
+
+
 bool ResultDatabase::Result::operator<(const Result &rhs) const
 {
     if (test < rhs.test)
         return true;
     if (test > rhs.test)
         return false;
+#if (SORT_RETAIN_ATTS_ORDER == 0) 
+    // For ties, sort by the value of the attribute:
     if (atts < rhs.atts)
         return true;
     if (atts > rhs.atts)
         return false;
+#endif
     return false; // less-operator returns false on equal
 }
 
@@ -189,7 +196,10 @@ void ResultDatabase::AddResult(const string &test_orig,
 void ResultDatabase::DumpDetailed(ostream &out)
 {
     vector<Result> sorted(results);
-    sort(sorted.begin(), sorted.end());
+
+#if SORT_BY_NAME
+    stable_sort(sorted.begin(), sorted.end());
+#endif
 
     const int testNameW = 24 ;
     const int attW = 12;
@@ -283,12 +293,15 @@ void ResultDatabase::DumpDetailed(ostream &out)
 void ResultDatabase::DumpSummary(ostream &out)
 {
     vector<Result> sorted(results);
-    sort(sorted.begin(), sorted.end());
 
-    const int testNameW = 24 ;
+#if SORT_BY_NAME
+    stable_sort(sorted.begin(), sorted.end());
+#endif
+
+    const int testNameW = 32 ;
     const int attW = 12;
     const int fieldW = 9;
-    out << std::fixed << right << std::setprecision(4);
+    out << std::fixed << right << std::setprecision(2);
 
     // TODO: in big parallel runs, the "trials" are the procs
     // and we really don't want to print them all out....
@@ -334,8 +347,8 @@ void ResultDatabase::DumpSummary(ostream &out)
     }
     if (0) {
         out << endl
-        << "Note: results marked with (*) had missing values such as" << endl
-        << "might occur with a mixture of architectural capabilities." << endl;
+            << "Note: results marked with (*) had missing values such as" << endl
+            << "might occur with a mixture of architectural capabilities." << endl;
     }
 }
 
@@ -381,7 +394,9 @@ void ResultDatabase::DumpCsv(string fileName)
     bool emptyFile;
     vector<Result> sorted(results);
 
-    sort(sorted.begin(), sorted.end());
+#if SORT_BY_NAME
+    stable_sort(sorted.begin(), sorted.end());
+#endif
 
     //Check to see if the file is empty - if so, add the headers
     emptyFile = this->IsFileEmpty(fileName);
