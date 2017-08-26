@@ -96,7 +96,7 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
         if (stream != hipStreamNull) {
 
             // This will user create_blocking_marker to wait on the specified queue.
-            stream->locked_waitEvent(event);
+            stream->locked_streamWaitEvent(event);
 
         } else {
             // TODO-hcc Convert to use create_blocking_marker(...) functionality.
