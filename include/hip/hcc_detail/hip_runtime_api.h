@@ -171,7 +171,7 @@ typedef enum hipJitOption {
 
 
 /**
- * @warning On AMD devices and recent Nvidia devices, these hints and controls are ignored.
+ * @warning On AMD devices and some Nvidia devices, these hints and controls are ignored.
  */
 typedef enum hipFuncCache_t {
     hipFuncCachePreferNone, ///< no preference for shared memory or L1 (default)
@@ -182,7 +182,7 @@ typedef enum hipFuncCache_t {
 
 
 /**
- * @warning On AMD devices and recent Nvidia devices, these hints and controls are ignored.
+ * @warning On AMD devices and some Nvidia devices, these hints and controls are ignored.
  */
 typedef enum hipSharedMemConfig {
     hipSharedMemBankSizeDefault,   ///< The compiler selects a device-specific value for the banking.
@@ -364,7 +364,7 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
  * @param [in] cacheConfig
  *
  * @returns #hipSuccess, #hipErrorInitializationError
- * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
 hipError_t hipDeviceSetCacheConfig ( hipFuncCache_t cacheConfig );
@@ -376,7 +376,7 @@ hipError_t hipDeviceSetCacheConfig ( hipFuncCache_t cacheConfig );
  * @param [in] cacheConfig
  *
  * @returns #hipSuccess, #hipErrorInitializationError
- * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
 hipError_t hipDeviceGetCacheConfig ( hipFuncCache_t *cacheConfig );
@@ -400,7 +400,7 @@ hipError_t hipDeviceGetLimit(size_t *pValue, enum hipLimit_t limit);
  * @param [in] config;
  *
  * @returns #hipSuccess, #hipErrorInitializationError
- * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
 hipError_t hipFuncSetCacheConfig (const void* func, hipFuncCache_t config );
@@ -412,7 +412,7 @@ hipError_t hipFuncSetCacheConfig (const void* func, hipFuncCache_t config );
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInitializationError
  *
- * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ * Note: AMD devices and some Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
  *
  */
 hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig );
@@ -425,7 +425,7 @@ hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig );
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInitializationError
  *
- * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ * Note: AMD devices and some Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
  *
  */
 hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config );
@@ -1449,7 +1449,6 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms *p);
  *
  * @returns #hipSuccess,
  * @returns #hipErrorInvalidDevice if deviceId or peerDeviceId are not valid devices
- * @warning PeerToPeer support is experimental.
  */
 hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int deviceId, int peerDeviceId);
 
@@ -1467,7 +1466,6 @@ hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int deviceId, int peerDev
  *
  * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue,
  * @returns #hipErrorPeerAccessAlreadyEnabled if peer access is already enabled for this device.
- * @warning PeerToPeer support is experimental.
  */
 hipError_t  hipDeviceEnablePeerAccess (int  peerDeviceId, unsigned int flags);
 
@@ -1480,7 +1478,6 @@ hipError_t  hipDeviceEnablePeerAccess (int  peerDeviceId, unsigned int flags);
  * @param [in] peerDeviceId
  *
  * @returns #hipSuccess, #hipErrorPeerAccessNotEnabled
- * @warning PeerToPeer support is experimental.
  */
 hipError_t  hipDeviceDisablePeerAccess (int peerDeviceId);
 
@@ -1512,7 +1509,6 @@ hipError_t hipMemGetAddressRange ( hipDeviceptr_t* pbase, size_t* psize, hipDevi
  * @param [in] sizeBytes - Size of memory copy in bytes
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
- * @warning PeerToPeer support is experimental.
  */
 hipError_t hipMemcpyPeer (void* dst, int dstDeviceId, const void* src, int srcDeviceId, size_t sizeBytes);
 
@@ -1671,7 +1667,7 @@ hipError_t hipCtxGetApiVersion (hipCtx_t ctx,int *apiVersion);
  *
  * @return #hipSuccess
  *
- * @warning AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ * @warning AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
@@ -1684,7 +1680,7 @@ hipError_t hipCtxGetCacheConfig ( hipFuncCache_t *cacheConfig );
  *
  * @return #hipSuccess
  *
- * @warning AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ * @warning AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
@@ -1697,7 +1693,7 @@ hipError_t hipCtxSetCacheConfig ( hipFuncCache_t cacheConfig );
  *
  * @return #hipSuccess
  *
- * @warning AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ * @warning AMD devices and some Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
@@ -1710,7 +1706,7 @@ hipError_t hipCtxSetSharedMemConfig ( hipSharedMemConfig config );
  *
  * @return #hipSuccess
  *
- * @warning AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ * @warning AMD devices and some Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */

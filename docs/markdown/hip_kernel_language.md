@@ -167,7 +167,7 @@ The `__shared__` keyword is supported.
 Managed memory, including the `__managed__` keyword, are not supported in HIP.
 
 ### `__restrict__`
-The `__restrict__` keyword tells the compiler that the associated memory pointer will not alias with any other pointer in the kernel or function.  This feature can help the compiler generate better code. In most cases, all pointer arguments must use this keyword to realize the benefit. hcc support for the `__restrict__` qualifier on kernel arguments is under development.  
+The `__restrict__` keyword tells the compiler that the associated memory pointer will not alias with any other pointer in the kernel or function.  This feature can help the compiler generate better code. In most cases, all pointer arguments must use this keyword to realize the benefit. 
 
 
 ## Built-In Variables
@@ -603,6 +603,7 @@ The Cuda `__prof_trigger()` instruction is not supported.
 ## Assert
 
 The assert function is under development.
+HIP does support an "abort" call which will terminate the process execution from inside the kernel.
 
 ## Printf
 
@@ -690,7 +691,6 @@ for (int i=0; i<16; i++) ...
 ```
 
 
-Unbounded loop unroll is under development on HCC compiler.
 ```
 #pragma unroll /* hint to compiler to completely unroll next loop. */
 for (int i=0; i<16; i++) ...
