@@ -119,7 +119,7 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
             cd ${build_dir_rel}
             make install -j\$(nproc)
             make build_tests -i -j\$(nproc)
-            make test 
+            make test
           """
         // If unit tests output a junit or xunit file in the future, jenkins can parse that file
         // to display test results on the dashboard
@@ -194,15 +194,15 @@ def docker_upload_artifactory( String hcc_ver, String from_image, String source_
           hip_install_image.push( 'latest' )
         }
       }
+
+      // Lots of images with tags are created above; no apparent way to delete images:tags with docker global variable
+      // run bash script to clean images:tags after successful pushing
+      sh "docker images | grep \"${artifactory_org}/${image_name}\" | awk '{print \$1 \":\" \$2}' | xargs docker rmi"
     }
     catch( err )
     {
       currentBuild.result = 'SUCCESS'
     }
-
-    // Lots of images with tags are created above; no apparent way to delete images:tags with docker global variable
-    // run bash script to clean images:tags after successful pushing
-    sh "docker images | grep \"${artifactory_org}/${image_name}\" | awk '{print \$1 \":\" \$2}' | xargs docker rmi"
   }
 }
 
@@ -288,10 +288,10 @@ nvcc:
     String nvcc_ver = 'nvcc-8.0'
     String from_image = 'nvidia/cuda:8.0-devel'
 
-    // This unfortunately hardcodes the driver version nvidia_driver_375.66 in the volume mount.  Research if a way
+    // This unfortunately hardcodes the driver version nvidia_driver_375.74 in the volume mount.  Research if a way
     // exists to get volume driver to customize the volume names to leave out driver version
     String inside_args = '''--device=/dev/nvidiactl --device=/dev/nvidia0 --device=/dev/nvidia-uvm --device=/dev/nvidia-uvm-tools
-        --volume-driver=nvidia-docker --volume=nvidia_driver_375.66:/usr/local/nvidia:ro''';
+        --volume-driver=nvidia-docker --volume=nvidia_driver_375.74:/usr/local/nvidia:ro''';
 
     // Checkout source code, dependencies and version files
     String source_hip_rel = checkout_and_version( nvcc_ver )
