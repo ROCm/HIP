@@ -150,45 +150,45 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t *attributes, const void
     HIP_INIT_API(attributes, ptr);
 
     hipError_t e = hipSuccess;
-
-    hc::accelerator acc;
-#if (__hcc_workweek__ >= 17332)
-    hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);
-#else
-    hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
-#endif
-    am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
-    if (status == AM_SUCCESS) {
-
-        attributes->memoryType    = amPointerInfo._isInDeviceMem ? hipMemoryTypeDevice: hipMemoryTypeHost;
-        attributes->hostPointer   = amPointerInfo._hostPointer;
-        attributes->devicePointer = amPointerInfo._devicePointer;
-        attributes->isManaged     = 0;
-        if(attributes->memoryType == hipMemoryTypeHost){
-            attributes->hostPointer = (void*)ptr;
-        }
-        if(attributes->memoryType == hipMemoryTypeDevice){
-            attributes->devicePointer = (void*)ptr;
-        }
-        attributes->allocationFlags = amPointerInfo._appAllocationFlags;
-        attributes->device          = amPointerInfo._appId;
-
-        if (attributes->device < 0) {
-            e = hipErrorInvalidDevice;
-        }
-
-
+    if((attributes == nullptr) || (ptr == nullptr)) {
+        e = hipErrorInvalidValue;
     } else {
-        attributes->memoryType    = hipMemoryTypeDevice;
-        attributes->hostPointer   = 0;
-        attributes->devicePointer = 0;
-        attributes->device        = -1;
-        attributes->isManaged     = 0;
-        attributes->allocationFlags = 0;
+        hc::accelerator acc;
+#if (__hcc_workweek__ >= 17332)
+        hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+#else
+        hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+#endif
+        am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
+        if (status == AM_SUCCESS) {
 
-        e = hipErrorUnknown; // TODO - should be hipErrorInvalidValue ?
+            attributes->memoryType    = amPointerInfo._isInDeviceMem ? hipMemoryTypeDevice: hipMemoryTypeHost;
+            attributes->hostPointer   = amPointerInfo._hostPointer;
+            attributes->devicePointer = amPointerInfo._devicePointer;
+            attributes->isManaged     = 0;
+            if(attributes->memoryType == hipMemoryTypeHost){
+                attributes->hostPointer = (void*)ptr;
+            }
+            if(attributes->memoryType == hipMemoryTypeDevice){
+                attributes->devicePointer = (void*)ptr;
+            }
+            attributes->allocationFlags = amPointerInfo._appAllocationFlags;
+            attributes->device          = amPointerInfo._appId;
+
+            if (attributes->device < 0) {
+                e = hipErrorInvalidDevice;
+            }
+        } else {
+            attributes->memoryType    = hipMemoryTypeDevice;
+            attributes->hostPointer   = 0;
+            attributes->devicePointer = 0;
+            attributes->device        = -1;
+            attributes->isManaged     = 0;
+            attributes->allocationFlags = 0;
+
+            e = hipErrorUnknown; // TODO - should be hipErrorInvalidValue ?
+        }
     }
-
     return ihipLogStatus(e);
 }
 
@@ -199,13 +199,12 @@ hipError_t hipHostGetDevicePointer(void **devicePointer, void *hostPointer, unsi
 
     hipError_t e = hipSuccess;
 
-    *devicePointer = NULL;
-
     // Flags must be 0:
-    if (flags != 0) {
+    if ((flags != 0) || (devicePointer == nullptr) || (hostPointer == nullptr)){
         e = hipErrorInvalidValue;
     } else {
         hc::accelerator acc;
+        *devicePointer = NULL;
 #if (__hcc_workweek__ >= 17332)
         hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);
 #else
