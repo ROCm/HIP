@@ -48,12 +48,11 @@ The HIP API documentation describes each API and its limitations, if any, compar
 
 ### What is not supported?
 #### Runtime/Driver API features
-At a high-level, the following features are not supported:
-- Textures 
+)t a high-level, the following features are not supported:
+- Textures (partial support available)
 - Dynamic parallelism (CUDA 5.0)
 - Managed memory (CUDA 6.5)
 - Graphics interoperability with OpenGL or Direct3D
-- CUDA Driver API
 - CUDA IPC Functions (Under Development)
 - CUDA array, mipmappedArray and pitched memory
 - Queue priority controls
@@ -61,17 +60,12 @@ At a high-level, the following features are not supported:
 See the [API Support Table](CUDA_Runtime_API_functions_supported_by_HIP.md) for more detailed information.
 
 #### Kernel language features
-- Device-side dynamic memory allocations (malloc, free, new, delete) (CUDA 4.0)
+- C++-style device-side dynamic memory allocations (free, new, delete) (CUDA 4.0)
 - Virtual functions, indirect functions and try/catch (CUDA 4.0)
 - `__prof_trigger` 
 - PTX assembly (CUDA 4.0).  HCC supports inline GCN assembly.
 - Several kernel features are under development.  See the [HIP Kernel Language](hip_kernel_language.md) for more information.  These include:
   - printf
-  - assert
-  - `__restrict__`
-  - `__threadfence*_`, `__syncthreads*`
-  - Unbounded loop unroll
-
 
 
 ### Is HIP a drop-in replacement for CUDA?
@@ -100,18 +94,20 @@ However, we can provide a rough summary of the features included in each CUDA SD
     - Per-thread-streams (under development)
     - C++11 (HCC supports all of C++11, all of C++14 and some C++17 features)
 - CUDA 7.5
-    - float16
+    - float16 (supported)
 - CUDA 8.0
-    - TBD.
+    - Page Migration including cudaMemAdvise, cudaMemPrefetch, other cudaMem* APIs(not supported)
+
 
 ### What libraries does HIP support?
-HIP includes growing support for the 4 key math libraries using hcBlas, hcFft, hcrng and hcsparse.
-These offer pointer-based memory interfaces (as opposed to opaque buffers) and can be easily interfaced with other HCC applications.  Developers should use conditional compilation if portability to nvcc systems is desired - using calls to cu* routines on one path and hc* routines on the other.  
+HIP includes growing support for the 4 key math libraries using hcBlas, hcFft, hcrng and hcsparse, as well as MIOpen for machine intelligence applications.
+These offer pointer-based memory interfaces (as opposed to opaque buffers) and can be easily interfaced with other HIP applications.  
+The hip interfaces support both ROCm and CUDA paths, with familiar library interfaces.
 
-- [hcblas](https://bitbucket.org/multicoreware/hcblas)
-- [hcfft](https://bitbucket.org/multicoreware/hcfft)
-- [hcsparse](https://bitbucket.org/multicoreware/hcsparse)
-- [hcrng](https://bitbucket.org/multicoreware/hcrng)
+- [hipBlas](https://github.com/ROCmSoftwarePlatform/hipBLAS), which utilizes [rocBlas](https://github.com/ROCmSoftwarePlatform/rocBLAS).
+- [hipfft](https://github.com/ROCmSoftwarePlatform/hcFFT)
+- [hipsparse](https://github.com/ROCmSoftwarePlatform/hcSPARSE)
+- [hiprng](https://github.com/ROCmSoftwarePlatform/hcrng)
    
 Additionally, some of the cublas routines are automatically converted to hipblas equivalents by the hipify-clang tool.  These APIs use cublas or hcblas depending on the platform, and replace the need
 to use conditional compilation. 
@@ -218,7 +214,7 @@ If platform portability is important, use #ifdef __HIP_PLATFORM_NVCC__ to guard 
 ### On HCC, can I use HC functionality with HIP?
 Yes.  
 The code can include hc.hpp and use HC functions inside the kernel.  A typical use-case is to use AMD-specific hardware features such as the permute, swizzle, or DPP operations.
-The "-stdlib=libc++" must be passed to hipcc in order to compile hc.hpp.  See the 'bit_extract' sample for an example. 
+See the 'bit_extract' sample for an example. 
 
 Also these functions can be used to extract HCC accelerator and accelerator_view structures from the HIP deviceId and hipStream_t:
 hipHccGetAccelerator(int deviceId, hc::accelerator *acc);
