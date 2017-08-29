@@ -55,13 +55,13 @@ void ihipEvent_t::attachToCompletionFuture(const hc::completion_future *cf,
 
 void ihipEvent_t::refereshEventStatus()
 {
-    bool isReady0 = _marker.is_ready();
+    bool isReady0 = locked_isReady();
     bool isReady1;
     int val = 0;
     if (_state == hipEventStatusRecording) {
         // TODO - use completion-future functions to obtain ticks and timestamps:
         hsa_signal_t *sig  = static_cast<hsa_signal_t*> (_marker.get_native_handle());
-        isReady1 = _marker.is_ready();
+        isReady1 = locked_isReady();
         if (sig) {
             val = hsa_signal_load_acquire(*sig);
             if (val == 0) {
@@ -83,6 +83,17 @@ void ihipEvent_t::refereshEventStatus()
     if (_state != hipEventStatusComplete) {
         //printf (" not ready isReady0=%d val=%d isReady1=%d\n", isReady0, val, isReady1);
     }
+}
+
+
+bool ihipEvent_t::locked_isReady()
+{
+    return _stream->locked_eventIsReady(this);
+}
+
+void ihipEvent_t::locked_waitComplete(hc::hcWaitMode waitMode)
+{
+    return _stream->locked_eventWaitComplete(this, waitMode);
 }
 
 
@@ -127,7 +138,7 @@ hipError_t hipEventCreate(hipEvent_t* event)
 
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
 {
-    HIP_INIT_SPECIAL_API(TRACE_QUERY, event, stream);
+    HIP_INIT_SPECIAL_API(TRACE_SYNC, event, stream);
 
     if (event && event->_state != hipEventStatusUnitialized)   {
         stream = ihipSyncAndResolveStream(stream);
@@ -192,9 +203,7 @@ hipError_t hipEventSynchronize(hipEvent_t event)
             ctx->locked_syncDefaultStream(true, true);
             return ihipLogStatus(hipSuccess);
         } else {
-            event->_marker.wait((event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked : hc::hcWaitModeActive);
-
-            assert (event->_marker.is_ready());
+            event->locked_waitComplete((event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked : hc::hcWaitModeActive);
 
             return ihipLogStatus(hipSuccess);
         }
@@ -259,7 +268,7 @@ hipError_t hipEventQuery(hipEvent_t event)
 {
     HIP_INIT_SPECIAL_API(TRACE_QUERY, event);
 
-    if ((event->_state == hipEventStatusRecording) && (!event->_marker.is_ready())) {
+    if ((event->_state == hipEventStatusRecording) && !event->locked_isReady()) {
         return ihipLogStatus(hipErrorNotReady);
     } else {
         return ihipLogStatus(hipSuccess);
