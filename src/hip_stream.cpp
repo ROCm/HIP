@@ -93,18 +93,15 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
 
     } else if (event->_state != hipEventStatusUnitialized) {
 
-        if (stream != hipStreamNull) {
-
+        if (HIP_SYNC_STREAM_WAIT || (HIP_SYNC_NULL_STREAM && (stream == 0))) {
+            // conservative wait on host for the specified event to complete:
+            event->locked_waitComplete((event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked : hc::hcWaitModeActive);
+        } else {
+            stream = ihipSyncAndResolveStream(stream);
             // This will user create_blocking_marker to wait on the specified queue.
             stream->locked_streamWaitEvent(event);
-
-        } else {
-            // TODO-hcc Convert to use create_blocking_marker(...) functionality.
-            // Currently we have a super-conservative version of this - block on host, and drain the queue.
-            // This should create a barrier packet in the target queue.
-            // TODO-HIP_SYNC_NULL_STREAM
-            stream->locked_wait();
         }
+
     } // else event not recorded, return immediately and don't create marker.
 
     return ihipLogStatus(e);

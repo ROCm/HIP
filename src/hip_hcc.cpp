@@ -88,6 +88,8 @@ int HIP_HOST_COHERENT = 1;
 
 int HIP_SYNC_HOST_ALLOC = 1;
 
+int HIP_SYNC_STREAM_WAIT = 0;
+
 
 #if (__hcc_workweek__ >= 17300)
 // Make sure we have required bug fix in HCC
@@ -1249,6 +1251,7 @@ void HipReadEnv()
 
     READ_ENV_I(release, HIP_SYNC_HOST_ALLOC, 0, "Sync before and after all host memory allocations.  May help stability");
     READ_ENV_I(release, HIP_SYNC_NULL_STREAM, 0, "Synchronize on host for null stream submissions");
+    READ_ENV_I(release, HIP_SYNC_STREAM_WAIT, 0, "hipStreamWaitEvent will synchronize to host");
 
 
     READ_ENV_I(release, HIP_HOST_COHERENT, 0, "If set, all host memory will be allocated as fine-grained system memory.  This allows threadfence_system to work but prevents host memory from being cached on GPU which may have performance impact.");
