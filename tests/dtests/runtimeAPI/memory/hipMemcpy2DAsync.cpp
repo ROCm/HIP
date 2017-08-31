@@ -32,7 +32,7 @@ THE SOFTWARE.
 int main()
 {
 
-    float *A_d, *B_d, *C_d, *X_d, *Y_d, *Z_d;
+    float *A_d, *B_d, *C_d ;
     float *A_h, *B_h, *C_h ;
     size_t	numW = 321;
     size_t	numH = 211;
