@@ -38,21 +38,26 @@ hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags)
     hipError_t e = hipSuccess;
 
     if (ctx) {
-        hc::accelerator acc = ctx->getWriteableDevice()->_acc;
 
-        // TODO - se try-catch loop to detect memory exception?
-        //
-        //Note this is an execute_in_order queue, so all kernels submitted will atuomatically wait for prev to complete:
-        //This matches CUDA stream behavior:
+        if (HIP_FORCE_NULL_STREAM) {
+            *stream = 0; 
+        } else {
+            hc::accelerator acc = ctx->getWriteableDevice()->_acc;
 
-        {
-            // Obtain mutex access to the device critical data, release by destructor
-            LockedAccessor_CtxCrit_t  ctxCrit(ctx->criticalData());
+            // TODO - se try-catch loop to detect memory exception?
+            //
+            //Note this is an execute_in_order queue, so all kernels submitted will atuomatically wait for prev to complete:
+            //This matches CUDA stream behavior:
 
-            auto istream = new ihipStream_t(ctx, acc.create_view(), flags);
+            {
+                // Obtain mutex access to the device critical data, release by destructor
+                LockedAccessor_CtxCrit_t  ctxCrit(ctx->criticalData());
 
-            ctxCrit->addStream(istream);
-            *stream = istream;
+                auto istream = new ihipStream_t(ctx, acc.create_view(), flags);
+
+                ctxCrit->addStream(istream);
+                *stream = istream;
+            }
         }
 
         tprintf(DB_SYNC, "hipStreamCreate, %s\n", ToString(*stream).c_str());
@@ -119,15 +124,14 @@ hipError_t hipStreamQuery(hipStream_t stream)
         stream =  device->_defaultStream;
     }
 
-    int pendingOps = 0;
+    bool isEmpty = 0;
 
     {
         LockedAccessor_StreamCrit_t crit(stream->_criticalData);
-        pendingOps = crit->_av.get_pending_async_ops();
+        isEmpty = crit->_av.get_is_empty();
     }
 
-
-    hipError_t e = (pendingOps > 0) ? hipErrorNotReady : hipSuccess;
+    hipError_t e = isEmpty ? hipSuccess : hipErrorNotReady ;
 
     return ihipLogStatus(e);
 }
@@ -167,7 +171,9 @@ hipError_t hipStreamDestroy(hipStream_t stream)
 
     //--- Drain the stream:
     if (stream == NULL) {
-        e = hipErrorInvalidResourceHandle; // TODO - review - what happens if try to destroy null stream
+        if (!HIP_FORCE_NULL_STREAM) {
+            e = hipErrorInvalidResourceHandle; 
+        } 
     } else {
         stream->locked_wait();
 

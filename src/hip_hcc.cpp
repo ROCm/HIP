@@ -90,6 +90,8 @@ int HIP_SYNC_HOST_ALLOC = 1;
 
 int HIP_SYNC_STREAM_WAIT = 0;
 
+int HIP_FORCE_NULL_STREAM=0;
+
 
 #if (__hcc_workweek__ >= 17300)
 // Make sure we have required bug fix in HCC
@@ -1251,6 +1253,8 @@ void HipReadEnv()
 
     READ_ENV_I(release, HIP_SYNC_HOST_ALLOC, 0, "Sync before and after all host memory allocations.  May help stability");
     READ_ENV_I(release, HIP_SYNC_NULL_STREAM, 0, "Synchronize on host for null stream submissions");
+    READ_ENV_I(release, HIP_FORCE_NULL_STREAM,  0, "Force all stream allocations to secretly return the null stream");
+
     READ_ENV_I(release, HIP_SYNC_STREAM_WAIT, 0, "hipStreamWaitEvent will synchronize to host");
 
 
