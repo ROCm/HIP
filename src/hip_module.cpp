@@ -36,6 +36,8 @@ THE SOFTWARE.
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
 
+#include "llvm/Support/AMDGPUCodeObjectMetadata.h"
+
 //TODO Use Pool APIs from HCC to get memory regions.
 
 #include <cassert>
@@ -200,8 +202,7 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
             (*module)->size = size;
             in.seekg(0, std::ios::beg);
             std::copy(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>(), ptr);
-/*
-            Elf *e = elf_memory((char*)p, size);
+            auto e = elf_memory((char*)p, size);
             if(elf_kind(e) != ELF_K_ELF){
               return ihipLogStatus(hipErrorInvalidValue);
             }
@@ -223,22 +224,22 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
                   char *desc = name + alignTo(note->n_namesz, sizeof(int));
                   if (note->n_type == 8) {
                     std::string metadatastr((const char*)desc, (size_t)note->n_descsz);
-                    AMDGPU::RuntimeMD::Program::Metadata meta;
-                    meta = meta.fromYAML(metadatastr);
-                    for(int i=0;i<meta.Kernels.size();i++){
+                    llvm::AMDGPU::CodeObject::Metadata metaTmp, meta;
+                    meta.fromYamlString(metadatastr, meta);
+                    for(int i=0;i<meta.mKernels.size();i++){
                       struct ihipKernArgInfo pl;
                       size_t totalSizeOfArgs = 0;
-                      for(int j=0;j<meta.Kernels[i].Args.size();j++){
-                        if(meta.Kernels[i].Args[j].Kind < 7) {
-                          pl.Size.push_back(meta.Kernels[i].Args[j].Size);
-                          pl.Align.push_back(meta.Kernels[i].Args[j].Align);
-                          pl.ArgType.push_back(meta.Kernels[i].Args[j].TypeName);
-                          pl.ArgName.push_back(meta.Kernels[i].Args[j].Name);
-                          totalSizeOfArgs += meta.Kernels[i].Args[j].Align;
+                      for(int j=0;j<meta.mKernels[i].mArgs.size();j++){
+                        if(meta.mKernels[i].mArgs[j].mValueKind < llvm::AMDGPU::CodeObject::ValueKind::HiddenGlobalOffsetX) {
+                          pl.Size.push_back(meta.mKernels[i].mArgs[j].mSize);
+                          pl.Align.push_back(meta.mKernels[i].mArgs[j].mAlign);
+                          pl.ArgType.push_back(meta.mKernels[i].mArgs[j].mTypeName);
+                          pl.ArgName.push_back(meta.mKernels[i].mArgs[j].mName);
+                          totalSizeOfArgs += meta.mKernels[i].mArgs[j].mAlign;
                         }
                       }
                       pl.totalSize = totalSizeOfArgs;
-                      kernelArguments[meta.Kernels[i].Name] = pl;
+                      kernelArguments[meta.mKernels[i].mName] = pl;
                     }
                     break;
                   }
@@ -249,7 +250,7 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
                 }
               }
             }
-*/
+
             status = hsa_code_object_deserialize(ptr, size, NULL, &(*module)->object);
 
             if(status != HSA_STATUS_SUCCESS){
