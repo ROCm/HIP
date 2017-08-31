@@ -517,8 +517,11 @@ public:
 
     hc::accelerator_view* locked_getAv() { LockedAccessor_StreamCrit_t crit(_criticalData); return &(crit->_av); };
 
-    void                 locked_waitEvent(hipEvent_t event);
+    void                 locked_streamWaitEvent(hipEvent_t event);
     void                 locked_recordEvent(hipEvent_t event);
+
+    bool                 locked_eventIsReady(hipEvent_t event);
+    void                 locked_eventWaitComplete(hipEvent_t event, hc::hcWaitMode waitMode);
 
     ihipStreamCritical_t  &criticalData() { return _criticalData; };
 
@@ -608,18 +611,24 @@ public:
     ihipEvent_t(unsigned flags);
     void attachToCompletionFuture(const hc::completion_future *cf, hipStream_t stream, ihipEventType_t eventType);
     void refereshEventStatus();
+    hc::completion_future & marker() { return _marker; }
+    void marker(hc::completion_future cf) { _marker = cf; };
+
+    bool locked_isReady();
+    void locked_waitComplete(hc::hcWaitMode waitMode);
+
     uint64_t timestamp() const { return _timestamp; } ;
     ihipEventType_t type() const { return _type; };
 
 public:
     hipEventStatus_t      _state;
 
-    hipStream_t           _stream;  // Stream where the event is recorded, or NULL if all streams.
+    hipStream_t           _stream;  // Stream where the event is recorded.  Null stream is resolved to actual stream when recorded
     unsigned              _flags;
 
-    hc::completion_future _marker;
 
 private:
+    hc::completion_future _marker;
     ihipEventType_t       _type;
     uint64_t              _timestamp;  // store timestamp, may be set on host or by marker.
 friend hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream);
