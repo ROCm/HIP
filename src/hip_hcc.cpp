@@ -328,13 +328,33 @@ void ihipStream_t::locked_wait()
 
 // Causes current stream to wait for specified event to complete:
 // Note this does not provide any kind of host serialization.
-void ihipStream_t::locked_waitEvent(hipEvent_t event)
+void ihipStream_t::locked_streamWaitEvent(hipEvent_t event)
 {
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
 
-    crit->_av.create_blocking_marker(event->_marker, hc::accelerator_scope);
+    crit->_av.create_blocking_marker(event->marker(), hc::accelerator_scope);
 }
+
+
+// Causes current stream to wait for specified event to complete:
+// Note this does not provide any kind of host serialization.
+bool ihipStream_t::locked_eventIsReady(hipEvent_t event)
+{
+    // Event query that returns "Complete" may cause HCC to manipulate
+    // internal queue state so lock the stream's queue here.
+    LockedAccessor_StreamCrit_t crit(_criticalData);
+
+    return (event->marker().is_ready());
+}
+
+void ihipStream_t::locked_eventWaitComplete(hipEvent_t event, hc::hcWaitMode waitMode)
+{
+    LockedAccessor_StreamCrit_t crit(_criticalData);
+
+    event->marker().wait(waitMode);
+}
+
 
 // Create a marker in this stream.
 // Save state in the event so it can track the status of the event.
@@ -354,7 +374,7 @@ void ihipStream_t::locked_recordEvent(hipEvent_t event)
         scopeFlag = HIP_EVENT_SYS_RELEASE ? hc::system_scope : hc::accelerator_scope;
     }
 
-    event->_marker = crit->_av.create_marker(scopeFlag);
+    event->marker(crit->_av.create_marker(scopeFlag));
 };
 
 //=============================================================================
