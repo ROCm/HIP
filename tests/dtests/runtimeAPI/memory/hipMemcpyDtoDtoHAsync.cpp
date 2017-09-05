@@ -40,7 +40,7 @@ int main()
     hipStream_t s;
 
     HIPCHECK(hipGetDeviceCount(&numDevices));
-     if(numDevices <= 1)
+     if(numDevices > 1)
      {
         HIPCHECK(hipSetDevice(0));
         unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
