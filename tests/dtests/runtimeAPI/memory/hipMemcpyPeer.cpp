@@ -39,12 +39,7 @@ int main()
     int *A_h, *B_h, *C_h ;
 
     HIPCHECK(hipGetDeviceCount(&numDevices));
-     if(numDevices <= 1)
-     {
-     // test is not applicable for single device configs
-      exit(1);
-     } 
-     else
+     if(numDevices > 1)
      {
         HIPCHECK(hipSetDevice(0));
         unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
@@ -72,11 +67,11 @@ int main()
         HIPCHECK ( hipMemcpy(C_h, Z_d, Nbytes, hipMemcpyDeviceToHost));
         HIPCHECK (hipDeviceSynchronize());
         HipTest::checkVectorADD(A_h, B_h, C_h, N);
-
-
-
-        passed();
      }
+        passed();
+
+
+     
 
 }
 
