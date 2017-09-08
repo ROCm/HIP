@@ -106,6 +106,7 @@ if ($HIP_PLATFORM eq "hcc") {
 
     #### GCC system includes workaround ####
     $HCC_WA_FLAGS = " ";
+    $HOST_OSNAME= `cat /etc/os-release | grep "^ID\=" | cut -d= -f2 | tr -d '\n'`;
     if ($HCC_VERSION_MAJOR eq 1) {
         my $GCC_CUR_VER = `gcc -dumpversion`;
         my $GPP_CUR_VER = `g++ -dumpversion`;
@@ -116,7 +117,8 @@ if ($HIP_PLATFORM eq "hcc") {
 
         # Only include the libstdc++ headers and libraries flags explicitly if the g++ is older than version 5.
         # That's because HCC already uses libstdc++ by default if a newer g++/libstdc++ is available
-        if (${GCC_CUR_VER} eq ${GPP_CUR_VER} and $GPP_VER_FIELDS[0] < 5) {
+        # Cent OS 7 cannot use libstdc++ for compilation, defaults to libc++
+        if (${GCC_CUR_VER} eq ${GPP_CUR_VER} and $GPP_VER_FIELDS[0] < 5 and ($HOST_OSNAME ne "\"centos\"")) {
             $HCC_WA_FLAGS .= " -stdlib=libstdc++  -I/usr/include/x86_64-linux-gnu -I/usr/include/x86_64-linux-gnu/c++/${GCC_CUR_VER} -I/usr/include/c++/${GCC_CUR_VER} ";
             # Add C++ libs for GCC.
             $HIPLDFLAGS .= " -lstdc++";
@@ -124,7 +126,6 @@ if ($HIP_PLATFORM eq "hcc") {
     }
 
     # Force -stdlib=libc++ on UB14.04
-    $HOST_OSNAME= `cat /etc/os-release | grep "^ID\=" | cut -d= -f2 | tr -d '\n'`;
     $HOST_OSVER= `cat /etc/os-release | grep "^VERSION_ID\=" | cut -d= -f2 | tr -d '\n'`;
     if ($HOST_OSNAME eq "ubuntu" and $HOST_OSVER eq "\"14.04\"") {
         $HIPCXXFLAGS .= " -stdlib=libc++";
