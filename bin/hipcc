@@ -131,6 +131,11 @@ if ($HIP_PLATFORM eq "hcc") {
         $HIPCXXFLAGS .= " -stdlib=libc++";
         $setStdLib = 1;
     }
+    if ($HOST_OSNAME eq "\"centos\"" and $HOST_OSVER eq "\"7\"") {
+        $HIPCXXFLAGS .= " -stdlib=libc++";
+        $HIPLDFLAGS .= " -lc++ -lc++abi";
+        $setStdLib = 1;
+    }
 
     $HIPCXXFLAGS .= " -I$HIP_PATH/include/hip/hcc_detail/cuda";
     $HIPCXXFLAGS .= " -I$HSA_PATH/include";
