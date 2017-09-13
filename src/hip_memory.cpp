@@ -119,6 +119,11 @@ void * allocAndSharePtr(const char *msg, size_t sizeBytes, ihipCtx_t *ctx, bool 
     tprintf(DB_MEM, " alloc %s ptr:%p-%p size:%zu on dev:%d\n",
             msg, ptr, static_cast<char*>(ptr)+sizeBytes, sizeBytes, device->_deviceId);
 
+    if (HIP_INIT_ALLOC != -1) {
+        // TODO , dont' call HIP API directly here:
+        hipMemset(ptr, HIP_INIT_ALLOC, sizeBytes);
+    }	
+
     if (ptr != nullptr) {
         int r = sharePtr(ptr, ctx, shareWithAll, hipFlags);
         if (r != 0) {
@@ -1179,6 +1184,7 @@ ihipMemsetKernel(hipStream_t stream,
     });
 
 }
+
 
 // TODO-sync: function is async unless target is pinned host memory - then these are fully sync.
 hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t stream )

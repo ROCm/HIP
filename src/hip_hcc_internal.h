@@ -67,6 +67,7 @@ extern int HIP_HIDDEN_FREE_MEM;
 extern int HIP_SYNC_HOST_ALLOC;
 
 extern int HIP_SYNC_NULL_STREAM;
+extern int HIP_INIT_ALLOC;
 
 // TODO - remove when this is standard behavior.
 extern int HCC_OPT_FLUSH;
