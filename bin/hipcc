@@ -117,8 +117,8 @@ if ($HIP_PLATFORM eq "hcc") {
 
         # Only include the libstdc++ headers and libraries flags explicitly if the g++ is older than version 5.
         # That's because HCC already uses libstdc++ by default if a newer g++/libstdc++ is available
-        # Cent OS 7 cannot use libstdc++ for compilation, defaults to libc++
-        if (${GCC_CUR_VER} eq ${GPP_CUR_VER} and $GPP_VER_FIELDS[0] < 5 and ($HOST_OSNAME ne "\"centos\"")) {
+        # Cent OS 7 and RHEL 7.4 cannot use libstdc++ for compilation, default to libc++
+        if (${GCC_CUR_VER} eq ${GPP_CUR_VER} and $GPP_VER_FIELDS[0] < 5 and ($HOST_OSNAME ne "\"centos\"") and ($HOST_OSNAME ne "\"rhel\"")) {
             $HCC_WA_FLAGS .= " -stdlib=libstdc++  -I/usr/include/x86_64-linux-gnu -I/usr/include/x86_64-linux-gnu/c++/${GCC_CUR_VER} -I/usr/include/c++/${GCC_CUR_VER} ";
             # Add C++ libs for GCC.
             $HIPLDFLAGS .= " -lstdc++";
@@ -131,8 +131,8 @@ if ($HIP_PLATFORM eq "hcc") {
         $HIPCXXFLAGS .= " -stdlib=libc++";
         $setStdLib = 1;
     }
-    # Force -stdlib=libc++ on Cent OS 7
-    if ($HOST_OSNAME eq "\"centos\"" and $HOST_OSVER eq "\"7\"") {
+    # Force -stdlib=libc++ on Cent OS 7 and RHEL 7.4
+    if (($HOST_OSNAME eq "\"centos\"" and $HOST_OSVER eq "\"7\"") or ($HOST_OSNAME eq "\"rhel\"" and $HOST_OSVER eq "\"7.4\"")) {
         $HIPCXXFLAGS .= " -stdlib=libc++";
         $HIPLDFLAGS .= " -lc++ -lc++abi";
         $setStdLib = 1;
