@@ -359,7 +359,7 @@ inline static hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes,
 
 
 inline static hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind copyKind, hipStream_t stream __dparm(0)) {
-  return hipCUDAErrorTohipError(cudaMemcpyAsync(dst, src, sizeBytes, hipMemcpyKindToCudaMemcpyKind(copyKind), 0));
+  return hipCUDAErrorTohipError(cudaMemcpyAsync(dst, src, sizeBytes, hipMemcpyKindToCudaMemcpyKind(copyKind), stream));
 }
 
 inline static hipError_t hipMemcpyToSymbol(const void* symbol, const void* src, size_t sizeBytes, size_t offset __dparm(0), hipMemcpyKind copyType __dparm(hipMemcpyHostToDevice)) {
