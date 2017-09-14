@@ -378,8 +378,8 @@ if(${RUN_HIT} EQUAL 0)
     include(${HIP_SRC_PATH}/tests/hit/HIT.cmake)
 
     # Add tests
-    include_directories(${HIP_SRC_PATH}/tests/src)
-    hit_add_directory_recursive(${HIP_SRC_PATH}/tests/src "directed_tests")
+    include_directories(${HIP_SRC_PATH}/tests/dtests)
+    hit_add_directory_recursive(${HIP_SRC_PATH}/tests/dtests "directed_tests")
 
     # Add top-level tests to build_tests
     add_custom_target(build_tests DEPENDS directed_tests)
