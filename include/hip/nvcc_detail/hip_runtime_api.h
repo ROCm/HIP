@@ -105,7 +105,7 @@ typedef cudaIpcMemHandle_t hipIpcMemHandle_t;
 typedef cudaLimit hipLimit_t;
 typedef cudaFuncCache hipFuncCache_t;
 typedef CUcontext hipCtx_t;
-typedef CUsharedconfig hipSharedMemConfig;
+typedef cudaSharedMemConfig hipSharedMemConfig;
 typedef CUfunc_cache hipFuncCache;
 typedef CUjit_option hipJitOption;
 typedef CUdevice hipDevice_t;
@@ -123,6 +123,11 @@ typedef cudaArray hipArray;
 
 //typedef cudaChannelFormatDesc hipChannelFormatDesc;
 #define hipChannelFormatDesc cudaChannelFormatDesc
+
+//adding code for hipmemSharedConfig
+#define hipSharedMemBankSizeDefault cudaSharedMemBankSizeDefault
+#define hipSharedMemBankSizeFourByte cudaSharedMemBankSizeFourByte
+#define hipSharedMemBankSizeEightByte cudaSharedMemBankSizeEightByte
 
 inline static hipError_t hipCUDAErrorTohipError(cudaError_t cuError) {
 switch(cuError) {
@@ -833,12 +838,12 @@ inline static hipError_t  hipCtxSetCacheConfig (hipFuncCache cacheConfig)
 
 inline static hipError_t  hipCtxSetSharedMemConfig (hipSharedMemConfig config)
 {
-    return hipCUResultTohipError(cuCtxSetSharedMemConfig(config));
+    return hipCUResultTohipError(cuCtxSetSharedMemConfig((CUsharedconfig)config));
 }
 
 inline static hipError_t  hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig )
 {
-    return hipCUResultTohipError(cuCtxGetSharedMemConfig(pConfig));
+    return hipCUResultTohipError(cuCtxGetSharedMemConfig((CUsharedconfig *)pConfig));
 }
 
 inline static hipError_t  hipCtxSynchronize ( void )
@@ -879,6 +884,16 @@ inline static hipError_t hipDeviceGetPCIBusId(char* pciBusId,int len,hipDevice_t
 inline static hipError_t hipDeviceGetByPCIBusId(int* device, const char *pciBusId)
 {
     return hipCUDAErrorTohipError(cudaDeviceGetByPCIBusId(device, pciBusId));
+}
+
+inline static hipError_t hipDeviceGetSharedMemConfig(hipSharedMemConfig *config)
+{
+    return hipCUDAErrorTohipError(cudaDeviceGetSharedMemConfig(config));
+}
+ 
+inline static hipError_t hipDeviceSetSharedMemConfig(hipSharedMemConfig config)
+{
+    return hipCUDAErrorTohipError(cudaDeviceSetSharedMemConfig(config));
 }
 
 inline static hipError_t hipDeviceGetLimit(size_t *pValue, hipLimit_t limit)
