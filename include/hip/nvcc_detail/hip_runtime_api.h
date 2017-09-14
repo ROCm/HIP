@@ -105,8 +105,6 @@ typedef cudaIpcMemHandle_t hipIpcMemHandle_t;
 typedef cudaLimit hipLimit_t;
 typedef cudaFuncCache hipFuncCache_t;
 typedef CUcontext hipCtx_t;
-//typedef CUsharedconfig hipSharedMemConfig;
-
 typedef cudaSharedMemConfig hipSharedMemConfig;
 typedef CUfunc_cache hipFuncCache;
 typedef CUjit_option hipJitOption;
@@ -130,10 +128,6 @@ typedef cudaArray hipArray;
 #define hipSharedMemBankSizeDefault cudaSharedMemBankSizeDefault
 #define hipSharedMemBankSizeFourByte cudaSharedMemBankSizeFourByte
 #define hipSharedMemBankSizeEightByte cudaSharedMemBankSizeEightByte
-
-
-
-
 
 inline static hipError_t hipCUDAErrorTohipError(cudaError_t cuError) {
 switch(cuError) {
