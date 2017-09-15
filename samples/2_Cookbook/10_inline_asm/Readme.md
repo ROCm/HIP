@@ -27,9 +27,22 @@ We will be using the Simple Matrix Transpose application from the our very first
 
 ## asm() Assembler statement
 
-We insert the GCN isa into the kernel using asm() Assembler statement. In the same sourcecode, we used for MatrixTranspose. We'll add the following:
+In the same sourcecode, we used for MatrixTranspose. We'll add the following:
 
 `  asm volatile ("v_mov_b32_e32 %0, %1" : "=v" (out[x*width + y]) : "v" (in[y*width + x]));                    `
+
+GCN ISA In-line assembly, is supported. For example:
+
+```
+asm volatile ("v_mac_f32_e32 %0, %2, %3" : "=v" (out[i]) : "0"(out[i]), "v" (a), "v" (in[i]));
+```
+
+We insert the GCN isa into the kernel using `asm()` Assembler statement.
+`volatile` keyword is used so that the optimizers must not change the number of volatile operations or change their order of execution relative to other volatile operations.
+`v_mac_f32_e32` is the GCN instruction, for more information please refer - [AMD GCN3 ISA architecture manual](http://gpuopen.com/compute-product/amd-gcn3-isa-architecture-manual/)
+Index for the respective operand in the ordered fashion is provided by `%` followed by position in the list of operands
+`"v"` is the constraint code (for target-specific AMDGPU) for 32-bit VGPR register, for more info please refer - [Supported Constraint Code List for AMDGPU](https://llvm.org/docs/LangRef.html#supported-constraint-code-list)
+Output Constraints are specified by an `"="` prefix as shown above ("=v"). This indicate that assemby will write to this operand, and the operand will then be made available as a return value of the asm expression. Input constraints do not have a prefix - just the constraint code. The constraint string of `"0"` says to use the assigned register for output as an input as well (it being the 0'th constraint).
 
 ## How to build and run:
 Use the make command and execute it using ./exe

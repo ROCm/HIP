@@ -65,8 +65,12 @@ extern int HIP_HIDDEN_FREE_MEM;
 //---
 // Chicken bits for disabling functionality to work around potential issues:
 extern int HIP_SYNC_HOST_ALLOC;
+extern int HIP_SYNC_STREAM_WAIT;
 
 extern int HIP_SYNC_NULL_STREAM;
+extern int HIP_INIT_ALLOC;
+extern int HIP_FORCE_NULL_STREAM;
+
 
 // TODO - remove when this is standard behavior.
 extern int HCC_OPT_FLUSH;
