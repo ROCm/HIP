@@ -824,7 +824,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
 
     // Masquerade as a 3.0-level device. This will change as more HW functions are properly supported.
     // Application code should use the arch.has* to do detailed feature detection.
-    prop->major = 2;
+    prop->major = 3;
     prop->minor = 0;
 
     // Get number of Compute Unit
