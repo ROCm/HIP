@@ -89,6 +89,12 @@ int HIP_HOST_COHERENT = 1;
 int HIP_SYNC_HOST_ALLOC = 1;
 
 
+int HIP_INIT_ALLOC=-1;
+int HIP_SYNC_STREAM_WAIT = 0;
+int HIP_FORCE_NULL_STREAM=0;
+
+
+
 #if (__hcc_workweek__ >= 17300)
 // Make sure we have required bug fix in HCC
 // Perform resolution on the GPU:
@@ -267,8 +273,6 @@ ihipStream_t::ihipStream_t(ihipCtx_t *ctx, hc::accelerator_view av, unsigned int
         case hipDeviceScheduleBlockingSync  : _scheduleMode = Yield; break;
         default:_scheduleMode = Auto;
     };
-
-
 };
 
 
@@ -1248,7 +1252,11 @@ void HipReadEnv()
     READ_ENV_I(release, HIP_FAIL_SOC, 0, "Fault on Sub-Optimal-Copy, rather than use a slower but functional implementation.  Bit 0x1=Fail on async copy with unpinned memory.  Bit 0x2=Fail peer copy rather than use staging buffer copy");
 
     READ_ENV_I(release, HIP_SYNC_HOST_ALLOC, 0, "Sync before and after all host memory allocations.  May help stability");
+    READ_ENV_I(release, HIP_INIT_ALLOC, 0, "If not -1, initialize allocated memory to specified byte");
     READ_ENV_I(release, HIP_SYNC_NULL_STREAM, 0, "Synchronize on host for null stream submissions");
+    READ_ENV_I(release, HIP_FORCE_NULL_STREAM,  0, "Force all stream allocations to secretly return the null stream");
+
+    READ_ENV_I(release, HIP_SYNC_STREAM_WAIT, 0, "hipStreamWaitEvent will synchronize to host");
 
 
     READ_ENV_I(release, HIP_HOST_COHERENT, 0, "If set, all host memory will be allocated as fine-grained system memory.  This allows threadfence_system to work but prevents host memory from being cached on GPU which may have performance impact.");
