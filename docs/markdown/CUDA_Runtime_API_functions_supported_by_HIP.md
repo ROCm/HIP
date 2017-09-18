@@ -125,7 +125,7 @@
 | `cudaHostUnregister`                                      | `hipHostUnregister`           |
 | `cudaMalloc`                                              | `hipMalloc`                   |
 | `cudaMalloc3D`                                            |                               |
-| `cudaMalloc3DArray`                                       | `hipMalloc2DArray`            |
+| `cudaMalloc3DArray`                                       | `hipMalloc3DArray`            |
 | `cudaMallocArray`                                         | `hipMallocArray`              |
 | `cudaMallocHost`                                          | `hipHostMalloc`               |
 | `cudaMallocManaged`                                       |                               |
