@@ -307,15 +307,15 @@
 
 |   **CUDA**                                                |   **HIP**                     |
 |-----------------------------------------------------------|-------------------------------|
-| `cudaBindTexture`                                         |                               |
+| `cudaBindTexture`                                         | `hipBindTexture`              |
 | `cudaBindTexture2D`                                       | `hipBindTexture2D`            |
 | `cudaBindTextureToArray`                                  | `hipBindTextureToArray`       |
 | `cudaBindTextureToMipmappedArray`                         |                               |
-| `cudaCreateChannelDesc`                                   |                               |
-| `cudaGetChannelDesc`                                      |                               |
+| `cudaCreateChannelDesc`                                   | `hipCreateChannelDesc`        |
+| `cudaGetChannelDesc`                                      | `hipGetChannelDesc`           |
 | `cudaGetTextureAlignmentOffset`                           |                               |
 | `cudaGetTextureReference`                                 |                               |
-| `cudaUnbindTexture`                                       |                               |
+| `cudaUnbindTexture`                                       | `hipUnbindTexture`            |
 
 ## **24. Surface Reference Management**
 
