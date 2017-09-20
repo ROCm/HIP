@@ -1824,9 +1824,9 @@ struct cuda2hipMap {
     cuda2hipRename["cudaUnbindTexture"]                     = {"hipUnbindTexture", CONV_TEX, API_RUNTIME};
     cuda2hipRename["cudaBindTexture2D"]                     = {"hipBindTexture2D", CONV_TEX, API_RUNTIME};
     cuda2hipRename["cudaBindTextureToArray"]                = {"hipBindTextureToArray", CONV_TEX, API_RUNTIME};
-    cuda2hipRename["cudaBindTextureToMipmappedArray"]       = {"hipBindTextureToMipmappedArray", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGetTextureAlignmentOffset"]         = {"hipGetTextureAlignmentOffset", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
-    cuda2hipRename["cudaGetTextureReference"]               = {"hipGetTextureReference", CONV_TEX, API_RUNTIME, HIP_UNSUPPORTED};
+    cuda2hipRename["cudaBindTextureToMipmappedArray"]       = {"hipBindTextureToMipmappedArray", CONV_TEX, API_RUNTIME}; // Unsupported yet on NVCC path
+    cuda2hipRename["cudaGetTextureAlignmentOffset"]         = {"hipGetTextureAlignmentOffset", CONV_TEX, API_RUNTIME};   // Unsupported yet on NVCC path
+    cuda2hipRename["cudaGetTextureReference"]               = {"hipGetTextureReference", CONV_TEX, API_RUNTIME};         // Unsupported yet on NVCC path
 
     // Channel
     cuda2hipRename["cudaChannelFormatKind"]                 = {"hipChannelFormatKind", CONV_TEX, API_RUNTIME};
@@ -1845,7 +1845,7 @@ struct cuda2hipMap {
     cuda2hipRename["cudaResourceViewDesc"]                        = {"hipResourceViewDesc", CONV_TEX, API_RUNTIME};
     cuda2hipRename["cudaTextureDesc"]                             = {"hipTextureDesc", CONV_TEX, API_RUNTIME};
     cuda2hipRename["surfaceReference"]                            = {"hipSurfaceReference", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED};
-    // Leaved unchanged
+    // Left unchanged
     // cuda2hipRename["textureReference"]                         = {"textureReference", CONV_TEX, API_RUNTIME};
 
     // typedefs
