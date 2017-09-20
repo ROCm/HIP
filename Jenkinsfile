@@ -7,11 +7,36 @@ properties([buildDiscarder(logRotator(
     daysToKeepStr: '',
     numToKeepStr: '10')),
     disableConcurrentBuilds(),
+    parameters([booleanParam( name: 'push_image_to_docker_hub', defaultValue: false, description: 'Push hip & hcc image to rocm docker-hub' )]),
     [$class: 'CopyArtifactPermissionProperty', projectNames: '*']
    ])
 
 ////////////////////////////////////////////////////////////////////////
 // -- AUXILLARY HELPER FUNCTIONS
+
+////////////////////////////////////////////////////////////////////////
+// Return build number of upstream job
+@NonCPS
+int get_upstream_build_num( )
+{
+    def upstream_cause = currentBuild.rawBuild.getCause( hudson.model.Cause$UpstreamCause )
+    if( upstream_cause == null)
+      return 0
+
+    return upstream_cause.getUpstreamBuild()
+}
+
+////////////////////////////////////////////////////////////////////////
+// Return project name of upstream job
+@NonCPS
+String get_upstream_build_project( )
+{
+    def upstream_cause = currentBuild.rawBuild.getCause( hudson.model.Cause$UpstreamCause )
+    if( upstream_cause == null)
+      return null
+
+    return upstream_cause.getUpstreamProject()
+}
 
 ////////////////////////////////////////////////////////////////////////
 // Construct the relative path of the build directory
@@ -24,6 +49,21 @@ String build_directory_rel( String build_config )
   else
   {
     return "build/debug"
+  }
+}
+
+////////////////////////////////////////////////////////////////////////
+// Lots of images are created above; no apparent way to delete images:tags with docker global variable
+def docker_clean_images( String org, String image_name )
+{
+  // Check if any images exist first grepping for image names
+  int docker_images = sh( script: "docker images | grep \"${org}/${image_name}\"", returnStatus: true )
+
+  // The script returns a 0 for success (images were found )
+  if( docker_images == 0 )
+  {
+    // run bash script to clean images:tags after successful pushing
+    sh "docker images | grep \"${org}/${image_name}\" | awk '{print \$1 \":\" \$2}' | xargs docker rmi"
   }
 }
 
@@ -60,12 +100,10 @@ String checkout_and_version( String platform )
 ////////////////////////////////////////////////////////////////////////
 // This creates the docker image that we use to build the project in
 // The docker images contains all dependencies, including OS platform, to build
-def docker_build_image( String platform, String source_hip_rel, String from_image )
+def docker_build_image( String platform, String org, String optional_build_parm, String source_hip_rel, String from_image )
 {
-  String project = "hip"
-  String build_type_name = "build-ubuntu-16.04"
-  String dockerfile_name = "dockerfile-${build_type_name}"
-  String build_image_name = "${build_type_name}"
+  String build_image_name = "build-ubuntu-16.04"
+  String dockerfile_name = "dockerfile-build-ubuntu-16.04"
   def build_image = null
 
   stage("${platform} build image")
@@ -76,11 +114,11 @@ def docker_build_image( String platform, String source_hip_rel, String from_imag
 
       // Docker 17.05 introduced the ability to use ARG values in FROM statements
       // Docker inspect failing on FROM statements with ARG https://issues.jenkins-ci.org/browse/JENKINS-44836
-      //build_image = docker.build( "${project}/${build_image_name}:latest", "--pull -f docker/${dockerfile_name} --build-arg user_uid=${user_uid} --build-arg base_image=${from_image} ." )
+      // build_image = docker.build( "${org}/${build_image_name}:latest", "--pull -f docker/${dockerfile_name} --build-arg user_uid=${user_uid} --build-arg base_image=${from_image} ." )
 
       // JENKINS-44836 workaround by using a bash script instead of docker.build()
-      sh "docker build -t ${project}/${build_image_name}:latest --pull -f docker/${dockerfile_name} --build-arg user_uid=${user_uid} --build-arg base_image=${from_image} ."
-      build_image = docker.image( "${project}/${build_image_name}:latest" )
+      sh "docker build -t ${org}/${build_image_name}:latest -f docker/${dockerfile_name} ${optional_build_parm} --build-arg user_uid=${user_uid} --build-arg base_image=${from_image} ."
+      build_image = docker.image( "${org}/${build_image_name}:latest" )
     }
   }
 
@@ -140,7 +178,6 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
 
         // No matter the base platform, all packages have the same name
         // Only upload 1 set of packages, so we don't have a race condition uploading packages
-        // Using hcc-ctu since that is what most people want
         if( platform.toLowerCase( ).startsWith( 'hcc-ctu' ) )
         {
           archiveArtifacts artifacts: "${build_dir_rel}/*.deb", fingerprint: true
@@ -156,11 +193,10 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
 ////////////////////////////////////////////////////////////////////////
 // This builds a fresh docker image FROM a clean base image, with no build dependencies included
 // Uploads the new docker image to internal artifactory
-def docker_upload_artifactory( String hcc_ver, String from_image, String source_hip_rel, String build_dir_rel )
+String docker_upload_artifactory( String hcc_ver, String artifactory_org, String from_image, String source_hip_rel, String build_dir_rel )
 {
   def hip_install_image = null
   String image_name = "hip-${hcc_ver}-ubuntu-16.04"
-  String artifactory_org = env.JOB_NAME.toLowerCase( )
 
   stage( 'artifactory' )
   {
@@ -173,10 +209,9 @@ def docker_upload_artifactory( String hcc_ver, String from_image, String source_
     // Docker inspect failing on FROM statements with ARG https://issues.jenkins-ci.org/browse/JENKINS-44836
     // hip_install_image = docker.build( "${artifactory_org}/${image_name}:${env.BUILD_NUMBER}", "--pull -f ${build_dir_rel}/dockerfile-hip-ubuntu-16.04 --build-arg base_image=${from_image} ${build_dir_rel}" )
 
-    // The --build-arg REPO_RADEON= is a temporary fix to get around a DNS issue with our build machines
     // JENKINS-44836 workaround by using a bash script instead of docker.build()
-    sh "docker build -t ${artifactory_org}/${image_name}:${env.BUILD_NUMBER} --pull -f ${build_dir_rel}/dockerfile-hip-ubuntu-16.04 --build-arg base_image=${from_image} ${build_dir_rel}"
-    hip_install_image = docker.image( "${artifactory_org}/${image_name}:${env.BUILD_NUMBER}" )
+    sh "docker build -t ${artifactory_org}/${image_name} --pull -f ${build_dir_rel}/dockerfile-hip-ubuntu-16.04 --build-arg base_image=${from_image} ${build_dir_rel}"
+    hip_install_image = docker.image( "${artifactory_org}/${image_name}" )
 
     // The connection to artifactory can fail sometimes, but this should not be treated as a build fail
     try
@@ -194,10 +229,38 @@ def docker_upload_artifactory( String hcc_ver, String from_image, String source_
           hip_install_image.push( 'latest' )
         }
       }
+    }
+    catch( err )
+    {
+      currentBuild.result = 'SUCCESS'
+    }
+  }
 
-      // Lots of images with tags are created above; no apparent way to delete images:tags with docker global variable
-      // run bash script to clean images:tags after successful pushing
-      sh "docker images | grep \"${artifactory_org}/${image_name}\" | awk '{print \$1 \":\" \$2}' | xargs docker rmi"
+  return image_name
+}
+
+////////////////////////////////////////////////////////////////////////
+// Uploads the new docker image to the public docker-hub
+def docker_upload_dockerhub( String local_org, String image_name, String remote_org )
+{
+  stage( 'docker-hub' )
+  {
+    // Do not treat failures to push to docker-hub as a build fail
+    try
+    {
+      sh  """#!/usr/bin/env bash
+          set -x
+          echo inside sh
+          docker tag ${local_org}/${image_name} ${remote_org}/${image_name}
+        """
+
+      docker_hub_image = docker.image( "${remote_org}/${image_name}" )
+
+      docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-cred' )
+      {
+        docker_hub_image.push( "${env.BUILD_NUMBER}" )
+        docker_hub_image.push( 'latest' )
+      }
     }
     catch( err )
     {
@@ -207,13 +270,90 @@ def docker_upload_artifactory( String hcc_ver, String from_image, String source_
 }
 
 ////////////////////////////////////////////////////////////////////////
+// hcc_integration_testing
+// This function is sets up compilation and testing of HiP on a compiler downloaded from an upstream build
+// Integration testing is centered around docker and constructing clean test environments every time
+
+// NOTES: I have implemeneted integration testing 3 different ways, and I've come to the conclusion nothing is perfect
+// 1.  I've tried having HCC push the test compiler to artifactory, and having HiP download the test docker image from artifactory
+//     a.  The act of uploading and downloading images from artifactory takes minutes
+//     b.  There is no good way of deleting images from a repository.  You have to use an arcane CURL command and I don't know how
+//        to keep the password secret.  These test integration images are meant to be ephemeral.
+// 2.  I tried 'docker save' to export a docker image into a tarball, and transfering the image through 'copy artifacts plugin'
+//     a.  The HCC docker image uncompressed is over 1GB
+//     b.  Compressing the docker image takes even longer than uploading the image to artifactory
+// 3.  Download the HCC .deb and dockerfile through 'copy artifacts plugin'.  Create a new HCC image on the fly
+//     a.  There is inefficency in building a new ubuntu image and installing HCC twice (once in HCC build, once here)
+//     b.  This solution doesn't scale when we start testing downstream libraries
+
+// I've implemented solution #3 above, probably transitioning to #2 down the line (probably without compression)
+String hcc_integration_testing( String inside_args, String job, String build_config )
+{
+  // Attempt to make unique docker image names for each build, to support concurrent builds
+  // Mangle docker org name with upstream build info
+  String testing_org_name = 'hcc-test-' + get_upstream_build_project( ).replaceAll('/','-') + '-' + get_upstream_build_num( )
+
+  // Tag image name with this build number
+  String hcc_test_image_name = "hcc:${env.BUILD_NUMBER}"
+
+  def hip_integration_image = null
+
+  dir( 'integration-testing' )
+  {
+    deleteDir( )
+
+    // This invokes 'copy artifact plugin' to copy archived files from upstream build
+    step([$class: 'CopyArtifact', filter: 'archive/**/*.deb, docker/dockerfile-*',
+      fingerprintArtifacts: true, projectName: get_upstream_build_project( ), flatten: true,
+      selector: [$class: 'TriggeredBuildSelector', allowUpstreamDependencies: false, fallbackToLastSuccessful: false, upstreamFilterStrategy: 'UseGlobalSetting'],
+      target: '.' ])
+//  //    The following 'copy artifact' is supposed to copy direct from workspace, but it doesn't seem to work across machines
+//    step( [$class: 'CopyArtifact', filter: '**', fingerprintArtifacts: true, flatten: true,
+//    projectName: "${params.upstream_hcc}", selector: [$class: 'WorkspaceSelector'], target: 'integration-testing'] )
+
+    docker.build( "${testing_org_name}/${hcc_test_image_name}", "-f dockerfile-hcc-lc-ubuntu-16.04 ." )
+  }
+
+  // Checkout source code, dependencies and version files
+  String source_hip_rel = checkout_and_version( job )
+
+  // Conctruct a binary directory path based on build config
+  String build_hip_rel = build_directory_rel( build_config );
+
+  // Build hip inside of the build environment
+  hip_integration_image = docker_build_image( job, testing_org_name, '', source_hip_rel, "${testing_org_name}/${hcc_test_image_name}" )
+
+  docker_build_inside_image( hip_integration_image, inside_args, job, '', build_config, source_hip_rel, build_hip_rel )
+
+  docker_clean_images( testing_org_name, '*' )
+}
+
+////////////////////////////////////////////////////////////////////////
 // -- MAIN
 // Following this line is the start of MAIN of this Jenkinsfile
 String build_config = 'Release'
+String job_name = env.JOB_NAME.toLowerCase( )
 
+// Integration testing is a special path which implies testing of an upsteam build of hcc,
+// but does not need testing across older builds of hcc or cuda.  This is more of a compiler
+// hcc unit test
+//  params.hcc_integration_test is set in HCC build
+if( params.hcc_integration_test )
+{
+  println "HCC integration testing"
+
+  node('docker && rocm')
+  {
+    hcc_integration_testing( '--device=/dev/kfd', 'hcc-ctu', build_config )
+  }
+
+  return
+}
+
+// The following launches 3 builds in parallel: hcc-ctu, hcc-1.6 and cuda
 parallel hcc_ctu:
 {
-  node('docker && rocm && gfx803')
+  node('docker && rocm')
   {
     String hcc_ver = 'hcc-ctu'
     String from_image = 'compute-artifactory:5001/radeonopencompute/hcc/clang_tot_upgrade/hcc-lc-ubuntu-16.04:latest'
@@ -223,7 +363,7 @@ parallel hcc_ctu:
     String source_hip_rel = checkout_and_version( hcc_ver )
 
     // Create/reuse a docker image that represents the hip build environment
-    def hip_build_image = docker_build_image( hcc_ver, source_hip_rel, from_image )
+    def hip_build_image = docker_build_image( hcc_ver, 'hip', ' --pull', source_hip_rel, from_image )
 
     // Print system information for the log
     hip_build_image.inside( inside_args )
@@ -242,12 +382,19 @@ parallel hcc_ctu:
     docker_build_inside_image( hip_build_image, inside_args, hcc_ver, '', build_config, source_hip_rel, build_hip_rel )
 
     // After a successful build, upload a docker image of the results
-    docker_upload_artifactory( hcc_ver, from_image, source_hip_rel, build_hip_rel )
+    String hip_image_name = docker_upload_artifactory( hcc_ver, job_name, from_image, source_hip_rel, build_hip_rel )
+
+    if( params.push_image_to_docker_hub )
+    {
+      docker_upload_dockerhub( job_name, hip_image_name, 'rocm' )
+      docker_clean_images( 'rocm', hip_image_name )
+    }
+    docker_clean_images( job_name, hip_image_name )
   }
 },
 hcc_1_6:
 {
-  node('docker && rocm && gfx803')
+  node('docker && rocm')
   {
     String hcc_ver = 'hcc-1.6'
     String from_image = 'compute-artifactory:5001/radeonopencompute/hcc/roc-1.6.x/hcc-lc-ubuntu-16.04:latest'
@@ -257,7 +404,7 @@ hcc_1_6:
     String source_hip_rel = checkout_and_version( hcc_ver )
 
     // Create/reuse a docker image that represents the hip build environment
-    def hip_build_image = docker_build_image( hcc_ver, source_hip_rel, from_image )
+    def hip_build_image = docker_build_image( hcc_ver, 'hip', ' --pull', source_hip_rel, from_image )
 
     // Print system information for the log
     hip_build_image.inside( inside_args )
@@ -275,8 +422,9 @@ hcc_1_6:
     // Build hip inside of the build environment
     docker_build_inside_image( hip_build_image, inside_args, hcc_ver, '', build_config, source_hip_rel, build_hip_rel )
 
-    // After a successful build, upload a docker image of the results
-    docker_upload_artifactory( hcc_ver, from_image, source_hip_rel, build_hip_rel )
+    // Not pushing hip-hcc-1.6 builds at this time; saves a minute and nobody needs?
+    // String hip_image_name = docker_upload_artifactory( hcc_ver, job_name, from_image, source_hip_rel, build_hip_rel )
+    // docker_clean_images( job_name, hip_image_name )
   }
 },
 nvcc:
@@ -297,7 +445,7 @@ nvcc:
     String source_hip_rel = checkout_and_version( nvcc_ver )
 
     // We pull public nvidia images
-    def hip_build_image = docker_build_image( nvcc_ver, source_hip_rel, from_image )
+    def hip_build_image = docker_build_image( nvcc_ver, 'hip', ' --pull', source_hip_rel, from_image )
 
     // Print system information for the log
     hip_build_image.inside( inside_args )
@@ -314,7 +462,5 @@ nvcc:
 
     // Build hip inside of the build environment
     docker_build_inside_image( hip_build_image, inside_args, nvcc_ver, "-DHIP_NVCC_FLAGS=--Wno-deprecated-gpu-targets", build_config, source_hip_rel, build_hip_rel )
-
-    // Not pushing an Nvidia based HiP to artifactory at this time
   }
 }

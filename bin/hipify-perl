@@ -327,9 +327,6 @@ while (@ARGV) {
         $ft{'coord_func'} += s/\bgridDim\.y\b/hipGridDim_y/g;
         $ft{'coord_func'} += s/\bgridDim\.z\b/hipGridDim_z/g;
 
-		# hack to avoid replacing hipDeviceProp.warpSize call
-        $ft{'special_func'} += s/([^.])\bwarpSize\b/$1hipWarpSize/g;
-
 
         #--------
         # Events
