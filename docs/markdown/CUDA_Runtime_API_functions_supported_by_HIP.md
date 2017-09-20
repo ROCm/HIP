@@ -125,7 +125,7 @@
 | `cudaHostUnregister`                                      | `hipHostUnregister`           |
 | `cudaMalloc`                                              | `hipMalloc`                   |
 | `cudaMalloc3D`                                            |                               |
-| `cudaMalloc3DArray`                                       | `hipMalloc2DArray`            |
+| `cudaMalloc3DArray`                                       | `hipMalloc3DArray`            |
 | `cudaMallocArray`                                         | `hipMallocArray`              |
 | `cudaMallocHost`                                          | `hipHostMalloc`               |
 | `cudaMallocManaged`                                       |                               |
@@ -307,15 +307,15 @@
 
 |   **CUDA**                                                |   **HIP**                     |
 |-----------------------------------------------------------|-------------------------------|
-| `cudaBindTexture`                                         |                               |
+| `cudaBindTexture`                                         | `hipBindTexture`              |
 | `cudaBindTexture2D`                                       | `hipBindTexture2D`            |
 | `cudaBindTextureToArray`                                  | `hipBindTextureToArray`       |
 | `cudaBindTextureToMipmappedArray`                         |                               |
-| `cudaCreateChannelDesc`                                   |                               |
-| `cudaGetChannelDesc`                                      |                               |
+| `cudaCreateChannelDesc`                                   | `hipCreateChannelDesc`        |
+| `cudaGetChannelDesc`                                      | `hipGetChannelDesc`           |
 | `cudaGetTextureAlignmentOffset`                           |                               |
 | `cudaGetTextureReference`                                 |                               |
-| `cudaUnbindTexture`                                       |                               |
+| `cudaUnbindTexture`                                       | `hipUnbindTexture`            |
 
 ## **24. Surface Reference Management**
 
