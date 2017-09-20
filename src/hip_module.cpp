@@ -36,6 +36,8 @@ THE SOFTWARE.
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
 
+#include "hcc/hc_am.hpp"
+
 //TODO Use Pool APIs from HCC to get memory regions.
 
 #include <cassert>
@@ -64,7 +66,8 @@ struct MyElfNote {
 };
 
 struct ihipModuleSymbol_t{
-    uint64_t    _object;             // The kernel object.
+    uint64_t    _object;             // The kernel object or data address
+    uint32_t    _sizeBytes;          // Size in bytes (for variables)
     uint32_t    _groupSegmentSize;
     uint32_t    _privateSegmentSize;
     std::string        _name;       // TODO - review for performance cost.  Name is just used for debug.
@@ -157,6 +160,111 @@ uint64_t ElfSize(const void *emi){
     return total_size;
 }
 
+
+hsa_status_t process_kernel_symbol(
+    hsa_executable_t,
+    hsa_executable_symbol_t symbol,
+    void* z)
+{
+    hsa_status_t status;
+    //auto p = static_cast<typename ernel_table::mapped_type*>(z);
+    hsa_symbol_kind_t type;
+    status = hsa_executable_symbol_get_info(symbol,
+                                HSA_EXECUTABLE_SYMBOL_INFO_TYPE,
+                                &type);
+
+    uint32_t nameLen;
+    status = hsa_executable_symbol_get_info(symbol,
+                                HSA_EXECUTABLE_SYMBOL_INFO_NAME_LENGTH,
+                                &nameLen);
+
+    std::string name(nameLen, '\0');
+
+    status = hsa_executable_symbol_get_info(symbol,
+                                            HSA_EXECUTABLE_SYMBOL_INFO_NAME,
+                                            &name.front());
+
+    tprintf(DB_MEM, "  process program symbol type=%d namelen=%u, name=%s\n", type, nameLen, name.c_str());
+
+    return HSA_STATUS_SUCCESS;
+};
+
+
+hsa_status_t process_agent_kernel_symbol(
+    hsa_executable_t e,
+    hsa_agent_t x,
+    hsa_executable_symbol_t symbol,
+    void* z)
+{
+    hsa_status_t status;
+    //auto p = static_cast<typename ernel_table::mapped_type*>(z);
+    hsa_symbol_kind_t type;
+    status = hsa_executable_symbol_get_info(symbol,
+                                HSA_EXECUTABLE_SYMBOL_INFO_TYPE,
+                                &type);
+
+    uint32_t nameLen;
+    status = hsa_executable_symbol_get_info(symbol,
+                                HSA_EXECUTABLE_SYMBOL_INFO_NAME_LENGTH,
+                                &nameLen);
+
+    std::string name(nameLen, '\0');
+
+    status = hsa_executable_symbol_get_info(symbol,
+                                            HSA_EXECUTABLE_SYMBOL_INFO_NAME,
+                                            &name.front());
+
+    tprintf(DB_MEM, "  process symbol type=%d namelen=%u, name=%s\n", type, nameLen, name.c_str());
+
+    if (type == HSA_SYMBOL_KIND_VARIABLE) {
+        void * address;
+        uint32_t sizeBytes;
+        
+        status = hsa_executable_symbol_get_info(symbol,
+                                   HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_ADDRESS,
+                                   &address);
+        status = hsa_executable_symbol_get_info(symbol,
+                                   HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_SIZE,
+                                   &sizeBytes);
+
+        auto dev = static_cast<ihipDevice_t *> (z);
+
+        tprintf(DB_MEM, "    add variable '%s' with ptr=%p size=%u to tracker\n", 
+                name.c_str(), address, sizeBytes);
+
+        hc::AmPointerInfo ptrInfo(NULL, address, sizeBytes, dev->_acc, true, false);
+        hc::am_memtracker_add(address, ptrInfo);
+
+        hc::am_memtracker_update(address, dev->_deviceId, 0);
+    }
+
+    return HSA_STATUS_SUCCESS;
+}
+
+
+hipError_t ihipExecutableCreate (ihipDevice_t *device, hipModule_t *module, hsa_agent_t agent)
+{
+    hsa_status_t status;
+
+    status = hsa_executable_create(HSA_PROFILE_FULL, HSA_EXECUTABLE_STATE_UNFROZEN, NULL, &(*module)->executable);
+    CHECK_HSA(status, hipErrorNotInitialized);
+
+    status = hsa_executable_load_code_object((*module)->executable, agent, (*module)->object, NULL);
+    CHECK_HSA(status, hipErrorNotInitialized);
+
+
+    status = hsa_executable_freeze((*module)->executable, NULL);
+    CHECK_HSA(status, hipErrorNotInitialized);
+
+    status = hsa_executable_iterate_agent_symbols((*module)->executable, agent, process_agent_kernel_symbol, device);
+    CHECK_HSA(status, hipErrorUnknown);
+
+    // Don't need to process program symbols yet:
+    //status = hsa_executable_iterate_program_symbols((*module)->executable, process_kernel_symbol, device);
+    //CHECK_HSA(status, hipErrorUnknown);
+
+    return hipSuccess;
+}
 
 hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
     HIP_INIT_API(module, fname);
@@ -256,14 +364,8 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
                 return ihipLogStatus(hipErrorSharedObjectInitFailed);
             }
 
-            status = hsa_executable_create(HSA_PROFILE_FULL, HSA_EXECUTABLE_STATE_UNFROZEN, NULL, &(*module)->executable);
-            CHECKLOG_HSA(status, hipErrorNotInitialized);
+            ihipExecutableCreate(currentDevice, module, agent);
 
-            status = hsa_executable_load_code_object((*module)->executable, agent, (*module)->object, NULL);
-            CHECKLOG_HSA(status, hipErrorNotInitialized);
-
-            status = hsa_executable_freeze((*module)->executable, NULL);
-            CHECKLOG_HSA(status, hipErrorNotInitialized);
         }
     }
 
@@ -301,13 +403,15 @@ hipError_t hipModuleUnload(hipModule_t hmod)
 }
 
 
-hipError_t ihipModuleGetSymbol(hipFunction_t *func, hipModule_t hmod, const char *name)
+// TODO - hmod needs lock to make it thread-safe:
+// Refactor the interface to support kernels, symbols, textures, etc
+hipError_t ihipModuleGetSymbol(hipFunction_t *func, hipModule_t hmod, const char *name, bool isKernelSymbol)
 {
     auto ctx = ihipGetTlsDefaultCtx();
     hipError_t ret = hipSuccess;
 
     if (name == nullptr){
-        return ihipLogStatus(hipErrorInvalidValue);
+        return hipErrorInvalidValue;
     }
 
     if (ctx == nullptr){
@@ -330,23 +434,39 @@ hipError_t ihipModuleGetSymbol(hipFunction_t *func, hipModule_t hmod, const char
         hsa_executable_symbol_t 	symbol;
         status = hsa_executable_get_symbol(hmod->executable, NULL, name, gpuAgent, 0, &symbol);
         if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorNotFound);
+            return hipErrorNotFound;
         }
 
-        status = hsa_executable_symbol_get_info(symbol,
-                                   HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_OBJECT,
-                                   &sym->_object);
-        CHECK_HSA(status, hipErrorNotFound);
+        if (isKernelSymbol) {
+            status = hsa_executable_symbol_get_info(symbol,
+                                       HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_OBJECT,
+                                       &sym->_object);
+            CHECK_HSA(status, hipErrorNotFound);
 
-        status = hsa_executable_symbol_get_info(symbol,
-                                    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE,
-                                    &sym->_groupSegmentSize);
-        CHECK_HSA(status, hipErrorNotFound);
+            status = hsa_executable_symbol_get_info(symbol,
+                                        HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE,
+                                        &sym->_groupSegmentSize);
+            CHECK_HSA(status, hipErrorNotFound);
 
-        status = hsa_executable_symbol_get_info(symbol,
-                                    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_PRIVATE_SEGMENT_SIZE,
-                                    &sym->_privateSegmentSize);
-        CHECK_HSA(status, hipErrorNotFound);
+            status = hsa_executable_symbol_get_info(symbol,
+                                        HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_PRIVATE_SEGMENT_SIZE,
+                                        &sym->_privateSegmentSize);
+            CHECK_HSA(status, hipErrorNotFound);
+            sym->_sizeBytes = 0;
+        } else {
+            // data member:
+            status = hsa_executable_symbol_get_info(symbol,
+                                       HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_ADDRESS,
+                                       &sym->_object);
+            CHECK_HSA(status, hipErrorNotFound); // TODO - review error code
+            status = hsa_executable_symbol_get_info(symbol,
+                                       HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_SIZE,
+                                       &sym->_sizeBytes);
+            CHECK_HSA(status, hipErrorNotFound); // TODO - review error code
+
+            sym->_groupSegmentSize  = 0;
+            sym->_privateSegmentSize = 0;
+        }
 
         sym->_name = name;
         *func = sym;
@@ -359,7 +479,7 @@ hipError_t ihipModuleGetSymbol(hipFunction_t *func, hipModule_t hmod, const char
 hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod,
                                 const char *name){
     HIP_INIT_API(hfunc, hmod, name);
-    return ihipLogStatus(ihipModuleGetSymbol(hfunc, hmod, name));
+    return ihipLogStatus(ihipModuleGetSymbol(hfunc, hmod, name, true));
 }
 
 
@@ -523,13 +643,22 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes,
         return ihipLogStatus(hipErrorNotInitialized);
     }
     else{
-        hipFunction_t func;
-        ihipModuleGetSymbol(&func, hmod, name);
-        *bytes = PrintSymbolSizes(hmod->ptr, name) + sizeof(amd_kernel_code_t);
-        *dptr = reinterpret_cast<void*>(func->_object);
+        hipFunction_t func; // TODO - need a symbol class here
+        ret = ihipModuleGetSymbol(&func, hmod, name, false);
+        if (ret == hipSuccess) {
+            //*bytes = PrintSymbolSizes(hmod->ptr, name);
+            *bytes = static_cast<size_t>(func->_sizeBytes);
+            *dptr = reinterpret_cast<void*>(func->_object);
+        } else {
+            *bytes = 0;
+            *dptr = 0;
+        }
         return ihipLogStatus(ret);
     }
 }
+
+
+
 
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
 {
@@ -569,14 +698,8 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
             return ihipLogStatus(hipErrorSharedObjectInitFailed);
         }
 
-        status = hsa_executable_create(HSA_PROFILE_FULL, HSA_EXECUTABLE_STATE_UNFROZEN, NULL, &(*module)->executable);
-        CHECKLOG_HSA(status, hipErrorNotInitialized);
+        ihipExecutableCreate(currentDevice, module, agent);
 
-        status = hsa_executable_load_code_object((*module)->executable, agent, (*module)->object, NULL);
-        CHECKLOG_HSA(status, hipErrorNotInitialized);
-
-        status = hsa_executable_freeze((*module)->executable, NULL);
-        CHECKLOG_HSA(status, hipErrorNotInitialized);
     }
     return ihipLogStatus(ret);
 }
