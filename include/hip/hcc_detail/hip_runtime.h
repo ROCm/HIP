@@ -99,7 +99,7 @@ extern int HIP_TRACE_API;
 // TODO-HCC add a dummy implementation of assert, need to replace with a proper kernel exit call.
 #if __HIP_DEVICE_COMPILE__ == 1
    #undef assert
-   #define assert(COND) { if (!COND) {abort();} }
+   #define assert(COND) { if (!(COND)) {abort();} }
 #endif
 
 
