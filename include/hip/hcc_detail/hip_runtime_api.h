@@ -37,7 +37,8 @@ THE SOFTWARE.
 
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hip_runtime_api.h>
-#include <hip/hip_texture.h>
+#include <hip/hcc_detail/driver_types.h>
+#include <hip/hcc_detail/hip_texture_types.h>
 
 #if defined (__HCC__) &&  (__hcc_workweek__ < 16155)
 #error("This version of HIP requires a newer version of HCC.");
@@ -136,6 +137,11 @@ enum hipLimit_t
 #define hipDeviceMapHost            0x8
 #define hipDeviceLmemResizeToMax    0x16
 
+#define hipArrayDefault             0x00  ///< Default HIP array allocation flag
+#define hipArrayLayered             0x01
+#define hipArraySurfaceLoadStore    0x02
+#define hipArrayCubemap             0x04
+#define hipArrayTextureGather       0x08
 
 /*
 * @brief hipJitOption
@@ -165,7 +171,7 @@ typedef enum hipJitOption {
 
 
 /**
- * @warning On AMD devices and recent Nvidia devices, these hints and controls are ignored.
+ * @warning On AMD devices and some Nvidia devices, these hints and controls are ignored.
  */
 typedef enum hipFuncCache_t {
     hipFuncCachePreferNone, ///< no preference for shared memory or L1 (default)
@@ -176,7 +182,7 @@ typedef enum hipFuncCache_t {
 
 
 /**
- * @warning On AMD devices and recent Nvidia devices, these hints and controls are ignored.
+ * @warning On AMD devices and some Nvidia devices, these hints and controls are ignored.
  */
 typedef enum hipSharedMemConfig {
     hipSharedMemBankSizeDefault,   ///< The compiler selects a device-specific value for the banking.
@@ -198,27 +204,6 @@ typedef struct dim3 {
   dim3(uint32_t _x=1, uint32_t _y=1, uint32_t _z=1) : x(_x), y(_y), z(_z) {};
 #endif
 } dim3;
-
-
-/**
- * Memory copy types
- *
- */
-typedef enum hipMemcpyKind {
-   hipMemcpyHostToHost = 0    ///< Host-to-Host Copy
-  ,hipMemcpyHostToDevice = 1  ///< Host-to-Device Copy
-  ,hipMemcpyDeviceToHost = 2  ///< Device-to-Host Copy
-  ,hipMemcpyDeviceToDevice =3 ///< Device-to-Device Copy
-  ,hipMemcpyDefault = 4,      ///< Runtime will automatically determine copy-kind based on virtual addresses.
-} hipMemcpyKind;
-
-typedef struct {
-  unsigned int width;
-  unsigned int height;
-  enum hipChannelFormatKind f;
-  void* data; //FIXME: generalize this
-} hipArray;
-
 
 
 // Doxygen end group GlobalDefs
@@ -379,7 +364,7 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
  * @param [in] cacheConfig
  *
  * @returns #hipSuccess, #hipErrorInitializationError
- * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
 hipError_t hipDeviceSetCacheConfig ( hipFuncCache_t cacheConfig );
@@ -391,7 +376,7 @@ hipError_t hipDeviceSetCacheConfig ( hipFuncCache_t cacheConfig );
  * @param [in] cacheConfig
  *
  * @returns #hipSuccess, #hipErrorInitializationError
- * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
 hipError_t hipDeviceGetCacheConfig ( hipFuncCache_t *cacheConfig );
@@ -415,7 +400,7 @@ hipError_t hipDeviceGetLimit(size_t *pValue, enum hipLimit_t limit);
  * @param [in] config;
  *
  * @returns #hipSuccess, #hipErrorInitializationError
- * Note: AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  */
 hipError_t hipFuncSetCacheConfig (const void* func, hipFuncCache_t config );
@@ -427,7 +412,7 @@ hipError_t hipFuncSetCacheConfig (const void* func, hipFuncCache_t config );
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInitializationError
  *
- * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ * Note: AMD devices and some Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
  *
  */
 hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig );
@@ -440,7 +425,7 @@ hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig );
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInitializationError
  *
- * Note: AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ * Note: AMD devices and some Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
  *
  */
 hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config );
@@ -1288,6 +1273,19 @@ hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t st
 #endif
 
 /**
+ *  @brief Fills the memory area pointed to by dst with the constant value.
+ *
+ *  @param[out] dst Pointer to device memory
+ *  @param[in]  pitch - data size in bytes
+ *  @param[in]  value - constant value to be set
+ *  @param[in]  width
+ *  @param[in]  height
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
+ */
+
+hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height);
+
+/**
  * @brief Query memory info.
  * Return snapshot of free memory, and total allocatable memory on the device.
  *
@@ -1315,7 +1313,7 @@ hipError_t hipMemPtrGetInfo(void *ptr, size_t *size);
  */
 #if __cplusplus
 hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
-                          size_t width, size_t height = 0, unsigned int flags = 0);
+                          size_t width, size_t height = 0, unsigned int flags = hipArrayDefault);
 #else
 hipError_t hipMallocArray(hipArray** array, const struct hipChannelFormatDesc* desc,
                           size_t width, size_t height, unsigned int flags);
@@ -1330,6 +1328,22 @@ hipError_t hipMallocArray(hipArray** array, const struct hipChannelFormatDesc* d
  */
 hipError_t hipFreeArray(hipArray* array);
 
+/**
+ *  @brief Allocate an array on the device.
+ *
+ *  @param[out]  array  Pointer to allocated array in device memory
+ *  @param[in]   desc   Requested channel format
+ *  @param[in]   extent Requested array allocation width, height and depth
+ *  @param[in]   flags  Requested properties of allocated array
+ *  @return      #hipSuccess, #hipErrorMemoryAllocation
+ *
+ *  @see hipMalloc, hipMallocPitch, hipFree, hipFreeArray, hipHostMalloc, hipHostFree
+ */
+
+hipError_t hipMalloc3DArray(hipArray_t *array,
+                            const struct hipChannelFormatDesc* desc,
+                            struct hipExtent extent,
+                            unsigned int flags);
 /**
  *  @brief Copies data between host and device.
  *
@@ -1402,6 +1416,7 @@ hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset,
                             const void* src, size_t count, hipMemcpyKind kind);
 
 
+hipError_t hipMemcpy3D(const struct hipMemcpy3DParms *p);
 
 // doxygen end Memory
 /**
@@ -1434,7 +1449,6 @@ hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset,
  *
  * @returns #hipSuccess,
  * @returns #hipErrorInvalidDevice if deviceId or peerDeviceId are not valid devices
- * @warning PeerToPeer support is experimental.
  */
 hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int deviceId, int peerDeviceId);
 
@@ -1452,7 +1466,6 @@ hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int deviceId, int peerDev
  *
  * Returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue,
  * @returns #hipErrorPeerAccessAlreadyEnabled if peer access is already enabled for this device.
- * @warning PeerToPeer support is experimental.
  */
 hipError_t  hipDeviceEnablePeerAccess (int  peerDeviceId, unsigned int flags);
 
@@ -1465,7 +1478,6 @@ hipError_t  hipDeviceEnablePeerAccess (int  peerDeviceId, unsigned int flags);
  * @param [in] peerDeviceId
  *
  * @returns #hipSuccess, #hipErrorPeerAccessNotEnabled
- * @warning PeerToPeer support is experimental.
  */
 hipError_t  hipDeviceDisablePeerAccess (int peerDeviceId);
 
@@ -1497,7 +1509,6 @@ hipError_t hipMemGetAddressRange ( hipDeviceptr_t* pbase, size_t* psize, hipDevi
  * @param [in] sizeBytes - Size of memory copy in bytes
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
- * @warning PeerToPeer support is experimental.
  */
 hipError_t hipMemcpyPeer (void* dst, int dstDeviceId, const void* src, int srcDeviceId, size_t sizeBytes);
 
@@ -1656,7 +1667,7 @@ hipError_t hipCtxGetApiVersion (hipCtx_t ctx,int *apiVersion);
  *
  * @return #hipSuccess
  *
- * @warning AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ * @warning AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
@@ -1669,7 +1680,7 @@ hipError_t hipCtxGetCacheConfig ( hipFuncCache_t *cacheConfig );
  *
  * @return #hipSuccess
  *
- * @warning AMD devices and recent Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
+ * @warning AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored on those architectures.
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
@@ -1682,7 +1693,7 @@ hipError_t hipCtxSetCacheConfig ( hipFuncCache_t cacheConfig );
  *
  * @return #hipSuccess
  *
- * @warning AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ * @warning AMD devices and some Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
@@ -1695,7 +1706,7 @@ hipError_t hipCtxSetSharedMemConfig ( hipSharedMemConfig config );
  *
  * @return #hipSuccess
  *
- * @warning AMD devices and recent Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
+ * @warning AMD devices and some Nvidia GPUS do not support shared cache banking, and the hint is ignored on those architectures.
  *
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
@@ -1867,7 +1878,7 @@ hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len,int device);
  *
  * @returns #hipSuccess, #hipErrorInavlidDevice, #hipErrorInvalidValue
  */
-hipError_t hipDeviceGetByPCIBusId ( int*  device,const int* pciBusId );
+hipError_t hipDeviceGetByPCIBusId ( int*  device,const char* pciBusId );
 
 
 /**
@@ -2150,6 +2161,24 @@ hipError_t hipIpcCloseMemHandle(void *devPtr);
 #endif
 
 #ifdef __cplusplus
+
+hipError_t hipBindTexture(size_t* offset,
+                          textureReference* tex,
+                          const void* devPtr,
+                          const hipChannelFormatDesc* desc,
+                          size_t size = UINT_MAX);
+
+hipError_t ihipBindTextureImpl(int dim,
+                               enum hipTextureReadMode readMode,
+                               size_t *offset,
+                               const void *devPtr,
+                               const struct hipChannelFormatDesc& desc,
+                               size_t size,
+                               enum hipTextureAddressMode addressMode,
+                               enum hipTextureFilterMode filterMode,
+                               int normalizedCoords,
+                               hipTextureObject_t& textureObject);
+
 /*
  * @brief hipBindTexture Binds size bytes of the memory area pointed to by @p devPtr to the texture reference tex.
  *
@@ -2164,15 +2193,15 @@ hipError_t hipIpcCloseMemHandle(void *devPtr);
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
  **/
 template <class T, int dim, enum hipTextureReadMode readMode>
-hipError_t  hipBindTexture(size_t *offset,
-                                     struct texture<T, dim, readMode> &tex,
-                                     const void *devPtr,
-                                     const struct hipChannelFormatDesc *desc,
-                                     size_t size=UINT_MAX)
+hipError_t hipBindTexture(size_t *offset,
+                          struct texture<T, dim, readMode>& tex,
+                          const void *devPtr,
+                          const struct hipChannelFormatDesc& desc,
+                          size_t size = UINT_MAX)
 {
-    tex._dataPtr = static_cast<const T*>(devPtr);
-
-    return hipSuccess;
+    return ihipBindTextureImpl(dim, readMode, offset, devPtr, desc, size,
+                               tex.addressMode[0], tex.filterMode, tex.normalized,
+                               tex.textureObject);
 }
 
 /*
@@ -2188,20 +2217,115 @@ hipError_t  hipBindTexture(size_t *offset,
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
  **/
 template <class T, int dim, enum hipTextureReadMode readMode>
-hipError_t  hipBindTexture(size_t *offset,
-                                     struct texture<T, dim, readMode> &tex,
-                                     const void *devPtr,
-                                     size_t size=UINT_MAX)
+hipError_t hipBindTexture(size_t *offset,
+                          struct texture<T, dim, readMode>& tex,
+                          const void *devPtr,
+                          size_t size = UINT_MAX)
 {
-    return  hipBindTexture(offset, tex, devPtr, &tex.channelDesc, size);
+    return ihipBindTextureImpl(dim, readMode, offset, devPtr, tex.channelDesc, size,
+                               tex.addressMode[0], tex.filterMode, tex.normalized,
+                               tex.textureObject);
+}
+
+// C API
+hipError_t hipBindTexture2D(size_t* offset,
+                            textureReference* tex,
+                            const void* devPtr,
+                            const hipChannelFormatDesc* desc,
+                            size_t width,
+                            size_t height,
+                            size_t pitch);
+
+hipError_t ihipBindTexture2DImpl(int dim,
+                                 enum hipTextureReadMode readMode,
+                                 size_t *offset,
+                                 const void *devPtr,
+                                 const struct hipChannelFormatDesc& desc,
+                                 size_t width,
+                                 size_t height,
+                                 enum hipTextureAddressMode addressMode,
+                                 enum hipTextureFilterMode filterMode,
+                                 int normalizedCoords,
+                                 hipTextureObject_t& textureObject);
+
+template <class T, int dim, enum hipTextureReadMode readMode>
+hipError_t hipBindTexture2D(size_t *offset,
+                            struct texture<T, dim, readMode>& tex,
+                            const void *devPtr,
+                            size_t width,
+                            size_t height,
+                            size_t pitch)
+{
+    return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, tex.channelDesc, width, height,
+                                 tex.addressMode[0], tex.filterMode, tex.normalized,
+                                 tex.textureObject);
 }
 
 template <class T, int dim, enum hipTextureReadMode readMode>
-hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> &tex, hipArray* array) {
-  tex.width = array->width;
-  tex.height = array->height;
-  tex._dataPtr = static_cast<const T*>(array->data);
-  return hipSuccess;
+hipError_t hipBindTexture2D(size_t *offset,
+                            struct texture<T, dim, readMode>& tex,
+                            const void *devPtr,
+                            const struct hipChannelFormatDesc &desc,
+                            size_t width,
+                            size_t height,
+                            size_t pitch)
+{
+    return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, desc, width, height,
+                                 tex.addressMode[0], tex.filterMode, tex.normalized,
+                                 tex.textureObject);
+}
+
+//C API
+hipError_t hipBindTextureToArray(textureReference* tex,
+                                 hipArray_const_t array,
+                                 const hipChannelFormatDesc* desc);
+
+hipError_t ihipBindTextureToArrayImpl(int dim,
+                                      enum hipTextureReadMode readMode,
+                                      hipArray_const_t array,
+                                      const struct hipChannelFormatDesc& desc,
+                                      enum hipTextureAddressMode addressMode,
+                                      enum hipTextureFilterMode filterMode,
+                                      int normalizedCoords,
+                                      hipTextureObject_t& textureObject);
+
+template <class T, int dim, enum hipTextureReadMode readMode>
+hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex,
+                                 hipArray_const_t array)
+{
+    return ihipBindTextureToArrayImpl(dim, readMode, array, tex.channelDesc,
+                                      tex.addressMode[0], tex.filterMode, tex.normalized,
+                                      tex.textureObject);
+}
+
+template <class T, int dim, enum hipTextureReadMode readMode>
+hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex,
+                                 hipArray_const_t array,
+                                 const struct hipChannelFormatDesc& desc)
+{
+    return ihipBindTextureToArrayImpl(dim, readMode, array, desc,
+                                      tex.addressMode[0], tex.filterMode, tex.normalized,
+                                      tex.textureObject);
+}
+
+//C API
+hipError_t hipBindTextureToMipmappedArray(const textureReference* tex,
+                                          hipMipmappedArray_const_t mipmappedArray,
+                                          const hipChannelFormatDesc* desc);
+
+template <class T, int dim, enum hipTextureReadMode readMode>
+hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
+                                          hipMipmappedArray_const_t mipmappedArray)
+{
+    return hipSuccess;
+}
+
+template <class T, int dim, enum hipTextureReadMode readMode>
+hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
+                                          hipMipmappedArray_const_t mipmappedArray,
+                                          const hipChannelFormatDesc& desc)
+{
+    return hipSuccess;
 }
 
 /*
@@ -2211,15 +2335,30 @@ hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> &tex, hipArray
  *
  *  @return #hipSuccess
  **/
-template <class T, int dim, enum hipTextureReadMode readMode>
-hipError_t  hipUnbindTexture(struct texture<T, dim, readMode> &tex)
-{
-    tex._dataPtr = NULL;
+hipError_t hipUnbindTexture(const textureReference* tex);
 
-    return hipSuccess;
+extern hipError_t ihipUnbindTextureImpl(const hipTextureObject_t& textureObject);
+
+template <class T, int dim, enum hipTextureReadMode readMode>
+hipError_t hipUnbindTexture(struct texture<T, dim, readMode> &tex)
+{
+    return ihipUnbindTextureImpl(tex.textureObject);
 }
 
+hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array);
+hipError_t hipGetTextureAlignmentOffset (size_t* offset, const textureReference* texref);
+hipError_t hipGetTextureReference(const textureReference** texref, const void* symbol);
 
+hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject,
+                                  const hipResourceDesc* pResDesc,
+                                  const hipTextureDesc* pTexDesc,
+                                  const hipResourceViewDesc* pResViewDesc);
+
+hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject);
+
+hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDesc, hipTextureObject_t textureObject);
+hipError_t hipGetTextureObjectResourceViewDesc(hipResourceViewDesc* pResViewDesc, hipTextureObject_t textureObject);
+hipError_t hipGetTextureObjectTextureDesc(hipTextureDesc* pTexDesc, hipTextureObject_t textureObject);
 
 // doxygen end Texture
 /**

@@ -109,15 +109,14 @@ int main(int argc, char **argv)
         std::cout << devCount  << std::endl;
     }
     if (retDevInfo) {
-        hipSetDevice(device);
-        hipDeviceProp_t devProp;
+	hipDevice_t deviceT;
+	hipDeviceGet(&deviceT, device);
 
-        hipGetDeviceProperties(&devProp, device);
-        if (devProp.major < 1) {
-            printf("%d does not support HIP\n", device);
-            return -1;
-        }
-        std::cout << devProp.pciBusID << std::endl;
+        char pciBusId[100];
+        memset(pciBusId,0,100);
+        hipDeviceGetPCIBusId(pciBusId,100,deviceT);
+
+        cout<<pciBusId<<endl;
     }
     exit(0);
 }

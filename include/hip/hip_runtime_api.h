@@ -102,6 +102,7 @@ typedef struct hipDeviceProp_t {
     int clockInstructionRate;                   ///< Frequency in khz of the timer used by the device-side "clock*" instructions.  New for HIP.
     hipDeviceArch_t arch;                       ///< Architectural feature flags.  New for HIP.
     int concurrentKernels;                      ///< Device can possibly execute multiple kernels concurrently.
+    int pciDomainID;                            ///< PCI Domain ID
     int pciBusID;                               ///< PCI Bus ID.
     int pciDeviceID;                            ///< PCI Device ID.
     size_t maxSharedMemoryPerMultiProcessor;    ///< Maximum Shared Memory Per Multiprocessor.
@@ -160,6 +161,7 @@ typedef enum hipError_t {
     hipErrorProfilerNotInitialized  = 6,
     hipErrorProfilerAlreadyStarted  = 7,
     hipErrorProfilerAlreadyStopped  = 8,
+    hipErrorInsufficientDriver      = 35,
     hipErrorInvalidImage            = 200,
     hipErrorInvalidContext          = 201,  ///< Produced when input context is invalid.
     hipErrorContextAlreadyCurrent   = 202,

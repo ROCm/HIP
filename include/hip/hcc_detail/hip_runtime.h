@@ -50,14 +50,6 @@ THE SOFTWARE.
 #include <hip/hip_runtime_api.h>
 
 
-#if USE_PROMOTE_FREE_HCC == 1
-#define ADDRESS_SPACE_1
-#define ADDRESS_SPACE_3
-#else
-#define ADDRESS_SPACE_1 __attribute__((address_space(1)))
-#define ADDRESS_SPACE_3 __attribute__((address_space(3)))
-#endif
-
 //---
 // Remainder of this file only compiles with HCC
 #if defined __HCC__
@@ -89,12 +81,12 @@ namespace hip_impl
 extern int HIP_TRACE_API;
 
 #ifdef __cplusplus
-//#include <hip/hcc_detail/hip_texture.h>
 #include <hip/hcc_detail/hip_ldg.h>
 #endif
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hcc_detail/math_functions.h>
 #include <hip/hcc_detail/device_functions.h>
+#include <hip/hcc_detail/texture_functions.h>
 
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
 #if defined (__KALMAR_ACCELERATOR__) && !defined (__HCC_ACCELERATOR__)
@@ -107,7 +99,7 @@ extern int HIP_TRACE_API;
 // TODO-HCC add a dummy implementation of assert, need to replace with a proper kernel exit call.
 #if __HIP_DEVICE_COMPILE__ == 1
    #undef assert
-   #define assert(COND) { if (COND) {} }
+   #define assert(COND) { if (!(COND)) {abort();} }
 #endif
 
 
@@ -138,7 +130,7 @@ extern int HIP_TRACE_API;
 #define __HIP_ARCH_HAS_WARP_FUNNEL_SHIFT__          (0)
 
 //sync
-#define __HIP_ARCH_HAS_THREAD_FENCE_SYSTEM__        (0)
+#define __HIP_ARCH_HAS_THREAD_FENCE_SYSTEM__        (1)
 #define __HIP_ARCH_HAS_SYNC_THREAD_EXT__            (0)
 
 // misc

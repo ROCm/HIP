@@ -47,7 +47,7 @@ sub parse_config_file {
 }
 
 $verbose = $ENV{'HIPCC_VERBOSE'} // 0;
-# Verbose: 0x1=commands, 0x2=paths, 0x4=hippc args
+# Verbose: 0x1=commands, 0x2=paths, 0x4=hipcc args
 
 $HIP_PATH=$ENV{'HIP_PATH'} // dirname (dirname $0); # use parent directory of hipcc
 
@@ -75,6 +75,7 @@ $target_gfx801 = 0;
 $target_gfx802 = 0;
 $target_gfx803 = 0;
 $target_gfx900 = 0;
+$default_amdgpu_target = 1;
 
 if ($HIP_PLATFORM eq "hcc") {
     $HSA_PATH=$ENV{'HSA_PATH'} // "/opt/rocm/hsa";
@@ -103,31 +104,9 @@ if ($HIP_PLATFORM eq "hcc") {
 
     $HIPLDFLAGS = `${HCC_HOME}/bin/hcc-config --ldflags`;
 
-    $ROCM_AGENT_ENUM = "${ROCM_PATH}/bin/rocm_agent_enumerator";
-
-    my $myAgents = `${ROCM_AGENT_ENUM} -t GPU`;
-    my @agentsLine = split('\n', $myAgents);
-
-    foreach my $val (@agentsLine) {
-        if($val eq "gfx701") {
-            $target_gfx701 = 1;
-        }
-        if($val eq "gfx801") {
-            $target_gfx801 = 1;
-        }
-        if($val eq "gfx802") {
-            $target_gfx802 = 1;
-        }
-        if($val eq "gfx803") {
-            $target_gfx803 = 1;
-        }
-        if($val eq "gfx900") {
-            $target_gfx900 = 1;
-        }
-    }
-
     #### GCC system includes workaround ####
     $HCC_WA_FLAGS = " ";
+    $HOST_OSNAME= `cat /etc/os-release | grep "^ID\=" | cut -d= -f2 | tr -d '\n'`;
     if ($HCC_VERSION_MAJOR eq 1) {
         my $GCC_CUR_VER = `gcc -dumpversion`;
         my $GPP_CUR_VER = `g++ -dumpversion`;
@@ -138,7 +117,8 @@ if ($HIP_PLATFORM eq "hcc") {
 
         # Only include the libstdc++ headers and libraries flags explicitly if the g++ is older than version 5.
         # That's because HCC already uses libstdc++ by default if a newer g++/libstdc++ is available
-        if (${GCC_CUR_VER} eq ${GPP_CUR_VER} and $GPP_VER_FIELDS[0] < 5) {
+        # Cent OS 7 and RHEL 7.4 cannot use libstdc++ for compilation, default to libc++
+        if (${GCC_CUR_VER} eq ${GPP_CUR_VER} and $GPP_VER_FIELDS[0] < 5 and ($HOST_OSNAME ne "\"centos\"") and ($HOST_OSNAME ne "\"rhel\"")) {
             $HCC_WA_FLAGS .= " -stdlib=libstdc++  -I/usr/include/x86_64-linux-gnu -I/usr/include/x86_64-linux-gnu/c++/${GCC_CUR_VER} -I/usr/include/c++/${GCC_CUR_VER} ";
             # Add C++ libs for GCC.
             $HIPLDFLAGS .= " -lstdc++";
@@ -146,7 +126,6 @@ if ($HIP_PLATFORM eq "hcc") {
     }
 
     # Force -stdlib=libc++ on UB14.04
-    $HOST_OSNAME= `cat /etc/os-release | grep "^ID\=" | cut -d= -f2 | tr -d '\n'`;
     $HOST_OSVER= `cat /etc/os-release | grep "^VERSION_ID\=" | cut -d= -f2 | tr -d '\n'`;
     if ($HOST_OSNAME eq "ubuntu" and $HOST_OSVER eq "\"14.04\"") {
         $HIPCXXFLAGS .= " -stdlib=libc++";
@@ -278,25 +257,32 @@ foreach $arg (@ARGV)
         $HIPCXXFLAGS .= " -stdlib=libc++";
         $setStdLib = 1;
     }
+
+    # TODO: Add support for comma separated list like HCC_AMDGPU_TARGET
     if($arg eq '--amdgpu-target=gfx701')
     {
         $target_gfx701 = 1;
+        $default_amdgpu_target = 0;
     }
     if($arg eq '--amdgpu-target=gfx801')
     {
         $target_gfx801 = 1;
+        $default_amdgpu_target = 0;
     }
     if($arg eq '--amdgpu-target=gfx802')
     {
         $target_gfx802 = 1;
+        $default_amdgpu_target = 0;
     }
     if($arg eq '--amdgpu-target=gfx803')
     {
         $target_gfx803 = 1;
+        $default_amdgpu_target = 0;
     }
     if($arg eq '--amdgpu-target=gfx900')
     {
         $target_gfx900 = 1;
+        $default_amdgpu_target = 0;
     }
 
     if(($trimarg eq '-stdlib=libstdc++') and ($setStdLib eq 0))
@@ -358,38 +344,76 @@ foreach $arg (@ARGV)
     }
     $toolArgs .= " $arg" unless $swallowArg;
 }
-if(defined $ENV{HCC_AMDGPU_TARGET})
-{
-    foreach my $target (split(/,/, $ENV{HCC_AMDGPU_TARGET}))
-    {
-        if($target eq 'gfx701')
-        {
-            $target_gfx701 = 1;
-        }
-        if($target eq 'gfx801')
-        {
-            $target_gfx801 = 1;
-        }
-        if($target eq 'gfx802')
-        {
-            $target_gfx802 = 1;
-        }
-        if($target eq 'gfx803')
-        {
-            $target_gfx803 = 1;
-        }
-        if($target eq 'gfx900')
-        {
-            $target_gfx900 = 1;
-        }
-    }
-}
-if ($target_gfx701 eq 0 and $target_gfx801 eq 0 and $target_gfx802 eq 0 and $target_gfx803 eq 0 and $target_gfx900 eq 0)
-{
-    $target_gfx803 = 1;
-}
 
 if($HIP_PLATFORM eq "hcc"){
+    # No AMDGPU target specified at commandline. So look for HCC_AMDGPU_TARGET
+    if($default_amdgpu_target eq 1 and defined $ENV{HCC_AMDGPU_TARGET})
+    {
+        foreach my $target (split(/,/, $ENV{HCC_AMDGPU_TARGET}))
+        {
+            if($target eq 'gfx701')
+            {
+                $target_gfx701 = 1;
+                $default_amdgpu_target = 0;
+            }
+            if($target eq 'gfx801')
+            {
+                $target_gfx801 = 1;
+                $default_amdgpu_target = 0;
+            }
+            if($target eq 'gfx802')
+            {
+                $target_gfx802 = 1;
+                $default_amdgpu_target = 0;
+            }
+            if($target eq 'gfx803')
+            {
+                $target_gfx803 = 1;
+                $default_amdgpu_target = 0;
+            }
+            if($target eq 'gfx900')
+            {
+                $target_gfx900 = 1;
+                $default_amdgpu_target = 0;
+            }
+        }
+    }
+    # Else try using rocm_agent_enumerator
+    if($default_amdgpu_target eq 1)
+    {
+        $ROCM_AGENT_ENUM = "${ROCM_PATH}/bin/rocm_agent_enumerator";
+
+        my $myAgents = `${ROCM_AGENT_ENUM} -t GPU`;
+        my @agentsLine = split('\n', $myAgents);
+
+        foreach my $val (@agentsLine) {
+            if($val eq "gfx701") {
+                $target_gfx701 = 1;
+                $default_amdgpu_target = 0;
+            }
+            if($val eq "gfx801") {
+                $target_gfx801 = 1;
+                $default_amdgpu_target = 0;
+            }
+            if($val eq "gfx802") {
+                $target_gfx802 = 1;
+                $default_amdgpu_target = 0;
+            }
+            if($val eq "gfx803") {
+                $target_gfx803 = 1;
+                $default_amdgpu_target = 0;
+            }
+            if($val eq "gfx900") {
+                $target_gfx900 = 1;
+                $default_amdgpu_target = 0;
+            }
+        }
+    }
+    # rocm_agent_enumerator failed! Throw an error and die if linking is required
+    if ($default_amdgpu_target eq 1 and $compileOnly eq 0)
+    {
+        print "No valid AMD GPU target was either specified or found. Please specify a valid target using --amdgpu-target=" and die();
+    }
 
     $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_hc.ll\n";
 

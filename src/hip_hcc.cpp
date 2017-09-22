@@ -83,20 +83,35 @@ int HIP_HIDDEN_FREE_MEM = 256;
 int HIP_FORCE_SYNC_COPY = 0;
 
 // TODO - set these to 0 and 1
-int HIP_EVENT_SYS_RELEASE=1;
-int HIP_COHERENT_HOST_ALLOC = 0;
+int HIP_EVENT_SYS_RELEASE=0;
+int HIP_HOST_COHERENT = 1;
 
-// TODO - set to 0 once we resolve stability.
-// USE_ HIP_SYNC_HOST_ALLOC
 int HIP_SYNC_HOST_ALLOC = 1;
 
+
+int HIP_INIT_ALLOC=-1;
+int HIP_SYNC_STREAM_WAIT = 0;
+int HIP_FORCE_NULL_STREAM=0;
+
+
+
+#if (__hcc_workweek__ >= 17300)
+// Make sure we have required bug fix in HCC
+// Perform resolution on the GPU:
 // Chicken bit to sync on host to implement null stream.
 // If 0, null stream synchronization is performed on the GPU
 int HIP_SYNC_NULL_STREAM = 0;
+#else
+int HIP_SYNC_NULL_STREAM = 1;
+#endif
 
 // HIP needs to change some behavior based on HCC_OPT_FLUSH :
-// TODO - set this to 1
+#if (__hcc_workweek__ >= 17296)
 int HCC_OPT_FLUSH = 1;
+#else
+#warning "HIP disabled HCC_OPT_FLUSH since HCC version does not yet support"
+int HCC_OPT_FLUSH = 0;
+#endif
 
 
 
@@ -258,8 +273,6 @@ ihipStream_t::ihipStream_t(ihipCtx_t *ctx, hc::accelerator_view av, unsigned int
         case hipDeviceScheduleBlockingSync  : _scheduleMode = Yield; break;
         default:_scheduleMode = Auto;
     };
-
-
 };
 
 
@@ -319,13 +332,33 @@ void ihipStream_t::locked_wait()
 
 // Causes current stream to wait for specified event to complete:
 // Note this does not provide any kind of host serialization.
-void ihipStream_t::locked_waitEvent(hipEvent_t event)
+void ihipStream_t::locked_streamWaitEvent(hipEvent_t event)
 {
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
 
-    crit->_av.create_blocking_marker(event->_marker, hc::accelerator_scope);
+    crit->_av.create_blocking_marker(event->marker(), hc::accelerator_scope);
 }
+
+
+// Causes current stream to wait for specified event to complete:
+// Note this does not provide any kind of host serialization.
+bool ihipStream_t::locked_eventIsReady(hipEvent_t event)
+{
+    // Event query that returns "Complete" may cause HCC to manipulate
+    // internal queue state so lock the stream's queue here.
+    LockedAccessor_StreamCrit_t crit(_criticalData);
+
+    return (event->marker().is_ready());
+}
+
+void ihipStream_t::locked_eventWaitComplete(hipEvent_t event, hc::hcWaitMode waitMode)
+{
+    LockedAccessor_StreamCrit_t crit(_criticalData);
+
+    event->marker().wait(waitMode);
+}
+
 
 // Create a marker in this stream.
 // Save state in the event so it can track the status of the event.
@@ -345,7 +378,7 @@ void ihipStream_t::locked_recordEvent(hipEvent_t event)
         scopeFlag = HIP_EVENT_SYS_RELEASE ? hc::system_scope : hc::accelerator_scope;
     }
 
-    event->_marker = crit->_av.create_marker(scopeFlag);
+    event->marker(crit->_av.create_marker(scopeFlag));
 };
 
 //=============================================================================
@@ -737,21 +770,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     char archName[256];
     err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_NAME, &archName);
 
-    if(strcmp(archName,"gfx701")==0){
-      prop->gcnArch = 701;
-    }
-    if(strcmp(archName,"gfx801")==0){
-      prop->gcnArch = 801;
-    }
-    if(strcmp(archName,"gfx802")==0){
-      prop->gcnArch = 802;
-    }
-    if(strcmp(archName,"gfx803")==0){
-      prop->gcnArch = 803;
-    }
-    if(strcmp(archName,"gfx900")==0){
-      prop->gcnArch = 900;
-    }
+    prop->gcnArch = atoi(archName+3);
 
     DeviceErrorCheck(err);
 
@@ -799,13 +818,13 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     DeviceErrorCheck(err);
 
     // BDFID is 16bit uint: [8bit - BusID | 5bit - Device ID | 3bit - Function/DomainID]
-    // prop->pciDomainID =  bdf_id & 0x7;
+    prop->pciDomainID =  bdf_id & 0x7;
     prop->pciDeviceID =  (bdf_id>>3) & 0x1F;
     prop->pciBusID =  (bdf_id>>8) & 0xFF;
 
     // Masquerade as a 3.0-level device. This will change as more HW functions are properly supported.
     // Application code should use the arch.has* to do detailed feature detection.
-    prop->major = 2;
+    prop->major = 3;
     prop->minor = 0;
 
     // Get number of Compute Unit
@@ -1233,10 +1252,14 @@ void HipReadEnv()
     READ_ENV_I(release, HIP_FAIL_SOC, 0, "Fault on Sub-Optimal-Copy, rather than use a slower but functional implementation.  Bit 0x1=Fail on async copy with unpinned memory.  Bit 0x2=Fail peer copy rather than use staging buffer copy");
 
     READ_ENV_I(release, HIP_SYNC_HOST_ALLOC, 0, "Sync before and after all host memory allocations.  May help stability");
+    READ_ENV_I(release, HIP_INIT_ALLOC, 0, "If not -1, initialize allocated memory to specified byte");
     READ_ENV_I(release, HIP_SYNC_NULL_STREAM, 0, "Synchronize on host for null stream submissions");
+    READ_ENV_I(release, HIP_FORCE_NULL_STREAM,  0, "Force all stream allocations to secretly return the null stream");
+
+    READ_ENV_I(release, HIP_SYNC_STREAM_WAIT, 0, "hipStreamWaitEvent will synchronize to host");
 
 
-    READ_ENV_I(release, HIP_COHERENT_HOST_ALLOC, 0, "If set, all host memory will be allocated as fine-grained system memory.  This allows threadfence_system to work but prevents host memory from being cached on GPU which may have performance impact.");
+    READ_ENV_I(release, HIP_HOST_COHERENT, 0, "If set, all host memory will be allocated as fine-grained system memory.  This allows threadfence_system to work but prevents host memory from being cached on GPU which may have performance impact.");
 
 
     READ_ENV_I(release, HCC_OPT_FLUSH, 0, "When set, use agent-scope fence operations rather than system-scope fence operationsflush when possible. This flag controls both HIP and HCC behavior.");
@@ -1434,9 +1457,7 @@ void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, c
 {
 
     if ((HIP_TRACE_API & (1<<TRACE_KCMD)) || HIP_PROFILE_API || (COMPILE_HIP_DB & HIP_TRACE_API)) {
-        std::stringstream os_pre;
         std::stringstream os;
-        os_pre  << "<<hip-api tid:";
         os  << tls_tidInfo.tid() << "." << tls_tidInfo.apiSeqNum()
             << " hipLaunchKernel '" << kernelName << "'"
             << " gridDim:"  << lp->grid_dim
@@ -1444,16 +1465,17 @@ void ihipPrintKernelLaunch(const char *kernelName, const grid_launch_parm *lp, c
             << " sharedMem:+" << lp->dynamic_group_mem_bytes
             << " " << *stream;
 
+        if (COMPILE_HIP_DB && HIP_TRACE_API) {
+            std::string fullStr;
+            recordApiTrace(&fullStr, os.str());
+        }
+
         if (HIP_PROFILE_API == 0x1) {
             std::string shortAtpString("hipLaunchKernel:");
             shortAtpString += kernelName;
             MARKER_BEGIN(shortAtpString.c_str(), "HIP");
         } else if (HIP_PROFILE_API == 0x2) {
             MARKER_BEGIN(os.str().c_str(), "HIP");
-        }
-
-        if (COMPILE_HIP_DB && HIP_TRACE_API) {
-            std::cerr << API_COLOR << os.str() << API_COLOR_END << std::endl;
         }
     }
 }
@@ -1872,8 +1894,13 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     }
 
     hc::accelerator acc;
+#if (__hcc_workweek__ >= 17332)
+    hc::AmPointerInfo dstPtrInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+    hc::AmPointerInfo srcPtrInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+#else
     hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
     hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
+#endif
     bool dstTracked = getTailoredPtrInfo(&dstPtrInfo, dst, sizeBytes);
     bool srcTracked = getTailoredPtrInfo(&srcPtrInfo, src, sizeBytes);
 
@@ -1908,7 +1935,11 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
 }
 
 void ihipStream_t::addSymbolPtrToTracker(hc::accelerator& acc, void* ptr, size_t sizeBytes) {
+#if (__hcc_workweek__ >= 17332)
+  hc::AmPointerInfo ptrInfo(NULL, ptr, ptr, sizeBytes, acc, true, false);
+#else
   hc::AmPointerInfo ptrInfo(NULL, ptr, sizeBytes, acc, true, false);
+#endif
   hc::am_memtracker_add(ptr, ptrInfo);
 }
 
@@ -1932,7 +1963,11 @@ void ihipStream_t::lockedSymbolCopyAsync(hc::accelerator &acc, void* dst, void* 
 {
     // TODO - review - this looks broken , should not be adding pointers to tracker dynamically:
   if(kind == hipMemcpyHostToDevice) {
+#if (__hcc_workweek__ >= 17332)
+    hc::AmPointerInfo srcPtrInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+#else
     hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
+#endif
     bool srcTracked = (hc::am_memtracker_getinfo(&srcPtrInfo, src) == AM_SUCCESS);
     if(srcTracked) {
         addSymbolPtrToTracker(acc, dst, sizeBytes);
@@ -1944,7 +1979,11 @@ void ihipStream_t::lockedSymbolCopyAsync(hc::accelerator &acc, void* dst, void* 
     }
   }
   if(kind == hipMemcpyDeviceToHost) {
+#if (__hcc_workweek__ >= 17332)
+    hc::AmPointerInfo dstPtrInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+#else
     hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
+#endif
     bool dstTracked = (hc::am_memtracker_getinfo(&dstPtrInfo, dst) == AM_SUCCESS);
     if(dstTracked) {
         addSymbolPtrToTracker(acc, src, sizeBytes);
@@ -1983,8 +2022,13 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
     } else {
 
         hc::accelerator acc;
+#if (__hcc_workweek__ >= 17332)
+        hc::AmPointerInfo dstPtrInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+        hc::AmPointerInfo srcPtrInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+#else
         hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
         hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
+#endif
         bool dstTracked = getTailoredPtrInfo(&dstPtrInfo, dst, sizeBytes);
         bool srcTracked = getTailoredPtrInfo(&srcPtrInfo, src, sizeBytes);
 

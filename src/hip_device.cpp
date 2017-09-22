@@ -146,13 +146,14 @@ hipError_t hipSetDevice(int deviceId)
         return ihipLogStatus(hipErrorInvalidDevice);
     } else {
         ihipSetTlsDefaultCtx(ihipGetPrimaryCtx(deviceId));
+        tls_getPrimaryCtx = true;
         return ihipLogStatus(hipSuccess);
     }
 }
 
 hipError_t hipDeviceSynchronize(void)
 {
-    HIP_INIT_API();
+    HIP_INIT_SPECIAL_API(TRACE_SYNC);
     return ihipLogStatus(ihipSynchronize());
 }
 
@@ -179,6 +180,7 @@ hipError_t hipDeviceReset(void)
 
     return ihipLogStatus(hipSuccess);
 }
+
 
 hipError_t ihipDeviceSetState(void)
 {
@@ -272,6 +274,9 @@ hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device
 hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
 {
     HIP_INIT_API(pi, attr, device);
+    if ((device < 0) || (device >= g_deviceCnt)) {
+        return ihipLogStatus(hipErrorInvalidDevice);
+    } 
     return ihipLogStatus(ihipDeviceGetAttribute(pi,attr,device));
 }
 
@@ -298,6 +303,9 @@ hipError_t ihipGetDeviceProperties(hipDeviceProp_t* props, int device)
 hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device)
 {
     HIP_INIT_API(props, device);
+    if ((device < 0) || (device >= g_deviceCnt)) {
+        return ihipLogStatus(hipErrorInvalidDevice);
+    }
     return ihipLogStatus(ihipGetDeviceProperties(props, device));
 }
 
@@ -350,41 +358,44 @@ hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device
 {
     HIP_INIT_API(major,minor, device);
     hipError_t e = hipSuccess;
-    e = ihipDeviceGetAttribute(major, hipDeviceAttributeComputeCapabilityMajor, device);
-    e = ihipDeviceGetAttribute(minor, hipDeviceAttributeComputeCapabilityMinor, device);
+    if ((device < 0) || (device >= g_deviceCnt)) {
+        e = hipErrorInvalidDevice;
+    } else {
+        e = ihipDeviceGetAttribute(major, hipDeviceAttributeComputeCapabilityMajor, device);
+        e = ihipDeviceGetAttribute(minor, hipDeviceAttributeComputeCapabilityMinor, device);
+    }
     return ihipLogStatus(e);
 }
 
 hipError_t hipDeviceGetName(char *name,int len,hipDevice_t device)
 {
-    HIP_INIT_API(name,len, device);
+    // Cast to void* here to avoid printing garbage in debug modes.
+    HIP_INIT_API((void*)name,len, device);
     hipError_t e = hipSuccess;
-    auto deviceHandle = ihipGetDevice(device);
-    int nameLen = strlen(deviceHandle->_props.name);
-    if(nameLen <= len)
-        memcpy(name,deviceHandle->_props.name,nameLen);
+    if ((device < 0) || (device >= g_deviceCnt)) {
+        e = hipErrorInvalidDevice;
+    } else {
+        auto deviceHandle = ihipGetDevice(device);
+        int nameLen = strlen(deviceHandle->_props.name);
+        if(nameLen <= len)
+            memcpy(name,deviceHandle->_props.name,nameLen);
+    }
     return ihipLogStatus(e);
 }
 
 hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len, int device)
 {
-    HIP_INIT_API(pciBusId, len, device);
+    // Cast to void* here to avoid printing garbage in debug modes.
+    HIP_INIT_API((void*)pciBusId, len, device);
     hipError_t e = hipErrorInvalidValue;
-    int deviceCount = 0;
-    ihipGetDeviceCount( &deviceCount );
-    if((device > deviceCount) || (device < 0)) {
+    if ((device < 0) || (device >= g_deviceCnt)) {
         e = hipErrorInvalidDevice;
     } else {
         if((pciBusId != nullptr) && (len > 0)) {
-            int tempPciBusId = 0;
-            e = ihipDeviceGetAttribute( &tempPciBusId, hipDeviceAttributePciBusId, device);
-            if( e == hipSuccess) {
-                std::string tempPciStr = std::to_string(tempPciBusId);
-                if( len < tempPciStr.length()){
-                    e = hipErrorInvalidValue;
-                } else { 
-                    memcpy( pciBusId , tempPciStr.c_str() , tempPciStr.length() );
-                }
+            auto deviceHandle = ihipGetDevice(device);
+            int retVal = snprintf(pciBusId,len, "%04x:%02x:%02x.0",deviceHandle->_props.pciDomainID,deviceHandle->_props.pciBusID,deviceHandle->_props.pciDeviceID);
+            if( retVal > 0  && retVal < len) {
+                e = hipSuccess;
             }
         }
     }
@@ -395,26 +406,38 @@ hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device)
 {
     HIP_INIT_API(bytes, device);
     hipError_t e = hipSuccess;
-    auto deviceHandle = ihipGetDevice(device);
-    *bytes= deviceHandle->_props.totalGlobalMem;
+    if ((device < 0) || (device >= g_deviceCnt)) {
+        e = hipErrorInvalidDevice;
+    } else {
+        auto deviceHandle = ihipGetDevice(device);
+        *bytes= deviceHandle->_props.totalGlobalMem;
+    }
     return ihipLogStatus(e);
 }
 
-hipError_t hipDeviceGetByPCIBusId (int*  device, const int* pciBusId )
+hipError_t hipDeviceGetByPCIBusId (int*  device, const char* pciBusId )
 {
     HIP_INIT_API(device,pciBusId);
     hipDeviceProp_t  tempProp;
-    int deviceCount;
+    int deviceCount = 0 ;
     hipError_t e = hipErrorInvalidValue;
-    ihipGetDeviceCount( &deviceCount );
-    *device = 0;
-    for (int i = 0; i< deviceCount; i++) {
-        ihipGetDeviceProperties( &tempProp, i );
-        if(tempProp.pciBusID == *pciBusId) {
-            *device =i;
-            e = hipSuccess;
-            break;
-        }
+    if((device != nullptr) && (pciBusId != nullptr)) {
+        int pciBusID = -1;
+        int pciDeviceID = -1;
+        int pciDomainID = -1;
+        int len = 0;
+        len = sscanf (pciBusId,"%04x:%02x:%02x",&pciDomainID,&pciBusID,&pciDeviceID);
+        if(len == 3) {
+           ihipGetDeviceCount( &deviceCount );
+           for (int i = 0; i< deviceCount; i++) {
+               ihipGetDeviceProperties( &tempProp, i );
+               if(tempProp.pciBusID == pciBusID) {
+                   *device = i;
+                   e = hipSuccess;
+                   break;
+               }
+           }
+       }
     }
     return ihipLogStatus(e);
 }
