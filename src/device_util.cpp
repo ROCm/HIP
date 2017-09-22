@@ -35,8 +35,8 @@ THE SOFTWARE.
  This is the best place to put them because the device
  global variables need to be initialized at the start.
 */
-__device__ ADDRESS_SPACE_1 char gpuHeap[SIZE_OF_HEAP];
-__device__ ADDRESS_SPACE_1 uint32_t gpuFlags[NUM_PAGES];
+__device__ char gpuHeap[SIZE_OF_HEAP];
+__device__ uint32_t gpuFlags[NUM_PAGES];
 
 __device__ void *__hip_hc_malloc(size_t size)
 {
@@ -1264,109 +1264,7 @@ __device__ double __hip_fast_dsqrt_rz(double x) {
 }
 
 __device__ void  __threadfence_system(void){
-    // no-op
-}
-
-float __hip_host_erfinvf(float x)
-{
-    float ret;
-    int  sign;
-    if (x < -1 || x > 1){
-        return NAN;
-    }
-    if (x == 0){
-        return 0;
-    }
-    if (x > 0){
-        sign = 1;
-    } else {
-        sign = -1;
-        x = -x;
-    }
-    if (x <= 0.7) {
-        float x1 = x * x;
-        float x2 = std::fma(__hip_erfinva3, x1, __hip_erfinva2);
-        float x3 = std::fma(x2, x1, __hip_erfinva1);
-        float x4 = x * std::fma(x3, x1, __hip_erfinva0);
-
-        float r1 = std::fma(__hip_erfinvb4, x1, __hip_erfinvb3);
-        float r2 = std::fma(r1, x1, __hip_erfinvb2);
-        float r3 = std::fma(r2, x1, __hip_erfinvb1);
-        ret = x4 / std::fma(r3, x1, __hip_erfinvb0);
-    } else {
-        float x1 = std::sqrt(-std::log((1 - x) / 2));
-        float x2 = std::fma(__hip_erfinvc3, x1, __hip_erfinvc2);
-        float x3 = std::fma(x2, x1, __hip_erfinvc1);
-        float x4 = std::fma(x3, x1, __hip_erfinvc0);
-
-        float r1 = std::fma(__hip_erfinvd2, x1, __hip_erfinvd1);
-        ret = x4 / std::fma(r1, x1, __hip_erfinvd0);
-    }
-
-    ret = ret * sign;
-    x = x * sign;
-
-    ret -= (std::erf(ret) - x) / (2 / std::sqrt(HIP_PI) * std::exp(-ret * ret));
-    ret -= (std::erf(ret) - x) / (2 / std::sqrt(HIP_PI) * std::exp(-ret * ret));
-
-    return ret;
-
-}
-
-double __hip_host_erfinv(double x)
-{
-    double ret;
-    int  sign;
-    if (x < -1 || x > 1){
-        return NAN;
-    }
-    if (x == 0){
-        return 0;
-    }
-    if (x > 0){
-        sign = 1;
-    } else {
-        sign = -1;
-        x = -x;
-    }
-    if (x <= 0.7) {
-        double x1 = x * x;
-        double x2 = std::fma(__hip_erfinva3, x1, __hip_erfinva2);
-        double x3 = std::fma(x2, x1, __hip_erfinva1);
-        double x4 = x * std::fma(x3, x1, __hip_erfinva0);
-
-        double r1 = std::fma(__hip_erfinvb4, x1, __hip_erfinvb3);
-        double r2 = std::fma(r1, x1, __hip_erfinvb2);
-        double r3 = std::fma(r2, x1, __hip_erfinvb1);
-        ret = x4 / std::fma(r3, x1, __hip_erfinvb0);
-    } else {
-        double x1 = std::sqrt(-std::log((1 - x) / 2));
-        double x2 = std::fma(__hip_erfinvc3, x1, __hip_erfinvc2);
-        double x3 = std::fma(x2, x1, __hip_erfinvc1);
-        double x4 = std::fma(x3, x1, __hip_erfinvc0);
-
-        double r1 = std::fma(__hip_erfinvd2, x1, __hip_erfinvd1);
-        ret = x4 / std::fma(r1, x1, __hip_erfinvd0);
-    }
-
-    ret = ret * sign;
-    x = x * sign;
-
-    ret -= (std::erf(ret) - x) / (2 / std::sqrt(HIP_PI) * std::exp(-ret * ret));
-    ret -= (std::erf(ret) - x) / (2 / std::sqrt(HIP_PI) * std::exp(-ret * ret));
-
-    return ret;
-
-}
-
-float __hip_host_erfcinvf(float y)
-{
-    return __hip_host_erfinvf(1 - y);
-}
-
-double __hip_host_erfcinv(double y)
-{
-    return __hip_host_erfinv(1 - y);
+  std::atomic_thread_fence(std::memory_order_seq_cst);
 }
 
 double __hip_host_j0(double x)

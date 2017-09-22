@@ -111,6 +111,8 @@ kernelName<<<numblocks,numthreads,memperblock,streamId>>>(__VA_ARGS__);\
 
 #ifdef __HIP_DEVICE_COMPILE__
 #define abort() {asm("trap;");}
+#undef assert
+#define assert(COND) { if (!COND) {abort();} }
 #endif
 
 #endif

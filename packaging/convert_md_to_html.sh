@@ -54,8 +54,8 @@ popd
 
 # replace github.io links
 pushd $html_destdir
-sed -i "s?http://gpuopen-professionalcompute-tools.github.io/HIP?docs/RuntimeAPI/html/index.html?g" README.html
-sed -i "s?http://gpuopen-professionalcompute-tools.github.io/HIP?docs/RuntimeAPI/html/?g" RELEASE.html
+sed -i "s?http://rocm-developer-tools.github.io/HIP?docs/RuntimeAPI/html/index.html?g" README.html
+sed -i "s?http://rocm-developer-tools.github.io/HIP?docs/RuntimeAPI/html/?g" RELEASE.html
 popd
 
 exit 0

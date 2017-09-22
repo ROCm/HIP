@@ -59,14 +59,18 @@ extern int HIP_STREAM_SIGNALS;  /* number of signals to allocate at stream creat
 extern int HIP_VISIBLE_DEVICES; /* Contains a comma-separated sequence of GPU identifiers */
 extern int HIP_FORCE_P2P_HOST;
 
-extern int HIP_COHERENT_HOST_ALLOC;
+extern int HIP_HOST_COHERENT;
 
 extern int HIP_HIDDEN_FREE_MEM;
 //---
 // Chicken bits for disabling functionality to work around potential issues:
 extern int HIP_SYNC_HOST_ALLOC;
+extern int HIP_SYNC_STREAM_WAIT;
 
 extern int HIP_SYNC_NULL_STREAM;
+extern int HIP_INIT_ALLOC;
+extern int HIP_FORCE_NULL_STREAM;
+
 
 // TODO - remove when this is standard behavior.
 extern int HCC_OPT_FLUSH;
@@ -114,6 +118,7 @@ private:
 //Extern tls
 extern thread_local hipError_t tls_lastHipError;
 extern thread_local TidInfo tls_tidInfo;
+extern thread_local bool tls_getPrimaryCtx;
 
 extern std::vector<ProfTrigger> g_dbStartTriggers;
 extern std::vector<ProfTrigger> g_dbStopTriggers;
@@ -190,10 +195,12 @@ extern const char *API_COLOR_END;
 
 //---
 //HIP Trace modes - use with HIP_TRACE_API=...
-#define TRACE_ALL  0 // 0x1
-#define TRACE_KCMD 1 // 0x2, kernel command
-#define TRACE_MCMD 2 // 0x4, memory command
-#define TRACE_MEM  3 // 0x8, memory allocation or deallocation.
+#define TRACE_ALL   0  // 0x01
+#define TRACE_KCMD  1  // 0x02, kernel command
+#define TRACE_MCMD  2  // 0x04, memory command
+#define TRACE_MEM   3  // 0x08, memory allocation or deallocation.
+#define TRACE_SYNC  4  // 0x10, synchronization (host or hipStreamWaitEvent)
+#define TRACE_QUERY 5  // 0x20, hipEventRecord, hipEventQuery, hipStreamQuery
 
 
 //---
@@ -514,8 +521,11 @@ public:
 
     hc::accelerator_view* locked_getAv() { LockedAccessor_StreamCrit_t crit(_criticalData); return &(crit->_av); };
 
-    void                 locked_waitEvent(hipEvent_t event);
+    void                 locked_streamWaitEvent(hipEvent_t event);
     void                 locked_recordEvent(hipEvent_t event);
+
+    bool                 locked_eventIsReady(hipEvent_t event);
+    void                 locked_eventWaitComplete(hipEvent_t event, hc::hcWaitMode waitMode);
 
     ihipStreamCritical_t  &criticalData() { return _criticalData; };
 
@@ -605,18 +615,24 @@ public:
     ihipEvent_t(unsigned flags);
     void attachToCompletionFuture(const hc::completion_future *cf, hipStream_t stream, ihipEventType_t eventType);
     void refereshEventStatus();
+    hc::completion_future & marker() { return _marker; }
+    void marker(hc::completion_future cf) { _marker = cf; };
+
+    bool locked_isReady();
+    void locked_waitComplete(hc::hcWaitMode waitMode);
+
     uint64_t timestamp() const { return _timestamp; } ;
     ihipEventType_t type() const { return _type; };
 
 public:
     hipEventStatus_t      _state;
 
-    hipStream_t           _stream;  // Stream where the event is recorded, or NULL if all streams.
+    hipStream_t           _stream;  // Stream where the event is recorded.  Null stream is resolved to actual stream when recorded
     unsigned              _flags;
 
-    hc::completion_future _marker;
 
 private:
+    hc::completion_future _marker;
     ihipEventType_t       _type;
     uint64_t              _timestamp;  // store timestamp, may be set on host or by marker.
 friend hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream);

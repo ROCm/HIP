@@ -247,6 +247,7 @@ while (@ARGV) {
         $ft{'err'} += s/\bcudaErrorInvalidValue\b/hipErrorInvalidValue/g;
         $ft{'err'} += s/\bcudaErrorInvalidResourceHandle\b/hipErrorInvalidResourceHandle/g;
         $ft{'err'} += s/\bcudaErrorInvalidDevice\b/hipErrorInvalidDevice/g;
+        $ft{'err'} += s/\bcudaErrorInvalidDevicePointer\b/hipErrorInvalidDevicePointer/g;
         $ft{'err'} += s/\bcudaErrorNoDevice\b/hipErrorNoDevice/g;
         $ft{'err'} += s/\bcudaErrorNotReady\b/hipErrorNotReady/g;
         $ft{'err'} += s/\bcudaErrorUnknown\b/hipErrorUnknown/g;
@@ -280,9 +281,11 @@ while (@ARGV) {
         $ft{'mem'} += s/\bcudaMemcpyKind\b/hipMemcpyKind/g;
 
         $ft{'mem'} += s/\bcudaPointerAttributes\b/hipPointerAttribute_t/g;
+        $ft{'mem'} += s/\bcudaPointerGetAttributes\b/hipPointerGetAttribute_t/g;
 
         $ft{'mem'} += s/\bcudaMemcpy2D\b/hipMemcpy2D/g;
         $ft{'mem'} += s/\bcudaMemcpy2DToArray\b/hipMemcpy2DToArray/g;
+        $ft{'mem'} += s/\bcudaMemcpyToArray\b/hipMemcpyToArray/g;
 
         #--------
         # Memory management:
@@ -302,6 +305,7 @@ while (@ARGV) {
         $ft{'mem'} += s/\bcudaHostGetDevicePointer\b/hipHostGetDevicePointer/g;
 
         $ft{'mem'} += s/\bcudaMallocArray\b/hipMallocArray/g;
+        $ft{'mem'} += s/\bcudaFreeArray\b/hipFreeArray/g;
         $ft{'mem'} += s/\bcudaMallocPitch\b/hipMallocPitch/g;
 
 
@@ -323,9 +327,6 @@ while (@ARGV) {
         $ft{'coord_func'} += s/\bgridDim\.y\b/hipGridDim_y/g;
         $ft{'coord_func'} += s/\bgridDim\.z\b/hipGridDim_z/g;
 
-		# hack to avoid replacing hipDeviceProp.warpSize call
-        $ft{'special_func'} += s/([^.])\bwarpSize\b/$1hipWarpSize/g;
-
 
         #--------
         # Events
@@ -337,6 +338,7 @@ while (@ARGV) {
         $ft{'event'} += s/\bcudaEventElapsedTime\b/hipEventElapsedTime/g;
         $ft{'event'} += s/\bcudaEventSynchronize\b/hipEventSynchronize/g;
         $ft{'event'} += s/\bcudaEventDisableTiming\b/hipEventDisableTiming/g;
+        $ft{'event'} += s/\bcudaEventQuery\b/hipEventQuery/g;
 
         #--------
         # Streams
@@ -487,15 +489,15 @@ while (@ARGV) {
             my $kernelName;
 
             # Handle the <<numBlocks, blockDim, sharedSize, stream>>> syntax:
-            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>([\s*\\]*)\(/hipLaunchKernel(HIP_KERNEL_NAME($1$2), dim3($3), dim3($4), $5, $6, /g;
+            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>([\s*\\]*)\(/hipLaunchKernelGGL(($1$2), dim3($3), dim3($4), $5, $6, /g;
             $kernelName = $1 if $k;
 
             # Handle the <<numBlocks, blockDim, sharedSize>>> syntax:
-            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>([\s*\\]*)\(/hipLaunchKernel(HIP_KERNEL_NAME($1$2), dim3($3), dim3($4), $5, 0, /g;
+            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>([\s*\\]*)\(/hipLaunchKernelGGL(($1$2), dim3($3), dim3($4), $5, 0, /g;
             $kernelName = $1 if $k;
 
             # Handle the <<numBlocks, blockDim>>> syntax:
-            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>([\s\\]*)\(/hipLaunchKernel(HIP_KERNEL_NAME($1$2), dim3($3), dim3($4), 0, 0, /g;
+            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>([\s\\]*)\(/hipLaunchKernelGGL(($1$2), dim3($3), dim3($4), 0, 0, /g;
             $kernelName = $1 if $k;
 
             $ft{'kern'} += $k;
@@ -511,11 +513,14 @@ while (@ARGV) {
             $ft{'tex'} += s/\bcudaFilterModePoint\b/hipFilterModePoint/g;
             $ft{'tex'} += s/\bcudaReadModeElementType\b/hipReadModeElementType/g;
 
-            $ft{'tex'} += s/\bcudaArray\b/hipArrary/g;
+            $ft{'tex'} += s/\bcudaArray\b/hipArray/g;
             $ft{'tex'} += s/\bcudaCreateChannelDesc\b/hipCreateChannelDesc/g;
             $ft{'tex'} += s/\bcudaBindTexture\b/hipBindTexture/g;
             $ft{'tex'} += s/\bcudaBindTextureToArray\b/hipBindTextureToArray/g;
             $ft{'tex'} += s/\bcudaUnbindTexture\b/hipUnbindTexture/g;
+            $ft{'tex'} += s/\bcudaChannelFormatKindFloat\b/hipChannelFormatKindFloat/g;
+            $ft{'tex'} += s/\bcudaAddressMode/hipAddressMode/g;
+            $ft{'tex'} += s/\bcudaFilterMode/hipFilterMode/g;
         }
 
 

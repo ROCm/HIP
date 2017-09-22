@@ -8,7 +8,7 @@ hip-amdinternal
 HIP-Examples
 lib
 packages
-
+build
 bin/hipInfo
 bin/hipBusBandwidth
 bin/hipDispatchLatency

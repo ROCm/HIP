@@ -7,7 +7,7 @@ In all Earlier tutorial we used single stream, In this tutorial, we'll explain h
 The various instances of kernel to be executed on device in exact launch order defined by Host are called streams. We can launch multiple streams on a single device. We will learn how to learn two streams which can we scaled with ease.
 
 ## Requirement:
-For hardware requirement and software installation [Installation](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/INSTALL.md) 
+For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/INSTALL.md) 
 
 ## prerequiste knowledge:
 
@@ -47,11 +47,11 @@ Use the make command and execute it using ./exe
 Use hipcc to build the application, which is using hcc on AMD and nvcc on nvidia.
 
 ## More Info:
-- [HIP FAQ](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/docs/markdown/hip_faq.md)
-- [HIP Kernel Language](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/docs/markdown/hip_kernel_language.md)
-- [HIP Runtime API (Doxygen)](http://gpuopen-professionalcompute-tools.github.io/HIP)
-- [HIP Porting Guide](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/docs/markdown/hip_porting_guide.md)
-- [HIP Terminology](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenL)
-- [clang-hipify](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/clang-hipify/README.md)
-- [Developer/CONTRIBUTING Info](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/CONTRIBUTING.md)
-- [Release Notes](https://github.com/GPUOpen-ProfessionalCompute-Tools/HIP/RELEASE.md)
+- [HIP FAQ](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_faq.md)
+- [HIP Kernel Language](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_kernel_language.md)
+- [HIP Runtime API (Doxygen)](http://rocm-developer-tools.github.io/HIP)
+- [HIP Porting Guide](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_porting_guide.md)
+- [HIP Terminology](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenL)
+- [clang-hipify](https://github.com/ROCm-Developer-Tools/HIP/clang-hipify/README.md)
+- [Developer/CONTRIBUTING Info](https://github.com/ROCm-Developer-Tools/HIP/CONTRIBUTING.md)
+- [Release Notes](https://github.com/ROCm-Developer-Tools/HIP/RELEASE.md)

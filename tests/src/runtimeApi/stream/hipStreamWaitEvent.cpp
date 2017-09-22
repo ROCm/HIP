@@ -446,9 +446,41 @@ int main(int argc, char *argv[])
 
 
     if (p_tests & 0x1000) {
-        printf ("==> Test 0x1000 try null stream\n"); 
-        hipStreamQuery(0/* try null stream*/);
+        printf ("==> Test 0x1000 simple null stream tests\n"); 
 
+        // try some null stream:
+        hipStreamQuery(0);
+
+
+        hipStream_t s1;
+        hipEvent_t e1;
+
+        {
+            // stream null waits on event in s1 stream:
+            HIPCHECK(hipStreamCreate(&s1));
+            HIPCHECK(hipEventCreate(&e1));
+
+            HIPCHECK(hipEventRecord(e1, s1))
+
+            HIPCHECK(hipStreamWaitEvent(hipStream_t(0), e1, 0/*flags*/));
+            
+            HIPCHECK(hipStreamDestroy(s1));
+            HIPCHECK(hipEventDestroy(e1));
+        }
+
+        {
+            // stream s1 waits on event in null stream:
+            HIPCHECK(hipStreamCreate(&s1));
+            HIPCHECK(hipEventCreate(&e1));
+
+            HIPCHECK(hipEventRecord(e1, hipStream_t(0)))
+
+            HIPCHECK(hipStreamWaitEvent(s1, e1, 0/*flags*/));
+            
+            HIPCHECK(hipStreamDestroy(s1));
+            HIPCHECK(hipEventDestroy(e1));
+        }
+        
     }
 
 
@@ -471,8 +503,8 @@ int main(int argc, char *argv[])
     }
 
 
-    {
-        printf ("test: alternating memcpy/count-reverse followed by event\n");
+    if (p_tests & 0x4000 ) {
+        printf ("test: %x alternating memcpy/count-reverse followed by event\n", p_tests);
         RUN_SYNC_TEST(0x4000, streamersDev0, sync_queryAllUntilComplete(streamersDev0),  true);
         RUN_SYNC_TEST(0x8000, streamersDev0, sync_streamWaitEvent(streamersDev0.back()->event(), 0, sideStreams[0], false),  true);
     }
