@@ -1145,7 +1145,7 @@ inline static hipChannelFormatDesc hipCreateChannelDesc()
 		return cudaCreateChannelDesc<T>();
 }
 
-hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f)
+inline static hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f)
 {
     return cudaCreateChannelDesc(x , y , z , w, hipChannelFormatKindToCudaChannelFormatKind(f)); 
 }
