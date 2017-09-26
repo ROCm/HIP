@@ -28,17 +28,33 @@ THE SOFTWARE.
 #include <hip/hip_hcc.h>
 
 #define LEN 64
-#define SIZE LEN<<2
+#define SIZE LEN*sizeof(float)
 
 #define fileName "vcpy_kernel.code"
-#define kernel_name "hello_world"
 
-#define HIP_CHECK(status) \
-if(status != hipSuccess) {std::cout<<"Got Status: "<<status<<" at Line: "<<__LINE__<<std::endl;exit(0);}
+#define HIP_CHECK(cmd) \
+{\
+    hipError_t status = cmd;\
+    if(status != hipSuccess) {std::cout<<"error: #"<<status<<" ("<< hipGetErrorString(status) << ") at line:"<<__LINE__<<":  "<<#cmd<<std::endl;abort();}\
+}
+
+void * readGlobal(hipModule_t Module, const std::string &varName) 
+{
+    void *devicePtr;
+    size_t sz;
+
+    printf ("attempting to read '%s'\n", varName.c_str());
+
+    HIP_CHECK(hipModuleGetGlobal(&devicePtr, &sz, Module, varName.c_str()));
+    printf ("%s : ptr=%p sz=%zu\n", varName.c_str(), devicePtr, sz);
+
+    return devicePtr;
+}
+
 
 int main(){
     float *A, *B;
-    hipDeviceptr_t Ad, Bd;
+    float* Ad, *Bd;
     A = new float[LEN];
     B = new float[LEN];
 
@@ -56,18 +72,33 @@ int main(){
     hipMalloc((void**)&Ad, SIZE);
     hipMalloc((void**)&Bd, SIZE);
 
-    hipMemcpyHtoD(Ad, A, SIZE);
-    hipMemcpyHtoD(Bd, B, SIZE);
+    hipMemcpyHtoD(hipDeviceptr_t(Ad), A, SIZE);
+    hipMemcpyHtoD((hipDeviceptr_t)(Bd), B, SIZE);
     hipModule_t Module;
-    hipFunction_t Function;
     HIP_CHECK(hipModuleLoad(&Module, fileName));
-    HIP_CHECK(hipModuleGetFunction(&Function, Module, kernel_name));
+
+    float * myDeviceGlobal = (float*)readGlobal(Module, "myDeviceGlobal");
+    float myDeviceGlobal_h = 42.0;
+    HIP_CHECK(hipMemcpy(myDeviceGlobal, &myDeviceGlobal_h,  sizeof(int), hipMemcpyHostToDevice));
+
+    int *myDeviceGlobalArray = (int*)readGlobal(Module, "myDeviceGlobalArray");
+
+#define ARRAY_SIZE 16
+
+    float myDeviceGlobalArray_h[ARRAY_SIZE];
+    for (int i=0; i<ARRAY_SIZE; i++) {
+        myDeviceGlobalArray_h[i] = i*1000.0f;
+    }
+    HIP_CHECK(hipMemcpy(myDeviceGlobalArray, &myDeviceGlobalArray_h,  sizeof(myDeviceGlobalArray_h), hipMemcpyHostToDevice));
+    
+
 
 #ifdef __HIP_PLATFORM_HCC__
 		uint32_t len = LEN;
 		uint32_t one = 1;
 
     struct {
+        uint32_t _hidden[6];  // genco path + wrapper-gen pass used hidden arguments.
         void * _Ad;
         void * _Bd;
     } args;
@@ -98,23 +129,56 @@ int main(){
       HIP_LAUNCH_PARAM_END
     };
 
-    HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
+    { 
+        hipFunction_t Function;
+        HIP_CHECK(hipModuleGetFunction(&Function, Module, "hello_world"));
+        HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
 
-    hipMemcpyDtoH(B, Bd, SIZE);
+        hipMemcpyDtoH(B, Bd, SIZE);
 
-    int mismatchCount = 0;
-    for(uint32_t i=0;i<LEN;i++){
-        if (A[i] != B[i]) {
-            mismatchCount++;
-            std::cout<<"error: mismatch " << A[i]<<" != "<<B[i]<<std::endl;
+        int mismatchCount = 0;
+        for(uint32_t i=0;i<LEN;i++){
+            if (A[i] != B[i]) {
+                mismatchCount++;
+                std::cout<<"error: mismatch " << A[i]<<" != "<<B[i]<<std::endl;
+                if (mismatchCount >= 10) {
+                    break;
+                }
+            }
         }
+
+        if (mismatchCount == 0) {
+            std::cout << "Check ok!\n";
+        } else {
+            std::cout << "FAILED!\n";
+        };
     }
 
-    if (mismatchCount == 0) {
-        std::cout << "PASSED!\n";
-    } else {
-        std::cout << "FAILED!\n";
-    };
+    { 
+        hipFunction_t Function;
+        HIP_CHECK(hipModuleGetFunction(&Function, Module, "test_device_globals"));
+        HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
+
+        hipMemcpyDtoH(B, Bd, SIZE);
+
+        int mismatchCount = 0;
+        for(uint32_t i=0;i<LEN;i++){
+            float expected = A[i] + myDeviceGlobal_h + myDeviceGlobalArray_h[i%16];
+            if (expected != B[i]) {
+                mismatchCount++;
+                std::cout<<"error: mismatch " << expected <<" != "<<B[i]<<std::endl;
+                if (mismatchCount >= 10) {
+                    break;
+                }
+            }
+        }
+
+        if (mismatchCount == 0) {
+            std::cout << "Check ok!\n";
+        } else {
+            std::cout << "FAILED!\n";
+        };
+    }
 
     hipCtxDestroy(context);
     return 0;

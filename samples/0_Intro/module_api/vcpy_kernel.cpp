@@ -22,8 +22,32 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 
-extern "C" __global__ void hello_world(hipLaunchParm lp, float *a, float *b)
+#define ARRAY_SIZE (16)
+
+__device__ float myDeviceGlobal;
+//extern "C" __device__ int * myDeviceGlobalPtr; // Unreferences globals are eliminated.
+__constant__ float myDeviceGlobalArray[16];;
+
+
+extern "C" __global__ void hello_world(hipLaunchParm lp, const float *a, float *b)
 {
     int tx = hipThreadIdx_x;
     b[tx] = a[tx];
 }
+
+extern "C" __global__ void test_device_globals(hipLaunchParm lp, const float *a, float *b)
+{
+    int tx = hipThreadIdx_x;
+    b[tx] = a[tx] + myDeviceGlobal+ myDeviceGlobalArray[tx%ARRAY_SIZE] ;
+}
+
+#define TEST_PLATFORM_GLOBAL 0
+#if TEST_PLATFORM_GLOBAL
+float myPlatformGlobal;
+
+extern "C" __global__ void test_platform_globals(hipLaunchParm lp, float *a, float *b)
+{
+    int tx = hipThreadIdx_x;
+    b[tx] = a[tx] + myPlatformGlobal;
+}
+#endif
