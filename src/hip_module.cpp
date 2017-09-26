@@ -364,7 +364,7 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
                 return ihipLogStatus(hipErrorSharedObjectInitFailed);
             }
 
-            ihipExecutableCreate(currentDevice, module, agent);
+            ret =  ihipExecutableCreate(currentDevice, module, agent);
 
         }
     }
@@ -697,7 +697,7 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
             return ihipLogStatus(hipErrorSharedObjectInitFailed);
         }
 
-        ihipExecutableCreate(currentDevice, module, agent);
+        ret = ihipExecutableCreate(currentDevice, module, agent);
 
     }
     return ihipLogStatus(ret);
