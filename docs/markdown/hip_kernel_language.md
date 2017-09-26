@@ -161,14 +161,18 @@ The `__constant__` keyword is supported. The host writes constant memory before 
 ### `__shared__` 
 The `__shared__` keyword is supported.
 
-`extern __shared__` allows the host to dynamically allocate shared memory and is specified as a launch parameter.  HIP uses an alternate syntax based on the HIP_DYNAMIC_SHARED macro.
+`extern __shared__` allows the host to dynamically allocate shared memory and is specified as a launch parameter.  HIP uses an alternate syntax based on the HIP_DYNAMIC_SHARED macro.  File-scope __shared__ memory is not supported ; please use function-scope __shared__ memory as a workaround.
 
 ### `__managed__`
 Managed memory, including the `__managed__` keyword, are not supported in HIP.
 
 ### `__restrict__`
 The `__restrict__` keyword tells the compiler that the associated memory pointer will not alias with any other pointer in the kernel or function.  This feature can help the compiler generate better code. In most cases, all pointer arguments must use this keyword to realize the benefit. 
+The `__restrict__` keyword tells the compiler that the associated memory pointer will not alias with any other pointer in the kernel or function.  This feature can help the compiler generate better code. In most cases, all pointer arguments must use this keyword to realize the benefit.
 
+### `__device__`
+The `__device__` keyword can be used to create file-scope globals.
+Device-scope variables must be referenced in a kernel in the same compilation module to prevent the compiler from removing them (since they may appear unused).
 
 ## Built-In Variables
 
