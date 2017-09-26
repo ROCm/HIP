@@ -292,6 +292,7 @@ String hcc_integration_testing( String inside_args, String job, String build_con
   // Attempt to make unique docker image names for each build, to support concurrent builds
   // Mangle docker org name with upstream build info
   String testing_org_name = 'hcc-test-' + get_upstream_build_project( ).replaceAll('/','-') + '-' + get_upstream_build_num( )
+  // String testing_org_name = 'hcc-test-artifacts-download'
 
   // Tag image name with this build number
   String hcc_test_image_name = "hcc:${env.BUILD_NUMBER}"
@@ -303,13 +304,14 @@ String hcc_integration_testing( String inside_args, String job, String build_con
     deleteDir( )
 
     // This invokes 'copy artifact plugin' to copy archived files from upstream build
-    step([$class: 'CopyArtifact', filter: 'archive/**/*.deb, docker/dockerfile-*',
+    step([$class: 'CopyArtifact', filter: 'build/**/*.deb, docker/dockerfile-hcc-lc-*',
       fingerprintArtifacts: true, projectName: get_upstream_build_project( ), flatten: true,
       selector: [$class: 'TriggeredBuildSelector', allowUpstreamDependencies: false, fallbackToLastSuccessful: false, upstreamFilterStrategy: 'UseGlobalSetting'],
       target: '.' ])
-//  //    The following 'copy artifact' is supposed to copy direct from workspace, but it doesn't seem to work across machines
-//    step( [$class: 'CopyArtifact', filter: '**', fingerprintArtifacts: true, flatten: true,
-//    projectName: "${params.upstream_hcc}", selector: [$class: 'WorkspaceSelector'], target: 'integration-testing'] )
+    // step([$class: 'CopyArtifact', filter: 'build/**/*.deb, docker/dockerfile-hcc-lc-*',
+    //   fingerprintArtifacts: true, projectName: 'kknox/hcc/test-artifact-download', flatten: true,
+    //   selector: [$class: 'LastCompletedBuildSelector'],
+    //   target: '.' ])
 
     docker.build( "${testing_org_name}/${hcc_test_image_name}", "-f dockerfile-hcc-lc-ubuntu-16.04 ." )
   }
