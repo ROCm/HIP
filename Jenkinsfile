@@ -291,7 +291,7 @@ String hcc_integration_testing( String inside_args, String job, String build_con
 {
   // Attempt to make unique docker image names for each build, to support concurrent builds
   // Mangle docker org name with upstream build info
-  String testing_org_name = 'hcc-test-' + get_upstream_build_project( ).replaceAll('/','-') + '-' + get_upstream_build_num( )
+  String testing_org_name = 'hcc-test-' + get_upstream_build_project( ).replaceAll('/','-').toLowerCase( ) + '-' + get_upstream_build_num( )
   // String testing_org_name = 'hcc-test-artifacts-download'
 
   // Tag image name with this build number
