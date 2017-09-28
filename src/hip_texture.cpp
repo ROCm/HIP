@@ -255,7 +255,7 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject,
         fillSamplerDescriptor(samplerDescriptor, pTexDesc->addressMode[0], pTexDesc->filterMode, pTexDesc->normalizedCoords);
 
         hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
-        if (HSA_STATUS_SUCCESS != hsa_ext_image_create(*agent, &imageDescriptor, devPtr, permission, &(pTexture->image)) ||
+        if (HSA_STATUS_SUCCESS != hsa_ext_image_create_with_layout(*agent, &imageDescriptor, devPtr, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &(pTexture->image)) ||
             HSA_STATUS_SUCCESS != hsa_ext_sampler_create(*agent, &samplerDescriptor, &(pTexture->sampler))) {
             return ihipLogStatus(hipErrorRuntimeOther);
         }
@@ -394,7 +394,7 @@ hipError_t ihipBindTextureImpl(int dim,
 
         hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
 
-        if (HSA_STATUS_SUCCESS != hsa_ext_image_create(*agent, &imageDescriptor, devPtr, permission, &(pTexture->image)) ||
+        if (HSA_STATUS_SUCCESS != hsa_ext_image_create_with_layout(*agent, &imageDescriptor, devPtr, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &(pTexture->image)) ||
             HSA_STATUS_SUCCESS != hsa_ext_sampler_create(*agent, &samplerDescriptor, &(pTexture->sampler))) {
             return ihipLogStatus(hipErrorRuntimeOther);
         }
@@ -468,7 +468,7 @@ hipError_t ihipBindTexture2DImpl(int dim,
 
         hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
 
-        if (HSA_STATUS_SUCCESS != hsa_ext_image_create(*agent, &imageDescriptor, devPtr, permission, &(pTexture->image)) ||
+        if (HSA_STATUS_SUCCESS != hsa_ext_image_create_with_layout(*agent, &imageDescriptor, devPtr, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &(pTexture->image)) ||
             HSA_STATUS_SUCCESS != hsa_ext_sampler_create(*agent, &samplerDescriptor, &(pTexture->sampler))) {
             return ihipLogStatus(hipErrorRuntimeOther);
         }
@@ -567,7 +567,7 @@ hipError_t ihipBindTextureToArrayImpl(int dim,
 
         hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
 
-        if (HSA_STATUS_SUCCESS != hsa_ext_image_create(*agent, &imageDescriptor, array->data, permission, &(pTexture->image)) ||
+        if (HSA_STATUS_SUCCESS != hsa_ext_image_create_with_layout(*agent, &imageDescriptor, array->data, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &(pTexture->image)) ||
             HSA_STATUS_SUCCESS != hsa_ext_sampler_create(*agent, &samplerDescriptor, &(pTexture->sampler))) {
             return ihipLogStatus(hipErrorRuntimeOther);
         }
