@@ -50,38 +50,20 @@ hipMemcpyHostToHost
 ,hipMemcpyDeviceToDevice
 ,hipMemcpyDefault
 } hipMemcpyKind ;
-#if 0
-typedef enum hipTextureAddressMode {
-    hipAddressModeWrap   = 0,
-    hipAddressModeClamp  = 1,
-    hipAddressModeMirror = 2,
-    hipAddressModeBorder = 3
-}hipTextureAddressMode;
-#endif
+
+//hipTextureAddressMode
 #define hipTextureAddressMode cudaTextureAddressMode
 #define hipAddressModeWrap cudaAddressModeWrap
 #define hipAddressModeClamp cudaAddressModeClamp
 #define hipAddressModeMirror cudaAddressModeMirror
 #define hipAddressModeBorder cudaAddressModeBorder
 
-#if 0
-typedef enum hipTextureFilterMode {
-    hipFilterModePoint  = 0,
-    hipFilterModeLinear = 1
-}hipTextureFilterMode;
-
-#endif
-#if 1
+//hipTextureFilterMode
 #define hipTextureFilterMode cudaTextureFilterMode
 #define hipFilterModePoint cudaFilterModePoint
 #define hipFilterModeLinear cudaFilterModeLinear
-#endif
-#if 0
-typedef enum hipTextureReadMode {
-    hipReadModeElementType     = 0,
-    hipReadModeNormalizedFloat = 1
-}hipTextureReadMode;
-#endif
+
+//hipTextureReadMode
 #define hipTextureReadMode cudaTextureReadMode
 #define hipReadModeElementType cudaReadModeElementType
 #define hipReadModeNormalizedFloat cudaReadModeNormalizedFloat
@@ -92,14 +74,8 @@ typedef enum hipChannelFormatKind {
     hipChannelFormatKindFloat = 2,
     hipChannelFormatKindNone = 3
 }hipChannelFormatKind;
-#if 0
-typedef enum hipResourceType {
-    hipResourceTypeArray = 0,
-    hipResourceTypeMipmappedArray = 1,
-    hipResourceTypeLinear = 2,
-    hipResourceTypePitch2D = 3
-}hipResourceType;
-#endif
+
+//hipResourceType
 #define hipResourceType cudaResourceType
 #define hipResourceTypeArray cudaResourceTypeArray
 #define hipResourceTypeMipmappedArray cudaResourceTypeMipmappedArray
@@ -168,11 +144,8 @@ typedef CUdevice hipDevice_t;
 typedef CUmodule hipModule_t;
 typedef CUfunction hipFunction_t;
 typedef CUdeviceptr hipDeviceptr_t;
-//typedef enum cudaChannelFormatKind hipChannelFormatKind;
-//typedef struct cudaChannelFormatDesc hipChannelFormatDesc;
 typedef struct cudaArray hipArray;
 typedef struct cudaArray* hipArray_const_t;
-//typedef  cudaArray_const_t  hipArray;
 #define hipArrayDefault cudaArrayDefault
 
 typedef cudaTextureObject_t hipTextureObject_t;
@@ -183,7 +156,6 @@ typedef cudaTextureObject_t hipTextureObject_t;
 #define hipStreamDefault            cudaStreamDefault
 #define hipStreamNonBlocking        cudaStreamNonBlocking
 
-//typedef cudaChannelFormatDesc hipChannelFormatDesc;
 #define hipChannelFormatDesc cudaChannelFormatDesc
 #define hipResourceDesc cudaResourceDesc
 #define hipTextureDesc cudaTextureDesc
@@ -371,14 +343,14 @@ inline static hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int fla
 	return hipCUDAErrorTohipError(cudaHostAlloc(ptr, size, flags));
 }
 
-#if __cplusplus
+#if 0 //__cplusplus
 inline static hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
                           size_t width, size_t height = 0, unsigned int flags = hipArrayDefault) {
     return hipCUDAErrorTohipError(cudaMallocArray(array, desc, width, height, flags));
 }
 #else
 inline static hipError_t hipMallocArray(hipArray** array, const struct hipChannelFormatDesc* desc,
-                          size_t width, size_t height, unsigned int flags) {
+                          size_t width, size_t height, unsigned int flags __dparm(hipArrayDefault)) {
     return hipCUDAErrorTohipError(cudaMallocArray(array, desc, width, height, flags));
 }
 #endif
