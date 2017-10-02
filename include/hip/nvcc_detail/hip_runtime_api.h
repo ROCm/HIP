@@ -343,17 +343,10 @@ inline static hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int fla
 	return hipCUDAErrorTohipError(cudaHostAlloc(ptr, size, flags));
 }
 
-#if 0 //__cplusplus
-inline static hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
-                          size_t width, size_t height = 0, unsigned int flags = hipArrayDefault) {
-    return hipCUDAErrorTohipError(cudaMallocArray(array, desc, width, height, flags));
-}
-#else
 inline static hipError_t hipMallocArray(hipArray** array, const struct hipChannelFormatDesc* desc,
                           size_t width, size_t height, unsigned int flags __dparm(hipArrayDefault)) {
     return hipCUDAErrorTohipError(cudaMallocArray(array, desc, width, height, flags));
 }
-#endif
 
 inline static hipError_t hipFreeArray(hipArray* array) {
   return hipCUDAErrorTohipError(cudaFreeArray(array));
