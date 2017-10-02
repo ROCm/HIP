@@ -62,8 +62,20 @@ def docker_clean_images( String org, String image_name )
   // The script returns a 0 for success (images were found )
   if( docker_images == 0 )
   {
-    // run bash script to clean images:tags after successful pushing
-    sh "docker images | grep \"${org}/${image_name}\" | awk '{print \$1 \":\" \$2}' | xargs docker rmi"
+    // Deleting images can fail, if other projects have built on top of that image and are now dependent on it.
+    // This should not be treated as a hip build failure.  This requires cleanup at a later time, possibly through
+    // another job
+    try
+    {
+      // Best attempt to run bash script to clean images
+      // deleting images based on hash seems to be more stable than through name:tag values because of <none> tags
+      sh "docker images | grep \"${org}/${image_name}\" | awk '{print \$1 \":\" \$2}' | xargs docker rmi"
+    }
+    catch( err )
+    {
+      println 'Failed to cleanup a few images; probably the images are used as a base for other images'
+      currentBuild.result = 'SUCCESS'
+    }
   }
 }
 
