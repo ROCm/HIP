@@ -51,14 +51,39 @@ hipMemcpyHostToHost
 ,hipMemcpyDefault
 } hipMemcpyKind ;
 
+//hipTextureAddressMode
+#define hipTextureAddressMode cudaTextureAddressMode
+#define hipAddressModeWrap cudaAddressModeWrap
+#define hipAddressModeClamp cudaAddressModeClamp
+#define hipAddressModeMirror cudaAddressModeMirror
+#define hipAddressModeBorder cudaAddressModeBorder
+
+//hipTextureFilterMode
+#define hipTextureFilterMode cudaTextureFilterMode
+#define hipFilterModePoint cudaFilterModePoint
+#define hipFilterModeLinear cudaFilterModeLinear
+
+//hipTextureReadMode
+#define hipTextureReadMode cudaTextureReadMode
+#define hipReadModeElementType cudaReadModeElementType
+#define hipReadModeNormalizedFloat cudaReadModeNormalizedFloat
+
+typedef enum hipChannelFormatKind {
+    hipChannelFormatKindSigned = 0,
+    hipChannelFormatKindUnsigned  = 1,
+    hipChannelFormatKindFloat = 2,
+    hipChannelFormatKindNone = 3
+}hipChannelFormatKind;
+
+//hipResourceType
+#define hipResourceType cudaResourceType
+#define hipResourceTypeArray cudaResourceTypeArray
+#define hipResourceTypeMipmappedArray cudaResourceTypeMipmappedArray
+#define hipResourceTypeLinear cudaResourceTypeLinear
+#define hipResourceTypePitch2D cudaResourceTypePitch2D
+//
 // hipErrorNoDevice.
 
-/*typedef enum hipTextureFilterMode
-{
-    hipFilterModePoint = cudaFilterModePoint,  ///< Point filter mode.
-//! @warning cudaFilterModeLinear is not supported.
-} hipTextureFilterMode;*/
-#define hipFilterModePoint cudaFilterModePoint
 
 //! Flags that can be used with hipEventCreateWithFlags:
 #define hipEventDefault              cudaEventDefault
@@ -119,18 +144,22 @@ typedef CUdevice hipDevice_t;
 typedef CUmodule hipModule_t;
 typedef CUfunction hipFunction_t;
 typedef CUdeviceptr hipDeviceptr_t;
-typedef enum cudaChannelFormatKind hipChannelFormatKind;
-typedef struct cudaChannelFormatDesc hipChannelFormatDesc;
-typedef enum cudaTextureReadMode hipTextureReadMode;
 typedef struct cudaArray hipArray;
+typedef struct cudaArray* hipArray_const_t;
+#define hipArrayDefault cudaArrayDefault
+
+typedef cudaTextureObject_t hipTextureObject_t;
+#define hipTextureType2D cudaTextureType2D;
+#define hipDeviceMapHost cudaDeviceMapHost
 
 // Flags that can be used with hipStreamCreateWithFlags
 #define hipStreamDefault            cudaStreamDefault
 #define hipStreamNonBlocking        cudaStreamNonBlocking
 
-//typedef cudaChannelFormatDesc hipChannelFormatDesc;
 #define hipChannelFormatDesc cudaChannelFormatDesc
-
+#define hipResourceDesc cudaResourceDesc
+#define hipTextureDesc cudaTextureDesc
+#define hipResourceViewDesc cudaResourceViewDesc
 //adding code for hipmemSharedConfig
 #define hipSharedMemBankSizeDefault cudaSharedMemBankSizeDefault
 #define hipSharedMemBankSizeFourByte cudaSharedMemBankSizeFourByte
@@ -214,6 +243,58 @@ inline static enum cudaMemcpyKind hipMemcpyKindToCudaMemcpyKind(hipMemcpyKind ki
 }
 }
 
+inline static cudaTextureAddressMode hipTextureAddressModeToCudaTextureAddressMode(hipTextureAddressMode kind) {
+    switch(kind) {
+    case hipAddressModeWrap:
+        return cudaAddressModeWrap;
+    case hipAddressModeClamp:
+        return cudaAddressModeClamp;
+    case hipAddressModeMirror:
+        return cudaAddressModeMirror;
+    case hipAddressModeBorder:
+        return cudaAddressModeBorder;
+    default:
+        return cudaAddressModeWrap;
+}
+}
+
+inline static cudaTextureFilterMode hipTextureFilterModeToCudaTextureFilterMode(hipTextureFilterMode kind) {
+    switch(kind) {
+    case hipFilterModePoint:
+        return cudaFilterModePoint;
+    case hipFilterModeLinear:
+        return cudaFilterModeLinear;
+    default:
+        return cudaFilterModePoint;
+}
+}
+
+inline static cudaTextureReadMode hipTextureReadModeToCudaTextureReadMode(hipTextureReadMode kind) {
+    switch(kind) {
+    case hipReadModeElementType:
+        return cudaReadModeElementType;
+    case hipReadModeNormalizedFloat:
+        return cudaReadModeNormalizedFloat;
+    default:
+        return cudaReadModeElementType;
+}
+}
+
+inline static cudaChannelFormatKind hipChannelFormatKindToCudaChannelFormatKind(hipChannelFormatKind kind) {
+    switch(kind) {
+    case hipChannelFormatKindSigned :
+        return cudaChannelFormatKindSigned ;
+    case hipChannelFormatKindUnsigned :
+        return cudaChannelFormatKindUnsigned ;
+    case hipChannelFormatKindFloat :
+        return cudaChannelFormatKindFloat  ;
+    case hipChannelFormatKindNone  :
+        return cudaChannelFormatKindNone ;
+    default:
+        return cudaChannelFormatKindNone ;
+}
+}
+
 /**
  * Stream CallBack struct
  */
@@ -262,8 +343,9 @@ inline static hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int fla
 	return hipCUDAErrorTohipError(cudaHostAlloc(ptr, size, flags));
 }
 
-inline static hipError_t hipMallocArray(hipArray** array, const struct hipChannelFormatDesc* desc, size_t width, size_t height, unsigned int flags) {
-  return hipCUDAErrorTohipError(cudaMallocArray(array, desc, width, height, flags));
+inline static hipError_t hipMallocArray(hipArray** array, const struct hipChannelFormatDesc* desc,
+                          size_t width, size_t height, unsigned int flags __dparm(hipArrayDefault)) {
+    return hipCUDAErrorTohipError(cudaMallocArray(array, desc, width, height, flags));
 }
 
 inline static hipError_t hipFreeArray(hipArray* array) {
@@ -1007,10 +1089,43 @@ inline static hipError_t  hipUnbindTexture(struct texture<T, dim, readMode> *tex
 		return  hipCUDAErrorTohipError(cudaUnbindTexture(tex));
 }
 
+template <class T, int dim, enum hipTextureReadMode readMode>
+inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex,
+                                 hipArray_const_t array,
+                                 const struct hipChannelFormatDesc& desc)
+{
+    return  hipCUDAErrorTohipError(cudaBindTextureToArray(tex, array,desc));
+}
+
+template <class T, int dim, enum cudaTextureReadMode readMode>
+inline static  hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> &tex,
+                                 hipArray_const_t array)
+{
+    return hipCUDAErrorTohipError(cudaBindTextureToArray(tex, array));
+}
+
 template <class T>
 inline static hipChannelFormatDesc hipCreateChannelDesc()
 {
 		return cudaCreateChannelDesc<T>();
+}
+
+inline static hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f)
+{
+    return cudaCreateChannelDesc(x , y , z , w, hipChannelFormatKindToCudaChannelFormatKind(f)); 
+}
+
+inline static hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject,
+                                  const hipResourceDesc* pResDesc,
+                                  const hipTextureDesc* pTexDesc,
+                                  const hipResourceViewDesc* pResViewDesc)
+{
+    return hipCUDAErrorTohipError(cudaCreateTextureObject(pTexObject, pResDesc, pTexDesc, pResViewDesc));
+}
+
+inline static hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject)
+{
+    return hipCUDAErrorTohipError(cudaDestroyTextureObject(textureObject));
 }
 #endif //__CUDACC__
 
