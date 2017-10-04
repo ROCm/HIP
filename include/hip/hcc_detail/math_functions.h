@@ -23,6 +23,11 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_MATH_FUNCTIONS_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_MATH_FUNCTIONS_H
 
+#if defined(__HCC__)
+   #include <kalmar_math.h>
+#endif
+
+
 #include <hip/hip_runtime.h>
 #include <hip/hip_vector_types.h>
 #include <hip/hcc_detail/device_functions.h>
