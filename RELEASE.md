@@ -9,6 +9,17 @@ We have attempted to document known bugs and limitations - in particular the [HI
 ## Revision History:
 
 ===================================================================================================
+Release: 1.4
+Date: 2017.10.06
+- Improvements to HIP event management
+- Added new HIP_TRACE_API options
+- Enabled device side assert support
+- Several bug fixes including hipMallocArray, hipTexture fetch
+- Support for RHEL/CentOS 7.4
+- Updates to hipify-perl, hipify-clang and documentation
+
+
+===================================================================================================
 Release: 1.3
 Date: 2017.08.16
 - hipcc now auto-detects amdgcn arch. No need to specify the arch when building for same system.
