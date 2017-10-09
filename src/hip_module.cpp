@@ -242,6 +242,7 @@ namespace
     inline
     void associate_code_object_symbols_with_host_allocation(
         const ELFIO::elfio& reader,
+        const ELFIO::elfio& self_reader,
         ELFIO::section* code_object_dynsym,
         ELFIO::section* process_symtab,
         hsa_agent_t agent,
@@ -257,7 +258,7 @@ namespace
 
         for (auto&& x : undefined_symbols) {
             const auto tmp = find_symbol_address(
-                symbol_section_accessor{reader, process_symtab}, x);
+                symbol_section_accessor{self_reader, process_symtab}, x);
 
             assert(tmp.first);
 
@@ -343,6 +344,7 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
             // TODO: this may benefit from caching as well.
             elfio self_reader;
             self_reader.load("/proc/self/exe");
+
             const auto symtab =
                 find_section_if(self_reader, [](const ELFIO::section* x) {
                     return x->get_type() == SHT_SYMTAB;
@@ -355,6 +357,7 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
 
             associate_code_object_symbols_with_host_allocation(
                 reader,
+                self_reader,
                 code_object_dynsym,
                 symtab,
                 currentDevice->_hsaAgent,
