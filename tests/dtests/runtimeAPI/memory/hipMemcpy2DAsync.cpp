@@ -62,7 +62,6 @@ int main()
  
     HipTest::checkVectorADD(A_h, B_h, C_h, numW*numH);
  
-    HipTest::freeArrays (A_d, B_d, C_d, A_h, B_h, C_h, 0);
     passed();
 }
 
