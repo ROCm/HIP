@@ -3314,7 +3314,17 @@ private:
       for (unsigned argno = 0; argno < launchKernel->getNumArgs(); argno++) {
         const Expr *arg = launchKernel->getArg(argno);
         SourceLocation sl(arg->getLocStart());
+        if (SM->isMacroBodyExpansion(sl)) {
+          sl = SM->getExpansionLoc(sl);
+        } else if (SM->isMacroArgExpansion(sl)) {
+          sl = SM->getImmediateSpellingLoc(sl);
+        }
         SourceLocation el(arg->getLocEnd());
+        if (SM->isMacroBodyExpansion(el)) {
+          el = SM->getExpansionLoc(el);
+        } else if (SM->isMacroArgExpansion(el)) {
+          el = SM->getImmediateSpellingLoc(el);
+        }
         SourceLocation stop = Lexer::getLocForEndOfToken(el, 0, *SM, DefaultLangOptions);
         std::string outs(SM->getCharacterData(sl), SM->getCharacterData(stop) - SM->getCharacterData(sl));
         DEBUG(dbgs() << outs << "\n");
