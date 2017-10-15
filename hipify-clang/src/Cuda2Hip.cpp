@@ -4302,12 +4302,12 @@ int main(int argc, const char **argv) {
     replacementsToUse = &Tool.getReplacements();
 #endif
 
-    HipifyPPCallbacks PPCallbacks(replacementsToUse, tmpFile);
-    Cuda2HipCallback Callback(replacementsToUse, &Finder, &PPCallbacks, tmpFile);
+    HipifyPPCallbacks* PPCallbacks = new HipifyPPCallbacks(replacementsToUse, tmpFile);
+    Cuda2HipCallback Callback(replacementsToUse, &Finder, PPCallbacks, tmpFile);
 
     addAllMatchers(Finder, &Callback);
 
-    auto action = newFrontendActionFactory(&Finder, &PPCallbacks);
+    auto action = newFrontendActionFactory(&Finder, PPCallbacks);
 
     Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("--cuda-host-only", ArgumentInsertPosition::BEGIN));
 
@@ -4365,13 +4365,13 @@ int main(int argc, const char **argv) {
         }
         std::remove(csv.c_str());
       }
-      if (0 == printStats(csv, src, PPCallbacks, Callback, repBytes, bytes, lines, start)) {
+      if (0 == printStats(csv, src, *PPCallbacks, Callback, repBytes, bytes, lines, start)) {
         filesTranslated--;
       }
       start = std::chrono::steady_clock::now();
       repBytesTotal += repBytes;
       bytesTotal += bytes;
-      changedLinesTotal += PPCallbacks.LOCs.size() + Callback.LOCs.size();
+      changedLinesTotal += PPCallbacks->LOCs.size() + Callback.LOCs.size();
       linesTotal += lines;
     }
     dst.clear();
