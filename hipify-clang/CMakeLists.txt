@@ -59,13 +59,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHIPIFY_CLANG_RES=\\\"${LLVM_LIBRARY_DI
 install(TARGETS hipify-clang DESTINATION bin)
 
 # tests
-set(Python_ADDITIONAL_VERSIONS 2.7)
-include(FindPythonInterp)
-if(NOT PYTHONINTERP_FOUND)
-    message(FATAL_ERROR
-        "Unable to find Python interpreter, required for builds and testing\n\n"
-        "Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
-endif()
+find_package(PythonInterp 2.7 REQUIRED EXACT)
 
 # If lit is installed, build the testsuite.
 find_program(LIT_COMMAND lit)
