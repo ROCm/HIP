@@ -3109,10 +3109,10 @@ public:
         // to workaround the 'const' MacroArgs passed into this hook.
         const Token *start = Args->getUnexpArgument(i);
         size_t len = Args->getArgLength(start) + 1;
-#if (LLVM_VERSION_MAJOR >= 3) && (LLVM_VERSION_MINOR >= 9)
-        _pp->EnterTokenStream(ArrayRef<Token>(start, len), false);
-#else
+#if (LLVM_VERSION_MAJOR == 3) && (LLVM_VERSION_MINOR == 8)
         _pp->EnterTokenStream(start, len, false, false);
+#else
+        _pp->EnterTokenStream(ArrayRef<Token>(start, len), false);
 #endif
         do {
           toks.push_back(Token());
@@ -4201,11 +4201,15 @@ void printAllStats(const std::string &csvFile, int64_t totalFiles, int64_t conve
 int main(int argc, const char **argv) {
   auto start = std::chrono::steady_clock::now();
   auto begin = start;
-#if (LLVM_VERSION_MAJOR >= 3) && (LLVM_VERSION_MINOR >= 9)
-  llvm::sys::PrintStackTraceOnErrorSignal(StringRef());
-#else
+
+  // The signature of PrintStackTraceOnErrorSignal changed in llvm 3.9. We don't support
+  // anything older than 3.8, so let's specifically detect the one old version we support.
+#if (LLVM_VERSION_MAJOR == 3) && (LLVM_VERSION_MINOR == 8)
   llvm::sys::PrintStackTraceOnErrorSignal();
+#else
+  llvm::sys::PrintStackTraceOnErrorSignal(StringRef());
 #endif
+
   CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::OneOrMore);
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
   std::string dst = OutputFilename;
