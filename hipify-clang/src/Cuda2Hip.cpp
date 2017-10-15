@@ -3029,7 +3029,6 @@ public:
     SourceManager &SM = CI.getSourceManager();
     setSourceManager(&SM);
     PP.addPPCallbacks(std::unique_ptr<HipifyPPCallbacks>(this));
-    PP.Retain();
     setPreprocessor(&PP);
     return true;
   }
