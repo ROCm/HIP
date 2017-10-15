@@ -3030,7 +3030,11 @@ public:
   HipifyPPCallbacks(Replacements *R, const std::string &mainFileName)
     : Cuda2Hip(R, mainFileName), SeenEnd(false), _sm(nullptr), _pp(nullptr) {}
 
-  virtual bool handleBeginSource(CompilerInstance &CI, StringRef Filename) override {
+  virtual bool handleBeginSource(CompilerInstance &CI
+#if LLVM_VERSION_MAJOR < 4
+                                 , StringRef Filename
+#endif
+                                 ) override {
     Preprocessor &PP = CI.getPreprocessor();
     SourceManager &SM = CI.getSourceManager();
     setSourceManager(&SM);
