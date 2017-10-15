@@ -4291,8 +4291,19 @@ int main(int argc, const char **argv) {
     // So what we do is operate on a copy, which we then move to the output.
     RefactoringTool Tool(OptionsParser.getCompilations(), tmpFile);
     ast_matchers::MatchFinder Finder;
-    HipifyPPCallbacks PPCallbacks(&Tool.getReplacements(), tmpFile);
-    Cuda2HipCallback Callback(&Tool.getReplacements(), &Finder, &PPCallbacks, tmpFile);
+
+    // The Replacements to apply to the file `src`.
+    Replacements* replacementsToUse;
+#if LLVM_VERSION_MAJOR > 3
+    // getReplacements() now returns a map from filename to Replacements - so create an entry
+    // for this source file and return a pointer to it.
+    replacementsToUse = &(Tool.getReplacements()[tmpFile]);
+#else
+    replacementsToUse = &Tool.getReplacements();
+#endif
+
+    HipifyPPCallbacks PPCallbacks(replacementsToUse, tmpFile);
+    Cuda2HipCallback Callback(replacementsToUse, &Finder, &PPCallbacks, tmpFile);
 
     addAllMatchers(Finder, &Callback);
 
@@ -4320,9 +4331,14 @@ int main(int argc, const char **argv) {
     SourceManager SM(Diagnostics, Tool.getFiles());
     if (PrintStats) {
       DEBUG(dbgs() << "Replacements collected by the tool:\n");
-      for (const auto &r : Tool.getReplacements()) {
-        DEBUG(dbgs() << r.toString() << "\n");
-        repBytes += r.getLength();
+#if LLVM_VERSION_MAJOR > 3
+        Replacements& replacements = Tool.getReplacements().begin()->second;
+#else
+        Replacements& replacements = Tool.getReplacements();
+#endif
+      for (const auto &replacement : replacements) {
+        DEBUG(dbgs() << replacement.toString() << "\n");
+        repBytes += replacement.getLength();
       }
       std::ifstream src_file(dst, std::ios::binary | std::ios::ate);
       src_file.clear();
