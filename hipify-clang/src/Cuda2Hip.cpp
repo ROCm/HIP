@@ -2928,7 +2928,13 @@ protected:
   std::string mainFileName;
 
   virtual void insertReplacement(const Replacement &rep, const FullSourceLoc &fullSL) {
+#if LLVM_VERSION_MAJOR > 3
+    // New clang added error checking to Replacements, and *insists* that you explicitly check it.
+    llvm::Error e = Replace->add(rep);
+#else
+    // In older versions, it's literally an std::set<Replacement>
     Replace->insert(rep);
+#endif
     if (PrintStats) {
       LOCs.insert(fullSL.getExpansionLineNumber());
     }
