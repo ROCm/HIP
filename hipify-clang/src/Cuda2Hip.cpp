@@ -3799,7 +3799,7 @@ private:
   }
 
   bool stringLiteral(const MatchFinder::MatchResult &Result) {
-    if (const StringLiteral *sLiteral = Result.Nodes.getNodeAs<StringLiteral>("stringLiteral")) {
+    if (const clang::StringLiteral *sLiteral = Result.Nodes.getNodeAs<clang::StringLiteral>("stringLiteral")) {
       if (sLiteral->getCharByteWidth() == 1) {
         StringRef s = sLiteral->getString();
         SourceManager *SM = Result.SourceManager;
