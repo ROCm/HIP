@@ -4249,7 +4249,7 @@ int main(int argc, const char **argv) {
     if (dst.empty()) {
       dst = src;
       if (!Inplace) {
-        size_t pos = dst.rfind(".");
+        size_t pos = dst.rfind('.');
         if (pos != std::string::npos && pos + 1 < dst.size()) {
           dst = dst.substr(0, pos) + ".hip." + dst.substr(pos + 1, dst.size() - pos - 1);
         } else {
@@ -4320,7 +4320,7 @@ int main(int argc, const char **argv) {
       Result += Rewrite.overwriteChangedFiles();
     }
     if (!Inplace && !NoOutput) {
-      size_t pos = dst.rfind(".");
+      size_t pos = dst.rfind('.');
       if (pos != std::string::npos) {
         rename(dst.c_str(), dst.substr(0, pos).c_str());
       }
