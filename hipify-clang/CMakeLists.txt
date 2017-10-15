@@ -21,7 +21,6 @@ if (${LLVM_FOUND})
     link_directories(${LLVM_LIBRARY_DIRS})
     add_definitions(${LLVM_DEFINITIONS})
     add_llvm_executable(hipify-clang src/Cuda2Hip.cpp)
-    find_program(LIT_COMMAND lit)
 
     set(CMAKE_CXX_COMPILER ${LLVM_TOOLS_BINARY_DIR}/clang++)
     set(CMAKE_C_COMPILER ${LLVM_TOOLS_BINARY_DIR}/clang)
@@ -67,22 +66,29 @@ if (${LLVM_FOUND})
             "Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
     endif()
 
-    set(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+    # If lit is installed, build the testsuite.
+    find_program(LIT_COMMAND lit)
+    if (LIT_COMMAND)
+        set(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
-    configure_file(
-        ${CMAKE_SOURCE_DIR}/tests/hipify-clang/lit.site.cfg.in
-        ${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
-        @ONLY)
-
-    add_lit_testsuite(test-hipify "Running HIPify regression tests"
-        ${CMAKE_SOURCE_DIR}/tests/hipify-clang
-        PARAMS site_config=${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
-        DEPENDS hipify-clang lit
+        configure_file(
+            ${CMAKE_SOURCE_DIR}/tests/hipify-clang/lit.site.cfg.in
+            ${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
+            @ONLY
         )
 
-    add_custom_target(test-hipify-clang)
-    add_dependencies(test-hipify-clang test-hipify)
-    set_target_properties(test-hipify-clang PROPERTIES FOLDER "Tests")
+        add_lit_testsuite(test-hipify "Running HIPify regression tests"
+            ${CMAKE_SOURCE_DIR}/tests/hipify-clang
+            PARAMS site_config=${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
+            DEPENDS hipify-clang lit
+        )
+
+        add_custom_target(test-hipify-clang)
+        add_dependencies(test-hipify-clang test-hipify)
+        set_target_properties(test-hipify-clang PROPERTIES FOLDER "Tests")
+    else()
+        message(STATUS "hipify-clang's tests are not being built because `lit` is not installed.")
+    endif()
 
     set(BUILD_HIPIFY_CLANG 1 PARENT_SCOPE)
 endif()
