@@ -3102,7 +3102,14 @@ public:
                             const MacroDefinition &MD, SourceRange Range,
                             const MacroArgs *Args) override {
     if (_sm->isWrittenInMainFile(MacroNameTok.getLocation())) {
-      for (unsigned int i = 0; Args && i < MD.getMacroInfo()->getNumArgs(); i++) {
+        // The getNumArgs function was rather unhelpfully renamed in clang 4.0. Its semantics
+        // remain unchanged.
+#if LLVM_VERSION_MAJOR > 3
+        #define GET_NUM_ARGS() getNumParams()
+#else
+        #define GET_NUM_ARGS() getNumArgs()
+#endif
+      for (unsigned int i = 0; Args && i < MD.getMacroInfo()->GET_NUM_ARGS(); i++) {
         std::vector<Token> toks;
         // Code below is a kind of stolen from 'MacroArgs::getPreExpArgument'
         // to workaround the 'const' MacroArgs passed into this hook.
