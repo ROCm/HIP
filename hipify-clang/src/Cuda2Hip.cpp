@@ -3028,7 +3028,7 @@ class Cuda2HipCallback;
 class HipifyPPCallbacks : public PPCallbacks, public SourceFileCallbacks, public Cuda2Hip {
 public:
   HipifyPPCallbacks(Replacements *R, const std::string &mainFileName)
-    : Cuda2Hip(R, mainFileName), SeenEnd(false), _sm(nullptr), _pp(nullptr) {}
+    : Cuda2Hip(R, mainFileName) {}
 
   virtual bool handleBeginSource(CompilerInstance &CI
 #if LLVM_VERSION_MAJOR < 4
@@ -3201,15 +3201,15 @@ public:
 
   void EndOfMainFile() override {}
 
-  bool SeenEnd;
+  bool SeenEnd = false;
   void setSourceManager(SourceManager *sm) { _sm = sm; }
   void setPreprocessor(Preprocessor *pp) { _pp = pp; }
   void setMatch(Cuda2HipCallback *match) { Match = match; }
 
 private:
-  SourceManager *_sm;
-  Preprocessor *_pp;
-  Cuda2HipCallback *Match;
+  SourceManager *_sm = nullptr;
+  Preprocessor *_pp = nullptr;
+  Cuda2HipCallback *Match = nullptr;
 };
 
 class Cuda2HipCallback : public MatchFinder::MatchCallback, public Cuda2Hip {
