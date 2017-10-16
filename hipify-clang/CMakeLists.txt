@@ -3,6 +3,13 @@ project(hipify-clang)
 
 option(HIPIFY_CLANG_TESTS "Build the tests for hipify-clang, if lit is installed" ON)
 
+# Disable the tests if `lit` is not installed.
+find_program(LIT_COMMAND lit)
+if (NOT LIT_COMMAND)
+    set(HIPIFY_CLANG_TESTS OFF CACHE INTERNAL "")
+    message(STATUS "hipify-clang's tests are not being built because `lit` is not installed.")
+endif()
+
 if (PARENT_SCOPE)
     set(BUILD_HIPIFY_CLANG 0 PARENT_SCOPE)
 endif()
@@ -67,20 +74,20 @@ install(TARGETS hipify-clang DESTINATION bin)
 if (HIPIFY_CLANG_TESTS)
     # tests
     find_package(PythonInterp 2.7 REQUIRED EXACT)
-    find_program(LIT_COMMAND lit)
 
     set(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
     configure_file(
         ${CMAKE_SOURCE_DIR}/tests/hipify-clang/lit.site.cfg.in
         ${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
-        @ONLY)
+        @ONLY
+    )
 
     add_lit_testsuite(test-hipify "Running HIPify regression tests"
         ${CMAKE_SOURCE_DIR}/tests/hipify-clang
         PARAMS site_config=${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
         DEPENDS hipify-clang lit
-        )
+    )
 
     add_custom_target(test-hipify-clang)
     add_dependencies(test-hipify-clang test-hipify)
