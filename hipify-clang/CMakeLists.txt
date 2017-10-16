@@ -7,15 +7,7 @@ if (PARENT_SCOPE)
     set(BUILD_HIPIFY_CLANG 0 PARENT_SCOPE)
 endif()
 
-# Find LLVM package
-find_package(LLVM 3.8 QUIET PATHS ${HIPIFY_CLANG_LLVM_DIR} NO_DEFAULT_PATH)
-if (NOT ${LLVM_FOUND})
-    find_package(LLVM 3.9 QUIET PATHS ${HIPIFY_CLANG_LLVM_DIR} NO_DEFAULT_PATH)
-    if (NOT ${LLVM_FOUND})
-        message(STATUS "hipify-clang will not be built. To build it please specify absolute path to LLVM 3.8 or LLVM 3.9 package/dist using -DHIPIFY_CLANG_LLVM_DIR")
-        return()
-    endif()
-endif()
+find_package(LLVM PATHS ${HIPIFY_CLANG_LLVM_DIR} REQUIRED)
 
 list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
 include(AddLLVM)
