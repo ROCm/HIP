@@ -29,7 +29,10 @@ message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 include_directories(${LLVM_INCLUDE_DIRS})
 link_directories(${LLVM_LIBRARY_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
-add_llvm_executable(hipify-clang src/Cuda2Hip.cpp)
+add_llvm_executable(hipify-clang
+    src/Cuda2Hip.cpp
+    src/CUDA2HipMap.cpp
+)
 
 set(CMAKE_CXX_COMPILER ${LLVM_TOOLS_BINARY_DIR}/clang++)
 set(CMAKE_C_COMPILER ${LLVM_TOOLS_BINARY_DIR}/clang)
