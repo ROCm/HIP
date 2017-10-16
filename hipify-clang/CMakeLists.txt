@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.8)
 project(hipify-clang)
 
+option(HIPIFY_CLANG_TESTS "Build the tests for hipify-clang, if lit is installed" ON)
+
 if (PARENT_SCOPE)
     set(BUILD_HIPIFY_CLANG 0 PARENT_SCOPE)
 endif()
