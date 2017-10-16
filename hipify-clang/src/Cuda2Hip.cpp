@@ -4239,7 +4239,6 @@ int main(int argc, const char **argv) {
         llvm::errs() << "[HIPIFY] conflict: both -o and -inplace options are specified.\n";
         return 1;
       }
-      dst += ".hip";
     }
 
     std::string tmpFile = src + ".hipify-tmp";
