@@ -10,9 +10,7 @@ if (NOT LIT_COMMAND)
     message(STATUS "hipify-clang's tests are not being built because `lit` is not installed.")
 endif()
 
-if (PARENT_SCOPE)
-    set(BUILD_HIPIFY_CLANG 0 PARENT_SCOPE)
-endif()
+set(BUILD_HIPIFY_CLANG 0 CACHE INTERNAL "")
 
 find_package(LLVM PATHS ${HIPIFY_CLANG_LLVM_DIR} REQUIRED)
 
@@ -94,6 +92,4 @@ if (HIPIFY_CLANG_TESTS)
     set_target_properties(test-hipify-clang PROPERTIES FOLDER "Tests")
 endif()
 
-if (PARENT_SCOPE)
-    set(BUILD_HIPIFY_CLANG 1 PARENT_SCOPE)
-endif()
+set(BUILD_HIPIFY_CLANG 1 CACHE INTERNAL "")
