@@ -4243,7 +4243,7 @@ int main(int argc, const char **argv) {
       source.close();
       dest.close();
     }
-    RefactoringTool Tool(OptionsParser.getCompilations(), dst);
+    RefactoringTool Tool(OptionsParser.getCompilations(), src);
     ast_matchers::MatchFinder Finder;
     HipifyPPCallbacks PPCallbacks(&Tool.getReplacements(), src);
     Cuda2HipCallback Callback(&Tool.getReplacements(), &Finder, &PPCallbacks, src);
