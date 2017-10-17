@@ -1061,28 +1061,24 @@ public:
   }
 
   void run(const MatchFinder::MatchResult &Result) override {
-    do {
-      if (cudaCall(Result)) break;
-      if (cudaBuiltin(Result)) break;
-      if (cudaEnumConstantRef(Result)) break;
-      if (cudaEnumDecl(Result)) break;
-      if (cudaEnumVarPtr(Result)) break;
-      if (cudaTypedefVar(Result)) break;
-      if (cudaTypedefVarPtr(Result)) break;
-      if (cudaStructVar(Result)) break;
-      if (cudaStructVarPtr(Result)) break;
-      if (cudaStructSizeOf(Result)) break;
-      if (cudaParamDecl(Result)) break;
-      if (cudaParamDeclPtr(Result)) break;
-      if (cudaLaunchKernel(Result)) break;
-      if (cudaNewOperatorDecl(Result)) break;
-      if (cudaFunctionReturn(Result)) break;
-      if (cudaSharedIncompleteArrayVar(Result)) break;
-      if (stringLiteral(Result)) break;
-      if (unresolvedTemplateName(Result)) break;
-      break;
-    } while (false);
-    insertHipHeaders(PP, *Result.SourceManager);
+    if (cudaCall(Result)) return;
+    if (cudaBuiltin(Result)) return;
+    if (cudaEnumConstantRef(Result)) return;
+    if (cudaEnumDecl(Result)) return;
+    if (cudaEnumVarPtr(Result)) return;
+    if (cudaTypedefVar(Result)) return;
+    if (cudaTypedefVarPtr(Result)) return;
+    if (cudaStructVar(Result)) return;
+    if (cudaStructVarPtr(Result)) return;
+    if (cudaStructSizeOf(Result)) return;
+    if (cudaParamDecl(Result)) return;
+    if (cudaParamDeclPtr(Result)) return;
+    if (cudaLaunchKernel(Result)) return;
+    if (cudaNewOperatorDecl(Result)) return;
+    if (cudaFunctionReturn(Result)) return;
+    if (cudaSharedIncompleteArrayVar(Result)) return;
+    if (stringLiteral(Result)) return;
+    if (unresolvedTemplateName(Result)) return;
   }
 
 private:
