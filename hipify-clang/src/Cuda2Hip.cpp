@@ -126,6 +126,17 @@ StringRef unquoteStr(StringRef s) {
   return s;
 }
 
+/**
+ * If `s` starts with `prefix`, remove it. Otherwise, does nothing.
+ */
+void removePrefixIfPresent(std::string& s, std::string prefix) {
+  if (s.find(prefix) != 0) {
+    return;
+  }
+
+  s.erase(0, prefix.size());
+}
+
 class Cuda2Hip {
 public:
   Cuda2Hip(Replacements *R, const std::string &srcFileName) :
@@ -646,289 +657,51 @@ private:
     return false;
   }
 
-  bool cudaEnumDecl(const MatchFinder::MatchResult &Result) {
-    if (const VarDecl *enumDecl = Result.Nodes.getNodeAs<VarDecl>("cudaEnumDecl")) {
-      std::string name = enumDecl->getType()->getAsTagDecl()->getNameAsString();
-      QualType QT = enumDecl->getType().getUnqualifiedType();
-      std::string name_unqualified = QT.getAsString();
-      if ((name_unqualified.find(' ') == std::string::npos && name.find(' ') == std::string::npos) || name.empty()) {
-        name = name_unqualified;
+  bool cudaType(const MatchFinder::MatchResult& Result) {
+      const clang::TypeLoc* ret = Result.Nodes.getNodeAs<TypeLoc>("cudaType");
+      if (!ret) {
+          return false;
       }
-      // Workaround for enum VarDecl as param decl, declared with enum type specifier
-      // Example: void func(enum cudaMemcpyKind kind);
-      //-------------------------------------------------
-      SourceManager *SM = Result.SourceManager;
-      SourceLocation sl(enumDecl->getLocStart());
-      SourceLocation end(enumDecl->getLocEnd());
-      size_t repLength = SM->getCharacterData(end) - SM->getCharacterData(sl);
-      StringRef sfull = StringRef(SM->getCharacterData(sl), repLength);
-      size_t offset = sfull.find(name);
-      if (offset > 0) {
-        sl = sl.getLocWithOffset(offset);
+
+      // Ignore qualifiers - they don't alter our decision to rename.
+      clang::UnqualTypeLoc tl = ret->getUnqualifiedLoc();
+      const Type& typeObject = *(tl.getTypePtr());
+
+      std::string typeName = tl.getType().getAsString();
+
+      // Irritatingly, enum/struct types are identified as `enum/struct <something>`, and unlike most compound
+      // types (such as pointers or references), there isn't another type node inside. So we have
+      // to make do with what we've got. There's probably a better way of doing this...
+      if (typeObject.isEnumeralType()) {
+        removePrefixIfPresent(typeName, "enum ");
       }
-      //-------------------------------------------------
-      const auto found = CUDA_TO_HIP_RENAMES.find(name);
-      if (found != CUDA_TO_HIP_RENAMES.end()) {
-        updateCounters(found->second, name);
-        if (!found->second.unsupported) {
-          StringRef repName = found->second.hipName;
-          Replacement Rep(*SM, sl, name.size(), repName);
-          FullSourceLoc fullSL(sl, *SM);
-          insertReplacement(Rep, fullSL);
-        }
-      } else {
-        std::string msg = "the following reference is not handled: '" + name + "' [enum constant decl].";
-        printHipifyMessage(*SM, sl, msg);
+      if (typeObject.isStructureType()) {
+        removePrefixIfPresent(typeName, "struct ");
       }
+
+      // Do we have a replacement for this type?
+      const auto found = CUDA_TO_HIP_RENAMES.find(typeName);
+      if (found == CUDA_TO_HIP_RENAMES.end()) {
+          return false;
+      }
+
+      SourceManager &SM = *(Result.SourceManager);
+
+      // Start of the type expression to replace.
+      SourceLocation sl = tl.getBeginLoc();
+
+      const hipCounter& hipCtr = found->second;
+      if (hipCtr.unsupported) {
+          printHipifyMessage(SM, sl, "Unsupported CUDA '" + typeName);
+          return false;
+      }
+
+      // Apply the rename!
+      Replacement Rep(SM, sl, typeName.size(), hipCtr.hipName);
+      FullSourceLoc fullSL(sl, SM);
+      insertReplacement(Rep, fullSL);
+
       return true;
-    }
-    return false;
-  }
-
-  bool cudaEnumVarPtr(const MatchFinder::MatchResult &Result) {
-    if (const VarDecl *enumVarPtr = Result.Nodes.getNodeAs<VarDecl>("cudaEnumVarPtr")) {
-      const Type *t = enumVarPtr->getType().getTypePtrOrNull();
-      if (t) {
-        QualType QT = t->getPointeeType();
-        std::string name = QT.getAsString();
-        QT = enumVarPtr->getType().getUnqualifiedType();
-        std::string name_unqualified = QT.getAsString();
-        if ((name_unqualified.find(' ') == std::string::npos && name.find(' ') == std::string::npos) || name.empty()) {
-          name = name_unqualified;
-        }
-        // Workaround for enum VarDecl as param decl, declared with enum type specifier
-        // Example: void func(enum cudaMemcpyKind kind);
-        //-------------------------------------------------
-        SourceManager *SM = Result.SourceManager;
-        TypeLoc TL = enumVarPtr->getTypeSourceInfo()->getTypeLoc();
-        SourceLocation sl(TL.getUnqualifiedLoc().getLocStart());
-        SourceLocation end(TL.getUnqualifiedLoc().getLocEnd());
-        size_t repLength = SM->getCharacterData(end) - SM->getCharacterData(sl);
-        StringRef sfull = StringRef(SM->getCharacterData(sl), repLength);
-        size_t offset = sfull.find(name);
-        if (offset > 0) {
-          sl = sl.getLocWithOffset(offset);
-        }
-        //-------------------------------------------------
-        const auto found = CUDA_TO_HIP_RENAMES.find(name);
-        if (found != CUDA_TO_HIP_RENAMES.end()) {
-          updateCounters(found->second, name);
-          if (!found->second.unsupported) {
-            StringRef repName = found->second.hipName;
-            Replacement Rep(*SM, sl, name.size(), repName);
-            FullSourceLoc fullSL(sl, *SM);
-            insertReplacement(Rep, fullSL);
-          }
-        }
-        else {
-          std::string msg = "the following reference is not handled: '" + name + "' [enum var ptr].";
-          printHipifyMessage(*SM, sl, msg);
-        }
-      }
-      return true;
-    }
-    return false;
-  }
-
-  bool cudaTypedefVar(const MatchFinder::MatchResult &Result) {
-    if (const VarDecl *typedefVar = Result.Nodes.getNodeAs<VarDecl>("cudaTypedefVar")) {
-      QualType QT = typedefVar->getType();
-      if (QT->isArrayType()) {
-        QT = QT.getTypePtr()->getAsArrayTypeUnsafe()->getElementType();
-      }
-      QT = QT.getUnqualifiedType();
-      std::string name = QT.getAsString();
-      SourceLocation sl = typedefVar->getLocStart();
-      SourceManager *SM = Result.SourceManager;
-      const auto found = CUDA_TO_HIP_RENAMES.find(name);
-      if (found != CUDA_TO_HIP_RENAMES.end()) {
-        updateCounters(found->second, name);
-        if (!found->second.unsupported) {
-          StringRef repName = found->second.hipName;
-          Replacement Rep(*SM, sl, name.size(), repName);
-          FullSourceLoc fullSL(sl, *SM);
-          insertReplacement(Rep, fullSL);
-        }
-      } else {
-        std::string msg = "the following reference is not handled: '" + name + "' [typedef var].";
-        printHipifyMessage(*SM, sl, msg);
-      }
-      return true;
-    }
-    return false;
-  }
-
-  bool cudaTypedefVarPtr(const MatchFinder::MatchResult &Result) {
-    if (const VarDecl *typedefVarPtr = Result.Nodes.getNodeAs<VarDecl>("cudaTypedefVarPtr")) {
-      const Type *t = typedefVarPtr->getType().getTypePtrOrNull();
-      if (t) {
-        SourceManager *SM = Result.SourceManager;
-        TypeLoc TL = typedefVarPtr->getTypeSourceInfo()->getTypeLoc();
-        SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-        QualType QT = t->getPointeeType();
-        QT = QT.getUnqualifiedType();
-        std::string name = QT.getAsString();
-        const auto found = CUDA_TO_HIP_RENAMES.find(name);
-        if (found != CUDA_TO_HIP_RENAMES.end()) {
-          updateCounters(found->second, name);
-          if (!found->second.unsupported) {
-            StringRef repName = found->second.hipName;
-            Replacement Rep(*SM, sl, name.size(), repName);
-            FullSourceLoc fullSL(sl, *SM);
-            insertReplacement(Rep, fullSL);
-          }
-        }
-        else {
-          std::string msg = "the following reference is not handled: '" + name + "' [typedef var ptr].";
-          printHipifyMessage(*SM, sl, msg);
-        }
-      }
-      return true;
-    }
-    return false;
-  }
-
-  bool cudaStructVar(const MatchFinder::MatchResult &Result) {
-    if (const VarDecl *structVar = Result.Nodes.getNodeAs<VarDecl>("cudaStructVar")) {
-      QualType QT = structVar->getType();
-      // ToDo: find case-studies with types other than Struct.
-      if (QT->isStructureType()) {
-        std::string name = QT.getTypePtr()->getAsStructureType()->getDecl()->getNameAsString();
-        TypeLoc TL = structVar->getTypeSourceInfo()->getTypeLoc();
-        SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-        SourceManager *SM = Result.SourceManager;
-        const auto found = CUDA_TO_HIP_RENAMES.find(name);
-        if (found != CUDA_TO_HIP_RENAMES.end()) {
-          updateCounters(found->second, name);
-          if (!found->second.unsupported) {
-            StringRef repName = found->second.hipName;
-            Replacement Rep(*SM, sl, name.size(), repName);
-            FullSourceLoc fullSL(sl, *SM);
-            insertReplacement(Rep, fullSL);
-          }
-        }
-        else {
-          std::string msg = "the following reference is not handled: '" + name + "' [struct var].";
-          printHipifyMessage(*SM, sl, msg);
-        }
-      }
-      return true;
-    }
-    return false;
-  }
-
-  bool cudaStructVarPtr(const MatchFinder::MatchResult &Result) {
-    if (const VarDecl *structVarPtr = Result.Nodes.getNodeAs<VarDecl>("cudaStructVarPtr")) {
-      const Type *t = structVarPtr->getType().getTypePtrOrNull();
-      if (t) {
-        TypeLoc TL = structVarPtr->getTypeSourceInfo()->getTypeLoc();
-        SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-        SourceManager *SM = Result.SourceManager;
-        StringRef name = t->getPointeeCXXRecordDecl()->getName();
-        const auto found = CUDA_TO_HIP_RENAMES.find(name);
-        if (found != CUDA_TO_HIP_RENAMES.end()) {
-          updateCounters(found->second, name.str());
-          if (!found->second.unsupported) {
-            StringRef repName = found->second.hipName;
-            Replacement Rep(*SM, sl, name.size(), repName);
-            FullSourceLoc fullSL(sl, *SM);
-            insertReplacement(Rep, fullSL);
-          }
-        } else {
-          std::string msg = "the following reference is not handled: '" + name.str() + "' [struct var ptr].";
-          printHipifyMessage(*SM, sl, msg);
-        }
-      }
-      return true;
-    }
-    return false;
-  }
-
-  bool cudaStructSizeOf(const MatchFinder::MatchResult &Result) {
-    if (const UnaryExprOrTypeTraitExpr *expr = Result.Nodes.getNodeAs<UnaryExprOrTypeTraitExpr>("cudaStructSizeOf")) {
-      TypeSourceInfo *typeInfo = expr->getArgumentTypeInfo();
-      TypeLoc TL = typeInfo->getTypeLoc();
-      SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-      SourceManager *SM = Result.SourceManager;
-      QualType QT = typeInfo->getType().getUnqualifiedType();
-      const Type *type = QT.getTypePtr();
-      CXXRecordDecl *rec = type->getAsCXXRecordDecl();
-      if (!rec) {
-        return false;
-      }
-      StringRef name = rec->getName();
-      const auto found = CUDA_TO_HIP_RENAMES.find(name);
-      if (found != CUDA_TO_HIP_RENAMES.end()) {
-        updateCounters(found->second, name.str());
-        if (!found->second.unsupported) {
-          StringRef repName = found->second.hipName;
-          Replacement Rep(*SM, sl, name.size(), repName);
-          FullSourceLoc fullSL(sl, *SM);
-          insertReplacement(Rep, fullSL);
-        }
-      } else {
-        std::string msg = "the following reference is not handled: '" + name.str() + "' [struct sizeof].";
-        printHipifyMessage(*SM, sl, msg);
-      }
-      return true;
-    }
-    return false;
-  }
-
-  bool cudaNewOperatorDecl(const MatchFinder::MatchResult &Result) {
-    if (const auto *newOperator = Result.Nodes.getNodeAs<CXXNewExpr>("cudaNewOperatorDecl")) {
-      const Type *t = newOperator->getType().getTypePtrOrNull();
-      if (t) {
-        SourceManager *SM = Result.SourceManager;
-        TypeLoc TL = newOperator->getAllocatedTypeSourceInfo()->getTypeLoc();
-        SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-        QualType QT = t->getPointeeType();
-        std::string name = QT.getAsString();
-        const auto found = CUDA_TO_HIP_RENAMES.find(name);
-        if (found != CUDA_TO_HIP_RENAMES.end()) {
-          updateCounters(found->second, name);
-          if (!found->second.unsupported) {
-            StringRef repName = found->second.hipName;
-            Replacement Rep(*SM, sl, name.size(), repName);
-            FullSourceLoc fullSL(sl, *SM);
-            insertReplacement(Rep, fullSL);
-          }
-        }
-        else {
-          std::string msg = "the following reference is not handled: '" + name + "' [new operator].";
-          printHipifyMessage(*SM, sl, msg);
-        }
-      }
-    }
-    return false;
-  }
-
-  bool cudaFunctionReturn(const MatchFinder::MatchResult &Result) {
-    if (const auto *ret = Result.Nodes.getNodeAs<FunctionDecl>("cudaFunctionReturn")) {
-      QualType QT = ret->getReturnType();
-      SourceManager *SM = Result.SourceManager;
-      SourceRange sr = ret->getReturnTypeSourceRange();
-      SourceLocation sl = sr.getBegin();
-      std::string name = QT.getAsString();
-      if (QT.getTypePtr()->isEnumeralType()) {
-        name = QT.getTypePtr()->getAs<EnumType>()->getDecl()->getNameAsString();
-      }
-      const auto found = CUDA_TO_HIP_RENAMES.find(name);
-      if (found != CUDA_TO_HIP_RENAMES.end()) {
-        updateCounters(found->second, name);
-        if (!found->second.unsupported) {
-          StringRef repName = found->second.hipName;
-          Replacement Rep(*SM, sl, name.size(), repName);
-          FullSourceLoc fullSL(sl, *SM);
-          insertReplacement(Rep, fullSL);
-        }
-      }
-      else {
-        std::string msg = "the following reference is not handled: '" + name + "' [function return].";
-        printHipifyMessage(*SM, sl, msg);
-      }
-    }
-    return false;
   }
 
   bool cudaSharedIncompleteArrayVar(const MatchFinder::MatchResult &Result) {
@@ -973,66 +746,6 @@ private:
     return false;
   }
 
-  bool cudaParamDecl(const MatchFinder::MatchResult &Result) {
-    if (const ParmVarDecl *paramDecl = Result.Nodes.getNodeAs<ParmVarDecl>("cudaParamDecl")) {
-      QualType QT = paramDecl->getOriginalType().getUnqualifiedType();
-      std::string name = QT.getAsString();
-      const Type *t = QT.getTypePtr();
-      if (t->isStructureOrClassType()) {
-        name = t->getAsCXXRecordDecl()->getName();
-      }
-      TypeLoc TL = paramDecl->getTypeSourceInfo()->getTypeLoc();
-      SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-      SourceManager *SM = Result.SourceManager;
-      const auto found = CUDA_TO_HIP_RENAMES.find(name);
-      if (found != CUDA_TO_HIP_RENAMES.end()) {
-        updateCounters(found->second, name);
-        if (!found->second.unsupported) {
-          StringRef repName = found->second.hipName;
-          Replacement Rep(*SM, sl, name.size(), repName);
-          FullSourceLoc fullSL(sl, *SM);
-          insertReplacement(Rep, fullSL);
-        }
-      } else {
-        std::string msg = "the following reference is not handled: '" + name + "' [param decl].";
-        printHipifyMessage(*SM, sl, msg);
-      }
-      return true;
-    }
-    return false;
-  }
-
-  bool cudaParamDeclPtr(const MatchFinder::MatchResult &Result) {
-    if (const ParmVarDecl *paramDeclPtr = Result.Nodes.getNodeAs<ParmVarDecl>("cudaParamDeclPtr")) {
-      const Type *pt = paramDeclPtr->getType().getTypePtrOrNull();
-      if (pt) {
-        TypeLoc TL = paramDeclPtr->getTypeSourceInfo()->getTypeLoc();
-        SourceLocation sl = TL.getUnqualifiedLoc().getLocStart();
-        SourceManager *SM = Result.SourceManager;
-        QualType QT = pt->getPointeeType();
-        const Type *t = QT.getTypePtr();
-        StringRef name = t->isStructureOrClassType()
-          ? t->getAsCXXRecordDecl()->getName()
-          : StringRef(QT.getAsString());
-        const auto found = CUDA_TO_HIP_RENAMES.find(name);
-        if (found != CUDA_TO_HIP_RENAMES.end()) {
-          updateCounters(found->second, name.str());
-          if (!found->second.unsupported) {
-            StringRef repName = found->second.hipName;
-            Replacement Rep(*SM, sl, name.size(), repName);
-            FullSourceLoc fullSL(sl, *SM);
-            insertReplacement(Rep, fullSL);
-          }
-        } else {
-          std::string msg = "the following reference is not handled: '" + name.str() + "' [param decl ptr].";
-          printHipifyMessage(*SM, sl, msg);
-        }
-      }
-      return true;
-    }
-    return false;
-  }
-
   bool unresolvedTemplateName(const MatchFinder::MatchResult &Result) {
     if (const FunctionTemplateDecl *templateDecl = Result.Nodes.getNodeAs<FunctionTemplateDecl>("unresolvedTemplateName")) {
       FunctionDecl *kernelDecl = templateDecl->getTemplatedDecl();
@@ -1061,21 +774,11 @@ public:
   }
 
   void run(const MatchFinder::MatchResult &Result) override {
+    if (cudaType(Result)) return;
     if (cudaCall(Result)) return;
     if (cudaBuiltin(Result)) return;
     if (cudaEnumConstantRef(Result)) return;
-    if (cudaEnumDecl(Result)) return;
-    if (cudaEnumVarPtr(Result)) return;
-    if (cudaTypedefVar(Result)) return;
-    if (cudaTypedefVarPtr(Result)) return;
-    if (cudaStructVar(Result)) return;
-    if (cudaStructVarPtr(Result)) return;
-    if (cudaStructSizeOf(Result)) return;
-    if (cudaParamDecl(Result)) return;
-    if (cudaParamDeclPtr(Result)) return;
     if (cudaLaunchKernel(Result)) return;
-    if (cudaNewOperatorDecl(Result)) return;
-    if (cudaFunctionReturn(Result)) return;
     if (cudaSharedIncompleteArrayVar(Result)) return;
     if (stringLiteral(Result)) return;
     if (unresolvedTemplateName(Result)) return;
@@ -1091,100 +794,71 @@ void HipifyPPCallbacks::handleEndSource() {
 }
 
 void addAllMatchers(ast_matchers::MatchFinder &Finder, Cuda2HipCallback *Callback) {
-  Finder.addMatcher(callExpr(isExpansionInMainFile(),
-                             callee(functionDecl(matchesName("cu.*"))))
-                             .bind("cudaCall"),
-                             Callback);
-  Finder.addMatcher(cudaKernelCallExpr(isExpansionInMainFile()).bind("cudaLaunchKernel"), Callback);
-  Finder.addMatcher(memberExpr(isExpansionInMainFile(),
-                               hasObjectExpression(hasType(cxxRecordDecl(
-                               matchesName("__cuda_builtin_")))))
-                               .bind("cudaBuiltin"),
-                               Callback);
-  Finder.addMatcher(declRefExpr(isExpansionInMainFile(),
-                                to(enumConstantDecl(
-                                matchesName("cu.*|CU.*"))))
-                                .bind("cudaEnumConstantRef"),
-                                Callback);
-  Finder.addMatcher(varDecl(isExpansionInMainFile(),
-                            hasType(enumDecl()))
-                            .bind("cudaEnumDecl"),
-                            Callback);
-  Finder.addMatcher(varDecl(isExpansionInMainFile(),
-                            hasType(pointsTo(enumDecl(
-                            matchesName("cu.*|CU.*")))))
-                            .bind("cudaEnumVarPtr"),
-                            Callback);
-  Finder.addMatcher(varDecl(isExpansionInMainFile(),
-                            hasType(typedefDecl(matchesName("cu.*|CU.*"))))
-                            .bind("cudaTypedefVar"),
-                            Callback);
-  // Array of elements of typedef type. Example:
-  // cudaStream_t streams[2];
-  Finder.addMatcher(varDecl(isExpansionInMainFile(),
-                            hasType(arrayType(hasElementType(typedefType(
-                            hasDeclaration(typedefDecl(matchesName("cu.*|CU.*"))))))))
-                            .bind("cudaTypedefVar"),
-                            Callback);
-  // Pointer to typedef type. Examples:
-  // 1.
-  // cudaEvent_t *event = NULL;
-  // typedef __device_builtin__ struct CUevent_st *cudaEvent_t;
-  // 2.
-  // CUevent *event = NULL;
-  // typedef struct CUevent_st *CUevent;
-  Finder.addMatcher(varDecl(isExpansionInMainFile(),
-                            hasType(pointsTo(typedefDecl(
-                            matchesName("cu.*|CU.*")))))
-                            .bind("cudaTypedefVarPtr"),
-                            Callback);
-  Finder.addMatcher(varDecl(isExpansionInMainFile(),
-                            hasType(cxxRecordDecl(matchesName("cu.*|CU.*"))))
-                            .bind("cudaStructVar"),
-                            Callback);
-  Finder.addMatcher(varDecl(isExpansionInMainFile(),
-                            hasType(pointsTo(cxxRecordDecl(
-                            matchesName("cu.*|CU.*")))))
-                            .bind("cudaStructVarPtr"),
-                            Callback);
-  Finder.addMatcher(parmVarDecl(isExpansionInMainFile(),
-                                hasType(namedDecl(matchesName("cu.*|CU.*"))))
-                                .bind("cudaParamDecl"),
-                                Callback);
-  Finder.addMatcher(parmVarDecl(isExpansionInMainFile(),
-                                hasType(pointsTo(namedDecl(
-                                matchesName("cu.*|CU.*")))))
-                                .bind("cudaParamDeclPtr"),
-                                Callback);
-  Finder.addMatcher(expr(isExpansionInMainFile(),
-                         sizeOfExpr(hasArgumentOfType(
-                         recordType(hasDeclaration(cxxRecordDecl(matchesName("cu.*|CU.*")))))))
-                        .bind("cudaStructSizeOf"),
-                         Callback);
-  Finder.addMatcher(stringLiteral(isExpansionInMainFile()).bind("stringLiteral"),
-                                  Callback);
-  Finder.addMatcher(varDecl(isExpansionInMainFile(), allOf(
-                            hasAttr(attr::CUDAShared),
-                            hasType(incompleteArrayType())))
-                           .bind("cudaSharedIncompleteArrayVar"),
-                            Callback);
-  // Example:
-  // CUjit_option *jitOptions = new CUjit_option[jitNumOptions];
-  // hipJitOption *jitOptions = new hipJitOption[jitNumOptions];
-  Finder.addMatcher(cxxNewExpr(isExpansionInMainFile(),
-                               hasType(pointsTo(namedDecl(matchesName("cu.*|CU.*")))))
-                              .bind("cudaNewOperatorDecl"),
-                               Callback);
-  // Examples:
-  // 1.
-  // cudaStream_t cuda_memcpy_stream(...)
-  // 2.
-  // template<typename System1, typename System2> cudaMemcpyKind cuda_memcpy_kind(...)
-  Finder.addMatcher(functionDecl(isExpansionInMainFile(),
-                                 returns(hasDeclaration(namedDecl(matchesName("cu.*|CU.*")))))
-                                .bind("cudaFunctionReturn"),
-                                 Callback);
+  // Rewrite CUDA api calls to hip ones.
+  Finder.addMatcher(
+      callExpr(
+          isExpansionInMainFile(),
+          callee(
+              functionDecl(
+                  matchesName("cu.*")
+              )
+          )
+      ).bind("cudaCall"),
+      Callback
+  );
 
+  // Rewrite all references to CUDA types to their corresponding hip types.
+  Finder.addMatcher(
+      typeLoc(
+          isExpansionInMainFile()
+      ).bind("cudaType"),
+      Callback
+  );
+
+  // Replace references to CUDA names in string literals with the equivalent hip names.
+  Finder.addMatcher(stringLiteral(isExpansionInMainFile()).bind("stringLiteral"), Callback);
+
+  // Replace the <<<...>>> language extension with a hip kernel launch
+  Finder.addMatcher(cudaKernelCallExpr(isExpansionInMainFile()).bind("cudaLaunchKernel"), Callback);
+
+  // Replace cuda builtins.
+  Finder.addMatcher(
+      memberExpr(
+          isExpansionInMainFile(),
+          hasObjectExpression(
+              hasType(
+                  cxxRecordDecl(
+                      matchesName("__cuda_builtin_")
+                  )
+              )
+          )
+      ).bind("cudaBuiltin"),
+      Callback
+  );
+
+  // Map CUDA enum _values_ to their hip equivalents.
+  Finder.addMatcher(
+      declRefExpr(
+          isExpansionInMainFile(),
+          to(
+              enumConstantDecl(
+                  matchesName("cu.*|CU.*")
+              )
+          )
+      ).bind("cudaEnumConstantRef"),
+      Callback
+  );
+
+  Finder.addMatcher(
+      varDecl(
+          isExpansionInMainFile(),
+          allOf(
+              hasAttr(attr::CUDAShared),
+              hasType(incompleteArrayType())
+          )
+      ).bind("cudaSharedIncompleteArrayVar"),
+      Callback
+  );
 }
 
 int64_t printStats(const std::string &csvFile, const std::string &srcFile,
