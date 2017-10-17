@@ -1,28 +1,336 @@
 #include "CUDA2HipMap.h"
 
 const std::set<llvm::StringRef> CUDA_EXCLUDES{"CHECK_CUDA_ERROR", "CUDA_SAFE_CALL"};
-const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
-    // Defines
-    {"__CUDACC__", {"__HIPCC__", CONV_DEF, API_RUNTIME}},
 
-    // CUDA includes
-    {"cuda.h",             {"hip/hip_runtime.h",     CONV_INCLUDE_CUDA_MAIN_H, API_DRIVER}},
-    {"cuda_runtime.h",     {"hip/hip_runtime.h",     CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME}},
-    {"cuda_runtime_api.h", {"hip/hip_runtime_api.h", CONV_INCLUDE,             API_RUNTIME}},
-
-    // HIP includes
-    // TODO: uncomment this when hip/cudacommon.h will be renamed to hip/hipcommon.h
-    //    {"cudacommon.h", {"hipcommon.h", CONV_INCLUDE, API_RUNTIME}},
-
-    // CUBLAS includes
-    {"cublas.h",    {"hipblas.h", CONV_INCLUDE, API_BLAS}},
-    {"cublas_v2.h", {"hipblas.h", CONV_INCLUDE, API_BLAS}},
-
+/// Maps the names of CUDA types to the corresponding hip types.
+const std::map<llvm::StringRef, hipCounter> CUDA_TYPE_NAME_MAP{
     // Error codes and return types
     {"CUresult",    {"hipError_t", CONV_TYPE, API_DRIVER}},
 //      {"cudaError_enum", {"hipError_t", CONV_TYPE, API_DRIVER}},
     {"cudaError_t", {"hipError_t", CONV_TYPE, API_RUNTIME}},
     {"cudaError",   {"hipError_t", CONV_TYPE, API_RUNTIME}},
+
+    ///////////////////////////// CUDA DRIVER API /////////////////////////////
+    {"CUDA_ARRAY3D_DESCRIPTOR",           {"HIP_ARRAY3D_DESCRIPTOR",           CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    {"CUDA_ARRAY_DESCRIPTOR",             {"HIP_ARRAY_DESCRIPTOR",             CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    {"CUDA_MEMCPY2D",                     {"HIP_MEMCPY2D",                     CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    {"CUDA_MEMCPY3D",                     {"HIP_MEMCPY3D",                     CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    {"CUDA_MEMCPY3D_PEER",                {"HIP_MEMCPY3D_PEER",                CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    {"CUDA_POINTER_ATTRIBUTE_P2P_TOKENS", {"HIP_POINTER_ATTRIBUTE_P2P_TOKENS", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    {"CUDA_RESOURCE_DESC",                {"HIP_RESOURCE_DESC",                CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    {"CUDA_RESOURCE_VIEW_DESC",           {"HIP_RESOURCE_VIEW_DESC",           CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUipcEventHandle", {"hipIpcEventHandle", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    {"CUipcMemHandle",   {"hipIpcMemHandle",   CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUaddress_mode",        {"hipAddress_mode",       CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    {"CUarray_cubemap_face",  {"hipArray_cubemap_face", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    {"CUarray_format",        {"hipArray_format",       CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    {"CUcomputemode",         {"hipComputemode",        CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_RUNTIME ANALOGUE (cudaComputeMode)
+    {"CUmem_advise",          {"hipMemAdvise",          CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_RUNTIME ANALOGUE (cudaComputeMode)
+    {"CUmem_range_attribute", {"hipMemRangeAttribute",  CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_RUNTIME ANALOGUE (cudaMemRangeAttribute)
+    {"CUctx_flags",           {"hipCctx_flags",         CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+
+    // NOTE: CUdevice might be changed to typedef int in the future.
+    {"CUdevice",                {"hipDevice_t",          CONV_TYPE, API_DRIVER}},
+    {"CUdevice_attribute_enum", {"hipDeviceAttribute_t", CONV_TYPE, API_DRIVER}},    // API_Runtime ANALOGUE (cudaDeviceAttr)
+    {"CUdevice_attribute",      {"hipDeviceAttribute_t", CONV_TYPE, API_DRIVER}},    // API_Runtime ANALOGUE (cudaDeviceAttr)
+    {"CUdeviceptr",             {"hipDeviceptr_t",       CONV_TYPE, API_DRIVER}},
+
+    // CUDA: "The types::CUarray and struct ::cudaArray * represent the same data type and may be used interchangeably by casting the two types between each other."
+    //    typedef struct cudaArray  *cudaArray_t;
+    //    typedef struct CUarray_st *CUarray;
+    {"CUarray_st", {"hipArray",   CONV_TYPE, API_DRIVER}},    // API_Runtime ANALOGUE (cudaArray)
+    {"CUarray",    {"hipArray *", CONV_TYPE, API_DRIVER}},    // API_Runtime ANALOGUE (cudaArray_t)
+
+    {"CUdevprop_st", {"hipDeviceProp_t", CONV_TYPE, API_DRIVER}},
+    {"CUdevprop",    {"hipDeviceProp_t", CONV_TYPE, API_DRIVER}},
+
+    // pointer to CUfunc_st
+    {"CUfunction", {"hipFunction_t", CONV_TYPE, API_DRIVER}},
+
+    // TODO: move "typedef struct ihipModuleSymbol_t *hipFunction_t;" from hcc_details to HIP
+    //             typedef struct CUfunc_st          *CUfunction;
+    //     {"CUfunc_st", {"ihipModuleSymbol_t", CONV_TYPE, API_DRIVER}},
+
+    // typedef struct CUgraphicsResource_st *CUgraphicsResource;
+    {"CUgraphicsResource", {"hipGraphicsResource_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    // typedef struct CUmipmappedArray_st *CUmipmappedArray;
+    {"CUmipmappedArray",   {"hipMipmappedArray_t",   CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUfunction_attribute",      {"hipFuncAttribute_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    {"CUfunction_attribute_enum", {"hipFuncAttribute_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUgraphicsMapResourceFlags",      {"hipGraphicsMapFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGraphicsMapFlags)
+    {"CUgraphicsMapResourceFlags_enum", {"hipGraphicsMapFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGraphicsMapFlags)
+
+    {"CUgraphicsRegisterFlags",      {"hipGraphicsRegisterFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGraphicsRegisterFlags)
+    {"CUgraphicsRegisterFlags_enum", {"hipGraphicsRegisterFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGraphicsRegisterFlags)
+
+    {"CUoccupancy_flags",      {"hipOccupancyFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
+    {"CUoccupancy_flags_enum", {"hipOccupancyFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
+
+    {"CUfunc_cache_enum", {"hipFuncCache", CONV_TYPE, API_DRIVER}},    // API_Runtime ANALOGUE (cudaFuncCache)
+    {"CUfunc_cache",      {"hipFuncCache", CONV_TYPE, API_DRIVER}},    // API_Runtime ANALOGUE (cudaFuncCache)
+
+    {"CUipcMem_flags",      {"hipIpcMemFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
+    {"CUipcMem_flags_enum", {"hipIpcMemFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
+
+    {"CUjit_cacheMode",      {"hipJitCacheMode", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
+    {"CUjit_cacheMode_enum", {"hipJitCacheMode", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUjit_fallback",      {"hipJitFallback", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
+    {"CUjit_fallback_enum", {"hipJitFallback", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUjit_option",      {"hipJitOption", CONV_JIT, API_DRIVER}},    // API_Runtime ANALOGUE (no)
+    {"CUjit_option_enum", {"hipJitOption", CONV_JIT, API_DRIVER}},
+
+    {"CUjit_target",      {"hipJitTarget", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
+    {"CUjit_target_enum", {"hipJitTarget", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUjitInputType",      {"hipJitInputType", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
+    {"CUjitInputType_enum", {"hipJitInputType", CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUlimit",      {"hipLimit_t", CONV_TYPE, API_DRIVER}},    // API_Runtime ANALOGUE (cudaLimit)
+    {"CUlimit_enum", {"hipLimit_t", CONV_TYPE, API_DRIVER}},    // API_Runtime ANALOGUE (cudaLimit)
+
+    {"CUmemAttach_flags",      {"hipMemAttachFlags_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
+    {"CUmemAttach_flags_enum", {"hipMemAttachFlags_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
+
+    {"CUmemorytype",      {"hipMemType_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no - cudaMemoryType is not an analogue)
+    {"CUmemorytype_enum", {"hipMemType_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no - cudaMemoryType is not an analogue)
+
+    {"CUresourcetype",      {"hipResourceType", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaResourceType)
+    {"CUresourcetype_enum", {"hipResourceType", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaResourceType)
+
+    {"CUresourceViewFormat",      {"hipResourceViewFormat", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaResourceViewFormat)
+    {"CUresourceViewFormat_enum", {"hipResourceViewFormat", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaResourceViewFormat)
+
+    {"CUsharedconfig",      {"hipSharedMemConfig", CONV_TYPE, API_DRIVER}},
+    {"CUsharedconfig_enum", {"hipSharedMemConfig", CONV_TYPE, API_DRIVER}},
+
+    {"CUcontext",        {"hipCtx_t",              CONV_TYPE, API_DRIVER}},
+    // TODO: move "typedef struct ihipCtx_t *hipCtx_t;" from hcc_details to HIP
+    //             typedef struct CUctx_st  *CUcontext;
+    //     {"CUctx_st", {"ihipCtx_t", CONV_TYPE, API_DRIVER}},
+    {"CUmodule",         {"hipModule_t",           CONV_TYPE, API_DRIVER}},
+    // TODO: move "typedef struct ihipModule_t *hipModule_t;" from hcc_details to HIP
+    //             typedef struct CUmod_st     *CUmodule;
+    //     {"CUmod_st", {"ihipModule_t", CONV_TYPE, API_DRIVER}},
+    {"CUstream",         {"hipStream_t",           CONV_TYPE, API_DRIVER}},
+    // TODO: move "typedef struct ihipStream_t *hipStream_t;" from hcc_details to HIP
+    //             typedef struct CUstream_st *CUstream;
+    //     {"CUstream_st", {"ihipStream_t", CONV_TYPE, API_DRIVER}},
+
+    // typedef void (*hipStreamCallback_t)      (hipStream_t stream, hipError_t status, void* userData);
+    // typedef void (CUDA_CB *CUstreamCallback) (CUstream hStream, CUresult status, void* userData)
+    {"CUstreamCallback", {"hipStreamCallback_t",   CONV_TYPE, API_DRIVER}},
+
+    {"CUsurfObject",     {"hipSurfaceObject",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    // typedef struct CUsurfref_st *CUsurfref;
+    {"CUsurfref",        {"hipSurfaceReference_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    //     {"CUsurfref_st", {"ihipSurfaceReference_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    {"CUtexObject",      {"hipTextureObject",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    // typedef struct CUtexref_st *CUtexref;
+    {"CUtexref",         {"hipTextureReference_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    //     {"CUtexref_st", {"ihipTextureReference_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+
+    // Stream Flags enum
+    {"CUstream_flags",   {"hipStreamFlags",        CONV_TYPE, API_DRIVER}},
+    // TODO: ..?
+    //     {"CUstream_flags_enum", {"hipStreamFlags", CONV_TYPE, API_DRIVER}},
+
+    {"CUstreamWaitValue_flags", {"hipStreamWaitValueFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    // TODO: ..?
+    //     {"CUstreamWaitValue_flags_enum", {"hipStreamWaitValueFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUstreamWriteValue_flags", {"hipStreamWriteValueFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    //     {"CUstreamWriteValue_flags", {"hipStreamWriteValueFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUstreamBatchMemOpType", {"hipStreamBatchMemOpType", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    //     {"CUstreamBatchMemOpType_enum", {"hipStreamBatchMemOpType", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+
+    // P2P Attributes
+    {"CUdevice_P2PAttribute", {"hipDeviceP2PAttribute", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaDeviceP2PAttr)
+    //     {"CUdevice_P2PAttribute_enum", {"hipDeviceP2PAttribute", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+
+    // pointer to CUevent_st
+    {"CUevent",       {"hipEvent_t",    CONV_TYPE,  API_DRIVER}},
+    // ToDo:
+    //     {"CUevent_st", {"XXXX", CONV_TYPE, API_DRIVER}},
+    // Event Flags
+    {"CUevent_flags", {"hipEventFlags", CONV_EVENT, API_DRIVER, HIP_UNSUPPORTED}},
+    // ToDo:
+    //     {"CUevent_flags_enum", {"hipEventFlags", CONV_EVENT, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUfilter_mode", {"hipTextureFilterMode", CONV_TEX, API_DRIVER}},    // API_Runtime ANALOGUE (cudaTextureFilterMode)
+    // ToDo:
+    //     {"CUfilter_mode", {"CUfilter_mode_enum", CONV_TEX, API_DRIVER}},    // API_Runtime ANALOGUE (cudaTextureFilterMode)
+
+    {"CUGLDeviceList", {"hipGLDeviceList", CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGLDeviceList)
+    //     {"CUGLDeviceList_enum", {"hipGLDeviceList", CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUGLmap_flags", {"hipGLMapFlags", CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGLMapFlags)
+    //     {"CUGLmap_flags_enum", {"hipGLMapFlags", CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUd3d9DeviceList", {"hipD3D9DeviceList", CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaD3D9DeviceList)
+    //     {"CUd3d9DeviceList_enum", {"hipD3D9DeviceList", CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUd3d9map_flags", {"hipD3D9MapFlags", CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaD3D9MapFlags)
+    //     {"CUd3d9map_flags_enum", {"hipD3D9MapFlags", CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUd3d9register_flags", {"hipD3D9RegisterFlags", CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaD3D9RegisterFlags)
+    //     {"CUd3d9register_flags_enum", {"hipD3D9RegisterFlags", CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUd3d10DeviceList", {"hipd3d10DeviceList", CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaD3D10DeviceList)
+    //     {"CUd3d10DeviceList_enum", {"hipD3D10DeviceList", CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUd3d10map_flags", {"hipD3D10MapFlags", CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaD3D10MapFlags)
+    //     {"CUd3d10map_flags_enum", {"hipD3D10MapFlags", CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUd3d10register_flags", {"hipD3D10RegisterFlags", CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaD3D10RegisterFlags)
+    //     {"CUd3d10register_flags_enum", {"hipD3D10RegisterFlags", CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},
+
+    {"CUd3d11DeviceList", {"hipd3d11DeviceList", CONV_D3D11, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaD3D11DeviceList)
+    //     {"CUd3d11DeviceList_enum", {"hipD3D11DeviceList", CONV_D3D11, API_DRIVER, HIP_UNSUPPORTED}},
+
+    // EGL Interoperability
+    {"CUeglStreamConnection_st", {"hipEglStreamConnection", CONV_EGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaEglStreamConnection)
+    {"CUeglStreamConnection",    {"hipEglStreamConnection", CONV_EGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaEglStreamConnection)
+
+    /////////////////////////////// CUDA RT API ///////////////////////////////
+    {"libraryPropertyType_t", {"hipLibraryPropertyType_t", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
+    {"libraryPropertyType",   {"hipLibraryPropertyType_t", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
+
+    {"cudaStreamCallback_t", {"hipStreamCallback_t", CONV_TYPE, API_RUNTIME}},
+
+    // Arrays
+    {"cudaArray",                  {"hipArray",                  CONV_MEM, API_RUNTIME}},
+    // typedef struct cudaArray *cudaArray_t;
+
+    {"cudaArray_t",                {"hipArray_t",                CONV_MEM, API_RUNTIME}},
+    // typedef const struct cudaArray *cudaArray_const_t;
+
+    {"cudaArray_const_t",          {"hipArray_const_t",          CONV_MEM, API_RUNTIME}},
+    {"cudaMipmappedArray_t",       {"hipMipmappedArray_t",       CONV_MEM, API_RUNTIME}},
+    {"cudaMipmappedArray_const_t", {"hipMipmappedArray_const_t", CONV_MEM, API_RUNTIME}},
+
+    {"cudaMemoryAdvise", {"hipMemAdvise", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUmem_advise)
+    {"cudaMemRangeAttribute", {"hipMemRangeAttribute", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUmem_range_attribute)
+    {"cudaMemcpyKind", {"hipMemcpyKind", CONV_MEM, API_RUNTIME}},
+    {"cudaMemoryType", {"hipMemoryType", CONV_MEM, API_RUNTIME}},    // API_Driver ANALOGUE (no -  CUmemorytype is not an analogue)
+
+    {"cudaExtent",     {"hipExtent",     CONV_MEM, API_RUNTIME}},
+    {"cudaPitchedPtr", {"hipPitchedPtr", CONV_MEM, API_RUNTIME}},
+    {"cudaPos",        {"hipPos",        CONV_MEM, API_RUNTIME}},
+
+    {"cudaEvent_t",           {"hipEvent_t",            CONV_TYPE, API_RUNTIME}},
+    {"cudaStream_t",          {"hipStream_t",           CONV_TYPE, API_RUNTIME}},
+    {"cudaPointerAttributes", {"hipPointerAttribute_t", CONV_TYPE, API_RUNTIME}},
+
+    {"cudaDeviceAttr",      {"hipDeviceAttribute_t",  CONV_TYPE,  API_RUNTIME}},                     // API_DRIVER ANALOGUE (CUdevice_attribute)
+    {"cudaDeviceProp",      {"hipDeviceProp_t",       CONV_TYPE,  API_RUNTIME}},
+    {"cudaDeviceP2PAttr",   {"hipDeviceP2PAttribute", CONV_TYPE,  API_RUNTIME, HIP_UNSUPPORTED}},    // API_DRIVER ANALOGUE (CUdevice_P2PAttribute)
+    {"cudaComputeMode",     {"hipComputeMode",        CONV_TYPE,  API_RUNTIME, HIP_UNSUPPORTED}},    // API_DRIVER ANALOGUE (CUcomputemode)
+    {"cudaFuncCache",       {"hipFuncCache_t",        CONV_CACHE, API_RUNTIME}},    // API_Driver ANALOGUE (CUfunc_cache)
+    {"cudaFuncAttributes",  {"hipFuncAttributes",     CONV_EXEC,  API_RUNTIME, HIP_UNSUPPORTED}},
+    {"cudaSharedMemConfig", {"hipSharedMemConfig",    CONV_TYPE,  API_RUNTIME}},
+    {"cudaLimit",           {"hipLimit_t",            CONV_TYPE,  API_RUNTIME}},                     // API_Driver ANALOGUE (CUlimit)
+
+    {"cudaOutputMode", {"hipOutputMode", CONV_OTHER, API_RUNTIME, HIP_UNSUPPORTED}},
+
+    // Texture reference management
+    {"cudaTextureReadMode", {"hipTextureReadMode", CONV_TEX, API_RUNTIME}},
+    {"cudaTextureFilterMode", {"hipTextureFilterMode", CONV_TEX, API_RUNTIME}},    // API_DRIVER ANALOGUE (CUfilter_mode)
+
+    {"cudaChannelFormatKind", {"hipChannelFormatKind", CONV_TEX, API_RUNTIME}},
+    {"cudaChannelFormatDesc", {"hipChannelFormatDesc", CONV_TEX, API_RUNTIME}},
+
+    // Texture Object Management
+    {"cudaResourceDesc",     {"hipResourceDesc",     CONV_TEX,     API_RUNTIME}},
+    {"cudaResourceViewDesc", {"hipResourceViewDesc", CONV_TEX,     API_RUNTIME}},
+    {"cudaTextureDesc",      {"hipTextureDesc",      CONV_TEX,     API_RUNTIME}},
+    {"surfaceReference",     {"hipSurfaceReference", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
+    // Left unchanged
+    //     {"textureReference", {"textureReference", CONV_TEX, API_RUNTIME}},
+
+    // typedefs
+    {"cudaTextureObject_t",  {"hipTextureObject_t",  CONV_TEX,     API_RUNTIME}},
+
+    // enums
+    {"cudaResourceType",        {"hipResourceType",        CONV_TEX,     API_RUNTIME}},    // API_Driver ANALOGUE (CUresourcetype)
+    {"cudaResourceViewFormat",  {"hipResourceViewFormat",  CONV_TEX,     API_RUNTIME}},    // API_Driver ANALOGUE (CUresourceViewFormat)
+    {"cudaTextureAddressMode",  {"hipTextureAddressMode",  CONV_TEX,     API_RUNTIME}},
+    {"cudaSurfaceBoundaryMode", {"hipSurfaceBoundaryMode", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
+
+    {"cudaSurfaceFormatMode", {"hipSurfaceFormatMode", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
+
+    // Inter-Process Communication (IPC)
+    {"cudaIpcEventHandle_t",  {"hipIpcEventHandle_t", CONV_TYPE, API_RUNTIME}},
+    {"cudaIpcEventHandle_st", {"hipIpcEventHandle_t", CONV_TYPE, API_RUNTIME}},
+    {"cudaIpcMemHandle_t",    {"hipIpcMemHandle_t",   CONV_TYPE, API_RUNTIME}},
+    {"cudaIpcMemHandle_st",   {"hipIpcMemHandle_t",   CONV_TYPE, API_RUNTIME}},
+
+    // Graphics Interoperability
+    {"cudaGraphicsCubeFace",      {"hipGraphicsCubeFace",      CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},
+    {"cudaGraphicsMapFlags",      {"hipGraphicsMapFlags",      CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUgraphicsMapResourceFlags)
+    {"cudaGraphicsRegisterFlags", {"hipGraphicsRegisterFlags", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUgraphicsRegisterFlags)
+
+    // OpenGL Interoperability
+    {"cudaGLDeviceList", {"hipGLDeviceList", CONV_GL, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUGLDeviceList)
+    {"cudaGLMapFlags",   {"hipGLMapFlags",   CONV_GL, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUGLmap_flags)
+
+    // Direct3D 9 Interoperability
+    {"cudaD3D9DeviceList",    {"hipD3D9DeviceList",    CONV_D3D9, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUd3d9DeviceList)
+    {"cudaD3D9MapFlags",      {"hipD3D9MapFlags",      CONV_D3D9, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUd3d9map_flags)
+    {"cudaD3D9RegisterFlags", {"hipD3D9RegisterFlags", CONV_D3D9, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUd3d9Register_flags)
+
+    // Direct3D 10 Interoperability
+    {"cudaD3D10DeviceList",    {"hipd3d10DeviceList",    CONV_D3D10, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUd3d10DeviceList)
+    {"cudaD3D10MapFlags",      {"hipD3D10MapFlags",      CONV_D3D10, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUd3d10map_flags)
+    {"cudaD3D10RegisterFlags", {"hipD3D10RegisterFlags", CONV_D3D10, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUd3d10Register_flags)
+
+    // Direct3D 11 Interoperability
+    {"cudaD3D11DeviceList", {"hipd3d11DeviceList", CONV_D3D11, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUd3d11DeviceList)
+
+    // EGL Interoperability
+    {"cudaEglStreamConnection", {"hipEglStreamConnection", CONV_EGL, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUeglStreamConnection)
+
+    ///////////////////////////// cuBLAS /////////////////////////////
+    {"cublasHandle_t", {"hipblasHandle_t", CONV_TYPE, API_BLAS}},
+    // TODO: dereferencing: typedef struct cublasContext *cublasHandle_t;
+    //     {"cublasContext", {"hipblasHandle_t", CONV_TYPE, API_BLAS}},
+
+    {"cublasOperation_t",   {"hipblasOperation_t",   CONV_TYPE, API_BLAS}},
+    {"cublasStatus_t",      {"hipblasStatus_t",      CONV_TYPE, API_BLAS}},
+    {"cublasFillMode_t",    {"hipblasFillMode_t",    CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasDiagType_t",    {"hipblasDiagType_t",    CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasSideMode_t",    {"hipblasSideMode_t",    CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasPointerMode_t", {"hipblasPointerMode_t", CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasAtomicsMode_t", {"hipblasAtomicsMode_t", CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasDataType_t",    {"hipblasDataType_t",    CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
+};
+
+/// Maps cuda header names to hip header names.
+const std::map <llvm::StringRef, hipCounter> CUDA_INCLUDE_MAP{
+    // CUDA includes
+    {"cuda.h",             {"hip/hip_runtime.h",     CONV_INCLUDE_CUDA_MAIN_H, API_DRIVER}},
+    {"cuda_runtime.h",     {"hip/hip_runtime.h",     CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME}},
+    {"cuda_runtime_api.h", {"hip/hip_runtime_api.h", CONV_INCLUDE,             API_RUNTIME}},
+
+    // CUBLAS includes
+    {"cublas.h",    {"hipblas.h", CONV_INCLUDE, API_BLAS}},
+    {"cublas_v2.h", {"hipblas.h", CONV_INCLUDE, API_BLAS}},
+
+    // HIP includes
+    // TODO: uncomment this when hip/cudacommon.h will be renamed to hip/hipcommon.h
+    //    {"cudacommon.h", {"hipcommon.h", CONV_INCLUDE, API_RUNTIME}},
+};
+
+/// All other identifiers: function and macro names.
+const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
+    // Defines
+    {"__CUDACC__", {"__HIPCC__", CONV_DEF, API_RUNTIME}},
 
     // CUDA Driver API error codes only
     {"CUDA_ERROR_INVALID_CONTEXT",               {"hipErrorInvalidContext",              CONV_TYPE, API_DRIVER}},    // 201
@@ -153,8 +461,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"CUDA_ERROR_INVALID_GRAPHICS_CONTEXT",       {"hipErrorInvalidGraphicsContext",      CONV_TYPE, API_DRIVER}},    // 219
     {"cudaErrorInvalidGraphicsContext",           {"hipErrorInvalidGraphicsContext",      CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 79
 
-    {"CUDA_ERROR_NVLINK_UNCORRECTABLE",           {"hipErrorNvlinkUncorrectable",         CONV_TYPE, API_DRIVER,  HIP_UNSUPPORTED}},    // 220 [CUDA 8.0.44]
-    {"cudaErrorNvlinkUncorrectable",              {"hipErrorNvlinkUncorrectable",         CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 80  [CUDA 8.0.44]
+    {"CUDA_ERROR_NVLINK_UNCORRECTABLE",           {"hipErrorNvlinkUncorrectable",         CONV_TYPE, API_DRIVER,  HIP_UNSUPPORTED}},    // 220
+    {"cudaErrorNvlinkUncorrectable",              {"hipErrorNvlinkUncorrectable",         CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 80 
 
     {"CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND", {"hipErrorSharedObjectSymbolNotFound",  CONV_TYPE, API_DRIVER}},    // 302
     {"cudaErrorSharedObjectSymbolNotFound",       {"hipErrorSharedObjectSymbolNotFound",  CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 40
@@ -220,26 +528,13 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaErrorUnknown",                          {"hipErrorUnknown",                     CONV_TYPE, API_RUNTIME}},    // 30
 
     ///////////////////////////// CUDA DRIVER API /////////////////////////////
-    // structs
-    {"CUDA_ARRAY3D_DESCRIPTOR",           {"HIP_ARRAY3D_DESCRIPTOR",           CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    {"CUDA_ARRAY_DESCRIPTOR",             {"HIP_ARRAY_DESCRIPTOR",             CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    {"CUDA_MEMCPY2D",                     {"HIP_MEMCPY2D",                     CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    {"CUDA_MEMCPY3D",                     {"HIP_MEMCPY3D",                     CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    {"CUDA_MEMCPY3D_PEER",                {"HIP_MEMCPY3D_PEER",                CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    {"CUDA_POINTER_ATTRIBUTE_P2P_TOKENS", {"HIP_POINTER_ATTRIBUTE_P2P_TOKENS", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    {"CUDA_RESOURCE_DESC",                {"HIP_RESOURCE_DESC",                CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    {"CUDA_RESOURCE_VIEW_DESC",           {"HIP_RESOURCE_VIEW_DESC",           CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-
-    {"CUipcEventHandle",                  {"hipIpcEventHandle",                CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    {"CUipcMemHandle",                    {"hipIpcMemHandle",                  CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-
-    {"CUaddress_mode",                    {"hipAddress_mode",                  CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    // CUaddress_mode enum
     {"CU_TR_ADDRESS_MODE_WRAP",           {"HIP_TR_ADDRESS_MODE_WRAP",         CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0
     {"CU_TR_ADDRESS_MODE_CLAMP",          {"HIP_TR_ADDRESS_MODE_CLAMP",        CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 1
     {"CU_TR_ADDRESS_MODE_MIRROR",         {"HIP_TR_ADDRESS_MODE_MIRROR",       CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 2
     {"CU_TR_ADDRESS_MODE_BORDER",         {"HIP_TR_ADDRESS_MODE_BORDER",       CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 3
 
-    {"CUarray_cubemap_face",              {"hipArray_cubemap_face",            CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    // CUarray_cubemap_face enum
     {"CU_CUBEMAP_FACE_POSITIVE_X",        {"HIP_CUBEMAP_FACE_POSITIVE_X",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x00
     {"CU_CUBEMAP_FACE_NEGATIVE_X",        {"HIP_CUBEMAP_FACE_NEGATIVE_X",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01
     {"CU_CUBEMAP_FACE_POSITIVE_Y",        {"HIP_CUBEMAP_FACE_POSITIVE_Y",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x02
@@ -247,7 +542,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"CU_CUBEMAP_FACE_POSITIVE_Z",        {"HIP_CUBEMAP_FACE_POSITIVE_Z",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x04
     {"CU_CUBEMAP_FACE_NEGATIVE_Z",        {"HIP_CUBEMAP_FACE_NEGATIVE_Z",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x05
 
-    {"CUarray_format",                    {"hipArray_format",                  CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    // CUarray_format enum
     {"CU_AD_FORMAT_UNSIGNED_INT8",        {"HIP_AD_FORMAT_UNSIGNED_INT8",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01
     {"CU_AD_FORMAT_UNSIGNED_INT16",       {"HIP_AD_FORMAT_UNSIGNED_INT16",     CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x02
     {"CU_AD_FORMAT_UNSIGNED_INT32",       {"HIP_AD_FORMAT_UNSIGNED_INT32",     CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x03
@@ -256,16 +551,14 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"CU_AD_FORMAT_SIGNED_INT32",         {"HIP_AD_FORMAT_SIGNED_INT32",       CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x0a
     {"CU_AD_FORMAT_HALF",                 {"HIP_AD_FORMAT_HALF",               CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x10
     {"CU_AD_FORMAT_FLOAT",                {"HIP_AD_FORMAT_FLOAT",              CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x20
-    // Compute mode
-    {"CUcomputemode",                     {"hipComputemode",                   CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_RUNTIME ANALOGUE (cudaComputeMode)
+
+    // CUcomputemode enum
     {"CU_COMPUTEMODE_DEFAULT",            {"hipComputeModeDefault",            CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0 // API_RUNTIME ANALOGUE (cudaComputeModeDefault = 0)
     {"CU_COMPUTEMODE_EXCLUSIVE",          {"hipComputeModeExclusive",          CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 1 // API_RUNTIME ANALOGUE (cudaComputeModeExclusive = 1)
     {"CU_COMPUTEMODE_PROHIBITED",         {"hipComputeModeProhibited",         CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 2 // API_RUNTIME ANALOGUE (cudaComputeModeProhibited = 2)
     {"CU_COMPUTEMODE_EXCLUSIVE_PROCESS",  {"hipComputeModeExclusiveProcess",   CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 3 // API_RUNTIME ANALOGUE (cudaComputeModeExclusiveProcess = 3)
 
-    // unsupported yet by HIP [CUDA 8.0.44]
     // Memory advise values
-    {"CUmem_advise",                                  {"hipMemAdvise",                             CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_RUNTIME ANALOGUE (cudaComputeMode)
     //     {"CUmem_advise_enum", {"hipMemAdvise", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_MEM_ADVISE_SET_READ_MOSTLY",                 {"hipMemAdviseSetReadMostly",                CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 1 // API_RUNTIME ANALOGUE (cudaMemAdviseSetReadMostly = 1)
     {"CU_MEM_ADVISE_UNSET_READ_MOSTLY",               {"hipMemAdviseUnsetReadMostly",              CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 2 // API_RUNTIME ANALOGUE (cudaMemAdviseUnsetReadMostly = 2)
@@ -273,16 +566,15 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"CU_MEM_ADVISE_UNSET_PREFERRED_LOCATION",        {"hipMemAdviseUnsetPreferredLocation",       CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 4 // API_RUNTIME ANALOGUE (cudaMemAdviseUnsetPreferredLocation = 4)
     {"CU_MEM_ADVISE_SET_ACCESSED_BY",                 {"hipMemAdviseSetAccessedBy",                CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 5 // API_RUNTIME ANALOGUE (cudaMemAdviseSetAccessedBy = 5)
     {"CU_MEM_ADVISE_UNSET_ACCESSED_BY",               {"hipMemAdviseUnsetAccessedBy",              CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 6 // API_RUNTIME ANALOGUE (cudaMemAdviseUnsetAccessedBy = 6)
+
     // CUmem_range_attribute
-    {"CUmem_range_attribute",                         {"hipMemRangeAttribute",                     CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_RUNTIME ANALOGUE (cudaMemRangeAttribute)
     //     {"CUmem_range_attribute_enum", {"hipMemRangeAttribute", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_MEM_RANGE_ATTRIBUTE_READ_MOSTLY",            {"hipMemRangeAttributeReadMostly",           CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 1 // API_RUNTIME ANALOGUE (cudaMemRangeAttributeReadMostly = 1)
     {"CU_MEM_RANGE_ATTRIBUTE_PREFERRED_LOCATION",     {"hipMemRangeAttributePreferredLocation",    CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 2 // API_RUNTIME ANALOGUE (cudaMemRangeAttributePreferredLocation = 2)
     {"CU_MEM_RANGE_ATTRIBUTE_ACCESSED_BY",            {"hipMemRangeAttributeAccessedBy",           CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 3 // API_RUNTIME ANALOGUE (cudaMemRangeAttributeAccessedBy = 3)
     {"CU_MEM_RANGE_ATTRIBUTE_LAST_PREFETCH_LOCATION", {"hipMemRangeAttributeLastPrefetchLocation", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 4 // API_RUNTIME ANALOGUE (cudaMemRangeAttributeLastPrefetchLocation = 4)
 
-    // Context flags
-    {"CUctx_flags",                {"hipCctx_flags",               CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    // CUctx_flags enum
     {"CU_CTX_SCHED_AUTO",          {"HIP_CTX_SCHED_AUTO",          CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x00
     {"CU_CTX_SCHED_SPIN",          {"HIP_CTX_SCHED_SPIN",          CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01
     {"CU_CTX_SCHED_YIELD",         {"HIP_CTX_SCHED_YIELD",         CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x02
@@ -311,6 +603,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"CU_TRSF_NORMALIZED_COORDINATES", {"HIP_TRSF_NORMALIZED_COORDINATES", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},// 0x02
     {"CU_TRSF_READ_AS_INTEGER",        {"HIP_TRSF_READ_AS_INTEGER",        CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01
     {"CU_TRSF_SRGB",                   {"HIP_TRSF_SRGB",                   CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x10
+
     // Deprecated, use CUDA_ARRAY3D_LAYERED
     {"CUDA_ARRAY3D_2DARRAY",           {"HIP_ARRAY3D_LAYERED",             CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01
     {"CUDA_ARRAY3D_CUBEMAP",           {"HIP_ARRAY3D_CUBEMAP",             CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x04
@@ -320,19 +613,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"CUDA_ARRAY3D_TEXTURE_GATHER",    {"HIP_ARRAY3D_TEXTURE_GATHER",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x08
     {"CUDA_VERSION",                   {"HIP_VERSION",                     CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 7050
 
-    // Types
-    // NOTE: CUdevice might be changed to typedef int in the future.
-    {"CUdevice",                {"hipDevice_t",          CONV_TYPE, API_DRIVER}},
-    {"CUdevice_attribute_enum", {"hipDeviceAttribute_t", CONV_TYPE, API_DRIVER}},    // API_Runtime ANALOGUE (cudaDeviceAttr)
-    {"CUdevice_attribute",      {"hipDeviceAttribute_t", CONV_TYPE, API_DRIVER}},    // API_Runtime ANALOGUE (cudaDeviceAttr)
-    {"CUdeviceptr",             {"hipDeviceptr_t",       CONV_TYPE, API_DRIVER}},
-    // CUDA: "The types::CUarray and struct ::cudaArray * represent the same data type and may be used interchangeably by casting the two types between each other."
-    //    typedef struct cudaArray  *cudaArray_t;
-    //    typedef struct CUarray_st *CUarray;
-    {"CUarray_st",              {"hipArray",             CONV_TYPE, API_DRIVER}},    // API_Runtime ANALOGUE (cudaArray)
-    {"CUarray",                 {"hipArray *",           CONV_TYPE, API_DRIVER}},    // API_Runtime ANALOGUE (cudaArray_t)
-
-    // unsupported yet by HIP
+    // CUdevice_attribute_enum values...
     {"CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK",                   {"hipDeviceAttributeMaxThreadsPerBlock",                   CONV_TYPE,                API_DRIVER,  HIP_UNSUPPORTED}},    //  1 // API_Runtime ANALOGUE (cudaDevAttrMaxThreadsPerBlock = 1)
     {"CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_X",                         {"hipDeviceAttributeMaxBlockDimX",                         CONV_TYPE,                API_DRIVER,  HIP_UNSUPPORTED}},    //  2 // API_Runtime ANALOGUE (cudaDevAttrMaxBlockDimX = 2)
     {"CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Y",                         {"hipDeviceAttributeMaxBlockDimY",                         CONV_TYPE,                API_DRIVER,  HIP_UNSUPPORTED}},    //  3 // API_Runtime ANALOGUE (cudaDevAttrMaxBlockDimY = 3)
@@ -429,7 +710,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"CU_DEVICE_ATTRIBUTE_MANAGED_MEMORY",                          {"hipDeviceAttributeManagedMemory",                        CONV_TYPE,                API_DRIVER,  HIP_UNSUPPORTED}},    // 83 // API_Runtime ANALOGUE (cudaDevAttrManagedMemory = 83)
     {"CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD",                         {"hipDeviceAttributeIsMultiGpuBoard",                      CONV_TYPE,                API_DRIVER}},                      // 84 // API_Runtime ANALOGUE (cudaDevAttrIsMultiGpuBoard = 84)
     {"CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD_GROUP_ID",                {"hipDeviceAttributeMultiGpuBoardGroupId",                 CONV_TYPE,                API_DRIVER,  HIP_UNSUPPORTED}},    // 85 // API_Runtime ANALOGUE (cudaDevAttrMultiGpuBoardGroupID = 85)
-    // unsupported yet by HIP [CUDA 8.0.44]
     {"CU_DEVICE_ATTRIBUTE_HOST_NATIVE_ATOMIC_SUPPORTED",            {"hipDeviceAttributeHostNativeAtomicSupported",            CONV_TYPE,                API_DRIVER,  HIP_UNSUPPORTED}},    // 86 // API_Runtime ANALOGUE (cudaDevAttrHostNativeAtomicSupported = 86)
     {"CU_DEVICE_ATTRIBUTE_SINGLE_TO_DOUBLE_PRECISION_PERF_RATIO",   {"hipDeviceAttributeSingleToDoublePrecisionPerfRatio",     CONV_TYPE,                API_DRIVER,  HIP_UNSUPPORTED}},    // 87 // API_Runtime ANALOGUE (cudaDevAttrSingleToDoublePrecisionPerfRatio = 87)
     {"CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS",                  {"hipDeviceAttributePageableMemoryAccess",                 CONV_TYPE,                API_DRIVER,  HIP_UNSUPPORTED}},    // 88 // API_Runtime ANALOGUE (cudaDevAttrPageableMemoryAccess = 88)
@@ -438,9 +718,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"CU_DEVICE_ATTRIBUTE_CAN_USE_HOST_POINTER_FOR_REGISTERED_MEM", {"hipDeviceAttributeCanUseHostPointerForRegisteredMem",    CONV_TYPE,                API_DRIVER,  HIP_UNSUPPORTED}},    // 91 // API_Runtime ANALOGUE (cudaDevAttrCanUseHostPointerForRegisteredMem = 91)
 
     {"CU_DEVICE_ATTRIBUTE_MAX",                                     {"hipDeviceAttributeMax",                                  CONV_TYPE,                API_DRIVER,  HIP_UNSUPPORTED}},    // 92 // API_Runtime ANALOGUE (no)
-
-    {"CUdevprop_st",                                                {"hipDeviceProp_t",                                        CONV_TYPE,                API_DRIVER}},
-    {"CUdevprop",                                                   {"hipDeviceProp_t",                                        CONV_TYPE,                API_DRIVER}},
 
     // TODO: Analogous enum is needed in HIP. Couldn't map enum to struct hipPointerAttribute_t.
     // TODO: Do for Pointer Attributes the same as for Device Attributes.
@@ -455,20 +732,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"CU_POINTER_ATTRIBUTE_BUFFER_ID",      {"hipPointerAttributeBufferId",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 7 // API_Runtime ANALOGUE (no)
     {"CU_POINTER_ATTRIBUTE_IS_MANAGED",     {"hipPointerAttributeIsManaged",     CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 8 // API_Runtime ANALOGUE (no)
 
-    // pointer to CUfunc_st
-    {"CUfunction",         {"hipFunction_t",         CONV_TYPE, API_DRIVER}},
-    // TODO: move "typedef struct ihipModuleSymbol_t *hipFunction_t;" from hcc_details to HIP
-    //             typedef struct CUfunc_st          *CUfunction;
-    //     {"CUfunc_st", {"ihipModuleSymbol_t", CONV_TYPE, API_DRIVER}},
-
-    // typedef struct CUgraphicsResource_st *CUgraphicsResource;
-    {"CUgraphicsResource", {"hipGraphicsResource_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    // typedef struct CUmipmappedArray_st *CUmipmappedArray;
-    {"CUmipmappedArray",   {"hipMipmappedArray_t",   CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-
-    // unsupported yet by HIP
-    {"CUfunction_attribute",                    {"hipFuncAttribute_t",                  CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    {"CUfunction_attribute_enum",               {"hipFuncAttribute_t",                  CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    // CUfunction_attribute_enum values
     {"CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK", {"hipFuncAttributeMaxThreadsPerBlocks", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES",     {"hipFuncAttributeSharedSizeBytes",     CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_FUNC_ATTRIBUTE_CONST_SIZE_BYTES",      {"hipFuncAttributeConstSizeBytes",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
@@ -480,15 +744,11 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"CU_FUNC_ATTRIBUTE_MAX",                   {"hipFuncAttributeMax",                 CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
 
     // enum CUgraphicsMapResourceFlags/CUgraphicsMapResourceFlags_enum
-    {"CUgraphicsMapResourceFlags",                   {"hipGraphicsMapFlags",             CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGraphicsMapFlags)
-    {"CUgraphicsMapResourceFlags_enum",              {"hipGraphicsMapFlags",             CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGraphicsMapFlags)
     {"CU_GRAPHICS_MAP_RESOURCE_FLAGS_NONE",          {"hipGraphicsMapFlagsNone",         CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x00 // API_Runtime ANALOGUE (cudaGraphicsMapFlagsNone = 0)
     {"CU_GRAPHICS_MAP_RESOURCE_FLAGS_READ_ONLY",     {"hipGraphicsMapFlagsReadOnly",     CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01 // API_Runtime ANALOGUE (cudaGraphicsMapFlagsReadOnly = 1)
     {"CU_GRAPHICS_MAP_RESOURCE_FLAGS_WRITE_DISCARD", {"hipGraphicsMapFlagsWriteDiscard", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x02 // API_Runtime ANALOGUE (cudaGraphicsMapFlagsWriteDiscard = 2)
 
     // enum CUgraphicsRegisterFlags/CUgraphicsRegisterFlags_enum
-    {"CUgraphicsRegisterFlags",                   {"hipGraphicsRegisterFlags",                 CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGraphicsRegisterFlags)
-    {"CUgraphicsRegisterFlags_enum",              {"hipGraphicsRegisterFlags",                 CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGraphicsRegisterFlags)
     {"CU_GRAPHICS_MAP_RESOURCE_FLAGS_NONE",       {"hipGraphicsRegisterFlagsNone",             CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x00 // API_Runtime ANALOGUE (cudaGraphicsRegisterFlagsNone = 0)
     {"CU_GRAPHICS_MAP_RESOURCE_FLAGS_READ_ONLY",  {"hipGraphicsRegisterFlagsReadOnly",         CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01 // API_Runtime ANALOGUE (cudaGraphicsRegisterFlagsReadOnly = 1)
     {"CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD",  {"hipGraphicsRegisterFlagsWriteDiscard",     CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x02 // API_Runtime ANALOGUE (cudaGraphicsRegisterFlagsWriteDiscard = 2)
@@ -496,41 +756,29 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"CU_GRAPHICS_REGISTER_FLAGS_TEXTURE_GATHER", {"hipGraphicsRegisterFlagsTextureGather",    CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x08 // API_Runtime ANALOGUE (cudaGraphicsRegisterFlagsTextureGather = 8)
 
     // enum CUoccupancy_flags/CUoccupancy_flags_enum
-    {"CUoccupancy_flags",                     {"hipOccupancyFlags",                  CONV_TYPE,  API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
-    {"CUoccupancy_flags_enum",                {"hipOccupancyFlags",                  CONV_TYPE,  API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
     {"CU_OCCUPANCY_DEFAULT",                  {"hipOccupancyDefault",                CONV_TYPE,  API_DRIVER, HIP_UNSUPPORTED}},    // 0x00 // API_Runtime ANALOGUE (cudaOccupancyDefault = 0x0)
     {"CU_OCCUPANCY_DISABLE_CACHING_OVERRIDE", {"hipOccupancyDisableCachingOverride", CONV_TYPE,  API_DRIVER, HIP_UNSUPPORTED}},    // 0x01 // API_Runtime ANALOGUE (cudaOccupancyDisableCachingOverride = 0x1)
 
-    {"CUfunc_cache_enum",                     {"hipFuncCache",                       CONV_TYPE,  API_DRIVER}},    // API_Runtime ANALOGUE (cudaFuncCache)
-    {"CUfunc_cache",                          {"hipFuncCache",                       CONV_TYPE,  API_DRIVER}},    // API_Runtime ANALOGUE (cudaFuncCache)
+    // enum CUfunc_cache/CUfunc_cache_enum
     {"CU_FUNC_CACHE_PREFER_NONE",             {"hipFuncCachePreferNone",             CONV_CACHE, API_DRIVER}},    // 0x00 // API_Runtime ANALOGUE (cudaFilterModePoint = 0)
     {"CU_FUNC_CACHE_PREFER_SHARED",           {"hipFuncCachePreferShared",           CONV_CACHE, API_DRIVER}},    // 0x01 // API_Runtime ANALOGUE (cudaFuncCachePreferShared = 1)
     {"CU_FUNC_CACHE_PREFER_L1",               {"hipFuncCachePreferL1",               CONV_CACHE, API_DRIVER}},    // 0x02 // API_Runtime ANALOGUE (cudaFuncCachePreferL1 = 2)
     {"CU_FUNC_CACHE_PREFER_EQUAL",            {"hipFuncCachePreferEqual",            CONV_CACHE, API_DRIVER}},    // 0x03 // API_Runtime ANALOGUE (cudaFuncCachePreferEqual = 3)
 
     // enum CUipcMem_flags/CUipcMem_flags_enum
-    {"CUipcMem_flags",                     {"hipIpcMemFlags",                CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
-    {"CUipcMem_flags_enum",                {"hipIpcMemFlags",                CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
     {"CU_IPC_MEM_LAZY_ENABLE_PEER_ACCESS", {"hipIpcMemLazyEnablePeerAccess", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x1 // API_Runtime ANALOGUE (cudaIpcMemLazyEnablePeerAccess = 0x01)
-
-    // enum CUipcMem_flags/CUipcMem_flags_enum
-    {"CUipcMem_flags",                     {"hipIpcMemFlags",                CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
 
     // JIT
     // enum CUjit_cacheMode/CUjit_cacheMode_enum
-    {"CUjit_cacheMode",                    {"hipJitCacheMode",                     CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
-    {"CUjit_cacheMode_enum",               {"hipJitCacheMode",                     CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_JIT_CACHE_OPTION_NONE",           {"hipJitCacheModeOptionNone",           CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_JIT_CACHE_OPTION_CG",             {"hipJitCacheModeOptionCG",             CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_JIT_CACHE_OPTION_CA",             {"hipJitCacheModeOptionCA",             CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
+
     // enum CUjit_fallback/CUjit_fallback_enum
-    {"CUjit_fallback",                     {"hipJitFallback",                      CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
-    {"CUjit_fallback_enum",                {"hipJitFallback",                      CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_PREFER_PTX",                      {"hipJitFallbackPreferPtx",             CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_PREFER_BINARY",                   {"hipJitFallbackPreferBinary",          CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
+
     // enum CUjit_option/CUjit_option_enum
-    {"CUjit_option",                       {"hipJitOption",                        CONV_JIT, API_DRIVER}},    // API_Runtime ANALOGUE (no)
-    {"CUjit_option_enum",                  {"hipJitOption",                        CONV_JIT, API_DRIVER}},
     {"CU_JIT_MAX_REGISTERS",               {"hipJitOptionMaxRegisters",            CONV_JIT, API_DRIVER}},
     {"CU_JIT_THREADS_PER_BLOCK",           {"hipJitOptionThreadsPerBlock",         CONV_JIT, API_DRIVER}},
     {"CU_JIT_WALL_TIME",                   {"hipJitOptionWallTime",                CONV_JIT, API_DRIVER}},
@@ -546,14 +794,11 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"CU_JIT_LOG_VERBOSE",                 {"hipJitOptionLogVerbose",              CONV_JIT, API_DRIVER}},
     {"CU_JIT_GENERATE_LINE_INFO",          {"hipJitOptionGenerateLineInfo",        CONV_JIT, API_DRIVER}},
     {"CU_JIT_CACHE_MODE",                  {"hipJitOptionCacheMode",               CONV_JIT, API_DRIVER}},
-    // unsupported yet by HIP [CUDA 8.0.44]
     {"CU_JIT_NEW_SM3X_OPT",                {"hipJitOptionSm3xOpt",                 CONV_JIT, API_DRIVER}},
     {"CU_JIT_FAST_COMPILE",                {"hipJitOptionFastCompile",             CONV_JIT, API_DRIVER}},
-
     {"CU_JIT_NUM_OPTIONS",                 {"hipJitOptionNumOptions",              CONV_JIT, API_DRIVER}},
+
     // enum CUjit_target/CUjit_target_enum
-    {"CUjit_target",                       {"hipJitTarget",                        CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
-    {"CUjit_target_enum",                  {"hipJitTarget",                        CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_TARGET_COMPUTE_10",               {"hipJitTargetCompute10",               CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_TARGET_COMPUTE_11",               {"hipJitTargetCompute11",               CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_TARGET_COMPUTE_12",               {"hipJitTargetCompute12",               CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
@@ -566,14 +811,12 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"CU_TARGET_COMPUTE_37",               {"hipJitTargetCompute37",               CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_TARGET_COMPUTE_50",               {"hipJitTargetCompute50",               CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_TARGET_COMPUTE_52",               {"hipJitTargetCompute52",               CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
-    // unsupported yet by HIP [CUDA 8.0.44]
     {"CU_TARGET_COMPUTE_53",               {"hipJitTargetCompute53",               CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_TARGET_COMPUTE_60",               {"hipJitTargetCompute60",               CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_TARGET_COMPUTE_61",               {"hipJitTargetCompute61",               CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_TARGET_COMPUTE_62",               {"hipJitTargetCompute62",               CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
+
     // enum CUjitInputType/CUjitInputType_enum
-    {"CUjitInputType",                     {"hipJitInputType",                     CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
-    {"CUjitInputType_enum",                {"hipJitInputType",                     CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_JIT_INPUT_CUBIN",                 {"hipJitInputTypeBin",                  CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_JIT_INPUT_PTX",                   {"hipJitInputTypePtx",                  CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_JIT_INPUT_FATBINARY",             {"hipJitInputTypeFatBinary",            CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
@@ -581,9 +824,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"CU_JIT_INPUT_LIBRARY",               {"hipJitInputTypeLibrary",              CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_JIT_NUM_INPUT_TYPES",             {"hipJitInputTypeNumInputTypes",        CONV_JIT, API_DRIVER, HIP_UNSUPPORTED}},
 
-    // Limits
-    {"CUlimit",                                   {"hipLimit_t",                           CONV_TYPE, API_DRIVER}},    // API_Runtime ANALOGUE (cudaLimit)
-    {"CUlimit_enum",                              {"hipLimit_t",                           CONV_TYPE, API_DRIVER}},    // API_Runtime ANALOGUE (cudaLimit)
+    // enum CUlimit/CUlimit_enum
     {"CU_LIMIT_STACK_SIZE",                       {"hipLimitStackSize",                    CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x00 // API_Runtime ANALOGUE (cudaLimitStackSize = 0x00)
     {"CU_LIMIT_PRINTF_FIFO_SIZE",                 {"hipLimitPrintfFifoSize",               CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01 // API_Runtime ANALOGUE (cudaLimitPrintfFifoSize = 0x01)
     {"CU_LIMIT_MALLOC_HEAP_SIZE",                 {"hipLimitMallocHeapSize",               CONV_TYPE, API_DRIVER}},    // 0x02 // API_Runtime ANALOGUE (cudaLimitMallocHeapSize = 0x02)
@@ -592,31 +833,23 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"CU_LIMIT_STACK_SIZE",                       {"hipLimitStackSize",                    CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
 
     // enum CUmemAttach_flags/CUmemAttach_flags_enum
-    {"CUmemAttach_flags",      {"hipMemAttachFlags_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
-    {"CUmemAttach_flags_enum", {"hipMemAttachFlags_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no)
     {"CU_MEM_ATTACH_GLOBAL",   {"hipMemAttachGlobal",  CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x1 // API_Runtime ANALOGUE (#define cudaMemAttachGlobal 0x01)
     {"CU_MEM_ATTACH_HOST",     {"hipMemAttachHost",    CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x2 // API_Runtime ANALOGUE (#define cudaMemAttachHost 0x02)
     {"CU_MEM_ATTACH_SINGLE",   {"hipMemAttachSingle",  CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x4 // API_Runtime ANALOGUE (#define cudaMemAttachSingle 0x04)
 
     // enum CUmemorytype/CUmemorytype_enum
-    {"CUmemorytype",          {"hipMemType_t",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no - cudaMemoryType is not an analogue)
-    {"CUmemorytype_enum",     {"hipMemType_t",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (no - cudaMemoryType is not an analogue)
     {"CU_MEMORYTYPE_HOST",    {"hipMemTypeHost",    CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01 // API_Runtime ANALOGUE (no)
     {"CU_MEMORYTYPE_DEVICE",  {"hipMemTypeDevice",  CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x02 // API_Runtime ANALOGUE (no)
     {"CU_MEMORYTYPE_ARRAY",   {"hipMemTypeArray",   CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x03 // API_Runtime ANALOGUE (no)
     {"CU_MEMORYTYPE_UNIFIED", {"hipMemTypeUnified", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x04 // API_Runtime ANALOGUE (no)
 
-    // enum CUresourcetype
-    {"CUresourcetype",                   {"hipResourceType",               CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaResourceType)
-    {"CUresourcetype_enum",              {"hipResourceType",               CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaResourceType)
+    // enum CUresourcetype/CUresourcetype_enum
     {"CU_RESOURCE_TYPE_ARRAY",           {"hipResourceTypeArray",          CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x00 // API_Runtime ANALOGUE (cudaResourceTypeArray = 0x00)
     {"CU_RESOURCE_TYPE_MIPMAPPED_ARRAY", {"hipResourceTypeMipmappedArray", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01 // API_Runtime ANALOGUE (cudaResourceTypeMipmappedArray = 0x01)
     {"CU_RESOURCE_TYPE_LINEAR",          {"hipResourceTypeLinear",         CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x02 // API_Runtime ANALOGUE (cudaResourceTypeLinear = 0x02)
     {"CU_RESOURCE_TYPE_PITCH2D",         {"hipResourceTypePitch2D",        CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x03 // API_Runtime ANALOGUE (cudaResourceTypePitch2D = 0x03)
 
     // enum CUresourceViewFormat/CUresourceViewFormat_enum
-    {"CUresourceViewFormat",             {"hipResourceViewFormat",                     CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaResourceViewFormat)
-    {"CUresourceViewFormat_enum",        {"hipResourceViewFormat",                     CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaResourceViewFormat)
     {"CU_RES_VIEW_FORMAT_NONE",          {"hipResViewFormatNone",                      CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x00 // API_Runtime ANALOGUE (cudaResViewFormatNone = 0x00)
     {"CU_RES_VIEW_FORMAT_UINT_1X8",      {"hipResViewFormatUnsignedChar1",             CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedChar1 = 0x01)
     {"CU_RES_VIEW_FORMAT_UINT_2X8",      {"hipResViewFormatUnsignedChar2",             CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x02 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedChar2 = 0x02)
@@ -653,60 +886,25 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"CU_RES_VIEW_FORMAT_SIGNED_BC6H",   {"hipResViewFormatSignedBlockCompressed6H",   CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x21 // API_Runtime ANALOGUE (cudaResViewFormatSignedBlockCompressed6H = 0x21)
     {"CU_RES_VIEW_FORMAT_UNSIGNED_BC7",  {"hipResViewFormatUnsignedBlockCompressed7",  CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x22 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed7 = 0x22)
 
-    {"CUsharedconfig",                            {"hipSharedMemConfig",            CONV_TYPE, API_DRIVER}},
-    {"CUsharedconfig_enum",                       {"hipSharedMemConfig",            CONV_TYPE, API_DRIVER}},
     {"CU_SHARED_MEM_CONFIG_DEFAULT_BANK_SIZE",    {"hipSharedMemBankSizeDefault",   CONV_TYPE, API_DRIVER}},
     {"CU_SHARED_MEM_CONFIG_FOUR_BYTE_BANK_SIZE",  {"hipSharedMemBankSizeFourByte",  CONV_TYPE, API_DRIVER}},
     {"CU_SHARED_MEM_CONFIG_EIGHT_BYTE_BANK_SIZE", {"hipSharedMemBankSizeEightByte", CONV_TYPE, API_DRIVER}},
 
-    {"CUcontext",              {"hipCtx_t",              CONV_TYPE, API_DRIVER}},
-    // TODO: move "typedef struct ihipCtx_t *hipCtx_t;" from hcc_details to HIP
-    //             typedef struct CUctx_st  *CUcontext;
-    //     {"CUctx_st", {"ihipCtx_t", CONV_TYPE, API_DRIVER}},
-    {"CUmodule",               {"hipModule_t",           CONV_TYPE, API_DRIVER}},
-    // TODO: move "typedef struct ihipModule_t *hipModule_t;" from hcc_details to HIP
-    //             typedef struct CUmod_st     *CUmodule;
-    //     {"CUmod_st", {"ihipModule_t", CONV_TYPE, API_DRIVER}},
-    {"CUstream",               {"hipStream_t",           CONV_TYPE, API_DRIVER}},
-    // TODO: move "typedef struct ihipStream_t *hipStream_t;" from hcc_details to HIP
-    //             typedef struct CUstream_st *CUstream;
-    //     {"CUstream_st", {"ihipStream_t", CONV_TYPE, API_DRIVER}},
-
-    // typedef void (*hipStreamCallback_t)      (hipStream_t stream, hipError_t status, void* userData);
-    // typedef void (CUDA_CB *CUstreamCallback) (CUstream hStream, CUresult status, void* userData)
-    {"CUstreamCallback",       {"hipStreamCallback_t",   CONV_TYPE, API_DRIVER}},
-
-    {"CUsurfObject",           {"hipSurfaceObject",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    // typedef struct CUsurfref_st *CUsurfref;
-    {"CUsurfref",              {"hipSurfaceReference_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    //     {"CUsurfref_st", {"ihipSurfaceReference_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    {"CUtexObject",            {"hipTextureObject",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    // typedef struct CUtexref_st *CUtexref;
-    {"CUtexref",               {"hipTextureReference_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    //     {"CUtexref_st", {"ihipTextureReference_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-
-    // Stream Flags enum
-    {"CUstream_flags",         {"hipStreamFlags",        CONV_TYPE, API_DRIVER}},
-    //     {"CUstream_flags_enum", {"hipStreamFlags", CONV_TYPE, API_DRIVER}},
+    // enum CUstream_flags/CUstream_flags_enum
     {"CU_STREAM_DEFAULT",      {"hipStreamDefault",      CONV_TYPE, API_DRIVER}},
     {"CU_STREAM_NON_BLOCKING", {"hipStreamNonBlocking",  CONV_TYPE, API_DRIVER}},
 
-    // unsupported yet by HIP [CUDA 8.0.44]
-    // Flags for ::cuStreamWaitValue32
-    {"CUstreamWaitValue_flags",                 {"hipStreamWaitValueFlags",              CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    //     {"CUstreamWaitValue_flags_enum", {"hipStreamWaitValueFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    // Flags for ::cuStreamWaitValue32 (enum CUstreamWaitValue_flags/CUstreamWaitValue_flags_enum)
     {"CU_STREAM_WAIT_VALUE_GEQ",                {"hipStreamWaitValueGeq",                CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x0
     {"CU_STREAM_WAIT_VALUE_EQ",                 {"hipStreamWaitValueEq",                 CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x1
     {"CU_STREAM_WAIT_VALUE_AND",                {"hipStreamWaitValueAnd",                CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x2
     {"CU_STREAM_WAIT_VALUE_FLUSH",              {"hipStreamWaitValueFlush",              CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 1<<30
-    // Flags for ::cuStreamWriteValue32
-    {"CUstreamWriteValue_flags",                {"hipStreamWriteValueFlags",             CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    //     {"CUstreamWriteValue_flags", {"hipStreamWriteValueFlags", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+
+    // Flags for ::cuStreamWriteValue32 (enum CUstreamWriteValue_flags/CUstreamWriteValue_flags_enum)
     {"CU_STREAM_WRITE_VALUE_DEFAULT",           {"hipStreamWriteValueDefault",           CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x0
     {"CU_STREAM_WRITE_VALUE_NO_MEMORY_BARRIER", {"hipStreamWriteValueNoMemoryBarrier",   CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x1
-    // Flags for ::cuStreamBatchMemOp
-    {"CUstreamBatchMemOpType",                  {"hipStreamBatchMemOpType",              CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    //     {"CUstreamBatchMemOpType_enum", {"hipStreamBatchMemOpType", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+
+    // Flags for ::cuStreamBatchMemOp (enum CUstreamBatchMemOpType/CUstreamBatchMemOpType_enum)
     {"CU_STREAM_MEM_OP_WAIT_VALUE_32",          {"hipStreamBatchMemOpWaitValue32",       CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 1
     {"CU_STREAM_MEM_OP_WRITE_VALUE_32",         {"hipStreamBatchMemOpWriteValue32",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 2
     {"CU_STREAM_MEM_OP_FLUSH_REMOTE_WRITES",    {"hipStreamBatchMemOpFlushRemoteWrites", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 3
@@ -785,27 +983,17 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cuModuleLoadFatBinary", {"hipModuleLoadFatBinary", CONV_MODULE, API_DRIVER, HIP_UNSUPPORTED}},
     {"cuModuleUnload",        {"hipModuleUnload",        CONV_MODULE, API_DRIVER}},
 
-    // unsupported yet by HIP [CUDA 8.0.44]
-    // P2P Attributes
-    {"CUdevice_P2PAttribute",                           {"hipDeviceP2PAttribute",                      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaDeviceP2PAttr)
-    //     {"CUdevice_P2PAttribute_enum", {"hipDeviceP2PAttribute", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    // enum CUdevice_P2PAttribute/CUdevice_P2PAttribute_enum
     {"CU_DEVICE_P2P_ATTRIBUTE_PERFORMANCE_RANK",        {"hipDeviceP2PAttributePerformanceRank",       CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01 // API_Runtime ANALOGUE (cudaDevP2PAttrPerformanceRank = 0x01)
     {"CU_DEVICE_P2P_ATTRIBUTE_ACCESS_SUPPORTED",        {"hipDeviceP2PAttributeAccessSupported",       CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x02 // API_Runtime ANALOGUE (cudaDevP2PAttrAccessSupported = 0x02)
     {"CU_DEVICE_P2P_ATTRIBUTE_NATIVE_ATOMIC_SUPPORTED", {"hipDeviceP2PAttributeNativeAtomicSupported", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x03 // API_Runtime ANALOGUE (cudaDevP2PAttrNativeAtomicSupported = 0x03)
 
     // Events
-    // pointer to CUevent_st
-    {"CUevent",                 {"hipEvent_t",            CONV_TYPE,  API_DRIVER}},
-    // ToDo:
-    //     {"CUevent_st", {"XXXX", CONV_TYPE, API_DRIVER}},
-    // Event Flags
-    {"CUevent_flags",           {"hipEventFlags",         CONV_EVENT, API_DRIVER, HIP_UNSUPPORTED}},
-    // ToDo:
-    //     {"CUevent_flags_enum", {"hipEventFlags", CONV_EVENT, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_EVENT_DEFAULT",        {"hipEventDefault",       CONV_EVENT, API_DRIVER}},
     {"CU_EVENT_BLOCKING_SYNC",  {"hipEventBlockingSync",  CONV_EVENT, API_DRIVER}},
     {"CU_EVENT_DISABLE_TIMING", {"hipEventDisableTiming", CONV_EVENT, API_DRIVER}},
     {"CU_EVENT_INTERPROCESS",   {"hipEventInterprocess",  CONV_EVENT, API_DRIVER}},
+
     // Event functions
     {"cuEventCreate",           {"hipEventCreate",        CONV_EVENT, API_DRIVER}},
     {"cuEventDestroy_v2",       {"hipEventDestroy",       CONV_EVENT, API_DRIVER}},
@@ -849,9 +1037,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cuStreamQuery",              {"hipStreamQuery",              CONV_STREAM, API_DRIVER}},
     {"cuStreamSynchronize",        {"hipStreamSynchronize",        CONV_STREAM, API_DRIVER}},
     {"cuStreamWaitEvent",          {"hipStreamWaitEvent",          CONV_STREAM, API_DRIVER}},
-    {"cuStreamWaitValue32",        {"hipStreamWaitValue32",        CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}},    // [CUDA 8.0.44] // no API_Runtime ANALOGUE
-    {"cuStreamWriteValue32",       {"hipStreamWriteValue32",       CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}},    // [CUDA 8.0.44] // no API_Runtime ANALOGUE
-    {"cuStreamBatchMemOp",         {"hipStreamBatchMemOp",         CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}},    // [CUDA 8.0.44] // no API_Runtime ANALOGUE
+    {"cuStreamWaitValue32",        {"hipStreamWaitValue32",        CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}},    // // no API_Runtime ANALOGUE
+    {"cuStreamWriteValue32",       {"hipStreamWriteValue32",       CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}},    // // no API_Runtime ANALOGUE
+    {"cuStreamBatchMemOp",         {"hipStreamBatchMemOp",         CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}},    // // no API_Runtime ANALOGUE
 
     // Memory management
     {"cuArray3DCreate",           {"hipArray3DCreate",           CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
@@ -918,26 +1106,24 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cuMipmappedArrayGetLevel",  {"hipMipmappedArrayGetLevel",  CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
 
     // Unified Addressing
-    {"cuMemPrefetchAsync",      {"hipMemPrefetchAsync__",    CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // [CUDA 8.0.44] // no API_Runtime ANALOGUE (cudaMemPrefetchAsync has different signature)
-    {"cuMemAdvise",             {"hipMemAdvise",             CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // [CUDA 8.0.44] // API_Runtime ANALOGUE (cudaMemAdvise)
-    {"cuMemRangeGetAttribute",  {"hipMemRangeGetAttribute",  CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // [CUDA 8.0.44] // API_Runtime ANALOGUE (cudaMemRangeGetAttribute)
-    {"cuMemRangeGetAttributes", {"hipMemRangeGetAttributes", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // [CUDA 8.0.44] // API_Runtime ANALOGUE (cudaMemRangeGetAttributes)
+    {"cuMemPrefetchAsync",      {"hipMemPrefetchAsync__",    CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // // no API_Runtime ANALOGUE (cudaMemPrefetchAsync has different signature)
+    {"cuMemAdvise",             {"hipMemAdvise",             CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // // API_Runtime ANALOGUE (cudaMemAdvise)
+    {"cuMemRangeGetAttribute",  {"hipMemRangeGetAttribute",  CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // // API_Runtime ANALOGUE (cudaMemRangeGetAttribute)
+    {"cuMemRangeGetAttributes", {"hipMemRangeGetAttributes", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // // API_Runtime ANALOGUE (cudaMemRangeGetAttributes)
     {"cuPointerGetAttribute",   {"hipPointerGetAttribute",   CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
     {"cuPointerGetAttributes",  {"hipPointerGetAttributes",  CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
     {"cuPointerSetAttribute",   {"hipPointerSetAttribute",   CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
 
     // Texture Reference Mngmnt
     // Texture reference filtering modes
-    {"CUfilter_mode",               {"hipTextureFilterMode",         CONV_TEX, API_DRIVER}},    // API_Runtime ANALOGUE (cudaTextureFilterMode)
-    // ToDo:
-    //     {"CUfilter_mode", {"CUfilter_mode_enum", CONV_TEX, API_DRIVER}},    // API_Runtime ANALOGUE (cudaTextureFilterMode)
+    // enum CUfilter_mode/CUfilter_mode_enum
     {"CU_TR_FILTER_MODE_POINT",     {"hipFilterModePoint",           CONV_TEX, API_DRIVER}},    // 0 // API_Runtime ANALOGUE (cudaFilterModePoint = 0)
     {"CU_TR_FILTER_MODE_LINEAR",    {"hipFilterModeLinear",          CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 1 // API_Runtime ANALOGUE (cudaFilterModeLinear = 1)
 
     {"cuTexRefGetAddress",          {"hipTexRefGetAddress",          CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
     {"cuTexRefGetAddressMode",      {"hipTexRefGetAddressMode",      CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
     {"cuTexRefGetArray",            {"hipTexRefGetArray",            CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-    {"cuTexRefGetBorderColor",      {"hipTexRefGetBorderColor",      CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // [CUDA 8.0.44] // no API_Runtime ANALOGUE
+    {"cuTexRefGetBorderColor",      {"hipTexRefGetBorderColor",      CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // // no API_Runtime ANALOGUE
     {"cuTexRefGetFilterMode",       {"hipTexRefGetFilterMode",       CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
     {"cuTexRefGetFlags",            {"hipTexRefGetFlags",            CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
     {"cuTexRefGetFormat",           {"hipTexRefGetFormat",           CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
@@ -950,7 +1136,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cuTexRefSetAddress2D",        {"hipTexRefSetAddress2D",        CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
     {"cuTexRefSetAddressMode",      {"hipTexRefSetAddressMode",      CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
     {"cuTexRefSetArray",            {"hipTexRefSetArray",            CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-    {"cuTexRefSetBorderColor",      {"hipTexRefSetBorderColor",      CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // [CUDA 8.0.44] // no API_Runtime ANALOGUE
+    {"cuTexRefSetBorderColor",      {"hipTexRefSetBorderColor",      CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // // no API_Runtime ANALOGUE
     {"cuTexRefSetFilterMode",       {"hipTexRefSetFilterMode",       CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
     {"cuTexRefSetFlags",            {"hipTexRefSetFlags",            CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
     {"cuTexRefSetFormat",           {"hipTexRefSetFormat",           CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
@@ -996,8 +1182,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // OpenGL Interoperability
     // enum CUGLDeviceList/CUGLDeviceList_enum
-    {"CUGLDeviceList",                  {"hipGLDeviceList",                  CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGLDeviceList)
-    //     {"CUGLDeviceList_enum", {"hipGLDeviceList", CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_GL_DEVICE_LIST_ALL",           {"HIP_GL_DEVICE_LIST_ALL",           CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01 // API_Runtime ANALOGUE (cudaGLDeviceListAll)
     {"CU_GL_DEVICE_LIST_CURRENT_FRAME", {"HIP_GL_DEVICE_LIST_CURRENT_FRAME", CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // 0x02 // API_Runtime ANALOGUE (cudaGLDeviceListCurrentFrame)
     {"CU_GL_DEVICE_LIST_NEXT_FRAME",    {"HIP_GL_DEVICE_LIST_NEXT_FRAME",    CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // 0x03 // API_Runtime ANALOGUE (cudaGLDeviceListNextFrame)
@@ -1009,8 +1193,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // OpenGL Interoperability [DEPRECATED]
     // enum CUGLmap_flags/CUGLmap_flags_enum
-    {"CUGLmap_flags",                          {"hipGLMapFlags",                           CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGLMapFlags)
-    //     {"CUGLmap_flags_enum", {"hipGLMapFlags", CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_GL_MAP_RESOURCE_FLAGS_NONE",          {"HIP_GL_MAP_RESOURCE_FLAGS_NONE",          CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // 0x00 // API_Runtime ANALOGUE (cudaGLMapFlagsNone)
     {"CU_GL_MAP_RESOURCE_FLAGS_READ_ONLY",     {"HIP_GL_MAP_RESOURCE_FLAGS_READ_ONLY",     CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01 // API_Runtime ANALOGUE (cudaGLMapFlagsReadOnly)
     {"CU_GL_MAP_RESOURCE_FLAGS_WRITE_DISCARD", {"HIP_GL_MAP_RESOURCE_FLAGS_WRITE_DISCARD", CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // 0x02 // API_Runtime ANALOGUE (cudaGLMapFlagsWriteDiscard)
@@ -1027,8 +1209,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // Direct3D 9 Interoperability
     // enum CUd3d9DeviceList/CUd3d9DeviceList_enum
-    {"CUd3d9DeviceList",                  {"hipD3D9DeviceList",                  CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaD3D9DeviceList)
-    //     {"CUd3d9DeviceList_enum", {"hipD3D9DeviceList", CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_D3D9_DEVICE_LIST_ALL",           {"HIP_D3D9_DEVICE_LIST_ALL",           CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01 // API_Runtime ANALOGUE (cudaD3D9DeviceListAll)
     {"CU_D3D9_DEVICE_LIST_CURRENT_FRAME", {"HIP_D3D9_DEVICE_LIST_CURRENT_FRAME", CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},    // 0x02 // API_Runtime ANALOGUE (cudaD3D9DeviceListCurrentFrame)
     {"CU_D3D9_DEVICE_LIST_NEXT_FRAME",    {"HIP_D3D9_DEVICE_LIST_NEXT_FRAME",    CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},    // 0x03 // API_Runtime ANALOGUE (cudaD3D9DeviceListNextFrame)
@@ -1042,15 +1222,11 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // Direct3D 9 Interoperability [DEPRECATED]
     // enum CUd3d9map_flags/CUd3d9map_flags_enum
-    {"CUd3d9map_flags",                        {"hipD3D9MapFlags",                         CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaD3D9MapFlags)
-    //     {"CUd3d9map_flags_enum", {"hipD3D9MapFlags", CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_D3D9_MAPRESOURCE_FLAGS_NONE",         {"HIP_D3D9_MAPRESOURCE_FLAGS_NONE",         CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},    // 0x00 // API_Runtime ANALOGUE (cudaD3D9MapFlagsNone)
     {"CU_D3D9_MAPRESOURCE_FLAGS_READONLY",     {"HIP_D3D9_MAPRESOURCE_FLAGS_READONLY",     CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01 // API_Runtime ANALOGUE (cudaD3D9MapFlagsReadOnly)
     {"CU_D3D9_MAPRESOURCE_FLAGS_WRITEDISCARD", {"HIP_D3D9_MAPRESOURCE_FLAGS_WRITEDISCARD", CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},    // 0x02 // API_Runtime ANALOGUE (cudaD3D9MapFlagsWriteDiscard)
 
     // enum CUd3d9register_flags/CUd3d9register_flags_enum
-    {"CUd3d9register_flags",               {"hipD3D9RegisterFlags",                CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaD3D9RegisterFlags)
-    //     {"CUd3d9register_flags_enum", {"hipD3D9RegisterFlags", CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_D3D9_REGISTER_FLAGS_NONE",        {"HIP_D3D9_REGISTER_FLAGS_NONE",        CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},    // 0x00 // API_Runtime ANALOGUE (cudaD3D9RegisterFlagsNone)
     {"CU_D3D9_REGISTER_FLAGS_ARRAY",       {"HIP_D3D9_REGISTER_FLAGS_ARRAY",       CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01 // API_Runtime ANALOGUE (cudaD3D9RegisterFlagsArray)
 
@@ -1067,8 +1243,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // Direct3D 10 Interoperability
     // enum CUd3d10DeviceList/CUd3d10DeviceList_enum
-    {"CUd3d10DeviceList",                  {"hipd3d10DeviceList",                  CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaD3D10DeviceList)
-    //     {"CUd3d10DeviceList_enum", {"hipD3D10DeviceList", CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_D3D10_DEVICE_LIST_ALL",           {"HIP_D3D10_DEVICE_LIST_ALL",           CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01 // API_Runtime ANALOGUE (cudaD3D10DeviceListAll)
     {"CU_D3D10_DEVICE_LIST_CURRENT_FRAME", {"HIP_D3D10_DEVICE_LIST_CURRENT_FRAME", CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},    // 0x02 // API_Runtime ANALOGUE (cudaD3D10DeviceListCurrentFrame)
     {"CU_D3D10_DEVICE_LIST_NEXT_FRAME",    {"HIP_D3D10_DEVICE_LIST_NEXT_FRAME",    CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},    // 0x03 // API_Runtime ANALOGUE (cudaD3D10DeviceListNextFrame)
@@ -1079,15 +1253,11 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // Direct3D 10 Interoperability [DEPRECATED]
     // enum CUd3d10map_flags/CUd3d10map_flags_enum
-    {"CUd3d10map_flags",                        {"hipD3D10MapFlags",                         CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaD3D10MapFlags)
-    //     {"CUd3d10map_flags_enum", {"hipD3D10MapFlags", CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_D3D10_MAPRESOURCE_FLAGS_NONE",         {"HIP_D3D10_MAPRESOURCE_FLAGS_NONE",         CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},    // 0x00 // API_Runtime ANALOGUE (cudaD3D10MapFlagsNone)
     {"CU_D3D10_MAPRESOURCE_FLAGS_READONLY",     {"HIP_D3D10_MAPRESOURCE_FLAGS_READONLY",     CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01 // API_Runtime ANALOGUE (cudaD3D10MapFlagsReadOnly)
     {"CU_D3D10_MAPRESOURCE_FLAGS_WRITEDISCARD", {"HIP_D3D10_MAPRESOURCE_FLAGS_WRITEDISCARD", CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},    // 0x02 // API_Runtime ANALOGUE (cudaD3D10MapFlagsWriteDiscard)
 
     // enum CUd3d10register_flags/CUd3d10register_flags_enum
-    {"CUd3d10register_flags",               {"hipD3D10RegisterFlags",                CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaD3D10RegisterFlags)
-    //     {"CUd3d10register_flags_enum", {"hipD3D10RegisterFlags", CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_D3D10_REGISTER_FLAGS_NONE",        {"HIP_D3D10_REGISTER_FLAGS_NONE",        CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},    // 0x00 // API_Runtime ANALOGUE (cudaD3D10RegisterFlagsNone)
     {"CU_D3D10_REGISTER_FLAGS_ARRAY",       {"HIP_D3D10_REGISTER_FLAGS_ARRAY",       CONV_D3D10, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01 // API_Runtime ANALOGUE (cudaD3D10RegisterFlagsArray)
 
@@ -1107,8 +1277,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // Direct3D 11 Interoperability
     // enum CUd3d11DeviceList/CUd3d11DeviceList_enum
-    {"CUd3d11DeviceList",                  {"hipd3d11DeviceList",                  CONV_D3D11, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaD3D11DeviceList)
-    //     {"CUd3d11DeviceList_enum", {"hipD3D11DeviceList", CONV_D3D11, API_DRIVER, HIP_UNSUPPORTED}},
     {"CU_D3D11_DEVICE_LIST_ALL",           {"HIP_D3D11_DEVICE_LIST_ALL",           CONV_D3D11, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01 // API_Runtime ANALOGUE (cudaD3D11DeviceListAll)
     {"CU_D3D11_DEVICE_LIST_CURRENT_FRAME", {"HIP_D3D11_DEVICE_LIST_CURRENT_FRAME", CONV_D3D11, API_DRIVER, HIP_UNSUPPORTED}},    // 0x02 // API_Runtime ANALOGUE (cudaD3D11DeviceListCurrentFrame)
     {"CU_D3D11_DEVICE_LIST_NEXT_FRAME",    {"HIP_D3D11_DEVICE_LIST_NEXT_FRAME",    CONV_D3D11, API_DRIVER, HIP_UNSUPPORTED}},    // 0x03 // API_Runtime ANALOGUE (cudaD3D11DeviceListNextFrame)
@@ -1129,9 +1297,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cuVDPAUCtxCreate",                     {"hipVDPAUCtxCreate",                     CONV_VDPAU, API_DRIVER, HIP_UNSUPPORTED}},    // no API_Runtime ANALOGUE
 
     // EGL Interoperability
-    {"CUeglStreamConnection_st",            {"hipEglStreamConnection",               CONV_EGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaEglStreamConnection)
-    {"CUeglStreamConnection",               {"hipEglStreamConnection",               CONV_EGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaEglStreamConnection)
-
     {"cuEGLStreamConsumerAcquireFrame",     {"hipEGLStreamConsumerAcquireFrame",     CONV_EGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaEGLStreamConsumerAcquireFrame)
     {"cuEGLStreamConsumerConnect",          {"hipEGLStreamConsumerConnect",          CONV_EGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaEGLStreamConsumerConnect)
     {"cuEGLStreamConsumerConnectWithFlags", {"hipEGLStreamConsumerConnectWithFlags", CONV_EGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaEGLStreamConsumerConnectWithFlags)
@@ -1146,7 +1311,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
 /////////////////////////////// CUDA RT API ///////////////////////////////
     // Data types
-    // unsupported yet by HIP [CUDA 8.0.44]
     {"cudaDataType_t", {"hipDataType_t", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaDataType",   {"hipDataType_t", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
     {"CUDA_R_16F",     {"hipR16F",       CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
@@ -1166,10 +1330,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // Library property types
     // IMPORTANT: no cuda prefix
-    // TO_DO: new matcher is needed
-    // unsupported yet by HIP [CUDA 8.0.44]
-    {"libraryPropertyType_t", {"hipLibraryPropertyType_t", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"libraryPropertyType",   {"hipLibraryPropertyType_t", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
     {"MAJOR_VERSION",         {"hipLibraryMajorVersion",   CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
     {"MINOR_VERSION",         {"hipLibraryMinorVersion",   CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
     {"PATCH_LEVEL",           {"hipLibraryPatchVersion",   CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
@@ -1182,22 +1342,11 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaOccupancyDefault",                {"hipOccupancyDefault",                CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 0x00 // API_Driver ANALOGUE (CU_OCCUPANCY_DEFAULT = 0x0)
     {"cudaOccupancyDisableCachingOverride", {"hipOccupancyDisableCachingOverride", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 0x01 // API_Driver ANALOGUE (CU_OCCUPANCY_DISABLE_CACHING_OVERRIDE = 0x1)
 
-    {"cudaStreamCallback_t",                {"hipStreamCallback_t",                CONV_TYPE, API_RUNTIME}},
-
     // Error API
     {"cudaGetLastError",    {"hipGetLastError",    CONV_ERROR, API_RUNTIME}},
     {"cudaPeekAtLastError", {"hipPeekAtLastError", CONV_ERROR, API_RUNTIME}},
     {"cudaGetErrorName",    {"hipGetErrorName",    CONV_ERROR, API_RUNTIME}},
     {"cudaGetErrorString",  {"hipGetErrorString",  CONV_ERROR, API_RUNTIME}},
-
-    // Arrays
-    {"cudaArray",                  {"hipArray",                  CONV_MEM, API_RUNTIME}},
-    // typedef struct cudaArray *cudaArray_t;
-    {"cudaArray_t",                {"hipArray_t",                CONV_MEM, API_RUNTIME}},
-    // typedef const struct cudaArray *cudaArray_const_t;
-    {"cudaArray_const_t",          {"hipArray_const_t",          CONV_MEM, API_RUNTIME}},
-    {"cudaMipmappedArray_t",       {"hipMipmappedArray_t",       CONV_MEM, API_RUNTIME}},
-    {"cudaMipmappedArray_const_t", {"hipMipmappedArray_const_t", CONV_MEM, API_RUNTIME}},
 
     // memcpy
     // memcpy structs
@@ -1213,7 +1362,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaMemcpy2D",               {"hipMemcpy2D",               CONV_MEM, API_RUNTIME}},
     {"cudaMemcpy2DAsync",          {"hipMemcpy2DAsync",          CONV_MEM, API_RUNTIME}},
     {"cudaMemcpy2DToArray",        {"hipMemcpy2DToArray",        CONV_MEM, API_RUNTIME}},
-    // unsupported yet by HIP
     {"cudaMemcpy2DArrayToArray",   {"hipMemcpy2DArrayToArray",   CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaMemcpy2DFromArray",      {"hipMemcpy2DFromArray",      CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaMemcpy2DFromArrayAsync", {"hipMemcpy2DFromArrayAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
@@ -1226,28 +1374,25 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaMemcpyFromArrayAsync",   {"hipMemcpyFromArrayAsync",   CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaMemcpyFromSymbol",       {"hipMemcpyFromSymbol",       CONV_MEM, API_RUNTIME}},
     {"cudaMemcpyFromSymbolAsync",  {"hipMemcpyFromSymbolAsync",  CONV_MEM, API_RUNTIME}},
-    {"cudaMemAdvise",              {"hipMemAdvise",              CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},    // [CUDA 8.0.44]
-    {"cudaMemRangeGetAttribute",   {"hipMemRangeGetAttribute",   CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},    // [CUDA 8.0.44]
-    {"cudaMemRangeGetAttributes",  {"hipMemRangeGetAttributes",  CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},    // [CUDA 8.0.44]
+    {"cudaMemAdvise",              {"hipMemAdvise",              CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},    //
+    {"cudaMemRangeGetAttribute",   {"hipMemRangeGetAttribute",   CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},    //
+    {"cudaMemRangeGetAttributes",  {"hipMemRangeGetAttributes",  CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},    //
 
-    // unsupported yet by HIP [CUDA 8.0.44]
     // Memory advise values
-    {"cudaMemoryAdvise",                          {"hipMemAdvise",                             CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUmem_advise)
     {"cudaMemAdviseSetReadMostly",                {"hipMemAdviseSetReadMostly",                CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 1 // API_Driver ANALOGUE (CU_MEM_ADVISE_SET_READ_MOSTLY = 1)
     {"cudaMemAdviseUnsetReadMostly",              {"hipMemAdviseUnsetReadMostly",              CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 2 // API_Driver ANALOGUE (CU_MEM_ADVISE_UNSET_READ_MOSTLY = 2)
     {"cudaMemAdviseSetPreferredLocation",         {"hipMemAdviseSetPreferredLocation",         CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 3 // API_Driver ANALOGUE (CU_MEM_ADVISE_SET_PREFERRED_LOCATION = 3)
     {"cudaMemAdviseUnsetPreferredLocation",       {"hipMemAdviseUnsetPreferredLocation",       CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 4 // API_Driver ANALOGUE (CU_MEM_ADVISE_UNSET_PREFERRED_LOCATION = 4)
     {"cudaMemAdviseSetAccessedBy",                {"hipMemAdviseSetAccessedBy",                CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 5 // API_Driver ANALOGUE (CU_MEM_ADVISE_SET_ACCESSED_BY = 5)
     {"cudaMemAdviseUnsetAccessedBy",              {"hipMemAdviseUnsetAccessedBy",              CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 6 // API_Driver ANALOGUE (CU_MEM_ADVISE_UNSET_ACCESSED_BY = 6)
+
     // CUmem_range_attribute
-    {"cudaMemRangeAttribute",                     {"hipMemRangeAttribute",                     CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUmem_range_attribute)
     {"cudaMemRangeAttributeReadMostly",           {"hipMemRangeAttributeReadMostly",           CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 1 // API_Driver ANALOGUE (CU_MEM_RANGE_ATTRIBUTE_READ_MOSTLY = 1)
     {"cudaMemRangeAttributePreferredLocation",    {"hipMemRangeAttributePreferredLocation",    CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 2 // API_Driver ANALOGUE (CU_MEM_RANGE_ATTRIBUTE_PREFERRED_LOCATION = 2)
     {"cudaMemRangeAttributeAccessedBy",           {"hipMemRangeAttributeAccessedBy",           CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 3 // API_Driver ANALOGUE (CU_MEM_RANGE_ATTRIBUTE_ACCESSED_BY = 3)
     {"cudaMemRangeAttributeLastPrefetchLocation", {"hipMemRangeAttributeLastPrefetchLocation", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 4 // API_Driver ANALOGUE (CU_MEM_RANGE_ATTRIBUTE_LAST_PREFETCH_LOCATION = 4)
 
     // memcpy kind
-    {"cudaMemcpyKind",           {"hipMemcpyKind",           CONV_MEM, API_RUNTIME}},
     {"cudaMemcpyHostToHost",     {"hipMemcpyHostToHost",     CONV_MEM, API_RUNTIME}},
     {"cudaMemcpyHostToDevice",   {"hipMemcpyHostToDevice",   CONV_MEM, API_RUNTIME}},
     {"cudaMemcpyDeviceToHost",   {"hipMemcpyDeviceToHost",   CONV_MEM, API_RUNTIME}},
@@ -1258,20 +1403,18 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaMemset",        {"hipMemset",        CONV_MEM, API_RUNTIME}},
     {"cudaMemsetAsync",   {"hipMemsetAsync",   CONV_MEM, API_RUNTIME}},
     {"cudaMemset2D",      {"hipMemset2D",      CONV_MEM, API_RUNTIME}},
-    // unsupported yet by HIP
     {"cudaMemset2DAsync", {"hipMemset2DAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaMemset3D",      {"hipMemset3D",      CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaMemset3DAsync", {"hipMemset3DAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
 
     // Memory management
     {"cudaMemGetInfo",             {"hipMemGetInfo",             CONV_MEM, API_RUNTIME}},
-    // unsupported yet by HIP
     {"cudaArrayGetInfo",           {"hipArrayGetInfo",           CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaFreeMipmappedArray",     {"hipFreeMipmappedArray",     CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaGetMipmappedArrayLevel", {"hipGetMipmappedArrayLevel", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaGetSymbolAddress",       {"hipGetSymbolAddress",       CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaGetSymbolSize",          {"hipGetSymbolSize",          CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"cudaMemPrefetchAsync",       {"hipMemPrefetchAsync",       CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},    // [CUDA 8.0.44] // API_Driver ANALOGUE (cuMemPrefetchAsync)
+    {"cudaMemPrefetchAsync",       {"hipMemPrefetchAsync",       CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},    // // API_Driver ANALOGUE (cuMemPrefetchAsync)
 
     // malloc
     {"cudaMalloc",               {"hipMalloc",               CONV_MEM, API_RUNTIME}},
@@ -1291,8 +1434,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     // hipHostAlloc deprecated - use hipHostMalloc instead
     {"cudaHostAlloc",      {"hipHostMalloc",     CONV_MEM, API_RUNTIME}},
 
-    // Memory types
-    {"cudaMemoryType",       {"hipMemoryType",       CONV_MEM, API_RUNTIME}},    // API_Driver ANALOGUE (no -  CUmemorytype is not an analogue)
+    // enum cudaMemoryType
     {"cudaMemoryTypeHost",   {"hipMemoryTypeHost",   CONV_MEM, API_RUNTIME}},
     {"cudaMemoryTypeDevice", {"hipMemoryTypeDevice", CONV_MEM, API_RUNTIME}},
 
@@ -1301,11 +1443,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"make_cudaPitchedPtr", {"make_hipPitchedPtr", CONV_MEM, API_RUNTIME}},
     {"make_cudaPos",        {"make_hipPos",        CONV_MEM, API_RUNTIME}},
 
-    {"cudaExtent",          {"hipExtent",          CONV_MEM, API_RUNTIME}},
-    {"cudaPitchedPtr",      {"hipPitchedPtr",      CONV_MEM, API_RUNTIME}},
-    {"cudaPos",             {"hipPos",             CONV_MEM, API_RUNTIME}},
-
-    // Host Malloc Flags
+    // Host Malloc Flags (#defines)
     {"cudaHostAllocDefault",       {"hipHostMallocDefault",       CONV_MEM, API_RUNTIME}},
     {"cudaHostAllocPortable",      {"hipHostMallocPortable",      CONV_MEM, API_RUNTIME}},
     {"cudaHostAllocMapped",        {"hipHostMallocMapped",        CONV_MEM, API_RUNTIME}},
@@ -1350,7 +1488,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"warpSize",    {"hipWarpSize",    CONV_SPECIAL_FUNC, API_RUNTIME}},
 
     // Events
-    {"cudaEvent_t",                  {"hipEvent_t",                  CONV_TYPE,   API_RUNTIME}},
     {"cudaEventCreate",              {"hipEventCreate",              CONV_EVENT,  API_RUNTIME}},
     {"cudaEventCreateWithFlags",     {"hipEventCreateWithFlags",     CONV_EVENT,  API_RUNTIME}},
     {"cudaEventDestroy",             {"hipEventDestroy",             CONV_EVENT,  API_RUNTIME}},
@@ -1363,8 +1500,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaEventBlockingSync",        {"hipEventBlockingSync",        CONV_EVENT,  API_RUNTIME}},
     {"cudaEventDisableTiming",       {"hipEventDisableTiming",       CONV_EVENT,  API_RUNTIME}},
     {"cudaEventInterprocess",        {"hipEventInterprocess",        CONV_EVENT,  API_RUNTIME}},
+
     // Streams
-    {"cudaStream_t",                 {"hipStream_t",                 CONV_TYPE,   API_RUNTIME}},
     {"cudaStreamCreate",             {"hipStreamCreate",             CONV_STREAM, API_RUNTIME}},
     {"cudaStreamCreateWithFlags",    {"hipStreamCreateWithFlags",    CONV_STREAM, API_RUNTIME}},
     {"cudaStreamCreateWithPriority", {"hipStreamCreateWithPriority", CONV_STREAM, API_RUNTIME, HIP_UNSUPPORTED}},
@@ -1377,7 +1514,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaStreamAttachMemAsync",     {"hipStreamAttachMemAsync",     CONV_STREAM, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaStreamGetPriority",        {"hipStreamGetPriority",        CONV_STREAM, API_RUNTIME, HIP_UNSUPPORTED}},
 
-    // Stream Flags
+    // Stream Flags (defines)
     {"cudaStreamDefault",     {"hipStreamDefault",     CONV_TYPE, API_RUNTIME}},
     {"cudaStreamNonBlocking", {"hipStreamNonBlocking", CONV_TYPE, API_RUNTIME}},
 
@@ -1400,7 +1537,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     // Attributes
     {"cudaDeviceGetAttribute",                      {"hipDeviceGetAttribute",                              CONV_DEVICE, API_RUNTIME}},
 
-    {"cudaDeviceAttr",                              {"hipDeviceAttribute_t",                               CONV_TYPE,   API_RUNTIME}},                     // API_DRIVER ANALOGUE (CUdevice_attribute)
+    // enum cudaDeviceAttr
     {"cudaDevAttrMaxThreadsPerBlock",               {"hipDeviceAttributeMaxThreadsPerBlock",               CONV_TYPE,   API_RUNTIME}},                     //  1 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK = 1)
     {"cudaDevAttrMaxBlockDimX",                     {"hipDeviceAttributeMaxBlockDimX",                     CONV_TYPE,   API_RUNTIME}},                     //  2 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_X = 2)
     {"cudaDevAttrMaxBlockDimY",                     {"hipDeviceAttributeMaxBlockDimY",                     CONV_TYPE,   API_RUNTIME}},                     //  3 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MAX_BLOCK_DIM_Y = 3)
@@ -1487,8 +1624,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaDevAttrManagedMemory",                    {"hipDeviceAttributeManagedMemory",                    CONV_TYPE,   API_RUNTIME, HIP_UNSUPPORTED}},    // 83 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MANAGED_MEMORY = 83)
     {"cudaDevAttrIsMultiGpuBoard",                  {"hipDeviceAttributeIsMultiGpuBoard",                  CONV_TYPE,   API_RUNTIME}},                     // 84 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD = 84)
     {"cudaDevAttrMultiGpuBoardGroupID",             {"hipDeviceAttributeMultiGpuBoardGroupID",             CONV_TYPE,   API_RUNTIME, HIP_UNSUPPORTED}},    // 85 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD_GROUP_ID = 85)
-
-    // unsupported yet by HIP [CUDA 8.0.44]
     {"cudaDevAttrHostNativeAtomicSupported",         {"hipDeviceAttributeHostNativeAtomicSupported",         CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 86 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_HOST_NATIVE_ATOMIC_SUPPORTED = 86)
     {"cudaDevAttrSingleToDoublePrecisionPerfRatio",  {"hipDeviceAttributeSingleToDoublePrecisionPerfRatio",  CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 87 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_SINGLE_TO_DOUBLE_PRECISION_PERF_RATIO = 87)
     {"cudaDevAttrPageableMemoryAccess",              {"hipDeviceAttributePageableMemoryAccess",              CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 88 // API_DRIVER ANALOGUE (CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS = 88)
@@ -1498,31 +1633,25 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // Pointer Attributes
     // struct cudaPointerAttributes
-    {"cudaPointerAttributes",    {"hipPointerAttribute_t",   CONV_TYPE, API_RUNTIME}},
     {"cudaPointerGetAttributes", {"hipPointerGetAttributes", CONV_MEM,  API_RUNTIME}},
 
     {"cudaHostGetDevicePointer", {"hipHostGetDevicePointer", CONV_MEM,  API_RUNTIME}},
 
     // Device
-    {"cudaDeviceProp",                   {"hipDeviceProp_t",                 CONV_TYPE,   API_RUNTIME}},
     {"cudaGetDeviceProperties",          {"hipGetDeviceProperties",          CONV_DEVICE, API_RUNTIME}},
     {"cudaDeviceGetPCIBusId",            {"hipDeviceGetPCIBusId",            CONV_DEVICE, API_RUNTIME}},
     {"cudaDeviceGetByPCIBusId",          {"hipDeviceGetByPCIBusId",          CONV_DEVICE, API_RUNTIME}},
-    // unsupported yet by HIP
     {"cudaDeviceGetStreamPriorityRange", {"hipDeviceGetStreamPriorityRange", CONV_DEVICE, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaSetValidDevices",              {"hipSetValidDevices",              CONV_DEVICE, API_RUNTIME, HIP_UNSUPPORTED}},
 
-    // unsupported yet by HIP [CUDA 8.0.44]
-    // P2P Attributes
-    {"cudaDeviceP2PAttr",                   {"hipDeviceP2PAttribute",                      CONV_TYPE,   API_RUNTIME, HIP_UNSUPPORTED}},    // API_DRIVER ANALOGUE (CUdevice_P2PAttribute)
+    // P2P Attributes (enum cudaDeviceP2PAttr)
     {"cudaDevP2PAttrPerformanceRank",       {"hipDeviceP2PAttributePerformanceRank",       CONV_TYPE,   API_RUNTIME, HIP_UNSUPPORTED}},    // 0x01 // API_DRIVER ANALOGUE (CU_DEVICE_P2P_ATTRIBUTE_PERFORMANCE_RANK = 0x01)
     {"cudaDevP2PAttrAccessSupported",       {"hipDeviceP2PAttributeAccessSupported",       CONV_TYPE,   API_RUNTIME, HIP_UNSUPPORTED}},    // 0x02 // API_DRIVER ANALOGUE (CU_DEVICE_P2P_ATTRIBUTE_ACCESS_SUPPORTED = 0x02)
     {"cudaDevP2PAttrNativeAtomicSupported", {"hipDeviceP2PAttributeNativeAtomicSupported", CONV_TYPE,   API_RUNTIME, HIP_UNSUPPORTED}},    // 0x03 // API_DRIVER ANALOGUE (CU_DEVICE_P2P_ATTRIBUTE_NATIVE_ATOMIC_SUPPORTED = 0x03)
-    // [CUDA 8.0.44]
+    //
     {"cudaDeviceGetP2PAttribute",           {"hipDeviceGetP2PAttribute",                   CONV_DEVICE, API_RUNTIME, HIP_UNSUPPORTED}},    // API_DRIVER ANALOGUE (cuDeviceGetP2PAttribute)
 
-    // Compute mode
-    {"cudaComputeMode",                 {"hipComputeMode",                 CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // API_DRIVER ANALOGUE (CUcomputemode)
+    // enum cudaComputeMode
     {"cudaComputeModeDefault",          {"hipComputeModeDefault",          CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 0 // API_DRIVER ANALOGUE (CU_COMPUTEMODE_DEFAULT = 0)
     {"cudaComputeModeExclusive",        {"hipComputeModeExclusive",        CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 1 // API_DRIVER ANALOGUE (CU_COMPUTEMODE_EXCLUSIVE = 1)
     {"cudaComputeModeProhibited",       {"hipComputeModeProhibited",       CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 2 // API_DRIVER ANALOGUE (CU_COMPUTEMODE_PROHIBITED = 2)
@@ -1532,15 +1661,14 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaGetDeviceFlags", {"hipGetDeviceFlags", CONV_DEVICE, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaSetDeviceFlags", {"hipSetDeviceFlags", CONV_DEVICE, API_RUNTIME}},
 
+    // Device stuff (#defines)
     {"cudaDeviceScheduleAuto",         {"hipDeviceScheduleAuto",         CONV_TYPE, API_RUNTIME}},
     {"cudaDeviceScheduleSpin",         {"hipDeviceScheduleSpin",         CONV_TYPE, API_RUNTIME}},
     {"cudaDeviceScheduleYield",        {"hipDeviceScheduleYield",        CONV_TYPE, API_RUNTIME}},
     // deprecated as of CUDA 4.0 and replaced with cudaDeviceScheduleBlockingSync
     {"cudaDeviceBlockingSync",         {"hipDeviceScheduleBlockingSync", CONV_TYPE, API_RUNTIME}},
-    // unsupported yet by HIP
     {"cudaDeviceScheduleBlockingSync", {"hipDeviceScheduleBlockingSync", CONV_TYPE, API_RUNTIME}},
     {"cudaDeviceScheduleMask",         {"hipDeviceScheduleMask",         CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
-
     {"cudaDeviceMapHost",              {"hipDeviceMapHost",              CONV_TYPE, API_RUNTIME}},
     {"cudaDeviceLmemResizeToMax",      {"hipDeviceLmemResizeToMax",      CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaDeviceMask",                 {"hipDeviceMask",                 CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
@@ -1551,16 +1679,13 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaFuncSetCacheConfig",   {"hipFuncSetCacheConfig",   CONV_CACHE, API_RUNTIME}},
 
     // Execution control
-    // CUDA function cache configurations
-    {"cudaFuncCache",             {"hipFuncCache_t",           CONV_CACHE, API_RUNTIME}},    // API_Driver ANALOGUE (CUfunc_cache)
+    // CUDA function cache configurations (enum cudaFuncCache)
     {"cudaFuncCachePreferNone",   {"hipFuncCachePreferNone",   CONV_CACHE, API_RUNTIME}},    // 0 // API_Driver ANALOGUE (CU_FUNC_CACHE_PREFER_NONE = 0x00)
     {"cudaFuncCachePreferShared", {"hipFuncCachePreferShared", CONV_CACHE, API_RUNTIME}},    // 1 // API_Driver ANALOGUE (CU_FUNC_CACHE_PREFER_SHARED = 0x01)
     {"cudaFuncCachePreferL1",     {"hipFuncCachePreferL1",     CONV_CACHE, API_RUNTIME}},    // 2 // API_Driver ANALOGUE (CU_FUNC_CACHE_PREFER_L1 = 0x02)
     {"cudaFuncCachePreferEqual",  {"hipFuncCachePreferEqual",  CONV_CACHE, API_RUNTIME}},    // 3 // API_Driver ANALOGUE (CU_FUNC_CACHE_PREFER_EQUAL = 0x03)
 
     // Execution control functions
-    // unsupported yet by HIP
-    {"cudaFuncAttributes",         {"hipFuncAttributes",         CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaFuncGetAttributes",      {"hipFuncGetAttributes",      CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaFuncSetSharedMemConfig", {"hipFuncSetSharedMemConfig", CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaGetParameterBuffer",     {"hipGetParameterBuffer",     CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED}},
@@ -1568,7 +1693,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaSetDoubleForHost",       {"hipSetDoubleForHost",       CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED}},
 
     // Execution Control [deprecated since 7.0]
-    // unsupported yet by HIP
     {"cudaConfigureCall", {"hipConfigureCall", CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaLaunch",        {"hipLaunch",        CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaSetupArgument", {"hipSetupArgument", CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED}},
@@ -1579,10 +1703,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // Occupancy
     {"cudaOccupancyMaxPotentialBlockSize",                      {"hipOccupancyMaxPotentialBlockSize",                      CONV_OCCUPANCY, API_RUNTIME}},
-    // unsupported yet by HIP
     {"cudaOccupancyMaxPotentialBlockSizeWithFlags",             {"hipOccupancyMaxPotentialBlockSizeWithFlags",             CONV_OCCUPANCY, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaOccupancyMaxActiveBlocksPerMultiprocessor",           {"hipOccupancyMaxActiveBlocksPerMultiprocessor",           CONV_OCCUPANCY, API_RUNTIME}},
-    // unsupported yet by HIP
     {"cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags",  {"hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags",  CONV_OCCUPANCY, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaOccupancyMaxPotentialBlockSizeVariableSMem",          {"hipOccupancyMaxPotentialBlockSizeVariableSMem",          CONV_OCCUPANCY, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaOccupancyMaxPotentialBlockSizeVariableSMemWithFlags", {"hipOccupancyMaxPotentialBlockSizeVariableSMemWithFlags", CONV_OCCUPANCY, API_RUNTIME, HIP_UNSUPPORTED}},
@@ -1605,13 +1727,12 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     //     {"cudaThreadGetSharedMemConfig", {"hipDeviceGetSharedMemConfig", CONV_DEVICE, API_RUNTIME}},
     //     {"cudaThreadSetSharedMemConfig", {"hipDeviceSetSharedMemConfig", CONV_DEVICE, API_RUNTIME}},
 
-    {"cudaSharedMemConfig",            {"hipSharedMemConfig",            CONV_TYPE, API_RUNTIME}},
+    // enum cudaSharedMemConfig
     {"cudaSharedMemBankSizeDefault",   {"hipSharedMemBankSizeDefault",   CONV_TYPE, API_RUNTIME}},
     {"cudaSharedMemBankSizeFourByte",  {"hipSharedMemBankSizeFourByte",  CONV_TYPE, API_RUNTIME}},
     {"cudaSharedMemBankSizeEightByte", {"hipSharedMemBankSizeEightByte", CONV_TYPE, API_RUNTIME}},
 
-    // Limits
-    {"cudaLimit",                             {"hipLimit_t",                           CONV_TYPE,   API_RUNTIME}},                     // API_Driver ANALOGUE (CUlimit)
+    // enum cudaLimit
     {"cudaLimitStackSize",                    {"hipLimitStackSize",                    CONV_TYPE,   API_RUNTIME, HIP_UNSUPPORTED}},    // 0x00 // API_Driver ANALOGUE (CU_LIMIT_STACK_SIZE = 0x00)
     {"cudaLimitPrintfFifoSize",               {"hipLimitPrintfFifoSize",               CONV_TYPE,   API_RUNTIME, HIP_UNSUPPORTED}},    // 0x01 // API_Driver ANALOGUE (CU_LIMIT_PRINTF_FIFO_SIZE = 0x01)
     {"cudaLimitMallocHeapSize",               {"hipLimitMallocHeapSize",               CONV_TYPE,   API_RUNTIME}},                     // 0x02 // API_Driver ANALOGUE (CU_LIMIT_MALLOC_HEAP_SIZE = 0x02)
@@ -1625,18 +1746,16 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaProfilerStart",      {"hipProfilerStart",      CONV_OTHER, API_RUNTIME}},                     // API_Driver ANALOGUE (cuProfilerStart)
     {"cudaProfilerStop",       {"hipProfilerStop",       CONV_OTHER, API_RUNTIME}},                     // API_Driver ANALOGUE (cuProfilerStop)
 
-    // unsupported yet by HIP
-    {"cudaOutputMode",   {"hipOutputMode",   CONV_OTHER, API_RUNTIME, HIP_UNSUPPORTED}},
+    // enum cudaOutputMode
     {"cudaKeyValuePair", {"hipKeyValuePair", CONV_OTHER, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaCSV",          {"hipCSV",          CONV_OTHER, API_RUNTIME, HIP_UNSUPPORTED}},
 
     // Texture Reference Management
-    // enums
-    {"cudaTextureReadMode",             {"hipTextureReadMode",             CONV_TEX, API_RUNTIME}},
+    // enum cudaTextureReadMode
     {"cudaReadModeElementType",         {"hipReadModeElementType",         CONV_TEX, API_RUNTIME}},
     {"cudaReadModeNormalizedFloat",     {"hipReadModeNormalizedFloat",     CONV_TEX, API_RUNTIME}},
 
-    {"cudaTextureFilterMode",           {"hipTextureFilterMode",           CONV_TEX, API_RUNTIME}},    // API_DRIVER ANALOGUE (CUfilter_mode)
+    // enum cudaTextureFilterMode
     {"cudaFilterModePoint",             {"hipFilterModePoint",             CONV_TEX, API_RUNTIME}},    // 0 // API_DRIVER ANALOGUE (CU_TR_FILTER_MODE_POINT = 0)
     {"cudaFilterModeLinear",            {"hipFilterModeLinear",            CONV_TEX, API_RUNTIME}},    // 1 // API_DRIVER ANALOGUE (CU_TR_FILTER_MODE_POINT = 1)
 
@@ -1648,39 +1767,23 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaGetTextureAlignmentOffset",   {"hipGetTextureAlignmentOffset",   CONV_TEX, API_RUNTIME}},    // Unsupported yet on NVCC path
     {"cudaGetTextureReference",         {"hipGetTextureReference",         CONV_TEX, API_RUNTIME}},    // Unsupported yet on NVCC path
 
-    // Channel
-    {"cudaChannelFormatKind",         {"hipChannelFormatKind",         CONV_TEX, API_RUNTIME}},
+    // Channel (enum cudaChannelFormatKind)
     {"cudaChannelFormatKindSigned",   {"hipChannelFormatKindSigned",   CONV_TEX, API_RUNTIME}},
     {"cudaChannelFormatKindUnsigned", {"hipChannelFormatKindUnsigned", CONV_TEX, API_RUNTIME}},
     {"cudaChannelFormatKindFloat",    {"hipChannelFormatKindFloat",    CONV_TEX, API_RUNTIME}},
     {"cudaChannelFormatKindNone",     {"hipChannelFormatKindNone",     CONV_TEX, API_RUNTIME}},
-    {"cudaChannelFormatDesc",         {"hipChannelFormatDesc",         CONV_TEX, API_RUNTIME}},
 
     {"cudaCreateChannelDesc",         {"hipCreateChannelDesc",         CONV_TEX, API_RUNTIME}},
     {"cudaGetChannelDesc",            {"hipGetChannelDesc",            CONV_TEX, API_RUNTIME}},
 
     // Texture Object Management
-    // structs
-    {"cudaResourceDesc",     {"hipResourceDesc",     CONV_TEX,     API_RUNTIME}},
-    {"cudaResourceViewDesc", {"hipResourceViewDesc", CONV_TEX,     API_RUNTIME}},
-    {"cudaTextureDesc",      {"hipTextureDesc",      CONV_TEX,     API_RUNTIME}},
-    {"surfaceReference",     {"hipSurfaceReference", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
-    // Left unchanged
-    //     {"textureReference", {"textureReference", CONV_TEX, API_RUNTIME}},
-
-    // typedefs
-    {"cudaTextureObject_t", {"hipTextureObject_t", CONV_TEX, API_RUNTIME}},
-
-    // enums
     // enum cudaResourceType
-    {"cudaResourceType",               {"hipResourceType",               CONV_TEX, API_RUNTIME}},    // API_Driver ANALOGUE (CUresourcetype)
     {"cudaResourceTypeArray",          {"hipResourceTypeArray",          CONV_TEX, API_RUNTIME}},    // 0x00 // API_Driver ANALOGUE (CU_RESOURCE_TYPE_ARRAY = 0x00)
     {"cudaResourceTypeMipmappedArray", {"hipResourceTypeMipmappedArray", CONV_TEX, API_RUNTIME}},    // 0x01 // API_Driver ANALOGUE (CU_RESOURCE_TYPE_MIPMAPPED_ARRAY = 0x01)
     {"cudaResourceTypeLinear",         {"hipResourceTypeLinear",         CONV_TEX, API_RUNTIME}},    // 0x02 // API_Driver ANALOGUE (CU_RESOURCE_TYPE_LINEAR = 0x02)
     {"cudaResourceTypePitch2D",        {"hipResourceTypePitch2D",        CONV_TEX, API_RUNTIME}},    // 0x03 // API_Driver ANALOGUE (CU_RESOURCE_TYPE_PITCH2D = 0x03)
 
     // enum cudaResourceViewFormat
-    {"cudaResourceViewFormat",                      {"hipResourceViewFormat",                      CONV_TEX,      API_RUNTIME}},    // API_Driver ANALOGUE (CUresourceViewFormat)
     {"cudaResViewFormatNone",                       {"hipResViewFormatNone",                       CONV_TEX,      API_RUNTIME}},    // 0x00 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_NONE = 0x00)
     {"cudaResViewFormatUnsignedChar1",              {"hipResViewFormatUnsignedChar1",              CONV_TEX,      API_RUNTIME}},    // 0x01 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_1X8 = 0x01)
     {"cudaResViewFormatUnsignedChar2",              {"hipResViewFormatUnsignedChar2",              CONV_TEX,      API_RUNTIME}},    // 0x02 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UINT_2X8 = 0x02)
@@ -1717,7 +1820,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaResViewFormatSignedBlockCompressed6H",    {"hipResViewFormatSignedBlockCompressed6H",    CONV_TEX,      API_RUNTIME}},    // 0x21 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_SIGNED_BC6H = 0x21)
     {"cudaResViewFormatUnsignedBlockCompressed7",   {"hipResViewFormatUnsignedBlockCompressed7",   CONV_TEX,      API_RUNTIME}},    // 0x22 // API_Driver ANALOGUE (CU_RES_VIEW_FORMAT_UNSIGNED_BC7 = 0x22)
 
-    {"cudaTextureAddressMode", {"hipTextureAddressMode", CONV_TEX, API_RUNTIME}},
     {"cudaAddressModeWrap",    {"hipAddressModeWrap",    CONV_TEX, API_RUNTIME}},
     {"cudaAddressModeClamp",   {"hipAddressModeClamp",   CONV_TEX, API_RUNTIME}},
     {"cudaAddressModeMirror",  {"hipAddressModeMirror",  CONV_TEX, API_RUNTIME}},
@@ -1731,33 +1833,24 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaGetTextureObjectTextureDesc",      {"hipGetTextureObjectTextureDesc",      CONV_TEX, API_RUNTIME}},
 
     // Surface Reference Management
-    // unsupported yet by HIP
     {"cudaBindSurfaceToArray",  {"hipBindSurfaceToArray",  CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaGetSurfaceReference", {"hipGetSurfaceReference", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
 
-    {"cudaSurfaceBoundaryMode", {"hipSurfaceBoundaryMode", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
+    // enum cudaSurfaceBoundaryMode
     {"cudaBoundaryModeZero",    {"hipBoundaryModeZero",    CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaBoundaryModeClamp",   {"hipBoundaryModeClamp",   CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaBoundaryModeTrap",    {"hipBoundaryModeTrap",    CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
 
-    {"cudaSurfaceFormatMode",   {"hipSurfaceFormatMode",   CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
+    // enum cudaSurfaceFormatMode
     {"cudaFormatModeForced",    {"hipFormatModeForced",    CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaFormatModeAuto",      {"hipFormatModeAuto",      CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
 
     // Surface Object Management
-    // unsupported yet by HIP
     {"cudaCreateSurfaceObject",          {"hipCreateSurfaceObject",          CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaDestroySurfaceObject",         {"hipDestroySurfaceObject",         CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaGetSurfaceObjectResourceDesc", {"hipGetSurfaceObjectResourceDesc", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
 
     // Inter-Process Communications (IPC)
-    // IPC types
-    {"cudaIpcEventHandle_t",  {"hipIpcEventHandle_t", CONV_TYPE, API_RUNTIME}},
-    {"cudaIpcEventHandle_st", {"hipIpcEventHandle_t", CONV_TYPE, API_RUNTIME}},
-    {"cudaIpcMemHandle_t",    {"hipIpcMemHandle_t",   CONV_TYPE, API_RUNTIME}},
-    {"cudaIpcMemHandle_st",   {"hipIpcMemHandle_t",   CONV_TYPE, API_RUNTIME}},
-
-    // IPC functions
     {"cudaIpcCloseMemHandle",  {"hipIpcCloseMemHandle",  CONV_DEVICE, API_RUNTIME}},
     {"cudaIpcGetEventHandle",  {"hipIpcGetEventHandle",  CONV_DEVICE, API_RUNTIME}},
     {"cudaIpcGetMemHandle",    {"hipIpcGetMemHandle",    CONV_DEVICE, API_RUNTIME}},
@@ -1779,7 +1872,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaGraphicsUnmapResources",                  {"hipGraphicsUnmapResources",                  CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (cuGraphicsUnmapResources)
     {"cudaGraphicsUnregisterResource",              {"hipGraphicsUnregisterResource",              CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (cuGraphicsUnregisterResource)
 
-    {"cudaGraphicsCubeFace",                        {"hipGraphicsCubeFace",                        CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},
+    // enum cudaGraphicsCubeFace
     {"cudaGraphicsCubeFacePositiveX",               {"hipGraphicsCubeFacePositiveX",               CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaGraphicsCubeFaceNegativeX",               {"hipGraphicsCubeFaceNegativeX",               CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaGraphicsCubeFacePositiveY",               {"hipGraphicsCubeFacePositiveY",               CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},
@@ -1788,13 +1881,11 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaGraphicsCubeFaceNegativeZ",               {"hipGraphicsCubeFaceNegativeZ",               CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},
 
     // enum cudaGraphicsMapFlags
-    {"cudaGraphicsMapFlags",             {"hipGraphicsMapFlags",             CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUgraphicsMapResourceFlags)
     {"cudaGraphicsMapFlagsNone",         {"hipGraphicsMapFlagsNone",         CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},    // 0 // API_Driver ANALOGUE (CU_GRAPHICS_MAP_RESOURCE_FLAGS_NONE = 0x00)
     {"cudaGraphicsMapFlagsReadOnly",     {"hipGraphicsMapFlagsReadOnly",     CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},    // 1 // API_Driver ANALOGUE (CU_GRAPHICS_MAP_RESOURCE_FLAGS_READ_ONLY = 0x01)
     {"cudaGraphicsMapFlagsWriteDiscard", {"hipGraphicsMapFlagsWriteDiscard", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},    // 2 // API_Driver ANALOGUE (CU_GRAPHICS_MAP_RESOURCE_FLAGS_WRITE_DISCARD = 0x02)
 
     // enum cudaGraphicsRegisterFlags
-    {"cudaGraphicsRegisterFlags",                 {"hipGraphicsRegisterFlags",                 CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUgraphicsRegisterFlags)
     {"cudaGraphicsRegisterFlagsNone",             {"hipGraphicsRegisterFlagsNone",             CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},    // 0 // API_Driver ANALOGUE (CU_GRAPHICS_MAP_RESOURCE_FLAGS_NONE = 0x00)
     {"cudaGraphicsRegisterFlagsReadOnly",         {"hipGraphicsRegisterFlagsReadOnly",         CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},    // 1 // API_Driver ANALOGUE (CU_GRAPHICS_MAP_RESOURCE_FLAGS_READ_ONLY = 0x01)
     {"cudaGraphicsRegisterFlagsWriteDiscard",     {"hipGraphicsRegisterFlagsWriteDiscard",     CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},    // 2 // API_Driver ANALOGUE (CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD = 0x02)
@@ -1803,7 +1894,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // OpenGL Interoperability
     // enum cudaGLDeviceList
-    {"cudaGLDeviceList",             {"hipGLDeviceList",                  CONV_GL, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUGLDeviceList)
     {"cudaGLDeviceListAll",          {"HIP_GL_DEVICE_LIST_ALL",           CONV_GL, API_RUNTIME, HIP_UNSUPPORTED}},    // 0x01 // API_Driver ANALOGUE (CU_GL_DEVICE_LIST_ALL)
     {"cudaGLDeviceListCurrentFrame", {"HIP_GL_DEVICE_LIST_CURRENT_FRAME", CONV_GL, API_RUNTIME, HIP_UNSUPPORTED}},    // 0x02 // API_Driver ANALOGUE (CU_GL_DEVICE_LIST_CURRENT_FRAME)
     {"cudaGLDeviceListNextFrame",    {"HIP_GL_DEVICE_LIST_NEXT_FRAME",    CONV_GL, API_RUNTIME, HIP_UNSUPPORTED}},    // 0x03 // API_Driver ANALOGUE (CU_GL_DEVICE_LIST_NEXT_FRAME)
@@ -1815,7 +1905,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // OpenGL Interoperability [DEPRECATED]
     // enum cudaGLMapFlags
-    {"cudaGLMapFlags",                {"hipGLMapFlags",                           CONV_GL, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUGLmap_flags)
     {"cudaGLMapFlagsNone",            {"HIP_GL_MAP_RESOURCE_FLAGS_NONE",          CONV_GL, API_RUNTIME, HIP_UNSUPPORTED}},    // 0x00 // API_Driver ANALOGUE (CU_GL_MAP_RESOURCE_FLAGS_NONE)
     {"cudaGLMapFlagsReadOnly",        {"HIP_GL_MAP_RESOURCE_FLAGS_READ_ONLY",     CONV_GL, API_RUNTIME, HIP_UNSUPPORTED}},    // 0x01 // API_Driver ANALOGUE (CU_GL_MAP_RESOURCE_FLAGS_READ_ONLY)
     {"cudaGLMapFlagsWriteDiscard",    {"HIP_GL_MAP_RESOURCE_FLAGS_WRITE_DISCARD", CONV_GL, API_RUNTIME, HIP_UNSUPPORTED}},    // 0x02 // API_Driver ANALOGUE (CU_GL_MAP_RESOURCE_FLAGS_WRITE_DISCARD)
@@ -1831,7 +1920,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // Direct3D 9 Interoperability
     // enum CUd3d9DeviceList
-    {"cudaD3D9DeviceList",               {"hipD3D9DeviceList",                  CONV_D3D9, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUd3d9DeviceList)
     {"cudaD3D9DeviceListAll",            {"HIP_D3D9_DEVICE_LIST_ALL",           CONV_D3D9, API_RUNTIME, HIP_UNSUPPORTED}},    // 1 // API_Driver ANALOGUE (CU_D3D9_DEVICE_LIST_ALL)
     {"cudaD3D9DeviceListCurrentFrame",   {"HIP_D3D9_DEVICE_LIST_CURRENT_FRAME", CONV_D3D9, API_RUNTIME, HIP_UNSUPPORTED}},    // 2 // API_Driver ANALOGUE (CU_D3D9_DEVICE_LIST_CURRENT_FRAME)
     {"cudaD3D9DeviceListNextFrame",      {"HIP_D3D9_DEVICE_LIST_NEXT_FRAME",    CONV_D3D9, API_RUNTIME, HIP_UNSUPPORTED}},    // 3 // API_Driver ANALOGUE (CU_D3D9_DEVICE_LIST_NEXT_FRAME)
@@ -1850,7 +1938,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaD3D9MapFlagsWriteDiscard", {"HIP_D3D9_MAPRESOURCE_FLAGS_WRITEDISCARD", CONV_D3D9, API_RUNTIME, HIP_UNSUPPORTED}},    // 2 // API_Driver ANALOGUE (CU_D3D9_MAPRESOURCE_FLAGS_WRITEDISCARD)
 
     // enum cudaD3D9RegisterFlags
-    {"cudaD3D9RegisterFlags",                {"hipD3D9RegisterFlags",                CONV_D3D9, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUd3d9Register_flags)
     {"cudaD3D9RegisterFlagsNone",            {"HIP_D3D9_REGISTER_FLAGS_NONE",        CONV_D3D9, API_RUNTIME, HIP_UNSUPPORTED}},    // 0 // API_Driver ANALOGUE (CU_D3D9_REGISTER_FLAGS_NONE)
     {"cudaD3D9RegisterFlagsArray",           {"HIP_D3D9_REGISTER_FLAGS_ARRAY",       CONV_D3D9, API_RUNTIME, HIP_UNSUPPORTED}},    // 1 // API_Driver ANALOGUE (CU_D3D9_REGISTER_FLAGS_ARRAY)
 
@@ -1867,24 +1954,20 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // Direct3D 10 Interoperability
     // enum cudaD3D10DeviceList
-    {"cudaD3D10DeviceList",               {"hipd3d10DeviceList",                  CONV_D3D10, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUd3d10DeviceList)
     {"cudaD3D10DeviceListAll",            {"HIP_D3D10_DEVICE_LIST_ALL",           CONV_D3D10, API_RUNTIME, HIP_UNSUPPORTED}},    // 1 // API_Driver ANALOGUE (CU_D3D10_DEVICE_LIST_ALL)
     {"cudaD3D10DeviceListCurrentFrame",   {"HIP_D3D10_DEVICE_LIST_CURRENT_FRAME", CONV_D3D10, API_RUNTIME, HIP_UNSUPPORTED}},    // 2 // API_Driver ANALOGUE (CU_D3D10_DEVICE_LIST_CURRENT_FRAME)
     {"cudaD3D10DeviceListNextFrame",      {"HIP_D3D10_DEVICE_LIST_NEXT_FRAME",    CONV_D3D10, API_RUNTIME, HIP_UNSUPPORTED}},    // 3 // API_Driver ANALOGUE (CU_D3D10_DEVICE_LIST_NEXT_FRAME)
-
     {"cudaD3D10GetDevice",                {"hipD3D10GetDevice",                   CONV_D3D10, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (cuD3D10GetDevice)
     {"cudaD3D10GetDevices",               {"hipD3D10GetDevices",                  CONV_D3D10, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (cuD3D10GetDevices)
     {"cudaGraphicsD3D10RegisterResource", {"hipGraphicsD3D10RegisterResource",    CONV_D3D10, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (cuGraphicsD3D10RegisterResource)
 
     // Direct3D 10 Interoperability [DEPRECATED]
     // enum cudaD3D10MapFlags
-    {"cudaD3D10MapFlags",                     {"hipD3D10MapFlags",                         CONV_D3D10, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUd3d10map_flags)
     {"cudaD3D10MapFlagsNone",                 {"HIP_D3D10_MAPRESOURCE_FLAGS_NONE",         CONV_D3D10, API_RUNTIME, HIP_UNSUPPORTED}},    // 0 // API_Driver ANALOGUE (CU_D3D10_MAPRESOURCE_FLAGS_NONE)
     {"cudaD3D10MapFlagsReadOnly",             {"HIP_D3D10_MAPRESOURCE_FLAGS_READONLY",     CONV_D3D10, API_RUNTIME, HIP_UNSUPPORTED}},    // 1 // API_Driver ANALOGUE (CU_D3D10_MAPRESOURCE_FLAGS_READONLY)
     {"cudaD3D10MapFlagsWriteDiscard",         {"HIP_D3D10_MAPRESOURCE_FLAGS_WRITEDISCARD", CONV_D3D10, API_RUNTIME, HIP_UNSUPPORTED}},    // 2 // API_Driver ANALOGUE (CU_D3D10_MAPRESOURCE_FLAGS_WRITEDISCARD)
 
     // enum cudaD3D10RegisterFlags
-    {"cudaD3D10RegisterFlags",                {"hipD3D10RegisterFlags",                    CONV_D3D10, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUd3d10Register_flags)
     {"cudaD3D10RegisterFlagsNone",            {"HIP_D3D10_REGISTER_FLAGS_NONE",            CONV_D3D10, API_RUNTIME, HIP_UNSUPPORTED}},    // 0 // API_Driver ANALOGUE (CU_D3D10_REGISTER_FLAGS_NONE)
     {"cudaD3D10RegisterFlagsArray",           {"HIP_D3D10_REGISTER_FLAGS_ARRAY",           CONV_D3D10, API_RUNTIME, HIP_UNSUPPORTED}},    // 1 // API_Driver ANALOGUE (CU_D3D10_REGISTER_FLAGS_ARRAY)
 
@@ -1903,7 +1986,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // Direct3D 11 Interoperability
     // enum cudaD3D11DeviceList
-    {"cudaD3D11DeviceList",               {"hipd3d11DeviceList",                  CONV_D3D11, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUd3d11DeviceList)
     {"cudaD3D11DeviceListAll",            {"HIP_D3D11_DEVICE_LIST_ALL",           CONV_D3D11, API_RUNTIME, HIP_UNSUPPORTED}},    // 1 // API_Driver ANALOGUE (CU_D3D11_DEVICE_LIST_ALL)
     {"cudaD3D11DeviceListCurrentFrame",   {"HIP_D3D11_DEVICE_LIST_CURRENT_FRAME", CONV_D3D11, API_RUNTIME, HIP_UNSUPPORTED}},    // 2 // API_Driver ANALOGUE (CU_D3D11_DEVICE_LIST_CURRENT_FRAME)
     {"cudaD3D11DeviceListNextFrame",      {"HIP_D3D11_DEVICE_LIST_NEXT_FRAME",    CONV_D3D11, API_RUNTIME, HIP_UNSUPPORTED}},    // 3 // API_Driver ANALOGUE (CU_D3D11_DEVICE_LIST_NEXT_FRAME)
@@ -1924,8 +2006,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaVDPAUSetVDPAUDevice",                {"hipVDPAUSetDevice",                     CONV_VDPAU, API_RUNTIME, HIP_UNSUPPORTED}},    // no API_Driver ANALOGUE
 
     // EGL Interoperability
-    {"cudaEglStreamConnection",               {"hipEglStreamConnection",               CONV_EGL, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUeglStreamConnection)
-
     {"cudaEGLStreamConsumerAcquireFrame",     {"hipEGLStreamConsumerAcquireFrame",     CONV_EGL, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (cuEGLStreamConsumerAcquireFrame)
     {"cudaEGLStreamConsumerConnect",          {"hipEGLStreamConsumerConnect",          CONV_EGL, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (cuEGLStreamConsumerConnect)
     {"cudaEGLStreamConsumerConnectWithFlags", {"hipEGLStreamConsumerConnectWithFlags", CONV_EGL, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (cuEGLStreamConsumerConnectWithFlags)
@@ -1937,13 +2017,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cudaGraphicsEGLRegisterImage",          {"hipGraphicsEGLRegisterImage",          CONV_EGL, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (cuGraphicsEGLRegisterImage)
     {"cudaGraphicsResourceGetMappedEglFrame", {"hipGraphicsResourceGetMappedEglFrame", CONV_EGL, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (cuGraphicsResourceGetMappedEglFrame)
 
-    //---------------------------------------BLAS-------------------------------------//
-    // Blas types
-    {"cublasHandle_t",                 {"hipblasHandle_t",                 CONV_TYPE,            API_BLAS}},
-    // TODO: dereferencing: typedef struct cublasContext *cublasHandle_t;
-    //     {"cublasContext", {"hipblasHandle_t", CONV_TYPE, API_BLAS}},
+    ///////////////////////////// cuBLAS /////////////////////////////
     // Blas management functions
-    // unsupported yet by hipblas/hcblas
     {"cublasInit",                     {"hipblasInit",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasShutdown",                 {"hipblasShutdown",                 CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasGetVersion",               {"hipblasGetVersion",               CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -1953,13 +2028,13 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cublasSetKernelStream",          {"hipblasSetKernelStream",          CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasGetAtomicsMode",           {"hipblasGetAtomicsMode",           CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasSetAtomicsMode",           {"hipblasSetAtomicsMode",           CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
-    // Blas operations
-    {"cublasOperation_t",              {"hipblasOperation_t",              CONV_TYPE,            API_BLAS}},
+ 
+    // Blas operations (cublasOperation_t)
     {"CUBLAS_OP_N",                    {"HIPBLAS_OP_N",                    CONV_NUMERIC_LITERAL, API_BLAS}},
     {"CUBLAS_OP_T",                    {"HIPBLAS_OP_T",                    CONV_NUMERIC_LITERAL, API_BLAS}},
     {"CUBLAS_OP_C",                    {"HIPBLAS_OP_C",                    CONV_NUMERIC_LITERAL, API_BLAS}},
-    // Blas statuses
-    {"cublasStatus_t",                 {"hipblasStatus_t",                 CONV_TYPE,            API_BLAS}},
+
+    // Blas statuses (cublasStatus_t)
     {"CUBLAS_STATUS_SUCCESS",          {"HIPBLAS_STATUS_SUCCESS",          CONV_NUMERIC_LITERAL, API_BLAS}},
     {"CUBLAS_STATUS_NOT_INITIALIZED",  {"HIPBLAS_STATUS_NOT_INITIALIZED",  CONV_NUMERIC_LITERAL, API_BLAS}},
     {"CUBLAS_STATUS_ALLOC_FAILED",     {"HIPBLAS_STATUS_ALLOC_FAILED",     CONV_NUMERIC_LITERAL, API_BLAS}},
@@ -1968,34 +2043,28 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"CUBLAS_STATUS_EXECUTION_FAILED", {"HIPBLAS_STATUS_EXECUTION_FAILED", CONV_NUMERIC_LITERAL, API_BLAS}},
     {"CUBLAS_STATUS_INTERNAL_ERROR",   {"HIPBLAS_STATUS_INTERNAL_ERROR",   CONV_NUMERIC_LITERAL, API_BLAS}},
     {"CUBLAS_STATUS_NOT_SUPPORTED",    {"HIPBLAS_STATUS_INTERNAL_ERROR",   CONV_NUMERIC_LITERAL, API_BLAS}},
-    // Blas Fill Modes
-    // unsupported yet by hipblas/hcblas
-    {"cublasFillMode_t",               {"hipblasFillMode_t",               CONV_TYPE,            API_BLAS, HIP_UNSUPPORTED}},
+
+    // Blas Fill Modes (cublasFillMode_t)
     {"CUBLAS_FILL_MODE_LOWER",         {"HIPBLAS_FILL_MODE_LOWER",         CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
     {"CUBLAS_FILL_MODE_UPPER",         {"HIPBLAS_FILL_MODE_UPPER",         CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
-    // Blas Diag Types
-    // unsupported yet by hipblas/hcblas
-    {"cublasDiagType_t",               {"hipblasDiagType_t",               CONV_TYPE,            API_BLAS, HIP_UNSUPPORTED}},
+
+    // Blas Diag Types (cublasDiagType_t)
     {"CUBLAS_DIAG_NON_UNIT",           {"HIPBLAS_DIAG_NON_UNIT",           CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
     {"CUBLAS_DIAG_UNIT",               {"HIPBLAS_DIAG_UNIT",               CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
-    // Blas Side Modes
-    // unsupported yet by hipblas/hcblas
-    {"cublasSideMode_t",               {"hipblasSideMode_t",               CONV_TYPE,            API_BLAS, HIP_UNSUPPORTED}},
+
+    // Blas Side Modes (cublasSideMode_t
     {"CUBLAS_SIDE_LEFT",               {"HIPBLAS_SIDE_LEFT",               CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
     {"CUBLAS_SIDE_RIGHT",              {"HIPBLAS_SIDE_RIGHT",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
-    // Blas Pointer Modes
-    // unsupported yet by hipblas/hcblas
-    {"cublasPointerMode_t",            {"hipblasPointerMode_t",            CONV_TYPE,            API_BLAS, HIP_UNSUPPORTED}},
+
+    // Blas Pointer Modes (cublasPointerMode_t)
     {"CUBLAS_POINTER_MODE_HOST",       {"HIPBLAS_POINTER_MODE_HOST",       CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
     {"CUBLAS_POINTER_MODE_DEVICE",     {"HIPBLAS_POINTER_MODE_DEVICE",     CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
-    // Blas Atomics Modes
-    // unsupported yet by hipblas/hcblas
-    {"cublasAtomicsMode_t",            {"hipblasAtomicsMode_t",            CONV_TYPE,            API_BLAS, HIP_UNSUPPORTED}},
+
+    // Blas Atomics Modes (cublasAtomicsMode_t)
     {"CUBLAS_ATOMICS_NOT_ALLOWED",     {"HIPBLAS_ATOMICS_NOT_ALLOWED",     CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
     {"CUBLAS_ATOMICS_ALLOWED",         {"HIPBLAS_ATOMICS_ALLOWED",         CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
-    // Blas Data Type
-    // unsupported yet by hipblas/hcblas
-    {"cublasDataType_t",               {"hipblasDataType_t",               CONV_TYPE,            API_BLAS, HIP_UNSUPPORTED}},
+
+    // Blas Data Type (cublasDataType_t)
     {"CUBLAS_DATA_FLOAT",              {"HIPBLAS_DATA_FLOAT",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
     {"CUBLAS_DATA_DOUBLE",             {"HIPBLAS_DATA_DOUBLE",             CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
     {"CUBLAS_DATA_HALF",               {"HIPBLAS_DATA_HALF",               CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
@@ -2010,12 +2079,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cublasSetMatrix",                {"hipblasSetMatrix",                CONV_MATH_FUNC,       API_BLAS}},
     {"cublasGetMatrix",                {"hipblasGetMatrix",                CONV_MATH_FUNC,       API_BLAS}},
 
-    // unsupported yet by hipblas/hcblas
     {"cublasGetMatrixAsync",           {"hipblasGetMatrixAsync",           CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasSetMatrixAsync",           {"hipblasSetMatrixAsync",           CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // NRM2
-    // unsupported yet by hipblas/hcblas
     {"cublasSnrm2",  {"hipblasSnrm2",  CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDnrm2",  {"hipblasDnrm2",  CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED}},
     {"cublasScnrm2", {"hipblasScnrm2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED}},
@@ -2028,7 +2095,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cublasDdot",        {"hipblasDdot",        CONV_MATH_FUNC, API_BLAS}},
     // there is no such a function in CUDA
     {"cublasDdotBatched", {"hipblasDdotBatched", CONV_MATH_FUNC, API_BLAS}},
-    // unsupported yet by hipblas/hcblas
     {"cublasCdotu",       {"hipblasCdotu",       CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCdotc",       {"hipblasCdotc",       CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZdotu",       {"hipblasZdotu",       CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED}},
@@ -2041,7 +2107,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cublasDscal",        {"hipblasDscal",        CONV_MATH_FUNC, API_BLAS}},
     // there is no such a function in CUDA
     {"cublasDscalBatched", {"hipblasDscalBatched", CONV_MATH_FUNC, API_BLAS}},
-    // unsupported yet by hipblas/hcblas
     {"cublasCscal",        {"hipblasCscal",        CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCsscal",       {"hipblasCsscal",       CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZscal",        {"hipblasZscal",        CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED}},
@@ -2050,7 +2115,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     // AXPY
     {"cublasSaxpy",                    {"hipblasSaxpy",                    CONV_MATH_FUNC,       API_BLAS}},
     {"cublasSaxpyBatched",             {"hipblasSaxpyBatched",             CONV_MATH_FUNC,       API_BLAS}},
-    // unsupported yet by hipblas/hcblas
     {"cublasDaxpy",                    {"hipblasDaxpy",                    CONV_MATH_FUNC,       API_BLAS}},
     {"cublasCaxpy",                    {"hipblasCaxpy",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZaxpy",                    {"hipblasZaxpy",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2062,26 +2126,22 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cublasDcopy",                    {"hipblasDcopy",                    CONV_MATH_FUNC,       API_BLAS}},
     // there is no such a function in CUDA
     {"cublasDcopyBatched",             {"hipblasDcopyBatched",             CONV_MATH_FUNC,       API_BLAS}},
-    // unsupported yet by hipblas/hcblas
     {"cublasCcopy",                    {"hipblasCcopy",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZcopy",                    {"hipblasZcopy",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SWAP
-    // unsupported yet by hipblas/hcblas
     {"cublasSswap",                    {"hipblasSswap",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDswap",                    {"hipblasDswap",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCswap",                    {"hipblasCswap",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZswap",                    {"hipblasZswap",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // AMAX
-    // unsupported yet by hipblas/hcblas
     {"cublasIsamax",                   {"hipblasIsamax",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasIdamax",                   {"hipblasIdamax",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasIcamax",                   {"hipblasIcamax",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasIzamax",                   {"hipblasIzamax",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // AMIN
-    // unsupported yet by hipblas/hcblas
     {"cublasIsamin",                   {"hipblasIsamin",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasIdamin",                   {"hipblasIdamin",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasIcamin",                   {"hipblasIcamin",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2094,12 +2154,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cublasDasum",                    {"hipblasDasum",                    CONV_MATH_FUNC,       API_BLAS}},
     // there is no such a function in CUDA
     {"cublasDasumBatched",             {"hipblasDasumBatched",             CONV_MATH_FUNC,       API_BLAS}},
-    // unsupported yet by hipblas/hcblas
     {"cublasScasum",                   {"hipblasScasum",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDzasum",                   {"hipblasDzasum",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // ROT
-    // unsupported yet by hipblas/hcblas
     {"cublasSrot",                     {"hipblasSrot",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDrot",                     {"hipblasDrot",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCrot",                     {"hipblasCrot",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2108,19 +2166,16 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cublasZdrot",                    {"hipblasZdrot",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // ROTG
-    // unsupported yet by hipblas/hcblas
     {"cublasSrotg",                    {"hipblasSrotg",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDrotg",                    {"hipblasDrotg",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCrotg",                    {"hipblasCrotg",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZrotg",                    {"hipblasZrotg",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // ROTM
-    // unsupported yet by hipblas/hcblas
     {"cublasSrotm",                    {"hipblasSrotm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDrotm",                    {"hipblasDrotm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // ROTMG
-    // unsupported yet by hipblas/hcblas
     {"cublasSrotmg",                   {"hipblasSrotmg",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDrotmg",                   {"hipblasDrotmg",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
@@ -2129,61 +2184,52 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     // there is no such a function in CUDA
     {"cublasSgemvBatched",             {"hipblasSgemvBatched",             CONV_MATH_FUNC,       API_BLAS}},
     {"cublasDgemv",                    {"hipblasDgemv",                    CONV_MATH_FUNC,       API_BLAS}},
-    // unsupported yet by hipblas/hcblas
     {"cublasCgemv",                    {"hipblasCgemv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZgemv",                    {"hipblasZgemv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // GBMV
-    // unsupported yet by hipblas/hcblas
     {"cublasSgbmv",                    {"hipblasSgbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDgbmv",                    {"hipblasDgbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCgbmv",                    {"hipblasCgbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZgbmv",                    {"hipblasZgbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TRMV
-    // unsupported yet by hipblas/hcblas
     {"cublasStrmv",                    {"hipblasStrmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtrmv",                    {"hipblasDtrmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtrmv",                    {"hipblasCtrmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtrmv",                    {"hipblasZtrmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TBMV
-    // unsupported yet by hipblas/hcblas
     {"cublasStbmv",                    {"hipblasStbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtbmv",                    {"hipblasDtbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtbmv",                    {"hipblasCtbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtbmv",                    {"hipblasZtbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TPMV
-    // unsupported yet by hipblas/hcblas
     {"cublasStpmv",                    {"hipblasStpmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtpmv",                    {"hipblasDtpmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtpmv",                    {"hipblasCtpmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtpmv",                    {"hipblasZtpmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TRSV
-    // unsupported yet by hipblas/hcblas
     {"cublasStrsv",                    {"hipblasStrsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtrsv",                    {"hipblasDtrsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtrsv",                    {"hipblasCtrsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtrsv",                    {"hipblasZtrsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TPSV
-    // unsupported yet by hipblas/hcblas
     {"cublasStpsv",                    {"hipblasStpsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtpsv",                    {"hipblasDtpsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtpsv",                    {"hipblasCtpsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtpsv",                    {"hipblasZtpsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TBSV
-    // unsupported yet by hipblas/hcblas
     {"cublasStbsv",                    {"hipblasStbsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtbsv",                    {"hipblasDtbsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtbsv",                    {"hipblasCtbsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtbsv",                    {"hipblasZtbsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SYMV/HEMV
-    // unsupported yet by hipblas/hcblas
     {"cublasSsymv",                    {"hipblasSsymv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDsymv",                    {"hipblasDsymv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCsymv",                    {"hipblasCsymv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2192,14 +2238,12 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cublasZhemv",                    {"hipblasZhemv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SBMV/HBMV
-    // unsupported yet by hipblas/hcblas
     {"cublasSsbmv",                    {"hipblasSsbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDsbmv",                    {"hpiblasDsbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasChbmv",                    {"hipblasChbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZhbmv",                    {"hipblasZhbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SPMV/HPMV
-    // unsupported yet by hipblas/hcblas
     {"cublasSspmv",                    {"hipblasSspmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDspmv",                    {"hipblasDspmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasChpmv",                    {"hipblasChpmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2208,35 +2252,30 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     // GER
     {"cublasSger",                     {"hipblasSger",                     CONV_MATH_FUNC,       API_BLAS}},
     {"cublasDger",                     {"hipblasDger",                     CONV_MATH_FUNC,       API_BLAS}},
-    // unsupported yet by hipblas/hcblas
     {"cublasCgeru",                    {"hipblasCgeru",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCgerc",                    {"hipblasCgerc",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZgeru",                    {"hipblasZgeru",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZgerc",                    {"hipblasZgerc",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SYR/HER
-    // unsupported yet by hipblas/hcblas
     {"cublasSsyr",                     {"hipblasSsyr",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDsyr",                     {"hipblasDsyr",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCher",                     {"hipblasCher",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZher",                     {"hipblasZher",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SPR/HPR
-    // unsupported yet by hipblas/hcblas
     {"cublasSspr",                     {"hipblasSspr",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDspr",                     {"hipblasDspr",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasChpr",                     {"hipblasChpr",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZhpr",                     {"hipblasZhpr",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SYR2/HER2
-    // unsupported yet by hipblas/hcblas
     {"cublasSsyr2",                    {"hipblasSsyr2",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDsyr2",                    {"hipblasDsyr2",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCher2",                    {"hipblasCher2",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZher2",                    {"hipblasZher2",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SPR2/HPR2
-    // unsupported yet by hipblas/hcblas
     {"cublasSspr2",                    {"hipblasSspr2",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDspr2",                    {"hipblasDspr2",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasChpr2",                    {"hipblasChpr2",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2248,7 +2287,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cublasDgemm",                    {"hipblasDgemm",                    CONV_MATH_FUNC,       API_BLAS}},
 
     {"cublasCgemm",                    {"hipblasCgemm",                    CONV_MATH_FUNC,       API_BLAS}},
-    // unsupported yet by hipblas/hcblas
     {"cublasZgemm",                    {"hipblasZgemm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // BATCH GEMM
@@ -2256,30 +2294,25 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cublasDgemmBatched",             {"hipblasDgemmBatched",             CONV_MATH_FUNC,       API_BLAS}},
 
     {"cublasCgemmBatched",             {"hipblasCgemmBatched",             CONV_MATH_FUNC,       API_BLAS}},
-    // unsupported yet by hipblas/hcblas
     {"cublasZgemmBatched",             {"hipblasZgemmBatched",             CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SYRK
-    // unsupported yet by hipblas/hcblas
     {"cublasSsyrk",                    {"hipblasSsyrk",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDsyrk",                    {"hipblasDsyrk",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCsyrk",                    {"hipblasCsyrk",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZsyrk",                    {"hipblasZsyrk",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // HERK
-    // unsupported yet by hipblas/hcblas
     {"cublasCherk",                    {"hipblasCherk",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZherk",                    {"hipblasZherk",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SYR2K
-    // unsupported yet by hipblas/hcblas
     {"cublasSsyr2k",                   {"hipblasSsyr2k",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDsyr2k",                   {"hipblasDsyr2k",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCsyr2k",                   {"hipblasCsyr2k",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZsyr2k",                   {"hipblasZsyr2k",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SYRKX - eXtended SYRK
-    // unsupported yet by hipblas/hcblas
     {"cublasSsyrkx",                   {"hipblasSsyrkx",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDsyrkx",                   {"hipblasDsyrkx",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCsyrkx",                   {"hipblasCsyrkx",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2287,43 +2320,36 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
 
     // HER2K
-    // unsupported yet by hipblas/hcblas
     {"cublasCher2k",                   {"hipblasCher2k",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZher2k",                   {"hipblasZher2k",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // HERKX - eXtended HERK
-    // unsupported yet by hipblas/hcblas
     {"cublasCherkx",                   {"hipblasCherkx",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZherkx",                   {"hipblasZherkx",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SYMM
-    // unsupported yet by hipblas/hcblas
     {"cublasSsymm",                    {"hipblasSsymm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDsymm",                    {"hipblasDsymm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCsymm",                    {"hipblasCsymm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZsymm",                    {"hipblasZsymm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // HEMM
-    // unsupported yet by hipblas/hcblas
     {"cublasChemm",                    {"hipblasChemm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZhemm",                    {"hipblasZhemm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TRSM
-    // unsupported yet by hipblas/hcblas
     {"cublasStrsm",                    {"hipblasStrsm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtrsm",                    {"hipblasDtrsm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtrsm",                    {"hipblasCtrsm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtrsm",                    {"hipblasZtrsm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TRSM - Batched Triangular Solver
-    // unsupported yet by hipblas/hcblas
     {"cublasStrsmBatched",             {"hipblasStrsmBatched",             CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtrsmBatched",             {"hipblasDtrsmBatched",             CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtrsmBatched",             {"hipblasCtrsmBatched",             CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtrsmBatched",             {"hipblasZtrsmBatched",             CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TRMM
-    // unsupported yet by hipblas/hcblas
     {"cublasStrmm",                    {"hipblasStrmm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtrmm",                    {"hipblasDtrmm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtrmm",                    {"hipblasCtrmm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2331,77 +2357,66 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // ------------------------ CUBLAS BLAS - like extension (cublas_api.h)
     // GEAM
-    // unsupported yet by hipblas/hcblas
     {"cublasSgeam",                    {"hipblasSgeam",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDgeam",                    {"hipblasDgeam",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCgeam",                    {"hipblasCgeam",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZgeam",                    {"hipblasZgeam",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // GETRF - Batched LU
-    // unsupported yet by hipblas/hcblas
     {"cublasSgetrfBatched",            {"hipblasSgetrfBatched",            CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDgetrfBatched",            {"hipblasDgetrfBatched",            CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCgetrfBatched",            {"hipblasCgetrfBatched",            CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZgetrfBatched",            {"hipblasZgetrfBatched",            CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // Batched inversion based on LU factorization from getrf
-    // unsupported yet by hipblas/hcblas
     {"cublasSgetriBatched",            {"hipblasSgetriBatched",            CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDgetriBatched",            {"hipblasDgetriBatched",            CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCgetriBatched",            {"hipblasCgetriBatched",            CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZgetriBatched",            {"hipblasZgetriBatched",            CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // Batched solver based on LU factorization from getrf
-    // unsupported yet by hipblas/hcblas
     {"cublasSgetrsBatched",            {"hipblasSgetrsBatched",            CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDgetrsBatched",            {"hipblasDgetrsBatched",            CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCgetrsBatched",            {"hipblasCgetrsBatched",            CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZgetrsBatched",            {"hipblasZgetrsBatched",            CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TRSM - Batched Triangular Solver
-    // unsupported yet by hipblas/hcblas
     {"cublasStrsmBatched",             {"hipblasStrsmBatched",             CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtrsmBatched",             {"hipblasDtrsmBatched",             CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtrsmBatched",             {"hipblasCtrsmBatched",             CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtrsmBatched",             {"hipblasZtrsmBatched",             CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // MATINV - Batched
-    // unsupported yet by hipblas/hcblas
     {"cublasSmatinvBatched",           {"hipblasSmatinvBatched",           CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDmatinvBatched",           {"hipblasDmatinvBatched",           CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCmatinvBatched",           {"hipblasCmatinvBatched",           CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZmatinvBatched",           {"hipblasZmatinvBatched",           CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // Batch QR Factorization
-    // unsupported yet by hipblas/hcblas
     {"cublasSgeqrfBatched",            {"hipblasSgeqrfBatched",            CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDgeqrfBatched",            {"hipblasDgeqrfBatched",            CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCgeqrfBatched",            {"hipblasCgeqrfBatched",            CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZgeqrfBatched",            {"hipblasZgeqrfBatched",            CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // Least Square Min only m >= n and Non-transpose supported
-    // unsupported yet by hipblas/hcblas
     {"cublasSgelsBatched",             {"hipblasSgelsBatched",             CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDgelsBatched",             {"hipblasDgelsBatched",             CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCgelsBatched",             {"hipblasCgelsBatched",             CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZgelsBatched",             {"hipblasZgelsBatched",             CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // DGMM
-    // unsupported yet by hipblas/hcblas
     {"cublasSdgmm",                    {"hipblasSdgmm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDdgmm",                    {"hipblasDdgmm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCdgmm",                    {"hipblasCdgmm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZdgmm",                    {"hipblasZdgmm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TPTTR - Triangular Pack format to Triangular format
-    // unsupported yet by hipblas/hcblas
     {"cublasStpttr",                   {"hipblasStpttr",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtpttr",                   {"hipblasDtpttr",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtpttr",                   {"hipblasCtpttr",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtpttr",                   {"hipblasZtpttr",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TRTTP - Triangular format to Triangular Pack format
-    // unsupported yet by hipblas/hcblas
     {"cublasStrttp",                   {"hipblasStrttp",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtrttp",                   {"hipblasDtrttp",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtrttp",                   {"hipblasCtrttp",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2419,62 +2434,53 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // GEMV
     {"cublasSgemv_v2",                 {"hipblasSgemv",                    CONV_MATH_FUNC,       API_BLAS}},
-    // unsupported yet by hipblas/hcblas
     {"cublasDgemv_v2",                 {"hipblasDgemv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCgemv_v2",                 {"hipblasCgemv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZgemv_v2",                 {"hipblasZgemv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // GBMV
-    // unsupported yet by hipblas/hcblas
     {"cublasSgbmv_v2",                 {"hipblasSgbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDgbmv_v2",                 {"hipblasDgbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCgbmv_v2",                 {"hipblasCgbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZgbmv_v2",                 {"hipblasZgbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TRMV
-    // unsupported yet by hipblas/hcblas
     {"cublasStrmv_v2",                 {"hipblasStrmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtrmv_v2",                 {"hipblasDtrmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtrmv_v2",                 {"hipblasCtrmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtrmv_v2",                 {"hipblasZtrmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TBMV
-    // unsupported yet by hipblas/hcblas
     {"cublasStbmv_v2",                 {"hipblasStbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtbmv_v2",                 {"hipblasDtbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtbmv_v2",                 {"hipblasCtbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtbmv_v2",                 {"hipblasZtbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TPMV
-    // unsupported yet by hipblas/hcblas
     {"cublasStpmv_v2",                 {"hipblasStpmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtpmv_v2",                 {"hipblasDtpmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtpmv_v2",                 {"hipblasCtpmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtpmv_v2",                 {"hipblasZtpmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TRSV
-    // unsupported yet by hipblas/hcblas
     {"cublasStrsv_v2",                 {"hipblasStrsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtrsv_v2",                 {"hipblasDtrsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtrsv_v2",                 {"hipblasCtrsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtrsv_v2",                 {"hipblasZtrsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TPSV
-    // unsupported yet by hipblas/hcblas
     {"cublasStpsv_v2",                 {"hipblasStpsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtpsv_v2",                 {"hipblasDtpsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtpsv_v2",                 {"hipblasCtpsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtpsv_v2",                 {"hipblasZtpsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TBSV
-    // unsupported yet by hipblas/hcblas
     {"cublasStbsv_v2",                 {"hipblasStbsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtbsv_v2",                 {"hipblasDtbsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtbsv_v2",                 {"hipblasCtbsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtbsv_v2",                 {"hipblasZtbsv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SYMV/HEMV
-    // unsupported yet by hipblas/hcblas
     {"cublasSsymv_v2",                 {"hipblasSsymv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDsymv_v2",                 {"hipblasDsymv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCsymv_v2",                 {"hipblasCsymv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2483,14 +2489,12 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cublasZhemv_v2",                 {"hipblasZhemv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SBMV/HBMV
-    // unsupported yet by hipblas/hcblas
     {"cublasSsbmv_v2",                 {"hipblasSsbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDsbmv_v2",                 {"hpiblasDsbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasChbmv_v2",                 {"hipblasChbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZhbmv_v2",                 {"hipblasZhbmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SPMV/HPMV
-    // unsupported yet by hipblas/hcblas
     {"cublasSspmv_v2",                 {"hipblasSspmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDspmv_v2",                 {"hipblasDspmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasChpmv_v2",                 {"hipblasChpmv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2498,7 +2502,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // GER
     {"cublasSger_v2",                  {"hipblasSger",                     CONV_MATH_FUNC,       API_BLAS}},
-    // unsupported yet by hipblas/hcblas
     {"cublasDger_v2",                  {"hipblasDger",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCgeru_v2",                 {"hipblasCgeru",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCgerc_v2",                 {"hipblasCgerc",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2506,7 +2509,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cublasZgerc_v2",                 {"hipblasZgerc",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SYR/HER
-    // unsupported yet by hipblas/hcblas
     {"cublasSsyr_v2",                  {"hipblasSsyr",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDsyr_v2",                  {"hipblasDsyr",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCsyr_v2",                  {"hipblasCsyr",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2515,14 +2517,12 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cublasZher_v2",                  {"hipblasZher",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SPR/HPR
-    // unsupported yet by hipblas/hcblas
     {"cublasSspr_v2",                  {"hipblasSspr",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDspr_v2",                  {"hipblasDspr",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasChpr_v2",                  {"hipblasChpr",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZhpr_v2",                  {"hipblasZhpr",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SYR2/HER2
-    // unsupported yet by hipblas/hcblas
     {"cublasSsyr2_v2",                 {"hipblasSsyr2",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDsyr2_v2",                 {"hipblasDsyr2",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCsyr2_v2",                 {"hipblasCsyr2",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2531,7 +2531,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cublasZher2_v2",                 {"hipblasZher2",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SPR2/HPR2
-    // unsupported yet by hipblas/hcblas
     {"cublasSspr2_v2",                 {"hipblasSspr2",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDspr2_v2",                 {"hipblasDspr2",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasChpr2_v2",                 {"hipblasChpr2",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2540,69 +2539,57 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     // Blas3 (v2) Routines
     // GEMM
     {"cublasSgemm_v2",                 {"hipblasSgemm",                    CONV_MATH_FUNC,       API_BLAS}},
-    // unsupported yet by hipblas/hcblas
     {"cublasDgemm_v2",                 {"hipblasDgemm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     {"cublasCgemm_v2",                 {"hipblasCgemm",                    CONV_MATH_FUNC,       API_BLAS}},
-    // unsupported yet by hipblas/hcblas
     {"cublasZgemm_v2",                 {"hipblasZgemm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     //IO in FP16 / FP32, computation in float
-    // unsupported yet by hipblas/hcblas
     {"cublasSgemmEx",                  {"hipblasSgemmEx",                  CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SYRK
-    // unsupported yet by hipblas/hcblas
     {"cublasSsyrk_v2",                 {"hipblasSsyrk",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDsyrk_v2",                 {"hipblasDsyrk",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCsyrk_v2",                 {"hipblasCsyrk",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZsyrk_v2",                 {"hipblasZsyrk",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // HERK
-    // unsupported yet by hipblas/hcblas
     {"cublasCherk_v2",                 {"hipblasCherk",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZherk_v2",                 {"hipblasZherk",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SYR2K
-    // unsupported yet by hipblas/hcblas
     {"cublasSsyr2k_v2",                {"hipblasSsyr2k",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDsyr2k_v2",                {"hipblasDsyr2k",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCsyr2k_v2",                {"hipblasCsyr2k",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZsyr2k_v2",                {"hipblasZsyr2k",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // HER2K
-    // unsupported yet by hipblas/hcblas
     {"cublasCher2k_v2",                {"hipblasCher2k",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZher2k_v2",                {"hipblasZher2k",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SYMM
-    // unsupported yet by hipblas/hcblas
     {"cublasSsymm_v2",                 {"hipblasSsymm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDsymm_v2",                 {"hipblasDsymm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCsymm_v2",                 {"hipblasCsymm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZsymm_v2",                 {"hipblasZsymm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // HEMM
-    // unsupported yet by hipblas/hcblas
     {"cublasChemm_v2",                 {"hipblasChemm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZhemm_v2",                 {"hipblasZhemm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TRSM
-    // unsupported yet by hipblas/hcblas
     {"cublasStrsm_v2",                 {"hipblasStrsm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtrsm_v2",                 {"hipblasDtrsm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtrsm_v2",                 {"hipblasCtrsm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtrsm_v2",                 {"hipblasZtrsm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TRMM
-    // unsupported yet by hipblas/hcblas
     {"cublasStrmm_v2",                 {"hipblasStrmm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDtrmm_v2",                 {"hipblasDtrmm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCtrmm_v2",                 {"hipblasCtrmm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtrmm_v2",                 {"hipblasZtrmm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // NRM2
-    // unsupported yet by hipblas/hcblas
     {"cublasSnrm2_v2",                 {"hipblasSnrm2",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDnrm2_v2",                 {"hipblasDnrm2",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasScnrm2_v2",                {"hipblasScnrm2",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2612,7 +2599,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cublasSdot_v2",                  {"hipblasSdot",                     CONV_MATH_FUNC,       API_BLAS}},
     {"cublasDdot_v2",                  {"hipblasDdot",                     CONV_MATH_FUNC,       API_BLAS}},
 
-    // unsupported yet by hipblas/hcblas
     {"cublasCdotu_v2",                 {"hipblasCdotu",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCdotc_v2",                 {"hipblasCdotc",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZdotu_v2",                 {"hipblasZdotu",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2621,7 +2607,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     // SCAL
     {"cublasSscal_v2",                 {"hipblasSscal",                    CONV_MATH_FUNC,       API_BLAS}},
     {"cublasDscal_v2",                 {"hipblasDscal",                    CONV_MATH_FUNC,       API_BLAS}},
-    // unsupported yet by hipblas/hcblas
     {"cublasCscal_v2",                 {"hipblasCscal",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCsscal_v2",                {"hipblasCsscal",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZscal_v2",                 {"hipblasZscal",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2629,7 +2614,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
 
     // AXPY
     {"cublasSaxpy_v2",                 {"hipblasSaxpy",                    CONV_MATH_FUNC,       API_BLAS}},
-    // unsupported yet by hipblas/hcblas
     {"cublasDaxpy_v2",                 {"hipblasDaxpy",                    CONV_MATH_FUNC,       API_BLAS}},
     {"cublasCaxpy_v2",                 {"hipblasCaxpy",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZaxpy_v2",                 {"hipblasZaxpy",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2637,26 +2621,22 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     // COPY
     {"cublasScopy_v2",                 {"hipblasScopy",                    CONV_MATH_FUNC,       API_BLAS}},
     {"cublasDcopy_v2",                 {"hipblasDcopy",                    CONV_MATH_FUNC,       API_BLAS}},
-    // unsupported yet by hipblas/hcblas
     {"cublasCcopy_v2",                 {"hipblasCcopy",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZcopy_v2",                 {"hipblasZcopy",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SWAP
-    // unsupported yet by hipblas/hcblas
     {"cublasSswap_v2",                 {"hipblasSswap",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDswap_v2",                 {"hipblasDswap",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCswap_v2",                 {"hipblasCswap",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZswap_v2",                 {"hipblasZswap",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // AMAX
-    // unsupported yet by hipblas/hcblas
     {"cublasIsamax_v2",                {"hipblasIsamax",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasIdamax_v2",                {"hipblasIdamax",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasIcamax_v2",                {"hipblasIcamax",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasIzamax_v2",                {"hipblasIzamax",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // AMIN
-    // unsupported yet by hipblas/hcblas
     {"cublasIsamin_v2",                {"hipblasIsamin",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasIdamin_v2",                {"hipblasIdamin",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasIcamin_v2",                {"hipblasIcamin",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2665,12 +2645,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     // ASUM
     {"cublasSasum_v2",                 {"hipblasSasum",                    CONV_MATH_FUNC,       API_BLAS}},
     {"cublasDasum_v2",                 {"hipblasDasum",                    CONV_MATH_FUNC,       API_BLAS}},
-    // unsupported yet by hipblas/hcblas
     {"cublasScasum_v2",                {"hipblasScasum",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDzasum_v2",                {"hipblasDzasum",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // ROT
-    // unsupported yet by hipblas/hcblas
     {"cublasSrot_v2",                  {"hipblasSrot",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDrot_v2",                  {"hipblasDrot",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCrot_v2",                  {"hipblasCrot",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2679,19 +2657,30 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TO_HIP_RENAMES{
     {"cublasZdrot_v2",                 {"hipblasZdrot",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // ROTG
-    // unsupported yet by hipblas/hcblas
     {"cublasSrotg_v2",                 {"hipblasSrotg",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDrotg_v2",                 {"hipblasDrotg",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCrotg_v2",                 {"hipblasCrotg",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZrotg_v2",                 {"hipblasZrotg",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // ROTM
-    // unsupported yet by hipblas/hcblas
     {"cublasSrotm_v2",                 {"hipblasSrotm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDrotm_v2",                 {"hipblasDrotm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // ROTMG
-    // unsupported yet by hipblas/hcblas
     {"cublasSrotmg_v2",                {"hipblasSrotmg",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDrotmg_v2",                {"hipblasDrotmg",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}}
+};
+
+const std::map<llvm::StringRef, hipCounter>& CUDA_RENAMES_MAP() {
+    static std::map<llvm::StringRef, hipCounter> ret;
+    if (!ret.empty()) {
+        return ret;
+    }
+
+    // First run, so compute the union map.
+    ret = CUDA_IDENTIFIER_MAP;
+    ret.insert(CUDA_INCLUDE_MAP.begin(), CUDA_INCLUDE_MAP.end());
+    ret.insert(CUDA_TYPE_NAME_MAP.begin(), CUDA_TYPE_NAME_MAP.end());
+
+    return ret;
 };
