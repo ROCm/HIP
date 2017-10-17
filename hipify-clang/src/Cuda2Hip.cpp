@@ -476,49 +476,57 @@ private:
   }
 
   bool cudaCall(const MatchFinder::MatchResult &Result) {
-    if (const CallExpr *call = Result.Nodes.getNodeAs<CallExpr>("cudaCall")) {
-      const FunctionDecl *funcDcl = call->getDirectCallee();
-      std::string name = funcDcl->getDeclName().getAsString();
-      SourceManager *SM = Result.SourceManager;
-      SourceLocation sl = call->getLocStart();
+    const CallExpr *call = Result.Nodes.getNodeAs<CallExpr>("cudaCall");
+    if (!call) {
+      return false; // Another handler will do it.
+    }
 
-      // TODO: Make a lookup table just for functions to improve performance.
-      const auto found = CUDA_IDENTIFIER_MAP.find(name);
-      if (found != CUDA_IDENTIFIER_MAP.end()) {
-        if (!found->second.unsupported) {
-          StringRef repName = found->second.hipName;
-          size_t length = name.size();
-          bool bReplace = true;
-          if (SM->isMacroArgExpansion(sl)) {
-            sl = SM->getImmediateSpellingLoc(sl);
-          } else if (SM->isMacroBodyExpansion(sl)) {
-            LangOptions DefaultLangOptions;
-            SourceLocation sl_macro = SM->getExpansionLoc(sl);
-            SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *SM, DefaultLangOptions);
-            length = SM->getCharacterData(sl_end) - SM->getCharacterData(sl_macro);
-            StringRef macroName = StringRef(SM->getCharacterData(sl_macro), length);
-            if (CUDA_EXCLUDES.end() != CUDA_EXCLUDES.find(macroName)) {
-              bReplace = false;
-            } else {
-              sl = sl_macro;
-            }
-          }
-          if (bReplace) {
-            updateCounters(found->second, name);
-            Replacement Rep(*SM, sl, length, repName);
-            FullSourceLoc fullSL(sl, *SM);
-            insertReplacement(Rep, fullSL);
-          }
-        } else {
-          updateCounters(found->second, name);
-        }
-      } else {
-        std::string msg = "the following reference is not handled: '" + name + "' [function call].";
-        printHipifyMessage(*SM, sl, msg);
-      }
+    const FunctionDecl *funcDcl = call->getDirectCallee();
+    std::string name = funcDcl->getDeclName().getAsString();
+    SourceManager *SM = Result.SourceManager;
+    SourceLocation sl = call->getLocStart();
+
+    // TODO: Make a lookup table just for functions to improve performance.
+    const auto found = CUDA_IDENTIFIER_MAP.find(name);
+    if (found == CUDA_IDENTIFIER_MAP.end()) {
+      std::string msg = "the following reference is not handled: '" + name + "' [function call].";
+      printHipifyMessage(*SM, sl, msg);
       return true;
     }
-    return false;
+
+    const hipCounter& hipCtr = found->second;
+    updateCounters(found->second, name);
+
+    if (hipCtr.unsupported) {
+      return true; // Silently fail when you find an unsupported member.
+      // TODO: Print a warning with the diagnostics API?
+    }
+
+    size_t length = name.size();
+    bool bReplace = true;
+    if (SM->isMacroArgExpansion(sl)) {
+      sl = SM->getImmediateSpellingLoc(sl);
+    } else if (SM->isMacroBodyExpansion(sl)) {
+      LangOptions DefaultLangOptions;
+      SourceLocation sl_macro = SM->getExpansionLoc(sl);
+      SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *SM, DefaultLangOptions);
+      length = SM->getCharacterData(sl_end) - SM->getCharacterData(sl_macro);
+      StringRef macroName = StringRef(SM->getCharacterData(sl_macro), length);
+      if (CUDA_EXCLUDES.end() != CUDA_EXCLUDES.find(macroName)) {
+        bReplace = false;
+      } else {
+        sl = sl_macro;
+      }
+    }
+
+    if (bReplace) {
+      updateCounters(found->second, name);
+      Replacement Rep(*SM, sl, length, hipCtr.hipName);
+      FullSourceLoc fullSL(sl, *SM);
+      insertReplacement(Rep, fullSL);
+    }
+
+    return true;
   }
 
   bool cudaLaunchKernel(const MatchFinder::MatchResult &Result) {
