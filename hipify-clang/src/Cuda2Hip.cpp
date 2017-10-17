@@ -3838,7 +3838,6 @@ public:
       if (unresolvedTemplateName(Result)) break;
       break;
     } while (false);
-    insertHipHeaders(PP, *Result.SourceManager);
   }
 
 private:
