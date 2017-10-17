@@ -814,7 +814,15 @@ void addAllMatchers(ast_matchers::MatchFinder &Finder, Cuda2HipCallback *Callbac
           isExpansionInMainFile(),
           callee(
               functionDecl(
-                  matchesName("cu.*")
+                  matchesName("cu.*"),
+                  unless(
+                      // Clang generates structs with functions on them to represent things like
+                      // threadIdx.x. We have other logic to handle those builtins directly, so
+                      // we need to suppress the call-handling.
+                      // We can't handle those directly in the call-handler without special-casing
+                      // it unpleasantly, since the names of the functions are unique only per-struct.
+                      matchesName("__fetch_builtin.*")
+                  )
               )
           )
       ).bind("cudaCall"),
