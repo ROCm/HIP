@@ -239,8 +239,8 @@ protected:
     while ((begin = s.find("cu", begin)) != StringRef::npos) {
       const size_t end = s.find_first_of(" ", begin + 4);
       StringRef name = s.slice(begin, end);
-      const auto found = CUDA_TO_HIP_RENAMES.find(name);
-      if (found != CUDA_TO_HIP_RENAMES.end()) {
+      const auto found = CUDA_RENAMES_MAP().find(name);
+      if (found != CUDA_RENAMES_MAP().end()) {
         StringRef repName = found->second.hipName;
         hipCounter counter = {"", CONV_LITERAL, API_RUNTIME, found->second.unsupported};
         updateCounters(counter, name.str());
@@ -293,8 +293,8 @@ public:
                                   const clang::Module *imported) override {
     if (_sm->isWrittenInMainFile(hash_loc)) {
       if (is_angled) {
-        const auto found = CUDA_TO_HIP_RENAMES.find(file_name);
-        if (found != CUDA_TO_HIP_RENAMES.end()) {
+        const auto found = CUDA_INCLUDE_MAP.find(file_name);
+        if (found != CUDA_INCLUDE_MAP.end()) {
           updateCounters(found->second, file_name.str());
           if (!found->second.unsupported) {
             StringRef repName = found->second.hipName;
@@ -325,8 +325,8 @@ public:
       for (auto T : MD->getMacroInfo()->tokens()) {
         if (T.isAnyIdentifier()) {
           StringRef name = T.getIdentifierInfo()->getName();
-          const auto found = CUDA_TO_HIP_RENAMES.find(name);
-          if (found != CUDA_TO_HIP_RENAMES.end()) {
+          const auto found = CUDA_RENAMES_MAP().find(name);
+          if (found != CUDA_RENAMES_MAP().end()) {
             updateCounters(found->second, name.str());
             if (!found->second.unsupported) {
               StringRef repName = found->second.hipName;
@@ -379,8 +379,8 @@ public:
         for (auto tok : toks) {
           if (tok.isAnyIdentifier()) {
             StringRef name = tok.getIdentifierInfo()->getName();
-            const auto found = CUDA_TO_HIP_RENAMES.find(name);
-            if (found != CUDA_TO_HIP_RENAMES.end()) {
+            const auto found = CUDA_RENAMES_MAP().find(name);
+            if (found != CUDA_RENAMES_MAP().end()) {
               updateCounters(found->second, name.str());
               if (!found->second.unsupported) {
                 StringRef repName = found->second.hipName;
@@ -413,8 +413,8 @@ public:
               SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *_sm, DefaultLangOptions);
               size_t length = _sm->getCharacterData(sl_end) - _sm->getCharacterData(sl_macro);
               StringRef name = StringRef(_sm->getCharacterData(sl_macro), length);
-              const auto found = CUDA_TO_HIP_RENAMES.find(name);
-              if (found != CUDA_TO_HIP_RENAMES.end()) {
+              const auto found = CUDA_RENAMES_MAP().find(name);
+              if (found != CUDA_RENAMES_MAP().end()) {
                 updateCounters(found->second, name.str());
                 if (!found->second.unsupported) {
                   StringRef repName = found->second.hipName;
@@ -481,8 +481,10 @@ private:
       std::string name = funcDcl->getDeclName().getAsString();
       SourceManager *SM = Result.SourceManager;
       SourceLocation sl = call->getLocStart();
-      const auto found = CUDA_TO_HIP_RENAMES.find(name);
-      if (found != CUDA_TO_HIP_RENAMES.end()) {
+
+      // TODO: Make a lookup table just for functions to improve performance.
+      const auto found = CUDA_IDENTIFIER_MAP.find(name);
+      if (found != CUDA_IDENTIFIER_MAP.end()) {
         if (!found->second.unsupported) {
           StringRef repName = found->second.hipName;
           size_t length = name.size();
@@ -614,8 +616,10 @@ private:
           memberName = memberName.slice(pos, memberName.size());
           SmallString<128> tmpData;
           name = Twine(name + "." + memberName).toStringRef(tmpData);
-          const auto found = CUDA_TO_HIP_RENAMES.find(name);
-          if (found != CUDA_TO_HIP_RENAMES.end()) {
+
+          // TODO: Make a lookup table just for builtins to improve performance.
+          const auto found = CUDA_IDENTIFIER_MAP.find(name);
+          if (found != CUDA_IDENTIFIER_MAP.end()) {
             updateCounters(found->second, name.str());
             if (!found->second.unsupported) {
               StringRef repName = found->second.hipName;
@@ -639,8 +643,10 @@ private:
       StringRef name = enumConstantRef->getDecl()->getName();
       SourceLocation sl = enumConstantRef->getLocStart();
       SourceManager *SM = Result.SourceManager;
-      const auto found = CUDA_TO_HIP_RENAMES.find(name);
-      if (found != CUDA_TO_HIP_RENAMES.end()) {
+
+      // TODO: Make a lookup table just for enum values to improve performance.
+      const auto found = CUDA_IDENTIFIER_MAP.find(name);
+      if (found != CUDA_IDENTIFIER_MAP.end()) {
         updateCounters(found->second, name.str());
         if (!found->second.unsupported) {
           StringRef repName = found->second.hipName;
@@ -680,8 +686,8 @@ private:
       }
 
       // Do we have a replacement for this type?
-      const auto found = CUDA_TO_HIP_RENAMES.find(typeName);
-      if (found == CUDA_TO_HIP_RENAMES.end()) {
+      const auto found = CUDA_TYPE_NAME_MAP.find(typeName);
+      if (found == CUDA_TYPE_NAME_MAP.end()) {
           return false;
       }
 
