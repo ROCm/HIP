@@ -84,7 +84,7 @@ if (HIPIFY_CLANG_TESTS)
     add_lit_testsuite(test-hipify "Running HIPify regression tests"
         ${CMAKE_SOURCE_DIR}/tests/hipify-clang
         PARAMS site_config=${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
-        DEPENDS hipify-clang lit
+        DEPENDS hipify-clang
     )
 
     add_custom_target(test-hipify-clang)
