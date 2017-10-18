@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
   cudaMemcpy(device_x, host_x, kDataLen * sizeof(float), cudaMemcpyHostToDevice);
 
   // Launch the kernel.
-  // CHECK: hipLaunchKernel(HIP_KERNEL_NAME(axpy), dim3(1), dim3(kDataLen), 0, 0, a, device_x, device_y);
+  // CHECK: hipLaunchKernelGGL(axpy, dim3(1), dim3(kDataLen), 0, 0, a, device_x, device_y);
   axpy<<<1, kDataLen>>>(a, device_x, device_y);
 
   // Copy output data to host.
