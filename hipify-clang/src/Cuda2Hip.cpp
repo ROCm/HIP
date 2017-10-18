@@ -323,6 +323,45 @@ public:
     insertReplacement(Rep, fullSL);
   }
 
+  /**
+   * Look at, and consider altering, a given token.
+   *
+   * If it's not a CUDA identifier, nothing happens.
+   * If it's an unsupported CUDA identifier, a warning is emitted.
+   * Otherwise, the source file is updated with the corresponding hipification.
+   */
+  void RewriteToken(Token t) {
+    // String literals containing CUDA references need fixing...
+    if (t.is(tok::string_literal)) {
+      StringRef s(t.getLiteralData(), t.getLength());
+      processString(unquoteStr(s), *_sm, t.getLocation());
+      return;
+    } else if (!t.isAnyIdentifier()) {
+      // If it's neither a string nor an identifier, we don't care.
+      return;
+    }
+
+    StringRef name = t.getIdentifierInfo()->getName();
+    const auto found = CUDA_RENAMES_MAP().find(name);
+    if (found == CUDA_RENAMES_MAP().end()) {
+      // So it's an identifier, but not CUDA? Boring.
+      return;
+    }
+    updateCounters(found->second, name.str());
+
+    SourceLocation sl = t.getLocation();
+    if (found->second.unsupported) {
+      // An unsupported identifier? Curses! Warn the user.
+      printHipifyMessage(*_sm, sl, "Unsupported CUDA identifier used: " + name.str());
+      return;
+    }
+
+    StringRef repName = found->second.hipName;
+    Replacement Rep(*_sm, sl, name.size(), repName);
+    FullSourceLoc fullSL(sl, *_sm);
+    insertReplacement(Rep, fullSL);
+  }
+
   virtual void MacroDefined(const Token &MacroNameTok,
                             const MacroDirective *MD) override {
     if (!_sm->isWrittenInMainFile(MD->getLocation()) ||
@@ -331,58 +370,8 @@ public:
     }
 
     for (auto T : MD->getMacroInfo()->tokens()) {
-      // We're looking for CUDA identifiers in the macro definition to rewrite...
-      if (!T.isAnyIdentifier()) {
-        continue;
-      }
-
-      StringRef name = T.getIdentifierInfo()->getName();
-      const auto found = CUDA_RENAMES_MAP().find(name);
-      if (found == CUDA_RENAMES_MAP().end()) {
-        // So it's an identifier that isn't CUDA? Boring.
-        continue;
-      }
-
-      updateCounters(found->second, name.str());
-      SourceLocation sl = T.getLocation();
-      if (found->second.unsupported) {
-        // An unsupported identifier? Curses! Warn the user.
-        printHipifyMessage(*_sm, sl, "Unsupported CUDA identifier used: " + name.str());
-        continue;
-      }
-
-      StringRef repName = found->second.hipName;
-      DEBUG(dbgs() << "Identifier " << name << " found in definition of macro "
-                   << MacroNameTok.getIdentifierInfo()->getName() << "\n"
-                   << "will be replaced with: " << repName << "\n"
-                   << "SourceLocation: " << sl.printToString(*_sm) << "\n");
-      Replacement Rep(*_sm, sl, name.size(), repName);
-      FullSourceLoc fullSL(sl, *_sm);
-      insertReplacement(Rep, fullSL);
+      RewriteToken(T);
     }
-  }
-
-  void RewriteMacroIdentifier(const Token &MacroNameTok) {
-    std::string macroName = MacroNameTok.getIdentifierInfo()->getName();
-
-    // TODO: LUT just for macro names, to improve performance.
-    const auto found = CUDA_RENAMES_MAP().find(macroName);
-    if (found == CUDA_RENAMES_MAP().end()) {
-      // Not a CUDA macro. Moving on...
-      return;
-    }
-
-    SourceLocation sl = MacroNameTok.getLocation();
-    if (found->second.unsupported) {
-      // We know about it, but it isn't supported. Warn the user.
-      printHipifyMessage(*_sm, sl, "Unsupported CUDA macro: " + macroName);
-      return;
-    }
-
-    StringRef repName = found->second.hipName;
-    Replacement Rep(*_sm, sl, macroName.size(), repName);
-    FullSourceLoc fullSL(sl, *_sm);
-    insertReplacement(Rep, fullSL);
   }
 
   virtual void MacroExpands(const Token &MacroNameTok,
@@ -394,7 +383,7 @@ public:
     }
 
     // Is the macro itself a CUDA identifier? If so, rewrite it
-    RewriteMacroIdentifier(MacroNameTok);
+    RewriteToken(MacroNameTok);
 
     // The getNumArgs function was rather unhelpfully renamed in clang 4.0. Its semantics
     // remain unchanged.
@@ -426,69 +415,7 @@ public:
       // end of stolen code
 
       for (auto tok : toks) {
-        if (tok.isAnyIdentifier()) {
-          StringRef name = tok.getIdentifierInfo()->getName();
-          SourceLocation sl = tok.getLocation();
-
-          const auto found = CUDA_RENAMES_MAP().find(name);
-          if (found == CUDA_RENAMES_MAP().end()) {
-            // It's not a CUDA identifier. We have nothing to do.
-            continue;
-          }
-
-          updateCounters(found->second, name.str());
-          if (found->second.unsupported) {
-            // We know about it, but it isn't supported. Warn the user.
-            printHipifyMessage(*_sm, sl, "Unsupported CUDA identifier: " + name.str());
-            continue;
-          }
-
-          StringRef repName = found->second.hipName;
-          DEBUG(dbgs() << "Identifier " << name
-                       << " found as an actual argument in expansion of macro "
-                       << MacroNameTok.getIdentifierInfo()->getName() << "\n"
-                       << "will be replaced with: " << repName << "\n");
-          size_t length = name.size();
-          if (_sm->isMacroBodyExpansion(sl)) {
-            LangOptions DefaultLangOptions;
-            SourceLocation sl_macro = _sm->getExpansionLoc(sl);
-            SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *_sm, DefaultLangOptions);
-            length = _sm->getCharacterData(sl_end) - _sm->getCharacterData(sl_macro);
-            sl = sl_macro;
-          }
-          Replacement Rep(*_sm, sl, length, repName);
-          FullSourceLoc fullSL(sl, *_sm);
-          insertReplacement(Rep, fullSL);
-        } else if (tok.isLiteral()) {
-          SourceLocation sl = tok.getLocation();
-          if (_sm->isMacroBodyExpansion(sl)) {
-            LangOptions DefaultLangOptions;
-            SourceLocation sl_macro = _sm->getExpansionLoc(sl);
-            SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *_sm, DefaultLangOptions);
-            size_t length = _sm->getCharacterData(sl_end) - _sm->getCharacterData(sl_macro);
-            StringRef name = StringRef(_sm->getCharacterData(sl_macro), length);
-
-            const auto found = CUDA_RENAMES_MAP().find(name);
-            if (found == CUDA_RENAMES_MAP().end()) {
-              continue; // Not CUDA, we don't care.
-            }
-
-            updateCounters(found->second, name.str());
-            if (found->second.unsupported) {
-              printHipifyMessage(*_sm, sl, "Unsupported CUDA identifier: " + name.str());
-              continue;
-            }
-
-            StringRef repName = found->second.hipName;
-            sl = sl_macro;
-            Replacement Rep(*_sm, sl, length, repName);
-            FullSourceLoc fullSL(sl, *_sm);
-            insertReplacement(Rep, fullSL);
-          } else if (tok.is(tok::string_literal)) {
-            StringRef s(tok.getLiteralData(), tok.getLength());
-            processString(unquoteStr(s), *_sm, tok.getLocation());
-          }
-        }
+        RewriteToken(tok);
       }
     }
   }
