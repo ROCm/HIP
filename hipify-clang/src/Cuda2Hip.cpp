@@ -531,28 +531,10 @@ private:
     }
 
     size_t length = name.size();
-    bool bReplace = true;
-    if (SM->isMacroArgExpansion(sl)) {
-      sl = SM->getImmediateSpellingLoc(sl);
-    } else if (SM->isMacroBodyExpansion(sl)) {
-      LangOptions DefaultLangOptions;
-      SourceLocation sl_macro = SM->getExpansionLoc(sl);
-      SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *SM, DefaultLangOptions);
-      length = SM->getCharacterData(sl_end) - SM->getCharacterData(sl_macro);
-      StringRef macroName = StringRef(SM->getCharacterData(sl_macro), length);
-      if (CUDA_EXCLUDES.end() != CUDA_EXCLUDES.find(macroName)) {
-        bReplace = false;
-      } else {
-        sl = sl_macro;
-      }
-    }
-
-    if (bReplace) {
-      updateCounters(found->second, name);
-      Replacement Rep(*SM, sl, length, hipCtr.hipName);
-      FullSourceLoc fullSL(sl, *SM);
-      insertReplacement(Rep, fullSL);
-    }
+    updateCounters(found->second, name);
+    Replacement Rep(*SM, sl, length, hipCtr.hipName);
+    FullSourceLoc fullSL(sl, *SM);
+    insertReplacement(Rep, fullSL);
 
     return true;
   }
