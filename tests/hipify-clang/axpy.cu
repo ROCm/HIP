@@ -1,4 +1,4 @@
-// RUN: hipify "%s" -o=%t --
+// RUN: hipify "%s" -o=%t -- %cuda_args
 
 #include <iostream>
 
