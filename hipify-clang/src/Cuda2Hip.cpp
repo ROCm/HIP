@@ -362,6 +362,29 @@ public:
     }
   }
 
+  void RewriteMacroIdentifier(const Token &MacroNameTok) {
+    std::string macroName = MacroNameTok.getIdentifierInfo()->getName();
+
+    // TODO: LUT just for macro names, to improve performance.
+    const auto found = CUDA_RENAMES_MAP().find(macroName);
+    if (found == CUDA_RENAMES_MAP().end()) {
+      // Not a CUDA macro. Moving on...
+      return;
+    }
+
+    SourceLocation sl = MacroNameTok.getLocation();
+    if (found->second.unsupported) {
+      // We know about it, but it isn't supported. Warn the user.
+      printHipifyMessage(*_sm, sl, "Unsupported CUDA macro: " + macroName);
+      return;
+    }
+
+    StringRef repName = found->second.hipName;
+    Replacement Rep(*_sm, sl, macroName.size(), repName);
+    FullSourceLoc fullSL(sl, *_sm);
+    insertReplacement(Rep, fullSL);
+  }
+
   virtual void MacroExpands(const Token &MacroNameTok,
                             const MacroDefinition &MD, SourceRange Range,
                             const MacroArgs *Args) override {
@@ -369,6 +392,9 @@ public:
     if (!_sm->isWrittenInMainFile(MacroNameTok.getLocation())) {
       return; // Macros in headers are not our concern.
     }
+
+    // Is the macro itself a CUDA identifier? If so, rewrite it
+    RewriteMacroIdentifier(MacroNameTok);
 
     // The getNumArgs function was rather unhelpfully renamed in clang 4.0. Its semantics
     // remain unchanged.
@@ -378,6 +404,7 @@ public:
     #define GET_NUM_ARGS() getNumArgs()
 #endif
 
+    // If it's a macro with arguments, rewrite all the arguments as hip, too.
     for (unsigned int i = 0; Args && i < MD.getMacroInfo()->GET_NUM_ARGS(); i++) {
       std::vector<Token> toks;
       // Code below is a kind of stolen from 'MacroArgs::getPreExpArgument'
