@@ -614,6 +614,11 @@ void ihipDevice_t::locked_reset()
     _state = 0;
     am_memtracker_reset(_acc);
 
+    //FIXME - Calling am_memtracker_reset is really bad since it destroyed all buffers allocated by the HCC runtime as well
+    //such as the printf buffer.  Re-initialze the printf buffer as a workaround for now.
+#if (__hcc_workweek__ >= 17423)
+    Kalmar::getContext()->initPrintfBuffer();
+#endif
 };
 
 #define ErrorCheck(x) error_check(x, __LINE__, __FILE__)
