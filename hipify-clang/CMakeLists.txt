@@ -6,9 +6,10 @@ option(HIPIFY_CLANG_TESTS "Build the tests for hipify-clang, if lit is installed
 # Disable the tests if `lit` or `FileCheck` is not installed.
 find_program(LIT_COMMAND lit)
 find_program(FILECHECK_COMMAND FileCheck)
-if (NOT LIT_COMMAND OR NOT FILECHECK_COMMAND)
+find_program(SOCAT_COMMAND socat)
+if (NOT LIT_COMMAND OR NOT FILECHECK_COMMAND OR NOT SOCAT_COMMAND)
     set(HIPIFY_CLANG_TESTS OFF CACHE INTERNAL "")
-    message(STATUS "hipify-clang's tests are not being built because `lit` or `FileCheck` could not be found.")
+    message(STATUS "hipify-clang's tests are not being built because `lit`,`FileCheck` or `socat` could not be found.")
 endif()
 
 set(BUILD_HIPIFY_CLANG 0 CACHE INTERNAL "")
@@ -88,6 +89,7 @@ if (HIPIFY_CLANG_TESTS)
     add_lit_testsuite(test-hipify "Running HIPify regression tests"
         ${CMAKE_SOURCE_DIR}/tests/hipify-clang
         PARAMS site_config=${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
+        ARGS -v
         DEPENDS hipify-clang
     )
 
