@@ -135,7 +135,7 @@
 | `cudaMemcpy`                                              | `hipMemcpy`                   |
 | `cudaMemcpy2D`                                            | `hipMemcpy2D`                 |
 | `cudaMemcpy2DArrayToArray`                                |                               |
-| `cudaMemcpy2DAsync`                                       |                               |
+| `cudaMemcpy2DAsync`                                       | `hipMemcpy2DAsync`            |
 | `cudaMemcpy2DFromArray`                                   |                               |
 | `cudaMemcpy2DFromArrayAsync`                              |                               |
 | `cudaMemcpy2DToArray`                                     | `hipMemcpy2DToArray`          |
@@ -743,17 +743,17 @@
 | typedef      | `cudaStream_t`                                | `hipStream_t`                                        |
 | typedef      | `cudaStreamCallback_t`                        | `hipStreamCallback_t`                                |
 | typedef      | `cudaSurfaceObject_t`                         |                                                      |
-| typedef      | `cudaTextureObject_t`                         |                                                      |
+| typedef      | `cudaTextureObject_t`                         | `hipTextureObject_t`                                 |
 | typedef      | `CUuuid_stcudaUUID_t`                         |                                                      |
 | define       | `CUDA_IPC_HANDLE_SIZE`                        |                                                      |
-| define       | `cudaArrayCubemap`                            |                                                      |
-| define       | `cudaArrayDefault`                            |                                                      |
-| define       | `cudaArrayLayered`                            |                                                      |
-| define       | `cudaArraySurfaceLoadStore`                   |                                                      |
-| define       | `cudaArrayTextureGather`                      |                                                      |
+| define       | `cudaArrayCubemap`                            | `hipArrayCubemap`                                    |
+| define       | `cudaArrayDefault`                            | `hipArrayDefault`                                    |
+| define       | `cudaArrayLayered`                            | `hipArrayLayered`                                    |
+| define       | `cudaArraySurfaceLoadStore`                   | `hipArraySurfaceLoadStore`                           |
+| define       | `cudaArrayTextureGather`                      | `hipArrayTextureGather`                              |
 | define       | `cudaDeviceBlockingSync`                      | `hipDeviceScheduleBlockingSync`                      |
 | define       | `cudaDeviceLmemResizeToMax`                   |                                                      |
-| define       | `cudaDeviceMapHost`                           |                                                      |
+| define       | `cudaDeviceMapHost`                           | `hipDeviceMapHost`                                   |
 | define       | `cudaDeviceMask`                              |                                                      |
 | define       | `cudaDevicePropDontCare`                      |                                                      |
 | define       | `cudaDeviceScheduleAuto`                      | `hipDeviceScheduleAuto`                              |
@@ -783,3 +783,10 @@
 | define       | `cudaStreamLegacy`                            |                                                      |
 | define       | `cudaStreamNonBlocking`                       | `hipStreamNonBlocking`                               |
 | define       | `cudaStreamPerThread`                         |                                                      |
+| define       | `cudaTextureType1D`                           | `hipTextureType1D`                                   |
+| define       | `cudaTextureType2D`                           | `hipTextureType2D`                                   |
+| define       | `cudaTextureType3D`                           | `hipTextureType3D`                                   |
+| define       | `cudaTextureTypeCubemap`                      | `hipTextureTypeCubemap`                              |
+| define       | `cudaTextureType1DLayered`                    | `hipTextureType1DLayered`                            |
+| define       | `cudaTextureType2DLayered`                    | `hipTextureType2DLayered`                            |
+| define       | `cudaTextureTypeCubemapLayered`               | `hipTextureTypeCubemapLayered`                       |

@@ -1379,6 +1379,12 @@ struct cuda2hipMap {
     cuda2hipRename["cudaMipmappedArray_t"]        = {"hipMipmappedArray_t", CONV_MEM, API_RUNTIME};
     cuda2hipRename["cudaMipmappedArray_const_t"]  = {"hipMipmappedArray_const_t", CONV_MEM, API_RUNTIME};
 
+    cuda2hipRename["cudaArrayDefault"]            = {"hipArrayDefault", CONV_MEM, API_RUNTIME};                            // 0x00
+    cuda2hipRename["cudaArrayLayered"]            = {"hipArrayLayered", CONV_MEM, API_RUNTIME};                            // 0x01 // Unsupported yet on NVCC path
+    cuda2hipRename["cudaArraySurfaceLoadStore"]   = {"hipArraySurfaceLoadStore", CONV_MEM, API_RUNTIME};                   // 0x02 // Unsupported yet on NVCC path
+    cuda2hipRename["cudaArrayCubemap"]            = {"hipArrayCubemap", CONV_MEM, API_RUNTIME};                            // 0x04 // Unsupported yet on NVCC path
+    cuda2hipRename["cudaArrayTextureGather"]      = {"hipArrayTextureGather", CONV_MEM, API_RUNTIME};                      // 0x08 // Unsupported yet on NVCC path
+
     // memcpy
     // memcpy structs
     cuda2hipRename["cudaMemcpy3DParms"]           = {"hipMemcpy3DParms", CONV_MEM, API_RUNTIME};
@@ -1902,6 +1908,14 @@ struct cuda2hipMap {
     cuda2hipRename["cudaAddressModeClamp"]                        = {"hipAddressModeClamp", CONV_TEX, API_RUNTIME};
     cuda2hipRename["cudaAddressModeMirror"]                       = {"hipAddressModeMirror", CONV_TEX, API_RUNTIME};
     cuda2hipRename["cudaAddressModeBorder"]                       = {"hipAddressModeBorder", CONV_TEX, API_RUNTIME};
+
+    cuda2hipRename["cudaTextureType1D"]                           = {"hipTextureType1D", CONV_TEX, API_RUNTIME};                           // 0x01 // Unsupported yet on NVCC path
+    cuda2hipRename["cudaTextureType2D"]                           = {"hipTextureType2D", CONV_TEX, API_RUNTIME};                           // 0x02
+    cuda2hipRename["cudaTextureType3D"]                           = {"hipTextureType3D", CONV_TEX, API_RUNTIME};                           // 0x03 // Unsupported yet on NVCC path
+    cuda2hipRename["cudaTextureTypeCubemap"]                      = {"hipTextureTypeCubemap", CONV_TEX, API_RUNTIME};                      // 0x0C // Unsupported yet on NVCC path
+    cuda2hipRename["cudaTextureType1DLayered"]                    = {"hipTextureType1DLayered", CONV_TEX, API_RUNTIME};                    // 0xF1 // Unsupported yet on NVCC path
+    cuda2hipRename["cudaTextureType2DLayered"]                    = {"hipTextureType2DLayered", CONV_TEX, API_RUNTIME};                    // 0xF2 // Unsupported yet on NVCC path
+    cuda2hipRename["cudaTextureTypeCubemapLayered"]               = {"hipTextureTypeCubemapLayered", CONV_TEX, API_RUNTIME};               // 0xFC // Unsupported yet on NVCC path
 
     // functions
     cuda2hipRename["cudaCreateTextureObject"]                     = {"hipCreateTextureObject", CONV_TEX, API_RUNTIME};
@@ -3300,7 +3314,17 @@ private:
       for (unsigned argno = 0; argno < launchKernel->getNumArgs(); argno++) {
         const Expr *arg = launchKernel->getArg(argno);
         SourceLocation sl(arg->getLocStart());
+        if (SM->isMacroBodyExpansion(sl)) {
+          sl = SM->getExpansionLoc(sl);
+        } else if (SM->isMacroArgExpansion(sl)) {
+          sl = SM->getImmediateSpellingLoc(sl);
+        }
         SourceLocation el(arg->getLocEnd());
+        if (SM->isMacroBodyExpansion(el)) {
+          el = SM->getExpansionLoc(el);
+        } else if (SM->isMacroArgExpansion(el)) {
+          el = SM->getImmediateSpellingLoc(el);
+        }
         SourceLocation stop = Lexer::getLocForEndOfToken(el, 0, *SM, DefaultLangOptions);
         std::string outs(SM->getCharacterData(sl), SM->getCharacterData(stop) - SM->getCharacterData(sl));
         DEBUG(dbgs() << outs << "\n");
