@@ -1,4 +1,4 @@
-// RUN: hipify "%s" -o=%t -- %cuda_args && cat %t | sed -Ee 's|//.+|// |g' | FileCheck %s
+// RUN: %run_test hipify "%s" "%t" %cuda_args
 
 #include <iostream>
 
