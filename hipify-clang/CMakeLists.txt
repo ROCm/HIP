@@ -3,11 +3,12 @@ project(hipify-clang)
 
 option(HIPIFY_CLANG_TESTS "Build the tests for hipify-clang, if lit is installed" ON)
 
-# Disable the tests if `lit` is not installed.
+# Disable the tests if `lit` or `FileCheck` is not installed.
 find_program(LIT_COMMAND lit)
-if (NOT LIT_COMMAND)
+find_program(FILECHECK_COMMAND FileCheck)
+if (NOT LIT_COMMAND OR NOT FILECHECK_COMMAND)
     set(HIPIFY_CLANG_TESTS OFF CACHE INTERNAL "")
-    message(STATUS "hipify-clang's tests are not being built because `lit` is not installed.")
+    message(STATUS "hipify-clang's tests are not being built because `lit` or `FileCheck` could not be found.")
 endif()
 
 set(BUILD_HIPIFY_CLANG 0 CACHE INTERNAL "")
