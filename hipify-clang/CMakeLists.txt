@@ -70,8 +70,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHIPIFY_CLANG_RES=\\\"${LLVM_LIBRARY_DI
 install(TARGETS hipify-clang DESTINATION bin)
 
 if (HIPIFY_CLANG_TESTS)
-    # tests
     find_package(PythonInterp 2.7 REQUIRED EXACT)
+
+    # Populates CUDA_TOOLKIT_ROOT_DIR, which is then applied to the lit config to give the
+    # value of --cuda-path for the test runs.
+    find_package(CUDA REQUIRED)
 
     set(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
