@@ -4281,7 +4281,9 @@ int main(int argc, const char **argv) {
     compilationStages.push_back("--cuda-host-only");
 
     Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(compilationStages[0], ArgumentInsertPosition::BEGIN));
-    Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-std=c++11"));
+
+    // Ensure at least c++11 is used.
+    Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-std=c++11", ArgumentInsertPosition::BEGIN));
 #if defined(HIPIFY_CLANG_RES)
     Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-resource-dir=" HIPIFY_CLANG_RES));
 #endif
