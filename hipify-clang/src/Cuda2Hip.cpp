@@ -4277,10 +4277,8 @@ int main(int argc, const char **argv) {
     addAllMatchers(Finder, &Callback);
 
     auto action = newFrontendActionFactory(&Finder, &PPCallbacks);
-    std::vector<const char*> compilationStages;
-    compilationStages.push_back("--cuda-host-only");
 
-    Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster(compilationStages[0], ArgumentInsertPosition::BEGIN));
+    Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("--cuda-host-only", ArgumentInsertPosition::BEGIN));
 
     // Ensure at least c++11 is used.
     Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("-std=c++11", ArgumentInsertPosition::BEGIN));
