@@ -471,6 +471,49 @@ private:
     return true;
   }
 
+  SourceRange getReadRange(clang::SourceManager &SM, const SourceRange &exprRange) {
+    SourceLocation begin = exprRange.getBegin();
+    SourceLocation end = exprRange.getEnd();
+
+    bool beginSafe = !SM.isMacroBodyExpansion(begin) || Lexer::isAtStartOfMacroExpansion(begin, SM, LangOptions{});
+    bool endSafe = !SM.isMacroBodyExpansion(end) || Lexer::isAtEndOfMacroExpansion(end, SM, LangOptions{});
+
+    if (beginSafe && endSafe) {
+      return {SM.getFileLoc(begin), SM.getFileLoc(end)};
+    } else {
+      return {SM.getSpellingLoc(begin), SM.getSpellingLoc(end)};
+    }
+  }
+
+  SourceRange getWriteRange(clang::SourceManager &SM, const SourceRange &exprRange) {
+    SourceLocation begin = exprRange.getBegin();
+    SourceLocation end = exprRange.getEnd();
+
+    // If the range is contained within a macro, update the macro definition.
+    // Otherwise, use the file location and hope for the best.
+    if (!SM.isMacroBodyExpansion(begin) || !SM.isMacroBodyExpansion(end)) {
+      return {SM.getFileLoc(begin), SM.getFileLoc(end)};
+    }
+
+    return {SM.getSpellingLoc(begin), SM.getSpellingLoc(end)};
+  }
+
+  StringRef readSourceText(clang::SourceManager& SM, const SourceRange& exprRange) {
+    return Lexer::getSourceText(CharSourceRange::getTokenRange(getReadRange(SM, exprRange)), SM, LangOptions(), nullptr);
+  }
+
+  /**
+   * Get a string representation of the expression `arg`, unless it's a defaulting function
+   * call argument, in which case get a 0. Used for building argument lists to kernel calls.
+   */
+  std::string stringifyZeroDefaultedArg(SourceManager& SM, const Expr* arg) {
+    if (isa<CXXDefaultArgExpr>(arg)) {
+      return "0";
+    } else {
+      return readSourceText(SM, arg->getSourceRange());
+    }
+  }
+
   bool cudaLaunchKernel(const MatchFinder::MatchResult &Result) {
     StringRef refName = "cudaLaunchKernel";
     if (const CUDAKernelCallExpr *launchKernel = Result.Nodes.getNodeAs<CUDAKernelCallExpr>(refName)) {
@@ -480,59 +523,46 @@ private:
       LangOptions DefaultLangOptions;
       SourceManager *SM = Result.SourceManager;
 
-      const Expr *e = launchKernel->getCallee();
+      const Expr& calleeExpr = *(launchKernel->getCallee());
+      OS << "hipLaunchKernelGGL(" << readSourceText(*SM, calleeExpr.getSourceRange()) << ", ";
 
-      // Grab the characters for the callee expression and dump them into hipLaunchKernelGGL's
-      // first argument.
-      StringRef exprSource = Lexer::getSourceText(CharSourceRange::getTokenRange(e->getSourceRange()), *SM, LangOptions(), 0);
+      // Next up are the four kernel configuration parameters, the last two of which are optional and default to zero.
+      const CallExpr& config = *(launchKernel->getConfig());
 
-      OS << "hipLaunchKernelGGL(" << exprSource << ",";
-      const CallExpr *config = launchKernel->getConfig();
-      DEBUG(dbgs() << "Kernel config arguments:" << "\n");
-      for (unsigned argno = 0; argno < config->getNumArgs(); argno++) {
-        const Expr *arg = config->getArg(argno);
-        if (!isa<CXXDefaultArgExpr>(arg)) {
-          const ParmVarDecl *pvd = config->getDirectCallee()->getParamDecl(argno);
-          SourceLocation sl(arg->getLocStart());
-          SourceLocation el(arg->getLocEnd());
-          SourceLocation stop = Lexer::getLocForEndOfToken(el, 0, *SM, DefaultLangOptions);
-          StringRef outs(SM->getCharacterData(sl), SM->getCharacterData(stop) - SM->getCharacterData(sl));
-          DEBUG(dbgs() << "args[ " << argno << "]" << outs << " <" << pvd->getType().getAsString() << ">\n");
-          if (pvd->getType().getAsString().compare("dim3") == 0) {
-            OS << " dim3(" << outs << "),";
-          } else {
-            OS << " " << outs << ",";
-          }
-        } else {
-          OS << " 0,";
-        }
+      // Copy the two dimensional arguments verbatim.
+      OS << "dim3(" << readSourceText(*SM, config.getArg(0)->getSourceRange()) << "), ";
+      OS << "dim3(" << readSourceText(*SM, config.getArg(1)->getSourceRange()) << "), ";
+
+      // The stream/memory arguments default to zero if omitted.
+      OS << stringifyZeroDefaultedArg(*SM, config.getArg(2)) << ", ";
+      OS << stringifyZeroDefaultedArg(*SM, config.getArg(3));
+
+      // If there are ordinary arguments to the kernel, just copy them verbatim into our new call.
+      int numArgs = launchKernel->getNumArgs();
+      if (numArgs > 0) {
+        OS << ", ";
+
+        // Start of the first argument.
+        SourceLocation argStart = launchKernel->getArg(0)->getLocStart();
+
+        // End of the last argument.
+        SourceLocation argEnd = launchKernel->getArg(numArgs - 1)->getLocEnd();
+
+        OS << readSourceText(*SM, {argStart, argEnd});
       }
-      for (unsigned argno = 0; argno < launchKernel->getNumArgs(); argno++) {
-        const Expr *arg = launchKernel->getArg(argno);
-        SourceLocation sl(arg->getLocStart());
-        if (SM->isMacroBodyExpansion(sl)) {
-          sl = SM->getExpansionLoc(sl);
-        } else if (SM->isMacroArgExpansion(sl)) {
-          sl = SM->getImmediateSpellingLoc(sl);
-        }
-        SourceLocation el(arg->getLocEnd());
-        if (SM->isMacroBodyExpansion(el)) {
-          el = SM->getExpansionLoc(el);
-        } else if (SM->isMacroArgExpansion(el)) {
-          el = SM->getImmediateSpellingLoc(el);
-        }
-        SourceLocation stop = Lexer::getLocForEndOfToken(el, 0, *SM, DefaultLangOptions);
-        std::string outs(SM->getCharacterData(sl), SM->getCharacterData(stop) - SM->getCharacterData(sl));
-        DEBUG(dbgs() << outs << "\n");
-        OS << " " << outs << ",";
-      }
-      XStr.pop_back();
+
       OS << ")";
+
+      SourceRange replacementRange = getWriteRange(*SM, {launchKernel->getLocStart(), launchKernel->getLocEnd()});
+      SourceLocation launchStart = replacementRange.getBegin();
+      SourceLocation launchEnd = replacementRange.getEnd();
+
       size_t length = SM->getCharacterData(Lexer::getLocForEndOfToken(
-                        launchKernel->getLocEnd(), 0, *SM, DefaultLangOptions)) -
-                        SM->getCharacterData(launchKernel->getLocStart());
-      Replacement Rep(*SM, launchKernel->getLocStart(), length, OS.str());
-      FullSourceLoc fullSL(launchKernel->getLocStart(), *SM);
+                        launchEnd, 0, *SM, DefaultLangOptions)) -
+                        SM->getCharacterData(launchStart);
+
+      Replacement Rep(*SM, launchStart, length, OS.str());
+      FullSourceLoc fullSL(launchStart, *SM);
       insertReplacement(Rep, fullSL);
       hipCounter counter = {"hipLaunchKernelGGL", CONV_KERN, API_RUNTIME};
       updateCounters(counter, refName.str());
