@@ -745,13 +745,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     hipError_t e = hipSuccess;
     hsa_status_t err;
 
-    // Set some defaults in case we don't find the appropriate regions:
-    prop->totalGlobalMem = 0;
-    prop->totalConstMem = 0;
-    prop->maxThreadsPerMultiProcessor = 0;
-    prop->regsPerBlock = 0;
-    prop->totalConstMem = 0;
-    prop->sharedMemPerBlock = 0;
+    memset(prop, 0, sizeof(hipDeviceProp_t));
 
     if (_hsaAgent.handle == -1) {
         return hipErrorInvalidDevice;
@@ -882,7 +876,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop->arch.hasGlobalFloatAtomicExch    = 1;
     prop->arch.hasSharedInt32Atomics       = 1;
     prop->arch.hasSharedFloatAtomicExch    = 1;
-    prop->arch.hasFloatAtomicAdd           = 0;
+    prop->arch.hasFloatAtomicAdd           = 1;  // supported with CAS loop, but is supported
     prop->arch.hasGlobalInt64Atomics       = 1;
     prop->arch.hasSharedInt64Atomics       = 1;
     prop->arch.hasDoubles                  = 1;
@@ -890,7 +884,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop->arch.hasWarpBallot               = 1;
     prop->arch.hasWarpShuffle              = 1;
     prop->arch.hasFunnelShift              = 0; // TODO-hcc
-    prop->arch.hasThreadFenceSystem        = 0; // TODO-hcc
+    prop->arch.hasThreadFenceSystem        = 1;
     prop->arch.hasSyncThreadsExt           = 0; // TODO-hcc
     prop->arch.hasSurfaceFuncs             = 0; // TODO-hcc
     prop->arch.has3dGrid                   = 1;

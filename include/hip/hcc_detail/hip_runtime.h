@@ -108,13 +108,12 @@ extern int HIP_TRACE_API;
 #if defined(__HCC_ACCELERATOR__) && (__HCC_ACCELERATOR__ != 0)
 // Device compile and not host compile:
 
-//TODO-HCC enable __HIP_ARCH_HAS_ATOMICS__ when HCC supports these.
     // 32-bit Atomics:
 #define __HIP_ARCH_HAS_GLOBAL_INT32_ATOMICS__       (1)
 #define __HIP_ARCH_HAS_GLOBAL_FLOAT_ATOMIC_EXCH__   (1)
 #define __HIP_ARCH_HAS_SHARED_INT32_ATOMICS__       (1)
 #define __HIP_ARCH_HAS_SHARED_FLOAT_ATOMIC_EXCH__   (1)
-#define __HIP_ARCH_HAS_FLOAT_ATOMIC_ADD__           (0)
+#define __HIP_ARCH_HAS_FLOAT_ATOMIC_ADD__           (1)
 
 // 64-bit Atomics:
 #define __HIP_ARCH_HAS_GLOBAL_INT64_ATOMICS__       (1)
