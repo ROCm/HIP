@@ -710,7 +710,6 @@ hsa_status_t get_pool_info(hsa_amd_memory_pool_t pool, void* data)
         err = hsa_amd_memory_pool_get_info(pool, HSA_AMD_MEMORY_POOL_INFO_SIZE, &(p_prop->totalConstMem)); break;
     case HSA_REGION_SEGMENT_GROUP:
         err = hsa_amd_memory_pool_get_info(pool, HSA_AMD_MEMORY_POOL_INFO_SIZE, &(p_prop->sharedMemPerBlock)); 
-        printf ("shared_mem err=%d mem=%zu\n", err, p_prop->sharedMemPerBlock);
         break;
     default: break;
     }
