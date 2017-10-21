@@ -2928,7 +2928,13 @@ protected:
   std::string mainFileName;
 
   virtual void insertReplacement(const Replacement &rep, const FullSourceLoc &fullSL) {
+#if LLVM_VERSION_MAJOR > 3
+    // New clang added error checking to Replacements, and *insists* that you explicitly check it.
+    llvm::Error e = Replace->add(rep);
+#else
+    // In older versions, it's literally an std::set<Replacement>
     Replace->insert(rep);
+#endif
     if (PrintStats) {
       LOCs.insert(fullSL.getExpansionLineNumber());
     }
@@ -3022,14 +3028,17 @@ class Cuda2HipCallback;
 class HipifyPPCallbacks : public PPCallbacks, public SourceFileCallbacks, public Cuda2Hip {
 public:
   HipifyPPCallbacks(Replacements *R, const std::string &mainFileName)
-    : Cuda2Hip(R, mainFileName), SeenEnd(false), _sm(nullptr), _pp(nullptr) {}
+    : Cuda2Hip(R, mainFileName) {}
 
-  virtual bool handleBeginSource(CompilerInstance &CI, StringRef Filename) override {
+  virtual bool handleBeginSource(CompilerInstance &CI
+#if LLVM_VERSION_MAJOR < 4
+                                 , StringRef Filename
+#endif
+                                 ) override {
     Preprocessor &PP = CI.getPreprocessor();
     SourceManager &SM = CI.getSourceManager();
     setSourceManager(&SM);
     PP.addPPCallbacks(std::unique_ptr<HipifyPPCallbacks>(this));
-    PP.Retain();
     setPreprocessor(&PP);
     return true;
   }
@@ -3103,16 +3112,23 @@ public:
                             const MacroDefinition &MD, SourceRange Range,
                             const MacroArgs *Args) override {
     if (_sm->isWrittenInMainFile(MacroNameTok.getLocation())) {
-      for (unsigned int i = 0; Args && i < MD.getMacroInfo()->getNumArgs(); i++) {
+        // The getNumArgs function was rather unhelpfully renamed in clang 4.0. Its semantics
+        // remain unchanged.
+#if LLVM_VERSION_MAJOR > 3
+        #define GET_NUM_ARGS() getNumParams()
+#else
+        #define GET_NUM_ARGS() getNumArgs()
+#endif
+      for (unsigned int i = 0; Args && i < MD.getMacroInfo()->GET_NUM_ARGS(); i++) {
         std::vector<Token> toks;
         // Code below is a kind of stolen from 'MacroArgs::getPreExpArgument'
         // to workaround the 'const' MacroArgs passed into this hook.
         const Token *start = Args->getUnexpArgument(i);
         size_t len = Args->getArgLength(start) + 1;
-#if (LLVM_VERSION_MAJOR >= 3) && (LLVM_VERSION_MINOR >= 9)
-        _pp->EnterTokenStream(ArrayRef<Token>(start, len), false);
-#else
+#if (LLVM_VERSION_MAJOR == 3) && (LLVM_VERSION_MINOR == 8)
         _pp->EnterTokenStream(start, len, false, false);
+#else
+        _pp->EnterTokenStream(ArrayRef<Token>(start, len), false);
 #endif
         do {
           toks.push_back(Token());
@@ -3185,15 +3201,15 @@ public:
 
   void EndOfMainFile() override {}
 
-  bool SeenEnd;
+  bool SeenEnd = false;
   void setSourceManager(SourceManager *sm) { _sm = sm; }
   void setPreprocessor(Preprocessor *pp) { _pp = pp; }
   void setMatch(Cuda2HipCallback *match) { Match = match; }
 
 private:
-  SourceManager *_sm;
-  Preprocessor *_pp;
-  Cuda2HipCallback *Match;
+  SourceManager *_sm = nullptr;
+  Preprocessor *_pp = nullptr;
+  Cuda2HipCallback *Match = nullptr;
 };
 
 class Cuda2HipCallback : public MatchFinder::MatchCallback, public Cuda2Hip {
@@ -3799,7 +3815,7 @@ private:
   }
 
   bool stringLiteral(const MatchFinder::MatchResult &Result) {
-    if (const StringLiteral *sLiteral = Result.Nodes.getNodeAs<StringLiteral>("stringLiteral")) {
+    if (const clang::StringLiteral *sLiteral = Result.Nodes.getNodeAs<clang::StringLiteral>("stringLiteral")) {
       if (sLiteral->getCharByteWidth() == 1) {
         StringRef s = sLiteral->getString();
         SourceManager *SM = Result.SourceManager;
@@ -4207,11 +4223,15 @@ void copyFile(const std::string& src, const std::string& dst) {
 int main(int argc, const char **argv) {
   auto start = std::chrono::steady_clock::now();
   auto begin = start;
-#if (LLVM_VERSION_MAJOR >= 3) && (LLVM_VERSION_MINOR >= 9)
-  llvm::sys::PrintStackTraceOnErrorSignal(StringRef());
-#else
+
+  // The signature of PrintStackTraceOnErrorSignal changed in llvm 3.9. We don't support
+  // anything older than 3.8, so let's specifically detect the one old version we support.
+#if (LLVM_VERSION_MAJOR == 3) && (LLVM_VERSION_MINOR == 8)
   llvm::sys::PrintStackTraceOnErrorSignal();
+#else
+  llvm::sys::PrintStackTraceOnErrorSignal(StringRef());
 #endif
+
   CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::OneOrMore);
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
   std::string dst = OutputFilename;
@@ -4271,12 +4291,23 @@ int main(int argc, const char **argv) {
     // So what we do is operate on a copy, which we then move to the output.
     RefactoringTool Tool(OptionsParser.getCompilations(), tmpFile);
     ast_matchers::MatchFinder Finder;
-    HipifyPPCallbacks PPCallbacks(&Tool.getReplacements(), tmpFile);
-    Cuda2HipCallback Callback(&Tool.getReplacements(), &Finder, &PPCallbacks, tmpFile);
+
+    // The Replacements to apply to the file `src`.
+    Replacements* replacementsToUse;
+#if LLVM_VERSION_MAJOR > 3
+    // getReplacements() now returns a map from filename to Replacements - so create an entry
+    // for this source file and return a pointer to it.
+    replacementsToUse = &(Tool.getReplacements()[tmpFile]);
+#else
+    replacementsToUse = &Tool.getReplacements();
+#endif
+
+    HipifyPPCallbacks* PPCallbacks = new HipifyPPCallbacks(replacementsToUse, tmpFile);
+    Cuda2HipCallback Callback(replacementsToUse, &Finder, PPCallbacks, tmpFile);
 
     addAllMatchers(Finder, &Callback);
 
-    auto action = newFrontendActionFactory(&Finder, &PPCallbacks);
+    auto action = newFrontendActionFactory(&Finder, PPCallbacks);
 
     Tool.appendArgumentsAdjuster(getInsertArgumentAdjuster("--cuda-host-only", ArgumentInsertPosition::BEGIN));
 
@@ -4300,9 +4331,14 @@ int main(int argc, const char **argv) {
     SourceManager SM(Diagnostics, Tool.getFiles());
     if (PrintStats) {
       DEBUG(dbgs() << "Replacements collected by the tool:\n");
-      for (const auto &r : Tool.getReplacements()) {
-        DEBUG(dbgs() << r.toString() << "\n");
-        repBytes += r.getLength();
+#if LLVM_VERSION_MAJOR > 3
+        Replacements& replacements = Tool.getReplacements().begin()->second;
+#else
+        Replacements& replacements = Tool.getReplacements();
+#endif
+      for (const auto &replacement : replacements) {
+        DEBUG(dbgs() << replacement.toString() << "\n");
+        repBytes += replacement.getLength();
       }
       std::ifstream src_file(dst, std::ios::binary | std::ios::ate);
       src_file.clear();
@@ -4329,13 +4365,13 @@ int main(int argc, const char **argv) {
         }
         std::remove(csv.c_str());
       }
-      if (0 == printStats(csv, src, PPCallbacks, Callback, repBytes, bytes, lines, start)) {
+      if (0 == printStats(csv, src, *PPCallbacks, Callback, repBytes, bytes, lines, start)) {
         filesTranslated--;
       }
       start = std::chrono::steady_clock::now();
       repBytesTotal += repBytes;
       bytesTotal += bytes;
-      changedLinesTotal += PPCallbacks.LOCs.size() + Callback.LOCs.size();
+      changedLinesTotal += PPCallbacks->LOCs.size() + Callback.LOCs.size();
       linesTotal += lines;
     }
     dst.clear();
