@@ -16,9 +16,6 @@ struct hipCounter {
 
 #define HIP_UNSUPPORTED true
 
-/// Macros to ignore.
-extern const std::set<llvm::StringRef> CUDA_EXCLUDES;
-
 /// Maps cuda header names to hip header names.
 extern const std::map<llvm::StringRef, hipCounter> CUDA_INCLUDE_MAP;
 
