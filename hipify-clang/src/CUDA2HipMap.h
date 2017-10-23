@@ -11,10 +11,10 @@ struct hipCounter {
     llvm::StringRef hipName;
     ConvTypes countType;
     ApiTypes countApiType;
-    int unsupported;
+    bool unsupported;
 };
 
-#define HIP_UNSUPPORTED -1
+#define HIP_UNSUPPORTED true
 
 /// Macros to ignore.
 extern const std::set<llvm::StringRef> CUDA_EXCLUDES;
