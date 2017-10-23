@@ -422,7 +422,6 @@ public:
 
   void EndOfMainFile() override {}
 
-  bool SeenEnd = false;
   void setSourceManager(SourceManager *sm) { _sm = sm; }
   void setPreprocessor(Preprocessor *pp) { _pp = pp; }
   void setMatch(Cuda2HipCallback *match) { Match = match; }
