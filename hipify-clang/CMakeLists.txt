@@ -75,15 +75,21 @@ if (HIPIFY_CLANG_TESTS)
 
     set(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 
+    if (CMAKE_CURRENT_SOURCE_DIR EQUAL CMAKE_SOURCE_DIR)
+        set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+    else()
+        set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
+    endif()
+
     configure_file(
-        ${CMAKE_SOURCE_DIR}/tests/hipify-clang/lit.site.cfg.in
-        ${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
+        ${SOURCE_DIR}/tests/hipify-clang/lit.site.cfg.in
+        ${BINARY_DIR}/tests/hipify-clang/lit.site.cfg
         @ONLY
     )
 
     add_lit_testsuite(test-hipify "Running HIPify regression tests"
-        ${CMAKE_SOURCE_DIR}/tests/hipify-clang
-        PARAMS site_config=${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
+        ${SOURCE_DIR}/tests/hipify-clang
+        PARAMS site_config=${BINARY_DIR}/tests/hipify-clang/lit.site.cfg
         DEPENDS hipify-clang lit
     )
 
