@@ -34,7 +34,7 @@ THE SOFTWARE.
 #include <hsa/hsa_ext_amd.h>
 #include <hsa/amd_hsa_kernel_code.h>
 
-#include "hip/hcc_detail/elfio/elfio.hpp"
+#include "elfio/elfio.hpp"
 #include "hip/hip_runtime.h"
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
