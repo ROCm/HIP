@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.8)
 project(hipify-clang)
 
-find_package(LLVM PATHS ${HIPIFY_CLANG_LLVM_DIR} REQUIRED NO_DEFAULT_PATH)
+find_package(LLVM REQUIRED)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 
 option(HIPIFY_CLANG_TESTS "Build the tests for hipify-clang, if lit is installed" ON)
