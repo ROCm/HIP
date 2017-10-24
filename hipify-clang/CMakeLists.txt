@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 2.8.8)
 project(hipify-clang)
 
+set(BUILD_HIPIFY_CLANG 0 CACHE INTERNAL "")
+
+if (HIPIFY_CLANG_LLVM_DIR)
+    find_package(LLVM PATHS ${HIPIFY_CLANG_LLVM_DIR} REQUIRED)
+else()
+    message(STATUS "hipify-clang will not be built. To build it please specify absolute path to LLVM 3.8 or higher using HIPIFY_CLANG_LLVM_DIR")
+    return()
+endif()
+
 option(HIPIFY_CLANG_TESTS "Build the tests for hipify-clang, if lit is installed" ON)
 
 # Disable the tests if `lit` is not installed.
@@ -9,10 +18,6 @@ if (NOT LIT_COMMAND)
     set(HIPIFY_CLANG_TESTS OFF CACHE INTERNAL "")
     message(STATUS "hipify-clang's tests are not being built because `lit` is not installed.")
 endif()
-
-set(BUILD_HIPIFY_CLANG 0 CACHE INTERNAL "")
-
-find_package(LLVM PATHS ${HIPIFY_CLANG_LLVM_DIR} REQUIRED)
 
 list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
 include(AddLLVM)
@@ -74,7 +79,7 @@ if (HIPIFY_CLANG_TESTS)
     find_package(PythonInterp 2.7 REQUIRED EXACT)
 
     configure_file(
-        $${CMAKE_CURRENT_LIST_DIR}/../tests/hipify-clang/lit.site.cfg.in
+        ${CMAKE_CURRENT_LIST_DIR}/../tests/hipify-clang/lit.site.cfg.in
         ${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
         @ONLY
     )
