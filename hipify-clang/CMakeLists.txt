@@ -10,15 +10,6 @@ endif()
 
 option(HIPIFY_CLANG_TESTS "Build the tests for hipify-clang, if lit is installed" ON)
 
-# Disable the tests if `lit` or `FileCheck` is not installed.
-find_program(LIT_COMMAND lit)
-find_program(FILECHECK_COMMAND FileCheck)
-find_program(SOCAT_COMMAND socat)
-if (NOT LIT_COMMAND OR NOT FILECHECK_COMMAND OR NOT SOCAT_COMMAND)
-    set(HIPIFY_CLANG_TESTS OFF CACHE INTERNAL "")
-    message(STATUS "hipify-clang's tests are not being built because `lit`,`FileCheck` or `socat` could not be found.")
-endif()
-
 list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
 include(AddLLVM)
 
@@ -78,6 +69,17 @@ install(TARGETS hipify-clang DESTINATION bin)
 
 if (HIPIFY_CLANG_TESTS)
     find_package(PythonInterp 2.7 REQUIRED EXACT)
+
+    function (require_program PROGRAM_NAME)
+        find_program(FOUND_PROGRAM ${PROGRAM_NAME})
+        if (NOT FOUND_PROGRAM)
+            message(FATAL_ERROR "Can't find ${PROGRAM_NAME}. Either set HIPIFY_CLANG_TESTS to OFF to disable hipify tests, or install the missing program.")
+        endif()
+    endfunction()
+
+    require_program(lit)
+    require_program(FileCheck)
+    require_program(socat)
 
     # Populates CUDA_TOOLKIT_ROOT_DIR, which is then applied to the lit config to give the
     # value of --cuda-path for the test runs.
