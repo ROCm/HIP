@@ -12,11 +12,13 @@ endif()
 
 option(HIPIFY_CLANG_TESTS "Build the tests for hipify-clang, if lit is installed" ON)
 
-# Disable the tests if `lit` is not installed.
+# Disable the tests if `lit` or `FileCheck` is not installed.
 find_program(LIT_COMMAND lit)
-if (NOT LIT_COMMAND)
+find_program(FILECHECK_COMMAND FileCheck)
+find_program(SOCAT_COMMAND socat)
+if (NOT LIT_COMMAND OR NOT FILECHECK_COMMAND OR NOT SOCAT_COMMAND)
     set(HIPIFY_CLANG_TESTS OFF CACHE INTERNAL "")
-    message(STATUS "hipify-clang's tests are not being built because `lit` is not installed.")
+    message(STATUS "hipify-clang's tests are not being built because `lit`,`FileCheck` or `socat` could not be found.")
 endif()
 
 list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
@@ -75,8 +77,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHIPIFY_CLANG_RES=\\\"${LLVM_LIBRARY_DI
 install(TARGETS hipify-clang DESTINATION bin)
 
 if (HIPIFY_CLANG_TESTS)
-    # tests
     find_package(PythonInterp 2.7 REQUIRED EXACT)
+
+    # Populates CUDA_TOOLKIT_ROOT_DIR, which is then applied to the lit config to give the
+    # value of --cuda-path for the test runs.
+    find_package(CUDA REQUIRED)
 
     configure_file(
         ${CMAKE_CURRENT_LIST_DIR}/../tests/hipify-clang/lit.site.cfg.in
@@ -87,7 +92,8 @@ if (HIPIFY_CLANG_TESTS)
     add_lit_testsuite(test-hipify "Running HIPify regression tests"
         ${CMAKE_CURRENT_LIST_DIR}/../tests/hipify-clang
         PARAMS site_config=${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
-        DEPENDS hipify-clang lit
+        ARGS -v
+        DEPENDS hipify-clang
     )
 
     add_custom_target(test-hipify-clang)
