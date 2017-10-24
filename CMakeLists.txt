@@ -125,13 +125,6 @@ else()
     message(FATAL_ERROR "Don't know where to install HIP. Please specify absolute path using -DCMAKE_INSTALL_PREFIX")
 endif()
 
-# Check if we need to build hipify-clang
-if(NOT DEFINED HIPIFY_CLANG_LLVM_DIR)
-    if(DEFINED ENV{HIPIFY_CLANG_LLVM_DIR})
-        set(HIPIFY_CLANG_LLVM_DIR $ENV{HIPIFY_CLANG_LLVM_DIR})
-    endif()
-endif()
-
 # Check if we need to enable ATP marker
 if(NOT DEFINED COMPILE_HIP_ATP_MARKER)
     if(NOT DEFINED ENV{COMPILE_HIP_ATP_MARKER})
