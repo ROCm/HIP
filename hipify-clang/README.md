@@ -12,7 +12,6 @@
 ## Using hipify-clang
 
 `hipify-clang` is a clang-based tool which can automate the translation of CUDA source code into portable HIP C++.
-The tool can automatically add extra HIP arguments (notably the "hipLaunchParm" required at the beginning of every HIP kernel call).
 `hipify-clang` has some additional dependencies explained below and can be built as a separate make step. The instructions below are specifically for **Ubuntu 14.04** and **Ubuntu 16.04**.
 
 ### Build and install
