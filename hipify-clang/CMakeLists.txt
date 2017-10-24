@@ -73,23 +73,15 @@ if (HIPIFY_CLANG_TESTS)
     # tests
     find_package(PythonInterp 2.7 REQUIRED EXACT)
 
-    set(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
-
-    if (CMAKE_CURRENT_SOURCE_DIR EQUAL CMAKE_SOURCE_DIR)
-        set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-    else()
-        set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
-    endif()
-
     configure_file(
-        ${SOURCE_DIR}/tests/hipify-clang/lit.site.cfg.in
-        ${BINARY_DIR}/tests/hipify-clang/lit.site.cfg
+        $${CMAKE_CURRENT_LIST_DIR}/../tests/hipify-clang/lit.site.cfg.in
+        ${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
         @ONLY
     )
 
     add_lit_testsuite(test-hipify "Running HIPify regression tests"
-        ${SOURCE_DIR}/tests/hipify-clang
-        PARAMS site_config=${BINARY_DIR}/tests/hipify-clang/lit.site.cfg
+        ${CMAKE_CURRENT_LIST_DIR}/../tests/hipify-clang
+        PARAMS site_config=${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
         DEPENDS hipify-clang lit
     )
 
