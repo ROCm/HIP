@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 2.8.3)
 project(hip)
 
 #############################
+# Options
+#############################
+option(BUILD_HIPIFY_CLANG "Enable building the CUDA->HIP converter" OFF)
+
+#############################
 # Setup config generation
 #############################
 string(TIMESTAMP _timestamp UTC)
@@ -142,7 +147,9 @@ add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 # Build steps
 #############################
 # Build clang hipify if enabled
-add_subdirectory(hipify-clang)
+if (BUILD_HIPIFY_CLANG)
+    add_subdirectory(hipify-clang)
+endif()
 
 # Build hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")

@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 2.8.8)
 project(hipify-clang)
 
-set(BUILD_HIPIFY_CLANG 0 CACHE INTERNAL "")
-
 if (HIPIFY_CLANG_LLVM_DIR)
     find_package(LLVM PATHS ${HIPIFY_CLANG_LLVM_DIR} REQUIRED NO_DEFAULT_PATH)
 else()
@@ -10,7 +8,7 @@ else()
     return()
 endif()
 
-option(HIPIFY_CLANG_TESTS "Build the tests for hipify-clang, if lit is installed" ON)
+option(HIPIFY_CLANG_TESTS "Build the tests for hipify-clang, if lit is installed" OFF)
 
 # Disable the tests if `lit` or `FileCheck` is not installed.
 find_program(LIT_COMMAND lit)
@@ -102,5 +100,3 @@ if (HIPIFY_CLANG_TESTS)
     add_dependencies(test-hipify-clang test-hipify)
     set_target_properties(test-hipify-clang PROPERTIES FOLDER "Tests")
 endif()
-
-set(BUILD_HIPIFY_CLANG 1 CACHE INTERNAL "")
