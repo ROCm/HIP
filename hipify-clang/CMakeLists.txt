@@ -1,6 +1,15 @@
 cmake_minimum_required(VERSION 2.8.8)
 project(hipify-clang)
 
+set(BUILD_HIPIFY_CLANG 0 CACHE INTERNAL "")
+
+if (HIPIFY_CLANG_LLVM_DIR)
+    find_package(LLVM PATHS ${HIPIFY_CLANG_LLVM_DIR} REQUIRED)
+else()
+    message(STATUS "hipify-clang will not be built. To build it please specify absolute path to LLVM 3.8 or higher using HIPIFY_CLANG_LLVM_DIR")
+    return()
+endif()
+
 option(HIPIFY_CLANG_TESTS "Build the tests for hipify-clang, if lit is installed" ON)
 
 # Disable the tests if `lit` or `FileCheck` is not installed.
@@ -11,10 +20,6 @@ if (NOT LIT_COMMAND OR NOT FILECHECK_COMMAND OR NOT SOCAT_COMMAND)
     set(HIPIFY_CLANG_TESTS OFF CACHE INTERNAL "")
     message(STATUS "hipify-clang's tests are not being built because `lit`,`FileCheck` or `socat` could not be found.")
 endif()
-
-set(BUILD_HIPIFY_CLANG 0 CACHE INTERNAL "")
-
-find_package(LLVM PATHS ${HIPIFY_CLANG_LLVM_DIR} REQUIRED)
 
 list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
 include(AddLLVM)
@@ -78,16 +83,14 @@ if (HIPIFY_CLANG_TESTS)
     # value of --cuda-path for the test runs.
     find_package(CUDA REQUIRED)
 
-    set(BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
-
     configure_file(
-        ${CMAKE_SOURCE_DIR}/tests/hipify-clang/lit.site.cfg.in
+        ${CMAKE_CURRENT_LIST_DIR}/../tests/hipify-clang/lit.site.cfg.in
         ${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
         @ONLY
     )
 
     add_lit_testsuite(test-hipify "Running HIPify regression tests"
-        ${CMAKE_SOURCE_DIR}/tests/hipify-clang
+        ${CMAKE_CURRENT_LIST_DIR}/../tests/hipify-clang
         PARAMS site_config=${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
         ARGS -v
         DEPENDS hipify-clang
