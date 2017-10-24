@@ -259,6 +259,11 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
             status = hsa_executable_create(HSA_PROFILE_FULL, HSA_EXECUTABLE_STATE_UNFROZEN, NULL, &(*module)->executable);
             CHECKLOG_HSA(status, hipErrorNotInitialized);
 
+            status = hsa_executable_agent_global_variable_define((*module)->executable, agent,
+                                                                 "_ZN2hc13printf_bufferE",
+                                                                 Kalmar::getContext()->getPrintfBufferPointerVA());
+            CHECKLOG_HSA(status, hipErrorNotInitialized);
+
             status = hsa_executable_load_code_object((*module)->executable, agent, (*module)->object, NULL);
             CHECKLOG_HSA(status, hipErrorNotInitialized);
 
