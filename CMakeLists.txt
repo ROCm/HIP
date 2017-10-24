@@ -120,13 +120,6 @@ else()
     message(FATAL_ERROR "Don't know where to install HIP. Please specify absolute path using -DCMAKE_INSTALL_PREFIX")
 endif()
 
-# Check if we need to build hipify-clang
-if(NOT DEFINED HIPIFY_CLANG_LLVM_DIR)
-    if(DEFINED ENV{HIPIFY_CLANG_LLVM_DIR})
-        set(HIPIFY_CLANG_LLVM_DIR $ENV{HIPIFY_CLANG_LLVM_DIR})
-    endif()
-endif()
-
 # Check if we need to enable ATP marker
 if(NOT DEFINED COMPILE_HIP_ATP_MARKER)
     if(NOT DEFINED ENV{COMPILE_HIP_ATP_MARKER})
@@ -141,9 +134,6 @@ add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 #############################
 # Build steps
 #############################
-# Build clang hipify if enabled
-add_subdirectory(hipify-clang)
-
 # Build hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
     include_directories(${PROJECT_SOURCE_DIR}/include)
@@ -287,24 +277,13 @@ set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_base)
 configure_file(packaging/hip_base.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
 configure_file(packaging/hip_base.postinst ${BUILD_DIR}/postinst @ONLY)
 configure_file(packaging/hip_base.prerm ${BUILD_DIR}/prerm @ONLY)
-if(NOT BUILD_HIPIFY_CLANG)
-    add_custom_target(pkg_hip_base COMMAND ${CMAKE_COMMAND} .
-        COMMAND rm -rf *.deb *.rpm *.tar.gz
-        COMMAND make package
-        COMMAND cp *.deb ${PROJECT_BINARY_DIR}
-        COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
-        COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
-        WORKING_DIRECTORY ${BUILD_DIR})
-else()
-    add_custom_target(pkg_hip_base COMMAND ${CMAKE_COMMAND} .
-        COMMAND rm -rf *.deb *.rpm *.tar.gz
-        COMMAND make package
-        COMMAND cp *.deb ${PROJECT_BINARY_DIR}
-        COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
-        COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
-        WORKING_DIRECTORY ${BUILD_DIR}
-        DEPENDS hipify-clang)
-endif()
+add_custom_target(pkg_hip_base COMMAND ${CMAKE_COMMAND} .
+    COMMAND rm -rf *.deb *.rpm *.tar.gz
+    COMMAND make package
+    COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+    COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+    COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+    WORKING_DIRECTORY ${BUILD_DIR})
 
 # Package: hip_hcc
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_hcc)
