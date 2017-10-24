@@ -3031,7 +3031,7 @@ public:
     : Cuda2Hip(R, mainFileName) {}
 
   virtual bool handleBeginSource(CompilerInstance &CI
-#if LLVM_VERSION_MAJOR < 4
+#if LLVM_VERSION_MAJOR <= 4
                                  , StringRef Filename
 #endif
                                  ) override {
@@ -3114,7 +3114,7 @@ public:
     if (_sm->isWrittenInMainFile(MacroNameTok.getLocation())) {
         // The getNumArgs function was rather unhelpfully renamed in clang 4.0. Its semantics
         // remain unchanged.
-#if LLVM_VERSION_MAJOR > 3
+#if LLVM_VERSION_MAJOR > 4
         #define GET_NUM_ARGS() getNumParams()
 #else
         #define GET_NUM_ARGS() getNumArgs()
