@@ -1805,7 +1805,7 @@ void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind,
         }
     } else {
         *forceUnpinnedCopy = true;
-        tprintf (DB_COPY, "P2P: Copy engine(dev:%d agent=0x%lx) cannot see both host and device pointers - forcing copy with unpinned engine.\n",
+        tprintf (DB_COPY, "Copy engine(dev:%d agent=0x%lx) cannot see both host and device pointers - forcing copy with unpinned engine.\n",
                     *copyDevice ? (*copyDevice)->getDeviceNum() : -1, 
                     *copyDevice ? (*copyDevice)->getDevice()->_hsaAgent.handle : 0x0);
         if (HIP_FAIL_SOC & 0x2) {
@@ -1820,10 +1820,11 @@ void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind,
 
 void printPointerInfo(unsigned dbFlag, const char *tag, const void *ptr, const hc::AmPointerInfo &ptrInfo)
 {
-    tprintf (dbFlag, "  %s=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d registered=%d\n",
+    tprintf (dbFlag, "  %s=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d registered=%d allocSeqNum=%zu, appAllocationFlags=%x, appPtr=%p\n",
              tag, ptr,
              ptrInfo._hostPointer, ptrInfo._devicePointer, ptrInfo._sizeBytes,
-             ptrInfo._appId, ptrInfo._sizeBytes != 0, ptrInfo._isInDeviceMem, !ptrInfo._isAmManaged);
+             ptrInfo._appId, ptrInfo._sizeBytes != 0, ptrInfo._isInDeviceMem, !ptrInfo._isAmManaged,
+             ptrInfo._allocSeqNum, ptrInfo._appAllocationFlags, ptrInfo._appPtr);
 }
 
 
@@ -1871,12 +1872,14 @@ void tailorPtrInfo(hc::AmPointerInfo *ptrInfo, const void * ptr, size_t sizeByte
 };
 
 
-bool getTailoredPtrInfo(hc::AmPointerInfo *ptrInfo, const void * ptr, size_t sizeBytes)
+bool getTailoredPtrInfo(const char *tag, hc::AmPointerInfo *ptrInfo, const void * ptr, size_t sizeBytes)
 {
     bool tracked = (hc::am_memtracker_getinfo(ptrInfo, ptr) == AM_SUCCESS);
+    printPointerInfo(DB_COPY, tag, ptr, *ptrInfo);
 
     if (tracked)  {
         tailorPtrInfo(ptrInfo, ptr, sizeBytes);
+        printPointerInfo(DB_COPY, "    mod", ptr, *ptrInfo);
     }
 
     return tracked;
@@ -1906,8 +1909,8 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
     hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
 #endif
-    bool dstTracked = getTailoredPtrInfo(&dstPtrInfo, dst, sizeBytes);
-    bool srcTracked = getTailoredPtrInfo(&srcPtrInfo, src, sizeBytes);
+    bool dstTracked = getTailoredPtrInfo("    dst", &dstPtrInfo, dst, sizeBytes);
+    bool srcTracked = getTailoredPtrInfo("    src", &srcPtrInfo, src, sizeBytes);
 
 
     // Some code in HCC and in printPointerInfo uses _sizeBytes==0 as an indication ptr is not valid, so check it here:
@@ -2034,21 +2037,18 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
         hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
         hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
 #endif
-        bool dstTracked = getTailoredPtrInfo(&dstPtrInfo, dst, sizeBytes);
-        bool srcTracked = getTailoredPtrInfo(&srcPtrInfo, src, sizeBytes);
+        tprintf (DB_COPY, "copyASync dst=%p src=%p, sz=%zu\n", dst, src, sizeBytes);
+        bool dstTracked = getTailoredPtrInfo("    dst", &dstPtrInfo, dst, sizeBytes);
+        bool srcTracked = getTailoredPtrInfo("    src", &srcPtrInfo, src, sizeBytes);
 
 
         hc::hcCommandKind hcCopyDir;
         ihipCtx_t *copyDevice;
         bool forceUnpinnedCopy;
         resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &copyDevice, &forceUnpinnedCopy);
-        tprintf (DB_COPY, "copyASync copyDev:%d  dst=%p (phys_dev:%d, isDevMem:%d)  src=%p(phys_dev:%d, isDevMem:%d)   sz=%zu dir=%s forceUnpinnedCopy=%d\n",
+        tprintf (DB_COPY, "  copyDev:%d   dir=%s forceUnpinnedCopy=%d\n",
                  copyDevice ? copyDevice->getDeviceNum():-1,
-                 dst, dstPtrInfo._appId, dstPtrInfo._isInDeviceMem,
-                 src, srcPtrInfo._appId, srcPtrInfo._isInDeviceMem,
-                 sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
-        printPointerInfo(DB_COPY, "  dst", dst, dstPtrInfo);
-        printPointerInfo(DB_COPY, "  src", src, srcPtrInfo);
+                 hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
 
         // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.
         // If both pointers are not tracked, we need to fall back to a sync copy.
