@@ -175,21 +175,21 @@ protected:
   }
 
   void updateCountersExt(const hipCounter &counter, const std::string &cudaName) {
-    std::map<std::string, uint64_t> *map = &cuda2hipConverted;
-    std::map<std::string, uint64_t> *mapTotal = &cuda2hipConvertedTotal;
+    std::map<std::string, uint64_t>& map = cuda2hipConverted;
+    std::map<std::string, uint64_t>& mapTotal = cuda2hipConvertedTotal;
     if (counter.unsupported) {
-      map = &cuda2hipUnconverted;
-      mapTotal = &cuda2hipUnconvertedTotal;
+      map = cuda2hipUnconverted;
+      mapTotal = cuda2hipUnconvertedTotal;
     }
-    auto found = map->find(cudaName);
-    if (found == map->end()) {
-      map->insert(std::pair<std::string, uint64_t>(cudaName, 1));
+    auto found = map.find(cudaName);
+    if (found == map.end()) {
+      map.insert(std::pair<std::string, uint64_t>(cudaName, 1));
     } else {
       found->second++;
     }
-    auto foundT = mapTotal->find(cudaName);
-    if (foundT == mapTotal->end()) {
-      mapTotal->insert(std::pair<std::string, uint64_t>(cudaName, 1));
+    auto foundT = mapTotal.find(cudaName);
+    if (foundT == mapTotal.end()) {
+      mapTotal.insert(std::pair<std::string, uint64_t>(cudaName, 1));
     } else {
       foundT->second++;
     }
