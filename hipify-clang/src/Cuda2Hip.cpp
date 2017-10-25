@@ -787,6 +787,15 @@ void addAllMatchers(ast_matchers::MatchFinder &Finder, Cuda2HipCallback *Callbac
   );
 }
 
+/**
+ * Print a named stat value to both the terminal and the CSV file.
+ */
+template<typename T>
+void printStat(std::ofstream &csv, const std::string& name, T value) {
+  llvm::outs() << "  " << name << ": " << value << "\n";
+  csv << name << ";" << value << "\n";
+}
+
 int64_t printStats(const std::string &csvFile, const std::string &srcFile,
                    HipifyPPCallbacks &PPCallbacks, Cuda2HipCallback &Callback,
                    uint64_t replacedBytes, uint64_t totalBytes, unsigned totalLines,
@@ -802,53 +811,37 @@ int64_t printStats(const std::string &csvFile, const std::string &srcFile,
   for (int i = 0; i < CONV_LAST; i++) {
     sum_unsupported += Callback.countRepsUnsupported[i] + PPCallbacks.countRepsUnsupported[i];
   }
+
   if (sum > 0 || sum_unsupported > 0) {
     str = "file \'" + srcFile + "\' statistics:\n";
     llvm::outs() << "\n" << hipify_info << str;
     csv << "\n" << str;
-    str = "CONVERTED refs count";
-    llvm::outs() << "  " << str << ": " << sum << "\n";
-    csv << "\n" << str << separator << sum << "\n";
-    str = "UNCONVERTED refs count";
-    llvm::outs() << "  " << str << ": " << sum_unsupported << "\n";
-    csv << str << separator << sum_unsupported << "\n";
-    str = "CONVERSION %";
-    long conv = 100 - std::lround(double(sum_unsupported*100)/double(sum + sum_unsupported));
-    llvm::outs() << "  " << str << ": " << conv << "%\n";
-    csv << str << separator << conv << "%\n";
-    str = "REPLACED bytes";
-    llvm::outs() << "  " << str << ": " << replacedBytes << "\n";
-    csv << str << separator << replacedBytes << "\n";
-    str = "TOTAL bytes";
-    llvm::outs() << "  " << str << ": " << totalBytes << "\n";
-    csv << str << separator << totalBytes << "\n";
-    str = "CHANGED lines of code";
-    unsigned changedLines = Callback.LOCs.size() + PPCallbacks.LOCs.size();
-    llvm::outs() << "  " << str << ": " << changedLines << "\n";
-    csv << str << separator << changedLines << "\n";
-    str = "TOTAL lines of code";
-    llvm::outs() << "  " << str << ": " << totalLines << "\n";
-    csv << str << separator << totalLines << "\n";
+
+    size_t changedLines = Callback.LOCs.size() + PPCallbacks.LOCs.size();
+
+    printStat(csv, "CONVERTED refs count", sum);
+    printStat(csv, "UNCONVERTED refs count", sum_unsupported);
+    printStat(csv, "CONVERSION %", 100 - std::lround(double(sum_unsupported * 100) / double(sum + sum_unsupported)));
+    printStat(csv, "REPLACED bytes", replacedBytes);
+    printStat(csv, "TOTAL bytes", totalBytes);
+    printStat(csv, "CHANGED lines of code", changedLines);
+    printStat(csv, "TOTAL lines of code", totalLines);
+
     if (totalBytes > 0) {
-      str = "CODE CHANGED (in bytes) %";
-      conv = std::lround(double(replacedBytes * 100) / double(totalBytes));
-      llvm::outs() << "  " << str << ": " << conv << "%\n";
-      csv << str << separator << conv << "%\n";
+      printStat(csv, "CODE CHANGED (in bytes) %", std::lround(double(replacedBytes * 100) / double(totalBytes)));
     }
+
     if (totalLines > 0) {
-      str = "CODE CHANGED (in lines) %";
-      conv = std::lround(double(changedLines * 100) / double(totalLines));
-      llvm::outs() << "  " << str << ": " << conv << "%\n";
-      csv << str << separator << conv << "%\n";
+      printStat(csv, "CODE CHANGED (in lines) %", std::lround(double(changedLines * 100) / double(totalLines)));
     }
+
     typedef std::chrono::duration<double, std::milli> duration;
     duration elapsed = std::chrono::steady_clock::now() - start;
-    str = "TIME ELAPSED s";
     std::stringstream stream;
     stream << std::fixed << std::setprecision(2) << elapsed.count() / 1000;
-    llvm::outs() << "  " << str << ": " << stream.str() << "\n";
-    csv << str << separator << stream.str() << "\n";
+    printStat(csv, "TIME ELAPSED s", stream.str());
   }
+
   if (sum > 0) {
     llvm::outs() << hipify_info << "CONVERTED refs by type:\n";
     csv << "\nCUDA ref type" << separator << "Count\n";
@@ -857,14 +850,12 @@ int64_t printStats(const std::string &csvFile, const std::string &srcFile,
       if (0 == sum_interm) {
         continue;
       }
-      llvm::outs() << "  " << counterNames[i] << ": " << sum_interm << "\n";
-      csv << counterNames[i] << separator << sum_interm << "\n";
+      printStat(csv, counterNames[i], sum_interm);
     }
     llvm::outs() << hipify_info << "CONVERTED refs by API:\n";
     csv << "\nCUDA API" << separator << "Count\n";
     for (int i = 0; i < API_LAST; i++) {
-      llvm::outs() << "  " << apiNames[i] << ": " << Callback.countApiReps[i] + PPCallbacks.countApiReps[i] << "\n";
-      csv << apiNames[i] << separator << Callback.countApiReps[i] + PPCallbacks.countApiReps[i] << "\n";
+      printStat(csv, apiNames[i], Callback.countApiReps[i] + PPCallbacks.countApiReps[i]);
     }
     for (const auto & it : PPCallbacks.cuda2hipConverted) {
       const auto found = Callback.cuda2hipConverted.find(it.first);
@@ -877,10 +868,10 @@ int64_t printStats(const std::string &csvFile, const std::string &srcFile,
     llvm::outs() << hipify_info << "CONVERTED refs by names:\n";
     csv << "\nCUDA ref name" << separator << "Count\n";
     for (const auto & it : Callback.cuda2hipConverted) {
-      llvm::outs() << "  " << it.first << ": " << it.second << "\n";
-      csv << it.first << separator << it.second << "\n";
+      printStat(csv, it.first, it.second);
     }
   }
+
   if (sum_unsupported > 0) {
     str = "UNCONVERTED refs by type:";
     llvm::outs() << hipify_info << str << "\n";
@@ -890,14 +881,12 @@ int64_t printStats(const std::string &csvFile, const std::string &srcFile,
       if (0 == sum_interm) {
         continue;
       }
-      llvm::outs() << "  " << counterNames[i] << ": " << sum_interm << "\n";
-      csv << counterNames[i] << separator << sum_interm << "\n";
+      printStat(csv, counterNames[i], sum_interm);
     }
     llvm::outs() << hipify_info << "UNCONVERTED refs by API:\n";
     csv << "\nUNCONVERTED CUDA API" << separator << "Count\n";
     for (int i = 0; i < API_LAST; i++) {
-      llvm::outs() << "  " << apiNames[i] << ": " << Callback.countApiRepsUnsupported[i] + PPCallbacks.countApiRepsUnsupported[i] << "\n";
-      csv << apiNames[i] << separator << Callback.countApiRepsUnsupported[i] + PPCallbacks.countApiRepsUnsupported[i] << "\n";
+      printStat(csv, apiNames[i], Callback.countApiRepsUnsupported[i] + PPCallbacks.countApiRepsUnsupported[i]);
     }
     for (const auto & it : PPCallbacks.cuda2hipUnconverted) {
       const auto found = Callback.cuda2hipUnconverted.find(it.first);
@@ -907,13 +896,14 @@ int64_t printStats(const std::string &csvFile, const std::string &srcFile,
         found->second += it.second;
       }
     }
+
     llvm::outs() << hipify_info << "UNCONVERTED refs by names:\n";
     csv << "\nUNCONVERTED CUDA ref name" << separator << "Count\n";
     for (const auto & it : Callback.cuda2hipUnconverted) {
-      llvm::outs() << "  " << it.first << ": " << it.second << "\n";
-      csv << it.first << separator << it.second << "\n";
+      printStat(csv, it.first, it.second);
     }
   }
+
   csv.close();
   return sum;
 }
@@ -932,58 +922,34 @@ void printAllStats(const std::string &csvFile, int64_t totalFiles, int64_t conve
   for (int i = 0; i < CONV_LAST; i++) {
     sum_unsupported += countRepsTotalUnsupported[i];
   }
+
   if (sum > 0 || sum_unsupported > 0) {
     str = "TOTAL statistics:\n";
     llvm::outs() << "\n" << hipify_info << str;
     csv << "\n" << str;
-    str = "CONVERTED files";
-    llvm::outs() << "  " << str << ": " << convertedFiles << "\n";
-    csv << "\n" << str << separator << convertedFiles << "\n";
-    str = "PROCESSED files";
-    llvm::outs() << "  " << str << ": " << totalFiles << "\n";
-    csv << str << separator << totalFiles << "\n";
-    str = "CONVERTED refs count";
-    llvm::outs() << "  " << str << ": " << sum << "\n";
-    csv << str << separator << sum << "\n";
-    str = "UNCONVERTED refs count";
-    llvm::outs() << "  " << str << ": " << sum_unsupported << "\n";
-    csv << str << separator << sum_unsupported << "\n";
-    str = "CONVERSION %";
-    long conv = 100 - std::lround(double(sum_unsupported * 100) / double(sum + sum_unsupported));
-    llvm::outs() << "  " << str << ": " << conv << "%\n";
-    csv << str << separator << conv << "%\n";
-    str = "REPLACED bytes";
-    llvm::outs() << "  " << str << ": " << replacedBytes << "\n";
-    csv << str << separator << replacedBytes << "\n";
-    str = "TOTAL bytes";
-    llvm::outs() << "  " << str << ": " << totalBytes << "\n";
-    csv << str << separator << totalBytes << "\n";
-    str = "CHANGED lines of code";
-    llvm::outs() << "  " << str << ": " << changedLines << "\n";
-    csv << str << separator << changedLines << "\n";
-    str = "TOTAL lines of code";
-    llvm::outs() << "  " << str << ": " << totalLines << "\n";
-    csv << str << separator << totalLines << "\n";
+    printStat(csv, "CONVERTED files", convertedFiles);
+    printStat(csv, "PROCESSED files", totalFiles);
+    printStat(csv, "CONVERTED refs count", sum);
+    printStat(csv, "UNCONVERTED refs count", sum_unsupported);
+    printStat(csv, "CONVERSION %", 100 - std::lround(double(sum_unsupported * 100) / double(sum + sum_unsupported)));
+    printStat(csv, "REPLACED bytes", replacedBytes);
+    printStat(csv, "TOTAL bytes", totalBytes);
+    printStat(csv, "CHANGED lines of code", changedLines);
+    printStat(csv, "TOTAL lines of code", totalLines);
     if (totalBytes > 0) {
-      str = "CODE CHANGED (in bytes) %";
-      conv = std::lround(double(replacedBytes * 100) / double(totalBytes));
-      llvm::outs() << "  " << str << ": " << conv << "%\n";
-      csv << str << separator << conv << "%\n";
+      printStat(csv, "CODE CHANGED (in bytes) %", std::lround(double(replacedBytes * 100) / double(totalBytes)));
     }
     if (totalLines > 0) {
-      str = "CODE CHANGED (in lines) %";
-      conv = std::lround(double(changedLines * 100) / double(totalLines));
-      llvm::outs() << "  " << str << ": " << conv << "%\n";
-      csv << str << separator << conv << "%\n";
+      printStat(csv, "CODE CHANGED (in lines) %", std::lround(double(changedLines * 100) / double(totalLines)));
     }
+
     typedef std::chrono::duration<double, std::milli> duration;
     duration elapsed = std::chrono::steady_clock::now() - start;
-    str = "TIME ELAPSED s";
     std::stringstream stream;
     stream << std::fixed << std::setprecision(2) << elapsed.count() / 1000;
-    llvm::outs() << "  " << str << ": " << stream.str() << "\n";
-    csv << str << separator << stream.str() << "\n";
+    printStat(csv, "TIME ELAPSED s", stream.str());
   }
+
   if (sum > 0) {
     llvm::outs() << hipify_info << "CONVERTED refs by type:\n";
     csv << "\nCUDA ref type" << separator << "Count\n";
@@ -992,22 +958,23 @@ void printAllStats(const std::string &csvFile, int64_t totalFiles, int64_t conve
       if (0 == sum_interm) {
         continue;
       }
-      llvm::outs() << "  " << counterNames[i] << ": " << sum_interm << "\n";
-      csv << counterNames[i] << separator << sum_interm << "\n";
+
+      printStat(csv, counterNames[i], sum_interm);
     }
+
     llvm::outs() << hipify_info << "CONVERTED refs by API:\n";
     csv << "\nCUDA API" << separator << "Count\n";
     for (int i = 0; i < API_LAST; i++) {
-      llvm::outs() << "  " << apiNames[i] << ": " << countApiRepsTotal[i] << "\n";
-      csv << apiNames[i] << separator << countApiRepsTotal[i] << "\n";
+      printStat(csv, apiNames[i], countApiRepsTotal[i]);
     }
+
     llvm::outs() << hipify_info << "CONVERTED refs by names:\n";
     csv << "\nCUDA ref name" << separator << "Count\n";
     for (const auto & it : cuda2hipConvertedTotal) {
-      llvm::outs() << "  " << it.first << ": " << it.second << "\n";
-      csv << it.first << separator << it.second << "\n";
+      printStat(csv, it.first, it.second);
     }
   }
+
   if (sum_unsupported > 0) {
     str = "UNCONVERTED refs by type:";
     llvm::outs() << hipify_info << str << "\n";
@@ -1017,22 +984,23 @@ void printAllStats(const std::string &csvFile, int64_t totalFiles, int64_t conve
       if (0 == sum_interm) {
         continue;
       }
-      llvm::outs() << "  " << counterNames[i] << ": " << sum_interm << "\n";
-      csv << counterNames[i] << separator << sum_interm << "\n";
+
+      printStat(csv, counterNames[i], sum_interm);
     }
+
     llvm::outs() << hipify_info << "UNCONVERTED refs by API:\n";
     csv << "\nUNCONVERTED CUDA API" << separator << "Count\n";
     for (int i = 0; i < API_LAST; i++) {
-      llvm::outs() << "  " << apiNames[i] << ": " << countApiRepsTotalUnsupported[i] << "\n";
-      csv << apiNames[i] << separator << countApiRepsTotalUnsupported[i] << "\n";
+      printStat(csv, apiNames[i], countApiRepsTotalUnsupported[i]);
     }
+
     llvm::outs() << hipify_info << "UNCONVERTED refs by names:\n";
     csv << "\nUNCONVERTED CUDA ref name" << separator << "Count\n";
     for (const auto & it : cuda2hipUnconvertedTotal) {
-      llvm::outs() << "  " << it.first << ": " << it.second << "\n";
-      csv << it.first << separator << it.second << "\n";
+      printStat(csv, it.first, it.second);
     }
   }
+
   csv.close();
 }
 
