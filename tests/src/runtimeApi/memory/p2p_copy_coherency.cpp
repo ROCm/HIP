@@ -139,7 +139,7 @@ void runTestImpl(bool stepAIsCopy, bool hostSync, hipStream_t gpu0Stream, hipStr
     }
 }
 
-void testMultiGpu(int dev0, int dev1, int numElements, bool hostSync, bool useMemcpy)
+void testMultiGpu(int dev0, int dev1, int numElements, bool hostSync)
 {
     const size_t sizeElements = numElements * sizeof(int);
 
@@ -173,8 +173,6 @@ void testMultiGpu(int dev0, int dev1, int numElements, bool hostSync, bool useMe
 #endif
 
     printf ("  test: init complete\n");
-    int stepAIsCopy = 0;
-    int stepBIsCopy = 1;
     runTestImpl(true, hostSync, gpu0Stream, gpu1Stream, numElements, dataGpu0_0,dataGpu0_1, dataGpu1, dataHost, expected);
 
     HIPCHECK(hipFree(dataGpu0_0));
@@ -208,10 +206,8 @@ int main(int argc, char *argv[])
     };
 
     for(int index = 0;index < nSizes;index++) {
-        testMultiGpu(dev0, dev1, elementSizes[index] , false /* GPU Synchronization*/, true);
-        testMultiGpu(dev0, dev1, elementSizes[index] , true /*Host Synchronization*/, true);
-        testMultiGpu(dev0, dev1, elementSizes[index] , true /*Host Synchronization*/, false);
-        testMultiGpu(dev0, dev1, elementSizes[index] , false /*Host Synchronization*/, false);
+        testMultiGpu(dev0, dev1, elementSizes[index] , false /*GPU Synchronization*/);
+        testMultiGpu(dev0, dev1, elementSizes[index] , true  /*Host Synchronization*/);
     }
 
 
