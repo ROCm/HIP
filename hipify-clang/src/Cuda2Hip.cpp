@@ -181,18 +181,9 @@ protected:
       map = cuda2hipUnconverted;
       mapTotal = cuda2hipUnconvertedTotal;
     }
-    auto found = map.find(cudaName);
-    if (found == map.end()) {
-      map.insert(std::pair<std::string, uint64_t>(cudaName, 1));
-    } else {
-      found->second++;
-    }
-    auto foundT = mapTotal.find(cudaName);
-    if (foundT == mapTotal.end()) {
-      mapTotal.insert(std::pair<std::string, uint64_t>(cudaName, 1));
-    } else {
-      foundT->second++;
-    }
+
+    map[cudaName]++;
+    mapTotal[cudaName]++;
   }
 
   virtual void updateCounters(const hipCounter &counter, const std::string &cudaName) {
