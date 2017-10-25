@@ -1,3 +1,7 @@
+# hipify-clang
+
+`hipify-clang` is a clang-based tool to automatically translate CUDA source code into portable HIP C++.
+
 ## Table of Contents
 
 <!-- toc -->
@@ -9,67 +13,65 @@
 
 <!-- tocstop -->
 
-## Using hipify-clang
+## Build and install
 
-`hipify-clang` is a clang-based tool which can automate the translation of CUDA source code into portable HIP C++.
-`hipify-clang` has some additional dependencies explained below and can be built as a separate make step. The instructions below are specifically for **Ubuntu 14.04** and **Ubuntu 16.04**.
+### Dependencies
 
-### Build and install
+`hipify-clang` requires clang+llvm of at least version 3.8.
 
-- Download and unpack clang+llvm 3.8 binary package preqrequisite.
+In most cases, you can get a suitable version of clang+llvm with your package manager.
 
-**Ubuntu 14.04**:
+Failing that, you can [download a release archive](http://releases.llvm.org/), extract it somewhere, and set
+[CMAKE_PREFIX_PATH](https://cmake.org/cmake/help/v3.0/variable/CMAKE_PREFIX_PATH.html) so `cmake` can find it.
+
+### Build
+
+Assuming this repository is at `./HIP`:
+
 ```shell
-wget http://llvm.org/releases/3.8.0/clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
-tar xvfJ clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-14.04.tar.xz
-```
-**Ubuntu 16.04**:
-```shell
-wget http://llvm.org/releases/3.8.0/clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
-tar xvfJ clang+llvm-3.8.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz
-```
+mkdir build inst
 
-- Enable build of hipify-clang and specify path to LLVM.
-
-Note HIPIFY_CLANG_LLVM_DIR must be a full absolute path to the location extracted above. Here's an example assuming we extract the clang 3.8 package into ~/HIP/clang+llvm-3.8.0/
-```shell
-cd HIP
-mkdir build
 cd build
-cmake -DHIPIFY_CLANG_LLVM_DIR=~/HIP/clang+llvm-3.8.0/ -DCMAKE_BUILD_TYPE=Release ..
-make
-make install
+cmake \
+ -DCMAKE_INSTALL_PREFIX=../inst \
+ -DCMAKE_BUILD_TYPE=Release \
+ -DBUILD_HIPIFY_CLANG=ON \
+ ../HIP
+
+make -j install
 ```
 
-### Running and using hipify-clang
+The binary can then be found at `./inst/bin/hipify-clang`.
 
-`hipify-clang` performs an initial compile of the CUDA source code into a "symbol tree", and thus needs access to the appropriate header files.
+### Test
 
-In the case when `hipify-clang` doesn't find cuda headers, it reports various errors about unknown keywords (e.g. '\__global\__'), API function names (e.g. 'cudaMalloc'), syntax (e.g. 'foo<<<1,n>>>(...)'), etc.
+`hipify-clang` has unit tests using LLVM [`lit`](https://llvm.org/docs/CommandGuide/lit.html)/[`FileCheck`](https://llvm.org/docs/CommandGuide/FileCheck.html).
 
-To install CUDA headers, download the "deb(network)" variant of the target installer.
+To run it:
+1. Ensure `lit` and `FileCheck` are installed - these are distributed with LLVM.
+2. Ensure `socat` is installed - your distro almost certainly has a package for this.
+3. Build with the `HIPIFY_CLANG_TESTS` option turned on.
+4. `make test-hipify`
 
-**Ubuntu 14.04**:
+## Running and using hipify-clang
+
+To process a file, `hipify-clang` needs access to the same headers that would be needed to compile it with clang.
+
+For example:
+
 ```shell
-wget http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1404/x86_64/cuda-repo-ubuntu1404_7.5-18_amd64.deb
-sudo dpkg -i cuda-repo-ubuntu1404_7.5-18_amd64.deb
-sudo apt-get update && sudo apt-get install cuda-minimal-build-7-5 cuda-curand-dev-7-5
-```
-**Ubuntu 16.04**:
-```shell
-wget http://archive.ubuntu.com/ubuntu/pool/multiverse/n/nvidia-cuda-toolkit/nvidia-cuda-toolkit_7.5.18-0ubuntu1_amd64.deb
-sudo dpkg -i nvidia-cuda-toolkit_7.5.18-0ubuntu1_amd64.deb
-sudo apt-get update && sudo apt-get install cuda-minimal-build-7-5 cuda-curand-dev-7-5
-```
-To set additional options like Language Selection (only "-x cuda" is supported), Preprocessor Definition (-D), Include Path (-I), etc., options delimiter "--" should be used before them, for instance:
-
-```shell
-./hipify-clang -print-stats sort_kernel.cu -- -x cuda -I/srv/git/HIP/include -I/usr/local/cuda-7.5/include -DX=1
+hipify-clang square.cu -- \
+  -x cuda \
+  --cuda-path=/opt/cuda \
+  --cuda-gpu-arch=sm_30 \
+  -isystem /opt/cuda/samples/common/inc
 ```
 
-Delimiter "--" is used to separate hipify-clang options (before the delimiter) from clang options (after the delimiter). It is strongly recommended to always specify the delimiter, even if there are no clang specific options at all, in order to avoid possible errors regarding compilation database; in such case delimeter should be the last option in hipify-clang's command line.
+`hipify-clang` arguments are given first, followed by a separator, and then the arguments you'd pass to `clang` if you
+were compiling the input file. The [Clang manual for compiling CUDA](https://llvm.org/docs/CompileCudaWithLLVM.html#compiling-cuda-code)
+may be useful.
 
-Option "-x cuda" is also worth specifying in order to convert source CUDA files with extensions other than standard extensions (*.cu, *.cuh).
+For a list of `hipify-clang` options, run `hipify-clang --help`.
 
 ## Disclaimer
 
