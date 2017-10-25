@@ -174,24 +174,16 @@ protected:
     llvm::errs() << "[HIPIFY] " << getMsgType(msgType) << ": " << mainFileName << ":" << fullSL.getExpansionLineNumber() << ":" << fullSL.getExpansionColumnNumber() << ": " << message << "\n";
   }
 
-  void updateCountersExt(const hipCounter &counter, const std::string &cudaName) {
+  virtual void updateCounters(const hipCounter &counter, const std::string &cudaName) {
+    if (!PrintStats) {
+      return;
+    }
+
     std::map<std::string, uint64_t>& map = cuda2hipConverted;
     std::map<std::string, uint64_t>& mapTotal = cuda2hipConvertedTotal;
     if (counter.unsupported) {
       map = cuda2hipUnconverted;
       mapTotal = cuda2hipUnconvertedTotal;
-    }
-
-    map[cudaName]++;
-    mapTotal[cudaName]++;
-  }
-
-  virtual void updateCounters(const hipCounter &counter, const std::string &cudaName) {
-    if (!PrintStats) {
-      return;
-    }
-    updateCountersExt(counter, cudaName);
-    if (counter.unsupported) {
       countRepsUnsupported[counter.countType]++;
       countRepsTotalUnsupported[counter.countType]++;
       countApiRepsUnsupported[counter.countApiType]++;
@@ -202,6 +194,9 @@ protected:
       countApiReps[counter.countApiType]++;
       countApiRepsTotal[counter.countApiType]++;
     }
+
+    map[cudaName]++;
+    mapTotal[cudaName]++;
   }
 
   void processString(StringRef s, SourceManager &SM, SourceLocation start) {
