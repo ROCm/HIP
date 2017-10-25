@@ -54,6 +54,7 @@ THE SOFTWARE.
 
 #include "CUDA2HipMap.h"
 #include "Types.h"
+#include "LLVMCompat.h"
 
 using namespace clang;
 using namespace clang::ast_matchers;
@@ -139,7 +140,7 @@ void removePrefixIfPresent(std::string& s, std::string prefix) {
 
 class Cuda2Hip {
 public:
-  Cuda2Hip(Replacements *R, const std::string &srcFileName) :
+  Cuda2Hip(Replacements& R, const std::string &srcFileName) :
     Replace(R), mainFileName(srcFileName) {}
   uint64_t countReps[CONV_LAST] = { 0 };
   uint64_t countApiReps[API_LAST] = { 0 };
@@ -163,23 +164,17 @@ public:
   }
 
 protected:
-  Replacements *Replace;
+  Replacements& Replace;
   std::string mainFileName;
 
   virtual void insertReplacement(const Replacement &rep, const FullSourceLoc &fullSL) {
-#if LLVM_VERSION_MAJOR > 3
-    // New clang added error checking to Replacements, and *insists* that you explicitly check it.
-    llvm::Error e = Replace->add(rep);
-#else
-    // In older versions, it's literally an std::set<Replacement>
-    Replace->insert(rep);
-#endif
+    llcompat::insertReplacement(Replace, rep);
     if (PrintStats) {
       LOCs.insert(fullSL.getExpansionLineNumber());
     }
   }
   void insertHipHeaders(Cuda2Hip *owner, const SourceManager &SM) {
-    if (owner->countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 && countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 && Replace->size() > 0) {
+    if (owner->countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 && countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 && Replace.size() > 0) {
       std::string repName = "#include <hip/hip_runtime.h>";
       hipCounter counter = { repName, CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME };
       updateCounters(counter, repName);
@@ -266,7 +261,7 @@ class Cuda2HipCallback;
 
 class HipifyPPCallbacks : public PPCallbacks, public SourceFileCallbacks, public Cuda2Hip {
 public:
-  HipifyPPCallbacks(Replacements *R, const std::string &mainFileName)
+  HipifyPPCallbacks(Replacements& R, const std::string &mainFileName)
     : Cuda2Hip(R, mainFileName) {}
 
   virtual bool handleBeginSource(CompilerInstance &CI
@@ -385,14 +380,6 @@ public:
     // Is the macro itself a CUDA identifier? If so, rewrite it
     RewriteToken(MacroNameTok);
 
-    // The getNumArgs function was rather unhelpfully renamed in clang 4.0. Its semantics
-    // remain unchanged.
-#if LLVM_VERSION_MAJOR > 4
-    #define GET_NUM_ARGS() getNumParams()
-#else
-    #define GET_NUM_ARGS() getNumArgs()
-#endif
-
     // If it's a macro with arguments, rewrite all the arguments as hip, too.
     for (unsigned int i = 0; Args && i < MD.getMacroInfo()->GET_NUM_ARGS(); i++) {
       std::vector<Token> toks;
@@ -400,11 +387,8 @@ public:
       // to workaround the 'const' MacroArgs passed into this hook.
       const Token *start = Args->getUnexpArgument(i);
       size_t len = Args->getArgLength(start) + 1;
-#if (LLVM_VERSION_MAJOR == 3) && (LLVM_VERSION_MINOR == 8)
-      _pp->EnterTokenStream(start, len, false, false);
-#else
-      _pp->EnterTokenStream(ArrayRef<Token>(start, len), false);
-#endif
+      llcompat::EnterPreprocessorTokenStream(*_pp, start, len, false);
+
       do {
         toks.push_back(Token());
         Token &tk = toks.back();
@@ -733,7 +717,7 @@ private:
   }
 
 public:
-  Cuda2HipCallback(Replacements *Replace, ast_matchers::MatchFinder *parent, HipifyPPCallbacks *PPCallbacks, const std::string &mainFileName)
+  Cuda2HipCallback(Replacements& Replace, ast_matchers::MatchFinder *parent, HipifyPPCallbacks *PPCallbacks, const std::string &mainFileName)
     : Cuda2Hip(Replace, mainFileName), owner(parent), PP(PPCallbacks) {
     PP->setMatch(this);
   }
@@ -1092,13 +1076,7 @@ int main(int argc, const char **argv) {
   auto start = std::chrono::steady_clock::now();
   auto begin = start;
 
-  // The signature of PrintStackTraceOnErrorSignal changed in llvm 3.9. We don't support
-  // anything older than 3.8, so let's specifically detect the one old version we support.
-#if (LLVM_VERSION_MAJOR == 3) && (LLVM_VERSION_MINOR == 8)
-  llvm::sys::PrintStackTraceOnErrorSignal();
-#else
-  llvm::sys::PrintStackTraceOnErrorSignal(StringRef());
-#endif
+  llcompat::PrintStackTraceOnErrorSignal();
 
   CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::OneOrMore);
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
@@ -1161,15 +1139,7 @@ int main(int argc, const char **argv) {
     ast_matchers::MatchFinder Finder;
 
     // The Replacements to apply to the file `src`.
-    Replacements* replacementsToUse;
-#if LLVM_VERSION_MAJOR > 3
-    // getReplacements() now returns a map from filename to Replacements - so create an entry
-    // for this source file and return a pointer to it.
-    replacementsToUse = &(Tool.getReplacements()[tmpFile]);
-#else
-    replacementsToUse = &Tool.getReplacements();
-#endif
-
+    Replacements& replacementsToUse = llcompat::getReplacements(Tool, tmpFile);
     HipifyPPCallbacks* PPCallbacks = new HipifyPPCallbacks(replacementsToUse, tmpFile);
     Cuda2HipCallback Callback(replacementsToUse, &Finder, PPCallbacks, tmpFile);
 
@@ -1199,11 +1169,8 @@ int main(int argc, const char **argv) {
     SourceManager SM(Diagnostics, Tool.getFiles());
     if (PrintStats) {
       DEBUG(dbgs() << "Replacements collected by the tool:\n");
-#if LLVM_VERSION_MAJOR > 3
-        Replacements& replacements = Tool.getReplacements().begin()->second;
-#else
-        Replacements& replacements = Tool.getReplacements();
-#endif
+
+      Replacements& replacements = llcompat::getReplacements(Tool, tmpFile);
       for (const auto &replacement : replacements) {
         DEBUG(dbgs() << replacement.toString() << "\n");
         repBytes += replacement.getLength();
