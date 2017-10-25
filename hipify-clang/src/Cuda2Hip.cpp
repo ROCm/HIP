@@ -55,6 +55,7 @@ THE SOFTWARE.
 #include "CUDA2HipMap.h"
 #include "Types.h"
 #include "LLVMCompat.h"
+#include "StringUtils.h"
 
 using namespace clang;
 using namespace clang::ast_matchers;
@@ -120,23 +121,6 @@ uint64_t countRepsTotalUnsupported[CONV_LAST] = { 0 };
 uint64_t countApiRepsTotalUnsupported[API_LAST] = { 0 };
 std::map<std::string, uint64_t> cuda2hipConvertedTotal;
 std::map<std::string, uint64_t> cuda2hipUnconvertedTotal;
-
-StringRef unquoteStr(StringRef s) {
-  if (s.size() > 1 && s.front() == '"' && s.back() == '"')
-    return s.substr(1, s.size() - 2);
-  return s;
-}
-
-/**
- * If `s` starts with `prefix`, remove it. Otherwise, does nothing.
- */
-void removePrefixIfPresent(std::string& s, std::string prefix) {
-  if (s.find(prefix) != 0) {
-    return;
-  }
-
-  s.erase(0, prefix.size());
-}
 
 class Cuda2Hip {
 public:
