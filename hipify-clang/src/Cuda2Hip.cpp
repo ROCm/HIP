@@ -166,10 +166,8 @@ protected:
           FullSourceLoc fullSL(sl, SM);
           insertReplacement(Rep, fullSL);
         }
-      } else {
-        // std::string msg = "the following reference is not handled: '" + name.str() + "' [string literal].";
-        // printHipifyMessage(SM, start, msg);
       }
+
       if (end == StringRef::npos) {
         break;
       }
