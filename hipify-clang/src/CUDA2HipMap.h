@@ -4,15 +4,7 @@
 #include <set>
 #include <map>
 
-#include "Types.h"
-
-// TODO: This shouldn't really be here. More restructuring needed...
-struct hipCounter {
-    llvm::StringRef hipName;
-    ConvTypes countType;
-    ApiTypes countApiType;
-    bool unsupported;
-};
+#include "Statistics.h"
 
 #define HIP_UNSUPPORTED true
 
