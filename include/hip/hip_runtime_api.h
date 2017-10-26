@@ -143,6 +143,13 @@ typedef struct hipPointerAttribute_t {
  *
  */
 
+// Ignoring error-code return values from hip APIs is discouraged. On C++17,
+// we can make that yield a warning
+#if __cplusplus >= 201703L
+#define __HIP_NODISCARD [[nodiscard]]
+#else
+#define __HIP_NODISCARD
+#endif
 
 /*
  * @brief hipError_t
@@ -152,7 +159,7 @@ typedef struct hipPointerAttribute_t {
 // Developer note - when updating these, update the hipErrorName and hipErrorString functions in NVCC and HCC paths
 // Also update the hipCUDAErrorTohipError function in NVCC path.
 
-typedef enum hipError_t {
+typedef enum __HIP_NODISCARD hipError_t {
     hipSuccess                      = 0,    ///< Successful completion.
     hipErrorOutOfMemory             = 2,
     hipErrorNotInitialized          = 3,
@@ -218,6 +225,8 @@ typedef enum hipError_t {
     hipErrorMapBufferObjectFailed = 1071,   ///< Produced when the IPC memory attach failed from ROCr.
     hipErrorTbd                             ///< Marker that more error codes are needed.
 } hipError_t;
+
+#undef __HIP_NODISCARD
 
 /*
  * @brief hipDeviceAttribute_t
