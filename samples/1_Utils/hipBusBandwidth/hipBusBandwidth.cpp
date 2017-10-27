@@ -594,7 +594,7 @@ void RunBenchmark_Bidir(ResultDatabase &resultDB)
                         " ms\n";
             }
 
-            double speed = (double(sizeToBytes(thisSize)) / (1000*1000)) / t;
+            double speed = (double(sizeToBytes(2*thisSize)) / (1000*1000)) / t;
             char sizeStr[256];
             sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
             resultDB.AddResult(std::string("Bidir_Bandwidth") + "_" + mallocModeString(p_malloc_mode), sizeStr, "GB/sec", speed);
@@ -922,7 +922,7 @@ void RunBenchmark_P2P_Bidir(ResultDatabase &resultDB) {
                         std::cerr << "size " << sizeToString(thisSize) << " took " << t << " ms\n";
                     }
 
-                    double speed = (double(sizeToBytes(thisSize) * p_beatsperiteration) / (1000*1000)) / t;
+                    double speed = (double(sizeToBytes(2*thisSize) * p_beatsperiteration) / (1000*1000)) / t;
                     char sizeStr[256];
                     if (p_beatsperiteration>1) {
                         sprintf(sizeStr, "%9sx%d", sizeToString(thisSize).c_str(), p_beatsperiteration);
