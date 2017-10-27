@@ -291,149 +291,131 @@ public:
                                   const FileEntry *file, StringRef search_path,
                                   StringRef relative_path,
                                   const clang::Module *imported) override {
-    if (_sm->isWrittenInMainFile(hash_loc)) {
-      if (is_angled) {
-        const auto found = CUDA_INCLUDE_MAP.find(file_name);
-        if (found != CUDA_INCLUDE_MAP.end()) {
-          updateCounters(found->second, file_name.str());
-          if (!found->second.unsupported) {
-            StringRef repName = found->second.hipName;
-            DEBUG(dbgs() << "Include file found: " << file_name << "\n"
-                         << "SourceLocation: "
-                         << filename_range.getBegin().printToString(*_sm) << "\n"
-                         << "Will be replaced with " << repName << "\n");
-            SourceLocation sl = filename_range.getBegin();
-            SourceLocation sle = filename_range.getEnd();
-            const char *B = _sm->getCharacterData(sl);
-            const char *E = _sm->getCharacterData(sle);
-            SmallString<128> tmpData;
-            Replacement Rep(*_sm, sl, E - B, Twine("<" + repName + ">").toStringRef(tmpData));
-            FullSourceLoc fullSL(sl, *_sm);
-            insertReplacement(Rep, fullSL);
-          }
-        } else {
-//          llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << file_name << "' [inclusion directive].\n";
-        }
-      }
+    if (!_sm->isWrittenInMainFile(hash_loc) || !is_angled) {
+      return; // We're looking to rewrite angle-includes in the main file to point to hip.
     }
+
+    const auto found = CUDA_INCLUDE_MAP.find(file_name);
+    if (found == CUDA_INCLUDE_MAP.end()) {
+      // Not a CUDA include - don't touch it.
+      return;
+    }
+
+    updateCounters(found->second, file_name.str());
+    if (found->second.unsupported) {
+      // An unsupported CUDA header? Oh dear. Print a warning.
+      printHipifyMessage(*_sm, hash_loc, "Unsupported CUDA header used: " + file_name.str());
+      return;
+    }
+
+    StringRef repName = found->second.hipName;
+    DEBUG(dbgs() << "Include file found: " << file_name << "\n"
+                 << "SourceLocation: "
+                 << filename_range.getBegin().printToString(*_sm) << "\n"
+                 << "Will be replaced with " << repName << "\n");
+    SourceLocation sl = filename_range.getBegin();
+    SourceLocation sle = filename_range.getEnd();
+    const char *B = _sm->getCharacterData(sl);
+    const char *E = _sm->getCharacterData(sle);
+    SmallString<128> tmpData;
+    Replacement Rep(*_sm, sl, E - B, Twine("<" + repName + ">").toStringRef(tmpData));
+    FullSourceLoc fullSL(sl, *_sm);
+    insertReplacement(Rep, fullSL);
+  }
+
+  /**
+   * Look at, and consider altering, a given token.
+   *
+   * If it's not a CUDA identifier, nothing happens.
+   * If it's an unsupported CUDA identifier, a warning is emitted.
+   * Otherwise, the source file is updated with the corresponding hipification.
+   */
+  void RewriteToken(Token t) {
+    // String literals containing CUDA references need fixing...
+    if (t.is(tok::string_literal)) {
+      StringRef s(t.getLiteralData(), t.getLength());
+      processString(unquoteStr(s), *_sm, t.getLocation());
+      return;
+    } else if (!t.isAnyIdentifier()) {
+      // If it's neither a string nor an identifier, we don't care.
+      return;
+    }
+
+    StringRef name = t.getIdentifierInfo()->getName();
+    const auto found = CUDA_RENAMES_MAP().find(name);
+    if (found == CUDA_RENAMES_MAP().end()) {
+      // So it's an identifier, but not CUDA? Boring.
+      return;
+    }
+    updateCounters(found->second, name.str());
+
+    SourceLocation sl = t.getLocation();
+    if (found->second.unsupported) {
+      // An unsupported identifier? Curses! Warn the user.
+      printHipifyMessage(*_sm, sl, "Unsupported CUDA identifier used: " + name.str());
+      return;
+    }
+
+    StringRef repName = found->second.hipName;
+    Replacement Rep(*_sm, sl, name.size(), repName);
+    FullSourceLoc fullSL(sl, *_sm);
+    insertReplacement(Rep, fullSL);
   }
 
   virtual void MacroDefined(const Token &MacroNameTok,
                             const MacroDirective *MD) override {
-    if (_sm->isWrittenInMainFile(MD->getLocation()) &&
-        MD->getKind() == MacroDirective::MD_Define) {
-      for (auto T : MD->getMacroInfo()->tokens()) {
-        if (T.isAnyIdentifier()) {
-          StringRef name = T.getIdentifierInfo()->getName();
-          const auto found = CUDA_RENAMES_MAP().find(name);
-          if (found != CUDA_RENAMES_MAP().end()) {
-            updateCounters(found->second, name.str());
-            if (!found->second.unsupported) {
-              StringRef repName = found->second.hipName;
-              SourceLocation sl = T.getLocation();
-              DEBUG(dbgs() << "Identifier " << name << " found in definition of macro "
-                           << MacroNameTok.getIdentifierInfo()->getName() << "\n"
-                           << "will be replaced with: " << repName << "\n"
-                           << "SourceLocation: " << sl.printToString(*_sm) << "\n");
-              Replacement Rep(*_sm, sl, name.size(), repName);
-              FullSourceLoc fullSL(sl, *_sm);
-              insertReplacement(Rep, fullSL);
-            }
-          } else {
-            // llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [macro].\n";
-          }
-        }
-      }
+    if (!_sm->isWrittenInMainFile(MD->getLocation()) ||
+        MD->getKind() != MacroDirective::MD_Define) {
+      return;
+    }
+
+    for (auto T : MD->getMacroInfo()->tokens()) {
+      RewriteToken(T);
     }
   }
 
   virtual void MacroExpands(const Token &MacroNameTok,
                             const MacroDefinition &MD, SourceRange Range,
                             const MacroArgs *Args) override {
-    if (_sm->isWrittenInMainFile(MacroNameTok.getLocation())) {
-        // The getNumArgs function was rather unhelpfully renamed in clang 4.0. Its semantics
-        // remain unchanged.
+
+    if (!_sm->isWrittenInMainFile(MacroNameTok.getLocation())) {
+      return; // Macros in headers are not our concern.
+    }
+
+    // Is the macro itself a CUDA identifier? If so, rewrite it
+    RewriteToken(MacroNameTok);
+
+    // The getNumArgs function was rather unhelpfully renamed in clang 4.0. Its semantics
+    // remain unchanged.
 #if LLVM_VERSION_MAJOR > 4
-        #define GET_NUM_ARGS() getNumParams()
+    #define GET_NUM_ARGS() getNumParams()
 #else
-        #define GET_NUM_ARGS() getNumArgs()
+    #define GET_NUM_ARGS() getNumArgs()
 #endif
-      for (unsigned int i = 0; Args && i < MD.getMacroInfo()->GET_NUM_ARGS(); i++) {
-        std::vector<Token> toks;
-        // Code below is a kind of stolen from 'MacroArgs::getPreExpArgument'
-        // to workaround the 'const' MacroArgs passed into this hook.
-        const Token *start = Args->getUnexpArgument(i);
-        size_t len = Args->getArgLength(start) + 1;
+
+    // If it's a macro with arguments, rewrite all the arguments as hip, too.
+    for (unsigned int i = 0; Args && i < MD.getMacroInfo()->GET_NUM_ARGS(); i++) {
+      std::vector<Token> toks;
+      // Code below is a kind of stolen from 'MacroArgs::getPreExpArgument'
+      // to workaround the 'const' MacroArgs passed into this hook.
+      const Token *start = Args->getUnexpArgument(i);
+      size_t len = Args->getArgLength(start) + 1;
 #if (LLVM_VERSION_MAJOR == 3) && (LLVM_VERSION_MINOR == 8)
-        _pp->EnterTokenStream(start, len, false, false);
+      _pp->EnterTokenStream(start, len, false, false);
 #else
-        _pp->EnterTokenStream(ArrayRef<Token>(start, len), false);
+      _pp->EnterTokenStream(ArrayRef<Token>(start, len), false);
 #endif
-        do {
-          toks.push_back(Token());
-          Token &tk = toks.back();
-          _pp->Lex(tk);
-        } while (toks.back().isNot(tok::eof));
-        _pp->RemoveTopOfLexerStack();
-        // end of stolen code
-        for (auto tok : toks) {
-          if (tok.isAnyIdentifier()) {
-            StringRef name = tok.getIdentifierInfo()->getName();
-            const auto found = CUDA_RENAMES_MAP().find(name);
-            if (found != CUDA_RENAMES_MAP().end()) {
-              updateCounters(found->second, name.str());
-              if (!found->second.unsupported) {
-                StringRef repName = found->second.hipName;
-                DEBUG(dbgs() << "Identifier " << name
-                             << " found as an actual argument in expansion of macro "
-                             << MacroNameTok.getIdentifierInfo()->getName() << "\n"
-                             << "will be replaced with: " << repName << "\n");
-                size_t length = name.size();
-                SourceLocation sl = tok.getLocation();
-                if (_sm->isMacroBodyExpansion(sl)) {
-                  LangOptions DefaultLangOptions;
-                  SourceLocation sl_macro = _sm->getExpansionLoc(sl);
-                  SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *_sm, DefaultLangOptions);
-                  length = _sm->getCharacterData(sl_end) - _sm->getCharacterData(sl_macro);
-                  name = StringRef(_sm->getCharacterData(sl_macro), length);
-                  sl = sl_macro;
-                }
-                Replacement Rep(*_sm, sl, length, repName);
-                FullSourceLoc fullSL(sl, *_sm);
-                insertReplacement(Rep, fullSL);
-              }
-            } else {
-              // llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [macro expansion].\n";
-            }
-          } else if (tok.isLiteral()) {
-            SourceLocation sl = tok.getLocation();
-            if (_sm->isMacroBodyExpansion(sl)) {
-              LangOptions DefaultLangOptions;
-              SourceLocation sl_macro = _sm->getExpansionLoc(sl);
-              SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *_sm, DefaultLangOptions);
-              size_t length = _sm->getCharacterData(sl_end) - _sm->getCharacterData(sl_macro);
-              StringRef name = StringRef(_sm->getCharacterData(sl_macro), length);
-              const auto found = CUDA_RENAMES_MAP().find(name);
-              if (found != CUDA_RENAMES_MAP().end()) {
-                updateCounters(found->second, name.str());
-                if (!found->second.unsupported) {
-                  StringRef repName = found->second.hipName;
-                  sl = sl_macro;
-                  Replacement Rep(*_sm, sl, length, repName);
-                  FullSourceLoc fullSL(sl, *_sm);
-                  insertReplacement(Rep, fullSL);
-                }
-              } else {
-                // llvm::outs() << "[HIPIFY] warning: the following reference is not handled: '" << name << "' [literal macro expansion].\n";
-              }
-            } else {
-              if (tok.is(tok::string_literal)) {
-                StringRef s(tok.getLiteralData(), tok.getLength());
-                processString(unquoteStr(s), *_sm, tok.getLocation());
-              }
-            }
-          }
-        }
+      do {
+        toks.push_back(Token());
+        Token &tk = toks.back();
+        _pp->Lex(tk);
+      } while (toks.back().isNot(tok::eof));
+
+      _pp->RemoveTopOfLexerStack();
+      // end of stolen code
+
+      for (auto tok : toks) {
+        RewriteToken(tok);
       }
     }
   }
@@ -453,28 +435,6 @@ private:
 
 class Cuda2HipCallback : public MatchFinder::MatchCallback, public Cuda2Hip {
 private:
-  void convertKernelDecl(const FunctionDecl *kernelDecl, const MatchFinder::MatchResult &Result) {
-    SourceManager *SM = Result.SourceManager;
-    LangOptions DefaultLangOptions;
-    SmallString<40> XStr;
-    raw_svector_ostream OS(XStr);
-    SourceLocation sl = kernelDecl->getNameInfo().getEndLoc();
-    SourceLocation kernelArgListStart = Lexer::findLocationAfterToken(sl, tok::l_paren, *SM, DefaultLangOptions, true);
-    DEBUG(dbgs() << kernelArgListStart.printToString(*SM));
-    if (kernelDecl->getNumParams() > 0) {
-      const ParmVarDecl *pvdFirst = kernelDecl->getParamDecl(0);
-      const ParmVarDecl *pvdLast =  kernelDecl->getParamDecl(kernelDecl->getNumParams() - 1);
-      SourceLocation kernelArgListStart(pvdFirst->getLocStart());
-      SourceLocation kernelArgListEnd(pvdLast->getLocEnd());
-      SourceLocation stop = Lexer::getLocForEndOfToken(kernelArgListEnd, 0, *SM, DefaultLangOptions);
-      size_t repLength = SM->getCharacterData(stop) - SM->getCharacterData(kernelArgListStart);
-      OS << StringRef(SM->getCharacterData(kernelArgListStart), repLength);
-      Replacement Rep0(*(Result.SourceManager), kernelArgListStart, repLength, OS.str());
-      FullSourceLoc fullSL(sl, *(Result.SourceManager));
-      insertReplacement(Rep0, fullSL);
-    }
-  }
-
   bool cudaCall(const MatchFinder::MatchResult &Result) {
     const CallExpr *call = Result.Nodes.getNodeAs<CallExpr>("cudaCall");
     if (!call) {
@@ -503,30 +463,55 @@ private:
     }
 
     size_t length = name.size();
-    bool bReplace = true;
-    if (SM->isMacroArgExpansion(sl)) {
-      sl = SM->getImmediateSpellingLoc(sl);
-    } else if (SM->isMacroBodyExpansion(sl)) {
-      LangOptions DefaultLangOptions;
-      SourceLocation sl_macro = SM->getExpansionLoc(sl);
-      SourceLocation sl_end = Lexer::getLocForEndOfToken(sl_macro, 0, *SM, DefaultLangOptions);
-      length = SM->getCharacterData(sl_end) - SM->getCharacterData(sl_macro);
-      StringRef macroName = StringRef(SM->getCharacterData(sl_macro), length);
-      if (CUDA_EXCLUDES.end() != CUDA_EXCLUDES.find(macroName)) {
-        bReplace = false;
-      } else {
-        sl = sl_macro;
-      }
-    }
-
-    if (bReplace) {
-      updateCounters(found->second, name);
-      Replacement Rep(*SM, sl, length, hipCtr.hipName);
-      FullSourceLoc fullSL(sl, *SM);
-      insertReplacement(Rep, fullSL);
-    }
+    updateCounters(found->second, name);
+    Replacement Rep(*SM, sl, length, hipCtr.hipName);
+    FullSourceLoc fullSL(sl, *SM);
+    insertReplacement(Rep, fullSL);
 
     return true;
+  }
+
+  SourceRange getReadRange(clang::SourceManager &SM, const SourceRange &exprRange) {
+    SourceLocation begin = exprRange.getBegin();
+    SourceLocation end = exprRange.getEnd();
+
+    bool beginSafe = !SM.isMacroBodyExpansion(begin) || Lexer::isAtStartOfMacroExpansion(begin, SM, LangOptions{});
+    bool endSafe = !SM.isMacroBodyExpansion(end) || Lexer::isAtEndOfMacroExpansion(end, SM, LangOptions{});
+
+    if (beginSafe && endSafe) {
+      return {SM.getFileLoc(begin), SM.getFileLoc(end)};
+    } else {
+      return {SM.getSpellingLoc(begin), SM.getSpellingLoc(end)};
+    }
+  }
+
+  SourceRange getWriteRange(clang::SourceManager &SM, const SourceRange &exprRange) {
+    SourceLocation begin = exprRange.getBegin();
+    SourceLocation end = exprRange.getEnd();
+
+    // If the range is contained within a macro, update the macro definition.
+    // Otherwise, use the file location and hope for the best.
+    if (!SM.isMacroBodyExpansion(begin) || !SM.isMacroBodyExpansion(end)) {
+      return {SM.getFileLoc(begin), SM.getFileLoc(end)};
+    }
+
+    return {SM.getSpellingLoc(begin), SM.getSpellingLoc(end)};
+  }
+
+  StringRef readSourceText(clang::SourceManager& SM, const SourceRange& exprRange) {
+    return Lexer::getSourceText(CharSourceRange::getTokenRange(getReadRange(SM, exprRange)), SM, LangOptions(), nullptr);
+  }
+
+  /**
+   * Get a string representation of the expression `arg`, unless it's a defaulting function
+   * call argument, in which case get a 0. Used for building argument lists to kernel calls.
+   */
+  std::string stringifyZeroDefaultedArg(SourceManager& SM, const Expr* arg) {
+    if (isa<CXXDefaultArgExpr>(arg)) {
+      return "0";
+    } else {
+      return readSourceText(SM, arg->getSourceRange());
+    }
   }
 
   bool cudaLaunchKernel(const MatchFinder::MatchResult &Result) {
@@ -534,74 +519,50 @@ private:
     if (const CUDAKernelCallExpr *launchKernel = Result.Nodes.getNodeAs<CUDAKernelCallExpr>(refName)) {
       SmallString<40> XStr;
       raw_svector_ostream OS(XStr);
-      StringRef calleeName;
-      const FunctionDecl *kernelDecl = launchKernel->getDirectCallee();
-      if (kernelDecl) {
-        calleeName = kernelDecl->getName();
-        convertKernelDecl(kernelDecl, Result);
-      } else {
-        const Expr *e = launchKernel->getCallee();
-        if (const UnresolvedLookupExpr *ule =
-          dyn_cast<UnresolvedLookupExpr>(e)) {
-          calleeName = ule->getName().getAsIdentifierInfo()->getName();
-          owner->addMatcher(functionTemplateDecl(hasName(calleeName))
-            .bind("unresolvedTemplateName"), this);
-        }
-      }
-      XStr.clear();
-      if (calleeName.find(',') != StringRef::npos) {
-        SmallString<128> tmpData;
-        calleeName = Twine("(" + calleeName + ")").toStringRef(tmpData);
-      }
-      OS << "hipLaunchKernelGGL(" << calleeName << ",";
-      const CallExpr *config = launchKernel->getConfig();
-      DEBUG(dbgs() << "Kernel config arguments:" << "\n");
-      SourceManager *SM = Result.SourceManager;
+
       LangOptions DefaultLangOptions;
-      for (unsigned argno = 0; argno < config->getNumArgs(); argno++) {
-        const Expr *arg = config->getArg(argno);
-        if (!isa<CXXDefaultArgExpr>(arg)) {
-          const ParmVarDecl *pvd = config->getDirectCallee()->getParamDecl(argno);
-          SourceLocation sl(arg->getLocStart());
-          SourceLocation el(arg->getLocEnd());
-          SourceLocation stop = Lexer::getLocForEndOfToken(el, 0, *SM, DefaultLangOptions);
-          StringRef outs(SM->getCharacterData(sl), SM->getCharacterData(stop) - SM->getCharacterData(sl));
-          DEBUG(dbgs() << "args[ " << argno << "]" << outs << " <" << pvd->getType().getAsString() << ">\n");
-          if (pvd->getType().getAsString().compare("dim3") == 0) {
-            OS << " dim3(" << outs << "),";
-          } else {
-            OS << " " << outs << ",";
-          }
-        } else {
-          OS << " 0,";
-        }
+      SourceManager *SM = Result.SourceManager;
+
+      const Expr& calleeExpr = *(launchKernel->getCallee());
+      OS << "hipLaunchKernelGGL(" << readSourceText(*SM, calleeExpr.getSourceRange()) << ", ";
+
+      // Next up are the four kernel configuration parameters, the last two of which are optional and default to zero.
+      const CallExpr& config = *(launchKernel->getConfig());
+
+      // Copy the two dimensional arguments verbatim.
+      OS << "dim3(" << readSourceText(*SM, config.getArg(0)->getSourceRange()) << "), ";
+      OS << "dim3(" << readSourceText(*SM, config.getArg(1)->getSourceRange()) << "), ";
+
+      // The stream/memory arguments default to zero if omitted.
+      OS << stringifyZeroDefaultedArg(*SM, config.getArg(2)) << ", ";
+      OS << stringifyZeroDefaultedArg(*SM, config.getArg(3));
+
+      // If there are ordinary arguments to the kernel, just copy them verbatim into our new call.
+      int numArgs = launchKernel->getNumArgs();
+      if (numArgs > 0) {
+        OS << ", ";
+
+        // Start of the first argument.
+        SourceLocation argStart = launchKernel->getArg(0)->getLocStart();
+
+        // End of the last argument.
+        SourceLocation argEnd = launchKernel->getArg(numArgs - 1)->getLocEnd();
+
+        OS << readSourceText(*SM, {argStart, argEnd});
       }
-      for (unsigned argno = 0; argno < launchKernel->getNumArgs(); argno++) {
-        const Expr *arg = launchKernel->getArg(argno);
-        SourceLocation sl(arg->getLocStart());
-        if (SM->isMacroBodyExpansion(sl)) {
-          sl = SM->getExpansionLoc(sl);
-        } else if (SM->isMacroArgExpansion(sl)) {
-          sl = SM->getImmediateSpellingLoc(sl);
-        }
-        SourceLocation el(arg->getLocEnd());
-        if (SM->isMacroBodyExpansion(el)) {
-          el = SM->getExpansionLoc(el);
-        } else if (SM->isMacroArgExpansion(el)) {
-          el = SM->getImmediateSpellingLoc(el);
-        }
-        SourceLocation stop = Lexer::getLocForEndOfToken(el, 0, *SM, DefaultLangOptions);
-        std::string outs(SM->getCharacterData(sl), SM->getCharacterData(stop) - SM->getCharacterData(sl));
-        DEBUG(dbgs() << outs << "\n");
-        OS << " " << outs << ",";
-      }
-      XStr.pop_back();
+
       OS << ")";
+
+      SourceRange replacementRange = getWriteRange(*SM, {launchKernel->getLocStart(), launchKernel->getLocEnd()});
+      SourceLocation launchStart = replacementRange.getBegin();
+      SourceLocation launchEnd = replacementRange.getEnd();
+
       size_t length = SM->getCharacterData(Lexer::getLocForEndOfToken(
-                        launchKernel->getLocEnd(), 0, *SM, DefaultLangOptions)) -
-                        SM->getCharacterData(launchKernel->getLocStart());
-      Replacement Rep(*SM, launchKernel->getLocStart(), length, OS.str());
-      FullSourceLoc fullSL(launchKernel->getLocStart(), *SM);
+                        launchEnd, 0, *SM, DefaultLangOptions)) -
+                        SM->getCharacterData(launchStart);
+
+      Replacement Rep(*SM, launchStart, length, OS.str());
+      FullSourceLoc fullSL(launchStart, *SM);
       insertReplacement(Rep, fullSL);
       hipCounter counter = {"hipLaunchKernelGGL", CONV_KERN, API_RUNTIME};
       updateCounters(counter, refName.str());
@@ -760,15 +721,6 @@ private:
     return false;
   }
 
-  bool unresolvedTemplateName(const MatchFinder::MatchResult &Result) {
-    if (const FunctionTemplateDecl *templateDecl = Result.Nodes.getNodeAs<FunctionTemplateDecl>("unresolvedTemplateName")) {
-      FunctionDecl *kernelDecl = templateDecl->getTemplatedDecl();
-      convertKernelDecl(kernelDecl, Result);
-      return true;
-    }
-    return false;
-  }
-
   bool stringLiteral(const MatchFinder::MatchResult &Result) {
     if (const clang::StringLiteral *sLiteral = Result.Nodes.getNodeAs<clang::StringLiteral>("stringLiteral")) {
       if (sLiteral->getCharByteWidth() == 1) {
@@ -795,7 +747,6 @@ public:
     if (cudaLaunchKernel(Result)) return;
     if (cudaSharedIncompleteArrayVar(Result)) return;
     if (stringLiteral(Result)) return;
-    if (unresolvedTemplateName(Result)) return;
   }
 
 private:
