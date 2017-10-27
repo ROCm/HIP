@@ -53,7 +53,8 @@ THE SOFTWARE.
 #include <sstream>
 
 #include "CUDA2HipMap.h"
-#include "Types.h"
+#include "LLVMCompat.h"
+#include "StringUtils.h"
 
 using namespace clang;
 using namespace clang::ast_matchers;
@@ -62,16 +63,6 @@ using namespace llvm;
 
 #define DEBUG_TYPE "cuda2hip"
 
-const char *counterNames[CONV_LAST] = {
-    "version",      "init",     "device",  "mem",       "kern",        "coord_func", "math_func",
-    "special_func", "stream",   "event",   "occupancy", "ctx",         "peer",       "module",
-    "cache",        "exec",     "err",     "def",       "tex",         "gl",         "graphics",
-    "surface",      "jit",      "d3d9",    "d3d10",     "d3d11",       "vdpau",      "egl",
-    "thread",       "other",    "include", "include_cuda_main_header", "type",       "literal",
-    "numeric_literal"};
-
-const char *apiNames[API_LAST] = {
-    "CUDA Driver API", "CUDA RT API", "CUBLAS API"};
 
 // Set up the command line options
 static cl::OptionCategory ToolTemplateCategory("CUDA to HIP source translator options");
@@ -113,41 +104,10 @@ static cl::opt<bool> Examine("examine",
 
 static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 
-uint64_t countRepsTotal[CONV_LAST] = { 0 };
-uint64_t countApiRepsTotal[API_LAST] = { 0 };
-uint64_t countRepsTotalUnsupported[CONV_LAST] = { 0 };
-uint64_t countApiRepsTotalUnsupported[API_LAST] = { 0 };
-std::map<std::string, uint64_t> cuda2hipConvertedTotal;
-std::map<std::string, uint64_t> cuda2hipUnconvertedTotal;
-
-StringRef unquoteStr(StringRef s) {
-  if (s.size() > 1 && s.front() == '"' && s.back() == '"')
-    return s.substr(1, s.size() - 2);
-  return s;
-}
-
-/**
- * If `s` starts with `prefix`, remove it. Otherwise, does nothing.
- */
-void removePrefixIfPresent(std::string& s, std::string prefix) {
-  if (s.find(prefix) != 0) {
-    return;
-  }
-
-  s.erase(0, prefix.size());
-}
-
 class Cuda2Hip {
 public:
-  Cuda2Hip(Replacements *R, const std::string &srcFileName) :
+  Cuda2Hip(Replacements& R, const std::string &srcFileName) :
     Replace(R), mainFileName(srcFileName) {}
-  uint64_t countReps[CONV_LAST] = { 0 };
-  uint64_t countApiReps[API_LAST] = { 0 };
-  uint64_t countRepsUnsupported[CONV_LAST] = { 0 };
-  uint64_t countApiRepsUnsupported[API_LAST] = { 0 };
-  std::map<std::string, uint64_t> cuda2hipConverted;
-  std::map<std::string, uint64_t> cuda2hipUnconverted;
-  std::set<unsigned> LOCs;
 
   enum msgTypes {
     HIPIFY_ERROR = 0,
@@ -163,26 +123,21 @@ public:
   }
 
 protected:
-  Replacements *Replace;
+  Replacements& Replace;
   std::string mainFileName;
 
   virtual void insertReplacement(const Replacement &rep, const FullSourceLoc &fullSL) {
-#if LLVM_VERSION_MAJOR > 3
-    // New clang added error checking to Replacements, and *insists* that you explicitly check it.
-    llvm::Error e = Replace->add(rep);
-#else
-    // In older versions, it's literally an std::set<Replacement>
-    Replace->insert(rep);
-#endif
+    llcompat::insertReplacement(Replace, rep);
     if (PrintStats) {
-      LOCs.insert(fullSL.getExpansionLineNumber());
+      rep.getLength();
+      Statistics::current().lineTouched(fullSL.getExpansionLineNumber());
+      Statistics::current().bytesChanged(rep.getLength());
     }
   }
   void insertHipHeaders(Cuda2Hip *owner, const SourceManager &SM) {
-    if (owner->countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 && countReps[CONV_INCLUDE_CUDA_MAIN_H] == 0 && Replace->size() > 0) {
+    if (Replace.size() > 0) {
       std::string repName = "#include <hip/hip_runtime.h>";
-      hipCounter counter = { repName, CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME };
-      updateCounters(counter, repName);
+      Statistics::current().incrementCounter({repName, ConvTypes::CONV_INCLUDE_CUDA_MAIN_H, ApiTypes::API_RUNTIME}, "#include <cuda>");
       SourceLocation sl = SM.getLocForStartOfFile(SM.getMainFileID());
       FullSourceLoc fullSL(sl, SM);
       Replacement Rep(SM, sl, 0, repName + "\n");
@@ -195,45 +150,6 @@ protected:
     llvm::errs() << "[HIPIFY] " << getMsgType(msgType) << ": " << mainFileName << ":" << fullSL.getExpansionLineNumber() << ":" << fullSL.getExpansionColumnNumber() << ": " << message << "\n";
   }
 
-  void updateCountersExt(const hipCounter &counter, const std::string &cudaName) {
-    std::map<std::string, uint64_t> *map = &cuda2hipConverted;
-    std::map<std::string, uint64_t> *mapTotal = &cuda2hipConvertedTotal;
-    if (counter.unsupported) {
-      map = &cuda2hipUnconverted;
-      mapTotal = &cuda2hipUnconvertedTotal;
-    }
-    auto found = map->find(cudaName);
-    if (found == map->end()) {
-      map->insert(std::pair<std::string, uint64_t>(cudaName, 1));
-    } else {
-      found->second++;
-    }
-    auto foundT = mapTotal->find(cudaName);
-    if (foundT == mapTotal->end()) {
-      mapTotal->insert(std::pair<std::string, uint64_t>(cudaName, 1));
-    } else {
-      foundT->second++;
-    }
-  }
-
-  virtual void updateCounters(const hipCounter &counter, const std::string &cudaName) {
-    if (!PrintStats) {
-      return;
-    }
-    updateCountersExt(counter, cudaName);
-    if (counter.unsupported) {
-      countRepsUnsupported[counter.countType]++;
-      countRepsTotalUnsupported[counter.countType]++;
-      countApiRepsUnsupported[counter.countApiType]++;
-      countApiRepsTotalUnsupported[counter.countApiType]++;
-    } else {
-      countReps[counter.countType]++;
-      countRepsTotal[counter.countType]++;
-      countApiReps[counter.countApiType]++;
-      countApiRepsTotal[counter.countApiType]++;
-    }
-  }
-
   void processString(StringRef s, SourceManager &SM, SourceLocation start) {
     size_t begin = 0;
     while ((begin = s.find("cu", begin)) != StringRef::npos) {
@@ -242,18 +158,16 @@ protected:
       const auto found = CUDA_RENAMES_MAP().find(name);
       if (found != CUDA_RENAMES_MAP().end()) {
         StringRef repName = found->second.hipName;
-        hipCounter counter = {"", CONV_LITERAL, API_RUNTIME, found->second.unsupported};
-        updateCounters(counter, name.str());
+        hipCounter counter = {"[string literal]", ConvTypes::CONV_LITERAL, ApiTypes::API_RUNTIME, found->second.unsupported};
+        Statistics::current().incrementCounter(counter, name.str());
         if (!counter.unsupported) {
           SourceLocation sl = start.getLocWithOffset(begin + 1);
           Replacement Rep(SM, sl, name.size(), repName);
           FullSourceLoc fullSL(sl, SM);
           insertReplacement(Rep, fullSL);
         }
-      } else {
-        // std::string msg = "the following reference is not handled: '" + name.str() + "' [string literal].";
-        // printHipifyMessage(SM, start, msg);
       }
+
       if (end == StringRef::npos) {
         break;
       }
@@ -266,7 +180,7 @@ class Cuda2HipCallback;
 
 class HipifyPPCallbacks : public PPCallbacks, public SourceFileCallbacks, public Cuda2Hip {
 public:
-  HipifyPPCallbacks(Replacements *R, const std::string &mainFileName)
+  HipifyPPCallbacks(Replacements& R, const std::string &mainFileName)
     : Cuda2Hip(R, mainFileName) {}
 
   virtual bool handleBeginSource(CompilerInstance &CI
@@ -301,7 +215,7 @@ public:
       return;
     }
 
-    updateCounters(found->second, file_name.str());
+    Statistics::current().incrementCounter(found->second, file_name.str());
     if (found->second.unsupported) {
       // An unsupported CUDA header? Oh dear. Print a warning.
       printHipifyMessage(*_sm, hash_loc, "Unsupported CUDA header used: " + file_name.str());
@@ -347,7 +261,7 @@ public:
       // So it's an identifier, but not CUDA? Boring.
       return;
     }
-    updateCounters(found->second, name.str());
+    Statistics::current().incrementCounter(found->second, name.str());
 
     SourceLocation sl = t.getLocation();
     if (found->second.unsupported) {
@@ -385,14 +299,6 @@ public:
     // Is the macro itself a CUDA identifier? If so, rewrite it
     RewriteToken(MacroNameTok);
 
-    // The getNumArgs function was rather unhelpfully renamed in clang 4.0. Its semantics
-    // remain unchanged.
-#if LLVM_VERSION_MAJOR > 4
-    #define GET_NUM_ARGS() getNumParams()
-#else
-    #define GET_NUM_ARGS() getNumArgs()
-#endif
-
     // If it's a macro with arguments, rewrite all the arguments as hip, too.
     for (unsigned int i = 0; Args && i < MD.getMacroInfo()->GET_NUM_ARGS(); i++) {
       std::vector<Token> toks;
@@ -400,11 +306,8 @@ public:
       // to workaround the 'const' MacroArgs passed into this hook.
       const Token *start = Args->getUnexpArgument(i);
       size_t len = Args->getArgLength(start) + 1;
-#if (LLVM_VERSION_MAJOR == 3) && (LLVM_VERSION_MINOR == 8)
-      _pp->EnterTokenStream(start, len, false, false);
-#else
-      _pp->EnterTokenStream(ArrayRef<Token>(start, len), false);
-#endif
+      llcompat::EnterPreprocessorTokenStream(*_pp, start, len, false);
+
       do {
         toks.push_back(Token());
         Token &tk = toks.back();
@@ -422,7 +325,6 @@ public:
 
   void EndOfMainFile() override {}
 
-  bool SeenEnd = false;
   void setSourceManager(SourceManager *sm) { _sm = sm; }
   void setPreprocessor(Preprocessor *pp) { _pp = pp; }
   void setMatch(Cuda2HipCallback *match) { Match = match; }
@@ -455,7 +357,7 @@ private:
     }
 
     const hipCounter& hipCtr = found->second;
-    updateCounters(found->second, name);
+    Statistics::current().incrementCounter(hipCtr, name);
 
     if (hipCtr.unsupported) {
       return true; // Silently fail when you find an unsupported member.
@@ -463,7 +365,6 @@ private:
     }
 
     size_t length = name.size();
-    updateCounters(found->second, name);
     Replacement Rep(*SM, sl, length, hipCtr.hipName);
     FullSourceLoc fullSL(sl, *SM);
     insertReplacement(Rep, fullSL);
@@ -564,8 +465,8 @@ private:
       Replacement Rep(*SM, launchStart, length, OS.str());
       FullSourceLoc fullSL(launchStart, *SM);
       insertReplacement(Rep, fullSL);
-      hipCounter counter = {"hipLaunchKernelGGL", CONV_KERN, API_RUNTIME};
-      updateCounters(counter, refName.str());
+      hipCounter counter = {"hipLaunchKernelGGL", ConvTypes::CONV_KERN, ApiTypes::API_RUNTIME};
+      Statistics::current().incrementCounter(counter, refName.str());
       return true;
     }
     return false;
@@ -589,7 +490,7 @@ private:
           // TODO: Make a lookup table just for builtins to improve performance.
           const auto found = CUDA_IDENTIFIER_MAP.find(name);
           if (found != CUDA_IDENTIFIER_MAP.end()) {
-            updateCounters(found->second, name.str());
+            Statistics::current().incrementCounter(found->second, name.str());
             if (!found->second.unsupported) {
               StringRef repName = found->second.hipName;
               Replacement Rep(*SM, sl, name.size(), repName);
@@ -616,7 +517,7 @@ private:
       // TODO: Make a lookup table just for enum values to improve performance.
       const auto found = CUDA_IDENTIFIER_MAP.find(name);
       if (found != CUDA_IDENTIFIER_MAP.end()) {
-        updateCounters(found->second, name.str());
+        Statistics::current().incrementCounter(found->second, name.str());
         if (!found->second.unsupported) {
           StringRef repName = found->second.hipName;
           Replacement Rep(*SM, sl, name.size(), repName);
@@ -712,8 +613,8 @@ private:
           Replacement Rep(*SM, slStart, repLength, repName);
           FullSourceLoc fullSL(slStart, *SM);
           insertReplacement(Rep, fullSL);
-          hipCounter counter = { "HIP_DYNAMIC_SHARED", CONV_MEM, API_RUNTIME };
-          updateCounters(counter, refName.str());
+          hipCounter counter = { "HIP_DYNAMIC_SHARED", ConvTypes::CONV_MEM, ApiTypes::API_RUNTIME };
+          Statistics::current().incrementCounter(counter, refName.str());
         }
       }
       return true;
@@ -734,7 +635,7 @@ private:
   }
 
 public:
-  Cuda2HipCallback(Replacements *Replace, ast_matchers::MatchFinder *parent, HipifyPPCallbacks *PPCallbacks, const std::string &mainFileName)
+  Cuda2HipCallback(Replacements& Replace, ast_matchers::MatchFinder *parent, HipifyPPCallbacks *PPCallbacks, const std::string &mainFileName)
     : Cuda2Hip(Replace, mainFileName), owner(parent), PP(PPCallbacks) {
     PP->setMatch(this);
   }
@@ -834,255 +735,6 @@ void addAllMatchers(ast_matchers::MatchFinder &Finder, Cuda2HipCallback *Callbac
   );
 }
 
-int64_t printStats(const std::string &csvFile, const std::string &srcFile,
-                   HipifyPPCallbacks &PPCallbacks, Cuda2HipCallback &Callback,
-                   uint64_t replacedBytes, uint64_t totalBytes, unsigned totalLines,
-                   const std::chrono::steady_clock::time_point &start) {
-  std::ofstream csv(csvFile, std::ios::app);
-  int64_t sum = 0, sum_interm = 0;
-  std::string str;
-  const std::string hipify_info = "[HIPIFY] info: ", separator = ";";
-  for (int i = 0; i < CONV_LAST; i++) {
-    sum += Callback.countReps[i] + PPCallbacks.countReps[i];
-  }
-  int64_t sum_unsupported = 0;
-  for (int i = 0; i < CONV_LAST; i++) {
-    sum_unsupported += Callback.countRepsUnsupported[i] + PPCallbacks.countRepsUnsupported[i];
-  }
-  if (sum > 0 || sum_unsupported > 0) {
-    str = "file \'" + srcFile + "\' statistics:\n";
-    llvm::outs() << "\n" << hipify_info << str;
-    csv << "\n" << str;
-    str = "CONVERTED refs count";
-    llvm::outs() << "  " << str << ": " << sum << "\n";
-    csv << "\n" << str << separator << sum << "\n";
-    str = "UNCONVERTED refs count";
-    llvm::outs() << "  " << str << ": " << sum_unsupported << "\n";
-    csv << str << separator << sum_unsupported << "\n";
-    str = "CONVERSION %";
-    long conv = 100 - std::lround(double(sum_unsupported*100)/double(sum + sum_unsupported));
-    llvm::outs() << "  " << str << ": " << conv << "%\n";
-    csv << str << separator << conv << "%\n";
-    str = "REPLACED bytes";
-    llvm::outs() << "  " << str << ": " << replacedBytes << "\n";
-    csv << str << separator << replacedBytes << "\n";
-    str = "TOTAL bytes";
-    llvm::outs() << "  " << str << ": " << totalBytes << "\n";
-    csv << str << separator << totalBytes << "\n";
-    str = "CHANGED lines of code";
-    unsigned changedLines = Callback.LOCs.size() + PPCallbacks.LOCs.size();
-    llvm::outs() << "  " << str << ": " << changedLines << "\n";
-    csv << str << separator << changedLines << "\n";
-    str = "TOTAL lines of code";
-    llvm::outs() << "  " << str << ": " << totalLines << "\n";
-    csv << str << separator << totalLines << "\n";
-    if (totalBytes > 0) {
-      str = "CODE CHANGED (in bytes) %";
-      conv = std::lround(double(replacedBytes * 100) / double(totalBytes));
-      llvm::outs() << "  " << str << ": " << conv << "%\n";
-      csv << str << separator << conv << "%\n";
-    }
-    if (totalLines > 0) {
-      str = "CODE CHANGED (in lines) %";
-      conv = std::lround(double(changedLines * 100) / double(totalLines));
-      llvm::outs() << "  " << str << ": " << conv << "%\n";
-      csv << str << separator << conv << "%\n";
-    }
-    typedef std::chrono::duration<double, std::milli> duration;
-    duration elapsed = std::chrono::steady_clock::now() - start;
-    str = "TIME ELAPSED s";
-    std::stringstream stream;
-    stream << std::fixed << std::setprecision(2) << elapsed.count() / 1000;
-    llvm::outs() << "  " << str << ": " << stream.str() << "\n";
-    csv << str << separator << stream.str() << "\n";
-  }
-  if (sum > 0) {
-    llvm::outs() << hipify_info << "CONVERTED refs by type:\n";
-    csv << "\nCUDA ref type" << separator << "Count\n";
-    for (int i = 0; i < CONV_LAST; i++) {
-      sum_interm = Callback.countReps[i] + PPCallbacks.countReps[i];
-      if (0 == sum_interm) {
-        continue;
-      }
-      llvm::outs() << "  " << counterNames[i] << ": " << sum_interm << "\n";
-      csv << counterNames[i] << separator << sum_interm << "\n";
-    }
-    llvm::outs() << hipify_info << "CONVERTED refs by API:\n";
-    csv << "\nCUDA API" << separator << "Count\n";
-    for (int i = 0; i < API_LAST; i++) {
-      llvm::outs() << "  " << apiNames[i] << ": " << Callback.countApiReps[i] + PPCallbacks.countApiReps[i] << "\n";
-      csv << apiNames[i] << separator << Callback.countApiReps[i] + PPCallbacks.countApiReps[i] << "\n";
-    }
-    for (const auto & it : PPCallbacks.cuda2hipConverted) {
-      const auto found = Callback.cuda2hipConverted.find(it.first);
-      if (found == Callback.cuda2hipConverted.end()) {
-        Callback.cuda2hipConverted.insert(std::pair<std::string, uint64_t>(it.first, 1));
-      } else {
-        found->second += it.second;
-      }
-    }
-    llvm::outs() << hipify_info << "CONVERTED refs by names:\n";
-    csv << "\nCUDA ref name" << separator << "Count\n";
-    for (const auto & it : Callback.cuda2hipConverted) {
-      llvm::outs() << "  " << it.first << ": " << it.second << "\n";
-      csv << it.first << separator << it.second << "\n";
-    }
-  }
-  if (sum_unsupported > 0) {
-    str = "UNCONVERTED refs by type:";
-    llvm::outs() << hipify_info << str << "\n";
-    csv << "\nUNCONVERTED CUDA ref type" << separator << "Count\n";
-    for (int i = 0; i < CONV_LAST; i++) {
-      sum_interm = Callback.countRepsUnsupported[i] + PPCallbacks.countRepsUnsupported[i];
-      if (0 == sum_interm) {
-        continue;
-      }
-      llvm::outs() << "  " << counterNames[i] << ": " << sum_interm << "\n";
-      csv << counterNames[i] << separator << sum_interm << "\n";
-    }
-    llvm::outs() << hipify_info << "UNCONVERTED refs by API:\n";
-    csv << "\nUNCONVERTED CUDA API" << separator << "Count\n";
-    for (int i = 0; i < API_LAST; i++) {
-      llvm::outs() << "  " << apiNames[i] << ": " << Callback.countApiRepsUnsupported[i] + PPCallbacks.countApiRepsUnsupported[i] << "\n";
-      csv << apiNames[i] << separator << Callback.countApiRepsUnsupported[i] + PPCallbacks.countApiRepsUnsupported[i] << "\n";
-    }
-    for (const auto & it : PPCallbacks.cuda2hipUnconverted) {
-      const auto found = Callback.cuda2hipUnconverted.find(it.first);
-      if (found == Callback.cuda2hipUnconverted.end()) {
-        Callback.cuda2hipUnconverted.insert(std::pair<std::string, uint64_t>(it.first, 1));
-      } else {
-        found->second += it.second;
-      }
-    }
-    llvm::outs() << hipify_info << "UNCONVERTED refs by names:\n";
-    csv << "\nUNCONVERTED CUDA ref name" << separator << "Count\n";
-    for (const auto & it : Callback.cuda2hipUnconverted) {
-      llvm::outs() << "  " << it.first << ": " << it.second << "\n";
-      csv << it.first << separator << it.second << "\n";
-    }
-  }
-  csv.close();
-  return sum;
-}
-
-void printAllStats(const std::string &csvFile, int64_t totalFiles, int64_t convertedFiles,
-                   uint64_t replacedBytes, uint64_t totalBytes, unsigned changedLines, unsigned totalLines,
-                   const std::chrono::steady_clock::time_point &start) {
-  std::ofstream csv(csvFile, std::ios::app);
-  int64_t sum = 0, sum_interm = 0;
-  std::string str;
-  const std::string hipify_info = "[HIPIFY] info: ", separator = ";";
-  for (int i = 0; i < CONV_LAST; i++) {
-    sum += countRepsTotal[i];
-  }
-  int64_t sum_unsupported = 0;
-  for (int i = 0; i < CONV_LAST; i++) {
-    sum_unsupported += countRepsTotalUnsupported[i];
-  }
-  if (sum > 0 || sum_unsupported > 0) {
-    str = "TOTAL statistics:\n";
-    llvm::outs() << "\n" << hipify_info << str;
-    csv << "\n" << str;
-    str = "CONVERTED files";
-    llvm::outs() << "  " << str << ": " << convertedFiles << "\n";
-    csv << "\n" << str << separator << convertedFiles << "\n";
-    str = "PROCESSED files";
-    llvm::outs() << "  " << str << ": " << totalFiles << "\n";
-    csv << str << separator << totalFiles << "\n";
-    str = "CONVERTED refs count";
-    llvm::outs() << "  " << str << ": " << sum << "\n";
-    csv << str << separator << sum << "\n";
-    str = "UNCONVERTED refs count";
-    llvm::outs() << "  " << str << ": " << sum_unsupported << "\n";
-    csv << str << separator << sum_unsupported << "\n";
-    str = "CONVERSION %";
-    long conv = 100 - std::lround(double(sum_unsupported * 100) / double(sum + sum_unsupported));
-    llvm::outs() << "  " << str << ": " << conv << "%\n";
-    csv << str << separator << conv << "%\n";
-    str = "REPLACED bytes";
-    llvm::outs() << "  " << str << ": " << replacedBytes << "\n";
-    csv << str << separator << replacedBytes << "\n";
-    str = "TOTAL bytes";
-    llvm::outs() << "  " << str << ": " << totalBytes << "\n";
-    csv << str << separator << totalBytes << "\n";
-    str = "CHANGED lines of code";
-    llvm::outs() << "  " << str << ": " << changedLines << "\n";
-    csv << str << separator << changedLines << "\n";
-    str = "TOTAL lines of code";
-    llvm::outs() << "  " << str << ": " << totalLines << "\n";
-    csv << str << separator << totalLines << "\n";
-    if (totalBytes > 0) {
-      str = "CODE CHANGED (in bytes) %";
-      conv = std::lround(double(replacedBytes * 100) / double(totalBytes));
-      llvm::outs() << "  " << str << ": " << conv << "%\n";
-      csv << str << separator << conv << "%\n";
-    }
-    if (totalLines > 0) {
-      str = "CODE CHANGED (in lines) %";
-      conv = std::lround(double(changedLines * 100) / double(totalLines));
-      llvm::outs() << "  " << str << ": " << conv << "%\n";
-      csv << str << separator << conv << "%\n";
-    }
-    typedef std::chrono::duration<double, std::milli> duration;
-    duration elapsed = std::chrono::steady_clock::now() - start;
-    str = "TIME ELAPSED s";
-    std::stringstream stream;
-    stream << std::fixed << std::setprecision(2) << elapsed.count() / 1000;
-    llvm::outs() << "  " << str << ": " << stream.str() << "\n";
-    csv << str << separator << stream.str() << "\n";
-  }
-  if (sum > 0) {
-    llvm::outs() << hipify_info << "CONVERTED refs by type:\n";
-    csv << "\nCUDA ref type" << separator << "Count\n";
-    for (int i = 0; i < CONV_LAST; i++) {
-      sum_interm = countRepsTotal[i];
-      if (0 == sum_interm) {
-        continue;
-      }
-      llvm::outs() << "  " << counterNames[i] << ": " << sum_interm << "\n";
-      csv << counterNames[i] << separator << sum_interm << "\n";
-    }
-    llvm::outs() << hipify_info << "CONVERTED refs by API:\n";
-    csv << "\nCUDA API" << separator << "Count\n";
-    for (int i = 0; i < API_LAST; i++) {
-      llvm::outs() << "  " << apiNames[i] << ": " << countApiRepsTotal[i] << "\n";
-      csv << apiNames[i] << separator << countApiRepsTotal[i] << "\n";
-    }
-    llvm::outs() << hipify_info << "CONVERTED refs by names:\n";
-    csv << "\nCUDA ref name" << separator << "Count\n";
-    for (const auto & it : cuda2hipConvertedTotal) {
-      llvm::outs() << "  " << it.first << ": " << it.second << "\n";
-      csv << it.first << separator << it.second << "\n";
-    }
-  }
-  if (sum_unsupported > 0) {
-    str = "UNCONVERTED refs by type:";
-    llvm::outs() << hipify_info << str << "\n";
-    csv << "\nUNCONVERTED CUDA ref type" << separator << "Count\n";
-    for (int i = 0; i < CONV_LAST; i++) {
-      sum_interm = countRepsTotalUnsupported[i];
-      if (0 == sum_interm) {
-        continue;
-      }
-      llvm::outs() << "  " << counterNames[i] << ": " << sum_interm << "\n";
-      csv << counterNames[i] << separator << sum_interm << "\n";
-    }
-    llvm::outs() << hipify_info << "UNCONVERTED refs by API:\n";
-    csv << "\nUNCONVERTED CUDA API" << separator << "Count\n";
-    for (int i = 0; i < API_LAST; i++) {
-      llvm::outs() << "  " << apiNames[i] << ": " << countApiRepsTotalUnsupported[i] << "\n";
-      csv << apiNames[i] << separator << countApiRepsTotalUnsupported[i] << "\n";
-    }
-    llvm::outs() << hipify_info << "UNCONVERTED refs by names:\n";
-    csv << "\nUNCONVERTED CUDA ref name" << separator << "Count\n";
-    for (const auto & it : cuda2hipUnconvertedTotal) {
-      llvm::outs() << "  " << it.first << ": " << it.second << "\n";
-      csv << it.first << separator << it.second << "\n";
-    }
-  }
-  csv.close();
-}
-
 void copyFile(const std::string& src, const std::string& dst) {
   std::ifstream source(src, std::ios::binary);
   std::ofstream dest(dst, std::ios::binary);
@@ -1090,16 +742,7 @@ void copyFile(const std::string& src, const std::string& dst) {
 }
 
 int main(int argc, const char **argv) {
-  auto start = std::chrono::steady_clock::now();
-  auto begin = start;
-
-  // The signature of PrintStackTraceOnErrorSignal changed in llvm 3.9. We don't support
-  // anything older than 3.8, so let's specifically detect the one old version we support.
-#if (LLVM_VERSION_MAJOR == 3) && (LLVM_VERSION_MINOR == 8)
-  llvm::sys::PrintStackTraceOnErrorSignal();
-#else
-  llvm::sys::PrintStackTraceOnErrorSignal(StringRef());
-#endif
+  llcompat::PrintStackTraceOnErrorSignal();
 
   CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::OneOrMore);
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
@@ -1108,6 +751,7 @@ int main(int argc, const char **argv) {
     llvm::errs() << "[HIPIFY] conflict: -o and multiple source files are specified.\n";
     return 1;
   }
+
   if (NoOutput) {
     if (Inplace) {
       llvm::errs() << "[HIPIFY] conflict: both -no-output and -inplace options are specified.\n";
@@ -1118,24 +762,23 @@ int main(int argc, const char **argv) {
       return 1;
     }
   }
+
   if (Examine) {
     NoOutput = PrintStats = true;
   }
+
   int Result = 0;
-  std::string csv;
+
+  // Arguments for the Statistics print routines.
+  std::unique_ptr<std::ostream> csv = nullptr;
+  llvm::raw_ostream* statPrint = nullptr;
   if (!OutputStatsFilename.empty()) {
-    csv = OutputStatsFilename;
-  } else {
-    csv = "hipify_stats.csv";
+    csv = std::unique_ptr<std::ostream>(new std::ofstream(OutputStatsFilename, std::ios_base::trunc));
   }
-  size_t filesTranslated = fileSources.size();
-  uint64_t repBytesTotal = 0;
-  uint64_t bytesTotal = 0;
-  unsigned changedLinesTotal = 0;
-  unsigned linesTotal = 0;
-  if (PrintStats && filesTranslated > 1) {
-    std::remove(csv.c_str());
+  if (PrintStats) {
+    statPrint = &llvm::errs();
   }
+
   for (const auto & src : fileSources) {
     if (dst.empty()) {
       if (Inplace) {
@@ -1155,6 +798,9 @@ int main(int argc, const char **argv) {
     // Should we fail for some reason, we'll just leak this file and not corrupt the input.
     copyFile(src, tmpFile);
 
+    // Initialise the statistics counters for this file.
+    Statistics::setActive(src);
+
     // RefactoringTool operates on the file in-place. Giving it the output path is no good,
     // because that'll break relative includes, and we don't want to overwrite the input file.
     // So what we do is operate on a copy, which we then move to the output.
@@ -1162,15 +808,7 @@ int main(int argc, const char **argv) {
     ast_matchers::MatchFinder Finder;
 
     // The Replacements to apply to the file `src`.
-    Replacements* replacementsToUse;
-#if LLVM_VERSION_MAJOR > 3
-    // getReplacements() now returns a map from filename to Replacements - so create an entry
-    // for this source file and return a pointer to it.
-    replacementsToUse = &(Tool.getReplacements()[tmpFile]);
-#else
-    replacementsToUse = &Tool.getReplacements();
-#endif
-
+    Replacements& replacementsToUse = llcompat::getReplacements(Tool, tmpFile);
     HipifyPPCallbacks* PPCallbacks = new HipifyPPCallbacks(replacementsToUse, tmpFile);
     Cuda2HipCallback Callback(replacementsToUse, &Finder, PPCallbacks, tmpFile);
 
@@ -1194,27 +832,8 @@ int main(int argc, const char **argv) {
     TextDiagnosticPrinter DiagnosticPrinter(llvm::errs(), &*DiagOpts);
     DiagnosticsEngine Diagnostics(IntrusiveRefCntPtr<DiagnosticIDs>(new DiagnosticIDs()), &*DiagOpts, &DiagnosticPrinter, false);
 
-    uint64_t repBytes = 0;
-    uint64_t bytes = 0;
-    unsigned lines = 0;
     SourceManager SM(Diagnostics, Tool.getFiles());
-    if (PrintStats) {
-      DEBUG(dbgs() << "Replacements collected by the tool:\n");
-#if LLVM_VERSION_MAJOR > 3
-        Replacements& replacements = Tool.getReplacements().begin()->second;
-#else
-        Replacements& replacements = Tool.getReplacements();
-#endif
-      for (const auto &replacement : replacements) {
-        DEBUG(dbgs() << replacement.toString() << "\n");
-        repBytes += replacement.getLength();
-      }
-      std::ifstream src_file(dst, std::ios::binary | std::ios::ate);
-      src_file.clear();
-      src_file.seekg(0);
-      lines = std::count(std::istreambuf_iterator<char>(src_file), std::istreambuf_iterator<char>(), '\n');
-      bytes = src_file.tellg();
-    }
+
     Rewriter Rewrite(SM, DefaultLangOptions);
     if (!Tool.applyAllReplacements(Rewrite)) {
       DEBUG(dbgs() << "Skipped some replacements.\n");
@@ -1227,26 +846,16 @@ int main(int argc, const char **argv) {
     } else {
       remove(tmpFile.c_str());
     }
-    if (PrintStats) {
-      if (fileSources.size() == 1) {
-        if (OutputStatsFilename.empty()) {
-          csv = dst + ".csv";
-        }
-        std::remove(csv.c_str());
-      }
-      if (0 == printStats(csv, src, *PPCallbacks, Callback, repBytes, bytes, lines, start)) {
-        filesTranslated--;
-      }
-      start = std::chrono::steady_clock::now();
-      repBytesTotal += repBytes;
-      bytesTotal += bytes;
-      changedLinesTotal += PPCallbacks->LOCs.size() + Callback.LOCs.size();
-      linesTotal += lines;
-    }
+
+    Statistics::current().markCompletion();
+    Statistics::current().print(csv.get(), statPrint);
+
     dst.clear();
   }
-  if (PrintStats && fileSources.size() > 1) {
-    printAllStats(csv, fileSources.size(), filesTranslated, repBytesTotal, bytesTotal, changedLinesTotal, linesTotal, begin);
+
+  if (fileSources.size() > 1) {
+    Statistics::printAggregate(csv.get(), statPrint);
   }
+
   return Result;
 }
