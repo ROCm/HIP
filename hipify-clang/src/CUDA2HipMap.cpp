@@ -1,7 +1,5 @@
 #include "CUDA2HipMap.h"
 
-const std::set<llvm::StringRef> CUDA_EXCLUDES{"CHECK_CUDA_ERROR", "CUDA_SAFE_CALL"};
-
 /// Maps the names of CUDA types to the corresponding hip types.
 const std::map<llvm::StringRef, hipCounter> CUDA_TYPE_NAME_MAP{
     // Error codes and return types
