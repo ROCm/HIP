@@ -34,7 +34,7 @@ void insertReplacement(ct::Replacements& replacements, const ct::Replacement& re
 
 void EnterPreprocessorTokenStream(clang::Preprocessor& _pp, const clang::Token *start, size_t len, bool DisableMacroExpansion) {
 #if (LLVM_VERSION_MAJOR == 3) && (LLVM_VERSION_MINOR == 8)
-    _pp.EnterTokenStream(start, len, false, DisableMacroExpansion;
+    _pp.EnterTokenStream(start, len, false, DisableMacroExpansion);
 #else
     _pp.EnterTokenStream(clang::ArrayRef<clang::Token>{start, len}, DisableMacroExpansion);
 #endif
