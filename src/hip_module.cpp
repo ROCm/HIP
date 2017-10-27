@@ -23,15 +23,18 @@ THE SOFTWARE.
 #include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
-#include <libelf.h>
-#include <elf.h>
-#include <gelf.h>
+#include <cstdint>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <vector>
 #include <map>
 
-#include "hsa/hsa.h"
-#include "hsa/hsa_ext_amd.h"
-#include "hsa/amd_hsa_kernel_code.h"
+#include <hsa/hsa.h>
+#include <hsa/hsa_ext_amd.h>
+#include <hsa/amd_hsa_kernel_code.h>
 
+#include "elfio/elfio.hpp"
 #include "hip/hip_runtime.h"
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
@@ -114,6 +117,8 @@ namespace hipdrv {
 }   // End namespace hipdrv
 
 uint64_t PrintSymbolSizes(const void *emi, const char *name){
+    using namespace ELFIO;
+
     const Elf64_Ehdr *ehdr = (const Elf64_Ehdr*)emi;
     if(NULL == ehdr || EV_CURRENT != ehdr->e_version){}
     const Elf64_Shdr * shdr = (const Elf64_Shdr*)((char*)emi + ehdr->e_shoff);
@@ -138,6 +143,8 @@ uint64_t PrintSymbolSizes(const void *emi, const char *name){
 }
 
 uint64_t ElfSize(const void *emi){
+    using namespace ELFIO;
+
     const Elf64_Ehdr *ehdr = (const Elf64_Ehdr*)emi;
     const Elf64_Shdr *shdr = (const Elf64_Shdr*)((char*)emi + ehdr->e_shoff);
 
@@ -157,8 +164,156 @@ uint64_t ElfSize(const void *emi){
     return total_size;
 }
 
+namespace
+{
+    template<typename P>
+    inline
+    ELFIO::section* find_section_if(ELFIO::elfio& reader, P p)
+    {
+        using namespace std;
 
-hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
+        const auto it = find_if(
+            reader.sections.begin(), reader.sections.end(), move(p));
+
+        return it != reader.sections.end() ? *it : nullptr;
+    }
+
+    inline
+    std::vector<std::string> copy_names_of_undefined_symbols(
+        const ELFIO::symbol_section_accessor& section)
+    {
+        using namespace ELFIO;
+        using namespace std;
+
+        vector<string> r;
+
+        for (auto i = 0u; i != section.get_symbols_num(); ++i) {
+            // TODO: this is boyscout code, caching the temporaries
+            //       may be of worth.
+            string name;
+            Elf64_Addr value = 0;
+            Elf_Xword size = 0;
+            Elf_Half sect_idx = 0;
+            uint8_t bind = 0;
+            uint8_t type = 0;
+            uint8_t other = 0;
+
+            section.get_symbol(
+                i, name, value, size, bind, type, sect_idx, other);
+
+            if (sect_idx == SHN_UNDEF && !name.empty()) {
+                r.push_back(std::move(name));
+            }
+        }
+
+        return r;
+    }
+
+    inline
+    std::pair<ELFIO::Elf64_Addr, ELFIO::Elf_Xword> find_symbol_address(
+        const ELFIO::symbol_section_accessor& section,
+        const std::string& symbol_name)
+    {
+        using namespace ELFIO;
+        using namespace std;
+
+        static constexpr pair<Elf64_Addr, Elf_Xword> r{0, 0};
+
+        for (auto i = 0u; i != section.get_symbols_num(); ++i) {
+            // TODO: this is boyscout code, caching the temporaries
+            //       may be of worth.
+            string name;
+            Elf64_Addr value = 0;
+            Elf_Xword size = 0;
+            Elf_Half sect_idx = 0;
+            uint8_t bind = 0;
+            uint8_t type = 0;
+            uint8_t other = 0;
+
+            section.get_symbol(
+                i, name, value, size, bind, type, sect_idx, other);
+
+            if (name == symbol_name) return make_pair(value, size);
+        }
+
+        return r;
+    }
+
+    inline
+    void associate_code_object_symbols_with_host_allocation(
+        const ELFIO::elfio& reader,
+        const ELFIO::elfio& self_reader,
+        ELFIO::section* code_object_dynsym,
+        ELFIO::section* process_symtab,
+        hsa_agent_t agent,
+        hsa_executable_t executable)
+    {
+        using namespace ELFIO;
+        using namespace std;
+
+        if (!code_object_dynsym || !process_symtab) return;
+
+        const auto undefined_symbols = copy_names_of_undefined_symbols(
+            symbol_section_accessor{reader, code_object_dynsym});
+
+        for (auto&& x : undefined_symbols) {
+            const auto tmp = find_symbol_address(
+                symbol_section_accessor{self_reader, process_symtab}, x);
+
+            assert(tmp.first);
+
+            void* p = nullptr;
+            hsa_amd_memory_lock(
+                reinterpret_cast<void*>(tmp.first), tmp.second, &agent, 1, &p);
+
+            hsa_executable_agent_global_variable_define(
+                executable, agent, x.c_str(), p);
+
+            static vector<
+                unique_ptr<void, decltype(hsa_amd_memory_unlock)*>> globals;
+            static mutex mtx;
+
+            lock_guard<std::mutex> lck{mtx};
+            globals.emplace_back(p, hsa_amd_memory_unlock);
+        }
+    }
+
+    inline
+    void load_code_object_and_freeze_executable(
+        const char* file, hsa_agent_t agent, hsa_executable_t executable)
+    {   // TODO: the following sequence is inefficient, should be refactored
+        //       into a single load of the file and subsequent ELFIO
+        //       processing.
+        using namespace std;
+
+        static const auto cor_deleter = [](hsa_code_object_reader_t* p) {
+            hsa_code_object_reader_destroy(*p);
+        };
+
+        using RAII_code_reader = unique_ptr<
+            hsa_code_object_reader_t, decltype(cor_deleter)>;
+
+        unique_ptr<FILE, decltype(fclose)*> cobj{fopen(file, "r"), fclose};
+        RAII_code_reader tmp{new hsa_code_object_reader_t, cor_deleter};
+        hsa_code_object_reader_create_from_file(fileno(cobj.get()), tmp.get());
+
+        hsa_executable_load_agent_code_object(
+            executable, agent, *tmp, nullptr, nullptr);
+
+        hsa_executable_freeze(executable, nullptr);
+
+        static vector<RAII_code_reader> code_readers;
+        static mutex mtx;
+
+        lock_guard<mutex> lck{mtx};
+        code_readers.push_back(move(tmp));
+    }
+}
+
+hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
+{
+    using namespace ELFIO;
+
     HIP_INIT_API(module, fname);
     hipError_t ret = hipSuccess;
     *module = new ihipModule_t;
@@ -174,96 +329,42 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname){
     }else{
         int deviceId = ctx->getDevice()->_deviceId;
         ihipDevice_t *currentDevice = ihipGetDevice(deviceId);
-        std::ifstream in(fname, std::ios::binary | std::ios::ate);
 
-        if(!in.is_open() ){
+        hsa_executable_create_alt(
+            HSA_PROFILE_FULL,
+            HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT,
+            nullptr,
+            &(*module)->executable);
+
+        elfio reader;
+        if (!reader.load(fname)) {
             return ihipLogStatus(hipErrorFileNotFound);
+        }
+        else {
+            // TODO: this may benefit from caching as well.
+            elfio self_reader;
+            self_reader.load("/proc/self/exe");
 
-        } else {
+            const auto symtab =
+                find_section_if(self_reader, [](const ELFIO::section* x) {
+                    return x->get_type() == SHT_SYMTAB;
+                });
 
-            size_t size = std::string::size_type(in.tellg());
-            void *p = NULL;
-            hsa_agent_t agent = currentDevice->_hsaAgent;
-            hsa_region_t sysRegion;
-            hsa_status_t status = hsa_agent_iterate_regions(agent, hipdrv::findSystemRegions, &sysRegion);
-            status = hsa_memory_allocate(sysRegion, size, (void**)&p);
+            const auto code_object_dynsym =
+                find_section_if(reader, [](const ELFIO::section* x) {
+                    return x->get_type() == SHT_DYNSYM;
+                });
 
-            if(status != HSA_STATUS_SUCCESS){
-                return ihipLogStatus(hipErrorOutOfMemory);
-            }
+            associate_code_object_symbols_with_host_allocation(
+                reader,
+                self_reader,
+                code_object_dynsym,
+                symtab,
+                currentDevice->_hsaAgent,
+                (*module)->executable);
 
-            char *ptr = (char*)p;
-            if(!ptr){
-                return ihipLogStatus(hipErrorOutOfMemory);
-            }
-            (*module)->ptr = p;
-            (*module)->size = size;
-            in.seekg(0, std::ios::beg);
-            std::copy(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>(), ptr);
-/*
-            Elf *e = elf_memory((char*)p, size);
-            if(elf_kind(e) != ELF_K_ELF){
-              return ihipLogStatus(hipErrorInvalidValue);
-            }
-            size_t numpHdrs;
-            if(elf_getphdrnum(e, &numpHdrs) != 0){
-              return ihipLogStatus(hipErrorInvalidValue);
-            }
-            for(size_t i=0;i<numpHdrs;i++){
-              GElf_Phdr pHdr;
-              if(gelf_getphdr(e, i, &pHdr) != &pHdr){
-                continue;
-              }
-              if(pHdr.p_type == PT_NOTE && pHdr.p_align >= sizeof(int)){
-                char* ptr = (char*) p + pHdr.p_offset;
-                char* segmentEnd = ptr + pHdr.p_filesz;
-                while(ptr < segmentEnd){
-                  MyElfNote *note = (MyElfNote*) ptr;
-                  char *name = (char*) &note[1];
-                  char *desc = name + alignTo(note->n_namesz, sizeof(int));
-                  if (note->n_type == 8) {
-                    std::string metadatastr((const char*)desc, (size_t)note->n_descsz);
-                    AMDGPU::RuntimeMD::Program::Metadata meta;
-                    meta = meta.fromYAML(metadatastr);
-                    for(int i=0;i<meta.Kernels.size();i++){
-                      struct ihipKernArgInfo pl;
-                      size_t totalSizeOfArgs = 0;
-                      for(int j=0;j<meta.Kernels[i].Args.size();j++){
-                        if(meta.Kernels[i].Args[j].Kind < 7) {
-                          pl.Size.push_back(meta.Kernels[i].Args[j].Size);
-                          pl.Align.push_back(meta.Kernels[i].Args[j].Align);
-                          pl.ArgType.push_back(meta.Kernels[i].Args[j].TypeName);
-                          pl.ArgName.push_back(meta.Kernels[i].Args[j].Name);
-                          totalSizeOfArgs += meta.Kernels[i].Args[j].Align;
-                        }
-                      }
-                      pl.totalSize = totalSizeOfArgs;
-                      kernelArguments[meta.Kernels[i].Name] = pl;
-                    }
-                    break;
-                  }
-
-                  ptr += sizeof(*note)
-                      + alignTo(note->n_namesz, sizeof(int))
-                      + alignTo(note->n_descsz, sizeof(int));
-                }
-              }
-            }
-*/
-            status = hsa_code_object_deserialize(ptr, size, NULL, &(*module)->object);
-
-            if(status != HSA_STATUS_SUCCESS){
-                return ihipLogStatus(hipErrorSharedObjectInitFailed);
-            }
-
-            status = hsa_executable_create(HSA_PROFILE_FULL, HSA_EXECUTABLE_STATE_UNFROZEN, NULL, &(*module)->executable);
-            CHECKLOG_HSA(status, hipErrorNotInitialized);
-
-            status = hsa_executable_load_code_object((*module)->executable, agent, (*module)->object, NULL);
-            CHECKLOG_HSA(status, hipErrorNotInitialized);
-
-            status = hsa_executable_freeze((*module)->executable, NULL);
-            CHECKLOG_HSA(status, hipErrorNotInitialized);
+            load_code_object_and_freeze_executable(
+                fname, currentDevice->_hsaAgent, (*module)->executable);
         }
     }
 
@@ -283,16 +384,16 @@ hipError_t hipModuleUnload(hipModule_t hmod)
 		{
 				ret = hipErrorInvalidValue;
 		}
-    status = hsa_code_object_destroy(hmod->object);
-    if(status != HSA_STATUS_SUCCESS)
-		{
-				ret = hipErrorInvalidValue;
-		}
-    status = hsa_memory_free(hmod->ptr);
-    if(status != HSA_STATUS_SUCCESS)
-		{
-				ret = hipErrorInvalidValue;
-		}
+    // status = hsa_code_object_destroy(hmod->object);
+    // if(status != HSA_STATUS_SUCCESS)
+	// 	{
+	// 			ret = hipErrorInvalidValue;
+	// 	}
+    // status = hsa_memory_free(hmod->ptr);
+    // if(status != HSA_STATUS_SUCCESS)
+	// 	{
+	// 			ret = hipErrorInvalidValue;
+	// 	}
     for(auto f = hmod->funcTrack.begin(); f != hmod->funcTrack.end(); ++f) {
       delete *f;
     }
@@ -404,7 +505,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
             } else {
                 return ihipLogStatus(hipErrorNotInitialized);
             }
-            
+
         }else{
             return ihipLogStatus(hipErrorInvalidValue);
         }
@@ -450,7 +551,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
 
         hc::completion_future cf;
 
-        lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize, 
+        lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize,
                                   (startEvent || stopEvent) ? &cf : nullptr
 #if (__hcc_workweek__ > 17312)
                                   , f->_name.c_str()
