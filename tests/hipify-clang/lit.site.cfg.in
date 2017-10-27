@@ -1,7 +1,8 @@
 import sys
 
 config.llvm_tools_dir = "@LLVM_TOOLS_BINARY_DIR@"
-config.obj_root = "@BINARY_DIR@"
+config.obj_root = "@CMAKE_CURRENT_BINARY_DIR@"
+config.cuda_root = "@CUDA_TOOLKIT_ROOT_DIR@"
 
 # Support substitution of the tools and libs dirs with user parameters. This is
 # used when we can't determine the tool dir at configuration time.
