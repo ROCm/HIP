@@ -244,23 +244,28 @@ static const DbName dbName [] =
 #endif
 
 
-
+static inline uint64_t getTicks()
+{
+    return hc::get_system_ticks();
+}
 
 //---
-extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
+extern uint64_t recordApiTrace(std::string *fullStr, const std::string &apiStr);
 
 #if COMPILE_HIP_ATP_MARKER || (COMPILE_HIP_TRACE_API & 0x1)
 #define API_TRACE(forceTrace, ...)\
+uint64_t hipApiStartTick;\
 {\
     tls_tidInfo.incApiSeqNum();\
     if (forceTrace || (HIP_PROFILE_API || (COMPILE_HIP_DB && (HIP_TRACE_API & (1<<TRACE_ALL))))) {\
         std::string apiStr = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
         std::string fullStr;\
-        recordApiTrace(&fullStr, apiStr);\
+        hipApiStartTick = recordApiTrace(&fullStr, apiStr);\
         if      (HIP_PROFILE_API == 0x1) {MARKER_BEGIN(__func__, "HIP") }\
         else if (HIP_PROFILE_API == 0x2) {MARKER_BEGIN(fullStr.c_str(), "HIP"); }\
     }\
 }
+
 #else
 // Swallow API_TRACE
 #define API_TRACE(IS_CMD, ...)\
@@ -302,7 +307,10 @@ extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
         tls_lastHipError = localHipStatus;\
         \
         if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API & (1<<TRACE_ALL)) {\
-            fprintf(stderr, "  %ship-api tid:%d.%lu %-30s ret=%2d (%s)>>%s\n", (localHipStatus == 0) ? API_COLOR:KRED, tls_tidInfo.tid(),tls_tidInfo.apiSeqNum(),  __func__, localHipStatus, ihipErrorString(localHipStatus), API_COLOR_END);\
+            auto ticks = getTicks() - hipApiStartTick;\
+            fprintf(stderr, "  %ship-api tid:%d.%lu %-30s ret=%2d (%s)>> +%lu ns%s\n", \
+                    (localHipStatus == 0) ? API_COLOR:KRED, tls_tidInfo.tid(),tls_tidInfo.apiSeqNum(),  \
+                    __func__, localHipStatus, ihipErrorString(localHipStatus), ticks, API_COLOR_END);\
         }\
         if (HIP_PROFILE_API) { MARKER_END(); }\
         localHipStatus;\

@@ -374,6 +374,8 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
 
 hipError_t hipModuleUnload(hipModule_t hmod)
 {
+    HIP_INIT_API(hmod);
+
     // TODO - improve this synchronization so it is thread-safe.
     // Currently we want for all inflight activity to complete, but don't prevent another
     // thread from launching new kernels before we finish this operation.
@@ -408,7 +410,7 @@ hipError_t ihipModuleGetSymbol(hipFunction_t *func, hipModule_t hmod, const char
     hipError_t ret = hipSuccess;
 
     if (name == nullptr){
-        return ihipLogStatus(hipErrorInvalidValue);
+        return (hipErrorInvalidValue);
     }
 
     if (ctx == nullptr){
@@ -431,7 +433,7 @@ hipError_t ihipModuleGetSymbol(hipFunction_t *func, hipModule_t hmod, const char
         hsa_executable_symbol_t 	symbol;
         status = hsa_executable_get_symbol(hmod->executable, NULL, name, gpuAgent, 0, &symbol);
         if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorNotFound);
+            return hipErrorNotFound;
         }
 
         status = hsa_executable_symbol_get_info(symbol,
@@ -503,11 +505,11 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
             if(config[0] == HIP_LAUNCH_PARAM_BUFFER_POINTER && config[2] == HIP_LAUNCH_PARAM_BUFFER_SIZE && config[4] == HIP_LAUNCH_PARAM_END){
                 kernArgSize = *(size_t*)(config[3]);
             } else {
-                return ihipLogStatus(hipErrorNotInitialized);
+                return hipErrorNotInitialized;
             }
 
         }else{
-            return ihipLogStatus(hipErrorInvalidValue);
+            return hipErrorInvalidValue;
         }
 
 
@@ -624,7 +626,7 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes,
     }
     else{
         hipFunction_t func;
-        ihipModuleGetSymbol(&func, hmod, name);
+        ret = ihipModuleGetSymbol(&func, hmod, name);
         *bytes = PrintSymbolSizes(hmod->ptr, name) + sizeof(amd_kernel_code_t);
         *dptr = reinterpret_cast<void*>(func->_object);
         return ihipLogStatus(ret);
