@@ -4,20 +4,9 @@
 #include <set>
 #include <map>
 
-#include "Types.h"
+#include "Statistics.h"
 
-// TODO: This shouldn't really be here. More restructuring needed...
-struct hipCounter {
-    llvm::StringRef hipName;
-    ConvTypes countType;
-    ApiTypes countApiType;
-    int unsupported;
-};
-
-#define HIP_UNSUPPORTED -1
-
-/// Macros to ignore.
-extern const std::set<llvm::StringRef> CUDA_EXCLUDES;
+#define HIP_UNSUPPORTED true
 
 /// Maps cuda header names to hip header names.
 extern const std::map<llvm::StringRef, hipCounter> CUDA_INCLUDE_MAP;
