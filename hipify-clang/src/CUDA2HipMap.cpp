@@ -2677,7 +2677,6 @@ const std::map<llvm::StringRef, hipCounter>& CUDA_RENAMES_MAP() {
 
     // First run, so compute the union map.
     ret = CUDA_IDENTIFIER_MAP;
-    ret.insert(CUDA_INCLUDE_MAP.begin(), CUDA_INCLUDE_MAP.end());
     ret.insert(CUDA_TYPE_NAME_MAP.begin(), CUDA_TYPE_NAME_MAP.end());
 
     return ret;
