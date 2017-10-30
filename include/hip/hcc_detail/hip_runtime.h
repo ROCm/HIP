@@ -50,10 +50,16 @@ THE SOFTWARE.
 #include <hip/hip_runtime_api.h>
 
 
+// define HIP_ENABLE_PRINTF to enable printf
+#ifdef HIP_ENABLE_PRINTF
+  #define HCC_ENABLE_ACCELERATOR_PRINTF 1
+#endif 
+
 //---
 // Remainder of this file only compiles with HCC
 #if defined __HCC__
 #include <grid_launch.h>
+#include "hc_printf.hpp"
 //TODO-HCC-GL - change this to typedef.
 //typedef grid_launch_parm hipLaunchParm ;
 
@@ -419,6 +425,20 @@ static inline __device__ void* memset(void* ptr, int val, size_t size)
   return __hip_hc_memset(ptr, val8, size);
 }
 
+
+#ifdef __HCC_ACCELERATOR__
+
+#ifdef HC_FEATURE_PRINTF
+template <typename... All>
+static inline __device__ void printf(const char* format, All... all) {
+  hc::printf(format, all...);
+}
+#else
+template <typename... All>
+static inline __device__ void printf(const char* format, All... all) { }
+#endif
+
+#endif
 
 
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
