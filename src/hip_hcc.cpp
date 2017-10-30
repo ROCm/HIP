@@ -700,26 +700,25 @@ int checkAccess(hsa_agent_t agent, hsa_amd_memory_pool_t pool)
     return access;
 }
 
-hsa_status_t get_region_info(hsa_region_t region, void* data)
+hsa_status_t get_pool_info(hsa_amd_memory_pool_t pool, void* data)
 {
     hsa_status_t err;
     hipDeviceProp_t* p_prop = reinterpret_cast<hipDeviceProp_t*>(data);
     uint32_t region_segment;
 
-    // Get region segment
-    err = hsa_region_get_info(region, HSA_REGION_INFO_SEGMENT, &region_segment);
+    // Get pool segment
+    err = hsa_amd_memory_pool_get_info(pool, HSA_AMD_MEMORY_POOL_INFO_SEGMENT, &region_segment);
     ErrorCheck(err);
 
     switch(region_segment) {
     case HSA_REGION_SEGMENT_READONLY:
-        err = hsa_region_get_info(region, HSA_REGION_INFO_SIZE, &(p_prop->totalConstMem)); break;
-    /* case HSA_REGION_SEGMENT_PRIVATE:
-        cout<<"PRIVATE"<<endl; private segment cannot be queried */
+        err = hsa_amd_memory_pool_get_info(pool, HSA_AMD_MEMORY_POOL_INFO_SIZE, &(p_prop->totalConstMem)); break;
     case HSA_REGION_SEGMENT_GROUP:
-        err = hsa_region_get_info(region, HSA_REGION_INFO_SIZE, &(p_prop->sharedMemPerBlock)); break;
+        err = hsa_amd_memory_pool_get_info(pool, HSA_AMD_MEMORY_POOL_INFO_SIZE, &(p_prop->sharedMemPerBlock)); 
+        break;
     default: break;
     }
-    return HSA_STATUS_SUCCESS;
+    return err;
 }
 
 
@@ -750,11 +749,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     hipError_t e = hipSuccess;
     hsa_status_t err;
 
-    // Set some defaults in case we don't find the appropriate regions:
-    prop->totalGlobalMem = 0;
-    prop->totalConstMem = 0;
-    prop-> maxThreadsPerMultiProcessor = 0;
-    prop->regsPerBlock = 0;
+    memset(prop, 0, sizeof(hipDeviceProp_t));
 
     if (_hsaAgent.handle == -1) {
         return hipErrorInvalidDevice;
@@ -854,15 +849,18 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop-> maxThreadsPerMultiProcessor = prop->warpSize*max_waves_per_cu;
 
     // Get memory properties
-    err = hsa_agent_iterate_regions(_hsaAgent, get_region_info, prop);
+    err = hsa_amd_agent_iterate_memory_pools(_hsaAgent, get_pool_info, prop);
+    if (err == HSA_STATUS_INFO_BREAK) { 
+        err = HSA_STATUS_SUCCESS; 
+    }
     DeviceErrorCheck(err);
 
-    // Get the size of the region we are using for Accelerator Memory allocations:
+    // Get the size of the pool we are using for Accelerator Memory allocations:
     hsa_region_t *am_region = static_cast<hsa_region_t*>(_acc.get_hsa_am_region());
     err = hsa_region_get_info(*am_region, HSA_REGION_INFO_SIZE, &prop->totalGlobalMem);
     DeviceErrorCheck(err);
     // maxSharedMemoryPerMultiProcessor should be as the same as group memory size.
-    // Group memory will not be paged out, so, the physical memory size is the total shared memory size, and also equal to the group region size.
+    // Group memory will not be paged out, so, the physical memory size is the total shared memory size, and also equal to the group pool size.
     prop->maxSharedMemoryPerMultiProcessor = prop->totalGlobalMem;
 
     // Get Max memory clock frequency
@@ -882,7 +880,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop->arch.hasGlobalFloatAtomicExch    = 1;
     prop->arch.hasSharedInt32Atomics       = 1;
     prop->arch.hasSharedFloatAtomicExch    = 1;
-    prop->arch.hasFloatAtomicAdd           = 0;
+    prop->arch.hasFloatAtomicAdd           = 1;  // supported with CAS loop, but is supported
     prop->arch.hasGlobalInt64Atomics       = 1;
     prop->arch.hasSharedInt64Atomics       = 1;
     prop->arch.hasDoubles                  = 1;
@@ -890,7 +888,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop->arch.hasWarpBallot               = 1;
     prop->arch.hasWarpShuffle              = 1;
     prop->arch.hasFunnelShift              = 0; // TODO-hcc
-    prop->arch.hasThreadFenceSystem        = 0; // TODO-hcc
+    prop->arch.hasThreadFenceSystem        = 1;
     prop->arch.hasSyncThreadsExt           = 0; // TODO-hcc
     prop->arch.hasSurfaceFuncs             = 0; // TODO-hcc
     prop->arch.has3dGrid                   = 1;
