@@ -466,16 +466,6 @@ bool ihipCtxCriticalBase_t<CtxMutex>::isPeerWatcher(const ihipCtx_t *peer)
                     [=] (const ihipCtx_t *d) { return d->getDeviceNum() == peer->getDeviceNum(); });
 
     return (match != std::end(_peers));
-
-#if 0
-    for (auto pi=_peers.begin(); pi != _peers.end(); pi++) {
-        if ((*pi)->getDeviceNum() == peer->getDeviceNum()) {
-            return true;
-        }
-    }
-
-    return false;
-#endif
 }
 
 
@@ -1692,6 +1682,10 @@ const char *ihipErrorString(hipError_t hip_error)
 // So we check dstCtx's and srcCtx's peerList to see if the both include thisCtx.
 bool ihipStream_t::canSeeMemory(const ihipCtx_t *copyEngineCtx, const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo)
 {
+    if (copyEngineCtx == nullptr) {
+        return false;
+    }
+
     // Make sure this is a device-to-device copy with all memory available to the requested copy engine
     //
     // TODO - pointer-info stores a deviceID not a context,may have some unusual side-effects here:
