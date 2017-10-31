@@ -60,12 +60,12 @@ hipError_t ihipGetDeviceCount(int *count)
         *count = g_deviceCnt;
 
         if (*count > 0) {
-            e = ihipLogStatus(hipSuccess);
+            e = hipSuccess;
         } else {
-            e = ihipLogStatus(hipErrorNoDevice);
+            e = hipErrorNoDevice;
         }
     } else {
-        e = ihipLogStatus(hipErrorInvalidValue);
+        e = hipErrorInvalidValue;
     }
     return e;
 }
@@ -73,7 +73,7 @@ hipError_t ihipGetDeviceCount(int *count)
 hipError_t hipGetDeviceCount(int *count)
 {
     HIP_INIT_API(count);
-    return ihipGetDeviceCount(count);
+    return ihipLogStatus(ihipGetDeviceCount(count));
 }
 
 hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig)
@@ -205,7 +205,7 @@ hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device
     hipError_t e = hipSuccess;
 
     if(pi == nullptr) {
-        return ihipLogStatus(hipErrorInvalidValue);
+        return hipErrorInvalidValue;
     }
 
     auto * hipDevice = ihipGetDevice(device);
