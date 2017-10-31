@@ -191,6 +191,10 @@ hipError_t hipEventSynchronize(hipEvent_t event)
 {
     HIP_INIT_SPECIAL_API(TRACE_SYNC, event);
 
+    if (!(event->_flags & hipEventReleaseToSystem)) {
+        tprintf(DB_WARN, "hipEventSynchronize on event without system-scope fence ; consider creating with hipEventReleaseToSystem\n");
+    }
+
     if (event) {
         if (event->_state == hipEventStatusUnitialized) {
             return ihipLogStatus(hipErrorInvalidResourceHandle);
@@ -267,6 +271,10 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop)
 hipError_t hipEventQuery(hipEvent_t event)
 {
     HIP_INIT_SPECIAL_API(TRACE_QUERY, event);
+
+    if (!(event->_flags & hipEventReleaseToSystem)) {
+        tprintf(DB_WARN, "hipEventQuery on event without system-scope fence ; consider creating with hipEventReleaseToSystem\n");
+    }
 
     if ((event->_state == hipEventStatusRecording) && !event->locked_isReady()) {
         return ihipLogStatus(hipErrorNotReady);
