@@ -33,11 +33,13 @@ THE SOFTWARE.
 
 #ifdef __HIP_PLATFORM_HCC__
 #include <hc_am.hpp>
-#define USE_HCC_MEMTRACKER 0
 #endif
 
+#define USE_HCC_MEMTRACKER 0  /* Debug flag to show the memtracker periodically */
 
-int elementSizes[] = {16, 1024,524288};
+
+
+int elementSizes[] = {1, 16, 1024, 524288, 16*1000*1000};
 int nSizes  = sizeof(elementSizes) / sizeof(int);
 
 int enablePeers(int dev0, int dev1)
@@ -57,8 +59,9 @@ int enablePeers(int dev0, int dev1)
     return 0;
 };
 
+// Set value of array to specified 32-bit integer:
 __global__ void
-memsetIntKernel(/*hipLaunchParm lp,*/ int * ptr, const int val, size_t numElements)
+memsetIntKernel(int * ptr, const int val, size_t numElements)
 {
     int gid = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
     int stride = hipBlockDim_x * hipGridDim_x ;
@@ -68,7 +71,7 @@ memsetIntKernel(/*hipLaunchParm lp,*/ int * ptr, const int val, size_t numElemen
 };
 
 __global__ void
-memcpyIntKernel(/*hipLaunchParm lp, */const int * src, int* dst, size_t numElements)
+memcpyIntKernel(const int * src, int* dst, size_t numElements)
 {
     int gid = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
     int stride = hipBlockDim_x * hipGridDim_x ;
@@ -77,6 +80,9 @@ memcpyIntKernel(/*hipLaunchParm lp, */const int * src, int* dst, size_t numEleme
     }
 };
 
+
+// CHeck arrays in reverse order, to more easily detect cases where 
+// the copy is "partially" done.
 void checkReverse(const int *ptr, int numElements, int expected) {
     for (int i=numElements-1; i>=0; i--) {
         if (ptr[i] != expected) {
@@ -88,7 +94,8 @@ void checkReverse(const int *ptr, int numElements, int expected) {
     printf ("test:   OK\n");
 }
 
-void runTest(bool stepAIsCopy, bool hostSync, hipStream_t gpu0Stream, hipStream_t gpu1Stream, int numElements,
+
+void runTestImpl(bool stepAIsCopy, bool hostSync, hipStream_t gpu0Stream, hipStream_t gpu1Stream, int numElements,
              int * dataGpu0_0, int * dataGpu0_1, int *dataGpu1, int *dataHost, int expected)
 {
     hipEvent_t e;
@@ -96,7 +103,7 @@ void runTest(bool stepAIsCopy, bool hostSync, hipStream_t gpu0Stream, hipStream_
         HIPCHECK(hipEventCreateWithFlags(&e,0));
     }
     const size_t sizeElements = numElements * sizeof(int);
-    printf ("test: runTest with %zu bytes %s with hostSync %s\n", sizeElements, stepAIsCopy ? "copy" : "kernel", hostSync ? "enabled" : "disabled");
+    printf ("test: runTestImpl with %zu bytes %s with hostSync %s\n", sizeElements, stepAIsCopy ? "copy" : "kernel", hostSync ? "enabled" : "disabled");
 
     hipStream_t stepAStream = gpu0Stream;
 
@@ -127,9 +134,12 @@ void runTest(bool stepAIsCopy, bool hostSync, hipStream_t gpu0Stream, hipStream_
     HIPCHECK(hipStreamSynchronize(gpu0Stream));
 
     checkReverse(dataHost, numElements, expected);
+    if(!hostSync) {
+        HIPCHECK(hipEventDestroy(e));
+    }
 }
 
-void testMultiGpu(int dev0, int dev1, int numElements, bool hostSync, bool useMemcpy)
+void testMultiGpu(int dev0, int dev1, int numElements, bool hostSync)
 {
     const size_t sizeElements = numElements * sizeof(int);
 
@@ -163,12 +173,15 @@ void testMultiGpu(int dev0, int dev1, int numElements, bool hostSync, bool useMe
 #endif
 
     printf ("  test: init complete\n");
-    runTest(useMemcpy , hostSync, gpu0Stream, gpu1Stream, numElements, dataGpu0_0,dataGpu0_1, dataGpu1, dataHost, expected);
+    runTestImpl(true, hostSync, gpu0Stream, gpu1Stream, numElements, dataGpu0_0,dataGpu0_1, dataGpu1, dataHost, expected);
 
     HIPCHECK(hipFree(dataGpu0_0));
     HIPCHECK(hipFree(dataGpu0_1));
     HIPCHECK(hipFree(dataGpu1));
     HIPCHECK(hipHostFree(dataHost));
+
+    HIPCHECK(hipStreamDestroy(gpu0Stream));
+    HIPCHECK(hipStreamDestroy(gpu1Stream));
 };
 
 int main(int argc, char *argv[])
@@ -192,11 +205,9 @@ int main(int argc, char *argv[])
         return -1;
     };
 
-    for(int index = 1;index < nSizes;index++) {
-        testMultiGpu(dev0, dev1, elementSizes[index] , false /* GPU Synchronization*/, true);
-        testMultiGpu(dev0, dev1, elementSizes[index] , true /*Host Synchronization*/, true);
-        testMultiGpu(dev0, dev1, elementSizes[index] , true /*Host Synchronization*/, false);
-        testMultiGpu(dev0, dev1, elementSizes[index] , false /*Host Synchronization*/, false);
+    for(int index = 0;index < nSizes;index++) {
+        testMultiGpu(dev0, dev1, elementSizes[index] , false /*GPU Synchronization*/);
+        testMultiGpu(dev0, dev1, elementSizes[index] , true  /*Host Synchronization*/);
     }
 
 
