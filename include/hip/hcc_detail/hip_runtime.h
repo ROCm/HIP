@@ -50,10 +50,16 @@ THE SOFTWARE.
 #include <hip/hip_runtime_api.h>
 
 
+// define HIP_ENABLE_PRINTF to enable printf
+#ifdef HIP_ENABLE_PRINTF
+  #define HCC_ENABLE_ACCELERATOR_PRINTF 1
+#endif 
+
 //---
 // Remainder of this file only compiles with HCC
 #if defined __HCC__
 #include <grid_launch.h>
+#include "hc_printf.hpp"
 //TODO-HCC-GL - change this to typedef.
 //typedef grid_launch_parm hipLaunchParm ;
 
@@ -108,13 +114,12 @@ extern int HIP_TRACE_API;
 #if defined(__HCC_ACCELERATOR__) && (__HCC_ACCELERATOR__ != 0)
 // Device compile and not host compile:
 
-//TODO-HCC enable __HIP_ARCH_HAS_ATOMICS__ when HCC supports these.
     // 32-bit Atomics:
 #define __HIP_ARCH_HAS_GLOBAL_INT32_ATOMICS__       (1)
 #define __HIP_ARCH_HAS_GLOBAL_FLOAT_ATOMIC_EXCH__   (1)
 #define __HIP_ARCH_HAS_SHARED_INT32_ATOMICS__       (1)
 #define __HIP_ARCH_HAS_SHARED_FLOAT_ATOMIC_EXCH__   (1)
-#define __HIP_ARCH_HAS_FLOAT_ATOMIC_ADD__           (0)
+#define __HIP_ARCH_HAS_FLOAT_ATOMIC_ADD__           (1)
 
 // 64-bit Atomics:
 #define __HIP_ARCH_HAS_GLOBAL_INT64_ATOMICS__       (1)
@@ -419,6 +424,20 @@ static inline __device__ void* memset(void* ptr, int val, size_t size)
   return __hip_hc_memset(ptr, val8, size);
 }
 
+
+#ifdef __HCC_ACCELERATOR__
+
+#ifdef HC_FEATURE_PRINTF
+template <typename... All>
+static inline __device__ void printf(const char* format, All... all) {
+  hc::printf(format, all...);
+}
+#else
+template <typename... All>
+static inline __device__ void printf(const char* format, All... all) { }
+#endif
+
+#endif
 
 
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
