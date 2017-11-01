@@ -46,7 +46,6 @@ int main(int argc, char *argv[])
 	A_h = new char[Nbytes];
 
     HIPCHECK ( hipMalloc((void **) &A_d, Nbytes) );
-    A_h = (char*)malloc(Nbytes);
 
 	printf ("Size=%zu  memsetval=%2x \n", Nbytes, memsetval);
     HIPCHECK ( hipMemsetD8(A_d, memsetval, Nbytes) );
@@ -61,7 +60,7 @@ int main(int argc, char *argv[])
     }
 
     hipFree((void *) A_d);
-    free(A_h);
+    delete [] A_h;
     passed();
 
 }

@@ -21,76 +21,118 @@ THE SOFTWARE.
 */
 
 #include "hip/hcc_detail/grid_launch_GGL.hpp"
+#include "hip/hcc_detail/program_state.hpp"
+
+#include "hip/hip_runtime_api.h"
 
 // Internal header, do not percolate upwards.
 #include "hip_hcc_internal.h"
 #include "hc.hpp"
 #include "trace_helper.h"
 
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <stdexcept>
+
 #include <iostream>
-#include <sstream>
+
+using namespace hc;
+using namespace std;
 
 namespace hip_impl
 {
-    hc::accelerator_view lock_stream_hip_(
-        hipStream_t& stream, void*& locked_stream)
-    {   // This allocated but does not take ownership of locked_stream. If it is
-        // not deleted elsewhere it will leak.
-        using L = decltype(stream->lockopen_preKernelCommand());
-
-        HIP_INIT();
-
-        stream = ihipSyncAndResolveStream(stream);
-        locked_stream = new L{stream->lockopen_preKernelCommand()};
-        return (*static_cast<L*>(locked_stream))->_av;
-    }
-
-    void print_prelaunch_trace_(
-        const char* kernel_name,
-        dim3 num_blocks,
-        dim3 dim_blocks,
-        int group_mem_bytes,
-        hipStream_t stream)
+    namespace
     {
-        if ((HIP_TRACE_API & (1 << TRACE_KCMD)) ||
-            HIP_PROFILE_API ||
-            (COMPILE_HIP_DB && (HIP_TRACE_API & (1<<TRACE_ALL)))) {
-            std::stringstream os;
-            os  << tls_tidInfo.tid() << "." << tls_tidInfo.apiSeqNum()
-                << " hipLaunchKernel '" << kernel_name << "'"
-                << " gridDim:"  << num_blocks
-                << " groupDim:" << dim_blocks
-                << " sharedMem:+" << group_mem_bytes
-                << " " << *stream;
+        inline
+        string name(uintptr_t function_address)
+        {
+            const auto it = function_names().find(function_address);
 
-            if (HIP_PROFILE_API == 0x1) {
-                std::string shortAtpString("hipLaunchKernel:");
-                shortAtpString += kernel_name;
-                MARKER_BEGIN(shortAtpString.c_str(), "HIP");
-            } else if (HIP_PROFILE_API == 0x2) {
-                MARKER_BEGIN(os.str().c_str(), "HIP");
+            if (it == function_names().cend())  {
+                throw runtime_error{
+                    "Invalid function passed to hipLaunchKernelGGL."};
             }
 
-            if (COMPILE_HIP_DB && HIP_TRACE_API) {
-                std::string fullStr;
-                recordApiTrace(&fullStr, os.str());
+            return it->second;
+        }
+
+        inline
+        string name(hsa_agent_t agent)
+        {
+            char n[64] = {};
+            hsa_agent_get_info(agent, HSA_AGENT_INFO_NAME, n);
+
+            return string{n};
+        }
+
+        inline
+        hsa_agent_t target_agent(hipStream_t stream)
+        {
+            if (stream) {
+                return *static_cast<hsa_agent_t*>(
+                    stream->locked_getAv()->get_hsa_agent());
+            }
+            else if (
+                ihipGetTlsDefaultCtx() && ihipGetTlsDefaultCtx()->getDevice()) {
+                return ihipGetDevice(
+                    ihipGetTlsDefaultCtx()->getDevice()->_deviceId)->_hsaAgent;
+            }
+            else {
+                return *static_cast<hsa_agent_t*>(
+                    accelerator{}.get_default_view().get_hsa_agent());
             }
         }
     }
 
-    void unlock_stream_hip_(
+    void hipLaunchKernelGGLImpl(
+        uintptr_t function_address,
+        const dim3& numBlocks,
+        const dim3& dimBlocks,
+        uint32_t sharedMemBytes,
         hipStream_t stream,
-        void* locked_stream,
-        const char* kernel_name,
-        hc::accelerator_view* acc_v)
-    {   // Precondition: acc_v is the accelerator_view associated with stream
-        //               which is guarded by locked_stream;
-        //               locked_stream is deletable.
-        using L = decltype(stream->lockopen_preKernelCommand());
+        void** kernarg)
+    {
+        const auto it0 = functions().find(function_address);
 
-        stream->lockclose_postKernelCommand(kernel_name, acc_v);
+        if (it0 == functions().cend()) {
+            throw runtime_error{
+                "No device code available for function: " +
+                name(function_address)
+            };
+        }
 
-        delete static_cast<L*>(locked_stream);
-        locked_stream = nullptr;
+        auto agent = target_agent(stream);
+
+        const auto it1 = find_if(
+            it0->second.cbegin(),
+            it0->second.cend(),
+            [=](const pair<hsa_agent_t, Kernel_descriptor>& x) {
+                return x.first.handle == agent.handle;
+            });
+
+        if (it1 == it0->second.cend()) {
+            throw runtime_error{
+                "No code available for function: " + name(function_address) +
+                ", for agent: " + name(agent)
+            };
+        }
+
+        for (auto&& agent_kernel : it0->second) {
+            if (agent.handle == agent_kernel.first.handle) {
+                hipModuleLaunchKernel(
+                    agent_kernel.second,
+                    numBlocks.x,
+                    numBlocks.y,
+                    numBlocks.z,
+                    dimBlocks.x,
+                    dimBlocks.y,
+                    dimBlocks.z,
+                    sharedMemBytes,
+                    stream,
+                    nullptr,
+                    kernarg);
+            }
+        }
     }
 }
