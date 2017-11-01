@@ -128,7 +128,14 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+delete [] C;
+hipFree(Ad);
+hipFree(Bd);
+hipFree(Cd);
+
 if(passed == 1){
     return true;
 }
@@ -163,7 +170,14 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+delete [] C;
+hipFree(Ad);
+hipFree(Bd);
+hipFree(Cd);
+
 if(passed == 1){
     return true;
 }
@@ -193,7 +207,12 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+hipFree(Ad);
+hipFree(Bd);
+
 if(passed == 1){
     return true;
 }
@@ -221,7 +240,12 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+hipFree(Ad);
+hipFree(Bd);
+
 if(passed == 1){
     return true;
 }
@@ -249,7 +273,12 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+hipFree(Ad);
+hipFree(Bd);
+
 if(passed == 1){
     return true;
 }
@@ -278,7 +307,12 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+hipFree(Ad);
+hipFree(Bd);
+
 if(passed == 1){
     return true;
 }
@@ -306,7 +340,12 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+hipFree(Ad);
+hipFree(Bd);
+
 if(passed == 1){
     return true;
 }
@@ -343,7 +382,16 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+delete [] C;
+delete [] D;
+hipFree(Ad);
+hipFree(Bd);
+hipFree(Cd);
+hipFree(Dd);
+
 if(passed == 1){
     return true;
 }
@@ -383,7 +431,18 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+delete [] C;
+delete [] D;
+delete [] E;
+hipFree(Ad);
+hipFree(Bd);
+hipFree(Cd);
+hipFree(Dd);
+hipFree(Ed);
+
 if(passed == 1){
     return true;
 }
@@ -416,7 +475,14 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+delete [] C;
+hipFree(Ad);
+hipFree(Bd);
+hipFree(Cd);
+
 if(passed == 1){
     return true;
 }
@@ -452,7 +518,16 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+delete [] C;
+delete [] D;
+hipFree(Ad);
+hipFree(Bd);
+hipFree(Cd);
+hipFree(Dd);
+
 if(passed == 1){
     return true;
 }
@@ -492,7 +567,18 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+delete [] C;
+delete [] D;
+delete [] E;
+hipFree(Ad);
+hipFree(Bd);
+hipFree(Cd);
+hipFree(Dd);
+hipFree(Ed);
+
 if(passed == 1){
     return true;
 }
@@ -522,7 +608,12 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+hipFree(Ad);
+hipFree(Bd);
+
 if(passed == 1){
     return true;
 }
@@ -549,7 +640,12 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+hipFree(Ad);
+hipFree(Bd);
+
 if(passed == 1){
     return true;
 }

@@ -119,15 +119,18 @@ namespace hipdrv {
 uint64_t PrintSymbolSizes(const void *emi, const char *name){
     using namespace ELFIO;
 
-    const Elf64_Ehdr *ehdr = (const Elf64_Ehdr*)emi;
+    const ELFIO::Elf64_Ehdr *ehdr = (const ELFIO::Elf64_Ehdr*)emi;
     if(NULL == ehdr || EV_CURRENT != ehdr->e_version){}
-    const Elf64_Shdr * shdr = (const Elf64_Shdr*)((char*)emi + ehdr->e_shoff);
+    const ELFIO::Elf64_Shdr * shdr =
+        (const ELFIO::Elf64_Shdr*)((char*)emi + ehdr->e_shoff);
     for(uint16_t i=0;i<ehdr->e_shnum;++i){
         if(shdr[i].sh_type == SHT_SYMTAB){
-            const Elf64_Sym *syms = (const Elf64_Sym*)((char*)emi + shdr[i].sh_offset);
+            const ELFIO::Elf64_Sym *syms =
+                (const ELFIO::Elf64_Sym*)((char*)emi + shdr[i].sh_offset);
             assert(syms);
             uint64_t numSyms = shdr[i].sh_size/shdr[i].sh_entsize;
-            const char* strtab = (const char*)((char*)emi + shdr[shdr[i].sh_link].sh_offset);
+            const char* strtab =
+                (const char*)((char*)emi + shdr[shdr[i].sh_link].sh_offset);
             assert(strtab);
             for(uint64_t i=0;i<numSyms;++i){
                 const char *symname = strtab + syms[i].st_name;
@@ -145,8 +148,8 @@ uint64_t PrintSymbolSizes(const void *emi, const char *name){
 uint64_t ElfSize(const void *emi){
     using namespace ELFIO;
 
-    const Elf64_Ehdr *ehdr = (const Elf64_Ehdr*)emi;
-    const Elf64_Shdr *shdr = (const Elf64_Shdr*)((char*)emi + ehdr->e_shoff);
+    const ELFIO::Elf64_Ehdr *ehdr = (const ELFIO::Elf64_Ehdr*)emi;
+    const ELFIO::Elf64_Shdr *shdr = (const ELFIO::Elf64_Shdr*)((char*)emi + ehdr->e_shoff);
 
     uint64_t max_offset = ehdr->e_shoff;
     uint64_t total_size = max_offset + ehdr->e_shentsize * ehdr->e_shnum;
@@ -164,156 +167,8 @@ uint64_t ElfSize(const void *emi){
     return total_size;
 }
 
-namespace
-{
-    template<typename P>
-    inline
-    ELFIO::section* find_section_if(ELFIO::elfio& reader, P p)
-    {
-        using namespace std;
-
-        const auto it = find_if(
-            reader.sections.begin(), reader.sections.end(), move(p));
-
-        return it != reader.sections.end() ? *it : nullptr;
-    }
-
-    inline
-    std::vector<std::string> copy_names_of_undefined_symbols(
-        const ELFIO::symbol_section_accessor& section)
-    {
-        using namespace ELFIO;
-        using namespace std;
-
-        vector<string> r;
-
-        for (auto i = 0u; i != section.get_symbols_num(); ++i) {
-            // TODO: this is boyscout code, caching the temporaries
-            //       may be of worth.
-            string name;
-            Elf64_Addr value = 0;
-            Elf_Xword size = 0;
-            Elf_Half sect_idx = 0;
-            uint8_t bind = 0;
-            uint8_t type = 0;
-            uint8_t other = 0;
-
-            section.get_symbol(
-                i, name, value, size, bind, type, sect_idx, other);
-
-            if (sect_idx == SHN_UNDEF && !name.empty()) {
-                r.push_back(std::move(name));
-            }
-        }
-
-        return r;
-    }
-
-    inline
-    std::pair<ELFIO::Elf64_Addr, ELFIO::Elf_Xword> find_symbol_address(
-        const ELFIO::symbol_section_accessor& section,
-        const std::string& symbol_name)
-    {
-        using namespace ELFIO;
-        using namespace std;
-
-        static constexpr pair<Elf64_Addr, Elf_Xword> r{0, 0};
-
-        for (auto i = 0u; i != section.get_symbols_num(); ++i) {
-            // TODO: this is boyscout code, caching the temporaries
-            //       may be of worth.
-            string name;
-            Elf64_Addr value = 0;
-            Elf_Xword size = 0;
-            Elf_Half sect_idx = 0;
-            uint8_t bind = 0;
-            uint8_t type = 0;
-            uint8_t other = 0;
-
-            section.get_symbol(
-                i, name, value, size, bind, type, sect_idx, other);
-
-            if (name == symbol_name) return make_pair(value, size);
-        }
-
-        return r;
-    }
-
-    inline
-    void associate_code_object_symbols_with_host_allocation(
-        const ELFIO::elfio& reader,
-        const ELFIO::elfio& self_reader,
-        ELFIO::section* code_object_dynsym,
-        ELFIO::section* process_symtab,
-        hsa_agent_t agent,
-        hsa_executable_t executable)
-    {
-        using namespace ELFIO;
-        using namespace std;
-
-        if (!code_object_dynsym || !process_symtab) return;
-
-        const auto undefined_symbols = copy_names_of_undefined_symbols(
-            symbol_section_accessor{reader, code_object_dynsym});
-
-        for (auto&& x : undefined_symbols) {
-            const auto tmp = find_symbol_address(
-                symbol_section_accessor{self_reader, process_symtab}, x);
-
-            assert(tmp.first);
-
-            void* p = nullptr;
-            hsa_amd_memory_lock(
-                reinterpret_cast<void*>(tmp.first), tmp.second, &agent, 1, &p);
-
-            hsa_executable_agent_global_variable_define(
-                executable, agent, x.c_str(), p);
-
-            static vector<
-                unique_ptr<void, decltype(hsa_amd_memory_unlock)*>> globals;
-            static mutex mtx;
-
-            lock_guard<std::mutex> lck{mtx};
-            globals.emplace_back(p, hsa_amd_memory_unlock);
-        }
-    }
-
-    inline
-    void load_code_object_and_freeze_executable(
-        const char* file, hsa_agent_t agent, hsa_executable_t executable)
-    {   // TODO: the following sequence is inefficient, should be refactored
-        //       into a single load of the file and subsequent ELFIO
-        //       processing.
-        using namespace std;
-
-        static const auto cor_deleter = [](hsa_code_object_reader_t* p) {
-            hsa_code_object_reader_destroy(*p);
-        };
-
-        using RAII_code_reader = unique_ptr<
-            hsa_code_object_reader_t, decltype(cor_deleter)>;
-
-        unique_ptr<FILE, decltype(fclose)*> cobj{fopen(file, "r"), fclose};
-        RAII_code_reader tmp{new hsa_code_object_reader_t, cor_deleter};
-        hsa_code_object_reader_create_from_file(fileno(cobj.get()), tmp.get());
-
-        hsa_executable_load_agent_code_object(
-            executable, agent, *tmp, nullptr, nullptr);
-
-        hsa_executable_freeze(executable, nullptr);
-
-        static vector<RAII_code_reader> code_readers;
-        static mutex mtx;
-
-        lock_guard<mutex> lck{mtx};
-        code_readers.push_back(move(tmp));
-    }
-}
-
 hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
 {
-    using namespace ELFIO;
-
     HIP_INIT_API(module, fname);
     hipError_t ret = hipSuccess;
     *module = new ihipModule_t;
@@ -336,36 +191,14 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
             nullptr,
             &(*module)->executable);
 
-        elfio reader;
-        if (!reader.load(fname)) {
+        std::ifstream file{fname};
+
+        if (!file.is_open()) {
             return ihipLogStatus(hipErrorFileNotFound);
         }
-        else {
-            // TODO: this may benefit from caching as well.
-            elfio self_reader;
-            self_reader.load("/proc/self/exe");
-
-            const auto symtab =
-                find_section_if(self_reader, [](const ELFIO::section* x) {
-                    return x->get_type() == SHT_SYMTAB;
-                });
-
-            const auto code_object_dynsym =
-                find_section_if(reader, [](const ELFIO::section* x) {
-                    return x->get_type() == SHT_DYNSYM;
-                });
-
-            associate_code_object_symbols_with_host_allocation(
-                reader,
-                self_reader,
-                code_object_dynsym,
-                symtab,
-                currentDevice->_hsaAgent,
-                (*module)->executable);
-
-            load_code_object_and_freeze_executable(
-                fname, currentDevice->_hsaAgent, (*module)->executable);
-        }
+        (*module)->executable = hip_impl::load_executable(
+            (*module)->executable, currentDevice->_hsaAgent, file);
+        ret = (*module)->executable.handle ? hipSuccess : hipErrorUnknown;
     }
 
     return ihipLogStatus(ret);
