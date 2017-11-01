@@ -195,9 +195,9 @@ namespace
             static vector<vector<uint8_t>> blobs{
                 code_object_blob_for_process()};
 
-            dl_iterate_phdr([](dl_phdr_info* i, std::size_t, void*) {
+            dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void*) {
                 elfio tmp;
-                if (tmp.load(i->dlpi_name)) {
+                if (tmp.load(info->dlpi_name)) {
                     const auto it = find_section_if(tmp, [](const section* x) {
                         return x->get_name() == ".kernel";
                     });
@@ -266,6 +266,61 @@ namespace
         });
 
         cout << r.size() << endl;
+        return r;
+    }
+
+    vector<pair<uintptr_t, string>> function_names_for(
+        const elfio& reader, section* symtab)
+    {
+        vector<pair<uintptr_t, string>> r;
+        symbol_section_accessor symbols{reader, symtab};
+
+        auto foo = reader.get_entry();
+
+        for (auto i = 0u; i != symbols.get_symbols_num(); ++i) {
+            // TODO: this is boyscout code, caching the temporaries
+            //       may be of worth.
+            string name;
+            Elf64_Addr value = 0;
+            Elf_Xword size = 0;
+            Elf_Half sect_idx = 0;
+            uint8_t bind = 0;
+            uint8_t type = 0;
+            uint8_t other = 0;
+
+            symbols.get_symbol(
+                i, name, value, size, bind, type, sect_idx, other);
+
+            if (type == STT_FUNC && sect_idx != SHN_UNDEF && !name.empty()) {
+                r.emplace_back(value, name);
+            }
+        }
+
+        return r;
+    }
+
+    const vector<pair<uintptr_t, string>>& function_names_for_process()
+    {
+        static constexpr const char self[] = "/proc/self/exe";
+
+        static vector<pair<uintptr_t, string>> r;
+        static once_flag f;
+
+        call_once(f, []() {
+            elfio reader;
+
+            if (!reader.load(self)) {
+                throw runtime_error{
+                    "Failed to load the ELF file for the current process."};
+            }
+
+            auto symtab = find_section_if(reader, [](const section* x) {
+                return x->get_type() == SHT_SYMTAB;
+            });
+
+            r = function_names_for(reader, symtab);
+        });
+
         return r;
     }
 
@@ -395,43 +450,32 @@ namespace hip_impl
 {
     const unordered_map<uintptr_t, string>& function_names()
     {
-        static constexpr const char self[] = "/proc/self/exe";
-
-        static unordered_map<uintptr_t, string> r;
+        static unordered_map<uintptr_t, string> r{
+            function_names_for_process().cbegin(),
+            function_names_for_process().cend()};
         static once_flag f;
 
         call_once(f, []() {
-            elfio reader;
+            dl_iterate_phdr([](dl_phdr_info* info, size_t, void*) {
+                elfio tmp;
+                if (tmp.load(info->dlpi_name)) {
+                    const auto it = find_section_if(tmp, [](const section* x) {
+                        return x->get_type() == SHT_SYMTAB;
+                    });
 
-            if (!reader.load(self)) {
-                throw runtime_error{
-                    "Failed to load the ELF file for the current process."};
-            }
+                    if (it) {
+                        auto n = function_names_for(tmp, it);
 
-            auto symtab = find_section_if(reader, [](const section* x) {
-                return x->get_type() == SHT_SYMTAB;
-            });
+                        for (auto&& f : n) f.first += info->dlpi_addr;
 
-            symbol_section_accessor symbols{reader, symtab};
-
-            for (auto i = 0u; i != symbols.get_symbols_num(); ++i) {
-                // TODO: this is boyscout code, caching the temporaries
-                //       may be of worth.
-                string name;
-                Elf64_Addr value = 0;
-                Elf_Xword size = 0;
-                Elf_Half sect_idx = 0;
-                uint8_t bind = 0;
-                uint8_t type = 0;
-                uint8_t other = 0;
-
-                symbols.get_symbol(
-                    i, name, value, size, bind, type, sect_idx, other);
-
-                if (type == STT_FUNC && sect_idx != SHN_UNDEF && !name.empty()) {
-                    r.emplace(value, name);
+                        r.insert(
+                            make_move_iterator(n.begin()),
+                            make_move_iterator(n.end()));
+                    }
                 }
-            }
+
+                return 0;
+            }, nullptr);
         });
 
         return r;
