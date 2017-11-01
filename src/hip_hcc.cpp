@@ -156,7 +156,7 @@ thread_local TidInfo tls_tidInfo;
 //=================================================================================================
 // Top-level "free" functions:
 //=================================================================================================
-void recordApiTrace(std::string *fullStr, const std::string &apiStr)
+uint64_t recordApiTrace(std::string *fullStr, const std::string &apiStr)
 {
     auto apiSeqNum = tls_tidInfo.apiSeqNum();
     auto tid = tls_tidInfo.tid();
@@ -178,10 +178,14 @@ void recordApiTrace(std::string *fullStr, const std::string &apiStr)
     *fullStr += " ";
     *fullStr += apiStr;
 
+    uint64_t apiStartTick = getTicks();
+
 
     if (COMPILE_HIP_DB && HIP_TRACE_API) {
-        fprintf (stderr, "%s<<hip-api tid:%s%s\n" , API_COLOR, fullStr->c_str(), API_COLOR_END);
+        fprintf (stderr, "%s<<hip-api tid:%s @%lu%s\n" , API_COLOR, fullStr->c_str(), apiStartTick, API_COLOR_END);
     }
+
+    return apiStartTick;
 }
 
 

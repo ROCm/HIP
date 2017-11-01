@@ -140,7 +140,6 @@ hipError_t hipStreamQuery(hipStream_t stream)
 //---
 hipError_t hipStreamSynchronize(hipStream_t stream)
 {
-    HIP_INIT_API(stream);
     HIP_INIT_SPECIAL_API(TRACE_SYNC, stream);
 
     hipError_t e = hipSuccess;
