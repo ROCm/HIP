@@ -57,5 +57,8 @@ int main(){
 		}
         std::cout<<std::endl;
 		hipDeviceSynchronize();
+
+		free(A);
+		hipFree(Ad);
 	}
 }
