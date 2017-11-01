@@ -74,8 +74,8 @@ __global__ void MyKernel (const hipLaunchParm lp, const float *a, const float *b
 void callMyKernel()
 {
     float *a, *b, *c;
-    unsigned N;
     const unsigned blockSize = 256;
+    unsigned N = blockSize;
 
     hipLaunchKernel(MyKernel, dim3(N/blockSize), dim3(blockSize), 0, 0, a,b,c,N);
 }
@@ -102,7 +102,7 @@ vectorADD(const hipLaunchParm lp,
     int a = __shfl_up(x, 1);
 #endif
 
-    float x;
+    float x = 1.0;
     float z = sin(x);
 #ifdef NOT_YET
     float fastZ = __sin(x);
