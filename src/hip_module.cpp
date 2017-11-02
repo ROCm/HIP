@@ -217,7 +217,7 @@ namespace
         using namespace ELFIO;
         using namespace std;
 
-        static constexpr pair<Elf64_Addr, Elf_Xword> r{0, 0};
+        static const pair<Elf64_Addr, Elf_Xword> r{0, 0};
 
         for (auto i = 0u; i != section.get_symbols_num(); ++i) {
             // TODO: this is boyscout code, caching the temporaries
