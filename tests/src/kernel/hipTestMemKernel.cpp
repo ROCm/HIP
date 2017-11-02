@@ -107,9 +107,12 @@ int main(){
         assert(C[i] == 1);
     }
 
-    delete A;
-    delete B;
-    delete C;
+    delete [] A;
+    delete [] B;
+    delete [] C;
+    hipFree(Ad);
+    hipFree(Bd);
+    hipFree(Cd);
 
     A = new uint8_t[LEN9];
     B = new uint8_t[LEN9];
@@ -132,9 +135,12 @@ int main(){
         assert(C[i] == 1);
     }
 
-    delete A;
-    delete B;
-    delete C;
+    delete [] A;
+    delete [] B;
+    delete [] C;
+    hipFree(Ad);
+    hipFree(Bd);
+    hipFree(Cd);
 
     A = new uint8_t[LEN10];
     B = new uint8_t[LEN10];
@@ -157,9 +163,12 @@ int main(){
         assert(C[i] == 1);
     }
 
-    delete A;
-    delete B;
-    delete C;
+    delete [] A;
+    delete [] B;
+    delete [] C;
+    hipFree(Ad);
+    hipFree(Bd);
+    hipFree(Cd);
 
     A = new uint8_t[LEN11];
     B = new uint8_t[LEN11];
@@ -182,9 +191,12 @@ int main(){
         assert(C[i] == 1);
     }
 
-    delete A;
-    delete B;
-    delete C;
+    delete [] A;
+    delete [] B;
+    delete [] C;
+    hipFree(Ad);
+    hipFree(Bd);
+    hipFree(Cd);
 
     A = new uint8_t[LEN12];
     B = new uint8_t[LEN12];
@@ -207,9 +219,12 @@ int main(){
         assert(C[i] == 1);
     }
 
-    delete A;
-    delete B;
-    delete C;
+    delete [] A;
+    delete [] B;
+    delete [] C;
+    hipFree(Ad);
+    hipFree(Bd);
+    hipFree(Cd);
 
     passed();
 }
