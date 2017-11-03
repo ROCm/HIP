@@ -30,15 +30,17 @@ THE SOFTWARE.
 
 #include "test_common.h"
 
+const int len 256;
+
 int main()
 {
     int numDevices = 0;
-    char name[256];
+    char name[len];
     hipDevice_t device;
     HIPCHECK(hipGetDeviceCount(&numDevices));
     for(int i=0;i<numDevices;i++){
         HIPCHECK(hipDeviceGet(&device,i));
-        HIPCHECK(hipDeviceGetName(name,256,device));
+        HIPCHECK(hipDeviceGetName(name,len,device));
         HIPASSERT(name != "");
     }
     passed();
