@@ -30,7 +30,7 @@ THE SOFTWARE.
 
 #include "test_common.h"
 
-const int len 256;
+#define len 256
 
 int main()
 {
