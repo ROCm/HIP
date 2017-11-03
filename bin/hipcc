@@ -127,7 +127,9 @@ if ($HIP_PLATFORM eq "hcc") {
 
     # Force -stdlib=libc++ on UB14.04
     $HOST_OSVER= `cat /etc/os-release | grep "^VERSION_ID\=" | cut -d= -f2 | tr -d '\n'`;
-    if ($HOST_OSNAME eq "ubuntu" and $HOST_OSVER eq "\"14.04\"") {
+    if (($HOST_OSNAME eq "ubuntu" and $HOST_OSVER eq "\"14.04\"")
+         or ($HOST_OSNAME eq "\"centos\"" and $HOST_OSVER eq "\"7\"") 
+         or ($HOST_OSNAME eq "\"rhel\"" and $HOST_OSVER eq "\"7.4\"")) {
         $HIPCXXFLAGS .= " -stdlib=libc++";
         $setStdLib = 1;
     }

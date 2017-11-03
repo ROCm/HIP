@@ -32,9 +32,18 @@ THE SOFTWARE.
 #include "env.h"
 
 
-#if defined(__HCC__) && (__hcc_workweek__ < 16354)
+#if (__hcc_workweek__ < 16354)
 #error("This version of HIP requires a newer version of HCC.");
 #endif
+
+// Use the __appPtr field in the am memtracker to store the context.
+// Requires a bug fix in HCC
+#if defined(__HCC_HAS_EXTENDED_AM_MEMTRACKER_UPDATE) and (__HCC_HAS_EXTENDED_AM_MEMTRACKER_UPDATE != 0)
+#define USE_APP_PTR_FOR_CTX 1
+#endif
+
+
+
 
 #define USE_IPC 1
 
