@@ -221,48 +221,51 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop)
     hipError_t status = hipSuccess;
 
     *ms = 0.0f;
-    
-    auto startEcd = start->locked_copyCrit();
-    auto stopEcd  = stop->locked_copyCrit();
 
-    if ((start == nullptr) ||
-        (start->_flags & hipEventDisableTiming) ||
-        (startEcd._state == hipEventStatusUnitialized) || (startEcd._state == hipEventStatusCreated) ||
-        (stop == nullptr) ||
-        (stop->_flags & hipEventDisableTiming) ||
-        (stopEcd._state == hipEventStatusUnitialized) || (stopEcd._state == hipEventStatusCreated)) {
-
-        // Both events must be at least recorded else return hipErrorInvalidResourceHandle
-
+    if ((start == nullptr) || (stop == nullptr)) {
         status = hipErrorInvalidResourceHandle;
-
     } else {
-        // Refresh status, if still recording...
+    
+        auto startEcd = start->locked_copyCrit();
+        auto stopEcd  = stop->locked_copyCrit();
 
-        auto startStatus = start->refreshEventStatus();  // pair < state, timestamp >
-        auto stopStatus  = stop->refreshEventStatus();   // pair < state, timestamp >
+        if ((start->_flags & hipEventDisableTiming) ||
+            (startEcd._state == hipEventStatusUnitialized) || (startEcd._state == hipEventStatusCreated) ||
+            (stop->_flags & hipEventDisableTiming) ||
+            (stopEcd._state == hipEventStatusUnitialized) || (stopEcd._state == hipEventStatusCreated)) {
 
-        if ((startStatus.first == hipEventStatusComplete) && (stopStatus.first == hipEventStatusComplete)) {
-            // Common case, we have good information for both events.  'second" is the timestamp:
-            int64_t tickDiff = (stopStatus.second - startStatus.second);
+            // Both events must be at least recorded else return hipErrorInvalidResourceHandle
 
-            uint64_t freqHz;
-            hsa_system_get_info(HSA_SYSTEM_INFO_TIMESTAMP_FREQUENCY, &freqHz);
-            if (freqHz) {
-                *ms = ((double)(tickDiff) /  (double)(freqHz)) * 1000.0f;
-                status = hipSuccess;
-            } else {
+            status = hipErrorInvalidResourceHandle;
+
+        } else {
+            // Refresh status, if still recording...
+
+            auto startStatus = start->refreshEventStatus();  // pair < state, timestamp >
+            auto stopStatus  = stop->refreshEventStatus();   // pair < state, timestamp >
+
+            if ((startStatus.first == hipEventStatusComplete) && (stopStatus.first == hipEventStatusComplete)) {
+                // Common case, we have good information for both events.  'second" is the timestamp:
+                int64_t tickDiff = (stopStatus.second - startStatus.second);
+
+                uint64_t freqHz;
+                hsa_system_get_info(HSA_SYSTEM_INFO_TIMESTAMP_FREQUENCY, &freqHz);
+                if (freqHz) {
+                    *ms = ((double)(tickDiff) /  (double)(freqHz)) * 1000.0f;
+                    status = hipSuccess;
+                } else {
                 * ms = 0.0f;
                 status = hipErrorInvalidValue;
             }
 
 
-        } else if ((startStatus.first == hipEventStatusRecording) ||
-                   (stopStatus.first  == hipEventStatusRecording)) {
+            } else if ((startStatus.first == hipEventStatusRecording) ||
+                       (stopStatus.first  == hipEventStatusRecording)) {
 
-            status = hipErrorNotReady;
-        } else {
-            assert(0);
+                status = hipErrorNotReady;
+            } else {
+                assert(0);
+            }
         }
     } 
 
