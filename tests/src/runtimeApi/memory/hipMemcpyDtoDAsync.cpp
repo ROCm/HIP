@@ -52,11 +52,11 @@ int main()
 
         
         HIPCHECK(hipSetDevice(0));
-        HIPCHECK ( hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
-        HIPCHECK ( hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
+        HIPCHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
+        HIPCHECK(hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
         hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d,B_d, C_d, N);
-        HIPCHECK ( hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
-        HIPCHECK (hipDeviceSynchronize());
+        HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
+        HIPCHECK(hipDeviceSynchronize());
         HipTest::checkVectorADD(A_h, B_h, C_h, N);
     
         HIPCHECK(hipStreamCreate(&s));    
@@ -70,8 +70,11 @@ int main()
         HIPCHECK(hipDeviceSynchronize());
         
         HipTest::checkVectorADD(A_h, B_h, C_h, N);
-
+        HIPCHECK(hipStreamDestroy(s));
         HipTest::freeArrays(A_d, B_d, C_d, A_h, B_h, C_h, false);
+        HIPCHECK(hipFree(X_d));
+        HIPCHECK(hipFree(Y_d));
+        HIPCHECK(hipFree(Z_d));
      }
 
         passed();

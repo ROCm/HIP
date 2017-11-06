@@ -70,6 +70,12 @@ int main()
         HIPCHECK (hipDeviceSynchronize());
         HIPCHECK (hipStreamSynchronize(s));
         HipTest::checkVectorADD(A_h, B_h, C_h, N);
+        
+        HIPCHECK(hipStreamDestroy(s));
+        HipTest::freeArrays(A_d, B_d, C_d, A_h, B_h, C_h, false);
+        HIPCHECK(hipFree(X_d));
+        HIPCHECK(hipFree(Y_d));
+        HIPCHECK(hipFree(Z_d));
      }
 
         passed();
