@@ -98,7 +98,8 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
     if (event == nullptr) {
         e = hipErrorInvalidResourceHandle;
 
-    } else if (ecd._state != hipEventStatusUnitialized) {
+    } else if ((ecd._state != hipEventStatusUnitialized) && 
+               (ecd._state != hipEventStatusCreated)) {
 
         if (HIP_SYNC_STREAM_WAIT || (HIP_SYNC_NULL_STREAM && (stream == 0))) {
             // conservative wait on host for the specified event to complete:
