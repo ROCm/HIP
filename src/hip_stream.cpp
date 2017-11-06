@@ -103,7 +103,7 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
             event->locked_waitComplete((event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked : hc::hcWaitModeActive);
         } else {
             stream = ihipSyncAndResolveStream(stream);
-            // This will user create_blocking_marker to wait on the specified queue.
+            // This will use create_blocking_marker to wait on the specified queue.
             stream->locked_streamWaitEvent(event);
         }
 
