@@ -218,7 +218,8 @@ extern const char *API_COLOR_END;
 #define DB_SYNC   1 /* 0x02 - trace synchronization pieces */
 #define DB_MEM    2 /* 0x04 - trace memory allocation / deallocation */
 #define DB_COPY   3 /* 0x08 - trace memory copy and peer commands. . */
-#define DB_MAX_FLAG 4
+#define DB_WARN   4 /* 0x10 - warn about sub-optimal or shady behavior */
+#define DB_MAX_FLAG 5
 // When adding a new debug flag, also add to the char name table below.
 //
 //
@@ -235,6 +236,7 @@ static const DbName dbName [] =
     {KYEL, "sync"},
     {KCYN, "mem"},
     {KMAG, "copy"},
+    {KRED, "warn"},
 };
 
 

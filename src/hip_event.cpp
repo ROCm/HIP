@@ -45,10 +45,10 @@ ihipEvent_t::ihipEvent_t(unsigned flags)
 void ihipEvent_t::attachToCompletionFuture(const hc::completion_future *cf, 
                                            hipStream_t stream, ihipEventType_t eventType)
 {
-    _state  = hipEventStatusRecording;
     _marker = *cf;
     _type   = eventType;
     _stream = stream;
+    _state  = hipEventStatusRecording;
 }
 
 
@@ -157,13 +157,12 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
             event->_state = hipEventStatusComplete;
             return ihipLogStatus(hipSuccess);
         } else {
-            event->_state  = hipEventStatusRecording;
             // Clear timestamps
             event->_timestamp = 0;
 
             // Record the event in the stream:
             stream->locked_recordEvent(event);
-
+            event->_state  = hipEventStatusRecording;
             return ihipLogStatus(hipSuccess);
         }
     } else {
@@ -190,6 +189,10 @@ hipError_t hipEventDestroy(hipEvent_t event)
 hipError_t hipEventSynchronize(hipEvent_t event)
 {
     HIP_INIT_SPECIAL_API(TRACE_SYNC, event);
+
+    if (!(event->_flags & hipEventReleaseToSystem)) {
+        tprintf(DB_WARN, "hipEventSynchronize on event without system-scope fence ; consider creating with hipEventReleaseToSystem\n");
+    }
 
     if (event) {
         if (event->_state == hipEventStatusUnitialized) {
@@ -267,6 +270,10 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop)
 hipError_t hipEventQuery(hipEvent_t event)
 {
     HIP_INIT_SPECIAL_API(TRACE_QUERY, event);
+
+    if (!(event->_flags & hipEventReleaseToSystem)) {
+        tprintf(DB_WARN, "hipEventQuery on event without system-scope fence ; consider creating with hipEventReleaseToSystem\n");
+    }
 
     if ((event->_state == hipEventStatusRecording) && !event->locked_isReady()) {
         return ihipLogStatus(hipErrorNotReady);
