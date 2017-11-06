@@ -137,6 +137,7 @@ extern std::vector<ProfTrigger> g_dbStopTriggers;
 class ihipStream_t;
 class ihipDevice_t;
 class ihipCtx_t;
+struct ihipEventData_t;
 
 // Color defs for debug messages:
 #define KNRM  "\x1B[0m"
@@ -152,10 +153,12 @@ extern const char *API_COLOR;
 extern const char *API_COLOR_END;
 
 
-// If set, thread-safety is enforced on all stream functions.
-// Stream functions will acquire a mutex before entering critical sections.
-#define STREAM_THREAD_SAFE 1
+// If set, thread-safety is enforced on all event/stream/ctx/device functions.
+// Can disable for performance or functional experiments - in this case
+// the code uses a dummy "no-op" mutex.
+#define EVENT_THREAD_SAFE 1
 
+#define STREAM_THREAD_SAFE 1
 
 #define CTX_THREAD_SAFE 1
 
@@ -390,6 +393,12 @@ class FakeMutex
     void unlock() { }
 };
 
+#if EVENT_THREAD_SAFE
+typedef std::mutex EventMutex;
+#else
+#warning "Stream thread-safe disabled"
+typedef FakeMutex EventMutex;
+#endif
 
 #if STREAM_THREAD_SAFE
 typedef std::mutex StreamMutex;
@@ -540,11 +549,11 @@ public:
 
     hc::accelerator_view* locked_getAv() { LockedAccessor_StreamCrit_t crit(_criticalData); return &(crit->_av); };
 
-    void                 locked_streamWaitEvent(hipEvent_t event);
-    void                 locked_recordEvent(hipEvent_t event);
+    void                 locked_streamWaitEvent(ihipEventData_t & event);
+    hc::completion_future    locked_recordEvent(hipEvent_t event);
 
     bool                 locked_eventIsReady(hipEvent_t event);
-    void                 locked_eventWaitComplete(hipEvent_t event, hc::hcWaitMode waitMode);
+    void                 locked_eventWaitComplete(hc::completion_future &marker, hc::hcWaitMode waitMode);
 
     ihipStreamCritical_t  &criticalData() { return _criticalData; };
 
@@ -628,32 +637,76 @@ enum ihipEventType_t {
     hipEventTypeStopCommand,
 };
 
+
+struct ihipEventData_t
+{
+    ihipEventData_t() {
+        _state  = hipEventStatusCreated;
+        _stream = NULL;
+        _timestamp  = 0;
+        _type   = hipEventTypeIndependent;
+    };
+
+    void marker(const hc::completion_future & marker)  { _marker = marker; };
+    hc::completion_future & marker() { return _marker; }
+    uint64_t timestamp() const { return _timestamp; } ;
+    ihipEventType_t type() const { return _type; };
+
+    ihipEventType_t       _type;
+    hipEventStatus_t      _state;
+    hipStream_t           _stream;  // Stream where the event is recorded.  Null stream is resolved to actual stream when recorded
+    uint64_t              _timestamp;  // store timestamp, may be set on host or by marker.
+private:
+    hc::completion_future _marker;
+};
+
+
+//=============================================================================
+//class ihipEventCriticalBase_t
+template <typename MUTEX_TYPE>
+class ihipEventCriticalBase_t : LockedBase<MUTEX_TYPE>
+{
+public:
+    ihipEventCriticalBase_t(const ihipEvent_t *parentEvent) : 
+        _parent(parentEvent)
+    {}
+    ~ihipEventCriticalBase_t() {};
+   
+     // Keep data in structure so it can be easily copied into snapshots
+     // (used to reduce lock contention and preserve correct lock order)
+    ihipEventData_t _eventData;
+
+private:
+    const ihipEvent_t                 *_parent;
+    friend class LockedAccessor<ihipEventCriticalBase_t>;
+};
+
+typedef ihipEventCriticalBase_t<EventMutex> ihipEventCritical_t;
+
+typedef LockedAccessor<ihipEventCritical_t> LockedAccessor_EventCrit_t;
+
 // internal hip event structure.
 class ihipEvent_t {
 public:
     ihipEvent_t(unsigned flags);
     void attachToCompletionFuture(const hc::completion_future *cf, hipStream_t stream, ihipEventType_t eventType);
-    void refereshEventStatus();
-    hc::completion_future & marker() { return _marker; }
-    void marker(hc::completion_future cf) { _marker = cf; };
+    std::pair<hipEventStatus_t, uint64_t> refreshEventStatus(); // returns pair <state, timestamp>
 
-    bool locked_isReady();
-    void locked_waitComplete(hc::hcWaitMode waitMode);
 
-    uint64_t timestamp() const { return _timestamp; } ;
-    ihipEventType_t type() const { return _type; };
+    // Return a copy of the critical state. The critical data is locked during the copy.
+	ihipEventData_t locked_copyCrit() {
+        LockedAccessor_EventCrit_t crit(_criticalData);
+        return _criticalData._eventData; 
+    };
+
+	ihipEventCritical_t &criticalData() { return _criticalData; };
 
 public:
-    hipEventStatus_t      _state;
-
-    hipStream_t           _stream;  // Stream where the event is recorded.  Null stream is resolved to actual stream when recorded
     unsigned              _flags;
 
-
 private:
-    hc::completion_future _marker;
-    ihipEventType_t       _type;
-    uint64_t              _timestamp;  // store timestamp, may be set on host or by marker.
+	ihipEventCritical_t       _criticalData;
+
 friend hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream);
 } ;
 
@@ -671,7 +724,6 @@ public:
     };
 
     ~ihipDeviceCriticalBase_t()  {
-
     }
 
     // Contexts:
