@@ -33,6 +33,6 @@ THE SOFTWARE.
 int main()
 {
         hipSetDevice(-1);
-      if( hipPeekAtLastError() != hipSuccess)
-        passed();
+        if(hipPeekAtLastError() != hipSuccess)
+          passed();
 }
