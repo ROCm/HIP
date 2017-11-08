@@ -88,7 +88,7 @@ private:
 
 template <typename T>
 Streamer<T>::Streamer(int deviceId, T * A_d, size_t numElements, int commandType) :
-    _preA_d(NULL), 
+    _preA_d(NULL),
     _A_d(A_d),
     _deviceId(deviceId),
     _numElements(numElements),
@@ -239,7 +239,7 @@ size_t Streamer<T>::check(int streamerNum, T initValue, T expectedOffset, bool e
     return _mismatchCount;
 }
 
-   
+
 
 //---
 //Parse arguments specific to this test.
@@ -300,7 +300,7 @@ void checkAll(int initValue, std::vector<IntStreamer *> &streamers, std::vector<
     for (int i=0; i<streamers.size(); i++) {
 
         expected += streamers[i]->expectedAdd();
-        
+
         mismatchCount += streamers[i]->check(i+1, initValue, expected, expectPass);
 
     }
@@ -330,7 +330,7 @@ void checkAll(int initValue, std::vector<IntStreamer *> &streamers, std::vector<
 
 void sync_none(void) {};
 
-void sync_allDevices(int numDevices) 
+void sync_allDevices(int numDevices)
 {
     for (int d=0; d<numDevices; d++) {
         HIPCHECK(hipSetDevice(d));
@@ -339,7 +339,7 @@ void sync_allDevices(int numDevices)
 }
 
 
-void sync_queryAllUntilComplete(std::vector<IntStreamer *> streamers) 
+void sync_queryAllUntilComplete(std::vector<IntStreamer *> streamers)
 {
     for (int i=streamers.size()-1; i>=0; i--) {
         streamers[i]->queryUntilComplete();
@@ -347,7 +347,7 @@ void sync_queryAllUntilComplete(std::vector<IntStreamer *> streamers)
 }
 
 
-void sync_streamWaitEvent(hipEvent_t lastEvent, int sideDeviceId, hipStream_t sideStream, bool waitHere) 
+void sync_streamWaitEvent(hipEvent_t lastEvent, int sideDeviceId, hipStream_t sideStream, bool waitHere)
 {
     HIPCHECK(hipSetDevice(sideDeviceId));
 
@@ -389,7 +389,7 @@ int main(int argc, char *argv[])
         initArray_h[i] = initValue;
     }
     HIPCHECK(hipMemcpy(initArray_d, initArray_h, sizeElements, hipMemcpyHostToDevice));
-    
+
 
     int numDevices;
     HIPCHECK(hipGetDeviceCount(&numDevices));
@@ -414,7 +414,7 @@ int main(int argc, char *argv[])
 
 
     // A sideband stream channel that is independent from above.
-    // Used to check to ensure the WaitEvent or other synchronization is working correctly since by default sideStream is 
+    // Used to check to ensure the WaitEvent or other synchronization is working correctly since by default sideStream is
     // asynchronous wrt the other streams.
     std::vector<hipStream_t> sideStreams;
     for (int d=0; d<numDevices; d++) {
@@ -446,7 +446,7 @@ int main(int argc, char *argv[])
 
 
     if (p_tests & 0x1000) {
-        printf ("==> Test 0x1000 simple null stream tests\n"); 
+        printf ("==> Test 0x1000 simple null stream tests\n");
 
         // try some null stream:
         hipStreamQuery(0);
@@ -463,7 +463,7 @@ int main(int argc, char *argv[])
             HIPCHECK(hipEventRecord(e1, s1))
 
             HIPCHECK(hipStreamWaitEvent(hipStream_t(0), e1, 0/*flags*/));
-            
+
             HIPCHECK(hipStreamDestroy(s1));
             HIPCHECK(hipEventDestroy(e1));
         }
@@ -476,11 +476,11 @@ int main(int argc, char *argv[])
             HIPCHECK(hipEventRecord(e1, hipStream_t(0)))
 
             HIPCHECK(hipStreamWaitEvent(s1, e1, 0/*flags*/));
-            
+
             HIPCHECK(hipStreamDestroy(s1));
             HIPCHECK(hipEventDestroy(e1));
         }
-        
+
     }
 
 
