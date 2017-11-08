@@ -41,8 +41,8 @@ void printSep()
 // Designed to stress a small number of simple smoke tests
 
 template<
-    typename T=float, 
-	class P=HipTest::Unpinned, 
+    typename T=float,
+	class P=HipTest::Unpinned,
 	class C=HipTest::Memcpy
 >
 void simpleVectorAdd(size_t numElements, int iters, hipStream_t stream)

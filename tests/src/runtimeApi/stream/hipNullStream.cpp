@@ -119,7 +119,7 @@ void Streamer<T>::reset()
 {
     HipTest::setDefaultData(_numElements, _A_h, _B_h, _C_h);
     H2D();
-    
+
 }
 
 
@@ -238,7 +238,7 @@ int main(int argc, char *argv[])
             nullStreamer->D2H();
             HIPCHECK(hipDeviceSynchronize());
 
-            HipTest::checkTest(expected_H, nullStreamer->_C_h, numElements); 
+            HipTest::checkTest(expected_H, nullStreamer->_C_h, numElements);
         }
     }
 
@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
 
             HIPCHECK(hipDeviceSynchronize());
 
-            HipTest::checkTest(expected_H, nullStreamer->_C_h, numElements); 
+            HipTest::checkTest(expected_H, nullStreamer->_C_h, numElements);
         }
     }
 
@@ -289,10 +289,10 @@ int main(int argc, char *argv[])
         // Copy with stream1, this could go async if the streamSync doesn't synchronize ALL the streams.
         HIPCHECK(hipMemcpyAsync(streamers[0]->_C_h, streamers[0]->_C_d, streamers[0]->_numElements*sizeof(int), hipMemcpyDeviceToHost, streamers[1]->_stream));
 
-        
+
         HIPCHECK(hipDeviceSynchronize());
 
-        HipTest::checkTest(expected_H, streamers[0]->_C_h, numElements); 
+        HipTest::checkTest(expected_H, streamers[0]->_C_h, numElements);
     }
 
 
