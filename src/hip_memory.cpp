@@ -69,7 +69,7 @@ int sharePtr(void *ptr, ihipCtx_t *ctx, bool shareWithAll, unsigned hipFlags)
 
     if (shareWithAll) {
         hsa_status_t s = hsa_amd_agents_allow_access(g_deviceCnt+1, g_allAgents, NULL, ptr);
-        tprintf (DB_MEM, "    allow access to CPU + all %d GPUs (shareWithAll)\n", g_deviceCnt); 
+        tprintf (DB_MEM, "    allow access to CPU + all %d GPUs (shareWithAll)\n", g_deviceCnt);
         if (s != HSA_STATUS_SUCCESS) {
             ret = -1;
         }
@@ -126,7 +126,7 @@ void * allocAndSharePtr(const char *msg, size_t sizeBytes, ihipCtx_t *ctx, bool 
     if (HIP_INIT_ALLOC != -1) {
         // TODO , dont' call HIP API directly here:
         hipMemset(ptr, HIP_INIT_ALLOC, sizeBytes);
-    }	
+    }
 
     if (ptr != nullptr) {
         int r = sharePtr(ptr, ctx, shareWithAll, hipFlags);
@@ -255,7 +255,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
             hip_status = hipErrorMemoryAllocation;
         }
 
-    } 
+    }
 
 
     return ihipLogStatus(hip_status);
@@ -288,10 +288,10 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
         }
 
 
-        const unsigned supportedFlags = hipHostMallocPortable 
-                                      | hipHostMallocMapped 
-                                      | hipHostMallocWriteCombined 
-                                      | hipHostMallocCoherent 
+        const unsigned supportedFlags = hipHostMallocPortable
+                                      | hipHostMallocMapped
+                                      | hipHostMallocWriteCombined
+                                      | hipHostMallocCoherent
                                       | hipHostMallocNonCoherent;
 
 
@@ -304,7 +304,7 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
             hip_status = hipErrorInvalidValue;
         } else {
             auto device = ctx->getWriteableDevice();
-            
+
             unsigned amFlags = 0;
             if (flags & hipHostMallocCoherent) {
                 amFlags = amHostCoherent;
@@ -585,7 +585,7 @@ hipError_t hipMalloc3DArray(hipArray_t *array,
         hsa_ext_image_data_info_t imageInfo;
         hsa_status_t status = hsa_ext_image_data_get_info(*agent, &imageDescriptor, permission, &imageInfo);
         size_t alignment = imageInfo.alignment <= allocGranularity ? 0 : imageInfo.alignment;
- 
+
         *ptr = hip_internal::allocAndSharePtr("device_array", allocSize, ctx, false, am_flags, 0, alignment);
 
         if (size && (*ptr == NULL)) {
