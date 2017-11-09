@@ -40,6 +40,8 @@ THE SOFTWARE.
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
 
+//TODO Add support for multiple modules
+static std::unordered_map<std::string, uintptr_t> coGlobals;
 //TODO Use Pool APIs from HCC to get memory regions.
 
 #include <cassert>
@@ -262,7 +264,9 @@ namespace
                 symbol_section_accessor{self_reader, process_symtab}, x);
 
             assert(tmp.first);
-
+            if (coGlobals.count(x) == 0) {
+                coGlobals.emplace(x, tmp.first);
+            }
             void* p = nullptr;
             hsa_amd_memory_lock(
                 reinterpret_cast<void*>(tmp.first), tmp.second, &agent, 1, &p);
@@ -832,4 +836,22 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
 hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image, unsigned int numOptions, hipJitOption *options, void **optionValues)
 {
     return hipModuleLoadData(module, image);
+}
+
+hipError_t hipModuleGetTexRef(hipDeviceptr_t *dptr, hipModule_t hmod, const char* name)
+{
+    HIP_INIT_API(dptr, hmod, name);
+    hipError_t ret = hipSuccess;
+    if(dptr == NULL){
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
+    if(name == NULL || hmod == NULL){
+        return ihipLogStatus(hipErrorNotInitialized);
+    }
+    else{
+        const auto it = coGlobals.find(name);
+		if (it == coGlobals.end()) return ihipLogStatus(hipErrorInvalidValue);
+		*dptr = reinterpret_cast<void*>(it->second);
+		return ihipLogStatus(ret);
+    }
 }

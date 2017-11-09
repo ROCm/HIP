@@ -32,6 +32,48 @@ void saveTextureInfo(const hipTexture* pTexture,
     }
 }
 
+void getDrvChannelOrderAndType(const enum hipArray_Format Format,
+                            unsigned int NumChannels,
+                            hsa_ext_image_channel_order_t& channelOrder,
+                            hsa_ext_image_channel_type_t& channelType)
+{
+	switch(Format) {
+		case HIP_AD_FORMAT_UNSIGNED_INT8:
+			channelType = HSA_EXT_IMAGE_CHANNEL_TYPE_UNSIGNED_INT8;
+			break;
+		case HIP_AD_FORMAT_UNSIGNED_INT16:
+			channelType = HSA_EXT_IMAGE_CHANNEL_TYPE_UNSIGNED_INT16;
+			break;
+		case HIP_AD_FORMAT_UNSIGNED_INT32:
+			channelType = HSA_EXT_IMAGE_CHANNEL_TYPE_UNSIGNED_INT32;
+			break;
+		case HIP_AD_FORMAT_SIGNED_INT8:
+			channelType = HSA_EXT_IMAGE_CHANNEL_TYPE_SIGNED_INT8;
+			break;
+		case HIP_AD_FORMAT_SIGNED_INT16:
+			channelType = HSA_EXT_IMAGE_CHANNEL_TYPE_SIGNED_INT16;
+			break;
+		case HIP_AD_FORMAT_SIGNED_INT32:
+			channelType = HSA_EXT_IMAGE_CHANNEL_TYPE_SIGNED_INT32;
+			break;
+		case HIP_AD_FORMAT_HALF:
+			channelType = HSA_EXT_IMAGE_CHANNEL_TYPE_HALF_FLOAT;
+			break;
+		case HIP_AD_FORMAT_FLOAT:
+			channelType = HSA_EXT_IMAGE_CHANNEL_TYPE_FLOAT;
+			break;
+		default:
+			break;
+	}
+
+	if (NumChannels == 4) {
+		channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RGBA;
+	} else if (NumChannels == 2) {
+		channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RG;
+	} else if (NumChannels == 1) {
+		channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_R;
+	}
+}
 void getChannelOrderAndType(const hipChannelFormatDesc& desc,
                             enum hipTextureReadMode readMode,
                             hsa_ext_image_channel_order_t& channelOrder,
@@ -558,7 +600,11 @@ hipError_t ihipBindTextureToArrayImpl(int dim,
 
         hsa_ext_image_channel_order_t channelOrder;
         hsa_ext_image_channel_type_t channelType;
-        getChannelOrderAndType(desc, readMode, channelOrder, channelType);
+        if(array->isDrv) {
+			getDrvChannelOrderAndType(array->drvDesc.format, array->drvDesc.numChannels, channelOrder, channelType);
+		} else {
+            getChannelOrderAndType(desc, readMode, channelOrder, channelType);
+	    }
         imageDescriptor.format.channel_order = channelOrder;
         imageDescriptor.format.channel_type = channelType;
 
@@ -665,4 +711,48 @@ hipError_t hipGetTextureReference(const textureReference** tex, const void* symb
     if (ctx) {
     }
     return ihipLogStatus(hip_status);
+}
+
+hipError_t hipTexRefSetFormat (textureReference* tex, hipArray_Format fmt, int  NumPackedComponents )
+{
+	HIP_INIT_API(tex, fmt, NumPackedComponents);
+	hipError_t  hip_status = hipSuccess;
+	tex->format = fmt;
+	tex->numChannels = NumPackedComponents;
+    return ihipLogStatus(hip_status);
+}
+
+hipError_t hipTexRefSetFlags ( textureReference*  tex, unsigned int  flags )
+{
+	HIP_INIT_API(tex, flags);
+	hipError_t  hip_status = hipSuccess;
+	tex->normalized = flags;
+    return ihipLogStatus(hip_status);
+}
+
+hipError_t hipTexRefSetFilterMode ( textureReference*  tex, hipTextureFilterMode fm )
+{
+	HIP_INIT_API(tex, fm);
+	hipError_t  hip_status = hipSuccess;
+    tex->filterMode = fm;
+    return ihipLogStatus(hip_status);
+}
+
+hipError_t hipTexRefSetAddressMode ( textureReference* tex, int  dim, hipTextureAddressMode am )
+{
+	HIP_INIT_API(tex, dim, am);
+	hipError_t  hip_status = hipSuccess;
+	tex->addressMode[dim] = am;
+    return ihipLogStatus(hip_status);
+}
+
+hipError_t hipTexRefSetArray ( textureReference* tex,  hipArray_const_t array, unsigned int  flags )
+{
+	HIP_INIT_API(tex, array, flags);
+	hipError_t  hip_status = hipSuccess;
+
+    return ihipBindTextureToArrayImpl(hipTextureType2D, hipReadModeElementType,
+	                                      array, array->desc,/* channelOrder, channelType,*/
+	                                      tex->addressMode[0], tex->filterMode, tex->normalized,
+                                      tex->textureObject);
 }

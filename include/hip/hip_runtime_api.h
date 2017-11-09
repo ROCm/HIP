@@ -117,7 +117,9 @@ typedef struct hipDeviceProp_t {
  */
 enum hipMemoryType {
     hipMemoryTypeHost,   ///< Memory is physically located on host
-    hipMemoryTypeDevice  ///< Memory is physically located on device. (see deviceId for specific device)
+    hipMemoryTypeDevice,  ///< Memory is physically located on device. (see deviceId for specific device)
+    hipMemoryTypeArray,
+    hipMemoryTypeUnified
 };
 
 
