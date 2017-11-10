@@ -53,7 +53,7 @@ THE SOFTWARE.
 // define HIP_ENABLE_PRINTF to enable printf
 #ifdef HIP_ENABLE_PRINTF
   #define HCC_ENABLE_ACCELERATOR_PRINTF 1
-#endif 
+#endif
 
 //---
 // Remainder of this file only compiles with HCC
@@ -481,7 +481,7 @@ do {\
     type* var = \
     (type*)__get_dynamicgroupbaseptr(); \
 
-#define HIP_DYNAMIC_SHARED_ATTRIBUTE 
+#define HIP_DYNAMIC_SHARED_ATTRIBUTE
 
 
 
