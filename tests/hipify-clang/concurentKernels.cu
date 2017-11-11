@@ -99,6 +99,7 @@ int main(int argc, char **argv)
     // use command-line specified CUDA device, otherwise use device with highest Gflops/s
     cuda_device = findCudaDevice(argc, (const char **)argv);
 
+    // CHECK: hipDeviceProp_t deviceProp;
     cudaDeviceProp deviceProp;
     // CHECK: checkCudaErrors(hipGetDevice(&cuda_device));
     checkCudaErrors(cudaGetDevice(&cuda_device));
@@ -135,6 +136,7 @@ int main(int argc, char **argv)
         checkCudaErrors(cudaStreamCreate(&(streams[i])));
     }
 
+    // CHECK: hipEvent_t start_event, stop_event;
     // create CUDA event handles
     cudaEvent_t start_event, stop_event;
 
