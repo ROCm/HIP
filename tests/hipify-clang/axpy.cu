@@ -33,8 +33,13 @@ int main(int argc, char* argv[]) {
   // CHECK: hipMalloc(&device_x, kDataLen * sizeof(float));
   cudaMalloc(&device_x, kDataLen * sizeof(float));
 
+#ifdef HERRING
   // CHECK: hipMalloc(&device_y, kDataLen * sizeof(float));
   cudaMalloc(&device_y, kDataLen * sizeof(float));
+#else
+  // CHECK: hipMalloc(&device_y, kDataLen * sizeof(double));
+  cudaMalloc(&device_y, kDataLen * sizeof(double));
+#endif
 
   // CHECK: hipMemcpy(device_x, host_x, kDataLen * sizeof(float), hipMemcpyHostToDevice);
   cudaMemcpy(device_x, host_x, kDataLen * sizeof(float), cudaMemcpyHostToDevice);
