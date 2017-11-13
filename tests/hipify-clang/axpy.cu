@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+// CHECK: #include <hip/hip_runtime.h>
+#include <cuda.h>
 
 #define TOKEN_PASTE(X, Y) X ## Y
 #define ARG_LIST_AS_MACRO a, device_x, device_y
