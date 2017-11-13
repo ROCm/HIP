@@ -76,7 +76,9 @@ void HipifyAction::RewriteToken(const clang::Token& t) {
     clang::SourceLocation sl = t.getLocation();
     if (found->second.unsupported) {
         // An unsupported identifier? Curses! Warn the user.
-        llvm::errs() << "Unsupported CUDA identifier used: " + name.str() << "\n";
+        clang::DiagnosticsEngine& DE = getCompilerInstance().getDiagnostics();
+        const auto ID = DE.getCustomDiagID(clang::DiagnosticsEngine::Warning, "CUDA identifier unsupported in hip");
+        DE.Report(sl, ID);
         return;
     }
 
@@ -284,8 +286,9 @@ bool HipifyAction::cudaBuiltin(const clang::ast_matchers::MatchFinder::MatchResu
             insertReplacement(Rep, fullSL);
         }
     } else {
-        std::string msg = "the following reference is not handled: '" + name.str() + "' [builtin].";
-        llvm::errs() << msg << "\n";
+        clang::DiagnosticsEngine& DE = getCompilerInstance().getDiagnostics();
+        const auto ID = DE.getCustomDiagID(clang::DiagnosticsEngine::Warning, "Unknown CUDA builtin");
+        DE.Report(sl, ID);
     }
 
     return true;
