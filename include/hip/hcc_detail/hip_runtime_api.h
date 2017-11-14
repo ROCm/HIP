@@ -2175,10 +2175,7 @@ hipError_t ihipBindTextureImpl(int dim,
                                const void *devPtr,
                                const struct hipChannelFormatDesc& desc,
                                size_t size,
-                               enum hipTextureAddressMode addressMode,
-                               enum hipTextureFilterMode filterMode,
-                               int normalizedCoords,
-                               hipTextureObject_t& textureObject);
+                               textureReference* tex);
 
 /*
  * @brief hipBindTexture Binds size bytes of the memory area pointed to by @p devPtr to the texture reference tex.
@@ -2200,9 +2197,7 @@ hipError_t hipBindTexture(size_t *offset,
                           const struct hipChannelFormatDesc& desc,
                           size_t size = UINT_MAX)
 {
-    return ihipBindTextureImpl(dim, readMode, offset, devPtr, desc, size,
-                               tex.addressMode[0], tex.filterMode, tex.normalized,
-                               tex.textureObject);
+    return ihipBindTextureImpl(dim, readMode, offset, devPtr, desc, size, &tex);
 }
 
 /*
@@ -2223,9 +2218,7 @@ hipError_t hipBindTexture(size_t *offset,
                           const void *devPtr,
                           size_t size = UINT_MAX)
 {
-    return ihipBindTextureImpl(dim, readMode, offset, devPtr, tex.channelDesc, size,
-                               tex.addressMode[0], tex.filterMode, tex.normalized,
-                               tex.textureObject);
+    return ihipBindTextureImpl(dim, readMode, offset, devPtr, tex.channelDesc, size, &tex);
 }
 
 // C API
@@ -2244,10 +2237,7 @@ hipError_t ihipBindTexture2DImpl(int dim,
                                  const struct hipChannelFormatDesc& desc,
                                  size_t width,
                                  size_t height,
-                                 enum hipTextureAddressMode addressMode,
-                                 enum hipTextureFilterMode filterMode,
-                                 int normalizedCoords,
-                                 hipTextureObject_t& textureObject);
+                                 textureReference* tex);
 
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTexture2D(size_t *offset,
@@ -2257,9 +2247,7 @@ hipError_t hipBindTexture2D(size_t *offset,
                             size_t height,
                             size_t pitch)
 {
-    return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, tex.channelDesc, width, height,
-                                 tex.addressMode[0], tex.filterMode, tex.normalized,
-                                 tex.textureObject);
+    return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, tex.channelDesc, width, height, &tex);
 }
 
 template <class T, int dim, enum hipTextureReadMode readMode>
@@ -2271,9 +2259,7 @@ hipError_t hipBindTexture2D(size_t *offset,
                             size_t height,
                             size_t pitch)
 {
-    return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, desc, width, height,
-                                 tex.addressMode[0], tex.filterMode, tex.normalized,
-                                 tex.textureObject);
+    return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, desc, width, height, &tex);
 }
 
 //C API
@@ -2285,18 +2271,13 @@ hipError_t ihipBindTextureToArrayImpl(int dim,
                                       enum hipTextureReadMode readMode,
                                       hipArray_const_t array,
                                       const struct hipChannelFormatDesc& desc,
-                                      enum hipTextureAddressMode addressMode,
-                                      enum hipTextureFilterMode filterMode,
-                                      int normalizedCoords,
-                                      hipTextureObject_t& textureObject);
+                                      textureReference* tex);
 
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex,
                                  hipArray_const_t array)
 {
-    return ihipBindTextureToArrayImpl(dim, readMode, array, tex.channelDesc,
-                                      tex.addressMode[0], tex.filterMode, tex.normalized,
-                                      tex.textureObject);
+    return ihipBindTextureToArrayImpl(dim, readMode, array, tex.channelDesc, &tex);
 }
 
 template <class T, int dim, enum hipTextureReadMode readMode>
@@ -2304,9 +2285,7 @@ hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex,
                                  hipArray_const_t array,
                                  const struct hipChannelFormatDesc& desc)
 {
-    return ihipBindTextureToArrayImpl(dim, readMode, array, desc,
-                                      tex.addressMode[0], tex.filterMode, tex.normalized,
-                                      tex.textureObject);
+    return ihipBindTextureToArrayImpl(dim, readMode, array, desc, &tex);
 }
 
 //C API
