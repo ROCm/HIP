@@ -2173,7 +2173,7 @@ hipError_t ihipBindTextureImpl(int dim,
                                enum hipTextureReadMode readMode,
                                size_t *offset,
                                const void *devPtr,
-                               const struct hipChannelFormatDesc& desc,
+                               const struct hipChannelFormatDesc* desc,
                                size_t size,
                                textureReference* tex);
 
@@ -2197,7 +2197,7 @@ hipError_t hipBindTexture(size_t *offset,
                           const struct hipChannelFormatDesc& desc,
                           size_t size = UINT_MAX)
 {
-    return ihipBindTextureImpl(dim, readMode, offset, devPtr, desc, size, &tex);
+    return ihipBindTextureImpl(dim, readMode, offset, devPtr, &desc, size, &tex);
 }
 
 /*
@@ -2218,7 +2218,7 @@ hipError_t hipBindTexture(size_t *offset,
                           const void *devPtr,
                           size_t size = UINT_MAX)
 {
-    return ihipBindTextureImpl(dim, readMode, offset, devPtr, tex.channelDesc, size, &tex);
+    return ihipBindTextureImpl(dim, readMode, offset, devPtr, &(tex.channelDesc), size, &tex);
 }
 
 // C API
@@ -2234,7 +2234,7 @@ hipError_t ihipBindTexture2DImpl(int dim,
                                  enum hipTextureReadMode readMode,
                                  size_t *offset,
                                  const void *devPtr,
-                                 const struct hipChannelFormatDesc& desc,
+                                 const struct hipChannelFormatDesc* desc,
                                  size_t width,
                                  size_t height,
                                  textureReference* tex);
@@ -2247,7 +2247,7 @@ hipError_t hipBindTexture2D(size_t *offset,
                             size_t height,
                             size_t pitch)
 {
-    return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, tex.channelDesc, width, height, &tex);
+    return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, &(tex.channelDesc), width, height, &tex);
 }
 
 template <class T, int dim, enum hipTextureReadMode readMode>
@@ -2259,7 +2259,7 @@ hipError_t hipBindTexture2D(size_t *offset,
                             size_t height,
                             size_t pitch)
 {
-    return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, desc, width, height, &tex);
+    return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, &desc, width, height, &tex);
 }
 
 //C API
@@ -2348,6 +2348,10 @@ hipError_t hipTexRefSetFilterMode ( textureReference*  tex, hipTextureFilterMode
 hipError_t hipTexRefSetFlags ( textureReference*  tex, unsigned int  flags );
 
 hipError_t hipTexRefSetFormat (textureReference* tex, hipArray_Format fmt, int  NumPackedComponents );
+
+hipError_t hipTexRefSetAddress( size_t* offset, textureReference* tex, hipDeviceptr_t devPtr, size_t size );
+
+hipError_t hipTexRefSetAddress2D( textureReference* tex, const HIP_ARRAY_DESCRIPTOR* desc, hipDeviceptr_t devPtr, size_t pitch );
 
 // doxygen end Texture
 /**
