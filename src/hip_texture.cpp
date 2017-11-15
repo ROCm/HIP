@@ -752,7 +752,6 @@ hipError_t hipTexRefSetAddress( size_t* offset, textureReference* tex, hipDevice
 {
 	HIP_INIT_API(offset, tex, devPtr, size);
 	hipError_t  hip_status = hipSuccess;
-	//hipChannelFormatDesc desc;
     // TODO: hipReadModeElementType is default.
     hip_status = ihipBindTextureImpl(hipTextureType1D, hipReadModeElementType,
                                offset, devPtr, NULL, size, tex);
