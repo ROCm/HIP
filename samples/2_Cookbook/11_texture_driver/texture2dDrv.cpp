@@ -30,7 +30,7 @@ THE SOFTWARE.
 #define fileName "tex2dKernel.code"
 
 texture<float, 2, hipReadModeElementType> tex;
-bool testResult = true;
+bool testResult = false;
 
 #define HIP_CHECK(cmd) \
 {\
@@ -38,7 +38,7 @@ bool testResult = true;
     if(status != hipSuccess) {std::cout<<"error: #"<<status<<" ("<< hipGetErrorString(status) << ") at line:"<<__LINE__<<":  "<<#cmd<<std::endl;abort();}\
 }
 
-void runTest(int argc, char **argv)
+bool runTest(int argc, char **argv)
 {
     unsigned int width = 256;
     unsigned int height = 256;
@@ -142,11 +142,12 @@ void runTest(int argc, char **argv)
     }
     hipFree(dData);
     hipFreeArray(array);
+    return true;
 }
 
 int main(int argc, char **argv){
     hipInit(0);
-    runTest(argc, argv);
+    testResult = runTest(argc, argv);
     printf("%s ...\n", testResult ? "PASSED" : "FAILED");
     exit(testResult ? EXIT_SUCCESS : EXIT_FAILURE);
     return 0;
