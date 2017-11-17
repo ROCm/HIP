@@ -23,27 +23,6 @@ THE SOFTWARE.
 #include <hc_math.hpp>
 #include "device_util.h"
 
-struct holder64Bit{
-  union{
-    double d;
-    unsigned long int uli;
-    signed long int sli;
-    signed int si[2];
-    unsigned int ui[2];
-  };
-} __attribute__((aligned(8)));
-
-struct holder32Bit {
-  union {
-    float f;
-    unsigned int ui;
-    signed int si;
-  };
-} __attribute__((aligned(4)));
-
-__device__ struct holder64Bit hold64;
-__device__ struct holder32Bit hold32;
-
 __device__ float __double2float_rd(double x)
 {
   return (double)x;
@@ -64,13 +43,11 @@ __device__ float __double2float_rz(double x)
 
 __device__ int __double2hiint(double x)
 {
-  hold64.d = x;
-  return hold64.si[1];
+  return reinterpret_cast<int(&)[2]>(x)[1];
 }
 __device__ int __double2loint(double x)
 {
-  hold64.d = x;
-  return hold64.si[0];
+  return reinterpret_cast<int(&)[2]>(x)[0];
 }
 
 
@@ -145,8 +122,7 @@ __device__ unsigned long long int __double2ull_rz(double x)
 
 __device__ long long int __double_as_longlong(double x)
 {
-  hold64.d = x;
-  return hold64.sli;
+  return reinterpret_cast<long long&>(x);
 }
 
 __device__ int __float2int_rd(float x)
@@ -219,19 +195,17 @@ __device__ unsigned long long int __float2ull_rz(float x)
 
 __device__ int __float_as_int(float x)
 {
-  hold32.f = x;
-  return hold32.si;
+  return reinterpret_cast<int&>(x);
 }
 __device__ unsigned int __float_as_uint(float x)
 {
-  hold32.f = x;
-  return hold32.ui;
+  return reinterpret_cast<unsigned int&>(x);
 }
 __device__ double __hiloint2double(int hi, int lo)
-{
-  hold64.si[1] = hi;
-  hold64.si[0] = lo;
-  return hold64.d;
+{ // TODO: this matches the original in not considering endianness, is that
+  //       correct though?
+  int tmp[] = {lo, hi};
+  return reinterpret_cast<double&>(tmp);
 }
 __device__ double __int2double_rn(int x)
 {
@@ -257,8 +231,7 @@ __device__ float __int2float_rz(int x)
 
 __device__ float __int_as_float(int x)
 {
-  hold32.si = x;
-  return hold32.f;
+  return reinterpret_cast<float&>(x);
 }
 
 __device__ double __ll2double_rd(long long int x)
@@ -297,8 +270,7 @@ __device__ float __ll2float_rz(long long int x)
 
 __device__ double __longlong_as_double(long long int x)
 {
-  hold64.sli = x;
-  return hold64.d;
+  return reinterpret_cast<double&>(x);
 }
 
 __device__ double __uint2double_rn(int x)
@@ -325,8 +297,7 @@ __device__ float __uint2float_rz(unsigned int x)
 
 __device__ float __uint_as_float(unsigned int x)
 {
-  hold32.ui = x;
-  return hold32.f;
+  return reinterpret_cast<float&>(x);
 }
 
 __device__ double __ull2double_rd(unsigned long long int x)
