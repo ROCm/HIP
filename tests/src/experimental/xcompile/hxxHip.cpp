@@ -33,7 +33,7 @@ class memManager;
 template<typename T>
 __global__ void Add(hipLaunchParm lp, T* Ad, T* Bd, T* Cd, size_t Len)
 {
-    int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+    int tx = threadIdx.x + blockIdx.x * blockDim.x;
     if(tx < Len)
     {
         Cd[tx] = Ad[tx] + Bd[tx];

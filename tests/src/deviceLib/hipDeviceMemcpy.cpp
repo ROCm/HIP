@@ -16,13 +16,13 @@
 
 __global__ void cpy(hipLaunchParm lp, uint32_t *Out, uint32_t *In)
 {
-    int tx = hipThreadIdx_x;
+    int tx = threadIdx.x;
     memcpy(Out + tx, In + tx, sizeof(uint32_t));
 }
 
 __global__ void set(hipLaunchParm lp, uint32_t *ptr, uint8_t val, size_t size)
 {
-    int tx = hipThreadIdx_x;
+    int tx = threadIdx.x;
     memset(ptr + tx, val, (sizeof(uint32_t)*(size/LEN)));
 }
 
@@ -58,6 +58,6 @@ int main()
             return 0;
         }
     }
- 
+
     passed();
 }
