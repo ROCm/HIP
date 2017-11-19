@@ -40,13 +40,13 @@ THE SOFTWARE.
 #define THREADS_PER_BLOCK_Z  1
 
 
-__global__ void 
+__global__ void
 vectoradd_char1(hipLaunchParm lp,
-             char1* a, const char1*  bm, const char1* cm, int width, int height) 
+             char1* a, const char1*  bm, const char1* cm, int width, int height)
 
   {
-      int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
-      int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
+      int x = blockDim.x * blockIdx.x + threadIdx.x;
+      int y = blockDim.y * blockIdx.y + threadIdx.y;
 
       int i = y * width + x;
       if ( i < (width * height)) {
@@ -54,40 +54,40 @@ vectoradd_char1(hipLaunchParm lp,
       }
   }
 
-__global__ void 
+__global__ void
 vectoradd_char2(hipLaunchParm lp,
-             char2* a, const char2*  bm, const char2* cm, int width, int height) 
+             char2* a, const char2*  bm, const char2* cm, int width, int height)
 
   {
-      int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
-      int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
+      int x = blockDim.x * blockIdx.x + threadIdx.x;
+      int y = blockDim.y * blockIdx.y + threadIdx.y;
 
       int i = y * width + x;
       if ( i < (width * height)) {
         a[i] = make_char2(bm[i].x, bm[i].y) + make_char2(cm[i].x, cm[i].y);
       }
-} 
+}
 
-__global__ void 
+__global__ void
 vectoradd_char3(hipLaunchParm lp,
-             char3* a, const char3*  bm, const char3* cm, int width, int height) 
+             char3* a, const char3*  bm, const char3* cm, int width, int height)
 
   {
-      int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
-      int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
+      int x = blockDim.x * blockIdx.x + threadIdx.x;
+      int y = blockDim.y * blockIdx.y + threadIdx.y;
 
       int i = y * width + x;
       if ( i < (width * height)) {
         a[i] = make_char3(bm[i].x, bm[i].y, bm[i].z) + make_char3(cm[i].x, cm[i].y, cm[i].z);
       }
 }
-__global__ void 
+__global__ void
 vectoradd_char4(hipLaunchParm lp,
-             char4* a, const char4*  bm, const char4* cm, int width, int height) 
+             char4* a, const char4*  bm, const char4* cm, int width, int height)
 
   {
-      int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
-      int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
+      int x = blockDim.x * blockIdx.x + threadIdx.x;
+      int y = blockDim.y * blockIdx.y + threadIdx.y;
 
       int i = y * width + x;
       if ( i < (width * height)) {
@@ -99,7 +99,7 @@ vectoradd_char4(hipLaunchParm lp,
 #if 0
 __kernel__ void vectoradd_float(float* a, const float* b, const float* c, int width, int height) {
 
-  
+
   int x = blockDimX * blockIdx.x + threadIdx.x;
   int y = blockDimY * blockIdy.y + threadIdx.y;
 
@@ -128,21 +128,21 @@ bool dataTypesRun(){
   hostA = (T*)malloc(NUM * sizeof(T));
   hostB = (T*)malloc(NUM * sizeof(T));
   hostC = (T*)malloc(NUM * sizeof(T));
-  
+
   // initialize the input data
   for (i = 0; i < NUM; i++) {
     hostB[i] = (T)i;
     hostC[i] = (T)i;
   }
-  
+
   HIP_ASSERT(hipMalloc((void**)&deviceA, NUM * sizeof(T)));
   HIP_ASSERT(hipMalloc((void**)&deviceB, NUM * sizeof(T)));
   HIP_ASSERT(hipMalloc((void**)&deviceC, NUM * sizeof(T)));
-  
+
   HIP_ASSERT(hipMemcpy(deviceB, hostB, NUM*sizeof(T), hipMemcpyHostToDevice));
   HIP_ASSERT(hipMemcpy(deviceC, hostC, NUM*sizeof(T), hipMemcpyHostToDevice));
 
-  hipLaunchKernel(HIP_KERNEL_NAME(vectoradd_char1), 
+  hipLaunchKernel(HIP_KERNEL_NAME(vectoradd_char1),
                   dim3(WIDTH/THREADS_PER_BLOCK_X, HEIGHT/THREADS_PER_BLOCK_Y),
                   dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
                   0, 0,
@@ -192,21 +192,21 @@ bool dataTypesRun(){
   hostA = (T*)malloc(NUM * sizeof(T));
   hostB = (T*)malloc(NUM * sizeof(T));
   hostC = (T*)malloc(NUM * sizeof(T));
-  
+
   // initialize the input data
   for (i = 0; i < NUM; i++) {
     hostB[i] = (T)i;
     hostC[i] = (T)i;
   }
-  
+
   HIP_ASSERT(hipMalloc((void**)&deviceA, NUM * sizeof(T)));
   HIP_ASSERT(hipMalloc((void**)&deviceB, NUM * sizeof(T)));
   HIP_ASSERT(hipMalloc((void**)&deviceC, NUM * sizeof(T)));
-  
+
   HIP_ASSERT(hipMemcpy(deviceB, hostB, NUM*sizeof(T), hipMemcpyHostToDevice));
   HIP_ASSERT(hipMemcpy(deviceC, hostC, NUM*sizeof(T), hipMemcpyHostToDevice));
 
-  hipLaunchKernel(HIP_KERNEL_NAME(vectoradd_char1), 
+  hipLaunchKernel(HIP_KERNEL_NAME(vectoradd_char1),
                   dim3(WIDTH/THREADS_PER_BLOCK_X, HEIGHT/THREADS_PER_BLOCK_Y),
                   dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
                   0, 0,
@@ -256,21 +256,21 @@ bool dataTypesRun(){
   hostA = (T*)malloc(NUM * sizeof(T));
   hostB = (T*)malloc(NUM * sizeof(T));
   hostC = (T*)malloc(NUM * sizeof(T));
-  
+
   // initialize the input data
   for (i = 0; i < NUM; i++) {
     hostB[i] = (T)i;
     hostC[i] = (T)i;
   }
-  
+
   HIP_ASSERT(hipMalloc((void**)&deviceA, NUM * sizeof(T)));
   HIP_ASSERT(hipMalloc((void**)&deviceB, NUM * sizeof(T)));
   HIP_ASSERT(hipMalloc((void**)&deviceC, NUM * sizeof(T)));
-  
+
   HIP_ASSERT(hipMemcpy(deviceB, hostB, NUM*sizeof(T), hipMemcpyHostToDevice));
   HIP_ASSERT(hipMemcpy(deviceC, hostC, NUM*sizeof(T), hipMemcpyHostToDevice));
 
-  hipLaunchKernel(HIP_KERNEL_NAME(vectoradd_char1), 
+  hipLaunchKernel(HIP_KERNEL_NAME(vectoradd_char1),
                   dim3(WIDTH/THREADS_PER_BLOCK_X, HEIGHT/THREADS_PER_BLOCK_Y),
                   dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
                   0, 0,
@@ -319,21 +319,21 @@ bool dataTypesRunChar4(){
   hostA = (T*)malloc(NUM * sizeof(T));
   hostB = (T*)malloc(NUM * sizeof(T));
   hostC = (T*)malloc(NUM * sizeof(T));
-  
+
   // initialize the input data
   for (i = 0; i < NUM; i++) {
     hostB[i] = (T)i;
     hostC[i] = (T)i;
   }
-  
+
   HIP_ASSERT(hipMalloc((void**)&deviceA, NUM * sizeof(T)));
   HIP_ASSERT(hipMalloc((void**)&deviceB, NUM * sizeof(T)));
   HIP_ASSERT(hipMalloc((void**)&deviceC, NUM * sizeof(T)));
-  
+
   HIP_ASSERT(hipMemcpy(deviceB, hostB, NUM*sizeof(T), hipMemcpyHostToDevice));
   HIP_ASSERT(hipMemcpy(deviceC, hostC, NUM*sizeof(T), hipMemcpyHostToDevice));
 
-  hipLaunchKernel(HIP_KERNEL_NAME(vectoradd_char1), 
+  hipLaunchKernel(HIP_KERNEL_NAME(vectoradd_char1),
                   dim3(WIDTH/THREADS_PER_BLOCK_X, HEIGHT/THREADS_PER_BLOCK_Y),
                   dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
                   0, 0,
@@ -368,7 +368,7 @@ bool dataTypesRunChar4(){
 }
 
 int main() {
-  
+
   hipDeviceProp_t devProp;
   hipGetDeviceProperties(&devProp, 0);
   cout << " System minor " << devProp.minor << endl;
