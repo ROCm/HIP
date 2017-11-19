@@ -27,14 +27,14 @@ THE SOFTWARE.
 // TODO - add code object support here.
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11
- * RUN: %t 
+ * RUN: %t
  * HIT_END
  */
 
 
 // Test cache management (fences) and synchronization between kernel and copy commands.
-// Exhaustively tests 3 command types (copy, kernel, module kernel), 
-// many sync types (see SyncType), followed by another command, across a sweep 
+// Exhaustively tests 3 command types (copy, kernel, module kernel),
+// many sync types (see SyncType), followed by another command, across a sweep
 // of data sizes designed to stress various levels of the memory hierarchy.
 
 #include "hip/hip_runtime.h"
@@ -102,8 +102,8 @@ MemcpyFunction g_moduleMemcpy("memcpyInt.hsaco", "memcpyIntKernel");
 __global__ void
 memsetIntKernel(int * ptr, const int val, size_t numElements)
 {
-    int gid = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    int stride = hipBlockDim_x * hipGridDim_x ;
+    int gid = (blockIdx.x * blockDim.x + threadIdx.x);
+    int stride = blockDim.x * gridDim.x ;
     for (size_t i= gid; i< numElements; i+=stride){
        ptr[i] = val;
     }
@@ -112,15 +112,15 @@ memsetIntKernel(int * ptr, const int val, size_t numElements)
 __global__ void
 memcpyIntKernel(int *dst, const int * src, size_t numElements)
 {
-    int gid = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    int stride = hipBlockDim_x * hipGridDim_x ;
+    int gid = (blockIdx.x * blockDim.x + threadIdx.x);
+    int stride = blockDim.x * gridDim.x ;
     for (size_t i= gid; i< numElements; i+=stride){
        dst[i] = src[i];
     }
 };
 
 
-// CHeck arrays in reverse order, to more easily detect cases where 
+// CHeck arrays in reverse order, to more easily detect cases where
 // the copy is "partially" done.
 void checkReverse(const int *ptr, int numElements, int expected) {
     int mismatchCnt = 0;
@@ -157,7 +157,7 @@ const char * CmdTypeStr(CmdType c)
         ENUM_CASE_STR(MODULE_KERNEL);
         default: return "UNKNOWN";
     };
-} 
+}
 
 
 enum SyncType {
@@ -223,16 +223,16 @@ void resetInputs( int * Ad, int * Bd, int *Cd, int *Ch, size_t numElements, int 
 
 // Intended to test proper synchronization and cache flushing between CMDA and CMDB.
 // CMD are of type CmdType. All command copy memory, using either hipMemcpyAsync or kernel implementations.
-// CmdA copies from Ad to Bd, 
+// CmdA copies from Ad to Bd,
 // Some form of synchronization is applied.
 // Then cmdB copies from Bd to Cd.
 //
 // Cd is then copied to host Ch using a memory copy.
 //
 // Correct result at the end is that Ch contains the contents originally in Ad (integer 0x42)
-void runTestImpl(CmdType cmdAType, SyncType syncType, CmdType cmdBType, 
+void runTestImpl(CmdType cmdAType, SyncType syncType, CmdType cmdBType,
             hipStream_t stream1, hipStream_t stream2, int numElements,
-             int * Ad, int * Bd, int *Cd, int *Ch, 
+             int * Ad, int * Bd, int *Cd, int *Ch,
              int expected)
 {
     hipEvent_t e;
@@ -241,14 +241,14 @@ void runTestImpl(CmdType cmdAType, SyncType syncType, CmdType cmdBType,
     resetInputs(Ad, Bd, Cd, Ch, numElements, expected);
 
     const size_t sizeElements = numElements * sizeof(int);
-    fprintf (stderr, "test: runTest with %zu bytes (%6.2f MB) cmdA=%s; sync=%s; cmdB=%s\n", 
+    fprintf (stderr, "test: runTest with %zu bytes (%6.2f MB) cmdA=%s; sync=%s; cmdB=%s\n",
             sizeElements, (double) (sizeElements/1024.0), CmdTypeStr(cmdAType), SyncTypeStr(syncType), CmdTypeStr(cmdBType));
 
     if (SKIP_MODULE_KERNEL && ((cmdAType == MODULE_KERNEL) || (cmdBType == MODULE_KERNEL))) {
         fprintf (stderr, "warn: skipping since test infra does not yet support modules\n");
         return;
     }
-            
+
 
     // Step A:
     runCmd(cmdAType, Bd, Ad, stream1, numElements);
@@ -334,7 +334,7 @@ void testWrapper(size_t numElements)
     fprintf (stderr, "test: init complete, start running tests\n");
 
 
-    runTestImpl(COPY, EVENT_SYNC, KERNEL, stream1, stream2, numElements, Ad, Bd, Cd, Ch, expected); 
+    runTestImpl(COPY, EVENT_SYNC, KERNEL, stream1, stream2, numElements, Ad, Bd, Cd, Ch, expected);
 
     for (int cmdA=0; cmdA<MAX_CmdType; cmdA++) {
         for (int cmdB=0; cmdB<MAX_CmdType; cmdB++) {
@@ -347,7 +347,7 @@ void testWrapper(size_t numElements)
                     //case STREAM_QUERY:
                     case STREAM_SYNC:
                     case DEVICE_SYNC:
-                        runTestImpl(CmdType(cmdA), SyncType(syncMode), CmdType(cmdB), stream1, stream2, numElements, Ad, Bd, Cd, Ch, expected); 
+                        runTestImpl(CmdType(cmdA), SyncType(syncMode), CmdType(cmdB), stream1, stream2, numElements, Ad, Bd, Cd, Ch, expected);
                         break;
                     default:
                         break;
@@ -358,11 +358,11 @@ void testWrapper(size_t numElements)
     }
 
 #if 0
-    runTestImpl(COPY, STREAM_SYNC, MODULE_KERNEL, stream1, stream2, numElements, Ad, Bd, Cd, Ch, expected); 
-    runTestImpl(COPY, STREAM_SYNC, KERNEL, stream1, stream2, numElements, Ad, Bd, Cd, Ch, expected); 
-    runTestImpl(COPY, STREAM_WAIT_EVENT, MODULE_KERNEL, stream1, stream2, numElements, Ad, Bd, Cd, Ch, expected); 
+    runTestImpl(COPY, STREAM_SYNC, MODULE_KERNEL, stream1, stream2, numElements, Ad, Bd, Cd, Ch, expected);
+    runTestImpl(COPY, STREAM_SYNC, KERNEL, stream1, stream2, numElements, Ad, Bd, Cd, Ch, expected);
+    runTestImpl(COPY, STREAM_WAIT_EVENT, MODULE_KERNEL, stream1, stream2, numElements, Ad, Bd, Cd, Ch, expected);
 
-    runTestImpl(COPY, STREAM_WAIT_EVENT, KERNEL, stream1, stream2, numElements, Ad, Bd, Cd, Ch, expected); 
+    runTestImpl(COPY, STREAM_WAIT_EVENT, KERNEL, stream1, stream2, numElements, Ad, Bd, Cd, Ch, expected);
 #endif
 
     HIPCHECK(hipFree(Ad));

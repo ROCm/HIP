@@ -41,8 +41,8 @@ vectorADDRepeat(hipLaunchParm lp,
             size_t NELEM,
             int repeat)
 {
-    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    size_t stride = hipBlockDim_x * hipGridDim_x ;
+    size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
+    size_t stride = blockDim.x * gridDim.x ;
 
     for (int j=1; j<=repeat;j++) {
         for (size_t i=offset; i<NELEM; i+=stride) {

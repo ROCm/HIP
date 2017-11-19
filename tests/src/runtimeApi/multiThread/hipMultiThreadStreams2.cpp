@@ -35,7 +35,7 @@ THE SOFTWARE.
 
 template<typename T>
 __global__ void Inc(hipLaunchParm lp, T *Array){
-int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+int tx = threadIdx.x + blockIdx.x * blockDim.x;
 Array[tx] = Array[tx] + T(1);
 }
 
@@ -116,7 +116,7 @@ int main(int argc, char **argv)
 	}
 
 	const size_t size = N * sizeof(float);
-    
+
     for (int i=0; i< iterations; i++) {
 
 	std::thread t1(run1, size, stream[0]);
@@ -126,7 +126,7 @@ int main(int argc, char **argv)
 //	std::cout<<"T1"<<std::endl;
 	t2.join();
 //	std::cout<<"T2"<<std::endl;
-	t3.join(); 
+	t3.join();
     }
 	passed();
 }
