@@ -838,11 +838,11 @@ hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image, unsigned 
     return hipModuleLoadData(module, image);
 }
 
-hipError_t hipModuleGetTexRef(hipDeviceptr_t *dptr, hipModule_t hmod, const char* name)
+hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name)
 {
-    HIP_INIT_API(dptr, hmod, name);
+    HIP_INIT_API(texRef, hmod, name);
     hipError_t ret = hipSuccess;
-    if(dptr == NULL){
+    if(texRef == NULL){
         return ihipLogStatus(hipErrorInvalidValue);
     }
     if(name == NULL || hmod == NULL){
@@ -851,7 +851,7 @@ hipError_t hipModuleGetTexRef(hipDeviceptr_t *dptr, hipModule_t hmod, const char
     else{
         const auto it = coGlobals.find(name);
 		if (it == coGlobals.end()) return ihipLogStatus(hipErrorInvalidValue);
-		*dptr = reinterpret_cast<void*>(it->second);
+		*texRef = reinterpret_cast<textureReference*>(it->second);
 		return ihipLogStatus(ret);
     }
 }

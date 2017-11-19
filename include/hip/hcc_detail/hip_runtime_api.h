@@ -1968,7 +1968,7 @@ hipError_t hipModuleGetFunction(hipFunction_t *function, hipModule_t module, con
  */
 hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes, hipModule_t hmod, const char *name);
 
-hipError_t hipModuleGetTexRef(hipDeviceptr_t *dptr, hipModule_t hmod, const char* name);
+hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name);
 /**
  * @brief builds module from code object which resides in host memory. Image is pointer to that location.
  *
