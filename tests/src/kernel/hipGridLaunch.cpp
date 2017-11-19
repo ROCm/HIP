@@ -52,7 +52,7 @@ vectorADD2( hipLaunchParm lp,
     size_t stride = blockDim.x * gridDim.x ;
 
     for (size_t i=offset; i<N; i+=stride) {
-        auto foo = __hiloint2double(A_d[i], B_d[i]);
+        double foo = __hiloint2double(A_d[i], B_d[i]);
         C_d[i] = __double2loint(foo) + __double2hiint(foo);//A_d[i] + B_d[i] ;
     }
 }
