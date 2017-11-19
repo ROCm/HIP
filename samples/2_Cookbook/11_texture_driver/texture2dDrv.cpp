@@ -71,13 +71,15 @@ bool runTest(int argc, char **argv)
 	copyParam.widthInBytes = copyParam.srcPitch;
 	copyParam.height = height;
     hipMemcpy_2D(&copyParam);
-
-    hipTexRefSetAddressMode(&tex, 0, hipAddressModeWrap);
-	hipTexRefSetAddressMode(&tex, 1, hipAddressModeWrap);
-	hipTexRefSetFilterMode(&tex, hipFilterModePoint);
-    hipTexRefSetFlags(&tex, 0);
-	hipTexRefSetFormat(&tex, HIP_AD_FORMAT_FLOAT, 1);
-    hipTexRefSetArray(&tex, array, HIP_TRSA_OVERRIDE_FORMAT);
+    
+    textureReference* texref;
+    hipModuleGetTexRef(&texref, Module, "tex");
+    hipTexRefSetAddressMode(texref, 0, hipAddressModeWrap);
+	hipTexRefSetAddressMode(texref, 1, hipAddressModeWrap);
+	hipTexRefSetFilterMode(texref, hipFilterModePoint);
+    hipTexRefSetFlags(texref, 0);
+	hipTexRefSetFormat(texref, HIP_AD_FORMAT_FLOAT, 1);
+    hipTexRefSetArray(texref, array, HIP_TRSA_OVERRIDE_FORMAT);
 
     float* dData = NULL;
     hipMalloc((void **) &dData, size);
