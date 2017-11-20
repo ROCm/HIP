@@ -40,8 +40,8 @@ __global__ void testExternSharedKernel(hipLaunchParm lp, const T* A_d, const T* 
     T *sdata = reinterpret_cast<T *>(my_sdata);
 #endif
 
-    size_t gid = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    size_t tid = hipThreadIdx_x;
+    size_t gid = (blockIdx.x * blockDim.x + threadIdx.x);
+    size_t tid = threadIdx.x;
 
     // initialize dynamic shared memory
     if (tid < groupElements) {

@@ -269,7 +269,7 @@ hipError_t hipCtxGetSharedMemConfig ( hipSharedMemConfig * pConfig )
 hipError_t hipCtxSynchronize ( void )
 {
     HIP_INIT_API(1);
-    return ihipSynchronize(); //TODP Shall check validity of ctx?
+    return ihipLogStatus(ihipSynchronize()); //TODP Shall check validity of ctx?
 }
 
 hipError_t hipCtxGetFlags ( unsigned int* flags )

@@ -48,11 +48,12 @@ vectorADD2( hipLaunchParm lp,
             T *C_d,
             size_t N)
 {
-    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    size_t stride = hipBlockDim_x * hipGridDim_x ;
+    size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
+    size_t stride = blockDim.x * gridDim.x ;
 
     for (size_t i=offset; i<N; i+=stride) {
-        C_d[i] = A_d[i] + B_d[i] ;
+        double foo = __hiloint2double(A_d[i], B_d[i]);
+        C_d[i] = __double2loint(foo) + __double2hiint(foo);//A_d[i] + B_d[i] ;
     }
 }
 

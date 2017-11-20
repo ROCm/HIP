@@ -35,7 +35,7 @@ __global__ void vmac_asm(hipLaunchParm lp,
                                 float *out,
                                 float *in)
 {
-    int i = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+    int i = blockDim.x * blockIdx.x + threadIdx.x;
 
     asm volatile ("v_mac_f32_e32 %0, %2, %3" : "=v" (out[i]) : "0"(out[i]), "v" (a), "v" (in[i]));
 }
@@ -47,7 +47,7 @@ void CPUReference(
 {
     for(unsigned int j=0; j < NUM; j++)
     {
-        
+
         output[j]= a*input[j] + output[j];
     }
 }
