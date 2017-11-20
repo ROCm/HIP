@@ -1592,7 +1592,9 @@ void ihipPostLaunchKernel(const char *kernelName, hipStream_t stream, grid_launc
     tprintf(DB_SYNC, "ihipPostLaunchKernel, unlocking stream\n");
 
     stream->lockclose_postKernelCommand(kernelName, lp.av);
-    MARKER_END();
+    if(HIP_PROFILE_API) {
+        MARKER_END();
+    }
 }
 
 //=================================================================================================
