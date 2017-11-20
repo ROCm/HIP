@@ -45,8 +45,8 @@ __device__ void *__hip_hc_malloc(size_t size)
     {
         return (void*)nullptr;
     }
-    uint32_t totalThreads = hipBlockDim_x * hipGridDim_x * hipBlockDim_y * hipGridDim_y * hipBlockDim_z * hipGridDim_z;
-    uint32_t currentWorkItem = hipThreadIdx_x + hipBlockDim_x * hipBlockIdx_x;
+    uint32_t totalThreads = blockDim.x * gridDim.x * blockDim.y * gridDim.y * blockDim.z * gridDim.z;
+    uint32_t currentWorkItem = threadIdx.x + blockDim.x * blockIdx.x;
 
     uint32_t numHeapsPerWorkItem = NUM_PAGES / totalThreads;
     uint32_t heapSizePerWorkItem = SIZE_OF_HEAP / totalThreads;
@@ -932,7 +932,7 @@ __device__  unsigned long long int atomicMax(unsigned long long int* address,
 template<typename T>
 __device__ T atomicCAS_impl(T* address, T compare, T val)
 {
-  // the implementation assumes the atomic is lock-free and 
+  // the implementation assumes the atomic is lock-free and
   // has the same size as the non-atmoic equivalent type
   static_assert(sizeof(T) == sizeof(std::atomic<T>)
                 , "size mismatch between atomic and non-atomic types");
@@ -945,7 +945,7 @@ __device__ T atomicCAS_impl(T* address, T compare, T val)
 
   T expected = compare;
 
-  // hcc should generate a system scope atomic CAS 
+  // hcc should generate a system scope atomic CAS
   std::atomic_compare_exchange_weak_explicit(u.atomic_address
                                             , &expected, val
                                             , std::memory_order_acq_rel
@@ -1110,8 +1110,8 @@ __device__ void* __get_dynamicgroupbaseptr() {
   return hc::get_dynamic_group_segment_base_pointer();
 }
 
-__host__ void* __get_dynamicgroupbaseptr() { 
-  return nullptr; 
+__host__ void* __get_dynamicgroupbaseptr() {
+  return nullptr;
 }
 
 // Precise Math Functions

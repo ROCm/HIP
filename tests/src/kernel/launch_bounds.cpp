@@ -33,7 +33,7 @@ void
 __launch_bounds__(256, 2)
 myKern(hipLaunchParm lp, int *C, const int *A, int N, int xfactor)
 {
-    int tid = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    int tid = (blockIdx.x * blockDim.x + threadIdx.x);
 
     if (tid < N) {
         C[tid] = A[tid];
