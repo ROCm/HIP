@@ -17,9 +17,11 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -132,21 +134,39 @@ namespace
             const auto tmp = find_symbol_address(
                 symbol_section_accessor{self_reader, process_symtab}, x);
 
-            assert(tmp.first);
+            if (!tmp.first) {
+                throw runtime_error{
+                    "The global variable: " + x + ", could not be found."};
+            }
 
-            void* p = nullptr;
-            hsa_amd_memory_lock(
-                reinterpret_cast<void*>(tmp.first), tmp.second, &agent, 1, &p);
+            static unordered_map<
+                Elf64_Addr,
+                unique_ptr<void, decltype(hsa_amd_memory_unlock)*>> globals;
+
+            if (globals.count(tmp.first) == 0) {
+                void* p = nullptr;
+                hsa_amd_memory_lock(
+                    reinterpret_cast<void*>(tmp.first),
+                    tmp.second,
+                    &agent,
+                    1,
+                    &p);
+
+                static mutex mtx;
+
+                lock_guard<std::mutex> lck{mtx};
+                globals.emplace(
+                    piecewise_construct,
+                    make_tuple(tmp.first),
+                    make_tuple(p, hsa_amd_memory_unlock));
+            }
+
+            const auto it = globals.find(tmp.first);
+
+            assert(it != globals.cend());
 
             hsa_executable_agent_global_variable_define(
-                executable, agent, x.c_str(), p);
-
-            static vector<
-                unique_ptr<void, decltype(hsa_amd_memory_unlock)*>> globals;
-            static mutex mtx;
-
-            lock_guard<std::mutex> lck{mtx};
-            globals.emplace_back(p, hsa_amd_memory_unlock);
+                executable, agent, x.c_str(), it->second.get());
         }
     }
 
@@ -265,7 +285,6 @@ namespace
             }
         });
 
-        cout << r.size() << endl;
         return r;
     }
 
