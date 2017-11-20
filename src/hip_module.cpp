@@ -40,8 +40,6 @@ THE SOFTWARE.
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
 
-//TODO Add support for multiple modules
-static std::unordered_map<std::string, uintptr_t> coGlobals;
 //TODO Use Pool APIs from HCC to get memory regions.
 
 #include <cassert>
@@ -244,6 +242,7 @@ namespace
 
     inline
     void associate_code_object_symbols_with_host_allocation(
+        hipModule_t module,
         const ELFIO::elfio& reader,
         const ELFIO::elfio& self_reader,
         ELFIO::section* code_object_dynsym,
@@ -264,9 +263,6 @@ namespace
                 symbol_section_accessor{self_reader, process_symtab}, x);
 
             assert(tmp.first);
-            if (coGlobals.count(x) == 0) {
-                coGlobals.emplace(x, tmp.first);
-            }
             void* p = nullptr;
             hsa_amd_memory_lock(
                 reinterpret_cast<void*>(tmp.first), tmp.second, &agent, 1, &p);
@@ -280,6 +276,9 @@ namespace
 
             lock_guard<std::mutex> lck{mtx};
             globals.emplace_back(p, hsa_amd_memory_unlock);
+            if (module->coGlobals.count(x) == 0) {
+                module->coGlobals.emplace(x, tmp.first);
+            }
         }
     }
 
@@ -361,6 +360,7 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
                 });
 
             associate_code_object_symbols_with_host_allocation(
+                *module,
                 reader,
                 self_reader,
                 code_object_dynsym,
@@ -849,8 +849,8 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
         return ihipLogStatus(hipErrorNotInitialized);
     }
     else{
-        const auto it = coGlobals.find(name);
-		if (it == coGlobals.end()) return ihipLogStatus(hipErrorInvalidValue);
+        const auto it = hmod->coGlobals.find(name);
+		if (it == hmod->coGlobals.end()) return ihipLogStatus(hipErrorInvalidValue);
 		*texRef = reinterpret_cast<textureReference*>(it->second);
 		return ihipLogStatus(ret);
     }
