@@ -62,7 +62,7 @@ __global__ void MyKernel (const hipLaunchParm lp, const float *a, const float *b
 {
     //KERNELBEGIN;
 
-    unsigned gid = hipThreadIdx_x;
+    unsigned gid = threadIdx.x;
     if (gid < N) {
         c[gid] = a[gid] + PlusOne(b[gid]);
     }
@@ -96,7 +96,7 @@ vectorADD(const hipLaunchParm lp,
     int zuzu = deviceVar + 1;
 
 
-    int b = hipThreadIdx_x;
+    int b = threadIdx.x;
     int c;
 #ifdef NOT_YET
     int a = __shfl_up(x, 1);
@@ -119,8 +119,8 @@ vectorADD(const hipLaunchParm lp,
     __syncthreads();
 
 
-    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    size_t stride = hipBlockDim_x * hipGridDim_x ;
+    size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
+    size_t stride = blockDim.x * gridDim.x ;
 
     for (size_t i=offset; i<N; i+=stride) {
 		C_d[i] = A_d[i] + B_d[i];

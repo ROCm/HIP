@@ -29,13 +29,13 @@ THE SOFTWARE.
 #include<malloc.h>
 
 __global__ void Inc(hipLaunchParm lp, float *Ad){
-    int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+    int tx = threadIdx.x + blockIdx.x * blockDim.x;
     Ad[tx] = Ad[tx] + float(1);
 }
 
 
 template<typename T>
-void doMemCopy(size_t numElements, int offset, T *A, T *Bh, T *Bd, bool internalRegister) 
+void doMemCopy(size_t numElements, int offset, T *A, T *Bh, T *Bd, bool internalRegister)
 {
     A = A + offset;
     numElements -= offset;
@@ -56,7 +56,7 @@ void doMemCopy(size_t numElements, int offset, T *A, T *Bh, T *Bd, bool internal
     HIPCHECK(hipMemset(Bd, 13.0f, sizeBytes));
 
 
-    // 
+    //
     HIPCHECK(hipMemcpy(Bd, A, sizeBytes,  hipMemcpyHostToDevice));
     HIPCHECK(hipMemcpy(Bh, Bd, sizeBytes, hipMemcpyDeviceToHost));
 
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 
     const size_t size = N * sizeof(float);
 
-    if (p_tests & 0x1) { 
+    if (p_tests & 0x1) {
         float *A, **Ad;
         int num_devices;
         HIPCHECK(hipGetDeviceCount(&num_devices));
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
     }
 
 
-    if (p_tests & 0x6) { 
+    if (p_tests & 0x6) {
         // Sensitize HIP bug if device does not match where the memory was registered.
         HIPCHECK(hipSetDevice(0));
 
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
         HIPCHECK(hipMalloc(&Bd, size));
 
         // TODO - set to 128
-#define OFFSETS_TO_TRY 128 
+#define OFFSETS_TO_TRY 128
         assert (N>OFFSETS_TO_TRY);
 
         if (p_tests & 0x2) {

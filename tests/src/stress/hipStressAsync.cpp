@@ -30,7 +30,7 @@ THE SOFTWARE.
 #define ITER 1<<10
 
 __global__ void Iter(hipLaunchParm lp, int *Ad, int num){
-    int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+    int tx = threadIdx.x + blockIdx.x * blockDim.x;
     if(tx == 0){
         for(int i = 0; i<num;i++){
             Ad[tx] += 1;
@@ -58,7 +58,7 @@ int main(){
     }
 
     std::cout<<"Waitin..."<<std::endl;
-    
+
     hipDeviceSynchronize();
 }
 
