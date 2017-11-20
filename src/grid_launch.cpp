@@ -91,7 +91,6 @@ namespace hip_impl
         const dim3& dimBlocks,
         uint32_t sharedMemBytes,
         hipStream_t stream,
-<<<<<<< HEAD
         void** kernarg)
     {
         const auto it0 = functions().find(function_address);
@@ -134,22 +133,6 @@ namespace hip_impl
                     nullptr,
                     kernarg);
             }
-=======
-        void* locked_stream,
-        const char* kernel_name,
-        hc::accelerator_view* acc_v)
-    {   // Precondition: acc_v is the accelerator_view associated with stream
-        //               which is guarded by locked_stream;
-        //               locked_stream is deletable.
-        using L = decltype(stream->lockopen_preKernelCommand());
-
-        stream->lockclose_postKernelCommand(kernel_name, acc_v);
-
-        delete static_cast<L*>(locked_stream);
-        locked_stream = nullptr;
-        if(HIP_PROFILE_API) {
-            MARKER_END();
->>>>>>> e8ede28ec4f5744185b171031e537237afb7affa
         }
     }
 }
