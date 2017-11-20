@@ -439,6 +439,7 @@ if($HIP_PLATFORM eq "hcc"){
     if ($target_gfx900 eq 1) {
         $HIPLDFLAGS .= " --amdgpu-target=gfx900";
         $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX900__=1 ";
+        $ENV{HCC_EXTRA_LIBRARIES_GFX900}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
     }
 }
 

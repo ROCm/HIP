@@ -19,13 +19,14 @@ THE SOFTWARE.
 
 #include <iostream>
 #include <hip/hip_fp16.h>
-#include "hip/hip_runtime_api.h"
+#include "hip/hip_runtime.h"
+#include "test_common.h"
 
 #define LEN 64
 #define HALF_SIZE 64*sizeof(__half)
 #define HALF2_SIZE 64*sizeof(__half2)
 
-#if __HIP_ARCH_GFX803__ > 0
+#if __HIP_ARCH_GFX803__ || __HIP_ARCH_GFX900__
 
 __global__ void __halfMath(hipLaunchParm lp, __half *A, __half *B, __half *C) {
   int tx = threadIdx.x;
@@ -61,15 +62,21 @@ __global__ void __half2Math(hipLaunchParm lp, __half2 *A, __half2 *B, __half2 *C
 #endif
 
 int main(){
-  __half *A, *B, *C;
-  hipMalloc(&A, HALF_SIZE);
-  hipMalloc(&B, HALF_SIZE);
-  hipMalloc(&C, HALF_SIZE);
-  hipLaunchKernel(__halfMath, dim3(1,1,1), dim3(LEN,1,1), 0, 0, A, B, C);
-  __half2 *A2, *B2, *C2;
-  hipMalloc(&A, HALF2_SIZE);
-  hipMalloc(&B, HALF2_SIZE);
-  hipMalloc(&C, HALF2_SIZE);
-  hipLaunchKernel(__half2Math, dim3(1,1,1), dim3(LEN,1,1), 0, 0, A2, B2, C2);
-
+    __half *A, *B, *C;
+    hipMalloc(&A, HALF_SIZE);
+    hipMalloc(&B, HALF_SIZE);
+    hipMalloc(&C, HALF_SIZE);
+    hipLaunchKernel(__halfMath, dim3(1,1,1), dim3(LEN,1,1), 0, 0, A, B, C);
+    hipFree(A);
+    hipFree(B);
+    hipFree(C);
+    __half2 *A2, *B2, *C2;
+    hipMalloc(&A2, HALF2_SIZE);
+    hipMalloc(&B2, HALF2_SIZE);
+    hipMalloc(&C2, HALF2_SIZE);
+    hipLaunchKernel(__half2Math, dim3(1,1,1), dim3(LEN,1,1), 0, 0, A2, B2, C2);
+    hipFree(A2);
+    hipFree(B2);
+    hipFree(C2);
+    passed();
 }
