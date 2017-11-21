@@ -1134,7 +1134,7 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
     return ihipLogStatus(e);
 }
 
-hipError_t hipMemcpy_2D(const hip_Memcpy2D* pCopy)
+hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy)
 {
 	HIP_INIT_SPECIAL_API((TRACE_MCMD), pCopy);
 	hipError_t e = hipSuccess;
