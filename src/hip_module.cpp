@@ -554,15 +554,92 @@ namespace
     }
 
     inline
-    std::vector<Agent_global> read_agent_globals(hipModule_t hmodule)
+    std::vector<Agent_global> read_agent_globals(
+        hsa_agent_t agent, hsa_executable_t executable)
     {
         std::vector<Agent_global> r;
 
-
         hsa_executable_iterate_agent_symbols(
-            hmodule->executable, this_agent(), copy_agent_global_variables, &r);
+            executable, agent, copy_agent_global_variables, &r);
 
         return r;
+    }
+
+    template<typename ForwardIterator>
+    std::pair<hipDeviceptr_t, std::size_t> read_global_description(
+        ForwardIterator f, ForwardIterator l, const char* name)
+    {
+        const auto it = std::find_if(
+            f, l, [=](const Agent_global& x) { return x.name == name; });
+
+        return it == l ?
+            std::make_pair(nullptr, 0u) :
+            std::make_pair(it->address, it->byte_cnt);
+    }
+
+    hipError_t read_agent_global_from_module(
+        hipDeviceptr_t *dptr,
+        size_t* bytes,
+        hipModule_t hmod,
+        const char* name)
+    {
+        static std::unordered_map<
+            hipModule_t, std::vector<Agent_global>> agent_globals;
+
+        // TODO: this is not particularly robust.
+        if (agent_globals.count(hmod) == 0) {
+            static std::mutex mtx;
+            std::lock_guard<std::mutex> lck{mtx};
+
+            if (agent_globals.count(hmod) == 0) {
+                agent_globals.emplace(
+                    hmod, read_agent_globals(this_agent(), hmod->executable));
+            }
+        }
+
+        // TODO: This is unsafe iff some other emplacement triggers rehashing.
+        //       It will have to be properly fleshed out in the future.
+        const auto it0 = agent_globals.find(hmod);
+        if (it0 == agent_globals.cend()) {
+            throw std::runtime_error{"agent_globals data structure corrupted."};
+        }
+
+        std::tie(*dptr, *bytes) = read_global_description(
+            it0->second.cbegin(), it0->second.cend(), name);
+
+        return dptr ? hipSuccess : hipErrorNotFound;
+    }
+
+    hipError_t read_agent_global_from_process(
+        hipDeviceptr_t *dptr, size_t* bytes, const char* name)
+    {
+        static std::unordered_map<
+            hsa_agent_t, std::vector<Agent_global>> agent_globals;
+        static std::once_flag f;
+
+        std::call_once(f, []() {
+            for (auto&& agent_executables : hip_impl::executables()) {
+                std::vector<Agent_global> tmp0;
+                for (auto&& executable : agent_executables.second) {
+                    auto tmp1 = read_agent_globals(
+                        agent_executables.first, executable);
+                    tmp0.insert(
+                        tmp0.end(),
+                        std::make_move_iterator(tmp1.begin()),
+                        std::make_move_iterator(tmp1.end()));
+                }
+                agent_globals.emplace(agent_executables.first, std::move(tmp0));
+            }
+        });
+
+        const auto it = agent_globals.find(this_agent());
+
+        if (it == agent_globals.cend()) return hipErrorNotInitialized;
+
+        std::tie(*dptr, *bytes) = read_global_description(
+            it->second.cbegin(), it->second.cend(), name);
+
+        return dptr ? hipSuccess : hipErrorNotFound;
     }
 }
 
@@ -574,41 +651,15 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes,
     if(dptr == NULL || bytes == NULL){
         return ihipLogStatus(hipErrorInvalidValue);
     }
-    if(name == NULL || hmod == NULL){
+    if(name == NULL){
         return ihipLogStatus(hipErrorNotInitialized);
     }
     else{
-        static std::unordered_map<
-            hipModule_t, std::vector<Agent_global>> agent_globals;
+        ret = hmod ?
+            read_agent_global_from_module(dptr, bytes, hmod, name) :
+            read_agent_global_from_process(dptr, bytes, name);
 
-        // TODO: this is not particularly robust.
-        if (agent_globals.count(hmod) == 0) {
-            static std::mutex mtx;
-            std::lock_guard<std::mutex> lck{mtx};
-
-            if (agent_globals.count(hmod) == 0) {
-                agent_globals.emplace(hmod, read_agent_globals(hmod));
-            }
-        }
-
-        // TODO: This is unsafe iff some other emplacement triggers rehashing.
-        //       It will have to be properly fleshed out in the future.
-        const auto it0 = agent_globals.find(hmod);
-        if (it0 == agent_globals.cend()) {
-            throw std::runtime_error{"agent_globals data structure corrupted."};
-        }
-
-        const auto it1 = std::find_if(
-            it0->second.cbegin(),
-            it0->second.cend(),
-            [=](const Agent_global& x) { return x.name == name; });
-
-        if (it1 == it0->second.cend()) return ihipLogStatus(hipErrorNotFound);
-
-        *dptr = it1->address;
-        *bytes = it1->byte_cnt;
-
-        return ihipLogStatus(hipSuccess);
+        return ihipLogStatus(ret);
     }
 }
 

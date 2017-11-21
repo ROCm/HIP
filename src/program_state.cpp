@@ -32,27 +32,12 @@ using namespace std;
 namespace std
 {
     template<>
-    struct hash<hsa_agent_t> {
-        size_t operator()(hsa_agent_t x) const
-        {
-            return hash<decltype(x.handle)>{}(x.handle);
-        }
-    };
-
-    template<>
     struct hash<hsa_isa_t> {
         size_t operator()(hsa_isa_t x) const
         {
             return hash<decltype(x.handle)>{}(x.handle);
         }
     };
-}
-
-inline
-constexpr
-bool operator==(hsa_agent_t x, hsa_agent_t y)
-{
-    return x.handle == y.handle;
 }
 
 inline
@@ -242,52 +227,6 @@ namespace
         return r;
     }
 
-    const unordered_map<hsa_agent_t, vector<hsa_executable_t>>& executables()
-    {
-        static unordered_map<hsa_agent_t, vector<hsa_executable_t>> r;
-        static once_flag f;
-
-        call_once(f, []() {
-            static const auto accelerators = hc::accelerator::get_all();
-
-            for (auto&& acc : accelerators) {
-                auto agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
-
-                if (!agent) continue;
-
-                hsa_agent_iterate_isas(*agent, [](hsa_isa_t x, void* pa) {
-                    const auto it = code_object_blobs().find(x);
-
-                    if (it != code_object_blobs().cend()) {
-                        hsa_agent_t a = *static_cast<hsa_agent_t*>(pa);
-
-                        for (auto&& blob : it->second) {
-                            hsa_executable_t tmp = {};
-
-                            hsa_executable_create_alt(
-                                HSA_PROFILE_FULL,
-                                HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT,
-                                nullptr,
-                                &tmp);
-
-                            // TODO: this is massively inefficient and only
-                            //       meant for illustration.
-                            string blob_to_str{blob.cbegin(), blob.cend()};
-                            stringstream istr{blob_to_str};
-                            tmp = load_executable(tmp, a, istr);
-
-                            if (tmp.handle) r[a].push_back(tmp);
-                        }
-                    }
-
-                    return HSA_STATUS_SUCCESS;
-                }, agent);
-            }
-        });
-
-        return r;
-    }
-
     vector<pair<uintptr_t, string>> function_names_for(
         const elfio& reader, section* symtab)
     {
@@ -467,6 +406,52 @@ namespace
 
 namespace hip_impl
 {
+    const unordered_map<hsa_agent_t, vector<hsa_executable_t>>& executables()
+    {
+        static unordered_map<hsa_agent_t, vector<hsa_executable_t>> r;
+        static once_flag f;
+
+        call_once(f, []() {
+            static const auto accelerators = hc::accelerator::get_all();
+
+            for (auto&& acc : accelerators) {
+                auto agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
+
+                if (!agent) continue;
+
+                hsa_agent_iterate_isas(*agent, [](hsa_isa_t x, void* pa) {
+                    const auto it = code_object_blobs().find(x);
+
+                    if (it != code_object_blobs().cend()) {
+                        hsa_agent_t a = *static_cast<hsa_agent_t*>(pa);
+
+                        for (auto&& blob : it->second) {
+                            hsa_executable_t tmp = {};
+
+                            hsa_executable_create_alt(
+                                HSA_PROFILE_FULL,
+                                HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT,
+                                nullptr,
+                                &tmp);
+
+                            // TODO: this is massively inefficient and only
+                            //       meant for illustration.
+                            string blob_to_str{blob.cbegin(), blob.cend()};
+                            stringstream istr{blob_to_str};
+                            tmp = load_executable(tmp, a, istr);
+
+                            if (tmp.handle) r[a].push_back(tmp);
+                        }
+                    }
+
+                    return HSA_STATUS_SUCCESS;
+                }, agent);
+            }
+        });
+
+        return r;
+    }
+
     const unordered_map<uintptr_t, string>& function_names()
     {
         static unordered_map<uintptr_t, string> r{

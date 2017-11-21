@@ -715,7 +715,10 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void *src, size_t cou
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    void *dst = acc.get_symbol_address((const char*) symbolName);
+    hipDeviceptr_t dst = nullptr;
+    size_t byte_cnt = 0u;
+    auto status = hipModuleGetGlobal(
+        &dst, &byte_cnt, 0, static_cast<const char*>(symbolName));
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, dst);
 
     if(dst == nullptr)
@@ -750,7 +753,10 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count, 
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    void *src = acc.get_symbol_address((const char*) symbolName);
+    hipDeviceptr_t src = nullptr;
+    size_t byte_cnt = 0u;
+    auto status = hipModuleGetGlobal(
+        &src, &byte_cnt, 0, static_cast<const char*>(symbolName));
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, dst);
 
     if(dst == nullptr)
@@ -787,7 +793,10 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void *src, size_
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    void *dst = acc.get_symbol_address((const char*) symbolName);
+    hipDeviceptr_t dst = nullptr;
+    size_t byte_cnt = 0u;
+    auto status = hipModuleGetGlobal(
+        &dst, &byte_cnt, 0, static_cast<const char*>(symbolName));
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, dst);
 
     if(dst == nullptr)
@@ -825,7 +834,10 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t co
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    void *src = acc.get_symbol_address((const char*) symbolName);
+    hipDeviceptr_t src = nullptr;
+    size_t byte_cnt = 0u;
+    auto status = hipModuleGetGlobal(
+        &src, &byte_cnt, 0, static_cast<const char*>(symbolName));
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, src);
 
     if(src == nullptr || dst == nullptr)
@@ -1171,9 +1183,9 @@ namespace
     __global__
     void hip_fill_n(RandomAccessIterator f, N n, T value)
     {
-        const uint32_t grid_dim = hipGridDim_x;
+        const uint32_t grid_dim = gridDim.x * blockDim.x;
 
-        size_t idx = hipBlockIdx_x * block_dim + hipThreadIdx_x;
+        size_t idx = blockIdx.x * block_dim + threadIdx.x;
         while (idx < n) {
             new (&f[idx]) T{value};
             idx += grid_dim;

@@ -35,6 +35,24 @@ THE SOFTWARE.
 struct ihipModuleSymbol_t;
 using hipFunction_t = ihipModuleSymbol_t*;
 
+namespace std
+{
+    template<>
+    struct hash<hsa_agent_t> {
+        size_t operator()(hsa_agent_t x) const
+        {
+            return hash<decltype(x.handle)>{}(x.handle);
+        }
+    };
+}
+
+inline
+constexpr
+bool operator==(hsa_agent_t x, hsa_agent_t y)
+{
+    return x.handle == y.handle;
+}
+
 namespace hip_impl
 {
     struct Kernel_descriptor {
@@ -50,6 +68,8 @@ namespace hip_impl
         }
     };
 
+    const std::unordered_map<
+        hsa_agent_t, std::vector<hsa_executable_t>>& executables();
     const std::unordered_map<
         std::uintptr_t,
         std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>& functions();

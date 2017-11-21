@@ -102,23 +102,48 @@ __device__ void* __hip_hc_free(void *ptr)
 // loop unrolling
 __device__ void* __hip_hc_memcpy(void* dst, const void* src, size_t size)
 {
-    uint8_t *dstPtr, *srcPtr;
-    dstPtr = (uint8_t*)dst;
-    srcPtr = (uint8_t*)src;
-    for(uint32_t i=0;i<size;i++) {
-        dstPtr[i] = srcPtr[i];
+    auto dstPtr = static_cast<uint8_t*>(dst);
+    auto srcPtr = static_cast<const uint8_t*>(src);
+
+    while (size >= 4u) {
+        dstPtr[0] = srcPtr[0];
+        dstPtr[1] = srcPtr[1];
+        dstPtr[2] = srcPtr[2];
+        dstPtr[3] = srcPtr[3];
+
+        size -= 4u;
+        srcPtr += 4u;
+        dstPtr += 4u;
     }
-    return nullptr;
+    switch (size) {
+        case 3: dstPtr[2] = srcPtr[2];
+        case 2: dstPtr[1] = srcPtr[1];
+        case 1: dstPtr[0] = srcPtr[0];
+    }
+
+    return dst;
 }
 
-__device__ void* __hip_hc_memset(void* ptr, uint8_t val, size_t size)
+__device__ void* __hip_hc_memset(void* dst, uint8_t val, size_t size)
 {
-    uint8_t *dstPtr;
-    dstPtr = (uint8_t*)ptr;
-    for(uint32_t i=0;i<size;i++) {
-        dstPtr[i] = val;
+    auto dstPtr = static_cast<uint8_t*>(dst);
+
+    while (size >= 4u) {
+        dstPtr[0] = val;
+        dstPtr[1] = val;
+        dstPtr[2] = val;
+        dstPtr[3] = val;
+
+        size -= 4u;
+        dstPtr += 4u;
     }
-    return nullptr;
+    switch (size) {
+        case 3: dstPtr[2] = val;
+        case 2: dstPtr[1] = val;
+        case 1: dstPtr[0] = val;
+    }
+
+    return dst;
 }
 
 __device__ float __hip_erfinvf(float x){
