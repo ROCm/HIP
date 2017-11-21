@@ -1744,8 +1744,9 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr){
         am_status_t status = hc::am_memtracker_getinfo( &amPointerInfo , devPtr );
         if (status == AM_SUCCESS) {
             psize = (size_t)amPointerInfo._sizeBytes;
-        } else
+        } else {
             hipStatus = hipErrorInvalidResourceHandle;
+        }
         ihipIpcMemHandle_t* iHandle = (ihipIpcMemHandle_t*) handle;
         // Save the size of the pointer to hipIpcMemHandle
         iHandle->psize = psize;
