@@ -841,17 +841,18 @@ hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image, unsigned 
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name)
 {
     HIP_INIT_API(texRef, hmod, name);
-    hipError_t ret = hipSuccess;
+    hipError_t ret = hipErrorNotFound;
     if(texRef == NULL){
-        return ihipLogStatus(hipErrorInvalidValue);
+        ret = hipErrorInvalidValue;
+    } else {
+        if(name == NULL || hmod == NULL){
+            ret = hipErrorNotInitialized;
+        } else{
+            const auto it = hmod->coGlobals.find(name);
+		    if (it == hmod->coGlobals.end()) return ihipLogStatus(hipErrorInvalidValue);
+		    *texRef = reinterpret_cast<textureReference*>(it->second);
+            ret = hipSuccess;
+        }
     }
-    if(name == NULL || hmod == NULL){
-        return ihipLogStatus(hipErrorNotInitialized);
-    }
-    else{
-        const auto it = hmod->coGlobals.find(name);
-		if (it == hmod->coGlobals.end()) return ihipLogStatus(hipErrorInvalidValue);
-		*texRef = reinterpret_cast<textureReference*>(it->second);
-		return ihipLogStatus(ret);
-    }
+    return ihipLogStatus(ret);
 }
