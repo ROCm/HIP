@@ -248,8 +248,8 @@ static const DbName dbName [] =
 #if COMPILE_HIP_DB
 #define tprintf(trace_level, ...) {\
     if (HIP_DB & (1<<(trace_level))) {\
-        char msgStr[2000];\
-        snprintf(msgStr, 2000, __VA_ARGS__);\
+        char msgStr[1000];\
+        snprintf(msgStr, sizeof(msgStr), __VA_ARGS__);\
         fprintf (stderr, "  %ship-%s tid:%d:%s%s", dbName[trace_level]._color, dbName[trace_level]._shortName, tls_tidInfo.tid(), msgStr, KNRM); \
     }\
 }
@@ -269,7 +269,7 @@ extern uint64_t recordApiTrace(std::string *fullStr, const std::string &apiStr);
 
 #if COMPILE_HIP_ATP_MARKER || (COMPILE_HIP_TRACE_API & 0x1)
 #define API_TRACE(forceTrace, ...)\
-uint64_t hipApiStartTick;\
+uint64_t hipApiStartTick=0;\
 {\
     tls_tidInfo.incApiSeqNum();\
     if (forceTrace || (HIP_PROFILE_API || (COMPILE_HIP_DB && (HIP_TRACE_API & (1<<TRACE_ALL))))) {\
