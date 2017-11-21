@@ -1358,7 +1358,7 @@ hipError_t hipMalloc3DArray(hipArray_t *array,
  *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpyToSymbol, hipMemcpyAsync
  */
 hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind);
-hipError_t hipMemcpy_2D(const hip_Memcpy2D* pCopy);
+hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy);
 
 /**
  *  @brief Copies data between host and device.

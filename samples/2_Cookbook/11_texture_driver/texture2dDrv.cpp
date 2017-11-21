@@ -70,7 +70,7 @@ bool runTest(int argc, char **argv)
 	copyParam.srcPitch = width * sizeof(float);
 	copyParam.widthInBytes = copyParam.srcPitch;
 	copyParam.height = height;
-    hipMemcpy_2D(&copyParam);
+    hipMemcpyParam2D(&copyParam);
     
     textureReference* texref;
     hipModuleGetTexRef(&texref, Module, "tex");
