@@ -339,7 +339,7 @@ uint64_t hipApiStartTick=0;\
 class ihipException : public std::exception
 {
 public:
-    ihipException(hipError_t e) : _code(e) {};
+    explicit ihipException(hipError_t e) : _code(e) {};
 
     hipError_t _code;
 };
@@ -669,7 +669,7 @@ template <typename MUTEX_TYPE>
 class ihipEventCriticalBase_t : LockedBase<MUTEX_TYPE>
 {
 public:
-    ihipEventCriticalBase_t(const ihipEvent_t *parentEvent) : 
+    explicit ihipEventCriticalBase_t(const ihipEvent_t *parentEvent) : 
         _parent(parentEvent)
     {}
     ~ihipEventCriticalBase_t() {};
@@ -690,7 +690,7 @@ typedef LockedAccessor<ihipEventCritical_t> LockedAccessor_EventCrit_t;
 // internal hip event structure.
 class ihipEvent_t {
 public:
-    ihipEvent_t(unsigned flags);
+    explicit ihipEvent_t(unsigned flags);
     void attachToCompletionFuture(const hc::completion_future *cf, hipStream_t stream, ihipEventType_t eventType);
     std::pair<hipEventStatus_t, uint64_t> refreshEventStatus(); // returns pair <state, timestamp>
 
@@ -720,8 +720,9 @@ template <typename MUTEX_TYPE>
 class ihipDeviceCriticalBase_t : LockedBase<MUTEX_TYPE>
 {
 public:
-    ihipDeviceCriticalBase_t(ihipDevice_t *parentDevice) :
-        _parent(parentDevice)
+    explicit ihipDeviceCriticalBase_t(ihipDevice_t *parentDevice) :
+        _parent(parentDevice),
+        _ctxCount(0)
     {
     };
 
