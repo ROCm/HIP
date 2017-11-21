@@ -49,6 +49,38 @@ bool operator==(hsa_isa_t x, hsa_isa_t y)
 
 namespace
 {
+     struct Symbol {
+        std::string name;
+        ELFIO::Elf64_Addr value = 0;
+        ELFIO::Elf_Xword size = 0;
+        ELFIO::Elf_Half sect_idx = 0;
+        std::uint8_t bind = 0;
+        std::uint8_t type = 0;
+        std::uint8_t other = 0;
+    };
+
+    inline
+    Symbol read_symbol(const symbol_section_accessor& section, unsigned int idx)
+    {
+        assert(idx < section.get_symbols_num());
+
+        Symbol r;
+        section.get_symbol(
+            idx, r.name, r.value, r.size, r.bind, r.type, r.sect_idx, r.other);
+
+        return r;
+    }
+
+    template<typename P>
+    inline
+    section* find_section_if(elfio& reader, P p)
+    {
+        const auto it = find_if(
+            reader.sections.begin(), reader.sections.end(), move(p));
+
+        return it != reader.sections.end() ? *it : nullptr;
+    }
+
     vector<string> copy_names_of_undefined_symbols(
         const symbol_section_accessor& section)
     {
@@ -57,47 +89,57 @@ namespace
         for (auto i = 0u; i != section.get_symbols_num(); ++i) {
             // TODO: this is boyscout code, caching the temporaries
             //       may be of worth.
-            string name;
-            Elf64_Addr value = 0;
-            Elf_Xword size = 0;
-            Elf_Half sect_idx = 0;
-            uint8_t bind = 0;
-            uint8_t type = 0;
-            uint8_t other = 0;
 
-            section.get_symbol(
-                i, name, value, size, bind, type, sect_idx, other);
-
-            if (sect_idx == SHN_UNDEF && !name.empty()) {
-                r.push_back(std::move(name));
+            auto tmp = read_symbol(section, i);
+            if (tmp.sect_idx == SHN_UNDEF && !tmp.name.empty()) {
+                r.push_back(std::move(tmp.name));
             }
         }
 
         return r;
     }
 
-    pair<Elf64_Addr, Elf_Xword> find_symbol_address(
-        const symbol_section_accessor& section,
-        const string& symbol_name)
+    const std::unordered_map<
+        std::string,
+        std::pair<ELFIO::Elf64_Addr, ELFIO::Elf_Xword>>& symbol_addresses()
     {
-        static constexpr pair<Elf64_Addr, Elf_Xword> r{0, 0};
+        static unordered_map<string, pair<Elf64_Addr, Elf_Xword>> r;
+        static once_flag f;
 
-        for (auto i = 0u; i != section.get_symbols_num(); ++i) {
-            // TODO: this is boyscout code, caching the temporaries
-            //       may be of worth.
-            string name;
-            Elf64_Addr value = 0;
-            Elf_Xword size = 0;
-            Elf_Half sect_idx = 0;
-            uint8_t bind = 0;
-            uint8_t type = 0;
-            uint8_t other = 0;
+        call_once(f, []() {
+            dl_iterate_phdr([](dl_phdr_info* info, size_t, void*) {
+                static constexpr const char self[] = "/proc/self/exe";
+                elfio reader;
 
-            section.get_symbol(
-                i, name, value, size, bind, type, sect_idx, other);
+                static unsigned int iter = 0u;
+                if (reader.load(!iter ? self : info->dlpi_name)) {
+                    auto it = find_section_if(
+                        reader, [](const class section* x) {
+                        return x->get_type() == SHT_SYMTAB;
+                    });
 
-            if (name == symbol_name) return make_pair(value, size);
-        }
+                    if (it) {
+                        const symbol_section_accessor symtab{reader, it};
+
+                        for (auto i = 0u; i != symtab.get_symbols_num(); ++i) {
+                            auto tmp = read_symbol(symtab, i);
+
+                            if (tmp.type == STT_OBJECT &&
+                                tmp.sect_idx != SHN_UNDEF) {
+                                const auto addr =
+                                    tmp.value + (iter ? info->dlpi_addr : 0);
+                                r.emplace(
+                                    move(tmp.name), make_pair(addr, tmp.size));
+                            }
+                        }
+                    }
+
+                    ++iter;
+                }
+
+                return 0;
+            }, nullptr);
+        });
 
         return r;
     }
@@ -116,53 +158,41 @@ namespace
             symbol_section_accessor{reader, code_object_dynsym});
 
         for (auto&& x : undefined_symbols) {
-            const auto tmp = find_symbol_address(
-                symbol_section_accessor{self_reader, process_symtab}, x);
+            using RAII_global =
+                unique_ptr<void, decltype(hsa_amd_memory_unlock)*>;
 
-            if (!tmp.first) {
-                throw runtime_error{
-                    "The global variable: " + x + ", could not be found."};
+            static unordered_map<string, RAII_global> globals;
+            static once_flag f;
+            call_once(f, [=]() { globals.reserve(symbol_addresses().size()); });
+
+            if (globals.find(x) != globals.cend()) return;
+
+            const auto it1 = symbol_addresses().find(x);
+
+            if (it1 == symbol_addresses().cend()) {
+                throw runtime_error{"Global symbol: " + x + " is undefined."};
             }
 
-            static unordered_map<
-                Elf64_Addr,
-                unique_ptr<void, decltype(hsa_amd_memory_unlock)*>> globals;
+            static mutex mtx;
+            lock_guard<mutex> lck{mtx};
 
-            if (globals.count(tmp.first) == 0) {
-                void* p = nullptr;
-                hsa_amd_memory_lock(
-                    reinterpret_cast<void*>(tmp.first),
-                    tmp.second,
-                    &agent,
-                    1,
-                    &p);
+            if (globals.find(x) != globals.cend()) return;
 
-                static mutex mtx;
+            void* p = nullptr;
+            hsa_amd_memory_lock(
+                reinterpret_cast<void*>(it1->second.first),
+                it1->second.second,
+                nullptr, // All agents.
+                0,
+                &p);
 
-                lock_guard<std::mutex> lck{mtx};
-                globals.emplace(
-                    piecewise_construct,
-                    make_tuple(tmp.first),
-                    make_tuple(p, hsa_amd_memory_unlock));
-            }
-
-            const auto it = globals.find(tmp.first);
-
-            assert(it != globals.cend());
+            if (!p) { cerr << it1->first << endl; assert(false); }
 
             hsa_executable_agent_global_variable_define(
-                executable, agent, x.c_str(), it->second.get());
+                executable, agent, x.c_str(), p);
+
+            globals.emplace(x, RAII_global{p, hsa_amd_memory_unlock});
         }
-    }
-
-    template<typename P>
-    inline
-    section* find_section_if(elfio& reader, P p)
-    {
-        const auto it = find_if(
-            reader.sections.begin(), reader.sections.end(), std::move(p));
-
-        return it != reader.sections.end() ? *it : nullptr;
     }
 
     vector<uint8_t> code_object_blob_for_process()
@@ -217,8 +247,8 @@ namespace
                 Bundled_code_header tmp{blob};
                 if (valid(tmp)) {
                     for (auto&& bundle : bundles(tmp)) {
-                        r[triple_to_hsa_isa(bundle.triple)]
-                            .push_back(bundle.blob);
+                        r[triple_to_hsa_isa(bundle.triple)].push_back(
+                            bundle.blob);
                     }
                 }
             }
@@ -233,24 +263,15 @@ namespace
         vector<pair<uintptr_t, string>> r;
         symbol_section_accessor symbols{reader, symtab};
 
-        auto foo = reader.get_entry();
-
         for (auto i = 0u; i != symbols.get_symbols_num(); ++i) {
             // TODO: this is boyscout code, caching the temporaries
             //       may be of worth.
-            string name;
-            Elf64_Addr value = 0;
-            Elf_Xword size = 0;
-            Elf_Half sect_idx = 0;
-            uint8_t bind = 0;
-            uint8_t type = 0;
-            uint8_t other = 0;
+            auto tmp = read_symbol(symbols, i);
 
-            symbols.get_symbol(
-                i, name, value, size, bind, type, sect_idx, other);
-
-            if (type == STT_FUNC && sect_idx != SHN_UNDEF && !name.empty()) {
-                r.emplace_back(value, name);
+            if (tmp.type == STT_FUNC &&
+                tmp.sect_idx != SHN_UNDEF &&
+                !tmp.name.empty()) {
+                r.emplace_back(tmp.value, tmp.name);
             }
         }
 
@@ -417,7 +438,7 @@ namespace hip_impl
             for (auto&& acc : accelerators) {
                 auto agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
 
-                if (!agent) continue;
+                if (!agent || !acc.is_hsa_accelerator()) continue;
 
                 hsa_agent_iterate_isas(*agent, [](hsa_isa_t x, void* pa) {
                     const auto it = code_object_blobs().find(x);
