@@ -125,7 +125,7 @@ void hipLaunchKernelGGL(
     std::size_t kernarg_size = kernarg.size();
 
     void* config[] = {
-      HIP_LAUNCH_PARAM_BUFFER_POINTER, kernarg.data(),//&kernarg,
+      HIP_LAUNCH_PARAM_BUFFER_POINTER, kernarg.data(),
       HIP_LAUNCH_PARAM_BUFFER_SIZE, &kernarg_size,
       HIP_LAUNCH_PARAM_END
     };
