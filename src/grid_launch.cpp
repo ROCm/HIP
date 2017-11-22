@@ -92,5 +92,8 @@ namespace hip_impl
 
         delete static_cast<L*>(locked_stream);
         locked_stream = nullptr;
+        if(HIP_PROFILE_API) {
+            MARKER_END();
+        }
     }
 }
