@@ -61,11 +61,11 @@ int main()
     
         HIPCHECK(hipStreamCreate(&s));    
         HIPCHECK(hipSetDevice(1));
-        HIPCHECK(hipMemcpyDtoDAsync(X_d, A_d, Nbytes, s)); 
-        HIPCHECK(hipMemcpyDtoDAsync(Y_d, B_d, Nbytes, s));
+        HIPCHECK(hipMemcpyDtoDAsync((hipDeviceptr_t)X_d, (hipDeviceptr_t)A_d, Nbytes, s)); 
+        HIPCHECK(hipMemcpyDtoDAsync((hipDeviceptr_t)Y_d, (hipDeviceptr_t)B_d, Nbytes, s));
 
         hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0, X_d,Y_d, Z_d, N);
-        HIPCHECK(hipMemcpyDtoHAsync(C_h, Z_d, Nbytes, s));
+        HIPCHECK(hipMemcpyDtoHAsync(C_h, (hipDeviceptr_t)Z_d, Nbytes, s));
         HIPCHECK(hipStreamSynchronize(s));
         HIPCHECK(hipDeviceSynchronize());
         

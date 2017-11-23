@@ -332,7 +332,7 @@ void freeArrays(T *A_d, T *B_d, T *C_d,
     freeArraysForHost(A_h, B_h, C_h, usePinnedHost);
 }
 
-#if defined(__HIP_PLATFORM_HCC__)
+//#if defined(__HIP_PLATFORM_HCC__)
 template <typename T>
 void initArrays2DPitch(T **A_d, T **B_d, T **C_d,
                      size_t *pitch_A, size_t *pitch_B, size_t *pitch_C,
@@ -368,7 +368,7 @@ inline void initHIPArrays(hipArray **A_d, hipArray **B_d, hipArray **C_d,
   }
 
 }
-#endif
+//#endif
 
 // Assumes C_h contains vector add of A_h + B_h
 // Calls the test "failed" macro if a mismatch is detected.
