@@ -465,34 +465,36 @@ a performance impact.
 
 ### Textures and Cache Control
 
->Texture support is under-development and not yet supported by HIP.
-
 Compute programs sometimes use textures either to access dedicated texture caches or to use the texture-sampling hardware for interpolation and clamping. The former approach uses simple point samplers with linear interpolation, essentially only reading a single point. The latter approach uses the sampler hardware to interpolate and combine multiple
 point samples. AMD hardware, as well as recent competing hardware,
 has a unified texture/L1 cache, so it no longer has a dedicated texture cache. But the nvcc path often caches global loads in the L2 cache, and some programs may benefit from explicit control of the L1 cache contents.  We recommend the __ldg instruction for this purpose.
 
-HIP currently lacks texture support; a future revision will add this capability. Also, AMD compilers currently load all data into both the L1 and L2 caches, so __ldg is treated as a no-op. 
+AMD compilers currently load all data into both the L1 and L2 caches, so __ldg is treated as a no-op. 
 
 We recommend the following for functional portability:
 
 - For programs that use textures only to benefit from improved caching, use the __ldg instruction
-- Alternatively, use conditional compilation (see [Identify HIP Target Platform](#identify-hip-target-platform)) 
-   - For the `__HIP_PLATFORM_NVCC__` path, use the full texture path
-   - For the `__HIP_PLATFORM_HCC__` path, pass an additional pointer to the kernel and reference it using regular device memory-load instructions rather than texture loads. Some applications may already take this step, since it allows experimentation with caching behavior.
+- Programs that use texture object APIs, work well on HIP
+- For program that use texture reference APIs, use conditional compilation (see [Identify HIP Target Platform](#identify-hip-target-platform)) 
+   - For the `__HIP_PLATFORM_HCC__` path, pass an additional argument to the kernel and in texture fetch API inside kernel as shown below:-
 
 ``` 
-texture<float, 1, cudaReadModeElementType> t_features;
+texture<float, 2, hipReadModeElementType> tex;
 
-void __global__ MyKernel(float *d_features /* pass pointer parameter, if not already available */...) 
-{
-    // ... 
-
-#ifdef __HIP_PLATFORM_NVCC__
-    float tval = tex1Dfetch(t_features,addr);
-#else
-    float tval = d_features[addr];
+__global__ void tex2DKernel(float* outputData,
+#ifdef __HIP_PLATFORM_HCC__
+                             hipTextureObject_t textureObject,
 #endif
-        
+                             int width,
+                             int height)
+{
+    int x = blockIdx.x*blockDim.x + threadIdx.x;
+    int y = blockIdx.y*blockDim.y + threadIdx.y;
+#ifdef __HIP_PLATFORM_HCC__
+    outputData[y*width + x] = tex2D(tex, textureObject, x, y);
+#else
+    outputData[y*width + x] = tex2D(tex, x, y);
+#endif
 }
 
 // Host code:
@@ -500,22 +502,14 @@ void myFunc ()
 {
     // ...
 
-#ifdef __HIP_PLATFORM_NVCC__
-    cudaChannelFormatDesc chDesc0 = cudaCreateChannelDesc<float>();
-    t_features.filterMode = cudaFilterModePoint;   
-    t_features.normalized = false;
-    t_features.channelDesc = chDesc0;
-
-	cudaBindTexture(NULL, &t_features, d_features, &chDesc0, npoints*nfeatures*sizeof(float));
+#ifdef __HIP_PLATFORM_HCC__
+    hipLaunchKernelGGL(tex2DKernel, dim3(dimGrid), dim3(dimBlock), 0, 0, dData, tex.textureObject, width, height);
+#else
+    hipLaunchKernelGGL(tex2DKernel, dim3(dimGrid), dim3(dimBlock), 0, 0, dData, width, height);
 #endif
 
+
 ``` 
-
-Additionally, many of the Rodinia benchmarks demonstrate how to modify hipified programs so that textures are not required - search for USE_TEXTURES define in the rodinia source directory.   
-For example, [here
-
-
-Cuda programs that employ sampler hardware must either wait for hcc texture support or use more-sophisticated workarounds.
 
 ## More Tips
 ### HIPTRACE Mode
