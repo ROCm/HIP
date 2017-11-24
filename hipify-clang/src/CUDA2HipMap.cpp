@@ -312,9 +312,16 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TYPE_NAME_MAP{
 /// Maps cuda header names to hip header names.
 const std::map <llvm::StringRef, hipCounter> CUDA_INCLUDE_MAP{
     // CUDA includes
-    {"cuda.h",             {"hip/hip_runtime.h",     CONV_INCLUDE_CUDA_MAIN_H, API_DRIVER}},
-    {"cuda_runtime.h",     {"hip/hip_runtime.h",     CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME}},
-    {"cuda_runtime_api.h", {"hip/hip_runtime_api.h", CONV_INCLUDE,             API_RUNTIME}},
+    {"cuda.h",               {"hip/hip_runtime.h",        CONV_INCLUDE_CUDA_MAIN_H, API_DRIVER}},
+    {"cuda_runtime.h",       {"hip/hip_runtime.h",        CONV_INCLUDE_CUDA_MAIN_H, API_RUNTIME}},
+    {"cuda_runtime_api.h",   {"hip/hip_runtime_api.h",    CONV_INCLUDE,             API_RUNTIME}},
+    {"channel_descriptor.h", {"hip/channel_descriptor.h", CONV_INCLUDE,             API_RUNTIME}},
+    {"device_functions.h",   {"hip/device_functions.h",   CONV_INCLUDE,             API_RUNTIME}},
+    {"driver_types.h",       {"hip/driver_types.h",       CONV_INCLUDE,             API_RUNTIME}},
+    {"cuComplex.h",          {"hip/hip_complex.h",        CONV_INCLUDE,             API_RUNTIME}},
+    {"cuda_fp16.h",          {"hip/hip_fp16.h",           CONV_INCLUDE,             API_RUNTIME}},
+    {"cuda_texture_types.h", {"hip/hip_texture_types.h",  CONV_INCLUDE,             API_RUNTIME}},
+    {"vector_types.h",       {"hip/hip_vector_types.h",   CONV_INCLUDE,             API_RUNTIME}},
 
     // CUBLAS includes
     {"cublas.h",    {"hipblas.h", CONV_INCLUDE, API_BLAS}},

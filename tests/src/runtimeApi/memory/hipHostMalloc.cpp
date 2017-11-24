@@ -33,13 +33,13 @@
 #define SIZE LEN*sizeof(float)
 
 __global__ void Add(float *Ad, float *Bd, float *Cd){
-    int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+    int tx = threadIdx.x + blockIdx.x * blockDim.x;
     Cd[tx] = Ad[tx] + Bd[tx];
 }
 
 
 __global__ void Set(int *Ad, int val){
-    int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+    int tx = threadIdx.x + blockIdx.x * blockDim.x;
     Ad[tx] = val;
 }
 
@@ -52,13 +52,13 @@ std::vector<std::string> syncMsg = {"event", "stream", "device"};
 
 void CheckHostPointer(int numElements, int *ptr, unsigned eventFlags, int syncMethod, std::string msg)
 {
-    std::cerr << "test: CheckHostPointer " << msg 
+    std::cerr << "test: CheckHostPointer " << msg
               //<< " HIP_COHERENT_HOST_ALLOC=" << HIP_COHERENT_HOST_ALLOC
               //<< " HIP_EVENT_SYS_RELEASE=" <<   HIP_EVENT_SYS_RELEASE
-              << " eventFlags = " << std::hex << eventFlags 
-              << ((eventFlags & hipEventReleaseToDevice) ?  " hipEventReleaseToDevice" : "")  
-              << ((eventFlags & hipEventReleaseToSystem) ? " hipEventReleaseToSystem" : "") 
-              << " ptr=" << ptr 
+              << " eventFlags = " << std::hex << eventFlags
+              << ((eventFlags & hipEventReleaseToDevice) ?  " hipEventReleaseToDevice" : "")
+              << ((eventFlags & hipEventReleaseToSystem) ? " hipEventReleaseToSystem" : "")
+              << " ptr=" << ptr
               << " syncMethod=" << syncMsg[syncMethod] << "\n";
 
     hipStream_t s;
@@ -93,7 +93,7 @@ void CheckHostPointer(int numElements, int *ptr, unsigned eventFlags, int syncMe
         default:
             assert(0);
     };
-            
+
     for (int i=0; i<numElements; i++) {
         if (ptr[i] != expected) {
             printf ("mismatch at %d: %d != %d\n", i, ptr[i], expected);
@@ -153,7 +153,7 @@ int main(){
         size_t sizeBytes = numElements * sizeof (int);
 
 #ifdef __HIP_PLATFORM_HCC__
-        { 
+        {
             // Stimulate error condition:
             int *A = &numElements;
             HIPCHECK_API(hipHostMalloc((void**)&A, sizeBytes, hipHostMallocCoherent|hipHostMallocNonCoherent), hipErrorInvalidValue);
@@ -174,7 +174,7 @@ int main(){
             // agent-scope releases don't provide host visibility, don't use them here:
         }
 
-        if (1) { 
+        if (1) {
             int *A = nullptr;
             HIPCHECK(hipHostMalloc((void**)&A, sizeBytes, hipHostMallocCoherent));
             const char *ptrType = "coherent";
@@ -189,14 +189,14 @@ int main(){
 
 
         // Check defaults:
-        if (1) { 
+        if (1) {
             int *A = nullptr;
             HIPCHECK(hipHostMalloc((void**)&A, sizeBytes));
             const char *ptrType = "default";
             CheckHostPointer(numElements, A, 0, SYNC_DEVICE,   ptrType);
             CheckHostPointer(numElements, A, 0, SYNC_STREAM,  ptrType);
             CheckHostPointer(numElements, A, 0, SYNC_EVENT,   ptrType);
-            
+
             CheckHostPointer(numElements, A, 0, SYNC_DEVICE,   ptrType);
             CheckHostPointer(numElements, A, 0, SYNC_STREAM,  ptrType);
             CheckHostPointer(numElements, A, 0, SYNC_EVENT,   ptrType);
@@ -206,7 +206,7 @@ int main(){
 
 
     }
-        
+
     passed();
 
 }

@@ -37,9 +37,15 @@ __global__ void vadd_asm(hipLaunchParm lp,
                                 float *out,
                                 float *in)
 {
-    int i = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+    int i = blockDim.x * blockIdx.x + threadIdx.x;
 
-    asm volatile ("v_add_f32_e32 %0, %1, %2" : "=v" (out[i]) : "v"(in[i]),"v" (out[i]));
+#ifdef __HIP_PLATFORM_NVCC__
+        asm volatile("add.f32 %0,%1,%2;":"=f"(out[i]):"f"(in[i]),"f"(out[i]));
+#endif
+
+#ifdef __HIP_PLATFORM_HCC__
+   asm volatile ("v_add_f32_e32 %0, %1, %2" : "=v" (out[i]) : "v"(in[i]),"v" (out[i]));
+#endif
 }
 
 // CPU implementation of Vector Result
@@ -49,7 +55,7 @@ void addCPUReference(
 {
     for(unsigned int j=0; j < NUM; j++)
     {
-        
+
         output[j]= input[j] + output[j];
     }
 }

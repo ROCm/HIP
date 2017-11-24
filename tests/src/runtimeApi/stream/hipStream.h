@@ -73,7 +73,7 @@ void D2H(T *Dst, T *Src, size_t size){
 
 template<typename T>
 __global__ void Inc(hipLaunchParm lp, T *In){
-int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+int tx = threadIdx.x + blockIdx.x * blockDim.x;
 In[tx] = In[tx] + 1;
 }
 
@@ -94,12 +94,12 @@ void initArrays(T **Ad, T **Ah,
 }
 
 template<typename T>
-void initArrays(T **Ad, size_t N, 
-		bool deviceMemory = false, 
+void initArrays(T **Ad, size_t N,
+		bool deviceMemory = false,
 		bool usePinnedHost = false){
 	size_t NBytes = N * sizeof(T);
 	if(deviceMemory){
-		HIPCHECK( hipMalloc(Ad, NBytes)); 
+		HIPCHECK( hipMalloc(Ad, NBytes));
 	}else{
 		if(usePinnedHost){
 			HIPCHECK(hipHostMalloc((void**)Ad, NBytes, hipHostMallocDefault));
