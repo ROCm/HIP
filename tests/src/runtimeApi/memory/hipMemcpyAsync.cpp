@@ -59,7 +59,7 @@ struct HostTraits<Pinned>
     static const char *Name() { return "Pinned"; } ;
 
     static void *Alloc(size_t sizeBytes) {
-        void *p; 
+        void *p;
         HIPCHECK(hipHostMalloc((void**)&p, sizeBytes, hipHostMallocDefault));
         return p;
     };
@@ -67,11 +67,11 @@ struct HostTraits<Pinned>
 
 
 template<typename T>
-__global__ void 
+__global__ void
 addK (hipLaunchParm lp, T *A, T K, size_t numElements)
 {
-    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    size_t stride = hipBlockDim_x * hipGridDim_x ;
+    size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
+    size_t stride = blockDim.x * gridDim.x ;
 
     for (size_t i=offset; i<numElements; i+=stride) {
         A[i] = A[i] + K;
@@ -85,7 +85,7 @@ addK (hipLaunchParm lp, T *A, T K, size_t numElements)
 //IN: numInflight : number of copies inflight at any time:
 //IN: numPongs = number of iterations to run (iteration)
 template<typename T, class AllocType>
-void test_pingpong(hipStream_t stream, size_t numElements, int numInflight, int numPongs, bool doHostSide) 
+void test_pingpong(hipStream_t stream, size_t numElements, int numInflight, int numPongs, bool doHostSide)
 {
     HIPASSERT(numElements % numInflight == 0); // Must be evenly divisible.
     size_t Nbytes = numElements*sizeof(T);
@@ -95,7 +95,7 @@ void test_pingpong(hipStream_t stream, size_t numElements, int numInflight, int 
     unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, numElements);
 
     printf ("-----------------------------------------------------------------------------------------------\n");
-    printf ("testing: %s<%s>  Nbytes=%zu (%6.1f MB) numPongs=%d numInflight=%d eachCopyElements=%zu eachCopyBytes=%zu\n", 
+    printf ("testing: %s<%s>  Nbytes=%zu (%6.1f MB) numPongs=%d numInflight=%d eachCopyElements=%zu eachCopyBytes=%zu\n",
             __func__, HostTraits<AllocType>::Name(), Nbytes, (double)(Nbytes)/1024.0/1024.0, numPongs, numInflight, eachCopyElements, eachCopyBytes);
 
     T *A_h = NULL;
@@ -176,7 +176,7 @@ void test_manyInflightCopies(hipStream_t stream, int numElements, int numCopies,
     size_t eachCopyBytes = eachCopyElements * sizeof(T);
 
     printf ("-----------------------------------------------------------------------------------------------\n");
-    printf ("testing: %s  Nbytes=%zu (%6.1f MB) numCopies=%d eachCopyElements=%zu eachCopyBytes=%zu\n", 
+    printf ("testing: %s  Nbytes=%zu (%6.1f MB) numCopies=%d eachCopyElements=%zu eachCopyBytes=%zu\n",
             __func__, Nbytes, (double)(Nbytes)/1024.0/1024.0, numCopies, eachCopyElements, eachCopyBytes);
 
     T *A_d;
@@ -194,7 +194,7 @@ void test_manyInflightCopies(hipStream_t stream, int numElements, int numCopies,
     //stream=0; // fixme TODO
 
 
-    for (int i=0; i<numCopies; i++) 
+    for (int i=0; i<numCopies; i++)
     {
         HIPASSERT(A_d + i*eachCopyElements < A_d + Nbytes);
         HIPCHECK(hipMemcpyAsync(&A_d[i*eachCopyElements], &A_h1[i*eachCopyElements], eachCopyBytes, hipMemcpyHostToDevice, stream));
@@ -204,7 +204,7 @@ void test_manyInflightCopies(hipStream_t stream, int numElements, int numCopies,
         HIPCHECK(hipDeviceSynchronize());
     }
 
-    for (int i=0; i<numCopies; i++) 
+    for (int i=0; i<numCopies; i++)
     {
         HIPASSERT(A_d + i*eachCopyElements < A_d + Nbytes);
         HIPCHECK(hipMemcpyAsync(&A_h2[i*eachCopyElements], &A_d[i*eachCopyElements], eachCopyBytes, hipMemcpyDeviceToHost, stream));
@@ -252,7 +252,7 @@ void test_chunkedAsyncExample(int nStreams, bool useNullStream, bool useSyncMemc
 
 
     hipStream_t *stream = (hipStream_t*)malloc(sizeof(hipStream_t) * nStreams);
-    if (useNullStream) { 
+    if (useNullStream) {
         nStreams = 1;
         stream[0] = NULL;
     } else  {
@@ -262,7 +262,7 @@ void test_chunkedAsyncExample(int nStreams, bool useNullStream, bool useSyncMemc
     }
 
 
-    size_t workLeft = N; 
+    size_t workLeft = N;
     size_t workPerStream = N / nStreams;
     for (int i = 0; i < nStreams; ++i) {
         size_t work = (workLeft < workPerStream) ? workLeft : workPerStream;
@@ -287,7 +287,7 @@ void test_chunkedAsyncExample(int nStreams, bool useNullStream, bool useSyncMemc
         } else {
             HIPCHECK ( hipMemcpyAsync(&C_h[offset], &C_d[offset], workBytes, hipMemcpyDeviceToHost, stream[i]));
         }
-    } 
+    }
 
 
     HIPCHECK (hipDeviceSynchronize());

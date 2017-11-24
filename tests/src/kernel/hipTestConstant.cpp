@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp 
+ * BUILD: %t %s ../test_common.cpp
  * RUN: %t
  * HIT_END
  */
@@ -38,7 +38,7 @@ __constant__ int Value[LEN];
 
 __global__ void Get(hipLaunchParm lp, int *Ad)
 {
-    int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
     Ad[tid] = Value[tid];
 }
 
