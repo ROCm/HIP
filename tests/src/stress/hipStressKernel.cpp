@@ -26,7 +26,7 @@ THE SOFTWARE.
 static size_t size[NUM_SIZE];
 
 __global__ void Add(hipLaunchParm lp, int *Ad){
-    int tx = hipThreadIdx_x;
+    int tx = threadIdx.x;
     Ad[tx] = Ad[tx] + tx;
 }
 
@@ -57,5 +57,8 @@ int main(){
 		}
         std::cout<<std::endl;
 		hipDeviceSynchronize();
+
+		free(A);
+		hipFree(Ad);
 	}
 }

@@ -32,9 +32,18 @@ THE SOFTWARE.
 #include "env.h"
 
 
-#if defined(__HCC__) && (__hcc_workweek__ < 16354)
+#if (__hcc_workweek__ < 16354)
 #error("This version of HIP requires a newer version of HCC.");
 #endif
+
+// Use the __appPtr field in the am memtracker to store the context.
+// Requires a bug fix in HCC
+#if defined(__HCC_HAS_EXTENDED_AM_MEMTRACKER_UPDATE) and (__HCC_HAS_EXTENDED_AM_MEMTRACKER_UPDATE != 0)
+#define USE_APP_PTR_FOR_CTX 1
+#endif
+
+
+
 
 #define USE_IPC 1
 
@@ -128,6 +137,7 @@ extern std::vector<ProfTrigger> g_dbStopTriggers;
 class ihipStream_t;
 class ihipDevice_t;
 class ihipCtx_t;
+struct ihipEventData_t;
 
 // Color defs for debug messages:
 #define KNRM  "\x1B[0m"
@@ -143,10 +153,12 @@ extern const char *API_COLOR;
 extern const char *API_COLOR_END;
 
 
-// If set, thread-safety is enforced on all stream functions.
-// Stream functions will acquire a mutex before entering critical sections.
-#define STREAM_THREAD_SAFE 1
+// If set, thread-safety is enforced on all event/stream/ctx/device functions.
+// Can disable for performance or functional experiments - in this case
+// the code uses a dummy "no-op" mutex.
+#define EVENT_THREAD_SAFE 1
 
+#define STREAM_THREAD_SAFE 1
 
 #define CTX_THREAD_SAFE 1
 
@@ -209,7 +221,8 @@ extern const char *API_COLOR_END;
 #define DB_SYNC   1 /* 0x02 - trace synchronization pieces */
 #define DB_MEM    2 /* 0x04 - trace memory allocation / deallocation */
 #define DB_COPY   3 /* 0x08 - trace memory copy and peer commands. . */
-#define DB_MAX_FLAG 4
+#define DB_WARN   4 /* 0x10 - warn about sub-optimal or shady behavior */
+#define DB_MAX_FLAG 5
 // When adding a new debug flag, also add to the char name table below.
 //
 //
@@ -226,6 +239,7 @@ static const DbName dbName [] =
     {KYEL, "sync"},
     {KCYN, "mem"},
     {KMAG, "copy"},
+    {KRED, "warn"},
 };
 
 
@@ -244,23 +258,28 @@ static const DbName dbName [] =
 #endif
 
 
-
+static inline uint64_t getTicks()
+{
+    return hc::get_system_ticks();
+}
 
 //---
-extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
+extern uint64_t recordApiTrace(std::string *fullStr, const std::string &apiStr);
 
 #if COMPILE_HIP_ATP_MARKER || (COMPILE_HIP_TRACE_API & 0x1)
 #define API_TRACE(forceTrace, ...)\
+uint64_t hipApiStartTick;\
 {\
     tls_tidInfo.incApiSeqNum();\
     if (forceTrace || (HIP_PROFILE_API || (COMPILE_HIP_DB && (HIP_TRACE_API & (1<<TRACE_ALL))))) {\
         std::string apiStr = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';\
         std::string fullStr;\
-        recordApiTrace(&fullStr, apiStr);\
+        hipApiStartTick = recordApiTrace(&fullStr, apiStr);\
         if      (HIP_PROFILE_API == 0x1) {MARKER_BEGIN(__func__, "HIP") }\
         else if (HIP_PROFILE_API == 0x2) {MARKER_BEGIN(fullStr.c_str(), "HIP"); }\
     }\
 }
+
 #else
 // Swallow API_TRACE
 #define API_TRACE(IS_CMD, ...)\
@@ -302,7 +321,10 @@ extern void recordApiTrace(std::string *fullStr, const std::string &apiStr);
         tls_lastHipError = localHipStatus;\
         \
         if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API & (1<<TRACE_ALL)) {\
-            fprintf(stderr, "  %ship-api tid:%d.%lu %-30s ret=%2d (%s)>>%s\n", (localHipStatus == 0) ? API_COLOR:KRED, tls_tidInfo.tid(),tls_tidInfo.apiSeqNum(),  __func__, localHipStatus, ihipErrorString(localHipStatus), API_COLOR_END);\
+            auto ticks = getTicks() - hipApiStartTick;\
+            fprintf(stderr, "  %ship-api tid:%d.%lu %-30s ret=%2d (%s)>> +%lu ns%s\n", \
+                    (localHipStatus == 0) ? API_COLOR:KRED, tls_tidInfo.tid(),tls_tidInfo.apiSeqNum(),  \
+                    __func__, localHipStatus, ihipErrorString(localHipStatus), ticks, API_COLOR_END);\
         }\
         if (HIP_PROFILE_API) { MARKER_END(); }\
         localHipStatus;\
@@ -371,6 +393,12 @@ class FakeMutex
     void unlock() { }
 };
 
+#if EVENT_THREAD_SAFE
+typedef std::mutex EventMutex;
+#else
+#warning "Stream thread-safe disabled"
+typedef FakeMutex EventMutex;
+#endif
 
 #if STREAM_THREAD_SAFE
 typedef std::mutex StreamMutex;
@@ -521,11 +549,11 @@ public:
 
     hc::accelerator_view* locked_getAv() { LockedAccessor_StreamCrit_t crit(_criticalData); return &(crit->_av); };
 
-    void                 locked_streamWaitEvent(hipEvent_t event);
-    void                 locked_recordEvent(hipEvent_t event);
+    void                 locked_streamWaitEvent(ihipEventData_t & event);
+    hc::completion_future    locked_recordEvent(hipEvent_t event);
 
     bool                 locked_eventIsReady(hipEvent_t event);
-    void                 locked_eventWaitComplete(hipEvent_t event, hc::hcWaitMode waitMode);
+    void                 locked_eventWaitComplete(hc::completion_future &marker, hc::hcWaitMode waitMode);
 
     ihipStreamCritical_t  &criticalData() { return _criticalData; };
 
@@ -609,32 +637,76 @@ enum ihipEventType_t {
     hipEventTypeStopCommand,
 };
 
+
+struct ihipEventData_t
+{
+    ihipEventData_t() {
+        _state  = hipEventStatusCreated;
+        _stream = NULL;
+        _timestamp  = 0;
+        _type   = hipEventTypeIndependent;
+    };
+
+    void marker(const hc::completion_future & marker)  { _marker = marker; };
+    hc::completion_future & marker() { return _marker; }
+    uint64_t timestamp() const { return _timestamp; } ;
+    ihipEventType_t type() const { return _type; };
+
+    ihipEventType_t       _type;
+    hipEventStatus_t      _state;
+    hipStream_t           _stream;  // Stream where the event is recorded.  Null stream is resolved to actual stream when recorded
+    uint64_t              _timestamp;  // store timestamp, may be set on host or by marker.
+private:
+    hc::completion_future _marker;
+};
+
+
+//=============================================================================
+//class ihipEventCriticalBase_t
+template <typename MUTEX_TYPE>
+class ihipEventCriticalBase_t : LockedBase<MUTEX_TYPE>
+{
+public:
+    ihipEventCriticalBase_t(const ihipEvent_t *parentEvent) : 
+        _parent(parentEvent)
+    {}
+    ~ihipEventCriticalBase_t() {};
+   
+     // Keep data in structure so it can be easily copied into snapshots
+     // (used to reduce lock contention and preserve correct lock order)
+    ihipEventData_t _eventData;
+
+private:
+    const ihipEvent_t                 *_parent;
+    friend class LockedAccessor<ihipEventCriticalBase_t>;
+};
+
+typedef ihipEventCriticalBase_t<EventMutex> ihipEventCritical_t;
+
+typedef LockedAccessor<ihipEventCritical_t> LockedAccessor_EventCrit_t;
+
 // internal hip event structure.
 class ihipEvent_t {
 public:
     ihipEvent_t(unsigned flags);
     void attachToCompletionFuture(const hc::completion_future *cf, hipStream_t stream, ihipEventType_t eventType);
-    void refereshEventStatus();
-    hc::completion_future & marker() { return _marker; }
-    void marker(hc::completion_future cf) { _marker = cf; };
+    std::pair<hipEventStatus_t, uint64_t> refreshEventStatus(); // returns pair <state, timestamp>
 
-    bool locked_isReady();
-    void locked_waitComplete(hc::hcWaitMode waitMode);
 
-    uint64_t timestamp() const { return _timestamp; } ;
-    ihipEventType_t type() const { return _type; };
+    // Return a copy of the critical state. The critical data is locked during the copy.
+	ihipEventData_t locked_copyCrit() {
+        LockedAccessor_EventCrit_t crit(_criticalData);
+        return _criticalData._eventData; 
+    };
+
+	ihipEventCritical_t &criticalData() { return _criticalData; };
 
 public:
-    hipEventStatus_t      _state;
-
-    hipStream_t           _stream;  // Stream where the event is recorded.  Null stream is resolved to actual stream when recorded
     unsigned              _flags;
 
-
 private:
-    hc::completion_future _marker;
-    ihipEventType_t       _type;
-    uint64_t              _timestamp;  // store timestamp, may be set on host or by marker.
+	ihipEventCritical_t       _criticalData;
+
 friend hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream);
 } ;
 
@@ -652,7 +724,6 @@ public:
     };
 
     ~ihipDeviceCriticalBase_t()  {
-
     }
 
     // Contexts:

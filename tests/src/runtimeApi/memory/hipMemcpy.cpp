@@ -58,7 +58,7 @@ public:
 
     void offset(int offset) { _offset = offset; };
     int offset() const { return _offset; };
-    
+
 private:
     T * _A_d;
     T*  _B_d;
@@ -72,7 +72,7 @@ private:
 
 template<typename T>
 DeviceMemory<T>::DeviceMemory(size_t numElements)
-    : _maxNumElements(numElements), 
+    : _maxNumElements(numElements),
       _offset(0)
 {
     T ** np = nullptr;
@@ -93,7 +93,7 @@ DeviceMemory<T>::~DeviceMemory ()
     HipTest::freeArrays (_A_d, _B_d, _C_d, np, np, np, 0);
 
     HIPCHECK (hipFree(_C_dd));
-    
+
     _C_dd = NULL;
 };
 
@@ -125,7 +125,7 @@ public:
     T * A_hh;
     T*  B_hh;
 
-    bool   _usePinnedHost; 
+    bool   _usePinnedHost;
 private:
     size_t _maxNumElements;
 
@@ -165,11 +165,11 @@ HostMemory<T>::HostMemory(size_t numElements, bool usePinnedHost)
 
 template<typename T>
 void
-HostMemory<T>::reset(size_t numElements, bool full) 
+HostMemory<T>::reset(size_t numElements, bool full)
 {
     // Initialize the host data:
     for (size_t i=0; i<numElements; i++) {
-        (A_hh)[i] = 1097.0 + i; 
+        (A_hh)[i] = 1097.0 + i;
         (B_hh)[i] = 1492.0 + i; // Phi
 
         if (full) {
@@ -213,8 +213,8 @@ template <typename T>
 void memcpytest2(DeviceMemory<T> *dmem, HostMemory<T> *hmem, size_t numElements, bool useHostToHost, bool useDeviceToDevice, bool useMemkindDefault)
 {
     size_t sizeElements = numElements * sizeof(T);
-    printf ("test: %s<%s> size=%lu (%6.2fMB) usePinnedHost:%d, useHostToHost:%d, useDeviceToDevice:%d, useMemkindDefault:%d, offsets:dev:%+d host:+%d\n", 
-            __func__, 
+    printf ("test: %s<%s> size=%lu (%6.2fMB) usePinnedHost:%d, useHostToHost:%d, useDeviceToDevice:%d, useMemkindDefault:%d, offsets:dev:%+d host:+%d\n",
+            __func__,
             TYPENAME(T),
             sizeElements, sizeElements/1024.0/1024.0,
             hmem->_usePinnedHost, useHostToHost, useDeviceToDevice, useMemkindDefault,
@@ -273,8 +273,8 @@ void memcpytest2_for_type(size_t numElements)
 {
     printSep();
 
-    DeviceMemory<T> memD(numElements); 
-    HostMemory<T> memU(numElements, 0/*usePinnedHost*/); 
+    DeviceMemory<T> memD(numElements);
+    HostMemory<T> memU(numElements, 0/*usePinnedHost*/);
     HostMemory<T> memP(numElements, 1/*usePinnedHost*/);
 
     for (int usePinnedHost =0; usePinnedHost<=1; usePinnedHost++) {
@@ -307,11 +307,11 @@ void memcpytest2_sizes(size_t maxElem=0)
         maxElem = free/sizeof(T)/8;
     }
 
-    printf ("  device#%d: hipMemGetInfo: free=%zu (%4.2fMB) total=%zu (%4.2fMB)    maxSize=%6.1fMB\n", 
+    printf ("  device#%d: hipMemGetInfo: free=%zu (%4.2fMB) total=%zu (%4.2fMB)    maxSize=%6.1fMB\n",
             deviceId, free, (float)(free/1024.0/1024.0), total, (float)(total/1024.0/1024.0), maxElem*sizeof(T)/1024.0/1024.0);
     HIPCHECK ( hipDeviceReset() );
-    DeviceMemory<T> memD(maxElem); 
-    HostMemory<T> memU(maxElem, 0/*usePinnedHost*/); 
+    DeviceMemory<T> memD(maxElem);
+    HostMemory<T> memU(maxElem, 0/*usePinnedHost*/);
     HostMemory<T> memP(maxElem, 1/*usePinnedHost*/);
 
     for (size_t elem=1; elem<=maxElem; elem*=2) {
@@ -336,11 +336,11 @@ void memcpytest2_offsets(size_t maxElem, bool devOffsets, bool hostOffsets)
     HIPCHECK(hipMemGetInfo(&free, &total));
 
 
-    printf ("  device#%d: hipMemGetInfo: free=%zu (%4.2fMB) total=%zu (%4.2fMB)    maxSize=%6.1fMB\n", 
+    printf ("  device#%d: hipMemGetInfo: free=%zu (%4.2fMB) total=%zu (%4.2fMB)    maxSize=%6.1fMB\n",
             deviceId, free, (float)(free/1024.0/1024.0), total, (float)(total/1024.0/1024.0), maxElem*sizeof(T)/1024.0/1024.0);
     HIPCHECK ( hipDeviceReset() );
-    DeviceMemory<T> memD(maxElem); 
-    HostMemory<T> memU(maxElem, 0/*usePinnedHost*/); 
+    DeviceMemory<T> memD(maxElem);
+    HostMemory<T> memU(maxElem, 0/*usePinnedHost*/);
     HostMemory<T> memP(maxElem, 1/*usePinnedHost*/);
 
     size_t elem = maxElem / 2;
@@ -380,16 +380,16 @@ void multiThread_1(bool serialize, bool usePinnedHost)
 {
     printSep();
     printf ("test: %s<%s> serialize=%d usePinnedHost=%d\n", __func__,  TYPENAME(T), serialize, usePinnedHost);
-    DeviceMemory<T> memD(N); 
-    HostMemory<T> mem1(N, usePinnedHost); 
-    HostMemory<T> mem2(N, usePinnedHost); 
+    DeviceMemory<T> memD(N);
+    HostMemory<T> mem1(N, usePinnedHost);
+    HostMemory<T> mem2(N, usePinnedHost);
 
     std::thread t1 (memcpytest2<T>, &memD, &mem1, N, 0,0,0);
     if (serialize) {
         t1.join();
     }
 
-    
+
     std::thread t2 (memcpytest2<T>,&memD,  &mem2, N, 0,0,0);
     if (serialize) {
         t2.join();
@@ -427,21 +427,21 @@ int main(int argc, char *argv[])
         // Some tests around the 64KB boundary which have historically shown issues:
         printf ("\n\n=== tests&0x2 (64KB boundary)\n");
         size_t maxElem = 32*1024*1024;
-        DeviceMemory<float> memD(maxElem); 
-        HostMemory<float> memU(maxElem, 0/*usePinnedHost*/); 
-        HostMemory<float> memP(maxElem, 0/*usePinnedHost*/); 
+        DeviceMemory<float> memD(maxElem);
+        HostMemory<float> memU(maxElem, 0/*usePinnedHost*/);
+        HostMemory<float> memP(maxElem, 0/*usePinnedHost*/);
         // These all pass:
-        memcpytest2<float>(&memD, &memP, 15*1024*1024, 0, 0, 0);  
-        memcpytest2<float>(&memD, &memP, 16*1024*1024, 0, 0, 0);  
-        memcpytest2<float>(&memD, &memP, 16*1024*1024+16*1024,  0, 0, 0);  
+        memcpytest2<float>(&memD, &memP, 15*1024*1024, 0, 0, 0);
+        memcpytest2<float>(&memD, &memP, 16*1024*1024, 0, 0, 0);
+        memcpytest2<float>(&memD, &memP, 16*1024*1024+16*1024,  0, 0, 0);
 
         // Just over 64MB:
-        memcpytest2<float>(&memD, &memP, 16*1024*1024+512*1024,  0, 0, 0);  
-        memcpytest2<float>(&memD, &memP, 17*1024*1024+1024,  0, 0, 0);  
-        memcpytest2<float>(&memD, &memP, 32*1024*1024, 0, 0, 0);  
-        memcpytest2<float>(&memD, &memU, 32*1024*1024, 0, 0, 0);  
-        memcpytest2<float>(&memD, &memP, 32*1024*1024, 1, 1, 0);  
-        memcpytest2<float>(&memD, &memP, 32*1024*1024, 1, 1, 0);  
+        memcpytest2<float>(&memD, &memP, 16*1024*1024+512*1024,  0, 0, 0);
+        memcpytest2<float>(&memD, &memP, 17*1024*1024+1024,  0, 0, 0);
+        memcpytest2<float>(&memD, &memP, 32*1024*1024, 0, 0, 0);
+        memcpytest2<float>(&memD, &memU, 32*1024*1024, 0, 0, 0);
+        memcpytest2<float>(&memD, &memP, 32*1024*1024, 1, 1, 0);
+        memcpytest2<float>(&memD, &memP, 32*1024*1024, 1, 1, 0);
 
 
     }
@@ -464,7 +464,7 @@ int main(int argc, char *argv[])
 
         // Simplest cases: serialize the threads, and also used pinned memory:
         // This verifies that the sub-calls to memcpytest2 are correct.
-        multiThread_1<float>(true, true); 
+        multiThread_1<float>(true, true);
 
         // Serialize, but use unpinned memory to stress the unpinned memory xfer path.
         multiThread_1<float>(true, false);

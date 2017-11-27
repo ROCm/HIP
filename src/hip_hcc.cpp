@@ -47,6 +47,9 @@ THE SOFTWARE.
 #include "trace_helper.h"
 #include "env.h"
 
+//TODO - create a stream-based debug interface as an additional option for tprintf
+#define DB_PEER_CTX 0
+
 
 //=================================================================================================
 //Global variables:
@@ -156,7 +159,7 @@ thread_local TidInfo tls_tidInfo;
 //=================================================================================================
 // Top-level "free" functions:
 //=================================================================================================
-void recordApiTrace(std::string *fullStr, const std::string &apiStr)
+uint64_t recordApiTrace(std::string *fullStr, const std::string &apiStr)
 {
     auto apiSeqNum = tls_tidInfo.apiSeqNum();
     auto tid = tls_tidInfo.tid();
@@ -178,10 +181,14 @@ void recordApiTrace(std::string *fullStr, const std::string &apiStr)
     *fullStr += " ";
     *fullStr += apiStr;
 
+    uint64_t apiStartTick = getTicks();
+
 
     if (COMPILE_HIP_DB && HIP_TRACE_API) {
-        fprintf (stderr, "%s<<hip-api tid:%s%s\n" , API_COLOR, fullStr->c_str(), API_COLOR_END);
+        fprintf (stderr, "%s<<hip-api tid:%s @%lu%s\n" , API_COLOR, fullStr->c_str(), apiStartTick, API_COLOR_END);
     }
+
+    return apiStartTick;
 }
 
 
@@ -332,12 +339,11 @@ void ihipStream_t::locked_wait()
 
 // Causes current stream to wait for specified event to complete:
 // Note this does not provide any kind of host serialization.
-void ihipStream_t::locked_streamWaitEvent(hipEvent_t event)
+void ihipStream_t::locked_streamWaitEvent(ihipEventData_t &ecd)
 {
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
-
-    crit->_av.create_blocking_marker(event->marker(), hc::accelerator_scope);
+    crit->_av.create_blocking_marker(ecd.marker(), hc::accelerator_scope);
 }
 
 
@@ -345,24 +351,28 @@ void ihipStream_t::locked_streamWaitEvent(hipEvent_t event)
 // Note this does not provide any kind of host serialization.
 bool ihipStream_t::locked_eventIsReady(hipEvent_t event)
 {
+
     // Event query that returns "Complete" may cause HCC to manipulate
     // internal queue state so lock the stream's queue here.
-    LockedAccessor_StreamCrit_t crit(_criticalData);
+    LockedAccessor_StreamCrit_t scrit(_criticalData);
 
-    return (event->marker().is_ready());
+    LockedAccessor_EventCrit_t ecrit(event->criticalData());
+
+    return (ecrit->_eventData.marker().is_ready());
 }
 
-void ihipStream_t::locked_eventWaitComplete(hipEvent_t event, hc::hcWaitMode waitMode)
+// Waiting on event can cause HCC to reclaim stream resources - so need to lock the stream.
+void ihipStream_t::locked_eventWaitComplete(hc::completion_future &marker, hc::hcWaitMode waitMode)
 {
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
-    event->marker().wait(waitMode);
+    marker.wait(waitMode);
 }
 
 
 // Create a marker in this stream.
 // Save state in the event so it can track the status of the event.
-void ihipStream_t::locked_recordEvent(hipEvent_t event)
+hc::completion_future ihipStream_t::locked_recordEvent(hipEvent_t event)
 {
     // Lock the stream to prevent simultaneous access
     LockedAccessor_StreamCrit_t crit(_criticalData);
@@ -378,7 +388,7 @@ void ihipStream_t::locked_recordEvent(hipEvent_t event)
         scopeFlag = HIP_EVENT_SYS_RELEASE ? hc::system_scope : hc::accelerator_scope;
     }
 
-    event->marker(crit->_av.create_marker(scopeFlag));
+    return crit->_av.create_marker(scopeFlag);
 };
 
 //=============================================================================
@@ -459,7 +469,9 @@ void ihipCtxCriticalBase_t<CtxMutex>::recomputePeerAgents()
 template<>
 bool ihipCtxCriticalBase_t<CtxMutex>::isPeerWatcher(const ihipCtx_t *peer)
 {
-    auto match = std::find(_peers.begin(), _peers.end(), peer);
+    auto match = std::find_if(_peers.begin(), _peers.end(), 
+                    [=] (const ihipCtx_t *d) { return d->getDeviceNum() == peer->getDeviceNum(); });
+
     return (match != std::end(_peers));
 }
 
@@ -616,7 +628,7 @@ void ihipDevice_t::locked_reset()
 
     //FIXME - Calling am_memtracker_reset is really bad since it destroyed all buffers allocated by the HCC runtime as well
     //such as the printf buffer.  Re-initialze the printf buffer as a workaround for now.
-#if (__hcc_workweek__ >= 17423)
+#ifdef HC_FEATURE_PRINTF
     Kalmar::getContext()->initPrintfBuffer();
 #endif
 };
@@ -700,26 +712,25 @@ int checkAccess(hsa_agent_t agent, hsa_amd_memory_pool_t pool)
     return access;
 }
 
-hsa_status_t get_region_info(hsa_region_t region, void* data)
+hsa_status_t get_pool_info(hsa_amd_memory_pool_t pool, void* data)
 {
     hsa_status_t err;
     hipDeviceProp_t* p_prop = reinterpret_cast<hipDeviceProp_t*>(data);
     uint32_t region_segment;
 
-    // Get region segment
-    err = hsa_region_get_info(region, HSA_REGION_INFO_SEGMENT, &region_segment);
+    // Get pool segment
+    err = hsa_amd_memory_pool_get_info(pool, HSA_AMD_MEMORY_POOL_INFO_SEGMENT, &region_segment);
     ErrorCheck(err);
 
     switch(region_segment) {
     case HSA_REGION_SEGMENT_READONLY:
-        err = hsa_region_get_info(region, HSA_REGION_INFO_SIZE, &(p_prop->totalConstMem)); break;
-    /* case HSA_REGION_SEGMENT_PRIVATE:
-        cout<<"PRIVATE"<<endl; private segment cannot be queried */
+        err = hsa_amd_memory_pool_get_info(pool, HSA_AMD_MEMORY_POOL_INFO_SIZE, &(p_prop->totalConstMem)); break;
     case HSA_REGION_SEGMENT_GROUP:
-        err = hsa_region_get_info(region, HSA_REGION_INFO_SIZE, &(p_prop->sharedMemPerBlock)); break;
+        err = hsa_amd_memory_pool_get_info(pool, HSA_AMD_MEMORY_POOL_INFO_SIZE, &(p_prop->sharedMemPerBlock)); 
+        break;
     default: break;
     }
-    return HSA_STATUS_SUCCESS;
+    return err;
 }
 
 
@@ -750,11 +761,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     hipError_t e = hipSuccess;
     hsa_status_t err;
 
-    // Set some defaults in case we don't find the appropriate regions:
-    prop->totalGlobalMem = 0;
-    prop->totalConstMem = 0;
-    prop-> maxThreadsPerMultiProcessor = 0;
-    prop->regsPerBlock = 0;
+    memset(prop, 0, sizeof(hipDeviceProp_t));
 
     if (_hsaAgent.handle == -1) {
         return hipErrorInvalidDevice;
@@ -854,15 +861,18 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop-> maxThreadsPerMultiProcessor = prop->warpSize*max_waves_per_cu;
 
     // Get memory properties
-    err = hsa_agent_iterate_regions(_hsaAgent, get_region_info, prop);
+    err = hsa_amd_agent_iterate_memory_pools(_hsaAgent, get_pool_info, prop);
+    if (err == HSA_STATUS_INFO_BREAK) { 
+        err = HSA_STATUS_SUCCESS; 
+    }
     DeviceErrorCheck(err);
 
-    // Get the size of the region we are using for Accelerator Memory allocations:
+    // Get the size of the pool we are using for Accelerator Memory allocations:
     hsa_region_t *am_region = static_cast<hsa_region_t*>(_acc.get_hsa_am_region());
     err = hsa_region_get_info(*am_region, HSA_REGION_INFO_SIZE, &prop->totalGlobalMem);
     DeviceErrorCheck(err);
     // maxSharedMemoryPerMultiProcessor should be as the same as group memory size.
-    // Group memory will not be paged out, so, the physical memory size is the total shared memory size, and also equal to the group region size.
+    // Group memory will not be paged out, so, the physical memory size is the total shared memory size, and also equal to the group pool size.
     prop->maxSharedMemoryPerMultiProcessor = prop->totalGlobalMem;
 
     // Get Max memory clock frequency
@@ -882,7 +892,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop->arch.hasGlobalFloatAtomicExch    = 1;
     prop->arch.hasSharedInt32Atomics       = 1;
     prop->arch.hasSharedFloatAtomicExch    = 1;
-    prop->arch.hasFloatAtomicAdd           = 0;
+    prop->arch.hasFloatAtomicAdd           = 1;  // supported with CAS loop, but is supported
     prop->arch.hasGlobalInt64Atomics       = 1;
     prop->arch.hasSharedInt64Atomics       = 1;
     prop->arch.hasDoubles                  = 1;
@@ -890,7 +900,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop)
     prop->arch.hasWarpBallot               = 1;
     prop->arch.hasWarpShuffle              = 1;
     prop->arch.hasFunnelShift              = 0; // TODO-hcc
-    prop->arch.hasThreadFenceSystem        = 0; // TODO-hcc
+    prop->arch.hasThreadFenceSystem        = 1;
     prop->arch.hasSyncThreadsExt           = 0; // TODO-hcc
     prop->arch.hasSurfaceFuncs             = 0; // TODO-hcc
     prop->arch.has3dGrid                   = 1;
@@ -1582,7 +1592,9 @@ void ihipPostLaunchKernel(const char *kernelName, hipStream_t stream, grid_launc
     tprintf(DB_SYNC, "ihipPostLaunchKernel, unlocking stream\n");
 
     stream->lockclose_postKernelCommand(kernelName, lp.av);
-    MARKER_END();
+    if(HIP_PROFILE_API) {
+        MARKER_END();
+    }
 }
 
 //=================================================================================================
@@ -1677,6 +1689,9 @@ const char *ihipErrorString(hipError_t hip_error)
 // So we check dstCtx's and srcCtx's peerList to see if the both include thisCtx.
 bool ihipStream_t::canSeeMemory(const ihipCtx_t *copyEngineCtx, const hc::AmPointerInfo *dstPtrInfo, const hc::AmPointerInfo *srcPtrInfo)
 {
+    if (copyEngineCtx == nullptr) {
+        return false;
+    }
 
     // Make sure this is a device-to-device copy with all memory available to the requested copy engine
     //
@@ -1684,11 +1699,18 @@ bool ihipStream_t::canSeeMemory(const ihipCtx_t *copyEngineCtx, const hc::AmPoin
     if (dstPtrInfo->_sizeBytes == 0) {
         return false;
     } else {
+#if USE_APP_PTR_FOR_CTX
+        ihipCtx_t *dstCtx = static_cast<ihipCtx_t*> (dstPtrInfo->_appPtr);
+#else
         ihipCtx_t *dstCtx = ihipGetPrimaryCtx(dstPtrInfo->_appId);
+#endif
         if (copyEngineCtx != dstCtx) {
             // Only checks peer list if contexts are different
             LockedAccessor_CtxCrit_t  ctxCrit(dstCtx->criticalData());
-            //tprintf(DB_SYNC, "dstCrit lock succeeded\n");
+#if DB_PEER_CTX
+            std::cerr << "checking peer : copyEngineCtx =" << copyEngineCtx << " dstCtx =" << dstCtx << " peerCnt="
+                      << ctxCrit->peerCnt() << "\n";
+#endif
             if (!ctxCrit->isPeerWatcher(copyEngineCtx)) {
                 return false;
             };
@@ -1696,16 +1718,22 @@ bool ihipStream_t::canSeeMemory(const ihipCtx_t *copyEngineCtx, const hc::AmPoin
     }
 
 
-
     // TODO - pointer-info stores a deviceID not a context,may have some unusual side-effects here:
     if (srcPtrInfo->_sizeBytes == 0) {
         return false;
     } else {
+#if USE_APP_PTR_FOR_CTX
+        ihipCtx_t *srcCtx = static_cast<ihipCtx_t*> (srcPtrInfo->_appPtr);
+#else
         ihipCtx_t *srcCtx = ihipGetPrimaryCtx(srcPtrInfo->_appId);
+#endif
         if (copyEngineCtx != srcCtx) {
             // Only checks peer list if contexts are different
             LockedAccessor_CtxCrit_t  ctxCrit(srcCtx->criticalData());
-            //tprintf(DB_SYNC, "srcCrit lock succeeded\n");
+#if DB_PEER_CTX
+            std::cerr << "checking peer : copyEngineCtx =" << copyEngineCtx << " srcCtx =" << srcCtx << " peerCnt="
+                      << ctxCrit->peerCnt() << "\n";
+#endif
             if (!ctxCrit->isPeerWatcher(copyEngineCtx)) {
                 return false;
             };
@@ -1805,7 +1833,7 @@ void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind,
         }
     } else {
         *forceUnpinnedCopy = true;
-        tprintf (DB_COPY, "P2P: Copy engine(dev:%d agent=0x%lx) cannot see both host and device pointers - forcing copy with unpinned engine.\n",
+        tprintf (DB_COPY, "Copy engine(dev:%d agent=0x%lx) cannot see both host and device pointers - forcing copy with unpinned engine.\n",
                     *copyDevice ? (*copyDevice)->getDeviceNum() : -1, 
                     *copyDevice ? (*copyDevice)->getDevice()->_hsaAgent.handle : 0x0);
         if (HIP_FAIL_SOC & 0x2) {
@@ -1820,10 +1848,11 @@ void ihipStream_t::resolveHcMemcpyDirection(unsigned hipMemKind,
 
 void printPointerInfo(unsigned dbFlag, const char *tag, const void *ptr, const hc::AmPointerInfo &ptrInfo)
 {
-    tprintf (dbFlag, "  %s=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d registered=%d\n",
+    tprintf (dbFlag, "  %s=%p baseHost=%p baseDev=%p sz=%zu home_dev=%d tracked=%d isDevMem=%d registered=%d allocSeqNum=%zu, appAllocationFlags=%x, appPtr=%p\n",
              tag, ptr,
              ptrInfo._hostPointer, ptrInfo._devicePointer, ptrInfo._sizeBytes,
-             ptrInfo._appId, ptrInfo._sizeBytes != 0, ptrInfo._isInDeviceMem, !ptrInfo._isAmManaged);
+             ptrInfo._appId, ptrInfo._sizeBytes != 0, ptrInfo._isInDeviceMem, !ptrInfo._isAmManaged,
+             ptrInfo._allocSeqNum, ptrInfo._appAllocationFlags, ptrInfo._appPtr);
 }
 
 
@@ -1871,12 +1900,14 @@ void tailorPtrInfo(hc::AmPointerInfo *ptrInfo, const void * ptr, size_t sizeByte
 };
 
 
-bool getTailoredPtrInfo(hc::AmPointerInfo *ptrInfo, const void * ptr, size_t sizeBytes)
+bool getTailoredPtrInfo(const char *tag, hc::AmPointerInfo *ptrInfo, const void * ptr, size_t sizeBytes)
 {
     bool tracked = (hc::am_memtracker_getinfo(ptrInfo, ptr) == AM_SUCCESS);
+    printPointerInfo(DB_COPY, tag, ptr, *ptrInfo);
 
     if (tracked)  {
         tailorPtrInfo(ptrInfo, ptr, sizeBytes);
+        printPointerInfo(DB_COPY, "    mod", ptr, *ptrInfo);
     }
 
     return tracked;
@@ -1906,8 +1937,8 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
     hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
 #endif
-    bool dstTracked = getTailoredPtrInfo(&dstPtrInfo, dst, sizeBytes);
-    bool srcTracked = getTailoredPtrInfo(&srcPtrInfo, src, sizeBytes);
+    bool dstTracked = getTailoredPtrInfo("    dst", &dstPtrInfo, dst, sizeBytes);
+    bool srcTracked = getTailoredPtrInfo("    src", &srcPtrInfo, src, sizeBytes);
 
 
     // Some code in HCC and in printPointerInfo uses _sizeBytes==0 as an indication ptr is not valid, so check it here:
@@ -2034,21 +2065,18 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
         hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
         hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
 #endif
-        bool dstTracked = getTailoredPtrInfo(&dstPtrInfo, dst, sizeBytes);
-        bool srcTracked = getTailoredPtrInfo(&srcPtrInfo, src, sizeBytes);
+        tprintf (DB_COPY, "copyASync dst=%p src=%p, sz=%zu\n", dst, src, sizeBytes);
+        bool dstTracked = getTailoredPtrInfo("    dst", &dstPtrInfo, dst, sizeBytes);
+        bool srcTracked = getTailoredPtrInfo("    src", &srcPtrInfo, src, sizeBytes);
 
 
         hc::hcCommandKind hcCopyDir;
         ihipCtx_t *copyDevice;
         bool forceUnpinnedCopy;
         resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &copyDevice, &forceUnpinnedCopy);
-        tprintf (DB_COPY, "copyASync copyDev:%d  dst=%p (phys_dev:%d, isDevMem:%d)  src=%p(phys_dev:%d, isDevMem:%d)   sz=%zu dir=%s forceUnpinnedCopy=%d\n",
+        tprintf (DB_COPY, "  copyDev:%d   dir=%s forceUnpinnedCopy=%d\n",
                  copyDevice ? copyDevice->getDeviceNum():-1,
-                 dst, dstPtrInfo._appId, dstPtrInfo._isInDeviceMem,
-                 src, srcPtrInfo._appId, srcPtrInfo._isInDeviceMem,
-                 sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
-        printPointerInfo(DB_COPY, "  dst", dst, dstPtrInfo);
-        printPointerInfo(DB_COPY, "  src", src, srcPtrInfo);
+                 hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
 
         // "tracked" really indicates if the pointer's virtual address is available in the GPU address space.
         // If both pointers are not tracked, we need to fall back to a sync copy.

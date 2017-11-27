@@ -2,7 +2,7 @@
 #include "hip/hip_runtime_api.h"
 
 __global__ void Kernel(hipLaunchParm lp, float *Ad){
-    int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+    int tx = threadIdx.x + blockIdx.x * blockDim.x;
     Ad[tx] += Ad[tx-1];
 }
 

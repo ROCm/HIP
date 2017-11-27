@@ -52,7 +52,7 @@ void test(unsigned testMask, int *C_d, int *C_h, int64_t numElements, hipStream_
     if (!(testMask & p_tests)) {
         return;
     }
-    printf ("\ntest 0x%3x: stream=%p waitStart=%d syncMode=%s\n", 
+    printf ("\ntest 0x%3x: stream=%p waitStart=%d syncMode=%s\n",
             testMask, stream, waitStart, syncModeString(syncMode));
 
     size_t sizeBytes = numElements * sizeof(int);
@@ -85,8 +85,8 @@ void test(unsigned testMask, int *C_d, int *C_h, int64_t numElements, hipStream_
         HIPCHECK(hipEventSynchronize(start));
     }
 
-   
-    hipError_t expectedStopError = hipSuccess; 
+
+    hipError_t expectedStopError = hipSuccess;
 
     // How to wait for the events to finish:
     switch (syncMode) {
@@ -97,12 +97,12 @@ void test(unsigned testMask, int *C_d, int *C_h, int64_t numElements, hipStream_
             HIPCHECK(hipStreamSynchronize(stream));  // wait for recording to finish...
             break;
         case syncStopEvent:
-            HIPCHECK(hipEventSynchronize(stop)); 
+            HIPCHECK(hipEventSynchronize(stop));
             break;
         default:
             assert(0);
     };
-            
+
 
     float t;
 
@@ -111,25 +111,25 @@ void test(unsigned testMask, int *C_d, int *C_h, int64_t numElements, hipStream_
         failed ("start event not in expected state, was %d=%s\n", e, hipGetErrorName(e));
     }
 
-    if (e == hipSuccess) 
+    if (e == hipSuccess)
         assert (t==0.0f);
-        
+
 
     // stop usually ready unless we skipped the synchronization (syncNone)
     HIPCHECK_API(hipEventElapsedTime(&t, stop, stop), expectedStopError);
-    if (e == hipSuccess) 
+    if (e == hipSuccess)
         assert (t==0.0f);
 
 
     e = hipEventElapsedTime(&t, start, stop);
     HIPCHECK_API(e, expectedStopError);
-    if (expectedStopError == hipSuccess) 
+    if (expectedStopError == hipSuccess)
         assert (t>0.0f);
     printf ("time=%6.2f error=%s\n", t, hipGetErrorName(e));
 
     e = hipEventElapsedTime(&t, stop, start);
     HIPCHECK_API(e, expectedStopError);
-    if (expectedStopError == hipSuccess) 
+    if (expectedStopError == hipSuccess)
         assert (t<0.0f);
     printf ("negtime=%6.2f error=%s\n", t, hipGetErrorName(e));
 

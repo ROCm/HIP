@@ -127,7 +127,9 @@ if ($HIP_PLATFORM eq "hcc") {
 
     # Force -stdlib=libc++ on UB14.04
     $HOST_OSVER= `cat /etc/os-release | grep "^VERSION_ID\=" | cut -d= -f2 | tr -d '\n'`;
-    if ($HOST_OSNAME eq "ubuntu" and $HOST_OSVER eq "\"14.04\"") {
+    if (($HOST_OSNAME eq "ubuntu" and $HOST_OSVER eq "\"14.04\"")
+         or ($HOST_OSNAME eq "\"centos\"" and $HOST_OSVER eq "\"7\"") 
+         or ($HOST_OSNAME eq "\"rhel\"" and $HOST_OSVER eq "\"7.4\"")) {
         $HIPCXXFLAGS .= " -stdlib=libc++";
         $setStdLib = 1;
     }
@@ -136,7 +138,6 @@ if ($HIP_PLATFORM eq "hcc") {
     $HIPCXXFLAGS .= " -I$HSA_PATH/include";
     $HIPCXXFLAGS .= " -Wno-deprecated-register";
 
-    $HIPLDFLAGS .= " -lsupc++";
     $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am -lhsakmt ";
 #    $HIPLDFLAGS .= " -L$HCC_HOME/compiler/lib -lLLVMAMDGPUDesc -lLLVMAMDGPUUtils -lLLVMMC -lLLVMCore -lLLVMSupport ";
 
@@ -438,6 +439,7 @@ if($HIP_PLATFORM eq "hcc"){
     if ($target_gfx900 eq 1) {
         $HIPLDFLAGS .= " --amdgpu-target=gfx900";
         $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX900__=1 ";
+        $ENV{HCC_EXTRA_LIBRARIES_GFX900}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
     }
 }
 

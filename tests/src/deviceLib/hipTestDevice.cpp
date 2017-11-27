@@ -32,82 +32,82 @@ THE SOFTWARE.
 #define SIZE N*sizeof(float)
 
 __global__ void test_sincosf(hipLaunchParm lp, float* a, float* b, float *c){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     sincosf(a[tid], b+tid, c+tid);
 }
 
 __global__ void test_sincospif(hipLaunchParm lp, float* a, float* b, float *c){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     sincospif(a[tid], b+tid, c+tid);
 }
 
 __global__ void test_fdividef(hipLaunchParm lp, float *a, float* b, float *c){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     c[tid] = fdividef(a[tid], b[tid]);
 }
 
 __global__ void test_llrintf(hipLaunchParm lp, float *a, long long int *b){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     b[tid] = llrintf(a[tid]);
 }
 
 __global__ void test_lrintf(hipLaunchParm lp, float *a, long int *b){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     b[tid] = lrintf(a[tid]);
 }
 
 __global__ void test_rintf(hipLaunchParm lp, float *a, float *b){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     b[tid] = rintf(a[tid]);
 }
 
 __global__ void test_llroundf(hipLaunchParm lp, float *a, long long int *b){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     b[tid] = llroundf(a[tid]);
 }
 
 __global__ void test_lroundf(hipLaunchParm lp, float *a, long int *b){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     b[tid] = lroundf(a[tid]);
 }
 
 __global__ void test_rhypotf(hipLaunchParm lp, float *a, float* b, float *c){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     c[tid] = rhypotf(a[tid], b[tid]);
 }
 
 __global__ void test_norm3df(hipLaunchParm lp, float *a, float* b, float *c, float *d){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     d[tid] = norm3df(a[tid], b[tid], c[tid]);
 }
 
 __global__ void test_norm4df(hipLaunchParm lp, float *a, float* b, float *c, float *d, float *e){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     e[tid] = norm4df(a[tid], b[tid], c[tid], d[tid]);
 }
 
 __global__ void test_normf(hipLaunchParm lp, float *a, float *b){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     b[tid] = normf(N, a);
 }
 
 __global__ void test_rnorm3df(hipLaunchParm lp, float *a, float* b, float *c, float *d){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     d[tid] = rnorm3df(a[tid], b[tid], c[tid]);
 }
 
 __global__ void test_rnorm4df(hipLaunchParm lp, float *a, float* b, float *c, float *d, float *e){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     e[tid] = rnorm4df(a[tid], b[tid], c[tid], d[tid]);
 }
 
 __global__ void test_rnormf(hipLaunchParm lp, float *a, float *b){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     b[tid] = rnormf(N, a);
 }
 
 __global__ void test_erfinvf(hipLaunchParm lp, float *a, float *b){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     b[tid] = erff(erfinvf(a[tid]));
 }
 
@@ -139,7 +139,14 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+delete [] C;
+hipFree(Ad);
+hipFree(Bd);
+hipFree(Cd);
+
 if(passed == 1){
     return true;
 }
@@ -174,7 +181,14 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+delete [] C;
+hipFree(Ad);
+hipFree(Bd);
+hipFree(Cd);
+
 if(passed == 1){
     return true;
 }
@@ -205,7 +219,13 @@ for(int i=0;i<512;i++){
     }
 }
 
-free(A);
+delete [] A;
+delete [] B;
+delete [] C;
+hipFree(Ad);
+hipFree(Bd);
+hipFree(Cd);
+
 if(passed == 1){
     return true;
 }
@@ -234,7 +254,12 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+hipFree(Ad);
+hipFree(Bd);
+
 if(passed == 1){
     return true;
 }
@@ -263,7 +288,12 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+hipFree(Ad);
+hipFree(Bd);
+
 if(passed == 1){
     return true;
 }
@@ -291,7 +321,12 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+hipFree(Ad);
+hipFree(Bd);
+
 if(passed == 1){
     return true;
 }
@@ -321,7 +356,12 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+hipFree(Ad);
+hipFree(Bd);
+
 if(passed == 1){
     return true;
 }
@@ -350,7 +390,12 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+hipFree(Ad);
+hipFree(Bd);
+
 if(passed == 1){
     return true;
 }
@@ -387,7 +432,16 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+delete [] C;
+delete [] D;
+hipFree(Ad);
+hipFree(Bd);
+hipFree(Cd);
+hipFree(Dd);
+
 if(passed == 1){
     return true;
 }
@@ -427,7 +481,18 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+delete [] C;
+delete [] D;
+delete [] E;
+hipFree(Ad);
+hipFree(Bd);
+hipFree(Cd);
+hipFree(Dd);
+hipFree(Ed);
+
 if(passed == 1){
     return true;
 }
@@ -457,7 +522,12 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+hipFree(Ad);
+hipFree(Bd);
+
 if(passed == 1){
     return true;
 }
@@ -489,7 +559,14 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+delete [] C;
+hipFree(Ad);
+hipFree(Bd);
+hipFree(Cd);
+
 if(passed == 1){
     return true;
 }
@@ -525,7 +602,16 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+delete [] C;
+delete [] D;
+hipFree(Ad);
+hipFree(Bd);
+hipFree(Cd);
+hipFree(Dd);
+
 if(passed == 1){
     return true;
 }
@@ -565,7 +651,18 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+delete [] C;
+delete [] D;
+delete [] E;
+hipFree(Ad);
+hipFree(Bd);
+hipFree(Cd);
+hipFree(Dd);
+hipFree(Ed);
+
 if(passed == 1){
     return true;
 }
@@ -595,7 +692,12 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+hipFree(Ad);
+hipFree(Bd);
+
 if(passed == 1){
     return true;
 }
@@ -622,7 +724,12 @@ for(int i=0;i<512;i++){
         passed = 1;
     }
 }
-free(A);
+
+delete [] A;
+delete [] B;
+hipFree(Ad);
+hipFree(Bd);
+
 if(passed == 1){
     return true;
 }
@@ -631,7 +738,7 @@ return false;
 }
 
 int main(){
-if(run_sincosf() && run_sincospif() && run_fdividef() && 
+if(run_sincosf() && run_sincospif() && run_fdividef() &&
    run_llrintf() && run_norm3df() && run_norm4df() &&
    run_normf() && run_rnorm3df() && run_rnorm4df() &&
    run_rnormf() && run_lroundf() && run_llroundf() &&

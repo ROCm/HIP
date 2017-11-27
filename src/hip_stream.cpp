@@ -93,18 +93,23 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
 
     hipError_t e = hipSuccess;
 
+    auto ecd = event->locked_copyCrit();
+
     if (event == nullptr) {
         e = hipErrorInvalidResourceHandle;
 
-    } else if (event->_state != hipEventStatusUnitialized) {
+    } else if ((ecd._state != hipEventStatusUnitialized) && 
+               (ecd._state != hipEventStatusCreated)) {
 
         if (HIP_SYNC_STREAM_WAIT || (HIP_SYNC_NULL_STREAM && (stream == 0))) {
             // conservative wait on host for the specified event to complete:
-            event->locked_waitComplete((event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked : hc::hcWaitModeActive);
+            // return _stream->locked_eventWaitComplete(this, waitMode);
+            //
+            ecd._stream->locked_eventWaitComplete(ecd.marker(), (event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked : hc::hcWaitModeActive);
         } else {
             stream = ihipSyncAndResolveStream(stream);
-            // This will user create_blocking_marker to wait on the specified queue.
-            stream->locked_streamWaitEvent(event);
+            // This will use create_blocking_marker to wait on the specified queue.
+            stream->locked_streamWaitEvent(ecd);
         }
 
     } // else event not recorded, return immediately and don't create marker.
@@ -140,7 +145,6 @@ hipError_t hipStreamQuery(hipStream_t stream)
 //---
 hipError_t hipStreamSynchronize(hipStream_t stream)
 {
-    HIP_INIT_API(stream);
     HIP_INIT_SPECIAL_API(TRACE_SYNC, stream);
 
     hipError_t e = hipSuccess;
