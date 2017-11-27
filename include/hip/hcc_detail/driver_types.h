@@ -23,6 +23,7 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_DRIVER_TYPES_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_DRIVER_TYPES_H
 
+typedef void* hipDeviceptr_t;
 enum hipChannelFormatKind
 {
     hipChannelFormatKindSigned = 0,
@@ -40,6 +41,29 @@ struct hipChannelFormatDesc
     enum hipChannelFormatKind f;
 };
 
+#define HIP_TRSF_NORMALIZED_COORDINATES 0x02
+#define HIP_TRSF_READ_AS_INTEGER 0x01
+#define HIP_TRSA_OVERRIDE_FORMAT 0x01
+
+enum hipArray_Format
+{
+    HIP_AD_FORMAT_UNSIGNED_INT8 = 0x01,
+    HIP_AD_FORMAT_UNSIGNED_INT16 = 0x02,
+    HIP_AD_FORMAT_UNSIGNED_INT32 = 0x03,
+    HIP_AD_FORMAT_SIGNED_INT8 = 0x08,
+    HIP_AD_FORMAT_SIGNED_INT16 = 0x09,
+    HIP_AD_FORMAT_SIGNED_INT32 = 0x0a,
+    HIP_AD_FORMAT_HALF = 0x10,
+    HIP_AD_FORMAT_FLOAT = 0x20
+};
+
+struct HIP_ARRAY_DESCRIPTOR {
+	enum hipArray_Format format;
+	unsigned int numChannels;
+	size_t width;
+	size_t height;
+};
+
 struct hipArray {
     void* data; //FIXME: generalize this
     struct hipChannelFormatDesc desc;
@@ -47,7 +71,29 @@ struct hipArray {
     unsigned int width;
     unsigned int height;
     unsigned int depth;
+    struct HIP_ARRAY_DESCRIPTOR drvDesc;
+    bool isDrv;
 };
+
+typedef struct hip_Memcpy2D {
+    size_t  height;
+    size_t  widthInBytes;
+    hipArray* dstArray;
+    hipDeviceptr_t dstDevice;
+    void * dstHost;
+    hipMemoryType dstMemoryType;
+    size_t  dstPitch;
+    size_t  dstXInBytes;
+    size_t  dstY;
+    hipArray* srcArray;
+    hipDeviceptr_t srcDevice;
+    const void * srcHost;
+    hipMemoryType srcMemoryType;
+    size_t  srcPitch;
+    size_t  srcXInBytes;
+    size_t  srcY;
+}hip_Memcpy2D;
+
 
 typedef struct hipArray* hipArray_t;
 
