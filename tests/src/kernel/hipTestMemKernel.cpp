@@ -35,52 +35,52 @@ THE SOFTWARE.
 #define LEN12 12 * 4
 
 __global__ void MemCpy8(hipLaunchParm lp, uint8_t *In, uint8_t *Out) {
-  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
   memcpy(Out + tid*8, In + tid*8, 8);
 }
 
 __global__ void MemCpy9(hipLaunchParm lp, uint8_t *In, uint8_t *Out) {
-  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
   memcpy(Out + tid*9, In + tid*9, 9);
 }
 
 __global__ void MemCpy10(hipLaunchParm lp, uint8_t *In, uint8_t *Out) {
-  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
   memcpy(Out + tid*10, In + tid*10, 10);
 }
 
 __global__ void MemCpy11(hipLaunchParm lp, uint8_t *In, uint8_t *Out) {
-  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
   memcpy(Out + tid*11, In + tid*11, 11);
 }
 
 __global__ void MemCpy12(hipLaunchParm lp, uint8_t *In, uint8_t *Out) {
-  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
   memcpy(Out + tid*12, In + tid*12, 12);
 }
 
 __global__ void MemSet8(hipLaunchParm lp, uint8_t *In) {
-  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
   memset(In + tid*8, 1, 8);
 }
 
 __global__ void MemSet9(hipLaunchParm lp, uint8_t *In) {
-  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
   memset(In + tid*9, 1, 9);
 }
 
 __global__ void MemSet10(hipLaunchParm lp, uint8_t *In) {
-  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
   memset(In + tid*10, 1, 10);
 }
 
 __global__ void MemSet11(hipLaunchParm lp, uint8_t *In) {
-  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
   memset(In + tid*11, 1, 11);
 }
 
 __global__ void MemSet12(hipLaunchParm lp, uint8_t *In) {
-  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
   memset(In + tid*12, 1, 12);
 }
 
@@ -107,9 +107,12 @@ int main(){
         assert(C[i] == 1);
     }
 
-    delete A;
-    delete B;
-    delete C;
+    delete [] A;
+    delete [] B;
+    delete [] C;
+    hipFree(Ad);
+    hipFree(Bd);
+    hipFree(Cd);
 
     A = new uint8_t[LEN9];
     B = new uint8_t[LEN9];
@@ -132,9 +135,12 @@ int main(){
         assert(C[i] == 1);
     }
 
-    delete A;
-    delete B;
-    delete C;
+    delete [] A;
+    delete [] B;
+    delete [] C;
+    hipFree(Ad);
+    hipFree(Bd);
+    hipFree(Cd);
 
     A = new uint8_t[LEN10];
     B = new uint8_t[LEN10];
@@ -157,9 +163,12 @@ int main(){
         assert(C[i] == 1);
     }
 
-    delete A;
-    delete B;
-    delete C;
+    delete [] A;
+    delete [] B;
+    delete [] C;
+    hipFree(Ad);
+    hipFree(Bd);
+    hipFree(Cd);
 
     A = new uint8_t[LEN11];
     B = new uint8_t[LEN11];
@@ -182,9 +191,12 @@ int main(){
         assert(C[i] == 1);
     }
 
-    delete A;
-    delete B;
-    delete C;
+    delete [] A;
+    delete [] B;
+    delete [] C;
+    hipFree(Ad);
+    hipFree(Bd);
+    hipFree(Cd);
 
     A = new uint8_t[LEN12];
     B = new uint8_t[LEN12];
@@ -207,9 +219,12 @@ int main(){
         assert(C[i] == 1);
     }
 
-    delete A;
-    delete B;
-    delete C;
+    delete [] A;
+    delete [] B;
+    delete [] C;
+    hipFree(Ad);
+    hipFree(Bd);
+    hipFree(Cd);
 
     passed();
 }

@@ -30,23 +30,29 @@ THE SOFTWARE.
 
 __global__ void Kern(hipLaunchParm lp, float *A)
 {
-	int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+	int tx = threadIdx.x + blockIdx.x * blockDim.x;
 	A[tx] += 1.0f;
 }
 
 int main()
 {
-	float *A, *Ad;
+	float A[len];
+	float *Ad;
+
 	for(int i=0;i<len;i++)
 	{
 		A[i] = 1.0f;
 	}
+
 	Ad = (float*)mallocHip(size);
 	memcpyHipH2D(Ad, A, size);
-	hipLaunchKernel(HIP_KERNEL_NAME(Kern), dim3(len/1024), dim3(1024), 0, 0, A);
+	hipLaunchKernel(
+		HIP_KERNEL_NAME(Kern), dim3(len/1024), dim3(1024), 0, 0, Ad);
 	memcpyHipD2H(A, Ad, size);
 	for(int i=0;i<len;i++)
 	{
 		assert(A[i] == 2.0f);
 	}
+
+	hipFree(Ad);
 }

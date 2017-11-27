@@ -23,7 +23,6 @@ THE SOFTWARE.
 #include <stddef.h>
 
 #include "hip/hip_runtime.h"
-#include "hip/hip_texture_types.h"
 #include "hip/hip_runtime_api.h"
 
 #define HC __attribute__((hc))
@@ -137,8 +136,8 @@ vectorADD(hipLaunchParm lp,
             T *C_d,
             size_t NELEM)
 {
-    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    size_t stride = hipBlockDim_x * hipGridDim_x ;
+    size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
+    size_t stride = blockDim.x * gridDim.x ;
 
     for (size_t i=offset; i<NELEM; i+=stride) {
         C_d[i] = A_d[i] + B_d[i];
@@ -154,8 +153,8 @@ vectorADDReverse(hipLaunchParm lp,
             T *C_d,
             size_t NELEM)
 {
-    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    size_t stride = hipBlockDim_x * hipGridDim_x ;
+    size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
+    size_t stride = blockDim.x * gridDim.x ;
 
     for (int64_t i=NELEM-stride+offset; i>=0; i-=stride) {
         C_d[i] = A_d[i] + B_d[i];
@@ -170,8 +169,8 @@ addCount( const T *A_d,
         size_t NELEM,
         int count)
 {
-    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    size_t stride = hipBlockDim_x * hipGridDim_x ;
+    size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
+    size_t stride = blockDim.x * gridDim.x ;
 
     // Deliberately do this in an inefficient way to increase kernel runtime
     for (int i=0; i<count; i++) {
@@ -189,8 +188,8 @@ addCountReverse( const T *A_d,
         int64_t NELEM,
         int count)
 {
-    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    size_t stride = hipBlockDim_x * hipGridDim_x ;
+    size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
+    size_t stride = blockDim.x * gridDim.x ;
 
     // Deliberately do this in an inefficient way to increase kernel runtime
     for (int i=0; i<count; i++) {
@@ -206,8 +205,8 @@ __global__ void
 memsetReverse( T *C_d,  T val,
         int64_t NELEM)
 {
-    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    size_t stride = hipBlockDim_x * hipGridDim_x ;
+    size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
+    size_t stride = blockDim.x * gridDim.x ;
 
     for (int64_t i=NELEM-stride+offset; i>=0; i-=stride) {
         C_d[i] = val;
@@ -220,12 +219,12 @@ void setDefaultData(size_t numElements, T *A_h, T* B_h, T *C_h)
 {
     // Initialize the host data:
     for (size_t i=0; i<numElements; i++) {
-        if (A_h) 
+        if (A_h)
             (A_h)[i] = 3.146f + i; // Pi
-        if (B_h) 
+        if (B_h)
             (B_h)[i] = 1.618f + i; // Phi
-        if (C_h) 
-            (C_h)[i] = 0.0f + i;  
+        if (C_h)
+            (C_h)[i] = 0.0f + i;
     }
 }
 
@@ -269,8 +268,8 @@ void initArraysForHost(T **A_h, T **B_h, T **C_h,
 
 template <typename T>
 void initArrays(T **A_d, T **B_d, T **C_d,
-                T **A_h, T **B_h, T **C_h, 
-                size_t N, bool usePinnedHost=false) 
+                T **A_h, T **B_h, T **C_h,
+                size_t N, bool usePinnedHost=false)
 {
     size_t Nbytes = N*sizeof(T);
 
@@ -318,7 +317,7 @@ void freeArraysForHost(T *A_h, T *B_h, T *C_h, bool usePinnedHost)
 
 template <typename T>
 void freeArrays(T *A_d, T *B_d, T *C_d,
-                T *A_h, T *B_h, T *C_h, bool usePinnedHost) 
+                T *A_h, T *B_h, T *C_h, bool usePinnedHost)
 {
     if (A_d) {
         HIPCHECK ( hipFree(A_d) );
@@ -454,9 +453,9 @@ struct Pinned {
 	static const bool isPinned = true;
 	static const char *str() { return "Pinned"; };
 
-    static void *Alloc(size_t sizeBytes) 
+    static void *Alloc(size_t sizeBytes)
 	{
-        void *p; 
+        void *p;
         HIPCHECK(hipHostMalloc((void**)&p, sizeBytes));
         return p;
     };
@@ -464,12 +463,12 @@ struct Pinned {
 
 
 //---
-struct Unpinned 
+struct Unpinned
 {
 	static const bool isPinned = false;
 	static const char *str() { return "Unpinned"; };
 
-    static void *Alloc(size_t sizeBytes) 
+    static void *Alloc(size_t sizeBytes)
 	{
         void *p  = malloc (sizeBytes);
         HIPASSERT(p);
@@ -497,7 +496,7 @@ template<>
 struct MemTraits<Memcpy>
 {
 
-    static void Copy(void *dest, const void *src, size_t sizeBytes, hipMemcpyKind kind,  hipStream_t stream) 
+    static void Copy(void *dest, const void *src, size_t sizeBytes, hipMemcpyKind kind,  hipStream_t stream)
 	{
 		HIPCHECK(hipMemcpy(dest, src, sizeBytes, kind));
 	}
@@ -508,7 +507,7 @@ template<>
 struct MemTraits<MemcpyAsync>
 {
 
-    static void Copy(void *dest, const void *src, size_t sizeBytes, hipMemcpyKind kind,  hipStream_t stream) 
+    static void Copy(void *dest, const void *src, size_t sizeBytes, hipMemcpyKind kind,  hipStream_t stream)
 	{
 		HIPCHECK(hipMemcpyAsync(dest, src, sizeBytes, kind, stream));
 	}
