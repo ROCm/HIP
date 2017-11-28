@@ -28,27 +28,6 @@ extern "C" float __ocml_rint_f32(float);
 extern "C" float __ocml_ceil_f32(float);
 extern "C" float __ocml_trunc_f32(float);
 
-struct holder64Bit{
-  union{
-    double d;
-    unsigned long int uli;
-    signed long int sli;
-    signed int si[2];
-    unsigned int ui[2];
-  };
-} __attribute__((aligned(8)));
-
-struct holder32Bit {
-  union {
-    float f;
-    unsigned int ui;
-    signed int si;
-  };
-} __attribute__((aligned(4)));
-
-__device__ struct holder64Bit hold64;
-__device__ struct holder32Bit hold32;
-
 __device__ float __double2float_rd(double x)
 {
   return (double)x;
