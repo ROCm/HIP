@@ -158,14 +158,7 @@ namespace
             symbol_section_accessor{reader, code_object_dynsym});
 
         for (auto&& x : undefined_symbols) {
-            using RAII_global =
-                unique_ptr<void, decltype(hsa_amd_memory_unlock)*>;
-
-            static unordered_map<string, RAII_global> globals;
-            static once_flag f;
-            call_once(f, [=]() { globals.reserve(symbol_addresses().size()); });
-
-            if (globals.find(x) != globals.cend()) return;
+            if (globals().find(x) != globals().cend()) return;
 
             const auto it1 = symbol_addresses().find(x);
 
@@ -176,7 +169,7 @@ namespace
             static mutex mtx;
             lock_guard<mutex> lck{mtx};
 
-            if (globals.find(x) != globals.cend()) return;
+            if (globals().find(x) != globals().cend()) return;
 
             void* p = nullptr;
             hsa_amd_memory_lock(
@@ -186,12 +179,10 @@ namespace
                 0,
                 &p);
 
-            if (!p) { cerr << it1->first << endl; assert(false); }
-
             hsa_executable_agent_global_variable_define(
                 executable, agent, x.c_str(), p);
 
-            globals.emplace(x, RAII_global{p, hsa_amd_memory_unlock});
+            globals().emplace(x, RAII_global{p, hsa_amd_memory_unlock});
         }
     }
 
@@ -530,6 +521,15 @@ namespace hip_impl
                 }
             }
         });
+
+        return r;
+    }
+
+    unordered_map<string, RAII_global>& globals()
+    {
+        static unordered_map<string, RAII_global> r;
+        static once_flag f;
+        call_once(f, []() { r.reserve(symbol_addresses().size()); });
 
         return r;
     }
