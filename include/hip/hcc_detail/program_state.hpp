@@ -23,6 +23,7 @@ THE SOFTWARE.
 #pragma once
 
 #include <hsa/hsa.h>
+#include <hsa/hsa_ext_amd.h>
 
 #include <cstddef>
 #include <istream>
@@ -68,12 +69,15 @@ namespace hip_impl
         }
     };
 
+    using RAII_global = std::unique_ptr<void, decltype(hsa_amd_memory_unlock)*>;
+
     const std::unordered_map<
         hsa_agent_t, std::vector<hsa_executable_t>>& executables();
     const std::unordered_map<
         std::uintptr_t,
         std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>& functions();
     const std::unordered_map<std::uintptr_t, std::string>& function_names();
+    std::unordered_map<std::string, RAII_global>& globals();
 
     hsa_executable_t load_executable(
         hsa_executable_t executable, hsa_agent_t agent, std::istream& file);

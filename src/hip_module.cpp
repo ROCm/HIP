@@ -725,9 +725,9 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
         if(name == NULL || hmod == NULL){
             ret = hipErrorNotInitialized;
         } else{
-            const auto it = hmod->coGlobals.find(name);
-		    if (it == hmod->coGlobals.end()) return ihipLogStatus(hipErrorInvalidValue);
-		    *texRef = reinterpret_cast<textureReference*>(it->second);
+            const auto it = hip_impl::globals().find(name);
+		    if (it == hip_impl::globals().end()) return ihipLogStatus(hipErrorInvalidValue);
+		    *texRef = reinterpret_cast<textureReference*>(it->second.get());
             ret = hipSuccess;
         }
     }
