@@ -93,6 +93,8 @@ struct textureReference
     float                       maxMipmapLevelClamp;
 
     hipTextureObject_t          textureObject;
+    int 						numChannels;
+    enum hipArray_Format        format;
 };
 
 /**

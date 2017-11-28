@@ -242,6 +242,7 @@ namespace
 
     inline
     void associate_code_object_symbols_with_host_allocation(
+        hipModule_t module,
         const ELFIO::elfio& reader,
         const ELFIO::elfio& self_reader,
         ELFIO::section* code_object_dynsym,
@@ -262,7 +263,6 @@ namespace
                 symbol_section_accessor{self_reader, process_symtab}, x);
 
             assert(tmp.first);
-
             void* p = nullptr;
             hsa_amd_memory_lock(
                 reinterpret_cast<void*>(tmp.first), tmp.second, &agent, 1, &p);
@@ -276,6 +276,9 @@ namespace
 
             lock_guard<std::mutex> lck{mtx};
             globals.emplace_back(p, hsa_amd_memory_unlock);
+            if (module->coGlobals.count(x) == 0) {
+                module->coGlobals.emplace(x, tmp.first);
+            }
         }
     }
 
@@ -357,6 +360,7 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
                 });
 
             associate_code_object_symbols_with_host_allocation(
+                *module,
                 reader,
                 self_reader,
                 code_object_dynsym,
@@ -832,4 +836,23 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
 hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image, unsigned int numOptions, hipJitOption *options, void **optionValues)
 {
     return hipModuleLoadData(module, image);
+}
+
+hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name)
+{
+    HIP_INIT_API(texRef, hmod, name);
+    hipError_t ret = hipErrorNotFound;
+    if(texRef == NULL){
+        ret = hipErrorInvalidValue;
+    } else {
+        if(name == NULL || hmod == NULL){
+            ret = hipErrorNotInitialized;
+        } else{
+            const auto it = hmod->coGlobals.find(name);
+		    if (it == hmod->coGlobals.end()) return ihipLogStatus(hipErrorInvalidValue);
+		    *texRef = reinterpret_cast<textureReference*>(it->second);
+            ret = hipSuccess;
+        }
+    }
+    return ihipLogStatus(ret);
 }
