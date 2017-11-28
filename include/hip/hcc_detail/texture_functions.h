@@ -39,7 +39,10 @@ union TData {
     unsigned int ADDRESS_SPACE_2 *i = (unsigned int ADDRESS_SPACE_2*)textureObject; \
     unsigned int ADDRESS_SPACE_2 *s = i + HIP_SAMPLER_OBJECT_OFFSET_DWORD; \
     TData texel;
-
+#define TEXTURE_REF_PARAMETERS_INIT \
+    unsigned int ADDRESS_SPACE_2 *i = (unsigned int ADDRESS_SPACE_2*)texRef.textureObject; \
+    unsigned int ADDRESS_SPACE_2 *s = i + HIP_SAMPLER_OBJECT_OFFSET_DWORD; \
+    TData texel;
 #define TEXTURE_SET_FLOAT \
     *retVal = texel.f.x;
 
@@ -2971,6 +2974,232 @@ __TEXTURE_FUNCTIONS_DECL__ T tex2DLayeredLod(hipTextureObject_t textureObject, f
 // Texture Reference APIs
 ////////////////////////////////////////////////////////////
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char tex1Dfetch(texture<char, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char1 tex1Dfetch(texture<char1, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_CHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char2 tex1Dfetch(texture<char2, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char4 tex1Dfetch(texture<char4, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_CHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned char tex1Dfetch(texture<unsigned char, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar1 tex1Dfetch(texture<uchar1, texType, mode> texRef,  int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_UCHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar2 tex1Dfetch(texture<uchar2, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar4 tex1Dfetch(texture<uchar4, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_UCHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short tex1Dfetch(texture<short, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short1 tex1Dfetch(texture<short1, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_SHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short2 tex1Dfetch(texture<short2, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short4 tex1Dfetch(texture<short4, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_SHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort1 tex1Dfetch(texture<ushort1, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_USHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned short tex1Dfetch(texture<unsigned short, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort2 tex1Dfetch(texture<ushort2, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort4 tex1Dfetch(texture<ushort4, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_USHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int1 tex1Dfetch(texture<int1, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_INT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int tex1Dfetch(texture<int, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int2 tex1Dfetch(texture<int2, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int4 tex1Dfetch(texture<int4, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_INT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned int tex1Dfetch(texture<unsigned int, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint1 tex1Dfetch(texture<uint1, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_UINT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint2 tex1Dfetch(texture<uint2, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint4 tex1Dfetch(texture<uint4, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_UINT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float tex1Dfetch(texture<float, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float1 tex1Dfetch(texture<float1, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_FLOAT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float2 tex1Dfetch(texture<float2, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float4 tex1Dfetch(texture<float4, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_FLOAT_XYZW;
+}
+
+////////////////////////////////////////////////////////////
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ char tex1Dfetch(texture<char, texType, mode> texRef, hipTextureObject_t textureObject, int x)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -3196,6 +3425,223 @@ __TEXTURE_FUNCTIONS_DECL__ float4 tex1Dfetch(texture<float4, texType, mode> texR
 
 ////////////////////////////////////////////////////////////
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char tex1D(texture<char, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char1 tex1D(texture<char1, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_CHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char2 tex1D(texture<char2, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char4 tex1D(texture<char4, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_CHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned char tex1D(texture<unsigned char, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar1 tex1D(texture<uchar1, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_UCHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar2 tex1D(texture<uchar2, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar4 tex1D(texture<uchar4, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_UCHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short tex1D(texture<short, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short1 tex1D(texture<short1, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_SHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short2 tex1D(texture<short2, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short4 tex1D(texture<short4, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_SHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned short tex1D(texture<unsigned short, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort1 tex1D(texture<ushort1, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_USHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort2 tex1D(texture<ushort2, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort4 tex1D(texture<ushort4, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_USHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int tex1D(texture<int, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int1 tex1D(texture<int1, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_INT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int2 tex1D(texture<int2, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int4 tex1D(texture<int4, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_INT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned int tex1D(texture<unsigned int, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint1 tex1D(texture<uint1, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_UINT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint2 tex1D(texture<uint2, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint4 tex1D(texture<uint4, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_UINT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float1 tex1D(texture<float1, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_FLOAT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float2 tex1D(texture<float2, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float4 tex1D(texture<float4, texType, mode> texRef, int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_FLOAT_XYZW;
+}
+
+////////////////////////////////////////////////////////////
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ char tex1D(texture<char, texType, mode> texRef, hipTextureObject_t textureObject, int x)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -3396,6 +3842,14 @@ __TEXTURE_FUNCTIONS_DECL__ float tex1D(texture<float, texType, mode> texRef, hip
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float tex1D(texture<float, texType, mode> texRef, /*hipTextureObject_t textureObject,*/ int x)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ float1 tex1D(texture<float1, texType, mode> texRef, hipTextureObject_t textureObject, int x)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -3416,6 +3870,231 @@ __TEXTURE_FUNCTIONS_DECL__ float4 tex1D(texture<float4, texType, mode> texRef, h
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_1D(i, s, x);
+    TEXTURE_RETURN_FLOAT_XYZW;
+}
+
+////////////////////////////////////////////////////////////
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char tex1DLod(texture<char, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char1 tex1DLod(texture<char1, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_CHAR_X;
+}
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char2 tex1DLod(texture<char2, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char4 tex1DLod(texture<char4, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_CHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned char tex1DLod(texture<unsigned char, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar1 tex1DLod(texture<uchar1, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_UCHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar2 tex1DLod(texture<uchar2, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar4 tex1DLod(texture<uchar4, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_UCHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short tex1DLod(texture<short, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short1 tex1DLod(texture<short1, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_SHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short2 tex1DLod(texture<short2, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short4 tex1DLod(texture<short4, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_SHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned short tex1DLod(texture<unsigned short, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort1 tex1DLod(texture<ushort1, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_USHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort2 tex1DLod(texture<ushort2, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort4 tex1DLod(texture<ushort4, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_USHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int tex1DLod(texture<int, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int1 tex1DLod(texture<int1, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_INT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int2 tex1DLod(texture<int2, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int4 tex1DLod(texture<int4, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_INT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned int tex1DLod(texture<unsigned int, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint1 tex1DLod(texture<uint1, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_UINT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint2 tex1DLod(texture<uint2, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint4 tex1DLod(texture<uint4, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_UINT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float tex1DLod(texture<float, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float1 tex1DLod(texture<float1, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_FLOAT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float2 tex1DLod(texture<float2, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float4 tex1DLod(texture<float4, texType, mode> texRef, float x, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
     TEXTURE_RETURN_FLOAT_XYZW;
 }
 
@@ -3641,6 +4320,232 @@ __TEXTURE_FUNCTIONS_DECL__ float4 tex1DLod(texture<float4, texType, mode> texRef
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_lod_1D(i, s, x, level);
+    TEXTURE_RETURN_FLOAT_XYZW;
+}
+
+////////////////////////////////////////////////////////////
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char tex1DGrad(texture<char, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char1 tex1DGrad(texture<char1, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_CHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char2 tex1DGrad(texture<char2, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char4 tex1DGrad(texture<char4, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_CHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned char tex1DGrad(texture<unsigned char, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar1 tex1DGrad(texture<uchar1, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_UCHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar2 tex1DGrad(texture<uchar2, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar4 tex1DGrad(texture<uchar4, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_UCHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short tex1DGrad(texture<short, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short1 tex1DGrad(texture<short1, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_SHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short2 tex1DGrad(texture<short2, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short4 tex1DGrad(texture<short4, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_SHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned short tex1DGrad(texture<unsigned short, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort1 tex1DGrad(texture<ushort1, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_USHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort2 tex1DGrad(texture<ushort2, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort4 tex1DGrad(texture<ushort4, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_USHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int tex1DGrad(texture<int, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int1 tex1DGrad(texture<int1, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_INT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int2 tex1DGrad(texture<int2, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int4 tex1DGrad(texture<int4, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_INT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned int tex1DGrad(texture<unsigned int, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint1 tex1DGrad(texture<uint1, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_UINT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint2 tex1DGrad(texture<uint2, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint4 tex1DGrad(texture<uint4, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_UINT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float tex1DGrad(texture<float, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float1 tex1DGrad(texture<float1, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_FLOAT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float2 tex1DGrad(texture<float2, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
+    TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float4 tex1DGrad(texture<float4, texType, mode> texRef, float x, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1D(i, s, x, dx, dy);
     TEXTURE_RETURN_FLOAT_XYZW;
 }
 
@@ -3873,6 +4778,202 @@ __TEXTURE_FUNCTIONS_DECL__ float4 tex1DGrad(texture<float4, texType, mode> texRe
 ////////////////////////////////////////////////////////////
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char tex2D(texture<char, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char1 tex2D(texture<char1, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_CHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char2 tex2D(texture<char2, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char4 tex2D(texture<char4, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_CHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned char tex2D(texture<unsigned char, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar1 tex2D(texture<uchar1, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_UCHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar2 tex2D(texture<uchar2, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar4 tex2D(texture<uchar4, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_UCHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short tex2D(texture<short, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short1 tex2D(texture<short1, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_SHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short2 tex2D(texture<short2, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short4 tex2D(texture<short4, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_SHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned short tex2D(texture<unsigned short, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort1 tex2D(texture<ushort1, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_USHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort2 tex2D(texture<ushort2, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort4 tex2D(texture<ushort4, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_USHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int tex2D(texture<int, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int1 tex2D(texture<int1, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_INT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int2 tex2D(texture<int2, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int4 tex2D(texture<int4, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_INT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned int tex2D(texture<unsigned int, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint1 tex2D(texture<uint1, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_UINT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint2 tex2D(texture<uint2, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint4 tex2D(texture<uint4, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_UINT_XYZW;
+}
+
+
+
+////////////////////////////////////////////////////////////
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ char tex2D(texture<char, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -4073,11 +5174,35 @@ __TEXTURE_FUNCTIONS_DECL__ float tex2D(texture<float, texType, mode> texRef, hip
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float tex2D(texture<float, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float1 tex2D(texture<float1, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_FLOAT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ float1 tex2D(texture<float1, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
     TEXTURE_RETURN_FLOAT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float2 tex2D(texture<float2, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_FLOAT_XY;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -4089,10 +5214,244 @@ __TEXTURE_FUNCTIONS_DECL__ float2 tex2D(texture<float2, texType, mode> texRef, h
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float4 tex2D(texture<float4, texType, mode> texRef, float x, float y)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_FLOAT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ float4 tex2D(texture<float4, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_2D(i, s, hc::short_vector::float2(x, y).get_vector());
+    TEXTURE_RETURN_FLOAT_XYZW;
+}
+
+////////////////////////////////////////////////////////////
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char tex2DLod(texture<char, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char1 tex2DLod(texture<char1, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_CHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char2 tex2DLod(texture<char2, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+	TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char4 tex2DLod(texture<char4, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_CHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned char tex2DLod(texture<unsigned char, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar1 tex2DLod(texture<uchar1, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_UCHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar2 tex2DLod(texture<uchar2, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+	TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar4 tex2DLod(texture<uchar4, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_UCHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short tex2DLod(texture<short, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short1 tex2DLod(texture<short1, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_SHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short2 tex2DLod(texture<short2, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+	TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short4 tex2DLod(texture<short4, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_SHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned short tex2DLod(texture<unsigned short, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort1 tex2DLod(texture<ushort1, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_USHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort2 tex2DLod(texture<ushort2, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+	TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort4 tex2DLod(texture<ushort4, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_USHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int tex2DLod(texture<int, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int1 tex2DLod(texture<int1, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_INT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int2 tex2DLod(texture<int2, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+	TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int4 tex2DLod(texture<int4, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_INT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned int tex2DLod(texture<unsigned int, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint1 tex2DLod(texture<uint1, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_UINT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint2 tex2DLod(texture<uint2, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+	TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint4 tex2DLod(texture<uint4, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_UINT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float tex2DLod(texture<float, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float1 tex2DLod(texture<float1, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_FLOAT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float2 tex2DLod(texture<float2, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+	TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float4 tex2DLod(texture<float4, texType, mode> texRef, float x, float y, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
     TEXTURE_RETURN_FLOAT_XYZW;
 }
 
@@ -4319,6 +5678,316 @@ __TEXTURE_FUNCTIONS_DECL__ float4 tex2DLod(texture<float4, texType, mode> texRef
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_lod_2D(i, s, hc::short_vector::float2(x, y).get_vector(), level);
+    TEXTURE_RETURN_FLOAT_XYZW;
+}
+
+////////////////////////////////////////////////////////////
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char tex2DGrad(texture<char, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char1 tex2DGrad(texture<char1, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_CHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char2 tex2DGrad(texture<char2, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char4 tex2DGrad(texture<char4, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_CHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned char tex2DGrad(texture<unsigned char, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar1 tex2DGrad(texture<uchar1, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_UCHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar2 tex2DGrad(texture<uchar2, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar4 tex2DGrad(texture<uchar4, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_UCHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short tex2DGrad(texture<short, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short1 tex2DGrad(texture<short1, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_SHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short2 tex2DGrad(texture<short2, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short4 tex2DGrad(texture<short4, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_SHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned short tex2DGrad(texture<unsigned short, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort1 tex2DGrad(texture<ushort1, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_USHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort2 tex2DGrad(texture<ushort2, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort4 tex2DGrad(texture<ushort4, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_USHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int tex2DGrad(texture<int, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int1 tex2DGrad(texture<int1, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_INT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int2 tex2DGrad(texture<int2, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int4 tex2DGrad(texture<int4, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_INT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned int tex2DGrad(texture<unsigned int, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint1 tex2DGrad(texture<uint1, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_UINT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint2 tex2DGrad(texture<uint2, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint4 tex2DGrad(texture<uint4, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_UINT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float tex2DGrad(texture<float, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float1 tex2DGrad(texture<float1, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_FLOAT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float2 tex2DGrad(texture<float2, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float4 tex2DGrad(texture<float4, texType, mode> texRef, float x, float y, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2D(i, s,
+                                        hc::short_vector::float2(x, y).get_vector(),
+                                        hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                        hc::short_vector::float2(dy.x, dy.y).get_vector());
     TEXTURE_RETURN_FLOAT_XYZW;
 }
 
@@ -4635,6 +6304,232 @@ __TEXTURE_FUNCTIONS_DECL__ float4 tex2DGrad(texture<float4, texType, mode> texRe
 ////////////////////////////////////////////////////////////
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char tex3D(texture<char, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char1 tex3D(texture<char1, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_CHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char2 tex3D(texture<char2, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char4 tex3D(texture<char4, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_CHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned char tex3D(texture<unsigned char, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar1 tex3D(texture<uchar1, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_UCHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar2 tex3D(texture<uchar2, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar4 tex3D(texture<uchar4, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_UCHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short tex3D(texture<short, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short1 tex3D(texture<short1, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_SHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short2 tex3D(texture<short2, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short4 tex3D(texture<short4, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_SHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned short tex3D(texture<unsigned short, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort1 tex3D(texture<ushort1, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_USHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort2 tex3D(texture<ushort2, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort4 tex3D(texture<ushort4, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_USHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int tex3D(texture<int, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int1 tex3D(texture<int1, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_INT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int2 tex3D(texture<int2, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int4 tex3D(texture<int4, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_INT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned int tex3D(texture<unsigned int, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint1 tex3D(texture<uint1, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_UINT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint2 tex3D(texture<uint2, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint4 tex3D(texture<uint4, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_UINT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float tex3D(texture<float, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float1 tex3D(texture<float1, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_FLOAT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float2 tex3D(texture<float2, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float4 tex3D(texture<float4, texType, mode> texRef, float x, float y, float z)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector());
+    TEXTURE_RETURN_FLOAT_XYZW;
+}
+
+////////////////////////////////////////////////////////////
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ char tex3D(texture<char, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, float z)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -4861,6 +6756,168 @@ __TEXTURE_FUNCTIONS_DECL__ float4 tex3D(texture<float4, texType, mode> texRef, h
 ////////////////////////////////////////////////////////////
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char tex3DLod(texture<char, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char1 tex3DLod(texture<char1, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_CHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char2 tex3DLod(texture<char2, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char4 tex3DLod(texture<char4, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_CHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned char tex3DLod(texture<unsigned char, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar1 tex3DLod(texture<uchar1, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_UCHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar2 tex3DLod(texture<uchar2, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar4 tex3DLod(texture<uchar4, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_UCHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int tex3DLod(texture<int, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int1 tex3DLod(texture<int1, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_INT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int2 tex3DLod(texture<int2, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int4 tex3DLod(texture<int4, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_INT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned int tex3DLod(texture<unsigned int, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint1 tex3DLod(texture<uint1, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_UINT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint2 tex3DLod(texture<uint2, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint4 tex3DLod(texture<uint4, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_UINT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float tex3DLod(texture<float, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float1 tex3DLod(texture<float1, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_FLOAT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float2 tex3DLod(texture<float2, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float4 tex3DLod(texture<float4, texType, mode> texRef, float x, float y, float z, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_FLOAT_XYZW;
+}
+
+////////////////////////////////////////////////////////////
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ char tex3DLod(texture<char, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, float z, float level)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -5017,6 +7074,316 @@ __TEXTURE_FUNCTIONS_DECL__ float4 tex3DLod(texture<float4, texType, mode> texRef
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_lod_3D(i, s, hc::short_vector::float4(x, y, z, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_FLOAT_XYZW;
+}
+
+////////////////////////////////////////////////////////////
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char tex3DGrad(texture<char, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char1 tex3DGrad(texture<char1, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_CHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char2 tex3DGrad(texture<char2, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char4 tex3DGrad(texture<char4, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_CHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned char tex3DGrad(texture<unsigned char, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar1 tex3DGrad(texture<uchar1, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_UCHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar2 tex3DGrad(texture<uchar2, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar4 tex3DGrad(texture<uchar4, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_UCHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short tex3DGrad(texture<short, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short1 tex3DGrad(texture<short1, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_SHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short2 tex3DGrad(texture<short2, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short4 tex3DGrad(texture<short4, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_SHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned short tex3DGrad(texture<unsigned short, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort1 tex3DGrad(texture<ushort1, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_USHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort2 tex3DGrad(texture<ushort2, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort4 tex3DGrad(texture<ushort4, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_USHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int tex3DGrad(texture<int, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int1 tex3DGrad(texture<int1, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_INT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int2 tex3DGrad(texture<int2, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int4 tex3DGrad(texture<int4, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_INT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned int tex3DGrad(texture<unsigned int, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint1 tex3DGrad(texture<uint1, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_UINT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint2 tex3DGrad(texture<uint2, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint4 tex3DGrad(texture<uint4, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_UINT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float tex3DGrad(texture<float, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float1 tex3DGrad(texture<float1, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_FLOAT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float2 tex3DGrad(texture<float2, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
+    TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float4 tex3DGrad(texture<float4, texType, mode> texRef, float x, float y, float z, float4 dx, float4 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f =__ockl_image_sample_grad_3D(i, s,
+                                       hc::short_vector::float4(x, y, z, 0.0f).get_vector(),
+                                       hc::short_vector::float4(dx.x, dx.y, dx.z, dx.w).get_vector(),
+                                       hc::short_vector::float4(dy.x, dy.y, dy.z, dy.w).get_vector());
     TEXTURE_RETURN_FLOAT_XYZW;
 }
 
@@ -5332,6 +7699,232 @@ __TEXTURE_FUNCTIONS_DECL__ float4 tex3DGrad(texture<float4, texType, mode> texRe
 ////////////////////////////////////////////////////////////
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char tex1DLayered(texture<char, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char1 tex1DLayered(texture<char1, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_CHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char2 tex1DLayered(texture<char2, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char4 tex1DLayered(texture<char4, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_CHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned char tex1DLayered(texture<unsigned char, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar1 tex1DLayered(texture<uchar1, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_UCHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar2 tex1DLayered(texture<uchar2, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar4 tex1DLayered(texture<uchar4, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_UCHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short tex1DLayered(texture<short, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short1 tex1DLayered(texture<short1, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_SHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short2 tex1DLayered(texture<short2, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short4 tex1DLayered(texture<short4, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_SHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned short tex1DLayered(texture<unsigned short, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort1 tex1DLayered(texture<ushort1, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_USHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort2 tex1DLayered(texture<ushort2, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort4 tex1DLayered(texture<ushort4, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_USHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int tex1DLayered(texture<int, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int1 tex1DLayered(texture<int1, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_INT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int2 tex1DLayered(texture<int2, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int4 tex1DLayered(texture<int4, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_INT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned int tex1DLayered(texture<unsigned int, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint1 tex1DLayered(texture<uint1, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_UINT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint2 tex1DLayered(texture<uint2, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint4 tex1DLayered(texture<uint4, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_UINT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float tex1DLayered(texture<float, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float1 tex1DLayered(texture<float1, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_FLOAT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float2 tex1DLayered(texture<float2, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float4 tex1DLayered(texture<float4, texType, mode> texRef, float x, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_FLOAT_XYZW;
+}
+
+////////////////////////////////////////////////////////////
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ char tex1DLayered(texture<char, texType, mode> texRef, hipTextureObject_t textureObject, float x, int layer)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -5552,6 +8145,232 @@ __TEXTURE_FUNCTIONS_DECL__ float4 tex1DLayered(texture<float4, texType, mode> te
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_1Da(i, s, hc::short_vector::float2(x, layer).get_vector());
+    TEXTURE_RETURN_FLOAT_XYZW;
+}
+
+////////////////////////////////////////////////////////////
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char tex1DLayeredLod(texture<char, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char1 tex1DLayeredLod(texture<char1, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_CHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char2 tex1DLayeredLod(texture<char2, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char4 tex1DLayeredLod(texture<char4, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_CHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned char tex1DLayeredLod(texture<unsigned char, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar1 tex1DLayeredLod(texture<uchar1, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_UCHAR_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar2 tex1DLayeredLod(texture<uchar2, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar4 tex1DLayeredLod(texture<uchar4, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_UCHAR_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short tex1DLayeredLod(texture<short, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short1 tex1DLayeredLod(texture<short1, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_SHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short2 tex1DLayeredLod(texture<short2, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short4 tex1DLayeredLod(texture<short4, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_SHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned short tex1DLayeredLod(texture<unsigned short, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort1 tex1DLayeredLod(texture<ushort1, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_USHORT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort2 tex1DLayeredLod(texture<ushort2, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort4 tex1DLayeredLod(texture<ushort4, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_USHORT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int tex1DLayeredLod(texture<int, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int1 tex1DLayeredLod(texture<int1, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_INT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int2 tex1DLayeredLod(texture<int2, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int4 tex1DLayeredLod(texture<int4, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_INT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned int tex1DLayeredLod(texture<unsigned int, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint1 tex1DLayeredLod(texture<uint1, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_UINT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint2 tex1DLayeredLod(texture<uint2, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint4 tex1DLayeredLod(texture<uint4, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_UINT_XYZW;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float tex1DLayeredLod(texture<float, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float1 tex1DLayeredLod(texture<float1, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_FLOAT_X;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float2 tex1DLayeredLod(texture<float2, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
+    TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float4 tex1DLayeredLod(texture<float4, texType, mode> texRef, float x, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), level);
     TEXTURE_RETURN_FLOAT_XYZW;
 }
 
@@ -5784,11 +8603,27 @@ __TEXTURE_FUNCTIONS_DECL__ float4 tex1DLayeredLod(texture<float4, texType, mode>
 ////////////////////////////////////////////////////////////
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char tex1DLayeredGrad(texture<char, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ char tex1DLayeredGrad(texture<char, texType, mode> texRef, hipTextureObject_t textureObject, float x, int layer, float dx, float dy)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
     TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char1 tex1DLayeredGrad(texture<char1, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_CHAR_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -5800,11 +8635,27 @@ __TEXTURE_FUNCTIONS_DECL__ char1 tex1DLayeredGrad(texture<char1, texType, mode> 
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char2 tex1DLayeredGrad(texture<char2, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ char2 tex1DLayeredGrad(texture<char2, texType, mode> texRef, hipTextureObject_t textureObject, float x, int layer, float dx, float dy)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
     TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char4 tex1DLayeredGrad(texture<char4, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_CHAR_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -5816,11 +8667,27 @@ __TEXTURE_FUNCTIONS_DECL__ char4 tex1DLayeredGrad(texture<char4, texType, mode> 
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned char tex1DLayeredGrad(texture<unsigned char, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ unsigned char tex1DLayeredGrad(texture<unsigned char, texType, mode> texRef, hipTextureObject_t textureObject, float x, int layer, float dx, float dy)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
     TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar1 tex1DLayeredGrad(texture<uchar1, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_UCHAR_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -5832,11 +8699,27 @@ __TEXTURE_FUNCTIONS_DECL__ uchar1 tex1DLayeredGrad(texture<uchar1, texType, mode
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar2 tex1DLayeredGrad(texture<uchar2, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ uchar2 tex1DLayeredGrad(texture<uchar2, texType, mode> texRef, hipTextureObject_t textureObject, float x, int layer, float dx, float dy)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
     TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar4 tex1DLayeredGrad(texture<uchar4, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_UCHAR_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -5848,11 +8731,27 @@ __TEXTURE_FUNCTIONS_DECL__ uchar4 tex1DLayeredGrad(texture<uchar4, texType, mode
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short tex1DLayeredGrad(texture<short, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ short tex1DLayeredGrad(texture<short, texType, mode> texRef, hipTextureObject_t textureObject, float x, int layer, float dx, float dy)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
     TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short1 tex1DLayeredGrad(texture<short1, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_SHORT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -5864,11 +8763,27 @@ __TEXTURE_FUNCTIONS_DECL__ short1 tex1DLayeredGrad(texture<short1, texType, mode
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short2 tex1DLayeredGrad(texture<short2, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ short2 tex1DLayeredGrad(texture<short2, texType, mode> texRef, hipTextureObject_t textureObject, float x, int layer, float dx, float dy)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
     TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short4 tex1DLayeredGrad(texture<short4, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_SHORT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -5880,11 +8795,27 @@ __TEXTURE_FUNCTIONS_DECL__ short4 tex1DLayeredGrad(texture<short4, texType, mode
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned short tex1DLayeredGrad(texture<unsigned short, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ unsigned short tex1DLayeredGrad(texture<unsigned short, texType, mode> texRef, hipTextureObject_t textureObject, float x, int layer, float dx, float dy)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
     TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort1 tex1DLayeredGrad(texture<ushort1, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_USHORT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -5896,11 +8827,27 @@ __TEXTURE_FUNCTIONS_DECL__ ushort1 tex1DLayeredGrad(texture<ushort1, texType, mo
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort2 tex1DLayeredGrad(texture<ushort2, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ ushort2 tex1DLayeredGrad(texture<ushort2, texType, mode> texRef, hipTextureObject_t textureObject, float x, int layer, float dx, float dy)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
     TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort4 tex1DLayeredGrad(texture<ushort4, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_USHORT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -5912,11 +8859,27 @@ __TEXTURE_FUNCTIONS_DECL__ ushort4 tex1DLayeredGrad(texture<ushort4, texType, mo
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int tex1DLayeredGrad(texture<int, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ int tex1DLayeredGrad(texture<int, texType, mode> texRef, hipTextureObject_t textureObject, float x, int layer, float dx, float dy)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
     TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int1 tex1DLayeredGrad(texture<int1, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_INT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -5928,11 +8891,27 @@ __TEXTURE_FUNCTIONS_DECL__ int1 tex1DLayeredGrad(texture<int1, texType, mode> te
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int2 tex1DLayeredGrad(texture<int2, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ int2 tex1DLayeredGrad(texture<int2, texType, mode> texRef, hipTextureObject_t textureObject, float x, int layer, float dx, float dy)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
     TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int4 tex1DLayeredGrad(texture<int4, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_INT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -5944,11 +8923,27 @@ __TEXTURE_FUNCTIONS_DECL__ int4 tex1DLayeredGrad(texture<int4, texType, mode> te
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned int tex1DLayeredGrad(texture<unsigned int, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ unsigned int tex1DLayeredGrad(texture<unsigned int, texType, mode> texRef, hipTextureObject_t textureObject, float x, int layer, float dx, float dy)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
     TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint1 tex1DLayeredGrad(texture<uint1, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_UINT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -5960,11 +8955,27 @@ __TEXTURE_FUNCTIONS_DECL__ uint1 tex1DLayeredGrad(texture<uint1, texType, mode> 
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint2 tex1DLayeredGrad(texture<uint2, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ uint2 tex1DLayeredGrad(texture<uint2, texType, mode> texRef, hipTextureObject_t textureObject, float x, int layer, float dx, float dy)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
     TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint4 tex1DLayeredGrad(texture<uint4, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_UINT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -5976,11 +8987,27 @@ __TEXTURE_FUNCTIONS_DECL__ uint4 tex1DLayeredGrad(texture<uint4, texType, mode> 
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float tex1DLayeredGrad(texture<float, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ float tex1DLayeredGrad(texture<float, texType, mode> texRef, hipTextureObject_t textureObject, float x, int layer, float dx, float dy)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
     TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float1 tex1DLayeredGrad(texture<float1, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_FLOAT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -5992,11 +9019,27 @@ __TEXTURE_FUNCTIONS_DECL__ float1 tex1DLayeredGrad(texture<float1, texType, mode
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float2 tex1DLayeredGrad(texture<float2, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ float2 tex1DLayeredGrad(texture<float2, texType, mode> texRef, hipTextureObject_t textureObject, float x, int layer, float dx, float dy)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
     TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float4 tex1DLayeredGrad(texture<float4, texType, mode> texRef, float x, int layer, float dx, float dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_1Da(i, s, hc::short_vector::float2(x, layer).get_vector(), dx, dy);
+    TEXTURE_RETURN_FLOAT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6010,11 +9053,27 @@ __TEXTURE_FUNCTIONS_DECL__ float4 tex1DLayeredGrad(texture<float4, texType, mode
 ////////////////////////////////////////////////////////////
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char tex2DLayered(texture<char, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ char tex2DLayered(texture<char, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
     TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char1 tex2DLayered(texture<char1, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_CHAR_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6026,11 +9085,27 @@ __TEXTURE_FUNCTIONS_DECL__ char1 tex2DLayered(texture<char1, texType, mode> texR
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char2 tex2DLayered(texture<char2, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ char2 tex2DLayered(texture<char2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
     TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char4 tex2DLayered(texture<char4, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_CHAR_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6042,11 +9117,27 @@ __TEXTURE_FUNCTIONS_DECL__ char4 tex2DLayered(texture<char4, texType, mode> texR
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned char tex2DLayered(texture<unsigned char, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ unsigned char tex2DLayered(texture<unsigned char, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
     TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar1 tex2DLayered(texture<uchar1, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_UCHAR_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6058,11 +9149,27 @@ __TEXTURE_FUNCTIONS_DECL__ uchar1 tex2DLayered(texture<uchar1, texType, mode> te
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar2 tex2DLayered(texture<uchar2, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ uchar2 tex2DLayered(texture<uchar2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
     TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar4 tex2DLayered(texture<uchar4, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_UCHAR_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6074,11 +9181,27 @@ __TEXTURE_FUNCTIONS_DECL__ uchar4 tex2DLayered(texture<uchar4, texType, mode> te
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short tex2DLayered(texture<short, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ short tex2DLayered(texture<short, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
     TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short1 tex2DLayered(texture<short1, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_SHORT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6090,11 +9213,27 @@ __TEXTURE_FUNCTIONS_DECL__ short1 tex2DLayered(texture<short1, texType, mode> te
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short2 tex2DLayered(texture<short2, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ short2 tex2DLayered(texture<short2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
     TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short4 tex2DLayered(texture<short4, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_SHORT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6106,11 +9245,27 @@ __TEXTURE_FUNCTIONS_DECL__ short4 tex2DLayered(texture<short4, texType, mode> te
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned short tex2DLayered(texture<unsigned short, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ unsigned short tex2DLayered(texture<unsigned short, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
     TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort1 tex2DLayered(texture<ushort1, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_USHORT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6122,11 +9277,27 @@ __TEXTURE_FUNCTIONS_DECL__ ushort1 tex2DLayered(texture<ushort1, texType, mode> 
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort2 tex2DLayered(texture<ushort2, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ ushort2 tex2DLayered(texture<ushort2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
     TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort4 tex2DLayered(texture<ushort4, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_USHORT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6138,11 +9309,27 @@ __TEXTURE_FUNCTIONS_DECL__ ushort4 tex2DLayered(texture<ushort4, texType, mode> 
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int tex2DLayered(texture<int, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ int tex2DLayered(texture<int, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
     TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int1 tex2DLayered(texture<int1, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_INT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6154,11 +9341,27 @@ __TEXTURE_FUNCTIONS_DECL__ int1 tex2DLayered(texture<int1, texType, mode> texRef
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int2 tex2DLayered(texture<int2, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ int2 tex2DLayered(texture<int2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
     TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int4 tex2DLayered(texture<int4, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_INT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6170,11 +9373,27 @@ __TEXTURE_FUNCTIONS_DECL__ int4 tex2DLayered(texture<int4, texType, mode> texRef
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned int tex2DLayered(texture<unsigned int, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ unsigned int tex2DLayered(texture<unsigned int, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
     TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint1 tex2DLayered(texture<uint1, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_UINT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6186,11 +9405,27 @@ __TEXTURE_FUNCTIONS_DECL__ uint1 tex2DLayered(texture<uint1, texType, mode> texR
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint2 tex2DLayered(texture<uint2, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ uint2 tex2DLayered(texture<uint2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
     TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint4 tex2DLayered(texture<uint4, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_UINT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6202,11 +9437,27 @@ __TEXTURE_FUNCTIONS_DECL__ uint4 tex2DLayered(texture<uint4, texType, mode> texR
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float tex2DLayered(texture<float, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ float tex2DLayered(texture<float, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
     TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float1 tex2DLayered(texture<float1, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_FLOAT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6218,11 +9469,27 @@ __TEXTURE_FUNCTIONS_DECL__ float1 tex2DLayered(texture<float1, texType, mode> te
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float2 tex2DLayered(texture<float2, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ float2 tex2DLayered(texture<float2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
     TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float4 tex2DLayered(texture<float4, texType, mode> texRef, float x, float y, int layer)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector());
+    TEXTURE_RETURN_FLOAT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6236,11 +9503,27 @@ __TEXTURE_FUNCTIONS_DECL__ float4 tex2DLayered(texture<float4, texType, mode> te
 ////////////////////////////////////////////////////////////
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char tex2DLayeredLod(texture<char, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ char tex2DLayeredLod(texture<char, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float level)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
     TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char1 tex2DLayeredLod(texture<char1, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_CHAR_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6252,11 +9535,27 @@ __TEXTURE_FUNCTIONS_DECL__ char1 tex2DLayeredLod(texture<char1, texType, mode> t
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char2 tex2DLayeredLod(texture<char2, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ char2 tex2DLayeredLod(texture<char2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float level)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
     TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char4 tex2DLayeredLod(texture<char4, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_CHAR_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6268,11 +9567,27 @@ __TEXTURE_FUNCTIONS_DECL__ char4 tex2DLayeredLod(texture<char4, texType, mode> t
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned char tex2DLayeredLod(texture<unsigned char, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ unsigned char tex2DLayeredLod(texture<unsigned char, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float level)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
     TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar1 tex2DLayeredLod(texture<uchar1, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_UCHAR_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6284,11 +9599,27 @@ __TEXTURE_FUNCTIONS_DECL__ uchar1 tex2DLayeredLod(texture<uchar1, texType, mode>
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar2 tex2DLayeredLod(texture<uchar2, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ uchar2 tex2DLayeredLod(texture<uchar2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float level)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
     TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar4 tex2DLayeredLod(texture<uchar4, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_UCHAR_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6300,11 +9631,27 @@ __TEXTURE_FUNCTIONS_DECL__ uchar4 tex2DLayeredLod(texture<uchar4, texType, mode>
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short tex2DLayeredLod(texture<short, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ short tex2DLayeredLod(texture<short, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float level)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
     TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short1 tex2DLayeredLod(texture<short1, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_SHORT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6316,11 +9663,27 @@ __TEXTURE_FUNCTIONS_DECL__ short1 tex2DLayeredLod(texture<short1, texType, mode>
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short2 tex2DLayeredLod(texture<short2, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ short2 tex2DLayeredLod(texture<short2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float level)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
     TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short4 tex2DLayeredLod(texture<short4, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_SHORT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6332,11 +9695,27 @@ __TEXTURE_FUNCTIONS_DECL__ short4 tex2DLayeredLod(texture<short4, texType, mode>
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned short tex2DLayeredLod(texture<unsigned short, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ unsigned short tex2DLayeredLod(texture<unsigned short, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float level)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
     TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort1 tex2DLayeredLod(texture<ushort1, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_USHORT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6348,11 +9727,27 @@ __TEXTURE_FUNCTIONS_DECL__ ushort1 tex2DLayeredLod(texture<ushort1, texType, mod
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort2 tex2DLayeredLod(texture<ushort2, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ ushort2 tex2DLayeredLod(texture<ushort2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float level)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
     TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort4 tex2DLayeredLod(texture<ushort4, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_USHORT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6364,11 +9759,27 @@ __TEXTURE_FUNCTIONS_DECL__ ushort4 tex2DLayeredLod(texture<ushort4, texType, mod
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int tex2DLayeredLod(texture<int, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ int tex2DLayeredLod(texture<int, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float level)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
     TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int1 tex2DLayeredLod(texture<int1, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_INT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6380,11 +9791,27 @@ __TEXTURE_FUNCTIONS_DECL__ int1 tex2DLayeredLod(texture<int1, texType, mode> tex
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int2 tex2DLayeredLod(texture<int2, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ int2 tex2DLayeredLod(texture<int2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float level)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
     TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int4 tex2DLayeredLod(texture<int4, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_INT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6396,11 +9823,27 @@ __TEXTURE_FUNCTIONS_DECL__ int4 tex2DLayeredLod(texture<int4, texType, mode> tex
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned int tex2DLayeredLod(texture<unsigned int, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ unsigned int tex2DLayeredLod(texture<unsigned int, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float level)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
     TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint1 tex2DLayeredLod(texture<uint1, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_UINT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6412,11 +9855,27 @@ __TEXTURE_FUNCTIONS_DECL__ uint1 tex2DLayeredLod(texture<uint1, texType, mode> t
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint2 tex2DLayeredLod(texture<uint2, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ uint2 tex2DLayeredLod(texture<uint2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float level)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
     TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint4 tex2DLayeredLod(texture<uint4, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_UINT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6428,11 +9887,27 @@ __TEXTURE_FUNCTIONS_DECL__ uint4 tex2DLayeredLod(texture<uint4, texType, mode> t
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float tex2DLayeredLod(texture<float, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ float tex2DLayeredLod(texture<float, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float level)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
     TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float1 tex2DLayeredLod(texture<float1, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_FLOAT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6444,11 +9919,27 @@ __TEXTURE_FUNCTIONS_DECL__ float1 tex2DLayeredLod(texture<float1, texType, mode>
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float2 tex2DLayeredLod(texture<float2, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ float2 tex2DLayeredLod(texture<float2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float level)
 {
     TEXTURE_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
     TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float4 tex2DLayeredLod(texture<float4, texType, mode> texRef, float x, float y, int layer, float level)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_lod_2Da(i, s, hc::short_vector::float4(x, y, layer, 0.0f).get_vector(), level);
+    TEXTURE_RETURN_FLOAT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6462,6 +9953,17 @@ __TEXTURE_FUNCTIONS_DECL__ float4 tex2DLayeredLod(texture<float4, texType, mode>
 ////////////////////////////////////////////////////////////
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char tex2DLayeredGrad(texture<char, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ char tex2DLayeredGrad(texture<char, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float2 dx, float2 dy)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -6470,6 +9972,17 @@ __TEXTURE_FUNCTIONS_DECL__ char tex2DLayeredGrad(texture<char, texType, mode> te
                                          hc::short_vector::float2(dx.x, dx.y).get_vector(),
                                          hc::short_vector::float2(dy.x, dy.y).get_vector());
     TEXTURE_RETURN_CHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char1 tex2DLayeredGrad(texture<char1, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_CHAR_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6484,6 +9997,17 @@ __TEXTURE_FUNCTIONS_DECL__ char1 tex2DLayeredGrad(texture<char1, texType, mode> 
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char2 tex2DLayeredGrad(texture<char2, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ char2 tex2DLayeredGrad(texture<char2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float2 dx, float2 dy)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -6492,6 +10016,17 @@ __TEXTURE_FUNCTIONS_DECL__ char2 tex2DLayeredGrad(texture<char2, texType, mode> 
                                          hc::short_vector::float2(dx.x, dx.y).get_vector(),
                                          hc::short_vector::float2(dy.x, dy.y).get_vector());
     TEXTURE_RETURN_CHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ char4 tex2DLayeredGrad(texture<char4, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_CHAR_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6506,6 +10041,17 @@ __TEXTURE_FUNCTIONS_DECL__ char4 tex2DLayeredGrad(texture<char4, texType, mode> 
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned char tex2DLayeredGrad(texture<unsigned char, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ unsigned char tex2DLayeredGrad(texture<unsigned char, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float2 dx, float2 dy)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -6514,6 +10060,17 @@ __TEXTURE_FUNCTIONS_DECL__ unsigned char tex2DLayeredGrad(texture<unsigned char,
                                          hc::short_vector::float2(dx.x, dx.y).get_vector(),
                                          hc::short_vector::float2(dy.x, dy.y).get_vector());
     TEXTURE_RETURN_UCHAR;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar1 tex2DLayeredGrad(texture<uchar1, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_UCHAR_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6528,6 +10085,17 @@ __TEXTURE_FUNCTIONS_DECL__ uchar1 tex2DLayeredGrad(texture<uchar1, texType, mode
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar2 tex2DLayeredGrad(texture<uchar2, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ uchar2 tex2DLayeredGrad(texture<uchar2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float2 dx, float2 dy)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -6536,6 +10104,17 @@ __TEXTURE_FUNCTIONS_DECL__ uchar2 tex2DLayeredGrad(texture<uchar2, texType, mode
                                          hc::short_vector::float2(dx.x, dx.y).get_vector(),
                                          hc::short_vector::float2(dy.x, dy.y).get_vector());
     TEXTURE_RETURN_UCHAR_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uchar4 tex2DLayeredGrad(texture<uchar4, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_UCHAR_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6550,6 +10129,17 @@ __TEXTURE_FUNCTIONS_DECL__ uchar4 tex2DLayeredGrad(texture<uchar4, texType, mode
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short tex2DLayeredGrad(texture<short, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ short tex2DLayeredGrad(texture<short, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float2 dx, float2 dy)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -6558,6 +10148,17 @@ __TEXTURE_FUNCTIONS_DECL__ short tex2DLayeredGrad(texture<short, texType, mode> 
                                          hc::short_vector::float2(dx.x, dx.y).get_vector(),
                                          hc::short_vector::float2(dy.x, dy.y).get_vector());
     TEXTURE_RETURN_SHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short1 tex2DLayeredGrad(texture<short1, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_SHORT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6572,6 +10173,17 @@ __TEXTURE_FUNCTIONS_DECL__ short1 tex2DLayeredGrad(texture<short1, texType, mode
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short2 tex2DLayeredGrad(texture<short2, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ short2 tex2DLayeredGrad(texture<short2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float2 dx, float2 dy)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -6580,6 +10192,17 @@ __TEXTURE_FUNCTIONS_DECL__ short2 tex2DLayeredGrad(texture<short2, texType, mode
                                          hc::short_vector::float2(dx.x, dx.y).get_vector(),
                                          hc::short_vector::float2(dy.x, dy.y).get_vector());
     TEXTURE_RETURN_SHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ short4 tex2DLayeredGrad(texture<short4, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_SHORT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6594,6 +10217,17 @@ __TEXTURE_FUNCTIONS_DECL__ short4 tex2DLayeredGrad(texture<short4, texType, mode
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned short tex2DLayeredGrad(texture<unsigned short, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ unsigned short tex2DLayeredGrad(texture<unsigned short, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float2 dx, float2 dy)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -6602,6 +10236,17 @@ __TEXTURE_FUNCTIONS_DECL__ unsigned short tex2DLayeredGrad(texture<unsigned shor
                                          hc::short_vector::float2(dx.x, dx.y).get_vector(),
                                          hc::short_vector::float2(dy.x, dy.y).get_vector());
     TEXTURE_RETURN_USHORT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort1 tex2DLayeredGrad(texture<ushort1, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_USHORT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6616,6 +10261,17 @@ __TEXTURE_FUNCTIONS_DECL__ ushort1 tex2DLayeredGrad(texture<ushort1, texType, mo
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort2 tex2DLayeredGrad(texture<ushort2, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ ushort2 tex2DLayeredGrad(texture<ushort2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float2 dx, float2 dy)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -6624,6 +10280,17 @@ __TEXTURE_FUNCTIONS_DECL__ ushort2 tex2DLayeredGrad(texture<ushort2, texType, mo
                                          hc::short_vector::float2(dx.x, dx.y).get_vector(),
                                          hc::short_vector::float2(dy.x, dy.y).get_vector());
     TEXTURE_RETURN_USHORT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ ushort4 tex2DLayeredGrad(texture<ushort4, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_USHORT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6638,6 +10305,17 @@ __TEXTURE_FUNCTIONS_DECL__ ushort4 tex2DLayeredGrad(texture<ushort4, texType, mo
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int tex2DLayeredGrad(texture<int, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ int tex2DLayeredGrad(texture<int, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float2 dx, float2 dy)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -6646,6 +10324,17 @@ __TEXTURE_FUNCTIONS_DECL__ int tex2DLayeredGrad(texture<int, texType, mode> texR
                                          hc::short_vector::float2(dx.x, dx.y).get_vector(),
                                          hc::short_vector::float2(dy.x, dy.y).get_vector());
     TEXTURE_RETURN_INT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int1 tex2DLayeredGrad(texture<int1, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_INT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6660,6 +10349,17 @@ __TEXTURE_FUNCTIONS_DECL__ int1 tex2DLayeredGrad(texture<int1, texType, mode> te
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int2 tex2DLayeredGrad(texture<int2, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ int2 tex2DLayeredGrad(texture<int2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float2 dx, float2 dy)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -6668,6 +10368,17 @@ __TEXTURE_FUNCTIONS_DECL__ int2 tex2DLayeredGrad(texture<int2, texType, mode> te
                                          hc::short_vector::float2(dx.x, dx.y).get_vector(),
                                          hc::short_vector::float2(dy.x, dy.y).get_vector());
     TEXTURE_RETURN_INT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ int4 tex2DLayeredGrad(texture<int4, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_INT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6682,6 +10393,17 @@ __TEXTURE_FUNCTIONS_DECL__ int4 tex2DLayeredGrad(texture<int4, texType, mode> te
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ unsigned int tex2DLayeredGrad(texture<unsigned int, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ unsigned int tex2DLayeredGrad(texture<unsigned int, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float2 dx, float2 dy)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -6690,6 +10412,17 @@ __TEXTURE_FUNCTIONS_DECL__ unsigned int tex2DLayeredGrad(texture<unsigned int, t
                                          hc::short_vector::float2(dx.x, dx.y).get_vector(),
                                          hc::short_vector::float2(dy.x, dy.y).get_vector());
     TEXTURE_RETURN_UINT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint1 tex2DLayeredGrad(texture<uint1, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_UINT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6704,6 +10437,17 @@ __TEXTURE_FUNCTIONS_DECL__ uint1 tex2DLayeredGrad(texture<uint1, texType, mode> 
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint2 tex2DLayeredGrad(texture<uint2, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ uint2 tex2DLayeredGrad(texture<uint2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float2 dx, float2 dy)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -6712,6 +10456,17 @@ __TEXTURE_FUNCTIONS_DECL__ uint2 tex2DLayeredGrad(texture<uint2, texType, mode> 
                                          hc::short_vector::float2(dx.x, dx.y).get_vector(),
                                          hc::short_vector::float2(dy.x, dy.y).get_vector());
     TEXTURE_RETURN_UINT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ uint4 tex2DLayeredGrad(texture<uint4, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_UINT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6726,6 +10481,17 @@ __TEXTURE_FUNCTIONS_DECL__ uint4 tex2DLayeredGrad(texture<uint4, texType, mode> 
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float tex2DLayeredGrad(texture<float, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ float tex2DLayeredGrad(texture<float, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float2 dx, float2 dy)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -6734,6 +10500,17 @@ __TEXTURE_FUNCTIONS_DECL__ float tex2DLayeredGrad(texture<float, texType, mode> 
                                          hc::short_vector::float2(dx.x, dx.y).get_vector(),
                                          hc::short_vector::float2(dy.x, dy.y).get_vector());
     TEXTURE_RETURN_FLOAT;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float1 tex2DLayeredGrad(texture<float1, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_FLOAT_X;
 }
 
 template<int texType, enum hipTextureReadMode mode>
@@ -6748,6 +10525,17 @@ __TEXTURE_FUNCTIONS_DECL__ float1 tex2DLayeredGrad(texture<float1, texType, mode
 }
 
 template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float2 tex2DLayeredGrad(texture<float2, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ float2 tex2DLayeredGrad(texture<float2, texType, mode> texRef, hipTextureObject_t textureObject, float x, float y, int layer, float2 dx, float2 dy)
 {
     TEXTURE_PARAMETERS_INIT;
@@ -6756,6 +10544,17 @@ __TEXTURE_FUNCTIONS_DECL__ float2 tex2DLayeredGrad(texture<float2, texType, mode
                                          hc::short_vector::float2(dx.x, dx.y).get_vector(),
                                          hc::short_vector::float2(dy.x, dy.y).get_vector());
     TEXTURE_RETURN_FLOAT_XY;
+}
+
+template<int texType, enum hipTextureReadMode mode>
+__TEXTURE_FUNCTIONS_DECL__ float4 tex2DLayeredGrad(texture<float4, texType, mode> texRef, float x, float y, int layer, float2 dx, float2 dy)
+{
+    TEXTURE_REF_PARAMETERS_INIT;
+    texel.f = __ockl_image_sample_grad_2Da(i, s,
+                                         hc::short_vector::float4(x, y, layer, 0.0f).get_vector(),
+                                         hc::short_vector::float2(dx.x, dx.y).get_vector(),
+                                         hc::short_vector::float2(dy.x, dy.y).get_vector());
+    TEXTURE_RETURN_FLOAT_XYZW;
 }
 
 template<int texType, enum hipTextureReadMode mode>

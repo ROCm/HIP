@@ -14,7 +14,9 @@ texture<float, 2, hipReadModeElementType> tex;
 bool testResult = true;
 
 __global__ void tex2DKernel(float* outputData,
+#ifdef __HIP_PLATFORM_HCC__
                              hipTextureObject_t textureObject,
+#endif
                              int width,
                              int height)
 {
@@ -78,7 +80,7 @@ void runTest(int argc, char **argv)
 #ifdef __HIP_PLATFORM_HCC__
     hipLaunchKernelGGL(tex2DKernel, dim3(dimGrid), dim3(dimBlock), 0, 0, dData, tex.textureObject, width, height);
 #else
-    hipLaunchKernelGGL(tex2DKernel, dim3(dimGrid), dim3(dimBlock), 0, 0, dData, 0, width, height);
+    hipLaunchKernelGGL(tex2DKernel, dim3(dimGrid), dim3(dimBlock), 0, 0, dData, width, height);
 #endif
     hipDeviceSynchronize();
 

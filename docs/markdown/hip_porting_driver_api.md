@@ -231,3 +231,45 @@ int main(){
     return 0;
 }
 ```
+
+## HIP Module and Texture Driver API
+
+HIP supports texture driver APIs however texture reference should be declared in host scope. Following code explains the use of texture reference for __HIP_PLATFORM_HCC__ platform. 
+
+```
+// Code to generate code object
+
+#include "hip/hip_runtime.h"
+extern texture<float, 2, hipReadModeElementType> tex;
+
+__global__ void tex2dKernel(hipLaunchParm lp, float* outputData,
+                             int width,
+                             int height)
+{
+    int x = hipBlockIdx_x*hipBlockDim_x + hipThreadIdx_x;
+    int y = hipBlockIdx_y*hipBlockDim_y + hipThreadIdx_y;
+    outputData[y*width + x] = tex2D(tex, x, y);
+}
+
+```
+```
+// Host code:
+
+texture<float, 2, hipReadModeElementType> tex;
+
+void myFunc () 
+{
+    // ...
+
+    textureReference* texref;
+    hipModuleGetTexRef(&texref, Module1, "tex");
+    hipTexRefSetAddressMode(texref, 0, hipAddressModeWrap);
+    hipTexRefSetAddressMode(texref, 1, hipAddressModeWrap);
+    hipTexRefSetFilterMode(texref, hipFilterModePoint);
+    hipTexRefSetFlags(texref, 0);
+    hipTexRefSetFormat(texref, HIP_AD_FORMAT_FLOAT, 1);
+    hipTexRefSetArray(texref, array, HIP_TRSA_OVERRIDE_FORMAT);
+
+   // ...
+}
+```

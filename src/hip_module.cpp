@@ -120,18 +120,15 @@ namespace hipdrv {
 uint64_t PrintSymbolSizes(const void *emi, const char *name){
     using namespace ELFIO;
 
-    const ELFIO::Elf64_Ehdr *ehdr = (const ELFIO::Elf64_Ehdr*)emi;
+    const Elf64_Ehdr *ehdr = (const Elf64_Ehdr*)emi;
     if(NULL == ehdr || EV_CURRENT != ehdr->e_version){}
-    const ELFIO::Elf64_Shdr * shdr =
-        (const ELFIO::Elf64_Shdr*)((char*)emi + ehdr->e_shoff);
+    const Elf64_Shdr * shdr = (const Elf64_Shdr*)((char*)emi + ehdr->e_shoff);
     for(uint16_t i=0;i<ehdr->e_shnum;++i){
         if(shdr[i].sh_type == SHT_SYMTAB){
-            const ELFIO::Elf64_Sym *syms =
-                (const ELFIO::Elf64_Sym*)((char*)emi + shdr[i].sh_offset);
+            const Elf64_Sym *syms = (const Elf64_Sym*)((char*)emi + shdr[i].sh_offset);
             assert(syms);
             uint64_t numSyms = shdr[i].sh_size/shdr[i].sh_entsize;
-            const char* strtab =
-                (const char*)((char*)emi + shdr[shdr[i].sh_link].sh_offset);
+            const char* strtab = (const char*)((char*)emi + shdr[shdr[i].sh_link].sh_offset);
             assert(strtab);
             for(uint64_t i=0;i<numSyms;++i){
                 const char *symname = strtab + syms[i].st_name;
@@ -149,8 +146,8 @@ uint64_t PrintSymbolSizes(const void *emi, const char *name){
 uint64_t ElfSize(const void *emi){
     using namespace ELFIO;
 
-    const ELFIO::Elf64_Ehdr *ehdr = (const ELFIO::Elf64_Ehdr*)emi;
-    const ELFIO::Elf64_Shdr *shdr = (const ELFIO::Elf64_Shdr*)((char*)emi + ehdr->e_shoff);
+    const Elf64_Ehdr *ehdr = (const Elf64_Ehdr*)emi;
+    const Elf64_Shdr *shdr = (const Elf64_Shdr*)((char*)emi + ehdr->e_shoff);
 
     uint64_t max_offset = ehdr->e_shoff;
     uint64_t total_size = max_offset + ehdr->e_shentsize * ehdr->e_shnum;
@@ -716,4 +713,23 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
 hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image, unsigned int numOptions, hipJitOption *options, void **optionValues)
 {
     return hipModuleLoadData(module, image);
+}
+
+hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name)
+{
+    HIP_INIT_API(texRef, hmod, name);
+    hipError_t ret = hipErrorNotFound;
+    if(texRef == NULL){
+        ret = hipErrorInvalidValue;
+    } else {
+        if(name == NULL || hmod == NULL){
+            ret = hipErrorNotInitialized;
+        } else{
+            const auto it = hmod->coGlobals.find(name);
+		    if (it == hmod->coGlobals.end()) return ihipLogStatus(hipErrorInvalidValue);
+		    *texRef = reinterpret_cast<textureReference*>(it->second);
+            ret = hipSuccess;
+        }
+    }
+    return ihipLogStatus(ret);
 }
