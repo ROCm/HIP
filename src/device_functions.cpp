@@ -23,6 +23,11 @@ THE SOFTWARE.
 #include <hc_math.hpp>
 #include "device_util.h"
 
+extern "C" float __ocml_floor_f32(float);
+extern "C" float __ocml_rint_f32(float);
+extern "C" float __ocml_ceil_f32(float);
+extern "C" float __ocml_trunc_f32(float);
+
 struct holder64Bit{
   union{
     double d;
@@ -163,19 +168,19 @@ __device__ long long int __double_as_longlong(double x)
 
 __device__ int __float2int_rd(float x)
 {
-  return (int)x;
+  return (int)__ocml_floor_f32(x);
 }
 __device__ int __float2int_rn(float x)
 {
-  return (int)x;
+  return (int)__ocml_rint_f32(x);
 }
 __device__ int __float2int_ru(float x)
 {
-  return (int)x;
+  return (int)__ocml_ceil_f32(x);
 }
 __device__ int __float2int_rz(float x)
 {
-  return (int)x;
+  return (int)__ocml_trunc_f32(x);
 }
 
 __device__ long long int __float2ll_rd(float x)

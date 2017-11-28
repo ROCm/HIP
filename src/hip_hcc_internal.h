@@ -25,8 +25,9 @@ THE SOFTWARE.
 
 #include <hc.hpp>
 #include <hsa/hsa.h>
-#include "hsa/hsa_ext_amd.h"
+#include <unordered_map>
 
+#include "hsa/hsa_ext_amd.h"
 #include "hip/hip_runtime.h"
 #include "hip_util.h"
 #include "env.h"
@@ -373,13 +374,14 @@ public:
 
 class ihipModule_t {
 public:
-  hsa_executable_t executable;
-  hsa_code_object_t object;
-  std::string fileName;
-  void *ptr;
-  size_t size;
-  std::list<hipFunction_t> funcTrack;
-  ihipModule_t() : executable(), object(), fileName(), ptr(nullptr), size(0) {}
+    hsa_executable_t executable;
+    hsa_code_object_t object;
+    std::string fileName;
+    void *ptr;
+    size_t size;
+    std::list<hipFunction_t> funcTrack;
+    std::unordered_map<std::string, uintptr_t> coGlobals;
+    ihipModule_t() : executable(), object(), fileName(), ptr(nullptr), size(0) {}
 };
 
 
