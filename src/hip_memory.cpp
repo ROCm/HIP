@@ -1311,7 +1311,10 @@ namespace
 
         size_t idx = blockIdx.x * block_dim + threadIdx.x;
         while (idx < n) {
-            new (&f[idx]) T{value};
+            __builtin_memcpy(
+                reinterpret_cast<void*>(&f[idx]),
+                reinterpret_cast<const void*>(&value),
+                sizeof(T));
             idx += grid_dim;
         }
     }

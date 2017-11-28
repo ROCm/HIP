@@ -389,18 +389,9 @@ template<typename std::common_type<
 class Coordinates {
     using R = decltype(f(0));
 
-    struct X {
-        __device__ operator R() const { return f(0); }
-        __host__ operator R() const { return R{}; }
-    };
-    struct Y {
-        __device__ operator R() const { return f(1); }
-        __host__ operator R() const { return R{}; }
-    };
-    struct Z {
-        __device__ operator R() const { return f(2); }
-        __host__ operator R() const { return R{}; }
-    };
+    struct X { __device__ operator R() const { return f(0); } };
+    struct Y { __device__ operator R() const { return f(1); } };
+    struct Z { __device__ operator R() const { return f(2); } };
 public:
     static constexpr X x{};
     static constexpr Y y{};
