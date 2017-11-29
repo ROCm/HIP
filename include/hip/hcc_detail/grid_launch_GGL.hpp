@@ -19,10 +19,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+#pragma once
 
 #if GENERIC_GRID_LAUNCH == 1
     #if __hcc_workweek__ >= 17481
-        #define FUNCTIONAL_GRID_LAUNCH 1
         #include "functional_grid_launch.hpp"
     #else
         #include "macro_based_grid_launch.hpp"
