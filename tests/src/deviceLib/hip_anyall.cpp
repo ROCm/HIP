@@ -37,9 +37,9 @@ __global__ void
 	warpvote(hipLaunchParm lp, int* device_any, int* device_all , int Num_Warps_per_Block, int pshift)
 {
 
-   int tid = threadIdx.x + blockIdx.x * blockDim.x;
-   device_any[threadIdx.x>>pshift] = __any(tid -77);
-   device_all[threadIdx.x>>pshift] = __all(tid -77);
+   int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+   device_any[hipThreadIdx_x>>pshift] = __any(tid -77);
+   device_all[hipThreadIdx_x>>pshift] = __all(tid -77);
 }
 
 int main(int argc, char *argv[])

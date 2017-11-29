@@ -29,7 +29,7 @@ THE SOFTWARE.
 const int NN = 1 << 21;
 
 __global__ void kernel(hipLaunchParm lp, float *x, float *y, int n){
-	int tid = threadIdx.x;
+	int tid = hipThreadIdx_x;
 	if(tid < 1){
 		for(int i=0;i<n;i++){
 			x[i] = sqrt(powf(3.14159,i));
@@ -39,7 +39,7 @@ __global__ void kernel(hipLaunchParm lp, float *x, float *y, int n){
 }
 
 __global__ void nKernel(hipLaunchParm lp, float *y){
-	int tid = threadIdx.x;
+	int tid = hipThreadIdx_x;
 	y[tid] = y[tid] + 1.0f;
 }
 

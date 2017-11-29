@@ -57,8 +57,8 @@ vectoradd_float(hipLaunchParm lp,
              T* a, const T*  bm,  int width, int height)
 
   {
-      int x = blockDim.x * blockIdx.x + threadIdx.x;
-      int y = blockDim.y * blockIdx.y + threadIdx.y;
+      int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+      int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
 
       int i = y * width + x;
       if ( i < (width * height)) {

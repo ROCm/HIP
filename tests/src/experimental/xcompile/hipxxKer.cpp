@@ -30,7 +30,7 @@ THE SOFTWARE.
 
 __global__ void Kern(hipLaunchParm lp, float *A)
 {
-	int tx = threadIdx.x + blockIdx.x * blockDim.x;
+	int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
 	A[tx] += 1.0f;
 }
 

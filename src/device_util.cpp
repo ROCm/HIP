@@ -45,8 +45,8 @@ __device__ void *__hip_hc_malloc(size_t size)
     {
         return (void*)nullptr;
     }
-    uint32_t totalThreads = blockDim.x * gridDim.x * blockDim.y * gridDim.y * blockDim.z * gridDim.z;
-    uint32_t currentWorkItem = threadIdx.x + blockDim.x * blockIdx.x;
+    uint32_t totalThreads = hipBlockDim_x * hipGridDim_x * hipBlockDim_y * hipGridDim_y * hipBlockDim_z * hipGridDim_z;
+    uint32_t currentWorkItem = hipThreadIdx_x + hipBlockDim_x * hipBlockIdx_x;
 
     uint32_t numHeapsPerWorkItem = NUM_PAGES / totalThreads;
     uint32_t heapSizePerWorkItem = SIZE_OF_HEAP / totalThreads;

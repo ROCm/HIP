@@ -35,7 +35,7 @@ THE SOFTWARE.
 
 
 __global__ void floatMath(hipLaunchParm lp, float *In, float *Out) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
   Out[tid] = __cosf(In[tid]);
   Out[tid] = __exp10f(Out[tid]);
   Out[tid] = __expf(Out[tid]);

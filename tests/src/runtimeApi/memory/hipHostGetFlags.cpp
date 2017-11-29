@@ -33,7 +33,7 @@ THE SOFTWARE.
 #define SIZE LEN*sizeof(float)
 
 __global__ void Add(hipLaunchParm lp, float *Ad, float *Bd, float *Cd){
-int tx = threadIdx.x + blockIdx.x * blockDim.x;
+int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
 Cd[tx] = Ad[tx] + Bd[tx];
 }
 

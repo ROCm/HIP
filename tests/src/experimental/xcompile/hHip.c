@@ -29,7 +29,7 @@ THE SOFTWARE.
 
 __global__ void Add(hipLaunchParm lp, float *Ad, float *Bd, float *Cd, size_t len)
 {
-    int tx = threadIdx.x + blockIdx.x * blockDim.x;
+    int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
     if(tx < len)
     {
         Cd[tx] = Ad[tx] + Bd[tx];

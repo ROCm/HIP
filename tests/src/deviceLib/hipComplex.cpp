@@ -27,7 +27,7 @@ THE SOFTWARE.
 #define SIZE 64<<2
 
 __global__  void getSqAbs(hipLaunchParm lp, float *A, float *B, float *C){
-    int tx = threadIdx.x + blockIdx.x * blockDim.x;
+    int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
     C[tx] = hipCsqabsf(make_hipFloatComplex(A[tx], B[tx]));
 }
 
