@@ -37,6 +37,7 @@ THE SOFTWARE.
 
 #include "elfio/elfio.hpp"
 #include "hip/hip_runtime.h"
+#include "hip/hcc_detail/program_state.hpp"
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
 
