@@ -34,7 +34,7 @@ THE SOFTWARE.
 #define NUM_STREAMS 2
 
 __global__ void Iter(hipLaunchParm lp, int *Ad, int num){
-    int tx = threadIdx.x + blockIdx.x * blockDim.x;
+    int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
     // Kernel loop designed to execute very slowly... ... ...   so we can test timing-related behavior below
     if(tx == 0){
         for(int i = 0; i<num;i++){

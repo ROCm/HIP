@@ -34,7 +34,7 @@ THE SOFTWARE.
 #define SIZE 1024*1024*sizeof(int)
 
 __global__ void Iter(hipLaunchParm lp, int *Ad){
-    int tx = threadIdx.x + blockIdx.x * blockDim.x;
+    int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
     if(tx == 0){
         for(int i=0;i<ITER;i++){
             Ad[tx] += 1;

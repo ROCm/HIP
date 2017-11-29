@@ -34,12 +34,12 @@ __global__ void
 	gpu_ballot(hipLaunchParm lp, unsigned int* device_ballot, int Num_Warps_per_Block,int pshift)
 {
 
-   int tid = threadIdx.x + blockIdx.x * blockDim.x;
-   const unsigned int warp_num = threadIdx.x >> pshift;
+   int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+   const unsigned int warp_num = hipThreadIdx_x >> pshift;
 #ifdef __HIP_PLATFORM_HCC__
-   atomicAdd(&device_ballot[warp_num+blockIdx.x*Num_Warps_per_Block],__popcll(__ballot(tid - 245)));
+   atomicAdd(&device_ballot[warp_num+hipBlockIdx_x*Num_Warps_per_Block],__popcll(__ballot(tid - 245)));
 #else
-	atomicAdd(&device_ballot[warp_num+blockIdx.x*Num_Warps_per_Block],__popc(__ballot(tid - 245)));
+	atomicAdd(&device_ballot[warp_num+hipBlockIdx_x*Num_Warps_per_Block],__popc(__ballot(tid - 245)));
 #endif
 
 }

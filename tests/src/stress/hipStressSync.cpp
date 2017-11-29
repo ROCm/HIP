@@ -30,7 +30,7 @@ THE SOFTWARE.
 #define ITER 1<<10
 
 __global__ void Iter(hipLaunchParm lp, int *Ad, int num){
-    int tx = threadIdx.x + blockIdx.x * blockDim.x;
+    int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
     if(tx == 0){
         for(int i = 0; i<num;i++){
             Ad[tx] += 1;

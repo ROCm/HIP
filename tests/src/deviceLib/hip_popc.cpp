@@ -64,8 +64,8 @@ HIP_kernel(hipLaunchParm lp,
              unsigned int* a, unsigned int* b,unsigned  int* c, unsigned long long int* d, int width, int height)
   {
 
-      int x = blockDim.x * blockIdx.x + threadIdx.x;
-      int y = blockDim.y * blockIdx.y + threadIdx.y;
+      int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+      int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
 
       int i = y * width + x;
       if ( i < (width * height)) {

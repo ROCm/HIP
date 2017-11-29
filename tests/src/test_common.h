@@ -136,8 +136,8 @@ vectorADD(hipLaunchParm lp,
             T *C_d,
             size_t NELEM)
 {
-    size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
-    size_t stride = blockDim.x * gridDim.x ;
+    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    size_t stride = hipBlockDim_x * hipGridDim_x ;
 
     for (size_t i=offset; i<NELEM; i+=stride) {
         C_d[i] = A_d[i] + B_d[i];
@@ -153,8 +153,8 @@ vectorADDReverse(hipLaunchParm lp,
             T *C_d,
             size_t NELEM)
 {
-    size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
-    size_t stride = blockDim.x * gridDim.x ;
+    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    size_t stride = hipBlockDim_x * hipGridDim_x ;
 
     for (int64_t i=NELEM-stride+offset; i>=0; i-=stride) {
         C_d[i] = A_d[i] + B_d[i];
@@ -169,8 +169,8 @@ addCount( const T *A_d,
         size_t NELEM,
         int count)
 {
-    size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
-    size_t stride = blockDim.x * gridDim.x ;
+    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    size_t stride = hipBlockDim_x * hipGridDim_x ;
 
     // Deliberately do this in an inefficient way to increase kernel runtime
     for (int i=0; i<count; i++) {
@@ -188,8 +188,8 @@ addCountReverse( const T *A_d,
         int64_t NELEM,
         int count)
 {
-    size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
-    size_t stride = blockDim.x * gridDim.x ;
+    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    size_t stride = hipBlockDim_x * hipGridDim_x ;
 
     // Deliberately do this in an inefficient way to increase kernel runtime
     for (int i=0; i<count; i++) {
@@ -205,8 +205,8 @@ __global__ void
 memsetReverse( T *C_d,  T val,
         int64_t NELEM)
 {
-    size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
-    size_t stride = blockDim.x * gridDim.x ;
+    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    size_t stride = hipBlockDim_x * hipGridDim_x ;
 
     for (int64_t i=NELEM-stride+offset; i>=0; i-=stride) {
         C_d[i] = val;

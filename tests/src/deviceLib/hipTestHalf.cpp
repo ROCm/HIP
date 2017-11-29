@@ -29,7 +29,7 @@ THE SOFTWARE.
 #if __HIP_ARCH_GFX803__ || __HIP_ARCH_GFX900__
 
 __global__ void __halfMath(hipLaunchParm lp, __half *A, __half *B, __half *C) {
-  int tx = threadIdx.x;
+  int tx = hipThreadIdx_x;
   __half a = A[tx];
   __half b = B[tx];
   __half c = C[tx];
@@ -45,7 +45,7 @@ __global__ void __halfMath(hipLaunchParm lp, __half *A, __half *B, __half *C) {
 }
 
 __global__ void __half2Math(hipLaunchParm lp, __half2 *A, __half2 *B, __half2 *C) {
-  int tx = threadIdx.x;
+  int tx = hipThreadIdx_x;
   __half2 a = A[tx];
   __half2 b = B[tx];
   __half2 c = C[tx];

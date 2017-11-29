@@ -217,7 +217,7 @@ int computeGold(int *gpuData, const int len)
 __global__ void testKernel(hipLaunchParm lp,int *g_odata)
 {
     // access thread id
-    const unsigned int tid = blockDim.x * blockIdx.x + threadIdx.x;
+    const unsigned int tid = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
 
     // Test various atomic instructions
 

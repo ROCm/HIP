@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 extern "C" __global__ void hello_world(hipLaunchParm lp, float *a, float *b)
 {
-    int tx = threadIdx.x;
+    int tx = hipThreadIdx_x;
     b[tx] = a[tx];
 }
 
