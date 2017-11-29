@@ -33,7 +33,7 @@ THE SOFTWARE.
 
 __global__ void vAdd(hipLaunchParm lp, float *In1, float *In2, float *In3, float *In4, float *Out)
 {
-    int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
     In4[tid] = In1[tid] + In2[tid];
     __threadfence();
     In3[tid] = In3[tid] + In4[tid];

@@ -63,8 +63,8 @@ int enablePeers(int dev0, int dev1)
 __global__ void
 memsetIntKernel(int * ptr, const int val, size_t numElements)
 {
-    int gid = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    int stride = hipBlockDim_x * hipGridDim_x ;
+    int gid = (blockIdx.x * blockDim.x + threadIdx.x);
+    int stride = blockDim.x * gridDim.x ;
     for (size_t i= gid; i< numElements; i+=stride){
        ptr[i] = val;
     }
@@ -73,8 +73,8 @@ memsetIntKernel(int * ptr, const int val, size_t numElements)
 __global__ void
 memcpyIntKernel(const int * src, int* dst, size_t numElements)
 {
-    int gid = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    int stride = hipBlockDim_x * hipGridDim_x ;
+    int gid = (blockIdx.x * blockDim.x + threadIdx.x);
+    int stride = blockDim.x * gridDim.x ;
     for (size_t i= gid; i< numElements; i+=stride){
        dst[i] = src[i];
     }

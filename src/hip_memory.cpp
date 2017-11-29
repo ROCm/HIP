@@ -1307,9 +1307,9 @@ namespace
     __global__
     void hip_fill_n(RandomAccessIterator f, N n, T value)
     {
-        const uint32_t grid_dim = hipGridDim_x * hipBlockDim_x;
+        const uint32_t grid_dim = gridDim.x * blockDim.x;
 
-        size_t idx = hipBlockIdx_x * block_dim + hipThreadIdx_x;
+        size_t idx = blockIdx.x * block_dim + threadIdx.x;
         while (idx < n) {
             __builtin_memcpy(
                 reinterpret_cast<void*>(&f[idx]),
