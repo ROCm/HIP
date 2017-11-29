@@ -60,11 +60,11 @@ int main()
     
          
         HIPCHECK(hipSetDevice(1));
-        HIPCHECK(hipMemcpyDtoD(X_d, A_d,  Nbytes)); 
-        HIPCHECK(hipMemcpyDtoD(Y_d, B_d,  Nbytes));
+        HIPCHECK(hipMemcpyDtoD((hipDeviceptr_t)X_d, (hipDeviceptr_t)A_d,  Nbytes)); 
+        HIPCHECK(hipMemcpyDtoD((hipDeviceptr_t)Y_d, (hipDeviceptr_t)B_d,  Nbytes));
 
         hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0, X_d,Y_d, Z_d, N);
-        HIPCHECK(hipMemcpyDtoH(C_h, Z_d, Nbytes));
+        HIPCHECK(hipMemcpyDtoH(C_h, (hipDeviceptr_t)Z_d, Nbytes));
         HIPCHECK(hipDeviceSynchronize());
         HipTest::checkVectorADD(A_h, B_h, C_h, N);
 
