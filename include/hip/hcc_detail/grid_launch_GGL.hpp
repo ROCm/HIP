@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #if GENERIC_GRID_LAUNCH == 1
     #if __hcc_workweek__ >= 17481
-        #define FUNCTIONAL_GRID_LAUNCH
+        #define FUNCTIONAL_GRID_LAUNCH 1
         #include "functional_grid_launch.hpp"
     #else
         #include "macro_based_grid_launch.hpp"

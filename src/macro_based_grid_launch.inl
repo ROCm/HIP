@@ -20,8 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "hip/hcc_detail/grid_launch_GGL.hpp"
-
 // Internal header, do not percolate upwards.
 #include "hip_hcc_internal.h"
 #include "hc.hpp"
