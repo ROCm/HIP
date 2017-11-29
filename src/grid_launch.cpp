@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #include "hip/hcc_detail/grid_launch_GGL.hpp"
 
-#if defined(FUNCTIONAL_GRID_LAUNCH)
+#if __hcc_workweek__ >= 17481
     #include "functional_grid_launch.inl"
 #else
     #include "macro_based_grid_launch.inl"
