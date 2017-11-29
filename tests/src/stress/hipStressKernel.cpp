@@ -26,7 +26,7 @@ THE SOFTWARE.
 static size_t size[NUM_SIZE];
 
 __global__ void Add(hipLaunchParm lp, int *Ad){
-    int tx = threadIdx.x;
+    int tx = hipThreadIdx_x;
     Ad[tx] = Ad[tx] + tx;
 }
 

@@ -102,8 +102,8 @@ MemcpyFunction g_moduleMemcpy("memcpyInt.hsaco", "memcpyIntKernel");
 __global__ void
 memsetIntKernel(int * ptr, const int val, size_t numElements)
 {
-    int gid = (blockIdx.x * blockDim.x + threadIdx.x);
-    int stride = blockDim.x * gridDim.x ;
+    int gid = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    int stride = hipBlockDim_x * hipGridDim_x ;
     for (size_t i= gid; i< numElements; i+=stride){
        ptr[i] = val;
     }
@@ -112,8 +112,8 @@ memsetIntKernel(int * ptr, const int val, size_t numElements)
 __global__ void
 memcpyIntKernel(int *dst, const int * src, size_t numElements)
 {
-    int gid = (blockIdx.x * blockDim.x + threadIdx.x);
-    int stride = blockDim.x * gridDim.x ;
+    int gid = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+    int stride = hipBlockDim_x * hipGridDim_x ;
     for (size_t i= gid; i< numElements; i+=stride){
        dst[i] = src[i];
     }

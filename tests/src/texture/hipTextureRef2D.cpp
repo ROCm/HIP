@@ -20,8 +20,8 @@ __global__ void tex2DKernel(float* outputData,
                              int width,
                              int height)
 {
-    int x = blockIdx.x*blockDim.x + threadIdx.x;
-    int y = blockIdx.y*blockDim.y + threadIdx.y;
+    int x = hipBlockIdx_x*hipBlockDim_x + hipThreadIdx_x;
+    int y = hipBlockIdx_y*hipBlockDim_y + hipThreadIdx_y;
 #ifdef __HIP_PLATFORM_HCC__
     outputData[y*width + x] = tex2D(tex, textureObject, x, y);
 #else

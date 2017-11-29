@@ -36,7 +36,7 @@ THE SOFTWARE.
 #define SIZE LEN<<2
 
 __global__ void kernel_trig(hipLaunchParm lp, float *In, float *sin_d, float *cos_d, float *tan_d, float *sin_pd, float *cos_pd){
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
   sin_d[tid] = __sinf(In[tid]);
   cos_d[tid] = __cosf(In[tid]);
   tan_d[tid] = __tanf(In[tid]);

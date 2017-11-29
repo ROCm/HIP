@@ -31,7 +31,7 @@ THE SOFTWARE.
 
 __global__ void Kernel(hipLaunchParm lp,volatile float* hostRes)
 {
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
     hostRes[tid] = tid + 1;
     __threadfence_system();
     // expecting that the data is getting flushed to host here!

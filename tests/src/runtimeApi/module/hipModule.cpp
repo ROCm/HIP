@@ -34,7 +34,7 @@ THE SOFTWARE.
 #define kernel_name "hello_world"
 
 __global__ void Cpy(hipLaunchParm lp, float *Ad, float* Bd){
-  int tx = threadIdx.x;
+  int tx = hipThreadIdx_x;
   Bd[tx] = Ad[tx];
 }
 
