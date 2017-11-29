@@ -33,13 +33,13 @@
 #define SIZE LEN*sizeof(float)
 
 __global__ void Add(float *Ad, float *Bd, float *Cd){
-    int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+    int tx = threadIdx.x + blockIdx.x * blockDim.x;
     Cd[tx] = Ad[tx] + Bd[tx];
 }
 
 
 __global__ void Set(int *Ad, int val){
-    int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+    int tx = threadIdx.x + blockIdx.x * blockDim.x;
     Ad[tx] = val;
 }
 

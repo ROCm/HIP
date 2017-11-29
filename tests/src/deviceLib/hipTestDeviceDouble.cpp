@@ -32,72 +32,72 @@ THE SOFTWARE.
 #define SIZE N*sizeof(double)
 
 __global__ void test_sincos(hipLaunchParm lp, double* a, double* b, double *c){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     sincos(a[tid], b+tid, c+tid);
 }
 
 __global__ void test_sincospi(hipLaunchParm lp, double* a, double* b, double *c){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     sincospi(a[tid], b+tid, c+tid);
 }
 
 __global__ void test_llrint(hipLaunchParm lp, double *a, long long int *b){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     b[tid] = llrint(a[tid]);
 }
 
 __global__ void test_lrint(hipLaunchParm lp, double *a, long int *b){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     b[tid] = lrint(a[tid]);
 }
 
 __global__ void test_rint(hipLaunchParm lp, double *a, double *b){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     b[tid] = rint(a[tid]);
 }
 
 __global__ void test_llround(hipLaunchParm lp, double *a, long long int *b){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     b[tid] = llround(a[tid]);
 }
 
 __global__ void test_lround(hipLaunchParm lp, double *a, long int *b){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     b[tid] = lround(a[tid]);
 }
 
 __global__ void test_rhypot(hipLaunchParm lp, double *a, double* b, double *c){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     c[tid] = rhypot(a[tid], b[tid]);
 }
 
 __global__ void test_norm3d(hipLaunchParm lp, double *a, double* b, double *c, double *d){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     d[tid] = norm3d(a[tid], b[tid], c[tid]);
 }
 
 __global__ void test_norm4d(hipLaunchParm lp, double *a, double* b, double *c, double *d, double *e){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     e[tid] = norm4d(a[tid], b[tid], c[tid], d[tid]);
 }
 
 __global__ void test_rnorm3d(hipLaunchParm lp, double *a, double* b, double *c, double *d){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     d[tid] = rnorm3d(a[tid], b[tid], c[tid]);
 }
 
 __global__ void test_rnorm4d(hipLaunchParm lp, double *a, double* b, double *c, double *d, double *e){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     e[tid] = rnorm4d(a[tid], b[tid], c[tid], d[tid]);
 }
 
 __global__ void test_rnorm(hipLaunchParm lp, double *a, double *b){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     b[tid] = rnorm(N, a);
 }
 
 __global__ void test_erfinv(hipLaunchParm lp, double *a, double *b){
-    int tid = hipThreadIdx_x;
+    int tid = threadIdx.x;
     b[tid] = erf(erfinv(a[tid]));
 }
 

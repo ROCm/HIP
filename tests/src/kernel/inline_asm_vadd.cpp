@@ -37,7 +37,7 @@ __global__ void vadd_asm(hipLaunchParm lp,
                                 float *out,
                                 float *in)
 {
-    int i = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+    int i = blockDim.x * blockIdx.x + threadIdx.x;
 
 #ifdef __HIP_PLATFORM_NVCC__
         asm volatile("add.f32 %0,%1,%2;":"=f"(out[i]):"f"(in[i]),"f"(out[i]));
