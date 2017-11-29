@@ -35,7 +35,7 @@ THE SOFTWARE.
 
 template<typename T>
 __global__ void Inc(hipLaunchParm lp, T *Array){
-int tx = threadIdx.x + blockIdx.x * blockDim.x;
+int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
 Array[tx] = Array[tx] + T(1);
 }
 

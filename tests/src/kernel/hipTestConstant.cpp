@@ -38,7 +38,7 @@ __constant__ int Value[LEN];
 
 __global__ void Get(hipLaunchParm lp, int *Ad)
 {
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
     Ad[tid] = Value[tid];
 }
 

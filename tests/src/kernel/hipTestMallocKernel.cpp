@@ -33,12 +33,12 @@ THE SOFTWARE.
 #define SIZE NUM * 8
 
 __global__ void Alloc(hipLaunchParm lp, uint64_t *Ptr) {
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
     Ptr[tid] = (uint64_t)malloc(128);
 }
 
 __global__ void Free(hipLaunchParm lp, uint64_t *Ptr) {
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
     free((void*)Ptr[tid]);
 }
 

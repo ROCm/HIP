@@ -45,8 +45,8 @@ vectoradd_char1(hipLaunchParm lp,
              char1* a, const char1*  bm, const char1* cm, int width, int height)
 
   {
-      int x = blockDim.x * blockIdx.x + threadIdx.x;
-      int y = blockDim.y * blockIdx.y + threadIdx.y;
+      int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+      int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
 
       int i = y * width + x;
       if ( i < (width * height)) {
@@ -59,8 +59,8 @@ vectoradd_char2(hipLaunchParm lp,
              char2* a, const char2*  bm, const char2* cm, int width, int height)
 
   {
-      int x = blockDim.x * blockIdx.x + threadIdx.x;
-      int y = blockDim.y * blockIdx.y + threadIdx.y;
+      int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+      int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
 
       int i = y * width + x;
       if ( i < (width * height)) {
@@ -73,8 +73,8 @@ vectoradd_char3(hipLaunchParm lp,
              char3* a, const char3*  bm, const char3* cm, int width, int height)
 
   {
-      int x = blockDim.x * blockIdx.x + threadIdx.x;
-      int y = blockDim.y * blockIdx.y + threadIdx.y;
+      int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+      int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
 
       int i = y * width + x;
       if ( i < (width * height)) {
@@ -86,8 +86,8 @@ vectoradd_char4(hipLaunchParm lp,
              char4* a, const char4*  bm, const char4* cm, int width, int height)
 
   {
-      int x = blockDim.x * blockIdx.x + threadIdx.x;
-      int y = blockDim.y * blockIdx.y + threadIdx.y;
+      int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+      int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
 
       int i = y * width + x;
       if ( i < (width * height)) {
@@ -100,8 +100,8 @@ vectoradd_char4(hipLaunchParm lp,
 __kernel__ void vectoradd_float(float* a, const float* b, const float* c, int width, int height) {
 
 
-  int x = blockDimX * blockIdx.x + threadIdx.x;
-  int y = blockDimY * blockIdy.y + threadIdx.y;
+  int x = blockDimX * hipBlockIdx_x + hipThreadIdx_x;
+  int y = blockDimY * blockIdy.y + hipThreadIdx_y;
 
   int i = y * width + x;
   if ( i < (width * height)) {

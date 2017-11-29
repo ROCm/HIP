@@ -35,52 +35,52 @@ THE SOFTWARE.
 #define LEN12 12 * 4
 
 __global__ void MemCpy8(hipLaunchParm lp, uint8_t *In, uint8_t *Out) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
   memcpy(Out + tid*8, In + tid*8, 8);
 }
 
 __global__ void MemCpy9(hipLaunchParm lp, uint8_t *In, uint8_t *Out) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
   memcpy(Out + tid*9, In + tid*9, 9);
 }
 
 __global__ void MemCpy10(hipLaunchParm lp, uint8_t *In, uint8_t *Out) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
   memcpy(Out + tid*10, In + tid*10, 10);
 }
 
 __global__ void MemCpy11(hipLaunchParm lp, uint8_t *In, uint8_t *Out) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
   memcpy(Out + tid*11, In + tid*11, 11);
 }
 
 __global__ void MemCpy12(hipLaunchParm lp, uint8_t *In, uint8_t *Out) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
   memcpy(Out + tid*12, In + tid*12, 12);
 }
 
 __global__ void MemSet8(hipLaunchParm lp, uint8_t *In) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
   memset(In + tid*8, 1, 8);
 }
 
 __global__ void MemSet9(hipLaunchParm lp, uint8_t *In) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
   memset(In + tid*9, 1, 9);
 }
 
 __global__ void MemSet10(hipLaunchParm lp, uint8_t *In) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
   memset(In + tid*10, 1, 10);
 }
 
 __global__ void MemSet11(hipLaunchParm lp, uint8_t *In) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
   memset(In + tid*11, 1, 11);
 }
 
 __global__ void MemSet12(hipLaunchParm lp, uint8_t *In) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
   memset(In + tid*12, 1, 12);
 }
 

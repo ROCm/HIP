@@ -36,7 +36,7 @@ __device__ int globalOut[NUM];
 
 __global__ void Assign(hipLaunchParm lp, int* Out)
 {
-    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    int tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
     Out[tid] = globalIn[tid];
     globalOut[tid] = globalIn[tid];
 }

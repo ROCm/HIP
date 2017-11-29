@@ -34,7 +34,7 @@ THE SOFTWARE.
 
 __global__ void vectorAdd(hipLaunchParm lp, float *Ad, float *Bd) {
   HIP_DYNAMIC_SHARED(float, sBd);
-  int tx = threadIdx.x;
+  int tx = hipThreadIdx_x;
   for(int i=0;i<LEN/64;i++) {
     sBd[tx + i * 64] = Ad[tx + i * 64] + 1.0f;
     Bd[tx + i * 64] = sBd[tx + i * 64];
