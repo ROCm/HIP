@@ -20,7 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#if defined(FUNCTIONAL_GRID_LAUNCH)
+#include "hip/hcc_detail/grid_launch_GGL.hpp"
+
+#if !defined(FUNCTIONAL_GRID_LAUNCH)
     #include "functional_grid_launch.inl"
 #else
     #include "macro_based_grid_launch.inl"

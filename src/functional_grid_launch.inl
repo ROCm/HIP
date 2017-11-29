@@ -20,7 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "hip/hcc_detail/grid_launch_GGL.hpp"
 #include "hip/hcc_detail/program_state.hpp"
 
 #include "hip/hip_runtime_api.h"
