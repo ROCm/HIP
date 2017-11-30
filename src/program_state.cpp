@@ -288,7 +288,7 @@ namespace
                 return x->get_type() == SHT_SYMTAB;
             });
 
-            r = function_names_for(reader, symtab);
+            if (symtab) r = function_names_for(reader, symtab);
         });
 
         return r;

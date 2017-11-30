@@ -808,6 +808,26 @@ hipError_t hipHostUnregister(void *hostPtr)
     return ihipLogStatus(hip_status);
 }
 
+namespace
+{
+    inline
+    hipDeviceptr_t agent_address_for_symbol(const char* symbolName)
+    {
+        hipDeviceptr_t r = nullptr;
+
+        #if __hcc_workweek__ >= 17481
+            size_t byte_cnt = 0u;
+            hipModuleGetGlobal(&r, &byte_cnt, 0, symbolName);
+        #else
+            auto ctx = ihipGetTlsDefaultCtx();
+            auto acc = ctx->getDevice()->_acc;
+            r = acc.get_symbol_address(symbolName);
+        #endif
+
+        return r;
+    }
+}
+
 hipError_t hipMemcpyToSymbol(const void* symbolName, const void *src, size_t count, size_t offset, hipMemcpyKind kind)
 {
     HIP_INIT_SPECIAL_API((TRACE_MCMD), symbolName, src, count, offset, kind);
@@ -821,10 +841,8 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void *src, size_t cou
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    hipDeviceptr_t dst = nullptr;
-    size_t byte_cnt = 0u;
-    auto status = hipModuleGetGlobal(
-        &dst, &byte_cnt, 0, static_cast<const char*>(symbolName));
+    hipDeviceptr_t dst =
+        agent_address_for_symbol(static_cast<const char*>(symbolName));
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, dst);
 
     if(dst == nullptr)
@@ -859,10 +877,8 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count, 
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    hipDeviceptr_t src = nullptr;
-    size_t byte_cnt = 0u;
-    auto status = hipModuleGetGlobal(
-        &src, &byte_cnt, 0, static_cast<const char*>(symbolName));
+    hipDeviceptr_t src =
+        agent_address_for_symbol(static_cast<const char*>(symbolName));
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, dst);
 
     if(dst == nullptr)
@@ -899,10 +915,8 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void *src, size_
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    hipDeviceptr_t dst = nullptr;
-    size_t byte_cnt = 0u;
-    auto status = hipModuleGetGlobal(
-        &dst, &byte_cnt, 0, static_cast<const char*>(symbolName));
+    hipDeviceptr_t dst =
+        agent_address_for_symbol(static_cast<const char*>(symbolName));
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, dst);
 
     if(dst == nullptr)
@@ -940,10 +954,8 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t co
 
     hc::accelerator acc = ctx->getDevice()->_acc;
 
-    hipDeviceptr_t src = nullptr;
-    size_t byte_cnt = 0u;
-    auto status = hipModuleGetGlobal(
-        &src, &byte_cnt, 0, static_cast<const char*>(symbolName));
+    hipDeviceptr_t src =
+        agent_address_for_symbol(static_cast<const char*>(symbolName));
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, src);
 
     if(src == nullptr || dst == nullptr)

@@ -76,6 +76,8 @@ namespace hip_impl
             RandomAccessIterator l,
             Bundled_code_header& x)
         {
+            if (f == l) return false;
+
             std::copy_n(f, sizeof(x.cbuf_), x.cbuf_);
 
             if (valid(x)) {
