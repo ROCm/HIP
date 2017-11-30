@@ -10,8 +10,13 @@ We have attempted to document known bugs and limitations - in particular the [HI
 
 ===================================================================================================
 Release: 1.5
-Date: 
+Date:
+- printf support in device code
+- Support for globals when using module API
+- hipify-clang now supports using newer versions of clang
 - HIP texture support equivalent to CUDA texture driver APIs
+- Updates to hipify-perl, hipify-clang and documentation
+
 
 ===================================================================================================
 Release: 1.4
