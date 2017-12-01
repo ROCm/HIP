@@ -18,8 +18,8 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11
- * RUN: %t
+ * ZZZBUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11
+ * ZZZRUN: %t
  * HIT_END
  */
 
