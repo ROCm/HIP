@@ -69,7 +69,16 @@ int main(int argc, char *argv[])
 		// Record the start event
 		HIPCHECK (hipEventRecord(start, NULL));
 
-		hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d, B_d, C_d, N);
+		hipLaunchKernel(
+            HipTest::vectorADD,
+            dim3(blocks),
+            dim3(threadsPerBlock),
+            0,
+            0,
+            static_cast<const float*>(A_d),
+            static_cast<const float*>(B_d),
+            C_d,
+            N);
 
 
 		HIPCHECK (hipEventRecord(stop, NULL));
