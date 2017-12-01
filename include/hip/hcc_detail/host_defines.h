@@ -44,7 +44,12 @@ THE SOFTWARE.
 #if GENERIC_GRID_LAUNCH == 0
 #define __global__  __attribute__((hc_grid_launch)) __attribute__((used))
 #else
-#define __global__ __attribute__((annotate("hip__global__"), hc, used, weak))
+    #if __hcc_workweek__ >= 17481
+        #define __global__ \
+            __attribute__((annotate("__HIP_global_function__"), cpu, hc, used))
+    #else
+        #define __global__ __attribute__((hc, used))
+    #endif
 #endif //GENERIC_GRID_LAUNCH
 
 #define __noinline__      __attribute__((noinline))

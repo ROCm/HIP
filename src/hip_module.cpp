@@ -37,6 +37,7 @@ THE SOFTWARE.
 
 #include "elfio/elfio.hpp"
 #include "hip/hip_runtime.h"
+#include "hip/hcc_detail/program_state.hpp"
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
 
@@ -165,159 +166,8 @@ uint64_t ElfSize(const void *emi){
     return total_size;
 }
 
-namespace
-{
-    template<typename P>
-    inline
-    ELFIO::section* find_section_if(ELFIO::elfio& reader, P p)
-    {
-        using namespace std;
-
-        const auto it = find_if(
-            reader.sections.begin(), reader.sections.end(), move(p));
-
-        return it != reader.sections.end() ? *it : nullptr;
-    }
-
-    inline
-    std::vector<std::string> copy_names_of_undefined_symbols(
-        const ELFIO::symbol_section_accessor& section)
-    {
-        using namespace ELFIO;
-        using namespace std;
-
-        vector<string> r;
-
-        for (auto i = 0u; i != section.get_symbols_num(); ++i) {
-            // TODO: this is boyscout code, caching the temporaries
-            //       may be of worth.
-            string name;
-            Elf64_Addr value = 0;
-            Elf_Xword size = 0;
-            Elf_Half sect_idx = 0;
-            uint8_t bind = 0;
-            uint8_t type = 0;
-            uint8_t other = 0;
-
-            section.get_symbol(
-                i, name, value, size, bind, type, sect_idx, other);
-
-            if (sect_idx == SHN_UNDEF && !name.empty()) {
-                r.push_back(std::move(name));
-            }
-        }
-
-        return r;
-    }
-
-    inline
-    std::pair<ELFIO::Elf64_Addr, ELFIO::Elf_Xword> find_symbol_address(
-        const ELFIO::symbol_section_accessor& section,
-        const std::string& symbol_name)
-    {
-        using namespace ELFIO;
-        using namespace std;
-
-        static const pair<Elf64_Addr, Elf_Xword> r{0, 0};
-
-        for (auto i = 0u; i != section.get_symbols_num(); ++i) {
-            // TODO: this is boyscout code, caching the temporaries
-            //       may be of worth.
-            string name;
-            Elf64_Addr value = 0;
-            Elf_Xword size = 0;
-            Elf_Half sect_idx = 0;
-            uint8_t bind = 0;
-            uint8_t type = 0;
-            uint8_t other = 0;
-
-            section.get_symbol(
-                i, name, value, size, bind, type, sect_idx, other);
-
-            if (name == symbol_name) return make_pair(value, size);
-        }
-
-        return r;
-    }
-
-    inline
-    void associate_code_object_symbols_with_host_allocation(
-        hipModule_t module,
-        const ELFIO::elfio& reader,
-        const ELFIO::elfio& self_reader,
-        ELFIO::section* code_object_dynsym,
-        ELFIO::section* process_symtab,
-        hsa_agent_t agent,
-        hsa_executable_t executable)
-    {
-        using namespace ELFIO;
-        using namespace std;
-
-        if (!code_object_dynsym || !process_symtab) return;
-
-        const auto undefined_symbols = copy_names_of_undefined_symbols(
-            symbol_section_accessor{reader, code_object_dynsym});
-
-        for (auto&& x : undefined_symbols) {
-            const auto tmp = find_symbol_address(
-                symbol_section_accessor{self_reader, process_symtab}, x);
-
-            assert(tmp.first);
-            void* p = nullptr;
-            hsa_amd_memory_lock(
-                reinterpret_cast<void*>(tmp.first), tmp.second, &agent, 1, &p);
-
-            hsa_executable_agent_global_variable_define(
-                executable, agent, x.c_str(), p);
-
-            static vector<
-                unique_ptr<void, decltype(hsa_amd_memory_unlock)*>> globals;
-            static mutex mtx;
-
-            lock_guard<std::mutex> lck{mtx};
-            globals.emplace_back(p, hsa_amd_memory_unlock);
-            if (module->coGlobals.count(x) == 0) {
-                module->coGlobals.emplace(x, tmp.first);
-            }
-        }
-    }
-
-    inline
-    void load_code_object_and_freeze_executable(
-        const char* file, hsa_agent_t agent, hsa_executable_t executable)
-    {   // TODO: the following sequence is inefficient, should be refactored
-        //       into a single load of the file and subsequent ELFIO
-        //       processing.
-        using namespace std;
-
-        static const auto cor_deleter = [](hsa_code_object_reader_t* p) {
-            hsa_code_object_reader_destroy(*p);
-        };
-
-        using RAII_code_reader = unique_ptr<
-            hsa_code_object_reader_t, decltype(cor_deleter)>;
-
-        unique_ptr<FILE, decltype(fclose)*> cobj{fopen(file, "r"), fclose};
-        RAII_code_reader tmp{new hsa_code_object_reader_t, cor_deleter};
-        hsa_code_object_reader_create_from_file(fileno(cobj.get()), tmp.get());
-
-        hsa_executable_load_agent_code_object(
-            executable, agent, *tmp, nullptr, nullptr);
-
-        hsa_executable_freeze(executable, nullptr);
-
-        static vector<RAII_code_reader> code_readers;
-        static mutex mtx;
-
-        lock_guard<mutex> lck{mtx};
-        code_readers.push_back(move(tmp));
-    }
-}
-
 hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
 {
-    using namespace ELFIO;
-
     HIP_INIT_API(module, fname);
     hipError_t ret = hipSuccess;
     *module = new ihipModule_t;
@@ -340,37 +190,14 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
             nullptr,
             &(*module)->executable);
 
-        elfio reader;
-        if (!reader.load(fname)) {
+        std::ifstream file{fname};
+
+        if (!file.is_open()) {
             return ihipLogStatus(hipErrorFileNotFound);
         }
-        else {
-            // TODO: this may benefit from caching as well.
-            elfio self_reader;
-            self_reader.load("/proc/self/exe");
-
-            const auto symtab =
-                find_section_if(self_reader, [](const ELFIO::section* x) {
-                    return x->get_type() == SHT_SYMTAB;
-                });
-
-            const auto code_object_dynsym =
-                find_section_if(reader, [](const ELFIO::section* x) {
-                    return x->get_type() == SHT_DYNSYM;
-                });
-
-            associate_code_object_symbols_with_host_allocation(
-                *module,
-                reader,
-                self_reader,
-                code_object_dynsym,
-                symtab,
-                currentDevice->_hsaAgent,
-                (*module)->executable);
-
-            load_code_object_and_freeze_executable(
-                fname, currentDevice->_hsaAgent, (*module)->executable);
-        }
+        (*module)->executable = hip_impl::load_executable(
+            (*module)->executable, currentDevice->_hsaAgent, file);
+        ret = (*module)->executable.handle ? hipSuccess : hipErrorUnknown;
     }
 
     return ihipLogStatus(ret);
@@ -725,15 +552,92 @@ namespace
     }
 
     inline
-    std::vector<Agent_global> read_agent_globals(hipModule_t hmodule)
+    std::vector<Agent_global> read_agent_globals(
+        hsa_agent_t agent, hsa_executable_t executable)
     {
         std::vector<Agent_global> r;
 
-
         hsa_executable_iterate_agent_symbols(
-            hmodule->executable, this_agent(), copy_agent_global_variables, &r);
+            executable, agent, copy_agent_global_variables, &r);
 
         return r;
+    }
+
+    template<typename ForwardIterator>
+    std::pair<hipDeviceptr_t, std::size_t> read_global_description(
+        ForwardIterator f, ForwardIterator l, const char* name)
+    {
+        const auto it = std::find_if(
+            f, l, [=](const Agent_global& x) { return x.name == name; });
+
+        return it == l ?
+            std::make_pair(nullptr, 0u) :
+            std::make_pair(it->address, it->byte_cnt);
+    }
+
+    hipError_t read_agent_global_from_module(
+        hipDeviceptr_t *dptr,
+        size_t* bytes,
+        hipModule_t hmod,
+        const char* name)
+    {
+        static std::unordered_map<
+            hipModule_t, std::vector<Agent_global>> agent_globals;
+
+        // TODO: this is not particularly robust.
+        if (agent_globals.count(hmod) == 0) {
+            static std::mutex mtx;
+            std::lock_guard<std::mutex> lck{mtx};
+
+            if (agent_globals.count(hmod) == 0) {
+                agent_globals.emplace(
+                    hmod, read_agent_globals(this_agent(), hmod->executable));
+            }
+        }
+
+        // TODO: This is unsafe iff some other emplacement triggers rehashing.
+        //       It will have to be properly fleshed out in the future.
+        const auto it0 = agent_globals.find(hmod);
+        if (it0 == agent_globals.cend()) {
+            throw std::runtime_error{"agent_globals data structure corrupted."};
+        }
+
+        std::tie(*dptr, *bytes) = read_global_description(
+            it0->second.cbegin(), it0->second.cend(), name);
+
+        return dptr ? hipSuccess : hipErrorNotFound;
+    }
+
+    hipError_t read_agent_global_from_process(
+        hipDeviceptr_t *dptr, size_t* bytes, const char* name)
+    {
+        static std::unordered_map<
+            hsa_agent_t, std::vector<Agent_global>> agent_globals;
+        static std::once_flag f;
+
+        std::call_once(f, []() {
+            for (auto&& agent_executables : hip_impl::executables()) {
+                std::vector<Agent_global> tmp0;
+                for (auto&& executable : agent_executables.second) {
+                    auto tmp1 = read_agent_globals(
+                        agent_executables.first, executable);
+                    tmp0.insert(
+                        tmp0.end(),
+                        std::make_move_iterator(tmp1.begin()),
+                        std::make_move_iterator(tmp1.end()));
+                }
+                agent_globals.emplace(agent_executables.first, std::move(tmp0));
+            }
+        });
+
+        const auto it = agent_globals.find(this_agent());
+
+        if (it == agent_globals.cend()) return hipErrorNotInitialized;
+
+        std::tie(*dptr, *bytes) = read_global_description(
+            it->second.cbegin(), it->second.cend(), name);
+
+        return dptr ? hipSuccess : hipErrorNotFound;
     }
 }
 
@@ -745,41 +649,15 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes,
     if(dptr == NULL || bytes == NULL){
         return ihipLogStatus(hipErrorInvalidValue);
     }
-    if(name == NULL || hmod == NULL){
+    if(name == NULL){
         return ihipLogStatus(hipErrorNotInitialized);
     }
     else{
-        static std::unordered_map<
-            hipModule_t, std::vector<Agent_global>> agent_globals;
+        ret = hmod ?
+            read_agent_global_from_module(dptr, bytes, hmod, name) :
+            read_agent_global_from_process(dptr, bytes, name);
 
-        // TODO: this is not particularly robust.
-        if (agent_globals.count(hmod) == 0) {
-            static std::mutex mtx;
-            std::lock_guard<std::mutex> lck{mtx};
-
-            if (agent_globals.count(hmod) == 0) {
-                agent_globals.emplace(hmod, read_agent_globals(hmod));
-            }
-        }
-
-        // TODO: This is unsafe iff some other emplacement triggers rehashing.
-        //       It will have to be properly fleshed out in the future.
-        const auto it0 = agent_globals.find(hmod);
-        if (it0 == agent_globals.cend()) {
-            throw std::runtime_error{"agent_globals data structure corrupted."};
-        }
-
-        const auto it1 = std::find_if(
-            it0->second.cbegin(),
-            it0->second.cend(),
-            [=](const Agent_global& x) { return x.name == name; });
-
-        if (it1 == it0->second.cend()) return ihipLogStatus(hipErrorNotFound);
-
-        *dptr = it1->address;
-        *bytes = it1->byte_cnt;
-
-        return ihipLogStatus(hipSuccess);
+        return ihipLogStatus(ret);
     }
 }
 
@@ -848,9 +726,9 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
         if(name == NULL || hmod == NULL){
             ret = hipErrorNotInitialized;
         } else{
-            const auto it = hmod->coGlobals.find(name);
-		    if (it == hmod->coGlobals.end()) return ihipLogStatus(hipErrorInvalidValue);
-		    *texRef = reinterpret_cast<textureReference*>(it->second);
+            const auto it = hip_impl::globals().find(name);
+		    if (it == hip_impl::globals().end()) return ihipLogStatus(hipErrorInvalidValue);
+		    *texRef = reinterpret_cast<textureReference*>(it->second.get());
             ret = hipSuccess;
         }
     }

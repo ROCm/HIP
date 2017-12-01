@@ -28,27 +28,6 @@ extern "C" float __ocml_rint_f32(float);
 extern "C" float __ocml_ceil_f32(float);
 extern "C" float __ocml_trunc_f32(float);
 
-struct holder64Bit{
-  union{
-    double d;
-    unsigned long int uli;
-    signed long int sli;
-    signed int si[2];
-    unsigned int ui[2];
-  };
-} __attribute__((aligned(8)));
-
-struct holder32Bit {
-  union {
-    float f;
-    unsigned int ui;
-    signed int si;
-  };
-} __attribute__((aligned(4)));
-
-__device__ struct holder64Bit hold64;
-__device__ struct holder32Bit hold32;
-
 __device__ float __double2float_rd(double x)
 {
   return (double)x;
@@ -69,13 +48,21 @@ __device__ float __double2float_rz(double x)
 
 __device__ int __double2hiint(double x)
 {
-  hold64.d = x;
-  return hold64.si[1];
+  static_assert(sizeof(double) == 2 * sizeof(int), "");
+
+  int tmp[2];
+  __builtin_memcpy(tmp, &x, sizeof(tmp));
+
+  return tmp[1];
 }
 __device__ int __double2loint(double x)
 {
-  hold64.d = x;
-  return hold64.si[0];
+  static_assert(sizeof(double) == 2 * sizeof(int), "");
+
+  int tmp[2];
+  __builtin_memcpy(tmp, &x, sizeof(tmp));
+
+  return tmp[0];
 }
 
 
@@ -150,8 +137,12 @@ __device__ unsigned long long int __double2ull_rz(double x)
 
 __device__ long long int __double_as_longlong(double x)
 {
-  hold64.d = x;
-  return hold64.sli;
+  static_assert(sizeof(long long) == sizeof(double), "");
+
+  long long tmp;
+  __builtin_memcpy(&tmp, &x, sizeof(tmp));
+
+  return tmp;
 }
 
 __device__ int __float2int_rd(float x)
@@ -224,19 +215,32 @@ __device__ unsigned long long int __float2ull_rz(float x)
 
 __device__ int __float_as_int(float x)
 {
-  hold32.f = x;
-  return hold32.si;
+  static_assert(sizeof(int) == sizeof(float), "");
+
+  int tmp;
+  __builtin_memcpy(&tmp, &x, sizeof(tmp));
+
+  return tmp;
 }
 __device__ unsigned int __float_as_uint(float x)
 {
-  hold32.f = x;
-  return hold32.ui;
+  static_assert(sizeof(unsigned int) == sizeof(float), "");
+
+  unsigned int tmp;
+  __builtin_memcpy(&tmp, &x, sizeof(tmp));
+
+  return tmp;
 }
-__device__ double __hiloint2double(int hi, int lo)
+__device__ double __hiloint2double(int32_t hi, int32_t lo)
 {
-  hold64.si[1] = hi;
-  hold64.si[0] = lo;
-  return hold64.d;
+  static_assert(sizeof(double) == sizeof(uint64_t), "");
+
+  uint64_t tmp0 =
+    (static_cast<uint64_t>(hi) << 32ull) | static_cast<uint32_t>(lo);
+  double tmp1;
+  __builtin_memcpy(&tmp1, &tmp0, sizeof(tmp0));
+
+  return tmp1;
 }
 __device__ double __int2double_rn(int x)
 {
@@ -262,8 +266,12 @@ __device__ float __int2float_rz(int x)
 
 __device__ float __int_as_float(int x)
 {
-  hold32.si = x;
-  return hold32.f;
+  static_assert(sizeof(float) == sizeof(int), "");
+
+  float tmp;
+  __builtin_memcpy(&tmp, &x, sizeof(tmp));
+
+  return tmp;
 }
 
 __device__ double __ll2double_rd(long long int x)
@@ -302,8 +310,12 @@ __device__ float __ll2float_rz(long long int x)
 
 __device__ double __longlong_as_double(long long int x)
 {
-  hold64.sli = x;
-  return hold64.d;
+  static_assert(sizeof(double) == sizeof(long long), "");
+
+  double tmp;
+  __builtin_memcpy(&tmp, &x, sizeof(tmp));
+
+  return x;
 }
 
 __device__ double __uint2double_rn(int x)
@@ -330,8 +342,12 @@ __device__ float __uint2float_rz(unsigned int x)
 
 __device__ float __uint_as_float(unsigned int x)
 {
-  hold32.ui = x;
-  return hold32.f;
+  static_assert(sizeof(float) == sizeof(unsigned int), "");
+
+  float tmp;
+  __builtin_memcpy(&tmp, &x, sizeof(tmp));
+
+  return tmp;
 }
 
 __device__ double __ull2double_rd(unsigned long long int x)

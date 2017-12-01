@@ -248,7 +248,7 @@ static const DbName dbName [] =
 #if COMPILE_HIP_DB
 #define tprintf(trace_level, ...) {\
     if (HIP_DB & (1<<(trace_level))) {\
-        char msgStr[1000];\
+        char msgStr[2000];\
         snprintf(msgStr, 2000, __VA_ARGS__);\
         fprintf (stderr, "  %ship-%s tid:%d:%s%s", dbName[trace_level]._color, dbName[trace_level]._shortName, tls_tidInfo.tid(), msgStr, KNRM); \
     }\
