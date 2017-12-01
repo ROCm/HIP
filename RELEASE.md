@@ -11,7 +11,15 @@ We have attempted to document known bugs and limitations - in particular the [HI
 ===================================================================================================
 Release: 1.5
 Date:
-- printf support in device code
+- Support threadIdx, blockIdx, blockDim directly (no need for hipify conversions in kernels.)  HIP
+  Kernel syntax is now identical to CUDA kernel syntax - no need for extra parms or conversions.
+- Refactor launch syntax.  HIP now extracts kernels from the executable and launches them using the 
+  existing module interface.  Kernels dispatch no longer flows through HCC.  Result is faster
+  kernel launches and with less resource usage (no signals required). 
+- Remove requirement for manual "serializers" previously required when passing complex structures
+  into kernels.
+- Remove need for manual destructors
+- Provide printf in device code
 - Support for globals when using module API
 - hipify-clang now supports using newer versions of clang
 - HIP texture support equivalent to CUDA texture driver APIs
