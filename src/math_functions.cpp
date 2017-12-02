@@ -96,7 +96,7 @@ __device__ float erff(float x)
 }
 __device__ float erfinvf(float y)
 {
-    return hc::precise_math::erfinvf(y);//__hip_erfinvf(y);
+    return hc::precise_math::erfinvf(y);
 }
 __device__ float exp10f(float x)
 {
