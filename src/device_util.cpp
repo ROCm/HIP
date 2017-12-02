@@ -147,91 +147,11 @@ __device__ void* __hip_hc_memset(void* dst, uint8_t val, size_t size)
 }
 
 __device__ float __hip_erfinvf(float x){
-    float ret;
-    int  sign;
-    if (x < -1 || x > 1){
-        return NAN;
-    }
-    if (x == 0){
-        return 0;
-    }
-    if (x > 0){
-        sign = 1;
-    } else {
-        sign = -1;
-        x = -x;
-    }
-    if (x <= 0.7) {
-        float x1 = x * x;
-        float x2 = __hip_erfinva3 * x1 + __hip_erfinva2;
-        float x3 = x2 * x1 + __hip_erfinva1;
-        float x4 = x * (x3 * x1 + __hip_erfinva0);
-
-        float r1 = __hip_erfinvb4 * x1 + __hip_erfinvb3;
-        float r2 = r1 * x1 + __hip_erfinvb2;
-        float r3 = r2 * x1 + __hip_erfinvb1;
-        ret = x4 / (r3 * x1 + __hip_erfinvb0);
-    } else {
-        float x1 = hc::precise_math::sqrtf(-hc::precise_math::logf((1 - x) / 2));
-        float x2 = __hip_erfinvc3 * x1 + __hip_erfinvc2;
-        float x3 = x2 * x1 + __hip_erfinvc1;
-        float x4 = x3 * x1 + __hip_erfinvc0;
-
-        float r1 = __hip_erfinvd2 * x1 + __hip_erfinvd1;
-        ret = x4 / (r1 * x1 + __hip_erfinvd0);
-    }
-
-    ret = ret * sign;
-    x = x * sign;
-
-    ret -= (hc::precise_math::erff(ret) - x) / (2 / HIP_SQRT_PI * hc::precise_math::expf(-ret * ret));
-    ret -= (hc::precise_math::erff(ret) - x) / (2 / HIP_SQRT_PI * hc::precise_math::expf(-ret * ret));
-
-    return ret;
+    return hc::precise_math::erfinvf(x);
 }
 
 __device__ double __hip_erfinv(double x){
-    double ret;
-    int  sign;
-    if (x < -1 || x > 1){
-        return NAN;
-    }
-    if (x == 0){
-        return 0;
-    }
-    if (x > 0){
-        sign = 1;
-    } else {
-        sign = -1;
-        x = -x;
-    }
-    if (x <= 0.7) {
-        double x1 = x * x;
-        double x2 = __hip_erfinva3 * x1 + __hip_erfinva2;
-        double x3 = x2 * x1 + __hip_erfinva1;
-        double x4 = x * (x3 * x1 + __hip_erfinva0);
-
-        double r1 = __hip_erfinvb4 * x1 + __hip_erfinvb3;
-        double r2 = r1 * x1 + __hip_erfinvb2;
-        double r3 = r2 * x1 + __hip_erfinvb1;
-        ret = x4 / (r3 * x1 + __hip_erfinvb0);
-    } else {
-        double x1 = hc::precise_math::sqrt(-hc::precise_math::log((1 - x) / 2));
-        double x2 = __hip_erfinvc3 * x1 + __hip_erfinvc2;
-        double x3 = x2 * x1 + __hip_erfinvc1;
-        double x4 = x3 * x1 + __hip_erfinvc0;
-
-        double r1 = __hip_erfinvd2 * x1 + __hip_erfinvd1;
-        ret = x4 / (r1 * x1 + __hip_erfinvd0);
-    }
-
-    ret = ret * sign;
-    x = x * sign;
-
-    ret -= (hc::precise_math::erf(ret) - x) / (2 / HIP_SQRT_PI * hc::precise_math::exp(-ret * ret));
-    ret -= (hc::precise_math::erf(ret) - x) / (2 / HIP_SQRT_PI * hc::precise_math::exp(-ret * ret));
-
-    return ret;
+    return hc::precise_math::erfinv(x);
 }
 
 #define __hip_j0a1 57568490574.0
