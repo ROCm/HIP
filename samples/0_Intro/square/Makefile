@@ -1,20 +1,17 @@
 HIP_PATH?= $(wildcard /opt/rocm/hip)
 HIPCC=$(HIP_PATH)/bin/hipcc
 
-all: square.hip.out
+all: square.out
 
+# Step
+square.cpp:
+	$(HIP_PATH)/bin/hipify-perl square.cu > square.cpp
+
+square.out: square.cpp
+	$(HIPCC) $(CXXFLAGS) square.cpp -o $@
+
+# make step to make native cuda app, if on cuda machine
 square.cuda.out : square.cu
 	nvcc square.cu -o $@
-
-#hipify square.cu > square.cpp
-# Then review & finish port in square.cpp
-#
-
-square.hip.out: square.hipref.cpp
-	$(HIPCC) $(CXXFLAGS) square.hipref.cpp -o $@
-
-
-
-
 clean:
 	rm -f *.o *.out	
