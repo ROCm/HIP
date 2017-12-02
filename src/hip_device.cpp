@@ -446,14 +446,14 @@ hipError_t hipChooseDevice( int* device, const hipDeviceProp_t* prop )
 {
     HIP_INIT_API(device,prop);
     hipDeviceProp_t  tempProp;
-    int deviceCount;
-    int inPropCount = 0;
-    int matchedPropCount = 0;
     hipError_t e = hipSuccess;
     if((device == NULL) || (prop == NULL)) {
         e = hipErrorInvalidValue;
     }
     if(e == hipSuccess) {
+        int deviceCount;
+        int inPropCount = 0;
+        int matchedPropCount = 0;
         ihipGetDeviceCount( &deviceCount );
         *device = 0;
         for (int i = 0; i < deviceCount; i++) {
