@@ -80,5 +80,7 @@ namespace hip_impl
     std::unordered_map<std::string, RAII_global>& globals();
 
     hsa_executable_t load_executable(
-        hsa_executable_t executable, hsa_agent_t agent, std::istream& file);
+        const std::string& file,
+        hsa_executable_t executable,
+        hsa_agent_t agent);
 } // Namespace hip_impl.
