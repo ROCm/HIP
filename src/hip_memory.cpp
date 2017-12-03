@@ -44,7 +44,7 @@ hipError_t memcpyAsync (void* dst, const void* src, size_t sizeBytes, hipMemcpyK
         try {
             stream->locked_copyAsync(dst, src, sizeBytes, kind);
         }
-        catch (ihipException ex) {
+        catch (ihipException &ex) {
             e = ex._code;
         }
     } else {
@@ -928,7 +928,7 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void *src, size_
         try {
           stream->lockedSymbolCopyAsync(acc, dst, (void*)src, count, offset, kind);
         }
-        catch (ihipException ex) {
+        catch (ihipException &ex) {
             e = ex._code;
         }
     } else {
@@ -968,7 +968,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t co
         try {
           stream->lockedSymbolCopyAsync(acc, dst, src, count, offset, kind);
         }
-        catch (ihipException ex) {
+        catch (ihipException &ex) {
             e = ex._code;
         }
     } else {
@@ -993,7 +993,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 
         stream->locked_copySync(dst, src, sizeBytes, kind);
     }
-    catch (ihipException ex) {
+    catch (ihipException &ex) {
         e = ex._code;
     }
 
@@ -1015,7 +1015,7 @@ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes)
 
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyHostToDevice, false);
     }
-    catch (ihipException ex) {
+    catch (ihipException &ex) {
         e = ex._code;
     }
 
@@ -1037,7 +1037,7 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes)
 
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyDeviceToHost, false);
     }
-    catch (ihipException ex) {
+    catch (ihipException &ex) {
         e = ex._code;
     }
 
@@ -1059,7 +1059,7 @@ hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeByte
 
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyDeviceToDevice, false);
     }
-    catch (ihipException ex) {
+    catch (ihipException &ex) {
         e = ex._code;
     }
 
@@ -1081,7 +1081,7 @@ hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes)
 
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyHostToHost, false);
     }
-    catch (ihipException ex) {
+    catch (ihipException &ex) {
         e = ex._code;
     }
 
@@ -1140,7 +1140,7 @@ hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch
             stream->locked_copySync((unsigned char*)dst + i*dpitch, (unsigned char*)src + i*spitch, width, kind);
         }
     }
-    catch (ihipException ex) {
+    catch (ihipException &ex) {
         e = ex._code;
     }
 
@@ -1178,7 +1178,7 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
             e = hip_internal::memcpyAsync((unsigned char*)dst + i*dpitch, (unsigned char*)src + i*spitch, width, kind,stream);
         }
     }
-    catch (ihipException ex) {
+    catch (ihipException &ex) {
         e = ex._code;
     }
 
@@ -1231,7 +1231,7 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
             stream->locked_copySync((unsigned char*)dst->data + i*dst_w, (unsigned char*)src + i*src_w, width, kind);
         }
     }
-    catch (ihipException ex) {
+    catch (ihipException &ex) {
         e = ex._code;
     }
 
@@ -1252,7 +1252,7 @@ hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset,
     try {
         stream->locked_copySync((char *)dst->data + wOffset, src, count, kind);
     }
-    catch (ihipException ex) {
+    catch (ihipException &ex) {
         e = ex._code;
     }
 
@@ -1302,7 +1302,7 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms *p)
 			}
         }
     }
-    catch (ihipException ex) {
+    catch (ihipException &ex) {
         e = ex._code;
     }
 
@@ -1744,8 +1744,9 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr){
         am_status_t status = hc::am_memtracker_getinfo( &amPointerInfo , devPtr );
         if (status == AM_SUCCESS) {
             psize = (size_t)amPointerInfo._sizeBytes;
-        } else
+        } else {
             hipStatus = hipErrorInvalidResourceHandle;
+        }
         ihipIpcMemHandle_t* iHandle = (ihipIpcMemHandle_t*) handle;
         // Save the size of the pointer to hipIpcMemHandle
         iHandle->psize = psize;
