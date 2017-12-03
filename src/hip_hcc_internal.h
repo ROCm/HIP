@@ -248,8 +248,8 @@ static const DbName dbName [] =
 #if COMPILE_HIP_DB
 #define tprintf(trace_level, ...) {\
     if (HIP_DB & (1<<(trace_level))) {\
-        char msgStr[2000];\
-        snprintf(msgStr, 2000, __VA_ARGS__);\
+        char msgStr[1000];\
+        snprintf(msgStr, sizeof(msgStr), __VA_ARGS__);\
         fprintf (stderr, "  %ship-%s tid:%d:%s%s", dbName[trace_level]._color, dbName[trace_level]._shortName, tls_tidInfo.tid(), msgStr, KNRM); \
     }\
 }
@@ -269,7 +269,7 @@ extern uint64_t recordApiTrace(std::string *fullStr, const std::string &apiStr);
 
 #if COMPILE_HIP_ATP_MARKER || (COMPILE_HIP_TRACE_API & 0x1)
 #define API_TRACE(forceTrace, ...)\
-uint64_t hipApiStartTick;\
+uint64_t hipApiStartTick=0;\
 {\
     tls_tidInfo.incApiSeqNum();\
     if (forceTrace || (HIP_PROFILE_API || (COMPILE_HIP_DB && (HIP_TRACE_API & (1<<TRACE_ALL))))) {\
@@ -339,7 +339,7 @@ uint64_t hipApiStartTick;\
 class ihipException : public std::exception
 {
 public:
-    ihipException(hipError_t e) : _code(e) {};
+    explicit ihipException(hipError_t e) : _code(e) {};
 
     hipError_t _code;
 };
@@ -669,7 +669,7 @@ template <typename MUTEX_TYPE>
 class ihipEventCriticalBase_t : LockedBase<MUTEX_TYPE>
 {
 public:
-    ihipEventCriticalBase_t(const ihipEvent_t *parentEvent) :
+    explicit ihipEventCriticalBase_t(const ihipEvent_t *parentEvent) :
         _parent(parentEvent)
     {}
     ~ihipEventCriticalBase_t() {};
@@ -690,7 +690,7 @@ typedef LockedAccessor<ihipEventCritical_t> LockedAccessor_EventCrit_t;
 // internal hip event structure.
 class ihipEvent_t {
 public:
-    ihipEvent_t(unsigned flags);
+    explicit ihipEvent_t(unsigned flags);
     void attachToCompletionFuture(const hc::completion_future *cf, hipStream_t stream, ihipEventType_t eventType);
     std::pair<hipEventStatus_t, uint64_t> refreshEventStatus(); // returns pair <state, timestamp>
 
@@ -720,8 +720,9 @@ template <typename MUTEX_TYPE>
 class ihipDeviceCriticalBase_t : LockedBase<MUTEX_TYPE>
 {
 public:
-    ihipDeviceCriticalBase_t(ihipDevice_t *parentDevice) :
-        _parent(parentDevice)
+    explicit ihipDeviceCriticalBase_t(ihipDevice_t *parentDevice) :
+        _parent(parentDevice),
+        _ctxCount(0)
     {
     };
 
