@@ -47,57 +47,55 @@ THE SOFTWARE.
 #include <utility>
 #include <vector>
 
-//TODO Use Pool APIs from HCC to get memory regions.
+// TODO Use Pool APIs from HCC to get memory regions.
 
 using namespace ELFIO;
 using namespace hip_impl;
 using namespace std;
 
 inline uint64_t alignTo(uint64_t Value, uint64_t Align, uint64_t Skew = 0) {
-  assert(Align != 0u && "Align can't be 0.");
-  Skew %= Align;
-  return (Value + Align - 1 - Skew) / Align * Align + Skew;
+    assert(Align != 0u && "Align can't be 0.");
+    Skew %= Align;
+    return (Value + Align - 1 - Skew) / Align * Align + Skew;
 }
 
 
-struct ihipKernArgInfo{
-  vector<uint32_t> Size;
-  vector<uint32_t> Align;
-  vector<string> ArgType;
-  vector<string> ArgName;
-  uint32_t totalSize;
+struct ihipKernArgInfo {
+    vector<uint32_t> Size;
+    vector<uint32_t> Align;
+    vector<string> ArgType;
+    vector<string> ArgName;
+    uint32_t totalSize;
 };
 
 map<string, ihipKernArgInfo> kernelArguments;
 
-struct ihipModuleSymbol_t{
-    uint64_t _object;             // The kernel object.
+struct ihipModuleSymbol_t {
+    uint64_t _object;  // The kernel object.
     uint32_t _groupSegmentSize;
     uint32_t _privateSegmentSize;
-    string   _name;       // TODO - review for performance cost.  Name is just used for debug.
+    string _name;  // TODO - review for performance cost.  Name is just used for debug.
 };
 
 template <>
-string ToString(hipFunction_t v)
-{
+string ToString(hipFunction_t v) {
     std::ostringstream ss;
     ss << "0x" << std::hex << v->_object;
     return ss.str();
 };
 
 
-#define CHECK_HSA(hsaStatus, hipStatus) \
-if (hsaStatus != HSA_STATUS_SUCCESS) {\
-    return hipStatus;\
-}
+#define CHECK_HSA(hsaStatus, hipStatus)                                                            \
+    if (hsaStatus != HSA_STATUS_SUCCESS) {                                                         \
+        return hipStatus;                                                                          \
+    }
 
-#define CHECKLOG_HSA(hsaStatus, hipStatus) \
-if (hsaStatus != HSA_STATUS_SUCCESS) {\
-    return ihipLogStatus(hipStatus);\
-}
+#define CHECKLOG_HSA(hsaStatus, hipStatus)                                                         \
+    if (hsaStatus != HSA_STATUS_SUCCESS) {                                                         \
+        return ihipLogStatus(hipStatus);                                                           \
+    }
 
-hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
-{
+hipError_t hipModuleLoad(hipModule_t* module, const char* fname) {
     HIP_INIT_API(module, fname);
 
     if (!fname) return ihipLogStatus(hipErrorInvalidValue);
@@ -106,15 +104,13 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
 
     if (!file.is_open()) return ihipLogStatus(hipErrorFileNotFound);
 
-    vector<char> tmp{
-        istreambuf_iterator<char>{file}, istreambuf_iterator<char>{}};
+    vector<char> tmp{istreambuf_iterator<char>{file}, istreambuf_iterator<char>{}};
 
     return hipModuleLoadData(module, tmp.data());
 }
 
 
-hipError_t hipModuleUnload(hipModule_t hmod)
-{
+hipError_t hipModuleUnload(hipModule_t hmod) {
     HIP_INIT_API(hmod);
 
     // TODO - improve this synchronization so it is thread-safe.
@@ -122,74 +118,75 @@ hipError_t hipModuleUnload(hipModule_t hmod)
     // thread from launching new kernels before we finish this operation.
     ihipSynchronize();
 
-    delete hmod; // The ihipModule_t dtor will clean everything up.
+    delete hmod;  // The ihipModule_t dtor will clean everything up.
     hmod = nullptr;
 
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t ihipModuleLaunchKernel(hipFunction_t f,
-                                  uint32_t globalWorkSizeX, uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
-                                  uint32_t localWorkSizeX, uint32_t localWorkSizeY, uint32_t localWorkSizeZ,
-                                  size_t sharedMemBytes, hipStream_t hStream,
-                                  void **kernelParams, void **extra,
-                                  hipEvent_t startEvent, hipEvent_t stopEvent)
-{
-
+hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
+                                  uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
+                                  uint32_t localWorkSizeX, uint32_t localWorkSizeY,
+                                  uint32_t localWorkSizeZ, size_t sharedMemBytes,
+                                  hipStream_t hStream, void** kernelParams, void** extra,
+                                  hipEvent_t startEvent, hipEvent_t stopEvent) {
     auto ctx = ihipGetTlsDefaultCtx();
     hipError_t ret = hipSuccess;
 
-    if(ctx == nullptr){
+    if (ctx == nullptr) {
         ret = hipErrorInvalidDevice;
 
-    }else{
+    } else {
         int deviceId = ctx->getDevice()->_deviceId;
-        ihipDevice_t *currentDevice = ihipGetDevice(deviceId);
+        ihipDevice_t* currentDevice = ihipGetDevice(deviceId);
         hsa_agent_t gpuAgent = (hsa_agent_t)currentDevice->_hsaAgent;
 
-        void *config[5] = {0};
+        void* config[5] = {0};
         size_t kernArgSize;
 
-        if(kernelParams != NULL){
-          std::string name = f->_name;
-          struct ihipKernArgInfo pl = kernelArguments[name];
-          char* argBuf = (char*)malloc(pl.totalSize);
-          memset(argBuf, 0, pl.totalSize);
-          int index = 0;
-          for(int i=0;i<pl.Size.size();i++){
-            memcpy(argBuf + index, kernelParams[i], pl.Size[i]);
-            index += pl.Align[i];
-          }
-          config[1] = (void*)argBuf;
-          kernArgSize = pl.totalSize;
-        } else if(extra != NULL){
-            memcpy(config, extra, sizeof(size_t)*5);
-            if(config[0] == HIP_LAUNCH_PARAM_BUFFER_POINTER && config[2] == HIP_LAUNCH_PARAM_BUFFER_SIZE && config[4] == HIP_LAUNCH_PARAM_END){
+        if (kernelParams != NULL) {
+            std::string name = f->_name;
+            struct ihipKernArgInfo pl = kernelArguments[name];
+            char* argBuf = (char*)malloc(pl.totalSize);
+            memset(argBuf, 0, pl.totalSize);
+            int index = 0;
+            for (int i = 0; i < pl.Size.size(); i++) {
+                memcpy(argBuf + index, kernelParams[i], pl.Size[i]);
+                index += pl.Align[i];
+            }
+            config[1] = (void*)argBuf;
+            kernArgSize = pl.totalSize;
+        } else if (extra != NULL) {
+            memcpy(config, extra, sizeof(size_t) * 5);
+            if (config[0] == HIP_LAUNCH_PARAM_BUFFER_POINTER &&
+                config[2] == HIP_LAUNCH_PARAM_BUFFER_SIZE && config[4] == HIP_LAUNCH_PARAM_END) {
                 kernArgSize = *(size_t*)(config[3]);
             } else {
                 return hipErrorNotInitialized;
             }
 
-        }else{
+        } else {
             return hipErrorInvalidValue;
         }
-
 
 
         /*
           Kernel argument preparation.
         */
         grid_launch_parm lp;
-        lp.dynamic_group_mem_bytes = sharedMemBytes;  // TODO - this should be part of preLaunchKernel.
-        hStream = ihipPreLaunchKernel(hStream, dim3(globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ), dim3(localWorkSizeX, localWorkSizeY, localWorkSizeZ), &lp, f->_name.c_str());
+        lp.dynamic_group_mem_bytes =
+            sharedMemBytes;  // TODO - this should be part of preLaunchKernel.
+        hStream = ihipPreLaunchKernel(
+            hStream, dim3(globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ),
+            dim3(localWorkSizeX, localWorkSizeY, localWorkSizeZ), &lp, f->_name.c_str());
 
 
         hsa_kernel_dispatch_packet_t aql;
 
         memset(&aql, 0, sizeof(aql));
 
-        //aql.completion_signal._handle = 0;
-        //aql.kernarg_address = 0;
+        // aql.completion_signal._handle = 0;
+        // aql.kernarg_address = 0;
 
         aql.workgroup_size_x = localWorkSizeX;
         aql.workgroup_size_y = localWorkSizeY;
@@ -201,8 +198,9 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
         aql.private_segment_size = f->_privateSegmentSize;
         aql.kernel_object = f->_object;
         aql.setup = 3 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
-        aql.header =   (HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE) |
-                       (1 << HSA_PACKET_HEADER_BARRIER);  // TODO - honor queue setting for execute_in_order
+        aql.header =
+            (HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE) |
+            (1 << HSA_PACKET_HEADER_BARRIER);  // TODO - honor queue setting for execute_in_order
 
         if (HCC_OPT_FLUSH) {
             aql.header |= (HSA_FENCE_SCOPE_AGENT << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
@@ -216,24 +214,24 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
         hc::completion_future cf;
 
         lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize,
-                                  (startEvent || stopEvent) ? &cf : nullptr
+                                   (startEvent || stopEvent) ? &cf : nullptr
 #if (__hcc_workweek__ > 17312)
-                                  , f->_name.c_str()
+                                   ,
+                                   f->_name.c_str()
 #endif
-                                  );
-
+        );
 
 
         if (startEvent) {
             startEvent->attachToCompletionFuture(&cf, hStream, hipEventTypeStartCommand);
         }
         if (stopEvent) {
-            stopEvent->attachToCompletionFuture (&cf, hStream, hipEventTypeStopCommand);
+            stopEvent->attachToCompletionFuture(&cf, hStream, hipEventTypeStopCommand);
         }
 
 
-        if(kernelParams != NULL){
-          free(config[1]);
+        if (kernelParams != NULL) {
+            free(config[1]);
         }
         ihipPostLaunchKernel(f->_name.c_str(), hStream, lp);
     }
@@ -241,243 +239,192 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
     return ret;
 }
 
-hipError_t hipModuleLaunchKernel(hipFunction_t f,
-            uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
-            uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
-            uint32_t sharedMemBytes, hipStream_t hStream,
-            void **kernelParams, void **extra)
-{
-    HIP_INIT_API(f, gridDimX, gridDimY, gridDimZ,
-                 blockDimX, blockDimY, blockDimZ,
-                 sharedMemBytes, hStream,
-                 kernelParams, extra);
-    return ihipLogStatus(ihipModuleLaunchKernel(f,
-                blockDimX * gridDimX, blockDimY * gridDimY, gridDimZ * blockDimZ,
-                blockDimX, blockDimY, blockDimZ,
-                sharedMemBytes, hStream, kernelParams, extra,
-                nullptr, nullptr));
+hipError_t hipModuleLaunchKernel(hipFunction_t f, uint32_t gridDimX, uint32_t gridDimY,
+                                 uint32_t gridDimZ, uint32_t blockDimX, uint32_t blockDimY,
+                                 uint32_t blockDimZ, uint32_t sharedMemBytes, hipStream_t hStream,
+                                 void** kernelParams, void** extra) {
+    HIP_INIT_API(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ, sharedMemBytes,
+                 hStream, kernelParams, extra);
+    return ihipLogStatus(ihipModuleLaunchKernel(
+        f, blockDimX * gridDimX, blockDimY * gridDimY, gridDimZ * blockDimZ, blockDimX, blockDimY,
+        blockDimZ, sharedMemBytes, hStream, kernelParams, extra, nullptr, nullptr));
 }
 
 
-hipError_t hipHccModuleLaunchKernel(hipFunction_t f,
-            uint32_t globalWorkSizeX, uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
-            uint32_t localWorkSizeX, uint32_t localWorkSizeY, uint32_t localWorkSizeZ,
-            size_t sharedMemBytes, hipStream_t hStream,
-            void **kernelParams, void **extra,
-            hipEvent_t startEvent, hipEvent_t stopEvent)
-{
-    HIP_INIT_API(f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ,
-                 localWorkSizeX, localWorkSizeY, localWorkSizeZ,
-                 sharedMemBytes, hStream,
-                 kernelParams, extra);
-    return ihipLogStatus(ihipModuleLaunchKernel(f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ,
-                localWorkSizeX, localWorkSizeY, localWorkSizeZ,
-                sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent));
+hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
+                                    uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
+                                    uint32_t localWorkSizeX, uint32_t localWorkSizeY,
+                                    uint32_t localWorkSizeZ, size_t sharedMemBytes,
+                                    hipStream_t hStream, void** kernelParams, void** extra,
+                                    hipEvent_t startEvent, hipEvent_t stopEvent) {
+    HIP_INIT_API(f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX,
+                 localWorkSizeY, localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra);
+    return ihipLogStatus(ihipModuleLaunchKernel(
+        f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX, localWorkSizeY,
+        localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent));
 }
 
-namespace
-{
-    struct Agent_global {
-        string name;
-        hipDeviceptr_t address;
-        uint32_t byte_cnt;
-    };
+namespace {
+struct Agent_global {
+    string name;
+    hipDeviceptr_t address;
+    uint32_t byte_cnt;
+};
 
-    inline
-    void track(const Agent_global& x)
-    {
-        tprintf(
-            DB_MEM,
-            "  add variable '%s' with ptr=%p size=%u to tracker\n",
-            x.name.c_str(),
-            x.address,
-            x.byte_cnt);
+inline void track(const Agent_global& x) {
+    tprintf(DB_MEM, "  add variable '%s' with ptr=%p size=%u to tracker\n", x.name.c_str(),
+            x.address, x.byte_cnt);
 
-        auto device = ihipGetTlsDefaultCtx()->getWriteableDevice();
+    auto device = ihipGetTlsDefaultCtx()->getWriteableDevice();
 
-        hc::AmPointerInfo ptr_info(
-            nullptr,
-            x.address,
-            x.address,
-            x.byte_cnt,
-            device->_acc,
-            true,
-            false);
-        hc::am_memtracker_add(x.address, ptr_info);
-        hc::am_memtracker_update(x.address, device->_deviceId, 0u);
+    hc::AmPointerInfo ptr_info(nullptr, x.address, x.address, x.byte_cnt, device->_acc, true,
+                               false);
+    hc::am_memtracker_add(x.address, ptr_info);
+    hc::am_memtracker_update(x.address, device->_deviceId, 0u);
+}
+
+template <typename Container = vector<Agent_global>>
+inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t,
+                                                hsa_executable_symbol_t x, void* out) {
+    assert(out);
+
+    hsa_symbol_kind_t t = {};
+    hsa_executable_symbol_get_info(x, HSA_EXECUTABLE_SYMBOL_INFO_TYPE, &t);
+
+    if (t == HSA_SYMBOL_KIND_VARIABLE) {
+        static_cast<Container*>(out)->push_back(Agent_global{name(x), address(x), size(x)});
+
+        track(static_cast<Container*>(out)->back());
     }
 
-    template<typename Container = vector<Agent_global>>
-    inline
-    hsa_status_t copy_agent_global_variables(
-        hsa_executable_t, hsa_agent_t, hsa_executable_symbol_t x, void* out)
-    {
-        assert(out);
+    return HSA_STATUS_SUCCESS;
+}
 
-        hsa_symbol_kind_t t = {};
-        hsa_executable_symbol_get_info(x, HSA_EXECUTABLE_SYMBOL_INFO_TYPE, &t);
+inline hsa_agent_t this_agent() {
+    auto ctx = ihipGetTlsDefaultCtx();
 
-        if (t == HSA_SYMBOL_KIND_VARIABLE) {
-            static_cast<Container*>(out)->push_back(
-                Agent_global{name(x), address(x), size(x)});
+    if (!ctx) throw runtime_error{"No active HIP context."};
 
-            track(static_cast<Container*>(out)->back());
-        }
+    auto device = ctx->getDevice();
 
-        return HSA_STATUS_SUCCESS;
-    }
+    if (!device) throw runtime_error{"No device available for HIP."};
 
-    inline
-    hsa_agent_t this_agent()
-    {
-        auto ctx = ihipGetTlsDefaultCtx();
+    ihipDevice_t* currentDevice = ihipGetDevice(device->_deviceId);
 
-        if (!ctx) throw runtime_error{"No active HIP context."};
+    if (!currentDevice) throw runtime_error{"No active device for HIP."};
 
-        auto device = ctx->getDevice();
+    return currentDevice->_hsaAgent;
+}
 
-        if (!device) throw runtime_error{"No device available for HIP."};
+inline vector<Agent_global> read_agent_globals(hsa_agent_t agent, hsa_executable_t executable) {
+    vector<Agent_global> r;
 
-        ihipDevice_t *currentDevice = ihipGetDevice(device->_deviceId);
+    hsa_executable_iterate_agent_symbols(executable, agent, copy_agent_global_variables, &r);
 
-        if (!currentDevice) throw runtime_error{"No active device for HIP."};
+    return r;
+}
 
-        return currentDevice->_hsaAgent;
-    }
+template <typename ForwardIterator>
+pair<hipDeviceptr_t, size_t> read_global_description(ForwardIterator f, ForwardIterator l,
+                                                     const char* name) {
+    const auto it = std::find_if(f, l, [=](const Agent_global& x) { return x.name == name; });
 
-    inline
-    vector<Agent_global> read_agent_globals(
-        hsa_agent_t agent, hsa_executable_t executable)
-    {
-        vector<Agent_global> r;
+    return it == l ? make_pair(nullptr, 0u) : make_pair(it->address, it->byte_cnt);
+}
 
-        hsa_executable_iterate_agent_symbols(
-            executable, agent, copy_agent_global_variables, &r);
+hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
+                                         const char* name) {
+    static unordered_map<hipModule_t, vector<Agent_global>> agent_globals;
 
-        return r;
-    }
+    // TODO: this is not particularly robust.
+    if (agent_globals.count(hmod) == 0) {
+        static mutex mtx;
+        lock_guard<mutex> lck{mtx};
 
-    template<typename ForwardIterator>
-    pair<hipDeviceptr_t, size_t> read_global_description(
-        ForwardIterator f, ForwardIterator l, const char* name)
-    {
-        const auto it = std::find_if(
-            f, l, [=](const Agent_global& x) { return x.name == name; });
-
-        return it == l ?
-            make_pair(nullptr, 0u) : make_pair(it->address, it->byte_cnt);
-    }
-
-    hipError_t read_agent_global_from_module(
-        hipDeviceptr_t *dptr,
-        size_t* bytes,
-        hipModule_t hmod,
-        const char* name)
-    {
-        static unordered_map<hipModule_t, vector<Agent_global>> agent_globals;
-
-        // TODO: this is not particularly robust.
         if (agent_globals.count(hmod) == 0) {
-            static mutex mtx;
-            lock_guard<mutex> lck{mtx};
-
-            if (agent_globals.count(hmod) == 0) {
-                agent_globals.emplace(
-                    hmod, read_agent_globals(this_agent(), hmod->executable));
-            }
+            agent_globals.emplace(hmod, read_agent_globals(this_agent(), hmod->executable));
         }
-
-        // TODO: This is unsafe iff some other emplacement triggers rehashing.
-        //       It will have to be properly fleshed out in the future.
-        const auto it0 = agent_globals.find(hmod);
-        if (it0 == agent_globals.cend()) {
-            throw runtime_error{"agent_globals data structure corrupted."};
-        }
-
-        tie(*dptr, *bytes) = read_global_description(
-            it0->second.cbegin(), it0->second.cend(), name);
-
-        return dptr ? hipSuccess : hipErrorNotFound;
     }
 
-    hipError_t read_agent_global_from_process(
-        hipDeviceptr_t *dptr, size_t* bytes, const char* name)
-    {
-        static unordered_map<hsa_agent_t, vector<Agent_global>> agent_globals;
-        static std::once_flag f;
+    // TODO: This is unsafe iff some other emplacement triggers rehashing.
+    //       It will have to be properly fleshed out in the future.
+    const auto it0 = agent_globals.find(hmod);
+    if (it0 == agent_globals.cend()) {
+        throw runtime_error{"agent_globals data structure corrupted."};
+    }
 
-        call_once(f, []() {
-            for (auto&& agent_executables : hip_impl::executables()) {
-                vector<Agent_global> tmp0;
-                for (auto&& executable : agent_executables.second) {
-                    auto tmp1 = read_agent_globals(
-                        agent_executables.first, executable);
-                    tmp0.insert(
-                        tmp0.end(),
-                        make_move_iterator(tmp1.begin()),
-                        make_move_iterator(tmp1.end()));
-                }
-                agent_globals.emplace(agent_executables.first, move(tmp0));
+    tie(*dptr, *bytes) = read_global_description(it0->second.cbegin(), it0->second.cend(), name);
+
+    return dptr ? hipSuccess : hipErrorNotFound;
+}
+
+hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes, const char* name) {
+    static unordered_map<hsa_agent_t, vector<Agent_global>> agent_globals;
+    static std::once_flag f;
+
+    call_once(f, []() {
+        for (auto&& agent_executables : hip_impl::executables()) {
+            vector<Agent_global> tmp0;
+            for (auto&& executable : agent_executables.second) {
+                auto tmp1 = read_agent_globals(agent_executables.first, executable);
+                tmp0.insert(tmp0.end(), make_move_iterator(tmp1.begin()),
+                            make_move_iterator(tmp1.end()));
             }
-        });
+            agent_globals.emplace(agent_executables.first, move(tmp0));
+        }
+    });
 
-        const auto it = agent_globals.find(this_agent());
+    const auto it = agent_globals.find(this_agent());
 
-        if (it == agent_globals.cend()) return hipErrorNotInitialized;
+    if (it == agent_globals.cend()) return hipErrorNotInitialized;
 
-        tie(*dptr, *bytes) = read_global_description(
-            it->second.cbegin(), it->second.cend(), name);
+    tie(*dptr, *bytes) = read_global_description(it->second.cbegin(), it->second.cend(), name);
 
-        return dptr ? hipSuccess : hipErrorNotFound;
-    }
+    return dptr ? hipSuccess : hipErrorNotFound;
+}
 
-    hsa_executable_symbol_t find_kernel_by_name(
-        hsa_executable_t executable, const char* kname)
-    {
-        pair<const char*, hsa_executable_symbol_t> r{kname, {}};
+hsa_executable_symbol_t find_kernel_by_name(hsa_executable_t executable, const char* kname) {
+    pair<const char*, hsa_executable_symbol_t> r{kname, {}};
 
-        hsa_executable_iterate_agent_symbols(
-            executable,
-            this_agent(),
-            [](hsa_executable_t, hsa_agent_t, hsa_executable_symbol_t x, void* s) {
-                auto p =
-                    static_cast<pair<const char*, hsa_executable_symbol_t>*>(s);
+    hsa_executable_iterate_agent_symbols(
+        executable, this_agent(),
+        [](hsa_executable_t, hsa_agent_t, hsa_executable_symbol_t x, void* s) {
+            auto p = static_cast<pair<const char*, hsa_executable_symbol_t>*>(s);
 
-                if (type(x) != HSA_SYMBOL_KIND_KERNEL) {
-                    return HSA_STATUS_SUCCESS;
-                }
-                if (name(x) != p->first) return HSA_STATUS_SUCCESS;
+            if (type(x) != HSA_SYMBOL_KIND_KERNEL) {
+                return HSA_STATUS_SUCCESS;
+            }
+            if (name(x) != p->first) return HSA_STATUS_SUCCESS;
 
-                p->second = x;
+            p->second = x;
 
-                return HSA_STATUS_INFO_BREAK;
-            }, &r);
+            return HSA_STATUS_INFO_BREAK;
+        },
+        &r);
 
-        return r.second;
-    }
+    return r.second;
+}
 
-    string read_elf_file_as_string(const void* file)
-    {   // Precondition: file points to an ELF image that was BITWISE loaded
-        //               into process accessible memory, and not one loaded by
-        //               the loader. This is because in the latter case
-        //               alignment may differ, which will break the size
-        //               computation.
-        //               the image is Elf64, and matches endianness i.e. it is
-        //               Little Endian.
-        if (!file) return {};
+string read_elf_file_as_string(
+    const void* file) {  // Precondition: file points to an ELF image that was BITWISE loaded
+    //               into process accessible memory, and not one loaded by
+    //               the loader. This is because in the latter case
+    //               alignment may differ, which will break the size
+    //               computation.
+    //               the image is Elf64, and matches endianness i.e. it is
+    //               Little Endian.
+    if (!file) return {};
 
-        auto h = static_cast<const Elf64_Ehdr*>(file);
-        auto s = static_cast<const char*>(file);
-        // This assumes the common case of SHT being the last part of the ELF.
-        auto sz = sizeof(Elf64_Ehdr) + h->e_shoff + h->e_shentsize * h->e_shnum;
+    auto h = static_cast<const Elf64_Ehdr*>(file);
+    auto s = static_cast<const char*>(file);
+    // This assumes the common case of SHT being the last part of the ELF.
+    auto sz = sizeof(Elf64_Ehdr) + h->e_shoff + h->e_shentsize * h->e_shnum;
 
-        return string{s, s + sz};
-    }
-} // Anonymous namespace, internal linkage.
+    return string{s, s + sz};
+}
+}  // namespace
 
-hipError_t ihipModuleGetFunction(
-    hipFunction_t *func, hipModule_t hmod, const char *name)
-{
+hipError_t ihipModuleGetFunction(hipFunction_t* func, hipModule_t hmod, const char* name) {
     HIP_INIT_API(func, hmod, name);
 
     if (!func || !name) return ihipLogStatus(hipErrorInvalidValue);
@@ -504,30 +451,26 @@ hipError_t ihipModuleGetFunction(
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod,
-                                const char *name){
+hipError_t hipModuleGetFunction(hipFunction_t* hfunc, hipModule_t hmod, const char* name) {
     HIP_INIT_API(hfunc, hmod, name);
     return ihipLogStatus(ihipModuleGetFunction(hfunc, hmod, name));
 }
 
-hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes,
-                              hipModule_t hmod, const char* name)
-{
+hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
+                              const char* name) {
     HIP_INIT_API(dptr, bytes, hmod, name);
 
-    if(!dptr || !bytes) return ihipLogStatus(hipErrorInvalidValue);
+    if (!dptr || !bytes) return ihipLogStatus(hipErrorInvalidValue);
 
-    if(!name) return ihipLogStatus(hipErrorNotInitialized);
+    if (!name) return ihipLogStatus(hipErrorNotInitialized);
 
-    const auto r = hmod ?
-        read_agent_global_from_module(dptr, bytes, hmod, name) :
-        read_agent_global_from_process(dptr, bytes, name);
+    const auto r = hmod ? read_agent_global_from_module(dptr, bytes, hmod, name)
+                        : read_agent_global_from_process(dptr, bytes, name);
 
     return ihipLogStatus(r);
 }
 
-hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
-{
+hipError_t hipModuleLoadData(hipModule_t* module, const void* image) {
     HIP_INIT_API(module, image);
 
     if (!module) return ihipLogStatus(hipErrorInvalidValue);
@@ -537,33 +480,27 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
     auto ctx = ihipGetTlsDefaultCtx();
     if (!ctx) return ihipLogStatus(hipErrorInvalidContext);
 
-    hsa_executable_create_alt(
-        HSA_PROFILE_FULL,
-        HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT,
-        nullptr,
-        &(*module)->executable);
+    hsa_executable_create_alt(HSA_PROFILE_FULL, HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT, nullptr,
+                              &(*module)->executable);
 
-    (*module)->executable = hip_impl::load_executable(
-        read_elf_file_as_string(image), (*module)->executable, this_agent());
+    (*module)->executable = hip_impl::load_executable(read_elf_file_as_string(image),
+                                                      (*module)->executable, this_agent());
 
-    return ihipLogStatus(
-        (*module)->executable.handle ? hipSuccess : hipErrorUnknown);
+    return ihipLogStatus((*module)->executable.handle ? hipSuccess : hipErrorUnknown);
 }
 
-hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image, unsigned int numOptions, hipJitOption *options, void **optionValues)
-{
+hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* image, unsigned int numOptions,
+                               hipJitOption* options, void** optionValues) {
     return hipModuleLoadData(module, image);
 }
 
-hipError_t hipModuleGetTexRef(
-    textureReference** texRef, hipModule_t hmod, const char* name)
-{
+hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name) {
     HIP_INIT_API(texRef, hmod, name);
 
     hipError_t ret = hipErrorNotFound;
-    if(!texRef) return ihipLogStatus(hipErrorInvalidValue);
+    if (!texRef) return ihipLogStatus(hipErrorInvalidValue);
 
-    if(!hmod || !name) return ihipLogStatus(hipErrorNotInitialized);
+    if (!hmod || !name) return ihipLogStatus(hipErrorNotInitialized);
 
     const auto it = globals().find(name);
     if (it == globals().end()) return ihipLogStatus(hipErrorInvalidValue);

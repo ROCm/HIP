@@ -23,18 +23,18 @@ THE SOFTWARE.
 #ifndef DEVICE_UTIL_H
 #define DEVICE_UTIL_H
 
-#include<hip/hcc_detail/hip_runtime.h>
+#include <hip/hcc_detail/hip_runtime.h>
 
 /*
  Heap size computation for malloc and free device functions.
 */
 
-#define NUM_PAGES_PER_THREAD  16
-#define SIZE_OF_PAGE          64
-#define NUM_THREADS_PER_CU    64
-#define NUM_CUS_PER_GPU       64  // Specific for r9 Nano
-#define NUM_PAGES NUM_PAGES_PER_THREAD * NUM_THREADS_PER_CU * NUM_CUS_PER_GPU
-#define SIZE_MALLOC NUM_PAGES * SIZE_OF_PAGE
+#define NUM_PAGES_PER_THREAD 16
+#define SIZE_OF_PAGE 64
+#define NUM_THREADS_PER_CU 64
+#define NUM_CUS_PER_GPU 64  // Specific for r9 Nano
+#define NUM_PAGES NUM_PAGES_PER_THREAD* NUM_THREADS_PER_CU* NUM_CUS_PER_GPU
+#define SIZE_MALLOC NUM_PAGES* SIZE_OF_PAGE
 #define SIZE_OF_HEAP SIZE_MALLOC
 
 #define HIP_SQRT_2 1.41421356237
@@ -98,7 +98,7 @@ __device__ float __hip_precise_log10f(float x);
 __device__ float __hip_precise_log2f(float x);
 __device__ float __hip_precise_logf(float x);
 __device__ float __hip_precise_powf(float base, float exponent);
-__device__ void __hip_precise_sincosf(float x, float *s, float *c);
+__device__ void __hip_precise_sincosf(float x, float* s, float* c);
 __device__ float __hip_precise_sinf(float x);
 __device__ float __hip_precise_tanf(float x);
 // Double Precision Math
@@ -106,7 +106,6 @@ __device__ double __hip_precise_dsqrt_rd(double x);
 __device__ double __hip_precise_dsqrt_rn(double x);
 __device__ double __hip_precise_dsqrt_ru(double x);
 __device__ double __hip_precise_dsqrt_rz(double x);
-
 
 
 // Float Fast Math
@@ -119,14 +118,14 @@ __device__ float __hip_fast_fsqrt_rz(float x);
 __device__ float __hip_fast_log10f(float x);
 __device__ float __hip_fast_logf(float x);
 __device__ float __hip_fast_powf(float base, float exponent);
-__device__ void __hip_fast_sincosf(float x, float *s, float *c);
+__device__ void __hip_fast_sincosf(float x, float* s, float* c);
 __device__ float __hip_fast_tanf(float x);
 // Double Precision Math
 __device__ double __hip_fast_dsqrt_rd(double x);
 __device__ double __hip_fast_dsqrt_rn(double x);
 __device__ double __hip_fast_dsqrt_ru(double x);
 __device__ double __hip_fast_dsqrt_rz(double x);
-__device__ void  __threadfence_system(void);
+__device__ void __threadfence_system(void);
 
 float __hip_host_j0f(float x);
 double __hip_host_j0(double x);
