@@ -372,16 +372,16 @@ public:
 };
 
 
-class ihipModule_t {
-public:
-    hsa_executable_t executable;
-    hsa_code_object_t object;
+struct ihipModule_t {
     std::string fileName;
-    void *ptr;
-    size_t size;
-    std::list<hipFunction_t> funcTrack;
-    std::unordered_map<std::string, uintptr_t> coGlobals;
-    ihipModule_t() : executable(), object(), fileName(), ptr(nullptr), size(0) {}
+    hsa_executable_t executable = {};
+    hsa_code_object_reader_t coReader = {};
+
+    ~ihipModule_t()
+    {
+        if (executable.handle) hsa_executable_destroy(executable);
+        if (coReader.handle) hsa_code_object_reader_destroy(coReader);
+    }
 };
 
 
@@ -669,11 +669,11 @@ template <typename MUTEX_TYPE>
 class ihipEventCriticalBase_t : LockedBase<MUTEX_TYPE>
 {
 public:
-    explicit ihipEventCriticalBase_t(const ihipEvent_t *parentEvent) : 
+    explicit ihipEventCriticalBase_t(const ihipEvent_t *parentEvent) :
         _parent(parentEvent)
     {}
     ~ihipEventCriticalBase_t() {};
-   
+
      // Keep data in structure so it can be easily copied into snapshots
      // (used to reduce lock contention and preserve correct lock order)
     ihipEventData_t _eventData;
@@ -698,7 +698,7 @@ public:
     // Return a copy of the critical state. The critical data is locked during the copy.
 	ihipEventData_t locked_copyCrit() {
         LockedAccessor_EventCrit_t crit(_criticalData);
-        return _criticalData._eventData; 
+        return _criticalData._eventData;
     };
 
 	ihipEventCritical_t &criticalData() { return _criticalData; };
