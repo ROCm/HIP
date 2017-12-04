@@ -97,7 +97,16 @@ void test(unsigned testMask, int *C_d, int *C_h, int64_t numElements, SyncMode s
 
     unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, numElements);
     // Launch kernel into null stream, should result in C_h == count.
-    hipLaunchKernelGGL(HipTest::addCountReverse , dim3(blocks), dim3(threadsPerBlock), 0, 0 /*stream*/,    C_d, C_h, numElements, count);
+    hipLaunchKernelGGL(
+        HipTest::addCountReverse,
+        dim3(blocks),
+        dim3(threadsPerBlock),
+        0,
+        0 /*stream*/,
+        static_cast<const int*>(C_d),
+        C_h,
+        numElements,
+        count);
     HIPCHECK(hipEventRecord(stop, 0/*default*/));
 
     switch (syncMode) {
