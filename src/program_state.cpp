@@ -3,6 +3,7 @@
 #include "../include/hip/hcc_detail/code_object_bundle.hpp"
 
 #include "hip_hcc_internal.h"
+#include "hsa_helpers.hpp"
 #include "trace_helper.h"
 
 #include "elfio/elfio.hpp"
@@ -146,13 +147,11 @@ namespace
 
     void associate_code_object_symbols_with_host_allocation(
         const elfio& reader,
-        const elfio& self_reader,
         section* code_object_dynsym,
-        section* process_symtab,
         hsa_agent_t agent,
         hsa_executable_t executable)
     {
-        if (!code_object_dynsym || !process_symtab) return;
+        if (!code_object_dynsym) return;
 
         const auto undefined_symbols = copy_names_of_undefined_symbols(
             symbol_section_accessor{reader, code_object_dynsym});
@@ -294,68 +293,6 @@ namespace
         return r;
     }
 
-    inline
-    hsa_agent_t agent(hsa_executable_symbol_t x)
-    {
-        hsa_agent_t r = {};
-        hsa_executable_symbol_get_info(x, HSA_EXECUTABLE_SYMBOL_INFO_AGENT, &r);
-
-        return r;
-    }
-
-    inline
-    uint32_t group_size(hsa_executable_symbol_t x)
-    {
-        uint32_t r = 0u;
-        hsa_executable_symbol_get_info(
-            x, HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE, &r);
-
-        return r;
-    }
-
-    inline
-    uint64_t kernel_object(hsa_executable_symbol_t x)
-    {
-        uint64_t r = 0u;
-        hsa_executable_symbol_get_info(
-            x, HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_OBJECT, &r);
-
-        return r;
-    }
-
-    inline
-    string name(hsa_executable_symbol_t x)
-    {
-        uint32_t sz = 0u;
-        hsa_executable_symbol_get_info(
-            x, HSA_EXECUTABLE_SYMBOL_INFO_NAME_LENGTH, &sz);
-
-        string r(sz, '\0');
-        hsa_executable_symbol_get_info(
-            x, HSA_EXECUTABLE_SYMBOL_INFO_NAME, &r.front());
-
-        return r;
-    }
-
-    inline
-    uint32_t private_size(hsa_executable_symbol_t x)
-    {
-        uint32_t r = 0u;
-        hsa_executable_symbol_get_info(
-            x, HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_PRIVATE_SEGMENT_SIZE, &r);
-
-        return r;
-    }
-
-    inline
-    hsa_symbol_kind_t type(hsa_executable_symbol_t x)
-    {
-        hsa_symbol_kind_t r = {};
-        hsa_executable_symbol_get_info(x, HSA_EXECUTABLE_SYMBOL_INFO_TYPE, &r);
-
-        return r;
-    }
-
     const unordered_map<string, vector<hsa_executable_symbol_t>>& kernels()
     {
         static unordered_map<string, vector<hsa_executable_symbol_t>> r;
@@ -384,42 +321,43 @@ namespace
     }
 
     void load_code_object_and_freeze_executable(
-        istream& file, hsa_agent_t agent, hsa_executable_t executable)
+        const string& file, hsa_agent_t agent, hsa_executable_t executable)
     {   // TODO: the following sequence is inefficient, should be refactored
         //       into a single load of the file and subsequent ELFIO
         //       processing.
         static const auto cor_deleter = [](hsa_code_object_reader_t* p) {
-            hsa_code_object_reader_destroy(*p);
+            if (p) {
+                hsa_code_object_reader_destroy(*p);
+                delete p;
+            }
         };
 
         using RAII_code_reader = unique_ptr<
             hsa_code_object_reader_t, decltype(cor_deleter)>;
 
-        file.seekg(0);
+        if (!file.empty()) {
+            RAII_code_reader tmp{new hsa_code_object_reader_t, cor_deleter};
+            hsa_code_object_reader_create_from_memory(
+                file.data(), file.size(), tmp.get());
 
-        vector<uint8_t> blob{
-            istreambuf_iterator<char>{file}, istreambuf_iterator<char>{}};
-        RAII_code_reader tmp{new hsa_code_object_reader_t, cor_deleter};
-        hsa_code_object_reader_create_from_memory(
-            blob.data(), blob.size(), tmp.get());
+            hsa_executable_load_agent_code_object(
+                executable, agent, *tmp, nullptr, nullptr);
 
-        hsa_executable_load_agent_code_object(
-            executable, agent, *tmp, nullptr, nullptr);
+            hsa_executable_freeze(executable, nullptr);
 
-        hsa_executable_freeze(executable, nullptr);
+            static vector<RAII_code_reader> code_readers;
+            static mutex mtx;
 
-        static vector<RAII_code_reader> code_readers;
-        static mutex mtx;
-
-        lock_guard<mutex> lck{mtx};
-        code_readers.push_back(move(tmp));
+            lock_guard<mutex> lck{mtx};
+            code_readers.push_back(move(tmp));
+        }
     }
 }
 
 namespace hip_impl
 {
     const unordered_map<hsa_agent_t, vector<hsa_executable_t>>& executables()
-    {
+    {   // TODO: This leaks the hsa_executable_ts, it should use RAII.
         static unordered_map<hsa_agent_t, vector<hsa_executable_t>> r;
         static once_flag f;
 
@@ -449,8 +387,7 @@ namespace hip_impl
                             // TODO: this is massively inefficient and only
                             //       meant for illustration.
                             string blob_to_str{blob.cbegin(), blob.cend()};
-                            stringstream istr{blob_to_str};
-                            tmp = load_executable(tmp, a, istr);
+                            tmp = load_executable(blob_to_str, tmp, a);
 
                             if (tmp.handle) r[a].push_back(tmp);
                         }
@@ -535,33 +472,23 @@ namespace hip_impl
     }
 
     hsa_executable_t load_executable(
-        hsa_executable_t executable, hsa_agent_t agent, istream& file)
+        const string& file, hsa_executable_t executable, hsa_agent_t agent)
     {
         elfio reader;
-        if (!reader.load(file)) {
-            return hsa_executable_t{};
-        }
-        else {
-            // TODO: this may benefit from caching as well.
-            elfio self_reader;
-            self_reader.load("/proc/self/exe");
+        stringstream tmp{file};
 
-            const auto symtab =
-                find_section_if(self_reader, [](const ELFIO::section* x) {
-                    return x->get_type() == SHT_SYMTAB;
-                });
+        if (!reader.load(tmp)) return hsa_executable_t{};
 
-            const auto code_object_dynsym =
-                find_section_if(reader, [](const ELFIO::section* x) {
+        const auto code_object_dynsym =
+            find_section_if(reader, [](const ELFIO::section* x) {
                     return x->get_type() == SHT_DYNSYM;
-                });
+            });
 
-            associate_code_object_symbols_with_host_allocation(
-                reader, self_reader, code_object_dynsym, symtab, agent, executable);
+        associate_code_object_symbols_with_host_allocation(
+            reader, code_object_dynsym, agent, executable);
 
-            load_code_object_and_freeze_executable(file, agent, executable);
+        load_code_object_and_freeze_executable(file, agent, executable);
 
-            return executable;
-        }
+        return executable;
     }
 } // Namespace hip_impl.
