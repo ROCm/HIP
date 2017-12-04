@@ -22,107 +22,100 @@ THE SOFTWARE.
 #include "test_common.h"
 
 // standard global variables that can be set on command line
-size_t N = 4*1024*1024;
-char memsetval=0x42;
+size_t N = 4 * 1024 * 1024;
+char memsetval = 0x42;
 int iterations = 1;
-unsigned blocksPerCU = 6; // to hide latency
-unsigned threadsPerBlock = 256; 
+unsigned blocksPerCU = 6;  // to hide latency
+unsigned threadsPerBlock = 256;
 int p_gpuDevice = 0;
-unsigned p_verbose  = 0;
+unsigned p_verbose = 0;
 int p_tests = -1; /*which tests to run. Interpretation is left to each test.  default:all*/
-
 
 
 namespace HipTest {
 
 
-double elapsed_time(long long startTimeUs, long long stopTimeUs)
-{
-	return ((double) (stopTimeUs - startTimeUs)) / ((double)(1000));
+double elapsed_time(long long startTimeUs, long long stopTimeUs) {
+    return ((double)(stopTimeUs - startTimeUs)) / ((double)(1000));
 }
 
 
-int parseSize(const char *str, size_t *output)
-{
-    char *next;
+int parseSize(const char* str, size_t* output) {
+    char* next;
     *output = strtoull(str, &next, 0);
-	int l = strlen(str);
-	if (l) {
-		char c = str[l-1]; // last char.
-		if ((c == 'k') || (c == 'K')) {
-			*output *= 1024;
-		}
-		if ((c == 'm') || (c == 'M')) {
-			*output *= (1024*1024);
-		}
-		if ((c == 'g') || (c == 'G')) {
-			*output *= (1024*1024*1024);
-		}
-
-	}
+    int l = strlen(str);
+    if (l) {
+        char c = str[l - 1];  // last char.
+        if ((c == 'k') || (c == 'K')) {
+            *output *= 1024;
+        }
+        if ((c == 'm') || (c == 'M')) {
+            *output *= (1024 * 1024);
+        }
+        if ((c == 'g') || (c == 'G')) {
+            *output *= (1024 * 1024 * 1024);
+        }
+    }
     return 1;
 }
 
 
-int parseUInt(const char *str, unsigned int *output)
-{
-    char *next;
+int parseUInt(const char* str, unsigned int* output) {
+    char* next;
     *output = strtoul(str, &next, 0);
     return !strlen(next);
 }
 
 
-int parseInt(const char *str, int *output)
-{
-    char *next;
+int parseInt(const char* str, int* output) {
+    char* next;
     *output = strtol(str, &next, 0);
     return !strlen(next);
 }
 
 
-int parseStandardArguments(int argc, char *argv[], bool failOnUndefinedArg)
-{
+int parseStandardArguments(int argc, char* argv[], bool failOnUndefinedArg) {
     int extraArgs = 1;
     for (int i = 1; i < argc; i++) {
-        const char *arg = argv[i];
+        const char* arg = argv[i];
 
         if (!strcmp(arg, " ")) {
             // skip NULL args.
         } else if (!strcmp(arg, "--N") || (!strcmp(arg, "-N"))) {
             if (++i >= argc || !HipTest::parseSize(argv[i], &N)) {
-               failed("Bad N size argument"); 
+                failed("Bad N size argument");
             }
         } else if (!strcmp(arg, "--threadsPerBlock")) {
             if (++i >= argc || !HipTest::parseUInt(argv[i], &threadsPerBlock)) {
-               failed("Bad threadsPerBlock argument"); 
+                failed("Bad threadsPerBlock argument");
             }
         } else if (!strcmp(arg, "--blocksPerCU")) {
             if (++i >= argc || !HipTest::parseUInt(argv[i], &blocksPerCU)) {
-               failed("Bad blocksPerCU argument"); 
+                failed("Bad blocksPerCU argument");
             }
         } else if (!strcmp(arg, "--memsetval")) {
             int ex;
             if (++i >= argc || !HipTest::parseInt(argv[i], &ex)) {
-               failed("Bad memsetval argument"); 
+                failed("Bad memsetval argument");
             }
             memsetval = ex;
         } else if (!strcmp(arg, "--iterations") || (!strcmp(arg, "-i"))) {
             if (++i >= argc || !HipTest::parseInt(argv[i], &iterations)) {
-               failed("Bad iterations argument"); 
+                failed("Bad iterations argument");
             }
 
-        } else if (!strcmp(arg, "--gpu") ||  (!strcmp(arg, "-gpuDevice")) || (!strcmp(arg, "-g"))) {
+        } else if (!strcmp(arg, "--gpu") || (!strcmp(arg, "-gpuDevice")) || (!strcmp(arg, "-g"))) {
             if (++i >= argc || !HipTest::parseInt(argv[i], &p_gpuDevice)) {
-               failed("Bad gpuDevice argument"); 
+                failed("Bad gpuDevice argument");
             }
 
         } else if (!strcmp(arg, "--verbose") || (!strcmp(arg, "-v"))) {
             if (++i >= argc || !HipTest::parseUInt(argv[i], &p_verbose)) {
-               failed("Bad verbose argument"); 
+                failed("Bad verbose argument");
             }
         } else if (!strcmp(arg, "--tests") || (!strcmp(arg, "-t"))) {
             if (++i >= argc || !HipTest::parseInt(argv[i], &p_tests)) {
-               failed("Bad tests argument"); 
+                failed("Bad tests argument");
             }
 
         } else {
@@ -138,9 +131,7 @@ int parseStandardArguments(int argc, char *argv[], bool failOnUndefinedArg)
 }
 
 
-
-unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlock, size_t N)
-{
+unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlock, size_t N) {
     int device;
     HIPCHECK(hipGetDevice(&device));
     hipDeviceProp_t props;
@@ -148,11 +139,11 @@ unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlock, size_t N)
 
     unsigned blocks = props.multiProcessorCount * blocksPerCU;
     if (blocks * threadsPerBlock > N) {
-        blocks = (N+threadsPerBlock-1)/threadsPerBlock;
+        blocks = (N + threadsPerBlock - 1) / threadsPerBlock;
     }
 
     return blocks;
 }
 
 
-}// namespace HipTest
+}  // namespace HipTest

@@ -19,17 +19,17 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime_api.h"
-#include<iostream>
-#include<fstream>
-#include<vector>
+#include <iostream>
+#include <fstream>
+#include <vector>
 
-int main(){
+int main() {
     hipInit(0);
-	hipDevice_t device;
-	hipDeviceGet(&device, 0);
+    hipDevice_t device;
+    hipDeviceGet(&device, 0);
     char pciBusId[10];
-    memset(pciBusId,0,10);
-    hipDeviceGetPCIBusId(pciBusId,100,device);
-    printf("PCI Bus ID= %s\n",pciBusId);
+    memset(pciBusId, 0, 10);
+    hipDeviceGetPCIBusId(pciBusId, 100, device);
+    printf("PCI Bus ID= %s\n", pciBusId);
     return 0;
 }

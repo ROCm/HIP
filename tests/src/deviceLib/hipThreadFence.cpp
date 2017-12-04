@@ -23,34 +23,31 @@ THE SOFTWARE.
  * HIT_END
  */
 
-#include<iostream>
-#include<hip/hip_runtime_api.h>
-#include<hip/hip_runtime.h>
-#include"test_common.h"
+#include <iostream>
+#include <hip/hip_runtime_api.h>
+#include <hip/hip_runtime.h>
+#include "test_common.h"
 
 #define NUM 1024
-#define SIZE NUM*sizeof(float)
+#define SIZE NUM * sizeof(float)
 
-__global__ void vAdd(hipLaunchParm lp, float *In1, float *In2, float *In3, float *In4, float *Out)
-{
+__global__ void vAdd(hipLaunchParm lp, float* In1, float* In2, float* In3, float* In4, float* Out) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     In4[tid] = In1[tid] + In2[tid];
     __threadfence();
     In3[tid] = In3[tid] + In4[tid];
     __threadfence_block();
     Out[tid] = In4[tid] + In3[tid];
-
 }
 
-int main(){
-    float *In1 = new float[1024];
-    float *In2 = new float[1024];
-    float *In3 = new float[1024];
-    float *In4 = new float[1024];
-    float *Out = new float[1024];
+int main() {
+    float* In1 = new float[1024];
+    float* In2 = new float[1024];
+    float* In3 = new float[1024];
+    float* In4 = new float[1024];
+    float* Out = new float[1024];
 
-    for(uint32_t i=0;i<1024;i++)
-    {
+    for (uint32_t i = 0; i < 1024; i++) {
         In1[i] = 1.0f;
         In2[i] = 1.0f;
         In3[i] = 1.0f;
@@ -69,8 +66,8 @@ int main(){
     hipMemcpy(In3d, In3, SIZE, hipMemcpyHostToDevice);
     hipMemcpy(In4d, In4, SIZE, hipMemcpyHostToDevice);
 
-    hipLaunchKernel(vAdd, dim3(32,1,1), dim3(32,1,1), 0, 0, In1d, In2d, In3d, In4d, Outd);
+    hipLaunchKernel(vAdd, dim3(32, 1, 1), dim3(32, 1, 1), 0, 0, In1d, In2d, In3d, In4d, Outd);
     hipMemcpy(Out, Outd, SIZE, hipMemcpyDeviceToHost);
-    assert(Out[10] == 2*In1[10] + 2*In2[10] + In3[10]);
+    assert(Out[10] == 2 * In1[10] + 2 * In2[10] + In3[10]);
     passed();
 }

@@ -29,16 +29,15 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
     HipTest::parseStandardArguments(argc, argv, true);
 
     HIPCHECK(hipInit(0));
 
     hipDevice_t device;
     hipDevice_t device1;
-    hipCtx_t    ctx;
-    hipCtx_t    ctx1;
+    hipCtx_t ctx;
+    hipCtx_t ctx1;
 
     HIPCHECK(hipDeviceGet(&device, 0));
     HIPCHECK(hipCtxCreate(&ctx, 0, device));

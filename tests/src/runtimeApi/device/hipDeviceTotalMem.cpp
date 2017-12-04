@@ -30,15 +30,14 @@ THE SOFTWARE.
 
 #include "test_common.h"
 
-int main()
-{
+int main() {
     int numDevices = 0;
     size_t totMem;
     hipDevice_t device;
     HIPCHECK(hipGetDeviceCount(&numDevices));
-    for(int i=0;i<numDevices;i++){
-        HIPCHECK(hipDeviceGet(&device,i));
-        HIPCHECK(hipDeviceTotalMem(&totMem,device));
+    for (int i = 0; i < numDevices; i++) {
+        HIPCHECK(hipDeviceGet(&device, i));
+        HIPCHECK(hipDeviceTotalMem(&totMem, device));
         HIPASSERT(totMem != 0);
     }
     passed();

@@ -21,12 +21,11 @@ THE SOFTWARE.
 */
 
 
-#include"gxxApi1.h"
+#include "gxxApi1.h"
 #include "hip/hip_runtime_api.h"
 
-void* mallocHip(size_t size)
-{
-	void *ptr;
-	hipMalloc(&ptr, size);
-	return ptr;
+void* mallocHip(size_t size) {
+    void* ptr;
+    hipMalloc(&ptr, size);
+    return ptr;
 }
