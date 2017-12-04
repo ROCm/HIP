@@ -167,6 +167,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HIP_HCC_BUILD_FLAGS}")
 
     set(SOURCE_FILES_RUNTIME
+        src/code_object_bundle.cpp
         src/hip_hcc.cpp
         src/hip_context.cpp
         src/hip_device.cpp
@@ -179,7 +180,8 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/hip_db.cpp
         src/grid_launch.cpp
         src/hip_texture.cpp
-        src/env.cpp)
+        src/env.cpp
+        src/program_state.cpp)
 
     set(SOURCE_FILES_DEVICE
         src/device_util.cpp

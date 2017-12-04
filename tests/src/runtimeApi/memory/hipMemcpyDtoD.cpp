@@ -49,21 +49,39 @@ int main()
         HIPCHECK(hipMalloc(&Y_d,Nbytes));
         HIPCHECK(hipMalloc(&Z_d,Nbytes));
 
-        
+
         HIPCHECK(hipSetDevice(0));
         HIPCHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
         HIPCHECK(hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
-        hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d,B_d, C_d, N);
+        hipLaunchKernel(
+          HipTest::vectorADD,
+          dim3(blocks),
+          dim3(threadsPerBlock),
+          0,
+          0,
+          static_cast<const int*>(A_d),
+          static_cast<const int*>(B_d),
+          C_d,
+          N);
         HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
         HIPCHECK(hipDeviceSynchronize());
         HipTest::checkVectorADD(A_h, B_h, C_h, N);
-    
-         
+
+
         HIPCHECK(hipSetDevice(1));
-        HIPCHECK(hipMemcpyDtoD(X_d, A_d,  Nbytes)); 
+        HIPCHECK(hipMemcpyDtoD(X_d, A_d,  Nbytes));
         HIPCHECK(hipMemcpyDtoD(Y_d, B_d,  Nbytes));
 
-        hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0, X_d,Y_d, Z_d, N);
+        hipLaunchKernel(
+          HipTest::vectorADD,
+          dim3(blocks),
+          dim3(threadsPerBlock),
+          0,
+          0,
+          static_cast<const int*>(X_d),
+          static_cast<const int*>(Y_d),
+          Z_d,
+          N);
         HIPCHECK(hipMemcpyDtoH(C_h, Z_d, Nbytes));
         HIPCHECK(hipDeviceSynchronize());
         HipTest::checkVectorADD(A_h, B_h, C_h, N);
@@ -73,8 +91,8 @@ int main()
         HIPCHECK(hipFree(Y_d));
         HIPCHECK(hipFree(Z_d));
       }
-     
+
         passed();
-     
+
 }
 
