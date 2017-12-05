@@ -18,8 +18,8 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * XXBUILD: %t %s ../test_common.cpp
- * XXRUN: %t
+ * BUILD: %t %s ../test_common.cpp
+ * RUN: %t
  * HIT_END
  */
 
