@@ -358,6 +358,8 @@ std::unique_ptr<clang::ASTConsumer> HipifyAction::CreateASTConsumer(clang::Compi
     Finder->addMatcher(mat::cudaKernelCallExpr(mat::isExpansionInMainFile()).bind("cudaLaunchKernel"), this);
 
     // Replace cuda builtins.
+    /* Disable as HIP has started to support vanilla CUDA syntax for threadIdx, blockIdx, blockDim and gridDim. */
+    /* Other CUDA builtins are not tracked for now.
     Finder->addMatcher(
         mat::memberExpr(
             mat::isExpansionInMainFile(),
@@ -371,7 +373,7 @@ std::unique_ptr<clang::ASTConsumer> HipifyAction::CreateASTConsumer(clang::Compi
         ).bind("cudaBuiltin"),
         this
     );
-
+    */
     Finder->addMatcher(
         mat::varDecl(
             mat::isExpansionInMainFile(),
@@ -454,7 +456,7 @@ void HipifyAction::ExecuteAction() {
 }
 
 void HipifyAction::run(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
-    if (cudaBuiltin(Result)) return;
+//    if (cudaBuiltin(Result)) return;
     if (cudaLaunchKernel(Result)) return;
     if (cudaSharedIncompleteArrayVar(Result)) return;
 }
