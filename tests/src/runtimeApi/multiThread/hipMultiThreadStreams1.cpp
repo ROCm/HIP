@@ -90,7 +90,16 @@ void simpleVectorAdd(size_t numElements, int iters, hipStream_t stream)
 
 		// This is the null stream?
 		//hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d, B_d, C_d, numElements);
-		hipLaunchKernel(HipTest::vectorADDReverse, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d, B_d, C_d, numElements);
+		hipLaunchKernel(
+			HipTest::vectorADDReverse,
+			dim3(blocks),
+			dim3(threadsPerBlock),
+			0,
+			0,
+			static_cast<const T*>(A_d),
+			static_cast<const T*>(B_d),
+			C_d,
+			numElements);
 
 		MemTraits<C>::Copy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost, stream);
 

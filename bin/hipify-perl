@@ -310,25 +310,6 @@ while (@ARGV) {
 
 
         #--------
-        # Coordinate Indexing and Dimensions:
-        $ft{'coord_func'} += s/\bthreadIdx\.x\b/hipThreadIdx_x/g;
-        $ft{'coord_func'} += s/\bthreadIdx\.y\b/hipThreadIdx_y/g;
-        $ft{'coord_func'} += s/\bthreadIdx\.z\b/hipThreadIdx_z/g;
-
-        $ft{'coord_func'} += s/\bblockIdx\.x\b/hipBlockIdx_x/g;
-        $ft{'coord_func'} += s/\bblockIdx\.y\b/hipBlockIdx_y/g;
-        $ft{'coord_func'} += s/\bblockIdx\.z\b/hipBlockIdx_z/g;
-
-        $ft{'coord_func'} += s/\bblockDim\.x\b/hipBlockDim_x/g;
-        $ft{'coord_func'} += s/\bblockDim\.y\b/hipBlockDim_y/g;
-        $ft{'coord_func'} += s/\bblockDim\.z\b/hipBlockDim_z/g;
-
-        $ft{'coord_func'} += s/\bgridDim\.x\b/hipGridDim_x/g;
-        $ft{'coord_func'} += s/\bgridDim\.y\b/hipGridDim_y/g;
-        $ft{'coord_func'} += s/\bgridDim\.z\b/hipGridDim_z/g;
-
-
-        #--------
         # Events
         $ft{'event'} += s/\bcudaEvent_t\b/hipEvent_t/g;
         $ft{'event'} += s/\bcudaEventCreate\b/hipEventCreate/g;

@@ -1,20 +1,24 @@
 HIP_PATH?= $(wildcard /opt/rocm/hip)
+ifeq (,$(HIP_PATH))
+	HIP_PATH=../../..
+endif
+HIP_PLATFORM=$(shell $(HIP_PATH)/bin/hipconfig --platform)
 HIPCC=$(HIP_PATH)/bin/hipcc
 
-all: square.hip.out
+ifeq (${HIP_PLATFORM}, nvcc)
+	SOURCES=square.cu
+else
+	SOURCES=square.cpp
+endif
 
-square.cuda.out : square.cu
-	nvcc square.cu -o $@
+all: square.out
 
-#hipify square.cu > square.cpp
-# Then review & finish port in square.cpp
-#
+# Step
+square.cpp: square.cu
+	$(HIP_PATH)/bin/hipify-perl square.cu > square.cpp
 
-square.hip.out: square.hipref.cpp
-	$(HIPCC) $(CXXFLAGS) square.hipref.cpp -o $@
-
-
-
+square.out: $(SOURCES)
+	$(HIPCC) $(CXXFLAGS) $(SOURCES) -o $@
 
 clean:
-	rm -f *.o *.out	
+	rm -f *.o *.out square.cpp
