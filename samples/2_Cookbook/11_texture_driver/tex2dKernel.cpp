@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,11 +20,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
+#include "hip/hip_runtime.h"
+extern texture<float, 2, hipReadModeElementType> tex;
 
-namespace hip_impl // Documentation only.
+__global__ void tex2dKernel(hipLaunchParm lp, float* outputData,
+                             int width,
+                             int height)
 {
-    #define requires(...)
-
-    #define FunctionalProcedure typename
+    int x = hipBlockIdx_x*hipBlockDim_x + hipThreadIdx_x;
+    int y = hipBlockIdx_y*hipBlockDim_y + hipThreadIdx_y;
+    outputData[y*width + x] = tex2D(tex, x, y);
 }

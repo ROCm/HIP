@@ -25,8 +25,9 @@ THE SOFTWARE.
 
 #include <hc.hpp>
 #include <hsa/hsa.h>
-#include "hsa/hsa_ext_amd.h"
+#include <unordered_map>
 
+#include "hsa/hsa_ext_amd.h"
 #include "hip/hip_runtime.h"
 #include "hip_util.h"
 #include "env.h"
@@ -248,7 +249,7 @@ static const DbName dbName [] =
 #define tprintf(trace_level, ...) {\
     if (HIP_DB & (1<<(trace_level))) {\
         char msgStr[1000];\
-        snprintf(msgStr, 2000, __VA_ARGS__);\
+        snprintf(msgStr, sizeof(msgStr), __VA_ARGS__);\
         fprintf (stderr, "  %ship-%s tid:%d:%s%s", dbName[trace_level]._color, dbName[trace_level]._shortName, tls_tidInfo.tid(), msgStr, KNRM); \
     }\
 }
@@ -268,7 +269,7 @@ extern uint64_t recordApiTrace(std::string *fullStr, const std::string &apiStr);
 
 #if COMPILE_HIP_ATP_MARKER || (COMPILE_HIP_TRACE_API & 0x1)
 #define API_TRACE(forceTrace, ...)\
-uint64_t hipApiStartTick;\
+uint64_t hipApiStartTick=0;\
 {\
     tls_tidInfo.incApiSeqNum();\
     if (forceTrace || (HIP_PROFILE_API || (COMPILE_HIP_DB && (HIP_TRACE_API & (1<<TRACE_ALL))))) {\
@@ -338,7 +339,7 @@ uint64_t hipApiStartTick;\
 class ihipException : public std::exception
 {
 public:
-    ihipException(hipError_t e) : _code(e) {};
+    explicit ihipException(hipError_t e) : _code(e) {};
 
     hipError_t _code;
 };
@@ -371,15 +372,16 @@ public:
 };
 
 
-class ihipModule_t {
-public:
-  hsa_executable_t executable;
-  hsa_code_object_t object;
-  std::string fileName;
-  void *ptr;
-  size_t size;
-  std::list<hipFunction_t> funcTrack;
-  ihipModule_t() : executable(), object(), fileName(), ptr(nullptr), size(0) {}
+struct ihipModule_t {
+    std::string fileName;
+    hsa_executable_t executable = {};
+    hsa_code_object_reader_t coReader = {};
+
+    ~ihipModule_t()
+    {
+        if (executable.handle) hsa_executable_destroy(executable);
+        if (coReader.handle) hsa_code_object_reader_destroy(coReader);
+    }
 };
 
 
@@ -667,11 +669,11 @@ template <typename MUTEX_TYPE>
 class ihipEventCriticalBase_t : LockedBase<MUTEX_TYPE>
 {
 public:
-    ihipEventCriticalBase_t(const ihipEvent_t *parentEvent) : 
+    explicit ihipEventCriticalBase_t(const ihipEvent_t *parentEvent) :
         _parent(parentEvent)
     {}
     ~ihipEventCriticalBase_t() {};
-   
+
      // Keep data in structure so it can be easily copied into snapshots
      // (used to reduce lock contention and preserve correct lock order)
     ihipEventData_t _eventData;
@@ -688,7 +690,7 @@ typedef LockedAccessor<ihipEventCritical_t> LockedAccessor_EventCrit_t;
 // internal hip event structure.
 class ihipEvent_t {
 public:
-    ihipEvent_t(unsigned flags);
+    explicit ihipEvent_t(unsigned flags);
     void attachToCompletionFuture(const hc::completion_future *cf, hipStream_t stream, ihipEventType_t eventType);
     std::pair<hipEventStatus_t, uint64_t> refreshEventStatus(); // returns pair <state, timestamp>
 
@@ -696,7 +698,7 @@ public:
     // Return a copy of the critical state. The critical data is locked during the copy.
 	ihipEventData_t locked_copyCrit() {
         LockedAccessor_EventCrit_t crit(_criticalData);
-        return _criticalData._eventData; 
+        return _criticalData._eventData;
     };
 
 	ihipEventCritical_t &criticalData() { return _criticalData; };
@@ -718,8 +720,9 @@ template <typename MUTEX_TYPE>
 class ihipDeviceCriticalBase_t : LockedBase<MUTEX_TYPE>
 {
 public:
-    ihipDeviceCriticalBase_t(ihipDevice_t *parentDevice) :
-        _parent(parentDevice)
+    explicit ihipDeviceCriticalBase_t(ihipDevice_t *parentDevice) :
+        _parent(parentDevice),
+        _ctxCount(0)
     {
     };
 

@@ -159,11 +159,16 @@ bool dataTypesRun(){
   HIP_ASSERT(hipMemcpy(deviceB, hostB, NUM*sizeof(T), hipMemcpyHostToDevice));
 
 
-  hipLaunchKernel(vectoradd_float,
-                  dim3(WIDTH/THREADS_PER_BLOCK_X, HEIGHT/THREADS_PER_BLOCK_Y),
-                  dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
-                  0, 0,
-                  deviceA ,deviceB ,WIDTH ,HEIGHT);
+  hipLaunchKernel(
+    vectoradd_float,
+    dim3(WIDTH/THREADS_PER_BLOCK_X, HEIGHT/THREADS_PER_BLOCK_Y),
+    dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
+    0,
+    0,
+    deviceA,
+    static_cast<const T*>(deviceB),
+    WIDTH,
+    HEIGHT);
 
 
   HIP_ASSERT(hipMemcpy(hostA, deviceA, NUM*sizeof(T), hipMemcpyDeviceToHost));
@@ -221,11 +226,16 @@ bool dataTypesRun2(){
   HIP_ASSERT(hipMalloc((void**)&deviceB, NUM * sizeof(T)));
 
   HIP_ASSERT(hipMemcpy(deviceB, hostB, NUM*sizeof(T), hipMemcpyHostToDevice));
-  hipLaunchKernel(vectoradd_float,
-                  dim3(WIDTH/THREADS_PER_BLOCK_X, HEIGHT/THREADS_PER_BLOCK_Y),
-                  dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
-                  0, 0,
-                  deviceA ,deviceB,WIDTH ,HEIGHT);
+  hipLaunchKernel(
+    vectoradd_float,
+    dim3(WIDTH/THREADS_PER_BLOCK_X, HEIGHT/THREADS_PER_BLOCK_Y),
+    dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
+    0,
+    0,
+    deviceA,
+    static_cast<const T*>(deviceB),
+    WIDTH,
+    HEIGHT);
 
 
   HIP_ASSERT(hipMemcpy(hostA, deviceA, NUM*sizeof(T), hipMemcpyDeviceToHost));
@@ -281,11 +291,16 @@ bool dataTypesRun4(){
   HIP_ASSERT(hipMemcpy(deviceB, hostB, NUM*sizeof(T), hipMemcpyHostToDevice));
 
 
-  hipLaunchKernel(vectoradd_float,
-                  dim3(WIDTH/THREADS_PER_BLOCK_X, HEIGHT/THREADS_PER_BLOCK_Y),
-                  dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
-                  0, 0,
-                  deviceA ,deviceB ,WIDTH ,HEIGHT);
+  hipLaunchKernel(
+    vectoradd_float,
+    dim3(WIDTH/THREADS_PER_BLOCK_X, HEIGHT/THREADS_PER_BLOCK_Y),
+    dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
+    0,
+    0,
+    deviceA,
+    static_cast<const T*>(deviceB),
+    WIDTH,
+    HEIGHT);
 
 
   HIP_ASSERT(hipMemcpy(hostA, deviceA, NUM*sizeof(T), hipMemcpyDeviceToHost));

@@ -20,62 +20,65 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <fstream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <cstdint>
-#include <memory>
-#include <mutex>
-#include <string>
-#include <unordered_map>
-#include <vector>
-#include <map>
+#include "elfio/elfio.hpp"
+#include "hip/hip_runtime.h"
+#include "hip/hcc_detail/program_state.hpp"
+#include "hip_hcc_internal.h"
+#include "hsa_helpers.hpp"
+#include "trace_helper.h"
 
 #include <hsa/hsa.h>
 #include <hsa/hsa_ext_amd.h>
 #include <hsa/amd_hsa_kernel_code.h>
 
-#include "elfio/elfio.hpp"
-#include "hip/hip_runtime.h"
-#include "hip_hcc_internal.h"
-#include "trace_helper.h"
+#include <cassert>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <fstream>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 //TODO Use Pool APIs from HCC to get memory regions.
 
-#include <cassert>
+using namespace ELFIO;
+using namespace hip_impl;
+using namespace std;
+
 inline uint64_t alignTo(uint64_t Value, uint64_t Align, uint64_t Skew = 0) {
   assert(Align != 0u && "Align can't be 0.");
   Skew %= Align;
   return (Value + Align - 1 - Skew) / Align * Align + Skew;
 }
 
+
 struct ihipKernArgInfo{
-  std::vector<uint32_t> Size;
-  std::vector<uint32_t> Align;
-  std::vector<std::string> ArgType;
-  std::vector<std::string> ArgName;
+  vector<uint32_t> Size;
+  vector<uint32_t> Align;
+  vector<string> ArgType;
+  vector<string> ArgName;
   uint32_t totalSize;
 };
 
-std::map<std::string,struct ihipKernArgInfo> kernelArguments;
-
-struct MyElfNote {
-  uint32_t n_namesz = 0;
-  uint32_t n_descsz = 0;
-  uint32_t n_type = 0;
-
-  MyElfNote() = default;
-};
+map<string, ihipKernArgInfo> kernelArguments;
 
 struct ihipModuleSymbol_t{
-    uint64_t    _object;             // The kernel object.
-    uint32_t    _groupSegmentSize;
-    uint32_t    _privateSegmentSize;
-    std::string        _name;       // TODO - review for performance cost.  Name is just used for debug.
+    uint64_t _object;             // The kernel object.
+    uint32_t _groupSegmentSize;
+    uint32_t _privateSegmentSize;
+    string   _name;       // TODO - review for performance cost.  Name is just used for debug.
 };
 
 template <>
-std::string ToString(hipFunction_t v)
+string ToString(hipFunction_t v)
 {
     std::ostringstream ss;
     ss << "0x" << std::hex << v->_object;
@@ -93,283 +96,20 @@ if (hsaStatus != HSA_STATUS_SUCCESS) {\
     return ihipLogStatus(hipStatus);\
 }
 
-namespace hipdrv {
-
-    hsa_status_t findSystemRegions(hsa_region_t region, void *data){
-        hsa_region_segment_t segment_id;
-        hsa_region_get_info(region, HSA_REGION_INFO_SEGMENT, &segment_id);
-
-        if(segment_id != HSA_REGION_SEGMENT_GLOBAL){
-            return HSA_STATUS_SUCCESS;
-        }
-
-        hsa_region_global_flag_t flags;
-        hsa_region_get_info(region, HSA_REGION_INFO_GLOBAL_FLAGS, &flags);
-
-        hsa_region_t *reg = (hsa_region_t*)data;
-
-        if(flags & HSA_REGION_GLOBAL_FLAG_FINE_GRAINED){
-            *reg = region;
-        }
-
-        return HSA_STATUS_SUCCESS;
-    }
-
-}   // End namespace hipdrv
-
-uint64_t PrintSymbolSizes(const void *emi, const char *name){
-    using namespace ELFIO;
-
-    const Elf64_Ehdr *ehdr = (const Elf64_Ehdr*)emi;
-    if(NULL == ehdr || EV_CURRENT != ehdr->e_version){}
-    const Elf64_Shdr * shdr = (const Elf64_Shdr*)((char*)emi + ehdr->e_shoff);
-    for(uint16_t i=0;i<ehdr->e_shnum;++i){
-        if(shdr[i].sh_type == SHT_SYMTAB){
-            const Elf64_Sym *syms = (const Elf64_Sym*)((char*)emi + shdr[i].sh_offset);
-            assert(syms);
-            uint64_t numSyms = shdr[i].sh_size/shdr[i].sh_entsize;
-            const char* strtab = (const char*)((char*)emi + shdr[shdr[i].sh_link].sh_offset);
-            assert(strtab);
-            for(uint64_t i=0;i<numSyms;++i){
-                const char *symname = strtab + syms[i].st_name;
-                assert(symname);
-                uint64_t size = syms[i].st_size;
-                if(strcmp(name, symname) == 0){
-                    return size;
-                }
-            }
-        }
-    }
-    return 0;
-}
-
-uint64_t ElfSize(const void *emi){
-    using namespace ELFIO;
-
-    const Elf64_Ehdr *ehdr = (const Elf64_Ehdr*)emi;
-    const Elf64_Shdr *shdr = (const Elf64_Shdr*)((char*)emi + ehdr->e_shoff);
-
-    uint64_t max_offset = ehdr->e_shoff;
-    uint64_t total_size = max_offset + ehdr->e_shentsize * ehdr->e_shnum;
-
-    for(uint16_t i=0;i < ehdr->e_shnum;++i){
-        uint64_t cur_offset = static_cast<uint64_t>(shdr[i].sh_offset);
-        if(max_offset < cur_offset){
-            max_offset = cur_offset;
-            total_size = max_offset;
-            if(SHT_NOBITS != shdr[i].sh_type){
-                total_size += static_cast<uint64_t>(shdr[i].sh_size);
-            }
-        }
-    }
-    return total_size;
-}
-
-namespace
-{
-    template<typename P>
-    inline
-    ELFIO::section* find_section_if(ELFIO::elfio& reader, P p)
-    {
-        using namespace std;
-
-        const auto it = find_if(
-            reader.sections.begin(), reader.sections.end(), move(p));
-
-        return it != reader.sections.end() ? *it : nullptr;
-    }
-
-    inline
-    std::vector<std::string> copy_names_of_undefined_symbols(
-        const ELFIO::symbol_section_accessor& section)
-    {
-        using namespace ELFIO;
-        using namespace std;
-
-        vector<string> r;
-
-        for (auto i = 0u; i != section.get_symbols_num(); ++i) {
-            // TODO: this is boyscout code, caching the temporaries
-            //       may be of worth.
-            string name;
-            Elf64_Addr value = 0;
-            Elf_Xword size = 0;
-            Elf_Half sect_idx = 0;
-            uint8_t bind = 0;
-            uint8_t type = 0;
-            uint8_t other = 0;
-
-            section.get_symbol(
-                i, name, value, size, bind, type, sect_idx, other);
-
-            if (sect_idx == SHN_UNDEF && !name.empty()) {
-                r.push_back(std::move(name));
-            }
-        }
-
-        return r;
-    }
-
-    inline
-    std::pair<ELFIO::Elf64_Addr, ELFIO::Elf_Xword> find_symbol_address(
-        const ELFIO::symbol_section_accessor& section,
-        const std::string& symbol_name)
-    {
-        using namespace ELFIO;
-        using namespace std;
-
-        static const pair<Elf64_Addr, Elf_Xword> r{0, 0};
-
-        for (auto i = 0u; i != section.get_symbols_num(); ++i) {
-            // TODO: this is boyscout code, caching the temporaries
-            //       may be of worth.
-            string name;
-            Elf64_Addr value = 0;
-            Elf_Xword size = 0;
-            Elf_Half sect_idx = 0;
-            uint8_t bind = 0;
-            uint8_t type = 0;
-            uint8_t other = 0;
-
-            section.get_symbol(
-                i, name, value, size, bind, type, sect_idx, other);
-
-            if (name == symbol_name) return make_pair(value, size);
-        }
-
-        return r;
-    }
-
-    inline
-    void associate_code_object_symbols_with_host_allocation(
-        const ELFIO::elfio& reader,
-        const ELFIO::elfio& self_reader,
-        ELFIO::section* code_object_dynsym,
-        ELFIO::section* process_symtab,
-        hsa_agent_t agent,
-        hsa_executable_t executable)
-    {
-        using namespace ELFIO;
-        using namespace std;
-
-        if (!code_object_dynsym || !process_symtab) return;
-
-        const auto undefined_symbols = copy_names_of_undefined_symbols(
-            symbol_section_accessor{reader, code_object_dynsym});
-
-        for (auto&& x : undefined_symbols) {
-            const auto tmp = find_symbol_address(
-                symbol_section_accessor{self_reader, process_symtab}, x);
-
-            assert(tmp.first);
-
-            void* p = nullptr;
-            hsa_amd_memory_lock(
-                reinterpret_cast<void*>(tmp.first), tmp.second, &agent, 1, &p);
-
-            hsa_executable_agent_global_variable_define(
-                executable, agent, x.c_str(), p);
-
-            static vector<
-                unique_ptr<void, decltype(hsa_amd_memory_unlock)*>> globals;
-            static mutex mtx;
-
-            lock_guard<std::mutex> lck{mtx};
-            globals.emplace_back(p, hsa_amd_memory_unlock);
-        }
-    }
-
-    inline
-    void load_code_object_and_freeze_executable(
-        const char* file, hsa_agent_t agent, hsa_executable_t executable)
-    {   // TODO: the following sequence is inefficient, should be refactored
-        //       into a single load of the file and subsequent ELFIO
-        //       processing.
-        using namespace std;
-
-        static const auto cor_deleter = [](hsa_code_object_reader_t* p) {
-            hsa_code_object_reader_destroy(*p);
-        };
-
-        using RAII_code_reader = unique_ptr<
-            hsa_code_object_reader_t, decltype(cor_deleter)>;
-
-        unique_ptr<FILE, decltype(fclose)*> cobj{fopen(file, "r"), fclose};
-        RAII_code_reader tmp{new hsa_code_object_reader_t, cor_deleter};
-        hsa_code_object_reader_create_from_file(fileno(cobj.get()), tmp.get());
-
-        hsa_executable_load_agent_code_object(
-            executable, agent, *tmp, nullptr, nullptr);
-
-        hsa_executable_freeze(executable, nullptr);
-
-        static vector<RAII_code_reader> code_readers;
-        static mutex mtx;
-
-        lock_guard<mutex> lck{mtx};
-        code_readers.push_back(move(tmp));
-    }
-}
-
 hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
 {
-    using namespace ELFIO;
-
     HIP_INIT_API(module, fname);
-    hipError_t ret = hipSuccess;
-    *module = new ihipModule_t;
 
-    if(module == NULL){
-        return ihipLogStatus(hipErrorInvalidValue);
-    }
+    if (!fname) return ihipLogStatus(hipErrorInvalidValue);
 
-    auto ctx = ihipGetTlsDefaultCtx();
-    if(ctx == nullptr){
-        ret = hipErrorInvalidContext;
+    ifstream file{fname};
 
-    }else{
-        int deviceId = ctx->getDevice()->_deviceId;
-        ihipDevice_t *currentDevice = ihipGetDevice(deviceId);
+    if (!file.is_open()) return ihipLogStatus(hipErrorFileNotFound);
 
-        hsa_executable_create_alt(
-            HSA_PROFILE_FULL,
-            HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT,
-            nullptr,
-            &(*module)->executable);
+    vector<char> tmp{
+        istreambuf_iterator<char>{file}, istreambuf_iterator<char>{}};
 
-        elfio reader;
-        if (!reader.load(fname)) {
-            return ihipLogStatus(hipErrorFileNotFound);
-        }
-        else {
-            // TODO: this may benefit from caching as well.
-            elfio self_reader;
-            self_reader.load("/proc/self/exe");
-
-            const auto symtab =
-                find_section_if(self_reader, [](const ELFIO::section* x) {
-                    return x->get_type() == SHT_SYMTAB;
-                });
-
-            const auto code_object_dynsym =
-                find_section_if(reader, [](const ELFIO::section* x) {
-                    return x->get_type() == SHT_DYNSYM;
-                });
-
-            associate_code_object_symbols_with_host_allocation(
-                reader,
-                self_reader,
-                code_object_dynsym,
-                symtab,
-                currentDevice->_hsaAgent,
-                (*module)->executable);
-
-            load_code_object_and_freeze_executable(
-                fname, currentDevice->_hsaAgent, (*module)->executable);
-        }
-    }
-
-    return ihipLogStatus(ret);
+    return hipModuleLoadData(module, tmp.data());
 }
 
 
@@ -381,91 +121,12 @@ hipError_t hipModuleUnload(hipModule_t hmod)
     // Currently we want for all inflight activity to complete, but don't prevent another
     // thread from launching new kernels before we finish this operation.
     ihipSynchronize();
-    hipError_t ret = hipSuccess;
-    hsa_status_t status = hsa_executable_destroy(hmod->executable);
-    if(status != HSA_STATUS_SUCCESS)
-		{
-				ret = hipErrorInvalidValue;
-		}
-    // status = hsa_code_object_destroy(hmod->object);
-    // if(status != HSA_STATUS_SUCCESS)
-	// 	{
-	// 			ret = hipErrorInvalidValue;
-	// 	}
-    // status = hsa_memory_free(hmod->ptr);
-    // if(status != HSA_STATUS_SUCCESS)
-	// 	{
-	// 			ret = hipErrorInvalidValue;
-	// 	}
-    for(auto f = hmod->funcTrack.begin(); f != hmod->funcTrack.end(); ++f) {
-      delete *f;
-    }
-    delete hmod;
-    return ihipLogStatus(ret);
+
+    delete hmod; // The ihipModule_t dtor will clean everything up.
+    hmod = nullptr;
+
+    return ihipLogStatus(hipSuccess);
 }
-
-
-hipError_t ihipModuleGetSymbol(hipFunction_t *func, hipModule_t hmod, const char *name)
-{
-    auto ctx = ihipGetTlsDefaultCtx();
-    hipError_t ret = hipSuccess;
-
-    if (name == nullptr){
-        return (hipErrorInvalidValue);
-    }
-
-    if (ctx == nullptr){
-        ret = hipErrorInvalidContext;
-
-    } else {
-        std::string str(name);
-        for(auto f = hmod->funcTrack.begin(); f != hmod->funcTrack.end(); ++f) {
-            if((*f)->_name == str) {
-                *func = *f;
-                return ret;
-            }
-        }
-        ihipModuleSymbol_t *sym = new ihipModuleSymbol_t;
-        int deviceId = ctx->getDevice()->_deviceId;
-        ihipDevice_t *currentDevice = ihipGetDevice(deviceId);
-        hsa_agent_t gpuAgent = (hsa_agent_t)currentDevice->_hsaAgent;
-
-        hsa_status_t status;
-        hsa_executable_symbol_t 	symbol;
-        status = hsa_executable_get_symbol(hmod->executable, NULL, name, gpuAgent, 0, &symbol);
-        if(status != HSA_STATUS_SUCCESS){
-            return hipErrorNotFound;
-        }
-
-        status = hsa_executable_symbol_get_info(symbol,
-                                   HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_OBJECT,
-                                   &sym->_object);
-        CHECK_HSA(status, hipErrorNotFound);
-
-        status = hsa_executable_symbol_get_info(symbol,
-                                    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE,
-                                    &sym->_groupSegmentSize);
-        CHECK_HSA(status, hipErrorNotFound);
-
-        status = hsa_executable_symbol_get_info(symbol,
-                                    HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_PRIVATE_SEGMENT_SIZE,
-                                    &sym->_privateSegmentSize);
-        CHECK_HSA(status, hipErrorNotFound);
-
-        sym->_name = name;
-        *func = sym;
-        hmod->funcTrack.push_back(*func);
-    }
-    return ret;
-}
-
-
-hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod,
-                                const char *name){
-    HIP_INIT_API(hfunc, hmod, name);
-    return ihipLogStatus(ihipModuleGetSymbol(hfunc, hmod, name));
-}
-
 
 hipError_t ihipModuleLaunchKernel(hipFunction_t f,
                                   uint32_t globalWorkSizeX, uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
@@ -617,44 +278,10 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f,
 namespace
 {
     struct Agent_global {
-        std::string name;
+        string name;
         hipDeviceptr_t address;
-        std::uint32_t byte_cnt;
+        uint32_t byte_cnt;
     };
-
-    inline
-    void* address(hsa_executable_symbol_t x)
-    {
-        void* r = nullptr;
-        hsa_executable_symbol_get_info(
-            x, HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_ADDRESS, &r);
-
-        return r;
-    }
-
-    inline
-    std::string name(hsa_executable_symbol_t x)
-    {
-        uint32_t sz = 0u;
-        hsa_executable_symbol_get_info(
-            x, HSA_EXECUTABLE_SYMBOL_INFO_NAME_LENGTH, &sz);
-
-        std::string r(sz, '\0');
-        hsa_executable_symbol_get_info(
-            x, HSA_EXECUTABLE_SYMBOL_INFO_NAME, &r.front());
-
-        return r;
-    }
-
-    inline
-    std::uint32_t size(hsa_executable_symbol_t x)
-    {
-        std::uint32_t r = 0;
-        hsa_executable_symbol_get_info(
-            x, HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_SIZE, &r);
-
-        return r;
-    }
 
     inline
     void track(const Agent_global& x)
@@ -680,7 +307,7 @@ namespace
         hc::am_memtracker_update(x.address, device->_deviceId, 0u);
     }
 
-    template<typename Container = std::vector<Agent_global>>
+    template<typename Container = vector<Agent_global>>
     inline
     hsa_status_t copy_agent_global_variables(
         hsa_executable_t, hsa_agent_t, hsa_executable_symbol_t x, void* out)
@@ -705,56 +332,58 @@ namespace
     {
         auto ctx = ihipGetTlsDefaultCtx();
 
-        if (!ctx) throw std::runtime_error{"No active HIP context."};
+        if (!ctx) throw runtime_error{"No active HIP context."};
 
         auto device = ctx->getDevice();
 
-        if (!device) throw std::runtime_error{"No device available for HIP."};
+        if (!device) throw runtime_error{"No device available for HIP."};
 
         ihipDevice_t *currentDevice = ihipGetDevice(device->_deviceId);
 
-        if (!currentDevice) {
-            throw std::runtime_error{"No active device for HIP"};
-        }
+        if (!currentDevice) throw runtime_error{"No active device for HIP."};
 
         return currentDevice->_hsaAgent;
     }
 
     inline
-    std::vector<Agent_global> read_agent_globals(hipModule_t hmodule)
+    vector<Agent_global> read_agent_globals(
+        hsa_agent_t agent, hsa_executable_t executable)
     {
-        std::vector<Agent_global> r;
-
+        vector<Agent_global> r;
 
         hsa_executable_iterate_agent_symbols(
-            hmodule->executable, this_agent(), copy_agent_global_variables, &r);
+            executable, agent, copy_agent_global_variables, &r);
 
         return r;
     }
-}
 
-hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes,
-                              hipModule_t hmod, const char* name)
-{
-    HIP_INIT_API(dptr, bytes, hmod, name);
-    hipError_t ret = hipSuccess;
-    if(dptr == NULL || bytes == NULL){
-        return ihipLogStatus(hipErrorInvalidValue);
+    template<typename ForwardIterator>
+    pair<hipDeviceptr_t, size_t> read_global_description(
+        ForwardIterator f, ForwardIterator l, const char* name)
+    {
+        const auto it = std::find_if(
+            f, l, [=](const Agent_global& x) { return x.name == name; });
+
+        return it == l ?
+            make_pair(nullptr, 0u) : make_pair(it->address, it->byte_cnt);
     }
-    if(name == NULL || hmod == NULL){
-        return ihipLogStatus(hipErrorNotInitialized);
-    }
-    else{
-        static std::unordered_map<
-            hipModule_t, std::vector<Agent_global>> agent_globals;
+
+    hipError_t read_agent_global_from_module(
+        hipDeviceptr_t *dptr,
+        size_t* bytes,
+        hipModule_t hmod,
+        const char* name)
+    {
+        static unordered_map<hipModule_t, vector<Agent_global>> agent_globals;
 
         // TODO: this is not particularly robust.
         if (agent_globals.count(hmod) == 0) {
-            static std::mutex mtx;
-            std::lock_guard<std::mutex> lck{mtx};
+            static mutex mtx;
+            lock_guard<mutex> lck{mtx};
 
             if (agent_globals.count(hmod) == 0) {
-                agent_globals.emplace(hmod, read_agent_globals(hmod));
+                agent_globals.emplace(
+                    hmod, read_agent_globals(this_agent(), hmod->executable));
             }
         }
 
@@ -762,74 +391,184 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes,
         //       It will have to be properly fleshed out in the future.
         const auto it0 = agent_globals.find(hmod);
         if (it0 == agent_globals.cend()) {
-            throw std::runtime_error{"agent_globals data structure corrupted."};
+            throw runtime_error{"agent_globals data structure corrupted."};
         }
 
-        const auto it1 = std::find_if(
-            it0->second.cbegin(),
-            it0->second.cend(),
-            [=](const Agent_global& x) { return x.name == name; });
+        tie(*dptr, *bytes) = read_global_description(
+            it0->second.cbegin(), it0->second.cend(), name);
 
-        if (it1 == it0->second.cend()) return ihipLogStatus(hipErrorNotFound);
-
-        *dptr = it1->address;
-        *bytes = it1->byte_cnt;
-
-        return ihipLogStatus(hipSuccess);
+        return dptr ? hipSuccess : hipErrorNotFound;
     }
+
+    hipError_t read_agent_global_from_process(
+        hipDeviceptr_t *dptr, size_t* bytes, const char* name)
+    {
+        static unordered_map<hsa_agent_t, vector<Agent_global>> agent_globals;
+        static std::once_flag f;
+
+        call_once(f, []() {
+            for (auto&& agent_executables : hip_impl::executables()) {
+                vector<Agent_global> tmp0;
+                for (auto&& executable : agent_executables.second) {
+                    auto tmp1 = read_agent_globals(
+                        agent_executables.first, executable);
+                    tmp0.insert(
+                        tmp0.end(),
+                        make_move_iterator(tmp1.begin()),
+                        make_move_iterator(tmp1.end()));
+                }
+                agent_globals.emplace(agent_executables.first, move(tmp0));
+            }
+        });
+
+        const auto it = agent_globals.find(this_agent());
+
+        if (it == agent_globals.cend()) return hipErrorNotInitialized;
+
+        tie(*dptr, *bytes) = read_global_description(
+            it->second.cbegin(), it->second.cend(), name);
+
+        return dptr ? hipSuccess : hipErrorNotFound;
+    }
+
+    hsa_executable_symbol_t find_kernel_by_name(
+        hsa_executable_t executable, const char* kname)
+    {
+        pair<const char*, hsa_executable_symbol_t> r{kname, {}};
+
+        hsa_executable_iterate_agent_symbols(
+            executable,
+            this_agent(),
+            [](hsa_executable_t, hsa_agent_t, hsa_executable_symbol_t x, void* s) {
+                auto p =
+                    static_cast<pair<const char*, hsa_executable_symbol_t>*>(s);
+
+                if (type(x) != HSA_SYMBOL_KIND_KERNEL) {
+                    return HSA_STATUS_SUCCESS;
+                }
+                if (name(x) != p->first) return HSA_STATUS_SUCCESS;
+
+                p->second = x;
+
+                return HSA_STATUS_INFO_BREAK;
+            }, &r);
+
+        return r.second;
+    }
+
+    string read_elf_file_as_string(const void* file)
+    {   // Precondition: file points to an ELF image that was BITWISE loaded
+        //               into process accessible memory, and not one loaded by
+        //               the loader. This is because in the latter case
+        //               alignment may differ, which will break the size
+        //               computation.
+        //               the image is Elf64, and matches endianness i.e. it is
+        //               Little Endian.
+        if (!file) return {};
+
+        auto h = static_cast<const Elf64_Ehdr*>(file);
+        auto s = static_cast<const char*>(file);
+        // This assumes the common case of SHT being the last part of the ELF.
+        auto sz = sizeof(Elf64_Ehdr) + h->e_shoff + h->e_shentsize * h->e_shnum;
+
+        return string{s, s + sz};
+    }
+} // Anonymous namespace, internal linkage.
+
+hipError_t ihipModuleGetFunction(
+    hipFunction_t *func, hipModule_t hmod, const char *name)
+{
+    HIP_INIT_API(func, hmod, name);
+
+    if (!func || !name) return ihipLogStatus(hipErrorInvalidValue);
+
+    auto ctx = ihipGetTlsDefaultCtx();
+
+    if (!ctx) return ihipLogStatus(hipErrorInvalidContext);
+
+    hipError_t ret = hipSuccess;
+
+    *func = new ihipModuleSymbol_t;
+
+    if (!*func) return ihipLogStatus(hipErrorInvalidValue);
+
+    auto kernel = find_kernel_by_name(hmod->executable, name);
+
+    if (kernel.handle == 0u) return ihipLogStatus(hipErrorNotFound);
+
+    (*func)->_object = kernel_object(kernel);
+    (*func)->_groupSegmentSize = group_size(kernel);
+    (*func)->_privateSegmentSize = private_size(kernel);
+    (*func)->_name = name;
+
+    return ihipLogStatus(hipSuccess);
+}
+
+hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod,
+                                const char *name){
+    HIP_INIT_API(hfunc, hmod, name);
+    return ihipLogStatus(ihipModuleGetFunction(hfunc, hmod, name));
+}
+
+hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes,
+                              hipModule_t hmod, const char* name)
+{
+    HIP_INIT_API(dptr, bytes, hmod, name);
+
+    if(!dptr || !bytes) return ihipLogStatus(hipErrorInvalidValue);
+
+    if(!name) return ihipLogStatus(hipErrorNotInitialized);
+
+    const auto r = hmod ?
+        read_agent_global_from_module(dptr, bytes, hmod, name) :
+        read_agent_global_from_process(dptr, bytes, name);
+
+    return ihipLogStatus(r);
 }
 
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
 {
     HIP_INIT_API(module, image);
-    hipError_t ret = hipSuccess;
-    if(image == NULL || module == NULL){
-        return ihipLogStatus(hipErrorNotInitialized);
-    } else {
-        auto ctx = ihipGetTlsDefaultCtx();
-        *module = new ihipModule_t;
-        int deviceId = ctx->getDevice()->_deviceId;
-        ihipDevice_t *currentDevice = ihipGetDevice(deviceId);
 
-        void *p;
-        uint64_t size = ElfSize(image);
-        hsa_agent_t agent = currentDevice->_hsaAgent;
-        hsa_region_t sysRegion;
-        hsa_status_t status = hsa_agent_iterate_regions(agent, hipdrv::findSystemRegions, &sysRegion);
-        status = hsa_memory_allocate(sysRegion, size, (void**)&p);
+    if (!module) return ihipLogStatus(hipErrorInvalidValue);
 
-        if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorOutOfMemory);
-        }
+    *module = new ihipModule_t;
 
-        char *ptr = (char*)p;
-        if(!ptr){
-           return ihipLogStatus(hipErrorOutOfMemory);
-        }
-        (*module)->ptr = p;
-        (*module)->size = size;
+    auto ctx = ihipGetTlsDefaultCtx();
+    if (!ctx) return ihipLogStatus(hipErrorInvalidContext);
 
-        memcpy(ptr, image, size);
+    hsa_executable_create_alt(
+        HSA_PROFILE_FULL,
+        HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT,
+        nullptr,
+        &(*module)->executable);
 
-        status = hsa_code_object_deserialize(ptr, size, NULL, &(*module)->object);
+    (*module)->executable = hip_impl::load_executable(
+        read_elf_file_as_string(image), (*module)->executable, this_agent());
 
-        if(status != HSA_STATUS_SUCCESS){
-            return ihipLogStatus(hipErrorSharedObjectInitFailed);
-        }
-
-        status = hsa_executable_create(HSA_PROFILE_FULL, HSA_EXECUTABLE_STATE_UNFROZEN, NULL, &(*module)->executable);
-        CHECKLOG_HSA(status, hipErrorNotInitialized);
-
-        status = hsa_executable_load_code_object((*module)->executable, agent, (*module)->object, NULL);
-        CHECKLOG_HSA(status, hipErrorNotInitialized);
-
-        status = hsa_executable_freeze((*module)->executable, NULL);
-        CHECKLOG_HSA(status, hipErrorNotInitialized);
-    }
-    return ihipLogStatus(ret);
+    return ihipLogStatus(
+        (*module)->executable.handle ? hipSuccess : hipErrorUnknown);
 }
 
 hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image, unsigned int numOptions, hipJitOption *options, void **optionValues)
 {
     return hipModuleLoadData(module, image);
+}
+
+hipError_t hipModuleGetTexRef(
+    textureReference** texRef, hipModule_t hmod, const char* name)
+{
+    HIP_INIT_API(texRef, hmod, name);
+
+    hipError_t ret = hipErrorNotFound;
+    if(!texRef) return ihipLogStatus(hipErrorInvalidValue);
+
+    if(!hmod || !name) return ihipLogStatus(hipErrorNotInitialized);
+
+    const auto it = globals().find(name);
+    if (it == globals().end()) return ihipLogStatus(hipErrorInvalidValue);
+
+    *texRef = static_cast<textureReference*>(it->second.get());
+
+    return ihipLogStatus(hipSuccess);
 }
