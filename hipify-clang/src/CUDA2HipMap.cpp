@@ -1478,18 +1478,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"gridDim.y",   {"hipGridDim_y",   CONV_COORD_FUNC,   API_RUNTIME}},
     {"gridDim.z",   {"hipGridDim_z",   CONV_COORD_FUNC,   API_RUNTIME}},
 
-    {"blockIdx.x",  {"hipBlockIdx_x",  CONV_COORD_FUNC,   API_RUNTIME}},
-    {"blockIdx.y",  {"hipBlockIdx_y",  CONV_COORD_FUNC,   API_RUNTIME}},
-    {"blockIdx.z",  {"hipBlockIdx_z",  CONV_COORD_FUNC,   API_RUNTIME}},
-
-    {"blockDim.x",  {"hipBlockDim_x",  CONV_COORD_FUNC,   API_RUNTIME}},
-    {"blockDim.y",  {"hipBlockDim_y",  CONV_COORD_FUNC,   API_RUNTIME}},
-    {"blockDim.z",  {"hipBlockDim_z",  CONV_COORD_FUNC,   API_RUNTIME}},
-
-    {"gridDim.x",   {"hipGridDim_x",   CONV_COORD_FUNC,   API_RUNTIME}},
-    {"gridDim.y",   {"hipGridDim_y",   CONV_COORD_FUNC,   API_RUNTIME}},
-    {"gridDim.z",   {"hipGridDim_z",   CONV_COORD_FUNC,   API_RUNTIME}},
-
     {"warpSize",    {"hipWarpSize",    CONV_SPECIAL_FUNC, API_RUNTIME}},
 
     // Events
