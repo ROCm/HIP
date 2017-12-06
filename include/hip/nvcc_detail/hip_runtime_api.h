@@ -597,6 +597,10 @@ inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t *p_prop, int dev
     p_prop->arch.hasDynamicParallelism       =  (ccVers >= 350);
 
     p_prop->concurrentKernels = cdprop.concurrentKernels;
+    p_prop->pciBusID = cdprop.pciBusID;
+    p_prop->pciDeviceID = cdprop.pciDeviceID;
+    p_prop->maxSharedMemoryPerMultiProcessor = cdprop.sharedMemPerMultiprocessor;
+    p_prop->isMultiGpuBoard = cdprop.isMultiGpuBoard;
 
     return hipCUDAErrorTohipError(cerror);
 }
