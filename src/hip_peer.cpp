@@ -30,27 +30,27 @@ THE SOFTWARE.
 // Peer access functions.
 // There are two flavors:
 //   - one where contexts are specified with hipCtx_t type.
-//   - one where contexts are specified with integer deviceIds, that are mapped to the primary context for that device.
-// The implementation contains a set of internal ihip* functions which operate on contexts.  Then the
-// public APIs are thin wrappers which call into this internal implementations.
-// TODO - actually not yet - currently the integer deviceId flavors just call the context APIs.  need to fix.
+//   - one where contexts are specified with integer deviceIds, that are mapped to the primary
+//   context for that device.
+// The implementation contains a set of internal ihip* functions which operate on contexts.  Then
+// the public APIs are thin wrappers which call into this internal implementations.
+// TODO - actually not yet - currently the integer deviceId flavors just call the context APIs.
+// need to fix.
 
 
-
-hipError_t ihipDeviceCanAccessPeer (int* canAccessPeer, hipCtx_t thisCtx, hipCtx_t peerCtx)
-{
+hipError_t ihipDeviceCanAccessPeer(int* canAccessPeer, hipCtx_t thisCtx, hipCtx_t peerCtx) {
     hipError_t err = hipSuccess;
 
 
     if ((thisCtx != NULL) && (peerCtx != NULL)) {
-
         if (thisCtx == peerCtx) {
             *canAccessPeer = 0;
             tprintf(DB_MEM, "Can't be peer to self. (this=%s, peer=%s)\n",
                     thisCtx->toString().c_str(), peerCtx->toString().c_str());
-        } else  if (HIP_FORCE_P2P_HOST & 0x2) {
+        } else if (HIP_FORCE_P2P_HOST & 0x2) {
             *canAccessPeer = false;
-            tprintf(DB_MEM, "HIP_FORCE_P2P_HOST denies peer access this=%s peer=%s  canAccessPeer=%d\n",
+            tprintf(DB_MEM,
+                    "HIP_FORCE_P2P_HOST denies peer access this=%s peer=%s  canAccessPeer=%d\n",
                     thisCtx->toString().c_str(), peerCtx->toString().c_str(), *canAccessPeer);
         } else {
             *canAccessPeer = peerCtx->getDevice()->_acc.get_is_peer(thisCtx->getDevice()->_acc);
@@ -72,8 +72,7 @@ hipError_t ihipDeviceCanAccessPeer (int* canAccessPeer, hipCtx_t thisCtx, hipCtx
  * HCC returns 0 in *canAccessPeer ; Need to update this function when RT supports P2P
  */
 //---
-hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, hipCtx_t thisCtx, hipCtx_t peerCtx)
-{
+hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, hipCtx_t thisCtx, hipCtx_t peerCtx) {
     HIP_INIT_API(canAccessPeer, thisCtx, peerCtx);
 
     return ihipLogStatus(ihipDeviceCanAccessPeer(canAccessPeer, thisCtx, peerCtx));
@@ -83,28 +82,28 @@ hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, hipCtx_t thisCtx, hipCtx_
 //---
 // Disable visibility of this device into memory allocated on peer device.
 // Remove this device from peer device peerlist.
-hipError_t ihipDisablePeerAccess (hipCtx_t peerCtx)
-{
+hipError_t ihipDisablePeerAccess(hipCtx_t peerCtx) {
     hipError_t err = hipSuccess;
 
     auto thisCtx = ihipGetTlsDefaultCtx();
     if ((thisCtx != NULL) && (peerCtx != NULL)) {
-        bool canAccessPeer =  peerCtx->getDevice()->_acc.get_is_peer(thisCtx->getDevice()->_acc);
+        bool canAccessPeer = peerCtx->getDevice()->_acc.get_is_peer(thisCtx->getDevice()->_acc);
 
-        if (! canAccessPeer) {
+        if (!canAccessPeer) {
             err = hipErrorInvalidDevice;  // P2P not allowed between these devices.
-        } else if (thisCtx == peerCtx)  {
+        } else if (thisCtx == peerCtx) {
             err = hipErrorInvalidDevice;  // Can't disable peer access to self.
         } else {
             LockedAccessor_CtxCrit_t peerCrit(peerCtx->criticalData());
             bool changed = peerCrit->removePeerWatcher(peerCtx, thisCtx);
             if (changed) {
                 tprintf(DB_MEM, "device %s disable access to memory allocated on peer:%s\n",
-                                  thisCtx->toString().c_str(), peerCtx->toString().c_str());
+                        thisCtx->toString().c_str(), peerCtx->toString().c_str());
                 // Update the peers for all memory already saved in the tracker:
-                am_memtracker_update_peers(peerCtx->getDevice()->_acc, peerCrit->peerCnt(), peerCrit->peerAgents());
+                am_memtracker_update_peers(peerCtx->getDevice()->_acc, peerCrit->peerCnt(),
+                                           peerCrit->peerAgents());
             } else {
-                err = hipErrorPeerAccessNotEnabled; // never enabled P2P access.
+                err = hipErrorPeerAccessNotEnabled;  // never enabled P2P access.
             }
         }
     } else {
@@ -118,24 +117,24 @@ hipError_t ihipDisablePeerAccess (hipCtx_t peerCtx)
 //---
 // Allow the current device to see all memory allocated on peerCtx.
 // This should add this device to the peer-device peer list.
-hipError_t ihipEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags)
-{
-
+hipError_t ihipEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags) {
     hipError_t err = hipSuccess;
     if (flags != 0) {
         err = hipErrorInvalidValue;
     } else {
         auto thisCtx = ihipGetTlsDefaultCtx();
-        if (thisCtx == peerCtx)  {
+        if (thisCtx == peerCtx) {
             err = hipErrorInvalidDevice;  // Can't enable peer access to self.
         } else if ((thisCtx != NULL) && (peerCtx != NULL)) {
             LockedAccessor_CtxCrit_t peerCrit(peerCtx->criticalData());
-            // Add thisCtx to peerCtx's access list so that new allocations on peer will be made visible to this device:
+            // Add thisCtx to peerCtx's access list so that new allocations on peer will be made
+            // visible to this device:
             bool isNewPeer = peerCrit->addPeerWatcher(peerCtx, thisCtx);
             if (isNewPeer) {
                 tprintf(DB_MEM, "device=%s can now see all memory allocated on peer=%s\n",
-                                  thisCtx->toString().c_str(), peerCtx->toString().c_str());
-                am_memtracker_update_peers(peerCtx->getDevice()->_acc, peerCrit->peerCnt(), peerCrit->peerAgents());
+                        thisCtx->toString().c_str(), peerCtx->toString().c_str());
+                am_memtracker_update_peers(peerCtx->getDevice()->_acc, peerCrit->peerCnt(),
+                                           peerCrit->peerAgents());
             } else {
                 err = hipErrorPeerAccessAlreadyEnabled;
             }
@@ -149,8 +148,8 @@ hipError_t ihipEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags)
 
 
 //---
-hipError_t hipMemcpyPeer (void* dst, hipCtx_t dstCtx, const void* src, hipCtx_t srcCtx, size_t sizeBytes)
-{
+hipError_t hipMemcpyPeer(void* dst, hipCtx_t dstCtx, const void* src, hipCtx_t srcCtx,
+                         size_t sizeBytes) {
     HIP_INIT_API(dst, dstCtx, src, srcCtx, sizeBytes);
 
     // TODO - move to ihip memory copy implementaion.
@@ -160,8 +159,8 @@ hipError_t hipMemcpyPeer (void* dst, hipCtx_t dstCtx, const void* src, hipCtx_t 
 
 
 //---
-hipError_t hipMemcpyPeerAsync (void* dst, hipCtx_t dstDevice, const void* src, hipCtx_t srcDevice, size_t sizeBytes, hipStream_t stream)
-{
+hipError_t hipMemcpyPeerAsync(void* dst, hipCtx_t dstDevice, const void* src, hipCtx_t srcDevice,
+                              size_t sizeBytes, hipStream_t stream) {
     HIP_INIT_API(dst, dstDevice, src, srcDevice, sizeBytes, stream);
 
     // TODO - move to ihip memory copy implementaion.
@@ -170,57 +169,53 @@ hipError_t hipMemcpyPeerAsync (void* dst, hipCtx_t dstDevice, const void* src, h
 };
 
 
-
 //=============================================================================
 // These are the flavors that accept integer deviceIDs.
 // Implementations map these to primary contexts and call the internal functions above.
 //=============================================================================
 
-hipError_t hipDeviceCanAccessPeer (int* canAccessPeer, int deviceId, int peerDeviceId)
-{
+hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, int deviceId, int peerDeviceId) {
     HIP_INIT_API(canAccessPeer, deviceId, peerDeviceId);
-    return ihipLogStatus(ihipDeviceCanAccessPeer(canAccessPeer, ihipGetPrimaryCtx(deviceId), ihipGetPrimaryCtx(peerDeviceId)));
+    return ihipLogStatus(ihipDeviceCanAccessPeer(canAccessPeer, ihipGetPrimaryCtx(deviceId),
+                                                 ihipGetPrimaryCtx(peerDeviceId)));
 }
 
 
-hipError_t hipDeviceDisablePeerAccess (int peerDeviceId)
-{
+hipError_t hipDeviceDisablePeerAccess(int peerDeviceId) {
     HIP_INIT_API(peerDeviceId);
 
     return ihipLogStatus(ihipDisablePeerAccess(ihipGetPrimaryCtx(peerDeviceId)));
 }
 
 
-hipError_t hipDeviceEnablePeerAccess (int peerDeviceId, unsigned int flags)
-{
+hipError_t hipDeviceEnablePeerAccess(int peerDeviceId, unsigned int flags) {
     HIP_INIT_API(peerDeviceId, flags);
 
     return ihipLogStatus(ihipEnablePeerAccess(ihipGetPrimaryCtx(peerDeviceId), flags));
 }
 
 
-hipError_t hipMemcpyPeer (void* dst, int  dstDevice, const void* src, int  srcDevice, size_t sizeBytes)
-{
+hipError_t hipMemcpyPeer(void* dst, int dstDevice, const void* src, int srcDevice,
+                         size_t sizeBytes) {
     HIP_INIT_API(dst, dstDevice, src, srcDevice, sizeBytes);
-    return ihipLogStatus(hipMemcpyPeer(dst, ihipGetPrimaryCtx(dstDevice), src, ihipGetPrimaryCtx(srcDevice), sizeBytes));
+    return ihipLogStatus(hipMemcpyPeer(dst, ihipGetPrimaryCtx(dstDevice), src,
+                                       ihipGetPrimaryCtx(srcDevice), sizeBytes));
 }
 
 
-hipError_t hipMemcpyPeerAsync (void* dst, int  dstDevice, const void* src, int  srcDevice, size_t sizeBytes, hipStream_t stream)
-{
+hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int srcDevice,
+                              size_t sizeBytes, hipStream_t stream) {
     HIP_INIT_API(dst, dstDevice, src, srcDevice, sizeBytes, stream);
     return ihipLogStatus(hip_internal::memcpyAsync(dst, src, sizeBytes, hipMemcpyDefault, stream));
 }
 
-hipError_t hipCtxEnablePeerAccess (hipCtx_t peerCtx, unsigned int flags)
-{
+hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags) {
     HIP_INIT_API(peerCtx, flags);
 
     return ihipLogStatus(ihipEnablePeerAccess(peerCtx, flags));
 }
 
-hipError_t hipCtxDisablePeerAccess (hipCtx_t peerCtx)
-{
+hipError_t hipCtxDisablePeerAccess(hipCtx_t peerCtx) {
     HIP_INIT_API(peerCtx);
 
     return ihipLogStatus(ihipDisablePeerAccess(peerCtx));

@@ -20,45 +20,44 @@ THE SOFTWARE.
 /*
  * Test for checking the functionality of
  * hipError_t hipDeviceSynchronize();
-*/
+ */
 
 #include "hip/hip_runtime.h"
-#include<iostream>
+#include <iostream>
 
-#define _SIZE sizeof(int)*1024*1024
+#define _SIZE sizeof(int) * 1024 * 1024
 #define NUM_STREAMS 20
-#define ITER 1<<10
+#define ITER 1 << 10
 
-__global__ void Iter(hipLaunchParm lp, int *Ad, int num){
+__global__ void Iter(hipLaunchParm lp, int* Ad, int num) {
     int tx = threadIdx.x + blockIdx.x * blockDim.x;
-    if(tx == 0){
-        for(int i = 0; i<num;i++){
+    if (tx == 0) {
+        for (int i = 0; i < num; i++) {
             Ad[tx] += 1;
         }
     }
 }
 
-int main(){
-    int *A[NUM_STREAMS];
-    int *Ad[NUM_STREAMS];
+int main() {
+    int* A[NUM_STREAMS];
+    int* Ad[NUM_STREAMS];
     hipStream_t stream[NUM_STREAMS];
-    for(int i=0;i<NUM_STREAMS;i++){
+    for (int i = 0; i < NUM_STREAMS; i++) {
         hipHostMalloc((void**)&A[i], _SIZE, hipHostMallocDefault);
         A[i][0] = 1;
         hipMalloc((void**)&Ad[i], _SIZE);
         hipStreamCreate(&stream[i]);
     }
-    for(int i=0;i<NUM_STREAMS;i++){
-        for(int j=0;j<ITER;j++){
-        std::cout<<"Iter: "<<j<<std::endl;
-        hipMemcpyAsync(Ad[i], A[i], _SIZE, hipMemcpyHostToDevice, stream[i]);
-        hipLaunchKernel(HIP_KERNEL_NAME(Iter), dim3(1), dim3(1), 0, stream[i], Ad[i], 1<<30);
-        hipMemcpyAsync(A[i], Ad[i], _SIZE, hipMemcpyDeviceToHost, stream[i]);
+    for (int i = 0; i < NUM_STREAMS; i++) {
+        for (int j = 0; j < ITER; j++) {
+            std::cout << "Iter: " << j << std::endl;
+            hipMemcpyAsync(Ad[i], A[i], _SIZE, hipMemcpyHostToDevice, stream[i]);
+            hipLaunchKernel(HIP_KERNEL_NAME(Iter), dim3(1), dim3(1), 0, stream[i], Ad[i], 1 << 30);
+            hipMemcpyAsync(A[i], Ad[i], _SIZE, hipMemcpyDeviceToHost, stream[i]);
         }
     }
 
-    std::cout<<"Waitin..."<<std::endl;
+    std::cout << "Waitin..." << std::endl;
 
     hipDeviceSynchronize();
 }
-

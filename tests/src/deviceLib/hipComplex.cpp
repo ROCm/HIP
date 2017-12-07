@@ -24,22 +24,22 @@ THE SOFTWARE.
 #include "hip/hcc_detail/hip_complex.h"
 
 #define LEN 64
-#define SIZE 64<<2
+#define SIZE 64 << 2
 
-__global__  void getSqAbs(hipLaunchParm lp, float *A, float *B, float *C){
+__global__ void getSqAbs(hipLaunchParm lp, float* A, float* B, float* C) {
     int tx = threadIdx.x + blockIdx.x * blockDim.x;
     C[tx] = hipCsqabsf(make_hipFloatComplex(A[tx], B[tx]));
 }
 
-int main(){
+int main() {
     float *A, *Ad, *B, *Bd, *C, *Cd;
     A = new float[LEN];
     B = new float[LEN];
     C = new float[LEN];
-    for(uint32_t i=0;i<LEN;i++){
-        A[i] = i*1.0f;
-        B[i] = i*1.0f;
-        C[i] = i*1.0f;
+    for (uint32_t i = 0; i < LEN; i++) {
+        A[i] = i * 1.0f;
+        B[i] = i * 1.0f;
+        C[i] = i * 1.0f;
     }
 
     hipMalloc((void**)&Ad, SIZE);
@@ -49,5 +49,5 @@ int main(){
     hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice);
     hipLaunchKernel(getSqAbs, dim3(1), dim3(LEN), 0, 0, Ad, Bd, Cd);
     hipMemcpy(C, Cd, SIZE, hipMemcpyDeviceToHost);
-    std::cout<<A[11]<<" "<<B[11]<<" "<<C[11]<<std::endl;
+    std::cout << A[11] << " " << B[11] << " " << C[11] << std::endl;
 }

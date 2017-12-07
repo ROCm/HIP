@@ -29,32 +29,27 @@ THE SOFTWARE.
 #include "test_common.h"
 #define HIPRT_CB
 
-class CallbackClass
-{
-public:
-    static void HIPRT_CB Callback(hipStream_t stream, hipError_t status, void *userData);
+class CallbackClass {
+   public:
+    static void HIPRT_CB Callback(hipStream_t stream, hipError_t status, void* userData);
 
-private:
+   private:
     void callbackFunc(hipError_t status);
 };
 
-void HIPRT_CB CallbackClass::Callback(hipStream_t stream, hipError_t status, void *userData)
-{
-    CallbackClass* obj = (CallbackClass*) userData;
+void HIPRT_CB CallbackClass::Callback(hipStream_t stream, hipError_t status, void* userData) {
+    CallbackClass* obj = (CallbackClass*)userData;
     obj->callbackFunc(status);
 }
 
-void CallbackClass::callbackFunc(hipError_t status)
-{
-     HIPASSERT(status==hipSuccess);
-}
+void CallbackClass::callbackFunc(hipError_t status) { HIPASSERT(status == hipSuccess); }
 
-int main(){
+int main() {
     hipStream_t mystream;
     HIPCHECK(hipStreamCreate(&mystream));
     CallbackClass* obj = new CallbackClass;
     HIPCHECK(hipStreamAddCallback(mystream, CallbackClass::Callback, obj, 0));
     HIPCHECK(hipStreamAddCallback(NULL, CallbackClass::Callback, obj, 0));
 
-	passed();
+    passed();
 }

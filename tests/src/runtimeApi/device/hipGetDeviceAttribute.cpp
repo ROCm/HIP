@@ -33,17 +33,20 @@ THE SOFTWARE.
 
 #include "test_common.h"
 
-#define CHECK(error) \
-    if (error != hipSuccess) { \
-      fprintf(stderr, "error: '%s'(%d) at %s:%d\n", hipGetErrorString(error), error,__FILE__, __LINE__); \
-    exit(EXIT_FAILURE);\
+#define CHECK(error)                                                                               \
+    if (error != hipSuccess) {                                                                     \
+        fprintf(stderr, "error: '%s'(%d) at %s:%d\n", hipGetErrorString(error), error, __FILE__,   \
+                __LINE__);                                                                         \
+        exit(EXIT_FAILURE);                                                                        \
     }
 
-hipError_t test_hipDeviceGetAttribute(int deviceId, hipDeviceAttribute_t attr, int expectedValue = 0)
-{
+hipError_t test_hipDeviceGetAttribute(int deviceId, hipDeviceAttribute_t attr,
+                                      int expectedValue = 0) {
     int value = 0;
     std::cout << "Test hipDeviceGetAttribute attribute " << attr;
-    if (expectedValue) { std::cout << " expected value " << expectedValue; }
+    if (expectedValue) {
+        std::cout << " expected value " << expectedValue;
+    }
     hipError_t e = hipDeviceGetAttribute(&value, attr, deviceId);
     std::cout << " actual value " << value << std::endl;
     if (expectedValue && value != expectedValue) {
@@ -53,39 +56,57 @@ hipError_t test_hipDeviceGetAttribute(int deviceId, hipDeviceAttribute_t attr, i
     return hipSuccess;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
     int deviceId;
-    CHECK (hipGetDevice(&deviceId));
+    CHECK(hipGetDevice(&deviceId));
     hipDeviceProp_t props;
     CHECK(hipGetDeviceProperties(&props, deviceId));
-    printf ("info: running on device #%d %s\n", deviceId, props.name);
+    printf("info: running on device #%d %s\n", deviceId, props.name);
 
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxThreadsPerBlock, props.maxThreadsPerBlock));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxBlockDimX, props.maxThreadsDim[0]));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxBlockDimY, props.maxThreadsDim[1]));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxBlockDimZ, props.maxThreadsDim[2]));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxGridDimX, props.maxGridSize[0]));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxGridDimY, props.maxGridSize[1]));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxGridDimZ, props.maxGridSize[2]));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxSharedMemoryPerBlock, props.sharedMemPerBlock));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeTotalConstantMemory, props.totalConstMem));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxThreadsPerBlock,
+                                     props.maxThreadsPerBlock));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxBlockDimX,
+                                     props.maxThreadsDim[0]));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxBlockDimY,
+                                     props.maxThreadsDim[1]));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxBlockDimZ,
+                                     props.maxThreadsDim[2]));
+    CHECK(
+        test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxGridDimX, props.maxGridSize[0]));
+    CHECK(
+        test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxGridDimY, props.maxGridSize[1]));
+    CHECK(
+        test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxGridDimZ, props.maxGridSize[2]));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxSharedMemoryPerBlock,
+                                     props.sharedMemPerBlock));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeTotalConstantMemory,
+                                     props.totalConstMem));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeWarpSize, props.warpSize));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxRegistersPerBlock, props.regsPerBlock));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxRegistersPerBlock,
+                                     props.regsPerBlock));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeClockRate, props.clockRate));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMemoryClockRate, props.memoryClockRate));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMemoryBusWidth, props.memoryBusWidth));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMultiprocessorCount, props.multiProcessorCount));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeIsMultiGpuBoard, props.isMultiGpuBoard));//
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMemoryClockRate,
+                                     props.memoryClockRate));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMemoryBusWidth,
+                                     props.memoryBusWidth));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMultiprocessorCount,
+                                     props.multiProcessorCount));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeIsMultiGpuBoard,
+                                     props.isMultiGpuBoard));  //
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeComputeMode, props.computeMode));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeL2CacheSize, props.l2CacheSize));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxThreadsPerMultiProcessor, props.maxThreadsPerMultiProcessor));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeComputeCapabilityMajor, props.major));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeComputeCapabilityMinor, props.minor));//
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeConcurrentKernels, props.concurrentKernels));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxThreadsPerMultiProcessor,
+                                     props.maxThreadsPerMultiProcessor));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeComputeCapabilityMajor,
+                                     props.major));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeComputeCapabilityMinor,
+                                     props.minor));  //
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeConcurrentKernels,
+                                     props.concurrentKernels));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributePciBusId, props.pciBusID));
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributePciDeviceId, props.pciDeviceID));//
-    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxSharedMemoryPerMultiprocessor, props.maxSharedMemoryPerMultiProcessor));
+    CHECK(
+        test_hipDeviceGetAttribute(deviceId, hipDeviceAttributePciDeviceId, props.pciDeviceID));  //
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxSharedMemoryPerMultiprocessor,
+                                     props.maxSharedMemoryPerMultiProcessor));
     passed();
-
 };

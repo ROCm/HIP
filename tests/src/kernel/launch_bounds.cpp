@@ -28,11 +28,8 @@ THE SOFTWARE.
 int p_blockSize = 256;
 
 
-__global__
-void
-__launch_bounds__(256, 2)
-myKern(hipLaunchParm lp, int *C, const int *A, int N, int xfactor)
-{
+__global__ void __launch_bounds__(256, 2)
+    myKern(hipLaunchParm lp, int* C, const int* A, int N, int xfactor) {
     int tid = (blockIdx.x * blockDim.x + threadIdx.x);
 
     if (tid < N) {
@@ -41,16 +38,15 @@ myKern(hipLaunchParm lp, int *C, const int *A, int N, int xfactor)
 };
 
 
-void parseMyArguments(int argc, char *argv[])
-{
+void parseMyArguments(int argc, char* argv[]) {
     int more_argc = HipTest::parseStandardArguments(argc, argv, false);
     // parse args for this test:
     for (int i = 1; i < more_argc; i++) {
-        const char *arg = argv[i];
+        const char* arg = argv[i];
 
         if (!strcmp(arg, "--blockSize")) {
             if (++i >= argc || !HipTest::parseInt(argv[i], &p_blockSize)) {
-               failed("Bad peerDevice argument");
+                failed("Bad peerDevice argument");
             }
         } else {
             failed("Bad argument '%s'", arg);
@@ -59,63 +55,58 @@ void parseMyArguments(int argc, char *argv[])
 };
 
 
-
-
-int main(int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
     parseMyArguments(argc, argv);
 
-    size_t Nbytes = N*sizeof(int);
+    size_t Nbytes = N * sizeof(int);
 
     int *A_d, *C_d, *A_h, *C_h;
-    HIPCHECK ( hipMalloc(&A_d, Nbytes) );
-    HIPCHECK ( hipMalloc(&C_d, Nbytes) );
+    HIPCHECK(hipMalloc(&A_d, Nbytes));
+    HIPCHECK(hipMalloc(&C_d, Nbytes));
 
-    A_h = (int*)malloc (Nbytes);
-    C_h = (int*)malloc (Nbytes);
+    A_h = (int*)malloc(Nbytes);
+    C_h = (int*)malloc(Nbytes);
 
-    for (int i=0; i<N; i++) {
-        A_h[i] = i*10;
+    for (int i = 0; i < N; i++) {
+        A_h[i] = i * 10;
         C_h[i] = 0x0;
     }
 
     int blocks = N / p_blockSize;
-    printf ("running with N=%zu p_blockSize=%d blocks=%d\n", N, p_blockSize, blocks);
+    printf("running with N=%zu p_blockSize=%d blocks=%d\n", N, p_blockSize, blocks);
 
-    HIPCHECK ( hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice) );
-    HIPCHECK ( hipGetLastError() );
+    HIPCHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
+    HIPCHECK(hipGetLastError());
 
     hipLaunchKernel(myKern, dim3(blocks), dim3(p_blockSize), 0, 0, C_d, A_d, N, 0);
 
 #ifdef __HIP_PLATFORM_NVCC__
     cudaFuncAttributes attrib;
-    cudaFuncGetAttributes (&attrib, myKern);
-    printf ("binaryVersion = %d\n", attrib.binaryVersion);
-    printf ("cacheModeCA = %d\n", attrib.cacheModeCA);
-    printf ("constSizeBytes = %zu\n", attrib.constSizeBytes);
-    printf ("localSizeBytes = %zud\n", attrib.localSizeBytes);
-    printf ("maxThreadsPerBlock = %d\n", attrib.maxThreadsPerBlock);
-    printf ("numRegs = %d\n", attrib.numRegs);
-    printf ("ptxVersion = %d\n", attrib.ptxVersion);
-    printf ("sharedSizeBytes = %zud\n", attrib.sharedSizeBytes);
+    cudaFuncGetAttributes(&attrib, myKern);
+    printf("binaryVersion = %d\n", attrib.binaryVersion);
+    printf("cacheModeCA = %d\n", attrib.cacheModeCA);
+    printf("constSizeBytes = %zu\n", attrib.constSizeBytes);
+    printf("localSizeBytes = %zud\n", attrib.localSizeBytes);
+    printf("maxThreadsPerBlock = %d\n", attrib.maxThreadsPerBlock);
+    printf("numRegs = %d\n", attrib.numRegs);
+    printf("ptxVersion = %d\n", attrib.ptxVersion);
+    printf("sharedSizeBytes = %zud\n", attrib.sharedSizeBytes);
 #endif
 
-    HIPCHECK ( hipDeviceSynchronize() );
+    HIPCHECK(hipDeviceSynchronize());
 
-    HIPCHECK ( hipGetLastError() );
+    HIPCHECK(hipGetLastError());
 
-    HIPCHECK ( hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost) );
+    HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
 
-    HIPCHECK ( hipDeviceSynchronize() );
+    HIPCHECK(hipDeviceSynchronize());
 
-    for (int i=0; i<N; i++) {
+    for (int i = 0; i < N; i++) {
         int goldVal = i * 10;
         if (C_h[i] != goldVal) {
             failed("mismatch at index:%d computed:%02d, gold:%02d\n", i, (int)C_h[i], (int)goldVal);
-
         }
     }
 
     passed();
-
 };

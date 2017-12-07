@@ -30,34 +30,33 @@ THE SOFTWARE.
 #include <hip/device_functions.h>
 
 #define LEN 512
-#define SIZE LEN<<2
+#define SIZE LEN << 2
 
 
-
-__global__ void floatMath(hipLaunchParm lp, float *In, float *Out) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
-  Out[tid] = __cosf(In[tid]);
-  Out[tid] = __exp10f(Out[tid]);
-  Out[tid] = __expf(Out[tid]);
-  Out[tid] = __frsqrt_rn(Out[tid]);
-  Out[tid] = __fsqrt_rd(Out[tid]);
-  Out[tid] = __fsqrt_rn(Out[tid]);
-  Out[tid] = __fsqrt_ru(Out[tid]);
-  Out[tid] = __fsqrt_rz(Out[tid]);
-  Out[tid] = __log10f(Out[tid]);
-  Out[tid] = __log2f(Out[tid]);
-  Out[tid] = __logf(Out[tid]);
-  Out[tid] = __powf(2.0f, Out[tid]);
-  __sincosf(Out[tid], &In[tid], &Out[tid]);
-  Out[tid] = __sinf(Out[tid]);
-  Out[tid] = __cosf(Out[tid]);
-  Out[tid] = __tanf(Out[tid]);
+__global__ void floatMath(hipLaunchParm lp, float* In, float* Out) {
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    Out[tid] = __cosf(In[tid]);
+    Out[tid] = __exp10f(Out[tid]);
+    Out[tid] = __expf(Out[tid]);
+    Out[tid] = __frsqrt_rn(Out[tid]);
+    Out[tid] = __fsqrt_rd(Out[tid]);
+    Out[tid] = __fsqrt_rn(Out[tid]);
+    Out[tid] = __fsqrt_ru(Out[tid]);
+    Out[tid] = __fsqrt_rz(Out[tid]);
+    Out[tid] = __log10f(Out[tid]);
+    Out[tid] = __log2f(Out[tid]);
+    Out[tid] = __logf(Out[tid]);
+    Out[tid] = __powf(2.0f, Out[tid]);
+    __sincosf(Out[tid], &In[tid], &Out[tid]);
+    Out[tid] = __sinf(Out[tid]);
+    Out[tid] = __cosf(Out[tid]);
+    Out[tid] = __tanf(Out[tid]);
 }
 
-int main(){
-  float *Inh, *Outh, *Ind, *Outd;
-  hipMalloc((void**)&Ind, SIZE);
-  hipMalloc((void**)&Outd, SIZE);
-  hipLaunchKernel(floatMath, dim3(LEN,1,1), dim3(1,1,1), 0, 0, Ind, Outd);
-  passed();
+int main() {
+    float *Inh, *Outh, *Ind, *Outd;
+    hipMalloc((void**)&Ind, SIZE);
+    hipMalloc((void**)&Outd, SIZE);
+    hipLaunchKernel(floatMath, dim3(LEN, 1, 1), dim3(1, 1, 1), 0, 0, Ind, Outd);
+    passed();
 }

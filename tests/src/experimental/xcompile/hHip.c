@@ -24,20 +24,17 @@ THE SOFTWARE.
 #include "gHipApi.h"
 #include "hip/hip_runtime.h"
 
-#define LEN 1024*1024
+#define LEN 1024 * 1024
 #define SIZE LEN * sizeof(float)
 
-__global__ void Add(hipLaunchParm lp, float *Ad, float *Bd, float *Cd, size_t len)
-{
+__global__ void Add(hipLaunchParm lp, float* Ad, float* Bd, float* Cd, size_t len) {
     int tx = threadIdx.x + blockIdx.x * blockDim.x;
-    if(tx < len)
-    {
+    if (tx < len) {
         Cd[tx] = Ad[tx] + Bd[tx];
     }
 }
 
-int main()
-{
+int main() {
     mem_manager *a, *b, *c;
     a = mem_manager_start(SIZE);
     b = mem_manager_start(SIZE);
@@ -54,10 +51,9 @@ int main()
     b->h2d(b);
     dim3 dimGrid, dimBlock;
     dimBlock.x = 1024, dimBlock.y = 1, dimBlock.z = 1;
-    dimGrid.x = LEN/1024, dimGrid.y = 1, dimGrid.z = 1;
-    hipLaunchKernel(HIP_KERNEL_NAME(Add), dimGrid, dimBlock, 0, 0, (float*)a->dev_ptr, (float*)b->dev_ptr, (float*)c->dev_ptr, LEN);
+    dimGrid.x = LEN / 1024, dimGrid.y = 1, dimGrid.z = 1;
+    hipLaunchKernel(HIP_KERNEL_NAME(Add), dimGrid, dimBlock, 0, 0, (float*)a->dev_ptr,
+                    (float*)b->dev_ptr, (float*)c->dev_ptr, LEN);
     c->d2h(c);
     assert(((float*)c->hst_ptr)[10] == 3.0f);
-
-
 }
