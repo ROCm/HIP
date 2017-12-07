@@ -251,49 +251,6 @@ bool HipifyAction::cudaLaunchKernel(const clang::ast_matchers::MatchFinder::Matc
     return true;
 }
 
-bool HipifyAction::cudaBuiltin(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
-    const clang::MemberExpr* threadIdx = Result.Nodes.getNodeAs<clang::MemberExpr>("cudaBuiltin");
-    if (!threadIdx) {
-        return false;
-    }
-
-    const clang::OpaqueValueExpr* refBase = clang::dyn_cast<clang::OpaqueValueExpr>(threadIdx->getBase());
-    if (!refBase) {
-        return false;
-    }
-
-    const clang::DeclRefExpr* declRef = clang::dyn_cast<clang::DeclRefExpr>(refBase->getSourceExpr());
-    if (!declRef) {
-        return false;
-    }
-
-    clang::SourceLocation sl = threadIdx->getLocStart();
-    clang::SourceManager* SM = Result.SourceManager;
-    StringRef name = declRef->getDecl()->getName();
-    StringRef memberName = threadIdx->getMemberDecl()->getName();
-    size_t pos = memberName.find_first_not_of("__fetch_builtin_");
-    memberName = memberName.slice(pos, memberName.size());
-    clang::SmallString<128> tmpData;
-    name = clang::Twine(name + "." + memberName).toStringRef(tmpData);
-
-    const auto found = CUDA_IDENTIFIER_MAP.find(name);
-    if (found != CUDA_IDENTIFIER_MAP.end()) {
-        Statistics::current().incrementCounter(found->second, name.str());
-        if (!found->second.unsupported) {
-            StringRef repName = found->second.hipName;
-            ct::Replacement Rep(*SM, sl, name.size(), repName);
-            clang::FullSourceLoc fullSL(sl, *SM);
-            insertReplacement(Rep, fullSL);
-        }
-    } else {
-        clang::DiagnosticsEngine& DE = getCompilerInstance().getDiagnostics();
-        const auto ID = DE.getCustomDiagID(clang::DiagnosticsEngine::Warning, "Unknown CUDA builtin");
-        DE.Report(sl, ID);
-    }
-
-    return true;
-}
-
 bool HipifyAction::cudaSharedIncompleteArrayVar(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
     StringRef refName = "cudaSharedIncompleteArrayVar";
     auto* sharedVar = Result.Nodes.getNodeAs<clang::VarDecl>(refName);
@@ -356,21 +313,6 @@ std::unique_ptr<clang::ASTConsumer> HipifyAction::CreateASTConsumer(clang::Compi
 
     // Replace the <<<...>>> language extension with a hip kernel launch
     Finder->addMatcher(mat::cudaKernelCallExpr(mat::isExpansionInMainFile()).bind("cudaLaunchKernel"), this);
-
-    // Replace cuda builtins.
-    Finder->addMatcher(
-        mat::memberExpr(
-            mat::isExpansionInMainFile(),
-            mat::hasObjectExpression(
-                mat::hasType(
-                    mat::cxxRecordDecl(
-                        mat::matchesName("__cuda_builtin_")
-                    )
-                )
-            )
-        ).bind("cudaBuiltin"),
-        this
-    );
 
     Finder->addMatcher(
         mat::varDecl(
@@ -454,7 +396,6 @@ void HipifyAction::ExecuteAction() {
 }
 
 void HipifyAction::run(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
-    if (cudaBuiltin(Result)) return;
     if (cudaLaunchKernel(Result)) return;
     if (cudaSharedIncompleteArrayVar(Result)) return;
 }
