@@ -84,8 +84,6 @@ typedef struct ihipModule_t *hipModule_t;
 
 typedef struct ihipModuleSymbol_t *hipFunction_t;
 
-typedef void* hipDeviceptr_t;
-
 typedef struct ihipEvent_t *hipEvent_t;
 
 enum hipLimit_t
@@ -621,7 +619,7 @@ hipError_t hipStreamQuery(hipStream_t stream);
  *
  * This command is host-synchronous : the host will block until the specified stream is empty.
  *
- * This command follows standard null-stream semantics.  Specifically, specifying the null stream will cause the 
+ * This command follows standard null-stream semantics.  Specifically, specifying the null stream will cause the
  * command to wait for other streams on the same device to complete all pending operations.
  *
  * This command honors the hipDeviceLaunchBlocking flag, which controls whether the wait is active or blocking.
@@ -644,9 +642,9 @@ hipError_t hipStreamSynchronize(hipStream_t stream);
  * This function inserts a wait operation into the specified stream.
  * All future work submitted to @p stream will wait until @p event reports completion before beginning execution.
  *
- * This function only waits for commands in the current stream to complete.  Notably,, this function does 
- * not impliciy wait for commands in the default stream to complete, even if the specified stream is 
- * created with hipStreamNonBlocking = 0.  
+ * This function only waits for commands in the current stream to complete.  Notably,, this function does
+ * not impliciy wait for commands in the default stream to complete, even if the specified stream is
+ * created with hipStreamNonBlocking = 0.
  *
  * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamSynchronize, hipStreamDestroy
  */
@@ -756,7 +754,7 @@ hipError_t hipEventCreate(hipEvent_t* event);
  * If hipEventRecord() has been previously called on this event, then this call will overwrite any existing state in event.
  *
  * If this function is called on a an event that is currently being recorded, results are undefined - either
- * outstanding recording may save state into the event, and the order is not guaranteed.  
+ * outstanding recording may save state into the event, and the order is not guaranteed.
  *
  * @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventSynchronize, hipEventDestroy, hipEventElapsedTime
  *
@@ -1318,6 +1316,7 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
 hipError_t hipMallocArray(hipArray** array, const struct hipChannelFormatDesc* desc,
                           size_t width, size_t height, unsigned int flags);
 #endif
+hipError_t hipArrayCreate ( hipArray** pHandle, const HIP_ARRAY_DESCRIPTOR* pAllocateArray );
 /**
  *  @brief Frees an array on the device.
  *
@@ -1359,6 +1358,7 @@ hipError_t hipMalloc3DArray(hipArray_t *array,
  *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpyToSymbol, hipMemcpyAsync
  */
 hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width, size_t height, hipMemcpyKind kind);
+hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy);
 
 /**
  *  @brief Copies data between host and device.
@@ -1968,6 +1968,7 @@ hipError_t hipModuleGetFunction(hipFunction_t *function, hipModule_t module, con
  */
 hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes, hipModule_t hmod, const char *name);
 
+hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name);
 /**
  * @brief builds module from code object which resides in host memory. Image is pointer to that location.
  *
@@ -2172,12 +2173,9 @@ hipError_t ihipBindTextureImpl(int dim,
                                enum hipTextureReadMode readMode,
                                size_t *offset,
                                const void *devPtr,
-                               const struct hipChannelFormatDesc& desc,
+                               const struct hipChannelFormatDesc* desc,
                                size_t size,
-                               enum hipTextureAddressMode addressMode,
-                               enum hipTextureFilterMode filterMode,
-                               int normalizedCoords,
-                               hipTextureObject_t& textureObject);
+                               textureReference* tex);
 
 /*
  * @brief hipBindTexture Binds size bytes of the memory area pointed to by @p devPtr to the texture reference tex.
@@ -2199,9 +2197,7 @@ hipError_t hipBindTexture(size_t *offset,
                           const struct hipChannelFormatDesc& desc,
                           size_t size = UINT_MAX)
 {
-    return ihipBindTextureImpl(dim, readMode, offset, devPtr, desc, size,
-                               tex.addressMode[0], tex.filterMode, tex.normalized,
-                               tex.textureObject);
+    return ihipBindTextureImpl(dim, readMode, offset, devPtr, &desc, size, &tex);
 }
 
 /*
@@ -2222,9 +2218,7 @@ hipError_t hipBindTexture(size_t *offset,
                           const void *devPtr,
                           size_t size = UINT_MAX)
 {
-    return ihipBindTextureImpl(dim, readMode, offset, devPtr, tex.channelDesc, size,
-                               tex.addressMode[0], tex.filterMode, tex.normalized,
-                               tex.textureObject);
+    return ihipBindTextureImpl(dim, readMode, offset, devPtr, &(tex.channelDesc), size, &tex);
 }
 
 // C API
@@ -2240,13 +2234,10 @@ hipError_t ihipBindTexture2DImpl(int dim,
                                  enum hipTextureReadMode readMode,
                                  size_t *offset,
                                  const void *devPtr,
-                                 const struct hipChannelFormatDesc& desc,
+                                 const struct hipChannelFormatDesc* desc,
                                  size_t width,
                                  size_t height,
-                                 enum hipTextureAddressMode addressMode,
-                                 enum hipTextureFilterMode filterMode,
-                                 int normalizedCoords,
-                                 hipTextureObject_t& textureObject);
+                                 textureReference* tex);
 
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTexture2D(size_t *offset,
@@ -2256,9 +2247,7 @@ hipError_t hipBindTexture2D(size_t *offset,
                             size_t height,
                             size_t pitch)
 {
-    return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, tex.channelDesc, width, height,
-                                 tex.addressMode[0], tex.filterMode, tex.normalized,
-                                 tex.textureObject);
+    return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, &(tex.channelDesc), width, height, &tex);
 }
 
 template <class T, int dim, enum hipTextureReadMode readMode>
@@ -2270,9 +2259,7 @@ hipError_t hipBindTexture2D(size_t *offset,
                             size_t height,
                             size_t pitch)
 {
-    return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, desc, width, height,
-                                 tex.addressMode[0], tex.filterMode, tex.normalized,
-                                 tex.textureObject);
+    return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, &desc, width, height, &tex);
 }
 
 //C API
@@ -2284,18 +2271,13 @@ hipError_t ihipBindTextureToArrayImpl(int dim,
                                       enum hipTextureReadMode readMode,
                                       hipArray_const_t array,
                                       const struct hipChannelFormatDesc& desc,
-                                      enum hipTextureAddressMode addressMode,
-                                      enum hipTextureFilterMode filterMode,
-                                      int normalizedCoords,
-                                      hipTextureObject_t& textureObject);
+                                      textureReference* tex);
 
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex,
                                  hipArray_const_t array)
 {
-    return ihipBindTextureToArrayImpl(dim, readMode, array, tex.channelDesc,
-                                      tex.addressMode[0], tex.filterMode, tex.normalized,
-                                      tex.textureObject);
+    return ihipBindTextureToArrayImpl(dim, readMode, array, tex.channelDesc, &tex);
 }
 
 template <class T, int dim, enum hipTextureReadMode readMode>
@@ -2303,9 +2285,7 @@ hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex,
                                  hipArray_const_t array,
                                  const struct hipChannelFormatDesc& desc)
 {
-    return ihipBindTextureToArrayImpl(dim, readMode, array, desc,
-                                      tex.addressMode[0], tex.filterMode, tex.normalized,
-                                      tex.textureObject);
+    return ihipBindTextureToArrayImpl(dim, readMode, array, desc, &tex);
 }
 
 //C API
@@ -2359,6 +2339,19 @@ hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject);
 hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDesc, hipTextureObject_t textureObject);
 hipError_t hipGetTextureObjectResourceViewDesc(hipResourceViewDesc* pResViewDesc, hipTextureObject_t textureObject);
 hipError_t hipGetTextureObjectTextureDesc(hipTextureDesc* pTexDesc, hipTextureObject_t textureObject);
+hipError_t hipTexRefSetArray ( textureReference* tex,  hipArray_const_t array, unsigned int  flags );
+
+hipError_t hipTexRefSetAddressMode ( textureReference* tex, int  dim, hipTextureAddressMode am );
+
+hipError_t hipTexRefSetFilterMode ( textureReference*  tex, hipTextureFilterMode fm );
+
+hipError_t hipTexRefSetFlags ( textureReference*  tex, unsigned int  flags );
+
+hipError_t hipTexRefSetFormat (textureReference* tex, hipArray_Format fmt, int  NumPackedComponents );
+
+hipError_t hipTexRefSetAddress( size_t* offset, textureReference* tex, hipDeviceptr_t devPtr, size_t size );
+
+hipError_t hipTexRefSetAddress2D( textureReference* tex, const HIP_ARRAY_DESCRIPTOR* desc, hipDeviceptr_t devPtr, size_t pitch );
 
 // doxygen end Texture
 /**

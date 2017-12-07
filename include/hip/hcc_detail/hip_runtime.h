@@ -53,7 +53,7 @@ THE SOFTWARE.
 // define HIP_ENABLE_PRINTF to enable printf
 #ifdef HIP_ENABLE_PRINTF
   #define HCC_ENABLE_ACCELERATOR_PRINTF 1
-#endif 
+#endif
 
 //---
 // Remainder of this file only compiles with HCC
@@ -381,6 +381,27 @@ __device__ void  __threadfence_system(void) ;
  * @}
  */
 
+template<typename std::common_type<
+    decltype(hc_get_group_id),
+    decltype(hc_get_group_size),
+    decltype(hc_get_num_groups),
+    decltype(hc_get_workitem_id)>::type f>
+class Coordinates {
+    using R = decltype(f(0));
+
+    struct X { __device__ operator R() const { return f(0); } };
+    struct Y { __device__ operator R() const { return f(1); } };
+    struct Z { __device__ operator R() const { return f(2); } };
+public:
+    static constexpr X x{};
+    static constexpr Y y{};
+    static constexpr Z z{};
+};
+
+static constexpr Coordinates<hc_get_group_size> blockDim;
+static constexpr Coordinates<hc_get_group_id> blockIdx;
+static constexpr Coordinates<hc_get_num_groups> gridDim;
+static constexpr Coordinates<hc_get_workitem_id> threadIdx;
 
 #define hipThreadIdx_x (hc_get_workitem_id(0))
 #define hipThreadIdx_y (hc_get_workitem_id(1))
@@ -481,7 +502,7 @@ do {\
     type* var = \
     (type*)__get_dynamicgroupbaseptr(); \
 
-#define HIP_DYNAMIC_SHARED_ATTRIBUTE 
+#define HIP_DYNAMIC_SHARED_ATTRIBUTE
 
 
 

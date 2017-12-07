@@ -9,6 +9,11 @@ We have attempted to document known bugs and limitations - in particular the [HI
 ## Revision History:
 
 ===================================================================================================
+Release: 1.5
+Date: 
+- HIP texture support equivalent to CUDA texture driver APIs
+
+===================================================================================================
 Release: 1.4
 Date: 2017.10.06
 - Improvements to HIP event management
@@ -23,7 +28,7 @@ Date: 2017.10.06
 Release: 1.3
 Date: 2017.08.16
 - hipcc now auto-detects amdgcn arch. No need to specify the arch when building for same system.
-- HIP texture support
+- HIP texture support (run-time APIs)
 - Implemented __threadfence_support
 - Improvements in HIP context management logic
 - Bug fixes in several APIs including hipDeviceGetPCIBusId, hipEventDestroy, hipMemcpy2DAsync

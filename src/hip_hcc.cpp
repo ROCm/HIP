@@ -339,12 +339,11 @@ void ihipStream_t::locked_wait()
 
 // Causes current stream to wait for specified event to complete:
 // Note this does not provide any kind of host serialization.
-void ihipStream_t::locked_streamWaitEvent(hipEvent_t event)
+void ihipStream_t::locked_streamWaitEvent(ihipEventData_t &ecd)
 {
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
-
-    crit->_av.create_blocking_marker(event->marker(), hc::accelerator_scope);
+    crit->_av.create_blocking_marker(ecd.marker(), hc::accelerator_scope);
 }
 
 
@@ -352,24 +351,28 @@ void ihipStream_t::locked_streamWaitEvent(hipEvent_t event)
 // Note this does not provide any kind of host serialization.
 bool ihipStream_t::locked_eventIsReady(hipEvent_t event)
 {
+
     // Event query that returns "Complete" may cause HCC to manipulate
     // internal queue state so lock the stream's queue here.
-    LockedAccessor_StreamCrit_t crit(_criticalData);
+    LockedAccessor_StreamCrit_t scrit(_criticalData);
 
-    return (event->marker().is_ready());
+    LockedAccessor_EventCrit_t ecrit(event->criticalData());
+
+    return (ecrit->_eventData.marker().is_ready());
 }
 
-void ihipStream_t::locked_eventWaitComplete(hipEvent_t event, hc::hcWaitMode waitMode)
+// Waiting on event can cause HCC to reclaim stream resources - so need to lock the stream.
+void ihipStream_t::locked_eventWaitComplete(hc::completion_future &marker, hc::hcWaitMode waitMode)
 {
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
-    event->marker().wait(waitMode);
+    marker.wait(waitMode);
 }
 
 
 // Create a marker in this stream.
 // Save state in the event so it can track the status of the event.
-void ihipStream_t::locked_recordEvent(hipEvent_t event)
+hc::completion_future ihipStream_t::locked_recordEvent(hipEvent_t event)
 {
     // Lock the stream to prevent simultaneous access
     LockedAccessor_StreamCrit_t crit(_criticalData);
@@ -385,7 +388,7 @@ void ihipStream_t::locked_recordEvent(hipEvent_t event)
         scopeFlag = HIP_EVENT_SYS_RELEASE ? hc::system_scope : hc::accelerator_scope;
     }
 
-    event->marker(crit->_av.create_marker(scopeFlag));
+    return crit->_av.create_marker(scopeFlag);
 };
 
 //=============================================================================
@@ -1589,7 +1592,9 @@ void ihipPostLaunchKernel(const char *kernelName, hipStream_t stream, grid_launc
     tprintf(DB_SYNC, "ihipPostLaunchKernel, unlocking stream\n");
 
     stream->lockclose_postKernelCommand(kernelName, lp.av);
-    MARKER_END();
+    if(HIP_PROFILE_API) {
+        MARKER_END();
+    }
 }
 
 //=================================================================================================

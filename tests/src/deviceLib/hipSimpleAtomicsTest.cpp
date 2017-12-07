@@ -217,7 +217,7 @@ int computeGold(int *gpuData, const int len)
 __global__ void testKernel(hipLaunchParm lp,int *g_odata)
 {
     // access thread id
-    const unsigned int tid = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+    const unsigned int tid = blockDim.x * blockIdx.x + threadIdx.x;
 
     // Test various atomic instructions
 
@@ -240,7 +240,7 @@ __global__ void testKernel(hipLaunchParm lp,int *g_odata)
 
     // Atomic increment (modulo 17+1)
     atomicInc((unsigned int *)&g_odata[5], 17);
- 
+
     // Atomic decrement
     atomicDec((unsigned int *)&g_odata[6], 137);
 
