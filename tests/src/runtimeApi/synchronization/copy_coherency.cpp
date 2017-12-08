@@ -69,7 +69,6 @@ void MemcpyFunction::load(const char *fileName, const char *functionName)
 void MemcpyFunction::launch(int * dst, const int * src, size_t numElements, hipStream_t s)
 {
     struct {
-        uint32_t _hidden[6];
         int*        _dst;
         const int*  _src;
         size_t      _numElements;

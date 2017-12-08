@@ -37,17 +37,16 @@ namespace hip_impl
     hsa_isa_t triple_to_hsa_isa(const std::string& triple);
 
     struct Bundled_code {
-        union {
+        union Header {
             struct {
                 std::uint64_t offset;
                 std::uint64_t bundle_sz;
                 std::uint64_t triple_sz;
             };
-            std::uint8_t cbuf[
-                sizeof(offset) + sizeof(bundle_sz) + sizeof(triple_sz)];
-        };
+            char cbuf[sizeof(offset) + sizeof(bundle_sz) + sizeof(triple_sz)];
+        } header;
         std::string triple;
-        std::vector<std::uint8_t> blob;
+        std::vector<char> blob;
     };
 
     class Bundled_code_header {
@@ -57,14 +56,13 @@ namespace hip_impl
         static constexpr auto magic_string_sz_ = sizeof(magic_string_) - 1;
 
         // DATA
-        union {
+        union Header_ {
             struct {
-                std::uint8_t bundler_magic_string_[magic_string_sz_];
+                char bundler_magic_string_[magic_string_sz_];
                 std::uint64_t bundle_cnt_;
             };
-            std::uint8_t cbuf_[
-                sizeof(bundler_magic_string_) + sizeof(bundle_cnt_)];
-        };
+            char cbuf_[sizeof(bundler_magic_string_) + sizeof(bundle_cnt_)];
+        } header_;
         std::vector<Bundled_code> bundles_;
 
         // FRIENDS - MANIPULATORS
@@ -78,22 +76,24 @@ namespace hip_impl
         {
             if (f == l) return false;
 
-            std::copy_n(f, sizeof(x.cbuf_), x.cbuf_);
+            std::copy_n(f, sizeof(x.header_.cbuf_), x.header_.cbuf_);
 
             if (valid(x)) {
-                x.bundles_.resize(x.bundle_cnt_);
+                x.bundles_.resize(x.header_.bundle_cnt_);
 
-                auto it = f + sizeof(x.cbuf_);
+                auto it = f + sizeof(x.header_.cbuf_);
                 for (auto&& y : x.bundles_) {
-                    std::copy_n(it, sizeof(y.cbuf), y.cbuf);
-                    it += sizeof(y.cbuf);
+                    std::copy_n(it, sizeof(y.header.cbuf), y.header.cbuf);
+                    it += sizeof(y.header.cbuf);
 
-                    y.triple.insert(y.triple.cend(), it, it + y.triple_sz);
+                    y.triple.assign(it, it + y.header.triple_sz);
 
                     std::copy_n(
-                        f + y.offset, y.bundle_sz, std::back_inserter(y.blob));
+                        f + y.header.offset,
+                        y.header.bundle_sz,
+                        std::back_inserter(y.blob));
 
-                    it += y.triple_sz;
+                    it += y.header.triple_sz;
                 }
 
                 return true;
@@ -103,7 +103,7 @@ namespace hip_impl
         }
         friend
         inline
-        bool read(const std::vector<std::uint8_t>& blob, Bundled_code_header& x)
+        bool read(const std::vector<char>& blob, Bundled_code_header& x)
         {
             return read(blob.cbegin(), blob.cend(), x);
         }
@@ -111,7 +111,7 @@ namespace hip_impl
         inline
         bool read(std::istream& is, Bundled_code_header& x)
         {
-            return read(std::vector<std::uint8_t>{
+            return read(std::vector<char>{
                 std::istreambuf_iterator<char>{is},
                 std::istreambuf_iterator<char>{}},
                 x);
@@ -123,9 +123,9 @@ namespace hip_impl
         bool valid(const Bundled_code_header& x)
         {
             return std::equal(
-                x.bundler_magic_string_,
-                x.bundler_magic_string_ + magic_string_sz_,
-                x.magic_string_);
+                magic_string_,
+                magic_string_ + magic_string_sz_,
+                x.header_.bundler_magic_string_);
         }
         friend
         inline
@@ -139,7 +139,9 @@ namespace hip_impl
         template<typename RandomAccessIterator>
         Bundled_code_header(RandomAccessIterator f, RandomAccessIterator l);
         explicit
-        Bundled_code_header(const std::vector<std::uint8_t>& blob);
+        Bundled_code_header(const std::vector<char>& blob);
+        explicit
+        Bundled_code_header(const void* maybe_blob);
         Bundled_code_header(const Bundled_code_header&) = default;
         Bundled_code_header(Bundled_code_header&&) = default;
         ~Bundled_code_header() = default;
