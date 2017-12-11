@@ -23,7 +23,7 @@ THE SOFTWARE.
 // Also serves as a template for other tests.
 
 /* HIT_START
- * BUILD: %t %s test_common.cpp
+ * BUILD: %t %s ../test_common.cpp
  * RUN: %t EXCLUDE_HIP_PLATFORM all
  * RUN: %t --memcpyWithPeer EXCLUDE_HIP_PLATFORM all
  * RUN: %t --mirrorPeers EXCLUDE_HIP_PLATFORM all
@@ -391,7 +391,14 @@ void simpleNegative()
 int main(int argc, char *argv[])
 {
     parseMyArguments(argc, argv);
+    int gpuCount;
+    HIPCHECK(hipGetDeviceCount(&gpuCount));
 
+    if (gpuCount < 2)
+    {
+        printf("P2P application requires atleast 2 gpu devices\n");
+        return 0;
+    }
 
     if (p_tests & 0x100) {
         testPeerHostToDevice(false/*useAsyncCopy*/);
