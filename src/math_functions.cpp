@@ -158,7 +158,7 @@ __device__ float hypotf(float x, float y)
 {
     return hc::precise_math::hypotf(x, y);
 }
-__device__ float ilogbf(float x)
+__device__ int ilogbf(float x)
 {
     return hc::precise_math::ilogbf(x);
 }
@@ -539,7 +539,7 @@ __device__ double hypot(double x, double y)
 {
     return hc::precise_math::hypot(x, y);
 }
-__device__ double ilogb(double x)
+__device__ int ilogb(double x)
 {
     return hc::precise_math::ilogb(x);
 }
