@@ -169,9 +169,10 @@ if ($HIP_PLATFORM eq "hcc") {
     $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
 
     $HIPCC="$CUDA_PATH/bin/nvcc";
+    $HIPCXXFLAGS .= " -Wno-deprecated-gpu-targets ";
     $HIPCXXFLAGS .= " -I$CUDA_PATH/include";
 
-    $HIPLDFLAGS = "-lcuda -lcudart -L$CUDA_PATH/lib64";
+    $HIPLDFLAGS = " -Wno-deprecated-gpu-targets -lcuda -lcudart -L$CUDA_PATH/lib64";
 } else {
     printf ("error: unknown HIP_PLATFORM = '$HIP_PLATFORM'");
     exit (-1);
