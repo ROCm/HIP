@@ -249,7 +249,6 @@ hipMemcpy(B, Bd, N*sizeof(long long int), hipMemcpyDeviceToHost);
 int passed = 0;
 for(int i=0;i<512;i++){
     int x = roundf(A[i]);
-    long long int y = x;
     if(B[i] == x){
         passed = 1;
     }
@@ -283,7 +282,6 @@ hipMemcpy(B, Bd, N*sizeof(long int), hipMemcpyDeviceToHost);
 int passed = 0;
 for(int i=0;i<512;i++){
     int x = roundf(A[i]);
-    long int y = x;
     if(B[i] == x){
         passed = 1;
     }
@@ -351,7 +349,6 @@ hipMemcpy(B, Bd, N*sizeof(long long int), hipMemcpyDeviceToHost);
 int passed = 0;
 for(int i=0;i<512;i++){
     int x = roundf(A[i]);
-    long long int y = x;
     if(B[i] == x){
         passed = 1;
     }
@@ -385,7 +382,6 @@ hipMemcpy(B, Bd, N*sizeof(long int), hipMemcpyDeviceToHost);
 int passed = 0;
 for(int i=0;i<512;i++){
     int x = roundf(A[i]);
-    long int y = x;
     if(B[i] == x){
         passed = 1;
     }

@@ -55,7 +55,7 @@ __global__ void floatMath(hipLaunchParm lp, float *In, float *Out) {
 }
 
 int main(){
-  float *Inh, *Outh, *Ind, *Outd;
+  float  *Ind, *Outd;
   hipMalloc((void**)&Ind, SIZE);
   hipMalloc((void**)&Outd, SIZE);
   hipLaunchKernel(floatMath, dim3(LEN,1,1), dim3(1,1,1), 0, 0, Ind, Outd);
