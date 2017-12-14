@@ -48,6 +48,13 @@ THE SOFTWARE.
 #define HIP_LAUNCH_PARAM_BUFFER_SIZE    ((void*) 0x02)
 #define HIP_LAUNCH_PARAM_END            ((void*) 0x03)
 
+#ifdef __cplusplus
+  #define __dparm(x) \
+          = x
+#else
+  #define __dparm(x)
+#endif
+
 // Structure definitions:
 #ifdef __cplusplus
 extern "C" {
@@ -1242,7 +1249,7 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
 hipError_t hipMemset(void* dst, int  value, size_t sizeBytes );
 
 /**
- *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dest with the constant byte value value.
+ *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dest with the constant byte value.
  *
  *  @param[out] dst Data ptr to be filled
  *  @param[in]  constant value to be set
@@ -1250,6 +1257,17 @@ hipError_t hipMemset(void* dst, int  value, size_t sizeBytes );
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  */
 hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char  value, size_t sizeBytes );
+
+/**
+ *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dest with the constant byte value asynchronously.
+ *
+ *  @param[out] dst Data ptr to be filled
+ *  @param[in]  constant value to be set
+ *  @param[in]  sizeBytes Data size in bytes
+ *  @param[in]  stream stream to be used
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
+ */
+hipError_t hipMemsetD8Async(hipDeviceptr_t dst, unsigned char  value, size_t sizeBytes ,hipStream_t stream __dparm(0));
 
 /**
  *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dev with the constant byte value value.
@@ -1264,11 +1282,7 @@ hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char  value, size_t sizeByt
  *  @param[in]  stream - Stream identifier
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
  */
-#if __cplusplus
-hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t stream = 0 );
-#else
-hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream);
-#endif
+hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t stream __dparm(0) );
 
 /**
  *  @brief Fills the memory area pointed to by dst with the constant value.
@@ -1282,6 +1296,20 @@ hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t st
  */
 
 hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height);
+
+/**
+ *  @brief Fills asynchronously the memory area pointed to by dst with the constant value.
+ *
+ *  @param[out] dst Pointer to device memory
+ *  @param[in]  pitch - data size in bytes
+ *  @param[in]  value - constant value to be set
+ *  @param[in]  width
+ *  @param[in]  height
+ *  @param[in]  stream
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
+ */
+
+hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, size_t height,hipStream_t stream __dparm(0));
 
 /**
  * @brief Query memory info.

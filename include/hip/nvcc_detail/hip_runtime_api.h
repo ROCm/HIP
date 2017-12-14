@@ -540,6 +540,19 @@ inline static hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char  value, 
     return hipCUResultTohipError(cuMemsetD8(dest, value, sizeBytes));
 }
 
+inline static hipError_t hipMemsetD8Async(hipDeviceptr_t dest, unsigned char  value, size_t sizeBytes, hipStream_t stream __dparm(0) )
+{
+    return hipCUResultTohipError(cuMemsetD8Async(dest, value, sizeBytes, stream));
+}
+
+inline static hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height) {
+    return hipCUDAErrorTohipError(cudaMemset2D(dst, pitch, value, width, height));
+}
+
+inline static hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, size_t height, hipStream_t stream __dparm(0)) {
+    return hipCUDAErrorTohipError(cudaMemset2DAsync(dst, pitch, value, width, height, stream));
+}
+
 inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t *p_prop, int device)
 {
 	struct cudaDeviceProp cdprop;
