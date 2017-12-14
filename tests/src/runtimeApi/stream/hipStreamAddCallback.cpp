@@ -27,7 +27,10 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 #include "test_common.h"
+
+#ifdef __HIP_PLATFORM_HCC__ 
 #define HIPRT_CB
+#endif
 
 class CallbackClass
 {
