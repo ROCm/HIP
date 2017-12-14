@@ -32,7 +32,7 @@ THE SOFTWARE.
 
 __global__ void FloatMathPrecise(hipLaunchParm lp)
 {
-    int iX;
+    //int iX; //uncomment this when remqouf() is enabled again
     float fX, fY;
 
     acosf(1.0f);
