@@ -144,6 +144,13 @@ if (BUILD_HIPIFY_CLANG)
     add_subdirectory(hipify-clang)
 endif()
 
+# Build LPL an CA (fat binary generation / fat binary decomposition tools) if
+# platform is hcc; do this before the ugly hijacking of the compiler, since no
+# HC code is involved.
+if (HIP_PLATFORM STREQUAL "hcc")
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/LPL_CA)
+endif ()
+
 # Build hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
     include_directories(${PROJECT_SOURCE_DIR}/include)
@@ -191,7 +198,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/math_functions.cpp)
 
     execute_process(COMMAND ${HCC_HOME}/bin/hcc-config --ldflags OUTPUT_VARIABLE HCC_LD_FLAGS)
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${HCC_LD_FLAGS} -Wl,-Bsymbolic")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${HCC_LD_FLAGS}")
     #find_package(LLVM HINTS ${HCC_HOME}/compiler/lib/cmake)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --amdgpu-target=gfx701 --amdgpu-target=gfx801 --amdgpu-target=gfx802 --amdgpu-target=gfx803 --amdgpu-target=gfx900")
     if(COMPILE_HIP_ATP_MARKER)
