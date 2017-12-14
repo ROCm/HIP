@@ -70,7 +70,7 @@ THE SOFTWARE.
 #define HIPCHECK(error) \
 {\
     hipError_t localError = error; \
-    if (localError != hipSuccess) { \
+    if ((localError != hipSuccess) && (localError != hipErrorPeerAccessAlreadyEnabled)){ \
       printf("%serror: '%s'(%d) from %s at %s:%d%s\n", \
           KRED,hipGetErrorString(localError), localError,\
           #error,\

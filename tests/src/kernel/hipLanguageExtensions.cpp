@@ -90,14 +90,6 @@ vectorADD(const hipLaunchParm lp,
           size_t N)
 {
 //    KERNELBEGIN;
-    int ws = warpSize;
-
-
-    int zuzu = deviceVar + 1;
-
-
-    int b = threadIdx.x;
-    int c;
 #ifdef NOT_YET
     int a = __shfl_up(x, 1);
 #endif
@@ -109,6 +101,10 @@ vectorADD(const hipLaunchParm lp,
 #endif
 
 #ifdef __HCC__
+
+   int b = threadIdx.x;
+   int c;
+
 	// TODO - move to HIP atomics when ready.
     concurrency :: atomic_fetch_add(&c, b);
     //Concurrency::atomic_add_unsigned (&x, a);
