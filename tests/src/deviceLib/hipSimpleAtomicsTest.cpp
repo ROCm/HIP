@@ -287,7 +287,7 @@ void runTest(int argc, char **argv)
            "SM %d.%d compute capabilities\n\n",
            deviceProp.multiProcessorCount, deviceProp.major, deviceProp.minor);
 
-    int version = (deviceProp.major * 0x10 + deviceProp.minor);
+
 
     unsigned int numThreads = 256;
     unsigned int numBlocks = 64;

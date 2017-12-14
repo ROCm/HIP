@@ -188,7 +188,6 @@ int main(int argc, char *argv[])
 {
     HipTest::parseStandardArguments(argc, argv, true);
 
-    int numElements = N;
 
     int dev0 = 0;
     int dev1 = 1;
