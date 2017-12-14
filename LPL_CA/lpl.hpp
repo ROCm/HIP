@@ -1,3 +1,7 @@
+#pragma once
+
+#include "common.hpp"
+
 #include "clara/clara.hpp"
 #include "pstreams/pstream.h"
 #include "../src/elfio/elfio.hpp"
@@ -11,29 +15,11 @@
 #include <mutex>
 #include <stdexcept>
 #include <string>
-#include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace hip_impl
 {
-    inline
-    const std::unordered_set<std::string>& amdgpu_targets()
-    {   // The evolving list lives at:
-        // https://www.llvm.org/docs/AMDGPUUsage.html#processors.
-        static const std::unordered_set<std::string> r{
-            "gfx701", "gfx801", "gfx802", "gfx803", "gfx900"};
-
-        return r;
-    }
-
-    inline
-    const std::string& fat_binary_extension()
-    {
-        static const std::string r{".adipose"};
-
-        return r;
-    }
-
     inline
     const std::string& kernel_section()
     {
@@ -47,16 +33,20 @@ namespace hip_impl
     {
         static constexpr const char self[] = "/proc/self/exe";
 
-        static std::string r(PATH_MAX, '\0');
+        static std::string r;
         static std::once_flag f;
 
         std::call_once(f, []() {
-            decltype(readlink(self, &r.front(), r.size())) read_cnt;
-            do {
-                read_cnt = readlink(self, &r.front(), r.size());
-            } while (read_cnt == -1);
+            using N = decltype(readlink(self, &r.front(), r.size()));
 
-            r.resize(read_cnt);
+            constexpr decltype(r.size()) max_path_sz{PATH_MAX};
+            N read_cnt;
+            do {
+                r.resize(std::max(2 * r.size(), max_path_sz));
+                read_cnt = readlink(self, &r.front(), r.size());
+            } while (read_cnt == -1 && r.size() < r.max_size());
+
+            r.resize(std::max(read_cnt, N{0}));
         });
 
         return r;
@@ -156,66 +146,11 @@ namespace hip_impl
     }
 
     inline
-    bool file_exists(const std::string& path_to)
-    {
-        return static_cast<bool>(std::ifstream{path_to});
-    }
-
-    inline
     bool hipcc_and_lpl_colocated()
     {
         if (path_to_self().empty()) return false;
 
         return file_exists(path_to_hipcc());
-    }
-
-    inline
-    std::vector<std::string> tokenize_targets(const std::string& x)
-    {   // TODO: move to regular expressions once we clarify the need to support
-        //       ancient standard library implementations.
-        if (x.empty()) return {};
-
-        static constexpr const char valid_characters[] = "gfx0123456789,";
-
-        if (x.find_first_not_of(valid_characters) != std::string::npos) {
-            throw std::runtime_error{"Invalid target string: " + x};
-        }
-
-        std::vector<std::string> r;
-
-        auto it = x.cbegin();
-        do {
-            auto it1 = std::find(it, x.cend(), ',');
-            r.emplace_back(it, it1);
-
-            if (it1 == x.cend()) break;
-
-            it = ++it1;
-        } while (true);
-
-        return r;
-    }
-
-    inline
-    void validate_targets(const std::vector<std::string>& x)
-    {
-        assert(!x.empty());
-
-        for (auto&& t : x) {
-            static const std::string digits{"0123456789"};
-            static const std::string pre{"gfx"};
-
-            if (t.find(pre) != 0 ||
-                t.find_first_not_of(digits, pre.size()) != std::string::npos) {
-                throw std::runtime_error{"Invalid target: " + t};
-            }
-
-            if (amdgpu_targets().find(t) == amdgpu_targets().cend()) {
-                std::cerr << "Warning: target " << t
-                    << " has not been validated yet; it may be invalid."
-                    << std::endl;
-            }
-        }
     }
 
     inline
@@ -239,8 +174,8 @@ namespace hip_impl
                 "inputs for compilation; must contain valid C++ code.") |
             clara::Opt{targets, "gfx803,gfx900 etc."}
                 ["-t"]["--targets"](
-                    "targets for AMDGPU lowering; must be one of the processors"
-                    " with ROCm support from "
+                    "targets for AMDGPU lowering; must be included in the set "
+                    "of processors with ROCm support from "
                     "https://www.llvm.org/docs/AMDGPUUsage.html#processors.");
     }
 }
