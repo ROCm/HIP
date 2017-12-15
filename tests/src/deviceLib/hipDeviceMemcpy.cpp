@@ -29,7 +29,7 @@ __global__ void set(hipLaunchParm lp, uint32_t *ptr, uint8_t val, size_t size)
 int main()
 {
     uint32_t *A, *Ad, *B, *Bd;
-    uint32_t *Val, *Vald;
+    uint32_t *Val;
     A = new uint32_t[LEN];
     B = new uint32_t[LEN];
     Val = new uint32_t;

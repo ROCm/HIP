@@ -448,7 +448,7 @@ __device__  __half2 __lowhigh2highlow(const __half2 a) {
 
 __device__  __half2 __lows2half2(const __half2 a, const __half2 b) {
   __half2 c;
-  c.y = a.x;
+  c.x = a.x;
   c.y = b.x;
   return c;
 }
