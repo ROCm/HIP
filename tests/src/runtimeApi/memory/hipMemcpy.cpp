@@ -192,8 +192,6 @@ HostMemory<T>::~HostMemory ()
         free(A_hh);
         free(B_hh);
     }
-    T *A_hh = NULL;
-    T *B_hh = NULL;
 
 };
 

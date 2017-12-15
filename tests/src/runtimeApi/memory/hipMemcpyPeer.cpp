@@ -32,7 +32,6 @@ THE SOFTWARE.
 
 int main()
 {
-    hipDevice_t device;
     size_t Nbytes = N*sizeof(int);
     int numDevices = 0;
     int *A_d, *B_d, *C_d, *X_d, *Y_d, *Z_d;
