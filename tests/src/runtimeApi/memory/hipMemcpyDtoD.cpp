@@ -23,7 +23,7 @@ THE SOFTWARE.
  */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../../test_common.cpp
  * RUN: %t
  * HIT_END
  */
@@ -32,7 +32,7 @@ THE SOFTWARE.
 
 int main()
 {
-    hipDevice_t device;
+   
     size_t Nbytes = N*sizeof(int);
     int numDevices = 0;
     int *A_d, *B_d, *C_d, *X_d, *Y_d, *Z_d;
@@ -69,8 +69,8 @@ int main()
 
 
         HIPCHECK(hipSetDevice(1));
-        HIPCHECK(hipMemcpyDtoD(X_d, A_d,  Nbytes));
-        HIPCHECK(hipMemcpyDtoD(Y_d, B_d,  Nbytes));
+        HIPCHECK(hipMemcpyDtoD((hipDeviceptr_t)X_d, (hipDeviceptr_t)A_d,  Nbytes));
+        HIPCHECK(hipMemcpyDtoD((hipDeviceptr_t)Y_d, (hipDeviceptr_t)B_d,  Nbytes));
 
         hipLaunchKernel(
           HipTest::vectorADD,
@@ -82,7 +82,7 @@ int main()
           static_cast<const int*>(Y_d),
           Z_d,
           N);
-        HIPCHECK(hipMemcpyDtoH(C_h, Z_d, Nbytes));
+        HIPCHECK(hipMemcpyDtoH(C_h, (hipDeviceptr_t)Z_d, Nbytes));
         HIPCHECK(hipDeviceSynchronize());
         HipTest::checkVectorADD(A_h, B_h, C_h, N);
 
