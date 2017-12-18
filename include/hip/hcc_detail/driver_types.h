@@ -62,6 +62,8 @@ struct HIP_ARRAY_DESCRIPTOR {
 	unsigned int numChannels;
 	size_t width;
 	size_t height;
+    unsigned int flags;
+    size_t depth;
 };
 
 struct hipArray {
@@ -73,6 +75,7 @@ struct hipArray {
     unsigned int depth;
     struct HIP_ARRAY_DESCRIPTOR drvDesc;
     bool isDrv;
+    unsigned int textureType;
 };
 
 typedef struct hip_Memcpy2D {
@@ -251,6 +254,30 @@ struct hipMemcpy3DParms {
 
     struct hipExtent      extent;
     enum hipMemcpyKind    kind;
+    
+    size_t                Depth;
+    size_t                Height;
+    size_t                WidthInBytes;
+    hipDeviceptr_t        dstDevice;
+    size_t                dstHeight;
+    void *                dstHost;
+    size_t                dstLOD;
+    hipMemoryType         dstMemoryType;
+    size_t                dstPitch;
+    size_t                dstXInBytes;
+    size_t                dstY;
+    size_t                dstZ;
+    void *                reserved0;
+    void *                reserved1;
+    hipDeviceptr_t        srcDevice;
+    size_t                srcHeight;
+    const void *          srcHost;
+    size_t                srcLOD;
+    hipMemoryType          srcMemoryType;
+    size_t                srcPitch;
+    size_t                srcXInBytes;
+    size_t                srcY;
+    size_t                srcZ;
 };
 
 static __inline__ struct hipPitchedPtr make_hipPitchedPtr(void *d, size_t p, size_t xsz, size_t ysz)

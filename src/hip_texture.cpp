@@ -623,7 +623,7 @@ hipError_t hipBindTextureToArray(textureReference* tex,
 	HIP_INIT_API(tex, array, desc);
 	hipError_t  hip_status = hipSuccess;
     // TODO: hipReadModeElementType is default.
-    hip_status = ihipBindTextureToArrayImpl(hipTextureType2D, hipReadModeElementType,
+    hip_status = ihipBindTextureToArrayImpl(array->textureType, hipReadModeElementType,
                                       array, *desc, tex);
     return ihipLogStatus(hip_status);
 }
@@ -742,7 +742,7 @@ hipError_t hipTexRefSetArray ( textureReference* tex,  hipArray_const_t array, u
 	HIP_INIT_API(tex, array, flags);
 	hipError_t  hip_status = hipSuccess;
 
-    hip_status =  ihipBindTextureToArrayImpl(hipTextureType2D, hipReadModeElementType,
+    hip_status =  ihipBindTextureToArrayImpl(array->textureType, hipReadModeElementType,
 	                                      array, array->desc,tex );
     return ihipLogStatus(hip_status);
 }
