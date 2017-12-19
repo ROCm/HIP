@@ -23,8 +23,7 @@ THE SOFTWARE.
  * HIT_END
  */
 
-// Test under-development. Call hipStreamAddCallback function and see if it works as expected.
-
+#include <stdio.h>
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
@@ -32,32 +31,57 @@ THE SOFTWARE.
 #define HIPRT_CB
 #endif
 
-class CallbackClass
+__global__ void vector_square(float *C_d, float *A_d, size_t N)
 {
-public:
-    static void HIPRT_CB Callback(hipStream_t stream, hipError_t status, void *userData);
+    size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
+    size_t stride = blockDim.x * gridDim.x ;
 
-private:
-    void callbackFunc(hipError_t status);
-};
-
-void HIPRT_CB CallbackClass::Callback(hipStream_t stream, hipError_t status, void *userData)
-{
-    CallbackClass* obj = (CallbackClass*) userData;
-    obj->callbackFunc(status);
+    for (size_t i=offset; i<N; i+=stride) {
+        C_d[i] = A_d[i] * A_d[i];
+    }
 }
 
-void CallbackClass::callbackFunc(hipError_t status)
+float *A_h, *C_h;
+size_t N = 1000000;
+
+static void HIPRT_CB Callback(hipStream_t stream, hipError_t status, void *userData)
 {
-     HIPASSERT(status==hipSuccess);
+    for (size_t i=0; i<N; i++) {
+        if (C_h[i] != A_h[i] * A_h[i]) {
+            HIPCHECK(hipErrorUnknown);
+        }
+    }
+    printf ("PASSED!\n");
 }
 
-int main(){
+int main(int argc, char *argv[])
+{
+    float *A_d, *C_d;
+    size_t Nbytes = N * sizeof(float);
+
+    A_h = (float*)malloc(Nbytes);
+    HIPCHECK(A_h == 0 ? hipErrorMemoryAllocation : hipSuccess );
+    C_h = (float*)malloc(Nbytes);
+    HIPCHECK(C_h == 0 ? hipErrorMemoryAllocation : hipSuccess );
+
+    // Fill with Phi + i
+    for (size_t i=0; i<N; i++) 
+    {
+        A_h[i] = 1.618f + i; 
+    }
+
+    HIPCHECK(hipMalloc(&A_d, Nbytes));
+    HIPCHECK(hipMalloc(&C_d, Nbytes));
+
     hipStream_t mystream;
-    HIPCHECK(hipStreamCreate(&mystream));
-    CallbackClass* obj = new CallbackClass;
-    HIPCHECK(hipStreamAddCallback(mystream, CallbackClass::Callback, obj, 0));
-    HIPCHECK(hipStreamAddCallback(NULL, CallbackClass::Callback, obj, 0));
+    HIPCHECK(hipStreamCreateWithFlags(&mystream, hipStreamNonBlocking));
 
-	passed();
+    HIPCHECK(hipMemcpyAsync(A_d, A_h, Nbytes, hipMemcpyHostToDevice, mystream));
+
+    const unsigned blocks = 512;
+    const unsigned threadsPerBlock = 256;
+    hipLaunchKernelGGL((vector_square), dim3(blocks), dim3(threadsPerBlock), 0, mystream, C_d, A_d, N);
+
+    HIPCHECK(hipMemcpyAsync(C_h, C_d, Nbytes, hipMemcpyDeviceToHost, mystream));
+    HIPCHECK(hipStreamAddCallback(mystream, Callback, NULL, 0));
 }

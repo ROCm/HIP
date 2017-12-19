@@ -20,6 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <thread>
+#include <mutex>
 #include "hip/hip_runtime.h"
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
@@ -147,20 +149,8 @@ hipError_t hipStreamSynchronize(hipStream_t stream)
 {
     HIP_INIT_SPECIAL_API(TRACE_SYNC, stream);
 
-    hipError_t e = hipSuccess;
-
-    if (stream == hipStreamNull) {
-        ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
-        ctx->locked_syncDefaultStream(true/*waitOnSelf*/, true/*syncToHost*/);
-    } else {
-		// note this does not synchornize with the NULL stream:
-        stream->locked_wait();
-        e = hipSuccess;
-    }
-
-
-    return ihipLogStatus(e);
-};
+    return ihipLogStatus(ihipStreamSynchronize(stream));
+}
 
 
 //---
@@ -216,8 +206,20 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
 {
     HIP_INIT_API(stream, callback, userData, flags);
     hipError_t e = hipSuccess;
-    //--- explicitly synchronize stream to add callback routines
-    hipStreamSynchronize(stream);
-    callback(stream, e, userData);
+
+    // Create a thread in detached mode to handle callback
+    ihipStreamCallback_t *cb = new ihipStreamCallback_t(stream, callback, userData);
+    std::thread (ihipStreamCallbackHandler, cb).detach();
+
+    // Wait for thread to be ready
+    cb->_mtx.lock();
+    while(cb->_ready != true)
+    {
+        cb->_mtx.unlock();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        cb->_mtx.lock();
+    }
+    cb->_mtx.unlock();
+
     return ihipLogStatus(e);
 }
