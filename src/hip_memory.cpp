@@ -1659,6 +1659,41 @@ hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, si
     return ihipLogStatus(e);
 };
 
+hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent )
+{
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), &pitchedDevPtr, value, &extent);
+    hipError_t e = hipSuccess;
+
+    hipStream_t stream = hipStreamNull;
+    // TODO - call an ihip memset so HIP_TRACE is correct.
+    stream =  ihipSyncAndResolveStream(stream);
+    if (stream) {
+        size_t sizeBytes = pitchedDevPtr.pitch * extent.height * extent.depth;
+        e = ihipMemset(pitchedDevPtr.ptr, value, sizeBytes, stream);
+        stream->locked_wait();
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent ,hipStream_t stream )
+{
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), &pitchedDevPtr, value, &extent);
+    hipError_t e = hipSuccess;
+
+    // TODO - call an ihip memset so HIP_TRACE is correct.
+    stream =  ihipSyncAndResolveStream(stream);
+    if (stream) {
+        size_t sizeBytes = pitchedDevPtr.pitch * extent.height * extent.depth;
+        e = ihipMemset(pitchedDevPtr.ptr, value, sizeBytes, stream);
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
 
 hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char  value, size_t sizeBytes )
 {
