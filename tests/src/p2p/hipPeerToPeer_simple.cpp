@@ -23,10 +23,10 @@ THE SOFTWARE.
 // Also serves as a template for other tests.
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp
- * RUN: %t EXCLUDE_HIP_PLATFORM all
- * RUN: %t --memcpyWithPeer EXCLUDE_HIP_PLATFORM all
- * RUN: %t --mirrorPeers EXCLUDE_HIP_PLATFORM all
+ * BUILD: %t %s ../test_common.cpp 
+ * RUN: %t EXCLUDE_HIP_PLATFORM hipcc 
+ * RUN: %t --memcpyWithPeer EXCLUDE_HIP_PLATFORM hipcc
+ * RUN: %t --mirrorPeers EXCLUDE_HIP_PLATFORM hipcc
  * HIT_END
  */
 
