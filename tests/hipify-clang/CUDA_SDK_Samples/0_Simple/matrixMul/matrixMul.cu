@@ -168,7 +168,7 @@ int matrixMultiply(int argc, char **argv, int block_size, dim3 &dimsA, dim3 &dim
         printf("cudaMalloc d_A returned error %s (code %d), line(%d)\n", cudaGetErrorString(error), error, __LINE__);
         exit(EXIT_FAILURE);
     }
-    // CHECK: error = hipMalloc((void **)&d_B, mem_size_B);
+    // CHECK: error = hipMalloc((void **) &d_B, mem_size_B);
     error = cudaMalloc((void **) &d_B, mem_size_B);
     // CHECK: if (error != hipSuccess)
     if (error != cudaSuccess)
@@ -244,7 +244,7 @@ int matrixMultiply(int argc, char **argv, int block_size, dim3 &dimsA, dim3 &dim
     }
     // CHECK: hipEvent_t stop;
     cudaEvent_t stop;
-    // CHECK:  error = hipEventCreate(&stop);
+    // CHECK: error = hipEventCreate(&stop);
     error = cudaEventCreate(&stop);
     // CHECK: if (error != hipSuccess)
     if (error != cudaSuccess)
@@ -260,7 +260,6 @@ int matrixMultiply(int argc, char **argv, int block_size, dim3 &dimsA, dim3 &dim
     // CHECK: if (error != hipSuccess)
     if (error != cudaSuccess)
     {
-        // CHECK: fprintf(stderr, "Failed to record start event (error code %s)!\n", hipGetErrorString(error));
         fprintf(stderr, "Failed to record start event (error code %s)!\n", cudaGetErrorString(error));
         exit(EXIT_FAILURE);
     }
@@ -272,45 +271,37 @@ int matrixMultiply(int argc, char **argv, int block_size, dim3 &dimsA, dim3 &dim
     {
         if (block_size == 16)
         {
-            // CHECK: hipLaunchKernelGGL(matrixMulCUDA<16>, dim3(grid), dim3(threads), 0, 0, d_C, d_A, d_B, dimsA.x, dimsB.x);
             matrixMulCUDA<16><<< grid, threads >>>(d_C, d_A, d_B, dimsA.x, dimsB.x);
         }
         else
         {
-            // CHECK: hipLaunchKernelGGL(matrixMulCUDA<32>, dim3(grid), dim3(threads), 0, 0, d_C, d_A, d_B, dimsA.x, dimsB.x);
             matrixMulCUDA<32><<< grid, threads >>>(d_C, d_A, d_B, dimsA.x, dimsB.x);
         }
     }
 
     // Record the stop event
-    // check: error = hipEventRecord(stop, NULL);
     error = cudaEventRecord(stop, NULL);
     // CHECK: if (error != hipSuccess)
     if (error != cudaSuccess)
     {
-        // CHECK: fprintf(stderr, "Failed to record stop event (error code %s)!\n", hipGetErrorString(error));
         fprintf(stderr, "Failed to record stop event (error code %s)!\n", cudaGetErrorString(error));
         exit(EXIT_FAILURE);
     }
 
     // Wait for the stop event to complete
-    // CHECK: error = hipEventSynchronize(stop);
     error = cudaEventSynchronize(stop);
     // CHECK: if (error != hipSuccess)
     if (error != cudaSuccess)
     {
-        // CHECK: fprintf(stderr, "Failed to get time elapsed between events (error code %s)!\n", hipGetErrorString(error));
         fprintf(stderr, "Failed to synchronize on the stop event (error code %s)!\n", cudaGetErrorString(error));
         exit(EXIT_FAILURE);
     }
 
     float msecTotal = 0.0f;
-    // CHECK: error = hipEventElapsedTime(&msecTotal, start, stop);
     error = cudaEventElapsedTime(&msecTotal, start, stop);
     // CHECK: if (error != hipSuccess)
     if (error != cudaSuccess)
     {
-        // CHECK: fprintf(stderr, "Failed to get time elapsed between events (error code %s)!\n", hipGetErrorString(error));
         fprintf(stderr, "Failed to get time elapsed between events (error code %s)!\n", cudaGetErrorString(error));
         exit(EXIT_FAILURE);
     }
@@ -327,12 +318,9 @@ int matrixMultiply(int argc, char **argv, int block_size, dim3 &dimsA, dim3 &dim
         threads.x * threads.y);
 
     // Copy result from device to host
-    // CHECK: error = hipMemcpy(h_C, d_C, mem_size_C, hipMemcpyDeviceToHost);
     error = cudaMemcpy(h_C, d_C, mem_size_C, cudaMemcpyDeviceToHost);
-    // CHECK: if (error != hipSuccess)
     if (error != cudaSuccess)
     {
-        // CHECK: printf("hipMemcpy (h_C,d_C) returned error %s (code %d), line(%d)\n", hipGetErrorString(error), error, __LINE__);
         printf("cudaMemcpy (h_C,d_C) returned error %s (code %d), line(%d)\n", cudaGetErrorString(error), error, __LINE__);
         exit(EXIT_FAILURE);
     }
