@@ -1,4 +1,9 @@
 // RUN: %run_test hipify "%s" "%t" %cuda_args
+
+/*
+* This software contains source code provided by NVIDIA Corporation.
+*/
+
 /*
 * Copyright 1993-2015 NVIDIA Corporation.  All rights reserved.
 *
