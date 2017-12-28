@@ -46,7 +46,7 @@ THE SOFTWARE.
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
+#include "../include/hip/hcc_detail/code_object_bundle.hpp"
 //TODO Use Pool APIs from HCC to get memory regions.
 
 using namespace ELFIO;
