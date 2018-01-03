@@ -449,11 +449,7 @@ nvcc:
     // Block of string constants customizing behavior for cuda
     String nvcc_ver = 'nvcc-9.0'
     String from_image = 'nvidia/cuda:9.0-devel'
-
-    // This unfortunately hardcodes the driver version nvidia_driver_384.90 in the volume mount.  Research if a way
-    // exists to get volume driver to customize the volume names to leave out driver version
-    String inside_args = '''--device=/dev/nvidiactl --device=/dev/nvidia0 --device=/dev/nvidia-uvm --device=/dev/nvidia-uvm-tools
-        --volume-driver=nvidia-docker --volume=nvidia_driver_384.90:/usr/local/nvidia:ro''';
+    String inside_args = '--runtime=nvidia';
 
     // Checkout source code, dependencies and version files
     String source_hip_rel = checkout_and_version( nvcc_ver )
