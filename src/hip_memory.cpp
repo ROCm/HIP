@@ -1870,6 +1870,84 @@ hipError_t hipMemsetD2D8Async(hipDeviceptr_t dst, size_t pitch, unsigned char va
     return ihipLogStatus(e);
 };
 
+hipError_t hipMemsetD2D16(hipDeviceptr_t dst, size_t pitch, unsigned short value, size_t width, size_t height)
+{
+   HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, pitch, value, width, height);
+
+    hipError_t e = hipSuccess;
+
+    hipStream_t stream = hipStreamNull;
+    // TODO - call an ihip memset so HIP_TRACE is correct.
+    stream =  ihipSyncAndResolveStream(stream);
+
+    if (stream) {
+        size_t sizeBytes = pitch * height;
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeShort);
+        stream->locked_wait();
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemsetD2D16Async(hipDeviceptr_t dst, size_t pitch, unsigned short value, size_t width, size_t height, hipStream_t stream )
+{
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, pitch, value, width, height, stream);
+
+    hipError_t e = hipSuccess;
+
+    stream =  ihipSyncAndResolveStream(stream);
+
+    if (stream) {
+        size_t sizeBytes = pitch * height;
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeShort);
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+};
+
+hipError_t hipMemsetD2D32(hipDeviceptr_t dst, size_t pitch, unsigned int value, size_t width, size_t height)
+{
+   HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, pitch, value, width, height);
+
+    hipError_t e = hipSuccess;
+
+    hipStream_t stream = hipStreamNull;
+    // TODO - call an ihip memset so HIP_TRACE is correct.
+    stream =  ihipSyncAndResolveStream(stream);
+
+    if (stream) {
+        size_t sizeBytes = pitch * height;
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeInt);
+        stream->locked_wait();
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemsetD2D32Async(hipDeviceptr_t dst, size_t pitch, unsigned int value, size_t width, size_t height, hipStream_t stream )
+{
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, pitch, value, width, height, stream);
+
+    hipError_t e = hipSuccess;
+
+    stream =  ihipSyncAndResolveStream(stream);
+
+    if (stream) {
+        size_t sizeBytes = pitch * height;
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeInt);
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+};
+
 hipError_t hipMemGetInfo(size_t *free, size_t *total)
 {
     HIP_INIT_API(free, total);
