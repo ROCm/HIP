@@ -157,11 +157,11 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
     }
 
     // Special-casing to avoid duplication of the hip_runtime include.
+    bool secondMainInclude = false;
     if (found->second.hipName == "hip/hip_runtime.h") {
         if (insertedRuntimeHeader) {
-            return;
+          secondMainInclude = true;
         }
-
         insertedRuntimeHeader = true;
     }
 
@@ -169,24 +169,27 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
 
     clang::SourceLocation sl = filename_range.getBegin();
     if (found->second.unsupported) {
-        // An unsupported CUDA header? Oh dear. Print a warning.
         clang::DiagnosticsEngine& DE = getCompilerInstance().getDiagnostics();
         DE.Report(sl, DE.getCustomDiagID(clang::DiagnosticsEngine::Warning, "Unsupported CUDA header"));
         return;
     }
 
-    const char *B = SM.getCharacterData(sl);
-    const char *E = SM.getCharacterData(filename_range.getEnd());
-    clang::SmallString<128> includeBuffer;
     clang::StringRef newInclude;
 
     // Keep the same include type that the user gave.
-    if (is_angled) {
-        newInclude = llvm::Twine("<" + found->second.hipName + ">").toStringRef(includeBuffer);
+    if (!secondMainInclude) {
+      clang::SmallString<128> includeBuffer;
+      if (is_angled) {
+          newInclude = llvm::Twine("<" + found->second.hipName + ">").toStringRef(includeBuffer);
+      } else {
+          newInclude = llvm::Twine("\"" + found->second.hipName + "\"").toStringRef(includeBuffer);
+      }
     } else {
-        newInclude = llvm::Twine("\"" + found->second.hipName + "\"").toStringRef(includeBuffer);
+      // hashLoc is location of the '#', thus replacing the whole include directive by empty newInclude starting with '#'.
+      sl = hash_loc;
     }
-
+    const char *B = SM.getCharacterData(sl);
+    const char *E = SM.getCharacterData(filename_range.getEnd());
     ct::Replacement Rep(SM, sl, E - B, newInclude);
     insertReplacement(Rep, clang::FullSourceLoc{sl, SM});
 }
