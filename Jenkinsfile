@@ -367,11 +367,11 @@ if( params.hcc_integration_test )
 // The following launches 3 builds in parallel: hcc-ctu, hcc-1.6 and cuda
 parallel hcc_ctu:
 {
-  node('docker && rocm')
+  node('docker && rocm && dkms')
   {
     String hcc_ver = 'hcc-ctu'
     String from_image = 'compute-artifactory:5001/radeonopencompute/hcc/clang_tot_upgrade/hcc-lc-ubuntu-16.04:latest'
-    String inside_args = '--device=/dev/kfd --device=/dev/dri'
+    String inside_args = '--device=/dev/kfd --device=/dev/dri --group-add=video'
 
     // Checkout source code, dependencies and version files
     String source_hip_rel = checkout_and_version( hcc_ver )
@@ -408,7 +408,7 @@ parallel hcc_ctu:
 },
 hcc_1_6:
 {
-  node('docker && rocm')
+  node('docker && rocm && !dkms')
   {
     String hcc_ver = 'hcc-1.6'
     String from_image = 'rocm/dev-ubuntu-16.04:latest'
