@@ -174,13 +174,10 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
         return;
     }
 
-    char *B = nullptr;
-    const char *E = SM.getCharacterData(filename_range.getEnd());
     clang::StringRef newInclude;
 
     // Keep the same include type that the user gave.
     if (!secondMainInclude) {
-      B = const_cast<char*>(SM.getCharacterData(sl));
       clang::SmallString<128> includeBuffer;
       if (is_angled) {
           newInclude = llvm::Twine("<" + found->second.hipName + ">").toStringRef(includeBuffer);
@@ -189,10 +186,10 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
       }
     } else {
       // hashLoc is location of the '#', thus replacing the whole include directive by empty newInclude starting with '#'.
-      B = const_cast<char*>(SM.getCharacterData(hash_loc));
       sl = hash_loc;
     }
-
+    const char *B = SM.getCharacterData(sl);
+    const char *E = SM.getCharacterData(filename_range.getEnd());
     ct::Replacement Rep(SM, sl, E - B, newInclude);
     insertReplacement(Rep, clang::FullSourceLoc{sl, SM});
 }
