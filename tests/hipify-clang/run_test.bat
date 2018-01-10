@@ -1,4 +1,5 @@
 @echo off
+setlocal
 
 for %%i in (FileCheck.exe) do set FILE_CHECK=%%~$PATH:i
 if not defined FILE_CHECK (echo     Error: FileCheck.exe not found in PATH. && exit /b 1)
