@@ -25,7 +25,7 @@ ct::Replacements& getReplacements(ct::RefactoringTool& Tool, clang::StringRef fi
 void insertReplacement(ct::Replacements& replacements, const ct::Replacement& rep) {
 #if LLVM_VERSION_MAJOR > 3
     // New clang added error checking to Replacements, and *insists* that you explicitly check it.
-    llvm::Error e = replacements.add(rep);
+    llvm::consumeError(replacements.add(rep));
 #else
     // In older versions, it's literally an std::set<Replacement>
     replacements.insert(rep);
