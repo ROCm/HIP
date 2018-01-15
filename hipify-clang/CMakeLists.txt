@@ -78,9 +78,6 @@ if (HIPIFY_CLANG_TESTS)
 
     require_program(lit)
     require_program(FileCheck)
-    if(NOT WIN32)
-        require_program(socat)
-    endif()
 
     # Populates CUDA_TOOLKIT_ROOT_DIR, which is then applied to the lit config to give the
     # value of --cuda-path for the test runs.
