@@ -152,7 +152,10 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
 
     const auto found = CUDA_INCLUDE_MAP.find(file_name);
     if (found == CUDA_INCLUDE_MAP.end()) {
-        // Not a CUDA include - don't touch it.
+        if (!firstNotMainHeader) {
+            firstNotMainHeader = true;
+            firstNotMainHeaderLoc = hash_loc;
+        }
         return;
     }
 
@@ -160,7 +163,7 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
     bool secondMainInclude = false;
     if (found->second.hipName == "hip/hip_runtime.h") {
         if (insertedRuntimeHeader) {
-          secondMainInclude = true;
+            secondMainInclude = true;
         }
         insertedRuntimeHeader = true;
     }
@@ -178,15 +181,15 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
 
     // Keep the same include type that the user gave.
     if (!secondMainInclude) {
-      clang::SmallString<128> includeBuffer;
-      if (is_angled) {
-          newInclude = llvm::Twine("<" + found->second.hipName + ">").toStringRef(includeBuffer);
-      } else {
-          newInclude = llvm::Twine("\"" + found->second.hipName + "\"").toStringRef(includeBuffer);
-      }
+        clang::SmallString<128> includeBuffer;
+        if (is_angled) {
+            newInclude = llvm::Twine("<" + found->second.hipName + ">").toStringRef(includeBuffer);
+        } else {
+            newInclude = llvm::Twine("\"" + found->second.hipName + "\"").toStringRef(includeBuffer);
+        }
     } else {
-      // hashLoc is location of the '#', thus replacing the whole include directive by empty newInclude starting with '#'.
-      sl = hash_loc;
+        // hashLoc is location of the '#', thus replacing the whole include directive by empty newInclude starting with '#'.
+        sl = hash_loc;
     }
     const char *B = SM.getCharacterData(sl);
     const char *E = SM.getCharacterData(filename_range.getEnd());
@@ -194,6 +197,18 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
     insertReplacement(Rep, clang::FullSourceLoc{sl, SM});
 }
 
+void HipifyAction::PragmaDirective(clang::SourceLocation Loc, clang::PragmaIntroducerKind Introducer) {
+    if (pragmaOnce) { return; }
+    clang::SourceManager& SM = getCompilerInstance().getSourceManager();
+    clang::Preprocessor& PP = getCompilerInstance().getPreprocessor();
+    const clang::Token tok = PP.LookAhead(0);
+    clang::LangOptions DefaultLangOptions;
+    StringRef Text(SM.getCharacterData(tok.getLocation()), tok.getLength());
+    if (Text == "once") {
+        pragmaOnce = true;
+        pragmaOnceLoc = PP.LookAhead(1).getLocation();
+    }
+}
 
 bool HipifyAction::cudaLaunchKernel(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
     StringRef refName = "cudaLaunchKernel";
@@ -339,10 +354,16 @@ void HipifyAction::EndSourceFileAction() {
         // implicitly included by the compiler. Instead, we _delete_ CUDA headers, and unconditionally insert
         // one copy of the hip include into every file.
         clang::SourceManager& SM = getCompilerInstance().getSourceManager();
-
-        clang::SourceLocation sl = SM.getLocForStartOfFile(SM.getMainFileID());
+        clang::SourceLocation sl;
+        if (pragmaOnce) {
+            sl = pragmaOnceLoc;
+        } else if (firstNotMainHeader) {
+            sl = firstNotMainHeaderLoc;
+        } else {
+            sl = SM.getLocForStartOfFile(SM.getMainFileID());
+        }
         clang::FullSourceLoc fullSL(sl, SM);
-        ct::Replacement Rep(SM, sl, 0, "#include <hip/hip_runtime.h>\n");
+        ct::Replacement Rep(SM, sl, 0, "\n#include <hip/hip_runtime.h>\n");
         insertReplacement(Rep, fullSL);
     }
 
@@ -366,6 +387,10 @@ public:
                             const clang::FileEntry* file, StringRef search_path, StringRef relative_path,
                             const clang::Module* imported) override {
         hipifyAction.InclusionDirective(hash_loc, include_token, file_name, is_angled, filename_range, file, search_path, relative_path, imported);
+    }
+
+    void PragmaDirective(clang::SourceLocation Loc, clang::PragmaIntroducerKind Introducer) override {
+        hipifyAction.PragmaDirective(Loc, Introducer);
     }
 };
 
