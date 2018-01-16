@@ -5,7 +5,7 @@
 // CHECK-NEXT: #include <iostream>
 #include <stdio.h>
 #include <iostream>
-// CHECK-NOT: #include<hip/hip_runtime.h>
+// CHECK-NOT: #include <hip/hip_runtime.h>
 int main(int argc, char* argv[]) {
   return 0;
 }
