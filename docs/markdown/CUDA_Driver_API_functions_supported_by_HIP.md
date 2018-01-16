@@ -5,8 +5,8 @@
 | **type**     |   **CUDA**                                                    |   **HIP**                                                  |
 |-------------:|---------------------------------------------------------------|------------------------------------------------------------|
 | struct       | `CUDA_ARRAY3D_DESCRIPTOR`                                     |                                                            |
-| struct       | `CUDA_ARRAY_DESCRIPTOR`                                       |                                                            |
-| struct       | `CUDA_MEMCPY2D`                                               |                                                            |
+| struct       | `CUDA_ARRAY_DESCRIPTOR`                                       | `HIP_ARRAY_DESCRIPTOR`                                     |
+| struct       | `CUDA_MEMCPY2D`                                               | `hip_Memcpy2D`                                             |
 | struct       | `CUDA_MEMCPY3D`                                               |                                                            |
 | struct       | `CUDA_MEMCPY3D_PEER`                                          |                                                            |
 | struct       | `CUDA_POINTER_ATTRIBUTE_P2P_TOKENS`                           |                                                            |
@@ -27,15 +27,15 @@
 |         0x03 |*`CU_CUBEMAP_FACE_NEGATIVE_Y`*                                 |                                                            |
 |         0x04 |*`CU_CUBEMAP_FACE_POSITIVE_Z`*                                 |                                                            |
 |         0x05 |*`CU_CUBEMAP_FACE_NEGATIVE_Z`*                                 |                                                            |
-| enum         |***`CUarray_format`***                                         |                                                            |
-|         0x01 |*`CU_AD_FORMAT_UNSIGNED_INT8`*                                 |                                                            |
-|         0x02 |*`CU_AD_FORMAT_UNSIGNED_INT16`*                                |                                                            |
-|         0x03 |*`CU_AD_FORMAT_UNSIGNED_INT32`*                                |                                                            |
-|         0x08 |*`CU_AD_FORMAT_SIGNED_INT8`*                                   |                                                            |
-|         0x09 |*`CU_AD_FORMAT_SIGNED_INT16`*                                  |                                                            |
-|         0x0a |*`CU_AD_FORMAT_SIGNED_INT32`*                                  |                                                            |
-|         0x10 |*`CU_AD_FORMAT_HALF`*                                          |                                                            |
-|         0x20 |*`CU_AD_FORMAT_FLOAT`*                                         |                                                            |
+| enum         |***`CUarray_format`***                                         |***`hipArray_format`***                                     |
+|         0x01 |*`CU_AD_FORMAT_UNSIGNED_INT8`*                                 |*`HIP_AD_FORMAT_UNSIGNED_INT8`*                             |
+|         0x02 |*`CU_AD_FORMAT_UNSIGNED_INT16`*                                |*`HIP_AD_FORMAT_UNSIGNED_INT16`*                            |
+|         0x03 |*`CU_AD_FORMAT_UNSIGNED_INT32`*                                |*`HIP_AD_FORMAT_UNSIGNED_INT32`*                            |
+|         0x08 |*`CU_AD_FORMAT_SIGNED_INT8`*                                   |*`HIP_AD_FORMAT_SIGNED_INT8`*                               |
+|         0x09 |*`CU_AD_FORMAT_SIGNED_INT16`*                                  |*`HIP_AD_FORMAT_SIGNED_INT16`*                              |
+|         0x0a |*`CU_AD_FORMAT_SIGNED_INT32`*                                  |*`HIP_AD_FORMAT_SIGNED_INT32`*                              |
+|         0x10 |*`CU_AD_FORMAT_HALF`*                                          |*`HIP_AD_FORMAT_HALF`*                                      |
+|         0x20 |*`CU_AD_FORMAT_FLOAT`*                                         |*`HIP_AD_FORMAT_FLOAT`*                                     |
 | enum         |***`CUctx_flags`***                                            |                                                            |
 |         0x00 |*`CU_CTX_SCHED_AUTO`*                                          |                                                            |
 |         0x01 |*`CU_CTX_SCHED_SPIN`*                                          |                                                            |
@@ -518,7 +518,7 @@
 
 |   **CUDA**                                                |   **HIP**                     |
 |-----------------------------------------------------------|-------------------------------|
-| `cuArray3DCreate`                                         |                               |
+| `cuArray3DCreate`                                         | `hipArray3DCreate`            |
 | `cuArray3DGetDescriptor`                                  |                               |
 | `cuArrayCreate`                                           |                               |
 | `cuArrayDestroy`                                          |                               |
