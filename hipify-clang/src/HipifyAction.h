@@ -23,6 +23,10 @@ private:
     // not, we insert it at the top of the file when we finish processing it.
     // This approach means we do the best it's possible to do w.r.t preserving the user's include order.
     bool insertedRuntimeHeader = false;
+    bool firstNotMainHeader = false;
+    bool pragmaOnce = false;
+    clang::SourceLocation firstNotMainHeaderLoc;
+    clang::SourceLocation pragmaOnceLoc;
 
     /**
      * Rewrite a string literal to refer to hip, not CUDA.
@@ -56,6 +60,11 @@ public:
                             StringRef search_path,
                             StringRef relative_path,
                             const clang::Module *imported);
+
+    /**
+    * Called by the preprocessor for each pragma directive during the non-raw lexing pass.
+    */
+    void PragmaDirective(clang::SourceLocation Loc, clang::PragmaIntroducerKind Introducer);
 
 protected:
     /**
