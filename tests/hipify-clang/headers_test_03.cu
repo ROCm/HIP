@@ -3,7 +3,7 @@
 // CHECK: #pragma once
 // CHECK-NEXT: #include <hip/hip_runtime.h>
 #pragma once
-// CHECK-NOT: #include<hip/hip_runtime.h>
+// CHECK-NOT: #include <hip/hip_runtime.h>
 int main(int argc, char* argv[]) {
   return 0;
 }
