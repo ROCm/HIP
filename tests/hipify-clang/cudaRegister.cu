@@ -38,7 +38,6 @@ if(status != cudaSuccess) { \
 }
 
 __global__ void Inc1(float *Ad, float *Bd){
-  // CHECK: int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
 	int tx = threadIdx.x + blockIdx.x * blockDim.x;
 	if(tx < 1 ){
 		for(int i=0;i<ITER;i++){
@@ -51,7 +50,6 @@ __global__ void Inc1(float *Ad, float *Bd){
 }
 
 __global__ void Inc2(float *Ad, float *Bd){
-  // CHECK: int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
 	int tx = threadIdx.x + blockIdx.x * blockDim.x;
 	if(tx < 1024){
 		for(int i=0;i<ITER;i++){
