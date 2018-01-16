@@ -202,7 +202,6 @@ void HipifyAction::PragmaDirective(clang::SourceLocation Loc, clang::PragmaIntro
     clang::SourceManager& SM = getCompilerInstance().getSourceManager();
     clang::Preprocessor& PP = getCompilerInstance().getPreprocessor();
     const clang::Token tok = PP.LookAhead(0);
-    clang::LangOptions DefaultLangOptions;
     StringRef Text(SM.getCharacterData(tok.getLocation()), tok.getLength());
     if (Text == "once") {
         pragmaOnce = true;
