@@ -1411,6 +1411,65 @@ hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset,
     return ihipLogStatus(e);
 }
 
+hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffset, size_t hOffset,
+         size_t count, hipMemcpyKind kind) {
+
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, srcArray, wOffset, hOffset, count, kind);
+
+    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+    hc::completion_future marker;
+
+    hipError_t e = hipSuccess;
+
+    try {
+        stream->locked_copySync((char *)dst, (char*)srcArray->data + wOffset, count, kind);
+    }
+    catch (ihipException &ex) {
+        e = ex._code;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemcpyHtoA(hipArray* dstArray, size_t dstOffset, const void* srcHost, size_t count)
+{
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dstArray, dstOffset, srcHost, count);
+
+    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+    hc::completion_future marker;
+
+    hipError_t e = hipSuccess;
+    try {
+        stream->locked_copySync((char *)dstArray->data + dstOffset, srcHost, count, hipMemcpyHostToDevice);
+    } catch (ihipException &ex) {
+        e = ex._code;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t count)
+{
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, srcArray, srcOffset, count);
+
+    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+    hc::completion_future marker;
+
+    hipError_t e = hipSuccess;
+
+    try {
+        stream->locked_copySync((char *)dst, (char*)srcArray->data + srcOffset, count, hipMemcpyDeviceToHost);
+    }
+    catch (ihipException &ex) {
+        e = ex._code;
+    }
+
+    return ihipLogStatus(e);
+}
+
 hipError_t hipMemcpy3D(const struct hipMemcpy3DParms *p)
 {
     HIP_INIT_SPECIAL_API((TRACE_MCMD), p);

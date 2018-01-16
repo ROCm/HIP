@@ -1420,7 +1420,56 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
 hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset,
                             const void* src, size_t count, hipMemcpyKind kind);
 
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dst       Destination memory address
+ *  @param[in]   srcArray  Source memory address
+ *  @param[in]   woffset   Source starting X offset
+ *  @param[in]   hOffset   Source starting Y offset
+ *  @param[in]   count     Size in bytes to copy
+ *  @param[in]   kind      Type of transfer
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue, #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol, hipMemcpyAsync
+ */
+hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffset, size_t hOffset,
+         size_t count, hipMemcpyKind kind);
 
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dst       Destination memory address
+ *  @param[in]   srcArray  Source array
+ *  @param[in]   srcoffset Offset in bytes of source array
+ *  @param[in]   count     Size of memory copy in bytes
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue, #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol, hipMemcpyAsync
+ */
+hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t count);
+
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dstArray   Destination memory address
+ *  @param[in]   dstOffset  Offset in bytes of destination array
+ *  @param[in]   srcHost    Source host pointer
+ *  @param[in]   count      Size of memory copy in bytes
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue, #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol, hipMemcpyAsync
+ */
+hipError_t hipMemcpyHtoA(hipArray* dstArray, size_t dstOffset, const void* srcHost, size_t count);
+
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   p   3D memory copy parameters
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue, #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol, hipMemcpyAsync
+ */
 hipError_t hipMemcpy3D(const struct hipMemcpy3DParms *p);
 
 // doxygen end Memory
