@@ -10,8 +10,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TYPE_NAME_MAP{
 
     ///////////////////////////// CUDA DRIVER API /////////////////////////////
     {"CUDA_ARRAY3D_DESCRIPTOR",           {"HIP_ARRAY3D_DESCRIPTOR",           CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    {"CUDA_ARRAY_DESCRIPTOR",             {"HIP_ARRAY_DESCRIPTOR",             CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    {"CUDA_MEMCPY2D",                     {"HIP_MEMCPY2D",                     CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    {"CUDA_ARRAY_DESCRIPTOR",             {"HIP_ARRAY_DESCRIPTOR",             CONV_TYPE, API_DRIVER}},
+    {"CUDA_MEMCPY2D",                     {"hip_Memcpy2D",                     CONV_TYPE, API_DRIVER}},
     {"CUDA_MEMCPY3D",                     {"HIP_MEMCPY3D",                     CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
     {"CUDA_MEMCPY3D_PEER",                {"HIP_MEMCPY3D_PEER",                CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
     {"CUDA_POINTER_ATTRIBUTE_P2P_TOKENS", {"HIP_POINTER_ATTRIBUTE_P2P_TOKENS", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
@@ -23,7 +23,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TYPE_NAME_MAP{
 
     {"CUaddress_mode",        {"hipAddress_mode",       CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
     {"CUarray_cubemap_face",  {"hipArray_cubemap_face", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    {"CUarray_format",        {"hipArray_format",       CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    {"CUarray_format",        {"hipArray_format",       CONV_TYPE, API_DRIVER}},
     {"CUcomputemode",         {"hipComputemode",        CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_RUNTIME ANALOGUE (cudaComputeMode)
     {"CUmem_advise",          {"hipMemAdvise",          CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_RUNTIME ANALOGUE (cudaComputeMode)
     {"CUmem_range_attribute", {"hipMemRangeAttribute",  CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_RUNTIME ANALOGUE (cudaMemRangeAttribute)
@@ -564,14 +564,14 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"CU_CUBEMAP_FACE_NEGATIVE_Z",        {"HIP_CUBEMAP_FACE_NEGATIVE_Z",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x05
 
     // CUarray_format enum
-    {"CU_AD_FORMAT_UNSIGNED_INT8",        {"HIP_AD_FORMAT_UNSIGNED_INT8",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01
-    {"CU_AD_FORMAT_UNSIGNED_INT16",       {"HIP_AD_FORMAT_UNSIGNED_INT16",     CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x02
-    {"CU_AD_FORMAT_UNSIGNED_INT32",       {"HIP_AD_FORMAT_UNSIGNED_INT32",     CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x03
-    {"CU_AD_FORMAT_SIGNED_INT8",          {"HIP_AD_FORMAT_SIGNED_INT8",        CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x08
-    {"CU_AD_FORMAT_SIGNED_INT16",         {"HIP_AD_FORMAT_SIGNED_INT16",       CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x09
-    {"CU_AD_FORMAT_SIGNED_INT32",         {"HIP_AD_FORMAT_SIGNED_INT32",       CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x0a
-    {"CU_AD_FORMAT_HALF",                 {"HIP_AD_FORMAT_HALF",               CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x10
-    {"CU_AD_FORMAT_FLOAT",                {"HIP_AD_FORMAT_FLOAT",              CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0x20
+    {"CU_AD_FORMAT_UNSIGNED_INT8",        {"HIP_AD_FORMAT_UNSIGNED_INT8",      CONV_TYPE, API_DRIVER}},    // 0x01
+    {"CU_AD_FORMAT_UNSIGNED_INT16",       {"HIP_AD_FORMAT_UNSIGNED_INT16",     CONV_TYPE, API_DRIVER}},    // 0x02
+    {"CU_AD_FORMAT_UNSIGNED_INT32",       {"HIP_AD_FORMAT_UNSIGNED_INT32",     CONV_TYPE, API_DRIVER}},    // 0x03
+    {"CU_AD_FORMAT_SIGNED_INT8",          {"HIP_AD_FORMAT_SIGNED_INT8",        CONV_TYPE, API_DRIVER}},    // 0x08
+    {"CU_AD_FORMAT_SIGNED_INT16",         {"HIP_AD_FORMAT_SIGNED_INT16",       CONV_TYPE, API_DRIVER}},    // 0x09
+    {"CU_AD_FORMAT_SIGNED_INT32",         {"HIP_AD_FORMAT_SIGNED_INT32",       CONV_TYPE, API_DRIVER}},    // 0x0a
+    {"CU_AD_FORMAT_HALF",                 {"HIP_AD_FORMAT_HALF",               CONV_TYPE, API_DRIVER}},    // 0x10
+    {"CU_AD_FORMAT_FLOAT",                {"HIP_AD_FORMAT_FLOAT",              CONV_TYPE, API_DRIVER}},    // 0x20
 
     // CUcomputemode enum
     {"CU_COMPUTEMODE_DEFAULT",            {"hipComputeModeDefault",            CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0 // API_RUNTIME ANALOGUE (cudaComputeModeDefault = 0)
@@ -1063,7 +1063,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cuStreamBatchMemOp",         {"hipStreamBatchMemOp",         CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}},    // // no API_Runtime ANALOGUE
 
     // Memory management
-    {"cuArray3DCreate",           {"hipArray3DCreate",           CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
+    {"cuArray3DCreate",           {"hipArray3DCreate",           CONV_MEM, API_DRIVER}},
     {"cuArray3DGetDescriptor",    {"hipArray3DGetDescriptor",    CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
     {"cuArrayCreate",             {"hipArrayCreate",             CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
     {"cuArrayDestroy",            {"hipArrayDestroy",            CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
