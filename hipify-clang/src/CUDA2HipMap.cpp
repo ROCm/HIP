@@ -213,6 +213,13 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TYPE_NAME_MAP{
     {"cudaMipmappedArray_t",       {"hipMipmappedArray_t",       CONV_MEM, API_RUNTIME}},
     {"cudaMipmappedArray_const_t", {"hipMipmappedArray_const_t", CONV_MEM, API_RUNTIME}},
 
+    // defines
+    {"cudaArrayDefault",           {"hipArrayDefault",          CONV_MEM, API_RUNTIME}},
+    {"cudaArrayLayered",           {"hipArrayLayered",          CONV_MEM, API_RUNTIME}},
+    {"cudaArraySurfaceLoadStore",  {"hipArraySurfaceLoadStore", CONV_MEM, API_RUNTIME}},
+    {"cudaArrayCubemap",           {"hipArrayCubemap",          CONV_MEM, API_RUNTIME}},
+    {"cudaArrayTextureGather",     {"hipArrayTextureGather",    CONV_MEM, API_RUNTIME}},
+
     {"cudaMemoryAdvise", {"hipMemAdvise", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUmem_advise)
     {"cudaMemRangeAttribute", {"hipMemRangeAttribute", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUmem_range_attribute)
     {"cudaMemcpyKind", {"hipMemcpyKind", CONV_MEM, API_RUNTIME}},
@@ -262,6 +269,15 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TYPE_NAME_MAP{
     {"cudaSurfaceBoundaryMode", {"hipSurfaceBoundaryMode", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
 
     {"cudaSurfaceFormatMode", {"hipSurfaceFormatMode", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
+
+    // defines
+    {"cudaTextureType1D",             {"hipTextureType1D",             CONV_TEX, API_RUNTIME}},
+    {"cudaTextureType2D",             {"hipTextureType2D",             CONV_TEX, API_RUNTIME}},
+    {"cudaTextureType3D",             {"hipTextureType3D",             CONV_TEX, API_RUNTIME}},
+    {"cudaTextureTypeCubemap",        {"hipTextureTypeCubemap",        CONV_TEX, API_RUNTIME}},
+    {"cudaTextureType1DLayered",      {"hipTextureType1DLayered",      CONV_TEX, API_RUNTIME}},
+    {"cudaTextureType2DLayered",      {"hipTextureType2DLayered",      CONV_TEX, API_RUNTIME}},
+    {"cudaTextureTypeCubemapLayered", {"hipTextureTypeCubemapLayered", CONV_TEX, API_RUNTIME}},
 
     // Inter-Process Communication (IPC)
     {"cudaIpcEventHandle_t",  {"hipIpcEventHandle_t", CONV_TYPE, API_RUNTIME}},
