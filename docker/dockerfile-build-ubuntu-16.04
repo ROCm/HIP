@@ -7,6 +7,7 @@ MAINTAINER Kent Knox <kent.knox@amd>
 ARG user_uid
 
 # Install Packages
+# python and libnuma1 are dependencies of rocm_agent_enumerator
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     sudo \
     build-essential \
@@ -14,6 +15,8 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     git \
     libelf-dev \
     rpm \
+    python \
+    libnuma1 \
     && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*

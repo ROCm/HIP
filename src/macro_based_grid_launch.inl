@@ -89,7 +89,6 @@ namespace hip_impl
         stream->lockclose_postKernelCommand(kernel_name, acc_v);
 
         delete static_cast<L*>(locked_stream);
-        locked_stream = nullptr;
         if(HIP_PROFILE_API) {
             MARKER_END();
         }
