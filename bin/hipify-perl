@@ -281,7 +281,7 @@ while (@ARGV) {
         $ft{'mem'} += s/\bcudaMemcpyKind\b/hipMemcpyKind/g;
 
         $ft{'mem'} += s/\bcudaPointerAttributes\b/hipPointerAttribute_t/g;
-        $ft{'mem'} += s/\bcudaPointerGetAttributes\b/hipPointerGetAttribute_t/g;
+        $ft{'mem'} += s/\bcudaPointerGetAttributes\b/hipPointerGetAttributes/g;
 
         $ft{'mem'} += s/\bcudaMemcpy2D\b/hipMemcpy2D/g;
         $ft{'mem'} += s/\bcudaMemcpy2DToArray\b/hipMemcpy2DToArray/g;
