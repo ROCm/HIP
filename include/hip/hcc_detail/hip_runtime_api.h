@@ -1317,6 +1317,11 @@ hipError_t hipMallocArray(hipArray** array, const struct hipChannelFormatDesc* d
                           size_t width, size_t height, unsigned int flags);
 #endif
 hipError_t hipArrayCreate ( hipArray** pHandle, const HIP_ARRAY_DESCRIPTOR* pAllocateArray );
+
+hipError_t hipArray3DCreate(hipArray_t *array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray );
+
+hipError_t hipMalloc3D (hipPitchedPtr* pitchedDevPtr, hipExtent extent );
+
 /**
  *  @brief Frees an array on the device.
  *

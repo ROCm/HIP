@@ -65,22 +65,40 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHIPIFY_CLANG_RES=\\\"${LLVM_LIBRARY_DI
 install(TARGETS hipify-clang DESTINATION bin)
 
 if (HIPIFY_CLANG_TESTS)
-    find_package(PythonInterp 2.7 REQUIRED EXACT)
+    find_package(PythonInterp 2.7 REQUIRED)
 
     function (require_program PROGRAM_NAME)
-        find_program(FOUND_PROGRAM ${PROGRAM_NAME})
-        if (NOT FOUND_PROGRAM)
-            message(FATAL_ERROR "Can't find ${PROGRAM_NAME}. Either set HIPIFY_CLANG_TESTS to OFF to disable hipify tests, or install the missing program.")
+        find_program(FOUND_${PROGRAM_NAME} ${PROGRAM_NAME})
+        if (FOUND_${PROGRAM_NAME})
+            message(STATUS "Found ${PROGRAM_NAME}: ${FOUND_${PROGRAM_NAME}}")
+        else()
+            message(SEND_ERROR "Can't find ${PROGRAM_NAME}. Either set HIPIFY_CLANG_TESTS to OFF to disable hipify tests, or install the missing program.")
         endif()
     endfunction()
 
     require_program(lit)
     require_program(FileCheck)
-    require_program(socat)
 
     # Populates CUDA_TOOLKIT_ROOT_DIR, which is then applied to the lit config to give the
     # value of --cuda-path for the test runs.
     find_package(CUDA REQUIRED)
+    if ((CUDA_VERSION VERSION_LESS "7.0") OR (LLVM_PACKAGE_VERSION VERSION_LESS "3.8") OR
+        (CUDA_VERSION VERSION_GREATER "7.5" AND LLVM_PACKAGE_VERSION VERSION_LESS "4.0") OR
+        (CUDA_VERSION VERSION_GREATER "8.0" AND LLVM_PACKAGE_VERSION VERSION_LESS "6.0") OR
+        (CUDA_VERSION VERSION_GREATER "9.0" AND LLVM_PACKAGE_VERSION VERSION_LESS "7.0"))
+        message(SEND_ERROR "CUDA ${CUDA_VERSION} is not supported by clang ${LLVM_PACKAGE_VERSION}.")
+        if (CUDA_VERSION VERSION_LESS "7.0")
+            message(STATUS "Please install CUDA 7.0 or higher.")
+        elseif ((CUDA_VERSION VERSION_EQUAL "7.0") OR (CUDA_VERSION VERSION_EQUAL "7.5"))
+            message(STATUS "Please install clang 3.8 or higher.")
+        elseif (CUDA_VERSION VERSION_EQUAL "8.0")
+            message(STATUS "Please install clang 4.0 or higher.")
+        elseif (CUDA_VERSION VERSION_EQUAL "9.0")
+            message(STATUS "Please install clang 6.0 or higher.")
+        elseif (CUDA_VERSION VERSION_EQUAL "9.1")
+            message(STATUS "Please install clang 7.0 or higher.")
+        endif()
+    endif()
 
     configure_file(
         ${CMAKE_CURRENT_LIST_DIR}/../tests/hipify-clang/lit.site.cfg.in
