@@ -248,42 +248,42 @@
 |         0x01 |*`CU_RESOURCE_TYPE_MIPMAPPED_ARRAY`*                           |                                                            |
 |         0x02 |*`CU_RESOURCE_TYPE_LINEAR`*                                    |                                                            |
 |         0x03 |*`CU_RESOURCE_TYPE_PITCH2D`*                                   |                                                            |
-| enum         |***`CUresourceViewFormat`***                                   |                                                            |
-|         0x00 |*`CU_RES_VIEW_FORMAT_NONE`*                                    |                                                            |
-|         0x01 |*`CU_RES_VIEW_FORMAT_UINT_1X8`*                                |                                                            |
-|         0x02 |*`CU_RES_VIEW_FORMAT_UINT_2X8`*                                |                                                            |
-|         0x03 |*`CU_RES_VIEW_FORMAT_UINT_4X8`*                                |                                                            |
-|         0x04 |*`CU_RES_VIEW_FORMAT_SINT_1X8`*                                |                                                            |
-|         0x05 |*`CU_RES_VIEW_FORMAT_SINT_2X8`*                                |                                                            |
-|         0x06 |*`CU_RES_VIEW_FORMAT_SINT_4X8`*                                |                                                            |
-|         0x07 |*`CU_RES_VIEW_FORMAT_UINT_1X16`*                               |                                                            |
-|         0x08 |*`CU_RES_VIEW_FORMAT_UINT_2X16`*                               |                                                            |
-|         0x09 |*`CU_RES_VIEW_FORMAT_UINT_4X16`*                               |                                                            |
-|         0x0a |*`CU_RES_VIEW_FORMAT_SINT_1X16`*                               |                                                            |
-|         0x0b |*`CU_RES_VIEW_FORMAT_SINT_2X16`*                               |                                                            |
-|         0x0c |*`CU_RES_VIEW_FORMAT_SINT_4X16`*                               |                                                            |
-|         0x0d |*`CU_RES_VIEW_FORMAT_UINT_1X32`*                               |                                                            |
-|         0x0e |*`CU_RES_VIEW_FORMAT_UINT_2X32`*                               |                                                            |
-|         0x0f |*`CU_RES_VIEW_FORMAT_UINT_4X32`*                               |                                                            |
-|         0x10 |*`CU_RES_VIEW_FORMAT_SINT_1X32`*                               |                                                            |
-|         0x11 |*`CU_RES_VIEW_FORMAT_SINT_2X32`*                               |                                                            |
-|         0x12 |*`CU_RES_VIEW_FORMAT_SINT_4X32`*                               |                                                            |
-|         0x13 |*`CU_RES_VIEW_FORMAT_FLOAT_1X16`*                              |                                                            |
-|         0x14 |*`CU_RES_VIEW_FORMAT_FLOAT_2X16`*                              |                                                            |
-|         0x15 |*`CU_RES_VIEW_FORMAT_FLOAT_4X16`*                              |                                                            |
-|         0x16 |*`CU_RES_VIEW_FORMAT_FLOAT_1X32`*                              |                                                            |
-|         0x17 |*`CU_RES_VIEW_FORMAT_FLOAT_2X32`*                              |                                                            |
-|         0x18 |*`CU_RES_VIEW_FORMAT_FLOAT_4X32`*                              |                                                            |
-|         0x19 |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC1`*                            |                                                            |
-|         0x1a |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC3`*                            |                                                            |
-|         0x1b |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC3`*                            |                                                            |
-|         0x1c |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC4`*                            |                                                            |
-|         0x1d |*`CU_RES_VIEW_FORMAT_SIGNED_BC4`*                              |                                                            |
-|         0x1e |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC5`*                            |                                                            |
-|         0x1f |*`CU_RES_VIEW_FORMAT_SIGNED_BC5`*                              |                                                            |
-|         0x20 |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC6H`*                           |                                                            |
-|         0x21 |*`CU_RES_VIEW_FORMAT_SIGNED_BC6H`*                             |                                                            |
-|         0x22 |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC7`*                            |                                                            |
+| enum         |***`CUresourceViewFormat`***                                   |***`hipResourceViewFormat`***                               |
+|         0x00 |*`CU_RES_VIEW_FORMAT_NONE`*                                    |*`hipResViewFormatNone`*                                    |
+|         0x01 |*`CU_RES_VIEW_FORMAT_UINT_1X8`*                                |*`hipResViewFormatUnsignedChar1`*                           |
+|         0x02 |*`CU_RES_VIEW_FORMAT_UINT_2X8`*                                |*`hipResViewFormatUnsignedChar2`*                           |
+|         0x03 |*`CU_RES_VIEW_FORMAT_UINT_4X8`*                                |*`hipResViewFormatUnsignedChar4`*                           |
+|         0x04 |*`CU_RES_VIEW_FORMAT_SINT_1X8`*                                |*`hipResViewFormatSignedChar1`*                             |
+|         0x05 |*`CU_RES_VIEW_FORMAT_SINT_2X8`*                                |*`hipResViewFormatSignedChar2`*                             |
+|         0x06 |*`CU_RES_VIEW_FORMAT_SINT_4X8`*                                |*`hipResViewFormatSignedChar4`*                             |
+|         0x07 |*`CU_RES_VIEW_FORMAT_UINT_1X16`*                               |*`hipResViewFormatUnsignedShort1`*                          |
+|         0x08 |*`CU_RES_VIEW_FORMAT_UINT_2X16`*                               |*`hipResViewFormatUnsignedShort2`*                          |
+|         0x09 |*`CU_RES_VIEW_FORMAT_UINT_4X16`*                               |*`hipResViewFormatUnsignedShort4`*                          |
+|         0x0a |*`CU_RES_VIEW_FORMAT_SINT_1X16`*                               |*`hipResViewFormatSignedShort1`*                            |
+|         0x0b |*`CU_RES_VIEW_FORMAT_SINT_2X16`*                               |*`hipResViewFormatSignedShort2`*                            |
+|         0x0c |*`CU_RES_VIEW_FORMAT_SINT_4X16`*                               |*`hipResViewFormatSignedShort4`*                            |
+|         0x0d |*`CU_RES_VIEW_FORMAT_UINT_1X32`*                               |*`hipResViewFormatUnsignedInt1`*                            |
+|         0x0e |*`CU_RES_VIEW_FORMAT_UINT_2X32`*                               |*`hipResViewFormatUnsignedInt2`*                            |
+|         0x0f |*`CU_RES_VIEW_FORMAT_UINT_4X32`*                               |*`hipResViewFormatUnsignedInt4`*                            |
+|         0x10 |*`CU_RES_VIEW_FORMAT_SINT_1X32`*                               |*`hipResViewFormatSignedInt1`*                              |
+|         0x11 |*`CU_RES_VIEW_FORMAT_SINT_2X32`*                               |*`hipResViewFormatSignedInt2`*                              |
+|         0x12 |*`CU_RES_VIEW_FORMAT_SINT_4X32`*                               |*`hipResViewFormatSignedInt4`*                              |
+|         0x13 |*`CU_RES_VIEW_FORMAT_FLOAT_1X16`*                              |*`hipResViewFormatHalf1`*                                   |
+|         0x14 |*`CU_RES_VIEW_FORMAT_FLOAT_2X16`*                              |*`hipResViewFormatHalf2`*                                   |
+|         0x15 |*`CU_RES_VIEW_FORMAT_FLOAT_4X16`*                              |*`hipResViewFormatHalf4`*                                   |
+|         0x16 |*`CU_RES_VIEW_FORMAT_FLOAT_1X32`*                              |*`hipResViewFormatFloat1`*                                  |
+|         0x17 |*`CU_RES_VIEW_FORMAT_FLOAT_2X32`*                              |*`hipResViewFormatFloat2`*                                  |
+|         0x18 |*`CU_RES_VIEW_FORMAT_FLOAT_4X32`*                              |*`hipResViewFormatFloat4`*                                  |
+|         0x19 |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC1`*                            |*`hipResViewFormatUnsignedBlockCompressed1`*                |
+|         0x1a |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC2`*                            |*`hipResViewFormatUnsignedBlockCompressed2`*                |
+|         0x1b |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC3`*                            |*`hipResViewFormatUnsignedBlockCompressed3`*                |
+|         0x1c |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC4`*                            |*`hipResViewFormatUnsignedBlockCompressed4`*                |
+|         0x1d |*`CU_RES_VIEW_FORMAT_SIGNED_BC4`*                              |*`hipResViewFormatSignedBlockCompressed4`*                  |
+|         0x1e |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC5`*                            |*`hipResViewFormatUnsignedBlockCompressed5`*                |
+|         0x1f |*`CU_RES_VIEW_FORMAT_SIGNED_BC5`*                              |*`hipResViewFormatSignedBlockCompressed5`*                  |
+|         0x20 |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC6H`*                           |*`hipResViewFormatUnsignedBlockCompressed6H`*               |
+|         0x21 |*`CU_RES_VIEW_FORMAT_SIGNED_BC6H`*                             |*`hipResViewFormatSignedBlockCompressed6H`*                 |
+|         0x22 |*`CU_RES_VIEW_FORMAT_UNSIGNED_BC7`*                            |*`hipResViewFormatUnsignedBlockCompressed7`*                |
 | enum         |***`CUresult`***                                               |***`hipError_t`***                                          |
 |            0 |*`CUDA_SUCCESS`*                                               |*`hipSuccess`*                                              |
 |            1 |*`CUDA_ERROR_INVALID_VALUE`*                                   |*`hipErrorInvalidValue`*                                    |
@@ -394,8 +394,8 @@
 | typedef      | `CUstreamCallback`                                            | `hipStreamCallback_t`                                      |
 | typedef      | `CUsurfObject`                                                |                                                            |
 | typedef      | `CUsurfref`                                                   |                                                            |
-| typedef      | `CUtexObject`                                                 |                                                            |
-| typedef      | `CUtexref`                                                    |                                                            |
+| typedef      | `CUtexObject`                                                 | `hipTextureObject_t`                                       |
+| typedef      | `CUtexref`                                                    | `textureReference`                                         |
 | define       |`CU_IPC_HANDLE_SIZE`                                           |                                                            |
 | define       |`CU_LAUNCH_PARAM_BUFFER_POINTER`                               | `HIP_LAUNCH_PARAM_BUFFER_POINTER`                          |
 | define       |`CU_LAUNCH_PARAM_BUFFER_SIZE`                                  | `HIP_LAUNCH_PARAM_BUFFER_SIZE`                             |
@@ -507,7 +507,7 @@
 | `cuModuleGetFunction`                                     | `hipModuleGetFunction`        |
 | `cuModuleGetGlobal`                                       | `hipModuleGetGlobal`          |
 | `cuModuleGetSurfRef`                                      |                               |
-| `cuModuleGetTexRef`                                       |                               |
+| `cuModuleGetTexRef`                                       | `hipModuleGetTexRef`          |
 | `cuModuleLoad`                                            | `hipModuleLoad`               |
 | `cuModuleLoadData`                                        | `hipModuleLoadData`           |
 | `cuModuleLoadDataEx`                                      | `hipModuleLoadDataEx`         |
@@ -674,12 +674,12 @@
 | `cuTexRefGetMipmappedArray`                               |                               |
 | `cuTexRefSetAddress`                                      |                               |
 | `cuTexRefSetAddress2D`                                    |                               |
-| `cuTexRefSetAddressMode`                                  |                               |
-| `cuTexRefSetArray`                                        |                               |
+| `cuTexRefSetAddressMode`                                  | `hipTexRefSetAddressMode`     |
+| `cuTexRefSetArray`                                        | `hipTexRefSetArray`           |
 | `cuTexRefSetBorderColor`                                  |                               |
-| `cuTexRefSetFilterMode`                                   |                               |
-| `cuTexRefSetFlags`                                        |                               |
-| `cuTexRefSetFormat`                                       |                               |
+| `cuTexRefSetFilterMode`                                   | `hipTexRefSetFilterMode`      |
+| `cuTexRefSetFlags`                                        | `hipTexRefSetFlags`           |
+| `cuTexRefSetFormat`                                       | `hipTexRefSetFormat`          |
 | `cuTexRefSetMaxAnisotropy`                                |                               |
 | `cuTexRefSetMipmapFilterMode`                             |                               |
 | `cuTexRefSetMipmapLevelBias`                              |                               |
