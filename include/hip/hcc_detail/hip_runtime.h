@@ -389,13 +389,13 @@ template<typename std::common_type<
 class Coordinates {
     using R = decltype(f(0));
 
-    struct X { __device__ operator R() const { return f(0); } };
-    struct Y { __device__ operator R() const { return f(1); } };
-    struct Z { __device__ operator R() const { return f(2); } };
+    struct X { __device__ operator R() const __attribute__((weak)) { return f(0); } };
+    struct Y { __device__ operator R() const __attribute__((weak)) { return f(1); } };
+    struct Z { __device__ operator R() const __attribute__((weak)) { return f(2); } };
 public:
-    static constexpr X x{};
-    static constexpr Y y{};
-    static constexpr Z z{};
+    static constexpr __attribute__((weak)) X x{};
+    static constexpr __attribute__((weak)) Y y{};
+    static constexpr __attribute__((weak)) Z z{};
 };
 
 static constexpr Coordinates<hc_get_group_size> blockDim;
