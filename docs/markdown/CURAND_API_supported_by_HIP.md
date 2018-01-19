@@ -93,7 +93,14 @@
 |           11 |*`CURAND_3RD`*                                                 |                                                            |
 |           12 |*`CURAND_DEFINITION`*                                          |                                                            |
 |           13 |*`CURAND_POISSON`*                                             |                                                            |
-
+| struct       | `curandStateMtgp32_t`                                         | `hiprandStateMtgp32_t`                                     |
+| struct       | `curandStateScrambledSobol64_t`                               |                                                            |
+| struct       | `curandStateSobol64_t`                                        |                                                            |
+| struct       | `curandStateScrambledSobol32_t`                               |                                                            |
+| struct       | `curandStateSobol32_t`                                        | `hiprandStateSobol32_t`                                    |
+| struct       | `curandStateMRG32k3a_t`                                       | `hiprandStateMRG32k3a_t`                                   |
+| struct       | `curandStatePhilox4_32_10_t`                                  | `hiprandStatePhilox4_32_10_t`                              |
+| struct       | `curandStateXORWOW_t`                                         | `hiprandStateXORWOW_t`                                     |
 
 ## **2. Host API Functions**
 
@@ -128,5 +135,33 @@
 
 ## **3. Device API Functions**
 
-|   **CUDA**                                                |   **HIP**                     |
-|-----------------------------------------------------------|-------------------------------|
+|   **CUDA**                                                |   **HIP**                                  |
+|-----------------------------------------------------------|--------------------------------------------|
+| `curand`                                                  | `hiprand`                                  |
+| `curand_init`                                             | `hiprand_init`                             |
+| `curand_log_normal`                                       | `hiprand_log_normal`                       |
+| `curand_log_normal_double`                                | `hiprand_log_normal_double`                |
+| `curand_log_normal2`                                      | `hiprand_log_normal2`                      |
+| `curand_log_normal2_double`                               | `hiprand_log_normal2_double`               |
+| `curand_log_normal4`                                      | `hiprand_log_normal4`                      |
+| `curand_log_normal4_double`                               | `hiprand_log_normal4_double`               |
+| `curand_mtgp32_single`                                    |                                            |
+| `curand_mtgp32_single_specific`                           |                                            |
+| `curand_mtgp32_specific`                                  |                                            |
+| `curand_normal`                                           | `hiprand_normal`                           |
+| `curand_normal_double`                                    | `hiprand_normal_double`                    |
+| `curand_normal2`                                          | `hiprand_normal2`                          |
+| `curand_normal2_double`                                   | `hiprand_normal2_double`                   |
+| `curand_normal4`                                          | `hiprand_normal4`                          |
+| `curand_normal4_double`                                   | `hiprand_normal4_double`                   |
+| `curand_uniform2_double`                                  | `hiprand_uniform2_double`                  |
+| `curand_uniform4`                                         | `hiprand_uniform4`                         |
+| `curand_uniform4_double`                                  | `hiprand_uniform4_double`                  |
+| `curand_discrete`                                         | `hiprand_discrete`                         |
+| `curand_discrete4`                                        | `hiprand_discrete4`                        |
+| `curand_poisson`                                          | `hiprand_poisson`                          |
+| `curand_poisson4`                                         | `hiprand_poisson4`                         |
+| `curand_Philox4x32_10`                                    |                                            |
+| `skipahead`                                               | `skipahead`                                |
+| `skipahead_sequence`                                      | `skipahead_sequence`                       |
+| `skipahead_subsequence`                                   | `skipahead_subsequence`                    |

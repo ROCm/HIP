@@ -324,7 +324,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TYPE_NAME_MAP{
     {"cublasAtomicsMode_t", {"hipblasAtomicsMode_t", CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDataType_t",    {"hipblasDataType_t",    CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
 
-      ///////////////////////////// cuRAND /////////////////////////////
+    ///////////////////////////// cuRAND /////////////////////////////
     {"curandStatus",                  {"hiprandStatus_t",                CONV_TYPE, API_RAND}},
     {"curandStatus_t",                {"hiprandStatus_t",                CONV_TYPE, API_RAND}},
     {"curandRngType",                 {"hiprandRngType_t",               CONV_TYPE, API_RAND}},
@@ -353,6 +353,15 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TYPE_NAME_MAP{
     {"curandMethod_t",                {"hiprandMethod_t",                CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
     {"curandDirectionVectors32_t",    {"hiprandDirectionVectors32_t",    CONV_TYPE, API_RAND}},
     {"curandDirectionVectors64_t",    {"hiprandDirectionVectors64_t",    CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    // cuRAND types for Device functions
+    {"curandStateMtgp32_t",           {"hiprandStateMtgp32_t",           CONV_TYPE, API_RAND}},
+    {"curandStateScrambledSobol64_t", {"hiprandStateScrambledSobol64_t", CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandStateSobol64_t",          {"hiprandStateSobol64_t",          CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandStateScrambledSobol32_t", {"hiprandStateScrambledSobol32_t", CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandStateSobol32_t",          {"hiprandStateSobol32_t",          CONV_TYPE, API_RAND}},
+    {"curandStateMRG32k3a_t",         {"hiprandStateMRG32k3a_t",         CONV_TYPE, API_RAND}},
+    {"curandStatePhilox4_32_10_t",    {"hiprandStatePhilox4_32_10_t",    CONV_TYPE, API_RAND}},
+    {"curandStateXORWOW_t",           {"hiprandStateXORWOW_t",           CONV_TYPE, API_RAND}},
 };
 
 /// Maps cuda header names to hip header names.
@@ -2783,6 +2792,32 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"curandSetStream",                               {"hiprandSetStream",                               CONV_MATH_FUNC, API_RAND}},
 
     // RAND Device functions
+    {"curand",                                        {"hiprand",                                        CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_init",                                   {"hiprand_init",                                   CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_log_normal",                             {"hiprand_log_normal",                             CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_log_normal_double",                      {"hiprand_log_normal_double",                      CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_log_normal2",                            {"hiprand_log_normal2",                            CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_log_normal2_double",                     {"hiprand_log_normal2_double",                     CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_log_normal4",                            {"hiprand_log_normal4",                            CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_log_normal4_double",                     {"hiprand_log_normal4_double",                     CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_mtgp32_single",                          {"hiprand_mtgp32_single",                          CONV_DEVICE_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curand_mtgp32_single_specific",                 {"hiprand_mtgp32_single_specific",                 CONV_DEVICE_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curand_mtgp32_specific",                        {"hiprand_mtgp32_specific",                        CONV_DEVICE_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curand_normal",                                 {"hiprand_normal",                                 CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_normal_double",                          {"hiprand_normal_double",                          CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_normal2",                                {"hiprand_normal2",                                CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_normal2_double",                         {"hiprand_normal2_double",                         CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_normal4",                                {"hiprand_normal4",                                CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_normal4_double",                         {"hiprand_normal4_double",                         CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_uniform2_double",                        {"hiprand_uniform2_double",                        CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_uniform4",                               {"hiprand_uniform4",                               CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_uniform4_double",                        {"hiprand_uniform4_double",                        CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_discrete",                               {"hiprand_discrete4",                              CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_discrete4",                              {"hiprand_discrete4",                              CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_poisson",                                {"hiprand_poisson",                                CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_poisson4",                               {"hiprand_poisson4",                               CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_Philox4x32_10",                          {"hiprand_Philox4x32_10",                          CONV_DEVICE_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    // unchanged function names: skipahead, skipahead_sequence, skipahead_subsequence
 };
 
 const std::map<llvm::StringRef, hipCounter>& CUDA_RENAMES_MAP() {
