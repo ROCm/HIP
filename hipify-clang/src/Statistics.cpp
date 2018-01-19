@@ -5,7 +5,7 @@
 
 
 const char *counterNames[NUM_CONV_TYPES] = {
-    "version", "init", "device", "mem", "kern", "coord_func", "math_func",
+    "version", "init", "device", "mem", "kern", "coord_func", "math_func", "device_func",
     "special_func", "stream", "event", "occupancy", "ctx", "peer", "module",
     "cache", "exec", "err", "def", "tex", "gl", "graphics",
     "surface", "jit", "d3d9", "d3d10", "d3d11", "vdpau", "egl",
@@ -14,7 +14,7 @@ const char *counterNames[NUM_CONV_TYPES] = {
 };
 
 const char *apiNames[NUM_API_TYPES] = {
-    "CUDA Driver API", "CUDA RT API", "CUBLAS API"
+    "CUDA Driver API", "CUDA RT API", "CUBLAS API", "CURAND API"
 };
 
 namespace {

@@ -323,6 +323,36 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TYPE_NAME_MAP{
     {"cublasPointerMode_t", {"hipblasPointerMode_t", CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
     {"cublasAtomicsMode_t", {"hipblasAtomicsMode_t", CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDataType_t",    {"hipblasDataType_t",    CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
+
+      ///////////////////////////// cuRAND /////////////////////////////
+    {"curandStatus",                  {"hiprandStatus_t",                CONV_TYPE, API_RAND}},
+    {"curandStatus_t",                {"hiprandStatus_t",                CONV_TYPE, API_RAND}},
+    {"curandRngType",                 {"hiprandRngType_t",               CONV_TYPE, API_RAND}},
+    {"curandRngType_t",               {"hiprandRngType_t",               CONV_TYPE, API_RAND}},
+    {"curandGenerator_st",            {"hiprandGenerator_st",            CONV_TYPE, API_RAND}},
+    {"curandGenerator_t",             {"hiprandGenerator_t",             CONV_TYPE, API_RAND}},
+    {"curandDirectionVectorSet",      {"hiprandDirectionVectorSet_t",    CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandDirectionVectorSet_t",    {"hiprandDirectionVectorSet_t",    CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandOrdering",                {"hiprandOrdering_t",              CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandOrdering_t",              {"hiprandOrdering_t",              CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandDistribution_st",         {"hiprandDistribution_st",         CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandHistogramM2V_st",         {"hiprandDistribution_st",         CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandDistribution_t",          {"hiprandDistribution_t",          CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandHistogramM2V_t",          {"hiprandDistribution_t",          CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandDistributionShift_st",    {"hiprandDistributionShift_st",    CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandDistributionShift_t",     {"hiprandDistributionShift_t",     CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandDistributionM2Shift_st",  {"hiprandDistributionM2Shift_st",  CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandDistributionM2Shift_t",   {"hiprandDistributionM2Shift_t",   CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandHistogramM2_st",          {"hiprandHistogramM2_st",          CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandHistogramM2_t",           {"hiprandHistogramM2_t",           CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandHistogramM2K_st",         {"hiprandHistogramM2K_st",         CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandHistogramM2K_t",          {"hiprandHistogramM2K_t",          CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandDiscreteDistribution_st", {"hiprandDiscreteDistribution_st", CONV_TYPE, API_RAND}},
+    {"curandDiscreteDistribution_t",  {"hiprandDiscreteDistribution_t",  CONV_TYPE, API_RAND}},
+    {"curandMethod",                  {"hiprandMethod_t",                CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandMethod_t",                {"hiprandMethod_t",                CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandDirectionVectors32_t",    {"hiprandDirectionVectors32_t",    CONV_TYPE, API_RAND}},
+    {"curandDirectionVectors64_t",    {"hiprandDirectionVectors64_t",    CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
 };
 
 /// Maps cuda header names to hip header names.
@@ -342,6 +372,10 @@ const std::map <llvm::StringRef, hipCounter> CUDA_INCLUDE_MAP{
     // CUBLAS includes
     {"cublas.h",    {"hipblas.h", CONV_INCLUDE, API_BLAS}},
     {"cublas_v2.h", {"hipblas.h", CONV_INCLUDE, API_BLAS}},
+
+    // CURAND includes
+    {"curand.h",             {"hiprand.h",        CONV_INCLUDE, API_RAND}},
+    {"curand_kernel.h",      {"hiprand_kernel.h", CONV_INCLUDE, API_RAND}},
 
     // HIP includes
     // TODO: uncomment this when hip/cudacommon.h will be renamed to hip/hipcommon.h
@@ -2660,7 +2694,95 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
 
     // ROTMG
     {"cublasSrotmg_v2",                {"hipblasSrotmg",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
-    {"cublasDrotmg_v2",                {"hipblasDrotmg",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}}
+    {"cublasDrotmg_v2",                {"hipblasDrotmg",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+
+    ///////////////////////////// cuRAND /////////////////////////////
+    // RAND function call status types (enum curandStatus)
+    {"CURAND_STATUS_SUCCESS",                         {"HIPRAND_STATUS_SUCCESS",                         CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_VERSION_MISMATCH",                {"HIPRAND_STATUS_VERSION_MISMATCH",                CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_NOT_INITIALIZED",                 {"HIPRAND_STATUS_NOT_INITIALIZED",                 CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_ALLOCATION_FAILED",               {"HIPRAND_STATUS_ALLOCATION_FAILED",               CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_TYPE_ERROR",                      {"HIPRAND_STATUS_TYPE_ERROR",                      CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_OUT_OF_RANGE",                    {"HIPRAND_STATUS_OUT_OF_RANGE",                    CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_LENGTH_NOT_MULTIPLE",             {"HIPRAND_STATUS_LENGTH_NOT_MULTIPLE",             CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_DOUBLE_PRECISION_REQUIRED",       {"HIPRAND_STATUS_DOUBLE_PRECISION_REQUIRED",       CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_LAUNCH_FAILURE",                  {"HIPRAND_STATUS_LAUNCH_FAILURE",                  CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_PREEXISTING_FAILURE",             {"HIPRAND_STATUS_PREEXISTING_FAILURE",             CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_INITIALIZATION_FAILED",           {"HIPRAND_STATUS_INITIALIZATION_FAILED",           CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_ARCH_MISMATCH",                   {"HIPRAND_STATUS_ARCH_MISMATCH",                   CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_INTERNAL_ERROR",                  {"HIPRAND_STATUS_INTERNAL_ERROR",                  CONV_NUMERIC_LITERAL, API_RAND}},
+
+    // RAND generator types (enum curandRngType)
+    {"CURAND_RNG_TEST",                               {"HIPRAND_RNG_TEST",                               CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_PSEUDO_DEFAULT",                     {"HIPRAND_RNG_PSEUDO_DEFAULT",                     CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_PSEUDO_XORWOW",                      {"HIPRAND_RNG_PSEUDO_XORWOW",                      CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_PSEUDO_MRG32K3A",                    {"HIPRAND_RNG_PSEUDO_MRG32K3A",                    CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_PSEUDO_MTGP32",                      {"HIPRAND_RNG_PSEUDO_MTGP32",                      CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_PSEUDO_MT19937",                     {"HIPRAND_RNG_PSEUDO_MT19937",                     CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_PSEUDO_PHILOX4_32_10",               {"HIPRAND_RNG_PSEUDO_PHILOX4_32_10",               CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_QUASI_DEFAULT",                      {"HIPRAND_RNG_QUASI_DEFAULT",                      CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_QUASI_SOBOL32",                      {"HIPRAND_RNG_QUASI_SOBOL32",                      CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_QUASI_SCRAMBLED_SOBOL32",            {"HIPRAND_RNG_QUASI_SCRAMBLED_SOBOL32",            CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_QUASI_SOBOL64",                      {"HIPRAND_RNG_QUASI_SOBOL64",                      CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_QUASI_SCRAMBLED_SOBOL64",            {"HIPRAND_RNG_QUASI_SCRAMBLED_SOBOL64",            CONV_NUMERIC_LITERAL, API_RAND}},
+
+    // RAND ordering of results in memory (enum curandOrdering)
+    {"CURAND_ORDERING_PSEUDO_BEST",                   {"HIPRAND_ORDERING_PSEUDO_BEST",                   CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_ORDERING_PSEUDO_DEFAULT",                {"HIPRAND_ORDERING_PSEUDO_DEFAULT",                CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_ORDERING_PSEUDO_SEEDED",                 {"HIPRAND_ORDERING_PSEUDO_SEEDED",                 CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_ORDERING_QUASI_DEFAULT",                 {"HIPRAND_ORDERING_QUASI_DEFAULT",                 CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+
+    // RAND choice of direction vector set (enum curandDirectionVectorSet)
+    {"CURAND_DIRECTION_VECTORS_32_JOEKUO6",           {"HIPRAND_DIRECTION_VECTORS_32_JOEKUO6",           CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_SCRAMBLED_DIRECTION_VECTORS_32_JOEKUO6", {"HIPRAND_SCRAMBLED_DIRECTION_VECTORS_32_JOEKUO6", CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_DIRECTION_VECTORS_64_JOEKUO6",           {"HIPRAND_DIRECTION_VECTORS_64_JOEKUO6",           CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_SCRAMBLED_DIRECTION_VECTORS_64_JOEKUO6", {"HIPRAND_SCRAMBLED_DIRECTION_VECTORS_64_JOEKUO6", CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+
+    // RAND method (enum curandMethod)
+    {"CURAND_CHOOSE_BEST",                            {"HIPRAND_CHOOSE_BEST",                            CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_ITR",                                    {"HIPRAND_ITR",                                    CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_KNUTH",                                  {"HIPRAND_KNUTH",                                  CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_HITR",                                   {"HIPRAND_HITR",                                   CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_M1",                                     {"HIPRAND_M1",                                     CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_M2",                                     {"HIPRAND_M2",                                     CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_BINARY_SEARCH",                          {"HIPRAND_BINARY_SEARCH",                          CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_DISCRETE_GAUSS",                         {"HIPRAND_DISCRETE_GAUSS",                         CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_REJECTION",                              {"HIPRAND_REJECTION",                              CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_DEVICE_API",                             {"HIPRAND_DEVICE_API",                             CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_FAST_REJECTION",                         {"HIPRAND_FAST_REJECTION",                         CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_3RD",                                    {"HIPRAND_3RD",                                    CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_DEFINITION",                             {"HIPRAND_DEFINITION",                             CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_POISSON",                                {"HIPRAND_POISSON",                                CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+
+    // RAND Host functions
+    {"curandCreateGenerator",                         {"hiprandCreateGenerator",                         CONV_MATH_FUNC, API_RAND}},
+    {"curandCreateGeneratorHost",                     {"hiprandCreateGeneratorHost",                     CONV_MATH_FUNC, API_RAND}},
+    {"curandCreatePoissonDistribution",               {"hiprandCreatePoissonDistribution",               CONV_MATH_FUNC, API_RAND}},
+    {"curandDestroyDistribution",                     {"hiprandDestroyDistribution",                     CONV_MATH_FUNC, API_RAND}},
+    {"curandDestroyGenerator",                        {"hiprandDestroyGenerator",                        CONV_MATH_FUNC, API_RAND}},
+    {"curandGenerate",                                {"hiprandGenerate",                                CONV_MATH_FUNC, API_RAND}},
+    {"curandGenerateLogNormal",                       {"hiprandGenerateLogNormal",                       CONV_MATH_FUNC, API_RAND}},
+    {"curandGenerateLogNormalDouble",                 {"hiprandGenerateLogNormalDouble",                 CONV_MATH_FUNC, API_RAND}},
+    {"curandGenerateLongLong",                        {"hiprandGenerateLongLong",                        CONV_MATH_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curandGenerateNormal",                          {"hiprandGenerateNormal",                          CONV_MATH_FUNC, API_RAND}},
+    {"curandGenerateNormalDouble",                    {"hiprandGenerateNormalDouble",                    CONV_MATH_FUNC, API_RAND}},
+    {"curandGeneratePoisson",                         {"hiprandGeneratePoisson",                         CONV_MATH_FUNC, API_RAND}},
+    {"curandGenerateSeeds",                           {"hiprandGenerateSeeds",                           CONV_MATH_FUNC, API_RAND}},
+    {"curandGenerateUniform",                         {"hiprandGenerateUniform",                         CONV_MATH_FUNC, API_RAND}},
+    {"curandGenerateUniformDouble",                   {"hiprandGenerateUniformDouble",                   CONV_MATH_FUNC, API_RAND}},
+    {"curandGetDirectionVectors32",                   {"hiprandGetDirectionVectors32",                   CONV_MATH_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curandGetDirectionVectors64",                   {"hiprandGetDirectionVectors64",                   CONV_MATH_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curandGetProperty",                             {"hiprandGetProperty",                             CONV_MATH_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curandGetScrambleConstants32",                  {"hiprandGetScrambleConstants32",                  CONV_MATH_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curandGetScrambleConstants64",                  {"hiprandGetScrambleConstants64",                  CONV_MATH_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curandGetVersion",                              {"hiprandGetVersion",                              CONV_MATH_FUNC, API_RAND}},
+    {"curandSetGeneratorOffset",                      {"hiprandSetGeneratorOffset",                      CONV_MATH_FUNC, API_RAND}},
+    {"curandSetGeneratorOrdering",                    {"hiprandSetGeneratorOrdering",                    CONV_MATH_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curandSetPseudoRandomGeneratorSeed",            {"hiprandSetPseudoRandomGeneratorSeed",            CONV_MATH_FUNC, API_RAND}},
+    {"curandSetQuasiRandomGeneratorDimensions",       {"hiprandSetQuasiRandomGeneratorDimensions",       CONV_MATH_FUNC, API_RAND}},
+    {"curandSetStream",                               {"hiprandSetStream",                               CONV_MATH_FUNC, API_RAND}},
+
+    // RAND Device functions
 };
 
 const std::map<llvm::StringRef, hipCounter>& CUDA_RENAMES_MAP() {
