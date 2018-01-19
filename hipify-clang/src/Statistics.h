@@ -18,6 +18,7 @@ enum ConvTypes {
     CONV_KERN,
     CONV_COORD_FUNC,
     CONV_MATH_FUNC,
+    CONV_DEVICE_FUNC,
     CONV_SPECIAL_FUNC,
     CONV_STREAM,
     CONV_EVENT,
@@ -54,6 +55,7 @@ enum ApiTypes {
     API_DRIVER = 0,
     API_RUNTIME,
     API_BLAS,
+    API_RAND,
     API_LAST
 };
 constexpr int NUM_API_TYPES = (int) ApiTypes::API_LAST;
