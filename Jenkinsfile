@@ -367,11 +367,11 @@ if( params.hcc_integration_test )
 // The following launches 3 builds in parallel: hcc-ctu, hcc-1.6 and cuda
 parallel hcc_ctu:
 {
-  node('docker && rocm')
+  node('docker && rocm && dkms')
   {
     String hcc_ver = 'hcc-ctu'
     String from_image = 'compute-artifactory:5001/radeonopencompute/hcc/clang_tot_upgrade/hcc-lc-ubuntu-16.04:latest'
-    String inside_args = '--device=/dev/kfd'
+    String inside_args = '--device=/dev/kfd --device=/dev/dri --group-add=video'
 
     // Checkout source code, dependencies and version files
     String source_hip_rel = checkout_and_version( hcc_ver )
@@ -408,11 +408,11 @@ parallel hcc_ctu:
 },
 hcc_1_6:
 {
-  node('docker && rocm')
+  node('docker && rocm && !dkms')
   {
     String hcc_ver = 'hcc-1.6'
-    String from_image = 'compute-artifactory:5001/radeonopencompute/hcc/roc-1.6.x/hcc-lc-ubuntu-16.04:latest'
-    String inside_args = '--device=/dev/kfd'
+    String from_image = 'rocm/dev-ubuntu-16.04:latest'
+    String inside_args = '--device=/dev/kfd --device=/dev/dri'
 
     // Checkout source code, dependencies and version files
     String source_hip_rel = checkout_and_version( hcc_ver )
@@ -449,11 +449,7 @@ nvcc:
     // Block of string constants customizing behavior for cuda
     String nvcc_ver = 'nvcc-9.0'
     String from_image = 'nvidia/cuda:9.0-devel'
-
-    // This unfortunately hardcodes the driver version nvidia_driver_384.90 in the volume mount.  Research if a way
-    // exists to get volume driver to customize the volume names to leave out driver version
-    String inside_args = '''--device=/dev/nvidiactl --device=/dev/nvidia0 --device=/dev/nvidia-uvm --device=/dev/nvidia-uvm-tools
-        --volume-driver=nvidia-docker --volume=nvidia_driver_384.90:/usr/local/nvidia:ro''';
+    String inside_args = '--runtime=nvidia';
 
     // Checkout source code, dependencies and version files
     String source_hip_rel = checkout_and_version( nvcc_ver )

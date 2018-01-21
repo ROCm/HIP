@@ -1,8 +1,23 @@
 import sys
+import os
 
 config.llvm_tools_dir = "@LLVM_TOOLS_BINARY_DIR@"
 config.obj_root = "@CMAKE_CURRENT_BINARY_DIR@"
 config.cuda_root = "@CUDA_TOOLKIT_ROOT_DIR@"
+if sys.platform in ['win32']:
+    config.cuda_sdk_root = "@CUDA_SDK_ROOT_DIR@"
+    if not config.cuda_sdk_root or config.cuda_sdk_root == "CUDA_SDK_ROOT_DIR-NOTFOUND":
+        cuda_version = "@CUDA_VERSION@"
+        cuda_version = cuda_version.replace('.','_')
+        config.cuda_samples_root = os.environ.get('NVCUDASAMPLES' + cuda_version + '_ROOT')
+        if not config.cuda_samples_root:
+            lit_config.fatal('No CUDA Samples dir set! Please set CUDA_SDK_ROOT_DIR.')
+        config.cuda_sdk_root = config.cuda_samples_root
+    config.build_type = "@CMAKE_BUILD_TYPE@"
+    if not config.build_type:
+        config.build_type = "Debug"
+else:
+    config.cuda_sdk_root = config.cuda_root
 
 # Support substitution of the tools and libs dirs with user parameters. This is
 # used when we can't determine the tool dir at configuration time.

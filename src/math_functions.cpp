@@ -84,7 +84,7 @@ __device__ float erfcf(float x)
 }
 __device__ float erfcinvf(float y)
 {
-    return __hip_erfinvf(1 - y);
+    return hc::precise_math::erfcinvf(y);
 }
 __device__ float erfcxf(float x)
 {
@@ -96,7 +96,7 @@ __device__ float erff(float x)
 }
 __device__ float erfinvf(float y)
 {
-    return __hip_erfinvf(y);
+    return hc::precise_math::erfinvf(y);
 }
 __device__ float exp10f(float x)
 {
@@ -158,7 +158,7 @@ __device__ float hypotf(float x, float y)
 {
     return hc::precise_math::hypotf(x, y);
 }
-__device__ float ilogbf(float x)
+__device__ int ilogbf(float x)
 {
     return hc::precise_math::ilogbf(x);
 }
@@ -192,12 +192,7 @@ __device__ float ldexpf(float x, int exp)
 }
 __device__ float lgammaf(float x)
 {
-  float val = 0.0f;
-  float y = x - 1;
-  while(y > 0){
-    val += logf(y--);
-  }
-  return val;
+    return hc::precise_math::lgammaf(x);
 }
 __device__ long long int llrintf(float x)
 {
@@ -544,7 +539,7 @@ __device__ double hypot(double x, double y)
 {
     return hc::precise_math::hypot(x, y);
 }
-__device__ double ilogb(double x)
+__device__ int ilogb(double x)
 {
     return hc::precise_math::ilogb(x);
 }

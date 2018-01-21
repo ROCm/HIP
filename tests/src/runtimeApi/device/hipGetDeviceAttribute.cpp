@@ -23,7 +23,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp
- * RUN: %t EXCLUDE_HIP_PLATFORM nvcc
+ * RUN: %t
  * HIT_END
  */
 
@@ -39,14 +39,14 @@ THE SOFTWARE.
     exit(EXIT_FAILURE);\
     }
 
-hipError_t test_hipDeviceGetAttribute(int deviceId, hipDeviceAttribute_t attr, int expectedValue = 0)
+hipError_t test_hipDeviceGetAttribute(int deviceId, hipDeviceAttribute_t attr, int expectedValue = -1)
 {
     int value = 0;
     std::cout << "Test hipDeviceGetAttribute attribute " << attr;
-    if (expectedValue) { std::cout << " expected value " << expectedValue; }
+    if (expectedValue != -1) { std::cout << " expected value " << expectedValue; }
     hipError_t e = hipDeviceGetAttribute(&value, attr, deviceId);
     std::cout << " actual value " << value << std::endl;
-    if (expectedValue && value != expectedValue) {
+    if ((expectedValue != -1) && value != expectedValue) {
         std::cout << "fail" << std::endl;
         return hipErrorInvalidValue;
     }

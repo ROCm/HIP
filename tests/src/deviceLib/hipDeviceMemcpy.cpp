@@ -23,13 +23,13 @@ __global__ void cpy(hipLaunchParm lp, uint32_t *Out, uint32_t *In)
 __global__ void set(hipLaunchParm lp, uint32_t *ptr, uint8_t val, size_t size)
 {
     int tx = threadIdx.x;
-    memset(ptr + tx, val, (sizeof(uint32_t)*(size/LEN)));
+    memset(ptr + tx, val, sizeof(uint32_t));
 }
 
 int main()
 {
     uint32_t *A, *Ad, *B, *Bd;
-    uint32_t *Val, *Vald;
+    uint32_t *Val;
     A = new uint32_t[LEN];
     B = new uint32_t[LEN];
     Val = new uint32_t;

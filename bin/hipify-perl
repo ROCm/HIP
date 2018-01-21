@@ -281,7 +281,7 @@ while (@ARGV) {
         $ft{'mem'} += s/\bcudaMemcpyKind\b/hipMemcpyKind/g;
 
         $ft{'mem'} += s/\bcudaPointerAttributes\b/hipPointerAttribute_t/g;
-        $ft{'mem'} += s/\bcudaPointerGetAttributes\b/hipPointerGetAttribute_t/g;
+        $ft{'mem'} += s/\bcudaPointerGetAttributes\b/hipPointerGetAttributes/g;
 
         $ft{'mem'} += s/\bcudaMemcpy2D\b/hipMemcpy2D/g;
         $ft{'mem'} += s/\bcudaMemcpy2DToArray\b/hipMemcpy2DToArray/g;
@@ -307,25 +307,6 @@ while (@ARGV) {
         $ft{'mem'} += s/\bcudaMallocArray\b/hipMallocArray/g;
         $ft{'mem'} += s/\bcudaFreeArray\b/hipFreeArray/g;
         $ft{'mem'} += s/\bcudaMallocPitch\b/hipMallocPitch/g;
-
-
-        #--------
-        # Coordinate Indexing and Dimensions:
-        $ft{'coord_func'} += s/\bthreadIdx\.x\b/hipThreadIdx_x/g;
-        $ft{'coord_func'} += s/\bthreadIdx\.y\b/hipThreadIdx_y/g;
-        $ft{'coord_func'} += s/\bthreadIdx\.z\b/hipThreadIdx_z/g;
-
-        $ft{'coord_func'} += s/\bblockIdx\.x\b/hipBlockIdx_x/g;
-        $ft{'coord_func'} += s/\bblockIdx\.y\b/hipBlockIdx_y/g;
-        $ft{'coord_func'} += s/\bblockIdx\.z\b/hipBlockIdx_z/g;
-
-        $ft{'coord_func'} += s/\bblockDim\.x\b/hipBlockDim_x/g;
-        $ft{'coord_func'} += s/\bblockDim\.y\b/hipBlockDim_y/g;
-        $ft{'coord_func'} += s/\bblockDim\.z\b/hipBlockDim_z/g;
-
-        $ft{'coord_func'} += s/\bgridDim\.x\b/hipGridDim_x/g;
-        $ft{'coord_func'} += s/\bgridDim\.y\b/hipGridDim_y/g;
-        $ft{'coord_func'} += s/\bgridDim\.z\b/hipGridDim_z/g;
 
 
         #--------

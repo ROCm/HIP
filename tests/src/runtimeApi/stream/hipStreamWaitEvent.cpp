@@ -18,8 +18,8 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11
- * RUN: %t
+ * ZZZBUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11
+ * ZZZRUN: %t
  * HIT_END
  */
 
@@ -163,9 +163,27 @@ void Streamer<T>::runAsyncAfter(Streamer<T> *depStreamer, bool waitSameStream)
 
     unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, _numElements);
     if (_commandType == COMMAND_ADD_REVERSE) {
-        hipLaunchKernelGGL(HipTest::addCountReverse , dim3(blocks), dim3(threadsPerBlock), 0, _stream,    _A_d, _C_d, _numElements, p_count);
+        hipLaunchKernelGGL(
+            HipTest::addCountReverse,
+            dim3(blocks),
+            dim3(threadsPerBlock),
+            0,
+            _stream,
+            static_cast<const T*>(_A_d),
+            _C_d,
+            static_cast<int64_t>(_numElements),
+            static_cast<int>(p_count));
     } else if (_commandType == COMMAND_ADD_FORWARD) {
-        hipLaunchKernelGGL(HipTest::addCount,         dim3(blocks), dim3(threadsPerBlock), 0, _stream,    _A_d, _C_d, _numElements, p_count);
+        hipLaunchKernelGGL(
+            HipTest::addCount,
+            dim3(blocks),
+            dim3(threadsPerBlock),
+            0,
+            _stream,
+            static_cast<const T*>(_A_d),
+            _C_d,
+            _numElements,
+            static_cast<int>(p_count));
     } else if (_commandType == COMMAND_COPY) {
         HIPCHECK(hipMemcpyAsync(_C_d, _A_d, _numElements * sizeof(T), hipMemcpyDeviceToDevice, _stream));
     } else {

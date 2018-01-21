@@ -128,7 +128,17 @@ void Streamer<T>::enqueAsync()
 {
     printf ("testing: %s  numElements=%zu size=%6.2fMB\n", __func__, _numElements, _numElements * sizeof(T) / 1024.0/1024.0);
     unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, _numElements);
-    hipLaunchKernel(vectorADDRepeat, dim3(blocks), dim3(threadsPerBlock), 0, _stream, _A_d, _B_d, _C_d, _numElements, p_repeat);
+    hipLaunchKernel(
+        vectorADDRepeat,
+        dim3(blocks),
+        dim3(threadsPerBlock),
+        0,
+        _stream,
+        static_cast<const T*>(_A_d),
+        static_cast<const T*>(_B_d),
+        _C_d,
+        _numElements,
+        p_repeat);
 
 }
 
@@ -225,7 +235,17 @@ int main(int argc, char *argv[])
             auto lastStreamer = streamers[s - 1];
 
             // Dispatch to NULL stream, should wait for prior async activity to complete before beginning:
-            hipLaunchKernel(vectorADDRepeat, dim3(blocks), dim3(threadsPerBlock), 0, 0/*nullstream*/, lastStreamer->_C_d, lastStreamer->_C_d, nullStreamer->_C_d, numElements, 1/*repeat*/);
+            hipLaunchKernel(
+                vectorADDRepeat,
+                dim3(blocks),
+                dim3(threadsPerBlock),
+                0,
+                0/*nullstream*/,
+                static_cast<const int*>(lastStreamer->_C_d),
+                static_cast<const int*>(lastStreamer->_C_d),
+                nullStreamer->_C_d,
+                numElements,
+                1/*repeat*/);
 
 
             if (p_db) {
@@ -257,7 +277,17 @@ int main(int argc, char *argv[])
             auto lastStreamer = streamers[s - 1];
 
             // Dispatch to NULL stream, should wait for prior async activity to complete before beginning:
-            hipLaunchKernel(vectorADDRepeat, dim3(blocks), dim3(threadsPerBlock), 0, 0/*nullstream*/, lastStreamer->_C_d, lastStreamer->_C_d, nullStreamer->_C_d, numElements, 1/*repeat*/);
+            hipLaunchKernel(
+                vectorADDRepeat,
+                dim3(blocks),
+                dim3(threadsPerBlock),
+                0,
+                0/*nullstream*/,
+                static_cast<const int*>(lastStreamer->_C_d),
+                static_cast<const int*>(lastStreamer->_C_d),
+                nullStreamer->_C_d,
+                numElements,
+                1/*repeat*/);
 
             nullStreamer->D2H();
 

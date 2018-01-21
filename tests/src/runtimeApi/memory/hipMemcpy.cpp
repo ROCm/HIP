@@ -192,8 +192,6 @@ HostMemory<T>::~HostMemory ()
         free(A_hh);
         free(B_hh);
     }
-    T *A_hh = NULL;
-    T *B_hh = NULL;
 
 };
 
@@ -243,7 +241,16 @@ void memcpytest2(DeviceMemory<T> *dmem, HostMemory<T> *hmem, size_t numElements,
         HIPCHECK ( hipMemcpy(dmem->B_d(), hmem->B_h(), sizeElements, useMemkindDefault ? hipMemcpyDefault : hipMemcpyHostToDevice));
     }
 
-    hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0, dmem->A_d(), dmem->B_d(), dmem->C_d(), numElements);
+    hipLaunchKernel(
+        HipTest::vectorADD,
+        dim3(blocks),
+        dim3(threadsPerBlock),
+        0,
+        0,
+        static_cast<const T*>(dmem->A_d()),
+        static_cast<const T*>(dmem->B_d()),
+        dmem->C_d(),
+        numElements);
 
     if (useDeviceToDevice) {
         // Do an extra device-to-device copy here to mix things up:
