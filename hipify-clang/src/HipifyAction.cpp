@@ -198,8 +198,13 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
 }
 
 void HipifyAction::PragmaDirective(clang::SourceLocation Loc, clang::PragmaIntroducerKind Introducer) {
-    if (pragmaOnce) { return; }
+    if (pragmaOnce) {
+        return;
+    }
     clang::SourceManager& SM = getCompilerInstance().getSourceManager();
+    if (!SM.isWrittenInMainFile(Loc)) {
+        return;
+    }
     clang::Preprocessor& PP = getCompilerInstance().getPreprocessor();
     const clang::Token tok = PP.LookAhead(0);
     StringRef Text(SM.getCharacterData(tok.getLocation()), tok.getLength());
