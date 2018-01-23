@@ -1,4 +1,4 @@
-rem @echo off
+@echo off
 setlocal
 
 for %%i in (FileCheck.exe) do set FILE_CHECK=%%~$PATH:i
