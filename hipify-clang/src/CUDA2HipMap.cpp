@@ -379,12 +379,12 @@ const std::map <llvm::StringRef, hipCounter> CUDA_INCLUDE_MAP{
     {"vector_types.h",       {"hip/hip_vector_types.h",   CONV_INCLUDE,             API_RUNTIME}},
 
     // CUBLAS includes
-    {"cublas.h",    {"hipblas.h", CONV_INCLUDE, API_BLAS}},
-    {"cublas_v2.h", {"hipblas.h", CONV_INCLUDE, API_BLAS}},
+    {"cublas.h",             {"hipblas.h",                CONV_INCLUDE_CUDA_MAIN_H, API_BLAS}},
+    {"cublas_v2.h",          {"hipblas.h",                CONV_INCLUDE_CUDA_MAIN_H, API_BLAS}},
 
     // CURAND includes
-    {"curand.h",             {"hiprand.h",        CONV_INCLUDE, API_RAND}},
-    {"curand_kernel.h",      {"hiprand_kernel.h", CONV_INCLUDE, API_RAND}},
+    {"curand.h",             {"hiprand.h",                CONV_INCLUDE,             API_RAND}},
+    {"curand_kernel.h",      {"hiprand_kernel.h",         CONV_INCLUDE,             API_RAND}},
 
     // HIP includes
     // TODO: uncomment this when hip/cudacommon.h will be renamed to hip/hipcommon.h
