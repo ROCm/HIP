@@ -101,8 +101,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TYPE_NAME_MAP{
     {"CUresourcetype",      {"hipResourceType", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaResourceType)
     {"CUresourcetype_enum", {"hipResourceType", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaResourceType)
 
-    {"CUresourceViewFormat",      {"hipResourceViewFormat", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaResourceViewFormat)
-    {"CUresourceViewFormat_enum", {"hipResourceViewFormat", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaResourceViewFormat)
+    {"CUresourceViewFormat",      {"hipResourceViewFormat", CONV_TEX, API_DRIVER}},    // API_Runtime ANALOGUE (cudaResourceViewFormat)
+    {"CUresourceViewFormat_enum", {"hipResourceViewFormat", CONV_TEX, API_DRIVER}},    // API_Runtime ANALOGUE (cudaResourceViewFormat)
 
     {"CUsharedconfig",      {"hipSharedMemConfig", CONV_TYPE, API_DRIVER}},
     {"CUsharedconfig_enum", {"hipSharedMemConfig", CONV_TYPE, API_DRIVER}},
@@ -128,9 +128,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TYPE_NAME_MAP{
     // typedef struct CUsurfref_st *CUsurfref;
     {"CUsurfref",        {"hipSurfaceReference_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
     //     {"CUsurfref_st", {"ihipSurfaceReference_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-    {"CUtexObject",      {"hipTextureObject",      CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    {"CUtexObject",      {"hipTextureObject_t",      CONV_TYPE, API_DRIVER}},
     // typedef struct CUtexref_st *CUtexref;
-    {"CUtexref",         {"hipTextureReference_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+    {"CUtexref",         {"textureReference", CONV_TYPE, API_DRIVER}},
     //     {"CUtexref_st", {"ihipTextureReference_t", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
 
     // Stream Flags enum
@@ -317,12 +317,51 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TYPE_NAME_MAP{
 
     {"cublasOperation_t",   {"hipblasOperation_t",   CONV_TYPE, API_BLAS}},
     {"cublasStatus_t",      {"hipblasStatus_t",      CONV_TYPE, API_BLAS}},
-    {"cublasFillMode_t",    {"hipblasFillMode_t",    CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
-    {"cublasDiagType_t",    {"hipblasDiagType_t",    CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
-    {"cublasSideMode_t",    {"hipblasSideMode_t",    CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
-    {"cublasPointerMode_t", {"hipblasPointerMode_t", CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasFillMode_t",    {"hipblasFillMode_t",    CONV_TYPE, API_BLAS}},
+    {"cublasDiagType_t",    {"hipblasDiagType_t",    CONV_TYPE, API_BLAS}},
+    {"cublasSideMode_t",    {"hipblasSideMode_t",    CONV_TYPE, API_BLAS}},
+    {"cublasPointerMode_t", {"hipblasPointerMode_t", CONV_TYPE, API_BLAS}},
     {"cublasAtomicsMode_t", {"hipblasAtomicsMode_t", CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDataType_t",    {"hipblasDataType_t",    CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
+
+    ///////////////////////////// cuRAND /////////////////////////////
+    {"curandStatus",                  {"hiprandStatus_t",                CONV_TYPE, API_RAND}},
+    {"curandStatus_t",                {"hiprandStatus_t",                CONV_TYPE, API_RAND}},
+    {"curandRngType",                 {"hiprandRngType_t",               CONV_TYPE, API_RAND}},
+    {"curandRngType_t",               {"hiprandRngType_t",               CONV_TYPE, API_RAND}},
+    {"curandGenerator_st",            {"hiprandGenerator_st",            CONV_TYPE, API_RAND}},
+    {"curandGenerator_t",             {"hiprandGenerator_t",             CONV_TYPE, API_RAND}},
+    {"curandDirectionVectorSet",      {"hiprandDirectionVectorSet_t",    CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandDirectionVectorSet_t",    {"hiprandDirectionVectorSet_t",    CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandOrdering",                {"hiprandOrdering_t",              CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandOrdering_t",              {"hiprandOrdering_t",              CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandDistribution_st",         {"hiprandDistribution_st",         CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandHistogramM2V_st",         {"hiprandDistribution_st",         CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandDistribution_t",          {"hiprandDistribution_t",          CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandHistogramM2V_t",          {"hiprandDistribution_t",          CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandDistributionShift_st",    {"hiprandDistributionShift_st",    CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandDistributionShift_t",     {"hiprandDistributionShift_t",     CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandDistributionM2Shift_st",  {"hiprandDistributionM2Shift_st",  CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandDistributionM2Shift_t",   {"hiprandDistributionM2Shift_t",   CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandHistogramM2_st",          {"hiprandHistogramM2_st",          CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandHistogramM2_t",           {"hiprandHistogramM2_t",           CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandHistogramM2K_st",         {"hiprandHistogramM2K_st",         CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandHistogramM2K_t",          {"hiprandHistogramM2K_t",          CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandDiscreteDistribution_st", {"hiprandDiscreteDistribution_st", CONV_TYPE, API_RAND}},
+    {"curandDiscreteDistribution_t",  {"hiprandDiscreteDistribution_t",  CONV_TYPE, API_RAND}},
+    {"curandMethod",                  {"hiprandMethod_t",                CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandMethod_t",                {"hiprandMethod_t",                CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandDirectionVectors32_t",    {"hiprandDirectionVectors32_t",    CONV_TYPE, API_RAND}},
+    {"curandDirectionVectors64_t",    {"hiprandDirectionVectors64_t",    CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    // cuRAND types for Device functions
+    {"curandStateMtgp32_t",           {"hiprandStateMtgp32_t",           CONV_TYPE, API_RAND}},
+    {"curandStateScrambledSobol64_t", {"hiprandStateScrambledSobol64_t", CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandStateSobol64_t",          {"hiprandStateSobol64_t",          CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandStateScrambledSobol32_t", {"hiprandStateScrambledSobol32_t", CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
+    {"curandStateSobol32_t",          {"hiprandStateSobol32_t",          CONV_TYPE, API_RAND}},
+    {"curandStateMRG32k3a_t",         {"hiprandStateMRG32k3a_t",         CONV_TYPE, API_RAND}},
+    {"curandStatePhilox4_32_10_t",    {"hiprandStatePhilox4_32_10_t",    CONV_TYPE, API_RAND}},
+    {"curandStateXORWOW_t",           {"hiprandStateXORWOW_t",           CONV_TYPE, API_RAND}},
 };
 
 /// Maps cuda header names to hip header names.
@@ -342,6 +381,10 @@ const std::map <llvm::StringRef, hipCounter> CUDA_INCLUDE_MAP{
     // CUBLAS includes
     {"cublas.h",    {"hipblas.h", CONV_INCLUDE, API_BLAS}},
     {"cublas_v2.h", {"hipblas.h", CONV_INCLUDE, API_BLAS}},
+
+    // CURAND includes
+    {"curand.h",             {"hiprand.h",        CONV_INCLUDE, API_RAND}},
+    {"curand_kernel.h",      {"hiprand_kernel.h", CONV_INCLUDE, API_RAND}},
 
     // HIP includes
     // TODO: uncomment this when hip/cudacommon.h will be renamed to hip/hipcommon.h
@@ -871,41 +914,41 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"CU_RESOURCE_TYPE_PITCH2D",         {"hipResourceTypePitch2D",        CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x03 // API_Runtime ANALOGUE (cudaResourceTypePitch2D = 0x03)
 
     // enum CUresourceViewFormat/CUresourceViewFormat_enum
-    {"CU_RES_VIEW_FORMAT_NONE",          {"hipResViewFormatNone",                      CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x00 // API_Runtime ANALOGUE (cudaResViewFormatNone = 0x00)
-    {"CU_RES_VIEW_FORMAT_UINT_1X8",      {"hipResViewFormatUnsignedChar1",             CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x01 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedChar1 = 0x01)
-    {"CU_RES_VIEW_FORMAT_UINT_2X8",      {"hipResViewFormatUnsignedChar2",             CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x02 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedChar2 = 0x02)
-    {"CU_RES_VIEW_FORMAT_UINT_4X8",      {"hipResViewFormatUnsignedChar4",             CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x03 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedChar4 = 0x03)
-    {"CU_RES_VIEW_FORMAT_SINT_1X8",      {"hipResViewFormatSignedChar1",               CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x04 // API_Runtime ANALOGUE (cudaResViewFormatSignedChar1 = 0x04)
-    {"CU_RES_VIEW_FORMAT_SINT_2X8",      {"hipResViewFormatSignedChar2",               CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x05 // API_Runtime ANALOGUE (cudaResViewFormatSignedChar2 = 0x05)
-    {"CU_RES_VIEW_FORMAT_SINT_4X8",      {"hipResViewFormatSignedChar4",               CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x06 // API_Runtime ANALOGUE (cudaResViewFormatSignedChar4 = 0x06)
-    {"CU_RES_VIEW_FORMAT_UINT_1X16",     {"hipResViewFormatUnsignedShort1",            CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x07 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedShort1 = 0x07)
-    {"CU_RES_VIEW_FORMAT_UINT_2X16",     {"hipResViewFormatUnsignedShort2",            CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x08 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedShort2 = 0x08)
-    {"CU_RES_VIEW_FORMAT_UINT_4X16",     {"hipResViewFormatUnsignedShort4",            CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x09 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedShort4 = 0x09)
-    {"CU_RES_VIEW_FORMAT_SINT_1X16",     {"hipResViewFormatSignedShort1",              CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x0a // API_Runtime ANALOGUE (cudaResViewFormatSignedShort1 = 0x0a)
-    {"CU_RES_VIEW_FORMAT_SINT_2X16",     {"hipResViewFormatSignedShort2",              CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x0b // API_Runtime ANALOGUE (cudaResViewFormatSignedShort2 = 0x0b)
-    {"CU_RES_VIEW_FORMAT_SINT_4X16",     {"hipResViewFormatSignedShort4",              CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x0c // API_Runtime ANALOGUE (cudaResViewFormatSignedShort4 = 0x0c)
-    {"CU_RES_VIEW_FORMAT_UINT_1X32",     {"hipResViewFormatUnsignedInt1",              CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x0d // API_Runtime ANALOGUE (cudaResViewFormatUnsignedInt1 = 0x0d)
-    {"CU_RES_VIEW_FORMAT_UINT_2X32",     {"hipResViewFormatUnsignedInt2",              CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x0e // API_Runtime ANALOGUE (cudaResViewFormatUnsignedInt2 = 0x0e)
-    {"CU_RES_VIEW_FORMAT_UINT_4X32",     {"hipResViewFormatUnsignedInt4",              CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x0f // API_Runtime ANALOGUE (cudaResViewFormatUnsignedInt4 = 0x0f)
-    {"CU_RES_VIEW_FORMAT_SINT_1X32",     {"hipResViewFormatSignedInt1",                CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x10 // API_Runtime ANALOGUE (cudaResViewFormatSignedInt1 = 0x10)
-    {"CU_RES_VIEW_FORMAT_SINT_2X32",     {"hipResViewFormatSignedInt2",                CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x11 // API_Runtime ANALOGUE (cudaResViewFormatSignedInt2 = 0x11)
-    {"CU_RES_VIEW_FORMAT_SINT_4X32",     {"hipResViewFormatSignedInt4",                CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x12 // API_Runtime ANALOGUE (cudaResViewFormatSignedInt4 = 0x12)
-    {"CU_RES_VIEW_FORMAT_FLOAT_1X16",    {"hipResViewFormatHalf1",                     CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x13 // API_Runtime ANALOGUE (cudaResViewFormatHalf1 = 0x13)
-    {"CU_RES_VIEW_FORMAT_FLOAT_2X16",    {"hipResViewFormatHalf2",                     CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x14 // API_Runtime ANALOGUE (cudaResViewFormatHalf2 = 0x14)
-    {"CU_RES_VIEW_FORMAT_FLOAT_4X16",    {"hipResViewFormatHalf4",                     CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x15 // API_Runtime ANALOGUE (cudaResViewFormatHalf4 = 0x15)
-    {"CU_RES_VIEW_FORMAT_FLOAT_1X32",    {"hipResViewFormatFloat1",                    CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x16 // API_Runtime ANALOGUE (cudaResViewFormatFloat1 = 0x16)
-    {"CU_RES_VIEW_FORMAT_FLOAT_2X32",    {"hipResViewFormatFloat2",                    CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x17 // API_Runtime ANALOGUE (cudaResViewFormatFloat2 = 0x17)
-    {"CU_RES_VIEW_FORMAT_FLOAT_4X32",    {"hipResViewFormatFloat4",                    CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x18 // API_Runtime ANALOGUE (cudaResViewFormatFloat4 = 0x18)
-    {"CU_RES_VIEW_FORMAT_UNSIGNED_BC1",  {"hipResViewFormatUnsignedBlockCompressed1",  CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x19 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed1 = 0x19)
-    {"CU_RES_VIEW_FORMAT_UNSIGNED_BC2",  {"hipResViewFormatUnsignedBlockCompressed2",  CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x1a // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed2 = 0x1a)
-    {"CU_RES_VIEW_FORMAT_UNSIGNED_BC3",  {"hipResViewFormatUnsignedBlockCompressed3",  CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x1b // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed3 = 0x1b)
-    {"CU_RES_VIEW_FORMAT_UNSIGNED_BC4",  {"hipResViewFormatUnsignedBlockCompressed4",  CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x1c // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed4 = 0x1c)
-    {"CU_RES_VIEW_FORMAT_SIGNED_BC4",    {"hipResViewFormatSignedBlockCompressed4",    CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x1d // API_Runtime ANALOGUE (cudaResViewFormatSignedBlockCompressed4 = 0x1d)
-    {"CU_RES_VIEW_FORMAT_UNSIGNED_BC5",  {"hipResViewFormatUnsignedBlockCompressed5",  CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x1e // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed5 = 0x1e)
-    {"CU_RES_VIEW_FORMAT_SIGNED_BC5",    {"hipResViewFormatSignedBlockCompressed5",    CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x1f // API_Runtime ANALOGUE (cudaResViewFormatSignedBlockCompressed5 = 0x1f)
-    {"CU_RES_VIEW_FORMAT_UNSIGNED_BC6H", {"hipResViewFormatUnsignedBlockCompressed6H", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x20 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed6H = 0x20)
-    {"CU_RES_VIEW_FORMAT_SIGNED_BC6H",   {"hipResViewFormatSignedBlockCompressed6H",   CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x21 // API_Runtime ANALOGUE (cudaResViewFormatSignedBlockCompressed6H = 0x21)
-    {"CU_RES_VIEW_FORMAT_UNSIGNED_BC7",  {"hipResViewFormatUnsignedBlockCompressed7",  CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // 0x22 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed7 = 0x22)
+    {"CU_RES_VIEW_FORMAT_NONE",          {"hipResViewFormatNone",                      CONV_TEX, API_DRIVER}},    // 0x00 // API_Runtime ANALOGUE (cudaResViewFormatNone = 0x00)
+    {"CU_RES_VIEW_FORMAT_UINT_1X8",      {"hipResViewFormatUnsignedChar1",             CONV_TEX, API_DRIVER}},    // 0x01 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedChar1 = 0x01)
+    {"CU_RES_VIEW_FORMAT_UINT_2X8",      {"hipResViewFormatUnsignedChar2",             CONV_TEX, API_DRIVER}},    // 0x02 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedChar2 = 0x02)
+    {"CU_RES_VIEW_FORMAT_UINT_4X8",      {"hipResViewFormatUnsignedChar4",             CONV_TEX, API_DRIVER}},    // 0x03 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedChar4 = 0x03)
+    {"CU_RES_VIEW_FORMAT_SINT_1X8",      {"hipResViewFormatSignedChar1",               CONV_TEX, API_DRIVER}},    // 0x04 // API_Runtime ANALOGUE (cudaResViewFormatSignedChar1 = 0x04)
+    {"CU_RES_VIEW_FORMAT_SINT_2X8",      {"hipResViewFormatSignedChar2",               CONV_TEX, API_DRIVER}},    // 0x05 // API_Runtime ANALOGUE (cudaResViewFormatSignedChar2 = 0x05)
+    {"CU_RES_VIEW_FORMAT_SINT_4X8",      {"hipResViewFormatSignedChar4",               CONV_TEX, API_DRIVER}},    // 0x06 // API_Runtime ANALOGUE (cudaResViewFormatSignedChar4 = 0x06)
+    {"CU_RES_VIEW_FORMAT_UINT_1X16",     {"hipResViewFormatUnsignedShort1",            CONV_TEX, API_DRIVER}},    // 0x07 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedShort1 = 0x07)
+    {"CU_RES_VIEW_FORMAT_UINT_2X16",     {"hipResViewFormatUnsignedShort2",            CONV_TEX, API_DRIVER}},    // 0x08 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedShort2 = 0x08)
+    {"CU_RES_VIEW_FORMAT_UINT_4X16",     {"hipResViewFormatUnsignedShort4",            CONV_TEX, API_DRIVER}},    // 0x09 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedShort4 = 0x09)
+    {"CU_RES_VIEW_FORMAT_SINT_1X16",     {"hipResViewFormatSignedShort1",              CONV_TEX, API_DRIVER}},    // 0x0a // API_Runtime ANALOGUE (cudaResViewFormatSignedShort1 = 0x0a)
+    {"CU_RES_VIEW_FORMAT_SINT_2X16",     {"hipResViewFormatSignedShort2",              CONV_TEX, API_DRIVER}},    // 0x0b // API_Runtime ANALOGUE (cudaResViewFormatSignedShort2 = 0x0b)
+    {"CU_RES_VIEW_FORMAT_SINT_4X16",     {"hipResViewFormatSignedShort4",              CONV_TEX, API_DRIVER}},    // 0x0c // API_Runtime ANALOGUE (cudaResViewFormatSignedShort4 = 0x0c)
+    {"CU_RES_VIEW_FORMAT_UINT_1X32",     {"hipResViewFormatUnsignedInt1",              CONV_TEX, API_DRIVER}},    // 0x0d // API_Runtime ANALOGUE (cudaResViewFormatUnsignedInt1 = 0x0d)
+    {"CU_RES_VIEW_FORMAT_UINT_2X32",     {"hipResViewFormatUnsignedInt2",              CONV_TEX, API_DRIVER}},    // 0x0e // API_Runtime ANALOGUE (cudaResViewFormatUnsignedInt2 = 0x0e)
+    {"CU_RES_VIEW_FORMAT_UINT_4X32",     {"hipResViewFormatUnsignedInt4",              CONV_TEX, API_DRIVER}},    // 0x0f // API_Runtime ANALOGUE (cudaResViewFormatUnsignedInt4 = 0x0f)
+    {"CU_RES_VIEW_FORMAT_SINT_1X32",     {"hipResViewFormatSignedInt1",                CONV_TEX, API_DRIVER}},    // 0x10 // API_Runtime ANALOGUE (cudaResViewFormatSignedInt1 = 0x10)
+    {"CU_RES_VIEW_FORMAT_SINT_2X32",     {"hipResViewFormatSignedInt2",                CONV_TEX, API_DRIVER}},    // 0x11 // API_Runtime ANALOGUE (cudaResViewFormatSignedInt2 = 0x11)
+    {"CU_RES_VIEW_FORMAT_SINT_4X32",     {"hipResViewFormatSignedInt4",                CONV_TEX, API_DRIVER}},    // 0x12 // API_Runtime ANALOGUE (cudaResViewFormatSignedInt4 = 0x12)
+    {"CU_RES_VIEW_FORMAT_FLOAT_1X16",    {"hipResViewFormatHalf1",                     CONV_TEX, API_DRIVER}},    // 0x13 // API_Runtime ANALOGUE (cudaResViewFormatHalf1 = 0x13)
+    {"CU_RES_VIEW_FORMAT_FLOAT_2X16",    {"hipResViewFormatHalf2",                     CONV_TEX, API_DRIVER}},    // 0x14 // API_Runtime ANALOGUE (cudaResViewFormatHalf2 = 0x14)
+    {"CU_RES_VIEW_FORMAT_FLOAT_4X16",    {"hipResViewFormatHalf4",                     CONV_TEX, API_DRIVER}},    // 0x15 // API_Runtime ANALOGUE (cudaResViewFormatHalf4 = 0x15)
+    {"CU_RES_VIEW_FORMAT_FLOAT_1X32",    {"hipResViewFormatFloat1",                    CONV_TEX, API_DRIVER}},    // 0x16 // API_Runtime ANALOGUE (cudaResViewFormatFloat1 = 0x16)
+    {"CU_RES_VIEW_FORMAT_FLOAT_2X32",    {"hipResViewFormatFloat2",                    CONV_TEX, API_DRIVER}},    // 0x17 // API_Runtime ANALOGUE (cudaResViewFormatFloat2 = 0x17)
+    {"CU_RES_VIEW_FORMAT_FLOAT_4X32",    {"hipResViewFormatFloat4",                    CONV_TEX, API_DRIVER}},    // 0x18 // API_Runtime ANALOGUE (cudaResViewFormatFloat4 = 0x18)
+    {"CU_RES_VIEW_FORMAT_UNSIGNED_BC1",  {"hipResViewFormatUnsignedBlockCompressed1",  CONV_TEX, API_DRIVER}},    // 0x19 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed1 = 0x19)
+    {"CU_RES_VIEW_FORMAT_UNSIGNED_BC2",  {"hipResViewFormatUnsignedBlockCompressed2",  CONV_TEX, API_DRIVER}},    // 0x1a // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed2 = 0x1a)
+    {"CU_RES_VIEW_FORMAT_UNSIGNED_BC3",  {"hipResViewFormatUnsignedBlockCompressed3",  CONV_TEX, API_DRIVER}},    // 0x1b // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed3 = 0x1b)
+    {"CU_RES_VIEW_FORMAT_UNSIGNED_BC4",  {"hipResViewFormatUnsignedBlockCompressed4",  CONV_TEX, API_DRIVER}},    // 0x1c // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed4 = 0x1c)
+    {"CU_RES_VIEW_FORMAT_SIGNED_BC4",    {"hipResViewFormatSignedBlockCompressed4",    CONV_TEX, API_DRIVER}},    // 0x1d // API_Runtime ANALOGUE (cudaResViewFormatSignedBlockCompressed4 = 0x1d)
+    {"CU_RES_VIEW_FORMAT_UNSIGNED_BC5",  {"hipResViewFormatUnsignedBlockCompressed5",  CONV_TEX, API_DRIVER}},    // 0x1e // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed5 = 0x1e)
+    {"CU_RES_VIEW_FORMAT_SIGNED_BC5",    {"hipResViewFormatSignedBlockCompressed5",    CONV_TEX, API_DRIVER}},    // 0x1f // API_Runtime ANALOGUE (cudaResViewFormatSignedBlockCompressed5 = 0x1f)
+    {"CU_RES_VIEW_FORMAT_UNSIGNED_BC6H", {"hipResViewFormatUnsignedBlockCompressed6H", CONV_TEX, API_DRIVER}},    // 0x20 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed6H = 0x20)
+    {"CU_RES_VIEW_FORMAT_SIGNED_BC6H",   {"hipResViewFormatSignedBlockCompressed6H",   CONV_TEX, API_DRIVER}},    // 0x21 // API_Runtime ANALOGUE (cudaResViewFormatSignedBlockCompressed6H = 0x21)
+    {"CU_RES_VIEW_FORMAT_UNSIGNED_BC7",  {"hipResViewFormatUnsignedBlockCompressed7",  CONV_TEX, API_DRIVER}},    // 0x22 // API_Runtime ANALOGUE (cudaResViewFormatUnsignedBlockCompressed7 = 0x22)
 
     {"CU_SHARED_MEM_CONFIG_DEFAULT_BANK_SIZE",    {"hipSharedMemBankSizeDefault",   CONV_TYPE, API_DRIVER}},
     {"CU_SHARED_MEM_CONFIG_FOUR_BYTE_BANK_SIZE",  {"hipSharedMemBankSizeFourByte",  CONV_TYPE, API_DRIVER}},
@@ -997,7 +1040,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cuModuleGetFunction",   {"hipModuleGetFunction",   CONV_MODULE, API_DRIVER}},
     {"cuModuleGetGlobal_v2",  {"hipModuleGetGlobal",     CONV_MODULE, API_DRIVER}},
     {"cuModuleGetSurfRef",    {"hipModuleGetSurfRef",    CONV_MODULE, API_DRIVER, HIP_UNSUPPORTED}},
-    {"cuModuleGetTexRef",     {"hipModuleGetTexRef",     CONV_MODULE, API_DRIVER, HIP_UNSUPPORTED}},
+    {"cuModuleGetTexRef",     {"hipModuleGetTexRef",     CONV_MODULE, API_DRIVER}},
     {"cuModuleLoad",          {"hipModuleLoad",          CONV_MODULE, API_DRIVER}},
     {"cuModuleLoadData",      {"hipModuleLoadData",      CONV_MODULE, API_DRIVER}},
     {"cuModuleLoadDataEx",    {"hipModuleLoadDataEx",    CONV_MODULE, API_DRIVER}},
@@ -1155,12 +1198,12 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cuTexRefGetMipmappedArray",   {"hipTexRefGetMipmappedArray",   CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
     {"cuTexRefSetAddress",          {"hipTexRefSetAddress",          CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
     {"cuTexRefSetAddress2D",        {"hipTexRefSetAddress2D",        CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-    {"cuTexRefSetAddressMode",      {"hipTexRefSetAddressMode",      CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-    {"cuTexRefSetArray",            {"hipTexRefSetArray",            CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
+    {"cuTexRefSetAddressMode",      {"hipTexRefSetAddressMode",      CONV_TEX, API_DRIVER}},
+    {"cuTexRefSetArray",            {"hipTexRefSetArray",            CONV_TEX, API_DRIVER}},
     {"cuTexRefSetBorderColor",      {"hipTexRefSetBorderColor",      CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // // no API_Runtime ANALOGUE
-    {"cuTexRefSetFilterMode",       {"hipTexRefSetFilterMode",       CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-    {"cuTexRefSetFlags",            {"hipTexRefSetFlags",            CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-    {"cuTexRefSetFormat",           {"hipTexRefSetFormat",           CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
+    {"cuTexRefSetFilterMode",       {"hipTexRefSetFilterMode",       CONV_TEX, API_DRIVER}},
+    {"cuTexRefSetFlags",            {"hipTexRefSetFlags",            CONV_TEX, API_DRIVER}},
+    {"cuTexRefSetFormat",           {"hipTexRefSetFormat",           CONV_TEX, API_DRIVER}},
     {"cuTexRefSetMaxAnisotropy",    {"hipTexRefSetMaxAnisotropy",    CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
     {"cuTexRefSetMipmapFilterMode", {"hipTexRefSetMipmapFilterMode", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
     {"cuTexRefSetMipmapLevelBias",  {"hipTexRefSetMipmapLevelBias",  CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
@@ -1441,7 +1484,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cudaMalloc",               {"hipMalloc",               CONV_MEM, API_RUNTIME}},
     {"cudaMallocHost",           {"hipHostMalloc",           CONV_MEM, API_RUNTIME}},
     {"cudaMallocArray",          {"hipMallocArray",          CONV_MEM, API_RUNTIME}},
-    {"cudaMalloc3D",             {"hipMalloc3D",             CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
+    {"cudaMalloc3D",             {"hipMalloc3D",             CONV_MEM, API_RUNTIME}},
     {"cudaMalloc3DArray",        {"hipMalloc3DArray",        CONV_MEM, API_RUNTIME}},
     {"cudaMallocManaged",        {"hipMallocManaged",        CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaMallocMipmappedArray", {"hipMallocMipmappedArray", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
@@ -2020,7 +2063,11 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cublasSetKernelStream",          {"hipblasSetKernelStream",          CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasGetAtomicsMode",           {"hipblasGetAtomicsMode",           CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasSetAtomicsMode",           {"hipblasSetAtomicsMode",           CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
- 
+    {"cublasGetMathMode",              {"hipblasGetMathMode",              CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasSetMathMode",              {"hipblasSetMathMode",              CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+
+
+
     // Blas operations (cublasOperation_t)
     {"CUBLAS_OP_N",                    {"HIPBLAS_OP_N",                    CONV_NUMERIC_LITERAL, API_BLAS}},
     {"CUBLAS_OP_T",                    {"HIPBLAS_OP_T",                    CONV_NUMERIC_LITERAL, API_BLAS}},
@@ -2037,20 +2084,20 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"CUBLAS_STATUS_NOT_SUPPORTED",    {"HIPBLAS_STATUS_INTERNAL_ERROR",   CONV_NUMERIC_LITERAL, API_BLAS}},
 
     // Blas Fill Modes (cublasFillMode_t)
-    {"CUBLAS_FILL_MODE_LOWER",         {"HIPBLAS_FILL_MODE_LOWER",         CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
-    {"CUBLAS_FILL_MODE_UPPER",         {"HIPBLAS_FILL_MODE_UPPER",         CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
+    {"CUBLAS_FILL_MODE_LOWER",         {"HIPBLAS_FILL_MODE_LOWER",         CONV_NUMERIC_LITERAL, API_BLAS}},
+    {"CUBLAS_FILL_MODE_UPPER",         {"HIPBLAS_FILL_MODE_UPPER",         CONV_NUMERIC_LITERAL, API_BLAS}},
 
     // Blas Diag Types (cublasDiagType_t)
-    {"CUBLAS_DIAG_NON_UNIT",           {"HIPBLAS_DIAG_NON_UNIT",           CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
-    {"CUBLAS_DIAG_UNIT",               {"HIPBLAS_DIAG_UNIT",               CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
+    {"CUBLAS_DIAG_NON_UNIT",           {"HIPBLAS_DIAG_NON_UNIT",           CONV_NUMERIC_LITERAL, API_BLAS}},
+    {"CUBLAS_DIAG_UNIT",               {"HIPBLAS_DIAG_UNIT",               CONV_NUMERIC_LITERAL, API_BLAS}},
 
     // Blas Side Modes (cublasSideMode_t
-    {"CUBLAS_SIDE_LEFT",               {"HIPBLAS_SIDE_LEFT",               CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
-    {"CUBLAS_SIDE_RIGHT",              {"HIPBLAS_SIDE_RIGHT",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
+    {"CUBLAS_SIDE_LEFT",               {"HIPBLAS_SIDE_LEFT",               CONV_NUMERIC_LITERAL, API_BLAS}},
+    {"CUBLAS_SIDE_RIGHT",              {"HIPBLAS_SIDE_RIGHT",              CONV_NUMERIC_LITERAL, API_BLAS}},
 
     // Blas Pointer Modes (cublasPointerMode_t)
-    {"CUBLAS_POINTER_MODE_HOST",       {"HIPBLAS_POINTER_MODE_HOST",       CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
-    {"CUBLAS_POINTER_MODE_DEVICE",     {"HIPBLAS_POINTER_MODE_DEVICE",     CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
+    {"CUBLAS_POINTER_MODE_HOST",       {"HIPBLAS_POINTER_MODE_HOST",       CONV_NUMERIC_LITERAL, API_BLAS}},
+    {"CUBLAS_POINTER_MODE_DEVICE",     {"HIPBLAS_POINTER_MODE_DEVICE",     CONV_NUMERIC_LITERAL, API_BLAS}},
 
     // Blas Atomics Modes (cublasAtomicsMode_t)
     {"CUBLAS_ATOMICS_NOT_ALLOWED",     {"HIPBLAS_ATOMICS_NOT_ALLOWED",     CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
@@ -2068,17 +2115,23 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
 
     {"cublasSetVector",                {"hipblasSetVector",                CONV_MATH_FUNC,       API_BLAS}},
     {"cublasGetVector",                {"hipblasGetVector",                CONV_MATH_FUNC,       API_BLAS}},
+    {"cublasSetVectorAsync",           {"hipblasSetVectorAsync",           CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasGetVectorAsync",           {"hipblasGetVectorAsync",           CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+
     {"cublasSetMatrix",                {"hipblasSetMatrix",                CONV_MATH_FUNC,       API_BLAS}},
     {"cublasGetMatrix",                {"hipblasGetMatrix",                CONV_MATH_FUNC,       API_BLAS}},
-
     {"cublasGetMatrixAsync",           {"hipblasGetMatrixAsync",           CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasSetMatrixAsync",           {"hipblasSetMatrixAsync",           CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+
+    {"cublasXerbla",                   {"hipblasXerbla",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // NRM2
     {"cublasSnrm2",  {"hipblasSnrm2",  CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDnrm2",  {"hipblasDnrm2",  CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED}},
     {"cublasScnrm2", {"hipblasScnrm2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDznrm2", {"hipblasDznrm2", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED}},
+
+    {"cublasNrm2Ex", {"hipblasNrm2Ex", CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED}},
 
     // DOT
     {"cublasSdot",        {"hipblasSdot",        CONV_MATH_FUNC, API_BLAS}},
@@ -2128,8 +2181,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cublasZswap",                    {"hipblasZswap",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // AMAX
-    {"cublasIsamax",                   {"hipblasIsamax",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
-    {"cublasIdamax",                   {"hipblasIdamax",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasIsamax",                   {"hipblasIsamax",                   CONV_MATH_FUNC,       API_BLAS}},
+    {"cublasIdamax",                   {"hipblasIdamax",                   CONV_MATH_FUNC,       API_BLAS}},
     {"cublasIcamax",                   {"hipblasIcamax",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasIzamax",                   {"hipblasIzamax",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
@@ -2174,7 +2227,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     // GEMV
     {"cublasSgemv",                    {"hipblasSgemv",                    CONV_MATH_FUNC,       API_BLAS}},
     // there is no such a function in CUDA
-    {"cublasSgemvBatched",             {"hipblasSgemvBatched",             CONV_MATH_FUNC,       API_BLAS}},
+    {"cublasSgemvBatched",             {"hipblasSgemvBatched",             CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasDgemv",                    {"hipblasDgemv",                    CONV_MATH_FUNC,       API_BLAS}},
     {"cublasCgemv",                    {"hipblasCgemv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZgemv",                    {"hipblasZgemv",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2280,13 +2333,24 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
 
     {"cublasCgemm",                    {"hipblasCgemm",                    CONV_MATH_FUNC,       API_BLAS}},
     {"cublasZgemm",                    {"hipblasZgemm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasHgemm",                    {"hipblasHgemm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // BATCH GEMM
     {"cublasSgemmBatched",             {"hipblasSgemmBatched",             CONV_MATH_FUNC,       API_BLAS}},
     {"cublasDgemmBatched",             {"hipblasDgemmBatched",             CONV_MATH_FUNC,       API_BLAS}},
+    {"cublasHgemmBatched",             {"hipblasHgemmBatched",             CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
-    {"cublasCgemmBatched",             {"hipblasCgemmBatched",             CONV_MATH_FUNC,       API_BLAS}},
+    {"cublasSgemmStridedBatched",      {"hipblasSgemmStridedBatched",      CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasDgemmStridedBatched",      {"hipblasDgemmStridedBatched",      CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+
+    {"cublasCgemmBatched",             {"hipblasCgemmBatched",             CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasCgemm3mBatched",           {"hipblasCgemm3mBatched",           CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZgemmBatched",             {"hipblasZgemmBatched",             CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+
+    {"cublasCgemmStridedBatched",      {"hipblasCgemmStridedBatched",      CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasCgemm3mStridedBatched",    {"hipblasCgemm3mStridedBatched",    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasZgemmStridedBatched",      {"hipblasZgemmStridedBatched",      CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasHgemmStridedBatched",      {"hipblasHgemmStridedBatched",      CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SYRK
     {"cublasSsyrk",                    {"hipblasSsyrk",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2309,7 +2373,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cublasDsyrkx",                   {"hipblasDsyrkx",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCsyrkx",                   {"hipblasCsyrkx",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZsyrkx",                   {"hipblasZsyrkx",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
-
 
     // HER2K
     {"cublasCher2k",                   {"hipblasCher2k",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2349,8 +2412,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
 
     // ------------------------ CUBLAS BLAS - like extension (cublas_api.h)
     // GEAM
-    {"cublasSgeam",                    {"hipblasSgeam",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
-    {"cublasDgeam",                    {"hipblasDgeam",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasSgeam",                    {"hipblasSgeam",                    CONV_MATH_FUNC,       API_BLAS}},
+    {"cublasDgeam",                    {"hipblasDgeam",                    CONV_MATH_FUNC,       API_BLAS}},
     {"cublasCgeam",                    {"hipblasCgeam",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZgeam",                    {"hipblasZgeam",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
@@ -2421,8 +2484,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cublasGetVersion_v2",            {"hipblasGetVersion",               CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasSetStream_v2",             {"hipblasSetStream",                CONV_MATH_FUNC,       API_BLAS}},
     {"cublasGetStream_v2",             {"hipblasGetStream",                CONV_MATH_FUNC,       API_BLAS}},
-    {"cublasGetPointerMode_v2",        {"hipblasGetPointerMode",           CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
-    {"cublasSetPointerMode_v2",        {"hipblasSetPointerMode",           CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasGetPointerMode_v2",        {"hipblasGetPointerMode",           CONV_MATH_FUNC,       API_BLAS}},
+    {"cublasSetPointerMode_v2",        {"hipblasSetPointerMode",           CONV_MATH_FUNC,       API_BLAS}},
 
     // GEMV
     {"cublasSgemv_v2",                 {"hipblasSgemv",                    CONV_MATH_FUNC,       API_BLAS}},
@@ -2494,7 +2557,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
 
     // GER
     {"cublasSger_v2",                  {"hipblasSger",                     CONV_MATH_FUNC,       API_BLAS}},
-    {"cublasDger_v2",                  {"hipblasDger",                     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasDger_v2",                  {"hipblasDger",                     CONV_MATH_FUNC,       API_BLAS}},
     {"cublasCgeru_v2",                 {"hipblasCgeru",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasCgerc_v2",                 {"hipblasCgerc",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZgeru_v2",                 {"hipblasZgeru",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2531,13 +2594,22 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     // Blas3 (v2) Routines
     // GEMM
     {"cublasSgemm_v2",                 {"hipblasSgemm",                    CONV_MATH_FUNC,       API_BLAS}},
-    {"cublasDgemm_v2",                 {"hipblasDgemm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasDgemm_v2",                 {"hipblasDgemm",                    CONV_MATH_FUNC,       API_BLAS}},
 
     {"cublasCgemm_v2",                 {"hipblasCgemm",                    CONV_MATH_FUNC,       API_BLAS}},
+    {"cublasCgemm3m",                  {"hipblasCgemm3m",                  CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasCgemm3mEx",                {"hipblasCgemm3mEx",                CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+
     {"cublasZgemm_v2",                 {"hipblasZgemm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasZgemm3m",                  {"hipblasZgemm3m",                  CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     //IO in FP16 / FP32, computation in float
     {"cublasSgemmEx",                  {"hipblasSgemmEx",                  CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasGemmEx",                   {"hipblasGemmEx",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    // IO in Int8 complex/cuComplex, computation in cuComplex
+    {"cublasCgemmEx",                  {"hipblasCgemmEx",                  CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+
+    {"cublasUint8gemmBias",            {"hipblasUint8gemmBias",            CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SYRK
     {"cublasSsyrk_v2",                 {"hipblasSsyrk",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2545,8 +2617,17 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cublasCsyrk_v2",                 {"hipblasCsyrk",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZsyrk_v2",                 {"hipblasZsyrk",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
+    // IO in Int8 complex/cuComplex, computation in cuComplex
+    {"cublasCsyrkEx",                  {"hipblasCsyrkEx",                  CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    // IO in Int8 complex/cuComplex, computation in cuComplex, Gaussian math
+    {"cublasCsyrk3mEx",                {"hipblasCsyrk3mEx",                CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+
     // HERK
     {"cublasCherk_v2",                 {"hipblasCherk",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    // IO in Int8 complex/cuComplex, computation in cuComplex
+    {"cublasCherkEx",                  {"hipblasCherkEx",                  CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    // IO in Int8 complex/cuComplex, computation in cuComplex, Gaussian math
+    {"cublasCherk3mEx",                {"hipblasCherk3mEx",                CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZherk_v2",                 {"hipblasZherk",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SYR2K
@@ -2588,6 +2669,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cublasDznrm2_v2",                {"hipblasDznrm2",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // DOT
+    {"cublasDotEx",                    {"hipblasDotEx",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasDotcEx",                   {"hipblasDotcEx",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+
     {"cublasSdot_v2",                  {"hipblasSdot",                     CONV_MATH_FUNC,       API_BLAS}},
     {"cublasDdot_v2",                  {"hipblasDdot",                     CONV_MATH_FUNC,       API_BLAS}},
 
@@ -2597,6 +2681,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cublasZdotc_v2",                 {"hipblasZdotc",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // SCAL
+    {"cublasScalEx",                   {"hipblasScalEx",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasSscal_v2",                 {"hipblasSscal",                    CONV_MATH_FUNC,       API_BLAS}},
     {"cublasDscal_v2",                 {"hipblasDscal",                    CONV_MATH_FUNC,       API_BLAS}},
     {"cublasCscal_v2",                 {"hipblasCscal",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2605,6 +2690,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cublasZdscal_v2",                {"hipblasZdscal",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // AXPY
+    {"cublasAxpyEx",                   {"hipblasAxpyEx",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasSaxpy_v2",                 {"hipblasSaxpy",                    CONV_MATH_FUNC,       API_BLAS}},
     {"cublasDaxpy_v2",                 {"hipblasDaxpy",                    CONV_MATH_FUNC,       API_BLAS}},
     {"cublasCaxpy_v2",                 {"hipblasCaxpy",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
@@ -2623,8 +2709,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cublasZswap_v2",                 {"hipblasZswap",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // AMAX
-    {"cublasIsamax_v2",                {"hipblasIsamax",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
-    {"cublasIdamax_v2",                {"hipblasIdamax",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasIsamax_v2",                {"hipblasIsamax",                   CONV_MATH_FUNC,       API_BLAS}},
+    {"cublasIdamax_v2",                {"hipblasIdamax",                   CONV_MATH_FUNC,       API_BLAS}},
     {"cublasIcamax_v2",                {"hipblasIcamax",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasIzamax_v2",                {"hipblasIzamax",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
@@ -2660,7 +2746,121 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
 
     // ROTMG
     {"cublasSrotmg_v2",                {"hipblasSrotmg",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
-    {"cublasDrotmg_v2",                {"hipblasDrotmg",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}}
+    {"cublasDrotmg_v2",                {"hipblasDrotmg",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+
+    ///////////////////////////// cuRAND /////////////////////////////
+    // RAND function call status types (enum curandStatus)
+    {"CURAND_STATUS_SUCCESS",                         {"HIPRAND_STATUS_SUCCESS",                         CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_VERSION_MISMATCH",                {"HIPRAND_STATUS_VERSION_MISMATCH",                CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_NOT_INITIALIZED",                 {"HIPRAND_STATUS_NOT_INITIALIZED",                 CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_ALLOCATION_FAILED",               {"HIPRAND_STATUS_ALLOCATION_FAILED",               CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_TYPE_ERROR",                      {"HIPRAND_STATUS_TYPE_ERROR",                      CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_OUT_OF_RANGE",                    {"HIPRAND_STATUS_OUT_OF_RANGE",                    CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_LENGTH_NOT_MULTIPLE",             {"HIPRAND_STATUS_LENGTH_NOT_MULTIPLE",             CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_DOUBLE_PRECISION_REQUIRED",       {"HIPRAND_STATUS_DOUBLE_PRECISION_REQUIRED",       CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_LAUNCH_FAILURE",                  {"HIPRAND_STATUS_LAUNCH_FAILURE",                  CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_PREEXISTING_FAILURE",             {"HIPRAND_STATUS_PREEXISTING_FAILURE",             CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_INITIALIZATION_FAILED",           {"HIPRAND_STATUS_INITIALIZATION_FAILED",           CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_ARCH_MISMATCH",                   {"HIPRAND_STATUS_ARCH_MISMATCH",                   CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_STATUS_INTERNAL_ERROR",                  {"HIPRAND_STATUS_INTERNAL_ERROR",                  CONV_NUMERIC_LITERAL, API_RAND}},
+
+    // RAND generator types (enum curandRngType)
+    {"CURAND_RNG_TEST",                               {"HIPRAND_RNG_TEST",                               CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_PSEUDO_DEFAULT",                     {"HIPRAND_RNG_PSEUDO_DEFAULT",                     CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_PSEUDO_XORWOW",                      {"HIPRAND_RNG_PSEUDO_XORWOW",                      CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_PSEUDO_MRG32K3A",                    {"HIPRAND_RNG_PSEUDO_MRG32K3A",                    CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_PSEUDO_MTGP32",                      {"HIPRAND_RNG_PSEUDO_MTGP32",                      CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_PSEUDO_MT19937",                     {"HIPRAND_RNG_PSEUDO_MT19937",                     CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_PSEUDO_PHILOX4_32_10",               {"HIPRAND_RNG_PSEUDO_PHILOX4_32_10",               CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_QUASI_DEFAULT",                      {"HIPRAND_RNG_QUASI_DEFAULT",                      CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_QUASI_SOBOL32",                      {"HIPRAND_RNG_QUASI_SOBOL32",                      CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_QUASI_SCRAMBLED_SOBOL32",            {"HIPRAND_RNG_QUASI_SCRAMBLED_SOBOL32",            CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_QUASI_SOBOL64",                      {"HIPRAND_RNG_QUASI_SOBOL64",                      CONV_NUMERIC_LITERAL, API_RAND}},
+    {"CURAND_RNG_QUASI_SCRAMBLED_SOBOL64",            {"HIPRAND_RNG_QUASI_SCRAMBLED_SOBOL64",            CONV_NUMERIC_LITERAL, API_RAND}},
+
+    // RAND ordering of results in memory (enum curandOrdering)
+    {"CURAND_ORDERING_PSEUDO_BEST",                   {"HIPRAND_ORDERING_PSEUDO_BEST",                   CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_ORDERING_PSEUDO_DEFAULT",                {"HIPRAND_ORDERING_PSEUDO_DEFAULT",                CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_ORDERING_PSEUDO_SEEDED",                 {"HIPRAND_ORDERING_PSEUDO_SEEDED",                 CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_ORDERING_QUASI_DEFAULT",                 {"HIPRAND_ORDERING_QUASI_DEFAULT",                 CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+
+    // RAND choice of direction vector set (enum curandDirectionVectorSet)
+    {"CURAND_DIRECTION_VECTORS_32_JOEKUO6",           {"HIPRAND_DIRECTION_VECTORS_32_JOEKUO6",           CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_SCRAMBLED_DIRECTION_VECTORS_32_JOEKUO6", {"HIPRAND_SCRAMBLED_DIRECTION_VECTORS_32_JOEKUO6", CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_DIRECTION_VECTORS_64_JOEKUO6",           {"HIPRAND_DIRECTION_VECTORS_64_JOEKUO6",           CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_SCRAMBLED_DIRECTION_VECTORS_64_JOEKUO6", {"HIPRAND_SCRAMBLED_DIRECTION_VECTORS_64_JOEKUO6", CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+
+    // RAND method (enum curandMethod)
+    {"CURAND_CHOOSE_BEST",                            {"HIPRAND_CHOOSE_BEST",                            CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_ITR",                                    {"HIPRAND_ITR",                                    CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_KNUTH",                                  {"HIPRAND_KNUTH",                                  CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_HITR",                                   {"HIPRAND_HITR",                                   CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_M1",                                     {"HIPRAND_M1",                                     CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_M2",                                     {"HIPRAND_M2",                                     CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_BINARY_SEARCH",                          {"HIPRAND_BINARY_SEARCH",                          CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_DISCRETE_GAUSS",                         {"HIPRAND_DISCRETE_GAUSS",                         CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_REJECTION",                              {"HIPRAND_REJECTION",                              CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_DEVICE_API",                             {"HIPRAND_DEVICE_API",                             CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_FAST_REJECTION",                         {"HIPRAND_FAST_REJECTION",                         CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_3RD",                                    {"HIPRAND_3RD",                                    CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_DEFINITION",                             {"HIPRAND_DEFINITION",                             CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+    {"CURAND_POISSON",                                {"HIPRAND_POISSON",                                CONV_NUMERIC_LITERAL, API_RAND, HIP_UNSUPPORTED}},
+
+    // RAND Host functions
+    {"curandCreateGenerator",                         {"hiprandCreateGenerator",                         CONV_MATH_FUNC, API_RAND}},
+    {"curandCreateGeneratorHost",                     {"hiprandCreateGeneratorHost",                     CONV_MATH_FUNC, API_RAND}},
+    {"curandCreatePoissonDistribution",               {"hiprandCreatePoissonDistribution",               CONV_MATH_FUNC, API_RAND}},
+    {"curandDestroyDistribution",                     {"hiprandDestroyDistribution",                     CONV_MATH_FUNC, API_RAND}},
+    {"curandDestroyGenerator",                        {"hiprandDestroyGenerator",                        CONV_MATH_FUNC, API_RAND}},
+    {"curandGenerate",                                {"hiprandGenerate",                                CONV_MATH_FUNC, API_RAND}},
+    {"curandGenerateLogNormal",                       {"hiprandGenerateLogNormal",                       CONV_MATH_FUNC, API_RAND}},
+    {"curandGenerateLogNormalDouble",                 {"hiprandGenerateLogNormalDouble",                 CONV_MATH_FUNC, API_RAND}},
+    {"curandGenerateLongLong",                        {"hiprandGenerateLongLong",                        CONV_MATH_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curandGenerateNormal",                          {"hiprandGenerateNormal",                          CONV_MATH_FUNC, API_RAND}},
+    {"curandGenerateNormalDouble",                    {"hiprandGenerateNormalDouble",                    CONV_MATH_FUNC, API_RAND}},
+    {"curandGeneratePoisson",                         {"hiprandGeneratePoisson",                         CONV_MATH_FUNC, API_RAND}},
+    {"curandGenerateSeeds",                           {"hiprandGenerateSeeds",                           CONV_MATH_FUNC, API_RAND}},
+    {"curandGenerateUniform",                         {"hiprandGenerateUniform",                         CONV_MATH_FUNC, API_RAND}},
+    {"curandGenerateUniformDouble",                   {"hiprandGenerateUniformDouble",                   CONV_MATH_FUNC, API_RAND}},
+    {"curandGetDirectionVectors32",                   {"hiprandGetDirectionVectors32",                   CONV_MATH_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curandGetDirectionVectors64",                   {"hiprandGetDirectionVectors64",                   CONV_MATH_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curandGetProperty",                             {"hiprandGetProperty",                             CONV_MATH_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curandGetScrambleConstants32",                  {"hiprandGetScrambleConstants32",                  CONV_MATH_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curandGetScrambleConstants64",                  {"hiprandGetScrambleConstants64",                  CONV_MATH_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curandGetVersion",                              {"hiprandGetVersion",                              CONV_MATH_FUNC, API_RAND}},
+    {"curandSetGeneratorOffset",                      {"hiprandSetGeneratorOffset",                      CONV_MATH_FUNC, API_RAND}},
+    {"curandSetGeneratorOrdering",                    {"hiprandSetGeneratorOrdering",                    CONV_MATH_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curandSetPseudoRandomGeneratorSeed",            {"hiprandSetPseudoRandomGeneratorSeed",            CONV_MATH_FUNC, API_RAND}},
+    {"curandSetQuasiRandomGeneratorDimensions",       {"hiprandSetQuasiRandomGeneratorDimensions",       CONV_MATH_FUNC, API_RAND}},
+    {"curandSetStream",                               {"hiprandSetStream",                               CONV_MATH_FUNC, API_RAND}},
+
+    // RAND Device functions
+    {"curand",                                        {"hiprand",                                        CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_init",                                   {"hiprand_init",                                   CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_log_normal",                             {"hiprand_log_normal",                             CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_log_normal_double",                      {"hiprand_log_normal_double",                      CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_log_normal2",                            {"hiprand_log_normal2",                            CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_log_normal2_double",                     {"hiprand_log_normal2_double",                     CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_log_normal4",                            {"hiprand_log_normal4",                            CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_log_normal4_double",                     {"hiprand_log_normal4_double",                     CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_mtgp32_single",                          {"hiprand_mtgp32_single",                          CONV_DEVICE_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curand_mtgp32_single_specific",                 {"hiprand_mtgp32_single_specific",                 CONV_DEVICE_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curand_mtgp32_specific",                        {"hiprand_mtgp32_specific",                        CONV_DEVICE_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    {"curand_normal",                                 {"hiprand_normal",                                 CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_normal_double",                          {"hiprand_normal_double",                          CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_normal2",                                {"hiprand_normal2",                                CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_normal2_double",                         {"hiprand_normal2_double",                         CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_normal4",                                {"hiprand_normal4",                                CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_normal4_double",                         {"hiprand_normal4_double",                         CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_uniform2_double",                        {"hiprand_uniform2_double",                        CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_uniform4",                               {"hiprand_uniform4",                               CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_uniform4_double",                        {"hiprand_uniform4_double",                        CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_discrete",                               {"hiprand_discrete4",                              CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_discrete4",                              {"hiprand_discrete4",                              CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_poisson",                                {"hiprand_poisson",                                CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_poisson4",                               {"hiprand_poisson4",                               CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_Philox4x32_10",                          {"hiprand_Philox4x32_10",                          CONV_DEVICE_FUNC, API_RAND, HIP_UNSUPPORTED}},
+    // unchanged function names: skipahead, skipahead_sequence, skipahead_subsequence
 };
 
 const std::map<llvm::StringRef, hipCounter>& CUDA_RENAMES_MAP() {
