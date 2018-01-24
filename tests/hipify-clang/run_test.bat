@@ -14,5 +14,6 @@ set clang_args=%4%clang_args%
 
 %HIPIFY% -o=%TMP_FILE% %IN_FILE% -- %clang_args%
 if errorlevel 1 (echo      Error: hipify-clang.exe failed with exit code: %errorlevel% && exit /b %errorlevel%)
-%FILE_CHECK% %IN_FILE% -input-file=%TMP_FILE%
+
+findstr /v /r /c:"[ ]*//[ ]*[CHECK*|RUN]" %TMP_FILE% | %FILE_CHECK% %IN_FILE%
 if errorlevel 1 (echo      Error: FileCheck.exe failed with exit code: %errorlevel% && exit /b %errorlevel%)
