@@ -151,7 +151,7 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
       // The rm command needs to run as sudo because the test steps below create files owned by root
       sh  """#!/usr/bin/env bash
           set -x
-          sudo rm -rf ${build_dir_rel}
+          rm -rf ${build_dir_rel}
           mkdir -p ${build_dir_rel}
           cd ${build_dir_rel}
           cmake -DCMAKE_BUILD_TYPE=${build_config} -DCMAKE_INSTALL_PREFIX=staging ${optional_configure} ${source_hip_abs}
@@ -194,7 +194,7 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
         if( platform.toLowerCase( ).startsWith( 'hcc-ctu' ) )
         {
           archiveArtifacts artifacts: "${build_dir_rel}/*.deb", fingerprint: true
-          archiveArtifacts artifacts: "${build_dir_rel}/*.rpm", fingerprint: true
+          // archiveArtifacts artifacts: "${build_dir_rel}/*.rpm", fingerprint: true
         }
       }
     }
