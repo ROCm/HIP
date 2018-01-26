@@ -149,23 +149,38 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
     if (!SM.isWrittenInMainFile(hash_loc)) {
         return;
     }
+    if (!firstHeader) {
+        firstHeader = true;
+        firstHeaderLoc = hash_loc;
+    }
 
     const auto found = CUDA_INCLUDE_MAP.find(file_name);
     if (found == CUDA_INCLUDE_MAP.end()) {
-        if (!firstNotMainHeader) {
-            firstNotMainHeader = true;
-            firstNotMainHeaderLoc = hash_loc;
-        }
         return;
     }
 
     // Special-casing to avoid duplication of the hip_runtime include.
     bool secondMainInclude = false;
-    if (found->second.hipName == "hip/hip_runtime.h") {
-        if (insertedRuntimeHeader) {
-            secondMainInclude = true;
+    if (found->second.countType == CONV_INCLUDE_CUDA_MAIN_H) {
+        switch (found->second.countApiType) {
+            case API_DRIVER:
+            case API_RUNTIME:
+                if (insertedRuntimeHeader) {
+                    secondMainInclude = true;
+                    break;
+                }
+                insertedRuntimeHeader = true;
+                break;
+            case API_BLAS:
+                if (insertedBLASHeader) {
+                    secondMainInclude = true;
+                    break;
+                }
+                insertedBLASHeader = true;
+                break;
+            default:
+                break;
         }
-        insertedRuntimeHeader = true;
     }
 
     Statistics::current().incrementCounter(found->second, file_name.str());
@@ -198,8 +213,13 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
 }
 
 void HipifyAction::PragmaDirective(clang::SourceLocation Loc, clang::PragmaIntroducerKind Introducer) {
-    if (pragmaOnce) { return; }
+    if (pragmaOnce) {
+        return;
+    }
     clang::SourceManager& SM = getCompilerInstance().getSourceManager();
+    if (!SM.isWrittenInMainFile(Loc)) {
+        return;
+    }
     clang::Preprocessor& PP = getCompilerInstance().getPreprocessor();
     const clang::Token tok = PP.LookAhead(0);
     StringRef Text(SM.getCharacterData(tok.getLocation()), tok.getLength());
@@ -356,8 +376,8 @@ void HipifyAction::EndSourceFileAction() {
         clang::SourceLocation sl;
         if (pragmaOnce) {
             sl = pragmaOnceLoc;
-        } else if (firstNotMainHeader) {
-            sl = firstNotMainHeaderLoc;
+        } else if (firstHeader) {
+            sl = firstHeaderLoc;
         } else {
             sl = SM.getLocForStartOfFile(SM.getMainFileID());
         }
