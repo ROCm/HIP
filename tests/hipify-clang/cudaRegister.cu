@@ -22,7 +22,12 @@ THE SOFTWARE.
 #include<cuda.h>
 #include<cuda_runtime.h>
 #include<iostream>
-#include<unistd.h>
+#ifdef _WIN32
+#include <windows.h>
+#define sleep(x) Sleep(x)
+#else
+#include <unistd.h>
+#endif
 #include<stdio.h>
 #include<malloc.h>
 
@@ -33,12 +38,11 @@ THE SOFTWARE.
 // CHECK: if(status != hipSuccess) {
 #define check(msg, status){ \
 if(status != cudaSuccess) { \
-	printf("%s failed. \n", #msg); \
+  printf("%s failed. \n", #msg); \
 } \
 }
 
 __global__ void Inc1(float *Ad, float *Bd){
-  // CHECK: int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
 	int tx = threadIdx.x + blockIdx.x * blockDim.x;
 	if(tx < 1 ){
 		for(int i=0;i<ITER;i++){
@@ -51,7 +55,6 @@ __global__ void Inc1(float *Ad, float *Bd){
 }
 
 __global__ void Inc2(float *Ad, float *Bd){
-  // CHECK: int tx = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
 	int tx = threadIdx.x + blockIdx.x * blockDim.x;
 	if(tx < 1024){
 		for(int i=0;i<ITER;i++){

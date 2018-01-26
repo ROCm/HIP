@@ -41,8 +41,6 @@ template <typename T>
 __global__ void
 vector_square(T *C_d, const T *A_d, size_t N)
 {
-    // CHECK: size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    // CHECK: size_t stride = hipBlockDim_x * hipGridDim_x;
     size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
     size_t stride = blockDim.x * gridDim.x;
 

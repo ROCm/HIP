@@ -23,7 +23,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp
- * RUN: %t EXCLUDE_HIP_PLATFORM nvcc
+ * RUN: %t
  * HIT_END
  */
 
