@@ -16,7 +16,6 @@
 
 template<typename T>
 __global__ void axpy(T a, T *x, T *y) {
-  // CHECK: y[hipThreadIdx_x] = a * x[hipThreadIdx_x];
   y[threadIdx.x] = a * x[threadIdx.x];
 }
 
