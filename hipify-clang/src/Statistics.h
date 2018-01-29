@@ -67,8 +67,8 @@ extern const char *apiNames[NUM_API_TYPES];
 
 struct hipCounter {
     llvm::StringRef hipName;
-    ConvTypes countType;
-    ApiTypes countApiType;
+    ConvTypes type;
+    ApiTypes apiType;
     bool unsupported;
 };
 
