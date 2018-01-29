@@ -152,8 +152,8 @@ namespace hip_impl
     };
 
     // CREATORS
-    template<typename I>
-    Bundled_code_header::Bundled_code_header(I f, I l) : Bundled_code_header{}
+    template<typename RandomAccessIterator>
+    Bundled_code_header::Bundled_code_header(RandomAccessIterator f, RandomAccessIterator l) : Bundled_code_header{}
     {
         read(f, l, *this);
     }

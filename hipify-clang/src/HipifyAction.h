@@ -23,9 +23,10 @@ private:
     // not, we insert it at the top of the file when we finish processing it.
     // This approach means we do the best it's possible to do w.r.t preserving the user's include order.
     bool insertedRuntimeHeader = false;
-    bool firstNotMainHeader = false;
+    bool insertedBLASHeader = false;
+    bool firstHeader = false;
     bool pragmaOnce = false;
-    clang::SourceLocation firstNotMainHeaderLoc;
+    clang::SourceLocation firstHeaderLoc;
     clang::SourceLocation pragmaOnceLoc;
 
     /**
