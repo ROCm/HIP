@@ -453,6 +453,7 @@ hipError_t hipArrayCreate ( hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAlloc
         array[0]->width = pAllocateArray->width;
         array[0]->height = pAllocateArray->height;
         array[0]->isDrv = true;
+        array[0]->textureType = hipTextureType2D;
         void ** ptr = &array[0]->data;
 	    if (ctx) {
             const unsigned am_flags = 0;
