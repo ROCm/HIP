@@ -6,6 +6,7 @@
 #include "clang/Tooling/Core/Replacement.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "ReplacementsFrontendActionFactory.h"
+#include "Statistics.h"
 
 namespace ct = clang::tooling;
 
@@ -24,6 +25,8 @@ private:
     // This approach means we do the best it's possible to do w.r.t preserving the user's include order.
     bool insertedRuntimeHeader = false;
     bool insertedBLASHeader = false;
+    bool insertedRANDHeader = false;
+    bool insertedRAND_kernelHeader = false;
     bool firstHeader = false;
     bool pragmaOnce = false;
     clang::SourceLocation firstHeaderLoc;
@@ -90,4 +93,6 @@ protected:
     void run(const clang::ast_matchers::MatchFinder::MatchResult& Result) override;
 
     std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance &CI, llvm::StringRef InFile) override;
+
+    bool Exclude(const hipCounter & hipToken);
 };

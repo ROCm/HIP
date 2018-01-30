@@ -137,6 +137,48 @@ std::string stringifyZeroDefaultedArg(clang::SourceManager& SM, const clang::Exp
 
 } // anonymous namespace
 
+bool HipifyAction::Exclude(const hipCounter & hipToken) {
+    switch (hipToken.type) {
+        case CONV_INCLUDE_CUDA_MAIN_H:
+            switch (hipToken.apiType) {
+                case API_DRIVER:
+                case API_RUNTIME:
+                    if (insertedRuntimeHeader) { return true; }
+                    insertedRuntimeHeader = true;
+                    return false;
+                case API_BLAS:
+                  if (insertedBLASHeader) { return true; }
+                    insertedBLASHeader = true;
+                    return false;
+                case API_RAND:
+                    if (hipToken.hipName == "hiprand_kernel.h") {
+                        if (insertedRAND_kernelHeader) { return true; }
+                        insertedRAND_kernelHeader = true;
+                        return false;
+                    } else if (hipToken.hipName == "hiprand.h") {
+                        if (insertedRANDHeader) { return true; }
+                        insertedRANDHeader = true;
+                        return false;
+                    }
+                default:
+                    return false;
+            }
+            return false;
+        case CONV_INCLUDE:
+            switch (hipToken.apiType) {
+                case API_RAND:
+                    if (insertedRAND_kernelHeader) { return true; }
+                    insertedRAND_kernelHeader = true;
+                    return false;
+                default:
+                    return false;
+            }
+            return false;
+        default:
+            return false;
+    }
+    return false;
+}
 
 void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
                                       const clang::Token&,
@@ -159,29 +201,7 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
         return;
     }
 
-    // Special-casing to avoid duplication of the hip_runtime include.
-    bool secondMainInclude = false;
-    if (found->second.countType == CONV_INCLUDE_CUDA_MAIN_H) {
-        switch (found->second.countApiType) {
-            case API_DRIVER:
-            case API_RUNTIME:
-                if (insertedRuntimeHeader) {
-                    secondMainInclude = true;
-                    break;
-                }
-                insertedRuntimeHeader = true;
-                break;
-            case API_BLAS:
-                if (insertedBLASHeader) {
-                    secondMainInclude = true;
-                    break;
-                }
-                insertedBLASHeader = true;
-                break;
-            default:
-                break;
-        }
-    }
+    bool exclude = Exclude(found->second);
 
     Statistics::current().incrementCounter(found->second, file_name.str());
 
@@ -195,7 +215,7 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
     clang::StringRef newInclude;
 
     // Keep the same include type that the user gave.
-    if (!secondMainInclude) {
+    if (!exclude) {
         clang::SmallString<128> includeBuffer;
         if (is_angled) {
             newInclude = llvm::Twine("<" + found->second.hipName + ">").toStringRef(includeBuffer);
