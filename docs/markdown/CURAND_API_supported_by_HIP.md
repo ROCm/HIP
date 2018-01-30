@@ -101,6 +101,8 @@
 | struct       | `curandStateMRG32k3a_t`                                       | `hiprandStateMRG32k3a_t`                                   |
 | struct       | `curandStatePhilox4_32_10_t`                                  | `hiprandStatePhilox4_32_10_t`                              |
 | struct       | `curandStateXORWOW_t`                                         | `hiprandStateXORWOW_t`                                     |
+| struct       | `curandState_t`                                               | `hiprandState_t`                                           |
+| struct       | `curandState`                                                 | `hiprandState_t`                                           |
 
 ## **2. Host API Functions**
 
