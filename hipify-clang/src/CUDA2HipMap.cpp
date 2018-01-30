@@ -2872,7 +2872,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"curand_uniform2_double",                        {"hiprand_uniform2_double",                        CONV_DEVICE_FUNC, API_RAND}},
     {"curand_uniform4",                               {"hiprand_uniform4",                               CONV_DEVICE_FUNC, API_RAND}},
     {"curand_uniform4_double",                        {"hiprand_uniform4_double",                        CONV_DEVICE_FUNC, API_RAND}},
-    {"curand_discrete",                               {"hiprand_discrete4",                              CONV_DEVICE_FUNC, API_RAND}},
+    {"curand_discrete",                               {"hiprand_discrete",                              CONV_DEVICE_FUNC, API_RAND}},
     {"curand_discrete4",                              {"hiprand_discrete4",                              CONV_DEVICE_FUNC, API_RAND}},
     {"curand_poisson",                                {"hiprand_poisson",                                CONV_DEVICE_FUNC, API_RAND}},
     {"curand_poisson4",                               {"hiprand_poisson4",                               CONV_DEVICE_FUNC, API_RAND}},
