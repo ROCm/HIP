@@ -510,7 +510,7 @@ void run_benchmarks(const cli::Parser& parser,
             run_benchmark<unsigned int, GeneratorState>(parser,
                 // CHECK: [] __device__ (GeneratorState * state, hiprandDiscreteDistribution_t discrete_distribution) {
                 [] __device__ (GeneratorState * state, curandDiscreteDistribution_t discrete_distribution) {
-                    // CHECK: return hiprand_discrete4(state, discrete_distribution);
+                    // CHECK: return hiprand_discrete(state, discrete_distribution);
                     return curand_discrete(state, discrete_distribution);
                 }, discrete_distribution
             );
