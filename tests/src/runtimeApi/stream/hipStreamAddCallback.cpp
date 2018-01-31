@@ -18,13 +18,14 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * RUN: %t
  * HIT_END
  */
 
 #include <stdio.h>
-#include <unistd.h>
+#include <thread>
+#include <chrono>
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
@@ -87,5 +88,6 @@ int main(int argc, char *argv[])
     HIPCHECK(hipMemcpyAsync(C_h, C_d, Nbytes, hipMemcpyDeviceToHost, mystream));
     HIPCHECK(hipStreamAddCallback(mystream, Callback, NULL, 0));
 
-    while(!cbDone) sleep(1);
+    while(!cbDone)
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }
