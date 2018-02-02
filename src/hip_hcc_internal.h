@@ -622,6 +622,24 @@ private: // Data
 };
 
 
+//----
+// Internal structure for stream callback handler
+class ihipStreamCallback_t {
+public:
+    ihipStreamCallback_t(hipStream_t stream, hipStreamCallback_t callback, void *userData) :
+        _stream(stream),
+        _callback(callback),
+        _userData(userData)
+        {
+            _ready = false;
+        };
+    hipStream_t                 _stream;
+    hipStreamCallback_t         _callback;
+    void*                       _userData;
+    std::mutex                  _mtx;
+    bool                        _ready;
+};
+
 
 //----
 // Internal event structure:
@@ -931,6 +949,8 @@ ihipCtx_t * ihipGetPrimaryCtx(unsigned deviceIndex);
 
 
 hipStream_t ihipSyncAndResolveStream(hipStream_t);
+hipError_t ihipStreamSynchronize(hipStream_t stream);
+void ihipStreamCallbackHandler(ihipStreamCallback_t *cb);
 
 // Stream printf functions:
 inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s)
