@@ -53,8 +53,8 @@ void printStat(std::ostream *csv, llvm::raw_ostream* printOut, const std::string
 
 void StatCounter::incrementCounter(const hipCounter& counter, std::string name) {
     counters[name]++;
-    apiCounters[(int) counter.countApiType]++;
-    convTypeCounters[(int) counter.countType]++;
+    apiCounters[(int) counter.apiType]++;
+    convTypeCounters[(int) counter.type]++;
 }
 
 void StatCounter::add(const StatCounter& other) {
