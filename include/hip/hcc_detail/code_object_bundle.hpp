@@ -86,7 +86,7 @@ namespace hip_impl
                     std::copy_n(it, sizeof(y.header.cbuf), y.header.cbuf);
                     it += sizeof(y.header.cbuf);
 
-                    y.triple.assign(it, it + y.triple_sz);
+                    y.triple.assign(it, it + y.header.triple_sz);
 
                     std::copy_n(
                         f + y.header.offset,
