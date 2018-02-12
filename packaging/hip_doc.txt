@@ -8,12 +8,12 @@ if(DOXYGEN_EXE)
     install(DIRECTORY RuntimeAPI/html DESTINATION docs/docs/RuntimeAPI)
 endif()
 
-find_program(GRIP_EXE grip)
-if(GRIP_EXE)
-    add_custom_target(convert_md_to_html ALL
-                  COMMAND @hip_SOURCE_DIR@/packaging/convert_md_to_html.sh @hip_SOURCE_DIR@ ${PROJECT_BINARY_DIR}/md2html)
-    install(DIRECTORY md2html/ DESTINATION docs)
-endif()
+#find_program(GRIP_EXE grip)
+#if(GRIP_EXE)
+#    add_custom_target(convert_md_to_html ALL
+#                  COMMAND @hip_SOURCE_DIR@/packaging/convert_md_to_html.sh @hip_SOURCE_DIR@ ${PROJECT_BINARY_DIR}/md2html)
+#    install(DIRECTORY md2html/ DESTINATION docs)
+#endif()
 
 #############################
 # Packaging steps

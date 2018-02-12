@@ -36,6 +36,7 @@ THE SOFTWARE.
 #include "LLVMCompat.h"
 #include "HipifyAction.h"
 #include "ArgParse.h"
+#include "llvm/Support/Debug.h"
 
 #define DEBUG_TYPE "cuda2hip"
 
