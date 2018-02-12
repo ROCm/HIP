@@ -568,7 +568,6 @@ hipError_t hipModuleGetTexRef(
     const auto it = globals().find(name);
     if (it == globals().end()) return ihipLogStatus(hipErrorInvalidValue);
 
-    *texRef = static_cast<textureReference*>(it->second.get());
-
+    *texRef = reinterpret_cast<textureReference*>(it->second);
     return ihipLogStatus(hipSuccess);
 }

@@ -69,15 +69,13 @@ namespace hip_impl
         }
     };
 
-    using RAII_global = std::unique_ptr<void, decltype(hsa_amd_memory_unlock)*>;
-
     const std::unordered_map<
         hsa_agent_t, std::vector<hsa_executable_t>>& executables();
     const std::unordered_map<
         std::uintptr_t,
         std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>& functions();
     const std::unordered_map<std::uintptr_t, std::string>& function_names();
-    std::unordered_map<std::string, RAII_global>& globals();
+    std::unordered_map<std::string, void*>& globals();
 
     hsa_executable_t load_executable(
         const std::string& file,
