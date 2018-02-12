@@ -483,6 +483,18 @@ inline static hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t 
   return hipCUDAErrorTohipError(cudaMemcpyToArray(dst, wOffset, hOffset, src, count, hipMemcpyKindToCudaMemcpyKind(kind)));
 }
 
+inline static hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffset, size_t hOffset, size_t count, hipMemcpyKind kind) {
+  return hipCUDAErrorTohipError(cudaMemcpyFromArray(dst, srcArray, wOffset, hOffset, count, hipMemcpyKindToCudaMemcpyKind(kind)));
+}
+
+inline static hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t count) {
+  return hipCUResultTohipError(cuMemcpyAtoH(dst, (CUarray)srcArray, srcOffset, count));
+}
+
+inline static hipError_t hipMemcpyHtoA(hipArray* dstArray, size_t dstOffset, const void* srcHost, size_t count) {
+  return hipCUResultTohipError(cuMemcpyHtoA((CUarray)dstArray, dstOffset, srcHost, count));
+}
+
 inline static hipError_t hipDeviceSynchronize() {
     return hipCUDAErrorTohipError(cudaDeviceSynchronize());
 }
