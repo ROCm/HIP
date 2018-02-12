@@ -101,6 +101,8 @@
 | struct       | `curandStateMRG32k3a_t`                                       | `hiprandStateMRG32k3a_t`                                   |
 | struct       | `curandStatePhilox4_32_10_t`                                  | `hiprandStatePhilox4_32_10_t`                              |
 | struct       | `curandStateXORWOW_t`                                         | `hiprandStateXORWOW_t`                                     |
+| struct       | `curandState_t`                                               | `hiprandState_t`                                           |
+| struct       | `curandState`                                                 | `hiprandState_t`                                           |
 
 ## **2. Host API Functions**
 
@@ -154,6 +156,8 @@
 | `curand_normal2_double`                                   | `hiprand_normal2_double`                   |
 | `curand_normal4`                                          | `hiprand_normal4`                          |
 | `curand_normal4_double`                                   | `hiprand_normal4_double`                   |
+| `curand_uniform`                                          | `hiprand_uniform`                          |
+| `curand_uniform_double`                                   | `hiprand_uniform_double`                   |
 | `curand_uniform2_double`                                  | `hiprand_uniform2_double`                  |
 | `curand_uniform4`                                         | `hiprand_uniform4`                         |
 | `curand_uniform4_double`                                  | `hiprand_uniform4_double`                  |

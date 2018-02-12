@@ -37,6 +37,7 @@ THE SOFTWARE.
 #include <vector>
 #include <algorithm>
 #include <atomic>
+#include <mutex>
 
 #include <hc.hpp>
 #include <hc_am.hpp>
@@ -1409,9 +1410,38 @@ void ihipInit()
     tprintf(DB_SYNC, "pid=%u %-30s g_numLogicalThreads=%u\n", getpid(), "<ihipInit>", g_numLogicalThreads);
 }
 
+hipError_t ihipStreamSynchronize(hipStream_t stream)
+{
+    hipError_t e = hipSuccess;
 
+    if (stream == hipStreamNull) {
+        ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
+        ctx->locked_syncDefaultStream(true/*waitOnSelf*/, true/*syncToHost*/);
+    } else {
+        // note this does not synchornize with the NULL stream:
+        stream->locked_wait();
+        e = hipSuccess;
+    }
 
+    return e;
+}
 
+void ihipStreamCallbackHandler(ihipStreamCallback_t *cb)
+{
+    hipError_t e = hipSuccess;
+
+    // Notify hipStreamAddCallback that callback handler thread is active
+    std::lock_guard<std::mutex> guard(cb->_mtx);
+    cb->_ready = true;
+
+    // Synchronize stream
+    tprintf(DB_SYNC, "ihipStreamCallbackHandler wait on stream %s\n", ToString(cb->_stream).c_str());
+    e = ihipStreamSynchronize(cb->_stream);
+
+    // Call registered callback function
+    cb->_callback(cb->_stream, e, cb->_userData);
+    delete cb;
+}
 
 //---
 // Get the stream to use for a command submission.

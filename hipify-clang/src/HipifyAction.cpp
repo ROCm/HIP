@@ -137,6 +137,48 @@ std::string stringifyZeroDefaultedArg(clang::SourceManager& SM, const clang::Exp
 
 } // anonymous namespace
 
+bool HipifyAction::Exclude(const hipCounter & hipToken) {
+    switch (hipToken.type) {
+        case CONV_INCLUDE_CUDA_MAIN_H:
+            switch (hipToken.apiType) {
+                case API_DRIVER:
+                case API_RUNTIME:
+                    if (insertedRuntimeHeader) { return true; }
+                    insertedRuntimeHeader = true;
+                    return false;
+                case API_BLAS:
+                  if (insertedBLASHeader) { return true; }
+                    insertedBLASHeader = true;
+                    return false;
+                case API_RAND:
+                    if (hipToken.hipName == "hiprand_kernel.h") {
+                        if (insertedRAND_kernelHeader) { return true; }
+                        insertedRAND_kernelHeader = true;
+                        return false;
+                    } else if (hipToken.hipName == "hiprand.h") {
+                        if (insertedRANDHeader) { return true; }
+                        insertedRANDHeader = true;
+                        return false;
+                    }
+                default:
+                    return false;
+            }
+            return false;
+        case CONV_INCLUDE:
+            switch (hipToken.apiType) {
+                case API_RAND:
+                    if (insertedRAND_kernelHeader) { return true; }
+                    insertedRAND_kernelHeader = true;
+                    return false;
+                default:
+                    return false;
+            }
+            return false;
+        default:
+            return false;
+    }
+    return false;
+}
 
 void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
                                       const clang::Token&,
@@ -149,24 +191,17 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
     if (!SM.isWrittenInMainFile(hash_loc)) {
         return;
     }
+    if (!firstHeader) {
+        firstHeader = true;
+        firstHeaderLoc = hash_loc;
+    }
 
     const auto found = CUDA_INCLUDE_MAP.find(file_name);
     if (found == CUDA_INCLUDE_MAP.end()) {
-        if (!firstNotMainHeader) {
-            firstNotMainHeader = true;
-            firstNotMainHeaderLoc = hash_loc;
-        }
         return;
     }
 
-    // Special-casing to avoid duplication of the hip_runtime include.
-    bool secondMainInclude = false;
-    if (found->second.hipName == "hip/hip_runtime.h") {
-        if (insertedRuntimeHeader) {
-            secondMainInclude = true;
-        }
-        insertedRuntimeHeader = true;
-    }
+    bool exclude = Exclude(found->second);
 
     Statistics::current().incrementCounter(found->second, file_name.str());
 
@@ -180,7 +215,7 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
     clang::StringRef newInclude;
 
     // Keep the same include type that the user gave.
-    if (!secondMainInclude) {
+    if (!exclude) {
         clang::SmallString<128> includeBuffer;
         if (is_angled) {
             newInclude = llvm::Twine("<" + found->second.hipName + ">").toStringRef(includeBuffer);
@@ -198,8 +233,13 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
 }
 
 void HipifyAction::PragmaDirective(clang::SourceLocation Loc, clang::PragmaIntroducerKind Introducer) {
-    if (pragmaOnce) { return; }
+    if (pragmaOnce) {
+        return;
+    }
     clang::SourceManager& SM = getCompilerInstance().getSourceManager();
+    if (!SM.isWrittenInMainFile(Loc)) {
+        return;
+    }
     clang::Preprocessor& PP = getCompilerInstance().getPreprocessor();
     const clang::Token tok = PP.LookAhead(0);
     StringRef Text(SM.getCharacterData(tok.getLocation()), tok.getLength());
@@ -356,8 +396,8 @@ void HipifyAction::EndSourceFileAction() {
         clang::SourceLocation sl;
         if (pragmaOnce) {
             sl = pragmaOnceLoc;
-        } else if (firstNotMainHeader) {
-            sl = firstNotMainHeaderLoc;
+        } else if (firstHeader) {
+            sl = firstHeaderLoc;
         } else {
             sl = SM.getLocForStartOfFile(SM.getMainFileID());
         }
