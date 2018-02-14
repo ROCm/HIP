@@ -220,8 +220,11 @@ endif()
 file(WRITE "${PROJECT_BINARY_DIR}/.hipVersion" ${_versionInfo})
 
 # Build doxygen documentation
-add_custom_target(doc COMMAND HIP_PATH=${CMAKE_CURRENT_SOURCE_DIR} doxygen ${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen-input/doxy.cfg
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docs)
+find_program(DOXYGEN_EXE doxygen)
+if(DOXYGEN_EXE)
+    add_custom_target(doc COMMAND HIP_PATH=${CMAKE_CURRENT_SOURCE_DIR} ${DOXYGEN_EXE} ${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen-input/doxy.cfg
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docs)
+endif()
 
 #############################
 # Install steps
@@ -364,8 +367,23 @@ endif()
 #############################
 # Code analysis
 #############################
-# Target: static_check
-add_custom_target(static_check COMMAND cppcheck --force --quiet --enable=warning,performance,portability,information,missingInclude src include -I /opt/rocm/include/hcc -I /opt/rocm/include --suppress=*:/opt/rocm/include/hcc/hc.hpp WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+# Target: cppcheck
+find_program(CPPCHECK_EXE cppcheck)
+if(CPPCHECK_EXE)
+    add_custom_target(cppcheck COMMAND ${CPPCHECK_EXE} --force --quiet --enable=warning,performance,portability,information,missingInclude src include -I /opt/rocm/include/hcc -I /opt/rocm/include --suppress=*:/opt/rocm/include/hcc/hc.hpp
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endif()
+
+#############################
+# Code formatting
+#############################
+# Target: clangformat
+find_program(CLANGFORMAT_EXE clang-format PATHS ${HCC_HOME}/bin)
+if(CLANGFORMAT_EXE)
+    file(GLOB_RECURSE FORMAT_SOURCE_FILE_LIST *.cpp *.hpp *.h)
+    add_custom_target(clangformat COMMAND ${CLANGFORMAT_EXE} -style=file -i ${FORMAT_SOURCE_FILE_LIST}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endif()
 
 #############################
 # Testing steps

@@ -1,0 +1,20 @@
+---
+Language: Cpp
+BasedOnStyle: Google
+AlignEscapedNewlinesLeft: false
+ColumnLimit: 100
+DerivePointerAlignment: false
+IndentWrappedFunctionNames: false
+MaxEmptyLinesToKeep: 2
+SortIncludes: false
+IndentWidth: 4
+---
+Language: ObjC
+BasedOnStyle: Google
+AlignEscapedNewlinesLeft: false
+ColumnLimit: 100
+DerivePointerAlignment: false
+IndentWrappedFunctionNames: false
+MaxEmptyLinesToKeep: 2
+SortIncludes: false
+IndentWidth: 4
