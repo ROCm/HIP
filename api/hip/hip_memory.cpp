@@ -66,4 +66,57 @@ hipError_t hipFree(void* ptr)
     return hipSuccess;
 }
 
+hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind)
+{
+    HIP_INIT_API(dst, src, sizeBytes, kind);
+
+    amd::Context* context = as_amd(g_currentCtx);
+    amd::Device* device = context->devices()[0];
+
+    // FIXME : Do we create a queue here or create at init and just reuse
+    amd::HostQueue* queue = new amd::HostQueue(*context, *device, 0,
+                                                amd::CommandQueue::RealTimeDisabled,
+                                                amd::CommandQueue::Priority::Normal);
+    if (!queue) {
+        return hipErrorOutOfMemory;
+    }
+
+    amd::Buffer* srcBuffer = as_amd(reinterpret_cast<cl_mem>(const_cast<void*>(src)))->asBuffer();
+    amd::Buffer* dstBuffer = as_amd(reinterpret_cast<cl_mem>(const_cast<void*>(dst)))->asBuffer();
+
+    amd::Command* command;
+    amd::Command::EventWaitList waitList;
+
+    switch (kind) {
+    case hipMemcpyDeviceToHost:
+    command = new amd::ReadMemoryCommand(*queue, CL_COMMAND_READ_BUFFER, waitList,
+        srcBuffer, 0, sizeBytes, dst);
+    break;
+    case hipMemcpyHostToDevice:
+    command = new amd::WriteMemoryCommand(*queue, CL_COMMAND_WRITE_BUFFER, waitList,
+        dstBuffer, 0, sizeBytes, src);
+    break;
+    default:
+        assert(!"Shouldn't reach here");
+    break;
+    }
+    if (!command) {
+        return hipErrorOutOfMemory;
+    }
+
+    // Make sure we have memory for the command execution
+    if (CL_SUCCESS != command->validateMemory()) {
+        delete command;
+        return hipErrorMemoryAllocation;
+    }
+
+
+    command->enqueue();
+    command->awaitCompletion();
+    command->release();
+
+    queue->release();
+
+    return hipSuccess;
+}
 
