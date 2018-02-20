@@ -54,7 +54,7 @@ A stronger system-level fence can be specified when the event is created with hi
 - HIP/ROCm also supports the ability to cache host memory in the GPU using the "Non-Coherent" host memory allocations. This can provide performance benefit, but care must be taken to use the correct synchronization.
 
 
-## Unpinned Memory Transfer Optimizations
+## Unpinned Memory Transfer Optimization
 Please note that this document lists possible ways for experimenting with HIP stack to gain performance. Performance may vary from platform to platform.
  
 ### On Small BAR Setup
@@ -79,11 +79,20 @@ stage the copy through an optimized pinned staging buffer, to implement H2D and 
 
 PinInPlace is another algorithm which pins the host memory "in-place", and copies it with the DMA engine.  
 
-By default staging buffers are used for unpinned memory transfers. Environment variables allow control over the unpinned copy algorithm and parameters:
+Unpinned memory transfer mode can be controlled using environment variable HCC_UNPINNED_COPY_MODE. 
 
-- HIP_PININPLACE - This environment variable forces the use of PinInPlace logic for all unpinned memory copies
+By default HCC_UNPINNED_COPY_MODE is set to 0, which uses default threshold values to decide which transfer way to use based on data size.
 
-- HIP_OPTIMAL_MEM_TRANSFER- This environment variable enables a hybrid memory copy logic based on thresholds. These thresholds can be managed with following environment variables:
-  -   HIP_H2D_MEM_TRANSFER_THRESHOLD_STAGING_OR_PININPLACE - Threshold in bytes for H2D copy. For sizes smaller than threshold staging buffers logic would be used else PinInPlace logic.
-  -   HIP_H2D_MEM_TRANSFER_THRESHOLD_DIRECT_OR_STAGING - Threshold in bytes for H2D copy. For sizes smaller than threshold direct copy logic would be used else staging buffers logic.
-  -   HIP_D2H_MEM_TRANSFER_THRESHOLD - Threshold in bytes for D2H copy. For sizes smaller than threshold staging buffer logic would be used else PinInPlace logic.
+Setting HCC_UNPINNED_COPY_MODE = 1, forces all unpinned transfer to use PinInPlace logic.
+
+Setting HCC_UNPINNED_COPY_MODE = 2, forces all unpinned transfer to use Staging buffers.
+
+Setting HCC_UNPINNED_COPY_MODE = 3, forces all unpinned transfer to use direct memcpy on large BAR systems.
+ 
+Following environment variables can be used to control the transfer thresholds:
+
+-   HCC_H2D_STAGING_THRESHOLD - Threshold in KB for H2D copy. For sizes smaller than threshold direct copy logic would be used else staging buffers logic. By default it is set to 64.
+   
+-   HCC_H2D_PININPLACE_THRESHOLD - Threshold in KB for H2D copy. For sizes smaller than threshold staging buffers logic would be used else PinInPlace logic. By default it is set to 4096.
+
+-   HCC_D2H_PININPLACE_THRESHOLD  - Threshold in KB for D2H copy. For sizes smaller than threshold staging buffer logic would be used else PinInPlace logic. By default it is set to 1024.

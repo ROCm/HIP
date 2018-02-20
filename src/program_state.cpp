@@ -169,7 +169,7 @@ namespace
             lock_guard<mutex> lck{mtx};
 
             if (globals().find(x) != globals().cend()) return;
-
+            globals().emplace(x, (void*)(it1->second.first));
             void* p = nullptr;
             hsa_amd_memory_lock(
                 reinterpret_cast<void*>(it1->second.first),
@@ -181,7 +181,6 @@ namespace
             hsa_executable_agent_global_variable_define(
                 executable, agent, x.c_str(), p);
 
-            globals().emplace(x, RAII_global{p, hsa_amd_memory_unlock});
         }
     }
 
@@ -462,9 +461,9 @@ namespace hip_impl
         return r;
     }
 
-    unordered_map<string, RAII_global>& globals()
+    unordered_map<string, void*>& globals()
     {
-        static unordered_map<string, RAII_global> r;
+        static unordered_map<string, void*> r;
         static once_flag f;
         call_once(f, []() { r.reserve(symbol_addresses().size()); });
 
@@ -491,4 +490,16 @@ namespace hip_impl
 
         return executable;
     }
+
+    // To force HIP to load the kernels and to setup the function
+    // symbol map on program startup
+    class startup_kernel_loader {
+      private:
+        startup_kernel_loader() { functions(); }
+        startup_kernel_loader(const startup_kernel_loader&) = delete;
+        startup_kernel_loader& operator= (const startup_kernel_loader&) = delete;
+        static startup_kernel_loader skl;
+    };
+    startup_kernel_loader startup_kernel_loader::skl;
+
 } // Namespace hip_impl.
