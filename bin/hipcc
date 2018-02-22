@@ -216,7 +216,6 @@ if($HIP_PLATFORM eq "hcc"){
 }
 
 if(($HIP_PLATFORM eq "hcc")){
-    $EXPORT_LL=" ";
     $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_hc.ll\n";
     $ENV{HIP_HC_IR_FILE}="";
 }

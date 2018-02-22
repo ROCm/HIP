@@ -148,7 +148,7 @@ endif()
 # platform is hcc; do this before the ugly hijacking of the compiler, since no
 # HC code is involved.
 if (HIP_PLATFORM STREQUAL "hcc")
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/LPL_CA)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lpl_ca)
 endif ()
 
 # Build hip_hcc if platform is hcc
