@@ -93,6 +93,7 @@ extern int HIP_TRACE_API;
 #include <hip/hcc_detail/math_functions.h>
 #include <hip/hcc_detail/device_functions.h>
 #include <hip/hcc_detail/texture_functions.h>
+#include <hip/hcc_detail/surface_functions.h>
 
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
 #if defined (__KALMAR_ACCELERATOR__) && !defined (__HCC_ACCELERATOR__)

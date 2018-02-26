@@ -1,0 +1,59 @@
+/*
+Copyright (c) 2018 - present Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
+#ifndef HIP_INCLUDE_HIP_HCC_DETAIL_SURFACE_FUNCTIONS_H
+#define HIP_INCLUDE_HIP_HCC_DETAIL_SURFACE_FUNCTIONS_H
+
+#include <hc.hpp>
+#include <hc_short_vector.hpp>
+#include <hip/hcc_detail/hip_surface_types.h>
+
+#define __SURFACE_FUNCTIONS_DECL__ static __inline__ __device__
+template <class T>
+__SURFACE_FUNCTIONS_DECL__ void surf2Dread(T* data, hipSurfaceObject_t surfObj, int x, int y, int boundaryMode = hipSurfaceBoundaryModeZero)
+{
+    hipArray* temp = (hipArray*) surfObj;
+    size_t width = temp->width;
+    size_t height = temp->height;
+    T* temp1 = (T*) temp->data;
+    if((x > width) || (x < 0) || (y > height) ||(y < 0)) {
+        if(boundaryMode == hipSurfaceBoundaryModeZero) {
+            *data = 0;
+        }
+    } else {
+        *data = *(temp1+ + y*width + x);
+    }
+}
+
+template <class T>
+__SURFACE_FUNCTIONS_DECL__ void surf2Dwrite(T data, hipSurfaceObject_t surfObj, int x, int y, int boundaryMode = hipSurfaceBoundaryModeZero)
+{
+    hipArray* temp = (hipArray*) surfObj;
+    size_t width = temp->width;
+    size_t height = temp->height;
+    T* temp1 = (T*) temp->data;
+    if(!((x > width) || (x < 0) || (y > height) ||(y < 0))){
+        *(temp1 +y*width + x) = data;
+    }
+}
+
+#endif
