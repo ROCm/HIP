@@ -26,12 +26,12 @@ THE SOFTWARE.
 // Common code included at start of every hip file.
 // Auto enable __HIP_PLATFORM_HCC__ if compiling with HCC
 // Other compiler (GCC,ICC,etc) need to set one of these macros explicitly
-#if defined(__HCC__)
+#if defined(__HCC__) || (defined(__clang__) && defined(__HIPCC__))
 #define __HIP_PLATFORM_HCC__
 #endif //__HCC__
 
 // Auto enable __HIP_PLATFORM_NVCC__ if compiling with NVCC
-#if defined(__NVCC__)
+#if defined(__NVCC__) || (defined(__clang__) && defined(__CUDACC__))
 #define __HIP_PLATFORM_NVCC__
 #ifdef __CUDACC__
 #define __HIPCC__

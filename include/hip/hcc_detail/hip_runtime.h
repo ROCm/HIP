@@ -41,7 +41,57 @@ THE SOFTWARE.
 #include <stddef.h>
 #endif//__cplusplus
 
-#if __HCC__
+#if defined(__clang__) && defined(__HIPCC__)
+
+#define hipConfigureCall cudaConfigureCall
+#define hipSetupArgument cudaSetupArgument
+#define hipLaunch cudaLaunch
+
+typedef int hipLaunchParm ;
+
+#define hipLaunchKernel(kernelName, numblocks, numthreads, memperblock, streamId, ...) \
+do {\
+  kernelName<<<numblocks,numthreads,memperblock,streamId>>>(0, ##__VA_ARGS__);\
+} while(0)
+
+#define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...) \
+do {\
+  kernelName<<<numblocks,numthreads,memperblock,streamId>>>(__VA_ARGS__);\
+} while(0)
+
+#include <hip/hip_runtime_api.h>
+
+#if defined(__cplusplus)
+extern "C" {
+#endif /*__cplusplus*/
+
+hipError_t hipConfigureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem, hipStream_t stream);
+hipError_t hipSetupArgument(const void *arg, size_t size, size_t offset);
+hipError_t hipLaunch(const void *func);
+
+#if defined(__cplusplus)
+}
+#endif /*__cplusplus*/
+
+#include <__clang_cuda_builtin_vars.h>
+
+#define hipThreadIdx_x threadIdx.x
+#define hipThreadIdx_y threadIdx.y
+#define hipThreadIdx_z threadIdx.z
+
+#define hipBlockIdx_x  blockIdx.x
+#define hipBlockIdx_y  blockIdx.y
+#define hipBlockIdx_z  blockIdx.z
+
+#define hipBlockDim_x  blockDim.x
+#define hipBlockDim_y  blockDim.y
+#define hipBlockDim_z  blockDim.z
+
+#define hipGridDim_x  gridDim.x
+#define hipGridDim_y  gridDim.y
+#define hipGridDim_z  gridDim.z
+
+#elif __HCC__
 
 // Define NVCC_COMPAT for CUDA compatibility
 #define NVCC_COMPAT
