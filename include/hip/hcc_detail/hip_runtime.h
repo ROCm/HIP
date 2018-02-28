@@ -525,7 +525,7 @@ do {\
  */
 
 
-#elif defined(__clang__) && defined(__HIPCC__)
+#elif defined(__clang__) && defined(__HIP__)
 
 #define hipConfigureCall cudaConfigureCall
 #define hipSetupArgument cudaSetupArgument
