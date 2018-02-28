@@ -64,7 +64,7 @@ THE SOFTWARE.
 #define __shared__     tile_static
 #define __constant__   __attribute__((hc))
 
-#elif defined(__clang__) && defined(__HIPCC__)
+#elif defined(__clang__) && defined(__HIP__)
 
 #define __host__      __attribute__((host))
 #define __device__    __attribute__((device))
