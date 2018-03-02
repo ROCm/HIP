@@ -54,7 +54,7 @@ struct __CudaPartHeader{
   unsigned int           subarch;
 };
 
-extern "C" hipModule_t __cudaRegisterFatBinary(void* bundle)
+extern "C" hipModule_t __hipRegisterFatBinary(void* bundle)
 {
   if (!amd::Runtime::initialized()) { // FIXME: fix initialization
     hipInit(0);
@@ -96,7 +96,7 @@ extern "C" hipModule_t __cudaRegisterFatBinary(void* bundle)
 std::map<const void*, hipFunction_t> g_functions;
 
 
-extern "C" void __cudaRegisterFunction(
+extern "C" void __hipRegisterFunction(
   hipModule_t  module,
   const void*  hostFunction,
   char*        deviceFunction,
@@ -120,7 +120,7 @@ extern "C" void __cudaRegisterFunction(
   g_functions.insert(std::make_pair(hostFunction, reinterpret_cast<hipFunction_t>(as_cl(kernel))));
 }
 
-extern "C" void __cudaRegisterVar(
+extern "C" void __hipRegisterVar(
   hipModule_t module,
   char*       hostVar,
   char*       deviceVar,
@@ -132,7 +132,7 @@ extern "C" void __cudaRegisterVar(
 {
 }
 
-extern "C" void __cudaUnregisterFatBinary(
+extern "C" void __hipUnregisterFatBinary(
   hipModule_t module
 )
 {
@@ -143,7 +143,7 @@ dim3 g_blockDim; // FIXME: place in execution stack
 size_t g_sharedMem; // FIXME: place in execution stack
 hipStream_t g_stream; // FIXME: place in execution stack
 
-extern "C" hipError_t cudaConfigureCall(
+extern "C" hipError_t hipConfigureCall(
   dim3 gridDim,
   dim3 blockDim,
   size_t sharedMem,
@@ -161,7 +161,7 @@ extern "C" hipError_t cudaConfigureCall(
 
 char* g_arguments[1024]; // FIXME: needs to grow
 
-extern "C" hipError_t cudaSetupArgument(
+extern "C" hipError_t hipSetupArgument(
   const void *arg,
   size_t size,
   size_t offset)
@@ -172,7 +172,7 @@ extern "C" hipError_t cudaSetupArgument(
   return hipSuccess;
 }
 
-extern "C" hipError_t cudaLaunch(const void *hostFunction)
+extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
 {
   std::map<const void*, hipFunction_t>::iterator it;
   if ((it = g_functions.find(hostFunction)) == g_functions.end())
