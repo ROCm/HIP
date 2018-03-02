@@ -24,9 +24,6 @@ THE SOFTWARE.
 
 #include "hip_internal.hpp"
 
-cl_device_id* g_deviceArray = NULL;
-unsigned g_deviceCnt = 0;
-
 hipError_t hipGetDevice(int *deviceId) {
 
   HIP_INIT_API(deviceId);
@@ -54,7 +51,7 @@ hipError_t hipDeviceGet(hipDevice_t *device, int deviceId)
   return hipSuccess;
 };
 
-hipError_t hipDeviceCount(int* count) {
+hipError_t hipGetDeviceCount(int* count) {
 
   HIP_INIT_API(count);
 
@@ -63,9 +60,7 @@ hipError_t hipDeviceCount(int* count) {
   }
 
   // Get all available devices
-  if (!amd::Device::getDeviceIDs(CL_DEVICE_TYPE_GPU, 0, NULL, count, false)) {
-    return hipErrorNoDevice;
-  }
+  *count = g_context->devices().size();
 
   return hipSuccess;
 }
@@ -74,93 +69,95 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
 
   HIP_INIT_API(pi, attr, device);
 
-  if(pi == NULL) {
+  if (pi == nullptr) {
     return hipErrorInvalidValue;
   }
 
-  auto deviceHandle = as_amd(g_deviceArray[hipDevice]);
+  //if (unsigned(device) >= g_context->devices().size()) {
+  //  return hipErrorInvalidDevice;
+  //}
+  //auto* deviceHandle = g_context->devices()[device];
 
-  if (deviceHandle == NULL) {
-    return hipErrorInvalidDevice;
-  }
-
-  hipDeviceProp_t *prop = deviceHandle->_props;
+  //FIXME: should we cache the props, or just select from deviceHandle->info_?
+  hipDeviceProp_t prop = {0};
+  hipError_t err = hipGetDeviceProperties(&prop, device);
+  if (err != hipSuccess) return err;
 
   switch (attr) {
   case hipDeviceAttributeMaxThreadsPerBlock:
-    *pi = prop->maxThreadsPerBlock;
+    *pi = prop.maxThreadsPerBlock;
     break;
   case hipDeviceAttributeMaxBlockDimX:
-    *pi = prop->maxThreadsDim[0];
+    *pi = prop.maxThreadsDim[0];
     break;
   case hipDeviceAttributeMaxBlockDimY:
-    *pi = prop->maxThreadsDim[1];
+    *pi = prop.maxThreadsDim[1];
     break;
   case hipDeviceAttributeMaxBlockDimZ:
-    *pi = prop->maxThreadsDim[2];
+    *pi = prop.maxThreadsDim[2];
     break;
   case hipDeviceAttributeMaxGridDimX:
-    *pi = prop->maxGridSize[0];
+    *pi = prop.maxGridSize[0];
     break;
   case hipDeviceAttributeMaxGridDimY:
-    *pi = prop->maxGridSize[1];
+    *pi = prop.maxGridSize[1];
     break;
   case hipDeviceAttributeMaxGridDimZ:
-    *pi = prop->maxGridSize[2];
+    *pi = prop.maxGridSize[2];
     break;
   case hipDeviceAttributeMaxSharedMemoryPerBlock:
-    *pi = prop->sharedMemPerBlock;
+    *pi = prop.sharedMemPerBlock;
     break;
   case hipDeviceAttributeTotalConstantMemory:
-    *pi = prop->totalConstMem;
+    *pi = prop.totalConstMem;
     break;
   case hipDeviceAttributeWarpSize:
-    *pi = prop->warpSize;
+    *pi = prop.warpSize;
     break;
   case hipDeviceAttributeMaxRegistersPerBlock:
-    *pi = prop->regsPerBlock;
+    *pi = prop.regsPerBlock;
     break;
   case hipDeviceAttributeClockRate:
-    *pi = prop->clockRate;
+    *pi = prop.clockRate;
     break;
   case hipDeviceAttributeMemoryClockRate:
-    *pi = prop->memoryClockRate;
+    *pi = prop.memoryClockRate;
     break;
   case hipDeviceAttributeMemoryBusWidth:
-    *pi = prop->memoryBusWidth;
+    *pi = prop.memoryBusWidth;
     break;
   case hipDeviceAttributeMultiprocessorCount:
-    *pi = prop->multiProcessorCount;
+    *pi = prop.multiProcessorCount;
     break;
   case hipDeviceAttributeComputeMode:
-    *pi = prop->computeMode;
+    *pi = prop.computeMode;
     break;
   case hipDeviceAttributeL2CacheSize:
-    *pi = prop->l2CacheSize;
+    *pi = prop.l2CacheSize;
     break;
   case hipDeviceAttributeMaxThreadsPerMultiProcessor:
-    *pi = prop->maxThreadsPerMultiProcessor;
+    *pi = prop.maxThreadsPerMultiProcessor;
     break;
   case hipDeviceAttributeComputeCapabilityMajor:
-    *pi = prop->major;
+    *pi = prop.major;
     break;
   case hipDeviceAttributeComputeCapabilityMinor:
-    *pi = prop->minor;
+    *pi = prop.minor;
     break;
   case hipDeviceAttributePciBusId:
-    *pi = prop->pciBusID;
+    *pi = prop.pciBusID;
     break;
   case hipDeviceAttributeConcurrentKernels:
-    *pi = prop->concurrentKernels;
+    *pi = prop.concurrentKernels;
     break;
   case hipDeviceAttributePciDeviceId:
-    *pi = prop->pciDeviceID;
+    *pi = prop.pciDeviceID;
     break;
   case hipDeviceAttributeMaxSharedMemoryPerMultiprocessor:
-    *pi = prop->maxSharedMemoryPerMultiProcessor;
+    *pi = prop.maxSharedMemoryPerMultiProcessor;
     break;
   case hipDeviceAttributeIsMultiGpuBoard:
-    *pi = prop->isMultiGpuBoard;
+    *pi = prop.isMultiGpuBoard;
     break;
   default:
     return hipErrorInvalidValue;
@@ -177,10 +174,10 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device) {
     return hipErrorInvalidValue;
   }
 
-  auto deviceHandle = as_amd(g_deviceArray[device]);
-  if (deviceHandle == NULL) {
+  if (unsigned(device) >= g_context->devices().size()) {
     return hipErrorInvalidDevice;
   }
+  auto* deviceHandle = g_context->devices()[device];
 
   hipDeviceProp_t deviceProps = {0};
 
@@ -226,11 +223,11 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device) {
   deviceProps.arch.has3dGrid                   = 1;
   deviceProps.arch.hasDynamicParallelism       = 0;
   deviceProps.concurrentKernels = 1;
-  deviceProps.pciDomainID = info.deviceTopology_.function;
-  deviceProps.pciBusID = info.deviceTopology_.bus;
-  deviceProps.pciDeviceID = info.deviceTopology_.device;
+  deviceProps.pciDomainID = info.deviceTopology_.pcie.function;
+  deviceProps.pciBusID = info.deviceTopology_.pcie.bus;
+  deviceProps.pciDeviceID = info.deviceTopology_.pcie.device;
   deviceProps.maxSharedMemoryPerMultiProcessor = info.localMemSizePerCU_;
-  deviceProps.isMultiGpuBoard = info.;
+  //deviceProps.isMultiGpuBoard = info.;
   deviceProps.canMapHostMemory = 1;
   deviceProps.gcnArch = info.gfxipVersion_;
 
@@ -254,32 +251,16 @@ hipError_t hipDeviceGetCacheConfig(hipFuncCache_t *cacheConfig) {
     return hipErrorInvalidValue;
   }
 
-  *cacheConfig = 0;
+  *cacheConfig = hipFuncCache_t();
 
   return hipSuccess;
-}
-
-hipError_t hipGetDeviceProperties(hipDeviceProp_t* properties, int device) {
-
-  HIP_INIT_API(properties, device);
-  if ((properties == NULL) || (device < 0) || (device >= g_deviceCnt)) {
-    return hipErrorInvalidDevice;
-  }
-
-  auto * deviceHandle = as_amd(g_deviceArray[device]);
-  if (deviceHandle != NULL) {
-    *properties = deviceHandle->_props;
-    return hipSuccess;
-  }
-
-  return hipErrorInvalidDevice;
 }
 
 hipError_t hipSetDeviceFlags(unsigned int flags) {
 
   HIP_INIT_API(flags);
 
-  assert(0 && "Unimplemented")
+  assert(0 && "Unimplemented");
 
   return hipSuccess;
 };
@@ -288,7 +269,7 @@ hipError_t hipDeviceGetLimit (size_t *pValue, hipLimit_t limit) {
 
   HIP_INIT_API(pValue, limit);
 
-  assert(0 && "Unimplemented")
+  assert(0 && "Unimplemented");
 
   return hipSuccess;
 }
@@ -297,7 +278,7 @@ hipError_t hipFuncSetCacheConfig (const void* func, hipFuncCache_t cacheConfig) 
 
   HIP_INIT_API(cacheConfig);
 
-  assert(0 && "Not supported")
+  assert(0 && "Not supported");
 
   return hipSuccess;
 }
@@ -306,7 +287,7 @@ hipError_t hipDeviceSetSharedMemConfig (hipSharedMemConfig config) {
 
   HIP_INIT_API(config);
 
-  assert(0 && "Not Supported")
+  assert(0 && "Not Supported");
 
   return hipSuccess;
 }
@@ -315,17 +296,17 @@ hipError_t hipDeviceGetSharedMemConfig (hipSharedMemConfig *pConfig) {
 
   HIP_INIT_API(pConfig);
 
-  assert(0 && "Not supported")
+  assert(0 && "Not supported");
 
   return hipSuccess;
 }
 
 
-hipError_t hipChooseDevice(int* device, const hipDeviceProp_t* properties) { 
+hipError_t hipChooseDevice(int* device, const hipDeviceProp_t* properties) {
 
   HIP_INIT_API(device, properties);
-  
-  assert(0 && "Unimplemented")
+
+  assert(0 && "Unimplemented");
 
   return hipSuccess;
 }
@@ -335,7 +316,7 @@ hipError_t hipDeviceGetByPCIBusId (int*  device, const char* pciBusId) {
 
   HIP_INIT_API(device,pciBusId);
 
-  assert(0 && "Unimplemented")
+  assert(0 && "Unimplemented");
 
   return hipSuccess;
 }
@@ -345,7 +326,7 @@ hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device) {
 
   HIP_INIT_API(bytes, device);
 
-  assert(0 && "Unimplemented")
+  assert(0 && "Unimplemented");
 
   return hipSuccess;
 }
@@ -353,7 +334,8 @@ hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device) {
 hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device) {
 
   HIP_INIT_API(major,minor, device);
-  assert(0 && "Unimplemented")
+
+  assert(0 && "Unimplemented");
 
   return hipSuccess;
 }
@@ -362,7 +344,7 @@ hipError_t hipDeviceGetName(char *name,int len, hipDevice_t device) {
 
   HIP_INIT_API((void*)name,len, device);
 
-  assert(0 && "Unimplemented")
+  assert(0 && "Unimplemented");
 
   return hipSuccess;
 }
@@ -371,7 +353,13 @@ hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len, int device) {
 
   HIP_INIT_API((void*)pciBusId, len, device);
 
-  assert(0 && "Unimplemented")
+  assert(0 && "Unimplemented");
 
+  return hipSuccess;
+}
+
+hipError_t hipDeviceSynchronize(void)
+{
+  // FIXME: should wait on all streams
   return hipSuccess;
 }

@@ -20,22 +20,48 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef HIP_SRC_HIP_INTERNAL_H
-#define HIP_SRC_HIP_INTERNAL_H
+#include <hip/hip_runtime.h>
 
-#include "cl_common.hpp"
+#include "hip_internal.hpp"
 
-#define HIP_INIT()\
-  amd::Thread* thread = amd::Thread::current();              \
-  if (!CL_CHECK_THREAD(thread)) {                            \
-    return hipErrorOutOfMemory;                              \
-  }
+hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags)
+{
+  HIP_INIT_API(event, flags);
 
+  return hipErrorUnknown;
+}
 
-// This macro should be called at the beginning of every HIP API.
-#define HIP_INIT_API(...) \
-    HIP_INIT()
+hipError_t hipEventCreate(hipEvent_t* event)
+{
+  HIP_INIT_API(event);
 
-extern amd::Context* g_context;
+  return hipErrorUnknown;
+}
 
-#endif // HIP_SRC_HIP_INTERNAL_H
+hipError_t hipEventDestroy(hipEvent_t event)
+{
+  HIP_INIT_API(event);
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop)
+{
+  HIP_INIT_API(ms, start, stop);
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream)
+{
+  HIP_INIT_API(event, stream);
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipEventSynchronize(hipEvent_t event)
+{
+  HIP_INIT_API(event);
+
+  return hipErrorUnknown;
+}

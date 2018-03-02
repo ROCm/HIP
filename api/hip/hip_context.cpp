@@ -20,22 +20,39 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef HIP_SRC_HIP_INTERNAL_H
-#define HIP_SRC_HIP_INTERNAL_H
+#include <hip/hip_runtime.h>
 
-#include "cl_common.hpp"
+#include "hip_internal.hpp"
+#include "platform/runtime.hpp"
 
-#define HIP_INIT()\
-  amd::Thread* thread = amd::Thread::current();              \
-  if (!CL_CHECK_THREAD(thread)) {                            \
-    return hipErrorOutOfMemory;                              \
+
+amd::Context* g_context = nullptr;
+
+hipError_t hipInit(unsigned int flags)
+{
+  HIP_INIT_API(flags);
+
+  if (!amd::Runtime::initialized()) {
+    amd::Runtime::init();
   }
 
+  // FIXME: move the global VDI context to hipInit.
+  g_context = new amd::Context(
+      amd::Device::getDevices(CL_DEVICE_TYPE_GPU, false), amd::Context::Info());
+  if (!g_context) return hipErrorOutOfMemory;
 
-// This macro should be called at the beginning of every HIP API.
-#define HIP_INIT_API(...) \
-    HIP_INIT()
+  if (g_context && CL_SUCCESS != g_context->create(nullptr)) {
+    g_context->release();
+    return hipErrorUnknown;
+  }
 
-extern amd::Context* g_context;
+  return hipSuccess;
+}
 
-#endif // HIP_SRC_HIP_INTERNAL_H
+hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device)
+{
+  HIP_INIT_API(ctx, flags, device);
+
+  return hipSuccess;
+}
+

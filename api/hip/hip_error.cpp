@@ -20,22 +20,29 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef HIP_SRC_HIP_INTERNAL_H
-#define HIP_SRC_HIP_INTERNAL_H
+#include <hip/hip_runtime.h>
 
-#include "cl_common.hpp"
+#include "hip_internal.hpp"
 
-#define HIP_INIT()\
-  amd::Thread* thread = amd::Thread::current();              \
-  if (!CL_CHECK_THREAD(thread)) {                            \
-    return hipErrorOutOfMemory;                              \
-  }
+hipError_t hipGetLastError()
+{
+  HIP_INIT_API();
+  return hipErrorUnknown;
+}
 
+hipError_t hipPeekAtLastError()
+{
+  HIP_INIT_API();
+  return hipErrorUnknown;
+}
 
-// This macro should be called at the beginning of every HIP API.
-#define HIP_INIT_API(...) \
-    HIP_INIT()
+const char *hipGetErrorName(hipError_t hip_error)
+{
+  return "";
+}
 
-extern amd::Context* g_context;
+const char *hipGetErrorString(hipError_t hip_error)
+{
+  return "";
+}
 
-#endif // HIP_SRC_HIP_INTERNAL_H
