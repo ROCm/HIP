@@ -1,0 +1,69 @@
+
+/opt/rocm/hcc/bin/ld.lld: error: can't create dynamic relocation R_AMDGPU_REL32_LO against symbol: __opencl_atomic_load_4 in readonly segment; recompile object files with -fPIC
+>>> defined in /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin
+>>> referenced by /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin:(main::HIP_kernel_functor_name_begin_unnamed_HIP_kernel_functor_name_end_1::__cxxamp_trampoline())
+
+/opt/rocm/hcc/bin/ld.lld: error: can't create dynamic relocation R_AMDGPU_REL32_HI against symbol: __opencl_atomic_load_4 in readonly segment; recompile object files with -fPIC
+>>> defined in /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin
+>>> referenced by /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin:(main::HIP_kernel_functor_name_begin_unnamed_HIP_kernel_functor_name_end_1::__cxxamp_trampoline())
+
+/opt/rocm/hcc/bin/ld.lld: error: can't create dynamic relocation R_AMDGPU_REL32_LO against symbol: __opencl_atomic_compare_exchange_4 in readonly segment; recompile object files with -fPIC
+>>> defined in /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin
+>>> referenced by /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin:(main::HIP_kernel_functor_name_begin_unnamed_HIP_kernel_functor_name_end_1::__cxxamp_trampoline())
+
+/opt/rocm/hcc/bin/ld.lld: error: can't create dynamic relocation R_AMDGPU_REL32_HI against symbol: __opencl_atomic_compare_exchange_4 in readonly segment; recompile object files with -fPIC
+>>> defined in /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin
+>>> referenced by /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin:(main::HIP_kernel_functor_name_begin_unnamed_HIP_kernel_functor_name_end_1::__cxxamp_trampoline())
+
+/opt/rocm/hcc/bin/ld.lld: error: can't create dynamic relocation R_AMDGPU_REL32_LO against symbol: __opencl_atomic_load_4 in readonly segment; recompile object files with -fPIC
+>>> defined in /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin
+>>> referenced by /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin:(main::HIP_kernel_functor_name_begin_unnamed_HIP_kernel_functor_name_end_1::__cxxamp_trampoline())
+
+/opt/rocm/hcc/bin/ld.lld: error: can't create dynamic relocation R_AMDGPU_REL32_HI against symbol: __opencl_atomic_load_4 in readonly segment; recompile object files with -fPIC
+>>> defined in /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin
+>>> referenced by /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin:(main::HIP_kernel_functor_name_begin_unnamed_HIP_kernel_functor_name_end_1::__cxxamp_trampoline())
+
+/opt/rocm/hcc/bin/ld.lld: error: can't create dynamic relocation R_AMDGPU_REL32_LO against symbol: __opencl_atomic_compare_exchange_4 in readonly segment; recompile object files with -fPIC
+>>> defined in /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin
+>>> referenced by /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin:(main::HIP_kernel_functor_name_begin_unnamed_HIP_kernel_functor_name_end_1::__cxxamp_trampoline())
+
+/opt/rocm/hcc/bin/ld.lld: error: can't create dynamic relocation R_AMDGPU_REL32_HI against symbol: __opencl_atomic_compare_exchange_4 in readonly segment; recompile object files with -fPIC
+>>> defined in /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin
+>>> referenced by /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin:(main::HIP_kernel_functor_name_begin_unnamed_HIP_kernel_functor_name_end_1::__cxxamp_trampoline())
+
+/opt/rocm/hcc/bin/ld.lld: error: can't create dynamic relocation R_AMDGPU_REL32_LO against symbol: __opencl_atomic_load_4 in readonly segment; recompile object files with -fPIC
+>>> defined in /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin
+>>> referenced by /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin:(main::HIP_kernel_functor_name_begin_unnamed_HIP_kernel_functor_name_end_1::__cxxamp_trampoline())
+
+/opt/rocm/hcc/bin/ld.lld: error: can't create dynamic relocation R_AMDGPU_REL32_HI against symbol: __opencl_atomic_load_4 in readonly segment; recompile object files with -fPIC
+>>> defined in /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin
+>>> referenced by /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin:(main::HIP_kernel_functor_name_begin_unnamed_HIP_kernel_functor_name_end_1::__cxxamp_trampoline())
+
+/opt/rocm/hcc/bin/ld.lld: error: can't create dynamic relocation R_AMDGPU_REL32_LO against symbol: __opencl_atomic_compare_exchange_4 in readonly segment; recompile object files with -fPIC
+>>> defined in /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin
+>>> referenced by /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin:(main::HIP_kernel_functor_name_begin_unnamed_HIP_kernel_functor_name_end_1::__cxxamp_trampoline())
+
+/opt/rocm/hcc/bin/ld.lld: error: can't create dynamic relocation R_AMDGPU_REL32_HI against symbol: __opencl_atomic_compare_exchange_4 in readonly segment; recompile object files with -fPIC
+>>> defined in /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin
+>>> referenced by /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin:(main::HIP_kernel_functor_name_begin_unnamed_HIP_kernel_functor_name_end_1::__cxxamp_trampoline())
+
+/opt/rocm/hcc/bin/ld.lld: error: can't create dynamic relocation R_AMDGPU_REL32_LO against symbol: __opencl_atomic_load_4 in readonly segment; recompile object files with -fPIC
+>>> defined in /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin
+>>> referenced by /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin:(main::HIP_kernel_functor_name_begin_unnamed_HIP_kernel_functor_name_end_1::__cxxamp_trampoline())
+
+/opt/rocm/hcc/bin/ld.lld: error: can't create dynamic relocation R_AMDGPU_REL32_HI against symbol: __opencl_atomic_load_4 in readonly segment; recompile object files with -fPIC
+>>> defined in /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin
+>>> referenced by /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin:(main::HIP_kernel_functor_name_begin_unnamed_HIP_kernel_functor_name_end_1::__cxxamp_trampoline())
+
+/opt/rocm/hcc/bin/ld.lld: error: can't create dynamic relocation R_AMDGPU_REL32_LO against symbol: __opencl_atomic_compare_exchange_4 in readonly segment; recompile object files with -fPIC
+>>> defined in /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin
+>>> referenced by /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin:(main::HIP_kernel_functor_name_begin_unnamed_HIP_kernel_functor_name_end_1::__cxxamp_trampoline())
+
+/opt/rocm/hcc/bin/ld.lld: error: can't create dynamic relocation R_AMDGPU_REL32_HI against symbol: __opencl_atomic_compare_exchange_4 in readonly segment; recompile object files with -fPIC
+>>> defined in /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin
+>>> referenced by /tmp/tmp.CW7abS6E0J/kernel-gfx803.hsaco.isabin:(main::HIP_kernel_functor_name_begin_unnamed_HIP_kernel_functor_name_end_1::__cxxamp_trampoline())
+Generating AMD GCN kernel failed in ld.lld for target: gfx803
+clang-6.0: error: linker command failed with exit code 1 (use -v to see invocation)
+Died at /opt/rocm/hip/bin/hipcc line 498.
+fpadmin@fpadmin-desktop:~/Desktop/Modified_Hip-veTests/src/events$
+

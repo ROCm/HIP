@@ -1,0 +1,46 @@
+the value of i:0
+the value of lineno:0
+lineval:255
+lineno:255
+Result: received SIGSEGV	CHECK_ERRORS(hipChooseDevice(NULL, NULL),__LINE__);
+the value of i:1
+the value of lineno:1
+lineval:261
+Result: hipSuccess	CHECK_ERRORS(hipChooseDevice(device_ptr, ptr),__LINE__);
+am in two
+the value of i:2
+the value of lineno:1
+the lineno is:264
+lineval:267
+lineno:267
+Result: received SIGSEGV	CHECK_ERRORS(hipChooseDevice(NULL, &prop),__LINE__);
+the value of i:3
+the value of lineno:1
+the lineno is:264
+lineval:273
+lineno:273
+Result: received SIGSEGV	CHECK_ERRORS(hipChooseDevice(NULL, ptr),__LINE__);
+the value of i:4
+the value of lineno:1
+the lineno is:264
+lineval:279
+lineno:279
+Result: received SIGSEGV	CHECK_ERRORS(hipChooseDevice(&device, NULL),__LINE__);
+the value of i:5
+the value of lineno:1
+the lineno is:264
+lineval:285
+Result: hipSuccess	CHECK_ERRORS(hipChooseDevice(device_ptr, ptr),__LINE__);
+am in six
+the value of i:6
+the value of lineno:1
+the lineno is:264
+lineval:291
+lineno:291
+Result: received SIGSEGV	CHECK_ERRORS(hipChooseDevice(device_ptr, nullptr),__LINE__);
+the value of i:7
+the value of lineno:1
+the lineno is:264
+lineval:297
+Result: hipSuccess	CHECK_ERRORS(hipChooseDevice(device_ptr, ptr),__LINE__);
+am in eight

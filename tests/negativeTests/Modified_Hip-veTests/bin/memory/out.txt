@@ -1,0 +1,6 @@
+Result: hipErrorInvalidValue        CHECK_ERRORS(hipHostGetDevicePointer(NULL,NULL,1),__LINE__);
+
+Result: received SIGABRT//        CHECK_ERRORS(hipHostGetDevicePointer((void **)fDevPtr,hstPtr,1),__LINE__);
+
+Result: received SIGABRT//        CHECK_ERRORS(hipHostGetDevicePointer((void **)fDevPtr,hstPtr,1),__LINE__);
+
