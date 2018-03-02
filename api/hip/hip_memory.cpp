@@ -26,97 +26,94 @@ THE SOFTWARE.
 
 hipError_t hipMalloc(void** ptr, size_t sizeBytes)
 {
-    HIP_INIT_API(ptr, sizeBytes);
+  HIP_INIT_API(ptr, sizeBytes);
 
-    amd::Context* context = as_amd(g_currentCtx);
-
-    if (sizeBytes == 0) {
-        *ptr = nullptr;
-        return hipSuccess;
-    }
-    else if (!is_valid(context) || !ptr) {
-        return hipErrorInvalidValue;
-    }
-
-    auto deviceHandle = as_amd(g_deviceArray[0]);
-    if ((deviceHandle->info().maxMemAllocSize_ < size)) {
-        return hipErrorOutOfMemory;
-    }
-
-    amd::Memory* mem = new (*context) amd::Buffer(*context, 0, sizeBytes);
-    if (!mem) {
-        return hipErrorOutOfMemory;
-    }
-
-    if (!mem->create(nullptr)) {
-        return hipErrorMemoryAllocation;
-    }
-
-    *ptr = reinterpret_cast<void*>(as_cl(mem));
-
+  if (sizeBytes == 0) {
+    *ptr = nullptr;
     return hipSuccess;
+  }
+  else if (!ptr) {
+    return hipErrorInvalidValue;
+  }
+
+  if (g_context->devices()[0]->info().maxMemAllocSize_ < sizeBytes) {
+    return hipErrorOutOfMemory;
+  }
+
+  amd::Memory* mem = new (*g_context) amd::Buffer(*g_context, 0, sizeBytes);
+  if (!mem) {
+    return hipErrorOutOfMemory;
+  }
+
+  if (!mem->create(nullptr)) {
+    return hipErrorMemoryAllocation;
+  }
+
+  *ptr = reinterpret_cast<void*>(as_cl(mem));
+
+  return hipSuccess;
 }
 
 hipError_t hipFree(void* ptr)
 {
-    if (!is_valid(reinterpret_cast<cl_mem>(ptr))) {
-        return hipErrorInvalidValue;
-    }
-    as_amd(reinterpret_cast<cl_mem>(ptr))->release();
-    return hipSuccess;
+  if (!is_valid(reinterpret_cast<cl_mem>(ptr))) {
+    return hipErrorInvalidValue;
+  }
+  as_amd(reinterpret_cast<cl_mem>(ptr))->release();
+  return hipSuccess;
 }
 
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind)
 {
-    HIP_INIT_API(dst, src, sizeBytes, kind);
+  HIP_INIT_API(dst, src, sizeBytes, kind);
 
-    amd::Context* context = as_amd(g_currentCtx);
-    amd::Device* device = context->devices()[0];
+  amd::Device* device = g_context->devices()[0];
 
-    // FIXME : Do we create a queue here or create at init and just reuse
-    amd::HostQueue* queue = new amd::HostQueue(*context, *device, 0,
-                                                amd::CommandQueue::RealTimeDisabled,
-                                                amd::CommandQueue::Priority::Normal);
-    if (!queue) {
-        return hipErrorOutOfMemory;
-    }
+  amd::HostQueue* queue = new amd::HostQueue(*g_context, *device, 0,
+                                             amd::CommandQueue::RealTimeDisabled,
+                                             amd::CommandQueue::Priority::Normal);
+  if (!queue) {
+    return hipErrorOutOfMemory;
+  }
 
-    amd::Buffer* srcBuffer = as_amd(reinterpret_cast<cl_mem>(const_cast<void*>(src)))->asBuffer();
-    amd::Buffer* dstBuffer = as_amd(reinterpret_cast<cl_mem>(const_cast<void*>(dst)))->asBuffer();
+  amd::Buffer* srcBuffer = as_amd(reinterpret_cast<cl_mem>(const_cast<void*>(src)))->asBuffer();
+  amd::Buffer* dstBuffer = as_amd(reinterpret_cast<cl_mem>(dst))->asBuffer();
 
-    amd::Command* command;
-    amd::Command::EventWaitList waitList;
+  amd::Command* command;
+  amd::Command::EventWaitList waitList;
 
-    switch (kind) {
-    case hipMemcpyDeviceToHost:
+  switch (kind) {
+  case hipMemcpyDeviceToHost:
     command = new amd::ReadMemoryCommand(*queue, CL_COMMAND_READ_BUFFER, waitList,
-        srcBuffer, 0, sizeBytes, dst);
+      *srcBuffer, 0, sizeBytes, dst);
     break;
-    case hipMemcpyHostToDevice:
+  case hipMemcpyHostToDevice:
     command = new amd::WriteMemoryCommand(*queue, CL_COMMAND_WRITE_BUFFER, waitList,
-        dstBuffer, 0, sizeBytes, src);
+      *dstBuffer, 0, sizeBytes, src);
     break;
-    default:
-        assert(!"Shouldn't reach here");
+  default:
+    assert(!"Shouldn't reach here");
     break;
-    }
-    if (!command) {
-        return hipErrorOutOfMemory;
-    }
+  }
+  if (!command) {
+    return hipErrorOutOfMemory;
+  }
 
-    // Make sure we have memory for the command execution
-    if (CL_SUCCESS != command->validateMemory()) {
-        delete command;
-        return hipErrorMemoryAllocation;
-    }
+// FIXME: virtualize MemoryCommand::validateMemory()
+#if 0
+  // Make sure we have memory for the command execution
+  if (CL_SUCCESS != command->validateMemory()) {
+    delete command;
+    return hipErrorMemoryAllocation;
+  }
+#endif
 
+  command->enqueue();
+  command->awaitCompletion();
+  command->release();
 
-    command->enqueue();
-    command->awaitCompletion();
-    command->release();
+  queue->release();
 
-    queue->release();
-
-    return hipSuccess;
+  return hipSuccess;
 }
 
