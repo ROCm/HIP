@@ -120,10 +120,10 @@ hipStreamGetFlags
 hipStreamQuery
 hipStreamSynchronize
 hipStreamWaitEvent
-__cudaRegisterFatBinary
-__cudaRegisterFunction
-__cudaRegisterVariable
-__cudaUnregisterFatBinary
-cudaConfigureCall
-cudaSetupArgument
-cudaLaunch
+__hipRegisterFatBinary
+__hipRegisterFunction
+__hipRegisterVariable
+__hipUnregisterFatBinary
+hipConfigureCall
+hipSetupArgument
+hipLaunchByPtr

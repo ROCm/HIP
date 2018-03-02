@@ -23,49 +23,54 @@ THE SOFTWARE.
 #include <hip/hip_runtime.h>
 
 #include "hip_internal.hpp"
-#include "platform/runtime.hpp"
-#include "utils/versions.hpp"
 
-
-amd::Context* g_context = nullptr;
-
-hipError_t hipInit(unsigned int flags)
+hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
 {
-  HIP_INIT_API(flags);
+  HIP_INIT_API(stream, flags);
 
-  if (!amd::Runtime::initialized()) {
-    amd::Runtime::init();
-  }
+  assert(0 && "Unimplemented");
 
-  // FIXME: move the global VDI context to hipInit.
-  g_context = new amd::Context(
-      amd::Device::getDevices(CL_DEVICE_TYPE_GPU, false), amd::Context::Info());
-  if (!g_context) return hipErrorOutOfMemory;
-
-  if (g_context && CL_SUCCESS != g_context->create(nullptr)) {
-    g_context->release();
-    return hipErrorUnknown;
-  }
-
-  return hipSuccess;
+  return hipErrorUnknown;
 }
 
-hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device)
-{
-  HIP_INIT_API(ctx, flags, device);
 
-  return hipSuccess;
+hipError_t hipStreamCreate(hipStream_t *stream)
+{
+  HIP_INIT_API(stream);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
 }
 
-hipError_t hipRuntimeGetVersion(int *runtimeVersion)
+
+hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags)
 {
-  HIP_INIT_API(runtimeVersion);
+  HIP_INIT_API(stream, flags);
 
-  if (!runtimeVersion) {
-    return hipErrorInvalidValue;
-  }
+  assert(0 && "Unimplemented");
 
-  *runtimeVersion = AMD_PLATFORM_BUILD_NUMBER;
-
-  return hipSuccess;
+  return hipErrorUnknown;
 }
+
+
+hipError_t hipStreamSynchronize(hipStream_t stream)
+{
+  HIP_INIT_API(stream);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+
+hipError_t hipStreamDestroy(hipStream_t stream)
+{
+  HIP_INIT_API(stream);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+

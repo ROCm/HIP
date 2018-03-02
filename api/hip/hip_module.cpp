@@ -47,6 +47,25 @@ static uint64_t ElfSize(const void *emi)
   return total_size;
 }
 
+hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
+{
+  HIP_INIT_API(module, fname);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+
+hipError_t hipModuleUnload(hipModule_t hmod)
+{
+  HIP_INIT_API(hmod);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
 {
   HIP_INIT_API(module, image);

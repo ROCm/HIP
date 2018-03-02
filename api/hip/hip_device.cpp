@@ -358,6 +358,25 @@ hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len, int device) {
   return hipSuccess;
 }
 
+hipError_t hipSetDevice(int deviceId)
+{
+  HIP_INIT_API(deviceId);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipDeviceReset(void)
+{
+  HIP_INIT_API();
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+
 hipError_t hipDeviceSynchronize(void)
 {
   // FIXME: should wait on all streams

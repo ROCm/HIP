@@ -54,6 +54,15 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes)
   return hipSuccess;
 }
 
+hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
+{
+  HIP_INIT_API(ptr, sizeBytes, flags);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
 hipError_t hipFree(void* ptr)
 {
   if (!is_valid(reinterpret_cast<cl_mem>(ptr))) {
@@ -62,6 +71,20 @@ hipError_t hipFree(void* ptr)
   as_amd(reinterpret_cast<cl_mem>(ptr))->release();
   return hipSuccess;
 }
+
+hipError_t hipMemcpyAsync(void* dst,
+                          const void* src,
+                          size_t sizeBytes,
+                          hipMemcpyKind kind,
+                          hipStream_t stream)
+{
+  HIP_INIT_API(dst, src, sizeBytes, kind, stream);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
 
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind)
 {
@@ -76,20 +99,17 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
     return hipErrorOutOfMemory;
   }
 
-  amd::Buffer* srcBuffer = as_amd(reinterpret_cast<cl_mem>(const_cast<void*>(src)))->asBuffer();
-  amd::Buffer* dstBuffer = as_amd(reinterpret_cast<cl_mem>(dst))->asBuffer();
-
   amd::Command* command;
   amd::Command::EventWaitList waitList;
 
   switch (kind) {
   case hipMemcpyDeviceToHost:
     command = new amd::ReadMemoryCommand(*queue, CL_COMMAND_READ_BUFFER, waitList,
-      *srcBuffer, 0, sizeBytes, dst);
+      *as_amd(reinterpret_cast<cl_mem>(const_cast<void*>(src)))->asBuffer(), 0, sizeBytes, dst);
     break;
   case hipMemcpyHostToDevice:
     command = new amd::WriteMemoryCommand(*queue, CL_COMMAND_WRITE_BUFFER, waitList,
-      *dstBuffer, 0, sizeBytes, src);
+      *as_amd(reinterpret_cast<cl_mem>(dst))->asBuffer(), 0, sizeBytes, src);
     break;
   default:
     assert(!"Shouldn't reach here");
@@ -117,3 +137,29 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
   return hipSuccess;
 }
 
+hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t stream )
+{
+  HIP_INIT_API(dst, value, sizeBytes, stream);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipMemset(void* dst, int value, size_t sizeBytes)
+{
+  HIP_INIT_API(dst, value, sizeBytes);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipMemPtrGetInfo(void *ptr, size_t *size)
+{
+  HIP_INIT_API(ptr, size);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
