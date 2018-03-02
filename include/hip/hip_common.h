@@ -31,7 +31,7 @@ THE SOFTWARE.
 #endif //__HCC__
 
 // Auto enable __HIP_PLATFORM_NVCC__ if compiling with NVCC
-#if defined(__NVCC__) || (defined(__clang__) && defined(__CUDA__))
+#if defined(__NVCC__) || (defined(__clang__) && defined(__CUDA__) && !defined(__HIP__))
 #define __HIP_PLATFORM_NVCC__
 #ifdef __CUDACC__
 #define __HIPCC__
