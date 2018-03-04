@@ -48,9 +48,9 @@ struct surfaceReference
  */
 enum hipSurfaceBoundaryMode
 {
-    hipSurfaceBoundaryModeZero   = 0,
-    hipSurfaceBoundaryModeTrap   = 1,
-    hipSurfaceBoundaryModeClamp  = 2
+    hipBoundaryModeZero   = 0,
+    hipBoundaryModeTrap   = 1,
+    hipBoundaryModeClamp  = 2
 };
 
 #endif /* !HIP_INCLUDE_HIP_HCC_DETAIL_HIP_SURFACE_TYPES_H */

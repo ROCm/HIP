@@ -29,30 +29,32 @@ THE SOFTWARE.
 
 #define __SURFACE_FUNCTIONS_DECL__ static __inline__ __device__
 template <class T>
-__SURFACE_FUNCTIONS_DECL__ void surf2Dread(T* data, hipSurfaceObject_t surfObj, int x, int y, int boundaryMode = hipSurfaceBoundaryModeZero)
+__SURFACE_FUNCTIONS_DECL__ void surf2Dread(T* data, hipSurfaceObject_t surfObj, int x, int y, int boundaryMode = hipBoundaryModeZero)
 {
-    hipArray* temp = (hipArray*) surfObj;
-    size_t width = temp->width;
-    size_t height = temp->height;
-    T* temp1 = (T*) temp->data;
-    if((x > width) || (x < 0) || (y > height) ||(y < 0)) {
-        if(boundaryMode == hipSurfaceBoundaryModeZero) {
+    hipArray* arrayPtr = (hipArray*) surfObj;
+    size_t width = arrayPtr->width;
+    size_t height = arrayPtr->height;
+    int32_t xOffset = x / sizeof(T);
+    T* dataPtr = (T*) arrayPtr->data;
+    if((xOffset > width) || (xOffset < 0) || (y > height) ||(y < 0)) {
+        if(boundaryMode == hipBoundaryModeZero) {
             *data = 0;
         }
     } else {
-        *data = *(temp1+ + y*width + x);
+        *data = *(dataPtr + y*width + xOffset);
     }
 }
 
 template <class T>
-__SURFACE_FUNCTIONS_DECL__ void surf2Dwrite(T data, hipSurfaceObject_t surfObj, int x, int y, int boundaryMode = hipSurfaceBoundaryModeZero)
+__SURFACE_FUNCTIONS_DECL__ void surf2Dwrite(T data, hipSurfaceObject_t surfObj, int x, int y, int boundaryMode = hipBoundaryModeZero)
 {
-    hipArray* temp = (hipArray*) surfObj;
-    size_t width = temp->width;
-    size_t height = temp->height;
-    T* temp1 = (T*) temp->data;
-    if(!((x > width) || (x < 0) || (y > height) ||(y < 0))){
-        *(temp1 +y*width + x) = data;
+    hipArray* arrayPtr = (hipArray*) surfObj;
+    size_t width = arrayPtr->width;
+    size_t height = arrayPtr->height;
+    int32_t xOffset = x / sizeof(T);
+    T* dataPtr = (T*) arrayPtr->data;
+    if(!((xOffset > width) || (xOffset < 0) || (y > height) ||(y < 0))){
+        *(dataPtr +y*width + xOffset) = data;
     }
 }
 
