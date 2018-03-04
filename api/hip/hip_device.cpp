@@ -28,7 +28,7 @@ hipError_t hipGetDevice(int *deviceId) {
 
   HIP_INIT_API(deviceId);
 
-  if (deviceId != NULL) {
+  if (deviceId != nullptr) {
     // this needs to return default device. For now return 0 always
     *deviceId = 0;
   } else {
@@ -55,7 +55,7 @@ hipError_t hipGetDeviceCount(int* count) {
 
   HIP_INIT_API(count);
 
-  if (count == NULL) {
+  if (count == nullptr) {
     return hipErrorInvalidValue;
   }
 
@@ -170,7 +170,7 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device) {
 
   HIP_INIT_API(props, device);
 
-  if (props == NULL) {
+  if (props == nullptr) {
     return hipErrorInvalidValue;
   }
 
@@ -247,7 +247,7 @@ hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig) {
 hipError_t hipDeviceGetCacheConfig(hipFuncCache_t *cacheConfig) {
   HIP_INIT_API(cacheConfig);
 
-  if(cacheConfig == NULL) {
+  if(cacheConfig == nullptr) {
     return hipErrorInvalidValue;
   }
 
@@ -269,16 +269,26 @@ hipError_t hipDeviceGetLimit (size_t *pValue, hipLimit_t limit) {
 
   HIP_INIT_API(pValue, limit);
 
-  assert(0 && "Unimplemented");
+  auto* deviceHandle = g_context->devices()[0];
+  const auto& info = deviceHandle->info();
 
-  return hipSuccess;
+  if(pValue == nullptr) {
+    return hipErrorInvalidValue;
+  }
+  if(limit == hipLimitMallocHeapSize) {
+    *pValue = info.globalMemSize_;
+    return hipSuccess;
+  } else {
+    return hipErrorUnsupportedLimit;
+  }
+
 }
 
 hipError_t hipFuncSetCacheConfig (const void* func, hipFuncCache_t cacheConfig) {
 
   HIP_INIT_API(cacheConfig);
 
-  assert(0 && "Not supported");
+  // No way to set cache config yet.
 
   return hipSuccess;
 }
@@ -287,7 +297,7 @@ hipError_t hipDeviceSetSharedMemConfig (hipSharedMemConfig config) {
 
   HIP_INIT_API(config);
 
-  assert(0 && "Not Supported");
+  // No way to set cache config yet.
 
   return hipSuccess;
 }
@@ -296,7 +306,7 @@ hipError_t hipDeviceGetSharedMemConfig (hipSharedMemConfig *pConfig) {
 
   HIP_INIT_API(pConfig);
 
-  assert(0 && "Not supported");
+  *pConfig = hipSharedMemBankSizeFourByte;
 
   return hipSuccess;
 }
@@ -306,54 +316,223 @@ hipError_t hipChooseDevice(int* device, const hipDeviceProp_t* properties) {
 
   HIP_INIT_API(device, properties);
 
-  assert(0 && "Unimplemented");
+  if (device == nullptr || properties == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
+  *device = 0;
+  cl_uint maxMatchedCount = 0;
+
+  for (cl_uint i = 0; i< g_context->devices().size(); ++i) {
+    hipDeviceProp_t currentProp = {0};
+    cl_uint validPropCount = 0;
+    cl_uint matchedCount = 0;
+    hipError_t err = hipGetDeviceProperties(&currentProp, i);
+    if (properties->major != 0) {
+      validPropCount++;
+      if(currentProp.major >= properties->major) {
+        matchedCount++;
+      }    
+    }
+    if (properties->minor != 0) {
+      validPropCount++;
+      if(currentProp.minor >= properties->minor) {
+        matchedCount++;
+      }       
+    }
+    if(properties->totalGlobalMem != 0) {
+        validPropCount++;
+        if(currentProp.totalGlobalMem >= properties->totalGlobalMem) {
+            matchedCount++;
+        }
+    }
+    if(properties->sharedMemPerBlock != 0) {
+        validPropCount++;
+        if(currentProp.sharedMemPerBlock >= properties->sharedMemPerBlock) {
+            matchedCount++;
+        }
+    }
+    if(properties->maxThreadsPerBlock != 0) {
+        validPropCount++;
+        if(currentProp.maxThreadsPerBlock >= properties->maxThreadsPerBlock ) {
+            matchedCount++;
+        }
+    }
+    if(properties->totalConstMem != 0) {
+        validPropCount++;
+        if(currentProp.totalConstMem >= properties->totalConstMem ) {
+            matchedCount++;
+        }
+    }
+    if(properties->multiProcessorCount != 0) {
+        validPropCount++;
+        if(currentProp.multiProcessorCount >= 
+          properties->multiProcessorCount ) {
+            matchedCount++;
+        }
+    }
+    if(properties->maxThreadsPerMultiProcessor != 0) {
+        validPropCount++;
+        if(currentProp.maxThreadsPerMultiProcessor >= 
+          properties->maxThreadsPerMultiProcessor ) {
+            matchedCount++;
+        }
+    }
+    if(properties->memoryClockRate != 0) {
+        validPropCount++;
+        if(currentProp.memoryClockRate >= properties->memoryClockRate ) {
+            matchedCount++;
+        }
+    }
+    if(properties->memoryBusWidth != 0) {
+        validPropCount++;
+        if(currentProp.memoryBusWidth >= properties->memoryBusWidth ) {
+            matchedCount++;
+        }
+    }
+    if(properties->l2CacheSize != 0) {
+        validPropCount++;
+        if(currentProp.l2CacheSize >= properties->l2CacheSize ) {
+            matchedCount++;
+        }
+    }    
+    if(properties->regsPerBlock != 0) {
+        validPropCount++;
+        if(currentProp.regsPerBlock >= properties->regsPerBlock ) {
+            matchedCount++;
+        }
+    }
+    if(properties->maxSharedMemoryPerMultiProcessor != 0) {
+        validPropCount++;
+        if(currentProp.maxSharedMemoryPerMultiProcessor >= 
+          properties->maxSharedMemoryPerMultiProcessor ) {
+            matchedCount++;
+        }
+    }
+    if(properties->warpSize != 0) {
+        validPropCount++;
+        if(currentProp.warpSize >= properties->warpSize ) {
+            matchedCount++;
+        }
+    }
+    if(validPropCount == matchedCount) {
+      *device = matchedCount > maxMatchedCount ? i : *device;
+      maxMatchedCount = std::max(matchedCount, maxMatchedCount);
+    }
+  }
 
   return hipSuccess;
 }
 
 
-hipError_t hipDeviceGetByPCIBusId (int*  device, const char* pciBusId) {
+hipError_t hipDeviceGetByPCIBusId (int*  device, const char* pciBusIdstr) {
 
-  HIP_INIT_API(device,pciBusId);
+  HIP_INIT_API(device, pciBusIdstr);
 
-  assert(0 && "Unimplemented");
+  if (device == nullptr || pciBusIdstr == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
+  int pciBusID = -1;
+  int pciDeviceID = -1;
+  int pciDomainID = -1;
+
+  if (sscanf (pciBusIdstr, "%04x:%02x:%02x", &pciDomainID, &pciBusID, &pciDeviceID) == 0x3) {
+    for (cl_uint i = 0; i < g_context->devices().size(); i++) {
+      auto* deviceHandle = g_context->devices()[i];
+      auto& info = deviceHandle->info();
+
+      if (pciBusID == info.deviceTopology_.pcie.bus) {
+        *device = i;
+        break;
+      }
+    }
+  }
 
   return hipSuccess;
 }
 
 
-hipError_t hipDeviceTotalMem (size_t *bytes,hipDevice_t device) {
+hipError_t hipDeviceTotalMem (size_t *bytes, hipDevice_t device) {
 
   HIP_INIT_API(bytes, device);
 
-  assert(0 && "Unimplemented");
+  if (device < 0 || device > (cl_int)g_context->devices().size()) {
+    return hipErrorInvalidDevice;
+  }
+
+  if (bytes == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
+  auto* deviceHandle = g_context->devices()[device];
+  const auto& info = deviceHandle->info();
+
+  *bytes = info.globalMemSize_;
 
   return hipSuccess;
 }
 
 hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device) {
 
-  HIP_INIT_API(major,minor, device);
+  HIP_INIT_API(major, minor, device);
 
-  assert(0 && "Unimplemented");
+  if (device < 0 || device > (cl_int)g_context->devices().size()) {
+    return hipErrorInvalidDevice;
+  }
+
+  if (major == nullptr || minor == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
+  auto* deviceHandle = g_context->devices()[device];
+  const auto& info = deviceHandle->info();
+  *major = info.gfxipVersion_ / 100;
+  *minor = info.gfxipVersion_ % 100;
 
   return hipSuccess;
 }
 
-hipError_t hipDeviceGetName(char *name,int len, hipDevice_t device) {
+hipError_t hipDeviceGetName(char *name, int len, hipDevice_t device) {
 
-  HIP_INIT_API((void*)name,len, device);
+  HIP_INIT_API((void*)name, len, device);
 
-  assert(0 && "Unimplemented");
+  if (device < 0 || device > (cl_int)g_context->devices().size()) {
+    return hipErrorInvalidDevice;
+  }
+
+  if (name == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
+  auto* deviceHandle = g_context->devices()[device];
+  const auto& info = deviceHandle->info();
+
+  len = ((cl_uint)len < ::strlen(info.boardName_)) ? len : 128;
+  ::strncpy(name, info.boardName_, len);
 
   return hipSuccess;
 }
 
-hipError_t hipDeviceGetPCIBusId (char *pciBusId,int len, int device) {
+hipError_t hipDeviceGetPCIBusId (char *pciBusId, int len, int device) {
 
   HIP_INIT_API((void*)pciBusId, len, device);
 
-  assert(0 && "Unimplemented");
+  if (device < 0 || device > (cl_int)g_context->devices().size()) {
+    return hipErrorInvalidDevice;
+  }
+
+  if (pciBusId == nullptr || len < 0) {
+    return hipErrorInvalidValue;
+  }
+
+  auto* deviceHandle = g_context->devices()[device];
+  const auto& info = deviceHandle->info();
+  snprintf (pciBusId, len, "%04x:%02x:%02x.0",
+                    info.deviceTopology_.pcie.function,
+                    info.deviceTopology_.pcie.bus,
+                    info.deviceTopology_.pcie.device);
+
 
   return hipSuccess;
 }
