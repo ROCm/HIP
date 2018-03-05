@@ -30,7 +30,7 @@ THE SOFTWARE.
 #define LEN 64
 #define SIZE LEN*sizeof(float)
 
-#define fileName "vcpy_kernel.code"
+#define fileName "vcpy_kernel.code.adipose"
 float myDeviceGlobal;
 float myDeviceGlobalArray[16];
 #define HIP_CHECK(cmd) \
@@ -80,7 +80,6 @@ int main(){
 		uint32_t one = 1;
 
     struct {
-        uint32_t _hidden[6];  // genco path + wrapper-gen pass use hidden arguments.
         void * _Ad;
         void * _Bd;
     } args;
@@ -111,7 +110,7 @@ int main(){
       HIP_LAUNCH_PARAM_END
     };
 
-    { 
+    {
         hipFunction_t Function;
         HIP_CHECK(hipModuleGetFunction(&Function, Module, "hello_world"));
         HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
@@ -136,7 +135,7 @@ int main(){
         };
     }
 
-    { 
+    {
         hipFunction_t Function;
         HIP_CHECK(hipModuleGetFunction(&Function, Module, "test_globals"));
         HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
