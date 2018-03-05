@@ -27,13 +27,13 @@ THE SOFTWARE.
 extern float myDeviceGlobal;
 extern float myDeviceGlobalArray[16];;
 
-extern "C" __global__ void hello_world(hipLaunchParm lp, const float *a, float *b)
+extern "C" __global__ void hello_world(const float *a, float *b)
 {
     int tx = hipThreadIdx_x;
     b[tx] = a[tx];
 }
 
-extern "C" __global__ void test_globals(hipLaunchParm lp, const float *a, float *b)
+extern "C" __global__ void test_globals(const float *a, float *b)
 {
     int tx = hipThreadIdx_x;
     b[tx] = a[tx] + myDeviceGlobal+ myDeviceGlobalArray[tx%ARRAY_SIZE] ;

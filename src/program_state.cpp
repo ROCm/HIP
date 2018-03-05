@@ -30,34 +30,16 @@ using namespace ELFIO;
 using namespace hip_impl;
 using namespace std;
 
-namespace std
-{
-    template<>
-    struct hash<hsa_isa_t> {
-        size_t operator()(hsa_isa_t x) const
-        {
-            return hash<decltype(x.handle)>{}(x.handle);
-        }
-    };
-}
-
-inline
-constexpr
-bool operator==(hsa_isa_t x, hsa_isa_t y)
-{
-    return x.handle == y.handle;
-}
-
 namespace
 {
      struct Symbol {
-        std::string name;
+        string name;
         ELFIO::Elf64_Addr value = 0;
-        ELFIO::Elf_Xword size = 0;
-        ELFIO::Elf_Half sect_idx = 0;
-        std::uint8_t bind = 0;
-        std::uint8_t type = 0;
-        std::uint8_t other = 0;
+        Elf_Xword size = 0;
+        Elf_Half sect_idx = 0;
+        uint8_t bind = 0;
+        uint8_t type = 0;
+        uint8_t other = 0;
     };
 
     inline
@@ -184,7 +166,7 @@ namespace
         }
     }
 
-    vector<uint8_t> code_object_blob_for_process()
+    vector<char> code_object_blob_for_process()
     {
         static constexpr const char self[] = "/proc/self/exe";
         static constexpr const char kernel_section[] = ".kernel";
@@ -199,7 +181,7 @@ namespace
             return x->get_name() == kernel_section;
         });
 
-        vector<uint8_t> r;
+        vector<char> r;
         if (kernels) {
             r.insert(
                 r.end(),
@@ -210,13 +192,13 @@ namespace
         return r;
     }
 
-    const unordered_map<hsa_isa_t, vector<vector<uint8_t>>>& code_object_blobs()
+    const unordered_map<hsa_isa_t, vector<vector<char>>>& code_object_blobs()
     {
-        static unordered_map<hsa_isa_t, vector<vector<uint8_t>>> r;
+        static unordered_map<hsa_isa_t, vector<vector<char>>> r;
         static once_flag f;
 
         call_once(f, []() {
-            static vector<vector<uint8_t>> blobs{
+            static vector<vector<char>> blobs{
                 code_object_blob_for_process()};
 
             dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void*) {
@@ -480,7 +462,7 @@ namespace hip_impl
 
         const auto code_object_dynsym =
             find_section_if(reader, [](const ELFIO::section* x) {
-                    return x->get_type() == SHT_DYNSYM;
+                return x->get_type() == SHT_DYNSYM;
             });
 
         associate_code_object_symbols_with_host_allocation(

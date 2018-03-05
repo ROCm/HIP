@@ -24,7 +24,26 @@ THE SOFTWARE.
 #include <hsa/hsa.h>
 
 #include <cstdint>
+#include <functional>
 #include <string>
+
+inline
+constexpr
+bool operator==(hsa_isa_t x, hsa_isa_t y)
+{
+    return x.handle == y.handle;
+}
+
+namespace std
+{
+    template<>
+    struct hash<hsa_isa_t> {
+        size_t operator()(hsa_isa_t x) const
+        {
+            return hash<decltype(x.handle)>{}(x.handle);
+        }
+    };
+}
 
 namespace hip_impl
 {
@@ -53,6 +72,19 @@ namespace hip_impl
         std::uint32_t r = 0u;
         hsa_executable_symbol_get_info(
             x, HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE, &r);
+
+        return r;
+    }
+
+    inline
+    hsa_isa_t isa(hsa_agent_t x)
+    {
+        hsa_isa_t r = {};
+        hsa_agent_iterate_isas(x, [](hsa_isa_t i, void* o) {
+            *static_cast<hsa_isa_t*>(o) = i; // Pick the first.
+
+            return HSA_STATUS_INFO_BREAK;
+        }, &r);
 
         return r;
     }

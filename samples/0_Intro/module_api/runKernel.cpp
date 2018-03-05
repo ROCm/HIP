@@ -30,7 +30,7 @@ THE SOFTWARE.
 #define LEN 64
 #define SIZE LEN<<2
 
-#define fileName "vcpy_kernel.code"
+#define fileName "vcpy_kernel.code.adipose"
 #define kernel_name "hello_world"
 
 #define HIP_CHECK(status) \
@@ -68,7 +68,6 @@ int main(){
 		uint32_t one = 1;
 
     struct {
-        uint32_t _hidden[6];
         void * _Ad;
         void * _Bd;
     } args;
