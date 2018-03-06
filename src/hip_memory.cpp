@@ -780,7 +780,7 @@ hipError_t hipMalloc3DArray(hipArray_t *array,
     array[0]->depth = extent.depth;
     array[0]->desc = *desc;
     array[0]->isDrv = false;
-    array[0]->textureType = hipTextureType3D; 
+    array[0]->textureType = hipTextureType3D;
     void ** ptr = &array[0]->data;
 
     if (ctx) {
@@ -1553,6 +1553,7 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms *p)
     }
     return ihipLogStatus(e);
 }
+
 namespace
 {
     template<
