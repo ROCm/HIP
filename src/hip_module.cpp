@@ -46,7 +46,7 @@ THE SOFTWARE.
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
+#include "../include/hip/hcc_detail/code_object_bundle.hpp"
 //TODO Use Pool APIs from HCC to get memory regions.
 
 using namespace ELFIO;
@@ -95,23 +95,6 @@ if (hsaStatus != HSA_STATUS_SUCCESS) {\
 if (hsaStatus != HSA_STATUS_SUCCESS) {\
     return ihipLogStatus(hipStatus);\
 }
-
-hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
-{
-    HIP_INIT_API(module, fname);
-
-    if (!fname) return ihipLogStatus(hipErrorInvalidValue);
-
-    ifstream file{fname};
-
-    if (!file.is_open()) return ihipLogStatus(hipErrorFileNotFound);
-
-    vector<char> tmp{
-        istreambuf_iterator<char>{file}, istreambuf_iterator<char>{}};
-
-    return hipModuleLoadData(module, tmp.data());
-}
-
 
 hipError_t hipModuleUnload(hipModule_t hmod)
 {
@@ -473,6 +456,29 @@ namespace
 
         return string{s, s + sz};
     }
+
+    string code_object_blob_for_agent(
+        const void* maybe_bundled_code, hsa_agent_t agent)
+    {
+        if (!maybe_bundled_code) return {};
+
+        Bundled_code_header tmp{maybe_bundled_code};
+
+        if (!valid(tmp)) return {};
+
+        const auto agent_isa = isa(agent);
+
+        const auto it = find_if(
+            bundles(tmp).cbegin(),
+            bundles(tmp).cend(),
+            [=](const Bundled_code& x) {
+                return agent_isa == triple_to_hsa_isa(x.triple);;
+        });
+
+        if (it == bundles(tmp).cend()) return {};
+
+        return string{it->blob.cbegin(), it->blob.cend()};
+    }
 } // Anonymous namespace, internal linkage.
 
 hipError_t ihipModuleGetFunction(
@@ -526,6 +532,22 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t *dptr, size_t *bytes,
     return ihipLogStatus(r);
 }
 
+hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
+{
+    HIP_INIT_API(module, fname);
+
+    if (!fname) return ihipLogStatus(hipErrorInvalidValue);
+
+    ifstream file{fname};
+
+    if (!file.is_open()) return ihipLogStatus(hipErrorFileNotFound);
+
+    vector<char> tmp{
+        istreambuf_iterator<char>{file}, istreambuf_iterator<char>{}};
+
+    return hipModuleLoadData(module, tmp.data());
+}
+
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
 {
     HIP_INIT_API(module, image);
@@ -543,8 +565,12 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
         nullptr,
         &(*module)->executable);
 
+    auto tmp = code_object_blob_for_agent(image, this_agent());
+
     (*module)->executable = hip_impl::load_executable(
-        read_elf_file_as_string(image), (*module)->executable, this_agent());
+        tmp.empty() ? read_elf_file_as_string(image) : tmp,
+        (*module)->executable,
+        this_agent());
 
     return ihipLogStatus(
         (*module)->executable.handle ? hipSuccess : hipErrorUnknown);

@@ -93,8 +93,6 @@ if ($HIP_PLATFORM eq "hcc") {
     $HIP_ATP_MARKER=$ENV{'HIP_ATP_MARKER'} // 1;
     $marker_path = "$ROCM_PATH/profiler/CXLActivityLogger";
 
-    $ROCM_TARGET=$ENV{'ROCM_TARGET'} // "gfx803";
-
     # HCC* may be used to compile src/hip_hcc.o (and also feed the HIPCXXFLAGS below)
     $HCC = "$HCC_HOME/bin/hcc";
     $HCCFLAGS = "-hc  -D__HIPCC__ -I$HCC_HOME/include ";
@@ -128,7 +126,7 @@ if ($HIP_PLATFORM eq "hcc") {
     # Force -stdlib=libc++ on UB14.04
     $HOST_OSVER= `cat /etc/os-release | grep "^VERSION_ID\=" | cut -d= -f2 | tr -d '\n'`;
     if (($HOST_OSNAME eq "ubuntu" and $HOST_OSVER eq "\"14.04\"")
-         or ($HOST_OSNAME eq "\"centos\"" and $HOST_OSVER eq "\"7\"") 
+         or ($HOST_OSNAME eq "\"centos\"" and $HOST_OSVER eq "\"7\"")
          or ($HOST_OSNAME eq "\"rhel\"" and $HOST_OSVER eq "\"7.4\"")) {
         $HIPCXXFLAGS .= " -stdlib=libc++";
         $setStdLib = 1;
@@ -203,7 +201,7 @@ if ($verbose & 0x4) {
 # Handle code object generation
 my $ISACMD="";
 if($HIP_PLATFORM eq "hcc"){
-    $ISACMD .= "set ROCM_PATH=$ROCM_PATH && set ROCM_TARGET=$ROCM_TARGET && $HIP_PATH/bin/hccgenco.sh ";
+    $ISACMD .= "$HIP_PATH/bin/lpl ";
     if($ARGV[0] eq "--genco"){
         foreach $isaarg (@ARGV[1..$#ARGV]){
             $ISACMD .= " ";
@@ -218,7 +216,6 @@ if($HIP_PLATFORM eq "hcc"){
 }
 
 if(($HIP_PLATFORM eq "hcc")){
-    $EXPORT_LL=" ";
     $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_hc.ll\n";
     $ENV{HIP_HC_IR_FILE}="";
 }
