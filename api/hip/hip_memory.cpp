@@ -58,13 +58,32 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
   HIP_INIT_API(ptr, sizeBytes, flags);
 
-  assert(0 && "Unimplemented");
+  if (sizeBytes == 0) {
+    *ptr = nullptr;
+    return hipSuccess;
+  }
+  else if (!ptr) {
+    return hipErrorInvalidValue;
+  }
 
-  return hipErrorUnknown;
+  if (g_context->devices()[0]->info().maxMemAllocSize_ < sizeBytes) {
+    return hipErrorOutOfMemory;
+  }
+
+  *ptr = amd::SvmBuffer::malloc(*g_context, 0, sizeBytes, g_context->devices()[0]->info().memBaseAddrAlign_);
+  if (!*ptr) {
+    return hipErrorOutOfMemory;
+  }
+
+  return hipSuccess;
 }
 
 hipError_t hipFree(void* ptr)
 {
+  if (amd::SvmBuffer::malloced(ptr)) {
+    amd::SvmBuffer::free(*g_context, ptr);
+    return hipSuccess;
+  }
   if (!is_valid(reinterpret_cast<cl_mem>(ptr))) {
     return hipErrorInvalidValue;
   }
