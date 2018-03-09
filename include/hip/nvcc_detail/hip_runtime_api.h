@@ -75,6 +75,11 @@ typedef enum hipChannelFormatKind {
     hipChannelFormatKindNone = 3
 }hipChannelFormatKind;
 
+#define hipSurfaceBoundaryMode cudaSurfaceBoundaryMode
+#define hipBoundaryModeZero cudaBoundaryModeZero
+#define hipBoundaryModeTrap cudaBoundaryModeTrap
+#define hipBoundaryModeClamp cudaBoundaryModeClamp
+
 //hipResourceType
 #define hipResourceType cudaResourceType
 #define hipResourceTypeArray cudaResourceTypeArray
@@ -149,6 +154,7 @@ typedef struct cudaArray* hipArray_const_t;
 #define hipArrayDefault cudaArrayDefault
 
 typedef cudaTextureObject_t hipTextureObject_t;
+typedef cudaSurfaceObject_t hipSurfaceObject_t;
 #define hipTextureType2D cudaTextureType2D;
 #define hipDeviceMapHost cudaDeviceMapHost
 
@@ -1143,6 +1149,17 @@ inline static hipError_t hipDestroyTextureObject(hipTextureObject_t textureObjec
 {
     return hipCUDAErrorTohipError(cudaDestroyTextureObject(textureObject));
 }
+
+inline static hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject, const hipResourceDesc* pResDesc)
+{
+    return hipCUDAErrorTohipError(cudaCreateSurfaceObject(pSurfObject, pResDesc));
+}
+
+inline static hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject)
+{
+    return hipCUDAErrorTohipError(cudaDestroySurfaceObject(surfaceObject));
+}
+
 #endif //__CUDACC__
 
 #endif //HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_API_H
