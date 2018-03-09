@@ -39,6 +39,7 @@ THE SOFTWARE.
 #include <hip/hip_runtime_api.h>
 #include <hip/hcc_detail/driver_types.h>
 #include <hip/hcc_detail/hip_texture_types.h>
+#include <hip/hcc_detail/hip_surface_types.h>
 
 #if defined (__HCC__) &&  (__hcc_workweek__ < 16155)
 #error("This version of HIP requires a newer version of HCC.");
@@ -2406,6 +2407,10 @@ hipError_t hipTexRefSetFormat (textureReference* tex, hipArray_Format fmt, int  
 hipError_t hipTexRefSetAddress( size_t* offset, textureReference* tex, hipDeviceptr_t devPtr, size_t size );
 
 hipError_t hipTexRefSetAddress2D( textureReference* tex, const HIP_ARRAY_DESCRIPTOR* desc, hipDeviceptr_t devPtr, size_t pitch );
+
+hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject, const hipResourceDesc* pResDesc);
+
+hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject);
 
 // doxygen end Texture
 /**
