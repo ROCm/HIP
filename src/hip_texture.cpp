@@ -391,6 +391,7 @@ hipError_t ihipBindTextureImpl(int dim,
     enum hipTextureFilterMode filterMode = tex->filterMode;
     int normalizedCoords = tex->normalized;
     hipTextureObject_t& textureObject = tex->textureObject;
+    *offset = 0;
     auto ctx = ihipGetTlsDefaultCtx();
     if (ctx) {
         hc::accelerator acc = ctx->getDevice()->_acc;
@@ -467,6 +468,7 @@ hipError_t ihipBindTexture2DImpl(int dim,
 	enum hipTextureFilterMode filterMode = tex->filterMode;
 	int normalizedCoords = tex->normalized;
     hipTextureObject_t& textureObject = tex->textureObject;
+    *offset = 0;
     auto ctx = ihipGetTlsDefaultCtx();
     if (ctx) {
         hc::accelerator acc = ctx->getDevice()->_acc;
