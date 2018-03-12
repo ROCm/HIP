@@ -23,13 +23,14 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HIP_PROFILE_H
 #define HIP_INCLUDE_HIP_HIP_PROFILE_H
 
-#if not defined (ENABLE_HIP_PROFILE)
+#if not defined(ENABLE_HIP_PROFILE)
 #define ENABLE_HIP_PROFILE 1
 #endif
 
-#if defined(__HIP_PLATFORM_HCC__) and (ENABLE_HIP_PROFILE==1)
+#if defined(__HIP_PLATFORM_HCC__) and (ENABLE_HIP_PROFILE == 1)
 #include <CXLActivityLogger.h>
-#define HIP_SCOPED_MARKER(markerName, group) amdtScopedMarker __scopedMarker(markerName, group, nullptr);
+#define HIP_SCOPED_MARKER(markerName, group)                                                       \
+    amdtScopedMarker __scopedMarker(markerName, group, nullptr);
 #define HIP_BEGIN_MARKER(markerName, group) amdtBeginMarker(markerName, group, nullptr);
 #define HIP_END_MARKER() amdtEndMarker();
 #else

@@ -28,50 +28,51 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_VECTOR_TYPES_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_VECTOR_TYPES_H
 
-#if defined (__HCC__) &&  (__hcc_workweek__ < 16032)
+#if defined(__HCC__) && (__hcc_workweek__ < 16032)
 #error("This version of HIP requires a newer version of HCC.");
 #endif
 
 #include "hip/hcc_detail/host_defines.h"
 
-#define MAKE_DEFAULT_CONSTRUCTOR_ONE_COMPONENT(type) \
-__device__ __host__ type() {} \
-__device__ __host__ type(const type& val) : x(val.x) { } \
-__device__ __host__ ~type() {} 
+#define MAKE_DEFAULT_CONSTRUCTOR_ONE_COMPONENT(type)                                               \
+    __device__ __host__ type() {}                                                                  \
+    __device__ __host__ type(const type& val) : x(val.x) {}                                        \
+    __device__ __host__ ~type() {}
 
-#define MAKE_DEFAULT_CONSTRUCTOR_TWO_COMPONENT(type) \
-__device__ __host__ type() {} \
-__device__ __host__ type(const type& val) : x(val.x), y(val.y) { } \
-__device__ __host__ ~type() {}
+#define MAKE_DEFAULT_CONSTRUCTOR_TWO_COMPONENT(type)                                               \
+    __device__ __host__ type() {}                                                                  \
+    __device__ __host__ type(const type& val) : x(val.x), y(val.y) {}                              \
+    __device__ __host__ ~type() {}
 
-#define MAKE_DEFAULT_CONSTRUCTOR_THREE_COMPONENT(type) \
-__device__ __host__ type() {} \
-__device__ __host__ type(const type& val) : x(val.x), y(val.y), z(val.z) { } \
-__device__ __host__ ~type() {} 
+#define MAKE_DEFAULT_CONSTRUCTOR_THREE_COMPONENT(type)                                             \
+    __device__ __host__ type() {}                                                                  \
+    __device__ __host__ type(const type& val) : x(val.x), y(val.y), z(val.z) {}                    \
+    __device__ __host__ ~type() {}
 
-#define MAKE_DEFAULT_CONSTRUCTOR_FOUR_COMPONENT(type) \
-__device__ __host__ type() {} \
-__device__ __host__ type(const type& val) : x(val.x), y(val.y), z(val.z), w(val.w) { } \
-__device__ __host__ ~type() {}
+#define MAKE_DEFAULT_CONSTRUCTOR_FOUR_COMPONENT(type)                                              \
+    __device__ __host__ type() {}                                                                  \
+    __device__ __host__ type(const type& val) : x(val.x), y(val.y), z(val.z), w(val.w) {}          \
+    __device__ __host__ ~type() {}
 
-#define MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(type, type1) \
-__device__ __host__ type(type1 val) : x(val) {} \
+#define MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(type, type1)                                      \
+    __device__ __host__ type(type1 val) : x(val) {}
 
-#define MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(type, type1) \
-__device__ __host__ type(type1 val) : x(val), y(val) {} \
-__device__ __host__ type(type1 val1, type1 val2) : x(val1), y(val2) {} \
+#define MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(type, type1)                                      \
+    __device__ __host__ type(type1 val) : x(val), y(val) {}                                        \
+    __device__ __host__ type(type1 val1, type1 val2) : x(val1), y(val2) {}
 
-#define MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(type, type1) \
-__device__ __host__ type(type1 val) : x(val), y(val), z(val) {} \
-__device__ __host__ type(type1 val1, type1 val2, type1 val3) : x(val1), y(val2), z(val3) {} \
+#define MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(type, type1)                                    \
+    __device__ __host__ type(type1 val) : x(val), y(val), z(val) {}                                \
+    __device__ __host__ type(type1 val1, type1 val2, type1 val3) : x(val1), y(val2), z(val3) {}
 
-#define MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(type, type1) \
-__device__ __host__ type(type1 val) : x(val), y(val), z(val), w(val) {} \
-__device__ __host__ type(type1 val1, type1 val2, type1 val3, type1 val4) : x(val1), y(val2), z(val3), w(val4) {} \
+#define MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(type, type1)                                     \
+    __device__ __host__ type(type1 val) : x(val), y(val), z(val), w(val) {}                        \
+    __device__ __host__ type(type1 val1, type1 val2, type1 val3, type1 val4)                       \
+        : x(val1), y(val2), z(val3), w(val4) {}
 
 struct uchar1 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_ONE_COMPONENT(uchar1)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(uchar1, unsigned char)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(uchar1, signed char)
@@ -86,14 +87,14 @@ struct uchar1 {
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(uchar1, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(uchar1, signed long long)
 
-  #endif
-  unsigned char x;
+#endif
+    unsigned char x;
 
 } __attribute__((aligned(1)));
 
 struct uchar2 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_TWO_COMPONENT(uchar2)
 
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(uchar2, unsigned char)
@@ -108,18 +109,18 @@ struct uchar2 {
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(uchar2, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(uchar2, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(uchar2, signed long long)
-  #endif
-  union {
-    struct {
-      unsigned char x, y;
+#endif
+    union {
+        struct {
+            unsigned char x, y;
+        };
+        unsigned short a;
     };
-    unsigned short a;
-  };
 } __attribute__((aligned(2)));
 
 struct uchar3 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_THREE_COMPONENT(uchar3)
 
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(uchar3, unsigned char)
@@ -134,13 +135,13 @@ struct uchar3 {
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(uchar3, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(uchar3, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(uchar3, signed long long)
-  #endif
-  unsigned char x, y, z;
+#endif
+    unsigned char x, y, z;
 };
 
 struct uchar4 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_FOUR_COMPONENT(uchar4)
 
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(uchar4, unsigned char)
@@ -155,19 +156,19 @@ struct uchar4 {
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(uchar4, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(uchar4, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(uchar4, signed long long)
-  #endif
-  union {
-    struct {
-      unsigned char x, y, z, w;
+#endif
+    union {
+        struct {
+            unsigned char x, y, z, w;
+        };
+        unsigned int a;
     };
-    unsigned int a;
-  };
 } __attribute__((aligned(4)));
 
 
 struct char1 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_ONE_COMPONENT(char1)
 
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(char1, unsigned char)
@@ -182,13 +183,13 @@ struct char1 {
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(char1, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(char1, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(char1, signed long long)
-  #endif
-  signed char x;
+#endif
+    signed char x;
 } __attribute__((aligned(1)));
 
 struct char2 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_TWO_COMPONENT(char2)
 
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(char2, unsigned char)
@@ -203,18 +204,18 @@ struct char2 {
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(char2, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(char2, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(char2, signed long long)
-  #endif
-  union {
-    struct {
-      signed char x, y;
+#endif
+    union {
+        struct {
+            signed char x, y;
+        };
+        unsigned short a;
     };
-    unsigned short a;
-  };
 } __attribute__((aligned(2)));
 
 struct char3 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_THREE_COMPONENT(char3)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(char3, unsigned char)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(char3, signed char)
@@ -228,13 +229,13 @@ struct char3 {
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(char3, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(char3, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(char3, signed long long)
-  #endif
-  signed char x, y, z;
+#endif
+    signed char x, y, z;
 };
 
 struct char4 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_FOUR_COMPONENT(char4)
 
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(char4, unsigned char)
@@ -249,20 +250,19 @@ struct char4 {
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(char4, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(char4, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(char4, signed long long)
-  #endif
-  union {
-    struct {
-      signed char x, y, z, w;
+#endif
+    union {
+        struct {
+            signed char x, y, z, w;
+        };
+        unsigned int a;
     };
-    unsigned int a;
-  };
 } __attribute__((aligned(4)));
 
 
-
 struct ushort1 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_ONE_COMPONENT(ushort1)
 
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(ushort1, unsigned char)
@@ -277,13 +277,13 @@ struct ushort1 {
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(ushort1, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(ushort1, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(ushort1, signed long long)
-  #endif
-  unsigned short x;
+#endif
+    unsigned short x;
 } __attribute__((aligned(2)));
 
 struct ushort2 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_TWO_COMPONENT(ushort2)
 
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(ushort2, unsigned char)
@@ -298,18 +298,18 @@ struct ushort2 {
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(ushort2, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(ushort2, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(ushort2, signed long long)
-  #endif
-  union {
-    struct {
-      unsigned short x, y;
+#endif
+    union {
+        struct {
+            unsigned short x, y;
+        };
+        unsigned int a;
     };
-    unsigned int a;
-  };
 } __attribute__((aligned(4)));
 
 struct ushort3 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_THREE_COMPONENT(ushort3)
 
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(ushort3, unsigned char)
@@ -324,13 +324,13 @@ struct ushort3 {
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(ushort3, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(ushort3, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(ushort3, signed long long)
-  #endif
-  unsigned short x, y, z;
+#endif
+    unsigned short x, y, z;
 };
 
 struct ushort4 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_FOUR_COMPONENT(ushort4)
 
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(ushort4, unsigned char)
@@ -345,18 +345,18 @@ struct ushort4 {
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(ushort4, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(ushort4, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(ushort4, signed long long)
-  #endif
-  union {
-    struct {
-      unsigned short x, y, z, w;
+#endif
+    union {
+        struct {
+            unsigned short x, y, z, w;
+        };
+        unsigned int a, b;
     };
-    unsigned int a, b;
-  };
 } __attribute__((aligned(8)));
 
 struct short1 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_ONE_COMPONENT(short1)
 
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(short1, unsigned char)
@@ -371,13 +371,13 @@ struct short1 {
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(short1, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(short1, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(short1, signed long long)
-  #endif
-  signed short x;
+#endif
+    signed short x;
 } __attribute__((aligned(2)));
 
 struct short2 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_TWO_COMPONENT(short2)
 
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(short2, unsigned char)
@@ -392,19 +392,19 @@ struct short2 {
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(short2, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(short2, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(short2, signed long long)
-  #endif
-  union {
-    struct {
-      signed short x, y;
+#endif
+    union {
+        struct {
+            signed short x, y;
+        };
+        unsigned int a;
     };
-    unsigned int a;
-  };
 
 } __attribute__((aligned(4)));
 
 struct short3 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_THREE_COMPONENT(short3)
 
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(short3, unsigned char)
@@ -419,13 +419,13 @@ struct short3 {
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(short3, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(short3, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(short3, signed long long)
-  #endif
-  signed short x, y, z;
+#endif
+    signed short x, y, z;
 };
 
 struct short4 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_FOUR_COMPONENT(short4)
 
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(short4, unsigned char)
@@ -440,19 +440,19 @@ struct short4 {
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(short4, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(short4, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(short4, signed long long)
-  #endif
-  union {
-    struct {
-      signed short x, y, z, w;
+#endif
+    union {
+        struct {
+            signed short x, y, z, w;
+        };
+        unsigned int a, b;
     };
-    unsigned int a, b;
-  };
 } __attribute__((aligned(8)));
 
 
 struct uint1 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_ONE_COMPONENT(uint1)
 
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(uint1, unsigned char)
@@ -467,13 +467,13 @@ struct uint1 {
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(uint1, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(uint1, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(uint1, signed long long)
-  #endif
-  unsigned int x;
+#endif
+    unsigned int x;
 } __attribute__((aligned(4)));
 
 struct uint2 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_TWO_COMPONENT(uint2)
 
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(uint2, unsigned char)
@@ -488,13 +488,13 @@ struct uint2 {
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(uint2, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(uint2, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(uint2, signed long long)
-  #endif
-  unsigned int x, y;
+#endif
+    unsigned int x, y;
 } __attribute__((aligned(8)));
 
 struct uint3 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_THREE_COMPONENT(uint3)
 
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(uint3, unsigned char)
@@ -509,13 +509,13 @@ struct uint3 {
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(uint3, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(uint3, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(uint3, signed long long)
-  #endif
-  unsigned int x, y, z;
+#endif
+    unsigned int x, y, z;
 };
 
 struct uint4 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_FOUR_COMPONENT(uint4)
 
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(uint4, unsigned char)
@@ -530,13 +530,13 @@ struct uint4 {
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(uint4, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(uint4, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(uint4, signed long long)
-  #endif
-  unsigned int x, y, z, w;
+#endif
+    unsigned int x, y, z, w;
 } __attribute__((aligned(16)));
 
 struct int1 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_ONE_COMPONENT(int1)
 
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(int1, unsigned char)
@@ -551,13 +551,13 @@ struct int1 {
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(int1, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(int1, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(int1, signed long long)
-  #endif
-  signed int x;
+#endif
+    signed int x;
 } __attribute__((aligned(4)));
 
 struct int2 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_TWO_COMPONENT(int2)
 
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(int2, unsigned char)
@@ -572,13 +572,13 @@ struct int2 {
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(int2, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(int2, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(int2, signed long long)
-  #endif
-  signed int x, y;
+#endif
+    signed int x, y;
 } __attribute__((aligned(8)));
 
 struct int3 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_THREE_COMPONENT(int3)
 
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(int3, unsigned char)
@@ -593,13 +593,13 @@ struct int3 {
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(int3, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(int3, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(int3, signed long long)
-  #endif
-  signed int x, y, z;
+#endif
+    signed int x, y, z;
 };
 
 struct int4 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_FOUR_COMPONENT(int4)
 
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(int4, unsigned char)
@@ -614,14 +614,14 @@ struct int4 {
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(int4, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(int4, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(int4, signed long long)
-  #endif
-  signed int x, y, z, w;
+#endif
+    signed int x, y, z, w;
 } __attribute__((aligned(16)));
 
 
 struct float1 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_ONE_COMPONENT(float1)
 
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(float1, unsigned char)
@@ -636,13 +636,13 @@ struct float1 {
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(float1, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(float1, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(float1, signed long long)
-  #endif
-  float x;
+#endif
+    float x;
 } __attribute__((aligned(4)));
 
 struct float2 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_TWO_COMPONENT(float2)
 
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(float2, unsigned char)
@@ -657,13 +657,13 @@ struct float2 {
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(float2, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(float2, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(float2, signed long long)
-  #endif
-  float x, y;
+#endif
+    float x, y;
 } __attribute__((aligned(8)));
 
 struct float3 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_THREE_COMPONENT(float3)
 
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(float3, unsigned char)
@@ -678,13 +678,13 @@ struct float3 {
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(float3, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(float3, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(float3, signed long long)
-  #endif
-  float x, y, z;
+#endif
+    float x, y, z;
 };
 
 struct float4 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_FOUR_COMPONENT(float4)
 
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(float4, unsigned char)
@@ -699,15 +699,14 @@ struct float4 {
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(float4, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(float4, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(float4, signed long long)
-  #endif
-  float x, y, z, w;
+#endif
+    float x, y, z, w;
 } __attribute__((aligned(16)));
 
 
-
 struct double1 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_ONE_COMPONENT(double1)
 
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(double1, unsigned char)
@@ -722,13 +721,13 @@ struct double1 {
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(double1, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(double1, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(double1, signed long long)
-  #endif
-  double x;
+#endif
+    double x;
 } __attribute__((aligned(8)));
 
 struct double2 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_TWO_COMPONENT(double2)
 
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(double2, unsigned char)
@@ -743,13 +742,13 @@ struct double2 {
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(double2, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(double2, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(double2, signed long long)
-  #endif
-  double x, y;
+#endif
+    double x, y;
 } __attribute__((aligned(16)));
 
 struct double3 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_THREE_COMPONENT(double3)
 
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(double3, unsigned char)
@@ -764,13 +763,13 @@ struct double3 {
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(double3, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(double3, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(double3, signed long long)
-  #endif
-  double x, y, z;
+#endif
+    double x, y, z;
 };
 
 struct double4 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_FOUR_COMPONENT(double4)
 
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(double4, unsigned char)
@@ -785,14 +784,14 @@ struct double4 {
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(double4, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(double4, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(double4, signed long long)
-  #endif
-  double x, y, z, w;
+#endif
+    double x, y, z, w;
 } __attribute__((aligned(32)));
 
 
 struct ulong1 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_ONE_COMPONENT(ulong1)
 
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(ulong1, unsigned char)
@@ -807,13 +806,13 @@ struct ulong1 {
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(ulong1, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(ulong1, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(ulong1, signed long long)
-  #endif
-  unsigned long x;
+#endif
+    unsigned long x;
 } __attribute__((aligned(8)));
 
 struct ulong2 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_TWO_COMPONENT(ulong2)
 
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(ulong2, unsigned char)
@@ -828,13 +827,13 @@ struct ulong2 {
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(ulong2, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(ulong2, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(ulong2, signed long long)
-  #endif
-  unsigned long x, y;
+#endif
+    unsigned long x, y;
 } __attribute__((aligned(16)));
 
 struct ulong3 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_THREE_COMPONENT(ulong3)
 
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(ulong3, unsigned char)
@@ -849,13 +848,13 @@ struct ulong3 {
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(ulong3, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(ulong3, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(ulong3, signed long long)
-  #endif
-  unsigned long x, y, z;
+#endif
+    unsigned long x, y, z;
 };
 
 struct ulong4 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_FOUR_COMPONENT(ulong4)
 
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(ulong4, unsigned char)
@@ -870,14 +869,14 @@ struct ulong4 {
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(ulong4, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(ulong4, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(ulong4, signed long long)
-  #endif
-  unsigned long x, y, z, w;
+#endif
+    unsigned long x, y, z, w;
 } __attribute__((aligned(32)));
 
 
 struct long1 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_ONE_COMPONENT(long1)
 
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(long1, unsigned char)
@@ -892,13 +891,13 @@ struct long1 {
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(long1, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(long1, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(long1, signed long long)
-  #endif
-  signed long x;
+#endif
+    signed long x;
 } __attribute__((aligned(8)));
 
 struct long2 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_TWO_COMPONENT(long2)
 
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(long2, unsigned char)
@@ -913,13 +912,13 @@ struct long2 {
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(long2, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(long2, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(long2, signed long long)
-  #endif
-  signed long x, y;
+#endif
+    signed long x, y;
 } __attribute__((aligned(16)));
 
 struct long3 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_THREE_COMPONENT(long3)
 
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(long3, unsigned char)
@@ -934,13 +933,13 @@ struct long3 {
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(long3, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(long3, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(long3, signed long long)
-  #endif
-  signed long x, y, z;
+#endif
+    signed long x, y, z;
 };
 
 struct long4 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_FOUR_COMPONENT(long4)
 
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(long4, unsigned char)
@@ -955,14 +954,14 @@ struct long4 {
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(long4, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(long4, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(long4, signed long long)
-  #endif
-  signed long x, y, z, w;
+#endif
+    signed long x, y, z, w;
 } __attribute__((aligned(32)));
 
 
 struct ulonglong1 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_ONE_COMPONENT(ulonglong1)
 
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(ulonglong1, unsigned char)
@@ -977,13 +976,13 @@ struct ulonglong1 {
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(ulonglong1, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(ulonglong1, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(ulonglong1, signed long long)
-  #endif
-  unsigned long long x;
+#endif
+    unsigned long long x;
 } __attribute__((aligned(8)));
 
 struct ulonglong2 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_TWO_COMPONENT(ulonglong2)
 
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(ulonglong2, unsigned char)
@@ -998,13 +997,13 @@ struct ulonglong2 {
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(ulonglong2, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(ulonglong2, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(ulonglong2, signed long long)
-  #endif
-  unsigned long long x, y;
+#endif
+    unsigned long long x, y;
 } __attribute__((aligned(16)));
 
 struct ulonglong3 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_THREE_COMPONENT(ulonglong3)
 
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(ulonglong3, unsigned char)
@@ -1019,13 +1018,13 @@ struct ulonglong3 {
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(ulonglong3, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(ulonglong3, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(ulonglong3, signed long long)
-  #endif
-  unsigned long long x, y, z;
+#endif
+    unsigned long long x, y, z;
 };
 
 struct ulonglong4 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_FOUR_COMPONENT(ulonglong4)
 
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(ulonglong4, unsigned char)
@@ -1040,14 +1039,14 @@ struct ulonglong4 {
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(ulonglong4, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(ulonglong4, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(ulonglong4, signed long long)
-  #endif
-  unsigned long long x, y, z, w;
+#endif
+    unsigned long long x, y, z, w;
 } __attribute__((aligned(32)));
 
 
 struct longlong1 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_ONE_COMPONENT(longlong1)
 
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(longlong1, unsigned char)
@@ -1062,13 +1061,13 @@ struct longlong1 {
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(longlong1, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(longlong1, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_ONE_COMPONENT(longlong1, signed long long)
-  #endif
-  signed long long x;
+#endif
+    signed long long x;
 } __attribute__((aligned(8)));
 
 struct longlong2 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_TWO_COMPONENT(longlong2)
 
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(longlong2, unsigned char)
@@ -1083,13 +1082,13 @@ struct longlong2 {
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(longlong2, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(longlong2, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(longlong2, signed long long)
-  #endif
-  signed long long x, y;
+#endif
+    signed long long x, y;
 } __attribute__((aligned(16)));
 
 struct longlong3 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_THREE_COMPONENT(longlong3)
 
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(longlong3, unsigned char)
@@ -1104,13 +1103,13 @@ struct longlong3 {
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(longlong3, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(longlong3, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_THREE_COMPONENT(longlong3, signed long long)
-  #endif
-  signed long long x, y, z;
+#endif
+    signed long long x, y, z;
 };
 
 struct longlong4 {
-  #ifdef __cplusplus
-    public:
+#ifdef __cplusplus
+   public:
     MAKE_DEFAULT_CONSTRUCTOR_FOUR_COMPONENT(longlong4)
 
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(longlong4, unsigned char)
@@ -1125,43 +1124,43 @@ struct longlong4 {
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(longlong4, signed long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(longlong4, unsigned long long)
     MAKE_COMPONENT_CONSTRUCTOR_FOUR_COMPONENT(longlong4, signed long long)
-  #endif
-  signed long x, y, z, w;
+#endif
+    signed long x, y, z, w;
 } __attribute__((aligned(32)));
 
-#define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
-__device__ __host__ static inline struct type make_##type(comp x) { \
-  struct type ret; \
-  ret.x = x; \
-  return ret; \
-}
+#define DECLOP_MAKE_ONE_COMPONENT(comp, type)                                                      \
+    __device__ __host__ static inline struct type make_##type(comp x) {                            \
+        struct type ret;                                                                           \
+        ret.x = x;                                                                                 \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_MAKE_TWO_COMPONENT(comp, type) \
-__device__ __host__ static inline struct type make_##type(comp x, comp y) { \
-  struct type ret; \
-  ret.x = x; \
-  ret.y = y; \
-  return ret; \
-}
+#define DECLOP_MAKE_TWO_COMPONENT(comp, type)                                                      \
+    __device__ __host__ static inline struct type make_##type(comp x, comp y) {                    \
+        struct type ret;                                                                           \
+        ret.x = x;                                                                                 \
+        ret.y = y;                                                                                 \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_MAKE_THREE_COMPONENT(comp, type) \
-__device__ __host__ static inline struct type make_##type(comp x, comp y, comp z) { \
-  struct type ret; \
-  ret.x = x; \
-  ret.y = y; \
-  ret.z = z; \
-  return ret; \
-}
+#define DECLOP_MAKE_THREE_COMPONENT(comp, type)                                                    \
+    __device__ __host__ static inline struct type make_##type(comp x, comp y, comp z) {            \
+        struct type ret;                                                                           \
+        ret.x = x;                                                                                 \
+        ret.y = y;                                                                                 \
+        ret.z = z;                                                                                 \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_MAKE_FOUR_COMPONENT(comp, type) \
-__device__ __host__ static inline struct type make_##type(comp x, comp y, comp z, comp w) { \
-  struct type ret; \
-  ret.x = x; \
-  ret.y = y; \
-  ret.z = z; \
-  ret.w = w; \
-  return ret; \
-}
+#define DECLOP_MAKE_FOUR_COMPONENT(comp, type)                                                     \
+    __device__ __host__ static inline struct type make_##type(comp x, comp y, comp z, comp w) {    \
+        struct type ret;                                                                           \
+        ret.x = x;                                                                                 \
+        ret.y = y;                                                                                 \
+        ret.z = z;                                                                                 \
+        ret.w = w;                                                                                 \
+        return ret;                                                                                \
+    }
 
 DECLOP_MAKE_ONE_COMPONENT(unsigned char, uchar1);
 DECLOP_MAKE_TWO_COMPONENT(unsigned char, uchar2);
@@ -1226,331 +1225,329 @@ DECLOP_MAKE_FOUR_COMPONENT(signed long, longlong4);
 
 #if __cplusplus
 
-#define DECLOP_1VAR_2IN_1OUT(type, op) \
-__device__ __host__ static inline type operator op (const type& lhs, const type& rhs) { \
-  type ret; \
-  ret.x = lhs.x op rhs.x; \
-  return ret; \
-}
+#define DECLOP_1VAR_2IN_1OUT(type, op)                                                             \
+    __device__ __host__ static inline type operator op(const type& lhs, const type& rhs) {         \
+        type ret;                                                                                  \
+        ret.x = lhs.x op rhs.x;                                                                    \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_1VAR_SCALE_PRODUCT(type, type1) \
-__device__ __host__ static inline type operator * (const type& lhs, type1 rhs) { \
-  type ret; \
-  ret.x = lhs.x * rhs; \
-  return ret; \
-} \
-\
-__device__ __host__ static inline type operator * (type1 lhs, const type& rhs) { \
-  type ret; \
-  ret.x = lhs * rhs.x; \
-  return ret; \
-}
+#define DECLOP_1VAR_SCALE_PRODUCT(type, type1)                                                     \
+    __device__ __host__ static inline type operator*(const type& lhs, type1 rhs) {                 \
+        type ret;                                                                                  \
+        ret.x = lhs.x * rhs;                                                                       \
+        return ret;                                                                                \
+    }                                                                                              \
+                                                                                                   \
+    __device__ __host__ static inline type operator*(type1 lhs, const type& rhs) {                 \
+        type ret;                                                                                  \
+        ret.x = lhs * rhs.x;                                                                       \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_1VAR_ASSIGN(type, op) \
-__device__ __host__ static inline type& operator op ( type& lhs, const type& rhs) { \
-  lhs.x op rhs.x; \
-  return lhs; \
-}
+#define DECLOP_1VAR_ASSIGN(type, op)                                                               \
+    __device__ __host__ static inline type& operator op(type& lhs, const type& rhs) {              \
+        lhs.x op rhs.x;                                                                            \
+        return lhs;                                                                                \
+    }
 
-#define DECLOP_1VAR_PREOP(type, op) \
-__device__ __host__ static inline type& operator op (type& val) { \
-  op val.x; \
-  return val; \
-}
+#define DECLOP_1VAR_PREOP(type, op)                                                                \
+    __device__ __host__ static inline type& operator op(type& val) {                               \
+        op val.x;                                                                                  \
+        return val;                                                                                \
+    }
 
-#define DECLOP_1VAR_POSTOP(type, op) \
-__device__ __host__ static inline type operator op (type& val, int) { \
-  type ret; \
-  ret.x = val.x; \
-  val.x op; \
-  return ret; \
-}
+#define DECLOP_1VAR_POSTOP(type, op)                                                               \
+    __device__ __host__ static inline type operator op(type& val, int) {                           \
+        type ret;                                                                                  \
+        ret.x = val.x;                                                                             \
+        val.x op;                                                                                  \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_1VAR_COMP(type, op) \
-__device__ __host__ static inline bool operator op (type& lhs, type& rhs) { \
-  return lhs.x op rhs.x; \
-} \
-__device__ __host__ static inline bool operator op (const type& lhs, type& rhs) { \
-  return lhs.x op rhs.x; \
-} \
-__device__ __host__ static inline bool operator op (type& lhs, const type& rhs) { \
-  return lhs.x op rhs.x ; \
-} \
-__device__ __host__ static inline bool operator op (const type& lhs, const type& rhs) { \
-  return lhs.x op rhs.x ; \
-}
+#define DECLOP_1VAR_COMP(type, op)                                                                 \
+    __device__ __host__ static inline bool operator op(type& lhs, type& rhs) {                     \
+        return lhs.x op rhs.x;                                                                     \
+    }                                                                                              \
+    __device__ __host__ static inline bool operator op(const type& lhs, type& rhs) {               \
+        return lhs.x op rhs.x;                                                                     \
+    }                                                                                              \
+    __device__ __host__ static inline bool operator op(type& lhs, const type& rhs) {               \
+        return lhs.x op rhs.x;                                                                     \
+    }                                                                                              \
+    __device__ __host__ static inline bool operator op(const type& lhs, const type& rhs) {         \
+        return lhs.x op rhs.x;                                                                     \
+    }
 
-#define DECLOP_1VAR_1IN_1OUT(type, op) \
-__device__ __host__ static inline type operator op(type& rhs) { \
-  type ret; \
-  ret.x = op rhs.x; \
-  return ret; \
-}
+#define DECLOP_1VAR_1IN_1OUT(type, op)                                                             \
+    __device__ __host__ static inline type operator op(type& rhs) {                                \
+        type ret;                                                                                  \
+        ret.x = op rhs.x;                                                                          \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_1VAR_1IN_BOOLOUT(type, op) \
-__device__ __host__ static inline bool operator op (type& rhs) { \
-  return op rhs.x; \
-}
+#define DECLOP_1VAR_1IN_BOOLOUT(type, op)                                                          \
+    __device__ __host__ static inline bool operator op(type& rhs) { return op rhs.x; }
 
 /*
  Two Element Access
 */
 
-#define DECLOP_2VAR_2IN_1OUT(type, op) \
-__device__ __host__ static inline type operator op (const type& lhs, const type& rhs) { \
-  type ret; \
-  ret.x = lhs.x op rhs.x; \
-  ret.y = lhs.y op rhs.y; \
-  return ret; \
-}
+#define DECLOP_2VAR_2IN_1OUT(type, op)                                                             \
+    __device__ __host__ static inline type operator op(const type& lhs, const type& rhs) {         \
+        type ret;                                                                                  \
+        ret.x = lhs.x op rhs.x;                                                                    \
+        ret.y = lhs.y op rhs.y;                                                                    \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_2VAR_SCALE_PRODUCT(type, type1) \
-__device__ __host__ static inline type operator * (const type& lhs, type1 rhs) { \
-  type ret; \
-  ret.x = lhs.x * rhs; \
-  ret.y = lhs.y * rhs; \
-  return ret; \
-} \
-\
-__device__ __host__ static inline type operator * (type1 lhs, const type& rhs) { \
-  type ret; \
-  ret.x = lhs * rhs.x; \
-  ret.y = lhs * rhs.y; \
-  return ret; \
-}
+#define DECLOP_2VAR_SCALE_PRODUCT(type, type1)                                                     \
+    __device__ __host__ static inline type operator*(const type& lhs, type1 rhs) {                 \
+        type ret;                                                                                  \
+        ret.x = lhs.x * rhs;                                                                       \
+        ret.y = lhs.y * rhs;                                                                       \
+        return ret;                                                                                \
+    }                                                                                              \
+                                                                                                   \
+    __device__ __host__ static inline type operator*(type1 lhs, const type& rhs) {                 \
+        type ret;                                                                                  \
+        ret.x = lhs * rhs.x;                                                                       \
+        ret.y = lhs * rhs.y;                                                                       \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_2VAR_ASSIGN(type, op) \
-__device__ __host__ static inline type& operator op ( type& lhs, const type& rhs) { \
-  lhs.x op rhs.x; \
-  lhs.y op rhs.y; \
-  return lhs; \
-}
+#define DECLOP_2VAR_ASSIGN(type, op)                                                               \
+    __device__ __host__ static inline type& operator op(type& lhs, const type& rhs) {              \
+        lhs.x op rhs.x;                                                                            \
+        lhs.y op rhs.y;                                                                            \
+        return lhs;                                                                                \
+    }
 
-#define DECLOP_2VAR_PREOP(type, op) \
-__device__ __host__ static inline type& operator op (type& val) { \
-  op val.x; \
-  op val.y; \
-  return val; \
-}
+#define DECLOP_2VAR_PREOP(type, op)                                                                \
+    __device__ __host__ static inline type& operator op(type& val) {                               \
+        op val.x;                                                                                  \
+        op val.y;                                                                                  \
+        return val;                                                                                \
+    }
 
-#define DECLOP_2VAR_POSTOP(type, op) \
-__device__ __host__ static inline type operator op (type& val, int) { \
-  type ret; \
-  ret.x = val.x; \
-  ret.y = val.y; \
-  val.x op; \
-  val.y op; \
-  return ret; \
-}
+#define DECLOP_2VAR_POSTOP(type, op)                                                               \
+    __device__ __host__ static inline type operator op(type& val, int) {                           \
+        type ret;                                                                                  \
+        ret.x = val.x;                                                                             \
+        ret.y = val.y;                                                                             \
+        val.x op;                                                                                  \
+        val.y op;                                                                                  \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_2VAR_COMP(type, op) \
-__device__ __host__ static inline bool operator op (type& lhs, type& rhs) { \
-  return (lhs.x op rhs.x) && (lhs.y op rhs.y); \
-} \
-__device__ __host__ static inline bool operator op (const type& lhs, type& rhs) { \
-  return (lhs.x op rhs.x) && (lhs.y op rhs.y); \
-} \
-__device__ __host__ static inline bool operator op (type& lhs, const type& rhs) { \
-  return (lhs.x op rhs.x) && (lhs.y op rhs.y); \
-} \
-__device__ __host__ static inline bool operator op (const type& lhs, const type& rhs) { \
-  return (lhs.x op rhs.x) && (lhs.y op rhs.y); \
-}
+#define DECLOP_2VAR_COMP(type, op)                                                                 \
+    __device__ __host__ static inline bool operator op(type& lhs, type& rhs) {                     \
+        return (lhs.x op rhs.x) && (lhs.y op rhs.y);                                               \
+    }                                                                                              \
+    __device__ __host__ static inline bool operator op(const type& lhs, type& rhs) {               \
+        return (lhs.x op rhs.x) && (lhs.y op rhs.y);                                               \
+    }                                                                                              \
+    __device__ __host__ static inline bool operator op(type& lhs, const type& rhs) {               \
+        return (lhs.x op rhs.x) && (lhs.y op rhs.y);                                               \
+    }                                                                                              \
+    __device__ __host__ static inline bool operator op(const type& lhs, const type& rhs) {         \
+        return (lhs.x op rhs.x) && (lhs.y op rhs.y);                                               \
+    }
 
-#define DECLOP_2VAR_1IN_1OUT(type, op) \
-__device__ __host__ static inline type operator op(type &rhs) { \
-  type ret; \
-  ret.x = op rhs.x; \
-  ret.y = op rhs.y; \
-  return ret; \
-}
+#define DECLOP_2VAR_1IN_1OUT(type, op)                                                             \
+    __device__ __host__ static inline type operator op(type& rhs) {                                \
+        type ret;                                                                                  \
+        ret.x = op rhs.x;                                                                          \
+        ret.y = op rhs.y;                                                                          \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_2VAR_1IN_BOOLOUT(type, op) \
-__device__ __host__ static inline bool operator op (type &rhs) { \
-  return (op rhs.x) && (op rhs.y); \
-}
+#define DECLOP_2VAR_1IN_BOOLOUT(type, op)                                                          \
+    __device__ __host__ static inline bool operator op(type& rhs) {                                \
+        return (op rhs.x) && (op rhs.y);                                                           \
+    }
 
 
 /*
  Three Element Access
 */
 
-#define DECLOP_3VAR_2IN_1OUT(type, op) \
-__device__ __host__ static inline type operator op (const type& lhs, const type& rhs) { \
-  type ret; \
-  ret.x = lhs.x op rhs.x; \
-  ret.y = lhs.y op rhs.y; \
-  ret.z = lhs.z op rhs.z; \
-  return ret; \
-}
+#define DECLOP_3VAR_2IN_1OUT(type, op)                                                             \
+    __device__ __host__ static inline type operator op(const type& lhs, const type& rhs) {         \
+        type ret;                                                                                  \
+        ret.x = lhs.x op rhs.x;                                                                    \
+        ret.y = lhs.y op rhs.y;                                                                    \
+        ret.z = lhs.z op rhs.z;                                                                    \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_3VAR_SCALE_PRODUCT(type, type1) \
-__device__ __host__ static inline type operator * (const type& lhs, type1 rhs) { \
-  type ret; \
-  ret.x = lhs.x * rhs; \
-  ret.y = lhs.y * rhs; \
-  ret.z = lhs.z * rhs; \
-  return ret; \
-} \
-\
-__device__ __host__ static inline type operator * (type1 lhs, const type& rhs) { \
-  type ret; \
-  ret.x = lhs * rhs.x; \
-  ret.y = lhs * rhs.y; \
-  ret.z = lhs * rhs.z; \
-  return ret; \
-}
+#define DECLOP_3VAR_SCALE_PRODUCT(type, type1)                                                     \
+    __device__ __host__ static inline type operator*(const type& lhs, type1 rhs) {                 \
+        type ret;                                                                                  \
+        ret.x = lhs.x * rhs;                                                                       \
+        ret.y = lhs.y * rhs;                                                                       \
+        ret.z = lhs.z * rhs;                                                                       \
+        return ret;                                                                                \
+    }                                                                                              \
+                                                                                                   \
+    __device__ __host__ static inline type operator*(type1 lhs, const type& rhs) {                 \
+        type ret;                                                                                  \
+        ret.x = lhs * rhs.x;                                                                       \
+        ret.y = lhs * rhs.y;                                                                       \
+        ret.z = lhs * rhs.z;                                                                       \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_3VAR_ASSIGN(type, op) \
-__device__ __host__ static inline type& operator op ( type& lhs, const type& rhs) { \
-  lhs.x op rhs.x; \
-  lhs.y op rhs.y; \
-  lhs.z op rhs.z; \
-  return lhs; \
-}
+#define DECLOP_3VAR_ASSIGN(type, op)                                                               \
+    __device__ __host__ static inline type& operator op(type& lhs, const type& rhs) {              \
+        lhs.x op rhs.x;                                                                            \
+        lhs.y op rhs.y;                                                                            \
+        lhs.z op rhs.z;                                                                            \
+        return lhs;                                                                                \
+    }
 
-#define DECLOP_3VAR_PREOP(type, op) \
-__device__ __host__ static inline type& operator op (type& val) { \
-  op val.x; \
-  op val.y; \
-  op val.z; \
-  return val; \
-}
+#define DECLOP_3VAR_PREOP(type, op)                                                                \
+    __device__ __host__ static inline type& operator op(type& val) {                               \
+        op val.x;                                                                                  \
+        op val.y;                                                                                  \
+        op val.z;                                                                                  \
+        return val;                                                                                \
+    }
 
-#define DECLOP_3VAR_POSTOP(type, op) \
-__device__ __host__ static inline type operator op (type& val, int) { \
-  type ret; \
-  ret.x = val.x; \
-  ret.y = val.y; \
-  ret.z = val.z; \
-  val.x op; \
-  val.y op; \
-  val.z op; \
-  return ret; \
-}
+#define DECLOP_3VAR_POSTOP(type, op)                                                               \
+    __device__ __host__ static inline type operator op(type& val, int) {                           \
+        type ret;                                                                                  \
+        ret.x = val.x;                                                                             \
+        ret.y = val.y;                                                                             \
+        ret.z = val.z;                                                                             \
+        val.x op;                                                                                  \
+        val.y op;                                                                                  \
+        val.z op;                                                                                  \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_3VAR_COMP(type, op) \
-__device__ __host__ static inline bool operator op (type& lhs, type& rhs) { \
-  return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z); \
-} \
-__device__ __host__ static inline bool operator op (const type& lhs, type& rhs) { \
-  return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z); \
-} \
-__device__ __host__ static inline bool operator op (type& lhs, const type& rhs) { \
-  return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z); \
-} \
-__device__ __host__ static inline bool operator op (const type& lhs, const type& rhs) { \
-  return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z); \
-} \
+#define DECLOP_3VAR_COMP(type, op)                                                                 \
+    __device__ __host__ static inline bool operator op(type& lhs, type& rhs) {                     \
+        return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z);                           \
+    }                                                                                              \
+    __device__ __host__ static inline bool operator op(const type& lhs, type& rhs) {               \
+        return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z);                           \
+    }                                                                                              \
+    __device__ __host__ static inline bool operator op(type& lhs, const type& rhs) {               \
+        return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z);                           \
+    }                                                                                              \
+    __device__ __host__ static inline bool operator op(const type& lhs, const type& rhs) {         \
+        return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z);                           \
+    }
 
-#define DECLOP_3VAR_1IN_1OUT(type, op) \
-__device__ __host__ static inline type operator op(type &rhs) { \
-  type ret; \
-  ret.x = op rhs.x; \
-  ret.y = op rhs.y; \
-  ret.z = op rhs.z; \
-  return ret; \
-}
+#define DECLOP_3VAR_1IN_1OUT(type, op)                                                             \
+    __device__ __host__ static inline type operator op(type& rhs) {                                \
+        type ret;                                                                                  \
+        ret.x = op rhs.x;                                                                          \
+        ret.y = op rhs.y;                                                                          \
+        ret.z = op rhs.z;                                                                          \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_3VAR_1IN_BOOLOUT(type, op) \
-__device__ __host__ static inline bool operator op (type &rhs) { \
-  return (op rhs.x) && (op rhs.y) && (op rhs.z); \
-}
+#define DECLOP_3VAR_1IN_BOOLOUT(type, op)                                                          \
+    __device__ __host__ static inline bool operator op(type& rhs) {                                \
+        return (op rhs.x) && (op rhs.y) && (op rhs.z);                                             \
+    }
 
 
 /*
  Four Element Access
 */
 
-#define DECLOP_4VAR_2IN_1OUT(type, op) \
-__device__ __host__ static inline type operator op ( const type& lhs, const type& rhs) { \
-  type ret; \
-  ret.x = lhs.x op rhs.x; \
-  ret.y = lhs.y op rhs.y; \
-  ret.z = lhs.z op rhs.z; \
-  ret.w = lhs.w op rhs.w; \
-  return ret; \
-}
+#define DECLOP_4VAR_2IN_1OUT(type, op)                                                             \
+    __device__ __host__ static inline type operator op(const type& lhs, const type& rhs) {         \
+        type ret;                                                                                  \
+        ret.x = lhs.x op rhs.x;                                                                    \
+        ret.y = lhs.y op rhs.y;                                                                    \
+        ret.z = lhs.z op rhs.z;                                                                    \
+        ret.w = lhs.w op rhs.w;                                                                    \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_4VAR_SCALE_PRODUCT(type, type1) \
-__device__ __host__ static inline type operator * (const type& lhs, type1 rhs) { \
-  type ret; \
-  ret.x = lhs.x * rhs; \
-  ret.y = lhs.y * rhs; \
-  ret.z = lhs.z * rhs; \
-  ret.w = lhs.w * rhs; \
-  return ret; \
-} \
-\
-__device__ __host__ static inline type operator * (type1 lhs, const type& rhs) { \
-  type ret; \
-  ret.x = lhs * rhs.x; \
-  ret.y = lhs * rhs.y; \
-  ret.z = lhs * rhs.z; \
-  ret.w = lhs * rhs.w; \
-  return ret; \
-}
+#define DECLOP_4VAR_SCALE_PRODUCT(type, type1)                                                     \
+    __device__ __host__ static inline type operator*(const type& lhs, type1 rhs) {                 \
+        type ret;                                                                                  \
+        ret.x = lhs.x * rhs;                                                                       \
+        ret.y = lhs.y * rhs;                                                                       \
+        ret.z = lhs.z * rhs;                                                                       \
+        ret.w = lhs.w * rhs;                                                                       \
+        return ret;                                                                                \
+    }                                                                                              \
+                                                                                                   \
+    __device__ __host__ static inline type operator*(type1 lhs, const type& rhs) {                 \
+        type ret;                                                                                  \
+        ret.x = lhs * rhs.x;                                                                       \
+        ret.y = lhs * rhs.y;                                                                       \
+        ret.z = lhs * rhs.z;                                                                       \
+        ret.w = lhs * rhs.w;                                                                       \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_4VAR_ASSIGN(type, op) \
-__device__ __host__ static inline type& operator op ( type& lhs, const type& rhs) { \
-  lhs.x op rhs.x; \
-  lhs.y op rhs.y; \
-  lhs.z op rhs.z; \
-  lhs.w op rhs.w; \
-  return lhs; \
-}
+#define DECLOP_4VAR_ASSIGN(type, op)                                                               \
+    __device__ __host__ static inline type& operator op(type& lhs, const type& rhs) {              \
+        lhs.x op rhs.x;                                                                            \
+        lhs.y op rhs.y;                                                                            \
+        lhs.z op rhs.z;                                                                            \
+        lhs.w op rhs.w;                                                                            \
+        return lhs;                                                                                \
+    }
 
-#define DECLOP_4VAR_PREOP(type, op) \
-__device__ __host__ static inline type& operator op (type& val) { \
-  op val.x; \
-  op val.y; \
-  op val.z; \
-  op val.w; \
-  return val; \
-}
+#define DECLOP_4VAR_PREOP(type, op)                                                                \
+    __device__ __host__ static inline type& operator op(type& val) {                               \
+        op val.x;                                                                                  \
+        op val.y;                                                                                  \
+        op val.z;                                                                                  \
+        op val.w;                                                                                  \
+        return val;                                                                                \
+    }
 
-#define DECLOP_4VAR_POSTOP(type, op) \
-__device__ __host__ static inline type operator op (type& val, int) { \
-  type ret; \
-  ret.x = val.x; \
-  ret.y = val.y; \
-  ret.z = val.z; \
-  ret.w = val.w; \
-  val.x op; \
-  val.y op; \
-  val.z op; \
-  val.w op; \
-  return ret; \
-}
+#define DECLOP_4VAR_POSTOP(type, op)                                                               \
+    __device__ __host__ static inline type operator op(type& val, int) {                           \
+        type ret;                                                                                  \
+        ret.x = val.x;                                                                             \
+        ret.y = val.y;                                                                             \
+        ret.z = val.z;                                                                             \
+        ret.w = val.w;                                                                             \
+        val.x op;                                                                                  \
+        val.y op;                                                                                  \
+        val.z op;                                                                                  \
+        val.w op;                                                                                  \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_4VAR_COMP(type, op) \
-__device__ __host__ static inline bool operator op (type& lhs, type& rhs) { \
-  return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z) && (lhs.w op rhs.w); \
-} \
-__device__ __host__ static inline bool operator op (const type& lhs, type& rhs) { \
-  return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z) && (lhs.w op rhs.w); \
-} \
-__device__ __host__ static inline bool operator op (type& lhs, const type& rhs) { \
-  return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z) && (lhs.w op rhs.w); \
-} \
-__device__ __host__ static inline bool operator op (const type& lhs, const type& rhs) { \
-  return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z) && (lhs.w op rhs.w); \
-}
+#define DECLOP_4VAR_COMP(type, op)                                                                 \
+    __device__ __host__ static inline bool operator op(type& lhs, type& rhs) {                     \
+        return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z) && (lhs.w op rhs.w);       \
+    }                                                                                              \
+    __device__ __host__ static inline bool operator op(const type& lhs, type& rhs) {               \
+        return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z) && (lhs.w op rhs.w);       \
+    }                                                                                              \
+    __device__ __host__ static inline bool operator op(type& lhs, const type& rhs) {               \
+        return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z) && (lhs.w op rhs.w);       \
+    }                                                                                              \
+    __device__ __host__ static inline bool operator op(const type& lhs, const type& rhs) {         \
+        return (lhs.x op rhs.x) && (lhs.y op rhs.y) && (lhs.z op rhs.z) && (lhs.w op rhs.w);       \
+    }
 
-#define DECLOP_4VAR_1IN_1OUT(type, op) \
-__device__ __host__ static inline type operator op(type &rhs) { \
-  type ret; \
-  ret.x = op rhs.x; \
-  ret.y = op rhs.y; \
-  ret.z = op rhs.z; \
-  ret.w = op rhs.w; \
-  return ret; \
-}
+#define DECLOP_4VAR_1IN_1OUT(type, op)                                                             \
+    __device__ __host__ static inline type operator op(type& rhs) {                                \
+        type ret;                                                                                  \
+        ret.x = op rhs.x;                                                                          \
+        ret.y = op rhs.y;                                                                          \
+        ret.z = op rhs.z;                                                                          \
+        ret.w = op rhs.w;                                                                          \
+        return ret;                                                                                \
+    }
 
-#define DECLOP_4VAR_1IN_BOOLOUT(type, op) \
-__device__ __host__ static inline bool operator op (type &rhs) { \
-  return (op rhs.x) && (op rhs.y) && (op rhs.z) && (op rhs.w); \
-}
+#define DECLOP_4VAR_1IN_BOOLOUT(type, op)                                                          \
+    __device__ __host__ static inline bool operator op(type& rhs) {                                \
+        return (op rhs.x) && (op rhs.y) && (op rhs.z) && (op rhs.w);                               \
+    }
 
 
 /*

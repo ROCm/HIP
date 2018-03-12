@@ -32,8 +32,7 @@ THE SOFTWARE.
 #pragma GCC diagnostic ignored "-Wall"
 #pragma clang diagnostic ignored "-Wunused-variable"
 
-__device__ void single_precision_intrinsics()
-{
+__device__ void single_precision_intrinsics() {
     float fX, fY;
 
     __cosf(0.0f);
@@ -80,14 +79,12 @@ __device__ void single_precision_intrinsics()
 }
 
 
-__global__ void compileSinglePrecisionIntrinsics(hipLaunchParm lp, int ignored)
-{
+__global__ void compileSinglePrecisionIntrinsics(hipLaunchParm lp, int ignored) {
     single_precision_intrinsics();
 }
 
 
-int main()
-{
-  hipLaunchKernel(compileSinglePrecisionIntrinsics, dim3(1,1,1), dim3(1,1,1), 0, 0, 1);
-  passed();
+int main() {
+    hipLaunchKernel(compileSinglePrecisionIntrinsics, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, 1);
+    passed();
 }

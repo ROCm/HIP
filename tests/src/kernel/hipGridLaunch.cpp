@@ -31,65 +31,51 @@ THE SOFTWARE.
 #include "test_common.h"
 
 
-
 // __device__ maps to __attribute__((hc))
-__device__ int foo(int i)
-{
-    return i+1;
-}
+__device__ int foo(int i) { return i + 1; }
 
 //---
-//Syntax we would like to support with GRID_LAUNCH enabled:
+// Syntax we would like to support with GRID_LAUNCH enabled:
 template <typename T>
-__global__ void
-vectorADD2( hipLaunchParm lp,
-            T *A_d,
-            T *B_d,
-            T *C_d,
-            size_t N)
-{
+__global__ void vectorADD2(hipLaunchParm lp, T* A_d, T* B_d, T* C_d, size_t N) {
     size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
-    size_t stride = blockDim.x * gridDim.x ;
+    size_t stride = blockDim.x * gridDim.x;
 
-    for (size_t i=offset; i<N; i+=stride) {
+    for (size_t i = offset; i < N; i += stride) {
         double foo = __hiloint2double(A_d[i], B_d[i]);
-        C_d[i] = __double2loint(foo) + __double2hiint(foo);//A_d[i] + B_d[i] ;
+        C_d[i] = __double2loint(foo) + __double2hiint(foo);  // A_d[i] + B_d[i] ;
     }
 }
 
 int test_gl2(size_t N) {
-
-    size_t Nbytes = N*sizeof(int);
+    size_t Nbytes = N * sizeof(int);
 
     int *A_d, *B_d, *C_d;
     int *A_h, *B_h, *C_h;
 
-    HipTest::initArrays (&A_d, &B_d, &C_d, &A_h, &B_h, &C_h, N);
-
+    HipTest::initArrays(&A_d, &B_d, &C_d, &A_h, &B_h, &C_h, N);
 
 
     unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
 
 
     // Full vadd in one large chunk, to get things started:
-    HIPCHECK ( hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
-    HIPCHECK ( hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
+    HIPCHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
+    HIPCHECK(hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
 
     hipLaunchKernel(vectorADD2, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d, B_d, C_d, N);
 
-    HIPCHECK ( hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
+    HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
 
-    HIPCHECK (hipDeviceSynchronize());
+    HIPCHECK(hipDeviceSynchronize());
 
     HipTest::checkVectorADD(A_h, B_h, C_h, N);
 
     return 0;
-
 }
 
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
     HipTest::parseStandardArguments(argc, argv, true);
 
     test_gl2(N);

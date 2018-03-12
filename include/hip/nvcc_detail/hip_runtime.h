@@ -29,74 +29,72 @@ THE SOFTWARE.
 
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
 
-typedef int hipLaunchParm ;
+typedef int hipLaunchParm;
 
-#define hipLaunchKernel(kernelName, numblocks, numthreads, memperblock, streamId, ...) \
-do {\
-kernelName<<<numblocks,numthreads,memperblock,streamId>>>(0, ##__VA_ARGS__);\
-} while(0)
+#define hipLaunchKernel(kernelName, numblocks, numthreads, memperblock, streamId, ...)             \
+    do {                                                                                           \
+        kernelName<<<numblocks, numthreads, memperblock, streamId>>>(0, ##__VA_ARGS__);            \
+    } while (0)
 
-#define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...) \
-do {\
-kernelName<<<numblocks,numthreads,memperblock,streamId>>>(__VA_ARGS__);\
-} while(0)
+#define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
+    do {                                                                                           \
+        kernelName<<<numblocks, numthreads, memperblock, streamId>>>(__VA_ARGS__);                 \
+    } while (0)
 
 #define hipReadModeElementType cudaReadModeElementType
 
 #ifdef __CUDA_ARCH__
 
 
-    // 32-bit Atomics:
-#define __HIP_ARCH_HAS_GLOBAL_INT32_ATOMICS__       (__CUDA_ARCH__ >= 110)
-#define __HIP_ARCH_HAS_GLOBAL_FLOAT_ATOMIC_EXCH__   (__CUDA_ARCH__ >= 110)
-#define __HIP_ARCH_HAS_SHARED_INT32_ATOMICS__       (__CUDA_ARCH__ >= 120)
-#define __HIP_ARCH_HAS_SHARED_FLOAT_ATOMIC_EXCH__   (__CUDA_ARCH__ >= 120)
-#define __HIP_ARCH_HAS_FLOAT_ATOMIC_ADD__           (__CUDA_ARCH__ >= 200)
+// 32-bit Atomics:
+#define __HIP_ARCH_HAS_GLOBAL_INT32_ATOMICS__ (__CUDA_ARCH__ >= 110)
+#define __HIP_ARCH_HAS_GLOBAL_FLOAT_ATOMIC_EXCH__ (__CUDA_ARCH__ >= 110)
+#define __HIP_ARCH_HAS_SHARED_INT32_ATOMICS__ (__CUDA_ARCH__ >= 120)
+#define __HIP_ARCH_HAS_SHARED_FLOAT_ATOMIC_EXCH__ (__CUDA_ARCH__ >= 120)
+#define __HIP_ARCH_HAS_FLOAT_ATOMIC_ADD__ (__CUDA_ARCH__ >= 200)
 
 // 64-bit Atomics:
-#define __HIP_ARCH_HAS_GLOBAL_INT64_ATOMICS__       (__CUDA_ARCH__ >= 200)
-#define __HIP_ARCH_HAS_SHARED_INT64_ATOMICS__       (__CUDA_ARCH__ >= 120)
+#define __HIP_ARCH_HAS_GLOBAL_INT64_ATOMICS__ (__CUDA_ARCH__ >= 200)
+#define __HIP_ARCH_HAS_SHARED_INT64_ATOMICS__ (__CUDA_ARCH__ >= 120)
 
 // Doubles
-#define __HIP_ARCH_HAS_DOUBLES__                    (__CUDA_ARCH__ >= 120)
+#define __HIP_ARCH_HAS_DOUBLES__ (__CUDA_ARCH__ >= 120)
 
-//warp cross-lane operations:
-#define __HIP_ARCH_HAS_WARP_VOTE__                  (__CUDA_ARCH__ >= 120)
-#define __HIP_ARCH_HAS_WARP_BALLOT__                (__CUDA_ARCH__ >= 200)
-#define __HIP_ARCH_HAS_WARP_SHUFFLE__               (__CUDA_ARCH__ >= 300)
-#define __HIP_ARCH_HAS_WARP_FUNNEL_SHIFT__          (__CUDA_ARCH__ >= 350)
+// warp cross-lane operations:
+#define __HIP_ARCH_HAS_WARP_VOTE__ (__CUDA_ARCH__ >= 120)
+#define __HIP_ARCH_HAS_WARP_BALLOT__ (__CUDA_ARCH__ >= 200)
+#define __HIP_ARCH_HAS_WARP_SHUFFLE__ (__CUDA_ARCH__ >= 300)
+#define __HIP_ARCH_HAS_WARP_FUNNEL_SHIFT__ (__CUDA_ARCH__ >= 350)
 
-//sync
-#define __HIP_ARCH_HAS_THREAD_FENCE_SYSTEM__        (__CUDA_ARCH__ >= 200)
-#define __HIP_ARCH_HAS_SYNC_THREAD_EXT__            (__CUDA_ARCH__ >= 200)
+// sync
+#define __HIP_ARCH_HAS_THREAD_FENCE_SYSTEM__ (__CUDA_ARCH__ >= 200)
+#define __HIP_ARCH_HAS_SYNC_THREAD_EXT__ (__CUDA_ARCH__ >= 200)
 
 // misc
-#define __HIP_ARCH_HAS_SURFACE_FUNCS__              (__CUDA_ARCH__ >= 200)
-#define __HIP_ARCH_HAS_3DGRID__                     (__CUDA_ARCH__ >= 200)
-#define __HIP_ARCH_HAS_DYNAMIC_PARALLEL__           (__CUDA_ARCH__ >= 350)
+#define __HIP_ARCH_HAS_SURFACE_FUNCS__ (__CUDA_ARCH__ >= 200)
+#define __HIP_ARCH_HAS_3DGRID__ (__CUDA_ARCH__ >= 200)
+#define __HIP_ARCH_HAS_DYNAMIC_PARALLEL__ (__CUDA_ARCH__ >= 350)
 
 #endif
 
 #ifdef __CUDACC__
 
 
-
-
 #define hipThreadIdx_x threadIdx.x
 #define hipThreadIdx_y threadIdx.y
 #define hipThreadIdx_z threadIdx.z
 
-#define hipBlockIdx_x  blockIdx.x
-#define hipBlockIdx_y  blockIdx.y
-#define hipBlockIdx_z  blockIdx.z
+#define hipBlockIdx_x blockIdx.x
+#define hipBlockIdx_y blockIdx.y
+#define hipBlockIdx_z blockIdx.z
 
-#define hipBlockDim_x  blockDim.x
-#define hipBlockDim_y  blockDim.y
-#define hipBlockDim_z  blockDim.z
+#define hipBlockDim_x blockDim.x
+#define hipBlockDim_y blockDim.y
+#define hipBlockDim_z blockDim.z
 
-#define hipGridDim_x  gridDim.x
-#define hipGridDim_y  gridDim.y
-#define hipGridDim_z  gridDim.z
+#define hipGridDim_x gridDim.x
+#define hipGridDim_y gridDim.y
+#define hipGridDim_z gridDim.z
 
 #define HIP_SYMBOL(X) X
 
@@ -104,15 +102,20 @@ kernelName<<<numblocks,numthreads,memperblock,streamId>>>(__VA_ARGS__);\
  * extern __shared__
  */
 
-#define HIP_DYNAMIC_SHARED(type, var) \
-    extern __shared__ type var[]; \
+#define HIP_DYNAMIC_SHARED(type, var) extern __shared__ type var[];
 
 #define HIP_DYNAMIC_SHARED_ATTRIBUTE
 
 #ifdef __HIP_DEVICE_COMPILE__
-#define abort() {asm("trap;");}
+#define abort()                                                                                    \
+    { asm("trap;"); }
 #undef assert
-#define assert(COND) { if (!COND) {abort();} }
+#define assert(COND)                                                                               \
+    {                                                                                              \
+        if (!COND) {                                                                               \
+            abort();                                                                               \
+        }                                                                                          \
+    }
 #endif
 
 #endif

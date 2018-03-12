@@ -38,34 +38,31 @@ THE SOFTWARE.
 #include "test_common.h"
 
 
-int main(int argc, char *argv[])
-{
-
+int main(int argc, char* argv[]) {
     HipTest::parseStandardArguments(argc, argv, true);
 
     HIPCHECK(hipSetDevice(p_gpuDevice));
 
-    size_t Nbytes = N*sizeof(char);
+    size_t Nbytes = N * sizeof(char);
 
-    printf ("N=%zu  memsetval=%2x device=%d\n", N, memsetval, p_gpuDevice);
+    printf("N=%zu  memsetval=%2x device=%d\n", N, memsetval, p_gpuDevice);
 
-    char *A_d;
-    char *A_h;
+    char* A_d;
+    char* A_h;
 
-    HIPCHECK ( hipMalloc(&A_d, Nbytes) );
+    HIPCHECK(hipMalloc(&A_d, Nbytes));
     A_h = (char*)malloc(Nbytes);
 
-    HIPCHECK ( hipMemset(A_d, memsetval, Nbytes) ); 
+    HIPCHECK(hipMemset(A_d, memsetval, Nbytes));
 
-    HIPCHECK ( hipMemcpy(A_h, A_d, Nbytes, hipMemcpyDeviceToHost));
+    HIPCHECK(hipMemcpy(A_h, A_d, Nbytes, hipMemcpyDeviceToHost));
 
-    for (int i=0; i<N; i++) {
+    for (int i = 0; i < N; i++) {
         if (A_h[i] != memsetval) {
-            failed("mismatch at index:%d computed:%02x, memsetval:%02x\n", i, (int)A_h[i], (int)memsetval);
-
+            failed("mismatch at index:%d computed:%02x, memsetval:%02x\n", i, (int)A_h[i],
+                   (int)memsetval);
         }
     }
 
     passed();
-
 }

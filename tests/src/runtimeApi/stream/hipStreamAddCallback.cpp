@@ -29,16 +29,15 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
-#ifdef __HIP_PLATFORM_HCC__ 
+#ifdef __HIP_PLATFORM_HCC__
 #define HIPRT_CB
 #endif
 
-__global__ void vector_square(float *C_d, float *A_d, size_t N)
-{
+__global__ void vector_square(float* C_d, float* A_d, size_t N) {
     size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
-    size_t stride = blockDim.x * gridDim.x ;
+    size_t stride = blockDim.x * gridDim.x;
 
-    for (size_t i=offset; i<N; i+=stride) {
+    for (size_t i = offset; i < N; i += stride) {
         C_d[i] = A_d[i] * A_d[i];
     }
 }
@@ -46,31 +45,28 @@ __global__ void vector_square(float *C_d, float *A_d, size_t N)
 float *A_h, *C_h;
 bool cbDone = false;
 
-static void HIPRT_CB Callback(hipStream_t stream, hipError_t status, void *userData)
-{
-    for (size_t i=0; i<N; i++) {
+static void HIPRT_CB Callback(hipStream_t stream, hipError_t status, void* userData) {
+    for (size_t i = 0; i < N; i++) {
         if (C_h[i] != A_h[i] * A_h[i]) {
             warn("Data mismatch %zu", i);
         }
     }
-    printf ("PASSED!\n");
+    printf("PASSED!\n");
     cbDone = true;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
     float *A_d, *C_d;
     size_t Nbytes = N * sizeof(float);
 
     A_h = (float*)malloc(Nbytes);
-    HIPCHECK(A_h == 0 ? hipErrorMemoryAllocation : hipSuccess );
+    HIPCHECK(A_h == 0 ? hipErrorMemoryAllocation : hipSuccess);
     C_h = (float*)malloc(Nbytes);
-    HIPCHECK(C_h == 0 ? hipErrorMemoryAllocation : hipSuccess );
+    HIPCHECK(C_h == 0 ? hipErrorMemoryAllocation : hipSuccess);
 
     // Fill with Phi + i
-    for (size_t i=0; i<N; i++) 
-    {
-        A_h[i] = 1.618f + i; 
+    for (size_t i = 0; i < N; i++) {
+        A_h[i] = 1.618f + i;
     }
 
     HIPCHECK(hipMalloc(&A_d, Nbytes));
@@ -83,11 +79,11 @@ int main(int argc, char *argv[])
 
     const unsigned blocks = 512;
     const unsigned threadsPerBlock = 256;
-    hipLaunchKernelGGL((vector_square), dim3(blocks), dim3(threadsPerBlock), 0, mystream, C_d, A_d, N);
+    hipLaunchKernelGGL((vector_square), dim3(blocks), dim3(threadsPerBlock), 0, mystream, C_d, A_d,
+                       N);
 
     HIPCHECK(hipMemcpyAsync(C_h, C_d, Nbytes, hipMemcpyDeviceToHost, mystream));
     HIPCHECK(hipStreamAddCallback(mystream, Callback, NULL, 0));
 
-    while(!cbDone)
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    while (!cbDone) std::this_thread::sleep_for(std::chrono::milliseconds(10));
 }

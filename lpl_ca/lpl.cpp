@@ -11,12 +11,10 @@ using namespace clara;
 using namespace hip_impl;
 using namespace std;
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     try {
         if (!hipcc_and_lpl_colocated()) {
-            throw runtime_error{
-                "The LPL executable and hipcc must be in the same directory."};
+            throw runtime_error{"The LPL executable and hipcc must be in the same directory."};
         }
 
         bool help = false;
@@ -31,22 +29,23 @@ int main(int argc, char** argv)
 
         if (!r) throw runtime_error{r.errorMessage()};
 
-        if (help) cout << cmd << endl;
+        if (help)
+            cout << cmd << endl;
         else {
             if (sources.empty()) throw runtime_error{"No inputs specified."};
 
             auto tmp = tokenize_targets(targets);
             if (tmp.empty()) {
                 tmp.assign(amdgpu_targets().cbegin(), amdgpu_targets().cend());
-            }
-            else validate_targets(tmp);
+            } else
+                validate_targets(tmp);
 
-            if (output.empty()) for (auto&& x : tmp) output += x;
+            if (output.empty())
+                for (auto&& x : tmp) output += x;
 
             generate_fat_binary(sources, tmp, flags, output);
         }
-    }
-    catch (const exception& ex) {
+    } catch (const exception& ex) {
         cerr << ex.what() << endl;
 
         return EXIT_FAILURE;
