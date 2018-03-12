@@ -20,105 +20,94 @@ THE SOFTWARE.
 #include <iostream>
 #include <hip/hip_runtime.h>
 #include <assert.h>
-#define WIDTH     32
+#define WIDTH 32
 
-#define NUM       (WIDTH*WIDTH)
+#define NUM (WIDTH * WIDTH)
 
-#define THREADS_PER_BLOCK_X  4
-#define THREADS_PER_BLOCK_Y  4
-#define THREADS_PER_BLOCK_Z  1
+#define THREADS_PER_BLOCK_X 4
+#define THREADS_PER_BLOCK_Y 4
+#define THREADS_PER_BLOCK_Z 1
 
 using namespace std;
 
-#define KNRM  "\x1B[0m"
-#define KRED  "\x1B[31m"
+#define KNRM "\x1B[0m"
+#define KRED "\x1B[31m"
 
-#define failed(...) \
-    printf ("%serror: ", KRED);\
-    printf (__VA_ARGS__);\
-    printf ("\n");\
-    printf ("error: TEST FAILED\n%s", KNRM );\
+#define failed(...)                                                                                \
+    printf("%serror: ", KRED);                                                                     \
+    printf(__VA_ARGS__);                                                                           \
+    printf("\n");                                                                                  \
+    printf("error: TEST FAILED\n%s", KNRM);                                                        \
     abort();
 
-#define HIPCHECK(error) \
-{\
-    hipError_t localError = error; \
-    if (localError != hipSuccess) { \
-        printf("%serror: '%s'(%d) from %s at %s:%d%s\n", \
-        KRED, hipGetErrorString(localError), localError,\
-        #error,__FILE__, __LINE__, KNRM); \
-        failed("API returned error code.");\
-    }\
-}
+#define HIPCHECK(error)                                                                            \
+    {                                                                                              \
+        hipError_t localError = error;                                                             \
+        if (localError != hipSuccess) {                                                            \
+            printf("%serror: '%s'(%d) from %s at %s:%d%s\n", KRED, hipGetErrorString(localError),  \
+                   localError, #error, __FILE__, __LINE__, KNRM);                                  \
+            failed("API returned error code.");                                                    \
+        }                                                                                          \
+    }
 
-void checkPeer2PeerSupport()
-{
+void checkPeer2PeerSupport() {
     int gpuCount;
     int canAccessPeer;
 
     HIPCHECK(hipGetDeviceCount(&gpuCount));
 
-    for (int currentGpu=0; currentGpu<gpuCount; currentGpu++)
-    {
+    for (int currentGpu = 0; currentGpu < gpuCount; currentGpu++) {
         HIPCHECK(hipSetDevice(currentGpu));
 
-        for (int peerGpu=0; peerGpu<currentGpu; peerGpu++)
-        {
-            if (currentGpu!=peerGpu)
-            {
+        for (int peerGpu = 0; peerGpu < currentGpu; peerGpu++) {
+            if (currentGpu != peerGpu) {
                 HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, currentGpu, peerGpu));
-                printf ("currentGpu#%d canAccessPeer: peerGpu#%d=%d\n", currentGpu, peerGpu, canAccessPeer);
+                printf("currentGpu#%d canAccessPeer: peerGpu#%d=%d\n", currentGpu, peerGpu,
+                       canAccessPeer);
             }
 
             HIPCHECK(hipSetDevice(peerGpu));
             HIPCHECK(hipDeviceReset());
         }
-    HIPCHECK(hipSetDevice(currentGpu));
-    HIPCHECK(hipDeviceReset());
+        HIPCHECK(hipSetDevice(currentGpu));
+        HIPCHECK(hipDeviceReset());
     }
 }
 
-void enablePeer2Peer(int currentGpu, int peerGpu)
-{
+void enablePeer2Peer(int currentGpu, int peerGpu) {
     int canAccessPeer;
 
     // Must be on a multi-gpu system:
-    assert (currentGpu != peerGpu);
+    assert(currentGpu != peerGpu);
 
     HIPCHECK(hipSetDevice(currentGpu));
     hipDeviceCanAccessPeer(&canAccessPeer, currentGpu, peerGpu);
 
-    if(canAccessPeer==1){
+    if (canAccessPeer == 1) {
         HIPCHECK(hipDeviceEnablePeerAccess(peerGpu, 0));
-    }
-    else
-    printf("peer2peer transfer not possible between the selected gpu devices");
+    } else
+        printf("peer2peer transfer not possible between the selected gpu devices");
 }
 
-void disablePeer2Peer(int currentGpu, int peerGpu)
-{
+void disablePeer2Peer(int currentGpu, int peerGpu) {
     int canAccessPeer;
 
     // Must be on a multi-gpu system:
-    assert (currentGpu != peerGpu);
+    assert(currentGpu != peerGpu);
 
     HIPCHECK(hipSetDevice(currentGpu));
     hipDeviceCanAccessPeer(&canAccessPeer, currentGpu, peerGpu);
 
-    if(canAccessPeer==1){
+    if (canAccessPeer == 1) {
         HIPCHECK(hipDeviceDisablePeerAccess(peerGpu));
-    }
-    else
-    printf("peer2peer disable not required");
+    } else
+        printf("peer2peer disable not required");
 }
 
 
-__global__ void matrixTranspose_static_shared(hipLaunchParm lp,
-                                float *out,
-                                float *in,
-                                const int width)
-{
-    __shared__ float sharedMem[WIDTH*WIDTH];
+__global__ void matrixTranspose_static_shared(hipLaunchParm lp, float* out, float* in,
+                                              const int width) {
+    __shared__ float sharedMem[WIDTH * WIDTH];
 
     int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
     int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
@@ -130,11 +119,8 @@ __global__ void matrixTranspose_static_shared(hipLaunchParm lp,
     out[y * width + x] = sharedMem[y * width + x];
 }
 
-__global__ void matrixTranspose_dynamic_shared(hipLaunchParm lp,
-                                float *out,
-                                float *in,
-                                const int width)
-{
+__global__ void matrixTranspose_dynamic_shared(hipLaunchParm lp, float* out, float* in,
+                                               const int width) {
     // declare dynamic shared memory
     HIP_DYNAMIC_SHARED(float, sharedMem)
 
@@ -148,8 +134,7 @@ __global__ void matrixTranspose_dynamic_shared(hipLaunchParm lp,
     out[y * width + x] = sharedMem[y * width + x];
 }
 
-int main(){
-
+int main() {
     checkPeer2PeerSupport();
 
     int gpuCount;
@@ -157,8 +142,7 @@ int main(){
 
     HIPCHECK(hipGetDeviceCount(&gpuCount));
 
-    if (gpuCount < 2)
-    {
+    if (gpuCount < 2) {
         printf("Peer2Peer application requires atleast 2 gpu devices");
         return 0;
     }
@@ -166,7 +150,7 @@ int main(){
     currentGpu = 0;
     peerGpu = (currentGpu + 1);
 
-    printf ("currentGpu=%d peerGpu=%d (Total no. of gpu = %d)\n", currentGpu, peerGpu, gpuCount);
+    printf("currentGpu=%d peerGpu=%d (Total no. of gpu = %d)\n", currentGpu, peerGpu, gpuCount);
 
     float *data[2], *TransposeMatrix[2], *gpuTransposeMatrix[2], *randArray;
 
@@ -174,9 +158,8 @@ int main(){
 
     randArray = (float*)malloc(NUM * sizeof(float));
 
-    for(int i = 0; i < NUM; i++)
-    {
-        randArray[i] = (float)i*1.0f;
+    for (int i = 0; i < NUM; i++) {
+        randArray[i] = (float)i * 1.0f;
     }
 
     enablePeer2Peer(currentGpu, peerGpu);
@@ -188,10 +171,9 @@ int main(){
     hipMemcpy(data[0], randArray, NUM * sizeof(float), hipMemcpyHostToDevice);
 
     hipLaunchKernel(matrixTranspose_static_shared,
-                    dim3(WIDTH/THREADS_PER_BLOCK_X, WIDTH/THREADS_PER_BLOCK_Y),
-                    dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
-                    0, 0,
-                    gpuTransposeMatrix[0], data[0], width);
+                    dim3(WIDTH / THREADS_PER_BLOCK_X, WIDTH / THREADS_PER_BLOCK_Y),
+                    dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), 0, 0, gpuTransposeMatrix[0],
+                    data[0], width);
 
     HIPCHECK(hipSetDevice(peerGpu));
     TransposeMatrix[1] = (float*)malloc(NUM * sizeof(float));
@@ -200,12 +182,12 @@ int main(){
     hipMemcpy(data[1], gpuTransposeMatrix[0], NUM * sizeof(float), hipMemcpyDeviceToDevice);
 
     hipLaunchKernel(matrixTranspose_dynamic_shared,
-                    dim3(WIDTH/THREADS_PER_BLOCK_X, WIDTH/THREADS_PER_BLOCK_Y),
-                    dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
-                    sizeof(float)*WIDTH*WIDTH, 0,
-                    gpuTransposeMatrix[1], data[1], width);
+                    dim3(WIDTH / THREADS_PER_BLOCK_X, WIDTH / THREADS_PER_BLOCK_Y),
+                    dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), sizeof(float) * WIDTH * WIDTH,
+                    0, gpuTransposeMatrix[1], data[1], width);
 
-    hipMemcpy(TransposeMatrix[1], gpuTransposeMatrix[1], NUM*sizeof(float), hipMemcpyDeviceToHost);
+    hipMemcpy(TransposeMatrix[1], gpuTransposeMatrix[1], NUM * sizeof(float),
+              hipMemcpyDeviceToHost);
 
     hipDeviceSynchronize();
 
@@ -215,22 +197,22 @@ int main(){
     int errors = 0;
     double eps = 1.0E-6;
     for (int i = 0; i < NUM; i++) {
-        if (std::abs(randArray[i] - TransposeMatrix[1][i]) > eps ) {
-        printf("%d cpu: %f gpu peered data  %f\n",i,randArray[i],TransposeMatrix[1][i]);
-        errors++;
+        if (std::abs(randArray[i] - TransposeMatrix[1][i]) > eps) {
+            printf("%d cpu: %f gpu peered data  %f\n", i, randArray[i], TransposeMatrix[1][i]);
+            errors++;
         }
     }
-    if (errors!=0) {
-        printf("FAILED: %d errors\n",errors);
+    if (errors != 0) {
+        printf("FAILED: %d errors\n", errors);
     } else {
-        printf ("Peer2Peer PASSED!\n");
+        printf("Peer2Peer PASSED!\n");
     }
 
     free(randArray);
-    for(int i=0;i<2;i++){
-       hipFree(data[i]);
-       hipFree(gpuTransposeMatrix[i]);
-       free(TransposeMatrix[i]);
+    for (int i = 0; i < 2; i++) {
+        hipFree(data[i]);
+        hipFree(gpuTransposeMatrix[i]);
+        free(TransposeMatrix[i]);
     }
 
     HIPCHECK(hipSetDevice(peerGpu));

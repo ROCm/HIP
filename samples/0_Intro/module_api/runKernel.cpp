@@ -28,22 +28,25 @@ THE SOFTWARE.
 #include <hip/hip_hcc.h>
 
 #define LEN 64
-#define SIZE LEN<<2
+#define SIZE LEN << 2
 
 #define fileName "vcpy_kernel.code.adipose"
 #define kernel_name "hello_world"
 
-#define HIP_CHECK(status) \
-if(status != hipSuccess) {std::cout<<"Got Status: "<<status<<" at Line: "<<__LINE__<<std::endl;exit(0);}
+#define HIP_CHECK(status)                                                                          \
+    if (status != hipSuccess) {                                                                    \
+        std::cout << "Got Status: " << status << " at Line: " << __LINE__ << std::endl;            \
+        exit(0);                                                                                   \
+    }
 
-int main(){
+int main() {
     float *A, *B;
     hipDeviceptr_t Ad, Bd;
     A = new float[LEN];
     B = new float[LEN];
 
-    for(uint32_t i=0;i<LEN;i++){
-        A[i] = i*1.0f;
+    for (uint32_t i = 0; i < LEN; i++) {
+        A[i] = i * 1.0f;
         B[i] = 0.0f;
     }
 
@@ -64,12 +67,12 @@ int main(){
     HIP_CHECK(hipModuleGetFunction(&Function, Module, kernel_name));
 
 #ifdef __HIP_PLATFORM_HCC__
-		uint32_t len = LEN;
-		uint32_t one = 1;
+    uint32_t len = LEN;
+    uint32_t one = 1;
 
     struct {
-        void * _Ad;
-        void * _Bd;
+        void* _Ad;
+        void* _Bd;
     } args;
 
     args._Ad = Ad;
@@ -80,8 +83,8 @@ int main(){
 #ifdef __HIP_PLATFORM_NVCC__
     struct {
         uint32_t _hidden[1];
-        void * _Ad;
-        void * _Bd;
+        void* _Ad;
+        void* _Bd;
     } args;
 
     args._hidden[0] = 0;
@@ -92,21 +95,18 @@ int main(){
 
     size_t size = sizeof(args);
 
-    void *config[] = {
-      HIP_LAUNCH_PARAM_BUFFER_POINTER, &args,
-      HIP_LAUNCH_PARAM_BUFFER_SIZE, &size,
-      HIP_LAUNCH_PARAM_END
-    };
+    void* config[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args, HIP_LAUNCH_PARAM_BUFFER_SIZE, &size,
+                      HIP_LAUNCH_PARAM_END};
 
     HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
 
     hipMemcpyDtoH(B, Bd, SIZE);
 
     int mismatchCount = 0;
-    for(uint32_t i=0;i<LEN;i++){
+    for (uint32_t i = 0; i < LEN; i++) {
         if (A[i] != B[i]) {
             mismatchCount++;
-            std::cout<<"error: mismatch " << A[i]<<" != "<<B[i]<<std::endl;
+            std::cout << "error: mismatch " << A[i] << " != " << B[i] << std::endl;
         }
     }
 

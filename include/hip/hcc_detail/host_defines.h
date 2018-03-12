@@ -38,42 +38,40 @@ THE SOFTWARE.
 /**
  * Function and kernel markers
  */
-#define __host__     __attribute__((cpu))
-#define __device__   __attribute__((hc))
+#define __host__ __attribute__((cpu))
+#define __device__ __attribute__((hc))
 
 #if GENERIC_GRID_LAUNCH == 0
-#define __global__  __attribute__((hc_grid_launch)) __attribute__((used))
+#define __global__ __attribute__((hc_grid_launch)) __attribute__((used))
 #else
-    #if __hcc_workweek__ >= 17481
-        #define __global__ \
-            __attribute__((annotate("__HIP_global_function__"), cpu, hc, used))
-    #else
-        #define __global__ __attribute__((hc, used))
-    #endif
-#endif //GENERIC_GRID_LAUNCH
+#if __hcc_workweek__ >= 17481
+#define __global__ __attribute__((annotate("__HIP_global_function__"), cpu, hc, used))
+#else
+#define __global__ __attribute__((hc, used))
+#endif
+#endif  // GENERIC_GRID_LAUNCH
 
-#define __noinline__      __attribute__((noinline))
-#define __forceinline__   __attribute__((always_inline))
-
+#define __noinline__ __attribute__((noinline))
+#define __forceinline__ __attribute__((always_inline))
 
 
 /*
  * Variable Type Qualifiers:
  */
 // _restrict is supported by the compiler
-#define __shared__     tile_static
-#define __constant__   __attribute__((hc))
+#define __shared__ tile_static
+#define __constant__ __attribute__((hc))
 
 #elif defined(__clang__) && defined(__HIP__)
 
-#define __host__      __attribute__((host))
-#define __device__    __attribute__((device))
-#define __global__    __attribute__((global))
-#define __shared__    __attribute__((shared))
-#define __constant__  __attribute__((constant))
+#define __host__ __attribute__((host))
+#define __device__ __attribute__((device))
+#define __global__ __attribute__((global))
+#define __shared__ __attribute__((shared))
+#define __constant__ __attribute__((constant))
 
-#define __noinline__     __attribute__((noinline))
-#define __forceinline__  __attribute__((always_inline))
+#define __noinline__ __attribute__((noinline))
+#define __forceinline__ __attribute__((always_inline))
 
 #else
 

@@ -33,31 +33,30 @@ THE SOFTWARE.
 #include "hip/hip_hcc.h"
 #include "test_common.h"
 
-#define CHECK(error) \
-    if (error != hipSuccess) { \
-      fprintf(stderr, "error: '%s'(%d) at %s:%d\n", hipGetErrorString(error), error,__FILE__, __LINE__); \
-    exit(EXIT_FAILURE);\
+#define CHECK(error)                                                                               \
+    if (error != hipSuccess) {                                                                     \
+        fprintf(stderr, "error: '%s'(%d) at %s:%d\n", hipGetErrorString(error), error, __FILE__,   \
+                __LINE__);                                                                         \
+        exit(EXIT_FAILURE);                                                                        \
     }
 
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
     int deviceId;
-    CHECK (hipGetDevice(&deviceId));
+    CHECK(hipGetDevice(&deviceId));
     hipDeviceProp_t props;
     CHECK(hipGetDeviceProperties(&props, deviceId));
-    printf ("info: running on device #%d %s\n", deviceId, props.name);
+    printf("info: running on device #%d %s\n", deviceId, props.name);
 
 #ifdef __HCC__
     hc::accelerator acc;
     CHECK(hipHccGetAccelerator(deviceId, &acc));
     std::wcout << "device_path=" << acc.get_device_path() << "\n";
 
-    hc::accelerator_view *av;
-    CHECK(hipHccGetAcceleratorView(0/*nullStream*/, &av));
+    hc::accelerator_view* av;
+    CHECK(hipHccGetAcceleratorView(0 /*nullStream*/, &av));
 #endif
 
 
     passed();
-
 };

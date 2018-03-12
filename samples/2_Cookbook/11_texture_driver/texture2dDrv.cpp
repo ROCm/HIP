@@ -32,111 +32,113 @@ THE SOFTWARE.
 texture<float, 2, hipReadModeElementType> tex;
 bool testResult = false;
 
-#define HIP_CHECK(cmd) \
-{\
-    hipError_t status = cmd;\
-    if(status != hipSuccess) {std::cout<<"error: #"<<status<<" ("<< hipGetErrorString(status) << ") at line:"<<__LINE__<<":  "<<#cmd<<std::endl;abort();}\
-}
+#define HIP_CHECK(cmd)                                                                             \
+    {                                                                                              \
+        hipError_t status = cmd;                                                                   \
+        if (status != hipSuccess) {                                                                \
+            std::cout << "error: #" << status << " (" << hipGetErrorString(status)                 \
+                      << ") at line:" << __LINE__ << ":  " << #cmd << std::endl;                   \
+            abort();                                                                               \
+        }                                                                                          \
+    }
 
-bool runTest(int argc, char **argv)
-{
+bool runTest(int argc, char** argv) {
     unsigned int width = 256;
     unsigned int height = 256;
     unsigned int size = width * height * sizeof(float);
-    float* hData = (float*) malloc(size);
+    float* hData = (float*)malloc(size);
     memset(hData, 0, size);
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            hData[i*width+j] = i*width+j;
+            hData[i * width + j] = i * width + j;
         }
     }
     hipModule_t Module;
     HIP_CHECK(hipModuleLoad(&Module, fileName));
 
     hipArray* array;
-	HIP_ARRAY_DESCRIPTOR desc;
-	desc.format = HIP_AD_FORMAT_FLOAT;
-	desc.numChannels = 1;
-	desc.width = width;
-	desc.height = height;
+    HIP_ARRAY_DESCRIPTOR desc;
+    desc.format = HIP_AD_FORMAT_FLOAT;
+    desc.numChannels = 1;
+    desc.width = width;
+    desc.height = height;
     hipArrayCreate(&array, &desc);
 
     hip_Memcpy2D copyParam;
-	memset(&copyParam, 0, sizeof(copyParam));
-	copyParam.dstMemoryType = hipMemoryTypeArray;
-	copyParam.dstArray = array;
-	copyParam.srcMemoryType = hipMemoryTypeHost;
-	copyParam.srcHost = hData;
-	copyParam.srcPitch = width * sizeof(float);
-	copyParam.widthInBytes = copyParam.srcPitch;
-	copyParam.height = height;
+    memset(&copyParam, 0, sizeof(copyParam));
+    copyParam.dstMemoryType = hipMemoryTypeArray;
+    copyParam.dstArray = array;
+    copyParam.srcMemoryType = hipMemoryTypeHost;
+    copyParam.srcHost = hData;
+    copyParam.srcPitch = width * sizeof(float);
+    copyParam.widthInBytes = copyParam.srcPitch;
+    copyParam.height = height;
     hipMemcpyParam2D(&copyParam);
-    
+
     textureReference* texref;
     hipModuleGetTexRef(&texref, Module, "tex");
     hipTexRefSetAddressMode(texref, 0, hipAddressModeWrap);
-	hipTexRefSetAddressMode(texref, 1, hipAddressModeWrap);
-	hipTexRefSetFilterMode(texref, hipFilterModePoint);
+    hipTexRefSetAddressMode(texref, 1, hipAddressModeWrap);
+    hipTexRefSetFilterMode(texref, hipFilterModePoint);
     hipTexRefSetFlags(texref, 0);
-	hipTexRefSetFormat(texref, HIP_AD_FORMAT_FLOAT, 1);
+    hipTexRefSetFormat(texref, HIP_AD_FORMAT_FLOAT, 1);
     hipTexRefSetArray(texref, array, HIP_TRSA_OVERRIDE_FORMAT);
 
     float* dData = NULL;
-    hipMalloc((void **) &dData, size);
+    hipMalloc((void**)&dData, size);
 
 #ifdef __HIP_PLATFORM_HCC__
 
-	struct {
-		uint32_t _hidden[6];  // genco path + wrapper-gen pass used hidden arguments.
-		void * _Ad;
-		unsigned int _Bd;
-		unsigned int _Cd;
-	} args;
+    struct {
+        uint32_t _hidden[6];  // genco path + wrapper-gen pass used hidden arguments.
+        void* _Ad;
+        unsigned int _Bd;
+        unsigned int _Cd;
+    } args;
     args._Ad = dData;
-	args._Bd = width;
-	args._Cd = height;
+    args._Bd = width;
+    args._Cd = height;
 
 #endif
 
 #ifdef __HIP_PLATFORM_NVCC__
-	struct {
-		uint32_t _hidden[1];
-		void * _Ad;
-		unsigned int _Bd;
-		unsigned int _Cd;
-	} args;
+    struct {
+        uint32_t _hidden[1];
+        void* _Ad;
+        unsigned int _Bd;
+        unsigned int _Cd;
+    } args;
 
-	args._hidden[0] = 0;
-	args._Ad = dData;
+    args._hidden[0] = 0;
+    args._Ad = dData;
     args._Bd = width;
-	args._Cd = height;
+    args._Cd = height;
 #endif
 
 
-	size_t sizeTemp = sizeof(args);
+    size_t sizeTemp = sizeof(args);
 
-	void *config[] = {
-	  HIP_LAUNCH_PARAM_BUFFER_POINTER, &args,
-	  HIP_LAUNCH_PARAM_BUFFER_SIZE, &sizeTemp,
-	  HIP_LAUNCH_PARAM_END
-	};
+    void* config[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args, HIP_LAUNCH_PARAM_BUFFER_SIZE,
+                      &sizeTemp, HIP_LAUNCH_PARAM_END};
 
-	hipFunction_t Function;
-	HIP_CHECK(hipModuleGetFunction(&Function, Module, "tex2dKernel"));
+    hipFunction_t Function;
+    HIP_CHECK(hipModuleGetFunction(&Function, Module, "tex2dKernel"));
 
-    int temp1= width/16;
-    int temp2 = height/16;
-    HIP_CHECK(hipModuleLaunchKernel(Function, 16, 16, 1, temp1, temp2, 1, 0, 0, NULL, (void**)&config));
+    int temp1 = width / 16;
+    int temp2 = height / 16;
+    HIP_CHECK(
+        hipModuleLaunchKernel(Function, 16, 16, 1, temp1, temp2, 1, 0, 0, NULL, (void**)&config));
     hipDeviceSynchronize();
 
-    float *hOutputData = (float *) malloc(size);
-    memset(hOutputData, 0,  size);
+    float* hOutputData = (float*)malloc(size);
+    memset(hOutputData, 0, size);
     hipMemcpy(hOutputData, dData, size, hipMemcpyDeviceToHost);
 
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            if (hData[i*width+j] != hOutputData[i*width+j]) {
-                printf("Difference [ %d %d ]:%f ----%f\n",i, j, hData[i*width+j] , hOutputData[i*width+j]);
+            if (hData[i * width + j] != hOutputData[i * width + j]) {
+                printf("Difference [ %d %d ]:%f ----%f\n", i, j, hData[i * width + j],
+                       hOutputData[i * width + j]);
                 testResult = false;
                 break;
             }
@@ -147,7 +149,7 @@ bool runTest(int argc, char **argv)
     return true;
 }
 
-int main(int argc, char **argv){
+int main(int argc, char** argv) {
     hipInit(0);
     testResult = runTest(argc, argv);
     printf("%s ...\n", testResult ? "PASSED" : "FAILED");

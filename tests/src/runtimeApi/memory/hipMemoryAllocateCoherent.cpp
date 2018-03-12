@@ -29,33 +29,32 @@ THE SOFTWARE.
 #include <cstdio>
 #include "hip/hip_runtime.h"
 
-__global__ void Kernel(hipLaunchParm lp,volatile float* hostRes)
-{
+__global__ void Kernel(hipLaunchParm lp, volatile float* hostRes) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     hostRes[tid] = tid + 1;
     __threadfence_system();
     // expecting that the data is getting flushed to host here!
     // time waster for-loop (sleep)
-    for (int timeWater = 0; timeWater  < 100000000; timeWater++);
+    for (int timeWater = 0; timeWater < 100000000; timeWater++)
+        ;
 }
 
-int main()
-{
+int main() {
     size_t blocks = 2;
     volatile float* hostRes;
-    hipHostMalloc((void**)&hostRes,blocks*sizeof(float),hipHostMallocMapped);
-    hostRes[0]=0;
-    hostRes[1]=0;
+    hipHostMalloc((void**)&hostRes, blocks * sizeof(float), hipHostMallocMapped);
+    hostRes[0] = 0;
+    hostRes[1] = 0;
     hipLaunchKernel(HIP_KERNEL_NAME(Kernel), dim3(1), dim3(blocks), 0, 0, hostRes);
     int eleCounter = 0;
-    while (eleCounter < blocks)
-    {
+    while (eleCounter < blocks) {
         // blocks until the value changes
-        while(hostRes[eleCounter] == 0);
-        printf("%f\n", hostRes[eleCounter]);;
+        while (hostRes[eleCounter] == 0)
+            ;
+        printf("%f\n", hostRes[eleCounter]);
+        ;
         eleCounter++;
     }
-    hipHostFree((void *)hostRes);
+    hipHostFree((void*)hostRes);
     return 0;
 }
-

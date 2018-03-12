@@ -22,9 +22,9 @@ THE SOFTWARE.
 
 #pragma once
 
-namespace hip_impl // Documentation only.
+namespace hip_impl  // Documentation only.
 {
-    #define requires(...)
+#define requires(...)
 
-    #define FunctionalProcedure typename
-}
+#define FunctionalProcedure typename
+}  // namespace hip_impl
