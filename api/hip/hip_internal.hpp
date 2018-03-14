@@ -38,4 +38,6 @@ THE SOFTWARE.
 
 extern amd::Context* g_context;
 
+hipError_t hipDeviceGetCount(int* count);
+
 #endif // HIP_SRC_HIP_INTERNAL_H
