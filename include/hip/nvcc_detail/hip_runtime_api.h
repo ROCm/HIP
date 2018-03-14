@@ -558,6 +558,77 @@ inline static hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char  value, 
     return hipCUResultTohipError(cuMemsetD8(dest, value, sizeBytes));
 }
 
+inline static hipError_t hipMemsetD8Async(hipDeviceptr_t dest, unsigned char  value, size_t sizeBytes, hipStream_t stream __dparm(0) )
+{
+    return hipCUResultTohipError(cuMemsetD8Async(dest, value, sizeBytes, stream));
+}
+
+inline static hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height) {
+    return hipCUDAErrorTohipError(cudaMemset2D(dst, pitch, value, width, height));
+}
+
+inline static hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, size_t height, hipStream_t stream __dparm(0)) {
+    return hipCUDAErrorTohipError(cudaMemset2DAsync(dst, pitch, value, width, height, stream));
+}
+
+inline static hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent ){
+    return hipCUDAErrorTohipError(cudaMemset3D(pitchedDevPtr, value, extent));
+}
+
+inline static hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent, hipStream_t stream __dparm(0) ){
+    return hipCUDAErrorTohipError(cudaMemset3DAsync(pitchedDevPtr, value, extent, stream));
+}
+
+inline static hipError_t hipMemsetD32(hipDeviceptr_t dest, unsigned int  value, size_t sizeBytes )
+{
+    return hipCUResultTohipError(cuMemsetD32(dest, value, sizeBytes));
+}
+
+inline static hipError_t hipMemsetD32Async(hipDeviceptr_t dest, unsigned int  value, size_t sizeBytes, hipStream_t stream __dparm(0) )
+{
+    return hipCUResultTohipError(cuMemsetD32Async(dest, value, sizeBytes, stream));
+}
+
+inline static hipError_t hipMemsetD16(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes )
+{
+    return hipCUResultTohipError(cuMemsetD16(dest, value, sizeBytes));
+}
+
+inline static hipError_t hipMemsetD16Async(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes, hipStream_t stream __dparm(0) )
+{
+    return hipCUResultTohipError(cuMemsetD16Async(dest, value, sizeBytes, stream));
+}
+
+inline static hipError_t hipMemsetD2D8(hipDeviceptr_t dest, size_t pitch, unsigned char value, size_t width, size_t height)
+{
+    return hipCUResultTohipError(cuMemsetD2D8(dest, pitch, value, width, height));
+}
+
+inline static hipError_t hipMemsetD2D8Async(hipDeviceptr_t dest, size_t pitch, unsigned char value, size_t width, size_t height, hipStream_t stream )
+{
+    return hipCUResultTohipError(cuMemsetD2D8Async(dest, pitch, value, width, height, stream));
+}
+
+inline static hipError_t hipMemsetD2D16(hipDeviceptr_t dest, size_t pitch, unsigned short value, size_t width, size_t height)
+{
+    return hipCUResultTohipError(cuMemsetD2D16(dest, pitch, value, width, height));
+}
+
+inline static hipError_t hipMemsetD2D16Async(hipDeviceptr_t dest, size_t pitch, unsigned short value, size_t width, size_t height, hipStream_t stream )
+{
+    return hipCUResultTohipError(cuMemsetD2D16Async(dest, pitch, value, width, height, stream));
+}
+
+inline static hipError_t hipMemsetD2D32(hipDeviceptr_t dest, size_t pitch, unsigned int value, size_t width, size_t height)
+{
+    return hipCUResultTohipError(cuMemsetD2D32(dest, pitch, value, width, height));
+}
+
+inline static hipError_t hipMemsetD2D32Async(hipDeviceptr_t dest, size_t pitch, unsigned int value, size_t width, size_t height, hipStream_t stream )
+{
+    return hipCUResultTohipError(cuMemsetD2D32Async(dest, pitch, value, width, height, stream));
+}
+
 inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t *p_prop, int device)
 {
 	struct cudaDeviceProp cdprop;

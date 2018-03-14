@@ -1609,6 +1609,62 @@ ihipMemsetKernel(hipStream_t stream,
         std::move(val));
 }
 
+typedef enum ihipMemsetCopyType {
+    ihipMemsetCopyTypeChar   = 0,
+    ihipMemsetCopyTypeShort  = 1,
+    ihipMemsetCopyTypeInt    = 2
+}ihipMemsetCopyType;
+
+hipError_t ihipMemset(void* dst, int  value, size_t sizeBytes, hipStream_t stream, enum ihipMemsetCopyType copyFlag  )
+{
+    hipError_t e = hipSuccess;
+
+    if (stream) {
+        if(copyFlag == ihipMemsetCopyTypeChar){
+            if ((sizeBytes & 0x3) == 0) {
+                // use a faster dword-per-workitem copy:
+                try {
+                    value = value & 0xff;
+                    uint32_t value32 = (value << 24) | (value << 16) | (value << 8) | (value) ;
+                    ihipMemsetKernel<uint32_t> (stream, static_cast<uint32_t*> (dst), value32, sizeBytes/sizeof(uint32_t));
+                }
+                catch (std::exception &ex) {
+                    e = hipErrorInvalidValue;
+                }
+             } else {
+                // use a slow byte-per-workitem copy:
+                try {
+                    ihipMemsetKernel<char> (stream, static_cast<char*> (dst), value, sizeBytes);
+                }
+                catch (std::exception &ex) {
+                    e = hipErrorInvalidValue;
+                }
+                if (HIP_API_BLOCKING) {
+                    tprintf (DB_SYNC, "%s LAUNCH_BLOCKING wait for hipMemsetAsync.\n", ToString(stream).c_str());
+                    stream->locked_wait();
+                }
+            }
+        } else {
+           if(copyFlag == ihipMemsetCopyTypeInt) { // 4 Bytes value
+               try {
+                   ihipMemsetKernel<uint32_t> (stream, static_cast<uint32_t*> (dst), value, sizeBytes);
+               } catch (std::exception &ex) {
+                   e = hipErrorInvalidValue;
+               }
+            } else if(copyFlag == ihipMemsetCopyTypeShort) {
+               try {
+                   value = value & 0xffff;
+                   ihipMemsetKernel<uint16_t> (stream, static_cast<uint16_t*> (dst), value, sizeBytes);
+               } catch (std::exception &ex) {
+                   e = hipErrorInvalidValue;
+               }
+            }
+        }
+    } else {
+        e = hipErrorInvalidValue;
+    }
+    return e;
+};
 
 // TODO-sync: function is async unless target is pinned host memory - then these are fully sync.
 hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t stream )
@@ -1619,35 +1675,11 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
 
     stream =  ihipSyncAndResolveStream(stream);
 
-    if (stream) {
-        if ((sizeBytes & 0x3) == 0) {
-            // use a faster dword-per-workitem copy:
-            try {
-                value = value & 0xff;
-                uint32_t value32 = (value << 24) | (value << 16) | (value << 8) | (value) ;
-                ihipMemsetKernel<uint32_t> (stream, static_cast<uint32_t*> (dst), value32, sizeBytes/sizeof(uint32_t));
-            }
-            catch (std::exception &ex) {
-                e = hipErrorInvalidValue;
-            }
-        } else {
-            // use a slow byte-per-workitem copy:
-            try {
-                ihipMemsetKernel<char> (stream, static_cast<char*> (dst), value, sizeBytes);
-            }
-            catch (std::exception &ex) {
-                e = hipErrorInvalidValue;
-            }
-        }
-
-        if (HIP_API_BLOCKING) {
-            tprintf (DB_SYNC, "%s LAUNCH_BLOCKING wait for hipMemsetAsync.\n", ToString(stream).c_str());
-            stream->locked_wait();
-        }
+    if(stream) {
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeChar);
     } else {
         e = hipErrorInvalidValue;
     }
-
 
     return ihipLogStatus(e);
 };
@@ -1663,33 +1695,8 @@ hipError_t hipMemset(void* dst, int value, size_t sizeBytes)
     stream =  ihipSyncAndResolveStream(stream);
 
     if (stream) {
-        if ((sizeBytes & 0x3) == 0) {
-            // use a faster dword-per-workitem copy:
-            try {
-                value = value & 0xff;
-                uint32_t value32 = (value << 24) | (value << 16) | (value << 8) | (value) ;
-                ihipMemsetKernel<uint32_t> (stream, static_cast<uint32_t*> (dst), value32, sizeBytes/sizeof(uint32_t));
-            }
-            catch (std::exception &ex) {
-                e = hipErrorInvalidValue;
-            }
-        } else {
-            // use a slow byte-per-workitem copy:
-            try {
-                ihipMemsetKernel<char> (stream, static_cast<char*> (dst), value, sizeBytes);
-            }
-            catch (std::exception &ex) {
-                e = hipErrorInvalidValue;
-            }
-        }
-        // TODO - is hipMemset supposed to be async?
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeChar);
         stream->locked_wait();
-
-        if (HIP_LAUNCH_BLOCKING) {
-            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING wait for memset in %s.\n", __func__, ToString(stream).c_str());
-            stream->locked_wait();
-            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING memset completed in %s.\n", __func__, ToString(stream).c_str());
-        }
     } else {
         e = hipErrorInvalidValue;
     }
@@ -1709,33 +1716,62 @@ hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t 
 
     if (stream) {
         size_t sizeBytes = pitch * height;
-        if ((sizeBytes & 0x3) == 0) {
-            // use a faster dword-per-workitem copy:
-            try {
-                value = value & 0xff;
-                uint32_t value32 = (value << 24) | (value << 16) | (value << 8) | (value) ;
-                ihipMemsetKernel<uint32_t> (stream,  static_cast<uint32_t*> (dst), value32, sizeBytes/sizeof(uint32_t));
-            }
-            catch (std::exception &ex) {
-                e = hipErrorInvalidValue;
-            }
-        } else {
-            // use a slow byte-per-workitem copy:
-            try {
-                ihipMemsetKernel<char> (stream, static_cast<char*> (dst), value, sizeBytes);
-            }
-            catch (std::exception &ex) {
-                e = hipErrorInvalidValue;
-            }
-        }
-        // TODO - is hipMemset supposed to be async?
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeChar);
         stream->locked_wait();
+    } else {
+        e = hipErrorInvalidValue;
+    }
 
-        if (HIP_LAUNCH_BLOCKING) {
-            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING wait for memset in %s.\n", __func__, ToString(stream).c_str());
-            stream->locked_wait();
-            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING memset completed in %s.\n", __func__, ToString(stream).c_str());
-        }
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, size_t height, hipStream_t stream )
+{
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, pitch, value, width, height, stream);
+
+    hipError_t e = hipSuccess;
+
+    stream =  ihipSyncAndResolveStream(stream);
+
+    if (stream) {
+        size_t sizeBytes = pitch * height;
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeChar);
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+};
+
+hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent )
+{
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), &pitchedDevPtr, value, &extent);
+    hipError_t e = hipSuccess;
+
+    hipStream_t stream = hipStreamNull;
+    // TODO - call an ihip memset so HIP_TRACE is correct.
+    stream =  ihipSyncAndResolveStream(stream);
+    if (stream) {
+        size_t sizeBytes = pitchedDevPtr.pitch * extent.height * extent.depth;
+        e = ihipMemset(pitchedDevPtr.ptr, value, sizeBytes, stream, ihipMemsetCopyTypeChar);
+        stream->locked_wait();
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent ,hipStream_t stream )
+{
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), &pitchedDevPtr, value, &extent);
+    hipError_t e = hipSuccess;
+
+    // TODO - call an ihip memset so HIP_TRACE is correct.
+    stream =  ihipSyncAndResolveStream(stream);
+    if (stream) {
+        size_t sizeBytes = pitchedDevPtr.pitch * extent.height * extent.depth;
+        e = ihipMemset(pitchedDevPtr.ptr, value, sizeBytes, stream, ihipMemsetCopyTypeChar);
     } else {
         e = hipErrorInvalidValue;
     }
@@ -1754,38 +1790,224 @@ hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char  value, size_t sizeByte
     stream =  ihipSyncAndResolveStream(stream);
 
     if (stream) {
-        if ((sizeBytes & 0x3) == 0) {
-            // use a faster dword-per-workitem copy:
-            try {
-                uint32_t value32 = (value << 24) | (value << 16) | (value << 8) | (value) ;
-                ihipMemsetKernel<uint32_t> (stream, static_cast<uint32_t*> (dst), value32, sizeBytes/sizeof(uint32_t));
-            }
-            catch (std::exception &ex) {
-                std::cout << ex.what() << std::endl;
-                e = hipErrorInvalidValue;
-            }
-        } else {
-            // use a slow byte-per-workitem copy:
-            try {
-                ihipMemsetKernel<char> (stream, static_cast<char*> (dst), value, sizeBytes);
-            }
-            catch (std::exception &ex) {
-                e = hipErrorInvalidValue;
-            }
-        }
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeChar);
         stream->locked_wait();
-
-        if (HIP_LAUNCH_BLOCKING) {
-            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING wait for memset in %s.\n", __func__, ToString(stream).c_str());
-            stream->locked_wait();
-            tprintf (DB_SYNC, "'%s' LAUNCH_BLOCKING memset completed in %s.\n", __func__, ToString(stream).c_str());
-        }
     } else {
         e = hipErrorInvalidValue;
     }
 
     return ihipLogStatus(e);
 }
+
+hipError_t hipMemsetD8Async(hipDeviceptr_t dst, unsigned char  value, size_t sizeBytes ,hipStream_t stream)
+{
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, value, sizeBytes,stream);
+
+    hipError_t e = hipSuccess;
+
+    stream =  ihipSyncAndResolveStream(stream);
+
+    if (stream) {
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeChar);
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemsetD32(hipDeviceptr_t dst, unsigned int  value, size_t sizeBytes )
+{
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, value, sizeBytes);
+
+    hipError_t e = hipSuccess;
+
+    hipStream_t stream = hipStreamNull;
+    // TODO - call an ihip memset so HIP_TRACE is correct.
+    stream =  ihipSyncAndResolveStream(stream);
+
+    if (stream) {
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeInt);
+        stream->locked_wait();
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemsetD32Async(hipDeviceptr_t dst, unsigned int  value, size_t sizeBytes, hipStream_t stream )
+{
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, value, sizeBytes);
+
+    hipError_t e = hipSuccess;
+
+    // TODO - call an ihip memset so HIP_TRACE is correct.
+    stream =  ihipSyncAndResolveStream(stream);
+
+    if (stream) {
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeInt);
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemsetD16(hipDeviceptr_t dst, unsigned short value, size_t sizeBytes )
+{
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, value, sizeBytes);
+
+    hipError_t e = hipSuccess;
+
+    hipStream_t stream = hipStreamNull;
+    // TODO - call an ihip memset so HIP_TRACE is correct.
+    stream =  ihipSyncAndResolveStream(stream);
+
+    if (stream) {
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeShort);
+        stream->locked_wait();
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemsetD16Async(hipDeviceptr_t dst, unsigned short value, size_t sizeBytes, hipStream_t stream )
+{
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, value, sizeBytes);
+
+    hipError_t e = hipSuccess;
+
+    // TODO - call an ihip memset so HIP_TRACE is correct.
+    stream =  ihipSyncAndResolveStream(stream);
+
+    if (stream) {
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeShort);
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemsetD2D8(hipDeviceptr_t dst, size_t pitch, unsigned char value, size_t width, size_t height)
+{
+   HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, pitch, value, width, height);
+
+    hipError_t e = hipSuccess;
+
+    hipStream_t stream = hipStreamNull;
+    // TODO - call an ihip memset so HIP_TRACE is correct.
+    stream =  ihipSyncAndResolveStream(stream);
+
+    if (stream) {
+        size_t sizeBytes = pitch * height;
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeChar);
+        stream->locked_wait();
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemsetD2D8Async(hipDeviceptr_t dst, size_t pitch, unsigned char value, size_t width, size_t height, hipStream_t stream )
+{
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, pitch, value, width, height, stream);
+
+    hipError_t e = hipSuccess;
+
+    stream =  ihipSyncAndResolveStream(stream);
+
+    if (stream) {
+        size_t sizeBytes = pitch * height;
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeChar);
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+};
+
+hipError_t hipMemsetD2D16(hipDeviceptr_t dst, size_t pitch, unsigned short value, size_t width, size_t height)
+{
+   HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, pitch, value, width, height);
+
+    hipError_t e = hipSuccess;
+
+    hipStream_t stream = hipStreamNull;
+    // TODO - call an ihip memset so HIP_TRACE is correct.
+    stream =  ihipSyncAndResolveStream(stream);
+
+    if (stream) {
+        size_t sizeBytes = pitch * height;
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeShort);
+        stream->locked_wait();
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemsetD2D16Async(hipDeviceptr_t dst, size_t pitch, unsigned short value, size_t width, size_t height, hipStream_t stream )
+{
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, pitch, value, width, height, stream);
+
+    hipError_t e = hipSuccess;
+
+    stream =  ihipSyncAndResolveStream(stream);
+
+    if (stream) {
+        size_t sizeBytes = pitch * height;
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeShort);
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+};
+
+hipError_t hipMemsetD2D32(hipDeviceptr_t dst, size_t pitch, unsigned int value, size_t width, size_t height)
+{
+   HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, pitch, value, width, height);
+
+    hipError_t e = hipSuccess;
+
+    hipStream_t stream = hipStreamNull;
+    // TODO - call an ihip memset so HIP_TRACE is correct.
+    stream =  ihipSyncAndResolveStream(stream);
+
+    if (stream) {
+        size_t sizeBytes = pitch * height;
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeInt);
+        stream->locked_wait();
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemsetD2D32Async(hipDeviceptr_t dst, size_t pitch, unsigned int value, size_t width, size_t height, hipStream_t stream )
+{
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, pitch, value, width, height, stream);
+
+    hipError_t e = hipSuccess;
+
+    stream =  ihipSyncAndResolveStream(stream);
+
+    if (stream) {
+        size_t sizeBytes = pitch * height;
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyTypeInt);
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+};
 
 hipError_t hipMemGetInfo(size_t *free, size_t *total)
 {
