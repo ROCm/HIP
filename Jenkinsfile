@@ -407,13 +407,13 @@ parallel hcc_ctu:
     docker_clean_images( job_name, hip_image_name )
   }
 },
-hcc_1_6:
+hcc_1_7:
 {
   node('docker && rocm && !dkms')
   {
-    String hcc_ver = 'hcc-1.6'
+    String hcc_ver = 'hcc-1.7'
     String from_image = 'rocm/dev-ubuntu-16.04:latest'
-    String inside_args = '--device=/dev/kfd --device=/dev/dri'
+    String inside_args = '--device=/dev/kfd --device=/dev/dri --group-add=video'
 
     // Checkout source code, dependencies and version files
     String source_hip_rel = checkout_and_version( hcc_ver )
