@@ -34,8 +34,10 @@ hipError_t hipChooseDevice(int* device, const hipDeviceProp_t* properties) {
 
   *device = 0;
   cl_uint maxMatchedCount = 0;
+  int count = 0;
+  hipDeviceGetCount(&count);
 
-  for (cl_uint i = 0; i< g_context->devices().size(); ++i) {
+  for (cl_int i = 0; i< count; ++i) {
     hipDeviceProp_t currentProp = {0};
     cl_uint validPropCount = 0;
     cl_uint matchedCount = 0;
@@ -250,11 +252,15 @@ hipError_t hipDeviceGetByPCIBusId(int* device, const char*pciBusIdstr) {
   int pciDomainID = -1;
 
   if (sscanf (pciBusIdstr, "%04x:%02x:%02x", &pciDomainID, &pciBusID, &pciDeviceID) == 0x3) {
-    for (cl_uint i = 0; i < g_context->devices().size(); i++) {
-      auto* deviceHandle = g_context->devices()[i];
-      auto& info = deviceHandle->info();
+    int count = 0;
+    hipDeviceGetCount(&count);
+    for (cl_int i = 0; i < count; i++) {
+      int pi = 0;
+      hipDevice_t dev;
+      hipDeviceGet(&dev, i);
+      hipDeviceGetAttribute(&pi, hipDeviceAttributePciBusId, dev);
 
-      if (pciBusID == info.deviceTopology_.pcie.bus) {
+      if (pciBusID == pi) {
         *device = i;
         break;
       }
@@ -280,14 +286,14 @@ hipError_t hipDeviceGetLimit ( size_t* pValue, hipLimit_t limit ) {
 
   HIP_INIT_API(pValue, limit);
 
-  auto* deviceHandle = g_context->devices()[0];
-  const auto& info = deviceHandle->info();
-
   if(pValue == nullptr) {
     return hipErrorInvalidValue;
   }
   if(limit == hipLimitMallocHeapSize) {
-    *pValue = info.globalMemSize_;
+    hipDeviceProp_t prop;
+    hipGetDeviceProperties(&prop, 0);
+
+    *pValue = prop.totalGlobalMem;
     return hipSuccess;
   } else {
     return hipErrorUnsupportedLimit;
@@ -305,7 +311,9 @@ hipError_t hipDeviceGetPCIBusId ( char* pciBusId, int  len, int  device ) {
 
   HIP_INIT_API((void*)pciBusId, len, device);
 
-  if (device < 0 || device > (cl_int)g_context->devices().size()) {
+  int count;
+  hipDeviceGetCount(&count);
+  if (device < 0 || device > count) {
     return hipErrorInvalidDevice;
   }
 
@@ -313,13 +321,13 @@ hipError_t hipDeviceGetPCIBusId ( char* pciBusId, int  len, int  device ) {
     return hipErrorInvalidValue;
   }
 
-  auto* deviceHandle = g_context->devices()[device];
-  const auto& info = deviceHandle->info();
-  snprintf (pciBusId, len, "%04x:%02x:%02x.0",
-                    info.deviceTopology_.pcie.function,
-                    info.deviceTopology_.pcie.bus,
-                    info.deviceTopology_.pcie.device);
+  hipDeviceProp_t prop;
+  hipGetDeviceProperties(&prop, device);
 
+  snprintf (pciBusId, len, "%04x:%02x:%02x.0",
+                    prop.pciDomainID,
+                    prop.pciBusID,
+                    prop.pciDeviceID);
 
   return hipSuccess;
 }
@@ -385,86 +393,11 @@ hipError_t hipGetDevice ( int* deviceId ) {
 hipError_t hipGetDeviceCount ( int* count ) {
   HIP_INIT_API(count);
 
-  if (count == nullptr) {
-    return hipErrorInvalidValue;
-  }
-
-  // Get all available devices
-  *count = g_context->devices().size();
-
-  return hipSuccess;
+  return hipDeviceGetCount(count);
 }
 
 hipError_t hipGetDeviceFlags ( unsigned int* flags ) {
   return hipErrorUnknown;
-}
-
-hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, int  device ) {
-  HIP_INIT_API(props, device);
-
-  if (props == nullptr) {
-    return hipErrorInvalidValue;
-  }
-
-  if (unsigned(device) >= g_context->devices().size()) {
-    return hipErrorInvalidDevice;
-  }
-  auto* deviceHandle = g_context->devices()[device];
-
-  hipDeviceProp_t deviceProps = {0};
-
-  const auto& info = deviceHandle->info();
-  ::strncpy(deviceProps.name, info.boardName_, 128);
-  deviceProps.totalGlobalMem = info.globalMemSize_;
-  deviceProps.sharedMemPerBlock = info.localMemSizePerCU_;
-  deviceProps.regsPerBlock = info.availableSGPRs_;
-  deviceProps.warpSize = info.wavefrontWidth_;
-  deviceProps.maxThreadsPerBlock = info.maxWorkGroupSize_;
-  deviceProps.maxThreadsDim[0] = info.maxWorkItemSizes_[0];
-  deviceProps.maxThreadsDim[1] = info.maxWorkItemSizes_[1];
-  deviceProps.maxThreadsDim[2] = info.maxWorkItemSizes_[2];
-  deviceProps.maxGridSize[0] = UINT32_MAX;
-  deviceProps.maxGridSize[1] = UINT32_MAX;
-  deviceProps.maxGridSize[2] = UINT32_MAX;
-  deviceProps.clockRate = info.maxEngineClockFrequency_;
-  deviceProps.memoryClockRate = info.maxMemoryClockFrequency_;
-  deviceProps.memoryBusWidth = info.globalMemChannels_ * 32;
-  deviceProps.totalConstMem = info.maxConstantBufferSize_;
-  deviceProps.major = info.gfxipVersion_ / 100;
-  deviceProps.minor = info.gfxipVersion_ % 100;
-  deviceProps.multiProcessorCount = info.maxComputeUnits_;
-  deviceProps.l2CacheSize = info.l2CacheSize_;
-  deviceProps.maxThreadsPerMultiProcessor = info.simdPerCU_;
-  deviceProps.computeMode = 0;
-  deviceProps.clockInstructionRate = info.timeStampFrequency_;
-  deviceProps.arch.hasGlobalInt32Atomics       = 1;
-  deviceProps.arch.hasGlobalFloatAtomicExch    = 1;
-  deviceProps.arch.hasSharedInt32Atomics       = 1;
-  deviceProps.arch.hasSharedFloatAtomicExch    = 1;
-  deviceProps.arch.hasFloatAtomicAdd           = 0;
-  deviceProps.arch.hasGlobalInt64Atomics       = 1;
-  deviceProps.arch.hasSharedInt64Atomics       = 1;
-  deviceProps.arch.hasDoubles                  = 1;
-  deviceProps.arch.hasWarpVote                 = 0;
-  deviceProps.arch.hasWarpBallot               = 0;
-  deviceProps.arch.hasWarpShuffle              = 0;
-  deviceProps.arch.hasFunnelShift              = 0;
-  deviceProps.arch.hasThreadFenceSystem        = 1;
-  deviceProps.arch.hasSyncThreadsExt           = 0;
-  deviceProps.arch.hasSurfaceFuncs             = 0;
-  deviceProps.arch.has3dGrid                   = 1;
-  deviceProps.arch.hasDynamicParallelism       = 0;
-  deviceProps.concurrentKernels = 1;
-  deviceProps.pciDomainID = info.deviceTopology_.pcie.function;
-  deviceProps.pciBusID = info.deviceTopology_.pcie.bus;
-  deviceProps.pciDeviceID = info.deviceTopology_.pcie.device;
-  deviceProps.maxSharedMemoryPerMultiProcessor = info.localMemSizePerCU_;
-  //deviceProps.isMultiGpuBoard = info.;
-  deviceProps.canMapHostMemory = 1;
-  deviceProps.gcnArch = info.gfxipVersion_;
-
-  *props = deviceProps;
-  return hipSuccess;
 }
 
 hipError_t hipIpcCloseMemHandle ( void* devPtr ) {
