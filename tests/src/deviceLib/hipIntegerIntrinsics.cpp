@@ -34,8 +34,7 @@ THE SOFTWARE.
 #pragma GCC diagnostic ignored "-Wall"
 #pragma clang diagnostic ignored "-Wunused-variable"
 
-__device__ void integer_intrinsics()
-{
+__device__ void integer_intrinsics() {
     __brev((unsigned int)10);
     __brevll((unsigned long long)10);
     __byte_perm((unsigned int)0, (unsigned int)0, 0);
@@ -63,13 +62,9 @@ __device__ void integer_intrinsics()
     assert(1);
 }
 
-__global__ void compileIntegerIntrinsics(hipLaunchParm lp, int ignored)
-{
-    integer_intrinsics();
-}
+__global__ void compileIntegerIntrinsics(hipLaunchParm lp, int ignored) { integer_intrinsics(); }
 
-int main()
-{
-  hipLaunchKernel(compileIntegerIntrinsics, dim3(1,1,1), dim3(1,1,1), 0, 0, 1);
-  passed();
+int main() {
+    hipLaunchKernel(compileIntegerIntrinsics, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, 1);
+    passed();
 }

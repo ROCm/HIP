@@ -30,24 +30,18 @@ THE SOFTWARE.
 namespace ELFIO {
 
 //------------------------------------------------------------------------------
-class string_section_accessor
-{
-  public:
-//------------------------------------------------------------------------------
-    string_section_accessor( section* section_ ) :
-                             string_section( section_ )
-    {
-    }
+class string_section_accessor {
+   public:
+    //------------------------------------------------------------------------------
+    string_section_accessor(section* section_) : string_section(section_) {}
 
 
-//------------------------------------------------------------------------------
-    const char*
-    get_string( Elf_Word index ) const
-    {
-        if ( string_section ) {
-            if ( index < string_section->get_size() ) {
+    //------------------------------------------------------------------------------
+    const char* get_string(Elf_Word index) const {
+        if (string_section) {
+            if (index < string_section->get_size()) {
                 const char* data = string_section->get_data();
-                if ( 0 != data ) {
+                if (0 != data) {
                     return data + index;
                 }
             }
@@ -57,40 +51,34 @@ class string_section_accessor
     }
 
 
-//------------------------------------------------------------------------------
-    Elf_Word
-    add_string( const char* str )
-    {
+    //------------------------------------------------------------------------------
+    Elf_Word add_string(const char* str) {
         Elf_Word current_position = 0;
-        
+
         if (string_section) {
             // Strings are addeded to the end of the current section data
             current_position = (Elf_Word)string_section->get_size();
 
-            if ( current_position == 0 ) {
+            if (current_position == 0) {
                 char empty_string = '\0';
-                string_section->append_data( &empty_string, 1 );
+                string_section->append_data(&empty_string, 1);
                 current_position++;
             }
-            string_section->append_data( str, (Elf_Word)std::strlen( str ) + 1 );
+            string_section->append_data(str, (Elf_Word)std::strlen(str) + 1);
         }
 
         return current_position;
     }
 
 
-//------------------------------------------------------------------------------
-    Elf_Word
-    add_string( const std::string& str )
-    {
-        return add_string( str.c_str() );
-    }
+    //------------------------------------------------------------------------------
+    Elf_Word add_string(const std::string& str) { return add_string(str.c_str()); }
 
-//------------------------------------------------------------------------------
-  private:
+    //------------------------------------------------------------------------------
+   private:
     section* string_section;
 };
 
-} // namespace ELFIO
+}  // namespace ELFIO
 
-#endif // ELFIO_STRINGS_HPP
+#endif  // ELFIO_STRINGS_HPP

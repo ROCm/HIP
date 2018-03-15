@@ -18,21 +18,19 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp 
+ * BUILD: %t %s ../test_common.cpp
  * RUN: %t
  * HIT_END
  */
 
 #define HIP_ENABLE_PRINTF
 
-#include"test_common.h"
+#include "test_common.h"
 
-__global__ void run_printf(hipLaunchParm lp){
-  printf("Hello World\n");
-}
+__global__ void run_printf(hipLaunchParm lp) { printf("Hello World\n"); }
 
-int main(){
-hipLaunchKernel(HIP_KERNEL_NAME(run_printf), dim3(1), dim3(1), 0, 0);
-hipDeviceSynchronize();
-passed();
+int main() {
+    hipLaunchKernel(HIP_KERNEL_NAME(run_printf), dim3(1), dim3(1), 0, 0);
+    hipDeviceSynchronize();
+    passed();
 }

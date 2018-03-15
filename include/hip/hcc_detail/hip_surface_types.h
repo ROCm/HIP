@@ -28,7 +28,7 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_SURFACE_TYPES_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_SURFACE_TYPES_H
 
-#include<hip/hcc_detail/driver_types.h>
+#include <hip/hcc_detail/driver_types.h>
 
 /**
  * An opaque value that represents a hip surface object
@@ -38,21 +38,17 @@ typedef unsigned long long hipSurfaceObject_t;
 /**
  * hip surface reference
  */
-struct surfaceReference
-{
-    hipSurfaceObject_t          surfaceObject;
+struct surfaceReference {
+    hipSurfaceObject_t surfaceObject;
 };
 
 /**
  * hip surface boundary modes
  */
-enum hipSurfaceBoundaryMode
-{
-    hipBoundaryModeZero   = 0,
-    hipBoundaryModeTrap   = 1,
-    hipBoundaryModeClamp  = 2
+enum hipSurfaceBoundaryMode {
+    hipBoundaryModeZero = 0,
+    hipBoundaryModeTrap = 1,
+    hipBoundaryModeClamp = 2
 };
 
 #endif /* !HIP_INCLUDE_HIP_HCC_DETAIL_HIP_SURFACE_TYPES_H */
-
-

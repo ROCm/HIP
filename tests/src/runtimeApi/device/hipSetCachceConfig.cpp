@@ -23,14 +23,13 @@ THE SOFTWARE.
  * HIT_END
  */
 
-#include<hip/hip_runtime_api.h>
-#include<iostream>
-#include"test_common.h"
+#include <hip/hip_runtime_api.h>
+#include <iostream>
+#include "test_common.h"
 
-int main(){
-  hipFuncCache_t cacheConfig;
-  void *func;
-  hipFuncSetCacheConfig(func, cacheConfig);
-  passed();
+int main() {
+    hipFuncCache_t cacheConfig;
+    void* func;
+    hipFuncSetCacheConfig(func, cacheConfig);
+    passed();
 }
-

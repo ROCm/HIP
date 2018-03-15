@@ -6,11 +6,11 @@
 #include <iostream>
 #include <fstream>
 #include <cfloat>
+using std::ifstream;
+using std::ofstream;
+using std::ostream;
 using std::string;
 using std::vector;
-using std::ostream;
-using std::ofstream;
-using std::ifstream;
 
 
 // ****************************************************************************
@@ -40,18 +40,16 @@ using std::ifstream;
 //    Added a GetResults method as well, and made several functions const.
 //
 // ****************************************************************************
-class ResultDatabase
-{
-  public:
+class ResultDatabase {
+   public:
     //
     // A performance result for a single SHOC benchmark run.
     //
-    struct Result
-    {
-        string test;  // e.g. "readback"
-        string atts;  // e.g. "pagelocked 4k^2"
-        string unit;  // e.g. "MB/sec"
-        vector<double> value; // e.g. "837.14"
+    struct Result {
+        string test;           // e.g. "readback"
+        string atts;           // e.g. "pagelocked 4k^2"
+        string unit;           // e.g. "MB/sec"
+        vector<double> value;  // e.g. "837.14"
         double GetMin() const;
         double GetMax() const;
         double GetMedian() const;
@@ -59,41 +57,32 @@ class ResultDatabase
         double GetMean() const;
         double GetStdDev() const;
 
-        bool operator<(const Result &rhs) const;
+        bool operator<(const Result& rhs) const;
 
-        bool HadAnyFLTMAXValues() const
-        {
-            for (int i=0; i<value.size(); ++i)
-            {
-                if (value[i] >= FLT_MAX)
-                    return true;
+        bool HadAnyFLTMAXValues() const {
+            for (int i = 0; i < value.size(); ++i) {
+                if (value[i] >= FLT_MAX) return true;
             }
             return false;
         }
     };
 
-  protected:
+   protected:
     vector<Result> results;
 
-  public:
-    void AddResult(const string &test,
-                   const string &atts,
-                   const string &unit,
-                   double value);
-    void AddResults(const string &test,
-                    const string &atts,
-                    const string &unit,
-                    const vector<double> &values);
-    vector<Result>        GetResultsForTest(const string &test);
-    const vector<Result> &GetResults() const;
+   public:
+    void AddResult(const string& test, const string& atts, const string& unit, double value);
+    void AddResults(const string& test, const string& atts, const string& unit,
+                    const vector<double>& values);
+    vector<Result> GetResultsForTest(const string& test);
+    const vector<Result>& GetResults() const;
     void ClearAllResults();
     void DumpDetailed(ostream&);
     void DumpSummary(ostream&);
     void DumpCsv(string fileName);
 
-  private:
+   private:
     bool IsFileEmpty(string fileName);
-
 };
 
 

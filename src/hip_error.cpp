@@ -29,8 +29,7 @@ THE SOFTWARE.
 // Error Handling
 //---
 
-hipError_t hipGetLastError()
-{
+hipError_t hipGetLastError() {
     HIP_INIT_API();
 
     // Return last error, but then reset the state:
@@ -39,26 +38,24 @@ hipError_t hipGetLastError()
     return e;
 }
 
-hipError_t hipPeekAtLastError()
-{
+hipError_t hipPeekAtLastError() {
     HIP_INIT_API();
 
     // peek at last error, but don't reset it.
     return ihipLogStatus(tls_lastHipError);
 }
 
-const char *hipGetErrorName(hipError_t hip_error)
-{
+const char* hipGetErrorName(hipError_t hip_error) {
     HIP_INIT_API(hip_error);
 
     return ihipErrorString(hip_error);
 }
 
-const char *hipGetErrorString(hipError_t hip_error)
-{
+const char* hipGetErrorString(hipError_t hip_error) {
     HIP_INIT_API(hip_error);
 
     // TODO - return a message explaining the error.
-    // TODO - This should be set up to return the same string reported in the the doxygen comments, somehow.
+    // TODO - This should be set up to return the same string reported in the the doxygen comments,
+    // somehow.
     return hipGetErrorName(hip_error);
 }

@@ -29,15 +29,15 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
-template<typename T>
-__global__ void testExternSharedKernel(hipLaunchParm lp, const T* A_d, const T* B_d, T* C_d, size_t numElements, size_t groupElements) {
-
+template <typename T>
+__global__ void testExternSharedKernel(hipLaunchParm lp, const T* A_d, const T* B_d, T* C_d,
+                                       size_t numElements, size_t groupElements) {
     // declare dynamic shared memory
 #if defined(__HIP_PLATFORM_HCC__)
     HIP_DYNAMIC_SHARED(T, sdata)
 #else
     HIP_DYNAMIC_SHARED(__align__(sizeof(T)) unsigned char, my_sdata)
-    T *sdata = reinterpret_cast<T *>(my_sdata);
+    T* sdata = reinterpret_cast<T*>(my_sdata);
 #endif
 
     size_t gid = (blockIdx.x * blockDim.x + threadIdx.x);
@@ -50,25 +50,52 @@ __global__ void testExternSharedKernel(hipLaunchParm lp, const T* A_d, const T* 
 
     // prefix sum inside dynamic shared memory
     if (groupElements >= 512) {
-        if (tid >= 256) { sdata[tid] += sdata[tid - 256]; } __syncthreads();
+        if (tid >= 256) {
+            sdata[tid] += sdata[tid - 256];
+        }
+        __syncthreads();
     }
     if (groupElements >= 256) {
-        if (tid >= 128) { sdata[tid] += sdata[tid - 128]; } __syncthreads();
+        if (tid >= 128) {
+            sdata[tid] += sdata[tid - 128];
+        }
+        __syncthreads();
     }
     if (groupElements >= 128) {
-        if (tid >= 64) { sdata[tid] += sdata[tid - 64]; } __syncthreads();
+        if (tid >= 64) {
+            sdata[tid] += sdata[tid - 64];
+        }
+        __syncthreads();
     }
-    if (groupElements >= 64) { sdata[tid] += sdata[tid - 32]; } __syncthreads();
-    if (groupElements >= 32) { sdata[tid] += sdata[tid - 16]; } __syncthreads();
-    if (groupElements >= 16) { sdata[tid] += sdata[tid - 8]; } __syncthreads();
-    if (groupElements >= 8) { sdata[tid] += sdata[tid - 4]; } __syncthreads();
-    if (groupElements >= 4) { sdata[tid] += sdata[tid - 2]; } __syncthreads();
-    if (groupElements >= 2) { sdata[tid] += sdata[tid - 1]; } __syncthreads();
+    if (groupElements >= 64) {
+        sdata[tid] += sdata[tid - 32];
+    }
+    __syncthreads();
+    if (groupElements >= 32) {
+        sdata[tid] += sdata[tid - 16];
+    }
+    __syncthreads();
+    if (groupElements >= 16) {
+        sdata[tid] += sdata[tid - 8];
+    }
+    __syncthreads();
+    if (groupElements >= 8) {
+        sdata[tid] += sdata[tid - 4];
+    }
+    __syncthreads();
+    if (groupElements >= 4) {
+        sdata[tid] += sdata[tid - 2];
+    }
+    __syncthreads();
+    if (groupElements >= 2) {
+        sdata[tid] += sdata[tid - 1];
+    }
+    __syncthreads();
 
     C_d[gid] = A_d[gid] + B_d[gid] + sdata[tid % groupElements];
 }
 
-template<typename T>
+template <typename T>
 void testExternShared(size_t N, size_t groupElements) {
     size_t Nbytes = N * sizeof(T);
 
@@ -78,7 +105,7 @@ void testExternShared(size_t N, size_t groupElements) {
     HipTest::initArrays(&A_d, &B_d, &C_d, &A_h, &B_h, &C_h, N, false);
     unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
 
-    //printf("blocksPerCU: %d\nthreadsPerBlock: %d\nN: %zu\n", blocksPerCU, threadsPerBlock, N);
+    // printf("blocksPerCU: %d\nthreadsPerBlock: %d\nN: %zu\n", blocksPerCU, threadsPerBlock, N);
 
     HIPCHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
     HIPCHECK(hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
@@ -87,7 +114,8 @@ void testExternShared(size_t N, size_t groupElements) {
     size_t groupMemBytes = groupElements * sizeof(T);
 
     // launch kernel with dynamic shared memory
-    hipLaunchKernel(HIP_KERNEL_NAME(testExternSharedKernel<T>), dim3(blocks), dim3(threadsPerBlock), groupMemBytes, 0, A_d, B_d, C_d, N, groupElements);
+    hipLaunchKernel(HIP_KERNEL_NAME(testExternSharedKernel<T>), dim3(blocks), dim3(threadsPerBlock),
+                    groupMemBytes, 0, A_d, B_d, C_d, N, groupElements);
 
     HIPCHECK(hipDeviceSynchronize());
 
@@ -99,25 +127,25 @@ void testExternShared(size_t N, size_t groupElements) {
         T sumFromSharedMemory = static_cast<T>(tid * (tid + 1) / 2);
         T expected = A_h[i] + B_h[i] + sumFromSharedMemory;
         if (C_h[i] != expected) {
-           std::cout << std::fixed << std::setprecision(32);
-           std::cout << "At " << i << std::endl;
-           std::cout << "  Computed:" << C_h[i] << std::endl;
-           std::cout << "  Expected:" << expected << std::endl;
-           std::cout << sumFromSharedMemory << std::endl;
-           std::cout << A_h[i] << std::endl;
-           std::cout << B_h[i] << std::endl;
+            std::cout << std::fixed << std::setprecision(32);
+            std::cout << "At " << i << std::endl;
+            std::cout << "  Computed:" << C_h[i] << std::endl;
+            std::cout << "  Expected:" << expected << std::endl;
+            std::cout << sumFromSharedMemory << std::endl;
+            std::cout << A_h[i] << std::endl;
+            std::cout << B_h[i] << std::endl;
 
-           failed("Failed at index:%zu\n", i);
+            failed("Failed at index:%zu\n", i);
         }
     }
 
     HipTest::freeArrays(A_d, B_d, C_d, A_h, B_h, C_h, false);
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
     HipTest::parseStandardArguments(argc, argv, true);
 
-    //printf("info: set device to %d\n", p_gpuDevice);
+    // printf("info: set device to %d\n", p_gpuDevice);
     HIPCHECK(hipSetDevice(p_gpuDevice));
 
     testExternShared<float>(1024, 4);

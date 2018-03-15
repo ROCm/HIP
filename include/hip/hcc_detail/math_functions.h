@@ -24,7 +24,7 @@ THE SOFTWARE.
 #define HIP_INCLUDE_HIP_HCC_DETAIL_MATH_FUNCTIONS_H
 
 #if defined(__HCC__)
-   #include <kalmar_math.h>
+#include <kalmar_math.h>
 #endif
 
 
@@ -48,7 +48,7 @@ __device__ float cospif(float x);
 //__device__ float cyl_bessel_i0f(float x);
 //__device__ float cyl_bessel_i1f(float x);
 __device__ float erfcf(float x);
-__device__  float erfcinvf(float y);
+__device__ float erfcinvf(float y);
 __device__ float erfcxf(float x);
 __device__ float erff(float x);
 __device__ float erfinvf(float y);
@@ -91,11 +91,11 @@ __device__ float norm3df(float a, float b, float c);
 __device__ float norm4df(float a, float b, float c, float d);
 __device__ float normcdff(float y);
 __device__ float normcdfinvf(float y);
-__device__ float normf(int dim, const float *a);
+__device__ float normf(int dim, const float* a);
 __device__ float powf(float x, float y);
 __device__ float rcbrtf(float x);
 __device__ float remainderf(float x, float y);
-__device__ float remquof(float x, float y, int *quo);
+__device__ float remquof(float x, float y, int* quo);
 __device__ float rhypotf(float x, float y);
 __device__ float rintf(float x);
 __device__ float rnorm3df(float a, float b, float c);
@@ -106,8 +106,8 @@ __device__ float rsqrtf(float x);
 __device__ float scalblnf(float x, long int n);
 __device__ float scalbnf(float x, int n);
 __device__ int signbit(float a);
-__device__ void sincosf(float x, float *sptr, float *cptr);
-__device__ void sincospif(float x, float *sptr, float *cptr);
+__device__ void sincosf(float x, float* sptr, float* cptr);
+__device__ void sincospif(float x, float* sptr, float* cptr);
 __device__ float sinf(float x);
 __device__ float sinhf(float x);
 __device__ float sinpif(float x);
@@ -151,7 +151,7 @@ __device__ double fma(double x, double y, double z);
 __device__ double fmax(double x, double y);
 __device__ double fmin(double x, double y);
 __device__ double fmod(double x, double y);
-__device__ double frexp(double x, int *nptr);
+__device__ double frexp(double x, int* nptr);
 __device__ double hypot(double x, double y);
 __device__ int ilogb(double x);
 __device__ int isfinite(double x);
@@ -195,8 +195,8 @@ __device__ double scalbln(double x, long int n);
 __device__ double scalbn(double x, int n);
 __device__ int signbit(double a);
 __device__ double sin(double a);
-__device__ void sincos(double x, double *sptr, double *cptr);
-__device__ void sincospi(double x, double *sptr, double *cptr);
+__device__ void sincos(double x, double* sptr, double* cptr);
+__device__ void sincospi(double x, double* sptr, double* cptr);
 __device__ double sinh(double x);
 __device__ double sinpi(double x);
 __device__ double sqrt(double x);
@@ -213,45 +213,25 @@ __device__ double yn(int n, double x);
 #ifdef HIP_FAST_MATH
 // Single Precision Precise Math when enabled
 
-__device__ inline float cosf(float x) {
-  return __hip_fast_cosf(x);
-}
+__device__ inline float cosf(float x) { return __hip_fast_cosf(x); }
 
-__device__ inline float exp10f(float x) {
-  return __hip_fast_exp10f(x);
-}
+__device__ inline float exp10f(float x) { return __hip_fast_exp10f(x); }
 
-__device__ inline float expf(float x) {
-  return __hip_fast_expf(x);
-}
+__device__ inline float expf(float x) { return __hip_fast_expf(x); }
 
-__device__ inline float log10f(float x) {
-  return __hip_fast_log10f(x);
-}
+__device__ inline float log10f(float x) { return __hip_fast_log10f(x); }
 
-__device__ inline float log2f(float x) {
-  return __hip_fast_log2f(x);
-}
+__device__ inline float log2f(float x) { return __hip_fast_log2f(x); }
 
-__device__ inline float logf(float x) {
-  return __hip_fast_logf(x);
-}
+__device__ inline float logf(float x) { return __hip_fast_logf(x); }
 
-__device__ inline float powf(float base, float exponent) {
-  return __hip_fast_powf(base, exponent);
-}
+__device__ inline float powf(float base, float exponent) { return __hip_fast_powf(base, exponent); }
 
-__device__ inline void sincosf(float x, float *s, float *c) {
-  return __hip_fast_sincosf(x, s, c);
-}
+__device__ inline void sincosf(float x, float* s, float* c) { return __hip_fast_sincosf(x, s, c); }
 
-__device__ inline float sinf(float x) {
-  return __hip_fast_sinf(x);
-}
+__device__ inline float sinf(float x) { return __hip_fast_sinf(x); }
 
-__device__ inline float tanf(float x) {
-  return __hip_fast_tanf(x);
-}
+__device__ inline float tanf(float x) { return __hip_fast_tanf(x); }
 
 #else
 

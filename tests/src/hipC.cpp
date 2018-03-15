@@ -25,20 +25,20 @@ THE SOFTWARE.
 #include "test_common.h"
 #include <stdio.h>
 
-#define ITER 1<<20
-#define SIZE 1024*1024*sizeof(int)
+#define ITER 1 << 20
+#define SIZE 1024 * 1024 * sizeof(int)
 
-__global__ void Iter(hipLaunchParm lp, int *Ad){
+__global__ void Iter(hipLaunchParm lp, int* Ad) {
     int tx = threadIdx.x + blockIdx.x * blockDim.x;
-    if(tx == 0){
-        for(int i=0;i<ITER;i++){
+    if (tx == 0) {
+        for (int i = 0; i < ITER; i++) {
             Ad[tx] += 1;
         }
     }
 }
 
-int main(){
-    int A=0, *Ad;
+int main() {
+    int A = 0, *Ad;
     hipMalloc((void**)&Ad, SIZE);
     hipMemcpy(Ad, &A, SIZE, hipMemcpyHostToDevice);
     hipLaunchKernel(HIP_KERNEL_NAME(Iter), dim3(1), dim3(1), 0, 0, Ad);

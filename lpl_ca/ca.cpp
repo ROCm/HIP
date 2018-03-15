@@ -11,8 +11,7 @@ using namespace clara;
 using namespace hip_impl;
 using namespace std;
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     try {
         bool help = false;
         vector<string> inputs;
@@ -24,7 +23,8 @@ int main(int argc, char** argv)
 
         if (!r) throw runtime_error{r.errorMessage()};
 
-        if (help) cout << cmd << endl;
+        if (help)
+            cout << cmd << endl;
         else {
             if (inputs.empty()) throw runtime_error{"No inputs specified."};
 
@@ -33,13 +33,12 @@ int main(int argc, char** argv)
             auto tmp = tokenize_targets(targets);
             if (tmp.empty()) {
                 tmp.assign(amdgpu_targets().cbegin(), amdgpu_targets().cend());
-            }
-            else validate_targets(tmp);
+            } else
+                validate_targets(tmp);
 
             extract_code_objects(inputs, tmp);
         }
-    }
-    catch (const exception& ex) {
+    } catch (const exception& ex) {
         cerr << ex.what() << endl;
 
         return EXIT_FAILURE;
