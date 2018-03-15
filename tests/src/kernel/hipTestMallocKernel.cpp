@@ -23,45 +23,44 @@ THE SOFTWARE.
  * HIT_END
  */
 
-#include<hip/hip_runtime.h>
-#include<hip/hip_runtime_api.h>
-#include<iostream>
+#include <hip/hip_runtime.h>
+#include <hip/hip_runtime_api.h>
+#include <iostream>
 
 #define HIP_ASSERT(status) assert(hipSuccess == status);
 
-#define NUM  1024
+#define NUM 1024
 #define SIZE NUM * 8
 
-__global__ void Alloc(hipLaunchParm lp, uint64_t *Ptr) {
+__global__ void Alloc(hipLaunchParm lp, uint64_t* Ptr) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     Ptr[tid] = (uint64_t)malloc(128);
 }
 
-__global__ void Free(hipLaunchParm lp, uint64_t *Ptr) {
+__global__ void Free(hipLaunchParm lp, uint64_t* Ptr) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     free((void*)Ptr[tid]);
 }
 
-int main()
-{
+int main() {
     uint64_t *hPtr, *dPtr;
     hPtr = new uint64_t[NUM];
-    for(uint32_t i=0;i<NUM;i++) {
+    for (uint32_t i = 0; i < NUM; i++) {
         hPtr[i] = 1;
     }
     int devCnt;
     hipGetDeviceCount(&devCnt);
-    for(uint32_t i=0;i<devCnt;i++){
+    for (uint32_t i = 0; i < devCnt; i++) {
         HIP_ASSERT(hipSetDevice(i));
         HIP_ASSERT(hipMalloc((void**)&dPtr, SIZE));
         HIP_ASSERT(hipMemcpy(dPtr, hPtr, SIZE, hipMemcpyHostToDevice));
-        hipLaunchKernel(Alloc, dim3(1,1,1), dim3(NUM,1,1), 0, 0, dPtr);
+        hipLaunchKernel(Alloc, dim3(1, 1, 1), dim3(NUM, 1, 1), 0, 0, dPtr);
         HIP_ASSERT(hipMemcpy(hPtr, dPtr, SIZE, hipMemcpyDeviceToHost));
         assert(hPtr[0] != 0);
-        hipLaunchKernel(Free, dim3(1,1,1), dim3(NUM,1,1), 0, 0, dPtr);
+        hipLaunchKernel(Free, dim3(1, 1, 1), dim3(NUM, 1, 1), 0, 0, dPtr);
         HIP_ASSERT(hipFree(dPtr));
-        for(uint32_t i=1;i<NUM;i++) {
-            assert(hPtr[i] == hPtr[i-1] + 4096);
+        for (uint32_t i = 1; i < NUM; i++) {
+            assert(hPtr[i] == hPtr[i - 1] + 4096);
         }
     }
 }

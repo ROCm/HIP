@@ -36,49 +36,33 @@ THE SOFTWARE.
 struct ihipModuleSymbol_t;
 using hipFunction_t = ihipModuleSymbol_t*;
 
-namespace std
-{
-    template<>
-    struct hash<hsa_agent_t> {
-        size_t operator()(hsa_agent_t x) const
-        {
-            return hash<decltype(x.handle)>{}(x.handle);
-        }
-    };
-}
+namespace std {
+template <>
+struct hash<hsa_agent_t> {
+    size_t operator()(hsa_agent_t x) const { return hash<decltype(x.handle)>{}(x.handle); }
+};
+}  // namespace std
 
-inline
-constexpr
-bool operator==(hsa_agent_t x, hsa_agent_t y)
-{
-    return x.handle == y.handle;
-}
+inline constexpr bool operator==(hsa_agent_t x, hsa_agent_t y) { return x.handle == y.handle; }
 
-namespace hip_impl
-{
-    struct Kernel_descriptor {
-        std::uint64_t kernel_object_;
-        std::uint32_t group_size_;
-        std::uint32_t private_size_;
-        std::string name_;
+namespace hip_impl {
+struct Kernel_descriptor {
+    std::uint64_t kernel_object_;
+    std::uint32_t group_size_;
+    std::uint32_t private_size_;
+    std::string name_;
 
-        operator hipFunction_t() const
-        {   // TODO: this is awful and only meant for illustration.
-            return reinterpret_cast<hipFunction_t>(
-                const_cast<Kernel_descriptor*>(this));
-        }
-    };
+    operator hipFunction_t() const {  // TODO: this is awful and only meant for illustration.
+        return reinterpret_cast<hipFunction_t>(const_cast<Kernel_descriptor*>(this));
+    }
+};
 
-    const std::unordered_map<
-        hsa_agent_t, std::vector<hsa_executable_t>>& executables();
-    const std::unordered_map<
-        std::uintptr_t,
-        std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>& functions();
-    const std::unordered_map<std::uintptr_t, std::string>& function_names();
-    std::unordered_map<std::string, void*>& globals();
+const std::unordered_map<hsa_agent_t, std::vector<hsa_executable_t>>& executables();
+const std::unordered_map<std::uintptr_t, std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>&
+functions();
+const std::unordered_map<std::uintptr_t, std::string>& function_names();
+std::unordered_map<std::string, void*>& globals();
 
-    hsa_executable_t load_executable(
-        const std::string& file,
-        hsa_executable_t executable,
-        hsa_agent_t agent);
-} // Namespace hip_impl.
+hsa_executable_t load_executable(const std::string& file, hsa_executable_t executable,
+                                 hsa_agent_t agent);
+}  // Namespace hip_impl.

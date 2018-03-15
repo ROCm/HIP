@@ -25,27 +25,24 @@ THE SOFTWARE.
 
 #include "test_common.h"
 
-int main()
-{
+int main() {
     unsigned flag = 0;
     HIPCHECK(hipDeviceReset());
 
     int deviceCount = 0;
     HIPCHECK(hipGetDeviceCount(&deviceCount));
 
-    for(int j=0;j<deviceCount;j++){
-
+    for (int j = 0; j < deviceCount; j++) {
         HIPCHECK(hipSetDevice(j));
 
-        for(int i=0;i<4;i++){
+        for (int i = 0; i < 4; i++) {
             flag = 1 << i;
-            printf ("Flag=%x\n", flag);
+            printf("Flag=%x\n", flag);
             HIPCHECK(hipSetDeviceFlags(flag));
-            //HIPCHECK_API(hipSetDeviceFlags(flag), hipErrorInvalidValue);
+            // HIPCHECK_API(hipSetDeviceFlags(flag), hipErrorInvalidValue);
         }
 
         flag = 0;
-
     }
 
     passed();

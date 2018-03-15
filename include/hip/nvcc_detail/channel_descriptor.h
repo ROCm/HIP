@@ -23,6 +23,6 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_NVCC_DETAIL_CHANNEL_DESCRIPTOR_H
 #define HIP_INCLUDE_HIP_NVCC_DETAIL_CHANNEL_DESCRIPTOR_H
 
-#include"channel_descriptor.h"
+#include "channel_descriptor.h"
 
 #endif

@@ -35,89 +35,87 @@ THE SOFTWARE.
 using namespace std;
 
 void usage() {
-    printf("hipEnvVar [otpions]\n\
+    printf(
+        "hipEnvVar [otpions]\n\
     -c,\t\ttotal number of available GPUs and their pciBusID\n\
     -d,\t\tselect one GPU and return its pciBusID\n\
     -v,\t\tsend the list to HIP_VISIBLE_DEVICES env var\n\
     -h,\t\tshow this help message\n\
     ");
 }
-int main(int argc, char **argv)
-{
-   //string str = getenv("HIP_VISIBLE_DEVICES");
-    //std::cout << "The current env HIP_VISIBLE_DEVICES is"<<str << std::endl;
-    extern char *optarg;
+int main(int argc, char** argv) {
+    // string str = getenv("HIP_VISIBLE_DEVICES");
+    // std::cout << "The current env HIP_VISIBLE_DEVICES is"<<str << std::endl;
+    extern char* optarg;
     extern int optind;
     int c = 0;
-    int retDevCnt=0, retDevInfo=0, setEnvVar=0;
-    int device=0;
+    int retDevCnt = 0, retDevInfo = 0, setEnvVar = 0;
+    int device = 0;
     string env;
-    while ((c = getopt(argc, argv, "cd:v:h")) != -1)
-        switch (c) {
-        case 'c':
-            retDevCnt = true;
-            break;
-        case 'd':
-            retDevInfo = true;
-            device = atoi(optarg);
-            break;
-        case 'v':
-            setEnvVar = true;
-            env = optarg;
-            break;
-        case 'h':
-            usage();
-            return 0;
-        default :
-            //usage();
-            return -1;
+    while ((c = getopt(argc, argv, "cd:v:h")) != -1) switch (c) {
+            case 'c':
+                retDevCnt = true;
+                break;
+            case 'd':
+                retDevInfo = true;
+                device = atoi(optarg);
+                break;
+            case 'v':
+                setEnvVar = true;
+                env = optarg;
+                break;
+            case 'h':
+                usage();
+                return 0;
+            default:
+                // usage();
+                return -1;
         }
 
-    if (setEnvVar ) {
-        //env = "export HIP_VISIBLE_DEVICES=" + env;
-        //cout<<"The received env var is: "<<env<<endl;
-        setenv("HIP_VISIBLE_DEVICES",env.c_str(),1);
-        setenv("CUDA_VISIBLE_DEVICES",env.c_str(),1);
-        cout<<"set env HIP_VISIBLE_DEVICES = "<< env.c_str()<<endl;
-        //verify if the environment variable is set
+    if (setEnvVar) {
+        // env = "export HIP_VISIBLE_DEVICES=" + env;
+        // cout<<"The received env var is: "<<env<<endl;
+        setenv("HIP_VISIBLE_DEVICES", env.c_str(), 1);
+        setenv("CUDA_VISIBLE_DEVICES", env.c_str(), 1);
+        cout << "set env HIP_VISIBLE_DEVICES = " << env.c_str() << endl;
+        // verify if the environment variable is set
         char* pPath;
-        pPath = getenv ("HIP_VISIBLE_DEVICES");
-        if(pPath!=NULL)
+        pPath = getenv("HIP_VISIBLE_DEVICES");
+        if (pPath != NULL)
             printf("HIP_VISIBLE_DEVICES is %s\n", pPath);
         else
             printf("HIP_VISIBLE_DEVICES is not set\n");
     }
 
     // device init
-    int devCount=0;
+    int devCount = 0;
     hipGetDeviceCount(&devCount);
 
-    //printf("\nTotal number of GPU devices in the system is %d\n",devCount);
+    // printf("\nTotal number of GPU devices in the system is %d\n",devCount);
 
     if (devCount == 0) {
         printf("No HIP enabled device\n");
         return -1;
     }
-    if (device < 0 || device > devCount -1) {
+    if (device < 0 || device > devCount - 1) {
         printf("Selected device %d is out of bound. Devices on your system are in range %d - %d\n",
-               device, 0, devCount -1);
+               device, 0, devCount - 1);
         return -1;
     }
 
     if (retDevCnt) {
-        //std::cout << "Total number of devices visible in system is "<< devCount  << std::endl;
-        std::cout << devCount  << std::endl;
+        // std::cout << "Total number of devices visible in system is "<< devCount  << std::endl;
+        std::cout << devCount << std::endl;
     }
     if (retDevInfo) {
-	hipDevice_t deviceT;
-	hipDeviceGet(&deviceT, device);
+        hipDevice_t deviceT;
+        hipDeviceGet(&deviceT, device);
 
         char pciBusId[100];
-        memset(pciBusId,0,100);
-        hipDeviceGetPCIBusId(pciBusId,100,deviceT);
+        memset(pciBusId, 0, 100);
+        hipDeviceGetPCIBusId(pciBusId, 100, deviceT);
 
-        cout<<pciBusId<<endl;
+        cout << pciBusId << endl;
     }
     exit(0);
 }
-

@@ -32,9 +32,7 @@ THE SOFTWARE.
 
 static std::map<hipSurfaceObject_t, hipSurface*> surfaceHash;
 
-void saveSurfaceInfo(const hipSurface* pSurface,
-                     const hipResourceDesc* pResDesc)
-{
+void saveSurfaceInfo(const hipSurface* pSurface, const hipResourceDesc* pResDesc) {
     if (pResDesc != nullptr) {
         memcpy((void*)&(pSurface->resDesc), (void*)pResDesc, sizeof(hipResourceDesc));
     }
@@ -42,41 +40,40 @@ void saveSurfaceInfo(const hipSurface* pSurface,
 
 // Surface Object APIs
 hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject,
-                                  const hipResourceDesc* pResDesc)
-{
+                                  const hipResourceDesc* pResDesc) {
     HIP_INIT_API(pSurfObject, pResDesc);
-    hipError_t  hip_status = hipSuccess;
+    hipError_t hip_status = hipSuccess;
 
     auto ctx = ihipGetTlsDefaultCtx();
     if (ctx) {
-        hipSurface* pSurface = (hipSurface*) malloc(sizeof(hipSurface));
+        hipSurface* pSurface = (hipSurface*)malloc(sizeof(hipSurface));
         if (pSurface != nullptr) {
             memset(pSurface, 0, sizeof(hipSurface));
             saveSurfaceInfo(pSurface, pResDesc);
         }
 
         switch (pResDesc->resType) {
-        case hipResourceTypeArray:
-            pSurface->array = pResDesc->res.array.array;
-            break;
-        default:
-            break;
+            case hipResourceTypeArray:
+                pSurface->array = pResDesc->res.array.array;
+                break;
+            default:
+                break;
         }
         unsigned int* surfObj;
-        hipMalloc((void **) &surfObj, sizeof(hipArray));
-        hipMemcpy(surfObj, (void *)pResDesc->res.array.array, sizeof(hipArray), hipMemcpyHostToDevice);
-        *pSurfObject = (hipSurfaceObject_t) surfObj;
+        hipMalloc((void**)&surfObj, sizeof(hipArray));
+        hipMemcpy(surfObj, (void*)pResDesc->res.array.array, sizeof(hipArray),
+                  hipMemcpyHostToDevice);
+        *pSurfObject = (hipSurfaceObject_t)surfObj;
         surfaceHash[*pSurfObject] = pSurface;
     }
 
     return ihipLogStatus(hip_status);
 }
 
-hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject)
-{
+hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject) {
     HIP_INIT_API(surfaceObject);
 
-    hipError_t  hip_status = hipSuccess;
+    hipError_t hip_status = hipSuccess;
 
     auto ctx = ihipGetTlsDefaultCtx();
     if (ctx) {

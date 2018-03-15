@@ -30,25 +30,25 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
-int main( void ) {
+int main(void) {
     char pciBusId[13];
     int deviceCount = 0;
     HIPCHECK(hipGetDeviceCount(&deviceCount));
     HIPASSERT(deviceCount != 0);
-    for(int i=0; i< deviceCount;i++) {
+    for (int i = 0; i < deviceCount; i++) {
         int pciBusID = -1;
         int pciDeviceID = -1;
         int pciDomainID = -1;
         int tempPciBusId = -1;
         int tempDeviceId = -1;
-        HIPCHECK(hipDeviceGetPCIBusId ( &pciBusId[0], 13, i ));
-        sscanf (pciBusId,"%04x:%02x:%02x",&pciDomainID,&pciBusID,&pciDeviceID);
-        HIPCHECK(hipDeviceGetAttribute(&tempPciBusId,hipDeviceAttributePciBusId , i));
-        if(pciBusID != tempPciBusId) {
+        HIPCHECK(hipDeviceGetPCIBusId(&pciBusId[0], 13, i));
+        sscanf(pciBusId, "%04x:%02x:%02x", &pciDomainID, &pciBusID, &pciDeviceID);
+        HIPCHECK(hipDeviceGetAttribute(&tempPciBusId, hipDeviceAttributePciBusId, i));
+        if (pciBusID != tempPciBusId) {
             exit(EXIT_FAILURE);
         }
-        HIPCHECK(hipDeviceGetByPCIBusId ( &tempDeviceId, pciBusId ));
-        if(tempDeviceId != i) {
+        HIPCHECK(hipDeviceGetByPCIBusId(&tempDeviceId, pciBusId));
+        if (tempDeviceId != i) {
             exit(EXIT_FAILURE);
         }
     }

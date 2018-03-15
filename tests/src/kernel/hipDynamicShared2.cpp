@@ -26,37 +26,37 @@ THE SOFTWARE.
  * HIT_END
  */
 
- #include "hip/hip_runtime.h"
- #include "test_common.h"
+#include "hip/hip_runtime.h"
+#include "test_common.h"
 
-#define LEN 16*1024
-#define SIZE LEN*4
+#define LEN 16 * 1024
+#define SIZE LEN * 4
 
-__global__ void vectorAdd(hipLaunchParm lp, float *Ad, float *Bd) {
-  HIP_DYNAMIC_SHARED(float, sBd);
-  int tx = threadIdx.x;
-  for(int i=0;i<LEN/64;i++) {
-    sBd[tx + i * 64] = Ad[tx + i * 64] + 1.0f;
-    Bd[tx + i * 64] = sBd[tx + i * 64];
-  }
+__global__ void vectorAdd(hipLaunchParm lp, float* Ad, float* Bd) {
+    HIP_DYNAMIC_SHARED(float, sBd);
+    int tx = threadIdx.x;
+    for (int i = 0; i < LEN / 64; i++) {
+        sBd[tx + i * 64] = Ad[tx + i * 64] + 1.0f;
+        Bd[tx + i * 64] = sBd[tx + i * 64];
+    }
 }
 
 int main() {
-  float *A, *B, *Ad, *Bd;
-  A = new float[LEN];
-  B = new float[LEN];
-  for(int i=0;i<LEN;i++) {
-    A[i] = 1.0f;
-    B[i] = 1.0f;
-  }
-  hipMalloc(&Ad, SIZE);
-  hipMalloc(&Bd, SIZE);
-  hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
-  hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice);
-  hipLaunchKernel(vectorAdd, dim3(1,1,1), dim3(64,1,1), SIZE, 0, Ad, Bd);
-  hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost);
-  for(int i=0;i<LEN;i++) {
-    assert(B[i] > 1.0f && B[i] < 3.0f);
-  }
-  passed();
+    float *A, *B, *Ad, *Bd;
+    A = new float[LEN];
+    B = new float[LEN];
+    for (int i = 0; i < LEN; i++) {
+        A[i] = 1.0f;
+        B[i] = 1.0f;
+    }
+    hipMalloc(&Ad, SIZE);
+    hipMalloc(&Bd, SIZE);
+    hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
+    hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice);
+    hipLaunchKernel(vectorAdd, dim3(1, 1, 1), dim3(64, 1, 1), SIZE, 0, Ad, Bd);
+    hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost);
+    for (int i = 0; i < LEN; i++) {
+        assert(B[i] > 1.0f && B[i] < 3.0f);
+    }
+    passed();
 }

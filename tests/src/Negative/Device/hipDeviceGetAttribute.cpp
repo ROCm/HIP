@@ -1,12 +1,11 @@
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime_api.h"
-#include"hipDeviceUtil.h"
+#include "hipDeviceUtil.h"
 
-int main()
-{
+int main() {
     int pi;
     int attr = 0;
-//    hipDeviceAttribute_t attr = hipDeviceAttributeMaxThreadsPerBlock;
+    //    hipDeviceAttribute_t attr = hipDeviceAttributeMaxThreadsPerBlock;
     HIP_CHECK(hipDeviceGetAttribute(NULL, hipDeviceAttribute_t(attr), 0), hipDeviceGetAttribute);
     HIP_CHECK(hipDeviceGetAttribute(&pi, hipDeviceAttribute_t(attr), 0), hipDeviceGetAttribute);
     attr = -1;

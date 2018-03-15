@@ -30,9 +30,7 @@ THE SOFTWARE.
 
 #include "test_common.h"
 
-int main()
-{
-        hipSetDevice(-1);
-        if(hipPeekAtLastError() != hipSuccess)
-          passed();
+int main() {
+    hipSetDevice(-1);
+    if (hipPeekAtLastError() != hipSuccess) passed();
 }

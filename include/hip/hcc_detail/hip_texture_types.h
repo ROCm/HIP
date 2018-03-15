@@ -29,10 +29,10 @@ THE SOFTWARE.
 #define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_TEXTURE_TYPES_H
 
 /*******************************************************************************
-*                                                                              *
-*                                                                              *
-*                                                                              *
-*******************************************************************************/
+ *                                                                              *
+ *                                                                              *
+ *                                                                              *
+ *******************************************************************************/
 #include <limits.h>
 //#include <hip/hcc_detail/driver_types.h>
 #include <hip/hcc_detail/channel_descriptor.h>
@@ -41,43 +41,37 @@ THE SOFTWARE.
 #if __cplusplus
 
 /*******************************************************************************
-*                                                                              *
-*                                                                              *
-*                                                                              *
-*******************************************************************************/
+ *                                                                              *
+ *                                                                              *
+ *                                                                              *
+ *******************************************************************************/
 
-template<class T, int texType = hipTextureType1D, enum hipTextureReadMode mode = hipReadModeElementType>
-struct texture : public textureReference
-{
-    texture(int                         norm  = 0,
-            enum hipTextureFilterMode  fMode = hipFilterModePoint,
-            enum hipTextureAddressMode aMode = hipAddressModeClamp)
-    {
-        normalized     = norm;
-        filterMode     = fMode;
+template <class T, int texType = hipTextureType1D,
+          enum hipTextureReadMode mode = hipReadModeElementType>
+struct texture : public textureReference {
+    texture(int norm = 0, enum hipTextureFilterMode fMode = hipFilterModePoint,
+            enum hipTextureAddressMode aMode = hipAddressModeClamp) {
+        normalized = norm;
+        filterMode = fMode;
         addressMode[0] = aMode;
         addressMode[1] = aMode;
         addressMode[2] = aMode;
-        channelDesc    = hipCreateChannelDesc<T>();
-        sRGB           = 0;
+        channelDesc = hipCreateChannelDesc<T>();
+        sRGB = 0;
     }
 
-	texture(int                         norm,
-			enum hipTextureFilterMode   fMode,
-			enum hipTextureAddressMode  aMode,
-			struct hipChannelFormatDesc desc)
-    {
-        normalized     = norm;
-        filterMode     = fMode;
+    texture(int norm, enum hipTextureFilterMode fMode, enum hipTextureAddressMode aMode,
+            struct hipChannelFormatDesc desc) {
+        normalized = norm;
+        filterMode = fMode;
         addressMode[0] = aMode;
         addressMode[1] = aMode;
         addressMode[2] = aMode;
-        channelDesc    = desc;
-        sRGB           = 0;
+        channelDesc = desc;
+        sRGB = 0;
     }
 };
 
 #endif /* __cplusplus */
 
 #endif /* !HIP_INCLUDE_HIP_HCC_DETAIL_HIP_TEXTURE_TYPES_H */
-
