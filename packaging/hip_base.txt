@@ -7,6 +7,8 @@ if(@BUILD_HIPIFY_CLANG@)
 endif()
 install(DIRECTORY @hip_SOURCE_DIR@/include DESTINATION .)
 install(FILES @PROJECT_BINARY_DIR@/.hipVersion DESTINATION bin)
+install(PROGRAMS @PROJECT_BINARY_DIR@/lpl DESTINATION bin)
+install(PROGRAMS @PROJECT_BINARY_DIR@/ca DESTINATION bin)
 install(DIRECTORY @hip_SOURCE_DIR@/cmake DESTINATION .)
 
 #############################
