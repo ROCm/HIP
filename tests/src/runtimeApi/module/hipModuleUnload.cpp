@@ -19,13 +19,12 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime_api.h"
-#include<iostream>
+#include <iostream>
 
 #define fileName "vcpy_isa.co"
 
-int main(){
+int main() {
     hipModule_t module;
     hipModuleLoad(&module, fileName);
     hipModuleUnload(module);
 }
-

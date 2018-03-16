@@ -22,25 +22,25 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime_api.h"
-#include<iostream>
-#include<fstream>
-#include<vector>
+#include <iostream>
+#include <fstream>
+#include <vector>
 
 #define LEN 64
-#define SIZE LEN<<2
+#define SIZE LEN << 2
 
 #define fileName "test.co"
 #define kernel_name "vadd"
 
-int main(){
+int main() {
     float *A, *B, *C;
     hipDeviceptr_t Ad, Bd, Cd;
     A = new float[LEN];
     B = new float[LEN];
     C = new float[LEN];
 
-    for(uint32_t i=0;i<LEN;i++){
-        A[i] = i*1.0f;
+    for (uint32_t i = 0; i < LEN; i++) {
+        A[i] = i * 1.0f;
         B[i] = 1.0f;
         C[i] = 0.0f;
     }
@@ -65,16 +65,16 @@ int main(){
     hipModuleGetFunction(&Function, Module, kernel_name);
 
     int n = LEN;
-    void * args[4] = {&Ad, &Bd, &Cd, &n};
+    void* args[4] = {&Ad, &Bd, &Cd, &n};
 
     hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, args, nullptr);
 
     hipMemcpyDtoH(C, Cd, SIZE);
     int mismatchCount = 0;
-    for(uint32_t i=0;i<LEN;i++){
+    for (uint32_t i = 0; i < LEN; i++) {
         if (A[i] + B[i] != C[i]) {
             mismatchCount++;
-            std::cout<<"error: mismatch " << A[i]<<" + "<<B[i]<<" != "<<C[i]<<std::endl;
+            std::cout << "error: mismatch " << A[i] << " + " << B[i] << " != " << C[i] << std::endl;
         }
     }
 

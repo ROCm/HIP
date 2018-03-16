@@ -32,17 +32,19 @@ THE SOFTWARE.
 // Helper functions to convert HIP function arguments into strings.
 // Handles POD data types as well as enumerations (ie hipMemcpyKind).
 // The implementation uses C++11 variadic templates and template specialization.
-// The hipMemcpyKind example below is a good example that shows how to implement conversion for a new HSA type.
+// The hipMemcpyKind example below is a good example that shows how to implement conversion for a
+// new HSA type.
 
 
 // Handy macro to convert an enumeration to a stringified version of same:
-#define CASE_STR(x) case x: return #x;
+#define CASE_STR(x)                                                                                \
+    case x:                                                                                        \
+        return #x;
 
 
 // Building block functions:
 template <typename T>
-inline std::string ToHexString(T v)
-{
+inline std::string ToHexString(T v) {
     std::ostringstream ss;
     ss << "0x" << std::hex << v;
     return ss.str();
@@ -54,8 +56,7 @@ inline std::string ToHexString(T v)
 
 // This is the default which works for most types:
 template <typename T>
-inline std::string ToString(T v)
-{
+inline std::string ToString(T v) {
     std::ostringstream ss;
     ss << v;
     return ss.str();
@@ -64,16 +65,14 @@ inline std::string ToString(T v)
 
 //  hipEvent_t specialization. TODO - maybe add an event ID for debug?
 template <>
-inline std::string ToString(hipEvent_t v)
-{
+inline std::string ToString(hipEvent_t v) {
     std::ostringstream ss;
     ss << v;
     return ss.str();
 };
 //  hipStream_t
 template <>
-inline std::string ToString(hipStream_t v)
-{
+inline std::string ToString(hipStream_t v) {
     std::ostringstream ss;
     if (v == NULL) {
         ss << "stream:<null>";
@@ -86,40 +85,35 @@ inline std::string ToString(hipStream_t v)
 
 //  hipMemcpyKind specialization
 template <>
-inline std::string ToString(hipMemcpyKind v)
-{
-    switch(v) {
-    CASE_STR(hipMemcpyHostToHost);
-    CASE_STR(hipMemcpyHostToDevice);
-    CASE_STR(hipMemcpyDeviceToHost);
-    CASE_STR(hipMemcpyDeviceToDevice);
-    CASE_STR(hipMemcpyDefault);
-    default : return ToHexString(v);
+inline std::string ToString(hipMemcpyKind v) {
+    switch (v) {
+        CASE_STR(hipMemcpyHostToHost);
+        CASE_STR(hipMemcpyHostToDevice);
+        CASE_STR(hipMemcpyDeviceToHost);
+        CASE_STR(hipMemcpyDeviceToDevice);
+        CASE_STR(hipMemcpyDefault);
+        default:
+            return ToHexString(v);
     };
 };
 
 
 template <>
-inline std::string ToString(hipError_t v)
-{
+inline std::string ToString(hipError_t v) {
     return ihipErrorString(v);
 };
 
 
 // Catch empty arguments case
-inline std::string ToString()
-{
-    return ("");
-}
+inline std::string ToString() { return (""); }
 
 
 //---
-// C++11 variadic template - peels off first argument, converts to string, and calls itself again to peel the next arg.
-// Strings are automatically separated by comma+space.
+// C++11 variadic template - peels off first argument, converts to string, and calls itself again to
+// peel the next arg. Strings are automatically separated by comma+space.
 template <typename T, typename... Args>
-inline std::string ToString(T first, Args... args)
-{
-    return ToString(first) + ", " + ToString(args...) ;
+inline std::string ToString(T first, Args... args) {
+    return ToString(first) + ", " + ToString(args...);
 }
 
 #endif

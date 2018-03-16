@@ -20,7 +20,8 @@ THE SOFTWARE.
 /*
  * Conformance test for checking functionality of
  * hipError_t hipRuntimeGetVersion(int* runtimeVersion);
- * On HIP/HCC path this function returns HIP runtime patch version(a 5 digit code) however on HIP/NVCC path this function return CUDA runtime version.
+ * On HIP/HCC path this function returns HIP runtime patch version(a 5 digit code) however on
+ * HIP/NVCC path this function return CUDA runtime version.
  */
 
 /* HIT_START
@@ -31,8 +32,7 @@ THE SOFTWARE.
 
 #include "test_common.h"
 
-int main()
-{
+int main() {
     int runtimeVersion;
     HIPCHECK(hipRuntimeGetVersion(&runtimeVersion));
     passed();

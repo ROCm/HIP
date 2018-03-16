@@ -29,106 +29,91 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
-int p_iters=10;
+int p_iters = 10;
 
-void printSep()
-{
-    printf ("======================================================================================\n");
+void printSep() {
+    printf(
+        "======================================================================================\n");
 }
 
 //---
 // Test simple H2D copies and back.
 // Designed to stress a small number of simple smoke tests
 
-template<
-    typename T=float,
-	class P=HipTest::Unpinned,
-	class C=HipTest::Memcpy
->
-void simpleVectorAdd(size_t numElements, int iters, hipStream_t stream)
-{
-	using HipTest::MemTraits;
+template <typename T = float, class P = HipTest::Unpinned, class C = HipTest::Memcpy>
+void simpleVectorAdd(size_t numElements, int iters, hipStream_t stream) {
+    using HipTest::MemTraits;
 
-	std::thread::id pid = std::this_thread::get_id();
+    std::thread::id pid = std::this_thread::get_id();
 
-    printf ("test: %s <%s> %s %s\n", __func__, TYPENAME(T), P::str(), C::str());
-    size_t Nbytes = numElements*sizeof(T);
-    printf ("numElements=%zu Nbytes=%6.2fMB\n", numElements, Nbytes/1024.0/1024.0);
+    printf("test: %s <%s> %s %s\n", __func__, TYPENAME(T), P::str(), C::str());
+    size_t Nbytes = numElements * sizeof(T);
+    printf("numElements=%zu Nbytes=%6.2fMB\n", numElements, Nbytes / 1024.0 / 1024.0);
 
     T *A_d, *B_d, *C_d;
     T *A_h, *B_h, *C_h;
 
-    HipTest::initArrays (&A_d, &B_d, &C_d, &A_h, &B_h, &C_h, N, P::isPinned);
-	for (size_t i=0; i<numElements; i++) {
-		A_h[i] = 1000.0f;
-		B_h[i] = 2000.0f;
-		C_h[i] = -1;
-	}
+    HipTest::initArrays(&A_d, &B_d, &C_d, &A_h, &B_h, &C_h, N, P::isPinned);
+    for (size_t i = 0; i < numElements; i++) {
+        A_h[i] = 1000.0f;
+        B_h[i] = 2000.0f;
+        C_h[i] = -1;
+    }
 
 
-	MemTraits<C>::Copy(B_d, B_h, Nbytes, hipMemcpyHostToDevice, stream);
-	MemTraits<C>::Copy(A_d, A_h, Nbytes, hipMemcpyHostToDevice, stream);
-	MemTraits<C>::Copy(C_d, C_h, Nbytes, hipMemcpyHostToDevice, stream);
-    HIPCHECK (hipDeviceSynchronize());
+    MemTraits<C>::Copy(B_d, B_h, Nbytes, hipMemcpyHostToDevice, stream);
+    MemTraits<C>::Copy(A_d, A_h, Nbytes, hipMemcpyHostToDevice, stream);
+    MemTraits<C>::Copy(C_d, C_h, Nbytes, hipMemcpyHostToDevice, stream);
+    HIPCHECK(hipDeviceSynchronize());
 
-	for (size_t i=0; i<numElements; i++) {
-		A_h[i] = 1.0f;
-		B_h[i] = 2.0f;
-		C_h[i] = -1;
-	}
+    for (size_t i = 0; i < numElements; i++) {
+        A_h[i] = 1.0f;
+        B_h[i] = 2.0f;
+        C_h[i] = -1;
+    }
 
 
+    for (int i = 0; i < iters; i++) {
+        unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, numElements);
 
-	for (int i=0; i<iters; i++) {
+        MemTraits<C>::Copy(A_d, A_h, Nbytes, hipMemcpyHostToDevice, stream);
+        MemTraits<C>::Copy(B_d, B_h, Nbytes, hipMemcpyHostToDevice, stream);
 
-		unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, numElements);
+        // HIPCHECK(hipStreamSynchronize(stream));
 
-		MemTraits<C>::Copy(A_d, A_h, Nbytes, hipMemcpyHostToDevice, stream);
-		MemTraits<C>::Copy(B_d, B_h, Nbytes, hipMemcpyHostToDevice, stream);
+        // This is the null stream?
+        // hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d, B_d,
+        // C_d, numElements);
+        hipLaunchKernel(HipTest::vectorADDReverse, dim3(blocks), dim3(threadsPerBlock), 0, 0,
+                        static_cast<const T*>(A_d), static_cast<const T*>(B_d), C_d, numElements);
 
-		//HIPCHECK(hipStreamSynchronize(stream));
+        MemTraits<C>::Copy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost, stream);
 
-		// This is the null stream?
-		//hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d, B_d, C_d, numElements);
-		hipLaunchKernel(
-			HipTest::vectorADDReverse,
-			dim3(blocks),
-			dim3(threadsPerBlock),
-			0,
-			0,
-			static_cast<const T*>(A_d),
-			static_cast<const T*>(B_d),
-			C_d,
-			numElements);
+        HIPCHECK(hipDeviceSynchronize());
 
-		MemTraits<C>::Copy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost, stream);
+        HipTest::checkVectorADD(A_h, B_h, C_h, numElements);
+    }
 
-		HIPCHECK (hipDeviceSynchronize());
-
-		HipTest::checkVectorADD(A_h, B_h, C_h, numElements);
-	}
-
-    HipTest::freeArrays (A_d, B_d, C_d, A_h, B_h, C_h, P::isPinned);
-	std::cout <<"  pid" << pid << " success\n";
-    HIPCHECK (hipDeviceSynchronize());
-
+    HipTest::freeArrays(A_d, B_d, C_d, A_h, B_h, C_h, P::isPinned);
+    std::cout << "  pid" << pid << " success\n";
+    HIPCHECK(hipDeviceSynchronize());
 }
 
-template<typename T, class C>
-void test_multiThread_1(std::string testName, hipStream_t stream0, hipStream_t stream1, bool serialize)
-{
-	printSep();
-	printf ("%s\n", __func__);
-	std::cout << testName << std::endl;
+template <typename T, class C>
+void test_multiThread_1(std::string testName, hipStream_t stream0, hipStream_t stream1,
+                        bool serialize) {
+    printSep();
+    printf("%s\n", __func__);
+    std::cout << testName << std::endl;
 
-	size_t numElements = N;
+    size_t numElements = N;
 
-	// Test 2 threads operating on same stream:
-    std::thread t1 (simpleVectorAdd<T, HipTest::Pinned, C>, numElements, p_iters/*iters*/, stream0);
+    // Test 2 threads operating on same stream:
+    std::thread t1(simpleVectorAdd<T, HipTest::Pinned, C>, numElements, p_iters /*iters*/, stream0);
     if (serialize) {
         t1.join();
     }
-    std::thread t2 (simpleVectorAdd<T, HipTest::Pinned, C>, numElements, p_iters/*iters*/, stream1);
+    std::thread t2(simpleVectorAdd<T, HipTest::Pinned, C>, numElements, p_iters /*iters*/, stream1);
     if (serialize) {
         t2.join();
     }
@@ -138,48 +123,51 @@ void test_multiThread_1(std::string testName, hipStream_t stream0, hipStream_t s
         t2.join();
     }
 
-	HIPCHECK(hipDeviceSynchronize());
+    HIPCHECK(hipDeviceSynchronize());
 };
 
 
-int main(int argc, char *argv[])
-{
-	N = 8000000;
+int main(int argc, char* argv[]) {
+    N = 8000000;
     HipTest::parseStandardArguments(argc, argv, true);
 
-    printf ("info: set device to %d\n", p_gpuDevice);
+    printf("info: set device to %d\n", p_gpuDevice);
     HIPCHECK(hipSetDevice(p_gpuDevice));
 
 
     if (p_tests & 0x1) {
-        HIPCHECK ( hipDeviceReset() );
+        HIPCHECK(hipDeviceReset());
 
         hipStream_t stream;
-        HIPCHECK (hipStreamCreate(&stream));
+        HIPCHECK(hipStreamCreate(&stream));
 
-        simpleVectorAdd<float, HipTest::Pinned, HipTest::MemcpyAsync>	(N/*mb*/, 10/*iters*/, stream);
-        simpleVectorAdd<float, HipTest::Pinned, HipTest::Memcpy>		(N/*mb*/, 10/*iters*/, stream);
+        simpleVectorAdd<float, HipTest::Pinned, HipTest::MemcpyAsync>(N /*mb*/, 10 /*iters*/,
+                                                                      stream);
+        simpleVectorAdd<float, HipTest::Pinned, HipTest::Memcpy>(N /*mb*/, 10 /*iters*/, stream);
 
         HIPCHECK(hipStreamDestroy(stream));
     }
 
 
     hipStream_t stream0, stream1;
-    HIPCHECK (hipStreamCreate(&stream0));
-    HIPCHECK (hipStreamCreate(&stream1));
+    HIPCHECK(hipStreamCreate(&stream0));
+    HIPCHECK(hipStreamCreate(&stream1));
 
     if (p_tests & 0x2) {
-		// Easy tests to verify the test works - these don't allow overlap between the threads:
-		test_multiThread_1<float, HipTest::MemcpyAsync> ("Multithread NULL with serialized", NULL, NULL, true);
-		test_multiThread_1<float, HipTest::MemcpyAsync> ("Multithread two streams serialized", stream0, stream1, true);
+        // Easy tests to verify the test works - these don't allow overlap between the threads:
+        test_multiThread_1<float, HipTest::MemcpyAsync>("Multithread NULL with serialized", NULL,
+                                                        NULL, true);
+        test_multiThread_1<float, HipTest::MemcpyAsync>("Multithread two streams serialized",
+                                                        stream0, stream1, true);
     }
 
     if (p_tests & 0x4) {
-		//test_multiThread_1<float, HipTest::MemcpyAsync> ("Multithread with NULL stream", NULL, NULL, false);
-		//test_multiThread_1<float, HipTest::MemcpyAsync> ("Multithread with two streams", stream0, stream1, false);
-		test_multiThread_1<float, HipTest::MemcpyAsync> ("Multithread with one stream",  stream0, stream0, false);
-	}
+        // test_multiThread_1<float, HipTest::MemcpyAsync> ("Multithread with NULL stream", NULL,
+        // NULL, false); test_multiThread_1<float, HipTest::MemcpyAsync> ("Multithread with two
+        // streams", stream0, stream1, false);
+        test_multiThread_1<float, HipTest::MemcpyAsync>("Multithread with one stream", stream0,
+                                                        stream0, false);
+    }
 
     passed();
-
 }

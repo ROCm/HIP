@@ -33,8 +33,7 @@ THE SOFTWARE.
 #pragma GCC diagnostic ignored "-Wall"
 #pragma clang diagnostic ignored "-Wunused-variable"
 
-__device__ void single_precision_math_functions()
-{
+__device__ void single_precision_math_functions() {
     int iX;
     float fX, fY;
 
@@ -51,8 +50,8 @@ __device__ void single_precision_math_functions()
     cosf(0.0f);
     coshf(0.0f);
     cospif(0.0f);
-    //cyl_bessel_i0f(0.0f);
-    //cyl_bessel_i1f(0.0f);
+    // cyl_bessel_i0f(0.0f);
+    // cyl_bessel_i1f(0.0f);
     erfcf(0.0f);
     erfcinvf(2.0f);
     erfcxf(0.0f);
@@ -80,7 +79,7 @@ __device__ void single_precision_math_functions()
     j1f(0.0f);
     jnf(-1.0f, 1.0f);
     ldexpf(0.0f, 0);
-    //lgammaf(1.0f);
+    // lgammaf(1.0f);
     llrintf(0.0f);
     llroundf(0.0f);
     log10f(1.0f);
@@ -90,28 +89,30 @@ __device__ void single_precision_math_functions()
     logf(1.0f);
     lrintf(0.0f);
     lroundf(0.0f);
-    //modff(0.0f, &fX);
+    // modff(0.0f, &fX);
     nanf("1");
     nearbyintf(0.0f);
-    //nextafterf(0.0f);
+    // nextafterf(0.0f);
     norm3df(1.0f, 0.0f, 0.0f);
     norm4df(1.0f, 0.0f, 0.0f, 0.0f);
     normcdff(0.0f);
     normcdfinvf(1.0f);
-    fX = 1.0f; normf(1, &fX);
+    fX = 1.0f;
+    normf(1, &fX);
     powf(1.0f, 0.0f);
-    //rcbrtf(1.0f);
+    // rcbrtf(1.0f);
     remainderf(2.0f, 1.0f);
-    //remquof(1.0f, 2.0f, &iX);
+    // remquof(1.0f, 2.0f, &iX);
     rhypotf(0.0f, 1.0f);
     rintf(1.0f);
     rnorm3df(0.0f, 0.0f, 1.0f);
     rnorm4df(0.0f, 0.0f, 0.0f, 1.0f);
-    fX = 1.0f; rnormf(1, &fX);
+    fX = 1.0f;
+    rnormf(1, &fX);
     roundf(0.0f);
     rsqrtf(1.0f);
-    //scalblnf(0.0f, 1);
-    //scalbnf(0.0f, 1);
+    // scalblnf(0.0f, 1);
+    // scalbnf(0.0f, 1);
     signbit(1.0f);
     sincosf(0.0f, &fX, &fY);
     sincospif(0.0f, &fX, &fY);
@@ -128,13 +129,11 @@ __device__ void single_precision_math_functions()
     ynf(1, 1.0f);
 }
 
-__global__ void compileSinglePrecisionMathOnDevice(hipLaunchParm lp, int ignored)
-{
+__global__ void compileSinglePrecisionMathOnDevice(hipLaunchParm lp, int ignored) {
     single_precision_math_functions();
 }
 
-int main()
-{
-  hipLaunchKernel(compileSinglePrecisionMathOnDevice, dim3(1,1,1), dim3(1,1,1), 0, 0, 1);
-  passed();
+int main() {
+    hipLaunchKernel(compileSinglePrecisionMathOnDevice, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, 1);
+    passed();
 }

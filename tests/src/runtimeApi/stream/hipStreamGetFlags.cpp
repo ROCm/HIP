@@ -26,18 +26,17 @@ THE SOFTWARE.
 #include "test_common.h"
 
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
     hipStream_t stream;
     unsigned int flags;
     HIPCHECK(hipStreamCreateWithFlags(&stream, hipStreamDefault));
     HIPCHECK(hipStreamGetFlags(stream, &flags));
-    HIPASSERT(flags == 0); 
+    HIPASSERT(flags == 0);
     HIPCHECK(hipStreamDestroy(stream));
 
     HIPCHECK(hipStreamCreateWithFlags(&stream, hipStreamNonBlocking));
     HIPCHECK(hipStreamGetFlags(stream, &flags));
-    HIPASSERT(flags == 1); 
+    HIPASSERT(flags == 1);
     HIPCHECK(hipStreamDestroy(stream));
 
     passed();

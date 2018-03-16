@@ -20,40 +20,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include<iostream>
+#include <iostream>
 
 // hip header file
 #include "hip/hip_runtime.h"
 
-#define NUM       1024
+#define NUM 1024
 
-#define THREADS_PER_BLOCK_X  4
+#define THREADS_PER_BLOCK_X 4
 
 // Device (Kernel) function, it must be void
 // hipLaunchParm provides the execution configuration
-__global__ void vmac_asm(hipLaunchParm lp,
-                                float *out,
-                                float *in)
-{
+__global__ void vmac_asm(hipLaunchParm lp, float* out, float* in) {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
 
-    asm volatile ("v_mac_f32_e32 %0, %2, %3" : "=v" (out[i]) : "0"(out[i]), "v" (a), "v" (in[i]));
+    asm volatile("v_mac_f32_e32 %0, %2, %3" : "=v"(out[i]) : "0"(out[i]), "v"(a), "v"(in[i]));
 }
 
 // CPU implementation of saxpy
-void CPUReference(
-    float * output,
-    float * input)
-{
-    for(unsigned int j=0; j < NUM; j++)
-    {
-
-        output[j]= a*input[j] + output[j];
+void CPUReference(float* output, float* input) {
+    for (unsigned int j = 0; j < NUM; j++) {
+        output[j] = a * input[j] + output[j];
     }
 }
 
-int main(){
-
+int main() {
     float* VectorA;
     float* ResultVector;
     float* VectorB;
@@ -61,8 +52,7 @@ int main(){
     float* gpuVector;
     float* gpuResultVector;
 
-    const float a = 10.0f
-    int i;
+    const float a = 10.0f int i;
     int errors;
 
     VectorA = (float*)malloc(NUM * sizeof(float));
@@ -71,8 +61,8 @@ int main(){
 
     // initialize the input data
     for (i = 0; i < NUM; i++) {
-    VectorA[i] = (float)i*10.0f;
-    VectorB[i] = (float)i*30.0f;
+        VectorA[i] = (float)i * 10.0f;
+        VectorB[i] = (float)i * 30.0f;
     }
 
     // allocate the memory on the device side
@@ -80,18 +70,15 @@ int main(){
     hipMalloc((void**)&gpuResultVector, NUM * sizeof(float));
 
     // Memory transfer from host to device
-    hipMemcpy(gpuVector, VectorA, NUM*sizeof(float), hipMemcpyHostToDevice);
-    hipMemcpy(gpuResultVector, VectorB, NUM*sizeof(float), hipMemcpyHostToDevice);
+    hipMemcpy(gpuVector, VectorA, NUM * sizeof(float), hipMemcpyHostToDevice);
+    hipMemcpy(gpuResultVector, VectorB, NUM * sizeof(float), hipMemcpyHostToDevice);
 
     // Lauching kernel from host
-    hipLaunchKernel(vmac_asm,
-                    dim3(NUM/THREADS_PER_BLOCK_X),
-                    dim3(THREADS_PER_BLOCK_X),
-                    0, 0,
-                    gpuResultVector , gpuVector);
+    hipLaunchKernel(vmac_asm, dim3(NUM / THREADS_PER_BLOCK_X), dim3(THREADS_PER_BLOCK_X), 0, 0,
+                    gpuResultVector, gpuVector);
 
     // Memory transfer from device to host
-    hipMemcpy(ResultVector, gpuResultVector, NUM*sizeof(float), hipMemcpyDeviceToHost);
+    hipMemcpy(ResultVector, gpuResultVector, NUM * sizeof(float), hipMemcpyDeviceToHost);
 
     // CPU Result computation
     addCPUReference(VectorB, VectorA);
@@ -100,23 +87,23 @@ int main(){
     errors = 0;
     double eps = 1.0E-3;
     for (i = 0; i < NUM; i++) {
-    if (std::abs(ResultVector[i] - VectorB[i]) > eps ) {
-        errors++;
+        if (std::abs(ResultVector[i] - VectorB[i]) > eps) {
+            errors++;
         }
     }
-    if (errors!=0) {
-    printf("FAILED: %d errors\n",errors);
+    if (errors != 0) {
+        printf("FAILED: %d errors\n", errors);
     } else {
-        printf ("PASSED!\n");
+        printf("PASSED!\n");
     }
 
-    //free the resources on device side
+    // free the resources on device side
     hipFree(gpuVector);
     hipFree(gpuResultVector);
 
     hipDeviceReset();
 
-    //free the resources on host side
+    // free the resources on host side
     free(VectorA);
     free(ResultVector);
     free(VectorB);

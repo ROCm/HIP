@@ -412,7 +412,7 @@ hcc_1_6:
   node('docker && rocm && !dkms')
   {
     String hcc_ver = 'hcc-1.6'
-    String from_image = 'rocm/dev-ubuntu-16.04:latest'
+    String from_image = 'rocm/dev-ubuntu-16.04:1.6.4'
     String inside_args = '--device=/dev/kfd --device=/dev/dri'
 
     // Checkout source code, dependencies and version files

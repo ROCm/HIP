@@ -17,12 +17,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include<hip/hip_runtime_api.h>
-#include<iostream>
-#include<assert.h>
+#include <hip/hip_runtime_api.h>
+#include <iostream>
+#include <assert.h>
 
-int main()
-{
+int main() {
     size_t heap;
     assert(hipSuccess == hipDeviceGetLimit(&heap, hipLimitMallocHeapSize));
     assert(heap == 4194304);
