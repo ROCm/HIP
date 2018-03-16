@@ -18,44 +18,44 @@ THE SOFTWARE.
 */
 
 #include "hip/hip_runtime.h"
-#include<iostream>
-#include<time.h>
+#include <iostream>
+#include <time.h>
 
 #define NUM_SIZE 8
 #define NUM_ITER 1 << 30
 static size_t size[NUM_SIZE];
 
-__global__ void Add(hipLaunchParm lp, int *Ad){
+__global__ void Add(hipLaunchParm lp, int* Ad) {
     int tx = threadIdx.x;
     Ad[tx] = Ad[tx] + tx;
 }
 
-void setup(){
-    for(int i=0;i<NUM_SIZE;i++){
-        size[i] = 1<<(i+6); // start at 8 bytes
+void setup() {
+    for (int i = 0; i < NUM_SIZE; i++) {
+        size[i] = 1 << (i + 6);  // start at 8 bytes
     }
 }
 
-void valSet(int *A, int val, size_t size){
-    size_t len = size/sizeof(int);
-    for(int i=0;i<len;i++){
+void valSet(int* A, int val, size_t size) {
+    size_t len = size / sizeof(int);
+    for (int i = 0; i < len; i++) {
         A[i] = val;
     }
 }
 
-int main(){
+int main() {
     setup();
     int *A, *Ad;
-    for(int i=0;i<NUM_SIZE;i++){
+    for (int i = 0; i < NUM_SIZE; i++) {
         A = (int*)malloc(size[i]);
         valSet(A, 1, size[i]);
         hipMalloc(&Ad, size[i]);
-        std::cout<<"Malloc success at size: "<<size[i]<<std::endl;
+        std::cout << "Malloc success at size: " << size[i] << std::endl;
 
-        for(int j=0;j<NUM_ITER;j++){
-            std::cout<<"Iter: "<<j<<std::endl;
+        for (int j = 0; j < NUM_ITER; j++) {
+            std::cout << "Iter: " << j << std::endl;
             hipMemcpy(Ad, A, size[i], hipMemcpyHostToDevice);
-            hipLaunchKernel(Add, dim3(1), dim3(size[i]/sizeof(int)), 0, 0, Ad);
+            hipLaunchKernel(Add, dim3(1), dim3(size[i] / sizeof(int)), 0, 0, Ad);
             hipMemcpy(A, Ad, size[i], hipMemcpyDeviceToHost);
         }
 

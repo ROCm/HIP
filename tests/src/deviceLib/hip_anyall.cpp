@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS --Wno-deprecated-declarations 
+ * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS --Wno-deprecated-declarations
  * RUN: %t
  * HIT_END
  */
@@ -31,75 +31,79 @@ THE SOFTWARE.
 
 #include <hip/hip_runtime.h>
 #include <hip/device_functions.h>
-#define HIP_ASSERT(x) (assert((x)==hipSuccess))
+#define HIP_ASSERT(x) (assert((x) == hipSuccess))
 
-__global__ void
-	warpvote(hipLaunchParm lp, int* device_any, int* device_all , int Num_Warps_per_Block, int pshift)
-{
-
-   int tid = threadIdx.x + blockIdx.x * blockDim.x;
-   device_any[threadIdx.x>>pshift] = __any(tid -77);
-   device_all[threadIdx.x>>pshift] = __all(tid -77);
+__global__ void warpvote(hipLaunchParm lp, int* device_any, int* device_all,
+                         int Num_Warps_per_Block, int pshift) {
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    device_any[threadIdx.x >> pshift] = __any(tid - 77);
+    device_all[threadIdx.x >> pshift] = __all(tid - 77);
 }
 
-int main(int argc, char *argv[])
-{ int warpSize, pshift;
-  hipDeviceProp_t devProp;
-  hipGetDeviceProperties(&devProp, 0);
-  warpSize = devProp.warpSize;
+int main(int argc, char* argv[]) {
+    int warpSize, pshift;
+    hipDeviceProp_t devProp;
+    hipGetDeviceProperties(&devProp, 0);
+    warpSize = devProp.warpSize;
 
-  int w = warpSize;
-  pshift = 0;
-  while (w >>= 1) ++pshift;
+    int w = warpSize;
+    pshift = 0;
+    while (w >>= 1) ++pshift;
 
-  printf ("warpSize=%d pshift=%d\n", warpSize, pshift);
-
-
-  int anycount =0;
-  int allcount =0;
-  int Num_Threads_per_Block      = 1024;
-  int Num_Blocks_per_Grid        = 1;
-  int Num_Warps_per_Block        = Num_Threads_per_Block/warpSize;
-  int Num_Warps_per_Grid         = (Num_Threads_per_Block*Num_Blocks_per_Grid)/warpSize;
-
-  int * host_any  = ( int*)malloc(Num_Warps_per_Grid*sizeof(int));
-  int * host_all  = ( int*)malloc(Num_Warps_per_Grid*sizeof(int));
-  int *device_any;
-  int *device_all;
-  HIP_ASSERT(hipMalloc((void**)&device_any,Num_Warps_per_Grid*sizeof( int)));
-  HIP_ASSERT(hipMalloc((void**)&device_all,Num_Warps_per_Grid*sizeof(int)));
-for (int i=0; i<Num_Warps_per_Grid; i++)
-{
-	host_any[i] = 0;
-	host_all[i] = 0;
-}
-  HIP_ASSERT(hipMemcpy(device_any, host_any,sizeof(int), hipMemcpyHostToDevice));
-  HIP_ASSERT(hipMemcpy(device_all, host_all,sizeof(int), hipMemcpyHostToDevice));
-
-  hipLaunchKernel(warpvote, dim3(Num_Blocks_per_Grid),dim3(Num_Threads_per_Block),0,0, device_any, device_all ,Num_Warps_per_Block,pshift);
+    printf("warpSize=%d pshift=%d\n", warpSize, pshift);
 
 
-  HIP_ASSERT(hipMemcpy(host_any, device_any, Num_Warps_per_Grid*sizeof(int), hipMemcpyDeviceToHost));
-  HIP_ASSERT(hipMemcpy(host_all, device_all, Num_Warps_per_Grid*sizeof(int), hipMemcpyDeviceToHost));
-  for (int i=0; i<Num_Warps_per_Grid; i++) {
+    int anycount = 0;
+    int allcount = 0;
+    int Num_Threads_per_Block = 1024;
+    int Num_Blocks_per_Grid = 1;
+    int Num_Warps_per_Block = Num_Threads_per_Block / warpSize;
+    int Num_Warps_per_Grid = (Num_Threads_per_Block * Num_Blocks_per_Grid) / warpSize;
 
-    printf("warp no. %d __any = %d \n",i,host_any[i]);
-    printf("warp no. %d __all = %d \n",i,host_all[i]);
+    int* host_any = (int*)malloc(Num_Warps_per_Grid * sizeof(int));
+    int* host_all = (int*)malloc(Num_Warps_per_Grid * sizeof(int));
+    int* device_any;
+    int* device_all;
+    HIP_ASSERT(hipMalloc((void**)&device_any, Num_Warps_per_Grid * sizeof(int)));
+    HIP_ASSERT(hipMalloc((void**)&device_all, Num_Warps_per_Grid * sizeof(int)));
+    for (int i = 0; i < Num_Warps_per_Grid; i++) {
+        host_any[i] = 0;
+        host_all[i] = 0;
+    }
+    HIP_ASSERT(hipMemcpy(device_any, host_any, sizeof(int), hipMemcpyHostToDevice));
+    HIP_ASSERT(hipMemcpy(device_all, host_all, sizeof(int), hipMemcpyHostToDevice));
 
-    if (host_all[i]!=1) ++allcount;
-#if defined (__HIP_PLATFORM_HCC__) &&  !defined ( NVCC_COMPAT )
-    if (host_any[i]!=64) ++anycount;
+    hipLaunchKernel(warpvote, dim3(Num_Blocks_per_Grid), dim3(Num_Threads_per_Block), 0, 0,
+                    device_any, device_all, Num_Warps_per_Block, pshift);
+
+
+    HIP_ASSERT(
+        hipMemcpy(host_any, device_any, Num_Warps_per_Grid * sizeof(int), hipMemcpyDeviceToHost));
+    HIP_ASSERT(
+        hipMemcpy(host_all, device_all, Num_Warps_per_Grid * sizeof(int), hipMemcpyDeviceToHost));
+    for (int i = 0; i < Num_Warps_per_Grid; i++) {
+        printf("warp no. %d __any = %d \n", i, host_any[i]);
+        printf("warp no. %d __all = %d \n", i, host_all[i]);
+
+        if (host_all[i] != 1) ++allcount;
+#if defined(__HIP_PLATFORM_HCC__) && !defined(NVCC_COMPAT)
+        if (host_any[i] != 64) ++anycount;
 #else
-    if (host_any[i]!=1) ++anycount;
+        if (host_any[i] != 1) ++anycount;
 #endif
-}
+    }
 
-#if defined (__HIP_PLATFORM_HCC__) &&  !defined ( NVCC_COMPAT )
-    if (anycount == 1 && allcount ==1) printf("PASSED\n"); else printf("FAILED\n");
+#if defined(__HIP_PLATFORM_HCC__) && !defined(NVCC_COMPAT)
+    if (anycount == 1 && allcount == 1)
+        printf("PASSED\n");
+    else
+        printf("FAILED\n");
 #else
-    if (anycount == 0 && allcount ==1) printf("PASSED\n"); else printf("FAILED\n");
+    if (anycount == 0 && allcount == 1)
+        printf("PASSED\n");
+    else
+        printf("FAILED\n");
 #endif
 
-  return EXIT_SUCCESS;
-
+    return EXIT_SUCCESS;
 }

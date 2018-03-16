@@ -37,30 +37,28 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
-int main(int argc, char *argv[])
-{
-	HipTest::parseStandardArguments(argc, argv, true);
-	size_t Nbytes = N*sizeof(char);
-    char *A_h;
-   	hipDeviceptr_t A_d;
-	A_h = new char[Nbytes];
+int main(int argc, char* argv[]) {
+    HipTest::parseStandardArguments(argc, argv, true);
+    size_t Nbytes = N * sizeof(char);
+    char* A_h;
+    hipDeviceptr_t A_d;
+    A_h = new char[Nbytes];
 
-    HIPCHECK ( hipMalloc((void **) &A_d, Nbytes) );
+    HIPCHECK(hipMalloc((void**)&A_d, Nbytes));
 
-	printf ("Size=%zu  memsetval=%2x \n", Nbytes, memsetval);
-    HIPCHECK ( hipMemsetD8(A_d, memsetval, Nbytes) );
+    printf("Size=%zu  memsetval=%2x \n", Nbytes, memsetval);
+    HIPCHECK(hipMemsetD8(A_d, memsetval, Nbytes));
 
-    HIPCHECK ( hipMemcpy(A_h, (void *) A_d, Nbytes, hipMemcpyDeviceToHost));
+    HIPCHECK(hipMemcpy(A_h, (void*)A_d, Nbytes, hipMemcpyDeviceToHost));
 
-    for (int i=0; i<N; i++) {
+    for (int i = 0; i < N; i++) {
         if (A_h[i] != memsetval) {
-            failed("mismatch at index:%d computed:%02x, memsetval:%02x\n", i, (int)A_h[i], (int)memsetval);
-
+            failed("mismatch at index:%d computed:%02x, memsetval:%02x\n", i, (int)A_h[i],
+                   (int)memsetval);
         }
     }
 
-    hipFree((void *) A_d);
-    delete [] A_h;
+    hipFree((void*)A_d);
+    delete[] A_h;
     passed();
-
 }

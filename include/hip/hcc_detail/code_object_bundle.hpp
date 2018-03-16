@@ -32,129 +32,103 @@ THE SOFTWARE.
 #include <utility>
 #include <vector>
 
-namespace hip_impl
-{
-    hsa_isa_t triple_to_hsa_isa(const std::string& triple);
+namespace hip_impl {
+hsa_isa_t triple_to_hsa_isa(const std::string& triple);
 
-    struct Bundled_code {
-        union Header {
-            struct {
-                std::uint64_t offset;
-                std::uint64_t bundle_sz;
-                std::uint64_t triple_sz;
-            };
-            char cbuf[sizeof(offset) + sizeof(bundle_sz) + sizeof(triple_sz)];
-        } header;
-        std::string triple;
-        std::vector<char> blob;
-    };
+struct Bundled_code {
+    union Header {
+        struct {
+            std::uint64_t offset;
+            std::uint64_t bundle_sz;
+            std::uint64_t triple_sz;
+        };
+        char cbuf[sizeof(offset) + sizeof(bundle_sz) + sizeof(triple_sz)];
+    } header;
+    std::string triple;
+    std::vector<char> blob;
+};
 
-    class Bundled_code_header {
-        // DATA - STATICS
-        static constexpr const char magic_string_[] =
-            "__CLANG_OFFLOAD_BUNDLE__";
-        static constexpr auto magic_string_sz_ = sizeof(magic_string_) - 1;
+class Bundled_code_header {
+    // DATA - STATICS
+    static constexpr const char magic_string_[] = "__CLANG_OFFLOAD_BUNDLE__";
+    static constexpr auto magic_string_sz_ = sizeof(magic_string_) - 1;
 
-        // DATA
-        union Header_ {
-            struct {
-                char bundler_magic_string_[magic_string_sz_];
-                std::uint64_t bundle_cnt_;
-            };
-            char cbuf_[sizeof(bundler_magic_string_) + sizeof(bundle_cnt_)];
-        } header_;
-        std::vector<Bundled_code> bundles_;
+    // DATA
+    union Header_ {
+        struct {
+            char bundler_magic_string_[magic_string_sz_];
+            std::uint64_t bundle_cnt_;
+        };
+        char cbuf_[sizeof(bundler_magic_string_) + sizeof(bundle_cnt_)];
+    } header_;
+    std::vector<Bundled_code> bundles_;
 
-        // FRIENDS - MANIPULATORS
-        template<typename RandomAccessIterator>
-        friend
-        inline
-        bool read(
-            RandomAccessIterator f,
-            RandomAccessIterator l,
-            Bundled_code_header& x)
-        {
-            if (f == l) return false;
+    // FRIENDS - MANIPULATORS
+    template <typename RandomAccessIterator>
+    friend inline bool read(RandomAccessIterator f, RandomAccessIterator l,
+                            Bundled_code_header& x) {
+        if (f == l) return false;
 
-            std::copy_n(f, sizeof(x.header_.cbuf_), x.header_.cbuf_);
+        std::copy_n(f, sizeof(x.header_.cbuf_), x.header_.cbuf_);
 
-            if (valid(x)) {
-                x.bundles_.resize(x.header_.bundle_cnt_);
+        if (valid(x)) {
+            x.bundles_.resize(x.header_.bundle_cnt_);
 
-                auto it = f + sizeof(x.header_.cbuf_);
-                for (auto&& y : x.bundles_) {
-                    std::copy_n(it, sizeof(y.header.cbuf), y.header.cbuf);
-                    it += sizeof(y.header.cbuf);
+            auto it = f + sizeof(x.header_.cbuf_);
+            for (auto&& y : x.bundles_) {
+                std::copy_n(it, sizeof(y.header.cbuf), y.header.cbuf);
+                it += sizeof(y.header.cbuf);
 
-                    y.triple.assign(it, it + y.header.triple_sz);
+                y.triple.assign(it, it + y.header.triple_sz);
 
-                    std::copy_n(
-                        f + y.header.offset,
-                        y.header.bundle_sz,
-                        std::back_inserter(y.blob));
+                std::copy_n(f + y.header.offset, y.header.bundle_sz, std::back_inserter(y.blob));
 
-                    it += y.header.triple_sz;
-                }
-
-                return true;
+                it += y.header.triple_sz;
             }
 
-            return false;
-        }
-        friend
-        inline
-        bool read(const std::vector<char>& blob, Bundled_code_header& x)
-        {
-            return read(blob.cbegin(), blob.cend(), x);
-        }
-        friend
-        inline
-        bool read(std::istream& is, Bundled_code_header& x)
-        {
-            return read(std::vector<char>{
-                std::istreambuf_iterator<char>{is},
-                std::istreambuf_iterator<char>{}},
-                x);
+            return true;
         }
 
-        // FRIENDS - ACCESSORS
-        friend
-        inline
-        bool valid(const Bundled_code_header& x)
-        {
-            return std::equal(
-                magic_string_,
-                magic_string_ + magic_string_sz_,
-                x.header_.bundler_magic_string_);
-        }
-        friend
-        inline
-        const std::vector<Bundled_code>& bundles(const Bundled_code_header& x)
-        {
-            return x.bundles_;
-        }
-    public:
-        // CREATORS
-        Bundled_code_header() = default;
-        template<typename RandomAccessIterator>
-        Bundled_code_header(RandomAccessIterator f, RandomAccessIterator l);
-        explicit
-        Bundled_code_header(const std::vector<char>& blob);
-        explicit
-        Bundled_code_header(const void* maybe_blob);
-        Bundled_code_header(const Bundled_code_header&) = default;
-        Bundled_code_header(Bundled_code_header&&) = default;
-        ~Bundled_code_header() = default;
-
-        // MANIPULATORS
-        Bundled_code_header& operator=(const Bundled_code_header&) = default;
-        Bundled_code_header& operator=(Bundled_code_header&&) = default;
-    };
-
-    // CREATORS
-    template<typename RandomAccessIterator>
-    Bundled_code_header::Bundled_code_header(RandomAccessIterator f, RandomAccessIterator l) : Bundled_code_header{}
-    {
-        read(f, l, *this);
+        return false;
     }
-} // Namespace hip_impl.
+    friend inline bool read(const std::vector<char>& blob, Bundled_code_header& x) {
+        return read(blob.cbegin(), blob.cend(), x);
+    }
+    friend inline bool read(std::istream& is, Bundled_code_header& x) {
+        return read(
+            std::vector<char>{std::istreambuf_iterator<char>{is}, std::istreambuf_iterator<char>{}},
+            x);
+    }
+
+    // FRIENDS - ACCESSORS
+    friend inline bool valid(const Bundled_code_header& x) {
+        return std::equal(magic_string_, magic_string_ + magic_string_sz_,
+                          x.header_.bundler_magic_string_);
+    }
+    friend inline const std::vector<Bundled_code>& bundles(const Bundled_code_header& x) {
+        return x.bundles_;
+    }
+
+   public:
+    // CREATORS
+    Bundled_code_header() = default;
+    template <typename RandomAccessIterator>
+    Bundled_code_header(RandomAccessIterator f, RandomAccessIterator l);
+    explicit Bundled_code_header(const std::vector<char>& blob);
+    explicit Bundled_code_header(const void* maybe_blob);
+    Bundled_code_header(const Bundled_code_header&) = default;
+    Bundled_code_header(Bundled_code_header&&) = default;
+    ~Bundled_code_header() = default;
+
+    // MANIPULATORS
+    Bundled_code_header& operator=(const Bundled_code_header&) = default;
+    Bundled_code_header& operator=(Bundled_code_header&&) = default;
+};
+
+// CREATORS
+template <typename RandomAccessIterator>
+Bundled_code_header::Bundled_code_header(RandomAccessIterator f, RandomAccessIterator l)
+    : Bundled_code_header{} {
+    read(f, l, *this);
+}
+}  // Namespace hip_impl.

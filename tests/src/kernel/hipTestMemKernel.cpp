@@ -23,73 +23,73 @@ THE SOFTWARE.
  * HIT_END
  */
 
-#include<hip/hip_runtime_api.h>
-#include<hip/hip_runtime.h>
-#include<iostream>
-#include"test_common.h"
+#include <hip/hip_runtime_api.h>
+#include <hip/hip_runtime.h>
+#include <iostream>
+#include "test_common.h"
 
-#define LEN8  8  * 4
-#define LEN9  9  * 4
+#define LEN8 8 * 4
+#define LEN9 9 * 4
 #define LEN10 10 * 4
 #define LEN11 11 * 4
 #define LEN12 12 * 4
 
-__global__ void MemCpy8(hipLaunchParm lp, uint8_t *In, uint8_t *Out) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
-  memcpy(Out + tid*8, In + tid*8, 8);
+__global__ void MemCpy8(hipLaunchParm lp, uint8_t* In, uint8_t* Out) {
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    memcpy(Out + tid * 8, In + tid * 8, 8);
 }
 
-__global__ void MemCpy9(hipLaunchParm lp, uint8_t *In, uint8_t *Out) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
-  memcpy(Out + tid*9, In + tid*9, 9);
+__global__ void MemCpy9(hipLaunchParm lp, uint8_t* In, uint8_t* Out) {
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    memcpy(Out + tid * 9, In + tid * 9, 9);
 }
 
-__global__ void MemCpy10(hipLaunchParm lp, uint8_t *In, uint8_t *Out) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
-  memcpy(Out + tid*10, In + tid*10, 10);
+__global__ void MemCpy10(hipLaunchParm lp, uint8_t* In, uint8_t* Out) {
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    memcpy(Out + tid * 10, In + tid * 10, 10);
 }
 
-__global__ void MemCpy11(hipLaunchParm lp, uint8_t *In, uint8_t *Out) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
-  memcpy(Out + tid*11, In + tid*11, 11);
+__global__ void MemCpy11(hipLaunchParm lp, uint8_t* In, uint8_t* Out) {
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    memcpy(Out + tid * 11, In + tid * 11, 11);
 }
 
-__global__ void MemCpy12(hipLaunchParm lp, uint8_t *In, uint8_t *Out) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
-  memcpy(Out + tid*12, In + tid*12, 12);
+__global__ void MemCpy12(hipLaunchParm lp, uint8_t* In, uint8_t* Out) {
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    memcpy(Out + tid * 12, In + tid * 12, 12);
 }
 
-__global__ void MemSet8(hipLaunchParm lp, uint8_t *In) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
-  memset(In + tid*8, 1, 8);
+__global__ void MemSet8(hipLaunchParm lp, uint8_t* In) {
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    memset(In + tid * 8, 1, 8);
 }
 
-__global__ void MemSet9(hipLaunchParm lp, uint8_t *In) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
-  memset(In + tid*9, 1, 9);
+__global__ void MemSet9(hipLaunchParm lp, uint8_t* In) {
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    memset(In + tid * 9, 1, 9);
 }
 
-__global__ void MemSet10(hipLaunchParm lp, uint8_t *In) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
-  memset(In + tid*10, 1, 10);
+__global__ void MemSet10(hipLaunchParm lp, uint8_t* In) {
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    memset(In + tid * 10, 1, 10);
 }
 
-__global__ void MemSet11(hipLaunchParm lp, uint8_t *In) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
-  memset(In + tid*11, 1, 11);
+__global__ void MemSet11(hipLaunchParm lp, uint8_t* In) {
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    memset(In + tid * 11, 1, 11);
 }
 
-__global__ void MemSet12(hipLaunchParm lp, uint8_t *In) {
-  int tid = threadIdx.x + blockIdx.x * blockDim.x;
-  memset(In + tid*12, 1, 12);
+__global__ void MemSet12(hipLaunchParm lp, uint8_t* In) {
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    memset(In + tid * 12, 1, 12);
 }
 
-int main(){
+int main() {
     uint8_t *A, *Ad, *B, *Bd, *C, *Cd;
     A = new uint8_t[LEN8];
     B = new uint8_t[LEN8];
     C = new uint8_t[LEN8];
-    for(uint32_t i=0;i<LEN8;i++) {
+    for (uint32_t i = 0; i < LEN8; i++) {
         A[i] = i;
         B[i] = 0;
         C[i] = 0;
@@ -98,18 +98,18 @@ int main(){
     hipMalloc((void**)&Bd, LEN8);
     hipMalloc((void**)&Cd, LEN8);
     hipMemcpy(Ad, A, LEN8, hipMemcpyHostToDevice);
-    hipLaunchKernel(MemCpy8, dim3(2,1,1), dim3(2,1,1), 0, 0, Ad, Bd);
-    hipLaunchKernel(MemSet8, dim3(2,1,1), dim3(2,1,1), 0, 0, Cd);
+    hipLaunchKernel(MemCpy8, dim3(2, 1, 1), dim3(2, 1, 1), 0, 0, Ad, Bd);
+    hipLaunchKernel(MemSet8, dim3(2, 1, 1), dim3(2, 1, 1), 0, 0, Cd);
     hipMemcpy(B, Bd, LEN8, hipMemcpyDeviceToHost);
     hipMemcpy(C, Cd, LEN8, hipMemcpyDeviceToHost);
-    for(uint32_t i=0;i<LEN8;i++) {
+    for (uint32_t i = 0; i < LEN8; i++) {
         assert(A[i] == B[i]);
         assert(C[i] == 1);
     }
 
-    delete [] A;
-    delete [] B;
-    delete [] C;
+    delete[] A;
+    delete[] B;
+    delete[] C;
     hipFree(Ad);
     hipFree(Bd);
     hipFree(Cd);
@@ -117,7 +117,7 @@ int main(){
     A = new uint8_t[LEN9];
     B = new uint8_t[LEN9];
     C = new uint8_t[LEN9];
-    for(uint32_t i=0;i<LEN9;i++) {
+    for (uint32_t i = 0; i < LEN9; i++) {
         A[i] = i;
         B[i] = 0;
         C[i] = 0;
@@ -126,18 +126,18 @@ int main(){
     hipMalloc((void**)&Bd, LEN9);
     hipMalloc((void**)&Cd, LEN9);
     hipMemcpy(Ad, A, LEN9, hipMemcpyHostToDevice);
-    hipLaunchKernel(MemCpy9, dim3(2,1,1), dim3(2,1,1), 0, 0, Ad, Bd);
-    hipLaunchKernel(MemSet9, dim3(2,1,1), dim3(2,1,1), 0, 0, Cd);
+    hipLaunchKernel(MemCpy9, dim3(2, 1, 1), dim3(2, 1, 1), 0, 0, Ad, Bd);
+    hipLaunchKernel(MemSet9, dim3(2, 1, 1), dim3(2, 1, 1), 0, 0, Cd);
     hipMemcpy(B, Bd, LEN9, hipMemcpyDeviceToHost);
     hipMemcpy(C, Cd, LEN9, hipMemcpyDeviceToHost);
-    for(uint32_t i=0;i<LEN9;i++) {
+    for (uint32_t i = 0; i < LEN9; i++) {
         assert(A[i] == B[i]);
         assert(C[i] == 1);
     }
 
-    delete [] A;
-    delete [] B;
-    delete [] C;
+    delete[] A;
+    delete[] B;
+    delete[] C;
     hipFree(Ad);
     hipFree(Bd);
     hipFree(Cd);
@@ -145,7 +145,7 @@ int main(){
     A = new uint8_t[LEN10];
     B = new uint8_t[LEN10];
     C = new uint8_t[LEN10];
-    for(uint32_t i=0;i<LEN10;i++) {
+    for (uint32_t i = 0; i < LEN10; i++) {
         A[i] = i;
         B[i] = 0;
         C[i] = 0;
@@ -154,18 +154,18 @@ int main(){
     hipMalloc((void**)&Bd, LEN10);
     hipMalloc((void**)&Cd, LEN10);
     hipMemcpy(Ad, A, LEN10, hipMemcpyHostToDevice);
-    hipLaunchKernel(MemCpy10, dim3(2,1,1), dim3(2,1,1), 0, 0, Ad, Bd);
-    hipLaunchKernel(MemSet10, dim3(2,1,1), dim3(2,1,1), 0, 0, Cd);
+    hipLaunchKernel(MemCpy10, dim3(2, 1, 1), dim3(2, 1, 1), 0, 0, Ad, Bd);
+    hipLaunchKernel(MemSet10, dim3(2, 1, 1), dim3(2, 1, 1), 0, 0, Cd);
     hipMemcpy(B, Bd, LEN10, hipMemcpyDeviceToHost);
     hipMemcpy(C, Cd, LEN10, hipMemcpyDeviceToHost);
-    for(uint32_t i=0;i<LEN10;i++) {
+    for (uint32_t i = 0; i < LEN10; i++) {
         assert(A[i] == B[i]);
         assert(C[i] == 1);
     }
 
-    delete [] A;
-    delete [] B;
-    delete [] C;
+    delete[] A;
+    delete[] B;
+    delete[] C;
     hipFree(Ad);
     hipFree(Bd);
     hipFree(Cd);
@@ -173,7 +173,7 @@ int main(){
     A = new uint8_t[LEN11];
     B = new uint8_t[LEN11];
     C = new uint8_t[LEN11];
-    for(uint32_t i=0;i<LEN11;i++) {
+    for (uint32_t i = 0; i < LEN11; i++) {
         A[i] = i;
         B[i] = 0;
         C[i] = 0;
@@ -182,18 +182,18 @@ int main(){
     hipMalloc((void**)&Bd, LEN11);
     hipMalloc((void**)&Cd, LEN11);
     hipMemcpy(Ad, A, LEN11, hipMemcpyHostToDevice);
-    hipLaunchKernel(MemCpy11, dim3(2,1,1), dim3(2,1,1), 0, 0, Ad, Bd);
-    hipLaunchKernel(MemSet11, dim3(2,1,1), dim3(2,1,1), 0, 0, Cd);
+    hipLaunchKernel(MemCpy11, dim3(2, 1, 1), dim3(2, 1, 1), 0, 0, Ad, Bd);
+    hipLaunchKernel(MemSet11, dim3(2, 1, 1), dim3(2, 1, 1), 0, 0, Cd);
     hipMemcpy(B, Bd, LEN11, hipMemcpyDeviceToHost);
     hipMemcpy(C, Cd, LEN11, hipMemcpyDeviceToHost);
-    for(uint32_t i=0;i<LEN11;i++) {
+    for (uint32_t i = 0; i < LEN11; i++) {
         assert(A[i] == B[i]);
         assert(C[i] == 1);
     }
 
-    delete [] A;
-    delete [] B;
-    delete [] C;
+    delete[] A;
+    delete[] B;
+    delete[] C;
     hipFree(Ad);
     hipFree(Bd);
     hipFree(Cd);
@@ -201,7 +201,7 @@ int main(){
     A = new uint8_t[LEN12];
     B = new uint8_t[LEN12];
     C = new uint8_t[LEN12];
-    for(uint32_t i=0;i<LEN12;i++) {
+    for (uint32_t i = 0; i < LEN12; i++) {
         A[i] = i;
         B[i] = 0;
         C[i] = 0;
@@ -210,18 +210,18 @@ int main(){
     hipMalloc((void**)&Bd, LEN12);
     hipMalloc((void**)&Cd, LEN12);
     hipMemcpy(Ad, A, LEN12, hipMemcpyHostToDevice);
-    hipLaunchKernel(MemCpy12, dim3(2,1,1), dim3(2,1,1), 0, 0, Ad, Bd);
-    hipLaunchKernel(MemSet12, dim3(2,1,1), dim3(2,1,1), 0, 0, Cd);
+    hipLaunchKernel(MemCpy12, dim3(2, 1, 1), dim3(2, 1, 1), 0, 0, Ad, Bd);
+    hipLaunchKernel(MemSet12, dim3(2, 1, 1), dim3(2, 1, 1), 0, 0, Cd);
     hipMemcpy(B, Bd, LEN12, hipMemcpyDeviceToHost);
     hipMemcpy(C, Cd, LEN12, hipMemcpyDeviceToHost);
-    for(uint32_t i=0;i<LEN12;i++) {
+    for (uint32_t i = 0; i < LEN12; i++) {
         assert(A[i] == B[i]);
         assert(C[i] == 1);
     }
 
-    delete [] A;
-    delete [] B;
-    delete [] C;
+    delete[] A;
+    delete[] B;
+    delete[] C;
     hipFree(Ad);
     hipFree(Bd);
     hipFree(Cd);

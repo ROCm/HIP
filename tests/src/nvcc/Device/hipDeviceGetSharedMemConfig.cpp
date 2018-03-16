@@ -17,11 +17,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include<hip/hip_runtime_api.h>
-#include"test_common.h"
+#include <hip/hip_runtime_api.h>
+#include "test_common.h"
 
-int main()
-{
+int main() {
     hipSharedMemConfig_t config;
     HIP_PRINT_STATUS(hipDeviceGetSharedMemConfig(NULL));
     HIP_PRINT_STATUS(hipDeviceGetSharedMemConfig(&config));

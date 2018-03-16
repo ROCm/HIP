@@ -23,44 +23,39 @@ THE SOFTWARE.
  * HIT_END
  */
 
-#include<hip/hip_runtime.h>
-#include<hip/hip_runtime_api.h>
-#include<iostream>
+#include <hip/hip_runtime.h>
+#include <hip/hip_runtime_api.h>
+#include <iostream>
 #include "test_common.h"
 
-#define HIP_ASSERT(status) \
-    assert(status == hipSuccess)
+#define HIP_ASSERT(status) assert(status == hipSuccess)
 
 #define LEN 512
 #define SIZE 2048
 
 __constant__ int Value[LEN];
 
-__global__ void Get(hipLaunchParm lp, int *Ad)
-{
+__global__ void Get(hipLaunchParm lp, int* Ad) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     Ad[tid] = Value[tid];
 }
 
-int main()
-{
+int main() {
     int *A, *B, *Ad;
     A = new int[LEN];
     B = new int[LEN];
-    for(unsigned i=0;i<LEN;i++)
-    {
-        A[i] = -1*i;
+    for (unsigned i = 0; i < LEN; i++) {
+        A[i] = -1 * i;
         B[i] = 0;
     }
 
     HIP_ASSERT(hipMalloc((void**)&Ad, SIZE));
 
     HIP_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(Value), A, SIZE, 0, hipMemcpyHostToDevice));
-    hipLaunchKernel(Get, dim3(1,1,1), dim3(LEN,1,1), 0, 0, Ad);
+    hipLaunchKernel(Get, dim3(1, 1, 1), dim3(LEN, 1, 1), 0, 0, Ad);
     HIP_ASSERT(hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost));
 
-    for(unsigned i=0;i<LEN;i++)
-    {
+    for (unsigned i = 0; i < LEN; i++) {
         assert(A[i] == B[i]);
     }
     passed();

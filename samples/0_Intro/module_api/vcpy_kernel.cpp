@@ -22,8 +22,7 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 
-extern "C" __global__ void hello_world(float *a, float *b)
-{
+extern "C" __global__ void hello_world(float* a, float* b) {
     int tx = hipThreadIdx_x;
     b[tx] = a[tx];
 }

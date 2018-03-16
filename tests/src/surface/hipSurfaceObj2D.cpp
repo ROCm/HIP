@@ -12,42 +12,36 @@
 
 bool testResult = true;
 
-__global__ void tex2DKernel(hipSurfaceObject_t surfaceObject,
-                            hipSurfaceObject_t outputSurfObj,
-                            int width,
-                            int height)
-{
-    int x = blockIdx.x*blockDim.x + threadIdx.x;
-    int y = blockIdx.y*blockDim.y + threadIdx.y;
+__global__ void tex2DKernel(hipSurfaceObject_t surfaceObject, hipSurfaceObject_t outputSurfObj,
+                            int width, int height) {
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
     float data;
-    surf2Dread(&data, surfaceObject, x*4, y, hipBoundaryModeZero);
-    surf2Dwrite(data, outputSurfObj, x*4, y, hipBoundaryModeZero);
+    surf2Dread(&data, surfaceObject, x * 4, y, hipBoundaryModeZero);
+    surf2Dwrite(data, outputSurfObj, x * 4, y, hipBoundaryModeZero);
 }
 
-void runTest(int argc, char **argv);
+void runTest(int argc, char** argv);
 
-int main(int argc, char **argv)
-{
+int main(int argc, char** argv) {
     runTest(argc, argv);
 
-    if(testResult) {
+    if (testResult) {
         passed();
     } else {
         exit(EXIT_FAILURE);
     }
-
 }
 
-void runTest(int argc, char **argv)
-{
+void runTest(int argc, char** argv) {
     unsigned int width = 256;
     unsigned int height = 256;
     unsigned int size = width * height * sizeof(float);
-    float* hData = (float*) malloc(size);
+    float* hData = (float*)malloc(size);
     memset(hData, 0, size);
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            hData[i*width+j] = i*width+j;
+            hData[i * width + j] = i * width + j;
         }
     }
     printf("hData: ");
@@ -79,18 +73,19 @@ void runTest(int argc, char **argv)
     hipCreateSurfaceObject(&outSurfaceObject, &resOutDesc);
 
     float* dData = NULL;
-    hipMalloc((void **) &dData, size);
+    hipMalloc((void**)&dData, size);
 
     dim3 dimBlock(16, 16, 1);
     dim3 dimGrid(width / dimBlock.x, height / dimBlock.y, 1);
 
-    hipLaunchKernelGGL(tex2DKernel, dim3(dimGrid), dim3(dimBlock), 0, 0, surfaceObject,outSurfaceObject, width, height);
+    hipLaunchKernelGGL(tex2DKernel, dim3(dimGrid), dim3(dimBlock), 0, 0, surfaceObject,
+                       outSurfaceObject, width, height);
 
     hipDeviceSynchronize();
 
-    float *hOutputData = (float *) malloc(size);
-    memset(hOutputData, 0,  size);
-    hipMemcpyFromArray(hOutputData, hipOutArray, 0, 0, size,hipMemcpyDeviceToHost);
+    float* hOutputData = (float*)malloc(size);
+    memset(hOutputData, 0, size);
+    hipMemcpyFromArray(hOutputData, hipOutArray, 0, 0, size, hipMemcpyDeviceToHost);
 
     printf("dData: ");
     for (int i = 0; i < 64; i++) {
@@ -99,8 +94,9 @@ void runTest(int argc, char **argv)
     printf("\n");
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            if (hData[i*width+j] != hOutputData[i*width+j]) {
-                printf("Difference [ %d %d ]:%f ----%f\n",i, j, hData[i*width+j] , hOutputData[i*width+j]);
+            if (hData[i * width + j] != hOutputData[i * width + j]) {
+                printf("Difference [ %d %d ]:%f ----%f\n", i, j, hData[i * width + j],
+                       hOutputData[i * width + j]);
                 testResult = false;
                 break;
             }
@@ -112,4 +108,3 @@ void runTest(int argc, char **argv)
     hipFreeArray(hipArray);
     hipFreeArray(hipOutArray);
 }
-
