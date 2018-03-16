@@ -27,7 +27,7 @@ THE SOFTWARE.
 #include <vector>
 #include <hip/hip_hcc.h>
 
-#define fileName "tex2dKernel.code"
+#define fileName "tex2dKernel.code.adipose"
 
 texture<float, 2, hipReadModeElementType> tex;
 bool testResult = false;
