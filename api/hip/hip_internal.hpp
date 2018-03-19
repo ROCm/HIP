@@ -36,7 +36,8 @@ THE SOFTWARE.
 #define HIP_INIT_API(...) \
     HIP_INIT()
 
-extern amd::Context* g_context;
+extern thread_local amd::Context* g_context;
+extern std::vector<amd::Context*> g_devices;
 
 hipError_t hipDeviceGetCount(int* count);
 

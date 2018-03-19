@@ -50,7 +50,7 @@ hipError_t hipDeviceTotalMem (size_t *bytes, hipDevice_t device) {
 
   HIP_INIT_API(bytes, device);
 
-  if (device < 0 || device > (cl_int)g_context->devices().size()) {
+  if (device < 0 || static_cast<size_t>(device) >= g_devices.size()) {
     return hipErrorInvalidDevice;
   }
 
@@ -58,7 +58,7 @@ hipError_t hipDeviceTotalMem (size_t *bytes, hipDevice_t device) {
     return hipErrorInvalidValue;
   }
 
-  auto* deviceHandle = g_context->devices()[device];
+  auto* deviceHandle = g_devices[device]->devices()[0];
   const auto& info = deviceHandle->info();
 
   *bytes = info.globalMemSize_;
@@ -70,7 +70,7 @@ hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device
 
   HIP_INIT_API(major, minor, device);
 
-  if (device < 0 || device > (cl_int)g_context->devices().size()) {
+  if (device < 0 || static_cast<size_t>(device) >= g_devices.size()) {
     return hipErrorInvalidDevice;
   }
 
@@ -78,7 +78,7 @@ hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device
     return hipErrorInvalidValue;
   }
 
-  auto* deviceHandle = g_context->devices()[device];
+  auto* deviceHandle = g_devices[device]->devices()[0];
   const auto& info = deviceHandle->info();
   *major = info.gfxipVersion_ / 100;
   *minor = info.gfxipVersion_ % 100;
@@ -94,7 +94,7 @@ hipError_t hipDeviceGetCount(int* count) {
   }
 
   // Get all available devices
-  *count = g_context->devices().size();
+  *count = g_devices.size();
 
   return hipSuccess;
 }
@@ -103,7 +103,7 @@ hipError_t hipDeviceGetName(char *name, int len, hipDevice_t device) {
 
   HIP_INIT_API((void*)name, len, device);
 
-  if (device < 0 || device > (cl_int)g_context->devices().size()) {
+  if (device < 0 || static_cast<size_t>(device) >= g_devices.size()) {
     return hipErrorInvalidDevice;
   }
 
@@ -111,7 +111,7 @@ hipError_t hipDeviceGetName(char *name, int len, hipDevice_t device) {
     return hipErrorInvalidValue;
   }
 
-  auto* deviceHandle = g_context->devices()[device];
+  auto* deviceHandle = g_devices[device]->devices()[0];
   const auto& info = deviceHandle->info();
 
   len = ((cl_uint)len < ::strlen(info.boardName_)) ? len : 128;
@@ -127,10 +127,10 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
     return hipErrorInvalidValue;
   }
 
-  if (unsigned(device) >= g_context->devices().size()) {
+  if (unsigned(device) >= g_devices.size()) {
     return hipErrorInvalidDevice;
   }
-  auto* deviceHandle = g_context->devices()[device];
+  auto* deviceHandle = g_devices[device]->devices()[0];
 
   hipDeviceProp_t deviceProps = {0};
 
