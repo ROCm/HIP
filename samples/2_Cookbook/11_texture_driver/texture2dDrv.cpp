@@ -27,7 +27,7 @@ THE SOFTWARE.
 #include <vector>
 #include <hip/hip_hcc.h>
 
-#define fileName "tex2dKernel.code"
+#define fileName "tex2dKernel.code.adipose"
 
 texture<float, 2, hipReadModeElementType> tex;
 bool testResult = false;
@@ -90,7 +90,6 @@ bool runTest(int argc, char** argv) {
 #ifdef __HIP_PLATFORM_HCC__
 
     struct {
-        uint32_t _hidden[6];  // genco path + wrapper-gen pass used hidden arguments.
         void* _Ad;
         unsigned int _Bd;
         unsigned int _Cd;
