@@ -27,7 +27,8 @@ THE SOFTWARE.
 #include "utils/versions.hpp"
 
 
-amd::Context* g_context = nullptr;
+thread_local amd::Context* g_context = nullptr;
+std::vector<amd::Context*> g_devices;
 
 hipError_t hipInit(unsigned int flags)
 {
@@ -37,14 +38,18 @@ hipError_t hipInit(unsigned int flags)
     amd::Runtime::init();
   }
 
-  // FIXME: move the global VDI context to hipInit.
-  g_context = new amd::Context(
-      amd::Device::getDevices(CL_DEVICE_TYPE_GPU, false), amd::Context::Info());
-  if (!g_context) return hipErrorOutOfMemory;
+  const std::vector<amd::Device*>& devices = amd::Device::getDevices(CL_DEVICE_TYPE_GPU, false);
 
-  if (g_context && CL_SUCCESS != g_context->create(nullptr)) {
-    g_context->release();
-    return hipErrorUnknown;
+  for (unsigned int i=0; i<devices.size(); i++) {
+    const std::vector<amd::Device*> device(1, devices[i]);
+    amd::Context* context = new amd::Context(device, amd::Context::Info());
+    if (!context) return hipErrorOutOfMemory;
+
+    if (context && CL_SUCCESS != context->create(nullptr)) {
+      context->release();
+    } else {
+      g_devices.push_back(context);
+    }
   }
 
   return hipSuccess;
@@ -53,6 +58,30 @@ hipError_t hipInit(unsigned int flags)
 hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device)
 {
   HIP_INIT_API(ctx, flags, device);
+
+  if (static_cast<size_t>(device) >= g_devices.size()) {
+    return hipErrorInvalidValue;
+  }
+
+  *ctx = reinterpret_cast<hipCtx_t>(g_devices[device]);
+
+  return hipSuccess;
+}
+
+hipError_t hipCtxSetCurrent(hipCtx_t ctx)
+{
+  HIP_INIT_API(ctx);
+
+  g_context = reinterpret_cast<amd::Context*>(ctx);
+
+  return hipSuccess;
+}
+
+hipError_t hipCtxGetCurrent(hipCtx_t* ctx)
+{
+  HIP_INIT_API(ctx);
+
+  *ctx = reinterpret_cast<hipCtx_t>(g_context);
 
   return hipSuccess;
 }
