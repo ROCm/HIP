@@ -17,13 +17,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include<hip/hip_runtime_api.h>
-#include"test_common.h"
+#include <hip/hip_runtime_api.h>
+#include "test_common.h"
 
-int main()
-{
+int main() {
     int val;
-    hipDeviceAttribute_t attr = hipDeviceAttributeMaxThreadsPerBlock;                   ///< Maximum number of threads per block.
+    hipDeviceAttribute_t attr =
+        hipDeviceAttributeMaxThreadsPerBlock;  ///< Maximum number of threads per block.
 
     HIP_PRINT_STATUS(hipDeviceGetAttribute(NULL, attr, 0));
     HIP_PRINT_STATUS(hipDeviceGetAttribute(&val, attr, 0));
@@ -35,5 +35,4 @@ int main()
     HIP_PRINT_STATUS(hipDeviceGetAttribute(&val, attr, 0));
     HIP_PRINT_STATUS(hipDeviceGetAttribute(NULL, attr, -1));
     HIP_PRINT_STATUS(hipDeviceGetAttribute(&val, attr, -1));
-
 }

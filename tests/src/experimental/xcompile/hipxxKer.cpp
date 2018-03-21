@@ -23,36 +23,31 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime_api.h"
-#include"gxxApi1.h"
+#include "gxxApi1.h"
 
-#define len 1024*1024
+#define len 1024 * 1024
 #define size len * sizeof(float)
 
-__global__ void Kern(hipLaunchParm lp, float *A)
-{
-	int tx = threadIdx.x + blockIdx.x * blockDim.x;
-	A[tx] += 1.0f;
+__global__ void Kern(hipLaunchParm lp, float* A) {
+    int tx = threadIdx.x + blockIdx.x * blockDim.x;
+    A[tx] += 1.0f;
 }
 
-int main()
-{
-	float A[len];
-	float *Ad;
+int main() {
+    float A[len];
+    float* Ad;
 
-	for(int i=0;i<len;i++)
-	{
-		A[i] = 1.0f;
-	}
+    for (int i = 0; i < len; i++) {
+        A[i] = 1.0f;
+    }
 
-	Ad = (float*)mallocHip(size);
-	memcpyHipH2D(Ad, A, size);
-	hipLaunchKernel(
-		HIP_KERNEL_NAME(Kern), dim3(len/1024), dim3(1024), 0, 0, Ad);
-	memcpyHipD2H(A, Ad, size);
-	for(int i=0;i<len;i++)
-	{
-		assert(A[i] == 2.0f);
-	}
+    Ad = (float*)mallocHip(size);
+    memcpyHipH2D(Ad, A, size);
+    hipLaunchKernel(HIP_KERNEL_NAME(Kern), dim3(len / 1024), dim3(1024), 0, 0, Ad);
+    memcpyHipD2H(A, Ad, size);
+    for (int i = 0; i < len; i++) {
+        assert(A[i] == 2.0f);
+    }
 
-	hipFree(Ad);
+    hipFree(Ad);
 }

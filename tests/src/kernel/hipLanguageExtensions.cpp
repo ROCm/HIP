@@ -45,50 +45,38 @@ __constant__ int constantVar1;
 __constant__ __device__ int constantVar2;
 
 // Test HOST space:
-__host__ void foo() {
-    printf ("foo!\n");
-}
+__host__ void foo() { printf("foo!\n"); }
 
-__device__ __noinline__    int sum1_noinline(int a)    { return a+1;};
-__device__ __forceinline__ int sum1_forceinline(int a) { return a+1;};
+__device__ __noinline__ int sum1_noinline(int a) { return a + 1; };
+__device__ __forceinline__ int sum1_forceinline(int a) { return a + 1; };
 
 
-__device__ __host__ float PlusOne(float x)
-{
-    return x + 1.0;
-}
+__device__ __host__ float PlusOne(float x) { return x + 1.0; }
 
-__global__ void MyKernel (const hipLaunchParm lp, const float *a, const float *b, float *c, unsigned N)
-{
-    //KERNELBEGIN;
+__global__ void MyKernel(const hipLaunchParm lp, const float* a, const float* b, float* c,
+                         unsigned N) {
+    // KERNELBEGIN;
 
     unsigned gid = threadIdx.x;
     if (gid < N) {
         c[gid] = a[gid] + PlusOne(b[gid]);
     }
 
-    //KERNELEND;
+    // KERNELEND;
 }
 
 
-void callMyKernel()
-{
+void callMyKernel() {
     float *a, *b, *c;
     const unsigned blockSize = 256;
     unsigned N = blockSize;
 
-    hipLaunchKernel(MyKernel, dim3(N/blockSize), dim3(blockSize), 0, 0, a,b,c,N);
+    hipLaunchKernel(MyKernel, dim3(N / blockSize), dim3(blockSize), 0, 0, a, b, c, N);
 }
 
 
 template <typename T>
-__global__ void
-vectorADD(const hipLaunchParm lp,
-          T __restrict__ *A_d,
-          T *B_d,
-          T *C_d,
-          size_t N)
-{
+__global__ void vectorADD(const hipLaunchParm lp, T __restrict__* A_d, T* B_d, T* C_d, size_t N) {
 //    KERNELBEGIN;
 #ifdef NOT_YET
     int a = __shfl_up(x, 1);
@@ -102,31 +90,31 @@ vectorADD(const hipLaunchParm lp,
 
 #ifdef __HCC__
 
-   int b = threadIdx.x;
-   int c;
+    int b = threadIdx.x;
+    int c;
 
-	// TODO - move to HIP atomics when ready.
-    concurrency :: atomic_fetch_add(&c, b);
-    //Concurrency::atomic_add_unsigned (&x, a);
+    // TODO - move to HIP atomics when ready.
+    concurrency ::atomic_fetch_add(&c, b);
+    // Concurrency::atomic_add_unsigned (&x, a);
 
-    //concurrency ::atomic_add_ (x, a);
+    // concurrency ::atomic_add_ (x, a);
 #endif
 
     __syncthreads();
 
 
     size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
-    size_t stride = blockDim.x * gridDim.x ;
+    size_t stride = blockDim.x * gridDim.x;
 
-    for (size_t i=offset; i<N; i+=stride) {
-		C_d[i] = A_d[i] + B_d[i];
-	}
+    for (size_t i = offset; i < N; i += stride) {
+        C_d[i] = A_d[i] + B_d[i];
+    }
 
-//    KERNELEND;
+    //    KERNELEND;
 }
 
 
 int main() {
-    printf ("Hello world\n");
+    printf("Hello world\n");
     passed();
 }

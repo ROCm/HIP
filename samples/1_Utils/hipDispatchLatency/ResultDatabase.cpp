@@ -11,96 +11,72 @@ using namespace std;
 #define SORT_RETAIN_ATTS_ORDER 1
 
 
-bool ResultDatabase::Result::operator<(const Result &rhs) const
-{
-    if (test < rhs.test)
-        return true;
-    if (test > rhs.test)
-        return false;
-#if (SORT_RETAIN_ATTS_ORDER == 0) 
+bool ResultDatabase::Result::operator<(const Result& rhs) const {
+    if (test < rhs.test) return true;
+    if (test > rhs.test) return false;
+#if (SORT_RETAIN_ATTS_ORDER == 0)
     // For ties, sort by the value of the attribute:
-    if (atts < rhs.atts)
-        return true;
-    if (atts > rhs.atts)
-        return false;
+    if (atts < rhs.atts) return true;
+    if (atts > rhs.atts) return false;
 #endif
-    return false; // less-operator returns false on equal
+    return false;  // less-operator returns false on equal
 }
 
-double ResultDatabase::Result::GetMin() const
-{
+double ResultDatabase::Result::GetMin() const {
     double r = FLT_MAX;
-    for (int i=0; i<value.size(); i++)
-    {
+    for (int i = 0; i < value.size(); i++) {
         r = min(r, value[i]);
     }
     return r;
 }
 
-double ResultDatabase::Result::GetMax() const
-{
+double ResultDatabase::Result::GetMax() const {
     double r = -FLT_MAX;
-    for (int i=0; i<value.size(); i++)
-    {
+    for (int i = 0; i < value.size(); i++) {
         r = max(r, value[i]);
     }
     return r;
 }
 
-double ResultDatabase::Result::GetMedian() const
-{
-    return GetPercentile(50);
-}
+double ResultDatabase::Result::GetMedian() const { return GetPercentile(50); }
 
-double ResultDatabase::Result::GetPercentile(double q) const
-{
+double ResultDatabase::Result::GetPercentile(double q) const {
     int n = value.size();
-    if (n == 0)
-        return FLT_MAX;
-    if (n == 1)
-        return value[0];
+    if (n == 0) return FLT_MAX;
+    if (n == 1) return value[0];
 
-    if (q <= 0)
-        return value[0];
-    if (q >= 100)
-        return value[n-1];
+    if (q <= 0) return value[0];
+    if (q >= 100) return value[n - 1];
 
     double index = ((n + 1.) * q / 100.) - 1;
 
     vector<double> sorted = value;
     sort(sorted.begin(), sorted.end());
 
-    if (n == 2)
-        return (sorted[0] * (1 - q/100.)  +  sorted[1] * (q/100.));
+    if (n == 2) return (sorted[0] * (1 - q / 100.) + sorted[1] * (q / 100.));
 
     int index_lo = int(index);
     double frac = index - index_lo;
-    if (frac == 0)
-        return sorted[index_lo];
+    if (frac == 0) return sorted[index_lo];
 
     double lo = sorted[index_lo];
     double hi = sorted[index_lo + 1];
-    return lo + (hi-lo)*frac;
+    return lo + (hi - lo) * frac;
 }
 
-double ResultDatabase::Result::GetMean() const
-{
+double ResultDatabase::Result::GetMean() const {
     double r = 0;
-    for (int i=0; i<value.size(); i++)
-    {
+    for (int i = 0; i < value.size(); i++) {
         r += value[i];
     }
     return r / double(value.size());
 }
 
-double ResultDatabase::Result::GetStdDev() const
-{
+double ResultDatabase::Result::GetStdDev() const {
     double r = 0;
     double u = GetMean();
-    if (u == FLT_MAX)
-        return FLT_MAX;
-    for (int i=0; i<value.size(); i++)
-    {
+    if (u == FLT_MAX) return FLT_MAX;
+    for (int i = 0; i < value.size(); i++) {
         r += (value[i] - u) * (value[i] - u);
     }
     r = sqrt(r / value.size());
@@ -108,58 +84,42 @@ double ResultDatabase::Result::GetStdDev() const
 }
 
 
-void ResultDatabase::AddResults(const string &test,
-                                const string &atts,
-                                const string &unit,
-                                const vector<double> &values)
-{
-    for (int i=0; i<values.size(); i++)
-    {
+void ResultDatabase::AddResults(const string& test, const string& atts, const string& unit,
+                                const vector<double>& values) {
+    for (int i = 0; i < values.size(); i++) {
         AddResult(test, atts, unit, values[i]);
     }
 }
 
-static string RemoveAllButLeadingSpaces(const string &a)
-{
+static string RemoveAllButLeadingSpaces(const string& a) {
     string b;
     int n = a.length();
     int i = 0;
-    while (i<n && a[i] == ' ')
-    {
+    while (i < n && a[i] == ' ') {
         b += a[i];
         ++i;
     }
-    for (; i<n; i++)
-    {
-        if (a[i] != ' ' && a[i] != '\t')
-            b += a[i];
+    for (; i < n; i++) {
+        if (a[i] != ' ' && a[i] != '\t') b += a[i];
     }
     return b;
 }
 
-void ResultDatabase::AddResult(const string &test_orig,
-                               const string &atts_orig,
-                               const string &unit_orig,
-                               double value)
-{
+void ResultDatabase::AddResult(const string& test_orig, const string& atts_orig,
+                               const string& unit_orig, double value) {
     string test = RemoveAllButLeadingSpaces(test_orig);
     string atts = RemoveAllButLeadingSpaces(atts_orig);
     string unit = RemoveAllButLeadingSpaces(unit_orig);
     int index;
-    for (index = 0; index < results.size(); index++)
-    {
-        if (results[index].test == test &&
-            results[index].atts == atts)
-        {
-            if (results[index].unit != unit)
-                throw "Internal error: mixed units";
+    for (index = 0; index < results.size(); index++) {
+        if (results[index].test == test && results[index].atts == atts) {
+            if (results[index].unit != unit) throw "Internal error: mixed units";
 
             break;
         }
     }
 
-    if (index >= results.size())
-    {
+    if (index >= results.size()) {
         Result r;
         r.test = test;
         r.atts = atts;
@@ -193,43 +153,35 @@ void ResultDatabase::AddResult(const string &test_orig,
 //    Changed note about missing values to be worded a little better.
 //
 // ****************************************************************************
-void ResultDatabase::DumpDetailed(ostream &out)
-{
+void ResultDatabase::DumpDetailed(ostream& out) {
     vector<Result> sorted(results);
 
 #if SORT_BY_NAME
     stable_sort(sorted.begin(), sorted.end());
 #endif
 
-    const int testNameW = 24 ;
+    const int testNameW = 24;
     const int attW = 12;
     const int fieldW = 11;
     out << std::fixed << right << std::setprecision(4);
 
     int maxtrials = 1;
-    for (int i=0; i<sorted.size(); i++)
-    {
-        if (sorted[i].value.size() > maxtrials)
-            maxtrials = sorted[i].value.size();
+    for (int i = 0; i < sorted.size(); i++) {
+        if (sorted[i].value.size() > maxtrials) maxtrials = sorted[i].value.size();
     }
 
     // TODO: in big parallel runs, the "trials" are the procs
     // and we really don't want to print them all out....
-    out << setw(testNameW) << "test\t"  
-        << setw(attW) << "atts\t"
-        << setw(fieldW) 
-        << "median\t"
+    out << setw(testNameW) << "test\t" << setw(attW) << "atts\t" << setw(fieldW) << "median\t"
         << "mean\t"
         << "stddev\t"
         << "min\t"
         << "max\t";
-    for (int i=0; i<maxtrials; i++)
-        out << "trial"<<i<<"\t";
+    for (int i = 0; i < maxtrials; i++) out << "trial" << i << "\t";
     out << endl;
 
-    for (int i=0; i<sorted.size(); i++)
-    {
-        Result &r = sorted[i];
+    for (int i = 0; i < sorted.size(); i++) {
+        Result& r = sorted[i];
         out << setw(testNameW) << r.test + "\t";
         out << setw(attW) << r.atts + "\t";
         out << setw(fieldW) << r.unit + "\t";
@@ -240,7 +192,7 @@ void ResultDatabase::DumpDetailed(ostream &out)
         if (r.GetMean() == FLT_MAX)
             out << "N/A\t";
         else
-            out << r.GetMean()   << "\t";
+            out << r.GetMean() << "\t";
         if (r.GetStdDev() == FLT_MAX)
             out << "N/A\t";
         else
@@ -248,13 +200,12 @@ void ResultDatabase::DumpDetailed(ostream &out)
         if (r.GetMin() == FLT_MAX)
             out << "N/A\t";
         else
-            out << r.GetMin()    << "\t";
+            out << r.GetMin() << "\t";
         if (r.GetMax() == FLT_MAX)
             out << "N/A\t";
         else
-            out << r.GetMax()    << "\t";
-        for (int j=0; j<r.value.size(); j++)
-        {
+            out << r.GetMax() << "\t";
+        for (int j = 0; j < r.value.size(); j++) {
             if (r.value[j] == FLT_MAX)
                 out << "N/A\t";
             else
@@ -290,25 +241,21 @@ void ResultDatabase::DumpDetailed(ostream &out)
 //    Added note about (*) missing value tag.
 //
 // ****************************************************************************
-void ResultDatabase::DumpSummary(ostream &out)
-{
+void ResultDatabase::DumpSummary(ostream& out) {
     vector<Result> sorted(results);
 
 #if SORT_BY_NAME
     stable_sort(sorted.begin(), sorted.end());
 #endif
 
-    const int testNameW = 32 ;
+    const int testNameW = 32;
     const int attW = 12;
     const int fieldW = 9;
     out << std::fixed << right << std::setprecision(2);
 
     // TODO: in big parallel runs, the "trials" are the procs
     // and we really don't want to print them all out....
-    out << setw(testNameW) << "test\t"  
-        << setw(attW) << "atts\t"
-        << setw(fieldW) 
-        << "units\t"
+    out << setw(testNameW) << "test\t" << setw(attW) << "atts\t" << setw(fieldW) << "units\t"
         << "median\t"
         << "mean\t"
         << "stddev\t"
@@ -316,9 +263,8 @@ void ResultDatabase::DumpSummary(ostream &out)
         << "max\t";
     out << endl;
 
-    for (int i=0; i<sorted.size(); i++)
-    {
-        Result &r = sorted[i];
+    for (int i = 0; i < sorted.size(); i++) {
+        Result& r = sorted[i];
         out << setw(testNameW) << r.test + "\t";
         out << setw(attW) << r.atts + "\t";
         out << setw(fieldW) << r.unit + "\t";
@@ -329,7 +275,7 @@ void ResultDatabase::DumpSummary(ostream &out)
         if (r.GetMean() == FLT_MAX)
             out << "N/A\t";
         else
-            out << r.GetMean()   << "\t";
+            out << r.GetMean() << "\t";
         if (r.GetStdDev() == FLT_MAX)
             out << "N/A\t";
         else
@@ -337,11 +283,11 @@ void ResultDatabase::DumpSummary(ostream &out)
         if (r.GetMin() == FLT_MAX)
             out << "N/A\t";
         else
-            out << r.GetMin()    << "\t";
+            out << r.GetMin() << "\t";
         if (r.GetMax() == FLT_MAX)
             out << "N/A\t";
         else
-            out << r.GetMax()    << "\t";
+            out << r.GetMax() << "\t";
 
         out << endl;
     }
@@ -368,10 +314,7 @@ void ResultDatabase::DumpSummary(ostream &out)
 //
 //
 // ****************************************************************************
-void ResultDatabase::ClearAllResults()
-{
-	results.clear();	
-}
+void ResultDatabase::ClearAllResults() { results.clear(); }
 
 // ****************************************************************************
 //  Method:  ResultDatabase::DumpCsv
@@ -389,8 +332,7 @@ void ResultDatabase::ClearAllResults()
 //  Modifications:
 //
 // ****************************************************************************
-void ResultDatabase::DumpCsv(string fileName)
-{
+void ResultDatabase::DumpCsv(string fileName) {
     bool emptyFile;
     vector<Result> sorted(results);
 
@@ -398,32 +340,30 @@ void ResultDatabase::DumpCsv(string fileName)
     stable_sort(sorted.begin(), sorted.end());
 #endif
 
-    //Check to see if the file is empty - if so, add the headers
+    // Check to see if the file is empty - if so, add the headers
     emptyFile = this->IsFileEmpty(fileName);
 
-    //Open file and append by default
+    // Open file and append by default
     ofstream out;
-    out.open(fileName.c_str(), std::ofstream::out | std::ofstream::app); 
+    out.open(fileName.c_str(), std::ofstream::out | std::ofstream::app);
 
-    //Add headers only for empty files
-    if(emptyFile)
-    {
-    // TODO: in big parallel runs, the "trials" are the procs
-    // and we really don't want to print them all out....
-    out << "test, "
-        << "atts, "
-        << "units, "
-        << "median, "
-        << "mean, "
-        << "stddev, "
-        << "min, "
-        << "max, ";
-    out << endl;
+    // Add headers only for empty files
+    if (emptyFile) {
+        // TODO: in big parallel runs, the "trials" are the procs
+        // and we really don't want to print them all out....
+        out << "test, "
+            << "atts, "
+            << "units, "
+            << "median, "
+            << "mean, "
+            << "stddev, "
+            << "min, "
+            << "max, ";
+        out << endl;
     }
 
-    for (int i=0; i<sorted.size(); i++)
-    {
-        Result &r = sorted[i];
+    for (int i = 0; i < sorted.size(); i++) {
+        Result& r = sorted[i];
         out << r.test << ", ";
         out << r.atts << ", ";
         out << r.unit << ", ";
@@ -434,7 +374,7 @@ void ResultDatabase::DumpCsv(string fileName)
         if (r.GetMean() == FLT_MAX)
             out << "N/A, ";
         else
-            out << r.GetMean()   << ", ";
+            out << r.GetMean() << ", ";
         if (r.GetStdDev() == FLT_MAX)
             out << "N/A, ";
         else
@@ -442,11 +382,11 @@ void ResultDatabase::DumpCsv(string fileName)
         if (r.GetMin() == FLT_MAX)
             out << "N/A, ";
         else
-            out << r.GetMin()    << ", ";
+            out << r.GetMin() << ", ";
         if (r.GetMax() == FLT_MAX)
             out << "N/A, ";
         else
-            out << r.GetMax()    << ", ";
+            out << r.GetMax() << ", ";
 
         out << endl;
     }
@@ -471,29 +411,24 @@ void ResultDatabase::DumpCsv(string fileName)
 //
 // ****************************************************************************
 
-bool ResultDatabase::IsFileEmpty(string fileName)
-{
-      bool fileEmpty;
+bool ResultDatabase::IsFileEmpty(string fileName) {
+    bool fileEmpty;
 
-      ifstream file(fileName.c_str());
+    ifstream file(fileName.c_str());
 
-      //If the file doesn't exist it is by definition empty
-      if(!file.good())
-      {
+    // If the file doesn't exist it is by definition empty
+    if (!file.good()) {
         return true;
-      }
-      else
-      {
+    } else {
         fileEmpty = (bool)(file.peek() == ifstream::traits_type::eof());
         file.close();
-        
-	return fileEmpty;
-      }
-  
-      //Otherwise, return false  
-        return false;
-}
 
+        return fileEmpty;
+    }
+
+    // Otherwise, return false
+    return false;
+}
 
 
 // ****************************************************************************
@@ -511,16 +446,12 @@ bool ResultDatabase::IsFileEmpty(string fileName)
 //  Modifications:
 //
 // ****************************************************************************
-vector<ResultDatabase::Result>
-ResultDatabase::GetResultsForTest(const string &test)
-{
+vector<ResultDatabase::Result> ResultDatabase::GetResultsForTest(const string& test) {
     // get only the given test results
     vector<Result> retval;
-    for (int i=0; i<results.size(); i++)
-    {
-        Result &r = results[i];
-        if (r.test == test)
-            retval.push_back(r);
+    for (int i = 0; i < results.size(); i++) {
+        Result& r = results[i];
+        if (r.test == test) retval.push_back(r);
     }
     return retval;
 }
@@ -539,8 +470,4 @@ ResultDatabase::GetResultsForTest(const string &test)
 //  Modifications:
 //
 // ****************************************************************************
-const vector<ResultDatabase::Result> &
-ResultDatabase::GetResults() const
-{
-    return results;
-}
+const vector<ResultDatabase::Result>& ResultDatabase::GetResults() const { return results; }

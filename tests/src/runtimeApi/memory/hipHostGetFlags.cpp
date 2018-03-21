@@ -26,61 +26,62 @@ THE SOFTWARE.
  * HIT_END
  */
 
-#include"test_common.h"
-#include<malloc.h>
+#include "test_common.h"
+#include <malloc.h>
 
-#define LEN 1024*1024
-#define SIZE LEN*sizeof(float)
+#define LEN 1024 * 1024
+#define SIZE LEN * sizeof(float)
 
-__global__ void Add(hipLaunchParm lp, float *Ad, float *Bd, float *Cd){
-int tx = threadIdx.x + blockIdx.x * blockDim.x;
-Cd[tx] = Ad[tx] + Bd[tx];
+__global__ void Add(hipLaunchParm lp, float* Ad, float* Bd, float* Cd) {
+    int tx = threadIdx.x + blockIdx.x * blockDim.x;
+    Cd[tx] = Ad[tx] + Bd[tx];
 }
 
-int main(){
-float *A, *B, *C, *D;
-float *Ad, *Bd, *Cd, *Dd;
-unsigned int FlagA, FlagB, FlagC;
-FlagA = hipHostMallocWriteCombined | hipHostMallocMapped;
-FlagB = hipHostMallocWriteCombined | hipHostMallocMapped;
-FlagC = hipHostMallocMapped;
-hipDeviceProp_t prop;
-int device;
-HIPCHECK(hipGetDevice(&device));
-HIPCHECK(hipGetDeviceProperties(&prop, device));
-if(prop.canMapHostMemory != 1){
-std::cout<<"Exiting..."<<std::endl;
-}
-HIPCHECK(hipHostMalloc((void**)&A, SIZE, hipHostMallocWriteCombined | hipHostMallocMapped));
-HIPCHECK(hipHostMalloc((void**)&B, SIZE, hipHostMallocWriteCombined | hipHostMallocMapped));
-HIPCHECK(hipHostMalloc((void**)&C, SIZE, hipHostMallocMapped));
+int main() {
+    float *A, *B, *C, *D;
+    float *Ad, *Bd, *Cd, *Dd;
+    unsigned int FlagA, FlagB, FlagC;
+    FlagA = hipHostMallocWriteCombined | hipHostMallocMapped;
+    FlagB = hipHostMallocWriteCombined | hipHostMallocMapped;
+    FlagC = hipHostMallocMapped;
+    hipDeviceProp_t prop;
+    int device;
+    HIPCHECK(hipGetDevice(&device));
+    HIPCHECK(hipGetDeviceProperties(&prop, device));
+    if (prop.canMapHostMemory != 1) {
+        std::cout << "Exiting..." << std::endl;
+    }
+    HIPCHECK(hipHostMalloc((void**)&A, SIZE, hipHostMallocWriteCombined | hipHostMallocMapped));
+    HIPCHECK(hipHostMalloc((void**)&B, SIZE, hipHostMallocWriteCombined | hipHostMallocMapped));
+    HIPCHECK(hipHostMalloc((void**)&C, SIZE, hipHostMallocMapped));
 
-HIPCHECK(hipHostMalloc((void**)&D, SIZE, hipHostMallocDefault));
+    HIPCHECK(hipHostMalloc((void**)&D, SIZE, hipHostMallocDefault));
 
-unsigned int flagA, flagB, flagC;
-HIPCHECK(hipHostGetDevicePointer((void**)&Ad, A, 0));
-HIPCHECK(hipHostGetDevicePointer((void**)&Bd, B, 0));
-HIPCHECK(hipHostGetDevicePointer((void**)&Cd, C, 0));
-HIPCHECK(hipHostGetDevicePointer((void**)&Dd, D, 0));
-HIPCHECK(hipHostGetFlags(&flagA, A));
-HIPCHECK(hipHostGetFlags(&flagB, B));
-HIPCHECK(hipHostGetFlags(&flagC, C));
+    unsigned int flagA, flagB, flagC;
+    HIPCHECK(hipHostGetDevicePointer((void**)&Ad, A, 0));
+    HIPCHECK(hipHostGetDevicePointer((void**)&Bd, B, 0));
+    HIPCHECK(hipHostGetDevicePointer((void**)&Cd, C, 0));
+    HIPCHECK(hipHostGetDevicePointer((void**)&Dd, D, 0));
+    HIPCHECK(hipHostGetFlags(&flagA, A));
+    HIPCHECK(hipHostGetFlags(&flagB, B));
+    HIPCHECK(hipHostGetFlags(&flagC, C));
 
-for(int i=0;i<LEN;i++){
-A[i] = 1.0f;
-B[i] = 2.0f;
-}
+    for (int i = 0; i < LEN; i++) {
+        A[i] = 1.0f;
+        B[i] = 2.0f;
+    }
 
-dim3 dimGrid(LEN/512,1,1);
-dim3 dimBlock(512,1,1);
+    dim3 dimGrid(LEN / 512, 1, 1);
+    dim3 dimBlock(512, 1, 1);
 
-hipLaunchKernel(HIP_KERNEL_NAME(Add), dimGrid, dimBlock, 0, 0, Ad, Bd, Cd);
+    hipLaunchKernel(HIP_KERNEL_NAME(Add), dimGrid, dimBlock, 0, 0, Ad, Bd, Cd);
 
-HIPCHECK(hipMemcpy(C, Cd, SIZE, hipMemcpyDeviceToHost));  // Note this really HostToHost not DeviceToHost, since memory is mapped...
-HIPASSERT(C[10] == 3.0f);
-HIPASSERT(flagA == FlagA);
-HIPASSERT(flagB == FlagB);
-HIPASSERT(flagC == FlagC);
-passed();
-
+    HIPCHECK(
+        hipMemcpy(C, Cd, SIZE, hipMemcpyDeviceToHost));  // Note this really HostToHost not
+                                                         // DeviceToHost, since memory is mapped...
+    HIPASSERT(C[10] == 3.0f);
+    HIPASSERT(flagA == FlagA);
+    HIPASSERT(flagB == FlagB);
+    HIPASSERT(flagC == FlagC);
+    passed();
 }

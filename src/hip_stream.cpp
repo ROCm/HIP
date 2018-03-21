@@ -33,27 +33,25 @@ THE SOFTWARE.
 //
 
 //---
-hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags)
-{
-    ihipCtx_t *ctx = ihipGetTlsDefaultCtx();
+hipError_t ihipStreamCreate(hipStream_t* stream, unsigned int flags) {
+    ihipCtx_t* ctx = ihipGetTlsDefaultCtx();
 
     hipError_t e = hipSuccess;
 
     if (ctx) {
-
         if (HIP_FORCE_NULL_STREAM) {
-            *stream = 0; 
+            *stream = 0;
         } else {
             hc::accelerator acc = ctx->getWriteableDevice()->_acc;
 
             // TODO - se try-catch loop to detect memory exception?
             //
-            //Note this is an execute_in_order queue, so all kernels submitted will atuomatically wait for prev to complete:
-            //This matches CUDA stream behavior:
+            // Note this is an execute_in_order queue, so all kernels submitted will atuomatically
+            // wait for prev to complete: This matches CUDA stream behavior:
 
             {
                 // Obtain mutex access to the device critical data, release by destructor
-                LockedAccessor_CtxCrit_t  ctxCrit(ctx->criticalData());
+                LockedAccessor_CtxCrit_t ctxCrit(ctx->criticalData());
 
                 auto istream = new ihipStream_t(ctx, acc.create_view(), flags);
 
@@ -72,25 +70,21 @@ hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags)
 
 
 //---
-hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
-{
+hipError_t hipStreamCreateWithFlags(hipStream_t* stream, unsigned int flags) {
     HIP_INIT_API(stream, flags);
 
     return ihipLogStatus(ihipStreamCreate(stream, flags));
-
 }
 
 //---
-hipError_t hipStreamCreate(hipStream_t *stream)
-{
+hipError_t hipStreamCreate(hipStream_t* stream) {
     HIP_INIT_API(stream);
 
     return ihipLogStatus(ihipStreamCreate(stream, hipStreamDefault));
 }
 
 
-hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags)
-{
+hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags) {
     HIP_INIT_SPECIAL_API(TRACE_SYNC, stream, event, flags);
 
     hipError_t e = hipSuccess;
@@ -100,35 +94,34 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
     if (event == nullptr) {
         e = hipErrorInvalidResourceHandle;
 
-    } else if ((ecd._state != hipEventStatusUnitialized) && 
-               (ecd._state != hipEventStatusCreated)) {
-
+    } else if ((ecd._state != hipEventStatusUnitialized) && (ecd._state != hipEventStatusCreated)) {
         if (HIP_SYNC_STREAM_WAIT || (HIP_SYNC_NULL_STREAM && (stream == 0))) {
             // conservative wait on host for the specified event to complete:
             // return _stream->locked_eventWaitComplete(this, waitMode);
             //
-            ecd._stream->locked_eventWaitComplete(ecd.marker(), (event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked : hc::hcWaitModeActive);
+            ecd._stream->locked_eventWaitComplete(
+                ecd.marker(), (event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked
+                                                                     : hc::hcWaitModeActive);
         } else {
             stream = ihipSyncAndResolveStream(stream);
             // This will use create_blocking_marker to wait on the specified queue.
             stream->locked_streamWaitEvent(ecd);
         }
 
-    } // else event not recorded, return immediately and don't create marker.
+    }  // else event not recorded, return immediately and don't create marker.
 
     return ihipLogStatus(e);
 };
 
 
 //---
-hipError_t hipStreamQuery(hipStream_t stream)
-{
+hipError_t hipStreamQuery(hipStream_t stream) {
     HIP_INIT_SPECIAL_API(TRACE_QUERY, stream);
 
     // Use default stream if 0 specified:
     if (stream == hipStreamNull) {
-        ihipCtx_t *device = ihipGetTlsDefaultCtx();
-        stream =  device->_defaultStream;
+        ihipCtx_t* device = ihipGetTlsDefaultCtx();
+        stream = device->_defaultStream;
     }
 
     bool isEmpty = 0;
@@ -138,15 +131,14 @@ hipError_t hipStreamQuery(hipStream_t stream)
         isEmpty = crit->_av.get_is_empty();
     }
 
-    hipError_t e = isEmpty ? hipSuccess : hipErrorNotReady ;
+    hipError_t e = isEmpty ? hipSuccess : hipErrorNotReady;
 
     return ihipLogStatus(e);
 }
 
 
 //---
-hipError_t hipStreamSynchronize(hipStream_t stream)
-{
+hipError_t hipStreamSynchronize(hipStream_t stream) {
     HIP_INIT_SPECIAL_API(TRACE_SYNC, stream);
 
     return ihipLogStatus(ihipStreamSynchronize(stream));
@@ -157,8 +149,7 @@ hipError_t hipStreamSynchronize(hipStream_t stream)
 /**
  * @return #hipSuccess, #hipErrorInvalidResourceHandle
  */
-hipError_t hipStreamDestroy(hipStream_t stream)
-{
+hipError_t hipStreamDestroy(hipStream_t stream) {
     HIP_INIT_API(stream);
 
     hipError_t e = hipSuccess;
@@ -166,12 +157,12 @@ hipError_t hipStreamDestroy(hipStream_t stream)
     //--- Drain the stream:
     if (stream == NULL) {
         if (!HIP_FORCE_NULL_STREAM) {
-            e = hipErrorInvalidResourceHandle; 
-        } 
+            e = hipErrorInvalidResourceHandle;
+        }
     } else {
         stream->locked_wait();
 
-        ihipCtx_t *ctx = stream->getCtx();
+        ihipCtx_t* ctx = stream->getCtx();
 
         if (ctx) {
             ctx->locked_removeStream(stream);
@@ -186,8 +177,7 @@ hipError_t hipStreamDestroy(hipStream_t stream)
 
 
 //---
-hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags)
-{
+hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int* flags) {
     HIP_INIT_API(stream, flags);
 
     if (flags == NULL) {
@@ -202,19 +192,18 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags)
 
 
 //---
-hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void *userData, unsigned int flags)
-{
+hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
+                                unsigned int flags) {
     HIP_INIT_API(stream, callback, userData, flags);
     hipError_t e = hipSuccess;
 
     // Create a thread in detached mode to handle callback
-    ihipStreamCallback_t *cb = new ihipStreamCallback_t(stream, callback, userData);
-    std::thread (ihipStreamCallbackHandler, cb).detach();
+    ihipStreamCallback_t* cb = new ihipStreamCallback_t(stream, callback, userData);
+    std::thread(ihipStreamCallbackHandler, cb).detach();
 
     // Wait for thread to be ready
     cb->_mtx.lock();
-    while(cb->_ready != true)
-    {
+    while (cb->_ready != true) {
         cb->_mtx.unlock();
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
         cb->_mtx.lock();

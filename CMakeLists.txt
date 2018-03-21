@@ -144,6 +144,13 @@ if (BUILD_HIPIFY_CLANG)
     add_subdirectory(hipify-clang)
 endif()
 
+# Build LPL an CA (fat binary generation / fat binary decomposition tools) if
+# platform is hcc; do this before the ugly hijacking of the compiler, since no
+# HC code is involved.
+if (HIP_PLATFORM STREQUAL "hcc")
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lpl_ca)
+endif ()
+
 # Build hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
     include_directories(${PROJECT_SOURCE_DIR}/include)
@@ -180,6 +187,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/hip_db.cpp
         src/grid_launch.cpp
         src/hip_texture.cpp
+        src/hip_surface.cpp
         src/env.cpp
         src/program_state.cpp)
 
