@@ -23,11 +23,8 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 extern texture<float, 2, hipReadModeElementType> tex;
 
-__global__ void tex2dKernel(hipLaunchParm lp, float* outputData,
-                             int width,
-                             int height)
-{
-    int x = hipBlockIdx_x*hipBlockDim_x + hipThreadIdx_x;
-    int y = hipBlockIdx_y*hipBlockDim_y + hipThreadIdx_y;
-    outputData[y*width + x] = tex2D(tex, x, y);
+extern "C" __global__ void tex2dKernel(float* outputData, int width, int height) {
+    int x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    outputData[y * width + x] = tex2D(tex, x, y);
 }

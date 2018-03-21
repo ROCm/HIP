@@ -26,27 +26,27 @@ THE SOFTWARE.
  * HIT_END
  */
 
-#include"test_common.h"
+#include "test_common.h"
 
 struct {
-  float a;
-  int b;
-  void *c;
-} Struct ;
+    float a;
+    int b;
+    void* c;
+} Struct;
 
-int main(){
-  int *iPtr;
-  float *fPtr;
-  struct Struct *sPtr;
-  size_t sSetSize = 1024, sGetSize;
-  hipMalloc(&iPtr, sSetSize);
-  hipMalloc(&fPtr, sSetSize);
-  hipMalloc(&sPtr, sSetSize);
-  hipMemPtrGetInfo(iPtr, &sGetSize);
-  assert(sGetSize == sSetSize);
-  hipMemPtrGetInfo(fPtr, &sGetSize);
-  assert(sGetSize == sSetSize);
-  hipMemPtrGetInfo(sPtr, &sGetSize);
-  assert(sGetSize == sSetSize);
-  passed();
+int main() {
+    int* iPtr;
+    float* fPtr;
+    struct Struct* sPtr;
+    size_t sSetSize = 1024, sGetSize;
+    hipMalloc(&iPtr, sSetSize);
+    hipMalloc(&fPtr, sSetSize);
+    hipMalloc(&sPtr, sSetSize);
+    hipMemPtrGetInfo(iPtr, &sGetSize);
+    assert(sGetSize == sSetSize);
+    hipMemPtrGetInfo(fPtr, &sGetSize);
+    assert(sGetSize == sSetSize);
+    hipMemPtrGetInfo(sPtr, &sGetSize);
+    assert(sGetSize == sSetSize);
+    passed();
 }

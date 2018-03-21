@@ -28,25 +28,29 @@ THE SOFTWARE.
 #include <hip/hip_hcc.h>
 
 #define LEN 64
-#define SIZE LEN*sizeof(float)
+#define SIZE LEN * sizeof(float)
 
-#define fileName "vcpy_kernel.code"
+#define fileName "vcpy_kernel.code.adipose"
 float myDeviceGlobal;
 float myDeviceGlobalArray[16];
-#define HIP_CHECK(cmd) \
-{\
-    hipError_t status = cmd;\
-    if(status != hipSuccess) {std::cout<<"error: #"<<status<<" ("<< hipGetErrorString(status) << ") at line:"<<__LINE__<<":  "<<#cmd<<std::endl;abort();}\
-}
+#define HIP_CHECK(cmd)                                                                             \
+    {                                                                                              \
+        hipError_t status = cmd;                                                                   \
+        if (status != hipSuccess) {                                                                \
+            std::cout << "error: #" << status << " (" << hipGetErrorString(status)                 \
+                      << ") at line:" << __LINE__ << ":  " << #cmd << std::endl;                   \
+            abort();                                                                               \
+        }                                                                                          \
+    }
 
-int main(){
+int main() {
     float *A, *B;
-    float* Ad, *Bd;
+    float *Ad, *Bd;
     A = new float[LEN];
     B = new float[LEN];
 
-    for(uint32_t i=0;i<LEN;i++){
-        A[i] = i*1.0f;
+    for (uint32_t i = 0; i < LEN; i++) {
+        A[i] = i * 1.0f;
         B[i] = 0.0f;
     }
 
@@ -70,19 +74,18 @@ int main(){
 #define ARRAY_SIZE 16
 
     float myDeviceGlobalArray_h[ARRAY_SIZE];
-    for (int i=0; i<ARRAY_SIZE; i++) {
-        myDeviceGlobalArray_h[i] = i*1000.0f;
-        myDeviceGlobalArray[i] = i*1000.0f;
+    for (int i = 0; i < ARRAY_SIZE; i++) {
+        myDeviceGlobalArray_h[i] = i * 1000.0f;
+        myDeviceGlobalArray[i] = i * 1000.0f;
     }
 
 #ifdef __HIP_PLATFORM_HCC__
-		uint32_t len = LEN;
-		uint32_t one = 1;
+    uint32_t len = LEN;
+    uint32_t one = 1;
 
     struct {
-        uint32_t _hidden[6];  // genco path + wrapper-gen pass use hidden arguments.
-        void * _Ad;
-        void * _Bd;
+        void* _Ad;
+        void* _Bd;
     } args;
 
     args._Ad = Ad;
@@ -93,8 +96,8 @@ int main(){
 #ifdef __HIP_PLATFORM_NVCC__
     struct {
         uint32_t _hidden[1];
-        void * _Ad;
-        void * _Bd;
+        void* _Ad;
+        void* _Bd;
     } args;
 
     args._hidden[0] = 0;
@@ -105,13 +108,10 @@ int main(){
 
     size_t size = sizeof(args);
 
-    void *config[] = {
-      HIP_LAUNCH_PARAM_BUFFER_POINTER, &args,
-      HIP_LAUNCH_PARAM_BUFFER_SIZE, &size,
-      HIP_LAUNCH_PARAM_END
-    };
+    void* config[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args, HIP_LAUNCH_PARAM_BUFFER_SIZE, &size,
+                      HIP_LAUNCH_PARAM_END};
 
-    { 
+    {
         hipFunction_t Function;
         HIP_CHECK(hipModuleGetFunction(&Function, Module, "hello_world"));
         HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
@@ -119,10 +119,10 @@ int main(){
         hipMemcpyDtoH(B, Bd, SIZE);
 
         int mismatchCount = 0;
-        for(uint32_t i=0;i<LEN;i++){
+        for (uint32_t i = 0; i < LEN; i++) {
             if (A[i] != B[i]) {
                 mismatchCount++;
-                std::cout<<"error: mismatch " << A[i]<<" != "<<B[i]<<std::endl;
+                std::cout << "error: mismatch " << A[i] << " != " << B[i] << std::endl;
                 if (mismatchCount >= 10) {
                     break;
                 }
@@ -136,7 +136,7 @@ int main(){
         };
     }
 
-    { 
+    {
         hipFunction_t Function;
         HIP_CHECK(hipModuleGetFunction(&Function, Module, "test_globals"));
         HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
@@ -144,11 +144,11 @@ int main(){
         hipMemcpyDtoH(B, Bd, SIZE);
 
         int mismatchCount = 0;
-        for(uint32_t i=0;i<LEN;i++){
-            float expected = A[i] + myDeviceGlobal_h + myDeviceGlobalArray_h[i%16];
+        for (uint32_t i = 0; i < LEN; i++) {
+            float expected = A[i] + myDeviceGlobal_h + myDeviceGlobalArray_h[i % 16];
             if (expected != B[i]) {
                 mismatchCount++;
-                std::cout<<"error: mismatch " << expected <<" != "<<B[i]<<std::endl;
+                std::cout << "error: mismatch " << expected << " != " << B[i] << std::endl;
                 if (mismatchCount >= 10) {
                     break;
                 }

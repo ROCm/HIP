@@ -24,12 +24,12 @@ THE SOFTWARE.
  */
 
 #include "hip/hip_runtime.h"
-#include"test_common.h"
+#include "test_common.h"
 
-#define len 1024*1024
+#define len 1024 * 1024
 #define size len * sizeof(float)
 
-int main(){
+int main() {
     float *Ad, *A;
     hipHostMalloc((void**)&A, size);
     hipMalloc((void**)&Ad, size);

@@ -25,10 +25,10 @@ THE SOFTWARE.
 
 #include "test_common.h"
 
-int main(){
+int main() {
     int numDevices = 0;
     HIPCHECK(hipGetDeviceCount(&numDevices));
-    for(int i=0;i<numDevices;i++){
+    for (int i = 0; i < numDevices; i++) {
         HIPCHECK(hipSetDevice(i));
     }
     HIPASSERT(hipErrorInvalidDevice == hipSetDevice(numDevices));

@@ -23,11 +23,11 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_DEVICE_FUNCTIONS_H
 #define HIP_INCLUDE_HIP_DEVICE_FUNCTIONS_H
 
-#include<hip/hip_common.h>
+#include <hip/hip_common.h>
 
-#if defined(__HIP_PLATFORM_HCC__) && !defined (__HIP_PLATFORM_NVCC__)
+#if defined(__HIP_PLATFORM_HCC__) && !defined(__HIP_PLATFORM_NVCC__)
 #include <hip/hcc_detail/device_functions.h>
-#elif defined(__HIP_PLATFORM_NVCC__) && !defined (__HIP_PLATFORM_HCC__)
+#elif defined(__HIP_PLATFORM_NVCC__) && !defined(__HIP_PLATFORM_HCC__)
 #include <device_functions.h>
 #else
 #error("Must define exactly one of __HIP_PLATFORM_HCC__ or __HIP_PLATFORM_NVCC__");

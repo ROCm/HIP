@@ -24,8 +24,7 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
     HipTest::parseStandardArguments(argc, argv, true);
 
     passed();

@@ -20,10 +20,9 @@ THE SOFTWARE.
 #include <hip/hip_runtime_api.h>
 #include "test_common.h"
 
-int main()
-{
+int main() {
     HIP_PRINT_STATUS(hipSetDevice(-1));
     int count;
     hipGetDeviceCount(&count);
-    HIP_PRINT_STATUS(hipSetDevice(count+1));
+    HIP_PRINT_STATUS(hipSetDevice(count + 1));
 }

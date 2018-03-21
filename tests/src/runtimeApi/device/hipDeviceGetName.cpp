@@ -32,15 +32,14 @@ THE SOFTWARE.
 
 #define len 256
 
-int main()
-{
+int main() {
     int numDevices = 0;
     char name[len];
     hipDevice_t device;
     HIPCHECK(hipGetDeviceCount(&numDevices));
-    for(int i=0;i<numDevices;i++){
-        HIPCHECK(hipDeviceGet(&device,i));
-        HIPCHECK(hipDeviceGetName(name,len,device));
+    for (int i = 0; i < numDevices; i++) {
+        HIPCHECK(hipDeviceGet(&device, i));
+        HIPCHECK(hipDeviceGetName(name, len, device));
         HIPASSERT(name != "");
     }
     passed();

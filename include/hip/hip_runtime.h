@@ -30,8 +30,9 @@ THE SOFTWARE.
 //! Runtime API is C
 //! Memory management is based on pure pointers and resembles malloc/free/copy.
 //
-//! hip_runtime.h     : includes everything in hip_api.h, plus math builtins and kernel launch macros.
-//! hip_runtime_api.h : Defines HIP API.  This is a C header file and does not use any C++ features.
+//! hip_runtime.h     : includes everything in hip_api.h, plus math builtins and kernel launch
+//! macros. hip_runtime_api.h : Defines HIP API.  This is a C header file and does not use any C++
+//! features.
 
 #ifndef HIP_INCLUDE_HIP_HIP_RUNTIME_H
 #define HIP_INCLUDE_HIP_HIP_RUNTIME_H
@@ -51,9 +52,9 @@ THE SOFTWARE.
 
 #include <hip/hip_common.h>
 
-#if defined(__HIP_PLATFORM_HCC__) && !defined (__HIP_PLATFORM_NVCC__)
+#if defined(__HIP_PLATFORM_HCC__) && !defined(__HIP_PLATFORM_NVCC__)
 #include <hip/hcc_detail/hip_runtime.h>
-#elif defined(__HIP_PLATFORM_NVCC__) && !defined (__HIP_PLATFORM_HCC__)
+#elif defined(__HIP_PLATFORM_NVCC__) && !defined(__HIP_PLATFORM_HCC__)
 #include <hip/nvcc_detail/hip_runtime.h>
 #else
 #error("Must define exactly one of __HIP_PLATFORM_HCC__ or __HIP_PLATFORM_NVCC__");
