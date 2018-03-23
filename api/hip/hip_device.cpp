@@ -89,6 +89,10 @@ hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device
 hipError_t hipDeviceGetCount(int* count) {
   HIP_INIT_API(count);
 
+  return ihipDeviceGetCount(count);
+}
+
+hipError_t ihipDeviceGetCount(int* count) {
   if (count == nullptr) {
     return hipErrorInvalidValue;
   }

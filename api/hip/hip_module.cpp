@@ -22,9 +22,12 @@ THE SOFTWARE.
 
 #include <hip/hip_runtime.h>
 #include <libelf.h>
+#include <fstream>
 
 #include "hip_internal.hpp"
 #include "platform/program.hpp"
+
+hipError_t ihipModuleLoadData(hipModule_t *module, const void *image);
 
 static uint64_t ElfSize(const void *emi)
 {
@@ -51,9 +54,19 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
 {
   HIP_INIT_API(module, fname);
 
-  assert(0 && "Unimplemented");
+  if (!fname) {
+    return hipErrorInvalidValue;
+  }
 
-  return hipErrorUnknown;
+  std::ifstream file{fname};
+
+  if (!file.is_open()) {
+    return hipErrorFileNotFound;
+  }
+
+  std::vector<char> tmp{std::istreambuf_iterator<char>{file}, std::istreambuf_iterator<char>{}};
+
+  return ihipModuleLoadData(module, tmp.data());
 }
 
 
@@ -61,15 +74,26 @@ hipError_t hipModuleUnload(hipModule_t hmod)
 {
   HIP_INIT_API(hmod);
 
-  assert(0 && "Unimplemented");
+  if (hmod == nullptr) {
+    return hipErrorUnknown;
+  }
 
-  return hipErrorUnknown;
+  amd::Program* program = as_amd(reinterpret_cast<cl_program>(hmod));
+
+  program->release();
+
+  return hipSuccess;
 }
 
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
 {
   HIP_INIT_API(module, image);
 
+  return ihipModuleLoadData(module, image);
+}
+
+hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
+{
   amd::Program* program = new amd::Program(*g_context);
   if (program == NULL) {
     return hipErrorOutOfMemory;
@@ -133,11 +157,16 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
   amd::NDRangeContainer ndrange(3, globalWorkOffset, globalWorkSize, localWorkSize);
   amd::Command::EventWaitList waitList;
 
-  assert(!kernelParams && extra && "check this code");
   const amd::KernelSignature& signature = kernel->signature();
   for (size_t i = 0; i < signature.numParameters(); ++i) {
     const amd::KernelParameterDescriptor& desc = signature.at(i);
-    kernel->parameters().set(i, desc.size_, reinterpret_cast<address>(extra[1]) + desc.offset_);
+    if (kernelParams == nullptr) {
+      assert(extra);
+      kernel->parameters().set(i, desc.size_, reinterpret_cast<address>(extra[1]) + desc.offset_);
+    } else {
+      assert(!extra);
+      kernel->parameters().set(i, desc.size_, kernelParams[i]);
+    }
   }
 
   amd::NDRangeKernelCommand* command = new amd::NDRangeKernelCommand(*queue, waitList, *kernel, ndrange);
