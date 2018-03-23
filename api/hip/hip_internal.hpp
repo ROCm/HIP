@@ -39,6 +39,6 @@ THE SOFTWARE.
 extern thread_local amd::Context* g_context;
 extern std::vector<amd::Context*> g_devices;
 
-hipError_t hipDeviceGetCount(int* count);
+hipError_t ihipDeviceGetCount(int* count);
 
 #endif // HIP_SRC_HIP_INTERNAL_H

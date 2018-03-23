@@ -35,7 +35,7 @@ hipError_t hipChooseDevice(int* device, const hipDeviceProp_t* properties) {
   *device = 0;
   cl_uint maxMatchedCount = 0;
   int count = 0;
-  hipDeviceGetCount(&count);
+  ihipDeviceGetCount(&count);
 
   for (cl_int i = 0; i< count; ++i) {
     hipDeviceProp_t currentProp = {0};
@@ -146,10 +146,11 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
     return hipErrorInvalidValue;
   }
 
-  //if (unsigned(device) >= g_context->devices().size()) {
-  //  return hipErrorInvalidDevice;
-  //}
-  //auto* deviceHandle = g_context->devices()[device];
+  int count = 0;
+  ihipDeviceGetCount(&count);
+  if (device < 0 || device >= count) {
+    return hipErrorInvalidDevice;
+  }
 
   //FIXME: should we cache the props, or just select from deviceHandle->info_?
   hipDeviceProp_t prop = {0};
@@ -253,7 +254,7 @@ hipError_t hipDeviceGetByPCIBusId(int* device, const char*pciBusIdstr) {
 
   if (sscanf (pciBusIdstr, "%04x:%02x:%02x", &pciDomainID, &pciBusID, &pciDeviceID) == 0x3) {
     int count = 0;
-    hipDeviceGetCount(&count);
+    ihipDeviceGetCount(&count);
     for (cl_int i = 0; i < count; i++) {
       int pi = 0;
       hipDevice_t dev;
@@ -312,7 +313,7 @@ hipError_t hipDeviceGetPCIBusId ( char* pciBusId, int  len, int  device ) {
   HIP_INIT_API((void*)pciBusId, len, device);
 
   int count;
-  hipDeviceGetCount(&count);
+  ihipDeviceGetCount(&count);
   if (device < 0 || device > count) {
     return hipErrorInvalidDevice;
   }
@@ -393,7 +394,7 @@ hipError_t hipGetDevice ( int* deviceId ) {
 hipError_t hipGetDeviceCount ( int* count ) {
   HIP_INIT_API(count);
 
-  return hipDeviceGetCount(count);
+  return ihipDeviceGetCount(count);
 }
 
 hipError_t hipGetDeviceFlags ( unsigned int* flags ) {
