@@ -34,14 +34,21 @@ union TData {
 };
 
 #define __TEXTURE_FUNCTIONS_DECL__ static __inline__ __device__
-#define ADDRESS_SPACE_2 __attribute__((address_space(2)))
+
+
+#if (__hcc_workweek__ >= 18115)
+#define ADDRESS_SPACE_CONSTANT __attribute__((address_space(4)))
+#else
+#define ADDRESS_SPACE_CONSTANT __attribute__((address_space(2)))
+#endif
+
 #define TEXTURE_PARAMETERS_INIT                                                                    \
-    unsigned int ADDRESS_SPACE_2* i = (unsigned int ADDRESS_SPACE_2*)textureObject;                \
-    unsigned int ADDRESS_SPACE_2* s = i + HIP_SAMPLER_OBJECT_OFFSET_DWORD;                         \
+    unsigned int ADDRESS_SPACE_CONSTANT* i = (unsigned int ADDRESS_SPACE_CONSTANT*)textureObject;  \
+    unsigned int ADDRESS_SPACE_CONSTANT* s = i + HIP_SAMPLER_OBJECT_OFFSET_DWORD;                  \
     TData texel;
-#define TEXTURE_REF_PARAMETERS_INIT                                                                \
-    unsigned int ADDRESS_SPACE_2* i = (unsigned int ADDRESS_SPACE_2*)texRef.textureObject;         \
-    unsigned int ADDRESS_SPACE_2* s = i + HIP_SAMPLER_OBJECT_OFFSET_DWORD;                         \
+#define TEXTURE_REF_PARAMETERS_INIT                                                                      \
+    unsigned int ADDRESS_SPACE_CONSTANT* i = (unsigned int ADDRESS_SPACE_CONSTANT*)texRef.textureObject; \
+    unsigned int ADDRESS_SPACE_CONSTANT* s = i + HIP_SAMPLER_OBJECT_OFFSET_DWORD;                        \
     TData texel;
 #define TEXTURE_SET_FLOAT *retVal = texel.f.x;
 
@@ -146,90 +153,90 @@ union TData {
 #define TEXTURE_RETURN_FLOAT_XYZW return float4(texel.f.x, texel.f.y, texel.f.z, texel.f.w);
 
 extern "C" {
-hc::short_vector::float4::vector_value_type __ockl_image_sample_1D(unsigned int ADDRESS_SPACE_2* i,
-                                                                   unsigned int ADDRESS_SPACE_2* s,
+hc::short_vector::float4::vector_value_type __ockl_image_sample_1D(unsigned int ADDRESS_SPACE_CONSTANT* i,
+                                                                   unsigned int ADDRESS_SPACE_CONSTANT* s,
                                                                    float c)[[hc]];
 
 hc::short_vector::float4::vector_value_type __ockl_image_sample_1Da(
-    unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s,
+    unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
     hc::short_vector::float2::vector_value_type c)[[hc]];
 
 hc::short_vector::float4::vector_value_type __ockl_image_sample_2D(
-    unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s,
+    unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
     hc::short_vector::float2::vector_value_type c)[[hc]];
 
 
 hc::short_vector::float4::vector_value_type __ockl_image_sample_2Da(
-    unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s,
+    unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
     hc::short_vector::float4::vector_value_type c)[[hc]];
 
-float __ockl_image_sample_2Dad(unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s,
+float __ockl_image_sample_2Dad(unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
                                hc::short_vector::float4::vector_value_type c)[[hc]];
 
-float __ockl_image_sample_2Dd(unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s,
+float __ockl_image_sample_2Dd(unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
                               hc::short_vector::float2::vector_value_type c)[[hc]];
 
 hc::short_vector::float4::vector_value_type __ockl_image_sample_3D(
-    unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s,
+    unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
     hc::short_vector::float4::vector_value_type c)[[hc]];
 
 hc::short_vector::float4::vector_value_type __ockl_image_sample_grad_1D(
-    unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s, float c, float dx,
+    unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s, float c, float dx,
     float dy)[[hc]];
 
 hc::short_vector::float4::vector_value_type __ockl_image_sample_grad_1Da(
-    unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s,
+    unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
     hc::short_vector::float2::vector_value_type c, float dx, float dy)[[hc]];
 
 hc::short_vector::float4::vector_value_type __ockl_image_sample_grad_2D(
-    unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s,
+    unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
     hc::short_vector::float2::vector_value_type c, hc::short_vector::float2::vector_value_type dx,
     hc::short_vector::float2::vector_value_type dy)[[hc]];
 
 hc::short_vector::float4::vector_value_type __ockl_image_sample_grad_2Da(
-    unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s,
+    unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
     hc::short_vector::float4::vector_value_type c, hc::short_vector::float2::vector_value_type dx,
     hc::short_vector::float2::vector_value_type dy)[[hc]];
 
-float __ockl_image_sample_grad_2Dad(unsigned int ADDRESS_SPACE_2* i,
-                                    unsigned int ADDRESS_SPACE_2* s,
+float __ockl_image_sample_grad_2Dad(unsigned int ADDRESS_SPACE_CONSTANT* i,
+                                    unsigned int ADDRESS_SPACE_CONSTANT* s,
                                     hc::short_vector::float4::vector_value_type c,
                                     hc::short_vector::float2::vector_value_type dx,
                                     hc::short_vector::float2::vector_value_type dy)[[hc]];
 
-float __ockl_image_sample_grad_2Dd(unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s,
+float __ockl_image_sample_grad_2Dd(unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
                                    hc::short_vector::float2::vector_value_type c,
                                    hc::short_vector::float2::vector_value_type dx,
                                    hc::short_vector::float2::vector_value_type dy)[[hc]];
 
 hc::short_vector::float4::vector_value_type __ockl_image_sample_grad_3D(
-    unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s,
+    unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
     hc::short_vector::float4::vector_value_type c, hc::short_vector::float4::vector_value_type dx,
     hc::short_vector::float4::vector_value_type dy)[[hc]];
 
 hc::short_vector::float4::vector_value_type __ockl_image_sample_lod_1D(
-    unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s, float c, float l)[[hc]];
+    unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s, float c, float l)[[hc]];
 
 hc::short_vector::float4::vector_value_type __ockl_image_sample_lod_1Da(
-    unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s,
+    unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
     hc::short_vector::float2::vector_value_type c, float l)[[hc]];
 
 hc::short_vector::float4::vector_value_type __ockl_image_sample_lod_2D(
-    unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s,
+    unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
     hc::short_vector::float2::vector_value_type c, float l)[[hc]];
 
 hc::short_vector::float4::vector_value_type __ockl_image_sample_lod_2Da(
-    unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s,
+    unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
     hc::short_vector::float4::vector_value_type c, float l)[[hc]];
 
-float __ockl_image_sample_lod_2Dad(unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s,
+float __ockl_image_sample_lod_2Dad(unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
                                    hc::short_vector::float4::vector_value_type c, float l)[[hc]];
 
-float __ockl_image_sample_lod_2Dd(unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s,
+float __ockl_image_sample_lod_2Dd(unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
                                   hc::short_vector::float2::vector_value_type c, float l)[[hc]];
 
 hc::short_vector::float4::vector_value_type __ockl_image_sample_lod_3D(
-    unsigned int ADDRESS_SPACE_2* i, unsigned int ADDRESS_SPACE_2* s,
+    unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
     hc::short_vector::float4::vector_value_type c, float l)[[hc]];
 }
 
