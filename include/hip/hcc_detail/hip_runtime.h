@@ -517,9 +517,8 @@ extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, gri
 
 #elif defined(__clang__) && defined(__HIP__)
 
-#define hipConfigureCall cudaConfigureCall
-#define hipSetupArgument cudaSetupArgument
-#define hipLaunch cudaLaunch
+#define HIP_KERNEL_NAME(...) __VA_ARGS__
+#define HIP_SYMBOL(X) #X
 
 typedef int hipLaunchParm;
 
@@ -541,7 +540,7 @@ extern "C" {
 
 hipError_t hipConfigureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem, hipStream_t stream);
 hipError_t hipSetupArgument(const void* arg, size_t size, size_t offset);
-hipError_t hipLaunch(const void* func);
+hipError_t hipLaunchByPtr(const void* func);
 
 #if defined(__cplusplus)
 }
