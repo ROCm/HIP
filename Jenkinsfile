@@ -407,6 +407,7 @@ parallel hcc_ctu:
     docker_clean_images( job_name, hip_image_name )
   }
 },
+/*
 hcc_1_6:
 {
   node('docker && rocm')
@@ -477,6 +478,7 @@ hcc_1_7:
     // docker_clean_images( job_name, hip_image_name )
   }
 },
+*/
 nvcc:
 {
   node('docker && cuda')
