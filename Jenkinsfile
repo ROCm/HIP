@@ -359,7 +359,7 @@ if( params.hcc_integration_test )
 
   node('docker && rocm')
   {
-    hcc_integration_testing( '--device=/dev/kfd', 'hcc-ctu', build_config )
+    hcc_integration_testing( '--device=/dev/kfd --device=/dev/dri --group-add=video', 'hcc-ctu', build_config )
   }
 
   return
@@ -409,7 +409,7 @@ parallel hcc_ctu:
 },
 hcc_1_6:
 {
-  node('docker && rocm && !dkms')
+  node('docker && rocm')
   {
     String hcc_ver = 'hcc-1.6'
     String from_image = 'rocm/dev-ubuntu-16.04:1.6.4'
@@ -444,7 +444,7 @@ hcc_1_6:
 },
 hcc_1_7:
 {
-  node('docker && rocm && !dkms')
+  node('docker && rocm && dkms')
   {
     String hcc_ver = 'hcc-1.7'
     String from_image = 'rocm/dev-ubuntu-16.04:latest'
