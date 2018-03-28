@@ -25,20 +25,26 @@ THE SOFTWARE.
 
 #include "cl_common.hpp"
 
-#define HIP_INIT()\
+#include <thread>
+
+#define HIP_INIT() \
+  std::call_once(g_ihipInitialized, ihipInit);
+
+
+// This macro should be called at the beginning of every HIP API.
+#define HIP_INIT_API(...)                                    \
+  HIP_INIT();                                                \
+                                                             \
   amd::Thread* thread = amd::Thread::current();              \
   if (!CL_CHECK_THREAD(thread)) {                            \
     return hipErrorOutOfMemory;                              \
   }
 
-
-// This macro should be called at the beginning of every HIP API.
-#define HIP_INIT_API(...) \
-    HIP_INIT()
-
+extern std::once_flag g_ihipInitialized;
 extern thread_local amd::Context* g_context;
 extern std::vector<amd::Context*> g_devices;
 
-hipError_t ihipDeviceGetCount(int* count);
+extern hipError_t ihipDeviceGetCount(int* count);
+extern void ihipInit();
 
 #endif // HIP_SRC_HIP_INTERNAL_H

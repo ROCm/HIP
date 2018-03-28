@@ -44,7 +44,7 @@ struct __CudaFatBinaryHeader {
   unsigned long long int fatSize;
 };
 
-struct __CudaPartHeader{
+struct __CudaPartHeader {
   unsigned short         type;
   unsigned short         dummy1;
   unsigned int           headerSize;
@@ -54,31 +54,20 @@ struct __CudaPartHeader{
   unsigned int           subarch;
 };
 
-extern "C" hipModule_t __hipRegisterFatBinary(void* bundle)
+static hipModule_t registerCudaFatBinary(const __CudaFatBinaryHeader* fbheader)
 {
-  if (!amd::Runtime::initialized()) { // FIXME: fix initialization
-    hipInit(0);
-  }
+  const __CudaPartHeader* pheader = reinterpret_cast<const __CudaPartHeader*>(
+      reinterpret_cast<uintptr_t>(fbheader) + fbheader->headerSize);
+  const __CudaPartHeader* end = reinterpret_cast<const __CudaPartHeader*>(
+      reinterpret_cast<uintptr_t>(pheader) + fbheader->fatSize);
 
   amd::Program* program = new amd::Program(*g_context);
   if (!program) return nullptr;
 
-  struct __CudaFatBinaryWrapper* fbwrapper = (struct __CudaFatBinaryWrapper*)bundle;
-  if (fbwrapper->magic != __cudaFatMAGIC2 || fbwrapper->version != 1) {
-    return nullptr;
-  }
-  struct __CudaFatBinaryHeader* fbheader = (struct __CudaFatBinaryHeader*)fbwrapper->binary;
-  if (fbheader->magic != __cudaFatMAGIC3 || fbheader->version != 1) {
-    return nullptr;
-  }
-  struct __CudaPartHeader* pheader = (struct __CudaPartHeader*)(
-      (uintptr_t)fbheader + fbheader->headerSize);
-  struct __CudaPartHeader* end = (struct __CudaPartHeader*)(
-      (uintptr_t)pheader + fbheader->fatSize);
-
   while (pheader < end) {
     if (true/*pheader->subarch == match a device in the context*/) {
-      void *image = (void*)((uintptr_t)pheader + pheader->headerSize);
+      const void *image = reinterpret_cast<void*>(
+          reinterpret_cast<uintptr_t>(pheader) + pheader->headerSize);
       size_t size = pheader->partSize;
       if (CL_SUCCESS != program->addDeviceProgram(*g_context->devices()[0], image, size) ||
         CL_SUCCESS != program->build(g_context->devices(), nullptr, nullptr, nullptr)) {
@@ -86,11 +75,81 @@ extern "C" hipModule_t __hipRegisterFatBinary(void* bundle)
       }
       break;
     }
-    pheader = (struct __CudaPartHeader*)(
-        (uintptr_t)pheader + pheader->headerSize + pheader->partSize);
+    pheader = reinterpret_cast<const __CudaPartHeader*>(
+        reinterpret_cast<uintptr_t>(pheader) + pheader->headerSize + pheader->partSize);
   }
 
   return reinterpret_cast<hipModule_t>(as_cl(program));
+}
+
+#define CLANG_OFFLOAD_BUNDLER_MAGIC_STR "__CLANG_OFFLOAD_BUNDLE__"
+#define AMDGCN_AMDHSA_TRIPLE "openmp-amdgcn--amdhsa"
+
+struct __ClangOffloadBundleDesc {
+  uint64_t offset;
+  uint64_t size;
+  uint64_t tripleSize;
+  const char triple[1];
+};
+
+struct __ClangOffloadBundleHeader {
+  const char magic[sizeof(CLANG_OFFLOAD_BUNDLER_MAGIC_STR) - 1];
+  uint64_t numBundles;
+  __ClangOffloadBundleDesc desc[1];
+};
+
+static hipModule_t registerOffloadBundle(const __ClangOffloadBundleHeader* obheader)
+{
+  amd::Program* program = new amd::Program(*g_context);
+  if (!program)
+    return nullptr;
+
+  const __ClangOffloadBundleDesc* desc = &obheader->desc[0];
+  for (uint64_t i = 0; i < obheader->numBundles; ++i,
+       desc = reinterpret_cast<const __ClangOffloadBundleDesc*>(
+           reinterpret_cast<uintptr_t>(&desc->triple[0]) + desc->tripleSize)) {
+
+    std::string triple(desc->triple, sizeof(AMDGCN_AMDHSA_TRIPLE) - 1);
+    if (triple.compare(AMDGCN_AMDHSA_TRIPLE))
+      continue;
+
+    std::string target(desc->triple + sizeof(AMDGCN_AMDHSA_TRIPLE),
+                       desc->tripleSize - sizeof(AMDGCN_AMDHSA_TRIPLE));
+    if (target.compare(g_context->devices()[0]->info().name_))
+      continue;
+
+    const void *image = reinterpret_cast<const void*>(
+        reinterpret_cast<uintptr_t>(obheader) + desc->offset);
+    size_t size = desc->size;
+
+    if (CL_SUCCESS == program->addDeviceProgram(*g_context->devices()[0], image, size) &&
+        CL_SUCCESS == program->build(g_context->devices(), nullptr, nullptr, nullptr))
+      break;
+  }
+
+  return reinterpret_cast<hipModule_t>(as_cl(program));
+}
+
+
+extern "C" hipModule_t __hipRegisterFatBinary(const void* data)
+{
+  HIP_INIT();
+
+  const __CudaFatBinaryWrapper* fbwrapper = reinterpret_cast<const __CudaFatBinaryWrapper*>(data);
+  if (fbwrapper->magic != __cudaFatMAGIC2 || fbwrapper->version != 1) {
+    return nullptr;
+  }
+  const __CudaFatBinaryHeader* fbheader = reinterpret_cast<const __CudaFatBinaryHeader*>(fbwrapper->binary);
+  if (fbheader->magic == __cudaFatMAGIC3 && fbheader->version == 1) {
+    return registerCudaFatBinary(fbheader);
+  }
+
+  std::string magic((char*)fbwrapper->binary, sizeof(CLANG_OFFLOAD_BUNDLER_MAGIC_STR) - 1);
+  if (!magic.compare(CLANG_OFFLOAD_BUNDLER_MAGIC_STR)) {
+    return registerOffloadBundle(reinterpret_cast<const __ClangOffloadBundleHeader*>(fbwrapper->binary));
+  }
+
+  return nullptr;
 }
 
 std::map<const void*, hipFunction_t> g_functions;
@@ -108,6 +167,8 @@ extern "C" void __hipRegisterFunction(
   dim3*        gridDim,
   int*         wSize)
 {
+  HIP_INIT();
+
   amd::Program* program = as_amd(reinterpret_cast<cl_program>(module));
 
   const amd::Symbol* symbol = program->findSymbol(deviceName);
@@ -130,12 +191,14 @@ extern "C" void __hipRegisterVar(
   int         constant,
   int         global)
 {
+  HIP_INIT();
 }
 
 extern "C" void __hipUnregisterFatBinary(
   hipModule_t module
 )
 {
+  HIP_INIT();
 }
 
 dim3 g_gridDim; // FIXME: place in execution stack
@@ -149,6 +212,8 @@ extern "C" hipError_t hipConfigureCall(
   size_t sharedMem,
   hipStream_t stream)
 {
+  HIP_INIT_API(gridDim, blockDim, sharedMem, stream);
+
   // FIXME: should push and new entry on the execution stack
 
   g_gridDim = gridDim;
@@ -166,6 +231,8 @@ extern "C" hipError_t hipSetupArgument(
   size_t size,
   size_t offset)
 {
+  HIP_INIT_API(arg, size, offset);
+
   // FIXME: should modify the top of the execution stack
 
   ::memcpy(g_arguments + offset, arg, size);
@@ -174,6 +241,8 @@ extern "C" hipError_t hipSetupArgument(
 
 extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
 {
+  HIP_INIT_API(hostFunction);
+
   std::map<const void*, hipFunction_t>::iterator it;
   if ((it = g_functions.find(hostFunction)) == g_functions.end())
     return hipErrorUnknown;

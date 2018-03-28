@@ -25,16 +25,16 @@ THE SOFTWARE.
 #include "platform/runtime.hpp"
 #include "utils/versions.hpp"
 #include <stack>
+#include <thread>
 
 thread_local amd::Context* g_context = nullptr;
 thread_local std::stack<amd::Context*> g_ctxtStack;
 
 std::vector<amd::Context*> g_devices;
+std::once_flag g_ihipInitialized;
 
-hipError_t hipInit(unsigned int flags)
+void ihipInit()
 {
-  HIP_INIT_API(flags);
-
   if (!amd::Runtime::initialized()) {
     amd::Runtime::init();
   }
@@ -44,17 +44,25 @@ hipError_t hipInit(unsigned int flags)
   for (unsigned int i=0; i<devices.size(); i++) {
     const std::vector<amd::Device*> device(1, devices[i]);
     amd::Context* context = new amd::Context(device, amd::Context::Info());
-    if (!context) return hipErrorOutOfMemory;
+    if (!context) return;
 
     if (context && CL_SUCCESS != context->create(nullptr)) {
       context->release();
     } else {
       g_devices.push_back(context);
+      g_context = context;
     }
   }
+}
+
+
+hipError_t hipInit(unsigned int flags)
+{
+  HIP_INIT_API(flags);
 
   return hipSuccess;
 }
+
 
 hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device)
 {
