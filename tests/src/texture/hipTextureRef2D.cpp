@@ -14,17 +14,10 @@ texture<float, 2, hipReadModeElementType> tex;
 bool testResult = true;
 
 __global__ void tex2DKernel(float* outputData,
-#ifdef __HIP_PLATFORM_HCC__
-                            hipTextureObject_t textureObject,
-#endif
                             int width, int height) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
-#ifdef __HIP_PLATFORM_HCC__
-    outputData[y * width + x] = tex2D(tex, textureObject, x, y);
-#else
     outputData[y * width + x] = tex2D(tex, x, y);
-#endif
 }
 
 void runTest(int argc, char** argv);
@@ -73,12 +66,7 @@ void runTest(int argc, char** argv) {
 
     dim3 dimBlock(16, 16, 1);
     dim3 dimGrid(width / dimBlock.x, height / dimBlock.y, 1);
-#ifdef __HIP_PLATFORM_HCC__
-    hipLaunchKernelGGL(tex2DKernel, dim3(dimGrid), dim3(dimBlock), 0, 0, dData, tex.textureObject,
-                       width, height);
-#else
     hipLaunchKernelGGL(tex2DKernel, dim3(dimGrid), dim3(dimBlock), 0, 0, dData, width, height);
-#endif
     hipDeviceSynchronize();
 
     float* hOutputData = (float*)malloc(size);
