@@ -24,13 +24,30 @@ THE SOFTWARE.
 
 #include "hip_internal.hpp"
 
+static hipError_t ihipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
+{
+  assert(flags == 0); // we don't handle flags yet
+
+  amd::Device* device = g_context->devices()[0];
+
+  amd::HostQueue* queue = new amd::HostQueue(*g_context, *device, 0,
+                                             amd::CommandQueue::RealTimeDisabled,
+                                             amd::CommandQueue::Priority::Normal);
+
+  if (queue == nullptr) {
+    return hipErrorOutOfMemory;
+  }
+
+  *stream = reinterpret_cast<hipStream_t>(as_cl(queue));
+
+  return hipSuccess;
+}
+
 hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
 {
   HIP_INIT_API(stream, flags);
 
-  assert(0 && "Unimplemented");
-
-  return hipErrorUnknown;
+  return ihipStreamCreateWithFlags(stream, flags);
 }
 
 
@@ -38,9 +55,7 @@ hipError_t hipStreamCreate(hipStream_t *stream)
 {
   HIP_INIT_API(stream);
 
-  assert(0 && "Unimplemented");
-
-  return hipErrorUnknown;
+  return ihipStreamCreateWithFlags(stream, hipStreamDefault);
 }
 
 
@@ -58,9 +73,14 @@ hipError_t hipStreamSynchronize(hipStream_t stream)
 {
   HIP_INIT_API(stream);
 
-  assert(0 && "Unimplemented");
+  amd::HostQueue* hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
+  if (hostQueue == nullptr) {
+    return hipErrorUnknown;
+  }
 
-  return hipErrorUnknown;
+  hostQueue->finish();
+
+  return hipSuccess;
 }
 
 
@@ -68,9 +88,9 @@ hipError_t hipStreamDestroy(hipStream_t stream)
 {
   HIP_INIT_API(stream);
 
-  assert(0 && "Unimplemented");
+  as_amd(reinterpret_cast<cl_command_queue>(stream))->release();
 
-  return hipErrorUnknown;
+  return hipSuccess;
 }
 
 
