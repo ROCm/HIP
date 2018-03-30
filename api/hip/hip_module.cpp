@@ -144,9 +144,8 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
   amd::Kernel* kernel = as_amd(reinterpret_cast<cl_kernel>(f));
   amd::Device* device = g_context->devices()[0];
 
-  amd::HostQueue* queue = new amd::HostQueue(*g_context, *device, 0,
-                                             amd::CommandQueue::RealTimeDisabled,
-                                             amd::CommandQueue::Priority::Normal);
+  amd::HostQueue* queue = as_amd(reinterpret_cast<cl_command_queue>(hStream))->asHostQueue();
+
   if (!queue) {
     return hipErrorOutOfMemory;
   }
@@ -183,8 +182,6 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
   command->enqueue();
   command->awaitCompletion();
   command->release();
-
-  queue->release();
 
   return hipSuccess;
 }
