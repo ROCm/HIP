@@ -443,6 +443,7 @@ hcc_1_6:
     // docker_clean_images( job_name, hip_image_name )
   }
 },
+*/
 hcc_1_7:
 {
   node('docker && rocm && dkms')
@@ -478,7 +479,6 @@ hcc_1_7:
     // docker_clean_images( job_name, hip_image_name )
   }
 },
-*/
 nvcc:
 {
   node('docker && cuda')
