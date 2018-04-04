@@ -534,18 +534,6 @@ typedef int hipLaunchParm;
 
 #include <hip/hip_runtime_api.h>
 
-#if defined(__cplusplus)
-extern "C" {
-#endif /*__cplusplus*/
-
-hipError_t hipConfigureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem, hipStream_t stream);
-hipError_t hipSetupArgument(const void* arg, size_t size, size_t offset);
-hipError_t hipLaunchByPtr(const void* func);
-
-#if defined(__cplusplus)
-}
-#endif /*__cplusplus*/
-
 #include <__clang_cuda_builtin_vars.h>
 
 #define hipThreadIdx_x threadIdx.x
