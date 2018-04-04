@@ -243,8 +243,8 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
 {
   HIP_INIT_API(hostFunction);
 
-  std::map<const void*, hipFunction_t>::iterator it;
-  if ((it = g_functions.find(hostFunction)) == g_functions.end())
+  const auto it = g_functions.find(hostFunction);
+  if (it == g_functions.cend())
     return hipErrorUnknown;
 
   // FIXME: should pop an entry from the execution stack
