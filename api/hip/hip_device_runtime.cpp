@@ -401,14 +401,6 @@ hipError_t hipGetDeviceFlags ( unsigned int* flags ) {
   return hipErrorUnknown;
 }
 
-hipError_t hipIpcCloseMemHandle ( void* devPtr ) {
-  HIP_INIT_API(devPtr);
-
-  assert(0 && "Unimplemented");
-
-  return hipErrorUnknown;
-}
-
 hipError_t hipIpcGetEventHandle ( hipIpcEventHandle_t* handle, hipEvent_t event ) {
   HIP_INIT_API(handle, event);
 
@@ -417,24 +409,8 @@ hipError_t hipIpcGetEventHandle ( hipIpcEventHandle_t* handle, hipEvent_t event 
   return hipErrorUnknown;
 }
 
-hipError_t hipIpcGetMemHandle ( hipIpcMemHandle_t* handle, void* devPtr ) {
-  HIP_INIT_API(handle, devPtr);
-
-  assert(0 && "Unimplemented");
-
-  return hipErrorUnknown;
-}
-
 hipError_t hipIpcOpenEventHandle ( hipEvent_t* event, hipIpcEventHandle_t handle ) {
   HIP_INIT_API(event, handle);
-
-  assert(0 && "Unimplemented");
-
-  return hipErrorUnknown;
-}
-
-hipError_t hipIpcOpenMemHandle ( void** devPtr, hipIpcMemHandle_t handle, unsigned int  flags ) {
-  HIP_INIT_API(devPtr, handle, flags);
 
   assert(0 && "Unimplemented");
 
