@@ -789,6 +789,16 @@ class ihipDevice_t {
 //=============================================================================
 
 
+//---
+//
+struct ihipExec_t {
+  dim3 _gridDim;
+  dim3 _blockDim;
+  size_t _sharedMem;
+  hipStream_t _hStream;
+  std::vector<char> _arguments;
+};
+
 //=============================================================================
 // class ihipCtxCriticalBase_t
 template <typename MUTEX_TYPE>
@@ -827,6 +837,8 @@ class ihipCtxCriticalBase_t : LockedBase<MUTEX_TYPE> {
 
     // TODO - move private
     std::list<ihipCtx_t*> _peers;  // list of enabled peer devices.
+    //--- Execution stack:
+    std::stack<ihipExec_t> _execStack; // Execution stack for this device.
 
     friend class LockedAccessor<ihipCtxCriticalBase_t>;
 

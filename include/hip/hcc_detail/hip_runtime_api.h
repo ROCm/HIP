@@ -2427,6 +2427,59 @@ hipError_t hipIpcCloseMemHandle(void* devPtr);
 // hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags);
 
 
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup Clang Launch API to support the triple-chevron syntax
+ *  @{
+ */
+
+/**
+ * @brief Configure a kernel launch.
+ *
+ * @param [in] gridDim   grid dimension specified as multiple of blockDim.
+ * @param [in] blockDim  block dimensions specified in work-items
+ * @param [in] sharedMem Amount of dynamic shared memory to allocate for this kernel.  The
+ * kernel can access this with HIP_DYNAMIC_SHARED.
+ * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case the
+ * default stream is used with associated synchronization rules.
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ *
+ */
+hipError_t hipConfigureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem, hipStream_t stream);
+
+
+/**
+ * @brief Set a kernel argument.
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ *
+ * @param [in] arg    Pointer the argument in host memory.
+ * @param [in] size   Size of the argument.
+ * @param [in] offset Offset of the argument on the argument stack.
+ *
+ */
+hipError_t hipSetupArgument(const void* arg, size_t size, size_t offset);
+
+
+/**
+ * @brief Launch a kernel.
+ *
+ * @param [in] func Kernel to launch.
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ *
+ */
+hipError_t hipLaunchByPtr(const void* func);
+
+
+
+/**
+ * @}
+ */
+
+
 #ifdef __cplusplus
 } /* extern "c" */
 #endif
