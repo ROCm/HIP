@@ -24,8 +24,7 @@ THE SOFTWARE.
 
 #include "hip_internal.hpp"
 
-hipError_t hipDeviceGet(hipDevice_t *device, int deviceId)
-{
+hipError_t hipDeviceGet(hipDevice_t *device, int deviceId) {
   HIP_INIT_API(device, deviceId);
 
   if (device != nullptr) {
