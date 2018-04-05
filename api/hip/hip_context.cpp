@@ -33,8 +33,7 @@ thread_local std::stack<amd::Context*> g_ctxtStack;
 std::vector<amd::Context*> g_devices;
 std::once_flag g_ihipInitialized;
 
-void ihipInit()
-{
+void ihipInit() {
   if (!amd::Runtime::initialized()) {
     amd::Runtime::init();
   }
@@ -55,17 +54,13 @@ void ihipInit()
   }
 }
 
-
-hipError_t hipInit(unsigned int flags)
-{
+hipError_t hipInit(unsigned int flags) {
   HIP_INIT_API(flags);
 
   return hipSuccess;
 }
 
-
-hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device)
-{
+hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device) {
   HIP_INIT_API(ctx, flags, device);
 
   if (static_cast<size_t>(device) >= g_devices.size()) {
@@ -80,8 +75,7 @@ hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device)
   return hipSuccess;
 }
 
-hipError_t hipCtxSetCurrent(hipCtx_t ctx)
-{
+hipError_t hipCtxSetCurrent(hipCtx_t ctx) {
   HIP_INIT_API(ctx);
 
   if (ctx == nullptr) {
@@ -99,8 +93,7 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx)
   return hipSuccess;
 }
 
-hipError_t hipCtxGetCurrent(hipCtx_t* ctx)
-{
+hipError_t hipCtxGetCurrent(hipCtx_t* ctx) {
   HIP_INIT_API(ctx);
 
   *ctx = reinterpret_cast<hipCtx_t>(g_context);
@@ -108,8 +101,7 @@ hipError_t hipCtxGetCurrent(hipCtx_t* ctx)
   return hipSuccess;
 }
 
-hipError_t hipRuntimeGetVersion(int *runtimeVersion)
-{
+hipError_t hipRuntimeGetVersion(int *runtimeVersion) {
   HIP_INIT_API(runtimeVersion);
 
   if (!runtimeVersion) {
@@ -121,8 +113,7 @@ hipError_t hipRuntimeGetVersion(int *runtimeVersion)
   return hipSuccess;
 }
 
-hipError_t hipCtxDestroy(hipCtx_t ctx)
-{
+hipError_t hipCtxDestroy(hipCtx_t ctx) {
   HIP_INIT_API(ctx);
 
   amd::Context* amdContext = reinterpret_cast<amd::Context*>(as_amd(ctx));
@@ -146,9 +137,7 @@ hipError_t hipCtxDestroy(hipCtx_t ctx)
   return hipSuccess;
 }
 
-
-hipError_t hipCtxPopCurrent(hipCtx_t* ctx)
-{
+hipError_t hipCtxPopCurrent(hipCtx_t* ctx) {
   HIP_INIT_API(ctx);
 
   amd::Context* amdContext = reinterpret_cast<amd::Context*>(as_amd(ctx));
@@ -166,8 +155,7 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx)
   return hipSuccess;
 }
 
-hipError_t hipCtxPushCurrent(hipCtx_t ctx)
-{
+hipError_t hipCtxPushCurrent(hipCtx_t ctx) {
   HIP_INIT_API(ctx);
 
   amd::Context* amdContext = reinterpret_cast<amd::Context*>(as_amd(ctx));
@@ -179,4 +167,100 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx)
   g_ctxtStack.push(g_context);
 
   return hipSuccess;
+}
+
+hipError_t hipCtxGetDevice(hipDevice_t* device) {
+  HIP_INIT_API(device);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion) {
+  HIP_INIT_API(apiVersion);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig) {
+  HIP_INIT_API(cacheConfig);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig) {
+  HIP_INIT_API(cacheConfig);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config) {
+  HIP_INIT_API(config);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipCtxSynchronize(void) {
+  HIP_INIT_API(1);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipCtxGetFlags(unsigned int* flags) {
+  HIP_INIT_API(flags);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int* active) {
+  HIP_INIT_API(dev, flags, active);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipDevicePrimaryCtxRelease(hipDevice_t dev) {
+  HIP_INIT_API(dev);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipDevicePrimaryCtxRetain(hipCtx_t* pctx, hipDevice_t dev) {
+  HIP_INIT_API(pctx, dev);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipDevicePrimaryCtxReset(hipDevice_t dev) {
+  HIP_INIT_API(dev);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipDevicePrimaryCtxSetFlags(hipDevice_t dev, unsigned int flags) {
+  HIP_INIT_API(dev, flags);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
 }

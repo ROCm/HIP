@@ -24,8 +24,7 @@ THE SOFTWARE.
 
 #include "hip_internal.hpp"
 
-static hipError_t ihipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
-{
+static hipError_t ihipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
   assert(flags == 0); // we don't handle flags yet
 
   amd::Device* device = g_context->devices()[0];
@@ -43,24 +42,21 @@ static hipError_t ihipStreamCreateWithFlags(hipStream_t *stream, unsigned int fl
   return hipSuccess;
 }
 
-hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags)
-{
+hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
   HIP_INIT_API(stream, flags);
 
   return ihipStreamCreateWithFlags(stream, flags);
 }
 
 
-hipError_t hipStreamCreate(hipStream_t *stream)
-{
+hipError_t hipStreamCreate(hipStream_t *stream) {
   HIP_INIT_API(stream);
 
   return ihipStreamCreateWithFlags(stream, hipStreamDefault);
 }
 
 
-hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags)
-{
+hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags) {
   HIP_INIT_API(stream, flags);
 
   assert(0 && "Unimplemented");
@@ -69,8 +65,7 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags)
 }
 
 
-hipError_t hipStreamSynchronize(hipStream_t stream)
-{
+hipError_t hipStreamSynchronize(hipStream_t stream) {
   HIP_INIT_API(stream);
 
   amd::HostQueue* hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
@@ -84,13 +79,38 @@ hipError_t hipStreamSynchronize(hipStream_t stream)
 }
 
 
-hipError_t hipStreamDestroy(hipStream_t stream)
-{
+hipError_t hipStreamDestroy(hipStream_t stream) {
   HIP_INIT_API(stream);
 
   as_amd(reinterpret_cast<cl_command_queue>(stream))->release();
 
   return hipSuccess;
+}
+
+
+hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags) {
+  HIP_INIT_API(stream, event, flags);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipStreamQuery(hipStream_t stream) {
+  HIP_INIT_API(stream);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
+hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
+                                unsigned int flags) {
+  HIP_INIT_API(stream, callback, userData, flags);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
 }
 
 

@@ -23,55 +23,25 @@ THE SOFTWARE.
 #include <hip/hip_runtime.h>
 
 #include "hip_internal.hpp"
+#include <hip/hcc_detail/hip_surface_types.h>
 
-hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags) {
-  HIP_INIT_API(event, flags);
+struct hipSurface {
+    hipArray* array;
+    hipResourceDesc resDesc;
+};
 
-  assert(0 && "Unimplemented");
-
-  return hipErrorUnknown;
-}
-
-hipError_t hipEventCreate(hipEvent_t* event) {
-  HIP_INIT_API(event);
-
-  assert(0 && "Unimplemented");
-
-  return hipErrorUnknown;
-}
-
-hipError_t hipEventDestroy(hipEvent_t event) {
-  HIP_INIT_API(event);
+hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject,
+                                  const hipResourceDesc* pResDesc) {
+  HIP_INIT_API(pSurfObject, pResDesc);
 
   assert(0 && "Unimplemented");
 
   return hipErrorUnknown;
 }
 
-hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop) {
-  HIP_INIT_API(ms, start, stop);
 
-  return hipErrorUnknown;
-}
-
-hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
-  HIP_INIT_API(event, stream);
-
-  assert(0 && "Unimplemented");
-
-  return hipErrorUnknown;
-}
-
-hipError_t hipEventSynchronize(hipEvent_t event) {
-  HIP_INIT_API(event);
-
-  assert(0 && "Unimplemented");
-
-  return hipErrorUnknown;
-}
-
-hipError_t hipEventQuery(hipEvent_t event) {
-  HIP_INIT_API(event);
+hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject) {
+  HIP_INIT_API(surfaceObject);
 
   assert(0 && "Unimplemented");
 
