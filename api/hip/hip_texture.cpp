@@ -24,13 +24,6 @@ THE SOFTWARE.
 #include <hip/hcc_detail/texture_types.h>
 #include "hip_internal.hpp"
 
-struct hipTexture {
-    hipResourceDesc resDesc;
-    hipTextureDesc texDesc;
-    hipResourceViewDesc resViewDesc;
-    hsa_ext_image_t image;
-    hsa_ext_sampler_t sampler;
-};
 
 hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResourceDesc* pResDesc,
                                   const hipTextureDesc* pTexDesc,
@@ -164,7 +157,11 @@ hipError_t hipTexRefSetFlags(textureReference* tex, unsigned int flags) {
 }
 
 hipError_t hipTexRefSetFilterMode(textureReference* tex, hipTextureFilterMode fm) {
-    HIP_INIT_API(tex, fm);
+  HIP_INIT_API(tex, fm);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown; 
 }
 
 hipError_t hipTexRefSetAddressMode(textureReference* tex, int dim, hipTextureAddressMode am) {
