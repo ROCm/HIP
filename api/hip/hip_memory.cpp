@@ -24,9 +24,8 @@ THE SOFTWARE.
 
 #include "hip_internal.hpp"
 
-hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
-  HIP_INIT_API(ptr, sizeBytes);
-
+hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
+{
   if (sizeBytes == 0) {
     *ptr = nullptr;
     return hipSuccess;
@@ -39,36 +38,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
     return hipErrorOutOfMemory;
   }
 
-  amd::Memory* mem = new (*g_context) amd::Buffer(*g_context, 0, sizeBytes);
-  if (!mem) {
-    return hipErrorOutOfMemory;
-  }
-
-  if (!mem->create(nullptr)) {
-    return hipErrorMemoryAllocation;
-  }
-
-  *ptr = reinterpret_cast<void*>(as_cl(mem));
-
-  return hipSuccess;
-}
-
-hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
-  HIP_INIT_API(ptr, sizeBytes, flags);
-
-  if (sizeBytes == 0) {
-    *ptr = nullptr;
-    return hipSuccess;
-  }
-  else if (!ptr) {
-    return hipErrorInvalidValue;
-  }
-
-  if (g_context->devices()[0]->info().maxMemAllocSize_ < sizeBytes) {
-    return hipErrorOutOfMemory;
-  }
-
-  *ptr = amd::SvmBuffer::malloc(*g_context, 0, sizeBytes, g_context->devices()[0]->info().memBaseAddrAlign_);
+  *ptr = amd::SvmBuffer::malloc(*g_context, flags, sizeBytes, g_context->devices()[0]->info().memBaseAddrAlign_);
   if (!*ptr) {
     return hipErrorOutOfMemory;
   }
@@ -76,16 +46,24 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
   return hipSuccess;
 }
 
+hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
+  HIP_INIT_API(ptr, sizeBytes);
+
+  return ihipMalloc(ptr, sizeBytes, 0);
+}
+
+hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
+  HIP_INIT_API(ptr, sizeBytes, flags);
+
+  return ihipMalloc(ptr, sizeBytes, CL_MEM_SVM_FINE_GRAIN_BUFFER);
+}
+
 hipError_t hipFree(void* ptr) {
   if (amd::SvmBuffer::malloced(ptr)) {
     amd::SvmBuffer::free(*g_context, ptr);
     return hipSuccess;
   }
-  if (!is_valid(reinterpret_cast<cl_mem>(ptr))) {
-    return hipErrorInvalidValue;
-  }
-  as_amd(reinterpret_cast<cl_mem>(ptr))->release();
-  return hipSuccess;
+  return hipErrorInvalidValue;
 }
 
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind) {
@@ -102,15 +80,18 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 
   amd::Command* command;
   amd::Command::EventWaitList waitList;
+  amd::Memory* memory;
 
   switch (kind) {
   case hipMemcpyDeviceToHost:
+    memory = amd::SvmManager::FindSvmBuffer(src);
     command = new amd::ReadMemoryCommand(*queue, CL_COMMAND_READ_BUFFER, waitList,
-      *as_amd(reinterpret_cast<cl_mem>(const_cast<void*>(src)))->asBuffer(), 0, sizeBytes, dst);
+      *memory->asBuffer(), 0, sizeBytes, dst);
     break;
   case hipMemcpyHostToDevice:
+    memory = amd::SvmManager::FindSvmBuffer(dst);
     command = new amd::WriteMemoryCommand(*queue, CL_COMMAND_WRITE_BUFFER, waitList,
-      *as_amd(reinterpret_cast<cl_mem>(dst))->asBuffer(), 0, sizeBytes, src);
+      *memory->asBuffer(), 0, sizeBytes, src);
     break;
   default:
     assert(!"Shouldn't reach here");
