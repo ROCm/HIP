@@ -98,8 +98,8 @@ HIP parses the `__noinline__` and `__forceinline__` keywords and converts them t
 
 ## Calling `__global__` Functions
 
-`__global__` functions are often referred to as *kernels,* and calling one is termed *launching the kernel.* These functions require the caller to specify an "execution configuration" that includes the grid and block dimensions. The execution configuration can also include other information for the launch, such as the amount of additional shared memory to allocate and the stream where the kernel should execute. HIP introduces a standard C++ calling convention to pass the execution configuration to the kernel (this convention replaces the Cuda <<< >>> syntax). In HIP,
-- Kernels launch with the "hipLaunchKernel" function
+`__global__` functions are often referred to as *kernels,* and calling one is termed *launching the kernel.* These functions require the caller to specify an "execution configuration" that includes the grid and block dimensions. The execution configuration can also include other information for the launch, such as the amount of additional shared memory to allocate and the stream where the kernel should execute. HIP introduces a standard C++ calling convention to pass the execution configuration to the kernel in addition to the Cuda <<< >>> syntax. In HIP,
+- Kernels launch with either <<< >>> syntax or the "hipLaunchKernel" function
 - The first five parameters to hipLaunchKernel are the following:
    - **symbol kernelName**: the name of the kernel to launch.  To support template kernels which contains "," use the HIP_KERNEL_NAME macro.   The hipify tools insert this automatically.
    - **dim3 gridDim**: 3D-grid dimensions specifying the number of blocks to launch.
@@ -116,12 +116,13 @@ __global__ MyKernel(hipLaunchParm lp, float *A, float *B, float *C, size_t N)
 ...
 }
 
-// Replace MyKernel<<<dim3(gridDim), dim3(gridDim), 0, 0>>> (a,b,c,n);
-hipLaunchKernel(MyKernel, dim3(gridDim), dim3(groupDim), 0/*dynamicShared*/, 0/*stream), a, b, c, n);
+MyKernel<<<dim3(gridDim), dim3(gridDim), 0, 0>>> (a,b,c,n);
+// Alternatively, kernel can be launched by 
+// hipLaunchKernel(MyKernel, dim3(gridDim), dim3(groupDim), 0/*dynamicShared*/, 0/*stream), a, b, c, n);
 
 ```
 
-The hipLaunchKernel macro always starts with the five parameters specified above, followed by the kernel arguments. The Hipify script automatically converts Cuda launch syntax to hipLaunchKernel, including conversion of optional arguments in <<< >>> to the five required hipLaunchKernel parameters. The dim3 constructor accepts zero to three arguments and will by default initialize unspecified dimensions to 1. See [dim3](#dim3). The kernel uses the coordinate built-ins (hipThread*, hipBlock*, hipGrid*) to determine coordinate index and coordinate bounds of the work item that’s currently executing. See [Coordinate Built-Ins](#coordinate-builtins).
+The hipLaunchKernel macro always starts with the five parameters specified above, followed by the kernel arguments. The Hipify script optionally converts Cuda launch syntax to hipLaunchKernel, including conversion of optional arguments in <<< >>> to the five required hipLaunchKernel parameters. The dim3 constructor accepts zero to three arguments and will by default initialize unspecified dimensions to 1. See [dim3](#dim3). The kernel uses the coordinate built-ins (hipThread*, hipBlock*, hipGrid*) to determine coordinate index and coordinate bounds of the work item that’s currently executing. See [Coordinate Built-Ins](#coordinate-builtins).
 
 
 ## Kernel-Launch Example
@@ -149,7 +150,9 @@ void callMyKernel()
     unsigned N = 1000000;
     const unsigned blockSize = 256;
 
-    hipLaunchKernel(MyKernel, dim3(N/blockSize), dim3(blockSize), 0, 0,  a,b,c,N);
+    MyKernel<<<dim3(gridDim), dim3(gridDim), 0, 0>>> (a,b,c,n);
+    // Alternatively, kernel can be launched by
+    // hipLaunchKernel(MyKernel, dim3(N/blockSize), dim3(blockSize), 0, 0,  a,b,c,N);
 }
 ```
 
