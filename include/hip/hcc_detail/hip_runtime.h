@@ -534,19 +534,67 @@ typedef int hipLaunchParm;
 
 #include <hip/hip_runtime_api.h>
 
-#if defined(__cplusplus)
-extern "C" {
-#endif /*__cplusplus*/
+#pragma push_macro("__DEVICE__")
+#define __DEVICE__ static __device__ __forceinline__
 
-hipError_t hipConfigureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem, hipStream_t stream);
-hipError_t hipSetupArgument(const void* arg, size_t size, size_t offset);
-hipError_t hipLaunchByPtr(const void* func);
+extern "C" __device__ size_t __ockl_get_local_id(uint);
+__DEVICE__ uint __hip_get_thread_idx_x() { return __ockl_get_local_id(0); }
+__DEVICE__ uint __hip_get_thread_idx_y() { return __ockl_get_local_id(1); }
+__DEVICE__ uint __hip_get_thread_idx_z() { return __ockl_get_local_id(2); }
 
-#if defined(__cplusplus)
-}
-#endif /*__cplusplus*/
+extern "C" __device__ size_t __ockl_get_group_id(uint);
+__DEVICE__ uint __hip_get_block_idx_x() { return __ockl_get_group_id(0); }
+__DEVICE__ uint __hip_get_block_idx_y() { return __ockl_get_group_id(1); }
+__DEVICE__ uint __hip_get_block_idx_z() { return __ockl_get_group_id(2); }
 
-#include <__clang_cuda_builtin_vars.h>
+extern "C" __device__ size_t __ockl_get_local_size(uint);
+__DEVICE__ uint __hip_get_block_dim_x() { return __ockl_get_local_size(0); }
+__DEVICE__ uint __hip_get_block_dim_y() { return __ockl_get_local_size(1); }
+__DEVICE__ uint __hip_get_block_dim_z() { return __ockl_get_local_size(2); }
+
+extern "C" __device__ size_t __ockl_get_num_groups(uint);
+__DEVICE__ uint __hip_get_grid_dim_x() { return __ockl_get_num_groups(0); }
+__DEVICE__ uint __hip_get_grid_dim_y() { return __ockl_get_num_groups(1); }
+__DEVICE__ uint __hip_get_grid_dim_z() { return __ockl_get_num_groups(2); }
+
+#define __HIP_DEVICE_BUILTIN(DIMENSION, FUNCTION)               \
+  __declspec(property(get = __get_##DIMENSION)) uint DIMENSION; \
+  __DEVICE__ uint __get_##DIMENSION(void) {                     \
+    return FUNCTION;                                            \
+  }
+
+struct __hip_builtin_threadIdx_t {
+  __HIP_DEVICE_BUILTIN(x,__hip_get_thread_idx_x());
+  __HIP_DEVICE_BUILTIN(y,__hip_get_thread_idx_y());
+  __HIP_DEVICE_BUILTIN(z,__hip_get_thread_idx_z());
+};
+
+struct __hip_builtin_blockIdx_t {
+  __HIP_DEVICE_BUILTIN(x,__hip_get_block_idx_x());
+  __HIP_DEVICE_BUILTIN(y,__hip_get_block_idx_y());
+  __HIP_DEVICE_BUILTIN(z,__hip_get_block_idx_z());
+};
+
+struct __hip_builtin_blockDim_t {
+  __HIP_DEVICE_BUILTIN(x,__hip_get_block_dim_x());
+  __HIP_DEVICE_BUILTIN(y,__hip_get_block_dim_y());
+  __HIP_DEVICE_BUILTIN(z,__hip_get_block_dim_z());
+};
+
+struct __hip_builtin_gridDim_t {
+  __HIP_DEVICE_BUILTIN(x,__hip_get_grid_dim_x());
+  __HIP_DEVICE_BUILTIN(y,__hip_get_grid_dim_y());
+  __HIP_DEVICE_BUILTIN(z,__hip_get_grid_dim_z());
+};
+
+#undef __HIP_DEVICE_BUILTIN
+#pragma pop_macro("__DEVICE__")
+
+extern const __device__ __attribute__((weak)) __hip_builtin_threadIdx_t threadIdx;
+extern const __device__ __attribute__((weak)) __hip_builtin_blockIdx_t blockIdx;
+extern const __device__ __attribute__((weak)) __hip_builtin_blockDim_t blockDim;
+extern const __device__ __attribute__((weak)) __hip_builtin_gridDim_t gridDim;
+
 
 #define hipThreadIdx_x threadIdx.x
 #define hipThreadIdx_y threadIdx.y
