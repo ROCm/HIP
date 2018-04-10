@@ -463,40 +463,28 @@ hipError_t hipIpcCloseMemHandle(void* devPtr) {
   return hipErrorUnknown;
 }
 
-hipError_t hipMemcpyPeer(void* dst, hipCtx_t dstCtx, const void* src, hipCtx_t srcCtx,
-                         size_t sizeBytes) {
-  HIP_INIT_API(dst, dstCtx, src, srcCtx, sizeBytes);
+hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f) {
+    hipChannelFormatDesc cd;
+    cd.x = x;
+    cd.y = y;
+    cd.z = z;
+    cd.w = w;
+    cd.f = f;
+    return cd;
+}
+
+hipError_t hipHostGetDevicePointer(void** devicePointer, void* hostPointer, unsigned flags) {
+  HIP_INIT_API(devicePointer, hostPointer, flags);
 
   assert(0 && "Unimplemented");
 
   return hipErrorUnknown;
 }
 
-
-hipError_t hipMemcpyPeerAsync(void* dst, hipCtx_t dstDevice, const void* src, hipCtx_t srcDevice,
-                              size_t sizeBytes, hipStream_t stream) {
-  HIP_INIT_API(dst, dstDevice, src, srcDevice, sizeBytes, stream);
+hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr) {
+  HIP_INIT_API(attributes, ptr);
 
   assert(0 && "Unimplemented");
 
   return hipErrorUnknown;
 }
-
-hipError_t hipMemcpyPeer(void* dst, int dstDevice, const void* src, int srcDevice,
-                         size_t sizeBytes) {
-  HIP_INIT_API(dst, dstDevice, src, srcDevice, sizeBytes);
-
-  assert(0 && "Unimplemented");
-
-  return hipErrorUnknown;
-}
-
-hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int srcDevice,
-                              size_t sizeBytes, hipStream_t stream) {
-  HIP_INIT_API(dst, dstDevice, src, srcDevice, sizeBytes, stream);
-
-  assert(0 && "Unimplemented");
-
-  return hipErrorUnknown;
-}
-
