@@ -169,6 +169,22 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx) {
   return hipSuccess;
 }
 
+hipError_t hipDriverGetVersion(int* driverVersion) {
+  HIP_INIT_API(driverVersion);
+
+  auto* deviceHandle = g_devices[0]->devices()[0];
+  const auto& info = deviceHandle->info();
+
+  if (driverVersion) {
+      *driverVersion = AMD_PLATFORM_BUILD_NUMBER * 100 +
+                       AMD_PLATFORM_REVISION_NUMBER;
+  } else {
+      return hipErrorInvalidValue;
+  }
+
+  return hipSuccess;;
+}
+
 hipError_t hipCtxGetDevice(hipDevice_t* device) {
   HIP_INIT_API(device);
 
