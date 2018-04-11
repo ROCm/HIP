@@ -35,8 +35,10 @@ hipError_t memcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKi
                        hipStream_t stream) {
     hipError_t e = hipSuccess;
 
-    stream = ihipSyncAndResolveStream(stream);
+    // Return success if number of bytes to copy is 0
+    if (sizeBytes == 0) return e;
 
+    stream = ihipSyncAndResolveStream(stream);
 
     if ((dst == NULL) || (src == NULL)) {
         e = hipErrorInvalidValue;
