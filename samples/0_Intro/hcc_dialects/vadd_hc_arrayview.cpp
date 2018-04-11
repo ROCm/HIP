@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
     // Launch kernel onto default accelerator:
     // The HCC runtime will ensure that A and B are available on the accelerator before launching
     // the kernel.
-    hc::parallel_for_each(hc::extent<1>(sizeElements), [=](hc::index<1> idx)[[hc]] {
+    hc::parallel_for_each(hc::extent<1>(sizeElements), [=](hc::index<1> idx) [[hc]] {
         int i = idx[0];
         C[i] = A[i] + B[i];
     });

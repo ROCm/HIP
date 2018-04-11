@@ -127,7 +127,8 @@ hipError_t hipCtxDestroy(hipCtx_t ctx) {
             ctx->locked_reset();
         }
         delete ctx;  // As per CUDA docs , attempting to access ctx from those threads which has
-                     // this ctx as current, will result in the error HIP_ERROR_CONTEXT_IS_DESTROYED.
+                     // this ctx as current, will result in the error
+                     // HIP_ERROR_CONTEXT_IS_DESTROYED.
     }
 
     return ihipLogStatus(e);

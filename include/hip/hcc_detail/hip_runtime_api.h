@@ -2474,7 +2474,6 @@ hipError_t hipSetupArgument(const void* arg, size_t size, size_t offset);
 hipError_t hipLaunchByPtr(const void* func);
 
 
-
 /**
  * @}
  */
