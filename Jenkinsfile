@@ -478,7 +478,7 @@ hcc_1_7:
     // String hip_image_name = docker_upload_artifactory( hcc_ver, job_name, from_image, source_hip_rel, build_hip_rel )
     // docker_clean_images( job_name, hip_image_name )
   }
-},
+}/*,
 nvcc:
 {
   node('docker && cuda')
@@ -511,4 +511,4 @@ nvcc:
     // Build hip inside of the build environment
     docker_build_inside_image( hip_build_image, inside_args, nvcc_ver, "-DHIP_NVCC_FLAGS=--Wno-deprecated-gpu-targets", build_config, source_hip_rel, build_hip_rel )
   }
-}
+}*/
