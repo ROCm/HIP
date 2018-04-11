@@ -1619,6 +1619,7 @@ hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
     hipError_t e = hipSuccess;
 
     hipStream_t stream = hipStreamNull;
+    stream =  ihipSyncAndResolveStream(stream);
     if (stream) {
         e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetCopyDataTypeChar);
         stream->locked_wait();
