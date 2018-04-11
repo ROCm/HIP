@@ -175,6 +175,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
 
     set(SOURCE_FILES_RUNTIME
         src/code_object_bundle.cpp
+        src/hip_clang.cpp
         src/hip_hcc.cpp
         src/hip_context.cpp
         src/hip_device.cpp
