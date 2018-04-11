@@ -856,8 +856,8 @@ void CommandStream::parse(std::string fullCmd) {
         //= This function will create new stream on first call to setstream or re-use previous
         //= stream if setstream has already been called with STREAM_INDEX.
         //= STREAM_INDEX=0 will use the default "null" stream associated with the device, and will
-        //not create a new stream. =  The default stream has special, conservative synchronization
-        //properties.
+        // not create a new stream. =  The default stream has special, conservative synchronization
+        // properties.
 
         cmd = new SetStreamCommand(cmdStream, args);
 

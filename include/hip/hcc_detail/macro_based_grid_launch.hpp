@@ -768,7 +768,7 @@ requires(Domain<K> == {Ts...}) inline std::enable_if_t<
     }
 #define make_kernel_functor_hip_2(function_name, kernel_name)                                      \
     struct make_kernel_name_hip(function_name, 0) {                                                \
-        void operator()(const hc::tiled_index<3>&)[[hc]] { return kernel_name(hipLaunchParm{}); }  \
+        void operator()(const hc::tiled_index<3>&) [[hc]] { return kernel_name(hipLaunchParm{}); } \
     }
 #define make_kernel_functor_hip_1(...)
 #define make_kernel_functor_hip_0(...)

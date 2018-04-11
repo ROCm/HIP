@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
     // and we don't need additional synchronization to ensure the copies complete before the PFE
     // begins.
     hc::completion_future cf =
-        hc::parallel_for_each(av, hc::extent<1>(sizeElements), [=](hc::index<1> idx)[[hc]] {
+        hc::parallel_for_each(av, hc::extent<1>(sizeElements), [=](hc::index<1> idx) [[hc]] {
             int i = idx[0];
             C_d[i] = A_d[i] + B_d[i];
         });

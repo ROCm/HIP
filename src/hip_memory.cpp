@@ -151,7 +151,7 @@ void* allocAndSharePtr(const char* msg, size_t sizeBytes, ihipCtx_t* ctx, bool s
 //         registered.  This device will have a GPUVM mapping for the host mem.
 //
 //_appAllocationFlags : These are flags provided by the user when allocation is performed. They are
-//returned to user in hipHostGetFlags and other APIs.
+// returned to user in hipHostGetFlags and other APIs.
 // TODO - add more info here when available.
 //
 hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr) {

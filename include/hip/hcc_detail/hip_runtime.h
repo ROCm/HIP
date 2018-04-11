@@ -363,7 +363,7 @@ __device__ static inline void __threadfence(void) { return __hip_hc_threadfence(
  * @warning __threadfence_system is a stub and map to no-op.
  */
 //__device__ void  __threadfence_system(void) __attribute__((deprecated("Provided with workaround
-//configuration, see hip_kernel_language.md for details")));
+// configuration, see hip_kernel_language.md for details")));
 __device__ void __threadfence_system(void);
 
 // doxygen end Fence Fence
@@ -557,34 +557,32 @@ __DEVICE__ uint __hip_get_grid_dim_x() { return __ockl_get_num_groups(0); }
 __DEVICE__ uint __hip_get_grid_dim_y() { return __ockl_get_num_groups(1); }
 __DEVICE__ uint __hip_get_grid_dim_z() { return __ockl_get_num_groups(2); }
 
-#define __HIP_DEVICE_BUILTIN(DIMENSION, FUNCTION)               \
-  __declspec(property(get = __get_##DIMENSION)) uint DIMENSION; \
-  __DEVICE__ uint __get_##DIMENSION(void) {                     \
-    return FUNCTION;                                            \
-  }
+#define __HIP_DEVICE_BUILTIN(DIMENSION, FUNCTION)                                                  \
+    __declspec(property(get = __get_##DIMENSION)) uint DIMENSION;                                  \
+    __DEVICE__ uint __get_##DIMENSION(void) { return FUNCTION; }
 
 struct __hip_builtin_threadIdx_t {
-  __HIP_DEVICE_BUILTIN(x,__hip_get_thread_idx_x());
-  __HIP_DEVICE_BUILTIN(y,__hip_get_thread_idx_y());
-  __HIP_DEVICE_BUILTIN(z,__hip_get_thread_idx_z());
+    __HIP_DEVICE_BUILTIN(x, __hip_get_thread_idx_x());
+    __HIP_DEVICE_BUILTIN(y, __hip_get_thread_idx_y());
+    __HIP_DEVICE_BUILTIN(z, __hip_get_thread_idx_z());
 };
 
 struct __hip_builtin_blockIdx_t {
-  __HIP_DEVICE_BUILTIN(x,__hip_get_block_idx_x());
-  __HIP_DEVICE_BUILTIN(y,__hip_get_block_idx_y());
-  __HIP_DEVICE_BUILTIN(z,__hip_get_block_idx_z());
+    __HIP_DEVICE_BUILTIN(x, __hip_get_block_idx_x());
+    __HIP_DEVICE_BUILTIN(y, __hip_get_block_idx_y());
+    __HIP_DEVICE_BUILTIN(z, __hip_get_block_idx_z());
 };
 
 struct __hip_builtin_blockDim_t {
-  __HIP_DEVICE_BUILTIN(x,__hip_get_block_dim_x());
-  __HIP_DEVICE_BUILTIN(y,__hip_get_block_dim_y());
-  __HIP_DEVICE_BUILTIN(z,__hip_get_block_dim_z());
+    __HIP_DEVICE_BUILTIN(x, __hip_get_block_dim_x());
+    __HIP_DEVICE_BUILTIN(y, __hip_get_block_dim_y());
+    __HIP_DEVICE_BUILTIN(z, __hip_get_block_dim_z());
 };
 
 struct __hip_builtin_gridDim_t {
-  __HIP_DEVICE_BUILTIN(x,__hip_get_grid_dim_x());
-  __HIP_DEVICE_BUILTIN(y,__hip_get_grid_dim_y());
-  __HIP_DEVICE_BUILTIN(z,__hip_get_grid_dim_z());
+    __HIP_DEVICE_BUILTIN(x, __hip_get_grid_dim_x());
+    __HIP_DEVICE_BUILTIN(y, __hip_get_grid_dim_y());
+    __HIP_DEVICE_BUILTIN(z, __hip_get_grid_dim_z());
 };
 
 #undef __HIP_DEVICE_BUILTIN

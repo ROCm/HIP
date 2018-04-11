@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
 
     // Launch kernel onto default accelerator:
     // array<> types are not implicitly copied, so we performed copies above.
-    hc::parallel_for_each(hc::extent<1>(sizeElements), [&](hc::index<1> idx)[[hc]] {
+    hc::parallel_for_each(hc::extent<1>(sizeElements), [&](hc::index<1> idx) [[hc]] {
         int i = idx[0];
         C_d[i] = A_d[i] + B_d[i];
     });
