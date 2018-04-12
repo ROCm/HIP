@@ -104,28 +104,28 @@ __device__ double __fma_ru(double x, double y, double z);
 __device__ double __fma_rz(double x, double y, double z);
 
 // Single Precision Fast Math
-extern __attribute__((const)) float __hip_fast_cosf(float) __asm("llvm.cos.f32");
-extern __attribute__((const)) float __hip_fast_exp2f(float) __asm("llvm.exp2.f32");
+extern __device__ __attribute__((const)) float __hip_fast_cosf(float) __asm("llvm.cos.f32");
+extern __device__ __attribute__((const)) float __hip_fast_exp2f(float) __asm("llvm.exp2.f32");
 __device__ float __hip_fast_exp10f(float);
 __device__ float __hip_fast_expf(float);
 __device__ float __hip_fast_frsqrt_rn(float);
-extern __attribute__((const)) float __hip_fast_fsqrt_rd(float) __asm("llvm.sqrt.f32");
+extern __device__ __attribute__((const)) float __hip_fast_fsqrt_rd(float) __asm("llvm.sqrt.f32");
 __device__ float __hip_fast_fsqrt_rn(float);
 __device__ float __hip_fast_fsqrt_ru(float);
 __device__ float __hip_fast_fsqrt_rz(float);
 __device__ float __hip_fast_log10f(float);
-extern __attribute__((const)) float __hip_fast_log2f(float) __asm("llvm.log2.f32");
+extern __device__ __attribute__((const)) float __hip_fast_log2f(float) __asm("llvm.log2.f32");
 __device__ float __hip_fast_logf(float);
 __device__ float __hip_fast_powf(float, float);
 __device__ void __hip_fast_sincosf(float, float*, float*);
-extern __attribute__((const)) float __hip_fast_sinf(float) __asm("llvm.sin.f32");
+extern __device__ __attribute__((const)) float __hip_fast_sinf(float) __asm("llvm.sin.f32");
 __device__ float __hip_fast_tanf(float);
-extern __attribute__((const)) float __hip_fast_fmaf(float, float, float) __asm("llvm.fma.f32");
-extern __attribute__((const)) float __hip_fast_frcp(float) __asm("llvm.amdgcn.rcp.f32");
+extern __device__ __attribute__((const)) float __hip_fast_fmaf(float, float, float) __asm("llvm.fma.f32");
+extern __device__ __attribute__((const)) float __hip_fast_frcp(float) __asm("llvm.amdgcn.rcp.f32");
 
-extern __attribute__((const)) double __hip_fast_dsqrt(double) __asm("llvm.sqrt.f64");
-extern __attribute__((const)) double __hip_fast_fma(double, double, double) __asm("llvm.fma.f64");
-extern __attribute__((const)) double __hip_fast_drcp(double) __asm("llvm.amdgcn.rcp.f64");
+extern __device__ __attribute__((const)) double __hip_fast_dsqrt(double) __asm("llvm.sqrt.f64");
+extern __device__ __attribute__((const)) double __hip_fast_fma(double, double, double) __asm("llvm.fma.f64");
+extern __device__ __attribute__((const)) double __hip_fast_drcp(double) __asm("llvm.amdgcn.rcp.f64");
 
 
 // Single Precision Fast Math
@@ -283,11 +283,11 @@ __device__ inline double __fma_ru(double x, double y, double z) { return __hip_f
 __device__ inline double __fma_rz(double x, double y, double z) { return __hip_fast_fma(x, y, z); }
 
 
-extern "C" unsigned int __hip_hc_ir_umul24_int(unsigned int, unsigned int);
-extern "C" signed int __hip_hc_ir_mul24_int(signed int, signed int);
-extern "C" signed int __hip_hc_ir_mulhi_int(signed int, signed int);
-extern "C" unsigned int __hip_hc_ir_umulhi_int(unsigned int, unsigned int);
-extern "C" unsigned int __hip_hc_ir_usad_int(unsigned int, unsigned int, unsigned int);
+extern "C" __device__ unsigned int __hip_hc_ir_umul24_int(unsigned int, unsigned int);
+extern "C" __device__ signed int __hip_hc_ir_mul24_int(signed int, signed int);
+extern "C" __device__ signed int __hip_hc_ir_mulhi_int(signed int, signed int);
+extern "C" __device__ unsigned int __hip_hc_ir_umulhi_int(unsigned int, unsigned int);
+extern "C" __device__ unsigned int __hip_hc_ir_usad_int(unsigned int, unsigned int, unsigned int);
 
 // integer intrinsic function __poc __clz __ffs __brev
 __device__ unsigned int __brev(unsigned int x);
