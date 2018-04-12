@@ -7,22 +7,21 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <iostream>
 
 using namespace std;
 
 hsa_isa_t hip_impl::triple_to_hsa_isa(const std::string& triple) {
-    static constexpr const char prefix[] = "hcc-amdgcn--amdhsa-gfx";
+    static constexpr const char prefix[] = "amdgcn-amd-amdhsa--gfx";
     static constexpr size_t prefix_sz = sizeof(prefix) - 1;
-
     hsa_isa_t r = {};
 
     auto idx = triple.find(prefix);
 
     if (idx != string::npos) {
         idx += prefix_sz;
-        string tmp = "AMD:AMDGPU";
+        string tmp = "amdgcn-amd-amdhsa--gfx";
         while (idx != triple.size()) {
-            tmp.push_back(':');
             tmp.push_back(triple[idx++]);
         }
 
