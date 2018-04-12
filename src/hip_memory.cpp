@@ -1546,7 +1546,7 @@ typedef enum ihipMemsetDataType {
     ihipMemsetDataTypeChar   = 0,
     ihipMemsetDataTypeShort  = 1,
     ihipMemsetDataTypeInt    = 2
-}ihipMemsetCopyDataType;
+}ihipMemsetDataType;
 
 hipError_t ihipMemset(void* dst, int  value, size_t sizeBytes, hipStream_t stream, enum ihipMemsetDataType copyDataType  )
 {
