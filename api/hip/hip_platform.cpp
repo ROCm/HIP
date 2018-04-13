@@ -260,3 +260,20 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
     g_blockDim.x, g_blockDim.y, g_blockDim.z,
     g_sharedMem, g_stream, nullptr, extra);
 }
+
+#if defined(ATI_OS_LINUX)
+
+namespace hip_impl {
+
+void hipLaunchKernelGGLImpl(
+  uintptr_t function_address,
+  const dim3& numBlocks,
+  const dim3& dimBlocks,
+  uint32_t sharedMemBytes,
+  hipStream_t stream,
+  void** kernarg) {
+}
+
+}
+
+#endif // defined(ATI_OS_LINUX)
