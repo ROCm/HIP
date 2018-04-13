@@ -98,6 +98,15 @@ hipError_t hipBindTextureToArray(textureReference* tex, hipArray_const_t array,
   return hipErrorUnknown;
 }
 
+hipError_t ihipBindTextureToArrayImpl(int dim, enum hipTextureReadMode readMode,
+                                      hipArray_const_t array,
+                                      const struct hipChannelFormatDesc& desc,
+                                      textureReference* tex) {
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
 hipError_t hipBindTextureToMipmappedArray(textureReference* tex,
                                           hipMipmappedArray_const_t mipmappedArray,
                                           const hipChannelFormatDesc* desc) {

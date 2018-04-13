@@ -90,6 +90,7 @@ global:
     hipMemcpyPeer;
     hipMemcpyPeerAsync;
     hipMemcpyToArray;
+    hipMemcpyFromArray;
     hipMemcpyToSymbol;
     hipMemcpyToSymbolAsync;
     hipMemGetAddressRange;
@@ -128,6 +129,37 @@ global:
     hipConfigureCall;
     hipSetupArgument;
     hipLaunchByPtr;
+    hipProfilerStart;
+    hipProfilerStop;
+    extern "C++" {
+    hip_impl::hipLaunchKernelGGLImpl*;
+    hipCreateTextureObject*;
+    hipDestroyTextureObject*;
+    hipGetTextureObjectResourceDesc;
+    hipGetTextureObjectResourceViewDesc;
+    hipGetTextureObjectTextureDesc;
+    hipBindTexture;
+    hipBindTexture2D;
+    hipBindTextureToArray;
+    hipBindTextureToMipmappedArray;
+    hipUnbindTexture;
+    hipGetChannelDesc;
+    hipGetTextureAlignmentOffset;
+    hipGetTextureReference;
+    hipTexRefSetFormat;
+    hipTexRefSetFlags;
+    hipTexRefSetFilterMode;
+    hipTexRefSetAddressMode;
+    hipTexRefSetArray;
+    hipTexRefSetAddress;
+    hipTexRefSetAddress2D;
+    hipCreateChannelDesc*;
+    ihipBindTextureToArrayImpl*;
+    hipHccGetAccelerator*;
+    hipHccGetAcceleratorView*;
+    hipCreateSurfaceObject*;
+    hipDestroySurfaceObject*;
+    };
 local:
     *;
 };
