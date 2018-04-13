@@ -7,28 +7,25 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <iostream>
 
 using namespace std;
 
 hsa_isa_t hip_impl::triple_to_hsa_isa(const std::string& triple) {
-    static constexpr const char prefix[] = "amdgcn-amd-amdhsa--gfx";
-    static constexpr size_t prefix_sz = sizeof(prefix) - 1;
-    hsa_isa_t r = {};
+    static constexpr const char oldPrefix[] = "hcc-amdgcn--amdhsa-gfx";
+    static constexpr const char newPrefix[] = "amdgcn-amd-amdhsa--gfx";
 
-    auto idx = triple.find(prefix);
-
-    if (idx != string::npos) {
-        idx += prefix_sz;
-        string tmp = "amdgcn-amd-amdhsa--gfx";
-        while (idx != triple.size()) {
-            tmp.push_back(triple[idx++]);
-        }
-
-        hsa_isa_from_name(tmp.c_str(), &r);
+    std::string validatedTriple = triple;
+    if ((triple.size() >= sizeof(oldPrefix) - 1) && std::equal(oldPrefix, oldPrefix + sizeof(oldPrefix) - 1, triple.c_str())) {
+        // Support backwards compatibility with old naming.
+        validatedTriple = newPrefix + triple.substr(sizeof(oldPrefix) - 1);
     }
 
-    return r;
+    hsa_isa_t Isa = {0};
+    if (HSA_STATUS_SUCCESS != hsa_isa_from_name(validatedTriple.c_str(), &Isa)) {
+        Isa.handle = 0;
+    }
+
+    return Isa;
 }
 
 // DATA - STATICS
