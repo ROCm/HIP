@@ -485,7 +485,7 @@ hipError_t hipModuleLoad(hipModule_t* module, const char* fname) {
 
     vector<char> tmp{istreambuf_iterator<char>{file}, istreambuf_iterator<char>{}};
 
-    return hipModuleLoadData(module, tmp.data());
+    return ihipLogStatus(hipModuleLoadData(module, tmp.data()));
 }
 
 hipError_t hipModuleLoadData(hipModule_t* module, const void* image) {
