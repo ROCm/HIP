@@ -11,25 +11,27 @@
 using namespace std;
 
 hsa_isa_t hip_impl::triple_to_hsa_isa(const std::string& triple) {
-    static constexpr const char prefix[] = "hcc-amdgcn--amdhsa-gfx";
-    static constexpr size_t prefix_sz = sizeof(prefix) - 1;
+    static constexpr const char OffloadKind[] = "hcc-";
+    hsa_isa_t Isa = {0};
 
-    hsa_isa_t r = {};
-
-    auto idx = triple.find(prefix);
-
-    if (idx != string::npos) {
-        idx += prefix_sz;
-        string tmp = "AMD:AMDGPU";
-        while (idx != triple.size()) {
-            tmp.push_back(':');
-            tmp.push_back(triple[idx++]);
-        }
-
-        hsa_isa_from_name(tmp.c_str(), &r);
+    if ((triple.size() < sizeof(OffloadKind) - 1) || !std::equal(triple.c_str(),  triple.c_str() + sizeof(OffloadKind) - 1, triple.c_str())) {
+        return Isa;
     }
 
-    return r;
+    std::string validatedTriple = triple.substr(sizeof(OffloadKind) - 1);
+    static constexpr const char oldPrefix[] = "amdgcn--amdhsa-gfx";
+    static constexpr const char newPrefix[] = "amdgcn-amd-amdhsa--gfx";
+
+    if ((triple.size() >= sizeof(oldPrefix) - 1) && std::equal(oldPrefix, oldPrefix + sizeof(oldPrefix) - 1, triple.c_str())) {
+        // Support backwards compatibility with old naming.
+        validatedTriple = newPrefix + triple.substr(sizeof(oldPrefix) - 1);
+    }
+
+    if (HSA_STATUS_SUCCESS != hsa_isa_from_name(validatedTriple.c_str(), &Isa)) {
+        Isa.handle = 0;
+    }
+
+    return Isa;
 }
 
 // DATA - STATICS
