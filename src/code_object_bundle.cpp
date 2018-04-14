@@ -14,23 +14,37 @@ hsa_isa_t hip_impl::triple_to_hsa_isa(const std::string& triple) {
     static constexpr const char OffloadKind[] = "hcc-";
     hsa_isa_t Isa = {0};
 
-    if ((triple.size() < sizeof(OffloadKind) - 1) || !std::equal(triple.c_str(),  triple.c_str() + sizeof(OffloadKind) - 1, triple.c_str())) {
+    // Check that Triple larger than hcc- and the prefix matches hcc-
+    if ((triple.size() < sizeof(OffloadKind) - 1) || !std::equal(triple.c_str(),  triple.c_str() + sizeof(OffloadKind) - 1, OffloadKind)) {
         return Isa;
     }
 
     std::string validatedTriple = triple.substr(sizeof(OffloadKind) - 1);
-    static constexpr const char oldPrefix[] = "amdgcn--amdhsa-gfx";
     static constexpr const char newPrefix[] = "amdgcn-amd-amdhsa--gfx";
 
-    if ((triple.size() >= sizeof(oldPrefix) - 1) && std::equal(oldPrefix, oldPrefix + sizeof(oldPrefix) - 1, triple.c_str())) {
-        // Support backwards compatibility with old naming.
-        validatedTriple = newPrefix + triple.substr(sizeof(oldPrefix) - 1);
+    // Check if the target triple matches the new prefix
+    if ((validatedTriple.size() >= sizeof(newPrefix) - 1) && std::equal(validatedTriple.c_str(), validatedTriple.c_str() + sizeof(newPrefix) - 1, newPrefix)) {
+        if (HSA_STATUS_SUCCESS != hsa_isa_from_name(validatedTriple.c_str(), &Isa)) {
+            // If new prefix fails, try older prefix incase of older ROCR
+            // Supports backwards compatibility with old naming
+            Isa = {};
+            auto it = std::find_if(
+                validatedTriple.cbegin(),
+                validatedTriple.cend(),
+                [](char x) { return std::isdigit(x); });
+            if (std::equal(validatedTriple.cbegin(), it, newPrefix)) {
+                std::string tmp = "AMD:AMDGPU";
+                while (it != validatedTriple.cend()) {
+                    tmp.push_back(':');
+                    tmp.push_back(*it++);
+                }
+                if (HSA_STATUS_SUCCESS != hsa_isa_from_name(tmp.c_str(), &Isa)) {
+                    // If it also fails, then unsupported target triple
+                    Isa.handle = 0;
+                }
+            }
+        }
     }
-
-    if (HSA_STATUS_SUCCESS != hsa_isa_from_name(validatedTriple.c_str(), &Isa)) {
-        Isa.handle = 0;
-    }
-
     return Isa;
 }
 
