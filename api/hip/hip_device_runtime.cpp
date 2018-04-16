@@ -382,13 +382,17 @@ hipError_t hipGetDevice ( int* deviceId ) {
   HIP_INIT_API(deviceId);
 
   if (deviceId != nullptr) {
-    // this needs to return default device. For now return 0 always
-    *deviceId = 0;
+    for (unsigned int i = 0; i < g_devices.size(); i++) {
+      if (g_devices[i] == g_context) {
+        *deviceId = i;
+        return hipSuccess;
+      }
+    }
   } else {
     return hipErrorInvalidValue;
   }
 
-  return hipSuccess;
+  return hipErrorUnknown;
 }
 
 hipError_t hipGetDeviceCount ( int* count ) {
@@ -420,9 +424,12 @@ hipError_t hipIpcOpenEventHandle ( hipEvent_t* event, hipIpcEventHandle_t handle
 hipError_t hipSetDevice ( int  device ) {
   HIP_INIT_API(device);
 
-  assert(0 && "Unimplemented");
+  if (static_cast<unsigned int>(device) < g_devices.size()) {
+    g_context = g_devices[device];
 
-  return hipErrorUnknown;
+    return hipSuccess;
+  }
+  return hipErrorInvalidValue;
 }
 
 hipError_t hipSetDeviceFlags ( unsigned int  flags ) {

@@ -24,13 +24,123 @@ THE SOFTWARE.
 #include <hip/hcc_detail/texture_types.h>
 #include "hip_internal.hpp"
 
+void getChannelOrderAndType(const hipChannelFormatDesc& desc, enum hipTextureReadMode readMode,
+                            cl_channel_order* channelOrder, cl_channel_type* channelType) {
+    if (desc.x != 0 && desc.y != 0 && desc.z != 0 && desc.w != 0) {
+        *channelOrder = CL_RGBA;
+    } else if (desc.x != 0 && desc.y != 0 && desc.z != 0 && desc.w == 0) {
+        *channelOrder = CL_RGB;
+    } else if (desc.x != 0 && desc.y != 0 && desc.z == 0 && desc.w == 0) {
+        *channelOrder = CL_RG;
+    } else if (desc.x != 0 && desc.y == 0 && desc.z == 0 && desc.w == 0) {
+        *channelOrder = CL_R;
+    } else {
+    }
+
+    switch (desc.f) {
+        case hipChannelFormatKindUnsigned:
+            switch (desc.x) {
+                case 32:
+                    *channelType = CL_UNSIGNED_INT32;
+                    break;
+                case 16:
+                    *channelType = readMode == hipReadModeNormalizedFloat
+                                       ? CL_UNORM_INT16
+                                       : CL_UNSIGNED_INT16;
+                    break;
+                case 8:
+                    *channelType = readMode == hipReadModeNormalizedFloat
+                                       ? CL_UNORM_INT8
+                                       : CL_UNSIGNED_INT8;
+                    break;
+                default:
+                    *channelType = CL_UNSIGNED_INT32;
+            }
+            break;
+        case hipChannelFormatKindSigned:
+            switch (desc.x) {
+                case 32:
+                    *channelType = CL_SIGNED_INT32;
+                    break;
+                case 16:
+                    *channelType = readMode == hipReadModeNormalizedFloat
+                                       ? CL_SNORM_INT16
+                                       : CL_SIGNED_INT16;
+                    break;
+                case 8:
+                    *channelType = readMode == hipReadModeNormalizedFloat
+                                       ? CL_SNORM_INT8
+                                       : CL_SIGNED_INT8;
+                    break;
+                default:
+                    *channelType = CL_SIGNED_INT32;
+            }
+            break;
+        case hipChannelFormatKindFloat:
+            switch (desc.x) {
+                case 32:
+                    *channelType = CL_FLOAT;
+                    break;
+                case 16:
+                    *channelType = CL_HALF_FLOAT;
+                    break;
+                case 8:
+                    break;
+                default:
+                    *channelType = CL_FLOAT;
+            }
+            break;
+        case hipChannelFormatKindNone:
+        default:
+            break;
+    }
+}
 
 hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResourceDesc* pResDesc,
                                   const hipTextureDesc* pTexDesc,
                                   const hipResourceViewDesc* pResViewDesc) {
   HIP_INIT_API(pTexObject, pResDesc, pTexDesc, pResViewDesc);
 
-  assert(0 && "Unimplemented");
+  if (!g_context->devices()[0]->info().imageSupport_) {
+    return hipErrorInvalidValue;
+  }
+
+  amd::Image* image = nullptr;
+
+  cl_image_format image_format;
+  getChannelOrderAndType(pResDesc->res.pitch2D.desc, pTexDesc->readMode,
+    &image_format.image_channel_order, &image_format.image_channel_data_type);
+
+  const amd::Image::Format imageFormat(image_format);
+
+  amd::Memory* memory = nullptr;
+
+  switch (pResDesc->resType) {
+    case hipResourceTypeArray:
+      assert(0);
+      break;
+    case hipResourceTypeMipmappedArray:
+      assert(0);
+      break;
+    case hipResourceTypeLinear:
+      assert(pResViewDesc == nullptr);
+
+      memory = amd::SvmManager::FindSvmBuffer(pResDesc->res.linear.devPtr);
+      image = new (*g_context) amd::Image(*memory->asBuffer(), CL_MEM_OBJECT_IMAGE1D, memory->getMemFlags(), imageFormat,
+                                          pResDesc->res.linear.sizeInBytes / imageFormat.getElementSize(), 1, 1,
+                                          pResDesc->res.linear.sizeInBytes, 0);
+      break;
+    case hipResourceTypePitch2D:
+      assert(pResViewDesc == nullptr);
+
+      memory = amd::SvmManager::FindSvmBuffer(pResDesc->res.pitch2D.devPtr);
+      image = new (*g_context) amd::Image(*memory->asBuffer(), CL_MEM_OBJECT_IMAGE2D, memory->getMemFlags(), imageFormat,
+                                          pResDesc->res.pitch2D.width, pResDesc->res.pitch2D.height, 1,
+                                          pResDesc->res.pitch2D.pitchInBytes, 0);
+      break;
+    default: return hipErrorInvalidValue;
+  }
+  *pTexObject = reinterpret_cast<hipTextureObject_t>(as_cl(image));
 
   return hipErrorUnknown;
 }
@@ -38,9 +148,9 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
 hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject) {
   HIP_INIT_API(textureObject);
 
-  assert(0 && "Unimplemented");
+  as_amd(reinterpret_cast<cl_mem>(textureObject))->release();
 
-  return hipErrorUnknown;
+  return hipSuccess;
 }
 
 hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDesc,
