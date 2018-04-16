@@ -1615,6 +1615,12 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
     HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, value, sizeBytes, stream);
 
     hipError_t e = hipSuccess;
+	if(dst==NULL || dst==0)
+	  {
+	    e=hipErrorInvalidValue;
+	    return ihipLogStatus(e);
+	  }
+
 
     stream =  ihipSyncAndResolveStream(stream);
 
