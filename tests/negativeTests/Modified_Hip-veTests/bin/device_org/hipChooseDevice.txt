@@ -1,0 +1,40 @@
+Result: 
+Error: hipErrorInvalidValue in hipChooseDevice.cpp
+occurred at  CHECK_ERRORS(hipChooseDevice(NULL, NULL)); //crash
+
+
+Result: 
+Error: hipSuccess in hipChooseDevice.cpp
+occurred at  CHECK_ERRORS(hipChooseDevice(device_ptr, ptr)); //worksFine
+
+
+Result: 
+Error: hipErrorInvalidValue in hipChooseDevice.cpp
+occurred at   CHECK_ERRORS(hipChooseDevice(NULL, &prop)); //crash
+
+
+Result: 
+Error: hipErrorInvalidValue in hipChooseDevice.cpp
+occurred at   CHECK_ERRORS(hipChooseDevice(NULL, ptr)); //crash
+
+
+Result: 
+Error: hipErrorInvalidValue in hipChooseDevice.cpp
+occurred at   CHECK_ERRORS(hipChooseDevice(&device, NULL));// crash
+
+
+Result: 
+Error: hipSuccess in hipChooseDevice.cpp
+occurred at   CHECK_ERRORS(hipChooseDevice(device_ptr, ptr));
+
+
+Result: 
+Error: hipErrorInvalidValue in hipChooseDevice.cpp
+occurred at  CHECK_ERRORS(hipChooseDevice(device_ptr, nullptr));
+
+
+Result: 
+Error: hipSuccess in hipChooseDevice.cpp
+occurred at   CHECK_ERRORS(hipChooseDevice(device_ptr, ptr));
+
+

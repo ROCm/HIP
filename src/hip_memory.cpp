@@ -1551,6 +1551,12 @@ typedef enum ihipMemsetDataType {
 hipError_t ihipMemset(void* dst, int  value, size_t sizeBytes, hipStream_t stream, enum ihipMemsetDataType copyDataType  )
 {
     hipError_t e = hipSuccess;
+	if(dst==NULL || dst==0)
+	  {
+	    e=hipErrorInvalidValue;
+	    return ihipLogStatus(e);
+	  }
+
 
     if (stream) {
         if(copyDataType == ihipMemsetDataTypeChar){

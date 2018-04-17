@@ -1,0 +1,52 @@
+01:00.0 VGA compatible controller: Advanced Micro Devices, Inc. [AMD/ATI] Fiji [Radeon R9 FURY / NANO Series] (rev ca) (prog-if 00 [VGA controller])
+	Subsystem: Advanced Micro Devices, Inc. [AMD/ATI] Radeon R9 FURY X / NANO
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Interrupt: pin A routed to IRQ 28
+	Region 0: Memory at b00000000 (64-bit, prefetchable) [size=4G]
+	Region 2: Memory at c00000000 (64-bit, prefetchable) [size=2M]
+	Region 4: I/O ports at 2000 [size=256]
+	Region 5: Memory at dfd40000 (32-bit, non-prefetchable) [size=256K]
+	Expansion ROM at dfd20000 [disabled] [size=128K]
+	Capabilities: <access denied>
+	Kernel driver in use: amdgpu
+	Kernel modules: amdgpu
+
+01:00.1 Audio device: Advanced Micro Devices, Inc. [AMD/ATI] Fiji HDMI/DP Audio [Radeon R9 Nano / FURY/FURY X]
+	Subsystem: Advanced Micro Devices, Inc. [AMD/ATI] Fiji HDMI/DP Audio [Radeon R9 Nano / FURY/FURY X]
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Interrupt: pin B routed to IRQ 32
+	Region 0: Memory at dfd00000 (64-bit, non-prefetchable) [size=16K]
+	Capabilities: <access denied>
+	Kernel driver in use: snd_hda_intel
+	Kernel modules: snd_hda_intel
+
+02:00.0 VGA compatible controller: Advanced Micro Devices, Inc. [AMD/ATI] Ellesmere [Radeon RX 470/480/570/580] (rev c7) (prog-if 00 [VGA controller])
+	Subsystem: XFX Pine Group Inc. Radeon RX 480
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Interrupt: pin A routed to IRQ 29
+	Region 0: Memory at 800000000 (64-bit, prefetchable) [size=8G]
+	Region 2: Memory at a00000000 (64-bit, prefetchable) [size=2M]
+	Region 4: I/O ports at 3000 [size=256]
+	Region 5: Memory at dfc40000 (32-bit, non-prefetchable) [size=256K]
+	Expansion ROM at dfc20000 [disabled] [size=128K]
+	Capabilities: <access denied>
+	Kernel driver in use: amdgpu
+	Kernel modules: amdgpu
+
+02:00.1 Audio device: Advanced Micro Devices, Inc. [AMD/ATI] Ellesmere [Radeon RX 580]
+	Subsystem: XFX Pine Group Inc. Device aaf0
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Interrupt: pin B routed to IRQ 33
+	Region 0: Memory at dfc00000 (64-bit, non-prefetchable) [size=16K]
+	Capabilities: <access denied>
+	Kernel driver in use: snd_hda_intel
+	Kernel modules: snd_hda_intel
+
