@@ -429,30 +429,27 @@ string code_object_blob_for_agent(const void* maybe_bundled_code, hsa_agent_t ag
 }  // namespace
 
 hipError_t ihipModuleGetFunction(hipFunction_t* func, hipModule_t hmod, const char* name) {
-    HIP_INIT_API(func, hmod, name);
 
-    if (!func || !name) return ihipLogStatus(hipErrorInvalidValue);
+    if (!func || !name) return hipErrorInvalidValue;
 
     auto ctx = ihipGetTlsDefaultCtx();
 
-    if (!ctx) return ihipLogStatus(hipErrorInvalidContext);
-
-    hipError_t ret = hipSuccess;
+    if (!ctx) return hipErrorInvalidContext;
 
     *func = new ihipModuleSymbol_t;
 
-    if (!*func) return ihipLogStatus(hipErrorInvalidValue);
+    if (!*func) return hipErrorInvalidValue;
 
     auto kernel = find_kernel_by_name(hmod->executable, name);
 
-    if (kernel.handle == 0u) return ihipLogStatus(hipErrorNotFound);
+    if (kernel.handle == 0u) return hipErrorNotFound;
 
     (*func)->_object = kernel_object(kernel);
     (*func)->_groupSegmentSize = group_size(kernel);
     (*func)->_privateSegmentSize = private_size(kernel);
     (*func)->_name = name;
 
-    return ihipLogStatus(hipSuccess);
+    return hipSuccess;
 }
 
 hipError_t hipModuleGetFunction(hipFunction_t* hfunc, hipModule_t hmod, const char* name) {
@@ -474,6 +471,31 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t h
     return ihipLogStatus(r);
 }
 
+hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
+
+    if (!module) return hipErrorInvalidValue;
+
+    *module = new ihipModule_t;
+
+    auto ctx = ihipGetTlsDefaultCtx();
+    if (!ctx) return hipErrorInvalidContext;
+
+    hsa_executable_create_alt(HSA_PROFILE_FULL, HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT, nullptr,
+                              &(*module)->executable);
+
+    auto tmp = code_object_blob_for_agent(image, this_agent());
+
+    (*module)->executable = hip_impl::load_executable(
+        tmp.empty() ? read_elf_file_as_string(image) : tmp, (*module)->executable, this_agent());
+    
+    return (*module)->executable.handle ? hipSuccess : hipErrorUnknown;
+}
+
+hipError_t hipModuleLoadData(hipModule_t* module, const void* image) {
+    HIP_INIT_API(module, image);
+    return ihipLogStatus(ihipModuleLoadData(module,image));
+}
+
 hipError_t hipModuleLoad(hipModule_t* module, const char* fname) {
     HIP_INIT_API(module, fname);
 
@@ -485,33 +507,13 @@ hipError_t hipModuleLoad(hipModule_t* module, const char* fname) {
 
     vector<char> tmp{istreambuf_iterator<char>{file}, istreambuf_iterator<char>{}};
 
-    return hipModuleLoadData(module, tmp.data());
-}
-
-hipError_t hipModuleLoadData(hipModule_t* module, const void* image) {
-    HIP_INIT_API(module, image);
-
-    if (!module) return ihipLogStatus(hipErrorInvalidValue);
-
-    *module = new ihipModule_t;
-
-    auto ctx = ihipGetTlsDefaultCtx();
-    if (!ctx) return ihipLogStatus(hipErrorInvalidContext);
-
-    hsa_executable_create_alt(HSA_PROFILE_FULL, HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT, nullptr,
-                              &(*module)->executable);
-
-    auto tmp = code_object_blob_for_agent(image, this_agent());
-
-    (*module)->executable = hip_impl::load_executable(
-        tmp.empty() ? read_elf_file_as_string(image) : tmp, (*module)->executable, this_agent());
-
-    return ihipLogStatus((*module)->executable.handle ? hipSuccess : hipErrorUnknown);
+    return ihipLogStatus(ihipModuleLoadData(module, tmp.data()));
 }
 
 hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* image, unsigned int numOptions,
                                hipJitOption* options, void** optionValues) {
-    return hipModuleLoadData(module, image);
+    HIP_INIT_API(module, image, numOptions, options, optionValues);
+    return ihipLogStatus(ihipModuleLoadData(module, image));
 }
 
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name) {
