@@ -70,11 +70,11 @@ namespace hip_impl
     };
 
     const std::unordered_map<
-        hsa_agent_t, std::vector<hsa_executable_t>>& executables();
+        hsa_agent_t, std::vector<hsa_executable_t>>& executables(bool rebuild = false);
     const std::unordered_map<
         std::uintptr_t,
-        std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>& functions();
-    const std::unordered_map<std::uintptr_t, std::string>& function_names();
+        std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>& functions(bool rebuild = false);
+    const std::unordered_map<std::uintptr_t, std::string>& function_names(bool rebuild = false);
     std::unordered_map<std::string, void*>& globals();
 
     hsa_executable_t load_executable(

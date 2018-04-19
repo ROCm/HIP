@@ -210,14 +210,19 @@ namespace
         return r;
     }
 
-    const unordered_map<hsa_isa_t, vector<vector<uint8_t>>>& code_object_blobs()
+    const unordered_map<hsa_isa_t, vector<vector<uint8_t>>>& code_object_blobs(bool rebuild = false)
     {
         static unordered_map<hsa_isa_t, vector<vector<uint8_t>>> r;
         static once_flag f;
 
-        call_once(f, []() {
+        auto cons = [rebuild]() {
             static vector<vector<uint8_t>> blobs{
                 code_object_blob_for_process()};
+
+            if (rebuild) {
+                blobs.clear();
+                blobs.push_back(code_object_blob_for_process());
+            }
 
             dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void*) {
                 elfio tmp;
@@ -241,7 +246,12 @@ namespace
                     }
                 }
             }
-        });
+        };
+
+        call_once(f, cons);
+        if (rebuild) {
+            cons();
+        }
 
         return r;
     }
@@ -267,14 +277,14 @@ namespace
         return r;
     }
 
-    const vector<pair<uintptr_t, string>>& function_names_for_process()
+    const vector<pair<uintptr_t, string>>& function_names_for_process(bool rebuild = false)
     {
         static constexpr const char self[] = "/proc/self/exe";
 
         static vector<pair<uintptr_t, string>> r;
         static once_flag f;
 
-        call_once(f, []() {
+        auto cons = []() {
             elfio reader;
 
             if (!reader.load(self)) {
@@ -287,17 +297,27 @@ namespace
             });
 
             if (symtab) r = function_names_for(reader, symtab);
-        });
+        };
+
+        call_once(f, cons);
+        if (rebuild) {
+            cons();
+        }
 
         return r;
     }
 
-    const unordered_map<string, vector<hsa_executable_symbol_t>>& kernels()
+    const unordered_map<string, vector<hsa_executable_symbol_t>>& kernels(bool rebuild = false)
     {
         static unordered_map<string, vector<hsa_executable_symbol_t>> r;
         static once_flag f;
 
-        call_once(f, []() {
+        auto cons = [rebuild]() {
+            if (rebuild) {
+                r.clear();
+                executables(rebuild);
+            }
+
             static const auto copy_kernels = [](
                 hsa_executable_t, hsa_agent_t, hsa_executable_symbol_t s, void*) {
                 if (type(s) == HSA_SYMBOL_KIND_KERNEL) r[name(s)].push_back(s);
@@ -314,7 +334,12 @@ namespace
                         nullptr);
                 }
             }
-        });
+        };
+
+        call_once(f, cons);
+        if (rebuild) {
+            cons();
+        }
 
         return r;
     }
@@ -355,13 +380,18 @@ namespace
 
 namespace hip_impl
 {
-    const unordered_map<hsa_agent_t, vector<hsa_executable_t>>& executables()
+    const unordered_map<hsa_agent_t, vector<hsa_executable_t>>& executables(bool rebuild)
     {   // TODO: This leaks the hsa_executable_ts, it should use RAII.
         static unordered_map<hsa_agent_t, vector<hsa_executable_t>> r;
         static once_flag f;
 
-        call_once(f, []() {
+        auto cons = [rebuild]() {
             static const auto accelerators = hc::accelerator::get_all();
+
+            if (rebuild) {
+                r.clear();
+                code_object_blobs(rebuild);
+            }
 
             for (auto&& acc : accelerators) {
                 auto agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
@@ -395,19 +425,30 @@ namespace hip_impl
                     return HSA_STATUS_SUCCESS;
                 }, agent);
             }
-        });
+        };
+
+        call_once(f, cons);
+        if (rebuild) {
+            cons();
+        }
 
         return r;
     }
 
-    const unordered_map<uintptr_t, string>& function_names()
+    const unordered_map<uintptr_t, string>& function_names(bool rebuild)
     {
         static unordered_map<uintptr_t, string> r{
             function_names_for_process().cbegin(),
             function_names_for_process().cend()};
         static once_flag f;
 
-        call_once(f, []() {
+        auto cons = [rebuild]() {
+            if (rebuild) {
+                r.clear();
+                function_names_for_process(rebuild);
+                r.insert(function_names_for_process().cbegin(),
+                         function_names_for_process().cend());
+            }
             dl_iterate_phdr([](dl_phdr_info* info, size_t, void*) {
                 elfio tmp;
                 if (tmp.load(info->dlpi_name)) {
@@ -428,19 +469,31 @@ namespace hip_impl
 
                 return 0;
             }, nullptr);
-        });
+        };
+
+        call_once(f, cons);
+        if (rebuild) {
+            static mutex mtx;
+            lock_guard<mutex> lck{mtx};
+            cons();
+        }
 
         return r;
     }
 
     const unordered_map<
-        uintptr_t, vector<pair<hsa_agent_t, Kernel_descriptor>>>& functions()
+        uintptr_t, vector<pair<hsa_agent_t, Kernel_descriptor>>>& functions(bool rebuild)
     {
         static unordered_map<
             uintptr_t, vector<pair<hsa_agent_t, Kernel_descriptor>>> r;
         static once_flag f;
 
-        call_once(f, []() {
+        auto cons = [rebuild]() {
+            if (rebuild) {
+                r.clear();
+                function_names(rebuild);
+                kernels(rebuild);
+            }
             for (auto&& function : function_names()) {
                 const auto it = kernels().find(function.second);
 
@@ -456,7 +509,14 @@ namespace hip_impl
                     }
                 }
             }
-        });
+        };
+
+        call_once(f, cons);
+        if (rebuild) {
+            static mutex mtx;
+            lock_guard<mutex> lck{mtx};
+            cons();
+        }
 
         return r;
     }
