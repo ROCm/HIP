@@ -21,8 +21,10 @@ THE SOFTWARE.
 */
 
 #include <hip/hip_runtime.h>
-
 #include "hip_internal.hpp"
+#include "platform/context.hpp"
+#include "platform/command.hpp"
+#include "platform/memory.hpp"
 
 hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
@@ -119,7 +121,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
   return hipSuccess;
 }
 
-hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t stream) {
+hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream) {
   HIP_INIT_API(dst, value, sizeBytes, stream);
 
   assert(0 && "Unimplemented");
@@ -130,9 +132,36 @@ hipError_t hipMemsetAsync(void* dst, int  value, size_t sizeBytes, hipStream_t s
 hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
   HIP_INIT_API(dst, value, sizeBytes);
 
-  assert(0 && "Unimplemented");
+  amd::Device* device = g_context->devices()[0];
 
-  return hipErrorUnknown;
+  amd::HostQueue* queue = new amd::HostQueue(*g_context, *device, 0,
+                                             amd::CommandQueue::RealTimeDisabled,
+                                             amd::CommandQueue::Priority::Normal);
+  if (!queue) {
+    return hipErrorOutOfMemory;
+  }
+
+  amd::Command::EventWaitList waitList;
+  amd::Memory* memory = amd::SvmManager::FindSvmBuffer(dst);
+
+
+  amd::Coord3D fillOffset(0, 0, 0);
+  amd::Coord3D fillSize(sizeBytes, 1, 1);
+  amd::FillMemoryCommand* command =
+      new amd::FillMemoryCommand(*queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
+                                 &value, sizeof(int), fillOffset, fillSize);
+
+  if (!command) {
+    return hipErrorOutOfMemory;
+  }
+
+  command->enqueue();
+  command->awaitCompletion();
+  command->release();
+
+  queue->release();
+
+  return hipSuccess;
 }
 
 hipError_t hipMemPtrGetInfo(void *ptr, size_t *size) {
@@ -146,17 +175,21 @@ hipError_t hipMemPtrGetInfo(void *ptr, size_t *size) {
 hipError_t hipHostFree(void* ptr) {
   HIP_INIT_API(ptr);
 
-  assert(0 && "Unimplemented");
-
-  return hipErrorUnknown;
+  if (amd::SvmBuffer::malloced(ptr)) {
+    amd::SvmBuffer::free(*g_context, ptr);
+    return hipSuccess;
+  }
+  return hipErrorInvalidValue;
 }
 
 hipError_t hipFreeArray(hipArray* array) {
   HIP_INIT_API(array);
 
-  assert(0 && "Unimplemented");
-
-  return hipErrorUnknown;
+  if (amd::SvmBuffer::malloced(array->data)) {
+    amd::SvmBuffer::free(*g_context, array->data);
+    return hipSuccess;
+  }
+  return hipErrorInvalidValue;
 }
 
 hipError_t hipMemGetAddressRange(hipDeviceptr_t* pbase, size_t* psize, hipDeviceptr_t dptr) {
@@ -170,25 +203,83 @@ hipError_t hipMemGetAddressRange(hipDeviceptr_t* pbase, size_t* psize, hipDevice
 hipError_t hipMemGetInfo(size_t* free, size_t* total) {
   HIP_INIT_API(free, total);
 
-  assert(0 && "Unimplemented");
+  size_t freeMemory[2];
+  amd::Device* device = g_context->devices()[0];
+  if(!device) {
+    return hipErrorInvalidDevice;
+  }
 
-  return hipErrorUnknown;
+  if(!device->globalFreeMemory(freeMemory)) {
+    return hipErrorInvalidValue;
+  }
+
+  *free = freeMemory[0];
+  *total = device->info().globalMemSize_;
+
+return hipSuccess;
 }
+
+hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height, size_t depth,
+                           cl_mem_object_type imageType) {
+
+  amd::Device* device = g_context->devices()[0];
+
+  if ((width == 0) || (height == 0)) {
+    *ptr = nullptr;
+    return hipSuccess;
+  }
+  else if (!(device->info().image2DMaxWidth_ >= width &&
+           device->info().image2DMaxHeight_ >= height ) || (ptr == nullptr)) {
+    return hipErrorInvalidValue;
+  }
+
+  if (g_context->devices()[0]->info().maxMemAllocSize_ < (width * height)) {
+    return hipErrorOutOfMemory;
+  }
+
+  const cl_image_format image_format = { CL_R, CL_UNSIGNED_INT8 };
+  const amd::Image::Format imageFormat(image_format);
+
+  *pitch = width * imageFormat.getElementSize();
+
+  size_t sizeBytes = *pitch * height;
+  *ptr = amd::SvmBuffer::malloc(*g_context, CL_MEM_SVM_FINE_GRAIN_BUFFER, sizeBytes,
+                                g_context->devices()[0]->info().memBaseAddrAlign_);
+
+  if (!*ptr) {
+    return hipErrorOutOfMemory;
+  }
+
+  return hipSuccess;
+}
+
 
 hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height) {
   HIP_INIT_API(ptr, pitch, width, height);
 
-  assert(0 && "Unimplemented");
-
-  return hipErrorUnknown;
+  return ihipMallocPitch(ptr, pitch, width, height, 1, CL_MEM_OBJECT_IMAGE2D);
 }
 
 hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
   HIP_INIT_API(pitchedDevPtr, &extent);
 
-  assert(0 && "Unimplemented");
+  size_t pitch = 0;
 
-  return hipErrorUnknown;
+  if (pitchedDevPtr == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
+  hipError_t status = hipSuccess;
+  status = ihipMallocPitch(&pitchedDevPtr->ptr, &pitch, extent.width, extent.height, extent.depth,
+                           CL_MEM_OBJECT_IMAGE3D);
+
+  if (status == hipSuccess) {
+        pitchedDevPtr->pitch = pitch;
+        pitchedDevPtr->xsize = extent.width;
+        pitchedDevPtr->ysize = extent.height;
+  }
+
+  return status;
 }
 
 hipError_t hipArrayCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray) {
