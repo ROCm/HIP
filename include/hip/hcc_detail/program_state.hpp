@@ -75,7 +75,7 @@ namespace hip_impl
         std::uintptr_t,
         std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>& functions(bool rebuild = false);
     const std::unordered_map<std::uintptr_t, std::string>& function_names(bool rebuild = false);
-    std::unordered_map<std::string, void*>& globals();
+    std::unordered_map<std::string, void*>& globals(bool rebuild = false);
 
     hsa_executable_t load_executable(
         const std::string& file,
