@@ -42,6 +42,9 @@ THE SOFTWARE.
 #include <hip/hcc_detail/hip_texture_types.h>
 #include <hip/hcc_detail/hip_surface_types.h>
 
+#define DEPRECATED(msg, func) func __attribute__ ((deprecated(msg)))
+#define DEPRECATED_MSG "This API is marked as deprecated and may not be supported in future releases.For more details please refer https://github.com/ROCm-Developer-Tools/HIP/tree/master/docs/markdown/hip_deprecated_api_list"
+
 #if defined(__HCC__) && (__hcc_workweek__ < 16155)
 #error("This version of HIP requires a newer version of HCC.");
 #endif
@@ -1828,7 +1831,7 @@ hipError_t hipInit(unsigned int flags);
  * @see hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxPushCurrent,
  * hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxCreate(hipCtx_t* ctx, unsigned int flags, hipDevice_t device);
+DEPRECATED(DEPRECATED_MSG,hipError_t hipCtxCreate(hipCtx_t* ctx, unsigned int flags, hipDevice_t device));
 
 /**
  * @brief Destroy a HIP context.
@@ -1840,7 +1843,7 @@ hipError_t hipCtxCreate(hipCtx_t* ctx, unsigned int flags, hipDevice_t device);
  * @see hipCtxCreate, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,hipCtxSetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
  */
-hipError_t hipCtxDestroy(hipCtx_t ctx);
+DEPRECATED(DEPRECATED_MSG,hipError_t hipCtxDestroy(hipCtx_t ctx));
 
 /**
  * @brief Pop the current/default context and return the popped context.
@@ -1852,7 +1855,7 @@ hipError_t hipCtxDestroy(hipCtx_t ctx);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxSetCurrent, hipCtxGetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
+DEPRECATED(DEPRECATED_MSG,hipError_t hipCtxPopCurrent(hipCtx_t* ctx));
 
 /**
  * @brief Push the context to be set as current/ default context
@@ -1864,7 +1867,7 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
  */
-hipError_t hipCtxPushCurrent(hipCtx_t ctx);
+DEPRECATED(DEPRECATED_MSG,hipError_t hipCtxPushCurrent(hipCtx_t ctx));
 
 /**
  * @brief Set the passed context as current/default
@@ -1876,7 +1879,7 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
  */
-hipError_t hipCtxSetCurrent(hipCtx_t ctx);
+DEPRECATED(DEPRECATED_MSG,hipError_t hipCtxSetCurrent(hipCtx_t ctx));
 
 /**
  * @brief Get the handle of the current/ default context
@@ -1888,7 +1891,7 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetDevice, hipCtxGetFlags, hipCtxPopCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
+DEPRECATED(DEPRECATED_MSG,hipError_t hipCtxGetCurrent(hipCtx_t* ctx));
 
 /**
  * @brief Get the handle of the device associated with current/default context
@@ -1901,7 +1904,7 @@ hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize
  */
 
-hipError_t hipCtxGetDevice(hipDevice_t* device);
+DEPRECATED(DEPRECATED_MSG,hipError_t hipCtxGetDevice(hipDevice_t* device));
 
 /**
  * @brief Returns the approximate HIP api version.
@@ -1920,7 +1923,7 @@ hipError_t hipCtxGetDevice(hipDevice_t* device);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetDevice, hipCtxGetFlags, hipCtxPopCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion);
+DEPRECATED(DEPRECATED_MSG,hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion));
 
 /**
  * @brief Set Cache configuration for a specific function
@@ -1935,7 +1938,7 @@ hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig);
+DEPRECATED(DEPRECATED_MSG,hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig));
 
 /**
  * @brief Set L1/Shared cache partition.
@@ -1950,7 +1953,7 @@ hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig);
+DEPRECATED(DEPRECATED_MSG,hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig));
 
 /**
  * @brief Set Shared memory bank configuration.
@@ -1965,7 +1968,7 @@ hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config);
+DEPRECATED(DEPRECATED_MSG,hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config));
 
 /**
  * @brief Get Shared memory bank configuration.
@@ -1980,7 +1983,7 @@ hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig);
+DEPRECATED(DEPRECATED_MSG,hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig));
 
 /**
  * @brief Blocks until the default context has completed all preceding requested tasks.
@@ -1993,7 +1996,7 @@ hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxGetDevice
  */
-hipError_t hipCtxSynchronize(void);
+DEPRECATED(DEPRECATED_MSG,hipError_t hipCtxSynchronize(void));
 
 /**
  * @brief Return flags used for creating default context.
@@ -2005,7 +2008,7 @@ hipError_t hipCtxSynchronize(void);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxGetFlags(unsigned int* flags);
+DEPRECATED(DEPRECATED_MSG,hipError_t hipCtxGetFlags(unsigned int* flags));
 
 /**
  * @brief Enables direct access to memory allocations in a peer context.
@@ -2026,7 +2029,7 @@ hipError_t hipCtxGetFlags(unsigned int* flags);
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning PeerToPeer support is experimental.
  */
-hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags);
+DEPRECATED(DEPRECATED_MSG,hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags));
 
 /**
  * @brief Disable direct access from current context's virtual address space to memory allocations
@@ -2044,7 +2047,7 @@ hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags);
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning PeerToPeer support is experimental.
  */
-hipError_t hipCtxDisablePeerAccess(hipCtx_t peerCtx);
+DEPRECATED(DEPRECATED_MSG,hipError_t hipCtxDisablePeerAccess(hipCtx_t peerCtx));
 
 /**
  * @brief Get the state of the primary context.
