@@ -1125,6 +1125,14 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 
     hipError_t e = hipSuccess;
 
+    if(dst==NULL || dst==0 || src==NULL || src==0)
+        {
+         e=hipErrorInvalidValue;
+        return ihipLogStatus(e);
+        }
+
+    
+    
     try {
         stream->locked_copySync(dst, src, sizeBytes, kind);
     } catch (ihipException& ex) {
