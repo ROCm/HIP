@@ -339,6 +339,12 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags) {
 // width in bytes
 hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height, size_t depth) {
     hipError_t hip_status = hipSuccess;
+	if(ptr==NULL || ptr==0)
+	{
+	hip_status=hipErrorInvalidValue;
+	return hip_status;
+	}
+	
     // hardcoded 128 bytes
     *pitch = ((((int)width - 1) / 128) + 1) * 128;
     const size_t sizeBytes = (*pitch) * height;
