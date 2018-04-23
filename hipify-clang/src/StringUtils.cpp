@@ -8,7 +8,7 @@ llvm::StringRef unquoteStr(llvm::StringRef s) {
     return s;
 }
 
-void removePrefixIfPresent(std::string& s, std::string prefix) {
+void removePrefixIfPresent(std::string &s, std::string prefix) {
     if (s.find(prefix) != 0) {
         return;
     }
