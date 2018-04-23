@@ -201,7 +201,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
 
     execute_process(COMMAND ${HCC_HOME}/bin/hcc-config --ldflags OUTPUT_VARIABLE HCC_LD_FLAGS)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${HCC_LD_FLAGS} -Wl,-Bsymbolic")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --amdgpu-target=gfx701 --amdgpu-target=gfx801 --amdgpu-target=gfx802 --amdgpu-target=gfx803 --amdgpu-target=gfx900")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --amdgpu-target=gfx701 --amdgpu-target=gfx803 --amdgpu-target=gfx900")
     if(COMPILE_HIP_ATP_MARKER)
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L/opt/rocm/profiler/CXLActivityLogger/bin/x86_64 -lCXLActivityLogger")
     endif()
