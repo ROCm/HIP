@@ -272,6 +272,8 @@ void hipLaunchKernelGGLImpl(
   uint32_t sharedMemBytes,
   hipStream_t stream,
   void** kernarg) {
+
+  assert(0 && "Unimplemented");
 }
 
 }

@@ -349,9 +349,9 @@ hipError_t hipDeviceGetStreamPriorityRange ( int* leastPriority, int* greatestPr
 hipError_t hipDeviceReset ( void ) {
   HIP_INIT_API();
 
-  assert(0 && "Unimplemented");
+  /* FIXME */
 
-  return hipErrorUnknown;
+  return hipSuccess;
 }
 
 hipError_t hipDeviceSetCacheConfig ( hipFuncCache_t cacheConfig ) {
@@ -429,13 +429,21 @@ hipError_t hipSetDevice ( int  device ) {
 
     return hipSuccess;
   }
-  return hipErrorInvalidValue;
+  return hipErrorInvalidDevice;
 }
 
 hipError_t hipSetDeviceFlags ( unsigned int  flags ) {
   HIP_INIT_API(flags);
 
-  assert(0 && "Unimplemented");
+  /* FIXME */
+  /* Not all of Ctx may be implemented */
+
+  unsigned supportedFlags =
+      hipDeviceScheduleMask | hipDeviceMapHost | hipDeviceLmemResizeToMax;
+
+  if (flags & (~supportedFlags)) {
+    return hipErrorInvalidValue;
+  }
 
   return hipSuccess;
 }
