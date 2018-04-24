@@ -56,6 +56,9 @@ __device__ float expm1f(float x) { return hc::precise_math::expm1f(x); }
 __device__ int abs(int x) {
     return x >= 0 ? x : -x;  // TODO - optimize with OCML
 }
+__device__ long long abs(long long x) {
+    return x >= 0 ? x : -x;  
+}
 __device__ float fabsf(float x) { return hc::precise_math::fabsf(x); }
 __device__ float fdimf(float x, float y) { return hc::precise_math::fdimf(x, y); }
 __device__ float fdividef(float x, float y) { return x / y; }
@@ -220,14 +223,7 @@ __device__ double j0(double x) { return __hip_j0(x); }
 __device__ double j1(double x) { return __hip_j1(x); }
 __device__ double jn(int n, double x) { return __hip_jn(n, x); }
 __device__ double ldexp(double x, int exp) { return hc::precise_math::ldexp(x, exp); }
-__device__ double lgamma(double x) {
-    double val = 0.0;
-    double y = x - 1;
-    while (y > 0) {
-        val += log(y--);
-    }
-    return val;
-}
+__device__ double lgamma(double x) { return hc::precise_math::lgamma(x); }
 __device__ long long int llrint(double x) {
     long long int y = hc::precise_math::round(x);
     return y;
