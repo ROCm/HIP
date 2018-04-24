@@ -26,6 +26,9 @@ THE SOFTWARE.
 #include "platform/command.hpp"
 #include "platform/memory.hpp"
 
+extern void getChannelOrderAndType(const hipChannelFormatDesc& desc, enum hipTextureReadMode readMode,
+                                    cl_channel_order* channelOrder, cl_channel_type* channelType);
+
 hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
   if (sizeBytes == 0) {
@@ -167,9 +170,15 @@ hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
 hipError_t hipMemPtrGetInfo(void *ptr, size_t *size) {
   HIP_INIT_API(ptr, size);
 
-  assert(0 && "Unimplemented");
+  amd::Memory* svmMem = amd::SvmManager::FindSvmBuffer(ptr);
 
-  return hipErrorUnknown;
+  if (svmMem == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
+  *size = svmMem->getSize();
+
+  return hipSuccess;
 }
 
 hipError_t hipHostFree(void* ptr) {
@@ -195,9 +204,18 @@ hipError_t hipFreeArray(hipArray* array) {
 hipError_t hipMemGetAddressRange(hipDeviceptr_t* pbase, size_t* psize, hipDeviceptr_t dptr) {
   HIP_INIT_API(pbase, psize, dptr);
 
-  assert(0 && "Unimplemented");
+  // Since we are using SVM buffer DevicePtr and HostPtr is the same
+  void* ptr = dptr;
+  amd::Memory* svmMem = amd::SvmManager::FindSvmBuffer(ptr);
 
-  return hipErrorUnknown;
+  if (svmMem == nullptr) {
+    return hipErrorInvalidDevicePointer;
+  }
+
+  *pbase = ptr;
+  *psize = svmMem->getSize();
+
+  return hipSuccess;
 }
 
 hipError_t hipMemGetInfo(size_t* free, size_t* total) {
@@ -220,7 +238,7 @@ return hipSuccess;
 }
 
 hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height, size_t depth,
-                           cl_mem_object_type imageType) {
+                           cl_mem_object_type imageType, const cl_image_format* image_format) {
 
   amd::Device* device = g_context->devices()[0];
 
@@ -237,17 +255,16 @@ hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t heigh
     return hipErrorOutOfMemory;
   }
 
-  const cl_image_format image_format = { CL_R, CL_UNSIGNED_INT8 };
-  const amd::Image::Format imageFormat(image_format);
+  const amd::Image::Format imageFormat(*image_format);
 
   *pitch = width * imageFormat.getElementSize();
 
-  size_t sizeBytes = *pitch * height;
+  size_t sizeBytes = *pitch * height * depth;
   *ptr = amd::SvmBuffer::malloc(*g_context, CL_MEM_SVM_FINE_GRAIN_BUFFER, sizeBytes,
                                 g_context->devices()[0]->info().memBaseAddrAlign_);
 
   if (!*ptr) {
-    return hipErrorOutOfMemory;
+    return hipErrorMemoryAllocation;
   }
 
   return hipSuccess;
@@ -257,7 +274,8 @@ hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t heigh
 hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height) {
   HIP_INIT_API(ptr, pitch, width, height);
 
-  return ihipMallocPitch(ptr, pitch, width, height, 1, CL_MEM_OBJECT_IMAGE2D);
+  const cl_image_format image_format = { CL_R, CL_UNSIGNED_INT8 };
+  return ihipMallocPitch(ptr, pitch, width, height, 1, CL_MEM_OBJECT_IMAGE2D, &image_format);
 }
 
 hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
@@ -269,9 +287,10 @@ hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
     return hipErrorInvalidValue;
   }
 
+  const cl_image_format image_format = { CL_R, CL_UNSIGNED_INT8 };
   hipError_t status = hipSuccess;
   status = ihipMallocPitch(&pitchedDevPtr->ptr, &pitch, extent.width, extent.height, extent.depth,
-                           CL_MEM_OBJECT_IMAGE3D);
+                           CL_MEM_OBJECT_IMAGE3D, &image_format);
 
   if (status == hipSuccess) {
         pitchedDevPtr->pitch = pitch;
@@ -294,18 +313,82 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
                           size_t width, size_t height, unsigned int flags) {
   HIP_INIT_API(array, desc, width, height, flags);
 
-  assert(0 && "Unimplemented");
+  if (width == 0) {
+    return hipErrorInvalidValue;
+  }
 
-  return hipErrorUnknown;
+  *array = (hipArray*)malloc(sizeof(hipArray));
+  array[0]->type = flags;
+  array[0]->width = width;
+  array[0]->height = height;
+  array[0]->depth = 1;
+  array[0]->desc = *desc;
+  array[0]->isDrv = false;
+  array[0]->textureType = hipTextureType2D;
+  void** ptr = &array[0]->data;
+
+  cl_channel_order channelOrder;
+  cl_channel_type channelType;
+  getChannelOrderAndType(*desc, hipReadModeElementType, &channelOrder, &channelType);
+
+  const cl_image_format image_format = { channelOrder, channelType };
+
+ // Dummy flags check
+  switch (flags) {
+    case hipArrayLayered:
+    case hipArrayCubemap:
+    case hipArraySurfaceLoadStore:
+    case hipArrayTextureGather:
+        assert(0 && "Unspported");
+        break;
+    case hipArrayDefault:
+    default:
+        break;
+  }
+  size_t pitch = 0;
+  hipError_t status = ihipMallocPitch(ptr, &pitch, width, height, 1, CL_MEM_OBJECT_IMAGE2D,
+                      &image_format);
+
+  return status;
 }
 
 hipError_t hipMalloc3DArray(hipArray_t* array, const struct hipChannelFormatDesc* desc,
                             struct hipExtent extent, unsigned int flags) {
   HIP_INIT_API(array, desc, &extent, flags);
 
-  assert(0 && "Unimplemented");
+  *array = (hipArray*)malloc(sizeof(hipArray));
+  array[0]->type = flags;
+  array[0]->width = extent.width;
+  array[0]->height = extent.height;
+  array[0]->depth = extent.depth;
+  array[0]->desc = *desc;
+  array[0]->isDrv = false;
+  array[0]->textureType = hipTextureType3D;
+  void** ptr = &array[0]->data;
 
-  return hipErrorUnknown;
+  cl_channel_order channelOrder;
+  cl_channel_type channelType;
+  getChannelOrderAndType(*desc, hipReadModeElementType, &channelOrder, &channelType);
+
+  const cl_image_format image_format = { channelOrder, channelType };
+
+ // Dummy flags check
+  switch (flags) {
+    case hipArrayLayered:
+    case hipArrayCubemap:
+    case hipArraySurfaceLoadStore:
+    case hipArrayTextureGather:
+        assert(0 && "Unspported");
+        break;
+    case hipArrayDefault:
+    default:
+        break;
+  }
+  size_t pitch = 0;
+  hipError_t status = ihipMallocPitch(ptr, &pitch, extent.width, extent.height, extent.depth,
+                      CL_MEM_OBJECT_IMAGE3D, &image_format);
+
+  return status;
 }
 
 hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) {
