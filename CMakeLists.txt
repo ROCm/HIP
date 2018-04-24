@@ -215,7 +215,10 @@ if(HIP_PLATFORM STREQUAL "hcc")
     foreach(TARGET hip_hcc hip_hcc_static hip_device)
         target_include_directories(${TARGET} SYSTEM INTERFACE $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>;${HSA_PATH}/include)
     endforeach()
-    target_link_libraries(hip_hcc INTERFACE hcc::hccrt;hcc::hc_am)
+    add_library(host INTERFACE)
+    target_link_libraries(host INTERFACE hip_hcc)
+    add_library(device INTERFACE)
+    target_link_libraries(device INTERFACE host hip_device hcc::hccrt hcc::hc_am)
 
     # Generate .hipInfo
     file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
@@ -265,7 +268,7 @@ set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
 set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
 
 if(HIP_PLATFORM STREQUAL "hcc")
-    install(TARGETS hip_hcc_static hip_hcc hip_device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
+    install(TARGETS hip_hcc_static hip_hcc hip_device host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
     install(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
     include(CMakePackageConfigHelpers)
 
