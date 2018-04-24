@@ -71,6 +71,7 @@ hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device) 
 
   // Increment ref count for device primary context
   g_devices[device]->retain();
+  g_ctxtStack.push(g_devices[device]);
 
   return hipSuccess;
 }
@@ -122,7 +123,7 @@ hipError_t hipCtxDestroy(hipCtx_t ctx) {
   }
 
   // Need to remove the ctx of calling thread if its the top one
-  if (g_context == amdContext) {
+  if (!g_ctxtStack.empty() && g_ctxtStack.top() == amdContext) {
     g_ctxtStack.pop();
   }
 
@@ -188,7 +189,16 @@ hipError_t hipDriverGetVersion(int* driverVersion) {
 hipError_t hipCtxGetDevice(hipDevice_t* device) {
   HIP_INIT_API(device);
 
-  assert(0 && "Unimplemented");
+  if (device != nullptr) {
+    for (unsigned int i = 0; i < g_devices.size(); i++) {
+      if (g_devices[i] == g_context) {
+        *device = static_cast<hipDevice_t>(i);
+        return hipSuccess;
+      }
+    }
+  } else {
+    return hipErrorInvalidValue;
+  }
 
   return hipErrorUnknown;
 }
