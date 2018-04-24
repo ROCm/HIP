@@ -118,6 +118,10 @@ __device__ int abs(int x)
 {
     return x >= 0 ? x : -x; // TODO - optimize with OCML
 }
+__device__ long long abs(long long x)
+{
+    return x >= 0 ? x : -x; 
+}
 __device__ float fabsf(float x)
 {
     return hc::precise_math::fabsf(x);
@@ -573,12 +577,7 @@ __device__ double ldexp(double x, int exp)
 }
 __device__ double lgamma(double x)
 {
-  double val = 0.0;
-  double y = x - 1;
-  while(y > 0){
-    val += log(y--);
-  }
-  return val;
+    return hc::precise_math::lgamma(x);
 }
 __device__ long long int llrint(double x)
 {
