@@ -30,7 +30,6 @@ THE SOFTWARE.
  */
 #include <stdint.h>
 #include <stddef.h>
-#include <iostream>
 
 #ifndef GENERIC_GRID_LAUNCH
 #define GENERIC_GRID_LAUNCH 1
@@ -1314,7 +1313,7 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
  * hipMemcpyFromSymbolAsync
  */
 hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t sizeBytes,
-                             size_t offset = 0, hipMemcpyKind kind = hipMemcpyHostToDevice);
+                             size_t offset __dparm(0), hipMemcpyKind kind __dparm(hipMemcpyHostToDevice));
 
 
 /**
@@ -1343,13 +1342,13 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t siz
  * hipMemcpyFromSymbolAsync
  */
 hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src, size_t sizeBytes,
-                                  size_t offset, hipMemcpyKind kind, hipStream_t stream = 0);
+                                  size_t offset, hipMemcpyKind kind, hipStream_t stream __dparm(0));
 
 hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t sizeBytes,
-                               size_t offset = 0, hipMemcpyKind kind = hipMemcpyDeviceToHost);
+                               size_t offset __dparm(0), hipMemcpyKind kind __dparm( hipMemcpyDeviceToHost ));
 
 hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t sizeBytes,
-                                    size_t offset, hipMemcpyKind kind, hipStream_t stream = 0);
+                                    size_t offset, hipMemcpyKind kind, hipStream_t stream __dparm(0));
 
 /**
  *  @brief Copy data from src to dst asynchronously.
@@ -1379,13 +1378,8 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t si
  * hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync,
  * hipMemcpyFromSymbolAsync
  */
-#if __cplusplus
 hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
-                          hipStream_t stream = 0);
-#else
-hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
-                          hipStream_t stream);
-#endif
+                          hipStream_t stream __dparm(0));
 
 /**
  *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dest with the constant
@@ -1424,11 +1418,7 @@ hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char value, size_t sizeByte
  *  @param[in]  stream - Stream identifier
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
  */
-#if __cplusplus
-hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream = 0);
-#else
-hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream);
-#endif
+hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream __dparm(0));
 
 /**
  *  @brief Fills the memory area pointed to by dst with the constant value.
@@ -1484,13 +1474,8 @@ hipError_t hipMemPtrGetInfo(void* ptr, size_t* size);
  *
  *  @see hipMalloc, hipMallocPitch, hipFree, hipFreeArray, hipHostMalloc, hipHostFree
  */
-#if __cplusplus
 hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, size_t width,
-                          size_t height = 0, unsigned int flags = hipArrayDefault);
-#else
-hipError_t hipMallocArray(hipArray** array, const struct hipChannelFormatDesc* desc, size_t width,
-                          size_t height, unsigned int flags);
-#endif
+                          size_t height __dparm(0), unsigned int flags __dparm(hipArrayDefault));
 hipError_t hipArrayCreate(hipArray** pHandle, const HIP_ARRAY_DESCRIPTOR* pAllocateArray);
 
 hipError_t hipArray3DCreate(hipArray_t* array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray);
@@ -1558,13 +1543,8 @@ hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy);
  *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpyToSymbol,
  * hipMemcpyAsync
  */
-#if __cplusplus
 hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
-                            size_t height, hipMemcpyKind kind, hipStream_t stream = 0);
-#else
-hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
-                            size_t height, hipMemcpyKind kind, hipStream_t stream);
-#endif
+                            size_t height, hipMemcpyKind kind, hipStream_t stream __dparm(0));
 
 /**
  *  @brief Copies data between host and device.
@@ -1776,13 +1756,8 @@ hipError_t hipMemcpyPeer(void* dst, int dstDeviceId, const void* src, int srcDev
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
  */
-#if __cplusplus
 hipError_t hipMemcpyPeerAsync(void* dst, int dstDeviceId, const void* src, int srcDevice,
-                              size_t sizeBytes, hipStream_t stream = 0);
-#else
-hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int srcDevice,
-                              size_t sizeBytes, hipStream_t stream);
-#endif
+                              size_t sizeBytes, hipStream_t stream __dparm(0));
 #endif
 
 
