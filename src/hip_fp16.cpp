@@ -29,10 +29,6 @@ struct hipHalfHolder{
   };
 };
 
-#define HINF 65504
-
-__device__ static struct hipHalfHolder __hInfValue = {HINF};
-
 __device__ __half __hadd(__half a, __half b) {
   return a + b;
 }
@@ -90,11 +86,19 @@ __device__  bool __hgt(__half a, __half b) {
 }
 
 __device__  bool __hisinf(__half a) {
-  return a == HINF ? true : false;
+  hipHalfHolder hH;
+  hH.h = a;
+  // mask with 0x7fff to drop the sign bit
+  // 0x7c00 is bit pattern for inf (exp = 11111, significand = 0)
+  return ((hH.s & 0x7fff) == 0x7c00) ? true : false;
 }
 
 __device__  bool __hisnan(__half a) {
-  return a > HINF ? true : false;
+  hipHalfHolder hH;
+  hH.h = a;
+  // mask with 0x7fff to drop the sign bit
+  // 0x7cXX is bit pattern for nan (exp = 11111, significand > 0)
+  return ((hH.s & 0x7fff) > 0x7c00) ? true : false;
 }
 
 __device__  bool __hle(__half a, __half b) {
@@ -160,8 +164,8 @@ __device__  __half2 __hgt2(__half2 a, __half2 b) {
 
 __device__  __half2 __hisnan2(__half2 a) {
   __half2 c;
-  c.x = (a.x > HINF) ? (__half)1 : (__half)0;
-  c.y = (a.y > HINF) ? (__half)1 : (__half)0;
+  c.x = (__hisnan(a.x)) ? (__half)1 : (__half)0;
+  c.y = (__hisnan(a.y)) ? (__half)1 : (__half)0;
   return c;
 }
 
