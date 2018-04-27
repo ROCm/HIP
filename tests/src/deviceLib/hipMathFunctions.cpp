@@ -71,14 +71,9 @@ void check_lgamma_double() {
   datatype_t *outputGPU = nullptr; hipMalloc((void**)&outputGPU, memsize);
   
   // populate input
-  inputCPU[0] = -3.5;
-  inputCPU[0] = -2.5;
-  inputCPU[0] = -1.5;
-  inputCPU[0] = -0.5;
-  inputCPU[0] =  0.5;
-  inputCPU[0] =  1.5;
-  inputCPU[0] =  2.5;
-  inputCPU[0] =  3.5;
+  for (int i=0; i<NUM_INPUTS; i++) {
+    inputCPU[i] = -3.5 + i;
+  }
   
   // copy inputs to device
   hipMemcpy(inputGPU, inputCPU, memsize, hipMemcpyHostToDevice);
