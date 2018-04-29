@@ -417,7 +417,7 @@ void hipLaunchKernelGGLImpl(
 
   const auto it = functions().find(function_address);
   if (it == functions().cend())
-    return;
+    assert(0);
 
   hipModuleLaunchKernel(it->second,
     numBlocks.x, numBlocks.y, numBlocks.z,

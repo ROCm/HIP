@@ -151,7 +151,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
   }
 
   size_t globalWorkOffset[3] = {0};
-  size_t globalWorkSize[3] = { gridDimX, gridDimY, gridDimZ };
+  size_t globalWorkSize[3] = { gridDimX * blockDimX, gridDimY * blockDimY, gridDimZ * blockDimZ};
   size_t localWorkSize[3] = { blockDimX, blockDimY, blockDimZ };
   amd::NDRangeContainer ndrange(3, globalWorkOffset, globalWorkSize, localWorkSize);
   amd::Command::EventWaitList waitList;
@@ -161,10 +161,11 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
     const amd::KernelParameterDescriptor& desc = signature.at(i);
     if (kernelParams == nullptr) {
       assert(extra);
-      kernel->parameters().set(i, desc.size_, reinterpret_cast<address>(extra[1]) + desc.offset_);
+      kernel->parameters().set(i, desc.size_, reinterpret_cast<address>(extra[1]) + desc.offset_,
+                               desc.type_ == T_POINTER/*svmBound*/);
     } else {
       assert(!extra);
-      kernel->parameters().set(i, desc.size_, kernelParams[i]);
+      kernel->parameters().set(i, desc.size_, kernelParams[i], desc.type_ == T_POINTER/*svmBound*/);
     }
   }
 
