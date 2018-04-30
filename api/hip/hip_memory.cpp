@@ -83,7 +83,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
     return hipErrorOutOfMemory;
   }
 
-  amd::Command* command;
+  amd::Command* command = nullptr;
   amd::Command::EventWaitList waitList;
   amd::Memory* memory;
 
@@ -568,7 +568,7 @@ hipError_t hipMemcpyToArray(hipArray* dstArray, size_t wOffset, size_t hOffset, 
     return hipErrorOutOfMemory;
   }
 
-  amd::Command* command;
+  amd::Command* command = nullptr;
   amd::Command::EventWaitList waitList;
   amd::Memory* memory;
 
@@ -613,7 +613,7 @@ hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffs
     return hipErrorOutOfMemory;
   }
 
-  amd::Command* command;
+  amd::Command* command = nullptr;
   amd::Command::EventWaitList waitList;
   amd::Memory* memory;
 
