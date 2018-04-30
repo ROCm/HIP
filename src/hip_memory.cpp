@@ -1552,7 +1552,7 @@ hipError_t ihipMemset(void* dst, int  value, size_t sizeBytes, hipStream_t strea
 {
     hipError_t e = hipSuccess;
 
-    if (stream) {
+    if (stream && (dst != NULL)) {
         if(copyDataType == ihipMemsetDataTypeChar){
             if ((sizeBytes & 0x3) == 0) {
                 // use a faster dword-per-workitem copy:
@@ -1646,6 +1646,24 @@ hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t 
 
     return ihipLogStatus(e);
 }
+
+hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, size_t height, hipStream_t stream )
+{
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, pitch, value, width, height, stream);
+
+    hipError_t e = hipSuccess;
+
+    stream =  ihipSyncAndResolveStream(stream);
+
+    if (stream) {
+        size_t sizeBytes = pitch * height;
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetDataTypeChar);
+    } else {
+        e = hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(e);
+};
 
 hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes) {
     HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, value, sizeBytes);
