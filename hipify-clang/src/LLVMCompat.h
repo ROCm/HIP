@@ -18,9 +18,9 @@ namespace llcompat {
  * remain unchanged, so let's be slightly ugly about it here. :D
  */
 #if LLVM_VERSION_MAJOR > 4
-#define GET_NUM_ARGS() getNumParams()
+    #define GET_NUM_ARGS() getNumParams()
 #else
-#define GET_NUM_ARGS() getNumArgs()
+    #define GET_NUM_ARGS() getNumArgs()
 #endif
 
 void PrintStackTraceOnErrorSignal();
@@ -41,7 +41,9 @@ void insertReplacement(ct::Replacements& replacements, const ct::Replacement& re
 /**
  * Version-agnostic version of Preprocessor::EnterTokenStream().
  */
-void EnterPreprocessorTokenStream(clang::Preprocessor& _pp, const clang::Token* start, size_t len,
+void EnterPreprocessorTokenStream(clang::Preprocessor& _pp,
+                                  const clang::Token *start,
+                                  size_t len,
                                   bool DisableMacroExpansion);
 
-}  // namespace llcompat
+} // namespace llcompat
