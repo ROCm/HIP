@@ -158,7 +158,26 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
 
   switch (pResDesc->resType) {
     case hipResourceTypeArray:
-      assert(0);
+      {
+        memory = amd::SvmManager::FindSvmBuffer(pResDesc->res.array.array->data);
+
+        getChannelOrderAndType(pResDesc->res.array.array->desc, pTexDesc->readMode,
+                             &image_format.image_channel_order, &image_format.image_channel_data_type);
+        const amd::Image::Format imageFormat(image_format);
+        switch (pResDesc->res.array.array->type) {
+          case hipArrayLayered:
+          case hipArrayCubemap:
+            assert(0);
+            break;
+          case hipArraySurfaceLoadStore:
+          case hipArrayTextureGather:
+          case hipArrayDefault:
+          default:
+            image = new (*g_context) amd::Image(*memory->asBuffer(), CL_MEM_OBJECT_IMAGE2D, memory->getMemFlags(), imageFormat,
+                                          pResDesc->res.array.array->width, pResDesc->res.array.array->height, 1, 0, 0);
+            break;
+        }
+      }
       break;
     case hipResourceTypeMipmappedArray:
       assert(0);
