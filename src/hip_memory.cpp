@@ -766,10 +766,18 @@ hipError_t hipArray3DCreate(hipArray_t* array, const HIP_ARRAY_DESCRIPTOR* pAllo
 
 hipError_t hipMalloc3DArray(hipArray_t* array, const struct hipChannelFormatDesc* desc,
                             struct hipExtent extent, unsigned int flags) {
+
+
+
     HIP_INIT_API(array, desc, &extent, flags);
     HIP_SET_DEVICE();
     hipError_t hip_status = hipSuccess;
 
+        if(array==NULL )
+        {
+         hip_status=hipErrorInvalidValue;
+        return ihipLogStatus(hip_status);
+        }
     auto ctx = ihipGetTlsDefaultCtx();
 
     *array = (hipArray*)malloc(sizeof(hipArray));
