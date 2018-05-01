@@ -142,7 +142,9 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
                                   const hipResourceViewDesc* pResViewDesc) {
   HIP_INIT_API(pTexObject, pResDesc, pTexDesc, pResViewDesc);
 
-  if (!g_context->devices()[0]->info().imageSupport_) {
+  amd::Device* device = hip::getCurrentContext()->devices()[0];
+
+  if (!device->info().imageSupport_) {
     return hipErrorInvalidValue;
   }
 
@@ -173,8 +175,9 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
           case hipArrayTextureGather:
           case hipArrayDefault:
           default:
-            image = new (*g_context) amd::Image(*memory->asBuffer(), CL_MEM_OBJECT_IMAGE2D, memory->getMemFlags(), imageFormat,
-                                          pResDesc->res.array.array->width, pResDesc->res.array.array->height, 1, 0, 0);
+            image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
+              CL_MEM_OBJECT_IMAGE2D, memory->getMemFlags(), imageFormat,
+              pResDesc->res.array.array->width, pResDesc->res.array.array->height, 1, 0, 0);
             break;
         }
       }
@@ -186,17 +189,19 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
       assert(pResViewDesc == nullptr);
 
       memory = amd::SvmManager::FindSvmBuffer(pResDesc->res.linear.devPtr);
-      image = new (*g_context) amd::Image(*memory->asBuffer(), CL_MEM_OBJECT_IMAGE1D, memory->getMemFlags(), imageFormat,
-                                          pResDesc->res.linear.sizeInBytes / imageFormat.getElementSize(), 1, 1,
-                                          pResDesc->res.linear.sizeInBytes, 0);
+      image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
+        CL_MEM_OBJECT_IMAGE1D, memory->getMemFlags(), imageFormat,
+        pResDesc->res.linear.sizeInBytes / imageFormat.getElementSize(), 1, 1,
+        pResDesc->res.linear.sizeInBytes, 0);
       break;
     case hipResourceTypePitch2D:
       assert(pResViewDesc == nullptr);
 
       memory = amd::SvmManager::FindSvmBuffer(pResDesc->res.pitch2D.devPtr);
-      image = new (*g_context) amd::Image(*memory->asBuffer(), CL_MEM_OBJECT_IMAGE2D, memory->getMemFlags(), imageFormat,
-                                          pResDesc->res.pitch2D.width, pResDesc->res.pitch2D.height, 1,
-                                          pResDesc->res.pitch2D.pitchInBytes, 0);
+      image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
+        CL_MEM_OBJECT_IMAGE2D, memory->getMemFlags(), imageFormat,
+        pResDesc->res.pitch2D.width, pResDesc->res.pitch2D.height, 1,
+        pResDesc->res.pitch2D.pitchInBytes, 0);
       break;
     default: return hipErrorInvalidValue;
   }
@@ -247,7 +252,7 @@ hipError_t ihipBindTexture(cl_mem_object_type type,
   if (tex == nullptr) {
     return hipErrorInvalidImage;
   }
-  if (g_context) {
+  if (hip::getCurrentContext()) {
     cl_image_format image_format;
 
     if (nullptr == desc) {
@@ -260,8 +265,8 @@ hipError_t ihipBindTexture(cl_mem_object_type type,
     const amd::Image::Format imageFormat(image_format);
 
     amd::Memory* memory = amd::SvmManager::FindSvmBuffer(devPtr);
-    amd::Image* image = new (*g_context) amd::Image(*memory->asBuffer(), type, memory->getMemFlags(),
-                                                    imageFormat, width, height, 1, pitch, 0);
+    amd::Image* image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
+      type, memory->getMemFlags(), imageFormat, width, height, 1, pitch, 0);
 
     *offset = 0;
     if (tex->textureObject) {

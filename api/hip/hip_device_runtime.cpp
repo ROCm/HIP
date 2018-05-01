@@ -383,7 +383,7 @@ hipError_t hipGetDevice ( int* deviceId ) {
 
   if (deviceId != nullptr) {
     for (unsigned int i = 0; i < g_devices.size(); i++) {
-      if (g_devices[i] == g_context) {
+      if (g_devices[i] == hip::getCurrentContext()) {
         *deviceId = i;
         return hipSuccess;
       }
@@ -425,7 +425,7 @@ hipError_t hipSetDevice ( int  device ) {
   HIP_INIT_API(device);
 
   if (static_cast<unsigned int>(device) < g_devices.size()) {
-    g_context = g_devices[device];
+    hip::setCurrentContext(device);
 
     return hipSuccess;
   }

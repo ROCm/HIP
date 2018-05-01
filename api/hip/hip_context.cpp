@@ -27,13 +27,17 @@ THE SOFTWARE.
 #include <stack>
 #include <thread>
 
-thread_local amd::Context* g_context = nullptr;
-thread_local std::stack<amd::Context*> g_ctxtStack;
-
 std::vector<amd::Context*> g_devices;
 std::once_flag g_ihipInitialized;
 
-void ihipInit() {
+namespace hip {
+
+thread_local amd::Context* g_context = nullptr;
+thread_local std::stack<amd::Context*> g_ctxtStack;
+
+std::map<amd::Context*,amd::HostQueue*> g_nullStreams;
+
+void init() {
   if (!amd::Runtime::initialized()) {
     amd::Runtime::init();
   }
@@ -53,6 +57,32 @@ void ihipInit() {
     }
   }
 }
+
+amd::Context* getCurrentContext() {
+  return g_context;
+}
+
+void setCurrentContext(unsigned int index) {
+  assert(index<g_devices.size());
+  g_context = g_devices[index];
+}
+
+amd::HostQueue* getNullStream() {
+  auto stream = g_nullStreams.find(getCurrentContext());
+  if (stream == g_nullStreams.end()) {
+    amd::Device* device = getCurrentContext()->devices()[0];
+    amd::HostQueue* queue = new amd::HostQueue(*hip::getCurrentContext(), *device, 0,
+                                               amd::CommandQueue::RealTimeDisabled,
+                                               amd::CommandQueue::Priority::Normal);
+    g_nullStreams[getCurrentContext()] = queue;
+    return queue;
+  }
+  return stream->second;
+}
+
+};
+
+using namespace hip;
 
 hipError_t hipInit(unsigned int flags) {
   HIP_INIT_API(flags);
@@ -84,11 +114,11 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx) {
       g_ctxtStack.pop();
     }
   } else {
-    g_context = reinterpret_cast<amd::Context*>(as_amd(ctx));
+    hip::g_context = reinterpret_cast<amd::Context*>(as_amd(ctx));
     if(!g_ctxtStack.empty()) {
       g_ctxtStack.pop();
     }
-    g_ctxtStack.push(g_context);
+    g_ctxtStack.push(hip::getCurrentContext());
   }
 
   return hipSuccess;
@@ -97,7 +127,7 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx) {
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx) {
   HIP_INIT_API(ctx);
 
-  *ctx = reinterpret_cast<hipCtx_t>(g_context);
+  *ctx = reinterpret_cast<hipCtx_t>(hip::getCurrentContext());
 
   return hipSuccess;
 }
@@ -164,8 +194,8 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx) {
     return hipErrorInvalidContext;
   }
 
-  g_context = amdContext;
-  g_ctxtStack.push(g_context);
+  hip::g_context = amdContext;
+  g_ctxtStack.push(hip::getCurrentContext());
 
   return hipSuccess;
 }
@@ -191,7 +221,7 @@ hipError_t hipCtxGetDevice(hipDevice_t* device) {
 
   if (device != nullptr) {
     for (unsigned int i = 0; i < g_devices.size(); i++) {
-      if (g_devices[i] == g_context) {
+      if (g_devices[i] == hip::getCurrentContext()) {
         *device = static_cast<hipDevice_t>(i);
         return hipSuccess;
       }

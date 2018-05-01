@@ -94,13 +94,13 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
 
 hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
 {
-  amd::Program* program = new amd::Program(*g_context);
+  amd::Program* program = new amd::Program(*hip::getCurrentContext());
   if (program == NULL) {
     return hipErrorOutOfMemory;
   }
 
-  if (CL_SUCCESS != program->addDeviceProgram(*g_context->devices()[0], image, ElfSize(image)) ||
-    CL_SUCCESS != program->build(g_context->devices(), nullptr, nullptr, nullptr)) {
+  if (CL_SUCCESS != program->addDeviceProgram(*hip::getCurrentContext()->devices()[0], image, ElfSize(image)) ||
+    CL_SUCCESS != program->build(hip::getCurrentContext()->devices(), nullptr, nullptr, nullptr)) {
     return hipErrorUnknown;
   }
 
@@ -142,13 +142,11 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
                kernelParams, extra);
 
   amd::Kernel* kernel = as_amd(reinterpret_cast<cl_kernel>(f));
-  amd::Device* device = g_context->devices()[0];
+  amd::Device* device = hip::getCurrentContext()->devices()[0];
 
   amd::HostQueue* queue;
   if (hStream == nullptr) {
-    queue = new amd::HostQueue(*g_context, *device, 0,
-                               amd::CommandQueue::RealTimeDisabled,
-                               amd::CommandQueue::Priority::Normal);
+    queue = hip::getNullStream();
   } else {
     queue = as_amd(reinterpret_cast<cl_command_queue>(hStream))->asHostQueue();
   }
@@ -199,10 +197,6 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
   command->enqueue();
   command->awaitCompletion();
   command->release();
-
-  if (hStream == nullptr) {
-    queue->release();
-  }
 
   return hipSuccess;
 }
