@@ -156,12 +156,22 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
   amd::NDRangeContainer ndrange(3, globalWorkOffset, globalWorkSize, localWorkSize);
   amd::Command::EventWaitList waitList;
 
+  // 'extra' is a struct that contains the following info: {
+  //   HIP_LAUNCH_PARAM_BUFFER_POINTER, kernargs,
+  //   HIP_LAUNCH_PARAM_BUFFER_SIZE, &kernargs_size,
+  //   HIP_LAUNCH_PARAM_END }
+  if (extra[0] != HIP_LAUNCH_PARAM_BUFFER_POINTER ||
+      extra[2] != HIP_LAUNCH_PARAM_BUFFER_SIZE || extra[4] != HIP_LAUNCH_PARAM_END) {
+    return hipErrorNotInitialized;
+  }
+  address kernargs = reinterpret_cast<address>(extra[1]);
+
   const amd::KernelSignature& signature = kernel->signature();
   for (size_t i = 0; i < signature.numParameters(); ++i) {
     const amd::KernelParameterDescriptor& desc = signature.at(i);
     if (kernelParams == nullptr) {
       assert(extra);
-      kernel->parameters().set(i, desc.size_, reinterpret_cast<address>(extra[1]) + desc.offset_,
+      kernel->parameters().set(i, desc.size_, kernargs + desc.offset_,
                                desc.type_ == T_POINTER/*svmBound*/);
     } else {
       assert(!extra);
