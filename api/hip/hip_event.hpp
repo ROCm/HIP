@@ -20,43 +20,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef HIP_SRC_HIP_INTERNAL_H
-#define HIP_SRC_HIP_INTERNAL_H
+#ifndef HIP_EVENT_H
+#define HIP_EVENT_H
 
-#include "cl_common.hpp"
-
-#include <thread>
-
-#define HIP_INIT() \
-  std::call_once(g_ihipInitialized, hip::init);
-
-
-// This macro should be called at the beginning of every HIP API.
-#define HIP_INIT_API(...)                                    \
-  HIP_INIT();                                                \
-                                                             \
-  amd::Thread* thread = amd::Thread::current();              \
-  if (!CL_CHECK_THREAD(thread)) {                            \
-    return hipErrorOutOfMemory;                              \
-  }
-
-namespace hc {
-class accelerator;
-class accelerator_view;
-};
-
-extern std::once_flag g_ihipInitialized;
+#include "hip_internal.hpp"
 
 namespace hip {
-  extern void init();
 
-  extern amd::Context* getCurrentContext();
-  extern void setCurrentContext(unsigned int index);
-
-  extern amd::HostQueue* getNullStream();
+class Event {
+public:
+  Event(unsigned int flags) : flags(flags) {}
+  ~Event() {}
+  unsigned int flags;
+private:
 };
-extern std::vector<amd::Context*> g_devices;
 
-extern hipError_t ihipDeviceGetCount(int* count);
+};
 
-#endif // HIP_SRC_HIP_INTERNAL_H
+#endif // HIP_EVEMT_H

@@ -27,9 +27,9 @@ THE SOFTWARE.
 static hipError_t ihipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
   assert(flags == 0); // we don't handle flags yet
 
-  amd::Device* device = g_context->devices()[0];
+  amd::Device* device = hip::getCurrentContext()->devices()[0];
 
-  amd::HostQueue* queue = new amd::HostQueue(*g_context, *device, 0,
+  amd::HostQueue* queue = new amd::HostQueue(*hip::getCurrentContext(), *device, 0,
                                              amd::CommandQueue::RealTimeDisabled,
                                              amd::CommandQueue::Priority::Normal);
 
@@ -68,7 +68,14 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags) {
 hipError_t hipStreamSynchronize(hipStream_t stream) {
   HIP_INIT_API(stream);
 
-  amd::HostQueue* hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
+  amd::HostQueue* hostQueue;
+
+  if (stream == nullptr) {
+    hostQueue = hip::getNullStream();
+  } else {
+    hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
+  }
+
   if (hostQueue == nullptr) {
     return hipErrorUnknown;
   }
@@ -81,6 +88,10 @@ hipError_t hipStreamSynchronize(hipStream_t stream) {
 
 hipError_t hipStreamDestroy(hipStream_t stream) {
   HIP_INIT_API(stream);
+
+  if (stream == nullptr) {
+    return hipErrorInvalidResourceHandle;
+  }
 
   as_amd(reinterpret_cast<cl_command_queue>(stream))->release();
 

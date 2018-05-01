@@ -22,30 +22,42 @@ THE SOFTWARE.
 
 #include <hip/hip_runtime.h>
 
-#include "hip_internal.hpp"
+#include "hip_event.hpp"
 
 hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags) {
   HIP_INIT_API(event, flags);
 
-  assert(0 && "Unimplemented");
+  hip::Event* e = new hip::Event(flags);
 
-  return hipErrorUnknown;
+  if (e == nullptr) {
+    return hipErrorOutOfMemory;
+  }
+
+  *event = reinterpret_cast<hipEvent_t>(e);
+
+  return hipSuccess;
 }
 
 hipError_t hipEventCreate(hipEvent_t* event) {
   HIP_INIT_API(event);
 
-  assert(0 && "Unimplemented");
+  hip::Event* e = new hip::Event(0);
 
-  return hipErrorUnknown;
+  if (e == nullptr) {
+    return hipErrorOutOfMemory;
+  }
+
+  *event = reinterpret_cast<hipEvent_t>(e);
+
+  return hipSuccess;
 }
 
 hipError_t hipEventDestroy(hipEvent_t event) {
   HIP_INIT_API(event);
 
-  assert(0 && "Unimplemented");
+  delete reinterpret_cast<hip::Event*>(event);
 
-  return hipErrorUnknown;
+  return hipSuccess;
 }
 
 hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop) {

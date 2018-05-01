@@ -68,7 +68,7 @@ extern "C" hipModule_t __hipRegisterFatBinary(const void* data)
     return nullptr;
   }
 
-  amd::Program* program = new amd::Program(*g_context);
+  amd::Program* program = new amd::Program(*hip::getCurrentContext());
   if (!program)
     return nullptr;
 
@@ -84,15 +84,15 @@ extern "C" hipModule_t __hipRegisterFatBinary(const void* data)
 
     std::string target(desc->triple + sizeof(OPENMP_AMDGCN_AMDHSA_TRIPLE),
                        desc->tripleSize - sizeof(OPENMP_AMDGCN_AMDHSA_TRIPLE));
-    if (target.compare(g_context->devices()[0]->info().name_))
+    if (target.compare(hip::getCurrentContext()->devices()[0]->info().name_))
       continue;
 
     const void *image = reinterpret_cast<const void*>(
         reinterpret_cast<uintptr_t>(obheader) + desc->offset);
     size_t size = desc->size;
 
-    if (CL_SUCCESS == program->addDeviceProgram(*g_context->devices()[0], image, size) &&
-        CL_SUCCESS == program->build(g_context->devices(), nullptr, nullptr, nullptr))
+    if (CL_SUCCESS == program->addDeviceProgram(*hip::getCurrentContext()->devices()[0], image, size) &&
+        CL_SUCCESS == program->build(hip::getCurrentContext()->devices(), nullptr, nullptr, nullptr))
       break;
   }
 
@@ -372,7 +372,7 @@ const std::vector<hipModule_t>& modules() {
           std::string target(desc->triple + sizeof(HCC_AMDGCN_AMDHSA_TRIPLE),
                              desc->tripleSize - sizeof(HCC_AMDGCN_AMDHSA_TRIPLE));
 
-          if (!target.compare(g_context->devices()[0]->info().name_)) {
+          if (!target.compare(hip::getCurrentContext()->devices()[0]->info().name_)) {
             hipModule_t module;
             if (hipSuccess == hipModuleLoadData(&module, reinterpret_cast<const void*>(
                 reinterpret_cast<uintptr_t>(obheader) + desc->offset)))

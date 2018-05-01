@@ -39,11 +39,11 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
     return hipErrorInvalidValue;
   }
 
-  if (g_context->devices()[0]->info().maxMemAllocSize_ < sizeBytes) {
+  if (hip::getCurrentContext()->devices()[0]->info().maxMemAllocSize_ < sizeBytes) {
     return hipErrorOutOfMemory;
   }
 
-  *ptr = amd::SvmBuffer::malloc(*g_context, flags, sizeBytes, g_context->devices()[0]->info().memBaseAddrAlign_);
+  *ptr = amd::SvmBuffer::malloc(*hip::getCurrentContext(), flags, sizeBytes, hip::getCurrentContext()->devices()[0]->info().memBaseAddrAlign_);
   if (!*ptr) {
     return hipErrorOutOfMemory;
   }
@@ -65,7 +65,7 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
 
 hipError_t hipFree(void* ptr) {
   if (amd::SvmBuffer::malloced(ptr)) {
-    amd::SvmBuffer::free(*g_context, ptr);
+    amd::SvmBuffer::free(*hip::getCurrentContext(), ptr);
     return hipSuccess;
   }
   return hipErrorInvalidValue;
@@ -74,11 +74,8 @@ hipError_t hipFree(void* ptr) {
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind) {
   HIP_INIT_API(dst, src, sizeBytes, kind);
 
-  amd::Device* device = g_context->devices()[0];
+  amd::HostQueue* queue = hip::getNullStream();
 
-  amd::HostQueue* queue = new amd::HostQueue(*g_context, *device, 0,
-                                             amd::CommandQueue::RealTimeDisabled,
-                                             amd::CommandQueue::Priority::Normal);
   if (!queue) {
     return hipErrorOutOfMemory;
   }
@@ -119,8 +116,6 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
   command->awaitCompletion();
   command->release();
 
-  queue->release();
-
   return hipSuccess;
 }
 
@@ -135,11 +130,8 @@ hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t st
 hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
   HIP_INIT_API(dst, value, sizeBytes);
 
-  amd::Device* device = g_context->devices()[0];
+  amd::HostQueue* queue = hip::getNullStream();
 
-  amd::HostQueue* queue = new amd::HostQueue(*g_context, *device, 0,
-                                             amd::CommandQueue::RealTimeDisabled,
-                                             amd::CommandQueue::Priority::Normal);
   if (!queue) {
     return hipErrorOutOfMemory;
   }
@@ -162,8 +154,6 @@ hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
   command->awaitCompletion();
   command->release();
 
-  queue->release();
-
   return hipSuccess;
 }
 
@@ -185,7 +175,7 @@ hipError_t hipHostFree(void* ptr) {
   HIP_INIT_API(ptr);
 
   if (amd::SvmBuffer::malloced(ptr)) {
-    amd::SvmBuffer::free(*g_context, ptr);
+    amd::SvmBuffer::free(*hip::getCurrentContext(), ptr);
     return hipSuccess;
   }
   return hipErrorInvalidValue;
@@ -195,7 +185,7 @@ hipError_t hipFreeArray(hipArray* array) {
   HIP_INIT_API(array);
 
   if (amd::SvmBuffer::malloced(array->data)) {
-    amd::SvmBuffer::free(*g_context, array->data);
+    amd::SvmBuffer::free(*hip::getCurrentContext(), array->data);
     return hipSuccess;
   }
   return hipErrorInvalidValue;
@@ -222,7 +212,7 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
   HIP_INIT_API(free, total);
 
   size_t freeMemory[2];
-  amd::Device* device = g_context->devices()[0];
+  amd::Device* device = hip::getCurrentContext()->devices()[0];
   if(!device) {
     return hipErrorInvalidDevice;
   }
@@ -240,7 +230,7 @@ return hipSuccess;
 hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height, size_t depth,
                            cl_mem_object_type imageType, const cl_image_format* image_format) {
 
-  amd::Device* device = g_context->devices()[0];
+  amd::Device* device = hip::getCurrentContext()->devices()[0];
 
   if ((width == 0) || (height == 0)) {
     *ptr = nullptr;
@@ -251,7 +241,7 @@ hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t heigh
     return hipErrorInvalidValue;
   }
 
-  if (g_context->devices()[0]->info().maxMemAllocSize_ < (width * height)) {
+  if (device->info().maxMemAllocSize_ < (width * height)) {
     return hipErrorOutOfMemory;
   }
 
@@ -260,8 +250,8 @@ hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t heigh
   *pitch = width * imageFormat.getElementSize();
 
   size_t sizeBytes = *pitch * height * depth;
-  *ptr = amd::SvmBuffer::malloc(*g_context, CL_MEM_SVM_FINE_GRAIN_BUFFER, sizeBytes,
-                                g_context->devices()[0]->info().memBaseAddrAlign_);
+  *ptr = amd::SvmBuffer::malloc(*hip::getCurrentContext(), CL_MEM_SVM_FINE_GRAIN_BUFFER, sizeBytes,
+                                device->info().memBaseAddrAlign_);
 
   if (!*ptr) {
     return hipErrorMemoryAllocation;
@@ -559,11 +549,7 @@ hipError_t hipMemcpyToArray(hipArray* dstArray, size_t wOffset, size_t hOffset, 
                             size_t count, hipMemcpyKind kind) {
   HIP_INIT_API(dstArray, wOffset, hOffset, src, count, kind);
 
-  amd::Device* device = g_context->devices()[0];
-
-  amd::HostQueue* queue = new amd::HostQueue(*g_context, *device, 0,
-                                             amd::CommandQueue::RealTimeDisabled,
-                                             amd::CommandQueue::Priority::Normal);
+  amd::HostQueue* queue = hip::getNullStream();
   if (!queue) {
     return hipErrorOutOfMemory;
   }
@@ -597,8 +583,6 @@ hipError_t hipMemcpyToArray(hipArray* dstArray, size_t wOffset, size_t hOffset, 
   command->awaitCompletion();
   command->release();
 
-  queue->release();
-
   return hipSuccess;
 }
 
@@ -606,11 +590,7 @@ hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffs
                               size_t count, hipMemcpyKind kind) {
   HIP_INIT_API(dst, srcArray, wOffset, hOffset, count, kind);
 
-  amd::Device* device = g_context->devices()[0];
-
-  amd::HostQueue* queue = new amd::HostQueue(*g_context, *device, 0,
-                                             amd::CommandQueue::RealTimeDisabled,
-                                             amd::CommandQueue::Priority::Normal);
+  amd::HostQueue* queue = hip::getNullStream();
   if (!queue) {
     return hipErrorOutOfMemory;
   }
@@ -644,19 +624,13 @@ hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffs
   command->awaitCompletion();
   command->release();
 
-  queue->release();
-
   return hipSuccess;
 }
 
 hipError_t hipMemcpyHtoA(hipArray* dstArray, size_t dstOffset, const void* srcHost, size_t count) {
   HIP_INIT_API(dstArray, dstOffset, srcHost, count);
 
-  amd::Device* device = g_context->devices()[0];
-
-  amd::HostQueue* queue = new amd::HostQueue(*g_context, *device, 0,
-                                             amd::CommandQueue::RealTimeDisabled,
-                                             amd::CommandQueue::Priority::Normal);
+  amd::HostQueue* queue = hip::getNullStream();
   if (!queue) {
     return hipErrorOutOfMemory;
   }
@@ -674,19 +648,13 @@ hipError_t hipMemcpyHtoA(hipArray* dstArray, size_t dstOffset, const void* srcHo
   command->awaitCompletion();
   command->release();
 
-  queue->release();
-
   return hipSuccess;
 }
 
 hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t count) {
   HIP_INIT_API(dst, srcArray, srcOffset, count);
 
-  amd::Device* device = g_context->devices()[0];
-
-  amd::HostQueue* queue = new amd::HostQueue(*g_context, *device, 0,
-                                             amd::CommandQueue::RealTimeDisabled,
-                                             amd::CommandQueue::Priority::Normal);
+  amd::HostQueue* queue = hip::getNullStream();
   if (!queue) {
     return hipErrorOutOfMemory;
   }
@@ -704,19 +672,13 @@ hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t
   command->awaitCompletion();
   command->release();
 
-  queue->release();
-
   return hipSuccess;
 }
 
 hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
   HIP_INIT_API(p);
 
-  amd::Device* device = g_context->devices()[0];
-
-  amd::HostQueue* queue = new amd::HostQueue(*g_context, *device, 0,
-                                             amd::CommandQueue::RealTimeDisabled,
-                                             amd::CommandQueue::Priority::Normal);
+  amd::HostQueue* queue = hip::getNullStream();
   if (!queue) {
     return hipErrorOutOfMemory;
   }
@@ -826,19 +788,13 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
   command->awaitCompletion();
   command->release();
 
-  queue->release();
-
   return hipSuccess;
 }
 
 hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height) {
   HIP_INIT_API(dst, pitch, value, width, height);
 
-  amd::Device* device = g_context->devices()[0];
-
-  amd::HostQueue* queue = new amd::HostQueue(*g_context, *device, 0,
-                                             amd::CommandQueue::RealTimeDisabled,
-                                             amd::CommandQueue::Priority::Normal);
+  amd::HostQueue* queue = hip::getNullStream();
   if (!queue) {
     return hipErrorOutOfMemory;
   }
@@ -862,19 +818,13 @@ hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t 
   command->awaitCompletion();
   command->release();
 
-  queue->release();
-
   return hipSuccess;
 }
 
 hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes) {
   HIP_INIT_API(dst, value, sizeBytes);
 
-  amd::Device* device = g_context->devices()[0];
-
-  amd::HostQueue* queue = new amd::HostQueue(*g_context, *device, 0,
-                                             amd::CommandQueue::RealTimeDisabled,
-                                             amd::CommandQueue::Priority::Normal);
+  amd::HostQueue* queue = hip::getNullStream();
   if (!queue) {
     return hipErrorOutOfMemory;
   }
@@ -895,8 +845,6 @@ hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes
   command->enqueue();
   command->awaitCompletion();
   command->release();
-
-  queue->release();
 
   return hipSuccess;
 }
@@ -938,9 +886,13 @@ hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannel
 hipError_t hipHostGetDevicePointer(void** devicePointer, void* hostPointer, unsigned flags) {
   HIP_INIT_API(devicePointer, hostPointer, flags);
 
-  assert(0 && "Unimplemented");
+  if (!amd::SvmBuffer::malloced(hostPointer)) {
+    return hipErrorInvalidValue;
+  }
+  // right now we have SVM
+  *devicePointer = hostPointer;
 
-  return hipErrorUnknown;
+  return hipSuccess;
 }
 
 hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr) {
