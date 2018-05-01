@@ -375,6 +375,13 @@ hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config ) {
 }
 
 hipError_t hipDeviceSynchronize ( void ) {
+  amd::HostQueue* queue = hip::getNullStream();
+
+  if (!queue) {
+    return hipErrorOutOfMemory;
+  }
+
+  queue->finish();
   return hipSuccess;
 }
 
