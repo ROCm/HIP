@@ -26,8 +26,15 @@ THE SOFTWARE.
 #include "platform/command.hpp"
 #include "platform/memory.hpp"
 
-extern void getChannelOrderAndType(const hipChannelFormatDesc& desc, enum hipTextureReadMode readMode,
-                                    cl_channel_order* channelOrder, cl_channel_type* channelType);
+extern void getChannelOrderAndType(const hipChannelFormatDesc& desc,
+                                   enum hipTextureReadMode readMode,
+                                   cl_channel_order* channelOrder,
+                                   cl_channel_type* channelType);
+
+extern void getDrvChannelOrderAndType(const enum hipArray_Format Format,
+                                      unsigned int NumChannels,
+                                      cl_channel_order* channelOrder,
+                                      cl_channel_type* channelType);
 
 hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
@@ -122,9 +129,35 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream) {
   HIP_INIT_API(dst, value, sizeBytes, stream);
 
-  assert(0 && "Unimplemented");
+  amd::HostQueue* queue;
 
-  return hipErrorUnknown;
+  if (stream == nullptr) {
+    queue = hip::getNullStream();
+  } else {
+    queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
+  }
+
+  if (!queue) {
+    return hipErrorOutOfMemory;
+  }
+
+  amd::Command::EventWaitList waitList;
+  amd::Memory* memory = amd::SvmManager::FindSvmBuffer(dst);
+
+  amd::Coord3D fillOffset(0, 0, 0);
+  amd::Coord3D fillSize(sizeBytes, 1, 1);
+  amd::FillMemoryCommand* command =
+      new amd::FillMemoryCommand(*queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
+                                 &value, sizeof(int), fillOffset, fillSize);
+
+  if (!command) {
+    return hipErrorOutOfMemory;
+  }
+
+  command->enqueue();
+  command->release();
+
+  return hipSuccess;
 }
 
 hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
@@ -294,9 +327,34 @@ hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
 hipError_t hipArrayCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray) {
   HIP_INIT_API(array, pAllocateArray);
 
-  assert(0 && "Unimplemented");
+  if (array[0]->width == 0) {
+    return hipErrorInvalidValue;
+  }
 
-  return hipErrorUnknown;
+  *array = (hipArray*)malloc(sizeof(hipArray));
+  array[0]->drvDesc = *pAllocateArray;
+  array[0]->width = pAllocateArray->width;
+  array[0]->height = pAllocateArray->height;
+  array[0]->isDrv = true;
+  array[0]->textureType = hipTextureType2D;
+  void** ptr = &array[0]->data;
+
+  cl_channel_order channelOrder;
+  cl_channel_type channelType;
+  getDrvChannelOrderAndType(pAllocateArray->format, pAllocateArray->numChannels, 
+                            &channelOrder, &channelType);
+
+  const cl_image_format image_format = { channelOrder, channelType };
+  size_t size = pAllocateArray->width;
+  if (pAllocateArray->height > 0) {
+      size = size * pAllocateArray->height;
+  }
+
+  size_t pitch = 0;
+  hipError_t status = ihipMallocPitch(ptr, &pitch, array[0]->width, array[0]->height, 1, CL_MEM_OBJECT_IMAGE2D,
+                      &image_format);
+
+  return status;
 }
 
 hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
@@ -477,9 +535,44 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes,
                           hipMemcpyKind kind, hipStream_t stream) {
   HIP_INIT_API(dst, src, sizeBytes, kind, stream);
 
-  assert(0 && "Unimplemented");
+  amd::Command* command = nullptr;
+  amd::Command::EventWaitList waitList;
+  amd::Memory* memory;
+  amd::HostQueue* queue;
 
-  return hipErrorUnknown;
+  if (stream == nullptr) {
+    queue = hip::getNullStream();
+  } else {
+    queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
+  }
+
+  if (!queue) {
+    return hipErrorOutOfMemory;
+  }
+
+  switch (kind) {
+  case hipMemcpyDeviceToHost:
+    memory = amd::SvmManager::FindSvmBuffer(src);
+    command = new amd::ReadMemoryCommand(*queue, CL_COMMAND_READ_BUFFER, waitList,
+      *memory->asBuffer(), 0, sizeBytes, dst);
+    break;
+  case hipMemcpyHostToDevice:
+    memory = amd::SvmManager::FindSvmBuffer(dst);
+    command = new amd::WriteMemoryCommand(*queue, CL_COMMAND_WRITE_BUFFER, waitList,
+      *memory->asBuffer(), 0, sizeBytes, src);
+    break;
+  default:
+    assert(!"Shouldn't reach here");
+    break;
+  }
+  if (!command) {
+    return hipErrorOutOfMemory;
+  }
+
+  command->enqueue();
+  command->release();
+
+  return hipSuccess;
 }
 
 
@@ -514,9 +607,52 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
                        size_t height, hipMemcpyKind kind) {
   HIP_INIT_API(dst, dpitch, src, spitch, width, height, kind);
 
-  assert(0 && "Unimplemented");
+  amd::HostQueue* queue = hip::getNullStream();
+  if (!queue) {
+    return hipErrorOutOfMemory;
+  }
 
-  return hipErrorUnknown;
+  // Create buffer rectangle info structure
+  amd::BufferRect srcRect;
+  amd::BufferRect dstRect;
+  amd::Memory* srcPtr = amd::SvmManager::FindSvmBuffer(src);
+  amd::Memory* dstPtr = amd::SvmManager::FindSvmBuffer(dst);
+  size_t region[3] = {width, height, 0};
+  size_t src_slice_pitch = spitch * height;
+  size_t dst_slice_pitch = dpitch * height;
+  size_t origin[3] = { };
+
+  if (!srcRect.create(origin, region, spitch, src_slice_pitch) ||
+      !dstRect.create(origin, region, dpitch, dst_slice_pitch)) {
+    return hipErrorInvalidValue;
+  }
+
+  amd::Coord3D srcStart(srcRect.start_, 0, 0);
+  amd::Coord3D dstStart(dstRect.start_, 0, 0);
+  amd::Coord3D srcEnd(srcRect.end_, 1, 1);
+  amd::Coord3D dstEnd(dstRect.end_, 1, 1);
+
+  if (!srcPtr->asBuffer()->validateRegion(srcStart, srcEnd) ||
+      !dstPtr->asBuffer()->validateRegion(dstStart, dstEnd)) {
+    return hipErrorInvalidValue;
+  }
+
+  amd::Command::EventWaitList waitList;
+  amd::Coord3D size(region[0], region[1], region[2]);
+
+  amd::CopyMemoryCommand* command =
+      new amd::CopyMemoryCommand(*queue, CL_COMMAND_COPY_BUFFER_RECT, waitList, *srcPtr->asBuffer(),
+                                 *dstPtr->asBuffer(), srcStart, dstStart, size, srcRect, dstRect);
+
+  if (!command) {
+    return hipErrorOutOfMemory;
+  }
+
+  command->enqueue();
+  command->awaitCompletion();
+  command->release();
+
+  return hipSuccess;
 }
 
 hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
@@ -679,6 +815,7 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
   HIP_INIT_API(p);
 
   amd::HostQueue* queue = hip::getNullStream();
+
   if (!queue) {
     return hipErrorOutOfMemory;
   }
