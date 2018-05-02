@@ -641,7 +641,7 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, si
     return ihipLogStatus(hip_status);
 }
 
-hipError_t hipArray3DCreate(hipArray_t* array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray) {
+hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray) {
     HIP_INIT_SPECIAL_API((TRACE_MEM), array, pAllocateArray);
     hipError_t hip_status = hipSuccess;
 
@@ -764,7 +764,7 @@ hipError_t hipArray3DCreate(hipArray_t* array, const HIP_ARRAY_DESCRIPTOR* pAllo
     return ihipLogStatus(hip_status);
 }
 
-hipError_t hipMalloc3DArray(hipArray_t* array, const struct hipChannelFormatDesc* desc,
+hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc* desc,
                             struct hipExtent extent, unsigned int flags) {
 
 
