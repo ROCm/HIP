@@ -150,8 +150,7 @@ typedef CUfunction hipFunction_t;
 typedef CUdeviceptr hipDeviceptr_t;
 typedef struct cudaArray hipArray;
 typedef struct cudaArray* hipArray_const_t;
-typedef cudaMemcpy3DParms hipMemcpy3DParms;
-//#define hipMemcpy3DParms cudaMemcpy3DParms
+#define hipMemcpy3DParms cudaMemcpy3DParms
 #define hipArrayDefault cudaArrayDefault
 
 typedef cudaTextureObject_t hipTextureObject_t;
