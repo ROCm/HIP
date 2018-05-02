@@ -40,7 +40,7 @@ struct __CudaFatBinaryWrapper {
 
 #define CLANG_OFFLOAD_BUNDLER_MAGIC_STR "__CLANG_OFFLOAD_BUNDLE__"
 #define OPENMP_AMDGCN_AMDHSA_TRIPLE "openmp-amdgcn--amdhsa"
-#define HCC_AMDGCN_AMDHSA_TRIPLE "hcc-amdgcn--amdhsa"
+#define HCC_AMDGCN_AMDHSA_TRIPLE "hcc-amdgcn-amd-amdhsa-"
 
 struct __ClangOffloadBundleDesc {
   uint64_t offset;

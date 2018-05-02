@@ -958,6 +958,15 @@ hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t 
   return hipSuccess;
 }
 
+hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, size_t height,
+                       hipStream_t stream) {
+  HIP_INIT_API(dst, pitch, value, width, height, stream);
+
+  assert(0 && "Unimplemented");
+
+  return hipErrorUnknown;
+}
+
 hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes) {
   HIP_INIT_API(dst, value, sizeBytes);
 
