@@ -150,13 +150,19 @@ typedef CUfunction hipFunction_t;
 typedef CUdeviceptr hipDeviceptr_t;
 typedef struct cudaArray hipArray;
 typedef struct cudaArray* hipArray_const_t;
+#define hipMemcpy3DParms cudaMemcpy3DParms
 #define hipArrayDefault cudaArrayDefault
 
 typedef cudaTextureObject_t hipTextureObject_t;
 typedef cudaSurfaceObject_t hipSurfaceObject_t;
-#define hipTextureType2D cudaTextureType2D;
+#define hipTextureType2D cudaTextureType2D
+#define hipTextureType3D cudaTextureType3D
 #define hipDeviceMapHost cudaDeviceMapHost
 
+#define hipExtent cudaExtent
+#define make_hipExtent make_cudaExtent
+#define make_hipPos make_cudaPos
+#define make_hipPitchedPtr make_cudaPitchedPtr
 // Flags that can be used with hipStreamCreateWithFlags
 #define hipStreamDefault cudaStreamDefault
 #define hipStreamNonBlocking cudaStreamNonBlocking
@@ -399,6 +405,11 @@ inline static hipError_t hipMallocArray(hipArray** array, const struct hipChanne
     return hipCUDAErrorTohipError(cudaMallocArray(array, desc, width, height, flags));
 }
 
+inline static hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc* desc,
+                            struct hipExtent extent, unsigned int flags) {
+    return hipCUDAErrorTohipError(cudaMalloc3DArray(array, desc, extent, flags));
+}
+
 inline static hipError_t hipFreeArray(hipArray* array) {
     return hipCUDAErrorTohipError(cudaFreeArray(array));
 }
@@ -529,6 +540,11 @@ inline static hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, 
                                      size_t width, size_t height, hipMemcpyKind kind) {
     return hipCUDAErrorTohipError(
         cudaMemcpy2D(dst, dpitch, src, spitch, width, height, hipMemcpyKindToCudaMemcpyKind(kind)));
+}
+
+inline static hipError_t hipMemcpy3D(const struct hipMemcpy3DParms *p)
+{
+    return hipCUDAErrorTohipError(cudaMemcpy3D(p));
 }
 
 inline static hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch,
