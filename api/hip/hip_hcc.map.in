@@ -99,6 +99,7 @@ global:
     hipMemset;
     hipMemset2D;
     hipMemsetAsync;
+    hipMemset2DAsync;
     hipMemsetD8;
     hipModuleGetFunction;
     hipModuleGetGlobal;
