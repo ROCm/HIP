@@ -49,14 +49,20 @@ enum ConvTypes {
     CONV_NUMERIC_LITERAL,
     CONV_LAST
 };
-constexpr int NUM_CONV_TYPES = (int)ConvTypes::CONV_LAST;
+constexpr int NUM_CONV_TYPES = (int) ConvTypes::CONV_LAST;
 
-enum ApiTypes { API_DRIVER = 0, API_RUNTIME, API_BLAS, API_RAND, API_LAST };
-constexpr int NUM_API_TYPES = (int)ApiTypes::API_LAST;
+enum ApiTypes {
+    API_DRIVER = 0,
+    API_RUNTIME,
+    API_BLAS,
+    API_RAND,
+    API_LAST
+};
+constexpr int NUM_API_TYPES = (int) ApiTypes::API_LAST;
 
 // The names of various fields in in the statistics reports.
-extern const char* counterNames[NUM_CONV_TYPES];
-extern const char* apiNames[NUM_API_TYPES];
+extern const char *counterNames[NUM_CONV_TYPES];
+extern const char *apiNames[NUM_API_TYPES];
 
 
 struct hipCounter {
@@ -71,14 +77,14 @@ struct hipCounter {
  * Tracks a set of named counters, as well as counters for each of the type enums defined above.
  */
 class StatCounter {
-   private:
+private:
     // Each thing we track is either "supported" or "unsupported"...
     std::map<std::string, int> counters;
 
     int apiCounters[NUM_API_TYPES] = {};
     int convTypeCounters[NUM_CONV_TYPES] = {};
 
-   public:
+public:
     void incrementCounter(const hipCounter& counter, std::string name);
 
     /**
@@ -109,15 +115,15 @@ class Statistics {
     chr::steady_clock::time_point startTime;
     chr::steady_clock::time_point completionTime;
 
-   public:
+public:
     Statistics(std::string name);
 
-    void incrementCounter(const hipCounter& counter, std::string name);
+    void incrementCounter(const hipCounter &counter, std::string name);
 
     /**
      * Add the counters from `other` onto the counters of this object.
      */
-    void add(const Statistics& other);
+    void add(const Statistics &other);
 
     void lineTouched(int lineNumber);
     void bytesChanged(int bytes);
@@ -129,18 +135,18 @@ class Statistics {
 
     /////// Output functions ///////
 
-   public:
-    /**
+public:
+   /**
      * Pretty-print the statistics stored in this object.
      *
      * @param csv Pointer to an output stream for the CSV to write. If null, no CSV is written
-     * @param printOut Pointer to an output stream to print human-readable textual stats to. If
-     * null, no such stats are produced.
+     * @param printOut Pointer to an output stream to print human-readable textual stats to. If null, no
+     *                 such stats are produced.
      */
     void print(std::ostream* csv, llvm::raw_ostream* printOut, bool skipHeader = false);
 
     /// Print aggregated statistics for all registered counters.
-    static void printAggregate(std::ostream* csv, llvm::raw_ostream* printOut);
+    static void printAggregate(std::ostream *csv, llvm::raw_ostream* printOut);
 
     /////// Static nonsense ///////
 
@@ -156,15 +162,15 @@ class Statistics {
     static Statistics getAggregate();
 
     /**
-     * Convenient global entry point for updating the "active" Statistics. Since we operate
-     * single-threadedly processing one file at a time, this allows us to simply expose the stats
-     * for the current file globally, simplifying things.
+     * Convenient global entry point for updating the "active" Statistics. Since we operate single-threadedly
+     * processing one file at a time, this allows us to simply expose the stats for the current file globally,
+     * simplifying things.
      */
     static Statistics& current();
 
     /**
-     * Set the active Statistics object to the named one, creating it if necessary, and write the
-     * completion timestamp into the currently active one.
+     * Set the active Statistics object to the named one, creating it if necessary, and write the completion
+     * timestamp into the currently active one.
      */
     static void setActive(std::string name);
 };

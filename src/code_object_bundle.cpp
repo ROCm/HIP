@@ -10,23 +10,55 @@
 
 using namespace std;
 
-hsa_isa_t hip_impl::triple_to_hsa_isa(const std::string& triple) {
-    static constexpr const char prefix[] = "hcc-amdgcn--amdhsa-gfx";
-    static constexpr size_t prefix_sz = sizeof(prefix) - 1;
+inline
+std::string transmogrify_triple(const std::string& triple)
+{
+    static constexpr const char old_prefix[]{"hcc-amdgcn--amdhsa-gfx"};
+    static constexpr const char new_prefix[]{"hcc-amdgcn-amd-amdhsa--gfx"};
 
-    hsa_isa_t r = {};
+    if (triple.find(old_prefix) == 0) {
+        return new_prefix + triple.substr(sizeof(old_prefix) - 1);
+    }
 
-    auto idx = triple.find(prefix);
+    return (triple.find(new_prefix) == 0) ? triple : "";
+}
 
-    if (idx != string::npos) {
-        idx += prefix_sz;
-        string tmp = "AMD:AMDGPU";
-        while (idx != triple.size()) {
-            tmp.push_back(':');
-            tmp.push_back(triple[idx++]);
+inline
+std::string isa_name(std::string triple)
+{
+    static constexpr const char offload_prefix[]{"hcc-"};
+
+    triple = transmogrify_triple(triple);
+    if (triple.empty()) return {};
+
+    triple.erase(0, sizeof(offload_prefix) - 1);
+
+    static hsa_isa_t tmp{};
+    static const bool is_old_rocr{
+        hsa_isa_from_name(triple.c_str(), &tmp) != HSA_STATUS_SUCCESS};
+
+    if (is_old_rocr) {
+        auto tmp{triple.substr(triple.rfind('x') + 1)};
+        triple.replace(0, std::string::npos, "AMD:AMDGPU");
+
+        for (auto&& x : tmp) {
+            triple.push_back(':');
+            triple.push_back(x);
         }
+    }
 
-        hsa_isa_from_name(tmp.c_str(), &r);
+    return triple;
+}
+
+hsa_isa_t hip_impl::triple_to_hsa_isa(const std::string& triple) {
+    const auto isa{isa_name(std::move(triple))};
+
+    if (isa.empty()) return hsa_isa_t({});
+
+    hsa_isa_t r{};
+
+    if(HSA_STATUS_SUCCESS != hsa_isa_from_name(isa.c_str(), &r)) {
+        r.handle = 0;
     }
 
     return r;
