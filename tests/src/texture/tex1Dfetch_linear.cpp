@@ -19,7 +19,6 @@ __global__ void increment_values(float *val,hipTextureObject_t obj)
   {
 	int k=blockIdx.x * blockDim.x + threadIdx.x;
 	val[k]=tex1Dfetch<float>(obj,k);
-printf("Hi, the value of k is ");
 	
   } 
 
