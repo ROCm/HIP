@@ -42,7 +42,7 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
     *ptr = nullptr;
     return hipSuccess;
   }
-  else if (!ptr) {
+  else if (ptr == nullptr) {
     return hipErrorInvalidValue;
   }
 
@@ -51,7 +51,7 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
   }
 
   *ptr = amd::SvmBuffer::malloc(*hip::getCurrentContext(), flags, sizeBytes, hip::getCurrentContext()->devices()[0]->info().memBaseAddrAlign_);
-  if (!*ptr) {
+  if (*ptr == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -83,30 +83,52 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 
   amd::HostQueue* queue = hip::getNullStream();
 
-  if (!queue) {
+  if (queue == nullptr) {
     return hipErrorOutOfMemory;
   }
 
   amd::Command* command = nullptr;
   amd::Command::EventWaitList waitList;
-  amd::Memory* memory;
+  amd::Memory *srcMemory = nullptr;
+  amd::Memory *dstMemory = nullptr;
+
+  srcMemory = amd::SvmManager::FindSvmBuffer(src);
+  dstMemory = amd::SvmManager::FindSvmBuffer(dst);
+
+  if (kind == hipMemcpyDefault) {
+    // Determine kind on VA
+    if (srcMemory == nullptr && dstMemory != nullptr) {
+      kind = hipMemcpyHostToDevice;
+    } else if (srcMemory != nullptr && dstMemory == nullptr) {
+      kind = hipMemcpyDeviceToHost;
+    } else if (srcMemory != nullptr && dstMemory != nullptr) {
+      kind = hipMemcpyDeviceToDevice;
+    } else {
+      kind = hipMemcpyHostToHost;
+    }
+  }
 
   switch (kind) {
   case hipMemcpyDeviceToHost:
-    memory = amd::SvmManager::FindSvmBuffer(src);
     command = new amd::ReadMemoryCommand(*queue, CL_COMMAND_READ_BUFFER, waitList,
-      *memory->asBuffer(), 0, sizeBytes, dst);
+              *srcMemory->asBuffer(), 0, sizeBytes, dst);
     break;
   case hipMemcpyHostToDevice:
-    memory = amd::SvmManager::FindSvmBuffer(dst);
     command = new amd::WriteMemoryCommand(*queue, CL_COMMAND_WRITE_BUFFER, waitList,
-      *memory->asBuffer(), 0, sizeBytes, src);
+              *dstMemory->asBuffer(), 0, sizeBytes, src);
     break;
+  case hipMemcpyDeviceToDevice:
+    command = new amd::CopyMemoryCommand(*queue, CL_COMMAND_COPY_BUFFER, waitList,
+              *srcMemory->asBuffer(),*dstMemory->asBuffer(), 0, 0, sizeBytes);
+    break;
+  case hipMemcpyHostToHost:
+    memcpy(dst, src, sizeBytes);
+    return hipSuccess;
   default:
     assert(!"Shouldn't reach here");
     break;
   }
-  if (!command) {
+  if (command == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -133,12 +155,11 @@ hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t st
 
   if (stream == nullptr) {
     queue = hip::getNullStream();
+    if (queue == nullptr) {
+      return hipErrorOutOfMemory;
+    }
   } else {
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
-  }
-
-  if (!queue) {
-    return hipErrorOutOfMemory;
   }
 
   amd::Command::EventWaitList waitList;
@@ -150,7 +171,7 @@ hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t st
       new amd::FillMemoryCommand(*queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
                                  &value, sizeof(int), fillOffset, fillSize);
 
-  if (!command) {
+  if (command == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -165,7 +186,7 @@ hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
 
   amd::HostQueue* queue = hip::getNullStream();
 
-  if (!queue) {
+  if (queue == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -179,7 +200,7 @@ hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
       new amd::FillMemoryCommand(*queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
                                  &value, sizeof(int), fillOffset, fillSize);
 
-  if (!command) {
+  if (command == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -246,7 +267,7 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
 
   size_t freeMemory[2];
   amd::Device* device = hip::getCurrentContext()->devices()[0];
-  if(!device) {
+  if(device == nullptr) {
     return hipErrorInvalidDevice;
   }
 
@@ -286,7 +307,7 @@ hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t heigh
   *ptr = amd::SvmBuffer::malloc(*hip::getCurrentContext(), CL_MEM_SVM_FINE_GRAIN_BUFFER, sizeBytes,
                                 device->info().memBaseAddrAlign_);
 
-  if (!*ptr) {
+  if (*ptr == nullptr) {
     return hipErrorMemoryAllocation;
   }
 
@@ -537,35 +558,56 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes,
 
   amd::Command* command = nullptr;
   amd::Command::EventWaitList waitList;
-  amd::Memory* memory;
   amd::HostQueue* queue;
+  amd::Memory *srcMemory = nullptr;
+  amd::Memory *dstMemory = nullptr;
 
   if (stream == nullptr) {
     queue = hip::getNullStream();
+    if (queue == nullptr) {
+      return hipErrorOutOfMemory;
+    }
   } else {
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
-  if (!queue) {
-    return hipErrorOutOfMemory;
+  srcMemory = amd::SvmManager::FindSvmBuffer(src);
+  dstMemory = amd::SvmManager::FindSvmBuffer(dst);
+
+  if (kind == hipMemcpyDefault) {
+    // Determine kind on VA
+    if (srcMemory == nullptr && dstMemory != nullptr) {
+      kind = hipMemcpyHostToDevice;
+    } else if (srcMemory != nullptr && dstMemory == nullptr) {
+      kind = hipMemcpyDeviceToHost;
+    } else if (srcMemory != nullptr && dstMemory != nullptr) {
+      kind = hipMemcpyDeviceToDevice;
+    } else {
+      kind = hipMemcpyHostToHost;
+    }
   }
 
   switch (kind) {
   case hipMemcpyDeviceToHost:
-    memory = amd::SvmManager::FindSvmBuffer(src);
     command = new amd::ReadMemoryCommand(*queue, CL_COMMAND_READ_BUFFER, waitList,
-      *memory->asBuffer(), 0, sizeBytes, dst);
+      *srcMemory->asBuffer(), 0, sizeBytes, dst);
     break;
   case hipMemcpyHostToDevice:
-    memory = amd::SvmManager::FindSvmBuffer(dst);
     command = new amd::WriteMemoryCommand(*queue, CL_COMMAND_WRITE_BUFFER, waitList,
-      *memory->asBuffer(), 0, sizeBytes, src);
+      *dstMemory->asBuffer(), 0, sizeBytes, src);
     break;
+  case hipMemcpyDeviceToDevice:
+    command = new amd::CopyMemoryCommand(*queue, CL_COMMAND_COPY_BUFFER, waitList,
+              *srcMemory->asBuffer(),*dstMemory->asBuffer(), 0, 0, sizeBytes);
+    break;
+  case hipMemcpyHostToHost:
+    memcpy(dst, src, sizeBytes);
+    return hipSuccess;
   default:
     assert(!"Shouldn't reach here");
     break;
   }
-  if (!command) {
+  if (command == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -608,7 +650,7 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
   HIP_INIT_API(dst, dpitch, src, spitch, width, height, kind);
 
   amd::HostQueue* queue = hip::getNullStream();
-  if (!queue) {
+  if (queue == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -644,7 +686,7 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
       new amd::CopyMemoryCommand(*queue, CL_COMMAND_COPY_BUFFER_RECT, waitList, *srcPtr->asBuffer(),
                                  *dstPtr->asBuffer(), srcStart, dstStart, size, srcRect, dstRect);
 
-  if (!command) {
+  if (command == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -686,7 +728,7 @@ hipError_t hipMemcpyToArray(hipArray* dstArray, size_t wOffset, size_t hOffset, 
   HIP_INIT_API(dstArray, wOffset, hOffset, src, count, kind);
 
   amd::HostQueue* queue = hip::getNullStream();
-  if (!queue) {
+  if (queue == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -711,7 +753,7 @@ hipError_t hipMemcpyToArray(hipArray* dstArray, size_t wOffset, size_t hOffset, 
     assert(!"Shouldn't reach here");
     break;
   }
-  if (!command) {
+  if (command == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -727,7 +769,7 @@ hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffs
   HIP_INIT_API(dst, srcArray, wOffset, hOffset, count, kind);
 
   amd::HostQueue* queue = hip::getNullStream();
-  if (!queue) {
+  if (queue == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -752,7 +794,7 @@ hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffs
     assert(!"Shouldn't reach here");
     break;
   }
-  if (!command) {
+  if (command == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -767,7 +809,7 @@ hipError_t hipMemcpyHtoA(hipArray* dstArray, size_t dstOffset, const void* srcHo
   HIP_INIT_API(dstArray, dstOffset, srcHost, count);
 
   amd::HostQueue* queue = hip::getNullStream();
-  if (!queue) {
+  if (queue == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -776,7 +818,7 @@ hipError_t hipMemcpyHtoA(hipArray* dstArray, size_t dstOffset, const void* srcHo
   amd::Command* command = new amd::WriteMemoryCommand(*queue, CL_COMMAND_WRITE_BUFFER, waitList,
       *memory->asBuffer(), dstOffset, count, srcHost);
 
-  if (!command) {
+  if (command == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -791,7 +833,7 @@ hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t
   HIP_INIT_API(dst, srcArray, srcOffset, count);
 
   amd::HostQueue* queue = hip::getNullStream();
-  if (!queue) {
+  if (queue == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -800,7 +842,7 @@ hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t
   amd::Command* command = new amd::ReadMemoryCommand(*queue, CL_COMMAND_READ_BUFFER, waitList,
       *memory->asBuffer(), srcOffset, count, dst);
 
-  if (!command) {
+  if (command == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -816,7 +858,7 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
 
   amd::HostQueue* queue = hip::getNullStream();
 
-  if (!queue) {
+  if (queue == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -917,7 +959,7 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
       new amd::CopyMemoryCommand(*queue, CL_COMMAND_COPY_BUFFER_RECT, waitList, *src->asBuffer(),
                                  *dst->asBuffer(), srcStart, dstStart, size, srcRect, dstRect);
 
-  if (!command) {
+  if (command == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -932,7 +974,7 @@ hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t 
   HIP_INIT_API(dst, pitch, value, width, height);
 
   amd::HostQueue* queue = hip::getNullStream();
-  if (!queue) {
+  if (queue == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -947,7 +989,7 @@ hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t 
       new amd::FillMemoryCommand(*queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
                                  &value, sizeof(int), fillOffset, fillSize);
 
-  if (!command) {
+  if (command == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -958,20 +1000,46 @@ hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t 
   return hipSuccess;
 }
 
-hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, size_t height,
-                       hipStream_t stream) {
+hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value,
+                            size_t width, size_t height, hipStream_t stream) {
   HIP_INIT_API(dst, pitch, value, width, height, stream);
 
-  assert(0 && "Unimplemented");
+  amd::HostQueue* queue == nullptr;
+  if (stream == nullptr) {
+    queue = hip::getNullStream();
+    if (queue == nullptr) {
+      return hipErrorOutOfMemory;
+    }
+  } else {
+    queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
+  }
 
-  return hipErrorUnknown;
+  amd::Command::EventWaitList waitList;
+  amd::Memory* memory = amd::SvmManager::FindSvmBuffer(dst);
+
+  amd::Coord3D fillOffset(0, 0, 0);
+
+  size_t sizeBytes = pitch * height;
+  amd::Coord3D fillSize(sizeBytes, 1, 1);
+  amd::FillMemoryCommand* command =
+      new amd::FillMemoryCommand(*queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
+                                 &value, sizeof(int), fillOffset, fillSize);
+
+  if (command == nullptr) {
+    return hipErrorOutOfMemory;
+  }
+
+  command->enqueue();
+  command->release();
+
+  return hipSuccess;
 }
 
 hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes) {
   HIP_INIT_API(dst, value, sizeBytes);
 
   amd::HostQueue* queue = hip::getNullStream();
-  if (!queue) {
+  if (queue == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -984,7 +1052,7 @@ hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes
       new amd::FillMemoryCommand(*queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
                                  &value, sizeof(char), fillOffset, fillSize);
 
-  if (!command) {
+  if (command == nullptr) {
     return hipErrorOutOfMemory;
   }
 
