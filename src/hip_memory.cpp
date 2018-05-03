@@ -339,6 +339,11 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags) {
 // width in bytes
 hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height, size_t depth) {
     hipError_t hip_status = hipSuccess;
+    if(ptr==NULL)
+     {
+	hip_status=hipErrorInvalidValue;
+       	return hip_status;
+     }
     // hardcoded 128 bytes
     *pitch = ((((int)width - 1) / 128) + 1) * 128;
     const size_t sizeBytes = (*pitch) * height;
@@ -641,7 +646,7 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, si
     return ihipLogStatus(hip_status);
 }
 
-hipError_t hipArray3DCreate(hipArray_t* array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray) {
+hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray) {
     HIP_INIT_SPECIAL_API((TRACE_MEM), array, pAllocateArray);
     hipError_t hip_status = hipSuccess;
 
@@ -764,7 +769,7 @@ hipError_t hipArray3DCreate(hipArray_t* array, const HIP_ARRAY_DESCRIPTOR* pAllo
     return ihipLogStatus(hip_status);
 }
 
-hipError_t hipMalloc3DArray(hipArray_t* array, const struct hipChannelFormatDesc* desc,
+hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc* desc,
                             struct hipExtent extent, unsigned int flags) {
 
 
@@ -1132,7 +1137,11 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
     hc::completion_future marker;
 
     hipError_t e = hipSuccess;
-
+    if(dst==NULL || src==NULL)
+	{
+	e=hipErrorInvalidValue;
+	return e;
+	}
     try {
         stream->locked_copySync(dst, src, sizeBytes, kind);
     } catch (ihipException& ex) {

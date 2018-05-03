@@ -23,27 +23,31 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_DRIVER_TYPES_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_DRIVER_TYPES_H
 
+#ifndef __cplusplus
+#include <stdbool.h>
+#endif
+
 typedef void* hipDeviceptr_t;
-enum hipChannelFormatKind {
+typedef enum hipChannelFormatKind {
     hipChannelFormatKindSigned = 0,
     hipChannelFormatKindUnsigned = 1,
     hipChannelFormatKindFloat = 2,
     hipChannelFormatKindNone = 3
-};
+}hipChannelFormatKind;
 
-struct hipChannelFormatDesc {
+typedef struct hipChannelFormatDesc {
     int x;
     int y;
     int z;
     int w;
     enum hipChannelFormatKind f;
-};
+}hipChannelFormatDesc;
 
 #define HIP_TRSF_NORMALIZED_COORDINATES 0x01
 #define HIP_TRSF_READ_AS_INTEGER 0x00
 #define HIP_TRSA_OVERRIDE_FORMAT 0x01
 
-enum hipArray_Format {
+typedef enum hipArray_Format {
     HIP_AD_FORMAT_UNSIGNED_INT8 = 0x01,
     HIP_AD_FORMAT_UNSIGNED_INT16 = 0x02,
     HIP_AD_FORMAT_UNSIGNED_INT32 = 0x03,
@@ -52,18 +56,18 @@ enum hipArray_Format {
     HIP_AD_FORMAT_SIGNED_INT32 = 0x0a,
     HIP_AD_FORMAT_HALF = 0x10,
     HIP_AD_FORMAT_FLOAT = 0x20
-};
+}hipArray_Format;
 
-struct HIP_ARRAY_DESCRIPTOR {
+typedef struct HIP_ARRAY_DESCRIPTOR {
     enum hipArray_Format format;
     unsigned int numChannels;
     size_t width;
     size_t height;
     unsigned int flags;
     size_t depth;
-};
+}HIP_ARRAY_DESCRIPTOR;
 
-struct hipArray {
+typedef struct hipArray {
     void* data;  // FIXME: generalize this
     struct hipChannelFormatDesc desc;
     unsigned int type;
@@ -73,7 +77,7 @@ struct hipArray {
     struct HIP_ARRAY_DESCRIPTOR drvDesc;
     bool isDrv;
     unsigned int textureType;
-};
+}hipArray;
 
 typedef struct hip_Memcpy2D {
     size_t height;
@@ -115,17 +119,17 @@ typedef const struct hipMipmappedArray* hipMipmappedArray_const_t;
 /**
  * hip resource types
  */
-enum hipResourceType {
+typedef enum hipResourceType {
     hipResourceTypeArray = 0x00,
     hipResourceTypeMipmappedArray = 0x01,
     hipResourceTypeLinear = 0x02,
     hipResourceTypePitch2D = 0x03
-};
+}hipResourceType;
 
 /**
  * hip texture resource view formats
  */
-enum hipResourceViewFormat {
+typedef enum hipResourceViewFormat {
     hipResViewFormatNone = 0x00,
     hipResViewFormatUnsignedChar1 = 0x01,
     hipResViewFormatUnsignedChar2 = 0x02,
@@ -161,12 +165,12 @@ enum hipResourceViewFormat {
     hipResViewFormatUnsignedBlockCompressed6H = 0x20,
     hipResViewFormatSignedBlockCompressed6H = 0x21,
     hipResViewFormatUnsignedBlockCompressed7 = 0x22
-};
+}hipResourceViewFormat;
 
 /**
  * HIP resource descriptor
  */
-struct hipResourceDesc {
+typedef struct hipResourceDesc {
     enum hipResourceType resType;
 
     union {
@@ -189,7 +193,7 @@ struct hipResourceDesc {
             size_t pitchInBytes;
         } pitch2D;
     } res;
-};
+}hipResourceDesc;
 
 /**
  * hip resource view descriptor
@@ -218,27 +222,27 @@ typedef enum hipMemcpyKind {
         4  ///< Runtime will automatically determine copy-kind based on virtual addresses.
 } hipMemcpyKind;
 
-struct hipPitchedPtr {
+typedef struct hipPitchedPtr {
     void* ptr;
     size_t pitch;
     size_t xsize;
     size_t ysize;
-};
+}hipPitchedPtr;
 
-struct hipExtent {
+typedef struct hipExtent {
     size_t width;  // Width in elements when referring to array memory, in bytes when referring to
                    // linear memory
     size_t height;
     size_t depth;
-};
+}hipExtent;
 
-struct hipPos {
+typedef struct hipPos {
     size_t x;
     size_t y;
     size_t z;
-};
+}hipPos;
 
-struct hipMemcpy3DParms {
+typedef struct hipMemcpy3DParms {
     hipArray_t srcArray;
     struct hipPos srcPos;
     struct hipPitchedPtr srcPtr;
@@ -273,7 +277,7 @@ struct hipMemcpy3DParms {
     size_t srcXInBytes;
     size_t srcY;
     size_t srcZ;
-};
+}hipMemcpy3DParms;
 
 static __inline__ struct hipPitchedPtr make_hipPitchedPtr(void* d, size_t p, size_t xsz,
                                                           size_t ysz) {
