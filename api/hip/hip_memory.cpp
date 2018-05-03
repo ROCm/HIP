@@ -89,11 +89,8 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 
   amd::Command* command = nullptr;
   amd::Command::EventWaitList waitList;
-  amd::Memory *srcMemory = nullptr;
-  amd::Memory *dstMemory = nullptr;
-
-  srcMemory = amd::SvmManager::FindSvmBuffer(src);
-  dstMemory = amd::SvmManager::FindSvmBuffer(dst);
+  amd::Memory *srcMemory = amd::SvmManager::FindSvmBuffer(src);;
+  amd::Memory *dstMemory = amd::SvmManager::FindSvmBuffer(dst);
 
   if (kind == hipMemcpyDefault) {
     // Determine kind on VA
@@ -304,7 +301,7 @@ hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t heigh
   *pitch = width * imageFormat.getElementSize();
 
   size_t sizeBytes = *pitch * height * depth;
-  *ptr = amd::SvmBuffer::malloc(*hip::getCurrentContext(), CL_MEM_SVM_FINE_GRAIN_BUFFER, sizeBytes,
+  *ptr = amd::SvmBuffer::malloc(*hip::getCurrentContext(), CL_MEM_SVM_COARSE_GRAIN_BUFFER, sizeBytes,
                                 device->info().memBaseAddrAlign_);
 
   if (*ptr == nullptr) {
@@ -559,8 +556,8 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes,
   amd::Command* command = nullptr;
   amd::Command::EventWaitList waitList;
   amd::HostQueue* queue;
-  amd::Memory *srcMemory = nullptr;
-  amd::Memory *dstMemory = nullptr;
+  amd::Memory *srcMemory = amd::SvmManager::FindSvmBuffer(src);;
+  amd::Memory *dstMemory = amd::SvmManager::FindSvmBuffer(dst);
 
   if (stream == nullptr) {
     queue = hip::getNullStream();
@@ -570,9 +567,6 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes,
   } else {
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
-
-  srcMemory = amd::SvmManager::FindSvmBuffer(src);
-  dstMemory = amd::SvmManager::FindSvmBuffer(dst);
 
   if (kind == hipMemcpyDefault) {
     // Determine kind on VA
@@ -709,9 +703,57 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
                             size_t height, hipMemcpyKind kind, hipStream_t stream) {
   HIP_INIT_API(dst, dpitch, src, spitch, width, height, kind, stream);
 
-  assert(0 && "Unimplemented");
+  amd::HostQueue* queue;
 
-  return hipErrorUnknown;
+  if (stream == nullptr) {
+    queue = hip::getNullStream();
+    if (queue == nullptr) {
+      return hipErrorOutOfMemory;
+    }
+  } else {
+    queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
+  }
+
+  // Create buffer rectangle info structure
+  amd::BufferRect srcRect;
+  amd::BufferRect dstRect;
+  amd::Memory* srcPtr = amd::SvmManager::FindSvmBuffer(src);
+  amd::Memory* dstPtr = amd::SvmManager::FindSvmBuffer(dst);
+  size_t region[3] = {width, height, 0};
+  size_t src_slice_pitch = spitch * height;
+  size_t dst_slice_pitch = dpitch * height;
+  size_t origin[3] = { };
+
+  if (!srcRect.create(origin, region, spitch, src_slice_pitch) ||
+      !dstRect.create(origin, region, dpitch, dst_slice_pitch)) {
+    return hipErrorInvalidValue;
+  }
+
+  amd::Coord3D srcStart(srcRect.start_, 0, 0);
+  amd::Coord3D dstStart(dstRect.start_, 0, 0);
+  amd::Coord3D srcEnd(srcRect.end_, 1, 1);
+  amd::Coord3D dstEnd(dstRect.end_, 1, 1);
+
+  if (!srcPtr->asBuffer()->validateRegion(srcStart, srcEnd) ||
+      !dstPtr->asBuffer()->validateRegion(dstStart, dstEnd)) {
+    return hipErrorInvalidValue;
+  }
+
+  amd::Command::EventWaitList waitList;
+  amd::Coord3D size(region[0], region[1], region[2]);
+
+  amd::CopyMemoryCommand* command =
+      new amd::CopyMemoryCommand(*queue, CL_COMMAND_COPY_BUFFER_RECT, waitList, *srcPtr->asBuffer(),
+                                 *dstPtr->asBuffer(), srcStart, dstStart, size, srcRect, dstRect);
+
+  if (command == nullptr) {
+    return hipErrorOutOfMemory;
+  }
+
+  command->enqueue();
+  command->release();
+
+  return hipSuccess;
 }
 
 hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
