@@ -339,6 +339,11 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags) {
 // width in bytes
 hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height, size_t depth) {
     hipError_t hip_status = hipSuccess;
+    if(ptr==NULL)
+     {
+	hip_status=hipErrorInvalidValue;
+       	return hip_status;
+     }
     // hardcoded 128 bytes
     *pitch = ((((int)width - 1) / 128) + 1) * 128;
     const size_t sizeBytes = (*pitch) * height;
@@ -1132,7 +1137,11 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
     hc::completion_future marker;
 
     hipError_t e = hipSuccess;
-
+    if(dst==NULL || src==NULL)
+	{
+	e=hipErrorInvalidValue;
+	return e;
+	}
     try {
         stream->locked_copySync(dst, src, sizeBytes, kind);
     } catch (ihipException& ex) {
