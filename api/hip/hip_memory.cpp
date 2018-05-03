@@ -1004,7 +1004,7 @@ hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value,
                             size_t width, size_t height, hipStream_t stream) {
   HIP_INIT_API(dst, pitch, value, width, height, stream);
 
-  amd::HostQueue* queue == nullptr;
+  amd::HostQueue* queue = nullptr;
   if (stream == nullptr) {
     queue = hip::getNullStream();
     if (queue == nullptr) {
