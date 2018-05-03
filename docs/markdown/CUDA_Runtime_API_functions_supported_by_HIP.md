@@ -102,9 +102,9 @@
 
 |   **CUDA**                                                |   **HIP**                     |
 |-----------------------------------------------------------|-------------------------------|
-| `cudaConfigureCall`                                       |                               |
-| `cudaLaunch`                                              |                               |
-| `cudaSetupArgument`                                       |                               |
+| `cudaConfigureCall`                                       | `hipConfigureCall`            |
+| `cudaLaunch`                                              | `hipLaunchByPtr`              |
+| `cudaSetupArgument`                                       | `hipSetupArgument`            |
 
 ## **9. Memory Management**
 
@@ -158,7 +158,7 @@
 | `cudaMemcpyToSymbolAsync`                                 | `hipMemcpyToSymbolAsync`      |
 | `cudaMemset`                                              | `hipMemset`                   |
 | `cudaMemset2D`                                            | `hipMemset2D`                 |
-| `cudaMemset2DAsync`                                       |                               |
+| `cudaMemset2DAsync`                                       | `hipMemset2DAsync`            |
 | `cudaMemset3D`                                            |                               |
 | `cudaMemset3DAsync`                                       |                               |
 | `cudaMemsetAsync`                                         | `hipMemsetAsync`              |
@@ -338,8 +338,8 @@
 
 |   **CUDA**                                                |   **HIP**                     |
 |-----------------------------------------------------------|-------------------------------|
-| `cudaCreateSurfaceObject`                                 |                               |
-| `cudaDestroySurfaceObject`                                |                               |
+| `cudaCreateSurfaceObject`                                 | `hipCreateSurfaceObject`      |
+| `cudaDestroySurfaceObject`                                | `hipDestroySurfaceObject`     |
 | `cudaGetSurfaceObjectResourceDesc`                        |                               |
 
 ## **27. Version Management**
@@ -675,10 +675,10 @@
 |            0 |*`cudaSharedMemBankSizeDefault`*               |*`hipSharedMemBankSizeDefault`*                       |
 |            1 |*`cudaSharedMemBankSizeFourByte`*              |*`hipSharedMemBankSizeFourByte`*                      |
 |            2 |*`cudaSharedMemBankSizeEightByte`*             |*`hipSharedMemBankSizeEightByte`*                     |
-| enum         |***`cudaSurfaceBoundaryMode`***                |                                                      |
-|            0 |*`cudaBoundaryModeZero`*                       |                                                      |
-|            1 |*`cudaBoundaryModeClamp`*                      |                                                      |
-|            2 |*`cudaBoundaryModeTrap`*                       |                                                      |
+| enum         |***`cudaSurfaceBoundaryMode`***                |***`hipSurfaceBoundaryMode`***                        |
+|            0 |*`cudaBoundaryModeZero`*                       |*`hipBoundaryModeZero`*                               |
+|            1 |*`cudaBoundaryModeClamp`*                      |*`hipBoundaryModeClamp`*                              |
+|            2 |*`cudaBoundaryModeTrap`*                       |*`hipBoundaryModeTrap`*                               |
 | enum         |***`cudaSurfaceFormatMode`***                  |                                                      |
 |            0 |*`cudaFormatModeForced`*                       |                                                      |
 |            1 |*`cudaFormatModeAuto`*                         |                                                      |
@@ -742,7 +742,7 @@
 | typedef      | `cudaOutputMode_t`                            |                                                      |
 | typedef      | `cudaStream_t`                                | `hipStream_t`                                        |
 | typedef      | `cudaStreamCallback_t`                        | `hipStreamCallback_t`                                |
-| typedef      | `cudaSurfaceObject_t`                         |                                                      |
+| typedef      | `cudaSurfaceObject_t`                         | `hipSurfaceObject_t`                                 |
 | typedef      | `cudaTextureObject_t`                         | `hipTextureObject_t`                                 |
 | typedef      | `CUuuid_stcudaUUID_t`                         |                                                      |
 | define       | `CUDA_IPC_HANDLE_SIZE`                        |                                                      |
