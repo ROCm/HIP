@@ -15,7 +15,7 @@ using namespace std;
 
 bool testResult=true;
 
-__global__ void increment_values(float *val,hipTextureObject_t obj)
+__global__ void tex1d_kernel(float *val,hipTextureObject_t obj)
   {
 	int k=blockIdx.x * blockDim.x + threadIdx.x;
 	val[k]=tex1Dfetch<float>(obj,k);
@@ -83,7 +83,7 @@ for(i=0;i<N;i++)
 output[i]=0;
 
 
-hipLaunchKernelGGL(increment_values,dim3(dimGrid),dim3(dimBlock), 0,0, tex_buf_check,tex_obj  );
+hipLaunchKernelGGL(tex1d_kernel,dim3(dimGrid),dim3(dimBlock), 0,0, tex_buf_check,tex_obj  );
 hipDeviceSynchronize();
 
 
