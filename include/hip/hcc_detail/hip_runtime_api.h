@@ -30,7 +30,6 @@ THE SOFTWARE.
  */
 #include <stdint.h>
 #include <stddef.h>
-#include <iostream>
 
 #ifndef GENERIC_GRID_LAUNCH
 #define GENERIC_GRID_LAUNCH 1
@@ -41,6 +40,9 @@ THE SOFTWARE.
 #include <hip/hcc_detail/driver_types.h>
 #include <hip/hcc_detail/hip_texture_types.h>
 #include <hip/hcc_detail/hip_surface_types.h>
+
+#define DEPRECATED(msg) __attribute__ ((deprecated(msg)))
+#define DEPRECATED_MSG "This API is marked as deprecated and may not be supported in future releases.For more details please refer https://github.com/ROCm-Developer-Tools/HIP/tree/master/docs/markdown/hip_deprecated_api_list"
 
 #if defined(__HCC__) && (__hcc_workweek__ < 16155)
 #error("This version of HIP requires a newer version of HCC.");
@@ -1314,7 +1316,7 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
  * hipMemcpyFromSymbolAsync
  */
 hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t sizeBytes,
-                             size_t offset = 0, hipMemcpyKind kind = hipMemcpyHostToDevice);
+                             size_t offset __dparm(0), hipMemcpyKind kind __dparm(hipMemcpyHostToDevice));
 
 
 /**
@@ -1343,13 +1345,13 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t siz
  * hipMemcpyFromSymbolAsync
  */
 hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src, size_t sizeBytes,
-                                  size_t offset, hipMemcpyKind kind, hipStream_t stream = 0);
+                                  size_t offset, hipMemcpyKind kind, hipStream_t stream __dparm(0));
 
 hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t sizeBytes,
-                               size_t offset = 0, hipMemcpyKind kind = hipMemcpyDeviceToHost);
+                               size_t offset __dparm(0), hipMemcpyKind kind __dparm( hipMemcpyDeviceToHost ));
 
 hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t sizeBytes,
-                                    size_t offset, hipMemcpyKind kind, hipStream_t stream = 0);
+                                    size_t offset, hipMemcpyKind kind, hipStream_t stream __dparm(0));
 
 /**
  *  @brief Copy data from src to dst asynchronously.
@@ -1379,13 +1381,8 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t si
  * hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync,
  * hipMemcpyFromSymbolAsync
  */
-#if __cplusplus
 hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
-                          hipStream_t stream = 0);
-#else
-hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
-                          hipStream_t stream);
-#endif
+                          hipStream_t stream __dparm(0));
 
 /**
  *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dest with the constant
@@ -1424,11 +1421,7 @@ hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char value, size_t sizeByte
  *  @param[in]  stream - Stream identifier
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
  */
-#if __cplusplus
-hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream = 0);
-#else
-hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream);
-#endif
+hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream __dparm(0));
 
 /**
  *  @brief Fills the memory area pointed to by dst with the constant value.
@@ -1484,16 +1477,11 @@ hipError_t hipMemPtrGetInfo(void* ptr, size_t* size);
  *
  *  @see hipMalloc, hipMallocPitch, hipFree, hipFreeArray, hipHostMalloc, hipHostFree
  */
-#if __cplusplus
 hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, size_t width,
-                          size_t height = 0, unsigned int flags = hipArrayDefault);
-#else
-hipError_t hipMallocArray(hipArray** array, const struct hipChannelFormatDesc* desc, size_t width,
-                          size_t height, unsigned int flags);
-#endif
+                          size_t height __dparm(0), unsigned int flags __dparm(hipArrayDefault));
 hipError_t hipArrayCreate(hipArray** pHandle, const HIP_ARRAY_DESCRIPTOR* pAllocateArray);
 
-hipError_t hipArray3DCreate(hipArray_t* array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray);
+hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray);
 
 hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent);
 
@@ -1519,7 +1507,7 @@ hipError_t hipFreeArray(hipArray* array);
  *  @see hipMalloc, hipMallocPitch, hipFree, hipFreeArray, hipHostMalloc, hipHostFree
  */
 
-hipError_t hipMalloc3DArray(hipArray_t* array, const struct hipChannelFormatDesc* desc,
+hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc* desc,
                             struct hipExtent extent, unsigned int flags);
 /**
  *  @brief Copies data between host and device.
@@ -1558,13 +1546,8 @@ hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy);
  *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray, hipMemcpyToSymbol,
  * hipMemcpyAsync
  */
-#if __cplusplus
 hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
-                            size_t height, hipMemcpyKind kind, hipStream_t stream = 0);
-#else
-hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
-                            size_t height, hipMemcpyKind kind, hipStream_t stream);
-#endif
+                            size_t height, hipMemcpyKind kind, hipStream_t stream __dparm(0));
 
 /**
  *  @brief Copies data between host and device.
@@ -1776,13 +1759,8 @@ hipError_t hipMemcpyPeer(void* dst, int dstDeviceId, const void* src, int srcDev
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice
  */
-#if __cplusplus
 hipError_t hipMemcpyPeerAsync(void* dst, int dstDeviceId, const void* src, int srcDevice,
-                              size_t sizeBytes, hipStream_t stream = 0);
-#else
-hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int srcDevice,
-                              size_t sizeBytes, hipStream_t stream);
-#endif
+                              size_t sizeBytes, hipStream_t stream __dparm(0));
 #endif
 
 
@@ -1828,7 +1806,7 @@ hipError_t hipInit(unsigned int flags);
  * @see hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxPushCurrent,
  * hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxCreate(hipCtx_t* ctx, unsigned int flags, hipDevice_t device);
+hipError_t hipCtxCreate(hipCtx_t* ctx, unsigned int flags, hipDevice_t device)DEPRECATED(DEPRECATED_MSG);
 
 /**
  * @brief Destroy a HIP context.
@@ -1840,7 +1818,7 @@ hipError_t hipCtxCreate(hipCtx_t* ctx, unsigned int flags, hipDevice_t device);
  * @see hipCtxCreate, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,hipCtxSetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
  */
-hipError_t hipCtxDestroy(hipCtx_t ctx);
+hipError_t hipCtxDestroy(hipCtx_t ctx) DEPRECATED(DEPRECATED_MSG);
 
 /**
  * @brief Pop the current/default context and return the popped context.
@@ -1852,7 +1830,7 @@ hipError_t hipCtxDestroy(hipCtx_t ctx);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxSetCurrent, hipCtxGetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
+hipError_t hipCtxPopCurrent(hipCtx_t* ctx) DEPRECATED(DEPRECATED_MSG);
 
 /**
  * @brief Push the context to be set as current/ default context
@@ -1864,7 +1842,7 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
  */
-hipError_t hipCtxPushCurrent(hipCtx_t ctx);
+hipError_t hipCtxPushCurrent(hipCtx_t ctx) DEPRECATED(DEPRECATED_MSG);
 
 /**
  * @brief Set the passed context as current/default
@@ -1876,7 +1854,7 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
  */
-hipError_t hipCtxSetCurrent(hipCtx_t ctx);
+hipError_t hipCtxSetCurrent(hipCtx_t ctx) DEPRECATED(DEPRECATED_MSG);
 
 /**
  * @brief Get the handle of the current/ default context
@@ -1888,7 +1866,7 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetDevice, hipCtxGetFlags, hipCtxPopCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
+hipError_t hipCtxGetCurrent(hipCtx_t* ctx) DEPRECATED(DEPRECATED_MSG);
 
 /**
  * @brief Get the handle of the device associated with current/default context
@@ -1901,7 +1879,7 @@ hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize
  */
 
-hipError_t hipCtxGetDevice(hipDevice_t* device);
+hipError_t hipCtxGetDevice(hipDevice_t* device) DEPRECATED(DEPRECATED_MSG);
 
 /**
  * @brief Returns the approximate HIP api version.
@@ -1920,7 +1898,7 @@ hipError_t hipCtxGetDevice(hipDevice_t* device);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetDevice, hipCtxGetFlags, hipCtxPopCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion);
+hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion) DEPRECATED(DEPRECATED_MSG);
 
 /**
  * @brief Set Cache configuration for a specific function
@@ -1935,7 +1913,7 @@ hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig);
+hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig) DEPRECATED(DEPRECATED_MSG);
 
 /**
  * @brief Set L1/Shared cache partition.
@@ -1950,7 +1928,7 @@ hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig);
+hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig) DEPRECATED(DEPRECATED_MSG);
 
 /**
  * @brief Set Shared memory bank configuration.
@@ -1965,7 +1943,7 @@ hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config);
+hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config) DEPRECATED(DEPRECATED_MSG);
 
 /**
  * @brief Get Shared memory bank configuration.
@@ -1980,7 +1958,7 @@ hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig);
+hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig) DEPRECATED(DEPRECATED_MSG);
 
 /**
  * @brief Blocks until the default context has completed all preceding requested tasks.
@@ -1993,7 +1971,7 @@ hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxGetDevice
  */
-hipError_t hipCtxSynchronize(void);
+hipError_t hipCtxSynchronize(void) DEPRECATED(DEPRECATED_MSG);
 
 /**
  * @brief Return flags used for creating default context.
@@ -2005,7 +1983,7 @@ hipError_t hipCtxSynchronize(void);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-hipError_t hipCtxGetFlags(unsigned int* flags);
+hipError_t hipCtxGetFlags(unsigned int* flags) DEPRECATED(DEPRECATED_MSG);
 
 /**
  * @brief Enables direct access to memory allocations in a peer context.
@@ -2026,7 +2004,7 @@ hipError_t hipCtxGetFlags(unsigned int* flags);
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning PeerToPeer support is experimental.
  */
-hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags);
+hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags) DEPRECATED(DEPRECATED_MSG);
 
 /**
  * @brief Disable direct access from current context's virtual address space to memory allocations
@@ -2044,7 +2022,7 @@ hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags);
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning PeerToPeer support is experimental.
  */
-hipError_t hipCtxDisablePeerAccess(hipCtx_t peerCtx);
+hipError_t hipCtxDisablePeerAccess(hipCtx_t peerCtx) DEPRECATED(DEPRECATED_MSG);
 
 /**
  * @brief Get the state of the primary context.

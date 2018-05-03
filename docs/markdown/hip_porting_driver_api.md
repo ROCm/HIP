@@ -39,7 +39,8 @@ HIP as well as a recent versions of CUDA Runtime provide other mechanisms to acc
 The CUDA Runtime API unifies the Context API with the Device API. This simplifies the APIs and has little loss of functionality since each Context can contain a single device, and the benefits of multiple contexts has been replaced with other interfaces.
 HIP provides a context API to facilitate easy porting from existing Driver codes.
 In HIP, the Ctx functions largely provide an alternate syntax for changing the active device.
-Most new applications will prefer to use `hipSetDevice` or the stream APIs.
+
+Most new applications will prefer to use `hipSetDevice` or the stream APIs , therefore HIP has marked hipCtx APIs as **deprecated**. Support for these APIs may not be available in future releases. For more details on deprecated APIs please refer [HIP deprecated APIs](https://github.com/ROCm-Developer-Tools/HIP/tree/master/docs/markdown/hip_deprecated_api_list.md).
 
 ## HIP Module and Ctx APIs
 
