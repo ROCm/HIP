@@ -17,41 +17,146 @@
 
 ### Dependencies
 
-`hipify-clang` requires clang+llvm of at least version 3.8.
+`hipify-clang` requires:
+1. LLVM+CLANG of at least version 3.8.0, latest stable release is 6.0.0.
+2. CUDA at least version 7.5, latest supported release is 9.0.
 
-In most cases, you can get a suitable version of clang+llvm with your package manager.
+| **LLVM release version** | **CUDA latest supported version** |
+|:------------------------:|:---------------------------------:|
+| 3.8.0                    | 7.5                               |
+| 3.8.1                    | 7.5                               |
+| 3.9.0                    | 7.5                               |
+| 3.9.1                    | 7.5                               |
+| 4.0.0                    | 8.0                               |
+| 4.0.1                    | 8.0                               |
+| 5.0.0                    | 8.0                               |
+| 5.0.1                    | 8.0                               |
+| 6.0.0                    | 9.0                               |
 
-Failing that, you can [download a release archive](http://releases.llvm.org/), extract it somewhere, and set
-[CMAKE_PREFIX_PATH](https://cmake.org/cmake/help/v3.0/variable/CMAKE_PREFIX_PATH.html) so `cmake` can find it.
+In most cases, you can get a suitable version of LLVM+CLANG with your package manager.
+
+Failing that or having multiple versions of LLVM, you can [download a release archive](http://releases.llvm.org/), build or install it, and set
+[CMAKE_PREFIX_PATH](https://cmake.org/cmake/help/v3.0/variable/CMAKE_PREFIX_PATH.html) so `cmake` can find it; for instance: `-DCMAKE_PREFIX_PATH=f:\LLVM\6.0.0\dist`
 
 ### Build
+
 
 Assuming this repository is at `./HIP`:
 
 ```shell
-mkdir build inst
-
+cd hipify-clang
+mkdir build dist
 cd build
+
 cmake \
- -DCMAKE_INSTALL_PREFIX=../inst \
+ -DCMAKE_INSTALL_PREFIX=../dist \
  -DCMAKE_BUILD_TYPE=Release \
- -DBUILD_HIPIFY_CLANG=ON \
- ../HIP
+ ..
 
 make -j install
 ```
+On Windows the following option should be specified for `cmake` at first place: `-G "Visual Studio 15 2017 Win64"` and after `cmake` the generated `hipify-clang.sln` should be built by `Visual Studio 15 2017` instead of `make`.
 
-The binary can then be found at `./inst/bin/hipify-clang`.
+Debug build type `-DCMAKE_BUILD_TYPE=Debug` is also supported and tested, `LLVM+CLANG` should be built in `Debug` mode as well.
+64 bit build mode `-Thost=x64` is supported as well, `LLVM+CLANG` should be built (installed) in 64bit mode as well.
+
+The binary can then be found at `./dist/bin/hipify-clang`.
 
 ### Test
 
 `hipify-clang` has unit tests using LLVM [`lit`](https://llvm.org/docs/CommandGuide/lit.html)/[`FileCheck`](https://llvm.org/docs/CommandGuide/FileCheck.html).
 
+**LLVM+CLANG should be built from sources, Pre-Built Binaries are not exhaustive for testing.**
+
 To run it:
-1. Ensure `lit` and `FileCheck` are installed - these are distributed with LLVM.
-2. Ensure `socat` is installed - your distro almost certainly has a package for this.
-3. Build with the `HIPIFY_CLANG_TESTS` option turned on.
-4. `make test-hipify`
+1. Download [`LLVM`](http://releases.llvm.org/6.0.0/llvm-6.0.0.src.tar.xz)+[`CLANG`](http://releases.llvm.org/6.0.0/cfe-6.0.0.src.tar.xz) sources.
+2. Build [`LLVM+CLANG`](http://llvm.org/docs/CMake.html).
+    For instance:
+    ```shell
+   cd llvm
+   mkdir build dist
+   cd build
+
+   cmake \
+     -DCMAKE_INSTALL_PREFIX=../dist \
+     -DLLVM_SOURCE_DIR=../llvm \
+     -DCMAKE_BUILD_TYPE=Debug \
+     -Thost=x64 \
+     ../llvm
+
+    make -j install
+    ```
+    On Windows the following option should be specified for `cmake` at first place: `-G "Visual Studio 15 2017 Win64"` and after `cmake` the generated `LLVM.sln` should be built by `Visual Studio 15 2017` instead of `make`.
+
+3. Ensure [`CUDA`](https://developer.nvidia.com/cuda-toolkit-archive) of minimum version 7.5 is installed.
+
+    * Having multiple CUDA installations in order to choose a concrete version the `DCUDA_TOOLKIT_ROOT_DIR` option should be specified:
+
+      `-DCUDA_TOOLKIT_ROOT_DIR="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.0"`
+
+      * On Windows `CUDA_SDK_ROOT_DIR` option should be specified as well:
+
+      `-DCUDA_SDK_ROOT_DIR="c:/ProgramData/NVIDIA Corporation/CUDA Samples/v9.0"`
+
+4. Ensure [`cuDNN`](https://developer.nvidia.com/rdp/cudnn-archive) of version corresponding to CUDA's version is installed.
+
+    * Path to cuDNN should be specified by the `CUDA_DNN_ROOT_DIR` option:
+
+      `-DCUDA_DNN_ROOT_DIR=f:/CUDNN/cudnn-9.0-windows10-x64-v7.1`
+
+5. Ensure [`python`](https://www.python.org/downloads) of minimum required version 2.7 is installed.
+6. Ensure `lit` and `FileCheck` are installed - these are distributed with LLVM.
+    * installing `lit` into `python` might be required:
+
+      `python f:/LLVM/6.0.0/llvm/utils/lit/setup.py install`,
+
+      where `f:/LLVM/6.0.0/llvm` is LLVM sources root directory.
+
+    * Starting with LLVM 6.0.0 path to llvm-lit.py script should be specified by the `LLVM_EXTERNAL_LIT` option:
+
+      `-DLLVM_EXTERNAL_LIT=f:/LLVM/6.0.0/build/Debug/bin/llvm-lit.py`,
+
+      where `f:/LLVM/6.0.0/build/Debug` is LLVM build directory.
+7. Build with the `HIPIFY_CLANG_TESTS` option turned on: -DHIPIFY_CLANG_TESTS=1.
+8. `make test-hipify`
+
+    On Windows after `cmake` the project `test-hipify` in the generated `hipify-clang.sln` should be built by `Visual Studio 15 2017` instead of `make test-hipify`.
+
+### Windows
+
+On Windows the following tested configuration is recommended:
+
+LLVM 6.0.0 (exact), CUDA 9.0 (exact), cudnn-9.0 (exact), Python 3.6 (min), cmake 3.10 (min), Visual Studio 15.5 2017 (min).
+
+Here is an example of building `hipify-clang` with testing support on `Windows 10` by `Visual Studio 15 2017`:
+
+```shell
+cmake
+ -G "Visual Studio 15 2017 Win64" \
+ -DHIPIFY_CLANG_TESTS=1 \
+ -DCMAKE_BUILD_TYPE=Debug \
+ -DCMAKE_INSTALL_PREFIX=../dist \
+ -DCMAKE_PREFIX_PATH=f:/LLVM/6.0.0/dist \
+ -DCUDA_TOOLKIT_ROOT_DIR="c:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.0" \
+ -DCUDA_SDK_ROOT_DIR="c:/ProgramData/NVIDIA Corporation/CUDA Samples/v9.0" \
+ -DCUDA_DNN_ROOT_DIR=f:/CUDNN/cudnn-9.0-windows10-x64-v7.1 \
+ -DLLVM_EXTERNAL_LIT=f:/LLVM/6.0.0/build/Debug/bin/llvm-lit.py \
+ ..
+```
+A corresponding successful output:
+```shell
+-- Found LLVM 6.0.0:
+--    - CMake module path: F:/LLVM/6.0.0/dist/lib/cmake/llvm
+--    - Include path     : F:/LLVM/6.0.0/dist/include
+--    - Binary path      : F:/LLVM/6.0.0/dist/bin
+-- Found PythonInterp: C:/Program Files/Python36/python.exe (found suitable version "3.6.4", minimum required is "2.7")
+-- Found lit: C:/Program Files/Python36/Scripts/lit.exe
+-- Found FileCheck: F:/LLVM/6.0.0/dist/bin/FileCheck.exe
+-- Found CUDA: C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.0 (found version "9.0")
+-- Configuring done
+-- Generating done
+-- Build files have been written to: f:/HIP/hipify-clang/build
+```
 
 ## Running and using hipify-clang
 
@@ -65,6 +170,7 @@ hipify-clang square.cu -- \
   --cuda-path=/opt/cuda \
   --cuda-gpu-arch=sm_30 \
   -isystem /opt/cuda/samples/common/inc
+  -I /opt/cuda/cuDNN
 ```
 
 `hipify-clang` arguments are given first, followed by a separator, and then the arguments you'd pass to `clang` if you
@@ -79,5 +185,5 @@ The information contained herein is for informational purposes only, and is subj
 
 AMD, the AMD Arrow logo, and combinations thereof are trademarks of Advanced Micro Devices, Inc. Other product names used in this publication are for identification purposes only and may be trademarks of their respective companies.
 
-Copyright (c) 2014-2017 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2014-2018 Advanced Micro Devices, Inc. All rights reserved.
 
