@@ -28,12 +28,12 @@ THE SOFTWARE.
 #include <thread>
 
 std::vector<amd::Context*> g_devices;
-std::once_flag g_ihipInitialized;
 
 namespace hip {
 
 thread_local amd::Context* g_context = nullptr;
 thread_local std::stack<amd::Context*> g_ctxtStack;
+std::once_flag g_ihipInitialized;
 
 std::map<amd::Context*,amd::HostQueue*> g_nullStreams;
 
@@ -53,7 +53,6 @@ void init() {
       context->release();
     } else {
       g_devices.push_back(context);
-      g_context = context;
     }
   }
 }

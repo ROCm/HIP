@@ -28,26 +28,29 @@ THE SOFTWARE.
 #include <thread>
 
 #define HIP_INIT() \
-  std::call_once(g_ihipInitialized, hip::init);
-
+  std::call_once(hip::g_ihipInitialized, hip::init); \
+  assert(g_devices.size() > 0);                      \
+  if (hip::g_context == nullptr) {                   \
+    hip::g_context = g_devices[0];                   \
+  }
 
 // This macro should be called at the beginning of every HIP API.
 #define HIP_INIT_API(...)                                    \
-  HIP_INIT();                                                \
-                                                             \
   amd::Thread* thread = amd::Thread::current();              \
   if (!CL_CHECK_THREAD(thread)) {                            \
     return hipErrorOutOfMemory;                              \
-  }
+  }                                                          \
+  HIP_INIT();
 
 namespace hc {
 class accelerator;
 class accelerator_view;
 };
 
-extern std::once_flag g_ihipInitialized;
-
 namespace hip {
+  extern std::once_flag g_ihipInitialized;
+  extern thread_local amd::Context* g_context;
+
   extern void init();
 
   extern amd::Context* getCurrentContext();
