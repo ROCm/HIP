@@ -35,7 +35,7 @@
 // CHECK: #include <hiprand.h>
 #include <curand.h>
 
-// CHECK: if((x)!=hipSuccess) {
+// CHECK: if ((x) != hipSuccess) {
 #define CUDA_CALL(x)                                                                               \
     do {                                                                                           \
         if ((x) != cudaSuccess) {                                                                  \
@@ -43,7 +43,7 @@
             exit(EXIT_FAILURE);                                                                    \
         }                                                                                          \
     } while (0)
-// CHECK: if((x)!=HIPRAND_STATUS_SUCCESS) {
+// CHECK: if ((x) != HIPRAND_STATUS_SUCCESS) {
 #define CURAND_CALL(x)                                                                             \
     do {                                                                                           \
         if ((x) != CURAND_STATUS_SUCCESS) {                                                        \
@@ -59,9 +59,8 @@ const size_t DEFAULT_RAND_N = 1024 * 1024 * 128;
 // CHECK: typedef hiprandRngType_t rng_type_t;
 typedef curandRngType rng_type_t;
 
-// CHECK: using generate_func_type = std::function<hiprandStatus_t(hiprandGenerator_t, T *,
-// size_t)>;
 template <typename T>
+// CHECK: using generate_func_type = std::function<hiprandStatus_t(hiprandGenerator_t, T*, size_t)>;
 using generate_func_type = std::function<curandStatus_t(curandGenerator_t, T*, size_t)>;
 
 template <typename T>
@@ -71,7 +70,7 @@ void run_benchmark(const cli::Parser& parser, const rng_type_t rng_type,
     const size_t trials = parser.get<size_t>("trials");
 
     T* data;
-    // CHECK: CUDA_CALL(hipMalloc((void **)&data, size * sizeof(T)));
+    // CHECK: CUDA_CALL(hipMalloc((void**)&data, size * sizeof(T)));
     CUDA_CALL(cudaMalloc((void**)&data, size * sizeof(T)));
 
     // CHECK: hiprandGenerator_t generator;
@@ -80,8 +79,8 @@ void run_benchmark(const cli::Parser& parser, const rng_type_t rng_type,
     CURAND_CALL(curandCreateGenerator(&generator, rng_type));
 
     const size_t dimensions = parser.get<size_t>("dimensions");
-    // CHECK: hiprandStatus_t status = hiprandSetQuasiRandomGeneratorDimensions(generator,
-    // dimensions); CHECK: if (status != HIPRAND_STATUS_TYPE_ERROR)
+    // CHECK: hiprandStatus_t status = hiprandSetQuasiRandomGeneratorDimensions(generator, dimensions);
+    // CHECK: if (status != HIPRAND_STATUS_TYPE_ERROR)
     curandStatus_t status = curandSetQuasiRandomGeneratorDimensions(generator, dimensions);
     if (status != CURAND_STATUS_TYPE_ERROR)  // If the RNG is not quasi-random
     {
@@ -123,12 +122,12 @@ void run_benchmarks(const cli::Parser& parser, const rng_type_t rng_type,
                     const std::string& distribution) {
     if (distribution == "uniform-uint") {
         // CHECK: if (rng_type != HIPRAND_RNG_QUASI_SOBOL64 &&
-        // CHECK: rng_type != HIPRAND_RNG_QUASI_SCRAMBLED_SOBOL64)
+        // CHECK: rng_type != HIPRAND_RNG_QUASI_SCRAMBLED_SOBOL64) {
         if (rng_type != CURAND_RNG_QUASI_SOBOL64 &&
             rng_type != CURAND_RNG_QUASI_SCRAMBLED_SOBOL64) {
             run_benchmark<unsigned int>(
                 parser, rng_type,
-                // CHECK: [](hiprandGenerator_t gen, unsigned int * data, size_t size) {
+                // CHECK: [](hiprandGenerator_t gen, unsigned int* data, size_t size) {
                 // CHECK: return hiprandGenerate(gen, data, size);
                 [](curandGenerator_t gen, unsigned int* data, size_t size) {
                     return curandGenerate(gen, data, size);
@@ -142,7 +141,7 @@ void run_benchmarks(const cli::Parser& parser, const rng_type_t rng_type,
             rng_type == CURAND_RNG_QUASI_SCRAMBLED_SOBOL64) {
             run_benchmark<unsigned long long>(
                 parser, rng_type,
-                // CHECK: [](hiprandGenerator_t gen, unsigned long long * data, size_t size) {
+                // CHECK: [](hiprandGenerator_t gen, unsigned long long* data, size_t size) {
                 [](curandGenerator_t gen, unsigned long long* data, size_t size) {
                     // curandGenerateLongLong is yet unsupported by HIP
                     // CHECK-NOT: return hiprandGenerateLongLong(gen, data, size);
@@ -152,7 +151,7 @@ void run_benchmarks(const cli::Parser& parser, const rng_type_t rng_type,
     }
     if (distribution == "uniform-float") {
         run_benchmark<float>(parser, rng_type,
-                             // CHECK: [](hiprandGenerator_t gen, float * data, size_t size) {
+                             // CHECK: [](hiprandGenerator_t gen, float* data, size_t size) {
                              // CHECK: return hiprandGenerateUniform(gen, data, size);
                              [](curandGenerator_t gen, float* data, size_t size) {
                                  return curandGenerateUniform(gen, data, size);
@@ -160,7 +159,7 @@ void run_benchmarks(const cli::Parser& parser, const rng_type_t rng_type,
     }
     if (distribution == "uniform-double") {
         run_benchmark<double>(parser, rng_type,
-                              // CHECK: [](hiprandGenerator_t gen, double * data, size_t size) {
+                              // CHECK: [](hiprandGenerator_t gen, double* data, size_t size) {
                               // CHECK: return hiprandGenerateUniformDouble(gen, data, size);
                               [](curandGenerator_t gen, double* data, size_t size) {
                                   return curandGenerateUniformDouble(gen, data, size);
@@ -168,7 +167,7 @@ void run_benchmarks(const cli::Parser& parser, const rng_type_t rng_type,
     }
     if (distribution == "normal-float") {
         run_benchmark<float>(parser, rng_type,
-                             // CHECK: [](hiprandGenerator_t gen, float * data, size_t size) {
+                             // CHECK: [](hiprandGenerator_t gen, float* data, size_t size) {
                              // CHECK: return hiprandGenerateNormal(gen, data, size, 0.0f, 1.0f);
                              [](curandGenerator_t gen, float* data, size_t size) {
                                  return curandGenerateNormal(gen, data, size, 0.0f, 1.0f);
@@ -177,7 +176,7 @@ void run_benchmarks(const cli::Parser& parser, const rng_type_t rng_type,
     if (distribution == "normal-double") {
         run_benchmark<double>(
             parser, rng_type,
-            // CHECK: [](hiprandGenerator_t gen, double * data, size_t size) {
+            // CHECK: [](hiprandGenerator_t gen, double* data, size_t size) {
             // CHECK: return hiprandGenerateNormalDouble(gen, data, size, 0.0, 1.0);
             [](curandGenerator_t gen, double* data, size_t size) {
                 return curandGenerateNormalDouble(gen, data, size, 0.0, 1.0);
@@ -185,7 +184,7 @@ void run_benchmarks(const cli::Parser& parser, const rng_type_t rng_type,
     }
     if (distribution == "log-normal-float") {
         run_benchmark<float>(parser, rng_type,
-                             // CHECK: [](hiprandGenerator_t gen, float * data, size_t size) {
+                             // CHECK: [](hiprandGenerator_t gen, float* data, size_t size) {
                              // CHECK: return hiprandGenerateLogNormal(gen, data, size, 0.0f, 1.0f);
                              [](curandGenerator_t gen, float* data, size_t size) {
                                  return curandGenerateLogNormal(gen, data, size, 0.0f, 1.0f);
@@ -194,7 +193,7 @@ void run_benchmarks(const cli::Parser& parser, const rng_type_t rng_type,
     if (distribution == "log-normal-double") {
         run_benchmark<double>(
             parser, rng_type,
-            // CHECK: [](hiprandGenerator_t gen, double * data, size_t size) {
+            // CHECK: [](hiprandGenerator_t gen, double* data, size_t size) {
             // CHECK: return hiprandGenerateLogNormalDouble(gen, data, size, 0.0, 1.0);
             [](curandGenerator_t gen, double* data, size_t size) {
                 return curandGenerateLogNormalDouble(gen, data, size, 0.0, 1.0);
@@ -207,7 +206,7 @@ void run_benchmarks(const cli::Parser& parser, const rng_type_t rng_type,
                       << "lambda " << std::fixed << std::setprecision(1) << lambda << std::endl;
             run_benchmark<unsigned int>(
                 parser, rng_type,
-                // CHECK: [lambda](hiprandGenerator_t gen, unsigned int * data, size_t size) {
+                // CHECK: [lambda](hiprandGenerator_t gen, unsigned int* data, size_t size) {
                 // CHECK: return hiprandGeneratePoisson(gen, data, size, lambda);
                 [lambda](curandGenerator_t gen, unsigned int* data, size_t size) {
                     return curandGeneratePoisson(gen, data, size, lambda);
