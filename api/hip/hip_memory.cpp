@@ -653,7 +653,7 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
   amd::BufferRect dstRect;
   amd::Memory* srcPtr = amd::SvmManager::FindSvmBuffer(src);
   amd::Memory* dstPtr = amd::SvmManager::FindSvmBuffer(dst);
-  size_t region[3] = {width, height, 0};
+  size_t region[3] = {width, height, 1};
   size_t src_slice_pitch = spitch * height;
   size_t dst_slice_pitch = dpitch * height;
   size_t origin[3] = { };
@@ -719,7 +719,7 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
   amd::BufferRect dstRect;
   amd::Memory* srcPtr = amd::SvmManager::FindSvmBuffer(src);
   amd::Memory* dstPtr = amd::SvmManager::FindSvmBuffer(dst);
-  size_t region[3] = {width, height, 0};
+  size_t region[3] = {width, height, 1};
   size_t src_slice_pitch = spitch * height;
   size_t dst_slice_pitch = dpitch * height;
   size_t origin[3] = { };
