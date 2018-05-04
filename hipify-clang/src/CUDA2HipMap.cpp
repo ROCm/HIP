@@ -261,12 +261,13 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TYPE_NAME_MAP{
 
     // typedefs
     {"cudaTextureObject_t",  {"hipTextureObject_t",  CONV_TEX,     API_RUNTIME}},
+    {"cudaSurfaceObject_t",  {"hipSurfaceObject_t",  CONV_SURFACE, API_RUNTIME}},
 
     // enums
     {"cudaResourceType",        {"hipResourceType",        CONV_TEX,     API_RUNTIME}},    // API_Driver ANALOGUE (CUresourcetype)
     {"cudaResourceViewFormat",  {"hipResourceViewFormat",  CONV_TEX,     API_RUNTIME}},    // API_Driver ANALOGUE (CUresourceViewFormat)
     {"cudaTextureAddressMode",  {"hipTextureAddressMode",  CONV_TEX,     API_RUNTIME}},
-    {"cudaSurfaceBoundaryMode", {"hipSurfaceBoundaryMode", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
+    {"cudaSurfaceBoundaryMode", {"hipSurfaceBoundaryMode", CONV_SURFACE, API_RUNTIME}},
 
     {"cudaSurfaceFormatMode", {"hipSurfaceFormatMode", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
 
@@ -1487,7 +1488,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cudaMemset",        {"hipMemset",        CONV_MEM, API_RUNTIME}},
     {"cudaMemsetAsync",   {"hipMemsetAsync",   CONV_MEM, API_RUNTIME}},
     {"cudaMemset2D",      {"hipMemset2D",      CONV_MEM, API_RUNTIME}},
-    {"cudaMemset2DAsync", {"hipMemset2DAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
+    {"cudaMemset2DAsync", {"hipMemset2DAsync", CONV_MEM, API_RUNTIME}},
     {"cudaMemset3D",      {"hipMemset3D",      CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaMemset3DAsync", {"hipMemset3DAsync", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
 
@@ -1748,9 +1749,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cudaSetDoubleForHost",       {"hipSetDoubleForHost",       CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED}},
 
     // Execution Control [deprecated since 7.0]
-    {"cudaConfigureCall", {"hipConfigureCall", CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"cudaLaunch",        {"hipLaunch",        CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"cudaSetupArgument", {"hipSetupArgument", CONV_EXEC, API_RUNTIME, HIP_UNSUPPORTED}},
+    {"cudaConfigureCall", {"hipConfigureCall", CONV_EXEC, API_RUNTIME}},
+    {"cudaLaunch",        {"hipLaunchByPtr",   CONV_EXEC, API_RUNTIME}},
+    {"cudaSetupArgument", {"hipSetupArgument", CONV_EXEC, API_RUNTIME}},
 
     // Version Management
     {"cudaDriverGetVersion",  {"hipDriverGetVersion",  CONV_VERSION, API_RUNTIME}},
@@ -1892,17 +1893,17 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cudaGetSurfaceReference", {"hipGetSurfaceReference", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
 
     // enum cudaSurfaceBoundaryMode
-    {"cudaBoundaryModeZero",    {"hipBoundaryModeZero",    CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"cudaBoundaryModeClamp",   {"hipBoundaryModeClamp",   CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"cudaBoundaryModeTrap",    {"hipBoundaryModeTrap",    CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
+    {"cudaBoundaryModeZero",    {"hipBoundaryModeZero",    CONV_SURFACE, API_RUNTIME}},
+    {"cudaBoundaryModeClamp",   {"hipBoundaryModeClamp",   CONV_SURFACE, API_RUNTIME}},
+    {"cudaBoundaryModeTrap",    {"hipBoundaryModeTrap",    CONV_SURFACE, API_RUNTIME}},
 
     // enum cudaSurfaceFormatMode
     {"cudaFormatModeForced",    {"hipFormatModeForced",    CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaFormatModeAuto",      {"hipFormatModeAuto",      CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
 
     // Surface Object Management
-    {"cudaCreateSurfaceObject",          {"hipCreateSurfaceObject",          CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"cudaDestroySurfaceObject",         {"hipDestroySurfaceObject",         CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
+    {"cudaCreateSurfaceObject",          {"hipCreateSurfaceObject",          CONV_SURFACE, API_RUNTIME}},
+    {"cudaDestroySurfaceObject",         {"hipDestroySurfaceObject",         CONV_SURFACE, API_RUNTIME}},
     {"cudaGetSurfaceObjectResourceDesc", {"hipGetSurfaceObjectResourceDesc", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
 
     // Inter-Process Communications (IPC)
