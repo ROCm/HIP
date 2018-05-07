@@ -649,6 +649,14 @@ inline static hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, si
     return hipCUDAErrorTohipError(cudaMemset2DAsync(dst, pitch, value, width, height, stream));
 }
 
+inline static hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent ){
+    return hipCUDAErrorTohipError(cudaMemset3D(pitchedDevPtr, value, extent));
+}
+
+inline static hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent, hipStream_t stream __dparm(0) ){
+    return hipCUDAErrorTohipError(cudaMemset3DAsync(pitchedDevPtr, value, extent, stream));
+}
+
 inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t* p_prop, int device) {
     struct cudaDeviceProp cdprop;
     cudaError_t cerror;
