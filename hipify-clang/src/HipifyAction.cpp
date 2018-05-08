@@ -160,6 +160,10 @@ bool HipifyAction::Exclude(const hipCounter & hipToken) {
                         insertedRANDHeader = true;
                         return false;
                     }
+                case API_DNN:
+                  if (insertedDNNHeader) { return true; }
+                    insertedDNNHeader = true;
+                    return false;
                 default:
                     return false;
             }
