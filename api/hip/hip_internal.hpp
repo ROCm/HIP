@@ -24,8 +24,9 @@ THE SOFTWARE.
 #define HIP_SRC_HIP_INTERNAL_H
 
 #include "cl_common.hpp"
-
+#include <unordered_set>
 #include <thread>
+#include <stack>
 
 #define HIP_INIT() \
   std::call_once(hip::g_ihipInitialized, hip::init); \
@@ -57,9 +58,10 @@ namespace hip {
   extern void setCurrentContext(unsigned int index);
 
   extern amd::HostQueue* getNullStream();
+  extern void syncStreams();
 };
 extern std::vector<amd::Context*> g_devices;
-
+extern thread_local std::unordered_set<amd::HostQueue*> streamSet;
 extern hipError_t ihipDeviceGetCount(int* count);
 
 #endif // HIP_SRC_HIP_INTERNAL_H

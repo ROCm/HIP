@@ -21,17 +21,21 @@ THE SOFTWARE.
 */
 
 #include <hip/hip_runtime.h>
-
 #include "hip_internal.hpp"
 
-static hipError_t ihipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
-  assert(flags == 0); // we don't handle flags yet
+thread_local std::unordered_set<amd::HostQueue*> streamSet;
 
+static hipError_t ihipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
   amd::Device* device = hip::getCurrentContext()->devices()[0];
 
   amd::HostQueue* queue = new amd::HostQueue(*hip::getCurrentContext(), *device, 0,
                                              amd::CommandQueue::RealTimeDisabled,
                                              amd::CommandQueue::Priority::Normal);
+
+  if (!(flags & hipStreamNonBlocking)) {
+    hip::syncStreams();
+    streamSet.insert(queue);
+  }
 
   if (queue == nullptr) {
     return hipErrorOutOfMemory;
@@ -48,22 +52,26 @@ hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
   return ihipStreamCreateWithFlags(stream, flags);
 }
 
-
 hipError_t hipStreamCreate(hipStream_t *stream) {
   HIP_INIT_API(stream);
 
   return ihipStreamCreateWithFlags(stream, hipStreamDefault);
 }
 
-
 hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags) {
   HIP_INIT_API(stream, flags);
 
-  assert(0 && "Unimplemented");
+  amd::HostQueue* hostQueue = reinterpret_cast<amd::HostQueue*>(stream);
+  auto it = streamSet.find(hostQueue);
 
-  return hipErrorUnknown;
+  if(flags != nullptr) {
+    *flags = (it != streamSet.end()) ? hipStreamNonBlocking : hipStreamDefault;
+  } else {
+    return hipErrorInvalidValue;
+  }
+
+  return hipSuccess;
 }
-
 
 hipError_t hipStreamSynchronize(hipStream_t stream) {
   HIP_INIT_API(stream);
@@ -85,7 +93,6 @@ hipError_t hipStreamSynchronize(hipStream_t stream) {
   return hipSuccess;
 }
 
-
 hipError_t hipStreamDestroy(hipStream_t stream) {
   HIP_INIT_API(stream);
 
@@ -93,11 +100,13 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
     return hipErrorInvalidResourceHandle;
   }
 
+  amd::HostQueue* hostQueue = reinterpret_cast<amd::HostQueue*>(stream);
+  streamSet.erase(hostQueue);
+
   as_amd(reinterpret_cast<cl_command_queue>(stream))->release();
 
   return hipSuccess;
 }
-
 
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags) {
   HIP_INIT_API(stream, event, flags);
