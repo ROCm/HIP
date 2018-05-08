@@ -36,6 +36,14 @@ extern void getDrvChannelOrderAndType(const enum hipArray_Format Format,
                                       cl_channel_order* channelOrder,
                                       cl_channel_type* channelType);
 
+inline amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
+  amd::Memory *memObj = amd::SvmManager::FindSvmBuffer(ptr);
+  if (memObj != nullptr) {
+    offset = reinterpret_cast<size_t>(ptr) - reinterpret_cast<size_t>(memObj->getSvmPtr());
+  }
+  return memObj;
+}
+
 hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
   if (sizeBytes == 0) {
@@ -63,8 +71,13 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
 
   amd::Command* command = nullptr;
   amd::Command::EventWaitList waitList;
-  amd::Memory *srcMemory = amd::SvmManager::FindSvmBuffer(src);;
-  amd::Memory *dstMemory = amd::SvmManager::FindSvmBuffer(dst);
+  size_t sOffset = 0;
+  amd::Memory *srcMemory = getMemoryObject(src, sOffset);
+  size_t dOffset = 0;
+  amd::Memory *dstMemory = getMemoryObject(dst, dOffset);
+
+  amd::Coord3D srcOffset(sOffset, 0, 0);
+  amd::Coord3D dstOffset(dOffset, 0, 0);
 
   if (kind == hipMemcpyDefault) {
     // Determine kind on VA
@@ -82,15 +95,15 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
   switch (kind) {
   case hipMemcpyDeviceToHost:
     command = new amd::ReadMemoryCommand(queue, CL_COMMAND_READ_BUFFER, waitList,
-              *srcMemory->asBuffer(), 0, sizeBytes, dst);
+              *srcMemory->asBuffer(), srcOffset, sizeBytes, dst);
     break;
   case hipMemcpyHostToDevice:
     command = new amd::WriteMemoryCommand(queue, CL_COMMAND_WRITE_BUFFER, waitList,
-              *dstMemory->asBuffer(), 0, sizeBytes, src);
+              *dstMemory->asBuffer(), dstOffset, sizeBytes, src);
     break;
   case hipMemcpyDeviceToDevice:
     command = new amd::CopyMemoryCommand(queue, CL_COMMAND_COPY_BUFFER, waitList,
-              *srcMemory->asBuffer(),*dstMemory->asBuffer(), 0, 0, sizeBytes);
+              *srcMemory->asBuffer(),*dstMemory->asBuffer(), srcOffset, dstOffset, sizeBytes);
     break;
   case hipMemcpyHostToHost:
     memcpy(dst, src, sizeBytes);
@@ -124,24 +137,35 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
 hipError_t ihipMemset(void* dst, int value, size_t sizeBytes, amd::HostQueue& queue,
                       bool isAsync = false) {
 
-  amd::Command::EventWaitList waitList;
-  amd::Memory* memory = amd::SvmManager::FindSvmBuffer(dst);
-
-  amd::Coord3D fillOffset(0, 0, 0);
-  amd::Coord3D fillSize(sizeBytes, 1, 1);
-  amd::FillMemoryCommand* command =
-      new amd::FillMemoryCommand(queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
-                                 &value, sizeof(int), fillOffset, fillSize);
-
-  if (command == nullptr) {
-    return hipErrorOutOfMemory;
+  if (dst == nullptr) {
+    return hipErrorInvalidValue;
   }
 
-  command->enqueue();
-  if (!isAsync) {
-    command->awaitCompletion();
+  size_t offset = 0;
+  amd::Memory* memory = getMemoryObject(dst, offset);
+
+  if (memory != nullptr) {
+    // Device memory
+    amd::Command::EventWaitList waitList;
+    amd::Coord3D fillOffset(offset, 0, 0);
+    amd::Coord3D fillSize(sizeBytes, 1, 1);
+    amd::FillMemoryCommand* command =
+        new amd::FillMemoryCommand(queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
+                                   &value, sizeof(char), fillOffset, fillSize);
+
+    if (command == nullptr) {
+      return hipErrorOutOfMemory;
+    }
+
+    command->enqueue();
+    if (!isAsync) {
+      command->awaitCompletion();
+    }
+    command->release();
+  } else {
+    // Host alloced memory
+    memset(dst, value, sizeBytes);
   }
-  command->release();
 
   return hipSuccess;
 }
@@ -198,7 +222,8 @@ hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
 hipError_t hipMemPtrGetInfo(void *ptr, size_t *size) {
   HIP_INIT_API(ptr, size);
 
-  amd::Memory* svmMem = amd::SvmManager::FindSvmBuffer(ptr);
+  size_t offset = 0;
+  amd::Memory* svmMem = getMemoryObject(ptr, offset);
 
   if (svmMem == nullptr) {
     return hipErrorInvalidValue;
@@ -234,13 +259,14 @@ hipError_t hipMemGetAddressRange(hipDeviceptr_t* pbase, size_t* psize, hipDevice
 
   // Since we are using SVM buffer DevicePtr and HostPtr is the same
   void* ptr = dptr;
-  amd::Memory* svmMem = amd::SvmManager::FindSvmBuffer(ptr);
+  size_t offset = 0;
+  amd::Memory* svmMem = getMemoryObject(ptr, offset);
 
   if (svmMem == nullptr) {
     return hipErrorInvalidDevicePointer;
   }
 
-  *pbase = ptr;
+  *pbase = svmMem->getSvmPtr();
   *psize = svmMem->getSize();
 
   return hipSuccess;
@@ -509,7 +535,7 @@ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {
 
   amd::HostQueue* queue = hip::getNullStream();
 
-  return ihipMemcpy((void*) dst, (const void*) src, sizeBytes, hipMemcpyHostToDevice, *queue);
+  return ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyHostToDevice, *queue);
 }
 
 hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes) {
@@ -517,7 +543,7 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes) {
 
   amd::HostQueue* queue = hip::getNullStream();
 
-  return ihipMemcpy((void*) dst, (const void*) src, sizeBytes, hipMemcpyDeviceToHost, *queue);
+  return ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyDeviceToHost, *queue);
 }
 
 hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes) {
@@ -525,7 +551,7 @@ hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeByte
 
   amd::HostQueue* queue = hip::getNullStream();
 
-  return ihipMemcpy((void*) dst, (const void*) src, sizeBytes, hipMemcpyDeviceToDevice, *queue);
+  return ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyDeviceToDevice, *queue);
 }
 
 hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes) {
@@ -533,7 +559,7 @@ hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes) {
 
   amd::HostQueue* queue = hip::getNullStream();
 
-  return ihipMemcpy((void*) dst, (const void*) src, sizeBytes, hipMemcpyHostToHost, *queue);
+  return ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyHostToHost, *queue);
 }
 
 hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes,
@@ -564,7 +590,7 @@ hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, void* src, size_t sizeBytes,
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
-  return ihipMemcpy((void*) dst, (const void*) src, sizeBytes, hipMemcpyHostToDevice,
+  return ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyHostToDevice,
                     *queue, true);
 }
 
@@ -580,7 +606,7 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
-  return ihipMemcpy((void*) dst, (const void*) src, sizeBytes, hipMemcpyDeviceToDevice,
+  return ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyDeviceToDevice,
                    *queue, true);
 }
 
@@ -596,7 +622,7 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes,
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
-  return ihipMemcpy((void*) dst, (const void*) src, sizeBytes, hipMemcpyDeviceToHost,
+  return ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyDeviceToHost,
                    *queue, true);
 }
 
@@ -614,34 +640,70 @@ hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch
   // Create buffer rectangle info structure
   amd::BufferRect srcRect;
   amd::BufferRect dstRect;
-  amd::Memory* srcPtr = amd::SvmManager::FindSvmBuffer(src);
-  amd::Memory* dstPtr = amd::SvmManager::FindSvmBuffer(dst);
+
   size_t region[3] = {width, height, 1};
   size_t src_slice_pitch = spitch * height;
   size_t dst_slice_pitch = dpitch * height;
-  size_t origin[3] = { };
+  size_t sOrigin[3] = { };
+  size_t dOrigin[3] = { };
+  amd::Memory* srcPtr = getMemoryObject(src, sOrigin[0]);
+  amd::Memory* dstPtr = getMemoryObject(dst, dOrigin[0]);
 
-  if (!srcRect.create(origin, region, spitch, src_slice_pitch) ||
-      !dstRect.create(origin, region, dpitch, dst_slice_pitch)) {
-    return hipErrorInvalidValue;
+  if (kind == hipMemcpyDefault) {
+    // Determine kind on VA
+    if (srcPtr == nullptr && dstPtr != nullptr) {
+      kind = hipMemcpyHostToDevice;
+    } else if (srcPtr != nullptr && dstPtr == nullptr) {
+      kind = hipMemcpyDeviceToHost;
+    } else if (srcPtr != nullptr && dstPtr != nullptr) {
+      kind = hipMemcpyDeviceToDevice;
+    } else {
+      kind = hipMemcpyHostToHost;
+    }
   }
 
   amd::Coord3D srcStart(srcRect.start_, 0, 0);
   amd::Coord3D dstStart(dstRect.start_, 0, 0);
   amd::Coord3D srcEnd(srcRect.end_, 1, 1);
   amd::Coord3D dstEnd(dstRect.end_, 1, 1);
-
-  if (!srcPtr->asBuffer()->validateRegion(srcStart, srcEnd) ||
-      !dstPtr->asBuffer()->validateRegion(dstStart, dstEnd)) {
-    return hipErrorInvalidValue;
-  }
-
-  amd::Command::EventWaitList waitList;
   amd::Coord3D size(region[0], region[1], region[2]);
 
-  amd::CopyMemoryCommand* command =
-      new amd::CopyMemoryCommand(queue, CL_COMMAND_COPY_BUFFER_RECT, waitList, *srcPtr->asBuffer(),
-                                 *dstPtr->asBuffer(), srcStart, dstStart, size, srcRect, dstRect);
+  if (!srcRect.create(sOrigin, region, spitch, src_slice_pitch) ||
+      !dstRect.create(dOrigin, region, dpitch, dst_slice_pitch)) {
+    return hipErrorInvalidValue;
+  }
+/*
+  if (((srcPtr != nullptr) && (!srcPtr->asBuffer()->validateRegion(srcStart, srcEnd))) ||
+      ((srcPtr != nullptr) && (!dstPtr->asBuffer()->validateRegion(dstStart, dstEnd)))) {
+    return hipErrorInvalidValue;
+  }
+*/
+  amd::Command* command = nullptr;
+  amd::Command::EventWaitList waitList;
+  switch (kind) {
+  case hipMemcpyDeviceToHost:
+    command = new amd::ReadMemoryCommand(queue, CL_COMMAND_READ_BUFFER_RECT, waitList,
+              *srcPtr->asBuffer(), srcStart, size, dst, srcRect, dstRect);
+    break;
+  case hipMemcpyHostToDevice:
+    command = new amd::WriteMemoryCommand(queue, CL_COMMAND_WRITE_BUFFER_RECT, waitList,
+              *dstPtr->asBuffer(), dstStart, size, src, dstRect, srcRect);
+    break;
+  case hipMemcpyDeviceToDevice:
+    command = new amd::CopyMemoryCommand(queue, CL_COMMAND_COPY_BUFFER_RECT, waitList, *srcPtr->asBuffer(),
+              *dstPtr->asBuffer(), srcStart, dstStart, size, srcRect, dstRect);
+    break;
+  case hipMemcpyHostToHost:
+    for(unsigned int y = 0; y < height; y++) {
+      void* pDst = reinterpret_cast<void*>(reinterpret_cast<size_t>(dst) + y * dpitch);
+      void* pSrc = reinterpret_cast<void*>(reinterpret_cast<size_t>(src) + y * spitch);
+      memcpy(pDst, pSrc, width);
+    }
+    return hipSuccess;
+  default:
+    assert(!"Shouldn't reach here");
+    break;
+  }
 
   if (command == nullptr) {
     return hipErrorOutOfMemory;
@@ -700,14 +762,15 @@ hipError_t hipMemcpyToArray(hipArray* dstArray, size_t wOffset, size_t hOffset, 
   amd::Command* command = nullptr;
   amd::Command::EventWaitList waitList;
   amd::Memory* memory;
-
+  size_t offset = 0;
   amd::Coord3D dstOffset(wOffset, hOffset, 0);
 
   switch (kind) {
   case hipMemcpyDeviceToHost:
     assert(!"Invalid case");
   case hipMemcpyHostToDevice:
-    memory = amd::SvmManager::FindSvmBuffer(dstArray->data);
+    memory = getMemoryObject(dstArray->data, offset);
+    assert(offset == 0);
     command = new amd::WriteMemoryCommand(*queue, CL_COMMAND_WRITE_BUFFER, waitList,
       *memory->asBuffer(), dstOffset, count, src);
     break;
@@ -738,13 +801,15 @@ hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffs
   amd::Command::EventWaitList waitList;
   amd::Memory* memory;
 
+  size_t offset = 0;
   amd::Coord3D srcOffset(wOffset, hOffset, 0);
 
   switch (kind) {
   case hipMemcpyHostToDevice:
     assert(!"Invalid case");
   case hipMemcpyDeviceToHost:
-    memory = amd::SvmManager::FindSvmBuffer(srcArray->data);
+    memory = getMemoryObject(srcArray->data, offset);
+    assert(offset == 0);
     command = new amd::ReadMemoryCommand(*queue, CL_COMMAND_READ_BUFFER, waitList,
       *memory->asBuffer(), srcOffset, count, dst);
     break;
@@ -771,7 +836,9 @@ hipError_t hipMemcpyHtoA(hipArray* dstArray, size_t dstOffset, const void* srcHo
   amd::HostQueue* queue = hip::getNullStream();
 
   amd::Command::EventWaitList waitList;
-  amd::Memory* memory = amd::SvmManager::FindSvmBuffer(dstArray->data);
+  size_t offset = 0;
+  amd::Memory* memory = getMemoryObject(dstArray->data, offset);
+  assert(offset == 0);
   amd::Command* command = new amd::WriteMemoryCommand(*queue, CL_COMMAND_WRITE_BUFFER, waitList,
       *memory->asBuffer(), dstOffset, count, srcHost);
 
@@ -792,7 +859,9 @@ hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t
   amd::HostQueue* queue = hip::getNullStream();
 
   amd::Command::EventWaitList waitList;
-  amd::Memory* memory = amd::SvmManager::FindSvmBuffer(srcArray->data);
+  size_t offset = 0;
+  amd::Memory* memory = getMemoryObject(srcArray->data, offset);
+  assert(offset == 0);
   amd::Command* command = new amd::ReadMemoryCommand(*queue, CL_COMMAND_READ_BUFFER, waitList,
       *memory->asBuffer(), srcOffset, count, dst);
 
@@ -870,8 +939,11 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
   // Create buffer rectangle info structure
   amd::BufferRect srcRect;
   amd::BufferRect dstRect;
-  amd::Memory* src = amd::SvmManager::FindSvmBuffer(srcPtr);
-  amd::Memory* dst = amd::SvmManager::FindSvmBuffer(dstPtr);
+  size_t offset = 0;
+  amd::Memory* src = getMemoryObject(srcPtr, offset);
+  assert(offset == 0);
+  amd::Memory* dst = getMemoryObject(dstPtr, offset);
+  assert(offset == 0);
 
   size_t src_slice_pitch = srcPitchInBytes * p->srcHeight;
   size_t dst_slice_pitch = dstPitchInbytes * p->dstHeight;
@@ -923,26 +995,39 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
 hipError_t ihipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height,
                         amd::HostQueue& queue, bool isAsync = false) {
 
-  amd::Command::EventWaitList waitList;
-  amd::Memory* memory = amd::SvmManager::FindSvmBuffer(dst);
-
-  amd::Coord3D fillOffset(0, 0, 0);
+  if (dst == nullptr) {
+    return hipErrorInvalidValue;
+  }
 
   size_t sizeBytes = pitch * height;
-  amd::Coord3D fillSize(sizeBytes, 1, 1);
-  amd::FillMemoryCommand* command =
-      new amd::FillMemoryCommand(queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
-                                 &value, sizeof(int), fillOffset, fillSize);
+  size_t offset = 0;
 
-  if (command == nullptr) {
-    return hipErrorOutOfMemory;
-  }
+  amd::Memory* memory = getMemoryObject(dst, offset);
 
-  command->enqueue();
-  if(!isAsync) {
-    command->awaitCompletion();
+  if (memory != nullptr) {
+    // Device memory
+    amd::Command::EventWaitList waitList;
+    amd::Coord3D fillOffset(offset, 0, 0);
+    amd::Coord3D fillSize(sizeBytes, 1, 1);
+
+    // TODO: Byte copies are inefficient. Combine multiple writes inside runtime
+    amd::FillMemoryCommand* command =
+        new amd::FillMemoryCommand(queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
+                                   &value, sizeof(char), fillOffset, fillSize);
+
+    if (command == nullptr) {
+      return hipErrorOutOfMemory;
+    }
+
+    command->enqueue();
+    if(!isAsync) {
+      command->awaitCompletion();
+    }
+    command->release();
+  } else {
+    // Host alloced memory
+    memset(dst, value, sizeBytes);
   }
-  command->release();
 
   return hipSuccess;
 }
@@ -971,24 +1056,33 @@ hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value,
 hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes) {
   HIP_INIT_API(dst, value, sizeBytes);
 
-  amd::HostQueue* queue = hip::getNullStream();
-
-  amd::Command::EventWaitList waitList;
-  amd::Memory* memory = amd::SvmManager::FindSvmBuffer(dst);
-
-  amd::Coord3D fillOffset(0, 0, 0);
-  amd::Coord3D fillSize(sizeBytes, 1, 1);
-  amd::FillMemoryCommand* command =
-      new amd::FillMemoryCommand(*queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
-                                 &value, sizeof(char), fillOffset, fillSize);
-
-  if (command == nullptr) {
-    return hipErrorOutOfMemory;
+  if (dst == nullptr) {
+    return hipErrorInvalidValue;
   }
 
-  command->enqueue();
-  command->awaitCompletion();
-  command->release();
+  amd::HostQueue* queue = hip::getNullStream();
+  size_t offset = 0;
+  amd::Command::EventWaitList waitList;
+  amd::Memory* memory = getMemoryObject(dst, offset);
+  if (memory != nullptr) {
+    // Device memory
+    amd::Coord3D fillOffset(offset, 0, 0);
+    amd::Coord3D fillSize(sizeBytes, 1, 1);
+    amd::FillMemoryCommand* command =
+        new amd::FillMemoryCommand(*queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
+                                   &value, sizeof(char), fillOffset, fillSize);
+
+    if (command == nullptr) {
+      return hipErrorOutOfMemory;
+    }
+
+    command->enqueue();
+    command->awaitCompletion();
+    command->release();
+  } else {
+    // Host alloced memory
+    memset(dst, value, sizeBytes);
+  }
 
   return hipSuccess;
 }
