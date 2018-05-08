@@ -345,6 +345,11 @@ __device__ static inline unsigned int __usad(unsigned int x, unsigned int y, uns
     return __hip_hc_ir_usad_int(x, y, z);
 }
 
+extern __device__ __attribute__((const)) unsigned int __mbcnt_lo(unsigned int x, unsigned int y) __asm("llvm.amdgcn.mbcnt.lo");
+extern __device__ __attribute__((const)) unsigned int __mbcnt_hi(unsigned int x, unsigned int y) __asm("llvm.amdgcn.mbcnt.hi");
+
+__device__ static inline unsigned int __lane_id() { return  __mbcnt_hi(-1, __mbcnt_lo(-1, 0)); }
+
 /*
 Rounding modes are not yet supported in HIP
 */
