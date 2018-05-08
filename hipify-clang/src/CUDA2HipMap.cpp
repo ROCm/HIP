@@ -311,19 +311,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TYPE_NAME_MAP{
     // EGL Interoperability
     {"cudaEglStreamConnection", {"hipEglStreamConnection", CONV_EGL, API_RUNTIME, HIP_UNSUPPORTED}},    // API_Driver ANALOGUE (CUeglStreamConnection)
 
-    ///////////////////////////// cuBLAS /////////////////////////////
     {"cublasHandle_t", {"hipblasHandle_t", CONV_TYPE, API_BLAS}},
     // TODO: dereferencing: typedef struct cublasContext *cublasHandle_t;
-    //     {"cublasContext", {"hipblasHandle_t", CONV_TYPE, API_BLAS}},
-
-    {"cublasOperation_t",   {"hipblasOperation_t",   CONV_TYPE, API_BLAS}},
-    {"cublasStatus_t",      {"hipblasStatus_t",      CONV_TYPE, API_BLAS}},
-    {"cublasFillMode_t",    {"hipblasFillMode_t",    CONV_TYPE, API_BLAS}},
-    {"cublasDiagType_t",    {"hipblasDiagType_t",    CONV_TYPE, API_BLAS}},
-    {"cublasSideMode_t",    {"hipblasSideMode_t",    CONV_TYPE, API_BLAS}},
-    {"cublasPointerMode_t", {"hipblasPointerMode_t", CONV_TYPE, API_BLAS}},
-    {"cublasAtomicsMode_t", {"hipblasAtomicsMode_t", CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
-    {"cublasDataType_t",    {"hipblasDataType_t",    CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
+    // {"cublasContext", {"hipblasHandle_t", CONV_TYPE, API_BLAS}},
 
     ///////////////////////////// cuRAND /////////////////////////////
     {"curandStatus",                  {"hiprandStatus_t",                CONV_TYPE, API_RAND}},
@@ -2087,14 +2077,14 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cublasGetMathMode",              {"hipblasGetMathMode",              CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasSetMathMode",              {"hipblasSetMathMode",              CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
-
-
-    // Blas operations (cublasOperation_t)
+    // Blas operations
+    {"cublasOperation_t",              {"hipblasOperation_t",              CONV_TYPE, API_BLAS}},
     {"CUBLAS_OP_N",                    {"HIPBLAS_OP_N",                    CONV_NUMERIC_LITERAL, API_BLAS}},
     {"CUBLAS_OP_T",                    {"HIPBLAS_OP_T",                    CONV_NUMERIC_LITERAL, API_BLAS}},
     {"CUBLAS_OP_C",                    {"HIPBLAS_OP_C",                    CONV_NUMERIC_LITERAL, API_BLAS}},
 
-    // Blas statuses (cublasStatus_t)
+    // Blas statuses
+    {"cublasStatus_t",                 {"hipblasStatus_t",                 CONV_TYPE, API_BLAS}},
     {"CUBLAS_STATUS_SUCCESS",          {"HIPBLAS_STATUS_SUCCESS",          CONV_NUMERIC_LITERAL, API_BLAS}},
     {"CUBLAS_STATUS_NOT_INITIALIZED",  {"HIPBLAS_STATUS_NOT_INITIALIZED",  CONV_NUMERIC_LITERAL, API_BLAS}},
     {"CUBLAS_STATUS_ALLOC_FAILED",     {"HIPBLAS_STATUS_ALLOC_FAILED",     CONV_NUMERIC_LITERAL, API_BLAS}},
@@ -2102,29 +2092,36 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"CUBLAS_STATUS_MAPPING_ERROR",    {"HIPBLAS_STATUS_MAPPING_ERROR",    CONV_NUMERIC_LITERAL, API_BLAS}},
     {"CUBLAS_STATUS_EXECUTION_FAILED", {"HIPBLAS_STATUS_EXECUTION_FAILED", CONV_NUMERIC_LITERAL, API_BLAS}},
     {"CUBLAS_STATUS_INTERNAL_ERROR",   {"HIPBLAS_STATUS_INTERNAL_ERROR",   CONV_NUMERIC_LITERAL, API_BLAS}},
-    {"CUBLAS_STATUS_NOT_SUPPORTED",    {"HIPBLAS_STATUS_INTERNAL_ERROR",   CONV_NUMERIC_LITERAL, API_BLAS}},
+    {"CUBLAS_STATUS_NOT_SUPPORTED",    {"HIPBLAS_STATUS_NOT_SUPPORTED",    CONV_NUMERIC_LITERAL, API_BLAS}},
+    {"CUBLAS_STATUS_ARCH_MISMATCH",    {"HIPBLAS_STATUS_ARCH_MISMATCH",    CONV_NUMERIC_LITERAL, API_BLAS}},
 
-    // Blas Fill Modes (cublasFillMode_t)
+    // Blas Fill Modes
+    {"cublasFillMode_t",               {"hipblasFillMode_t",               CONV_TYPE, API_BLAS}},
     {"CUBLAS_FILL_MODE_LOWER",         {"HIPBLAS_FILL_MODE_LOWER",         CONV_NUMERIC_LITERAL, API_BLAS}},
     {"CUBLAS_FILL_MODE_UPPER",         {"HIPBLAS_FILL_MODE_UPPER",         CONV_NUMERIC_LITERAL, API_BLAS}},
 
-    // Blas Diag Types (cublasDiagType_t)
+    // Blas Diag Types
+    {"cublasDiagType_t",               {"hipblasDiagType_t",               CONV_TYPE, API_BLAS}},
     {"CUBLAS_DIAG_NON_UNIT",           {"HIPBLAS_DIAG_NON_UNIT",           CONV_NUMERIC_LITERAL, API_BLAS}},
     {"CUBLAS_DIAG_UNIT",               {"HIPBLAS_DIAG_UNIT",               CONV_NUMERIC_LITERAL, API_BLAS}},
 
-    // Blas Side Modes (cublasSideMode_t
+    // Blas Side Modes
+    {"cublasSideMode_t",               {"hipblasSideMode_t",               CONV_TYPE, API_BLAS}},
     {"CUBLAS_SIDE_LEFT",               {"HIPBLAS_SIDE_LEFT",               CONV_NUMERIC_LITERAL, API_BLAS}},
     {"CUBLAS_SIDE_RIGHT",              {"HIPBLAS_SIDE_RIGHT",              CONV_NUMERIC_LITERAL, API_BLAS}},
 
-    // Blas Pointer Modes (cublasPointerMode_t)
+    // Blas Pointer Modes
+    {"cublasPointerMode_t",            {"hipblasPointerMode_t",            CONV_TYPE, API_BLAS}},
     {"CUBLAS_POINTER_MODE_HOST",       {"HIPBLAS_POINTER_MODE_HOST",       CONV_NUMERIC_LITERAL, API_BLAS}},
     {"CUBLAS_POINTER_MODE_DEVICE",     {"HIPBLAS_POINTER_MODE_DEVICE",     CONV_NUMERIC_LITERAL, API_BLAS}},
 
-    // Blas Atomics Modes (cublasAtomicsMode_t)
+    // Blas Atomics Modes
+    {"cublasAtomicsMode_t",            {"hipblasAtomicsMode_t",            CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
     {"CUBLAS_ATOMICS_NOT_ALLOWED",     {"HIPBLAS_ATOMICS_NOT_ALLOWED",     CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
     {"CUBLAS_ATOMICS_ALLOWED",         {"HIPBLAS_ATOMICS_ALLOWED",         CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
 
-    // Blas Data Type (cublasDataType_t)
+    // Blas Data Type
+    {"cublasDataType_t",               {"hipblasDataType_t",               CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
     {"CUBLAS_DATA_FLOAT",              {"HIPBLAS_DATA_FLOAT",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
     {"CUBLAS_DATA_DOUBLE",             {"HIPBLAS_DATA_DOUBLE",             CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
     {"CUBLAS_DATA_HALF",               {"HIPBLAS_DATA_HALF",               CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
@@ -2354,7 +2351,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
 
     {"cublasCgemm",                    {"hipblasCgemm",                    CONV_MATH_FUNC,       API_BLAS}},
     {"cublasZgemm",                    {"hipblasZgemm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
-    {"cublasHgemm",                    {"hipblasHgemm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasHgemm",                    {"hipblasHgemm",                    CONV_MATH_FUNC,       API_BLAS}},
 
     // BATCH GEMM
     {"cublasSgemmBatched",             {"hipblasSgemmBatched",             CONV_MATH_FUNC,       API_BLAS}},
@@ -2414,8 +2411,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cublasZhemm",                    {"hipblasZhemm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
     // TRSM
-    {"cublasStrsm",                    {"hipblasStrsm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
-    {"cublasDtrsm",                    {"hipblasDtrsm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasStrsm",                    {"hipblasStrsm",                    CONV_MATH_FUNC,       API_BLAS}},
+    {"cublasDtrsm",                    {"hipblasDtrsm",                    CONV_MATH_FUNC,       API_BLAS}},
     {"cublasCtrsm",                    {"hipblasCtrsm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasZtrsm",                    {"hipblasZtrsm",                    CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
