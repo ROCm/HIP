@@ -24,8 +24,6 @@ THE SOFTWARE.
 #include "hip_internal.hpp"
 #include "platform/runtime.hpp"
 #include "utils/versions.hpp"
-#include <stack>
-#include <thread>
 
 std::vector<amd::Context*> g_devices;
 
@@ -35,7 +33,7 @@ thread_local amd::Context* g_context = nullptr;
 thread_local std::stack<amd::Context*> g_ctxtStack;
 std::once_flag g_ihipInitialized;
 
-std::map<amd::Context*,amd::HostQueue*> g_nullStreams;
+std::map<amd::Context*, amd::HostQueue*> g_nullStreams;
 
 void init() {
   if (!amd::Runtime::initialized()) {
@@ -66,6 +64,12 @@ void setCurrentContext(unsigned int index) {
   g_context = g_devices[index];
 }
 
+void syncStreams() {
+  for (const auto& it : streamSet) {
+    it->finish();
+  }
+}
+
 amd::HostQueue* getNullStream() {
   auto stream = g_nullStreams.find(getCurrentContext());
   if (stream == g_nullStreams.end()) {
@@ -76,6 +80,7 @@ amd::HostQueue* getNullStream() {
     g_nullStreams[getCurrentContext()] = queue;
     return queue;
   }
+  syncStreams();
   return stream->second;
 }
 
