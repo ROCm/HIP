@@ -2127,6 +2127,41 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"CUBLAS_DATA_HALF",               {"HIPBLAS_DATA_HALF",               CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
     {"CUBLAS_DATA_INT8",               {"HIPBLAS_DATA_INT8",               CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
 
+    // Blas Math mode/tensor operation
+    {"cublasMath_t",                   {"hipblasMath_t",                   CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
+    {"CUBLAS_DEFAULT_MATH",            {"HIPBLAS_DEFAULT_MATH",            CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
+    {"CUBLAS_TENSOR_OP_MATH",          {"HIPBLAS_TENSOR_OP_MATH",          CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
+
+    // Blass different GEMM algorithms
+    {"cublasGemmAlgo_t",               {"hipblasGemmAlgo_t",               CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
+    {"CUBLAS_GEMM_DFALT",              {"HIPBLAS_GEMM_DFALT",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //  -1
+    {"CUBLAS_GEMM_DEFAULT",            {"HIPBLAS_GEMM_DEFAULT",            CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //  -1
+    {"CUBLAS_GEMM_ALGO0",              {"HIPBLAS_GEMM_ALGO0",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //   0
+    {"CUBLAS_GEMM_ALGO1",              {"HIPBLAS_GEMM_ALGO1",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //   1
+    {"CUBLAS_GEMM_ALGO2",              {"HIPBLAS_GEMM_ALGO2",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //   2
+    {"CUBLAS_GEMM_ALGO3",              {"HIPBLAS_GEMM_ALGO3",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //   3
+    {"CUBLAS_GEMM_ALGO4",              {"HIPBLAS_GEMM_ALGO4",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //   4
+    {"CUBLAS_GEMM_ALGO5",              {"HIPBLAS_GEMM_ALGO5",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //   5
+    {"CUBLAS_GEMM_ALGO6",              {"HIPBLAS_GEMM_ALGO6",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //   6
+    {"CUBLAS_GEMM_ALGO7",              {"HIPBLAS_GEMM_ALGO7",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //   7
+    {"CUBLAS_GEMM_ALGO8",              {"HIPBLAS_GEMM_ALGO8",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //   8
+    {"CUBLAS_GEMM_ALGO9",              {"HIPBLAS_GEMM_ALGO9",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //   9
+    {"CUBLAS_GEMM_ALGO10",             {"HIPBLAS_GEMM_ALGO10",             CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //  10
+    {"CUBLAS_GEMM_ALGO11",             {"HIPBLAS_GEMM_ALGO11",             CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //  11
+    {"CUBLAS_GEMM_ALGO12",             {"HIPBLAS_GEMM_ALGO12",             CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //  12
+    {"CUBLAS_GEMM_ALGO13",             {"HIPBLAS_GEMM_ALGO13",             CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //  13
+    {"CUBLAS_GEMM_ALGO14",             {"HIPBLAS_GEMM_ALGO14",             CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //  14
+    {"CUBLAS_GEMM_ALGO15",             {"HIPBLAS_GEMM_ALGO15",             CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //  15
+    {"CUBLAS_GEMM_ALGO16",             {"HIPBLAS_GEMM_ALGO16",             CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //  16
+    {"CUBLAS_GEMM_ALGO17",             {"HIPBLAS_GEMM_ALGO17",             CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //  17
+    {"CUBLAS_GEMM_DEFAULT_TENSOR_OP",  {"HIPBLAS_GEMM_DEFAULT_TENSOR_OP",  CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //  99
+    {"CUBLAS_GEMM_DFALT_TENSOR_OP",    {"HIPBLAS_GEMM_DFALT_TENSOR_OP",    CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //  99
+    {"CUBLAS_GEMM_ALGO0_TENSOR_OP",    {"HIPBLAS_GEMM_ALGO0_TENSOR_OP",    CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  // 100
+    {"CUBLAS_GEMM_ALGO1_TENSOR_OP",    {"HIPBLAS_GEMM_ALGO1_TENSOR_OP",    CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  // 101
+    {"CUBLAS_GEMM_ALGO2_TENSOR_OP",    {"HIPBLAS_GEMM_ALGO2_TENSOR_OP",    CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  // 102
+    {"CUBLAS_GEMM_ALGO3_TENSOR_OP",    {"HIPBLAS_GEMM_ALGO3_TENSOR_OP",    CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  // 103
+    {"CUBLAS_GEMM_ALGO4_TENSOR_OP",    {"HIPBLAS_GEMM_ALGO4_TENSOR_OP",    CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  // 104
+
     // Blas1 (v1) Routines
     {"cublasCreate",                   {"hipblasCreate",                   CONV_MATH_FUNC,       API_BLAS}},
     {"cublasDestroy",                  {"hipblasDestroy",                  CONV_MATH_FUNC,       API_BLAS}},
@@ -2624,6 +2659,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     //IO in FP16 / FP32, computation in float
     {"cublasSgemmEx",                  {"hipblasSgemmEx",                  CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     {"cublasGemmEx",                   {"hipblasGemmEx",                   CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasGemmBatchedEx",            {"hipblasGemmBatchedEx",            CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasGemmStridedBatchedEx",     {"hipblasGemmStridedBatchedEx",     CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
     // IO in Int8 complex/cuComplex, computation in cuComplex
     {"cublasCgemmEx",                  {"hipblasCgemmEx",                  CONV_MATH_FUNC,       API_BLAS, HIP_UNSUPPORTED}},
 
