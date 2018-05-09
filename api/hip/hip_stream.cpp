@@ -61,7 +61,7 @@ hipError_t hipStreamCreate(hipStream_t *stream) {
 hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags) {
   HIP_INIT_API(stream, flags);
 
-  amd::HostQueue* hostQueue = reinterpret_cast<amd::HostQueue*>(stream);
+  amd::HostQueue* hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   auto it = streamSet.find(hostQueue);
 
   if(flags != nullptr) {
@@ -100,10 +100,11 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
     return hipErrorInvalidResourceHandle;
   }
 
-  amd::HostQueue* hostQueue = reinterpret_cast<amd::HostQueue*>(stream);
+  amd::HostQueue* hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
+
   streamSet.erase(hostQueue);
 
-  as_amd(reinterpret_cast<cl_command_queue>(stream))->release();
+  hostQueue->release();
 
   return hipSuccess;
 }
