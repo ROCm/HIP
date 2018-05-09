@@ -27,6 +27,7 @@ private:
     bool insertedBLASHeader = false;
     bool insertedRANDHeader = false;
     bool insertedRAND_kernelHeader = false;
+    bool insertedDNNHeader = false;
     bool firstHeader = false;
     bool pragmaOnce = false;
     clang::SourceLocation firstHeaderLoc;
