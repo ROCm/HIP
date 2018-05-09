@@ -33,7 +33,7 @@
 |Fast Math|`__cos(f)`|`__cos(f)`|`hc::`<br>`fast_math::cos(f)`|`concurrency::`<br>`fast_math::cos(f)`|`native_cos(f)`
 |Vector|`float4`|`float4`|`hc::`<br>`short_vector::float4`|`concurrency::`<br>`graphics::float_4`|`float4`
 
-###Notes
+### Notes
 1. For HC and C++AMP, assume a captured _tiled_ext_ named "t_ext" and captured _extent_ named "ext".  These languages use captured variables to pass information to the kernel rather than using special built-in functions so the exact variable name may vary.
 2. The indexing functions (starting with `thread-index`) show the terminology for a 1D grid.  Some APIs use reverse order of xyz / 012 indexing for 3D grids.
 3. HC allows tile dimensions to be specified at runtime while C++AMP requires that tile dimensions be specified at compile-time.  Thus hc syntax for tile dims is `t_ext.tile_dim[0]` while C++AMP is t_ext.tile_dim0.
