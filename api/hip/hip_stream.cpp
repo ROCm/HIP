@@ -32,13 +32,13 @@ static hipError_t ihipStreamCreateWithFlags(hipStream_t *stream, unsigned int fl
                                              amd::CommandQueue::RealTimeDisabled,
                                              amd::CommandQueue::Priority::Normal);
 
+  if (queue == nullptr || !queue->create()) {
+    return hipErrorOutOfMemory;
+  }
+
   if (!(flags & hipStreamNonBlocking)) {
     hip::syncStreams();
     streamSet.insert(queue);
-  }
-
-  if (queue == nullptr) {
-    return hipErrorOutOfMemory;
   }
 
   *stream = reinterpret_cast<hipStream_t>(as_cl(queue));
@@ -101,10 +101,8 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
   }
 
   amd::HostQueue* hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
-
-  streamSet.erase(hostQueue);
-
   hostQueue->release();
+  streamSet.erase(hostQueue);
 
   return hipSuccess;
 }
