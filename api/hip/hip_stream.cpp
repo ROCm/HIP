@@ -22,8 +22,22 @@ THE SOFTWARE.
 
 #include <hip/hip_runtime.h>
 #include "hip_internal.hpp"
+#include "thread/monitor.hpp"
 
-thread_local std::unordered_set<amd::HostQueue*> streamSet;
+static amd::Monitor streamSetLock("Guards global stream set");
+static std::unordered_set<amd::HostQueue*> streamSet;
+
+namespace hip {
+
+void syncStreams() {
+  amd::ScopedLock lock(streamSetLock);
+
+  for (const auto& it : streamSet) {
+    it->finish();
+  }
+}
+
+};
 
 static hipError_t ihipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
   amd::Device* device = hip::getCurrentContext()->devices()[0];
@@ -38,7 +52,11 @@ static hipError_t ihipStreamCreateWithFlags(hipStream_t *stream, unsigned int fl
 
   if (!(flags & hipStreamNonBlocking)) {
     hip::syncStreams();
-    streamSet.insert(queue);
+
+    {
+      amd::ScopedLock lock(streamSetLock);
+      streamSet.insert(queue);
+    }
   }
 
   *stream = reinterpret_cast<hipStream_t>(as_cl(queue));
@@ -99,6 +117,8 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
   if (stream == nullptr) {
     return hipErrorInvalidResourceHandle;
   }
+
+  amd::ScopedLock lock(streamSetLock);
 
   amd::HostQueue* hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   hostQueue->release();

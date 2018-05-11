@@ -64,12 +64,6 @@ void setCurrentContext(unsigned int index) {
   g_context = g_devices[index];
 }
 
-void syncStreams() {
-  for (const auto& it : streamSet) {
-    it->finish();
-  }
-}
-
 amd::HostQueue* getNullStream() {
   auto stream = g_nullStreams.find(getCurrentContext());
   if (stream == g_nullStreams.end()) {

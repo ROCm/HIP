@@ -377,6 +377,8 @@ hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config ) {
 hipError_t hipDeviceSynchronize ( void ) {
   HIP_INIT_API();
 
+  hip::syncStreams();
+
   amd::HostQueue* queue = hip::getNullStream();
 
   if (!queue) {
