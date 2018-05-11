@@ -483,14 +483,17 @@ namespace
         hipDeviceProp_t prop{};
         hipGetDeviceProperties(
             &prop, ihipGetTlsDefaultCtx()->getDevice()->_deviceId);
-
+        // TODO: at the moment there is no way to query the count of registers
+        //       available per CU, therefore we hardcode it to 64 KiRegisters.
+        prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024.
+        
         r.localSizeBytes = header.workitem_private_segment_byte_size;
         r.sharedSizeBytes = header.workgroup_group_segment_byte_size;
         r.maxDynamicSharedSizeBytes =
             prop.sharedMemPerBlock - r.sharedSizeBytes;
         r.numRegs = header.workitem_vgpr_count;
-        r.maxThreadsPerBlock = r.numRegs ? // TODO: proper query.
-            std::min(prop.maxThreadsPerBlock, 64 * 1024 / r.numRegs) :
+        r.maxThreadsPerBlock = r.numRegs ?
+            std::min(prop.maxThreadsPerBlock, prop.regsPerBlock / r.numRegs) :
             prop.maxThreadsPerBlock;
         r.binaryVersion =
             header.amd_machine_version_major * 10 +
