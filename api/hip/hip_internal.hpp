@@ -61,7 +61,6 @@ namespace hip {
   extern void syncStreams();
 };
 extern std::vector<amd::Context*> g_devices;
-extern thread_local std::unordered_set<amd::HostQueue*> streamSet;
 extern hipError_t ihipDeviceGetCount(int* count);
 
 #endif // HIP_SRC_HIP_INTERNAL_H
