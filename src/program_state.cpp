@@ -382,8 +382,7 @@ const unordered_map<uintptr_t, vector<pair<hsa_agent_t, Kernel_descriptor>>>& fu
                 for (auto&& kernel_symbol : it->second) {
                     r[function.first].emplace_back(
                         agent(kernel_symbol),
-                        Kernel_descriptor{kernel_object(kernel_symbol), group_size(kernel_symbol),
-                                          private_size(kernel_symbol), it->first});
+                        Kernel_descriptor{kernel_object(kernel_symbol), it->first});
                 }
             }
         }

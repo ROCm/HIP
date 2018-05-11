@@ -94,6 +94,19 @@ typedef struct ihipModule_t* hipModule_t;
 
 typedef struct ihipModuleSymbol_t* hipFunction_t;
 
+struct hipFuncAttributes {
+    int binaryVersion;
+    int cacheModeCA;
+    size_t constSizeBytes;
+    size_t localSizeBytes;
+    int maxDynamicSharedSizeBytes;
+    int maxThreadsPerBlock;
+    int numRegs;
+    int preferredShmemCarveout;
+    int ptxVersion;
+    size_t sharedSizeBytes;
+};
+
 typedef struct ihipEvent_t* hipEvent_t;
 
 enum hipLimit_t {
@@ -2221,6 +2234,17 @@ hipError_t hipModuleUnload(hipModule_t module);
  * hipErrorNotFound,
  */
 hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule_t module, const char* kname);
+
+/**
+ * @bried Find out attributes for a given function.
+ *
+ * @param [out] attr
+ * @param [in] func
+ *
+ * @returns hipSuccess, hipErrorInvalidDeviceFunction
+ */
+
+hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func);
 
 /**
  * @brief returns device memory pointer and size of the kernel present in the module with symbol @p
