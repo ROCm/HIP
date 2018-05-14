@@ -506,6 +506,7 @@ namespace
 
 hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 {
+    if (!attr) return hipErrorInvalidValue;
     if (!func) return hipErrorInvalidDeviceFunction;
 
     const auto it0 = functions().find(reinterpret_cast<uintptr_t>(func));
