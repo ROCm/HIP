@@ -3009,6 +3009,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cudnnReduceTensorStruct",                             {"hipdnnReduceTensorStruct",                             CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
     {"cudnnCTCLossDescriptor_t",                            {"hipdnnCTCLossDescriptor_t",                            CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
     {"cudnnCTCLossStruct",                                  {"hipdnnCTCLossStruct",                                  CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+    {"cudnnConvolutionBwdDataAlgoPerf_t",                   {"hipdnnConvolutionBwdDataAlgoPerf_t",                   CONV_TYPE, API_DNN}},
 
     {"cudnnRNNInputMode_t",                                 {"hipdnnRNNInputMode_t",                                 CONV_TYPE, API_DNN}},
     {"CUDNN_LINEAR_INPUT",                                  {"HIPDNN_LINEAR_INPUT",                                  CONV_NUMERIC_LITERAL, API_DNN}},    // 0
@@ -3085,17 +3086,38 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"CUDNN_REDUCE_TENSOR_NO_INDICES",                      {"HIPDNN_REDUCE_TENSOR_NO_INDICES",                      CONV_NUMERIC_LITERAL, API_DNN}},    // 0
     {"CUDNN_REDUCE_TENSOR_FLATTENED_INDICES",               {"HIPDNN_REDUCE_TENSOR_FLATTENED_INDICES",               CONV_NUMERIC_LITERAL, API_DNN}},    // 1
 
-    {"cudnnIndicesType_t",                                  {"cudnnIndicesType_t",                                   CONV_TYPE, API_DNN}},
-    {"CUDNN_32BIT_INDICES",                                 {"CUDNN_32BIT_INDICES",                                  CONV_NUMERIC_LITERAL, API_DNN}},    // 0
-    {"CUDNN_64BIT_INDICES",                                 {"CUDNN_64BIT_INDICES",                                  CONV_NUMERIC_LITERAL, API_DNN}},    // 1
-    {"CUDNN_16BIT_INDICES",                                 {"CUDNN_16BIT_INDICES",                                  CONV_NUMERIC_LITERAL, API_DNN}},    // 2
-    {"CUDNN_8BIT_INDICES",                                  {"CUDNN_8BIT_INDICES",                                   CONV_NUMERIC_LITERAL, API_DNN}},    // 3
+    {"cudnnConvolutionBwdDataPreference_t",                 {"hipdnnConvolutionBwdDataPreference_t",                 CONV_TYPE, API_DNN}},
+    {"CUDNN_CONVOLUTION_BWD_DATA_NO_WORKSPACE",             {"HIPDNN_CONVOLUTION_BWD_DATA_NO_WORKSPACE",             CONV_NUMERIC_LITERAL, API_DNN}},    // 0
+    {"CUDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST",           {"HIPDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST",           CONV_NUMERIC_LITERAL, API_DNN}},    // 1
+    {"CUDNN_CONVOLUTION_BWD_DATA_SPECIFY_WORKSPACE_LIMIT",  {"HIPDNN_CONVOLUTION_BWD_DATA_SPECIFY_WORKSPACE_LIMIT",  CONV_NUMERIC_LITERAL, API_DNN}},    // 2
+
+    {"cudnnIndicesType_t",                                  {"hipdnnIndicesType_t",                                  CONV_TYPE, API_DNN}},
+    {"CUDNN_32BIT_INDICES",                                 {"HIPDNN_32BIT_INDICES",                                 CONV_NUMERIC_LITERAL, API_DNN}},    // 0
+    {"CUDNN_64BIT_INDICES",                                 {"HIPDNN_64BIT_INDICES",                                 CONV_NUMERIC_LITERAL, API_DNN}},    // 1
+    {"CUDNN_16BIT_INDICES",                                 {"HIPDNN_16BIT_INDICES",                                 CONV_NUMERIC_LITERAL, API_DNN}},    // 2
+    {"CUDNN_8BIT_INDICES",                                  {"HIPDNN_8BIT_INDICES",                                  CONV_NUMERIC_LITERAL, API_DNN}},    // 3
+
+    {"cudnnSoftmaxAlgorithm_t",                             {"hipdnnSoftmaxAlgorithm_t",                             CONV_TYPE, API_DNN}},
+    {"CUDNN_SOFTMAX_FAST",                                  {"HIPDNN_SOFTMAX_FAST",                                  CONV_NUMERIC_LITERAL, API_DNN}},    // 0
+    {"CUDNN_SOFTMAX_ACCURATE",                              {"HIPDNN_SOFTMAX_ACCURATE",                              CONV_NUMERIC_LITERAL, API_DNN}},    // 1
+    {"CUDNN_SOFTMAX_LOG",                                   {"HIPDNN_SOFTMAX_LOG",                                   CONV_NUMERIC_LITERAL, API_DNN}},    // 2
+
+    {"cudnnSoftmaxMode_t",                                  {"hipdnnSoftmaxMode_t",                                  CONV_TYPE, API_DNN}},
+    {"CUDNN_SOFTMAX_MODE_INSTANCE",                         {"HIPDNN_SOFTMAX_MODE_INSTANCE",                         CONV_NUMERIC_LITERAL, API_DNN}},    // 0
+    {"CUDNN_SOFTMAX_MODE_CHANNEL",                          {"HIPDNN_SOFTMAX_MODE_CHANNEL",                          CONV_NUMERIC_LITERAL, API_DNN}},    // 1
+
+    {"cudnnPoolingMode_t",                                  {"hipdnnPoolingMode_t",                                  CONV_TYPE, API_DNN}},
+    {"CUDNN_POOLING_MAX",                                   {"HIPDNN_POOLING_MAX",                                   CONV_NUMERIC_LITERAL, API_DNN}},    // 0
+    {"CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING",         {"HIPDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING",         CONV_NUMERIC_LITERAL, API_DNN}},    // 1
+    {"CUDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING",         {"HIPDNN_POOLING_AVERAGE_COUNT_EXCLUDE_PADDING",         CONV_NUMERIC_LITERAL, API_DNN}},    // 2
+    {"CUDNN_POOLING_MAX_DETERMINISTIC",                     {"HIPDNN_POOLING_MAX_DETERMINISTIC",                     CONV_NUMERIC_LITERAL, API_DNN}},    // 3
 
     {"cudnnGetVersion",                               {"hipdnnGetVersion",                               CONV_VERSION, API_DNN}},
     {"cudnnGetCudartVersion",                         {"hipdnnGetCudartVersion",                         CONV_VERSION, API_DNN, HIP_UNSUPPORTED}},
     {"cudnnQueryRuntimeError",                        {"hipdnnQueryRuntimeError",                        CONV_VERSION, API_DNN, HIP_UNSUPPORTED}},
     {"cudnnGetProperty",                              {"hipdnnGetProperty",                              CONV_VERSION, API_DNN, HIP_UNSUPPORTED}},
     {"cudnnGetErrorString",                           {"hipdnnGetErrorString",                           CONV_ERROR, API_DNN}},
+
     {"cudnnCreate",                                   {"hipdnnCreate",                                   CONV_MATH_FUNC, API_DNN}},
     {"cudnnCreateTensorDescriptor",                   {"hipdnnCreateTensorDescriptor",                   CONV_MATH_FUNC, API_DNN}},
     {"cudnnCreateDropoutDescriptor",                  {"hipdnnCreateDropoutDescriptor",                  CONV_MATH_FUNC, API_DNN}},
@@ -3124,21 +3146,35 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cudnnGetTensorNdDescriptor",                    {"hipdnnGetTensorNdDescriptor",                    CONV_MATH_FUNC, API_DNN}},
     {"cudnnSetTensorNdDescriptorEx",                  {"hipdnnSetTensorNdDescriptorEx",                  CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
     {"cudnnFindConvolutionForwardAlgorithm",          {"hipdnnFindConvolutionForwardAlgorithm",          CONV_MATH_FUNC, API_DNN}},
+    {"cudnnFindConvolutionForwardAlgorithmEx",        {"hipdnnFindConvolutionForwardAlgorithmEx",        CONV_MATH_FUNC, API_DNN}},
     {"cudnnConvolutionBackwardFilter",                {"hipdnnConvolutionBackwardFilter",                CONV_MATH_FUNC, API_DNN}},
     {"cudnnConvolutionBackwardData",                  {"hipdnnConvolutionBackwardData",                  CONV_MATH_FUNC, API_DNN}},
     {"cudnnFindConvolutionBackwardFilterAlgorithm",   {"hipdnnFindConvolutionBackwardFilterAlgorithm",   CONV_MATH_FUNC, API_DNN}},
+    {"cudnnFindConvolutionBackwardFilterAlgorithmEx", {"hipdnnFindConvolutionBackwardFilterAlgorithmEx", CONV_MATH_FUNC, API_DNN}},
     {"cudnnGetConvolutionBackwardFilterAlgorithm",    {"hipdnnGetConvolutionBackwardFilterAlgorithm",    CONV_MATH_FUNC, API_DNN}},
+    {"cudnnGetConvolutionBackwardFilterAlgorithm_v7", {"hipdnnGetConvolutionBackwardFilterAlgorithm_v7", CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
     {"cudnnGetConvolutionBackwardFilterWorkspaceSize",{"hipdnnGetConvolutionBackwardFilterWorkspaceSize",CONV_MATH_FUNC, API_DNN}},
     {"cudnnGetConvolutionBackwardDataWorkspaceSize",  {"hipdnnGetConvolutionBackwardDataWorkspaceSize",  CONV_MATH_FUNC, API_DNN}},
     {"cudnnGetConvolutionBackwardDataAlgorithm",      {"hipdnnGetConvolutionBackwardDataAlgorithm",      CONV_MATH_FUNC, API_DNN}},
+    {"cudnnGetConvolutionBackwardDataAlgorithm_v7",   {"hipdnnGetConvolutionBackwardDataAlgorithm_v7",   CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
+    {"cudnnGetConvolutionBackwardDataAlgorithmMaxCount", {"hipdnnGetConvolutionBackwardDataAlgorithmMaxCount", CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
+    {"cudnnGetConvolutionForwardAlgorithmMaxCount",   {"hipdnnGetConvolutionForwardAlgorithmMaxCount", CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
     {"cudnnGetRNNLinLayerMatrixParams",               {"hipdnnGetRNNLinLayerMatrixParams",               CONV_MATH_FUNC, API_DNN}},
     {"cudnnGetRNNLinLayerBiasParams",                 {"hipdnnGetRNNLinLayerBiasParams",                 CONV_MATH_FUNC, API_DNN}},
     {"cudnnGetFilterNdDescriptor",                    {"hipdnnGetFilterNdDescriptor",                    CONV_MATH_FUNC, API_DNN}},
     {"cudnnFindConvolutionBackwardDataAlgorithm",     {"hipdnnFindConvolutionBackwardDataAlgorithm",     CONV_MATH_FUNC, API_DNN}},
+    {"cudnnFindConvolutionBackwardDataAlgorithmEx",   {"hipdnnFindConvolutionBackwardDataAlgorithmEx",   CONV_MATH_FUNC, API_DNN}},
     {"cudnnSetDropoutDescriptor",                     {"hipdnnSetDropoutDescriptor",                     CONV_MATH_FUNC, API_DNN}},
     {"cudnnSetConvolution2dDescriptor",               {"hipdnnSetConvolution2dDescriptor",               CONV_MATH_FUNC, API_DNN}},
+    {"cudnnGetConvolution2dDescriptor",               {"hipdnnGetConvolution2dDescriptor",               CONV_MATH_FUNC, API_DNN}},
     {"cudnnSetConvolutionMathType",                   {"hipdnnSetConvolutionMathType",                   CONV_MATH_FUNC, API_DNN}},
+    {"cudnnGetConvolutionMathType",                   {"hipdnnGetConvolutionMathType",                   CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
+    {"cudnnSetConvolutionGroupCount",                 {"hipdnnSetConvolutionGroupCount",                 CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
+    {"cudnnGetConvolutionGroupCount",                 {"hipdnnGetConvolutionGroupCount",                 CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
     {"cudnnGetConvolution2dForwardOutputDim",         {"hipdnnGetConvolution2dForwardOutputDim",         CONV_MATH_FUNC, API_DNN}},
+    {"cudnnSetConvolutionNdDescriptor",               {"hipdnnSetConvolutionNdDescriptor",               CONV_MATH_FUNC, API_DNN}},
+    {"cudnnGetConvolutionNdDescriptor",               {"hipdnnGetConvolutionNdDescriptor",               CONV_MATH_FUNC, API_DNN}},
+    {"cudnnGetConvolutionNdForwardOutputDim",         {"hipdnnGetConvolutionNdForwardOutputDim",         CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
     {"cudnnCreateFilterDescriptor",                   {"hipdnnCreateFilterDescriptor",                   CONV_MATH_FUNC, API_DNN}},
     {"cudnnCreatePersistentRNNPlan",                  {"hipdnnCreatePersistentRNNPlan",                  CONV_MATH_FUNC, API_DNN}},
     {"cudnnSetPersistentRNNPlan",                     {"hipdnnSetPersistentRNNPlan",                     CONV_MATH_FUNC, API_DNN}},
@@ -3154,8 +3190,16 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cudnnSetRNNMatrixMathType",                     {"hipdnnSetRNNMatrixMathType",                     CONV_MATH_FUNC, API_DNN}},
     {"cudnnCreateConvolutionDescriptor",              {"hipdnnCreateConvolutionDescriptor",              CONV_MATH_FUNC, API_DNN}},
     {"cudnnGetConvolutionForwardAlgorithm",           {"hipdnnGetConvolutionForwardAlgorithm",           CONV_MATH_FUNC, API_DNN}},
+    {"cudnnGetConvolutionForwardAlgorithm_v7",        {"hipdnnGetConvolutionForwardAlgorithm_v7",        CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
     {"cudnnConvolutionForward",                       {"hipdnnConvolutionForward",                       CONV_MATH_FUNC, API_DNN}},
     {"cudnnGetConvolutionForwardWorkspaceSize",       {"hipdnnGetConvolutionForwardWorkspaceSize",       CONV_MATH_FUNC, API_DNN}},
+    {"cudnnConvolutionBiasActivationForward",         {"hipdnnConvolutionBiasActivationForward",         CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
+    {"cudnnGetConvolutionBackwardFilterAlgorithmMaxCount", {"hipdnnGetConvolutionBackwardFilterAlgorithmMaxCount",       CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
+    {"cudnnConvolutionBackwardBias",                  {"hipdnnConvolutionBackwardBias",                  CONV_MATH_FUNC, API_DNN}},
+    {"cudnnReduceTensor",                             {"hipdnnReduceTensor",                             CONV_MATH_FUNC, API_DNN}},
+    {"cudnnSetTensor",                                {"hipdnnSetTensor",                                CONV_MATH_FUNC, API_DNN}},
+    {"cudnnScaleTensor",                              {"hipdnnScaleTensor",                              CONV_MATH_FUNC, API_DNN}},
+    {"cudnnIm2Col",                                   {"hipdnnIm2Col",                                   CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
     {"cudnnDestroyTensorDescriptor",                  {"hipdnnDestroyTensorDescriptor",                  CONV_MATH_FUNC, API_DNN}},
     {"cudnnDestroyOpTensorDescriptor",                {"hipdnnDestroyOpTensorDescriptor",                CONV_MATH_FUNC, API_DNN}},
     {"cudnnDestroyConvolutionDescriptor",             {"hipdnnDestroyConvolutionDescriptor",             CONV_MATH_FUNC, API_DNN}},
@@ -3165,6 +3209,21 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cudnnDestroyReduceTensorDescriptor",            {"hipdnnDestroyReduceTensorDescriptor",            CONV_MATH_FUNC, API_DNN}},
     {"cudnnDestroyPersistentRNNPlan",                 {"hipdnnDestroyPersistentRNNPlan",                 CONV_MATH_FUNC, API_DNN}},
     {"cudnnDestroy",                                  {"hipdnnDestroy",                                  CONV_MATH_FUNC, API_DNN}},
+
+    {"cudnnSoftmaxForward",                           {"hipdnnSoftmaxForward",                           CONV_MATH_FUNC, API_DNN}},
+    {"cudnnSoftmaxBackward",                          {"hipdnnSoftmaxBackward",                          CONV_MATH_FUNC, API_DNN}},
+
+    {"cudnnCreatePoolingDescriptor",                  {"hipdnnCreatePoolingDescriptor",                  CONV_MATH_FUNC, API_DNN}},
+    {"cudnnSetPooling2dDescriptor",                   {"hipdnnSetPooling2dDescriptor",                   CONV_MATH_FUNC, API_DNN}},
+    {"cudnnGetPooling2dDescriptor",                   {"hipdnnGetPooling2dDescriptor",                   CONV_MATH_FUNC, API_DNN}},
+    {"cudnnSetPoolingNdDescriptor",                   {"hipdnnSetPoolingNdDescriptor",                   CONV_MATH_FUNC, API_DNN}},
+    {"cudnnGetPoolingNdDescriptor",                   {"hipdnnGetPoolingNdDescriptor",                   CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
+    {"cudnnGetPoolingNdForwardOutputDim",             {"hipdnnGetPoolingNdForwardOutputDim",             CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
+    {"cudnnGetPooling2dForwardOutputDim",             {"hipdnnGetPooling2dForwardOutputDim",             CONV_MATH_FUNC, API_DNN}},
+    {"cudnnDestroyPoolingDescriptor",                 {"hipdnnDestroyPoolingDescriptor",                 CONV_MATH_FUNC, API_DNN}},
+
+    {"cudnnPoolingForward",                           {"hipdnnPoolingForward",                           CONV_MATH_FUNC, API_DNN}},
+    {"cudnnPoolingBackward",                          {"hipdnnPoolingBackward",                          CONV_MATH_FUNC, API_DNN}},
 
 };
 
