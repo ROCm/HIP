@@ -146,8 +146,10 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
 
   amd::HostQueue* queue;
   if (hStream == nullptr) {
+    hip::syncStreams();
     queue = hip::getNullStream();
   } else {
+    hip::getNullStream()->finish();
     queue = as_amd(reinterpret_cast<cl_command_queue>(hStream))->asHostQueue();
   }
   if (!queue) {
@@ -195,7 +197,6 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
   }
 
   command->enqueue();
-  command->awaitCompletion();
   command->release();
 
   return hipSuccess;

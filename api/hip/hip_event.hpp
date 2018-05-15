@@ -27,12 +27,27 @@ THE SOFTWARE.
 
 namespace hip {
 
+class TimerMarker: public amd::Marker {
+public:
+  TimerMarker(amd::HostQueue& queue) : amd::Marker(queue, true) {
+    profilingInfo_.enabled_ = true;
+    profilingInfo_.callback_ = nullptr;
+    profilingInfo_.start_ = profilingInfo_.end_ = 0;
+  }
+};
+
 class Event {
 public:
-  Event(unsigned int flags) : flags(flags) {}
-  ~Event() {}
+  Event(unsigned int flags) : flags(flags), stream_(nullptr), event_(nullptr) {}
+  ~Event() {
+    if (event_ != nullptr) {
+      event_->release();
+    }
+  }
   unsigned int flags;
-private:
+
+  amd::HostQueue* stream_;
+  amd::Event* event_;
 };
 
 };
