@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 #include <hip/hip_runtime.h>
 #include "hip_internal.hpp"
+#include "hip_event.hpp"
 #include "thread/monitor.hpp"
 
 static amd::Monitor streamSetLock("Guards global stream set");
@@ -97,8 +98,12 @@ hipError_t hipStreamSynchronize(hipStream_t stream) {
   amd::HostQueue* hostQueue;
 
   if (stream == nullptr) {
+    hip::syncStreams();
+
     hostQueue = hip::getNullStream();
   } else {
+    hip::getNullStream()->finish();
+
     hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
@@ -130,9 +135,29 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags) {
   HIP_INIT_API(stream, event, flags);
 
-  assert(0 && "Unimplemented");
+  if (stream == nullptr || event == nullptr) {
+    return hipErrorInvalidResourceHandle;
+  }
 
-  return hipErrorUnknown;
+  amd::HostQueue* hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
+  hip::Event* e = reinterpret_cast<hip::Event*>(event);
+  cl_event clEvent = as_cl(e->event_);
+
+  amd::Command::EventWaitList eventWaitList;
+  cl_int err = amd::clSetEventWaitList(eventWaitList, hostQueue->context(), 1,
+                                       &clEvent);
+  if (err != CL_SUCCESS) {
+    return hipErrorUnknown;
+  }
+
+  amd::Command* command = new amd::Marker(*hostQueue, true, eventWaitList);
+  if (command == NULL) {
+    return hipErrorOutOfMemory;
+  }
+  command->enqueue();
+  command->release();
+
+  return hipSuccess;
 }
 
 hipError_t hipStreamQuery(hipStream_t stream) {

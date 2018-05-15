@@ -24,36 +24,67 @@ THE SOFTWARE.
 
 #include "hip_event.hpp"
 
+hipError_t ihipEventCreateWithFlags(hipEvent_t* event, unsigned flags) {
+  if (event == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
+  unsigned supportedFlags = hipEventDefault | hipEventBlockingSync | hipEventDisableTiming |
+                            hipEventReleaseToDevice | hipEventReleaseToSystem;
+  const unsigned releaseFlags = (hipEventReleaseToDevice | hipEventReleaseToSystem);
+
+  const bool illegalFlags =
+      (flags & ~supportedFlags) ||             // can't set any unsupported flags.
+      (flags & releaseFlags) == releaseFlags;  // can't set both release flags
+
+  if (!illegalFlags) {
+    hip::Event* e = new hip::Event(flags);
+
+    if (e == nullptr) {
+      return hipErrorOutOfMemory;
+    }
+
+    *event = reinterpret_cast<hipEvent_t>(e);
+  } else {
+    return hipErrorInvalidValue;
+  }
+  return hipSuccess;
+}
+
+hipError_t ihipEventQuery(hipEvent_t event) {
+  if (event == nullptr) {
+    return hipErrorInvalidResourceHandle;
+  }
+
+  hip::Event* e = reinterpret_cast<hip::Event*>(event);
+
+  if (e->event_ == nullptr) {
+    return hipErrorInvalidResourceHandle;
+  }
+
+  e->event_->notifyCmdQueue();
+
+  return (e->event_->status() == CL_COMPLETE)? hipSuccess : hipErrorNotReady;
+}
+
 hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags) {
   HIP_INIT_API(event, flags);
 
-  hip::Event* e = new hip::Event(flags);
-
-  if (e == nullptr) {
-    return hipErrorOutOfMemory;
-  }
-
-  *event = reinterpret_cast<hipEvent_t>(e);
-
-  return hipSuccess;
-}
+  return ihipEventCreateWithFlags(event, flags);
+}  
 
 hipError_t hipEventCreate(hipEvent_t* event) {
   HIP_INIT_API(event);
 
-  hip::Event* e = new hip::Event(0);
-
-  if (e == nullptr) {
-    return hipErrorOutOfMemory;
-  }
-
-  *event = reinterpret_cast<hipEvent_t>(e);
-
-  return hipSuccess;
+  return ihipEventCreateWithFlags(event, 0);
 }
 
 hipError_t hipEventDestroy(hipEvent_t event) {
   HIP_INIT_API(event);
+
+  if (event == nullptr) {
+    return hipErrorInvalidResourceHandle;
+  }
 
   delete reinterpret_cast<hip::Event*>(event);
 
@@ -63,29 +94,83 @@ hipError_t hipEventDestroy(hipEvent_t event) {
 hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop) {
   HIP_INIT_API(ms, start, stop);
 
-  return hipErrorUnknown;
+  if (start == nullptr || stop == nullptr) {
+    return hipErrorInvalidResourceHandle;
+  }
+
+  hip::Event* eStart = reinterpret_cast<hip::Event*>(start);
+  hip::Event* eStop  = reinterpret_cast<hip::Event*>(stop);
+
+  if (eStart->event_ == nullptr ||
+      eStop->event_  == nullptr) {
+    return hipErrorInvalidResourceHandle;
+  }
+
+  if ((eStart->flags | eStop->flags) & hipEventDisableTiming) {
+    return hipErrorInvalidResourceHandle;
+  }
+
+  if (ihipEventQuery(start) == hipErrorNotReady ||
+      ihipEventQuery(stop) == hipErrorNotReady) {
+    return hipErrorNotReady;
+  }
+
+  if (ms == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
+  *ms = static_cast<float>(eStop->event_->profilingInfo().submitted_ - eStart->event_->profilingInfo().submitted_)/1000000.f;
+
+  return hipSuccess;
 }
 
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
   HIP_INIT_API(event, stream);
 
-  assert(0 && "Unimplemented");
+  if (event == nullptr) {
+    return hipErrorInvalidResourceHandle;
+  }
 
-  return hipErrorUnknown;
+  hip::Event* e = reinterpret_cast<hip::Event*>(event);
+
+  if (stream == nullptr) {
+    e->stream_ = hip::getNullStream();
+  } else {
+    e->stream_ = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
+  }
+  amd::Command* command = (e->flags & hipEventDisableTiming)? new amd::Marker(*e->stream_, true) :
+    new hip::TimerMarker(*e->stream_);
+  command->enqueue();
+
+  if (e->event_ != nullptr) {
+    e->event_->release();
+  }
+
+  e->event_ = &command->event();
+
+  return hipSuccess;
 }
 
 hipError_t hipEventSynchronize(hipEvent_t event) {
   HIP_INIT_API(event);
 
-  assert(0 && "Unimplemented");
+  if (event == nullptr) {
+    return hipErrorInvalidResourceHandle;
+  }
 
-  return hipErrorUnknown;
+  hip::Event* e = reinterpret_cast<hip::Event*>(event);
+
+  if (e->event_ == nullptr) {
+    return hipErrorInvalidResourceHandle;
+  }
+
+  e->event_->awaitCompletion();
+
+  return hipSuccess;
 }
 
 hipError_t hipEventQuery(hipEvent_t event) {
   HIP_INIT_API(event);
 
-  assert(0 && "Unimplemented");
-
-  return hipErrorUnknown;
+  return ihipEventQuery(event);
 }

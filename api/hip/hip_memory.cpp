@@ -68,7 +68,6 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 
 hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
                       amd::HostQueue& queue, bool isAsync = false) {
-
   amd::Command* command = nullptr;
   amd::Command::EventWaitList waitList;
   size_t sOffset = 0;
@@ -115,15 +114,6 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
   if (command == nullptr) {
     return hipErrorOutOfMemory;
   }
-
-// FIXME: virtualize MemoryCommand::validateMemory()
-#if 0
-  // Make sure we have memory for the command execution
-  if (CL_SUCCESS != command->validateMemory()) {
-    delete command;
-    return hipErrorMemoryAllocation;
-  }
-#endif
 
   command->enqueue();
   if (!isAsync) {
@@ -193,6 +183,7 @@ hipError_t hipFree(void* ptr) {
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind) {
   HIP_INIT_API(dst, src, sizeBytes, kind);
 
+  hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
   return ihipMemcpy(dst, src, sizeBytes, kind, *queue);
 }
@@ -203,8 +194,10 @@ hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t st
   amd::HostQueue* queue;
 
   if (stream == nullptr) {
+    hip::syncStreams();
     queue = hip::getNullStream();
   } else {
+    hip::getNullStream()->finish();
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
@@ -214,6 +207,7 @@ hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t st
 hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
   HIP_INIT_API(dst, value, sizeBytes);
 
+  hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
   return ihipMemset(dst, value, sizeBytes, *queue);
@@ -533,6 +527,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t co
 hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {
   HIP_INIT_API(dst, src, sizeBytes);
 
+  hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
   return ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyHostToDevice, *queue);
@@ -541,6 +536,7 @@ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {
 hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes) {
   HIP_INIT_API(dst, src, sizeBytes);
 
+  hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
   return ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyDeviceToHost, *queue);
@@ -549,6 +545,7 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes) {
 hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes) {
   HIP_INIT_API(dst, src, sizeBytes);
 
+  hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
   return ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyDeviceToDevice, *queue);
@@ -557,6 +554,7 @@ hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeByte
 hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes) {
   HIP_INIT_API(dst, src, sizeBytes);
 
+  hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
   return ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyHostToHost, *queue);
@@ -569,8 +567,10 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes,
   amd::HostQueue* queue = nullptr;
 
   if (stream == nullptr) {
+    hip::syncStreams();
     queue = hip::getNullStream();
   } else {
+    hip::getNullStream()->finish();
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
@@ -585,8 +585,10 @@ hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, void* src, size_t sizeBytes,
   amd::HostQueue* queue = nullptr;
 
   if (stream == nullptr) {
+    hip::syncStreams();
     queue = hip::getNullStream();
   } else {
+    hip::getNullStream()->finish();
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
@@ -601,8 +603,10 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
   amd::HostQueue* queue = nullptr;
 
   if (stream == nullptr) {
+    hip::syncStreams();
     queue = hip::getNullStream();
   } else {
+    hip::getNullStream()->finish();
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
@@ -617,8 +621,10 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes,
   amd::HostQueue* queue = nullptr;
 
   if (stream == nullptr) {
+    hip::syncStreams();
     queue = hip::getNullStream();
   } else {
+    hip::getNullStream()->finish();
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
@@ -723,6 +729,7 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
                        size_t height, hipMemcpyKind kind) {
   HIP_INIT_API(dst, dpitch, src, spitch, width, height, kind);
 
+  hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
   return ihipMemcpy2D(dst, dpitch, src, spitch, width, height, kind, *queue);
@@ -736,8 +743,10 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
   amd::HostQueue* queue;
 
   if (stream == nullptr) {
+    hip::syncStreams();
     queue = hip::getNullStream();
   } else {
+    hip::getNullStream()->finish();
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
@@ -757,6 +766,7 @@ hipError_t hipMemcpyToArray(hipArray* dstArray, size_t wOffset, size_t hOffset, 
                             size_t count, hipMemcpyKind kind) {
   HIP_INIT_API(dstArray, wOffset, hOffset, src, count, kind);
 
+  hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
   amd::Command* command = nullptr;
@@ -795,6 +805,7 @@ hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffs
                               size_t count, hipMemcpyKind kind) {
   HIP_INIT_API(dst, srcArray, wOffset, hOffset, count, kind);
 
+  hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
   amd::Command* command = nullptr;
@@ -833,6 +844,7 @@ hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffs
 hipError_t hipMemcpyHtoA(hipArray* dstArray, size_t dstOffset, const void* srcHost, size_t count) {
   HIP_INIT_API(dstArray, dstOffset, srcHost, count);
 
+  hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
   amd::Command::EventWaitList waitList;
@@ -856,6 +868,7 @@ hipError_t hipMemcpyHtoA(hipArray* dstArray, size_t dstOffset, const void* srcHo
 hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t count) {
   HIP_INIT_API(dst, srcArray, srcOffset, count);
 
+  hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
   amd::Command::EventWaitList waitList;
@@ -879,6 +892,7 @@ hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t
 hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
   HIP_INIT_API(p);
 
+  hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
   size_t byteSize;
@@ -1035,6 +1049,7 @@ hipError_t ihipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t
 hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height) {
   HIP_INIT_API(dst, pitch, value, width, height);
 
+  hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
   return ihipMemset2D(dst, pitch, value, width, height, *queue);
 }
@@ -1045,8 +1060,10 @@ hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value,
 
   amd::HostQueue* queue = nullptr;
   if (stream == nullptr) {
+    hip::syncStreams();
     queue = hip::getNullStream();
   } else {
+    hip::getNullStream()->finish();
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
@@ -1060,6 +1077,7 @@ hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes
     return hipErrorInvalidValue;
   }
 
+  hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
   size_t offset = 0;
   amd::Command::EventWaitList waitList;
