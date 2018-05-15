@@ -84,7 +84,7 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags) {
   auto it = streamSet.find(hostQueue);
 
   if(flags != nullptr) {
-    *flags = (it != streamSet.end()) ? hipStreamNonBlocking : hipStreamDefault;
+    *flags = (it == streamSet.end()) ? hipStreamNonBlocking : hipStreamDefault;
   } else {
     return hipErrorInvalidValue;
   }
