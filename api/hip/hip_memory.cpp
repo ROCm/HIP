@@ -169,7 +169,19 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
   HIP_INIT_API(ptr, sizeBytes, flags);
 
-  return ihipMalloc(ptr, sizeBytes, CL_MEM_SVM_FINE_GRAIN_BUFFER);
+  if (ptr == nullptr) {
+    return hipErrorInvalidValue;
+  }
+  *ptr = nullptr;
+
+  const unsigned int coherentFlags = hipHostMallocCoherent | hipHostMallocNonCoherent;
+
+  // can't have both Coherent and NonCoherent flags set at the same time
+  if ((flags & coherentFlags) == coherentFlags) {
+    return hipErrorInvalidValue;
+  }
+
+  return ihipMalloc(ptr, sizeBytes, CL_MEM_SVM_FINE_GRAIN_BUFFER | (flags << 16));
 }
 
 hipError_t hipFree(void* ptr) {
@@ -467,9 +479,21 @@ hipError_t hipMalloc3DArray(hipArray_t* array, const struct hipChannelFormatDesc
 hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) {
   HIP_INIT_API(flagsPtr, hostPtr);
 
-  assert(0 && "Unimplemented");
+  if (flagsPtr == nullptr ||
+      hostPtr == nullptr) {
+    return hipErrorInvalidValue;
+  }
 
-  return hipErrorUnknown;
+  size_t offset = 0;
+  amd::Memory* svmMem = getMemoryObject(hostPtr, offset);
+
+  if (svmMem == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
+  *flagsPtr = svmMem->getMemFlags() >> 16;
+
+  return hipSuccess;
 }
 
 hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) {
