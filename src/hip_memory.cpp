@@ -1261,21 +1261,24 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
 // TODO - review and optimize
 hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
                         size_t height, hipMemcpyKind kind) {
-    if (width > dpitch || width > spitch) return hipErrorUnknown;
+    if (dst == nullptr || src == nullptr || width > dpitch || width > spitch) return hipErrorInvalidValue;
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
     hc::completion_future marker;
 
     hipError_t e = hipSuccess;
-
-    try {
-        for (int i = 0; i < height; ++i) {
-            stream->locked_copySync((unsigned char*)dst + i * dpitch,
+    if((width == dpitch) && (width == spitch)) {
+        stream->locked_copySync((void*)dst, (void*)src, width*height, kind, false);
+    } else {
+        try {
+            for (int i = 0; i < height; ++i) {
+                stream->locked_copySync((unsigned char*)dst + i * dpitch,
                                     (unsigned char*)src + i * spitch, width, kind);
+            }
+        } catch (ihipException& ex) {
+            e = ex._code;
         }
-    } catch (ihipException& ex) {
-        e = ex._code;
     }
 
     return e;
@@ -1303,15 +1306,19 @@ hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
 hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
                             size_t height, hipMemcpyKind kind, hipStream_t stream) {
     HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, dpitch, src, spitch, width, height, kind, stream);
-    if (width > dpitch || width > spitch) return ihipLogStatus(hipErrorUnknown);
+    if (dst == nullptr || src == nullptr || width > dpitch || width > spitch) return ihipLogStatus(hipErrorInvalidValue);
     hipError_t e = hipSuccess;
-    try {
-        for (int i = 0; i < height; ++i) {
-            e = hip_internal::memcpyAsync((unsigned char*)dst + i * dpitch,
+    if((width == dpitch) && (width == spitch)) {
+        hip_internal::memcpyAsync(dst, src, width*height, kind, stream);
+    } else {
+        try {
+            for (int i = 0; i < height; ++i) {
+                e = hip_internal::memcpyAsync((unsigned char*)dst + i * dpitch,
                                           (unsigned char*)src + i * spitch, width, kind, stream);
+            }
+        } catch (ihipException& ex) {
+            e = ex._code;
         }
-    } catch (ihipException& ex) {
-        e = ex._code;
     }
 
     return ihipLogStatus(e);
