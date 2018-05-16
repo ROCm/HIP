@@ -19,7 +19,7 @@ $(EXE): hipCommander.cpp
 	$(HIPCC) $(CXXFLAGS) $^ -o $@
 
 nullkernel.hsaco : nullkernel.hip.cpp
-	$(HIPCC) --genco nullkernel.hip -o nullkernel.hsaco
+	$(HIPCC) --genco nullkernel.hip.cpp -o nullkernel.hsaco
 
 
 install: $(EXE)
