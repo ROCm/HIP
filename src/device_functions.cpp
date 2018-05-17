@@ -276,6 +276,13 @@ struct ucharHolder {
     };
 } __attribute__((aligned(4)));
 
+struct uchar2Holder {
+    union {
+        unsigned int ui[2];
+        unsigned char c[8];
+    };
+} __attribute__((aligned(8)));
+
 __device__ unsigned int __byte_perm(unsigned int x, unsigned int y, unsigned int s) {
     struct uchar2Holder cHoldVal;
     struct ucharHolder cHoldKey;
