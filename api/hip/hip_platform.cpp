@@ -29,7 +29,7 @@ THE SOFTWARE.
 #include <unordered_map>
 #include "elfio.hpp"
 
-constexpr unsigned __cudaFatMAGIC2 = 0x466243b1;
+constexpr unsigned __hipFatMAGIC2 = 0x48495046; // "HIPF"
 
 struct __CudaFatBinaryWrapper {
   unsigned int magic;
@@ -39,7 +39,7 @@ struct __CudaFatBinaryWrapper {
 };
 
 #define CLANG_OFFLOAD_BUNDLER_MAGIC_STR "__CLANG_OFFLOAD_BUNDLE__"
-#define OPENMP_AMDGCN_AMDHSA_TRIPLE "openmp-amdgcn--amdhsa"
+#define HIP_AMDGCN_AMDHSA_TRIPLE "hip-amdgcn-amd-amdhsa"
 #define HCC_AMDGCN_AMDHSA_TRIPLE "hcc-amdgcn-amd-amdhsa-"
 
 struct __ClangOffloadBundleDesc {
@@ -60,7 +60,7 @@ extern "C" hipModule_t __hipRegisterFatBinary(const void* data)
   HIP_INIT();
 
   const __CudaFatBinaryWrapper* fbwrapper = reinterpret_cast<const __CudaFatBinaryWrapper*>(data);
-  if (fbwrapper->magic != __cudaFatMAGIC2 || fbwrapper->version != 1) {
+  if (fbwrapper->magic != __hipFatMAGIC2 || fbwrapper->version != 1) {
     return nullptr;
   }
   std::string magic((char*)fbwrapper->binary, sizeof(CLANG_OFFLOAD_BUNDLER_MAGIC_STR) - 1);
@@ -78,12 +78,12 @@ extern "C" hipModule_t __hipRegisterFatBinary(const void* data)
        desc = reinterpret_cast<const __ClangOffloadBundleDesc*>(
            reinterpret_cast<uintptr_t>(&desc->triple[0]) + desc->tripleSize)) {
 
-    std::string triple(desc->triple, sizeof(OPENMP_AMDGCN_AMDHSA_TRIPLE) - 1);
-    if (triple.compare(OPENMP_AMDGCN_AMDHSA_TRIPLE))
+    std::string triple(desc->triple, sizeof(HIP_AMDGCN_AMDHSA_TRIPLE) - 1);
+    if (triple.compare(HIP_AMDGCN_AMDHSA_TRIPLE))
       continue;
 
-    std::string target(desc->triple + sizeof(OPENMP_AMDGCN_AMDHSA_TRIPLE),
-                       desc->tripleSize - sizeof(OPENMP_AMDGCN_AMDHSA_TRIPLE));
+    std::string target(desc->triple + sizeof(HIP_AMDGCN_AMDHSA_TRIPLE),
+                       desc->tripleSize - sizeof(HIP_AMDGCN_AMDHSA_TRIPLE));
     if (target.compare(hip::getCurrentContext()->devices()[0]->info().name_))
       continue;
 
