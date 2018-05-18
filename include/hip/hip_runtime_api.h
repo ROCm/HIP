@@ -243,6 +243,8 @@ typedef enum __HIP_NODISCARD hipError_t {
         1062,  ///< Produced when trying to unlock a non-page-locked memory.
     hipErrorMapBufferObjectFailed =
         1071,    ///< Produced when the IPC memory attach failed from ROCr.
+    hipErrorAssert =
+        1081,    ///< Produced when the kernel calls assert.
     hipErrorTbd  ///< Marker that more error codes are needed.
 } hipError_t;
 
