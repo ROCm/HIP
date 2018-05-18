@@ -485,7 +485,7 @@ namespace
             &prop, ihipGetTlsDefaultCtx()->getDevice()->_deviceId);
         // TODO: at the moment there is no way to query the count of registers
         //       available per CU, therefore we hardcode it to 64 KiRegisters.
-        prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024.
+        prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
         
         r.localSizeBytes = header.workitem_private_segment_byte_size;
         r.sharedSizeBytes = header.workgroup_group_segment_byte_size;
