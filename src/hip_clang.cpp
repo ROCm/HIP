@@ -27,10 +27,10 @@ THE SOFTWARE.
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
 
-constexpr unsigned __cudaFatMAGIC2 = 0x466243b1;
+constexpr unsigned __hipFatMAGIC2 = 0x48495046; // "HIPF"
 
 #define CLANG_OFFLOAD_BUNDLER_MAGIC "__CLANG_OFFLOAD_BUNDLE__"
-#define AMDGCN_AMDHSA_TRIPLE "openmp-amdgcn--amdhsa"
+#define AMDGCN_AMDHSA_TRIPLE "hip-amdgcn-amd-amdhsa"
 
 struct __ClangOffloadBundleDesc {
   uint64_t offset;
@@ -59,7 +59,7 @@ __hipRegisterFatBinary(const void* data)
   HIP_INIT();
 
   const __CudaFatBinaryWrapper* fbwrapper = reinterpret_cast<const __CudaFatBinaryWrapper*>(data);
-  if (fbwrapper->magic != __cudaFatMAGIC2 || fbwrapper->version != 1) {
+  if (fbwrapper->magic != __hipFatMAGIC2 || fbwrapper->version != 1) {
     return nullptr;
   }
 
