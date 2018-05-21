@@ -382,6 +382,10 @@ inline static hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width,
     return hipCUDAErrorTohipError(cudaMallocPitch(ptr, pitch, width, height));
 }
 
+inline static hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
+    return hipCUDAErrorTohipError(cudaMalloc3D(pitchedDevPtr, extent));
+}
+
 inline static hipError_t hipFree(void* ptr) { return hipCUDAErrorTohipError(cudaFree(ptr)); }
 
 inline static hipError_t hipMallocHost(void** ptr, size_t size)
