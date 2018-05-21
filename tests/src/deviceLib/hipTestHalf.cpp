@@ -32,7 +32,7 @@ THE SOFTWARE.
 #define HALF_SIZE 64 * sizeof(__half)
 #define HALF2_SIZE 64 * sizeof(__half2)
 
-#if __HIP_ARCH_GFX803__ || __HIP_ARCH_GFX900__
+#if __HIP_ARCH_GFX803__ || __HIP_ARCH_GFX900__ || __HIP_ARCH_GFX906__
 
 __global__ void __halfMath(hipLaunchParm lp, __half* A, __half* B, __half* C) {
     int tx = threadIdx.x;

@@ -1451,6 +1451,27 @@ hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t 
 hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, size_t height,hipStream_t stream __dparm(0));
 
 /**
+ *  @brief Fills synchronously the memory area pointed to by pitchedDevPtr with the constant value.
+ *
+ *  @param[in] pitchedDevPtr
+ *  @param[in]  value - constant value to be set
+ *  @param[in]  extent
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
+ */
+hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent );
+
+/**
+ *  @brief Fills asynchronously the memory area pointed to by pitchedDevPtr with the constant value.
+ *
+ *  @param[in] pitchedDevPtr
+ *  @param[in]  value - constant value to be set
+ *  @param[in]  extent
+ *  @param[in]  stream
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
+ */
+hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent ,hipStream_t stream __dparm(0));
+
+/**
  * @brief Query memory info.
  * Return snapshot of free memory, and total allocatable memory on the device.
  *

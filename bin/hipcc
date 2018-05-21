@@ -50,6 +50,8 @@ $verbose = $ENV{'HIPCC_VERBOSE'} // 0;
 # Verbose: 0x1=commands, 0x2=paths, 0x4=hipcc args
 
 $HIP_PATH=$ENV{'HIP_PATH'} // dirname (dirname $0); # use parent directory of hipcc
+$HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'};
+$DEVICE_LIB_PATH=$ENV{'DEVICE_LIB_PATH'};
 
 #---
 # Read .hipInfo
@@ -61,6 +63,10 @@ parse_config_file("$HIP_PATH/lib/.hipInfo", \%hipConfig);
 $HIP_PLATFORM= `$HIP_PATH/bin/hipconfig --platform` // "hcc";
 $HIP_VERSION= `$HIP_PATH/bin/hipconfig --version`;
 ($HIP_VERSION_MAJOR, $HIP_VERSION_MINOR, $HIP_VERSION_PATCH) = split(/\./, $HIP_VERSION);
+
+if (defined $HIP_CLANG_PATH) {
+  $HIP_PLATFORM = "clang"
+}
 
 if ($verbose & 0x2) {
     print ("HIP_PATH=$HIP_PATH\n");
@@ -75,9 +81,19 @@ $target_gfx801 = 0;
 $target_gfx802 = 0;
 $target_gfx803 = 0;
 $target_gfx900 = 0;
+$target_gfx906 = 0;
 $default_amdgpu_target = 1;
 
-if ($HIP_PLATFORM eq "hcc") {
+if ($HIP_PLATFORM eq "clang") {
+    if ($verbose & 0x2) {
+        print ("HIP_CLANG_PATH=$HIP_CLANG_PATH\n");
+    }
+    $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
+    $HIPCC="$HIP_CLANG_PATH/clang++";
+    $HIPCXXFLAGS .= " -I$HIP_PATH/include";
+
+    $HIPLDFLAGS = "--hip-link --hip-device-lib-path=$DEVICE_LIB_PATH -L$HIP_PATH/lib -lhip_hcc";
+} elsif ($HIP_PLATFORM eq "hcc") {
     $HSA_PATH=$ENV{'HSA_PATH'} // "/opt/rocm/hsa";
 
     $HCC_HOME=$ENV{'HCC_HOME'} // $hipConfig{'HCC_HOME'} // "/opt/rocm/hcc";
@@ -281,6 +297,12 @@ foreach $arg (@ARGV)
         $target_gfx900 = 1;
         $default_amdgpu_target = 0;
     }
+    if($arg eq '--amdgpu-target=gfx906')
+    {
+        $target_gfx906 = 1;
+        $default_amdgpu_target = 0;
+    }
+
 
     if(($trimarg eq '-stdlib=libstdc++') and ($setStdLib eq 0))
     {
@@ -330,10 +352,16 @@ foreach $arg (@ARGV)
         if (($arg =~ /\.cpp$/) or ($arg =~ /\.c$/) or ($arg =~ /\.cc$/) ) {
             $hasC = 1;
             $needCXXFLAGS = 1;
+            if ($HIP_PLATFORM eq 'clang') {
+                $toolArgs .= " -x hip"
+            }
         }
         if (($arg =~ /\.cu$/) or ($arg =~ /\.cuh$/)) {
             $hasCU = 1;
             $needCXXFLAGS = 1;
+            if ($HIP_PLATFORM eq 'clang') {
+                $toolArgs .= " -x hip"
+            }
         }
 
         push (@inputs, $arg);
@@ -342,7 +370,7 @@ foreach $arg (@ARGV)
     $toolArgs .= " $arg" unless $swallowArg;
 }
 
-if($HIP_PLATFORM eq "hcc"){
+if($HIP_PLATFORM eq "hcc" or $HIP_PLATFORM eq "clang"){
     # No AMDGPU target specified at commandline. So look for HCC_AMDGPU_TARGET
     if($default_amdgpu_target eq 1 and defined $ENV{HCC_AMDGPU_TARGET})
     {
@@ -371,6 +399,11 @@ if($HIP_PLATFORM eq "hcc"){
             if($target eq 'gfx900')
             {
                 $target_gfx900 = 1;
+                $default_amdgpu_target = 0;
+            }
+            if($target eq 'gfx906')
+            {
+                $target_gfx906 = 1;
                 $default_amdgpu_target = 0;
             }
         }
@@ -404,6 +437,10 @@ if($HIP_PLATFORM eq "hcc"){
                 $target_gfx900 = 1;
                 $default_amdgpu_target = 0;
             }
+            if($val eq "gfx906") {
+                $target_gfx906 = 1;
+                $default_amdgpu_target = 0;
+            }
         }
     }
     # rocm_agent_enumerator failed! Throw an error and die if linking is required
@@ -414,28 +451,58 @@ if($HIP_PLATFORM eq "hcc"){
 
     $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_hc.ll\n";
 
+    if($HIP_PLATFORM eq "hcc") {
+        $GPU_ARCH_OPT = " --amdgpu-target=";
+    } else {
+        $GPU_ARCH_OPT = " --cuda-gpu-arch=";
+    }
     # Handle ROCm target platform
     if ($target_gfx701 eq 1) {
-        $HIPLDFLAGS .= " --amdgpu-target=gfx701";
+        $GPU_ARCH_ARG = $GPU_ARCH_OPT . "gfx701";
+        $HIPLDFLAGS .= $GPU_ARCH_ARG;
+        if ($HIP_PLATFORM eq 'clang') {
+            $HIPCXXFLAGS .= $GPU_ARCH_ARG;;
+        }
         $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX701__=1 ";
     }
     if ($target_gfx801 eq 1) {
-        $HIPLDFLAGS .= " --amdgpu-target=gfx801";
+        $GPU_ARCH_ARG = $GPU_ARCH_OPT . "gfx801";
+        $HIPLDFLAGS .= $GPU_ARCH_ARG;
+        if ($HIP_PLATFORM eq 'clang') {
+            $HIPCXXFLAGS .= $GPU_ARCH_ARG;;
+        }
         $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX801__=1 ";
     }
     if ($target_gfx802 eq 1) {
-        $HIPLDFLAGS .= " --amdgpu-target=gfx802";
+        $GPU_ARCH_ARG = $GPU_ARCH_OPT . "gfx802";
+        $HIPLDFLAGS .= $GPU_ARCH_ARG;
+        if ($HIP_PLATFORM eq 'clang') {
+            $HIPCXXFLAGS .= $GPU_ARCH_ARG;;
+        }
         $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX802__=1 ";
     }
     if ($target_gfx803 eq 1) {
-        $HIPLDFLAGS .= " --amdgpu-target=gfx803";
+        $GPU_ARCH_ARG = $GPU_ARCH_OPT . "gfx803";
+        $HIPLDFLAGS .= $GPU_ARCH_ARG;
+        if ($HIP_PLATFORM eq 'clang') {
+            $HIPCXXFLAGS .= $GPU_ARCH_ARG;;
+        }
         $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX803__=1 ";
         $ENV{HCC_EXTRA_LIBRARIES_GFX803}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
     }
     if ($target_gfx900 eq 1) {
-        $HIPLDFLAGS .= " --amdgpu-target=gfx900";
+        $GPU_ARCH_ARG = $GPU_ARCH_OPT . "gfx900";
+        $HIPLDFLAGS .= $GPU_ARCH_ARG;
+        if ($HIP_PLATFORM eq 'clang') {
+            $HIPCXXFLAGS .= $GPU_ARCH_ARG;;
+        }
         $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX900__=1 ";
         $ENV{HCC_EXTRA_LIBRARIES_GFX900}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
+    }
+    if ($target_gfx906 eq 1) {
+        $HIPLDFLAGS .= " --amdgpu-target=gfx906";
+        $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX906__=1 ";
+        $ENV{HCC_EXTRA_LIBRARIES_GFX906}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
     }
 }
 
@@ -445,6 +512,7 @@ if ($hasC and $HIP_PLATFORM eq 'nvcc') {
 if ($hasCU and $HIP_PLATFORM eq 'hcc') {
     $HIPCXXFLAGS .= " -x c++";
 }
+
 if ($buildDeps and $HIP_PLATFORM eq 'nvcc') {
     $HIPCXXFLAGS .= " -M -D__CUDACC__";
 }
