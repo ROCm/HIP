@@ -160,6 +160,7 @@ typedef cudaSurfaceObject_t hipSurfaceObject_t;
 #define hipDeviceMapHost cudaDeviceMapHost
 
 #define hipExtent cudaExtent
+#define hipPitchedPtr cudaPitchedPtr
 #define make_hipExtent make_cudaExtent
 #define make_hipPos make_cudaPos
 #define make_hipPitchedPtr make_cudaPitchedPtr
