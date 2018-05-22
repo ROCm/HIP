@@ -107,8 +107,8 @@ namespace hip_impl
             it0->second.cbegin(),
             it0->second.cend(),
             [=](const pair<hsa_agent_t, Kernel_descriptor>& x) {
-                return x.first.handle == agent.handle;
-            });
+            return x.first == agent;
+        });
 
         if (it1 == it0->second.cend()) {
             throw runtime_error{
