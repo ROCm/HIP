@@ -1132,15 +1132,19 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t co
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind) {
     HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes, kind);
 
+    hipError_t e = hipSuccess;
+
+    // Return success if number of bytes to copy is 0
+    if (sizeBytes == 0) return ihipLogStatus(e);
+
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
     hc::completion_future marker;
 
-    hipError_t e = hipSuccess;
     if(dst==NULL || src==NULL)
 	{
 	e=hipErrorInvalidValue;
-	return e;
+	return ihipLogStatus(e);
 	}
     try {
         stream->locked_copySync(dst, src, sizeBytes, kind);
