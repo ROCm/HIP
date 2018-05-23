@@ -1180,7 +1180,32 @@ hipError_t hipHostGetDevicePointer(void** devicePointer, void* hostPointer, unsi
 hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr) {
   HIP_INIT_API(attributes, ptr);
 
-  assert(0 && "Unimplemented");
+  size_t offset = 0;
+  amd::Memory* memObj = getMemoryObject(ptr, offset);
+  amd::Context &memObjCtx = memObj->getContext();
+  int device = 0;
 
-  return hipErrorUnknown;
+  if (memObj != nullptr) {
+    attributes->memoryType = hipMemoryTypeDevice;
+    attributes->hostPointer = memObj->getSvmPtr();
+    attributes->devicePointer = memObj->getSvmPtr();
+    attributes->isManaged = 0;
+    attributes->allocationFlags = memObj->getMemFlags();
+    for (auto& ctx : g_devices) {
+      ++device;
+      if (*ctx == memObjCtx) {
+        attributes->device = device;
+        break;
+      }
+    }
+  } else {
+    attributes->memoryType = hipMemoryTypeHost;
+    attributes->hostPointer = (void*)ptr;
+    attributes->devicePointer = 0;
+    attributes->device = -1;
+    attributes->isManaged = 0;
+    attributes->allocationFlags = 0;
+  }
+
+  return hipSuccess;
 }
