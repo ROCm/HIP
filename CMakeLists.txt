@@ -195,7 +195,6 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set(SOURCE_FILES_DEVICE
         src/device_util.cpp
         src/hip_ldg.cpp
-        src/hip_fp16.cpp
         src/device_functions.cpp
         src/math_functions.cpp)
 
