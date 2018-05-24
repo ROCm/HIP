@@ -694,22 +694,18 @@ hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch
     }
   }
 
-  amd::Coord3D srcStart(srcRect.start_, 0, 0);
-  amd::Coord3D dstStart(dstRect.start_, 0, 0);
-  amd::Coord3D srcEnd(srcRect.end_, 1, 1);
-  amd::Coord3D dstEnd(dstRect.end_, 1, 1);
   amd::Coord3D size(region[0], region[1], region[2]);
 
   if (!srcRect.create(sOrigin, region, spitch, src_slice_pitch) ||
       !dstRect.create(dOrigin, region, dpitch, dst_slice_pitch)) {
     return hipErrorInvalidValue;
   }
-/*
-  if (((srcPtr != nullptr) && (!srcPtr->asBuffer()->validateRegion(srcStart, srcEnd))) ||
-      ((srcPtr != nullptr) && (!dstPtr->asBuffer()->validateRegion(dstStart, dstEnd)))) {
-    return hipErrorInvalidValue;
-  }
-*/
+
+  amd::Coord3D srcStart(srcRect.start_, 0, 0);
+  amd::Coord3D dstStart(dstRect.start_, 0, 0);
+  amd::Coord3D srcEnd(srcRect.end_, 1, 1);
+  amd::Coord3D dstEnd(dstRect.end_, 1, 1);
+
   amd::Command* command = nullptr;
   amd::Command::EventWaitList waitList;
   switch (kind) {
@@ -783,9 +779,119 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
                               size_t spitch, size_t width, size_t height, hipMemcpyKind kind) {
   HIP_INIT_API(dst, wOffset, hOffset, src, spitch, width, height, kind);
 
-  assert(0 && "Unimplemented");
+  if (dst->data == nullptr) {
+    return hipErrorUnknown;
+  }
 
-  return hipErrorUnknown;
+  hip::syncStreams();
+  amd::HostQueue* queue = hip::getNullStream();
+
+  size_t dpitch = dst->width;
+
+  switch (dst[0].desc.f) {
+    case hipChannelFormatKindSigned:
+      dpitch *= sizeof(int);
+      break;
+    case hipChannelFormatKindUnsigned:
+      dpitch *= sizeof(unsigned int);
+      break;
+    case hipChannelFormatKindFloat:
+      dpitch *= sizeof(float);
+      break;
+    case hipChannelFormatKindNone:
+      dpitch *= sizeof(size_t);
+      break;
+    default:
+      dpitch *= 1;
+      break;
+  }
+
+  if ((wOffset + width > (dpitch)) || width > spitch) {
+      return hipErrorUnknown;
+  }
+
+  // Create buffer rectangle info structure
+  amd::BufferRect srcRect;
+  amd::BufferRect dstRect;
+
+  size_t region[3] = {width, height, 1};
+  size_t src_slice_pitch = spitch * height;
+  size_t dst_slice_pitch = dpitch * height;
+  size_t sOrigin[3] = { };
+  size_t dOrigin[3] = {wOffset, hOffset, 0};
+  size_t sz = 0;
+  amd::Memory* srcPtr = getMemoryObject(src, sz);
+  amd::Memory* dstPtr = getMemoryObject(dst->data, sz);
+
+  if (kind == hipMemcpyDefault) {
+    // Determine kind on VA
+    if (srcPtr == nullptr && dstPtr != nullptr) {
+      kind = hipMemcpyHostToDevice;
+    } else if (srcPtr != nullptr && dstPtr == nullptr) {
+      kind = hipMemcpyDeviceToHost;
+    } else if (srcPtr != nullptr && dstPtr != nullptr) {
+      kind = hipMemcpyDeviceToDevice;
+    } else {
+      kind = hipMemcpyHostToHost;
+    }
+  }
+
+  amd::Coord3D size(region[0], region[1], region[2]);
+
+  if (!srcRect.create(sOrigin, region, spitch, src_slice_pitch) ||
+      !dstRect.create(dOrigin, region, dpitch, dst_slice_pitch)) {
+    return hipErrorInvalidValue;
+  }
+
+  amd::Coord3D srcStart(srcRect.start_, 0, 0);
+  amd::Coord3D dstStart(dstRect.start_, 0, 0);
+  amd::Coord3D srcEnd(srcRect.end_, 1, 1);
+  amd::Coord3D dstEnd(dstRect.end_, 1, 1);
+
+  amd::Command* command = nullptr;
+  amd::Command::EventWaitList waitList;
+
+  void* newDst = nullptr;
+
+  switch (kind) {
+  case hipMemcpyDeviceToHost:
+    command = new amd::ReadMemoryCommand(*queue, CL_COMMAND_READ_BUFFER_RECT, waitList,
+              *srcPtr->asBuffer(), srcStart, size, dst->data, srcRect, dstRect);
+    break;
+  case hipMemcpyHostToDevice:
+    command = new amd::WriteMemoryCommand(*queue, CL_COMMAND_WRITE_BUFFER_RECT, waitList,
+              *dstPtr->asBuffer(), dstStart, size, src, dstRect, srcRect);
+    break;
+  case hipMemcpyDeviceToDevice:
+    command = new amd::CopyMemoryCommand(*queue, CL_COMMAND_COPY_BUFFER_RECT, waitList, *srcPtr->asBuffer(),
+              *dstPtr->asBuffer(), srcStart, dstStart, size, srcRect, dstRect);
+    break;
+  case hipMemcpyHostToHost:
+    newDst = reinterpret_cast<void*>(reinterpret_cast<size_t>(dst->data)
+                                          + dpitch * hOffset + wOffset);
+    for(unsigned int y = 0; y < height; y++) {
+      void* pDst = reinterpret_cast<void*>(reinterpret_cast<size_t>(newDst) + y * dpitch);
+      void* pSrc = reinterpret_cast<void*>(reinterpret_cast<size_t>(src) + y * spitch);
+      memcpy(pDst, pSrc, width);
+    }
+    return hipSuccess;
+  default:
+    assert(!"Shouldn't reach here");
+    break;
+  }
+
+  if (command == nullptr) {
+    return hipErrorOutOfMemory;
+  }
+
+  command->enqueue();
+
+  command->awaitCompletion();
+
+  command->release();
+
+  return hipSuccess;
+
 }
 
 hipError_t hipMemcpyToArray(hipArray* dstArray, size_t wOffset, size_t hOffset, const void* src,
