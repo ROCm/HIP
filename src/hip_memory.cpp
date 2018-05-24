@@ -1501,7 +1501,7 @@ __global__ void hip_copy2d_n(T* dst, const T* src, size_t width, size_t height, 
         T *srcPtr = (T *)((uint8_t*) src + idy * srcPitch);
         dstPtr[idx] = srcPtr[idx];
     } else {
-        size_t bytesToCopy = width - floorWidth;
+        size_t bytesToCopy = width - (floorWidth * sizeof(T));
         uint8_t *dstPtr = (uint8_t *) ((uint8_t*) dst + idy * destPitch);
         uint8_t *srcPtr = (uint8_t *) ((uint8_t*) src + idy * srcPitch);
         for(int i =0 ; i < bytesToCopy ; i++) {
