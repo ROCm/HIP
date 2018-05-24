@@ -28,51 +28,65 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
-#define LEN 64
-#define HALF_SIZE 64 * sizeof(__half)
-#define HALF2_SIZE 64 * sizeof(__half2)
-
 #if __HIP_ARCH_GFX803__ || __HIP_ARCH_GFX900__ || __HIP_ARCH_GFX906__
 
-__global__ void __halfMath(__half* A, __half* B, __half* C) {
-    int tx = threadIdx.x;
-    __half a = A[tx];
-    __half b = B[tx];
-    __half c = C[tx];
-    c = __hadd(a, c);
-    c = __hadd_sat(b, c);
-    c = __hfma(a, c, b);
-    c = __hfma_sat(b, c, a);
-    c = __hsub(a, c);
-    c = __hsub_sat(b, c);
-    c = __hmul(a, c);
-    c = __hmul_sat(b, c);
-    c = __hdiv(a, c);
+__global__
+__attribute__((optnone))
+void __halfMath(bool* result) {
+  __half a{1};
+
+  result[0] = __heq(__hadd(a, __half{1}), __half{2});
+  result[0] = __heq(__hadd_sat(a, __half{1}), __half{1}) && result[0];
+  result[0] = __heq(__hfma(a, __half{2}, __half{3}), __half{5}) && result[0];
+  result[0] =
+    __heq(__hfma_sat(a, __half{2}, __half{3}), __half{1}) && result[0];
+  result[0] = __heq(__hsub(a, __half{1}), __half{0}) && result[0];
+  result[0] = __heq(__hsub_sat(a, __half{2}), __half{0}) && result[0];
+  result[0] = __heq(__hmul(a, __half{2}), __half{2}) && result[0];
+  result[0] = __heq(__hmul_sat(a, __half{2}), __half{1}) && result[0];
+  result[0] = __heq(__hdiv(a, __half{2}), __half{0.5}) && result[0];
 }
 
-__global__ void __half2Math(__half2* A, __half2* B, __half2* C) {
-    int tx = threadIdx.x;
-    __half2 a = A[tx];
-    __half2 b = B[tx];
-    __half2 c = C[tx];
-    c = __hadd2(a, c);
-    c = __hadd2_sat(b, c);
-    c = __hfma2(a, c, b);
-    c = __hfma2_sat(b, c, a);
-    c = __hsub2(a, c);
-    c = __hsub2_sat(b, c);
-    c = __hmul2(a, c);
-    c = __hmul2_sat(b, c);
+__device__
+bool to_bool(const __half2& x)
+{
+  auto r = static_cast<const __half2_raw&>(x);
+
+  return r.data.x != 0 && r.data.y != 0;
+}
+
+__global__
+__attribute__((optnone))
+void __half2Math(bool* result) {
+  __half2 a{1, 1};
+
+  result[0] = to_bool(__heq2(__hadd2(a, __half2{1, 1}), __half2{2, 2}));
+  result[0] = to_bool(__heq2(__hadd2_sat(a, __half2{1, 1}), __half2{1, 1})) &&
+    result[0];
+  result[0] = to_bool(__heq2(
+    __hfma2(a, __half2{2, 2}, __half2{3, 3}), __half2{5, 5})) && result[0];
+  result[0] = to_bool(__heq2(
+    __hfma2_sat(a, __half2{2, 2}, __half2{3, 3}), __half2{1, 1})) && result[0];
+  result[0] = to_bool(__heq2(__hsub2(a, __half2{1, 1}), __half2{0, 0})) &&
+    result[0];
+  result[0] = to_bool(__heq2(__hsub2_sat(a, __half2{2, 2}), __half2{0, 0})) &&
+    result[0];
+  result[0] = to_bool(__heq2(__hmul2(a, __half2{2, 2}), __half2{2, 2})) &&
+    result[0];
+  result[0] = to_bool(__heq2(__hmul2_sat(a, __half2{2, 2}), __half2{1, 1})) &&
+    result[0];
+  result[0] = to_bool(__heq2(__h2div(a, __half2{2, 2}), __half2{0.5, 0.5})) &&
+    result[0];
 }
 
 __global__ void kernel_hisnan(__half* input, int* output) {
-    int tx = threadIdx.x;
-    output[tx] = __hisnan(input[tx]);
+  int tx = threadIdx.x;
+  output[tx] = __hisnan(input[tx]);
 }
 
 __global__ void kernel_hisinf(__half* input, int* output) {
-    int tx = threadIdx.x;
-    output[tx] = __hisinf(input[tx]);
+  int tx = threadIdx.x;
+  output[tx] = __hisinf(input[tx]);
 }
 
 #endif
@@ -217,27 +231,25 @@ void checkFunctional() {
 }
 
 int main() {
-    __half *A, *B, *C;
-    hipMalloc(&A, HALF_SIZE);
-    hipMalloc(&B, HALF_SIZE);
-    hipMalloc(&C, HALF_SIZE);
-    hipLaunchKernelGGL(
-      __halfMath, dim3(1, 1, 1), dim3(LEN, 1, 1), 0, 0, A, B, C);
-    hipFree(A);
-    hipFree(B);
-    hipFree(C);
-    __half2 *A2, *B2, *C2;
-    hipMalloc(&A2, HALF2_SIZE);
-    hipMalloc(&B2, HALF2_SIZE);
-    hipMalloc(&C2, HALF2_SIZE);
-    hipLaunchKernelGGL(
-      __half2Math, dim3(1, 1, 1), dim3(LEN, 1, 1), 0, 0, A2, B2, C2);
-    hipFree(A2);
-    hipFree(B2);
-    hipFree(C2);
+  bool* result{nullptr};
+  hipHostMalloc(&result, sizeof(result));
 
-    // run some functional checks
-    checkFunctional();
+  result[0] = false;
+  hipLaunchKernelGGL(__halfMath, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, result);
+  hipDeviceSynchronize();
 
-    passed();
+  if (!result[0]) { failed("Failed __half tests."); }
+
+  result[0] = false;
+  hipLaunchKernelGGL(__half2Math, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, result);
+  hipDeviceSynchronize();
+
+  if (!result[0]) { failed("Failed __half2 tests."); }
+
+  hipHostFree(result);
+
+  // run some functional checks
+  checkFunctional();
+
+  passed();
 }
