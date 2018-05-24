@@ -1521,10 +1521,11 @@ void ihipMemsetKernel(hipStream_t stream, T* ptr, T val, size_t sizeBytes) {
 
 template <typename T>
 void ihipMemcpy2dKernel(hipStream_t stream, T* dst, const T* src, size_t width, size_t height, size_t destPitch, size_t srcPitch) {
-    size_t threadsPerBlock = 16;
-    uint32_t grid_dim_x = clamp_integer<size_t>( (width+(threadsPerBlock*sizeof(T)-1)) / (threadsPerBlock*sizeof(T)), 1, UINT32_MAX);
-    uint32_t grid_dim_y = clamp_integer<size_t>( (height+(threadsPerBlock-1)) / threadsPerBlock, 1, UINT32_MAX);
-    hipLaunchKernelGGL(hip_copy2d_n, dim3(grid_dim_x,grid_dim_y), dim3(threadsPerBlock,threadsPerBlock), 0u, stream, dst, src,
+    size_t threadsPerBlock_x = 64;
+    size_t threadsPerBlock_y = 4;
+    uint32_t grid_dim_x = clamp_integer<size_t>( (width+(threadsPerBlock_x*sizeof(T)-1)) / (threadsPerBlock_x*sizeof(T)), 1, UINT32_MAX);
+    uint32_t grid_dim_y = clamp_integer<size_t>( (height+(threadsPerBlock_y-1)) / threadsPerBlock_y, 1, UINT32_MAX);
+    hipLaunchKernelGGL(hip_copy2d_n, dim3(grid_dim_x,grid_dim_y), dim3(threadsPerBlock_x,threadsPerBlock_y), 0u, stream, dst, src,
                        width, height, destPitch, srcPitch);
 }
 
