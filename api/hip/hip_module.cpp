@@ -190,8 +190,8 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
     return hipErrorOutOfMemory;
   }
 
-  // Make sure we have memory for the command execution
-  if (CL_SUCCESS != command->validateMemory()) {
+  // Capture the kernel arguments
+  if (CL_SUCCESS != command->captureAndValidate()) {
     delete command;
     return hipErrorMemoryAllocation;
   }
