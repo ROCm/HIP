@@ -1496,19 +1496,15 @@ __global__ void hip_copy2d_n(T* dst, const T* src, size_t width, size_t height, 
     size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
     size_t idy = blockIdx.y * blockDim.y + threadIdx.y;
     size_t floorWidth = (width/sizeof(T));
-    if((idx < width) && (idy < height)) {
-        if((idx < floorWidth)){
-            T *dstPtr = (T *)((uint8_t*) dst + idy * destPitch);
-            T *srcPtr = (T *)((uint8_t*) src + idy * srcPitch);
-            dstPtr[idx] = srcPtr[idx];
-        } else {
-            size_t bytesToCopy = width - (floorWidth * sizeof(T));
-            uint8_t *dstPtr = (uint8_t *) ((uint8_t*) dst + idy * destPitch);
-            uint8_t *srcPtr = (uint8_t *) ((uint8_t*) src + idy * srcPitch);
-            for(int i =0 ; i < bytesToCopy ; i++) {
-                dstPtr[idx+i]= srcPtr[idx+i];
-            }
-       }
+    T *dstPtr = (T *)((uint8_t*) dst + idy * destPitch);
+    T *srcPtr = (T *)((uint8_t*) src + idy * srcPitch);
+    if((idx < floorWidth) && (idy < height)){
+        dstPtr[idx] = srcPtr[idx];
+    } else if((idx < width) && (idy < height)){
+        size_t bytesToCopy = width - (floorWidth * sizeof(T));
+        dstPtr += floorWidth;
+        srcPtr += floorWidth;
+        __builtin_memcpy(reinterpret_cast<uint8_t*>(dstPtr), reinterpret_cast<const uint8_t*>(srcPtr),bytesToCopy);
     }
 }
 }  // namespace
