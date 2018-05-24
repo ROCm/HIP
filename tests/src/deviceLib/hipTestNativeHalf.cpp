@@ -138,5 +138,7 @@ int main() {
 
     if (!result[0]) { failed("Failed __half2 tests."); }
 
+    hipHostFree(result);
+
     passed();
 }
