@@ -514,7 +514,9 @@ extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, gri
  *   @}
  */
 
-
+//
+// hip-clang functions
+//
 #elif defined(__clang__) && defined(__HIP__)
 
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
@@ -627,6 +629,8 @@ __DEVICE__ void inline __assert_fail(const char * __assertion,
     __device_trap();
 }
 #pragma push_macro("__DEVICE__")
+
+#include <hip/hcc_detail/math_functions.h>
 
 #endif
 
