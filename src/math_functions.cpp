@@ -65,6 +65,9 @@ __device__ double abs(double x) {
 __device__ long int abs(long int x) {
     return x >= 0 ? x : -x;   
 }
+__device__ long long int labs(long long int x) {
+    return x >= 0 ? x : -x;   
+}
 __device__ float fabsf(float x) { return hc::precise_math::fabsf(x); }
 __device__ float fdimf(float x, float y) { return hc::precise_math::fdimf(x, y); }
 __device__ float fdividef(float x, float y) { return x / y; }
