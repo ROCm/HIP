@@ -60,6 +60,7 @@ __device__ int abs(int x);
 __device__ long long abs(long long x);
 __device__ double abs(double x);
 __device__ long int abs(long int x);
+__device__ long long int labs(long long int x);
 __device__ float fabsf(float x);
 __device__ float fdimf(float x, float y);
 __device__ float fdividef(float x, float y);
