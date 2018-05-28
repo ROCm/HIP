@@ -303,6 +303,10 @@ foreach $arg (@ARGV)
         $default_amdgpu_target = 0;
     }
 
+    # hip-clang does not accept --amdgpu-target= options.
+    if (($arg =~ /--amdgpu-target=/) and $HIP_PLATFORM eq 'clang' ) {
+        $swallowArg = 1;
+    }
 
     if(($trimarg eq '-stdlib=libstdc++') and ($setStdLib eq 0))
     {
