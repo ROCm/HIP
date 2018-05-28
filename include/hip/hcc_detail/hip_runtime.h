@@ -612,6 +612,22 @@ extern const __device__ __attribute__((weak)) __hip_builtin_gridDim_t gridDim;
 #define hipGridDim_y gridDim.y
 #define hipGridDim_z gridDim.z
 
+#pragma push_macro("__DEVICE__")
+#define __DEVICE__ extern "C" __device__ __attribute__((always_inline)) \
+  __attribute__((weak))
+
+__DEVICE__ void __device_trap() __asm("llvm.trap");
+
+__DEVICE__ void inline __assert_fail(const char * __assertion,
+                                     const char *__file,
+                                     unsigned int __line,
+                                     const char *__function)
+{
+    // Ignore all the args for now.
+    __device_trap();
+}
+#pragma push_macro("__DEVICE__")
+
 #endif
 
 #endif  // HIP_HCC_DETAIL_RUNTIME_H
