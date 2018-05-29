@@ -155,6 +155,8 @@ typedef struct cudaArray* hipArray_const_t;
 
 typedef cudaTextureObject_t hipTextureObject_t;
 typedef cudaSurfaceObject_t hipSurfaceObject_t;
+#define hipTextureType1D cudaTextureType1D
+#define hipTextureType1DLayered cudaTextureType1DLayered
 #define hipTextureType2D cudaTextureType2D
 #define hipTextureType3D cudaTextureType3D
 #define hipDeviceMapHost cudaDeviceMapHost
