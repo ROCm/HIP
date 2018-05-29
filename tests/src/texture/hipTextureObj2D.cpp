@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
     }
 }
 
-void runTest(int argc, char** argv) {
+int runTest(int argc, char** argv) {
     int testResult = 1;
     unsigned int width = 256;
     unsigned int height = 256;
