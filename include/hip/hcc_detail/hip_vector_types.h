@@ -37,7 +37,10 @@ THE SOFTWARE.
 #if defined(__clang__)
     #define __NATIVE_VECTOR__(n, ...) __attribute__((ext_vector_type(n)))
 #elif defined(__GNUC__) // N.B.: GCC does not support .xyzw syntax.
-    #define __NATIVE_VECTOR__(n, T) __attribute__((vector_size(n * sizeof(T))))
+    #define __ROUND_UP_TO_NEXT_POT__(x) \
+        (1 << (31 - __builtin_clz(x) + (x > (1 << (31 - __builtin_clz(x))))))
+    #define __NATIVE_VECTOR__(n, T) \
+        __attribute__((vector_size(__ROUND_UP_TO_NEXT_POT__(n) * sizeof(T))))
 #endif
 
 typedef unsigned char uchar1 __NATIVE_VECTOR__(1, unsigned char);
@@ -100,24 +103,30 @@ typedef double double2 __NATIVE_VECTOR__(2, double);
 typedef double double3 __NATIVE_VECTOR__(3, double);
 typedef double double4 __NATIVE_VECTOR__(4, double);
 
-#define DECLOP_MAKE_ONE_COMPONENT(comp, type)                                                      \
-    __device__ __host__ static inline type make_##type(comp x) {                            \
-        return type{x};                                                                           \
-    }
+#define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
+    __device__ __host__ \
+    static \
+    inline \
+    type make_##type(comp x) { return type{x}; }
 
-#define DECLOP_MAKE_TWO_COMPONENT(comp, type)                                                      \
-    __device__ __host__ static inline type make_##type(comp x, comp y) {                    \
-        return type{x, y};                                                                           \
-    }
+#define DECLOP_MAKE_TWO_COMPONENT(comp, type) \
+    __device__ __host__ \
+    static \
+    inline \
+    type make_##type(comp x, comp y) { return type{x, y}; }
 
-#define DECLOP_MAKE_THREE_COMPONENT(comp, type)                                                    \
-    __device__ __host__ static inline type make_##type(comp x, comp y, comp z) {            \
-        return type{x, y, z};                                                                           \
-    }
+#define DECLOP_MAKE_THREE_COMPONENT(comp, type) \
+    __device__ __host__ \
+    static \
+    inline \
+    type make_##type(comp x, comp y, comp z) { return type{x, y, z}; }
 
-#define DECLOP_MAKE_FOUR_COMPONENT(comp, type)                                                     \
-    __device__ __host__ static inline type make_##type(comp x, comp y, comp z, comp w) {    \
-        return type{x, y, z, w};                                                                   \
+#define DECLOP_MAKE_FOUR_COMPONENT(comp, type) \
+    __device__ __host__ \
+    static \
+    inline \
+    type make_##type(comp x, comp y, comp z, comp w) { \
+        return type{x, y, z, w}; \
     }
 
 DECLOP_MAKE_ONE_COMPONENT(unsigned char, uchar1);
