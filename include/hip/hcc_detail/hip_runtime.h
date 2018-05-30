@@ -471,12 +471,12 @@ static inline __device__ void printf(const char* format, All... all) {}
 #endif
 
 #endif
-
-
-#define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
 #endif //__HCC_OR_HIP_CLANG__
 
 #ifdef __HCC__
+
+#define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
+
 #define HIP_KERNEL_NAME(...) (__VA_ARGS__)
 #define HIP_SYMBOL(X) #X
 
@@ -655,6 +655,8 @@ __DEVICE__ void inline __assert_fail(const char * __assertion,
     // Ignore all the args for now.
     __device_trap();
 }
+
+extern "C" __device__ __attribute__((noduplicate)) void __syncthreads();
 
 #pragma push_macro("__DEVICE__")
 
