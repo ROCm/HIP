@@ -11,8 +11,6 @@
 #include "test_common.h"
 texture<float, 2, hipReadModeElementType> tex;
 
-bool testResult = true;
-
 __global__ void tex2DKernel(float* outputData,
                             int width, int height) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -20,10 +18,10 @@ __global__ void tex2DKernel(float* outputData,
     outputData[y * width + x] = tex2D(tex, x, y);
 }
 
-void runTest(int argc, char** argv);
+int runTest(int argc, char** argv);
 
 int main(int argc, char** argv) {
-    runTest(argc, argv);
+    int testResult = runTest(argc, argv);
     if (testResult) {
         passed();
     } else {
@@ -31,7 +29,8 @@ int main(int argc, char** argv) {
     }
 }
 
-void runTest(int argc, char** argv) {
+int runTest(int argc, char** argv) {
+    int testResult = 1;
     unsigned int width = 256;
     unsigned int height = 256;
     unsigned int size = width * height * sizeof(float);
@@ -83,11 +82,12 @@ void runTest(int argc, char** argv) {
             if (hData[i * width + j] != hOutputData[i * width + j]) {
                 printf("Difference [ %d %d ]:%f ----%f\n", i, j, hData[i * width + j],
                        hOutputData[i * width + j]);
-                testResult = false;
+                testResult = 0;
                 break;
             }
         }
     }
     hipFree(dData);
     hipFreeArray(hipArray);
+    return testResult;
 }
