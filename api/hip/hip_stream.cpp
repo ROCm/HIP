@@ -144,8 +144,7 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
   cl_event clEvent = as_cl(e->event_);
 
   amd::Command::EventWaitList eventWaitList;
-  cl_int err = amd::clSetEventWaitList(eventWaitList, hostQueue->context(), 1,
-                                       &clEvent);
+  cl_int err = amd::clSetEventWaitList(eventWaitList, *hostQueue, 1, &clEvent);
   if (err != CL_SUCCESS) {
     return hipErrorUnknown;
   }
