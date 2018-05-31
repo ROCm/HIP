@@ -150,6 +150,7 @@ typedef CUfunction hipFunction_t;
 typedef CUdeviceptr hipDeviceptr_t;
 typedef struct cudaArray hipArray;
 typedef struct cudaArray* hipArray_const_t;
+typedef cudaFuncAttributes hipFuncAttributes;
 #define hipMemcpy3DParms cudaMemcpy3DParms
 #define hipArrayDefault cudaArrayDefault
 
@@ -1105,6 +1106,10 @@ inline static hipError_t hipModuleUnload(hipModule_t hmod) {
 inline static hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule_t module,
                                               const char* kname) {
     return hipCUResultTohipError(cuModuleGetFunction(function, module, kname));
+}
+
+inline static hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func) {
+    return hipCUDAErrorTohipError(cudaFuncGetAttributes(attr, func));
 }
 
 inline static hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
