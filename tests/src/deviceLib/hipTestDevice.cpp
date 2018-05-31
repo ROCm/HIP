@@ -31,82 +31,82 @@ THE SOFTWARE.
 #define N 512
 #define SIZE N * sizeof(float)
 
-__global__ void test_sincosf(hipLaunchParm lp, float* a, float* b, float* c) {
+__global__ void test_sincosf(float* a, float* b, float* c) {
     int tid = threadIdx.x;
     sincosf(a[tid], b + tid, c + tid);
 }
 
-__global__ void test_sincospif(hipLaunchParm lp, float* a, float* b, float* c) {
+__global__ void test_sincospif(float* a, float* b, float* c) {
     int tid = threadIdx.x;
     sincospif(a[tid], b + tid, c + tid);
 }
 
-__global__ void test_fdividef(hipLaunchParm lp, float* a, float* b, float* c) {
+__global__ void test_fdividef(float* a, float* b, float* c) {
     int tid = threadIdx.x;
     c[tid] = fdividef(a[tid], b[tid]);
 }
 
-__global__ void test_llrintf(hipLaunchParm lp, float* a, long long int* b) {
+__global__ void test_llrintf(float* a, long long int* b) {
     int tid = threadIdx.x;
     b[tid] = llrintf(a[tid]);
 }
 
-__global__ void test_lrintf(hipLaunchParm lp, float* a, long int* b) {
+__global__ void test_lrintf(float* a, long int* b) {
     int tid = threadIdx.x;
     b[tid] = lrintf(a[tid]);
 }
 
-__global__ void test_rintf(hipLaunchParm lp, float* a, float* b) {
+__global__ void test_rintf(float* a, float* b) {
     int tid = threadIdx.x;
     b[tid] = rintf(a[tid]);
 }
 
-__global__ void test_llroundf(hipLaunchParm lp, float* a, long long int* b) {
+__global__ void test_llroundf(float* a, long long int* b) {
     int tid = threadIdx.x;
     b[tid] = llroundf(a[tid]);
 }
 
-__global__ void test_lroundf(hipLaunchParm lp, float* a, long int* b) {
+__global__ void test_lroundf(float* a, long int* b) {
     int tid = threadIdx.x;
     b[tid] = lroundf(a[tid]);
 }
 
-__global__ void test_rhypotf(hipLaunchParm lp, float* a, float* b, float* c) {
+__global__ void test_rhypotf(float* a, float* b, float* c) {
     int tid = threadIdx.x;
     c[tid] = rhypotf(a[tid], b[tid]);
 }
 
-__global__ void test_norm3df(hipLaunchParm lp, float* a, float* b, float* c, float* d) {
+__global__ void test_norm3df(float* a, float* b, float* c, float* d) {
     int tid = threadIdx.x;
     d[tid] = norm3df(a[tid], b[tid], c[tid]);
 }
 
-__global__ void test_norm4df(hipLaunchParm lp, float* a, float* b, float* c, float* d, float* e) {
+__global__ void test_norm4df(float* a, float* b, float* c, float* d, float* e) {
     int tid = threadIdx.x;
     e[tid] = norm4df(a[tid], b[tid], c[tid], d[tid]);
 }
 
-__global__ void test_normf(hipLaunchParm lp, float* a, float* b) {
+__global__ void test_normf(float* a, float* b) {
     int tid = threadIdx.x;
     b[tid] = normf(N, a);
 }
 
-__global__ void test_rnorm3df(hipLaunchParm lp, float* a, float* b, float* c, float* d) {
+__global__ void test_rnorm3df(float* a, float* b, float* c, float* d) {
     int tid = threadIdx.x;
     d[tid] = rnorm3df(a[tid], b[tid], c[tid]);
 }
 
-__global__ void test_rnorm4df(hipLaunchParm lp, float* a, float* b, float* c, float* d, float* e) {
+__global__ void test_rnorm4df(float* a, float* b, float* c, float* d, float* e) {
     int tid = threadIdx.x;
     e[tid] = rnorm4df(a[tid], b[tid], c[tid], d[tid]);
 }
 
-__global__ void test_rnormf(hipLaunchParm lp, float* a, float* b) {
+__global__ void test_rnormf(float* a, float* b) {
     int tid = threadIdx.x;
     b[tid] = rnormf(N, a);
 }
 
-__global__ void test_erfinvf(hipLaunchParm lp, float* a, float* b) {
+__global__ void test_erfinvf(float* a, float* b) {
     int tid = threadIdx.x;
     b[tid] = erff(erfinvf(a[tid]));
 }
@@ -124,7 +124,7 @@ bool run_sincosf() {
     hipMalloc((void**)&Bd, SIZE);
     hipMalloc((void**)&Cd, SIZE);
     hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(test_sincosf, dim3(1), dim3(N), 0, 0, Ad, Bd, Cd);
+    hipLaunchKernelGGL(test_sincosf, dim3(1), dim3(N), 0, 0, Ad, Bd, Cd);
     hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost);
     hipMemcpy(C, Cd, SIZE, hipMemcpyDeviceToHost);
     int passed = 0;
@@ -166,7 +166,7 @@ bool run_sincospif() {
     hipMalloc((void**)&Bd, SIZE);
     hipMalloc((void**)&Cd, SIZE);
     hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(test_sincospif, dim3(1), dim3(N), 0, 0, Ad, Bd, Cd);
+    hipLaunchKernelGGL(test_sincospif, dim3(1), dim3(N), 0, 0, Ad, Bd, Cd);
     hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost);
     hipMemcpy(C, Cd, SIZE, hipMemcpyDeviceToHost);
     int passed = 0;
@@ -210,7 +210,7 @@ bool run_fdividef() {
     hipMalloc((void**)&Cd, SIZE);
     hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
     hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(test_fdividef, dim3(1), dim3(N), 0, 0, Ad, Bd, Cd);
+    hipLaunchKernelGGL(test_fdividef, dim3(1), dim3(N), 0, 0, Ad, Bd, Cd);
     hipMemcpy(C, Cd, SIZE, hipMemcpyDeviceToHost);
     int passed = 0;
     for (int i = 0; i < 512; i++) {
@@ -244,7 +244,7 @@ bool run_llrintf() {
     hipMalloc((void**)&Ad, SIZE);
     hipMalloc((void**)&Bd, N * sizeof(long long int));
     hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(test_llrintf, dim3(1), dim3(N), 0, 0, Ad, Bd);
+    hipLaunchKernelGGL(test_llrintf, dim3(1), dim3(N), 0, 0, Ad, Bd);
     hipMemcpy(B, Bd, N * sizeof(long long int), hipMemcpyDeviceToHost);
     int passed = 0;
     for (int i = 0; i < 512; i++) {
@@ -277,7 +277,7 @@ bool run_lrintf() {
     hipMalloc((void**)&Ad, SIZE);
     hipMalloc((void**)&Bd, N * sizeof(long int));
     hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(test_lrintf, dim3(1), dim3(N), 0, 0, Ad, Bd);
+    hipLaunchKernelGGL(test_lrintf, dim3(1), dim3(N), 0, 0, Ad, Bd);
     hipMemcpy(B, Bd, N * sizeof(long int), hipMemcpyDeviceToHost);
     int passed = 0;
     for (int i = 0; i < 512; i++) {
@@ -310,7 +310,7 @@ bool run_rintf() {
     hipMalloc((void**)&Ad, SIZE);
     hipMalloc((void**)&Bd, SIZE);
     hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(test_rintf, dim3(1), dim3(N), 0, 0, Ad, Bd);
+    hipLaunchKernelGGL(test_rintf, dim3(1), dim3(N), 0, 0, Ad, Bd);
     hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost);
     int passed = 0;
     for (int i = 0; i < 512; i++) {
@@ -344,7 +344,7 @@ bool run_llroundf() {
     hipMalloc((void**)&Ad, SIZE);
     hipMalloc((void**)&Bd, N * sizeof(long long int));
     hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(test_llroundf, dim3(1), dim3(N), 0, 0, Ad, Bd);
+    hipLaunchKernelGGL(test_llroundf, dim3(1), dim3(N), 0, 0, Ad, Bd);
     hipMemcpy(B, Bd, N * sizeof(long long int), hipMemcpyDeviceToHost);
     int passed = 0;
     for (int i = 0; i < 512; i++) {
@@ -377,7 +377,7 @@ bool run_lroundf() {
     hipMalloc((void**)&Ad, SIZE);
     hipMalloc((void**)&Bd, N * sizeof(long int));
     hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(test_lroundf, dim3(1), dim3(N), 0, 0, Ad, Bd);
+    hipLaunchKernelGGL(test_lroundf, dim3(1), dim3(N), 0, 0, Ad, Bd);
     hipMemcpy(B, Bd, N * sizeof(long int), hipMemcpyDeviceToHost);
     int passed = 0;
     for (int i = 0; i < 512; i++) {
@@ -420,7 +420,7 @@ bool run_norm3df() {
     hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
     hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice);
     hipMemcpy(Cd, C, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(test_norm3df, dim3(1), dim3(N), 0, 0, Ad, Bd, Cd, Dd);
+    hipLaunchKernelGGL(test_norm3df, dim3(1), dim3(N), 0, 0, Ad, Bd, Cd, Dd);
     hipMemcpy(D, Dd, SIZE, hipMemcpyDeviceToHost);
     int passed = 0;
     for (int i = 0; i < 512; i++) {
@@ -469,7 +469,7 @@ bool run_norm4df() {
     hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice);
     hipMemcpy(Cd, C, SIZE, hipMemcpyHostToDevice);
     hipMemcpy(Dd, D, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(test_norm4df, dim3(1), dim3(N), 0, 0, Ad, Bd, Cd, Dd, Ed);
+    hipLaunchKernelGGL(test_norm4df, dim3(1), dim3(N), 0, 0, Ad, Bd, Cd, Dd, Ed);
     hipMemcpy(E, Ed, SIZE, hipMemcpyDeviceToHost);
     int passed = 0;
     for (int i = 0; i < 512; i++) {
@@ -510,7 +510,7 @@ bool run_normf() {
     hipMalloc((void**)&Ad, SIZE);
     hipMalloc((void**)&Bd, SIZE);
     hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(test_normf, dim3(1), dim3(N), 0, 0, Ad, Bd);
+    hipLaunchKernelGGL(test_normf, dim3(1), dim3(N), 0, 0, Ad, Bd);
     hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost);
     int passed = 0;
     for (int i = 0; i < 512; i++) {
@@ -547,7 +547,7 @@ bool run_rhypotf() {
     hipMalloc((void**)&Cd, SIZE);
     hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
     hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(test_rhypotf, dim3(1), dim3(N), 0, 0, Ad, Bd, Cd);
+    hipLaunchKernelGGL(test_rhypotf, dim3(1), dim3(N), 0, 0, Ad, Bd, Cd);
     hipMemcpy(C, Cd, SIZE, hipMemcpyDeviceToHost);
     int passed = 0;
     for (int i = 0; i < 512; i++) {
@@ -590,7 +590,7 @@ bool run_rnorm3df() {
     hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
     hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice);
     hipMemcpy(Cd, C, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(test_rnorm3df, dim3(1), dim3(N), 0, 0, Ad, Bd, Cd, Dd);
+    hipLaunchKernelGGL(test_rnorm3df, dim3(1), dim3(N), 0, 0, Ad, Bd, Cd, Dd);
     hipMemcpy(D, Dd, SIZE, hipMemcpyDeviceToHost);
     int passed = 0;
     for (int i = 0; i < 512; i++) {
@@ -639,7 +639,7 @@ bool run_rnorm4df() {
     hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice);
     hipMemcpy(Cd, C, SIZE, hipMemcpyHostToDevice);
     hipMemcpy(Dd, D, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(test_rnorm4df, dim3(1), dim3(N), 0, 0, Ad, Bd, Cd, Dd, Ed);
+    hipLaunchKernelGGL(test_rnorm4df, dim3(1), dim3(N), 0, 0, Ad, Bd, Cd, Dd, Ed);
     hipMemcpy(E, Ed, SIZE, hipMemcpyDeviceToHost);
     int passed = 0;
     for (int i = 0; i < 512; i++) {
@@ -680,7 +680,7 @@ bool run_rnormf() {
     hipMalloc((void**)&Ad, SIZE);
     hipMalloc((void**)&Bd, SIZE);
     hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(test_rnormf, dim3(1), dim3(N), 0, 0, Ad, Bd);
+    hipLaunchKernelGGL(test_rnormf, dim3(1), dim3(N), 0, 0, Ad, Bd);
     hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost);
     int passed = 0;
     for (int i = 0; i < 512; i++) {
@@ -712,7 +712,7 @@ bool run_erfinvf() {
     hipMalloc((void**)&Ad, SIZE);
     hipMalloc((void**)&Bd, SIZE);
     hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(test_erfinvf, dim3(1), dim3(N), 0, 0, Ad, Bd);
+    hipLaunchKernelGGL(test_erfinvf, dim3(1), dim3(N), 0, 0, Ad, Bd);
     hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost);
     int passed = 0;
     for (int i = 0; i < 512; i++) {
