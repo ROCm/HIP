@@ -390,7 +390,7 @@ __device__ void __threadfence_system(void);
  * @}
  */
 
-#endif  // __HCC_OR_CLANG__
+#endif  // __HCC_OR_HIP_CLANG__
 
 #if defined __HCC__
 
@@ -437,6 +437,8 @@ static constexpr Coordinates<hc_get_workitem_id> threadIdx;
 #define hipGridDim_y (hc_get_num_groups(1))
 #define hipGridDim_z (hc_get_num_groups(2))
 
+#endif // defined __HCC__
+#if __HCC_OR_HIP_CLANG__
 extern "C" __device__ void* __hip_hc_memcpy(void* dst, const void* src, size_t size);
 extern "C" __device__ void* __hip_hc_memset(void* ptr, uint8_t val, size_t size);
 extern "C" __device__ void* __hip_hc_malloc(size_t);
@@ -469,7 +471,9 @@ static inline __device__ void printf(const char* format, All... all) {}
 #endif
 
 #endif
+#endif //__HCC_OR_HIP_CLANG__
 
+#ifdef __HCC__
 
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
 
@@ -652,7 +656,7 @@ __DEVICE__ void inline __assert_fail(const char * __assertion,
     __device_trap();
 }
 
-__DEVICE__ void __syncthreads();
+extern "C" __device__ __attribute__((noduplicate)) void __syncthreads();
 
 #pragma push_macro("__DEVICE__")
 
