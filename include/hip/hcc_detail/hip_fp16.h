@@ -58,6 +58,11 @@ THE SOFTWARE.
         #include "hip_vector_types.h"
         #include "host_defines.h"
 
+        namespace std
+        {
+            template<> struct is_floating_point<_Float16> : std::true_type {};
+        }
+
         template<bool cond, typename T = void>
         using Enable_if_t = typename std::enable_if<cond, T>::type;
 
@@ -107,6 +112,32 @@ THE SOFTWARE.
             __half& operator=(__half&&) = default;
             __host__ __device__
             __half& operator=(const __half_raw& x)
+            {
+                data = x.data;
+                return *this;
+            }
+            __host__ __device__
+            volatile __half& operator=(const __half_raw& x) volatile
+            {
+                data = x.data;
+                return *this;
+            }
+            volatile __half& operator=(const volatile __half_raw& x) volatile
+            {
+                data = x.data;
+                return *this;
+            }
+            __half& operator=(__half_raw&& x)
+            {
+                data = x.data;
+                return *this;
+            }
+            volatile __half& operator=(__half_raw&& x) volatile
+            {
+                data = x.data;
+                return *this;
+            }
+            volatile __half& operator=(volatile __half_raw&& x) volatile
             {
                 data = x.data;
                 return *this;
@@ -182,18 +213,27 @@ THE SOFTWARE.
 
             // ACCESSORS
             #if !defined(__HIP_NO_HALF_CONVERSIONS__)
-                __host__ __device__
-                operator decltype(data)() const { return data; }
-                __host__ __device__
-                operator float() const { return data; }
+                template<
+                    typename T,
+                    Enable_if_t<
+                        std::is_floating_point<T>{} &&
+                        !std::is_same<T, double>{}>* = nullptr>
+                operator T() const { return data; }
             #endif
             __host__ __device__
             operator __half_raw() const { return __half_raw{data}; }
+            __host__ __device__
+            operator volatile __half_raw() const volatile
+            {
+                return __half_raw{data};
+            }
 
             // ACCESSORS - DEVICE ONLY
             #if !defined(__HIP_NO_HALF_CONVERSIONS__)
+                template<
+                    typename T, Enable_if_t<std::is_integral<T>{}>* = nullptr>
                 __device__
-                operator bool() const { return data; }
+                operator T() const { return data; }
             #endif
 
             #if !defined(__HIP_NO_HALF_OPERATORS__)

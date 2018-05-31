@@ -28,28 +28,60 @@ THE SOFTWARE.
 
 #include "test_common.h"
 
+#include <type_traits>
+
+using namespace std;
+
 #if __HIP_ARCH_GFX803__ || __HIP_ARCH_GFX900__ || __HIP_ARCH_GFX906__
 
 __global__
-__attribute__((optnone))
-void __halfTest(bool* result) {
+void __halfTest(bool* result, __half a) {
     // Construction
-    __half a{1}; result[0] = __heq(a, 1);
-    a = __half{1.0f}; result[0] = __heq(a, 1) && result[0];
-    a = __half{1.0}; result[0] = __heq(a, 1) && result[0];
-    a = __half{static_cast<unsigned short>(1)}; 
-    result[0] = __heq(a, 1) && result[0];
-    a = __half{static_cast<short>(1)}; result[0] = __heq(a, 1) && result[0];
-    a = __half{1u}; result[0] = __heq(a, 1) && result[0];
-    a = __half{1ul}; result[0] = __heq(a, 1) && result[0];
-    a = __half{1l}; result[0] = __heq(a, 1) && result[0];
-    a = __half{1ll}; result[0] = __heq(a, 1) && result[0];
-    a = __half{1ull}; result[0] = __heq(a, 1) && result[0];
+    static_assert(is_default_constructible<__half>{}, "");
+    static_assert(is_copy_constructible<__half>{}, "");
+    static_assert(is_move_constructible<__half>{}, "");
+    static_assert(is_constructible<__half, float>{}, "");
+    static_assert(is_constructible<__half, double>{}, "");
+    static_assert(is_constructible<__half, unsigned short>{}, "");
+    static_assert(is_constructible<__half, short>{}, "");
+    static_assert(is_constructible<__half, unsigned int>{}, "");
+    static_assert(is_constructible<__half, int>{}, "");
+    static_assert(is_constructible<__half, unsigned long>{}, "");
+    static_assert(is_constructible<__half, long>{}, "");
+    static_assert(is_constructible<__half, long long>{}, "");
+    static_assert(is_constructible<__half, unsigned long long>{}, "");
+    static_assert(is_constructible<__half, __half_raw>{}, "");
 
     // Assignment
-    a = 0.0f; result[0] = __heq(a, 0) && result[0];
-    a = 1.0; result[0] = __heq(a, 1) && result[0];
-    a = __half_raw{2}; result[0] = __heq(a, 2) && result[0];
+    static_assert(is_copy_assignable<__half>{}, "");
+    static_assert(is_move_assignable<__half>{}, "");
+    static_assert(is_assignable<__half, float>{}, "");
+    static_assert(is_assignable<__half, double>{}, "");
+    static_assert(is_assignable<__half, unsigned short>{}, "");
+    static_assert(is_assignable<__half, short>{}, "");
+    static_assert(is_assignable<__half, unsigned int>{}, "");
+    static_assert(is_assignable<__half, int>{}, "");
+    static_assert(is_assignable<__half, unsigned long>{}, "");
+    static_assert(is_assignable<__half, long>{}, "");
+    static_assert(is_assignable<__half, long long>{}, "");
+    static_assert(is_assignable<__half, unsigned long long>{}, "");
+    static_assert(is_assignable<__half, __half_raw>{}, "");
+    static_assert(is_assignable<__half, volatile __half_raw&>{}, "");
+    static_assert(is_assignable<__half, volatile __half_raw&&>{}, "");
+
+    // Conversion
+    static_assert(is_convertible<__half, float>{}, "");
+    static_assert(is_convertible<__half, unsigned short>{}, "");
+    static_assert(is_convertible<__half, short>{}, "");
+    static_assert(is_convertible<__half, unsigned int>{}, "");
+    static_assert(is_convertible<__half, int>{}, "");
+    static_assert(is_convertible<__half, unsigned long>{}, "");
+    static_assert(is_convertible<__half, long>{}, "");
+    static_assert(is_convertible<__half, long long>{}, "");
+    static_assert(is_convertible<__half, bool>{}, "");
+    static_assert(is_convertible<__half, unsigned long long>{}, "");
+    static_assert(is_convertible<__half, __half_raw>{}, "");
+    static_assert(is_convertible<__half, volatile __half_raw>{}, "");
 
     // Nullary
     result[0] = __heq(a, +a) && result[0];
@@ -83,17 +115,23 @@ bool to_bool(const __half2& x)
 
     return r.data.x != 0 && r.data.y != 0;
 }
+
 __global__
-__attribute__((optnone))
-void __half2Test(bool* result) {
+void __half2Test(bool* result, __half2 a) {
     // Construction
-    __half2 a{1};
-    result[0] = to_bool(__heq2(a, 1));
-    a = __half2{__half{1}, __half{1}};
-    result[0] = to_bool(__heq2(a, {1, 1})) && result[0];
+    static_assert(is_default_constructible<__half2>{}, "");
+    static_assert(is_copy_constructible<__half2>{}, "");
+    static_assert(is_move_constructible<__half2>{}, "");
+    static_assert(is_constructible<__half2, __half, __half>{}, "");
+    static_assert(is_constructible<__half2, __half2_raw>{}, "");
 
     // Assignment
-    a = __half2_raw{2}; result[0] = to_bool(__heq2(a, {2, 2})) && result[0];
+    static_assert(is_copy_assignable<__half2>{}, "");
+    static_assert(is_move_assignable<__half2>{}, "");
+    static_assert(is_assignable<__half2, __half2_raw>{}, "");
+
+    // Conversion
+    static_assert(is_convertible<__half2, __half2_raw>{}, "");
 
     // Nullary
     result[0] = to_bool(__heq2(a, +a)) && result[0];
@@ -126,14 +164,16 @@ int main() {
     bool* result{nullptr};
     hipHostMalloc(&result, 1);
 
-    result[0] = false;
-    hipLaunchKernelGGL(__halfTest, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, result);
+    result[0] = true;
+    hipLaunchKernelGGL(
+        __halfTest, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, result, __half{1});
     hipDeviceSynchronize();
 
     if (!result[0]) { failed("Failed __half tests."); }
 
-    result[0] = false;
-    hipLaunchKernelGGL(__half2Test, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, result);
+    result[0] = true;
+    hipLaunchKernelGGL(
+        __half2Test, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, result, __half2{1, 1});
     hipDeviceSynchronize();
 
     if (!result[0]) { failed("Failed __half2 tests."); }
