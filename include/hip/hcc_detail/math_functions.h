@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <hip/hip_runtime.h>
 
 #include <assert.h>
+#include <limits.h>
 #include <stdint.h>
 
 __device__
@@ -99,6 +100,9 @@ uint64_t __make_mantissa(const char* tagp)
 }
 
 // BEGIN FLOAT
+__device__
+inline
+float abs(float x) { return __ocml_fabs_f32(x); }
 __device__
 inline
 float acosf(float x) { return __ocml_acos_f32(x); }
@@ -628,6 +632,9 @@ float __tanf(float x) { return __ocml_tan_f32(x); }
 // BEGIN DOUBLE
 __device__
 inline
+double abs(double x) { return __ocml_fabs_f64(x); }
+__device__
+inline
 double acos(double x) { return __ocml_acos_f64(x); }
 __device__
 inline
@@ -1102,3 +1109,36 @@ double __fma_rz(double x, double y, double z)
 }
 // END INTRINSICS
 // END DOUBLE
+
+// BEGIN INTEGER
+__device__
+inline
+int abs(int x)
+{
+    int sgn = x >> (sizeof(int) * CHAR_BIT - 1);
+    return (x ^ sgn) - sgn;
+}
+__device__
+inline
+long labs(long x)
+{
+    long sgn = x >> (sizeof(long) * CHAR_BIT - 1);
+    return (x ^ sgn) - sgn;
+}
+__device__
+inline
+long long llabs(long long x)
+{
+    long long sgn = x >> (sizeof(long long) * CHAR_BIT - 1);
+    return (x ^ sgn) - sgn;
+}
+
+#if defined(__cplusplus)
+    __device__
+    inline
+    long abs(long x) { return labs(x); }
+    __device__
+    inline
+    long long abs(long long x) { return llabs(x); }
+#endif
+// END INTEGER

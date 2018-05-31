@@ -278,21 +278,6 @@ struct uchar2Holder {
     };
 } __attribute__((aligned(8)));
 
-struct intHolder {
-    union {
-        signed int si[2];
-        signed int long sl;
-    };
-} __attribute__((aligned(8)));
-
-struct uintHolder {
-    union {
-        signed int ui[2];
-        signed int long ul;
-    };
-} __attribute__((aligned(8)));
-
-
 __device__ unsigned int __byte_perm(unsigned int x, unsigned int y, unsigned int s) {
     struct uchar2Holder cHoldVal;
     struct ucharHolder cHoldKey;
@@ -308,21 +293,29 @@ __device__ unsigned int __byte_perm(unsigned int x, unsigned int y, unsigned int
 }
 
 __device__ long long __mul64hi(long long int x, long long int y) {
-    struct intHolder iHold1;
-    struct intHolder iHold2;
-    iHold1.sl = x;
-    iHold2.sl = y;
-    iHold1.sl = iHold1.si[1] * iHold2.si[1];
-    return iHold1.sl;
+    ulong x0 = (ulong)x & 0xffffffffUL;
+    long x1 = x >> 32;
+    ulong y0 = (ulong)y & 0xffffffffUL;
+    long y1 = y >> 32;
+    ulong z0 = x0*y0;
+    long t = x1*y0 + (z0 >> 32);
+    long z1 = t & 0xffffffffL;
+    long z2 = t >> 32;
+    z1 = x0*y1 + z1;
+    return x1*y1 + z2 + (z1 >> 32);
 }
 
 __device__ unsigned long long __umul64hi(unsigned long long int x, unsigned long long int y) {
-    struct uintHolder uHold1;
-    struct uintHolder uHold2;
-    uHold1.ul = x;
-    uHold2.ul = y;
-    uHold1.ul = uHold1.ui[1] * uHold2.ui[1];
-    return uHold1.ul;
+    ulong x0 = x & 0xffffffffUL;
+    ulong x1 = x >> 32;
+    ulong y0 = y & 0xffffffffUL;
+    ulong y1 = y >> 32;
+    ulong z0 = x0*y0;
+    ulong t = x1*y0 + (z0 >> 32);
+    ulong z1 = t & 0xffffffffUL;
+    ulong z2 = t >> 32;
+    z1 = x0*y1 + z1;
+    return x1*y1 + z2 + (z1 >> 32);
 }
 
 /*
