@@ -1624,7 +1624,7 @@ hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch
         stream->locked_copySync((void*)dst, (void*)src, width*height, kind, false);
     } else {
         try {
-            if(isLocked) {
+            if(!isLocked) {
                 for (int i = 0; i < height; ++i)
                     stream->locked_copySync((unsigned char*)dst + i * dpitch,
                                     (unsigned char*)src + i * spitch, width, kind);
