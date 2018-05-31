@@ -90,7 +90,7 @@ if ($HIP_PLATFORM eq "clang") {
     }
     $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
     $HIPCC="$HIP_CLANG_PATH/clang++";
-    $HIPCXXFLAGS .= " -I$HIP_PATH/include";
+    $HIPCXXFLAGS .= "-std=c++11 -I$HIP_PATH/include";
 
     $HIPLDFLAGS = "--hip-link --hip-device-lib-path=$DEVICE_LIB_PATH -L$HIP_PATH/lib -lhip_hcc";
 } elsif ($HIP_PLATFORM eq "hcc") {
@@ -303,6 +303,10 @@ foreach $arg (@ARGV)
         $default_amdgpu_target = 0;
     }
 
+    # hip-clang does not accept --amdgpu-target= options.
+    if (($arg =~ /--amdgpu-target=/) and $HIP_PLATFORM eq 'clang' ) {
+        $swallowArg = 1;
+    }
 
     if(($trimarg eq '-stdlib=libstdc++') and ($setStdLib eq 0))
     {
