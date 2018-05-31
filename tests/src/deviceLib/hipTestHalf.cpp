@@ -31,10 +31,7 @@ THE SOFTWARE.
 #if __HIP_ARCH_GFX803__ || __HIP_ARCH_GFX900__ || __HIP_ARCH_GFX906__
 
 __global__
-__attribute__((optnone))
-void __halfMath(bool* result) {
-  __half a{1};
-
+void __halfMath(bool* result, __half a) {
   result[0] = __heq(__hadd(a, __half{1}), __half{2});
   result[0] = __heq(__hadd_sat(a, __half{1}), __half{1}) && result[0];
   result[0] = __heq(__hfma(a, __half{2}, __half{3}), __half{5}) && result[0];
@@ -56,11 +53,9 @@ bool to_bool(const __half2& x)
 }
 
 __global__
-__attribute__((optnone))
-void __half2Math(bool* result) {
-  __half2 a{1, 1};
-
-  result[0] = to_bool(__heq2(__hadd2(a, __half2{1, 1}), __half2{2, 2}));
+void __half2Math(bool* result, __half2 a) {
+  result[0] =
+    to_bool(__heq2(__hadd2(a, __half2{1, 1}), __half2{2, 2}));
   result[0] = to_bool(__heq2(__hadd2_sat(a, __half2{1, 1}), __half2{1, 1})) &&
     result[0];
   result[0] = to_bool(__heq2(
@@ -79,12 +74,14 @@ void __half2Math(bool* result) {
     result[0];
 }
 
-__global__ void kernel_hisnan(__half* input, int* output) {
+__global__
+void kernel_hisnan(__half* input, int* output) {
   int tx = threadIdx.x;
   output[tx] = __hisnan(input[tx]);
 }
 
-__global__ void kernel_hisinf(__half* input, int* output) {
+__global__
+void kernel_hisinf(__half* input, int* output) { 
   int tx = threadIdx.x;
   output[tx] = __hisinf(input[tx]);
 }
@@ -235,13 +232,15 @@ int main() {
   hipHostMalloc(&result, sizeof(result));
 
   result[0] = false;
-  hipLaunchKernelGGL(__halfMath, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, result);
+  hipLaunchKernelGGL(
+    __halfMath, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, result, __half{1});
   hipDeviceSynchronize();
 
   if (!result[0]) { failed("Failed __half tests."); }
 
   result[0] = false;
-  hipLaunchKernelGGL(__half2Math, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, result);
+  hipLaunchKernelGGL(
+    __half2Math, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, result, __half2{1, 1});
   hipDeviceSynchronize();
 
   if (!result[0]) { failed("Failed __half2 tests."); }
