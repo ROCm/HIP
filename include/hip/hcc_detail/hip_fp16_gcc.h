@@ -248,5 +248,10 @@ struct __half2_raw {
         {
             return __internal_half2float(static_cast<__half2_raw>(x).y);
         }
-    }
+    } // Anonymous namespace.
+
+    #if !defined(HIP_NO_HALF)
+        using half = __half;
+        using half2 = __half2;
+    #endif
 #endif // defined(__cplusplus)
