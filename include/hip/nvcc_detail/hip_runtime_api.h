@@ -150,16 +150,20 @@ typedef CUfunction hipFunction_t;
 typedef CUdeviceptr hipDeviceptr_t;
 typedef struct cudaArray hipArray;
 typedef struct cudaArray* hipArray_const_t;
+typedef cudaFuncAttributes hipFuncAttributes;
 #define hipMemcpy3DParms cudaMemcpy3DParms
 #define hipArrayDefault cudaArrayDefault
 
 typedef cudaTextureObject_t hipTextureObject_t;
 typedef cudaSurfaceObject_t hipSurfaceObject_t;
+#define hipTextureType1D cudaTextureType1D
+#define hipTextureType1DLayered cudaTextureType1DLayered
 #define hipTextureType2D cudaTextureType2D
 #define hipTextureType3D cudaTextureType3D
 #define hipDeviceMapHost cudaDeviceMapHost
 
 #define hipExtent cudaExtent
+#define hipPitchedPtr cudaPitchedPtr
 #define make_hipExtent make_cudaExtent
 #define make_hipPos make_cudaPos
 #define make_hipPitchedPtr make_cudaPitchedPtr
@@ -379,6 +383,10 @@ inline static hipError_t hipMalloc(void** ptr, size_t size) {
 
 inline static hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height) {
     return hipCUDAErrorTohipError(cudaMallocPitch(ptr, pitch, width, height));
+}
+
+inline static hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
+    return hipCUDAErrorTohipError(cudaMalloc3D(pitchedDevPtr, extent));
 }
 
 inline static hipError_t hipFree(void* ptr) { return hipCUDAErrorTohipError(cudaFree(ptr)); }
@@ -647,6 +655,14 @@ inline static hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t 
 
 inline static hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, size_t height, hipStream_t stream __dparm(0)) {
     return hipCUDAErrorTohipError(cudaMemset2DAsync(dst, pitch, value, width, height, stream));
+}
+
+inline static hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent ){
+    return hipCUDAErrorTohipError(cudaMemset3D(pitchedDevPtr, value, extent));
+}
+
+inline static hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent, hipStream_t stream __dparm(0) ){
+    return hipCUDAErrorTohipError(cudaMemset3DAsync(pitchedDevPtr, value, extent, stream));
 }
 
 inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t* p_prop, int device) {
@@ -1092,6 +1108,10 @@ inline static hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule
     return hipCUResultTohipError(cuModuleGetFunction(function, module, kname));
 }
 
+inline static hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func) {
+    return hipCUDAErrorTohipError(cudaFuncGetAttributes(attr, func));
+}
+
 inline static hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
                                             const char* name) {
     return hipCUResultTohipError(cuModuleGetGlobal(dptr, bytes, hmod, name));
@@ -1148,8 +1168,8 @@ inline static hipError_t hipBindTexture(size_t* offset, const struct texture<T, 
 }
 
 template <class T, int dim, enum cudaTextureReadMode readMode>
-inline static hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>* tex,
-                                        const void* devPtr, const struct hipChannelFormatDesc* desc,
+inline static hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex,
+                                        const void* devPtr, const struct hipChannelFormatDesc& desc,
                                         size_t size = UINT_MAX) {
     return hipCUDAErrorTohipError(cudaBindTexture(offset, tex, devPtr, desc, size));
 }
@@ -1157,6 +1177,11 @@ inline static hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, r
 template <class T, int dim, enum cudaTextureReadMode readMode>
 inline static hipError_t hipUnbindTexture(struct texture<T, dim, readMode>* tex) {
     return hipCUDAErrorTohipError(cudaUnbindTexture(tex));
+}
+
+inline static hipError_t hipBindTexture(size_t* offset, textureReference* tex, const void* devPtr,
+                                        const hipChannelFormatDesc* desc, size_t size = UINT_MAX){
+    return hipCUDAErrorTohipError(cudaBindTexture(offset, tex, devPtr, desc, size));
 }
 
 template <class T, int dim, enum hipTextureReadMode readMode>

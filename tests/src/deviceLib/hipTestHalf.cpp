@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
  * RUN: %t
  * HIT_END
  */
@@ -32,7 +32,7 @@ THE SOFTWARE.
 #define HALF_SIZE 64 * sizeof(__half)
 #define HALF2_SIZE 64 * sizeof(__half2)
 
-#if __HIP_ARCH_GFX803__ || __HIP_ARCH_GFX900__
+#if __HIP_ARCH_GFX803__ || __HIP_ARCH_GFX900__ || __HIP_ARCH_GFX906__
 
 __global__ void __halfMath(hipLaunchParm lp, __half* A, __half* B, __half* C) {
     int tx = threadIdx.x;

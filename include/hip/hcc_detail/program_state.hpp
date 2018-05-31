@@ -22,8 +22,10 @@ THE SOFTWARE.
 
 #pragma once
 
+#include <hsa/amd_hsa_kernel_code.h>
 #include <hsa/hsa.h>
 #include <hsa/hsa_ext_amd.h>
+#include <hsa/hsa_ven_amd_loader.h>
 
 #include <cstddef>
 #include <istream>
@@ -46,11 +48,45 @@ struct hash<hsa_agent_t> {
 inline constexpr bool operator==(hsa_agent_t x, hsa_agent_t y) { return x.handle == y.handle; }
 
 namespace hip_impl {
-struct Kernel_descriptor {
-    std::uint64_t kernel_object_;
-    std::uint32_t group_size_;
-    std::uint32_t private_size_;
-    std::string name_;
+class Kernel_descriptor {
+    std::uint64_t kernel_object_{};
+    amd_kernel_code_t const* kernel_header_{nullptr};
+    std::string name_{};
+public:
+    Kernel_descriptor() = default;
+    Kernel_descriptor(std::uint64_t kernel_object, const std::string& name)
+        : kernel_object_{kernel_object}, name_{name}
+    {
+        bool supported{false};
+        std::uint16_t min_v{UINT16_MAX};
+        auto r = hsa_system_major_extension_supported(
+            HSA_EXTENSION_AMD_LOADER, 1, &min_v, &supported);
+
+        if (r != HSA_STATUS_SUCCESS || !supported) return;
+
+        hsa_ven_amd_loader_1_01_pfn_t tbl{};
+
+        r = hsa_system_get_major_extension_table(
+            HSA_EXTENSION_AMD_LOADER,
+            1,
+            sizeof(tbl),
+            reinterpret_cast<void*>(&tbl));
+
+        if (r != HSA_STATUS_SUCCESS) return;
+        if (!tbl.hsa_ven_amd_loader_query_host_address) return;
+
+        r = tbl.hsa_ven_amd_loader_query_host_address(
+            reinterpret_cast<void*>(kernel_object_),
+            reinterpret_cast<const void**>(&kernel_header_));
+
+        if (r != HSA_STATUS_SUCCESS) return;
+    }
+    Kernel_descriptor(const Kernel_descriptor&) = default;
+    Kernel_descriptor(Kernel_descriptor&&) = default;
+    ~Kernel_descriptor() = default;
+
+    Kernel_descriptor& operator=(const Kernel_descriptor&) = default;
+    Kernel_descriptor& operator=(Kernel_descriptor&&) = default;
 
     operator hipFunction_t() const {  // TODO: this is awful and only meant for illustration.
         return reinterpret_cast<hipFunction_t>(const_cast<Kernel_descriptor*>(this));

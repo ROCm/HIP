@@ -94,6 +94,19 @@ typedef struct ihipModule_t* hipModule_t;
 
 typedef struct ihipModuleSymbol_t* hipFunction_t;
 
+struct hipFuncAttributes {
+    int binaryVersion;
+    int cacheModeCA;
+    size_t constSizeBytes;
+    size_t localSizeBytes;
+    int maxDynamicSharedSizeBytes;
+    int maxThreadsPerBlock;
+    int numRegs;
+    int preferredShmemCarveout;
+    int ptxVersion;
+    size_t sharedSizeBytes;
+};
+
 typedef struct ihipEvent_t* hipEvent_t;
 
 enum hipLimit_t {
@@ -1451,6 +1464,27 @@ hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t 
 hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, size_t height,hipStream_t stream __dparm(0));
 
 /**
+ *  @brief Fills synchronously the memory area pointed to by pitchedDevPtr with the constant value.
+ *
+ *  @param[in] pitchedDevPtr
+ *  @param[in]  value - constant value to be set
+ *  @param[in]  extent
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
+ */
+hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent );
+
+/**
+ *  @brief Fills asynchronously the memory area pointed to by pitchedDevPtr with the constant value.
+ *
+ *  @param[in] pitchedDevPtr
+ *  @param[in]  value - constant value to be set
+ *  @param[in]  extent
+ *  @param[in]  stream
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
+ */
+hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent ,hipStream_t stream __dparm(0));
+
+/**
  * @brief Query memory info.
  * Return snapshot of free memory, and total allocatable memory on the device.
  *
@@ -2221,6 +2255,17 @@ hipError_t hipModuleUnload(hipModule_t module);
  * hipErrorNotFound,
  */
 hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule_t module, const char* kname);
+
+/**
+ * @bried Find out attributes for a given function.
+ *
+ * @param [out] attr
+ * @param [in] func
+ *
+ * @returns hipSuccess, hipErrorInvalidDeviceFunction
+ */
+
+hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func);
 
 /**
  * @brief returns device memory pointer and size of the kernel present in the module with symbol @p
