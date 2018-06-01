@@ -114,6 +114,7 @@ typedef struct hipDeviceProp_t {
     int isMultiGpuBoard;                      ///< 1 if device is on a multi-GPU board, 0 if not.
     int canMapHostMemory;                     ///< Check whether HIP can map host memory
     int gcnArch;                              ///< AMD GCN Arch Value. Eg: 803, 701
+    bool integrated; //<Device is an integrated device
 } hipDeviceProp_t;
 
 
