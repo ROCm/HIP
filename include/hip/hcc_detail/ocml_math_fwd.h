@@ -169,53 +169,53 @@ float __ocml_y1_f32(float);
 
 // BEGIN INTRINSICS
 __attribute__((const))
-float __llvm_add_rte_f32(float, float);
+float __ocml_add_rte_f32(float, float);
 __attribute__((const))
-float __llvm_add_rtn_f32(float, float);
+float __ocml_add_rtn_f32(float, float);
 __attribute__((const))
-float __llvm_add_rtp_f32(float, float);
+float __ocml_add_rtp_f32(float, float);
 __attribute__((const))
-float __llvm_add_rtz_f32(float, float);
+float __ocml_add_rtz_f32(float, float);
 __attribute__((const))
-float __llvm_sub_rte_f32(float, float);
+float __ocml_sub_rte_f32(float, float);
 __attribute__((const))
-float __llvm_sub_rtn_f32(float, float);
+float __ocml_sub_rtn_f32(float, float);
 __attribute__((const))
-float __llvm_sub_rtp_f32(float, float);
+float __ocml_sub_rtp_f32(float, float);
 __attribute__((const))
-float __llvm_sub_rtz_f32(float, float);
+float __ocml_sub_rtz_f32(float, float);
 __attribute__((const))
-float __llvm_mul_rte_f32(float, float);
+float __ocml_mul_rte_f32(float, float);
 __attribute__((const))
-float __llvm_mul_rtn_f32(float, float);
+float __ocml_mul_rtn_f32(float, float);
 __attribute__((const))
-float __llvm_mul_rtp_f32(float, float);
+float __ocml_mul_rtp_f32(float, float);
 __attribute__((const))
-float __llvm_mul_rtz_f32(float, float);
+float __ocml_mul_rtz_f32(float, float);
 __attribute__((const))
-float __llvm_div_rte_f32(float, float);
+float __ocml_div_rte_f32(float, float);
 __attribute__((const))
-float __llvm_div_rtn_f32(float, float);
+float __ocml_div_rtn_f32(float, float);
 __attribute__((const))
-float __llvm_div_rtp_f32(float, float);
+float __ocml_div_rtp_f32(float, float);
 __attribute__((const))
-float __llvm_div_rtz_f32(float, float);
+float __ocml_div_rtz_f32(float, float);
 __attribute__((const))
-float __llvm_sqrt_rte_f32(float);
+float __ocml_sqrt_rte_f32(float);
 __attribute__((const))
-float __llvm_sqrt_rtn_f32(float);
+float __ocml_sqrt_rtn_f32(float);
 __attribute__((const))
-float __llvm_sqrt_rtp_f32(float);
+float __ocml_sqrt_rtp_f32(float);
 __attribute__((const))
-float __llvm_sqrt_rtz_f32(float);
+float __ocml_sqrt_rtz_f32(float);
 __attribute__((const))
-float __llvm_fma_rte_f32(float, float, float);
+float __ocml_fma_rte_f32(float, float, float);
 __attribute__((const))
-float __llvm_fma_rtn_f32(float, float, float);
+float __ocml_fma_rtn_f32(float, float, float);
 __attribute__((const))
-float __llvm_fma_rtp_f32(float, float, float);
+float __ocml_fma_rtp_f32(float, float, float);
 __attribute__((const))
-float __llvm_fma_rtz_f32(float, float, float);
+float __ocml_fma_rtz_f32(float, float, float);
 
 __attribute__((const))
 float __llvm_amdgcn_cos_f32(float) __asm("llvm.amdgcn.cos.f32");
@@ -371,58 +371,58 @@ double __ocml_y1_f64(double);
 
 // BEGIN INTRINSICS
 __attribute__((const))
-double __llvm_add_rte_f64(double, double);
+double __ocml_add_rte_f64(double, double);
 __attribute__((const))
-double __llvm_add_rtn_f64(double, double);
+double __ocml_add_rtn_f64(double, double);
 __attribute__((const))
-double __llvm_add_rtp_f64(double, double);
+double __ocml_add_rtp_f64(double, double);
 __attribute__((const))
-double __llvm_add_rtz_f64(double, double);
+double __ocml_add_rtz_f64(double, double);
 __attribute__((const))
-double __llvm_sub_rte_f64(double, double);
+double __ocml_sub_rte_f64(double, double);
 __attribute__((const))
-double __llvm_sub_rtn_f64(double, double);
+double __ocml_sub_rtn_f64(double, double);
 __attribute__((const))
-double __llvm_sub_rtp_f64(double, double);
+double __ocml_sub_rtp_f64(double, double);
 __attribute__((const))
-double __llvm_sub_rtz_f64(double, double);
+double __ocml_sub_rtz_f64(double, double);
 __attribute__((const))
-double __llvm_mul_rte_f64(double, double);
+double __ocml_mul_rte_f64(double, double);
 __attribute__((const))
-double __llvm_mul_rtn_f64(double, double);
+double __ocml_mul_rtn_f64(double, double);
 __attribute__((const))
-double __llvm_mul_rtp_f64(double, double);
+double __ocml_mul_rtp_f64(double, double);
 __attribute__((const))
-double __llvm_mul_rtz_f64(double, double);
+double __ocml_mul_rtz_f64(double, double);
 __attribute__((const))
-double __llvm_div_rte_f64(double, double);
+double __ocml_div_rte_f64(double, double);
 __attribute__((const))
-double __llvm_div_rtn_f64(double, double);
+double __ocml_div_rtn_f64(double, double);
 __attribute__((const))
-double __llvm_div_rtp_f64(double, double);
+double __ocml_div_rtp_f64(double, double);
 __attribute__((const))
-double __llvm_div_rtz_f64(double, double);
+double __ocml_div_rtz_f64(double, double);
 __attribute__((const))
-double __llvm_sqrt_rte_f64(double);
+double __ocml_sqrt_rte_f64(double);
 __attribute__((const))
-double __llvm_sqrt_rtn_f64(double);
+double __ocml_sqrt_rtn_f64(double);
 __attribute__((const))
-double __llvm_sqrt_rtp_f64(double);
+double __ocml_sqrt_rtp_f64(double);
 __attribute__((const))
-double __llvm_sqrt_rtz_f64(double);
+double __ocml_sqrt_rtz_f64(double);
 __attribute__((const))
-double __llvm_fma_rte_f64(float, float, float);
+double __ocml_fma_rte_f64(double, double, double);
 __attribute__((const))
-double __llvm_fma_rtn_f64(float, float, float);
+double __ocml_fma_rtn_f64(double, double, double);
 __attribute__((const))
-double __llvm_fma_rtp_f64(float, float, float);
+double __ocml_fma_rtp_f64(double, double, double);
 __attribute__((const))
-double __llvm_fma_rtz_f64(float, float, float);
+double __ocml_fma_rtz_f64(double, double, double);
 
 __attribute__((const))
-double __llvm_amdgcn_rcp_f64(double);
+double __llvm_amdgcn_rcp_f64(double) __asm("llvm.amdgcn.rcp.f64");
 __attribute__((const))
-double __llvm_amdgcn_rsq_f64(double);
+double __llvm_amdgcn_rsq_f64(double) __asm("llvm.amdgcn.rsq.f64");
 // END INTRINSICS
 // END DOUBLE
 
