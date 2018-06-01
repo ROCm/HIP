@@ -492,7 +492,6 @@ if($HIP_PLATFORM eq "hcc" or $HIP_PLATFORM eq "clang"){
             $HIPCXXFLAGS .= $GPU_ARCH_ARG;;
         }
         $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX803__=1 ";
-        $ENV{HCC_EXTRA_LIBRARIES_GFX803}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
     }
     if ($target_gfx900 eq 1) {
         $GPU_ARCH_ARG = $GPU_ARCH_OPT . "gfx900";
@@ -501,12 +500,10 @@ if($HIP_PLATFORM eq "hcc" or $HIP_PLATFORM eq "clang"){
             $HIPCXXFLAGS .= $GPU_ARCH_ARG;;
         }
         $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX900__=1 ";
-        $ENV{HCC_EXTRA_LIBRARIES_GFX900}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
     }
     if ($target_gfx906 eq 1) {
         $HIPLDFLAGS .= " --amdgpu-target=gfx906";
         $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX906__=1 ";
-        $ENV{HCC_EXTRA_LIBRARIES_GFX906}="$HIP_PATH/lib/hip_hc_gfx803.ll\n";
     }
 }
 
