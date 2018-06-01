@@ -64,6 +64,7 @@ HIP code can be developed either on AMD ROCm platform using hcc or clang compile
    * By default HIP looks for HSA in /opt/rocm/hsa (can be overridden by setting HSA_PATH environment variable) 
    * By default HIP is installed into /opt/rocm/hip (can be overridden by setting HIP_PATH environment variable).
    * Optionally, consider adding /opt/rocm/bin to your PATH to make it easier to use the tools.
+   * Optionally, set HIPCC_VERBOSE=7 to output the command line for compilation to make sure clang is used instead of hcc.
 
 ## NVIDIA-nvcc
 * Configure the additional package server as described [here](http://gpuopen.com/getting-started-with-boltzmann-components-platforms-installation/).  
