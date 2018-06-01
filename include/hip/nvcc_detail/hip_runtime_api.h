@@ -153,6 +153,10 @@ typedef struct cudaArray* hipArray_const_t;
 typedef cudaFuncAttributes hipFuncAttributes;
 #define hipMemcpy3DParms cudaMemcpy3DParms
 #define hipArrayDefault cudaArrayDefault
+#define hipArrayLayered cudaArrayLayered
+#define hipArraySurfaceLoadStore cudaArraySurfaceLoadStore
+#define hipArrayCubemap cudaArrayCubemap
+#define hipArrayTextureGather cudaArrayTextureGather
 
 typedef cudaTextureObject_t hipTextureObject_t;
 typedef cudaSurfaceObject_t hipSurfaceObject_t;
