@@ -23,56 +23,67 @@ THE SOFTWARE.
  * HIT_END
  */
 
-#include <iostream>
 #include <hip/hip_fp16.h>
 #include "hip/hip_runtime.h"
-#include "test_common.h"
 
-#define LEN 64
-#define HALF_SIZE 64 * sizeof(__half)
-#define HALF2_SIZE 64 * sizeof(__half2)
+#include "test_common.h"
 
 #if __HIP_ARCH_GFX803__ || __HIP_ARCH_GFX900__ || __HIP_ARCH_GFX906__
 
-__global__ void __halfMath(hipLaunchParm lp, __half* A, __half* B, __half* C) {
-    int tx = threadIdx.x;
-    __half a = A[tx];
-    __half b = B[tx];
-    __half c = C[tx];
-    c = __hadd(a, c);
-    c = __hadd_sat(b, c);
-    c = __hfma(a, c, b);
-    c = __hfma_sat(b, c, a);
-    c = __hsub(a, c);
-    c = __hsub_sat(b, c);
-    c = __hmul(a, c);
-    c = __hmul_sat(b, c);
-    c = hdiv(a, c);
+__global__
+void __halfMath(bool* result, __half a) {
+  result[0] = __heq(__hadd(a, __half{1}), __half{2});
+  result[0] = __heq(__hadd_sat(a, __half{1}), __half{1}) && result[0];
+  result[0] = __heq(__hfma(a, __half{2}, __half{3}), __half{5}) && result[0];
+  result[0] =
+    __heq(__hfma_sat(a, __half{2}, __half{3}), __half{1}) && result[0];
+  result[0] = __heq(__hsub(a, __half{1}), __half{0}) && result[0];
+  result[0] = __heq(__hsub_sat(a, __half{2}), __half{0}) && result[0];
+  result[0] = __heq(__hmul(a, __half{2}), __half{2}) && result[0];
+  result[0] = __heq(__hmul_sat(a, __half{2}), __half{1}) && result[0];
+  result[0] = __heq(__hdiv(a, __half{2}), __half{0.5}) && result[0];
 }
 
-__global__ void __half2Math(hipLaunchParm lp, __half2* A, __half2* B, __half2* C) {
-    int tx = threadIdx.x;
-    __half2 a = A[tx];
-    __half2 b = B[tx];
-    __half2 c = C[tx];
-    c = __hadd2(a, c);
-    c = __hadd2_sat(b, c);
-    c = __hfma2(a, c, b);
-    c = __hfma2_sat(b, c, a);
-    c = __hsub2(a, c);
-    c = __hsub2_sat(b, c);
-    c = __hmul2(a, c);
-    c = __hmul2_sat(b, c);
+__device__
+bool to_bool(const __half2& x)
+{
+  auto r = static_cast<const __half2_raw&>(x);
+
+  return r.data.x != 0 && r.data.y != 0;
 }
 
-__global__ void kernel_hisnan(hipLaunchParm lp, __half* input, int* output) {
-    int tx = threadIdx.x;
-    output[tx] = __hisnan(input[tx]);
+__global__
+void __half2Math(bool* result, __half2 a) {
+  result[0] =
+    to_bool(__heq2(__hadd2(a, __half2{1, 1}), __half2{2, 2}));
+  result[0] = to_bool(__heq2(__hadd2_sat(a, __half2{1, 1}), __half2{1, 1})) &&
+    result[0];
+  result[0] = to_bool(__heq2(
+    __hfma2(a, __half2{2, 2}, __half2{3, 3}), __half2{5, 5})) && result[0];
+  result[0] = to_bool(__heq2(
+    __hfma2_sat(a, __half2{2, 2}, __half2{3, 3}), __half2{1, 1})) && result[0];
+  result[0] = to_bool(__heq2(__hsub2(a, __half2{1, 1}), __half2{0, 0})) &&
+    result[0];
+  result[0] = to_bool(__heq2(__hsub2_sat(a, __half2{2, 2}), __half2{0, 0})) &&
+    result[0];
+  result[0] = to_bool(__heq2(__hmul2(a, __half2{2, 2}), __half2{2, 2})) &&
+    result[0];
+  result[0] = to_bool(__heq2(__hmul2_sat(a, __half2{2, 2}), __half2{1, 1})) &&
+    result[0];
+  result[0] = to_bool(__heq2(__h2div(a, __half2{2, 2}), __half2{0.5, 0.5})) &&
+    result[0];
 }
 
-__global__ void kernel_hisinf(hipLaunchParm lp, __half* input, int* output) {
-    int tx = threadIdx.x;
-    output[tx] = __hisinf(input[tx]);
+__global__
+void kernel_hisnan(__half* input, int* output) {
+  int tx = threadIdx.x;
+  output[tx] = __hisnan(input[tx]);
+}
+
+__global__
+void kernel_hisinf(__half* input, int* output) { 
+  int tx = threadIdx.x;
+  output[tx] = __hisinf(input[tx]);
 }
 
 #endif
@@ -93,7 +104,8 @@ void check_hisnan(int NUM_INPUTS, __half* inputCPU, __half* inputGPU) {
   hipMalloc((void**)&outputGPU, memsize);
 
   // launch the kernel
-  hipLaunchKernel(kernel_hisnan, dim3(1), dim3(NUM_INPUTS), 0, 0, inputGPU, outputGPU);
+  hipLaunchKernelGGL(
+    kernel_hisnan, dim3(1), dim3(NUM_INPUTS), 0, 0, inputGPU, outputGPU);
 
   // copy output from device
   int* outputCPU = (int*) malloc(memsize);
@@ -103,12 +115,18 @@ void check_hisnan(int NUM_INPUTS, __half* inputCPU, __half* inputGPU) {
   for (int i=0; i<NUM_INPUTS; i++) {
     if ((2 <= i) && (i <= 5)) { // inputs are nan, output should be true
       if (outputCPU[i] == 0) {
-	failed("__hisnan() returned false for %f (input idx = %d)\n", inputCPU[i], i);
+	      failed(
+          "__hisnan() returned false for %f (input idx = %d)\n",
+          static_cast<float>(inputCPU[i]),
+          i);
       }
     }
     else { // inputs are NOT nan, output should be false
       if (outputCPU[i] != 0) {
-	failed("__hisnan() returned true for %f (input idx = %d)\n", inputCPU[i], i);
+	      failed(
+          "__hisnan() returned true for %f (input idx = %d)\n",
+          static_cast<float>(inputCPU[i]),
+          i);
       }
     }
   }
@@ -129,7 +147,8 @@ void check_hisinf(int NUM_INPUTS, __half* inputCPU, __half* inputGPU) {
   hipMalloc((void**)&outputGPU, memsize);
 
   // launch the kernel
-  hipLaunchKernel(kernel_hisinf, dim3(1), dim3(NUM_INPUTS), 0, 0, inputGPU, outputGPU);
+  hipLaunchKernelGGL(
+    kernel_hisinf, dim3(1), dim3(NUM_INPUTS), 0, 0, inputGPU, outputGPU);
 
   // copy output from device
   int* outputCPU = (int*) malloc(memsize);
@@ -139,12 +158,18 @@ void check_hisinf(int NUM_INPUTS, __half* inputCPU, __half* inputGPU) {
   for (int i=0; i<NUM_INPUTS; i++) {
     if ((0 <= i) && (i <= 1)) { // inputs are inf, output should be true
       if (outputCPU[i] == 0) {
-	failed("__hisinf() returned false for %f (input idx = %d)\n", inputCPU[i], i);
+	      failed(
+          "__hisinf() returned false for %f (input idx = %d)\n",
+          static_cast<float>(inputCPU[i]),
+          i);
       }
     }
     else { // inputs are NOT inf, output should be false
       if (outputCPU[i] != 0) {
-	failed("__hisinf() returned true for %f (input idx = %d)\n", inputCPU[i], i);
+	      failed(
+          "__hisinf() returned true for %f (input idx = %d)\n",
+          static_cast<float>(inputCPU[i]),
+          i);
       }
     }
   }
@@ -160,11 +185,11 @@ void check_hisinf(int NUM_INPUTS, __half* inputCPU, __half* inputGPU) {
 
 void checkFunctional() {
 
-  // allocate memory 
+  // allocate memory
   const int NUM_INPUTS = 16;
   auto memsize = NUM_INPUTS * sizeof(__half);
   __half* inputCPU = (__half*) malloc(memsize);
-  
+
   // populate inputs
   inputCPU[0] = host_ushort_as_half(0x7c00);  //  inf
   inputCPU[1] = host_ushort_as_half(0xfc00);  // -inf
@@ -203,25 +228,27 @@ void checkFunctional() {
 }
 
 int main() {
-    __half *A, *B, *C;
-    hipMalloc(&A, HALF_SIZE);
-    hipMalloc(&B, HALF_SIZE);
-    hipMalloc(&C, HALF_SIZE);
-    hipLaunchKernel(__halfMath, dim3(1, 1, 1), dim3(LEN, 1, 1), 0, 0, A, B, C);
-    hipFree(A);
-    hipFree(B);
-    hipFree(C);
-    __half2 *A2, *B2, *C2;
-    hipMalloc(&A2, HALF2_SIZE);
-    hipMalloc(&B2, HALF2_SIZE);
-    hipMalloc(&C2, HALF2_SIZE);
-    hipLaunchKernel(__half2Math, dim3(1, 1, 1), dim3(LEN, 1, 1), 0, 0, A2, B2, C2);
-    hipFree(A2);
-    hipFree(B2);
-    hipFree(C2);
+  bool* result{nullptr};
+  hipHostMalloc(&result, sizeof(result));
 
-    // run some functional checks
-    checkFunctional();
-    
-    passed();
+  result[0] = false;
+  hipLaunchKernelGGL(
+    __halfMath, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, result, __half{1});
+  hipDeviceSynchronize();
+
+  if (!result[0]) { failed("Failed __half tests."); }
+
+  result[0] = false;
+  hipLaunchKernelGGL(
+    __half2Math, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, result, __half2{1, 1});
+  hipDeviceSynchronize();
+
+  if (!result[0]) { failed("Failed __half2 tests."); }
+
+  hipHostFree(result);
+
+  // run some functional checks
+  checkFunctional();
+
+  passed();
 }
