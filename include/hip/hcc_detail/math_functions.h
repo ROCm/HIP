@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "ocml_math_fwd.h"
+#include "math_fwd.h"
 
 #include <hip/hip_runtime.h>
 
