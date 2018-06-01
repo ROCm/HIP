@@ -157,11 +157,11 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
   const amd::Image::Format imageFormat(image_format);
 
   amd::Memory* memory = nullptr;
-
+  size_t offset = 0;
   switch (pResDesc->resType) {
     case hipResourceTypeArray:
       {
-        memory = amd::SvmManager::FindSvmBuffer(pResDesc->res.array.array->data);
+        memory = getMemoryObject(pResDesc->res.array.array->data, offset);
 
         getChannelOrderAndType(pResDesc->res.array.array->desc, pTexDesc->readMode,
                              &image_format.image_channel_order, &image_format.image_channel_data_type);
@@ -187,8 +187,8 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
       break;
     case hipResourceTypeLinear:
       assert(pResViewDesc == nullptr);
+      memory = getMemoryObject(pResDesc->res.linear.devPtr, offset);
 
-      memory = amd::SvmManager::FindSvmBuffer(pResDesc->res.linear.devPtr);
       image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
         CL_MEM_OBJECT_IMAGE1D, memory->getMemFlags(), imageFormat,
         pResDesc->res.linear.sizeInBytes / imageFormat.getElementSize(), 1, 1,
@@ -196,8 +196,8 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
       break;
     case hipResourceTypePitch2D:
       assert(pResViewDesc == nullptr);
+      memory = getMemoryObject(pResDesc->res.pitch2D.devPtr, offset);
 
-      memory = amd::SvmManager::FindSvmBuffer(pResDesc->res.pitch2D.devPtr);
       image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
         CL_MEM_OBJECT_IMAGE2D, memory->getMemFlags(), imageFormat,
         pResDesc->res.pitch2D.width, pResDesc->res.pitch2D.height, 1,
@@ -263,8 +263,7 @@ hipError_t ihipBindTexture(cl_mem_object_type type,
         &image_format.image_channel_order, &image_format.image_channel_data_type);
     }
     const amd::Image::Format imageFormat(image_format);
-
-    amd::Memory* memory = amd::SvmManager::FindSvmBuffer(devPtr);
+    amd::Memory* memory = getMemoryObject(devPtr, *offset);
     amd::Image* image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
       type, memory->getMemFlags(), imageFormat, width, height, 1, pitch, 0);
 

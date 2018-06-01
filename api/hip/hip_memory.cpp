@@ -37,7 +37,7 @@ extern void getDrvChannelOrderAndType(const enum hipArray_Format Format,
                                       cl_channel_type* channelType);
 
 inline amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
-  amd::Memory *memObj = amd::SvmManager::FindSvmBuffer(ptr);
+  amd::Memory *memObj = amd::MemObjMap::FindMemObj(ptr);
   if (memObj != nullptr) {
     offset = reinterpret_cast<size_t>(ptr) - reinterpret_cast<size_t>(memObj->getSvmPtr());
   }
@@ -500,19 +500,47 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) {
 
 hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) {
   HIP_INIT_API(hostPtr, sizeBytes, flags);
+  if(hostPtr != nullptr) {
+    amd::Context *amdContext = hip::getCurrentContext();
+    amd::Memory* mem = new (*amdContext) amd::Buffer(*amdContext, CL_MEM_USE_HOST_PTR, sizeBytes);
 
-  assert(0 && "Unimplemented");
-
-  return hipErrorUnknown;
+    if (!mem->create(hostPtr)) {
+      mem->release();
+      return hipErrorMemoryAllocation;
+    }
+    amd::MemObjMap::AddMemObj(hostPtr, mem);
+    return hipSuccess;
+  } else {
+    return ihipMalloc(&hostPtr, sizeBytes, flags);
+  }
 }
 
 hipError_t hipHostUnregister(void* hostPtr) {
   HIP_INIT_API(hostPtr);
 
-  assert(0 && "Unimplemented");
+  if (amd::SvmBuffer::malloced(hostPtr)) {
+    hip::syncStreams();
+    hip::getNullStream()->finish();
+    amd::SvmBuffer::free(*hip::getCurrentContext(), hostPtr);
+    return hipSuccess;
+  } else {
+    size_t offset = 0;
+    amd::Memory* mem = getMemoryObject(hostPtr, offset);
 
-  return hipErrorUnknown;
+    if(mem) {
+      mem->release();
+      return hipSuccess;
+    }
+  }
+
+  return hipErrorInvalidValue;
 }
+
+// Deprecated function:
+hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags) {
+  return ihipMalloc(ptr, sizeBytes, flags);
+};
+
 
 hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t count,
                              size_t offset, hipMemcpyKind kind) {
