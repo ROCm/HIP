@@ -341,7 +341,7 @@ float normcdfinvf(float x) { return __ocml_ncdfinv_f32(x); }
 __device__
 inline
 float normf(int dim, const float* a)
-{
+{   // TODO: placeholder until OCML adds support.
     float r = 0;
     while (dim--) { r += a[0] * a[0]; ++a; }
 
@@ -389,7 +389,7 @@ float rnorm4df(float x, float y, float z, float w)
 __device__
 inline
 float rnormf(int dim, const float* a)
-{
+{   // TODO: placeholder until OCML adds support.
     float r = 0;
     while (dim--) { r += a[0] * a[0]; ++a; }
 
@@ -468,7 +468,8 @@ inline
 float ynf(int n, float x)
 {   // TODO: we could use Ahmes multiplication and the Miller & Brown algorithm
     //       for linear recurrences to get O(log n) steps, but it's unclear if
-    //       it'd be beneficial in this case.
+    //       it'd be beneficial in this case. Placeholder until OCML adds
+    //       support.
     if (n == 0) return y0f(x);
     if (n == 1) return y1f(x);
 
@@ -495,67 +496,67 @@ inline
 float __expf(float x) { return __ocml_exp_f32(x); }
 __device__
 inline
-float __fadd_rd(float x, float y) { return __llvm_add_rte_f32(x, y); }
+float __fadd_rd(float x, float y) { return __ocml_add_rtp_f32(x, y); }
 __device__
 inline
-float __fadd_rn(float x, float y) { return __llvm_add_rtn_f32(x, y); }
+float __fadd_rn(float x, float y) { return __ocml_add_rte_f32(x, y); }
 __device__
 inline
-float __fadd_ru(float x, float y) { return __llvm_add_rtp_f32(x, y); }
+float __fadd_ru(float x, float y) { return __ocml_add_rtn_f32(x, y); }
 __device__
 inline
-float __fadd_rz(float x, float y) { return __llvm_add_rtz_f32(x, y); }
+float __fadd_rz(float x, float y) { return __ocml_add_rtz_f32(x, y); }
 __device__
 inline
-float __fdiv_rd(float x, float y) { return __llvm_div_rte_f32(x, y); }
+float __fdiv_rd(float x, float y) { return __ocml_div_rtp_f32(x, y); }
 __device__
 inline
-float __fdiv_rn(float x, float y) { return __llvm_div_rtn_f32(x, y); }
+float __fdiv_rn(float x, float y) { return __ocml_div_rte_f32(x, y); }
 __device__
 inline
-float __fdiv_ru(float x, float y) { return __llvm_div_rtp_f32(x, y); }
+float __fdiv_ru(float x, float y) { return __ocml_div_rtn_f32(x, y); }
 __device__
 inline
-float __fdiv_rz(float x, float y) { return __llvm_div_rtz_f32(x, y); }
+float __fdiv_rz(float x, float y) { return __ocml_div_rtz_f32(x, y); }
 __device__
 inline
-float __fdividef(float x, float y) { return __llvm_div_rte_f32(x, y); }
+float __fdividef(float x, float y) { return __ocml_div_rte_f32(x, y); }
 __device__
 inline
 float __fmaf_rd(float x, float y, float z)
 {
-    return __llvm_fma_rte_f32(x, y, z);
+    return __ocml_fma_rtp_f32(x, y, z);
 }
 __device__
 inline
 float __fmaf_rn(float x, float y, float z)
 {
-    return __llvm_fma_rtn_f32(x, y, z);
+    return __ocml_fma_rte_f32(x, y, z);
 }
 __device__
 inline
 float __fmaf_ru(float x, float y, float z)
 {
-    return __llvm_fma_rtp_f32(x, y, z);
+    return __ocml_fma_rtn_f32(x, y, z);
 }
 __device__
 inline
 float __fmaf_rz(float x, float y, float z)
 {
-   return __llvm_fma_rtz_f32(x, y, z);
+   return __ocml_fma_rtz_f32(x, y, z);
 }
 __device__
 inline
-float __fmul_rd(float x, float y) { return __llvm_mul_rte_f32(x, y); }
+float __fmul_rd(float x, float y) { return __ocml_mul_rtp_f32(x, y); }
 __device__
 inline
-float __fmul_rn(float x, float y) { return __llvm_mul_rtn_f32(x, y); }
+float __fmul_rn(float x, float y) { return __ocml_mul_rte_f32(x, y); }
 __device__
 inline
-float __fmul_ru(float x, float y)  { return __llvm_mul_rtp_f32(x, y); }
+float __fmul_ru(float x, float y)  { return __ocml_mul_rtn_f32(x, y); }
 __device__
 inline
-float __fmul_rz(float x, float y) { return __llvm_mul_rtz_f32(x, y); }
+float __fmul_rz(float x, float y) { return __ocml_mul_rtz_f32(x, y); }
 __device__
 inline
 float __frcp_rd(float x) { return __llvm_amdgcn_rcp_f32(x); }
@@ -573,28 +574,28 @@ inline
 float __frsqrt_rn(float x) { return __llvm_amdgcn_rsq_f32(x); }
 __device__
 inline
-float __fsqrt_rd(float x) { return __llvm_sqrt_rte_f32(x); }
+float __fsqrt_rd(float x) { return __ocml_sqrt_rtp_f32(x); }
 __device__
 inline
-float __fsqrt_rn(float x) { return __llvm_sqrt_rtn_f32(x); }
+float __fsqrt_rn(float x) { return __ocml_sqrt_rte_f32(x); }
 __device__
 inline
-float __fsqrt_ru(float x) { return __llvm_sqrt_rtp_f32(x); }
+float __fsqrt_ru(float x) { return __ocml_sqrt_rtn_f32(x); }
 __device__
 inline
-float __fsqrt_rz(float x) { return __llvm_sqrt_rtz_f32(x); }
+float __fsqrt_rz(float x) { return __ocml_sqrt_rtz_f32(x); }
 __device__
 inline
-float __fsub_rd(float x, float y) { return __llvm_sub_rte_f32(x, y); }
+float __fsub_rd(float x, float y) { return __ocml_sub_rtp_f32(x, y); }
 __device__
 inline
-float __fsub_rn(float x, float y) { return __llvm_sub_rtn_f32(x, y); }
+float __fsub_rn(float x, float y) { return __ocml_sub_rte_f32(x, y); }
 __device__
 inline
-float __fsub_ru(float x, float y) { return __llvm_sub_rtp_f32(x, y); }
+float __fsub_ru(float x, float y) { return __ocml_sub_rtn_f32(x, y); }
 __device__
 inline
-float __fsub_rz(float x, float y) { return __llvm_sub_rtz_f32(x, y); }
+float __fsub_rz(float x, float y) { return __ocml_sub_rtz_f32(x, y); }
 __device__
 inline
 float __log10f(float x) { return __ocml_log10_f32(x); }
@@ -617,7 +618,7 @@ void __sincosf(float x, float* sptr, float* cptr)
     float tmp;
 
     *sptr =
-    __ocml_sincos_f32(x, (__attribute__((address_space(5))) float*) &tmp);
+        __ocml_sincos_f32(x, (__attribute__((address_space(5))) float*) &tmp);
     *cptr = tmp;
 }
 __device__
@@ -763,7 +764,8 @@ inline
 double jn(int n, double x)
 {   // TODO: we could use Ahmes multiplication and the Miller & Brown algorithm
     //       for linear recurrences to get O(log n) steps, but it's unclear if
-    //       it'd be beneficial in this case.
+    //       it'd be beneficial in this case. Placeholder until OCML adds
+    //       support.
     if (n == 0) return j0f(x);
     if (n == 1) return j1f(x);
 
@@ -853,7 +855,7 @@ double nextafter(double x, double y) { return __ocml_nextafter_f64(x, y); }
 __device__
 inline
 double norm(int dim, const double* a)
-{
+{   // TODO: placeholder until OCML adds support.
     double r = 0;
     while (dim--) { r += a[0] * a[0]; ++a; }
 
@@ -906,7 +908,7 @@ double rint(double x) { return __ocml_rint_f64(x); }
 __device__
 inline
 double rnorm(int dim, const double* a)
-{
+{   // TODO: placeholder until OCML adds support.
     double r = 0;
     while (dim--) { r += a[0] * a[0]; ++a; }
 
@@ -995,7 +997,8 @@ inline
 double yn(int n, double x)
 {   // TODO: we could use Ahmes multiplication and the Miller & Brown algorithm
     //       for linear recurrences to get O(log n) steps, but it's unclear if
-    //       it'd be beneficial in this case.
+    //       it'd be beneficial in this case. Placeholder until OCML adds
+    //       support.
     if (n == 0) return j0f(x);
     if (n == 1) return j1f(x);
 
@@ -1013,40 +1016,40 @@ double yn(int n, double x)
 // BEGIN INTRINSICS
 __device__
 inline
-double __dadd_rd(double x, double y) { return __llvm_add_rtp_f64(x, y); }
+double __dadd_rd(double x, double y) { return __ocml_add_rtp_f64(x, y); }
 __device__
 inline
-double __dadd_rn(double x, double y) { return __llvm_add_rte_f64(x, y); }
+double __dadd_rn(double x, double y) { return __ocml_add_rte_f64(x, y); }
 __device__
 inline
-double __dadd_ru(double x, double y) { return __llvm_add_rtn_f64(x, y); }
+double __dadd_ru(double x, double y) { return __ocml_add_rtn_f64(x, y); }
 __device__
 inline
-double __dadd_rz(double x, double y) { return __llvm_add_rtz_f64(x, y); }
+double __dadd_rz(double x, double y) { return __ocml_add_rtz_f64(x, y); }
 __device__
 inline
-double __ddiv_rd(double x, double y) { return __llvm_div_rtp_f64(x, y); }
+double __ddiv_rd(double x, double y) { return __ocml_div_rtp_f64(x, y); }
 __device__
 inline
-double __ddiv_rn(double x, double y) { return __llvm_div_rte_f64(x, y); }
+double __ddiv_rn(double x, double y) { return __ocml_div_rte_f64(x, y); }
 __device__
 inline
-double __ddiv_ru(double x, double y) { return __llvm_div_rtn_f64(x, y); }
+double __ddiv_ru(double x, double y) { return __ocml_div_rtn_f64(x, y); }
 __device__
 inline
-double __ddiv_rz(double x, double y) { return __llvm_div_rtz_f64(x, y); }
+double __ddiv_rz(double x, double y) { return __ocml_div_rtz_f64(x, y); }
 __device__
 inline
-double __dmul_rd(double x, double y) { return __llvm_mul_rtp_f64(x, y); }
+double __dmul_rd(double x, double y) { return __ocml_mul_rtp_f64(x, y); }
 __device__
 inline
-double __dmul_rn(double x, double y) { return __llvm_mul_rte_f64(x, y); }
+double __dmul_rn(double x, double y) { return __ocml_mul_rte_f64(x, y); }
 __device__
 inline
-double __dmul_ru(double x, double y) { return __llvm_mul_rtn_f64(x, y); }
+double __dmul_ru(double x, double y) { return __ocml_mul_rtn_f64(x, y); }
 __device__
 inline
-double __dmul_rz(double x, double y) { return __llvm_mul_rtz_f64(x, y); }
+double __dmul_rz(double x, double y) { return __ocml_mul_rtz_f64(x, y); }
 __device__
 inline
 double __drcp_rd(double x) { return __llvm_amdgcn_rcp_f64(x); }
@@ -1061,51 +1064,51 @@ inline
 double __drcp_rz(double x) { return __llvm_amdgcn_rcp_f64(x); }
 __device__
 inline
-double __dsqrt_rd(double x) { return __llvm_sqrt_rtp_f64(x); }
+double __dsqrt_rd(double x) { return __ocml_sqrt_rtp_f64(x); }
 __device__
 inline
-double __dsqrt_rn(double x) { return __llvm_sqrt_rte_f64(x); }
+double __dsqrt_rn(double x) { return __ocml_sqrt_rte_f64(x); }
 __device__
 inline
-double __dsqrt_ru(double x) { return __llvm_sqrt_rtn_f64(x); }
+double __dsqrt_ru(double x) { return __ocml_sqrt_rtn_f64(x); }
 __device__
 inline
-double __dsqrt_rz(double x) { return __llvm_sqrt_rtz_f64(x); }
+double __dsqrt_rz(double x) { return __ocml_sqrt_rtz_f64(x); }
 __device__
 inline
-double __dsub_rd(double x, double y) { return __llvm_sub_rtp_f64(x, y); }
+double __dsub_rd(double x, double y) { return __ocml_sub_rtp_f64(x, y); }
 __device__
 inline
-double __dsub_rn(double x, double y) { return __llvm_sub_rte_f64(x, y); }
+double __dsub_rn(double x, double y) { return __ocml_sub_rte_f64(x, y); }
 __device__
 inline
-double __dsub_ru(double x, double y) { return __llvm_sub_rtn_f64(x, y); }
+double __dsub_ru(double x, double y) { return __ocml_sub_rtn_f64(x, y); }
 __device__
 inline
-double __dsub_rz(double x, double y) { return __llvm_sub_rtz_f64(x, y); }
+double __dsub_rz(double x, double y) { return __ocml_sub_rtz_f64(x, y); }
 __device__
 inline
 double __fma_rd(double x, double y, double z)
 {
-    return __llvm_fma_rtp_f64(x, y, z);
+    return __ocml_fma_rtp_f64(x, y, z);
 }
 __device__
 inline
 double __fma_rn(double x, double y, double z)
 {
-    return __llvm_fma_rte_f64(x, y, z);
+    return __ocml_fma_rte_f64(x, y, z);
 }
 __device__
 inline
 double __fma_ru(double x, double y, double z)
 {
-    return __llvm_fma_rtn_f64(x, y, z);
+    return __ocml_fma_rtn_f64(x, y, z);
 }
 __device__
 inline
 double __fma_rz(double x, double y, double z)
 {
-    return __llvm_fma_rtz_f64(x, y, z);
+    return __ocml_fma_rtz_f64(x, y, z);
 }
 // END INTRINSICS
 // END DOUBLE
