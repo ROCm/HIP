@@ -195,7 +195,6 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set(SOURCE_FILES_DEVICE
         src/device_util.cpp
         src/hip_ldg.cpp
-        src/hip_fp16.cpp
         src/device_functions.cpp)
 
     execute_process(COMMAND ${HCC_HOME}/bin/hcc-config --ldflags OUTPUT_VARIABLE HCC_LD_FLAGS)
@@ -239,7 +238,7 @@ endif()
 # Install hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
     install(TARGETS hip_hcc_static hip_hcc hip_device DESTINATION lib)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_hc.ll ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_hc_gfx803.ll DESTINATION lib)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_hc.ll DESTINATION lib)
 
     # Install .hipInfo
     install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)
