@@ -176,7 +176,9 @@ __device__
 inline
 unsigned int atomicInc(unsigned int* address, unsigned int val)
 {
-    extern unsigned int __builtin_amdgcn_atomic_inc(
+    __device__
+    extern 
+    unsigned int __builtin_amdgcn_atomic_inc(
         unsigned int*,
         unsigned int,
         unsigned int,
@@ -191,7 +193,9 @@ __device__
 inline
 unsigned int atomicDec(unsigned int* address, unsigned int val)
 {
-    extern unsigned int __builtin_amdgcn_atomic_dec(
+    __device__
+    extern 
+    unsigned int __builtin_amdgcn_atomic_dec(
         unsigned int*,
         unsigned int,
         unsigned int,
