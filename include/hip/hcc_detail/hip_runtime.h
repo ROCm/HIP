@@ -98,6 +98,9 @@ struct Empty_launch_parm {};
 #include "grid_launch_GGL.hpp"
 #endif  // GENERIC_GRID_LAUNCH
 
+#endif // HCC
+
+#if __HCC_OR_HIP_CLANG__
 extern int HIP_TRACE_API;
 
 #ifdef __cplusplus
@@ -107,14 +110,15 @@ extern int HIP_TRACE_API;
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hcc_detail/math_functions.h>
 #include <hip/hcc_detail/device_functions.h>
+#if __HCC___
 #include <hip/hcc_detail/texture_functions.h>
 #include <hip/hcc_detail/surface_functions.h>
+#endif // __HCC__
 
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
 #if defined(__KALMAR_ACCELERATOR__) && !defined(__HCC_ACCELERATOR__)
 #define __HCC_ACCELERATOR__ __KALMAR_ACCELERATOR__
 #endif
-
 
 // TODO-HCC add a dummy implementation of assert, need to replace with a proper kernel exit call.
 #if __HIP_DEVICE_COMPILE__ == 1
@@ -179,10 +183,6 @@ extern int HIP_TRACE_API;
 #elif defined(__STDC_VERSION__)
 #define __HCC_C__
 #endif
-
-#endif  // defined __HCC__
-
-#if __HCC_OR_HIP_CLANG__
 
 // TODO - hipify-clang - change to use the function call.
 //#define warpSize hc::__wavesize()
