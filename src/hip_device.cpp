@@ -273,6 +273,9 @@ hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device
             case hipDeviceAttributeIsMultiGpuBoard:
                 *pi = prop->isMultiGpuBoard;
                 break;
+            case hipDeviceAttributeIntegrated:
+                *pi = prop->integrated;
+                break;
             default:
                 e = hipErrorInvalidValue;
                 break;
