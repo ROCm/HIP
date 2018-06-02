@@ -108,5 +108,6 @@ int main(int argc, char* argv[]) {
         test_hipDeviceGetAttribute(deviceId, hipDeviceAttributePciDeviceId, props.pciDeviceID));  //
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxSharedMemoryPerMultiprocessor,
                                      props.maxSharedMemoryPerMultiProcessor));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeIntegrated, props.integrated));
     passed();
 };
