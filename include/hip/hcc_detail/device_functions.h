@@ -23,7 +23,8 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_DEVICE_FUNCTIONS_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_DEVICE_FUNCTIONS_H
 
-#include <hip/hip_runtime.h>
+#include "host_defines.h"
+
 #include <hip/hip_vector_types.h>
 
 
