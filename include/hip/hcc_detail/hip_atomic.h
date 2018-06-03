@@ -57,7 +57,7 @@ __device__
 inline
 float atomicAdd(float* address, float val)
 {
-    unsigned int* uaddr{reinterpret_cast<unsigned int*>(uaddr)};
+    unsigned int* uaddr{reinterpret_cast<unsigned int*>(address)};
     unsigned int old{__atomic_load_n(uaddr, __ATOMIC_RELAXED)};
     unsigned int r;
 
@@ -72,7 +72,7 @@ __device__
 inline
 double atomicAdd(double* address, double val)
 {
-    unsigned long long* uaddr{reinterpret_cast<unsigned long long*>(uaddr)};
+    unsigned long long* uaddr{reinterpret_cast<unsigned long long*>(address)};
     unsigned long long old{__atomic_load_n(uaddr, __ATOMIC_RELAXED)};
     unsigned long long r;
 
