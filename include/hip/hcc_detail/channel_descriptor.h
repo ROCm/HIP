@@ -92,6 +92,7 @@ inline hipChannelFormatDesc hipCreateChannelDesc<char2>() {
     return hipCreateChannelDesc(e, e, 0, 0, hipChannelFormatKindSigned);
 }
 
+#ifndef __GNUC__  // vector3 is the same as vector4
 template <>
 inline hipChannelFormatDesc hipCreateChannelDesc<uchar3>() {
     int e = (int)sizeof(unsigned char) * 8;
@@ -103,6 +104,7 @@ inline hipChannelFormatDesc hipCreateChannelDesc<char3>() {
     int e = (int)sizeof(signed char) * 8;
     return hipCreateChannelDesc(e, e, e, 0, hipChannelFormatKindSigned);
 }
+#endif
 
 template <>
 inline hipChannelFormatDesc hipCreateChannelDesc<uchar4>() {
@@ -152,6 +154,7 @@ inline hipChannelFormatDesc hipCreateChannelDesc<short2>() {
     return hipCreateChannelDesc(e, e, 0, 0, hipChannelFormatKindSigned);
 }
 
+#ifndef __GNUC__
 template <>
 inline hipChannelFormatDesc hipCreateChannelDesc<ushort3>() {
     int e = (int)sizeof(unsigned short) * 8;
@@ -163,6 +166,7 @@ inline hipChannelFormatDesc hipCreateChannelDesc<short3>() {
     int e = (int)sizeof(signed short) * 8;
     return hipCreateChannelDesc(e, e, e, 0, hipChannelFormatKindSigned);
 }
+#endif
 
 template <>
 inline hipChannelFormatDesc hipCreateChannelDesc<ushort4>() {
@@ -212,6 +216,7 @@ inline hipChannelFormatDesc hipCreateChannelDesc<int2>() {
     return hipCreateChannelDesc(e, e, 0, 0, hipChannelFormatKindSigned);
 }
 
+#ifndef __GNUC__
 template <>
 inline hipChannelFormatDesc hipCreateChannelDesc<uint3>() {
     int e = (int)sizeof(unsigned int) * 8;
@@ -223,6 +228,7 @@ inline hipChannelFormatDesc hipCreateChannelDesc<int3>() {
     int e = (int)sizeof(signed int) * 8;
     return hipCreateChannelDesc(e, e, e, 0, hipChannelFormatKindSigned);
 }
+#endif
 
 template <>
 inline hipChannelFormatDesc hipCreateChannelDesc<uint4>() {
@@ -254,11 +260,13 @@ inline hipChannelFormatDesc hipCreateChannelDesc<float2>() {
     return hipCreateChannelDesc(e, e, 0, 0, hipChannelFormatKindFloat);
 }
 
+#ifndef __GNUC__
 template <>
 inline hipChannelFormatDesc hipCreateChannelDesc<float3>() {
     int e = (int)sizeof(float) * 8;
     return hipCreateChannelDesc(e, e, e, 0, hipChannelFormatKindFloat);
 }
+#endif
 
 template <>
 inline hipChannelFormatDesc hipCreateChannelDesc<float4>() {
@@ -302,6 +310,7 @@ inline hipChannelFormatDesc hipCreateChannelDesc<long2>() {
     return hipCreateChannelDesc(e, e, 0, 0, hipChannelFormatKindSigned);
 }
 
+#ifndef __GNUC__
 template <>
 inline hipChannelFormatDesc hipCreateChannelDesc<ulong3>() {
     int e = (int)sizeof(unsigned long) * 8;
@@ -313,6 +322,7 @@ inline hipChannelFormatDesc hipCreateChannelDesc<long3>() {
     int e = (int)sizeof(signed long) * 8;
     return hipCreateChannelDesc(e, e, e, 0, hipChannelFormatKindSigned);
 }
+#endif
 
 template <>
 inline hipChannelFormatDesc hipCreateChannelDesc<ulong4>() {
