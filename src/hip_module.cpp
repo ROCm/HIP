@@ -84,6 +84,7 @@ string ToString(hipFunction_t v) {
     return ss.str();
 };
 
+std::string& FunctionSymbol(hipFunction_t f) { return f->_name; };
 
 #define CHECK_HSA(hsaStatus, hipStatus)                                                            \
     if (hsaStatus != HSA_STATUS_SUCCESS) {                                                         \
@@ -96,7 +97,7 @@ string ToString(hipFunction_t v) {
     }
 
 hipError_t hipModuleUnload(hipModule_t hmod) {
-    HIP_INIT_API(hmod);
+    HIP_INIT_CB_API(hipModuleUnload, hmod);
 
     // TODO - improve this synchronization so it is thread-safe.
     // Currently we want for all inflight activity to complete, but don't prevent another
@@ -228,7 +229,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, uint32_t gridDimX, uint32_t gr
                                  uint32_t gridDimZ, uint32_t blockDimX, uint32_t blockDimY,
                                  uint32_t blockDimZ, uint32_t sharedMemBytes, hipStream_t hStream,
                                  void** kernelParams, void** extra) {
-    HIP_INIT_API(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ, sharedMemBytes,
+    HIP_INIT_CB_API(hipModuleLaunchKernel, f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ, sharedMemBytes,
                  hStream, kernelParams, extra);
     return ihipLogStatus(ihipModuleLaunchKernel(
         f, blockDimX * gridDimX, blockDimY * gridDimY, gridDimZ * blockDimZ, blockDimX, blockDimY,
@@ -456,13 +457,13 @@ hipError_t ihipModuleGetFunction(hipFunction_t* func, hipModule_t hmod, const ch
 }
 
 hipError_t hipModuleGetFunction(hipFunction_t* hfunc, hipModule_t hmod, const char* name) {
-    HIP_INIT_API(hfunc, hmod, name);
+    HIP_INIT_CB_API(hipModuleGetFunction, hfunc, hmod, name);
     return ihipLogStatus(ihipModuleGetFunction(hfunc, hmod, name));
 }
 
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
                               const char* name) {
-    HIP_INIT_API(dptr, bytes, hmod, name);
+    HIP_INIT_CB_API(hipModuleGetGlobal, dptr, bytes, hmod, name);
 
     if (!dptr || !bytes) return ihipLogStatus(hipErrorInvalidValue);
 
@@ -475,7 +476,7 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t h
 }
 
 hipError_t hipModuleLoad(hipModule_t* module, const char* fname) {
-    HIP_INIT_API(module, fname);
+    HIP_INIT_CB_API(hipModuleLoad, module, fname);
 
     if (!fname) return ihipLogStatus(hipErrorInvalidValue);
 
@@ -489,7 +490,7 @@ hipError_t hipModuleLoad(hipModule_t* module, const char* fname) {
 }
 
 hipError_t hipModuleLoadData(hipModule_t* module, const void* image) {
-    HIP_INIT_API(module, image);
+    HIP_INIT_CB_API(hipModuleLoadData, module, image);
 
     if (!module) return ihipLogStatus(hipErrorInvalidValue);
 
@@ -515,7 +516,7 @@ hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* image, unsigned 
 }
 
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name) {
-    HIP_INIT_API(texRef, hmod, name);
+    HIP_INIT_CB_API(hipModuleGetTexRef, texRef, hmod, name);
 
     hipError_t ret = hipErrorNotFound;
     if (!texRef) return ihipLogStatus(hipErrorInvalidValue);
