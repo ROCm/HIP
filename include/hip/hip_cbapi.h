@@ -4,8 +4,6 @@
 
 #include <hip/hip_cbstr.h>
 
-#include <mutex>
-
 // HIP API callbacks table
 struct hip_cb_table_entry_t {
   hip_cb_act_t act;
