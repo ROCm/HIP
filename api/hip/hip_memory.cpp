@@ -1302,7 +1302,7 @@ hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannel
 hipError_t hipHostGetDevicePointer(void** devicePointer, void* hostPointer, unsigned flags) {
   HIP_INIT_API(devicePointer, hostPointer, flags);
 
-  if (!amd::SvmBuffer::malloced(hostPointer)) {
+  if (!amd::MemObjMap::FindMemObj(hostPointer)) {
     return hipErrorInvalidValue;
   }
   // right now we have SVM
