@@ -30,7 +30,7 @@ THE SOFTWARE.
 //---
 
 hipError_t hipGetLastError() {
-    HIP_INIT_API();
+    HIP_INIT_CB_API(hipGetLastError);
 
     // Return last error, but then reset the state:
     hipError_t e = ihipLogStatus(tls_lastHipError);
@@ -39,7 +39,7 @@ hipError_t hipGetLastError() {
 }
 
 hipError_t hipPeekAtLastError() {
-    HIP_INIT_API();
+    HIP_INIT_CB_API(hipPeekAtLastError);
 
     // peek at last error, but don't reset it.
     return ihipLogStatus(tls_lastHipError);

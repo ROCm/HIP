@@ -188,6 +188,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/grid_launch.cpp
         src/hip_texture.cpp
         src/hip_surface.cpp
+        src/hip_intercept.cpp
         src/env.cpp
         src/program_state.cpp)
 

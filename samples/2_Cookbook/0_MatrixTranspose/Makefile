@@ -22,7 +22,7 @@ CXX=$(HIPCC)
 
 
 $(EXECUTABLE): $(OBJECTS)
-	$(HIPCC) $(OBJECTS) -o $@
+	$(HIPCC) $(OBJECTS) -o $@ -lmcwamp_hsa
 
 
 test: $(EXECUTABLE)
