@@ -94,6 +94,9 @@ THE SOFTWARE.
         ret.y = lhs.y * rhs;                                                                       \
         return ret;                                                                                \
     }
+#define MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(ComplexT, T)                                      \
+    ComplexT(T val) : x(val), y(val) {}                                                            \
+    ComplexT(T val1, T val2) : x(val1), y(val2) {}
 
 #endif
 
