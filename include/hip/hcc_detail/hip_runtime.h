@@ -657,6 +657,14 @@ __DEVICE__ void inline __assert_fail(const char * __assertion,
 }
 
 extern "C" __device__ __attribute__((noduplicate)) void __syncthreads();
+extern "C" __device__ void *__amdgcn_get_dynamicgroupbaseptr();
+
+// Macro to replace extern __shared__ declarations
+// to local variable definitions
+#define HIP_DYNAMIC_SHARED(type, var) \
+    type* var = (type*)__amdgcn_get_dynamicgroupbaseptr();
+
+#define HIP_DYNAMIC_SHARED_ATTRIBUTE
 
 #pragma push_macro("__DEVICE__")
 
