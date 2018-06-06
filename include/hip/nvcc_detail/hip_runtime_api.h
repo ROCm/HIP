@@ -809,6 +809,9 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
         case hipDeviceAttributeIsMultiGpuBoard:
             cdattr = cudaDevAttrIsMultiGpuBoard;
             break;
+        case hipDeviceAttributeIntegrated:
+            cdattr = cudaDevAttrIntegrated;
+            break;
         default:
             cerror = cudaErrorInvalidValue;
             break;
