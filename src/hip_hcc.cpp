@@ -900,6 +900,13 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
         prop->canMapHostMemory = 0;
     }
 #endif
+    // Get profile
+    hsa_profile_t agent_profile;
+    err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_PROFILE, &agent_profile);
+    DeviceErrorCheck(err);
+    if(agent_profile == HSA_PROFILE_FULL) {
+        prop->integrated = 1;
+    }
     return e;
 }
 
