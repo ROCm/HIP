@@ -3,14 +3,10 @@
  * RUN: %t
  * HIT_END
  */
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 #include <hip/hip_runtime.h>
 #include "test_common.h"
-
-bool testResult = true;
 
 __global__ void tex2DKernel(hipSurfaceObject_t surfaceObject, hipSurfaceObject_t outputSurfObj,
                             int width, int height) {
@@ -21,10 +17,10 @@ __global__ void tex2DKernel(hipSurfaceObject_t surfaceObject, hipSurfaceObject_t
     surf2Dwrite(data, outputSurfObj, x * 4, y, hipBoundaryModeZero);
 }
 
-void runTest(int argc, char** argv);
+int runTest(int argc, char** argv);
 
 int main(int argc, char** argv) {
-    runTest(argc, argv);
+    int testResult = runTest(argc, argv);
 
     if (testResult) {
         passed();
@@ -33,7 +29,8 @@ int main(int argc, char** argv) {
     }
 }
 
-void runTest(int argc, char** argv) {
+int runTest(int argc, char** argv) {
+    int testResult = 1;
     unsigned int width = 256;
     unsigned int height = 256;
     unsigned int size = width * height * sizeof(float);
@@ -97,7 +94,7 @@ void runTest(int argc, char** argv) {
             if (hData[i * width + j] != hOutputData[i * width + j]) {
                 printf("Difference [ %d %d ]:%f ----%f\n", i, j, hData[i * width + j],
                        hOutputData[i * width + j]);
-                testResult = false;
+                testResult = 0;
                 break;
             }
         }
@@ -107,4 +104,5 @@ void runTest(int argc, char** argv) {
     hipFree(dData);
     hipFreeArray(hipArray);
     hipFreeArray(hipOutArray);
+    return testResult;
 }
