@@ -30,8 +30,8 @@ THE SOFTWARE.
 #include <hip/math_functions.h>
 #include "test_common.h"
 
-__global__ void FloatMathPrecise(hipLaunchParm lp) {
-    // int iX; //uncomment this when remqouf() is enabled again
+__global__ void FloatMathPrecise() {
+    int iX;
     float fX, fY;
 
     acosf(1.0f);
@@ -47,8 +47,8 @@ __global__ void FloatMathPrecise(hipLaunchParm lp) {
     cosf(0.0f);
     coshf(0.0f);
     cospif(0.0f);
-    // cyl_bessel_i0f(0.0f);
-    // cyl_bessel_i1f(0.0f);
+    cyl_bessel_i0f(0.0f);
+    cyl_bessel_i1f(0.0f);
     erfcf(0.0f);
     erfcinvf(2.0f);
     erfcxf(0.0f);
@@ -66,7 +66,7 @@ __global__ void FloatMathPrecise(hipLaunchParm lp) {
     fX = fmaxf(0.0f, 0.0f);
     fX = fminf(0.0f, 0.0f);
     fmodf(0.0f, 1.0f);
-    // frexpf(0.0f, &iX);
+    frexpf(0.0f, &iX);
     hypotf(1.0f, 0.0f);
     ilogbf(1.0f);
     isfinite(0.0f);
@@ -76,7 +76,7 @@ __global__ void FloatMathPrecise(hipLaunchParm lp) {
     j1f(0.0f);
     jnf(-1.0f, 1.0f);
     ldexpf(0.0f, 0);
-    // lgammaf(1.0f);
+    lgammaf(1.0f);
     llrintf(0.0f);
     llroundf(0.0f);
     log10f(1.0f);
@@ -86,10 +86,10 @@ __global__ void FloatMathPrecise(hipLaunchParm lp) {
     logf(1.0f);
     lrintf(0.0f);
     lroundf(0.0f);
-    // modff(0.0f, &fX);
+    modff(0.0f, &fX);
     fX = nanf("1");
     fX = nearbyintf(0.0f);
-    // nextafterf(0.0f);
+    nextafterf(0.0f, 0.0f);
     norm3df(1.0f, 0.0f, 0.0f);
     norm4df(1.0f, 0.0f, 0.0f, 0.0f);
     normcdff(0.0f);
@@ -99,7 +99,7 @@ __global__ void FloatMathPrecise(hipLaunchParm lp) {
     powf(1.0f, 0.0f);
     rcbrtf(1.0f);
     remainderf(2.0f, 1.0f);
-    // remquof(1.0f, 2.0f, &iX);
+    remquof(1.0f, 2.0f, &iX);
     rhypotf(0.0f, 1.0f);
     fY = rintf(1.0f);
     rnorm3df(0.0f, 0.0f, 1.0f);
@@ -127,6 +127,6 @@ __global__ void FloatMathPrecise(hipLaunchParm lp) {
 }
 
 int main() {
-    hipLaunchKernel(FloatMathPrecise, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0);
+    hipLaunchKernelGGL(FloatMathPrecise, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0);
     passed();
 }
