@@ -30,6 +30,9 @@ THE SOFTWARE.
 #endif
 
 #if defined(__clang__) && (__clang_major__ > 3)
+// workaround for tensorflow 1.8
+#define half2half2 __half2half2
+#define h2div __h2div
     typedef _Float16 _Float16_2 __attribute__((ext_vector_type(2)));
 
     struct __half_raw {
