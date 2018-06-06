@@ -1235,6 +1235,10 @@ inline static hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObjec
     return hipCUDAErrorTohipError(cudaDestroySurfaceObject(surfaceObject));
 }
 
+inline static hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDesc,
+                                           hipTextureObject_t textureObject) {
+    return hipCUDAErrorTohipError(cudaGetTextureObjectResourceDesc( pResDesc, textureObject));
+}
 #endif  //__CUDACC__
 
 #endif  // HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_API_H
