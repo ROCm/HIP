@@ -363,7 +363,7 @@ hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t heigh
         hsa_ext_image_descriptor_t imageDescriptor;
         imageDescriptor.width = *pitch;
         imageDescriptor.height = height;
-        imageDescriptor.depth = 0;  // depth;
+        imageDescriptor.depth = depth;
         imageDescriptor.array_size = 0;
         if (depth == 0)
             imageDescriptor.geometry = HSA_EXT_IMAGE_GEOMETRY_2D;
@@ -778,11 +778,11 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
     HIP_SET_DEVICE();
     hipError_t hip_status = hipSuccess;
 
-        if(array==NULL )
-        {
+    if(array==NULL )
+    {
          hip_status=hipErrorInvalidValue;
         return ihipLogStatus(hip_status);
-        }
+    }
     auto ctx = ihipGetTlsDefaultCtx();
 
     *array = (hipArray*)malloc(sizeof(hipArray));
@@ -830,7 +830,7 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
         hsa_ext_image_descriptor_t imageDescriptor;
         imageDescriptor.width = extent.width;
         imageDescriptor.height = extent.height;
-        imageDescriptor.depth = 0;
+        imageDescriptor.depth = extent.depth;
         imageDescriptor.array_size = 0;
         switch (flags) {
             case hipArrayLayered:
