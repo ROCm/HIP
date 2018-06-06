@@ -1394,7 +1394,6 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
         size_t depth;
         size_t height;
         size_t widthInBytes;
-        size_t dstWidthInbytes;
         size_t srcPitch;
         size_t dstPitch;
         void* srcPtr;
@@ -1425,13 +1424,13 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
                 srcPitch = p->srcPtr.pitch;
                 srcPtr = p->srcPtr.ptr;
                 ySize = p->srcPtr.ysize;
-                dstWidthInbytes = p->dstArray->width * byteSize;
+                dstPitch = p->dstArray->width * byteSize;
                 dstPtr = p->dstArray->data;
             } else {
                 depth = p->Depth;
                 height = p->Height;
                 widthInBytes = p->WidthInBytes;
-                dstWidthInbytes = p->dstArray->width * 4;
+                dstPitch = p->dstArray->width * 4;
                 srcPitch = p->srcPitch;
                 srcPtr = (void*)p->srcHost;
                 ySize = p->srcHeight;
@@ -1446,21 +1445,25 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
             srcPtr = p->srcPtr.ptr;
             dstPtr = p->dstPtr.ptr;
             ySize = p->srcPtr.ysize;
-            dstWidthInbytes = p->dstPtr.pitch;
+            dstPitch = p->dstPtr.pitch;
         }
         hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
         hc::completion_future marker;
         try {
-            for (int i = 0; i < depth; i++) {
-                for (int j = 0; j < height; j++) {
-                    // TODO: p->srcPos or p->dstPos are not 0.
-                    unsigned char* src =
-                        (unsigned char*)srcPtr + i * ySize * srcPitch + j * srcPitch;
-                    unsigned char* dst =
-                        (unsigned char*)dstPtr + i * height * dstWidthInbytes + j * dstWidthInbytes;
-                    stream->locked_copySync(dst, src, widthInBytes, p->kind);
+            if((widthInBytes == dstPitch) && (widthInBytes == srcPitch)) {
+                stream->locked_copySync((void*)dstPtr, (void*)srcPtr, widthInBytes*height*depth, p->kind, false);
+            } else {
+                for (int i = 0; i < depth; i++) {
+                    for (int j = 0; j < height; j++) {
+                        // TODO: p->srcPos or p->dstPos are not 0.
+                        unsigned char* src =
+                             (unsigned char*)srcPtr + i * ySize * srcPitch + j * srcPitch;
+                        unsigned char* dst =
+                             (unsigned char*)dstPtr + i * height * dstPitch + j * dstPitch;
+                        stream->locked_copySync(dst, src, widthInBytes, p->kind);
+                     }
                 }
-            }
+           }
         } catch (ihipException ex) {
             e = ex._code;
         }
