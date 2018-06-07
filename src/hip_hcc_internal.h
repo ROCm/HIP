@@ -620,13 +620,10 @@ class ihipStreamCallback_t {
    public:
     ihipStreamCallback_t(hipStream_t stream, hipStreamCallback_t callback, void* userData)
         : _stream(stream), _callback(callback), _userData(userData) {
-        _ready = false;
     };
     hipStream_t _stream;
     hipStreamCallback_t _callback;
     void* _userData;
-    std::mutex _mtx;
-    bool _ready;
 };
 
 

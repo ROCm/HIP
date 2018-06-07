@@ -23,11 +23,6 @@ THE SOFTWARE.
 #include <hc_math.hpp>
 #include "device_util.h"
 
-extern "C" float __ocml_floor_f32(float);
-extern "C" float __ocml_rint_f32(float);
-extern "C" float __ocml_ceil_f32(float);
-extern "C" float __ocml_trunc_f32(float);
-
 __device__ float __double2float_rd(double x) { return (double)x; }
 __device__ float __double2float_rn(double x) { return (double)x; }
 __device__ float __double2float_ru(double x) { return (double)x; }
