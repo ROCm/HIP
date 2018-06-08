@@ -900,6 +900,13 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
         prop->canMapHostMemory = 0;
     }
 #endif
+    // Get profile
+    hsa_profile_t agent_profile;
+    err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_PROFILE, &agent_profile);
+    DeviceErrorCheck(err);
+    if(agent_profile == HSA_PROFILE_FULL) {
+        prop->integrated = 1;
+    }
     return e;
 }
 
@@ -1444,10 +1451,6 @@ hipError_t ihipStreamSynchronize(hipStream_t stream) {
 
 void ihipStreamCallbackHandler(ihipStreamCallback_t* cb) {
     hipError_t e = hipSuccess;
-
-    // Notify hipStreamAddCallback that callback handler thread is active
-    std::lock_guard<std::mutex> guard(cb->_mtx);
-    cb->_ready = true;
 
     // Synchronize stream
     tprintf(DB_SYNC, "ihipStreamCallbackHandler wait on stream %s\n",

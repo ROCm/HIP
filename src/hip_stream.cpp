@@ -201,14 +201,5 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
     ihipStreamCallback_t* cb = new ihipStreamCallback_t(stream, callback, userData);
     std::thread(ihipStreamCallbackHandler, cb).detach();
 
-    // Wait for thread to be ready
-    cb->_mtx.lock();
-    while (cb->_ready != true) {
-        cb->_mtx.unlock();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        cb->_mtx.lock();
-    }
-    cb->_mtx.unlock();
-
     return ihipLogStatus(e);
 }

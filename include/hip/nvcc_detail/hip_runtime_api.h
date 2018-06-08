@@ -153,6 +153,10 @@ typedef struct cudaArray* hipArray_const_t;
 typedef cudaFuncAttributes hipFuncAttributes;
 #define hipMemcpy3DParms cudaMemcpy3DParms
 #define hipArrayDefault cudaArrayDefault
+#define hipArrayLayered cudaArrayLayered
+#define hipArraySurfaceLoadStore cudaArraySurfaceLoadStore
+#define hipArrayCubemap cudaArrayCubemap
+#define hipArrayTextureGather cudaArrayTextureGather
 
 typedef cudaTextureObject_t hipTextureObject_t;
 typedef cudaSurfaceObject_t hipSurfaceObject_t;
@@ -809,6 +813,9 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
         case hipDeviceAttributeIsMultiGpuBoard:
             cdattr = cudaDevAttrIsMultiGpuBoard;
             break;
+        case hipDeviceAttributeIntegrated:
+            cdattr = cudaDevAttrIntegrated;
+            break;
         default:
             cerror = cudaErrorInvalidValue;
             break;
@@ -1228,6 +1235,10 @@ inline static hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObjec
     return hipCUDAErrorTohipError(cudaDestroySurfaceObject(surfaceObject));
 }
 
+inline static hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDesc,
+                                           hipTextureObject_t textureObject) {
+    return hipCUDAErrorTohipError(cudaGetTextureObjectResourceDesc( pResDesc, textureObject));
+}
 #endif  //__CUDACC__
 
 #endif  // HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_API_H
