@@ -110,47 +110,47 @@ union TData {
 
 #define TEXTURE_RETURN_UNSIGNED return texel.u.x;
 
-#define TEXTURE_RETURN_CHAR_X return make_char1(texel.i.x);
+#define TEXTURE_RETURN_CHAR_X return char1(texel.i.x);
 
-#define TEXTURE_RETURN_UCHAR_X return make_uchar1(texel.u.x);
+#define TEXTURE_RETURN_UCHAR_X return uchar1(texel.u.x);
 
-#define TEXTURE_RETURN_SHORT_X return make_short1(texel.i.x);
+#define TEXTURE_RETURN_SHORT_X return short1(texel.i.x);
 
-#define TEXTURE_RETURN_USHORT_X return make_ushort1(texel.u.x);
+#define TEXTURE_RETURN_USHORT_X return ushort1(texel.u.x);
 
-#define TEXTURE_RETURN_INT_X return make_int1(texel.i.x);
+#define TEXTURE_RETURN_INT_X return int1(texel.i.x);
 
-#define TEXTURE_RETURN_UINT_X return make_uint1(texel.u.x);
+#define TEXTURE_RETURN_UINT_X return uint1(texel.u.x);
 
-#define TEXTURE_RETURN_FLOAT_X return make_float1(texel.f.x);
+#define TEXTURE_RETURN_FLOAT_X return float1(texel.f.x);
 
-#define TEXTURE_RETURN_CHAR_XY return make_char2(texel.i.x, texel.i.y);
+#define TEXTURE_RETURN_CHAR_XY return char2(texel.i.x, texel.i.y);
 
-#define TEXTURE_RETURN_UCHAR_XY return make_uchar2(texel.u.x, texel.u.y);
+#define TEXTURE_RETURN_UCHAR_XY return uchar2(texel.u.x, texel.u.y);
 
-#define TEXTURE_RETURN_SHORT_XY return make_short2(texel.i.x, texel.i.y);
+#define TEXTURE_RETURN_SHORT_XY return short2(texel.i.x, texel.i.y);
 
-#define TEXTURE_RETURN_USHORT_XY return make_ushort2(texel.u.x, texel.u.y);
+#define TEXTURE_RETURN_USHORT_XY return ushort2(texel.u.x, texel.u.y);
 
-#define TEXTURE_RETURN_INT_XY return make_int2(texel.i.x, texel.i.y);
+#define TEXTURE_RETURN_INT_XY return int2(texel.i.x, texel.i.y);
 
-#define TEXTURE_RETURN_UINT_XY return make_uint2(texel.u.x, texel.u.y);
+#define TEXTURE_RETURN_UINT_XY return uint2(texel.u.x, texel.u.y);
 
-#define TEXTURE_RETURN_FLOAT_XY return make_float2(texel.f.x, texel.f.y);
+#define TEXTURE_RETURN_FLOAT_XY return float2(texel.f.x, texel.f.y);
 
-#define TEXTURE_RETURN_CHAR_XYZW return make_char4(texel.i.x, texel.i.y, texel.i.z, texel.i.w);
+#define TEXTURE_RETURN_CHAR_XYZW return char4(texel.i.x, texel.i.y, texel.i.z, texel.i.w);
 
-#define TEXTURE_RETURN_UCHAR_XYZW return make_uchar4(texel.u.x, texel.u.y, texel.u.z, texel.u.w);
+#define TEXTURE_RETURN_UCHAR_XYZW return uchar4(texel.u.x, texel.u.y, texel.u.z, texel.u.w);
 
-#define TEXTURE_RETURN_SHORT_XYZW return make_short4(texel.i.x, texel.i.y, texel.i.z, texel.i.w);
+#define TEXTURE_RETURN_SHORT_XYZW return short4(texel.i.x, texel.i.y, texel.i.z, texel.i.w);
 
-#define TEXTURE_RETURN_USHORT_XYZW return make_ushort4(texel.u.x, texel.u.y, texel.u.z, texel.u.w);
+#define TEXTURE_RETURN_USHORT_XYZW return ushort4(texel.u.x, texel.u.y, texel.u.z, texel.u.w);
 
-#define TEXTURE_RETURN_INT_XYZW return make_int4(texel.i.x, texel.i.y, texel.i.z, texel.i.w);
+#define TEXTURE_RETURN_INT_XYZW return int4(texel.i.x, texel.i.y, texel.i.z, texel.i.w);
 
-#define TEXTURE_RETURN_UINT_XYZW return make_uint4(texel.u.x, texel.u.y, texel.u.z, texel.u.w);
+#define TEXTURE_RETURN_UINT_XYZW return uint4(texel.u.x, texel.u.y, texel.u.z, texel.u.w);
 
-#define TEXTURE_RETURN_FLOAT_XYZW return make_float4(texel.f.x, texel.f.y, texel.f.z, texel.f.w);
+#define TEXTURE_RETURN_FLOAT_XYZW return float4(texel.f.x, texel.f.y, texel.f.z, texel.f.w);
 
 extern "C" {
 hc::short_vector::float4::vector_value_type __ockl_image_sample_1D(unsigned int ADDRESS_SPACE_CONSTANT* i,
