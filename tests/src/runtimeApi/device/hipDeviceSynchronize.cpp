@@ -45,6 +45,7 @@ __global__ void Iter(hipLaunchParm lp, int* Ad, int num) {
 }
 
 int main() {
+#if __HCC__
     int* A[NUM_STREAMS];
     int* Ad[NUM_STREAMS];
     hipStream_t stream[NUM_STREAMS];
@@ -73,4 +74,7 @@ int main() {
     HIPCHECK(hipDeviceSynchronize());
     HIPASSERT(1 << 30 == A[NUM_STREAMS - 1][0] - 1);
     passed();
+#else
+    failed("disabled for hip-clang")
+#endif
 }
