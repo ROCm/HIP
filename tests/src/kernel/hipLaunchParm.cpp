@@ -25,8 +25,6 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 #include "test_common.h"
-#include "hip/hip_runtime_api.h"
-#include <iostream>
 
 // Struct with dummy variables to check the hipLaunchKernel()
 typedef struct hipLaunchKernelStruct {
