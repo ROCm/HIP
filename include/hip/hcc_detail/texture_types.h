@@ -70,7 +70,7 @@ enum hipTextureReadMode { hipReadModeElementType = 0, hipReadModeNormalizedFloat
 /**
  * hip texture reference
  */
-struct textureReference {
+typedef struct textureReference {
     int normalized;
     enum hipTextureFilterMode filterMode;
     enum hipTextureAddressMode addressMode[3];  // Texture address mode for up to 3 dimensions
@@ -85,12 +85,12 @@ struct textureReference {
     hipTextureObject_t textureObject;
     int numChannels;
     enum hipArray_Format format;
-};
+}textureReference;
 
 /**
  * hip texture descriptor
  */
-struct hipTextureDesc {
+typedef struct hipTextureDesc {
     enum hipTextureAddressMode addressMode[3];  // Texture address mode for up to 3 dimensions
     enum hipTextureFilterMode filterMode;
     enum hipTextureReadMode readMode;
@@ -102,6 +102,6 @@ struct hipTextureDesc {
     float mipmapLevelBias;
     float minMipmapLevelClamp;
     float maxMipmapLevelClamp;
-};
+}hipTextureDesc;
 
 #endif

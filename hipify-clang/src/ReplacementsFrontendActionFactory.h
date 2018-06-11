@@ -17,9 +17,12 @@ template <typename T>
 class ReplacementsFrontendActionFactory : public ct::FrontendActionFactory {
     ct::Replacements* replacements;
 
-   public:
-    explicit ReplacementsFrontendActionFactory(ct::Replacements* r)
-        : ct::FrontendActionFactory(), replacements(r) {}
+public:
+    explicit ReplacementsFrontendActionFactory(ct::Replacements* r):
+        ct::FrontendActionFactory(),
+        replacements(r) {}
 
-    clang::FrontendAction* create() override { return new T(replacements); }
+    clang::FrontendAction* create() override {
+        return new T(replacements);
+    }
 };

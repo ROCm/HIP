@@ -29,6 +29,20 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_RUNTIME_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_RUNTIME_H
 
+#if defined(__HCC__)
+#define __HCC_OR_HIP_CLANG__ 1
+#define __HCC_ONLY__ 1
+#define __HIP_CLANG_ONLY__ 0
+#elif defined(__clang__) && defined(__HIP__)
+#define __HCC_OR_HIP_CLANG__ 1
+#define __HCC_ONLY__ 0
+#define __HIP_CLANG_ONLY__ 1
+#else
+#define __HCC_OR_HIP_CLANG__ 0
+#define __HCC_ONLY__ 0
+#define __HIP_CLANG_ONLY__ 0
+#endif
+
 //---
 // Top part of file can be compiled with any compiler
 
@@ -41,15 +55,16 @@ THE SOFTWARE.
 #include <stddef.h>
 #endif  //__cplusplus
 
-#if __HCC__
+#if __HCC_OR_HIP_CLANG__
 
 // Define NVCC_COMPAT for CUDA compatibility
 #define NVCC_COMPAT
 #define CUDA_SUCCESS hipSuccess
 
 #include <hip/hip_runtime_api.h>
+#endif  // __HCC_OR_HIP_CLANG__
 
-
+#if __HCC__
 // define HIP_ENABLE_PRINTF to enable printf
 #ifdef HIP_ENABLE_PRINTF
 #define HCC_ENABLE_ACCELERATOR_PRINTF 1
@@ -163,6 +178,10 @@ extern int HIP_TRACE_API;
 #elif defined(__STDC_VERSION__)
 #define __HCC_C__
 #endif
+
+#endif  // defined __HCC__
+
+#if __HCC_OR_HIP_CLANG__
 
 // TODO - hipify-clang - change to use the function call.
 //#define warpSize hc::__wavesize()
@@ -371,6 +390,10 @@ __device__ void __threadfence_system(void);
  * @}
  */
 
+#endif  // __HCC_OR_HIP_CLANG__
+
+#if defined __HCC__
+
 template <
     typename std::common_type<decltype(hc_get_group_id), decltype(hc_get_group_size),
                               decltype(hc_get_num_groups), decltype(hc_get_workitem_id)>::type f>
@@ -414,6 +437,8 @@ static constexpr Coordinates<hc_get_workitem_id> threadIdx;
 #define hipGridDim_y (hc_get_num_groups(1))
 #define hipGridDim_z (hc_get_num_groups(2))
 
+#endif // defined __HCC__
+#if __HCC_OR_HIP_CLANG__
 extern "C" __device__ void* __hip_hc_memcpy(void* dst, const void* src, size_t size);
 extern "C" __device__ void* __hip_hc_memset(void* ptr, uint8_t val, size_t size);
 extern "C" __device__ void* __hip_hc_malloc(size_t);
@@ -446,7 +471,9 @@ static inline __device__ void printf(const char* format, All... all) {}
 #endif
 
 #endif
+#endif //__HCC_OR_HIP_CLANG__
 
+#ifdef __HCC__
 
 #define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
 
@@ -514,7 +541,9 @@ extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, gri
  *   @}
  */
 
-
+//
+// hip-clang functions
+//
 #elif defined(__clang__) && defined(__HIP__)
 
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
@@ -534,19 +563,67 @@ typedef int hipLaunchParm;
 
 #include <hip/hip_runtime_api.h>
 
-#if defined(__cplusplus)
-extern "C" {
-#endif /*__cplusplus*/
+#pragma push_macro("__DEVICE__")
+#define __DEVICE__ static __device__ __forceinline__
 
-hipError_t hipConfigureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem, hipStream_t stream);
-hipError_t hipSetupArgument(const void* arg, size_t size, size_t offset);
-hipError_t hipLaunchByPtr(const void* func);
+extern "C" __device__ size_t __ockl_get_local_id(uint);
+__DEVICE__ uint __hip_get_thread_idx_x() { return __ockl_get_local_id(0); }
+__DEVICE__ uint __hip_get_thread_idx_y() { return __ockl_get_local_id(1); }
+__DEVICE__ uint __hip_get_thread_idx_z() { return __ockl_get_local_id(2); }
 
-#if defined(__cplusplus)
-}
-#endif /*__cplusplus*/
+extern "C" __device__ size_t __ockl_get_group_id(uint);
+__DEVICE__ uint __hip_get_block_idx_x() { return __ockl_get_group_id(0); }
+__DEVICE__ uint __hip_get_block_idx_y() { return __ockl_get_group_id(1); }
+__DEVICE__ uint __hip_get_block_idx_z() { return __ockl_get_group_id(2); }
 
-#include <__clang_cuda_builtin_vars.h>
+extern "C" __device__ size_t __ockl_get_local_size(uint);
+__DEVICE__ uint __hip_get_block_dim_x() { return __ockl_get_local_size(0); }
+__DEVICE__ uint __hip_get_block_dim_y() { return __ockl_get_local_size(1); }
+__DEVICE__ uint __hip_get_block_dim_z() { return __ockl_get_local_size(2); }
+
+extern "C" __device__ size_t __ockl_get_num_groups(uint);
+__DEVICE__ uint __hip_get_grid_dim_x() { return __ockl_get_num_groups(0); }
+__DEVICE__ uint __hip_get_grid_dim_y() { return __ockl_get_num_groups(1); }
+__DEVICE__ uint __hip_get_grid_dim_z() { return __ockl_get_num_groups(2); }
+
+#define __HIP_DEVICE_BUILTIN(DIMENSION, FUNCTION)               \
+  __declspec(property(get = __get_##DIMENSION)) uint DIMENSION; \
+  __DEVICE__ uint __get_##DIMENSION(void) {                     \
+    return FUNCTION;                                            \
+  }
+
+struct __hip_builtin_threadIdx_t {
+  __HIP_DEVICE_BUILTIN(x,__hip_get_thread_idx_x());
+  __HIP_DEVICE_BUILTIN(y,__hip_get_thread_idx_y());
+  __HIP_DEVICE_BUILTIN(z,__hip_get_thread_idx_z());
+};
+
+struct __hip_builtin_blockIdx_t {
+  __HIP_DEVICE_BUILTIN(x,__hip_get_block_idx_x());
+  __HIP_DEVICE_BUILTIN(y,__hip_get_block_idx_y());
+  __HIP_DEVICE_BUILTIN(z,__hip_get_block_idx_z());
+};
+
+struct __hip_builtin_blockDim_t {
+  __HIP_DEVICE_BUILTIN(x,__hip_get_block_dim_x());
+  __HIP_DEVICE_BUILTIN(y,__hip_get_block_dim_y());
+  __HIP_DEVICE_BUILTIN(z,__hip_get_block_dim_z());
+};
+
+struct __hip_builtin_gridDim_t {
+  __HIP_DEVICE_BUILTIN(x,__hip_get_grid_dim_x());
+  __HIP_DEVICE_BUILTIN(y,__hip_get_grid_dim_y());
+  __HIP_DEVICE_BUILTIN(z,__hip_get_grid_dim_z());
+};
+
+#undef __HIP_DEVICE_BUILTIN
+#pragma pop_macro("__DEVICE__")
+
+extern const __device__ __attribute__((weak)) __hip_builtin_threadIdx_t threadIdx;
+extern const __device__ __attribute__((weak)) __hip_builtin_blockIdx_t blockIdx;
+extern const __device__ __attribute__((weak)) __hip_builtin_blockDim_t blockDim;
+extern const __device__ __attribute__((weak)) __hip_builtin_gridDim_t gridDim;
+
 
 #define hipThreadIdx_x threadIdx.x
 #define hipThreadIdx_y threadIdx.y
@@ -563,6 +640,27 @@ hipError_t hipLaunchByPtr(const void* func);
 #define hipGridDim_x gridDim.x
 #define hipGridDim_y gridDim.y
 #define hipGridDim_z gridDim.z
+
+#pragma push_macro("__DEVICE__")
+#define __DEVICE__ extern "C" __device__ __attribute__((always_inline)) \
+  __attribute__((weak))
+
+__DEVICE__ void __device_trap() __asm("llvm.trap");
+
+__DEVICE__ void inline __assert_fail(const char * __assertion,
+                                     const char *__file,
+                                     unsigned int __line,
+                                     const char *__function)
+{
+    // Ignore all the args for now.
+    __device_trap();
+}
+
+extern "C" __device__ __attribute__((noduplicate)) void __syncthreads();
+
+#pragma push_macro("__DEVICE__")
+
+#include <hip/hcc_detail/math_functions.h>
 
 #endif
 

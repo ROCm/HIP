@@ -114,20 +114,21 @@ typedef struct hipDeviceProp_t {
     int isMultiGpuBoard;                      ///< 1 if device is on a multi-GPU board, 0 if not.
     int canMapHostMemory;                     ///< Check whether HIP can map host memory
     int gcnArch;                              ///< AMD GCN Arch Value. Eg: 803, 701
+    int integrated;            ///< APU vs dGPU
 } hipDeviceProp_t;
 
 
 /**
  * Memory type (for pointer attributes)
  */
-enum hipMemoryType {
+typedef enum hipMemoryType {
     hipMemoryTypeHost,    ///< Memory is physically located on host
     hipMemoryTypeDevice,  ///< Memory is physically located on device. (see deviceId for specific
                           ///< device)
     hipMemoryTypeArray,  ///< Array memory, physically located on device. (see deviceId for specific
                          ///< device)
     hipMemoryTypeUnified  ///< Not used currently
-};
+}hipMemoryType;
 
 
 /**
@@ -243,6 +244,8 @@ typedef enum __HIP_NODISCARD hipError_t {
         1062,  ///< Produced when trying to unlock a non-page-locked memory.
     hipErrorMapBufferObjectFailed =
         1071,    ///< Produced when the IPC memory attach failed from ROCr.
+    hipErrorAssert =
+        1081,    ///< Produced when the kernel calls assert.
     hipErrorTbd  ///< Marker that more error codes are needed.
 } hipError_t;
 
@@ -287,6 +290,7 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeMaxSharedMemoryPerMultiprocessor,  ///< Maximum Shared Memory Per
                                                          ///< Multiprocessor.
     hipDeviceAttributeIsMultiGpuBoard,                   ///< Multiple GPU devices.
+    hipDeviceAttributeIntegrated,                        ///< iGPU
 } hipDeviceAttribute_t;
 
 

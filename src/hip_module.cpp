@@ -27,10 +27,11 @@ THE SOFTWARE.
 #include "hsa_helpers.hpp"
 #include "trace_helper.h"
 
+#include <hsa/amd_hsa_kernel_code.h>
 #include <hsa/hsa.h>
 #include <hsa/hsa_ext_amd.h>
-#include <hsa/amd_hsa_kernel_code.h>
 
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
@@ -71,9 +72,8 @@ struct ihipKernArgInfo {
 map<string, ihipKernArgInfo> kernelArguments;
 
 struct ihipModuleSymbol_t {
-    uint64_t _object;  // The kernel object.
-    uint32_t _groupSegmentSize;
-    uint32_t _privateSegmentSize;
+    uint64_t _object{};  // The kernel object.
+    amd_kernel_code_t const* _header{};
     string _name;  // TODO - review for performance cost.  Name is just used for debug.
 };
 
@@ -179,8 +179,10 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
         aql.grid_size_x = globalWorkSizeX;
         aql.grid_size_y = globalWorkSizeY;
         aql.grid_size_z = globalWorkSizeZ;
-        aql.group_segment_size = f->_groupSegmentSize + sharedMemBytes;
-        aql.private_segment_size = f->_privateSegmentSize;
+        aql.group_segment_size =
+            f->_header->workgroup_group_segment_byte_size + sharedMemBytes;
+        aql.private_segment_size =
+            f->_header->workitem_private_segment_byte_size;
         aql.kernel_object = f->_object;
         aql.setup = 3 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
         aql.header =
@@ -429,30 +431,27 @@ string code_object_blob_for_agent(const void* maybe_bundled_code, hsa_agent_t ag
 }  // namespace
 
 hipError_t ihipModuleGetFunction(hipFunction_t* func, hipModule_t hmod, const char* name) {
-    HIP_INIT_API(func, hmod, name);
 
-    if (!func || !name) return ihipLogStatus(hipErrorInvalidValue);
+    if (!func || !name) return hipErrorInvalidValue;
 
     auto ctx = ihipGetTlsDefaultCtx();
 
-    if (!ctx) return ihipLogStatus(hipErrorInvalidContext);
-
-    hipError_t ret = hipSuccess;
+    if (!ctx) return hipErrorInvalidContext;
 
     *func = new ihipModuleSymbol_t;
 
-    if (!*func) return ihipLogStatus(hipErrorInvalidValue);
+    if (!*func) return hipErrorInvalidValue;
 
     auto kernel = find_kernel_by_name(hmod->executable, name);
 
-    if (kernel.handle == 0u) return ihipLogStatus(hipErrorNotFound);
+    if (kernel.handle == 0u) return hipErrorNotFound;
 
-    (*func)->_object = kernel_object(kernel);
-    (*func)->_groupSegmentSize = group_size(kernel);
-    (*func)->_privateSegmentSize = private_size(kernel);
-    (*func)->_name = name;
+    // TODO: refactor the whole ihipThisThat, which is a mess and yields the
+    //       below, due to hipFunction_t being a pointer to ihipModuleSymbol_t.
+    func[0][0] = *static_cast<hipFunction_t>(
+        Kernel_descriptor{kernel_object(kernel), name});
 
-    return ihipLogStatus(hipSuccess);
+    return hipSuccess;
 }
 
 hipError_t hipModuleGetFunction(hipFunction_t* hfunc, hipModule_t hmod, const char* name) {
@@ -474,6 +473,90 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t h
     return ihipLogStatus(r);
 }
 
+namespace
+{
+    inline
+    hipFuncAttributes make_function_attributes(const amd_kernel_code_t& header)
+    {
+        hipFuncAttributes r{};
+
+        hipDeviceProp_t prop{};
+        hipGetDeviceProperties(
+            &prop, ihipGetTlsDefaultCtx()->getDevice()->_deviceId);
+        // TODO: at the moment there is no way to query the count of registers
+        //       available per CU, therefore we hardcode it to 64 KiRegisters.
+        prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
+        
+        r.localSizeBytes = header.workitem_private_segment_byte_size;
+        r.sharedSizeBytes = header.workgroup_group_segment_byte_size;
+        r.maxDynamicSharedSizeBytes =
+            prop.sharedMemPerBlock - r.sharedSizeBytes;
+        r.numRegs = header.workitem_vgpr_count;
+        r.maxThreadsPerBlock = r.numRegs ?
+            std::min(prop.maxThreadsPerBlock, prop.regsPerBlock / r.numRegs) :
+            prop.maxThreadsPerBlock;
+        r.binaryVersion =
+            header.amd_machine_version_major * 10 +
+            header.amd_machine_version_minor;
+        r.ptxVersion = prop.major * 10 + prop.minor; // HIP currently presents itself as PTX 3.0.
+
+        return r;
+    }
+}
+
+hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
+{
+    if (!attr) return hipErrorInvalidValue;
+    if (!func) return hipErrorInvalidDeviceFunction;
+
+    const auto it0 = functions().find(reinterpret_cast<uintptr_t>(func));
+
+    if (it0 == functions().cend()) return hipErrorInvalidDeviceFunction;
+
+    auto agent = this_agent();
+    const auto it1 = find_if(
+        it0->second.cbegin(),
+        it0->second.cend(),
+        [=](const pair<hsa_agent_t, Kernel_descriptor>& x) {
+        return x.first == agent;
+    });
+
+    if (it1 == it0->second.cend()) return hipErrorInvalidDeviceFunction;
+
+    const auto header = static_cast<hipFunction_t>(it1->second)->_header;
+
+    if (!header) throw runtime_error{"Ill-formed Kernel_descriptor."};
+
+    *attr = make_function_attributes(*header);
+
+    return hipSuccess;
+}
+
+hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
+
+    if (!module) return hipErrorInvalidValue;
+
+    *module = new ihipModule_t;
+
+    auto ctx = ihipGetTlsDefaultCtx();
+    if (!ctx) return hipErrorInvalidContext;
+
+    hsa_executable_create_alt(HSA_PROFILE_FULL, HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT, nullptr,
+                              &(*module)->executable);
+
+    auto tmp = code_object_blob_for_agent(image, this_agent());
+
+    (*module)->executable = hip_impl::load_executable(
+        tmp.empty() ? read_elf_file_as_string(image) : tmp, (*module)->executable, this_agent());
+
+    return (*module)->executable.handle ? hipSuccess : hipErrorUnknown;
+}
+
+hipError_t hipModuleLoadData(hipModule_t* module, const void* image) {
+    HIP_INIT_API(module, image);
+    return ihipLogStatus(ihipModuleLoadData(module,image));
+}
+
 hipError_t hipModuleLoad(hipModule_t* module, const char* fname) {
     HIP_INIT_API(module, fname);
 
@@ -485,33 +568,13 @@ hipError_t hipModuleLoad(hipModule_t* module, const char* fname) {
 
     vector<char> tmp{istreambuf_iterator<char>{file}, istreambuf_iterator<char>{}};
 
-    return hipModuleLoadData(module, tmp.data());
-}
-
-hipError_t hipModuleLoadData(hipModule_t* module, const void* image) {
-    HIP_INIT_API(module, image);
-
-    if (!module) return ihipLogStatus(hipErrorInvalidValue);
-
-    *module = new ihipModule_t;
-
-    auto ctx = ihipGetTlsDefaultCtx();
-    if (!ctx) return ihipLogStatus(hipErrorInvalidContext);
-
-    hsa_executable_create_alt(HSA_PROFILE_FULL, HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT, nullptr,
-                              &(*module)->executable);
-
-    auto tmp = code_object_blob_for_agent(image, this_agent());
-
-    (*module)->executable = hip_impl::load_executable(
-        tmp.empty() ? read_elf_file_as_string(image) : tmp, (*module)->executable, this_agent());
-
-    return ihipLogStatus((*module)->executable.handle ? hipSuccess : hipErrorUnknown);
+    return ihipLogStatus(ihipModuleLoadData(module, tmp.data()));
 }
 
 hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* image, unsigned int numOptions,
                                hipJitOption* options, void** optionValues) {
-    return hipModuleLoadData(module, image);
+    HIP_INIT_API(module, image, numOptions, options, optionValues);
+    return ihipLogStatus(ihipModuleLoadData(module, image));
 }
 
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name) {

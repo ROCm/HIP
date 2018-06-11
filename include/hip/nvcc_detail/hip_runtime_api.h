@@ -150,13 +150,27 @@ typedef CUfunction hipFunction_t;
 typedef CUdeviceptr hipDeviceptr_t;
 typedef struct cudaArray hipArray;
 typedef struct cudaArray* hipArray_const_t;
+typedef cudaFuncAttributes hipFuncAttributes;
+#define hipMemcpy3DParms cudaMemcpy3DParms
 #define hipArrayDefault cudaArrayDefault
+#define hipArrayLayered cudaArrayLayered
+#define hipArraySurfaceLoadStore cudaArraySurfaceLoadStore
+#define hipArrayCubemap cudaArrayCubemap
+#define hipArrayTextureGather cudaArrayTextureGather
 
 typedef cudaTextureObject_t hipTextureObject_t;
 typedef cudaSurfaceObject_t hipSurfaceObject_t;
-#define hipTextureType2D cudaTextureType2D;
+#define hipTextureType1D cudaTextureType1D
+#define hipTextureType1DLayered cudaTextureType1DLayered
+#define hipTextureType2D cudaTextureType2D
+#define hipTextureType3D cudaTextureType3D
 #define hipDeviceMapHost cudaDeviceMapHost
 
+#define hipExtent cudaExtent
+#define hipPitchedPtr cudaPitchedPtr
+#define make_hipExtent make_cudaExtent
+#define make_hipPos make_cudaPos
+#define make_hipPitchedPtr make_cudaPitchedPtr
 // Flags that can be used with hipStreamCreateWithFlags
 #define hipStreamDefault cudaStreamDefault
 #define hipStreamNonBlocking cudaStreamNonBlocking
@@ -375,6 +389,10 @@ inline static hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width,
     return hipCUDAErrorTohipError(cudaMallocPitch(ptr, pitch, width, height));
 }
 
+inline static hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
+    return hipCUDAErrorTohipError(cudaMalloc3D(pitchedDevPtr, extent));
+}
+
 inline static hipError_t hipFree(void* ptr) { return hipCUDAErrorTohipError(cudaFree(ptr)); }
 
 inline static hipError_t hipMallocHost(void** ptr, size_t size)
@@ -397,6 +415,11 @@ inline static hipError_t hipMallocArray(hipArray** array, const struct hipChanne
                                         size_t width, size_t height,
                                         unsigned int flags __dparm(hipArrayDefault)) {
     return hipCUDAErrorTohipError(cudaMallocArray(array, desc, width, height, flags));
+}
+
+inline static hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc* desc,
+                            struct hipExtent extent, unsigned int flags) {
+    return hipCUDAErrorTohipError(cudaMalloc3DArray(array, desc, extent, flags));
 }
 
 inline static hipError_t hipFreeArray(hipArray* array) {
@@ -531,6 +554,11 @@ inline static hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, 
         cudaMemcpy2D(dst, dpitch, src, spitch, width, height, hipMemcpyKindToCudaMemcpyKind(kind)));
 }
 
+inline static hipError_t hipMemcpy3D(const struct hipMemcpy3DParms *p)
+{
+    return hipCUDAErrorTohipError(cudaMemcpy3D(p));
+}
+
 inline static hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch,
                                           size_t width, size_t height, hipMemcpyKind kind,
                                           hipStream_t stream) {
@@ -623,6 +651,22 @@ inline static hipError_t hipMemsetAsync(void* devPtr, int value, size_t count,
 
 inline static hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char value, size_t sizeBytes) {
     return hipCUResultTohipError(cuMemsetD8(dest, value, sizeBytes));
+}
+
+inline static hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height) {
+    return hipCUDAErrorTohipError(cudaMemset2D(dst, pitch, value, width, height));
+}
+
+inline static hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, size_t height, hipStream_t stream __dparm(0)) {
+    return hipCUDAErrorTohipError(cudaMemset2DAsync(dst, pitch, value, width, height, stream));
+}
+
+inline static hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent ){
+    return hipCUDAErrorTohipError(cudaMemset3D(pitchedDevPtr, value, extent));
+}
+
+inline static hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent, hipStream_t stream __dparm(0) ){
+    return hipCUDAErrorTohipError(cudaMemset3DAsync(pitchedDevPtr, value, extent, stream));
 }
 
 inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t* p_prop, int device) {
@@ -768,6 +812,9 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
             break;
         case hipDeviceAttributeIsMultiGpuBoard:
             cdattr = cudaDevAttrIsMultiGpuBoard;
+            break;
+        case hipDeviceAttributeIntegrated:
+            cdattr = cudaDevAttrIntegrated;
             break;
         default:
             cerror = cudaErrorInvalidValue;
@@ -1068,6 +1115,10 @@ inline static hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule
     return hipCUResultTohipError(cuModuleGetFunction(function, module, kname));
 }
 
+inline static hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func) {
+    return hipCUDAErrorTohipError(cudaFuncGetAttributes(attr, func));
+}
+
 inline static hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
                                             const char* name) {
     return hipCUResultTohipError(cuModuleGetGlobal(dptr, bytes, hmod, name));
@@ -1124,8 +1175,8 @@ inline static hipError_t hipBindTexture(size_t* offset, const struct texture<T, 
 }
 
 template <class T, int dim, enum cudaTextureReadMode readMode>
-inline static hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>* tex,
-                                        const void* devPtr, const struct hipChannelFormatDesc* desc,
+inline static hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex,
+                                        const void* devPtr, const struct hipChannelFormatDesc& desc,
                                         size_t size = UINT_MAX) {
     return hipCUDAErrorTohipError(cudaBindTexture(offset, tex, devPtr, desc, size));
 }
@@ -1133,6 +1184,11 @@ inline static hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, r
 template <class T, int dim, enum cudaTextureReadMode readMode>
 inline static hipError_t hipUnbindTexture(struct texture<T, dim, readMode>* tex) {
     return hipCUDAErrorTohipError(cudaUnbindTexture(tex));
+}
+
+inline static hipError_t hipBindTexture(size_t* offset, textureReference* tex, const void* devPtr,
+                                        const hipChannelFormatDesc* desc, size_t size = UINT_MAX){
+    return hipCUDAErrorTohipError(cudaBindTexture(offset, tex, devPtr, desc, size));
 }
 
 template <class T, int dim, enum hipTextureReadMode readMode>
@@ -1179,6 +1235,10 @@ inline static hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObjec
     return hipCUDAErrorTohipError(cudaDestroySurfaceObject(surfaceObject));
 }
 
+inline static hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDesc,
+                                           hipTextureObject_t textureObject) {
+    return hipCUDAErrorTohipError(cudaGetTextureObjectResourceDesc( pResDesc, textureObject));
+}
 #endif  //__CUDACC__
 
 #endif  // HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_API_H

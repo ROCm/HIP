@@ -175,6 +175,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
 
     set(SOURCE_FILES_RUNTIME
         src/code_object_bundle.cpp
+        src/hip_clang.cpp
         src/hip_hcc.cpp
         src/hip_context.cpp
         src/hip_device.cpp
@@ -194,31 +195,28 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set(SOURCE_FILES_DEVICE
         src/device_util.cpp
         src/hip_ldg.cpp
-        src/hip_fp16.cpp
-        src/device_functions.cpp
-        src/math_functions.cpp)
+        src/device_functions.cpp)
 
     execute_process(COMMAND ${HCC_HOME}/bin/hcc-config --ldflags OUTPUT_VARIABLE HCC_LD_FLAGS)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${HCC_LD_FLAGS} -Wl,-Bsymbolic")
-    #find_package(LLVM HINTS ${HCC_HOME}/compiler/lib/cmake)
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --amdgpu-target=gfx701 --amdgpu-target=gfx801 --amdgpu-target=gfx802 --amdgpu-target=gfx803 --amdgpu-target=gfx900")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --amdgpu-target=gfx701 --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906")
     if(COMPILE_HIP_ATP_MARKER)
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L/opt/rocm/profiler/CXLActivityLogger/bin/x86_64 -lCXLActivityLogger")
     endif()
     add_library(hip_hcc SHARED ${SOURCE_FILES_RUNTIME})
     target_link_libraries(hip_hcc PRIVATE hc_am)
-    #target_link_libraries(hip_hcc PUBLIC LLVMAMDGPUUtils)
     add_library(hip_hcc_static STATIC ${SOURCE_FILES_RUNTIME})
     target_link_libraries(hip_hcc_static PRIVATE hc_am)
-    add_dependencies(hip_hcc_static hip_hcc)
     add_library(hip_device STATIC ${SOURCE_FILES_DEVICE})
-    add_dependencies(hip_device hip_hcc)
 
     string(REPLACE " " ";" HCC_CXX_FLAGS_LIST ${HCC_CXX_FLAGS})
     foreach(TARGET hip_hcc hip_hcc_static hip_device)
         target_include_directories(${TARGET} SYSTEM INTERFACE $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/include>;${HSA_PATH}/include)
     endforeach()
-    target_link_libraries(hip_hcc INTERFACE hcc::hccrt;hcc::hc_am)
+    add_library(host INTERFACE)
+    target_link_libraries(host INTERFACE hip_hcc)
+    add_library(device INTERFACE)
+    target_link_libraries(device INTERFACE host hip_device hcc::hccrt hcc::hc_am)
 
     # Generate .hipInfo
     file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
@@ -240,7 +238,7 @@ endif()
 # Install hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
     install(TARGETS hip_hcc_static hip_hcc hip_device DESTINATION lib)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_hc.ll ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_hc_gfx803.ll DESTINATION lib)
+    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_hc.ll DESTINATION lib)
 
     # Install .hipInfo
     install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)
@@ -268,7 +266,7 @@ set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
 set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
 
 if(HIP_PLATFORM STREQUAL "hcc")
-    install(TARGETS hip_hcc_static hip_hcc hip_device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
+    install(TARGETS hip_hcc_static hip_hcc hip_device host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
     install(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
     include(CMakePackageConfigHelpers)
 
@@ -308,7 +306,7 @@ add_custom_target(pkg_hip_base COMMAND ${CMAKE_COMMAND} .
     COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
     COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
     WORKING_DIRECTORY ${BUILD_DIR}
-)
+    DEPENDS lpl ca)
 
 # Packaging needs to wait for hipify-clang to build if it's enabled...
 if (BUILD_HIPIFY_CLANG)
