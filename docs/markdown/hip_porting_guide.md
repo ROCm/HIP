@@ -393,7 +393,7 @@ The hcc path provides an empty cuda.h file. Some existing Cuda programs include 
 Many existing Cuda projects use the ".cu" and ".cuh" file extensions to indicate code that should be run through the nvcc compiler. 
 For quick HIP ports, leaving these file extensions unchanged is often easier, as it minimizes the work required to change file names in the directory and #include statements in the files.
 
-For new projects or ports which can be re-factored, we recommend the use of the extension ".hip.cpp" for header files, and
+For new projects or ports which can be re-factored, we recommend the use of the extension ".hip.cpp" for source files, and
 ".hip.h" or ".hip.hpp" for header files.
 This indicates that the code is standard C++ code, but also provides a unique indication for make tools to
 run hipcc when appropriate.
