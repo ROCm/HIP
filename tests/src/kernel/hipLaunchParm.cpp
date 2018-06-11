@@ -28,8 +28,14 @@ THE SOFTWARE.
 #include "hip/hip_runtime_api.h"
 #include <iostream>
 
-__global__ void vAdd(hipLaunchParm lp, float* a) {}
+// Struct with dummy variables to check the hipLaunchKernel()
+typedef struct hipLaunchKernelStruct {
+    int i;
+    float f;
+} hipLaunchKernelStruct_t;
 
+__global__ void vAdd(hipLaunchParm lp, float* a) {}
+__global__ void hipLaunchKernelStructFunc(hipLaunchParm lp, hipLaunchKernelStruct_t* hipLaunchKernelStruct_) {}
 
 //---
 // Some wrapper macro for testing:
@@ -64,13 +70,16 @@ __global__ void vAdd(hipLaunchParm lp, float* a) {}
 
 int main() {
     float* Ad;
+    hipLaunchKernelStruct_t* hipLaunchKernelStruct_;
     hipMalloc((void**)&Ad, 1024);
+    hipMalloc((void**)&hipLaunchKernelStruct_, 1024);
 
     // Test the different hipLaunchParm options:
     hipLaunchKernel(vAdd, size_t(1024), 1, 0, 0, Ad);
     hipLaunchKernel(vAdd, 1024, dim3(1), 0, 0, Ad);
     hipLaunchKernel(vAdd, dim3(1024), 1, 0, 0, Ad);
     hipLaunchKernel(vAdd, dim3(1024), dim3(1), 0, 0, Ad);
+    hipLaunchKernel(hipLaunchKernelStructFunc, dim3(1024), dim3(1), 0, 0, hipLaunchKernelStruct_);
 
     // Test case with hipLaunchKernel inside another macro:
     float e0;
