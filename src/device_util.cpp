@@ -144,9 +144,6 @@ __device__ void* __hip_hc_memset(void* dst, uint8_t val, size_t size) {
     return dst;
 }
 
-__device__ long long int clock64() { return (long long int)hc::__cycle_u64(); };
-__device__ clock_t clock() { return (clock_t)hc::__cycle_u64(); };
-
 // abort
 __device__ void abort() { return hc::abort(); }
 
@@ -201,10 +198,6 @@ __host__ __device__ int min(int arg1, int arg2) {
 }
 __host__ __device__ int max(int arg1, int arg2) {
     return (int)(hc::precise_math::fmax((float)arg1, (float)arg2));
-}
-
-__device__ void* __get_dynamicgroupbaseptr() {
-    return hc::get_dynamic_group_segment_base_pointer();
 }
 
 __host__ void* __get_dynamicgroupbaseptr() { return nullptr; }
