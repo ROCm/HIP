@@ -36,7 +36,7 @@ extern void getDrvChannelOrderAndType(const enum hipArray_Format Format,
                                       cl_channel_order* channelOrder,
                                       cl_channel_type* channelType);
 
-inline amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
+amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
   amd::Memory *memObj = amd::MemObjMap::FindMemObj(ptr);
   if (memObj != nullptr) {
     offset = reinterpret_cast<size_t>(ptr) - reinterpret_cast<size_t>(memObj->getSvmPtr());
