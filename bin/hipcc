@@ -377,14 +377,31 @@ foreach $arg (@ARGV)
         while (my $line = <$in>) {
             chomp $line;
             if ($line =~ m/\.a$/) {
+                my $libFile = $line;
                 my $path = abs_path($line);
                 my @objs = split ('\n', `cd $tmpdir; ar xv $path`);
+                ## Check if all files in .a are object files.
+                my $allIsObj = 1;
+                my $realObjs = "";
                 foreach my $obj (@objs) {
                     chomp $obj;
                     $obj =~ s/^x - //;
                     $obj = "$tmpdir/$obj";
-                    push (@inputs, $obj);
-                    $new_arg = "$new_arg $obj";
+                    my $fileType = `file $obj`;
+                    my $isObj = ($fileType =~ m/ELF/ or $fileType =~ m/COFF/);
+                    $allIsObj = ($allIsObj and $isObj);
+                    if ($isObj) {
+                        $realObjs = $realObjs . " " . $obj;
+                    } else {
+                        push (@inputs, $obj);
+                        $new_arg = "$new_arg $obj";
+                    }
+                }
+                if ($allIsObj) {
+                    print $out "$line\n";
+                } else {
+                    system("cd $tmpdir; ar c $libFile $realObjs");
+                    print $out "$tmpdir/$libFile\n";
                 }
             } else {
                 print $out "$line\n";
