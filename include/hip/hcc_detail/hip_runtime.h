@@ -658,21 +658,21 @@ void __assertfail(const char * __assertion,
 typedef unsigned __cl_mem_fence_flags;
 
 typedef enum __memory_scope {
-  memory_scope_work_item = __OPENCL_MEMORY_SCOPE_WORK_ITEM,
-  memory_scope_work_group = __OPENCL_MEMORY_SCOPE_WORK_GROUP,
-  memory_scope_device = __OPENCL_MEMORY_SCOPE_DEVICE,
-  memory_scope_all_svm_devices = __OPENCL_MEMORY_SCOPE_ALL_SVM_DEVICES,
-  memory_scope_sub_group = __OPENCL_MEMORY_SCOPE_SUB_GROUP
+  __memory_scope_work_item = __OPENCL_MEMORY_SCOPE_WORK_ITEM,
+  __memory_scope_work_group = __OPENCL_MEMORY_SCOPE_WORK_GROUP,
+  __memory_scope_device = __OPENCL_MEMORY_SCOPE_DEVICE,
+  __memory_scope_all_svm_devices = __OPENCL_MEMORY_SCOPE_ALL_SVM_DEVICES,
+  __memory_scope_sub_group = __OPENCL_MEMORY_SCOPE_SUB_GROUP
 } __memory_scope;
 
 // enum values aligned with what clang uses in EmitAtomicExpr()
 typedef enum __memory_order
 {
-  memory_order_relaxed = __ATOMIC_RELAXED,
-  memory_order_acquire = __ATOMIC_ACQUIRE,
-  memory_order_release = __ATOMIC_RELEASE,
-  memory_order_acq_rel = __ATOMIC_ACQ_REL,
-  memory_order_seq_cst = __ATOMIC_SEQ_CST
+  __memory_order_relaxed = __ATOMIC_RELAXED,
+  __memory_order_acquire = __ATOMIC_ACQUIRE,
+  __memory_order_release = __ATOMIC_RELEASE,
+  __memory_order_acq_rel = __ATOMIC_ACQ_REL,
+  __memory_order_seq_cst = __ATOMIC_SEQ_CST
 } __memory_order;
 
 // __llvm_fence* functions from device-libs/irif/src/fence.ll
@@ -692,21 +692,21 @@ static void hc_work_group_barrier(__cl_mem_fence_flags flags, __memory_scope sco
 {
     if (flags) {
         switch(scope) {
-          case memory_scope_work_item:        break;
-          case memory_scope_sub_group:        __llvm_fence_rel_sg(); break;
-          case memory_scope_work_group:       __llvm_fence_rel_wg(); break;
-          case memory_scope_device:           __llvm_fence_rel_dev(); break;
-          case memory_scope_all_svm_devices:  __llvm_fence_rel_sys(); break;
+          case __memory_scope_work_item:        break;
+          case __memory_scope_sub_group:        __llvm_fence_rel_sg(); break;
+          case __memory_scope_work_group:       __llvm_fence_rel_wg(); break;
+          case __memory_scope_device:           __llvm_fence_rel_dev(); break;
+          case __memory_scope_all_svm_devices:  __llvm_fence_rel_sys(); break;
         }
         //atomic_work_item_fence(flags, memory_order_release, scope);
         __builtin_amdgcn_s_barrier();
         //atomic_work_item_fence(flags, memory_order_acquire, scope);
         switch(scope) {
-          case memory_scope_work_item:        break;
-          case memory_scope_sub_group:        __llvm_fence_acq_sg(); break;
-          case memory_scope_work_group:       __llvm_fence_acq_wg(); break;
-          case memory_scope_device:           __llvm_fence_acq_dev(); break;
-          case memory_scope_all_svm_devices:  __llvm_fence_acq_sys(); break;
+          case __memory_scope_work_item:        break;
+          case __memory_scope_sub_group:        __llvm_fence_acq_sg(); break;
+          case __memory_scope_work_group:       __llvm_fence_acq_wg(); break;
+          case __memory_scope_device:           __llvm_fence_acq_dev(); break;
+          case __memory_scope_all_svm_devices:  __llvm_fence_acq_sys(); break;
         }
     } else {
         __builtin_amdgcn_s_barrier();
@@ -717,7 +717,7 @@ __device__
 inline
 static void hc_barrier(int n)
 {
-  hc_work_group_barrier((__cl_mem_fence_flags)n, memory_scope_work_group);
+  hc_work_group_barrier((__cl_mem_fence_flags)n, __memory_scope_work_group);
 }
 
 __device__
