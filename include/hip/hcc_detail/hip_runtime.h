@@ -285,11 +285,29 @@ __device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask
 __host__ __device__ int min(int arg1, int arg2);
 __host__ __device__ int max(int arg1, int arg2);
 
-extern "C" __device__ void* get_dynamic_group_segment_base_pointer();
+// Introduce local address space
+#define __local __attribute__((address_space(3)))
+__device__ inline static __local char* __to_local(unsigned x) { return (__local char*)x; }
+extern "C" __device__ void* __local_to_generic(__local void* p);
+
+__device__ unsigned __llvm_amdgcn_s_getreg(unsigned) __asm("llvm.amdgcn.s.getreg");
+
+__device__ unsigned __llvm_amdgcn_groupstaticsize() __asm("llvm.amdgcn.groupstaticsize");
 
 __device__
 inline
-void* __get_dynamicgroupbaseptr() { return get_dynamic_group_segment_base_pointer(); }
+void* __get_dynamicgroupbaseptr()
+{
+    // Get group segment base pointer.
+    unsigned lds_base = __llvm_amdgcn_s_getreg(14342) << 8;
+    __local char* base = __to_local(lds_base);
+    unsigned long long group_static_size = __llvm_amdgcn_groupstaticsize();
+    return (char*)__local_to_generic(base + group_static_size);
+}
+
+__device__ inline void *__amdgcn_get_dynamicgroupbaseptr() {
+    return __get_dynamicgroupbaseptr();
+}
 
 /**
  * CUDA 8 device function features
@@ -653,8 +671,6 @@ void __assertfail(const char * __assertion,
 // hip.amdgcn.bc - sync threads
 // extern "C" __device__ __attribute__((noduplicate)) void __syncthreads();
 #define __CLK_LOCAL_MEM_FENCE    0x01
-#define __local __attribute__((address_space(3)))
-
 typedef unsigned __cl_mem_fence_flags;
 
 typedef enum __memory_scope {
@@ -688,7 +704,7 @@ extern "C" __device__ void __llvm_fence_rel_sys(void);
 
 __device__
 inline
-static void hc_work_group_barrier(__cl_mem_fence_flags flags, __memory_scope scope)
+static void __work_group_barrier(__cl_mem_fence_flags flags, __memory_scope scope)
 {
     if (flags) {
         switch(scope) {
@@ -715,9 +731,9 @@ static void hc_work_group_barrier(__cl_mem_fence_flags flags, __memory_scope sco
 
 __device__
 inline
-static void hc_barrier(int n)
+static void __barrier(int n)
 {
-  hc_work_group_barrier((__cl_mem_fence_flags)n, __memory_scope_work_group);
+  __work_group_barrier((__cl_mem_fence_flags)n, __memory_scope_work_group);
 }
 
 __device__
@@ -725,24 +741,7 @@ inline
 __attribute__((noduplicate))
 void __syncthreads()
 {
-  hc_barrier(__CLK_LOCAL_MEM_FENCE);
-}
-
-
-__device__ unsigned __llvm_amdgcn_s_getreg(unsigned) __asm("llvm.amdgcn.s.getreg");
-
-__device__ unsigned __llvm_amdgcn_groupstaticsize() __asm("llvm.amdgcn.groupstaticsize");
-
-__device__ inline static __local char* __to_local(unsigned x) { return (__local char*)x; }
-
-__device__ inline void *__amdgcn_get_dynamicgroupbaseptr() {
-#if 0
-    // Get group segment base pointer.
-    char* base = __llvm_amdgcn_s_getreg(14342) << 8);
-    base += __llvm_amdgcn_groupstaticsize();
-    return base;
-#endif
-    return __get_dynamicgroupbaseptr();
+  __barrier(__CLK_LOCAL_MEM_FENCE);
 }
 
 // hip.amdgcn.bc - device routine
