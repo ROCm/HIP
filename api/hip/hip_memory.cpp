@@ -363,6 +363,18 @@ hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
   return status;
 }
 
+hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent) {
+  HIP_INIT_API(pitchedDevPtr, value, &extent);
+
+  void *dst = &pitchedDevPtr.ptr;
+  size_t sizeBytes = pitchedDevPtr.pitch * extent.height * extent.depth;
+
+  hip::syncStreams();
+  amd::HostQueue* queue = hip::getNullStream();
+
+  return ihipMemset(&dst, value, sizeBytes, *queue);
+}
+
 hipError_t hipArrayCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray) {
   HIP_INIT_API(array, pAllocateArray);
 

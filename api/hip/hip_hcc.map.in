@@ -101,6 +101,7 @@ global:
     hipMemsetAsync;
     hipMemset2DAsync;
     hipMemsetD8;
+    hipMemset3D;
     hipModuleGetFunction;
     hipModuleGetGlobal;
     hipModuleLaunchKernel;
