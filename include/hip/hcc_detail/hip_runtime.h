@@ -652,40 +652,62 @@ void __assertfail(const char * __assertion,
 
 // hip.amdgcn.bc - sync threads
 // extern "C" __device__ __attribute__((noduplicate)) void __syncthreads();
-#define CLK_LOCAL_MEM_FENCE    0x01
-#define local __attribute__((address_space(3)))
+#define __CLK_LOCAL_MEM_FENCE    0x01
+#define __local __attribute__((address_space(3)))
 
-typedef unsigned cl_mem_fence_flags;
+typedef unsigned __cl_mem_fence_flags;
 
-typedef enum memory_scope {
+typedef enum __memory_scope {
   memory_scope_work_item = __OPENCL_MEMORY_SCOPE_WORK_ITEM,
   memory_scope_work_group = __OPENCL_MEMORY_SCOPE_WORK_GROUP,
   memory_scope_device = __OPENCL_MEMORY_SCOPE_DEVICE,
   memory_scope_all_svm_devices = __OPENCL_MEMORY_SCOPE_ALL_SVM_DEVICES,
   memory_scope_sub_group = __OPENCL_MEMORY_SCOPE_SUB_GROUP
-} memory_scope;
+} __memory_scope;
 
 // enum values aligned with what clang uses in EmitAtomicExpr()
-typedef enum memory_order
+typedef enum __memory_order
 {
   memory_order_relaxed = __ATOMIC_RELAXED,
   memory_order_acquire = __ATOMIC_ACQUIRE,
   memory_order_release = __ATOMIC_RELEASE,
   memory_order_acq_rel = __ATOMIC_ACQ_REL,
   memory_order_seq_cst = __ATOMIC_SEQ_CST
-} memory_order;
+} __memory_order;
 
-extern "C" __device__ __attribute__((overloadable))
-void atomic_work_item_fence(cl_mem_fence_flags, memory_order, memory_scope);
+// __llvm_fence* functions from device-libs/irif/src/fence.ll
+extern "C" __device__ void __llvm_fence_acq_sg(void);
+extern "C" __device__ void __llvm_fence_acq_wg(void);
+extern "C" __device__ void __llvm_fence_acq_dev(void);
+extern "C" __device__ void __llvm_fence_acq_sys(void);
+
+extern "C" __device__ void __llvm_fence_rel_sg(void);
+extern "C" __device__ void __llvm_fence_rel_wg(void);
+extern "C" __device__ void __llvm_fence_rel_dev(void);
+extern "C" __device__ void __llvm_fence_rel_sys(void);
 
 __device__
 inline
-static void hc_work_group_barrier(cl_mem_fence_flags flags, memory_scope scope)
+static void hc_work_group_barrier(__cl_mem_fence_flags flags, __memory_scope scope)
 {
     if (flags) {
-        atomic_work_item_fence(flags, memory_order_release, scope);
+        switch(scope) {
+          case memory_scope_work_item:        break;
+          case memory_scope_sub_group:        __llvm_fence_rel_sg(); break;
+          case memory_scope_work_group:       __llvm_fence_rel_wg(); break;
+          case memory_scope_device:           __llvm_fence_rel_dev(); break;
+          case memory_scope_all_svm_devices:  __llvm_fence_rel_sys(); break;
+        }
+        //atomic_work_item_fence(flags, memory_order_release, scope);
         __builtin_amdgcn_s_barrier();
-        atomic_work_item_fence(flags, memory_order_acquire, scope);
+        //atomic_work_item_fence(flags, memory_order_acquire, scope);
+        switch(scope) {
+          case memory_scope_work_item:        break;
+          case memory_scope_sub_group:        __llvm_fence_acq_sg(); break;
+          case memory_scope_work_group:       __llvm_fence_acq_wg(); break;
+          case memory_scope_device:           __llvm_fence_acq_dev(); break;
+          case memory_scope_all_svm_devices:  __llvm_fence_acq_sys(); break;
+        }
     } else {
         __builtin_amdgcn_s_barrier();
     }
@@ -695,7 +717,7 @@ __device__
 inline
 static void hc_barrier(int n)
 {
-  hc_work_group_barrier((cl_mem_fence_flags)n, memory_scope_work_group);
+  hc_work_group_barrier((__cl_mem_fence_flags)n, memory_scope_work_group);
 }
 
 __device__
@@ -703,7 +725,7 @@ inline
 __attribute__((noduplicate))
 void __syncthreads()
 {
-  hc_barrier(CLK_LOCAL_MEM_FENCE);
+  hc_barrier(__CLK_LOCAL_MEM_FENCE);
 }
 
 
@@ -711,7 +733,7 @@ __device__ unsigned __llvm_amdgcn_s_getreg(unsigned) __asm("llvm.amdgcn.s.getreg
 
 __device__ unsigned __llvm_amdgcn_groupstaticsize() __asm("llvm.amdgcn.groupstaticsize");
 
-__device__ inline static local char* __to_local(unsigned x) { return (local char*)x; }
+__device__ inline static __local char* __to_local(unsigned x) { return (__local char*)x; }
 
 __device__ inline void *__amdgcn_get_dynamicgroupbaseptr() {
 #if 0
