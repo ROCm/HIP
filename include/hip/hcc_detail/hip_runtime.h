@@ -62,6 +62,8 @@ THE SOFTWARE.
 #define CUDA_SUCCESS hipSuccess
 
 #include <hip/hip_runtime_api.h>
+#include <hip/hcc_detail/device_library_decls.h>
+#include <hip/hcc_detail/llvm_intrinsics.h>
 #endif  // __HCC_OR_HIP_CLANG__
 
 #if __HCC__
@@ -190,9 +192,6 @@ static constexpr int warpSize = 64;
 
 #define clock_t long long int
 __device__
-unsigned long __llvm_amdgcn_s_memrealtime(void) __asm("llvm.amdgcn.s.memrealtime");
-
-__device__
 inline
 long long int __clock64() { return (long long int)__llvm_amdgcn_s_memrealtime(); }
 
@@ -221,8 +220,6 @@ int64_t __ballot64(int a) {
 }
 
 // hip.amdgcn.bc - lanemask
-extern "C" __device__ int32_t __ockl_activelane_u32(void);
-
 __device__
 inline
 int64_t __lanemask_gt()
@@ -285,27 +282,18 @@ __device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask
 __host__ __device__ int min(int arg1, int arg2);
 __host__ __device__ int max(int arg1, int arg2);
 
-// Introduce local address space
-#define __local __attribute__((address_space(3)))
-__device__ inline static __local char* __to_local(unsigned x) { return (__local char*)x; }
-extern "C" __device__ void* __local_to_generic(__local void* p);
-
-__device__ unsigned __llvm_amdgcn_s_getreg(unsigned) __asm("llvm.amdgcn.s.getreg");
-
-__device__ unsigned __llvm_amdgcn_groupstaticsize() __asm("llvm.amdgcn.groupstaticsize");
 
 __device__
 inline
 void* __get_dynamicgroupbaseptr()
 {
     // Get group segment base pointer.
-    unsigned lds_base = __llvm_amdgcn_s_getreg(14342) << 8;
-    __local char* base = __to_local(lds_base);
-    unsigned long long group_static_size = __llvm_amdgcn_groupstaticsize();
-    return (char*)__local_to_generic(base + group_static_size);
+    return (char*)__local_to_generic(__to_local(__llvm_amdgcn_groupstaticsize()));
 }
 
-__device__ inline void *__amdgcn_get_dynamicgroupbaseptr() {
+__device__
+inline
+void *__amdgcn_get_dynamicgroupbaseptr() {
     return __get_dynamicgroupbaseptr();
 }
 
@@ -384,8 +372,6 @@ __device__ void __threadfence_system(void);
  */
 
 // hip.amdgcn.bc - named sync
-__device__ void __llvm_amdgcn_s_barrier() __asm("llvm.amdgcn.s.barrier");
-
 __device__ inline void __named_sync(int a, int b) { __llvm_amdgcn_s_barrier(); }
 
 #endif  // __HCC_OR_HIP_CLANG__
@@ -669,7 +655,6 @@ void __assertfail(const char * __assertion,
 }
 
 // hip.amdgcn.bc - sync threads
-// extern "C" __device__ __attribute__((noduplicate)) void __syncthreads();
 #define __CLK_LOCAL_MEM_FENCE    0x01
 typedef unsigned __cl_mem_fence_flags;
 
@@ -690,17 +675,6 @@ typedef enum __memory_order
   __memory_order_acq_rel = __ATOMIC_ACQ_REL,
   __memory_order_seq_cst = __ATOMIC_SEQ_CST
 } __memory_order;
-
-// __llvm_fence* functions from device-libs/irif/src/fence.ll
-extern "C" __device__ void __llvm_fence_acq_sg(void);
-extern "C" __device__ void __llvm_fence_acq_wg(void);
-extern "C" __device__ void __llvm_fence_acq_dev(void);
-extern "C" __device__ void __llvm_fence_acq_sys(void);
-
-extern "C" __device__ void __llvm_fence_rel_sg(void);
-extern "C" __device__ void __llvm_fence_rel_wg(void);
-extern "C" __device__ void __llvm_fence_rel_dev(void);
-extern "C" __device__ void __llvm_fence_rel_sys(void);
 
 __device__
 inline
