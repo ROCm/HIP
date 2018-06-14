@@ -1668,6 +1668,7 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
     void *pinnedPtr=NULL;
     void *actualSrc = (void*)src;
     void *actualDest = dst;
+    stream = ihipSyncAndResolveStream(stream);
     if(kind == hipMemcpyHostToDevice ) {
         if(getLockedPointer((void*)src, spitch, &pinnedPtr) == hipSuccess ){
             isLocked = 1;
