@@ -32,15 +32,6 @@ THE SOFTWARE.
 #include "hip/hcc_detail/host_defines.h"
 
 __device__
-unsigned long __llvm_amdgcn_s_memrealtime(void) __asm("llvm.amdgcn.s.memrealtime");
-
-__device__
-unsigned __llvm_amdgcn_s_getreg(unsigned) __asm("llvm.amdgcn.s.getreg");
-
-__device__
 unsigned __llvm_amdgcn_groupstaticsize() __asm("llvm.amdgcn.groupstaticsize");
-
-__device__
-void __llvm_amdgcn_s_barrier() __asm("llvm.amdgcn.s.barrier");
 
 #endif
