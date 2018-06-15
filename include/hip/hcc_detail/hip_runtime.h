@@ -62,8 +62,6 @@ THE SOFTWARE.
 #define CUDA_SUCCESS hipSuccess
 
 #include <hip/hip_runtime_api.h>
-#include <hip/hcc_detail/device_library_decls.h>
-#include <hip/hcc_detail/llvm_intrinsics.h>
 #endif  // __HCC_OR_HIP_CLANG__
 
 #if __HCC__
@@ -190,59 +188,8 @@ extern int HIP_TRACE_API;
 //#define warpSize hc::__wavesize()
 static constexpr int warpSize = 64;
 
-#define clock_t long long int
-__device__
-inline
-long long int __clock64() { return (long long int)__llvm_amdgcn_s_memrealtime(); }
-
-__device__
-inline
-clock_t  __clock() { return (clock_t)__llvm_amdgcn_s_memrealtime(); }
-
 // abort
 __device__ void abort();
-
-// warp vote function __all __any __ballot
-__device__ int __all(int input);
-__device__ int __any(int input);
-__device__ unsigned long long int __ballot(int input);
-
-__device__
-inline
-int64_t __ballot64(int a) {
-    int64_t s;
-    // define i64 @__ballot64(i32 %a) #0 {
-    //   %b = tail call i64 asm "v_cmp_ne_i32_e64 $0, 0, $1", "=s,v"(i32 %a) #1
-    //   ret i64 %b
-    // }
-    __asm("v_cmp_ne_i32_e64 $0, 0, $1" : "=s"(s) : "v"(a));
-    return s;
-}
-
-// hip.amdgcn.bc - lanemask
-__device__
-inline
-int64_t __lanemask_gt()
-{
-    int32_t activelane = __ockl_activelane_u32();
-    int64_t ballot = __ballot64(1);
-    if (activelane != 63) {
-        int64_t tmp = (~0UL) << (activelane + 1);
-        return tmp & ballot;
-    }
-    return 0;
-}
-
-__device__
-inline
-int64_t __lanemask_lt()
-{
-    int32_t activelane = __ockl_activelane_u32();
-    int64_t ballot = __ballot64(1);
-    if (activelane == 0)
-        return 0;
-    return ballot;
-}
 
 #if __HIP_ARCH_GFX701__ == 0
 
@@ -282,20 +229,6 @@ __device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask
 __host__ __device__ int min(int arg1, int arg2);
 __host__ __device__ int max(int arg1, int arg2);
 
-
-__device__
-inline
-void* __get_dynamicgroupbaseptr()
-{
-    // Get group segment base pointer.
-    return (char*)__local_to_generic(__to_local(__llvm_amdgcn_groupstaticsize()));
-}
-
-__device__
-inline
-void *__amdgcn_get_dynamicgroupbaseptr() {
-    return __get_dynamicgroupbaseptr();
-}
 
 /**
  * CUDA 8 device function features
@@ -370,9 +303,6 @@ __device__ void __threadfence_system(void);
 /**
  * @}
  */
-
-// hip.amdgcn.bc - named sync
-__device__ inline void __named_sync(int a, int b) { __llvm_amdgcn_s_barrier(); }
 
 #endif  // __HCC_OR_HIP_CLANG__
 
@@ -497,17 +427,6 @@ extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, gri
 #endif  //__HCC_CPP__
 
 /**
- * extern __shared__
- */
-
-// Macro to replace extern __shared__ declarations
-// to local variable definitions
-#define HIP_DYNAMIC_SHARED(type, var) type* var = (type*)__get_dynamicgroupbaseptr();
-
-#define HIP_DYNAMIC_SHARED_ATTRIBUTE
-
-
-/**
  * @defgroup HIP-ENV HIP Environment Variables
  * @{
  */
@@ -624,154 +543,6 @@ extern const __device__ __attribute__((weak)) __hip_builtin_gridDim_t gridDim;
 #define hipGridDim_x gridDim.x
 #define hipGridDim_y gridDim.y
 #define hipGridDim_z gridDim.z
-
-#pragma push_macro("__DEVICE__")
-#define __DEVICE__ extern "C" __device__ __attribute__((always_inline)) \
-  __attribute__((weak))
-
-__DEVICE__ void __device_trap() __asm("llvm.trap");
-
-__DEVICE__
-inline
-void __assert_fail(const char * __assertion,
-                                     const char *__file,
-                                     unsigned int __line,
-                                     const char *__function)
-{
-    // Ignore all the args for now.
-    __device_trap();
-}
-
-__DEVICE__
-inline
-void __assertfail(const char * __assertion,
-                  const char *__file,
-                  unsigned int __line,
-                  const char *__function,
-                  size_t charsize)
-{
-    // ignore all the args for now.
-    __device_trap();
-}
-
-// hip.amdgcn.bc - sync threads
-#define __CLK_LOCAL_MEM_FENCE    0x01
-typedef unsigned __cl_mem_fence_flags;
-
-typedef enum __memory_scope {
-  __memory_scope_work_item = __OPENCL_MEMORY_SCOPE_WORK_ITEM,
-  __memory_scope_work_group = __OPENCL_MEMORY_SCOPE_WORK_GROUP,
-  __memory_scope_device = __OPENCL_MEMORY_SCOPE_DEVICE,
-  __memory_scope_all_svm_devices = __OPENCL_MEMORY_SCOPE_ALL_SVM_DEVICES,
-  __memory_scope_sub_group = __OPENCL_MEMORY_SCOPE_SUB_GROUP
-} __memory_scope;
-
-// enum values aligned with what clang uses in EmitAtomicExpr()
-typedef enum __memory_order
-{
-  __memory_order_relaxed = __ATOMIC_RELAXED,
-  __memory_order_acquire = __ATOMIC_ACQUIRE,
-  __memory_order_release = __ATOMIC_RELEASE,
-  __memory_order_acq_rel = __ATOMIC_ACQ_REL,
-  __memory_order_seq_cst = __ATOMIC_SEQ_CST
-} __memory_order;
-
-__device__
-inline
-static void __work_group_barrier(__cl_mem_fence_flags flags, __memory_scope scope)
-{
-    if (flags) {
-        switch(scope) {
-          case __memory_scope_work_item:        break;
-          case __memory_scope_sub_group:        __llvm_fence_rel_sg(); break;
-          case __memory_scope_work_group:       __llvm_fence_rel_wg(); break;
-          case __memory_scope_device:           __llvm_fence_rel_dev(); break;
-          case __memory_scope_all_svm_devices:  __llvm_fence_rel_sys(); break;
-        }
-        //atomic_work_item_fence(flags, memory_order_release, scope);
-        __builtin_amdgcn_s_barrier();
-        //atomic_work_item_fence(flags, memory_order_acquire, scope);
-        switch(scope) {
-          case __memory_scope_work_item:        break;
-          case __memory_scope_sub_group:        __llvm_fence_acq_sg(); break;
-          case __memory_scope_work_group:       __llvm_fence_acq_wg(); break;
-          case __memory_scope_device:           __llvm_fence_acq_dev(); break;
-          case __memory_scope_all_svm_devices:  __llvm_fence_acq_sys(); break;
-        }
-    } else {
-        __builtin_amdgcn_s_barrier();
-    }
-}
-
-__device__
-inline
-static void __barrier(int n)
-{
-  __work_group_barrier((__cl_mem_fence_flags)n, __memory_scope_work_group);
-}
-
-__device__
-inline
-__attribute__((noduplicate))
-void __syncthreads()
-{
-  __barrier(__CLK_LOCAL_MEM_FENCE);
-}
-
-// hip.amdgcn.bc - device routine
-/*
-   HW_ID Register bit structure
-   WAVE_ID     3:0     Wave buffer slot number. 0-9.
-   SIMD_ID     5:4     SIMD which the wave is assigned to within the CU.
-   PIPE_ID     7:6     Pipeline from which the wave was dispatched.
-   CU_ID       11:8    Compute Unit the wave is assigned to.
-   SH_ID       12      Shader Array (within an SE) the wave is assigned to.
-   SE_ID       14:13   Shader Engine the wave is assigned to.
-   TG_ID       19:16   Thread-group ID
-   VM_ID       23:20   Virtual Memory ID
-   QUEUE_ID    26:24   Queue from which this wave was dispatched.
-   STATE_ID    29:27   State ID (graphics only, not compute).
-   ME_ID       31:30   Micro-engine ID.
- */
-
-#define HW_ID               4
-
-#define HW_ID_CU_ID_SIZE    4
-#define HW_ID_CU_ID_OFFSET  8
-
-#define HW_ID_SE_ID_SIZE    2
-#define HW_ID_SE_ID_OFFSET  13
-
-/*
-   Encoding of parameter bitmask
-   HW_ID        5:0     HW_ID
-   OFFSET       10:6    Range: 0..31
-   SIZE         15:11   Range: 1..32
- */
-
-#define GETREG_IMMED(SZ,OFF,REG) (SZ << 11) | (OFF << 6) | REG
-
-__device__
-inline
-unsigned __smid(void)
-{
-    unsigned cu_id = __llvm_amdgcn_s_getreg(
-            GETREG_IMMED(HW_ID_CU_ID_SIZE, HW_ID_CU_ID_OFFSET, HW_ID));
-    unsigned se_id = __llvm_amdgcn_s_getreg(
-            GETREG_IMMED(HW_ID_SE_ID_SIZE, HW_ID_SE_ID_OFFSET, HW_ID));
-
-    /* Each shader engine has 16 CU */
-    return (se_id << HW_ID_CU_ID_SIZE) + cu_id;
-}
-
-// Macro to replace extern __shared__ declarations
-// to local variable definitions
-#define HIP_DYNAMIC_SHARED(type, var) \
-    type* var = (type*)__amdgcn_get_dynamicgroupbaseptr();
-
-#define HIP_DYNAMIC_SHARED_ATTRIBUTE
-
-#pragma push_macro("__DEVICE__")
 
 #include <hip/hcc_detail/math_functions.h>
 
