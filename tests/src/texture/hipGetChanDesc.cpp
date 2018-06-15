@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-Present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,9 +25,6 @@ THE SOFTWARE.
  * RUN: %t
  * HIT_END
  */
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 
 #include <hip/hip_runtime.h>
 #include "test_common.h"
@@ -35,9 +32,6 @@ THE SOFTWARE.
 using namespace std;
 #define R 8 //rows, height
 #define C 8 //columns, width
-
-
-texture<int, hipTextureType2D,hipReadModeElementType> tex;
 
 bool testResult = true;
 
@@ -57,83 +51,16 @@ int main(int argc, char** argv) {
 void runTest()
 {
 
-string out;
-int val[R][C],i,j;
-
-for(i=0;i<R;i++)
-    for(j=0;j<C;j++)
-	{
-	 val[i][j]=(i+1)*(j+1);
-	}
-
-
 hipChannelFormatDesc chan_test,chan_desc=hipCreateChannelDesc(32,0,0,0,hipChannelFormatKindSigned);
 
 hipArray *hipArray;
-hipMallocArray(&hipArray, &chan_desc,C,R,0);
+HIPCHECK(hipMallocArray(&hipArray, &chan_desc,C,R,0));
+HIPCHECK(hipGetChannelDesc(&chan_test,hipArray));
 
-
-hipMemcpyToArray(hipArray,0,0, val, R*C*sizeof(int), hipMemcpyHostToDevice);
-
-
-
-tex.addressMode[0]=hipAddressModeWrap;
-tex.addressMode[1]=hipAddressModeWrap;
-tex.filterMode=hipFilterModePoint;
-tex.normalized=0;
-
-hipBindTextureToArray(&tex, hipArray, &chan_desc);
-
-hipGetChannelDesc(&chan_test,hipArray);
-
-if (chan_test.x == 32)
-   {
-	if(chan_test.y == 0)	
-	 {
-         
-		if(chan_test.z == 0)	
-	 	{
-         
-			if(chan_test.z == 0)	
-	 		{
-         
-				if(chan_test.f == 0)	
-	 			{
-         			  testResult=true;
-		 		}
-				else
-		 	 	{
-			   	testResult=false;
-		   		return;
-		 		 }	
-		 	}
-			else
-	 	 	{
-		   	testResult=false;
-		   	return;
-	 		 }	
-	 	}
-		else
-	 	 {
-	   	testResult=false;
-	   	return;
-	 	 }	
-	 }
-	else
-	 {
-	   testResult=false;
-	   return;
-	  }	
-   }
+if((chan_test.x == 32)&&(chan_test.y == 0)&&(chan_test.z == 0)&&(chan_test.f == 0))
+	testResult=true;
 else
-   {
-   testResult=false;
-   return;
-   }
+	testResult=false;
 
-
-hipUnbindTexture(&tex);
-
-hipFree(hipArray);
-testResult=true;
+HIPCHECK(hipFreeArray(hipArray));
 }
