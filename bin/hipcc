@@ -391,17 +391,20 @@ foreach $arg (@ARGV)
                     my $isObj = ($fileType =~ m/ELF/ or $fileType =~ m/COFF/);
                     $allIsObj = ($allIsObj and $isObj);
                     if ($isObj) {
-                        $realObjs = $realObjs . " " . $obj;
+                        $realObjs = ($realObjs . " " . $obj);
                     } else {
                         push (@inputs, $obj);
                         $new_arg = "$new_arg $obj";
                     }
                 }
+                chomp $realObjs;
                 if ($allIsObj) {
                     print $out "$line\n";
-                } else {
-                    system("cd $tmpdir; ar c $libFile $realObjs");
-                    print $out "$tmpdir/$libFile\n";
+                } elsif ($realObjs) {
+                    my $libBaseName = basename($libFile, ".a");
+                    $libBaseName = mktemp($libBaseName . "XXXX") . ".a";
+                    system("cd $tmpdir; ar c $libBaseName $realObjs");
+                    print $out "$tmpdir/$libBaseName\n";
                 }
             } else {
                 print $out "$line\n";
