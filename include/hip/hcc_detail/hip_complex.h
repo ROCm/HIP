@@ -234,7 +234,6 @@ __device__ __host__ static inline hipFloatComplex hipCdivf(hipFloatComplex p, hi
 
 __device__ __host__ static inline float hipCabsf(hipFloatComplex z) { return sqrtf(hipCsqabsf(z)); }
 
-
 __device__ __host__ static inline double hipCreal(hipDoubleComplex z) { return z.x; }
 
 __device__ __host__ static inline double hipCimag(hipDoubleComplex z) { return z.y; }
@@ -313,5 +312,13 @@ __device__ __host__ static inline hipDoubleComplex hipCfma(hipDoubleComplex p, h
 
     return make_hipDoubleComplex(real, imag);
 }
+
+#define __DEFINE_HIP_COMPLEX_FUN(func) \
+__device__ __host__ inline float func(const hipFloatComplex& z) { return hipC##func##f(z); } \
+__device__ __host__ inline double func(const hipDoubleComplex& z) { return hipC##func(z); }
+
+__DEFINE_HIP_COMPLEX_FUN(abs)
+__DEFINE_HIP_COMPLEX_FUN(real)
+__DEFINE_HIP_COMPLEX_FUN(imag)
 
 #endif
