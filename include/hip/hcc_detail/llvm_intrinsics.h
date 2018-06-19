@@ -34,4 +34,33 @@ THE SOFTWARE.
 __device__
 unsigned __llvm_amdgcn_groupstaticsize() __asm("llvm.amdgcn.groupstaticsize");
 
+__device__
+unsigned int __llvm_bitrev_b32(unsigned int src0) __asm("llvm.bitreverse.i32");
+
+__device__
+uint64_t __llvm_bitrev_b64(uint64_t src0) __asm("llvm.bitreverse.i64");
+
+extern
+__device__
+__attribute__((const))
+unsigned int __mbcnt_lo(unsigned int x, unsigned int y) __asm("llvm.amdgcn.mbcnt.lo");
+
+extern
+__device__
+__attribute__((const))
+unsigned int __mbcnt_hi(unsigned int x, unsigned int y) __asm("llvm.amdgcn.mbcnt.hi");
+
+__device__
+int __llvm_amdgcn_ds_bpermute(int index, int src) __asm("llvm.amdgcn.ds.bpermute");
+
+__device__
+int __llvm_amdgcn_ds_permute(int index, int src) __asm("llvm.amdgcn.ds.permute");
+
+__device__
+int __llvm_amdgcn_ds_swizzle(int index, int pattern) __asm("llvm.amdgcn.ds.swizzle");
+
+__device__
+int __llvm_amdgcn_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask,
+                           bool bound_ctrl) __asm("llvm.amdgcn.mov.dpp.i32");
+
 #endif
