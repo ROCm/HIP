@@ -34,11 +34,55 @@ THE SOFTWARE.
 typedef unsigned long ulong;
 typedef unsigned int uint;
 
-extern "C" __device__ unsigned int __hip_hc_ir_umul24_int(unsigned int, unsigned int);
-extern "C" __device__ signed int __hip_hc_ir_mul24_int(signed int, signed int);
-extern "C" __device__ signed int __hip_hc_ir_mulhi_int(signed int, signed int);
-extern "C" __device__ unsigned int __hip_hc_ir_umulhi_int(unsigned int, unsigned int);
-extern "C" __device__ unsigned int __hip_hc_ir_usad_int(unsigned int, unsigned int, unsigned int);
+extern "C" __device__ inline uint __hip_hc_ir_umul24_int(uint a, uint b) {
+    // define i32 @__hip_hc_ir_umul24_int(i32 %a, i32 %b) #1 {
+    //   %1 = tail call i32 asm sideeffect "v_mul_u32_u24 $0, $1, $2","=v,v,v"(i32 %a, i32 %b)
+    //   ret i32 %1
+    // }
+    uint out;
+    __asm volatile("v_mul_u32_u24 %0, %1, %2" : "=v"(out) : "v"(a), "v"(b));
+    return out;
+}
+
+extern "C" __device__ inline int __hip_hc_ir_mul24_int(int a, int b) {
+    // define i32 @__hip_hc_ir_mul24_int(i32 %a, i32 %b) #1 {
+    //   %1 = tail call i32 asm sideeffect "v_mul_i32_i24 $0, $1, $2","=v,v,v"(i32 %a, i32 %b)
+    //   ret i32 %1
+    // }
+    int out;
+    __asm volatile("v_mul_i32_i24 %0, %1, %2" : "=v"(out) : "v"(a), "v"(b));
+    return out;
+}
+
+extern "C" __device__ inline int __hip_hc_ir_mulhi_int(int a, int b) {
+    // define i32 @__hip_hc_ir_mulhi_int(i32 %a, i32 %b) #1 {
+    //   %1 = tail call i32 asm sideeffect "v_mul_hi_i32 $0, $1, $2","=v,v,v"(i32 %a, i32 %b)
+    //   ret i32 %1
+    // }
+    int out;
+    __asm volatile("v_mul_hi_i32 %0, %1, %2" : "=v"(out) : "v"(a), "v"(b));
+    return out;
+}
+
+extern "C" __device__ inline uint __hip_hc_ir_umulhi_int(uint a, uint b) {
+    // define i32 @__hip_hc_ir_umulhi_int(i32 %a, i32 %b) #1 {
+    //   %1 = tail call i32 asm sideeffect "v_mul_hi_u32 $0, $1, $2","=v,v,v"(i32 %a, i32 %b)
+    //   ret i32 %1
+    // }
+    uint out;
+    __asm volatile("v_mul_hi_u32 %0, %1, %2" : "=v"(out) : "v"(a), "v"(b));
+    return out;
+}
+
+extern "C" __device__ inline uint __hip_hc_ir_usad_int(uint a, uint b, uint c) {
+    // define i32 @__hip_hc_ir_usad_int(i32 %a, i32 %b, i32 %c) #1 {
+    //  %1 = tail call i32 asm sideeffect "v_sad_u32 $0, $1, $2, $3","=v,v,v,v"(i32 %a, i32 %b, i32 %c)
+    //  ret i32 %1
+    // }
+    uint out;
+    __asm volatile("v_sad_u32 %0, %1, %2, %3" : "=v"(out) : "v"(a), "v"(b), "v"(c));
+    return out;
+}
 
 /*
 Integer Intrinsics
@@ -556,7 +600,7 @@ uint64_t __ballot64(int a) {
     //   %b = tail call i64 asm "v_cmp_ne_i32_e64 $0, 0, $1", "=s,v"(i32 %a) #1
     //   ret i64 %b
     // }
-    __asm("v_cmp_ne_i32_e64 $0, 0, $1" : "=s"(s) : "v"(a));
+    __asm("v_cmp_ne_i32_e64 %0, 0, %1" : "=s"(s) : "v"(a));
     return s;
 }
 
