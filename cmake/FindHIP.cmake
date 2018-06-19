@@ -265,7 +265,7 @@ endmacro()
 set(HIP_HIPCC_INCLUDE_ARGS_USER "")
 macro(HIP_INCLUDE_DIRECTORIES)
     foreach(dir ${ARGN})
-        list(APPEND HIP_HIPCC_INCLUDE_ARGS_USER -I${dir})
+        list(APPEND HIP_HIPCC_INCLUDE_ARGS_USER $<$<BOOL:${dir}>:-I${dir}>)
     endforeach()
 endmacro()
 
@@ -373,7 +373,7 @@ macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files _source_files
     list(REMOVE_DUPLICATES _hip_include_directories)
     if(_hip_include_directories)
         foreach(dir ${_hip_include_directories})
-            list(APPEND HIP_HIPCC_INCLUDE_ARGS -I${dir})
+            list(APPEND HIP_HIPCC_INCLUDE_ARGS $<$<BOOL:${dir}>:-I${dir}>)
         endforeach()
     endif()
 
