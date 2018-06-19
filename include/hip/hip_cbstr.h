@@ -141,6 +141,7 @@ enum hip_cb_id_t {
   HIP_API_ID_hipGetDevice = 125,
   HIP_API_ID_hipGetDeviceCount = 126,
   HIP_API_ID_NUMBER = 127,
+  HIP_API_ID_ANY = 128,
 };
 
 // Return HIP API string
