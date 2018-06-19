@@ -1668,6 +1668,7 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
     void *pinnedPtr=NULL;
     void *actualSrc = (void*)src;
     void *actualDest = dst;
+    stream = ihipSyncAndResolveStream(stream);
     if(kind == hipMemcpyHostToDevice ) {
         if(getLockedPointer((void*)src, spitch, &pinnedPtr) == hipSuccess ){
             isLocked = 1;
@@ -1679,9 +1680,12 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
             actualDest = pinnedPtr;
           }
     }
+#if 0
     if((width == dpitch) && (width == spitch)) {
             hip_internal::memcpyAsync(dst, src, width*height, kind, stream);
-    } else {
+    } else
+#endif
+   {
         try {
             if(!isLocked){
                 for (int i = 0; i < height; ++i) 
