@@ -237,7 +237,6 @@ endif()
 # Install hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
     install(TARGETS hip_hcc_static hip_hcc hip_device DESTINATION lib)
-    install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/hip_hc.ll DESTINATION lib)
 
     # Install .hipInfo
     install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)
