@@ -83,6 +83,10 @@ __device__ __host__ static inline hipDoubleComplex hipCsub(hipDoubleComplex p, h
     return cuCsub(p, q);
 }
 
+__device__ __host__ static inline hipDoubleComplex hipCmul(hipDoubleComplex p, hipDoubleComplex q) {
+    return cuCmul(p, q);
+}
+
 __device__ __host__ static inline hipDoubleComplex hipCdiv(hipDoubleComplex p, hipDoubleComplex q) {
     return cuCdiv(p, q);
 }
