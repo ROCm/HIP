@@ -32,6 +32,11 @@ THE SOFTWARE.
 
 extern "C" __device__ int32_t __ockl_activelane_u32(void);
 
+extern "C" __device__ float __ocml_floor_f32(float);
+extern "C" __device__ float __ocml_rint_f32(float);
+extern "C" __device__ float __ocml_ceil_f32(float);
+extern "C" __device__ float __ocml_trunc_f32(float);
+
 // Introduce local address space
 #define __local __attribute__((address_space(3)))
 __device__ inline static __local char* __to_local(unsigned x) { return (__local char*)x; }

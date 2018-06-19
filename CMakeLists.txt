@@ -194,8 +194,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
 
     set(SOURCE_FILES_DEVICE
         src/device_util.cpp
-        src/hip_ldg.cpp
-        src/device_functions.cpp)
+        src/hip_ldg.cpp)
 
     execute_process(COMMAND ${HCC_HOME}/bin/hcc-config --ldflags OUTPUT_VARIABLE HCC_LD_FLAGS)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${HCC_LD_FLAGS} -Wl,-Bsymbolic")
