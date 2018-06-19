@@ -410,7 +410,7 @@ if(${RUN_HIT} EQUAL 0)
     hit_add_directory_recursive(${HIP_SRC_PATH}/tests/src "directed_tests")
 
     # Add top-level tests to build_tests
-    add_custom_target(build_tests DEPENDS directed_tests)
+    add_custom_target(build_tests DEPENDS ${directed_tests})
 
     # Add custom target: check
     add_custom_target(check COMMAND "${CMAKE_COMMAND}" --build . --target test DEPENDS build_tests)
