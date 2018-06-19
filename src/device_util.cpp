@@ -147,23 +147,6 @@ __device__ void* __hip_hc_memset(void* dst, uint8_t val, size_t size) {
 // abort
 __device__ void abort() { return hc::abort(); }
 
-// warp vote function __all __any __ballot
-__device__ int __all(int input) { return hc::__all(input); }
-
-
-__device__ int __any(int input) {
-#ifdef NVCC_COMPAT
-    if (hc::__any(input) != 0)
-        return 1;
-    else
-        return 0;
-#else
-    return hc::__any(input);
-#endif
-}
-
-__device__ unsigned long long int __ballot(int input) { return hc::__ballot(input); }
-
 // warp shuffle functions
 __device__ int __shfl(int input, int lane, int width) { return hc::__shfl(input, lane, width); }
 
