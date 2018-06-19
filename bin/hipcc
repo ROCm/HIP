@@ -376,7 +376,7 @@ foreach $arg (@ARGV)
         open my $out, ">", $new_file or die "$new_file: $!";
         while (my $line = <$in>) {
             chomp $line;
-            if ($line =~ m/\.a$/) {
+            if ($line =~ m/\.a$/ || $line =~ m/\.lo$/) {
                 my $libFile = $line;
                 my $path = abs_path($line);
                 my @objs = split ('\n', `cd $tmpdir; ar xv $path`);
@@ -401,8 +401,8 @@ foreach $arg (@ARGV)
                 if ($allIsObj) {
                     print $out "$line\n";
                 } elsif ($realObjs) {
-                    my $libBaseName = basename($libFile, ".a");
-                    $libBaseName = mktemp($libBaseName . "XXXX") . ".a";
+                    my($libBaseName, $libDir, $libExt) = fileparse($libFile);
+                    $libBaseName = mktemp($libBaseName . "XXXX") . $libExt;
                     system("cd $tmpdir; ar c $libBaseName $realObjs");
                     print $out "$tmpdir/$libBaseName\n";
                 }
