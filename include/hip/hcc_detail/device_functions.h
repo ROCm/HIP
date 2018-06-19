@@ -585,23 +585,51 @@ void __named_sync(int a, int b) { __builtin_amdgcn_s_barrier(); }
 #endif // __HIP_DEVICE_COMPILE__
 
 // warp vote function __all __any __ballot
-__device__
-int __all(int input);
-__device__
-int __any(int input);
-__device__
-unsigned long long int __ballot(int input);
+extern "C" __device__ inline uint64_t __activelanemask_v4_b64_b1(unsigned int input) {
+    uint64_t output;
+    // define i64 @__activelanemask_v4_b64_b1(i32 %input) #5 {
+    //   %a = tail call i64 asm "v_cmp_ne_i32_e64 $0, 0, $1", "=s,v"(i32 %input) #9
+    //   ret i64 %a
+    // }
+    __asm("v_cmp_ne_i32_e64 %0, 0, %1" : "=s"(output) : "v"(input));
+    return output;
+}
 
 __device__
 inline
-uint64_t __ballot64(int a) {
-    int64_t s;
-    // define i64 @__ballot64(i32 %a) #0 {
-    //   %b = tail call i64 asm "v_cmp_ne_i32_e64 $0, 0, $1", "=s,v"(i32 %a) #1
-    //   ret i64 %b
-    // }
-    __asm("v_cmp_ne_i32_e64 %0, 0, %1" : "=s"(s) : "v"(a));
-    return s;
+unsigned int __activelanecount_u32_b1(unsigned int input) {
+    return  __popcll(__activelanemask_v4_b64_b1(input));
+}
+
+__device__
+inline
+int __all(int predicate) {
+    return __popcll(__activelanemask_v4_b64_b1(predicate)) == __activelanecount_u32_b1(1);
+}
+
+__device__
+inline
+int __any(int predicate) {
+#ifdef NVCC_COMPAT
+    if (__popcll(__activelanemask_v4_b64_b1(predicate)) != 0)
+        return 1;
+    else
+        return 0;
+#else
+    return __popcll(__activelanemask_v4_b64_b1(predicate));
+#endif
+}
+
+__device__
+inline
+unsigned long long int __ballot(int predicate) {
+    return __activelanemask_v4_b64_b1(predicate);
+}
+
+__device__
+inline
+unsigned long long int __ballot64(int predicate) {
+    return __activelanemask_v4_b64_b1(predicate);
 }
 
 // hip.amdgcn.bc - lanemask
