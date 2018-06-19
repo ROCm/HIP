@@ -471,7 +471,13 @@ macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files _source_files
                 INPUT "${custom_target_script_pregen}"
                 )
             set(main_dep DEPENDS ${source_file})
-            set(verbose_output "$(VERBOSE)")
+            if(CMAKE_GENERATOR MATCHES "Makefiles")
+                set(verbose_output "$(VERBOSE)")
+            elseif(HIP_VERBOSE_BUILD)
+                set(verbose_output ON)
+            else()
+                set(verbose_output OFF)
+            endif() 
 
             # Create up the comment string
             file(RELATIVE_PATH generated_file_relative_path "${CMAKE_BINARY_DIR}" "${generated_file}")
