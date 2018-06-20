@@ -176,9 +176,12 @@ while (@ARGV) {
 			$infile  = $file_prehip;
 			$outfile = $fileName;
 		} else {
-			system ("cp $fileName $file_prehip");
-			$infile = $file_prehip;
-			$outfile = $fileName;
+        #system ("cp $fileName $file_prehip");
+            #$infile = $file_prehip;
+			$infile = $fileName;
+			$fileName =~ s{\.[^.]+$}{};
+            my $hipName = $fileName . "_hip.cc";
+            $outfile = $hipName;
 		}
 
         open(INFILE,"<", $infile) or die "error: could not open $infile";
@@ -428,7 +431,7 @@ while (@ARGV) {
         #
         #
         $ft{'other'} += s/\bcontext_gpu\b/context_hip/g;
-        $ft{'other'} += s/\bcuda_stream\b/hip_stream/g;
+        $ft{'other'} += s/\bcuda_stream\b/context_hip/g;
         $ft{'other'} += s/CUDA/HIP/g;
 
         $countKeywords += m/__global__/;
