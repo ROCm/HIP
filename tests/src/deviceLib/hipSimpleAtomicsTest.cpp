@@ -241,7 +241,12 @@ int main(int argc, char** argv) {
 
     hipDeviceReset();
     printf("%s completed, returned %s\n", sampleName, testResult ? "OK" : "ERROR!");
-    exit(testResult ? EXIT_SUCCESS : EXIT_FAILURE);
+    
+    if (testResult) {
+      passed();
+    } else {
+      exit(EXIT_FAILURE);
+    }
 }
 
 void runTest(int argc, char** argv) {
@@ -292,5 +297,5 @@ void runTest(int argc, char** argv) {
     free(hOData);
     hipFree(dOData);
 
-    passed();
+    //passed();
 }
