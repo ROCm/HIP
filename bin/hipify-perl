@@ -424,7 +424,12 @@ while (@ARGV) {
         $ft{'other'} += s/\bcudaProfilerStart\b/hipProfilerStart/g;
         $ft{'other'} += s/\bcudaProfilerStop\b/hipProfilerStop/g;
 
-
+        #C2 Specific
+        #
+        #
+        $ft{'other'} += s/\bcontext_gpu\b/context_hip/g;
+        $ft{'other'} += s/\bcuda_stream\b/hip_stream/g;
+        $ft{'other'} += s/CUDA/HIP/g;
 
         $countKeywords += m/__global__/;
         $countKeywords += m/__shared__/;
