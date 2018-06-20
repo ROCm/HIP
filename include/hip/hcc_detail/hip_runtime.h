@@ -203,25 +203,33 @@ __device__ unsigned long long int __ballot(int input);
 #if __HIP_ARCH_GFX701__ == 0
 
 // warp shuffle functions
-#ifdef __cplusplus
-__device__ int __shfl(int input, int lane, int width = warpSize);
-__device__ int __shfl_up(int input, unsigned int lane_delta, int width = warpSize);
-__device__ int __shfl_down(int input, unsigned int lane_delta, int width = warpSize);
-__device__ int __shfl_xor(int input, int lane_mask, int width = warpSize);
-__device__ float __shfl(float input, int lane, int width = warpSize);
-__device__ float __shfl_up(float input, unsigned int lane_delta, int width = warpSize);
-__device__ float __shfl_down(float input, unsigned int lane_delta, int width = warpSize);
-__device__ float __shfl_xor(float input, int lane_mask, int width = warpSize);
-#else
-__device__ int __shfl(int input, int lane, int width);
-__device__ int __shfl_up(int input, unsigned int lane_delta, int width);
-__device__ int __shfl_down(int input, unsigned int lane_delta, int width);
-__device__ int __shfl_xor(int input, int lane_mask, int width);
-__device__ float __shfl(float input, int lane, int width);
-__device__ float __shfl_up(float input, unsigned int lane_delta, int width);
-__device__ float __shfl_down(float input, unsigned int lane_delta, int width);
-__device__ float __shfl_xor(float input, int lane_mask, int width);
-#endif  //__cplusplus
+inline __device__ int __shfl(int input, int lane, int width) { return hc::__shfl(input, lane, width); }
+
+inline __device__ int __shfl_up(int input, unsigned int lane_delta, int width) {
+    return hc::__shfl_up(input, lane_delta, width);
+}
+
+inline __device__ int __shfl_down(int input, unsigned int lane_delta, int width) {
+    return hc::__shfl_down(input, lane_delta, width);
+}
+
+inline __device__ int __shfl_xor(int input, int lane_mask, int width) {
+    return hc::__shfl_xor(input, lane_mask, width);
+}
+
+inline __device__ float __shfl(float input, int lane, int width) { return hc::__shfl(input, lane, width); }
+
+inline __device__ float __shfl_up(float input, unsigned int lane_delta, int width) {
+    return hc::__shfl_up(input, lane_delta, width);
+}
+
+inline __device__ float __shfl_down(float input, unsigned int lane_delta, int width) {
+    return hc::__shfl_down(input, lane_delta, width);
+}
+
+inline __device__ float __shfl_xor(float input, int lane_mask, int width) {
+    return hc::__shfl_xor(input, lane_mask, width);
+}
 
 __device__ unsigned __hip_ds_bpermute(int index, unsigned src);
 __device__ float __hip_ds_bpermutef(int index, float src);
