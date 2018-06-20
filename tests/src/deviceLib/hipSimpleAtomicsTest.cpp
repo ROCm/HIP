@@ -23,134 +23,37 @@ THE SOFTWARE.
  * HIT_END
  */
 
-// includes, system
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-
-
 // Includes HIP Runtime
 #include "hip/hip_runtime.h"
 #include <test_common.h>
 
+// includes, system
+#include <algorithm>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include <type_traits>
+
 #define EXIT_WAIVED 2
 
 const char* sampleName = "hipSimpleAtomicsTest";
+
+using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Auto-Verification Code
 bool testResult = true;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Declaration, forward
-void runTest(int argc, char** argv);
 
+bool computeGoldBitwise(...) {
+    return true;
+}
 
-#define min(a, b) (a) < (b) ? (a) : (b)
-#define max(a, b) (a) > (b) ? (a) : (b)
-
-int computeGold(int* gpuData, const int len) {
-    int val = 0;
-
-    for (int i = 0; i < len; ++i) {
-        val += 10;
-    }
-
-    if (val != gpuData[0]) {
-        printf("atomicAdd failed\n");
-        return false;
-    }
-
-    val = 0;
-
-    for (int i = 0; i < len; ++i) {
-        val -= 10;
-    }
-
-    if (val != gpuData[1]) {
-        printf("atomicSub failed\n");
-        return false;
-    }
-
-    bool found = false;
-
-    for (int i = 0; i < len; ++i) {
-        // third element should be a member of [0, len)
-        if (i == gpuData[2]) {
-            found = true;
-            break;
-        }
-    }
-
-    if (!found) {
-        printf("atomicExch failed\n");
-        return false;
-    }
-
-    val = -(1 << 8);
-
-    for (int i = 0; i < len; ++i) {
-        // fourth element should be len-1
-        val = max(val, i);
-    }
-
-    if (val != gpuData[3]) {
-        printf("atomicMax failed\n");
-        return false;
-    }
-
-    val = 1 << 8;
-
-    for (int i = 0; i < len; ++i) {
-        val = min(val, i);
-    }
-
-    if (val != gpuData[4]) {
-        printf("atomicMin failed\n");
-        return false;
-    }
-
-    int limit = 17;
-    val = 0;
-
-    for (int i = 0; i < len; ++i) {
-        val = (val >= limit) ? 0 : val + 1;
-    }
-
-    if (val != gpuData[5]) {
-        printf("atomicInc failed\n");
-        return false;
-    }
-
-    limit = 137;
-    val = 0;
-
-    for (int i = 0; i < len; ++i) {
-        val = ((val == 0) || (val > limit)) ? limit : val - 1;
-    }
-
-    if (val != gpuData[6]) {
-        printf("atomicDec failed\n");
-        return false;
-    }
-
-    found = false;
-
-    for (int i = 0; i < len; ++i) {
-        // eighth element should be a member of [0, len)
-        if (i == gpuData[7]) {
-            found = true;
-            break;
-        }
-    }
-
-    if (!found) {
-        printf("atomicCAS failed\n");
-        return false;
-    }
-
-    val = 0xff;
+template<typename T, typename enable_if<is_integral<T>{}>::type* = nullptr>
+bool computeGoldBitwise(T* gpuData, int len) {
+    T val = 0xff;
 
     for (int i = 0; i < len; ++i) {
         // 9th element should be 1
@@ -189,22 +92,142 @@ int computeGold(int* gpuData, const int len) {
     return true;
 }
 
-__global__ void testKernel(hipLaunchParm lp, int* g_odata) {
+template<typename T>
+bool computeGold(T* gpuData, int len) {
+    T val = 0;
+
+    for (int i = 0; i < len; ++i) {
+        val += 10;
+    }
+
+    if (val != gpuData[0]) {
+        printf("atomicAdd failed\n");
+        return false;
+    }
+
+    val = 0;
+
+    for (int i = 0; i < len; ++i) {
+        val -= 10;
+    }
+
+    if (val != gpuData[1]) {
+        printf("atomicSub failed\n");
+        return false;
+    }
+
+    bool found = false;
+
+    for (T i = 0; i < len; ++i) {
+        // third element should be a member of [0, len)
+        if (i == gpuData[2]) {
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        printf("atomicExch failed\n");
+        return false;
+    }
+
+    val = -(1 << 8);
+
+    for (T i = 0; i < len; ++i) {
+        // fourth element should be len-1
+        val = max(val, i);
+    }
+
+    if (val != gpuData[3]) {
+        printf("atomicMax failed\n");
+        return false;
+    }
+
+    val = 1 << 8;
+
+    for (T i = 0; i < len; ++i) {
+        val = min(val, i);
+    }
+
+    if (val != gpuData[4]) {
+        printf("atomicMin failed\n");
+        return false;
+    }
+
+    int limit = 17;
+    val = 0;
+
+    for (int i = 0; i < len; ++i) {
+        val = (val >= limit) ? 0 : val + 1;
+    }
+
+    if (val != gpuData[5]) {
+        printf("atomicInc failed\n");
+        return false;
+    }
+
+    limit = 137;
+    val = 0;
+
+    for (int i = 0; i < len; ++i) {
+        val = ((val == 0) || (val > limit)) ? limit : val - 1;
+    }
+
+    if (val != gpuData[6]) {
+        printf("atomicDec failed\n");
+        return false;
+    }
+
+    found = false;
+
+    for (T i = 0; i < len; ++i) {
+        // eighth element should be a member of [0, len)
+        if (i == gpuData[7]) {
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        printf("atomicCAS failed\n");
+        return false;
+    }
+
+    return computeGoldBitwise(gpuData, len);
+}
+
+__device__
+void testKernelExch(...) {}
+
+template<typename T, typename enable_if<!is_same<T, double>{}>::type* = nullptr>
+__device__
+void testKernelExch(T* g_odata) {
     // access thread id
-    const unsigned int tid = blockDim.x * blockIdx.x + threadIdx.x;
-
-    // Test various atomic instructions
-
-    // Arithmetic atomic instructions
-
-    // Atomic addition
-    atomicAdd(&g_odata[0], 10);
-
-    // Atomic subtraction (final should be 0)
-    atomicSub(&g_odata[1], 10);
+    const T tid = blockDim.x * blockIdx.x + threadIdx.x;
 
     // Atomic exchange
     atomicExch(&g_odata[2], tid);
+}
+
+__device__
+void testKernelSub(...) {}
+
+template<
+    typename T, 
+    typename enable_if<
+        is_same<T, int>{} || is_same<T, unsigned int>{}>::type* = nullptr>
+void testKernelSub(T* g_odata) {
+    // Atomic subtraction (final should be 0)
+    atomicSub(&g_odata[1], 10);
+}
+
+__device__
+void testKernelIntegral(...) {}
+
+template<typename T, typename enable_if<is_integral<T>{}>::type* = nullptr>
+__device__
+void testKernelIntegral(T* g_odata) {
+    // access thread id
+    const T tid = blockDim.x * blockIdx.x + threadIdx.x;
 
     // Atomic maximum
     atomicMax(&g_odata[3], tid);
@@ -231,20 +254,21 @@ __global__ void testKernel(hipLaunchParm lp, int* g_odata) {
 
     // Atomic XOR
     atomicXor(&g_odata[10], tid);
+
+    testKernelSub(g_odata);
 }
 
+template<typename T>
+__global__ void testKernel(T* g_odata) {
+    // Atomic addition
+    atomicAdd(&g_odata[0], 10);
 
-int main(int argc, char** argv) {
-    printf("%s starting...\n", sampleName);
-
-    runTest(argc, argv);
-
-    hipDeviceReset();
-    printf("%s completed, returned %s\n", sampleName, testResult ? "OK" : "ERROR!");
-    exit(testResult ? EXIT_SUCCESS : EXIT_FAILURE);
+    testKernelIntegral(g_odata);
+    testKernelExch(g_odata);
 }
 
-void runTest(int argc, char** argv) {
+template<typename T>
+void runTest() {
     hipDeviceProp_t deviceProp;
     deviceProp.major = 0;
     deviceProp.minor = 0;
@@ -262,10 +286,10 @@ void runTest(int argc, char** argv) {
     unsigned int numThreads = 256;
     unsigned int numBlocks = 64;
     unsigned int numData = 11;
-    unsigned int memSize = sizeof(int) * numData;
+    unsigned int memSize = sizeof(T) * numData;
 
     // allocate mem for the result on host side
-    int* hOData = (int*)malloc(memSize);
+    T* hOData = (T*)malloc(memSize);
 
     // initialize the memory
     for (unsigned int i = 0; i < numData; i++) hOData[i] = 0;
@@ -274,13 +298,14 @@ void runTest(int argc, char** argv) {
     hOData[8] = hOData[10] = 0xff;
 
     // allocate device memory for result
-    int* dOData;
+    T* dOData;
     hipMalloc((void**)&dOData, memSize);
     // copy host memory to device to initialize to zero
     hipMemcpy(dOData, hOData, memSize, hipMemcpyHostToDevice);
 
     // execute the kernel
-    hipLaunchKernel(testKernel, dim3(numBlocks), dim3(numThreads), 0, 0, dOData);
+    hipLaunchKernelGGL(
+        testKernel, dim3(numBlocks), dim3(numThreads), 0, 0, dOData);
 
     // Copy result from device to host
     hipMemcpy(hOData, dOData, memSize, hipMemcpyDeviceToHost);
@@ -293,4 +318,19 @@ void runTest(int argc, char** argv) {
     hipFree(dOData);
 
     passed();
+}
+
+
+int main(int argc, char** argv) {
+    printf("%s starting...\n", sampleName);
+
+    runTest<int>();
+    runTest<unsigned int>();
+    runTest<unsigned long long>();
+    runTest<float>();
+    runTest<double>();
+
+    hipDeviceReset();
+    printf("%s completed, returned %s\n", sampleName, testResult ? "OK" : "ERROR!");
+    exit(testResult ? EXIT_SUCCESS : EXIT_FAILURE);
 }
