@@ -34,56 +34,6 @@ THE SOFTWARE.
 typedef unsigned long ulong;
 typedef unsigned int uint;
 
-extern "C" __device__ inline uint __hip_hc_ir_umul24_int(uint a, uint b) {
-    // define i32 @__hip_hc_ir_umul24_int(i32 %a, i32 %b) #1 {
-    //   %1 = tail call i32 asm sideeffect "v_mul_u32_u24 $0, $1, $2","=v,v,v"(i32 %a, i32 %b)
-    //   ret i32 %1
-    // }
-    uint out;
-    __asm volatile("v_mul_u32_u24 %0, %1, %2" : "=v"(out) : "v"(a), "v"(b));
-    return out;
-}
-
-extern "C" __device__ inline int __hip_hc_ir_mul24_int(int a, int b) {
-    // define i32 @__hip_hc_ir_mul24_int(i32 %a, i32 %b) #1 {
-    //   %1 = tail call i32 asm sideeffect "v_mul_i32_i24 $0, $1, $2","=v,v,v"(i32 %a, i32 %b)
-    //   ret i32 %1
-    // }
-    int out;
-    __asm volatile("v_mul_i32_i24 %0, %1, %2" : "=v"(out) : "v"(a), "v"(b));
-    return out;
-}
-
-extern "C" __device__ inline int __hip_hc_ir_mulhi_int(int a, int b) {
-    // define i32 @__hip_hc_ir_mulhi_int(i32 %a, i32 %b) #1 {
-    //   %1 = tail call i32 asm sideeffect "v_mul_hi_i32 $0, $1, $2","=v,v,v"(i32 %a, i32 %b)
-    //   ret i32 %1
-    // }
-    int out;
-    __asm volatile("v_mul_hi_i32 %0, %1, %2" : "=v"(out) : "v"(a), "v"(b));
-    return out;
-}
-
-extern "C" __device__ inline uint __hip_hc_ir_umulhi_int(uint a, uint b) {
-    // define i32 @__hip_hc_ir_umulhi_int(i32 %a, i32 %b) #1 {
-    //   %1 = tail call i32 asm sideeffect "v_mul_hi_u32 $0, $1, $2","=v,v,v"(i32 %a, i32 %b)
-    //   ret i32 %1
-    // }
-    uint out;
-    __asm volatile("v_mul_hi_u32 %0, %1, %2" : "=v"(out) : "v"(a), "v"(b));
-    return out;
-}
-
-extern "C" __device__ inline uint __hip_hc_ir_usad_int(uint a, uint b, uint c) {
-    // define i32 @__hip_hc_ir_usad_int(i32 %a, i32 %b, i32 %c) #1 {
-    //  %1 = tail call i32 asm sideeffect "v_sad_u32 $0, $1, $2, $3","=v,v,v,v"(i32 %a, i32 %b, i32 %c)
-    //  ret i32 %1
-    // }
-    uint out;
-    __asm volatile("v_sad_u32 %0, %1, %2, %3" : "=v"(out) : "v"(a), "v"(b), "v"(c));
-    return out;
-}
-
 /*
 Integer Intrinsics
 */
@@ -217,7 +167,10 @@ __device__ static inline unsigned int __hadd(int x, int y) {
     int value = z & 0x7FFFFFFF;
     return ((value) >> 1 || sign);
 }
-__device__ static inline int __mul24(int x, int y) { return __hip_hc_ir_mul24_int(x, y); }
+
+__device__ static inline int __mul24(int x, int y) {
+    return __ockl_mul24_i32(x, y);
+}
 
 __device__ static inline long long __mul64hi(long long int x, long long int y) {
     ulong x0 = (ulong)x & 0xffffffffUL;
@@ -232,7 +185,10 @@ __device__ static inline long long __mul64hi(long long int x, long long int y) {
     return x1*y1 + z2 + (z1 >> 32);
 }
 
-__device__ static inline int __mulhi(int x, int y) { return __hip_hc_ir_mulhi_int(x, y); }
+__device__ static inline int __mulhi(int x, int y) {
+    return __ockl_mul_hi_i32(x, y);
+}
+
 __device__ static inline int __rhadd(int x, int y) {
     int z = x + y + 1;
     int sign = z & 0x8000000;
@@ -246,7 +202,7 @@ __device__ static inline unsigned int __uhadd(unsigned int x, unsigned int y) {
     return (x + y) >> 1;
 }
 __device__ static inline int __umul24(unsigned int x, unsigned int y) {
-    return __hip_hc_ir_umul24_int(x, y);
+    return __ockl_mul24_u32(x, y);
 }
 
 __device__
@@ -264,13 +220,13 @@ static inline unsigned long long __umul64hi(unsigned long long int x, unsigned l
 }
 
 __device__ static inline unsigned int __umulhi(unsigned int x, unsigned int y) {
-    return __hip_hc_ir_umulhi_int(x, y);
+    return __ockl_mul_hi_u32(x, y);
 }
 __device__ static inline unsigned int __urhadd(unsigned int x, unsigned int y) {
     return (x + y + 1) >> 1;
 }
 __device__ static inline unsigned int __usad(unsigned int x, unsigned int y, unsigned int z) {
-    return __hip_hc_ir_usad_int(x, y, z);
+    return __ockl_sad_u32(x, y, z);
 }
 
 __device__ static inline unsigned int __lane_id() { return  __mbcnt_hi(-1, __mbcnt_lo(-1, 0)); }
