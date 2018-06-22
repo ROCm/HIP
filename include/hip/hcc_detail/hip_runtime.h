@@ -287,6 +287,10 @@ __device__ float __shfl(float input, int lane, int width = warpSize);
 __device__ float __shfl_up(float input, unsigned int lane_delta, int width = warpSize);
 __device__ float __shfl_down(float input, unsigned int lane_delta, int width = warpSize);
 __device__ float __shfl_xor(float input, int lane_mask, int width = warpSize);
+__device__ double __shfl(double input, int lane, int width = warpSize);
+__device__ double __shfl_up(double input, unsigned int lane_delta, int width = warpSize);
+__device__ double __shfl_down(double input, unsigned int lane_delta, int width = warpSize);
+__device__ double __shfl_xor(double input, int lane_mask, int width = warpSize);
 #else
 __device__ int __shfl(int input, int lane, int width);
 __device__ int __shfl_up(int input, unsigned int lane_delta, int width);
@@ -296,6 +300,10 @@ __device__ float __shfl(float input, int lane, int width);
 __device__ float __shfl_up(float input, unsigned int lane_delta, int width);
 __device__ float __shfl_down(float input, unsigned int lane_delta, int width);
 __device__ float __shfl_xor(float input, int lane_mask, int width);
+__device__ double __shfl(double input, int lane, int width);
+__device__ double __shfl_up(double input, unsigned int lane_delta, int width);
+__device__ double __shfl_down(double input, unsigned int lane_delta, int width);
+__device__ double __shfl_xor(double input, int lane_mask, int width);
 #endif  //__cplusplus
 
 __device__ unsigned __hip_ds_bpermute(int index, unsigned src);
