@@ -184,35 +184,10 @@ extern int HIP_TRACE_API;
 
 #if __HCC_OR_HIP_CLANG__
 
-// TODO - hipify-clang - change to use the function call.
-//#define warpSize hc::__wavesize()
-static constexpr int warpSize = 64;
-
 // abort
 __device__ void abort();
 
 #if __HIP_ARCH_GFX701__ == 0
-
-// warp shuffle functions
-#ifdef __cplusplus
-__device__ int __shfl(int input, int lane, int width = warpSize);
-__device__ int __shfl_up(int input, unsigned int lane_delta, int width = warpSize);
-__device__ int __shfl_down(int input, unsigned int lane_delta, int width = warpSize);
-__device__ int __shfl_xor(int input, int lane_mask, int width = warpSize);
-__device__ float __shfl(float input, int lane, int width = warpSize);
-__device__ float __shfl_up(float input, unsigned int lane_delta, int width = warpSize);
-__device__ float __shfl_down(float input, unsigned int lane_delta, int width = warpSize);
-__device__ float __shfl_xor(float input, int lane_mask, int width = warpSize);
-#else
-__device__ int __shfl(int input, int lane, int width);
-__device__ int __shfl_up(int input, unsigned int lane_delta, int width);
-__device__ int __shfl_down(int input, unsigned int lane_delta, int width);
-__device__ int __shfl_xor(int input, int lane_mask, int width);
-__device__ float __shfl(float input, int lane, int width);
-__device__ float __shfl_up(float input, unsigned int lane_delta, int width);
-__device__ float __shfl_down(float input, unsigned int lane_delta, int width);
-__device__ float __shfl_xor(float input, int lane_mask, int width);
-#endif  //__cplusplus
 
 __device__ unsigned __hip_ds_bpermute(int index, unsigned src);
 __device__ float __hip_ds_bpermutef(int index, float src);
