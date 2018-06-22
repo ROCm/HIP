@@ -147,35 +147,6 @@ __device__ void* __hip_hc_memset(void* dst, uint8_t val, size_t size) {
 // abort
 __device__ void abort() { return hc::abort(); }
 
-// warp shuffle functions
-__device__ int __shfl(int input, int lane, int width) { return hc::__shfl(input, lane, width); }
-
-__device__ int __shfl_up(int input, unsigned int lane_delta, int width) {
-    return hc::__shfl_up(input, lane_delta, width);
-}
-
-__device__ int __shfl_down(int input, unsigned int lane_delta, int width) {
-    return hc::__shfl_down(input, lane_delta, width);
-}
-
-__device__ int __shfl_xor(int input, int lane_mask, int width) {
-    return hc::__shfl_xor(input, lane_mask, width);
-}
-
-__device__ float __shfl(float input, int lane, int width) { return hc::__shfl(input, lane, width); }
-
-__device__ float __shfl_up(float input, unsigned int lane_delta, int width) {
-    return hc::__shfl_up(input, lane_delta, width);
-}
-
-__device__ float __shfl_down(float input, unsigned int lane_delta, int width) {
-    return hc::__shfl_down(input, lane_delta, width);
-}
-
-__device__ float __shfl_xor(float input, int lane_mask, int width) {
-    return hc::__shfl_xor(input, lane_mask, width);
-}
-
 __host__ __device__ int min(int arg1, int arg2) {
     return (int)(hc::precise_math::fmin((float)arg1, (float)arg2));
 }

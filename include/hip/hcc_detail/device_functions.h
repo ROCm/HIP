@@ -282,6 +282,127 @@ __device__ static inline int __hip_move_dpp(int src, int dpp_ctrl, int row_mask,
     return __llvm_amdgcn_move_dpp(src, dpp_ctrl, row_mask, bank_mask, bound_ctrl);
 }
 
+static constexpr int warpSize = 64;
+
+ __device__
+inline
+int __shfl(int var, int src_lane, int width = warpSize) {
+    int self = __lane_id();
+    int index = src_lane + (self & ~(width-1));
+    return __llvm_amdgcn_ds_bpermute(index<<2, var);
+}
+__device__
+inline
+unsigned int __shfl(unsigned int var, int src_lane, int width = warpSize) {
+     __u tmp; tmp.u = var;
+    tmp.i = __shfl(tmp.i, src_lane, width);
+    return tmp.u;
+}
+__device__
+inline
+float __shfl(float var, int src_lane, int width = warpSize) {
+    __u tmp; tmp.f = var;
+    tmp.i = __shfl(tmp.i, src_lane, width);
+    return tmp.f;
+}
+__device__
+inline
+double __shfl(double var, int src_lane, int width = warpSize) {
+    __u tmp; tmp.f = (float) var;
+    tmp.i = __shfl(tmp.i, src_lane, width);
+    return (double) tmp.f;
+}
+
+ __device__
+inline
+int __shfl_up(int var, unsigned int lane_delta, int width = warpSize) {
+    int self = __lane_id();
+    int index = self - lane_delta;
+    index = (index < (self & ~(width-1)))?self:index;
+    return __llvm_amdgcn_ds_bpermute(index<<2, var);
+}
+__device__
+inline
+unsigned int __shfl_up(unsigned int var, unsigned int lane_delta, int width = warpSize) {
+    __u tmp; tmp.u = var;
+    tmp.i = __shfl_up(tmp.i, lane_delta, width);
+    return tmp.u;
+}
+__device__
+inline
+float __shfl_up(float var, unsigned int lane_delta, int width = warpSize) {
+    __u tmp; tmp.f = var;
+    tmp.i = __shfl_up(tmp.i, lane_delta, width);
+    return tmp.f;
+}
+__device__
+inline
+double __shfl_up(double var, unsigned int lane_delta, int width = warpSize) {
+    __u tmp; tmp.f = (float) var;
+    tmp.i = __shfl_up(tmp.i, lane_delta, width);
+    return (double) tmp.f;
+}
+
+__device__
+inline
+int __shfl_down(int var, unsigned int lane_delta, int width = warpSize) {
+    int self = __lane_id();
+    int index = self + lane_delta;
+    index = (int)((self&(width-1))+lane_delta) >= width?self:index;
+    return __llvm_amdgcn_ds_bpermute(index<<2, var);
+}
+__device__
+inline
+unsigned int __shfl_down(unsigned int var, unsigned int lane_delta, int width = warpSize) {
+    __u tmp; tmp.u = var;
+    tmp.i = __shfl_down(tmp.i, lane_delta, width);
+    return tmp.u;
+}
+__device__
+inline
+float __shfl_down(float var, unsigned int lane_delta, int width = warpSize) {
+    __u tmp; tmp.f = var;
+    tmp.i = __shfl_down(tmp.i, lane_delta, width);
+    return tmp.f;
+}
+__device__
+inline
+double __shfl_down(double var, unsigned int lane_delta, int width = warpSize) {
+    __u tmp; tmp.f = (float) var;
+    tmp.i = __shfl_down(tmp.i, lane_delta, width);
+    return (double) tmp.f;
+}
+
+__device__
+inline
+int __shfl_xor(int var, int lane_mask, int width = warpSize) {
+    int self = __lane_id();
+    int index = self^lane_mask;
+    index = index >= ((self+width)&~(width-1))?self:index;
+    return __llvm_amdgcn_ds_bpermute(index<<2, var);
+}
+__device__
+inline
+unsigned int __shfl_xor(unsigned int var, int lane_mask, int width = warpSize) {
+    __u tmp; tmp.u = var;
+    tmp.i = __shfl_xor(tmp.i, lane_mask, width);
+    return tmp.u;
+}
+__device__
+inline
+float __shfl_xor(float var, int lane_mask, int width = warpSize) {
+    __u tmp; tmp.f = var;
+    tmp.i = __shfl_xor(tmp.i, lane_mask, width);
+    return tmp.f;
+}
+__device__
+inline
+double __shfl_xor(double var, int lane_mask, int width = warpSize) {
+    __u tmp; tmp.f = (float) var;
+    tmp.i = __shfl_xor(tmp.i, lane_mask, width);
+    return (double) tmp.f;
+}
+
 #define MASK1 0x00ff00ff
 #define MASK2 0xff00ff00
 
