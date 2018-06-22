@@ -210,4 +210,62 @@ __device__ char4 __hip_hc_sub8pk(char4, char4);
 __device__ char4 __hip_hc_mul8pk(char4, char4);
 
 
+// loop unrolling
+static inline __device__ void* __hip_hc_memcpy(void* dst, const void* src, size_t size) {
+    auto dstPtr = static_cast<uint8_t*>(dst);
+    auto srcPtr = static_cast<const uint8_t*>(src);
+
+    while (size >= 4u) {
+        dstPtr[0] = srcPtr[0];
+        dstPtr[1] = srcPtr[1];
+        dstPtr[2] = srcPtr[2];
+        dstPtr[3] = srcPtr[3];
+
+        size -= 4u;
+        srcPtr += 4u;
+        dstPtr += 4u;
+    }
+    switch (size) {
+        case 3:
+            dstPtr[2] = srcPtr[2];
+        case 2:
+            dstPtr[1] = srcPtr[1];
+        case 1:
+            dstPtr[0] = srcPtr[0];
+    }
+
+    return dst;
+}
+
+static inline __device__ void* __hip_hc_memset(void* dst, uint8_t val, size_t size) {
+    auto dstPtr = static_cast<uint8_t*>(dst);
+
+    while (size >= 4u) {
+        dstPtr[0] = val;
+        dstPtr[1] = val;
+        dstPtr[2] = val;
+        dstPtr[3] = val;
+
+        size -= 4u;
+        dstPtr += 4u;
+    }
+    switch (size) {
+        case 3:
+            dstPtr[2] = val;
+        case 2:
+            dstPtr[1] = val;
+        case 1:
+            dstPtr[0] = val;
+    }
+
+    return dst;
+}
+static inline __device__ void* memcpy(void* dst, const void* src, size_t size) {
+    return __hip_hc_memcpy(dst, src, size);
+}
+
+static inline __device__ void* memset(void* ptr, int val, size_t size) {
+    uint8_t val8 = static_cast<uint8_t>(val);
+    return __hip_hc_memset(ptr, val8, size);
+}
 #endif

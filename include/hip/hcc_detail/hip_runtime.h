@@ -364,24 +364,11 @@ static constexpr Coordinates<hc_get_workitem_id> threadIdx;
 
 #endif // defined __HCC__
 #if __HCC_OR_HIP_CLANG__
-extern "C" __device__ void* __hip_hc_memcpy(void* dst, const void* src, size_t size);
-extern "C" __device__ void* __hip_hc_memset(void* ptr, uint8_t val, size_t size);
 extern "C" __device__ void* __hip_hc_malloc(size_t);
 extern "C" __device__ void* __hip_hc_free(void* ptr);
 
 static inline __device__ void* malloc(size_t size) { return __hip_hc_malloc(size); }
-
 static inline __device__ void* free(void* ptr) { return __hip_hc_free(ptr); }
-
-static inline __device__ void* memcpy(void* dst, const void* src, size_t size) {
-    return __hip_hc_memcpy(dst, src, size);
-}
-
-static inline __device__ void* memset(void* ptr, int val, size_t size) {
-    uint8_t val8 = static_cast<uint8_t>(val);
-    return __hip_hc_memset(ptr, val8, size);
-}
-
 
 #ifdef __HCC_ACCELERATOR__
 
