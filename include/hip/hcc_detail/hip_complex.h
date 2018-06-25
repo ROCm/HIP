@@ -27,6 +27,10 @@ THE SOFTWARE.
 #include <math.h>
 
 #if __cplusplus
+#define MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(type, type1)                                      \
+    __device__ __host__ type(type1 val) : x(val), y(val) {}                                        \
+    __device__ __host__ type(type1 val1, type1 val2) : x(val1), y(val2) {}
+
 #define COMPLEX_ADD_OP_OVERLOAD(type)                                                              \
     __device__ __host__ static inline type operator+(const type& lhs, const type& rhs) {           \
         type ret;                                                                                  \
