@@ -55,8 +55,7 @@ THE SOFTWARE.
         union {
             Native_vec_ data;
             struct {
-                typename std::decay<
-                    decltype(std::declval<Native_vec_>().x)>::type x;
+                T x;
             };
         };
     };
@@ -68,10 +67,8 @@ THE SOFTWARE.
         union {
             Native_vec_ data;
             struct {
-                typename std::decay<
-                    decltype(std::declval<Native_vec_>().x)>::type x;
-                typename std::decay<
-                    decltype(std::declval<Native_vec_>().y)>::type y;
+                T x;
+                T y;
             };
         };
     };
@@ -83,12 +80,9 @@ THE SOFTWARE.
         union {
             Native_vec_ data;
             struct {
-                typename std::decay<
-                    decltype(std::declval<Native_vec_>().x)>::type x;
-                typename std::decay<
-                    decltype(std::declval<Native_vec_>().y)>::type y;
-                typename std::decay<
-                    decltype(std::declval<Native_vec_>().z)>::type z;
+                T x;
+                T y;
+                T z;
             };
         };
     };
@@ -100,14 +94,10 @@ THE SOFTWARE.
         union {
             Native_vec_ data;
             struct {
-                typename std::decay<
-                    decltype(std::declval<Native_vec_>().x)>::type x;
-                typename std::decay<
-                    decltype(std::declval<Native_vec_>().y)>::type y;
-                typename std::decay<
-                    decltype(std::declval<Native_vec_>().z)>::type z;
-                typename std::decay<
-                    decltype(std::declval<Native_vec_>().w)>::type w;
+                T x;
+                T y;
+                T z;
+                T w;
             };
         };
     };
@@ -125,7 +115,10 @@ THE SOFTWARE.
                 std::is_convertible<U, T>{}>::type* = nullptr>
         __host__ __device__
         explicit
-        HIP_vector_type(U x) noexcept { data = Native_vec_(x); }
+        HIP_vector_type(U x) noexcept
+        {
+            for (auto i = 0u; i != rank; ++i) data[i] = x;
+        }
         template< // TODO: constrain based on type as well.
             typename... Us,
             typename std::enable_if<sizeof...(Us) == rank>::type* = nullptr>
@@ -147,8 +140,7 @@ THE SOFTWARE.
         __host__ __device__
         HIP_vector_type& operator++() noexcept
         {
-            data += Native_vec_(1);
-            return *this;
+            return *this += HIP_vector_type{1};
         }
         __host__ __device__
         HIP_vector_type operator++(int) noexcept
@@ -160,8 +152,7 @@ THE SOFTWARE.
         __host__ __device__
         HIP_vector_type& operator--() noexcept
         {
-            data -= Native_vec_(1);
-            return *this;
+            return *this -= HIP_vector_type{1};
         }
         __host__ __device__
         HIP_vector_type operator--(int) noexcept
