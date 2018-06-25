@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #pragma once
-
+#include "hip/hcc_detail/host_defines.h"
 #include <assert.h>
 #if defined(__cplusplus)
     #include <algorithm>
