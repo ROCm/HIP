@@ -26,14 +26,60 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
-// Struct with dummy variables to check the hipLaunchKernel()
-typedef struct hipLaunchKernelStruct {
-    int i;
-    float f;
-} hipLaunchKernelStruct_t;
+static const int  STRUCT_SIZE = 1024;
+
+// This test is to verify Struct with variables to check the hipLaunchKernel() support, read and write into the same struct
+typedef struct hipLaunchKernelStruct1 {
+  int li;  // local int
+  float lf;  // local float
+  bool result;  // default is false, will be set to true if the condition is met
+} hipLaunchKernelStruct_t1;
+
+// This test is to verify struct with padding, read and write into the same struct
+typedef struct hipLaunchKernelStruct2 {
+  char c1;  // local char
+  long l1;  // local long
+  char c2;  // local char
+  long l2;  // local long
+  bool result;  // default is false, will be set to true if the condition is met
+} hipLaunchKernelStruct_t2;
+
+typedef struct hipLaunchKernelStruct3 {
+  char bf1;
+  char bf2;
+  long l1;
+  char bf3;
+  bool result;  // default is false, will be set to true if the condition is met
+} hipLaunchKernelStruct_t3;
+
+
+// Passing struct to a hipLaunchKernel(), read and write into the same struct
+__global__ void hipLaunchKernelStructFunc1(hipLaunchParm lp, hipLaunchKernelStruct_t1* hipLaunchKernelStruct_) {
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+
+    // set the result to true if the condition met
+    hipLaunchKernelStruct_[x].result =  ((hipLaunchKernelStruct_[x].li == 1) && (hipLaunchKernelStruct_[x].lf == 1.0)) ? true : false;
+}
+
+// Passing struct to a hipLaunchKernel(), checks padding, read and write into the same struct
+__global__ void hipLaunchKernelStructFunc2(hipLaunchParm lp, hipLaunchKernelStruct_t2* hipLaunchKernelStruct_) {
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+
+    // set the result to true if the condition met
+    hipLaunchKernelStruct_[x].result =  ((hipLaunchKernelStruct_[x].c1 == 'a') && (hipLaunchKernelStruct_[x].l1 == 1.0)
+                                          && (hipLaunchKernelStruct_[x].c2 == 'b') && (hipLaunchKernelStruct_[x].l2 == 2.0) ) ? true : false;
+}
+
+// Passing struct to a hipLaunchKernel(), checks padding, read and write into the same struct
+__global__ void hipLaunchKernelStructFunc3(hipLaunchParm lp, hipLaunchKernelStruct_t3* hipLaunchKernelStruct_) {
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+
+    // set the result to true if the condition met
+    hipLaunchKernelStruct_[x].result =  ((hipLaunchKernelStruct_[x].bf1 == 1) && (hipLaunchKernelStruct_[x].bf2 == 1)
+                                           && (hipLaunchKernelStruct_[x].l1 == 1.0) && (hipLaunchKernelStruct_[x].bf3 == 1) ) ? true : false;
+}
 
 __global__ void vAdd(hipLaunchParm lp, float* a) {}
-__global__ void hipLaunchKernelStructFunc(hipLaunchParm lp, hipLaunchKernelStruct_t* hipLaunchKernelStruct_) {}
 
 //---
 // Some wrapper macro for testing:
@@ -68,16 +114,66 @@ __global__ void hipLaunchKernelStructFunc(hipLaunchParm lp, hipLaunchKernelStruc
 
 int main() {
     float* Ad;
-    hipLaunchKernelStruct_t* hipLaunchKernelStruct_;
+
     hipMalloc((void**)&Ad, 1024);
-    hipMalloc((void**)&hipLaunchKernelStruct_, 1024);
+
+    // Struct type,  check access from device.
+    hipLaunchKernelStruct_t1 *hipLaunchKernelStruct_d1, *hipLaunchKernelStruct_h1;
+    hipMalloc((void**)&hipLaunchKernelStruct_d1, STRUCT_SIZE*sizeof(hipLaunchKernelStruct_t1));
+    hipHostMalloc((void**)&hipLaunchKernelStruct_h1, STRUCT_SIZE*sizeof(hipLaunchKernelStruct_t1));
+    for (int k = 0; k < STRUCT_SIZE; ++k) {
+        hipLaunchKernelStruct_d1[k].li = 1;
+        hipLaunchKernelStruct_d1[k].lf = 1.0;
+        hipLaunchKernelStruct_d1[k].result = false;  // This will be set to true if the the condition is satisfied, from device side
+    }
+
+    // Struct type, checks padding
+    hipLaunchKernelStruct_t2 *hipLaunchKernelStruct_d2, *hipLaunchKernelStruct_h2;
+    hipMalloc((void**)&hipLaunchKernelStruct_d2, STRUCT_SIZE*sizeof(hipLaunchKernelStruct_t2));
+    hipHostMalloc((void**)&hipLaunchKernelStruct_h2, STRUCT_SIZE*sizeof(hipLaunchKernelStruct_t2));
+    for (int k = 0; k < STRUCT_SIZE; ++k) {
+        hipLaunchKernelStruct_d2[k].c1 = 'a';
+        hipLaunchKernelStruct_d2[k].l1 = 1.0;
+        hipLaunchKernelStruct_d2[k].c2 = 'b';
+        hipLaunchKernelStruct_d2[k].l2 = 2.0;
+        hipLaunchKernelStruct_d2[k].result = false;  // This will be set to true if the the condition is satisfied, from device side
+    }
+
+    // Struct type, checks padding, assigning integer to a char
+    hipLaunchKernelStruct_t3 *hipLaunchKernelStruct_d3, *hipLaunchKernelStruct_h3;
+    hipMalloc((void**)&hipLaunchKernelStruct_d3, STRUCT_SIZE*sizeof(hipLaunchKernelStruct_t3));
+    hipHostMalloc((void**)&hipLaunchKernelStruct_h3, STRUCT_SIZE*sizeof(hipLaunchKernelStruct_t3));
+    for (int k = 0; k < STRUCT_SIZE; ++k) {
+      hipLaunchKernelStruct_d3[k].bf1 = 1;
+      hipLaunchKernelStruct_d3[k].bf2 = 1;
+      hipLaunchKernelStruct_d3[k].l1 = 1.0;
+      hipLaunchKernelStruct_d3[k].bf3 = 1;
+      hipLaunchKernelStruct_d3[k].result = false;  // This will be set to true if the the condition is satisfied, from device side
+    }
 
     // Test the different hipLaunchParm options:
     hipLaunchKernel(vAdd, size_t(1024), 1, 0, 0, Ad);
     hipLaunchKernel(vAdd, 1024, dim3(1), 0, 0, Ad);
     hipLaunchKernel(vAdd, dim3(1024), 1, 0, 0, Ad);
     hipLaunchKernel(vAdd, dim3(1024), dim3(1), 0, 0, Ad);
-    hipLaunchKernel(hipLaunchKernelStructFunc, dim3(1024), dim3(1), 0, 0, hipLaunchKernelStruct_);
+    hipLaunchKernel(hipLaunchKernelStructFunc1, dim3(STRUCT_SIZE), dim3(1), 0, 0, hipLaunchKernelStruct_d1);
+    hipLaunchKernel(hipLaunchKernelStructFunc2, dim3(STRUCT_SIZE), dim3(1), 0, 0, hipLaunchKernelStruct_d2);
+    hipLaunchKernel(hipLaunchKernelStructFunc3, dim3(STRUCT_SIZE), dim3(1), 0, 0, hipLaunchKernelStruct_d3);
+
+    // Validation part of the struct
+    hipMemcpy(hipLaunchKernelStruct_h1, hipLaunchKernelStruct_d1, STRUCT_SIZE*sizeof(hipLaunchKernelStruct_t1), hipMemcpyDeviceToHost);
+    for (int k = 0; k < STRUCT_SIZE; ++k)
+      HIPASSERT(hipLaunchKernelStruct_h1[k].result == true);
+
+    // Validation part of the struct
+    hipMemcpy(hipLaunchKernelStruct_h2, hipLaunchKernelStruct_d2, STRUCT_SIZE*sizeof(hipLaunchKernelStruct_t2), hipMemcpyDeviceToHost);
+    for (int k = 0; k < STRUCT_SIZE; ++k)
+    HIPASSERT(hipLaunchKernelStruct_h2[k].result == true);
+
+    // Validation part of the struct
+    hipMemcpy(hipLaunchKernelStruct_h3, hipLaunchKernelStruct_d3, STRUCT_SIZE*sizeof(hipLaunchKernelStruct_t3), hipMemcpyDeviceToHost);
+    for (int k = 0; k < STRUCT_SIZE; ++k)
+     HIPASSERT(hipLaunchKernelStruct_h3[k].result == true);
 
     // Test case with hipLaunchKernel inside another macro:
     float e0;
