@@ -52,20 +52,20 @@ template<
 __device__
 bool integer_unary_tests(V& f1, V& f2) {
     f1 %= f2;
-    if (!cmp(f1, 0)) return false;
+    if (f1 != V{0}) return false;
     f1 &= f2;
-    if (!cmp(f1, 0)) return false;
+    if (f1 != V{0}) return false;
     f1 |= f2;
-    if (!cmp(f1, 1)) return false;
+    if (f1 != V{1}) return false;
     f1 ^= f2;
-    if (!cmp(f1, 0)) return false;
-    f1.x = 1;
+    if (f1 != V{0}) return false;
+    f1 = V{1};
     f1 <<= f2;
-    if (!cmp(f1, 2)) return false;
+    if (f1 != V{2}) return false;
     f1 >>= f2;
-    if (!cmp(f1, 1)) return false;
+    if (f1 != V{1}) return false;
     f2 = ~f1;
-    return cmp(f2, ~1);
+    return f2 == V{~1};
 }
 
 template<
@@ -74,17 +74,17 @@ template<
 __device__
 bool integer_binary_tests(V& f1, V& f2, V& f3) {
     f3 = f1 % f2;
-    if (!cmp(f3, 0)) return false;
+    if (f3 != V{0}) return false;
     f1 = f3 & f2;
-    if (!cmp(f1, 0)) return false;
+    if (f1 != V{0}) return false;
     f2 = f1 ^ f3;
-    if (!cmp(f2, 0)) return false;
-    f1.x = 1;
-    f2.x = 2;
+    if (f2 != V{0}) return false;
+    f1 = V{1};
+    f2 = V{2};
     f3 = f1 << f2;
-    if (!cmp(f3, 4)) return false;
+    if (f3 != V{4}) return false;
     f2 = f3 >> f1;
-    if (!cmp(f2, 2)) return false;
+    return f2 == V{2};
 }
 
 template<typename V>
@@ -107,60 +107,58 @@ bool constructor_tests() {
 
 template<typename V>
 bool TestVectorType() {
-    V f1(1);
-    V f2(1);
+    V f1{1};
+    V f2{1};
     V f3 = f1 + f2;
-    if (!cmp(f3, 2)) return false;
+    if (f3 != V{2}) return false;
     f2 = f3 - f1;
-    if (!cmp(f2, 1)) return false;
+    if (f2 != V{1}) return false;
     f1 = f2 * f3;
-    if (!cmp(f1, 2)) return false;
+    if (f1 != V{2}) return false;
     f2 = f1 / f3;
-    if (!cmp(f2, 2 / 2)) return false;
+    if (f2 != V{1}) return false;
     if (!integer_binary_tests(f1, f2, f3)) return false;
 
-    f1 = V(2);
-    f2 = V(1);
+    f1 = V{2};
+    f2 = V{1};
     f1 += f2;
-    if (!cmp(f1, 3)) return false;
+    if (f1 != V{3}) return false;
     f1 -= f2;
-    if (!cmp(f1, 2)) return false;
+    if (f1 != V{2}) return false;
     f1 *= f2;
-    if (!cmp(f1, 2)) return false;
+    if (f1 != V{2}) return false;
     f1 /= f2;
-    if (!cmp(f1, 2)) return false;
+    if (f1 != V{2}) return false;
     if (!integer_unary_tests(f1, f2)) return false;
 
-    #if false // We do not enable nullary increment / decrement yet.
-        f1 = V(2);
-        f2 = f1++;
-        if (!cmp(f1, 3)) return false;
-        if (!cmp(f2, 2)) return false;
-        f2 = f1--;
-        if (!cmp(f2, 3)) return false;
-        if (!cmp(f1, 2)) return false;
-        f2 = ++f1;
-        if (!cmp(f1, 3)) return false;
-        if (!cmp(f2, 3)) return false;
-        f2 = --f1;
-        if (!cmp(f1, 2)) return false;
-        if (!cmp(f2, 2)) return false;
-    #endif
+    f1 = V{2};
+    f2 = f1++;
+    if (f1 != V{3}) return false;
+    if (f2 != V{2}) return false;
+    f2 = f1--;
+    if (f2 != V{3}) return false;
+    if (f1 != V{2}) return false;
+    f2 = ++f1;
+    if (f1 != V{3}) return false;
+    if (f2 != V{3}) return false;
+    f2 = --f1;
+    if (f1 != V{2}) return false;
+    if (f2 != V{2}) return false;
 
     if (!constructor_tests<V>()) return false;
 
-    f1 = V(3);
-    f2 = V(4);
-    f3 = V(3);
-    if (cmp(f1 == f2, true)) return false;
-    if (cmp(f1 != f2, false)) return false;
-    if (cmp(f1 < f2, false)) return false;
-    if (cmp(f2 > f1, false)) return false;
-    if (cmp(f1 >= f3, false)) return false;
-    if (cmp(f1 <= f3, false)) return false;
+    f1 = V{3};
+    f2 = V{4};
+    f3 = V{3};
+    if (f1 == f2) return false;
+    if (!(f1 != f2)) return false;
+    if (!(f1 < f2)) return false;
+    if (!(f2 > f1)) return false;
+    if (!(f1 >= f3)) return false;
+    if (!(f1 <= f3)) return false;
 
-    if (cmp(f1 && f2, false)) return false;
-    if (cmp(f1 || f2, false)) return false;
+    if (!(f1 && f2)) return false;
+    if (!(f1 || f2)) return false;
     return true;
 }
 
