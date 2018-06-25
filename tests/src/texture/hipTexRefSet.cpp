@@ -88,7 +88,10 @@ HIPCHECK(hipTexRefSetFlags(&tex, hipReadModeNormalizedFloat));
 if(tex.normalized == 1)
    testResult=true;
 else
+   {
    testResult=false;
+   printf("hipTexRefSetFlags() api didn't work as expected.");
+    }
 
 
 HIPCHECK(hipTexRefSetFilterMode(&tex, hipFilterModeLinear));
@@ -96,22 +99,30 @@ HIPCHECK(hipTexRefSetFilterMode(&tex, hipFilterModeLinear));
 if(tex.filterMode == 1)
    testResult=true;
 else
+   {
    testResult=false;
+   printf("hipTexRefSetFilterMode() api didn't work as expected.");
+   }
 
 
 HIPCHECK(hipTexRefSetAddressMode(&tex, 0,hipAddressModeClamp));
 if(tex.addressMode[0] == 1)
    testResult=true;
-else	
+else
+   {	
    testResult=false;
-   
+   printf("hipTexRefSetAddressMode() api didn't work as expected.");
+   }
 
 HIPCHECK(hipTexRefSetFormat(&tex, HIP_AD_FORMAT_HALF, 4));
 
 if(tex.format == HIP_AD_FORMAT_HALF)
   testResult=true;
 else
+   {
    testResult=false;	
+   printf("hipTexRefSetFormat() api didn't work as expected.");
+  }
 
 
 HIPCHECK(hipTexRefSetArray(&tex, hip_arr, 0));
