@@ -38,7 +38,7 @@ extern void getDrvChannelOrderAndType(const enum hipArray_Format Format,
 
 amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
   amd::Memory *memObj = amd::MemObjMap::FindMemObj(ptr);
-  if (memObj != nullptr) {
+  if (memObj != nullptr && memObj->getSvmPtr() != nullptr) {
     offset = reinterpret_cast<size_t>(ptr) - reinterpret_cast<size_t>(memObj->getSvmPtr());
   }
   return memObj;
@@ -1314,11 +1314,13 @@ hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannel
 hipError_t hipHostGetDevicePointer(void** devicePointer, void* hostPointer, unsigned flags) {
   HIP_INIT_API(devicePointer, hostPointer, flags);
 
-  if (!amd::MemObjMap::FindMemObj(hostPointer)) {
+  size_t offset = 0;
+
+  amd::Memory* memObj = getMemoryObject(hostPointer, offset);
+  if (!memObj) {
     return hipErrorInvalidValue;
   }
-  // right now we have SVM
-  *devicePointer = hostPointer;
+  *devicePointer = reinterpret_cast<void*>(memObj->getDeviceMemory(*hip::getCurrentContext()->devices()[0])->virtualAddress() + offset);
 
   return hipSuccess;
 }
