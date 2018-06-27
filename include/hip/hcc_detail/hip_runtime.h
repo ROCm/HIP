@@ -238,6 +238,21 @@ __device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask
 __host__ __device__ int min(int arg1, int arg2);
 __host__ __device__ int max(int arg1, int arg2);
 
+__host__ __device__ unsigned int min(unsigned int arg1, unsigned int arg2);
+__host__ __device__ unsigned int max(unsigned int arg1, unsigned int arg2);
+
+__host__ __device__ long min(long arg1, long arg2);
+__host__ __device__ long max(long arg1, long arg2);
+
+__host__ __device__ unsigned long min(unsigned long arg1, unsigned long arg2);
+__host__ __device__ unsigned long max(unsigned long arg1, unsigned long arg2);
+
+__host__ __device__ float min(float arg1, float arg2);
+__host__ __device__ float max(float arg1, float arg2);
+
+__host__ __device__ double min(double arg1, double arg2);
+__host__ __device__ double max(double arg1, double arg2);
+
 __device__ void* __get_dynamicgroupbaseptr();
 
 

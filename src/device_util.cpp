@@ -203,6 +203,56 @@ __host__ __device__ int max(int arg1, int arg2) {
     return (int)(hc::precise_math::fmax((float)arg1, (float)arg2));
 }
 
+__host__ __device__ unsigned int min(unsigned int arg1, unsigned int arg2)
+{
+  return (arg1 < arg2) ? arg1 : arg2;
+}
+
+__host__ __device__ unsigned int max(unsigned int arg1, unsigned int arg2)
+{
+  return (arg1 > arg2) ? arg1 : arg2;
+}
+
+__host__ __device__  long min( long arg1,  long arg2)
+{
+  return (arg1 < arg2) ? arg1 : arg2;
+}
+
+__host__ __device__  long max( long arg1,  long arg2)
+{
+  return (arg1 > arg2) ? arg1 : arg2;
+}
+
+__host__ __device__ unsigned long min(unsigned long arg1, unsigned long arg2)
+{
+  return (arg1 < arg2) ? arg1 : arg2;
+}
+
+__host__ __device__ unsigned long max(unsigned long arg1, unsigned long arg2)
+{
+  return (arg1 > arg2) ? arg1 : arg2;
+}
+
+__host__ __device__ float min(float arg1, float arg2)
+{
+  return (arg1 < arg2) ? arg1 : arg2;
+}
+
+__host__ __device__ float max(float arg1, float arg2)
+{
+  return (arg1 > arg2) ? arg1 : arg2;
+}
+
+__host__ __device__ double min(double arg1, double arg2)
+{
+  return (arg1 < arg2) ? arg1 : arg2;
+}
+
+__host__ __device__ double max(double arg1, double arg2)
+{
+  return (arg1 > arg2) ? arg1 : arg2;
+}
+
 __device__ void* __get_dynamicgroupbaseptr() {
     return hc::get_dynamic_group_segment_base_pointer();
 }
