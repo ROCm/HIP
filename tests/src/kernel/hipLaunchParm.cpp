@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
-#define DISABLE_TEST 0
+#define ENABLE_ALIGNMENT_TEST 0
 
 static const int  BLOCK_DIM_SIZE = 1024;
 
@@ -422,7 +422,7 @@ int main() {
       HIPASSERT(result_h5[k] == true);
 
     // alignment is broken hence disabled the validation part
-    #if DISABLE_TEST
+    #if ENABLE_ALIGNMENT_TEST
     // Validation part of the struct, hipLaunchKernelStructFunc6
     hipMemcpy(result_h6, result_d6, BLOCK_DIM_SIZE*sizeof(bool),
               hipMemcpyDeviceToHost);
