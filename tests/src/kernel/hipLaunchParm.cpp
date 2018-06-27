@@ -30,14 +30,14 @@ THE SOFTWARE.
 
 static const int  BLOCK_DIM_SIZE = 1024;
 
-// This test is to verify Struct with variables to check the hipLaunchKernel() support, read and write into the same struct
+// This test is to verify Struct with variables to check the hipLaunchKernel() support, read from device.
 typedef struct hipLaunchKernelStruct1 {
   int li;  // local int
   float lf;  // local float
   bool result;  // local bool
 } hipLaunchKernelStruct_t1;
 
-// This test is to verify struct with padding, read and write into the same struct
+// This test is to verify struct with padding, read from device
 typedef struct hipLaunchKernelStruct2 {
   char c1;
   long l1;
@@ -46,7 +46,7 @@ typedef struct hipLaunchKernelStruct2 {
   bool result;
 } hipLaunchKernelStruct_t2;
 
-// This test is to verify struct with padding, read and write into the same struct
+// This test is to verify struct with padding, read from device
 typedef struct hipLaunchKernelStruct3 {
   char bf1;
   char bf2;
