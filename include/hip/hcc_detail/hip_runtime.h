@@ -235,22 +235,42 @@ __device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask
 
 #endif  //__HIP_ARCH_GFX803__ == 1
 
-__host__ __device__ int min(int arg1, int arg2);
-__host__ __device__ int max(int arg1, int arg2);
-
+__host__ __device__ int          min(         int arg1,          int arg2);
+__host__ __device__ unsigned int min(         int arg1, unsigned int arg2);
+__host__ __device__ unsigned int min(unsigned int arg1,          int arg2);
 __host__ __device__ unsigned int min(unsigned int arg1, unsigned int arg2);
-__host__ __device__ unsigned int max(unsigned int arg1, unsigned int arg2);
 
-__host__ __device__ long min(long arg1, long arg2);
-__host__ __device__ long max(long arg1, long arg2);
-
+__host__ __device__          long min(         long arg1,          long arg2);
+__host__ __device__ unsigned long min(         long arg1, unsigned long arg2);
+__host__ __device__ unsigned long min(unsigned long arg1,          long arg2);
 __host__ __device__ unsigned long min(unsigned long arg1, unsigned long arg2);
-__host__ __device__ unsigned long max(unsigned long arg1, unsigned long arg2);
+
+__host__ __device__          long long min(         long long arg1,          long long arg2);
+__host__ __device__ unsigned long long min(         long long arg1, unsigned long long arg2);
+__host__ __device__ unsigned long long min(unsigned long long arg1,          long long arg2);
+__host__ __device__ unsigned long long min(unsigned long long arg1, unsigned long long arg2);
 
 __host__ __device__ float min(float arg1, float arg2);
-__host__ __device__ float max(float arg1, float arg2);
-
 __host__ __device__ double min(double arg1, double arg2);
+
+
+
+__host__ __device__ int          max(         int arg1,          int arg2);
+__host__ __device__ unsigned int max(         int arg1, unsigned int arg2);
+__host__ __device__ unsigned int max(unsigned int arg1,          int arg2);
+__host__ __device__ unsigned int max(unsigned int arg1, unsigned int arg2);
+
+__host__ __device__          long max(         long arg1,          long arg2);
+__host__ __device__ unsigned long max(         long arg1, unsigned long arg2);
+__host__ __device__ unsigned long max(unsigned long arg1,          long arg2);
+__host__ __device__ unsigned long max(unsigned long arg1, unsigned long arg2);
+
+__host__ __device__          long long max(         long long arg1,          long long arg2);
+__host__ __device__ unsigned long long max(         long long arg1, unsigned long long arg2);
+__host__ __device__ unsigned long long max(unsigned long long arg1,          long long arg2);
+__host__ __device__ unsigned long long max(unsigned long long arg1, unsigned long long arg2);
+
+__host__ __device__ float max(float arg1, float arg2);
 __host__ __device__ double max(double arg1, double arg2);
 
 __device__ void* __get_dynamicgroupbaseptr();
