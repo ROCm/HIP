@@ -109,7 +109,7 @@ extern int HIP_TRACE_API;
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hcc_detail/math_functions.h>
 #include <hip/hcc_detail/device_functions.h>
-#if __HCC___
+#if __HCC__
 #include <hip/hcc_detail/texture_functions.h>
 #include <hip/hcc_detail/surface_functions.h>
 #endif // __HCC__
