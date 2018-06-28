@@ -69,8 +69,6 @@ float __ocml_cosh_f32(float);
 __device__
 float __ocml_cospi_f32(float);
 __device__
-float __ocml_div_rtz_f32(float, float);
-__device__
 float __ocml_i0_f32(float);
 __device__
 float __ocml_i1_f32(float);
@@ -288,18 +286,6 @@ float __ocml_mul_rtp_f32(float, float);
 __device__
 __attribute__((const))
 float __ocml_mul_rtz_f32(float, float);
-__device__
-__attribute__((const))
-float __ocml_div_rte_f32(float, float);
-__device__
-__attribute__((const))
-float __ocml_div_rtn_f32(float, float);
-__device__
-__attribute__((const))
-float __ocml_div_rtp_f32(float, float);
-__device__
-__attribute__((const))
-float __ocml_div_rtz_f32(float, float);
 __device__
 __attribute__((const))
 float __ocml_sqrt_rte_f32(float);
@@ -596,18 +582,6 @@ double __ocml_mul_rtp_f64(double, double);
 __device__
 __attribute__((const))
 double __ocml_mul_rtz_f64(double, double);
-__device__
-__attribute__((const))
-double __ocml_div_rte_f64(double, double);
-__device__
-__attribute__((const))
-double __ocml_div_rtn_f64(double, double);
-__device__
-__attribute__((const))
-double __ocml_div_rtp_f64(double, double);
-__device__
-__attribute__((const))
-double __ocml_div_rtz_f64(double, double);
 __device__
 __attribute__((const))
 double __ocml_sqrt_rte_f64(double);
