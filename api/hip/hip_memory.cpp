@@ -540,6 +540,9 @@ hipError_t hipHostUnregister(void* hostPtr) {
     amd::Memory* mem = getMemoryObject(hostPtr, offset);
 
     if(mem) {
+      hip::syncStreams();
+      hip::getNullStream()->finish();
+      amd::MemObjMap::RemoveMemObj(hostPtr);
       mem->release();
       return hipSuccess;
     }
