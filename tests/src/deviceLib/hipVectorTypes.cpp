@@ -152,13 +152,7 @@ bool TestVectorType() {
     f3 = V{3};
     if (f1 == f2) return false;
     if (!(f1 != f2)) return false;
-    if (!(f1 < f2)) return false;
-    if (!(f2 > f1)) return false;
-    if (!(f1 >= f3)) return false;
-    if (!(f1 <= f3)) return false;
 
-    if (!(f1 && f2)) return false;
-    if (!(f1 || f2)) return false;
     return true;
 }
 
