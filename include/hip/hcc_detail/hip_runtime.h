@@ -440,6 +440,16 @@ extern const __device__ __attribute__((weak)) __hip_builtin_gridDim_t gridDim;
 
 #include <hip/hcc_detail/math_functions.h>
 
+// Support std::complex.
+#pragma push_macro("__CUDA__")
+#define __CUDA__
+#include <__clang_cuda_math_forward_declares.h>
+#include <__clang_cuda_complex_builtins.h>
+#include <cuda_wrappers/algorithm>
+#include <cuda_wrappers/complex>
+#undef __CUDA__
+#pragma pop_macro("__CUDA__")
+
 #endif
 
 #endif  // HIP_HCC_DETAIL_RUNTIME_H
