@@ -20,6 +20,7 @@ foreach(config ${_hip_configuration_types})
     mark_as_advanced(HIP_HIPCC_FLAGS_${config_upper} HIP_HCC_FLAGS_${config_upper} HIP_NVCC_FLAGS_${config_upper})
 endforeach()
 option(HIP_HOST_COMPILATION_CPP "Host code compilation mode" ON)
+option(HIP_VERBOSE_BUILD "Print out the commands run while compiling the HIP source file.  With the Makefile generator this defaults to VERBOSE variable specified on the command line, but can be forced on with this option." OFF)
 mark_as_advanced(HIP_HOST_COMPILATION_CPP)
 
 ###############################################################################
@@ -471,7 +472,13 @@ macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files _source_files
                 INPUT "${custom_target_script_pregen}"
                 )
             set(main_dep DEPENDS ${source_file})
-            set(verbose_output "$(VERBOSE)")
+            if(CMAKE_GENERATOR MATCHES "Makefiles")
+                set(verbose_output "$(VERBOSE)")
+            elseif(HIP_VERBOSE_BUILD)
+                set(verbose_output ON)
+            else()
+                set(verbose_output OFF)
+            endif() 
 
             # Create up the comment string
             file(RELATIVE_PATH generated_file_relative_path "${CMAKE_BINARY_DIR}" "${generated_file}")

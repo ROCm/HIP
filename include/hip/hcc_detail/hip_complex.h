@@ -24,9 +24,35 @@ THE SOFTWARE.
 #define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_COMPLEX_H
 
 #include "hip/hcc_detail/hip_vector_types.h"
-#include <math.h>
+
+// TODO: Clang has a bug which allows device functions to call std functions
+// when std functions are introduced into default namespace by using statement.
+// math.h may be included after this bug is fixed.
+#if __cplusplus
+#include <cmath>
+#else
+#include "math.h"
+#endif
 
 #if __cplusplus
+#define COMPLEX_NEG_OP_OVERLOAD(type)                                                              \
+    __device__ __host__ static inline type operator-(const type& op) {                             \
+        type ret;                                                                                  \
+        ret.x = -op.x;                                                                             \
+        ret.y = -op.y;                                                                             \
+        return ret;                                                                                \
+    }
+
+#define COMPLEX_EQ_OP_OVERLOAD(type)                                                               \
+    __device__ __host__ static inline bool operator==(const type& lhs, const type& rhs) {          \
+        return lhs.x == rhs.x && lhs.y == rhs.y;                                                   \
+    }
+
+#define COMPLEX_NE_OP_OVERLOAD(type)                                                               \
+    __device__ __host__ static inline bool operator!=(const type& lhs, const type& rhs) {          \
+        return !(lhs == rhs);                                                                      \
+    }
+
 #define COMPLEX_ADD_OP_OVERLOAD(type)                                                              \
     __device__ __host__ static inline type operator+(const type& lhs, const type& rhs) {           \
         type ret;                                                                                  \
@@ -94,12 +120,16 @@ THE SOFTWARE.
         ret.y = lhs.y * rhs;                                                                       \
         return ret;                                                                                \
     }
+#define MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(ComplexT, T)                                      \
+    __device__ __host__ ComplexT(T val) : x(val), y(val) {}                                        \
+    __device__ __host__ ComplexT(T val1, T val2) : x(val1), y(val2) {}
 
 #endif
 
 struct hipFloatComplex {
 #ifdef __cplusplus
    public:
+   typedef float value_type;
     __device__ __host__ hipFloatComplex() : x(0.0f), y(0.0f) {}
     __device__ __host__ hipFloatComplex(float x) : x(x), y(0.0f) {}
     __device__ __host__ hipFloatComplex(float x, float y) : x(x), y(y) {}
@@ -119,6 +149,7 @@ struct hipFloatComplex {
 struct hipDoubleComplex {
 #ifdef __cplusplus
    public:
+   typedef double value_type;
     __device__ __host__ hipDoubleComplex() : x(0.0f), y(0.0f) {}
     __device__ __host__ hipDoubleComplex(double x) : x(x), y(0.0f) {}
     __device__ __host__ hipDoubleComplex(double x, double y) : x(x), y(y) {}
@@ -137,6 +168,9 @@ struct hipDoubleComplex {
 
 #if __cplusplus
 
+COMPLEX_NEG_OP_OVERLOAD(hipFloatComplex)
+COMPLEX_EQ_OP_OVERLOAD(hipFloatComplex)
+COMPLEX_NE_OP_OVERLOAD(hipFloatComplex)
 COMPLEX_ADD_OP_OVERLOAD(hipFloatComplex)
 COMPLEX_SUB_OP_OVERLOAD(hipFloatComplex)
 COMPLEX_MUL_OP_OVERLOAD(hipFloatComplex)
@@ -156,6 +190,9 @@ COMPLEX_SCALAR_PRODUCT(hipFloatComplex, double)
 COMPLEX_SCALAR_PRODUCT(hipFloatComplex, signed long long)
 COMPLEX_SCALAR_PRODUCT(hipFloatComplex, unsigned long long)
 
+COMPLEX_NEG_OP_OVERLOAD(hipDoubleComplex)
+COMPLEX_EQ_OP_OVERLOAD(hipDoubleComplex)
+COMPLEX_NE_OP_OVERLOAD(hipDoubleComplex)
 COMPLEX_ADD_OP_OVERLOAD(hipDoubleComplex)
 COMPLEX_SUB_OP_OVERLOAD(hipDoubleComplex)
 COMPLEX_MUL_OP_OVERLOAD(hipDoubleComplex)
@@ -220,7 +257,6 @@ __device__ __host__ static inline hipFloatComplex hipCdivf(hipFloatComplex p, hi
 }
 
 __device__ __host__ static inline float hipCabsf(hipFloatComplex z) { return sqrtf(hipCsqabsf(z)); }
-
 
 __device__ __host__ static inline double hipCreal(hipDoubleComplex z) { return z.x; }
 
@@ -300,5 +336,21 @@ __device__ __host__ static inline hipDoubleComplex hipCfma(hipDoubleComplex p, h
 
     return make_hipDoubleComplex(real, imag);
 }
+
+// Complex functions returning real numbers.
+#define __DEFINE_HIP_COMPLEX_REAL_FUN(func, hipFun) \
+__device__ __host__ inline float func(const hipFloatComplex& z) { return hipFun##f(z); } \
+__device__ __host__ inline double func(const hipDoubleComplex& z) { return hipFun(z); }
+
+__DEFINE_HIP_COMPLEX_REAL_FUN(abs, hipCabs)
+__DEFINE_HIP_COMPLEX_REAL_FUN(real, hipCreal)
+__DEFINE_HIP_COMPLEX_REAL_FUN(imag, hipCimag)
+
+// Complex functions returning complex numbers.
+#define __DEFINE_HIP_COMPLEX_FUN(func, hipFun) \
+__device__ __host__ inline hipFloatComplex func(const hipFloatComplex& z) { return hipFun##f(z); } \
+__device__ __host__ inline hipDoubleComplex func(const hipDoubleComplex& z) { return hipFun(z); }
+
+__DEFINE_HIP_COMPLEX_FUN(conj, hipConj)
 
 #endif
