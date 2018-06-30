@@ -1,4 +1,4 @@
-# HIP Deprecated API List
+# HIP Deprecated APIs
 
 ## HIP Context API
 
