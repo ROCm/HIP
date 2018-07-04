@@ -508,19 +508,19 @@ inline
 float __fadd_rz(float x, float y) { return __ocml_add_rtz_f32(x, y); }
 __device__
 inline
-float __fdiv_rd(float x, float y) { return __ocml_div_rtp_f32(x, y); }
+float __fdiv_rd(float x, float y) { return x / y; }
 __device__
 inline
-float __fdiv_rn(float x, float y) { return __ocml_div_rte_f32(x, y); }
+float __fdiv_rn(float x, float y) { return x / y; }
 __device__
 inline
-float __fdiv_ru(float x, float y) { return __ocml_div_rtn_f32(x, y); }
+float __fdiv_ru(float x, float y) { return x / y; }
 __device__
 inline
-float __fdiv_rz(float x, float y) { return __ocml_div_rtz_f32(x, y); }
+float __fdiv_rz(float x, float y) { return x / y; }
 __device__
 inline
-float __fdividef(float x, float y) { return __ocml_div_rte_f32(x, y); }
+float __fdividef(float x, float y) { return x / y; }
 __device__
 inline
 float __fmaf_rd(float x, float y, float z)
@@ -1028,16 +1028,16 @@ inline
 double __dadd_rz(double x, double y) { return __ocml_add_rtz_f64(x, y); }
 __device__
 inline
-double __ddiv_rd(double x, double y) { return __ocml_div_rtp_f64(x, y); }
+double __ddiv_rd(double x, double y) { return x / y; }
 __device__
 inline
-double __ddiv_rn(double x, double y) { return __ocml_div_rte_f64(x, y); }
+double __ddiv_rn(double x, double y) { return x / y; }
 __device__
 inline
-double __ddiv_ru(double x, double y) { return __ocml_div_rtn_f64(x, y); }
+double __ddiv_ru(double x, double y) { return x / y; }
 __device__
 inline
-double __ddiv_rz(double x, double y) { return __ocml_div_rtz_f64(x, y); }
+double __ddiv_rz(double x, double y) { return x / y; }
 __device__
 inline
 double __dmul_rd(double x, double y) { return __ocml_mul_rtp_f64(x, y); }
