@@ -155,6 +155,3 @@ __host__ __device__ int max(int arg1, int arg2) {
 }
 
 __host__ void* __get_dynamicgroupbaseptr() { return nullptr; }
-
-
-__device__ void __threadfence_system(void) { std::atomic_thread_fence(std::memory_order_seq_cst); }

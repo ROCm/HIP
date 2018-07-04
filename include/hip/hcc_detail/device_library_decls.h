@@ -63,4 +63,15 @@ extern "C" __device__ void __llvm_fence_rel_wg(void);
 extern "C" __device__ void __llvm_fence_rel_dev(void);
 extern "C" __device__ void __llvm_fence_rel_sys(void);
 
+extern "C" __device__ void __llvm_fence_ar_sg(void);
+extern "C" __device__ void __llvm_fence_ar_wg(void);
+extern "C" __device__ void __llvm_fence_ar_dev(void);
+extern "C" __device__ void __llvm_fence_ar_sys(void);
+
+
+extern "C" __device__ void __llvm_fence_sc_sg(void);
+extern "C" __device__ void __llvm_fence_sc_wg(void);
+extern "C" __device__ void __llvm_fence_sc_dev(void);
+extern "C" __device__ void __llvm_fence_sc_sys(void);
+
 #endif

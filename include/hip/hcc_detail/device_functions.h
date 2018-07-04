@@ -752,6 +752,101 @@ void *__amdgcn_get_dynamicgroupbaseptr() {
 
 #endif // __HIP_DEVICE_COMPILE__
 
+
+// hip.amdgcn.bc - sync threads
+#define __CLK_LOCAL_MEM_FENCE    0x01
+typedef unsigned __cl_mem_fence_flags;
+
+typedef enum __memory_scope {
+  __memory_scope_work_item = __OPENCL_MEMORY_SCOPE_WORK_ITEM,
+  __memory_scope_work_group = __OPENCL_MEMORY_SCOPE_WORK_GROUP,
+  __memory_scope_device = __OPENCL_MEMORY_SCOPE_DEVICE,
+  __memory_scope_all_svm_devices = __OPENCL_MEMORY_SCOPE_ALL_SVM_DEVICES,
+  __memory_scope_sub_group = __OPENCL_MEMORY_SCOPE_SUB_GROUP
+} __memory_scope;
+
+// enum values aligned with what clang uses in EmitAtomicExpr()
+typedef enum __memory_order
+{
+  __memory_order_relaxed = __ATOMIC_RELAXED,
+  __memory_order_acquire = __ATOMIC_ACQUIRE,
+  __memory_order_release = __ATOMIC_RELEASE,
+  __memory_order_acq_rel = __ATOMIC_ACQ_REL,
+  __memory_order_seq_cst = __ATOMIC_SEQ_CST
+} __memory_order;
+
+__device__
+inline
+static void
+__atomic_work_item_fence(__cl_mem_fence_flags flags, __memory_order order, __memory_scope scope)
+{
+    // We're tying global-happens-before and local-happens-before together as does HSA
+    if (order != __memory_order_relaxed) {
+        switch (scope) {
+        case __memory_scope_work_item:
+            break;
+        case __memory_scope_sub_group:
+            switch (order) {
+            case __memory_order_relaxed: break;
+            case __memory_order_acquire: __llvm_fence_acq_sg(); break;
+            case __memory_order_release: __llvm_fence_rel_sg(); break;
+            case __memory_order_acq_rel: __llvm_fence_ar_sg(); break;
+            case __memory_order_seq_cst: __llvm_fence_sc_sg(); break;
+            }
+            break;
+        case __memory_scope_work_group:
+            switch (order) {
+            case __memory_order_relaxed: break;
+            case __memory_order_acquire: __llvm_fence_acq_wg(); break;
+            case __memory_order_release: __llvm_fence_rel_wg(); break;
+            case __memory_order_acq_rel: __llvm_fence_ar_wg(); break;
+            case __memory_order_seq_cst: __llvm_fence_sc_wg(); break;
+            }
+            break;
+        case __memory_scope_device:
+            switch (order) {
+            case __memory_order_relaxed: break;
+            case __memory_order_acquire: __llvm_fence_acq_dev(); break;
+            case __memory_order_release: __llvm_fence_rel_dev(); break;
+            case __memory_order_acq_rel: __llvm_fence_ar_dev(); break;
+            case __memory_order_seq_cst: __llvm_fence_sc_dev(); break;
+            }
+            break;
+        case __memory_scope_all_svm_devices:
+            switch (order) {
+            case __memory_order_relaxed: break;
+            case __memory_order_acquire: __llvm_fence_acq_sys(); break;
+            case __memory_order_release: __llvm_fence_rel_sys(); break;
+            case __memory_order_acq_rel: __llvm_fence_ar_sys(); break;
+            case __memory_order_seq_cst: __llvm_fence_sc_sys(); break;
+            }
+            break;
+        }
+    }
+}
+
+// Memory Fence Functions
+__device__
+inline
+static void __threadfence()
+{
+  __atomic_work_item_fence(0, __memory_order_seq_cst, __memory_scope_device);
+}
+
+__device__
+inline
+static void __threadfence_block()
+{
+  __atomic_work_item_fence(0, __memory_order_seq_cst, __memory_scope_work_group);
+}
+
+__device__
+inline
+static void __threadfence_system()
+{
+  __atomic_work_item_fence(0, __memory_order_seq_cst, __memory_scope_all_svm_devices);
+}
+
 #endif // __HCC_OR_HIP_CLANG__
 
 #ifdef __HCC__
@@ -796,50 +891,14 @@ void __assertfail(const char * __assertion,
     __builtin_trap();
 }
 
-// hip.amdgcn.bc - sync threads
-#define __CLK_LOCAL_MEM_FENCE    0x01
-typedef unsigned __cl_mem_fence_flags;
-
-typedef enum __memory_scope {
-  __memory_scope_work_item = __OPENCL_MEMORY_SCOPE_WORK_ITEM,
-  __memory_scope_work_group = __OPENCL_MEMORY_SCOPE_WORK_GROUP,
-  __memory_scope_device = __OPENCL_MEMORY_SCOPE_DEVICE,
-  __memory_scope_all_svm_devices = __OPENCL_MEMORY_SCOPE_ALL_SVM_DEVICES,
-  __memory_scope_sub_group = __OPENCL_MEMORY_SCOPE_SUB_GROUP
-} __memory_scope;
-
-// enum values aligned with what clang uses in EmitAtomicExpr()
-typedef enum __memory_order
-{
-  __memory_order_relaxed = __ATOMIC_RELAXED,
-  __memory_order_acquire = __ATOMIC_ACQUIRE,
-  __memory_order_release = __ATOMIC_RELEASE,
-  __memory_order_acq_rel = __ATOMIC_ACQ_REL,
-  __memory_order_seq_cst = __ATOMIC_SEQ_CST
-} __memory_order;
-
 __device__
 inline
 static void __work_group_barrier(__cl_mem_fence_flags flags, __memory_scope scope)
 {
     if (flags) {
-        switch(scope) {
-          case __memory_scope_work_item:        break;
-          case __memory_scope_sub_group:        __llvm_fence_rel_sg(); break;
-          case __memory_scope_work_group:       __llvm_fence_rel_wg(); break;
-          case __memory_scope_device:           __llvm_fence_rel_dev(); break;
-          case __memory_scope_all_svm_devices:  __llvm_fence_rel_sys(); break;
-        }
-        //atomic_work_item_fence(flags, memory_order_release, scope);
+        __atomic_work_item_fence(flags, __memory_order_release, scope);
         __builtin_amdgcn_s_barrier();
-        //atomic_work_item_fence(flags, memory_order_acquire, scope);
-        switch(scope) {
-          case __memory_scope_work_item:        break;
-          case __memory_scope_sub_group:        __llvm_fence_acq_sg(); break;
-          case __memory_scope_work_group:       __llvm_fence_acq_wg(); break;
-          case __memory_scope_device:           __llvm_fence_acq_dev(); break;
-          case __memory_scope_all_svm_devices:  __llvm_fence_acq_sys(); break;
-        }
+        __atomic_work_item_fence(flags, __memory_order_acquire, scope);
     } else {
         __builtin_amdgcn_s_barrier();
     }
@@ -917,5 +976,6 @@ unsigned __smid(void)
 
 
 #endif //defined(__clang__) && defined(__HIP__)
+
 
 #endif
