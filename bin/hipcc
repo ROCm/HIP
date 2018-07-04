@@ -626,6 +626,9 @@ if ($needLDFLAGS and not $compileOnly) {
     $CMD .= " $HIPLDFLAGS";
 }
 $CMD .= " $toolArgs";
+if ($needLDFLAGS and not $compileOnly and $HIP_PLATFORM eq "clang") {
+    $CMD .= " -lgcc_s -lgcc";
+}
 
 if ($verbose & 0x1) {
     print "hipcc-cmd: ", $CMD, "\n";
