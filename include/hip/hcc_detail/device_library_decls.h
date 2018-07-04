@@ -45,7 +45,11 @@ extern "C" __device__ float __ocml_trunc_f32(float);
 
 // Introduce local address space
 #define __local __attribute__((address_space(3)))
-__device__ inline static __local char* __to_local(unsigned x) { return (__local char*)x; }
+
+#ifdef __HIP_DEVICE_COMPILE__
+__device__ inline static __local void* __to_local(unsigned x) { return (__local void*)x; }
+#endif //__HIP_DEVICE_COMPILE__
+
 extern "C" __device__ void* __local_to_generic(__local void* p);
 
 // __llvm_fence* functions from device-libs/irif/src/fence.ll
