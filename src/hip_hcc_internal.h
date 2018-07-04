@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include <hc.hpp>
 #include <hsa/hsa.h>
 #include <unordered_map>
-
+#include <stack>
 #include "hsa/hsa_ext_amd.h"
 #include "hip/hip_runtime.h"
 #include "hip_util.h"
