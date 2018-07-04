@@ -98,22 +98,27 @@ struct Empty_launch_parm {};
 #include "grid_launch_GGL.hpp"
 #endif  // GENERIC_GRID_LAUNCH
 
+#endif // HCC
+
+#if __HCC_OR_HIP_CLANG__
 extern int HIP_TRACE_API;
 
 #ifdef __cplusplus
 #include <hip/hcc_detail/hip_ldg.h>
 #endif
+#include <hip/hcc_detail/hip_atomic.h>
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hcc_detail/math_functions.h>
 #include <hip/hcc_detail/device_functions.h>
+#if __HCC__
 #include <hip/hcc_detail/texture_functions.h>
 #include <hip/hcc_detail/surface_functions.h>
+#endif // __HCC__
 
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
 #if defined(__KALMAR_ACCELERATOR__) && !defined(__HCC_ACCELERATOR__)
 #define __HCC_ACCELERATOR__ __KALMAR_ACCELERATOR__
 #endif
-
 
 // TODO-HCC add a dummy implementation of assert, need to replace with a proper kernel exit call.
 #if __HIP_DEVICE_COMPILE__ == 1
@@ -179,10 +184,6 @@ extern int HIP_TRACE_API;
 #define __HCC_C__
 #endif
 
-#endif  // defined __HCC__
-
-#if __HCC_OR_HIP_CLANG__
-
 // TODO - hipify-clang - change to use the function call.
 //#define warpSize hc::__wavesize()
 static constexpr int warpSize = 64;
@@ -193,82 +194,6 @@ __device__ clock_t clock();
 
 // abort
 __device__ void abort();
-
-// atomicAdd()
-__device__ int atomicAdd(int* address, int val);
-__device__ unsigned int atomicAdd(unsigned int* address, unsigned int val);
-
-__device__ unsigned long long int atomicAdd(unsigned long long int* address,
-                                            unsigned long long int val);
-
-__device__ float atomicAdd(float* address, float val);
-
-
-// atomicSub()
-__device__ int atomicSub(int* address, int val);
-
-__device__ unsigned int atomicSub(unsigned int* address, unsigned int val);
-
-
-// atomicExch()
-__device__ int atomicExch(int* address, int val);
-
-__device__ unsigned int atomicExch(unsigned int* address, unsigned int val);
-
-__device__ unsigned long long int atomicExch(unsigned long long int* address,
-                                             unsigned long long int val);
-
-__device__ float atomicExch(float* address, float val);
-
-
-// atomicMin()
-__device__ int atomicMin(int* address, int val);
-__device__ unsigned int atomicMin(unsigned int* address, unsigned int val);
-__device__ unsigned long long int atomicMin(unsigned long long int* address,
-                                            unsigned long long int val);
-
-
-// atomicMax()
-__device__ int atomicMax(int* address, int val);
-__device__ unsigned int atomicMax(unsigned int* address, unsigned int val);
-__device__ unsigned long long int atomicMax(unsigned long long int* address,
-                                            unsigned long long int val);
-
-
-// atomicCAS()
-__device__ int atomicCAS(int* address, int compare, int val);
-__device__ unsigned int atomicCAS(unsigned int* address, unsigned int compare, unsigned int val);
-__device__ unsigned long long int atomicCAS(unsigned long long int* address,
-                                            unsigned long long int compare,
-                                            unsigned long long int val);
-
-
-// atomicAnd()
-__device__ int atomicAnd(int* address, int val);
-__device__ unsigned int atomicAnd(unsigned int* address, unsigned int val);
-__device__ unsigned long long int atomicAnd(unsigned long long int* address,
-                                            unsigned long long int val);
-
-
-// atomicOr()
-__device__ int atomicOr(int* address, int val);
-__device__ unsigned int atomicOr(unsigned int* address, unsigned int val);
-__device__ unsigned long long int atomicOr(unsigned long long int* address,
-                                           unsigned long long int val);
-
-
-// atomicXor()
-__device__ int atomicXor(int* address, int val);
-__device__ unsigned int atomicXor(unsigned int* address, unsigned int val);
-__device__ unsigned long long int atomicXor(unsigned long long int* address,
-                                            unsigned long long int val);
-
-// atomicInc()
-__device__ unsigned int atomicInc(unsigned int* address, unsigned int val);
-
-
-// atomicDec()
-__device__ unsigned int atomicDec(unsigned int* address, unsigned int val);
 
 // warp vote function __all __any __ballot
 __device__ int __all(int input);
