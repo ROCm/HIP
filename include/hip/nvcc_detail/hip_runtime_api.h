@@ -163,6 +163,7 @@ typedef cudaSurfaceObject_t hipSurfaceObject_t;
 #define hipTextureType1D cudaTextureType1D
 #define hipTextureType1DLayered cudaTextureType1DLayered
 #define hipTextureType2D cudaTextureType2D
+#define hipTextureType2DLayered cudaTextureType2DLayered
 #define hipTextureType3D cudaTextureType3D
 #define hipDeviceMapHost cudaDeviceMapHost
 
