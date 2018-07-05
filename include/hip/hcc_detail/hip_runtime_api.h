@@ -2621,6 +2621,13 @@ hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex, hipArray
     return ihipBindTextureToArrayImpl(dim, readMode, array, desc, &tex);
 }
 
+template <class T, int dim, enum hipTextureReadMode readMode>
+inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> *tex,
+                                               hipArray_const_t array,
+                                               const struct hipChannelFormatDesc* desc) {
+    return ihipBindTextureToArrayImpl(dim, readMode, array, *desc, tex);
+}
+
 // C API
 hipError_t hipBindTextureToMipmappedArray(const textureReference* tex,
                                           hipMipmappedArray_const_t mipmappedArray,
