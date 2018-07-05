@@ -201,8 +201,15 @@ __device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask
 
 #endif  //__HIP_ARCH_GFX803__ == 1
 
-__host__ __device__ int min(int arg1, int arg2);
-__host__ __device__ int max(int arg1, int arg2);
+__device__ inline static int min(int arg1, int arg2) {
+    return (int)(__ocml_fmin_f32((float) arg1, (float) arg2));
+}
+__device__ inline static int max(int arg1, int arg2) {
+    return (int)(__ocml_fmax_f32((float) arg1, (float) arg2));
+}
+
+__host__ inline static int min(int arg1, int arg2) { return std::min(arg1, arg2); }
+__host__ inline static int max(int arg1, int arg2) { return std::max(arg1, arg2); }
 
 #endif  // __HCC_OR_HIP_CLANG__
 

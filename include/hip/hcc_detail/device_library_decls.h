@@ -43,6 +43,9 @@ extern "C" __device__ float __ocml_rint_f32(float);
 extern "C" __device__ float __ocml_ceil_f32(float);
 extern "C" __device__ float __ocml_trunc_f32(float);
 
+extern "C" __device__ float __ocml_fmin_f32(float, float);
+extern "C" __device__ float __ocml_fmax_f32(float, float);
+
 // Introduce local address space
 #define __local __attribute__((address_space(3)))
 

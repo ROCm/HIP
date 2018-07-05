@@ -147,11 +147,4 @@ __device__ void* __hip_hc_memset(void* dst, uint8_t val, size_t size) {
 // abort
 __device__ void abort() { return hc::abort(); }
 
-__host__ __device__ int min(int arg1, int arg2) {
-    return (int)(hc::precise_math::fmin((float)arg1, (float)arg2));
-}
-__host__ __device__ int max(int arg1, int arg2) {
-    return (int)(hc::precise_math::fmax((float)arg1, (float)arg2));
-}
-
 __host__ void* __get_dynamicgroupbaseptr() { return nullptr; }
