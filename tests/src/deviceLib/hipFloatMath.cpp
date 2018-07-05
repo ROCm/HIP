@@ -51,6 +51,14 @@ __global__ void floatMath(hipLaunchParm lp, float* In, float* Out) {
     Out[tid] = __sinf(Out[tid]);
     Out[tid] = __cosf(Out[tid]);
     Out[tid] = __tanf(Out[tid]);
+
+    Out[tid] = HIPRT_INF_F;
+    Out[tid] = HIPRT_NAN_F;
+    Out[tid] = HIPRT_MIN_DENORM_F;
+    Out[tid] = HIPRT_MAX_NORMAL_F;
+    Out[tid] = HIPRT_NEG_ZERO_F;
+    Out[tid] = HIPRT_ZERO_F;
+    Out[tid] = HIPRT_ONE_F;
 }
 
 int main() {

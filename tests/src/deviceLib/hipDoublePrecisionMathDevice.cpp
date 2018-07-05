@@ -126,6 +126,9 @@ __device__ void double_precision_math_functions() {
     y0(1.0);
     y1(1.0);
     yn(1, 1.0);
+
+    HIPRT_INF;
+    HIPRT_NAN;
 }
 
 __global__ void compileDoublePrecisionMathOnDevice(int) {
