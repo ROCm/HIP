@@ -196,13 +196,7 @@ __device__ float __shfl_xor(float input, int lane_mask, int width) {
     return hc::__shfl_xor(input, lane_mask, width);
 }
 
-__host__ __device__ int min(int arg1, int arg2) {
-    return (int)(hc::precise_math::fmin((float)arg1, (float)arg2));
-}
-__host__ __device__ int max(int arg1, int arg2) {
-    return (int)(hc::precise_math::fmax((float)arg1, (float)arg2));
-}
-
+__host__ __device__          int min(         int arg1,          int arg2) { return ((arg1 < arg2) ? arg1 : arg2 ); }
 __host__ __device__ unsigned int min(         int arg1, unsigned int arg2) { return ((arg1 < arg2) ? arg1 : arg2 ); }
 __host__ __device__ unsigned int min(unsigned int arg1,          int arg2) { return ((arg1 < arg2) ? arg1 : arg2 ); }
 __host__ __device__ unsigned int min(unsigned int arg1, unsigned int arg2) { return ((arg1 < arg2) ? arg1 : arg2 ); }
@@ -221,6 +215,7 @@ __host__ __device__ float min(float arg1, float arg2) { return ((arg1 < arg2) ? 
 __host__ __device__ double min(double arg1, double arg2) { return ((arg1 < arg2) ? arg1 : arg2 ); }
 
 
+__host__ __device__          int max(         int arg1,          int arg2) { return ((arg1 > arg2) ? arg1 : arg2 ); }
 __host__ __device__ unsigned int max(         int arg1, unsigned int arg2) { return ((arg1 > arg2) ? arg1 : arg2 ); }
 __host__ __device__ unsigned int max(unsigned int arg1,          int arg2) { return ((arg1 > arg2) ? arg1 : arg2 ); }
 __host__ __device__ unsigned int max(unsigned int arg1, unsigned int arg2) { return ((arg1 > arg2) ? arg1 : arg2 ); }
