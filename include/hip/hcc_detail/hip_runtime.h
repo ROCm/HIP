@@ -110,9 +110,9 @@ extern int HIP_TRACE_API;
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hcc_detail/math_functions.h>
 #include <hip/hcc_detail/device_functions.h>
+#include <hip/hcc_detail/surface_functions.h>
 #if __HCC__
 #include <hip/hcc_detail/texture_functions.h>
-#include <hip/hcc_detail/surface_functions.h>
 #endif // __HCC__
 
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
