@@ -28,6 +28,7 @@ THE SOFTWARE.
 
 #include <hip/hip_runtime.h>
 #include <hip/math_functions.h>
+#include <hip/math_constants.h>
 #include "test_common.h"
 
 #pragma GCC diagnostic ignored "-Wall"
