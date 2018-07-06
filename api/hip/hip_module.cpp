@@ -130,6 +130,13 @@ hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod, const ch
   return hipSuccess;
 }
 
+hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
+{
+  HIP_INIT_API(attr, func);
+
+  return hipErrorInvalidDeviceFunction;
+}
+
 hipError_t hipModuleLaunchKernel(hipFunction_t f,
                                  uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
                                  uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
