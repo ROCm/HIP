@@ -366,13 +366,13 @@ hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
 hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent) {
   HIP_INIT_API(pitchedDevPtr, value, &extent);
 
-  void *dst = &pitchedDevPtr.ptr;
+  void *dst = pitchedDevPtr.ptr;
   size_t sizeBytes = pitchedDevPtr.pitch * extent.height * extent.depth;
 
   hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
-  return ihipMemset(&dst, value, sizeBytes, *queue);
+  return ihipMemset(dst, value, sizeBytes, *queue);
 }
 
 hipError_t hipArrayCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray) {
@@ -1129,9 +1129,9 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
   amd::BufferRect srcRect;
   amd::BufferRect dstRect;
   size_t offset = 0;
-  amd::Memory* src = getMemoryObject(srcPtr, offset);
+  amd::Memory* srcMemory = getMemoryObject(srcPtr, offset);
   assert(offset == 0);
-  amd::Memory* dst = getMemoryObject(dstPtr, offset);
+  amd::Memory* dstMemory = getMemoryObject(dstPtr, offset);
   assert(offset == 0);
 
   size_t src_slice_pitch = srcPitchInBytes * p->srcHeight;
@@ -1147,28 +1147,46 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
   amd::Coord3D srcEnd(srcRect.end_, 1, 1);
   amd::Coord3D dstEnd(dstRect.end_, 1, 1);
 
-  if (!src->asBuffer()->validateRegion(srcStart, srcEnd) ||
-      !dst->asBuffer()->validateRegion(dstStart, dstEnd)) {
-    return hipErrorInvalidValue;
+  hipMemcpyKind kind = p->kind;
+
+  if (kind == hipMemcpyDefault) {
+    // Determine kind on VA
+    if (srcMemory == nullptr && dstMemory != nullptr) {
+      kind = hipMemcpyHostToDevice;
+    } else if (srcMemory != nullptr && dstMemory == nullptr) {
+      kind = hipMemcpyDeviceToHost;
+    } else if (srcMemory != nullptr && dstMemory != nullptr) {
+      kind = hipMemcpyDeviceToDevice;
+    } else {
+      kind = hipMemcpyHostToHost;
+    }
   }
 
-  // Check if regions overlap each other
-  if ((src->asBuffer() == dst->asBuffer()) &&
-      (std::abs(static_cast<long>(srcOrigin[0]) - static_cast<long>(dstOrigin[0])) <
-       static_cast<long>(region[0])) &&
-      (std::abs(static_cast<long>(srcOrigin[1]) - static_cast<long>(dstOrigin[1])) <
-       static_cast<long>(region[1])) &&
-      (std::abs(static_cast<long>(srcOrigin[2]) - static_cast<long>(dstOrigin[2])) <
-       static_cast<long>(region[2]))) {
-    return hipErrorUnknown;
-  }
-
+  amd::Command* command = nullptr;
   amd::Command::EventWaitList waitList;
   amd::Coord3D size(region[0], region[1], region[2]);
 
-  amd::CopyMemoryCommand* command =
-      new amd::CopyMemoryCommand(*queue, CL_COMMAND_COPY_BUFFER_RECT, waitList, *src->asBuffer(),
-                                 *dst->asBuffer(), srcStart, dstStart, size, srcRect, dstRect);
+  switch (kind) {
+  case hipMemcpyDeviceToHost:
+    command = new amd::ReadMemoryCommand(*queue, CL_COMMAND_READ_BUFFER_RECT, waitList,
+              *srcMemory->asBuffer(), srcStart, size, dstPtr, srcRect, dstRect);
+    break;
+  case hipMemcpyHostToDevice:
+    command = new amd::WriteMemoryCommand(*queue, CL_COMMAND_WRITE_BUFFER_RECT, waitList,
+              *dstMemory->asBuffer(), srcStart, size, srcPtr, srcRect, dstRect);
+    break;
+  case hipMemcpyDeviceToDevice:
+    command = new amd::CopyMemoryCommand(*queue, CL_COMMAND_COPY_BUFFER_RECT, waitList,
+              *srcMemory->asBuffer(),*dstMemory->asBuffer(), srcStart, dstStart, size,
+               srcRect, dstRect);
+    break;
+  case hipMemcpyHostToHost:
+    memcpy(dstPtr, srcPtr, region[0] * region[1] * region[2]);
+    return hipSuccess;
+  default:
+    assert(!"Shouldn't reach here");
+    break;
+  }
 
   if (command == nullptr) {
     return hipErrorOutOfMemory;
