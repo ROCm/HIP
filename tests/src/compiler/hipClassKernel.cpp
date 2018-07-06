@@ -28,48 +28,80 @@ THE SOFTWARE.
 
 #include "compiler/hipClassKernel.h"
 
- // check sizeof empty class in kernel
-__global__ void 
- emptyClassKernel(bool* result_ecd){
-   int tid = threadIdx.x + blockIdx.x * blockDim.x;
-   result_ecd[tid] = (sizeof(testClassEmpty) == 1);
+// check sizeof empty class is 1
+__global__ void
+emptyClassKernel(bool* result_ecd) {
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  result_ecd[tid] = (sizeof(testClassEmpty) == 1);
+}
+
+// check object addresses are not same
+__global__ void
+emptyClassKernelObj(bool* result_ecd) {
+  int tid = threadIdx.x + blockIdx.x * blockDim.x;
+  testClassEmpty ob1, ob2;
+  result_ecd[tid] = (&ob1 != &ob2);
 }
 
 
- int main() {
-    bool *result_ecd,*result_ech;
-    size_t NBOOL = BLOCKS * sizeof(bool);
-    
-    HIPCHECK(hipMalloc((void**)&result_ecd,
-                        NBOOL));
-    HIPCHECK(hipMemset(result_ecd, 
-                       false, 
+int main() {
+  bool *result_ecd, *result_eob, *result_ech, *result_eoh;
+  size_t NBOOL = BLOCKS * sizeof(bool);
+
+  HIPCHECK(hipHostMalloc(reinterpret_cast<void**>(&result_ech),
+                         NBOOL,
+                         hipHostMallocDefault));
+  HIPCHECK(hipMalloc(reinterpret_cast<void**>(&result_ecd),
+                     NBOOL));
+  HIPCHECK(hipMemset(result_ecd,
+                       false,
                        NBOOL));
-
-    HIPCHECK(hipHostMalloc((void**)&result_ech,
-                           NBOOL,
-                           hipHostMallocDefault));
-    
-    hipLaunchKernelGGL(
-        HIP_KERNEL_NAME(emptyClassKernel),
-        dim3(BLOCKS),
-        dim3(THREADS_PER_BLOCK),
-        0,
-        0,
-        result_ecd);
-
-    HIPCHECK(hipMemcpy(result_ech, 
+  hipLaunchKernelGGL(HIP_KERNEL_NAME(emptyClassKernel),
+                     dim3(BLOCKS),
+                     dim3(THREADS_PER_BLOCK),
+                     0,
+                     0,
+                     result_ecd);
+  HIPCHECK(hipMemcpy(result_ech,
                        result_ecd,
-                       BLOCKS*sizeof(bool), 
+                       BLOCKS*sizeof(bool),
                        hipMemcpyDeviceToHost));
 
     // validation on host side
-    for(int i = 0; i < BLOCKS; i++){
-        HIPASSERT(result_ech[i] == true);
+  for (int i = 0; i < BLOCKS; i++) {
+    HIPASSERT(result_ech[i] == true);
     }
-    
-    hipFree((void **)&result_ech);
-    hipFree((void **)&result_ecd);
-    
-    passed();
+
+
+  HIPCHECK(hipHostMalloc(reinterpret_cast<void**>(&result_eoh),
+                         NBOOL,
+                         hipHostMallocDefault));
+  HIPCHECK(hipMalloc(reinterpret_cast<void**>(&result_eob),
+                     NBOOL));
+  HIPCHECK(hipMemset(result_eob,
+                     false,
+                     NBOOL));
+  hipLaunchKernelGGL(HIP_KERNEL_NAME(emptyClassKernelObj),
+                     dim3(BLOCKS),
+                     dim3(THREADS_PER_BLOCK),
+                     0,
+                     0,
+                     result_eob);
+  HIPCHECK(hipMemcpy(result_eoh,
+                       result_eob,
+                       BLOCKS*sizeof(bool),
+                       hipMemcpyDeviceToHost));
+
+    // validation on host side
+  for (int i = 0; i < BLOCKS; i++) {
+    HIPASSERT(result_eoh[i] == true);
+    }
+
+
+  HIPCHECK(hipHostFree(result_ech));
+  HIPCHECK(hipFree(result_ecd));
+  HIPCHECK(hipFree(result_eob));
+  HIPCHECK(hipHostFree(result_eoh));
+
+  passed();
 }

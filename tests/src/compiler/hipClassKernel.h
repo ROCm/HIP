@@ -19,13 +19,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+#ifndef COMPILER_HIPCLASSKERNEL_H_
+#define COMPILER_HIPCLASSKERNEL_H_
 
 #include <iostream>
 #include "hip/hip_runtime.h"
 #include "test_common.h"
-using namespace std;
 
-static const int BLOCKS=512;
-static const int THREADS_PER_BLOCK=1;
+static const int BLOCKS = 512;
+static const int THREADS_PER_BLOCK = 1;
 
 class testClassEmpty{};
+
+#endif  // COMPILER_HIPCLASSKERNEL_H_
