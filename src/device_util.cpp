@@ -319,6 +319,20 @@ __device__ float __shfl_xor(float input, int lane_mask, int width) {
     return hc::__shfl_xor(input, lane_mask, width);
 }
 
+__device__ double __shfl(double input, int lane, int width) { return hc::__shfl(input, lane, width); }
+
+__device__ double __shfl_up(double input, unsigned int lane_delta, int width) {
+    return hc::__shfl_up(input, lane_delta, width);
+}
+
+__device__ double __shfl_down(double input, unsigned int lane_delta, int width) {
+    return hc::__shfl_down(input, lane_delta, width);
+}
+
+__device__ double __shfl_xor(double input, int lane_mask, int width) {
+    return hc::__shfl_xor(input, lane_mask, width);
+}
+
 __host__ __device__ int min(int arg1, int arg2) {
     return (int)(hc::precise_math::fmin((float)arg1, (float)arg2));
 }
