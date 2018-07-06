@@ -440,21 +440,21 @@ int main() {
                          dim3(1), 0, 0, Ad), true, "firstCall");
 #endif
 
-    hipFree((void **)&result_h1);
+    hipHostFree((void **)&result_h1);
     hipFree((void **)&result_d1);
-    hipFree((void **)&result_h2);
+    hipHostFree((void **)&result_h2);
     hipFree((void **)&result_d2);
-    hipFree((void **)&result_h3);
+    hipHostFree((void **)&result_h3);
     hipFree((void **)&result_d3);
-    hipFree((void **)&result_h4);
+    hipHostFree((void **)&result_h4);
     hipFree((void **)&result_d4);
-    hipFree((void **)&result_h5);
+    hipHostFree((void **)&result_h5);
     hipFree((void **)&result_d5);
-    hipFree((void **)&result_h6);
+    hipHostFree((void **)&result_h6);
     hipFree((void **)&result_d6);
-    hipFree((void **)&result_h7);
+    hipHostFree((void **)&result_h7);
     hipFree((void **)&result_d7);
-    hipFree((void **)&result_h8);
+    hipHostFree((void **)&result_h8);
     hipFree((void **)&result_d8);
     passed();
 }
