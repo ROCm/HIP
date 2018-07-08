@@ -735,7 +735,6 @@ int64_t __lanemask_lt()
 }
 
 #ifdef __HIP_DEVICE_COMPILE__
-
 __device__
 inline
 void* __get_dynamicgroupbaseptr()
@@ -743,6 +742,10 @@ void* __get_dynamicgroupbaseptr()
     // Get group segment base pointer.
     return (char*)__local_to_generic(__to_local(__llvm_amdgcn_groupstaticsize()));
 }
+#else
+__device__
+void* __get_dynamicgroupbaseptr();
+#endif // __HIP_DEVICE_COMPILE__
 
 __device__
 inline
@@ -750,7 +753,6 @@ void *__amdgcn_get_dynamicgroupbaseptr() {
     return __get_dynamicgroupbaseptr();
 }
 
-#endif // __HIP_DEVICE_COMPILE__
 
 
 // hip.amdgcn.bc - sync threads
