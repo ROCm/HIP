@@ -53,8 +53,6 @@ extern "C" __device__ float __ocml_fmax_f32(float, float);
 __device__ inline static __local void* __to_local(unsigned x) { return (__local void*)x; }
 #endif //__HIP_DEVICE_COMPILE__
 
-extern "C" __device__ void* __local_to_generic(__local void* p);
-
 // __llvm_fence* functions from device-libs/irif/src/fence.ll
 extern "C" __device__ void __llvm_fence_acq_sg(void);
 extern "C" __device__ void __llvm_fence_acq_wg(void);
