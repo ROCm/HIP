@@ -440,21 +440,21 @@ int main() {
                          dim3(1), 0, 0, Ad), true, "firstCall");
 #endif
 
-    hipHostFree((void **)&result_h1);
-    hipFree((void **)&result_d1);
-    hipHostFree((void **)&result_h2);
-    hipFree((void **)&result_d2);
-    hipHostFree((void **)&result_h3);
-    hipFree((void **)&result_d3);
-    hipHostFree((void **)&result_h4);
-    hipFree((void **)&result_d4);
-    hipHostFree((void **)&result_h5);
-    hipFree((void **)&result_d5);
-    hipHostFree((void **)&result_h6);
-    hipFree((void **)&result_d6);
-    hipHostFree((void **)&result_h7);
-    hipFree((void **)&result_d7);
-    hipHostFree((void **)&result_h8);
-    hipFree((void **)&result_d8);
+    HIPCHECK(hipHostFree(result_h1));
+    HIPCHECK(hipFree(result_d1));
+    HIPCHECK(hipHostFree(result_h2));
+    HIPCHECK(hipFree(result_d2));
+    HIPCHECK(hipHostFree(result_h3));
+    HIPCHECK(hipFree(result_d3));
+    HIPCHECK(hipHostFree(result_h4));
+    HIPCHECK(hipFree(result_d4));
+    HIPCHECK(hipHostFree(result_h5));
+    HIPCHECK(hipFree(result_d5));
+    HIPCHECK(hipHostFree(result_h6));
+    HIPCHECK(hipFree(result_d6));
+    HIPCHECK(hipHostFree(result_h7));
+    HIPCHECK(hipFree(result_d7));
+    HIPCHECK(hipHostFree(result_h8));
+    HIPCHECK(hipFree(result_d8));
     passed();
 }
