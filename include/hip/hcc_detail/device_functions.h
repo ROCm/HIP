@@ -734,13 +734,15 @@ int64_t __lanemask_lt()
     return ballot;
 }
 
+__device__ inline void* __local_to_generic(void* p) { return p; }
+
 #ifdef __HIP_DEVICE_COMPILE__
 __device__
 inline
 void* __get_dynamicgroupbaseptr()
 {
     // Get group segment base pointer.
-    return (char*)__local_to_generic(__to_local(__llvm_amdgcn_groupstaticsize()));
+    return (char*)__local_to_generic((void*)__to_local(__llvm_amdgcn_groupstaticsize()));
 }
 #else
 __device__
