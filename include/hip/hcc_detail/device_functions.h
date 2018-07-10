@@ -662,51 +662,38 @@ void __named_sync(int a, int b) { __builtin_amdgcn_s_barrier(); }
 #endif // __HIP_DEVICE_COMPILE__
 
 // warp vote function __all __any __ballot
-extern "C" __device__ inline uint64_t __activelanemask_v4_b64_b1(unsigned int input) {
-    uint64_t output;
-    // define i64 @__activelanemask_v4_b64_b1(i32 %input) #5 {
-    //   %a = tail call i64 asm "v_cmp_ne_i32_e64 $0, 0, $1", "=s,v"(i32 %input) #9
-    //   ret i64 %a
-    // }
-    __asm("v_cmp_ne_i32_e64 %0, 0, %1" : "=s"(output) : "v"(input));
-    return output;
-}
-
-__device__
-inline
-unsigned int __activelanecount_u32_b1(unsigned int input) {
-    return  __popcll(__activelanemask_v4_b64_b1(input));
-}
-
 __device__
 inline
 int __all(int predicate) {
-    return __popcll(__activelanemask_v4_b64_b1(predicate)) == __activelanecount_u32_b1(1);
+    return __ockl_wfall_i32(predicate);
 }
 
 __device__
 inline
 int __any(int predicate) {
 #ifdef NVCC_COMPAT
-    if (__popcll(__activelanemask_v4_b64_b1(predicate)) != 0)
+    if (__ockl_wfany_i32(predicate) != 0)
         return 1;
     else
         return 0;
 #else
-    return __popcll(__activelanemask_v4_b64_b1(predicate));
+    return __ockl_wfany_i32(predicate);
 #endif
 }
+
+// XXX from llvm/include/llvm/IR/InstrTypes.h
+#define ICMP_NE 33
 
 __device__
 inline
 unsigned long long int __ballot(int predicate) {
-    return __activelanemask_v4_b64_b1(predicate);
+    return __llvm_amdgcn_icmp_i32(predicate, 0, ICMP_NE);
 }
 
 __device__
 inline
 unsigned long long int __ballot64(int predicate) {
-    return __activelanemask_v4_b64_b1(predicate);
+    return __llvm_amdgcn_icmp_i32(predicate, 0, ICMP_NE);
 }
 
 // hip.amdgcn.bc - lanemask
