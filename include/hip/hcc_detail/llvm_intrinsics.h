@@ -31,6 +31,8 @@ THE SOFTWARE.
 
 #include "hip/hcc_detail/host_defines.h"
 
+__device__ ulong __llvm_amdgcn_icmp_i32(uint x, uint y, uint z) __asm("llvm.amdgcn.icmp.i32");
+
 __device__
 unsigned __llvm_amdgcn_groupstaticsize() __asm("llvm.amdgcn.groupstaticsize");
 

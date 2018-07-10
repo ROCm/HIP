@@ -30,6 +30,8 @@ THE SOFTWARE.
 
 #include "hip/hcc_detail/host_defines.h"
 
+extern "C" __device__ bool __ockl_wfany_i32(int);
+extern "C" __device__ bool __ockl_wfall_i32(int);
 extern "C" __device__ int32_t __ockl_activelane_u32(void);
 
 extern "C" __device__ uint __ockl_mul24_u32(uint, uint);
