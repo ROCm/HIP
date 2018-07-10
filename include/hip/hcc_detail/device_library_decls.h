@@ -30,23 +30,23 @@ THE SOFTWARE.
 
 #include "hip/hcc_detail/host_defines.h"
 
-extern "C" __device__ bool __ockl_wfany_i32(int);
-extern "C" __device__ bool __ockl_wfall_i32(int);
-extern "C" __device__ int32_t __ockl_activelane_u32(void);
+extern "C" __device__ __attribute__((const)) bool __ockl_wfany_i32(int);
+extern "C" __device__ __attribute__((const)) bool __ockl_wfall_i32(int);
+extern "C" __device__ uint __ockl_activelane_u32(void);
 
-extern "C" __device__ uint __ockl_mul24_u32(uint, uint);
-extern "C" __device__ int __ockl_mul24_i32(int, int);
-extern "C" __device__ uint __ockl_mul_hi_u32(uint, uint);
-extern "C" __device__ int __ockl_mul_hi_i32(int, int);
-extern "C" __device__ uint __ockl_sad_u32(uint, uint, uint);
+extern "C" __device__ __attribute__((const)) uint __ockl_mul24_u32(uint, uint);
+extern "C" __device__ __attribute__((const)) int __ockl_mul24_i32(int, int);
+extern "C" __device__ __attribute__((const)) uint __ockl_mul_hi_u32(uint, uint);
+extern "C" __device__ __attribute__((const)) int __ockl_mul_hi_i32(int, int);
+extern "C" __device__ __attribute__((const)) uint __ockl_sad_u32(uint, uint, uint);
 
-extern "C" __device__ float __ocml_floor_f32(float);
-extern "C" __device__ float __ocml_rint_f32(float);
-extern "C" __device__ float __ocml_ceil_f32(float);
-extern "C" __device__ float __ocml_trunc_f32(float);
+extern "C" __device__ __attribute__((const)) float __ocml_floor_f32(float);
+extern "C" __device__ __attribute__((const)) float __ocml_rint_f32(float);
+extern "C" __device__ __attribute__((const)) float __ocml_ceil_f32(float);
+extern "C" __device__ __attribute__((const)) float __ocml_trunc_f32(float);
 
-extern "C" __device__ float __ocml_fmin_f32(float, float);
-extern "C" __device__ float __ocml_fmax_f32(float, float);
+extern "C" __device__ __attribute__((const)) float __ocml_fmin_f32(float, float);
+extern "C" __device__ __attribute__((const)) float __ocml_fmax_f32(float, float);
 
 // Introduce local address space
 #define __local __attribute__((address_space(3)))
