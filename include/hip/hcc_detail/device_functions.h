@@ -440,7 +440,8 @@ __device__ static inline char4 __hip_hc_mul8pk(char4 in1, char4 in2) {
 }
 
 /*
-Rounding modes are not yet supported in HIP
+ * Rounding modes are not yet supported in HIP
+ * TODO: Conversion functions are not correct, need to fix when BE is ready
 */
 
 __device__ static inline float __double2float_rd(double x) { return (double)x; }
