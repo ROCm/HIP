@@ -18,16 +18,13 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp
+ * BUILD: %t %s ../test_common.cpp HIPCC_OPTIONS -O3
  * RUN: %t
  * HIT_END
  */
 
-#include <iostream>
-#include "hip/hip_runtime.h"
-#include "../test_common.h"
-#include "hip/hip_runtime_api.h"
 
+#include "../test_common.h"
 
 #define test_passed(test_name)  printf("%s %s  PASSED!%s\n", KGRN, #test_name, KNRM);
 
@@ -59,6 +56,7 @@ class HipFunctorTests {
     void TestForFunctorContainInStructObj(void);
 };
 
+
 static const int BLOCK_DIM_SIZE = 1024;
 static const int THREADS_PER_BLOCK = 1;
 
@@ -69,6 +67,7 @@ class DoublerFunctor{
  public:
     __device__ int operator()(int x) { return x * 2;}
 };
+
 
 // simple doubler functor passed to kernel
 __global__ void DoublerFunctorKernel(
@@ -87,10 +86,12 @@ void HipFunctorTests::TestForSimpleClassFunctor(void) {
   for (int k = 0; k < BLOCK_DIM_SIZE; ++k) {
     // initialize to false, will be set to
     // true if the functor is called in device code
-    deviceResults[k] = false;
+    hostResults[k] = false;
   }
 
-  hipLaunchKernelGGL(HIP_KERNEL_NAME(DoublerFunctorKernel), dim3(BLOCK_DIM_SIZE),
+  HIPCHECK(hipMemcpy(deviceResults, hostResults, BLOCK_DIM_SIZE*sizeof(bool),
+           hipMemcpyHostToDevice));
+  hipLaunchKernelGGL(DoublerFunctorKernel, dim3(BLOCK_DIM_SIZE),
                   dim3(THREADS_PER_BLOCK), 0, 0, doubler, deviceResults);
 
   // Validation part of TestForSimpleClassFunctor
@@ -101,6 +102,7 @@ void HipFunctorTests::TestForSimpleClassFunctor(void) {
   HIPCHECK(hipHostFree(hostResults));
   HIPCHECK(hipFree(deviceResults));
 }
+
 
 // pointer functor passed to kernel
 __global__ void PtrDoublerFunctorKernel(
@@ -119,10 +121,12 @@ void HipFunctorTests::TestForClassObjPtrFunctor(void) {
   for (int k = 0; k < BLOCK_DIM_SIZE; ++k) {
     // initialize to false, will be set to
     // true if the functor is called in device code
-    deviceResults[k] = false;
+    hostResults[k] = false;
   }
 
-  hipLaunchKernelGGL(HIP_KERNEL_NAME(PtrDoublerFunctorKernel), dim3(BLOCK_DIM_SIZE),
+  HIPCHECK(hipMemcpy(deviceResults, hostResults, BLOCK_DIM_SIZE*sizeof(bool),
+           hipMemcpyHostToDevice));
+  hipLaunchKernelGGL(PtrDoublerFunctorKernel, dim3(BLOCK_DIM_SIZE),
                   dim3(THREADS_PER_BLOCK), 0, 0, ptrdoubler, deviceResults);
 
   // Validation part of TestForClassObjPtrFunctor
@@ -143,6 +147,7 @@ class compare {
     }
 };
 
+
 // template functor passed to kernel
 __global__ void TemplateFunctorKernel(
                     compare compare_,
@@ -161,10 +166,12 @@ void HipFunctorTests::TestForClassTemplateFunctor(void) {
   for (int k = 0; k < BLOCK_DIM_SIZE; ++k) {
     // initialize to false, will be set to
     // true if the functor is called in device code
-    deviceResults[k] = false;
+    hostResults[k] = false;
   }
 
-  hipLaunchKernelGGL(HIP_KERNEL_NAME(TemplateFunctorKernel), dim3(BLOCK_DIM_SIZE),
+  HIPCHECK(hipMemcpy(deviceResults, hostResults, BLOCK_DIM_SIZE*sizeof(bool),
+           hipMemcpyHostToDevice));
+  hipLaunchKernelGGL(TemplateFunctorKernel, dim3(BLOCK_DIM_SIZE),
                   dim3(THREADS_PER_BLOCK), 0, 0, comparefunctor, deviceResults);
 
   // Validation part of TestForClassTemplateFunctor
@@ -178,16 +185,17 @@ void HipFunctorTests::TestForClassTemplateFunctor(void) {
 
 
 // Doubler calculator
-class DoublerCaluclator {
+class DoublerCalculator {
  public:
     int a, result;
     // fucntor contained in class object
     DoublerFunctor doubler;
 };
 
+
 // doubler functor conatined in class obj passed to kernel
 __global__ void DoublerCalculatorFunctorKernel(
-                    DoublerCaluclator doubler_,
+                    DoublerCalculator doubler_,
                     bool* deviceResult) {
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   int result = doubler_.doubler(doubler_.a);
@@ -195,20 +203,22 @@ __global__ void DoublerCalculatorFunctorKernel(
 }
 
 void HipFunctorTests::TestForFunctorContainInClassObj(void) {
-  DoublerCaluclator Doubler;
+  DoublerCalculator Doubler;
   bool *deviceResults, *hostResults;
   HIPCHECK(hipMalloc(&deviceResults, BLOCK_DIM_SIZE*sizeof(bool)));
   HIPCHECK(hipHostMalloc(&hostResults, BLOCK_DIM_SIZE*sizeof(bool)));
   for (int k = 0; k < BLOCK_DIM_SIZE; ++k) {
     // initialize to false, will be set to
     // true if the functor is called in device code
-    deviceResults[k] = false;
+    hostResults[k] = false;
   }
 
   Doubler.a = 5;
   Doubler.result = 10;
   // pass comparefunctor to  hipLaunchParm
-  hipLaunchKernelGGL(HIP_KERNEL_NAME(DoublerCalculatorFunctorKernel), dim3(BLOCK_DIM_SIZE),
+  HIPCHECK(hipMemcpy(deviceResults, hostResults, BLOCK_DIM_SIZE*sizeof(bool),
+           hipMemcpyHostToDevice));
+  hipLaunchKernelGGL(DoublerCalculatorFunctorKernel, dim3(BLOCK_DIM_SIZE),
                   dim3(THREADS_PER_BLOCK), 0, 0, Doubler, deviceResults);
 
   // Validation part of TestForStructTemplateFunctor
@@ -229,6 +239,7 @@ struct sDoublerFunctor {
     __device__ int operator()(int x) { return x * 2;}
 };
 
+
 // simple sturct doubler functor passed to kernel
 __global__ void structDoublerFunctorKernel(
                     sDoublerFunctor doubler_,
@@ -246,10 +257,11 @@ void HipFunctorTests::TestForSimpleStructFunctor(void) {
   for (int k = 0; k < BLOCK_DIM_SIZE; ++k) {
     // initialize to false, will be set to
     // true if the functor is called in device code
-    deviceResults[k] = false;
+    hostResults[k] = false;
   }
-
-  hipLaunchKernelGGL(HIP_KERNEL_NAME(structDoublerFunctorKernel), dim3(BLOCK_DIM_SIZE),
+  HIPCHECK(hipMemcpy(deviceResults, hostResults, BLOCK_DIM_SIZE*sizeof(bool),
+           hipMemcpyHostToDevice));
+  hipLaunchKernelGGL(structDoublerFunctorKernel, dim3(BLOCK_DIM_SIZE),
                   dim3(THREADS_PER_BLOCK), 0, 0, doubler, deviceResults);
 
   // Validation part of TestForSimpleStructFunctor
@@ -278,10 +290,12 @@ void HipFunctorTests::TestForStructObjPtrFunctor(void) {
   for (int k = 0; k < BLOCK_DIM_SIZE; ++k) {
     // initialize to false, will be set to
     // true if the functor is called in device code
-    deviceResults[k] = false;
+    hostResults[k] = false;
   }
 
-  hipLaunchKernelGGL(HIP_KERNEL_NAME(structPtrDoublerFunctorKernel), dim3(BLOCK_DIM_SIZE),
+  HIPCHECK(hipMemcpy(deviceResults, hostResults, BLOCK_DIM_SIZE*sizeof(bool),
+           hipMemcpyHostToDevice));
+  hipLaunchKernelGGL(structPtrDoublerFunctorKernel, dim3(BLOCK_DIM_SIZE),
                   dim3(THREADS_PER_BLOCK), 0, 0, ptrdoubler, deviceResults);
 
   // Validation part of TestForStructObjPtrFunctor
@@ -302,6 +316,7 @@ struct sCompare {
     }
 };
 
+
 // template functor passed to kernel
 __global__ void structTemplateFunctorKernel(
                     sCompare compare_,
@@ -320,11 +335,13 @@ void HipFunctorTests::TestForStructTemplateFunctor(void) {
   for (int k = 0; k < BLOCK_DIM_SIZE; ++k) {
     // initialize to false, will be set to
     // true if the functor is called in device code
-    deviceResults[k] = false;
+    hostResults[k] = false;
   }
 
+  HIPCHECK(hipMemcpy(deviceResults, hostResults, BLOCK_DIM_SIZE*sizeof(bool),
+           hipMemcpyHostToDevice));
   // pass comparefunctor to  hipLaunchKernelGGL
-  hipLaunchKernelGGL(HIP_KERNEL_NAME(structTemplateFunctorKernel), dim3(BLOCK_DIM_SIZE),
+  hipLaunchKernelGGL(structTemplateFunctorKernel, dim3(BLOCK_DIM_SIZE),
                   dim3(THREADS_PER_BLOCK), 0, 0, comparefunctor, deviceResults);
 
   // Validation part of TestForStructTemplateFunctor
@@ -337,16 +354,17 @@ void HipFunctorTests::TestForStructTemplateFunctor(void) {
 }
 
 // Doubler calculator struct
-struct sDoublerCaluclator {
+struct sDoublerCalculator {
  public:
     int a, result;
     // fucntor contained in class object
     DoublerFunctor doubler;
 };
 
+
 // doubler functor contained in struct passed to kernel
 __global__ void DoublerCalculatorFunctorKernel(
-                    sDoublerCaluclator doubler_,
+                    sDoublerCalculator doubler_,
                     bool* deviceResult) {
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   int result = doubler_.doubler(doubler_.a);
@@ -354,20 +372,23 @@ __global__ void DoublerCalculatorFunctorKernel(
 }
 
 void HipFunctorTests::TestForFunctorContainInStructObj(void) {
-  sDoublerCaluclator Doubler;
+  sDoublerCalculator Doubler;
   bool *deviceResults, *hostResults;
   HIPCHECK(hipMalloc(&deviceResults, BLOCK_DIM_SIZE*sizeof(bool)));
   HIPCHECK(hipHostMalloc(&hostResults, BLOCK_DIM_SIZE*sizeof(bool)));
   for (int k = 0; k < BLOCK_DIM_SIZE; ++k) {
     // initialize to false, will be set to
     // true if the functor is called in device code
-    deviceResults[k] = false;
+    hostResults[k] = false;
   }
 
   Doubler.a = 5;
   Doubler.result = 10;
+  HIPCHECK(hipMemcpy(deviceResults, hostResults, BLOCK_DIM_SIZE*sizeof(bool),
+           hipMemcpyHostToDevice));
+
   // pass comparefunctor to  hipLaunchKernelGGL
-  hipLaunchKernelGGL(HIP_KERNEL_NAME(DoublerCalculatorFunctorKernel), dim3(BLOCK_DIM_SIZE),
+  hipLaunchKernelGGL(DoublerCalculatorFunctorKernel, dim3(BLOCK_DIM_SIZE),
                   dim3(THREADS_PER_BLOCK), 0, 0, Doubler, deviceResults);
 
   // Validation part of TestForStructTemplateFunctor
