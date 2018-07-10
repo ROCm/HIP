@@ -171,7 +171,7 @@ extern "C" hipError_t hipConfigureCall(
   return hipSuccess;
 }
 
-char* g_arguments[1024]; // FIXME: needs to grow
+char g_arguments[1024]; // FIXME: needs to grow
 
 extern "C" hipError_t hipSetupArgument(
   const void *arg,
