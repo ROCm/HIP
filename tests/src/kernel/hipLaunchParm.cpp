@@ -30,6 +30,7 @@ THE SOFTWARE.
 
 static const int  BLOCK_DIM_SIZE = 1024;
 
+
 // This test is to verify Struct with variables
 // support, read from device.
 typedef struct hipLaunchKernelStruct1 {
@@ -250,9 +251,9 @@ int main() {
     // Struct type,  check access from device.
     hipLaunchKernelStruct_t1 hipLaunchKernelStruct_h1;
     bool *result_d1, *result_h1;
-    hipMalloc((void**)&result_d1, BLOCK_DIM_SIZE*sizeof(bool));
-    hipHostMalloc((void**)&result_h1, BLOCK_DIM_SIZE*sizeof(bool));
-	hipMemset(result_d1, false, BLOCK_DIM_SIZE);
+    HIPCHECK(hipMalloc((void**)&result_d1, BLOCK_DIM_SIZE*sizeof(bool)));
+    HIPCHECK(hipHostMalloc((void**)&result_h1, BLOCK_DIM_SIZE*sizeof(bool)));
+	HIPCHECK(hipMemset(result_d1, false, BLOCK_DIM_SIZE));
 	hipLaunchKernelStruct_h1.li = 1;
     hipLaunchKernelStruct_h1.lf = 1.0;
     hipLaunchKernelStruct_h1.result = false;
@@ -260,9 +261,9 @@ int main() {
     // Struct type, checks padding
     hipLaunchKernelStruct_t2 hipLaunchKernelStruct_h2;
     bool *result_d2, *result_h2;
-    hipMalloc((void**)&result_d2, BLOCK_DIM_SIZE*sizeof(bool));
-    hipHostMalloc((void**)&result_h2, BLOCK_DIM_SIZE*sizeof(bool));
-    hipMemset(result_d2, false, BLOCK_DIM_SIZE);
+    HIPCHECK(hipMalloc((void**)&result_d2, BLOCK_DIM_SIZE*sizeof(bool)));
+    HIPCHECK(hipHostMalloc((void**)&result_h2, BLOCK_DIM_SIZE*sizeof(bool)));
+    HIPCHECK(hipMemset(result_d2, false, BLOCK_DIM_SIZE));
     hipLaunchKernelStruct_h2.c1 = 'a';
     hipLaunchKernelStruct_h2.l1 = 1.0;
     hipLaunchKernelStruct_h2.c2 = 'b';
@@ -272,9 +273,9 @@ int main() {
     // Struct type, checks padding, assigning integer to a char
     hipLaunchKernelStruct_t3 hipLaunchKernelStruct_h3;
     bool *result_d3, *result_h3;
-    hipMalloc((void**)&result_d3, BLOCK_DIM_SIZE*sizeof(bool));
-    hipHostMalloc((void**)&result_h3, BLOCK_DIM_SIZE*sizeof(bool));
-    hipMemset(result_d3, false, BLOCK_DIM_SIZE);
+    HIPCHECK(hipMalloc((void**)&result_d3, BLOCK_DIM_SIZE*sizeof(bool)));
+    HIPCHECK(hipHostMalloc((void**)&result_h3, BLOCK_DIM_SIZE*sizeof(bool)));
+    HIPCHECK(hipMemset(result_d3, false, BLOCK_DIM_SIZE));
     hipLaunchKernelStruct_h3.bf1 = 1;
     hipLaunchKernelStruct_h3.bf2 = 1;
     hipLaunchKernelStruct_h3.l1 = 1.0;
@@ -286,19 +287,19 @@ int main() {
     // empty struct
     hipLaunchKernelStruct_t4 hipLaunchKernelStruct_h4;
     bool *result_d4, *result_h4;
-    hipMalloc((void**)&result_d4, BLOCK_DIM_SIZE*sizeof(bool));
-    hipHostMalloc((void**)&result_h4, BLOCK_DIM_SIZE*sizeof(bool));
-    hipMemset(result_d4, false, BLOCK_DIM_SIZE);
+    HIPCHECK(hipMalloc((void**)&result_d4, BLOCK_DIM_SIZE*sizeof(bool)));
+    HIPCHECK(hipHostMalloc((void**)&result_h4, BLOCK_DIM_SIZE*sizeof(bool)));
+    HIPCHECK(hipMemset(result_d4, false, BLOCK_DIM_SIZE));
 
     // Passing struct with pointer object to a hipLaunchKernel()
     hipLaunchKernelStruct_t5 hipLaunchKernelStruct_h5;
     // This is passed as pointer to struct member, struct.cp = &cp_d5
     char* cp_d5;
     bool *result_d5, *result_h5;
-    hipMalloc((void**)&result_d5, BLOCK_DIM_SIZE*sizeof(bool));
+    HIPCHECK(hipMalloc((void**)&result_d5, BLOCK_DIM_SIZE*sizeof(bool)));
     // allocating memory for char pointer on device
-    hipMalloc((void**)&cp_d5, sizeof(char));
-    hipHostMalloc((void**)&result_h5, BLOCK_DIM_SIZE*sizeof(bool));
+    HIPCHECK(hipMalloc((void**)&cp_d5, sizeof(char)));
+    HIPCHECK(hipHostMalloc((void**)&result_h5, BLOCK_DIM_SIZE*sizeof(bool)));
 	hipMemset(cp_d5, 'p', sizeof(char));
     hipLaunchKernelStruct_h5.c1 = 'c';
     hipLaunchKernelStruct_h5.cp = cp_d5;
@@ -307,29 +308,29 @@ int main() {
     // Passing struct with aligned(8)
     hipLaunchKernelStruct_t6 hipLaunchKernelStruct_h6;
     bool *result_d6, *result_h6;
-    hipMalloc((void**)&result_d6, BLOCK_DIM_SIZE*sizeof(bool));
-    hipHostMalloc((void**)&result_h6, BLOCK_DIM_SIZE*sizeof(bool));
+    HIPCHECK(hipMalloc((void**)&result_d6, BLOCK_DIM_SIZE*sizeof(bool)));
+    HIPCHECK(hipHostMalloc((void**)&result_h6, BLOCK_DIM_SIZE*sizeof(bool)));
     hipLaunchKernelStruct_h6.c1 = 'c';
     hipLaunchKernelStruct_h6.si = 1;
-    hipMemset(result_d6, false, BLOCK_DIM_SIZE);
+    HIPCHECK(hipMemset(result_d6, false, BLOCK_DIM_SIZE));
 
     // Passing struct with aligned(16)
     hipLaunchKernelStruct_t7 hipLaunchKernelStruct_h7;
     bool *result_d7, *result_h7;
-    hipMalloc((void**)&result_d7, BLOCK_DIM_SIZE*sizeof(bool));
-    hipHostMalloc((void**)&result_h7, BLOCK_DIM_SIZE*sizeof(bool));
+    HIPCHECK(hipMalloc((void**)&result_d7, BLOCK_DIM_SIZE*sizeof(bool)));
+    HIPCHECK(hipHostMalloc((void**)&result_h7, BLOCK_DIM_SIZE*sizeof(bool)));
     hipLaunchKernelStruct_h7.c1 = 'c';
     hipLaunchKernelStruct_h7.si = 1;
-    hipMemset(result_d7, false, BLOCK_DIM_SIZE);
+    HIPCHECK(hipMemset(result_d7, false, BLOCK_DIM_SIZE));
 
     // Passing struct with packed aligned to 6Bytes
     hipLaunchKernelStruct_t8 hipLaunchKernelStruct_h8;
     bool *result_d8, *result_h8;
-    hipMalloc((void**)&result_d8, BLOCK_DIM_SIZE*sizeof(bool));
-    hipHostMalloc((void**)&result_h8, BLOCK_DIM_SIZE*sizeof(bool));
+    HIPCHECK(hipMalloc((void**)&result_d8, BLOCK_DIM_SIZE*sizeof(bool)));
+    HIPCHECK(hipHostMalloc((void**)&result_h8, BLOCK_DIM_SIZE*sizeof(bool)));
     hipLaunchKernelStruct_h8.c1 = 'c';
     hipLaunchKernelStruct_h8.si = 1;
-    hipMemset(result_d8, false, BLOCK_DIM_SIZE);
+    HIPCHECK(hipMemset(result_d8, false, BLOCK_DIM_SIZE));
 
     // Test the different hipLaunchParm options:
     hipLaunchKernel(vAdd, size_t(1024), 1, 0, 0, Ad);
@@ -364,52 +365,52 @@ int main() {
                     result_d8);
 
     // Validation part of the struct, hipLaunchKernelStructFunc1
-    hipMemcpy(result_h1, result_d1, BLOCK_DIM_SIZE*sizeof(bool),
-              hipMemcpyDeviceToHost);
+    HIPCHECK(hipMemcpy(result_h1, result_d1, BLOCK_DIM_SIZE*sizeof(bool),
+              hipMemcpyDeviceToHost));
     for (int k = 0; k < BLOCK_DIM_SIZE; ++k)
       HIPASSERT(result_h1[k] == true);
 
     // Validation part of the struct, hipLaunchKernelStructFunc2
-    hipMemcpy(result_h2, result_d2, BLOCK_DIM_SIZE*sizeof(bool),
-              hipMemcpyDeviceToHost);
+    HIPCHECK(hipMemcpy(result_h2, result_d2, BLOCK_DIM_SIZE*sizeof(bool),
+              hipMemcpyDeviceToHost));
     for (int k = 0; k < BLOCK_DIM_SIZE; ++k)
     HIPASSERT(result_h2[k] == true);
 
     // Validation part of the struct, hipLaunchKernelStructFunc3
-    hipMemcpy(result_h3, result_d3, BLOCK_DIM_SIZE*sizeof(bool),
-              hipMemcpyDeviceToHost);
+    HIPCHECK(hipMemcpy(result_h3, result_d3, BLOCK_DIM_SIZE*sizeof(bool),
+              hipMemcpyDeviceToHost));
     for (int k = 0; k < BLOCK_DIM_SIZE; ++k)
      HIPASSERT(result_h3[k] == true);
 
     // Validation part of the struct, hipLaunchKernelStructFunc4
-    hipMemcpy(result_h4, result_d4, BLOCK_DIM_SIZE*sizeof(bool),
-              hipMemcpyDeviceToHost);
+    HIPCHECK(hipMemcpy(result_h4, result_d4, BLOCK_DIM_SIZE*sizeof(bool),
+              hipMemcpyDeviceToHost));
     for (int k = 0; k < BLOCK_DIM_SIZE; ++k)
       HIPASSERT(result_h4[k] == true);
 
     // Validation part of the struct, hipLaunchKernelStructFunc5
-    hipMemcpy(result_h5, result_d5, BLOCK_DIM_SIZE*sizeof(bool),
-              hipMemcpyDeviceToHost);
+    HIPCHECK(hipMemcpy(result_h5, result_d5, BLOCK_DIM_SIZE*sizeof(bool),
+              hipMemcpyDeviceToHost));
     for (int k = 0; k < BLOCK_DIM_SIZE; ++k)
       HIPASSERT(result_h5[k] == true);
 
     // alignment is broken hence disabled the validation part
     #if ENABLE_ALIGNMENT_TEST
     // Validation part of the struct, hipLaunchKernelStructFunc6
-    hipMemcpy(result_h6, result_d6, BLOCK_DIM_SIZE*sizeof(bool),
-              hipMemcpyDeviceToHost);
+    HIPCHECK(hipMemcpy(result_h6, result_d6, BLOCK_DIM_SIZE*sizeof(bool),
+              hipMemcpyDeviceToHost));
     for (int k = 0; k < BLOCK_DIM_SIZE; ++k)
       HIPASSERT(result_h6[k] == true);
 
     // Validation part of the struct, hipLaunchKernelStructFunc7
-    hipMemcpy(result_h7, result_d7, BLOCK_DIM_SIZE*sizeof(bool),
-              hipMemcpyDeviceToHost);
+    HIPCHECK(hipMemcpy(result_h7, result_d7, BLOCK_DIM_SIZE*sizeof(bool),
+              hipMemcpyDeviceToHost));
     for (int k = 0; k < BLOCK_DIM_SIZE; ++k)
       HIPASSERT(result_h7[k] == true);
 
     // Validation part of the struct, hipLaunchKernelStructFunc7
-    hipMemcpy(result_h8, result_d8, BLOCK_DIM_SIZE*sizeof(bool),
-              hipMemcpyDeviceToHost);
+    HIPCHECK(hipMemcpy(result_h8, result_d8, BLOCK_DIM_SIZE*sizeof(bool),
+              hipMemcpyDeviceToHost));
     for (int k = 0; k < BLOCK_DIM_SIZE; ++k)
       HIPASSERT(result_h8[k] == true);
      #endif
@@ -442,19 +443,19 @@ int main() {
 
     HIPCHECK(hipHostFree(result_h1));
     HIPCHECK(hipFree(result_d1));
-    HIPCHECK(hipHostFree(result_h2));
+	HIPCHECK(hipHostFree(result_h2));
     HIPCHECK(hipFree(result_d2));
     HIPCHECK(hipHostFree(result_h3));
     HIPCHECK(hipFree(result_d3));
-    HIPCHECK(hipHostFree(result_h4));
+	HIPCHECK(hipHostFree(result_h4));
     HIPCHECK(hipFree(result_d4));
     HIPCHECK(hipHostFree(result_h5));
     HIPCHECK(hipFree(result_d5));
-    HIPCHECK(hipHostFree(result_h6));
+	HIPCHECK(hipHostFree(result_h6));
     HIPCHECK(hipFree(result_d6));
     HIPCHECK(hipHostFree(result_h7));
     HIPCHECK(hipFree(result_d7));
-    HIPCHECK(hipHostFree(result_h8));
+	HIPCHECK(hipHostFree(result_h8));
     HIPCHECK(hipFree(result_d8));
     passed();
 }
