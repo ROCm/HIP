@@ -40,10 +40,10 @@ texture<int, hipTextureType2D,hipReadModeElementType> tex;
 texture<int, hipTextureType1D, hipReadModeElementType>tex_1D;
 bool testResult = true;
 
-void runTest(void);
+bool runTest(void);
 
 int main(int argc, char** argv) {
-    runTest();
+    testResult=runTest();
 
     if (testResult) {
         passed();
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
 }
 
 
-void runTest()
+bool runTest()
 {
 int val[R][C],val1[64],i,j;
 size_t offset;
@@ -148,4 +148,6 @@ tex_1D.normalized=0;
  HIPCHECK(hipFree(dev_ptr1D));
 //hipFreeArray() has issue in implementations hence commented
 //HIPCHECK(hipFreeArray(hip_arr));
+return testResult;
 }
+
