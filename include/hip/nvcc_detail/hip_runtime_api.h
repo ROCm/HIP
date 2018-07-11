@@ -1200,6 +1200,13 @@ inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>&
 }
 
 template <class T, int dim, enum hipTextureReadMode readMode>
+inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> *tex,
+                                               hipArray_const_t array,
+                                               const struct hipChannelFormatDesc* desc) {
+    return hipCUDAErrorTohipError(cudaBindTextureToArray(tex, array, desc));
+}
+
+template <class T, int dim, enum hipTextureReadMode readMode>
 inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex,
                                                hipArray_const_t array) {
     return hipCUDAErrorTohipError(cudaBindTextureToArray(tex, array));
