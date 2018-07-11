@@ -1244,6 +1244,11 @@ inline static hipError_t hipGetTextureAlignmentOffset(size_t* offset, const text
 {
     return hipCUDAErrorTohipError(cudaGetTextureAlignmentOffset(offset,texref));
 }
+
+inline static hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array)
+{
+    return hipCUDAErrorTohipError(cudaGetChannelDesc(desc,array));
+}
 #endif  //__CUDACC__
 
 #endif  // HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_API_H
