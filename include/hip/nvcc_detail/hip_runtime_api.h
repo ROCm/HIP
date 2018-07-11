@@ -1239,6 +1239,11 @@ inline static hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDe
                                            hipTextureObject_t textureObject) {
     return hipCUDAErrorTohipError(cudaGetTextureObjectResourceDesc( pResDesc, textureObject));
 }
+
+inline static hipError_t hipGetTextureAlignmentOffset(size_t* offset, const textureReference* texref)
+{
+    return hipCUDAErrorTohipError(cudaGetTextureAlignmentOffset(offset,texref));
+}
 #endif  //__CUDACC__
 
 #endif  // HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_API_H
