@@ -24,6 +24,26 @@ option(HIP_VERBOSE_BUILD "Print out the commands run while compiling the HIP sou
 mark_as_advanced(HIP_HOST_COMPILATION_CPP)
 
 ###############################################################################
+# Set HIP CMAKE Flags
+###############################################################################
+# Copy the invocation styles from CXX to HIP
+set(CMAKE_HIP_ARCHIVE_CREATE ${CMAKE_CXX_ARCHIVE_CREATE})
+set(CMAKE_HIP_ARCHIVE_FINISH ${CMAKE_CXX_ARCHIVE_FINISH})
+set(CMAKE_SHARED_LIBRARY_SONAME_HIP_FLAG ${CMAKE_SHARED_LIBRARY_SONAME_CXX_FLAG})
+set(CMAKE_SHARED_LIBRARY_CREATE_HIP_FLAGS ${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS})
+set(CMAKE_SHARED_LIBRARY_HIP_FLAGS ${CMAKE_SHARED_LIBRARY_CXX_FLAGS})
+set(CMAKE_SHARED_LIBRARY_LINK_HIP_FLAGS ${CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS})
+set(CMAKE_SHARED_LIBRARY_RUNTIME_HIP_FLAG ${CMAKE_SHARED_LIBRARY_RUNTIME_CXX_FLAG})
+set(CMAKE_SHARED_LIBRARY_RUNTIME_HIP_FLAG_SEP ${CMAKE_SHARED_LIBRARY_RUNTIME_CXX_FLAG_SEP})
+set(CMAKE_SHARED_LIBRARY_LINK_STATIC_HIP_FLAGS ${CMAKE_SHARED_LIBRARY_LINK_STATIC_CXX_FLAGS})
+set(CMAKE_SHARED_LIBRARY_LINK_DYNAMIC_HIP_FLAGS ${CMAKE_SHARED_LIBRARY_LINK_DYNAMIC_CXX_FLAGS})
+
+# Set the CMake Flags to use the HCC Compilier.
+set(CMAKE_HIP_CREATE_SHARED_LIBRARY "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HCC_PATH} <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
+set(CMAKE_HIP_CREATE_SHARED_MODULE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HCC_PATH} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <LINK_LIBRARIES> -shared" )
+set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HCC_PATH} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+
+###############################################################################
 # FIND: HIP and associated helper binaries
 ###############################################################################
 # HIP is supported on Linux only
@@ -383,6 +403,10 @@ macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files _source_files
     HIP_PARSE_HIPCC_OPTIONS(HIP_HCC_FLAGS ${_hcc_options})
     HIP_PARSE_HIPCC_OPTIONS(HIP_NVCC_FLAGS ${_nvcc_options})
 
+    # Add the include directories && compile definitions
+    list(APPEND HIP_HIPCC_INCLUDE_ARGS_USER "-I$<JOIN:$<TARGET_PROPERTY:${_target},INCLUDE_DIRECTORIES>, -I>")
+    list(APPEND HIP_HIPCC_FLAGS "-D$<JOIN:$<TARGET_PROPERTY:${_target},COMPILE_DEFINITIONS>, -D>")
+
     # Check if we are building shared library.
     set(_hip_build_shared_libs FALSE)
     list(FIND _hip_cmake_options SHARED _hip_found_SHARED)
@@ -478,7 +502,7 @@ macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files _source_files
                 set(verbose_output ON)
             else()
                 set(verbose_output OFF)
-            endif() 
+            endif()
 
             # Create up the comment string
             file(RELATIVE_PATH generated_file_relative_path "${CMAKE_BINARY_DIR}" "${generated_file}")
