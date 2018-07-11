@@ -23,6 +23,10 @@ namespace llcompat {
     #define GET_NUM_ARGS() getNumArgs()
 #endif
 
+#if LLVM_VERSION_MAJOR < 7
+    #define LLVM_DEBUG(X) DEBUG(X)
+#endif
+
 void PrintStackTraceOnErrorSignal();
 
 /**
