@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp 
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
  * RUN: %t
  * HIT_END
  */
@@ -35,10 +35,10 @@ using namespace std;
 
 bool testResult = true;
 
-void runTest(void);
+bool runTest(void);
 
 int main(int argc, char** argv) {
-    runTest();
+    testResult=runTest();
 
     if (testResult) {
         passed();
@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
 }
 
 
-void runTest()
+bool runTest()
 {
 
 hipChannelFormatDesc chan_test,chan_desc=hipCreateChannelDesc(32,0,0,0,hipChannelFormatKindSigned);
@@ -63,4 +63,5 @@ else
 	testResult=false;
 
 HIPCHECK(hipFreeArray(hipArray));
+return testResult;
 }
