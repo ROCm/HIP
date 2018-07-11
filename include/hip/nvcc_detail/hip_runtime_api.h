@@ -163,6 +163,7 @@ typedef cudaSurfaceObject_t hipSurfaceObject_t;
 #define hipTextureType1D cudaTextureType1D
 #define hipTextureType1DLayered cudaTextureType1DLayered
 #define hipTextureType2D cudaTextureType2D
+#define hipTextureType2DLayered cudaTextureType2DLayered
 #define hipTextureType3D cudaTextureType3D
 #define hipDeviceMapHost cudaDeviceMapHost
 
@@ -1168,20 +1169,20 @@ inline static hipError_t hipOccupancyMaxPotentialBlockSize(int* minGridSize, int
     return hipCUDAErrorTohipError(cerror);
 }
 
-template <class T, int dim, enum cudaTextureReadMode readMode>
+template <class T, int dim, enum hipTextureReadMode readMode>
 inline static hipError_t hipBindTexture(size_t* offset, const struct texture<T, dim, readMode>& tex,
                                         const void* devPtr, size_t size = UINT_MAX) {
     return hipCUDAErrorTohipError(cudaBindTexture(offset, tex, devPtr, size));
 }
 
-template <class T, int dim, enum cudaTextureReadMode readMode>
+template <class T, int dim, enum hipTextureReadMode readMode>
 inline static hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex,
                                         const void* devPtr, const struct hipChannelFormatDesc& desc,
                                         size_t size = UINT_MAX) {
     return hipCUDAErrorTohipError(cudaBindTexture(offset, tex, devPtr, desc, size));
 }
 
-template <class T, int dim, enum cudaTextureReadMode readMode>
+template <class T, int dim, enum hipTextureReadMode readMode>
 inline static hipError_t hipUnbindTexture(struct texture<T, dim, readMode>* tex) {
     return hipCUDAErrorTohipError(cudaUnbindTexture(tex));
 }
@@ -1205,7 +1206,7 @@ inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> 
     return hipCUDAErrorTohipError(cudaBindTextureToArray(tex, array, desc));
 }
 
-template <class T, int dim, enum cudaTextureReadMode readMode>
+template <class T, int dim, enum hipTextureReadMode readMode>
 inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex,
                                                hipArray_const_t array) {
     return hipCUDAErrorTohipError(cudaBindTextureToArray(tex, array));
