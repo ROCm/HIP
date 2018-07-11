@@ -37,10 +37,10 @@ texture<int, hipTextureType2D,hipReadModeElementType> tex;
 
 bool testResult = true;
 
-void runTest(void);
+bool runTest(void);
 
 int main(int argc, char** argv) {
-    runTest();
+    testResult=runTest();
 
     if (testResult) {
         passed();
@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
 }
 
 
-void runTest()
+bool runTest()
 {
 
 int val[R][C],i,j;
@@ -81,4 +81,5 @@ HIPCHECK(hipGetTextureAlignmentOffset(&offset,&tex));
 
 HIPCHECK(hipUnbindTexture(&tex));
 HIPCHECK(hipFreeArray(hipArray));
+return testResult;
 }
