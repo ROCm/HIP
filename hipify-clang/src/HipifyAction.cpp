@@ -428,7 +428,11 @@ public:
     void InclusionDirective(clang::SourceLocation hash_loc, const clang::Token& include_token,
                             StringRef file_name, bool is_angled, clang::CharSourceRange filename_range,
                             const clang::FileEntry* file, StringRef search_path, StringRef relative_path,
-                            const clang::Module* imported) override {
+                            const clang::Module* imported
+#if LLVM_VERSION_MAJOR > 6
+                          , clang::SrcMgr::CharacteristicKind FileType
+#endif
+                           ) override {
         hipifyAction.InclusionDirective(hash_loc, include_token, file_name, is_angled, filename_range, file, search_path, relative_path, imported);
     }
 
