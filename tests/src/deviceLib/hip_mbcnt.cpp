@@ -88,7 +88,7 @@ int main() {
     for (unsigned int i = 0; i < num_threads; i++) {
         unsigned int this_lane_id = i % wave_size;
         unsigned int this_mbcnt_lo = this_lane_id >= 32 ? 32 : this_lane_id;
-        unsigned int this_mbcnt_hi = this_lane_id < 32 ? 0 : (this_lane_id - 22);
+        unsigned int this_mbcnt_hi = this_lane_id < 32 ? 0 : (this_lane_id - 32);
 
         if (host_mbcnt_lo[i] != this_mbcnt_lo)
             mbcnt_lo_errors++;
