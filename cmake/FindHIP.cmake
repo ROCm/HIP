@@ -390,6 +390,10 @@ macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files _source_files
     # Initialize list of includes with those specified by the user. Append with
     # ones specified to cmake directly.
     set(HIP_HIPCC_INCLUDE_ARGS ${HIP_HIPCC_INCLUDE_ARGS_USER})
+
+    # Add the include directories
+    list(APPEND HIP_HIPCC_INCLUDE_ARGS "-I$<JOIN:$<TARGET_PROPERTY:${_target},INCLUDE_DIRECTORIES>, -I>")
+
     get_directory_property(_hip_include_directories INCLUDE_DIRECTORIES)
     list(REMOVE_DUPLICATES _hip_include_directories)
     if(_hip_include_directories)
@@ -403,8 +407,7 @@ macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files _source_files
     HIP_PARSE_HIPCC_OPTIONS(HIP_HCC_FLAGS ${_hcc_options})
     HIP_PARSE_HIPCC_OPTIONS(HIP_NVCC_FLAGS ${_nvcc_options})
 
-    # Add the include directories && compile definitions
-    list(APPEND HIP_HIPCC_INCLUDE_ARGS_USER "-I$<JOIN:$<TARGET_PROPERTY:${_target},INCLUDE_DIRECTORIES>, -I>")
+    # Add the compile definitions
     list(APPEND HIP_HIPCC_FLAGS "-D$<JOIN:$<TARGET_PROPERTY:${_target},COMPILE_DEFINITIONS>, -D>")
 
     # Check if we are building shared library.
