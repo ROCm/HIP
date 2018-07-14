@@ -297,7 +297,7 @@ enum hipComputeMode {
     hipComputeModeDefault = 0,
     hipComputeModeExclusive = 1,
     hipComputeModeProhibited = 2,
-    hipComputeModeExcusiveProcess = 3
+    hipComputeModeExclusiveProcess = 3
 };
 
 /**
