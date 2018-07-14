@@ -418,11 +418,11 @@
 |            1 |*`cudaChannelFormatKindUnsigned`*              |*`hipChannelFormatKindUnsigned`*                      |
 |            2 |*`cudaChannelFormatKindFloat`*                 |*`hipChannelFormatKindFloat`*                         |
 |            3 |*`cudaChannelFormatKindNone`*                  |*`hipChannelFormatKindNone`*                          |
-| enum         |***`cudaComputeMode`***                        |                                                      |
-|            0 |*`cudaComputeModeDefault`*                     |                                                      |
-|            1 |*`cudaComputeModeExclusive`*                   |                                                      |
-|            2 |*`cudaComputeModeProhibited`*                  |                                                      |
-|            3 |*`cudaComputeModeExclusiveProcess`*            |                                                      |
+| enum         |***`cudaComputeMode`***                        |***`hipComputeMode`***                                |
+|            0 |*`cudaComputeModeDefault`*                     |*`hipComputeModeDefault`*                             |
+|            1 |*`cudaComputeModeExclusive`*                   |*`hipComputeModeExclusive`*                           |
+|            2 |*`cudaComputeModeProhibited`*                  |*`hipComputeModeProhibited`*                          |
+|            3 |*`cudaComputeModeExclusiveProcess`*            |*`hipComputeModeExclusiveProcess`*                    |
 | enum         |***`cudaDeviceAttr`***                         |***`hipDeviceAttribute_t`***                          |
 |            1 |*`cudaDevAttrMaxThreadsPerBlock`*              |*`hipDeviceAttributeMaxThreadsPerBlock`*              |
 |            2 |*`cudaDevAttrMaxBlockDimX`*                    |*`hipDeviceAttributeMaxBlockDimX`*                    |

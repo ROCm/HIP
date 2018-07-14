@@ -231,6 +231,11 @@
 |         0x02 |*`CU_MEMORYTYPE_DEVICE`*                                       |                                                            |
 |         0x03 |*`CU_MEMORYTYPE_ARRAY`*                                        |                                                            |
 |         0x04 |*`CU_MEMORYTYPE_UNIFIED`*                                      |                                                            |
+| enum         |***`CUcomputemode`***                                          |***`hipComputeMode`***                                      |
+|            0 |*`CU_COMPUTEMODE_DEFAULT`*                                     |*`hipComputeModeDefault`*                                   |
+|            1 |*`CU_COMPUTEMODE_EXCLUSIVE`*                                   |*`hipComputeModeExclusive`*                                 |
+|            2 |*`CU_COMPUTEMODE_PROHIBITED`*                                  |*`hipComputeModeProhibited`*                                |
+|            3 |*`CU_COMPUTEMODE_EXCLUSIVE_PROCESS`*                           |*`hipComputeModeExclusiveProcess`*                          |
 | enum         |***`CUoccupancy_flags`***                                      |                                                            |
 |         0x00 |*`CU_OCCUPANCY_DEFAULT`*                                       |                                                            |
 |         0x01 |*`CU_OCCUPANCY_DISABLE_CACHING_OVERRIDE`*                      |                                                            |
@@ -243,7 +248,7 @@
 |            6 |*`CU_POINTER_ATTRIBUTE_SYNC_MEMOPS`*                           |                                                            |
 |            7 |*`CU_POINTER_ATTRIBUTE_BUFFER_ID`*                             |                                                            |
 |            8 |*`CU_POINTER_ATTRIBUTE_IS_MANAGED`*                            |                                                            |
-| enum         |***`CUmemorytype`***                                           |                                                            |
+| enum         |***`CUresourcetype`***                                         |                                                            |
 |         0x00 |*`CU_RESOURCE_TYPE_ARRAY`*                                     |                                                            |
 |         0x01 |*`CU_RESOURCE_TYPE_MIPMAPPED_ARRAY`*                           |                                                            |
 |         0x02 |*`CU_RESOURCE_TYPE_LINEAR`*                                    |                                                            |
