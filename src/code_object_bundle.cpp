@@ -38,7 +38,7 @@ std::string isa_name(std::string triple)
         hsa_isa_from_name(triple.c_str(), &tmp) != HSA_STATUS_SUCCESS};
 
     if (is_old_rocr) {
-        auto tmp{triple.substr(triple.rfind('x') + 1)};
+        std::string tmp{triple.substr(triple.rfind('x') + 1)};
         triple.replace(0, std::string::npos, "AMD:AMDGPU");
 
         for (auto&& x : tmp) {
@@ -51,7 +51,7 @@ std::string isa_name(std::string triple)
 }
 
 hsa_isa_t hip_impl::triple_to_hsa_isa(const std::string& triple) {
-    const auto isa{isa_name(std::move(triple))};
+    const std::string isa{isa_name(std::move(triple))};
 
     if (isa.empty()) return hsa_isa_t({});
 

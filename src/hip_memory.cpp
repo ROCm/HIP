@@ -1680,12 +1680,9 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
             actualDest = pinnedPtr;
           }
     }
-#if 0
     if((width == dpitch) && (width == spitch)) {
             hip_internal::memcpyAsync(dst, src, width*height, kind, stream);
-    } else
-#endif
-   {
+    } else {
         try {
             if(!isLocked){
                 for (int i = 0; i < height; ++i) 
