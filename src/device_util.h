@@ -125,7 +125,6 @@ __device__ double __hip_fast_dsqrt_rd(double x);
 __device__ double __hip_fast_dsqrt_rn(double x);
 __device__ double __hip_fast_dsqrt_ru(double x);
 __device__ double __hip_fast_dsqrt_rz(double x);
-__device__ void __threadfence_system(void);
 
 float __hip_host_j0f(float x);
 double __hip_host_j0(double x);
