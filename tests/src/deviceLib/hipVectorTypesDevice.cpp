@@ -40,6 +40,7 @@ using namespace std;
 template<
     typename V,
     Enable_if_t<!is_integral<decltype(declval<V>().x)>{}>* = nullptr>
+__device__
 constexpr
 bool integer_unary_tests(const V&, const V&) {
     return true;
@@ -73,6 +74,7 @@ bool integer_unary_tests(V& f1, V& f2) {
 template<
     typename V,
     Enable_if_t<!is_integral<decltype(declval<V>().x)>{}>* = nullptr>
+__device__
 constexpr
 bool integer_binary_tests(const V&, const V&, const V&) {
     return true;
