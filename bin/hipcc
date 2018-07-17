@@ -259,8 +259,7 @@ if($HIP_PLATFORM eq "hcc"){
 }
 
 if(($HIP_PLATFORM eq "hcc")){
-    $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_hc.ll\n";
-    $ENV{HIP_HC_IR_FILE}="";
+    $ENV{HCC_EXTRA_LIBRARIES}="\n";
 }
 
 if($HIP_PLATFORM eq "nvcc"){
@@ -533,7 +532,7 @@ if($HIP_PLATFORM eq "hcc" or $HIP_PLATFORM eq "clang"){
         print "No valid AMD GPU target was either specified or found. Please specify a valid target using --amdgpu-target=" and die();
     }
 
-    $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_hc.ll\n";
+    $ENV{HCC_EXTRA_LIBRARIES}="\n";
 
     if($HIP_PLATFORM eq "hcc") {
         $GPU_ARCH_OPT = " --amdgpu-target=";
