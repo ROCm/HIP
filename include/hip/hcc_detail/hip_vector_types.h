@@ -120,7 +120,8 @@ THE SOFTWARE.
         }
         template< // TODO: constrain based on type as well.
             typename... Us,
-            typename std::enable_if<sizeof...(Us) == rank>::type* = nullptr>
+            typename std::enable_if<
+                (rank > 1) && sizeof...(Us) == rank>::type* = nullptr>
         __host__ __device__
         HIP_vector_type(Us... xs) noexcept { data = Native_vec_{xs...}; }
         __host__ __device__
@@ -682,32 +683,60 @@ __MAKE_VECTOR_TYPE__(longlong, long long);
 __MAKE_VECTOR_TYPE__(float, float);
 __MAKE_VECTOR_TYPE__(double, double);
 
-#define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
-    __device__ __host__ \
-    static \
-    inline \
-    type make_##type(comp x) { type r = {x}; return r; }
+#if defined(__cplusplus)
+    #define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
+        __device__ __host__ \
+        static \
+        inline \
+        type make_##type(comp x) { return type{x}; }
 
-#define DECLOP_MAKE_TWO_COMPONENT(comp, type) \
-    __device__ __host__ \
-    static \
-    inline \
-    type make_##type(comp x, comp y) { type r = {x, y}; return r; }
+    #define DECLOP_MAKE_TWO_COMPONENT(comp, type) \
+        __device__ __host__ \
+        static \
+        inline \
+        type make_##type(comp x, comp y) { return type{x, y}; }
 
-#define DECLOP_MAKE_THREE_COMPONENT(comp, type) \
-    __device__ __host__ \
-    static \
-    inline \
-    type make_##type(comp x, comp y, comp z) { type r = {x, y, z}; return r; }
+    #define DECLOP_MAKE_THREE_COMPONENT(comp, type) \
+        __device__ __host__ \
+        static \
+        inline \
+        type make_##type(comp x, comp y, comp z) { return type{x, y, z}; }
 
-#define DECLOP_MAKE_FOUR_COMPONENT(comp, type) \
-    __device__ __host__ \
-    static \
-    inline \
-    type make_##type(comp x, comp y, comp z, comp w) { \
-        type r = {x, y, z, w}; \
-        return r; \
-    }
+    #define DECLOP_MAKE_FOUR_COMPONENT(comp, type) \
+        __device__ __host__ \
+        static \
+        inline \
+        type make_##type(comp x, comp y, comp z, comp w) { \
+            return type{x, y, z, w}; \
+        }
+#else
+    #define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
+        __device__ __host__ \
+        static \
+        inline \
+        type make_##type(comp x) { type r = {x}; return r; }
+
+    #define DECLOP_MAKE_TWO_COMPONENT(comp, type) \
+        __device__ __host__ \
+        static \
+        inline \
+        type make_##type(comp x, comp y) { type r = {x, y}; return r; }
+
+    #define DECLOP_MAKE_THREE_COMPONENT(comp, type) \
+        __device__ __host__ \
+        static \
+        inline \
+        type make_##type(comp x, comp y, comp z) { type r = {x, y, z}; return r; }
+
+    #define DECLOP_MAKE_FOUR_COMPONENT(comp, type) \
+        __device__ __host__ \
+        static \
+        inline \
+        type make_##type(comp x, comp y, comp z, comp w) { \
+            type r = {x, y, z, w}; \
+            return r; \
+        }
+#endif
 
 DECLOP_MAKE_ONE_COMPONENT(unsigned char, uchar1);
 DECLOP_MAKE_TWO_COMPONENT(unsigned char, uchar2);
