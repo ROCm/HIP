@@ -30,6 +30,7 @@ THE SOFTWARE.
 #include <hip/hip_vector_types.h>
 #include <hip/hcc_detail/device_library_decls.h>
 #include <hip/hcc_detail/llvm_intrinsics.h>
+#include <stddef.h>
 
 typedef unsigned long ulong;
 typedef unsigned int uint;
@@ -970,4 +971,62 @@ unsigned __smid(void)
 #endif //defined(__clang__) && defined(__HIP__)
 
 
+// loop unrolling
+static inline __device__ void* __hip_hc_memcpy(void* dst, const void* src, size_t size) {
+    auto dstPtr = static_cast<unsigned char*>(dst);
+    auto srcPtr = static_cast<const unsigned char*>(src);
+
+    while (size >= 4u) {
+        dstPtr[0] = srcPtr[0];
+        dstPtr[1] = srcPtr[1];
+        dstPtr[2] = srcPtr[2];
+        dstPtr[3] = srcPtr[3];
+
+        size -= 4u;
+        srcPtr += 4u;
+        dstPtr += 4u;
+    }
+    switch (size) {
+        case 3:
+            dstPtr[2] = srcPtr[2];
+        case 2:
+            dstPtr[1] = srcPtr[1];
+        case 1:
+            dstPtr[0] = srcPtr[0];
+    }
+
+    return dst;
+}
+
+static inline __device__ void* __hip_hc_memset(void* dst, unsigned char val, size_t size) {
+    auto dstPtr = static_cast<unsigned char*>(dst);
+
+    while (size >= 4u) {
+        dstPtr[0] = val;
+        dstPtr[1] = val;
+        dstPtr[2] = val;
+        dstPtr[3] = val;
+
+        size -= 4u;
+        dstPtr += 4u;
+    }
+    switch (size) {
+        case 3:
+            dstPtr[2] = val;
+        case 2:
+            dstPtr[1] = val;
+        case 1:
+            dstPtr[0] = val;
+    }
+
+    return dst;
+}
+static inline __device__ void* memcpy(void* dst, const void* src, size_t size) {
+    return __hip_hc_memcpy(dst, src, size);
+}
+
+static inline __device__ void* memset(void* ptr, int val, size_t size) {
+    unsigned char val8 = static_cast<unsigned char>(val);
+    return __hip_hc_memset(ptr, val8, size);
+}
 #endif
