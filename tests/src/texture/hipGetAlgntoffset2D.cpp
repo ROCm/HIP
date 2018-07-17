@@ -63,7 +63,7 @@ for(i=0;i<R;i++)
 	}
 
 
-hipChannelFormatDesc chan_test,chan_desc=hipCreateChannelDesc(32,0,0,0,hipChannelFormatKindSigned);
+hipChannelFormatDesc chan_desc=hipCreateChannelDesc(32,0,0,0,hipChannelFormatKindSigned);
 
 hipArray *hipArray;
 HIPCHECK(hipMallocArray(&hipArray, &chan_desc,C,R,0));
