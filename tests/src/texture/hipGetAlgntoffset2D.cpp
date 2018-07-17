@@ -35,12 +35,10 @@ using namespace std;
 
 texture<int, hipTextureType2D,hipReadModeElementType> tex;
 
-bool testResult = true;
-
 bool runTest(void);
 
 int main(int argc, char** argv) {
-    testResult=runTest();
+    bool testResult=runTest();
 
     if (testResult) {
         passed();
@@ -81,5 +79,5 @@ HIPCHECK(hipGetTextureAlignmentOffset(&offset,&tex));
 
 HIPCHECK(hipUnbindTexture(&tex));
 HIPCHECK(hipFreeArray(hipArray));
-return testResult;
+return true;
 }
