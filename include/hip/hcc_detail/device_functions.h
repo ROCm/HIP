@@ -408,34 +408,34 @@ double __shfl_xor(double var, int lane_mask, int width = warpSize) {
 
 __device__ static inline char4 __hip_hc_add8pk(char4 in1, char4 in2) {
     char4 out;
-    unsigned one1 = in1.a & MASK1;
-    unsigned one2 = in2.a & MASK1;
-    out.a = (one1 + one2) & MASK1;
-    one1 = in1.a & MASK2;
-    one2 = in2.a & MASK2;
-    out.a = out.a | ((one1 + one2) & MASK2);
+    unsigned one1 = in1.w & MASK1;
+    unsigned one2 = in2.w & MASK1;
+    out.w = (one1 + one2) & MASK1;
+    one1 = in1.w & MASK2;
+    one2 = in2.w & MASK2;
+    out.w = out.w | ((one1 + one2) & MASK2);
     return out;
 }
 
 __device__ static inline char4 __hip_hc_sub8pk(char4 in1, char4 in2) {
     char4 out;
-    unsigned one1 = in1.a & MASK1;
-    unsigned one2 = in2.a & MASK1;
-    out.a = (one1 - one2) & MASK1;
-    one1 = in1.a & MASK2;
-    one2 = in2.a & MASK2;
-    out.a = out.a | ((one1 - one2) & MASK2);
+    unsigned one1 = in1.w & MASK1;
+    unsigned one2 = in2.w & MASK1;
+    out.w = (one1 - one2) & MASK1;
+    one1 = in1.w & MASK2;
+    one2 = in2.w & MASK2;
+    out.w = out.w | ((one1 - one2) & MASK2);
     return out;
 }
 
 __device__ static inline char4 __hip_hc_mul8pk(char4 in1, char4 in2) {
     char4 out;
-    unsigned one1 = in1.a & MASK1;
-    unsigned one2 = in2.a & MASK1;
-    out.a = (one1 * one2) & MASK1;
-    one1 = in1.a & MASK2;
-    one2 = in2.a & MASK2;
-    out.a = out.a | ((one1 * one2) & MASK2);
+    unsigned one1 = in1.w & MASK1;
+    unsigned one2 = in2.w & MASK1;
+    out.w = (one1 * one2) & MASK1;
+    one1 = in1.w & MASK2;
+    one2 = in2.w & MASK2;
+    out.w = out.w | ((one1 * one2) & MASK2);
     return out;
 }
 
