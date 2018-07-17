@@ -683,7 +683,6 @@ __MAKE_VECTOR_TYPE__(longlong, long long);
 __MAKE_VECTOR_TYPE__(float, float);
 __MAKE_VECTOR_TYPE__(double, double);
 
-
 #define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
     __device__ __host__ \
     static \
