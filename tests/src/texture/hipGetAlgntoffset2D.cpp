@@ -32,7 +32,6 @@ using namespace std;
 #define R 8 //rows, height
 #define C 8 //columns, width
 
-
 texture<int, hipTextureType2D,hipReadModeElementType> tex;
 
 bool runTest(void);
@@ -47,10 +46,8 @@ int main(int argc, char** argv) {
     }
 }
 
-
 bool runTest()
 {
-
 int val[R][C],i,j;
 size_t offset;
 
@@ -59,10 +56,7 @@ for(i=0;i<R;i++)
 	{
 	 val[i][j]=(i+1)*(j+1);
 	}
-
-
 hipChannelFormatDesc chan_desc=hipCreateChannelDesc(32,0,0,0,hipChannelFormatKindSigned);
-
 hipArray *hipArray;
 HIPCHECK(hipMallocArray(&hipArray, &chan_desc,C,R,0));
 
@@ -74,9 +68,7 @@ tex.filterMode=hipFilterModePoint;
 tex.normalized=0;
 
 HIPCHECK(hipBindTextureToArray(&tex, hipArray, &chan_desc));
-
 HIPCHECK(hipGetTextureAlignmentOffset(&offset,&tex));
-
 HIPCHECK(hipUnbindTexture(&tex));
 HIPCHECK(hipFreeArray(hipArray));
 return true;
