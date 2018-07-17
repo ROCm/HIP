@@ -110,9 +110,9 @@ extern int HIP_TRACE_API;
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hcc_detail/math_functions.h>
 #include <hip/hcc_detail/device_functions.h>
+#include <hip/hcc_detail/surface_functions.h>
 #if __HCC__
 #include <hip/hcc_detail/texture_functions.h>
-#include <hip/hcc_detail/surface_functions.h>
 #endif // __HCC__
 
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
@@ -184,44 +184,10 @@ extern int HIP_TRACE_API;
 #define __HCC_C__
 #endif
 
-// TODO - hipify-clang - change to use the function call.
-//#define warpSize hc::__wavesize()
-static constexpr int warpSize = 64;
-
-#define clock_t long long int
-__device__ long long int clock64();
-__device__ clock_t clock();
-
 // abort
 __device__ void abort();
 
-// warp vote function __all __any __ballot
-__device__ int __all(int input);
-__device__ int __any(int input);
-__device__ unsigned long long int __ballot(int input);
-
 #if __HIP_ARCH_GFX701__ == 0
-
-// warp shuffle functions
-#ifdef __cplusplus
-__device__ int __shfl(int input, int lane, int width = warpSize);
-__device__ int __shfl_up(int input, unsigned int lane_delta, int width = warpSize);
-__device__ int __shfl_down(int input, unsigned int lane_delta, int width = warpSize);
-__device__ int __shfl_xor(int input, int lane_mask, int width = warpSize);
-__device__ float __shfl(float input, int lane, int width = warpSize);
-__device__ float __shfl_up(float input, unsigned int lane_delta, int width = warpSize);
-__device__ float __shfl_down(float input, unsigned int lane_delta, int width = warpSize);
-__device__ float __shfl_xor(float input, int lane_mask, int width = warpSize);
-#else
-__device__ int __shfl(int input, int lane, int width);
-__device__ int __shfl_up(int input, unsigned int lane_delta, int width);
-__device__ int __shfl_down(int input, unsigned int lane_delta, int width);
-__device__ int __shfl_xor(int input, int lane_mask, int width);
-__device__ float __shfl(float input, int lane, int width);
-__device__ float __shfl_up(float input, unsigned int lane_delta, int width);
-__device__ float __shfl_down(float input, unsigned int lane_delta, int width);
-__device__ float __shfl_xor(float input, int lane_mask, int width);
-#endif  //__cplusplus
 
 __device__ unsigned __hip_ds_bpermute(int index, unsigned src);
 __device__ float __hip_ds_bpermutef(int index, float src);
@@ -235,85 +201,15 @@ __device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask
 
 #endif  //__HIP_ARCH_GFX803__ == 1
 
-__host__ __device__ int min(int arg1, int arg2);
-__host__ __device__ int max(int arg1, int arg2);
+__device__ inline static int min(int arg1, int arg2) {
+    return (arg1 < arg2) ? arg1 : arg2;
+}
+__device__ inline static int max(int arg1, int arg2) {
+    return (arg1 > arg2) ? arg1 : arg2;
+}
 
-__device__ void* __get_dynamicgroupbaseptr();
-
-
-/**
- * CUDA 8 device function features
-
- */
-
-
-/**
- * Kernel launching
- */
-
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup Fence Fence Functions
- *  @{
- *
- *
- *  @warning The HIP memory fence functions are currently not supported yet.
- *  If any of those threadfence stubs are reached by the application, you should set "export
- *HSA_DISABLE_CACHE=1" to disable L1 and L2 caches.
- *
- *
- *  On AMD platforms, the threadfence* routines are currently empty stubs.
- */
-
-extern __attribute__((const)) __device__ void __hip_hc_threadfence() __asm("__llvm_fence_sc_dev");
-extern __attribute__((const)) __device__ void __hip_hc_threadfence_block() __asm(
-    "__llvm_fence_sc_wg");
-
-
-/**
- * @brief threadfence_block makes writes visible to threads running in same block.
- *
- * @Returns void
- *
- * @param void
- *
- * @warning __threadfence_block is a stub and map to no-op.
- */
-// __device__ void  __threadfence_block(void);
-__device__ static inline void __threadfence_block(void) { return __hip_hc_threadfence_block(); }
-
-/**
- * @brief threadfence makes wirtes visible to other threads running on same GPU.
- *
- * @Returns void
- *
- * @param void
- *
- * @warning __threadfence is a stub and map to no-op, application should set "export
- * HSA_DISABLE_CACHE=1" to disable both L1 and L2 caches.
- */
-// __device__ void  __threadfence(void) __attribute__((deprecated("Provided for compile-time
-// compatibility, not yet functional")));
-__device__ static inline void __threadfence(void) { return __hip_hc_threadfence(); }
-
-/**
- * @brief threadfence_system makes writes to pinned system memory visible on host CPU.
- *
- * @Returns void
- *
- * @param void
- *
- * @warning __threadfence_system is a stub and map to no-op.
- */
-//__device__ void  __threadfence_system(void) __attribute__((deprecated("Provided with workaround
-//configuration, see hip_kernel_language.md for details")));
-__device__ void __threadfence_system(void);
-
-// doxygen end Fence Fence
-/**
- * @}
- */
+__host__ inline static int min(int arg1, int arg2) { return std::min(arg1, arg2); }
+__host__ inline static int max(int arg1, int arg2) { return std::max(arg1, arg2); }
 
 #endif  // __HCC_OR_HIP_CLANG__
 
@@ -438,17 +334,6 @@ extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, gri
 #endif  //__HCC_CPP__
 
 /**
- * extern __shared__
- */
-
-// Macro to replace extern __shared__ declarations
-// to local variable definitions
-#define HIP_DYNAMIC_SHARED(type, var) type* var = (type*)__get_dynamicgroupbaseptr();
-
-#define HIP_DYNAMIC_SHARED_ATTRIBUTE
-
-
-/**
  * @defgroup HIP-ENV HIP Environment Variables
  * @{
  */
@@ -565,33 +450,6 @@ extern const __device__ __attribute__((weak)) __hip_builtin_gridDim_t gridDim;
 #define hipGridDim_x gridDim.x
 #define hipGridDim_y gridDim.y
 #define hipGridDim_z gridDim.z
-
-#pragma push_macro("__DEVICE__")
-#define __DEVICE__ extern "C" __device__ __attribute__((always_inline)) \
-  __attribute__((weak))
-
-__DEVICE__ void __device_trap() __asm("llvm.trap");
-
-__DEVICE__ void inline __assert_fail(const char * __assertion,
-                                     const char *__file,
-                                     unsigned int __line,
-                                     const char *__function)
-{
-    // Ignore all the args for now.
-    __device_trap();
-}
-
-extern "C" __device__ __attribute__((noduplicate)) void __syncthreads();
-extern "C" __device__ void *__amdgcn_get_dynamicgroupbaseptr();
-
-// Macro to replace extern __shared__ declarations
-// to local variable definitions
-#define HIP_DYNAMIC_SHARED(type, var) \
-    type* var = (type*)__amdgcn_get_dynamicgroupbaseptr();
-
-#define HIP_DYNAMIC_SHARED_ATTRIBUTE
-
-#pragma push_macro("__DEVICE__")
 
 #include <hip/hcc_detail/math_functions.h>
 
