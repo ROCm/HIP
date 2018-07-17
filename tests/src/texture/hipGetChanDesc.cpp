@@ -33,12 +33,10 @@ using namespace std;
 #define R 8 //rows, height
 #define C 8 //columns, width
 
-bool testResult = true;
-
 bool runTest(void);
 
 int main(int argc, char** argv) {
-    testResult=runTest();
+    bool testResult=runTest();
 
     if (testResult) {
         passed();
@@ -47,12 +45,10 @@ int main(int argc, char** argv) {
     }
 }
 
-
 bool runTest()
 {
-
+bool testResult=true;
 hipChannelFormatDesc chan_test,chan_desc=hipCreateChannelDesc(32,0,0,0,hipChannelFormatKindSigned);
-
 hipArray *hipArray;
 HIPCHECK(hipMallocArray(&hipArray, &chan_desc,C,R,0));
 HIPCHECK(hipGetChannelDesc(&chan_test,hipArray));
