@@ -120,7 +120,8 @@ THE SOFTWARE.
         }
         template< // TODO: constrain based on type as well.
             typename... Us,
-            typename std::enable_if<sizeof...(Us) == rank>::type* = nullptr>
+            typename std::enable_if<
+                (rank > 1) && sizeof...(Us) == rank>::type* = nullptr>
         __host__ __device__
         HIP_vector_type(Us... xs) noexcept { data = Native_vec_{xs...}; }
         __host__ __device__
