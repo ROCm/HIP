@@ -21,8 +21,7 @@ THE SOFTWARE.
  * RUN: %t
  * HIT_END
  */
-
-#include "hip/hip_runtime.h"
+#include "test_common.h"
 #include <iostream>
 #include <complex>
 
@@ -157,5 +156,6 @@ int main() {
   test<float>();
   test<double>();
 #endif
+  passed();
   return 0;
 }
