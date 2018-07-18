@@ -128,7 +128,7 @@ global:
     hipStreamWaitEvent;
     __hipRegisterFatBinary;
     __hipRegisterFunction;
-    __hipRegisterVariable;
+    __hipRegisterVar;
     __hipUnregisterFatBinary;
     hipConfigureCall;
     hipSetupArgument;
