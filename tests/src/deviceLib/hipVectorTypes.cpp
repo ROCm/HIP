@@ -38,18 +38,23 @@ THE SOFTWARE.
 
 using namespace std;
 
-bool integer_unary_tests(...) {
+template<
+    typename V,
+    Enable_if_t<!is_integral<decltype(declval<V>().x)>{}>* = nullptr>
+bool integer_unary_tests(V&, V&) {
     return true;
 }
 
-bool integer_binary_tests(...) {
+template<
+    typename V,
+    Enable_if_t<!is_integral<decltype(declval<V>().x)>{}>* = nullptr>
+bool integer_binary_tests(V&, V&, V&...) {
     return true;
 }
 
 template<
     typename V,
     Enable_if_t<is_integral<decltype(declval<V>().x)>{}>* = nullptr>
-__device__
 bool integer_unary_tests(V& f1, V& f2) {
     f1 %= f2;
     if (f1 != V{0}) return false;
@@ -71,7 +76,6 @@ bool integer_unary_tests(V& f1, V& f2) {
 template<
     typename V,
     Enable_if_t<is_integral<decltype(declval<V>().x)>{}>* = nullptr>
-__device__
 bool integer_binary_tests(V& f1, V& f2, V& f3) {
     f3 = f1 % f2;
     if (f3 != V{0}) return false;
