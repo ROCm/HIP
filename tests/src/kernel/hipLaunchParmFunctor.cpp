@@ -57,6 +57,8 @@ class HipFunctorTests {
 };
 
 
+
+
 static const int BLOCK_DIM_SIZE = 1024;
 static const int THREADS_PER_BLOCK = 1;
 
@@ -67,6 +69,8 @@ class DoublerFunctor{
  public:
     __device__ int operator()(int x) { return x * 2;}
 };
+
+
 
 
 // simple doubler functor passed to kernel
@@ -89,6 +93,7 @@ void HipFunctorTests::TestForSimpleClassFunctor(void) {
     hostResults[k] = false;
   }
 
+
   HIPCHECK(hipMemcpy(deviceResults, hostResults, BLOCK_DIM_SIZE*sizeof(bool),
            hipMemcpyHostToDevice));
   hipLaunchKernelGGL(DoublerFunctorKernel, dim3(BLOCK_DIM_SIZE),
@@ -102,6 +107,8 @@ void HipFunctorTests::TestForSimpleClassFunctor(void) {
   HIPCHECK(hipHostFree(hostResults));
   HIPCHECK(hipFree(deviceResults));
 }
+
+
 
 
 // pointer functor passed to kernel
@@ -123,6 +130,7 @@ void HipFunctorTests::TestForClassObjPtrFunctor(void) {
     // true if the functor is called in device code
     hostResults[k] = false;
   }
+
 
   HIPCHECK(hipMemcpy(deviceResults, hostResults, BLOCK_DIM_SIZE*sizeof(bool),
            hipMemcpyHostToDevice));
@@ -146,6 +154,8 @@ class compare {
        return v1 > v2;
     }
 };
+
+
 
 
 // template functor passed to kernel
@@ -193,6 +203,7 @@ class DoublerCalculator {
 };
 
 
+
 // doubler functor conatined in class obj passed to kernel
 __global__ void DoublerCalculatorFunctorKernel(
                     DoublerCalculator doubler_,
@@ -216,6 +227,7 @@ void HipFunctorTests::TestForFunctorContainInClassObj(void) {
   Doubler.a = 5;
   Doubler.result = 10;
   // pass comparefunctor to  hipLaunchParm
+
   HIPCHECK(hipMemcpy(deviceResults, hostResults, BLOCK_DIM_SIZE*sizeof(bool),
            hipMemcpyHostToDevice));
   hipLaunchKernelGGL(DoublerCalculatorFunctorKernel, dim3(BLOCK_DIM_SIZE),
@@ -240,6 +252,8 @@ struct sDoublerFunctor {
 };
 
 
+
+
 // simple sturct doubler functor passed to kernel
 __global__ void structDoublerFunctorKernel(
                     sDoublerFunctor doubler_,
@@ -259,6 +273,7 @@ void HipFunctorTests::TestForSimpleStructFunctor(void) {
     // true if the functor is called in device code
     hostResults[k] = false;
   }
+
   HIPCHECK(hipMemcpy(deviceResults, hostResults, BLOCK_DIM_SIZE*sizeof(bool),
            hipMemcpyHostToDevice));
   hipLaunchKernelGGL(structDoublerFunctorKernel, dim3(BLOCK_DIM_SIZE),
@@ -293,6 +308,7 @@ void HipFunctorTests::TestForStructObjPtrFunctor(void) {
     hostResults[k] = false;
   }
 
+
   HIPCHECK(hipMemcpy(deviceResults, hostResults, BLOCK_DIM_SIZE*sizeof(bool),
            hipMemcpyHostToDevice));
   hipLaunchKernelGGL(structPtrDoublerFunctorKernel, dim3(BLOCK_DIM_SIZE),
@@ -315,6 +331,8 @@ struct sCompare {
     return v1 > v2;
     }
 };
+
+
 
 
 // template functor passed to kernel
@@ -340,6 +358,7 @@ void HipFunctorTests::TestForStructTemplateFunctor(void) {
 
   HIPCHECK(hipMemcpy(deviceResults, hostResults, BLOCK_DIM_SIZE*sizeof(bool),
            hipMemcpyHostToDevice));
+
   // pass comparefunctor to  hipLaunchKernelGGL
   hipLaunchKernelGGL(structTemplateFunctorKernel, dim3(BLOCK_DIM_SIZE),
                   dim3(THREADS_PER_BLOCK), 0, 0, comparefunctor, deviceResults);
@@ -360,6 +379,7 @@ struct sDoublerCalculator {
     // fucntor contained in class object
     DoublerFunctor doubler;
 };
+
 
 
 // doubler functor contained in struct passed to kernel
@@ -386,6 +406,7 @@ void HipFunctorTests::TestForFunctorContainInStructObj(void) {
   Doubler.result = 10;
   HIPCHECK(hipMemcpy(deviceResults, hostResults, BLOCK_DIM_SIZE*sizeof(bool),
            hipMemcpyHostToDevice));
+
 
   // pass comparefunctor to  hipLaunchKernelGGL
   hipLaunchKernelGGL(DoublerCalculatorFunctorKernel, dim3(BLOCK_DIM_SIZE),
