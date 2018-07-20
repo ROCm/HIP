@@ -689,13 +689,13 @@ int __any(int predicate) {
 __device__
 inline
 unsigned long long int __ballot(int predicate) {
-    return __llvm_amdgcn_icmp_i32(predicate, 0, ICMP_NE);
+    return __llvm_amdgcn_icmp_i64_i32(predicate, 0, ICMP_NE);
 }
 
 __device__
 inline
 unsigned long long int __ballot64(int predicate) {
-    return __llvm_amdgcn_icmp_i32(predicate, 0, ICMP_NE);
+    return __llvm_amdgcn_icmp_i64_i32(predicate, 0, ICMP_NE);
 }
 
 // hip.amdgcn.bc - lanemask
