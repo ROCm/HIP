@@ -635,6 +635,10 @@ if ($buildDeps and $HIP_PLATFORM eq 'nvcc') {
     $HIPCXXFLAGS .= " -M -D__CUDACC__";
 }
 
+if ($buildDeps and $HIP_PLATFORM eq 'clang') {
+    $HIPCXXFLAGS .= " --cuda-host-only";
+}
+
 if ($setStdLib eq 0 and $HIP_PLATFORM eq 'hcc')
 {
     $HIPCXXFLAGS .= $HCC_WA_FLAGS;
