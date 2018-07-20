@@ -51,6 +51,9 @@ THE SOFTWARE.
 // ip_d9 is a pointer, uint_t*, hipLaunchKernelStruct_h9 = {'c', ip_d9};
 #define ENABLE_DECLARE_INITIALIZATION_POINTER 0
 
+// Bit fields are broken
+#define ENABLE_BIT_FIELDS 0
+
 static const int  BLOCK_DIM_SIZE = 1024;
 
 // allocate memory on device and host for result validation
@@ -78,7 +81,7 @@ static void ResultValidation() {
 static void ResetValidationMem() {
     // reset the memory to false to reuse it.
     hipMemset(result_d, false, BLOCK_DIM_SIZE);
-//    hipMemset(result_h, false, BLOCK_DIM_SIZE);
+    hipMemset(result_h, false, BLOCK_DIM_SIZE);
     return;
 }
 
@@ -237,8 +240,10 @@ typedef struct hipLaunchKernelStruct19 {
   stackNode_t* stack = NULL;
   unsigned int size_ = 0;
   void pushMe(int value) {  // not a device function, setting from host
-    stackNode_t* newNode = new stackNode_t;
-    newNode->data = value;
+    stackNode_t* newNode;
+    hipMalloc((void**)&newNode, sizeof(stackNode_t));
+    hipMemset(&newNode->data, value, sizeof(stackNode_t));
+    //newNode->data = value;
     ++size_;
     if (stack == NULL) {
       stack = newNode;
@@ -268,6 +273,13 @@ typedef struct hipLaunchKernelStruct20 {
   int age;
   int rank;
 } hipLaunchKernelStruct_t20;
+
+// This test is to verify bit fields operations
+// the size should be 1Bytes
+typedef struct hipLaunchKernelStruct21 {
+  int i : 3;  // limiting bits to 3
+  int j : 2;  // limiting bits to 2
+} hipLaunchKernelStruct_t21;
 
 // Passing struct to a hipLaunchKernelGGL(),
 // read and write into the same struct
@@ -545,6 +557,18 @@ __global__ void hipLaunchKernelStructFunc20(
     // strcmp(hipLaunchKernelStruct_.name, "AMD") -> strcmp is not broken
                      && hipLaunchKernelStruct_.age == 42
                      && hipLaunchKernelStruct_.rank == 2);
+}
+
+// Passing struct with bit fields
+__global__ void hipLaunchKernelStructFunc21(
+                    hipLaunchKernelStruct_t21 hipLaunchKernelStruct_,
+                    bool* result_d21) {
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+
+    // accessing struct members in order
+    result_d21[x] = (hipLaunchKernelStruct_.i == 2
+                     && hipLaunchKernelStruct_.j == 0
+                     && (sizeof(hipLaunchKernelStruct_) == 1));
 }
 
 __global__ void vAdd(float* a) {}
@@ -866,6 +890,20 @@ int main() {
     hipLaunchKernelGGL(HIP_KERNEL_NAME(hipLaunchKernelStructFunc20),
                     dim3(BLOCK_DIM_SIZE),
                     dim3(1), 0, 0, hipLaunchKernelStruct_h20, result_d);
+    ResultValidation();
+    #endif
+
+    // Test: Passing struct with bit fields operation
+    // accessing same elements in order from device
+    ResetValidationMem();
+    hipLaunchKernelStruct_t21 hipLaunchKernelStruct_h21 =
+    // out of order initalization
+                     {2,0};
+    bool *result_d21, *result_h21;
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(hipLaunchKernelStructFunc21),
+                    dim3(BLOCK_DIM_SIZE),
+                    dim3(1), 0, 0, hipLaunchKernelStruct_h21, result_d);
+    #if ENABLE_BIT_FIELDS
     ResultValidation();
     #endif
 
