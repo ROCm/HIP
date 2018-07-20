@@ -114,14 +114,19 @@ if ($HIP_PLATFORM eq "clang") {
     }
     $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
     $HIPCC="$HIP_CLANG_PATH/clang++";
-    $HIPCXXFLAGS .= "-std=c++11 -I$HIP_PATH/include";
-    $HIPLDFLAGS = "--hip-link --hip-device-lib-path=$DEVICE_LIB_PATH -L$HIP_PATH/lib -lhip_hcc";
 
     # If $HIPCC clang++ is not compiled, use clang instead
     if ( ! -e $HIPCC ) {
         $HIPCC="$HIP_CLANG_PATH/clang";
-        $HIPLDFLAGS = "--driver-mode=g++ " . $HIPLDFLAGS;
+        $HIPLDFLAGS = "--driver-mode=g++";
     }
+
+    $HIP_CLANG_VERSION = `$HIPCC --version`;
+    $HIP_CLANG_VERSION=~/.*clang version ([^ ]+).*/;
+    $HIP_CLANG_VERSION=$1;
+
+    $HIPCXXFLAGS .= " -std=c++11 -isystem $HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/include -I$HIP_PATH/include";
+    $HIPLDFLAGS .= " --hip-link --hip-device-lib-path=$DEVICE_LIB_PATH -L$HIP_PATH/lib -lhip_hcc";
 } elsif ($HIP_PLATFORM eq "hcc") {
     $HSA_PATH=$ENV{'HSA_PATH'} // "/opt/rocm/hsa";
 
@@ -439,7 +444,7 @@ foreach $arg (@ARGV)
                 $toolArgs .= " -x hip"
             }
         }
-        if (($arg =~ /\.cu$/) or ($arg =~ /\.cuh$/)) {
+        if (($arg =~ /\.cu$/) or ($arg =~ /\.cuh$/) or ($arg =~ /\.hip$/)) {
             $hasCU = 1;
             $needCXXFLAGS = 1;
             if ($HIP_PLATFORM eq 'clang') {

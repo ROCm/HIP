@@ -123,21 +123,17 @@ namespace hip_impl
             };
         }
 
-        for (auto&& agent_kernel : it0->second) {
-            if (agent.handle == agent_kernel.first.handle) {
-                hipModuleLaunchKernel(
-                    agent_kernel.second,
-                    numBlocks.x,
-                    numBlocks.y,
-                    numBlocks.z,
-                    dimBlocks.x,
-                    dimBlocks.y,
-                    dimBlocks.z,
-                    sharedMemBytes,
-                    stream,
-                    nullptr,
-                    kernarg);
-            }
-        }
+        hipModuleLaunchKernel(
+            it1->second,
+            numBlocks.x,
+            numBlocks.y,
+            numBlocks.z,
+            dimBlocks.x,
+            dimBlocks.y,
+            dimBlocks.z,
+            sharedMemBytes,
+            stream,
+            nullptr,
+            kernarg);
     }
 }
