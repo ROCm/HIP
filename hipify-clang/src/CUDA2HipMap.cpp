@@ -24,7 +24,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TYPE_NAME_MAP{
     {"CUaddress_mode",        {"hipAddress_mode",       CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
     {"CUarray_cubemap_face",  {"hipArray_cubemap_face", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
     {"CUarray_format",        {"hipArray_format",       CONV_TYPE, API_DRIVER}},
-    {"CUcomputemode",         {"hipComputemode",        CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_RUNTIME ANALOGUE (cudaComputeMode)
+    {"CUcomputemode",         {"hipComputeMode",        CONV_TYPE, API_DRIVER}},                     // API_RUNTIME ANALOGUE (cudaComputeMode)
     {"CUmem_advise",          {"hipMemAdvise",          CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_RUNTIME ANALOGUE (cudaComputeMode)
     {"CUmem_range_attribute", {"hipMemRangeAttribute",  CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // API_RUNTIME ANALOGUE (cudaMemRangeAttribute)
     {"CUctx_flags",           {"hipCctx_flags",         CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
@@ -236,7 +236,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_TYPE_NAME_MAP{
     {"cudaDeviceAttr",      {"hipDeviceAttribute_t",  CONV_TYPE,  API_RUNTIME}},                     // API_DRIVER ANALOGUE (CUdevice_attribute)
     {"cudaDeviceProp",      {"hipDeviceProp_t",       CONV_TYPE,  API_RUNTIME}},
     {"cudaDeviceP2PAttr",   {"hipDeviceP2PAttribute", CONV_TYPE,  API_RUNTIME, HIP_UNSUPPORTED}},    // API_DRIVER ANALOGUE (CUdevice_P2PAttribute)
-    {"cudaComputeMode",     {"hipComputeMode",        CONV_TYPE,  API_RUNTIME, HIP_UNSUPPORTED}},    // API_DRIVER ANALOGUE (CUcomputemode)
+    {"cudaComputeMode",     {"hipComputeMode",        CONV_TYPE,  API_RUNTIME}},    // API_DRIVER ANALOGUE (CUcomputemode)
     {"cudaFuncCache",       {"hipFuncCache_t",        CONV_CACHE, API_RUNTIME}},    // API_Driver ANALOGUE (CUfunc_cache)
     {"cudaFuncAttributes",  {"hipFuncAttributes",     CONV_EXEC,  API_RUNTIME, HIP_UNSUPPORTED}},
     {"cudaSharedMemConfig", {"hipSharedMemConfig",    CONV_TYPE,  API_RUNTIME}},
@@ -628,10 +628,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"CU_AD_FORMAT_FLOAT",                {"HIP_AD_FORMAT_FLOAT",              CONV_TYPE, API_DRIVER}},    // 0x20
 
     // CUcomputemode enum
-    {"CU_COMPUTEMODE_DEFAULT",            {"hipComputeModeDefault",            CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 0 // API_RUNTIME ANALOGUE (cudaComputeModeDefault = 0)
-    {"CU_COMPUTEMODE_EXCLUSIVE",          {"hipComputeModeExclusive",          CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 1 // API_RUNTIME ANALOGUE (cudaComputeModeExclusive = 1)
-    {"CU_COMPUTEMODE_PROHIBITED",         {"hipComputeModeProhibited",         CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 2 // API_RUNTIME ANALOGUE (cudaComputeModeProhibited = 2)
-    {"CU_COMPUTEMODE_EXCLUSIVE_PROCESS",  {"hipComputeModeExclusiveProcess",   CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},    // 3 // API_RUNTIME ANALOGUE (cudaComputeModeExclusiveProcess = 3)
+    {"CU_COMPUTEMODE_DEFAULT",            {"hipComputeModeDefault",            CONV_TYPE, API_DRIVER}},    // 0 // API_RUNTIME ANALOGUE (cudaComputeModeDefault = 0)
+    {"CU_COMPUTEMODE_EXCLUSIVE",          {"hipComputeModeExclusive",          CONV_TYPE, API_DRIVER}},    // 1 // API_RUNTIME ANALOGUE (cudaComputeModeExclusive = 1)
+    {"CU_COMPUTEMODE_PROHIBITED",         {"hipComputeModeProhibited",         CONV_TYPE, API_DRIVER}},    // 2 // API_RUNTIME ANALOGUE (cudaComputeModeProhibited = 2)
+    {"CU_COMPUTEMODE_EXCLUSIVE_PROCESS",  {"hipComputeModeExclusiveProcess",   CONV_TYPE, API_DRIVER}},    // 3 // API_RUNTIME ANALOGUE (cudaComputeModeExclusiveProcess = 3)
 
     // Memory advise values
     //     {"CUmem_advise_enum", {"hipMemAdvise", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
@@ -1698,10 +1698,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cudaDeviceGetP2PAttribute",           {"hipDeviceGetP2PAttribute",                   CONV_DEVICE, API_RUNTIME, HIP_UNSUPPORTED}},    // API_DRIVER ANALOGUE (cuDeviceGetP2PAttribute)
 
     // enum cudaComputeMode
-    {"cudaComputeModeDefault",          {"hipComputeModeDefault",          CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 0 // API_DRIVER ANALOGUE (CU_COMPUTEMODE_DEFAULT = 0)
-    {"cudaComputeModeExclusive",        {"hipComputeModeExclusive",        CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 1 // API_DRIVER ANALOGUE (CU_COMPUTEMODE_EXCLUSIVE = 1)
-    {"cudaComputeModeProhibited",       {"hipComputeModeProhibited",       CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 2 // API_DRIVER ANALOGUE (CU_COMPUTEMODE_PROHIBITED = 2)
-    {"cudaComputeModeExclusiveProcess", {"hipComputeModeExclusiveProcess", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},    // 3 // API_DRIVER ANALOGUE (CU_COMPUTEMODE_EXCLUSIVE_PROCESS = 3)
+    {"cudaComputeModeDefault",          {"hipComputeModeDefault",          CONV_TYPE, API_RUNTIME}},    // 0 // API_DRIVER ANALOGUE (CU_COMPUTEMODE_DEFAULT = 0)
+    {"cudaComputeModeExclusive",        {"hipComputeModeExclusive",        CONV_TYPE, API_RUNTIME}},    // 1 // API_DRIVER ANALOGUE (CU_COMPUTEMODE_EXCLUSIVE = 1)
+    {"cudaComputeModeProhibited",       {"hipComputeModeProhibited",       CONV_TYPE, API_RUNTIME}},    // 2 // API_DRIVER ANALOGUE (CU_COMPUTEMODE_PROHIBITED = 2)
+    {"cudaComputeModeExclusiveProcess", {"hipComputeModeExclusiveProcess", CONV_TYPE, API_RUNTIME}},    // 3 // API_DRIVER ANALOGUE (CU_COMPUTEMODE_EXCLUSIVE_PROCESS = 3)
 
     // Device Flags
     {"cudaGetDeviceFlags", {"hipGetDeviceFlags", CONV_DEVICE, API_RUNTIME, HIP_UNSUPPORTED}},

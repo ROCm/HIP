@@ -114,14 +114,19 @@ if ($HIP_PLATFORM eq "clang") {
     }
     $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
     $HIPCC="$HIP_CLANG_PATH/clang++";
-    $HIPCXXFLAGS .= "-std=c++11 -I$HIP_PATH/include";
-    $HIPLDFLAGS = "--hip-link --hip-device-lib-path=$DEVICE_LIB_PATH -L$HIP_PATH/lib -lhip_hcc";
 
     # If $HIPCC clang++ is not compiled, use clang instead
     if ( ! -e $HIPCC ) {
         $HIPCC="$HIP_CLANG_PATH/clang";
-        $HIPLDFLAGS = "--driver-mode=g++ " . $HIPLDFLAGS;
+        $HIPLDFLAGS = "--driver-mode=g++";
     }
+
+    $HIP_CLANG_VERSION = `$HIPCC --version`;
+    $HIP_CLANG_VERSION=~/.*clang version ([^ ]+).*/;
+    $HIP_CLANG_VERSION=$1;
+
+    $HIPCXXFLAGS .= " -std=c++11 -isystem $HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/include -I$HIP_PATH/include";
+    $HIPLDFLAGS .= " --hip-link --hip-device-lib-path=$DEVICE_LIB_PATH -L$HIP_PATH/lib -lhip_hcc";
 } elsif ($HIP_PLATFORM eq "hcc") {
     $HSA_PATH=$ENV{'HSA_PATH'} // "/opt/rocm/hsa";
 
@@ -259,8 +264,7 @@ if($HIP_PLATFORM eq "hcc"){
 }
 
 if(($HIP_PLATFORM eq "hcc")){
-    $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_hc.ll\n";
-    $ENV{HIP_HC_IR_FILE}="";
+    $ENV{HCC_EXTRA_LIBRARIES}="\n";
 }
 
 if($HIP_PLATFORM eq "nvcc"){
@@ -381,15 +385,35 @@ foreach $arg (@ARGV)
         open my $out, ">", $new_file or die "$new_file: $!";
         while (my $line = <$in>) {
             chomp $line;
-            if ($line =~ m/\.a$/) {
+            if ($line =~ m/\.a$/ || $line =~ m/\.lo$/) {
+                my $libFile = $line;
                 my $path = abs_path($line);
                 my @objs = split ('\n', `cd $tmpdir; ar xv $path`);
+                ## Check if all files in .a are object files.
+                my $allIsObj = 1;
+                my $realObjs = "";
                 foreach my $obj (@objs) {
                     chomp $obj;
                     $obj =~ s/^x - //;
                     $obj = "$tmpdir/$obj";
-                    push (@inputs, $obj);
-                    $new_arg = "$new_arg $obj";
+                    my $fileType = `file $obj`;
+                    my $isObj = ($fileType =~ m/ELF/ or $fileType =~ m/COFF/);
+                    $allIsObj = ($allIsObj and $isObj);
+                    if ($isObj) {
+                        $realObjs = ($realObjs . " " . $obj);
+                    } else {
+                        push (@inputs, $obj);
+                        $new_arg = "$new_arg $obj";
+                    }
+                }
+                chomp $realObjs;
+                if ($allIsObj) {
+                    print $out "$line\n";
+                } elsif ($realObjs) {
+                    my($libBaseName, $libDir, $libExt) = fileparse($libFile);
+                    $libBaseName = mktemp($libBaseName . "XXXX") . $libExt;
+                    system("cd $tmpdir; ar c $libBaseName $realObjs");
+                    print $out "$tmpdir/$libBaseName\n";
                 }
             } else {
                 print $out "$line\n";
@@ -420,7 +444,7 @@ foreach $arg (@ARGV)
                 $toolArgs .= " -x hip"
             }
         }
-        if (($arg =~ /\.cu$/) or ($arg =~ /\.cuh$/)) {
+        if (($arg =~ /\.cu$/) or ($arg =~ /\.cuh$/) or ($arg =~ /\.hip$/)) {
             $hasCU = 1;
             $needCXXFLAGS = 1;
             if ($HIP_PLATFORM eq 'clang') {
@@ -513,7 +537,7 @@ if($HIP_PLATFORM eq "hcc" or $HIP_PLATFORM eq "clang"){
         print "No valid AMD GPU target was either specified or found. Please specify a valid target using --amdgpu-target=" and die();
     }
 
-    $ENV{HCC_EXTRA_LIBRARIES}="$HIP_PATH/lib/hip_hc.ll\n";
+    $ENV{HCC_EXTRA_LIBRARIES}="\n";
 
     if($HIP_PLATFORM eq "hcc") {
         $GPU_ARCH_OPT = " --amdgpu-target=";
@@ -606,6 +630,9 @@ if ($needLDFLAGS and not $compileOnly) {
     $CMD .= " $HIPLDFLAGS";
 }
 $CMD .= " $toolArgs";
+if ($needLDFLAGS and not $compileOnly and $HIP_PLATFORM eq "clang") {
+    $CMD .= " -lgcc_s -lgcc";
+}
 
 if ($verbose & 0x1) {
     print "hipcc-cmd: ", $CMD, "\n";

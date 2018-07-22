@@ -293,6 +293,12 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeIntegrated,                        ///< iGPU
 } hipDeviceAttribute_t;
 
+enum hipComputeMode {
+    hipComputeModeDefault = 0,
+    hipComputeModeExclusive = 1,
+    hipComputeModeProhibited = 2,
+    hipComputeModeExclusiveProcess = 3
+};
 
 /**
  *     @}

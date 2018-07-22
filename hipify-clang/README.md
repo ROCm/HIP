@@ -31,7 +31,9 @@
 | 4.0.1                    | 8.0                               |
 | 5.0.0                    | 8.0                               |
 | 5.0.1                    | 8.0                               |
+| 5.0.2                    | 8.0                               |
 | 6.0.0                    | 9.0                               |
+| 6.0.1                    | 9.0                               |
 
 In most cases, you can get a suitable version of LLVM+CLANG with your package manager.
 
@@ -80,7 +82,7 @@ To run it:
    cmake \
      -DCMAKE_INSTALL_PREFIX=../dist \
      -DLLVM_SOURCE_DIR=../llvm \
-     -DCMAKE_BUILD_TYPE=Debug \
+     -DCMAKE_BUILD_TYPE=Release \
      -Thost=x64 \
      ../llvm
 
@@ -114,9 +116,9 @@ To run it:
 
     * Starting with LLVM 6.0.0 path to llvm-lit.py script should be specified by the `LLVM_EXTERNAL_LIT` option:
 
-      `-DLLVM_EXTERNAL_LIT=f:/LLVM/6.0.0/build/Debug/bin/llvm-lit.py`,
+      `-DLLVM_EXTERNAL_LIT=f:/LLVM/6.0.0/build/Release/bin/llvm-lit.py`,
 
-      where `f:/LLVM/6.0.0/build/Debug` is LLVM build directory.
+      where `f:/LLVM/6.0.0/build/Release` is LLVM build directory.
 7. Build with the `HIPIFY_CLANG_TESTS` option turned on: -DHIPIFY_CLANG_TESTS=1.
 8. `make test-hipify`
 
@@ -124,9 +126,15 @@ To run it:
 
 ### Windows
 
-On Windows the following tested configuration is recommended:
+On Windows the following configurations are tested:
 
-LLVM 6.0.0 (exact), CUDA 9.0 (exact), cudnn-9.0 (exact), Python 3.6 (min), cmake 3.10 (min), Visual Studio 15.5 2017 (min).
+LLVM 6.0.0 - 6.0.1, CUDA 9.0, cudnn-9.0
+
+LLVM 5.0.0 - 5.0.2, CUDA 8.0, cudnn-8.0
+
+Build system for the above configurations:
+
+Python 3.6 (min), cmake 3.10 (min), Visual Studio 15.5 2017 (min).
 
 Here is an example of building `hipify-clang` with testing support on `Windows 10` by `Visual Studio 15 2017`:
 
@@ -134,13 +142,14 @@ Here is an example of building `hipify-clang` with testing support on `Windows 1
 cmake
  -G "Visual Studio 15 2017 Win64" \
  -DHIPIFY_CLANG_TESTS=1 \
- -DCMAKE_BUILD_TYPE=Debug \
+ -DCMAKE_BUILD_TYPE=Release \
  -DCMAKE_INSTALL_PREFIX=../dist \
  -DCMAKE_PREFIX_PATH=f:/LLVM/6.0.0/dist \
  -DCUDA_TOOLKIT_ROOT_DIR="c:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.0" \
  -DCUDA_SDK_ROOT_DIR="c:/ProgramData/NVIDIA Corporation/CUDA Samples/v9.0" \
  -DCUDA_DNN_ROOT_DIR=f:/CUDNN/cudnn-9.0-windows10-x64-v7.1 \
- -DLLVM_EXTERNAL_LIT=f:/LLVM/6.0.0/build/Debug/bin/llvm-lit.py \
+ -DLLVM_EXTERNAL_LIT=f:/LLVM/6.0.0/build/Release/bin/llvm-lit.py \
+ -Thost=x64
  ..
 ```
 A corresponding successful output:

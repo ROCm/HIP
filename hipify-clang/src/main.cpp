@@ -132,7 +132,7 @@ int main(int argc, const char **argv) {
 
     // Hipify _all_ the things!
     if (Tool.runAndSave(&actionFactory)) {
-      DEBUG(llvm::dbgs() << "Skipped some replacements.\n");
+      LLVM_DEBUG(llvm::dbgs() << "Skipped some replacements.\n");
     }
 
     // Either move the tmpfile to the output, or remove it.
