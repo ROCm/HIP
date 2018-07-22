@@ -72,11 +72,14 @@ void CheckHostPointer(int numElements, int* ptr, unsigned eventFlags, int syncMe
 
     const int expected = 13;
 
+    int *dPtr;
+    HIPCHECK(hipHostGetDevicePointer((void**)&dPtr, ptr, 0));
+
     // Init array to know state:
-    hipLaunchKernelGGL(Set, dimGrid, dimBlock, 0, 0x0, ptr, -42);
+    hipLaunchKernelGGL(Set, dimGrid, dimBlock, 0, 0x0, dPtr, -42);
     HIPCHECK(hipDeviceSynchronize());
 
-    hipLaunchKernelGGL(Set, dimGrid, dimBlock, 0, s, ptr, expected);
+    hipLaunchKernelGGL(Set, dimGrid, dimBlock, 0, s, dPtr, expected);
     HIPCHECK(hipEventRecord(e, s));
 
     // Host waits for event :
