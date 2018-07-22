@@ -144,7 +144,12 @@ if ($HIP_PLATFORM eq "clang") {
     $marker_path = "$ROCM_PATH/profiler/CXLActivityLogger";
 
     # HCC* may be used to compile src/hip_hcc.o (and also feed the HIPCXXFLAGS below)
-    $HCC = "$HCC_HOME/bin/hcc";
+    if [[ -n "$(which hcc)" ]]; then
+        $HCC = "$(which hcc)";
+    else
+        $HCC = "$HCC_HOME/bin/hcc"
+    fi
+
     $HCCFLAGS = "-hc  -D__HIPCC__ -I$HCC_HOME/include ";
 
     $HIPCC=$HCC;
