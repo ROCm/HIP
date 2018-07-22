@@ -51,19 +51,19 @@ void waitStreams(int iterations) {
 //
 void multiThread_pyramid(bool serialize, int iters) {
     printf("%s creating %d streams\n", __func__, iters * 100);
-    std::thread t1(createThenDestroyStreams, iters * 1, 50);
+    std::thread t1(createThenDestroyStreams, iters * 1, 100);
     if (serialize) {
         t1.join();
         printf("t1 done\n");
     }
 
-    std::thread t2(createThenDestroyStreams, iters * 5, 10);
+    std::thread t2(createThenDestroyStreams, iters * 10, 10);
     if (serialize) {
         t2.join();
         printf("t2 done\n");
     }
 
-    std::thread t3(createThenDestroyStreams, iters * 50, 1);
+    std::thread t3(createThenDestroyStreams, iters * 100, 1);
     if (serialize) {
         t3.join();
         printf("t3 done\n");
