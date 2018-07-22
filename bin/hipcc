@@ -144,6 +144,8 @@ if ($HIP_PLATFORM eq "clang") {
     $marker_path = "$ROCM_PATH/profiler/CXLActivityLogger";
 
     # HCC* may be used to compile src/hip_hcc.o (and also feed the HIPCXXFLAGS below)
+    # Here, we'll search for hcc inside the path first instead of setting the direct path.
+    # This is helpful in cases when we're using ccache for caching compiler invocations.
     if [[ -n "$(which hcc)" ]]; then
         $HCC = "$(which hcc)";
     else
