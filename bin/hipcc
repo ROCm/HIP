@@ -157,7 +157,7 @@ if ($HIP_PLATFORM eq "clang") {
     }
 
     $HIPCXXFLAGS .= " -std=c++11 -isystem $HIP_CLANG_INCLUDE_PATH";
-    $HIPLDFLAGS .= " --hip-link --hip-device-lib-path=$DEVICE_LIB_PATH -L$HIP_LIB_PATH -lhip_hcc";
+    $HIPLDFLAGS .= " --hip-device-lib-path=$DEVICE_LIB_PATH -L$HIP_LIB_PATH -Wl,--rpath=$HIP_LIB_PATH -lhip_hcc";
 } elsif ($HIP_PLATFORM eq "hcc") {
     $HIP_INCLUDE_PATH = "$HIP_PATH/include";
     $HSA_PATH=$ENV{'HSA_PATH'} // "/opt/rocm/hsa";
@@ -637,6 +637,11 @@ if ($buildDeps and $HIP_PLATFORM eq 'nvcc') {
 
 if ($buildDeps and $HIP_PLATFORM eq 'clang') {
     $HIPCXXFLAGS .= " --cuda-host-only";
+}
+
+# Add --hip-link only if there are no source files.
+if (!$needCXXFLAGS and $HIP_PLATFORM eq 'clang') {
+    $HIPLDFLAGS .= " --hip-link";
 }
 
 if ($setStdLib eq 0 and $HIP_PLATFORM eq 'hcc')
