@@ -128,15 +128,20 @@ extern "C" void __hipRegisterFunction(
   g_functions.insert(std::make_pair(hostFunction, reinterpret_cast<hipFunction_t>(as_cl(kernel))));
 }
 
+// Registers a device-side global variable.
+// For each global variable in device code, there is a corresponding shadow
+// global variable in host code. The shadow host variable is used to keep
+// track of the value of the device side global variable between kernel
+// executions.
 extern "C" void __hipRegisterVar(
-  hipModule_t module,
-  char*       hostVar,
-  char*       deviceVar,
-  const char* deviceName,
-  int         ext,
-  int         size,
-  int         constant,
-  int         global)
+  hipModule_t modules,   // The device modules containing code object
+  char*       var,       // The shadow variable in host code
+  char*       hostVar,   // Variable name in host code
+  char*       deviceVar, // Variable name in device code
+  int         ext,       // Whether this variable is external
+  int         size,      // Size of the variable
+  int         constant,  // Whether this variable is constant
+  int         global)    // Unknown, always 0
 {
   HIP_INIT();
 }
