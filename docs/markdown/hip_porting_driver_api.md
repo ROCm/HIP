@@ -53,10 +53,10 @@ NVCC and HCC target different architectures and use different code object format
 The external compilers which generate these code objects are responsible for generating and loading the correct code object for each platform.
 Notably, there is not a fat binary format that can contain code for both NVCC and HCC platforms. The following table summarizes the formats used on each platform:
 
-| Format        | APIs                             | NVCC               | HCC               |
-| ---           | ---                              | ---                | ---               |
-| Code Object   | hipModuleLoad, hipModuleLoadData | .cubin or PTX text | .hsaco            |
-| Fat Binary    | hipModuleLoadFatBin              | .fatbin            | Under Development |
+| Format        | APIs                             | NVCC               | HCC               | HIP-CLANG    |
+| ---           | ---                              | ---                | ---               | ---
+| Code Object   | hipModuleLoad, hipModuleLoadData | .cubin or PTX text | .hsaco            | .hsaco       |
+| Fat Binary    | hipModuleLoadFatBin              | .fatbin            | Under Development | .hip_fatbin  |
 
 `hipcc` uses NVCC and HCC to compile host codes. Both of these may embed code objects into the final executable, and these code objects will be automatically loaded when the application starts.
 The hipModule API can be used to load additional code objects, and in this way provides an extended capability to the automatically loaded code objects.
@@ -93,6 +93,14 @@ Thus addresses may be shared between contexts, and unlike the original CUDA defi
 - HCC allocates staging buffers (used for unpinned copies) on a per-device basis.
 - HCC creates a primary context when the HIP API is called. So in a pure driver API code, HIP/HCC will create a primary context while HIP/NVCC will have empty context stack.
 HIP/HCC will push primary context to context stack when it is empty. This can have subtle differences on applications which mix the runtime and driver APIs.
+
+### hip-clang Implementation Notes
+#### .hip_fatbin
+hip-clang links device code from different translation units together. For each device target, a code object is generated. Code objects for different device targets are bundled by clang-offload-bundler as one fatbinary, which is embeded as a global symbol `__hip_fatbin` in the .hip_fatbin section of the ELF file of the executable or shared object.
+
+#### Initialization and Termination Functions
+hip-clang generates initializatiion and termination functions for each translation unit for host code compilation. The initialization functions call `__hipRegisterFatBinary` to register the fatbinary embeded in the ELF file. They also call `__hipRegisterFunction` and `__hipRegisterVar` to register kernel functions and device side global variables. The termination functions call `__hipUnregisterFatBinary`.
+hip-clang emits a global variable `__hip_gpubin_handle` of void** type with linkonce linkage and inital value 0 for each host translation unit. Each initialization function checks `__hip_gpubin_handle` and register the fatbinary only if `__hip_gpubin_handle` is 0 and saves the return value of `__hip_gpubin_handle` to `__hip_gpubin_handle`. This is to guarantee that the fatbinary is only registered once. Similar check is done in the termination functions.
 
 ### NVCC Implementation Notes
 
