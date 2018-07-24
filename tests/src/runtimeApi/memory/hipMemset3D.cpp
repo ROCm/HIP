@@ -36,15 +36,13 @@ bool testhipMemset3D(int memsetval,int p_gpuDevice)
 {
     size_t numH = 256;
     size_t numW = 256;
-    size_t depth = 1;
-    size_t pitch_A;
+    size_t depth = 10;
     size_t width = numW * sizeof(char);
     size_t sizeElements = width * numH * depth;
     size_t elements = numW* numH* depth;
 
 
 	printf ("testhipMemset3D memsetval=%2x device=%d\n", memsetval, p_gpuDevice);
-    char *A_d;
     char *A_h;
     bool testResult = true;
     hipExtent extent = make_hipExtent(width, numH, depth);
@@ -56,23 +54,19 @@ bool testhipMemset3D(int memsetval,int p_gpuDevice)
 	for (size_t i=0; i<elements; i++) {
         A_h[i] = 1;
     }
-    hipStream_t stream;
-    //HIPCHECK(hipStreamCreate(&stream));
 	HIPCHECK ( hipMemset3D( devPitchedPtr, memsetval, extent) );
-	//HIPCHECK ( hipMemcpy3D(A_h, width, A_d, pitch_A, numW, numH, hipMemcpyDeviceToHost));
 	hipMemcpy3DParms myparms = {0};
 	myparms.srcPos = make_hipPos(0,0,0);
 	myparms.dstPos = make_hipPos(0,0,0);
 	myparms.dstPtr = make_hipPitchedPtr(A_h, width , numW, numH);
 	myparms.srcPtr = devPitchedPtr;
-    //myparms.dstArray = cuArray;
 	myparms.extent = extent;
 #ifdef __HIP_PLATFORM_NVCC__
 	myparms.kind = hipMemcpyKindToCudaMemcpyKind(hipMemcpyDeviceToHost);
 #else
     myparms.kind = hipMemcpyDeviceToHost;
 #endif
-    hipMemcpy3D(&myparms);
+    HIPCHECK(hipMemcpy3D(&myparms));
 
     for (int i=0; i<elements; i++) {
         if (A_h[i] != memsetval) {
@@ -81,7 +75,7 @@ bool testhipMemset3D(int memsetval,int p_gpuDevice)
             break;
         }
     }
-    hipFree(A_d);
+    HIPCHECK(hipFree(devPitchedPtr.ptr));
     free(A_h);
     return testResult;
 }
@@ -92,7 +86,9 @@ int main(int argc, char *argv[])
     bool testResult = false;
     HIPCHECK(hipSetDevice(p_gpuDevice));
     testResult = testhipMemset3D(memsetval, p_gpuDevice);
-
-    passed();
-
+    if (testResult) {
+        passed();
+    } else {
+        exit(EXIT_FAILURE);
+    }
 }
