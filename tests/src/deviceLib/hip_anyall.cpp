@@ -96,13 +96,17 @@ int main(int argc, char* argv[]) {
 #if defined(__HIP_PLATFORM_HCC__) && !defined(NVCC_COMPAT)
     if (anycount == 1 && allcount == 1)
         printf("PASSED\n");
-    else
+    else {
         printf("FAILED\n");
+        return EXIT_FAILURE;
+    }
 #else
     if (anycount == 0 && allcount == 1)
         printf("PASSED\n");
-    else
+    else {
         printf("FAILED\n");
+        return EXIT_FAILURE;
+    }
 #endif
 
     return EXIT_SUCCESS;
