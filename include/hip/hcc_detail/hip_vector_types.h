@@ -123,7 +123,7 @@ THE SOFTWARE.
             typename std::enable_if<
                 (rank > 1) && sizeof...(Us) == rank>::type* = nullptr>
         __host__ __device__
-        HIP_vector_type(Us... xs) noexcept { data = Native_vec_{xs...}; }
+        HIP_vector_type(Us... xs) noexcept { data = Native_vec_{static_cast<T>(xs)...}; }
         __host__ __device__
         HIP_vector_type(const HIP_vector_type&) = default;
         __host__ __device__

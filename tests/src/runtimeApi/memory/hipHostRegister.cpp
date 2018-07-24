@@ -108,6 +108,7 @@ int main(int argc, char* argv[]) {
         HIPCHECK(hipHostUnregister(A));
 
         free(A);
+        delete [] Ad;
     }
 
 
@@ -144,6 +145,8 @@ int main(int argc, char* argv[]) {
 
 
         free(A);
+        free(Bh);
+        hipFree(Bd);
     }
 
 

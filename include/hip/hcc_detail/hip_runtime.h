@@ -108,10 +108,10 @@ extern int HIP_TRACE_API;
 #endif
 #include <hip/hcc_detail/hip_atomic.h>
 #include <hip/hcc_detail/host_defines.h>
-#include <hip/hcc_detail/math_functions.h>
 #include <hip/hcc_detail/device_functions.h>
 #include <hip/hcc_detail/surface_functions.h>
 #if __HCC__
+#include <hip/hcc_detail/math_functions.h>
 #include <hip/hcc_detail/texture_functions.h>
 #endif // __HCC__
 
@@ -438,8 +438,6 @@ extern const __device__ __attribute__((weak)) __hip_builtin_gridDim_t gridDim;
 #define hipGridDim_y gridDim.y
 #define hipGridDim_z gridDim.z
 
-#include <hip/hcc_detail/math_functions.h>
-
 // Support std::complex.
 #pragma push_macro("__CUDA__")
 #define __CUDA__
@@ -449,6 +447,8 @@ extern const __device__ __attribute__((weak)) __hip_builtin_gridDim_t gridDim;
 #include <cuda_wrappers/complex>
 #undef __CUDA__
 #pragma pop_macro("__CUDA__")
+
+#include <hip/hcc_detail/math_functions.h>
 
 #endif
 
