@@ -96,7 +96,7 @@ HIP/HCC will push primary context to context stack when it is empty. This can ha
 
 ### hip-clang Implementation Notes
 #### .hip_fatbin
-hip-clang links device code from different translation units together. For each device target, a code object is generated. Code objects for different device targets are bundled by clang-offload-bundler as one fatbinary, which is embeded as a global symbol `__hip_fatbin` in the .hip_fatbin section of the ELF file of the executible or shared object.
+hip-clang links device code from different translation units together. For each device target, a code object is generated. Code objects for different device targets are bundled by clang-offload-bundler as one fatbinary, which is embeded as a global symbol `__hip_fatbin` in the .hip_fatbin section of the ELF file of the executable or shared object.
 
 #### Initialization and Termination Functions
 hip-clang generates initializatiion and termination functions for each translation unit for host code compilation. The initialization functions call `__hipRegisterFatBinary` to register the fatbinary embeded in the ELF file. They also call `__hipRegisterFunction` and `__hipRegisterVar` to register kernel functions and device side global variables. The termination functions call `__hipUnregisterFatBinary`.
