@@ -1029,4 +1029,5 @@ static inline __device__ void* memset(void* ptr, int val, size_t size) {
     unsigned char val8 = static_cast<unsigned char>(val);
     return __hip_hc_memset(ptr, val8, size);
 }
+
 #endif

@@ -99,7 +99,7 @@ hipError_t hipDeviceGetLimit(size_t* pValue, hipLimit_t limit) {
         return ihipLogStatus(hipErrorInvalidValue);
     }
     if (limit == hipLimitMallocHeapSize) {
-        *pValue = (size_t)SIZE_OF_HEAP;
+        *pValue = (size_t)__HIP_SIZE_OF_HEAP;
         return ihipLogStatus(hipSuccess);
     } else {
         return ihipLogStatus(hipErrorUnsupportedLimit);
