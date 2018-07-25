@@ -676,6 +676,8 @@ hipError_t hipGetTextureAlignmentOffset(size_t* offset, const textureReference* 
 
     auto ctx = ihipGetTlsDefaultCtx();
     if (ctx) {
+        if(offset != nullptr)
+            *offset = 0;
     }
     return ihipLogStatus(hip_status);
 }
