@@ -51,7 +51,10 @@ extern "C" inline __device__ void* __hip_malloc(size_t size) {
     uint32_t totalThreads =
         hipBlockDim_x * hipGridDim_x * hipBlockDim_y
         * hipGridDim_y * hipBlockDim_z * hipGridDim_z;
-    uint32_t currentWorkItem = hipThreadIdx_x + hipBlockDim_x * hipBlockIdx_x;
+    uint32_t currentWorkItem = hipThreadIdx_x + hipBlockDim_x * hipBlockIdx_x
+        + (hipThreadIdx_y + hipBlockDim_y * hipBlockIdx_y) * hipBlockDim_x
+        + (hipThreadIdx_z + hipBlockDim_z * hipBlockIdx_z) * hipBlockDim_x
+        * hipBlockDim_y;
 
     uint32_t numHeapsPerWorkItem = __HIP_NUM_PAGES / totalThreads;
     uint32_t heapSizePerWorkItem = __HIP_SIZE_OF_HEAP / totalThreads;
