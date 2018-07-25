@@ -29,7 +29,14 @@ THE SOFTWARE.
 const double tolerance = 1e-6;
 const bool verbose = false;
 
-#define LEN 64
+#define BLKDIM_X 64
+#define BLKDIM_Y 1
+#define BLKDIM_Z 1
+#define NUM_BLK_X 1
+#define NUM_BLK_Y 1
+#define NUM_BLK_Z 1
+
+#define LEN (BLKDIM_X * BLKDIM_Y * BLKDIM_Z * NUM_BLK_X * NUM_BLK_Y * NUM_BLK_Z)
 
 #define ALL_FUN \
   OP(add) \
@@ -83,7 +90,10 @@ __global__ void kernel_alloc(std::complex<FloatT>* A,
                              std::complex<FloatT>** pA,
                              std::complex<FloatT>** pB) {
     typedef std::complex<FloatT> CFloatT;
-    int tx = threadIdx.x + blockIdx.x * blockDim.x;
+    int tx = hipThreadIdx_x + hipBlockDim_x * hipBlockIdx_x
+        + (hipThreadIdx_y + hipBlockDim_y * hipBlockIdx_y) * hipBlockDim_x
+        + (hipThreadIdx_z + hipBlockDim_z * hipBlockIdx_z) * hipBlockDim_x
+        * hipBlockDim_y;
     if (tx == 0) {
         *pA = (CFloatT*)malloc(sizeof(CFloatT)*LEN);
         *pB = (CFloatT*)malloc(sizeof(CFloatT)*LEN);
@@ -101,7 +111,10 @@ __global__ void kernel_free(std::complex<FloatT>** pA,
                             std::complex<FloatT>** pB, std::complex<FloatT>* C,
                             enum CalcKind CK) {
     typedef std::complex<FloatT> CFloatT;
-    int tx = threadIdx.x + blockIdx.x * blockDim.x;
+    int tx = hipThreadIdx_x + hipBlockDim_x * hipBlockIdx_x
+        + (hipThreadIdx_y + hipBlockDim_y * hipBlockIdx_y) * hipBlockDim_x
+        + (hipThreadIdx_z + hipBlockDim_z * hipBlockIdx_z) * hipBlockDim_x
+        * hipBlockDim_y;
     C[tx] = calc<FloatT>((*pA)[tx], (*pB)[tx], CK);
     if (tx == 0) {
         free(*pA);
@@ -140,10 +153,12 @@ void test() {
       ComplexT **pA, **pB;
       hipMalloc((ComplexT***)&pA, sizeof(ComplexT*));
       hipMalloc((ComplexT***)&pB, sizeof(ComplexT*));
-      hipLaunchKernelGGL(kernel_alloc<FloatT>, dim3(1), dim3(LEN), 0, 0,
+      dim3 blkDim(BLKDIM_X, BLKDIM_Y, BLKDIM_Z);
+      dim3 numBlk(NUM_BLK_X, NUM_BLK_Y, NUM_BLK_Z);
+      hipLaunchKernelGGL(kernel_alloc<FloatT>, numBlk, blkDim, 0, 0,
           Ad, Bd, pA, pB);
       hipDeviceSynchronize();
-      hipLaunchKernelGGL(kernel_free<FloatT>, dim3(1), dim3(LEN), 0, 0,
+      hipLaunchKernelGGL(kernel_free<FloatT>, numBlk, blkDim, 0, 0,
           pA, pB, Cd, CK);
       hipMemcpy(C, Cd, sizeof(ComplexT)*LEN, hipMemcpyDeviceToHost);
       hipFree(pA);
