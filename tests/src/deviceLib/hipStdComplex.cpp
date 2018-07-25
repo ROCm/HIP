@@ -17,8 +17,8 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 /* HIT_START
- * BUILD: %t %s
- * RUN: %t
+ * BUILD: %t %s NVCC_OPTIONS -std=c++11
+ * RUN: %t EXCLUDE_HIP_PLATFORM nvcc
  * HIT_END
  */
 #include "test_common.h"
