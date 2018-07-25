@@ -61,19 +61,20 @@ int sharePtr(void* ptr, ihipCtx_t* ctx, bool shareWithAll, unsigned hipFlags) {
 
     auto device = ctx->getWriteableDevice();
 
-#if USE_APP_PTR_FOR_CTX
-    hc::am_memtracker_update(ptr, device->_deviceId, hipFlags, ctx);
-#else
-    hc::am_memtracker_update(ptr, device->_deviceId, hipFlags);
-#endif
-
     if (shareWithAll) {
+        // shareWithAll memory is not mapped to any device
+        hc::am_memtracker_update(ptr, -1, hipFlags);
         hsa_status_t s = hsa_amd_agents_allow_access(g_deviceCnt + 1, g_allAgents, NULL, ptr);
         tprintf(DB_MEM, "    allow access to CPU + all %d GPUs (shareWithAll)\n", g_deviceCnt);
         if (s != HSA_STATUS_SUCCESS) {
             ret = -1;
         }
     } else {
+#if USE_APP_PTR_FOR_CTX
+        hc::am_memtracker_update(ptr, device->_deviceId, hipFlags, ctx);
+#else
+        hc::am_memtracker_update(ptr, device->_deviceId, hipFlags);
+#endif
         int peerCnt = 0;
         {
             LockedAccessor_CtxCrit_t crit(ctx->criticalData());
