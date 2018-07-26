@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp
+ * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS -std=c++11
  * RUN: %t
  * HIT_END
  */
@@ -54,7 +54,7 @@ THE SOFTWARE.
 // Bit fields are broken
 #define ENABLE_BIT_FIELDS 0
 
-static const int  BLOCK_DIM_SIZE = 1024;
+static const int  BLOCK_DIM_SIZE = 512;
 
 // allocate memory on device and host for result validation
 static bool *result_d, *result_h;
@@ -882,9 +882,10 @@ int main() {
     // Test: Passing struct which is initiazed out of order
     // accessing same elements in order from device
     ResetValidationMem();
-    hipLaunchKernelStruct_t20 hipLaunchKernelStruct_h20 =
-    // out of order initalization
-                     {.name = 'A', .rank = 2, .age = 42};
+    hipLaunchKernelStruct_t20 hipLaunchKernelStruct_h20;
+    hipLaunchKernelStruct_h20.name = 'A';
+    hipLaunchKernelStruct_h20.rank = 2;
+    hipLaunchKernelStruct_h20.age = 42;
     bool *result_d20, *result_h20;
     #if ENABLE_OUT_OF_ORDER_INITIALIZATION
     hipLaunchKernelGGL(HIP_KERNEL_NAME(hipLaunchKernelStructFunc20),
