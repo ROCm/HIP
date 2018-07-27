@@ -48,69 +48,35 @@ __device__ static inline unsigned int __popcll(unsigned long long int input) {
 }
 
 __device__ static inline unsigned int __clz(unsigned int input) {
-#ifdef NVCC_COMPAT
     return input == 0 ? 32 : __builtin_clz(input);
-#else
-    return input == 0 ? -1 : __builtin_clz(input);
-#endif
 }
 
 __device__ static inline unsigned int __clzll(unsigned long long int input) {
-#ifdef NVCC_COMPAT
     return input == 0 ? 64 : ( input == 0 ? -1 : __builtin_clzl(input) );
-#else
-    return input == 0 ? -1 : __builtin_clzl(input);
-#endif
 }
 
 __device__ static inline unsigned int __clz(int input) {
-#ifdef NVCC_COMPAT
     return input == 0 ? 32 : ( input > 0 ? __builtin_clz(input) : __builtin_clz(~input) );
-#else
-    if (input == 0) return -1;
-    return input > 0 ? __builtin_clz(input) : __builtin_clz(~input);
-#endif
 }
 
 __device__ static inline unsigned int __clzll(long long int input) {
-#ifdef NVCC_COMPAT
     return input == 0 ? 64 : input > 0 ? __builtin_clzl(input) : __builtin_clzl(~input);
-#else
-    if (input == 0) return -1;
-    return input > 0 ? __builtin_clzl(input) : __builtin_clzl(~input);
-#endif
 }
 
 __device__ static inline unsigned int __ffs(unsigned int input) {
-#ifdef NVCC_COMPAT
     return ( input == 0 ? -1 : __builtin_ctz(input) ) + 1;
-#else
-    return input == 0 ? -1 : __builtin_ctz(input);
-#endif
 }
 
 __device__ static inline unsigned int __ffsll(unsigned long long int input) {
-#ifdef NVCC_COMPAT
     return ( input == 0 ? -1 : __builtin_ctzl(input) ) + 1;
-#else
-    return input == 0 ? -1 : __builtin_ctzl(input);
-#endif
 }
 
 __device__ static inline unsigned int __ffs(int input) {
-#ifdef NVCC_COMPAT
     return ( input == 0 ? -1 : __builtin_ctz(input) ) + 1;
-#else
-    return input == 0 ? -1 : __builtin_ctz(input);
-#endif
 }
 
 __device__ static inline unsigned int __ffsll(long long int input) {
-#ifdef NVCC_COMPAT
     return ( input == 0 ? -1 : __builtin_ctzl(input) ) + 1;
-#else
-    return input == 0 ? -1 : __builtin_ctzl(input);
-#endif
 }
 
 __device__ static inline unsigned int __brev(unsigned int input) { return __llvm_bitrev_b32(input); }
@@ -673,14 +639,7 @@ int __all(int predicate) {
 __device__
 inline
 int __any(int predicate) {
-#ifdef NVCC_COMPAT
-    if (__ockl_wfany_i32(predicate) != 0)
-        return 1;
-    else
-        return 0;
-#else
     return __ockl_wfany_i32(predicate);
-#endif
 }
 
 // XXX from llvm/include/llvm/IR/InstrTypes.h
