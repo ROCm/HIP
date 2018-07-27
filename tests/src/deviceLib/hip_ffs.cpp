@@ -49,21 +49,13 @@ THE SOFTWARE.
 template <typename T>
 int lastbit(T a) {
     if (a == 0)
-#if defined(__HIP_PLATFORM_HCC__) && !defined(NVCC_COMPAT)
-        return -1;
-#else
         return 0;
-#endif
     int pos = 1;
     while ((a & 1) != 1) {
         a >>= 1;
         pos++;
     }
-#if defined(__HIP_PLATFORM_HCC__) && !defined(NVCC_COMPAT)
-    return pos - 1;
-#else
     return pos;
-#endif
 }
 
 
