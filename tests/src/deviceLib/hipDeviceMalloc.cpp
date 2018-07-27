@@ -60,43 +60,35 @@ std::string getName(enum CalcKind CK) {
 
 // Calculates function.
 // If the function has one argument, B is ignored.
-// If the function returns real number, converts it to a complex number.
-#define ONE_ARG(func) \
-  case CK_##func: \
-    return std::complex<FloatT>(std::func(A));
+#define ONE_ARG(func)                                                                              \
+    case CK_##func:                                                                                \
+        return std::func(A);
 
-template<typename FloatT>
-__device__ __host__ std::complex<FloatT> calc(std::complex<FloatT> A,
-                                              std::complex<FloatT> B,
-                                              enum CalcKind CK) {
-  switch(CK) {
-  case CK_add:
-    return A + B;
-  case CK_sub:
-    return A - B;
-  case CK_mul:
-    return A * B;
-  case CK_div:
-    return A / B;
-    
-  }
+template <typename FloatT>
+__device__ __host__ FloatT calc(FloatT A, FloatT B, enum CalcKind CK) {
+    switch (CK) {
+        case CK_add:
+            return A + B;
+        case CK_sub:
+            return A - B;
+        case CK_mul:
+            return A * B;
+        case CK_div:
+            return A / B;
+    }
 }
 
 // Allocate memory in kernel and save the address to pA and pB.
 // Copy value from A, B to allocated memory.
-template<typename FloatT>
-__global__ void kernel_alloc(std::complex<FloatT>* A,
-                             std::complex<FloatT>* B,
-                             std::complex<FloatT>** pA,
-                             std::complex<FloatT>** pB) {
-    typedef std::complex<FloatT> CFloatT;
+template <typename FloatT>
+__global__ void kernel_alloc(FloatT* A, FloatT* B, FloatT** pA, FloatT** pB) {
     int tx = hipThreadIdx_x + hipBlockDim_x * hipBlockIdx_x
         + (hipThreadIdx_y + hipBlockDim_y * hipBlockIdx_y) * hipBlockDim_x
         + (hipThreadIdx_z + hipBlockDim_z * hipBlockIdx_z) * hipBlockDim_x
         * hipBlockDim_y;
     if (tx == 0) {
-        *pA = (CFloatT*)malloc(sizeof(CFloatT)*LEN);
-        *pB = (CFloatT*)malloc(sizeof(CFloatT)*LEN);
+        *pA = (FloatT*)malloc(sizeof(FloatT) * LEN);
+        *pB = (FloatT*)malloc(sizeof(FloatT) * LEN);
         for (int i = 0; i < LEN; i++) {
             (*pA)[i] = A[i];
             (*pB)[i] = B[i];
@@ -106,11 +98,8 @@ __global__ void kernel_alloc(std::complex<FloatT>* A,
 
 // Do calculation using values saved in allocated memmory. pA, pB are buffers
 // containing the address of the device-side allocated array.
-template<typename FloatT>
-__global__ void kernel_free(std::complex<FloatT>** pA,
-                            std::complex<FloatT>** pB, std::complex<FloatT>* C,
-                            enum CalcKind CK) {
-    typedef std::complex<FloatT> CFloatT;
+template <typename FloatT>
+__global__ void kernel_free(FloatT** pA, FloatT** pB, FloatT* C, enum CalcKind CK) {
     int tx = hipThreadIdx_x + hipBlockDim_x * hipBlockIdx_x
         + (hipThreadIdx_y + hipBlockDim_y * hipBlockIdx_y) * hipBlockDim_x
         + (hipThreadIdx_z + hipBlockDim_z * hipBlockIdx_z) * hipBlockDim_x
@@ -124,23 +113,22 @@ __global__ void kernel_free(std::complex<FloatT>** pA,
 
 template<typename FloatT>
 void test() {
-    typedef std::complex<FloatT> ComplexT;
-    ComplexT *A, *Ad, *B, *Bd, *C, *Cd, *D;
-    A = new ComplexT[LEN];
-    B = new ComplexT[LEN];
-    C = new ComplexT[LEN];
-    D = new ComplexT[LEN];
-    hipMalloc((void**)&Ad, sizeof(ComplexT)*LEN);
-    hipMalloc((void**)&Bd, sizeof(ComplexT)*LEN);
-    hipMalloc((void**)&Cd, sizeof(ComplexT)*LEN);
+    FloatT *A, *Ad, *B, *Bd, *C, *Cd, *D;
+    A = new FloatT[LEN];
+    B = new FloatT[LEN];
+    C = new FloatT[LEN];
+    D = new FloatT[LEN];
+    hipMalloc((void**)&Ad, sizeof(FloatT) * LEN);
+    hipMalloc((void**)&Bd, sizeof(FloatT) * LEN);
+    hipMalloc((void**)&Cd, sizeof(FloatT) * LEN);
 
     for (uint32_t i = 0; i < LEN; i++) {
-        A[i] = ComplexT((i + 1) * 1.0f, (i + 2) * 1.0f);
+        A[i] = (i + 1) * 1.0f;
         B[i] = A[i];
         C[i] = A[i];
     }
-    hipMemcpy(Ad, A, sizeof(ComplexT)*LEN, hipMemcpyHostToDevice);
-    hipMemcpy(Bd, B, sizeof(ComplexT)*LEN, hipMemcpyHostToDevice);
+    hipMemcpy(Ad, A, sizeof(FloatT) * LEN, hipMemcpyHostToDevice);
+    hipMemcpy(Bd, B, sizeof(FloatT) * LEN, hipMemcpyHostToDevice);
 
     // Run kernel for a calculation kind and verify by comparing with host
     // calculation result. Returns false if fails.
@@ -150,9 +138,9 @@ void test() {
       // calculation then free the memory.
       // pA and pB are buffers to pass the device-side allocated memory address
       // from kernel_alloc to kernel_free.
-      ComplexT **pA, **pB;
-      hipMalloc((ComplexT***)&pA, sizeof(ComplexT*));
-      hipMalloc((ComplexT***)&pB, sizeof(ComplexT*));
+      FloatT **pA, **pB;
+      hipMalloc((FloatT***)&pA, sizeof(FloatT*));
+      hipMalloc((FloatT***)&pB, sizeof(FloatT*));
       dim3 blkDim(BLKDIM_X, BLKDIM_Y, BLKDIM_Z);
       dim3 numBlk(NUM_BLK_X, NUM_BLK_Y, NUM_BLK_Z);
       hipLaunchKernelGGL(kernel_alloc<FloatT>, numBlk, blkDim, 0, 0,
@@ -160,23 +148,18 @@ void test() {
       hipDeviceSynchronize();
       hipLaunchKernelGGL(kernel_free<FloatT>, numBlk, blkDim, 0, 0,
           pA, pB, Cd, CK);
-      hipMemcpy(C, Cd, sizeof(ComplexT)*LEN, hipMemcpyDeviceToHost);
+      hipMemcpy(C, Cd, sizeof(FloatT) * LEN, hipMemcpyDeviceToHost);
       hipFree(pA);
       hipFree(pB);
       for (int i = 0; i < LEN; i++) {
-        ComplexT Expected = calc(A[i], B[i], CK);
-        FloatT error = std::abs(C[i] - Expected);
-        if (std::abs(Expected) > tolerance)
-          error /= std::abs(Expected);
-        bool pass = error < tolerance;
-        if (verbose || !pass) {
-          std::cout << "Function: " << getName(CK)
-                    << " Operands: " << A[i] << " " << B[i]
-                    << " Result: " << C[i]
-                    << " Expected: " << Expected
-                    << " Error: " << error
-                    << " Pass: " << pass
-                    << std::endl;
+          FloatT Expected = calc(A[i], B[i], CK);
+          FloatT error = std::abs(C[i] - Expected);
+          if (std::abs(Expected) > tolerance) error /= std::abs(Expected);
+          bool pass = error < tolerance;
+          if (verbose || !pass) {
+              std::cout << "Function: " << getName(CK) << " Operands: " << A[i] << " " << B[i]
+                        << " Result: " << C[i] << " Expected: " << Expected << " Error: " << error
+                        << " Pass: " << pass << std::endl;
         }
         if (!pass)
           return false;
