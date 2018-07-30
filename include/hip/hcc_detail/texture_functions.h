@@ -26,21 +26,25 @@ THE SOFTWARE.
 #include <hip/hcc_detail/hip_vector_types.h>
 #include <hip/hcc_detail/hip_texture_types.h>
 
+#pragma push_macro("TYPEDEF_VECTOR_VALUE_TYPE")
 #define TYPEDEF_VECTOR_VALUE_TYPE(SCALAR_TYPE) \
-typedef SCALAR_TYPE SCALAR_TYPE##2_vector_value_type __attribute__((ext_vector_type(2))); \
-typedef SCALAR_TYPE SCALAR_TYPE##3_vector_value_type __attribute__((ext_vector_type(3))); \
-typedef SCALAR_TYPE SCALAR_TYPE##4_vector_value_type __attribute__((ext_vector_type(4))); \
-typedef SCALAR_TYPE SCALAR_TYPE##8_vector_value_type __attribute__((ext_vector_type(8))); \
-typedef SCALAR_TYPE SCALAR_TYPE##16_vector_value_type __attribute__((ext_vector_type(16)));
+typedef SCALAR_TYPE __hip_##SCALAR_TYPE##2_vector_value_type __attribute__((ext_vector_type(2))); \
+typedef SCALAR_TYPE __hip_##SCALAR_TYPE##3_vector_value_type __attribute__((ext_vector_type(3))); \
+typedef SCALAR_TYPE __hip_##SCALAR_TYPE##4_vector_value_type __attribute__((ext_vector_type(4))); \
+typedef SCALAR_TYPE __hip_##SCALAR_TYPE##8_vector_value_type __attribute__((ext_vector_type(8))); \
+typedef SCALAR_TYPE __hip_##SCALAR_TYPE##16_vector_value_type __attribute__((ext_vector_type(16)));
 
 TYPEDEF_VECTOR_VALUE_TYPE(float);
 TYPEDEF_VECTOR_VALUE_TYPE(int);
 TYPEDEF_VECTOR_VALUE_TYPE(uint);
 
+#undef TYPEDEF_VECTOR_VALUE_TYPE
+#pragma pop_macro("TYPEDEF_VECTOR_VALUE_TYPE")
+
 union TData {
-    float4_vector_value_type f;
-    int4_vector_value_type i;
-    uint4_vector_value_type u;
+    __hip_float4_vector_value_type f;
+    __hip_int4_vector_value_type i;
+    __hip_uint4_vector_value_type u;
 };
 
 #define __TEXTURE_FUNCTIONS_DECL__ static __inline__ __device__
@@ -165,110 +169,110 @@ union TData {
 extern "C" {
 
 __device__
-float4_vector_value_type __ockl_image_sample_1D(
+__hip_float4_vector_value_type __ockl_image_sample_1D(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
     float c);
 
 __device__
-float4_vector_value_type __ockl_image_sample_1Da(
+__hip_float4_vector_value_type __ockl_image_sample_1Da(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
-    float2_vector_value_type c);
+    __hip_float2_vector_value_type c);
 
 __device__
-float4_vector_value_type __ockl_image_sample_2D(
+__hip_float4_vector_value_type __ockl_image_sample_2D(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
-    float2_vector_value_type c);
+    __hip_float2_vector_value_type c);
 
 
 __device__
-float4_vector_value_type __ockl_image_sample_2Da(
+__hip_float4_vector_value_type __ockl_image_sample_2Da(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
-    float4_vector_value_type c);
+    __hip_float4_vector_value_type c);
 
 __device__
 float __ockl_image_sample_2Dad(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
-    float4_vector_value_type c);
+    __hip_float4_vector_value_type c);
 
 __device__
 float __ockl_image_sample_2Dd(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
-    float2_vector_value_type c);
+    __hip_float2_vector_value_type c);
 
 __device__
-float4_vector_value_type __ockl_image_sample_3D(
+__hip_float4_vector_value_type __ockl_image_sample_3D(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
-    float4_vector_value_type c);
+    __hip_float4_vector_value_type c);
 
 __device__
-float4_vector_value_type __ockl_image_sample_grad_1D(
+__hip_float4_vector_value_type __ockl_image_sample_grad_1D(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
     float c, float dx, float dy);
 
 __device__
-float4_vector_value_type __ockl_image_sample_grad_1Da(
+__hip_float4_vector_value_type __ockl_image_sample_grad_1Da(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
-    float2_vector_value_type c, float dx, float dy);
+    __hip_float2_vector_value_type c, float dx, float dy);
 
 __device__
-float4_vector_value_type __ockl_image_sample_grad_2D(
+__hip_float4_vector_value_type __ockl_image_sample_grad_2D(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
-    float2_vector_value_type c, float2_vector_value_type dx, float2_vector_value_type dy);
+    __hip_float2_vector_value_type c, __hip_float2_vector_value_type dx, __hip_float2_vector_value_type dy);
 
 __device__
-float4_vector_value_type __ockl_image_sample_grad_2Da(
+__hip_float4_vector_value_type __ockl_image_sample_grad_2Da(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
-    float4_vector_value_type c, float2_vector_value_type dx, float2_vector_value_type dy);
+    __hip_float4_vector_value_type c, __hip_float2_vector_value_type dx, __hip_float2_vector_value_type dy);
 
 __device__
 float __ockl_image_sample_grad_2Dad(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
-    float4_vector_value_type c, float2_vector_value_type dx, float2_vector_value_type dy);
+    __hip_float4_vector_value_type c, __hip_float2_vector_value_type dx, __hip_float2_vector_value_type dy);
 
 __device__
 float __ockl_image_sample_grad_2Dd(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
-    float2_vector_value_type c, float2_vector_value_type dx, float2_vector_value_type dy);
+    __hip_float2_vector_value_type c, __hip_float2_vector_value_type dx, __hip_float2_vector_value_type dy);
 
 __device__
-float4_vector_value_type __ockl_image_sample_grad_3D(
+__hip_float4_vector_value_type __ockl_image_sample_grad_3D(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
-    float4_vector_value_type c, float4_vector_value_type dx, float4_vector_value_type dy);
+    __hip_float4_vector_value_type c, __hip_float4_vector_value_type dx, __hip_float4_vector_value_type dy);
 
 __device__
-float4_vector_value_type __ockl_image_sample_lod_1D(
+__hip_float4_vector_value_type __ockl_image_sample_lod_1D(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
     float c, float l);
 
 __device__
-float4_vector_value_type __ockl_image_sample_lod_1Da(
+__hip_float4_vector_value_type __ockl_image_sample_lod_1Da(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
-    float2_vector_value_type c, float l);
+    __hip_float2_vector_value_type c, float l);
 
 __device__
-float4_vector_value_type __ockl_image_sample_lod_2D(
+__hip_float4_vector_value_type __ockl_image_sample_lod_2D(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
-    float2_vector_value_type c, float l);
+    __hip_float2_vector_value_type c, float l);
 
 __device__
-float4_vector_value_type __ockl_image_sample_lod_2Da(
+__hip_float4_vector_value_type __ockl_image_sample_lod_2Da(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
-    float4_vector_value_type c, float l);
+    __hip_float4_vector_value_type c, float l);
 
 __device__
 float __ockl_image_sample_lod_2Dad(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
-    float4_vector_value_type c, float l);
+    __hip_float4_vector_value_type c, float l);
 
 __device__
 float __ockl_image_sample_lod_2Dd(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
-    float2_vector_value_type c, float l);
+    __hip_float2_vector_value_type c, float l);
 
 __device__
-float4_vector_value_type __ockl_image_sample_lod_3D(
+__hip_float4_vector_value_type __ockl_image_sample_lod_3D(
     unsigned int ADDRESS_SPACE_CONSTANT* i, unsigned int ADDRESS_SPACE_CONSTANT* s,
-    float4_vector_value_type c, float l);
+    __hip_float4_vector_value_type c, float l);
 }
 
 ////////////////////////////////////////////////////////////
