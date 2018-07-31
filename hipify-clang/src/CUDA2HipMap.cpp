@@ -395,7 +395,10 @@ const std::map <llvm::StringRef, hipCounter> CUDA_INCLUDE_MAP{
     {"curand_uniform.h",          {"hiprand_kernel.h",         CONV_INCLUDE,             API_RAND}},
 
     // CUDNN includes
-    {"cudnn.h",                   {"hipDNN.h",                 CONV_INCLUDE_CUDA_MAIN_H, API_RAND}},
+    {"cudnn.h",                   {"hipDNN.h",                 CONV_INCLUDE_CUDA_MAIN_H, API_DNN}},
+
+    // CUDNN includes
+    {"cufft.h",                   {"hipfft.h",                 CONV_INCLUDE_CUDA_MAIN_H, API_FFT}},
 
     // HIP includes
     // TODO: uncomment this when hip/cudacommon.h will be renamed to hip/hipcommon.h
@@ -3161,7 +3164,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cudnnDebug_t",                                        {"hipdnnDebug_t",                                        CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
     {"cudnnCallback_t",                                     {"hipdnnCallback_t",                                     CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
 
-     ///////////////////////////// cuDNN functions /////////////////////////////
+    ///////////////////////////// cuDNN functions /////////////////////////////
     {"cudnnGetVersion",                                     {"hipdnnGetVersion",                                     CONV_VERSION, API_DNN}},
     {"cudnnGetCudartVersion",                               {"hipdnnGetCudartVersion",                               CONV_VERSION, API_DNN, HIP_UNSUPPORTED}},
     {"cudnnQueryRuntimeError",                              {"hipdnnQueryRuntimeError",                              CONV_VERSION, API_DNN, HIP_UNSUPPORTED}},
@@ -3193,7 +3196,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cudnnDestroyOpTensorDescriptor",                      {"hipdnnDestroyOpTensorDescriptor",                      CONV_MATH_FUNC, API_DNN}},
     {"cudnnOpTensor",                                       {"hipdnnOpTensor",                                       CONV_MATH_FUNC, API_DNN}},
 
-      // cuDNN Reduce Tensor functions
+    // cuDNN Reduce Tensor functions
     {"cudnnCreateReduceTensorDescriptor",                   {"hipdnnCreateReduceTensorDescriptor",                   CONV_MATH_FUNC, API_DNN}},
     {"cudnnSetReduceTensorDescriptor",                      {"hipdnnSetReduceTensorDescriptor",                      CONV_MATH_FUNC, API_DNN}},
     {"cudnnGetReduceTensorDescriptor",                      {"hipdnnGetReduceTensorDescriptor",                      CONV_MATH_FUNC, API_DNN}},
@@ -3206,7 +3209,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
 
     // cuDNN Filter functions
     {"cudnnCreateFilterDescriptor",                         {"hipdnnCreateFilterDescriptor",                         CONV_MATH_FUNC, API_DNN}},
-    {"cudnnSetFilter4dDescriptor",                          {"hipdnnSetFilter4dDescriptor",                          CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
+    {"cudnnSetFilter4dDescriptor",                          {"hipdnnSetFilter4dDescriptor",                          CONV_MATH_FUNC, API_DNN}},
     {"cudnnGetFilter4dDescriptor",                          {"hipdnnGetFilter4dDescriptor",                          CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
     {"cudnnSetFilterNdDescriptor",                          {"hipdnnSetFilterNdDescriptor",                          CONV_MATH_FUNC, API_DNN}},
     {"cudnnGetFilterNdDescriptor",                          {"hipdnnGetFilterNdDescriptor",                          CONV_MATH_FUNC, API_DNN}},
@@ -3365,6 +3368,85 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cudnnGetAlgorithmSpaceSize",                          {"hipdnnGetAlgorithmSpaceSize",                          CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
     {"cudnnSaveAlgorithm",                                  {"hipdnnSaveAlgorithm",                                  CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
     {"cudnnRestoreAlgorithm",                               {"hipdnnRestoreAlgorithm",                               CONV_MATH_FUNC, API_DNN, HIP_UNSUPPORTED}},
+
+    ///////////////////////////// cuFFT /////////////////////////////
+    // cuFFT defines
+    {"CUFFT_FORWARD",                                       {"HIPFFT_FORWARD",                                       CONV_NUMERIC_LITERAL, API_DNN}},    // -1
+    {"CUFFT_INVERSE",                                       {"HIPFFT_BACKWARD",                                      CONV_NUMERIC_LITERAL, API_DNN}},    //  1
+    {"CUFFT_COMPATIBILITY_DEFAULT",                         {"HIPFFT_COMPATIBILITY_DEFAULT",                         CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    //  CUFFT_COMPATIBILITY_FFTW_PADDING
+
+    // cuFFT enums
+    {"cufftResult_t",                                       {"hipfftResult_t",                                       CONV_TYPE, API_FFT}},
+    {"cufftResult",                                         {"hipfftResult",                                         CONV_TYPE, API_FFT}},
+    {"CUFFT_SUCCESS",                                       {"HIPFFT_SUCCESS",                                       CONV_NUMERIC_LITERAL, API_FFT}},    //  0x0  0
+    {"CUFFT_INVALID_PLAN",                                  {"HIPFFT_INVALID_PLAN",                                  CONV_NUMERIC_LITERAL, API_FFT}},    //  0x1  1
+    {"CUFFT_ALLOC_FAILED",                                  {"HIPFFT_ALLOC_FAILED",                                  CONV_NUMERIC_LITERAL, API_FFT}},    //  0x2  2
+    {"CUFFT_INVALID_TYPE",                                  {"HIPFFT_INVALID_TYPE",                                  CONV_NUMERIC_LITERAL, API_FFT}},    //  0x3  3
+    {"CUFFT_INVALID_VALUE",                                 {"HIPFFT_INVALID_VALUE",                                 CONV_NUMERIC_LITERAL, API_FFT}},    //  0x4  4
+    {"CUFFT_INTERNAL_ERROR",                                {"HIPFFT_INTERNAL_ERROR",                                CONV_NUMERIC_LITERAL, API_FFT}},    //  0x5  5
+    {"CUFFT_EXEC_FAILED",                                   {"HIPFFT_EXEC_FAILED",                                   CONV_NUMERIC_LITERAL, API_FFT}},    //  0x6  6
+    {"CUFFT_SETUP_FAILED",                                  {"HIPFFT_SETUP_FAILED",                                  CONV_NUMERIC_LITERAL, API_FFT}},    //  0x7  7
+    {"CUFFT_INVALID_SIZE",                                  {"HIPFFT_INVALID_SIZE",                                  CONV_NUMERIC_LITERAL, API_FFT}},    //  0x8  8
+    {"CUFFT_UNALIGNED_DATA",                                {"HIPFFT_UNALIGNED_DATA",                                CONV_NUMERIC_LITERAL, API_FFT}},    //  0x9  9
+    {"CUFFT_INCOMPLETE_PARAMETER_LIST",                     {"HIPFFT_INCOMPLETE_PARAMETER_LIST",                     CONV_NUMERIC_LITERAL, API_FFT}},    //  0xA  10
+    {"CUFFT_INVALID_DEVICE",                                {"HIPFFT_INVALID_DEVICE",                                CONV_NUMERIC_LITERAL, API_FFT}},    //  0xB  11
+    {"CUFFT_PARSE_ERROR",                                   {"HIPFFT_PARSE_ERROR",                                   CONV_NUMERIC_LITERAL, API_FFT}},    //  0xC  12
+    {"CUFFT_NO_WORKSPACE",                                  {"HIPFFT_NO_WORKSPACE",                                  CONV_NUMERIC_LITERAL, API_FFT}},    //  0xD  13
+    {"CUFFT_NOT_IMPLEMENTED",                               {"HIPFFT_NOT_IMPLEMENTED",                               CONV_NUMERIC_LITERAL, API_FFT}},    //  0xE  14
+    {"CUFFT_LICENSE_ERROR",                                 {"HIPFFT_LICENSE_ERROR",                                 CONV_NUMERIC_LITERAL, API_FFT, HIP_UNSUPPORTED}},
+    {"CUFFT_NOT_SUPPORTED",                                 {"HIPFFT_NOT_SUPPORTED",                                 CONV_NUMERIC_LITERAL, API_FFT}},    //  0x10 16
+    {"cufftType_t",                                         {"hipfftType_t",                                         CONV_TYPE, API_FFT}},
+    {"cufftType",                                           {"hipfftType",                                           CONV_TYPE, API_FFT}},
+    {"CUFFT_R2C",                                           {"HIPFFT_R2C",                                           CONV_NUMERIC_LITERAL, API_FFT}},    //  0x2a
+    {"CUFFT_C2R",                                           {"HIPFFT_C2R",                                           CONV_NUMERIC_LITERAL, API_FFT}},    //  0x2c
+    {"CUFFT_C2C",                                           {"HIPFFT_C2C",                                           CONV_NUMERIC_LITERAL, API_FFT}},    //  0x29
+    {"CUFFT_D2Z",                                           {"HIPFFT_D2Z",                                           CONV_NUMERIC_LITERAL, API_FFT}},    //  0x6a
+    {"CUFFT_Z2D",                                           {"HIPFFT_Z2D",                                           CONV_NUMERIC_LITERAL, API_FFT}},    //  0x6c
+    {"CUFFT_Z2Z",                                           {"HIPFFT_Z2Z",                                           CONV_NUMERIC_LITERAL, API_FFT}},    //  0x69
+    {"cufftCompatibility_t",                                {"hipfftCompatibility_t",                                CONV_TYPE, API_FFT, HIP_UNSUPPORTED}},
+    {"cufftCompatibility",                                  {"hipfftCompatibility",                                  CONV_TYPE, API_FFT, HIP_UNSUPPORTED}},
+    {"CUFFT_COMPATIBILITY_FFTW_PADDING",                    {"HIPFFT_COMPATIBILITY_FFTW_PADDING",                    CONV_NUMERIC_LITERAL, API_FFT, HIP_UNSUPPORTED}},    //  0x01
+
+    // cuFFT types
+    {"cufftReal",                                           {"hipfftReal",                                           CONV_TYPE, API_FFT}},
+    {"cufftDoubleReal",                                     {"hipfftDoubleReal",                                     CONV_TYPE, API_FFT}},
+    {"cufftComplex",                                        {"hipfftComplex",                                        CONV_TYPE, API_FFT}},
+    {"cufftDoubleComplex",                                  {"hipfftDoubleComplex",                                  CONV_TYPE, API_FFT}},
+    {"cufftHandle",                                         {"hipfftHandle",                                         CONV_TYPE, API_FFT}},
+
+    ///////////////////////////// cuFFT functions /////////////////////////////
+    {"cufftPlan1d",                                         {"hipfftPlan1d",                                         CONV_MATH_FUNC, API_FFT}},
+    {"cufftPlan2d",                                         {"hipfftPlan2d",                                         CONV_MATH_FUNC, API_FFT}},
+    {"cufftPlan3d",                                         {"hipfftPlan3d",                                         CONV_MATH_FUNC, API_FFT}},
+    {"cufftPlanMany",                                       {"hipfftPlanMany",                                       CONV_MATH_FUNC, API_FFT}},
+    {"cufftMakePlan1d",                                     {"hipfftMakePlan1d",                                     CONV_MATH_FUNC, API_FFT}},
+    {"cufftMakePlan2d",                                     {"hipfftMakePlan2d",                                     CONV_MATH_FUNC, API_FFT}},
+    {"cufftMakePlan3d",                                     {"hipfftMakePlan3d",                                     CONV_MATH_FUNC, API_FFT}},
+    {"cufftMakePlanMany",                                   {"hipfftMakePlanMany",                                   CONV_MATH_FUNC, API_FFT}},
+    {"cufftMakePlanMany64",                                 {"hipfftMakePlanMany64",                                 CONV_MATH_FUNC, API_FFT}},
+    {"cufftGetSizeMany64",                                  {"hipfftGetSizeMany64",                                  CONV_MATH_FUNC, API_FFT}},
+    {"cufftEstimate1d",                                     {"hipfftEstimate1d",                                     CONV_MATH_FUNC, API_FFT}},
+    {"cufftEstimate2d",                                     {"hipfftEstimate2d",                                     CONV_MATH_FUNC, API_FFT}},
+    {"cufftEstimate3d",                                     {"hipfftEstimate3d",                                     CONV_MATH_FUNC, API_FFT}},
+    {"cufftEstimateMany",                                   {"hipfftEstimateMany",                                   CONV_MATH_FUNC, API_FFT}},
+    {"cufftCreate",                                         {"hipfftCreate",                                         CONV_MATH_FUNC, API_FFT}},
+    {"cufftGetSize1d",                                      {"hipfftGetSize1d",                                      CONV_MATH_FUNC, API_FFT}},
+    {"cufftGetSize2d",                                      {"hipfftGetSize2d",                                      CONV_MATH_FUNC, API_FFT}},
+    {"cufftGetSize3d",                                      {"hipfftGetSize3d",                                      CONV_MATH_FUNC, API_FFT}},
+    {"cufftGetSizeMany",                                    {"hipfftGetSizeMany",                                    CONV_MATH_FUNC, API_FFT}},
+    {"cufftGetSize",                                        {"hipfftGetSize",                                        CONV_MATH_FUNC, API_FFT}},
+    {"cufftSetWorkArea",                                    {"hipfftSetWorkArea",                                    CONV_MATH_FUNC, API_FFT}},
+    {"cufftSetAutoAllocation",                              {"hipfftSetAutoAllocation",                              CONV_MATH_FUNC, API_FFT}},
+    {"cufftExecC2C",                                        {"hipfftExecC2C",                                        CONV_MATH_FUNC, API_FFT}},
+    {"cufftExecR2C",                                        {"hipfftExecR2C",                                        CONV_MATH_FUNC, API_FFT}},
+    {"cufftExecC2R",                                        {"hipfftExecC2R",                                        CONV_MATH_FUNC, API_FFT}},
+    {"cufftExecZ2Z",                                        {"hipfftExecZ2Z",                                        CONV_MATH_FUNC, API_FFT}},
+    {"cufftExecD2Z",                                        {"hipfftExecD2Z",                                        CONV_MATH_FUNC, API_FFT}},
+    {"cufftExecZ2D",                                        {"hipfftExecZ2D",                                        CONV_MATH_FUNC, API_FFT}},
+    {"cufftSetStream",                                      {"hipfftSetStream",                                      CONV_MATH_FUNC, API_FFT}},
+    {"cufftDestroy",                                        {"hipfftDestroy",                                        CONV_MATH_FUNC, API_FFT}},
+    {"cufftGetVersion",                                     {"hipfftGetVersion",                                     CONV_MATH_FUNC, API_FFT}},
+    {"cufftGetProperty",                                    {"hipfftGetProperty",                                    CONV_MATH_FUNC, API_FFT, HIP_UNSUPPORTED}},
 };
 
 const std::map<llvm::StringRef, hipCounter>& CUDA_RENAMES_MAP() {
