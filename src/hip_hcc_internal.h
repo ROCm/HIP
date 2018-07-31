@@ -527,7 +527,13 @@ class ihipStream_t {
     // kind is hipMemcpyKind
     void locked_copySync(void* dst, const void* src, size_t sizeBytes, unsigned kind,
                          bool resolveOn = true);
+
+    void locked_copy2DSync(void* dst, const void* src, size_t width, size_t height, size_t srcPitch, size_t dstPitch, unsigned kind,
+                         bool resolveOn = true);
+
     void locked_copyAsync(void* dst, const void* src, size_t sizeBytes, unsigned kind);
+
+    void locked_copy2DAsync(void* dst, const void* src, size_t width, size_t height, size_t srcPitch, size_t dstPitch, unsigned kind);
 
     void lockedSymbolCopySync(hc::accelerator& acc, void* dst, void* src, size_t sizeBytes,
                               size_t offset, unsigned kind);
