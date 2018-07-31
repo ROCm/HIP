@@ -57,6 +57,7 @@ $HIP_PATH=$ENV{'HIP_PATH'} // dirname (dirname $0); # use parent directory of hi
 $HIP_VDI_HOME=$ENV{'HIP_VDI_HOME'};
 $HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'};
 $DEVICE_LIB_PATH=$ENV{'DEVICE_LIB_PATH'};
+$HIP_CLANG_HCC_COMPAT_MODE=$ENV{'HIP_CLANG_HCC_COMPAT_MODE'}; # HCC compatibility mode
 
 #---
 # Read .hipInfo
@@ -158,6 +159,10 @@ if ($HIP_PLATFORM eq "clang") {
 
     $HIPCXXFLAGS .= " -std=c++11 -isystem $HIP_CLANG_INCLUDE_PATH";
     $HIPLDFLAGS .= " --hip-device-lib-path=$DEVICE_LIB_PATH -L$HIP_LIB_PATH -Wl,--rpath=$HIP_LIB_PATH -lhip_hcc";
+    if ($HIP_CLANG_HCC_COMPAT_MODE) {
+        ## Allow __fp16 as function parameter and return type.
+        $HIPCXXFLAGS .= " -Xclang -fallow-half-arguments-and-returns -D__HIP_HCC_COMPAT_MODE__=1";
+    }
 } elsif ($HIP_PLATFORM eq "hcc") {
     $HIP_INCLUDE_PATH = "$HIP_PATH/include";
     $HSA_PATH=$ENV{'HSA_PATH'} // "/opt/rocm/hsa";
