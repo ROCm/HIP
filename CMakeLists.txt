@@ -59,7 +59,7 @@ endif()
 message(STATUS "HIP Platform: " ${HIP_PLATFORM})
 
 # If HIP_PLATFORM is hcc, we need HCC_HOME and HSA_PATH to be defined
-if(HIP_PLATFORM STREQUAL "hcc")
+if(HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "clang")
     # Determine HCC_HOME
     if(NOT DEFINED HCC_HOME)
         if(NOT DEFINED ENV{HCC_HOME})
@@ -147,12 +147,12 @@ endif()
 # Build LPL an CA (fat binary generation / fat binary decomposition tools) if
 # platform is hcc; do this before the ugly hijacking of the compiler, since no
 # HC code is involved.
-if (HIP_PLATFORM STREQUAL "hcc")
+if (HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "clang")
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lpl_ca)
 endif ()
 
 # Build hip_hcc if platform is hcc
-if(HIP_PLATFORM STREQUAL "hcc")
+if(HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "clang")
     include_directories(${PROJECT_SOURCE_DIR}/include)
     set(HIP_HCC_BUILD_FLAGS)
     if(COMPILE_HIP_ATP_MARKER)
@@ -170,6 +170,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
     # Set compiler and compiler flags
     set(CMAKE_CXX_COMPILER "${HCC_HOME}/bin/hcc")
     set(CMAKE_C_COMPILER   "${HCC_HOME}/bin/hcc")
+
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_HCC_BUILD_FLAGS}")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HIP_HCC_BUILD_FLAGS}")
 
@@ -214,7 +215,12 @@ if(HIP_PLATFORM STREQUAL "hcc")
     add_library(host INTERFACE)
     target_link_libraries(host INTERFACE hip_hcc)
     add_library(device INTERFACE)
-    target_link_libraries(device INTERFACE host hip_device hcc::hccrt hcc::hc_am)
+
+    if(HIP_PLATFORM STREQUAL "hcc")
+        target_link_libraries(device INTERFACE host hip_device hcc::hccrt hcc::hc_am)
+    elseif(HIP_PLATFORM STREQUAL "clang")
+        target_link_libraries(device INTERFACE host hip_device)
+    endif()
 
     # Generate .hipInfo
     file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
@@ -234,7 +240,7 @@ endif()
 # Install steps
 #############################
 # Install hip_hcc if platform is hcc
-if(HIP_PLATFORM STREQUAL "hcc")
+if(HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "clang")
     install(TARGETS hip_hcc_static hip_hcc hip_device DESTINATION lib)
 
     # Install .hipInfo
@@ -262,7 +268,7 @@ set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
 set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
 set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
 
-if(HIP_PLATFORM STREQUAL "hcc")
+if(HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "clang")
     install(TARGETS hip_hcc_static hip_hcc hip_device host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
     install(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
     include(CMakePackageConfigHelpers)
