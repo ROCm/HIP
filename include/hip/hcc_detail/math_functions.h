@@ -1197,6 +1197,20 @@ template <class __T> struct __hip_enable_if<true, __T> {
     return __fn((double)__x, (double)__y);                                     \
   }
 
+// __HIP_OVERLOAD3 is used to resolve function calls with mixed float/double
+// or integer argument to avoid compilation error due to ambibuity. e.g.
+// fma(5.0f, 6.0, 7) is resolved with fma(double, double, double).
+#define __HIP_OVERLOAD3(__retty, __fn)                                         \
+  template <typename __T1, typename __T2, typename __T3>                       \
+  __DEVICE__ typename __hip_enable_if<                                         \
+      std::numeric_limits<__T1>::is_specialized &&                             \
+          std::numeric_limits<__T2>::is_specialized &&                         \
+          std::numeric_limits<__T3>::is_specialized,                           \
+      __retty>::type                                                           \
+  __fn(__T1 __x, __T2 __y, __T3 __z) {                                         \
+    return __fn((double)__x, (double)__y, (double)__z);                        \
+  }
+
 // Define cmath functions with float argument and returns float.
 #define __DEF_FUN1(retty, func) \
 __DEVICE__ \
@@ -1227,6 +1241,16 @@ float func(float x, float y) \
 } \
 __HIP_OVERLOAD2(retty, func)
 
+// define cmath functions with three float arguments.
+#define __DEF_FUN3(retty, func) \
+__DEVICE__ \
+inline \
+float func(float x, float y, float z) \
+{ \
+  return func##f(x, y, z); \
+} \
+__HIP_OVERLOAD3(retty, func)
+
 __DEF_FUN1(double, acos)
 __DEF_FUN1(double, acosh)
 __DEF_FUN1(double, asin)
@@ -1247,6 +1271,7 @@ __DEF_FUN1(double, expm1)
 __DEF_FUN1(double, fabs)
 __DEF_FUN2(double, fdim);
 __DEF_FUN1(double, floor)
+__DEF_FUN3(double, fma)
 __DEF_FUN2(double, fmax);
 __DEF_FUN2(double, fmin);
 __DEF_FUN2(double, fmod);
