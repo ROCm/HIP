@@ -58,6 +58,21 @@ if(NOT DEFINED HIP_PLATFORM)
 endif()
 message(STATUS "HIP Platform: " ${HIP_PLATFORM})
 
+# Determine HIP_COMPILER
+# Either hcc or clang; default is hcc
+if(NOT DEFINED HIP_COMPILER)
+    if(NOT DEFINED ENV{HIP_COMPILER})
+        set(HIP_COMPILER "hcc" CACHE STRING "HIP Compiler")
+    else()
+        set(HIP_COMPILER $ENV{HIP_COMPILER} CACHE STRING "HIP Compiler")
+    endif()
+endif()
+if(NOT (HIP_COMPILER STREQUAL "hcc" OR HIP_COMPILER STREQUAL "clang"))
+    message(FATAL_ERROR "Must use HIP_COMPILER as hcc or clang")
+endif()
+message(STATUS "HIP Compiler: " ${HIP_COMPILER})
+
+
 # If HIP_PLATFORM is hcc, we need HCC_HOME and HSA_PATH to be defined
 if(HIP_PLATFORM STREQUAL "hcc")
     # Determine HCC_HOME
@@ -214,7 +229,11 @@ if(HIP_PLATFORM STREQUAL "hcc")
     add_library(host INTERFACE)
     target_link_libraries(host INTERFACE hip_hcc)
     add_library(device INTERFACE)
-    target_link_libraries(device INTERFACE host hip_device hcc::hccrt hcc::hc_am)
+    if(HIP_COMPILER STREQUAL "hcc")
+        target_link_libraries(device INTERFACE host hip_device hcc::hccrt hcc::hc_am)
+    elseif(HIP_COMPILER STREQUAL "clang")
+        target_link_libraries(device INTERFACE host hip_device)
+    endif()
 
     # Generate .hipInfo
     file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
