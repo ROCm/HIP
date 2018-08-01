@@ -71,5 +71,8 @@ HIPCHECK(hipBindTextureToArray(&tex, hipArray, &chan_desc));
 HIPCHECK(hipGetTextureAlignmentOffset(&offset,&tex));
 HIPCHECK(hipUnbindTexture(&tex));
 HIPCHECK(hipFreeArray(hipArray));
-return true;
+if(offset != 0)
+    return false;
+  else
+    return true;
 }
