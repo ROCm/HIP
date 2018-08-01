@@ -38,8 +38,16 @@ extern void getDrvChannelOrderAndType(const enum hipArray_Format Format,
 
 amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
   amd::Memory *memObj = amd::MemObjMap::FindMemObj(ptr);
-  if (memObj != nullptr && memObj->getSvmPtr() != nullptr) {
-    offset = reinterpret_cast<size_t>(ptr) - reinterpret_cast<size_t>(memObj->getSvmPtr());
+  if (memObj != nullptr) {
+    if (memObj->getSvmPtr() != nullptr) {
+      // SVM pointer
+      offset = reinterpret_cast<size_t>(ptr) - reinterpret_cast<size_t>(memObj->getSvmPtr());
+    } else if (memObj->getHostMem() != nullptr) {
+      // Prepinned memory
+      offset = reinterpret_cast<size_t>(ptr) - reinterpret_cast<size_t>(memObj->getHostMem());
+    } else {
+      ShouldNotReachHere();
+    }
   }
   return memObj;
 }
