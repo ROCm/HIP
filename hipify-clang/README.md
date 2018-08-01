@@ -17,7 +17,7 @@
 
 <!-- tocstop -->
 
-##<a name="cuda-apis"></a>Supported CUDA APIs
+## <a name="cuda-apis"></a> Supported CUDA APIs
 
 - [Runtime API](../docs/markdown/CUDA_Runtime_API_functions_supported_by_HIP.md)
 - [Driver API](../docs/markdown/CUDA_Driver_API_functions_supported_by_HIP.md)
@@ -26,7 +26,7 @@
 - [cuDNN](../docs/markdown/CUDNN_API_supported_by_HIP.md)
 - [cuFFT](../docs/markdown/CUFFT_API_supported_by_HIP.md)
 
-##<a name="dependencies"></a>Dependencies
+## <a name="dependencies"></a> Dependencies
 
 `hipify-clang` requires:
 1. LLVM+CLANG of at least version 3.8.0, latest stable and recommended release is 6.0.1.
@@ -51,9 +51,9 @@ In most cases, you can get a suitable version of LLVM+CLANG with your package ma
 Failing that or having multiple versions of LLVM, you can [download a release archive](http://releases.llvm.org/), build or install it, and set
 [CMAKE_PREFIX_PATH](https://cmake.org/cmake/help/v3.10/variable/CMAKE_PREFIX_PATH.html) so `cmake` can find it; for instance: `-DCMAKE_PREFIX_PATH=f:\LLVM\6.0.1\dist`
 
-##<a name="build-and-install"></a>Build and install
+## <a name="build-and-install"></a> Build and install
 
-###<a name="building"></a>Build
+### <a name="building"></a> Build
 
 Assuming this repository is at `./HIP`:
 
@@ -76,7 +76,7 @@ Debug build type `-DCMAKE_BUILD_TYPE=Debug` is also supported and tested, `LLVM+
 
 The binary can then be found at `./dist/bin/hipify-clang`.
 
-###<a name="testing"></a>Test
+### <a name="testing"></a> Test
 
 `hipify-clang` has unit tests using LLVM [`lit`](https://llvm.org/docs/CommandGuide/lit.html)/[`FileCheck`](https://llvm.org/docs/CommandGuide/FileCheck.html).
 
@@ -136,7 +136,7 @@ To run it:
 
     On Windows after `cmake` the project `test-hipify` in the generated `hipify-clang.sln` should be built by `Visual Studio 15 2017` instead of `make test-hipify`.
 
-###<a name="windows"></a>Windows
+### <a name="windows"></a >Windows
 
 On Windows the following configurations are tested:
 
@@ -179,7 +179,7 @@ A corresponding successful output:
 -- Build files have been written to: f:/HIP/hipify-clang/build
 ```
 
-##<a name="running-and-using-hipify-clang"></a>Running and using hipify-clang
+## <a name="running-and-using-hipify-clang"></a> Running and using hipify-clang
 
 To process a file, `hipify-clang` needs access to the same headers that would be needed to compile it with clang.
 
@@ -200,7 +200,7 @@ may be useful.
 
 For a list of `hipify-clang` options, run `hipify-clang --help`.
 
-##<a name="disclaimer"></a>Disclaimer
+## <a name="disclaimer"></a> Disclaimer
 
 The information contained herein is for informational purposes only, and is subject to change without notice. While every precaution has been taken in the preparation of this document, it may contain technical inaccuracies, omissions and typographical errors, and AMD is under no obligation to update or otherwise correct this information. Advanced Micro Devices, Inc. makes no representations or warranties with respect to the accuracy or completeness of the contents of this document, and assumes no liability of any kind, including the implied warranties of noninfringement, merchantability or fitness for particular purposes, with respect to the operation or use of AMD hardware, software or other products described herein. No license, including implied or arising by estoppel, to any intellectual property rights is granted by this document. Terms and limitations applicable to the purchase or use of AMD's products are as set forth in a signed agreement between the parties or in AMD's Standard Terms and Conditions of Sale.
 
