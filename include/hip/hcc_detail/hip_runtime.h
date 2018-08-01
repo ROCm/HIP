@@ -456,6 +456,14 @@ __DEFINE_HCC_FUNC(group_id, blockIdx)
 __DEFINE_HCC_FUNC(group_size, blockDim)
 __DEFINE_HCC_FUNC(num_groups, gridDim)
 #pragma pop_macro("__DEFINE_HCC_FUNC")
+
+extern "C" __device__ __attribute__((const)) size_t __ockl_get_global_id(uint);
+inline __device__ __attribute__((always_inline)) uint
+hc_get_workitem_absolute_id(int dim)
+{
+  return (uint)__ockl_get_global_id(dim);
+}
+
 #endif
 
 // Support std::complex.
