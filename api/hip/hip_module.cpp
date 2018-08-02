@@ -222,6 +222,9 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
   command->enqueue();
 
   if(stopEvent != nullptr) {
+    if (eStop->event_ != nullptr) {
+      eStop->event_->release();
+    }
     eStop->event_ = &command->event();
     command->retain();
   }
