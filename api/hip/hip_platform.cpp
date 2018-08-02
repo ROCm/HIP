@@ -100,18 +100,18 @@ extern "C" hipModule_t __hipRegisterFatBinary(const void* data)
 }
 
 struct ihipExec_t {
-  dim3 _gridDim;
-  dim3 _blockDim;
-  size_t _sharedMem;
-  hipStream_t _hStream;
-  std::vector<char> _arguments;
+  dim3 gridDim_;
+  dim3 blockDim_;
+  size_t sharedMem_;
+  hipStream_t hStream_;
+  std::vector<char> arguments_;
 };
 
 class PlatformState {
-  amd::Monitor _lock;
+  amd::Monitor lock_;
 
-  std::stack<ihipExec_t> _execStack;
-  std::map<const void*, hipFunction_t> _functions;
+  std::stack<ihipExec_t> execStack_;
+  std::map<const void*, hipFunction_t> functions_;
 
   struct RegisteredVar {
     char* var;
@@ -121,14 +121,14 @@ class PlatformState {
     bool  constant;
   };
 
-  std::map<hipModule_t, RegisteredVar> _vars;
+  std::map<hipModule_t, RegisteredVar> vars_;
 
-  static PlatformState* _platform;
+  static PlatformState* platform_;
 
-  PlatformState() : _lock("Guards global function map") {}
+  PlatformState() : lock_("Guards global function map") {}
 public:
   static PlatformState& instance() {
-    return *_platform;
+    return *platform_;
   }
 
   void registerVar(hipModule_t modules,
@@ -137,23 +137,23 @@ public:
                    char* deviceVar,
                    int   size,
                    bool  constant) {
-    amd::ScopedLock lock(_lock);
+    amd::ScopedLock lock(lock_);
 
     const RegisteredVar rvar = { var, hostVar, deviceVar, size, constant != 0 };
 
-    _vars.insert(std::make_pair(modules, rvar));
+    vars_.insert(std::make_pair(modules, rvar));
   }
 
   void registerFunction(const void* hostFunction, hipFunction_t func) {
-    amd::ScopedLock lock(_lock);
+    amd::ScopedLock lock(lock_);
 
-    _functions.insert(std::make_pair(hostFunction, func));
+    functions_.insert(std::make_pair(hostFunction, func));
   }
 
   hipFunction_t getFunc(const void* hostFunction) {
-    amd::ScopedLock lock(_lock);
-    const auto it = _functions.find(hostFunction);
-    if (it != _functions.cend()) {
+    amd::ScopedLock lock(lock_);
+    const auto it = functions_.find(hostFunction);
+    if (it != functions_.cend()) {
       return it->second;
     } else {
       return nullptr;
@@ -163,9 +163,9 @@ public:
   void setupArgument(const void *arg,
                      size_t size,
                      size_t offset) {
-    amd::ScopedLock lock(_lock);
+    amd::ScopedLock lock(lock_);
 
-    auto& arguments = _execStack.top()._arguments;
+    auto& arguments = execStack_.top().arguments_;
 
     if (arguments.size() < offset + size) {
       arguments.resize(offset + size);
@@ -178,17 +178,17 @@ public:
                      dim3 blockDim,
                      size_t sharedMem,
                      hipStream_t stream) {
-    amd::ScopedLock lock(_lock);
-    _execStack.push(ihipExec_t{gridDim, blockDim, sharedMem, stream});
+    amd::ScopedLock lock(lock_);
+    execStack_.push(ihipExec_t{gridDim, blockDim, sharedMem, stream});
   }
 
   void popExec(ihipExec_t& exec) {
-    amd::ScopedLock lock(_lock);
-    exec = std::move(_execStack.top());
-    _execStack.pop();
+    amd::ScopedLock lock(lock_);
+    exec = std::move(execStack_.top());
+    execStack_.pop();
   }
 };
-PlatformState* PlatformState::_platform = new PlatformState();
+PlatformState* PlatformState::platform_ = new PlatformState();
 
 extern "C" void __hipRegisterFunction(
   hipModule_t  module,
@@ -279,15 +279,15 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
   PlatformState::instance().popExec(exec);
 
   void *extra[] = {
-      HIP_LAUNCH_PARAM_BUFFER_POINTER, &exec._arguments[0],
+      HIP_LAUNCH_PARAM_BUFFER_POINTER, &exec.arguments_[0],
       HIP_LAUNCH_PARAM_BUFFER_SIZE, 0 /* FIXME: not needed, but should be correct*/,
       HIP_LAUNCH_PARAM_END
     };
 
   return hipModuleLaunchKernel(func,
-    exec._gridDim.x, exec._gridDim.y, exec._gridDim.z,
-    exec._blockDim.x, exec._blockDim.y, exec._blockDim.z,
-    exec._sharedMem, exec._hStream, nullptr, extra);
+    exec.gridDim_.x, exec.gridDim_.y, exec.gridDim_.z,
+    exec.blockDim_.x, exec.blockDim_.y, exec.blockDim_.z,
+    exec.sharedMem_, exec.hStream_, nullptr, extra);
 }
 
 #if defined(ATI_OS_LINUX)
