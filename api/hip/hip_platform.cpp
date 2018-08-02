@@ -99,8 +99,96 @@ extern "C" hipModule_t __hipRegisterFatBinary(const void* data)
   return reinterpret_cast<hipModule_t>(as_cl(program));
 }
 
-std::map<const void*, hipFunction_t> g_functions;
+struct ihipExec_t {
+  dim3 _gridDim;
+  dim3 _blockDim;
+  size_t _sharedMem;
+  hipStream_t _hStream;
+  std::vector<char> _arguments;
+};
 
+class PlatformState {
+  amd::Monitor _lock;
+
+  std::stack<ihipExec_t> _execStack;
+  std::map<const void*, hipFunction_t> _functions;
+
+  struct RegisteredVar {
+    char* var;
+    char* hostVar;
+    char* deviceVar;
+    int   size;
+    bool  constant;
+  };
+
+  std::map<hipModule_t, RegisteredVar> _vars;
+
+  static PlatformState* _platform;
+
+  PlatformState() : _lock("Guards global function map") {}
+public:
+  static PlatformState& instance() {
+    return *_platform;
+  }
+
+  void registerVar(hipModule_t modules,
+                   char* var,
+                   char* hostVar,
+                   char* deviceVar,
+                   int   size,
+                   bool  constant) {
+    amd::ScopedLock lock(_lock);
+
+    const RegisteredVar rvar = { var, hostVar, deviceVar, size, constant != 0 };
+
+    _vars.insert(std::make_pair(modules, rvar));
+  }
+
+  void registerFunction(const void* hostFunction, hipFunction_t func) {
+    amd::ScopedLock lock(_lock);
+
+    _functions.insert(std::make_pair(hostFunction, func));
+  }
+
+  hipFunction_t getFunc(const void* hostFunction) {
+    amd::ScopedLock lock(_lock);
+    const auto it = _functions.find(hostFunction);
+    if (it != _functions.cend()) {
+      return it->second;
+    } else {
+      return nullptr;
+    }
+  }
+
+  void setupArgument(const void *arg,
+                     size_t size,
+                     size_t offset) {
+    amd::ScopedLock lock(_lock);
+
+    auto& arguments = _execStack.top()._arguments;
+
+    if (arguments.size() < offset + size) {
+      arguments.resize(offset + size);
+    }
+
+    ::memcpy(&arguments[offset], arg, size);
+  }
+
+  void configureCall(dim3 gridDim,
+                     dim3 blockDim,
+                     size_t sharedMem,
+                     hipStream_t stream) {
+    amd::ScopedLock lock(_lock);
+    _execStack.push(ihipExec_t{gridDim, blockDim, sharedMem, stream});
+  }
+
+  void popExec(ihipExec_t& exec) {
+    amd::ScopedLock lock(_lock);
+    exec = std::move(_execStack.top());
+    _execStack.pop();
+  }
+};
+PlatformState* PlatformState::_platform = new PlatformState();
 
 extern "C" void __hipRegisterFunction(
   hipModule_t  module,
@@ -124,8 +212,7 @@ extern "C" void __hipRegisterFunction(
   amd::Kernel* kernel = new amd::Kernel(*program, *symbol, deviceName);
   if (!kernel) return;
 
-  // FIXME: not thread safe
-  g_functions.insert(std::make_pair(hostFunction, reinterpret_cast<hipFunction_t>(as_cl(kernel))));
+  PlatformState::instance().registerFunction(hostFunction, reinterpret_cast<hipFunction_t>(as_cl(kernel)));
 }
 
 // Registers a device-side global variable.
@@ -144,6 +231,8 @@ extern "C" void __hipRegisterVar(
   int         global)    // Unknown, always 0
 {
   HIP_INIT();
+
+  PlatformState::instance().registerVar(modules, var, hostVar, deviceVar, size, constant != 0);
 }
 
 extern "C" void __hipUnregisterFatBinary(
@@ -153,11 +242,6 @@ extern "C" void __hipUnregisterFatBinary(
   HIP_INIT();
 }
 
-dim3 g_gridDim; // FIXME: place in execution stack
-dim3 g_blockDim; // FIXME: place in execution stack
-size_t g_sharedMem; // FIXME: place in execution stack
-hipStream_t g_stream; // FIXME: place in execution stack
-
 extern "C" hipError_t hipConfigureCall(
   dim3 gridDim,
   dim3 blockDim,
@@ -166,17 +250,10 @@ extern "C" hipError_t hipConfigureCall(
 {
   HIP_INIT_API(gridDim, blockDim, sharedMem, stream);
 
-  // FIXME: should push and new entry on the execution stack
-
-  g_gridDim = gridDim;
-  g_blockDim = blockDim;
-  g_sharedMem = sharedMem;
-  g_stream = stream;
+  PlatformState::instance().configureCall(gridDim, blockDim, sharedMem, stream);
 
   return hipSuccess;
 }
-
-char g_arguments[1024]; // FIXME: needs to grow
 
 extern "C" hipError_t hipSetupArgument(
   const void *arg,
@@ -185,9 +262,8 @@ extern "C" hipError_t hipSetupArgument(
 {
   HIP_INIT_API(arg, size, offset);
 
-  // FIXME: should modify the top of the execution stack
+  PlatformState::instance().setupArgument(arg, size, offset);
 
-  ::memcpy(g_arguments + offset, arg, size);
   return hipSuccess;
 }
 
@@ -195,22 +271,23 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
 {
   HIP_INIT_API(hostFunction);
 
-  const auto it = g_functions.find(hostFunction);
-  if (it == g_functions.cend())
+  hipFunction_t func = PlatformState::instance().getFunc(hostFunction);
+  if (func == nullptr)
     return hipErrorUnknown;
 
-  // FIXME: should pop an entry from the execution stack
+  ihipExec_t exec;
+  PlatformState::instance().popExec(exec);
 
   void *extra[] = {
-      HIP_LAUNCH_PARAM_BUFFER_POINTER, g_arguments,
+      HIP_LAUNCH_PARAM_BUFFER_POINTER, &exec._arguments[0],
       HIP_LAUNCH_PARAM_BUFFER_SIZE, 0 /* FIXME: not needed, but should be correct*/,
       HIP_LAUNCH_PARAM_END
     };
 
-  return hipModuleLaunchKernel(it->second,
-    g_gridDim.x, g_gridDim.y, g_gridDim.z,
-    g_blockDim.x, g_blockDim.y, g_blockDim.z,
-    g_sharedMem, g_stream, nullptr, extra);
+  return hipModuleLaunchKernel(func,
+    exec._gridDim.x, exec._gridDim.y, exec._gridDim.z,
+    exec._blockDim.x, exec._blockDim.y, exec._blockDim.z,
+    exec._sharedMem, exec._hStream, nullptr, extra);
 }
 
 #if defined(ATI_OS_LINUX)
