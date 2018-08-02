@@ -106,6 +106,8 @@ global:
     hipModuleGetFunction;
     hipModuleGetGlobal;
     hipModuleLaunchKernel;
+    hipModuleLaunchKernelExt;
+    hipHccModuleLaunchKernel;
     hipModuleLoad;
     hipModuleLoadData;
     hipModuleLoadDataEx;
