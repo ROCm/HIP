@@ -450,6 +450,14 @@ extern const __device__ __attribute__((weak)) __hip_builtin_gridDim_t gridDim;
 
 #include <hip/hcc_detail/math_functions.h>
 
-#endif
+hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
+                                    uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
+                                    uint32_t localWorkSizeX, uint32_t localWorkSizeY,
+                                    uint32_t localWorkSizeZ, size_t sharedMemBytes,
+                                    hipStream_t hStream, void** kernelParams, void** extra,
+                                    hipEvent_t startEvent = nullptr,
+                                    hipEvent_t stopEvent = nullptr);
+
+#endif // defined(__clang__) && defined(__HIP__)
 
 #endif  // HIP_HCC_DETAIL_RUNTIME_H
