@@ -80,7 +80,7 @@ inline void copy_kernel_section_to_fat_binary(const std::string& tmp, const std:
         std::find_if(reader.sections.begin(), reader.sections.end(),
                      [](const ELFIO::section* x) { return x->get_name() == kernel_section(); });
 
-    std::ofstream out{output + fat_binary_extension()};
+    std::ofstream out{output};
 
     if (it == reader.sections.end()) {
         std::cerr << "Warning: no kernels were generated; fat binary shall "
@@ -95,8 +95,8 @@ inline void generate_fat_binary(const std::vector<std::string>& sources,
                                 const std::vector<std::string>& targets, const std::string& flags,
                                 const std::string& output) {
     static const auto d = [](const std::string* f) { remove(f->c_str()); };
-
-    std::unique_ptr<const std::string, decltype(d)> tmp{&output, d};
+    std::string temp_str = output + ".tmp";
+    std::unique_ptr<const std::string, decltype(d)> tmp{&temp_str, d};
 
     redi::ipstream hipcc{make_hipcc_call(sources, targets, flags, *tmp), redi::pstream::pstderr};
 
