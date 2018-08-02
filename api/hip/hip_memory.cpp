@@ -1299,7 +1299,6 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
 
   size_t offset = 0;
   amd::Memory* memObj = getMemoryObject(ptr, offset);
-  amd::Context &memObjCtx = memObj->getContext();
   int device = 0;
 
   if (memObj != nullptr) {
@@ -1308,6 +1307,8 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
     attributes->devicePointer = memObj->getSvmPtr();
     attributes->isManaged = 0;
     attributes->allocationFlags = memObj->getMemFlags();
+  
+    amd::Context &memObjCtx = memObj->getContext();
     for (auto& ctx : g_devices) {
       ++device;
       if (*ctx == memObjCtx) {
