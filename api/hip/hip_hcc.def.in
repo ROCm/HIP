@@ -105,6 +105,8 @@ hipMemset3D
 hipModuleGetFunction
 hipModuleGetGlobal
 hipModuleLaunchKernel
+hipModuleLaunchKernelExt
+hipHccModuleLaunchKernel
 hipModuleLoad
 hipModuleLoadData
 hipModuleLoadDataEx

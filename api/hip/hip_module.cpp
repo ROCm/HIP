@@ -26,6 +26,7 @@ THE SOFTWARE.
 
 #include "hip_internal.hpp"
 #include "platform/program.hpp"
+#include "hip_event.hpp"
 
 hipError_t ihipModuleLoadData(hipModule_t *module, const void *image);
 
@@ -137,20 +138,24 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
   return hipErrorInvalidDeviceFunction;
 }
 
-hipError_t hipModuleLaunchKernel(hipFunction_t f,
+
+hipError_t ihipModuleLaunchKernel(hipFunction_t f,
                                  uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
                                  uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
                                  uint32_t sharedMemBytes, hipStream_t hStream,
-                                 void **kernelParams, void **extra)
+                                 void **kernelParams, void **extra,
+                                 hipEvent_t startEvent, hipEvent_t stopEvent)
 {
   HIP_INIT_API(f, gridDimX, gridDimY, gridDimZ,
                blockDimX, blockDimY, blockDimZ,
                sharedMemBytes, hStream,
-               kernelParams, extra);
+               kernelParams, extra, startEvent, stopEvent);
 
   amd::Kernel* kernel = as_amd(reinterpret_cast<cl_kernel>(f));
   amd::Device* device = hip::getCurrentContext()->devices()[0];
 
+  hip::Event* eStart = reinterpret_cast<hip::Event*>(startEvent);
+  hip::Event* eStop = reinterpret_cast<hip::Event*>(stopEvent);
   amd::HostQueue* queue;
   if (hStream == nullptr) {
     hip::syncStreams();
@@ -192,6 +197,17 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
     }
   }
 
+  if(startEvent != nullptr) {
+    amd::Command* startCommand = new hip::TimerMarker(*eStart->stream_);
+    startCommand->enqueue();
+
+    if (eStart->event_ != nullptr) {
+      eStart->event_->release();
+    }
+
+    eStart->event_ = &startCommand->event();
+  }
+
   amd::NDRangeKernelCommand* command = new amd::NDRangeKernelCommand(*queue, waitList, *kernel, ndrange);
   if (!command) {
     return hipErrorOutOfMemory;
@@ -204,9 +220,38 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
   }
 
   command->enqueue();
+
+  if(stopEvent != nullptr) {
+    eStop->event_ = &command->event();
+    command->retain();
+  }
+
   command->release();
 
   return hipSuccess;
 }
+
+hipError_t hipModuleLaunchKernel(hipFunction_t f,
+                                 uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
+                                 uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
+                                 uint32_t sharedMemBytes, hipStream_t hStream,
+                                 void **kernelParams, void **extra)
+{
+  return ihipModuleLaunchKernel(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
+                                sharedMemBytes, hStream, kernelParams, extra, nullptr, nullptr);
+}
+
+hipError_t hipModuleLaunchKernelExt(hipFunction_t f,
+                                 uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
+                                 uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
+                                 uint32_t sharedMemBytes, hipStream_t hStream,
+                                 void **kernelParams, void **extra,
+                                 hipEvent_t startEvent, hipEvent_t stopEvent)
+{
+  return ihipModuleLaunchKernel(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
+                                sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent);
+}
+
+const auto& hipHccModuleLaunchKernel = hipModuleLaunchKernelExt;
 
 
