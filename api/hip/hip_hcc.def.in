@@ -131,6 +131,8 @@ __hipRegisterFatBinary
 __hipRegisterFunction
 __hipRegisterVar
 __hipUnregisterFatBinary
+__gnu_f2h_ieee
+__gnu_h2f_ieee
 hipConfigureCall
 hipSetupArgument
 hipLaunchByPtr
