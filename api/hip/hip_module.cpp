@@ -244,17 +244,28 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
                                 sharedMemBytes, hStream, kernelParams, extra, nullptr, nullptr);
 }
 
-hipError_t hipModuleLaunchKernelExt(hipFunction_t f,
-                                 uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
-                                 uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
-                                 uint32_t sharedMemBytes, hipStream_t hStream,
-                                 void **kernelParams, void **extra,
-                                 hipEvent_t startEvent, hipEvent_t stopEvent)
+hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t gridDimX,
+                                    uint32_t gridDimY, uint32_t gridDimZ,
+                                    uint32_t blockDimX, uint32_t blockDimY,
+                                    uint32_t blockDimZ, size_t sharedMemBytes,
+                                    hipStream_t hStream, void** kernelParams, void** extra,
+                                    hipEvent_t startEvent,
+                                    hipEvent_t stopEvent)
 {
   return ihipModuleLaunchKernel(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
                                 sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent);
 }
 
-const auto& hipHccModuleLaunchKernel = hipModuleLaunchKernelExt;
+hipError_t hipModuleLaunchKernelExt(hipFunction_t f, uint32_t gridDimX,
+                                    uint32_t gridDimY, uint32_t gridDimZ,
+                                    uint32_t blockDimX, uint32_t blockDimY,
+                                    uint32_t blockDimZ, size_t sharedMemBytes,
+                                    hipStream_t hStream, void** kernelParams, void** extra,
+                                    hipEvent_t startEvent,
+                                    hipEvent_t stopEvent)
+{
+  return ihipModuleLaunchKernel(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
+                                sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent);
+}
 
 
