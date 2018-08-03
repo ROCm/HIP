@@ -180,29 +180,21 @@ const unordered_map<hsa_isa_t, vector<vector<char>>>& code_object_blobs(bool reb
     static once_flag f;
 
     auto cons = [rebuild]() {
-        // names of shared libraries who .kernel sections already loaded
-        static unordered_set<string> lib_names;
         static vector<vector<char>> blobs{code_object_blob_for_process()};
 
         if (rebuild) {
-            r.clear();
             blobs.clear();
+            blobs.push_back(code_object_blob_for_process());
         }
 
         dl_iterate_phdr(
             [](dl_phdr_info* info, std::size_t, void*) {
                 elfio tmp;
-                if ((lib_names.find(info->dlpi_name) == lib_names.end()) &&
-                    (tmp.load(info->dlpi_name))) {
+                if (tmp.load(info->dlpi_name)) {
                     const auto it = find_section_if(
                         tmp, [](const section* x) { return x->get_name() == ".kernel"; });
 
-                    if (it) {
-                        blobs.emplace_back(
-                            it->get_data(), it->get_data() + it->get_size());
-                        // register the shared library as already loaded
-                        lib_names.emplace(info->dlpi_name);
-                    }
+                    if (it) blobs.emplace_back(it->get_data(), it->get_data() + it->get_size());
                 }
                 return 0;
             },
@@ -346,8 +338,7 @@ executables(bool rebuild) {  // TODO: This leaks the hsa_executable_ts, it shoul
         static const auto accelerators = hc::accelerator::get_all();
 
         if (rebuild) {
-            // do NOT clear r so we reuse instances of hsa_executable_t
-            // created previously
+            r.clear();
             code_object_blobs(rebuild);
         }
 
