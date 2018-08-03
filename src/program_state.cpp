@@ -522,6 +522,7 @@ class startup_kernel_loader {
     startup_kernel_loader& operator=(const startup_kernel_loader&) = delete;
     static startup_kernel_loader skl;
 };
-startup_kernel_loader startup_kernel_loader::skl;
+// disable HIP startup kernel loader
+//startup_kernel_loader startup_kernel_loader::skl;
 
 }  // Namespace hip_impl.
