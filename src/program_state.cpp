@@ -444,9 +444,7 @@ const unordered_map<uintptr_t, vector<pair<hsa_agent_t, Kernel_descriptor>>>& fu
 
     auto cons = [rebuild]() {
         if (rebuild) {
-            // do NOT clear r so we reuse instances of pair<hsa_agent_t, Kernel_descriptor>
-            // created previously
-
+            r.clear();
             function_names(rebuild);
             kernels(rebuild);
             globals(rebuild);
