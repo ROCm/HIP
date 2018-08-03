@@ -57,8 +57,6 @@ THE SOFTWARE.
 
 #if __HCC_OR_HIP_CLANG__
 
-// Define NVCC_COMPAT for CUDA compatibility
-#define NVCC_COMPAT
 #define CUDA_SUCCESS hipSuccess
 
 #include <hip/hip_runtime_api.h>
