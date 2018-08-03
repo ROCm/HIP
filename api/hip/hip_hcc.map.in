@@ -107,7 +107,6 @@ global:
     hipModuleGetGlobal;
     hipModuleLaunchKernel;
     hipModuleLaunchKernelExt;
-    hipHccModuleLaunchKernel;
     hipModuleLoad;
     hipModuleLoadData;
     hipModuleLoadDataEx;
@@ -166,6 +165,7 @@ global:
     hipHccGetAcceleratorView*;
     hipCreateSurfaceObject*;
     hipDestroySurfaceObject*;
+    hipHccModuleLaunchKernel*;
     };
 local:
     *;
