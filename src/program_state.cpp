@@ -525,7 +525,7 @@ class startup_kernel_loader {
 };
 
 extern "C" void __attribute__((constructor)) __startup_kernel_loader_init() {
-    if (atoi(std::getenv("HIP_STARTUP_LOADER"))) functions();
+    if (atoi(std::getenv("HIP_STARTUP_LOADER")) == 1) functions();
 }
 
 extern "C" void __attribute__((destructor)) __startup_kernel_loader_fini() {
