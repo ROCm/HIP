@@ -513,8 +513,9 @@ hsa_executable_t load_executable(const string& file, hsa_executable_t executable
     return executable;
 }
 
-// To force HIP to load the kernels and to setup the function
-// symbol map on program startup
+// HIP startup kernel loader logic
+// When enabled HIP_STARTUP_LOADER, HIP will load the kernels and setup
+// the function symbol map on program startup
 class startup_kernel_loader {
    private:
     startup_kernel_loader() { functions(); }
@@ -522,6 +523,12 @@ class startup_kernel_loader {
     startup_kernel_loader& operator=(const startup_kernel_loader&) = delete;
     static startup_kernel_loader skl;
 };
-startup_kernel_loader startup_kernel_loader::skl;
+
+extern "C" void __attribute__((constructor)) __startup_kernel_loader_init() {
+    if (atoi(std::getenv("HIP_STARTUP_LOADER"))) functions();
+}
+
+extern "C" void __attribute__((destructor)) __startup_kernel_loader_fini() {
+}
 
 }  // Namespace hip_impl.
