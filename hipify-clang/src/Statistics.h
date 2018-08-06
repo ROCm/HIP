@@ -57,6 +57,7 @@ enum ApiTypes {
     API_BLAS,
     API_RAND,
     API_DNN,
+    API_FFT,
     API_LAST
 };
 constexpr int NUM_API_TYPES = (int) ApiTypes::API_LAST;

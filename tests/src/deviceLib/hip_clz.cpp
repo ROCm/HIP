@@ -45,12 +45,7 @@ THE SOFTWARE.
 
 unsigned int firstbit_u32(unsigned int a) {
     if (a == 0) {
-#if defined(__HIP_PLATFORM_HCC__) && !defined(NVCC_COMPAT)
-
-        return -1;
-#else
         return 32;
-#endif
     }
     unsigned int pos = 0;
     while ((int)a > 0) {
@@ -62,11 +57,7 @@ unsigned int firstbit_u32(unsigned int a) {
 
 unsigned int firstbit_u64(unsigned long long int a) {
     if (a == 0) {
-#if defined(__HIP_PLATFORM_HCC__) && !defined(NVCC_COMPAT)
-        return -1;
-#else
         return 64;
-#endif
     }
     unsigned int pos = 0;
     while ((long long int)a > 0) {
