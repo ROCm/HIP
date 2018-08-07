@@ -198,6 +198,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
   }
 
   if(startEvent != nullptr) {
+    eStart->stream_ = queue;
     amd::Command* startCommand = new hip::TimerMarker(*eStart->stream_);
     startCommand->enqueue();
 
@@ -225,6 +226,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
     if (eStop->event_ != nullptr) {
       eStop->event_->release();
     }
+    eStop->stream_ = queue;
     eStop->event_ = &command->event();
     command->retain();
   }
