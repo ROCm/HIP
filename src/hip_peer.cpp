@@ -175,21 +175,21 @@ hipError_t hipMemcpyPeerAsync(void* dst, hipCtx_t dstDevice, const void* src, hi
 //=============================================================================
 
 hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, int deviceId, int peerDeviceId) {
-    HIP_INIT_API(canAccessPeer, deviceId, peerDeviceId);
+    HIP_INIT_CB_API(hipDeviceCanAccessPeer, canAccessPeer, deviceId, peerDeviceId);
     return ihipLogStatus(ihipDeviceCanAccessPeer(canAccessPeer, ihipGetPrimaryCtx(deviceId),
                                                  ihipGetPrimaryCtx(peerDeviceId)));
 }
 
 
 hipError_t hipDeviceDisablePeerAccess(int peerDeviceId) {
-    HIP_INIT_API(peerDeviceId);
+    HIP_INIT_CB_API(hipDeviceDisablePeerAccess, peerDeviceId);
 
     return ihipLogStatus(ihipDisablePeerAccess(ihipGetPrimaryCtx(peerDeviceId)));
 }
 
 
 hipError_t hipDeviceEnablePeerAccess(int peerDeviceId, unsigned int flags) {
-    HIP_INIT_API(peerDeviceId, flags);
+    HIP_INIT_CB_API(hipDeviceEnablePeerAccess, peerDeviceId, flags);
 
     return ihipLogStatus(ihipEnablePeerAccess(ihipGetPrimaryCtx(peerDeviceId), flags));
 }
@@ -197,7 +197,7 @@ hipError_t hipDeviceEnablePeerAccess(int peerDeviceId, unsigned int flags) {
 
 hipError_t hipMemcpyPeer(void* dst, int dstDevice, const void* src, int srcDevice,
                          size_t sizeBytes) {
-    HIP_INIT_API(dst, dstDevice, src, srcDevice, sizeBytes);
+    HIP_INIT_CB_API(hipMemcpyPeer, dst, dstDevice, src, srcDevice, sizeBytes);
     return ihipLogStatus(hipMemcpyPeer(dst, ihipGetPrimaryCtx(dstDevice), src,
                                        ihipGetPrimaryCtx(srcDevice), sizeBytes));
 }
@@ -205,18 +205,18 @@ hipError_t hipMemcpyPeer(void* dst, int dstDevice, const void* src, int srcDevic
 
 hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int srcDevice,
                               size_t sizeBytes, hipStream_t stream) {
-    HIP_INIT_API(dst, dstDevice, src, srcDevice, sizeBytes, stream);
+    HIP_INIT_CB_API(hipMemcpyPeerAsync, dst, dstDevice, src, srcDevice, sizeBytes, stream);
     return ihipLogStatus(hip_internal::memcpyAsync(dst, src, sizeBytes, hipMemcpyDefault, stream));
 }
 
 hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags) {
-    HIP_INIT_API(peerCtx, flags);
+    HIP_INIT_CB_API(hipCtxEnablePeerAccess, peerCtx, flags);
 
     return ihipLogStatus(ihipEnablePeerAccess(peerCtx, flags));
 }
 
 hipError_t hipCtxDisablePeerAccess(hipCtx_t peerCtx) {
-    HIP_INIT_API(peerCtx);
+    HIP_INIT_CB_API(hipCtxDisablePeerAccess, peerCtx);
 
     return ihipLogStatus(ihipDisablePeerAccess(peerCtx));
 }
