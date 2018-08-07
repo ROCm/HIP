@@ -3,6 +3,7 @@
 #define _HIP_PROF_API_H
 
 #include <atomic>
+#include <iostream>
 #include <mutex>
 
 #include "hip/hip_prof_str.h"
