@@ -71,21 +71,21 @@ hipError_t ihipStreamCreate(hipStream_t* stream, unsigned int flags) {
 
 //---
 hipError_t hipStreamCreateWithFlags(hipStream_t* stream, unsigned int flags) {
-    HIP_INIT_API(stream, flags);
+    HIP_INIT_CB_API(hipStreamCreateWithFlags, stream, flags);
 
     return ihipLogStatus(ihipStreamCreate(stream, flags));
 }
 
 //---
 hipError_t hipStreamCreate(hipStream_t* stream) {
-    HIP_INIT_API(stream);
+    HIP_INIT_CB_API(hipStreamCreate, stream);
 
     return ihipLogStatus(ihipStreamCreate(stream, hipStreamDefault));
 }
 
 
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags) {
-    HIP_INIT_SPECIAL_API(TRACE_SYNC, stream, event, flags);
+    HIP_INIT_SPECIAL_CB_API(hipStreamWaitEvent, TRACE_SYNC, stream, event, flags);
 
     hipError_t e = hipSuccess;
 
@@ -116,7 +116,7 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
 
 //---
 hipError_t hipStreamQuery(hipStream_t stream) {
-    HIP_INIT_SPECIAL_API(TRACE_QUERY, stream);
+    HIP_INIT_SPECIAL_CB_API(hipStreamQuery, TRACE_QUERY, stream);
 
     // Use default stream if 0 specified:
     if (stream == hipStreamNull) {
@@ -139,7 +139,7 @@ hipError_t hipStreamQuery(hipStream_t stream) {
 
 //---
 hipError_t hipStreamSynchronize(hipStream_t stream) {
-    HIP_INIT_SPECIAL_API(TRACE_SYNC, stream);
+    HIP_INIT_SPECIAL_CB_API(hipStreamSynchronize, TRACE_SYNC, stream);
 
     return ihipLogStatus(ihipStreamSynchronize(stream));
 }
@@ -150,7 +150,7 @@ hipError_t hipStreamSynchronize(hipStream_t stream) {
  * @return #hipSuccess, #hipErrorInvalidResourceHandle
  */
 hipError_t hipStreamDestroy(hipStream_t stream) {
-    HIP_INIT_API(stream);
+    HIP_INIT_CB_API(hipStreamDestroy, stream);
 
     hipError_t e = hipSuccess;
 
@@ -178,7 +178,7 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
 
 //---
 hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int* flags) {
-    HIP_INIT_API(stream, flags);
+    HIP_INIT_CB_API(hipStreamGetFlags, stream, flags);
 
     if (flags == NULL) {
         return ihipLogStatus(hipErrorInvalidValue);
@@ -194,7 +194,7 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int* flags) {
 //---
 hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
                                 unsigned int flags) {
-    HIP_INIT_API(stream, callback, userData, flags);
+    HIP_INIT_CB_API(hipStreamAddCallback, stream, callback, userData, flags);
     hipError_t e = hipSuccess;
 
     // Create a thread in detached mode to handle callback
