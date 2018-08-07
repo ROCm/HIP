@@ -301,6 +301,11 @@ extern uint64_t recordApiTrace(std::string* fullStr, const std::string& apiStr);
     HIP_INIT()                                                                                     \
     API_TRACE(0, __VA_ARGS__);
 
+#define HIP_INIT_CB_API(cid, ...)                                                                  \
+    HIP_INIT()                                                                                     \
+    API_TRACE(0, __VA_ARGS__);                                                                     \
+    HIP_CB_SPAWNER_OBJECT(cid);
+
 
 // Like above, but will trace with a specified "special" bit.
 // Replace HIP_INIT_API with this call inside HIP APIs that launch work on the GPU:
@@ -308,6 +313,11 @@ extern uint64_t recordApiTrace(std::string* fullStr, const std::string& apiStr);
 #define HIP_INIT_SPECIAL_API(tbit, ...)                                                            \
     HIP_INIT()                                                                                     \
     API_TRACE((HIP_TRACE_API & (1 << tbit)), __VA_ARGS__);
+
+#define HIP_INIT_SPECIAL_CB_API(cid, tbit, ...)                                                    \
+    HIP_INIT()                                                                                     \
+    API_TRACE((HIP_TRACE_API & (1 << tbit)), __VA_ARGS__);                                         \
+    HIP_CB_SPAWNER_OBJECT(cid);
 
 
 // This macro should be called at the end of every HIP API, and only at the end of top-level hip

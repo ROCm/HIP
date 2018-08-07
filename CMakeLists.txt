@@ -150,6 +150,19 @@ if(NOT DEFINED COMPILE_HIP_ATP_MARKER)
 endif()
 add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 
+################
+# Detect profiling API
+################
+if (USE_PROF_API EQUAL 1)
+add_definitions(-DUSE_PROF_API=1)
+find_path(PROF_API_HEADER_DIR NAMES prof_protocol.h PATHS ${PROF_API_HEADER_PATH} /opt/rocm/roctracer/include/roctracer NO_DEFAULT_PATH)
+if (NOT PROF_API_HEADER_DIR)
+  MESSAGE("Profiling API header not found, use -DPROF_API_HEADER_PATH=<path to prof_protocol.h header>")
+else ()
+  include_directories ( ${PROF_API_HEADER_DIR} )
+endif ()
+MESSAGE("PROF_API_HEADER_DIR = ${PROF_API_HEADER_DIR}")
+endif ()
 
 #############################
 # Build steps
@@ -204,6 +217,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/grid_launch.cpp
         src/hip_texture.cpp
         src/hip_surface.cpp
+        src/hip_intercept.cpp
         src/env.cpp
         src/program_state.cpp)
 

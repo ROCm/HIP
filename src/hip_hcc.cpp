@@ -2288,7 +2288,7 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
 //-------------------------------------------------------------------------------------------------
 // Profiler, really these should live elsewhere:
 hipError_t hipProfilerStart() {
-    HIP_INIT_API();
+    HIP_INIT_CB_API(hipProfilerStart);
 #if COMPILE_HIP_ATP_MARKER
     amdtResumeProfiling(AMDT_ALL_PROFILING);
 #endif
@@ -2298,7 +2298,7 @@ hipError_t hipProfilerStart() {
 
 
 hipError_t hipProfilerStop() {
-    HIP_INIT_API();
+    HIP_INIT_CB_API(hipProfilerStop);
 #if COMPILE_HIP_ATP_MARKER
     amdtStopProfiling(AMDT_ALL_PROFILING);
 #endif
