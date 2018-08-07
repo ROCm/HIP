@@ -31,6 +31,20 @@ THE SOFTWARE.
 // declartions.
 
 #include <hip/math_functions.h>
+
+// Test __HIP_DEVICE_COMPILE__ is defined after math_functions.h
+// is included.
+//
+__device__ __host__ inline void throw_std_bad_alloc()
+{
+  #ifndef __HIP_DEVICE_COMPILE__
+    throw std::bad_alloc();
+  #else
+    std::size_t huge = static_cast<std::size_t>(-1);
+    new int[huge];
+  #endif
+}
+
 #include <hip/hip_runtime.h>
 #include "test_common.h"
 
