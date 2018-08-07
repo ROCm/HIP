@@ -281,7 +281,7 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
     return hipErrorInvalidValue;
   }
 
-  *free = freeMemory[0];
+  *free = freeMemory[0] * Ki;
   *total = device->info().globalMemSize_;
 
   return hipSuccess;
