@@ -366,7 +366,6 @@ const std::map <llvm::StringRef, hipCounter> CUDA_INCLUDE_MAP{
     {"channel_descriptor.h",      {"hip/channel_descriptor.h", CONV_INCLUDE,             API_RUNTIME}},
     {"device_functions.h",        {"hip/device_functions.h",   CONV_INCLUDE,             API_RUNTIME}},
     {"driver_types.h",            {"hip/driver_types.h",       CONV_INCLUDE,             API_RUNTIME}},
-    {"cuComplex.h",               {"hip/hip_complex.h",        CONV_INCLUDE,             API_RUNTIME}},
     {"cuda_fp16.h",               {"hip/hip_fp16.h",           CONV_INCLUDE,             API_RUNTIME}},
     {"cuda_texture_types.h",      {"hip/hip_texture_types.h",  CONV_INCLUDE,             API_RUNTIME}},
     {"vector_types.h",            {"hip/hip_vector_types.h",   CONV_INCLUDE,             API_RUNTIME}},
@@ -397,12 +396,11 @@ const std::map <llvm::StringRef, hipCounter> CUDA_INCLUDE_MAP{
     // CUDNN includes
     {"cudnn.h",                   {"hipDNN.h",                 CONV_INCLUDE_CUDA_MAIN_H, API_DNN}},
 
-    // CUDNN includes
+    // CUFFT includes
     {"cufft.h",                   {"hipfft.h",                 CONV_INCLUDE_CUDA_MAIN_H, API_FFT}},
 
-    // HIP includes
-    // TODO: uncomment this when hip/cudacommon.h will be renamed to hip/hipcommon.h
-    //    {"cudacommon.h", {"hipcommon.h", CONV_INCLUDE, API_RUNTIME}},
+    // cuComplex includes
+    {"cuComplex.h",               {"hip/hip_complex.h",        CONV_INCLUDE_CUDA_MAIN_H, API_COMPLEX}},
 };
 
 /// All other identifiers: function and macro names.
@@ -1386,6 +1384,36 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"cuEGLStreamProducerReturnFrame",      {"hipEGLStreamProducerReturnFrame",      CONV_EGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaEGLStreamProducerReturnFrame)
     {"cuGraphicsEGLRegisterImage",          {"hipGraphicsEGLRegisterImage",          CONV_EGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGraphicsEGLRegisterImage)
     {"cuGraphicsResourceGetMappedEglFrame", {"hipGraphicsResourceGetMappedEglFrame", CONV_EGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGraphicsResourceGetMappedEglFrame)
+
+
+////////////////////////////// cuComplex API //////////////////////////////
+    {"cuFloatComplex",                               {"hipFloatComplex",                                     CONV_TYPE, API_COMPLEX}},
+    {"cuDoubleComplex",                              {"hipDoubleComplex",                                    CONV_TYPE, API_COMPLEX}},
+    {"cuComplex",                                    {"hipComplex",                                          CONV_TYPE, API_COMPLEX}},
+
+    {"cuCrealf",                                     {"hipCrealf",                                           CONV_COMPLEX, API_COMPLEX}},
+    {"cuCimagf",                                     {"hipCimagf",                                           CONV_COMPLEX, API_COMPLEX}},
+    {"make_cuFloatComplex",                          {"make_hipFloatComplex",                                CONV_COMPLEX, API_COMPLEX}},
+    {"cuConjf",                                      {"hipConjf",                                            CONV_COMPLEX, API_COMPLEX}},
+    {"cuCaddf",                                      {"hipCaddf",                                            CONV_COMPLEX, API_COMPLEX}},
+    {"cuCsubf",                                      {"hipCsubf",                                            CONV_COMPLEX, API_COMPLEX}},
+    {"cuCmulf",                                      {"hipCmulf",                                            CONV_COMPLEX, API_COMPLEX}},
+    {"cuCdivf",                                      {"hipCdivf",                                            CONV_COMPLEX, API_COMPLEX}},
+    {"cuCabsf",                                      {"hipCabsf",                                            CONV_COMPLEX, API_COMPLEX}},
+    {"cuCreal",                                      {"hipCreal",                                            CONV_COMPLEX, API_COMPLEX}},
+    {"cuCimag",                                      {"hipCimag",                                            CONV_COMPLEX, API_COMPLEX}},
+    {"make_cuDoubleComplex",                         {"make_hipDoubleComplex",                               CONV_COMPLEX, API_COMPLEX}},
+    {"cuConj",                                       {"hipConj",                                             CONV_COMPLEX, API_COMPLEX}},
+    {"cuCadd",                                       {"hipCadd",                                             CONV_COMPLEX, API_COMPLEX}},
+    {"cuCsub",                                       {"hipCsub",                                             CONV_COMPLEX, API_COMPLEX}},
+    {"cuCmul",                                       {"hipCmul",                                             CONV_COMPLEX, API_COMPLEX}},
+    {"cuCdiv",                                       {"hipCdiv",                                             CONV_COMPLEX, API_COMPLEX}},
+    {"cuCabs",                                       {"hipCabs",                                             CONV_COMPLEX, API_COMPLEX}},
+    {"make_cuComplex",                               {"make_hipComplex",                                     CONV_COMPLEX, API_COMPLEX}},
+    {"cuComplexFloatToDouble",                       {"hipComplexFloatToDouble",                             CONV_COMPLEX, API_COMPLEX}},
+    {"cuComplexDoubleToFloat",                       {"hipComplexDoubleToFloat",                             CONV_COMPLEX, API_COMPLEX}},
+    {"cuCfmaf",                                      {"hipCfmaf",                                            CONV_COMPLEX, API_COMPLEX}},
+    {"cuCfma",                                       {"hipCfma",                                             CONV_COMPLEX, API_COMPLEX}},
 
 /////////////////////////////// CUDA RT API ///////////////////////////////
     // Data types
