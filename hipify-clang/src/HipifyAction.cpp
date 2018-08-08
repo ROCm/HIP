@@ -168,6 +168,10 @@ bool HipifyAction::Exclude(const hipCounter & hipToken) {
                   if (insertedFFTHeader) { return true; }
                   insertedFFTHeader = true;
                   return false;
+                case API_COMPLEX:
+                  if (insertedComplexHeader) { return true; }
+                  insertedComplexHeader = true;
+                  return false;
                 default:
                     return false;
             }
