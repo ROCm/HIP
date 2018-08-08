@@ -1338,3 +1338,8 @@ __HIP_OVERLOAD2(double, min)
 #pragma pop_macro("__HIP_OVERLOAD2")
 #pragma pop_macro("__DEVICE__")
 #pragma pop_macro("__RETURN_TYPE")
+
+// For backward compatibility.
+// There are HIP applications e.g. TensorFlow, expecting __HIP_ARCH_* macros
+// defined after including math_functions.h.
+#include <hip/hcc_detail/hip_runtime.h>
