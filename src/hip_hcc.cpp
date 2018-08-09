@@ -1808,7 +1808,7 @@ bool ihipStream_t::canSeeMemory(const ihipCtx_t* copyEngineCtx, const hc::AmPoin
     // TODO - pointer-info stores a deviceID not a context,may have some unusual side-effects here:
     if (dstPtrInfo->_sizeBytes == 0) {
         return false;
-    } else {
+    } else if (dstPtrInfo->_appId != -1) {
 #if USE_APP_PTR_FOR_CTX
         ihipCtx_t* dstCtx = static_cast<ihipCtx_t*>(dstPtrInfo->_appPtr);
 #else
@@ -1831,7 +1831,7 @@ bool ihipStream_t::canSeeMemory(const ihipCtx_t* copyEngineCtx, const hc::AmPoin
     // TODO - pointer-info stores a deviceID not a context,may have some unusual side-effects here:
     if (srcPtrInfo->_sizeBytes == 0) {
         return false;
-    } else {
+    } else if (srcPtrInfo->_appId != -1) {
 #if USE_APP_PTR_FOR_CTX
         ihipCtx_t* srcCtx = static_cast<ihipCtx_t*>(srcPtrInfo->_appPtr);
 #else
