@@ -21,6 +21,7 @@
 
 - [Runtime API](../docs/markdown/CUDA_Runtime_API_functions_supported_by_HIP.md)
 - [Driver API](../docs/markdown/CUDA_Driver_API_functions_supported_by_HIP.md)
+- [cuComplex API](../docs/markdown/cuComplex_API_supported_by_HIP.md)
 - [cuBLAS](../docs/markdown/CUBLAS_API_supported_by_HIP.md)
 - [cuRAND](../docs/markdown/CURAND_API_supported_by_HIP.md)
 - [cuDNN](../docs/markdown/CUDNN_API_supported_by_HIP.md)
