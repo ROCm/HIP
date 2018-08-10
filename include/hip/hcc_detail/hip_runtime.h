@@ -436,6 +436,34 @@ extern const __device__ __attribute__((weak)) __hip_builtin_gridDim_t gridDim;
 #define hipGridDim_y gridDim.y
 #define hipGridDim_z gridDim.z
 
+#if __HIP_HCC_COMPAT_MODE__
+// Define HCC work item functions in terms of HIP builtin variables.
+#pragma push_macro("__DEFINE_HCC_FUNC")
+#define __DEFINE_HCC_FUNC(hc_fun,hip_var) \
+inline __device__ __attribute__((always_inline)) uint hc_get_##hc_fun(uint i) { \
+  if (i==0) \
+    return hip_var.x; \
+  else if(i==1) \
+    return hip_var.y; \
+  else \
+    return hip_var.z; \
+}
+
+__DEFINE_HCC_FUNC(workitem_id, threadIdx)
+__DEFINE_HCC_FUNC(group_id, blockIdx)
+__DEFINE_HCC_FUNC(group_size, blockDim)
+__DEFINE_HCC_FUNC(num_groups, gridDim)
+#pragma pop_macro("__DEFINE_HCC_FUNC")
+
+extern "C" __device__ __attribute__((const)) size_t __ockl_get_global_id(uint);
+inline __device__ __attribute__((always_inline)) uint
+hc_get_workitem_absolute_id(int dim)
+{
+  return (uint)__ockl_get_global_id(dim);
+}
+
+#endif
+
 // Support std::complex.
 #pragma push_macro("__CUDA__")
 #define __CUDA__
