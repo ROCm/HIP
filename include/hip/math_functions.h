@@ -27,6 +27,7 @@ THE SOFTWARE.
 // paths to provide a consistent include env and avoid "missing symbol" errors that only appears
 // on NVCC path:
 
+#include <hip/hip_common.h>
 
 #if defined(__HIP_PLATFORM_HCC__) && !defined(__HIP_PLATFORM_NVCC__)
 #include <hip/hcc_detail/math_functions.h>

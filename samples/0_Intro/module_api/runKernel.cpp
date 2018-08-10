@@ -30,7 +30,7 @@ THE SOFTWARE.
 #define LEN 64
 #define SIZE LEN << 2
 
-#define fileName "vcpy_kernel.code.adipose"
+#define fileName "vcpy_kernel.code"
 #define kernel_name "hello_world"
 
 #define HIP_CHECK(status)                                                                          \
@@ -66,32 +66,13 @@ int main() {
     HIP_CHECK(hipModuleLoad(&Module, fileName));
     HIP_CHECK(hipModuleGetFunction(&Function, Module, kernel_name));
 
-#ifdef __HIP_PLATFORM_HCC__
-    uint32_t len = LEN;
-    uint32_t one = 1;
-
     struct {
         void* _Ad;
         void* _Bd;
     } args;
 
-    args._Ad = Ad;
-    args._Bd = Bd;
-
-#endif
-
-#ifdef __HIP_PLATFORM_NVCC__
-    struct {
-        uint32_t _hidden[1];
-        void* _Ad;
-        void* _Bd;
-    } args;
-
-    args._hidden[0] = 0;
-    args._Ad = Ad;
-    args._Bd = Bd;
-#endif
-
+    args._Ad = (void*) Ad;
+    args._Bd = (void*) Bd;
 
     size_t size = sizeof(args);
 

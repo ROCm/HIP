@@ -21,13 +21,13 @@ THE SOFTWARE.
 */
 
 #include "hip/hip_runtime.h"
-#include "hip/hip_runtime_api.h"
+//#include "hip/hip_runtime_api.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <hip/hip_hcc.h>
+//#include <hip/hip_hcc.h>
 
-#define fileName "tex2dKernel.code.adipose"
+#define fileName "tex2dKernel.code"
 
 texture<float, 2, hipReadModeElementType> tex;
 bool testResult = false;
@@ -87,33 +87,14 @@ bool runTest(int argc, char** argv) {
     float* dData = NULL;
     hipMalloc((void**)&dData, size);
 
-#ifdef __HIP_PLATFORM_HCC__
-
     struct {
         void* _Ad;
         unsigned int _Bd;
         unsigned int _Cd;
     } args;
-    args._Ad = dData;
+    args._Ad = (void*) dData;
     args._Bd = width;
     args._Cd = height;
-
-#endif
-
-#ifdef __HIP_PLATFORM_NVCC__
-    struct {
-        uint32_t _hidden[1];
-        void* _Ad;
-        unsigned int _Bd;
-        unsigned int _Cd;
-    } args;
-
-    args._hidden[0] = 0;
-    args._Ad = dData;
-    args._Bd = width;
-    args._Cd = height;
-#endif
-
 
     size_t sizeTemp = sizeof(args);
 
