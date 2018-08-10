@@ -169,7 +169,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
   }
 
   size_t globalWorkOffset[3] = {0};
-  size_t globalWorkSize[3] = { gridDimX * blockDimX, gridDimY * blockDimY, gridDimZ * blockDimZ};
+  size_t globalWorkSize[3] = { gridDimX, gridDimY, gridDimZ };
   size_t localWorkSize[3] = { blockDimX, blockDimY, blockDimZ };
   amd::NDRangeContainer ndrange(3, globalWorkOffset, globalWorkSize, localWorkSize);
   amd::Command::EventWaitList waitList;
@@ -242,7 +242,8 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
                                  uint32_t sharedMemBytes, hipStream_t hStream,
                                  void **kernelParams, void **extra)
 {
-  return ihipModuleLaunchKernel(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
+  return ihipModuleLaunchKernel(f, gridDimX * blockDimX, gridDimY * blockDimY, gridDimZ * blockDimZ,
+                                blockDimX, blockDimY, blockDimZ,
                                 sharedMemBytes, hStream, kernelParams, extra, nullptr, nullptr);
 }
 
