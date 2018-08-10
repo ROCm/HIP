@@ -147,9 +147,9 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.maxThreadsDim[0] = info.maxWorkItemSizes_[0];
   deviceProps.maxThreadsDim[1] = info.maxWorkItemSizes_[1];
   deviceProps.maxThreadsDim[2] = info.maxWorkItemSizes_[2];
-  deviceProps.maxGridSize[0] = UINT32_MAX;
-  deviceProps.maxGridSize[1] = UINT32_MAX;
-  deviceProps.maxGridSize[2] = UINT32_MAX;
+  deviceProps.maxGridSize[0] = INT32_MAX;
+  deviceProps.maxGridSize[1] = INT32_MAX;
+  deviceProps.maxGridSize[2] = INT32_MAX;
   deviceProps.clockRate = info.maxEngineClockFrequency_ * 1000;
   deviceProps.memoryClockRate = info.maxMemoryClockFrequency_ * 1000;
   deviceProps.memoryBusWidth = info.globalMemChannels_ * 32;
