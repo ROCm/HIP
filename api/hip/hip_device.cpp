@@ -30,10 +30,10 @@ hipError_t hipDeviceGet(hipDevice_t *device, int deviceId) {
   if (device != nullptr) {
     *device = deviceId;
   } else {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 };
 
 hipError_t hipFuncSetCacheConfig (const void* func, hipFuncCache_t cacheConfig) {
@@ -42,7 +42,7 @@ hipError_t hipFuncSetCacheConfig (const void* func, hipFuncCache_t cacheConfig) 
 
   // No way to set cache config yet.
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipDeviceTotalMem (size_t *bytes, hipDevice_t device) {
@@ -50,11 +50,11 @@ hipError_t hipDeviceTotalMem (size_t *bytes, hipDevice_t device) {
   HIP_INIT_API(bytes, device);
 
   if (device < 0 || static_cast<size_t>(device) >= g_devices.size()) {
-    return hipErrorInvalidDevice;
+    HIP_RETURN(hipErrorInvalidDevice);
   }
 
   if (bytes == nullptr) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   auto* deviceHandle = g_devices[device]->devices()[0];
@@ -62,7 +62,7 @@ hipError_t hipDeviceTotalMem (size_t *bytes, hipDevice_t device) {
 
   *bytes = info.globalMemSize_;
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device) {
@@ -70,11 +70,11 @@ hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device
   HIP_INIT_API(major, minor, device);
 
   if (device < 0 || static_cast<size_t>(device) >= g_devices.size()) {
-    return hipErrorInvalidDevice;
+    HIP_RETURN(hipErrorInvalidDevice);
   }
 
   if (major == nullptr || minor == nullptr) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   auto* deviceHandle = g_devices[device]->devices()[0];
@@ -82,13 +82,13 @@ hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device
   *major = info.gfxipVersion_ / 100;
   *minor = info.gfxipVersion_ % 100;
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipDeviceGetCount(int* count) {
   HIP_INIT_API(count);
 
-  return ihipDeviceGetCount(count);
+  HIP_RETURN(ihipDeviceGetCount(count));
 }
 
 hipError_t ihipDeviceGetCount(int* count) {
@@ -107,11 +107,11 @@ hipError_t hipDeviceGetName(char *name, int len, hipDevice_t device) {
   HIP_INIT_API((void*)name, len, device);
 
   if (device < 0 || static_cast<size_t>(device) >= g_devices.size()) {
-    return hipErrorInvalidDevice;
+    HIP_RETURN(hipErrorInvalidDevice);
   }
 
   if (name == nullptr) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   auto* deviceHandle = g_devices[device]->devices()[0];
@@ -120,18 +120,18 @@ hipError_t hipDeviceGetName(char *name, int len, hipDevice_t device) {
   len = ((cl_uint)len < ::strlen(info.boardName_)) ? len : 128;
   ::strncpy(name, info.boardName_, len);
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device ) {
   HIP_INIT_API(props, device);
 
   if (props == nullptr) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   if (unsigned(device) >= g_devices.size()) {
-    return hipErrorInvalidDevice;
+    HIP_RETURN(hipErrorInvalidDevice);
   }
   auto* deviceHandle = g_devices[device]->devices()[0];
 
@@ -188,7 +188,7 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.gcnArch = info.gfxipVersion_;
 
   *props = deviceProps;
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc) {
@@ -196,7 +196,7 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** av) {
@@ -204,5 +204,5 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** a
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }

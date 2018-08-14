@@ -39,7 +39,7 @@ THE SOFTWARE.
 #define HIP_INIT_API(...)                                    \
   amd::Thread* thread = amd::Thread::current();              \
   if (!CL_CHECK_THREAD(thread)) {                            \
-    return hipErrorOutOfMemory;                              \
+    HIP_RETURN(hipErrorOutOfMemory);                         \
   }                                                          \
   HIP_INIT();
 
@@ -51,6 +51,7 @@ class accelerator_view;
 namespace hip {
   extern std::once_flag g_ihipInitialized;
   extern thread_local amd::Context* g_context;
+  extern thread_local hipError_t g_lastError;
 
   extern void init();
 
@@ -63,6 +64,10 @@ namespace hip {
 extern std::vector<amd::Context*> g_devices;
 extern hipError_t ihipDeviceGetCount(int* count);
 extern amd::Memory* getMemoryObject(const void* ptr, size_t& offset);
+
+#define HIP_RETURN(ret)          \
+        hip::g_lastError = ret;  \
+        return ret;              \
 
 
 #endif // HIP_SRC_HIP_INTERNAL_H

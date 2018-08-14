@@ -56,18 +56,18 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
   HIP_INIT_API(module, fname);
 
   if (!fname) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   std::ifstream file{fname};
 
   if (!file.is_open()) {
-    return hipErrorFileNotFound;
+    HIP_RETURN(hipErrorFileNotFound);
   }
 
   std::vector<char> tmp{std::istreambuf_iterator<char>{file}, std::istreambuf_iterator<char>{}};
 
-  return ihipModuleLoadData(module, tmp.data());
+  HIP_RETURN(ihipModuleLoadData(module, tmp.data()));
 }
 
 
@@ -76,21 +76,21 @@ hipError_t hipModuleUnload(hipModule_t hmod)
   HIP_INIT_API(hmod);
 
   if (hmod == nullptr) {
-    return hipErrorUnknown;
+    HIP_RETURN(hipErrorUnknown);
   }
 
   amd::Program* program = as_amd(reinterpret_cast<cl_program>(hmod));
 
   program->release();
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
 {
   HIP_INIT_API(module, image);
 
-  return ihipModuleLoadData(module, image);
+  HIP_RETURN(ihipModuleLoadData(module, image));
 }
 
 hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
@@ -118,24 +118,24 @@ hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod, const ch
 
   const amd::Symbol* symbol = program->findSymbol(name);
   if (!symbol) {
-    return hipErrorNotFound;
+    HIP_RETURN(hipErrorNotFound);
   }
 
   amd::Kernel* kernel = new amd::Kernel(*program, *symbol, name);
   if (!kernel) {
-    return hipErrorOutOfMemory;
+    HIP_RETURN(hipErrorOutOfMemory);
   }
 
   *hfunc = reinterpret_cast<hipFunction_t>(as_cl(kernel));
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 {
   HIP_INIT_API(attr, func);
 
-  return hipErrorInvalidDeviceFunction;
+  HIP_RETURN(hipErrorInvalidDeviceFunction);
 }
 
 
@@ -242,9 +242,9 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
                                  uint32_t sharedMemBytes, hipStream_t hStream,
                                  void **kernelParams, void **extra)
 {
-  return ihipModuleLaunchKernel(f, gridDimX * blockDimX, gridDimY * blockDimY, gridDimZ * blockDimZ,
+  HIP_RETURN(ihipModuleLaunchKernel(f, gridDimX * blockDimX, gridDimY * blockDimY, gridDimZ * blockDimZ,
                                 blockDimX, blockDimY, blockDimZ,
-                                sharedMemBytes, hStream, kernelParams, extra, nullptr, nullptr);
+                                sharedMemBytes, hStream, kernelParams, extra, nullptr, nullptr));
 }
 
 hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t gridDimX,
@@ -255,8 +255,8 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t gridDimX,
                                     hipEvent_t startEvent,
                                     hipEvent_t stopEvent)
 {
-  return ihipModuleLaunchKernel(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
-                                sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent);
+  HIP_RETURN(ihipModuleLaunchKernel(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
+                                sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent));
 }
 
 hipError_t hipModuleLaunchKernelExt(hipFunction_t f, uint32_t gridDimX,
@@ -267,8 +267,8 @@ hipError_t hipModuleLaunchKernelExt(hipFunction_t f, uint32_t gridDimX,
                                     hipEvent_t startEvent,
                                     hipEvent_t stopEvent)
 {
-  return ihipModuleLaunchKernel(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
-                                sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent);
+  HIP_RETURN(ihipModuleLaunchKernel(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
+                                sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent));
 }
 
 

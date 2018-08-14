@@ -64,38 +64,38 @@ hipError_t ihipEventQuery(hipEvent_t event) {
 
   e->event_->notifyCmdQueue();
 
-  return (e->event_->status() == CL_COMPLETE)? hipSuccess : hipErrorNotReady;
+  return (e->event_->status() == CL_COMPLETE) ? hipSuccess : hipErrorNotReady;
 }
 
 hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags) {
   HIP_INIT_API(event, flags);
 
-  return ihipEventCreateWithFlags(event, flags);
+  HIP_RETURN(ihipEventCreateWithFlags(event, flags));
 }  
 
 hipError_t hipEventCreate(hipEvent_t* event) {
   HIP_INIT_API(event);
 
-  return ihipEventCreateWithFlags(event, 0);
+  HIP_RETURN(ihipEventCreateWithFlags(event, 0));
 }
 
 hipError_t hipEventDestroy(hipEvent_t event) {
   HIP_INIT_API(event);
 
   if (event == nullptr) {
-    return hipErrorInvalidResourceHandle;
+    HIP_RETURN(hipErrorInvalidResourceHandle);
   }
 
   delete reinterpret_cast<hip::Event*>(event);
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop) {
   HIP_INIT_API(ms, start, stop);
 
   if (start == nullptr || stop == nullptr) {
-    return hipErrorInvalidResourceHandle;
+    HIP_RETURN(hipErrorInvalidResourceHandle);
   }
 
   hip::Event* eStart = reinterpret_cast<hip::Event*>(start);
@@ -103,32 +103,32 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop) {
 
   if (eStart->event_ == nullptr ||
       eStop->event_  == nullptr) {
-    return hipErrorInvalidResourceHandle;
+    HIP_RETURN(hipErrorInvalidResourceHandle);
   }
 
   if ((eStart->flags | eStop->flags) & hipEventDisableTiming) {
-    return hipErrorInvalidResourceHandle;
+    HIP_RETURN(hipErrorInvalidResourceHandle);
   }
 
   if (ihipEventQuery(start) == hipErrorNotReady ||
       ihipEventQuery(stop) == hipErrorNotReady) {
-    return hipErrorNotReady;
+    HIP_RETURN(hipErrorNotReady);
   }
 
   if (ms == nullptr) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   *ms = static_cast<float>(eStop->event_->profilingInfo().submitted_ - eStart->event_->profilingInfo().submitted_)/1000000.f;
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
   HIP_INIT_API(event, stream);
 
   if (event == nullptr) {
-    return hipErrorInvalidResourceHandle;
+    HIP_RETURN(hipErrorInvalidResourceHandle);
   }
 
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
@@ -148,29 +148,29 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
 
   e->event_ = &command->event();
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipEventSynchronize(hipEvent_t event) {
   HIP_INIT_API(event);
 
   if (event == nullptr) {
-    return hipErrorInvalidResourceHandle;
+    HIP_RETURN(hipErrorInvalidResourceHandle);
   }
 
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
 
   if (e->event_ == nullptr) {
-    return hipErrorInvalidResourceHandle;
+    HIP_RETURN(hipErrorInvalidResourceHandle);
   }
 
   e->event_->awaitCompletion();
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipEventQuery(hipEvent_t event) {
   HIP_INIT_API(event);
 
-  return ihipEventQuery(event);
+  HIP_RETURN(ihipEventQuery(event));
 }
