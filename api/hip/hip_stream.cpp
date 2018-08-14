@@ -68,13 +68,13 @@ static hipError_t ihipStreamCreateWithFlags(hipStream_t *stream, unsigned int fl
 hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
   HIP_INIT_API(stream, flags);
 
-  return ihipStreamCreateWithFlags(stream, flags);
+  HIP_RETURN(ihipStreamCreateWithFlags(stream, flags));
 }
 
 hipError_t hipStreamCreate(hipStream_t *stream) {
   HIP_INIT_API(stream);
 
-  return ihipStreamCreateWithFlags(stream, hipStreamDefault);
+  HIP_RETURN(ihipStreamCreateWithFlags(stream, hipStreamDefault));
 }
 
 hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags) {
@@ -86,10 +86,10 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags) {
   if(flags != nullptr) {
     *flags = (it == streamSet.end()) ? hipStreamNonBlocking : hipStreamDefault;
   } else {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipStreamSynchronize(hipStream_t stream) {
@@ -108,19 +108,19 @@ hipError_t hipStreamSynchronize(hipStream_t stream) {
   }
 
   if (hostQueue == nullptr) {
-    return hipErrorUnknown;
+    HIP_RETURN(hipErrorUnknown);
   }
 
   hostQueue->finish();
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipStreamDestroy(hipStream_t stream) {
   HIP_INIT_API(stream);
 
   if (stream == nullptr) {
-    return hipErrorInvalidResourceHandle;
+    HIP_RETURN(hipErrorInvalidResourceHandle);
   }
 
   amd::ScopedLock lock(streamSetLock);
@@ -129,14 +129,14 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
   hostQueue->release();
   streamSet.erase(hostQueue);
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags) {
   HIP_INIT_API(stream, event, flags);
 
   if (stream == nullptr || event == nullptr) {
-    return hipErrorInvalidResourceHandle;
+    HIP_RETURN(hipErrorInvalidResourceHandle);
   }
 
   amd::HostQueue* hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
@@ -146,17 +146,17 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
   amd::Command::EventWaitList eventWaitList;
   cl_int err = amd::clSetEventWaitList(eventWaitList, *hostQueue, 1, &clEvent);
   if (err != CL_SUCCESS) {
-    return hipErrorUnknown;
+    HIP_RETURN(hipErrorUnknown);
   }
 
   amd::Command* command = new amd::Marker(*hostQueue, true, eventWaitList);
   if (command == NULL) {
-    return hipErrorOutOfMemory;
+    HIP_RETURN(hipErrorOutOfMemory);
   }
   command->enqueue();
   command->release();
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipStreamQuery(hipStream_t stream) {
@@ -164,7 +164,7 @@ hipError_t hipStreamQuery(hipStream_t stream) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
@@ -173,7 +173,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 

@@ -29,7 +29,7 @@ hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, hipCtx_t thisCtx, hipCtx_t
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipMemcpyPeer(void* dst, hipCtx_t dstCtx, const void* src, hipCtx_t srcCtx,
@@ -38,7 +38,7 @@ hipError_t hipMemcpyPeer(void* dst, hipCtx_t dstCtx, const void* src, hipCtx_t s
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipMemcpyPeerAsync(void* dst, hipCtx_t dstDevice, const void* src, hipCtx_t srcDevice,
@@ -47,7 +47,7 @@ hipError_t hipMemcpyPeerAsync(void* dst, hipCtx_t dstDevice, const void* src, hi
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, int deviceId, int peerDeviceId) {
@@ -55,7 +55,7 @@ hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, int deviceId, int peerDevi
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipDeviceDisablePeerAccess(int peerDeviceId) {
@@ -63,7 +63,7 @@ hipError_t hipDeviceDisablePeerAccess(int peerDeviceId) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipDeviceEnablePeerAccess(int peerDeviceId, unsigned int flags) {
@@ -71,7 +71,7 @@ hipError_t hipDeviceEnablePeerAccess(int peerDeviceId, unsigned int flags) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipMemcpyPeer(void* dst, int dstDevice, const void* src, int srcDevice,
@@ -80,7 +80,7 @@ hipError_t hipMemcpyPeer(void* dst, int dstDevice, const void* src, int srcDevic
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int srcDevice,
@@ -89,7 +89,7 @@ hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int src
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags) {
@@ -97,7 +97,7 @@ hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipCtxDisablePeerAccess(hipCtx_t peerCtx) {
@@ -105,5 +105,5 @@ hipError_t hipCtxDisablePeerAccess(hipCtx_t peerCtx) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }

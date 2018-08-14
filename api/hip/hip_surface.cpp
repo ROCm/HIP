@@ -36,7 +36,7 @@ hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject,
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 
@@ -45,5 +45,5 @@ hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }

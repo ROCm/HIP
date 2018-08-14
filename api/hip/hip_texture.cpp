@@ -145,7 +145,7 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
   amd::Device* device = hip::getCurrentContext()->devices()[0];
 
   if (!device->info().imageSupport_) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   amd::Image* image = nullptr;
@@ -203,11 +203,11 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
         pResDesc->res.pitch2D.width, pResDesc->res.pitch2D.height, 1,
         pResDesc->res.pitch2D.pitchInBytes, 0);
       break;
-    default: return hipErrorInvalidValue;
+    default: HIP_RETURN(hipErrorInvalidValue);
   }
   *pTexObject = reinterpret_cast<hipTextureObject_t>(as_cl(image));
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject) {
@@ -215,7 +215,7 @@ hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject) {
 
   as_amd(reinterpret_cast<cl_mem>(textureObject))->release();
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDesc,
@@ -224,7 +224,7 @@ hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDesc,
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipGetTextureObjectResourceViewDesc(hipResourceViewDesc* pResViewDesc,
@@ -233,7 +233,7 @@ hipError_t hipGetTextureObjectResourceViewDesc(hipResourceViewDesc* pResViewDesc
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipGetTextureObjectTextureDesc(hipTextureDesc* pTexDesc,
@@ -242,7 +242,7 @@ hipError_t hipGetTextureObjectTextureDesc(hipTextureDesc* pTexDesc,
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t ihipBindTexture(cl_mem_object_type type,
@@ -282,14 +282,14 @@ hipError_t hipBindTexture(size_t* offset, textureReference* tex, const void* dev
   HIP_INIT_API(offset, tex, devPtr, desc, size);
 
   if (desc == nullptr) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
   cl_image_format image_format;
   getChannelOrderAndType(*desc, hipReadModeElementType,
     &image_format.image_channel_order, &image_format.image_channel_data_type);
   const amd::Image::Format imageFormat(image_format);
 
-  return ihipBindTexture(CL_MEM_OBJECT_IMAGE1D, offset, tex, devPtr, desc, size / imageFormat.getElementSize(), 1, size);
+  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE1D, offset, tex, devPtr, desc, size / imageFormat.getElementSize(), 1, size));
 }
 
 hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* devPtr,
@@ -297,7 +297,7 @@ hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* d
                             size_t pitch) {
   HIP_INIT_API(offset, tex, devPtr, desc, width, height, pitch);
 
-  return ihipBindTexture(CL_MEM_OBJECT_IMAGE2D, offset, tex, devPtr, desc, width, height, pitch);
+  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE2D, offset, tex, devPtr, desc, width, height, pitch));
 }
 
 hipError_t hipBindTextureToArray(textureReference* tex, hipArray_const_t array,
@@ -306,7 +306,7 @@ hipError_t hipBindTextureToArray(textureReference* tex, hipArray_const_t array,
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t ihipBindTextureToArrayImpl(int dim, enum hipTextureReadMode readMode,
@@ -325,7 +325,7 @@ hipError_t hipBindTextureToMipmappedArray(textureReference* tex,
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipUnbindTexture(const textureReference* tex) {
@@ -333,7 +333,7 @@ hipError_t hipUnbindTexture(const textureReference* tex) {
 
   as_amd(reinterpret_cast<cl_mem>(tex->textureObject))->release();
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array) {
@@ -341,7 +341,7 @@ hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array)
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipGetTextureAlignmentOffset(size_t* offset, const textureReference* tex) {
@@ -349,7 +349,7 @@ hipError_t hipGetTextureAlignmentOffset(size_t* offset, const textureReference* 
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipGetTextureReference(const textureReference** tex, const void* symbol) {
@@ -357,56 +357,56 @@ hipError_t hipGetTextureReference(const textureReference** tex, const void* symb
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipTexRefSetFormat(textureReference* tex, hipArray_Format fmt, int NumPackedComponents) {
   HIP_INIT_API(tex, fmt, NumPackedComponents);
 
   if (tex == nullptr) {
-    return hipErrorInvalidImage;
+    HIP_RETURN(hipErrorInvalidImage);
   }
 
   tex->format = fmt;
   tex->numChannels = NumPackedComponents;
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipTexRefSetFlags(textureReference* tex, unsigned int flags) {
   HIP_INIT_API(tex, flags);
 
   if (tex == nullptr) {
-    return hipErrorInvalidImage;
+    HIP_RETURN(hipErrorInvalidImage);
   }
 
   tex->normalized = flags;
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipTexRefSetFilterMode(textureReference* tex, hipTextureFilterMode fm) {
   HIP_INIT_API(tex, fm);
 
   if (tex == nullptr) {
-    return hipErrorInvalidImage;
+    HIP_RETURN(hipErrorInvalidImage);
   }
 
   tex->filterMode = fm;
 
-  return hipSuccess; 
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipTexRefSetAddressMode(textureReference* tex, int dim, hipTextureAddressMode am) {
   HIP_INIT_API(tex, dim, am);
 
   if (tex == nullptr) {
-    return hipErrorInvalidImage;
+    HIP_RETURN(hipErrorInvalidImage);
   }
 
   tex->addressMode[dim] = am;
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipTexRefSetArray(textureReference* tex, hipArray_const_t array, unsigned int flags) {
@@ -414,7 +414,7 @@ hipError_t hipTexRefSetArray(textureReference* tex, hipArray_const_t array, unsi
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipTexRefSetAddress(size_t* offset, textureReference* tex, hipDeviceptr_t devPtr,
@@ -422,7 +422,7 @@ hipError_t hipTexRefSetAddress(size_t* offset, textureReference* tex, hipDevicep
   HIP_INIT_API(offset, tex, devPtr, size);
 
   if (tex == nullptr) {
-    return hipErrorInvalidImage;
+    HIP_RETURN(hipErrorInvalidImage);
   }
 
   cl_image_format image_format;
@@ -430,7 +430,7 @@ hipError_t hipTexRefSetAddress(size_t* offset, textureReference* tex, hipDevicep
     &image_format.image_channel_order, &image_format.image_channel_data_type);
   const amd::Image::Format imageFormat(image_format);
 
-  return ihipBindTexture(CL_MEM_OBJECT_IMAGE1D, offset, tex, devPtr, nullptr, size / imageFormat.getElementSize(), 1, size);
+  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE1D, offset, tex, devPtr, nullptr, size / imageFormat.getElementSize(), 1, size));
 }
 
 hipError_t hipTexRefSetAddress2D(textureReference* tex, const HIP_ARRAY_DESCRIPTOR* desc,
@@ -438,9 +438,9 @@ hipError_t hipTexRefSetAddress2D(textureReference* tex, const HIP_ARRAY_DESCRIPT
   HIP_INIT_API(tex, desc, devPtr, pitch);
 
   if (desc == nullptr) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   size_t offset;
-  return ihipBindTexture(CL_MEM_OBJECT_IMAGE2D, &offset, tex, devPtr, nullptr, desc->width, desc->height, pitch);
+  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE2D, &offset, tex, devPtr, nullptr, desc->width, desc->height, pitch));
 }

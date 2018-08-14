@@ -252,7 +252,7 @@ extern "C" hipError_t hipConfigureCall(
 
   PlatformState::instance().configureCall(gridDim, blockDim, sharedMem, stream);
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 extern "C" hipError_t hipSetupArgument(
@@ -264,7 +264,7 @@ extern "C" hipError_t hipSetupArgument(
 
   PlatformState::instance().setupArgument(arg, size, offset);
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
@@ -272,8 +272,9 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
   HIP_INIT_API(hostFunction);
 
   hipFunction_t func = PlatformState::instance().getFunc(hostFunction);
-  if (func == nullptr)
-    return hipErrorUnknown;
+  if (func == nullptr) {
+    HIP_RETURN(hipErrorUnknown);
+  }
 
   ihipExec_t exec;
   PlatformState::instance().popExec(exec);
@@ -284,10 +285,10 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
       HIP_LAUNCH_PARAM_END
     };
 
-  return hipModuleLaunchKernel(func,
+  HIP_RETURN(hipModuleLaunchKernel(func,
     exec.gridDim_.x, exec.gridDim_.y, exec.gridDim_.z,
     exec.blockDim_.x, exec.blockDim_.y, exec.blockDim_.z,
-    exec.sharedMem_, exec.hStream_, nullptr, extra);
+    exec.sharedMem_, exec.hStream_, nullptr, extra));
 }
 
 #if defined(ATI_OS_LINUX)
@@ -514,7 +515,7 @@ static inline std::uint32_t f32_as_u32(float f) { union { float f; std::uint32_t
 static inline float u32_as_f32(std::uint32_t u) { union { float f; std::uint32_t u; } v; v.u = u; return v.f; }
 static inline int clamp_int(int i, int l, int h) { return std::min(std::max(i, l), h); }
 
-// half � float, the f16 is in the low 16 bits of the input argument �a�
+// half float, the f16 is in the low 16 bits of the input argument
 static inline float __convert_half_to_float(std::uint32_t a) noexcept {
   std::uint32_t u = ((a << 13) + 0x70000000U) & 0x8fffe000U;
   std::uint32_t v = f32_as_u32(u32_as_f32(u) * 0x1.0p+112f) + 0x38000000U;
@@ -522,7 +523,7 @@ static inline float __convert_half_to_float(std::uint32_t a) noexcept {
   return u32_as_f32(u) * 0x1.0p-112f;
 }
 
-// float � half with nearest even rounding
+// float half with nearest even rounding
 // The lower 16 bits of the result is the bit pattern for the f16
 static inline std::uint32_t __convert_float_to_half(float a) noexcept {
   std::uint32_t u = f32_as_u32(a);

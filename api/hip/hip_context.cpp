@@ -31,6 +31,7 @@ namespace hip {
 
 thread_local amd::Context* g_context = nullptr;
 thread_local std::stack<amd::Context*> g_ctxtStack;
+thread_local hipError_t g_lastError = hipSuccess;
 std::once_flag g_ihipInitialized;
 
 std::map<amd::Context*, amd::HostQueue*> g_nullStreams;
@@ -85,14 +86,14 @@ using namespace hip;
 hipError_t hipInit(unsigned int flags) {
   HIP_INIT_API(flags);
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device) {
   HIP_INIT_API(ctx, flags, device);
 
   if (static_cast<size_t>(device) >= g_devices.size()) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   *ctx = reinterpret_cast<hipCtx_t>(g_devices[device]);
@@ -101,7 +102,7 @@ hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device) 
   g_devices[device]->retain();
   g_ctxtStack.push(g_devices[device]);
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipCtxSetCurrent(hipCtx_t ctx) {
@@ -119,7 +120,7 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx) {
     g_ctxtStack.push(hip::getCurrentContext());
   }
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx) {
@@ -127,19 +128,19 @@ hipError_t hipCtxGetCurrent(hipCtx_t* ctx) {
 
   *ctx = reinterpret_cast<hipCtx_t>(hip::getCurrentContext());
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipRuntimeGetVersion(int *runtimeVersion) {
   HIP_INIT_API(runtimeVersion);
 
   if (!runtimeVersion) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   *runtimeVersion = AMD_PLATFORM_BUILD_NUMBER;
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipCtxDestroy(hipCtx_t ctx) {
@@ -147,7 +148,7 @@ hipError_t hipCtxDestroy(hipCtx_t ctx) {
 
   amd::Context* amdContext = reinterpret_cast<amd::Context*>(as_amd(ctx));
   if (amdContext == nullptr) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   // Need to remove the ctx of calling thread if its the top one
@@ -163,7 +164,7 @@ hipError_t hipCtxDestroy(hipCtx_t ctx) {
     }
   }
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipCtxPopCurrent(hipCtx_t* ctx) {
@@ -171,17 +172,17 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx) {
 
   amd::Context* amdContext = reinterpret_cast<amd::Context*>(as_amd(ctx));
   if (amdContext == nullptr) {
-    return hipErrorInvalidContext;
+    HIP_RETURN(hipErrorInvalidContext);
   }
 
   if (!g_ctxtStack.empty()) {
     amdContext = g_ctxtStack.top();
     g_ctxtStack.pop();
   } else {
-    return hipErrorInvalidContext;
+    HIP_RETURN(hipErrorInvalidContext);
   }
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipCtxPushCurrent(hipCtx_t ctx) {
@@ -189,13 +190,13 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx) {
 
   amd::Context* amdContext = reinterpret_cast<amd::Context*>(as_amd(ctx));
   if (amdContext == nullptr) {
-    return hipErrorInvalidContext;
+    HIP_RETURN(hipErrorInvalidContext);
   }
 
   hip::g_context = amdContext;
   g_ctxtStack.push(hip::getCurrentContext());
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipDriverGetVersion(int* driverVersion) {
@@ -205,13 +206,13 @@ hipError_t hipDriverGetVersion(int* driverVersion) {
   const auto& info = deviceHandle->info();
 
   if (driverVersion) {
-      *driverVersion = AMD_PLATFORM_BUILD_NUMBER * 100 +
-                       AMD_PLATFORM_REVISION_NUMBER;
+    *driverVersion = AMD_PLATFORM_BUILD_NUMBER * 100 +
+                     AMD_PLATFORM_REVISION_NUMBER;
   } else {
-      return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
-  return hipSuccess;;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipCtxGetDevice(hipDevice_t* device) {
@@ -221,11 +222,11 @@ hipError_t hipCtxGetDevice(hipDevice_t* device) {
     for (unsigned int i = 0; i < g_devices.size(); i++) {
       if (g_devices[i] == hip::getCurrentContext()) {
         *device = static_cast<hipDevice_t>(i);
-        return hipSuccess;
+        HIP_RETURN(hipSuccess);
       }
     }
   } else {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   return hipErrorUnknown;

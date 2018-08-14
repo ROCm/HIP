@@ -151,14 +151,14 @@ hipError_t ihipMemset(void* dst, int value, size_t sizeBytes, amd::HostQueue& qu
 hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
   HIP_INIT_API(ptr, sizeBytes);
 
-  return ihipMalloc(ptr, sizeBytes, 0);
+  HIP_RETURN(ihipMalloc(ptr, sizeBytes, 0));
 }
 
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
   HIP_INIT_API(ptr, sizeBytes, flags);
 
   if (ptr == nullptr) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
   *ptr = nullptr;
 
@@ -166,10 +166,10 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
 
   // can't have both Coherent and NonCoherent flags set at the same time
   if ((flags & coherentFlags) == coherentFlags) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
-  return ihipMalloc(ptr, sizeBytes, CL_MEM_SVM_FINE_GRAIN_BUFFER | (flags << 16));
+  HIP_RETURN(ihipMalloc(ptr, sizeBytes, CL_MEM_SVM_FINE_GRAIN_BUFFER | (flags << 16)));
 }
 
 hipError_t hipFree(void* ptr) {
@@ -177,9 +177,9 @@ hipError_t hipFree(void* ptr) {
     hip::syncStreams();
     hip::getNullStream()->finish();
     amd::SvmBuffer::free(*hip::getCurrentContext(), ptr);
-    return hipSuccess;
+    HIP_RETURN(hipSuccess);
   }
-  return hipErrorInvalidValue;
+  HIP_RETURN(hipErrorInvalidValue);
 }
 
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind) {
@@ -187,7 +187,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 
   hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
-  return ihipMemcpy(dst, src, sizeBytes, kind, *queue);
+  HIP_RETURN(ihipMemcpy(dst, src, sizeBytes, kind, *queue));
 }
 
 hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream) {
@@ -203,7 +203,7 @@ hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t st
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
-  return ihipMemset(dst, value, sizeBytes, *queue, true);
+  HIP_RETURN(ihipMemset(dst, value, sizeBytes, *queue, true));
 }
 
 hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
@@ -212,7 +212,7 @@ hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
   hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
-  return ihipMemset(dst, value, sizeBytes, *queue);
+  HIP_RETURN(ihipMemset(dst, value, sizeBytes, *queue));
 }
 
 hipError_t hipMemPtrGetInfo(void *ptr, size_t *size) {
@@ -222,12 +222,12 @@ hipError_t hipMemPtrGetInfo(void *ptr, size_t *size) {
   amd::Memory* svmMem = getMemoryObject(ptr, offset);
 
   if (svmMem == nullptr) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   *size = svmMem->getSize();
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipHostFree(void* ptr) {
@@ -235,9 +235,9 @@ hipError_t hipHostFree(void* ptr) {
 
   if (amd::SvmBuffer::malloced(ptr)) {
     amd::SvmBuffer::free(*hip::getCurrentContext(), ptr);
-    return hipSuccess;
+    HIP_RETURN(hipSuccess);
   }
-  return hipErrorInvalidValue;
+  HIP_RETURN(hipErrorInvalidValue);
 }
 
 hipError_t hipFreeArray(hipArray* array) {
@@ -245,9 +245,9 @@ hipError_t hipFreeArray(hipArray* array) {
 
   if (amd::SvmBuffer::malloced(array->data)) {
     amd::SvmBuffer::free(*hip::getCurrentContext(), array->data);
-    return hipSuccess;
+    HIP_RETURN(hipSuccess);
   }
-  return hipErrorInvalidValue;
+  HIP_RETURN(hipErrorInvalidValue);
 }
 
 hipError_t hipMemGetAddressRange(hipDeviceptr_t* pbase, size_t* psize, hipDeviceptr_t dptr) {
@@ -259,13 +259,13 @@ hipError_t hipMemGetAddressRange(hipDeviceptr_t* pbase, size_t* psize, hipDevice
   amd::Memory* svmMem = getMemoryObject(ptr, offset);
 
   if (svmMem == nullptr) {
-    return hipErrorInvalidDevicePointer;
+    HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   *pbase = svmMem->getSvmPtr();
   *psize = svmMem->getSize();
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipMemGetInfo(size_t* free, size_t* total) {
@@ -274,17 +274,17 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
   size_t freeMemory[2];
   amd::Device* device = hip::getCurrentContext()->devices()[0];
   if(device == nullptr) {
-    return hipErrorInvalidDevice;
+    HIP_RETURN(hipErrorInvalidDevice);
   }
 
   if(!device->globalFreeMemory(freeMemory)) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   *free = freeMemory[0] * Ki;
   *total = device->info().globalMemSize_;
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height, size_t depth,
@@ -325,7 +325,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
   HIP_INIT_API(ptr, pitch, width, height);
 
   const cl_image_format image_format = { CL_R, CL_UNSIGNED_INT8 };
-  return ihipMallocPitch(ptr, pitch, width, height, 1, CL_MEM_OBJECT_IMAGE2D, &image_format);
+  HIP_RETURN(ihipMallocPitch(ptr, pitch, width, height, 1, CL_MEM_OBJECT_IMAGE2D, &image_format));
 }
 
 hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
@@ -334,7 +334,7 @@ hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
   size_t pitch = 0;
 
   if (pitchedDevPtr == nullptr) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   const cl_image_format image_format = { CL_R, CL_UNSIGNED_INT8 };
@@ -348,7 +348,7 @@ hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
         pitchedDevPtr->ysize = extent.height;
   }
 
-  return status;
+  HIP_RETURN(status);
 }
 
 hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent) {
@@ -360,14 +360,14 @@ hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent)
   hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
-  return ihipMemset(dst, value, sizeBytes, *queue);
+  HIP_RETURN(ihipMemset(dst, value, sizeBytes, *queue));
 }
 
 hipError_t hipArrayCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray) {
   HIP_INIT_API(array, pAllocateArray);
 
   if (array[0]->width == 0) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   *array = (hipArray*)malloc(sizeof(hipArray));
@@ -393,7 +393,7 @@ hipError_t hipArrayCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocat
   hipError_t status = ihipMallocPitch(ptr, &pitch, array[0]->width, array[0]->height, 1, CL_MEM_OBJECT_IMAGE2D,
                       &image_format);
 
-  return status;
+  HIP_RETURN(status);
 }
 
 hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
@@ -401,7 +401,7 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
   HIP_INIT_API(array, desc, width, height, flags);
 
   if (width == 0) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   *array = (hipArray*)malloc(sizeof(hipArray));
@@ -436,7 +436,7 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
   hipError_t status = ihipMallocPitch(ptr, &pitch, width, height, 1, CL_MEM_OBJECT_IMAGE2D,
                       &image_format);
 
-  return status;
+  HIP_RETURN(status);
 }
 
 hipError_t hipMalloc3DArray(hipArray_t* array, const struct hipChannelFormatDesc* desc,
@@ -475,7 +475,7 @@ hipError_t hipMalloc3DArray(hipArray_t* array, const struct hipChannelFormatDesc
   hipError_t status = ihipMallocPitch(ptr, &pitch, extent.width, extent.height, extent.depth,
                       CL_MEM_OBJECT_IMAGE3D, &image_format);
 
-  return status;
+  HIP_RETURN(status);
 }
 
 hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) {
@@ -483,19 +483,19 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) {
 
   if (flagsPtr == nullptr ||
       hostPtr == nullptr) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   size_t offset = 0;
   amd::Memory* svmMem = getMemoryObject(hostPtr, offset);
 
   if (svmMem == nullptr) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   *flagsPtr = svmMem->getMemFlags() >> 16;
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) {
@@ -506,12 +506,12 @@ hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) 
 
     if (!mem->create(hostPtr)) {
       mem->release();
-      return hipErrorMemoryAllocation;
+      HIP_RETURN(hipErrorMemoryAllocation);
     }
     amd::MemObjMap::AddMemObj(hostPtr, mem);
-    return hipSuccess;
+    HIP_RETURN(hipSuccess);
   } else {
-    return ihipMalloc(&hostPtr, sizeBytes, flags);
+    HIP_RETURN(ihipMalloc(&hostPtr, sizeBytes, flags));
   }
 }
 
@@ -522,7 +522,7 @@ hipError_t hipHostUnregister(void* hostPtr) {
     hip::syncStreams();
     hip::getNullStream()->finish();
     amd::SvmBuffer::free(*hip::getCurrentContext(), hostPtr);
-    return hipSuccess;
+    HIP_RETURN(hipSuccess);
   } else {
     size_t offset = 0;
     amd::Memory* mem = getMemoryObject(hostPtr, offset);
@@ -532,16 +532,16 @@ hipError_t hipHostUnregister(void* hostPtr) {
       hip::getNullStream()->finish();
       amd::MemObjMap::RemoveMemObj(hostPtr);
       mem->release();
-      return hipSuccess;
+      HIP_RETURN(hipSuccess);
     }
   }
 
-  return hipErrorInvalidValue;
+  HIP_RETURN(hipErrorInvalidValue);
 }
 
 // Deprecated function:
 hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags) {
-  return ihipMalloc(ptr, sizeBytes, flags);
+  HIP_RETURN(ihipMalloc(ptr, sizeBytes, flags));
 };
 
 
@@ -551,7 +551,7 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t cou
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count,
@@ -560,7 +560,7 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count,
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src, size_t count,
@@ -569,7 +569,7 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src, size_
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t count,
@@ -578,7 +578,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t co
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {
@@ -587,7 +587,7 @@ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {
   hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
-  return ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyHostToDevice, *queue);
+  HIP_RETURN(ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyHostToDevice, *queue));
 }
 
 hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes) {
@@ -596,7 +596,7 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes) {
   hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
-  return ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyDeviceToHost, *queue);
+  HIP_RETURN(ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyDeviceToHost, *queue));
 }
 
 hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes) {
@@ -605,7 +605,7 @@ hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeByte
   hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
-  return ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyDeviceToDevice, *queue);
+  HIP_RETURN(ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyDeviceToDevice, *queue));
 }
 
 hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes) {
@@ -614,7 +614,7 @@ hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes) {
   hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
-  return ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyHostToHost, *queue);
+  HIP_RETURN(ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyHostToHost, *queue));
 }
 
 hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes,
@@ -631,7 +631,7 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes,
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
-  return ihipMemcpy(dst, src, sizeBytes, kind, *queue, true);
+  HIP_RETURN(ihipMemcpy(dst, src, sizeBytes, kind, *queue, true));
 }
 
 
@@ -649,8 +649,8 @@ hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, void* src, size_t sizeBytes,
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
-  return ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyHostToDevice,
-                    *queue, true);
+  HIP_RETURN(ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyHostToDevice,
+                    *queue, true));
 }
 
 hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes,
@@ -667,8 +667,8 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
-  return ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyDeviceToDevice,
-                   *queue, true);
+  HIP_RETURN(ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyDeviceToDevice,
+                   *queue, true));
 }
 
 hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes,
@@ -685,8 +685,8 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes,
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
-  return ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyDeviceToHost,
-                   *queue, true);
+  HIP_RETURN(ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyDeviceToHost,
+                   *queue, true));
 }
 
 hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
@@ -694,7 +694,7 @@ hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
@@ -763,7 +763,7 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
   hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
 
-  return ihipMemcpy2D(dst, dpitch, src, spitch, width, height, kind, *queue);
+  HIP_RETURN(ihipMemcpy2D(dst, dpitch, src, spitch, width, height, kind, *queue));
 }
 
 
@@ -781,7 +781,7 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
-  return ihipMemcpy2D(dst, dpitch, src, spitch, width, height, kind, *queue, true);
+  HIP_RETURN(ihipMemcpy2D(dst, dpitch, src, spitch, width, height, kind, *queue, true));
 }
 
 hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
@@ -789,7 +789,7 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
   HIP_INIT_API(dst, wOffset, hOffset, src, spitch, width, height, kind);
 
   if (dst->data == nullptr) {
-    return hipErrorUnknown;
+    HIP_RETURN(hipErrorUnknown);
   }
 
   hip::syncStreams();
@@ -816,7 +816,7 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
   }
 
   if ((wOffset + width > (dpitch)) || width > spitch) {
-    return hipErrorUnknown;
+    HIP_RETURN(hipErrorUnknown);
   }
 
   // Create buffer rectangle info structure
@@ -836,7 +836,7 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
 
   if (!srcRect.create(sOrigin, region, spitch, src_slice_pitch) ||
       !dstRect.create(dOrigin, region, dpitch, dst_slice_pitch)) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   amd::Command* command = nullptr;
@@ -855,7 +855,7 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
       void* pSrc = reinterpret_cast<void*>(reinterpret_cast<size_t>(src) + y * spitch);
       memcpy(pDst, pSrc, width);
     }
-    return hipSuccess;
+    HIP_RETURN(hipSuccess);
   } else if ((srcMemory == nullptr) && (dstMemory != nullptr)) {
     command = new amd::WriteMemoryCommand(*queue, CL_COMMAND_WRITE_BUFFER_RECT, waitList,
               *dstMemory->asBuffer(), dstStart, size, src, dstRect, srcRect);
@@ -868,14 +868,14 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
   }
 
   if (command == nullptr) {
-    return hipErrorOutOfMemory;
+    HIP_RETURN(hipErrorOutOfMemory);
   }
 
   command->enqueue();
   command->awaitCompletion();
   command->release();
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 
 }
 
@@ -909,14 +909,14 @@ hipError_t hipMemcpyToArray(hipArray* dstArray, size_t wOffset, size_t hOffset, 
   }
 
   if (command == nullptr) {
-    return hipErrorOutOfMemory;
+    HIP_RETURN(hipErrorOutOfMemory);
   }
 
   command->enqueue();
   command->awaitCompletion();
   command->release();
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffset, size_t hOffset,
@@ -949,14 +949,14 @@ hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffs
   }
 
   if (command == nullptr) {
-    return hipErrorOutOfMemory;
+    HIP_RETURN(hipErrorOutOfMemory);
   }
 
   command->enqueue();
   command->awaitCompletion();
   command->release();
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipMemcpyHtoA(hipArray* dstArray, size_t dstOffset, const void* srcHost, size_t count) {
@@ -986,14 +986,14 @@ hipError_t hipMemcpyHtoA(hipArray* dstArray, size_t dstOffset, const void* srcHo
   }
 
   if (command == nullptr) {
-    return hipErrorOutOfMemory;
+    HIP_RETURN(hipErrorOutOfMemory);
   }
 
   command->enqueue();
   command->awaitCompletion();
   command->release();
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t count) {
@@ -1023,14 +1023,14 @@ hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t
   }
 
   if (command == nullptr) {
-    return hipErrorOutOfMemory;
+    HIP_RETURN(hipErrorOutOfMemory);
   }
 
   command->enqueue();
   command->awaitCompletion();
   command->release();
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
@@ -1108,7 +1108,7 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
 
   if (!srcRect.create(srcOrigin, region, srcPitchInBytes, src_slice_pitch) ||
       !dstRect.create(dstOrigin, region, dstPitchInbytes, dst_slice_pitch)) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   hipMemcpyKind kind = p->kind;
@@ -1123,7 +1123,7 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
   if (((srcMemory == nullptr) && (dstMemory == nullptr)) ||
       (kind == hipMemcpyHostToHost)) {
     memcpy(dstPtr, srcPtr, region[0] * region[1] * region[2]);
-    return hipSuccess;
+    HIP_RETURN(hipSuccess);
   } else if ((srcMemory == nullptr) && (dstMemory != nullptr)) {
     command = new amd::WriteMemoryCommand(*queue, CL_COMMAND_WRITE_BUFFER_RECT, waitList,
               *dstMemory->asBuffer(), srcStart, size, srcPtr, srcRect, dstRect);
@@ -1137,14 +1137,14 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
   }
 
   if (command == nullptr) {
-    return hipErrorOutOfMemory;
+    HIP_RETURN(hipErrorOutOfMemory);
   }
 
   command->enqueue();
   command->awaitCompletion();
   command->release();
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t ihipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height,
@@ -1192,7 +1192,7 @@ hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t 
 
   hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
-  return ihipMemset2D(dst, pitch, value, width, height, *queue);
+  HIP_RETURN(ihipMemset2D(dst, pitch, value, width, height, *queue));
 }
 
 hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value,
@@ -1208,14 +1208,14 @@ hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value,
     queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
-  return ihipMemset2D(dst, pitch, value, width, height, *queue, true);
+  HIP_RETURN(ihipMemset2D(dst, pitch, value, width, height, *queue, true));
 }
 
 hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes) {
   HIP_INIT_API(dst, value, sizeBytes);
 
   if (dst == nullptr) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   hip::syncStreams();
@@ -1232,7 +1232,7 @@ hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes
                                    &value, sizeof(char), fillOffset, fillSize);
 
     if (command == nullptr) {
-      return hipErrorOutOfMemory;
+      HIP_RETURN(hipErrorOutOfMemory);
     }
 
     command->enqueue();
@@ -1243,7 +1243,7 @@ hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes
     memset(dst, value, sizeBytes);
   }
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr) {
@@ -1251,7 +1251,7 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags) {
@@ -1259,7 +1259,7 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipIpcCloseMemHandle(void* devPtr) {
@@ -1267,7 +1267,7 @@ hipError_t hipIpcCloseMemHandle(void* devPtr) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f) {
@@ -1287,11 +1287,11 @@ hipError_t hipHostGetDevicePointer(void** devicePointer, void* hostPointer, unsi
 
   amd::Memory* memObj = getMemoryObject(hostPointer, offset);
   if (!memObj) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
   *devicePointer = reinterpret_cast<void*>(memObj->getDeviceMemory(*hip::getCurrentContext()->devices()[0])->virtualAddress() + offset);
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr) {
@@ -1325,5 +1325,5 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
     attributes->allocationFlags = 0;
   }
 
-  return hipSuccess;
+  HIP_RETURN(hipSuccess);
 }
