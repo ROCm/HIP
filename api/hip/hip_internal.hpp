@@ -67,7 +67,7 @@ extern amd::Memory* getMemoryObject(const void* ptr, size_t& offset);
 
 #define HIP_RETURN(ret)          \
         hip::g_lastError = ret;  \
-        return ret;              \
+        return hip::g_lastError; \
 
 
 #endif // HIP_SRC_HIP_INTERNAL_H

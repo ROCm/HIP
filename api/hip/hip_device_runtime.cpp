@@ -155,7 +155,9 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
   //FIXME: should we cache the props, or just select from deviceHandle->info_?
   hipDeviceProp_t prop = {0};
   hipError_t err = hipGetDeviceProperties(&prop, device);
-  if (err != hipSuccess) HIP_RETURN(err);
+  if (err != hipSuccess) {
+    HIP_RETURN(err);
+  }
 
   switch (attr) {
   case hipDeviceAttributeMaxThreadsPerBlock:
