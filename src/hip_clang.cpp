@@ -58,6 +58,7 @@ __hipRegisterFatBinary(const void* data)
 {
   HIP_INIT();
 
+  tprintf(DB_FB, "Enter __hipRegisterFatBinary(%p)\n", data);
   const __CudaFatBinaryWrapper* fbwrapper = reinterpret_cast<const __CudaFatBinaryWrapper*>(data);
   if (fbwrapper->magic != __hipFatMAGIC2 || fbwrapper->version != 1) {
     return nullptr;
@@ -113,6 +114,7 @@ __hipRegisterFatBinary(const void* data)
     }
   }
 
+  tprintf(DB_FB, "__hipRegisterFatBinary succeeds and returns %p\n", modules);
   return modules;
 }
 
