@@ -96,8 +96,10 @@ hipError_t ihipDeviceGetCount(int* count) {
     return hipErrorInvalidValue;
   }
 
+  auto* deviceHandle = g_devices[0]->devices()[0];
+
   // Get all available devices
-  *count = g_devices.size();
+  *count = deviceHandle->isOrdinalValid() ? g_devices.size() : 0;
 
   return hipSuccess;
 }
