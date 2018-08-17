@@ -725,7 +725,7 @@ if ($needLDFLAGS and not $compileOnly) {
 }
 $CMD .= " $toolArgs";
 if ($needLDFLAGS and not $compileOnly and $HIP_PLATFORM eq "clang") {
-    $CMD .= " -lgcc_s -lgcc";
+    $CMD .= " -lgcc_s -lgcc -lpthread -lm";
 }
 
 if ($verbose & 0x1) {
