@@ -63,6 +63,22 @@ __device__ static inline unsigned int __clzll(long long int input) {
     return input == 0 ? 64 : input > 0 ? __builtin_clzl(input) : __builtin_clzl(~input);
 }
 
+__device__ static inline unsigned int __lastbit_u32_u64(unsigned long long int input) {
+  return input == 0 ? -1 : __builtin_ctzl(input);
+}
+
+__device__ static inline unsigned int __bitextract_u32(unsigned int src0, unsigned int src1, unsigned int src2) {
+  return (src0 << (32 - src1 - src2)) >> (32 - src2);
+}
+
+__device__ static inline uint64_t __bitextract_u64(uint64_t src0, unsigned int src1, unsigned int src2) {
+  return (src0 << (64 - src1 - src2)) >> (64 - src2);
+}
+
+__device__ static inline unsigned int __bitinsert_u32(unsigned int src0, unsigned int src1, unsigned int src2, unsigned int src3) {
+  return (src0 & ~(((1 << src3) - 1) << src2)) | ((src1 & ((1 << src3) - 1)) << src2);
+}
+
 __device__ static inline unsigned int __ffs(unsigned int input) {
     return ( input == 0 ? -1 : __builtin_ctz(input) ) + 1;
 }
