@@ -59,6 +59,9 @@ extern "C" hipModule_t __hipRegisterFatBinary(const void* data)
 {
   HIP_INIT();
 
+  if(g_devices.empty()) {
+    return nullptr;
+  }
   const __CudaFatBinaryWrapper* fbwrapper = reinterpret_cast<const __CudaFatBinaryWrapper*>(data);
   if (fbwrapper->magic != __hipFatMAGIC2 || fbwrapper->version != 1) {
     return nullptr;

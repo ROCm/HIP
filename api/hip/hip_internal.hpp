@@ -29,10 +29,9 @@ THE SOFTWARE.
 #include <stack>
 
 #define HIP_INIT() \
-  std::call_once(hip::g_ihipInitialized, hip::init); \
-  assert(g_devices.size() > 0);                      \
-  if (hip::g_context == nullptr) {                   \
-    hip::g_context = g_devices[0];                   \
+  std::call_once(hip::g_ihipInitialized, hip::init);        \
+  if (hip::g_context == nullptr && g_devices.size() > 0) {  \
+    hip::g_context = g_devices[0];                          \
   }
 
 // This macro should be called at the beginning of every HIP API.
