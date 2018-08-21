@@ -25,25 +25,62 @@ THE SOFTWARE.
 #include "hip_internal.hpp"
 #include <hip/hcc_detail/hip_surface_types.h>
 
+namespace hip {
+
+static amd::Monitor surfaceLock("Guards surface objects");
+
 struct hipSurface {
-    hipArray* array;
-    hipResourceDesc resDesc;
+  hipSurface(const hipResourceDesc* pResDesc): array(0)
+  {
+    memcpy((void*)&resDesc, (void*)pResDesc, sizeof(hipResourceDesc));
+  }
+
+  hipArray* array;
+  hipResourceDesc resDesc;
 };
+
+static std::map<hipSurfaceObject_t, hipSurface*> surfaceHash;
+
+};
+
+using namespace hip;
 
 hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject,
                                   const hipResourceDesc* pResDesc) {
   HIP_INIT_API(pSurfObject, pResDesc);
 
-  assert(0 && "Unimplemented");
+  hipSurface* pSurface = new hipSurface(pResDesc);
+  assert(pSurface != nullptr);
 
-  HIP_RETURN(hipErrorUnknown);
+  switch (pResDesc->resType) {
+  case hipResourceTypeArray:
+    pSurface->array = pResDesc->res.array.array;
+    break;
+  default:
+    break;
+  }
+  unsigned int* surfObj;
+  hipMalloc((void**)&surfObj, sizeof(hipArray));
+  hipMemcpy(surfObj, (void*)pResDesc->res.array.array, sizeof(hipArray),
+            hipMemcpyHostToDevice);
+  *pSurfObject = (hipSurfaceObject_t)surfObj;
+
+  amd::ScopedLock lock(surfaceLock);
+  surfaceHash[*pSurfObject] = pSurface;
+
+  HIP_RETURN(hipSuccess);
 }
 
 
 hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject) {
   HIP_INIT_API(surfaceObject);
 
-  assert(0 && "Unimplemented");
+  amd::ScopedLock lock(surfaceLock);
+  hipSurface* pSurface = surfaceHash[surfaceObject];
+  if (pSurface != nullptr) {
+    delete pSurface;
+    surfaceHash.erase(surfaceObject);
+  }
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipSuccess);
 }
