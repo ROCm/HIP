@@ -453,6 +453,15 @@ foreach $arg (@ARGV)
                     system("cd $tmpdir; ar c $libBaseName $realObjs");
                     print $out "$tmpdir/$libBaseName\n";
                 }
+            } elsif ($line =~ m/\.o$/) {
+                my $fileType = `file $line`;
+                my $isObj = ($fileType =~ m/ELF/ or $fileType =~ m/COFF/);
+                if ($isObj) {
+                    print $out "$line\n";
+                } else {
+                    push (@inputs, $line);
+                    $new_arg = "$new_arg $line";
+                }
             } else {
                 print $out "$line\n";
             }
