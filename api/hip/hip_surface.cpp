@@ -30,16 +30,16 @@ namespace hip {
 static amd::Monitor surfaceLock("Guards surface objects");
 
 struct hipSurface {
-  hipSurface(const hipResourceDesc* pResDesc): array(0)
+  hipSurface(const hipResourceDesc* pResDesc): array(nullptr)
   {
-    memcpy((void*)&resDesc, (void*)pResDesc, sizeof(hipResourceDesc));
+    memcpy(&resDesc, pResDesc, sizeof(hipResourceDesc));
   }
 
   hipArray* array;
   hipResourceDesc resDesc;
 };
 
-static std::map<hipSurfaceObject_t, hipSurface*> surfaceHash;
+static std::unordered_map<hipSurfaceObject_t, hipSurface*> surfaceHash;
 
 };
 
@@ -59,11 +59,20 @@ hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject,
   default:
     break;
   }
-  unsigned int* surfObj;
-  hipMalloc((void**)&surfObj, sizeof(hipArray));
-  hipMemcpy(surfObj, (void*)pResDesc->res.array.array, sizeof(hipArray),
+  hipSurfaceObject_t surfObj;
+  hipError_t err = hipMalloc(reinterpret_cast<void**>(&surfObj), sizeof(hipArray));
+  if (err != hipSuccess) {
+    delete pSurface;
+    HIP_RETURN(hipErrorOutOfMemory);
+  }
+  err = hipMemcpy(reinterpret_cast<void*>(surfObj), reinterpret_cast<void*>(pResDesc->res.array.array), sizeof(hipArray),
             hipMemcpyHostToDevice);
-  *pSurfObject = (hipSurfaceObject_t)surfObj;
+  if (err != hipSuccess) {
+    delete pSurface;
+    hipFree(reinterpret_cast<void*>(surfObj));
+    HIP_RETURN(err);
+  }
+  *pSurfObject = surfObj;
 
   amd::ScopedLock lock(surfaceLock);
   surfaceHash[*pSurfObject] = pSurface;
@@ -80,7 +89,8 @@ hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject) {
   if (pSurface != nullptr) {
     delete pSurface;
     surfaceHash.erase(surfaceObject);
+    HIP_RETURN(hipFree(reinterpret_cast<void*>(surfaceObject)));
   }
 
-  HIP_RETURN(hipSuccess);
+  HIP_RETURN(hipErrorUnknown);
 }
