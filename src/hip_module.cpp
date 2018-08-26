@@ -84,6 +84,7 @@ string ToString(hipFunction_t v) {
     return ss.str();
 };
 
+std::string& FunctionSymbol(hipFunction_t f) { return f->_name; };
 
 #define CHECK_HSA(hsaStatus, hipStatus)                                                            \
     if (hsaStatus != HSA_STATUS_SUCCESS) {                                                         \
