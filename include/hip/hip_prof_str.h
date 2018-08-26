@@ -294,7 +294,7 @@ static const char* hip_api_name(const uint32_t& id) {
 };
 
 // HIP API callbacks data structure
-struct hip_cb_data_t {
+struct hip_api_data_t {
   uint64_t correlation_id;
   uint32_t phase;
   union {
@@ -1522,7 +1522,7 @@ struct hip_cb_data_t {
 
 #if 0
 // HIP API string method, method name and parameters
-const char* hipApiString(hip_cb_id_t id, const hip_cb_data_t* data) {
+const char* hipApiString(hip_api_id_t id, const hip_api_data_t* data) {
   std::ostringstream oss;
   switch (id) {
     case HIP_API_ID_hipHostFree:
