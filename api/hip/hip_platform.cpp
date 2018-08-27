@@ -110,11 +110,12 @@ struct ihipExec_t {
   std::vector<char> arguments_;
 };
 
+thread_local std::stack<ihipExec_t> execStack_;
+
 class PlatformState {
   amd::Monitor lock_;
-
-  std::stack<ihipExec_t> execStack_;
-  std::map<const void*, hipFunction_t> functions_;
+private:
+  std::unordered_map<const void*, hip::Function*> functions_;
 
   struct RegisteredVar {
     char* var;
@@ -124,11 +125,16 @@ class PlatformState {
     bool  constant;
   };
 
-  std::map<hipModule_t, RegisteredVar> vars_;
+  std::unordered_map<hipModule_t, RegisteredVar> vars_;
 
   static PlatformState* platform_;
 
   PlatformState() : lock_("Guards global function map") {}
+  ~PlatformState() {
+    for (const auto it : functions_) {
+      delete it.second;
+    }
+  }
 public:
   static PlatformState& instance() {
     return *platform_;
@@ -147,13 +153,14 @@ public:
     vars_.insert(std::make_pair(modules, rvar));
   }
 
-  void registerFunction(const void* hostFunction, hipFunction_t func) {
+  void registerFunction(const void* hostFunction, amd::Kernel* func) {
     amd::ScopedLock lock(lock_);
 
-    functions_.insert(std::make_pair(hostFunction, func));
+    hip::Function* f = new hip::Function(func);
+    functions_.insert(std::make_pair(hostFunction, f));
   }
 
-  hipFunction_t getFunc(const void* hostFunction) {
+  hip::Function* getFunc(const void* hostFunction) {
     amd::ScopedLock lock(lock_);
     const auto it = functions_.find(hostFunction);
     if (it != functions_.cend()) {
@@ -166,8 +173,6 @@ public:
   void setupArgument(const void *arg,
                      size_t size,
                      size_t offset) {
-    amd::ScopedLock lock(lock_);
-
     auto& arguments = execStack_.top().arguments_;
 
     if (arguments.size() < offset + size) {
@@ -181,12 +186,10 @@ public:
                      dim3 blockDim,
                      size_t sharedMem,
                      hipStream_t stream) {
-    amd::ScopedLock lock(lock_);
     execStack_.push(ihipExec_t{gridDim, blockDim, sharedMem, stream});
   }
 
   void popExec(ihipExec_t& exec) {
-    amd::ScopedLock lock(lock_);
     exec = std::move(execStack_.top());
     execStack_.pop();
   }
@@ -215,7 +218,7 @@ extern "C" void __hipRegisterFunction(
   amd::Kernel* kernel = new amd::Kernel(*program, *symbol, deviceName);
   if (!kernel) return;
 
-  PlatformState::instance().registerFunction(hostFunction, reinterpret_cast<hipFunction_t>(as_cl(kernel)));
+  PlatformState::instance().registerFunction(hostFunction, kernel);
 }
 
 // Registers a device-side global variable.
@@ -274,7 +277,7 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
 {
   HIP_INIT_API(hostFunction);
 
-  hipFunction_t func = PlatformState::instance().getFunc(hostFunction);
+  hip::Function* func = PlatformState::instance().getFunc(hostFunction);
   if (func == nullptr) {
     HIP_RETURN(hipErrorUnknown);
   }
@@ -282,13 +285,14 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
   ihipExec_t exec;
   PlatformState::instance().popExec(exec);
 
+  size_t size = exec.arguments_.size();
   void *extra[] = {
       HIP_LAUNCH_PARAM_BUFFER_POINTER, &exec.arguments_[0],
-      HIP_LAUNCH_PARAM_BUFFER_SIZE, 0 /* FIXME: not needed, but should be correct*/,
+      HIP_LAUNCH_PARAM_BUFFER_SIZE, &size,
       HIP_LAUNCH_PARAM_END
     };
 
-  HIP_RETURN(hipModuleLaunchKernel(func,
+  HIP_RETURN(hipModuleLaunchKernel(func->asHipFunction(),
     exec.gridDim_.x, exec.gridDim_.y, exec.gridDim_.z,
     exec.blockDim_.x, exec.blockDim_.y, exec.blockDim_.z,
     exec.sharedMem_, exec.hStream_, nullptr, extra));
