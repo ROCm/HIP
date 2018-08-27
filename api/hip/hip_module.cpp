@@ -126,7 +126,8 @@ hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod, const ch
     HIP_RETURN(hipErrorOutOfMemory);
   }
 
-  *hfunc = reinterpret_cast<hipFunction_t>(as_cl(kernel));
+  hip::Function* f = new hip::Function(kernel);
+  *hfunc = f->asHipFunction();
 
   HIP_RETURN(hipSuccess);
 }
@@ -151,8 +152,11 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
                sharedMemBytes, hStream,
                kernelParams, extra, startEvent, stopEvent);
 
-  amd::Kernel* kernel = as_amd(reinterpret_cast<cl_kernel>(f));
+  hip::Function* function = hip::Function::asFunction(f);
+  amd::Kernel* kernel = function->function_;
   amd::Device* device = hip::getCurrentContext()->devices()[0];
+
+  amd::ScopedLock lock(function->lock_);
 
   hip::Event* eStart = reinterpret_cast<hip::Event*>(startEvent);
   hip::Event* eStop = reinterpret_cast<hip::Event*>(stopEvent);
