@@ -13,7 +13,7 @@ and provides practical suggestions on how to port CUDA code and work through com
   * [Converting a project "in-place"](#converting-a-project-in-place)
 - [Distinguishing Compiler Modes](#distinguishing-compiler-modes)
   * [Identifying HIP Target Platform](#identifying-hip-target-platform)
-  * [Identifying the Compiler: hcc or nvcc](#identifying-the-compiler-hcc-or-nvcc)
+  * [Identifying the Compiler: hcc, hip-clang, or nvcc](#identifying-the-compiler-hcc-hip-clang-or-nvcc)
   * [Identifying Current Compilation Pass: Host or Device](#identifying-current-compilation-pass-host-or-device)
   * [Compiler Defines: Summary](#compiler-defines-summary)
 - [Identifying Architecture Features](#identifying-architecture-features)
