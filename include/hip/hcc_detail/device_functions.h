@@ -110,6 +110,13 @@ __device__ static inline unsigned int __bitinsert_u32(unsigned int src0, unsigne
     return ((src0 & ~(mask << offset)) | ((src1 & mask) << offset));
 }
 
+__device__ static inline uint64_t __bitinsert_u64(uint64_t src0, uint64_t src1, unsigned int src2, unsigned int src3) {
+    uint64_t offset = src2 & 63;
+    uint64_t width = src3 & 63;
+    uint64_t mask = (1 << width) - 1;
+    return ((src0 & ~(mask << offset)) | ((src1 & mask) << offset));
+}
+
 __device__ static unsigned int __byte_perm(unsigned int x, unsigned int y, unsigned int s);
 __device__ static unsigned int __hadd(int x, int y);
 __device__ static int __mul24(int x, int y);
