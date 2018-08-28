@@ -471,6 +471,7 @@ hc_get_workitem_absolute_id(int dim)
 #include <__clang_cuda_complex_builtins.h>
 #include <cuda_wrappers/algorithm>
 #include <cuda_wrappers/complex>
+#include <cuda_wrappers/new>
 #undef __CUDA__
 #pragma pop_macro("__CUDA__")
 
