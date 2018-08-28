@@ -63,22 +63,6 @@ __device__ static inline unsigned int __clzll(long long int input) {
     return input == 0 ? 64 : input > 0 ? __builtin_clzl(input) : __builtin_clzl(~input);
 }
 
-__device__ static inline unsigned int __lastbit_u32_u64(unsigned long long int input) {
-  return input == 0 ? -1 : __builtin_ctzl(input);
-}
-
-__device__ static inline unsigned int __bitextract_u32(unsigned int src0, unsigned int src1, unsigned int src2) {
-  return (src0 << (32 - src1 - src2)) >> (32 - src2);
-}
-
-__device__ static inline uint64_t __bitextract_u64(uint64_t src0, unsigned int src1, unsigned int src2) {
-  return (src0 << (64 - src1 - src2)) >> (64 - src2);
-}
-
-__device__ static inline unsigned int __bitinsert_u32(unsigned int src0, unsigned int src1, unsigned int src2, unsigned int src3) {
-  return (src0 & ~(((1 << src3) - 1) << src2)) | ((src1 & ((1 << src3) - 1)) << src2);
-}
-
 __device__ static inline unsigned int __ffs(unsigned int input) {
     return ( input == 0 ? -1 : __builtin_ctz(input) ) + 1;
 }
@@ -95,10 +79,35 @@ __device__ static inline unsigned int __ffsll(long long int input) {
     return ( input == 0 ? -1 : __builtin_ctzl(input) ) + 1;
 }
 
-__device__ static inline unsigned int __brev(unsigned int input) { return __llvm_bitrev_b32(input); }
+__device__ static inline unsigned int __brev(unsigned int input) {
+    return __llvm_bitrev_b32(input);
+}
 
 __device__ static inline unsigned long long int __brevll(unsigned long long int input) {
     return __llvm_bitrev_b64(input);
+}
+
+__device__ static inline unsigned int __lastbit_u32_u64(uint64_t input) {
+    return input == 0 ? -1 : __builtin_ctzl(input);
+}
+
+__device__ static inline unsigned int __bitextract_u32(unsigned int src0, unsigned int src1, unsigned int src2) {
+    uint32_t offset = src1 & 31;
+    uint32_t width = src2 & 31;
+    return width == 0 ? 0 : (src0 << (32 - offset - width)) >> (32 - width);
+}
+
+__device__ static inline uint64_t __bitextract_u64(uint64_t src0, unsigned int src1, unsigned int src2) {
+    uint64_t offset = src1 & 63;
+    uint64_t width = src2 & 63;
+    return width == 0 ? 0 : (src0 << (64 - offset - width)) >> (64 - width);
+}
+
+__device__ static inline unsigned int __bitinsert_u32(unsigned int src0, unsigned int src1, unsigned int src2, unsigned int src3) {
+    uint32_t offset = src2 & 31;
+    uint32_t width = src3 & 31;
+    uint32_t mask = (1 << width) - 1;
+    return ((src0 & ~(mask << offset)) | ((src1 & mask) << offset));
 }
 
 __device__ static unsigned int __byte_perm(unsigned int x, unsigned int y, unsigned int s);
