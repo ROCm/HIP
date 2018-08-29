@@ -52,7 +52,7 @@ THE SOFTWARE.
 #endif  // GENERIC_GRID_LAUNCH
 
 #define __noinline__ __attribute__((noinline))
-#define __forceinline__ __attribute__((always_inline))
+#define __forceinline__ inline __attribute__((always_inline))
 
 
 /*
@@ -71,7 +71,7 @@ THE SOFTWARE.
 #define __constant__ __attribute__((constant))
 
 #define __noinline__ __attribute__((noinline))
-#define __forceinline__ __attribute__((always_inline))
+#define __forceinline__ inline __attribute__((always_inline))
 
 #else
 
