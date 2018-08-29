@@ -172,16 +172,24 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
     {
       stage("${platform} unit testing")
       {
-        sh  """#!/usr/bin/env bash
-            set -x
-            cd ${build_dir_rel}
-            make install -j\$(nproc)
-            make build_tests -i -j\$(nproc)
-            ctest
-          """
-        // If unit tests output a junit or xunit file in the future, jenkins can parse that file
-        // to display test results on the dashboard
-        // junit "${build_dir_rel}/*.xml"
+        try
+        {
+            sh  """#!/usr/bin/env bash
+                set -x
+                cd ${build_dir_rel}
+                make install -j\$(nproc)
+                make build_tests -i -j\$(nproc)
+                ctest -T test --no-compress-output || /usr/
+              """
+        }
+        finally
+        {
+            // Parse xml using xunit to display test results on the dashboard
+            xunit (
+                thresholds: [ skipped(failureThreshold: '0'), failed(failureThreshold: '0') ],
+                tools: [ CTest(pattern: '${build_dir_rel}/Testing/**/*.xml', deleteOutputFiles: true, failIfNotNew: false, skipNoTestFiles: true, stopProcessingIfError: true) ]
+            )
+        }
       }
     }
 
