@@ -380,7 +380,7 @@ endmacro()
 ###############################################################################
 macro(HIP_PREPARE_TARGET_COMMANDS _target _format _generated_files _source_files)
     set(_hip_flags "")
-    string(TOUPPER _hip_build_configuration "${CMAKE_BUILD_TYPE}")
+    string(TOUPPER "${CMAKE_BUILD_TYPE}" _hip_build_configuration)
     if(HIP_HOST_COMPILATION_CPP)
         set(HIP_C_OR_CXX CXX)
     else()
