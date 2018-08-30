@@ -119,7 +119,8 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  *ms = static_cast<float>(eStop->event_->profilingInfo().submitted_ - eStart->event_->profilingInfo().submitted_)/1000000.f;
+  *ms = static_cast<float>(static_cast<int64_t>(eStop->event_->profilingInfo().submitted_ -
+                           eStart->event_->profilingInfo().submitted_))/1000000.f;
 
   HIP_RETURN(hipSuccess);
 }
