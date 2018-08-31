@@ -121,7 +121,7 @@ THE SOFTWARE.
         return ret;                                                                                \
     }
 #define MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(ComplexT, T)                                      \
-    __device__ __host__ ComplexT(T val) : x(val), y(val) {}                                        \
+    explicit __device__ __host__ ComplexT(T val) : x(val), y(val) {}                               \
     __device__ __host__ ComplexT(T val1, T val2) : x(val1), y(val2) {}
 
 #endif
@@ -130,8 +130,8 @@ struct hipFloatComplex {
 #ifdef __cplusplus
    public:
    typedef float value_type;
-    __device__ __host__ hipFloatComplex() : x(0.0f), y(0.0f) {}
-    __device__ __host__ hipFloatComplex(float x) : x(x), y(0.0f) {}
+    explicit __device__ __host__ hipFloatComplex() : x(0.0f), y(0.0f) {}
+    explicit __device__ __host__ hipFloatComplex(float x) : x(x), y(0.0f) {}
     __device__ __host__ hipFloatComplex(float x, float y) : x(x), y(y) {}
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, unsigned short)
     MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, signed short)
