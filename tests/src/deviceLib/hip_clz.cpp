@@ -67,6 +67,21 @@ unsigned int firstbit_u64(unsigned long long int a) {
     return pos;
 }
 
+// Check implicit conversion will not cause ambiguity.
+__device__ void test_ambiguity() {
+  short s;
+  unsigned short us;
+  float f;
+  int i;
+  unsigned int ui;
+  __clz(f);
+  __clz(s);
+  __clz(us);
+  __clzll(f);
+  __clzll(i);
+  __clzll(ui);
+}
+
 __global__ void HIP_kernel(hipLaunchParm lp, unsigned int* a, unsigned int* b, unsigned int* c,
                            unsigned long long int* d, int width, int height) {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
