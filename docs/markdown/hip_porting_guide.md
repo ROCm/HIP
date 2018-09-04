@@ -13,7 +13,7 @@ and provides practical suggestions on how to port CUDA code and work through com
   * [Converting a project "in-place"](#converting-a-project-in-place)
 - [Distinguishing Compiler Modes](#distinguishing-compiler-modes)
   * [Identifying HIP Target Platform](#identifying-hip-target-platform)
-  * [Identifying the Compiler: hcc or nvcc](#identifying-the-compiler-hcc-or-nvcc)
+  * [Identifying the Compiler: hcc, hip-clang, or nvcc](#identifying-the-compiler-hcc-hip-clang-or-nvcc)
   * [Identifying Current Compilation Pass: Host or Device](#identifying-current-compilation-pass-host-or-device)
   * [Compiler Defines: Summary](#compiler-defines-summary)
 - [Identifying Architecture Features](#identifying-architecture-features)
@@ -137,12 +137,17 @@ All HIP projects target either the hcc or nvcc platform. The platform affects wh
 Many projects use a mixture of an accelerator compiler (hcc or nvcc) and a standard compiler (e.g., g++). These defines are set for both accelerator and standard compilers and thus are often the best option when writing code that uses conditional compilation.
  
  
-### Identifying the Compiler: hcc or nvcc
-Often, its useful to know whether the underlying compiler is hcc or nvcc. This knowledge can guard platform-specific code (features that only work on the nvcc or hcc path but not both) or aid in platform-specific performance tuning.   
+### Identifying the Compiler: hcc, hip-clang or nvcc
+Often, its useful to know whether the underlying compiler is hcc, hip-clang or nvcc. This knowledge can guard platform-specific code (features that only work on the nvcc, hip-clang or hcc path but not all) or aid in platform-specific performance tuning.   
  
 ```
 #ifdef __HCC__
 // Compiled with hcc 
+ 
+```
+```
+#ifdef __HIP__
+// Compiled with hip-clang 
  
 ```
  
@@ -159,9 +164,9 @@ Often, its useful to know whether the underlying compiler is hcc or nvcc. This
 // Compiled with nvcc (Cuda language extensions enabled) 
 ```
  
-hcc directly generates the host code (using the Clang x86 target) and passes the code to another host compiler. Thus, it lacks the equivalent of the \__CUDA_ACC define.
+hcc and hip-clang directly generates the host code (using the Clang x86 target) and passes the code to another host compiler. Thus, it lacks the equivalent of the \__CUDA_ACC define.
  
-The macro `__HIPCC__` is set if either `__HCC__` or `__CUDACC__` is defined. This configuration is useful in determining when code is being compiled using an accelerator-enabled compiler (hcc or nvcc) as opposed to a standard host compiler (GCC, ICC, Clang, etc.).
+The macro `__HIPCC__` is set if either `__HCC__`, `__HIP__` or `__CUDACC__` is defined. This configuration is useful in determining when code is being compiled using an accelerator-enabled compiler (hcc or nvcc) as opposed to a standard host compiler (GCC, ICC, Clang, etc.).
  
 ### Identifying Current Compilation Pass: Host or Device
  
@@ -176,22 +181,25 @@ Unlike `__CUDA_ARCH__`, the `__HIP_DEVICE_COMPILE__` value is 1 or undefined, an
 
 
 ### Compiler Defines: Summary
-|Define  		|  hcc      | nvcc 		|  Other (GCC, ICC, Clang, etc.) 
-|--- | --- | --- |---|
+|Define  		|  hcc      |  hip-clang  | nvcc 		|  Other (GCC, ICC, Clang, etc.) 
+|--- | --- | --- | --- |---|
 |HIP-related defines:|
-|`__HIP_PLATFORM_HCC___`| Defined | Undefined |  Defined if targeting hcc platform; undefined otherwise |
-|`__HIP_PLATFORM_NVCC___`| Undefined | Defined |  Defined if targeting nvcc platform; undefined otherwise |
-|`__HIP_DEVICE_COMPILE__`     | 1 if compiling for device; undefined if compiling for host  |1 if compiling for device; undefined if compiling for host  | Undefined 
-|`__HIPCC__`		| Defined   | Defined 		|  Undefined
-|`__HIP_ARCH_*` | 0 or 1 depending on feature support (see below) | 0 or 1 depending on feature support (see below) | 0 
+|`__HIP_PLATFORM_HCC___`| Defined | Defined | Undefined |  Defined if targeting hcc platform; undefined otherwise |
+|`__HIP_PLATFORM_NVCC___`| Undefined | Undefined | Defined |  Defined if targeting nvcc platform; undefined otherwise |
+|`__HIP_DEVICE_COMPILE__`     | 1 if compiling for device; undefined if compiling for host  | 1 if compiling for device; undefined if compiling for host  |1 if compiling for device; undefined if compiling for host  | Undefined 
+|`__HIPCC__`		| Defined   | Defined | Defined 		|  Undefined
+|`__HIP_ARCH_*` | 0 or 1 depending on feature support (see below) |0 or 1 depending on feature support (see below) | 0 or 1 depending on feature support (see below) | 0 
 |nvcc-related defines:|
-|`__CUDACC__` 		| Undefined | Defined if source code is compiled by nvcc; undefined otherwise 		|  Undefined
-|`__NVCC__` 		| Undefined | Defined 		|  Undefined
-|`__CUDA_ARCH__`		| Undefined | Unsigned representing compute capability (e.g., "130") if in device code; 0 if in host code  | Undefined 
+|`__CUDACC__` 		| Undefined | Undefined | Defined if source code is compiled by nvcc; undefined otherwise 		|  Undefined
+|`__NVCC__` 		| Undefined | Undefined | Defined 		|  Undefined
+|`__CUDA_ARCH__`		| Undefined | Undefined | Unsigned representing compute capability (e.g., "130") if in device code; 0 if in host code  | Undefined 
 |hcc-related defines:|
-|`__HCC__`  		| Defined   | Undefined   	|  Undefined
-|`__HCC_ACCELERATOR__`  	| Nonzero if in device code; otherwise undefined | Undefined | Undefined 
-|`__clang__`		| Defined   | Undefined 	|  Defined if using Clang; otherwise undefined
+|`__HCC__`  		| Defined   | Undefined | Undefined   	|  Undefined
+|`__HCC_ACCELERATOR__`  	| Nonzero if in device code; otherwise undefined | Undefined | Undefined | Undefined 
+|hip-clang-related defines:|
+|`__HIP__`  		| Undefined | Defined   | Undefined   	|  Undefined
+|hcc/hip-clang common defines:|
+|`__clang__`		| Defined   | Defined | Undefined 	|  Defined if using Clang; otherwise undefined
 
 
 ## Identifying Architecture Features
