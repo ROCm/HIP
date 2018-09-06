@@ -65,6 +65,15 @@ static hipError_t ihipStreamCreateWithFlags(hipStream_t *stream, unsigned int fl
   return hipSuccess;
 }
 
+
+void ihipStreamCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData) {
+    //Stream synchronize
+    hipError_t status = hipStreamSynchronize(stream);
+
+    // Call the callback function
+    callback(stream, status, userData);
+}
+
 hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
   HIP_INIT_API(stream, flags);
 
@@ -162,18 +171,22 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
 hipError_t hipStreamQuery(hipStream_t stream) {
   HIP_INIT_API(stream);
 
-  assert(0 && "Unimplemented");
-
-  HIP_RETURN(hipErrorUnknown);
+  amd::HostQueue* hostQueue;
+  if (stream == nullptr) {
+    hostQueue = hip::getNullStream();
+  } else {
+    hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
+  }
+  HIP_RETURN(hostQueue->isEmpty() ? hipSuccess : hipErrorNotReady);
 }
 
 hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
                                 unsigned int flags) {
   HIP_INIT_API(stream, callback, userData, flags);
 
-  assert(0 && "Unimplemented");
+  std::thread (ihipStreamCallback, stream, callback, userData).detach();
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipSuccess);
 }
 
 
