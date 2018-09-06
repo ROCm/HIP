@@ -635,37 +635,37 @@ THE SOFTWARE.
             // TODO: rounding behaviour is not correct.
             // float -> half | half2
             inline
-            __device__
+            __device__ __host__
             __half __float2half(float x)
             {
                 return __half_raw{static_cast<_Float16>(x)};
             }
             inline
-            __device__
+            __device__ __host__
             __half __float2half_rn(float x)
             {
                 return __half_raw{static_cast<_Float16>(x)};
             }
             inline
-            __device__
+            __device__ __host__
             __half __float2half_rz(float x)
             {
                 return __half_raw{static_cast<_Float16>(x)};
             }
             inline
-            __device__
+            __device__ __host__
             __half __float2half_rd(float x)
             {
                 return __half_raw{static_cast<_Float16>(x)};
             }
             inline
-            __device__
+            __device__ __host__
             __half __float2half_ru(float x)
             {
                 return __half_raw{static_cast<_Float16>(x)};
             }
             inline
-            __device__
+            __device__ __host__
             __half2 __float2half2_rn(float x)
             {
                 return __half2_raw{
@@ -673,14 +673,14 @@ THE SOFTWARE.
                         static_cast<_Float16>(x), static_cast<_Float16>(x)}};
             }
             inline
-            __device__
+            __device__ __host__
             __half2 __floats2half2_rn(float x, float y)
             {
                 return __half2_raw{_Float16_2{
                     static_cast<_Float16>(x), static_cast<_Float16>(y)}};
             }
             inline
-            __device__
+            __device__ __host__
             __half2 __float22half2_rn(float2 x)
             {
                 return __floats2half2_rn(x.x, x.y);
@@ -688,25 +688,25 @@ THE SOFTWARE.
 
             // half | half2 -> float
             inline
-            __device__
+            __device__ __host__
             float __half2float(__half x)
             {
                 return static_cast<__half_raw>(x).data;
             }
             inline
-            __device__
+            __device__ __host__
             float __low2float(__half2 x)
             {
                 return static_cast<__half2_raw>(x).data.x;
             }
             inline
-            __device__
+            __device__ __host__
             float __high2float(__half2 x)
             {
                 return static_cast<__half2_raw>(x).data.y;
             }
             inline
-            __device__
+            __device__ __host__
             float2 __half22float2(__half2 x)
             {
                 return make_float2(
