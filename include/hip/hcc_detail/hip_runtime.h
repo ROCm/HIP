@@ -161,8 +161,7 @@ extern int HIP_TRACE_API;
 // misc
 #define __HIP_ARCH_HAS_SURFACE_FUNCS__ (0)
 #define __HIP_ARCH_HAS_3DGRID__ (1)
-#define __HIP_ARCH_HAS_DYNAMIC_PARALLEL__ (0)
-
+//ToDo: Define __HIP_ARCH_HAS_DYNAMIC_PARALLEL__ when it is ready.
 #endif /* Device feature flags */
 
 
