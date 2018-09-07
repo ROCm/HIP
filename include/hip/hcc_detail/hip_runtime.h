@@ -346,15 +346,18 @@ extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, gri
 
 typedef int hipLaunchParm;
 
-#define hipLaunchKernel(kernelName, numblocks, numthreads, memperblock, streamId, ...)             \
-    do {                                                                                           \
-        kernelName<<<numblocks, numthreads, memperblock, streamId>>>(0, ##__VA_ARGS__);            \
-    } while (0)
+template <typename... Args, typename F = void (*)(Args...)>
+inline void hipLaunchKernelGGL(F kernelName, const dim3& numblocks, const dim3& numthreads,
+                               unsigned memperblock, hipStream_t streamId, Args... args) {
+  kernelName<<<numblocks, numthreads, memperblock, streamId>>>(args...);
+}
 
-#define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
-    do {                                                                                           \
-        kernelName<<<numblocks, numthreads, memperblock, streamId>>>(__VA_ARGS__);                 \
-    } while (0)
+template <typename... Args, typename F = void (*)(hipLaunchParm, Args...)>
+inline void hipLaunchKernel(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
+                            std::uint32_t groupMemBytes, hipStream_t stream, Args... args) {
+    hipLaunchKernelGGL(kernel, numBlocks, dimBlocks, groupMemBytes, stream, hipLaunchParm{},
+                       std::move(args)...);
+}
 
 #include <hip/hip_runtime_api.h>
 
