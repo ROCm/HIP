@@ -1304,6 +1304,32 @@ float func(float x, int y) \
 }
 __DEF_FLOAT_FUN2I(scalbn)
 
+#if __HCC__
+template<class T>
+__DEVICE__ __host__ inline static const T min(T arg1, T arg2) {
+  return std::min(arg1, arg2);
+}
+
+template<class T>
+__DEVICE__ __host__ inline static const T max(T arg1, T arg2) {
+  return std::max(arg1, arg2);
+}
+#else
+__device__ inline static int min(int arg1, int arg2) {
+  return (arg1 < arg2) ? arg1 : arg2;
+}
+__device__ inline static int max(int arg1, int arg2) {
+  return (arg1 > arg2) ? arg1 : arg2;
+}
+
+__host__ inline static int min(int arg1, int arg2) {
+  return std::min(arg1, arg2);
+}
+
+__host__ inline static int max(int arg1, int arg2) {
+  return std::max(arg1, arg2);
+}
+
 __DEVICE__
 inline
 float max(float x, float y) {
@@ -1330,6 +1356,8 @@ double min(double x, double y) {
 
 __HIP_OVERLOAD2(double, max)
 __HIP_OVERLOAD2(double, min)
+
+#endif
 
 #pragma pop_macro("__DEF_FLOAT_FUN")
 #pragma pop_macro("__DEF_FLOAT_FUN2")
