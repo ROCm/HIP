@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <unordered_set>
 #include <thread>
 #include <stack>
+#include <mutex>
 
 #define HIP_INIT() \
   std::call_once(hip::g_ihipInitialized, hip::init);        \
