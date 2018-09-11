@@ -78,6 +78,7 @@ extern amd::Memory* getMemoryObject(const void* ptr, size_t& offset);
 
 #define HIP_RETURN(ret)          \
         hip::g_lastError = ret;  \
+        DebugInfoGuarantee(hip::g_lastError == hipSuccess); \
         return hip::g_lastError; \
 
 
