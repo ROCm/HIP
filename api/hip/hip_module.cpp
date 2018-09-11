@@ -132,6 +132,14 @@ hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod, const ch
   HIP_RETURN(hipSuccess);
 }
 
+
+hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod, const char* name)
+{
+  HIP_INIT_API(dptr, bytes, hmod, name);
+
+  HIP_RETURN(hipSuccess);
+}
+
 hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 {
   HIP_INIT_API(attr, func);
