@@ -131,6 +131,14 @@ hipError_t hipCtxGetCurrent(hipCtx_t* ctx) {
   HIP_RETURN(hipSuccess);
 }
 
+hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig) {
+  HIP_INIT_API(pConfig);
+
+  *pConfig = hipSharedMemBankSizeFourByte;
+
+  HIP_RETURN(hipSuccess);
+}
+
 hipError_t hipRuntimeGetVersion(int *runtimeVersion) {
   HIP_INIT_API(runtimeVersion);
 
