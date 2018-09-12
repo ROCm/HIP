@@ -1307,12 +1307,12 @@ __DEF_FLOAT_FUN2I(scalbn)
 #if __HCC__
 template<class T>
 __DEVICE__ inline static T min(T arg1, T arg2) {
-  return std::min(arg1, arg2);
+  return (arg1 < arg2) ? arg1 : arg2;
 }
 
 template<class T>
 __DEVICE__ inline static T max(T arg1, T arg2) {
-  return std::max(arg1, arg2);
+  return (arg1 > arg2) ? arg1 : arg2;
 }
 #else
 __DEVICE__ inline static int min(int arg1, int arg2) {
