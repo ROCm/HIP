@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp
+ * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS -std=c++11
  * RUN: %t
  * HIT_END
  */
@@ -215,6 +215,7 @@ template<
     typename T, 
     typename enable_if<
         is_same<T, int>{} || is_same<T, unsigned int>{}>::type* = nullptr>
+__device__
 void testKernelSub(T* g_odata) {
     // Atomic subtraction (final should be 0)
     atomicSub(&g_odata[1], 10);
@@ -326,9 +327,15 @@ int main(int argc, char** argv) {
 
     runTest<int>();
     runTest<unsigned int>();
+#if !defined(__HIP_PLATFORM_NVCC__)
+    // most atomics don't seem to be supported for "unsigned long long"
     runTest<unsigned long long>();
+#endif
     runTest<float>();
+#if !defined(__HIP_PLATFORM_NVCC__)
+    // atomicAdd does not seem to be supported for "double"
     runTest<double>();
+#endif
 
     hipDeviceReset();
     printf("%s completed, returned %s\n", sampleName, testResult ? "OK" : "ERROR!");
