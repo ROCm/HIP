@@ -1310,10 +1310,52 @@ __DEVICE__ inline static T min(T arg1, T arg2) {
   return (arg1 < arg2) ? arg1 : arg2;
 }
 
+__DEVICE__ inline static uint32_t min(uint32_t arg1, int32_t arg2) {
+  return min(arg1, (uint32_t) arg2);
+}
+/*__DEVICE__ inline static uint32_t min(int32_t arg1, uint32_t arg2) {
+  return min((uint32_t) arg1, arg2);
+}
+
+__DEVICE__ inline static uint64_t min(uint64_t arg1, int64_t arg2) {
+  return min(arg1, (uint64_t) arg2);
+}
+__DEVICE__ inline static uint64_t min(int64_t arg1, uint64_t arg2) {
+  return min((uint64_t) arg1, arg2);
+}
+
+__DEVICE__ inline static unsigned long long min(unsigned long long arg1, long long arg2) {
+  return min(arg1, (unsigned long long) arg2);
+}
+__DEVICE__ inline static unsigned long long min(long long arg1, unsigned long long arg2) {
+  return min((unsigned long long) arg1, arg2);
+}*/
+
 template<class T>
 __DEVICE__ inline static T max(T arg1, T arg2) {
   return (arg1 > arg2) ? arg1 : arg2;
 }
+
+__DEVICE__ inline static uint32_t max(uint32_t arg1, int32_t arg2) {
+  return max(arg1, (uint32_t) arg2);
+}
+__DEVICE__ inline static uint32_t max(int32_t arg1, uint32_t arg2) {
+  return max((uint32_t) arg1, arg2);
+}
+
+/*__DEVICE__ inline static uint64_t max(uint64_t arg1, int64_t arg2) {
+  return max(arg1, (uint64_t) arg2);
+}
+__DEVICE__ inline static uint64_t max(int64_t arg1, uint64_t arg2) {
+  return max((uint64_t) arg1, arg2);
+}
+
+__DEVICE__ inline static unsigned long long max(unsigned long long arg1, long long arg2) {
+  return max(arg1, (unsigned long long) arg2);
+}
+__DEVICE__ inline static unsigned long long max(long long arg1, unsigned long long arg2) {
+  return max((unsigned long long) arg1, arg2);
+}*/
 #else
 __DEVICE__ inline static int min(int arg1, int arg2) {
   return (arg1 < arg2) ? arg1 : arg2;
