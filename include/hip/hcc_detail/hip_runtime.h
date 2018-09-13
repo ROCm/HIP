@@ -264,19 +264,16 @@ extern "C" __device__ void* __hip_hc_free(void* ptr);
 static inline __device__ void* malloc(size_t size) { return __hip_hc_malloc(size); }
 static inline __device__ void* free(void* ptr) { return __hip_hc_free(ptr); }
 
-#ifdef __HCC_ACCELERATOR__
-
-#ifdef HC_FEATURE_PRINTF
+#if defined(__HCC_ACCELERATOR__) && defined(HC_FEATURE_PRINTF)
 template <typename... All>
 static inline __device__ void printf(const char* format, All... all) {
     hc::printf(format, all...);
 }
-#else
+#elif defined(__HCC_ACCELERATOR__) || __HIP__
 template <typename... All>
 static inline __device__ void printf(const char* format, All... all) {}
 #endif
 
-#endif
 #endif //__HCC_OR_HIP_CLANG__
 
 #ifdef __HCC__
