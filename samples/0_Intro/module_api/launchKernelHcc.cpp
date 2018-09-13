@@ -34,7 +34,7 @@ THE SOFTWARE.
 #define LEN 64
 #define SIZE LEN << 2
 
-#define fileName "vcpy_kernel.code.adipose"
+#define fileName "vcpy_kernel.code"
 #define kernel_name "hello_world"
 
 #define HIP_CHECK(status)                                                                          \
