@@ -31,10 +31,62 @@ static const int BLOCKS = 512;
 static const int THREADS_PER_BLOCK = 1;
 static const int ENABLE_DESTRUCTOR_TEST = 0;
 static const int ENABLE_VIRTUAL_TESTS = 0;
+static const int ENABLE_FRIEND_TEST = 0;
+static const int ENABLE_OVERLAD_OVERRIDE_TESTS = 0;
 size_t NBOOL = BLOCKS * sizeof(bool);
 
 #define test_passed(test_name) printf("%s %s  PASSED!%s\n", KGRN, #test_name, KNRM);
 
+#ifdef ENABLE_OVERLOAD_OVERRIDE_TESTS
+class testFuncOvld{
+  public:
+  int __host__ __device__ func1(int a){
+    return a + 10;  
+  }
+
+  int __host__ __device__ func1(int a , int b){
+    return a + b + 10;  
+  }
+
+};
+
+
+class testOvrB{
+  public:
+  int __host__ __device__ ovrdFunc1(){
+    return  10;  
+  }
+
+
+};
+
+
+class testOvrD: public testOvrB{
+  public:
+    int __host__ __device__ ovrdFunc1(){
+    int x = testOvrB::ovrdFunc1();
+     return x + 20;
+    }
+
+};
+#endif
+
+#ifdef ENABLE_FRIEND_TEST
+class testFrndA{
+   private:
+       int fa = 10;
+   public:
+      friend class testFrndB;
+};
+ 
+class testFrndB{
+    public:
+      __host__ __device__ int showA(){
+         testFrndA x;
+          return x.fa;
+     }
+};
+#endif
 
 class testClassEmpty {};
 
@@ -177,7 +229,9 @@ class HipClassTests{
     void TestForPassByValue(void);
     void TestForMallocPassByValue(void);
     void TestForConsrtDesrt(void);
-    
+    void TestForOverload(void);
+    void TestForOverride(void);
+ 
     bool* AllocateHostMemory(void);
     bool* AllocateDeviceMemory(void);
     void VerifyResult(bool* result_ech, bool* result_ecd);
