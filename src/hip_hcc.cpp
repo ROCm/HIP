@@ -1228,7 +1228,7 @@ void HipReadEnv() {
 
     READ_ENV_C(release, HIP_DB, 0,
                "Print debug info.  Bitmask (HIP_DB=0xff) or flags separated by '+' "
-               "(HIP_DB=api+sync+mem+copy)",
+               "(HIP_DB=api+sync+mem+copy+fatbin)",
                HIP_DB_callback);
     if ((HIP_DB & (1 << DB_API)) && (HIP_TRACE_API == 0)) {
         // Set HIP_TRACE_API default before we read it, so it is printed correctly.
