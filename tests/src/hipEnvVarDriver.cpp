@@ -38,7 +38,10 @@ int getDeviceNumber() {
     string str;
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     if (!(in = popen("./directed_tests/hipEnvVar -c", "r"))) {
-        return 1;
+        // Check at same level
+        if (!(in = popen("./hipEnvVar -c", "r"))) {
+            return 1;
+        }
     }
     while (fgets(buff, 512, in) != NULL) {
         cout << buff;
@@ -54,7 +57,11 @@ void getDevicePCIBusNumRemote(int deviceID, char* pciBusID) {
     str += std::to_string(deviceID);
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     if (!(in = popen(str.c_str(), "r"))) {
-        exit(1);
+        // Check at same level
+        if (!(in = popen("./hipEnvVar -d ", "r"))) {
+            exit(1);
+        }
+
     }
     while (fgets(pciBusID, 100, in) != NULL) {
         cout << pciBusID;
