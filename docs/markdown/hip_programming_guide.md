@@ -96,3 +96,17 @@ Following environment variables can be used to control the transfer thresholds:
 -   HCC_H2D_PININPLACE_THRESHOLD - Threshold in KB for H2D copy. For sizes smaller than threshold staging buffers logic would be used else PinInPlace logic. By default it is set to 4096.
 
 -   HCC_D2H_PININPLACE_THRESHOLD  - Threshold in KB for D2H copy. For sizes smaller than threshold staging buffer logic would be used else PinInPlace logic. By default it is set to 1024.
+
+## Device-Side Malloc
+
+hip-hcc and hip-clang supports device-side malloc and free. Users can allocate
+memory dynamically in a kernel. The allocated memory are in global address
+space, however, different threads get different memory allocations for the same
+call of malloc. The allocated memory can be accessed or freed by other threads
+or other kernels. It persists in the life time of the HIP program until it is
+freed.
+
+The memory are allocated in pages. Users can define macro
+`__HIP_SIZE_OF_PAGE` for controlling the page size in bytes and macro
+`__HIP_NUM_PAGES` for controlling the total number of pages that can be
+allocated.

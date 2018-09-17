@@ -199,16 +199,6 @@ __device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask
 
 #endif  //__HIP_ARCH_GFX803__ == 1
 
-__device__ inline static int min(int arg1, int arg2) {
-    return (arg1 < arg2) ? arg1 : arg2;
-}
-__device__ inline static int max(int arg1, int arg2) {
-    return (arg1 > arg2) ? arg1 : arg2;
-}
-
-__host__ inline static int min(int arg1, int arg2) { return std::min(arg1, arg2); }
-__host__ inline static int max(int arg1, int arg2) { return std::max(arg1, arg2); }
-
 #endif  // __HCC_OR_HIP_CLANG__
 
 #if defined __HCC__
@@ -258,25 +248,22 @@ static constexpr Coordinates<hc_get_workitem_id> threadIdx;
 
 #endif // defined __HCC__
 #if __HCC_OR_HIP_CLANG__
-extern "C" __device__ void* __hip_hc_malloc(size_t);
-extern "C" __device__ void* __hip_hc_free(void* ptr);
+extern "C" __device__ void* __hip_malloc(size_t);
+extern "C" __device__ void* __hip_free(void* ptr);
 
-static inline __device__ void* malloc(size_t size) { return __hip_hc_malloc(size); }
-static inline __device__ void* free(void* ptr) { return __hip_hc_free(ptr); }
+static inline __device__ void* malloc(size_t size) { return __hip_malloc(size); }
+static inline __device__ void* free(void* ptr) { return __hip_free(ptr); }
 
-#ifdef __HCC_ACCELERATOR__
-
-#ifdef HC_FEATURE_PRINTF
+#if defined(__HCC_ACCELERATOR__) && defined(HC_FEATURE_PRINTF)
 template <typename... All>
 static inline __device__ void printf(const char* format, All... all) {
     hc::printf(format, all...);
 }
-#else
+#elif defined(__HCC_ACCELERATOR__) || __HIP__
 template <typename... All>
 static inline __device__ void printf(const char* format, All... all) {}
 #endif
 
-#endif
 #endif //__HCC_OR_HIP_CLANG__
 
 #ifdef __HCC__
@@ -346,15 +333,18 @@ extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, gri
 
 typedef int hipLaunchParm;
 
-#define hipLaunchKernel(kernelName, numblocks, numthreads, memperblock, streamId, ...)             \
-    do {                                                                                           \
-        kernelName<<<numblocks, numthreads, memperblock, streamId>>>(0, ##__VA_ARGS__);            \
-    } while (0)
+template <typename... Args, typename F = void (*)(Args...)>
+inline void hipLaunchKernelGGL(F kernelName, const dim3& numblocks, const dim3& numthreads,
+                               unsigned memperblock, hipStream_t streamId, Args... args) {
+  kernelName<<<numblocks, numthreads, memperblock, streamId>>>(args...);
+}
 
-#define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
-    do {                                                                                           \
-        kernelName<<<numblocks, numthreads, memperblock, streamId>>>(__VA_ARGS__);                 \
-    } while (0)
+template <typename... Args, typename F = void (*)(hipLaunchParm, Args...)>
+inline void hipLaunchKernel(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
+                            std::uint32_t groupMemBytes, hipStream_t stream, Args... args) {
+    hipLaunchKernelGGL(kernel, numBlocks, dimBlocks, groupMemBytes, stream, hipLaunchParm{},
+                       std::move(args)...);
+}
 
 #include <hip/hip_runtime_api.h>
 
@@ -436,6 +426,8 @@ extern const __device__ __attribute__((weak)) __hip_builtin_gridDim_t gridDim;
 #define hipGridDim_y gridDim.y
 #define hipGridDim_z gridDim.z
 
+#include <hip/hcc_detail/math_functions.h>
+
 #if __HIP_HCC_COMPAT_MODE__
 // Define HCC work item functions in terms of HIP builtin variables.
 #pragma push_macro("__DEFINE_HCC_FUNC")
@@ -471,10 +463,10 @@ hc_get_workitem_absolute_id(int dim)
 #include <__clang_cuda_complex_builtins.h>
 #include <cuda_wrappers/algorithm>
 #include <cuda_wrappers/complex>
+#include <cuda_wrappers/new>
 #undef __CUDA__
 #pragma pop_macro("__CUDA__")
 
-#include <hip/hcc_detail/math_functions.h>
 
 hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
@@ -485,5 +477,7 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipEvent_t stopEvent = nullptr);
 
 #endif // defined(__clang__) && defined(__HIP__)
+
+#include <hip/hcc_detail/hip_memory.h>
 
 #endif  // HIP_HCC_DETAIL_RUNTIME_H

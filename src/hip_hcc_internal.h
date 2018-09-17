@@ -223,7 +223,8 @@ extern const char* API_COLOR_END;
 #define DB_MEM 2  /* 0x04 - trace memory allocation / deallocation */
 #define DB_COPY 3 /* 0x08 - trace memory copy and peer commands. . */
 #define DB_WARN 4 /* 0x10 - warn about sub-optimal or shady behavior */
-#define DB_MAX_FLAG 5
+#define DB_FB 5   /* 0x20 - trace loading fat binary */
+#define DB_MAX_FLAG 6
 // When adding a new debug flag, also add to the char name table below.
 //
 //
@@ -237,6 +238,7 @@ struct DbName {
 static const DbName dbName[] = {
     {KGRN, "api"},  // not used,
     {KYEL, "sync"}, {KCYN, "mem"}, {KMAG, "copy"}, {KRED, "warn"},
+    {KBLU, "fatbin"},
 };
 
 
