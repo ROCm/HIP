@@ -26,11 +26,15 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 #include "test_common.h"
+
+#include <algorithm>
 #include <vector>
+
 unsigned p_streams = 16;
 int p_repeat = 10;
 int p_db = 0;
 
+using namespace std;
 
 template <typename T>
 __global__ void vectorADDRepeat(hipLaunchParm lp, const T* A_d, const T* B_d, T* C_d, size_t NELEM,

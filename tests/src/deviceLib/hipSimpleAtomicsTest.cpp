@@ -215,6 +215,7 @@ template<
     typename T, 
     typename enable_if<
         is_same<T, int>{} || is_same<T, unsigned int>{}>::type* = nullptr>
+__device__
 void testKernelSub(T* g_odata) {
     // Atomic subtraction (final should be 0)
     atomicSub(&g_odata[1], 10);

@@ -71,7 +71,7 @@ THE SOFTWARE.
 //---
 // Remainder of this file only compiles with HCC
 #if defined __HCC__
-#include <grid_launch.h>
+#include "grid_launch.h"
 #include "hc_printf.hpp"
 // TODO-HCC-GL - change this to typedef.
 // typedef grid_launch_parm hipLaunchParm ;
@@ -109,9 +109,6 @@ extern int HIP_TRACE_API;
 #include <hip/hcc_detail/device_functions.h>
 #include <hip/hcc_detail/surface_functions.h>
 #include <hip/hcc_detail/texture_functions.h>
-#if __HCC__
-#include <hip/hcc_detail/math_functions.h>
-#endif // __HCC__
 
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
 #if defined(__KALMAR_ACCELERATOR__) && !defined(__HCC_ACCELERATOR__)
