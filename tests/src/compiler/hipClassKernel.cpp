@@ -26,6 +26,66 @@ THE SOFTWARE.
  */
 #include "hipClassKernel.h"
 
+#ifdef ENABLE_OVERLOAD_OVERRIDE_TESTS
+__global__ void
+ovrdClassKernel(bool* result_ecd){
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    testOvrD tobj1;
+     result_ecd[tid] = (tobj1.ovrdFunc1() == 30);
+}
+
+void HipClassTests::TestForOverride(void){
+  bool *result_ecd, *result_ech;
+  result_ech = HipClassTests::AllocateHostMemory();
+  result_ecd = HipClassTests::AllocateDeviceMemory();
+
+  hipLaunchKernelGGL(ovrdClassKernel,
+                     dim3(BLOCKS),
+                     dim3(THREADS_PER_BLOCK),
+                     0,
+                     0,
+                     result_ecd);
+  
+  HipClassTests::VerifyResult(result_ech,result_ecd);
+  HipClassTests::FreeMem(result_ech,result_ecd);
+}
+
+
+__global__ void
+ovldClassKernel(bool* result_ecd){
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    testFuncOvld tfo1;
+     result_ecd[tid] = (tfo1.func1(10) == 20)
+                       && (tfo1.func1(10,10) == 30);
+}
+
+void HipClassTests::TestForOverload(void){
+  bool *result_ecd, *result_ech;
+  result_ech = HipClassTests::AllocateHostMemory();
+  result_ecd = HipClassTests::AllocateDeviceMemory();
+
+  hipLaunchKernelGGL(ovldClassKernel,
+                     dim3(BLOCKS),
+                     dim3(THREADS_PER_BLOCK),
+                     0,
+                     0,
+                     result_ecd);
+  
+  HipClassTests::VerifyResult(result_ech,result_ecd);
+  HipClassTests::FreeMem(result_ech,result_ecd);
+}
+#endif
+
+#ifdef ENABLE_FRIEND_TEST 
+// check for friend
+__global__ void
+friendClassKernel(bool* result_ecd){
+    int tid = threadIdx.x + blockIdx.x * blockDim.x;
+    testFrndB tfb1;
+     result_ecd[tid] = (tfb1.showA() == 10);
+}
+#endif
+
 // check sizeof empty class is 1
 __global__ void
 emptyClassKernel(bool* result_ecd) {
@@ -209,6 +269,20 @@ void HipClassTests::TestForConsrtDesrt(){
 }
 #endif
 
+#ifdef ENABLE_FRIEND_TEST
+void HipClassTests::TestForFriend(void){
+    bool *result_ecd, *result_ech;
+    result_ech = HipClassTests::AllocateHostMemory();
+    result_ecd = HipClassTests::AllocateDeviceMemory();
+    hipLaunchKernelGGL(friendClassKernel,
+                       dim3(BLOCKS),
+                       dim3(THREADS_PER_BLOCK),
+                       0,
+                       0,
+                       result_ecd);
+}
+#endif
+
 bool* HipClassTests::AllocateHostMemory(void){
   bool *result_ech;
   HIPCHECK(hipHostMalloc(&result_ech,
@@ -253,6 +327,19 @@ int main(){
   test_passed(TestForClassSize);
   classTests.TestForPassByValue();
   test_passed(TestForPassByValue);
+
+#ifdef ENABLE_OVERLOAD_OVERRIDE_TESTS
+  classTests.TestForOverload();
+  test_passed(TestForOverload);
+  classTests.TestForOverride();
+  test_passed(TestForOverride);
+#endif
+
+#ifdef ENABLE_FRIEND_TEST
+  classTests.TestForFriend();
+  test_passed(TestForFriend);
+#endif
+
 //  classTests.TestForMallocPassByValue();
  // test_passed(TestForMallocPassByValue); #this test is crashing
 
@@ -260,8 +347,6 @@ int main(){
   classTests.TestForVirtualClassSize();
   test_passed(TestForVirtualClassSize);
 #endif
-
-
 
 #ifdef ENABLE_DESTRUCTOR_TEST
   classTests.TestForConsrtDesrt();

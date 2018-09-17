@@ -593,7 +593,7 @@ __device__ static inline double __longlong_as_double(long long int x) {
     double tmp;
     __builtin_memcpy(&tmp, &x, sizeof(tmp));
 
-    return x;
+    return tmp;
 }
 
 __device__ static inline double __uint2double_rn(int x) { return (double)x; }
@@ -1036,4 +1036,5 @@ static inline __device__ void* memset(void* ptr, int val, size_t size) {
     unsigned char val8 = static_cast<unsigned char>(val);
     return __hip_hc_memset(ptr, val8, size);
 }
+
 #endif
