@@ -31,7 +31,7 @@ THE SOFTWARE.
 #include <test_common.h>
 
 #ifdef __HCC__
-#include <amp.h>
+    #include <hc.hpp>
 #endif
 
 // cudaA
@@ -93,11 +93,7 @@ __global__ void vectorADD(const hipLaunchParm lp, T __restrict__* A_d, T* B_d, T
     int b = threadIdx.x;
     int c;
 
-    // TODO - move to HIP atomics when ready.
-    concurrency ::atomic_fetch_add(&c, b);
-    // Concurrency::atomic_add_unsigned (&x, a);
-
-    // concurrency ::atomic_add_ (x, a);
+    atomicAdd(&c, b);
 #endif
 
     __syncthreads();

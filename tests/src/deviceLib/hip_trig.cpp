@@ -28,9 +28,11 @@ THE SOFTWARE.
 
 #include <hip/hip_runtime_api.h>
 #include <hip/hip_runtime.h>
-#include <iostream>
 #include "test_common.h"
 #include <hip/device_functions.h>
+#include <hip/math_functions.h>
+
+#include <iostream>
 
 #define LEN 512
 #define SIZE LEN << 2
