@@ -75,9 +75,15 @@ set_target_properties(hip::host PROPERTIES
 # Create imported target hip::device
 add_library(hip::device INTERFACE IMPORTED)
 
+if(HIP_COMPILER STREQUAL "clang")
+set_target_properties(hip::device PROPERTIES
+  INTERFACE_LINK_LIBRARIES "hip::host;hip::hip_device"
+)
+else()
 set_target_properties(hip::device PROPERTIES
   INTERFACE_LINK_LIBRARIES "hip::host;hip::hip_device;hcc::hccrt;hcc::hc_am"
 )
+endif()
 
 if(CMAKE_VERSION VERSION_LESS 3.0.0)
   message(FATAL_ERROR "This file relies on consumers using CMake 3.0.0 or greater.")

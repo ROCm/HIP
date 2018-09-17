@@ -57,6 +57,7 @@ $HIP_PATH=$ENV{'HIP_PATH'} // dirname (dirname $0); # use parent directory of hi
 $HIP_VDI_HOME=$ENV{'HIP_VDI_HOME'};
 $HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'};
 $DEVICE_LIB_PATH=$ENV{'DEVICE_LIB_PATH'};
+$HIP_CLANG_HCC_COMPAT_MODE=$ENV{'HIP_CLANG_HCC_COMPAT_MODE'}; # HCC compatibility mode
 
 #---
 # Read .hipInfo
@@ -158,6 +159,10 @@ if ($HIP_PLATFORM eq "clang") {
 
     $HIPCXXFLAGS .= " -std=c++11 -isystem $HIP_CLANG_INCLUDE_PATH";
     $HIPLDFLAGS .= " --hip-device-lib-path=$DEVICE_LIB_PATH -L$HIP_LIB_PATH -Wl,--rpath=$HIP_LIB_PATH -lhip_hcc";
+    if ($HIP_CLANG_HCC_COMPAT_MODE) {
+        ## Allow __fp16 as function parameter and return type.
+        $HIPCXXFLAGS .= " -Xclang -fallow-half-arguments-and-returns -D__HIP_HCC_COMPAT_MODE__=1";
+    }
 } elsif ($HIP_PLATFORM eq "hcc") {
     $HIP_INCLUDE_PATH = "$HIP_PATH/include";
     $HSA_PATH=$ENV{'HSA_PATH'} // "/opt/rocm/hsa";
@@ -216,7 +221,7 @@ if ($HIP_PLATFORM eq "clang") {
     $HIPCXXFLAGS .= " -I$HSA_PATH/include";
     $HIPCXXFLAGS .= " -Wno-deprecated-register";
 
-    $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am -lhsakmt ";
+    $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am ";
 #    $HIPLDFLAGS .= " -L$HCC_HOME/compiler/lib -lLLVMAMDGPUDesc -lLLVMAMDGPUUtils -lLLVMMC -lLLVMCore -lLLVMSupport ";
 
     # Add trace marker library:
@@ -448,6 +453,15 @@ foreach $arg (@ARGV)
                     system("cd $tmpdir; ar c $libBaseName $realObjs");
                     print $out "$tmpdir/$libBaseName\n";
                 }
+            } elsif ($line =~ m/\.o$/) {
+                my $fileType = `file $line`;
+                my $isObj = ($fileType =~ m/ELF/ or $fileType =~ m/COFF/);
+                if ($isObj) {
+                    print $out "$line\n";
+                } else {
+                    push (@inputs, $line);
+                    $new_arg = "$new_arg $line";
+                }
             } else {
                 print $out "$line\n";
             }
@@ -455,6 +469,53 @@ foreach $arg (@ARGV)
         close $in;
         close $out;
         $arg = "$new_arg -Wl,\@$new_file";
+    } elsif (($arg =~ m/\.a$/ || $arg =~ m/\.lo$/) &&
+             $HIP_PLATFORM eq 'clang') {
+        ## process static library for hip-clang
+        ## extract object files from static library and pass them directly to
+        ## hip-clang.
+        ## ToDo: Remove this after hip-clang switch to lto and lld is able to
+        ## handle clang-offload-bundler bundles.
+        
+        my $new_arg = "";
+        my $tmpdir = get_temp_dir ();
+        my $libFile = $arg;
+        my $path = abs_path($arg);
+        my @objs = split ('\n', `cd $tmpdir; ar xv $path`);
+        ## Check if all files in .a are object files.
+        my $allIsObj = 1;
+        my $realObjs = "";
+        foreach my $obj (@objs) {
+            chomp $obj;
+            $obj =~ s/^x - //;
+            $obj = "$tmpdir/$obj";
+            my $fileType = `file $obj`;
+            my $isObj = ($fileType =~ m/ELF/ or $fileType =~ m/COFF/);
+            $allIsObj = ($allIsObj and $isObj);
+            if ($isObj) {
+                $realObjs = ($realObjs . " " . $obj);
+            } else {
+                push (@inputs, $obj);
+                if ($new_arg ne "") {
+                    $new_arg .= " ";
+                }
+                $new_arg .= "$obj";
+            }
+        }
+        chomp $realObjs;
+        if ($allIsObj) {
+            $new_arg = $arg;
+        } elsif ($realObjs) {
+            my($libBaseName, $libDir, $libExt) = fileparse($libFile);
+            $libBaseName = mktemp($libBaseName . "XXXX") . $libExt;
+            system("cd $tmpdir; ar c $libBaseName $realObjs");
+            $new_arg .= " $tmpdir/$libBaseName";
+        }
+        $arg = "$new_arg";
+        if ($toolArgs =~ m/-Xlinker$/) {
+            $toolArgs = substr $toolArgs, 0, -8;
+            chomp $toolArgs;
+        }
     } elsif ($arg =~ m/^-/) {
         # options start with -
 
@@ -673,7 +734,7 @@ if ($needLDFLAGS and not $compileOnly) {
 }
 $CMD .= " $toolArgs";
 if ($needLDFLAGS and not $compileOnly and $HIP_PLATFORM eq "clang") {
-    $CMD .= " -lgcc_s -lgcc";
+    $CMD .= " -lgcc_s -lgcc -lpthread -lm";
 }
 
 if ($verbose & 0x1) {

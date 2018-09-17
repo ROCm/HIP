@@ -39,6 +39,13 @@ String get_upstream_build_project( )
 }
 
 ////////////////////////////////////////////////////////////////////////
+// Construct the docker build image name
+String docker_build_image_name( )
+{
+    return "build-ubuntu-16.04"
+}
+
+////////////////////////////////////////////////////////////////////////
 // Construct the relative path of the build directory
 String build_directory_rel( String build_config )
 {
@@ -114,7 +121,7 @@ String checkout_and_version( String platform )
 // The docker images contains all dependencies, including OS platform, to build
 def docker_build_image( String platform, String org, String optional_build_parm, String source_hip_rel, String from_image )
 {
-  String build_image_name = "build-ubuntu-16.04"
+  String build_image_name = docker_build_image_name( )
   String dockerfile_name = "dockerfile-build-ubuntu-16.04"
   def build_image = null
 
@@ -170,7 +177,7 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
             cd ${build_dir_rel}
             make install -j\$(nproc)
             make build_tests -i -j\$(nproc)
-            ctest -E hipPrintfKernel
+            ctest -E hipVectorTypes
           """
         // If unit tests output a junit or xunit file in the future, jenkins can parse that file
         // to display test results on the dashboard
@@ -179,7 +186,7 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
     }
 
     // Only create packages from hcc based builds
-    if( platform.toLowerCase( ).startsWith( 'hcc-' ) )
+    if( platform.toLowerCase( ).startsWith( 'rocm-' ) )
     {
       stage("${platform} packaging")
       {
@@ -191,10 +198,10 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
 
         // No matter the base platform, all packages have the same name
         // Only upload 1 set of packages, so we don't have a race condition uploading packages
-        if( platform.toLowerCase( ).startsWith( 'hcc-ctu' ) )
+        if( platform.toLowerCase( ).startsWith( 'rocm-head' ) )
         {
           archiveArtifacts artifacts: "${build_dir_rel}/*.deb", fingerprint: true
-          // archiveArtifacts artifacts: "${build_dir_rel}/*.rpm", fingerprint: true
+          archiveArtifacts artifacts: "${build_dir_rel}/*.rpm", fingerprint: true
         }
       }
     }
@@ -283,102 +290,25 @@ def docker_upload_dockerhub( String local_org, String image_name, String remote_
 }
 
 ////////////////////////////////////////////////////////////////////////
-// hcc_integration_testing
-// This function is sets up compilation and testing of HiP on a compiler downloaded from an upstream build
-// Integration testing is centered around docker and constructing clean test environments every time
-
-// NOTES: I have implemeneted integration testing 3 different ways, and I've come to the conclusion nothing is perfect
-// 1.  I've tried having HCC push the test compiler to artifactory, and having HiP download the test docker image from artifactory
-//     a.  The act of uploading and downloading images from artifactory takes minutes
-//     b.  There is no good way of deleting images from a repository.  You have to use an arcane CURL command and I don't know how
-//        to keep the password secret.  These test integration images are meant to be ephemeral.
-// 2.  I tried 'docker save' to export a docker image into a tarball, and transfering the image through 'copy artifacts plugin'
-//     a.  The HCC docker image uncompressed is over 1GB
-//     b.  Compressing the docker image takes even longer than uploading the image to artifactory
-// 3.  Download the HCC .deb and dockerfile through 'copy artifacts plugin'.  Create a new HCC image on the fly
-//     a.  There is inefficency in building a new ubuntu image and installing HCC twice (once in HCC build, once here)
-//     b.  This solution doesn't scale when we start testing downstream libraries
-
-// I've implemented solution #3 above, probably transitioning to #2 down the line (probably without compression)
-String hcc_integration_testing( String inside_args, String job, String build_config )
-{
-  // Attempt to make unique docker image names for each build, to support concurrent builds
-  // Mangle docker org name with upstream build info
-  String testing_org_name = 'hcc-test-' + get_upstream_build_project( ).replaceAll('/','-').toLowerCase( ) + '-' + get_upstream_build_num( )
-  // String testing_org_name = 'hcc-test-artifacts-download'
-
-  // Tag image name with this build number
-  String hcc_test_image_name = "hcc:${env.BUILD_NUMBER}"
-
-  def hip_integration_image = null
-
-  dir( 'integration-testing' )
-  {
-    deleteDir( )
-
-    // This invokes 'copy artifact plugin' to copy archived files from upstream build
-    step([$class: 'CopyArtifact', filter: 'build/**/*.deb, docker/dockerfile-hcc-lc-*',
-      fingerprintArtifacts: true, projectName: get_upstream_build_project( ), flatten: true,
-      selector: [$class: 'TriggeredBuildSelector', allowUpstreamDependencies: false, fallbackToLastSuccessful: false, upstreamFilterStrategy: 'UseGlobalSetting'],
-      target: '.' ])
-    // step([$class: 'CopyArtifact', filter: 'build/**/*.deb, docker/dockerfile-hcc-lc-*',
-    //   fingerprintArtifacts: true, projectName: 'kknox/hcc/test-artifact-download', flatten: true,
-    //   selector: [$class: 'LastCompletedBuildSelector'],
-    //   target: '.' ])
-
-    docker.build( "${testing_org_name}/${hcc_test_image_name}", "-f dockerfile-hcc-lc-ubuntu-16.04 ." )
-  }
-
-  // Checkout source code, dependencies and version files
-  String source_hip_rel = checkout_and_version( job )
-
-  // Conctruct a binary directory path based on build config
-  String build_hip_rel = build_directory_rel( build_config );
-
-  // Build hip inside of the build environment
-  hip_integration_image = docker_build_image( job, testing_org_name, '', source_hip_rel, "${testing_org_name}/${hcc_test_image_name}" )
-
-  docker_build_inside_image( hip_integration_image, inside_args, job, '', build_config, source_hip_rel, build_hip_rel )
-
-  docker_clean_images( testing_org_name, '*' )
-}
-
-////////////////////////////////////////////////////////////////////////
 // -- MAIN
 // Following this line is the start of MAIN of this Jenkinsfile
 String build_config = 'Release'
 String job_name = env.JOB_NAME.toLowerCase( )
 
-// Integration testing is a special path which implies testing of an upsteam build of hcc,
-// but does not need testing across older builds of hcc or cuda.  This is more of a compiler
-// hcc unit test
-//  params.hcc_integration_test is set in HCC build
-if( params.hcc_integration_test )
-{
-  println "HCC integration testing"
-
-  node('docker && rocm')
-  {
-    hcc_integration_testing( '--device=/dev/kfd --device=/dev/dri --group-add=video', 'hcc-ctu', build_config )
-  }
-
-  return
-}
-
 // The following launches 3 builds in parallel: hcc-ctu, hcc-1.6 and cuda
-parallel hcc_ctu:
+parallel rocm_1_9:
 {
-  node('docker && rocm && dkms')
+  node('hip-rocm')
   {
-    String hcc_ver = 'hcc-ctu'
-    String from_image = 'compute-artifactory:5001/radeonopencompute/hcc/clang_tot_upgrade/hcc-lc-ubuntu-16.04:latest'
+    String hcc_ver = 'rocm-1.9.x'
+    String from_image = 'ci_test_nodes/rocm-1.9.x/ubuntu-16.04:latest'
     String inside_args = '--device=/dev/kfd --device=/dev/dri --group-add=video'
 
     // Checkout source code, dependencies and version files
     String source_hip_rel = checkout_and_version( hcc_ver )
 
     // Create/reuse a docker image that represents the hip build environment
-    def hip_build_image = docker_build_image( hcc_ver, 'hip', ' --pull', source_hip_rel, from_image )
+    def hip_build_image = docker_build_image( hcc_ver, 'hip', '', source_hip_rel, from_image )
 
     // Print system information for the log
     hip_build_image.inside( inside_args )
@@ -396,67 +326,34 @@ parallel hcc_ctu:
     // Build hip inside of the build environment
     docker_build_inside_image( hip_build_image, inside_args, hcc_ver, '', build_config, source_hip_rel, build_hip_rel )
 
-    // After a successful build, upload a docker image of the results
-    String hip_image_name = docker_upload_artifactory( hcc_ver, job_name, from_image, source_hip_rel, build_hip_rel )
+    // Clean docker build image
+    docker_clean_images( 'hip', docker_build_image_name( ) )
 
+    // After a successful build, upload a docker image of the results
+    /*
+    String hip_image_name = docker_upload_artifactory( hcc_ver, job_name, from_image, source_hip_rel, build_hip_rel )
     if( params.push_image_to_docker_hub )
     {
       docker_upload_dockerhub( job_name, hip_image_name, 'rocm' )
       docker_clean_images( 'rocm', hip_image_name )
     }
     docker_clean_images( job_name, hip_image_name )
+    */
   }
 },
-/*
-hcc_1_6:
+rocm_head:
 {
-  node('docker && rocm')
+  node('hip-rocm')
   {
-    String hcc_ver = 'hcc-1.6'
-    String from_image = 'rocm/dev-ubuntu-16.04:1.6.4'
-    String inside_args = '--device=/dev/kfd --device=/dev/dri'
-
-    // Checkout source code, dependencies and version files
-    String source_hip_rel = checkout_and_version( hcc_ver )
-
-    // Create/reuse a docker image that represents the hip build environment
-    def hip_build_image = docker_build_image( hcc_ver, 'hip', ' --pull', source_hip_rel, from_image )
-
-    // Print system information for the log
-    hip_build_image.inside( inside_args )
-    {
-      sh  """#!/usr/bin/env bash
-          set -x
-          /opt/rocm/bin/rocm_agent_enumerator -t ALL
-          /opt/rocm/bin/hcc --version
-        """
-    }
-
-    // Conctruct a binary directory path based on build config
-    String build_hip_rel = build_directory_rel( build_config );
-
-    // Build hip inside of the build environment
-    docker_build_inside_image( hip_build_image, inside_args, hcc_ver, '', build_config, source_hip_rel, build_hip_rel )
-
-    // Not pushing hip-hcc-1.6 builds at this time; saves a minute and nobody needs?
-    // String hip_image_name = docker_upload_artifactory( hcc_ver, job_name, from_image, source_hip_rel, build_hip_rel )
-    // docker_clean_images( job_name, hip_image_name )
-  }
-},
-*/
-hcc_1_7:
-{
-  node('docker && rocm && dkms')
-  {
-    String hcc_ver = 'hcc-1.7'
-    String from_image = 'rocm/dev-ubuntu-16.04:latest'
+    String hcc_ver = 'rocm-head'
+    String from_image = 'ci_test_nodes/rocm-head/ubuntu-16.04:latest'
     String inside_args = '--device=/dev/kfd --device=/dev/dri --group-add=video'
 
     // Checkout source code, dependencies and version files
     String source_hip_rel = checkout_and_version( hcc_ver )
 
     // Create/reuse a docker image that represents the hip build environment
-    def hip_build_image = docker_build_image( hcc_ver, 'hip', ' --pull', source_hip_rel, from_image )
+    def hip_build_image = docker_build_image( hcc_ver, 'hip', '', source_hip_rel, from_image )
 
     // Print system information for the log
     hip_build_image.inside( inside_args )
@@ -474,41 +371,18 @@ hcc_1_7:
     // Build hip inside of the build environment
     docker_build_inside_image( hip_build_image, inside_args, hcc_ver, '', build_config, source_hip_rel, build_hip_rel )
 
-    // Not pushing hip-hcc-1.7 builds at this time; saves a minute and nobody needs?
-    // String hip_image_name = docker_upload_artifactory( hcc_ver, job_name, from_image, source_hip_rel, build_hip_rel )
-    // docker_clean_images( job_name, hip_image_name )
-  }
-}/*,
-nvcc:
-{
-  node('docker && cuda')
-  {
-    ////////////////////////////////////////////////////////////////////////
-    // Block of string constants customizing behavior for cuda
-    String nvcc_ver = 'nvcc-9.0'
-    String from_image = 'nvidia/cuda:9.0-devel'
-    String inside_args = '--runtime=nvidia';
+    // Clean docker image
+    docker_clean_images( 'hip', docker_build_image_name( ) )
 
-    // Checkout source code, dependencies and version files
-    String source_hip_rel = checkout_and_version( nvcc_ver )
-
-    // We pull public nvidia images
-    def hip_build_image = docker_build_image( nvcc_ver, 'hip', ' --pull', source_hip_rel, from_image )
-
-    // Print system information for the log
-    hip_build_image.inside( inside_args )
+    // After a successful build, upload a docker image of the results
+    /*
+    String hip_image_name = docker_upload_artifactory( hcc_ver, job_name, from_image, source_hip_rel, build_hip_rel )
+    if( params.push_image_to_docker_hub )
     {
-      sh  """#!/usr/bin/env bash
-          set -x
-          nvidia-smi
-          nvcc --version
-        """
+      docker_upload_dockerhub( job_name, hip_image_name, 'rocm' )
+      docker_clean_images( 'rocm', hip_image_name )
     }
-
-    // Conctruct a binary directory path based on build config
-    String build_hip_rel = build_directory_rel( build_config );
-
-    // Build hip inside of the build environment
-    docker_build_inside_image( hip_build_image, inside_args, nvcc_ver, "-DHIP_NVCC_FLAGS=--Wno-deprecated-gpu-targets", build_config, source_hip_rel, build_hip_rel )
+    docker_clean_images( job_name, hip_image_name )
+    */
   }
-}*/
+}

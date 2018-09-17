@@ -6,19 +6,31 @@
 
 <!-- toc -->
 
-- [Using hipify-clang](#using-hipify-clang)
-  * [Build and install](#build-and-install)
-  * [Running and using hipify-clang](#running-and-using-hipify-clang)
+- [Supported CUDA APIs](#cuda-apis)
+- [Dependencies](#dependencies)
+- [Build and install](#build-and-install)
+     * [Building](#building)
+     * [Testing](#testing)
+     * [Windows](#windows)
+- [Running and using hipify-clang](#running-and-using-hipify-clang)
 - [Disclaimer](#disclaimer)
 
 <!-- tocstop -->
 
-## Build and install
+## <a name="cuda-apis"></a> Supported CUDA APIs
 
-### Dependencies
+- [Runtime API](../docs/markdown/CUDA_Runtime_API_functions_supported_by_HIP.md)
+- [Driver API](../docs/markdown/CUDA_Driver_API_functions_supported_by_HIP.md)
+- [cuComplex API](../docs/markdown/cuComplex_API_supported_by_HIP.md)
+- [cuBLAS](../docs/markdown/CUBLAS_API_supported_by_HIP.md)
+- [cuRAND](../docs/markdown/CURAND_API_supported_by_HIP.md)
+- [cuDNN](../docs/markdown/CUDNN_API_supported_by_HIP.md)
+- [cuFFT](../docs/markdown/CUFFT_API_supported_by_HIP.md)
+
+## <a name="dependencies"></a> Dependencies
 
 `hipify-clang` requires:
-1. LLVM+CLANG of at least version 3.8.0, latest stable release is 6.0.0.
+1. LLVM+CLANG of at least version 3.8.0, latest stable and recommended release is 6.0.1.
 2. CUDA at least version 7.5, latest supported release is 9.0.
 
 | **LLVM release version** | **CUDA latest supported version** |
@@ -38,10 +50,11 @@
 In most cases, you can get a suitable version of LLVM+CLANG with your package manager.
 
 Failing that or having multiple versions of LLVM, you can [download a release archive](http://releases.llvm.org/), build or install it, and set
-[CMAKE_PREFIX_PATH](https://cmake.org/cmake/help/v3.0/variable/CMAKE_PREFIX_PATH.html) so `cmake` can find it; for instance: `-DCMAKE_PREFIX_PATH=f:\LLVM\6.0.0\dist`
+[CMAKE_PREFIX_PATH](https://cmake.org/cmake/help/v3.10/variable/CMAKE_PREFIX_PATH.html) so `cmake` can find it; for instance: `-DCMAKE_PREFIX_PATH=f:\LLVM\6.0.1\dist`
 
-### Build
+## <a name="build-and-install"></a> Build and install
 
+### <a name="building"></a> Build
 
 Assuming this repository is at `./HIP`:
 
@@ -64,14 +77,14 @@ Debug build type `-DCMAKE_BUILD_TYPE=Debug` is also supported and tested, `LLVM+
 
 The binary can then be found at `./dist/bin/hipify-clang`.
 
-### Test
+### <a name="testing"></a> Test
 
 `hipify-clang` has unit tests using LLVM [`lit`](https://llvm.org/docs/CommandGuide/lit.html)/[`FileCheck`](https://llvm.org/docs/CommandGuide/FileCheck.html).
 
 **LLVM+CLANG should be built from sources, Pre-Built Binaries are not exhaustive for testing.**
 
 To run it:
-1. Download [`LLVM`](http://releases.llvm.org/6.0.0/llvm-6.0.0.src.tar.xz)+[`CLANG`](http://releases.llvm.org/6.0.0/cfe-6.0.0.src.tar.xz) sources.
+1. Download [`LLVM`](http://releases.llvm.org/6.0.1/llvm-6.0.1.src.tar.xz)+[`CLANG`](http://releases.llvm.org/6.0.1/cfe-6.0.1.src.tar.xz) sources.
 2. Build [`LLVM+CLANG`](http://llvm.org/docs/CMake.html).
     For instance:
     ```shell
@@ -110,21 +123,21 @@ To run it:
 6. Ensure `lit` and `FileCheck` are installed - these are distributed with LLVM.
     * installing `lit` into `python` might be required:
 
-      `python f:/LLVM/6.0.0/llvm/utils/lit/setup.py install`,
+      `python f:/LLVM/6.0.1/llvm/utils/lit/setup.py install`,
 
-      where `f:/LLVM/6.0.0/llvm` is LLVM sources root directory.
+      where `f:/LLVM/6.0.1/llvm` is LLVM sources root directory.
 
-    * Starting with LLVM 6.0.0 path to llvm-lit.py script should be specified by the `LLVM_EXTERNAL_LIT` option:
+    * Starting with LLVM 6.0.1 path to llvm-lit.py script should be specified by the `LLVM_EXTERNAL_LIT` option:
 
-      `-DLLVM_EXTERNAL_LIT=f:/LLVM/6.0.0/build/Release/bin/llvm-lit.py`,
+      `-DLLVM_EXTERNAL_LIT=f:/LLVM/6.0.1/build/Release/bin/llvm-lit.py`,
 
-      where `f:/LLVM/6.0.0/build/Release` is LLVM build directory.
+      where `f:/LLVM/6.0.1/build/Release` is LLVM build directory.
 7. Build with the `HIPIFY_CLANG_TESTS` option turned on: -DHIPIFY_CLANG_TESTS=1.
 8. `make test-hipify`
 
     On Windows after `cmake` the project `test-hipify` in the generated `hipify-clang.sln` should be built by `Visual Studio 15 2017` instead of `make test-hipify`.
 
-### Windows
+### <a name="windows"></a >Windows
 
 On Windows the following configurations are tested:
 
@@ -144,30 +157,30 @@ cmake
  -DHIPIFY_CLANG_TESTS=1 \
  -DCMAKE_BUILD_TYPE=Release \
  -DCMAKE_INSTALL_PREFIX=../dist \
- -DCMAKE_PREFIX_PATH=f:/LLVM/6.0.0/dist \
+ -DCMAKE_PREFIX_PATH=f:/LLVM/6.0.1/dist \
  -DCUDA_TOOLKIT_ROOT_DIR="c:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.0" \
  -DCUDA_SDK_ROOT_DIR="c:/ProgramData/NVIDIA Corporation/CUDA Samples/v9.0" \
  -DCUDA_DNN_ROOT_DIR=f:/CUDNN/cudnn-9.0-windows10-x64-v7.1 \
- -DLLVM_EXTERNAL_LIT=f:/LLVM/6.0.0/build/Release/bin/llvm-lit.py \
+ -DLLVM_EXTERNAL_LIT=f:/LLVM/6.0.1/build/Release/bin/llvm-lit.py \
  -Thost=x64
  ..
 ```
 A corresponding successful output:
 ```shell
--- Found LLVM 6.0.0:
---    - CMake module path: F:/LLVM/6.0.0/dist/lib/cmake/llvm
---    - Include path     : F:/LLVM/6.0.0/dist/include
---    - Binary path      : F:/LLVM/6.0.0/dist/bin
+-- Found LLVM 6.0.1:
+--    - CMake module path: F:/LLVM/6.0.1/dist/lib/cmake/llvm
+--    - Include path     : F:/LLVM/6.0.1/dist/include
+--    - Binary path      : F:/LLVM/6.0.1/dist/bin
 -- Found PythonInterp: C:/Program Files/Python36/python.exe (found suitable version "3.6.4", minimum required is "2.7")
 -- Found lit: C:/Program Files/Python36/Scripts/lit.exe
--- Found FileCheck: F:/LLVM/6.0.0/dist/bin/FileCheck.exe
+-- Found FileCheck: F:/LLVM/6.0.1/dist/bin/FileCheck.exe
 -- Found CUDA: C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.0 (found version "9.0")
 -- Configuring done
 -- Generating done
 -- Build files have been written to: f:/HIP/hipify-clang/build
 ```
 
-## Running and using hipify-clang
+## <a name="running-and-using-hipify-clang"></a> Running and using hipify-clang
 
 To process a file, `hipify-clang` needs access to the same headers that would be needed to compile it with clang.
 
@@ -188,7 +201,7 @@ may be useful.
 
 For a list of `hipify-clang` options, run `hipify-clang --help`.
 
-## Disclaimer
+## <a name="disclaimer"></a> Disclaimer
 
 The information contained herein is for informational purposes only, and is subject to change without notice. While every precaution has been taken in the preparation of this document, it may contain technical inaccuracies, omissions and typographical errors, and AMD is under no obligation to update or otherwise correct this information. Advanced Micro Devices, Inc. makes no representations or warranties with respect to the accuracy or completeness of the contents of this document, and assumes no liability of any kind, including the implied warranties of noninfringement, merchantability or fitness for particular purposes, with respect to the operation or use of AMD hardware, software or other products described herein. No license, including implied or arising by estoppel, to any intellectual property rights is granted by this document. Terms and limitations applicable to the purchase or use of AMD's products are as set forth in a signed agreement between the parties or in AMD's Standard Terms and Conditions of Sale.
 

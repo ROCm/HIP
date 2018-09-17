@@ -86,28 +86,15 @@ int main(int argc, char* argv[]) {
         printf("warp no. %d __all = %d \n", i, host_all[i]);
 
         if (host_all[i] != 1) ++allcount;
-#if defined(__HIP_PLATFORM_HCC__) && !defined(NVCC_COMPAT)
-        if (host_any[i] != 64) ++anycount;
-#else
         if (host_any[i] != 1) ++anycount;
-#endif
     }
 
-#if defined(__HIP_PLATFORM_HCC__) && !defined(NVCC_COMPAT)
-    if (anycount == 1 && allcount == 1)
-        printf("PASSED\n");
-    else {
-        printf("FAILED\n");
-        return EXIT_FAILURE;
-    }
-#else
     if (anycount == 0 && allcount == 1)
         printf("PASSED\n");
     else {
         printf("FAILED\n");
         return EXIT_FAILURE;
     }
-#endif
 
     return EXIT_SUCCESS;
 }

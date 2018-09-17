@@ -8,13 +8,13 @@ const char *counterNames[NUM_CONV_TYPES] = {
     "version", "init", "device", "mem", "kern", "coord_func", "math_func", "device_func",
     "special_func", "stream", "event", "occupancy", "ctx", "peer", "module",
     "cache", "exec", "err", "def", "tex", "gl", "graphics",
-    "surface", "jit", "d3d9", "d3d10", "d3d11", "vdpau", "egl",
+    "surface", "jit", "d3d9", "d3d10", "d3d11", "vdpau", "egl", "complex",
     "thread", "other", "include", "include_cuda_main_header", "type", "literal",
     "numeric_literal"
 };
 
 const char *apiNames[NUM_API_TYPES] = {
-    "CUDA Driver API", "CUDA RT API", "CUBLAS API", "CURAND API", "CUDNN API"
+    "CUDA Driver API", "CUDA RT API", "CUBLAS API", "CURAND API", "CUDNN API", "CUFFT API", "cuComplex API"
 };
 
 namespace {

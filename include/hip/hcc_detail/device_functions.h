@@ -32,9 +32,6 @@ THE SOFTWARE.
 #include <hip/hcc_detail/llvm_intrinsics.h>
 #include <stddef.h>
 
-typedef unsigned long ulong;
-typedef unsigned int uint;
-
 /*
 Integer Intrinsics
 */
@@ -47,76 +44,66 @@ __device__ static inline unsigned int __popcll(unsigned long long int input) {
     return __builtin_popcountl(input);
 }
 
-__device__ static inline unsigned int __clz(unsigned int input) {
-#ifdef NVCC_COMPAT
-    return input == 0 ? 32 : __builtin_clz(input);
-#else
-    return input == 0 ? -1 : __builtin_clz(input);
-#endif
+__device__ static inline int __clz(int input) {
+  return __ockl_clz_u32((uint)input);
 }
 
-__device__ static inline unsigned int __clzll(unsigned long long int input) {
-#ifdef NVCC_COMPAT
-    return input == 0 ? 64 : ( input == 0 ? -1 : __builtin_clzl(input) );
-#else
-    return input == 0 ? -1 : __builtin_clzl(input);
-#endif
-}
-
-__device__ static inline unsigned int __clz(int input) {
-#ifdef NVCC_COMPAT
-    return input == 0 ? 32 : ( input > 0 ? __builtin_clz(input) : __builtin_clz(~input) );
-#else
-    if (input == 0) return -1;
-    return input > 0 ? __builtin_clz(input) : __builtin_clz(~input);
-#endif
-}
-
-__device__ static inline unsigned int __clzll(long long int input) {
-#ifdef NVCC_COMPAT
-    return input == 0 ? 64 : input > 0 ? __builtin_clzl(input) : __builtin_clzl(~input);
-#else
-    if (input == 0) return -1;
-    return input > 0 ? __builtin_clzl(input) : __builtin_clzl(~input);
-#endif
+__device__ static inline int __clzll(long long int input) {
+    return __ockl_clz_u64((ulong)input);
 }
 
 __device__ static inline unsigned int __ffs(unsigned int input) {
-#ifdef NVCC_COMPAT
     return ( input == 0 ? -1 : __builtin_ctz(input) ) + 1;
-#else
-    return input == 0 ? -1 : __builtin_ctz(input);
-#endif
 }
 
 __device__ static inline unsigned int __ffsll(unsigned long long int input) {
-#ifdef NVCC_COMPAT
     return ( input == 0 ? -1 : __builtin_ctzl(input) ) + 1;
-#else
-    return input == 0 ? -1 : __builtin_ctzl(input);
-#endif
 }
 
 __device__ static inline unsigned int __ffs(int input) {
-#ifdef NVCC_COMPAT
     return ( input == 0 ? -1 : __builtin_ctz(input) ) + 1;
-#else
-    return input == 0 ? -1 : __builtin_ctz(input);
-#endif
 }
 
 __device__ static inline unsigned int __ffsll(long long int input) {
-#ifdef NVCC_COMPAT
     return ( input == 0 ? -1 : __builtin_ctzl(input) ) + 1;
-#else
-    return input == 0 ? -1 : __builtin_ctzl(input);
-#endif
 }
 
-__device__ static inline unsigned int __brev(unsigned int input) { return __llvm_bitrev_b32(input); }
+__device__ static inline unsigned int __brev(unsigned int input) {
+    return __llvm_bitrev_b32(input);
+}
 
 __device__ static inline unsigned long long int __brevll(unsigned long long int input) {
     return __llvm_bitrev_b64(input);
+}
+
+__device__ static inline unsigned int __lastbit_u32_u64(uint64_t input) {
+    return input == 0 ? -1 : __builtin_ctzl(input);
+}
+
+__device__ static inline unsigned int __bitextract_u32(unsigned int src0, unsigned int src1, unsigned int src2) {
+    uint32_t offset = src1 & 31;
+    uint32_t width = src2 & 31;
+    return width == 0 ? 0 : (src0 << (32 - offset - width)) >> (32 - width);
+}
+
+__device__ static inline uint64_t __bitextract_u64(uint64_t src0, unsigned int src1, unsigned int src2) {
+    uint64_t offset = src1 & 63;
+    uint64_t width = src2 & 63;
+    return width == 0 ? 0 : (src0 << (64 - offset - width)) >> (64 - width);
+}
+
+__device__ static inline unsigned int __bitinsert_u32(unsigned int src0, unsigned int src1, unsigned int src2, unsigned int src3) {
+    uint32_t offset = src2 & 31;
+    uint32_t width = src3 & 31;
+    uint32_t mask = (1 << width) - 1;
+    return ((src0 & ~(mask << offset)) | ((src1 & mask) << offset));
+}
+
+__device__ static inline uint64_t __bitinsert_u64(uint64_t src0, uint64_t src1, unsigned int src2, unsigned int src3) {
+    uint64_t offset = src2 & 63;
+    uint64_t width = src3 & 63;
+    uint64_t mask = (1 << width) - 1;
+    return ((src0 & ~(mask << offset)) | ((src1 & mask) << offset));
 }
 
 __device__ static unsigned int __byte_perm(unsigned int x, unsigned int y, unsigned int s);
@@ -606,7 +593,7 @@ __device__ static inline double __longlong_as_double(long long int x) {
     double tmp;
     __builtin_memcpy(&tmp, &x, sizeof(tmp));
 
-    return x;
+    return tmp;
 }
 
 __device__ static inline double __uint2double_rn(int x) { return (double)x; }
@@ -645,16 +632,43 @@ __device__ static inline float __ull2float_rz(unsigned long long int x) { return
 
 #ifdef __HCC_OR_HIP_CLANG__
 
+// Clock functions
+__device__ long long int __clock64();
+__device__ long long int __clock();
+__device__ long long int clock64();
+__device__ long long int clock();
+// hip.amdgcn.bc - named sync
+__device__ void __named_sync(int a, int b);
+
 #ifdef __HIP_DEVICE_COMPILE__
 
 // Clock functions
-__device__
-inline
-long long int __clock64() { return (long long int) __builtin_amdgcn_s_memrealtime(); }
+#if __HCC__
+extern "C" uint64_t __clock_u64()  __HC__;
+#endif
 
 __device__
-inline
-long long int  __clock() { return (long long int) __builtin_amdgcn_s_memrealtime(); }
+inline  __attribute((always_inline))
+long long int __clock64() {
+// ToDo: Unify HCC and HIP implementation.
+#if __HCC__
+  return (long long int) __clock_u64();
+#else
+  return (long long int) __builtin_amdgcn_s_memrealtime();
+#endif
+}
+
+__device__
+inline __attribute((always_inline))
+long long int  __clock() { return __clock64(); }
+
+__device__
+inline  __attribute__((always_inline))
+long long int clock64() { return __clock64(); }
+
+__device__
+inline __attribute__((always_inline))
+long long int  clock() { return __clock(); }
 
 // hip.amdgcn.bc - named sync
 __device__
@@ -673,14 +687,7 @@ int __all(int predicate) {
 __device__
 inline
 int __any(int predicate) {
-#ifdef NVCC_COMPAT
-    if (__ockl_wfany_i32(predicate) != 0)
-        return 1;
-    else
-        return 0;
-#else
     return __ockl_wfany_i32(predicate);
-#endif
 }
 
 // XXX from llvm/include/llvm/IR/InstrTypes.h

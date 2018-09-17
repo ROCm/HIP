@@ -47,6 +47,8 @@
 
 // CHECK: #include <string>
 
+// CHECK: #include "hipfft.h"
+
 #include <cuda.h>
 
 #include <memory>
@@ -91,3 +93,5 @@
 #include "curand_uniform.h"
 
 #include <string>
+
+#include "cufft.h"
