@@ -58,6 +58,21 @@ if(NOT DEFINED HIP_PLATFORM)
 endif()
 message(STATUS "HIP Platform: " ${HIP_PLATFORM})
 
+# Determine HIP_COMPILER
+# Either hcc or clang; default is hcc
+if(NOT DEFINED HIP_COMPILER)
+    if(NOT DEFINED ENV{HIP_COMPILER})
+        set(HIP_COMPILER "hcc" CACHE STRING "HIP Compiler")
+    else()
+        set(HIP_COMPILER $ENV{HIP_COMPILER} CACHE STRING "HIP Compiler")
+    endif()
+endif()
+if(NOT (HIP_COMPILER STREQUAL "hcc" OR HIP_COMPILER STREQUAL "clang"))
+    message(FATAL_ERROR "Must use HIP_COMPILER as hcc or clang")
+endif()
+message(STATUS "HIP Compiler: " ${HIP_COMPILER})
+
+
 # If HIP_PLATFORM is hcc, we need HCC_HOME and HSA_PATH to be defined
 if(HIP_PLATFORM STREQUAL "hcc")
     # Determine HCC_HOME
@@ -202,9 +217,11 @@ if(HIP_PLATFORM STREQUAL "hcc")
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L/opt/rocm/profiler/CXLActivityLogger/bin/x86_64 -lCXLActivityLogger")
     endif()
     add_library(hip_hcc SHARED ${SOURCE_FILES_RUNTIME})
-    target_link_libraries(hip_hcc PRIVATE hc_am)
     add_library(hip_hcc_static STATIC ${SOURCE_FILES_RUNTIME})
-    target_link_libraries(hip_hcc_static PRIVATE hc_am)
+    if(HIP_COMPILER STREQUAL "hcc")
+      target_link_libraries(hip_hcc PRIVATE hc_am)
+      target_link_libraries(hip_hcc_static PRIVATE hc_am)
+    endif()
     add_library(hip_device STATIC ${SOURCE_FILES_DEVICE})
 
     string(REPLACE " " ";" HCC_CXX_FLAGS_LIST ${HCC_CXX_FLAGS})
@@ -214,7 +231,11 @@ if(HIP_PLATFORM STREQUAL "hcc")
     add_library(host INTERFACE)
     target_link_libraries(host INTERFACE hip_hcc)
     add_library(device INTERFACE)
-    target_link_libraries(device INTERFACE host hip_device hcc::hccrt hcc::hc_am)
+    if(HIP_COMPILER STREQUAL "hcc")
+        target_link_libraries(device INTERFACE host hip_device hcc::hccrt hcc::hc_am)
+    elseif(HIP_COMPILER STREQUAL "clang")
+        target_link_libraries(device INTERFACE host hip_device)
+    endif()
 
     # Generate .hipInfo
     file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})

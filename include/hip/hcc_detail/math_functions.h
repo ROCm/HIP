@@ -31,6 +31,12 @@ THE SOFTWARE.
 #include <limits>
 #include <stdint.h>
 
+// HCC's own math functions should be included first, otherwise there will
+// be conflicts when hip/math_functions.h is included before hip/hip_runtime.h.
+#ifdef __HCC__
+#include "kalmar_math.h"
+#endif
+
 #pragma push_macro("__DEVICE__")
 #pragma push_macro("__RETURN_TYPE")
 
@@ -1298,6 +1304,66 @@ float func(float x, int y) \
 }
 __DEF_FLOAT_FUN2I(scalbn)
 
+#if __HCC__
+template<class T>
+__DEVICE__ inline static T min(T arg1, T arg2) {
+  return (arg1 < arg2) ? arg1 : arg2;
+}
+
+__DEVICE__ inline static uint32_t min(uint32_t arg1, int32_t arg2) {
+  return min(arg1, (uint32_t) arg2);
+}
+/*__DEVICE__ inline static uint32_t min(int32_t arg1, uint32_t arg2) {
+  return min((uint32_t) arg1, arg2);
+}
+
+__DEVICE__ inline static uint64_t min(uint64_t arg1, int64_t arg2) {
+  return min(arg1, (uint64_t) arg2);
+}
+__DEVICE__ inline static uint64_t min(int64_t arg1, uint64_t arg2) {
+  return min((uint64_t) arg1, arg2);
+}
+
+__DEVICE__ inline static unsigned long long min(unsigned long long arg1, long long arg2) {
+  return min(arg1, (unsigned long long) arg2);
+}
+__DEVICE__ inline static unsigned long long min(long long arg1, unsigned long long arg2) {
+  return min((unsigned long long) arg1, arg2);
+}*/
+
+template<class T>
+__DEVICE__ inline static T max(T arg1, T arg2) {
+  return (arg1 > arg2) ? arg1 : arg2;
+}
+
+__DEVICE__ inline static uint32_t max(uint32_t arg1, int32_t arg2) {
+  return max(arg1, (uint32_t) arg2);
+}
+__DEVICE__ inline static uint32_t max(int32_t arg1, uint32_t arg2) {
+  return max((uint32_t) arg1, arg2);
+}
+
+/*__DEVICE__ inline static uint64_t max(uint64_t arg1, int64_t arg2) {
+  return max(arg1, (uint64_t) arg2);
+}
+__DEVICE__ inline static uint64_t max(int64_t arg1, uint64_t arg2) {
+  return max((uint64_t) arg1, arg2);
+}
+
+__DEVICE__ inline static unsigned long long max(unsigned long long arg1, long long arg2) {
+  return max(arg1, (unsigned long long) arg2);
+}
+__DEVICE__ inline static unsigned long long max(long long arg1, unsigned long long arg2) {
+  return max((unsigned long long) arg1, arg2);
+}*/
+#else
+__DEVICE__ inline static int min(int arg1, int arg2) {
+  return (arg1 < arg2) ? arg1 : arg2;
+}
+__DEVICE__ inline static int max(int arg1, int arg2) {
+  return (arg1 > arg2) ? arg1 : arg2;
+}
+
 __DEVICE__
 inline
 float max(float x, float y) {
@@ -1325,6 +1391,17 @@ double min(double x, double y) {
 __HIP_OVERLOAD2(double, max)
 __HIP_OVERLOAD2(double, min)
 
+#endif
+
+__host__ inline static int min(int arg1, int arg2) {
+  return std::min(arg1, arg2);
+}
+
+__host__ inline static int max(int arg1, int arg2) {
+  return std::max(arg1, arg2);
+}
+
+
 #pragma pop_macro("__DEF_FLOAT_FUN")
 #pragma pop_macro("__DEF_FLOAT_FUN2")
 #pragma pop_macro("__DEF_FLOAT_FUN2I")
@@ -1332,3 +1409,8 @@ __HIP_OVERLOAD2(double, min)
 #pragma pop_macro("__HIP_OVERLOAD2")
 #pragma pop_macro("__DEVICE__")
 #pragma pop_macro("__RETURN_TYPE")
+
+// For backward compatibility.
+// There are HIP applications e.g. TensorFlow, expecting __HIP_ARCH_* macros
+// defined after including math_functions.h.
+#include <hip/hcc_detail/hip_runtime.h>

@@ -30,6 +30,11 @@ THE SOFTWARE.
 
 #include "hip/hcc_detail/host_defines.h"
 
+typedef unsigned char uchar;
+typedef unsigned short ushort;
+typedef unsigned int uint;
+typedef unsigned long ulong;
+
 extern "C" __device__ __attribute__((const)) bool __ockl_wfany_i32(int);
 extern "C" __device__ __attribute__((const)) bool __ockl_wfall_i32(int);
 extern "C" __device__ uint __ockl_activelane_u32(void);
@@ -39,6 +44,11 @@ extern "C" __device__ __attribute__((const)) int __ockl_mul24_i32(int, int);
 extern "C" __device__ __attribute__((const)) uint __ockl_mul_hi_u32(uint, uint);
 extern "C" __device__ __attribute__((const)) int __ockl_mul_hi_i32(int, int);
 extern "C" __device__ __attribute__((const)) uint __ockl_sad_u32(uint, uint, uint);
+
+extern "C" __device__ __attribute__((const)) uchar __ockl_clz_u8(uchar);
+extern "C" __device__ __attribute__((const)) ushort __ockl_clz_u16(ushort);
+extern "C" __device__ __attribute__((const)) uint __ockl_clz_u32(uint);
+extern "C" __device__ __attribute__((const)) ulong __ockl_clz_u64(ulong);
 
 extern "C" __device__ __attribute__((const)) float __ocml_floor_f32(float);
 extern "C" __device__ __attribute__((const)) float __ocml_rint_f32(float);

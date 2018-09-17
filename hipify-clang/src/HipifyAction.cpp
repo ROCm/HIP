@@ -164,6 +164,14 @@ bool HipifyAction::Exclude(const hipCounter & hipToken) {
                   if (insertedDNNHeader) { return true; }
                     insertedDNNHeader = true;
                     return false;
+                case API_FFT:
+                  if (insertedFFTHeader) { return true; }
+                  insertedFFTHeader = true;
+                  return false;
+                case API_COMPLEX:
+                  if (insertedComplexHeader) { return true; }
+                  insertedComplexHeader = true;
+                  return false;
                 default:
                     return false;
             }

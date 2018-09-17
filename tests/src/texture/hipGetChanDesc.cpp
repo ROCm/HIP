@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-Present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,21 +20,44 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef HIP_INCLUDE_HIP_MATH_FUNCTIONS_H
-#define HIP_INCLUDE_HIP_MATH_FUNCTIONS_H
+/* HIT_START
+ * BUILD: %t %s ../test_common.cpp
+ * RUN: %t
+ * HIT_END
+ */
 
-// Some standard header files, these are included by hc.hpp and so want to make them avail on both
-// paths to provide a consistent include env and avoid "missing symbol" errors that only appears
-// on NVCC path:
+#include <hip/hip_runtime.h>
+#include "test_common.h"
 
-#include <hip/hip_common.h>
+using namespace std;
+#define R 8 //rows, height
+#define C 8 //columns, width
 
-#if defined(__HIP_PLATFORM_HCC__) && !defined(__HIP_PLATFORM_NVCC__)
-#include <hip/hcc_detail/math_functions.h>
-#elif defined(__HIP_PLATFORM_NVCC__) && !defined(__HIP_PLATFORM_HCC__)
-//#include <hip/nvcc_detail/math_functions.h>
-#else
-#error("Must define exactly one of __HIP_PLATFORM_HCC__ or __HIP_PLATFORM_NVCC__");
-#endif
+bool runTest(void);
 
-#endif
+int main(int argc, char** argv) {
+    bool testResult=runTest();
+
+    if (testResult) {
+        passed();
+    } else {
+        exit(EXIT_FAILURE);
+    }
+}
+
+bool runTest()
+{
+bool testResult=true;
+hipChannelFormatDesc chan_test,chan_desc=hipCreateChannelDesc(32,0,0,0,hipChannelFormatKindSigned);
+hipArray *hipArray;
+HIPCHECK(hipMallocArray(&hipArray, &chan_desc,C,R,0));
+HIPCHECK(hipGetChannelDesc(&chan_test,hipArray));
+
+if((chan_test.x == 32)&&(chan_test.y == 0)&&(chan_test.z == 0)&&(chan_test.f == 0))
+	testResult=true;
+else
+	testResult=false;
+
+HIPCHECK(hipFreeArray(hipArray));
+return testResult;
+}

@@ -57,8 +57,6 @@ THE SOFTWARE.
 
 #if __HCC_OR_HIP_CLANG__
 
-// Define NVCC_COMPAT for CUDA compatibility
-#define NVCC_COMPAT
 #define CUDA_SUCCESS hipSuccess
 
 #include <hip/hip_runtime_api.h>
@@ -110,9 +108,9 @@ extern int HIP_TRACE_API;
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hcc_detail/device_functions.h>
 #include <hip/hcc_detail/surface_functions.h>
+#include <hip/hcc_detail/texture_functions.h>
 #if __HCC__
 #include <hip/hcc_detail/math_functions.h>
-#include <hip/hcc_detail/texture_functions.h>
 #endif // __HCC__
 
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
@@ -201,16 +199,6 @@ __device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask
 
 #endif  //__HIP_ARCH_GFX803__ == 1
 
-__device__ inline static int min(int arg1, int arg2) {
-    return (arg1 < arg2) ? arg1 : arg2;
-}
-__device__ inline static int max(int arg1, int arg2) {
-    return (arg1 > arg2) ? arg1 : arg2;
-}
-
-__host__ inline static int min(int arg1, int arg2) { return std::min(arg1, arg2); }
-__host__ inline static int max(int arg1, int arg2) { return std::max(arg1, arg2); }
-
 #endif  // __HCC_OR_HIP_CLANG__
 
 #if defined __HCC__
@@ -266,19 +254,16 @@ extern "C" __device__ void* __hip_free(void* ptr);
 static inline __device__ void* malloc(size_t size) { return __hip_malloc(size); }
 static inline __device__ void* free(void* ptr) { return __hip_free(ptr); }
 
-#ifdef __HCC_ACCELERATOR__
-
-#ifdef HC_FEATURE_PRINTF
+#if defined(__HCC_ACCELERATOR__) && defined(HC_FEATURE_PRINTF)
 template <typename... All>
 static inline __device__ void printf(const char* format, All... all) {
     hc::printf(format, all...);
 }
-#else
+#elif defined(__HCC_ACCELERATOR__) || __HIP__
 template <typename... All>
 static inline __device__ void printf(const char* format, All... all) {}
 #endif
 
-#endif
 #endif //__HCC_OR_HIP_CLANG__
 
 #ifdef __HCC__
@@ -348,15 +333,18 @@ extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, gri
 
 typedef int hipLaunchParm;
 
-#define hipLaunchKernel(kernelName, numblocks, numthreads, memperblock, streamId, ...)             \
-    do {                                                                                           \
-        kernelName<<<numblocks, numthreads, memperblock, streamId>>>(0, ##__VA_ARGS__);            \
-    } while (0)
+template <typename... Args, typename F = void (*)(Args...)>
+inline void hipLaunchKernelGGL(F kernelName, const dim3& numblocks, const dim3& numthreads,
+                               unsigned memperblock, hipStream_t streamId, Args... args) {
+  kernelName<<<numblocks, numthreads, memperblock, streamId>>>(args...);
+}
 
-#define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
-    do {                                                                                           \
-        kernelName<<<numblocks, numthreads, memperblock, streamId>>>(__VA_ARGS__);                 \
-    } while (0)
+template <typename... Args, typename F = void (*)(hipLaunchParm, Args...)>
+inline void hipLaunchKernel(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
+                            std::uint32_t groupMemBytes, hipStream_t stream, Args... args) {
+    hipLaunchKernelGGL(kernel, numBlocks, dimBlocks, groupMemBytes, stream, hipLaunchParm{},
+                       std::move(args)...);
+}
 
 #include <hip/hip_runtime_api.h>
 
@@ -440,6 +428,34 @@ extern const __device__ __attribute__((weak)) __hip_builtin_gridDim_t gridDim;
 
 #include <hip/hcc_detail/math_functions.h>
 
+#if __HIP_HCC_COMPAT_MODE__
+// Define HCC work item functions in terms of HIP builtin variables.
+#pragma push_macro("__DEFINE_HCC_FUNC")
+#define __DEFINE_HCC_FUNC(hc_fun,hip_var) \
+inline __device__ __attribute__((always_inline)) uint hc_get_##hc_fun(uint i) { \
+  if (i==0) \
+    return hip_var.x; \
+  else if(i==1) \
+    return hip_var.y; \
+  else \
+    return hip_var.z; \
+}
+
+__DEFINE_HCC_FUNC(workitem_id, threadIdx)
+__DEFINE_HCC_FUNC(group_id, blockIdx)
+__DEFINE_HCC_FUNC(group_size, blockDim)
+__DEFINE_HCC_FUNC(num_groups, gridDim)
+#pragma pop_macro("__DEFINE_HCC_FUNC")
+
+extern "C" __device__ __attribute__((const)) size_t __ockl_get_global_id(uint);
+inline __device__ __attribute__((always_inline)) uint
+hc_get_workitem_absolute_id(int dim)
+{
+  return (uint)__ockl_get_global_id(dim);
+}
+
+#endif
+
 // Support std::complex.
 #pragma push_macro("__CUDA__")
 #define __CUDA__
@@ -447,11 +463,20 @@ extern const __device__ __attribute__((weak)) __hip_builtin_gridDim_t gridDim;
 #include <__clang_cuda_complex_builtins.h>
 #include <cuda_wrappers/algorithm>
 #include <cuda_wrappers/complex>
+#include <cuda_wrappers/new>
 #undef __CUDA__
 #pragma pop_macro("__CUDA__")
 
 
-#endif
+hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
+                                    uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
+                                    uint32_t localWorkSizeX, uint32_t localWorkSizeY,
+                                    uint32_t localWorkSizeZ, size_t sharedMemBytes,
+                                    hipStream_t hStream, void** kernelParams, void** extra,
+                                    hipEvent_t startEvent = nullptr,
+                                    hipEvent_t stopEvent = nullptr);
+
+#endif // defined(__clang__) && defined(__HIP__)
 
 #include <hip/hcc_detail/hip_memory.h>
 

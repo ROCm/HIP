@@ -40,6 +40,7 @@ enum ConvTypes {
     CONV_D3D11,
     CONV_VDPAU,
     CONV_EGL,
+    CONV_COMPLEX,
     CONV_THREAD,
     CONV_OTHER,
     CONV_INCLUDE,
@@ -57,6 +58,8 @@ enum ApiTypes {
     API_BLAS,
     API_RAND,
     API_DNN,
+    API_FFT,
+    API_COMPLEX,
     API_LAST
 };
 constexpr int NUM_API_TYPES = (int) ApiTypes::API_LAST;
