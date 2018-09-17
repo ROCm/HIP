@@ -248,11 +248,11 @@ static constexpr Coordinates<hc_get_workitem_id> threadIdx;
 
 #endif // defined __HCC__
 #if __HCC_OR_HIP_CLANG__
-extern "C" __device__ void* __hip_hc_malloc(size_t);
-extern "C" __device__ void* __hip_hc_free(void* ptr);
+extern "C" __device__ void* __hip_malloc(size_t);
+extern "C" __device__ void* __hip_free(void* ptr);
 
-static inline __device__ void* malloc(size_t size) { return __hip_hc_malloc(size); }
-static inline __device__ void* free(void* ptr) { return __hip_hc_free(ptr); }
+static inline __device__ void* malloc(size_t size) { return __hip_malloc(size); }
+static inline __device__ void* free(void* ptr) { return __hip_free(ptr); }
 
 #if defined(__HCC_ACCELERATOR__) && defined(HC_FEATURE_PRINTF)
 template <typename... All>
@@ -426,6 +426,8 @@ extern const __device__ __attribute__((weak)) __hip_builtin_gridDim_t gridDim;
 #define hipGridDim_y gridDim.y
 #define hipGridDim_z gridDim.z
 
+#include <hip/hcc_detail/math_functions.h>
+
 #if __HIP_HCC_COMPAT_MODE__
 // Define HCC work item functions in terms of HIP builtin variables.
 #pragma push_macro("__DEFINE_HCC_FUNC")
@@ -465,7 +467,6 @@ hc_get_workitem_absolute_id(int dim)
 #undef __CUDA__
 #pragma pop_macro("__CUDA__")
 
-#include <hip/hcc_detail/math_functions.h>
 
 hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
@@ -476,5 +477,7 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipEvent_t stopEvent = nullptr);
 
 #endif // defined(__clang__) && defined(__HIP__)
+
+#include <hip/hcc_detail/hip_memory.h>
 
 #endif  // HIP_HCC_DETAIL_RUNTIME_H
