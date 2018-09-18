@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp
+ * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS -std=c++11 --gpu-architecture=sm_60
  * RUN: %t
  * HIT_END
  */
@@ -215,6 +215,7 @@ template<
     typename T, 
     typename enable_if<
         is_same<T, int>{} || is_same<T, unsigned int>{}>::type* = nullptr>
+__device__
 void testKernelSub(T* g_odata) {
     // Atomic subtraction (final should be 0)
     atomicSub(&g_odata[1], 10);
