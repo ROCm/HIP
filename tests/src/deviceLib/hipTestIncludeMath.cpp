@@ -30,6 +30,7 @@ THE SOFTWARE.
 // Incorrect implementation causes compilation failure due to conflict
 // declartions.
 
+#include <new>
 #include <hip/math_functions.h>
 
 // Test __HIP_DEVICE_COMPILE__ is defined after math_functions.h
@@ -44,14 +45,6 @@ __device__ __host__ inline void throw_std_bad_alloc()
     new int[huge];
   #endif
 }
-
-// Test __HIP_ARCH_HAS_WARP_FUNNEL_SHIFT__ and __HIP_ARCH_HAS_DYNAMIC_PARALLEL__
-// is defined. Eigen HIP/hcc/Half.h __ldg depends on this.
-#if !defined(__HIP_ARCH_HAS_WARP_FUNNEL_SHIFT__) ||                            \
-    !defined(__HIP_ARCH_HAS_DYNAMIC_PARALLEL__)
-#error                                                                         \
-    "__HIP_ARCH_HAS_WARP_FUNNEL_SHIFT__ or __HIP_ARCH_HAS_DYNAMIC_PARALLEL__ not defined"
-#endif
 
 #include <hip/hip_runtime.h>
 #include "test_common.h"
