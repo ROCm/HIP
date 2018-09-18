@@ -33,7 +33,6 @@ THE SOFTWARE.
 #define LEN 512
 #define SIZE 2048
 
-struct TestPlacementNew {
   class A {
   public:
       __device__ A() {
@@ -63,9 +62,8 @@ struct TestPlacementNew {
         assert(i == A[i]);
     }
   }
-};
 
 int main() {
-  TestPlacementNew().run();
+  run();
   passed();
 }

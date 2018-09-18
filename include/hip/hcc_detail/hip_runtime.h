@@ -334,13 +334,13 @@ extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, gri
 typedef int hipLaunchParm;
 
 template <typename... Args, typename F = void (*)(Args...)>
-inline void hipLaunchKernelGGL(F kernelName, const dim3& numblocks, const dim3& numthreads,
+inline void hipLaunchKernelGGL(F&& kernelName, const dim3& numblocks, const dim3& numthreads,
                                unsigned memperblock, hipStream_t streamId, Args... args) {
   kernelName<<<numblocks, numthreads, memperblock, streamId>>>(args...);
 }
 
 template <typename... Args, typename F = void (*)(hipLaunchParm, Args...)>
-inline void hipLaunchKernel(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
+inline void hipLaunchKernel(F&& kernel, const dim3& numBlocks, const dim3& dimBlocks,
                             std::uint32_t groupMemBytes, hipStream_t stream, Args... args) {
     hipLaunchKernelGGL(kernel, numBlocks, dimBlocks, groupMemBytes, stream, hipLaunchParm{},
                        std::move(args)...);

@@ -25,7 +25,7 @@ popd () {
 function setupENV()
 {
     sudo apt-get update
-    sudo apt-get install dpkg-dev rpm doxygen libelf-dev
+    sudo apt-get install dpkg-dev rpm doxygen libelf-dev rename
 }
 
 function buildHIP()

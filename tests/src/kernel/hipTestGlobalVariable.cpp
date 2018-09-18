@@ -33,15 +33,14 @@ THE SOFTWARE.
 #define LEN 512
 #define SIZE 2048
 
-struct TestConstantGlobalVar {
-  static __constant__ int ConstantGlobalVar;
+  __constant__ int ConstantGlobalVar = 123;
 
   static __global__ void kernel(int* Ad) {
       int tid = threadIdx.x + blockIdx.x * blockDim.x;
       Ad[tid] = ConstantGlobalVar;
   }
 
-  void run() {
+  void runTestConstantGlobalVar() {
     int *A, *Ad;
     A = new int[LEN];
     for (unsigned i = 0; i < LEN; i++) {
@@ -56,11 +55,8 @@ struct TestConstantGlobalVar {
         assert(123 == A[i]);
     }
   }
-};
-__constant__ int TestConstantGlobalVar::ConstantGlobalVar = 123;
 
-struct TestGlobalArray {
-  static __device__ int GlobalArray[LEN];
+  __device__ int GlobalArray[LEN];
 
   static __global__ void kernelWrite() {
       int tid = threadIdx.x + blockIdx.x * blockDim.x;
@@ -71,7 +67,7 @@ struct TestGlobalArray {
       Ad[tid] = GlobalArray[tid];
   }
 
-  void run() {
+  void runTestGlobalArray() {
     int *A, *Ad;
     A = new int[LEN];
     for (unsigned i = 0; i < LEN; i++) {
@@ -87,11 +83,9 @@ struct TestGlobalArray {
         assert(i == A[i]);
     }
   }
-};
-__device__ int TestGlobalArray::GlobalArray[LEN];
 
 int main() {
-  TestConstantGlobalVar().run();
-  TestGlobalArray().run();
+  runTestConstantGlobalVar();
+  runTestGlobalArray();
   passed();
 }
