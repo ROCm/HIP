@@ -39,6 +39,8 @@ THE SOFTWARE.
 
 #define __HIP_SIZE_OF_HEAP (__HIP_NUM_PAGES * __HIP_SIZE_OF_PAGE)
 
+#if __HCC__ || __HIP__
+
 __attribute__((weak)) __device__ char __hip_device_heap[__HIP_SIZE_OF_HEAP];
 __attribute__((weak)) __device__
     uint32_t __hip_device_page_flag[__HIP_NUM_PAGES];
@@ -101,5 +103,7 @@ extern "C" inline __device__ void* __hip_free(void* ptr) {
 
     return nullptr;
 }
+
+#endif
 
 #endif // HIP_INCLUDE_HIP_HCC_DETAIL_HIP_MEMORY_H
