@@ -118,6 +118,9 @@ typedef int hipLaunchParm;
     }
 #endif
 
+#define __clock() clock()
+#define __clock64() clock64()
+
 #endif
 
 #endif
