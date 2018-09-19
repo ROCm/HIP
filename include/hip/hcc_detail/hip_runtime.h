@@ -131,7 +131,7 @@ extern int HIP_TRACE_API;
 
 
 // Feature tests:
-#if defined(__HCC_ACCELERATOR__) && (__HCC_ACCELERATOR__ != 0)
+#if (defined(__HCC_ACCELERATOR__) && (__HCC_ACCELERATOR__ != 0)) || __HIP_DEVICE_COMPILE__
 // Device compile and not host compile:
 
 // 32-bit Atomics:
