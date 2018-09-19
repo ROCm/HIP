@@ -22,14 +22,16 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "math_fwd.h"
-
-#include <hip/hcc_detail/host_defines.h>
-
 #include <assert.h>
 #include <limits.h>
 #include <limits>
 #include <stdint.h>
+#include <algorithm>
+
+#include <hip/hcc_detail/host_defines.h>
+
+#include "hip_fp16_math_fwd.h"
+#include "math_fwd.h"
 
 // HCC's own math functions should be included first, otherwise there will
 // be conflicts when hip/math_functions.h is included before hip/hip_runtime.h.
