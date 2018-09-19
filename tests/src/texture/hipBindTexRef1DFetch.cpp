@@ -56,7 +56,7 @@ int runTest() {
     int testResult = 1;
     float *texBuf;
     float val[N], output[N];
-    size_t size = 0;
+    size_t offset = 0;
     float *devBuf;
     for (int i = 0; i < N; i++) {
         val[i] = (float)i;
@@ -74,7 +74,8 @@ int runTest() {
     tex.filterMode = hipFilterModePoint;
     tex.normalized = 0;
 
-    HIPCHECK(hipBindTexture(&size, tex, (void *)texBuf, chanDesc, N * sizeof(float)));
+    HIPCHECK(hipBindTexture(&offset, tex, (void *)texBuf, chanDesc, N * sizeof(float)));
+    HIPCHECK(hipGetTextureAlignmentOffset(&offset,&tex));
 
     dim3 dimBlock(64, 1, 1);
     dim3 dimGrid(N / dimBlock.x, 1, 1);
