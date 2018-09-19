@@ -1359,10 +1359,10 @@ __DEVICE__ inline static unsigned long long max(long long arg1, unsigned long lo
   return max((unsigned long long) arg1, arg2);
 }*/
 #else
-__DEVICE__ inline static int min(int arg1, int arg2) {
+__DEVICE__ inline int min(int arg1, int arg2) {
   return (arg1 < arg2) ? arg1 : arg2;
 }
-__DEVICE__ inline static int max(int arg1, int arg2) {
+__DEVICE__ inline int max(int arg1, int arg2) {
   return (arg1 > arg2) ? arg1 : arg2;
 }
 
