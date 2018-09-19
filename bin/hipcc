@@ -58,6 +58,7 @@ $HIP_VDI_HOME=$ENV{'HIP_VDI_HOME'};
 $HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'};
 $DEVICE_LIB_PATH=$ENV{'DEVICE_LIB_PATH'};
 $HIP_CLANG_HCC_COMPAT_MODE=$ENV{'HIP_CLANG_HCC_COMPAT_MODE'}; # HCC compatibility mode
+$HIP_AUTO_INCLUDE_HEADER=$ENV{'HIP_AUTO_INCLUDE_HEADER'}; # includes hip_runtime.h automatically
 
 #---
 # Read .hipInfo
@@ -158,6 +159,9 @@ if ($HIP_PLATFORM eq "clang") {
     }
 
     $HIPCXXFLAGS .= " -std=c++11 -isystem $HIP_CLANG_INCLUDE_PATH";
+    if ($HIP_AUTO_INCLUDE_HEADER) {
+        $HIPCXXFLAGS .= " --include=hip/hip_runtime.h";
+    }
     $HIPLDFLAGS .= " --hip-device-lib-path=$DEVICE_LIB_PATH -L$HIP_LIB_PATH -Wl,--rpath=$HIP_LIB_PATH -lhip_hcc";
     if ($HIP_CLANG_HCC_COMPAT_MODE) {
         ## Allow __fp16 as function parameter and return type.
