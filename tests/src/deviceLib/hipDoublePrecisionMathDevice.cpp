@@ -28,6 +28,7 @@ THE SOFTWARE.
 
 #include <hip/hip_runtime.h>
 #include <hip/math_functions.h>
+#include <hip/math_constants.h>
 #include "test_common.h"
 
 #pragma GCC diagnostic ignored "-Wall"
@@ -126,6 +127,9 @@ __device__ void double_precision_math_functions() {
     y0(1.0);
     y1(1.0);
     yn(1, 1.0);
+
+    HIPRT_INF;
+    HIPRT_NAN;
 }
 
 __global__ void compileDoublePrecisionMathOnDevice(int) {
