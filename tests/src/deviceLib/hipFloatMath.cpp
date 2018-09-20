@@ -39,10 +39,10 @@ __global__ void floatMath(hipLaunchParm lp, float* In, float* Out) {
     Out[tid] = __exp10f(Out[tid]);
     Out[tid] = __expf(Out[tid]);
     Out[tid] = __frsqrt_rn(Out[tid]);
-    Out[tid] = __fsqrt_rd(Out[tid]);
-    Out[tid] = __fsqrt_rn(Out[tid]);
-    Out[tid] = __fsqrt_ru(Out[tid]);
-    Out[tid] = __fsqrt_rz(Out[tid]);
+    //Out[tid] = __fsqrt_rd(Out[tid]);
+    //Out[tid] = __fsqrt_rn(Out[tid]);
+    //Out[tid] = __fsqrt_ru(Out[tid]);
+    //Out[tid] = __fsqrt_rz(Out[tid]);
     Out[tid] = __log10f(Out[tid]);
     Out[tid] = __log2f(Out[tid]);
     Out[tid] = __logf(Out[tid]);
