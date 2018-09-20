@@ -33,8 +33,7 @@ THE SOFTWARE.
 #define LEN 50
 #define SIZE (LEN * sizeof(bool))
 
-struct TestFMA {
-  static __global__ void kernel(bool *Ad) {
+  __global__ void kernelTestFMA(bool *Ad) {
     float f = 1.0f / 3.0f;
     double d = f;
     int i = 0;
@@ -71,7 +70,8 @@ struct TestFMA {
     while (i < LEN)
       Check(true);
   }
-  void run() {
+
+  void runTestFMA() {
     bool *Ad;
     bool A[LEN];
     for (unsigned i = 0; i < LEN; i++) {
@@ -79,17 +79,15 @@ struct TestFMA {
     }
 
     HIP_ASSERT(hipMalloc((void **)&Ad, SIZE));
-    hipLaunchKernelGGL(kernel, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, Ad);
+    hipLaunchKernelGGL(kernelTestFMA, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, Ad);
     HIP_ASSERT(hipMemcpy(A, Ad, SIZE, hipMemcpyDeviceToHost));
 
     for (unsigned i = 0; i < LEN; i++) {
       assert(A[i]);
     }
   }
-};
 
-struct TestHalfFMA {
-    static __global__ void kernel(bool *Ad) {
+    __global__ void kernelTestHalfFMA(bool *Ad) {
       _Float16 h = (_Float16)(1.0f/3.0f);
       float f = h;
       double d = f;
@@ -118,7 +116,7 @@ struct TestHalfFMA {
         Check(true);
     }
 
-  void run() {
+  void runTestHalfFMA() {
     bool *Ad;
     bool A[LEN];
     for (unsigned i = 0; i < LEN; i++) {
@@ -126,17 +124,16 @@ struct TestHalfFMA {
     }
 
     HIP_ASSERT(hipMalloc((void **)&Ad, SIZE));
-    hipLaunchKernelGGL(kernel, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, Ad);
+    hipLaunchKernelGGL(kernelTestHalfFMA, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, Ad);
     HIP_ASSERT(hipMemcpy(A, Ad, SIZE, hipMemcpyDeviceToHost));
 
     for (unsigned i = 0; i < LEN; i++) {
       assert(A[i]);
     }
   }
-};
 
 int main() {
-  TestFMA().run();
-  TestHalfFMA().run();
+  runTestFMA();
+  runTestHalfFMA();
   passed();
 }
