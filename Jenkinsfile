@@ -386,4 +386,40 @@ rocm_head:
     docker_clean_images( job_name, hip_image_name )
     */
   }
+},
+cuda_9_x:
+{
+  node('hip-cuda')
+  {
+    ////////////////////////////////////////////////////////////////////////
+    // Block of string constants customizing behavior for cuda
+    String nvcc_ver = 'nvcc-9.x'
+    String from_image = 'ci_test_nodes/cuda-9.x/ubuntu-16.04:latest'
+    String inside_args = '--runtime=nvidia';
+
+    // Checkout source code, dependencies and version files
+    String source_hip_rel = checkout_and_version( nvcc_ver )
+
+    // Create/reuse a docker image that represents the hip build environment
+    def hip_build_image = docker_build_image( nvcc_ver, 'hip', '', source_hip_rel, from_image )
+
+    // Print system information for the log
+    hip_build_image.inside( inside_args )
+    {
+      sh  """#!/usr/bin/env bash
+          set -x
+          nvidia-smi
+          nvcc --version
+        """
+    }
+
+    // Conctruct a binary directory path based on build config
+    String build_hip_rel = build_directory_rel( build_config );
+
+    // Build hip inside of the build environment
+    docker_build_inside_image( hip_build_image, inside_args, nvcc_ver, "-DHIP_NVCC_FLAGS=--Wno-deprecated-gpu-targets", build_config, source_hip_rel, build_hip_rel )
+
+    // Clean docker image
+    docker_clean_images( 'hip', docker_build_image_name( ) )
+  }
 }
