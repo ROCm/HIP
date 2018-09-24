@@ -32,6 +32,8 @@ THE SOFTWARE.
 #include "test_common.h"
 #include <hip/device_functions.h>
 
+#define HIP_ASSERT(x) (assert((x) == hipSuccess))
+
 #define LEN 512
 #define SIZE LEN << 2
 
