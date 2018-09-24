@@ -1166,6 +1166,16 @@ long long llabs(long long x)
 #endif
 // END INTEGER
 
+__DEVICE__
+inline _Float16 fma(_Float16 x, _Float16 y, _Float16 z) {
+    return __ocml_fma_f16(x, y, z);
+}
+
+__DEVICE__
+inline float fma(float x, float y, float z) {
+    return fmaf(x, y, z);
+}
+
 #pragma push_macro("__DEF_FLOAT_FUN")
 #pragma push_macro("__DEF_FLOAT_FUN2")
 #pragma push_macro("__DEF_FLOAT_FUN2I")
@@ -1359,10 +1369,10 @@ __DEVICE__ inline static unsigned long long max(long long arg1, unsigned long lo
   return max((unsigned long long) arg1, arg2);
 }*/
 #else
-__DEVICE__ inline static int min(int arg1, int arg2) {
+__DEVICE__ inline int min(int arg1, int arg2) {
   return (arg1 < arg2) ? arg1 : arg2;
 }
-__DEVICE__ inline static int max(int arg1, int arg2) {
+__DEVICE__ inline int max(int arg1, int arg2) {
   return (arg1 > arg2) ? arg1 : arg2;
 }
 
