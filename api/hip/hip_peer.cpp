@@ -53,9 +53,9 @@ hipError_t hipMemcpyPeerAsync(void* dst, hipCtx_t dstDevice, const void* src, hi
 hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, int deviceId, int peerDeviceId) {
   HIP_INIT_API(canAccessPeer, deviceId, peerDeviceId);
 
-  assert(0 && "Unimplemented");
+  *canAccessPeer = 0;
 
-  HIP_RETURN(hipErrorUnknown);
+  return hipErrorInvalidDevice;
 }
 
 hipError_t hipDeviceDisablePeerAccess(int peerDeviceId) {
