@@ -1389,22 +1389,23 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
 
 /////////////////////////////// CUDA RT API ///////////////////////////////
     // Data types
-    {"cudaDataType_t", {"hipDataType_t", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"cudaDataType",   {"hipDataType_t", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"CUDA_R_16F",     {"hipR16F",       CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"CUDA_C_16F",     {"hipC16F",       CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"CUDA_R_32F",     {"hipR32F",       CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"CUDA_C_32F",     {"hipC32F",       CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"CUDA_R_64F",     {"hipR64F",       CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"CUDA_C_64F",     {"hipC64F",       CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"CUDA_R_8I",      {"hipR8I",        CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"CUDA_C_8I",      {"hipC8I",        CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"CUDA_R_8U",      {"hipR8U",        CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"CUDA_C_8U",      {"hipC8U",        CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"CUDA_R_32I",     {"hipR32I",       CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"CUDA_C_32I",     {"hipC32I",       CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"CUDA_R_32U",     {"hipR32U",       CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
-    {"CUDA_C_32U",     {"hipC32U",       CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
+    // TODO: rename hipblasDatatype_t to hipDataType_t and move from hipBLAS to HIP
+    {"cudaDataType_t", {"hipblasDatatype_t", CONV_TYPE, API_RUNTIME}},
+    {"cudaDataType",   {"hipblasDatatype_t", CONV_TYPE, API_RUNTIME}},
+    {"CUDA_R_16F",     {"HIPBLAS_R_16F",     CONV_NUMERIC_LITERAL, API_RUNTIME}},                  //  2  // 150
+    {"CUDA_C_16F",     {"HIPBLAS_C_16F",     CONV_NUMERIC_LITERAL, API_RUNTIME}},                  //  6  // 153
+    {"CUDA_R_32F",     {"HIPBLAS_R_32F",     CONV_NUMERIC_LITERAL, API_RUNTIME}},                  //  0  // 151
+    {"CUDA_C_32F",     {"HIPBLAS_C_32F",     CONV_NUMERIC_LITERAL, API_RUNTIME}},                  //  4  // 154
+    {"CUDA_R_64F",     {"HIPBLAS_R_64F",     CONV_NUMERIC_LITERAL, API_RUNTIME}},                  //  1  // 152
+    {"CUDA_C_64F",     {"HIPBLAS_C_64F",     CONV_NUMERIC_LITERAL, API_RUNTIME}},                  //  5  // 155
+    {"CUDA_R_8I",      {"HIPBLAS_R_8I",      CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, //  3  //
+    {"CUDA_C_8I",      {"HIPBLAS_C_8I",      CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, //  7  //
+    {"CUDA_R_8U",      {"HIPBLAS_R_8U",      CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, //  8  //
+    {"CUDA_C_8U",      {"HIPBLAS_C_8U",      CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, //  9  //
+    {"CUDA_R_32I",     {"HIPBLAS_R_32I",     CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 10  //
+    {"CUDA_C_32I",     {"HIPBLAS_C_32I",     CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 11  //
+    {"CUDA_R_32U",     {"HIPBLAS_R_32U",     CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 12  //
+    {"CUDA_C_32U",     {"HIPBLAS_C_32U",     CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 13  //
 
     // Library property types
     // IMPORTANT: no cuda prefix
@@ -2115,11 +2116,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"CUBLAS_ATOMICS_ALLOWED",         {"HIPBLAS_ATOMICS_ALLOWED",         CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
 
     // Blas Data Type
-    {"cublasDataType_t",               {"hipblasDataType_t",               CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
-    {"CUBLAS_DATA_FLOAT",              {"HIPBLAS_DATA_FLOAT",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
-    {"CUBLAS_DATA_DOUBLE",             {"HIPBLAS_DATA_DOUBLE",             CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
-    {"CUBLAS_DATA_HALF",               {"HIPBLAS_DATA_HALF",               CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
-    {"CUBLAS_DATA_INT8",               {"HIPBLAS_DATA_INT8",               CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasDataType_t",               {"hipblasDatatype_t",               CONV_TYPE, API_BLAS}},
 
     // Blas Math mode/tensor operation
     {"cublasMath_t",                   {"hipblasMath_t",                   CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
@@ -2127,9 +2124,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
     {"CUBLAS_TENSOR_OP_MATH",          {"HIPBLAS_TENSOR_OP_MATH",          CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},
 
     // Blass different GEMM algorithms
-    {"cublasGemmAlgo_t",               {"hipblasGemmAlgo_t",               CONV_TYPE, API_BLAS, HIP_UNSUPPORTED}},
-    {"CUBLAS_GEMM_DFALT",              {"HIPBLAS_GEMM_DFALT",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //  -1
-    {"CUBLAS_GEMM_DEFAULT",            {"HIPBLAS_GEMM_DEFAULT",            CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //  -1
+    {"cublasGemmAlgo_t",               {"hipblasGemmAlgo_t",               CONV_TYPE, API_BLAS}},
+    {"CUBLAS_GEMM_DFALT",              {"HIPBLAS_GEMM_DEFAULT",            CONV_NUMERIC_LITERAL, API_BLAS}},                   //  -1  // 160
+    {"CUBLAS_GEMM_DEFAULT",            {"HIPBLAS_GEMM_DEFAULT",            CONV_NUMERIC_LITERAL, API_BLAS}},                   //  -1  // 160
     {"CUBLAS_GEMM_ALGO0",              {"HIPBLAS_GEMM_ALGO0",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //   0
     {"CUBLAS_GEMM_ALGO1",              {"HIPBLAS_GEMM_ALGO1",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //   1
     {"CUBLAS_GEMM_ALGO2",              {"HIPBLAS_GEMM_ALGO2",              CONV_NUMERIC_LITERAL, API_BLAS, HIP_UNSUPPORTED}},  //   2
@@ -2687,7 +2684,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_IDENTIFIER_MAP{
 
     //IO in FP16 / FP32, computation in float
     {"cublasSgemmEx",                  {"hipblasSgemmEx",                  CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED}},
-    {"cublasGemmEx",                   {"hipblasGemmEx",                   CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED}},
+    {"cublasGemmEx",                   {"hipblasGemmEx",                   CONV_MATH_FUNC, API_BLAS}},
     {"cublasGemmBatchedEx",            {"hipblasGemmBatchedEx",            CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED}},
     {"cublasGemmStridedBatchedEx",     {"hipblasGemmStridedBatchedEx",     CONV_MATH_FUNC, API_BLAS, HIP_UNSUPPORTED}},
     // IO in Int8 complex/cuComplex, computation in cuComplex
