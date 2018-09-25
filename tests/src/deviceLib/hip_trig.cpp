@@ -42,10 +42,10 @@ THE SOFTWARE.
 __global__ void kernel_trig(hipLaunchParm lp, float* In, float* sin_d, float* cos_d, float* tan_d,
                             float* sin_pd, float* cos_pd) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
-    sin_d[tid] = __sinf(In[tid]);
-    cos_d[tid] = __cosf(In[tid]);
-    tan_d[tid] = __tanf(In[tid]);
-    __sincosf(In[tid], &sin_pd[tid], &cos_pd[tid]);
+    sin_d[tid] = sinf(In[tid]);
+    cos_d[tid] = cosf(In[tid]);
+    tan_d[tid] = tanf(In[tid]);
+    sincosf(In[tid], &sin_pd[tid], &cos_pd[tid]);
 }
 
 int main() {
