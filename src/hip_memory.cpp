@@ -1543,6 +1543,8 @@ hipError_t ihipMemset(void* dst, int  value, size_t sizeBytes, hipStream_t strea
 {
     hipError_t e = hipSuccess;
 
+    if (sizeBytes == 0) return e;
+
     if (stream && (dst != NULL)) {
         if(copyDataType == ihipMemsetDataTypeChar){
             if ((sizeBytes & 0x3) == 0) {
