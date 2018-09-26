@@ -38,8 +38,8 @@
 
 2. CUDA at least version 7.5, latest supported release is 9.2.
 
-| **LLVM release version** | **CUDA latest supported version** |**Comments**|
-|:------------------------:|:---------------------------------:|:-------- -:|
+| **LLVM release version** | **CUDA latest supported version** | **Comments** |
+|:------------------------:|:---------------------------------:|:------------:|
 | 3.8.0                    | 7.5                               |
 | 3.8.1                    | 7.5                               |
 | 3.9.0                    | 7.5                               |
