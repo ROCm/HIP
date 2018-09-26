@@ -29,11 +29,16 @@
 ##<a name="dependencies"></a>Dependencies
 
 `hipify-clang` requires:
-1. LLVM+CLANG of at least version 3.8.0, latest stable and recommended release is 6.0.1.
-2. CUDA at least version 7.5, latest supported release is 9.0.
+1. LLVM+CLANG of at least version 3.8.0, latest stable and recommended releases:
+   
+   6.0.1 (linux and windows),
 
-| **LLVM release version** | **CUDA latest supported version** |
-|:------------------------:|:---------------------------------:|
+   7.0.0 (linux only).
+
+2. CUDA at least version 7.5, latest supported release is 9.2.
+
+| **LLVM release version** | **CUDA latest supported version** |**Comments**|
+|:------------------------:|:---------------------------------:|:-------- -:|
 | 3.8.0                    | 7.5                               |
 | 3.8.1                    | 7.5                               |
 | 3.9.0                    | 7.5                               |
@@ -45,6 +50,8 @@
 | 5.0.2                    | 8.0                               |
 | 6.0.0                    | 9.0                               |
 | 6.0.1                    | 9.0                               |
+| 7.0.0                    | 9.2                               | linux only |
+|                          | 10.0                              | not yet supported |
 
 In most cases, you can get a suitable version of LLVM+CLANG with your package manager.
 
