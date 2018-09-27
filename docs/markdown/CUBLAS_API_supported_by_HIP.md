@@ -35,9 +35,9 @@
 | enum         |***`cublasAtomicsMode_t`***                                    |                                                            |
 |            0 |*`CUBLAS_ATOMICS_NOT_ALLOWED`*                                 |                                                            |
 |            1 |*`CUBLAS_ATOMICS_ALLOWED`*                                     |                                                            |
-| enum         |***`cublasAtomicsMode_t`***                                    |                                                            |
-|           -1 |*`CUBLAS_GEMM_DFALT`*                                          |                                                            |
-|           -1 |*`CUBLAS_GEMM_DEFAULT`*                                        |                                                            |
+| enum         |***`cublasGemmAlgo_t`***                                       |***`hipblasGemmAlgo_t`***                                   |
+|           -1 |*`CUBLAS_GEMM_DFALT`*                                          |*`HIPBLAS_GEMM_DEFAULT`*                                    | 160                       |
+|           -1 |*`CUBLAS_GEMM_DEFAULT`*                                        |*`HIPBLAS_GEMM_DEFAULT`*                                    | 160                       |
 |            0 |*`CUBLAS_GEMM_ALGO0`*                                          |                                                            |
 |            1 |*`CUBLAS_GEMM_ALGO1`*                                          |                                                            |
 |            2 |*`CUBLAS_GEMM_ALGO2`*                                          |                                                            |
@@ -391,7 +391,7 @@
 |`cublasZgemm3m`                                            |                                                 |
 |`cublasHgemm`                                              |`hipblasHgemm`                                   |
 |`cublasSgemmEx`                                            |                                                 |
-|`cublasGemmEx`                                             |                                                 |
+|`cublasGemmEx`                                             |`hipblasGemmEx`                                  |
 |`cublasCgemmEx`                                            |                                                 |
 |`cublasUint8gemmBias`                                      |                                                 |
 |`cublasSsyrk`                                              |                                                 |

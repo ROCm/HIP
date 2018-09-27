@@ -93,10 +93,10 @@
 
 ## **7. Occupancy**
 
-|   **CUDA**                                                |   **HIP**                     |
-|-----------------------------------------------------------|-------------------------------|
+|   **CUDA**                                                |   **HIP**                                     |
+|-----------------------------------------------------------|-----------------------------------------------|
 | `cudaOccupancyMaxActiveBlocksPerMultiprocessor`           | `hipOccupancyMaxActiveBlocksPerMultiprocessor`|
-| `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |                               |
+| `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |                                               |
 
 ## **8. Execution Control [deprecated since 7.0]**
 
@@ -326,13 +326,13 @@
 
 ## **25. Texture Object Management**
 
-|   **CUDA**                                                |   **HIP**                     |
-|-----------------------------------------------------------|-------------------------------|
-| `cudaCreateTextureObject`                                 |`hipCreateTextureObject`       |
-| `cudaDestroyTextureObject`                                |`hipDestroyTextureObject`      |
-| `cudaGetTextureObjectResourceDesc`                        |`hipGetTextureObjectResourceDesc` |
+|   **CUDA**                                                |   **HIP**                            |
+|-----------------------------------------------------------|--------------------------------------|
+| `cudaCreateTextureObject`                                 |`hipCreateTextureObject`              |
+| `cudaDestroyTextureObject`                                |`hipDestroyTextureObject`             |
+| `cudaGetTextureObjectResourceDesc`                        |`hipGetTextureObjectResourceDesc`     |
 | `cudaGetTextureObjectResourceViewDesc`                    |`hipGetTextureObjectResourceViewDesc` |
-| `cudaGetTextureObjectTextureDesc`                         |`hipGetTextureObjectTextureDesc` |
+| `cudaGetTextureObjectTextureDesc`                         |`hipGetTextureObjectTextureDesc`      |
 
 ## **26. Surface Object Management**
 
@@ -352,36 +352,36 @@
 ## **28. C++ API Routines**
 *(7.0 contains, 7.5 doesn’t)*
 
-|   **CUDA**                                                |   **HIP**                     |
-|-----------------------------------------------------------|-------------------------------|
-| `cudaBindSurfaceToArray`                                  |                               |
-| `cudaBindTexture`                                         | `hipBindTexture`              |
-| `cudaBindTexture2D`                                       |                               |
-| `cudaBindTextureToArray`                                  |                               |
-| `cudaBindTextureToMipmappedArray`                         |                               |
-| `cudaCreateChannelDesc`                                   | `hipCreateChannelDesc`        |
-| `cudaFuncGetAttributes`                                   |                               |
-| `cudaFuncSetCacheConfig`                                  |                               |
-| `cudaGetSymbolAddress`                                    |                               |
-| `cudaGetSymbolSize`                                       |                               |
-| `cudaGetTextureAlignmentOffset`                           |                               |
-| `cudaLaunch`                                              |                               |
-| `cudaLaunchKernel`                                        |                               |
-| `cudaMallocHost`                                          |                               |
-| `cudaMallocManaged`                                       |                               |
-| `cudaMemcpyFromSymbol`                                    |                               |
-| `cudaMemcpyFromSymbolAsync`                               |                               |
-| `cudaMemcpyToSymbol`                                      |                               |
-| `cudaMemcpyToSymbolAsync`                                 |                               |
+|   **CUDA**                                                |   **HIP**                                      |
+|-----------------------------------------------------------|------------------------------------------------|
+| `cudaBindSurfaceToArray`                                  |                                                |
+| `cudaBindTexture`                                         | `hipBindTexture`                               |
+| `cudaBindTexture2D`                                       |                                                |
+| `cudaBindTextureToArray`                                  |                                                |
+| `cudaBindTextureToMipmappedArray`                         |                                                |
+| `cudaCreateChannelDesc`                                   | `hipCreateChannelDesc`                         |
+| `cudaFuncGetAttributes`                                   |                                                |
+| `cudaFuncSetCacheConfig`                                  |                                                |
+| `cudaGetSymbolAddress`                                    |                                                |
+| `cudaGetSymbolSize`                                       |                                                |
+| `cudaGetTextureAlignmentOffset`                           |                                                |
+| `cudaLaunch`                                              |                                                |
+| `cudaLaunchKernel`                                        |                                                |
+| `cudaMallocHost`                                          |                                                |
+| `cudaMallocManaged`                                       |                                                |
+| `cudaMemcpyFromSymbol`                                    |                                                |
+| `cudaMemcpyFromSymbolAsync`                               |                                                |
+| `cudaMemcpyToSymbol`                                      |                                                |
+| `cudaMemcpyToSymbolAsync`                                 |                                                |
 | `cudaOccupancyMaxActiveBlocksPerMultiprocessor`           | `hipOccupancyMaxActiveBlocksPerMultiprocessor` |
-| `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |                               |
-| `cudaOccupancyMaxPotentialBlockSize`                      | `hipOccupancyMaxPotentialBlockSize` |
-| `cudaOccupancyMaxPotentialBlockSizeVariableSMem`          |                               |
-| `cudaOccupancyMaxPotentialBlockSizeVariableSMemWithFlags` |                               |
-| `cudaOccupancyMaxPotentialBlockSizeWithFlags`             |                               |
-| `cudaSetupArgument`                                       |                               |
-| `cudaStreamAttachMemAsync`                                |                               |
-| `cudaUnbindTexture`                                       | `hipUnbindTexture`            |
+| `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |                                                |
+| `cudaOccupancyMaxPotentialBlockSize`                      | `hipOccupancyMaxPotentialBlockSize`            |
+| `cudaOccupancyMaxPotentialBlockSizeVariableSMem`          |                                                |
+| `cudaOccupancyMaxPotentialBlockSizeVariableSMemWithFlags` |                                                |
+| `cudaOccupancyMaxPotentialBlockSizeWithFlags`             |                                                |
+| `cudaSetupArgument`                                       |                                                |
+| `cudaStreamAttachMemAsync`                                |                                                |
+| `cudaUnbindTexture`                                       | `hipUnbindTexture`                             |
 
 ## **30. Profiler Control**
 
@@ -395,8 +395,8 @@
 
 ## **31. Data types**
 
-| **type**     |   **CUDA**                                    |   **HIP**                                            |
-|-------------:|-----------------------------------------------|------------------------------------------------------|
+| **type**     |   **CUDA**                                    |   **HIP**                                            |**HIP value** (if differs) |
+|-------------:|-----------------------------------------------|------------------------------------------------------|---------------------------|
 | struct       | `cudaChannelFormatDesc`                       | `hipChannelFormatDesc`                               |
 | struct       | `cudaDeviceProp`                              | `hipDeviceProp_t`                                    |
 | struct       | `cudaExtent`                                  | `hipExtent`                                          |
@@ -790,3 +790,19 @@
 | define       | `cudaTextureType1DLayered`                    | `hipTextureType1DLayered`                            |
 | define       | `cudaTextureType2DLayered`                    | `hipTextureType2DLayered`                            |
 | define       | `cudaTextureTypeCubemapLayered`               | `hipTextureTypeCubemapLayered`                       |
+| enum         |***`cudaDataType_t`***                         |***`hipblasDatatype_t`***                             |
+| enum         |***`cudaDataType`***                           |***`hipblasDatatype_t`***                             |
+|            2 |*`CUDA_R_16F`*                                 |*`HIPBLAS_R_16F`*                                     | 150                       |
+|            6 |*`CUDA_C_16F`*                                 |*`HIPBLAS_C_16F`*                                     | 153                       |
+|            0 |*`CUDA_R_32F`*                                 |*`HIPBLAS_R_32F`*                                     | 151                       |
+|            4 |*`CUDA_C_32F`*                                 |*`HIPBLAS_C_32F`*                                     | 154                       |
+|            1 |*`CUDA_R_64F`*                                 |*`HIPBLAS_R_64F`*                                     | 152                       |
+|            5 |*`CUDA_C_64F`*                                 |*`HIPBLAS_C_64F`*                                     | 155                       |
+|            3 |*`CUDA_R_8I`*                                  |                                                      |
+|            7 |*`CUDA_C_8I`*                                  |                                                      |
+|            8 |*`CUDA_R_8U`*                                  |                                                      |
+|            9 |*`CUDA_C_8U`*                                  |                                                      |
+|           10 |*`CUDA_R_32I`*                                 |                                                      |
+|           11 |*`CUDA_C_32I`*                                 |                                                      |
+|           12 |*`CUDA_R_32U`*                                 |                                                      |
+|           13 |*`CUDA_C_32U`*                                 |                                                      |
