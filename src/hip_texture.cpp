@@ -198,6 +198,7 @@ bool getHipTextureObject(hipTextureObject_t* pTexObject, hsa_ext_image_t& image,
     return true;
 }
 
+size_t channelFormatKindSize[] = {sizeof(unsigned),sizeof(signed),sizeof(float),sizeof(unsigned)};
 // Texture Object APIs
 hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResourceDesc* pResDesc,
                                   const hipTextureDesc* pTexDesc,
@@ -263,7 +264,7 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
                 break;
             case hipResourceTypeLinear:
                 devPtr = pResDesc->res.linear.devPtr;
-                imageDescriptor.width = pResDesc->res.linear.sizeInBytes;
+                imageDescriptor.width = pResDesc->res.linear.sizeInBytes/channelFormatKindSize[pResDesc->res.linear.desc.f];
                 imageDescriptor.height = 1;
                 imageDescriptor.depth = 0;
                 imageDescriptor.array_size = 0;
