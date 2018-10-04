@@ -157,8 +157,12 @@ if ($HIP_PLATFORM eq "clang") {
         print ("DEVICE_LIB_PATH=$DEVICE_LIB_PATH\n");
     }
 
-    $HIPCXXFLAGS .= " -std=c++11 -isystem $HIP_CLANG_INCLUDE_PATH";
-    $HIPLDFLAGS .= " --hip-device-lib-path=$DEVICE_LIB_PATH -L$HIP_LIB_PATH -Wl,--rpath=$HIP_LIB_PATH -lhip_hcc";
+
+    # By default, hip-clang assumes -fno-gpu-rdc, therefore device lib path
+    # is required.
+    $HIP_DEVLIB_FLAGS = " --hip-device-lib-path=$DEVICE_LIB_PATH";
+    $HIPCXXFLAGS .= " $HIP_DEVLIB_FLAGS -std=c++11 -isystem $HIP_CLANG_INCLUDE_PATH";
+    $HIPLDFLAGS .= " $HIP_DEVLIB_FLAGS -L$HIP_LIB_PATH -Wl,--rpath=$HIP_LIB_PATH -lhip_hcc";
     if ($HIP_CLANG_HCC_COMPAT_MODE) {
         ## Allow __fp16 as function parameter and return type.
         $HIPCXXFLAGS .= " -Xclang -fallow-half-arguments-and-returns -D__HIP_HCC_COMPAT_MODE__=1";
