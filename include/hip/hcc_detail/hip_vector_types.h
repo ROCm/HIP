@@ -760,14 +760,14 @@ DECLOP_MAKE_TWO_COMPONENT(signed long, long2);
 DECLOP_MAKE_THREE_COMPONENT(signed long, long3);
 DECLOP_MAKE_FOUR_COMPONENT(signed long, long4);
 
-DECLOP_MAKE_ONE_COMPONENT(unsigned long, ulonglong1);
-DECLOP_MAKE_TWO_COMPONENT(unsigned long, ulonglong2);
-DECLOP_MAKE_THREE_COMPONENT(unsigned long, ulonglong3);
-DECLOP_MAKE_FOUR_COMPONENT(unsigned long, ulonglong4);
+DECLOP_MAKE_ONE_COMPONENT(unsigned long long, ulonglong1);
+DECLOP_MAKE_TWO_COMPONENT(unsigned long long, ulonglong2);
+DECLOP_MAKE_THREE_COMPONENT(unsigned long long, ulonglong3);
+DECLOP_MAKE_FOUR_COMPONENT(unsigned long long, ulonglong4);
 
-DECLOP_MAKE_ONE_COMPONENT(signed long, longlong1);
-DECLOP_MAKE_TWO_COMPONENT(signed long, longlong2);
-DECLOP_MAKE_THREE_COMPONENT(signed long, longlong3);
-DECLOP_MAKE_FOUR_COMPONENT(signed long, longlong4);
+DECLOP_MAKE_ONE_COMPONENT(signed long long, longlong1);
+DECLOP_MAKE_TWO_COMPONENT(signed long long, longlong2);
+DECLOP_MAKE_THREE_COMPONENT(signed long long, longlong3);
+DECLOP_MAKE_FOUR_COMPONENT(signed long long, longlong4);
 
 #endif
