@@ -890,6 +890,13 @@ inline static hipError_t hipStreamCreateWithFlags(hipStream_t* stream, unsigned 
     return hipCUDAErrorTohipError(cudaStreamCreateWithFlags(stream, flags));
 }
 
+inline static hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, int priority) {
+    return hipCUDAErrorTohipError(cudaStreamCreateWithPriority(stream, flags, priority));
+}
+
+inline static hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPriority) {
+    return hipCUDAErrorTohipError(cudaDeviceGetStreamPriorityRange(leastPriority, greatestPriority));
+}
 
 inline static hipError_t hipStreamCreate(hipStream_t* stream) {
     return hipCUDAErrorTohipError(cudaStreamCreate(stream));
@@ -903,6 +910,13 @@ inline static hipError_t hipStreamDestroy(hipStream_t stream) {
     return hipCUDAErrorTohipError(cudaStreamDestroy(stream));
 }
 
+inline static hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags) {
+    return hipCUDAErrorTohipError(cudaStreamGetFlags(stream, flags));
+}
+
+inline static hipError_t hipStreamGetPriority(hipStream_t stream, int *priority) {
+    return hipCUDAErrorTohipError(cudaStreamGetPriority(stream, priority));
+}
 
 inline static hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event,
                                             unsigned int flags) {
