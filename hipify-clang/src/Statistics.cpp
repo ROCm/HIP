@@ -7,7 +7,7 @@
 const char *counterNames[NUM_CONV_TYPES] = {
     "version", "init", "device", "mem", "kern", "coord_func", "math_func", "device_func",
     "special_func", "stream", "event", "occupancy", "ctx", "peer", "module",
-    "cache", "exec", "err", "def", "tex", "gl", "graphics",
+    "cache", "exec", "external_resource_interop", "graph", "err", "def", "tex", "gl", "graphics",
     "surface", "jit", "d3d9", "d3d10", "d3d11", "vdpau", "egl", "complex",
     "thread", "other", "include", "include_cuda_main_header", "type", "literal",
     "numeric_literal"
