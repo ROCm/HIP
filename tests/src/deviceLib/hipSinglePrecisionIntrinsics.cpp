@@ -27,7 +27,6 @@ THE SOFTWARE.
 
 #include <hip/hip_runtime.h>
 #include <hip/device_functions.h>
-#include <hip/math_functions.h>
 
 #include "test_common.h"
 

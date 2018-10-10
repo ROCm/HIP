@@ -27,7 +27,6 @@ THE SOFTWARE.
  */
 
 #include "hip/hip_runtime.h"
-#include "hip/math_functions.h"
 #include "test_common.h"
 
 #if __HIP_ARCH_GFX803__ || __HIP_ARCH_GFX900__ || __HIP_ARCH_GFX906__

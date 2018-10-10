@@ -30,7 +30,6 @@ THE SOFTWARE.
 #include <hip/hip_runtime.h>
 #include "test_common.h"
 #include <hip/device_functions.h>
-#include <hip/math_functions.h>
 
 #include <iostream>
 
