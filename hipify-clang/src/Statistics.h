@@ -28,6 +28,8 @@ enum ConvTypes {
     CONV_MODULE,
     CONV_CACHE,
     CONV_EXEC,
+    CONV_EXTERNAL_RES,
+    CONV_GRAPH,
     CONV_ERROR,
     CONV_DEF,
     CONV_TEX,
