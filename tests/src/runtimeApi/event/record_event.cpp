@@ -170,8 +170,8 @@ void runTests(int64_t numElements) {
     // for (int waitStart=0; waitStart<2; waitStart++) {
     for (int waitStart = 1; waitStart >= 0; waitStart--) {
         unsigned W = waitStart ? 0x1000 : 0;
-        test(W | 0x01, C_d, C_h, numElements, 0, waitStart, syncNone);
-        test(W | 0x02, C_d, C_h, numElements, stream, waitStart, syncNone);
+        test(W | 0x01, C_d, C_h, numElements, 0, 0, syncNone);
+        test(W | 0x02, C_d, C_h, numElements, stream, 0, syncNone);
         test(W | 0x04, C_d, C_h, numElements, 0, waitStart, syncStream);
         test(W | 0x08, C_d, C_h, numElements, stream, waitStart, syncStream);
         test(W | 0x10, C_d, C_h, numElements, 0, waitStart, syncStopEvent);

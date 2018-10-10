@@ -26,6 +26,8 @@ THE SOFTWARE.
 // Half Math Functions
 // */
 
+#include "host_defines.h"
+
 extern "C"
 {
     __device__ __attribute__((const)) _Float16 __ocml_ceil_f16(_Float16);
