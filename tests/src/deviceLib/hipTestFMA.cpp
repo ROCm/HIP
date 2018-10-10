@@ -62,7 +62,7 @@ THE SOFTWARE.
     Check(fma(d, (double)f, (unsigned char)3) == doubleResult);
     Check(fma(d, (double)f, (short)3) == doubleResult);
     Check(fma(d, (double)f, (unsigned short)3) == doubleResult);
-    Check(fma(d, (double)f, (int)3) == doubleResult); 
+    Check(fma(d, (double)f, (int)3) == doubleResult);
     Check(fma(d, (double)f, (unsigned int)3) == doubleResult);
     Check(fma(d, (double)f, (long)3) == doubleResult);
     Check(fma(d, (double)f, (unsigned long)3) == doubleResult);
