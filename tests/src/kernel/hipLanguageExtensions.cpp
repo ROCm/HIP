@@ -28,6 +28,8 @@ THE SOFTWARE.
  */
 
 #include "hip/hip_runtime.h"
+#include "hip/math_functions.h"
+
 #include <test_common.h>
 
 #ifdef __HCC__
@@ -53,7 +55,7 @@ __device__ __forceinline__ int sum1_forceinline(int a) { return a + 1; };
 
 __device__ __host__ float PlusOne(float x) { return x + 1.0; }
 
-__global__ void MyKernel(const hipLaunchParm lp, const float* a, const float* b, float* c,
+__global__ void MyKernel(const float* a, const float* b, float* c,
                          unsigned N) {
     // KERNELBEGIN;
 
@@ -71,12 +73,12 @@ void callMyKernel() {
     const unsigned blockSize = 256;
     unsigned N = blockSize;
 
-    hipLaunchKernel(MyKernel, dim3(N / blockSize), dim3(blockSize), 0, 0, a, b, c, N);
+    hipLaunchKernelGGL(MyKernel, dim3(N / blockSize), dim3(blockSize), 0, 0, a, b, c, N);
 }
 
 
 template <typename T>
-__global__ void vectorADD(const hipLaunchParm lp, T __restrict__* A_d, T* B_d, T* C_d, size_t N) {
+__global__ void vectorADD(T __restrict__* A_d, T* B_d, T* C_d, size_t N) {
 //    KERNELBEGIN;
 #ifdef NOT_YET
     int a = __shfl_up(x, 1);
