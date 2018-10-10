@@ -26,7 +26,6 @@ THE SOFTWARE.
 #include "test_common.h"
 #include <hip/hip_runtime.h>
 #include <hip/hip_runtime_api.h>
-#include <hip/math_functions.h>
 #include <iostream>
 
 #define HIP_ASSERT(status) assert(status == hipSuccess)
