@@ -33,21 +33,14 @@ THE SOFTWARE.
 #define LEN 512
 #define SIZE 2048
 
-  class A {
-  public:
-      __device__ A() {
-          a = threadIdx.x + blockIdx.x * blockDim.x;
-      }
-  private:
-      int a;
-  };
-     
+  __constant__ int ConstantGlobalVar = 123;
+
   static __global__ void kernel(int* Ad) {
       int tid = threadIdx.x + blockIdx.x * blockDim.x;
-      new(Ad+tid) A();
+      Ad[tid] = ConstantGlobalVar;
   }
 
-  void run() {
+  void runTestConstantGlobalVar() {
     int *A, *Ad;
     A = new int[LEN];
     for (unsigned i = 0; i < LEN; i++) {
@@ -59,11 +52,40 @@ THE SOFTWARE.
     HIP_ASSERT(hipMemcpy(A, Ad, SIZE, hipMemcpyDeviceToHost));
 
     for (unsigned i = 0; i < LEN; i++) {
+        assert(123 == A[i]);
+    }
+  }
+
+  __device__ int GlobalArray[LEN];
+
+  static __global__ void kernelWrite() {
+      int tid = threadIdx.x + blockIdx.x * blockDim.x;
+      GlobalArray[tid] = tid;
+  }
+  static __global__ void kernelRead(int* Ad) {
+      int tid = threadIdx.x + blockIdx.x * blockDim.x;
+      Ad[tid] = GlobalArray[tid];
+  }
+
+  void runTestGlobalArray() {
+    int *A, *Ad;
+    A = new int[LEN];
+    for (unsigned i = 0; i < LEN; i++) {
+        A[i] = 0;
+    }
+
+    HIP_ASSERT(hipMalloc((void**)&Ad, SIZE));
+    hipLaunchKernelGGL(kernelWrite, dim3(1, 1, 1), dim3(LEN, 1, 1), 0, 0);
+    hipLaunchKernelGGL(kernelRead, dim3(1, 1, 1), dim3(LEN, 1, 1), 0, 0, Ad);
+    HIP_ASSERT(hipMemcpy(A, Ad, SIZE, hipMemcpyDeviceToHost));
+
+    for (unsigned i = 0; i < LEN; i++) {
         assert(i == A[i]);
     }
   }
 
 int main() {
-  run();
+  runTestConstantGlobalVar();
+  runTestGlobalArray();
   passed();
 }

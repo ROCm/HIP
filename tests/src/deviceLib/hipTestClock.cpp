@@ -33,8 +33,6 @@ THE SOFTWARE.
 #define LEN 512
 #define SIZE 2048
 
-struct TestClock {
-     
   static __global__ void kernel1(int* Ad) {
       int tid = threadIdx.x + blockIdx.x * blockDim.x;
       Ad[tid] = clock() + clock64() + __clock() + __clock64();
@@ -61,9 +59,8 @@ struct TestClock {
         assert(0 != A[i]);
     }
   }
-};
 
 int main() {
-  TestClock().run();
+  run();
   passed();
 }
