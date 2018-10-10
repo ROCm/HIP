@@ -34,11 +34,11 @@ typedef struct grid_launch_parm
   gl_dim3      grid_dim;
 
   //! Group dimensions
-  gl_dim3      group_dim;;
+  gl_dim3      group_dim;
 
   //! Amount of dynamic group memory to use with the kernel launch.
   //! This memory is in addition to the amount used statically in the kernel.
-  unsigned int  dynamic_group_mem_bytes;;  
+  unsigned int  dynamic_group_mem_bytes;
 
   //! Control setting of barrier bit on per-packet basis:
   //! See gl_barrier_bit description.  
@@ -56,7 +56,7 @@ typedef struct grid_launch_parm
   //! If NULL, the default view on the default accelerator is used.
   hc::accelerator_view  *av;
 
-  //! Pointe to the completion_future used to track the status of the command.
+  //! Pointer to the completion_future used to track the status of the command.
   //! If NULL, the command does not write status.  In this case, 
   //! synchronization can be enforced with queue-level waits or 
   //! waiting on younger commands.
