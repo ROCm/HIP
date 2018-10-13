@@ -33,7 +33,7 @@ THE SOFTWARE.
 // implicit data transfer is used - really the only difference is the namespace.
 // Other examples show some of the more advanced controls.
 
-#include <hc.hpp>
+#include <hc/hc.hpp>
 
 int main(int argc, char* argv[]) {
     int sizeElements = 1000000;
