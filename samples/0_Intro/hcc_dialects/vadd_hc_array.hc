@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <hc.hpp>
+#include <hc/hc.hpp>
 
 int main(int argc, char *argv[])
 {
