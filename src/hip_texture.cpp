@@ -263,7 +263,7 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
                 break;
             case hipResourceTypeLinear:
                 devPtr = pResDesc->res.linear.devPtr;
-                imageDescriptor.width = pResDesc->res.linear.sizeInBytes;
+                imageDescriptor.width = pResDesc->res.linear.sizeInBytes/((pResDesc->res.linear.desc.x + pResDesc->res.linear.desc.y + pResDesc->res.linear.desc.z + pResDesc->res.linear.desc.w)/8);
                 imageDescriptor.height = 1;
                 imageDescriptor.depth = 0;
                 imageDescriptor.array_size = 0;
