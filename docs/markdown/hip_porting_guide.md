@@ -53,7 +53,7 @@ and provides practical suggestions on how to port CUDA code and work through com
 ### General Tips
 - Starting the port on a Cuda machine is often the easiest approach, since you can incrementally port pieces of the code to HIP while leaving the rest in Cuda. (Recall that on Cuda machines HIP is just a thin layer over Cuda, so the two code types can interoperate on nvcc platforms.) Also, the HIP port can be compared with the original Cuda code for function and performance.
 - Once the Cuda code is ported to HIP and is running on the Cuda machine, compile the HIP code using hcc on an AMD machine.
-- HIP ports can replace Cuda versions---HIP can deliver the same performance as a native Cuda implementation, with the benefit of portability to both Nvidia and AMD architectures as well as a path to future C++ standard support. You can handle platform-specific features through conditional compilation or by adding them to the open-source HIP infrastructure.
+- HIP ports can replace Cuda versions: HIP can deliver the same performance as a native Cuda implementation, with the benefit of portability to both Nvidia and AMD architectures as well as a path to future C++ standard support. You can handle platform-specific features through conditional compilation or by adding them to the open-source HIP infrastructure.
 - Use **[bin/hipconvertinplace.sh](https://github.com/ROCm-Developer-Tools/HIP/blob/master/bin/hipconvertinplace.sh)** to hipify all code files in the Cuda source directory.
 
 ### Scanning existing CUDA code to scope the porting effort
@@ -77,7 +77,7 @@ info: TOTAL-converted 89 CUDA->HIP refs( dev:3 mem:32 kern:2 builtin:37 math:0 s
   kernels (1 total) :   kmeansPoint(1)
 ```
 
-hipexamine scans each code file (cpp, c, h, hpp, etc) found in the specified directory:
+hipexamine scans each code file (cpp, c, h, hpp, etc.) found in the specified directory:
 
    * Files with no CUDA code (ie kmeans.h) print one line summary just listing the source file name.
    * Files with CUDA code print a summary of what was found - for example the kmeans_cuda_kernel.cu file:
@@ -85,11 +85,11 @@ hipexamine scans each code file (cpp, c, h, hpp, etc) found in the specified dir
 info: hipify ./kmeans_cuda_kernel.cu =====>
   info: converted 40 CUDA->HIP refs( dev:0 mem:0 kern:0 builtin:37 math:0 stream:0 event:0 
 ```
-* Some of the most interesting information in kmeans_cuda_kernel.cu :
-       * How many CUDA calls were converted to HIP (40)
-       * Breakdown of the different CUDA functionality used (dev:0 mem:0 etc).  This file uses many CUDA builtins (37) and texture functions (3).
-       * Warning for code that looks like CUDA API but was not converted (0 in this file).
-       * Count Lines-of-Code (LOC) - 185 for this file. 
+* Interesting information in kmeans_cuda_kernel.cu :
+  * How many CUDA calls were converted to HIP (40)
+  * Breakdown of the CUDA functionality used (dev:0 mem:0 etc). This file uses many CUDA builtins (37) and texture functions (3).
+   * Warning for code that looks like CUDA API but was not converted (0 in this file).
+   * Count Lines-of-Code (LOC) - 185 for this file. 
 
 * hipexamine also presents a summary at the end of the process for the statistics collected across all files. This has similar format to the per-file reporting, and also includes a list of all kernels which have been called.  An example from above:
 
@@ -138,7 +138,7 @@ Many projects use a mixture of an accelerator compiler (hcc or nvcc) and a stand
  
  
 ### Identifying the Compiler: hcc, hip-clang or nvcc
-Often, its useful to know whether the underlying compiler is hcc, hip-clang or nvcc. This knowledge can guard platform-specific code (features that only work on the nvcc, hip-clang or hcc path but not all) or aid in platform-specific performance tuning.   
+Often, it's useful to know whether the underlying compiler is hcc, hip-clang or nvcc. This knowledge can guard platform-specific code (features that only work on the nvcc, hip-clang or hcc path but not all) or aid in platform-specific performance tuning.   
  
 ```
 #ifdef __HCC__
