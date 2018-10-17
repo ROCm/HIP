@@ -54,7 +54,7 @@ and provides practical suggestions on how to port CUDA code and work through com
 - Starting the port on a Cuda machine is often the easiest approach, since you can incrementally port pieces of the code to HIP while leaving the rest in Cuda. (Recall that on Cuda machines HIP is just a thin layer over Cuda, so the two code types can interoperate on nvcc platforms.) Also, the HIP port can be compared with the original Cuda code for function and performance.
 - Once the Cuda code is ported to HIP and is running on the Cuda machine, compile the HIP code using hcc on an AMD machine.
 - HIP ports can replace Cuda versions---HIP can deliver the same performance as a native Cuda implementation, with the benefit of portability to both Nvidia and AMD architectures as well as a path to future C++ standard support. You can handle platform-specific features through conditional compilation or by adding them to the open-source HIP infrastructure.
-- Use **bin/hipconvertinplace.sh** to hipify all code files in the Cuda source directory.
+- Use **[bin/hipconvertinplace.sh](https://github.com/ROCm-Developer-Tools/HIP/blob/master/bin/hipconvertinplace.sh)** to hipify all code files in the Cuda source directory.
 
 ### Scanning existing CUDA code to scope the porting effort
 The hipexamine.sh tool will scan a source directory to determine which files contain CUDA code and how much of that code can be automatically hipified, 
