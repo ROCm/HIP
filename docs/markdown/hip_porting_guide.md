@@ -45,7 +45,7 @@ and provides practical suggestions on how to port CUDA code and work through com
     + [/usr/include/c++/v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();](#usrincludecv1memory517215-error-call-to-implicitly-deleted-default-constructor-of-std__1bad_weak_ptr-throw-bad_weak_ptr)
   * [HIP Environment Variables](#hip-environment-variables)
   * [Editor Highlighting](#editor-highlighting)
-  * [CUDA to HIP Math Library Equivalents](#libraries-convert)
+  * [CUDA to HIP Math Library Equivalents](#libraries-equivalent)
   
 
 <!-- tocstop -->
