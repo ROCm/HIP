@@ -105,8 +105,10 @@ typedef enum hipChannelFormatKind {
 #define hipHostMallocCoherent 0x0
 #define hipHostMallocNonCoherent 0x0
 
+#define hipHostRegisterDefault cudaHostRegisterDefault
 #define hipHostRegisterPortable cudaHostRegisterPortable
 #define hipHostRegisterMapped cudaHostRegisterMapped
+#define hipHostRegisterIoMemory cudaHostRegisterIoMemory
 
 #define HIP_LAUNCH_PARAM_BUFFER_POINTER CU_LAUNCH_PARAM_BUFFER_POINTER
 #define HIP_LAUNCH_PARAM_BUFFER_SIZE CU_LAUNCH_PARAM_BUFFER_SIZE
