@@ -32,12 +32,12 @@ THE SOFTWARE.
 #define NUM 1024
 #define SIZE NUM * 8
 
-__global__ void Alloc(hipLaunchParm lp, uint64_t* Ptr) {
+__global__ void Alloc(uint64_t* Ptr) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     Ptr[tid] = (uint64_t)malloc(128);
 }
 
-__global__ void Free(hipLaunchParm lp, uint64_t* Ptr) {
+__global__ void Free(uint64_t* Ptr) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     free((void*)Ptr[tid]);
 }
@@ -54,10 +54,10 @@ int main() {
         HIP_ASSERT(hipSetDevice(i));
         HIP_ASSERT(hipMalloc((void**)&dPtr, SIZE));
         HIP_ASSERT(hipMemcpy(dPtr, hPtr, SIZE, hipMemcpyHostToDevice));
-        hipLaunchKernel(Alloc, dim3(1, 1, 1), dim3(NUM, 1, 1), 0, 0, dPtr);
+        hipLaunchKernelGGL(Alloc, dim3(1, 1, 1), dim3(NUM, 1, 1), 0, 0, dPtr);
         HIP_ASSERT(hipMemcpy(hPtr, dPtr, SIZE, hipMemcpyDeviceToHost));
         assert(hPtr[0] != 0);
-        hipLaunchKernel(Free, dim3(1, 1, 1), dim3(NUM, 1, 1), 0, 0, dPtr);
+        hipLaunchKernelGGL(Free, dim3(1, 1, 1), dim3(NUM, 1, 1), 0, 0, dPtr);
         HIP_ASSERT(hipFree(dPtr));
         for (uint32_t i = 1; i < NUM; i++) {
             assert(hPtr[i] == hPtr[i - 1] + 4096);

@@ -33,7 +33,7 @@ THE SOFTWARE.
 #define SIZE LEN << 2
 
 
-__global__ void floatMath(hipLaunchParm lp, float* In, float* Out) {
+__global__ void floatMath(float* In, float* Out) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     Out[tid] = __cosf(In[tid]);
     Out[tid] = __exp10f(Out[tid]);
@@ -57,6 +57,6 @@ int main() {
     float *Ind, *Outd;
     hipMalloc((void**)&Ind, SIZE);
     hipMalloc((void**)&Outd, SIZE);
-    hipLaunchKernel(floatMath, dim3(LEN, 1, 1), dim3(1, 1, 1), 0, 0, Ind, Outd);
+    hipLaunchKernelGGL(floatMath, dim3(LEN, 1, 1), dim3(1, 1, 1), 0, 0, Ind, Outd);
     passed();
 }

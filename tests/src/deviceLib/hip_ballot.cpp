@@ -30,7 +30,7 @@ THE SOFTWARE.
 
 #define HIP_ASSERT(x) (assert((x) == hipSuccess))
 
-__global__ void gpu_ballot(hipLaunchParm lp, unsigned int* device_ballot, int Num_Warps_per_Block,
+__global__ void gpu_ballot(unsigned int* device_ballot, int Num_Warps_per_Block,
                            int pshift) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     const unsigned int warp_num = threadIdx.x >> pshift;
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
     HIP_ASSERT(hipMemcpy(device_ballot, host_ballot, Num_Warps_per_Grid * sizeof(unsigned int),
                          hipMemcpyHostToDevice));
 
-    hipLaunchKernel(gpu_ballot, dim3(Num_Blocks_per_Grid), dim3(Num_Threads_per_Block), 0, 0,
+    hipLaunchKernelGGL(gpu_ballot, dim3(Num_Blocks_per_Grid), dim3(Num_Threads_per_Block), 0, 0,
                     device_ballot, Num_Warps_per_Block, pshift);
 
 
