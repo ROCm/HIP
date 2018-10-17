@@ -53,6 +53,9 @@ sub parse_config_file {
 $verbose = $ENV{'HIPCC_VERBOSE'} // 0;
 # Verbose: 0x1=commands, 0x2=paths, 0x4=hipcc args
 
+$HIPCC_COMPILE_FLAGS_APPEND=$ENV{'HIPCC_COMPILE_FLAGS_APPEND'};
+$HIPCC_LINK_FLAGS_APPEND=$ENV{'HIPCC_LINK_FLAGS_APPEND'};
+
 $HIP_PATH=$ENV{'HIP_PATH'} // dirname (dirname $0); # use parent directory of hipcc
 $HIP_VDI_HOME=$ENV{'HIP_VDI_HOME'};
 $HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'};
@@ -727,7 +730,16 @@ if ($needHipHcc) {
 # Reason is that NVCC uses the file extension to determine whether to compile in CUDA mode or
 # pass-through CPP mode.
 
+if ($HIP_PLATFORM eq "clang") {
+    $HIPLDFLAGS .= " -lgcc_s -lgcc -lpthread -lm";
+}
 
+if ($HIPCC_COMPILE_FLAGS_APPEND) {
+    $HIPCXXFLAGS .= " $HIPCC_COMPILE_FLAGS_APPEND";
+}
+if ($HIPCC_LINK_FLAGS_APPEND) {
+    $HIPLDFLAGS .= " $HIPCC_LINK_FLAGS_APPEND";
+}
 
 my $CMD="$HIPCC";
 if ($needCXXFLAGS) {
@@ -737,9 +749,6 @@ if ($needLDFLAGS and not $compileOnly) {
     $CMD .= " $HIPLDFLAGS";
 }
 $CMD .= " $toolArgs";
-if ($needLDFLAGS and not $compileOnly and $HIP_PLATFORM eq "clang") {
-    $CMD .= " -lgcc_s -lgcc -lpthread -lm";
-}
 
 if ($verbose & 0x1) {
     print "hipcc-cmd: ", $CMD, "\n";
