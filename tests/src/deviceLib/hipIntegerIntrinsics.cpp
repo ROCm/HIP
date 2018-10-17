@@ -62,9 +62,9 @@ __device__ void integer_intrinsics() {
     assert(1);
 }
 
-__global__ void compileIntegerIntrinsics(hipLaunchParm lp, int ignored) { integer_intrinsics(); }
+__global__ void compileIntegerIntrinsics(int ignored) { integer_intrinsics(); }
 
 int main() {
-    hipLaunchKernel(compileIntegerIntrinsics, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, 1);
+    hipLaunchKernelGGL(compileIntegerIntrinsics, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, 1);
     passed();
 }

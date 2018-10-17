@@ -30,7 +30,7 @@ THE SOFTWARE.
 
 using namespace std;
 
-__global__ void matrixTranspose_static_shared(hipLaunchParm lp, float* out, float* in,
+__global__ void matrixTranspose_static_shared(float* out, float* in,
                                               const int width) {
     __shared__ float sharedMem[WIDTH * WIDTH];
 
@@ -44,7 +44,7 @@ __global__ void matrixTranspose_static_shared(hipLaunchParm lp, float* out, floa
     out[y * width + x] = sharedMem[y * width + x];
 }
 
-__global__ void matrixTranspose_dynamic_shared(hipLaunchParm lp, float* out, float* in,
+__global__ void matrixTranspose_dynamic_shared(float* out, float* in,
                                                const int width) {
     // declare dynamic shared memory
     HIP_DYNAMIC_SHARED(float, sharedMem)
@@ -71,12 +71,12 @@ void MultipleStream(float** data, float* randArray, float** gpuTransposeMatrix,
         hipMemcpyAsync(data[i], randArray, NUM * sizeof(float), hipMemcpyHostToDevice, streams[i]);
     }
 
-    hipLaunchKernel(matrixTranspose_static_shared,
+    hipLaunchKernelGGL(matrixTranspose_static_shared,
                     dim3(WIDTH / THREADS_PER_BLOCK_X, WIDTH / THREADS_PER_BLOCK_Y),
                     dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), 0, streams[0],
                     gpuTransposeMatrix[0], data[0], width);
 
-    hipLaunchKernel(matrixTranspose_dynamic_shared,
+    hipLaunchKernelGGL(matrixTranspose_dynamic_shared,
                     dim3(WIDTH / THREADS_PER_BLOCK_X, WIDTH / THREADS_PER_BLOCK_Y),
                     dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), sizeof(float) * WIDTH * WIDTH,
                     streams[1], gpuTransposeMatrix[1], data[1], width);
