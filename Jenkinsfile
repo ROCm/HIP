@@ -297,7 +297,7 @@ String build_config = 'Release'
 String job_name = env.JOB_NAME.toLowerCase( )
 
 // The following launches 3 builds in parallel: hcc-ctu, hcc-1.6 and cuda
-parallel rocm_1_9:
+parallel /*rocm_1_9:
 {
   node('hip-rocm')
   {
@@ -331,17 +331,15 @@ parallel rocm_1_9:
     docker_clean_images( 'hip', docker_build_image_name( ) )
 
     // After a successful build, upload a docker image of the results
-    /*
-    String hip_image_name = docker_upload_artifactory( hcc_ver, job_name, from_image, source_hip_rel, build_hip_rel )
-    if( params.push_image_to_docker_hub )
-    {
-      docker_upload_dockerhub( job_name, hip_image_name, 'rocm' )
-      docker_clean_images( 'rocm', hip_image_name )
-    }
-    docker_clean_images( job_name, hip_image_name )
-    */
+    //String hip_image_name = docker_upload_artifactory( hcc_ver, job_name, from_image, source_hip_rel, build_hip_rel )
+    //if( params.push_image_to_docker_hub )
+    //{
+    //  docker_upload_dockerhub( job_name, hip_image_name, 'rocm' )
+    //  docker_clean_images( 'rocm', hip_image_name )
+    //}
+    //docker_clean_images( job_name, hip_image_name )
   }
-},
+},*/
 rocm_head:
 {
   node('hip-rocm')
