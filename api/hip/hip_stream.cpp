@@ -43,7 +43,8 @@ void syncStreams() {
 static hipError_t ihipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
   amd::Device* device = hip::getCurrentContext()->devices()[0];
 
-  amd::HostQueue* queue = new amd::HostQueue(*hip::getCurrentContext(), *device, 0,
+  cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
+  amd::HostQueue* queue = new amd::HostQueue(*hip::getCurrentContext(), *device, properties,
                                              amd::CommandQueue::RealTimeDisabled,
                                              amd::CommandQueue::Priority::Normal);
 
@@ -135,6 +136,10 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
   amd::ScopedLock lock(streamSetLock);
 
   amd::HostQueue* hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
+
+  // Release last tracked command
+  hostQueue->setLastQueuedCommand(nullptr);
+
   hostQueue->release();
   streamSet.erase(hostQueue);
 

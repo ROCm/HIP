@@ -69,7 +69,8 @@ amd::HostQueue* getNullStream() {
   auto stream = g_nullStreams.find(getCurrentContext());
   if (stream == g_nullStreams.end()) {
     amd::Device* device = getCurrentContext()->devices()[0];
-    amd::HostQueue* queue = new amd::HostQueue(*hip::getCurrentContext(), *device, 0,
+    cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
+    amd::HostQueue* queue = new amd::HostQueue(*hip::getCurrentContext(), *device, properties,
                                                amd::CommandQueue::RealTimeDisabled,
                                                amd::CommandQueue::Priority::Normal);
     g_nullStreams[getCurrentContext()] = queue;
@@ -158,6 +159,9 @@ hipError_t hipCtxDestroy(hipCtx_t ctx) {
   if (amdContext == nullptr) {
     HIP_RETURN(hipErrorInvalidValue);
   }
+
+  // Release last tracked command
+  hip::getNullStream()->setLastQueuedCommand(nullptr);
 
   // Need to remove the ctx of calling thread if its the top one
   if (!g_ctxtStack.empty() && g_ctxtStack.top() == amdContext) {
