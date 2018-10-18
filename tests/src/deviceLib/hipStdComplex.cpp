@@ -84,7 +84,7 @@ __device__ __host__ std::complex<FloatT> calc(std::complex<FloatT> A,
 }
 
 template<typename FloatT>
-__global__ void kernel(hipLaunchParm lp, std::complex<FloatT>* A,
+__global__ void kernel(std::complex<FloatT>* A,
                        std::complex<FloatT>* B, std::complex<FloatT>* C,
                        enum CalcKind CK) {
     int tx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -114,7 +114,7 @@ void test() {
     // Run kernel for a calculation kind and verify by comparing with host
     // calculation result. Returns false if fails.
     auto test_fun = [&](enum CalcKind CK) {
-      hipLaunchKernel(kernel<FloatT>, dim3(1), dim3(LEN), 0, 0, Ad, Bd, Cd, CK);
+      hipLaunchKernelGGL(kernel<FloatT>, dim3(1), dim3(LEN), 0, 0, Ad, Bd, Cd, CK);
       hipMemcpy(C, Cd, sizeof(ComplexT)*LEN, hipMemcpyDeviceToHost);
       for (int i = 0; i < LEN; i++) {
         ComplexT Expected = calc(A[i], B[i], CK);

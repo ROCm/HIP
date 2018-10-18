@@ -45,6 +45,8 @@ and provides practical suggestions on how to port CUDA code and work through com
     + [/usr/include/c++/v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();](#usrincludecv1memory517215-error-call-to-implicitly-deleted-default-constructor-of-std__1bad_weak_ptr-throw-bad_weak_ptr)
   * [HIP Environment Variables](#hip-environment-variables)
   * [Editor Highlighting](#editor-highlighting)
+  * [CUDA to HIP Math Library Equivalents](#library-equivalents)
+  
 
 <!-- tocstop -->
 
@@ -53,8 +55,8 @@ and provides practical suggestions on how to port CUDA code and work through com
 ### General Tips
 - Starting the port on a Cuda machine is often the easiest approach, since you can incrementally port pieces of the code to HIP while leaving the rest in Cuda. (Recall that on Cuda machines HIP is just a thin layer over Cuda, so the two code types can interoperate on nvcc platforms.) Also, the HIP port can be compared with the original Cuda code for function and performance.
 - Once the Cuda code is ported to HIP and is running on the Cuda machine, compile the HIP code using hcc on an AMD machine.
-- HIP ports can replace Cuda versions---HIP can deliver the same performance as a native Cuda implementation, with the benefit of portability to both Nvidia and AMD architectures as well as a path to future C++ standard support. You can handle platform-specific features through conditional compilation or by adding them to the open-source HIP infrastructure.
-- Use **bin/hipconvertinplace.sh** to hipify all code files in the Cuda source directory.
+- HIP ports can replace Cuda versions: HIP can deliver the same performance as a native Cuda implementation, with the benefit of portability to both Nvidia and AMD architectures as well as a path to future C++ standard support. You can handle platform-specific features through conditional compilation or by adding them to the open-source HIP infrastructure.
+- Use **[bin/hipconvertinplace.sh](https://github.com/ROCm-Developer-Tools/HIP/blob/master/bin/hipconvertinplace.sh)** to hipify all code files in the Cuda source directory.
 
 ### Scanning existing CUDA code to scope the porting effort
 The hipexamine.sh tool will scan a source directory to determine which files contain CUDA code and how much of that code can be automatically hipified, 
@@ -77,7 +79,7 @@ info: TOTAL-converted 89 CUDA->HIP refs( dev:3 mem:32 kern:2 builtin:37 math:0 s
   kernels (1 total) :   kmeansPoint(1)
 ```
 
-hipexamine scans each code file (cpp, c, h, hpp, etc) found in the specified directory:
+hipexamine scans each code file (cpp, c, h, hpp, etc.) found in the specified directory:
 
    * Files with no CUDA code (ie kmeans.h) print one line summary just listing the source file name.
    * Files with CUDA code print a summary of what was found - for example the kmeans_cuda_kernel.cu file:
@@ -85,11 +87,11 @@ hipexamine scans each code file (cpp, c, h, hpp, etc) found in the specified dir
 info: hipify ./kmeans_cuda_kernel.cu =====>
   info: converted 40 CUDA->HIP refs( dev:0 mem:0 kern:0 builtin:37 math:0 stream:0 event:0 
 ```
-* Some of the most interesting information in kmeans_cuda_kernel.cu :
-       * How many CUDA calls were converted to HIP (40)
-       * Breakdown of the different CUDA functionality used (dev:0 mem:0 etc).  This file uses many CUDA builtins (37) and texture functions (3).
-       * Warning for code that looks like CUDA API but was not converted (0 in this file).
-       * Count Lines-of-Code (LOC) - 185 for this file. 
+* Interesting information in kmeans_cuda_kernel.cu :
+  * How many CUDA calls were converted to HIP (40)
+  * Breakdown of the CUDA functionality used (dev:0 mem:0 etc). This file uses many CUDA builtins (37) and texture functions (3).
+   * Warning for code that looks like CUDA API but was not converted (0 in this file).
+   * Count Lines-of-Code (LOC) - 185 for this file. 
 
 * hipexamine also presents a summary at the end of the process for the statistics collected across all files. This has similar format to the per-file reporting, and also includes a list of all kernels which have been called.  An example from above:
 
@@ -111,9 +113,9 @@ For each input file FILE, this script will:
 This is useful for testing improvements to the hipify toolset.
 
 
-The "hipconvertinplace.sh" script will perform inplace conversion for all code files in the specified directory.
+The [hipconvertinplace.sh](https://github.com/ROCm-Developer-Tools/HIP/blob/master/bin/hipconvertinplace.sh) script will perform inplace conversion for all code files in the specified directory.
 This can be quite handy when dealing with an existing CUDA code base since the script preserves the existing directory structure
-and filenames - so includes work.  After converting in-place, you can review the code to add additional parameters to
+and filenames - and includes work.  After converting in-place, you can review the code to add additional parameters to
 directory names.
 
 
@@ -138,7 +140,7 @@ Many projects use a mixture of an accelerator compiler (hcc or nvcc) and a stand
  
  
 ### Identifying the Compiler: hcc, hip-clang or nvcc
-Often, its useful to know whether the underlying compiler is hcc, hip-clang or nvcc. This knowledge can guard platform-specific code (features that only work on the nvcc, hip-clang or hcc path but not all) or aid in platform-specific performance tuning.   
+Often, it's useful to know whether the underlying compiler is hcc, hip-clang or nvcc. This knowledge can guard platform-specific code (features that only work on the nvcc, hip-clang or hcc path but not all) or aid in platform-specific performance tuning.   
  
 ```
 #ifdef __HCC__
@@ -164,7 +166,7 @@ Often, its useful to know whether the underlying compiler is hcc, hip-clang or
 // Compiled with nvcc (Cuda language extensions enabled) 
 ```
  
-hcc and hip-clang directly generates the host code (using the Clang x86 target) and passes the code to another host compiler. Thus, it lacks the equivalent of the \__CUDA_ACC define.
+hcc and hip-clang directly generates the host code (using the Clang x86 target) and passes the code to another host compiler. Thus, they have no equivalent of the \__CUDA_ACC define.
  
 The macro `__HIPCC__` is set if either `__HCC__`, `__HIP__` or `__CUDACC__` is defined. This configuration is useful in determining when code is being compiled using an accelerator-enabled compiler (hcc or nvcc) as opposed to a standard host compiler (GCC, ICC, Clang, etc.).
  
@@ -177,7 +179,7 @@ Both nvcc and hcc make two passes over the code: one for host code and one for d
 #if __HIP_DEVICE_COMPILE__
 ```
  
-Unlike `__CUDA_ARCH__`, the `__HIP_DEVICE_COMPILE__` value is 1 or undefined, and it doesnt represent the feature capability of the target device.  
+Unlike `__CUDA_ARCH__`, the `__HIP_DEVICE_COMPILE__` value is 1 or undefined, and it doesn't represent the feature capability of the target device.  
 
 
 ### Compiler Defines: Summary
@@ -212,7 +214,7 @@ Some Cuda code tests `__CUDA_ARCH__` for a specific value to determine whether t
 #if (__CUDA_ARCH__ >= 130) 
 // doubles are supported
 ```
-This type of code requires special attention, since hcc/AMD and nvcc/Cuda devices have different architectural capabilities. Moreover, you cant determine the presence of a feature using a simple comparison against an architectures version number. HIP provides a set of defines and device properties to query whether a specific architectural feature is supported.
+This type of code requires special attention, since hcc/AMD and nvcc/Cuda devices have different architectural capabilities. Moreover, you can't determine the presence of a feature using a simple comparison against an architecture's version number. HIP provides a set of defines and device properties to query whether a specific architectural feature is supported.
 
 The `__HIP_ARCH_*` defines can replace comparisons of `__CUDA_ARCH__` values: 
 ```
@@ -259,9 +261,8 @@ The table below shows the full set of architectural properties that HIP supports
 |`__HIP_ARCH_HAS_WARP_FUNNEL_SHIFT__`          |     hasFunnelShift             |Funnel shift two input words into one
 |Sync:                                    |                                      |
 |`__HIP_ARCH_HAS_THREAD_FENCE_SYSTEM__`        |     hasThreadFenceSystem       |threadfence\_system
-|`__HIP_ARCH_HAS_SYNC_THREAD_EXT__`            |     hasSyncThreadsExt         |syncthreads\_count, syncthreads\_and, syncthreads\_or 
-|                                                       
-|Miscellaneous:                                     |                                     |                                                     
+|`__HIP_ARCH_HAS_SYNC_THREAD_EXT__`            |     hasSyncThreadsExt         |syncthreads\_count, syncthreads\_and, syncthreads\_or                                                      
+|Miscellaneous:                                |                                |                                                     
 |`__HIP_ARCH_HAS_SURFACE_FUNCS__`              |   hasSurfaceFuncs              |                                                     
 |`__HIP_ARCH_HAS_3DGRID__`                     |   has3dGrid                    | Grids and groups are 3D                                                     
 |`__HIP_ARCH_HAS_DYNAMIC_PARALLEL__`           |   hasDynamicParallelism        | 
@@ -343,7 +344,7 @@ It also uses a standard compiler (g++) for the rest of the application. nvcc is 
 Code compiled using this tool can employ only the intersection of language features supported by both nvcc and the host compiler. 
 In some cases, you must take care to ensure the data types and alignment of the host compiler are identical to those of the device compiler. Only some host compilers are supported---for example, recent nvcc versions lack Clang host-compiler capability.  
 
-hcc generates both device and host code using the same Clang-based compiler. The code uses the same API as gcc, which allows code generated by different gcc-compatible compilers to be linked together. For example, code compiled using hcc can link with code compiled using "standard" compilers (such as gcc, ICC and Clang). You must take care to ensure all compilers use the same standard C++ header and library formats.
+hcc generates both device and host code using the same Clang-based compiler. The code uses the same API as gcc, which allows code generated by different gcc-compatible compilers to be linked together. For example, code compiled using hcc can link with code compiled using "standard" compilers (such as gcc, ICC and Clang). Take care to ensure all compilers use the same standard C++ header and library formats.
 
 
 ### libc++ and libstdc++
@@ -553,7 +554,7 @@ hipcc-cmd: /opt/hcc/bin/hcc  -hc -I/opt/hcc/include -stdlib=libc++ -I../../../..
 
 #### /usr/include/c++/v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();
 
-If you pass a ".cu" file, hcc will attempt to compile it as a Cuda language file. You must tell hcc that its in fact a C++ file: use the "-x c++" option.
+If you pass a ".cu" file, hcc will attempt to compile it as a Cuda language file. You must tell hcc that it's in fact a C++ file: use the "-x c++" option.
 
 
 ### HIP Environment Variables
@@ -577,3 +578,20 @@ HIP_VISIBLE_DEVICES            =  0 : Only devices whose index is present in the
 
 ### Editor Highlighting
 See the utils/vim or utils/gedit directories to add handy highlighting to hip files.
+
+
+### Library Equivalents
+
+| CUDA Library | ROCm Library | Comment |
+|------- | ---------   | -----   |
+| cuBLAS        |    rocBLAS     | Basic Linear Algebra Subroutines 
+| cuFFT        |    rocFFT     | Fast Fourier Transfer Library   
+| cuSPARSE     |    rocSPARSE   | Sparse BLAS  + SPMV 
+| cuSolver     |    rocSolver   | Lapack library
+| AMG-X    |    rocALUTION   | Sparse iterative solvers and preconditioners with Geometric and Algebraic MultiGrid
+| Thrust    |    hipThrust | C++ parallel algorithms library
+| CUB     |    rocPRIM | Low Level Optimized Parallel Primitives
+| cuDNN    |    MIOpen | Deep learning Solver Library 
+| cuRAND    |    rocRAND | Random Number Generator Library
+| EIGEN    |    EIGEN – HIP port | C++ template library for linear algebra: matrices, vectors, numerical solvers, 
+| NCCL    |    RCCL  | Communications Primitives Library based on the MPI equivalents

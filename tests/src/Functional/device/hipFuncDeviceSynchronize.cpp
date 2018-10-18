@@ -33,7 +33,7 @@ THE SOFTWARE.
 #define _SIZE sizeof(int) * 1024 * 1024
 #define NUM_STREAMS 2
 
-__global__ void Iter(hipLaunchParm lp, int* Ad, int num) {
+__global__ void Iter(int* Ad, int num) {
     int tx = threadIdx.x + blockIdx.x * blockDim.x;
     // Kernel loop designed to execute very slowly... ... ...   so we can test timing-related
     // behavior below
@@ -58,7 +58,7 @@ int main() {
         HIPCHECK(hipMemcpyAsync(Ad[i], A[i], _SIZE, hipMemcpyHostToDevice, stream[i]));
     }
     for (int i = 0; i < NUM_STREAMS; i++) {
-        hipLaunchKernel(HIP_KERNEL_NAME(Iter), dim3(1), dim3(1), 0, stream[i], Ad[i], 1 << 30);
+        hipLaunchKernelGGL(HIP_KERNEL_NAME(Iter), dim3(1), dim3(1), 0, stream[i], Ad[i], 1 << 30);
     }
     for (int i = 0; i < NUM_STREAMS; i++) {
         HIPCHECK(hipMemcpyAsync(A[i], Ad[i], _SIZE, hipMemcpyDeviceToHost, stream[i]));

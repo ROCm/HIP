@@ -64,11 +64,11 @@ __device__ void double_precision_intrinsics() {
     __fma_rz(1.0, 2.0, 3.0);
 }
 
-__global__ void compileDoublePrecisionIntrinsics(hipLaunchParm lp, int ignored) {
+__global__ void compileDoublePrecisionIntrinsics(int ignored) {
     double_precision_intrinsics();
 }
 
 int main() {
-    hipLaunchKernel(compileDoublePrecisionIntrinsics, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, 1);
+    hipLaunchKernelGGL(compileDoublePrecisionIntrinsics, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, 1);
     passed();
 }

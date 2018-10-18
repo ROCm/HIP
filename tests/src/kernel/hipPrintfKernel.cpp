@@ -27,10 +27,10 @@ THE SOFTWARE.
 
 #include "test_common.h"
 
-__global__ void run_printf(hipLaunchParm lp) { printf("Hello World\n"); }
+__global__ void run_printf() { printf("Hello World\n"); }
 
 int main() {
-    hipLaunchKernel(HIP_KERNEL_NAME(run_printf), dim3(1), dim3(1), 0, 0);
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(run_printf), dim3(1), dim3(1), 0, 0);
     hipDeviceSynchronize();
     passed();
 }

@@ -916,7 +916,7 @@ int main() {
     hipLaunchKernelGGL(HIP_KERNEL_NAME(vAdd), dim3(1024), 1, 0, 0, Ad);
     hipLaunchKernelGGL(HIP_KERNEL_NAME(vAdd), dim3(1024), dim3(1), 0, 0, Ad);
 
-    // Test: Passing hipLaunchKernel inside another macro:
+    // Test: Passing hipLaunchKernelGGL inside another macro:
     float e0;
     GPU_PRINT_TIME(hipLaunchKernelGGL(vAdd, dim3(1024),
                    dim3(1), 0, 0, Ad), e0, j);
@@ -924,7 +924,7 @@ int main() {
                    dim3(1), 0, 0, Ad)), e0, j);
 
 #ifdef EXTRA_PARENS_1
-    // Don't wrap hipLaunchKernel in extra set of parens:
+    // Don't wrap hipLaunchKernelGGL in extra set of parens:
     GPU_PRINT_TIME((hipLaunchKernelGGL(vAdd, dim3(1024),
                     dim3(1), 0, 0, Ad)), e0, j);
 #endif
