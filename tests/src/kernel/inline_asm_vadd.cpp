@@ -33,7 +33,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 // Device (Kernel) function, it must be void
 // hipLaunchParm provides the execution configuration
-__global__ void vadd_asm(hipLaunchParm lp, float* out, float* in) {
+__global__ void vadd_asm(float* out, float* in) {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
 
 #ifdef __HIP_PLATFORM_NVCC__
@@ -82,7 +82,7 @@ int main() {
     hipMemcpy(gpuResultVector, VectorB, NUM * sizeof(float), hipMemcpyHostToDevice);
 
     // Lauching kernel from host
-    hipLaunchKernel(vadd_asm, dim3(NUM / THREADS_PER_BLOCK_X), dim3(THREADS_PER_BLOCK_X), 0, 0,
+    hipLaunchKernelGGL(vadd_asm, dim3(NUM / THREADS_PER_BLOCK_X), dim3(THREADS_PER_BLOCK_X), 0, 0,
                     gpuResultVector, gpuVector);
 
     // Memory transfer from device to host

@@ -129,11 +129,11 @@ __device__ void single_precision_math_functions() {
     ynf(1, 1.0f);
 }
 
-__global__ void compileSinglePrecisionMathOnDevice(hipLaunchParm lp, int ignored) {
+__global__ void compileSinglePrecisionMathOnDevice(int ignored) {
     single_precision_math_functions();
 }
 
 int main() {
-    hipLaunchKernel(compileSinglePrecisionMathOnDevice, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, 1);
+    hipLaunchKernelGGL(compileSinglePrecisionMathOnDevice, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, 1);
     passed();
 }

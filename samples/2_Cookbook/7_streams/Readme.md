@@ -26,15 +26,15 @@ and create stream using `hipStreamCreate` as follows:
 `  for(int i=0;i<num_streams;i++)                                                `
 `  hipStreamCreate(&streams[i]);                                                 `
 
-and while kernel launch, we make the following changes in 5th parameter to hipLaunchKernel(having 0 as the default stream value):
+and while kernel launch, we make the following changes in 5th parameter to hipLaunchKernelGGL(having 0 as the default stream value):
 
-`  hipLaunchKernel(matrixTranspose_static_shared,                               `
+`  hipLaunchKernelGGL(matrixTranspose_static_shared,                             `
                     dim3(WIDTH/THREADS_PER_BLOCK_X, WIDTH/THREADS_PER_BLOCK_Y),
                     dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
                     0, streams[0],
                     gpuTransposeMatrix[0], data[0], width);
 
-`  hipLaunchKernel(matrixTranspose_dynamic_shared,                              `
+`  hipLaunchKernelGGL(matrixTranspose_dynamic_shared,                            `
                     dim3(WIDTH/THREADS_PER_BLOCK_X, WIDTH/THREADS_PER_BLOCK_Y),
                     dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
                     sizeof(float)*WIDTH*WIDTH, streams[1],

@@ -67,7 +67,7 @@ void memcpy2Dtest(size_t numW, size_t numH, bool usePinnedHost) {
     HIPCHECK(hipMemcpy2D(A_d, pitch_A, A_h, width, width, numH, hipMemcpyHostToDevice));
     HIPCHECK(hipMemcpy2D(B_d, pitch_B, B_h, width, width, numH, hipMemcpyHostToDevice));
 
-    hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d, B_d, C_d,
+    hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d, B_d, C_d,
                     (pitch_C / sizeof(T)) * numH);
 
     HIPCHECK(hipMemcpy2D(C_h, width, C_d, pitch_C, width, numH, hipMemcpyDeviceToHost));
@@ -117,7 +117,7 @@ void memcpyArraytest(size_t numW, size_t numH, bool usePinnedHost, bool usePitch
         HIPCHECK(hipMemcpyToArray(A_d, 0, 0, (void*)A_h, width, hipMemcpyHostToDevice));
         HIPCHECK(hipMemcpyToArray(B_d, 0, 0, (void*)B_h, width, hipMemcpyHostToDevice));
 
-        hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
+        hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
                         (T*)A_d->data, (T*)B_d->data, (T*)C_d->data, numW);
 
         HIPCHECK(hipMemcpy(C_h, C_d->data, width, hipMemcpyDeviceToHost));
@@ -156,7 +156,7 @@ void memcpyArraytest(size_t numW, size_t numH, bool usePinnedHost, bool usePitch
                                         hipMemcpyHostToDevice));
         }
 
-        hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
+        hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
                         (T*)A_d->data, (T*)B_d->data, (T*)C_d->data, numW * numH);
 
         HIPCHECK(hipMemcpy2D((void*)C_h, width, (void*)C_d->data, width, width, numH,

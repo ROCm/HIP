@@ -14,12 +14,12 @@
  */
 
 
-__global__ void cpy(hipLaunchParm lp, uint32_t* Out, uint32_t* In) {
+__global__ void cpy(uint32_t* Out, uint32_t* In) {
     int tx = threadIdx.x;
     memcpy(Out + tx, In + tx, sizeof(uint32_t));
 }
 
-__global__ void set(hipLaunchParm lp, uint32_t* ptr, uint8_t val, size_t size) {
+__global__ void set(uint32_t* ptr, uint8_t val, size_t size) {
     int tx = threadIdx.x;
     memset(ptr + tx, val, sizeof(uint32_t));
 }
@@ -39,7 +39,7 @@ int main() {
     hipMalloc((void**)&Bd, SIZE);
     hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
 
-    hipLaunchKernel(cpy, dim3(1), dim3(LEN), 0, 0, Bd, Ad);
+    hipLaunchKernelGGL(cpy, dim3(1), dim3(LEN), 0, 0, Bd, Ad);
 
     hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost);
     for (int i = LEN - 16; i < LEN; i++) {
@@ -47,7 +47,7 @@ int main() {
             return 0;
         }
     }
-    hipLaunchKernel(set, dim3(1), dim3(LEN), 0, 0, Bd, 0x1, LEN);
+    hipLaunchKernelGGL(set, dim3(1), dim3(LEN), 0, 0, Bd, 0x1, LEN);
 
     hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost);
     for (int i = LEN - 16; i < LEN; i++) {

@@ -21,8 +21,7 @@ In order to use the HIP framework, we need to add the "hip_runtime.h" header fil
 ## Device-side code
 We will work on device side code first, Here is simple example showing a snippet of HIP device side code:
 
-`__global__ void matrixTranspose(hipLaunchParm lp,            `
-`                                float *out,                  `
+`__global__ void matrixTranspose(float *out,                  `
 `                                float *in,                   `
 `                                const int width,             `
 `                                const int height)            `
@@ -41,11 +40,9 @@ other function-type qualifiers are:
 `__host__` can combine with `__device__`, in which case the function compiles for both the host and device. These functions cannot use the HIP grid coordinate functions (for example, "hipThreadIdx_x", will talk about it latter). A possible workaround is to pass the necessary coordinate info as an argument to the function.
 `__host__` cannot combine with `__global__`.
 
-`__global__` functions are often referred to as *kernels, and calling one is termed *launching the kernel*. 
+`__global__` functions are often referred to as *kernels*, and calling one is termed *launching the kernel*. 
 
-Next keyword is `void`. HIP `__global__` functions must have a `void` return type, and the first parameter to a HIP `__global__` function must have the type `hipLaunchParm`, which is for execution configuration. Global functions require the caller to specify an "execution configuration" that includes the grid and block dimensions. The execution configuration can also include other information for the launch, such as the amount of additional shared memory to allocate and the stream where the kernel should execute.
-
-After `hipLaunchParm`, Kernel arguments follows next(i.e.,  `float *out, float *in, const int width, const int height`).
+Next keyword is `void`. HIP `__global__` functions must have a `void` return type. Global functions require the caller to specify an "execution configuration" that includes the grid and block dimensions. The execution configuration can also include other information for the launch, such as the amount of additional shared memory to allocate and the stream where the kernel should execute.
 
 The kernel function begins with 
 `    int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;`
@@ -63,15 +60,15 @@ We allocated memory to the Matrix on host side by using malloc and initiallized 
 here the first parameter is the destination pointer, second is the source pointer, third is the size of memory copy and the last specify the direction on memory copy(which is in this case froom host to device). While in order to transfer memory from device to host, use `hipMemcpyDeviceToHost` and for device to device memory copy use `hipMemcpyDeviceToDevice`.
 
 Now, we'll see how to launch the kernel.
-`  hipLaunchKernel(matrixTranspose,                                                         `
+`  hipLaunchKernelGGL(matrixTranspose,                                                      `
 `                  dim3(WIDTH/THREADS_PER_BLOCK_X, HEIGHT/THREADS_PER_BLOCK_Y),             `
 `                  dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),                          `
 `                  0, 0,                                                                    `
 `                  gpuTransposeMatrix , gpuMatrix, WIDTH ,HEIGHT);                          `
 
 HIP introduces a standard C++ calling convention to pass the execution configuration to the kernel (this convention replaces the `Cuda <<< >>>` syntax). In HIP,
-- Kernels launch with the `"hipLaunchKernel"` function
-- The first five parameters to hipLaunchKernel are the following:
+- Kernels launch with the `"hipLaunchKernelGGL"` function
+- The first five parameters to hipLaunchKernelGGL are the following:
    - **symbol kernelName**: the name of the kernel to launch.  To support template kernels which contains "," use the HIP_KERNEL_NAME macro. In current application it's "matrixTranspose".
    - **dim3 gridDim**: 3D-grid dimensions specifying the number of blocks to launch. In MatrixTranspose sample, it's "dim3(WIDTH/THREADS_PER_BLOCK_X, HEIGHT/THREADS_PER_BLOCK_Y)". 
    - **dim3 blockDim**: 3D-block dimensions specifying the number of threads in each block.In MatrixTranspose sample, it's "dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y)". 
