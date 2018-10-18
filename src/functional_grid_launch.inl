@@ -92,13 +92,19 @@ namespace hip_impl
         hipStream_t stream,
         void** kernarg)
     {
-        const auto it0 = functions().find(function_address);
+        auto it0 = functions().find(function_address);
 
         if (it0 == functions().cend()) {
-            throw runtime_error{
-                "No device code available for function: " +
-                name(function_address)
-            };
+            // Re-init device code maps once again to help locate kernels
+            // loaded after HIP runtime initialization via means such as
+            // dlopen().
+            it0 = functions(true).find(function_address);
+            if (it0 == functions().cend()) {
+                throw runtime_error{
+                    "No device code available for function: " +
+                    name(function_address)
+                };
+            }
         }
 
         auto agent = target_agent(stream);
