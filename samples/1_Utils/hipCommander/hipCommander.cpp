@@ -434,7 +434,7 @@ class KernelCommand : public Command {
 
         switch (_kind) {
             case Null:
-                hipLaunchKernel(NullKernel, dim3(gridX / groupX), dim3(gridX), 0, _stream, nullptr);
+                hipLaunchKernelGGL(NullKernel, dim3(gridX / groupX), dim3(gridX), 0, _stream, nullptr);
                 break;
             case VectorAdd:
                 assert(0);  // TODO

@@ -33,7 +33,7 @@ THE SOFTWARE.
 #define ITER 1<<20
 #define SIZE 1024*1024*sizeof(int)
 
-__global__ void Iter(hipLaunchParm lp, int *Ad){
+__global__ void Iter(int *Ad){
     int tx = threadIdx.x + blockIdx.x * blockDim.x;
     if(tx == 0){
         for(int i=0;i<ITER;i++){
@@ -49,7 +49,7 @@ int main(){
     dim3 dimGrid, dimBlock;
     dimGrid.x = 1, dimGrid.y =1, dimGrid.z = 1;
     dimBlock.x = 1, dimBlock.y = 1, dimGrid.z = 1;
-    hipLaunchKernel(HIP_KERNEL_NAME(Iter), dimGrid, dimBlock, 0, 0, Ad);
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(Iter), dimGrid, dimBlock, 0, 0, Ad);
     hipMemcpy(&A, Ad, SIZE, hipMemcpyDeviceToHost);
     passed();
 }

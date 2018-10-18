@@ -48,7 +48,7 @@ const unsigned p_tests = 0xfffffff;
 
 
 // HCC optimizes away fully NULL kernel calls, so run one that is nearly null:
-__global__ void NearlyNull(hipLaunchParm lp, float* Ad) {
+__global__ void NearlyNull(float* Ad) {
     if (Ad) {
         Ad[0] = 42;
     }
@@ -94,14 +94,14 @@ int main() {
 
     if (p_tests & 0x1) {
         hipEventRecord(start);
-        hipLaunchKernel(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
+        hipLaunchKernelGGL(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
         stopTest(start, stop, "FirstKernelLaunch", 1);
     }
 
 
     if (p_tests & 0x2) {
         hipEventRecord(start);
-        hipLaunchKernel(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
+        hipLaunchKernelGGL(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
         stopTest(start, stop, "SecondKernelLaunch", 1);
     }
 
@@ -110,7 +110,7 @@ int main() {
         for (int t = 0; t < TEST_ITERS; t++) {
             hipEventRecord(start);
             for (int i = 0; i < DISPATCHES_PER_TEST; i++) {
-                hipLaunchKernel(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
+                hipLaunchKernelGGL(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
                 hipEventRecord(sync);
                 hipEventSynchronize(sync);
             }
@@ -123,7 +123,7 @@ int main() {
         for (int t = 0; t < TEST_ITERS; t++) {
             hipEventRecord(start);
             for (int i = 0; i < DISPATCHES_PER_TEST; i++) {
-                hipLaunchKernel(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream, Ad);
+                hipLaunchKernelGGL(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream, Ad);
                 hipEventRecord(sync);
                 hipEventSynchronize(sync);
             }
@@ -137,7 +137,7 @@ int main() {
         for (int t = 0; t < TEST_ITERS; t++) {
             hipEventRecord(start);
             for (int i = 0; i < DISPATCHES_PER_TEST; i++) {
-                hipLaunchKernel(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
+                hipLaunchKernelGGL(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
             }
             stopTest(start, stop, "NullStreamASyncDispatchNoWait", DISPATCHES_PER_TEST);
         }
@@ -147,7 +147,7 @@ int main() {
         for (int t = 0; t < TEST_ITERS; t++) {
             hipEventRecord(start);
             for (int i = 0; i < DISPATCHES_PER_TEST; i++) {
-                hipLaunchKernel(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream, Ad);
+                hipLaunchKernelGGL(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream, Ad);
             }
             stopTest(start, stop, "StreamASyncDispatchNoWait", DISPATCHES_PER_TEST);
         }

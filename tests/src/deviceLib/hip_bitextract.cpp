@@ -53,8 +53,7 @@ T bit_extract(T src0, unsigned int src1, unsigned int src2) {
   }
 }
 
-__global__ void HIP_kernel(hipLaunchParm lp,
-                           unsigned int* out32, unsigned int* in32_0,
+__global__ void HIP_kernel(unsigned int* out32, unsigned int* in32_0,
                            unsigned int* in32_1, unsigned int* in32_2,
                            unsigned long long int* out64, unsigned long long int* in64_0,
                            unsigned int* in64_1, unsigned int* in64_2) {
@@ -150,7 +149,7 @@ int main() {
     HIP_ASSERT(hipMemcpy(deviceSrc264, hostSrc264, NUM * sizeof(unsigned int), hipMemcpyHostToDevice));
 
 
-    hipLaunchKernel(HIP_kernel, dim3(num_blocks), dim3(num_threads_per_block),
+    hipLaunchKernelGGL(HIP_kernel, dim3(num_blocks), dim3(num_threads_per_block),
                        0, 0,
                        deviceOut32, deviceSrc032, deviceSrc132, deviceSrc232,
                        deviceOut64, deviceSrc064, deviceSrc164, deviceSrc264);

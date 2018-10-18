@@ -35,7 +35,7 @@ THE SOFTWARE.
 
 __constant__ int Value[LEN];
 
-__global__ void Get(hipLaunchParm lp, int* Ad) {
+__global__ void Get(int* Ad) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     Ad[tid] = Value[tid];
 }
@@ -52,7 +52,7 @@ int main() {
     HIP_ASSERT(hipMalloc((void**)&Ad, SIZE));
 
     HIP_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(Value), A, SIZE, 0, hipMemcpyHostToDevice));
-    hipLaunchKernel(Get, dim3(1, 1, 1), dim3(LEN, 1, 1), 0, 0, Ad);
+    hipLaunchKernelGGL(Get, dim3(1, 1, 1), dim3(LEN, 1, 1), 0, 0, Ad);
     HIP_ASSERT(hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost));
 
     for (unsigned i = 0; i < LEN; i++) {

@@ -50,7 +50,7 @@ T bit_insert(T src0, T src1, unsigned int src2, unsigned int src3) {
   return ((src0 & ~(mask << offset)) | ((src1 & mask) << offset));
 }
 
-__global__ void HIP_kernel(hipLaunchParm lp, unsigned int* out32,
+__global__ void HIP_kernel(unsigned int* out32,
                            unsigned int* in32_0, unsigned int* in32_1,
                            unsigned int* in32_2, unsigned int* in32_3,
                            unsigned long long int* out64, unsigned long long int* in64_0,
@@ -161,7 +161,7 @@ int main() {
     HIP_ASSERT(hipMemcpy(deviceSrc364, hostSrc364, NUM * sizeof(unsigned int), hipMemcpyHostToDevice));
 
 
-    hipLaunchKernel(HIP_kernel, dim3(num_blocks), dim3(num_threads_per_block),
+    hipLaunchKernelGGL(HIP_kernel, dim3(num_blocks), dim3(num_threads_per_block),
                        0, 0,
                        deviceOut32, deviceSrc032, deviceSrc132, deviceSrc232, deviceSrc332,
                        deviceOut64, deviceSrc064, deviceSrc164, deviceSrc264, deviceSrc364);

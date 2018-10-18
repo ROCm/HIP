@@ -79,12 +79,12 @@ __device__ void single_precision_intrinsics() {
 }
 
 
-__global__ void compileSinglePrecisionIntrinsics(hipLaunchParm lp, int ignored) {
+__global__ void compileSinglePrecisionIntrinsics(int ignored) {
     single_precision_intrinsics();
 }
 
 
 int main() {
-    hipLaunchKernel(compileSinglePrecisionIntrinsics, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, 1);
+    hipLaunchKernelGGL(compileSinglePrecisionIntrinsics, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, 1);
     passed();
 }
