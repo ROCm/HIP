@@ -33,7 +33,7 @@ THE SOFTWARE.
 
 
 template <typename T>
-__global__ void Inc(hipLaunchParm lp, T* Array) {
+__global__ void Inc(T* Array) {
     int tx = threadIdx.x + blockIdx.x * blockDim.x;
     Array[tx] = Array[tx] + T(1);
 }
@@ -53,7 +53,7 @@ void run1(size_t size, hipStream_t stream) {
 
     HIPCHECK(hipMemcpyAsync(Bh, Ah, size, hipMemcpyHostToHost, stream));
     HIPCHECK(hipMemcpyAsync(Cd, Bh, size, hipMemcpyHostToDevice, stream));
-    hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N / 500), dim3(500), 0, stream, Cd);
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(Inc), dim3(N / 500), dim3(500), 0, stream, Cd);
     HIPCHECK(hipMemcpyAsync(Dd, Cd, size, hipMemcpyDeviceToDevice, stream));
     HIPCHECK(hipMemcpyAsync(Eh, Dd, size, hipMemcpyDeviceToHost, stream));
     HIPCHECK(hipDeviceSynchronize());
@@ -80,8 +80,8 @@ void run(size_t size, hipStream_t stream1, hipStream_t stream2) {
     HIPCHECK(hipMemcpyAsync(Bhh, Ahh, size, hipMemcpyHostToHost, stream2));
     HIPCHECK(hipMemcpyAsync(Cd, Bh, size, hipMemcpyHostToDevice, stream1));
     HIPCHECK(hipMemcpyAsync(Cdd, Bhh, size, hipMemcpyHostToDevice, stream2));
-    hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N / 500), dim3(500), 0, stream1, Cd);
-    hipLaunchKernel(HIP_KERNEL_NAME(Inc), dim3(N / 500), dim3(500), 0, stream2, Cdd);
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(Inc), dim3(N / 500), dim3(500), 0, stream1, Cd);
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(Inc), dim3(N / 500), dim3(500), 0, stream2, Cdd);
     HIPCHECK(hipMemcpyAsync(Dd, Cd, size, hipMemcpyDeviceToDevice, stream1));
     HIPCHECK(hipMemcpyAsync(Ddd, Cdd, size, hipMemcpyDeviceToDevice, stream2));
     HIPCHECK(hipMemcpyAsync(Eh, Dd, size, hipMemcpyDeviceToHost, stream1));

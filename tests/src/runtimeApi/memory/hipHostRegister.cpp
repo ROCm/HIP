@@ -28,7 +28,7 @@ THE SOFTWARE.
 #include "test_common.h"
 #include <malloc.h>
 
-__global__ void Inc(hipLaunchParm lp, float* Ad) {
+__global__ void Inc(float* Ad) {
     int tx = threadIdx.x + blockIdx.x * blockDim.x;
     Ad[tx] = Ad[tx] + float(1);
 }
@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
         // Reference the registered device pointer Ad from inside the kernel:
         for (int i = 0; i < num_devices; i++) {
             HIPCHECK(hipSetDevice(i));
-            hipLaunchKernel(Inc, dim3(N / 512), dim3(512), 0, 0, Ad[i]);
+            hipLaunchKernelGGL(Inc, dim3(N / 512), dim3(512), 0, 0, Ad[i]);
 
             HIPCHECK(hipDeviceSynchronize());
         }

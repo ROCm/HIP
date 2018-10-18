@@ -52,7 +52,7 @@ int main() {
         HIPCHECK(hipSetDevice(0));
         HIPCHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
         HIPCHECK(hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
-        hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
+        hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
                         static_cast<const int*>(A_d), static_cast<const int*>(B_d), C_d, N);
         HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
         HIPCHECK(hipDeviceSynchronize());
@@ -63,7 +63,7 @@ int main() {
         HIPCHECK(hipMemcpyDtoDAsync((hipDeviceptr_t)X_d, (hipDeviceptr_t)A_d, Nbytes, s));
         HIPCHECK(hipMemcpyDtoDAsync((hipDeviceptr_t)Y_d, (hipDeviceptr_t)B_d, Nbytes, s));
 
-        hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
+        hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
                         static_cast<const int*>(X_d), static_cast<const int*>(Y_d), Z_d, N);
         HIPCHECK(hipMemcpyDtoHAsync(C_h, (hipDeviceptr_t)Z_d, Nbytes, s));
         HIPCHECK(hipStreamSynchronize(s));

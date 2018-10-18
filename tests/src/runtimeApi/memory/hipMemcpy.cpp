@@ -230,7 +230,7 @@ void memcpytest2(DeviceMemory<T>* dmem, HostMemory<T>* hmem, size_t numElements,
                            useMemkindDefault ? hipMemcpyDefault : hipMemcpyHostToDevice));
     }
 
-    hipLaunchKernel(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
+    hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
                     static_cast<const T*>(dmem->A_d()), static_cast<const T*>(dmem->B_d()),
                     dmem->C_d(), numElements);
 
