@@ -139,9 +139,8 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
   } else {
     e->stream_ = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
-  amd::Command* command = (e->flags & hipEventDisableTiming)? new amd::Marker(*e->stream_, true) :
-    new hip::TimerMarker(*e->stream_);
-  command->enqueue();
+
+  amd::Command* command = e->stream_->getLastQueuedCommand(true);
 
   if (e->event_ != nullptr) {
     e->event_->release();
