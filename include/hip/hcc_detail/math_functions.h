@@ -507,7 +507,7 @@ float ynf(int n, float x)
 // BEGIN INTRINSICS
 __DEVICE__
 inline
-float __cosf(float x) { return __llvm_amdgcn_cos_f32(x); }
+float __cosf(float x) { return __ocml_cos_f32(x); }
 __DEVICE__
 inline
 float __exp10f(float x) { return __ocml_exp10_f32(x); }
@@ -643,7 +643,7 @@ void __sincosf(float x, float* sptr, float* cptr)
 }
 __DEVICE__
 inline
-float __sinf(float x) { return __llvm_amdgcn_sin_f32(x); }
+float __sinf(float x) { return __ocml_sin_f32(x); }
 __DEVICE__
 inline
 float __tanf(float x) { return __ocml_tan_f32(x); }
