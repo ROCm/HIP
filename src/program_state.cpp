@@ -187,10 +187,16 @@ const unordered_map<hsa_isa_t, vector<vector<char>>>& code_object_blobs() {
             nullptr);
 
         for (auto&& blob : blobs) {
-            Bundled_code_header tmp{blob};
-            if (valid(tmp)) {
-                for (auto&& bundle : bundles(tmp)) {
-                    r[triple_to_hsa_isa(bundle.triple)].push_back(bundle.blob);
+            for (auto sub_blob = blob.begin(); sub_blob != blob.end(); ) {
+                Bundled_code_header tmp(sub_blob, blob.end());
+                if (valid(tmp)) {
+                    for (auto&& bundle : bundles(tmp)) {
+                        r[triple_to_hsa_isa(bundle.triple)].push_back(bundle.blob);
+                    }
+                    sub_blob+=tmp.bundled_code_size;
+                }
+                else {
+                    break;
                 }
             }
         }
