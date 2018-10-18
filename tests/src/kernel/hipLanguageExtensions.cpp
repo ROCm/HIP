@@ -32,7 +32,7 @@ THE SOFTWARE.
 #include <test_common.h>
 
 #ifdef __HCC__
-    #include <hc.hpp>
+#include <hc.hpp>
 #endif
 
 // cudaA

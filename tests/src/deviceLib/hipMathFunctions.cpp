@@ -31,12 +31,12 @@ THE SOFTWARE.
 
 #if __HIP_ARCH_GFX803__ || __HIP_ARCH_GFX900__ || __HIP_ARCH_GFX906__
 
-__global__ void kernel_abs_int64(hipLaunchParm lp, long long *input, long long *output) {
+__global__ void kernel_abs_int64(long long *input, long long *output) {
     int tx = threadIdx.x;
     output[tx] = abs(input[tx]);
 }
 
-__global__ void kernel_lgamma_double(hipLaunchParm lp, double *input, double *output) {
+__global__ void kernel_lgamma_double(double *input, double *output) {
     int tx = threadIdx.x;
     output[tx] = lgamma(input[tx]);
 }
@@ -79,7 +79,7 @@ void check_lgamma_double() {
   hipMemcpy(inputGPU, inputCPU, memsize, hipMemcpyHostToDevice);
 
   // launch kernel
-  hipLaunchKernel(kernel_lgamma_double, dim3(1), dim3(NUM_INPUTS), 0, 0, inputGPU, outputGPU);
+  hipLaunchKernelGGL(kernel_lgamma_double, dim3(1), dim3(NUM_INPUTS), 0, 0, inputGPU, outputGPU);
 
   // copy outputs from device
   hipMemcpy(outputCPU, outputGPU, memsize, hipMemcpyDeviceToHost);
@@ -127,7 +127,7 @@ void check_abs_int64() {
   hipMemcpy(inputGPU, inputCPU, memsize, hipMemcpyHostToDevice);
 
   // launch kernel
-  hipLaunchKernel(kernel_abs_int64, dim3(1), dim3(NUM_INPUTS), 0, 0, inputGPU, outputGPU);
+  hipLaunchKernelGGL(kernel_abs_int64, dim3(1), dim3(NUM_INPUTS), 0, 0, inputGPU, outputGPU);
 
   // copy outputs from device
   hipMemcpy(outputCPU, outputGPU, memsize, hipMemcpyDeviceToHost);
