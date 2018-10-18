@@ -84,6 +84,9 @@ class Bundled_code_header {
                 std::copy_n(f + y.header.offset, y.header.bundle_sz, std::back_inserter(y.blob));
 
                 it += y.header.triple_sz;
+
+                x.bundled_code_size = std::max(x.bundled_code_size, 
+                                               y.header.offset + y.header.bundle_sz);
             }
 
             return true;
@@ -123,6 +126,8 @@ class Bundled_code_header {
     // MANIPULATORS
     Bundled_code_header& operator=(const Bundled_code_header&) = default;
     Bundled_code_header& operator=(Bundled_code_header&&) = default;
+
+    size_t bundled_code_size = 0;
 };
 
 // CREATORS
