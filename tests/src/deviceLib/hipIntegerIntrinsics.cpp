@@ -31,6 +31,10 @@ THE SOFTWARE.
 #include <hip/device_functions.h>
 #include "test_common.h"
 
+#include <algorithm>
+
+using namespace std;
+
 #pragma GCC diagnostic ignored "-Wall"
 #pragma clang diagnostic ignored "-Wunused-variable"
 
