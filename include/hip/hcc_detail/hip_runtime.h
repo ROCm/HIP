@@ -181,8 +181,7 @@ extern int HIP_TRACE_API;
 #define __HCC_C__
 #endif
 
-// abort
-__device__ void abort();
+__host__ inline void* __get_dynamicgroupbaseptr() { return nullptr; }
 
 #if __HIP_ARCH_GFX701__ == 0
 

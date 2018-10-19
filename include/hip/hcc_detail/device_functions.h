@@ -774,6 +774,15 @@ static void __threadfence_system()
   __atomic_work_item_fence(0, __memory_order_seq_cst, __memory_scope_all_svm_devices);
 }
 
+// abort
+__device__
+inline
+__attribute__((weak))
+void abort() {
+  return __builtin_trap();
+}
+
+
 #endif // __HCC_OR_HIP_CLANG__
 
 #ifdef __HCC__
