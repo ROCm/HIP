@@ -37,7 +37,7 @@ __device__ int foo(int i) { return i + 1; }
 //---
 // Syntax we would like to support with GRID_LAUNCH enabled:
 template <typename T>
-__global__ void vectorADD2(hipLaunchParm lp, T* A_d, T* B_d, T* C_d, size_t N) {
+__global__ void vectorADD2(T* A_d, T* B_d, T* C_d, size_t N) {
     size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
     size_t stride = blockDim.x * gridDim.x;
 
@@ -63,7 +63,7 @@ int test_gl2(size_t N) {
     HIPCHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
     HIPCHECK(hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
 
-    hipLaunchKernel(vectorADD2, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d, B_d, C_d, N);
+    hipLaunchKernelGGL(vectorADD2, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d, B_d, C_d, N);
 
     HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
 

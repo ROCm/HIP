@@ -32,7 +32,7 @@ THE SOFTWARE.
 #define LEN 16 * 1024
 #define SIZE LEN * 4
 
-__global__ void vectorAdd(hipLaunchParm lp, float* Ad, float* Bd) {
+__global__ void vectorAdd(float* Ad, float* Bd) {
     HIP_DYNAMIC_SHARED(float, sBd);
     int tx = threadIdx.x;
     for (int i = 0; i < LEN / 64; i++) {
@@ -53,7 +53,7 @@ int main() {
     hipMalloc(&Bd, SIZE);
     hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
     hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(vectorAdd, dim3(1, 1, 1), dim3(64, 1, 1), SIZE, 0, Ad, Bd);
+    hipLaunchKernelGGL(vectorAdd, dim3(1, 1, 1), dim3(64, 1, 1), SIZE, 0, Ad, Bd);
     hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost);
     for (int i = 0; i < LEN; i++) {
         assert(B[i] > 1.0f && B[i] < 3.0f);

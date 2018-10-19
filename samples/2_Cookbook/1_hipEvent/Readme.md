@@ -41,7 +41,7 @@ Now, we'll have the operation for which we need to compute the time taken. For t
 `  hipMemcpy(gpuMatrix, Matrix, NUM*sizeof(float), hipMemcpyHostToDevice);`
 
 and for kernel execution time we'll use `hipKernelLaunch`:
-`  hipLaunchKernel(matrixTranspose,                                                    `
+`  hipLaunchKernelGGL(matrixTranspose,                                                    `
 `                  dim3(WIDTH/THREADS_PER_BLOCK_X, HEIGHT/THREADS_PER_BLOCK_Y),        `
 `                  dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),                     `
 `                  0, 0,                                                               `

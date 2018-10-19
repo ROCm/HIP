@@ -28,9 +28,10 @@ THE SOFTWARE.
 
 #include <hip/hip_runtime_api.h>
 #include <hip/hip_runtime.h>
-#include <iostream>
 #include "test_common.h"
 #include <hip/device_functions.h>
+
+#include <iostream>
 
 #define HIP_ASSERT(x) (assert((x) == hipSuccess))
 
@@ -39,7 +40,7 @@ THE SOFTWARE.
 
 #define TEST_DEBUG (0)
 
-__global__ void kernel_trig(hipLaunchParm lp, float* In, float* sin_d, float* cos_d, float* tan_d,
+__global__ void kernel_trig(float* In, float* sin_d, float* cos_d, float* tan_d,
                             float* sin_pd, float* cos_pd) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     sin_d[tid] = sinf(In[tid]);
@@ -74,7 +75,7 @@ int main() {
     HIP_ASSERT(hipMalloc((void**)&cos_pd, SIZE));
 
     hipMemcpy(In_d, In, SIZE, hipMemcpyHostToDevice);
-    hipLaunchKernel(kernel_trig, dim3(LEN, 1, 1), dim3(1, 1, 1), 0, 0,
+    hipLaunchKernelGGL(kernel_trig, dim3(LEN, 1, 1), dim3(1, 1, 1), 0, 0,
                     In_d, sin_d, cos_d, tan_d,
                     sin_pd, cos_pd);
     hipMemcpy(sin_h, sin_d, SIZE, hipMemcpyDeviceToHost);

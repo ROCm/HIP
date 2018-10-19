@@ -33,7 +33,7 @@ THE SOFTWARE.
 #include <hip/device_functions.h>
 #define HIP_ASSERT(x) (assert((x) == hipSuccess))
 
-__global__ void warpvote(hipLaunchParm lp, int* device_any, int* device_all,
+__global__ void warpvote(int* device_any, int* device_all,
                          int Num_Warps_per_Block, int pshift) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     device_any[threadIdx.x >> pshift] = __any(tid - 77);
@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
     HIP_ASSERT(hipMemcpy(device_any, host_any, sizeof(int), hipMemcpyHostToDevice));
     HIP_ASSERT(hipMemcpy(device_all, host_all, sizeof(int), hipMemcpyHostToDevice));
 
-    hipLaunchKernel(warpvote, dim3(Num_Blocks_per_Grid), dim3(Num_Threads_per_Block), 0, 0,
+    hipLaunchKernelGGL(warpvote, dim3(Num_Blocks_per_Grid), dim3(Num_Threads_per_Block), 0, 0,
                     device_any, device_all, Num_Warps_per_Block, pshift);
 
 

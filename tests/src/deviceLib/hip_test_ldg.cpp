@@ -52,7 +52,7 @@ THE SOFTWARE.
 using namespace std;
 
 template <typename T>
-__global__ void vectoradd_float(hipLaunchParm lp, T* a, const T* bm, int width, int height)
+__global__ void vectoradd_float(T* a, const T* bm, int width, int height)
 
 {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
@@ -120,7 +120,7 @@ bool dataTypesRun() {
     HIP_ASSERT(hipMemcpy(deviceB, hostB, NUM * sizeof(T), hipMemcpyHostToDevice));
 
 
-    hipLaunchKernel(vectoradd_float,
+    hipLaunchKernelGGL(vectoradd_float,
                     dim3(WIDTH / THREADS_PER_BLOCK_X, HEIGHT / THREADS_PER_BLOCK_Y),
                     dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), 0, 0, deviceA,
                     static_cast<const T*>(deviceB), WIDTH, HEIGHT);
@@ -178,7 +178,7 @@ bool dataTypesRun2() {
     HIP_ASSERT(hipMalloc((void**)&deviceB, NUM * sizeof(T)));
 
     HIP_ASSERT(hipMemcpy(deviceB, hostB, NUM * sizeof(T), hipMemcpyHostToDevice));
-    hipLaunchKernel(vectoradd_float,
+    hipLaunchKernelGGL(vectoradd_float,
                     dim3(WIDTH / THREADS_PER_BLOCK_X, HEIGHT / THREADS_PER_BLOCK_Y),
                     dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), 0, 0, deviceA,
                     static_cast<const T*>(deviceB), WIDTH, HEIGHT);
@@ -236,7 +236,7 @@ bool dataTypesRun4() {
     HIP_ASSERT(hipMemcpy(deviceB, hostB, NUM * sizeof(T), hipMemcpyHostToDevice));
 
 
-    hipLaunchKernel(vectoradd_float,
+    hipLaunchKernelGGL(vectoradd_float,
                     dim3(WIDTH / THREADS_PER_BLOCK_X, HEIGHT / THREADS_PER_BLOCK_Y),
                     dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), 0, 0, deviceA,
                     static_cast<const T*>(deviceB), WIDTH, HEIGHT);

@@ -32,7 +32,7 @@ THE SOFTWARE.
 #define LEN 1024 * 1024
 #define SIZE LEN * sizeof(float)
 
-__global__ void Add(hipLaunchParm lp, float* Ad, float* Bd, float* Cd) {
+__global__ void Add(float* Ad, float* Bd, float* Cd) {
     int tx = threadIdx.x + blockIdx.x * blockDim.x;
     Cd[tx] = Ad[tx] + Bd[tx];
 }
@@ -74,7 +74,7 @@ int main() {
     dim3 dimGrid(LEN / 512, 1, 1);
     dim3 dimBlock(512, 1, 1);
 
-    hipLaunchKernel(HIP_KERNEL_NAME(Add), dimGrid, dimBlock, 0, 0, Ad, Bd, Cd);
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(Add), dimGrid, dimBlock, 0, 0, Ad, Bd, Cd);
 
     HIPCHECK(
         hipMemcpy(C, Cd, SIZE, hipMemcpyDeviceToHost));  // Note this really HostToHost not

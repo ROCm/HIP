@@ -105,7 +105,7 @@ void disablePeer2Peer(int currentGpu, int peerGpu) {
 }
 
 
-__global__ void matrixTranspose_static_shared(hipLaunchParm lp, float* out, float* in,
+__global__ void matrixTranspose_static_shared(float* out, float* in,
                                               const int width) {
     __shared__ float sharedMem[WIDTH * WIDTH];
 
@@ -119,7 +119,7 @@ __global__ void matrixTranspose_static_shared(hipLaunchParm lp, float* out, floa
     out[y * width + x] = sharedMem[y * width + x];
 }
 
-__global__ void matrixTranspose_dynamic_shared(hipLaunchParm lp, float* out, float* in,
+__global__ void matrixTranspose_dynamic_shared(float* out, float* in,
                                                const int width) {
     // declare dynamic shared memory
     HIP_DYNAMIC_SHARED(float, sharedMem)
@@ -170,7 +170,7 @@ int main() {
     hipMalloc((void**)&data[0], NUM * sizeof(float));
     hipMemcpy(data[0], randArray, NUM * sizeof(float), hipMemcpyHostToDevice);
 
-    hipLaunchKernel(matrixTranspose_static_shared,
+    hipLaunchKernelGGL(matrixTranspose_static_shared,
                     dim3(WIDTH / THREADS_PER_BLOCK_X, WIDTH / THREADS_PER_BLOCK_Y),
                     dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), 0, 0, gpuTransposeMatrix[0],
                     data[0], width);
@@ -181,7 +181,7 @@ int main() {
     hipMalloc((void**)&data[1], NUM * sizeof(float));
     hipMemcpy(data[1], gpuTransposeMatrix[0], NUM * sizeof(float), hipMemcpyDeviceToDevice);
 
-    hipLaunchKernel(matrixTranspose_dynamic_shared,
+    hipLaunchKernelGGL(matrixTranspose_dynamic_shared,
                     dim3(WIDTH / THREADS_PER_BLOCK_X, WIDTH / THREADS_PER_BLOCK_Y),
                     dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), sizeof(float) * WIDTH * WIDTH,
                     0, gpuTransposeMatrix[1], data[1], width);
