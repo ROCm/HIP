@@ -59,8 +59,7 @@ set_target_properties(hip::hip_hcc PROPERTIES
 
 # Create imported target hip::hip_device
 add_library(hip::hip_device STATIC IMPORTED)
-
-set_target_properties(hip::hip_device PROPERTIES
+ set_target_properties(hip::hip_device PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/hsa/include"
   INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/hsa/include"
 )

@@ -89,7 +89,9 @@ int main(int argc, char* argv[]) {
 
     if (divergent_count == 1)
         printf("PASSED\n");
-    else
+    else {
         printf("FAILED\n");
+        return EXIT_FAILURE;
+    }
     return EXIT_SUCCESS;
 }
