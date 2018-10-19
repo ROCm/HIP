@@ -27,7 +27,11 @@ THE SOFTWARE.
 // automatic data management capabilities - instead the programmer
 // takes the reins and controls when copies are executed.
 
-#include <hc.hpp>
+#if defined(HC_NEXT)
+    #include <hc/hc.hpp>
+#else
+    #include <hc.hpp>
+#endif
 
 int main(int argc, char* argv[]) {
     int sizeElements = 1000000;

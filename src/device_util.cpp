@@ -21,10 +21,9 @@ THE SOFTWARE.
 */
 
 #include <hc.hpp>
-#include <grid_launch.h>
-#include <hc_math.hpp>
 #include "device_util.h"
 #include "hip/hcc_detail/device_functions.h"
+#include "hip/hcc_detail/grid_launch.h"
 #include "hip/hip_runtime.h"
 #include <atomic>
 
