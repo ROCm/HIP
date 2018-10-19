@@ -26,8 +26,13 @@ THE SOFTWARE.
 // which can only be used on the device.  The programmer has full control
 // over when data is copied.
 
-#include <hc.hpp>
-#include <hc_am.hpp>
+#if defined(HC_NEXT)
+    #include <hc/hc.hpp>
+    #include <hc/hc_am.hpp>
+#else
+    #include <hc.hpp>
+    #include <hc_am.hpp>
+#endif
 
 int main(int argc, char* argv[]) {
     int sizeElements = 1000000;

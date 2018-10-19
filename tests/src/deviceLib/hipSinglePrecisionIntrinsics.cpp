@@ -27,6 +27,7 @@ THE SOFTWARE.
 
 #include <hip/hip_runtime.h>
 #include <hip/device_functions.h>
+
 #include "test_common.h"
 
 #pragma GCC diagnostic ignored "-Wall"
